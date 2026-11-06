@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" width="960" height="360" role="img" aria-labelledby="cadillac-guide-title cadillac-guide-desc">
+  <title id="cadillac-guide-title">캐딜락 필라테스 3단계 타워 바 &amp; 척추 분절 정렬 가이드 (Cadillac Phase Alignment &amp; Kinematics Guide)</title>
+  <desc id="cadillac-guide-desc">Free original authored schematic (anatomicalAccuracyAssumed: false; pre-review vs post-review distinction required). Depicts Start (시작 자세 tall seated), Middle (중간 정점 자세 articulated roll-down with start-pose delta ghost), and End (끝 복귀 자세 stacked return) on the Cadillac Tower.</desc>
+  <defs>
+    <marker id="arrow-excursion" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#9a502d" />
+    </marker>
+    <marker id="arrow-return" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#244d44" />
+    </marker>
+    <linearGradient id="bg-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbfaf5" />
+      <stop offset="100%" stop-color="#f2ede1" />
+    </linearGradient>
+    <radialGradient id="muscle-scap-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c17c52" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#c17c52" stop-opacity="0.08" />
+    </radialGradient>
+  </defs>
+
+  <rect width="960" height="360" rx="16" fill="url(#bg-grad)" stroke="#d9d1c1" stroke-width="1.5" />
+
+  <!-- Top Editorial Banner -->
+  <g font-family="Pretendard, -apple-system, BlinkMacSystemFont, sans-serif">
+    <text x="24" y="27" font-size="13" font-weight="700" fill="#244d44">CADILLAC · 캐딜락 롤다운 바 &amp; 견갑-척추 분절 3단계 관절 정렬 도해</text>
+    <text x="936" y="27" text-anchor="end" font-size="10.5" font-weight="600" fill="#875641">FREE ORIGINAL SVG · 해부학적 확정 가정 없음 (anatomicalAccuracyAssumed: false)</text>
+  </g>
+
+  <!-- ==================== PANEL 1: START (x: 20..310) ==================== -->
+  <g id="phase-start">
+    <rect x="20" y="38" width="290" height="278" rx="12" fill="#ffffff" fill-opacity="0.78" stroke="#d8cfc0" stroke-width="1.2" />
+    <rect x="32" y="48" width="118" height="22" rx="6" fill="#244d44" />
+    <text x="91" y="63" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700" fill="#fbfaf5">1. START · 시작 자세</text>
+    <text x="298" y="63" text-anchor="end" font-family="Pretendard, sans-serif" font-size="10" fill="#5e6761">좌골 수직 앉기 · 견갑 하강</text>
+
+    <!-- Cadillac Bed & Vertical Tower Uprights -->
+    <rect x="38" y="246" width="254" height="10" rx="4" fill="#6b826d" fill-opacity="0.4" stroke="#244d44" stroke-width="1.2" />
+    <line x1="264" y1="82" x2="264" y2="256" stroke="#244d44" stroke-width="4" />
+    <circle cx="264" cy="100" r="5" fill="#9a502d" />
+    <!-- Top Spring to Roll-Down Bar -->
+    <path d="M 264 100 L 236 116 L 210 132" fill="none" stroke="#9a502d" stroke-width="2" stroke-dasharray="5 2" />
+    <circle cx="210" cy="132" r="4.5" fill="#9a502d" />
+
+    <!-- Joint Alignment Plumb Line (Ear - Shoulder - Pelvis) -->
+    <line x1="146" y1="86" x2="146" y2="258" stroke="#6b826d" stroke-width="1.4" stroke-dasharray="4 3" />
+    <text x="146" y="80" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">귀-어깨-좌골 수직 중립축</text>
+
+    <!-- Primary Muscle Zone (Lower Traps / Latissimus / Core) -->
+    <ellipse cx="144" cy="174" rx="18" ry="26" fill="url(#muscle-scap-core)" stroke="#c17c52" stroke-width="1" stroke-dasharray="3 2" />
+    <text x="92" y="176" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#9a502d">광배·하부승모 안정화</text>
+
+    <!-- Right Limb (Dashed) -->
+    <g stroke="#875641" stroke-width="3.2" stroke-dasharray="6 4" stroke-linecap="round" fill="none">
+      <path d="M 150 156 L 210 134" />
+      <path d="M 150 240 L 258 240" />
+    </g>
+    <!-- Left Limb & Upright Spine (Solid) -->
+    <g stroke="#244d44" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 146 152 L 146 242" />
+      <path d="M 146 158 L 210 132" />
+      <path d="M 146 242 L 258 242" />
+    </g>
+    <circle cx="146" cy="132" r="10.5" fill="#e6dec8" stroke="#244d44" stroke-width="2.5" />
+    <circle cx="146" cy="158" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="146" cy="242" r="4.5" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+
+    <text x="165" y="288" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">타워 기둥 발바닥 밀착 · 좌골 앵커</text>
+  </g>
+
+  <!-- ==================== PANEL 2: MIDDLE (x: 335..625) ==================== -->
+  <g id="phase-middle">
+    <rect x="335" y="38" width="290" height="278" rx="12" fill="#ffffff" fill-opacity="0.9" stroke="#c17c52" stroke-width="1.6" />
+    <rect x="347" y="48" width="138" height="22" rx="6" fill="#9a502d" />
+    <text x="416" y="63" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700" fill="#fbfaf5">2. MIDDLE · 중간 정점 자세</text>
+    <text x="613" y="63" text-anchor="end" font-family="Pretendard, sans-serif" font-size="10" fill="#9a502d">골반 후방경사 · 척추 C-커브</text>
+
+    <!-- Cadillac Bed & Vertical Tower Uprights -->
+    <rect x="353" y="246" width="254" height="10" rx="4" fill="#6b826d" fill-opacity="0.4" stroke="#244d44" stroke-width="1.2" />
+    <line x1="579" y1="82" x2="579" y2="256" stroke="#244d44" stroke-width="4" />
+    <circle cx="579" cy="100" r="5.5" fill="#9a502d" />
+    <!-- Elongated Spring under Roll-Down tension -->
+    <path d="M 579 100 L 530 132 L 484 164" fill="none" stroke="#9a502d" stroke-width="2.2" stroke-dasharray="6 2" />
+    <circle cx="484" cy="164" r="5" fill="#9a502d" />
+
+    <!-- GHOSTED START-POSE SILHOUETTE (Shows Upright vs C-Curve Roll-Down Delta) -->
+    <g id="middle-start-ghost" opacity="0.22" stroke="#244d44" stroke-width="3" stroke-dasharray="3 3" fill="none">
+      <circle cx="461" cy="132" r="10" />
+      <path d="M 461 152 L 461 242" />
+      <path d="M 461 158 L 525 132" />
+    </g>
+    <text x="476" y="274" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9" fill="#5e6761">점선 실루엣: 수직 시작 자세 대비 요추·흉추 분절 변위</text>
+
+    <!-- Joint Alignment Axis: Scapular Depression & Lumbar C-Curve Arc -->
+    <line x1="406" y1="184" x2="579" y2="184" stroke="#6b826d" stroke-width="1.3" stroke-dasharray="4 3" />
+    <text x="435" y="122" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">어깨 거상 없는 C-커브 분절 정렬</text>
+
+    <!-- Primary Muscle Zones (Deep Abdominals & Scapular Stabilizers) -->
+    <ellipse cx="432" cy="214" rx="32" ry="16" transform="rotate(24 432 214)" fill="url(#muscle-scap-core)" stroke="#9a502d" stroke-width="1.2" />
+    <text x="412" y="150" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#9a502d">주요 근육: 복직근·외복사근 편심성 제어</text>
+
+    <!-- Right Limb (Dashed) -->
+    <g stroke="#875641" stroke-width="3.2" stroke-dasharray="6 4" stroke-linecap="round" fill="none">
+      <path d="M 412 184 L 484 164" />
+      <path d="M 464 240 L 573 240" />
+    </g>
+    <!-- Left Limb & Articulated C-Curve Spine (Solid) -->
+    <g stroke="#244d44" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <!-- Articulated Roll-Down Curve -->
+      <path d="M 406 184 Q 418 232 461 242" />
+      <path d="M 408 186 L 484 164" />
+      <path d="M 461 242 L 573 242" />
+    </g>
+    <circle cx="398" cy="166" r="10.5" fill="#e6dec8" stroke="#244d44" stroke-width="2.5" />
+    <circle cx="408" cy="186" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="461" cy="242" r="4.5" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+
+    <!-- Movement Direction Vector (Roll-Down Arc) -->
+    <path d="M 446 142 Q 405 152 384 196" fill="none" stroke="#9a502d" stroke-width="2.2" marker-end="url(#arrow-excursion)" />
+    <text x="480" y="292" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#9a502d">날숨: 꼬리뼈 말아 아랫배부터 순차 분절 하강</text>
+  </g>
+
+  <!-- ==================== PANEL 3: END (x: 650..940) ==================== -->
+  <g id="phase-end">
+    <rect x="650" y="38" width="290" height="278" rx="12" fill="#ffffff" fill-opacity="0.78" stroke="#d8cfc0" stroke-width="1.2" />
+    <rect x="662" y="48" width="128" height="22" rx="6" fill="#244d44" />
+    <text x="726" y="63" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700" fill="#fbfaf5">3. END · 끝 복귀 자세</text>
+    <text x="928" y="63" text-anchor="end" font-family="Pretendard, sans-serif" font-size="10" fill="#5e6761">요추-흉추-경추 스태킹 복귀</text>
+
+    <!-- Cadillac Bed & Vertical Tower Uprights -->
+    <rect x="668" y="246" width="254" height="10" rx="4" fill="#6b826d" fill-opacity="0.4" stroke="#244d44" stroke-width="1.2" />
+    <line x1="894" y1="82" x2="894" y2="256" stroke="#244d44" stroke-width="4" />
+    <circle cx="894" cy="100" r="5" fill="#244d44" />
+    <path d="M 894 100 L 866 116 L 840 132" fill="none" stroke="#244d44" stroke-width="2" stroke-dasharray="5 2" />
+    <circle cx="840" cy="132" r="4.5" fill="#244d44" />
+
+    <!-- Joint Alignment Plumb Line -->
+    <line x1="776" y1="86" x2="776" y2="258" stroke="#6b826d" stroke-width="1.4" stroke-dasharray="4 3" />
+    <text x="776" y="80" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">수직 척추 스태킹 복귀축</text>
+
+    <!-- Primary Muscle Zone -->
+    <ellipse cx="776" cy="196" rx="20" ry="26" fill="url(#muscle-scap-core)" stroke="#c17c52" stroke-width="1" />
+    <text x="716" y="196" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#9a502d">코어·척추기립근 정렬</text>
+
+    <!-- Right Limb (Dashed) -->
+    <g stroke="#875641" stroke-width="3.2" stroke-dasharray="6 4" stroke-linecap="round" fill="none">
+      <path d="M 780 156 L 840 134" />
+      <path d="M 780 240 L 888 240" />
+    </g>
+    <!-- Left Limb & Upright Spine (Solid) -->
+    <g stroke="#244d44" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 776 152 L 776 242" />
+      <path d="M 776 158 L 840 132" />
+      <path d="M 776 242 L 888 242" />
+    </g>
+    <circle cx="776" cy="132" r="10.5" fill="#e6dec8" stroke="#244d44" stroke-width="2.5" />
+    <circle cx="776" cy="158" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="776" cy="242" r="4.5" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+
+    <!-- Return Vector -->
+    <path d="M 738 190 Q 742 152 762 136" fill="none" stroke="#244d44" stroke-width="2.2" marker-end="url(#arrow-return)" />
+    <text x="795" y="288" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#244d44">스프링에 끌려가지 않고 아래 허리부터 수직 복귀</text>
+  </g>
+
+  <!-- ==================== BOTTOM LEGEND BAR ==================== -->
+  <g transform="translate(20, 324)" font-family="Pretendard, sans-serif" font-size="10" fill="#244d44">
+    <line x1="6" y1="12" x2="28" y2="12" stroke="#244d44" stroke-width="3.5" stroke-linecap="round" />
+    <text x="34" y="16" font-weight="600">좌측 사지 (실선)</text>
+
+    <line x1="124" y1="12" x2="146" y2="12" stroke="#875641" stroke-width="3" stroke-dasharray="5 3" stroke-linecap="round" />
+    <text x="152" y="16" font-weight="600" fill="#875641">우측 사지 (점선)</text>
+
+    <line x1="244" y1="12" x2="266" y2="12" stroke="#6b826d" stroke-width="1.5" stroke-dasharray="4 3" />
+    <circle cx="255" cy="12" r="3.5" fill="#9a502d" />
+    <text x="272" y="16" font-weight="600">관절 정렬축 · 타워 앵커</text>
+
+    <line x1="396" y1="12" x2="418" y2="12" stroke="#9a502d" stroke-width="2" marker-end="url(#arrow-excursion)" />
+    <text x="426" y="16" font-weight="600" fill="#9a502d">움직임 방향 (분절/복귀)</text>
+
+    <ellipse cx="564" cy="12" rx="10" ry="6" fill="#c17c52" fill-opacity="0.45" stroke="#9a502d" stroke-width="1" />
+    <text x="580" y="16" font-weight="600" fill="#9a502d">주요 작용 근육 영역</text>
+
+    <text x="920" y="16" text-anchor="end" font-size="9.5" fill="#5e6761">※ 교육용 개념 도해이며 의료·임상 진단을 대체하지 않습니다</text>
+  </g>
+</svg>

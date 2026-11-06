@@ -61,6 +61,10 @@ import type {
   SequenceStep,
   StepPracticeOptions,
 } from '../types/pilates';
+import type {
+  ClassHistoryLogWithSnapshot,
+  TeachingProgramSnapshot,
+} from '../types/teachingHistorySnapshot';
 import {
   exerciseMatchesCriteria,
   fitSequenceDuration,
@@ -284,6 +288,7 @@ export interface PilatesStudioState extends SequenceSnapshot {
     stepsSnapshot?: SequenceStep[];
     sequenceTitle?: string;
     criteriaSnapshot?: AutoGenerateCriteria;
+    programSnapshot?: TeachingProgramSnapshot;
   }) => void;
   addClassGroup: (group: Omit<ClassGroupProfile, 'id'>) => void;
   updateClassGroup: (
@@ -1998,7 +2003,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
             payload.stepsSnapshot ??
               (isActive ? state.activeSteps : (sequence?.steps ?? state.activeSteps)),
           );
-          const log: ClassHistoryLog = {
+          const log: ClassHistoryLogWithSnapshot = {
             id: newId('log'),
             sequenceId: payload.sequenceId,
             sequenceTitle:
@@ -2028,6 +2033,9 @@ export const usePilatesStore = create<PilatesStudioState>()(
               : {}),
             ...(payload.actualRestDurationSec !== undefined
               ? { actualRestDurationSec: payload.actualRestDurationSec }
+              : {}),
+            ...(payload.programSnapshot
+              ? { programSnapshot: structuredClone(payload.programSnapshot) }
               : {}),
           };
           const checkedLog = historySchema.safeParse(log);

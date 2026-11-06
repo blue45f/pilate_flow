@@ -2,7 +2,10 @@ import { db, storage, router, json, error, requireAuth, isAppDatabaseError } fro
 import type { RouterMiddleware, RouterResponse } from '@appdeploy/sdk';
 import { BackupError, createBackupService } from './backupService';
 import type { BackupRecord } from './backupService';
+import { createFreeAiRoutes, createFreeAiService } from './freeAiService';
 import { assertExpectedPrincipal } from './principalAssertion';
+
+const freeAiRoutes = createFreeAiRoutes(createFreeAiService());
 
 const TABLE = 'studio_backups';
 const backups = createBackupService({
@@ -104,5 +107,13 @@ export const handler = router({
   'DELETE /api/studio/backup': [
     requireAuth(),
     protect('body', async ({ user, body }) => json(await backups.remove(user!.userId, body))),
+  ],
+  'GET /api/studio/ai/status': [
+    requireAuth(),
+    protect('query', (context) => freeAiRoutes['GET /api/studio/ai/status'](context)),
+  ],
+  'POST /api/studio/ai/assist': [
+    requireAuth(),
+    protect('body', (context) => freeAiRoutes['POST /api/studio/ai/assist'](context)),
   ],
 });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
   ChartNoAxesCombined,
@@ -79,6 +79,10 @@ import '../styles/design-tokens.css';
 import '../styles/workbench-usability.css';
 import '../styles/workbench-vnext.css';
 import '../styles/release-mobile-clarity.css';
+
+const LazyFreeAiAssistantPanel = lazy(() =>
+  import('./FreeAiAssistantPanel').then((mod) => ({ default: mod.FreeAiAssistantPanel })),
+);
 
 export type WorkbenchPlanningMode = 'auto' | 'manual';
 
@@ -1367,6 +1371,34 @@ export function SequenceWorkbench({
                 onOpenExerciseDetail={onOpenYouTubePreview}
               />
             )}
+          </details>
+          <details className="workbench-automation-tools workbench-free-ai-details">
+            <summary>AI 티칭 큐·시퀀스 도우미 (무료 한도 보호 · 소진 시 로컬 전환)</summary>
+            <Suspense fallback={<p className="pf-text-sm">AI 도우미를 불러오는 중...</p>}>
+              <LazyFreeAiAssistantPanel
+                exercises={s.exercises}
+                conditionTemplates={s.conditionTemplates}
+                activeTargetMinutes={s.activeTargetMinutes}
+                activeApparatus={s.activeApparatus}
+                activeLevel={s.activeLevel}
+                onApplyDraftSequence={(payload) => {
+                  usePilatesStore.setState({
+                    activeTitle: payload.title,
+                    activeSubtitle: payload.subtitle,
+                    activeTargetMinutes: payload.targetMinutes,
+                    activeLevel: payload.level,
+                    activeApparatus: payload.apparatus,
+                    activeSteps: payload.steps,
+                    generationError: null,
+                    saveFeedback: `‘${payload.title}’ 초안을 현재 수업 시퀀스에 반영했습니다.`,
+                  });
+                  setWorkflowStep('arrange');
+                }}
+                onSaveUnreviewedMovementIdea={(exercise) => {
+                  s.addCustomExercise(exercise);
+                }}
+              />
+            </Suspense>
           </details>
           <div className="workbench-footnotes">
             <PfButton variant="text" onClick={onOpenClipper}>

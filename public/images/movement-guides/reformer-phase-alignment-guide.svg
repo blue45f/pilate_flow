@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" width="960" height="360" role="img" aria-labelledby="reformer-guide-title reformer-guide-desc">
+  <title id="reformer-guide-title">리포머 필라테스 3단계 캐리지 주행 및 관절 정렬 가이드 (Reformer Phase Alignment &amp; Kinematics Guide)</title>
+  <desc id="reformer-guide-desc">Free original authored schematic (anatomicalAccuracyAssumed: false; pre-review vs post-review distinction required). Depicts Start (시작 자세 at stopper), Middle (중간 정점 자세 carriage press-out with start-pose delta ghost), and End (끝 복귀 자세 eccentric spring return) on the Reformer.</desc>
+  <defs>
+    <marker id="arrow-excursion" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#9a502d" />
+    </marker>
+    <marker id="arrow-return" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#244d44" />
+    </marker>
+    <linearGradient id="bg-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbfaf5" />
+      <stop offset="100%" stop-color="#f2ede1" />
+    </linearGradient>
+    <radialGradient id="muscle-glute-quad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c17c52" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#c17c52" stop-opacity="0.08" />
+    </radialGradient>
+  </defs>
+
+  <rect width="960" height="360" rx="16" fill="url(#bg-grad)" stroke="#d9d1c1" stroke-width="1.5" />
+
+  <!-- Top Editorial Banner -->
+  <g font-family="Pretendard, -apple-system, BlinkMacSystemFont, sans-serif">
+    <text x="24" y="27" font-size="13" font-weight="700" fill="#244d44">REFORMER · 리포머 풋워크 &amp; 캐리지 신전 3단계 관절 정렬 도해</text>
+    <text x="936" y="27" text-anchor="end" font-size="10.5" font-weight="600" fill="#875641">FREE ORIGINAL SVG · 해부학적 확정 가정 없음 (anatomicalAccuracyAssumed: false)</text>
+  </g>
+
+  <!-- ==================== PANEL 1: START (x: 20..310) ==================== -->
+  <g id="phase-start">
+    <rect x="20" y="38" width="290" height="278" rx="12" fill="#ffffff" fill-opacity="0.78" stroke="#d8cfc0" stroke-width="1.2" />
+    <rect x="32" y="48" width="118" height="22" rx="6" fill="#244d44" />
+    <text x="91" y="63" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700" fill="#fbfaf5">1. START · 시작 자세</text>
+    <text x="298" y="63" text-anchor="end" font-family="Pretendard, sans-serif" font-size="10" fill="#5e6761">스토퍼 밀착 · 고관절 굴곡</text>
+
+    <!-- Reformer Frame, Footbar & Springs -->
+    <rect x="36" y="246" width="258" height="12" rx="4" fill="#d9d1c1" stroke="#6b826d" stroke-width="1.2" />
+    <!-- Footbar at right of panel -->
+    <line x1="264" y1="246" x2="246" y2="196" stroke="#244d44" stroke-width="4" stroke-linecap="round" />
+    <circle cx="246" cy="196" r="5" fill="#9a502d" />
+    <!-- Springs (resting tension) -->
+    <path d="M 198 242 L 206 238 L 214 246 L 222 238 L 230 246 L 246 242" fill="none" stroke="#9a502d" stroke-width="1.8" />
+    <!-- Sliding Carriage near stopper (x: 84..198) -->
+    <rect x="84" y="232" width="114" height="12" rx="4" fill="#6b826d" fill-opacity="0.45" stroke="#244d44" stroke-width="1.5" />
+    <!-- Shoulder block -->
+    <rect x="108" y="220" width="7" height="12" rx="2" fill="#244d44" />
+
+    <!-- Joint Alignment Lines (2nd Toe - Knee - Hip Line & Neutral Spine) -->
+    <line x1="90" y1="226" x2="255" y2="226" stroke="#6b826d" stroke-width="1.3" stroke-dasharray="4 3" />
+    <line x1="184" y1="110" x2="184" y2="258" stroke="#6b826d" stroke-width="1.3" stroke-dasharray="4 3" />
+    <text x="184" y="102" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">고관절-무릎-2번째 발가락 정렬선</text>
+
+    <!-- Primary Muscle Pre-engagement -->
+    <ellipse cx="164" cy="218" rx="26" ry="12" fill="url(#muscle-glute-quad)" stroke="#c17c52" stroke-width="1" stroke-dasharray="3 2" />
+    <text x="148" y="196" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#9a502d">주요 근육: 코어·둔근 준비</text>
+
+    <!-- Right Limb (Dashed) -->
+    <g stroke="#875641" stroke-width="3.2" stroke-dasharray="6 4" stroke-linecap="round" fill="none">
+      <path d="M 186 224 L 214 166 L 246 194" />
+    </g>
+    <!-- Left Limb & Torso (Solid) -->
+    <g stroke="#244d44" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 118 226 L 184 226" />
+      <path d="M 184 226 L 210 172 L 246 196" />
+      <path d="M 124 226 L 168 226" />
+    </g>
+    <circle cx="98" cy="222" r="10" fill="#e6dec8" stroke="#244d44" stroke-width="2.5" />
+    <circle cx="184" cy="226" r="4.5" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="210" cy="172" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+
+    <text x="165" y="288" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">숄더블록 및 풋바 고정 앵커 확인</text>
+  </g>
+
+  <!-- ==================== PANEL 2: MIDDLE (x: 335..625) ==================== -->
+  <g id="phase-middle">
+    <rect x="335" y="38" width="290" height="278" rx="12" fill="#ffffff" fill-opacity="0.9" stroke="#c17c52" stroke-width="1.6" />
+    <rect x="347" y="48" width="138" height="22" rx="6" fill="#9a502d" />
+    <text x="416" y="63" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700" fill="#fbfaf5">2. MIDDLE · 중간 정점 자세</text>
+    <text x="613" y="63" text-anchor="end" font-family="Pretendard, sans-serif" font-size="10" fill="#9a502d">캐리지 프레스 아웃 정점</text>
+
+    <!-- Reformer Frame & Footbar -->
+    <rect x="351" y="246" width="258" height="12" rx="4" fill="#d9d1c1" stroke="#6b826d" stroke-width="1.2" />
+    <line x1="579" y1="246" x2="561" y2="196" stroke="#244d44" stroke-width="4" stroke-linecap="round" />
+    <circle cx="561" cy="196" r="5.5" fill="#9a502d" />
+    <!-- Extended Springs under tension -->
+    <path d="M 472 242 L 484 236 L 496 248 L 508 236 L 520 248 L 532 236 L 544 248 L 561 242" fill="none" stroke="#9a502d" stroke-width="2" />
+    <!-- Carriage displaced left (x: 358..472) -->
+    <rect x="358" y="232" width="114" height="12" rx="4" fill="#6b826d" fill-opacity="0.55" stroke="#244d44" stroke-width="1.5" />
+    <rect x="382" y="220" width="7" height="12" rx="2" fill="#244d44" />
+
+    <!-- GHOSTED START-POSE SILHOUETTE (Shows Carriage & Knee Delta) -->
+    <g id="middle-start-ghost" opacity="0.22" stroke="#244d44" stroke-width="3" stroke-dasharray="3 3" fill="none">
+      <circle cx="413" cy="222" r="10" />
+      <path d="M 433 226 L 499 226 L 525 172 L 561 196" />
+    </g>
+    <text x="480" y="274" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9" fill="#5e6761">점선 실루엣: 시작 위치 대비 캐리지 수평 이동량</text>
+
+    <!-- Joint Alignment Line (Hip-Knee-Ankle Long Axis, No Hyperextension) -->
+    <line x1="458" y1="226" x2="561" y2="196" stroke="#6b826d" stroke-width="1.4" stroke-dasharray="5 3" />
+    <text x="508" y="164" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">무릎 과신전 방지 · 하지 일직선 정렬</text>
+
+    <!-- Primary Muscle Zones (Quads, Gluteus Maximus, Deep Core) -->
+    <ellipse cx="436" cy="224" rx="28" ry="12" fill="url(#muscle-glute-quad)" stroke="#9a502d" stroke-width="1" />
+    <ellipse cx="506" cy="210" rx="36" ry="13" transform="rotate(-16 506 210)" fill="url(#muscle-glute-quad)" stroke="#9a502d" stroke-width="1.2" />
+    <text x="466" y="138" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#9a502d">주요 근육: 대퇴사두근 · 대둔근 · 코어 동시 수축</text>
+
+    <!-- Right Limb (Dashed) -->
+    <g stroke="#875641" stroke-width="3.2" stroke-dasharray="6 4" stroke-linecap="round" fill="none">
+      <path d="M 460 222 L 512 206 L 561 192" />
+    </g>
+    <!-- Left Limb & Torso (Solid) -->
+    <g stroke="#244d44" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 392 226 L 458 226" />
+      <path d="M 458 226 L 510 211 L 561 196" />
+      <path d="M 398 226 L 442 226" />
+    </g>
+    <circle cx="372" cy="222" r="10" fill="#e6dec8" stroke="#244d44" stroke-width="2.5" />
+    <circle cx="458" cy="226" r="4.5" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="510" cy="211" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+
+    <!-- Movement Direction Vectors (Carriage Excursion Left) -->
+    <line x1="468" y1="186" x2="386" y2="186" stroke="#9a502d" stroke-width="2.4" marker-end="url(#arrow-excursion)" />
+    <text x="426" y="178" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#9a502d">날숨: 캐리지 밀어내기 (Press Out)</text>
+    <text x="480" y="292" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#9a502d">풋바 고정 앵커 대비 골반 수평 활주</text>
+  </g>
+
+  <!-- ==================== PANEL 3: END (x: 650..940) ==================== -->
+  <g id="phase-end">
+    <rect x="650" y="38" width="290" height="278" rx="12" fill="#ffffff" fill-opacity="0.78" stroke="#d8cfc0" stroke-width="1.2" />
+    <rect x="662" y="48" width="128" height="22" rx="6" fill="#244d44" />
+    <text x="726" y="63" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700" fill="#fbfaf5">3. END · 끝 복귀 자세</text>
+    <text x="928" y="63" text-anchor="end" font-family="Pretendard, sans-serif" font-size="10" fill="#5e6761">스프링 저항 제어 복귀</text>
+
+    <!-- Reformer Frame & Footbar -->
+    <rect x="666" y="246" width="258" height="12" rx="4" fill="#d9d1c1" stroke="#6b826d" stroke-width="1.2" />
+    <line x1="894" y1="246" x2="876" y2="196" stroke="#244d44" stroke-width="4" stroke-linecap="round" />
+    <circle cx="876" cy="196" r="5" fill="#244d44" />
+    <path d="M 828 242 L 836 238 L 844 246 L 852 238 L 860 246 L 876 242" fill="none" stroke="#244d44" stroke-width="1.8" />
+    <rect x="714" y="232" width="114" height="12" rx="4" fill="#6b826d" fill-opacity="0.45" stroke="#244d44" stroke-width="1.5" />
+    <rect x="738" y="220" width="7" height="12" rx="2" fill="#244d44" />
+
+    <!-- Joint Alignment Lines -->
+    <line x1="814" y1="110" x2="814" y2="258" stroke="#6b826d" stroke-width="1.3" stroke-dasharray="4 3" />
+    <text x="814" y="102" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">무릎 흔들림 없는 정렬 복귀</text>
+
+    <!-- Primary Muscle Highlight (Eccentric Hamstring/Quad Control) -->
+    <ellipse cx="832" cy="192" rx="26" ry="14" transform="rotate(-35 832 192)" fill="url(#muscle-glute-quad)" stroke="#c17c52" stroke-width="1" />
+    <text x="772" y="148" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#9a502d">주요 근육: 하지 원심성 감속 제어</text>
+
+    <!-- Right Limb (Dashed) -->
+    <g stroke="#875641" stroke-width="3.2" stroke-dasharray="6 4" stroke-linecap="round" fill="none">
+      <path d="M 816 224 L 844 166 L 876 194" />
+    </g>
+    <!-- Left Limb & Torso (Solid) -->
+    <g stroke="#244d44" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 748 226 L 814 226" />
+      <path d="M 814 226 L 840 172 L 876 196" />
+      <path d="M 754 226 L 798 226" />
+    </g>
+    <circle cx="728" cy="222" r="10" fill="#e6dec8" stroke="#244d44" stroke-width="2.5" />
+    <circle cx="814" cy="226" r="4.5" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="840" cy="172" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+
+    <!-- Return Vector -->
+    <line x1="726" y1="194" x2="796" y2="194" stroke="#244d44" stroke-width="2.2" marker-end="url(#arrow-return)" />
+    <text x="761" y="184" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#244d44">들숨: 스토퍼 충격 없는 복귀</text>
+    <text x="795" y="288" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">스프링 텐션 끝까지 유지</text>
+  </g>
+
+  <!-- ==================== BOTTOM LEGEND BAR ==================== -->
+  <g transform="translate(20, 324)" font-family="Pretendard, sans-serif" font-size="10" fill="#244d44">
+    <line x1="6" y1="12" x2="28" y2="12" stroke="#244d44" stroke-width="3.5" stroke-linecap="round" />
+    <text x="34" y="16" font-weight="600">좌측 사지 (실선)</text>
+
+    <line x1="124" y1="12" x2="146" y2="12" stroke="#875641" stroke-width="3" stroke-dasharray="5 3" stroke-linecap="round" />
+    <text x="152" y="16" font-weight="600" fill="#875641">우측 사지 (점선)</text>
+
+    <line x1="244" y1="12" x2="266" y2="12" stroke="#6b826d" stroke-width="1.5" stroke-dasharray="4 3" />
+    <circle cx="255" cy="12" r="3.5" fill="#9a502d" />
+    <text x="272" y="16" font-weight="600">관절 정렬축 · 풋바 앵커</text>
+
+    <line x1="396" y1="12" x2="418" y2="12" stroke="#9a502d" stroke-width="2" marker-end="url(#arrow-excursion)" />
+    <text x="426" y="16" font-weight="600" fill="#9a502d">움직임 방향 (캐리지 주행)</text>
+
+    <ellipse cx="564" cy="12" rx="10" ry="6" fill="#c17c52" fill-opacity="0.45" stroke="#9a502d" stroke-width="1" />
+    <text x="580" y="16" font-weight="600" fill="#9a502d">주요 작용 근육 영역</text>
+
+    <text x="920" y="16" text-anchor="end" font-size="9.5" fill="#5e6761">※ 교육용 개념 도해이며 의료·임상 진단을 대체하지 않습니다</text>
+  </g>
+</svg>
