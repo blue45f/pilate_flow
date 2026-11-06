@@ -1,3 +1,4 @@
+import { ClassPlanSummary } from './ClassPlanSummary';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
@@ -303,6 +304,7 @@ export function SequencePlanPreview({
               <dd style={{ margin: 0 }}>{formatSecondsToMMSS(durations.restSec)}</dd>
             </div>
           </dl>
+          <ClassPlanSummary {...snapshot} />
           {selected && (
             <nav className="simulation-item-navigation" aria-label="미리보기 항목 이동">
               <p>

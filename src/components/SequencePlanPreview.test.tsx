@@ -213,3 +213,19 @@ describe('read-only whole class plan preview', () => {
     expect(usePilatesStore.getState().activeSteps).toHaveLength(0);
   });
 });
+
+it('keeps optional class summary on the frozen preview snapshot when the live draft changes', async () => {
+  usePilatesStore.setState({ activeTargetMinutes: 11 });
+  const before = usePilatesStore.getState();
+  const { container } = render(<SequencePlanPreview onClose={vi.fn()} />);
+  expect(screen.queryByRole('region', { name: '수업안 편성 요약' })).not.toBeInTheDocument();
+  const disclosure = container.querySelector<HTMLDetailsElement>('.class-plan-summary')!;
+  disclosure.open = true;
+  fireEvent(disclosure, new Event('toggle'));
+  const summary = await screen.findByRole('region', { name: '수업안 편성 요약' });
+  expect(within(summary).getByText(/목표 수업 시간\(11분\)/)).toBeInTheDocument();
+  expect(usePilatesStore.getState()).toBe(before);
+  act(() => usePilatesStore.setState({ activeTargetMinutes: 50 }));
+  expect(within(summary).getByText(/목표 수업 시간\(11분\)/)).toBeInTheDocument();
+  expect(within(summary).queryByText(/목표\(50분\)/)).not.toBeInTheDocument();
+});

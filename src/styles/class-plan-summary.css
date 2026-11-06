@@ -1,0 +1,45 @@
+.class-plan-summary {
+  border: 1px solid var(--border, #dce5e1);
+  border-radius: 14px;
+  background: var(--surface, #fff);
+  min-width: 0;
+}
+.class-plan-summary summary {
+  min-height: 44px;
+  padding: 14px 16px;
+  cursor: pointer;
+  color: #24594c;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.class-plan-summary summary:focus-visible {
+  outline: 3px solid #4e795e;
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+.class-plan-summary-content {
+  padding: 0 16px 16px;
+  min-width: 0;
+}
+.class-plan-summary-content dl {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+}
+.class-plan-summary-content dt {
+  font-weight: 600;
+}
+.class-plan-summary-content dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.class-plan-summary-content ul {
+  padding-left: 20px;
+}
+.class-plan-summary-content li {
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+.class-plan-summary-content li p {
+  margin-top: 4px;
+}
