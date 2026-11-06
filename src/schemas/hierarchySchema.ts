@@ -98,15 +98,22 @@ export const draftPhotoReferenceSchema = z
       .string()
       .trim()
       .min(1, '사진 참조 경로를 확인해 주세요.')
-      .max(1024)
+      .max(200000)
       .refine(
-        (uri) =>
-          (uri.startsWith('local-photo://') ||
-            uri.startsWith('blob:') ||
-            uri.startsWith('asset://') ||
-            uri.startsWith('file://')) &&
-          !/https?:\/\//i.test(uri),
-        '사진 참조는 외부 전송이 차단된 로컬 참조(local-photo://, blob:, asset://, file://) 형식만 허용됩니다.',
+        (uri) => {
+          const normalizedForExternalCheck = uri.startsWith('data:image/svg+xml')
+            ? uri.replace(/https?:\/\/www\.w3\.org\/2000\/svg/gi, '')
+            : uri;
+          return (
+            (uri.startsWith('local-photo://') ||
+              uri.startsWith('blob:') ||
+              uri.startsWith('asset://') ||
+              uri.startsWith('file://') ||
+              uri.startsWith('data:image/')) &&
+            !/https?:\/\//i.test(normalizedForExternalCheck)
+          );
+        },
+        '사진 참조는 외부 전송이 차단된 로컬 참조(local-photo://, blob:, asset://, file://, data:image/) 형식만 허용됩니다.',
       ),
     captionKo: z.string().trim().max(500).optional(),
     angleTag: z.enum(['setup', 'start-pose', 'end-pose', 'modification']).optional(),
@@ -151,6 +158,9 @@ export const humanMovementDraftContentSchema = z
         hard: textSchema.optional(),
       })
       .optional(),
+    parentDraftId: idSchema.optional(),
+    parentDraftRevision: z.number().int().positive().optional(),
+    variantLabelKo: z.string().trim().max(200).optional(),
     feelLogs: z.array(subjectiveFeelLogSchema).max(500),
     modificationLogs: z.array(draftModificationLogSchema).max(500),
     photoReferences: z.array(draftPhotoReferenceSchema).max(100),
@@ -169,6 +179,8 @@ export const draftRevisionEntrySchema = z
       'modification-added',
       'photo-added',
       'metadata-refined',
+      'variant-updated',
+      'variant-branched',
       'restored-revision',
     ]),
     summaryKo: z.string().trim().min(1).max(1000),
@@ -223,6 +235,9 @@ export const movementSnapshotSchema = z
     sourceOrigin: z.enum(['catalog', 'human-created']).optional(),
     humanDraftId: idSchema.optional(),
     humanDraftRevision: z.number().int().positive().optional(),
+    parentDraftId: idSchema.optional(),
+    parentDraftRevision: z.number().int().positive().optional(),
+    variantLabelKo: z.string().trim().max(200).optional(),
     ideaLineSnapshot: textSchema.optional(),
     feelLogsSnapshot: z.array(subjectiveFeelLogSchema).optional(),
     modificationLogsSnapshot: z.array(draftModificationLogSchema).optional(),

@@ -30,6 +30,7 @@ import type {
   ApparatusType,
   ClassBlockCategory,
   DifficultyLevel,
+  ExerciseLayers,
   LayerMode,
   PropType,
   StepSideMode,
@@ -100,6 +101,9 @@ function extractContentSnapshot(source: HumanMovementDraftContent): HumanMovemen
     cues: source.cues ? [...source.cues] : undefined,
     precautions: source.precautions,
     layers: source.layers ? { ...source.layers } : undefined,
+    parentDraftId: source.parentDraftId,
+    parentDraftRevision: source.parentDraftRevision,
+    variantLabelKo: source.variantLabelKo,
     feelLogs: structuredClone(source.feelLogs) as SubjectiveFeelLog[],
     modificationLogs: structuredClone(source.modificationLogs) as DraftModificationLog[],
     photoReferences: structuredClone(source.photoReferences) as DraftPhotoReference[],
@@ -495,6 +499,12 @@ export function refineHumanDraftMetadata(
     layers: sanitizedPatch.layers
       ? { ...(draft.layers ?? {}), ...sanitizedPatch.layers }
       : draft.layers,
+    parentDraftId: sanitizedPatch.parentDraftId ?? draft.parentDraftId,
+    parentDraftRevision: sanitizedPatch.parentDraftRevision ?? draft.parentDraftRevision,
+    variantLabelKo:
+      typeof sanitizedPatch.variantLabelKo === 'string'
+        ? sanitizedPatch.variantLabelKo.trim() || undefined
+        : draft.variantLabelKo,
     feelLogs: draft.feelLogs,
     modificationLogs: draft.modificationLogs,
     photoReferences: draft.photoReferences,
@@ -536,6 +546,241 @@ export function refineHumanDraftMetadata(
   deepFreeze(updated.revisionHistory);
   deepFreeze(updated.safetyBoundary);
   return updated;
+}
+
+/**
+ * Updates Easy/Standard/Hard variant layers and/or `variantLabelKo` on a draft without requiring
+ * any anatomy or classification fields, recording a `'variant-updated'` revision entry.
+ */
+export function updateHumanDraftVariants(
+  draft: HumanMovementDraft,
+  input: {
+    easy?: string;
+    standard?: string;
+    hard?: string;
+    variantLabelKo?: string;
+    summaryKo?: string;
+    now?: string;
+  },
+): HumanMovementDraft {
+  const hasEasy = typeof input.easy === 'string' && input.easy.trim().length > 0;
+  const hasStandard = typeof input.standard === 'string' && input.standard.trim().length > 0;
+  const hasHard = typeof input.hard === 'string' && input.hard.trim().length > 0;
+  const hasLabel =
+    typeof input.variantLabelKo === 'string' && input.variantLabelKo.trim().length > 0;
+
+  if (!hasEasy && !hasStandard && !hasHard && !hasLabel) {
+    throw new Error(
+      '최소 한 가지 이상의 난이도/변형(Easy/Standard/Hard 또는 변형 라벨) 내용을 입력해 주세요.',
+    );
+  }
+
+  const timestamp = input.now ?? new Date().toISOString();
+  const nextRevision = draft.revision + 1;
+
+  const mergedLayers: Partial<ExerciseLayers> = stripUndefined({
+    easy:
+      input.easy !== undefined
+        ? input.easy.trim() || undefined
+        : draft.layers?.easy,
+    standard:
+      input.standard !== undefined
+        ? input.standard.trim() || undefined
+        : draft.layers?.standard,
+    hard:
+      input.hard !== undefined
+        ? input.hard.trim() || undefined
+        : draft.layers?.hard,
+  });
+
+  const hasMergedLayers =
+    mergedLayers.easy !== undefined ||
+    mergedLayers.standard !== undefined ||
+    mergedLayers.hard !== undefined;
+
+  const resolvedVariantLabel =
+    input.variantLabelKo !== undefined
+      ? input.variantLabelKo.trim() || undefined
+      : draft.variantLabelKo;
+
+  const nextContent = extractContentSnapshot({
+    ...draft,
+    layers: hasMergedLayers ? mergedLayers : undefined,
+    variantLabelKo: resolvedVariantLabel,
+  });
+
+  const nextStage = computeCompletenessStage(nextContent, draft.completenessStage);
+
+  const revisionEntry: DraftRevisionEntry = deepFreeze({
+    revision: nextRevision,
+    parentRevision: draft.revision,
+    savedAt: timestamp,
+    changeType: 'variant-updated',
+    summaryKo:
+      input.summaryKo?.trim() ||
+      (resolvedVariantLabel
+        ? `동작 난이도·변형 레이어 업데이트 (${resolvedVariantLabel})`
+        : '동작 난이도·변형(Easy/Standard/Hard) 레이어 업데이트'),
+    contentSnapshot: extractContentSnapshot(nextContent),
+  });
+
+  const updated = humanMovementDraftSchema.parse(
+    stripUndefined({
+      id: draft.id,
+      sourceOrigin: 'human-created' as const,
+      ...nextContent,
+      completenessStage: nextStage,
+      revision: nextRevision,
+      revisionHistory: [...draft.revisionHistory, revisionEntry],
+      safetyBoundary: draft.safetyBoundary,
+      createdAt: draft.createdAt,
+      updatedAt: timestamp,
+    }),
+  );
+
+  deepFreeze(updated.revisionHistory);
+  deepFreeze(updated.safetyBoundary);
+  return updated;
+}
+
+/**
+ * Branches a new independent `HumanMovementDraft` (`revision: 1`) from `sourceDraft`,
+ * recording `parentDraftId: sourceDraft.id`, `parentDraftRevision: sourceDraft.revision`,
+ * and `variantLabelKo`, without mutating `sourceDraft`.
+ */
+export function forkHumanDraftVariant(
+  sourceDraft: HumanMovementDraft,
+  input: {
+    id?: string;
+    variantLabelKo: string;
+    ideaLine?: string;
+    workingNameKo?: string;
+    apparatus?: ApparatusType;
+    sectionRole?: ClassSectionRole;
+    blockCategory?: ClassBlockCategory;
+    level?: DifficultyLevel;
+    defaultDurationMin?: number;
+    defaultRepetitions?: number;
+    defaultSets?: number;
+    isUnilateral?: boolean;
+    sideMode?: StepSideMode;
+    springs?: string;
+    layers?: Partial<ExerciseLayers>;
+    now?: string;
+  },
+): HumanMovementDraft {
+  const trimmedVariantLabel =
+    typeof input.variantLabelKo === 'string' ? input.variantLabelKo.trim() : '';
+  if (!trimmedVariantLabel) {
+    throw new Error('파생 변형 동작의 구분 라벨(variantLabelKo)을 입력해 주세요.');
+  }
+
+  const resolvedIdeaLine =
+    input.ideaLine !== undefined ? input.ideaLine.trim() : sourceDraft.ideaLine.trim();
+  if (!resolvedIdeaLine) {
+    throw new Error('최소 한 줄의 동작 아이디어를 입력해 주세요.');
+  }
+
+  const timestamp = input.now ?? new Date().toISOString();
+  const variantDraftId =
+    input.id?.trim() ||
+    `${sourceDraft.id}-variant-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+  if (variantDraftId === sourceDraft.id) {
+    throw new Error('파생 변형 동작의 ID는 원본 초안 ID와 달라야 합니다.');
+  }
+
+  const mergedLayers: Partial<ExerciseLayers> = stripUndefined({
+    easy:
+      input.layers?.easy !== undefined
+        ? input.layers.easy.trim() || undefined
+        : sourceDraft.layers?.easy,
+    standard:
+      input.layers?.standard !== undefined
+        ? input.layers.standard.trim() || undefined
+        : sourceDraft.layers?.standard,
+    hard:
+      input.layers?.hard !== undefined
+        ? input.layers.hard.trim() || undefined
+        : sourceDraft.layers?.hard,
+  });
+
+  const hasMergedLayers =
+    mergedLayers.easy !== undefined ||
+    mergedLayers.standard !== undefined ||
+    mergedLayers.hard !== undefined;
+
+  const branchedContent = extractContentSnapshot(
+    stripUndefined({
+      ideaLine: resolvedIdeaLine,
+      workingNameKo:
+        input.workingNameKo !== undefined
+          ? input.workingNameKo.trim() || undefined
+          : sourceDraft.workingNameKo,
+      apparatus: input.apparatus ?? sourceDraft.apparatus,
+      requiredEquipment: sourceDraft.requiredEquipment
+        ? [...sourceDraft.requiredEquipment]
+        : undefined,
+      props: sourceDraft.props ? [...sourceDraft.props] : undefined,
+      blockCategory: input.blockCategory ?? sourceDraft.blockCategory,
+      sectionRole: input.sectionRole ?? sourceDraft.sectionRole,
+      level: input.level ?? sourceDraft.level,
+      defaultDurationMin: input.defaultDurationMin ?? sourceDraft.defaultDurationMin,
+      defaultRepetitions: input.defaultRepetitions ?? sourceDraft.defaultRepetitions,
+      defaultSets: input.defaultSets ?? sourceDraft.defaultSets,
+      isUnilateral: input.isUnilateral ?? sourceDraft.isUnilateral,
+      sideMode: input.sideMode ?? sourceDraft.sideMode,
+      springs:
+        input.springs !== undefined ? input.springs.trim() || undefined : sourceDraft.springs,
+      box: sourceDraft.box,
+      footbar: sourceDraft.footbar,
+      headrest: sourceDraft.headrest,
+      bodyPosition: sourceDraft.bodyPosition,
+      spinalPlanes: sourceDraft.spinalPlanes ? [...sourceDraft.spinalPlanes] : undefined,
+      targetMuscles: sourceDraft.targetMuscles ? [...sourceDraft.targetMuscles] : undefined,
+      breathPattern: sourceDraft.breathPattern,
+      cues: sourceDraft.cues ? [...sourceDraft.cues] : undefined,
+      precautions: sourceDraft.precautions,
+      layers: hasMergedLayers ? mergedLayers : undefined,
+      parentDraftId: sourceDraft.id,
+      parentDraftRevision: sourceDraft.revision,
+      variantLabelKo: trimmedVariantLabel,
+      feelLogs: structuredClone(sourceDraft.feelLogs) as SubjectiveFeelLog[],
+      modificationLogs: structuredClone(sourceDraft.modificationLogs) as DraftModificationLog[],
+      photoReferences: structuredClone(sourceDraft.photoReferences) as DraftPhotoReference[],
+    }),
+  );
+
+  const stage = computeCompletenessStage(branchedContent);
+
+  const initialRevisionEntry: DraftRevisionEntry = deepFreeze({
+    revision: 1,
+    savedAt: timestamp,
+    changeType: 'variant-branched',
+    summaryKo: `원본 초안(${sourceDraft.id} v${sourceDraft.revision})에서 변형 분기: ${trimmedVariantLabel}`,
+    contentSnapshot: extractContentSnapshot(branchedContent),
+  });
+
+  const safetyBoundary = movementSafetyAndEfficacyBoundarySchema.parse(
+    structuredClone(sourceDraft.safetyBoundary),
+  );
+
+  const candidateDraft = stripUndefined({
+    ...branchedContent,
+    id: variantDraftId,
+    sourceOrigin: 'human-created' as const,
+    completenessStage: stage,
+    revision: 1,
+    revisionHistory: [initialRevisionEntry],
+    safetyBoundary,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  });
+
+  const parsed = humanMovementDraftSchema.parse(candidateDraft);
+  deepFreeze(parsed.revisionHistory);
+  deepFreeze(parsed.safetyBoundary);
+  return parsed;
 }
 
 /**
@@ -751,6 +996,9 @@ export function createMovementSnapshotFromHumanDraft(
     sourceOrigin: 'human-created' as const,
     humanDraftId: draft.id,
     humanDraftRevision: draft.revision,
+    parentDraftId: draft.parentDraftId,
+    parentDraftRevision: draft.parentDraftRevision,
+    variantLabelKo: draft.variantLabelKo,
     ideaLineSnapshot: draft.ideaLine,
     feelLogsSnapshot: structuredClone(draft.feelLogs) as SubjectiveFeelLog[],
     modificationLogsSnapshot: structuredClone(draft.modificationLogs) as DraftModificationLog[],
@@ -1275,6 +1523,159 @@ export function createHumanDraftRepository(options?: {
             pendingOverrides,
           },
           patch.now,
+        );
+      }
+    },
+
+    updateVariants(
+      draftId: string,
+      input: Parameters<typeof updateHumanDraftVariants>[1],
+    ): HumanDraftOperationResult {
+      const existing = drafts.find((item) => item.id === draftId);
+      if (!existing) {
+        return recordFailure(
+          new Error(`대상 초안(${draftId})을 찾을 수 없습니다.`),
+          '대상 초안을 찾을 수 없습니다.',
+          {
+            draftId,
+            workingNameKo: input.variantLabelKo,
+          },
+          input.now,
+        );
+      }
+
+      try {
+        const updated = updateHumanDraftVariants(existing, input);
+        const nextDrafts = drafts.map((item) => (item.id === draftId ? updated : item));
+        drafts = nextDrafts;
+
+        const storedOk = persistToStorage(
+          nextDrafts,
+          {
+            draftId,
+            ideaLine: existing.ideaLine,
+            workingNameKo: input.variantLabelKo ?? existing.workingNameKo,
+          },
+          input.now,
+        );
+
+        if (!storedOk) {
+          return {
+            ok: false,
+            draft: structuredClone(updated),
+            drafts: structuredClone(drafts),
+            preservedInput: structuredClone(preservedInput),
+            errorKo: lastErrorKo,
+          };
+        }
+
+        preservedInput = null;
+        lastErrorKo = null;
+        return {
+          ok: true,
+          draft: structuredClone(updated),
+          drafts: structuredClone(drafts),
+          preservedInput: null,
+          errorKo: null,
+        };
+      } catch (error) {
+        return recordFailure(
+          error,
+          '초안 변형(Easy/Standard/Hard) 업데이트에 실패했습니다.',
+          {
+            draftId,
+            ideaLine: existing.ideaLine,
+            workingNameKo: input.variantLabelKo ?? existing.workingNameKo,
+          },
+          input.now,
+        );
+      }
+    },
+
+    forkVariant(
+      sourceDraftId: string,
+      input: Parameters<typeof forkHumanDraftVariant>[1],
+    ): HumanDraftOperationResult {
+      const sourceDraft = drafts.find((item) => item.id === sourceDraftId);
+      const pendingOverrides: DraftClassLinkOverrides = stripUndefined({
+        workingNameKo: input.workingNameKo,
+        apparatus: input.apparatus,
+        sectionRole: input.sectionRole,
+        blockCategory: input.blockCategory,
+        level: input.level,
+        durationMin: input.defaultDurationMin,
+        repetitions: input.defaultRepetitions,
+        sets: input.defaultSets,
+        isUnilateral: input.isUnilateral,
+        sideMode: input.sideMode,
+        springs: input.springs,
+      });
+
+      if (!sourceDraft) {
+        return recordFailure(
+          new Error(`원본 초안(${sourceDraftId})을 찾을 수 없습니다.`),
+          '원본 초안을 찾을 수 없습니다.',
+          {
+            draftId: input.id ?? sourceDraftId,
+            ideaLine: input.ideaLine,
+            workingNameKo: input.workingNameKo ?? input.variantLabelKo,
+            pendingOverrides,
+          },
+          input.now,
+        );
+      }
+
+      try {
+        const branched = forkHumanDraftVariant(sourceDraft, input);
+        const existingIdx = drafts.findIndex((item) => item.id === branched.id);
+        const nextDrafts =
+          existingIdx >= 0
+            ? drafts.map((item, idx) => (idx === existingIdx ? branched : item))
+            : [...drafts, branched];
+
+        drafts = nextDrafts;
+
+        const storedOk = persistToStorage(
+          nextDrafts,
+          {
+            draftId: branched.id,
+            ideaLine: branched.ideaLine,
+            workingNameKo: input.workingNameKo ?? input.variantLabelKo,
+            pendingOverrides,
+          },
+          input.now,
+        );
+
+        if (!storedOk) {
+          return {
+            ok: false,
+            draft: structuredClone(branched),
+            drafts: structuredClone(drafts),
+            preservedInput: structuredClone(preservedInput),
+            errorKo: lastErrorKo,
+          };
+        }
+
+        preservedInput = null;
+        lastErrorKo = null;
+        return {
+          ok: true,
+          draft: structuredClone(branched),
+          drafts: structuredClone(drafts),
+          preservedInput: null,
+          errorKo: null,
+        };
+      } catch (error) {
+        return recordFailure(
+          error,
+          '파생 변형 동작 분기에 실패했습니다.',
+          {
+            draftId: input.id ?? sourceDraftId,
+            ideaLine: input.ideaLine ?? sourceDraft.ideaLine,
+            workingNameKo: input.workingNameKo ?? input.variantLabelKo,
+            pendingOverrides,
+          },
+          input.now,
         );
       }
     },

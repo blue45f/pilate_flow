@@ -1153,6 +1153,196 @@ export function adjustReusableBlockItemDuration(
   return cloneReusableBlock(reusableBlockSchema.parse(candidate) as ReusableBlock);
 }
 
+export interface ReusableBlockTimingSummary {
+  blockId: string;
+  blockVersion: number;
+  itemCount: number;
+  unilateralItemCount: number;
+  totalDurationMin: number;
+  totalSec: number;
+  movementSec: number;
+  explanationSec: number;
+  transitionSec: number;
+  itemBreakdowns: Array<{
+    itemId: string;
+    order: number;
+    exerciseId: string;
+    nameKo: string;
+    durationMin: number;
+    totalSec: number;
+    movementSec: number;
+    explanationSec: number;
+    transitionSec: number;
+    repetitions?: number;
+    sets?: number;
+    sideMode: StepSideMode;
+  }>;
+}
+
+export function summarizeReusableBlockTiming(
+  block: ReusableBlock,
+  exercises?: readonly PilatesExercise[],
+  humanDrafts?:
+    | readonly HumanMovementDraft[]
+    | { humanDrafts?: readonly HumanMovementDraft[] },
+): ReusableBlockTimingSummary {
+  const exerciseMap = exercises ? new Map(exercises.map((ex) => [ex.id, ex])) : undefined;
+  const draftList = Array.isArray(humanDrafts)
+    ? humanDrafts
+    : (humanDrafts as { humanDrafts?: readonly HumanMovementDraft[] } | undefined)?.humanDrafts;
+  const draftMap = draftList ? new Map(draftList.map((d) => [d.id, d])) : undefined;
+
+  const sortedItems = [...block.items].sort((a, b) => a.order - b.order);
+  let unilateralItemCount = 0;
+  let totalSec = 0;
+  let movementSec = 0;
+  let explanationSec = 0;
+  let transitionSec = 0;
+
+  const itemBreakdowns = sortedItems.map((item, idx) => {
+    const snap = item.exerciseSnapshot;
+    const catalogEx = exerciseMap?.get(item.exerciseId);
+    const matchedDraft = draftMap?.get(item.humanDraftId ?? item.exerciseId);
+
+    const nameKo =
+      snap?.nameKo?.trim() ||
+      catalogEx?.nameKo?.trim() ||
+      matchedDraft?.workingNameKo?.trim() ||
+      matchedDraft?.ideaLine?.trim() ||
+      item.exerciseId;
+
+    const resolvedIsUnilateral =
+      snap?.isUnilateral ??
+      catalogEx?.isUnilateral ??
+      matchedDraft?.isUnilateral ??
+      (item.sideMode !== undefined && item.sideMode !== 'together');
+
+    const sideMode: StepSideMode =
+      item.sideMode ??
+      matchedDraft?.sideMode ??
+      (resolvedIsUnilateral ? 'left-then-right' : 'together');
+
+    if (resolvedIsUnilateral || sideMode !== 'together') {
+      unilateralItemCount += 1;
+    }
+
+    const itemTotalSec = Math.max(0, Math.round(item.durationMin * 60));
+    const itemExplanationSec = Math.max(0, Math.round(item.explanationSec ?? 0));
+    const itemTransitionSec = Math.max(0, Math.round(item.transitionSec ?? 0));
+    const itemMovementSec = Math.max(0, itemTotalSec - itemExplanationSec - itemTransitionSec);
+
+    totalSec += itemTotalSec;
+    movementSec += itemMovementSec;
+    explanationSec += itemExplanationSec;
+    transitionSec += itemTransitionSec;
+
+    return {
+      itemId: item.itemId,
+      order: item.order ?? idx + 1,
+      exerciseId: item.exerciseId,
+      nameKo,
+      durationMin: item.durationMin,
+      totalSec: itemTotalSec,
+      movementSec: itemMovementSec,
+      explanationSec: itemExplanationSec,
+      transitionSec: itemTransitionSec,
+      repetitions:
+        item.repetitions ??
+        snap?.defaultRepetitions ??
+        (catalogEx as HierarchyPilatesExercise | undefined)?.defaultRepetitions ??
+        matchedDraft?.defaultRepetitions,
+      sets:
+        item.sets ??
+        snap?.defaultSets ??
+        (catalogEx as HierarchyPilatesExercise | undefined)?.defaultSets ??
+        matchedDraft?.defaultSets,
+      sideMode,
+    };
+  });
+
+  const totalDurationMin = Number((totalSec / 60).toFixed(4));
+
+  return {
+    blockId: block.id,
+    blockVersion: block.version,
+    itemCount: sortedItems.length,
+    unilateralItemCount,
+    totalDurationMin,
+    totalSec,
+    movementSec,
+    explanationSec,
+    transitionSec,
+    itemBreakdowns,
+  };
+}
+
+export function updateReusableBlockItemOptions(
+  block: ReusableBlock,
+  itemIndex: number,
+  patch: {
+    durationMin?: number;
+    explanationSec?: number;
+    transitionSec?: number;
+    repetitions?: number;
+    sets?: number;
+    sideMode?: StepSideMode;
+    selectedLayer?: LayerMode;
+    customSpringOverride?: string;
+    instructorNote?: string;
+  },
+  now?: string,
+): ReusableBlock {
+  if (itemIndex < 0 || itemIndex >= block.items.length) {
+    throw new Error(`유효하지 않은 블록 항목 인덱스입니다: ${itemIndex}`);
+  }
+  if (
+    patch.durationMin !== undefined &&
+    (!Number.isFinite(patch.durationMin) || patch.durationMin < 0.5 || patch.durationMin > 20)
+  ) {
+    throw new Error('블록 동작 시간은 0.5분 이상 20분 이하로 입력해 주세요.');
+  }
+
+  const timestamp = now ?? new Date().toISOString();
+  const nextItems: ReusableBlockItem[] = block.items.map((item, idx) => {
+    const clonedSnapshot = item.exerciseSnapshot
+      ? deepFreeze(structuredClone(item.exerciseSnapshot))
+      : undefined;
+
+    if (idx !== itemIndex) {
+      return {
+        ...item,
+        order: idx + 1,
+        exerciseSnapshot: clonedSnapshot,
+      };
+    }
+
+    return {
+      ...item,
+      order: idx + 1,
+      durationMin: patch.durationMin !== undefined ? patch.durationMin : item.durationMin,
+      explanationSec: 'explanationSec' in patch ? patch.explanationSec : item.explanationSec,
+      transitionSec: 'transitionSec' in patch ? patch.transitionSec : item.transitionSec,
+      repetitions: 'repetitions' in patch ? patch.repetitions : item.repetitions,
+      sets: 'sets' in patch ? patch.sets : item.sets,
+      sideMode: 'sideMode' in patch ? patch.sideMode : item.sideMode,
+      selectedLayer: patch.selectedLayer !== undefined ? patch.selectedLayer : item.selectedLayer,
+      customSpringOverride:
+        'customSpringOverride' in patch ? patch.customSpringOverride : item.customSpringOverride,
+      instructorNote: 'instructorNote' in patch ? patch.instructorNote : item.instructorNote,
+      exerciseSnapshot: clonedSnapshot,
+    };
+  });
+
+  const candidate: ReusableBlock = {
+    ...block,
+    items: nextItems,
+    version: block.version + 1,
+    updatedAt: timestamp,
+  };
+
+  return cloneReusableBlock(reusableBlockSchema.parse(candidate) as ReusableBlock);
+}
+
 function allocateScaledDurationsMin(
   items: ReadonlyArray<{
     durationMin: number;

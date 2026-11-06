@@ -5,8 +5,11 @@ import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { createEmptyInstructorSchedule } from '../types/instructorSchedule';
 import {
+  captureCurrentClassHierarchySnapshot,
   clearIdeaWorkingBuffer,
+  getSavedReusableBlocks,
   isMovementIdeaExercise,
+  moveIdeaReusableBlockItem,
   readIdeaWorkingBuffer,
   readMovementIdeaDraft,
   resetMovementIdeaStateForTests,
@@ -259,5 +262,215 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
         item.cues.includes('연속 클릭 중복 방지 테스트 동작 아이디어'),
       );
     expect(matching).toHaveLength(1);
+  });
+
+  it('supports progressive variant & version management: Easy/Hard variation notes, revision history rollback, and variant forking without altering original draft', () => {
+    render(<App />);
+    const quickNav = screen.getByRole('navigation', { name: '핵심 빠른 메뉴' });
+    fireEvent.click(within(quickNav).getByRole('button', { name: '새 동작 메모' }));
+
+    const dialog = screen.getByRole('dialog', { name: /새 동작 메모/ });
+
+    // 1. Save v1 with 1-line idea only
+    fireEvent.change(within(dialog).getByLabelText('한 줄 아이디어'), {
+      target: { value: 'v1 원본 아이디어: 롱박스 위에서 한 다리 뻗으며 골반 안정화' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: '초안 바로 저장' }));
+
+    const originalEx = usePilatesStore.getState().exercises.find(isMovementIdeaExercise)!;
+    expect(readMovementIdeaDraft(originalEx)?.revision).toBe(1);
+
+    // 2. Update idea and add Easy/Hard variations -> creates new revision(s)
+    fireEvent.change(within(dialog).getByLabelText('한 줄 아이디어'), {
+      target: { value: 'v2 수정 아이디어: 롱박스 위에서 양팔 앞으로 뻗으며 한 다리 신전' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('쉬운 변형 메모'), {
+      target: { value: '발끝을 바닥에 살짝 터치한 상태로 가동범위 절반만 진행' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('심화 변형 메모'), {
+      target: { value: '정점에서 3초 홀드 후 호흡 2회 유지' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: '수정 저장' }));
+
+    const afterUpdateMeta = readMovementIdeaDraft(
+      usePilatesStore.getState().exercises.find((item) => item.id === originalEx.id)!,
+    )!;
+    expect(afterUpdateMeta.revision).toBeGreaterThanOrEqual(2);
+    expect(afterUpdateMeta.easyVariation).toContain('가동범위 절반만 진행');
+    expect(afterUpdateMeta.hardVariation).toContain('3초 홀드');
+
+    // 3. Non-destructive rollback to v1 from revision history UI
+    const revisionBox = within(dialog).getByLabelText('초안 버전 이력');
+    expect(revisionBox).toBeInTheDocument();
+    fireEvent.click(within(revisionBox).getByRole('button', { name: 'v1 버전으로 복원' }));
+
+    expect(within(dialog).getByLabelText('한 줄 아이디어')).toHaveValue(
+      'v1 원본 아이디어: 롱박스 위에서 한 다리 뻗으며 골반 안정화',
+    );
+    const afterRestoreMeta = readMovementIdeaDraft(
+      usePilatesStore.getState().exercises.find((item) => item.id === originalEx.id)!,
+    )!;
+    expect(afterRestoreMeta.ideaLine).toBe(
+      'v1 원본 아이디어: 롱박스 위에서 한 다리 뻗으며 골반 안정화',
+    );
+    // All previous revisions are preserved non-destructively
+    expect(afterRestoreMeta.revisionHistory?.length).toBeGreaterThanOrEqual(3);
+
+    // 4. Fork a new independent variant draft from the current draft
+    fireEvent.change(within(dialog).getByLabelText('변형 구분 이름'), {
+      target: { value: '초보자 지지면 확장 변형' },
+    });
+    fireEvent.click(within(dialog).getByTestId('idea-fork-variant'));
+
+    const allIdeaExercises = usePilatesStore.getState().exercises.filter(isMovementIdeaExercise);
+    expect(allIdeaExercises).toHaveLength(2);
+    const forkedEx = allIdeaExercises.find((item) => item.id !== originalEx.id)!;
+    const forkedMeta = readMovementIdeaDraft(forkedEx)!;
+    expect(forkedMeta.parentDraftId).toBe(originalEx.id);
+    expect(forkedMeta.variantLabelKo).toBe('초보자 지지면 확장 변형');
+    expect(forkedMeta.revision).toBe(1);
+
+    // Modifying the forked variant does not alter the original draft
+    fireEvent.change(within(dialog).getByLabelText('한 줄 아이디어'), {
+      target: { value: '파생 변형 전용 아이디어: 핸드스트랩을 잡고 보조 지지' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: '수정 저장' }));
+
+    const untouchedOriginal = usePilatesStore
+      .getState()
+      .exercises.find((item) => item.id === originalEx.id)!;
+    expect(readMovementIdeaDraft(untouchedOriginal)?.ideaLine).toBe(
+      'v1 원본 아이디어: 롱박스 위에서 한 다리 뻗으며 골반 안정화',
+    );
+  });
+
+  it('supports progressive 4-tier hierarchy (동작 -> 재사용 블록 -> 시퀀스 -> 수업), sub-timing summation, order/reps/L-R, block copy isolation, and past class snapshot immutability', () => {
+    render(<App />);
+    const quickNav = screen.getByRole('navigation', { name: '핵심 빠른 메뉴' });
+    fireEvent.click(within(quickNav).getByRole('button', { name: '새 동작 메모' }));
+
+    const dialog = screen.getByRole('dialog', { name: /새 동작 메모/ });
+
+    // 1. Progressive UX check: hierarchy section is collapsed by default so beginners only see 1-line idea
+    const timeBreakdownRegion = within(dialog).getByTestId('idea-time-breakdown');
+    const hierarchyDetails = timeBreakdownRegion.closest('details');
+    expect(hierarchyDetails).not.toHaveAttribute('open');
+
+    // 2. Configure movement #1 with sub-timing, repetitions, sets, and left-then-right sideMode
+    fireEvent.change(within(dialog).getByLabelText('한 줄 아이디어'), {
+      target: { value: '사이드 라잉 한 다리 서클 감각 익히기' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('임시 이름'), {
+      target: { value: '사이드 서클 초안' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('예상 시간 (분)'), {
+      target: { value: '4' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('설명 시간 (초)'), {
+      target: { value: '25' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('전환 시간 (초)'), {
+      target: { value: '15' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('반복 횟수'), {
+      target: { value: '8' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('세트 수'), {
+      target: { value: '2' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('좌우 수행 방식'), {
+      target: { value: 'left-then-right' },
+    });
+
+    // Verify live sub-timing summation: 4min (240s) = 200s movement + 25s explanation + 15s transition
+    expect(timeBreakdownRegion).toHaveTextContent('총 240초 (4분)');
+    expect(timeBreakdownRegion).toHaveTextContent('순수 동작 200초 + 설명 25초 + 전환 15초');
+
+    // 3. Create a ReusableBlock from movement #1
+    fireEvent.change(within(dialog).getByLabelText('재사용 블록 이름'), {
+      target: { value: '고관절·코어 연결 블록' },
+    });
+    fireEvent.click(within(dialog).getByTestId('create-reusable-block-btn'));
+
+    expect(getSavedReusableBlocks()).toHaveLength(1);
+    const createdBlock = getSavedReusableBlocks()[0]!;
+    expect(createdBlock.title).toBe('고관절·코어 연결 블록');
+    expect(createdBlock.version).toBe(1);
+
+    // 4. Create movement #2 and append it to the same ReusableBlock
+    fireEvent.click(within(dialog).getByRole('button', { name: /새 초안 쓰기/ }));
+    fireEvent.change(within(dialog).getByLabelText('한 줄 아이디어'), {
+      target: { value: '브릿징 정점에서 골반 좌우 틸트 컨트롤' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('임시 이름'), {
+      target: { value: '브릿징 틸트 초안' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('예상 시간 (분)'), {
+      target: { value: '3' },
+    });
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: '고관절·코어 연결 블록 블록에 현재 동작 추가' }),
+    );
+
+    const updatedBlock = getSavedReusableBlocks()[0]!;
+    expect(updatedBlock.version).toBe(2);
+    expect(updatedBlock.items).toHaveLength(2);
+
+    // Verify block sub-timing summation in UI: 4min + 3min = 7min (420s)
+    const blockList = within(dialog).getByTestId('saved-reusable-blocks');
+    expect(blockList).toHaveTextContent('총 7분 (420초)');
+
+    // 5. Copy the ReusableBlock into the current class sequence (Sequence tier)
+    fireEvent.click(
+      within(dialog).getByRole('button', {
+        name: '고관절·코어 연결 블록 수업 시퀀스에 블록 복사해 넣기',
+      }),
+    );
+
+    const stepsAfterBlockInsert = usePilatesStore.getState().activeSteps;
+    expect(stepsAfterBlockInsert).toHaveLength(2);
+    expect(stepsAfterBlockInsert[0]?.sourceBlockId).toBe(updatedBlock.id);
+    expect(stepsAfterBlockInsert[0]?.sourceBlockVersion).toBe(2);
+    expect(stepsAfterBlockInsert[0]?.blockInstanceId).toBeTruthy();
+    expect(stepsAfterBlockInsert[0]?.sideMode).toBe('left-then-right');
+    expect(stepsAfterBlockInsert[0]?.repetitions).toBe(8);
+    expect(stepsAfterBlockInsert[0]?.sets).toBe(2);
+
+    // 6. Capture an immutable ClassSequenceSnapshot (Class tier — past class record)
+    const pastClassSnapshot = captureCurrentClassHierarchySnapshot('오전 10시 고관절 집중 수업');
+    expect(Object.isFrozen(pastClassSnapshot)).toBe(true);
+    expect(pastClassSnapshot.steps).toHaveLength(2);
+    expect(pastClassSnapshot.timeBreakdown.totalSec).toBe(420);
+    const firstStepExerciseId = pastClassSnapshot.steps[0]!.exerciseId;
+    const originalSnapshotName = pastClassSnapshot.exerciseSnapshots[firstStepExerciseId]!.nameKo;
+
+    // 7. Mutate the ReusableBlock template order AND mutate the source movement draft afterwards
+    act(() => {
+      moveIdeaReusableBlockItem(updatedBlock.id, 1, 'up');
+      saveMovementIdeaToStore({
+        existingExerciseId: firstStepExerciseId,
+        ideaLine: '완전히 바뀐 이후 아이디어 텍스트',
+        workingTitle: '나중에 바뀐 동작 이름',
+        durationMin: 10,
+      });
+    });
+
+    // Verify block template is now v3 with swapped order
+    const blockAfterReorder = getSavedReusableBlocks()[0]!;
+    expect(blockAfterReorder.version).toBe(3);
+    expect(blockAfterReorder.items[0]?.exerciseId).not.toBe(firstStepExerciseId);
+
+    // Verify sequence steps already inserted in activeSteps were NOT reordered by block template edit
+    expect(usePilatesStore.getState().activeSteps[0]?.exerciseId).toBe(firstStepExerciseId);
+
+    // Verify past class snapshot is 100% untouched (immutability guarantee)
+    expect(pastClassSnapshot.steps[0]?.exerciseId).toBe(firstStepExerciseId);
+    expect(pastClassSnapshot.steps[0]?.durationMin).toBe(4);
+    expect(pastClassSnapshot.exerciseSnapshots[firstStepExerciseId]?.nameKo).toBe(
+      originalSnapshotName,
+    );
+    expect(pastClassSnapshot.exerciseSnapshots[firstStepExerciseId]?.ideaLineSnapshot).toBe(
+      '사이드 라잉 한 다리 서클 감각 익히기',
+    );
   });
 });
