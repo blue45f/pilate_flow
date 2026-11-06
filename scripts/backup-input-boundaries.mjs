@@ -179,6 +179,7 @@ function main() {
         target: corpusCase.target,
         classification: corpusCase.expectedClassification,
         defectId: corpusCase.defectId || null,
+        resolvedDefectId: corpusCase.resolvedDefectId || null,
         expectedOutcome: corpusCase.expectedOutcome,
         actualOutcome: corpusCase.actualOutcome || corpusCase.expectedOutcome,
         vitestStatus: matchedAssertion?.status || 'missing',
@@ -212,6 +213,7 @@ function main() {
     const reproducedDefects = caseResults.filter(
       (c) => c.classification === 'REPRODUCED_DEFECT',
     );
+    const resolvedDefects = caseResults.filter((c) => Boolean(c.resolvedDefectId));
     const negativeControls = caseResults.filter(
       (c) => c.classification === 'PASS_NEGATIVE_CONTROL',
     );
@@ -223,9 +225,15 @@ function main() {
     const withinResourceBounds =
       elapsedMs <= corpus.bounds.maxSuiteDurationMs &&
       heapDeltaMb <= corpus.bounds.maxRunnerHeapDeltaMb;
+    const reproducedDefectsCheckOk =
+      !options.failOnReproducedDefects || reproducedDefects.length === 0;
 
     const overallStatus =
-      vitestProc.status === 0 && allCasesVerified && negativeControlOk && withinResourceBounds
+      vitestProc.status === 0 &&
+      allCasesVerified &&
+      negativeControlOk &&
+      withinResourceBounds &&
+      reproducedDefectsCheckOk
         ? 'PASS'
         : 'FAIL';
 
@@ -246,6 +254,8 @@ function main() {
         enforcedGuardsTotal: enforcedGuards.length,
         reproducedDefectsDocumented: reproducedDefects.filter((c) => c.verified).length,
         reproducedDefectsTotal: reproducedDefects.length,
+        resolvedDefectsVerified: resolvedDefects.filter((c) => c.verified).length,
+        resolvedDefectsTotal: resolvedDefects.length,
         negativeControlsPassed: negativeControls.filter((c) => c.verified).length,
         negativeControlsTotal: negativeControls.length,
         envLimitsCount: 0,
@@ -258,6 +268,13 @@ function main() {
         expectedOutcome: d.expectedOutcome,
         actualOutcome: d.actualOutcome,
         reproducedAndVerified: d.verified,
+      })),
+      resolvedDefectsSummary: resolvedDefects.map((d) => ({
+        id: d.id,
+        resolvedDefectId: d.resolvedDefectId,
+        title: d.title,
+        expectedOutcome: d.expectedOutcome,
+        verified: d.verified,
       })),
       cases: caseResults,
     };

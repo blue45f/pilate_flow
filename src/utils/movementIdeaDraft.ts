@@ -177,6 +177,15 @@ function isNewerVersionedEntry(
   return false;
 }
 
+const DANGEROUS_OBJECT_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+function getSafeOwnEntry<T>(record: Record<string, T> | null | undefined, key: string): T | undefined {
+  if (!record || typeof record !== 'object' || DANGEROUS_OBJECT_KEYS.has(key)) {
+    return undefined;
+  }
+  return Object.prototype.hasOwnProperty.call(record, key) ? record[key] : undefined;
+}
+
 function getScopedHumanDraftMap(scope = getActiveOwnerScope()): Record<string, HumanMovementDraft> {
   const current = inMemoryHumanDraftByScope[scope] ?? {};
   const scopedKey = getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, scope);
@@ -186,8 +195,8 @@ function getScopedHumanDraftMap(scope = getActiveOwnerScope()): Record<string, H
   const merged: Record<string, HumanMovementDraft> = { ...current };
   if (stored && Array.isArray(stored.humanMovementDrafts)) {
     for (const draft of stored.humanMovementDrafts) {
-      if (draft && typeof draft.id === 'string') {
-        if (isNewerVersionedEntry(draft, merged[draft.id])) {
+      if (draft && typeof draft.id === 'string' && !DANGEROUS_OBJECT_KEYS.has(draft.id)) {
+        if (isNewerVersionedEntry(draft, getSafeOwnEntry(merged, draft.id))) {
           merged[draft.id] = draft;
         }
       }
@@ -274,9 +283,17 @@ export function getMovementIdeaMetaMap(
   const stored = readStorageJson<Record<string, MovementIdeaMeta>>(scopedKey, {});
   const current = inMemoryMetaByScope[scope] ?? {};
   const merged: Record<string, MovementIdeaMeta> = { ...current };
-  for (const [id, entry] of Object.entries(stored)) {
-    if (entry && isNewerVersionedEntry(entry, merged[id])) {
-      merged[id] = entry;
+  if (stored && typeof stored === 'object' && !Array.isArray(stored)) {
+    for (const [id, entry] of Object.entries(stored)) {
+      if (
+        !DANGEROUS_OBJECT_KEYS.has(id) &&
+        entry &&
+        typeof entry === 'object' &&
+        !Array.isArray(entry) &&
+        isNewerVersionedEntry(entry, getSafeOwnEntry(merged, id))
+      ) {
+        merged[id] = entry;
+      }
     }
   }
   inMemoryMetaByScope[scope] = merged;
@@ -284,7 +301,7 @@ export function getMovementIdeaMetaMap(
 }
 
 export function getHumanDraftForIdeaExercise(exerciseId: string): HumanMovementDraft | undefined {
-  return getScopedHumanDraftMap()[exerciseId];
+  return getSafeOwnEntry(getScopedHumanDraftMap(), exerciseId);
 }
 
 export function getSavedHumanMovementDrafts(scope = getActiveOwnerScope()): HumanMovementDraft[] {
@@ -294,8 +311,8 @@ export function getSavedHumanMovementDrafts(scope = getActiveOwnerScope()): Huma
 export function getMovementIdeaMeta(exercise: PilatesExercise): MovementIdeaMeta {
   const scope = getActiveOwnerScope();
   const map = getMovementIdeaMetaMap(scope);
-  const existing = map[exercise.id];
-  const draft = getScopedHumanDraftMap(scope)[exercise.id];
+  const existing = getSafeOwnEntry(map, exercise.id);
+  const draft = getSafeOwnEntry(getScopedHumanDraftMap(scope), exercise.id);
   if (existing) {
     if (draft) {
       return {
@@ -321,7 +338,7 @@ export function getMovementIdeaMeta(exercise: PilatesExercise): MovementIdeaMeta
     : rawPrecautions === defaultPrecaution
       ? ''
       : rawPrecautions;
-  const ideaLine = draft?.ideaLine || exercise.cues[0] || exercise.nameKo;
+  const ideaLine = draft?.ideaLine || exercise.cues?.[0] || exercise.nameKo;
   const adjustmentNote =
     draft?.modificationLogs.at(-1)?.modificationPointKo ||
     exercise.layers?.standard ||

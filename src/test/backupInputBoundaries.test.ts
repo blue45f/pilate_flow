@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import corpus from './fixtures/backup-recovery/backupInputBoundaryCorpus.json';
 import { usePilatesStore } from '../store/usePilatesStore';
 import {
+  MAX_BACKUP_JSON_DEPTH,
   MAX_LOCAL_BACKUP_BYTES,
   backupRecoveryStateFingerprint,
   canonicalRecoveryContent,
@@ -27,17 +28,20 @@ import {
 } from '../utils/teachingHistorySnapshot';
 import {
   getHumanDraftForIdeaExercise,
+  getMovementIdeaMeta,
   getMovementIdeaMetaMap,
+  getSavedHumanMovementDrafts,
   resetMovementIdeaStateForTests,
 } from '../utils/movementIdeaDraft';
 import { createEmptyInstructorSchedule } from '../types/instructorSchedule';
 import type {
-  ClassGroup,
+  ClassGroupProfile,
   ClassHistoryLog,
-  Exercise,
+  PilatesExercise,
   SavedSequence,
   SequenceStep,
 } from '../types/pilates';
+import type { ClassHistoryLogWithSnapshot } from '../types/teachingHistorySnapshot';
 
 const PERSIST_STORAGE_KEY = 'pilates-flow-atelier-storage-v3';
 const MOVEMENT_IDEA_META_KEY = 'pilates-flow-movement-idea-meta-v1';
@@ -46,13 +50,13 @@ const originalStoreState = usePilatesStore.getState();
 
 const baselineExercise = structuredClone(
   corpus.baselineState.customExercise,
-) as unknown as Exercise;
+) as unknown as PilatesExercise;
 const baselineSequence = structuredClone(
   corpus.baselineState.sequence,
 ) as unknown as SavedSequence;
 const baselineGroup = structuredClone(
   corpus.baselineState.classGroup,
-) as unknown as ClassGroup;
+) as unknown as ClassGroupProfile;
 const baselineHistoryLog = structuredClone(
   corpus.baselineState.historyLog,
 ) as unknown as ClassHistoryLog;
@@ -658,18 +662,44 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
       ]);
     });
 
-    it('BND-REF-004 [REPRODUCED_DEFECT D1]: documents that .passthrough() on sequence/step/exercise/group/history schemas bypasses strippedKeys and retains arbitrary unknown fields', () => {
-      const payloadWithNestedUnknowns = makeExportV3Payload({
+    it('BND-REF-004 [RESOLVED D1]: rejects unexpected fields on domain records (savedSequences, steps, exercises, youtube, classGroups, historyLogs, programSnapshot) while preserving allowlisted hierarchy/snapshot/extension fields', () => {
+      const unknownOnExercise = makeExportV3Payload({
         exercises: [
           {
             ...baselineExercise,
             unexpectedExerciseSecretField: { nested: 'unvalidated-exercise-payload' },
           },
         ],
+      });
+      assertRejectedWithoutSideEffects(JSON.stringify(unknownOnExercise), 'unsupported_fields');
+
+      const unknownOnYoutube = makeExportV3Payload({
+        exercises: [
+          {
+            ...baselineExercise,
+            youtube: {
+              ...baselineExercise.youtube,
+              unexpectedYoutubeKey: 'unvalidated-youtube',
+            },
+          },
+        ],
+      });
+      assertRejectedWithoutSideEffects(JSON.stringify(unknownOnYoutube), 'unsupported_fields');
+
+      const unknownOnSequence = makeExportV3Payload({
         savedSequences: [
           {
             ...baselineSequence,
             unexpectedSequenceField: 'unvalidated-sequence-payload',
+          },
+        ],
+      });
+      assertRejectedWithoutSideEffects(JSON.stringify(unknownOnSequence), 'unsupported_fields');
+
+      const unknownOnStep = makeExportV3Payload({
+        savedSequences: [
+          {
+            ...baselineSequence,
             steps: [
               {
                 ...baselineSequence.steps[0],
@@ -678,12 +708,20 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
             ],
           },
         ],
+      });
+      assertRejectedWithoutSideEffects(JSON.stringify(unknownOnStep), 'unsupported_fields');
+
+      const unknownOnGroup = makeExportV3Payload({
         classGroups: [
           {
             ...baselineGroup,
             unexpectedGroupField: 'unvalidated-group-payload',
           },
         ],
+      });
+      assertRejectedWithoutSideEffects(JSON.stringify(unknownOnGroup), 'unsupported_fields');
+
+      const unknownOnHistory = makeExportV3Payload({
         historyLogs: [
           {
             ...baselineHistoryLog,
@@ -691,71 +729,157 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
           },
         ],
       });
+      assertRejectedWithoutSideEffects(JSON.stringify(unknownOnHistory), 'unsupported_fields');
 
+      // Verify allowlisted hierarchy/snapshot/extension fields remain accepted without error
+      const validSnapshot = buildTeachingProgramSnapshot({
+        sourceKind: 'saved-sequence',
+        sequenceId: baselineSequence.id,
+        sequenceTitle: baselineSequence.title,
+        groupId: baselineGroup.id,
+        taughtAt: '2026-11-06T09:00:00.000Z',
+        capturedAt: '2026-11-06T09:00:00.000Z',
+        steps: baselineSequence.steps,
+        exercises: [baselineExercise],
+      });
+      const allowlistedPayload = makeExportV3Payload({
+        exercises: [
+          {
+            ...baselineExercise,
+            defaultRepetitions: 8,
+            defaultSets: 2,
+            sourceOrigin: 'human-created',
+            humanDraftId: 'draft-allowlist-1',
+            humanDraftRevision: 2,
+            historicalExtension: { marker: true },
+            youtube: {
+              ...baselineExercise.youtube,
+              historicalVideoLabel: 'synthetic only',
+            },
+          },
+        ],
+        savedSequences: [
+          {
+            ...baselineSequence,
+            version: 2,
+            historicalPlanLabel: 'synthetic only',
+            steps: [
+              {
+                ...baselineSequence.steps[0],
+                blockInstanceId: 'blk-inst-1',
+                sourceBlockId: 'blk-src-1',
+                sourceBlockVersion: 1,
+                sourceBlockTitle: '합성 블록',
+                blockInstanceDetached: false,
+                humanDraftId: 'draft-allowlist-1',
+                humanDraftRevision: 2,
+                futureStep: { keep: [1, 2] },
+                historicalStepLabel: 'synthetic only',
+              },
+              baselineSequence.steps[1],
+            ],
+          },
+        ],
+        historyLogs: [
+          {
+            ...baselineHistoryLog,
+            programSnapshot: validSnapshot,
+          },
+        ],
+      });
       const currentEmpty = makeCurrentRecoveryState({
         exercises: [],
         savedSequences: [],
         classGroups: [],
         historyLogs: [],
       });
-      const result = inspectBackupRecovery(JSON.stringify(payloadWithNestedUnknowns), currentEmpty);
-
-      if (process.env.BACKUP_BOUNDARY_FAIL_ON_DEFECTS === '1') {
-        expect(result.success).toBe(false);
-        return;
-      }
-
-      // Reproduced Defect D1: .passthrough() causes Zod to keep the keys in `checked`, so `!own(checked, key)` is false
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(
-          (result.next.savedSequences[0] as unknown as Record<string, unknown>)
-            .unexpectedSequenceField,
-        ).toBe('unvalidated-sequence-payload');
-      }
-    });
-
-    it('BND-REF-005 [REPRODUCED_DEFECT D3]: documents that partial/malformed historyLog.programSnapshot passes inspectBackupRecovery and throws TypeError in resolveTeachingHistoryView / collectMissingSnapshotExercises', () => {
-      const malformedSnapshotPayload = makeExportV3Payload({
-        historyLogs: [
-          {
-            ...baselineHistoryLog,
-            programSnapshot: {
-              snapshotVersion: 1,
-              capturedAt: '2026-11-06T09:00:00.000Z',
-              items: null,
-              exercisesById: null,
-            },
-          },
-        ],
-      });
-
-      const currentEmpty = makeCurrentRecoveryState({
-        historyLogs: [],
-      });
-      const inspection = inspectBackupRecovery(
-        JSON.stringify(malformedSnapshotPayload),
+      const allowlistedResult = inspectBackupRecovery(
+        JSON.stringify(allowlistedPayload),
         currentEmpty,
       );
-
-      if (process.env.BACKUP_BOUNDARY_FAIL_ON_DEFECTS === '1') {
-        expect(inspection.success).toBe(false);
-        return;
-      }
-
-      // Reproduced Defect D3: inspectBackupRecovery accepts malformed programSnapshot, which then crashes history consumers
-      expect(inspection.success).toBe(true);
-      if (inspection.success) {
-        const corruptedLog = inspection.next.historyLogs[0];
-        const exercisesMap = new Map([[baselineExercise.id, baselineExercise]]);
-        expect(() => resolveTeachingHistoryView(corruptedLog, exercisesMap)).toThrow(TypeError);
-        expect(() => collectMissingSnapshotExercises(corruptedLog, [baselineExercise])).toThrow(
-          TypeError,
-        );
-      }
+      expect(allowlistedResult.success).toBe(true);
     });
 
-    it('BND-REF-006 [REPRODUCED_DEFECT D4]: documents that duplicate stepId in sequence.steps and dangling exerciseId inside historyLog.programSnapshot.items are accepted without validation', () => {
+    it('BND-REF-005 [RESOLVED D3]: rejects partial/malformed historyLog.programSnapshot at inspectBackupRecovery and falls back safely without TypeError in history snapshot consumers', () => {
+      for (const badProgramSnapshot of [
+        {
+          snapshotVersion: 1,
+          capturedAt: '2026-11-06T09:00:00.000Z',
+          items: null,
+          exercisesById: null,
+        },
+        {
+          snapshotVersion: 2,
+          recordKind: 'completed-history',
+          sourceKind: 'saved-sequence',
+          sourceSequenceId: baselineSequence.id,
+          sourceSequenceTitle: baselineSequence.title,
+          sourceSubtitle: baselineSequence.subtitle,
+          taughtAt: '2026-11-06T09:00:00.000Z',
+          capturedAt: '2026-11-06T09:00:00.000Z',
+          completionFingerprint: 'fp',
+          timing: { plannedTotalSec: 600, plannedExerciseSec: 600, plannedRestSec: 0 },
+          exercisesById: {},
+          items: [],
+        },
+        {
+          snapshotVersion: 1,
+          recordKind: 'completed-history',
+          sourceKind: 'saved-sequence',
+          sourceSequenceId: baselineSequence.id,
+          sourceSequenceTitle: baselineSequence.title,
+          sourceSubtitle: baselineSequence.subtitle,
+          taughtAt: '2026-11-06T09:00:00.000Z',
+          capturedAt: '2026-11-06T09:00:00.000Z',
+          completionFingerprint: 'fp',
+          timing: null,
+          exercisesById: {},
+          items: [],
+        },
+      ]) {
+        const malformedPayload = makeExportV3Payload({
+          historyLogs: [
+            {
+              ...baselineHistoryLog,
+              programSnapshot: badProgramSnapshot,
+            },
+          ],
+        });
+        assertRejectedWithoutSideEffects(JSON.stringify(malformedPayload), 'invalid_data');
+      }
+
+      // Direct consumer defensive fallback when handed a malformed in-memory log
+      const corruptedLog = {
+        ...structuredClone(baselineHistoryLog),
+        programSnapshot: {
+          snapshotVersion: 1,
+          capturedAt: '2026-11-06T09:00:00.000Z',
+          items: null,
+          exercisesById: null,
+        },
+        sequenceSnapshot: {
+          steps: null,
+          exerciseSnapshots: null,
+        },
+      } as unknown as ClassHistoryLog;
+
+      const exercisesMap = new Map([[baselineExercise.id, baselineExercise]]);
+      const fallbackView = resolveTeachingHistoryView(corruptedLog, exercisesMap);
+      expect(fallbackView.hasPreservedSnapshot).toBe(false);
+      expect(fallbackView.steps).toHaveLength(2);
+      expect(fallbackView.steps[0].exerciseId).toBe(baselineExercise.id);
+
+      expect(collectMissingSnapshotExercises(corruptedLog, [baselineExercise])).toEqual([]);
+      expect(collectDriftedSnapshotExercises(corruptedLog, [baselineExercise]).size).toBe(0);
+      expect(
+        reconstructStepsSnapshotFromHistoryLog({ ...corruptedLog, stepsSnapshot: undefined }),
+      ).toBeNull();
+      const cloned = cloneTeachingHistoryToNextClassDraft(corruptedLog, [baselineExercise]);
+      expect(cloned).not.toBeNull();
+      expect(cloned?.steps).toHaveLength(2);
+    });
+
+    it('BND-REF-006 [RESOLVED D4]: rejects duplicate stepId in sequences/history snapshots with duplicate_id and rejects dangling/mismatched exerciseId in programSnapshot.items with missing_exercise', () => {
       const validSnapshot = buildTeachingProgramSnapshot({
         sourceKind: 'saved-sequence',
         sequenceId: baselineSequence.id,
@@ -767,7 +891,7 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
         exercises: [baselineExercise],
       });
 
-      const payloadWithDupStepAndDanglingSnapshotItem = makeExportV3Payload({
+      const dupSequenceStepsPayload = makeExportV3Payload({
         savedSequences: [
           {
             ...baselineSequence,
@@ -781,6 +905,48 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
             ],
           },
         ],
+      });
+      assertRejectedWithoutSideEffects(JSON.stringify(dupSequenceStepsPayload), 'duplicate_id');
+
+      const dupHistoryStepsPayload = makeExportV3Payload({
+        historyLogs: [
+          {
+            ...baselineHistoryLog,
+            stepsSnapshot: [
+              baselineSequence.steps[0],
+              {
+                ...baselineSequence.steps[0],
+                order: 2,
+              },
+            ],
+          },
+        ],
+      });
+      assertRejectedWithoutSideEffects(JSON.stringify(dupHistoryStepsPayload), 'duplicate_id');
+
+      const dupProgramSnapshotItemsPayload = makeExportV3Payload({
+        historyLogs: [
+          {
+            ...baselineHistoryLog,
+            programSnapshot: {
+              ...validSnapshot,
+              items: [
+                validSnapshot.items[0],
+                {
+                  ...validSnapshot.items[0],
+                  order: 2,
+                },
+              ],
+            },
+          },
+        ],
+      });
+      assertRejectedWithoutSideEffects(
+        JSON.stringify(dupProgramSnapshotItemsPayload),
+        'duplicate_id',
+      );
+
+      const danglingProgramSnapshotItemPayload = makeExportV3Payload({
         historyLogs: [
           {
             ...baselineHistoryLog,
@@ -790,63 +956,117 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
                 {
                   ...validSnapshot.items[0],
                   exerciseId: 'dangling-snapshot-only-exercise-id',
+                  exerciseSnapshot: undefined,
+                  movementSnapshot: undefined,
                 },
+                validSnapshot.items[1],
               ],
             },
           },
         ],
       });
-
-      const current = makeCurrentRecoveryState();
-      const result = inspectBackupRecovery(
-        JSON.stringify(payloadWithDupStepAndDanglingSnapshotItem),
-        current,
+      assertRejectedWithoutSideEffects(
+        JSON.stringify(danglingProgramSnapshotItemPayload),
+        'missing_exercise',
       );
 
-      if (process.env.BACKUP_BOUNDARY_FAIL_ON_DEFECTS === '1') {
-        expect(result.success).toBe(false);
-        return;
-      }
-
-      // Reproduced Defect D4: Neither duplicate step.stepId nor dangling programSnapshot.items[].exerciseId is rejected
-      expect(result.success).toBe(true);
+      const mismatchedSnapshotIdPayload = makeExportV3Payload({
+        historyLogs: [
+          {
+            ...baselineHistoryLog,
+            programSnapshot: {
+              ...validSnapshot,
+              items: [
+                {
+                  ...validSnapshot.items[0],
+                  exerciseId: 'mismatched-step-exercise-id',
+                  // validSnapshot.items[0].exerciseSnapshot.id is still baselineExercise.id
+                },
+                validSnapshot.items[1],
+              ],
+            },
+          },
+        ],
+      });
+      assertRejectedWithoutSideEffects(
+        JSON.stringify(mismatchedSnapshotIdPayload),
+        'missing_exercise',
+      );
     });
 
-    it('BND-REF-007 [REPRODUCED_DEFECT D5]: documents that inspectPersistedRollbackPoint accepts non-object elements inside state arrays and coerces missing version to 1', () => {
-      const corruptedRollbackRaw = JSON.stringify({
-        // version is omitted -> coerced to 1
-        id: 'rb-shallow-array',
+    it('BND-REF-007 [RESOLVED D5]: rejects rollback points with missing version (unsupported-version) or corrupted elements inside preRestoreState arrays (invalid-shape)', () => {
+      const current = makeCurrentRecoveryState();
+      const before = captureBoundarySafetySnapshot('{}', current);
+
+      // 1. Missing version is rejected with 'unsupported-version'
+      const missingVersionRollbackRaw = JSON.stringify({
+        id: 'rb-missing-version',
         capturedAt: '2026-11-06T09:00:00.000Z',
         addedCount: 1,
-        postRestoreStateFingerprint: 'fp-shallow',
-        postRestoreStorageFingerprint: 'fp-storage-shallow',
+        postRestoreStateFingerprint: 'fp-missing-ver',
+        postRestoreStorageFingerprint: 'fp-storage-missing-ver',
         preRestoreState: {
-          exercises: [null, 'corrupted-exercise-element'],
-          savedSequences: [null, 12345],
-          classGroups: ['not-a-group'],
-          historyLogs: [null],
+          exercises: [baselineExercise],
+          savedSequences: [baselineSequence],
+          classGroups: [baselineGroup],
+          historyLogs: [baselineHistoryLog],
           conditionTemplates: [],
           instructorSchedule: createEmptyInstructorSchedule(),
           ownedEquipment: ['mat'],
           ownedApparatus: ['mat'],
-          ownedProps: [],
+          ownedProps: ['mini-ball'],
           lastCriteria: null,
           draftCriteria: null,
         },
       });
+      const missingVerInspected = inspectPersistedRollbackPoint(missingVersionRollbackRaw);
+      expect(missingVerInspected.valid).toBe(false);
+      if (!missingVerInspected.valid) {
+        expect(missingVerInspected.reason).toBe('unsupported-version');
+      }
 
-      const inspected = inspectPersistedRollbackPoint(corruptedRollbackRaw);
+      // 2. Corrupted elements inside preRestoreState arrays are rejected with 'invalid-shape' for both version 0 and version 1
+      for (const ver of [0, 1]) {
+        const corruptedElementsRaw = JSON.stringify({
+          version: ver,
+          id: `rb-corrupted-elements-v${ver}`,
+          capturedAt: '2026-11-06T09:00:00.000Z',
+          addedCount: 1,
+          postRestoreStateFingerprint: 'fp-shallow',
+          postRestoreStorageFingerprint: 'fp-storage-shallow',
+          preRestoreState: {
+            exercises: [null, 'corrupted-exercise-element'],
+            savedSequences: [null, 12345],
+            classGroups: ['not-a-group'],
+            historyLogs: [null],
+            conditionTemplates: [],
+            instructorSchedule: createEmptyInstructorSchedule(),
+            ownedEquipment: ['mat'],
+            ownedApparatus: ['mat'],
+            ownedProps: [],
+            lastCriteria: null,
+            draftCriteria: null,
+          },
+        });
+        window.localStorage.setItem(BACKUP_ROLLBACK_STORAGE_KEY, corruptedElementsRaw);
+        resetInMemoryBackupRollbackPointForTest();
 
-      if (process.env.BACKUP_BOUNDARY_FAIL_ON_DEFECTS === '1') {
+        const inspected = inspectPersistedRollbackPoint(corruptedElementsRaw);
         expect(inspected.valid).toBe(false);
-        return;
+        if (!inspected.valid) {
+          expect(inspected.reason).toBe('invalid-shape');
+        }
+
+        const rollbackOutcome = rollbackLatestBackupRestore({
+          getState: () => usePilatesStore.getState(),
+          setState: (patch) => usePilatesStore.setState(patch),
+        });
+        expect(rollbackOutcome.success).toBe(false);
+        expect(rollbackOutcome.reason).toBe('no-rollback-point');
       }
 
-      // Reproduced Defect D5: shallow Array.isArray check marks corrupted element arrays as valid and coerces missing version to 1
-      expect(inspected.valid).toBe(true);
-      if (inspected.valid) {
-        expect(inspected.version).toBe(1);
-      }
+      window.localStorage.removeItem(BACKUP_ROLLBACK_STORAGE_KEY);
+      assertBoundarySafetyInvariants(before, '{}', current);
     });
   });
 
@@ -916,8 +1136,10 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
       assertRejectedWithoutSideEffects(JSON.stringify(overStepsPayload), 'invalid_data');
     });
 
-    it('BND-LIM-004 [REPRODUCED_DEFECT D6]: documents unbounded array length on historyLog.stepsSnapshot/exerciseIds (1,500 items), 256KB strings, and depth-128 nested JSON on .passthrough() fields', () => {
-      const historySteps1500: SequenceStep[] = Array.from({ length: 1500 }, (_, idx) => ({
+    it('BND-LIM-004 [RESOLVED D6]: enforces max(1000) on historyLog.stepsSnapshot and exerciseIds, rejects >20,000 char strings, and rejects JSON nesting depth > MAX_BACKUP_JSON_DEPTH (64)', () => {
+      expect(MAX_BACKUP_JSON_DEPTH).toBe(64);
+
+      const historySteps1001: SequenceStep[] = Array.from({ length: 1001 }, (_, idx) => ({
         kind: 'exercise',
         stepId: `hist-step-${idx + 1}`,
         order: idx + 1,
@@ -926,35 +1148,77 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
         durationMin: 1,
         selectedLayer: 'standard',
       }));
-      const long256kString = buildBoundedDeterministicString(262144, 'passthrough_256k_');
-      const deep128Object = buildBoundedNestedObject(128, 'deep-passthrough-leaf');
 
-      const payload = makeExportV3Payload({
+      const overHistoryStepsPayload = makeExportV3Payload({
         historyLogs: [
           {
             ...baselineHistoryLog,
-            exerciseIds: Array.from({ length: 1500 }, () => baselineExercise.id),
-            stepsSnapshot: historySteps1500,
-            unboundedPassthroughText: long256kString,
-            unboundedPassthroughDepth: deep128Object,
+            stepsSnapshot: historySteps1001,
           },
         ],
       });
+      assertRejectedWithoutSideEffects(JSON.stringify(overHistoryStepsPayload), 'invalid_data');
 
-      const current = makeCurrentRecoveryState();
+      const overHistoryExIdsPayload = makeExportV3Payload({
+        historyLogs: [
+          {
+            ...baselineHistoryLog,
+            exerciseIds: Array.from({ length: 1001 }, () => baselineExercise.id),
+          },
+        ],
+      });
+      assertRejectedWithoutSideEffects(JSON.stringify(overHistoryExIdsPayload), 'invalid_data');
+
+      const long256kString = buildBoundedDeterministicString(262144, 'overlimit_256k_');
+      const overStringPayload = makeExportV3Payload({
+        historyLogs: [
+          {
+            ...baselineHistoryLog,
+            instructorReflection: long256kString,
+          },
+        ],
+      });
+      assertRejectedWithoutSideEffects(JSON.stringify(overStringPayload), 'invalid_data');
+
+      // Deeply nested JSON (depth 72 > MAX_BACKUP_JSON_DEPTH = 64) inside allowlisted futureStep is rejected before schema traversal
+      const deep72Object = buildBoundedNestedObject(72, 'deep-leaf');
+      const overDepthPayload = makeExportV3Payload({
+        savedSequences: [
+          {
+            ...baselineSequence,
+            steps: [
+              {
+                ...baselineSequence.steps[0],
+                futureStep: deep72Object,
+              },
+              baselineSequence.steps[1],
+            ],
+          },
+        ],
+      });
       const startMs = performance.now();
-      const result = inspectBackupRecovery(JSON.stringify(payload), current);
+      assertRejectedWithoutSideEffects(JSON.stringify(overDepthPayload), 'invalid_data');
       const elapsedMs = performance.now() - startMs;
-
       expect(elapsedMs).toBeLessThan(corpus.bounds.maxCaseDurationMs);
 
-      if (process.env.BACKUP_BOUNDARY_FAIL_ON_DEFECTS === '1') {
-        expect(result.success).toBe(false);
-        return;
-      }
-
-      // Reproduced Defect D6: historyLog.stepsSnapshot (1,500 > 1,000), 256KB passthrough string, and depth-128 passthrough object are accepted
-      expect(result.success).toBe(true);
+      // Moderate nesting depth (depth 8 <= 64) inside allowlisted futureStep remains accepted
+      const shallow8Object = buildBoundedNestedObject(8, 'shallow-leaf');
+      const okDepthPayload = makeExportV3Payload({
+        savedSequences: [
+          {
+            ...baselineSequence,
+            steps: [
+              {
+                ...baselineSequence.steps[0],
+                futureStep: shallow8Object,
+              },
+              baselineSequence.steps[1],
+            ],
+          },
+        ],
+      });
+      const current = makeCurrentRecoveryState();
+      expect(inspectBackupRecovery(JSON.stringify(okDepthPayload), current).success).toBe(true);
     });
   });
 
@@ -976,23 +1240,47 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
       expect(({} as Record<string, unknown>).polluted).toBeUndefined();
     });
 
-    it('BND-PROTO-002 [REPRODUCED_DEFECT D2]: documents z.record(__proto__) stripping in export-v3 data, local prototype mutation in getMovementIdeaMetaMap, and TypeError when exerciseId is "constructor"', () => {
-      // 1. In export-v3 envelope, data: z.record(z.unknown()) assigns result['__proto__'] = ...,
-      // mutating the intermediate data object prototype and erasing '__proto__' from Object.keys(data) before strippedKeys runs
+    it('BND-PROTO-002 [RESOLVED D2]: rejects own __proto__/constructor/prototype keys anywhere in backup JSON, prevents local prototype mutation in canonicalRecoveryContent / getMovementIdeaMetaMap, and guards resolveTeachingHistoryView against exerciseId="constructor"', () => {
+      // 1. export-v3 data.__proto__ and nested __proto__/constructor/prototype keys are rejected with unsupported_fields
       const protoAtExportV3DataRaw =
         '{"format":"pilates-flow-atelier","version":3,"exportedAt":"2026-11-06T09:30:00.000Z","data":{"__proto__":{"polluted":"data"},"exercises":[],"savedSequences":[],"classGroups":[],"historyLogs":[]}}';
-      const current = makeCurrentRecoveryState();
-      const protoInDataResult = inspectBackupRecovery(protoAtExportV3DataRaw, current);
+      assertRejectedWithoutSideEffects(protoAtExportV3DataRaw, 'unsupported_fields');
 
-      // 2. getMovementIdeaMetaMap when localStorage contains a "__proto__" key with revision: 1
+      const nestedProtoInStepRaw =
+        '{"format":"pilates-flow-atelier","version":3,"exportedAt":"2026-11-06T09:30:00.000Z","data":{"exercises":[],"savedSequences":[{"id":"seq-1","title":"t","subtitle":"s","apparatus":"mat","level":"1.0","focusTags":[],"targetMinutes":50,"createdAt":"2026-11-06T00:00:00Z","updatedAt":"2026-11-06T00:00:00Z","taughtCount":0,"steps":[{"stepId":"st-1","order":1,"blockCategory":"extension","exerciseId":"custom-boundary-swan-prep","durationMin":10,"selectedLayer":"standard","futureStep":{"__proto__":{"polluted":"nested"}}}]}],"classGroups":[],"historyLogs":[]}}';
+      assertRejectedWithoutSideEffects(nestedProtoInStepRaw, 'unsupported_fields');
+
+      // 2. canonicalRecoveryContent strips own __proto__/constructor/prototype keys without mutating local prototypes
+      const parsedWithOwnProto = JSON.parse(
+        '{"__proto__":{"polluted":"canon"},"constructor":{"bad":1},"prototype":{"bad":2},"safeKey":"ok"}',
+      );
+      const canonical = canonicalRecoveryContent(parsedWithOwnProto);
+      expect(canonical).toBe('{"safeKey":"ok"}');
+
+      // 3. getMovementIdeaMetaMap & getScopedHumanDraftMap ignore __proto__/constructor/prototype keys and never mutate map prototypes
       resetMovementIdeaStateForTests();
       window.localStorage.setItem(
         MOVEMENT_IDEA_META_KEY,
-        '{"__proto__":{"revision":1,"pollutedLocalMap":true}}',
+        '{"__proto__":{"revision":1,"pollutedLocalMap":true},"constructor":{"revision":1,"pollutedCtor":true},"ex-valid-idea":{"exerciseId":"ex-valid-idea","ideaLine":"정상 아이디어","workingTitle":"정상","subjectiveFeeling":"","adjustmentNote":"","photoDataUrl":"","triedByInstructor":false,"createdAt":"2026-11-06T00:00:00Z","updatedAt":"2026-11-06T00:00:00Z","revision":1}}',
       );
       const ideaMetaMap = getMovementIdeaMetaMap();
+      expect(Object.getPrototypeOf(ideaMetaMap)).toBe(Object.prototype);
+      expect((ideaMetaMap as unknown as Record<string, unknown>).pollutedLocalMap).toBeUndefined();
+      expect(Object.prototype.hasOwnProperty.call(ideaMetaMap, '__proto__')).toBe(false);
+      expect(Object.prototype.hasOwnProperty.call(ideaMetaMap, 'constructor')).toBe(false);
+      expect(
+        getMovementIdeaMeta({ ...baselineExercise, id: 'constructor' }).ideaLine,
+      ).toBe(baselineExercise.cues[0]);
+      expect(
+        getMovementIdeaMeta({ ...baselineExercise, id: 'ex-valid-idea' }).ideaLine,
+      ).toBe('정상 아이디어');
 
-      // 3. resolveTeachingHistoryView when programSnapshot item has exerciseId: "constructor"
+      const savedDrafts = getSavedHumanMovementDrafts();
+      expect(Array.isArray(savedDrafts)).toBe(true);
+      expect(getHumanDraftForIdeaExercise('__proto__')).toBeUndefined();
+      expect(getHumanDraftForIdeaExercise('constructor')).toBeUndefined();
+
+      // 4. resolveTeachingHistoryView safely handles exerciseId: "constructor" or "__proto__" without throwing TypeError
       const validSnapshot = buildTeachingProgramSnapshot({
         sourceKind: 'saved-sequence',
         sequenceId: baselineSequence.id,
@@ -1003,7 +1291,7 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
         steps: baselineSequence.steps,
         exercises: [baselineExercise],
       });
-      const logWithConstructorExId: ClassHistoryLog = {
+      const logWithConstructorExId: ClassHistoryLogWithSnapshot = {
         ...structuredClone(baselineHistoryLog),
         programSnapshot: {
           ...validSnapshot,
@@ -1018,29 +1306,11 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
         },
       };
       const exercisesMap = new Map([[baselineExercise.id, baselineExercise]]);
+      const resolvedView = resolveTeachingHistoryView(logWithConstructorExId, exercisesMap);
+      expect(resolvedView.steps).toHaveLength(1);
+      expect(resolvedView.steps[0].isMissingUnrecoverable).toBe(true);
+      expect(resolvedView.missingUnrecoverableExerciseIds).toContain('constructor');
 
-      if (process.env.BACKUP_BOUNDARY_FAIL_ON_DEFECTS === '1') {
-        expect(protoInDataResult.success).toBe(false);
-        expect(Object.getPrototypeOf(ideaMetaMap)).toBe(Object.prototype);
-        expect(() =>
-          resolveTeachingHistoryView(logWithConstructorExId, exercisesMap),
-        ).not.toThrow();
-        return;
-      }
-
-      // Reproduced Defect D2a: export-v3 data.__proto__ bypasses strippedKeys because z.record() mutates envelope.data.data prototype
-      expect(protoInDataResult.success).toBe(true);
-
-      // Reproduced Defect D2b: merged[id] = entry in getMovementIdeaMetaMap mutates local map prototype when id === '__proto__'
-      expect(Object.getPrototypeOf(ideaMetaMap)).not.toBe(Object.prototype);
-      expect((ideaMetaMap as unknown as Record<string, unknown>).pollutedLocalMap).toBe(true);
-
-      // Reproduced Defect D2c: snapshot.exercisesById['constructor'] resolves to Object constructor and throws TypeError on sourceEx.layers[item.selectedLayer]
-      expect(() => resolveTeachingHistoryView(logWithConstructorExId, exercisesMap)).toThrow(
-        TypeError,
-      );
-
-      // Verify global Object.prototype was NEVER polluted even under D2
       expect((Object.prototype as Record<string, unknown>).polluted).toBeUndefined();
       expect((Object.prototype as Record<string, unknown>).pollutedLocalMap).toBeUndefined();
     });
@@ -1084,7 +1354,10 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
       expect(inspect1.success).toBe(true);
       if (!inspect1.success) return;
 
-      const fingerprint1 = backupRecoveryStateFingerprint(inspect1.next);
+      const fingerprint1 = backupRecoveryStateFingerprint({
+        ...currentEmpty,
+        ...inspect1.next,
+      });
 
       const restore1 = usePilatesStore.getState().restoreBackup(export1);
       expect(restore1.success).toBe(true);
@@ -1094,11 +1367,14 @@ describe('Deterministic Synthetic Backup & History Input Boundary Corpus', () =>
       expect(inspect2.success).toBe(true);
       if (!inspect2.success) return;
 
-      const fingerprint2 = backupRecoveryStateFingerprint(inspect2.next);
+      const fingerprint2 = backupRecoveryStateFingerprint({
+        ...currentEmpty,
+        ...inspect2.next,
+      });
       expect(fingerprint2).toBe(fingerprint1);
 
       // Mutate live customExercise after history completion and verify history snapshot remains immutable
-      const mutatedLiveExercise: Exercise = {
+      const mutatedLiveExercise: PilatesExercise = {
         ...structuredClone(baselineExercise),
         nameKo: '사후 수정된 라이브 스완 동작 이름',
         springs: '사후 변경된 스프링 설정',

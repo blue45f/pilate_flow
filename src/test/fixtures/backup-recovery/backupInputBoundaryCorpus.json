@@ -277,42 +277,42 @@
     {
       "id": "BND-REF-004",
       "category": "id-reference-fields",
-      "title": "Unexpected fields on .passthrough() domain records (savedSequences, steps, exercises, classGroups, historyLogs) bypass strippedKeys check",
-      "target": "inspectBackupRecovery",
-      "expectedClassification": "REPRODUCED_DEFECT",
-      "defectId": "D1",
-      "expectedOutcome": "rejected_with_unsupported_fields_or_stripped",
-      "actualOutcome": "accepted_unvalidated_passthrough_fields"
+      "title": "Unexpected fields on domain records (savedSequences, steps, exercises, youtube, classGroups, historyLogs, programSnapshot) rejected with unsupported_fields while preserving allowlisted hierarchy/snapshot/extension fields",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "D1",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "unsupported_fields"
     },
     {
       "id": "BND-REF-005",
       "category": "id-reference-fields",
-      "title": "Partial/malformed historyLog.programSnapshot (items: null or missing exercisesById) passes inspectBackupRecovery and throws TypeError in resolveTeachingHistoryView / collectMissingSnapshotExercises",
+      "title": "Partial/malformed historyLog.programSnapshot (items: null, missing exercisesById, wrong snapshotVersion) rejected at inspectBackupRecovery and safely falls back without TypeError in resolveTeachingHistoryView / collectMissingSnapshotExercises",
       "target": "inspectBackupRecovery+resolveTeachingHistoryView+collectMissingSnapshotExercises",
-      "expectedClassification": "REPRODUCED_DEFECT",
-      "defectId": "D3",
-      "expectedOutcome": "rejected_or_graceful_fallback",
-      "actualOutcome": "accepted_then_throws_typeerror"
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "D3",
+      "expectedOutcome": "rejected_and_graceful_fallback",
+      "expectedReasonCode": "invalid_data"
     },
     {
       "id": "BND-REF-006",
       "category": "id-reference-fields",
-      "title": "Duplicate stepId within sequence.steps / historyLog.stepsSnapshot and dangling exerciseId in historyLog.programSnapshot.items accepted without rejection",
-      "target": "inspectBackupRecovery",
-      "expectedClassification": "REPRODUCED_DEFECT",
-      "defectId": "D4",
-      "expectedOutcome": "rejected_with_duplicate_id_or_missing_exercise",
-      "actualOutcome": "accepted_without_step_or_snapshot_validation"
+      "title": "Duplicate stepId within sequence.steps / activeDraft.steps / historyLog.stepsSnapshot / programSnapshot.items rejected with duplicate_id, and dangling/mismatched exerciseId in programSnapshot.items / sequenceSnapshot.steps rejected with missing_exercise",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "D4",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "duplicate_id|missing_exercise"
     },
     {
       "id": "BND-REF-007",
       "category": "id-reference-fields",
-      "title": "inspectPersistedRollbackPoint accepts non-object elements inside state arrays (savedSequences: [null, 'corrupted']) and silently coerces missing version to 1",
-      "target": "inspectPersistedRollbackPoint",
-      "expectedClassification": "REPRODUCED_DEFECT",
-      "defectId": "D5",
-      "expectedOutcome": "rejected_with_invalid_shape_and_unsupported_version",
-      "actualOutcome": "accepted_as_valid_rollback_point"
+      "title": "inspectPersistedRollbackPoint rejects missing version with unsupported-version and rejects non-object/id-less elements inside preRestoreState arrays with invalid-shape",
+      "target": "inspectPersistedRollbackPoint+rollbackLatestBackupRestore",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "D5",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "unsupported-version|invalid-shape"
     },
     {
       "id": "BND-LIM-001",
@@ -344,12 +344,12 @@
     {
       "id": "BND-LIM-004",
       "category": "size-length-depth",
-      "title": "Unbounded array length on historyLog.stepsSnapshot / exerciseIds (1,500 items), 256KB strings, and depth-64/128 nested JSON on .passthrough() fields accepted",
-      "target": "inspectBackupRecovery",
-      "expectedClassification": "REPRODUCED_DEFECT",
-      "defectId": "D6",
-      "expectedOutcome": "bounded_by_schema_max_and_depth_limit",
-      "actualOutcome": "accepted_without_history_array_or_depth_cap"
+      "title": "Enforces max(1000) on historyLog.stepsSnapshot / exerciseIds, rejects >20,000 char strings, and rejects JSON nesting depth > MAX_BACKUP_JSON_DEPTH (64)",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "D6",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "invalid_data|unsupported_fields"
     },
     {
       "id": "BND-PROTO-001",
@@ -362,12 +362,12 @@
     {
       "id": "BND-PROTO-002",
       "category": "proto-constructor-pollution",
-      "title": "Own __proto__ keys mutate local result prototype in canonicalRecoveryContent / getMovementIdeaMetaMap, and exerciseId='constructor' crashes resolveTeachingHistoryView",
-      "target": "canonicalRecoveryContent+getMovementIdeaMetaMap+resolveTeachingHistoryView",
-      "expectedClassification": "REPRODUCED_DEFECT",
-      "defectId": "D2",
-      "expectedOutcome": "safe_own_property_filtering_and_hasOwnProperty_lookup",
-      "actualOutcome": "local_prototype_mutation_and_constructor_lookup_typeerror"
+      "title": "Rejects own __proto__/constructor/prototype keys anywhere in backup JSON (including export-v3 data), prevents local prototype mutation in canonicalRecoveryContent / getMovementIdeaMetaMap, and guards resolveTeachingHistoryView against exerciseId='constructor'",
+      "target": "inspectBackupRecovery+canonicalRecoveryContent+getMovementIdeaMetaMap+resolveTeachingHistoryView",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "D2",
+      "expectedOutcome": "rejected_and_safe_own_property_lookup",
+      "expectedReasonCode": "unsupported_fields"
     },
     {
       "id": "BND-RT-001",

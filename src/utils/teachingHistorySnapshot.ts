@@ -85,6 +85,56 @@ function getBlockLabel(category: ClassBlockCategory): { ko: string; en: string }
   return BLOCK_LABEL_MAP[category] ?? { ko: category, en: category };
 }
 
+const DANGEROUS_SNAPSHOT_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+function getSafeOwnRecordValue<V>(
+  record: Record<string, V> | null | undefined,
+  key: string,
+): V | undefined {
+  if (!record || typeof record !== 'object' || Array.isArray(record) || DANGEROUS_SNAPSHOT_KEYS.has(key)) {
+    return undefined;
+  }
+  return Object.prototype.hasOwnProperty.call(record, key) ? record[key] : undefined;
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function isUsableProgramSnapshot(value: unknown): value is TeachingProgramSnapshot {
+  if (!isPlainRecord(value)) return false;
+  if (value.snapshotVersion !== 1) return false;
+  if (!Array.isArray(value.items)) return false;
+  if (!isPlainRecord(value.exercisesById)) return false;
+  if (!isPlainRecord(value.timing)) return false;
+  return value.items.every(
+    (item) =>
+      isPlainRecord(item) &&
+      typeof item.stepId === 'string' &&
+      item.stepId.trim().length > 0 &&
+      (item.kind === 'exercise' || item.kind === 'rest') &&
+      typeof item.blockCategory === 'string' &&
+      typeof item.durationMin === 'number' &&
+      Number.isFinite(item.durationMin) &&
+      typeof item.selectedLayer === 'string',
+  );
+}
+
+function isUsableSequenceSnapshot(value: unknown): value is ClassSequenceSnapshot {
+  if (!isPlainRecord(value)) return false;
+  if (!Array.isArray(value.steps)) return false;
+  if (!isPlainRecord(value.exerciseSnapshots)) return false;
+  return value.steps.every(
+    (step) =>
+      isPlainRecord(step) &&
+      typeof step.stepId === 'string' &&
+      step.stepId.trim().length > 0 &&
+      typeof step.blockCategory === 'string' &&
+      typeof step.durationMin === 'number' &&
+      Number.isFinite(step.durationMin),
+  );
+}
+
 /**
  * Removes keys with `undefined` values recursively so `strippedKeys` in `backupRecoveryInspection.ts`
  * and `discardsFields` in `backend/backupValidation.ts` see 0 discarded keys before/after JSON serialization.
@@ -96,7 +146,7 @@ function stripUndefinedDeep<T>(value: T): T {
   if (value !== null && typeof value === 'object') {
     const result: Record<string, unknown> = {};
     for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
-      if (entry !== undefined) {
+      if (entry !== undefined && !DANGEROUS_SNAPSHOT_KEYS.has(key)) {
         result[key] = stripUndefinedDeep(entry);
       }
     }
@@ -725,8 +775,11 @@ export function resolveTeachingHistoryView(
   options?: ResolveTeachingHistoryOptions,
 ): ResolvedTeachingHistoryView {
   const log = rawLog as ClassHistoryLogWithSnapshot;
-  const snapshot = log.programSnapshot;
-  const p1SequenceSnapshot = log.sequenceSnapshot ?? snapshot?.sequenceSnapshot;
+  const snapshot = isUsableProgramSnapshot(log.programSnapshot) ? log.programSnapshot : undefined;
+  const rawP1SequenceSnapshot = log.sequenceSnapshot ?? snapshot?.sequenceSnapshot;
+  const p1SequenceSnapshot = isUsableSequenceSnapshot(rawP1SequenceSnapshot)
+    ? rawP1SequenceSnapshot
+    : undefined;
   const hasPreservedSnapshot = Boolean(
     (snapshot && snapshot.items.length > 0) ||
       (p1SequenceSnapshot && p1SequenceSnapshot.steps.length > 0),
@@ -749,10 +802,13 @@ export function resolveTeachingHistoryView(
 
   // Resolve blockSnapshots from snapshot, P1 sequenceSnapshot, or step metadata
   const blockSnapshots: ClassBlockSnapshot[] = (() => {
-    if (snapshot?.blockSnapshots && snapshot.blockSnapshots.length > 0) {
+    if (Array.isArray(snapshot?.blockSnapshots) && snapshot.blockSnapshots.length > 0) {
       return snapshot.blockSnapshots.map((b) => structuredClone(b));
     }
-    if (p1SequenceSnapshot?.blockSnapshots && p1SequenceSnapshot.blockSnapshots.length > 0) {
+    if (
+      Array.isArray(p1SequenceSnapshot?.blockSnapshots) &&
+      p1SequenceSnapshot.blockSnapshots.length > 0
+    ) {
       return p1SequenceSnapshot.blockSnapshots.map((b) => structuredClone(b));
     }
     const map = new Map<string, ClassBlockSnapshot>();
@@ -822,10 +878,11 @@ export function resolveTeachingHistoryView(
       }
 
       const p1MoveSnap =
-        item.movementSnapshot ?? p1SequenceSnapshot?.exerciseSnapshots[item.exerciseId];
+        item.movementSnapshot ??
+        getSafeOwnRecordValue(p1SequenceSnapshot?.exerciseSnapshots, item.exerciseId);
       const exSnap =
         item.exerciseSnapshot ??
-        snapshot.exercisesById[item.exerciseId] ??
+        getSafeOwnRecordValue(snapshot.exercisesById, item.exerciseId) ??
         (p1MoveSnap ? movementSnapshotToTeachingExerciseSnapshot(p1MoveSnap) : undefined);
       const liveEx = exercisesMap.get(item.exerciseId);
 
@@ -893,7 +950,7 @@ export function resolveTeachingHistoryView(
         selectedLayerLabelKo:
           item.selectedLayerLabelKo || LAYER_LABELS[item.selectedLayer].ko,
         selectedLayerDescription:
-          item.selectedLayerDescription || sourceEx?.layers[item.selectedLayer] || '',
+          item.selectedLayerDescription || sourceEx?.layers?.[item.selectedLayer] || '',
         effectiveSprings:
           item.effectiveSprings ||
           item.customSpringOverride ||
@@ -902,8 +959,8 @@ export function resolveTeachingHistoryView(
         ...(sourceEx
           ? { box: sourceEx.box, footbar: sourceEx.footbar, headrest: sourceEx.headrest }
           : {}),
-        props: sourceEx ? [...sourceEx.props] : [],
-        cues: sourceEx ? [...sourceEx.cues] : [],
+        props: Array.isArray(sourceEx?.props) ? [...sourceEx.props] : [],
+        cues: Array.isArray(sourceEx?.cues) ? [...sourceEx.cues] : [],
         precautions: sourceEx?.precautions ?? '',
         breathPattern: sourceEx?.breathPattern ?? '',
         isUnilateral: sourceEx?.isUnilateral ?? false,
@@ -976,7 +1033,8 @@ export function resolveTeachingHistoryView(
       }
 
       const embeddedMoveSnap =
-        step.exerciseSnapshot ?? p1SequenceSnapshot?.exerciseSnapshots[step.exerciseId];
+        step.exerciseSnapshot ??
+        getSafeOwnRecordValue(p1SequenceSnapshot?.exerciseSnapshots, step.exerciseId);
       const liveEx = exercisesMap.get(step.exerciseId);
       const exSnap = embeddedMoveSnap
         ? movementSnapshotToTeachingExerciseSnapshot(embeddedMoveSnap, liveEx)
@@ -1042,13 +1100,13 @@ export function resolveTeachingHistoryView(
         ...(timing.sides === 2 ? { perSideSec: timing.perSideSec } : {}),
         selectedLayer: step.selectedLayer,
         selectedLayerLabelKo: LAYER_LABELS[step.selectedLayer].ko,
-        selectedLayerDescription: sourceEx?.layers[step.selectedLayer] ?? '',
+        selectedLayerDescription: sourceEx?.layers?.[step.selectedLayer] ?? '',
         effectiveSprings: step.customSpringOverride?.trim() || sourceEx?.springs || '',
         ...(sourceEx
           ? { box: sourceEx.box, footbar: sourceEx.footbar, headrest: sourceEx.headrest }
           : {}),
-        props: sourceEx ? [...sourceEx.props] : [],
-        cues: sourceEx ? [...sourceEx.cues] : [],
+        props: Array.isArray(sourceEx?.props) ? [...sourceEx.props] : [],
+        cues: Array.isArray(sourceEx?.cues) ? [...sourceEx.cues] : [],
         precautions: sourceEx?.precautions ?? '',
         breathPattern: sourceEx?.breathPattern ?? '',
         isUnilateral: sourceEx?.isUnilateral ?? false,
@@ -1156,8 +1214,8 @@ export function resolveTeachingHistoryView(
   for (const exerciseId of log.exerciseIds) {
     if (!exercisesMap.has(exerciseId)) {
       const hasSnap = Boolean(
-        snapshot?.exercisesById[exerciseId] ||
-          p1SequenceSnapshot?.exerciseSnapshots[exerciseId] ||
+        getSafeOwnRecordValue(snapshot?.exercisesById, exerciseId) ||
+          getSafeOwnRecordValue(p1SequenceSnapshot?.exerciseSnapshots, exerciseId) ||
           steps.some((s) => s.exerciseId === exerciseId && s.fromSnapshot),
       );
       if (hasSnap) {
@@ -1400,20 +1458,31 @@ export function collectMissingSnapshotExercises(
   const knownIds = new Set(currentExercises.map((exercise) => exercise.id));
   const missing: PilatesExercise[] = [];
 
-  const snapshot = log.programSnapshot;
+  const snapshot = isUsableProgramSnapshot(log.programSnapshot) ? log.programSnapshot : undefined;
   if (snapshot) {
     for (const [exerciseId, exSnap] of Object.entries(snapshot.exercisesById)) {
-      if (!knownIds.has(exerciseId)) {
+      if (
+        !DANGEROUS_SNAPSHOT_KEYS.has(exerciseId) &&
+        isPlainRecord(exSnap) &&
+        !knownIds.has(exerciseId)
+      ) {
         missing.push(reconstructExerciseFromSnapshot(exSnap));
         knownIds.add(exerciseId);
       }
     }
     for (const item of snapshot.items) {
-      if (item.kind === 'exercise' && item.exerciseId && !knownIds.has(item.exerciseId)) {
-        if (item.exerciseSnapshot) {
+      if (!isPlainRecord(item)) continue;
+      if (
+        item.kind === 'exercise' &&
+        typeof item.exerciseId === 'string' &&
+        item.exerciseId.length > 0 &&
+        !DANGEROUS_SNAPSHOT_KEYS.has(item.exerciseId) &&
+        !knownIds.has(item.exerciseId)
+      ) {
+        if (isPlainRecord(item.exerciseSnapshot)) {
           missing.push(reconstructExerciseFromSnapshot(item.exerciseSnapshot));
           knownIds.add(item.exerciseId);
-        } else if (item.movementSnapshot) {
+        } else if (isPlainRecord(item.movementSnapshot)) {
           missing.push(
             reconstructExerciseFromSnapshot(
               movementSnapshotToTeachingExerciseSnapshot(item.movementSnapshot),
@@ -1425,10 +1494,17 @@ export function collectMissingSnapshotExercises(
     }
   }
 
-  const p1SequenceSnapshot = log.sequenceSnapshot ?? snapshot?.sequenceSnapshot;
+  const rawP1SequenceSnapshot = log.sequenceSnapshot ?? snapshot?.sequenceSnapshot;
+  const p1SequenceSnapshot = isUsableSequenceSnapshot(rawP1SequenceSnapshot)
+    ? rawP1SequenceSnapshot
+    : undefined;
   if (p1SequenceSnapshot) {
     for (const [exerciseId, moveSnap] of Object.entries(p1SequenceSnapshot.exerciseSnapshots)) {
-      if (!knownIds.has(exerciseId)) {
+      if (
+        !DANGEROUS_SNAPSHOT_KEYS.has(exerciseId) &&
+        isPlainRecord(moveSnap) &&
+        !knownIds.has(exerciseId)
+      ) {
         missing.push(
           reconstructExerciseFromSnapshot(movementSnapshotToTeachingExerciseSnapshot(moveSnap)),
         );
@@ -1437,10 +1513,17 @@ export function collectMissingSnapshotExercises(
     }
   }
 
-  if (log.stepsSnapshot) {
+  if (Array.isArray(log.stepsSnapshot)) {
     for (const step of log.stepsSnapshot) {
-      if (!isRestStep(step) && step.exerciseId && !knownIds.has(step.exerciseId)) {
-        if (step.exerciseSnapshot) {
+      if (!isPlainRecord(step)) continue;
+      if (
+        !isRestStep(step) &&
+        typeof step.exerciseId === 'string' &&
+        step.exerciseId.length > 0 &&
+        !DANGEROUS_SNAPSHOT_KEYS.has(step.exerciseId) &&
+        !knownIds.has(step.exerciseId)
+      ) {
+        if (isPlainRecord(step.exerciseSnapshot)) {
           missing.push(
             reconstructExerciseFromSnapshot(
               movementSnapshotToTeachingExerciseSnapshot(step.exerciseSnapshot),
@@ -1462,13 +1545,17 @@ export function collectMissingSnapshotExercises(
 export function reconstructStepsSnapshotFromHistoryLog(
   rawLog: ClassHistoryLog,
 ): SequenceStep[] | null {
-  if (rawLog.stepsSnapshot && rawLog.stepsSnapshot.length > 0) {
+  if (Array.isArray(rawLog.stepsSnapshot) && rawLog.stepsSnapshot.length > 0) {
     return null;
   }
   const log = rawLog as ClassHistoryLogWithSnapshot;
-  const programSnapshot = log.programSnapshot;
+  const programSnapshot = isUsableProgramSnapshot(log.programSnapshot)
+    ? log.programSnapshot
+    : undefined;
   if (programSnapshot && programSnapshot.items.length > 0) {
-    return programSnapshot.items.map((item, idx) => {
+    const validItems = programSnapshot.items.filter((item) => isPlainRecord(item));
+    if (validItems.length === 0) return null;
+    return validItems.map((item, idx) => {
       if (item.kind === 'rest') {
         return stripUndefinedDeep({
           stepId: item.stepId || `hist-step-${idx + 1}`,
@@ -1504,7 +1591,7 @@ export function reconstructStepsSnapshotFromHistoryLog(
         sourceBlockId: item.sourceBlockId,
         sourceBlockVersion: item.sourceBlockVersion,
         sourceBlockTitle: item.sourceBlockTitle,
-        exerciseSnapshot: item.movementSnapshot
+        exerciseSnapshot: isPlainRecord(item.movementSnapshot)
           ? structuredClone(item.movementSnapshot)
           : undefined,
         humanDraftId: item.humanDraftId,
@@ -1513,9 +1600,14 @@ export function reconstructStepsSnapshotFromHistoryLog(
     });
   }
 
-  const p1SequenceSnapshot = log.sequenceSnapshot ?? programSnapshot?.sequenceSnapshot;
+  const rawP1SequenceSnapshot = log.sequenceSnapshot ?? programSnapshot?.sequenceSnapshot;
+  const p1SequenceSnapshot = isUsableSequenceSnapshot(rawP1SequenceSnapshot)
+    ? rawP1SequenceSnapshot
+    : undefined;
   if (p1SequenceSnapshot && p1SequenceSnapshot.steps.length > 0) {
-    return p1SequenceSnapshot.steps.map((step, idx) =>
+    const validSteps = p1SequenceSnapshot.steps.filter((step) => isPlainRecord(step));
+    if (validSteps.length === 0) return null;
+    return validSteps.map((step, idx) =>
       stripUndefinedDeep({
         stepId: step.stepId || `hist-step-${idx + 1}`,
         order: step.order ?? idx + 1,
@@ -1536,7 +1628,7 @@ export function reconstructStepsSnapshotFromHistoryLog(
         sourceBlockId: step.sourceBlockId,
         sourceBlockVersion: step.sourceBlockVersion,
         sourceBlockTitle: step.sourceBlockTitle,
-        exerciseSnapshot: step.exerciseSnapshot
+        exerciseSnapshot: isPlainRecord(step.exerciseSnapshot)
           ? structuredClone(step.exerciseSnapshot)
           : undefined,
         humanDraftId: step.humanDraftId,
@@ -1563,14 +1655,18 @@ export function collectDriftedSnapshotExercises(
     { reconstructed: HierarchyPilatesExercise; movementSnapshot: MovementSnapshot }
   >();
 
-  const snapshot = log.programSnapshot;
-  const p1SequenceSnapshot = log.sequenceSnapshot ?? snapshot?.sequenceSnapshot;
+  const snapshot = isUsableProgramSnapshot(log.programSnapshot) ? log.programSnapshot : undefined;
+  const rawP1SequenceSnapshot = log.sequenceSnapshot ?? snapshot?.sequenceSnapshot;
+  const p1SequenceSnapshot = isUsableSequenceSnapshot(rawP1SequenceSnapshot)
+    ? rawP1SequenceSnapshot
+    : undefined;
 
   const inspectPair = (
     exerciseId: string,
     exSnap: TeachingExerciseSnapshot,
     moveSnap?: MovementSnapshot,
   ) => {
+    if (DANGEROUS_SNAPSHOT_KEYS.has(exerciseId) || !isPlainRecord(exSnap)) return;
     if (drifted.has(exerciseId)) return;
     const liveEx = currentById.get(exerciseId);
     if (!liveEx) return;
@@ -1578,7 +1674,7 @@ export function collectDriftedSnapshotExercises(
     const reconstructed = reconstructExerciseFromSnapshot(exSnap);
     const resolvedMoveSnap =
       moveSnap ??
-      p1SequenceSnapshot?.exerciseSnapshots[exerciseId] ??
+      getSafeOwnRecordValue(p1SequenceSnapshot?.exerciseSnapshots, exerciseId) ??
       createMovementSnapshot(reconstructed);
     drifted.set(exerciseId, {
       reconstructed,
@@ -1588,16 +1684,26 @@ export function collectDriftedSnapshotExercises(
 
   if (snapshot) {
     for (const [exerciseId, exSnap] of Object.entries(snapshot.exercisesById)) {
+      if (DANGEROUS_SNAPSHOT_KEYS.has(exerciseId) || !isPlainRecord(exSnap)) continue;
       const itemMoveSnap = snapshot.items.find(
-        (it) => it.kind === 'exercise' && it.exerciseId === exerciseId,
+        (it) => isPlainRecord(it) && it.kind === 'exercise' && it.exerciseId === exerciseId,
       )?.movementSnapshot;
-      inspectPair(exerciseId, exSnap, itemMoveSnap);
+      inspectPair(
+        exerciseId,
+        exSnap,
+        isPlainRecord(itemMoveSnap) ? itemMoveSnap : undefined,
+      );
     }
     for (const item of snapshot.items) {
-      if (item.kind === 'exercise' && item.exerciseId) {
-        if (item.exerciseSnapshot) {
-          inspectPair(item.exerciseId, item.exerciseSnapshot, item.movementSnapshot);
-        } else if (item.movementSnapshot) {
+      if (!isPlainRecord(item)) continue;
+      if (item.kind === 'exercise' && typeof item.exerciseId === 'string' && item.exerciseId) {
+        if (isPlainRecord(item.exerciseSnapshot)) {
+          inspectPair(
+            item.exerciseId,
+            item.exerciseSnapshot,
+            isPlainRecord(item.movementSnapshot) ? item.movementSnapshot : undefined,
+          );
+        } else if (isPlainRecord(item.movementSnapshot)) {
           inspectPair(
             item.exerciseId,
             movementSnapshotToTeachingExerciseSnapshot(item.movementSnapshot),
@@ -1610,6 +1716,7 @@ export function collectDriftedSnapshotExercises(
 
   if (p1SequenceSnapshot) {
     for (const [exerciseId, moveSnap] of Object.entries(p1SequenceSnapshot.exerciseSnapshots)) {
+      if (DANGEROUS_SNAPSHOT_KEYS.has(exerciseId) || !isPlainRecord(moveSnap)) continue;
       inspectPair(exerciseId, movementSnapshotToTeachingExerciseSnapshot(moveSnap), moveSnap);
     }
   }
@@ -1752,7 +1859,12 @@ export function cloneTeachingHistoryToNextClassDraft(
   sourceProvenance: SequenceSourceProvenance;
 } | null {
   const log = rawLog as ClassHistoryLogWithSnapshot;
-  const p1Snapshot = log.sequenceSnapshot ?? log.programSnapshot?.sequenceSnapshot;
+  const rawP1Snapshot =
+    log.sequenceSnapshot ??
+    (isUsableProgramSnapshot(log.programSnapshot)
+      ? log.programSnapshot.sequenceSnapshot
+      : undefined);
+  const p1Snapshot = isUsableSequenceSnapshot(rawP1Snapshot) ? rawP1Snapshot : undefined;
   if (p1Snapshot) {
     const cloned = cloneClassSnapshotToDraft(p1Snapshot, currentExercises, {
       sourceKind: 'history-snapshot',
@@ -1779,7 +1891,7 @@ export function cloneTeachingHistoryToNextClassDraft(
 
   const fallbackSteps =
     reconstructStepsSnapshotFromHistoryLog(rawLog) ??
-    (rawLog.stepsSnapshot && rawLog.stepsSnapshot.length > 0
+    (Array.isArray(rawLog.stepsSnapshot) && rawLog.stepsSnapshot.length > 0
       ? structuredClone(rawLog.stepsSnapshot)
       : null);
   if (!fallbackSteps || fallbackSteps.length === 0) {
@@ -1861,25 +1973,34 @@ export type BackupRollbackFailureReason =
 let latestBackupRollbackPoint: BackupRestoreRollbackPoint | null = null;
 let latestRollbackPersistedToDisk = false;
 
+function isRecordWithNonEmptyId(entry: unknown): boolean {
+  if (!isPlainRecord(entry)) return false;
+  return typeof entry.id === 'string' && entry.id.trim().length > 0;
+}
+
 function isValidBackupPreRestoreDomainState(
   value: unknown,
 ): value is BackupPreRestoreDomainState {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const candidate = value as Record<string, unknown>;
+  if (!isPlainRecord(value)) return false;
+  const candidate = value;
   return (
     Array.isArray(candidate.exercises) &&
+    candidate.exercises.every(isRecordWithNonEmptyId) &&
     Array.isArray(candidate.savedSequences) &&
+    candidate.savedSequences.every(isRecordWithNonEmptyId) &&
     Array.isArray(candidate.classGroups) &&
+    candidate.classGroups.every(isRecordWithNonEmptyId) &&
     Array.isArray(candidate.historyLogs) &&
+    candidate.historyLogs.every(isRecordWithNonEmptyId) &&
     Array.isArray(candidate.conditionTemplates) &&
-    Boolean(
-      candidate.instructorSchedule &&
-        typeof candidate.instructorSchedule === 'object' &&
-        !Array.isArray(candidate.instructorSchedule),
-    ) &&
+    candidate.conditionTemplates.every(isRecordWithNonEmptyId) &&
+    isPlainRecord(candidate.instructorSchedule) &&
     Array.isArray(candidate.ownedEquipment) &&
+    candidate.ownedEquipment.every((item) => typeof item === 'string') &&
     Array.isArray(candidate.ownedApparatus) &&
-    Array.isArray(candidate.ownedProps)
+    candidate.ownedApparatus.every((item) => typeof item === 'string') &&
+    Array.isArray(candidate.ownedProps) &&
+    candidate.ownedProps.every((item) => typeof item === 'string')
   );
 }
 
@@ -1895,23 +2016,21 @@ export function inspectPersistedRollbackPoint(
   } catch {
     return { valid: false, reason: 'corrupted-json', point: null };
   }
-  if (!parsedUnknown || typeof parsedUnknown !== 'object' || Array.isArray(parsedUnknown)) {
+  if (!isPlainRecord(parsedUnknown)) {
     return { valid: false, reason: 'invalid-shape', point: null };
   }
-  const parsed = parsedUnknown as Record<string, unknown>;
-  if (parsed.version !== undefined) {
-    if (
-      typeof parsed.version !== 'number' ||
-      !Number.isInteger(parsed.version) ||
-      (parsed.version !== 0 && parsed.version !== 1)
-    ) {
-      return {
-        valid: false,
-        reason: 'unsupported-version',
-        version: typeof parsed.version === 'number' ? parsed.version : undefined,
-        point: null,
-      };
-    }
+  const parsed = parsedUnknown;
+  if (
+    typeof parsed.version !== 'number' ||
+    !Number.isInteger(parsed.version) ||
+    (parsed.version !== 0 && parsed.version !== 1)
+  ) {
+    return {
+      valid: false,
+      reason: 'unsupported-version',
+      version: typeof parsed.version === 'number' ? parsed.version : undefined,
+      point: null,
+    };
   }
   if (
     typeof parsed.id !== 'string' ||
