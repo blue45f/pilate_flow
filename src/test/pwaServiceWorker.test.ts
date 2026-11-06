@@ -30,7 +30,7 @@ function harness() {
     caches,
     fetch,
     URL,
-    Response: { error: () => 'error' },
+    Response,
   });
   const request = (url: string, mode = 'cors', method = 'GET') => {
     const respondWith = vi.fn();
@@ -102,6 +102,41 @@ describe('static-only service worker', () => {
     const response = h.request('/', 'navigate');
     expect(await response.mock.calls[0][0]).toBe(h.cached);
     expect(h.cache.match).toHaveBeenCalledWith('/index.html');
+  });
+  it('neutralizes cleanUrls redirect metadata without changing the cached document', async () => {
+    const h = harness();
+    h.fetch.mockRejectedValue(new Error('offline'));
+    const cached = new Response('<html>saved app shell</html>', {
+      status: 200,
+      statusText: 'OK',
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'content-security-policy': "default-src 'self'",
+      },
+    });
+    Object.defineProperties(cached, {
+      redirected: { value: true },
+      url: { value: 'https://example.test/' },
+    });
+    h.cache.match.mockResolvedValueOnce(cached as never);
+    const response = (await h.request('/', 'navigate').mock.calls[0][0]) as Response;
+    expect(response).not.toBe(cached);
+    expect(response.redirected).toBe(false);
+    expect(response.url).toBe('');
+    expect(response.status).toBe(200);
+    expect(response.statusText).toBe('OK');
+    expect(response.headers.get('content-type')).toBe('text/html; charset=utf-8');
+    expect(response.headers.get('content-security-policy')).toBe("default-src 'self'");
+    expect(await response.text()).toBe('<html>saved app shell</html>');
+    expect(h.cache.addAll).not.toHaveBeenCalled();
+    expect(h.caches.delete).not.toHaveBeenCalled();
+  });
+  it('fails closed when the cached document is missing', async () => {
+    const h = harness();
+    h.fetch.mockRejectedValue(new Error('offline'));
+    h.cache.match.mockResolvedValueOnce(undefined as never);
+    const response = (await h.request('/', 'navigate').mock.calls[0][0]) as Response;
+    expect(response.type).toBe('error');
   });
   it('uses only this version cache for hashed assets', async () => {
     const h = harness();

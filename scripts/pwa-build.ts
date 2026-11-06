@@ -60,7 +60,14 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate' && (url.pathname === '/' || url.pathname === '/index.html')) {
     event.respondWith(fetch(request).catch(async () => {
       const cache = await caches.open(CACHE);
-      return (await cache.match('/index.html')) || Response.error();
+      const cached = await cache.match('/index.html');
+      if (!cached) return Response.error();
+      // Hosting cleanUrls may redirect /index.html to /. A navigation with
+      // redirect: manual cannot use that redirected response in respondWith.
+      // Copy only the cached document response, preserving body/status/headers.
+      return cached.redirected
+        ? new Response(cached.body, { status: cached.status, statusText: cached.statusText, headers: cached.headers })
+        : cached;
     }));
     return;
   }
