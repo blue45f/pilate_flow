@@ -12,6 +12,10 @@ import { LogClassHistorySchema } from '../schemas/pilatesSchema';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { SequenceStep } from '../types/pilates';
 import type { ClassHistoryLogWithSnapshot } from '../types/teachingHistorySnapshot';
+import {
+  getSavedHumanMovementDrafts,
+  getSavedReusableBlocks,
+} from '../utils/movementIdeaDraft';
 import { formatSecondsToMMSS, getSequenceDurations, isRestStep } from '../utils/sequenceEngine';
 import {
   attachProgramSnapshotToHistoryLog,
@@ -79,6 +83,12 @@ const SessionLogForm: React.FC<
   );
   const [exercisesAtOpen] = useState(() =>
     exercises.map((exercise) => structuredClone(exercise)),
+  );
+  const [humanDraftsAtOpen] = useState(() =>
+    getSavedHumanMovementDrafts().map((draft) => structuredClone(draft)),
+  );
+  const [reusableBlocksAtOpen] = useState(() =>
+    getSavedReusableBlocks().map((block) => structuredClone(block)),
   );
   const [sourceSubtitle] = useState(
     () => (sequenceId === activeSequenceId ? activeSubtitle : saved?.subtitle) ?? '',
@@ -223,6 +233,8 @@ const SessionLogForm: React.FC<
       groupId,
       steps: stepsForLog,
       exercises: exercisesAtOpen,
+      reusableBlocks: reusableBlocksAtOpen,
+      humanDrafts: humanDraftsAtOpen,
       actualDurationSec,
       actualRestDurationSec: context?.actualRestDurationSec,
       criteriaSnapshot: resolvedCriteriaSnapshot ?? undefined,
@@ -460,10 +472,15 @@ const SessionLogForm: React.FC<
                 <span>
                   {isRestStep(step)
                     ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}`
-                    : (step.exerciseSnapshot?.nameKo ??
-                      exercisesAtOpen.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
-                      exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
-                      '삭제된 동작')}
+                    : step.blockInstanceId
+                      ? (step.exerciseSnapshot?.nameKo ??
+                        exercisesAtOpen.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
+                        exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
+                        '삭제된 동작')
+                      : (exercisesAtOpen.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
+                        step.exerciseSnapshot?.nameKo ??
+                        exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
+                        '삭제된 동작')}
                 </span>
               </label>
             ))}

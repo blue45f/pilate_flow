@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parseRecoverableNativeBackup } from '../../backend/backupValidation';
 import { ClassBinderView } from '../components/ClassBinderView';
 import { LogSessionModal } from '../components/LogSessionModal';
+import { RecoveryPreview } from '../components/RecoveryPreview';
 import { INITIAL_CLASS_GROUPS, INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { useCloudSession } from '../lib/cloudSync';
 import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
@@ -16,6 +17,15 @@ import type {
 } from '../types/pilates';
 import type { ClassHistoryLogWithSnapshot } from '../types/teachingHistorySnapshot';
 import { inspectBackupRecovery } from '../utils/backupRecoveryInspection';
+import {
+  getHumanDraftForIdeaExercise,
+  getSavedHumanMovementDrafts,
+  getSavedReusableBlocks,
+  insertIdeaReusableBlockToCurrentClass,
+  resetMovementIdeaTestCache,
+  saveIdeaToReusableBlock,
+  saveMovementIdeaDraft,
+} from '../utils/movementIdeaDraft';
 import { syntheticPlanningExercise } from './planningFixtures';
 
 const originalStore = usePilatesStore.getState();
@@ -457,5 +467,199 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
     expect(afterQuotaFail.persistenceError).toEqual(expect.any(String));
     expect(afterQuotaFail.saveFeedback).toBeNull();
     expect(getRecoveryStorageStatus().ok).toBe(false);
+  });
+
+  it('captures HumanMovementDraft feel/modification logs and ReusableBlock snapshots in LogSessionModal, survives page refresh, detects v2 block/draft drift in ClassBinderView, and reports local-only status when cloudBackup is null', async () => {
+    resetMovementIdeaTestCache();
+
+    // 1. Instructor creates a HumanMovementDraft with subjective feeling & adjustment note (no instructor review gate)
+    const savedIdeaV1 = saveMovementIdeaDraft({
+      ideaLine: '리포머 롱스트레치 코어 제어 v1 아이디어',
+      workingTitle: '당시 창작 롱스트레치 v1',
+      subjectiveFeeling: '당시 운동감: 견갑 하강 유지 시 복횡근 자극이 선명함',
+      adjustmentNote: '당시 수정점: 손목 부담 시 전완 지지 변형 안내',
+      apparatus: 'reformer',
+      durationMin: 6,
+      level: '1.5',
+      repetitions: 8,
+      sets: 2,
+      sideMode: 'together',
+      sectionRole: 'main',
+    });
+    expect(savedIdeaV1.ok).toBe(true);
+    const ideaExId = savedIdeaV1.exercise!.id;
+
+    // 2. Instructor creates a ReusableBlock v1 from this movement and inserts it into the active class sequence
+    const blockResV1 = saveIdeaToReusableBlock({
+      exerciseId: ideaExId,
+      blockTitle: '당시 창작 코어 블록 v1',
+      sectionRole: 'main',
+      durationMin: 6,
+    });
+    expect(blockResV1.ok).toBe(true);
+    const blockId = blockResV1.block!.id;
+
+    usePilatesStore.setState({
+      activeSequenceId: 'draft-human-block-class',
+      activeTitle: '창작 동작·블록 수업',
+      activeApparatus: 'reformer',
+      activeLevel: '1.5',
+      activeTargetMinutes: 20,
+      activeSteps: [
+        {
+          stepId: 'step-warm-1',
+          order: 1,
+          kind: 'exercise',
+          blockCategory: 'warmup',
+          exerciseId: exWarm.id,
+          durationMin: 14,
+          selectedLayer: 'standard',
+        },
+      ],
+    });
+
+    const insertRes = insertIdeaReusableBlockToCurrentClass(blockId);
+    expect(insertRes.ok).toBe(true);
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(2);
+    // Inserting or planning never auto-records completed history
+    expect(usePilatesStore.getState().historyLogs).toHaveLength(0);
+
+    // 3. Simulate page refresh BEFORE logging the session: clear in-memory caches and rehydrate from localStorage
+    resetMovementIdeaTestCache();
+    expect(getSavedHumanMovementDrafts()).toHaveLength(1);
+    expect(getHumanDraftForIdeaExercise(ideaExId)?.workingNameKo).toBe('당시 창작 롱스트레치 v1');
+    expect(getSavedReusableBlocks()).toHaveLength(1);
+    expect(getSavedReusableBlocks()[0].title).toBe('당시 창작 코어 블록 v1');
+
+    // 4. Complete the class via LogSessionModal
+    const onClose = vi.fn();
+    const { unmount: unmountModal } = render(
+      <LogSessionModal sequenceId="draft-human-block-class" onClose={onClose} />,
+    );
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: '수업 기록 남기기' })).getByRole('button', {
+        name: '수업 기록 저장',
+      }),
+    );
+    expect(onClose).toHaveBeenCalledOnce();
+    unmountModal();
+
+    const completedLog = usePilatesStore.getState().historyLogs[0] as ClassHistoryLogWithSnapshot;
+    expect(completedLog.programSnapshot).toBeDefined();
+    expect(completedLog.programSnapshot?.blockSnapshots?.[0]?.sourceBlockTitle).toBe(
+      '당시 창작 코어 블록 v1',
+    );
+    expect(completedLog.programSnapshot?.items[1]?.movementSnapshot?.feelLogsSnapshot?.[0]?.feelNoteKo).toBe(
+      '당시 운동감: 견갑 하강 유지 시 복횡근 자극이 선명함',
+    );
+
+    // 5. Later modify the HumanMovementDraft (v1 -> v2) and ReusableBlock (v1 -> v2)
+    const savedIdeaV2 = saveMovementIdeaDraft({
+      existingExerciseId: ideaExId,
+      ideaLine: '나중에 완전히 바뀐 롱스트레치 v2 아이디어',
+      workingTitle: '나중에 수정된 창작 롱스트레치 v2',
+      subjectiveFeeling: '나중에 바뀐 운동감 메모 v2',
+      adjustmentNote: '나중에 바뀐 수정점 v2',
+      apparatus: 'reformer',
+      durationMin: 10,
+      level: '2.0',
+    });
+    expect(savedIdeaV2.ok).toBe(true);
+    expect(savedIdeaV2.draft?.revision).toBeGreaterThan(1);
+
+    const blockResV2 = saveIdeaToReusableBlock({
+      exerciseId: exWarm.id,
+      blockId,
+    });
+    expect(blockResV2.ok).toBe(true);
+    expect(blockResV2.block?.version).toBe(2);
+
+    // 6. Set cloud session to signed-in with backup: null (Firebase local-only mode)
+    useCloudSession.setState({
+      ...originalCloud,
+      phase: 'signed-in',
+      user: {
+        userId: 'instructor-local',
+        email: 'local-only@studio.kr',
+        name: '로컬 강사',
+        picture: undefined,
+        scope: 'authenticated',
+      },
+      backup: null,
+    });
+
+    // 7. Render ClassBinderView (view="history") and verify immutable v1 snapshots, drift badges, and local-only cloud banner
+    render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
+
+    expect(screen.getByLabelText('진행 완료 이력 스냅샷 보존 안내')).toHaveTextContent(
+      'P3 계정 연결됨 (local-only@studio.kr · 클라우드 백업 미연결 (로컬 전용))',
+    );
+
+    const historyFeed = screen.getByRole('region', { name: '수업 기록 목록' });
+    const historyCard = within(historyFeed).getByRole('article');
+
+    expect(within(historyCard).getByText('당시 창작 롱스트레치 v1')).toBeInTheDocument();
+    expect(
+      within(historyCard).queryByText('나중에 수정된 창작 롱스트레치 v2'),
+    ).not.toBeInTheDocument();
+    expect(
+      within(historyCard).getByText('원본 수정 후에도 당시 스냅샷 유지됨'),
+    ).toBeInTheDocument();
+
+    fireEvent.click(within(historyCard).getByRole('button', { name: '이력 다시 열기' }));
+    const reopenDialog = within(
+      screen.getByRole('dialog', { name: '진행 완료 수업 이력 상세' }),
+    );
+    expect(reopenDialog.getByText('원본 블록 수정됨 · 당시 블록 유지')).toBeInTheDocument();
+    expect(reopenDialog.getByText('원본 동작 수정됨 · 당시 값 표시')).toBeInTheDocument();
+  });
+
+  it('discloses conflict policy and allows rolling back a completed backup restore in RecoveryPreview UI', async () => {
+    vi.useRealTimers();
+    const before = usePilatesStore.getState();
+    const exportedSeq: SavedSequence = {
+      ...savedPlan,
+      id: 'seq-from-backup-file',
+      title: '백업 파일 시퀀스',
+    };
+    const rawBackup = JSON.stringify({
+      format: 'pilates-flow-atelier',
+      version: 3,
+      exportedAt: '2026-11-05T09:30:00.000Z',
+      data: {
+        exercises: [exWarm, exCore],
+        savedSequences: [exportedSeq],
+        classGroups: INITIAL_CLASS_GROUPS,
+        historyLogs: [],
+      },
+    });
+
+    render(<RecoveryPreview />);
+    const file = new File([rawBackup], 'backup.json', { type: 'application/json' });
+    Object.defineProperty(file, 'text', { value: vi.fn().mockResolvedValue(rawBackup) });
+    fireEvent.change(screen.getByLabelText('백업 JSON 파일 선택'), {
+      target: { files: [file] },
+    });
+
+    const preflight = await screen.findByRole('region', { name: '복구 전 확인' });
+    expect(preflight).toHaveTextContent(/충돌·되돌리기 안내/);
+    expect(preflight).toHaveTextContent(/복원 이전 상태로 되돌리기/);
+
+    fireEvent.click(screen.getByRole('button', { name: '이 내용으로 복원 적용' }));
+    expect(
+      usePilatesStore
+        .getState()
+        .savedSequences.some((seq) => seq.id === 'seq-from-backup-file'),
+    ).toBe(true);
+
+    const rollbackBtn = screen.getByRole('button', { name: '복원 이전 상태로 되돌리기' });
+    fireEvent.click(rollbackBtn);
+
+    const afterRollback = usePilatesStore.getState();
+    expect(afterRollback.savedSequences).toBe(before.savedSequences);
+    expect(afterRollback.exercises).toBe(before.exercises);
+    expect(afterRollback.historyLogs).toBe(before.historyLogs);
+    expect(afterRollback.undoStack).toBe(before.undoStack);
+    expect(screen.getByRole('status')).toHaveTextContent('백업 복원 이전 상태로 되돌렸습니다.');
   });
 });

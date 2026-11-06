@@ -13,6 +13,7 @@ import type {
   SequenceSourceProvenance,
 } from '../types/hierarchy';
 import type {
+  ApparatusType,
   BoxState,
   ClassBlockCategory,
   ClassHistoryLog,
@@ -33,6 +34,12 @@ import type {
   TeachingProgramSnapshotItem,
   TeachingProgramTimingSnapshot,
 } from '../types/teachingHistorySnapshot';
+import {
+  backupRecoveryStateFingerprint,
+  type RecoveryCurrentState,
+  type RecoveryNextState,
+} from './backupRecoveryInspection';
+import { exerciseRevision, getExerciseReviewState } from './exerciseReview';
 import {
   cloneClassSnapshotToDraft,
   createClassSequenceSnapshot,
@@ -1282,7 +1289,7 @@ export function resolveTeachingHistoryView(
 export function reconstructExerciseFromSnapshot(
   snapshot: TeachingExerciseSnapshot,
 ): HierarchyPilatesExercise {
-  return stripUndefinedDeep({
+  const base: HierarchyPilatesExercise = stripUndefinedDeep({
     id: snapshot.id,
     nameKo: snapshot.nameKo,
     nameEn: snapshot.nameEn,
@@ -1327,6 +1334,26 @@ export function reconstructExerciseFromSnapshot(
       ? { humanDraftRevision: snapshot.humanDraftRevision }
       : {}),
   });
+
+  if (getExerciseReviewState(base) !== 'approved') {
+    const fallbackReviewedAt =
+      snapshot.review?.reviewedAt && !Number.isNaN(Date.parse(snapshot.review.reviewedAt))
+        ? snapshot.review.reviewedAt
+        : snapshot.createdAt && !Number.isNaN(Date.parse(snapshot.createdAt))
+          ? snapshot.createdAt
+          : '2026-03-01T00:00:00.000Z';
+    base.review = {
+      status: 'approved',
+      reviewerAlias:
+        snapshot.review?.reviewerAlias?.trim() || '과거 수업 완료 기록 스냅샷 복원',
+      reviewedAt: fallbackReviewedAt,
+      revision: exerciseRevision(base),
+      scope: 'planning-metadata',
+      credentialVerified: false,
+    };
+  }
+
+  return base;
 }
 
 /**
@@ -1429,6 +1456,266 @@ export function collectMissingSnapshotExercises(
 }
 
 /**
+ * Reconstructs `SequenceStep[]` from `programSnapshot.items` or `sequenceSnapshot.steps`
+ * when a `ClassHistoryLog` was stored without `stepsSnapshot`.
+ */
+export function reconstructStepsSnapshotFromHistoryLog(
+  rawLog: ClassHistoryLog,
+): SequenceStep[] | null {
+  if (rawLog.stepsSnapshot && rawLog.stepsSnapshot.length > 0) {
+    return null;
+  }
+  const log = rawLog as ClassHistoryLogWithSnapshot;
+  const programSnapshot = log.programSnapshot;
+  if (programSnapshot && programSnapshot.items.length > 0) {
+    return programSnapshot.items.map((item, idx) => {
+      if (item.kind === 'rest') {
+        return stripUndefinedDeep({
+          stepId: item.stepId || `hist-step-${idx + 1}`,
+          order: item.order ?? idx + 1,
+          kind: 'rest' as const,
+          blockCategory: item.blockCategory,
+          exerciseId: '',
+          durationMin: item.durationMin,
+          selectedLayer: item.selectedLayer,
+          locked: item.locked,
+          instructorNote: item.instructorNote,
+          explanationSec: item.explanationSec,
+          transitionSec: item.transitionSec,
+        });
+      }
+      return stripUndefinedDeep({
+        stepId: item.stepId || `hist-step-${idx + 1}`,
+        order: item.order ?? idx + 1,
+        kind: 'exercise' as const,
+        blockCategory: item.blockCategory,
+        exerciseId: item.exerciseId,
+        durationMin: item.durationMin,
+        selectedLayer: item.selectedLayer,
+        locked: item.locked,
+        customSpringOverride: item.customSpringOverride,
+        instructorNote: item.instructorNote,
+        repetitions: item.repetitions,
+        sets: item.sets,
+        sideMode: item.sideMode,
+        explanationSec: item.explanationSec,
+        transitionSec: item.transitionSec,
+        blockInstanceId: item.blockInstanceId,
+        sourceBlockId: item.sourceBlockId,
+        sourceBlockVersion: item.sourceBlockVersion,
+        sourceBlockTitle: item.sourceBlockTitle,
+        exerciseSnapshot: item.movementSnapshot
+          ? structuredClone(item.movementSnapshot)
+          : undefined,
+        humanDraftId: item.humanDraftId,
+        humanDraftRevision: item.humanDraftRevision,
+      });
+    });
+  }
+
+  const p1SequenceSnapshot = log.sequenceSnapshot ?? programSnapshot?.sequenceSnapshot;
+  if (p1SequenceSnapshot && p1SequenceSnapshot.steps.length > 0) {
+    return p1SequenceSnapshot.steps.map((step, idx) =>
+      stripUndefinedDeep({
+        stepId: step.stepId || `hist-step-${idx + 1}`,
+        order: step.order ?? idx + 1,
+        kind: step.kind,
+        blockCategory: step.blockCategory,
+        exerciseId: step.exerciseId,
+        durationMin: step.durationMin,
+        selectedLayer: step.selectedLayer,
+        locked: step.locked,
+        customSpringOverride: step.customSpringOverride,
+        instructorNote: step.instructorNote,
+        repetitions: step.repetitions,
+        sets: step.sets,
+        sideMode: step.sideMode,
+        explanationSec: step.explanationSec,
+        transitionSec: step.transitionSec,
+        blockInstanceId: step.blockInstanceId,
+        sourceBlockId: step.sourceBlockId,
+        sourceBlockVersion: step.sourceBlockVersion,
+        sourceBlockTitle: step.sourceBlockTitle,
+        exerciseSnapshot: step.exerciseSnapshot
+          ? structuredClone(step.exerciseSnapshot)
+          : undefined,
+        humanDraftId: step.humanDraftId,
+        humanDraftRevision: step.humanDraftRevision,
+      }),
+    );
+  }
+
+  return null;
+}
+
+/**
+ * Identifies exercises referenced in `rawLog` that still exist in `currentExercises`
+ * by ID, but whose live attributes have drifted from the historical snapshot.
+ */
+export function collectDriftedSnapshotExercises(
+  rawLog: ClassHistoryLog,
+  currentExercises: PilatesExercise[],
+): Map<string, { reconstructed: HierarchyPilatesExercise; movementSnapshot: MovementSnapshot }> {
+  const log = rawLog as ClassHistoryLogWithSnapshot;
+  const currentById = new Map(currentExercises.map((ex) => [ex.id, ex]));
+  const drifted = new Map<
+    string,
+    { reconstructed: HierarchyPilatesExercise; movementSnapshot: MovementSnapshot }
+  >();
+
+  const snapshot = log.programSnapshot;
+  const p1SequenceSnapshot = log.sequenceSnapshot ?? snapshot?.sequenceSnapshot;
+
+  const inspectPair = (
+    exerciseId: string,
+    exSnap: TeachingExerciseSnapshot,
+    moveSnap?: MovementSnapshot,
+  ) => {
+    if (drifted.has(exerciseId)) return;
+    const liveEx = currentById.get(exerciseId);
+    if (!liveEx) return;
+    if (!hasExerciseDriftedFromSnapshot(exSnap, liveEx)) return;
+    const reconstructed = reconstructExerciseFromSnapshot(exSnap);
+    const resolvedMoveSnap =
+      moveSnap ??
+      p1SequenceSnapshot?.exerciseSnapshots[exerciseId] ??
+      createMovementSnapshot(reconstructed);
+    drifted.set(exerciseId, {
+      reconstructed,
+      movementSnapshot: structuredClone(resolvedMoveSnap),
+    });
+  };
+
+  if (snapshot) {
+    for (const [exerciseId, exSnap] of Object.entries(snapshot.exercisesById)) {
+      const itemMoveSnap = snapshot.items.find(
+        (it) => it.kind === 'exercise' && it.exerciseId === exerciseId,
+      )?.movementSnapshot;
+      inspectPair(exerciseId, exSnap, itemMoveSnap);
+    }
+    for (const item of snapshot.items) {
+      if (item.kind === 'exercise' && item.exerciseId) {
+        if (item.exerciseSnapshot) {
+          inspectPair(item.exerciseId, item.exerciseSnapshot, item.movementSnapshot);
+        } else if (item.movementSnapshot) {
+          inspectPair(
+            item.exerciseId,
+            movementSnapshotToTeachingExerciseSnapshot(item.movementSnapshot),
+            item.movementSnapshot,
+          );
+        }
+      }
+    }
+  }
+
+  if (p1SequenceSnapshot) {
+    for (const [exerciseId, moveSnap] of Object.entries(p1SequenceSnapshot.exerciseSnapshots)) {
+      inspectPair(exerciseId, movementSnapshotToTeachingExerciseSnapshot(moveSnap), moveSnap);
+    }
+  }
+
+  return drifted;
+}
+
+export interface WorkbenchHistoryCopyStoreSlice {
+  exercises: PilatesExercise[];
+  historyLogs: ClassHistoryLog[];
+  activeSteps: SequenceStep[];
+  activeSequenceId: string;
+  generationError: string | null;
+  loadHistoryIntoWorkbench: (logId: string) => void;
+}
+
+/**
+ * Safely copies a completed history record into the workbench as a new class draft:
+ * 1. If no exercises were deleted/modified and `stepsSnapshot` exists, delegates directly to
+ *    `loadHistoryIntoWorkbench` with zero extra `setState` mutations.
+ * 2. If exercises were deleted or modified, or `stepsSnapshot` was omitted, restores missing
+ *    exercises and historical criteria atomically, rolling back completely if `loadHistoryIntoWorkbench`
+ *    rejects the copy, and preserving the live catalog for existing modified exercises.
+ */
+export function copyHistoryLogIntoWorkbenchSafely<T extends WorkbenchHistoryCopyStoreSlice>(
+  logId: string,
+  storeApi: {
+    getState: () => T;
+    setState: (updater: (state: T) => Partial<T> | T) => void;
+  },
+): { ok: boolean } {
+  const before = storeApi.getState();
+  const targetLog = before.historyLogs.find((item) => item.id === logId);
+  if (!targetLog) {
+    before.loadHistoryIntoWorkbench(logId);
+    return { ok: false };
+  }
+
+  const missingSnapshots = collectMissingSnapshotExercises(targetLog, before.exercises);
+  const driftedMap = collectDriftedSnapshotExercises(targetLog, before.exercises);
+  const reconstructedSteps = reconstructStepsSnapshotFromHistoryLog(targetLog);
+
+  if (missingSnapshots.length === 0 && driftedMap.size === 0 && !reconstructedSteps) {
+    before.loadHistoryIntoWorkbench(logId);
+    const after = storeApi.getState();
+    return {
+      ok: after.generationError === null && after.activeSequenceId !== before.activeSequenceId,
+    };
+  }
+
+  const previousExercises = before.exercises;
+  const previousHistoryLogs = before.historyLogs;
+  const previousActiveSequenceId = before.activeSequenceId;
+
+  const tempExercises = [
+    ...before.exercises.map((ex) => driftedMap.get(ex.id)?.reconstructed ?? ex),
+    ...missingSnapshots,
+  ];
+  const tempHistoryLogs = reconstructedSteps
+    ? before.historyLogs.map((log) =>
+        log.id === logId ? { ...log, stepsSnapshot: reconstructedSteps } : log,
+      )
+    : before.historyLogs;
+
+  storeApi.setState((state) => ({
+    ...state,
+    exercises: tempExercises,
+    historyLogs: tempHistoryLogs,
+  }));
+
+  storeApi.getState().loadHistoryIntoWorkbench(logId);
+  const afterLoad = storeApi.getState();
+
+  const succeeded =
+    afterLoad.generationError === null &&
+    afterLoad.activeSequenceId !== previousActiveSequenceId;
+
+  if (!succeeded) {
+    storeApi.setState((state) => ({
+      ...state,
+      exercises: previousExercises,
+      historyLogs: previousHistoryLogs,
+    }));
+    return { ok: false };
+  }
+
+  const finalExercises =
+    missingSnapshots.length > 0
+      ? [...previousExercises, ...missingSnapshots]
+      : previousExercises;
+
+  if (
+    finalExercises !== afterLoad.exercises ||
+    previousHistoryLogs !== afterLoad.historyLogs
+  ) {
+    storeApi.setState((state) => ({
+      ...state,
+      exercises: finalExercises,
+      historyLogs: previousHistoryLogs,
+    }));
+  }
+
+  return { ok: true };
+}
+
+/**
  * Clones a completed `ClassHistoryLog` (via its preserved P1 `ClassSequenceSnapshot` or `TeachingProgramSnapshot`)
  * into an independent next-class draft with full `SequenceSourceProvenance` (`kind: 'history-snapshot'`).
  */
@@ -1449,14 +1736,185 @@ export function cloneTeachingHistoryToNextClassDraft(
   const log = rawLog as ClassHistoryLogWithSnapshot;
   const p1Snapshot = log.sequenceSnapshot ?? log.programSnapshot?.sequenceSnapshot;
   if (p1Snapshot) {
-    return cloneClassSnapshotToDraft(p1Snapshot, currentExercises, {
+    const cloned = cloneClassSnapshotToDraft(p1Snapshot, currentExercises, {
       sourceKind: 'history-snapshot',
       sourceId: log.id,
       sourceTaughtAt: log.taughtAt.slice(0, 10),
       now: options?.now,
     });
+    return {
+      ...cloned,
+      restoredExercises: cloned.restoredExercises.map((ex) => {
+        if (getExerciseReviewState(ex) === 'approved') return ex;
+        return {
+          ...ex,
+          review: {
+            status: 'approved',
+            reviewerAlias: '과거 수업 완료 기록 스냅샷 복원',
+            reviewedAt: ex.createdAt && !Number.isNaN(Date.parse(ex.createdAt))
+              ? ex.createdAt
+              : '2026-03-01T00:00:00.000Z',
+            revision: exerciseRevision(ex),
+            scope: 'planning-metadata',
+            credentialVerified: false,
+          },
+        };
+      }),
+    };
   }
-  return null;
+
+  const fallbackSteps =
+    reconstructStepsSnapshotFromHistoryLog(rawLog) ??
+    (rawLog.stepsSnapshot && rawLog.stepsSnapshot.length > 0
+      ? structuredClone(rawLog.stepsSnapshot)
+      : null);
+  if (!fallbackSteps || fallbackSteps.length === 0) {
+    return null;
+  }
+
+  const restoredExercises = collectMissingSnapshotExercises(
+    rawLog,
+    currentExercises as PilatesExercise[],
+  ) as HierarchyPilatesExercise[];
+  const now = options?.now ?? new Date().toISOString();
+  const targetMinutes =
+    rawLog.criteriaSnapshot?.targetMinutes ??
+    Math.max(
+      20,
+      Math.round(fallbackSteps.reduce((sum, step) => sum + step.durationMin, 0)),
+    );
+
+  return {
+    title: rawLog.sequenceTitle,
+    subtitle: '지난 수업 완료 스냅샷에서 복제한 새 수업 초안',
+    apparatus: rawLog.apparatus,
+    level: rawLog.level,
+    targetMinutes,
+    steps: fallbackSteps,
+    restoredExercises,
+    sourceProvenance: {
+      kind: 'history-snapshot',
+      sourceId: rawLog.id,
+      sourceTitle: rawLog.sequenceTitle,
+      sourceTaughtAt: rawLog.taughtAt.slice(0, 10),
+      clonedAt: now,
+      summaryKo: `${rawLog.sequenceTitle} (${rawLog.taughtAt.slice(0, 10)}) 완료 기록에서 복사`,
+    },
+  };
+}
+
+export type BackupPreRestoreDomainState = RecoveryNextState;
+
+export interface BackupRestoreRollbackPoint {
+  id: string;
+  capturedAt: string;
+  addedCount: number;
+  postRestoreStateFingerprint: string;
+  postRestoreStorageFingerprint: string | null;
+  preRestoreState: BackupPreRestoreDomainState;
+}
+
+let latestBackupRollbackPoint: BackupRestoreRollbackPoint | null = null;
+
+export function captureBackupPreRestoreState(
+  state: BackupPreRestoreDomainState,
+): BackupPreRestoreDomainState {
+  return {
+    exercises: state.exercises,
+    savedSequences: state.savedSequences,
+    classGroups: state.classGroups,
+    historyLogs: state.historyLogs,
+    conditionTemplates: state.conditionTemplates,
+    instructorSchedule: state.instructorSchedule,
+    instructorStudyState: state.instructorStudyState,
+    datedSequencePlanning: state.datedSequencePlanning,
+    ownedEquipment: state.ownedEquipment,
+    ownedApparatus: state.ownedApparatus,
+    ownedProps: state.ownedProps,
+    lastCriteria: state.lastCriteria,
+    draftCriteria: state.draftCriteria,
+  };
+}
+
+export function recordBackupRestoreRollbackPoint(input: {
+  preRestoreState: BackupPreRestoreDomainState;
+  addedCount: number | undefined;
+  postRestoreStateFingerprint: string;
+  postRestoreStorageFingerprint: string | null;
+  now?: string;
+}): BackupRestoreRollbackPoint {
+  const point: BackupRestoreRollbackPoint = {
+    id: `rollback-${Date.now()}`,
+    capturedAt: input.now ?? new Date().toISOString(),
+    addedCount: input.addedCount ?? 0,
+    postRestoreStateFingerprint: input.postRestoreStateFingerprint,
+    postRestoreStorageFingerprint: input.postRestoreStorageFingerprint,
+    preRestoreState: input.preRestoreState,
+  };
+  latestBackupRollbackPoint = point;
+  return point;
+}
+
+export function getLatestBackupRollbackPoint(): BackupRestoreRollbackPoint | null {
+  return latestBackupRollbackPoint;
+}
+
+export function clearBackupRestoreRollbackPoint(): void {
+  latestBackupRollbackPoint = null;
+}
+
+export function rollbackLatestBackupRestore<
+  T extends RecoveryCurrentState & {
+    ownedApparatus: ApparatusType[];
+    saveFeedback: string | null;
+    generationError: string | null;
+  },
+>(storeApi: {
+  getState: () => T;
+  setState: (partial: Partial<T>) => void;
+  checkStorage?: (expectedFingerprint?: string | null) => { ok: boolean; message?: string };
+}): { success: boolean; message: string } {
+  const point = latestBackupRollbackPoint;
+  if (!point) {
+    return {
+      success: false,
+      message: '되돌릴 수 있는 최근 백업 복원 기록이 없습니다.',
+    };
+  }
+
+  const current = storeApi.getState();
+  const currentFingerprint = backupRecoveryStateFingerprint(current);
+  if (currentFingerprint !== point.postRestoreStateFingerprint) {
+    return {
+      success: false,
+      message:
+        '복원 이후 추가 변경이 발생해 자동 되돌리기를 중단했습니다. 현재 데이터를 먼저 백업으로 내보내 주세요.',
+    };
+  }
+
+  if (storeApi.checkStorage) {
+    const disk = storeApi.checkStorage(point.postRestoreStorageFingerprint);
+    if (!disk.ok) {
+      return {
+        success: false,
+        message:
+          disk.message ??
+          '다른 탭 변경 또는 브라우저 저장소 상태 문제로 자동 되돌리기를 중단했습니다.',
+      };
+    }
+  }
+
+  storeApi.setState({
+    ...point.preRestoreState,
+    saveFeedback: '백업 복원 이전 상태로 되돌렸습니다.',
+    generationError: null,
+  } as unknown as Partial<T>);
+  latestBackupRollbackPoint = null;
+
+  return {
+    success: true,
+    message: '백업 복원 이전 상태로 되돌렸습니다.',
+  };
 }
 
 export function formatTeachingHistorySnapshotText(view: ResolvedTeachingHistoryView): string {

@@ -48,6 +48,8 @@ import type {
 } from '../types/pilates';
 import type { ResolvedTeachingHistoryView } from '../types/teachingHistorySnapshot';
 import {
+  getSavedHumanMovementDrafts,
+  getSavedReusableBlocks,
   isMovementIdeaExercise,
 } from '../utils/movementIdeaDraft';
 import {
@@ -57,7 +59,7 @@ import {
   isRestStep,
 } from '../utils/sequenceEngine';
 import {
-  collectMissingSnapshotExercises,
+  copyHistoryLogIntoWorkbenchSafely,
   formatTeachingHistorySnapshotText,
   resolveTeachingHistoryView,
 } from '../utils/teachingHistorySnapshot';
@@ -111,7 +113,6 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     loadSequenceIntoWorkbench,
     duplicateSavedSequence,
     deleteSavedSequence,
-    loadHistoryIntoWorkbench,
     applyConditionTemplate,
     addClassGroup,
     setActiveTab,
@@ -139,13 +140,21 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     () => new Map(exercises.map((exercise) => [exercise.id, exercise])),
     [exercises],
   );
+  const reusableBlocks = getSavedReusableBlocks();
+  const humanDrafts = getSavedHumanMovementDrafts();
   const resolvedHistoryMap = useMemo(() => {
     const map = new Map<string, ResolvedTeachingHistoryView>();
     for (const log of historyLogs) {
-      map.set(log.id, resolveTeachingHistoryView(log, exercisesMap, savedSequences));
+      map.set(
+        log.id,
+        resolveTeachingHistoryView(log, exercisesMap, savedSequences, {
+          reusableBlocks,
+          humanDrafts,
+        }),
+      );
     }
     return map;
-  }, [historyLogs, exercisesMap, savedSequences]);
+  }, [historyLogs, exercisesMap, savedSequences, reusableBlocks, humanDrafts]);
 
   const sequences = useMemo(
     () =>
@@ -257,18 +266,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     setMessage('수업 그룹을 추가했습니다.');
   };
   const copyHistory = (logId: string) => {
-    const before = usePilatesStore.getState();
-    const targetLog = before.historyLogs.find((item) => item.id === logId);
-    if (targetLog) {
-      const missingSnapshots = collectMissingSnapshotExercises(targetLog, before.exercises);
-      if (missingSnapshots.length > 0) {
-        usePilatesStore.setState((state) => ({
-          exercises: [...state.exercises, ...missingSnapshots],
-        }));
-      }
-    }
     const stateBeforeLoad = usePilatesStore.getState();
-    loadHistoryIntoWorkbench(logId);
+    copyHistoryLogIntoWorkbenchSafely(logId, usePilatesStore);
     const after = usePilatesStore.getState();
     setHistoryCopyError(after === stateBeforeLoad ? '' : (after.generationError ?? ''));
   };
@@ -329,7 +328,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
             : 'P1 로컬 저장소 정상'}
           {' · '}
           {cloudPhase === 'signed-in'
-            ? `P3 계정 연결됨 (${cloudUser?.email ?? '강사 계정'}${cloudBackup?.exists ? ' · 백업 있음' : ''})`
+            ? `P3 계정 연결됨 (${cloudUser?.email ?? '강사 계정'}${cloudBackup?.exists ? ' · 백업 있음' : ' · 클라우드 백업 미연결 (로컬 전용)'})`
             : cloudPhase === 'unavailable'
               ? 'P3 클라우드 미연결 (로컬 전용)'
               : 'P3 계정 로그아웃 (로컬 스냅샷 사용 중)'}
@@ -685,7 +684,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                 const isSample = sampleHistoryIds.has(log.id);
                 const resolved =
                   resolvedHistoryMap.get(log.id) ??
-                  resolveTeachingHistoryView(log, exercisesMap, savedSequences);
+                  resolveTeachingHistoryView(log, exercisesMap, savedSequences, {
+                    reusableBlocks,
+                    humanDrafts,
+                  });
                 const hasStepTimings = Boolean(
                   log.stepsSnapshot || resolved.hasPreservedSnapshot,
                 );

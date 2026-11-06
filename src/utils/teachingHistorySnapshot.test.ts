@@ -13,7 +13,11 @@ import type {
   SequenceStep,
 } from '../types/pilates';
 import type { ClassHistoryLogWithSnapshot } from '../types/teachingHistorySnapshot';
-import { inspectBackupRecovery } from './backupRecoveryInspection';
+import {
+  backupRecoveryStateFingerprint,
+  inspectBackupRecovery,
+} from './backupRecoveryInspection';
+import { getExerciseReviewState } from './exerciseReview';
 import {
   createReusableBlock,
   insertReusableBlockIntoSequence,
@@ -25,14 +29,20 @@ import {
   attachProgramSnapshotToHistoryLog,
   buildCompletionFingerprint,
   buildTeachingProgramSnapshot,
+  captureBackupPreRestoreState,
+  clearBackupRestoreRollbackPoint,
   cloneTeachingHistoryToNextClassDraft,
   collectMissingSnapshotExercises,
+  copyHistoryLogIntoWorkbenchSafely,
   createTeachingExerciseSnapshot,
   findDuplicateCompletedHistoryLog,
   formatTeachingHistorySnapshotText,
   hasExerciseDriftedFromSnapshot,
+  recordBackupRestoreRollbackPoint,
   reconstructExerciseFromSnapshot,
+  reconstructStepsSnapshotFromHistoryLog,
   resolveTeachingHistoryView,
+  rollbackLatestBackupRestore,
 } from './teachingHistorySnapshot';
 
 const originalStore = usePilatesStore.getState();
@@ -582,5 +592,232 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
         stepsSnapshot: [steps[0]],
       }),
     ).toBeNull();
+  });
+
+  it('atomically copies history logs when exercises were deleted or modified, reconstructs omitted stepsSnapshot, ensures review eligibility, and rolls back on validation failure', () => {
+    const snapshot = buildTeachingProgramSnapshot({
+      sequenceId: 'seq-snap-test',
+      sequenceTitle: '리포머 코어 집중 프로그램',
+      sequenceSubtitle: '화요 오전 정규반',
+      sourceKind: 'saved-sequence',
+      taughtAt: '2026-11-05T11:00:00.000Z',
+      groupId: INITIAL_CLASS_GROUPS[0].id,
+      steps,
+      exercises: [warmEx, coreEx],
+      actualDurationSec: 1320,
+      actualRestDurationSec: 120,
+      criteriaSnapshot: criteria,
+    });
+
+    // 1. Reconstructed exercise always has valid 'approved' planning-metadata review (no review gate blocking)
+    const strippedReviewSnap = {
+      ...snapshot.exercisesById[coreEx.id],
+      review: undefined,
+    };
+    const reconstructedCore = reconstructExerciseFromSnapshot(strippedReviewSnap);
+    expect(getExerciseReviewState(reconstructedCore)).toBe('approved');
+    expect(reconstructedCore.review?.credentialVerified).toBe(false);
+
+    // 2. History log where stepsSnapshot is omitted (only programSnapshot present),
+    //    coreEx is deleted, and warmEx has its live level/apparatus modified in store
+    const logWithoutStepsSnapshot: ClassHistoryLogWithSnapshot = {
+      id: 'log-program-only',
+      sequenceId: 'seq-snap-test',
+      sequenceTitle: '리포머 코어 집중 프로그램',
+      groupId: INITIAL_CLASS_GROUPS[0].id,
+      groupName: INITIAL_CLASS_GROUPS[0].name,
+      taughtAt: '2026-11-05T11:00:00.000Z',
+      apparatus: 'reformer',
+      level: '1.5',
+      exerciseIds: [warmEx.id, coreEx.id],
+      rating: 5,
+      intensity: 'moderate',
+      instructorReflection: 'stepsSnapshot 없이 programSnapshot만 있는 기록',
+      programSnapshot: snapshot,
+    };
+
+    const reconstructedSteps = reconstructStepsSnapshotFromHistoryLog(logWithoutStepsSnapshot);
+    expect(reconstructedSteps).toHaveLength(3);
+
+    const mutatedLiveWarmEx: PilatesExercise = {
+      ...warmEx,
+      nameKo: '나중에 매트로 바뀐 웜업',
+      apparatus: 'mat',
+      requiredEquipment: ['mat'],
+      level: '1.0',
+    };
+
+    usePilatesStore.setState({
+      exercises: [mutatedLiveWarmEx],
+      historyLogs: [logWithoutStepsSnapshot],
+      activeSequenceId: 'draft-before',
+      activeTitle: '기존 작업대 초안',
+      activeSteps: [],
+      generationError: null,
+    });
+
+    const copyOutcome = copyHistoryLogIntoWorkbenchSafely('log-program-only', usePilatesStore);
+    expect(copyOutcome.ok).toBe(true);
+
+    const afterSuccess = usePilatesStore.getState();
+    // Deleted coreEx was restored with valid review, while live mutatedWarmEx kept its live edits in store.exercises
+    expect(afterSuccess.exercises.some((ex) => ex.id === coreEx.id)).toBe(true);
+    expect(
+      getExerciseReviewState(afterSuccess.exercises.find((ex) => ex.id === coreEx.id)!),
+    ).toBe('approved');
+    expect(afterSuccess.exercises.find((ex) => ex.id === warmEx.id)?.nameKo).toBe(
+      '나중에 매트로 바뀐 웜업',
+    );
+    // Yet the copied workbench draft criteria derived apparatus & level from the historical reformer/1.5 snapshot!
+    expect(afterSuccess.draftCriteria?.apparatus).toBe('reformer');
+    expect(afterSuccess.draftCriteria?.level).toBe('1.5');
+    // And historyLogs was NOT mutated in place (still has undefined stepsSnapshot)
+    expect(afterSuccess.historyLogs[0].stepsSnapshot).toBeUndefined();
+
+    // 3. Fallback cloneTeachingHistoryToNextClassDraft when sequenceSnapshot is omitted
+    const logWithoutSequenceSnapshot: ClassHistoryLogWithSnapshot = {
+      ...logWithoutStepsSnapshot,
+      sequenceSnapshot: undefined,
+      programSnapshot: {
+        ...snapshot,
+        sequenceSnapshot: undefined,
+      },
+    };
+    const fallbackDraft = cloneTeachingHistoryToNextClassDraft(logWithoutSequenceSnapshot, [
+      mutatedLiveWarmEx,
+    ]);
+    expect(fallbackDraft).not.toBeNull();
+    expect(fallbackDraft?.steps).toHaveLength(3);
+    expect(fallbackDraft?.restoredExercises.map((ex) => ex.id)).toEqual([coreEx.id]);
+
+    // 4. Atomic rollback when loadHistoryIntoWorkbench rejects (e.g. one step has a deleted exercise
+    //    recoverable from programSnapshot, while another step references an unrecoverable missing exercise)
+    const invalidSteps: SequenceStep[] = [
+      {
+        stepId: 'step-recoverable-ex',
+        order: 1,
+        kind: 'exercise',
+        blockCategory: 'core',
+        exerciseId: coreEx.id,
+        durationMin: 10,
+        selectedLayer: 'standard',
+      },
+      {
+        stepId: 'step-unrecoverable-ex',
+        order: 2,
+        kind: 'exercise',
+        blockCategory: 'core',
+        exerciseId: 'ex-unrecoverable-missing-id',
+        durationMin: 10,
+        selectedLayer: 'standard',
+      },
+    ];
+    const invalidLog: ClassHistoryLogWithSnapshot = {
+      ...logWithoutStepsSnapshot,
+      id: 'log-invalid-criteria',
+      stepsSnapshot: invalidSteps,
+    };
+
+    const exercisesBeforeFail = [mutatedLiveWarmEx];
+    const historyBeforeFail = [invalidLog];
+    usePilatesStore.setState({
+      exercises: exercisesBeforeFail,
+      historyLogs: historyBeforeFail,
+      activeSequenceId: 'draft-keep-me',
+      activeTitle: '유지되어야 할 초안',
+      generationError: null,
+    });
+
+    const failOutcome = copyHistoryLogIntoWorkbenchSafely('log-invalid-criteria', usePilatesStore);
+    expect(failOutcome.ok).toBe(false);
+    const afterFail = usePilatesStore.getState();
+    // Exact reference rollback: coreEx was NOT left dangling in store.exercises
+    expect(afterFail.exercises).toBe(exercisesBeforeFail);
+    expect(afterFail.historyLogs).toBe(historyBeforeFail);
+    expect(afterFail.activeSequenceId).toBe('draft-keep-me');
+  });
+
+  it('captures pre-restore state and supports atomic rollback unless post-restore edits or storage conflicts occur', () => {
+    clearBackupRestoreRollbackPoint();
+    usePilatesStore.setState({
+      exercises: [warmEx],
+      savedSequences: [],
+      historyLogs: [],
+      activeSteps: [steps[0]],
+      activeTitle: '작성 중인 현재 수업',
+      undoStack: [],
+    });
+
+    const preRestoreState = captureBackupPreRestoreState(usePilatesStore.getState());
+    const incomingSeq: SavedSequence = {
+      id: 'seq-imported-rollback-test',
+      title: '백업에서 들어온 시퀀스',
+      subtitle: '부제',
+      apparatus: 'reformer',
+      level: '1.5',
+      focusTags: ['core'],
+      targetMinutes: 50,
+      createdAt: '2026-11-05T09:00:00.000Z',
+      updatedAt: '2026-11-05T09:00:00.000Z',
+      taughtCount: 0,
+      steps: [steps[0]],
+    };
+    const backupPayload = JSON.stringify({
+      format: 'pilates-flow-atelier',
+      version: 3,
+      exportedAt: '2026-11-05T10:00:00.000Z',
+      data: {
+        exercises: [warmEx, coreEx],
+        savedSequences: [incomingSeq],
+        classGroups: [],
+        historyLogs: [],
+      },
+    });
+
+    const restoreRes = usePilatesStore.getState().restoreBackup(backupPayload);
+    expect(restoreRes).toMatchObject({ success: true, unchanged: false, added: 2 });
+    expect(usePilatesStore.getState().savedSequences).toHaveLength(1);
+    expect(usePilatesStore.getState().exercises).toHaveLength(2);
+
+    const postDisk = getRecoveryStorageStatus();
+    recordBackupRestoreRollbackPoint({
+      preRestoreState,
+      addedCount: restoreRes.added,
+      postRestoreStateFingerprint: backupRecoveryStateFingerprint(usePilatesStore.getState()),
+      postRestoreStorageFingerprint: postDisk.ok ? postDisk.fingerprint : null,
+    });
+
+    // 1. Rollback succeeds and restores exact pre-restore references
+    const rollbackRes = rollbackLatestBackupRestore({
+      getState: usePilatesStore.getState,
+      setState: (partial) => usePilatesStore.setState(partial),
+      checkStorage: (expected) => getRecoveryStorageStatus(expected ?? undefined),
+    });
+    expect(rollbackRes.success).toBe(true);
+    expect(usePilatesStore.getState().exercises).toBe(preRestoreState.exercises);
+    expect(usePilatesStore.getState().savedSequences).toBe(preRestoreState.savedSequences);
+
+    // 2. If user makes a post-restore edit, rollback refuses to overwrite newer work
+    const preRestoreState2 = captureBackupPreRestoreState(usePilatesStore.getState());
+    const restoreRes2 = usePilatesStore.getState().restoreBackup(backupPayload);
+    expect(restoreRes2.success).toBe(true);
+    const postDisk2 = getRecoveryStorageStatus();
+    recordBackupRestoreRollbackPoint({
+      preRestoreState: preRestoreState2,
+      addedCount: restoreRes2.added,
+      postRestoreStateFingerprint: backupRecoveryStateFingerprint(usePilatesStore.getState()),
+      postRestoreStorageFingerprint: postDisk2.ok ? postDisk2.fingerprint : null,
+    });
+
+    usePilatesStore.setState({ activeTitle: '복원 후 강사가 새로 수정한 제목' });
+    const blockedRollback = rollbackLatestBackupRestore({
+      getState: usePilatesStore.getState,
+      setState: (partial) => usePilatesStore.setState(partial),
+      checkStorage: (expected) => getRecoveryStorageStatus(expected ?? undefined),
+    });
+    expect(blockedRollback.success).toBe(false);
+    expect(blockedRollback.message).toContain('복원 이후 추가 변경이 발생해');
+    expect(usePilatesStore.getState().savedSequences).toHaveLength(1);
+    clearBackupRestoreRollbackPoint();
   });
 });

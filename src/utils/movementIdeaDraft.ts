@@ -162,8 +162,21 @@ let inMemoryBufferByScope: Record<string, MovementIdeaWorkingBuffer> = {};
 let activeSaveLock = false;
 
 function getScopedHumanDraftMap(scope = getActiveOwnerScope()): Record<string, HumanMovementDraft> {
-  if (!inMemoryHumanDraftByScope[scope]) {
-    inMemoryHumanDraftByScope[scope] = {};
+  const current = inMemoryHumanDraftByScope[scope];
+  if (!current || Object.keys(current).length === 0) {
+    const scopedKey = getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, scope);
+    const stored = readStorageJson<{
+      humanMovementDrafts?: HumanMovementDraft[];
+    } | null>(scopedKey, null);
+    const hydrated: Record<string, HumanMovementDraft> = {};
+    if (stored && Array.isArray(stored.humanMovementDrafts)) {
+      for (const draft of stored.humanMovementDrafts) {
+        if (draft && typeof draft.id === 'string') {
+          hydrated[draft.id] = draft;
+        }
+      }
+    }
+    inMemoryHumanDraftByScope[scope] = current ? { ...hydrated, ...current } : hydrated;
   }
   return inMemoryHumanDraftByScope[scope];
 }
@@ -244,13 +257,17 @@ export function getMovementIdeaMetaMap(
   const scopedKey = getScopedStorageKey(IDEA_META_STORAGE_KEY, scope);
   const stored = readStorageJson<Record<string, MovementIdeaMeta>>(scopedKey, {});
   const current = inMemoryMetaByScope[scope] ?? {};
-  const merged = { ...current, ...stored };
+  const merged = { ...stored, ...current };
   inMemoryMetaByScope[scope] = merged;
   return merged;
 }
 
 export function getHumanDraftForIdeaExercise(exerciseId: string): HumanMovementDraft | undefined {
   return getScopedHumanDraftMap()[exerciseId];
+}
+
+export function getSavedHumanMovementDrafts(scope = getActiveOwnerScope()): HumanMovementDraft[] {
+  return Object.values(getScopedHumanDraftMap(scope));
 }
 
 export function getMovementIdeaMeta(exercise: PilatesExercise): MovementIdeaMeta {
@@ -275,24 +292,45 @@ export function getMovementIdeaMeta(exercise: PilatesExercise): MovementIdeaMeta
     return existing;
   }
 
-  const ideaLine = exercise.cues[0] || exercise.nameKo;
-  const adjustmentNote = exercise.layers?.standard || '';
-  const subjectiveFeeling = exercise.precautions || '';
+  const precautionPrefix = '강사 주관적 느낌 메모 (전문가 검증·효과 보장 아님): ';
+  const defaultPrecaution = '강사 직접 창작 초안 · 수업 전 개인별 상태를 직접 확인하세요.';
+  const rawPrecautions = exercise.precautions || '';
+  const fallbackFeeling = rawPrecautions.startsWith(precautionPrefix)
+    ? rawPrecautions.slice(precautionPrefix.length).trim()
+    : rawPrecautions === defaultPrecaution
+      ? ''
+      : rawPrecautions;
+  const ideaLine = draft?.ideaLine || exercise.cues[0] || exercise.nameKo;
+  const adjustmentNote =
+    draft?.modificationLogs.at(-1)?.modificationPointKo ||
+    exercise.layers?.standard ||
+    '';
+  const subjectiveFeeling =
+    draft?.feelLogs.at(-1)?.feelNoteKo || fallbackFeeling;
+  const photoDataUrl = draft?.photoReferences.at(-1)?.localRefUri || '';
   return {
     exerciseId: exercise.id,
     ideaLine,
-    workingTitle: exercise.nameKo,
+    workingTitle: draft?.workingNameKo ?? exercise.nameKo,
     subjectiveFeeling,
     adjustmentNote,
-    photoDataUrl: '',
-    triedByInstructor: Boolean(subjectiveFeeling || adjustmentNote),
-    createdAt: exercise.createdAt || new Date().toISOString(),
-    updatedAt: exercise.createdAt || new Date().toISOString(),
-    easyVariation: exercise.layers?.easy || '',
-    standardVariation: exercise.layers?.standard || '',
-    hardVariation: exercise.layers?.hard || '',
+    photoDataUrl,
+    triedByInstructor: Boolean(subjectiveFeeling || adjustmentNote || photoDataUrl),
+    createdAt: draft?.createdAt || exercise.createdAt || new Date().toISOString(),
+    updatedAt: draft?.updatedAt || exercise.createdAt || new Date().toISOString(),
+    easyVariation: draft?.layers?.easy ?? exercise.layers?.easy ?? '',
+    standardVariation: draft?.layers?.standard ?? exercise.layers?.standard ?? '',
+    hardVariation: draft?.layers?.hard ?? exercise.layers?.hard ?? '',
+    variantLabelKo: draft?.variantLabelKo,
+    parentDraftId: draft?.parentDraftId,
+    parentDraftRevision: draft?.parentDraftRevision,
     revision: draft?.revision ?? 1,
     revisionHistory: draft?.revisionHistory ?? [],
+    repetitions:
+      draft?.defaultRepetitions ?? (exercise as HierarchyPilatesExercise).defaultRepetitions,
+    sets: draft?.defaultSets ?? (exercise as HierarchyPilatesExercise).defaultSets,
+    sideMode: draft?.sideMode,
+    sectionRole: draft?.sectionRole,
   };
 }
 
@@ -334,12 +372,16 @@ export function clearMovementIdeaWorkingBuffer(scope = getActiveOwnerScope()): v
   }
 }
 
-export function resetMovementIdeaStateForTests(): void {
+export function resetMovementIdeaTestCache(): void {
   inMemoryMetaByScope = {};
   inMemoryHumanDraftByScope = {};
   inMemoryReusableBlocksByScope = {};
   inMemoryBufferByScope = {};
   activeSaveLock = false;
+}
+
+export function resetMovementIdeaStateForTests(): void {
+  resetMovementIdeaTestCache();
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
       const keysToRemove: string[] = [];
@@ -1176,8 +1218,14 @@ export function getSavedReusableBlocks(scope = getActiveOwnerScope()): ReusableB
   const current = inMemoryReusableBlocksByScope[scope] ?? [];
   if (stored.length > 0 && current.length === 0) {
     inMemoryReusableBlocksByScope[scope] = stored;
-  } else if (!inMemoryReusableBlocksByScope[scope]) {
-    inMemoryReusableBlocksByScope[scope] = [];
+  } else if (current.length === 0) {
+    const bundleKey = getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, scope);
+    const bundle = readStorageJson<{ reusableBlocks?: ReusableBlock[] } | null>(bundleKey, null);
+    if (bundle && Array.isArray(bundle.reusableBlocks) && bundle.reusableBlocks.length > 0) {
+      inMemoryReusableBlocksByScope[scope] = bundle.reusableBlocks;
+    } else if (!inMemoryReusableBlocksByScope[scope]) {
+      inMemoryReusableBlocksByScope[scope] = [];
+    }
   }
   return inMemoryReusableBlocksByScope[scope];
 }

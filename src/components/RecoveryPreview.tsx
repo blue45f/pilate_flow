@@ -8,6 +8,13 @@ import {
   MAX_LOCAL_BACKUP_BYTES,
 } from '../utils/backupRecoveryInspection';
 import type { BackupRecoveryInspection } from '../utils/backupRecoveryInspection';
+import {
+  captureBackupPreRestoreState,
+  clearBackupRestoreRollbackPoint,
+  recordBackupRestoreRollbackPoint,
+  rollbackLatestBackupRestore,
+} from '../utils/teachingHistorySnapshot';
+import type { BackupRestoreRollbackPoint } from '../utils/teachingHistorySnapshot';
 import '../styles/recovery-preview.css';
 
 /** File selection is read-only. Only the explicit Apply calls the atomic store recovery. */
@@ -22,6 +29,7 @@ export function RecoveryPreview() {
   const [message, setMessage] = useState('');
   const [storageStatus, setStorageStatus] = useState<RecoveryStorageStatus | null>(null);
   const [storageFingerprint, setStorageFingerprint] = useState<string | undefined>();
+  const [rollbackPoint, setRollbackPoint] = useState<BackupRestoreRollbackPoint | null>(null);
   useLayoutEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (raw === null || (event.key !== null && event.key !== RECOVERY_STORAGE_KEY)) return;
@@ -183,6 +191,11 @@ export function RecoveryPreview() {
                 없는 작업대의 비어 있는 수업 조건·최근 조건은 아래 표시된 경우에만 백업 값으로
                 채웁니다.
               </p>
+              <p>
+                충돌·되돌리기 안내: 복원 실패 시 기존 정상 데이터는 변경되지 않으며, 복원 적용
+                직후에는 ‘복원 이전 상태로 되돌리기’ 버튼으로 적용 전 상태로 즉시 원복할 수
+                있습니다.
+              </p>
               {inspection.summary.notices.map((notice) => (
                 <p className="recovery-notice" key={notice.code}>
                   {notice.message}
@@ -215,6 +228,9 @@ export function RecoveryPreview() {
                   disabled={!!stale || diskBlocked || reading}
                   onClick={() => {
                     if (raw === null) return;
+                    const preRestoreState = captureBackupPreRestoreState(
+                      usePilatesStore.getState(),
+                    );
                     const result = usePilatesStore.getState().restoreBackup(raw, {
                       expectedStateFingerprint: inspection.stateFingerprint,
                       expectedStorageFingerprint: storageFingerprint,
@@ -226,6 +242,21 @@ export function RecoveryPreview() {
                       if (!disk.ok) setMessage('');
                     }
                     if (result.success) {
+                      if (!result.unchanged) {
+                        const postDisk = getRecoveryStorageStatus();
+                        const point = recordBackupRestoreRollbackPoint({
+                          preRestoreState,
+                          addedCount: result.added,
+                          postRestoreStateFingerprint: backupRecoveryStateFingerprint(
+                            usePilatesStore.getState(),
+                          ),
+                          postRestoreStorageFingerprint: postDisk.ok ? postDisk.fingerprint : null,
+                        });
+                        setRollbackPoint(point);
+                      } else {
+                        clearBackupRestoreRollbackPoint();
+                        setRollbackPoint(null);
+                      }
                       setRaw(null);
                       setInspection(null);
                       focusChooser();
@@ -243,6 +274,38 @@ export function RecoveryPreview() {
         </section>
       )}
       {message && <p role="status">{message}</p>}
+      {rollbackPoint && !inspection && (
+        <div className="recovery-preview-actions" data-testid="recovery-rollback-bar">
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              const outcome = rollbackLatestBackupRestore({
+                getState: usePilatesStore.getState,
+                setState: (partial) => usePilatesStore.setState(partial),
+                checkStorage: (expected) => getRecoveryStorageStatus(expected ?? undefined),
+              });
+              setMessage(outcome.message);
+              if (outcome.success) {
+                setRollbackPoint(null);
+                focusChooser();
+              }
+            }}
+          >
+            복원 이전 상태로 되돌리기
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              clearBackupRestoreRollbackPoint();
+              setRollbackPoint(null);
+            }}
+          >
+            되돌리기 닫기
+          </button>
+        </div>
+      )}
     </div>
   );
 }
