@@ -64,8 +64,9 @@ export function PwaInstallPanel() {
                 주소창의 설치 아이콘이나 브라우저 메뉴의 앱 설치를 확인하세요.
               </p>
               <p>
-                메뉴가 없다면 일반 창의 최신 Chrome·Edge·Safari에서 다시 열어 주세요. 브라우저나
-                기기 설정에 따라 설치를 지원하지 않을 수 있어요.
+                Mac Safari에서는 파일 → Dock에 추가를 선택하세요. 지원하는 macOS 버전에서 사용할 수
+                있어요. 메뉴가 없다면 일반 창의 최신 Chrome·Edge·Safari에서 다시 열어 주세요.
+                브라우저나 기기 설정에 따라 설치를 지원하지 않을 수 있어요.
               </p>
             </details>
           )}
