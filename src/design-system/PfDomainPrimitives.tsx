@@ -121,7 +121,7 @@ export const PfSequenceBlock: React.FC<PfSequenceBlockProps> = ({
     <div className={classes} data-pf-block-phase={phase} {...rest}>
       <div className="flow-section-label pf-sequence-block__header">
         <span>
-          {eyebrow ? `${eyebrow} ` : ''}
+          {eyebrow}
           <strong>{title}</strong>
         </span>
         {meta !== undefined && <span>{meta}</span>}

@@ -1759,5 +1759,290 @@
   }
 }
 
+.pf-flow-continuation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pf-space-3);
+  padding: var(--pf-space-4);
+  margin-top: var(--pf-space-3);
+  border-radius: var(--pf-radius-lg);
+  border: 1px solid var(--pf-color-border-subtle);
+  background: var(--pf-color-bg-surface);
+}
+
+.pf-flow-continuation__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pf-flow-continuation__copy strong {
+  font-size: var(--pf-text-sm);
+  color: var(--pf-color-text-primary);
+}
+
+.pf-flow-continuation__copy p {
+  margin: 0;
+  font-size: var(--pf-text-xs);
+  color: var(--pf-color-text-secondary);
+}
+
+.pf-flow-continuation__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pf-space-2);
+}
+
+/* ==========================================================================
+   12. Responsive Touch Target (>= 44px), Overflow & Modal Action Bar Guarantees
+       (320px / 390px Mobile & 768px Tablet)
+   ========================================================================== */
+
+/* 1. Guarantee >= 44px touch targets across all viewports (including 768px tablet & unit tests) */
+.pf-search input,
+.motion-library .library-search input,
+.clipper-layout input,
+.clipper-layout select,
+.clipper-layout textarea,
+.sequence-title-label input,
+.custom-duration input,
+.chip,
+.btn-sm,
+.btn-xs,
+.save-flow,
+.text-button,
+.sidebar-close,
+.app-footer button,
+.advanced-brief summary,
+.condition-template summary,
+.library-modal-footer > button,
+.ml-pattern-pages button,
+.ml-card-patterns button,
+.motion-library .movement-card-footer .btn-ghost,
+.motion-library .movement-add,
+.motion-library .library-heading-actions > button,
+.movement-card h2 button,
+.ief-card h3 > button {
+  min-height: var(--pf-touch-min, 44px);
+}
+
+.movement-card h2 button,
+.ief-card h3 > button {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Override library.css and lazy-loaded motion-library.css rules (< 44px -> 44px) */
+.movement-detail-media-caption button,
+.motion-library .movement-card-footer button,
+.motion-library .movement-card-footer .btn-ghost,
+.motion-library .movement-add,
+.motion-library .library-search input,
+.motion-library .library-heading-actions > button,
+.ml-pattern-pages button,
+.ml-card-patterns button {
+  min-height: var(--pf-touch-min, 44px) !important;
+}
+
+/* 2. Prevent horizontal overflow on containers & grids */
+.vnext-shell,
+.vnext-Canvas,
+.vnext-workbench,
+.motion-library,
+.teaching-collection,
+.teaching-binder,
+.teaching-stage,
+.atelier-modal-dialog,
+.pf-modal-dialog {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Use min(100%, ...) in auto-fit grids so 320px nested containers never overflow */
+.pf-ds-swatch-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+}
+
+.pf-ds-matrix,
+.pf-idea-primary-actions,
+.pf-idea-advanced-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+.pf-workbench-ideas__list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+
+/* Eliminate negative horizontal margins that cause scrollWidth > clientWidth on mobile */
+#root .v3-workbench .flow-step,
+#root .v3-workbench .v3-primary-actions {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* 3. Accessible Modal & Sheet Action Bars */
+.pf-modal-actions,
+.modal-footer-actions,
+.library-modal-footer,
+.teaching-form-actions,
+.source-note-actions,
+.pf-idea-footer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--pf-space-2, 8px);
+  padding-top: var(--pf-space-3, 12px);
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+.pf-modal-actions button,
+.modal-footer-actions button,
+.library-modal-footer button,
+.teaching-form-actions button,
+.source-note-actions button,
+.pf-idea-footer-bar button {
+  min-height: var(--pf-touch-min, 44px);
+}
+
+/* 4. Tablet & Mobile (<= 768px) adjustments */
+@media (max-width: 768px) {
+  .atelier-modal-backdrop.pf-modal-backdrop {
+    padding: 12px;
+  }
+
+  .atelier-modal-dialog.pf-modal-dialog--sheet {
+    align-self: flex-end;
+    width: 100%;
+    max-width: 100% !important;
+    max-height: min(92dvh, 760px);
+    margin: 0;
+    border-radius: var(--pf-radius-xl, 22px) var(--pf-radius-xl, 22px) 0 0;
+    padding-bottom: calc(var(--pf-space-4, 16px) + env(safe-area-inset-bottom));
+  }
+
+  .teaching-card-tools {
+    flex-wrap: wrap;
+  }
+}
+
+/* 5. Mobile (<= 560px: covers 390px and 320px) */
+@media (max-width: 560px) {
+  /* Fix motion-library.css:588 overriding library.css:1592 to 2 columns on 320px/390px */
+  .motion-library .movement-card-grid,
+  #root .motion-library .movement-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Fix ClassBinderView group form staying 1fr 1fr at 320px/390px */
+  .teaching-form-two,
+  .teaching-group-form .teaching-form-two,
+  .teaching-log-form .teaching-form-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Fix LiveStageView header utility overlap at 320px/390px */
+  .teaching-stage-header {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--pf-space-2, 8px);
+  }
+
+  .teaching-stage-utility {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: var(--pf-space-2, 8px);
+  }
+
+  /* Prevent 101px timer digits from overflowing 320px container */
+  .teaching-timer-digits,
+  .teaching-high-contrast .teaching-timer-digits {
+    font-size: clamp(3.25rem, 20vw, 6.25rem);
+  }
+
+  /* Ensure modal/sheet action bars stay accessible and wrap cleanly on mobile */
+  .pf-modal-actions,
+  .modal-footer-actions,
+  .library-modal-footer,
+  .teaching-form-actions,
+  .source-note-actions,
+  .pf-idea-footer-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: var(--pf-surface-elevated, var(--bg-elevated, #ffffff));
+    padding-top: var(--pf-space-3, 12px);
+    padding-bottom: calc(var(--pf-space-2, 8px) + env(safe-area-inset-bottom));
+  }
+}
+
+/* 6. Narrow Mobile (<= 390px: covers 390px and 320px) */
+@media (max-width: 390px) {
+  /* Allow long Korean button/badge labels to wrap instead of overflowing 320px width */
+  .pf-btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .workbench-welcome-actions button {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.25;
+    height: auto;
+  }
+
+  .pf-badge {
+    white-space: normal;
+    max-width: 100%;
+  }
+
+  /* Wrap 4-button quick bar into 2x2 grid on 320px/390px */
+  .pf-core-quick-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Collapse cramped 2-column sub-grids on 320px/390px */
+  .library-expanded-filters,
+  .clipper-metadata-grid,
+  .verified-reference-selects,
+  .library-heading-actions,
+  .teaching-card-main-actions,
+  #root .vnext-workbench .workbench-preparation-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .regenerate-bar,
+  .pf-flow-continuation__actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .pf-flow-continuation__actions > button {
+    flex: 1 1 100%;
+  }
+
+  /* Maximize usable modal width at 320px/390px */
+  .atelier-modal-dialog,
+  .pf-modal-dialog {
+    width: calc(100% - 16px);
+    padding: var(--pf-space-4, 16px);
+  }
+
+  /* Stack or equal-split modal action buttons on narrow screens */
+  .pf-modal-actions > button,
+  .modal-footer-actions > button,
+  .library-modal-footer > button,
+  .teaching-form-actions > button,
+  .source-note-actions > button {
+    flex: 1 1 calc(50% - var(--pf-space-2, 8px));
+    justify-content: center;
+  }
+}
+
 
 
