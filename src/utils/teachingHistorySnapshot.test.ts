@@ -27,8 +27,10 @@ import {
   updateReusableBlockTemplate,
 } from './hierarchyModel';
 import { createHumanDraftRepository } from './humanMovementCreation';
+import syntheticFixtures from '../test/fixtures/backup-recovery/syntheticBackupFixtures.json';
 import {
   attachProgramSnapshotToHistoryLog,
+  BACKUP_ROLLBACK_STORAGE_KEY,
   buildCompletionFingerprint,
   buildTeachingProgramSnapshot,
   captureBackupPreRestoreState,
@@ -41,9 +43,11 @@ import {
   formatTeachingHistorySnapshotText,
   getLatestBackupRollbackPoint,
   hasExerciseDriftedFromSnapshot,
+  inspectPersistedRollbackPoint,
   recordBackupRestoreRollbackPoint,
   reconstructExerciseFromSnapshot,
   reconstructStepsSnapshotFromHistoryLog,
+  resetInMemoryBackupRollbackPointForTest,
   resolveTeachingHistoryView,
   rollbackLatestBackupRestore,
 } from './teachingHistorySnapshot';
@@ -834,10 +838,8 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
     expect(usePilatesStore.getState().savedSequences).toHaveLength(1);
     expect(getLatestBackupRollbackPoint()).not.toBeNull();
     quotaSpy.mockRestore();
-    // Restore clean disk baseline after simulated quota error
-    usePilatesStore.setState({ saveFeedback: null });
 
-    // 2. Rollback succeeds once storage is healthy and restores exact pre-restore references
+    // 2. Direct retry of rollback succeeds immediately once storage is healthy (without needing an intermediate store write)
     const rollbackRes = rollbackLatestBackupRestore({
       getState: usePilatesStore.getState,
       setState: (partial) => usePilatesStore.setState(partial),
@@ -900,9 +902,106 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
       checkStorage: (expected) => getRecoveryStorageStatus(expected ?? undefined),
     });
     expect(blockedRollback.success).toBe(false);
+    expect(blockedRollback.reason).toBe('post-restore-modified');
     expect(blockedRollback.message).toContain('복원 이후 추가 변경이 발생해');
     expect(usePilatesStore.getState().savedSequences).toHaveLength(1);
     expect(usePilatesStore.getState().activeTitle).toBe('복원 후 강사가 새로 수정한 제목');
     clearBackupRestoreRollbackPoint();
   });
+
+  it('validates BACKUP_ROLLBACK_STORAGE_KEY against corrupted JSON, legacy v0, unsupported v99, invalid preRestoreState shape, QuotaExceededError write faults, and cross-tab consumption', () => {
+    const preState = captureBackupPreRestoreState(usePilatesStore.getState());
+    const faultFixtures = syntheticFixtures.rollbackKeyFaultFixtures;
+
+    // 1. Corrupted JSON -> rejected safely with reason 'corrupted-json'
+    const corruptedRes = inspectPersistedRollbackPoint(faultFixtures.corruptedJsonRaw);
+    expect(corruptedRes).toEqual({
+      valid: false,
+      reason: 'corrupted-json',
+      point: null,
+    });
+    localStorage.setItem(BACKUP_ROLLBACK_STORAGE_KEY, faultFixtures.corruptedJsonRaw);
+    resetInMemoryBackupRollbackPointForTest();
+    expect(getLatestBackupRollbackPoint()).toBeNull();
+
+    // 2. Unsupported future version (version: 99) -> rejected with 'unsupported-version'
+    const unsupportedRaw = JSON.stringify({
+      ...faultFixtures.unsupportedVersion99Template,
+      postRestoreStateFingerprint: 'fp-post',
+      postRestoreStorageFingerprint: null,
+      preRestoreState: preState,
+    });
+    const unsupportedRes = inspectPersistedRollbackPoint(unsupportedRaw);
+    expect(unsupportedRes).toEqual({
+      valid: false,
+      reason: 'unsupported-version',
+      version: 99,
+      point: null,
+    });
+    localStorage.setItem(BACKUP_ROLLBACK_STORAGE_KEY, unsupportedRaw);
+    resetInMemoryBackupRollbackPointForTest();
+    expect(getLatestBackupRollbackPoint()).toBeNull();
+
+    // 3. Invalid preRestoreState shape -> rejected with 'invalid-shape'
+    const invalidShapeRaw = JSON.stringify({
+      ...faultFixtures.invalidPreRestoreShapeTemplate,
+      postRestoreStateFingerprint: 'fp-post',
+      postRestoreStorageFingerprint: null,
+    });
+    const invalidShapeRes = inspectPersistedRollbackPoint(invalidShapeRaw);
+    expect(invalidShapeRes).toEqual({
+      valid: false,
+      reason: 'invalid-shape',
+      point: null,
+    });
+    localStorage.setItem(BACKUP_ROLLBACK_STORAGE_KEY, invalidShapeRaw);
+    resetInMemoryBackupRollbackPointForTest();
+    expect(getLatestBackupRollbackPoint()).toBeNull();
+
+    // 4. Legacy version 0 with valid preRestoreState -> accepted and hydrated so valid rollback point is not lost
+    const legacyV0Raw = JSON.stringify({
+      ...faultFixtures.legacyVersion0Template,
+      postRestoreStateFingerprint: 'fp-legacy-v0',
+      postRestoreStorageFingerprint: null,
+      preRestoreState: preState,
+    });
+    const legacyRes = inspectPersistedRollbackPoint(legacyV0Raw);
+    expect(legacyRes.valid).toBe(true);
+    if (legacyRes.valid) {
+      expect(legacyRes.version).toBe(0);
+      expect(legacyRes.point.id).toBe('rollback-synthetic-legacy-v0');
+    }
+    localStorage.setItem(BACKUP_ROLLBACK_STORAGE_KEY, legacyV0Raw);
+    resetInMemoryBackupRollbackPointForTest();
+    const hydratedLegacy = getLatestBackupRollbackPoint();
+    expect(hydratedLegacy?.id).toBe('rollback-synthetic-legacy-v0');
+
+    // 5. Cross-tab consumption: when another tab removes BACKUP_ROLLBACK_STORAGE_KEY, in-memory persisted rollback is invalidated
+    localStorage.removeItem(BACKUP_ROLLBACK_STORAGE_KEY);
+    expect(getLatestBackupRollbackPoint()).toBeNull();
+
+    // 6. QuotaExceededError when writing BACKUP_ROLLBACK_STORAGE_KEY -> in-memory rollback point is preserved
+    const origSetItem = Storage.prototype.setItem;
+    const setItemSpy = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(function (this: Storage, key: string, value: string) {
+        if (key === BACKUP_ROLLBACK_STORAGE_KEY) {
+          throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+        }
+        return origSetItem.call(this, key, value);
+      });
+
+    const recordedInMemory = recordBackupRestoreRollbackPoint({
+      preRestoreState: preState,
+      addedCount: 1,
+      postRestoreStateFingerprint: backupRecoveryStateFingerprint(usePilatesStore.getState()),
+      postRestoreStorageFingerprint: 'disk-fp-1',
+    });
+    expect(localStorage.getItem(BACKUP_ROLLBACK_STORAGE_KEY)).toBeNull();
+    expect(getLatestBackupRollbackPoint()?.id).toBe(recordedInMemory.id);
+
+    setItemSpy.mockRestore();
+    clearBackupRestoreRollbackPoint();
+  });
 });
+

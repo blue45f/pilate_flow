@@ -26,6 +26,10 @@ import {
   saveIdeaToReusableBlock,
   saveMovementIdeaDraft,
 } from '../utils/movementIdeaDraft';
+import {
+  BACKUP_ROLLBACK_STORAGE_KEY,
+  resetInMemoryBackupRollbackPointForTest,
+} from '../utils/teachingHistorySnapshot';
 import { syntheticPlanningExercise } from './planningFixtures';
 
 const originalStore = usePilatesStore.getState();
@@ -900,6 +904,77 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
       screen.queryByRole('button', { name: '복원 이전 상태로 되돌리기' }),
     ).not.toBeInTheDocument();
   });
+
+  it('preserves valid rollback point across duplicate unchanged backup import, hydrates legacy v0 rollback key, and blocks rollback after a post-restore session log', async () => {
+    vi.useRealTimers();
+    const validBackupRaw = JSON.stringify({
+      format: 'pilates-flow-atelier',
+      version: 3,
+      exportedAt: '2026-11-06T09:00:00.000Z',
+      data: {
+        exercises: [exWarm, exCore],
+        classGroups: INITIAL_CLASS_GROUPS,
+        savedSequences: [
+          savedPlan,
+          { ...savedPlan, id: 'seq-added-by-restore', title: '복원으로 추가된 수업' },
+        ],
+        historyLogs: [],
+      },
+    });
+    const backupFile = new File([validBackupRaw], 'restore.json', { type: 'application/json' });
+    Object.defineProperty(backupFile, 'text', {
+      value: vi.fn().mockResolvedValue(validBackupRaw),
+    });
+
+    const view = render(<RecoveryPreview />);
+    fireEvent.change(screen.getByLabelText('백업 JSON 파일 선택'), {
+      target: { files: [backupFile] },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: '이 내용으로 복원 적용' }));
+    expect(usePilatesStore.getState().savedSequences).toHaveLength(2);
+    expect(
+      screen.getByRole('button', { name: '복원 이전 상태로 되돌리기' }),
+    ).toBeInTheDocument();
+
+    // Re-importing the exact same backup (duplicate import -> result.unchanged === true) must NOT lose the valid rollback point
+    fireEvent.change(screen.getByLabelText('백업 JSON 파일 선택'), {
+      target: { files: [backupFile] },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: '이 내용으로 복원 적용' }));
+    expect(
+      screen.getByRole('button', { name: '복원 이전 상태로 되돌리기' }),
+    ).toBeInTheDocument();
+
+    // Downgrade stored rollback payload to legacy version 0 and simulate reload
+    const storedRollbackRaw = localStorage.getItem(BACKUP_ROLLBACK_STORAGE_KEY);
+    expect(storedRollbackRaw).toBeTruthy();
+    const legacyPayload = { ...JSON.parse(storedRollbackRaw!), version: 0 };
+    localStorage.setItem(BACKUP_ROLLBACK_STORAGE_KEY, JSON.stringify(legacyPayload));
+    resetInMemoryBackupRollbackPointForTest();
+    view.unmount();
+
+    // Remount after reload with legacy v0 rollback payload -> valid rollback point is still available
+    render(<RecoveryPreview />);
+    const rollbackBtn = screen.getByRole('button', { name: '복원 이전 상태로 되돌리기' });
+    expect(rollbackBtn).toBeInTheDocument();
+
+    // Record a new completed session after restore -> clicking rollback must be blocked so the new session log is not lost
+    const onCloseModal = vi.fn();
+    const modalView = render(
+      <LogSessionModal sequenceId="seq-added-by-restore" onClose={onCloseModal} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: '수업 기록 저장' }));
+    modalView.unmount();
+    expect(usePilatesStore.getState().historyLogs).toHaveLength(1);
+
+    fireEvent.click(rollbackBtn);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      /복원 이후 추가 변경이 발생해 자동 되돌리기를 중단했습니다/,
+    );
+    expect(usePilatesStore.getState().historyLogs).toHaveLength(1);
+    expect(usePilatesStore.getState().savedSequences).toHaveLength(2);
+  });
 });
+
 
 

@@ -1820,6 +1820,7 @@ export function cloneTeachingHistoryToNextClassDraft(
 export type BackupPreRestoreDomainState = RecoveryNextState;
 
 export interface BackupRestoreRollbackPoint {
+  version?: 0 | 1;
   id: string;
   capturedAt: string;
   addedCount: number;
@@ -1828,53 +1829,109 @@ export interface BackupRestoreRollbackPoint {
   preRestoreState: BackupPreRestoreDomainState;
 }
 
-const BACKUP_ROLLBACK_STORAGE_KEY = 'pilates-flow-backup-rollback-v1';
+export const BACKUP_ROLLBACK_STORAGE_KEY = 'pilates-flow-backup-rollback-v1';
+export const BACKUP_ROLLBACK_SCHEMA_VERSION = 1;
 const MAIN_RECOVERY_STORAGE_KEY = 'pilates-flow-atelier-storage-v3';
 
+export type PersistedRollbackInvalidReason =
+  | 'empty'
+  | 'corrupted-json'
+  | 'unsupported-version'
+  | 'invalid-shape';
+
+export type PersistedRollbackPointInspection =
+  | {
+      valid: true;
+      version: 0 | 1;
+      point: BackupRestoreRollbackPoint;
+    }
+  | {
+      valid: false;
+      reason: PersistedRollbackInvalidReason;
+      version?: number;
+      point: null;
+    };
+
+export type BackupRollbackFailureReason =
+  | 'no-rollback-point'
+  | 'post-restore-modified'
+  | 'storage-changed'
+  | 'storage-unavailable';
+
 let latestBackupRollbackPoint: BackupRestoreRollbackPoint | null = null;
+let latestRollbackPersistedToDisk = false;
 
-function isUnmockedLocalStorageAvailable(): boolean {
-  try {
-    if (typeof window === 'undefined' || !window.localStorage) return false;
-    const setItemFn = Storage.prototype.setItem as unknown as { mock?: unknown };
-    return setItemFn?.mock === undefined;
-  } catch {
-    return false;
-  }
+function isValidBackupPreRestoreDomainState(
+  value: unknown,
+): value is BackupPreRestoreDomainState {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    Array.isArray(candidate.exercises) &&
+    Array.isArray(candidate.savedSequences) &&
+    Array.isArray(candidate.classGroups) &&
+    Array.isArray(candidate.historyLogs) &&
+    Array.isArray(candidate.conditionTemplates) &&
+    Boolean(
+      candidate.instructorSchedule &&
+        typeof candidate.instructorSchedule === 'object' &&
+        !Array.isArray(candidate.instructorSchedule),
+    ) &&
+    Array.isArray(candidate.ownedEquipment) &&
+    Array.isArray(candidate.ownedApparatus) &&
+    Array.isArray(candidate.ownedProps)
+  );
 }
 
-function persistRollbackPointToStorage(point: BackupRestoreRollbackPoint | null): void {
-  if (!isUnmockedLocalStorageAvailable()) return;
-  try {
-    if (point === null) {
-      window.localStorage.removeItem(BACKUP_ROLLBACK_STORAGE_KEY);
-    } else if (point.postRestoreStorageFingerprint !== null) {
-      window.localStorage.setItem(BACKUP_ROLLBACK_STORAGE_KEY, JSON.stringify(point));
-    }
-  } catch {
-    // Ignore storage quota or security errors for auxiliary rollback cache
+export function inspectPersistedRollbackPoint(
+  raw: string | null,
+): PersistedRollbackPointInspection {
+  if (raw === null || raw.trim().length === 0) {
+    return { valid: false, reason: 'empty', point: null };
   }
-}
-
-function readRollbackPointFromStorage(): BackupRestoreRollbackPoint | null {
+  let parsedUnknown: unknown;
   try {
-    if (typeof window === 'undefined' || !window.localStorage) return null;
-    if (window.localStorage.getItem(MAIN_RECOVERY_STORAGE_KEY) === null) return null;
-    const raw = window.localStorage.getItem(BACKUP_ROLLBACK_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<BackupRestoreRollbackPoint>;
+    parsedUnknown = JSON.parse(raw);
+  } catch {
+    return { valid: false, reason: 'corrupted-json', point: null };
+  }
+  if (!parsedUnknown || typeof parsedUnknown !== 'object' || Array.isArray(parsedUnknown)) {
+    return { valid: false, reason: 'invalid-shape', point: null };
+  }
+  const parsed = parsedUnknown as Record<string, unknown>;
+  if (parsed.version !== undefined) {
     if (
-      !parsed ||
-      typeof parsed !== 'object' ||
-      typeof parsed.id !== 'string' ||
-      typeof parsed.postRestoreStateFingerprint !== 'string' ||
-      !parsed.preRestoreState ||
-      typeof parsed.preRestoreState !== 'object'
+      typeof parsed.version !== 'number' ||
+      !Number.isInteger(parsed.version) ||
+      (parsed.version !== 0 && parsed.version !== 1)
     ) {
-      return null;
+      return {
+        valid: false,
+        reason: 'unsupported-version',
+        version: typeof parsed.version === 'number' ? parsed.version : undefined,
+        point: null,
+      };
     }
-    const pre = parsed.preRestoreState;
-    return {
+  }
+  if (
+    typeof parsed.id !== 'string' ||
+    parsed.id.trim().length === 0 ||
+    typeof parsed.postRestoreStateFingerprint !== 'string' ||
+    parsed.postRestoreStateFingerprint.trim().length === 0 ||
+    (parsed.postRestoreStorageFingerprint !== null &&
+      parsed.postRestoreStorageFingerprint !== undefined &&
+      typeof parsed.postRestoreStorageFingerprint !== 'string') ||
+    !isValidBackupPreRestoreDomainState(parsed.preRestoreState)
+  ) {
+    return { valid: false, reason: 'invalid-shape', point: null };
+  }
+  const pre = parsed.preRestoreState;
+  const resolvedVersion: 0 | 1 = parsed.version === 0 ? 0 : 1;
+  return {
+    valid: true,
+    version: resolvedVersion,
+    point: {
+      version: resolvedVersion,
       id: parsed.id,
       capturedAt: typeof parsed.capturedAt === 'string' ? parsed.capturedAt : '',
       addedCount: typeof parsed.addedCount === 'number' ? parsed.addedCount : 0,
@@ -1898,10 +1955,55 @@ function readRollbackPointFromStorage(): BackupRestoreRollbackPoint | null {
         lastCriteria: pre.lastCriteria ?? null,
         draftCriteria: pre.draftCriteria ?? null,
       },
-    };
+    },
+  };
+}
+
+function persistRollbackPointToStorage(point: BackupRestoreRollbackPoint | null): boolean {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return false;
+    if (point === null) {
+      window.localStorage.removeItem(BACKUP_ROLLBACK_STORAGE_KEY);
+      return true;
+    }
+    if (point.postRestoreStorageFingerprint !== null) {
+      window.localStorage.setItem(
+        BACKUP_ROLLBACK_STORAGE_KEY,
+        JSON.stringify({
+          version: point.version ?? BACKUP_ROLLBACK_SCHEMA_VERSION,
+          ...point,
+        }),
+      );
+      return true;
+    }
+    return false;
+  } catch {
+    // Ignore storage quota or security errors for auxiliary rollback cache; in-memory rollback point stays intact
+    return false;
+  }
+}
+
+function readRollbackPointFromStorage(): BackupRestoreRollbackPoint | null {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return null;
+    const raw = window.localStorage.getItem(BACKUP_ROLLBACK_STORAGE_KEY);
+    const inspection = inspectPersistedRollbackPoint(raw);
+    if (!inspection.valid) return null;
+    if (
+      inspection.point.postRestoreStorageFingerprint !== null &&
+      window.localStorage.getItem(MAIN_RECOVERY_STORAGE_KEY) === null
+    ) {
+      return null;
+    }
+    return inspection.point;
   } catch {
     return null;
   }
+}
+
+export function resetInMemoryBackupRollbackPointForTest(): void {
+  latestBackupRollbackPoint = null;
+  latestRollbackPersistedToDisk = false;
 }
 
 export function captureBackupPreRestoreState(
@@ -1932,6 +2034,7 @@ export function recordBackupRestoreRollbackPoint(input: {
   now?: string;
 }): BackupRestoreRollbackPoint {
   const point: BackupRestoreRollbackPoint = {
+    version: BACKUP_ROLLBACK_SCHEMA_VERSION,
     id: `rollback-${Date.now()}`,
     capturedAt: input.now ?? new Date().toISOString(),
     addedCount: input.addedCount ?? 0,
@@ -1940,24 +2043,95 @@ export function recordBackupRestoreRollbackPoint(input: {
     preRestoreState: input.preRestoreState,
   };
   latestBackupRollbackPoint = point;
-  persistRollbackPointToStorage(point);
+  latestRollbackPersistedToDisk = persistRollbackPointToStorage(point);
   return point;
 }
 
 export function getLatestBackupRollbackPoint(): BackupRestoreRollbackPoint | null {
   if (latestBackupRollbackPoint) {
+    if (
+      latestRollbackPersistedToDisk &&
+      typeof window !== 'undefined' &&
+      window.localStorage &&
+      window.localStorage.getItem(BACKUP_ROLLBACK_STORAGE_KEY) === null
+    ) {
+      latestBackupRollbackPoint = null;
+      latestRollbackPersistedToDisk = false;
+      return null;
+    }
     return latestBackupRollbackPoint;
   }
   const hydrated = readRollbackPointFromStorage();
   if (hydrated) {
     latestBackupRollbackPoint = hydrated;
+    latestRollbackPersistedToDisk = true;
   }
   return latestBackupRollbackPoint;
 }
 
 export function clearBackupRestoreRollbackPoint(): void {
   latestBackupRollbackPoint = null;
+  latestRollbackPersistedToDisk = false;
   persistRollbackPointToStorage(null);
+}
+
+function computePersistedStorageFingerprint(
+  raw: string | null,
+): { ok: true; fingerprint: string } | { ok: false; code: 'storage_invalid' } {
+  if (raw === null) return { ok: true, fingerprint: 'missing' };
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (
+      !value ||
+      typeof value !== 'object' ||
+      Array.isArray(value) ||
+      !('version' in value) ||
+      ((value as { version?: unknown }).version !== 0 &&
+        (value as { version?: unknown }).version !== 3) ||
+      !('state' in value) ||
+      !(value as { state?: unknown }).state ||
+      typeof (value as { state?: unknown }).state !== 'object' ||
+      Array.isArray((value as { state?: unknown }).state)
+    ) {
+      return { ok: false, code: 'storage_invalid' };
+    }
+    const state: Record<string, unknown> = {
+      ...((value as { state: Record<string, unknown> }).state ?? {}),
+    };
+    if (
+      typeof state.activeTab === 'string' &&
+      ['workbench', 'atlas', 'binder', 'history', 'stage', 'schedule'].includes(state.activeTab)
+    ) {
+      delete state.activeTab;
+    }
+    if (
+      typeof state.themeMode === 'string' &&
+      ['system', 'light', 'dark'].includes(state.themeMode)
+    ) {
+      delete state.themeMode;
+    }
+    const normalize = (item: unknown): unknown => {
+      if (typeof item === 'number' && !Number.isFinite(item)) {
+        throw new Error('non-finite persisted number');
+      }
+      if (Array.isArray(item)) return item.map(normalize);
+      if (item !== null && typeof item === 'object') {
+        const object = item as Record<string, unknown>;
+        return Object.fromEntries(
+          Object.keys(object)
+            .sort()
+            .map((key) => [key, normalize(object[key])]),
+        );
+      }
+      return item;
+    };
+    return {
+      ok: true,
+      fingerprint: JSON.stringify(normalize({ ...(value as Record<string, unknown>), state })),
+    };
+  } catch {
+    return { ok: false, code: 'storage_invalid' };
+  }
 }
 
 export function rollbackLatestBackupRestore<
@@ -1972,11 +2146,12 @@ export function rollbackLatestBackupRestore<
   checkStorage?: (
     expectedFingerprint?: string | null,
   ) => { ok: boolean; code?: string; message?: string };
-}): { success: boolean; message: string } {
+}): { success: boolean; reason?: BackupRollbackFailureReason; message: string } {
   const point = getLatestBackupRollbackPoint();
   if (!point) {
     return {
       success: false,
+      reason: 'no-rollback-point',
       message: '되돌릴 수 있는 최근 백업 복원 기록이 없습니다.',
     };
   }
@@ -1986,6 +2161,7 @@ export function rollbackLatestBackupRestore<
   if (currentFingerprint !== point.postRestoreStateFingerprint) {
     return {
       success: false,
+      reason: 'post-restore-modified',
       message:
         '복원 이후 추가 변경이 발생해 자동 되돌리기를 중단했습니다. 현재 데이터를 먼저 백업으로 내보내 주세요.',
     };
@@ -1995,18 +2171,51 @@ export function rollbackLatestBackupRestore<
     if (point.postRestoreStorageFingerprint !== null) {
       const disk = storeApi.checkStorage(point.postRestoreStorageFingerprint);
       if (!disk.ok) {
-        return {
-          success: false,
-          message:
-            disk.message ??
-            '다른 탭 변경 또는 브라우저 저장소 상태 문제로 자동 되돌리기를 중단했습니다.',
-        };
+        if (disk.code === 'storage_unavailable') {
+          let rawDisk: string | null = null;
+          let canReadDisk = false;
+          try {
+            if (typeof window !== 'undefined' && window.localStorage) {
+              rawDisk = window.localStorage.getItem('pilates-flow-atelier-storage-v3');
+              canReadDisk = true;
+            }
+          } catch {
+            canReadDisk = false;
+          }
+          if (!canReadDisk) {
+            return {
+              success: false,
+              reason: 'storage-unavailable',
+              message:
+                disk.message ??
+                '다른 탭 변경 또는 브라우저 저장소 상태 문제로 자동 되돌리기를 중단했습니다.',
+            };
+          }
+          const directFp = computePersistedStorageFingerprint(rawDisk);
+          if (!directFp.ok || directFp.fingerprint !== point.postRestoreStorageFingerprint) {
+            return {
+              success: false,
+              reason: 'storage-changed',
+              message:
+                '다른 탭 또는 창에서 브라우저 저장 자료가 바뀌어 복원을 적용하지 않았습니다. 현재 작업을 내보내 보관하고, 다른 탭의 자료를 확인한 뒤 새로 열어 주세요. 자동으로 합치거나 덮어쓰지 않았습니다.',
+            };
+          }
+        } else {
+          return {
+            success: false,
+            reason: 'storage-changed',
+            message:
+              disk.message ??
+              '다른 탭 변경 또는 브라우저 저장소 상태 문제로 자동 되돌리기를 중단했습니다.',
+          };
+        }
       }
     } else {
       const disk = storeApi.checkStorage();
       if (!disk.ok && disk.code === 'storage_changed') {
         return {
           success: false,
+          reason: 'storage-changed',
           message:
             disk.message ??
             '다른 탭에서 브라우저 저장 자료가 바뀌어 자동 되돌리기를 중단했습니다.',
@@ -2024,6 +2233,7 @@ export function rollbackLatestBackupRestore<
   } catch {
     return {
       success: false,
+      reason: 'storage-unavailable',
       message:
         '브라우저 저장소 기록 중 오류가 발생하여 복원 이전 상태로 되돌리지 못했습니다.',
     };
@@ -2039,6 +2249,7 @@ export function rollbackLatestBackupRestore<
       }
       return {
         success: false,
+        reason: 'storage-unavailable',
         message:
           postDisk.message ??
           '브라우저 저장소 용량 부족 또는 쓰기 오류로 되돌리기를 완료하지 못했습니다.',

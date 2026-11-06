@@ -267,8 +267,17 @@ export function RecoveryPreview() {
                           });
                           setRollbackPoint(point);
                         } else {
-                          clearBackupRestoreRollbackPoint();
-                          setRollbackPoint(null);
+                          const existingPoint = getLatestBackupRollbackPoint();
+                          const currentFp = backupRecoveryStateFingerprint(
+                            usePilatesStore.getState(),
+                          );
+                          if (
+                            !existingPoint ||
+                            existingPoint.postRestoreStateFingerprint !== currentFp
+                          ) {
+                            clearBackupRestoreRollbackPoint();
+                            setRollbackPoint(null);
+                          }
                         }
                         setRaw(null);
                         setInspection(null);

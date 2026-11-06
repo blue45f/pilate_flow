@@ -102,3 +102,20 @@
              : reconstructStepsSnapshotFromHistoryLog(target);
 ```
 
+---
+
+## 6. 지속 가능한 백업·복원 브라우저 회귀 하네스 및 롤백 키 방어 계약 (Browser Regression Harness)
+
+### 6.1 추적 가능한 하네스 구성
+- [`scripts/verify-backup-recovery-browser.mjs`](../scripts/verify-backup-recovery-browser.mjs): 임시 로컬 프리뷰 서버(`127.0.0.1` 유휴 포트)와 임시 Chromium 프로필(`os.tmpdir()` 하위 `mkdtemp`)을 사용해 `320x694` 및 `390x844` 뷰포트에서 실제 UI 기반 `수업 기록 생성 → JSON 내보내기 → 사전검사 → 복원 → 새로고침 → 롤백`(Scope A)과 동일 origin 두 독립 탭의 실제 `StorageEvent`, 복원 후 새 기록·새로고침·두 번 롤백 차단, 롤백 키 결함 주입(Scope B)을 검증하고 단계별 결과 JSON을 출력.
+- [`src/test/fixtures/backup-recovery/syntheticBackupFixtures.json`](../src/test/fixtures/backup-recovery/syntheticBackupFixtures.json): 실사용자 데이터가 전혀 포함되지 않은 합성 v3 백업 및 롤백 키 결함 주입 픽스처.
+- [`scripts/README-backup-recovery-harness.md`](../scripts/README-backup-recovery-harness.md): 단일 실행 명령(`node scripts/verify-backup-recovery-browser.mjs`), 격리 보장, 미적용 `package.json` 스크립트 제안 문서.
+
+### 6.2 롤백 저장 키(`pilates-flow-backup-rollback-v1`) 검증 및 추가 방어
+1. **스키마·버전 검증 (`inspectPersistedRollbackPoint`)**:
+   - `pilates-flow-backup-rollback-v1`에 저장된 JSON이 손상되었거나(`corrupted-json`), 지원하지 않는 미래 버전(`version: 99` 등 `unsupported-version`)이거나, `preRestoreState`의 도메인 컬렉션(`exercises`, `savedSequences`, `classGroups`, `historyLogs`, `conditionTemplates`, `instructorSchedule`, `ownedEquipment`, `ownedApparatus`, `ownedProps`) 형식이 유효하지 않은 경우(`invalid-shape`) 안전하게 무시하고 원본 수업·초안 데이터를 보존합니다.
+   - 구버전(`version: 0` 또는 `version` 미지정) 페이로드라도 `preRestoreState` 구조와 지문이 유효하면 손실 없이 재수화하여 되돌리기를 지원합니다.
+2. **중복 백업 재적용(`result.unchanged === true`) 및 쓰기 실패 시 유효 롤백 포인트 보존**:
+   - 유효한 복원 직후 동일한 백업 파일을 다시 적용해 변경 사항이 `0`건(`result.unchanged === true`)인 경우, 현재 스토어 지문(`postRestoreStateFingerprint`)이 기존 롤백 포인트와 일치하면 기존 유효 롤백 포인트를 삭제하지 않고 유지합니다.
+   - `pilates-flow-backup-rollback-v1` 쓰기 시 `QuotaExceededError`가 발생하더라도 메모리 내 롤백 포인트를 유지하며, 롤백 실행 중 메인 스토리지 쓰기 실패 시에도 유효 롤백 포인트를 소거하지 않아 공간 확보 후 재시도가 가능합니다.
+
