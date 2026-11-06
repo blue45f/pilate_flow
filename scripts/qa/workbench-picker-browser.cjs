@@ -112,7 +112,25 @@ const base = process.env.BASE_URL || 'http://127.0.0.1:5239';
         ids,
       );
       assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+      await p.getByRole('button', { name: '동작 더 담기', exact: true }).click();
+      await search.fill('서서 발목 움직임');
+      await f
+        .getByRole('button', { name: /초안 보기$/ })
+        .first()
+        .click();
+      const play = f.getByRole('button', { name: '한 주기 재생', exact: true });
+      await play.scrollIntoViewIfNeeded();
+      if (width !== 320) {
+        await play.click();
+        await f.getByRole('button', { name: '일시정지', exact: true }).waitFor();
+      } else assert.ok(await play.isDisabled());
+      await d.getByRole('button', { name: '수업 구성으로 돌아가기', exact: true }).click();
+      await p.getByRole('button', { name: '동작 더 담기', exact: true }).click();
+      assert.equal(await f.getByRole('button', { name: '일시정지', exact: true }).count(), 0);
+      assert.equal(await search.inputValue(), '서서 발목 움직임');
+      await d.getByRole('button', { name: '수업 구성으로 돌아가기', exact: true }).click();
       results.push({
+        retainedPreviewPaused: true,
         width,
         sourceReturn: true,
         filtersPreserved: true,

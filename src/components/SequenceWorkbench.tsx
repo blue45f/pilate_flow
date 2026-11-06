@@ -1530,6 +1530,7 @@ export function SequenceWorkbench({
         >
           {finderHasOpened && (
             <InlineExerciseFinder
+              active={finderOpen}
               onOpenExercise={onOpenYouTubePreview}
               classEquipment={EQUIPMENT_OPTIONS.filter((option) =>
                 selectedEquipment.includes(option.id),

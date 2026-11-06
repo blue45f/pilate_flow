@@ -31,6 +31,7 @@ import '../styles/finder-class-context.css';
 interface InlineExerciseFinderProps {
   onOpenExercise: (exercise: PilatesExercise) => void;
   classEquipment?: readonly EquipmentId[];
+  active?: boolean;
 }
 
 type FilterTab = 'equipment' | 'body' | 'duration';
@@ -64,6 +65,7 @@ const tabs: readonly { id: FilterTab; label: string }[] = [
 export function InlineExerciseFinder({
   onOpenExercise,
   classEquipment = [],
+  active = true,
 }: InlineExerciseFinderProps) {
   const exercises = usePilatesStore((state) => state.exercises);
   const activeSteps = usePilatesStore((state) => state.activeSteps);
@@ -383,7 +385,7 @@ export function InlineExerciseFinder({
               <X size={18} />
             </button>
           </div>
-          <MotionPatternPreview key={preview.variantId} reference={preview} active />
+          <MotionPatternPreview key={preview.variantId} reference={preview} active={active} />
           {previewExercise && (
             <section
               className="ief-preview-exercise-summary"

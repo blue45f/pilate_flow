@@ -238,3 +238,22 @@ describe('inline exercise finder', () => {
     expect(usePilatesStore.getState().activeSteps).toHaveLength(0);
   });
 });
+
+it('pauses a retained preview while the finder is inactive and never resumes it automatically', () => {
+  const mapped = INITIAL_EXERCISES.find(
+    (exercise) => getMotionPatternReferences(exercise.id).length > 0,
+  )!;
+  usePilatesStore.setState({ exercises: [mapped] });
+  const before = usePilatesStore.getState();
+  const onOpenExercise = vi.fn();
+  const { rerender } = render(<InlineExerciseFinder onOpenExercise={onOpenExercise} active />);
+  fireEvent.click(screen.getAllByRole('button', { name: /초안 보기$/ })[0]);
+  fireEvent.click(screen.getByRole('button', { name: '한 주기 재생' }));
+  expect(screen.getByRole('button', { name: '일시정지' })).toBeEnabled();
+  rerender(<InlineExerciseFinder onOpenExercise={onOpenExercise} active={false} />);
+  expect(screen.getByRole('button', { name: '한 주기 재생' })).toBeDisabled();
+  rerender(<InlineExerciseFinder onOpenExercise={onOpenExercise} active />);
+  expect(screen.getByRole('button', { name: '한 주기 재생' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: '일시정지' })).not.toBeInTheDocument();
+  expect(usePilatesStore.getState()).toBe(before);
+});
