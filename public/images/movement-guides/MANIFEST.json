@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "productionMethod": "free-authored-kinematic-svg-v1",
+  "rightsStatus": "original-app-authored-free-license",
+  "licenseFile": "/images/movement-guides/LICENSE.txt",
+  "licenseSha256": "6b6b52521d41d6a2496a8141b787196b5d680d098c9ecbec5db677aef43d3f89",
+  "licenseBytes": 2148,
+  "anatomicalAccuracyAssumed": false,
+  "assets": [
+    {
+      "fileName": "mat-phase-alignment-guide.svg",
+      "publicPath": "/images/movement-guides/mat-phase-alignment-guide.svg",
+      "apparatus": "mat",
+      "sha256": "6226143c5fd1e9512e4b880746a0cf70f3c79776673e3efeb00959c377a89733",
+      "bytes": 14713,
+      "phasesDepicted": [
+        "start",
+        "middle",
+        "end"
+      ],
+      "features": [
+        "joint-alignment",
+        "movement-direction",
+        "primary-muscles",
+        "pose-delta-ghost"
+      ],
+      "reviewDisclaimerKo": "매트 동작 3단계(시작·중간·끝) 개념 도해이며, 해부학적 확정 진단이 아닌 교육용 참고 자료입니다(전문 강사 검수 전/후 구분 필수)."
+    },
+    {
+      "fileName": "reformer-phase-alignment-guide.svg",
+      "publicPath": "/images/movement-guides/reformer-phase-alignment-guide.svg",
+      "apparatus": "reformer",
+      "sha256": "49232aa1b358ba56a224ce82397311e44e7880ec13cf88afbabf128b3cd16f15",
+      "bytes": 14052,
+      "phasesDepicted": [
+        "start",
+        "middle",
+        "end"
+      ],
+      "features": [
+        "joint-alignment",
+        "movement-direction",
+        "primary-muscles",
+        "pose-delta-ghost"
+      ],
+      "reviewDisclaimerKo": "리포머 캐리지 주행 3단계(시작·중간·끝) 개념 도해이며, 해부학적 확정 진단이 아닌 교육용 참고 자료입니다(전문 강사 검수 전/후 구분 필수)."
+    },
+    {
+      "fileName": "cadillac-phase-alignment-guide.svg",
+      "publicPath": "/images/movement-guides/cadillac-phase-alignment-guide.svg",
+      "apparatus": "cadillac",
+      "sha256": "84b0806120df658973b0820ae4183ea5090632ce66743f5b9bb1b48506041e7a",
+      "bytes": 12985,
+      "phasesDepicted": [
+        "start",
+        "middle",
+        "end"
+      ],
+      "features": [
+        "joint-alignment",
+        "movement-direction",
+        "primary-muscles",
+        "pose-delta-ghost"
+      ],
+      "reviewDisclaimerKo": "캐딜락 타워 바 분절 3단계(시작·중간·끝) 개념 도해이며, 해부학적 확정 진단이 아닌 교육용 참고 자료입니다(전문 강사 검수 전/후 구분 필수)."
+    },
+    {
+      "fileName": "chair-phase-alignment-guide.svg",
+      "publicPath": "/images/movement-guides/chair-phase-alignment-guide.svg",
+      "apparatus": "chair",
+      "sha256": "254140f027346ae80361003428c724f0627973067d02f583ad0ab7931aa22896",
+      "bytes": 12820,
+      "phasesDepicted": [
+        "start",
+        "middle",
+        "end"
+      ],
+      "features": [
+        "joint-alignment",
+        "movement-direction",
+        "primary-muscles",
+        "pose-delta-ghost"
+      ],
+      "reviewDisclaimerKo": "체어 페달 프레스 3단계(시작·중간·끝) 개념 도해이며, 해부학적 확정 진단이 아닌 교육용 참고 자료입니다(전문 강사 검수 전/후 구분 필수)."
+    },
+    {
+      "fileName": "barrel-phase-alignment-guide.svg",
+      "publicPath": "/images/movement-guides/barrel-phase-alignment-guide.svg",
+      "apparatus": "barrel",
+      "sha256": "5499a51ef0970d2f86db006276f448bb54493c7b6bca3f1e5f9988c47db049de",
+      "bytes": 12799,
+      "phasesDepicted": [
+        "start",
+        "middle",
+        "end"
+      ],
+      "features": [
+        "joint-alignment",
+        "movement-direction",
+        "primary-muscles",
+        "pose-delta-ghost"
+      ],
+      "reviewDisclaimerKo": "래더 바렐 아크 신전 3단계(시작·중간·끝) 개념 도해이며, 해부학적 확정 진단이 아닌 교육용 참고 자료입니다(전문 강사 검수 전/후 구분 필수)."
+    }
+  ]
+}
