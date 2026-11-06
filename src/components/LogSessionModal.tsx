@@ -14,6 +14,7 @@ import type { SequenceStep } from '../types/pilates';
 import type { ClassHistoryLogWithSnapshot } from '../types/teachingHistorySnapshot';
 import { formatSecondsToMMSS, getSequenceDurations, isRestStep } from '../utils/sequenceEngine';
 import {
+  attachProgramSnapshotToHistoryLog,
   buildTeachingProgramSnapshot,
   findDuplicateCompletedHistoryLog,
 } from '../utils/teachingHistorySnapshot';
@@ -260,6 +261,12 @@ const SessionLogForm: React.FC<
       sequenceTitle: payload.sequenceTitle,
       sequenceSubtitle: sourceSubtitle,
       sourceKind,
+      sourceSequenceVersion: saved?.version,
+      sourceSequenceUpdatedAt: saved?.updatedAt,
+      sourceProvenance: saved?.sourceProvenance,
+      apparatus: matchedLog.apparatus,
+      level: matchedLog.level,
+      targetMinutes: matchedLog.criteriaSnapshot?.targetMinutes,
       taughtAt: payload.taughtAt,
       groupId: payload.groupId,
       steps: payload.stepsSnapshot,
@@ -268,7 +275,11 @@ const SessionLogForm: React.FC<
       actualRestDurationSec: payload.actualRestDurationSec,
       criteriaSnapshot: matchedLog.criteriaSnapshot,
     });
-    matchedLog.programSnapshot = structuredClone(programSnapshot);
+    attachProgramSnapshotToHistoryLog(
+      matchedLog.id,
+      programSnapshot,
+      usePilatesStore.setState,
+    );
     setActiveTab('history');
     onClose();
   };
@@ -435,7 +446,9 @@ const SessionLogForm: React.FC<
                 <span>
                   {isRestStep(step)
                     ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}`
-                    : (exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
+                    : (step.exerciseSnapshot?.nameKo ??
+                      exercisesAtOpen.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
+                      exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
                       '삭제된 동작')}
                 </span>
               </label>
