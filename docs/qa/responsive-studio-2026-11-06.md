@@ -25,10 +25,10 @@ Chrome, clean temporary browser contexts, three identical mat movements, same or
 
 | Width  | Before: first card y / height | After: first card y / height |
 | ------ | ----------------------------- | ---------------------------- |
-| 390px  | 972.64px / 189.48px           | 454.25px / 143px             |
-| 1440px | 1011.94px / 175.80px          | 500.50px / 136px             |
+| 390px  | 972.64px / 189.48px           | 510.25px / 143px             |
+| 1440px | 1011.94px / 175.80px          | 560.89px / 136px             |
 
-The comparison used the same three movements: 누워서 호흡 관찰, 골반 시계, 서서 발목 움직임. Screenshots are actual application renders, not the design illustration. The source figures remain explanatory drafts, not verified exercise demonstrations.
+The final integrated layout also preserves the new preset-entry button above the conditions. The comparison used the same three movements: 누워서 호흡 관찰, 골반 시계, 서서 발목 움직임. Screenshots are actual application renders, not the design illustration. The source figures remain explanatory drafts, not verified exercise demonstrations.
 
 ## Verification coverage
 
@@ -36,6 +36,7 @@ The comparison used the same three movements: 누워서 호흡 관찰, 골반 �
 - Chrome at the same four widths: empty workbench, movement library, schedule, saved plans, history and idea dialog inspected. No horizontal document overflow and no visible button below 24px found by the geometry scan.
 - Short-height Chrome windows (320/390/768 × 500px): idea entry, 16px field font, 25 Tab transitions contained in the dialog, saving a personal draft, Escape dismissal and focus restoration passed. This simulates limited available space; it is not an OS keyboard test.
 - Empty-state regression discovered visually: an inherited mobile grid-column rule could leave an implicit second column after removing the decorative image. Explicit child grid placement fixed it; Chrome and actual iOS Safari were recaptured.
+- Integrated teaching screen: high-contrast panel, heading and button colors checked at all four Chrome widths; corrected a white-panel/bright-text conflict and verified no horizontal overflow.
 - Installed iOS 27 Simulator, actual Mobile Safari: first-page render, layout, bottom navigation and primary actions visually checked. Simulator was controlled by app-specific simctl operations, not general desktop coordinate clicks, and shut down after this check.
 - Before latest-main integration: full Vitest 170 files / 1809 tests passed, latest workbench subset 24 tests passed, storage/account copy protection added with 18 new cases and related three-file / 24-case run passed. TypeScript and production build passed. Lint had zero errors and one pre-existing React refresh warning. Final integrated totals must be recorded separately.
 

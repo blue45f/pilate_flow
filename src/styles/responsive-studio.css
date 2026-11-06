@@ -1020,3 +1020,13 @@ body {
   color: var(--pf-color-status-error-text, #9b382b);
   font-weight: 600;
 }
+
+/* Keep the teaching screen's own palette when the high-contrast option is on. */
+#root .vnext-shell .teaching-high-contrast .panel {
+  color: var(--teaching-ink);
+  background: var(--teaching-paper);
+  border-color: var(--teaching-line);
+}
+#root .vnext-shell .teaching-high-contrast :is(h1, h2, h3) {
+  color: var(--teaching-ink);
+}
