@@ -15,6 +15,29 @@ const { artifactDirectory } = require('./artifact-directory.cjs');
       await p.getByRole('searchbox').fill('골반시계');
       await p.getByRole('button', { name: '골반 시계 수업안에 추가', exact: true }).click();
       await p.getByRole('button', { name: '수업 구성으로 돌아가기', exact: true }).click();
+      const scope = p.getByRole('combobox', { name: '다시 만들 구간' });
+      await scope.scrollIntoViewIfNeeded();
+      const scopeMetrics = await scope.evaluate((el) => {
+        const style = getComputedStyle(el);
+        const ctx = document.createElement('canvas').getContext('2d');
+        ctx.font = style.font;
+        return {
+          width: el.getBoundingClientRect().width,
+          needed:
+            ctx.measureText(el.selectedOptions[0].text).width +
+            parseFloat(style.paddingLeft) +
+            parseFloat(style.paddingRight) +
+            24,
+        };
+      });
+      assert.ok(
+        scopeMetrics.width >= scopeMetrics.needed,
+        JSON.stringify({ width, ...scopeMetrics }),
+      );
+      for (const value of ['warmup', 'main', 'cooldown', 'all']) {
+        await scope.selectOption(value);
+        assert.equal(await scope.inputValue(), value);
+      }
       const add = p.locator('.workbench-add-movement');
       await add.scrollIntoViewIfNeeded();
       assert.equal((await add.innerText()).trim(), '동작 추가');
