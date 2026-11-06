@@ -89,6 +89,7 @@ import '../styles/design-tokens.css';
 import '../styles/workbench-usability.css';
 import '../styles/workbench-vnext.css';
 import '../styles/release-mobile-clarity.css';
+import '../styles/workbench-picker.css';
 
 const LazyOfflinePresetPicker = lazy(() =>
   import('./OfflinePresetPicker').then((mod) => ({ default: mod.OfflinePresetPicker })),
@@ -349,6 +350,7 @@ export function SequenceWorkbench({
     setFinderOpen(false);
     setWorkflowStep(usePilatesStore.getState().activeSteps.length ? 'arrange' : 'select');
     requestAnimationFrame(() => {
+      if (document.querySelector('dialog[open]')) return;
       const heading = document.getElementById('sequence-outline-heading');
       if (usePilatesStore.getState().activeSteps.length && heading) heading.focus();
       else if (finderOpener.current?.isConnected) finderOpener.current.focus();
@@ -359,19 +361,15 @@ export function SequenceWorkbench({
     setWorkflowStep('select');
     finderOpener.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    if (window.innerWidth >= 1200)
-      requestAnimationFrame(() => {
-        const search = document.querySelector<HTMLInputElement>(
-          '.v2-inline-finder .inline-exercise-finder input[type="search"]',
-        );
-        search?.focus();
-        search?.scrollIntoView?.({ block: 'nearest' });
-      });
-    else {
-      setFinderHasOpened(true);
-      setFinderOpen(true);
-    }
+    setFinderHasOpened(true);
+    setFinderOpen(true);
   };
+  useEffect(() => {
+    // Focus only on an explicit opening, after the lazy picker has mounted.
+    // Resizing or returning from source details must preserve the current control.
+    if (finderOpen && window.innerWidth >= 1200)
+      finderContentRef.current?.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
+  }, [finderOpen]);
   const arrangeSequence = () => {
     if (!usePilatesStore.getState().activeSteps.length) return;
     closeFinder();
@@ -565,7 +563,7 @@ export function SequenceWorkbench({
   };
   return (
     <div
-      className={`plan-view v2-workbench v3-workbench v11-workbench vnext-workbench ${s.activeSteps.length ? 'has-sequence' : 'is-empty'}`}
+      className={`plan-view v2-workbench v3-workbench v11-workbench vnext-workbench ${s.activeSteps.length ? 'has-sequence' : 'is-empty'} ${wideEditor && selectedStep ? 'has-inspector' : ''}`}
     >
       <div className="page-heading v2-workbench-heading">
         <div>
@@ -945,6 +943,10 @@ export function SequenceWorkbench({
                   </div>
                 </details>
                 <div className="sequence-tools">
+                  <PfButton variant="text" onClick={openExerciseFinder}>
+                    <Plus size={16} aria-hidden="true" />
+                    동작 더 담기
+                  </PfButton>
                   <PfButton
                     variant="text"
                     onClick={() => {
@@ -1385,11 +1387,8 @@ export function SequenceWorkbench({
             </PfButton>
           </div>
         </section>
-        <aside
-          className="v2-inline-finder"
-          aria-label={wideEditor && selectedStep ? '선택 동작 속성' : '동작 찾기'}
-        >
-          {wideEditor && selectedStep ? (
+        {wideEditor && selectedStep && (
+          <aside className="v2-inline-finder" aria-label="선택 동작 속성">
             <div className="step-properties-panel">
               <div className="step-properties-heading">
                 <span>선택 동작 속성</span>
@@ -1420,15 +1419,8 @@ export function SequenceWorkbench({
                 }}
               />
             </div>
-          ) : wideEditor ? (
-            <InlineExerciseFinder
-              onOpenExercise={onOpenYouTubePreview}
-              classEquipment={EQUIPMENT_OPTIONS.filter((option) =>
-                selectedEquipment.includes(option.id),
-              ).map((option) => option.id)}
-            />
-          ) : null}
-        </aside>
+          </aside>
+        )}
       </div>
       <NextClassBanner collapseEmpty />
       <details className="workbench-navigation-details">
@@ -1509,15 +1501,34 @@ export function SequenceWorkbench({
         </div>
       </LightDismissDialog>
       <LightDismissDialog
-        open={finderOpen && !wideEditor}
-        onClose={closeFinder}
+        open={finderOpen}
+        onClose={() => {
+          if (finderContentRef.current?.closest('dialog')?.open) return;
+          closeFinder();
+        }}
         title="수업에 넣을 동작 고르기"
         subtitle="상세를 확인하고 추가하면 현재 수업안에 그대로 담깁니다."
         className="workbench-finder-dialog"
         maxWidth="760px"
       >
-        <div ref={finderContentRef} className="workbench-finder-content">
-          {!wideEditor && finderHasOpened && (
+        <div
+          ref={finderContentRef}
+          className="workbench-finder-content"
+          onKeyDownCapture={(event) => {
+            // Chrome consumes Escape in search inputs to clear their value.
+            // Here Escape closes the temporary picker and preserves the query.
+            if (
+              event.key === 'Escape' &&
+              event.target instanceof HTMLInputElement &&
+              event.target.type === 'search'
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              closeFinder();
+            }
+          }}
+        >
+          {finderHasOpened && (
             <InlineExerciseFinder
               onOpenExercise={onOpenYouTubePreview}
               classEquipment={EQUIPMENT_OPTIONS.filter((option) =>

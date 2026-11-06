@@ -189,7 +189,7 @@ describe('clear next action without changing class-readiness gates', () => {
     expectCatalogBoundaries();
   });
 
-  it('takes the empty desktop CTA straight to the existing inline finder without replacing the draft', () => {
+  it('opens and focuses the requested desktop picker without replacing the draft', () => {
     resize(1440);
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
       callback(0);

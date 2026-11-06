@@ -63,86 +63,125 @@ afterEach(() => {
 });
 
 describe('contextual finder mount lifecycle', () => {
-  it('mounts the real mobile finder on demand, retains local filters on reopening, and never mounts two finders', () => {
+  it.each([390, 1440])(
+    'mounts on demand at %ipx and preserves the same finder across closing and resizing',
+    (width) => {
+      resize(width);
+      const before = usePilatesStore.getState();
+      const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
+      const storeChange = vi.fn();
+      const unsubscribe = usePilatesStore.subscribe(storeChange);
+      const { container } = renderWorkbench();
+      expect(finderCount(container)).toBe(0);
+
+      fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
+      const dialog = screen.getByRole('dialog', {
+        name: '수업에 넣을 동작 고르기',
+      });
+      const firstFinder = within(dialog).getByRole('complementary', {
+        name: '작업대 동작 찾기',
+      });
+      const finder = within(firstFinder);
+      const search = finder.getByRole('searchbox', {
+        name: '동작 이름 또는 등록된 부위 태그 검색',
+      });
+      expect(finderCount(container)).toBe(1);
+      fireEvent.change(search, { target: { value: pending.nameKo } });
+      fireEvent.click(finder.getByRole('button', { name: '필터' }));
+      fireEvent.click(finder.getByRole('button', { name: '매트' }));
+      expect(finder.getByRole('button', { name: '매트' })).toHaveAttribute('aria-pressed', 'true');
+      expect(finder.getByRole('status')).toHaveTextContent('1개 결과');
+
+      fireEvent.click(within(dialog).getByRole('button', { name: '수업 구성으로 돌아가기' }));
+      expect(
+        screen.queryByRole('dialog', { name: '수업에 넣을 동작 고르기' }),
+      ).not.toBeInTheDocument();
+      expect(finderCount(container)).toBe(1);
+      expect(firstFinder.isConnected).toBe(true);
+      expect(search).toHaveValue(pending.nameKo);
+
+      fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
+      const reopened = screen.getByRole('dialog', {
+        name: '수업에 넣을 동작 고르기',
+      });
+      expect(within(reopened).getByRole('complementary', { name: '작업대 동작 찾기' })).toBe(
+        firstFinder,
+      );
+      expect(finderCount(container)).toBe(1);
+      expect(
+        finder.getByRole('searchbox', {
+          name: '동작 이름 또는 등록된 부위 태그 검색',
+        }),
+      ).toHaveValue(pending.nameKo);
+      expect(finder.getByRole('button', { name: '매트' })).toHaveAttribute('aria-pressed', 'true');
+      expect(finder.getByRole('status')).toHaveTextContent('1개 결과');
+
+      resize(1440);
+      expect(finderCount(container)).toBe(1);
+      expect(
+        container.querySelector('.inline-exercise-finder')?.closest('.workbench-finder-dialog'),
+      ).not.toBeNull();
+      expect(container.querySelector('.inline-exercise-finder')).toBe(firstFinder);
+      expect(search).toHaveValue(pending.nameKo);
+      resize(390);
+      expect(finderCount(container)).toBe(1);
+      expect(
+        container.querySelector('.inline-exercise-finder')?.closest('.workbench-finder-dialog'),
+      ).not.toBeNull();
+
+      expect(usePilatesStore.getState()).toBe(before);
+      expect(storeChange).not.toHaveBeenCalled();
+      expect(storageWrite).not.toHaveBeenCalled();
+      expect(JSON.stringify(INITIAL_EXERCISES)).toBe(catalogSnapshot);
+      expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
+      unsubscribe();
+    },
+  );
+
+  it('does not mount the finder before it is requested at any viewport', () => {
+    resize(1440);
     const before = usePilatesStore.getState();
-    const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
-    const storeChange = vi.fn();
-    const unsubscribe = usePilatesStore.subscribe(storeChange);
     const { container } = renderWorkbench();
-    expect(finderCount(container)).toBe(0);
+    for (const width of [1440, 1150, 390, 1440]) {
+      resize(width);
+      expect(finderCount(container)).toBe(0);
+      expect(
+        screen.queryByRole('complementary', { name: '작업대 동작 찾기' }),
+      ).not.toBeInTheDocument();
+    }
+    expect(usePilatesStore.getState()).toBe(before);
+    expect(JSON.stringify(INITIAL_EXERCISES)).toBe(catalogSnapshot);
+  });
 
+  it('ignores a queued native close after the picker has reopened', () => {
+    renderWorkbench();
     fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
-    const dialog = screen.getByRole('dialog', {
-      name: '수업에 넣을 동작 고르기',
-    });
-    const firstFinder = within(dialog).getByRole('complementary', {
-      name: '작업대 동작 찾기',
-    });
-    const finder = within(firstFinder);
-    const search = finder.getByRole('searchbox', {
-      name: '동작 이름 또는 등록된 부위 태그 검색',
-    });
-    expect(finderCount(container)).toBe(1);
-    fireEvent.change(search, { target: { value: pending.nameKo } });
-    fireEvent.click(finder.getByRole('button', { name: '필터' }));
-    fireEvent.click(finder.getByRole('button', { name: '매트' }));
-    expect(finder.getByRole('button', { name: '매트' })).toHaveAttribute('aria-pressed', 'true');
-    expect(finder.getByRole('status')).toHaveTextContent('1개 결과');
-
+    const dialog = screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' });
     fireEvent.click(within(dialog).getByRole('button', { name: '수업 구성으로 돌아가기' }));
+    fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
+    fireEvent(dialog, new Event('close'));
+    expect(screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' })).toBe(dialog);
+    expect(dialog).toHaveAttribute('open');
+  });
+  it('closes from the focused search with Escape without clearing the retained query', () => {
+    resize(1440);
+    const before = usePilatesStore.getState();
+    renderWorkbench();
+    fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
+    const dialog = screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' });
+    const search = within(dialog).getByRole('searchbox');
+    fireEvent.change(search, { target: { value: pending.nameKo } });
+    fireEvent.keyDown(search, { key: 'Escape' });
     expect(
       screen.queryByRole('dialog', { name: '수업에 넣을 동작 고르기' }),
     ).not.toBeInTheDocument();
-    expect(finderCount(container)).toBe(1);
-    expect(firstFinder.isConnected).toBe(true);
-    expect(search).toHaveValue(pending.nameKo);
-
     fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
-    const reopened = screen.getByRole('dialog', {
-      name: '수업에 넣을 동작 고르기',
-    });
-    expect(within(reopened).getByRole('complementary', { name: '작업대 동작 찾기' })).toBe(
-      firstFinder,
-    );
-    expect(finderCount(container)).toBe(1);
     expect(
-      finder.getByRole('searchbox', {
-        name: '동작 이름 또는 등록된 부위 태그 검색',
-      }),
-    ).toHaveValue(pending.nameKo);
-    expect(finder.getByRole('button', { name: '매트' })).toHaveAttribute('aria-pressed', 'true');
-    expect(finder.getByRole('status')).toHaveTextContent('1개 결과');
-
-    resize(1440);
-    expect(finderCount(container)).toBe(1);
-    expect(
-      container.querySelector('.inline-exercise-finder')?.closest('.v2-inline-finder'),
-    ).not.toBeNull();
-    resize(390);
-    expect(finderCount(container)).toBe(1);
-    expect(
-      container.querySelector('.inline-exercise-finder')?.closest('.workbench-finder-dialog'),
-    ).not.toBeNull();
-
+      within(screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' })).getByRole(
+        'searchbox',
+      ),
+    ).toBe(search);
+    expect(search).toHaveValue(pending.nameKo);
     expect(usePilatesStore.getState()).toBe(before);
-    expect(storeChange).not.toHaveBeenCalled();
-    expect(storageWrite).not.toHaveBeenCalled();
-    expect(JSON.stringify(INITIAL_EXERCISES)).toBe(catalogSnapshot);
-    expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
-    unsubscribe();
-  });
-
-  it('mounts one real desktop finder and no never-opened mobile finder when narrowing the viewport', () => {
-    resize(1440);
-    const before = usePilatesStore.getState();
-    const { container } = renderWorkbench();
-    expect(finderCount(container)).toBe(1);
-    expect(screen.getByRole('complementary', { name: '작업대 동작 찾기' })).toBeInTheDocument();
-    resize(390);
-    expect(finderCount(container)).toBe(0);
-    resize(1440);
-    expect(finderCount(container)).toBe(1);
-    expect(usePilatesStore.getState()).toBe(before);
-    expect(JSON.stringify(INITIAL_EXERCISES)).toBe(catalogSnapshot);
   });
 });

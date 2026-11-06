@@ -1,0 +1,14 @@
+/* Keep the sequence dominant. The shared picker is temporary at every width;
+   an inspector rail appears only when a movement is selected. */
+#root .vnext-shell .vnext-workbench .plan-layout.v2-plan-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 1200px) {
+  #root .vnext-shell .vnext-workbench.has-inspector .plan-layout.v2-plan-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 370px);
+  }
+  #root .vnext-shell .vnext-workbench.has-inspector .v2-inline-finder {
+    width: auto;
+    min-width: 0;
+  }
+}
