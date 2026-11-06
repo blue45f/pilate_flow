@@ -23,13 +23,16 @@ import {
   INITIAL_SAVED_SEQUENCES,
 } from '../data/pilatesCatalog';
 import {
+  PfAiStatusBadge,
   PfBadge,
+  PfBlockPill,
   PfButton,
   PfCard,
   PfEmptyState,
   PfField,
   PfFormError,
   PfInput,
+  PfMovementCard,
   PfSearchField,
   PfSelect,
   PfStatusBanner,
@@ -44,6 +47,9 @@ import type {
   SequenceStep,
 } from '../types/pilates';
 import type { ResolvedTeachingHistoryView } from '../types/teachingHistorySnapshot';
+import {
+  isMovementIdeaExercise,
+} from '../utils/movementIdeaDraft';
 import {
   formatSecondsToMMSS,
   formatSequenceAsStudioSheet,
@@ -421,18 +427,30 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       </p>
                     )}
                     <ol className="teaching-flow-preview">
-                      {sequence.steps.slice(0, 4).map((step) => (
-                        <li
-                          key={step.stepId}
-                          className={`pf-block-pill ${isRestStep(step) ? 'pf-block-pill--rest' : 'pf-block-pill--movement'}`}
-                        >
-                          {isRestStep(step)
-                            ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}`
-                            : (exercisesMap.get(step.exerciseId)?.nameKo ?? '삭제된 동작')}
-                        </li>
-                      ))}
+                      {sequence.steps.slice(0, 4).map((step) => {
+                        const ex = exercisesMap.get(step.exerciseId);
+                        return (
+                          <PfBlockPill
+                            as="li"
+                            key={step.stepId}
+                            kind={
+                              isRestStep(step)
+                                ? 'rest'
+                                : ex && isMovementIdeaExercise(ex)
+                                  ? 'memo'
+                                  : 'movement'
+                            }
+                          >
+                            {isRestStep(step)
+                              ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}`
+                              : (ex?.nameKo ?? '삭제된 동작')}
+                          </PfBlockPill>
+                        );
+                      })}
                       {sequence.steps.length > 4 && (
-                        <li className="muted pf-block-pill">외 {sequence.steps.length - 4}개 항목</li>
+                        <PfBlockPill as="li" className="muted">
+                          외 {sequence.steps.length - 4}개 항목
+                        </PfBlockPill>
                       )}
                     </ol>
                     <p className="teaching-card-date">
@@ -715,9 +733,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       )}
                     </div>
                     {isSample && (
-                      <PfBadge tone="sample" shape="rect" className="teaching-sample-label">
-                        예시 기록 · 실제 수업 아님
-                      </PfBadge>
+                      <PfAiStatusBadge
+                        kind="sample-data"
+                        className="teaching-sample-label"
+                      />
                     )}
                     <h2>{resolved.sequenceTitle}</h2>
                     <div className="teaching-card-stats">
@@ -742,9 +761,16 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                     </p>
                     <div className="teaching-history-exercises">
                       {resolved.steps.map((step) => (
-                        <span
+                        <PfBlockPill
+                          as="span"
                           key={step.stepId}
-                          className={`pf-block-pill ${step.kind === 'rest' ? 'pf-block-pill--rest' : 'pf-block-pill--movement'}`}
+                          kind={
+                            step.kind === 'rest'
+                              ? 'rest'
+                              : step.exerciseId?.startsWith('ex-custom-idea-')
+                                ? 'memo'
+                                : 'movement'
+                          }
                           title={
                             step.kind === 'rest'
                               ? `휴식 (${step.durationMin}분)`
@@ -756,7 +782,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                             : step.isMissingUnrecoverable
                               ? '삭제된 동작'
                               : step.nameKo}
-                        </span>
+                        </PfBlockPill>
                       ))}
                     </div>
                     <div className="teaching-history-bottom">
@@ -954,7 +980,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
               </h3>
               <ol className="teaching-history-snapshot-list">
                 {reopenedView.steps.map((step) => (
-                  <li
+                  <PfMovementCard
+                    as="li"
+                    variant="step"
                     key={step.stepId}
                     className={`teaching-history-snapshot-item ${step.kind === 'rest' ? 'is-rest' : ''}`}
                   >
@@ -962,11 +990,14 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       <span className="teaching-step-order">
                         {String(step.order).padStart(2, '0')}
                       </span>
-                      <span className="teaching-step-block-badge">
+                      <PfBlockPill
+                        kind={step.kind === 'rest' ? 'rest' : 'movement'}
+                        className="teaching-step-block-badge"
+                      >
                         {step.kind === 'rest'
                           ? `휴식 · ${step.classSectionLabelKo}`
                           : `${step.blockNameKo} · ${step.classSectionLabelKo}`}
-                      </span>
+                      </PfBlockPill>
                       {step.sourceBlockTitle && (
                         <span className="teaching-step-block-badge">
                           블록: {step.sourceBlockTitle} v{step.sourceBlockVersion ?? 1}
@@ -988,10 +1019,14 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                         <small className="muted">({step.nameEn})</small>
                       )}
                       {step.isCatalogModified && (
-                        <span className="teaching-step-drift-tag">원본 동작 수정됨 · 당시 값 표시</span>
+                        <PfBadge tone="warning" className="teaching-step-drift-tag">
+                          원본 동작 수정됨 · 당시 값 표시
+                        </PfBadge>
                       )}
                       {step.isCatalogDeleted && (
-                        <span className="teaching-step-drift-tag">원본 동작 삭제됨 · 스냅샷 복원 가능</span>
+                        <PfBadge tone="warning" className="teaching-step-drift-tag">
+                          원본 동작 삭제됨 · 스냅샷 복원 가능
+                        </PfBadge>
                       )}
                       {step.isBlockTemplateModified && (
                         <span className="teaching-step-drift-tag">원본 블록 수정됨 · 당시 블록 유지</span>
@@ -1032,7 +1067,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                         </div>
                       )
                     )}
-                  </li>
+                  </PfMovementCard>
                 ))}
               </ol>
             </section>

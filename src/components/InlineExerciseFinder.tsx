@@ -14,11 +14,20 @@ import type { EquipmentId } from '../data/equipmentCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesExercise } from '../types/pilates';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
-import { addMovementIdeaToCurrentClass, isMovementIdeaExercise } from '../utils/movementIdeaDraft';
+import {
+  addMovementIdeaToCurrentClass,
+  isMovementIdeaExercise,
+  readMovementIdeaDraft,
+} from '../utils/movementIdeaDraft';
+import {
+  PfAiStatusBadge,
+  PfMovementCard,
+} from '../design-system';
 import { isRestStep } from '../utils/sequenceEngine';
 import { getMotionPatternReferences } from '../data/motionPatternReferences';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
 import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';
+import '../styles/design-tokens.css';
 import '../styles/inline-exercise-finder.css';
 import '../styles/finder-class-context.css';
 
@@ -475,6 +484,9 @@ export function InlineExerciseFinder({
             const equipment = getExerciseEquipment(exercise);
             const approved = isExerciseAutoEligible(exercise);
             const stale = getExerciseReviewState(exercise) === 'stale';
+            const isIdea = isMovementIdeaExercise(exercise);
+            const ideaMeta = isIdea ? readMovementIdeaDraft(exercise) : null;
+            const canAdd = approved || isIdea;
             const references = getMotionPatternReferences(exercise.id);
             const firstReference = references[0];
             const alreadyAdded = activeSteps.some(
@@ -487,8 +499,9 @@ export function InlineExerciseFinder({
                   .join(' · ')
               : '기구 요구 조건 미확인';
             return (
-              <article
+              <PfMovementCard
                 key={exercise.id}
+                variant={isIdea ? 'idea' : 'catalog'}
                 className="ief-card"
                 aria-label={`${exercise.nameKo} 동작 노트`}
               >
@@ -539,14 +552,33 @@ export function InlineExerciseFinder({
                     </div>
                   )}
                   <div className="ief-card-actions">
-                    <span className={approved ? 'is-reviewed' : 'is-pending'}>
-                      {approved ? '내 검토 기록' : stale ? '다시 검토' : '검토 전'}
-                    </span>
+                    <PfAiStatusBadge
+                      kind={
+                        isIdea
+                          ? ideaMeta?.triedByInstructor
+                            ? 'tried-memo'
+                            : 'creative-memo'
+                          : approved
+                            ? 'instructor-reviewed'
+                            : 'review-pending'
+                      }
+                      className={canAdd ? 'is-reviewed' : 'is-pending'}
+                    >
+                      {isIdea
+                        ? ideaMeta?.triedByInstructor
+                          ? '직접 해봄 · 주관적 메모'
+                          : '내 창작 메모'
+                        : approved
+                          ? '내 검토 기록'
+                          : stale
+                            ? '다시 검토'
+                            : '검토 전'}
+                    </PfAiStatusBadge>
                     <button
                       type="button"
-                      disabled={!approved || alreadyAdded}
+                      disabled={!canAdd || alreadyAdded}
                       aria-label={
-                        !approved
+                        !canAdd
                           ? `${exercise.nameKo} 강사 검토 후 추가 가능`
                           : alreadyAdded
                             ? `${exercise.nameKo} 이미 수업안에 있음`
@@ -554,16 +586,18 @@ export function InlineExerciseFinder({
                       }
                       onClick={() => addExercise(exercise)}
                       title={
-                        approved
-                          ? '내 강사 검토 · 자격 인증 미확인'
-                          : '전체 검토 전 추가할 수 없습니다.'
+                        isIdea
+                          ? '내 창작 메모 · 전문가 검증 아님'
+                          : approved
+                            ? '내 강사 검토 · 자격 인증 미확인'
+                            : '전체 검토 전 추가할 수 없습니다.'
                       }
                     >
                       {alreadyAdded ? <Check size={18} /> : <Plus size={18} />}
                     </button>
                   </div>
                 </div>
-              </article>
+              </PfMovementCard>
             );
           })}
         </div>

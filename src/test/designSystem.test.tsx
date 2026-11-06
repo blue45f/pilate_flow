@@ -30,11 +30,19 @@ import {
   PfTooltip,
 } from '../design-system';
 import { ClassBinderView } from '../components/ClassBinderView';
+import { ExerciseAtlasView } from '../components/ExerciseAtlasView';
+import { InlineExerciseFinder } from '../components/InlineExerciseFinder';
 import { InstructorStudyDialog } from '../components/InstructorStudyDialog';
 import { LightDismissDialog } from '../components/LightDismissDialog';
 import { LogSessionModal } from '../components/LogSessionModal';
+import { SequenceWorkbench } from '../components/SequenceWorkbench';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
+import {
+  clearIdeaWorkingBuffer,
+  resetMovementIdeaStateForTests,
+  saveMovementIdeaToStore,
+} from '../utils/movementIdeaDraft';
 
 const originalState = usePilatesStore.getState();
 
@@ -418,4 +426,95 @@ describe('Representative screens upgraded with the Design System', () => {
       '수업 그룹 별칭을 입력해 주세요.',
     );
   });
+
+  it('applies PfMovementCard, PfSequenceBlock, PfBlockPill, PfAiStatusBadge, and core flow continuation across SequenceWorkbench, ExerciseAtlasView, InlineExerciseFinder, and ClassBinderView', () => {
+    resetMovementIdeaStateForTests();
+    clearIdeaWorkingBuffer();
+
+    const ideaResult = saveMovementIdeaToStore({
+      ideaLine: '박스 위에서 골반 중립 유지하며 팔 원 그리기',
+      workingTitle: '박스 암 서클 메모',
+      subjectiveFeeling: '견갑골 하각이 안정적으로 지지됨',
+      adjustmentNote: '어깨가 으쓱하지 않게 목 길게 유지',
+      photoDataUrl: '',
+      apparatus: 'reformer',
+      durationMin: 4,
+    });
+    expect(ideaResult.ok).toBe(true);
+    const ideaId = ideaResult.exercise!.id;
+
+    // 1. ExerciseAtlasView renders PfMovementCard (variant="idea") + PfAiStatusBadge (tried-memo)
+    const { container: atlasContainer } = render(
+      <ExerciseAtlasView
+        onOpenYouTubePreview={vi.fn()}
+        onOpenIdeaSheet={vi.fn()}
+        onOpenClipper={vi.fn()}
+      />,
+    );
+    fireEvent.change(screen.getByRole('searchbox', { name: '동작 검색' }), {
+      target: { value: '박스 암 서클 메모' },
+    });
+    const ideaCardInAtlas = atlasContainer.querySelector('.pf-movement-card--idea');
+    expect(ideaCardInAtlas).not.toBeNull();
+    expect(ideaCardInAtlas?.querySelector('.pf-ai-status--tried-memo')).not.toBeNull();
+
+    cleanup();
+
+    // 2. InlineExerciseFinder renders PfMovementCard + PfAiStatusBadge and allows adding the 1-line idea directly
+    const { container: finderContainer } = render(
+      <InlineExerciseFinder onOpenExercise={vi.fn()} />,
+    );
+    fireEvent.change(
+      screen.getByRole('searchbox', { name: '동작 이름 또는 등록된 부위 태그 검색' }),
+      { target: { value: '박스 암 서클 메모' } },
+    );
+    expect(finderContainer.querySelector('.pf-movement-card--idea')).not.toBeNull();
+    fireEvent.click(
+      screen.getByRole('button', { name: '박스 암 서클 메모 수업안에 추가' }),
+    );
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
+    expect(usePilatesStore.getState().activeSteps[0]?.exerciseId).toBe(ideaId);
+
+    cleanup();
+
+    // 3. SequenceWorkbench renders PfSequenceBlock, PfMovementCard--step, PfBlockPill--memo, PfAiStatusBadge, and .pf-flow-continuation
+    const { container: workbenchContainer } = render(
+      <SequenceWorkbench
+        onOpenYouTubePreview={vi.fn()}
+        onOpenIdeaSheet={vi.fn()}
+        onOpenClipper={vi.fn()}
+        onOpenLogModal={vi.fn()}
+      />,
+    );
+    expect(workbenchContainer.querySelector('.pf-sequence-block')).not.toBeNull();
+    expect(workbenchContainer.querySelector('.pf-movement-card--step')).not.toBeNull();
+    expect(workbenchContainer.querySelector('.pf-block-pill--memo')).toHaveTextContent(
+      '내 창작 메모 · 전문가 검증 아님',
+    );
+    expect(
+      screen.getByRole('region', { name: '핵심 흐름 이어가기' }),
+    ).toBeInTheDocument();
+
+    // Save to binder and verify ClassBinderView renders PfBlockPill--memo on saved sequence card
+    fireEvent.click(screen.getByRole('button', { name: '저장' }));
+    cleanup();
+
+    const { container: binderContainer } = render(
+      <ClassBinderView view="saved" onOpenLogModal={vi.fn()} />,
+    );
+    expect(binderContainer.querySelector('.pf-block-pill--memo')).toHaveTextContent(
+      '박스 암 서클 메모',
+    );
+  });
+
+  it('enforces >= 44px touch targets and 320px/390px/768px overflow protection rules in design-tokens.css', () => {
+    const tokenCss = readFileSync(resolve(process.cwd(), 'src/styles/design-tokens.css'), 'utf8');
+    expect(tokenCss).toContain('@media (max-width: 768px)');
+    expect(tokenCss).toContain('@media (max-width: 560px)');
+    expect(tokenCss).toContain('@media (max-width: 390px)');
+    expect(tokenCss).toContain('min-height: var(--pf-touch-min, 44px)');
+    expect(tokenCss).toContain('.motion-library .movement-card-grid');
+    expect(tokenCss).toContain('.pf-core-quick-bar');
+  });
 });
+
