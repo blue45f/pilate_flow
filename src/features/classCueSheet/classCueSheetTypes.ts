@@ -299,8 +299,10 @@ export interface CueSheetTruncationMeta {
 
 export interface CueSheetPrivacyMeta {
   readonly allowlistApplied: true;
+  readonly inlineRedactionIsHeuristicOnly: true;
   readonly strippedSensitiveKeys: readonly string[];
   readonly redactedInlineTextCount: number;
+  readonly privacyPolicyNoteKo: string;
 }
 
 export type CueSheetDiagnosticCode =

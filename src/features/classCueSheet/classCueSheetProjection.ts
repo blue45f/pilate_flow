@@ -663,8 +663,11 @@ export function buildClassCueSheetProjection(
 
     const emptyPrivacy: CueSheetPrivacyMeta = {
       allowlistApplied: true,
+      inlineRedactionIsHeuristicOnly: true,
       strippedSensitiveKeys: [],
       redactedInlineTextCount: 0,
+      privacyPolicyNoteKo:
+        '구조화된 필드는 허용 목록(Allowlist)으로만 추출하며, 자유 서술 텍스트 내 인라인 마스킹은 보조적 휴리스틱으로 모든 건강·개인정보의 완전 제거를 보장하지 않습니다.',
     };
 
     const emptyProjection: ClassCueSheetProjection = {
@@ -1826,6 +1829,7 @@ export function buildClassCueSheetProjection(
   }
 
   const nameOccurrenceCounter = new Map<string, number>();
+  const identityKeyCounter = new Map<string, number>();
   const items: ClassCueSheetItem[] = intermediateItems.map((item) => {
     const normName = item.nameKo.trim().normalize('NFKC');
     const totalForName = nameOrdersMap.get(normName)?.length ?? 1;
@@ -1837,8 +1841,18 @@ export function buildClassCueSheetProjection(
       ? `동일 이름 #${occurrence} (${String(item.order).padStart(2, '0')}번 항목)`
       : null;
 
-    const slug = makeSlug(item.exerciseId ?? item.sourceStepId ?? item.nameKo);
-    const cueItemId = `cue-item-${String(item.order).padStart(3, '0')}-${slug}-${occurrence}`;
+    const explicitStepSlug = item.explicitStepId ? makeSlug(item.explicitStepId) : '';
+    const blockScopeSlug = item.blockMeta.blockInstanceId
+      ? makeSlug(item.blockMeta.blockInstanceId)
+      : item.blockMeta.sourceBlockId
+        ? makeSlug(item.blockMeta.sourceBlockId)
+        : '';
+    const identityBase = explicitStepSlug
+      ? `id-${blockScopeSlug ? `${blockScopeSlug}-` : ''}${explicitStepSlug}`
+      : `auto-${blockScopeSlug ? `${blockScopeSlug}-` : ''}${makeSlug(item.exerciseId ?? item.nameKo ?? item.kind)}`;
+    const identityOccurrence = (identityKeyCounter.get(identityBase) ?? 0) + 1;
+    identityKeyCounter.set(identityBase, identityOccurrence);
+    const cueItemId = `cue-item-${identityBase}-${identityOccurrence}`;
 
     return {
       cueItemId,
@@ -1967,7 +1981,7 @@ export function buildClassCueSheetProjection(
   if (strippedSensitiveKeys.length > 0 || redactionTracker.redactedCount > 0) {
     recordDiagnostic(
       'sensitive-fields-stripped',
-      '허용 목록(Allowlist) 정책에 따라 회원·참가자·건강·관찰 등 민감 필드 및 개인정보가 큐시트에서 제외되었습니다.',
+      '허용 목록(Allowlist) 정책에 따라 구조화된 민감 필드를 제외하고 자유 텍스트 내 인라인 패턴에 보조적 휴리스틱 마스킹을 적용했습니다(자유 서술 내 모든 민감 정보 제거를 보장하지 않음).',
     );
   }
 
@@ -2021,8 +2035,11 @@ export function buildClassCueSheetProjection(
 
   const privacy: CueSheetPrivacyMeta = {
     allowlistApplied: true,
+    inlineRedactionIsHeuristicOnly: true,
     strippedSensitiveKeys,
     redactedInlineTextCount: redactionTracker.redactedCount,
+    privacyPolicyNoteKo:
+      '구조화된 필드는 허용 목록(Allowlist)으로만 추출하며, 자유 서술 텍스트 내 인라인 마스킹은 보조적 휴리스틱으로 모든 건강·개인정보의 완전 제거를 보장하지 않습니다.',
   };
 
   // Compute timingSummary (NEVER inventing time for unspecified items)

@@ -14,4 +14,7 @@ export {
   getCueSheetFixtureById,
 } from './classCueSheetFixtures';
 export { ClassCueSheetPreview } from './ClassCueSheetPreview';
-export type { ClassCueSheetPreviewProps } from './ClassCueSheetPreview';
+export type {
+  ClassCueSheetPreviewProps,
+  CueSheetSelectionResolution,
+} from './ClassCueSheetPreview';

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   CLASS_CUE_SHEET_FIXTURES,
   getCueSheetFixtureById,
@@ -14,6 +14,14 @@ import type {
 } from './classCueSheetTypes';
 import './classCueSheet.css';
 
+export type CueSheetSelectionResolution =
+  | 'initial'
+  | 'user-navigation'
+  | 'preserved-by-id'
+  | 'fallback-adjacent-after-delete'
+  | 'reset-on-class-change'
+  | 'empty-class';
+
 export interface ClassCueSheetPreviewProps {
   readonly projection?: ClassCueSheetProjection;
   readonly sourceInput?: CueSheetSourceInput;
@@ -23,6 +31,202 @@ export interface ClassCueSheetPreviewProps {
   readonly initialViewMode?: 'compact' | 'expanded';
   readonly initialPrintPreviewMode?: boolean;
   readonly showFixtureSwitcher?: boolean;
+}
+
+interface SelectionTrackerState {
+  readonly projection: ClassCueSheetProjection;
+  readonly currentIndex: number;
+  readonly currentCueItemId: string | null;
+  readonly currentSourceStepId: string | null;
+  readonly currentItemNameKo: string | null;
+  readonly resolution: CueSheetSelectionResolution;
+  readonly removedItemNameKo: string | null;
+}
+
+function isExplicitSourceId(sourceId: string): boolean {
+  const trimmed = sourceId.trim();
+  return (
+    trimmed.length > 0 &&
+    trimmed !== 'cue-source-unspecified' &&
+    trimmed !== 'recovered-empty'
+  );
+}
+
+function isAutoPositionalStepId(sourceStepId: string): boolean {
+  return /^step-\d{3,}$/.test(sourceStepId);
+}
+
+function createInitialSelectionState(
+  projection: ClassCueSheetProjection,
+  initialStepIndex: number,
+): SelectionTrackerState {
+  const items = projection.items;
+  if (items.length === 0) {
+    return {
+      projection,
+      currentIndex: 0,
+      currentCueItemId: null,
+      currentSourceStepId: null,
+      currentItemNameKo: null,
+      resolution: 'empty-class',
+      removedItemNameKo: null,
+    };
+  }
+  const safeInitial = Math.min(
+    Math.max(0, Math.trunc(initialStepIndex || 0)),
+    items.length - 1,
+  );
+  const item = items[safeInitial]!;
+  return {
+    projection,
+    currentIndex: safeInitial,
+    currentCueItemId: item.cueItemId,
+    currentSourceStepId: item.sourceStepId,
+    currentItemNameKo: item.nameKo,
+    resolution: 'initial',
+    removedItemNameKo: null,
+  };
+}
+
+function reconcileSelectionState(
+  prev: SelectionTrackerState,
+  nextProjection: ClassCueSheetProjection,
+): SelectionTrackerState {
+  if (prev.projection === nextProjection) {
+    return prev;
+  }
+
+  const nextItems = nextProjection.items;
+  if (nextItems.length === 0) {
+    return {
+      projection: nextProjection,
+      currentIndex: 0,
+      currentCueItemId: null,
+      currentSourceStepId: null,
+      currentItemNameKo: null,
+      resolution: 'empty-class',
+      removedItemNameKo: null,
+    };
+  }
+
+  const prevProjection = prev.projection;
+  const prevItems = prevProjection.items;
+
+  if (prevItems.length === 0) {
+    const firstItem = nextItems[0]!;
+    return {
+      projection: nextProjection,
+      currentIndex: 0,
+      currentCueItemId: firstItem.cueItemId,
+      currentSourceStepId: firstItem.sourceStepId,
+      currentItemNameKo: firstItem.nameKo,
+      resolution: 'reset-on-class-change',
+      removedItemNameKo: null,
+    };
+  }
+
+  const prevHasExplicitSource = isExplicitSourceId(prevProjection.sourceId);
+  const nextHasExplicitSource = isExplicitSourceId(nextProjection.sourceId);
+
+  if (
+    prevHasExplicitSource &&
+    nextHasExplicitSource &&
+    prevProjection.sourceId !== nextProjection.sourceId
+  ) {
+    const firstItem = nextItems[0]!;
+    return {
+      projection: nextProjection,
+      currentIndex: 0,
+      currentCueItemId: firstItem.cueItemId,
+      currentSourceStepId: firstItem.sourceStepId,
+      currentItemNameKo: firstItem.nameKo,
+      resolution: 'reset-on-class-change',
+      removedItemNameKo: null,
+    };
+  }
+
+  // 1. Primary match by stable cueItemId
+  let matchedIndex = prev.currentCueItemId
+    ? nextItems.findIndex((item) => item.cueItemId === prev.currentCueItemId)
+    : -1;
+
+  // 2. Secondary match by explicit unique sourceStepId if custom projection changed cueItemId
+  if (
+    matchedIndex === -1 &&
+    prev.currentSourceStepId &&
+    !isAutoPositionalStepId(prev.currentSourceStepId)
+  ) {
+    const matchingStepIdIndices: number[] = [];
+    for (let i = 0; i < nextItems.length; i += 1) {
+      if (nextItems[i]!.sourceStepId === prev.currentSourceStepId) {
+        matchingStepIdIndices.push(i);
+      }
+    }
+    if (matchingStepIdIndices.length === 1) {
+      matchedIndex = matchingStepIdIndices[0]!;
+    }
+  }
+
+  if (matchedIndex !== -1) {
+    const matchedItem = nextItems[matchedIndex]!;
+    return {
+      projection: nextProjection,
+      currentIndex: matchedIndex,
+      currentCueItemId: matchedItem.cueItemId,
+      currentSourceStepId: matchedItem.sourceStepId,
+      currentItemNameKo: matchedItem.nameKo,
+      resolution: 'preserved-by-id',
+      removedItemNameKo: null,
+    };
+  }
+
+  // Active item was not found in nextItems. Check whether this is the same class with the current item deleted,
+  // or a replacement with a completely different class.
+  const prevCueIds = new Set(prevItems.map((item) => item.cueItemId));
+  const prevExplicitStepIds = new Set(
+    prevItems
+      .map((item) => item.sourceStepId)
+      .filter((id) => !isAutoPositionalStepId(id)),
+  );
+
+  const hasSharedItems = nextItems.some(
+    (item) =>
+      prevCueIds.has(item.cueItemId) ||
+      (!isAutoPositionalStepId(item.sourceStepId) &&
+        prevExplicitStepIds.has(item.sourceStepId)),
+  );
+  const hasSameExplicitSource =
+    prevHasExplicitSource &&
+    nextHasExplicitSource &&
+    prevProjection.sourceId === nextProjection.sourceId;
+
+  if (hasSharedItems || hasSameExplicitSource) {
+    const clampedIndex = Math.min(
+      Math.max(0, prev.currentIndex),
+      nextItems.length - 1,
+    );
+    const fallbackItem = nextItems[clampedIndex]!;
+    return {
+      projection: nextProjection,
+      currentIndex: clampedIndex,
+      currentCueItemId: fallbackItem.cueItemId,
+      currentSourceStepId: fallbackItem.sourceStepId,
+      currentItemNameKo: fallbackItem.nameKo,
+      resolution: 'fallback-adjacent-after-delete',
+      removedItemNameKo: prev.currentItemNameKo,
+    };
+  }
+
+  const firstItem = nextItems[0]!;
+  return {
+    projection: nextProjection,
+    currentIndex: 0,
+    currentCueItemId: firstItem.cueItemId,
+    currentSourceStepId: firstItem.sourceStepId,
+    currentItemNameKo: firstItem.nameKo,
+    resolution: 'reset-on-class-change',
+    removedItemNameKo: null,
+  };
 }
 
 function getOriginBadgeLabelKo(originKind: CueSheetItemOriginKind): string {
@@ -104,15 +308,16 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
   initialPrintPreviewMode = false,
   showFixtureSwitcher,
 }) => {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const focusDeckRef = useRef<HTMLDivElement | null>(null);
+  const hadFocusInsideRootRef = useRef<boolean>(false);
+
   const shouldShowFixtureSwitcher =
     showFixtureSwitcher ??
     (projection === undefined && sourceInput === undefined);
 
   const [selectedFixtureId, setSelectedFixtureId] =
     useState<CueSheetFixtureEntry['fixtureId']>(initialFixtureId);
-  const [rawStepIndex, setRawStepIndex] = useState<number>(() =>
-    Math.max(0, Math.trunc(initialStepIndex || 0)),
-  );
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>(
     initialViewMode,
   );
@@ -132,10 +337,27 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
     return fixture.buildProjection();
   }, [projection, sourceInput, projectionOptions, selectedFixtureId]);
 
+  const [selectionState, setSelectionState] = useState<SelectionTrackerState>(
+    () => createInitialSelectionState(activeProjection, initialStepIndex),
+  );
+
+  const effectiveSelection =
+    selectionState.projection === activeProjection
+      ? selectionState
+      : reconcileSelectionState(selectionState, activeProjection);
+
+  if (selectionState.projection !== activeProjection) {
+    setSelectionState(effectiveSelection);
+  }
+
   const totalItems = activeProjection.items.length;
   const maxStepIndex = Math.max(0, totalItems - 1);
   const currentIndex =
-    totalItems === 0 ? 0 : Math.min(Math.max(0, rawStepIndex), maxStepIndex);
+    totalItems === 0
+      ? 0
+      : Math.min(Math.max(0, effectiveSelection.currentIndex), maxStepIndex);
+  const selectionResolution = effectiveSelection.resolution;
+  const removedItemNameKo = effectiveSelection.removedItemNameKo;
 
   const currentItem =
     totalItems > 0 ? activeProjection.items[currentIndex] : undefined;
@@ -144,47 +366,146 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
       ? activeProjection.items[currentIndex + 1]
       : undefined;
 
+  useLayoutEffect(() => {
+    if (!hadFocusInsideRootRef.current) {
+      return;
+    }
+    const rootEl = rootRef.current;
+    const deckEl = focusDeckRef.current;
+    if (!rootEl || !deckEl) {
+      return;
+    }
+    const activeEl = document.activeElement;
+    if (!activeEl || activeEl === document.body || !rootEl.contains(activeEl)) {
+      deckEl.focus({ preventScroll: true });
+    }
+  });
+
+  const selectStepByIndex = (
+    nextIdx: number,
+    resolution: CueSheetSelectionResolution = 'user-navigation',
+  ) => {
+    if (totalItems === 0) {
+      return;
+    }
+    const clamped = Math.min(Math.max(0, nextIdx), maxStepIndex);
+    const targetItem = activeProjection.items[clamped]!;
+    setSelectionState({
+      projection: activeProjection,
+      currentIndex: clamped,
+      currentCueItemId: targetItem.cueItemId,
+      currentSourceStepId: targetItem.sourceStepId,
+      currentItemNameKo: targetItem.nameKo,
+      resolution,
+      removedItemNameKo: null,
+    });
+  };
+
+  const selectByCueItemId = (cueItemId: string) => {
+    const idx = activeProjection.items.findIndex(
+      (item) => item.cueItemId === cueItemId,
+    );
+    if (idx !== -1) {
+      selectStepByIndex(idx, 'user-navigation');
+    }
+  };
+
+  const transferFocusToDeckIfBoundary = (willDisableButton: boolean) => {
+    hadFocusInsideRootRef.current = true;
+    if (willDisableButton) {
+      focusDeckRef.current?.focus({ preventScroll: true });
+    }
+  };
+
   const handleSelectFixture = (
     nextFixtureId: CueSheetFixtureEntry['fixtureId'],
   ) => {
     setSelectedFixtureId(nextFixtureId);
-    setRawStepIndex(0);
   };
 
   const handleGoFirst = () => {
-    setRawStepIndex(0);
+    if (totalItems === 0) {
+      return;
+    }
+    transferFocusToDeckIfBoundary(true);
+    selectStepByIndex(0, 'user-navigation');
   };
 
   const handleGoPrev = () => {
-    setRawStepIndex(Math.max(0, currentIndex - 1));
+    if (totalItems === 0) {
+      return;
+    }
+    const targetIndex = Math.max(0, currentIndex - 1);
+    transferFocusToDeckIfBoundary(targetIndex === 0);
+    selectStepByIndex(targetIndex, 'user-navigation');
   };
 
   const handleGoNext = () => {
-    setRawStepIndex(Math.min(maxStepIndex, currentIndex + 1));
+    if (totalItems === 0) {
+      return;
+    }
+    const targetIndex = Math.min(maxStepIndex, currentIndex + 1);
+    transferFocusToDeckIfBoundary(targetIndex >= maxStepIndex);
+    selectStepByIndex(targetIndex, 'user-navigation');
   };
 
   const handleGoLast = () => {
-    setRawStepIndex(maxStepIndex);
+    if (totalItems === 0) {
+      return;
+    }
+    transferFocusToDeckIfBoundary(true);
+    selectStepByIndex(maxStepIndex, 'user-navigation');
   };
 
   const handleDeckKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
     if (totalItems === 0) {
       return;
     }
-    if (event.key === 'ArrowLeft') {
+    if (
+      event.key === 'ArrowLeft' ||
+      event.key === 'ArrowUp' ||
+      event.key === 'k' ||
+      event.key === 'p'
+    ) {
       event.preventDefault();
-      handleGoPrev();
-    } else if (event.key === 'ArrowRight') {
+      selectStepByIndex(Math.max(0, currentIndex - 1), 'user-navigation');
+    } else if (
+      event.key === 'ArrowRight' ||
+      event.key === 'ArrowDown' ||
+      event.key === 'j' ||
+      event.key === 'n'
+    ) {
       event.preventDefault();
-      handleGoNext();
+      selectStepByIndex(Math.min(maxStepIndex, currentIndex + 1), 'user-navigation');
     } else if (event.key === 'Home') {
       event.preventDefault();
-      handleGoFirst();
+      selectStepByIndex(0, 'user-navigation');
     } else if (event.key === 'End') {
       event.preventDefault();
-      handleGoLast();
+      selectStepByIndex(maxStepIndex, 'user-navigation');
     }
   };
+
+  const handleRootFocusCapture = () => {
+    hadFocusInsideRootRef.current = true;
+  };
+
+  const handleRootBlurCapture = (event: React.FocusEvent<HTMLDivElement>) => {
+    const nextFocused = event.relatedTarget;
+    if (
+      nextFocused instanceof Node &&
+      rootRef.current &&
+      !rootRef.current.contains(nextFocused)
+    ) {
+      hadFocusInsideRootRef.current = false;
+    }
+  };
+
+  const firstExpandedRowIdForCurrent = currentItem
+    ? activeProjection.expandedRows.find(
+        (r) => r.parentCueItemId === currentItem.cueItemId,
+      )?.expandedRowId
+    : undefined;
 
   const rootClassName = [
     'class-cue-sheet-root',
@@ -195,9 +516,15 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
 
   return (
     <div
+      ref={rootRef}
       className={rootClassName}
       data-testid="class-cue-sheet-root"
       data-print-preview={printPreviewMode ? 'true' : 'false'}
+      data-current-cue-item-id={currentItem?.cueItemId ?? ''}
+      data-current-step-index={currentItem ? String(currentIndex) : '-1'}
+      data-selection-resolution={selectionResolution}
+      onFocusCapture={handleRootFocusCapture}
+      onBlurCapture={handleRootBlurCapture}
     >
       <header
         className="cue-sheet-boundary-banner"
@@ -351,9 +678,9 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
               className="cue-sheet-badge"
               data-testid="privacy-stripped-badge"
             >
-              민감 필드 제외 ({activeProjection.privacy.strippedSensitiveKeys.length}
-              종) · 인라인 보호 ({activeProjection.privacy.redactedInlineTextCount}
-              건)
+              민감 키 제외 ({activeProjection.privacy.strippedSensitiveKeys.length}
+              종) · 보조 휴리스틱 마스킹 ({activeProjection.privacy.redactedInlineTextCount}
+              건, 전체 제거 보장 아님)
             </span>
           )}
         </div>
@@ -386,20 +713,23 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
       )}
 
       <div
+        ref={focusDeckRef}
         className="cue-sheet-focus-deck"
+        data-testid="cue-sheet-focus-deck"
         tabIndex={0}
         aria-label="현재 및 다음 진행 포커스 데크"
         onKeyDown={handleDeckKeyDown}
       >
         <div className="cue-sheet-focus-controls cue-sheet-no-print">
           <strong>
-            진행 포커스 이동 (방향키 좌·우 / Home·End 지원)
+            진행 포커스 이동 (방향키 좌·우·상·하 / Home·End 지원)
           </strong>
           <div className="cue-sheet-badge-row">
             <button
               type="button"
               className="cue-sheet-btn"
               aria-label="첫 진행 항목으로 이동"
+              data-testid="cue-sheet-nav-first"
               disabled={totalItems === 0 || currentIndex === 0}
               onClick={handleGoFirst}
             >
@@ -409,6 +739,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
               type="button"
               className="cue-sheet-btn"
               aria-label="이전 진행 항목"
+              data-testid="cue-sheet-nav-prev"
               disabled={totalItems === 0 || currentIndex === 0}
               onClick={handleGoPrev}
             >
@@ -418,13 +749,58 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
               type="button"
               className="cue-sheet-btn"
               aria-label="다음 진행 항목"
+              data-testid="cue-sheet-nav-next"
               disabled={totalItems === 0 || currentIndex >= totalItems - 1}
               onClick={handleGoNext}
             >
               다음 항목
             </button>
+            <button
+              type="button"
+              className="cue-sheet-btn"
+              aria-label="마지막 진행 항목으로 이동"
+              data-testid="cue-sheet-nav-last"
+              disabled={totalItems === 0 || currentIndex >= totalItems - 1}
+              onClick={handleGoLast}
+            >
+              마지막 항목으로
+            </button>
           </div>
         </div>
+
+        <p
+          className="cue-sheet-meta-line"
+          data-testid="cue-sheet-a11y-status"
+          role="status"
+          aria-live="polite"
+        >
+          {!currentItem
+            ? '현재 진행 항목 없음 (0/0) · 다음 준비 항목 없음'
+            : `현재 진행: #${formatStepNumber(currentItem.order)}/${formatStepNumber(totalItems)} ${currentItem.nameKo}${
+                currentItem.duplicateDisambiguatorKo
+                  ? ` (${currentItem.duplicateDisambiguatorKo})`
+                  : ''
+              } · 다음 준비: ${
+                nextItem
+                  ? `#${formatStepNumber(nextItem.order)} ${nextItem.nameKo}`
+                  : '없음 (마지막 항목)'
+              }`}
+        </p>
+
+        {selectionResolution === 'fallback-adjacent-after-delete' &&
+          currentItem && (
+            <p
+              className="cue-sheet-badge is-warning"
+              data-testid="cue-sheet-selection-fallback-notice"
+              role="status"
+            >
+              {`이전 선택 항목${
+                removedItemNameKo ? `(${removedItemNameKo})` : ''
+              }이 편집으로 삭제되어 인접 항목(#${formatStepNumber(
+                currentItem.order,
+              )} ${currentItem.nameKo})으로 위치를 유지했습니다.`}
+            </p>
+          )}
 
         <div className="cue-sheet-focus-grid">
           <section
@@ -635,7 +1011,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                       type="button"
                       className="cue-sheet-item-select-btn"
                       aria-current={isCurrent ? 'step' : undefined}
-                      onClick={() => setRawStepIndex(idx)}
+                      onClick={() => selectStepByIndex(idx, 'user-navigation')}
                     >
                       <span>#{formatStepNumber(item.order)}</span>
                       <span>{item.nameKo}</span>
@@ -701,57 +1077,82 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
             className="cue-sheet-expanded-list"
             aria-label="펼친 진행표 항목 목록"
           >
-            {activeProjection.expandedRows.map((row) => (
-              <li
-                key={row.expandedRowId}
-                data-expanded-row-id={row.expandedRowId}
-                className="cue-sheet-expanded-row"
-              >
-                <div className="cue-sheet-badge-row">
-                  <span className="cue-sheet-badge">
-                    펼침 #{formatStepNumber(row.expandedOrder)} (원본 #
-                    {formatStepNumber(row.parentItemOrder)})
-                  </span>
-                  <strong>{row.nameKo}</strong>
-                  {row.duplicateDisambiguatorKo && (
-                    <span className="cue-sheet-badge is-warning">
-                      {row.duplicateDisambiguatorKo}
+            {activeProjection.expandedRows.map((row) => {
+              const isCurrentParent = Boolean(
+                currentItem && row.parentCueItemId === currentItem.cueItemId,
+              );
+              const isFirstRowForCurrentItem = Boolean(
+                isCurrentParent &&
+                  row.expandedRowId === firstExpandedRowIdForCurrent,
+              );
+              const expandedRowClasses = [
+                'cue-sheet-expanded-row',
+                isCurrentParent ? 'is-active-step' : '',
+              ]
+                .filter(Boolean)
+                .join(' ');
+
+              return (
+                <li
+                  key={row.expandedRowId}
+                  data-expanded-row-id={row.expandedRowId}
+                  data-parent-cue-item-id={row.parentCueItemId}
+                  data-is-current-parent={isCurrentParent ? 'true' : 'false'}
+                  className={expandedRowClasses}
+                >
+                  <div className="cue-sheet-badge-row">
+                    <button
+                      type="button"
+                      className="cue-sheet-item-select-btn"
+                      aria-current={isFirstRowForCurrentItem ? 'step' : undefined}
+                      onClick={() => selectByCueItemId(row.parentCueItemId)}
+                    >
+                      <span className="cue-sheet-badge">
+                        펼침 #{formatStepNumber(row.expandedOrder)} (원본 #
+                        {formatStepNumber(row.parentItemOrder)})
+                      </span>
+                      <strong>{row.nameKo}</strong>
+                      {row.duplicateDisambiguatorKo && (
+                        <span className="cue-sheet-badge is-warning">
+                          {row.duplicateDisambiguatorKo}
+                        </span>
+                      )}
+                    </button>
+                    {row.blockHeaderKo && (
+                      <span className="cue-sheet-badge">{row.blockHeaderKo}</span>
+                    )}
+                    {row.sideLabelKo && (
+                      <span className="cue-sheet-badge">{row.sideLabelKo}</span>
+                    )}
+                    {row.setIndex !== null && row.setCount !== null && (
+                      <span className="cue-sheet-badge">
+                        세트 {row.setIndex}/{row.setCount}
+                      </span>
+                    )}
+                    {row.blockRepetitionCount > 1 && (
+                      <span className="cue-sheet-badge">
+                        블록 반복 {row.blockRepetitionIndex}/
+                        {row.blockRepetitionCount}
+                      </span>
+                    )}
+                    <span
+                      className={`cue-sheet-badge ${
+                        row.timingStatus === 'unspecified' ? 'is-warning' : ''
+                      }`}
+                    >
+                      {row.timingLabelKo}
                     </span>
-                  )}
-                  {row.blockHeaderKo && (
-                    <span className="cue-sheet-badge">{row.blockHeaderKo}</span>
-                  )}
-                  {row.sideLabelKo && (
-                    <span className="cue-sheet-badge">{row.sideLabelKo}</span>
-                  )}
-                  {row.setIndex !== null && row.setCount !== null && (
-                    <span className="cue-sheet-badge">
-                      세트 {row.setIndex}/{row.setCount}
-                    </span>
-                  )}
-                  {row.blockRepetitionCount > 1 && (
-                    <span className="cue-sheet-badge">
-                      블록 반복 {row.blockRepetitionIndex}/
-                      {row.blockRepetitionCount}
-                    </span>
-                  )}
-                  <span
-                    className={`cue-sheet-badge ${
-                      row.timingStatus === 'unspecified' ? 'is-warning' : ''
-                    }`}
-                  >
-                    {row.timingLabelKo}
-                  </span>
-                </div>
-                <p className="cue-sheet-meta-line">
-                  세팅: {row.setupSummaryKo}
-                </p>
-                <p className="cue-sheet-note">
-                  큐: {row.primaryCueKo}
-                  {row.instructorNote ? ` · 메모: ${row.instructorNote}` : ''}
-                </p>
-              </li>
-            ))}
+                  </div>
+                  <p className="cue-sheet-meta-line">
+                    세팅: {row.setupSummaryKo}
+                  </p>
+                  <p className="cue-sheet-note">
+                    큐: {row.primaryCueKo}
+                    {row.instructorNote ? ` · 메모: ${row.instructorNote}` : ''}
+                  </p>
+                </li>
+              );
+            })}
             {activeProjection.truncation.omittedExpandedRowCount > 0 && (
               <li
                 className="cue-sheet-expanded-omitted-footer"

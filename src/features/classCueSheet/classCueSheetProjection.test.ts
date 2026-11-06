@@ -180,6 +180,53 @@ describe('classCueSheetProjection', () => {
       expect(codes).toContain('duplicate-movement-name');
       expect(codes).toContain('duplicate-step-id');
     });
+
+    it('preserves stable cueItemIds across insertions, deletions, reorderings, and same-name items with different IDs', () => {
+      const baseClass = {
+        id: 'live-edit-seq',
+        title: '라이브 편집 안정 ID 검증',
+        steps: [
+          { stepId: 'step-a', nameKo: '풋워크 패러렐', durationMin: 4 },
+          { stepId: 'step-b', nameKo: '브릿징', durationMin: 4 },
+          { stepId: 'step-c', nameKo: '브릿징', durationMin: 3 },
+        ],
+      };
+
+      const projBase = buildClassCueSheetProjection(baseClass);
+      const idStepA = projBase.items[0].cueItemId;
+      const idStepB = projBase.items[1].cueItemId;
+      const idStepC = projBase.items[2].cueItemId;
+      expect(idStepB).not.toBe(idStepC);
+
+      // 1. Insert before step-b (including another item with the same name '브릿징'!)
+      const projInserted = buildClassCueSheetProjection({
+        ...baseClass,
+        steps: [
+          { stepId: 'step-intro', nameKo: '브릿징', durationMin: 2 },
+          ...baseClass.steps,
+        ],
+      });
+      expect(projInserted.items.find((i) => i.sourceStepId === 'step-a')?.cueItemId).toBe(idStepA);
+      expect(projInserted.items.find((i) => i.sourceStepId === 'step-b')?.cueItemId).toBe(idStepB);
+      expect(projInserted.items.find((i) => i.sourceStepId === 'step-c')?.cueItemId).toBe(idStepC);
+
+      // 2. Delete step-a before step-b
+      const projDeletedBefore = buildClassCueSheetProjection({
+        ...baseClass,
+        steps: [baseClass.steps[1], baseClass.steps[2]],
+      });
+      expect(projDeletedBefore.items[0].cueItemId).toBe(idStepB);
+      expect(projDeletedBefore.items[1].cueItemId).toBe(idStepC);
+
+      // 3. Reorder step-c before step-b
+      const projReordered = buildClassCueSheetProjection({
+        ...baseClass,
+        steps: [baseClass.steps[2], baseClass.steps[0], baseClass.steps[1]],
+      });
+      expect(projReordered.items[0].cueItemId).toBe(idStepC);
+      expect(projReordered.items[1].cueItemId).toBe(idStepA);
+      expect(projReordered.items[2].cueItemId).toBe(idStepB);
+    });
   });
 
   describe('Nested block repetitions, unilateral L/R modes, sets, and unspecified time preservation', () => {
@@ -296,7 +343,7 @@ describe('classCueSheetProjection', () => {
   });
 
   describe('Corrupted & circular inputs, privacy allowlist filtering, and HTML escaping', () => {
-    it('terminates finitely on circular references, strips all sensitive keys/inline PII, and escapes HTML/scripts', () => {
+    it('terminates finitely on circular references, strips structured sensitive keys via allowlist, applies heuristic inline masking without claiming full free-text guarantee, and escapes HTML/scripts', () => {
       const projection = getCueSheetFixtureById(
         'corrupted-circular-sensitive-html',
       ).buildProjection();
@@ -308,8 +355,11 @@ describe('classCueSheetProjection', () => {
       expect(projection.diagnostics.some((d) => d.code === 'corrupted-item')).toBe(true);
       expect(projection.diagnostics.some((d) => d.code === 'sensitive-fields-stripped')).toBe(true);
 
-      // Privacy allowlist verification
+      // Privacy allowlist & heuristic boundary verification
       expect(projection.privacy.allowlistApplied).toBe(true);
+      expect(projection.privacy.inlineRedactionIsHeuristicOnly).toBe(true);
+      expect(projection.privacy.privacyPolicyNoteKo).toContain('보조적 휴리스틱');
+      expect(projection.privacy.privacyPolicyNoteKo).toContain('완전 제거를 보장하지 않습니다');
       expect(projection.privacy.strippedSensitiveKeys).toEqual(
         expect.arrayContaining([
           'participantName',

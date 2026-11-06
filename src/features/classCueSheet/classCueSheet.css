@@ -9,6 +9,8 @@
   font-family:
     'Pretendard Variable',
     'Pretendard',
+    'Noto Sans CJK KR',
+    'Noto Sans KR',
     -apple-system,
     BlinkMacSystemFont,
     system-ui,
@@ -25,6 +27,7 @@
   box-sizing: border-box;
   min-width: 0;
   max-width: 100%;
+  font-family: inherit;
 }
 
 .class-cue-sheet-root h1,
@@ -267,6 +270,27 @@
   gap: 0.75rem;
 }
 
+.class-cue-sheet-root [data-testid='cue-sheet-a11y-status'],
+.class-cue-sheet-root .cue-sheet-a11y-status,
+.class-cue-sheet-root [data-testid='cue-sheet-selection-fallback-notice'],
+.class-cue-sheet-root .cue-sheet-selection-fallback-notice {
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.class-cue-sheet-root [data-testid='cue-sheet-selection-fallback-notice'],
+.class-cue-sheet-root .cue-sheet-selection-fallback-notice {
+  border: 1px solid #b45309;
+  background-color: #fffbeb;
+  color: #78350f;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
 .class-cue-sheet-root .cue-sheet-focus-controls {
   display: flex;
   flex-wrap: wrap;
@@ -472,6 +496,11 @@
     align-items: stretch;
   }
 
+  .class-cue-sheet-root .cue-sheet-focus-controls .cue-sheet-badge-row,
+  .class-cue-sheet-root .cue-sheet-view-buttons {
+    width: 100%;
+  }
+
   .class-cue-sheet-root .cue-sheet-btn,
   .class-cue-sheet-root .cue-sheet-fixture-select,
   .class-cue-sheet-root .cue-sheet-item-select-btn {
@@ -488,6 +517,10 @@
   box-shadow: none !important;
 }
 
+@page {
+  margin: 12mm;
+}
+
 @media print {
   .class-cue-sheet-root,
   .class-cue-sheet-root * {
@@ -501,23 +534,103 @@
     display: none !important;
   }
 
-  .class-cue-sheet-root .cue-sheet-item-header,
+  .class-cue-sheet-root,
+  .class-cue-sheet-root .cue-sheet-focus-deck,
+  .class-cue-sheet-root .cue-sheet-focus-grid,
+  .class-cue-sheet-root .cue-sheet-progression-section,
+  .class-cue-sheet-root .cue-sheet-item-list,
+  .class-cue-sheet-root .cue-sheet-expanded-list {
+    display: block !important;
+    overflow: visible !important;
+    max-height: none !important;
+    padding: 0 !important;
+    border: none !important;
+    margin: 0 0 0.5rem 0 !important;
+  }
+
+  .class-cue-sheet-root {
+    margin: 0 !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-boundary-banner,
   .class-cue-sheet-root .cue-sheet-summary-card,
-  .class-cue-sheet-root .cue-sheet-focus-card,
   .class-cue-sheet-root .cue-sheet-truncation-banner {
+    margin: 0 0 0.5rem 0 !important;
+    padding: 0.5rem 0.625rem 0.25rem 0.625rem !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-item,
+  .class-cue-sheet-root .cue-sheet-expanded-row,
+  .class-cue-sheet-root .cue-sheet-focus-card {
+    display: block !important;
+    margin: 0 0 0.5rem 0 !important;
+    padding: 0.375rem 0.25rem 0 0.25rem !important;
+    border-top: 1px solid #111 !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-radius: 0 !important;
+    break-inside: auto;
+    page-break-inside: auto;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-item:last-child,
+  .class-cue-sheet-root .cue-sheet-expanded-row:last-child,
+  .class-cue-sheet-root .cue-sheet-progression-section:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-item-header,
+  .class-cue-sheet-root .cue-sheet-expanded-row > .cue-sheet-badge-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .class-cue-sheet-root .cue-sheet-summary-card,
+  .class-cue-sheet-root .cue-sheet-truncation-banner,
+  .class-cue-sheet-root .cue-sheet-expanded-omitted-footer {
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
+  .class-cue-sheet-root .cue-sheet-expanded-omitted-footer {
+    margin: 0.375rem 0 0 0 !important;
+    padding: 0.375rem 0.5rem 0 0.5rem !important;
+    border-top: 2px dashed #111 !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-radius: 0 !important;
+  }
+
   .class-cue-sheet-root .cue-sheet-item.is-long-cue,
   .class-cue-sheet-root .cue-sheet-long-note,
-  .class-cue-sheet-root .cue-sheet-cue-list {
+  .class-cue-sheet-root .cue-sheet-cue-list,
+  .class-cue-sheet-root .cue-sheet-cue-text,
+  .class-cue-sheet-root .cue-sheet-note {
+    display: block !important;
     break-inside: auto;
     page-break-inside: auto;
     overflow: visible !important;
     max-height: none !important;
     white-space: pre-wrap;
-    orphans: 3;
-    widows: 3;
+    orphans: 2;
+    widows: 2;
+  }
+
+  .class-cue-sheet-root .cue-sheet-cue-list {
+    list-style: none !important;
+    padding-left: 0 !important;
+    margin: 0.25rem 0 0 0 !important;
+    font-size: 0.8125rem !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-cue-text {
+    display: block !important;
+    margin-bottom: 0.1875rem !important;
   }
 }

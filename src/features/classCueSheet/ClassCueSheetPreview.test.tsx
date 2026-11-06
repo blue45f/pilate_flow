@@ -360,4 +360,531 @@ describe('ClassCueSheetPreview', () => {
     expect(localClearSpy).not.toHaveBeenCalled();
     expect(JSON.stringify(rawInput)).toBe(snapshotBefore);
   });
+
+  it('preserves active movement identity across live edits when steps are inserted before, deleted before, or reordered', () => {
+    const baseSteps = [
+      {
+        id: 'step-1',
+        nameKo: '풋워크 패러렐',
+        durationMin: 4,
+        cues: ['뒤꿈치 정렬 유지'],
+      },
+      {
+        id: 'step-2',
+        nameKo: '헌드레드 프렙',
+        durationMin: 3,
+        cues: ['흉곽 하단 고정 및 호흡 연결'],
+      },
+      {
+        id: 'step-3',
+        nameKo: '레그 서클즈',
+        durationMin: 4,
+        cues: ['골반 중립 유지'],
+      },
+    ];
+
+    const { rerender } = render(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'live-edit-seq',
+          title: '실시간 편집 시퀀스',
+          steps: baseSteps,
+        }}
+      />,
+    );
+
+    const rootEl = screen.getByTestId('class-cue-sheet-root');
+    const currentSection = screen.getByRole('region', { name: '현재 진행 항목' });
+    const nextSection = screen.getByRole('region', { name: '다음 준비 항목' });
+
+    // Navigate to step-2 ('헌드레드 프렙', index 1)
+    fireEvent.click(screen.getByRole('button', { name: '다음 진행 항목' }));
+    expect(within(currentSection).getByText('헌드레드 프렙')).toBeTruthy();
+    expect(rootEl.getAttribute('data-current-cue-item-id')).toBe(
+      'cue-item-id-step-2-1',
+    );
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('1');
+    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
+      'user-navigation',
+    );
+
+    // 1. Insert a new step BEFORE the current item
+    rerender(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'live-edit-seq',
+          title: '실시간 편집 시퀀스',
+          steps: [
+            {
+              id: 'step-0',
+              nameKo: '호흡 워밍업',
+              durationMin: 2,
+              cues: ['갈비뼈 3차원 호흡'],
+            },
+            ...baseSteps,
+          ],
+        }}
+      />,
+    );
+
+    expect(within(currentSection).getByText('헌드레드 프렙')).toBeTruthy();
+    expect(within(currentSection).getByText('03 / 04')).toBeTruthy();
+    expect(within(nextSection).getByText('레그 서클즈')).toBeTruthy();
+    expect(rootEl.getAttribute('data-current-cue-item-id')).toBe(
+      'cue-item-id-step-2-1',
+    );
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('2');
+    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
+      'preserved-by-id',
+    );
+    expect(screen.getByTestId('cue-sheet-a11y-status').textContent).toContain(
+      '현재 진행: #03/04 헌드레드 프렙 · 다음 준비: #04 레그 서클즈',
+    );
+
+    // 2. Delete the two steps BEFORE the current item
+    rerender(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'live-edit-seq',
+          title: '실시간 편집 시퀀스',
+          steps: [baseSteps[1]!, baseSteps[2]!],
+        }}
+      />,
+    );
+
+    expect(within(currentSection).getByText('헌드레드 프렙')).toBeTruthy();
+    expect(within(currentSection).getByText('01 / 02')).toBeTruthy();
+    expect(within(nextSection).getByText('레그 서클즈')).toBeTruthy();
+    expect(rootEl.getAttribute('data-current-cue-item-id')).toBe(
+      'cue-item-id-step-2-1',
+    );
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('0');
+    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
+      'preserved-by-id',
+    );
+
+    // 3. Reorder steps so step-2 is moved to the last position
+    rerender(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'live-edit-seq',
+          title: '실시간 편집 시퀀스',
+          steps: [baseSteps[2]!, baseSteps[0]!, baseSteps[1]!],
+        }}
+      />,
+    );
+
+    expect(within(currentSection).getByText('헌드레드 프렙')).toBeTruthy();
+    expect(within(currentSection).getByText('03 / 03')).toBeTruthy();
+    expect(
+      within(nextSection).getByText(/마지막 항목입니다 · 다음 예정 항목 없음/),
+    ).toBeTruthy();
+    expect(rootEl.getAttribute('data-current-cue-item-id')).toBe(
+      'cue-item-id-step-2-1',
+    );
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('2');
+    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
+      'preserved-by-id',
+    );
+
+    const progressionList = screen.getByRole('list', {
+      name: '기본 진행표 항목 목록',
+    });
+    const rowButtons = within(progressionList).getAllByRole('button');
+    expect(rowButtons[2]?.getAttribute('aria-current')).toBe('step');
+  });
+
+  it('tracks the exact movement instance when multiple steps share the same Korean name (same-name different-id) across insertions and reorders', () => {
+    const { rerender } = render(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'dup-name-live-seq',
+          title: '동일 이름 구분 라이브 편집 시퀀스',
+          steps: [
+            {
+              id: 'bridge-warmup',
+              nameKo: '브릿징',
+              durationMin: 3,
+              cues: ['워밍업 기본 척추 분절 브릿징'],
+            },
+            {
+              id: 'bridge-challenge',
+              nameKo: '브릿징',
+              durationMin: 5,
+              cues: ['심화 싱글 레그 챌린지 브릿징'],
+            },
+          ],
+        }}
+      />,
+    );
+
+    // Select the 2nd '브릿징' (bridge-challenge)
+    fireEvent.click(screen.getByRole('button', { name: '다음 진행 항목' }));
+
+    const currentSection = screen.getByRole('region', { name: '현재 진행 항목' });
+    const rootEl = screen.getByTestId('class-cue-sheet-root');
+
+    expect(
+      within(currentSection).getByText('심화 싱글 레그 챌린지 브릿징'),
+    ).toBeTruthy();
+    expect(rootEl.getAttribute('data-current-cue-item-id')).toBe(
+      'cue-item-id-bridge-challenge-1',
+    );
+
+    // Insert another '브릿징' at the beginning AND swap bridge-challenge before bridge-warmup
+    rerender(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'dup-name-live-seq',
+          title: '동일 이름 구분 라이브 편집 시퀀스',
+          steps: [
+            {
+              id: 'bridge-prep',
+              nameKo: '브릿징',
+              durationMin: 2,
+              cues: ['사전 골반 틸트 브릿징'],
+            },
+            {
+              id: 'bridge-challenge',
+              nameKo: '브릿징',
+              durationMin: 5,
+              cues: ['심화 싱글 레그 챌린지 브릿징'],
+            },
+            {
+              id: 'bridge-warmup',
+              nameKo: '브릿징',
+              durationMin: 3,
+              cues: ['워밍업 기본 척추 분절 브릿징'],
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(
+      within(currentSection).getByText('심화 싱글 레그 챌린지 브릿징'),
+    ).toBeTruthy();
+    expect(within(currentSection).getByText('02 / 03')).toBeTruthy();
+    expect(rootEl.getAttribute('data-current-cue-item-id')).toBe(
+      'cue-item-id-bridge-challenge-1',
+    );
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('1');
+    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
+      'preserved-by-id',
+    );
+  });
+
+  it('falls back to the adjacent step and shows an explicit fallback notice when the active item is deleted, then clears the notice on manual navigation', () => {
+    const { rerender } = render(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'delete-active-seq',
+          title: '선택 항목 삭제 폴백 시퀀스',
+          steps: [
+            { id: 's-1', nameKo: '풋워크', durationMin: 4 },
+            { id: 's-2', nameKo: '헌드레드', durationMin: 3 },
+            { id: 's-3', nameKo: '레그 서클즈', durationMin: 4 },
+          ],
+        }}
+      />,
+    );
+
+    const rootEl = screen.getByTestId('class-cue-sheet-root');
+    const currentSection = screen.getByRole('region', { name: '현재 진행 항목' });
+
+    // Move to s-2 ('헌드레드', index 1)
+    fireEvent.click(screen.getByRole('button', { name: '다음 진행 항목' }));
+    expect(within(currentSection).getByText('헌드레드')).toBeTruthy();
+
+    // Delete s-2 while it is active -> should fallback to s-3 ('레그 서클즈') at clamped index 1
+    rerender(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'delete-active-seq',
+          title: '선택 항목 삭제 폴백 시퀀스',
+          steps: [
+            { id: 's-1', nameKo: '풋워크', durationMin: 4 },
+            { id: 's-3', nameKo: '레그 서클즈', durationMin: 4 },
+          ],
+        }}
+      />,
+    );
+
+    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
+      'fallback-adjacent-after-delete',
+    );
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('1');
+    expect(within(currentSection).getByText('레그 서클즈')).toBeTruthy();
+
+    const fallbackNotice = screen.getByTestId(
+      'cue-sheet-selection-fallback-notice',
+    );
+    expect(fallbackNotice.textContent).toContain('헌드레드');
+    expect(fallbackNotice.textContent).toContain('#02 레그 서클즈');
+
+    // Manual navigation clears the fallback notice
+    fireEvent.click(screen.getByRole('button', { name: '이전 진행 항목' }));
+    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
+      'user-navigation',
+    );
+    expect(
+      screen.queryByTestId('cue-sheet-selection-fallback-notice'),
+    ).toBeNull();
+  });
+
+  it('keeps expanded view rows synchronized with the current item across view toggles and live edits', () => {
+    const { rerender } = render(
+      <ClassCueSheetPreview
+        initialViewMode="expanded"
+        sourceInput={{
+          id: 'expanded-sync-seq',
+          title: '펼침 보기 동기화 시퀀스',
+          steps: [
+            {
+              id: 'exp-1',
+              nameKo: '풋워크',
+              durationMin: 3,
+              sets: 2,
+              sideMode: 'together',
+            },
+            {
+              id: 'exp-2',
+              nameKo: '사이드 레그 리프트',
+              durationMin: 4,
+              sets: 2,
+              sideMode: 'left-then-right',
+            },
+          ],
+        }}
+      />,
+    );
+
+    const expandedList = screen.getByRole('list', {
+      name: '펼친 진행표 항목 목록',
+    });
+    const expandedButtons = within(expandedList).getAllByRole('button');
+    // Click an expanded row belonging to exp-2 ('사이드 레그 리프트')
+    const exp2RowButton = expandedButtons.find((btn) =>
+      btn.textContent?.includes('사이드 레그 리프트'),
+    );
+    expect(exp2RowButton).toBeTruthy();
+    fireEvent.click(exp2RowButton!);
+
+    const currentSection = screen.getByRole('region', { name: '현재 진행 항목' });
+    expect(within(currentSection).getByText('사이드 레그 리프트')).toBeTruthy();
+
+    const activeExpandedRows = expandedList.querySelectorAll(
+      'li[data-is-current-parent="true"]',
+    );
+    expect(activeExpandedRows.length).toBe(4); // 2 sets * 2 sides
+
+    // Live-edit: insert exp-0 before exp-1 while in expanded view
+    rerender(
+      <ClassCueSheetPreview
+        initialViewMode="expanded"
+        sourceInput={{
+          id: 'expanded-sync-seq',
+          title: '펼침 보기 동기화 시퀀스',
+          steps: [
+            {
+              id: 'exp-0',
+              nameKo: '임프린트 앤 릴리즈',
+              durationMin: 2,
+              sets: 1,
+              sideMode: 'together',
+            },
+            {
+              id: 'exp-1',
+              nameKo: '풋워크',
+              durationMin: 3,
+              sets: 2,
+              sideMode: 'together',
+            },
+            {
+              id: 'exp-2',
+              nameKo: '사이드 레그 리프트',
+              durationMin: 4,
+              sets: 2,
+              sideMode: 'left-then-right',
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(within(currentSection).getByText('사이드 레그 리프트')).toBeTruthy();
+    expect(within(currentSection).getByText('03 / 03')).toBeTruthy();
+
+    const updatedActiveExpandedRows = expandedList.querySelectorAll(
+      'li[data-is-current-parent="true"]',
+    );
+    expect(updatedActiveExpandedRows.length).toBe(4);
+    expect(
+      updatedActiveExpandedRows[0]?.getAttribute('data-parent-cue-item-id'),
+    ).toBe('cue-item-id-exp-2-1');
+
+    // Switch to compact view and verify aria-current="step" is on #03 사이드 레그 리프트
+    fireEvent.click(screen.getByRole('button', { name: /기본 진행표/ }));
+    const compactList = screen.getByRole('list', {
+      name: '기본 진행표 항목 목록',
+    });
+    const compactButtons = within(compactList).getAllByRole('button');
+    expect(compactButtons[2]?.getAttribute('aria-current')).toBe('step');
+  });
+
+  it('handles empty ↔ 100+ item transitions and resets to step #1 when sourceInput is replaced with a different class', () => {
+    const { rerender } = render(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'empty-seq',
+          title: '빈 수업',
+          steps: [],
+        }}
+      />,
+    );
+
+    const rootEl = screen.getByTestId('class-cue-sheet-root');
+    const currentSection = screen.getByRole('region', { name: '현재 진행 항목' });
+
+    expect(rootEl.getAttribute('data-selection-resolution')).toBe('empty-class');
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('-1');
+    expect(screen.getByTestId('cue-sheet-a11y-status').textContent).toBe(
+      '현재 진행 항목 없음 (0/0) · 다음 준비 항목 없음',
+    );
+
+    // Transition from empty class to a 160-step class
+    rerender(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'long-160-seq',
+          title: '대용량 160개 동작 수업',
+          steps: Array.from({ length: 160 }, (_, idx) => ({
+            id: `long-step-${idx + 1}`,
+            nameKo: `대용량 동작 ${idx + 1}`,
+            durationMin: 1,
+          })),
+        }}
+      />,
+    );
+
+    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
+      'reset-on-class-change',
+    );
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('0');
+    expect(within(currentSection).getByText('대용량 동작 1')).toBeTruthy();
+
+    // Jump to the last bounded step (#150 / index 149)
+    fireEvent.click(
+      screen.getByRole('button', { name: '마지막 진행 항목으로 이동' }),
+    );
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('149');
+    expect(within(currentSection).getByText('대용량 동작 150')).toBeTruthy();
+
+    // Replace with a different class -> resets to step #1 (index 0)
+    rerender(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'brand-new-class',
+          title: '완전히 다른 신규 수업',
+          steps: [
+            { id: 'new-1', nameKo: '신규 첫 동작', durationMin: 5 },
+            { id: 'new-2', nameKo: '신규 둘째 동작', durationMin: 5 },
+          ],
+        }}
+      />,
+    );
+
+    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
+      'reset-on-class-change',
+    );
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('0');
+    expect(within(currentSection).getByText('신규 첫 동작')).toBeTruthy();
+
+    // Transition back to empty class
+    rerender(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'brand-new-class',
+          title: '완전히 다른 신규 수업 (비움)',
+          steps: [],
+        }}
+      />,
+    );
+
+    expect(rootEl.getAttribute('data-selection-resolution')).toBe('empty-class');
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('-1');
+  });
+
+  it('retains keyboard focus inside the focus deck (never dropping to document.body) when boundary buttons disable or a focused step is deleted', () => {
+    const { rerender } = render(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'focus-retention-seq',
+          title: '포커스 유지 검증 시퀀스',
+          steps: [
+            { id: 'f-1', nameKo: '동작 1', durationMin: 3 },
+            { id: 'f-2', nameKo: '동작 2', durationMin: 3 },
+          ],
+        }}
+      />,
+    );
+
+    const focusDeck = screen.getByTestId('cue-sheet-focus-deck');
+    const nextBtn = screen.getByTestId('cue-sheet-nav-next');
+    const prevBtn = screen.getByTestId('cue-sheet-nav-prev');
+
+    // Focus nextBtn and click it to reach the last step (which disables nextBtn)
+    nextBtn.focus();
+    expect(document.activeElement).toBe(nextBtn);
+    fireEvent.click(nextBtn);
+
+    expect((nextBtn as HTMLButtonElement).disabled).toBe(true);
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement).toBe(focusDeck);
+
+    // Focus prevBtn and click it to reach the first step (which disables prevBtn)
+    prevBtn.focus();
+    expect(document.activeElement).toBe(prevBtn);
+    fireEvent.click(prevBtn);
+
+    expect((prevBtn as HTMLButtonElement).disabled).toBe(true);
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement).toBe(focusDeck);
+
+    // Navigate with ArrowDown / j / ArrowUp / k on the focus deck
+    fireEvent.keyDown(focusDeck, { key: 'ArrowDown' });
+    expect(
+      screen.getByTestId('class-cue-sheet-root').getAttribute(
+        'data-current-step-index',
+      ),
+    ).toBe('1');
+    fireEvent.keyDown(focusDeck, { key: 'ArrowUp' });
+    expect(
+      screen.getByTestId('class-cue-sheet-root').getAttribute(
+        'data-current-step-index',
+      ),
+    ).toBe('0');
+
+    // Focus the row button for '동작 2', select it, and then delete '동작 2' in a live edit
+    const progressionList = screen.getByRole('list', {
+      name: '기본 진행표 항목 목록',
+    });
+    const rowButtons = within(progressionList).getAllByRole('button');
+    rowButtons[1]!.focus();
+    fireEvent.click(rowButtons[1]!);
+    expect(document.activeElement).toBe(rowButtons[1]);
+
+    rerender(
+      <ClassCueSheetPreview
+        sourceInput={{
+          id: 'focus-retention-seq',
+          title: '포커스 유지 검증 시퀀스',
+          steps: [{ id: 'f-1', nameKo: '동작 1', durationMin: 3 }],
+        }}
+      />,
+    );
+
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement).toBe(focusDeck);
+  });
 });
