@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Check, Clock3, Plus, ShieldCheck } from 'lucide-react';
 import {
   PfButton,
@@ -128,6 +128,7 @@ const SessionLogForm: React.FC<
   const [showGroup, setShowGroup] = useState(classGroups.length === 0);
   const [newGroupName, setNewGroupName] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const submittingRef = useRef(false);
   const planned = snapshot.reduce((sum, step) => sum + step.durationMin, 0);
   const plannedTiming = getSequenceDurations(snapshot);
   const exerciseCount = snapshot.filter((step) => !isRestStep(step)).length;
@@ -155,7 +156,7 @@ const SessionLogForm: React.FC<
   };
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (submitted) return;
+    if (submitted || submittingRef.current) return;
     setError('');
     const date = new Date(`${taughtDate}T12:00:00`);
     if (!taughtDate || Number.isNaN(date.getTime()) || taughtDate > localDate()) {
@@ -265,10 +266,12 @@ const SessionLogForm: React.FC<
       return;
     }
     const previousLogIds = new Set(beforeState.historyLogs.map((log) => log.id));
+    submittingRef.current = true;
     setSubmitted(true);
     try {
       logClassSession(payload);
     } catch {
+      submittingRef.current = false;
       setSubmitted(false);
       setError('수업 기록을 저장하지 못했습니다. 입력 내용을 확인한 뒤 다시 시도해 주세요.');
       return;
@@ -291,6 +294,7 @@ const SessionLogForm: React.FC<
     const idsAreUnique =
       new Set(after.historyLogs.map((log) => log.id)).size === after.historyLogs.length;
     if (matchingLogs.length !== 1 || !idsAreUnique) {
+      submittingRef.current = false;
       setSubmitted(false);
       setError(
         after.generationError ??
@@ -299,7 +303,11 @@ const SessionLogForm: React.FC<
       return;
     }
     const matchedLog = matchingLogs[0] as ClassHistoryLogWithSnapshot;
-    if (!matchedLog.programSnapshot) {
+    if (
+      !matchedLog.programSnapshot ||
+      (!matchedLog.sequenceSnapshot && programSnapshot.sequenceSnapshot) ||
+      (!matchedLog.sourceProvenance && programSnapshot.sourceProvenance)
+    ) {
       attachProgramSnapshotToHistoryLog(
         matchedLog.id,
         programSnapshot,

@@ -63,3 +63,42 @@
    - 내부에서 `copyHistoryLogIntoWorkbenchSafely(logId, usePilatesStore)` 또는 `reconstructStepsSnapshotFromHistoryLog(target)`를 기본 호출하도록 통합 가능.
 2. **`src/schemas/cloudBackupSchema.ts`**:
    - 현재 `exerciseSchema`와 `historySchema`가 `.passthrough()`를 사용해 `programSnapshot`, `sequenceSnapshot`, `humanDraftId`, `humanDraftRevision`을 손실 없이 보존(`strippedKeys === 0`)하고 있으므로, 향후 스키마 명시화 시 선택적(optional) 필드로 선언 가능.
+
+---
+
+## 5. 후속 안전성 감사: 재현 결함 5건 수정 및 결함 주입·실브라우저 검증 (Follow-up Safety Audit)
+
+### 5.1 재현 및 수정 완료된 소유 범위 결함 (5건)
+1. **스냅샷 복원 동작의 임의 `'approved'` 생성 제거 (`src/utils/teachingHistorySnapshot.ts`)**:
+   - **재현 조건**: 검토되지 않은 동작(`review: undefined` 또는 `status !== 'approved'`)이 포함된 수업 완료 이력을 복사·복원할 때 `reconstructExerciseFromSnapshot` 및 `cloneTeachingHistoryToNextClassDraft`가 `review: { status: 'approved', reviewerAlias: 'Completed class snapshot self-check', ... }`를 합성하여 부여함 (`docs/composition-authoring.md` 및 `docs/sequence-composition-safety-contract.md`의 TTS 호흡 브리핑 안전 경계 위반).
+   - **수정**: 원본 스냅샷에 `review?.status === 'approved'`가 실제 존재하는 경우에만 정규화·보존하고, 미검토 동작은 `review`를 합성하지 않도록 수정(`isExerciseAuthoringEligible`은 `review` 없이도 항상 `true`이므로 시퀀스 조합/저장 제한은 전혀 발생하지 않음).
+2. **`rollbackLatestBackupRestore` 저장소 쓰기 예외(`QuotaExceededError`) 시 원자적 메모리 복구 (`src/utils/teachingHistorySnapshot.ts`)**:
+   - **재현 조건**: 백업 복원 직후 `복원 이전 상태로 되돌리기`를 실행할 때 `localStorage.setItem`에서 `QuotaExceededError`가 발생하면 메모리 상태만 복원 이전으로 바뀌고 `latestBackupRollbackPoint`가 소거되어 디스크(`localStorage`)와 메모리가 불일치하며 재시도가 불가능해짐.
+   - **수정**: `storeApi.setState`를 `try/catch`로 감싸고 직후 `storeApi.checkStorage()`로 디스크 지문 일치를 검증하여, 쓰기 실패 시 메모리 상태를 즉시 복원 직후 상태(`current`)로 되돌리고 롤백 포인트를 유지하도록 수정.
+3. **새로고침(`location.reload()`) 이후 롤백 포인트 유실 수정 (`src/utils/teachingHistorySnapshot.ts`, `src/components/RecoveryPreview.tsx`)**:
+   - **재현 조건**: 백업 복원 적용 후 브라우저를 새로고침하면 메모리 변수 `latestBackupRollbackPoint`가 초기화되어 `복원 이전 상태로 되돌리기` 버튼이 사라짐.
+   - **수정**: `pilates-flow-backup-rollback-v1` 보조 로컬 스토리지 키에 롤백 포인트를 함께 기록하고 `RecoveryPreview` 마운트 시 현재 스토어 지문(`postRestoreStateFingerprint`)과 일치하면 자동 재수화(rehydrate)하도록 개선.
+4. **빠른 반복 클릭(Double-click) 경쟁 및 최상위 `sequenceSnapshot`/`sourceProvenance` 누락 수정 (`src/components/LogSessionModal.tsx`, `src/components/ClassBinderView.tsx`, `src/components/RecoveryPreview.tsx`)**:
+   - **재현 조건**: `LogSessionModal`의 `수업 기록 저장`, `ClassBinderView`의 `이 수업 다시 계획`, `RecoveryPreview`의 `이 내용으로 복원 적용` 및 `복원 이전 상태로 되돌리기`를 동기적으로 연속 클릭할 때 React 상태 반영 전 중복 실행이 발생할 수 있으며, `logClassSession`이 `programSnapshot`만 저장할 때 `attachProgramSnapshotToHistoryLog`가 호출되지 않아 최상위 `sequenceSnapshot` 및 `sourceProvenance`가 누락됨.
+   - **수정**: 각 핸들러에 동기적 `useRef` 잠금(`submittingRef`, `copyingRef`, `applyingRef`, `rollingBackRef`)을 추가하고, `LogSessionModal`에서 `!matchedLog.programSnapshot || (!matchedLog.sequenceSnapshot && programSnapshot.sequenceSnapshot) || (!matchedLog.sourceProvenance && programSnapshot.sourceProvenance)` 조건으로 보강.
+5. **창작 동작 초안(`HumanMovementDraft`) 및 메타데이터의 메모리·스토리지 병합 시 구버전 덮어쓰기 방지 (`src/utils/movementIdeaDraft.ts`)**:
+   - **재현 조건**: `getScopedHumanDraftMap` 및 `getMovementIdeaMetaMap`이 메모리 캐시와 `localStorage`를 병합할 때 `revision` 및 `updatedAt` 비교 없이 덮어써서 최신 리비전이 구버전으로 역전될 수 있음.
+   - **수정**: `isNewerVersionedEntry` 헬퍼를 통해 `revision` 및 `updatedAt`이 더 최신인 항목만 채택하도록 수정.
+
+### 5.2 공통 파일 미적용 패치 제안 (Unapplied Patch Proposal for Shared Files)
+공통 스토어·스키마(`src/store/usePilatesStore.ts`, `src/schemas/cloudBackupSchema.ts`)는 충돌 방지를 위해 직접 수정하지 않았으며, 통합 담당 세션을 위해 아래 패치를 제안합니다:
+
+```diff
+--- a/src/store/usePilatesStore.ts
++++ b/src/store/usePilatesStore.ts
+@@ -1868,6 +1868,12 @@
+         const target = state.historyLogs.find((item) => item.id === logId);
+         if (!target) return;
++        // (통합 제안) stepsSnapshot이 생략된 programSnapshot/sequenceSnapshot 전용 로그 및
++        // 삭제된 커스텀 동작을 복원하기 위해 copyHistoryLogIntoWorkbenchSafely 위임 가능
+         const stepsSnapshot =
+           target.stepsSnapshot && target.stepsSnapshot.length > 0
+             ? target.stepsSnapshot
+             : reconstructStepsSnapshotFromHistoryLog(target);
+```
+

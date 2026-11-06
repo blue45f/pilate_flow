@@ -1,8 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parseRecoverableNativeBackup } from '../../backend/backupValidation';
 import { INITIAL_CLASS_GROUPS, INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { syncAccountWorkspace } from '../lib/accountStorage';
 import { useCloudSession } from '../lib/cloudSync';
+import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import { cloudBackupDataSchema } from '../schemas/cloudBackupSchema';
 import { getRecoveryStorageStatus, usePilatesStore } from '../store/usePilatesStore';
 import { syntheticPlanningExercise } from '../test/planningFixtures';
@@ -17,6 +18,7 @@ import {
   backupRecoveryStateFingerprint,
   inspectBackupRecovery,
 } from './backupRecoveryInspection';
+import { isExerciseAuthoringEligible } from './exerciseAuthoring';
 import { getExerciseReviewState } from './exerciseReview';
 import {
   createReusableBlock,
@@ -37,6 +39,7 @@ import {
   createTeachingExerciseSnapshot,
   findDuplicateCompletedHistoryLog,
   formatTeachingHistorySnapshotText,
+  getLatestBackupRollbackPoint,
   hasExerciseDriftedFromSnapshot,
   recordBackupRestoreRollbackPoint,
   reconstructExerciseFromSnapshot,
@@ -594,7 +597,7 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
     ).toBeNull();
   });
 
-  it('atomically copies history logs when exercises were deleted or modified, reconstructs omitted stepsSnapshot, ensures review eligibility, and rolls back on validation failure', () => {
+  it('atomically copies history logs when exercises were deleted or modified, reconstructs omitted stepsSnapshot, preserves review provenance without manufacturing approval, and rolls back on failure or exception', () => {
     const snapshot = buildTeachingProgramSnapshot({
       sequenceId: 'seq-snap-test',
       sequenceTitle: '리포머 코어 집중 프로그램',
@@ -609,14 +612,22 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
       criteriaSnapshot: criteria,
     });
 
-    // 1. Reconstructed exercise always has valid 'approved' planning-metadata review (no review gate blocking)
-    const strippedReviewSnap = {
-      ...snapshot.exercisesById[coreEx.id],
-      review: undefined,
-    };
-    const reconstructedCore = reconstructExerciseFromSnapshot(strippedReviewSnap);
-    expect(getExerciseReviewState(reconstructedCore)).toBe('approved');
-    expect(reconstructedCore.review?.credentialVerified).toBe(false);
+    // 1. Reconstructed exercise preserves existing approval, and NEVER manufactures synthetic approval when review was absent
+    const approvedOriginal = syntheticPlanningExercise('reformer', 'core', 'alpha', true);
+    const approvedSnap = createTeachingExerciseSnapshot(
+      approvedOriginal,
+      '2026-11-05T11:00:00.000Z',
+    );
+    const approvedReconstructed = reconstructExerciseFromSnapshot(approvedSnap);
+    expect(getExerciseReviewState(approvedReconstructed)).toBe('approved');
+    expect(isExerciseAuthoringEligible(approvedReconstructed)).toBe(true);
+
+    const unreviewedReconstructed = reconstructExerciseFromSnapshot(
+      snapshot.exercisesById[coreEx.id],
+    );
+    expect(unreviewedReconstructed.review).toBeUndefined();
+    expect(getExerciseReviewState(unreviewedReconstructed)).toBe('pending');
+    expect(isExerciseAuthoringEligible(unreviewedReconstructed)).toBe(true);
 
     // 2. History log where stepsSnapshot is omitted (only programSnapshot present),
     //    coreEx is deleted, and warmEx has its live level/apparatus modified in store
@@ -660,11 +671,11 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
     expect(copyOutcome.ok).toBe(true);
 
     const afterSuccess = usePilatesStore.getState();
-    // Deleted coreEx was restored with valid review, while live mutatedWarmEx kept its live edits in store.exercises
-    expect(afterSuccess.exercises.some((ex) => ex.id === coreEx.id)).toBe(true);
-    expect(
-      getExerciseReviewState(afterSuccess.exercises.find((ex) => ex.id === coreEx.id)!),
-    ).toBe('approved');
+    // Deleted unreviewed coreEx was restored without synthetic approval, while live mutatedWarmEx kept its live edits in store.exercises
+    const restoredCore = afterSuccess.exercises.find((ex) => ex.id === coreEx.id)!;
+    expect(restoredCore).toBeDefined();
+    expect(getExerciseReviewState(restoredCore)).toBe('pending');
+    expect(isExerciseAuthoringEligible(restoredCore)).toBe(true);
     expect(afterSuccess.exercises.find((ex) => ex.id === warmEx.id)?.nameKo).toBe(
       '나중에 매트로 바뀐 웜업',
     );
@@ -735,9 +746,31 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
     expect(afterFail.exercises).toBe(exercisesBeforeFail);
     expect(afterFail.historyLogs).toBe(historyBeforeFail);
     expect(afterFail.activeSequenceId).toBe('draft-keep-me');
+
+    // 5. Atomic rollback when loadHistoryIntoWorkbench throws an unexpected runtime error
+    let stateSlice = {
+      exercises: exercisesBeforeFail,
+      historyLogs: [logWithoutStepsSnapshot],
+      activeSteps: [] as SequenceStep[],
+      activeSequenceId: 'draft-before-throw',
+      generationError: null as string | null,
+      loadHistoryIntoWorkbench: () => {
+        throw new Error('Synthetic store failure during history copy');
+      },
+    };
+    const throwOutcome = copyHistoryLogIntoWorkbenchSafely('log-program-only', {
+      getState: () => stateSlice,
+      setState: (updater) => {
+        stateSlice = { ...stateSlice, ...updater(stateSlice) };
+      },
+    });
+    expect(throwOutcome.ok).toBe(false);
+    expect(stateSlice.exercises).toBe(exercisesBeforeFail);
+    expect(stateSlice.historyLogs[0].stepsSnapshot).toBeUndefined();
+    expect(stateSlice.activeSequenceId).toBe('draft-before-throw');
   });
 
-  it('captures pre-restore state and supports atomic rollback unless post-restore edits or storage conflicts occur', () => {
+  it('captures pre-restore state and handles rollback under double-rollback, post-restore edits, multi-tab conflicts, storage quota failure, and page reload rehydration', () => {
     clearBackupRestoreRollbackPoint();
     usePilatesStore.setState({
       exercises: [warmEx],
@@ -787,7 +820,24 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
       postRestoreStorageFingerprint: postDisk.ok ? postDisk.fingerprint : null,
     });
 
-    // 1. Rollback succeeds and restores exact pre-restore references
+    // 1. Storage write failure (QuotaExceededError) during rollback reverts RAM and preserves rollback point for retry
+    const quotaSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Quota exceeded during rollback', 'QuotaExceededError');
+    });
+    const failedRollbackOnQuota = rollbackLatestBackupRestore({
+      getState: usePilatesStore.getState,
+      setState: (partial) => usePilatesStore.setState(partial),
+      checkStorage: (expected) => getRecoveryStorageStatus(expected ?? undefined),
+    });
+    expect(failedRollbackOnQuota.success).toBe(false);
+    // RAM reverted to post-restore state and rollback point is still available
+    expect(usePilatesStore.getState().savedSequences).toHaveLength(1);
+    expect(getLatestBackupRollbackPoint()).not.toBeNull();
+    quotaSpy.mockRestore();
+    // Restore clean disk baseline after simulated quota error
+    usePilatesStore.setState({ saveFeedback: null });
+
+    // 2. Rollback succeeds once storage is healthy and restores exact pre-restore references
     const rollbackRes = rollbackLatestBackupRestore({
       getState: usePilatesStore.getState,
       setState: (partial) => usePilatesStore.setState(partial),
@@ -796,8 +846,19 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
     expect(rollbackRes.success).toBe(true);
     expect(usePilatesStore.getState().exercises).toBe(preRestoreState.exercises);
     expect(usePilatesStore.getState().savedSequences).toBe(preRestoreState.savedSequences);
+    expect(usePilatesStore.getState().activeTitle).toBe('작성 중인 현재 수업');
 
-    // 2. If user makes a post-restore edit, rollback refuses to overwrite newer work
+    // 3. Double rollback is rejected cleanly without altering current state, draft, or history
+    const secondRollback = rollbackLatestBackupRestore({
+      getState: usePilatesStore.getState,
+      setState: (partial) => usePilatesStore.setState(partial),
+      checkStorage: (expected) => getRecoveryStorageStatus(expected ?? undefined),
+    });
+    expect(secondRollback.success).toBe(false);
+    expect(secondRollback.message).toContain('되돌릴 수 있는 최근 백업 복원 기록이 없습니다');
+    expect(usePilatesStore.getState().exercises).toBe(preRestoreState.exercises);
+
+    // 4. Multi-tab external storage mutation before rollback blocks automatic rollback
     const preRestoreState2 = captureBackupPreRestoreState(usePilatesStore.getState());
     const restoreRes2 = usePilatesStore.getState().restoreBackup(backupPayload);
     expect(restoreRes2.success).toBe(true);
@@ -809,6 +870,29 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
       postRestoreStorageFingerprint: postDisk2.ok ? postDisk2.fingerprint : null,
     });
 
+    const persistedBeforeExternal = localStorage.getItem(RECOVERY_STORAGE_KEY)!;
+    const externalParsed = JSON.parse(persistedBeforeExternal);
+    externalParsed.state.savedSequences.push({
+      ...incomingSeq,
+      id: 'seq-other-tab-added',
+      title: '다른 탭에서 추가한 시퀀스',
+    });
+    const externalRaw = JSON.stringify(externalParsed);
+    localStorage.setItem(RECOVERY_STORAGE_KEY, externalRaw);
+
+    const multiTabBlocked = rollbackLatestBackupRestore({
+      getState: usePilatesStore.getState,
+      setState: (partial) => usePilatesStore.setState(partial),
+      checkStorage: (expected) => getRecoveryStorageStatus(expected ?? undefined),
+    });
+    expect(multiTabBlocked.success).toBe(false);
+    expect(multiTabBlocked.message).toContain('다른 탭');
+    expect(localStorage.getItem(RECOVERY_STORAGE_KEY)).toBe(externalRaw);
+
+    // Restore disk to match current tab
+    localStorage.setItem(RECOVERY_STORAGE_KEY, persistedBeforeExternal);
+
+    // 5. If user makes a post-restore edit, rollback refuses to overwrite newer work
     usePilatesStore.setState({ activeTitle: '복원 후 강사가 새로 수정한 제목' });
     const blockedRollback = rollbackLatestBackupRestore({
       getState: usePilatesStore.getState,
@@ -818,6 +902,7 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
     expect(blockedRollback.success).toBe(false);
     expect(blockedRollback.message).toContain('복원 이후 추가 변경이 발생해');
     expect(usePilatesStore.getState().savedSequences).toHaveLength(1);
+    expect(usePilatesStore.getState().activeTitle).toBe('복원 후 강사가 새로 수정한 제목');
     clearBackupRestoreRollbackPoint();
   });
 });

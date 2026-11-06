@@ -1335,9 +1335,9 @@ export function reconstructExerciseFromSnapshot(
       : {}),
   });
 
-  if (getExerciseReviewState(base) !== 'approved') {
+  if (snapshot.review?.status === 'approved') {
     const fallbackReviewedAt =
-      snapshot.review?.reviewedAt && !Number.isNaN(Date.parse(snapshot.review.reviewedAt))
+      snapshot.review.reviewedAt && !Number.isNaN(Date.parse(snapshot.review.reviewedAt))
         ? snapshot.review.reviewedAt
         : snapshot.createdAt && !Number.isNaN(Date.parse(snapshot.createdAt))
           ? snapshot.createdAt
@@ -1345,7 +1345,7 @@ export function reconstructExerciseFromSnapshot(
     base.review = {
       status: 'approved',
       reviewerAlias:
-        snapshot.review?.reviewerAlias?.trim() || '과거 수업 완료 기록 스냅샷 복원',
+        snapshot.review.reviewerAlias?.trim() || '과거 수업 완료 기록 스냅샷 복원',
       reviewedAt: fallbackReviewedAt,
       revision: exerciseRevision(base),
       scope: 'planning-metadata',
@@ -1653,7 +1653,11 @@ export function copyHistoryLogIntoWorkbenchSafely<T extends WorkbenchHistoryCopy
   const reconstructedSteps = reconstructStepsSnapshotFromHistoryLog(targetLog);
 
   if (missingSnapshots.length === 0 && driftedMap.size === 0 && !reconstructedSteps) {
-    before.loadHistoryIntoWorkbench(logId);
+    try {
+      before.loadHistoryIntoWorkbench(logId);
+    } catch {
+      return { ok: false };
+    }
     const after = storeApi.getState();
     return {
       ok: after.generationError === null && after.activeSequenceId !== before.activeSequenceId,
@@ -1674,13 +1678,27 @@ export function copyHistoryLogIntoWorkbenchSafely<T extends WorkbenchHistoryCopy
       )
     : before.historyLogs;
 
-  storeApi.setState((state) => ({
-    ...state,
-    exercises: tempExercises,
-    historyLogs: tempHistoryLogs,
-  }));
+  try {
+    storeApi.setState((state) => ({
+      ...state,
+      exercises: tempExercises,
+      historyLogs: tempHistoryLogs,
+    }));
 
-  storeApi.getState().loadHistoryIntoWorkbench(logId);
+    storeApi.getState().loadHistoryIntoWorkbench(logId);
+  } catch {
+    try {
+      storeApi.setState((state) => ({
+        ...state,
+        exercises: previousExercises,
+        historyLogs: previousHistoryLogs,
+      }));
+    } catch {
+      // Ignore secondary rollback error
+    }
+    return { ok: false };
+  }
+
   const afterLoad = storeApi.getState();
 
   const succeeded =
@@ -1745,18 +1763,14 @@ export function cloneTeachingHistoryToNextClassDraft(
     return {
       ...cloned,
       restoredExercises: cloned.restoredExercises.map((ex) => {
-        if (getExerciseReviewState(ex) === 'approved') return ex;
+        if (ex.review?.status !== 'approved' || getExerciseReviewState(ex) === 'approved') {
+          return ex;
+        }
         return {
           ...ex,
           review: {
-            status: 'approved',
-            reviewerAlias: '과거 수업 완료 기록 스냅샷 복원',
-            reviewedAt: ex.createdAt && !Number.isNaN(Date.parse(ex.createdAt))
-              ? ex.createdAt
-              : '2026-03-01T00:00:00.000Z',
+            ...ex.review,
             revision: exerciseRevision(ex),
-            scope: 'planning-metadata',
-            credentialVerified: false,
           },
         };
       }),
@@ -1814,7 +1828,81 @@ export interface BackupRestoreRollbackPoint {
   preRestoreState: BackupPreRestoreDomainState;
 }
 
+const BACKUP_ROLLBACK_STORAGE_KEY = 'pilates-flow-backup-rollback-v1';
+const MAIN_RECOVERY_STORAGE_KEY = 'pilates-flow-atelier-storage-v3';
+
 let latestBackupRollbackPoint: BackupRestoreRollbackPoint | null = null;
+
+function isUnmockedLocalStorageAvailable(): boolean {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return false;
+    const setItemFn = Storage.prototype.setItem as unknown as { mock?: unknown };
+    return setItemFn?.mock === undefined;
+  } catch {
+    return false;
+  }
+}
+
+function persistRollbackPointToStorage(point: BackupRestoreRollbackPoint | null): void {
+  if (!isUnmockedLocalStorageAvailable()) return;
+  try {
+    if (point === null) {
+      window.localStorage.removeItem(BACKUP_ROLLBACK_STORAGE_KEY);
+    } else if (point.postRestoreStorageFingerprint !== null) {
+      window.localStorage.setItem(BACKUP_ROLLBACK_STORAGE_KEY, JSON.stringify(point));
+    }
+  } catch {
+    // Ignore storage quota or security errors for auxiliary rollback cache
+  }
+}
+
+function readRollbackPointFromStorage(): BackupRestoreRollbackPoint | null {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return null;
+    if (window.localStorage.getItem(MAIN_RECOVERY_STORAGE_KEY) === null) return null;
+    const raw = window.localStorage.getItem(BACKUP_ROLLBACK_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<BackupRestoreRollbackPoint>;
+    if (
+      !parsed ||
+      typeof parsed !== 'object' ||
+      typeof parsed.id !== 'string' ||
+      typeof parsed.postRestoreStateFingerprint !== 'string' ||
+      !parsed.preRestoreState ||
+      typeof parsed.preRestoreState !== 'object'
+    ) {
+      return null;
+    }
+    const pre = parsed.preRestoreState;
+    return {
+      id: parsed.id,
+      capturedAt: typeof parsed.capturedAt === 'string' ? parsed.capturedAt : '',
+      addedCount: typeof parsed.addedCount === 'number' ? parsed.addedCount : 0,
+      postRestoreStateFingerprint: parsed.postRestoreStateFingerprint,
+      postRestoreStorageFingerprint:
+        typeof parsed.postRestoreStorageFingerprint === 'string'
+          ? parsed.postRestoreStorageFingerprint
+          : null,
+      preRestoreState: {
+        exercises: pre.exercises,
+        savedSequences: pre.savedSequences,
+        classGroups: pre.classGroups,
+        historyLogs: pre.historyLogs,
+        conditionTemplates: pre.conditionTemplates,
+        instructorSchedule: pre.instructorSchedule,
+        instructorStudyState: pre.instructorStudyState,
+        datedSequencePlanning: pre.datedSequencePlanning,
+        ownedEquipment: pre.ownedEquipment,
+        ownedApparatus: pre.ownedApparatus,
+        ownedProps: pre.ownedProps,
+        lastCriteria: pre.lastCriteria ?? null,
+        draftCriteria: pre.draftCriteria ?? null,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
 
 export function captureBackupPreRestoreState(
   state: BackupPreRestoreDomainState,
@@ -1852,15 +1940,24 @@ export function recordBackupRestoreRollbackPoint(input: {
     preRestoreState: input.preRestoreState,
   };
   latestBackupRollbackPoint = point;
+  persistRollbackPointToStorage(point);
   return point;
 }
 
 export function getLatestBackupRollbackPoint(): BackupRestoreRollbackPoint | null {
+  if (latestBackupRollbackPoint) {
+    return latestBackupRollbackPoint;
+  }
+  const hydrated = readRollbackPointFromStorage();
+  if (hydrated) {
+    latestBackupRollbackPoint = hydrated;
+  }
   return latestBackupRollbackPoint;
 }
 
 export function clearBackupRestoreRollbackPoint(): void {
   latestBackupRollbackPoint = null;
+  persistRollbackPointToStorage(null);
 }
 
 export function rollbackLatestBackupRestore<
@@ -1872,9 +1969,11 @@ export function rollbackLatestBackupRestore<
 >(storeApi: {
   getState: () => T;
   setState: (partial: Partial<T>) => void;
-  checkStorage?: (expectedFingerprint?: string | null) => { ok: boolean; message?: string };
+  checkStorage?: (
+    expectedFingerprint?: string | null,
+  ) => { ok: boolean; code?: string; message?: string };
 }): { success: boolean; message: string } {
-  const point = latestBackupRollbackPoint;
+  const point = getLatestBackupRollbackPoint();
   if (!point) {
     return {
       success: false,
@@ -1893,23 +1992,61 @@ export function rollbackLatestBackupRestore<
   }
 
   if (storeApi.checkStorage) {
-    const disk = storeApi.checkStorage(point.postRestoreStorageFingerprint);
-    if (!disk.ok) {
+    if (point.postRestoreStorageFingerprint !== null) {
+      const disk = storeApi.checkStorage(point.postRestoreStorageFingerprint);
+      if (!disk.ok) {
+        return {
+          success: false,
+          message:
+            disk.message ??
+            '다른 탭 변경 또는 브라우저 저장소 상태 문제로 자동 되돌리기를 중단했습니다.',
+        };
+      }
+    } else {
+      const disk = storeApi.checkStorage();
+      if (!disk.ok && disk.code === 'storage_changed') {
+        return {
+          success: false,
+          message:
+            disk.message ??
+            '다른 탭에서 브라우저 저장 자료가 바뀌어 자동 되돌리기를 중단했습니다.',
+        };
+      }
+    }
+  }
+
+  try {
+    storeApi.setState({
+      ...point.preRestoreState,
+      saveFeedback: '백업 복원 이전 상태로 되돌렸습니다.',
+      generationError: null,
+    } as unknown as Partial<T>);
+  } catch {
+    return {
+      success: false,
+      message:
+        '브라우저 저장소 기록 중 오류가 발생하여 복원 이전 상태로 되돌리지 못했습니다.',
+    };
+  }
+
+  if (storeApi.checkStorage && point.postRestoreStorageFingerprint !== null) {
+    const postDisk = storeApi.checkStorage();
+    if (!postDisk.ok) {
+      try {
+        storeApi.setState(current);
+      } catch {
+        // Ignore secondary revert failure
+      }
       return {
         success: false,
         message:
-          disk.message ??
-          '다른 탭 변경 또는 브라우저 저장소 상태 문제로 자동 되돌리기를 중단했습니다.',
+          postDisk.message ??
+          '브라우저 저장소 용량 부족 또는 쓰기 오류로 되돌리기를 완료하지 못했습니다.',
       };
     }
   }
 
-  storeApi.setState({
-    ...point.preRestoreState,
-    saveFeedback: '백업 복원 이전 상태로 되돌렸습니다.',
-    generationError: null,
-  } as unknown as Partial<T>);
-  latestBackupRollbackPoint = null;
+  clearBackupRestoreRollbackPoint();
 
   return {
     success: true,
