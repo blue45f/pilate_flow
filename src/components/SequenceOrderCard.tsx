@@ -33,16 +33,19 @@ export function SequenceOrderCard({
     },
     [],
   );
-  const restoreFocus = () =>
-    requestAnimationFrame(() =>
-      document.getElementById(`order-handle-${step.stepId}`)?.focus({ preventScroll: true }),
-    );
-  const move = (targetId: string) => {
+  const restoreFocus = (ensureVisible: boolean) =>
+    requestAnimationFrame(() => {
+      const handle = document.getElementById(`order-handle-${step.stepId}`);
+      handle?.focus({ preventScroll: true });
+      if (ensureVisible)
+        handle?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
+    });
+  const move = (targetId: string, ensureVisible = true) => {
     const changed = usePilatesStore.getState().reorderStep(step.stepId, targetId);
     onNotice(
       changed ? `${label} 순서를 바꿨어요. 되돌릴 수 있습니다.` : '잠긴 항목의 위치는 유지합니다.',
     );
-    restoreFocus();
+    restoreFocus(ensureVisible);
   };
   const upDisabled = !!step.locked || index === 0 || !!steps[index - 1]?.locked;
   const downDisabled = !!step.locked || index === steps.length - 1 || !!steps[index + 1]?.locked;
@@ -74,7 +77,7 @@ export function SequenceOrderCard({
                 getSteps: () => usePilatesStore.getState().activeSteps,
                 startX: event.clientX,
                 startY: event.clientY,
-                onCommit: move,
+                onCommit: (targetId) => move(targetId, false),
                 onNotice,
               }),
             };

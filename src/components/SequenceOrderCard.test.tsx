@@ -286,3 +286,32 @@ describe('drag preview and interruption regressions', () => {
     expect(order()).toEqual(['b', 'c', 'a']);
   });
 });
+
+it('reveals keyboard and button destinations without jumping on pointer drop', async () => {
+  const descriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollIntoView');
+  const scroll = vi.fn();
+  Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+    configurable: true,
+    value: scroll,
+  });
+  try {
+    render(<Board />);
+    fireEvent.keyDown(handle(), { key: 'ArrowDown' });
+    await act(() => new Promise((resolve) => setTimeout(resolve, 30)));
+    expect(scroll).toHaveBeenCalledWith({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
+    scroll.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: 'a 위로 이동' }));
+    await act(() => new Promise((resolve) => setTimeout(resolve, 30)));
+    expect(scroll).toHaveBeenCalledOnce();
+    scroll.mockClear();
+    pointer(handle(), 'pointerdown', 20, 80);
+    pointer(handle(), 'pointermove', 20, 280);
+    pointer(handle(), 'pointerup', 20, 280);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 30)));
+    expect(order()).toEqual(['b', 'c', 'a']);
+    expect(scroll).not.toHaveBeenCalled();
+  } finally {
+    if (descriptor) Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', descriptor);
+    else Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
+  }
+});

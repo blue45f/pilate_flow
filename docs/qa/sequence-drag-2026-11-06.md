@@ -18,3 +18,7 @@ Viewport-edge scrolling continues while the pointer is stationary. The original 
 ## Limits
 
 Safari and physical-device drag behavior were not verified in this change. The optional desktop finder visibility and broader page-layout changes are separate work. No production deployment was performed by this validation task.
+
+## Repeated keyboard movement follow-up
+
+A further 390px check found that repeated ArrowDown could leave the focused handle outside the viewport. Pointer-drop focus intentionally preserves the scroll position, but keyboard and up/down button moves now reveal the destination with a 96px scroll margin for the mobile navigation. Five successive ArrowDown moves now keep the handle visible (y≈656–700px, navigation starts at 774px). A regression test distinguishes keyboard/button scrolling from pointer-drop no-jump behavior. This follow-up was completed before production deployment.

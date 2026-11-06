@@ -54,3 +54,7 @@
     animation: none;
   }
 }
+
+#root .sequence-drag-handle {
+  scroll-margin-block: 96px;
+}
