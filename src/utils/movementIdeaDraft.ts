@@ -1,4 +1,5 @@
 import { getEquipmentFamily } from '../data/equipmentCatalog';
+import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type {
   ClassSequenceSnapshot,
@@ -116,6 +117,21 @@ export interface SaveMovementIdeaInput {
 const IDEA_META_STORAGE_KEY = 'pilates-flow-movement-idea-meta-v1';
 const IDEA_BUFFER_STORAGE_KEY = 'pilates-flow-movement-idea-buffer-v1';
 const IDEA_REUSABLE_BLOCKS_STORAGE_KEY = 'pilates-flow-movement-idea-reusable-blocks-v1';
+const ACTIVE_OWNER_KEY = `${RECOVERY_STORAGE_KEY}:active-owner`;
+
+function getActiveOwnerScope(): string {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return 'device';
+    const owner = window.localStorage.getItem(ACTIVE_OWNER_KEY)?.trim();
+    return owner || 'device';
+  } catch {
+    return 'device';
+  }
+}
+
+function getScopedStorageKey(baseKey: string, scope = getActiveOwnerScope()): string {
+  return scope === 'device' ? baseKey : `${baseKey}:user:${encodeURIComponent(scope)}`;
+}
 
 const EMPTY_BUFFER: MovementIdeaWorkingBuffer = {
   editingExerciseId: null,
@@ -140,11 +156,36 @@ const EMPTY_BUFFER: MovementIdeaWorkingBuffer = {
   updatedAt: '',
 };
 
-let inMemoryMetaMap: Record<string, MovementIdeaMeta> = {};
-let inMemoryHumanDraftMap: Record<string, HumanMovementDraft> = {};
-let inMemoryReusableBlocks: ReusableBlock[] = [];
-let inMemoryBuffer: MovementIdeaWorkingBuffer = { ...EMPTY_BUFFER };
+let inMemoryMetaByScope: Record<string, Record<string, MovementIdeaMeta>> = {};
+let inMemoryHumanDraftByScope: Record<string, Record<string, HumanMovementDraft>> = {};
+let inMemoryReusableBlocksByScope: Record<string, ReusableBlock[]> = {};
+let inMemoryBufferByScope: Record<string, MovementIdeaWorkingBuffer> = {};
 let activeSaveLock = false;
+
+function getScopedHumanDraftMap(scope = getActiveOwnerScope()): Record<string, HumanMovementDraft> {
+  if (!inMemoryHumanDraftByScope[scope]) {
+    inMemoryHumanDraftByScope[scope] = {};
+  }
+  return inMemoryHumanDraftByScope[scope];
+}
+
+function inferApparatusFromIdeaLine(ideaLine: string): ApparatusType | undefined {
+  const normalized = ideaLine.trim().toLowerCase();
+  if (!normalized) return undefined;
+  const keywordRules: ReadonlyArray<{ pattern: RegExp; apparatus: ApparatusType }> = [
+    { pattern: /리포머|reformer/i, apparatus: 'reformer' },
+    { pattern: /체어|chair|운다체어|콤보체어/i, apparatus: 'chair' },
+    { pattern: /캐딜락|cadillac|타워|tower|스프링보드|springboard/i, apparatus: 'cadillac' },
+    { pattern: /바렐|barrel|래더바렐|스파인코렉터|아크바렐/i, apparatus: 'barrel' },
+    { pattern: /매트|mat/i, apparatus: 'mat' },
+  ];
+  for (const rule of keywordRules) {
+    if (rule.pattern.test(normalized)) {
+      return rule.apparatus;
+    }
+  }
+  return undefined;
+}
 
 function readStorageJson<T>(key: string, fallback: T): T {
   try {
@@ -181,13 +222,15 @@ function isSupportedLocalPhotoUri(uri: string): boolean {
   );
 }
 
-function persistHumanDraftMap(): void {
-  writeStorageJson(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, {
+function persistHumanDraftMap(scope = getActiveOwnerScope()): void {
+  const draftMap = getScopedHumanDraftMap(scope);
+  const blocks = inMemoryReusableBlocksByScope[scope] ?? [];
+  writeStorageJson(getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, scope), {
     format: 'pilates-flow-human-creation-v1',
     version: 1,
     exportedAt: new Date().toISOString(),
-    humanMovementDrafts: Object.values(inMemoryHumanDraftMap),
-    reusableBlocks: inMemoryReusableBlocks,
+    humanMovementDrafts: Object.values(draftMap),
+    reusableBlocks: blocks,
   });
 }
 
@@ -196,20 +239,24 @@ export function isMovementIdeaExercise(exercise: PilatesExercise | undefined | n
   return exercise.id.startsWith('ex-custom-idea-');
 }
 
-export function getMovementIdeaMetaMap(): Record<string, MovementIdeaMeta> {
-  const stored = readStorageJson<Record<string, MovementIdeaMeta>>(IDEA_META_STORAGE_KEY, {});
-  inMemoryMetaMap = { ...inMemoryMetaMap, ...stored };
-  return inMemoryMetaMap;
+export function getMovementIdeaMetaMap(scope = getActiveOwnerScope()): Record<string, MovementIdeaMeta> {
+  const scopedKey = getScopedStorageKey(IDEA_META_STORAGE_KEY, scope);
+  const stored = readStorageJson<Record<string, MovementIdeaMeta>>(scopedKey, {});
+  const current = inMemoryMetaByScope[scope] ?? {};
+  const merged = { ...current, ...stored };
+  inMemoryMetaByScope[scope] = merged;
+  return merged;
 }
 
 export function getHumanDraftForIdeaExercise(exerciseId: string): HumanMovementDraft | undefined {
-  return inMemoryHumanDraftMap[exerciseId];
+  return getScopedHumanDraftMap()[exerciseId];
 }
 
 export function getMovementIdeaMeta(exercise: PilatesExercise): MovementIdeaMeta {
-  const map = getMovementIdeaMetaMap();
+  const scope = getActiveOwnerScope();
+  const map = getMovementIdeaMetaMap(scope);
   const existing = map[exercise.id];
-  const draft = inMemoryHumanDraftMap[exercise.id];
+  const draft = getScopedHumanDraftMap(scope)[exercise.id];
   if (existing) {
     if (draft) {
       return {
@@ -249,30 +296,37 @@ export function getMovementIdeaMeta(exercise: PilatesExercise): MovementIdeaMeta
 }
 
 export function loadMovementIdeaWorkingBuffer(): MovementIdeaWorkingBuffer {
-  const stored = readStorageJson<MovementIdeaWorkingBuffer | null>(IDEA_BUFFER_STORAGE_KEY, null);
+  const scope = getActiveOwnerScope();
+  const scopedKey = getScopedStorageKey(IDEA_BUFFER_STORAGE_KEY, scope);
+  const stored = readStorageJson<MovementIdeaWorkingBuffer | null>(scopedKey, null);
   if (stored && typeof stored.ideaLine === 'string') {
-    inMemoryBuffer = { ...EMPTY_BUFFER, ...stored };
+    inMemoryBufferByScope[scope] = { ...EMPTY_BUFFER, ...stored };
+  } else if (!inMemoryBufferByScope[scope]) {
+    inMemoryBufferByScope[scope] = { ...EMPTY_BUFFER };
   }
-  return inMemoryBuffer;
+  return inMemoryBufferByScope[scope];
 }
 
 export function saveMovementIdeaWorkingBuffer(
   partial: Partial<MovementIdeaWorkingBuffer>,
 ): MovementIdeaWorkingBuffer {
-  inMemoryBuffer = {
-    ...inMemoryBuffer,
+  const scope = getActiveOwnerScope();
+  const current = inMemoryBufferByScope[scope] ?? { ...EMPTY_BUFFER };
+  const next: MovementIdeaWorkingBuffer = {
+    ...current,
     ...partial,
     updatedAt: new Date().toISOString(),
   };
-  writeStorageJson(IDEA_BUFFER_STORAGE_KEY, inMemoryBuffer);
-  return inMemoryBuffer;
+  inMemoryBufferByScope[scope] = next;
+  writeStorageJson(getScopedStorageKey(IDEA_BUFFER_STORAGE_KEY, scope), next);
+  return next;
 }
 
-export function clearMovementIdeaWorkingBuffer(): void {
-  inMemoryBuffer = { ...EMPTY_BUFFER };
+export function clearMovementIdeaWorkingBuffer(scope = getActiveOwnerScope()): void {
+  inMemoryBufferByScope[scope] = { ...EMPTY_BUFFER };
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.removeItem(IDEA_BUFFER_STORAGE_KEY);
+      window.localStorage.removeItem(getScopedStorageKey(IDEA_BUFFER_STORAGE_KEY, scope));
     }
   } catch {
     // Ignore storage removal errors.
@@ -280,17 +334,27 @@ export function clearMovementIdeaWorkingBuffer(): void {
 }
 
 export function resetMovementIdeaStateForTests(): void {
-  inMemoryMetaMap = {};
-  inMemoryHumanDraftMap = {};
-  inMemoryReusableBlocks = [];
-  inMemoryBuffer = { ...EMPTY_BUFFER };
+  inMemoryMetaByScope = {};
+  inMemoryHumanDraftByScope = {};
+  inMemoryReusableBlocksByScope = {};
+  inMemoryBufferByScope = {};
   activeSaveLock = false;
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.removeItem(IDEA_META_STORAGE_KEY);
-      window.localStorage.removeItem(IDEA_BUFFER_STORAGE_KEY);
-      window.localStorage.removeItem(IDEA_REUSABLE_BLOCKS_STORAGE_KEY);
-      window.localStorage.removeItem(DEFAULT_HUMAN_DRAFT_STORAGE_KEY);
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < window.localStorage.length; i += 1) {
+        const key = window.localStorage.key(i);
+        if (
+          key &&
+          (key.startsWith(IDEA_META_STORAGE_KEY) ||
+            key.startsWith(IDEA_BUFFER_STORAGE_KEY) ||
+            key.startsWith(IDEA_REUSABLE_BLOCKS_STORAGE_KEY) ||
+            key.startsWith(DEFAULT_HUMAN_DRAFT_STORAGE_KEY))
+        ) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => window.localStorage.removeItem(key));
     }
   } catch {
     // Ignore in test cleanup.
@@ -379,9 +443,12 @@ function syncHumanDraftOnSave(
     hardVariation?: string;
     variantLabelKo?: string;
     now: string;
+    scope?: string;
   },
 ): HumanMovementDraft {
-  const existingDraft = inMemoryHumanDraftMap[exerciseId];
+  const scope = input.scope ?? getActiveOwnerScope();
+  const draftMap = getScopedHumanDraftMap(scope);
+  const existingDraft = draftMap[exerciseId];
   const prevFeel = existingDraft?.feelLogs.at(-1)?.feelNoteKo ?? '';
   const prevMod = existingDraft?.modificationLogs.at(-1)?.modificationPointKo ?? '';
   const prevPhoto = existingDraft?.photoReferences.at(-1)?.localRefUri ?? '';
@@ -435,8 +502,8 @@ function syncHumanDraftOnSave(
       });
     }
 
-    inMemoryHumanDraftMap[exerciseId] = draft;
-    persistHumanDraftMap();
+    draftMap[exerciseId] = draft;
+    persistHumanDraftMap(scope);
     return draft;
   }
 
@@ -522,8 +589,8 @@ function syncHumanDraftOnSave(
     });
   }
 
-  inMemoryHumanDraftMap[exerciseId] = draft;
-  persistHumanDraftMap();
+  draftMap[exerciseId] = draft;
+  persistHumanDraftMap(scope);
   return draft;
 }
 
@@ -535,6 +602,8 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
   draft?: HumanMovementDraft;
   error?: string;
 } {
+  const scope = getActiveOwnerScope();
+  const draftMap = getScopedHumanDraftMap(scope);
   if (activeSaveLock) {
     const state = usePilatesStore.getState();
     const existing = input.existingExerciseId
@@ -546,7 +615,7 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
         ok: true,
         exercise: existing,
         meta: getMovementIdeaMeta(existing),
-        draft: inMemoryHumanDraftMap[existing.id],
+        draft: draftMap[existing.id],
       };
     }
   }
@@ -591,11 +660,12 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
           ok: true,
           exercise: recentDuplicate,
           meta: getMovementIdeaMeta(recentDuplicate),
-          draft: inMemoryHumanDraftMap[recentDuplicate.id],
+          draft: draftMap[recentDuplicate.id],
         };
       }
     }
 
+    const inferredApparatus = inferApparatusFromIdeaLine(trimmedIdea);
     const fallbackEquipment =
       state.draftCriteria?.availableEquipment?.[0] ||
       (state.activeApparatus !== 'mixed' ? state.activeApparatus : undefined) ||
@@ -603,15 +673,18 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
       'mat';
     const chosenApparatus: ApparatusType =
       input.apparatus ||
+      inferredApparatus ||
       existing?.apparatus ||
       getEquipmentFamily(fallbackEquipment) ||
       'mat';
     const requiredEquipment =
       input.apparatus
         ? [input.apparatus]
-        : existing?.requiredEquipment?.length
-          ? [...existing.requiredEquipment]
-          : [fallbackEquipment];
+        : inferredApparatus
+          ? [inferredApparatus]
+          : existing?.requiredEquipment?.length
+            ? [...existing.requiredEquipment]
+            : [fallbackEquipment];
 
     const durationMin =
       typeof input.durationMin === 'number' &&
@@ -682,7 +755,7 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
       subjectiveFeeling,
       adjustmentNote,
       photoDataUrl,
-      apparatus: input.apparatus || undefined,
+      apparatus: (input.apparatus || inferredApparatus) || undefined,
       level: input.level || undefined,
       durationMin,
       repetitions,
@@ -694,6 +767,7 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
       hardVariation,
       variantLabelKo,
       now,
+      scope,
     });
 
     const cues = [
@@ -809,12 +883,12 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
     };
 
     const nextMap = {
-      ...getMovementIdeaMetaMap(),
+      ...getMovementIdeaMetaMap(scope),
       [baseExercise.id]: meta,
     };
-    inMemoryMetaMap = nextMap;
-    writeStorageJson(IDEA_META_STORAGE_KEY, nextMap);
-    clearMovementIdeaWorkingBuffer();
+    inMemoryMetaByScope[scope] = nextMap;
+    writeStorageJson(getScopedStorageKey(IDEA_META_STORAGE_KEY, scope), nextMap);
+    clearMovementIdeaWorkingBuffer(scope);
 
     return {
       success: true,
@@ -843,9 +917,11 @@ export function restoreMovementIdeaRevision(
   draft?: HumanMovementDraft;
   message: string;
 } {
+  const scope = getActiveOwnerScope();
+  const draftMap = getScopedHumanDraftMap(scope);
   const state = usePilatesStore.getState();
   const existing = state.exercises.find((item) => item.id === exerciseId);
-  const existingDraft = inMemoryHumanDraftMap[exerciseId];
+  const existingDraft = draftMap[exerciseId];
   if (!existing || !existingDraft) {
     return {
       success: false,
@@ -857,8 +933,8 @@ export function restoreMovementIdeaRevision(
   try {
     const now = new Date().toISOString();
     const restoredDraft = restoreHumanDraftRevision(existingDraft, targetRevision, now);
-    inMemoryHumanDraftMap[exerciseId] = restoredDraft;
-    persistHumanDraftMap();
+    draftMap[exerciseId] = restoredDraft;
+    persistHumanDraftMap(scope);
 
     const restoredFeel = restoredDraft.feelLogs.at(-1)?.feelNoteKo ?? '';
     const restoredMod = restoredDraft.modificationLogs.at(-1)?.modificationPointKo ?? '';
@@ -942,11 +1018,11 @@ export function restoreMovementIdeaRevision(
     };
 
     const nextMap = {
-      ...getMovementIdeaMetaMap(),
+      ...getMovementIdeaMetaMap(scope),
       [updatedExercise.id]: nextMeta,
     };
-    inMemoryMetaMap = nextMap;
-    writeStorageJson(IDEA_META_STORAGE_KEY, nextMap);
+    inMemoryMetaByScope[scope] = nextMap;
+    writeStorageJson(getScopedStorageKey(IDEA_META_STORAGE_KEY, scope), nextMap);
 
     return {
       success: true,
@@ -991,6 +1067,8 @@ export function forkMovementIdeaVariant(
   draft?: HumanMovementDraft;
   message: string;
 } {
+  const scope = getActiveOwnerScope();
+  const draftMap = getScopedHumanDraftMap(scope);
   const state = usePilatesStore.getState();
   const sourceEx = state.exercises.find((item) => item.id === sourceExerciseId);
   if (!sourceEx) {
@@ -1012,7 +1090,7 @@ export function forkMovementIdeaVariant(
 
   const sourceMeta = getMovementIdeaMeta(sourceEx);
   const sourceDraft =
-    inMemoryHumanDraftMap[sourceExerciseId] ??
+    draftMap[sourceExerciseId] ??
     createHumanMovementIdeaDraft({
       id: sourceExerciseId,
       ideaLine: sourceMeta.ideaLine,
@@ -1043,8 +1121,8 @@ export function forkMovementIdeaVariant(
       now,
     });
 
-    inMemoryHumanDraftMap[newExerciseId] = branchedDraft;
-    persistHumanDraftMap();
+    draftMap[newExerciseId] = branchedDraft;
+    persistHumanDraftMap(scope);
 
     const nameKo = buildDisplayTitle(
       branchedDraft.ideaLine,
@@ -1103,11 +1181,11 @@ export function forkMovementIdeaVariant(
     };
 
     const nextMap = {
-      ...getMovementIdeaMetaMap(),
+      ...getMovementIdeaMetaMap(scope),
       [newExerciseId]: newMeta,
     };
-    inMemoryMetaMap = nextMap;
-    writeStorageJson(IDEA_META_STORAGE_KEY, nextMap);
+    inMemoryMetaByScope[scope] = nextMap;
+    writeStorageJson(getScopedStorageKey(IDEA_META_STORAGE_KEY, scope), nextMap);
 
     return {
       success: true,
@@ -1127,20 +1205,25 @@ export function forkMovementIdeaVariant(
   }
 }
 
-export function getSavedReusableBlocks(): ReusableBlock[] {
-  const stored = readStorageJson<ReusableBlock[]>(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, []);
-  if (stored.length > 0 && inMemoryReusableBlocks.length === 0) {
-    inMemoryReusableBlocks = stored;
+export function getSavedReusableBlocks(scope = getActiveOwnerScope()): ReusableBlock[] {
+  const scopedKey = getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope);
+  const stored = readStorageJson<ReusableBlock[]>(scopedKey, []);
+  const current = inMemoryReusableBlocksByScope[scope] ?? [];
+  if (stored.length > 0 && current.length === 0) {
+    inMemoryReusableBlocksByScope[scope] = stored;
+  } else if (!inMemoryReusableBlocksByScope[scope]) {
+    inMemoryReusableBlocksByScope[scope] = [];
   }
-  return inMemoryReusableBlocks;
+  return inMemoryReusableBlocksByScope[scope];
 }
 
 export function getReusableBlockTimingSummary(block: ReusableBlock): ReusableBlockTimingSummary {
+  const scope = getActiveOwnerScope();
   const state = usePilatesStore.getState();
   return summarizeReusableBlockTiming(
     block,
     state.exercises,
-    Object.values(inMemoryHumanDraftMap),
+    Object.values(getScopedHumanDraftMap(scope)),
   );
 }
 
@@ -1167,20 +1250,22 @@ export function saveIdeaToReusableBlock(input: {
   timingSummary?: ReusableBlockTimingSummary;
   message: string;
 } {
+  const scope = getActiveOwnerScope();
+  const draftMap = getScopedHumanDraftMap(scope);
   const state = usePilatesStore.getState();
   const exercise = state.exercises.find((item) => item.id === input.exerciseId);
   if (!exercise) {
     return {
       success: false,
       ok: false,
-      blocks: getSavedReusableBlocks(),
+      blocks: getSavedReusableBlocks(scope),
       message: '재사용 블록에 담을 동작 초안을 먼저 저장해 주세요.',
     };
   }
 
   const meta = getMovementIdeaMeta(exercise);
   const humanDraft =
-    inMemoryHumanDraftMap[exercise.id] ??
+    draftMap[exercise.id] ??
     createHumanMovementIdeaDraft({
       id: exercise.id,
       ideaLine: meta.ideaLine,
@@ -1189,7 +1274,7 @@ export function saveIdeaToReusableBlock(input: {
       level: exercise.level,
       defaultDurationMin: exercise.defaultDurationMin,
     });
-  inMemoryHumanDraftMap[exercise.id] = humanDraft;
+  draftMap[exercise.id] = humanDraft;
 
   const durationMin = input.durationMin ?? exercise.defaultDurationMin ?? 3;
   const timing = calculateIdeaStepTimeBreakdown({
@@ -1204,7 +1289,7 @@ export function saveIdeaToReusableBlock(input: {
   const sectionRole: ClassSectionRole =
     input.sectionRole ?? meta.sectionRole ?? 'main';
 
-  const currentBlocks = getSavedReusableBlocks();
+  const currentBlocks = getSavedReusableBlocks(scope);
   const existingBlock = input.blockId
     ? currentBlocks.find((item) => item.id === input.blockId)
     : undefined;
@@ -1235,10 +1320,10 @@ export function saveIdeaToReusableBlock(input: {
           exerciseSnapshot: snapshot,
           humanDraftId: humanDraft.id,
           humanDraftRevision: humanDraft.revision,
-          humanDrafts: Object.values(inMemoryHumanDraftMap),
+          humanDrafts: Object.values(draftMap),
         },
         state.exercises,
-        Object.values(inMemoryHumanDraftMap),
+        Object.values(draftMap),
       );
     } else {
       const title =
@@ -1262,23 +1347,24 @@ export function saveIdeaToReusableBlock(input: {
               humanDraftRevision: humanDraft.revision,
             },
           ],
-          humanDrafts: Object.values(inMemoryHumanDraftMap),
+          humanDrafts: Object.values(draftMap),
         },
         state.exercises,
-        Object.values(inMemoryHumanDraftMap),
+        Object.values(draftMap),
       );
     }
 
-    inMemoryReusableBlocks = addReusableBlockToLibrary(currentBlocks, targetBlock);
-    writeStorageJson(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, inMemoryReusableBlocks);
-    persistHumanDraftMap();
+    const nextBlocks = addReusableBlockToLibrary(currentBlocks, targetBlock);
+    inMemoryReusableBlocksByScope[scope] = nextBlocks;
+    writeStorageJson(getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope), nextBlocks);
+    persistHumanDraftMap(scope);
 
     const timingSummary = getReusableBlockTimingSummary(targetBlock);
     return {
       success: true,
       ok: true,
       block: targetBlock,
-      blocks: inMemoryReusableBlocks,
+      blocks: nextBlocks,
       timingSummary,
       message: existingBlock
         ? `‘${targetBlock.title}’ 블록(v${targetBlock.version})에 동작을 추가했습니다. (기존 수업 시퀀스 복사본과 과거 수업은 변경되지 않습니다)`
@@ -1307,7 +1393,8 @@ export function moveIdeaReusableBlockItem(
   timingSummary?: ReusableBlockTimingSummary;
   message: string;
 } {
-  const currentBlocks = getSavedReusableBlocks();
+  const scope = getActiveOwnerScope();
+  const currentBlocks = getSavedReusableBlocks(scope);
   const found = currentBlocks.find((item) => item.id === blockId);
   if (!found) {
     return {
@@ -1320,15 +1407,16 @@ export function moveIdeaReusableBlockItem(
 
   try {
     const updatedBlock = moveItemInReusableBlock(found, itemIndex, direction);
-    inMemoryReusableBlocks = addReusableBlockToLibrary(currentBlocks, updatedBlock);
-    writeStorageJson(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, inMemoryReusableBlocks);
-    persistHumanDraftMap();
+    const nextBlocks = addReusableBlockToLibrary(currentBlocks, updatedBlock);
+    inMemoryReusableBlocksByScope[scope] = nextBlocks;
+    writeStorageJson(getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope), nextBlocks);
+    persistHumanDraftMap(scope);
     const timingSummary = getReusableBlockTimingSummary(updatedBlock);
     return {
       success: true,
       ok: true,
       block: updatedBlock,
-      blocks: inMemoryReusableBlocks,
+      blocks: nextBlocks,
       timingSummary,
       message: `‘${updatedBlock.title}’ 블록 순서를 변경했습니다 (v${updatedBlock.version}). 이미 수업에 넣은 복사본과 과거 수업은 바뀌지 않습니다.`,
     };
@@ -1395,6 +1483,8 @@ export function insertIdeaReusableBlockToCurrentClass(blockId: string): {
  * modifications to movement drafts, variants, or reusable blocks never alter past classes.
  */
 export function captureCurrentClassHierarchySnapshot(title?: string): ClassSequenceSnapshot {
+  const scope = getActiveOwnerScope();
+  const draftMap = getScopedHumanDraftMap(scope);
   const state = usePilatesStore.getState();
   return createClassSequenceSnapshot(
     {
@@ -1405,11 +1495,11 @@ export function captureCurrentClassHierarchySnapshot(title?: string): ClassSeque
       level: state.activeLevel,
       targetMinutes: state.activeTargetMinutes,
       steps: state.activeSteps,
-      humanDrafts: Object.values(inMemoryHumanDraftMap),
+      humanDrafts: Object.values(draftMap),
     },
     state.exercises,
     undefined,
-    Object.values(inMemoryHumanDraftMap),
+    Object.values(draftMap),
   );
 }
 
@@ -1424,6 +1514,7 @@ export function addMovementIdeaToCurrentClass(exerciseId: string): {
   alreadyAdded?: boolean;
   message: string;
 } {
+  const scope = getActiveOwnerScope();
   const state = usePilatesStore.getState();
   const found = state.exercises.find((item) => item.id === exerciseId);
   if (!found) {
@@ -1435,7 +1526,7 @@ export function addMovementIdeaToCurrentClass(exerciseId: string): {
   }
 
   const meta = getMovementIdeaMeta(found);
-  const humanDraft = inMemoryHumanDraftMap[found.id];
+  const humanDraft = getScopedHumanDraftMap(scope)[found.id];
   const stepNoteParts = [
     ...(meta.subjectiveFeeling ? [`[느낌] ${meta.subjectiveFeeling}`] : []),
     ...(meta.adjustmentNote ? [`[수정] ${meta.adjustmentNote}`] : []),
