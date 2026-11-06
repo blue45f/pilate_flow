@@ -92,6 +92,40 @@ describe('CloudSyncPanel', () => {
     expect(screen.queryByRole('button', { name: /Google로/ })).not.toBeInTheDocument();
   });
 
+  it('supports switching to another Google account and updates displayed identity', () => {
+    session.phase = 'signed-in';
+    session.user = {
+      uid: 'account-a',
+      displayName: '강사 A',
+      email: 'a@example.test',
+    };
+    const view = render(<CloudSyncPanel />);
+    const switchBtn = screen.getByRole('button', { name: '다른 Google 계정으로 전환' });
+    expect(switchBtn).toBeEnabled();
+    fireEvent.click(switchBtn);
+    expect(actions.signIn).toHaveBeenCalledOnce();
+
+    session = { ...session, operation: 'signing-in' };
+    view.rerender(<CloudSyncPanel />);
+    expect(screen.getByRole('button', { name: '다른 Google 계정으로 전환' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '로그아웃' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('열린 Google 창에서 로그인을 완료');
+
+    session = {
+      ...session,
+      operation: null,
+      user: {
+        uid: 'account-b',
+        displayName: '강사 B',
+        email: 'b@example.test',
+      },
+    };
+    view.rerender(<CloudSyncPanel />);
+    expect(screen.queryByText('a@example.test')).not.toBeInTheDocument();
+    expect(screen.getByText('강사 B')).toBeInTheDocument();
+    expect(screen.getByText('b@example.test')).toBeInTheDocument();
+  });
+
   it('clears the previous identity on signout and disables a pending logout', () => {
     session.phase = 'signed-in';
     session.operation = 'signing-out';

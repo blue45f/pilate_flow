@@ -152,4 +152,67 @@ describe('account-local workspace preservation', () => {
     s.syncAccountWorkspace('a');
     expect(s.getRecoveryStorageStatus().ok).toBe(true);
   });
+
+  it('isolates savedSequences and historyLogs across refresh, logout/re-entry, and account switching', async () => {
+    const s = await load();
+    const initialSavedCount = s.store.getState().savedSequences.length;
+    const initialHistoryCount = s.store.getState().historyLogs.length;
+    s.store.getState().setActiveSequenceMeta({ title: '게스트 초안 시퀀스' });
+    s.store.getState().saveCurrentSequenceToBinder(true);
+    expect(s.store.getState().savedSequences).toHaveLength(initialSavedCount + 1);
+
+    // 1. First login as Account A adopts guest workspace
+    s.syncAccountWorkspace('account-a');
+    expect(s.store.getState().savedSequences[0]?.title).toBe('게스트 초안 시퀀스');
+
+    // Account A adds a new saved sequence and a teaching history record
+    s.store.getState().setActiveSequenceMeta({ title: '강사 A 전용 리포머 시퀀스' });
+    const seqAId = s.store.getState().saveCurrentSequenceToBinder(true);
+    const firstGroupId = s.store.getState().classGroups[0]?.id ?? 'group-1';
+    s.store.getState().logClassSession({
+      sequenceId: seqAId,
+      groupId: firstGroupId,
+      taughtAt: '2026-11-06T09:00:00.000Z',
+      rating: 5,
+      intensity: 'moderate',
+      instructorReflection: '강사 A 수업 기록',
+    });
+    expect(s.store.getState().savedSequences).toHaveLength(initialSavedCount + 2);
+    expect(s.store.getState().historyLogs).toHaveLength(initialHistoryCount + 1);
+
+    // 2. Refresh persistence while signed in as Account A
+    vi.resetModules();
+    const refreshed = await load();
+    refreshed.syncAccountWorkspace('account-a');
+    expect(refreshed.store.getState().savedSequences[0]?.title).toBe('강사 A 전용 리포머 시퀀스');
+    expect(refreshed.store.getState().savedSequences[1]?.title).toBe('게스트 초안 시퀀스');
+    expect(refreshed.store.getState().historyLogs[0]?.instructorReflection).toBe(
+      '강사 A 수업 기록',
+    );
+
+    // 3. Logout restores original guest workspace; re-entry restores Account A
+    refreshed.syncAccountWorkspace(null);
+    expect(refreshed.store.getState().savedSequences).toHaveLength(initialSavedCount + 1);
+    expect(refreshed.store.getState().savedSequences[0]?.title).toBe('게스트 초안 시퀀스');
+    expect(refreshed.store.getState().historyLogs).toHaveLength(initialHistoryCount);
+
+    refreshed.syncAccountWorkspace('account-a');
+    expect(refreshed.store.getState().savedSequences).toHaveLength(initialSavedCount + 2);
+    expect(refreshed.store.getState().historyLogs).toHaveLength(initialHistoryCount + 1);
+
+    // 4. Account switch to Account B starts clean and keeps Account A & B strictly separated
+    refreshed.syncAccountWorkspace('account-b');
+    expect(refreshed.store.getState().savedSequences).toHaveLength(initialSavedCount);
+    expect(refreshed.store.getState().historyLogs).toHaveLength(initialHistoryCount);
+
+    refreshed.store.getState().setActiveSequenceMeta({ title: '강사 B 전용 시퀀스' });
+    refreshed.store.getState().saveCurrentSequenceToBinder(true);
+    expect(refreshed.store.getState().savedSequences[0]?.title).toBe('강사 B 전용 시퀀스');
+
+    refreshed.syncAccountWorkspace('account-a');
+    expect(refreshed.store.getState().savedSequences[0]?.title).toBe('강사 A 전용 리포머 시퀀스');
+    expect(refreshed.store.getState().historyLogs[0]?.instructorReflection).toBe(
+      '강사 A 수업 기록',
+    );
+  });
 });
