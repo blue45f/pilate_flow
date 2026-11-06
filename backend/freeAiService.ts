@@ -22,7 +22,14 @@ export const UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER =
 
 export const FREE_QUOTA_EXHAUSTED_HEADING = '무료 사용량 소진' as const;
 
+/**
+ * Official Google Gemini API Free Tier models (Unpaid project without Cloud Billing, verified Oct/Nov 2026).
+ * - Current standard free-tier text models: `gemini-3.8-flash` and `gemini-3.5-flash-lite` (plus active free-tier text models `gemini-3.1-flash-lite`, `gemini-2.5-flash-lite`, `gemini-2.5-flash`).
+ * - Shut down on June 1, 2026 (must be rejected): `gemini-2.0-flash`, `gemini-2.0-flash-lite`.
+ * - Paid-only models/features (must be rejected): `gemini-4-argon`, `gemini-3.8-pro`, `gemini-3.1-pro-preview`, image models, and Search/Maps grounding.
+ */
 export const GEMINI_FREE_TIER_MODELS = [
+  'gemini-3.8-flash',
   'gemini-3.5-flash-lite',
   'gemini-3.1-flash-lite',
   'gemini-2.5-flash-lite',

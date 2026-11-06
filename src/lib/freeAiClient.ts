@@ -18,6 +18,7 @@ import type {
   FreeAiRenewalInfo,
   MovementIdeaInput,
   P1ReusableBlockContract,
+  P1ReusableBlockStepContract,
   SequenceComposeInput,
 } from '../types/freeAiAssistant';
 import type { ConditionTemplate, PilatesExercise } from '../types/pilates';
@@ -352,7 +353,16 @@ function toReviewedBlockCandidates(
     .filter((block) => block.isReviewed === true)
     .slice(0, 30)
     .map((block) => {
-      const reviewedSteps = block.steps
+      const blockSteps =
+        block.steps ??
+        (block as { items?: readonly P1ReusableBlockStepContract[] }).items ??
+        [];
+      const fallbackCategory =
+        block.category ?? blockSteps[0]?.blockCategory ?? 'core';
+      const defaultLayer =
+        block.level === '1.0' ? 'easy' : block.level === '2.0' ? 'hard' : 'standard';
+
+      const reviewedSteps = blockSteps
         .filter((step) => {
           const ex = exercisesMap.get(step.exerciseId);
           if (ex) return isExerciseAutoEligible(ex);
@@ -366,22 +376,31 @@ function toReviewedBlockCandidates(
             nameKo: (ex?.nameKo ?? step.exerciseSnapshot?.nameKo ?? step.exerciseId).slice(0, 160),
             nameEn: (ex?.nameEn ?? step.exerciseSnapshot?.nameEn ?? '').slice(0, 160),
             apparatus: ex?.apparatus ?? step.exerciseSnapshot?.apparatus ?? 'reformer',
-            blockCategory: step.blockCategory,
-            durationMin: Math.min(30, Math.max(0.5, step.durationMin)),
-            selectedLayer: step.selectedLayer,
+            blockCategory: step.blockCategory ?? ex?.blockCategory ?? fallbackCategory,
+            durationMin: Math.min(
+              30,
+              Math.max(0.5, step.durationMin ?? ex?.defaultDurationMin ?? 4),
+            ),
+            selectedLayer: step.selectedLayer ?? defaultLayer,
             ...(step.instructorNote
               ? { instructorNote: step.instructorNote.slice(0, 500) }
               : {}),
           };
         });
 
+      const stepDurationSum = reviewedSteps.reduce((sum, step) => sum + step.durationMin, 0);
+      const resolvedDurationMin = Math.min(
+        60,
+        Math.max(1, Math.round(block.durationMin ?? (stepDurationSum || 10))),
+      );
+
       return {
         id: block.id.slice(0, 120),
         title: block.title.slice(0, 160),
         apparatus: block.apparatus,
         level: block.level,
-        category: block.category,
-        durationMin: Math.min(60, Math.max(1, block.durationMin)),
+        category: fallbackCategory,
+        durationMin: resolvedDurationMin,
         isReviewed: true as const,
         steps: reviewedSteps,
       };

@@ -447,12 +447,47 @@ describe('freeAiClient', () => {
         apparatus: 'reformer',
         strengthenAreas: ['core'],
         selectedExerciseIds: [approvedCatalog[0].id, 'unreviewed-or-missing-id'],
+        selectedBlockIds: ['p1-items-reviewed-block', 'p1-items-unreviewed-block'],
       },
       approvedCatalog,
+      [
+        {
+          id: 'p1-items-reviewed-block',
+          title: 'P1 items 기반 블록',
+          apparatus: 'reformer',
+          level: '1.5',
+          isReviewed: true,
+          items: [
+            {
+              itemId: 'item-1',
+              order: 1,
+              exerciseId: approvedCatalog[1].id,
+              blockCategory: approvedCatalog[1].blockCategory,
+              durationMin: 8,
+              selectedLayer: 'standard',
+            },
+          ],
+        },
+        {
+          id: 'p1-items-unreviewed-block',
+          title: 'P1 items 미검토 블록',
+          apparatus: 'reformer',
+          level: '1.5',
+          isReviewed: false,
+          items: [
+            {
+              itemId: 'item-2',
+              order: 1,
+              exerciseId: approvedCatalog[2].id,
+            },
+          ],
+        },
+      ],
     );
 
     expect(composeRes.usedLocalFallback).toBe(true);
-    expect(composeRes.result.steps).toHaveLength(1);
+    expect(composeRes.result.steps).toHaveLength(2);
     expect(composeRes.result.excludedUnreviewedIds).toContain('unreviewed-or-missing-id');
+    expect(composeRes.result.excludedUnreviewedIds).toContain('p1-items-unreviewed-block');
   });
 });
