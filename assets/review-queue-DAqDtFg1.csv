@@ -1,0 +1,31 @@
+﻿id,유형,동작,기구,소도구,난이도,출처,확인한시점_초,시점종류,현재상태,전문강사승인,자동추천허용
+mv-01,movement,체어 풋워크,체어,,미확인,https://www.merrithew.com/blog/post/2019-01-04/exercise-of-the-month-footwork-on-stability-chair,23,확인한 셋업 프레임; 시작점 아님,부분 영상 확인; 전문 강사 검수 대기,미검수,아니오
+mv-02,movement,미니볼 사이드 린,매트,미니볼,미확인,https://www.merrithew.com/blog/post/2020-06-23/stott-pilates-matwork-with-the-mini-stability-ball,48.821,확인한 시연 시점; 시작점 아님,부분 영상 확인; 전문 강사 검수 대기,미검수,아니오
+mv-03,movement,미니볼 힙 익스텐션,매트,미니볼,미확인,https://www.merrithew.com/blog/post/2020-06-23/stott-pilates-matwork-with-the-mini-stability-ball,97.429,확인한 시연 시점; 시작점 아님,부분 영상 확인; 전문 강사 검수 대기,미검수,아니오
+mv-04,movement,래더바렐 스완 다이브,래더바렐,,중급,https://www.merrithew.com/blog/post/2018-10-22/exercise-of-the-month-ladder-barrel-swan-dive,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-05,movement,밴드 사이드 벤드,매트,저항밴드,미확인,https://www.merrithew.com/blog/post/2025-01-27/exercise-of-the-month-side-bend-with-the-flex-band,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+sr-01,series,리포머 링 준비운동 시리즈,리포머,필라테스 링,미확인,https://www.merrithew.com/blog/post/2022-09-23/exercise-of-the-month-warm-up-with-reformer-fitness-circle,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-06,movement,루프밴드 리포머 점프 변형,리포머,카디오 트램프; 루프밴드,미확인,https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-07,movement,루프밴드 랫 풀다운,리포머,루프밴드,미확인,https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-08,movement,미니볼 네발기기 전후 스텝,매트,미니볼,모든 수준(출처 표현),https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-09,movement,미니볼 옆누운 보행 패턴,매트,미니볼,모든 수준(출처 표현),https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-10,movement,닐링 사이드킥,매트,,고급,https://www.merrithew.com/blog/post/2024-01-22/exercise-of-the-month-sidekick-kneeling,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-11,movement,캐딜락 타이 스트레치 힌지,캐딜락,롤다운바,고급,https://www.merrithew.com/blog/post/2023-09-07/exercise-of-the-month-thigh-stretch-on-the-cadillac,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-12,movement,캐딜락 타이 스트레치 신전 변형,캐딜락,롤다운바,고급,https://www.merrithew.com/blog/post/2023-09-07/exercise-of-the-month-thigh-stretch-on-the-cadillac,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-13,movement,리포머 타이 스트레치,리포머,,고급,https://www.merrithew.com/blog/post/2023-07-06/exercise-of-the-month-thigh-stretch-on-the-reformer,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-14,movement,매트 스완 다이브,매트,,미확인,https://www.merrithew.com/blog/post/2023-08-13/exercise-of-the-month-swan-dive,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-15,movement,리포머 스완 다이브 변형,리포머,,미확인,https://www.merrithew.com/blog/post/2023-08-13/exercise-of-the-month-swan-dive,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-16,movement,회전 니 스트레치 프렙,리포머,,미확인,https://www.merrithew.com/blog/post/2023-02-27/exercise-of-the-month-knee-stretch-prep-with-rotations,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-17,movement,리포머 백 스플릿,리포머,,중급~고급,https://www.merrithew.com/blog/post/2024-08-28/exercise-of-the-month-back-splits,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+sr-02,series,스탠딩 밴드 통합 시리즈,,저항밴드,미확인,https://www.merrithew.com/blog/post/2024-03-20/exercise-of-the-month-standing-integration-series,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+sr-03,series,폼롤러 활용 시리즈,,폼롤러,미확인,https://www.merrithew.com/28-days-of-mindfulness/day-20,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+mv-18,movement,짐볼 롤오버,매트,짐볼,고급,https://www.merrithew.com/blog/post/2025-06-26/exercise-of-the-month-roll-over-using-the-stability-ball,,,기관·문헌 확인; 전문 강사 검수 대기,미검수,아니오
+kr-01,국내 영상 후보,헌드레드,매트,,미확인,https://www.youtube.com/watch?v=Bkgcbd1nabU,,,후보: 출처기관 자격 확인; 영상·언어·동작·품질 검수 대기,미검수,아니오
+kr-02,국내 영상 후보,캣 스트레칭,미확인,,미확인,https://www.youtube.com/watch?v=Z0gTRuo7uvY,,,후보: 출처기관 자격 확인; 영상·언어·동작·품질 검수 대기,미검수,아니오
+kr-03,국내 영상 후보,밴드 롤업,밴드,,미확인,https://www.youtube.com/watch?v=CYSX6eaoA2w,,,후보: 출처기관 자격 확인; 영상·언어·동작·품질 검수 대기,미검수,아니오
+kr-04,국내 영상 후보,싱글 레그 익스텐션,미확인,,미확인,https://www.youtube.com/watch?v=NNarvotdxiY,,,후보: 출처기관 자격 확인; 영상·언어·동작·품질 검수 대기,미검수,아니오
+kr-05,국내 영상 후보,숄더 브릿지,미확인,,미확인,https://www.youtube.com/watch?v=8xlVtNo1R8U,,,후보: 출처기관 자격 확인; 영상·언어·동작·품질 검수 대기,미검수,아니오
+kr-06,국내 영상 후보,폼롤러 롤오버,폼롤러,,미확인,https://www.youtube.com/watch?v=g8YsXEVRAZg,,,후보: 출처기관 자격 확인; 영상·언어·동작·품질 검수 대기,미검수,아니오
+kr-07,국내 영상 후보,롤오버,미확인,,미확인,https://www.youtube.com/watch?v=sftEAepTdUA,,,후보: 출처기관 자격 확인; 영상·언어·동작·품질 검수 대기,미검수,아니오
+kr-08,국내 영상 후보,필라테스 기초 호흡,미확인,,초급(제목 명시),https://www.youtube.com/watch?v=Y_9c3NFbm1A,,,후보: 출처기관 자격 확인; 영상·언어·동작·품질 검수 대기,미검수,아니오
+kr-09,국내 영상 후보,횡격막 호흡,미확인,,미확인,https://www.youtube.com/watch?v=DJtd3AqZzH0,,,후보: 출처기관 자격 확인; 영상·언어·동작·품질 검수 대기,미검수,아니오
