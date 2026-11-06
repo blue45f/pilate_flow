@@ -15,6 +15,7 @@
  */
 
 import { spawn, execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import net from 'node:net';
 import os from 'node:os';
@@ -23,33 +24,598 @@ import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const REPO_ROOT = path.resolve(__dirname, '..');
-const FIXTURE_PATH = path.join(
+export const REPO_ROOT = path.resolve(__dirname, '..');
+export const DEFAULT_FIXTURE_PATH = path.join(
   REPO_ROOT,
   'src/test/fixtures/backup-recovery/syntheticBackupFixtures.json',
 );
+export const BUILD_META_FILENAME = '.backup-harness-build-meta.json';
 
-function parseArgs(argv) {
+export class HarnessStageError extends Error {
+  constructor(stage, message) {
+    super(message);
+    this.name = 'HarnessStageError';
+    this.stage = stage;
+  }
+}
+
+class StopAfterStepSignal extends Error {
+  constructor(stepId) {
+    super(`Stopped after step ${stepId}`);
+    this.name = 'StopAfterStepSignal';
+    this.stepId = stepId;
+  }
+}
+
+const sha256Hex = (bufOrStr) => createHash('sha256').update(bufOrStr).digest('hex');
+
+function requireArgValue(argv, index, flagName) {
+  const next = argv[index + 1];
+  if (next === undefined || next.startsWith('--')) {
+    throw new HarnessStageError(
+      'cli-arguments',
+      `Missing value for CLI option ${flagName}`,
+    );
+  }
+  return next;
+}
+
+function parsePositiveIntOption(rawVal, flagName) {
+  const parsed = Number(rawVal);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new HarnessStageError(
+      'cli-arguments',
+      `Invalid positive integer for ${flagName}: ${rawVal}`,
+    );
+  }
+  return parsed;
+}
+
+export function parseArgs(argv) {
   const options = {
     outputPath: null,
     screenshotDir: null,
-    buildIfMissing: true,
+    fixturePath: DEFAULT_FIXTURE_PATH,
+    sourceRoot: REPO_ROOT,
+    noBuild: false,
+    distDir: null,
+    allowStaleDist: false,
+    expectedSourceSha256: null,
+    expectedArtifactSha256: null,
+    prepareDistDir: null,
     chromiumBin: process.env.CHROMIUM_BIN || '/usr/bin/chromium',
+    previewTimeoutMs: 20000,
+    cdpTimeoutMs: 15000,
+    injectAssertionFailure: null,
+    stopAfterStep: null,
+    simulatePreviewHang: false,
   };
+
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === '--output' && argv[i + 1]) {
-      options.outputPath = path.resolve(argv[++i]);
-    } else if (arg === '--screenshot-dir' && argv[i + 1]) {
-      options.screenshotDir = path.resolve(argv[++i]);
+    if (arg === '--output') {
+      options.outputPath = path.resolve(requireArgValue(argv, i, '--output'));
+      i += 1;
+    } else if (arg === '--screenshot-dir') {
+      options.screenshotDir = path.resolve(requireArgValue(argv, i, '--screenshot-dir'));
+      i += 1;
+    } else if (arg === '--fixture') {
+      options.fixturePath = path.resolve(requireArgValue(argv, i, '--fixture'));
+      i += 1;
+    } else if (arg === '--source-root') {
+      options.sourceRoot = path.resolve(requireArgValue(argv, i, '--source-root'));
+      i += 1;
     } else if (arg === '--no-build') {
-      options.buildIfMissing = false;
+      options.noBuild = true;
+    } else if (arg === '--dist-dir') {
+      options.distDir = path.resolve(requireArgValue(argv, i, '--dist-dir'));
+      i += 1;
+    } else if (arg === '--allow-stale-dist') {
+      options.allowStaleDist = true;
+    } else if (arg === '--expected-source-sha256') {
+      options.expectedSourceSha256 = requireArgValue(argv, i, '--expected-source-sha256').trim();
+      i += 1;
+    } else if (arg === '--expected-artifact-sha256') {
+      options.expectedArtifactSha256 = requireArgValue(argv, i, '--expected-artifact-sha256').trim();
+      i += 1;
+    } else if (arg === '--prepare-dist') {
+      options.prepareDistDir = path.resolve(requireArgValue(argv, i, '--prepare-dist'));
+      i += 1;
+    } else if (arg === '--chrome-bin') {
+      options.chromiumBin = requireArgValue(argv, i, '--chrome-bin');
+      i += 1;
+    } else if (arg === '--preview-timeout-ms') {
+      options.previewTimeoutMs = parsePositiveIntOption(
+        requireArgValue(argv, i, '--preview-timeout-ms'),
+        '--preview-timeout-ms',
+      );
+      i += 1;
+    } else if (arg === '--cdp-timeout-ms') {
+      options.cdpTimeoutMs = parsePositiveIntOption(
+        requireArgValue(argv, i, '--cdp-timeout-ms'),
+        '--cdp-timeout-ms',
+      );
+      i += 1;
+    } else if (arg === '--inject-assertion-failure') {
+      options.injectAssertionFailure = requireArgValue(argv, i, '--inject-assertion-failure');
+      i += 1;
+    } else if (arg === '--stop-after-step') {
+      options.stopAfterStep = requireArgValue(argv, i, '--stop-after-step');
+      i += 1;
+    } else if (arg === '--simulate-preview-hang') {
+      options.simulatePreviewHang = true;
+    } else {
+      throw new HarnessStageError(
+        'cli-arguments',
+        `Unknown or unsupported CLI argument: ${arg}`,
+      );
     }
   }
   return options;
 }
 
+export function computeGitProvenance(repoRoot = REPO_ROOT) {
+  const inspectedAt = new Date().toISOString();
+  try {
+    const branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    const headCommit = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    const headShort = execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    const porcelain = execFileSync(
+      'git',
+      ['status', '--porcelain', '--untracked-files=normal'],
+      {
+        cwd: repoRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      },
+    ).trim();
+    const dirtyLines = porcelain ? porcelain.split('\n').filter(Boolean) : [];
+    return {
+      branch,
+      headCommit,
+      headShort,
+      dirty: dirtyLines.length > 0,
+      dirtyFileCount: dirtyLines.length,
+      inspectedAt,
+    };
+  } catch {
+    return {
+      branch: 'unknown',
+      headCommit: 'unknown',
+      headShort: 'unknown',
+      dirty: null,
+      dirtyFileCount: null,
+      inspectedAt,
+    };
+  }
+}
+
+function collectFilesRecursive(baseDir, relPrefix = '') {
+  const results = [];
+  if (!fs.existsSync(baseDir)) return results;
+  const entries = fs.readdirSync(baseDir, { withFileTypes: true });
+  for (const entry of entries) {
+    const relPath = relPrefix ? `${relPrefix}/${entry.name}` : entry.name;
+    const fullPath = path.join(baseDir, entry.name);
+    const lstat = fs.lstatSync(fullPath);
+    if (lstat.isSymbolicLink()) continue;
+    if (lstat.isDirectory()) {
+      results.push(...collectFilesRecursive(fullPath, relPath));
+    } else if (lstat.isFile()) {
+      results.push({ relPath, fullPath, lstat });
+    }
+  }
+  return results;
+}
+
+export function computeSourceFingerprint(sourceRoot = REPO_ROOT) {
+  const computedAt = new Date().toISOString();
+  const rootFiles = [
+    'index.html',
+    'package.json',
+    'vite.config.ts',
+    'tsconfig.json',
+    'tsconfig.app.json',
+    'tsconfig.node.json',
+    'tsconfig.backend.json',
+  ];
+  const collected = [];
+  for (const rel of rootFiles) {
+    const full = path.join(sourceRoot, rel);
+    if (fs.existsSync(full)) {
+      const lstat = fs.lstatSync(full);
+      if (lstat.isFile() && !lstat.isSymbolicLink()) {
+        collected.push({ relPath: rel, fullPath: full, lstat });
+      }
+    }
+  }
+  const srcDir = path.join(sourceRoot, 'src');
+  collected.push(...collectFilesRecursive(srcDir, 'src'));
+  collected.sort((a, b) => a.relPath.localeCompare(b.relPath));
+
+  const hash = createHash('sha256');
+  let totalBytes = 0;
+  let newestMtimeMs = 0;
+
+  for (const item of collected) {
+    const bytes = fs.readFileSync(item.fullPath);
+    const fileSha = sha256Hex(bytes);
+    hash.update(`${item.relPath}\0${fileSha}\n`);
+    totalBytes += bytes.byteLength;
+    if (item.lstat.mtimeMs > newestMtimeMs) {
+      newestMtimeMs = item.lstat.mtimeMs;
+    }
+  }
+
+  return {
+    sha256: hash.digest('hex'),
+    fileCount: collected.length,
+    totalBytes,
+    newestMtimeMs,
+    newestMtimeIso: newestMtimeMs > 0 ? new Date(newestMtimeMs).toISOString() : null,
+    computedAt,
+  };
+}
+
+export function computeArtifactFingerprint(distDir) {
+  const computedAt = new Date().toISOString();
+  const indexHtmlPath = path.join(distDir, 'index.html');
+  if (!distDir || !fs.existsSync(distDir) || !fs.existsSync(indexHtmlPath)) {
+    return {
+      exists: false,
+      validBundle: false,
+      missingAssets: ['index.html'],
+      sha256: null,
+      fileCount: 0,
+      totalBytes: 0,
+      indexMtimeMs: null,
+      indexMtimeIso: null,
+      newestMtimeMs: null,
+      newestMtimeIso: null,
+      oldestMtimeMs: null,
+      buildMeta: null,
+      embeddedSourceSha256: null,
+      computedAt,
+    };
+  }
+
+  const indexStat = fs.lstatSync(indexHtmlPath);
+  if (!indexStat.isFile() || indexStat.isSymbolicLink()) {
+    return {
+      exists: false,
+      validBundle: false,
+      missingAssets: ['index.html'],
+      sha256: null,
+      fileCount: 0,
+      totalBytes: 0,
+      indexMtimeMs: null,
+      indexMtimeIso: null,
+      newestMtimeMs: null,
+      newestMtimeIso: null,
+      oldestMtimeMs: null,
+      buildMeta: null,
+      embeddedSourceSha256: null,
+      computedAt,
+    };
+  }
+
+  const indexHtmlContent = fs.readFileSync(indexHtmlPath, 'utf8');
+  const assetRefs = [
+    ...indexHtmlContent.matchAll(/(?:src|href)=["'](?:\.?\/)?(assets\/[^"'?#]+)["']/g),
+  ].map((m) => m[1]);
+  const missingAssets = [];
+  for (const ref of assetRefs) {
+    const assetFull = path.join(distDir, ref);
+    if (!fs.existsSync(assetFull)) {
+      missingAssets.push(ref);
+    }
+  }
+
+  const allFiles = collectFilesRecursive(distDir, '').filter(
+    (item) => item.relPath !== BUILD_META_FILENAME,
+  );
+  allFiles.sort((a, b) => a.relPath.localeCompare(b.relPath));
+
+  const hash = createHash('sha256');
+  let totalBytes = 0;
+  let newestMtimeMs = 0;
+  let oldestMtimeMs = Number.POSITIVE_INFINITY;
+
+  for (const item of allFiles) {
+    const bytes = fs.readFileSync(item.fullPath);
+    const fileSha = sha256Hex(bytes);
+    hash.update(`${item.relPath}\0${fileSha}\n`);
+    totalBytes += bytes.byteLength;
+    if (item.lstat.mtimeMs > newestMtimeMs) newestMtimeMs = item.lstat.mtimeMs;
+    if (item.lstat.mtimeMs < oldestMtimeMs) oldestMtimeMs = item.lstat.mtimeMs;
+  }
+
+  let buildMeta = null;
+  const metaPath = path.join(distDir, BUILD_META_FILENAME);
+  if (fs.existsSync(metaPath)) {
+    try {
+      buildMeta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+    } catch {
+      buildMeta = { parseError: true };
+    }
+  }
+
+  const hasAssetBundle = assetRefs.length > 0 && missingAssets.length === 0;
+
+  return {
+    exists: true,
+    validBundle: hasAssetBundle,
+    missingAssets,
+    sha256: hash.digest('hex'),
+    fileCount: allFiles.length,
+    totalBytes,
+    indexMtimeMs: indexStat.mtimeMs,
+    indexMtimeIso: new Date(indexStat.mtimeMs).toISOString(),
+    newestMtimeMs: newestMtimeMs > 0 ? newestMtimeMs : null,
+    newestMtimeIso: newestMtimeMs > 0 ? new Date(newestMtimeMs).toISOString() : null,
+    oldestMtimeMs: Number.isFinite(oldestMtimeMs) ? oldestMtimeMs : null,
+    buildMeta,
+    embeddedSourceSha256:
+      buildMeta && typeof buildMeta.sourceSha256 === 'string' ? buildMeta.sourceSha256 : null,
+    computedAt,
+  };
+}
+
+export function verifyArtifactFreshness({
+  sourceFp,
+  artifactFp,
+  buildMode,
+  allowStaleDist = false,
+  expectedSourceSha256 = null,
+  expectedArtifactSha256 = null,
+}) {
+  const verifiedAt = new Date().toISOString();
+
+  if (!sourceFp || sourceFp.fileCount === 0) {
+    return {
+      ok: false,
+      status: 'missing-source-tree',
+      matchesCurrentSource: false,
+      verifiedAt,
+      reason: 'Source tree is missing or empty; cannot compute source fingerprint.',
+    };
+  }
+
+  if (!artifactFp?.exists || !artifactFp?.validBundle) {
+    return {
+      ok: false,
+      status: 'missing-or-incomplete-artifact',
+      matchesCurrentSource: false,
+      verifiedAt,
+      reason: `Build artifact is missing or incomplete (missingAssets=${JSON.stringify(artifactFp?.missingAssets ?? [])}).`,
+    };
+  }
+
+  if (expectedSourceSha256 && expectedSourceSha256 !== sourceFp.sha256) {
+    return {
+      ok: false,
+      status: 'expected-source-fingerprint-mismatch',
+      matchesCurrentSource: false,
+      verifiedAt,
+      reason: `Current source fingerprint (${sourceFp.sha256}) does not match expected (${expectedSourceSha256}).`,
+    };
+  }
+
+  if (expectedArtifactSha256 && expectedArtifactSha256 !== artifactFp.sha256) {
+    return {
+      ok: false,
+      status: 'expected-artifact-fingerprint-mismatch',
+      matchesCurrentSource: false,
+      verifiedAt,
+      reason: `Artifact fingerprint (${artifactFp.sha256}) does not match expected (${expectedArtifactSha256}).`,
+    };
+  }
+
+  if (artifactFp.buildMeta?.parseError) {
+    return {
+      ok: Boolean(allowStaleDist),
+      status: 'corrupted-build-meta',
+      matchesCurrentSource: false,
+      verifiedAt,
+      reason: `Corrupted ${BUILD_META_FILENAME} in artifact directory.`,
+    };
+  }
+
+  if (artifactFp.buildMeta) {
+    if (artifactFp.buildMeta.sourceSha256 !== sourceFp.sha256) {
+      return {
+        ok: Boolean(allowStaleDist),
+        status: 'stale-source-fingerprint-mismatch',
+        matchesCurrentSource: false,
+        verifiedAt,
+        reason: `Stale build artifact detected: artifact was built from source ${artifactFp.buildMeta.sourceSha256}, but current source is ${sourceFp.sha256}.`,
+      };
+    }
+    if (
+      artifactFp.buildMeta.artifactSha256 &&
+      artifactFp.buildMeta.artifactSha256 !== artifactFp.sha256
+    ) {
+      return {
+        ok: Boolean(allowStaleDist),
+        status: 'artifact-tampered-after-build',
+        matchesCurrentSource: false,
+        verifiedAt,
+        reason: `Artifact files were modified after build: manifest expected ${artifactFp.buildMeta.artifactSha256}, actual ${artifactFp.sha256}.`,
+      };
+    }
+  }
+
+  if (
+    typeof sourceFp.newestMtimeMs === 'number' &&
+    typeof artifactFp.indexMtimeMs === 'number' &&
+    sourceFp.newestMtimeMs > artifactFp.indexMtimeMs + 1
+  ) {
+    return {
+      ok: Boolean(allowStaleDist),
+      status: 'stale-source-newer-than-artifact',
+      matchesCurrentSource: false,
+      verifiedAt,
+      reason: `Stale build artifact detected: newest source mtime (${sourceFp.newestMtimeIso}) is newer than artifact index.html mtime (${artifactFp.indexMtimeIso}).`,
+    };
+  }
+
+  if (artifactFp.buildMeta?.sourceSha256 === sourceFp.sha256) {
+    return {
+      ok: true,
+      status:
+        buildMode === 'isolated-fresh-build'
+          ? 'verified-fresh-isolated-build'
+          : 'verified-fresh-manifest',
+      matchesCurrentSource: true,
+      verifiedAt,
+      reason: null,
+    };
+  }
+
+  if (expectedArtifactSha256 && expectedArtifactSha256 === artifactFp.sha256) {
+    return {
+      ok: true,
+      status: 'verified-by-expected-artifact-sha256',
+      matchesCurrentSource: true,
+      verifiedAt,
+      reason: null,
+    };
+  }
+
+  return {
+    ok: Boolean(allowStaleDist),
+    status: 'unpinned-artifact-missing-build-meta',
+    matchesCurrentSource: false,
+    verifiedAt,
+    reason:
+      `--no-build target lacks ${BUILD_META_FILENAME} and no --expected-artifact-sha256 was provided; ` +
+      `refusing to trust unpinned build directory without --allow-stale-dist.`,
+  };
+}
+
+export function buildIsolatedArtifact({
+  sourceRoot = REPO_ROOT,
+  outDir,
+  gitProvenance = null,
+}) {
+  const sourceFp = computeSourceFingerprint(sourceRoot);
+  if (sourceFp.fileCount === 0) {
+    throw new HarnessStageError(
+      'isolated-build',
+      `Cannot build from empty or missing sourceRoot: ${sourceRoot}`,
+    );
+  }
+  fs.mkdirSync(outDir, { recursive: true });
+  try {
+    execFileSync(
+      'pnpm',
+      ['exec', 'vite', 'build', '--outDir', outDir, '--emptyOutDir', '--logLevel', 'error'],
+      {
+        cwd: sourceRoot,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    );
+  } catch (error) {
+    const stderr = error?.stderr ? String(error.stderr).trim() : '';
+    const msg = error instanceof Error ? error.message : String(error);
+    throw new HarnessStageError(
+      'isolated-build',
+      `Isolated Vite build failed: ${stderr || msg}`,
+    );
+  }
+
+  const initialArtifactFp = computeArtifactFingerprint(outDir);
+  if (!initialArtifactFp.exists || !initialArtifactFp.validBundle) {
+    throw new HarnessStageError(
+      'isolated-build',
+      `Isolated build did not produce a valid bundle in ${outDir}`,
+    );
+  }
+
+  const prov = gitProvenance || computeGitProvenance(sourceRoot);
+  const buildMeta = {
+    schemaVersion: 1,
+    sourceSha256: sourceFp.sha256,
+    artifactSha256: initialArtifactFp.sha256,
+    gitBranch: prov.branch,
+    gitHeadCommit: prov.headCommit,
+    gitDirty: prov.dirty,
+    builtAt: new Date().toISOString(),
+  };
+  fs.writeFileSync(
+    path.join(outDir, BUILD_META_FILENAME),
+    JSON.stringify(buildMeta, null, 2),
+  );
+
+  const finalArtifactFp = computeArtifactFingerprint(outDir);
+  return {
+    sourceFp,
+    artifactFp: finalArtifactFp,
+    buildMeta,
+  };
+}
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function isPidAlive(pid) {
+  if (!pid || typeof pid !== 'number' || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function terminateOwnedProcess(proc) {
+  if (!proc || !proc.pid || proc.pid === process.pid) return true;
+  const pid = proc.pid;
+  try {
+    process.kill(-pid, 'SIGTERM');
+  } catch {
+    try {
+      process.kill(pid, 'SIGTERM');
+    } catch {
+      // Already exited
+    }
+  }
+  const waitStart = Date.now();
+  while (Date.now() - waitStart < 150) {
+    if (proc.exitCode !== null || proc.signalCode !== null || !isPidAlive(pid)) {
+      return true;
+    }
+    await sleep(25);
+  }
+  try {
+    process.kill(-pid, 'SIGKILL');
+  } catch {
+    try {
+      process.kill(pid, 'SIGKILL');
+    } catch {
+      // Ignore
+    }
+  }
+  const killStart = Date.now();
+  while (Date.now() - killStart < 250) {
+    if (proc.exitCode !== null || proc.signalCode !== null || !isPidAlive(pid)) {
+      return true;
+    }
+    await sleep(25);
+  }
+  return !isPidAlive(pid);
+}
 
 function getFreePort() {
   return new Promise((resolve, reject) => {
@@ -64,18 +630,33 @@ function getFreePort() {
   });
 }
 
-async function waitForHttp(url, timeoutMs = 20000) {
+async function waitForHttp(url, timeoutMs = 20000, trackedProc = null, stage = 'preview-start') {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
+    if (trackedProc?.spawnError) {
+      throw new HarnessStageError(
+        stage,
+        `Process failed to spawn for ${url}: ${trackedProc.spawnError.message}`,
+      );
+    }
+    if (
+      trackedProc &&
+      (trackedProc.exitCode !== null || trackedProc.signalCode !== null)
+    ) {
+      throw new HarnessStageError(
+        stage,
+        `Process exited prematurely before ${url} became ready (exitCode=${trackedProc.exitCode}, signal=${trackedProc.signalCode})`,
+      );
+    }
     try {
       const res = await fetch(url);
       if (res.ok) return await res.text();
     } catch {
       // Wait until ready
     }
-    await sleep(200);
+    await sleep(100);
   }
-  throw new Error(`Timed out waiting for ${url}`);
+  throw new HarnessStageError(stage, `Timed out after ${timeoutMs}ms waiting for ${url}`);
 }
 
 class CDPClient {
@@ -278,47 +859,126 @@ async function recordCompletedSessionViaUI(cdp) {
   await sleep(350);
 }
 
-async function main() {
-  const options = parseArgs(process.argv.slice(2));
+function attachProcessErrorTracking(proc) {
+  proc.spawnError = null;
+  proc.on('error', (err) => {
+    proc.spawnError = err;
+  });
+  return proc;
+}
+
+export async function runHarness(rawArgv = process.argv.slice(2)) {
   const startedAtIso = new Date().toISOString();
   const startedAtMs = Date.now();
 
-  if (!fs.existsSync(FIXTURE_PATH)) {
-    throw new Error(`Missing tracked synthetic fixture file: ${FIXTURE_PATH}`);
-  }
-  const syntheticFixtures = JSON.parse(fs.readFileSync(FIXTURE_PATH, 'utf8'));
-  const importedSequenceId = syntheticFixtures.incomingBackupV3.data.savedSequences[0].id;
-
-  const distIndex = path.join(REPO_ROOT, 'dist/index.html');
-  if (!fs.existsSync(distIndex)) {
-    if (!options.buildIfMissing) {
-      throw new Error('dist/index.html is missing and --no-build was specified.');
-    }
-    execFileSync('pnpm', ['build'], { cwd: REPO_ROOT, stdio: 'inherit' });
-  }
-
-  const previewPort = await getFreePort();
-  const cdpPort = await getFreePort();
-  const baseUrl = `http://127.0.0.1:${previewPort}/`;
+  const sharedDistPath = path.join(REPO_ROOT, 'dist');
+  const sharedDistBefore = computeArtifactFingerprint(sharedDistPath);
 
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pilates-backup-regression-'));
   const profileDir = path.join(tempRoot, 'chrome-profile');
   const tempFixtureDir = path.join(tempRoot, 'fixtures');
+  const isolatedDistDir = path.join(tempRoot, 'dist-isolated');
   fs.mkdirSync(profileDir, { recursive: true });
   fs.mkdirSync(tempFixtureDir, { recursive: true });
 
-  let failureCaptureDir = options.screenshotDir;
+  // Pre-scan --output so even CLI argument errors can write a failure report to the requested path
+  let preScannedOutputPath = null;
+  for (let i = 0; i < rawArgv.length; i += 1) {
+    if (rawArgv[i] === '--output' && rawArgv[i + 1] && !rawArgv[i + 1].startsWith('--')) {
+      preScannedOutputPath = path.resolve(rawArgv[i + 1]);
+      break;
+    }
+  }
+
+  let options = { outputPath: preScannedOutputPath };
+  let failureCaptureDir = null;
   const steps = [];
   let browserVersion = 'unknown';
   let previewProc = null;
   let chromeProc = null;
   let tabA = null;
   let tabB = null;
+  let baseUrl = null;
+  let failureStage = null;
+  let failureReason = null;
+  let interruptedBySignal = null;
+  let stoppedEarlyAfterStep = null;
+
+  let gitProvenance = computeGitProvenance(REPO_ROOT);
+  let sourceFp = null;
+  let artifactFp = null;
+  let freshness = null;
+  let buildMode = 'isolated-fresh-build';
+
+  const onSignal = (sig) => {
+    if (interruptedBySignal) return;
+    interruptedBySignal = sig;
+    failureStage = 'signal-interrupted';
+    failureReason = `Harness interrupted by signal ${sig}`;
+    process.exitCode = sig === 'SIGINT' ? 130 : 143;
+    if (tabB) tabB.close();
+    if (tabA) tabA.close();
+    if (chromeProc?.pid) {
+      try {
+        process.kill(-chromeProc.pid, 'SIGKILL');
+      } catch {
+        try {
+          chromeProc.kill('SIGKILL');
+        } catch {
+          // Ignore
+        }
+      }
+    }
+    if (previewProc?.pid) {
+      try {
+        process.kill(-previewProc.pid, 'SIGKILL');
+      } catch {
+        try {
+          previewProc.kill('SIGKILL');
+        } catch {
+          // Ignore
+        }
+      }
+    }
+  };
+
+  process.once('SIGINT', onSignal);
+  process.once('SIGTERM', onSignal);
+
+  function resolveFailureCaptureDir() {
+    if (failureCaptureDir) return failureCaptureDir;
+    if (options?.screenshotDir) {
+      const resolved = path.resolve(options.screenshotDir);
+      // Never place failure captures inside tempRoot which gets deleted in finally
+      if (resolved === tempRoot || resolved.startsWith(`${tempRoot}${path.sep}`)) {
+        failureCaptureDir = fs.mkdtempSync(
+          path.join(os.tmpdir(), 'pilates-backup-failure-captures-'),
+        );
+      } else {
+        failureCaptureDir = resolved;
+      }
+    } else if (options?.outputPath) {
+      const baseName =
+        path.basename(options.outputPath, path.extname(options.outputPath)) || 'report';
+      failureCaptureDir = path.join(path.dirname(options.outputPath), `${baseName}-captures`);
+    } else {
+      failureCaptureDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'pilates-backup-failure-captures-'),
+      );
+    }
+    return failureCaptureDir;
+  }
 
   async function runStep({ id, scope, viewport, name, mode }, fn) {
     const stepStart = Date.now();
     try {
       const details = await fn();
+      if (options?.injectAssertionFailure === id) {
+        throw new HarnessStageError(
+          'step-assertion',
+          `Injected negative-control assertion failure at step ${id}`,
+        );
+      }
       steps.push({
         id,
         scope,
@@ -329,22 +989,26 @@ async function main() {
         durationMs: Date.now() - stepStart,
         details: details ?? {},
         failureCapturePath: null,
+        failureCapturePreserved: false,
       });
+      if (options?.stopAfterStep === id) {
+        throw new StopAfterStepSignal(id);
+      }
     } catch (error) {
+      if (error instanceof StopAfterStepSignal) {
+        throw error;
+      }
       let capturePath = null;
       if (tabA) {
         try {
-          if (!failureCaptureDir) {
-            failureCaptureDir = fs.mkdtempSync(
-              path.join(os.tmpdir(), 'pilates-backup-failure-captures-'),
-            );
-          }
-          capturePath = path.join(failureCaptureDir, `${id}-failure.png`);
+          const capDir = resolveFailureCaptureDir();
+          capturePath = path.join(capDir, `${id}-failure.png`);
           await tabA.screenshot(capturePath);
         } catch {
           capturePath = null;
         }
       }
+      const errMsg = error instanceof Error ? error.message : String(error);
       steps.push({
         id,
         scope,
@@ -353,51 +1017,172 @@ async function main() {
         mode,
         status: 'fail',
         durationMs: Date.now() - stepStart,
-        error: error instanceof Error ? error.message : String(error),
+        stage: error instanceof HarnessStageError ? error.stage : 'step-assertion',
+        error: errMsg,
         failureCapturePath: capturePath,
+        failureCapturePreserved: Boolean(capturePath && fs.existsSync(capturePath)),
       });
-      throw error;
+      throw new HarnessStageError('step-assertion', errMsg);
     }
   }
 
   try {
-    previewProc = spawn(
-      'pnpm',
-      ['exec', 'vite', 'preview', '--host', '127.0.0.1', '--port', String(previewPort), '--strictPort'],
-      {
-        cwd: REPO_ROOT,
-        stdio: 'ignore',
-        detached: true,
-      },
-    );
-    await waitForHttp(baseUrl, 20000);
+    options = parseArgs(rawArgv);
+    gitProvenance = computeGitProvenance(options.sourceRoot);
 
-    chromeProc = spawn(
-      options.chromiumBin,
-      [
-        '--headless=new',
-        '--no-sandbox',
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        `--user-data-dir=${profileDir}`,
-        `--remote-debugging-port=${cdpPort}`,
-        'about:blank',
-      ],
-      {
-        stdio: 'ignore',
-        detached: true,
-      },
+    if (options.prepareDistDir) {
+      const prepared = buildIsolatedArtifact({
+        sourceRoot: options.sourceRoot,
+        outDir: options.prepareDistDir,
+        gitProvenance,
+      });
+      return {
+        prepared: true,
+        distDir: options.prepareDistDir,
+        sourceFingerprint: prepared.sourceFp,
+        artifactFingerprint: prepared.artifactFp,
+      };
+    }
+
+    if (!fs.existsSync(options.fixturePath)) {
+      throw new HarnessStageError(
+        'fixture-load',
+        `Missing synthetic fixture file: ${options.fixturePath}`,
+      );
+    }
+    let syntheticFixtures;
+    try {
+      syntheticFixtures = JSON.parse(fs.readFileSync(options.fixturePath, 'utf8'));
+    } catch (err) {
+      throw new HarnessStageError(
+        'fixture-load',
+        `Invalid JSON in fixture file (${options.fixturePath}): ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+    const importedSequenceId = syntheticFixtures?.incomingBackupV3?.data?.savedSequences?.[0]?.id;
+    if (!importedSequenceId || !syntheticFixtures?.rollbackKeyFaultFixtures) {
+      throw new HarnessStageError(
+        'fixture-load',
+        `Fixture file (${options.fixturePath}) is missing required incomingBackupV3 or rollbackKeyFaultFixtures structure`,
+      );
+    }
+
+    let targetDistDir;
+    if (options.noBuild) {
+      buildMode = 'no-build';
+      targetDistDir = options.distDir || path.join(options.sourceRoot, 'dist');
+      sourceFp = computeSourceFingerprint(options.sourceRoot);
+      artifactFp = computeArtifactFingerprint(targetDistDir);
+      freshness = verifyArtifactFreshness({
+        sourceFp,
+        artifactFp,
+        buildMode,
+        allowStaleDist: options.allowStaleDist,
+        expectedSourceSha256: options.expectedSourceSha256,
+        expectedArtifactSha256: options.expectedArtifactSha256,
+      });
+      if (!freshness.ok) {
+        throw new HarnessStageError('build-freshness', freshness.reason);
+      }
+    } else {
+      buildMode = 'isolated-fresh-build';
+      targetDistDir = isolatedDistDir;
+      const built = buildIsolatedArtifact({
+        sourceRoot: options.sourceRoot,
+        outDir: targetDistDir,
+        gitProvenance,
+      });
+      sourceFp = built.sourceFp;
+      artifactFp = built.artifactFp;
+      freshness = verifyArtifactFreshness({
+        sourceFp,
+        artifactFp,
+        buildMode,
+        allowStaleDist: false,
+        expectedSourceSha256: options.expectedSourceSha256,
+        expectedArtifactSha256: options.expectedArtifactSha256,
+      });
+      if (!freshness.ok) {
+        throw new HarnessStageError('build-freshness', freshness.reason);
+      }
+    }
+
+    const previewPort = await getFreePort();
+    const cdpPort = await getFreePort();
+    baseUrl = `http://127.0.0.1:${previewPort}/`;
+
+    if (options.simulatePreviewHang) {
+      previewProc = attachProcessErrorTracking(
+        spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
+          cwd: REPO_ROOT,
+          stdio: 'ignore',
+          detached: true,
+        }),
+      );
+    } else {
+      previewProc = attachProcessErrorTracking(
+        spawn(
+          'pnpm',
+          [
+            'exec',
+            'vite',
+            'preview',
+            '--outDir',
+            targetDistDir,
+            '--host',
+            '127.0.0.1',
+            '--port',
+            String(previewPort),
+            '--strictPort',
+          ],
+          {
+            cwd: REPO_ROOT,
+            stdio: 'ignore',
+            detached: true,
+          },
+        ),
+      );
+    }
+    await waitForHttp(baseUrl, options.previewTimeoutMs, previewProc, 'preview-start');
+
+    chromeProc = attachProcessErrorTracking(
+      spawn(
+        options.chromiumBin,
+        [
+          '--headless=new',
+          '--no-sandbox',
+          '--disable-gpu',
+          '--disable-dev-shm-usage',
+          `--user-data-dir=${profileDir}`,
+          `--remote-debugging-port=${cdpPort}`,
+          'about:blank',
+        ],
+        {
+          stdio: 'ignore',
+          detached: true,
+        },
+      ),
     );
 
-    const versionInfoJson = await waitForHttp(`http://127.0.0.1:${cdpPort}/json/version`, 15000);
+    const versionInfoJson = await waitForHttp(
+      `http://127.0.0.1:${cdpPort}/json/version`,
+      options.cdpTimeoutMs,
+      chromeProc,
+      'browser-launch',
+    );
     const versionInfo = JSON.parse(versionInfoJson);
     browserVersion = versionInfo.Browser || 'Chromium';
 
-    const targetsJson = await waitForHttp(`http://127.0.0.1:${cdpPort}/json/list`, 10000);
+    const targetsJson = await waitForHttp(
+      `http://127.0.0.1:${cdpPort}/json/list`,
+      options.cdpTimeoutMs,
+      chromeProc,
+      'browser-launch',
+    );
     const targets = JSON.parse(targetsJson);
     const pageTarget = targets.find((t) => t.type === 'page');
     if (!pageTarget) {
-      throw new Error('No page target found in headless Chromium');
+      throw new HarnessStageError('browser-launch', 'No page target found in headless Chromium');
     }
 
     tabA = new CDPClient(pageTarget.webSocketDebuggerUrl);
@@ -1394,38 +2179,61 @@ async function main() {
       },
     );
   } catch (error) {
-    process.exitCode = 1;
-    console.error('[verify-backup-recovery-browser] Regression failure:', error);
+    if (error instanceof StopAfterStepSignal) {
+      stoppedEarlyAfterStep = error.stepId;
+    } else {
+      process.exitCode = interruptedBySignal
+        ? interruptedBySignal === 'SIGINT'
+          ? 130
+          : 143
+        : 1;
+      failureStage =
+        failureStage || (error instanceof HarnessStageError ? error.stage : 'unexpected-error');
+      failureReason =
+        failureReason || (error instanceof Error ? error.message : String(error));
+      console.error('[verify-backup-recovery-browser] Regression failure:', error);
+    }
   } finally {
+    process.removeListener('SIGINT', onSignal);
+    process.removeListener('SIGTERM', onSignal);
+
     if (tabB) tabB.close();
     if (tabA) tabA.close();
-    if (chromeProc?.pid) {
-      try {
-        process.kill(-chromeProc.pid, 'SIGKILL');
-      } catch {
-        try {
-          chromeProc.kill('SIGKILL');
-        } catch {
-          // Ignore
-        }
-      }
-    }
-    if (previewProc?.pid) {
-      try {
-        process.kill(-previewProc.pid, 'SIGKILL');
-      } catch {
-        try {
-          previewProc.kill('SIGKILL');
-        } catch {
-          // Ignore
-        }
-      }
-    }
+
+    const previewPid = previewProc?.pid ?? null;
+    const chromePid = chromeProc?.pid ?? null;
+
+    const browserProcessCleanedUp = await terminateOwnedProcess(chromeProc);
+    const previewProcessCleanedUp = await terminateOwnedProcess(previewProc);
+
     try {
       fs.rmSync(tempRoot, { recursive: true, force: true });
     } catch {
       // Ignore cleanup error
     }
+    const ephemeralProfileCleanedUp = !fs.existsSync(tempRoot);
+
+    for (const step of steps) {
+      if (step.failureCapturePath) {
+        const exists = fs.existsSync(step.failureCapturePath);
+        step.failureCapturePreserved = exists;
+        if (!exists) {
+          failureStage = failureStage || 'capture-preservation';
+          failureReason =
+            failureReason ||
+            `Failure capture was deleted or missing before report write: ${step.failureCapturePath}`;
+          process.exitCode = 1;
+        }
+      } else {
+        step.failureCapturePreserved = false;
+      }
+    }
+
+    const sharedDistAfter = computeArtifactFingerprint(sharedDistPath);
+    const sharedDistUntouched =
+      sharedDistBefore.exists === sharedDistAfter.exists &&
+      sharedDistBefore.sha256 === sharedDistAfter.sha256 &&
+      sharedDistBefore.indexMtimeMs === sharedDistAfter.indexMtimeMs;
 
     const completedAtIso = new Date().toISOString();
     const durationMs = Date.now() - startedAtMs;
@@ -1433,37 +2241,104 @@ async function main() {
     const failed = steps.filter((s) => s.status === 'fail').length;
     const skipped = steps.filter((s) => s.status === 'skip').length;
 
-    const report = {
-      harness: 'verify-backup-recovery-browser',
-      browserVersion,
-      startedAt: startedAtIso,
-      completedAt: completedAtIso,
-      durationMs,
-      isolation: {
-        ephemeralPreviewOrigin: baseUrl,
-        ephemeralProfileCleanedUp: !fs.existsSync(tempRoot),
-        usedUserProfile: false,
-        usedProductionData: false,
-      },
-      summary: {
-        total: steps.length,
-        passed,
-        failed,
-        skipped,
-      },
-      steps,
-    };
+    if (!options?.prepareDistDir) {
+      const hasFailure = Boolean(
+        failureStage || interruptedBySignal || failed > 0 || passed === 0,
+      );
+      if (hasFailure && !failureStage) {
+        failureStage = failed > 0 ? 'step-assertion' : 'no-steps-executed';
+      }
+      if (hasFailure) {
+        process.exitCode = process.exitCode || 1;
+      }
 
-    if (options.outputPath) {
-      fs.mkdirSync(path.dirname(options.outputPath), { recursive: true });
-      fs.writeFileSync(options.outputPath, JSON.stringify(report, null, 2));
-    }
+      const report = {
+        harness: 'verify-backup-recovery-browser',
+        status: hasFailure ? 'fail' : 'pass',
+        failureStage: hasFailure ? failureStage : null,
+        failureReason: hasFailure ? failureReason : null,
+        interruptedBySignal,
+        stoppedEarlyAfterStep,
+        browserVersion,
+        startedAt: startedAtIso,
+        completedAt: completedAtIso,
+        durationMs,
+        provenance: {
+          branch: gitProvenance.branch,
+          headCommit: gitProvenance.headCommit,
+          headShort: gitProvenance.headShort,
+          dirty: gitProvenance.dirty,
+          dirtyFileCount: gitProvenance.dirtyFileCount,
+          inspectedAt: gitProvenance.inspectedAt,
+          buildMode,
+          sourceFingerprint: sourceFp
+            ? {
+                sha256: sourceFp.sha256,
+                fileCount: sourceFp.fileCount,
+                totalBytes: sourceFp.totalBytes,
+                newestMtimeIso: sourceFp.newestMtimeIso,
+                computedAt: sourceFp.computedAt,
+              }
+            : null,
+          artifactFingerprint: artifactFp
+            ? {
+                exists: artifactFp.exists,
+                validBundle: artifactFp.validBundle,
+                sha256: artifactFp.sha256,
+                fileCount: artifactFp.fileCount,
+                totalBytes: artifactFp.totalBytes,
+                indexMtimeIso: artifactFp.indexMtimeIso,
+                newestMtimeIso: artifactFp.newestMtimeIso,
+                embeddedSourceSha256: artifactFp.embeddedSourceSha256,
+                computedAt: artifactFp.computedAt,
+              }
+            : null,
+          freshness,
+        },
+        isolation: {
+          ephemeralPreviewOrigin: baseUrl,
+          ephemeralProfileCleanedUp,
+          previewProcessCleanedUp,
+          browserProcessCleanedUp,
+          ownedPids: {
+            previewPid,
+            chromePid,
+          },
+          usedUserProfile: false,
+          usedProductionData: false,
+          sharedDistUntouched,
+        },
+        summary: {
+          total: steps.length,
+          passed,
+          failed,
+          skipped,
+        },
+        steps,
+        outputWriteError: null,
+      };
 
-    console.log(JSON.stringify(report, null, 2));
-    if (failed > 0 || passed === 0) {
-      process.exitCode = 1;
+      if (options?.outputPath) {
+        try {
+          fs.mkdirSync(path.dirname(options.outputPath), { recursive: true });
+          fs.writeFileSync(options.outputPath, JSON.stringify(report, null, 2));
+        } catch (writeErr) {
+          const writeMsg = writeErr instanceof Error ? writeErr.message : String(writeErr);
+          report.status = 'fail';
+          report.failureStage = report.failureStage || 'report-output-write';
+          report.failureReason =
+            report.failureReason ||
+            `Failed to write report output to ${options.outputPath}: ${writeMsg}`;
+          report.outputWriteError = writeMsg;
+          process.exitCode = 1;
+        }
+      }
+
+      console.log(JSON.stringify(report, null, 2));
     }
   }
 }
 
-await main();
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
+  await runHarness(process.argv.slice(2));
+}
