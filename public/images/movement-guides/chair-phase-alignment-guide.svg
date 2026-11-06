@@ -1,0 +1,178 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" width="960" height="360" role="img" aria-labelledby="chair-guide-title chair-guide-desc">
+  <title id="chair-guide-title">체어 필라테스 3단계 페달 프레스 &amp; 골반 수평 정렬 가이드 (Chair Phase Alignment &amp; Kinematics Guide)</title>
+  <desc id="chair-guide-desc">Free original authored schematic (anatomicalAccuracyAssumed: false; pre-review vs post-review distinction required). Depicts Start (시작 자세 high pedal), Middle (중간 정점 자세 deep pedal press with start-pose delta ghost), and End (끝 복귀 자세 controlled upward pedal return) on the Stability/Wunda Chair.</desc>
+  <defs>
+    <marker id="arrow-excursion" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#9a502d" />
+    </marker>
+    <marker id="arrow-return" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#244d44" />
+    </marker>
+    <linearGradient id="bg-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbfaf5" />
+      <stop offset="100%" stop-color="#f2ede1" />
+    </linearGradient>
+    <radialGradient id="muscle-chair" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c17c52" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#c17c52" stop-opacity="0.08" />
+    </radialGradient>
+  </defs>
+
+  <rect width="960" height="360" rx="16" fill="url(#bg-grad)" stroke="#d9d1c1" stroke-width="1.5" />
+
+  <!-- Top Editorial Banner -->
+  <g font-family="Pretendard, -apple-system, BlinkMacSystemFont, sans-serif">
+    <text x="24" y="27" font-size="13" font-weight="700" fill="#244d44">CHAIR · 체어 시티드 페달 프레스 &amp; 수직 척추-골반 3단계 관절 정렬 도해</text>
+    <text x="936" y="27" text-anchor="end" font-size="10.5" font-weight="600" fill="#875641">FREE ORIGINAL SVG · 해부학적 확정 가정 없음 (anatomicalAccuracyAssumed: false)</text>
+  </g>
+
+  <!-- ==================== PANEL 1: START (x: 20..310) ==================== -->
+  <g id="phase-start">
+    <rect x="20" y="38" width="290" height="278" rx="12" fill="#ffffff" fill-opacity="0.78" stroke="#d8cfc0" stroke-width="1.2" />
+    <rect x="32" y="48" width="118" height="22" rx="6" fill="#244d44" />
+    <text x="91" y="63" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700" fill="#fbfaf5">1. START · 시작 자세</text>
+    <text x="298" y="63" text-anchor="end" font-family="Pretendard, sans-serif" font-size="10" fill="#5e6761">페달 상단 위치 · 수직 좌골</text>
+
+    <!-- Wunda Chair Box & Hinged Pedal (High Position) -->
+    <rect x="92" y="186" width="84" height="72" rx="6" fill="#e6dec8" stroke="#244d44" stroke-width="1.8" />
+    <!-- Hinge at bottom right of chair box (176, 252) to high pedal (238, 198) -->
+    <line x1="176" y1="252" x2="238" y2="198" stroke="#244d44" stroke-width="4.5" stroke-linecap="round" />
+    <circle cx="238" cy="198" r="5" fill="#9a502d" />
+    <!-- Chair Spring -->
+    <line x1="146" y1="252" x2="218" y2="214" stroke="#9a502d" stroke-width="2" stroke-dasharray="4 2" />
+
+    <!-- Joint Alignment Plumb Line (Crown - Shoulder - Sit Bone) -->
+    <line x1="134" y1="78" x2="134" y2="262" stroke="#6b826d" stroke-width="1.4" stroke-dasharray="4 3" />
+    <text x="134" y="74" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">정수리-흉곽-좌골 수직축</text>
+
+    <!-- Primary Muscle Zone (Core & Hip Flexor/Quad Readiness) -->
+    <ellipse cx="176" cy="162" rx="26" ry="12" fill="url(#muscle-chair)" stroke="#c17c52" stroke-width="1" stroke-dasharray="3 2" />
+    <text x="226" y="138" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#9a502d">코어·대퇴 전면 준비</text>
+
+    <!-- Right Limb (Dashed) -->
+    <g stroke="#875641" stroke-width="3.2" stroke-dasharray="6 4" stroke-linecap="round" fill="none">
+      <path d="M 138 182 L 210 144 L 238 194" />
+    </g>
+    <!-- Left Limb & Upright Torso (Solid) -->
+    <g stroke="#244d44" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 134 114 L 134 184" />
+      <path d="M 134 184 L 206 148 L 238 198" />
+      <path d="M 134 126 L 122 184" />
+    </g>
+    <circle cx="134" cy="96" r="10.5" fill="#e6dec8" stroke="#244d44" stroke-width="2.5" />
+    <circle cx="134" cy="184" r="4.5" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="206" cy="148" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+
+    <text x="165" y="288" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">양쪽 좌골 체중 균등 고정 앵커</text>
+  </g>
+
+  <!-- ==================== PANEL 2: MIDDLE (x: 335..625) ==================== -->
+  <g id="phase-middle">
+    <rect x="335" y="38" width="290" height="278" rx="12" fill="#ffffff" fill-opacity="0.9" stroke="#c17c52" stroke-width="1.6" />
+    <rect x="347" y="48" width="138" height="22" rx="6" fill="#9a502d" />
+    <text x="416" y="63" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700" fill="#fbfaf5">2. MIDDLE · 중간 정점 자세</text>
+    <text x="613" y="63" text-anchor="end" font-family="Pretendard, sans-serif" font-size="10" fill="#9a502d">페달 하강 프레스 다운 정점</text>
+
+    <!-- Wunda Chair Box & Hinged Pedal (Pressed Down Position) -->
+    <rect x="407" y="186" width="84" height="72" rx="6" fill="#e6dec8" stroke="#244d44" stroke-width="1.8" />
+    <line x1="491" y1="252" x2="562" y2="238" stroke="#244d44" stroke-width="4.5" stroke-linecap="round" />
+    <circle cx="562" cy="238" r="5.5" fill="#9a502d" />
+    <!-- Stretched Chair Spring -->
+    <line x1="461" y1="210" x2="540" y2="242" stroke="#9a502d" stroke-width="2.2" stroke-dasharray="5 2" />
+
+    <!-- GHOSTED START-POSE SILHOUETTE (Shows High-Pedal vs Pressed-Pedal Delta) -->
+    <g id="middle-start-ghost" opacity="0.22" stroke="#244d44" stroke-width="3" stroke-dasharray="3 3" fill="none">
+      <path d="M 449 184 L 521 148 L 553 198" />
+      <line x1="491" y1="252" x2="553" y2="198" />
+    </g>
+    <text x="480" y="274" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9" fill="#5e6761">점선 실루엣: 시작 페달 높이 대비 하강 각도 변위</text>
+
+    <!-- Joint Alignment Plumb Line (Unchanged Spine Axis while Leg Presses) -->
+    <line x1="449" y1="78" x2="449" y2="262" stroke="#6b826d" stroke-width="1.4" stroke-dasharray="4 3" />
+    <text x="449" y="74" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">상체 흔들림 없는 독립적 하지 분절</text>
+
+    <!-- Primary Muscle Zones (Quads, Glutes, Deep Abdominal Stabilization) -->
+    <ellipse cx="449" cy="154" rx="18" ry="24" fill="url(#muscle-chair)" stroke="#9a502d" stroke-width="1" />
+    <ellipse cx="504" cy="186" rx="28" ry="13" fill="url(#muscle-chair)" stroke="#9a502d" stroke-width="1.2" />
+    <text x="536" y="132" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#9a502d">주요 근육: 대퇴사두·둔근 프레스 &amp; 코어 고정</text>
+
+    <!-- Right Limb (Dashed) -->
+    <g stroke="#875641" stroke-width="3.2" stroke-dasharray="6 4" stroke-linecap="round" fill="none">
+      <path d="M 453 182 L 530 176 L 562 234" />
+    </g>
+    <!-- Left Limb & Upright Torso (Solid) -->
+    <g stroke="#244d44" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 449 114 L 449 184" />
+      <path d="M 449 184 L 526 180 L 562 238" />
+      <path d="M 449 126 L 437 184" />
+    </g>
+    <circle cx="449" cy="96" r="10.5" fill="#e6dec8" stroke="#244d44" stroke-width="2.5" />
+    <circle cx="449" cy="184" r="4.5" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="526" cy="180" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+
+    <!-- Movement Direction Vector (Pedal Press Down Arc) -->
+    <path d="M 576 192 Q 584 214 574 234" fill="none" stroke="#9a502d" stroke-width="2.4" marker-end="url(#arrow-excursion)" />
+    <text x="480" y="292" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#9a502d">날숨: 골반 경사 없이 페달 수직 하강 (Press Down)</text>
+  </g>
+
+  <!-- ==================== PANEL 3: END (x: 650..940) ==================== -->
+  <g id="phase-end">
+    <rect x="650" y="38" width="290" height="278" rx="12" fill="#ffffff" fill-opacity="0.78" stroke="#d8cfc0" stroke-width="1.2" />
+    <rect x="662" y="48" width="128" height="22" rx="6" fill="#244d44" />
+    <text x="726" y="63" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700" fill="#fbfaf5">3. END · 끝 복귀 자세</text>
+    <text x="928" y="63" text-anchor="end" font-family="Pretendard, sans-serif" font-size="10" fill="#5e6761">페달 반동 억제 상승 복귀</text>
+
+    <!-- Wunda Chair Box & Hinged Pedal -->
+    <rect x="722" y="186" width="84" height="72" rx="6" fill="#e6dec8" stroke="#244d44" stroke-width="1.8" />
+    <line x1="806" y1="252" x2="868" y2="198" stroke="#244d44" stroke-width="4.5" stroke-linecap="round" />
+    <circle cx="868" cy="198" r="5" fill="#244d44" />
+    <line x1="776" y1="252" x2="848" y2="214" stroke="#244d44" stroke-width="2" stroke-dasharray="4 2" />
+
+    <!-- Joint Alignment Plumb Line -->
+    <line x1="764" y1="78" x2="764" y2="262" stroke="#6b826d" stroke-width="1.4" stroke-dasharray="4 3" />
+    <text x="764" y="74" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="600" fill="#244d44">척추 키 커짐 유지 복귀</text>
+
+    <!-- Primary Muscle Highlight -->
+    <ellipse cx="806" cy="162" rx="26" ry="12" fill="url(#muscle-chair)" stroke="#c17c52" stroke-width="1" />
+    <text x="856" y="138" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#9a502d">원심성 고관절 굴곡 제어</text>
+
+    <!-- Right Limb (Dashed) -->
+    <g stroke="#875641" stroke-width="3.2" stroke-dasharray="6 4" stroke-linecap="round" fill="none">
+      <path d="M 768 182 L 840 144 L 868 194" />
+    </g>
+    <!-- Left Limb & Upright Torso (Solid) -->
+    <g stroke="#244d44" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 764 114 L 764 184" />
+      <path d="M 764 184 L 836 148 L 868 198" />
+      <path d="M 764 126 L 752 184" />
+    </g>
+    <circle cx="764" cy="96" r="10.5" fill="#e6dec8" stroke="#244d44" stroke-width="2.5" />
+    <circle cx="764" cy="184" r="4.5" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="836" cy="148" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+
+    <!-- Return Vector -->
+    <path d="M 884 234 Q 892 212 880 192" fill="none" stroke="#244d44" stroke-width="2.2" marker-end="url(#arrow-return)" />
+    <text x="795" y="288" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="9.5" font-weight="700" fill="#244d44">스프링 반동에 밀리지 않고 등속 상승 복귀</text>
+  </g>
+
+  <!-- ==================== BOTTOM LEGEND BAR ==================== -->
+  <g transform="translate(20, 324)" font-family="Pretendard, sans-serif" font-size="10" fill="#244d44">
+    <line x1="6" y1="12" x2="28" y2="12" stroke="#244d44" stroke-width="3.5" stroke-linecap="round" />
+    <text x="34" y="16" font-weight="600">좌측 사지 (실선)</text>
+
+    <line x1="124" y1="12" x2="146" y2="12" stroke="#875641" stroke-width="3" stroke-dasharray="5 3" stroke-linecap="round" />
+    <text x="152" y="16" font-weight="600" fill="#875641">우측 사지 (점선)</text>
+
+    <line x1="244" y1="12" x2="266" y2="12" stroke="#6b826d" stroke-width="1.5" stroke-dasharray="4 3" />
+    <circle cx="255" cy="12" r="3.5" fill="#9a502d" />
+    <text x="272" y="16" font-weight="600">관절 정렬축 · 페달 앵커</text>
+
+    <line x1="396" y1="12" x2="418" y2="12" stroke="#9a502d" stroke-width="2" marker-end="url(#arrow-excursion)" />
+    <text x="426" y="16" font-weight="600" fill="#9a502d">움직임 방향 (프레스/복귀)</text>
+
+    <ellipse cx="564" cy="12" rx="10" ry="6" fill="#c17c52" fill-opacity="0.45" stroke="#9a502d" stroke-width="1" />
+    <text x="580" y="16" font-weight="600" fill="#9a502d">주요 작용 근육 영역</text>
+
+    <text x="920" y="16" text-anchor="end" font-size="9.5" fill="#5e6761">※ 교육용 개념 도해이며 의료·임상 진단을 대체하지 않습니다</text>
+  </g>
+</svg>

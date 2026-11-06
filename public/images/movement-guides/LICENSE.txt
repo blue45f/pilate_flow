@@ -1,0 +1,39 @@
+PILATE FLOW — ORIGINAL MOVEMENT GUIDE SCHEMATIC ASSETS LICENSE
+==============================================================
+
+Scope:
+All SVG files and metadata in `public/images/movement-guides/`:
+- `mat-phase-alignment-guide.svg`
+- `reformer-phase-alignment-guide.svg`
+- `cadillac-phase-alignment-guide.svg`
+- `chair-phase-alignment-guide.svg`
+- `barrel-phase-alignment-guide.svg`
+- `MANIFEST.json`
+
+1. Original Authorship & Provenance
+-----------------------------------
+Every vector diagram in this directory is an original, mathematically authored
+kinematic schematic created specifically for the `blue45f/pilate_flow` repository.
+Zero third-party copyrighted photographs, video frames, anatomical textbook plates,
+or proprietary studio illustrations were copied, traced, or embedded.
+
+2. Free & Open Usage License (CC-BY-4.0 / MIT Compatible)
+---------------------------------------------------------
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+these schematic assets to use, copy, modify, merge, publish, and distribute them,
+subject to attribution to the `blue45f/pilate_flow` project and preservation of
+the safety and clinical review disclaimers below.
+
+3. Anatomical & Clinical Disclaimer (`anatomicalAccuracyAssumed: false`)
+------------------------------------------------------------------------
+- These diagrams are conceptual instructional schematics illustrating relative
+  phase progression (Start / 시작 자세 · Middle / 중간 정점 자세 · End / 끝 복귀 자세),
+  reference joint alignment axes (관절 정렬), movement direction vectors (움직임 방향),
+  and primary muscle emphasis zones (주요 근육).
+- `anatomicalAccuracyAssumed: false`: Anatomical proportions, joint angles, and
+  muscle activation overlays are simplified visual abstractions and must NOT be
+  assumed to represent clinical or biomechanical truth without qualified human
+  instructor review.
+- Pre-review vs. post-review distinction is mandatory in all UI surfaces consuming
+  these assets. These schematics do not constitute medical diagnosis, physical
+  therapy prescription, or clinical advice.
