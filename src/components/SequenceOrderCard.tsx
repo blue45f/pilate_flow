@@ -2,6 +2,8 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { SequenceStep } from '../types/pilates';
+import { createSequenceDrag } from '../utils/sequenceDrag';
+import '../styles/sequence-drag.css';
 
 export function SequenceOrderCard({
   step,
@@ -17,31 +19,24 @@ export function SequenceOrderCard({
   children: ReactNode;
 }) {
   const steps = usePilatesStore((state) => state.activeSteps);
-  const pointerDrag = useRef<{
-    id: number;
-    x: number;
-    y: number;
-    moved: boolean;
-    target: string | null;
-  } | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const pointerDrag = useRef<{ id: number; session: ReturnType<typeof createSequenceDrag> } | null>(
+    null,
+  );
   const clearPointerDrag = () => {
+    pointerDrag.current?.session.cancel();
     pointerDrag.current = null;
-    document
-      .querySelectorAll('[data-order-step][data-drag-over]')
-      .forEach((element) => element.removeAttribute('data-drag-over'));
   };
-
   useEffect(
     () => () => {
-      pointerDrag.current = null;
-      document
-        .querySelectorAll('[data-order-step][data-drag-over]')
-        .forEach((element) => element.removeAttribute('data-drag-over'));
+      pointerDrag.current?.session.cancel();
     },
     [],
   );
   const restoreFocus = () =>
-    requestAnimationFrame(() => document.getElementById(`order-handle-${step.stepId}`)?.focus());
+    requestAnimationFrame(() =>
+      document.getElementById(`order-handle-${step.stepId}`)?.focus({ preventScroll: true }),
+    );
   const move = (targetId: string) => {
     const changed = usePilatesStore.getState().reorderStep(step.stepId, targetId);
     onNotice(
@@ -52,7 +47,7 @@ export function SequenceOrderCard({
   const upDisabled = !!step.locked || index === 0 || !!steps[index - 1]?.locked;
   const downDisabled = !!step.locked || index === steps.length - 1 || !!steps[index + 1]?.locked;
   return (
-    <div className="sequence-order-card" data-order-step={step.stepId}>
+    <div ref={cardRef} className="sequence-order-card" data-order-step={step.stepId}>
       {children}
       <div className="sequence-order-controls" role="group" aria-label={`${label} 순서 편집`}>
         <button
@@ -62,43 +57,39 @@ export function SequenceOrderCard({
           draggable={false}
           disabled={step.locked}
           onPointerDown={(event) => {
-            if (event.button !== 0 || step.locked) return;
+            if (event.button !== 0 || step.locked || pointerDrag.current || !cardRef.current)
+              return;
             event.preventDefault();
-            event.currentTarget.focus();
+            event.currentTarget.focus({ preventScroll: true });
             event.currentTarget.setPointerCapture(event.pointerId);
             pointerDrag.current = {
               id: event.pointerId,
-              x: event.clientX,
-              y: event.clientY,
-              moved: false,
-              target: null,
+              session: createSequenceDrag({
+                card: cardRef.current,
+                handle: event.currentTarget,
+                pointerId: event.pointerId,
+                stepId: step.stepId,
+                label,
+                steps: usePilatesStore.getState().activeSteps,
+                getSteps: () => usePilatesStore.getState().activeSteps,
+                startX: event.clientX,
+                startY: event.clientY,
+                onCommit: move,
+                onNotice,
+              }),
             };
           }}
           onPointerMove={(event) => {
-            const drag = pointerDrag.current;
-            if (!drag || drag.id !== event.pointerId) return;
-            if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 8 && !drag.moved)
-              return;
-            drag.moved = true;
-            const target = document
-              .elementFromPoint(event.clientX, event.clientY)
-              ?.closest<HTMLElement>('[data-order-step]');
-            document
-              .querySelectorAll('[data-order-step][data-drag-over]')
-              .forEach((element) => element.removeAttribute('data-drag-over'));
-            drag.target = target?.dataset.orderStep ?? null;
-            if (target && drag.target !== step.stepId)
-              target.setAttribute('data-drag-over', 'true');
+            if (pointerDrag.current?.id === event.pointerId)
+              pointerDrag.current.session.move(event.clientX, event.clientY);
           }}
           onPointerUp={(event) => {
+            if (pointerDrag.current?.id !== event.pointerId) return;
             const drag = pointerDrag.current;
-            const target = drag?.target;
-            const shouldMove =
-              drag?.id === event.pointerId && drag.moved && target && target !== step.stepId;
-            clearPointerDrag();
+            pointerDrag.current = null;
+            drag.session.finish(event.clientX, event.clientY);
             if (event.currentTarget.hasPointerCapture(event.pointerId))
               event.currentTarget.releasePointerCapture(event.pointerId);
-            if (shouldMove) move(target);
           }}
           onPointerCancel={clearPointerDrag}
           onLostPointerCapture={clearPointerDrag}
@@ -111,6 +102,7 @@ export function SequenceOrderCard({
             }
             if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
               event.preventDefault();
+              clearPointerDrag();
               const delta = event.key === 'ArrowUp' ? -1 : 1;
               if ((delta < 0 && upDisabled) || (delta > 0 && downDisabled)) return;
               move(steps[index + delta].stepId);
