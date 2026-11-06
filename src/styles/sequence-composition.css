@@ -161,6 +161,16 @@
 }
 
 /* Equal-width actions retain a single baseline at 320px. */
-#root .sequence-order-controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-#root .sequence-order-controls button { min-width: 44px; width: 100%; padding-inline: 6px; gap: 4px; }
-#root .sequence-order-controls .sequence-drag-handle { margin-right: 0; }
+#root .sequence-order-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+#root .sequence-order-controls button {
+  min-width: 44px;
+  width: 100%;
+  padding-inline: 6px;
+  gap: 4px;
+}
+#root .sequence-order-controls .sequence-drag-handle {
+  margin-right: 0;
+}

@@ -15,7 +15,7 @@ export interface PfAiStatusBadgeProps extends React.HTMLAttributes<HTMLSpanEleme
 }
 
 const DEFAULT_AI_STATUS_LABELS: Record<PfAiStatusKind, string> = {
-  'ai-draft': '조건 맞춤 초안 · 강사 확인 필요',
+  'ai-draft': '조건 맞춤 초안',
   'creative-memo': '내 창작 메모 · 전문가 검증 아님',
   'tried-memo': '직접 해봄 · 주관적 메모',
   'instructor-reviewed': '내 강사 검토 · 자격 인증 미확인',
@@ -31,12 +31,7 @@ export const PfAiStatusBadge: React.FC<PfAiStatusBadgeProps> = ({
   children,
   ...rest
 }) => {
-  const classes = [
-    'pf-badge',
-    'pf-ai-status',
-    `pf-ai-status--${kind}`,
-    className,
-  ]
+  const classes = ['pf-badge', 'pf-ai-status', `pf-ai-status--${kind}`, className]
     .filter(Boolean)
     .join(' ');
 
@@ -108,12 +103,7 @@ export const PfSequenceBlock: React.FC<PfSequenceBlockProps> = ({
   children,
   ...rest
 }) => {
-  const classes = [
-    'flow-section',
-    'pf-sequence-block',
-    `pf-sequence-block--${phase}`,
-    className,
-  ]
+  const classes = ['flow-section', 'pf-sequence-block', `pf-sequence-block--${phase}`, className]
     .filter(Boolean)
     .join(' ');
 
@@ -143,13 +133,7 @@ export const PfBlockPill: React.FC<PfBlockPillProps> = ({
   children,
   ...rest
 }) => {
-  const classes = [
-    'pf-block-pill',
-    `pf-block-pill--${kind}`,
-    className,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const classes = ['pf-block-pill', `pf-block-pill--${kind}`, className].filter(Boolean).join(' ');
 
   return React.createElement(
     Component,

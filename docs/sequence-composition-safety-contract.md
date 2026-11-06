@@ -1,5 +1,9 @@
 # Sequence composition and AI acceptance contract
 
+## Authoring update, 2026-11-06
+
+The authoring contract in [composition-authoring.md](composition-authoring.md) supersedes mandatory reviewed-pool restrictions for local creation, local composition, saving, and timing rehearsal. Review records are optional provenance and remain unchanged. Separate external AI validation contracts are not relaxed by this change. The historical implementation notes below describe the earlier boundary and must not be used to reintroduce an authoring gate.
+
 ## Current operating boundary
 
 The single public URL is https://pilates-flow-atelier.web.app. Firebase Google sign-in provides identity. Existing AppDeploy backups and browser-local studio records are separate data stores. Do not claim account cloud storage or cross-device restoration until authenticated write/read, logout/login, restart, and recovery tests pass against a real deployed backend. Preserve the existing backend and data during migration.

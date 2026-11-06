@@ -127,7 +127,11 @@ describe('Pilates Flow common design system components', () => {
           error="수업 그룹 별칭을 입력해 주세요."
           errorId="test-group-err"
         >
-          <PfInput id="test-group-input" hasError aria-describedby="test-group-hint test-group-err" />
+          <PfInput
+            id="test-group-input"
+            hasError
+            aria-describedby="test-group-hint test-group-err"
+          />
         </PfField>
         <PfField label="기본 난이도" htmlFor="test-level-select">
           <PfSelect id="test-level-select" disabled defaultValue="1.5">
@@ -269,9 +273,9 @@ describe('Pilates Flow common design system components', () => {
     );
 
     expect(screen.getByText('예시 배지')).toHaveClass('pf-badge', 'pf-badge--sample');
-    expect(screen.getByText('내 창작 메모 · 전문가 검증 아님').closest('.pf-ai-status')).toHaveClass(
-      'pf-ai-status--creative-memo',
-    );
+    expect(
+      screen.getByText('내 창작 메모 · 전문가 검증 아님').closest('.pf-ai-status'),
+    ).toHaveClass('pf-ai-status--creative-memo');
     expect(screen.getByText('창작 동작 카드').closest('.pf-movement-card')).toHaveClass(
       'pf-movement-card--idea',
       'is-selected',
@@ -309,7 +313,7 @@ describe('Internal dev-only DesignSystemInspector screen', () => {
     // Switch to Components section
     fireEvent.click(screen.getByRole('tab', { name: '2. 공통 컴포넌트' }));
     expect(screen.getByRole('region', { name: '공통 컴포넌트 쇼케이스' })).toBeInTheDocument();
-    expect(screen.getByText('조건 맞춤 초안 · 강사 확인 필요')).toBeInTheDocument();
+    expect(screen.getByText('조건 맞춤 초안')).toBeInTheDocument();
     expect(screen.getByText('벽 짚고 한 발 골반 회전 (예시)')).toBeInTheDocument();
 
     // Switch to States section
@@ -469,9 +473,7 @@ describe('Representative screens upgraded with the Design System', () => {
       { target: { value: '박스 암 서클 메모' } },
     );
     expect(finderContainer.querySelector('.pf-movement-card--idea')).not.toBeNull();
-    fireEvent.click(
-      screen.getByRole('button', { name: '박스 암 서클 메모 수업안에 추가' }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: '박스 암 서클 메모 수업안에 추가' }));
     expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
     expect(usePilatesStore.getState().activeSteps[0]?.exerciseId).toBe(ideaId);
 
@@ -491,9 +493,7 @@ describe('Representative screens upgraded with the Design System', () => {
     expect(workbenchContainer.querySelector('.pf-block-pill--memo')).toHaveTextContent(
       '내 창작 메모 · 전문가 검증 아님',
     );
-    expect(
-      screen.getByRole('region', { name: '핵심 흐름 이어가기' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: '핵심 흐름 이어가기' })).toBeInTheDocument();
 
     // Save to binder and verify ClassBinderView renders PfBlockPill--memo on saved sequence card
     fireEvent.click(screen.getByRole('button', { name: '저장' }));
@@ -517,4 +517,3 @@ describe('Representative screens upgraded with the Design System', () => {
     expect(tokenCss).toContain('.pf-core-quick-bar');
   });
 });
-
