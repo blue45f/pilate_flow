@@ -4,6 +4,7 @@ import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { VERIFIED_REFERENCES } from '../data/verifiedReferences';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { SequenceStep } from '../types/pilates';
+import { cloudBackupDataSchema } from '../schemas/cloudBackupSchema';
 import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { syntheticPlanningExercise } from '../test/planningFixtures';
@@ -483,7 +484,8 @@ describe('optional time calculation inside the block draft', () => {
     expect(after.undoStack).toHaveLength(1);
     expect(after.exercises).toBe(before.exercises);
     expect(after.historyLogs).toBe(before.historyLogs);
-    expect(JSON.parse(after.exportBackup()).data).toBeTruthy();
+    const exported = cloudBackupDataSchema.parse(JSON.parse(after.exportBackup()).data);
+    expect(exported.activeDraft?.steps[0].timeEstimate).toEqual(after.activeSteps[0].timeEstimate);
     const copied = structuredClone(after.activeSteps);
     const persisted = localStorage.getItem(RECOVERY_STORAGE_KEY)!;
     cleanup();
