@@ -12,6 +12,13 @@ describe('ClassCueSheetPreview', () => {
   it('renders empty class state cleanly without crashing and disables step navigation buttons', () => {
     render(<ClassCueSheetPreview initialFixtureId="empty-class" />);
 
+    expect(screen.getByTestId('no-mandatory-gate-badge').textContent).toContain(
+      '필수 검토 게이트 없음',
+    );
+    expect(screen.getByTestId('cue-sheet-empty-state').textContent).toContain(
+      '수업 진행 항목이 비어 있습니다 (0개 항목)',
+    );
+
     expect(
       screen.getByText(/독립 통합 후보 \(Standalone Integration Candidate\)/),
     ).toBeTruthy();
@@ -53,6 +60,93 @@ describe('ClassCueSheetPreview', () => {
         }) as HTMLButtonElement
       ).disabled,
     ).toBe(true);
+  });
+
+  it('prioritizes mobile-first reading order (Compact Header -> Focus Deck -> Full List -> Diagnostics) and collapses full list and diagnostics by default', () => {
+    render(<ClassCueSheetPreview />);
+
+    const rootEl = screen.getByTestId('class-cue-sheet-root');
+    expect(rootEl.getAttribute('data-full-list-open')).toBe('false');
+    expect(rootEl.getAttribute('data-diagnostics-open')).toBe('false');
+    expect(rootEl.getAttribute('data-mandatory-review-gate')).toBe('false');
+    expect(rootEl.getAttribute('data-reduced-motion')).toBe('respected');
+
+    const headerEl = screen.getByTestId('cue-sheet-compact-header');
+    const focusDeckEl = screen.getByTestId('cue-sheet-focus-deck');
+    const progressionEl = screen.getByTestId('cue-sheet-progression-section');
+    const diagnosticsEl = screen.getByTestId('cue-sheet-diagnostics-section');
+
+    // Verify top-to-bottom DOM reading order
+    expect(
+      Boolean(
+        headerEl.compareDocumentPosition(focusDeckEl) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true);
+    expect(
+      Boolean(
+        focusDeckEl.compareDocumentPosition(progressionEl) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true);
+    expect(
+      Boolean(
+        progressionEl.compareDocumentPosition(diagnosticsEl) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true);
+
+    // Full list and diagnostics panels are collapsed on screen by default
+    const fullListPanel = screen.getByTestId('cue-sheet-full-list-panel');
+    const diagnosticsPanel = screen.getByTestId('cue-sheet-diagnostics-panel');
+    expect(fullListPanel.getAttribute('data-collapsed')).toBe('true');
+    expect(diagnosticsPanel.getAttribute('data-collapsed')).toBe('true');
+
+    // Toggle full progression list open and closed
+    const fullListToggle = screen.getByTestId('cue-sheet-full-list-toggle');
+    expect(fullListToggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(fullListToggle);
+    expect(fullListToggle.getAttribute('aria-expanded')).toBe('true');
+    expect(rootEl.getAttribute('data-full-list-open')).toBe('true');
+    expect(fullListPanel.getAttribute('data-collapsed')).toBe('false');
+
+    // Toggle technical diagnostics open and closed
+    const diagnosticsToggle = screen.getByTestId('cue-sheet-diagnostics-toggle');
+    expect(diagnosticsToggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(diagnosticsToggle);
+    expect(diagnosticsToggle.getAttribute('aria-expanded')).toBe('true');
+    expect(rootEl.getAttribute('data-diagnostics-open')).toBe('true');
+    expect(diagnosticsPanel.getAttribute('data-collapsed')).toBe('false');
+  });
+
+  it('supports configurable text scale controls (100%, 125%, 150%, 200%) with aria-pressed and CSS custom property', () => {
+    render(<ClassCueSheetPreview />);
+
+    const rootEl = screen.getByTestId('class-cue-sheet-root');
+    const btn100 = screen.getByTestId('cue-sheet-scale-100');
+    const btn125 = screen.getByTestId('cue-sheet-scale-125');
+    const btn150 = screen.getByTestId('cue-sheet-scale-150');
+    const btn200 = screen.getByTestId('cue-sheet-scale-200');
+
+    expect(rootEl.getAttribute('data-text-scale')).toBe('100');
+    expect(rootEl.style.getPropertyValue('--cue-sheet-font-scale')).toBe('1');
+    expect(btn100.getAttribute('aria-pressed')).toBe('true');
+
+    fireEvent.click(btn125);
+    expect(rootEl.getAttribute('data-text-scale')).toBe('125');
+    expect(rootEl.style.getPropertyValue('--cue-sheet-font-scale')).toBe('1.25');
+    expect(btn125.getAttribute('aria-pressed')).toBe('true');
+    expect(btn100.getAttribute('aria-pressed')).toBe('false');
+
+    fireEvent.click(btn150);
+    expect(rootEl.getAttribute('data-text-scale')).toBe('150');
+    expect(rootEl.style.getPropertyValue('--cue-sheet-font-scale')).toBe('1.5');
+    expect(btn150.getAttribute('aria-pressed')).toBe('true');
+
+    fireEvent.click(btn200);
+    expect(rootEl.getAttribute('data-text-scale')).toBe('200');
+    expect(rootEl.style.getPropertyValue('--cue-sheet-font-scale')).toBe('2');
+    expect(btn200.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('navigates Current / Next item deck via buttons, keyboard (ArrowRight, ArrowLeft, Home, End), and clicking a progression row', () => {
@@ -140,7 +234,8 @@ describe('ClassCueSheetPreview', () => {
     fireEvent.click(firstBtn);
     expect(within(currentSection).getByText('풋워크 패러렐')).toBeTruthy();
 
-    // Click row 2 in full progression list and verify aria-current="step"
+    // Expand full progression list and click row 2 to verify aria-current="step"
+    fireEvent.click(screen.getByTestId('cue-sheet-full-list-toggle'));
     const progressionList = screen.getByRole('list', {
       name: '기본 진행표 항목 목록',
     });
@@ -174,7 +269,10 @@ describe('ClassCueSheetPreview', () => {
 
   it('preserves long Korean titles/cues, explicit empty cues placeholder, and disambiguates duplicate movement names with stable data-cue-item-id', () => {
     render(
-      <ClassCueSheetPreview initialFixtureId="long-korean-cues-empty-cues-duplicates" />,
+      <ClassCueSheetPreview
+        initialFixtureId="long-korean-cues-empty-cues-duplicates"
+        initialFullListOpen={true}
+      />,
     );
 
     const progressionList = screen.getByRole('list', {
@@ -231,7 +329,10 @@ describe('ClassCueSheetPreview', () => {
 
     render(<ClassCueSheetPreview sourceInput={highExpansionInput} />);
 
-    // Truncation banner is rendered prominently and never hidden
+    // Compact header truncation badge and truncation banner are rendered prominently and never hidden
+    expect(
+      screen.getByTestId('cue-sheet-header-truncation-badge').textContent,
+    ).toContain('상한 적용됨');
     const truncationBanner = screen.getByRole('region', {
       name: '진행표 잘림 및 상한 안내',
     });
@@ -239,7 +340,7 @@ describe('ClassCueSheetPreview', () => {
     expect(truncationBanner.textContent).toContain('생략된 입력 항목:');
     expect(truncationBanner.textContent).toContain('생략된 펼침 행:');
 
-    // Switch to expanded view ('반복·좌우 펼침 진행표')
+    // Switch to expanded view ('반복·좌우 펼침 진행표') which also opens the full list panel
     const expandedBtn = screen.getByRole('button', {
       name: /반복·좌우 펼침 진행표/,
     });
@@ -487,6 +588,7 @@ describe('ClassCueSheetPreview', () => {
       'preserved-by-id',
     );
 
+    fireEvent.click(screen.getByTestId('cue-sheet-full-list-toggle'));
     const progressionList = screen.getByRole('list', {
       name: '기본 진행표 항목 목록',
     });
@@ -636,6 +738,7 @@ describe('ClassCueSheetPreview', () => {
     const { rerender } = render(
       <ClassCueSheetPreview
         initialViewMode="expanded"
+        initialFullListOpen={true}
         sourceInput={{
           id: 'expanded-sync-seq',
           title: '펼침 보기 동기화 시퀀스',
@@ -682,6 +785,7 @@ describe('ClassCueSheetPreview', () => {
     rerender(
       <ClassCueSheetPreview
         initialViewMode="expanded"
+        initialFullListOpen={true}
         sourceInput={{
           id: 'expanded-sync-seq',
           title: '펼침 보기 동기화 시퀀스',
@@ -865,7 +969,8 @@ describe('ClassCueSheetPreview', () => {
       ),
     ).toBe('0');
 
-    // Focus the row button for '동작 2', select it, and then delete '동작 2' in a live edit
+    // Open full list, focus the row button for '동작 2', select it, and then delete '동작 2' in a live edit
+    fireEvent.click(screen.getByTestId('cue-sheet-full-list-toggle'));
     const progressionList = screen.getByRole('list', {
       name: '기본 진행표 항목 목록',
     });

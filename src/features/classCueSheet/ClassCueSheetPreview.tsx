@@ -22,6 +22,8 @@ export type CueSheetSelectionResolution =
   | 'reset-on-class-change'
   | 'empty-class';
 
+export type CueSheetTextScale = 100 | 125 | 150 | 200;
+
 export interface ClassCueSheetPreviewProps {
   readonly projection?: ClassCueSheetProjection;
   readonly sourceInput?: CueSheetSourceInput;
@@ -31,6 +33,9 @@ export interface ClassCueSheetPreviewProps {
   readonly initialViewMode?: 'compact' | 'expanded';
   readonly initialPrintPreviewMode?: boolean;
   readonly showFixtureSwitcher?: boolean;
+  readonly initialFullListOpen?: boolean;
+  readonly initialDiagnosticsOpen?: boolean;
+  readonly initialTextScale?: CueSheetTextScale;
 }
 
 interface SelectionTrackerState {
@@ -42,6 +47,17 @@ interface SelectionTrackerState {
   readonly resolution: CueSheetSelectionResolution;
   readonly removedItemNameKo: string | null;
 }
+
+const TEXT_SCALE_OPTIONS: readonly {
+  readonly scale: CueSheetTextScale;
+  readonly label: string;
+  readonly ariaLabel: string;
+}[] = [
+  { scale: 100, label: '100%', ariaLabel: '글자 크기 100% 기본' },
+  { scale: 125, label: '125%', ariaLabel: '글자 크기 125% 확대' },
+  { scale: 150, label: '150%', ariaLabel: '글자 크기 150% 확대' },
+  { scale: 200, label: '200%', ariaLabel: '글자 크기 200% 최대 확대' },
+];
 
 function isExplicitSourceId(sourceId: string): boolean {
   const trimmed = sourceId.trim();
@@ -271,7 +287,10 @@ function renderItemCueBlock(item: ClassCueSheetItem): React.ReactNode {
   return (
     <div className={cueContent.isLongCue ? 'cue-sheet-long-note' : undefined}>
       {cueContent.cues.length > 0 && (
-        <ul className="cue-sheet-cue-list" aria-label={`${item.nameKo} 티칭 큐 목록`}>
+        <ul
+          className="cue-sheet-cue-list"
+          aria-label={`${item.nameKo} 티칭 큐 목록`}
+        >
           {cueContent.cues.map((cueText, cueIdx) => (
             <li
               key={`${item.cueItemId}-cue-${cueIdx}`}
@@ -307,6 +326,9 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
   initialViewMode = 'compact',
   initialPrintPreviewMode = false,
   showFixtureSwitcher,
+  initialFullListOpen = false,
+  initialDiagnosticsOpen = false,
+  initialTextScale = 100,
 }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const focusDeckRef = useRef<HTMLDivElement | null>(null);
@@ -324,6 +346,13 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
   const [printPreviewMode, setPrintPreviewMode] = useState<boolean>(
     initialPrintPreviewMode,
   );
+  const [isFullListOpen, setIsFullListOpen] =
+    useState<boolean>(initialFullListOpen);
+  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState<boolean>(
+    initialDiagnosticsOpen,
+  );
+  const [textScale, setTextScale] =
+    useState<CueSheetTextScale>(initialTextScale);
 
   const activeProjection = useMemo<ClassCueSheetProjection>(() => {
     if (projection !== undefined) {
@@ -476,7 +505,10 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
       event.key === 'n'
     ) {
       event.preventDefault();
-      selectStepByIndex(Math.min(maxStepIndex, currentIndex + 1), 'user-navigation');
+      selectStepByIndex(
+        Math.min(maxStepIndex, currentIndex + 1),
+        'user-navigation',
+      );
     } else if (event.key === 'Home') {
       event.preventDefault();
       selectStepByIndex(0, 'user-navigation');
@@ -514,6 +546,9 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
     .filter(Boolean)
     .join(' ');
 
+  const isFullListCollapsedScreen = !isFullListOpen && !printPreviewMode;
+  const isDiagnosticsCollapsedScreen = !isDiagnosticsOpen && !printPreviewMode;
+
   return (
     <div
       ref={rootRef}
@@ -523,83 +558,26 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
       data-current-cue-item-id={currentItem?.cueItemId ?? ''}
       data-current-step-index={currentItem ? String(currentIndex) : '-1'}
       data-selection-resolution={selectionResolution}
+      data-text-scale={String(textScale)}
+      data-full-list-open={isFullListOpen ? 'true' : 'false'}
+      data-diagnostics-open={isDiagnosticsOpen ? 'true' : 'false'}
+      data-reduced-motion="respected"
+      data-mandatory-review-gate="false"
+      style={
+        {
+          '--cue-sheet-font-scale': String(textScale / 100),
+        } as React.CSSProperties
+      }
       onFocusCapture={handleRootFocusCapture}
       onBlurCapture={handleRootBlurCapture}
     >
+      {/* 1. Compact Header & Text Scale Bar */}
       <header
-        className="cue-sheet-boundary-banner"
-        aria-label="단독 통합 후보 및 경계 고지"
+        className="cue-sheet-compact-header"
+        data-testid="cue-sheet-compact-header"
+        aria-label="수업 진행 헤더 및 글자 크기 설정"
       >
-        <p className="cue-sheet-boundary-title">
-          독립 통합 후보 (Standalone Integration Candidate) · 실제 앱 라우트 미연결
-        </p>
-        <p className="cue-sheet-boundary-text">
-          자동 처방 없음 · 안전성·운동 효과 보장 없음 · 새 동작 강제 분류 없음 · 로컬
-          전용(외부 AI·서버 전송·저장소 기록 없음)
-        </p>
-        {activeProjection.boundary.disclaimerKo && (
-          <p className="cue-sheet-boundary-text">
-            {activeProjection.boundary.disclaimerKo}
-          </p>
-        )}
-      </header>
-
-      {shouldShowFixtureSwitcher && (
-        <section
-          className="cue-sheet-fixture-toolbar cue-sheet-no-print"
-          aria-label="합성 수업 픽스처 도구 모음"
-        >
-          <div className="cue-sheet-fixture-controls">
-            <label htmlFor="cue-sheet-fixture-select">
-              <strong>합성 수업 픽스처</strong>
-            </label>
-            <select
-              id="cue-sheet-fixture-select"
-              aria-label="합성 수업 픽스처 선택"
-              className="cue-sheet-fixture-select"
-              value={selectedFixtureId}
-              onChange={(e) =>
-                handleSelectFixture(
-                  e.target.value as CueSheetFixtureEntry['fixtureId'],
-                )
-              }
-            >
-              {CLASS_CUE_SHEET_FIXTURES.map((fixture) => (
-                <option key={fixture.fixtureId} value={fixture.fixtureId}>
-                  {fixture.labelKo} ({fixture.fixtureId})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div
-            className="cue-sheet-fixture-buttons"
-            role="group"
-            aria-label="픽스처 빠른 전환 버튼"
-          >
-            {CLASS_CUE_SHEET_FIXTURES.map((fixture) => {
-              const isSelected = fixture.fixtureId === selectedFixtureId;
-              return (
-                <button
-                  key={fixture.fixtureId}
-                  type="button"
-                  className={`cue-sheet-btn ${isSelected ? 'is-active' : ''}`}
-                  aria-pressed={isSelected}
-                  data-fixture-id={fixture.fixtureId}
-                  onClick={() => handleSelectFixture(fixture.fixtureId)}
-                >
-                  {fixture.labelKo}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      <section
-        className="cue-sheet-summary-card"
-        aria-label="수업 요약 및 장비·시간 안내"
-      >
-        <div className="cue-sheet-summary-header">
+        <div className="cue-sheet-compact-header-main">
           <div>
             <h1 className="cue-sheet-title">{activeProjection.title}</h1>
             {activeProjection.subtitle && (
@@ -613,105 +591,50 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
             <span className="cue-sheet-badge">
               난이도: {activeProjection.levelLabelKo}
             </span>
-          </div>
-        </div>
-
-        <div className="cue-sheet-summary-grid">
-          <div className="cue-sheet-summary-cell">
-            <span className="cue-sheet-summary-label">항목 구성</span>
-            <span className="cue-sheet-summary-value">
-              전체 {activeProjection.itemCount}개 · 동작{' '}
-              {activeProjection.exerciseCount}개 · 휴식{' '}
-              {activeProjection.restCount}개
-            </span>
-          </div>
-          <div className="cue-sheet-summary-cell">
-            <span className="cue-sheet-summary-label">시간 요약</span>
-            <span className="cue-sheet-summary-value">
-              {activeProjection.timingSummary.timingSummaryLabelKo}
-            </span>
-          </div>
-          <div className="cue-sheet-summary-cell">
-            <span className="cue-sheet-summary-label">사용 기구</span>
-            <span className="cue-sheet-summary-value">
-              {activeProjection.allEquipmentLabelsKo.length > 0
-                ? activeProjection.allEquipmentLabelsKo.join(', ')
-                : activeProjection.apparatusLabelKo}
-            </span>
-          </div>
-          <div className="cue-sheet-summary-cell">
-            <span className="cue-sheet-summary-label">소도구</span>
-            <span className="cue-sheet-summary-value">
-              {activeProjection.allPropLabelsKo.length > 0
-                ? activeProjection.allPropLabelsKo.join(', ')
-                : '소도구 없음'}
-            </span>
-          </div>
-        </div>
-
-        <div className="cue-sheet-badge-row">
-          {activeProjection.timingSummary.hasUnspecifiedTime && (
-            <span
-              className="cue-sheet-badge is-warning"
-              data-testid="unspecified-time-badge"
-            >
-              시간 미정 {activeProjection.timingSummary.unspecifiedItemCount}개 항목
-              포함 (새 시간 추정 없음)
-            </span>
-          )}
-          {activeProjection.nameOnlyCount > 0 && (
-            <span
-              className="cue-sheet-badge is-emphasis"
-              data-testid="name-only-count-badge"
-            >
-              이름만 입력된 동작 {activeProjection.nameOnlyCount}개 (강제 분류 없음)
-            </span>
-          )}
-          {activeProjection.duplicateNameGroupCount > 0 && (
-            <span className="cue-sheet-badge">
-              동일 동작명 구분 그룹 {activeProjection.duplicateNameGroupCount}개
-            </span>
-          )}
-          {(activeProjection.privacy.strippedSensitiveKeys.length > 0 ||
-            activeProjection.privacy.redactedInlineTextCount > 0) && (
             <span
               className="cue-sheet-badge"
-              data-testid="privacy-stripped-badge"
+              data-testid="no-mandatory-gate-badge"
             >
-              민감 키 제외 ({activeProjection.privacy.strippedSensitiveKeys.length}
-              종) · 보조 휴리스틱 마스킹 ({activeProjection.privacy.redactedInlineTextCount}
-              건, 전체 제거 보장 아님)
+              필수 검토 게이트 없음 · 즉시 진행 가능
             </span>
-          )}
+            {activeProjection.truncation.isTruncated && (
+              <span
+                className="cue-sheet-badge is-warning"
+                data-testid="cue-sheet-header-truncation-badge"
+              >
+                상한 적용됨 (세부 안내 확인)
+              </span>
+            )}
+          </div>
         </div>
-      </section>
 
-      {activeProjection.truncation.isTruncated && (
-        <section
-          role="region"
-          aria-label="진행표 잘림 및 상한 안내"
-          className="cue-sheet-truncation-banner"
-          data-testid="cue-sheet-truncation-banner"
+        <div
+          className="cue-sheet-scale-controls cue-sheet-no-print"
+          role="group"
+          aria-label="글자 크기 확대 설정"
+          data-testid="cue-sheet-text-scale-group"
         >
-          <h2 className="cue-sheet-truncation-title">
-            진행표 상한 적용 및 생략 안내 (임의 숨김 없음)
-          </h2>
-          <p className="cue-sheet-meta-line">
-            생략된 입력 항목: {activeProjection.truncation.omittedInputItemCount}개 ·
-            생략된 펼침 행: {activeProjection.truncation.omittedExpandedRowCount}개 ·
-            반복 상한 적용 블록:{' '}
-            {activeProjection.truncation.cappedBlockRepetitionCount}개 · 중첩 깊이
-            상한 적용: {activeProjection.truncation.cappedDepthCount}건 · 차단된 순환
-            참조: {activeProjection.truncation.circularReferenceCount}건
-          </p>
-          <ul className="cue-sheet-truncation-list">
-            {activeProjection.truncation.reasonsKo.map((reason, idx) => (
-              <li key={`truncation-reason-${idx}`}>{reason}</li>
-            ))}
-          </ul>
-        </section>
-      )}
+          <span className="cue-sheet-scale-label">글자 크기:</span>
+          {TEXT_SCALE_OPTIONS.map((opt) => {
+            const isSelected = textScale === opt.scale;
+            return (
+              <button
+                key={opt.scale}
+                type="button"
+                className={`cue-sheet-btn ${isSelected ? 'is-active' : ''}`}
+                aria-pressed={isSelected}
+                aria-label={opt.ariaLabel}
+                data-testid={`cue-sheet-scale-${opt.scale}`}
+                onClick={() => setTextScale(opt.scale)}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </header>
 
+      {/* 2. Primary Live Focus Deck */}
       <div
         ref={focusDeckRef}
         className="cue-sheet-focus-deck"
@@ -789,8 +712,8 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
 
         {selectionResolution === 'fallback-adjacent-after-delete' &&
           currentItem && (
-            <p
-              className="cue-sheet-badge is-warning"
+            <div
+              className="cue-sheet-selection-fallback-notice"
               data-testid="cue-sheet-selection-fallback-notice"
               role="status"
             >
@@ -799,14 +722,31 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
               }이 편집으로 삭제되어 인접 항목(#${formatStepNumber(
                 currentItem.order,
               )} ${currentItem.nameKo})으로 위치를 유지했습니다.`}
-            </p>
+            </div>
           )}
+
+        {activeProjection.isEmpty && (
+          <div
+            className="cue-sheet-empty-state"
+            data-testid="cue-sheet-empty-state"
+            role="status"
+          >
+            <p className="cue-sheet-title">
+              수업 진행 항목이 비어 있습니다 (0개 항목)
+            </p>
+            <p className="cue-sheet-subtitle">
+              시퀀스에 동작이나 휴식 구간이 등록되면 현재 동작과 다음 준비 동작,
+              순서·세팅·큐가 이곳에 표시됩니다. (필수 검토 게이트 없음)
+            </p>
+          </div>
+        )}
 
         <div className="cue-sheet-focus-grid">
           <section
             aria-label="현재 진행 항목"
             aria-live="polite"
             className="cue-sheet-focus-card is-current"
+            data-testid="cue-sheet-current-card"
           >
             <div className="cue-sheet-badge-row">
               <span className="cue-sheet-badge is-emphasis">현재 진행 항목</span>
@@ -884,6 +824,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
           <section
             aria-label="다음 준비 항목"
             className="cue-sheet-focus-card"
+            data-testid="cue-sheet-next-card"
           >
             <div className="cue-sheet-badge-row">
               <span className="cue-sheet-badge">다음 준비 항목</span>
@@ -938,19 +879,69 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
         </div>
       </div>
 
+      {/* 4. Truncation Banner */}
+      {activeProjection.truncation.isTruncated && (
+        <section
+          role="region"
+          aria-label="진행표 잘림 및 상한 안내"
+          className="cue-sheet-truncation-banner"
+          data-testid="cue-sheet-truncation-banner"
+        >
+          <h2 className="cue-sheet-truncation-title">
+            진행표 상한 적용 및 생략 안내 (임의 숨김 없음)
+          </h2>
+          <p className="cue-sheet-meta-line">
+            생략된 입력 항목: {activeProjection.truncation.omittedInputItemCount}개 ·
+            생략된 펼침 행: {activeProjection.truncation.omittedExpandedRowCount}개 ·
+            반복 상한 적용 블록:{' '}
+            {activeProjection.truncation.cappedBlockRepetitionCount}개 · 중첩 깊이
+            상한 적용: {activeProjection.truncation.cappedDepthCount}건 · 차단된 순환
+            참조: {activeProjection.truncation.circularReferenceCount}건
+          </p>
+          <ul className="cue-sheet-truncation-list">
+            {activeProjection.truncation.reasonsKo.map((reason, idx) => (
+              <li key={`truncation-reason-${idx}`}>{reason}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* 5. Collapsible Full Progression List */}
       <section
         aria-label="전체 수업 진행표"
         className="cue-sheet-progression-section"
+        data-testid="cue-sheet-progression-section"
       >
         <div className="cue-sheet-view-toolbar cue-sheet-no-print">
-          <div className="cue-sheet-view-buttons" role="group" aria-label="진행표 보기 모드">
+          <button
+            type="button"
+            className={`cue-sheet-btn cue-sheet-disclosure-btn ${
+              isFullListOpen ? 'is-active' : ''
+            }`}
+            data-testid="cue-sheet-full-list-toggle"
+            aria-expanded={isFullListOpen}
+            aria-controls="cue-sheet-full-list-panel"
+            onClick={() => setIsFullListOpen((prev) => !prev)}
+          >
+            전체 진행표 {isFullListOpen ? '접기' : '펼치기'} (
+            {activeProjection.itemCount}개 항목)
+          </button>
+
+          <div
+            className="cue-sheet-view-buttons"
+            role="group"
+            aria-label="진행표 보기 모드"
+          >
             <button
               type="button"
               className={`cue-sheet-btn ${
                 viewMode === 'compact' ? 'is-active' : ''
               }`}
               aria-pressed={viewMode === 'compact'}
-              onClick={() => setViewMode('compact')}
+              onClick={() => {
+                setViewMode('compact');
+                setIsFullListOpen(true);
+              }}
             >
               기본 진행표 ({activeProjection.items.length})
             </button>
@@ -960,7 +951,10 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                 viewMode === 'expanded' ? 'is-active' : ''
               }`}
               aria-pressed={viewMode === 'expanded'}
-              onClick={() => setViewMode('expanded')}
+              onClick={() => {
+                setViewMode('expanded');
+                setIsFullListOpen(true);
+              }}
             >
               반복·좌우 펼침 진행표 ({activeProjection.expandedRows.length})
             </button>
@@ -976,196 +970,404 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
           </button>
         </div>
 
-        {activeProjection.isEmpty ? (
-          <div className="cue-sheet-empty-state" role="status">
-            <p className="cue-sheet-title">
-              수업 진행 항목이 비어 있습니다 (0개 항목)
-            </p>
-            <p className="cue-sheet-subtitle">
-              시퀀스에 동작이나 휴식 구간이 등록되면 순서·세팅·큐가 이곳에 표시됩니다.
-            </p>
-          </div>
-        ) : viewMode === 'compact' ? (
-          <ol
-            className="cue-sheet-item-list"
-            aria-label="기본 진행표 항목 목록"
-          >
-            {activeProjection.items.map((item, idx) => {
-              const isCurrent = idx === currentIndex;
-              const itemClasses = [
-                'cue-sheet-item',
-                isCurrent ? 'is-active-step' : '',
-                item.cueContent.isLongCue ? 'is-long-cue' : '',
-              ]
-                .filter(Boolean)
-                .join(' ');
+        <div
+          id="cue-sheet-full-list-panel"
+          data-testid="cue-sheet-full-list-panel"
+          data-collapsed={isFullListCollapsedScreen ? 'true' : 'false'}
+          className={`cue-sheet-collapsible-panel ${
+            isFullListCollapsedScreen ? 'is-collapsed-screen' : ''
+          }`}
+        >
+          {activeProjection.isEmpty ? (
+            <div className="cue-sheet-empty-state" role="status">
+              <p className="cue-sheet-title">
+                수업 진행 항목이 비어 있습니다 (0개 항목)
+              </p>
+              <p className="cue-sheet-subtitle">
+                시퀀스에 동작이나 휴식 구간이 등록되면 순서·세팅·큐가 이곳에 표시됩니다.
+              </p>
+            </div>
+          ) : viewMode === 'compact' ? (
+            <ol
+              className="cue-sheet-item-list"
+              aria-label="기본 진행표 항목 목록"
+            >
+              {activeProjection.items.map((item, idx) => {
+                const isCurrent = idx === currentIndex;
+                const itemClasses = [
+                  'cue-sheet-item',
+                  isCurrent ? 'is-active-step' : '',
+                  item.cueContent.isLongCue ? 'is-long-cue' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ');
 
-              return (
-                <li
-                  key={item.cueItemId}
-                  data-cue-item-id={item.cueItemId}
-                  className={itemClasses}
-                >
-                  <div className="cue-sheet-item-header">
-                    <button
-                      type="button"
-                      className="cue-sheet-item-select-btn"
-                      aria-current={isCurrent ? 'step' : undefined}
-                      onClick={() => selectStepByIndex(idx, 'user-navigation')}
-                    >
-                      <span>#{formatStepNumber(item.order)}</span>
-                      <span>{item.nameKo}</span>
-                      {item.isDuplicateName && item.duplicateDisambiguatorKo && (
-                        <span className="cue-sheet-badge is-warning">
-                          {item.duplicateDisambiguatorKo}
+                return (
+                  <li
+                    key={item.cueItemId}
+                    data-cue-item-id={item.cueItemId}
+                    className={itemClasses}
+                  >
+                    <div className="cue-sheet-item-header">
+                      <button
+                        type="button"
+                        className="cue-sheet-item-select-btn"
+                        aria-current={isCurrent ? 'step' : undefined}
+                        onClick={() => selectStepByIndex(idx, 'user-navigation')}
+                      >
+                        <span>#{formatStepNumber(item.order)}</span>
+                        <span>{item.nameKo}</span>
+                        {item.isDuplicateName &&
+                          item.duplicateDisambiguatorKo && (
+                            <span className="cue-sheet-badge is-warning">
+                              {item.duplicateDisambiguatorKo}
+                            </span>
+                          )}
+                      </button>
+
+                      <div className="cue-sheet-badge-row">
+                        <span className="cue-sheet-badge">
+                          {getOriginBadgeLabelKo(item.originKind)}
                         </span>
-                      )}
-                    </button>
+                        <span className="cue-sheet-badge">
+                          {item.blockMeta.sectionLabelKo}
+                        </span>
+                        {item.blockMeta.blockCategoryLabelKo && (
+                          <span className="cue-sheet-badge">
+                            {item.blockMeta.blockCategoryLabelKo}
+                          </span>
+                        )}
+                        {item.blockMeta.blockPathTitles.length > 0 && (
+                          <span className="cue-sheet-badge">
+                            블록: {item.blockMeta.blockPathTitles.join(' › ')}
+                          </span>
+                        )}
+                        {item.blockMeta.blockRepetitionCount > 1 && (
+                          <span className="cue-sheet-badge">
+                            블록 반복 {item.blockMeta.blockRepetitionIndex}/
+                            {item.blockMeta.blockRepetitionCount}
+                          </span>
+                        )}
+                        <span className="cue-sheet-badge">
+                          {item.practice.sideBadgeKo}
+                        </span>
+                        <span
+                          className={`cue-sheet-badge ${
+                            item.timing.status === 'unspecified'
+                              ? 'is-warning'
+                              : ''
+                          }`}
+                        >
+                          {item.timing.displayLabelKo}
+                        </span>
+                      </div>
+                    </div>
 
+                    <p className="cue-sheet-meta-line">
+                      수행: {item.practice.practiceSummaryKo} · 시간 상세:{' '}
+                      {item.timing.detailLabelKo}
+                    </p>
+                    <p className="cue-sheet-meta-line">
+                      세팅: {item.setup.setupSummaryKo}
+                    </p>
+                    {renderItemCueBlock(item)}
+                  </li>
+                );
+              })}
+            </ol>
+          ) : (
+            <ol
+              className="cue-sheet-expanded-list"
+              aria-label="펼친 진행표 항목 목록"
+            >
+              {activeProjection.expandedRows.map((row) => {
+                const isCurrentParent = Boolean(
+                  currentItem && row.parentCueItemId === currentItem.cueItemId,
+                );
+                const isFirstRowForCurrentItem = Boolean(
+                  isCurrentParent &&
+                    row.expandedRowId === firstExpandedRowIdForCurrent,
+                );
+                const expandedRowClasses = [
+                  'cue-sheet-expanded-row',
+                  isCurrentParent ? 'is-active-step' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ');
+
+                return (
+                  <li
+                    key={row.expandedRowId}
+                    data-expanded-row-id={row.expandedRowId}
+                    data-parent-cue-item-id={row.parentCueItemId}
+                    data-is-current-parent={isCurrentParent ? 'true' : 'false'}
+                    className={expandedRowClasses}
+                  >
                     <div className="cue-sheet-badge-row">
-                      <span className="cue-sheet-badge">
-                        {getOriginBadgeLabelKo(item.originKind)}
-                      </span>
-                      <span className="cue-sheet-badge">
-                        {item.blockMeta.sectionLabelKo}
-                      </span>
-                      {item.blockMeta.blockCategoryLabelKo && (
+                      <button
+                        type="button"
+                        className="cue-sheet-item-select-btn"
+                        aria-current={
+                          isFirstRowForCurrentItem ? 'step' : undefined
+                        }
+                        onClick={() => selectByCueItemId(row.parentCueItemId)}
+                      >
                         <span className="cue-sheet-badge">
-                          {item.blockMeta.blockCategoryLabelKo}
+                          펼침 #{formatStepNumber(row.expandedOrder)} (원본 #
+                          {formatStepNumber(row.parentItemOrder)})
+                        </span>
+                        <strong>{row.nameKo}</strong>
+                        {row.duplicateDisambiguatorKo && (
+                          <span className="cue-sheet-badge is-warning">
+                            {row.duplicateDisambiguatorKo}
+                          </span>
+                        )}
+                      </button>
+                      {row.blockHeaderKo && (
+                        <span className="cue-sheet-badge">
+                          {row.blockHeaderKo}
                         </span>
                       )}
-                      {item.blockMeta.blockPathTitles.length > 0 && (
+                      {row.sideLabelKo && (
+                        <span className="cue-sheet-badge">{row.sideLabelKo}</span>
+                      )}
+                      {row.setIndex !== null && row.setCount !== null && (
                         <span className="cue-sheet-badge">
-                          블록: {item.blockMeta.blockPathTitles.join(' › ')}
+                          세트 {row.setIndex}/{row.setCount}
                         </span>
                       )}
-                      {item.blockMeta.blockRepetitionCount > 1 && (
+                      {row.blockRepetitionCount > 1 && (
                         <span className="cue-sheet-badge">
-                          블록 반복 {item.blockMeta.blockRepetitionIndex}/
-                          {item.blockMeta.blockRepetitionCount}
+                          블록 반복 {row.blockRepetitionIndex}/
+                          {row.blockRepetitionCount}
                         </span>
                       )}
-                      <span className="cue-sheet-badge">
-                        {item.practice.sideBadgeKo}
-                      </span>
                       <span
                         className={`cue-sheet-badge ${
-                          item.timing.status === 'unspecified'
-                            ? 'is-warning'
-                            : ''
+                          row.timingStatus === 'unspecified' ? 'is-warning' : ''
                         }`}
                       >
-                        {item.timing.displayLabelKo}
+                        {row.timingLabelKo}
                       </span>
                     </div>
-                  </div>
-
-                  <p className="cue-sheet-meta-line">
-                    수행: {item.practice.practiceSummaryKo} · 시간 상세:{' '}
-                    {item.timing.detailLabelKo}
-                  </p>
-                  <p className="cue-sheet-meta-line">
-                    세팅: {item.setup.setupSummaryKo}
-                  </p>
-                  {renderItemCueBlock(item)}
-                </li>
-              );
-            })}
-          </ol>
-        ) : (
-          <ol
-            className="cue-sheet-expanded-list"
-            aria-label="펼친 진행표 항목 목록"
-          >
-            {activeProjection.expandedRows.map((row) => {
-              const isCurrentParent = Boolean(
-                currentItem && row.parentCueItemId === currentItem.cueItemId,
-              );
-              const isFirstRowForCurrentItem = Boolean(
-                isCurrentParent &&
-                  row.expandedRowId === firstExpandedRowIdForCurrent,
-              );
-              const expandedRowClasses = [
-                'cue-sheet-expanded-row',
-                isCurrentParent ? 'is-active-step' : '',
-              ]
-                .filter(Boolean)
-                .join(' ');
-
-              return (
+                    <p className="cue-sheet-meta-line">
+                      세팅: {row.setupSummaryKo}
+                    </p>
+                    <p className="cue-sheet-note">
+                      큐: {row.primaryCueKo}
+                      {row.instructorNote ? ` · 메모: ${row.instructorNote}` : ''}
+                    </p>
+                  </li>
+                );
+              })}
+              {activeProjection.truncation.omittedExpandedRowCount > 0 && (
                 <li
-                  key={row.expandedRowId}
-                  data-expanded-row-id={row.expandedRowId}
-                  data-parent-cue-item-id={row.parentCueItemId}
-                  data-is-current-parent={isCurrentParent ? 'true' : 'false'}
-                  className={expandedRowClasses}
+                  className="cue-sheet-expanded-omitted-footer"
+                  data-testid="expanded-omitted-footer"
                 >
-                  <div className="cue-sheet-badge-row">
-                    <button
-                      type="button"
-                      className="cue-sheet-item-select-btn"
-                      aria-current={isFirstRowForCurrentItem ? 'step' : undefined}
-                      onClick={() => selectByCueItemId(row.parentCueItemId)}
-                    >
-                      <span className="cue-sheet-badge">
-                        펼침 #{formatStepNumber(row.expandedOrder)} (원본 #
-                        {formatStepNumber(row.parentItemOrder)})
-                      </span>
-                      <strong>{row.nameKo}</strong>
-                      {row.duplicateDisambiguatorKo && (
-                        <span className="cue-sheet-badge is-warning">
-                          {row.duplicateDisambiguatorKo}
-                        </span>
-                      )}
-                    </button>
-                    {row.blockHeaderKo && (
-                      <span className="cue-sheet-badge">{row.blockHeaderKo}</span>
-                    )}
-                    {row.sideLabelKo && (
-                      <span className="cue-sheet-badge">{row.sideLabelKo}</span>
-                    )}
-                    {row.setIndex !== null && row.setCount !== null && (
-                      <span className="cue-sheet-badge">
-                        세트 {row.setIndex}/{row.setCount}
-                      </span>
-                    )}
-                    {row.blockRepetitionCount > 1 && (
-                      <span className="cue-sheet-badge">
-                        블록 반복 {row.blockRepetitionIndex}/
-                        {row.blockRepetitionCount}
-                      </span>
-                    )}
-                    <span
-                      className={`cue-sheet-badge ${
-                        row.timingStatus === 'unspecified' ? 'is-warning' : ''
-                      }`}
-                    >
-                      {row.timingLabelKo}
-                    </span>
-                  </div>
-                  <p className="cue-sheet-meta-line">
-                    세팅: {row.setupSummaryKo}
-                  </p>
-                  <p className="cue-sheet-note">
-                    큐: {row.primaryCueKo}
-                    {row.instructorNote ? ` · 메모: ${row.instructorNote}` : ''}
-                  </p>
+                  펼침 행 상한({activeProjection.truncation.maxExpandedRowsCap}행) 초과로{' '}
+                  {activeProjection.truncation.omittedExpandedRowCount}개 펼침 행이
+                  생략되었습니다. (임의 숨김 없음)
                 </li>
+              )}
+            </ol>
+          )}
+        </div>
+      </section>
+
+      {/* 6. Collapsible Technical Summary & Diagnostics */}
+      <section
+        aria-label="수업 요약 및 기술·보안 진단"
+        className="cue-sheet-diagnostics-section"
+        data-testid="cue-sheet-diagnostics-section"
+      >
+        <div className="cue-sheet-no-print">
+          <button
+            type="button"
+            className={`cue-sheet-btn cue-sheet-disclosure-btn ${
+              isDiagnosticsOpen ? 'is-active' : ''
+            }`}
+            data-testid="cue-sheet-diagnostics-toggle"
+            aria-expanded={isDiagnosticsOpen}
+            aria-controls="cue-sheet-diagnostics-panel"
+            onClick={() => setIsDiagnosticsOpen((prev) => !prev)}
+          >
+            수업 요약·기술 진단 {isDiagnosticsOpen ? '접기' : '펼치기'}
+          </button>
+        </div>
+
+        <div
+          id="cue-sheet-diagnostics-panel"
+          data-testid="cue-sheet-diagnostics-panel"
+          data-collapsed={isDiagnosticsCollapsedScreen ? 'true' : 'false'}
+          className={`cue-sheet-collapsible-panel ${
+            isDiagnosticsCollapsedScreen ? 'is-collapsed-screen' : ''
+          }`}
+        >
+          <section
+            className="cue-sheet-summary-card"
+            aria-label="수업 요약 및 장비·시간 안내"
+          >
+            <div className="cue-sheet-summary-grid">
+              <div className="cue-sheet-summary-cell">
+                <span className="cue-sheet-summary-label">항목 구성</span>
+                <span className="cue-sheet-summary-value">
+                  전체 {activeProjection.itemCount}개 · 동작{' '}
+                  {activeProjection.exerciseCount}개 · 휴식{' '}
+                  {activeProjection.restCount}개
+                </span>
+              </div>
+              <div className="cue-sheet-summary-cell">
+                <span className="cue-sheet-summary-label">시간 요약</span>
+                <span className="cue-sheet-summary-value">
+                  {activeProjection.timingSummary.timingSummaryLabelKo}
+                </span>
+              </div>
+              <div className="cue-sheet-summary-cell">
+                <span className="cue-sheet-summary-label">사용 기구</span>
+                <span className="cue-sheet-summary-value">
+                  {activeProjection.allEquipmentLabelsKo.length > 0
+                    ? activeProjection.allEquipmentLabelsKo.join(', ')
+                    : activeProjection.apparatusLabelKo}
+                </span>
+              </div>
+              <div className="cue-sheet-summary-cell">
+                <span className="cue-sheet-summary-label">소도구</span>
+                <span className="cue-sheet-summary-value">
+                  {activeProjection.allPropLabelsKo.length > 0
+                    ? activeProjection.allPropLabelsKo.join(', ')
+                    : '소도구 없음'}
+                </span>
+              </div>
+            </div>
+
+            <div className="cue-sheet-badge-row">
+              {activeProjection.timingSummary.hasUnspecifiedTime && (
+                <span
+                  className="cue-sheet-badge is-warning"
+                  data-testid="unspecified-time-badge"
+                >
+                  시간 미정 {activeProjection.timingSummary.unspecifiedItemCount}개
+                  항목 포함 (새 시간 추정 없음)
+                </span>
+              )}
+              {activeProjection.nameOnlyCount > 0 && (
+                <span
+                  className="cue-sheet-badge is-emphasis"
+                  data-testid="name-only-count-badge"
+                >
+                  이름만 입력된 동작 {activeProjection.nameOnlyCount}개 (강제 분류
+                  없음)
+                </span>
+              )}
+              {activeProjection.duplicateNameGroupCount > 0 && (
+                <span className="cue-sheet-badge">
+                  동일 동작명 구분 그룹 {activeProjection.duplicateNameGroupCount}개
+                </span>
+              )}
+              {(activeProjection.privacy.strippedSensitiveKeys.length > 0 ||
+                activeProjection.privacy.redactedInlineTextCount > 0) && (
+                <span
+                  className="cue-sheet-badge"
+                  data-testid="privacy-stripped-badge"
+                >
+                  민감 키 제외 (
+                  {activeProjection.privacy.strippedSensitiveKeys.length}
+                  종) · 보조 휴리스틱 마스킹 (
+                  {activeProjection.privacy.redactedInlineTextCount}
+                  건, 전체 제거 보장 아님)
+                </span>
+              )}
+            </div>
+          </section>
+
+          <div
+            className="cue-sheet-boundary-banner"
+            role="region"
+            aria-label="단독 통합 후보 및 경계 고지"
+          >
+            <p className="cue-sheet-boundary-title">
+              독립 통합 후보 (Standalone Integration Candidate) · 실제 앱 라우트 미연결
+            </p>
+            <p className="cue-sheet-boundary-text">
+              자동 처방 없음 · 안전성·운동 효과 보장 없음 · 새 동작 강제 분류 없음 ·
+              로컬 전용(외부 AI·서버 전송·저장소 기록 없음)
+            </p>
+            {activeProjection.boundary.disclaimerKo && (
+              <p className="cue-sheet-boundary-text">
+                {activeProjection.boundary.disclaimerKo}
+              </p>
+            )}
+            {activeProjection.diagnostics.length > 0 && (
+              <ul
+                className="cue-sheet-diagnostics-list"
+                aria-label="진단 메시지 목록"
+              >
+                {activeProjection.diagnostics.map((diag, idx) => (
+                  <li
+                    key={`${diag.code}-${idx}`}
+                    className="cue-sheet-boundary-text"
+                  >
+                    {diag.messageKo}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Optional Fixture Switcher (Secondary Dev/Test Toolbar) */}
+      {shouldShowFixtureSwitcher && (
+        <section
+          className="cue-sheet-fixture-toolbar cue-sheet-no-print"
+          aria-label="합성 수업 픽스처 도구 모음"
+        >
+          <div className="cue-sheet-fixture-controls">
+            <label htmlFor="cue-sheet-fixture-select">
+              <strong>합성 수업 픽스처</strong>
+            </label>
+            <select
+              id="cue-sheet-fixture-select"
+              aria-label="합성 수업 픽스처 선택"
+              className="cue-sheet-fixture-select"
+              value={selectedFixtureId}
+              onChange={(e) =>
+                handleSelectFixture(
+                  e.target.value as CueSheetFixtureEntry['fixtureId'],
+                )
+              }
+            >
+              {CLASS_CUE_SHEET_FIXTURES.map((fixture) => (
+                <option key={fixture.fixtureId} value={fixture.fixtureId}>
+                  {fixture.labelKo} ({fixture.fixtureId})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div
+            className="cue-sheet-fixture-buttons"
+            role="group"
+            aria-label="픽스처 빠른 전환 버튼"
+          >
+            {CLASS_CUE_SHEET_FIXTURES.map((fixture) => {
+              const isSelected = fixture.fixtureId === selectedFixtureId;
+              return (
+                <button
+                  key={fixture.fixtureId}
+                  type="button"
+                  className={`cue-sheet-btn ${isSelected ? 'is-active' : ''}`}
+                  aria-pressed={isSelected}
+                  data-fixture-id={fixture.fixtureId}
+                  onClick={() => handleSelectFixture(fixture.fixtureId)}
+                >
+                  {fixture.labelKo}
+                </button>
               );
             })}
-            {activeProjection.truncation.omittedExpandedRowCount > 0 && (
-              <li
-                className="cue-sheet-expanded-omitted-footer"
-                data-testid="expanded-omitted-footer"
-              >
-                펼침 행 상한({activeProjection.truncation.maxExpandedRowsCap}행) 초과로{' '}
-                {activeProjection.truncation.omittedExpandedRowCount}개 펼침 행이
-                생략되었습니다. (임의 숨김 없음)
-              </li>
-            )}
-          </ol>
-        )}
-      </section>
+          </div>
+        </section>
+      )}
     </div>
   );
 };

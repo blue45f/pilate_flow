@@ -17,4 +17,5 @@ export { ClassCueSheetPreview } from './ClassCueSheetPreview';
 export type {
   ClassCueSheetPreviewProps,
   CueSheetSelectionResolution,
+  CueSheetTextScale,
 } from './ClassCueSheetPreview';

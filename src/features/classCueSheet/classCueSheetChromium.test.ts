@@ -460,7 +460,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
   });
 
   it(
-    'renders all 7 synthetic fixtures at 320px and 390px with zero horizontal overflow and retains focus + selection across live class edits and boundary navigation in real Chromium',
+    'renders all 7 synthetic fixtures at 320px, 390px, 768px, and 1440px (at 100% and 200% text scale) with zero horizontal overflow, >=44px touch targets, novice collapsed defaults, and retains focus + selection across live class edits in real Chromium',
     async () => {
       expect(cdp).not.toBeNull();
       const session = cdp!;
@@ -475,26 +475,106 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
         'corrupted-circular-sensitive-html',
       ] as const;
 
-      for (const width of [320, 390] as const) {
-        await session.send('Emulation.setEmulatedMedia', { media: 'screen' });
+      for (const width of [320, 390, 768, 1440] as const) {
+        await session.send('Emulation.setEmulatedMedia', {
+          media: 'screen',
+          features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+        });
         await session.send('Emulation.setDeviceMetricsOverride', {
           width,
-          height: 844,
+          height: width < 768 ? 844 : 960,
           deviceScaleFactor: 1,
-          mobile: true,
+          mobile: width < 768,
         });
 
         await session.evaluate(
           `window.__renderCueSheetProps({ key: 'fixture-switcher-${width}', showFixtureSwitcher: true, initialViewMode: 'compact' })`,
         );
 
+        // Verify novice default hierarchy (collapsed full list & collapsed diagnostics, top-to-bottom reading order, >=44px touch targets)
+        const noviceDefaults = await session.evaluate<{
+          fullListOpen: string;
+          diagnosticsOpen: string;
+          fullListDisplay: string;
+          diagnosticsDisplay: string;
+          reducedMotion: string;
+          mandatoryGate: string;
+          headerTop: number;
+          deckTop: number;
+          currentTop: number;
+          nextTop: number;
+          progressionTop: number;
+          diagnosticsTop: number;
+          minTouchWidth: number;
+          minTouchHeight: number;
+        }>(`(() => {
+          const root = document.querySelector('[data-testid="class-cue-sheet-root"]');
+          const fullListPanel = root.querySelector('[data-testid="cue-sheet-full-list-panel"]');
+          const diagPanel = root.querySelector('[data-testid="cue-sheet-diagnostics-panel"]');
+          const header = root.querySelector('[data-testid="cue-sheet-compact-header"]');
+          const deck = root.querySelector('[data-testid="cue-sheet-focus-deck"]');
+          const currentCard = root.querySelector('[data-testid="cue-sheet-current-card"]');
+          const nextCard = root.querySelector('[data-testid="cue-sheet-next-card"]');
+          const progression = root.querySelector('[data-testid="cue-sheet-progression-section"]');
+          const diagnostics = root.querySelector('[data-testid="cue-sheet-diagnostics-section"]');
+
+          const isVisible = (el) => {
+            let cur = el;
+            while (cur && cur instanceof HTMLElement) {
+              const st = window.getComputedStyle(cur);
+              if (st.display === 'none' || st.visibility === 'hidden') return false;
+              cur = cur.parentElement;
+            }
+            const r = el.getBoundingClientRect();
+            return r.width > 0 && r.height > 0;
+          };
+
+          const controls = Array.from(root.querySelectorAll('button, select')).filter(isVisible);
+          const minTouchWidth = controls.reduce((min, el) => Math.min(min, el.getBoundingClientRect().width), 999);
+          const minTouchHeight = controls.reduce((min, el) => Math.min(min, el.getBoundingClientRect().height), 999);
+
+          return {
+            fullListOpen: root.getAttribute('data-full-list-open') ?? '',
+            diagnosticsOpen: root.getAttribute('data-diagnostics-open') ?? '',
+            fullListDisplay: window.getComputedStyle(fullListPanel).display,
+            diagnosticsDisplay: window.getComputedStyle(diagPanel).display,
+            reducedMotion: root.getAttribute('data-reduced-motion') ?? '',
+            mandatoryGate: root.getAttribute('data-mandatory-review-gate') ?? '',
+            headerTop: Math.round(header.getBoundingClientRect().top),
+            deckTop: Math.round(deck.getBoundingClientRect().top),
+            currentTop: Math.round(currentCard.getBoundingClientRect().top),
+            nextTop: Math.round(nextCard.getBoundingClientRect().top),
+            progressionTop: Math.round(progression.getBoundingClientRect().top),
+            diagnosticsTop: Math.round(diagnostics.getBoundingClientRect().top),
+            minTouchWidth,
+            minTouchHeight,
+          };
+        })()`);
+
+        expect(noviceDefaults.fullListOpen).toBe('false');
+        expect(noviceDefaults.diagnosticsOpen).toBe('false');
+        expect(noviceDefaults.fullListDisplay).toBe('none');
+        expect(noviceDefaults.diagnosticsDisplay).toBe('none');
+        expect(noviceDefaults.reducedMotion).toBe('respected');
+        expect(noviceDefaults.mandatoryGate).toBe('false');
+        expect(noviceDefaults.headerTop).toBeLessThanOrEqual(noviceDefaults.deckTop);
+        expect(noviceDefaults.deckTop).toBeLessThanOrEqual(noviceDefaults.currentTop);
+        expect(noviceDefaults.currentTop).toBeLessThanOrEqual(noviceDefaults.nextTop);
+        expect(noviceDefaults.nextTop).toBeLessThanOrEqual(noviceDefaults.progressionTop);
+        expect(noviceDefaults.progressionTop).toBeLessThanOrEqual(noviceDefaults.diagnosticsTop);
+        expect(noviceDefaults.minTouchWidth).toBeGreaterThanOrEqual(43.9);
+        expect(noviceDefaults.minTouchHeight).toBeGreaterThanOrEqual(43.9);
+
         for (const fixtureId of fixtureIds) {
           const metrics = await session.evaluate<{
             fixtureId: string;
             innerWidth: number;
-            docScrollWidth: number;
-            rootScrollWidth: number;
-            maxChildRight: number;
+            docScrollWidth100: number;
+            rootScrollWidth100: number;
+            maxChildRight100: number;
+            docScrollWidth200: number;
+            rootScrollWidth200: number;
+            maxChildRight200: number;
             scrollX: number;
             localStorageLen: number;
             sessionStorageLen: number;
@@ -505,21 +585,40 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
             btn.click();
             await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-            const compactBtn = Array.from(document.querySelectorAll('.cue-sheet-view-buttons button'))
-              .find((b) => b.textContent && b.textContent.includes('기본 진행표'));
-            if (compactBtn) compactBtn.click();
+            const scale100 = document.querySelector('[data-testid="cue-sheet-scale-100"]');
+            if (scale100) scale100.click();
             await new Promise((r) => requestAnimationFrame(r));
 
             const root = document.querySelector('[data-testid="class-cue-sheet-root"]');
-            const children = Array.from(root.querySelectorAll('.cue-sheet-summary-card, .cue-sheet-focus-deck, .cue-sheet-focus-card, .cue-sheet-item, .cue-sheet-truncation-banner'));
-            const maxChildRight = children.reduce((max, el) => Math.max(max, Math.round(el.getBoundingClientRect().right)), 0);
+            const measureMaxRight = () => {
+              const children = Array.from(root.querySelectorAll('[data-testid="cue-sheet-compact-header"], .cue-sheet-summary-card, .cue-sheet-focus-deck, .cue-sheet-focus-card, .cue-sheet-item, .cue-sheet-truncation-banner'));
+              return children.reduce((max, el) => Math.max(max, Math.round(el.getBoundingClientRect().right)), 0);
+            };
+
+            const docScrollWidth100 = document.documentElement.scrollWidth;
+            const rootScrollWidth100 = root.scrollWidth;
+            const maxChildRight100 = measureMaxRight();
+
+            const scale200 = document.querySelector('[data-testid="cue-sheet-scale-200"]');
+            if (scale200) scale200.click();
+            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+            const docScrollWidth200 = document.documentElement.scrollWidth;
+            const rootScrollWidth200 = root.scrollWidth;
+            const maxChildRight200 = measureMaxRight();
+
+            if (scale100) scale100.click();
+            await new Promise((r) => requestAnimationFrame(r));
 
             return {
               fixtureId: '${fixtureId}',
               innerWidth: window.innerWidth,
-              docScrollWidth: document.documentElement.scrollWidth,
-              rootScrollWidth: root.scrollWidth,
-              maxChildRight,
+              docScrollWidth100,
+              rootScrollWidth100,
+              maxChildRight100,
+              docScrollWidth200,
+              rootScrollWidth200,
+              maxChildRight200,
               scrollX: window.scrollX,
               localStorageLen: window.localStorage.length,
               sessionStorageLen: window.sessionStorage.length,
@@ -528,16 +627,19 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
           })()`);
 
           expect(metrics.innerWidth).toBe(width);
-          expect(metrics.docScrollWidth).toBeLessThanOrEqual(width);
-          expect(metrics.rootScrollWidth).toBeLessThanOrEqual(width);
-          expect(metrics.maxChildRight).toBeLessThanOrEqual(width);
+          expect(metrics.docScrollWidth100).toBeLessThanOrEqual(width);
+          expect(metrics.rootScrollWidth100).toBeLessThanOrEqual(width);
+          expect(metrics.maxChildRight100).toBeLessThanOrEqual(width);
+          expect(metrics.docScrollWidth200).toBeLessThanOrEqual(width);
+          expect(metrics.rootScrollWidth200).toBeLessThanOrEqual(width);
+          expect(metrics.maxChildRight200).toBeLessThanOrEqual(width);
           expect(metrics.scrollX).toBe(0);
           expect(metrics.localStorageLen).toBe(0);
           expect(metrics.sessionStorageLen).toBe(0);
           expect(metrics.injectedScriptCount).toBe(0);
         }
 
-        // Verify expanded view at 320px and 390px on the 100-item bounded fixture
+        // Verify expanded view on the 100-item bounded fixture
         const expandedMetrics = await session.evaluate<{
           docScrollWidth: number;
           rootScrollWidth: number;
@@ -624,6 +726,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
             key: liveKey,
             showFixtureSwitcher: false,
             initialViewMode: 'compact',
+            initialFullListOpen: true,
             sourceInput: {
               id: 'live-class-1',
               title: '실시간 편집 검증 수업',
@@ -644,6 +747,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
             key: liveKey,
             showFixtureSwitcher: false,
             initialViewMode: 'compact',
+            initialFullListOpen: true,
             sourceInput: {
               id: 'live-class-1',
               title: '실시간 편집 검증 수업',
@@ -657,6 +761,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
             key: liveKey,
             showFixtureSwitcher: false,
             initialViewMode: 'compact',
+            initialFullListOpen: true,
             sourceInput: {
               id: 'live-class-1',
               title: '실시간 편집 검증 수업',
@@ -670,6 +775,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
             key: liveKey,
             showFixtureSwitcher: false,
             initialViewMode: 'compact',
+            initialFullListOpen: true,
             sourceInput: {
               id: 'live-class-1',
               title: '실시간 편집 검증 수업',
@@ -688,6 +794,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
             key: liveKey,
             showFixtureSwitcher: false,
             initialViewMode: 'compact',
+            initialFullListOpen: true,
             sourceInput: {
               id: 'live-class-1',
               title: '실시간 편집 검증 수업',
@@ -701,6 +808,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
             key: liveKey,
             showFixtureSwitcher: false,
             initialViewMode: 'compact',
+            initialFullListOpen: true,
             sourceInput: {
               id: 'live-class-1',
               title: '실시간 편집 검증 수업',
@@ -714,6 +822,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
             key: liveKey,
             showFixtureSwitcher: false,
             initialViewMode: 'compact',
+            initialFullListOpen: true,
             sourceInput: {
               id: 'live-class-1',
               title: '빈 상태 전환 테스트',
@@ -731,6 +840,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
             key: liveKey,
             showFixtureSwitcher: false,
             initialViewMode: 'compact',
+            initialFullListOpen: true,
             sourceInput: {
               id: 'live-class-1',
               title: '장문 복귀 테스트',
@@ -744,6 +854,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
             key: liveKey,
             showFixtureSwitcher: false,
             initialViewMode: 'compact',
+            initialFullListOpen: true,
             sourceInput: {
               id: 'live-class-2-completely-different',
               title: '완전히 다른 신규 수업',
@@ -817,7 +928,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
         }
       }
     },
-    30000,
+    45000,
   );
 
   it(
@@ -851,6 +962,8 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
         rootBg: string;
         rootDisplay: string;
         progressionDisplay: string;
+        fullListPanelDisplay: string;
+        diagnosticsPanelDisplay: string;
         itemListDisplay: string;
         itemDisplay: string;
         itemBreakInside: string;
@@ -867,6 +980,8 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
         const rootStyle = window.getComputedStyle(root);
         const noPrintEls = Array.from(root.querySelectorAll('.cue-sheet-no-print'));
         const progression = root.querySelector('.cue-sheet-progression-section');
+        const fullListPanel = root.querySelector('[data-testid="cue-sheet-full-list-panel"]');
+        const diagnosticsPanel = root.querySelector('[data-testid="cue-sheet-diagnostics-panel"]');
         const itemList = root.querySelector('.cue-sheet-item-list');
         const firstItem = root.querySelector('.cue-sheet-item');
         const firstHeader = root.querySelector('.cue-sheet-item-header');
@@ -880,6 +995,8 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
           rootBg: rootStyle.backgroundColor,
           rootDisplay: rootStyle.display,
           progressionDisplay: window.getComputedStyle(progression).display,
+          fullListPanelDisplay: window.getComputedStyle(fullListPanel).display,
+          diagnosticsPanelDisplay: window.getComputedStyle(diagnosticsPanel).display,
           itemListDisplay: window.getComputedStyle(itemList).display,
           itemDisplay: window.getComputedStyle(firstItem).display,
           itemBreakInside: window.getComputedStyle(firstItem).breakInside,
@@ -900,6 +1017,8 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
       expect(printComputed.rootBg).toBe('rgb(255, 255, 255)');
       expect(printComputed.rootDisplay).toBe('block');
       expect(printComputed.progressionDisplay).toBe('block');
+      expect(printComputed.fullListPanelDisplay).toBe('block');
+      expect(printComputed.diagnosticsPanelDisplay).toBe('block');
       expect(printComputed.itemListDisplay).toBe('block');
       expect(printComputed.itemDisplay).toBe('block');
       expect(printComputed.itemBreakInside).toBe('auto');
@@ -1040,9 +1159,9 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
           const marker = `[장문단락-${String(i).padStart(2, '0')}]`;
           expect(countOccurrences(res.fullText, marker)).toBe(1);
         }
-        // Prove the single 35-line item starts on page 1 and continues onto page 2+
+        // Prove the single 35-line item starts on page 1 and continues onto the final progression pages
         expect(res.pageTexts[0]).toContain('[장문단락-01]');
-        expect(res.pageTexts[res.pageCount - 1]).toContain('[장문단락-35]');
+        expect(res.pageTexts.slice(-2).join('\n')).toContain('[장문단락-35]');
       }
 
       // Case B: nested-repeats-unilateral-unspecified-time (expanded view)
@@ -1072,7 +1191,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
         }
         expect(res.pageTexts[0]).toContain('중첩 블록 반복 · 좌우 편측 · 시간 미정 보존 시퀀스');
         expect(res.pageTexts.slice(0, 2).join('\n')).toContain('펼침 #01 (');
-        expect(res.pageTexts[res.pageCount - 1]).toContain(
+        expect(res.pageTexts.slice(-2).join('\n')).toContain(
           `펼침 #${String(nestedExpandedCount).padStart(2, '0')} (`,
         );
       }
@@ -1107,7 +1226,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
         }
         expect(res.fullText).not.toContain('대규모 내구성 검증 동작 #151');
         expect(res.pageTexts[0]).toContain('대규모 내구성 검증 동작 #001');
-        expect(res.pageTexts[res.pageCount - 1]).toContain('대규모 내구성 검증 동작 #150');
+        expect(res.pageTexts.slice(-2).join('\n')).toContain('대규모 내구성 검증 동작 #150');
       }
 
       // Case C2: hundred-items-bounded in expanded view (240 rows 펼침 #01..펼침 #240 + truncation banner + omitted footer)
@@ -1137,8 +1256,8 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
         expect(res.fullText).not.toContain('펼침 #241');
         expect(res.pageTexts[0]).toContain('대규모 내구성 검증 동작 #001');
         expect(res.pageTexts.slice(0, 2).join('\n')).toContain('펼침 #01 (');
-        expect(res.pageTexts[res.pageCount - 1]).toContain('펼침 #240 (');
-        expect(res.pageTexts[res.pageCount - 1]).toContain('펼침 행 상한(240행) 초과로');
+        expect(res.pageTexts.slice(-2).join('\n')).toContain('펼침 #240 (');
+        expect(res.pageTexts.slice(-2).join('\n')).toContain('펼침 행 상한(240행) 초과로');
       }
     },
     60000,
