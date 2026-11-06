@@ -1,4 +1,16 @@
 import type {
+  ClassBlockSnapshot,
+  ClassSequenceSnapshot,
+  DraftModificationLog,
+  DraftPhotoReference,
+  HumanMovementDraft,
+  MovementSafetyAndEfficacyBoundary,
+  MovementSnapshot,
+  ReusableBlock,
+  SequenceSourceProvenance,
+  SubjectiveFeelLog,
+} from './hierarchy';
+import type {
   ApparatusType,
   AutoGenerateCriteria,
   BodyPosition,
@@ -34,8 +46,8 @@ export type TeachingRecordKind = 'plan-sequence' | 'condition-template' | 'compl
 export type TeachingHistorySourceKind = 'saved-sequence' | 'active-draft';
 
 /**
- * Immutable snapshot of a PilatesExercise at the exact time a class was taught.
- * Later mutations or deletions in the live exercise catalog must never alter this snapshot.
+ * Immutable snapshot of a PilatesExercise or HumanMovementDraft at the exact time a class was taught.
+ * Later mutations or deletions in the live exercise catalog or human draft repository must never alter this snapshot.
  */
 export interface TeachingExerciseSnapshot {
   id: string;
@@ -52,6 +64,8 @@ export interface TeachingExerciseSnapshot {
   bodyPosition: BodyPosition;
   level: DifficultyLevel;
   defaultDurationMin: number;
+  defaultRepetitions?: number;
+  defaultSets?: number;
   isUnilateral: boolean;
   springs: string;
   box: BoxState;
@@ -67,6 +81,15 @@ export interface TeachingExerciseSnapshot {
   tempo?: WorkoutTempo;
   isCustom?: boolean;
   createdAt?: string;
+  capturedAt?: string;
+  sourceOrigin?: 'catalog' | 'human-created';
+  humanDraftId?: string;
+  humanDraftRevision?: number;
+  ideaLineSnapshot?: string;
+  feelLogsSnapshot?: SubjectiveFeelLog[];
+  modificationLogsSnapshot?: DraftModificationLog[];
+  photoReferencesSnapshot?: DraftPhotoReference[];
+  safetyBoundarySnapshot?: MovementSafetyAndEfficacyBoundary;
 }
 
 /**
@@ -97,6 +120,14 @@ export interface TeachingProgramSnapshotItem {
   sideMode?: StepSideMode;
   instructorNote?: string;
   locked?: boolean;
+  blockInstanceId?: string;
+  sourceBlockId?: string;
+  sourceBlockVersion?: number;
+  sourceBlockTitle?: string;
+  blockInstanceDetached?: boolean;
+  humanDraftId?: string;
+  humanDraftRevision?: number;
+  movementSnapshot?: MovementSnapshot;
   exerciseSnapshot?: TeachingExerciseSnapshot;
 }
 
@@ -123,20 +154,26 @@ export interface TeachingProgramSnapshot {
   sourceSequenceId: string;
   sourceSequenceTitle: string;
   sourceSubtitle: string;
+  sourceSequenceVersion?: number;
+  sourceProvenance?: SequenceSourceProvenance;
   taughtAt: string;
   capturedAt: string;
   completionFingerprint: string;
   timing: TeachingProgramTimingSnapshot;
   exercisesById: Record<string, TeachingExerciseSnapshot>;
+  blockSnapshots?: ClassBlockSnapshot[];
+  sequenceSnapshot?: ClassSequenceSnapshot;
   items: TeachingProgramSnapshotItem[];
 }
 
 /**
- * Extended ClassHistoryLog type carrying the immutable `programSnapshot` payload.
+ * Extended ClassHistoryLog type carrying the immutable `programSnapshot` and P1 `sequenceSnapshot` payloads.
  * Compatible with shared `ClassHistoryLog` and P1 `historySchema.passthrough()`.
  */
 export type ClassHistoryLogWithSnapshot = ClassHistoryLog & {
   programSnapshot?: TeachingProgramSnapshot;
+  sequenceSnapshot?: ClassSequenceSnapshot;
+  sourceProvenance?: SequenceSourceProvenance;
 };
 
 /**
@@ -144,6 +181,7 @@ export type ClassHistoryLogWithSnapshot = ClassHistoryLog & {
  */
 export type CompletedHistoryLogPayload = Omit<ClassHistoryLog, 'id'> & {
   programSnapshot?: TeachingProgramSnapshot;
+  sequenceSnapshot?: ClassSequenceSnapshot;
 };
 
 export interface BuildTeachingProgramSnapshotInput {
@@ -151,14 +189,27 @@ export interface BuildTeachingProgramSnapshotInput {
   sequenceTitle: string;
   sequenceSubtitle?: string;
   sourceKind: TeachingHistorySourceKind;
+  sourceSequenceVersion?: number;
+  sourceSequenceUpdatedAt?: string;
+  sourceProvenance?: SequenceSourceProvenance;
+  apparatus?: ApparatusType | 'mixed';
+  level?: DifficultyLevel;
+  targetMinutes?: number;
   taughtAt: string;
   capturedAt?: string;
   groupId: string;
   steps: SequenceStep[];
   exercises: PilatesExercise[];
+  humanDrafts?: readonly HumanMovementDraft[];
+  reusableBlocks?: readonly ReusableBlock[];
   actualDurationSec?: number;
   actualRestDurationSec?: number;
   criteriaSnapshot?: AutoGenerateCriteria;
+}
+
+export interface ResolveTeachingHistoryOptions {
+  reusableBlocks?: readonly ReusableBlock[];
+  humanDrafts?: readonly HumanMovementDraft[];
 }
 
 export interface ResolvedTeachingHistoryStepView {
@@ -196,6 +247,19 @@ export interface ResolvedTeachingHistoryStepView {
   sideMode?: StepSideMode;
   instructorNote?: string;
   locked?: boolean;
+  blockInstanceId?: string;
+  sourceBlockId?: string;
+  sourceBlockVersion?: number;
+  sourceBlockTitle?: string;
+  blockInstanceDetached?: boolean;
+  isBlockTemplateModified?: boolean;
+  isBlockTemplateDeleted?: boolean;
+  humanDraftId?: string;
+  humanDraftRevision?: number;
+  sourceOrigin?: 'catalog' | 'human-created';
+  ideaLineSnapshot?: string;
+  isHumanDraftModified?: boolean;
+  isHumanDraftDeleted?: boolean;
   /** True when the exercise snapshot was preserved at completion time. */
   fromSnapshot: boolean;
   /** True when the live catalog exercise was later modified compared to the taught snapshot. */
@@ -223,13 +287,19 @@ export interface ResolvedTeachingHistoryView {
   instructorReflection: string;
   timing: TeachingProgramTimingSnapshot;
   steps: ResolvedTeachingHistoryStepView[];
+  blockSnapshots: ClassBlockSnapshot[];
   movementCount: number;
   restCount: number;
   hasPreservedSnapshot: boolean;
   hasCatalogDrift: boolean;
   modifiedExerciseIds: string[];
   deletedExerciseIds: string[];
+  modifiedBlockIds: string[];
+  deletedBlockIds: string[];
+  modifiedHumanDraftIds: string[];
+  deletedHumanDraftIds: string[];
   missingUnrecoverableExerciseIds: string[];
   sourceSequenceStatus: 'unchanged' | 'modified' | 'deleted' | 'draft-origin';
+  sourceProvenance?: SequenceSourceProvenance;
   canCopyToNextClass: boolean;
 }

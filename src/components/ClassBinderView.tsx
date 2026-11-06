@@ -160,7 +160,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
           const resolved = resolvedHistoryMap.get(log.id);
           const stepNames =
             resolved?.steps
-              .map((step) => `${step.nameKo} ${step.nameEn} ${step.blockNameKo}`)
+              .map(
+                (step) =>
+                  `${step.nameKo} ${step.nameEn} ${step.blockNameKo} ${step.sourceBlockTitle ?? ''} ${step.ideaLineSnapshot ?? ''}`,
+              )
               .join(' ') ?? '';
           const searchable = `${log.sequenceTitle} ${log.groupName} ${log.instructorReflection} ${log.taughtAt.slice(0, 10)} ${stepNames}`.toLowerCase();
           return searchable.includes(trimmed);
@@ -697,6 +700,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                           당시 동작·블록·시간 스냅샷 보존
                         </span>
                       )}
+                      {resolved.blockSnapshots.length > 0 && (
+                        <span className="teaching-snapshot-badge">
+                          재사용 블록 {resolved.blockSnapshots.length}개 스냅샷
+                        </span>
+                      )}
                       {resolved.hasCatalogDrift && (
                         <span
                           className="teaching-drift-badge"
@@ -740,7 +748,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                           title={
                             step.kind === 'rest'
                               ? `휴식 (${step.durationMin}분)`
-                              : `${String(step.order).padStart(2, '0')}. [${step.blockNameKo}] ${step.nameKo} (${step.durationMin}분)`
+                              : `${String(step.order).padStart(2, '0')}. [${step.sourceBlockTitle ? `${step.blockNameKo} · ${step.sourceBlockTitle}` : step.blockNameKo}] ${step.nameKo} (${step.durationMin}분)`
                           }
                         >
                           {step.kind === 'rest'
@@ -879,6 +887,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                     ? '원본 구분: 저장 시퀀스 계획'
                     : '원본 구분: 작업대 수업 초안'}
                 </span>
+                {reopenedView.blockSnapshots.map((blockSnap) => (
+                  <span key={blockSnap.blockInstanceId} className="teaching-snapshot-badge">
+                    블록 스냅샷: {blockSnap.sourceBlockTitle} (v{blockSnap.sourceBlockVersion})
+                  </span>
+                ))}
                 {reopenedView.hasCatalogDrift && (
                   <span className="teaching-drift-badge" data-snapshot-preserved="true">
                     원본 동작·블록 수정 후에도 당시 이력 스냅샷 그대로 보존됨
@@ -954,6 +967,16 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                           ? `휴식 · ${step.classSectionLabelKo}`
                           : `${step.blockNameKo} · ${step.classSectionLabelKo}`}
                       </span>
+                      {step.sourceBlockTitle && (
+                        <span className="teaching-step-block-badge">
+                          블록: {step.sourceBlockTitle} v{step.sourceBlockVersion ?? 1}
+                        </span>
+                      )}
+                      {step.sourceOrigin === 'human-created' && (
+                        <span className="teaching-step-block-badge">
+                          창작 초안 rev.{step.humanDraftRevision ?? 1}
+                        </span>
+                      )}
                       <strong>
                         {step.kind === 'rest'
                           ? '휴식'
@@ -969,6 +992,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       )}
                       {step.isCatalogDeleted && (
                         <span className="teaching-step-drift-tag">원본 동작 삭제됨 · 스냅샷 복원 가능</span>
+                      )}
+                      {step.isBlockTemplateModified && (
+                        <span className="teaching-step-drift-tag">원본 블록 수정됨 · 당시 블록 유지</span>
+                      )}
+                      {step.isBlockTemplateDeleted && (
+                        <span className="teaching-step-drift-tag">원본 블록 삭제됨 · 스냅샷 유지</span>
                       )}
                       <span className="teaching-step-duration">
                         {formatSecondsToMMSS(step.durationMin * 60)} ({step.durationMin}분)
@@ -989,6 +1018,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                           <span>
                             반복·세트: {step.repetitions}회 × {step.sets}세트
                           </span>
+                        )}
+                        {step.ideaLineSnapshot && (
+                          <span>당시 창작 아이디어: {step.ideaLineSnapshot}</span>
                         )}
                         {step.cues[0] && <span>당시 핵심 큐: {step.cues[0]}</span>}
                         {step.instructorNote && <span>당시 메모: {step.instructorNote}</span>}

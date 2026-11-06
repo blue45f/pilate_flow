@@ -72,6 +72,10 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
         repetitions: 10,
         sets: 2,
         instructorNote: '도입 정렬 체크 메모',
+        blockInstanceId: 'block-inst-opening-1',
+        sourceBlockId: 'block-reformer-warmup',
+        sourceBlockVersion: 1,
+        sourceBlockTitle: '당시 리포머 도입 블록',
       },
       {
         stepId: 'hist-step-rest',
@@ -315,9 +319,11 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
     expect(historyCard.queryByText('삭제된 동작')).not.toBeInTheDocument();
     expect(historyCard.getByText('원본 수정 후에도 당시 스냅샷 유지됨')).toBeInTheDocument();
 
-    // 4. Filter by search query using the historical movement name
+    // 4. Filter by search query using the historical movement name and historical block title
     const searchInput = screen.getByRole('textbox', { name: '수업 기록 검색' });
     fireEvent.change(searchInput, { target: { value: '당시 헌드레드 코어' } });
+    expect(screen.getByRole('heading', { name: '목요 리포머 정규 시퀀스' })).toBeInTheDocument();
+    fireEvent.change(searchInput, { target: { value: '당시 리포머 도입 블록' } });
     expect(screen.getByRole('heading', { name: '목요 리포머 정규 시퀀스' })).toBeInTheDocument();
     fireEvent.change(searchInput, { target: { value: '' } });
 
@@ -327,6 +333,8 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
       screen.getByRole('dialog', { name: '진행 완료 수업 이력 상세' }),
     );
     expect(reopenDialog.getByText(/진행 완료 이력 스냅샷/)).toBeInTheDocument();
+    expect(reopenDialog.getByText(/블록 스냅샷: 당시 리포머 도입 블록 \(v1\)/)).toBeInTheDocument();
+    expect(reopenDialog.getByText(/블록: 당시 리포머 도입 블록 v1/)).toBeInTheDocument();
     expect(reopenDialog.getByText(/원본 동작·블록 수정 후에도 당시 이력 스냅샷 그대로 보존됨/)).toBeInTheDocument();
     expect(reopenDialog.getByText('당시 풋워크 예열 동작')).toBeInTheDocument();
     expect(reopenDialog.getByText('당시 헌드레드 코어 동작')).toBeInTheDocument();
