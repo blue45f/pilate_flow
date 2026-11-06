@@ -35,6 +35,22 @@ import type {
   TeachingProgramTimingSnapshot,
 } from '../types/teachingHistorySnapshot';
 import {
+  apparatusSchema,
+  criteriaSchema,
+  datedSequencePlanningSchema,
+  equipmentSchema,
+  exerciseSchema,
+  groupSchema,
+  historySchema,
+  levelSchema,
+  propSchema,
+  sequenceSchema,
+  stepSchema,
+  templateSchema,
+} from '../schemas/cloudBackupSchema';
+import { instructorScheduleSchema } from '../schemas/instructorScheduleSchema';
+import { instructorStudyStateSchema } from '../schemas/instructorStudySchema';
+import {
   backupRecoveryStateFingerprint,
   type RecoveryCurrentState,
   type RecoveryNextState,
@@ -232,6 +248,15 @@ export function movementSnapshotToTeachingExerciseSnapshot(
     ...(movementSnap.humanDraftRevision !== undefined || hierEx?.humanDraftRevision !== undefined
       ? { humanDraftRevision: movementSnap.humanDraftRevision ?? hierEx?.humanDraftRevision }
       : {}),
+    ...(movementSnap.parentDraftId !== undefined
+      ? { parentDraftId: movementSnap.parentDraftId }
+      : {}),
+    ...(movementSnap.parentDraftRevision !== undefined
+      ? { parentDraftRevision: movementSnap.parentDraftRevision }
+      : {}),
+    ...(movementSnap.variantLabelKo !== undefined
+      ? { variantLabelKo: movementSnap.variantLabelKo }
+      : {}),
     ...(movementSnap.ideaLineSnapshot !== undefined
       ? { ideaLineSnapshot: movementSnap.ideaLineSnapshot }
       : {}),
@@ -262,7 +287,11 @@ export function createTeachingExerciseSnapshot(
   exercise: PilatesExercise,
   capturedAt?: string,
 ): TeachingExerciseSnapshot {
-  const hierEx = exercise as HierarchyPilatesExercise;
+  const hierEx = exercise as HierarchyPilatesExercise & Partial<TeachingExerciseSnapshot> & {
+    parentDraftId?: string;
+    parentDraftRevision?: number;
+    variantLabelKo?: string;
+  };
   return stripUndefinedDeep({
     id: exercise.id,
     nameKo: exercise.nameKo,
@@ -303,12 +332,40 @@ export function createTeachingExerciseSnapshot(
     ...(exercise.tempo !== undefined ? { tempo: exercise.tempo } : {}),
     ...(exercise.isCustom !== undefined ? { isCustom: exercise.isCustom } : {}),
     ...(exercise.createdAt !== undefined ? { createdAt: exercise.createdAt } : {}),
-    ...(capturedAt ? { capturedAt } : {}),
+    ...(capturedAt ?? hierEx.capturedAt ? { capturedAt: capturedAt ?? hierEx.capturedAt } : {}),
     ...(hierEx.humanDraftId
       ? { sourceOrigin: 'human-created' as const, humanDraftId: hierEx.humanDraftId }
-      : { sourceOrigin: 'catalog' as const }),
+      : { sourceOrigin: hierEx.sourceOrigin ?? ('catalog' as const) }),
     ...(hierEx.humanDraftRevision !== undefined
       ? { humanDraftRevision: hierEx.humanDraftRevision }
+      : {}),
+    ...(hierEx.parentDraftId !== undefined ? { parentDraftId: hierEx.parentDraftId } : {}),
+    ...(hierEx.parentDraftRevision !== undefined
+      ? { parentDraftRevision: hierEx.parentDraftRevision }
+      : {}),
+    ...(hierEx.variantLabelKo !== undefined ? { variantLabelKo: hierEx.variantLabelKo } : {}),
+    ...(hierEx.ideaLineSnapshot !== undefined
+      ? { ideaLineSnapshot: hierEx.ideaLineSnapshot }
+      : {}),
+    ...(Array.isArray(hierEx.feelLogsSnapshot)
+      ? { feelLogsSnapshot: hierEx.feelLogsSnapshot.map((item) => structuredClone(item)) }
+      : {}),
+    ...(Array.isArray(hierEx.modificationLogsSnapshot)
+      ? {
+          modificationLogsSnapshot: hierEx.modificationLogsSnapshot.map((item) =>
+            structuredClone(item),
+          ),
+        }
+      : {}),
+    ...(Array.isArray(hierEx.photoReferencesSnapshot)
+      ? {
+          photoReferencesSnapshot: hierEx.photoReferencesSnapshot.map((item) =>
+            structuredClone(item),
+          ),
+        }
+      : {}),
+    ...(hierEx.safetyBoundarySnapshot
+      ? { safetyBoundarySnapshot: structuredClone(hierEx.safetyBoundarySnapshot) }
       : {}),
   });
 }
@@ -1347,6 +1404,12 @@ export function resolveTeachingHistoryView(
 export function reconstructExerciseFromSnapshot(
   snapshot: TeachingExerciseSnapshot,
 ): HierarchyPilatesExercise {
+  const extSnap = snapshot as TeachingExerciseSnapshot & {
+    parentDraftId?: string;
+    parentDraftRevision?: number;
+    variantLabelKo?: string;
+    historicalExtension?: Record<string, unknown>;
+  };
   const base: HierarchyPilatesExercise = stripUndefinedDeep({
     id: snapshot.id,
     nameKo: snapshot.nameKo,
@@ -1387,9 +1450,42 @@ export function reconstructExerciseFromSnapshot(
     ...(snapshot.tempo !== undefined ? { tempo: snapshot.tempo } : {}),
     ...(snapshot.isCustom !== undefined ? { isCustom: snapshot.isCustom } : {}),
     ...(snapshot.createdAt !== undefined ? { createdAt: snapshot.createdAt } : {}),
+    ...(snapshot.capturedAt !== undefined ? { capturedAt: snapshot.capturedAt } : {}),
+    ...(snapshot.sourceOrigin !== undefined ? { sourceOrigin: snapshot.sourceOrigin } : {}),
     ...(snapshot.humanDraftId ? { humanDraftId: snapshot.humanDraftId } : {}),
     ...(snapshot.humanDraftRevision !== undefined
       ? { humanDraftRevision: snapshot.humanDraftRevision }
+      : {}),
+    ...(extSnap.parentDraftId !== undefined ? { parentDraftId: extSnap.parentDraftId } : {}),
+    ...(extSnap.parentDraftRevision !== undefined
+      ? { parentDraftRevision: extSnap.parentDraftRevision }
+      : {}),
+    ...(extSnap.variantLabelKo !== undefined ? { variantLabelKo: extSnap.variantLabelKo } : {}),
+    ...(snapshot.ideaLineSnapshot !== undefined
+      ? { ideaLineSnapshot: snapshot.ideaLineSnapshot }
+      : {}),
+    ...(Array.isArray(snapshot.feelLogsSnapshot)
+      ? { feelLogsSnapshot: snapshot.feelLogsSnapshot.map((item) => structuredClone(item)) }
+      : {}),
+    ...(Array.isArray(snapshot.modificationLogsSnapshot)
+      ? {
+          modificationLogsSnapshot: snapshot.modificationLogsSnapshot.map((item) =>
+            structuredClone(item),
+          ),
+        }
+      : {}),
+    ...(Array.isArray(snapshot.photoReferencesSnapshot)
+      ? {
+          photoReferencesSnapshot: snapshot.photoReferencesSnapshot.map((item) =>
+            structuredClone(item),
+          ),
+        }
+      : {}),
+    ...(snapshot.safetyBoundarySnapshot
+      ? { safetyBoundarySnapshot: structuredClone(snapshot.safetyBoundarySnapshot) }
+      : {}),
+    ...(isPlainRecord(extSnap.historicalExtension)
+      ? { historicalExtension: structuredClone(extSnap.historicalExtension) }
       : {}),
   });
 
@@ -1591,6 +1687,7 @@ export function reconstructStepsSnapshotFromHistoryLog(
         sourceBlockId: item.sourceBlockId,
         sourceBlockVersion: item.sourceBlockVersion,
         sourceBlockTitle: item.sourceBlockTitle,
+        blockInstanceDetached: item.blockInstanceDetached,
         exerciseSnapshot: isPlainRecord(item.movementSnapshot)
           ? structuredClone(item.movementSnapshot)
           : undefined,
@@ -1607,8 +1704,12 @@ export function reconstructStepsSnapshotFromHistoryLog(
   if (p1SequenceSnapshot && p1SequenceSnapshot.steps.length > 0) {
     const validSteps = p1SequenceSnapshot.steps.filter((step) => isPlainRecord(step));
     if (validSteps.length === 0) return null;
-    return validSteps.map((step, idx) =>
-      stripUndefinedDeep({
+    return validSteps.map((step, idx) => {
+      const extStep = step as SequenceStep & {
+        futureStep?: Record<string, unknown>;
+        historicalStepLabel?: string;
+      };
+      return stripUndefinedDeep({
         stepId: step.stepId || `hist-step-${idx + 1}`,
         order: step.order ?? idx + 1,
         kind: step.kind,
@@ -1622,19 +1723,26 @@ export function reconstructStepsSnapshotFromHistoryLog(
         repetitions: step.repetitions,
         sets: step.sets,
         sideMode: step.sideMode,
+        classSection: step.classSection,
+        motionStudy: step.motionStudy ? structuredClone(step.motionStudy) : undefined,
         explanationSec: step.explanationSec,
         transitionSec: step.transitionSec,
         blockInstanceId: step.blockInstanceId,
         sourceBlockId: step.sourceBlockId,
         sourceBlockVersion: step.sourceBlockVersion,
         sourceBlockTitle: step.sourceBlockTitle,
+        blockInstanceDetached: step.blockInstanceDetached,
         exerciseSnapshot: isPlainRecord(step.exerciseSnapshot)
           ? structuredClone(step.exerciseSnapshot)
           : undefined,
         humanDraftId: step.humanDraftId,
         humanDraftRevision: step.humanDraftRevision,
-      }),
-    );
+        futureStep: isPlainRecord(extStep.futureStep)
+          ? structuredClone(extStep.futureStep)
+          : undefined,
+        historicalStepLabel: extStep.historicalStepLabel,
+      });
+    });
   }
 
   return null;
@@ -1973,35 +2081,382 @@ export type BackupRollbackFailureReason =
 let latestBackupRollbackPoint: BackupRestoreRollbackPoint | null = null;
 let latestRollbackPersistedToDisk = false;
 
-function isRecordWithNonEmptyId(entry: unknown): boolean {
-  if (!isPlainRecord(entry)) return false;
-  return typeof entry.id === 'string' && entry.id.trim().length > 0;
+const MAX_ROLLBACK_JSON_DEPTH = 64;
+
+function isSafeRollbackValueTree(root: unknown, maxDepth = MAX_ROLLBACK_JSON_DEPTH): boolean {
+  const stack: Array<{ value: unknown; depth: number }> = [{ value: root, depth: 0 }];
+  while (stack.length > 0) {
+    const { value, depth } = stack.pop()!;
+    if (typeof value === 'number') {
+      if (!Number.isFinite(value)) return false;
+      continue;
+    }
+    if (value === null || typeof value !== 'object') continue;
+    if (depth > maxDepth) return false;
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i += 1) {
+        stack.push({ value: value[i], depth: depth + 1 });
+      }
+      continue;
+    }
+    const ownNames = Object.getOwnPropertyNames(value);
+    for (let i = 0; i < ownNames.length; i += 1) {
+      const key = ownNames[i];
+      if (DANGEROUS_SNAPSHOT_KEYS.has(key)) return false;
+      stack.push({
+        value: (value as Record<string, unknown>)[key],
+        depth: depth + 1,
+      });
+    }
+  }
+  return true;
 }
 
-function isValidBackupPreRestoreDomainState(
+function isRecordWithNonEmptyId(entry: unknown): entry is Record<string, unknown> & { id: string } {
+  if (!isPlainRecord(entry)) return false;
+  return (
+    typeof entry.id === 'string' &&
+    entry.id.trim().length > 0 &&
+    entry.id.length <= 300 &&
+    !DANGEROUS_SNAPSHOT_KEYS.has(entry.id.trim())
+  );
+}
+
+function hasUniqueRecordIds(items: ReadonlyArray<{ id: string }>): boolean {
+  const seen = new Set<string>();
+  for (const item of items) {
+    if (!item.id || DANGEROUS_SNAPSHOT_KEYS.has(item.id) || seen.has(item.id)) {
+      return false;
+    }
+    seen.add(item.id);
+  }
+  return true;
+}
+
+function hasDuplicateRollbackStepIds(
+  steps: ReadonlyArray<{ stepId: string }> | undefined,
+): boolean {
+  if (!steps || steps.length === 0) return false;
+  const seen = new Set<string>();
+  for (const step of steps) {
+    if (!step.stepId || DANGEROUS_SNAPSHOT_KEYS.has(step.stepId) || seen.has(step.stepId)) {
+      return true;
+    }
+    seen.add(step.stepId);
+  }
+  return false;
+}
+
+function hasValidRollbackHistoryRefs(
+  log: ClassHistoryLogWithSnapshot,
+  knownExerciseIds: Set<string>,
+): boolean {
+  const snapshotExerciseIds = new Set<string>();
+  if (log.programSnapshot) {
+    const { exercisesById, items } = log.programSnapshot;
+    for (const [key, exSnap] of Object.entries(exercisesById)) {
+      if (DANGEROUS_SNAPSHOT_KEYS.has(key) || exSnap.id !== key) {
+        return false;
+      }
+      snapshotExerciseIds.add(key);
+    }
+    for (const item of items) {
+      if (item.kind === 'rest') {
+        if (item.exerciseId !== '') return false;
+        continue;
+      }
+      if (!item.exerciseId || DANGEROUS_SNAPSHOT_KEYS.has(item.exerciseId)) {
+        return false;
+      }
+      if (item.exerciseSnapshot !== undefined && item.exerciseSnapshot.id !== item.exerciseId) {
+        return false;
+      }
+      if (item.movementSnapshot !== undefined && item.movementSnapshot.id !== item.exerciseId) {
+        return false;
+      }
+      const inExercisesById =
+        Object.prototype.hasOwnProperty.call(exercisesById, item.exerciseId) &&
+        exercisesById[item.exerciseId]?.id === item.exerciseId;
+      const inItemSnapshot =
+        item.exerciseSnapshot?.id === item.exerciseId ||
+        item.movementSnapshot?.id === item.exerciseId;
+      if (inItemSnapshot) {
+        snapshotExerciseIds.add(item.exerciseId);
+      }
+      if (!knownExerciseIds.has(item.exerciseId) && !inExercisesById && !inItemSnapshot) {
+        return false;
+      }
+    }
+  }
+  const sequenceSnapshots = [log.sequenceSnapshot, log.programSnapshot?.sequenceSnapshot];
+  for (const seqSnap of sequenceSnapshots) {
+    if (!seqSnap) continue;
+    for (const [key, moveSnap] of Object.entries(seqSnap.exerciseSnapshots)) {
+      if (DANGEROUS_SNAPSHOT_KEYS.has(key) || moveSnap.id !== key) {
+        return false;
+      }
+      snapshotExerciseIds.add(key);
+    }
+    for (const step of seqSnap.steps) {
+      if (step.kind === 'rest') continue;
+      if (!step.exerciseId || DANGEROUS_SNAPSHOT_KEYS.has(step.exerciseId)) {
+        return false;
+      }
+      if (step.exerciseSnapshot !== undefined && step.exerciseSnapshot.id !== step.exerciseId) {
+        return false;
+      }
+      const inSnapMap =
+        Object.prototype.hasOwnProperty.call(seqSnap.exerciseSnapshots, step.exerciseId) &&
+        seqSnap.exerciseSnapshots[step.exerciseId]?.id === step.exerciseId;
+      const inStepSnap = step.exerciseSnapshot?.id === step.exerciseId;
+      if (inStepSnap) {
+        snapshotExerciseIds.add(step.exerciseId);
+      }
+      if (!knownExerciseIds.has(step.exerciseId) && !inSnapMap && !inStepSnap) {
+        return false;
+      }
+    }
+  }
+  if (log.stepsSnapshot) {
+    for (const step of log.stepsSnapshot) {
+      if (step.kind === 'rest') continue;
+      if (!step.exerciseId || DANGEROUS_SNAPSHOT_KEYS.has(step.exerciseId)) {
+        return false;
+      }
+      if (step.exerciseSnapshot !== undefined && step.exerciseSnapshot.id !== step.exerciseId) {
+        return false;
+      }
+      if (step.exerciseSnapshot?.id === step.exerciseId) {
+        snapshotExerciseIds.add(step.exerciseId);
+      }
+    }
+    if (
+      log.stepsSnapshot.some(
+        (step) =>
+          step.kind !== 'rest' &&
+          !knownExerciseIds.has(step.exerciseId) &&
+          !snapshotExerciseIds.has(step.exerciseId),
+      )
+    ) {
+      return false;
+    }
+  }
+  if (
+    log.exerciseIds.some(
+      (id) =>
+        DANGEROUS_SNAPSHOT_KEYS.has(id) ||
+        (!knownExerciseIds.has(id) && !snapshotExerciseIds.has(id)),
+    )
+  ) {
+    return false;
+  }
+  return true;
+}
+
+export function isValidBackupPreRestoreDomainState(
   value: unknown,
 ): value is BackupPreRestoreDomainState {
-  if (!isPlainRecord(value)) return false;
+  if (!isPlainRecord(value) || !isSafeRollbackValueTree(value)) return false;
   const candidate = value;
-  return (
-    Array.isArray(candidate.exercises) &&
-    candidate.exercises.every(isRecordWithNonEmptyId) &&
-    Array.isArray(candidate.savedSequences) &&
-    candidate.savedSequences.every(isRecordWithNonEmptyId) &&
-    Array.isArray(candidate.classGroups) &&
-    candidate.classGroups.every(isRecordWithNonEmptyId) &&
-    Array.isArray(candidate.historyLogs) &&
-    candidate.historyLogs.every(isRecordWithNonEmptyId) &&
-    Array.isArray(candidate.conditionTemplates) &&
-    candidate.conditionTemplates.every(isRecordWithNonEmptyId) &&
-    isPlainRecord(candidate.instructorSchedule) &&
-    Array.isArray(candidate.ownedEquipment) &&
-    candidate.ownedEquipment.every((item) => typeof item === 'string') &&
-    Array.isArray(candidate.ownedApparatus) &&
-    candidate.ownedApparatus.every((item) => typeof item === 'string') &&
-    Array.isArray(candidate.ownedProps) &&
-    candidate.ownedProps.every((item) => typeof item === 'string')
-  );
+  if (
+    !Array.isArray(candidate.exercises) ||
+    candidate.exercises.length > 20000 ||
+    !candidate.exercises.every(
+      (item) => isRecordWithNonEmptyId(item) && exerciseSchema.safeParse(item).success,
+    ) ||
+    !hasUniqueRecordIds(candidate.exercises)
+  ) {
+    return false;
+  }
+  const knownExerciseIds = new Set(candidate.exercises.map((item) => item.id));
+
+  if (
+    !Array.isArray(candidate.savedSequences) ||
+    candidate.savedSequences.length > 10000 ||
+    !candidate.savedSequences.every(
+      (item) => isRecordWithNonEmptyId(item) && sequenceSchema.safeParse(item).success,
+    ) ||
+    !hasUniqueRecordIds(candidate.savedSequences)
+  ) {
+    return false;
+  }
+  for (const rawSeq of candidate.savedSequences) {
+    const seq = rawSeq as unknown as SavedSequence;
+    if (hasDuplicateRollbackStepIds(seq.steps)) return false;
+    for (const step of seq.steps) {
+      if (step.kind === 'rest') continue;
+      if (
+        DANGEROUS_SNAPSHOT_KEYS.has(step.exerciseId) ||
+        (step.exerciseSnapshot !== undefined && step.exerciseSnapshot.id !== step.exerciseId) ||
+        (!knownExerciseIds.has(step.exerciseId) && step.exerciseSnapshot?.id !== step.exerciseId)
+      ) {
+        return false;
+      }
+    }
+  }
+
+  if (
+    !Array.isArray(candidate.classGroups) ||
+    candidate.classGroups.length > 10000 ||
+    !candidate.classGroups.every(
+      (item) => isRecordWithNonEmptyId(item) && groupSchema.safeParse(item).success,
+    ) ||
+    !hasUniqueRecordIds(candidate.classGroups)
+  ) {
+    return false;
+  }
+
+  if (
+    !Array.isArray(candidate.conditionTemplates) ||
+    candidate.conditionTemplates.length > 1000 ||
+    !candidate.conditionTemplates.every(
+      (item) => isRecordWithNonEmptyId(item) && templateSchema.safeParse(item).success,
+    ) ||
+    !hasUniqueRecordIds(candidate.conditionTemplates)
+  ) {
+    return false;
+  }
+
+  if (
+    !Array.isArray(candidate.historyLogs) ||
+    candidate.historyLogs.length > 20000 ||
+    !candidate.historyLogs.every(
+      (item) => isRecordWithNonEmptyId(item) && historySchema.safeParse(item).success,
+    ) ||
+    !hasUniqueRecordIds(candidate.historyLogs)
+  ) {
+    return false;
+  }
+  for (const rawLog of candidate.historyLogs) {
+    const log = rawLog as unknown as ClassHistoryLogWithSnapshot;
+    if (
+      hasDuplicateRollbackStepIds(log.stepsSnapshot) ||
+      hasDuplicateRollbackStepIds(log.programSnapshot?.items) ||
+      hasDuplicateRollbackStepIds(log.sequenceSnapshot?.steps) ||
+      hasDuplicateRollbackStepIds(log.programSnapshot?.sequenceSnapshot?.steps) ||
+      !hasValidRollbackHistoryRefs(log, knownExerciseIds)
+    ) {
+      return false;
+    }
+  }
+
+  if (
+    !isPlainRecord(candidate.instructorSchedule) ||
+    !instructorScheduleSchema.safeParse(candidate.instructorSchedule).success
+  ) {
+    return false;
+  }
+  if (
+    candidate.instructorStudyState !== undefined &&
+    !instructorStudyStateSchema.safeParse(candidate.instructorStudyState).success
+  ) {
+    return false;
+  }
+  if (
+    candidate.datedSequencePlanning !== undefined &&
+    !datedSequencePlanningSchema.safeParse(candidate.datedSequencePlanning).success
+  ) {
+    return false;
+  }
+  if (
+    !Array.isArray(candidate.ownedEquipment) ||
+    !candidate.ownedEquipment.every(
+      (item) => equipmentSchema.safeParse(item).success || apparatusSchema.safeParse(item).success,
+    ) ||
+    !Array.isArray(candidate.ownedApparatus) ||
+    !candidate.ownedApparatus.every((item) => apparatusSchema.safeParse(item).success) ||
+    !Array.isArray(candidate.ownedProps) ||
+    !candidate.ownedProps.every((item) => propSchema.safeParse(item).success)
+  ) {
+    return false;
+  }
+  if (
+    candidate.lastCriteria !== undefined &&
+    candidate.lastCriteria !== null &&
+    !criteriaSchema.safeParse(candidate.lastCriteria).success
+  ) {
+    return false;
+  }
+  if (
+    candidate.draftCriteria !== undefined &&
+    candidate.draftCriteria !== null &&
+    !criteriaSchema.safeParse(candidate.draftCriteria).success
+  ) {
+    return false;
+  }
+
+  // Validate optional workspace fields if present on preRestoreState (e.g., activeSteps uses stepId, not id)
+  if (candidate.activeSteps !== undefined) {
+    if (
+      !Array.isArray(candidate.activeSteps) ||
+      candidate.activeSteps.length > 1000 ||
+      !candidate.activeSteps.every((step) => stepSchema.safeParse(step).success) ||
+      hasDuplicateRollbackStepIds(candidate.activeSteps as SequenceStep[])
+    ) {
+      return false;
+    }
+    for (const step of candidate.activeSteps as SequenceStep[]) {
+      if (step.kind === 'rest') continue;
+      if (
+        DANGEROUS_SNAPSHOT_KEYS.has(step.exerciseId) ||
+        (step.exerciseSnapshot !== undefined && step.exerciseSnapshot.id !== step.exerciseId) ||
+        (!knownExerciseIds.has(step.exerciseId) && step.exerciseSnapshot?.id !== step.exerciseId)
+      ) {
+        return false;
+      }
+    }
+  }
+  if (
+    candidate.activeSequenceId !== undefined &&
+    (typeof candidate.activeSequenceId !== 'string' ||
+      candidate.activeSequenceId.trim().length === 0 ||
+      candidate.activeSequenceId.length > 300 ||
+      DANGEROUS_SNAPSHOT_KEYS.has(candidate.activeSequenceId.trim()))
+  ) {
+    return false;
+  }
+  if (
+    candidate.activeTitle !== undefined &&
+    (typeof candidate.activeTitle !== 'string' || candidate.activeTitle.length > 20000)
+  ) {
+    return false;
+  }
+  if (
+    candidate.activeSubtitle !== undefined &&
+    (typeof candidate.activeSubtitle !== 'string' || candidate.activeSubtitle.length > 20000)
+  ) {
+    return false;
+  }
+  if (
+    candidate.activeApparatus !== undefined &&
+    candidate.activeApparatus !== 'mixed' &&
+    !apparatusSchema.safeParse(candidate.activeApparatus).success
+  ) {
+    return false;
+  }
+  if (
+    candidate.activeLevel !== undefined &&
+    !levelSchema.safeParse(candidate.activeLevel).success
+  ) {
+    return false;
+  }
+  if (
+    candidate.activeTargetMinutes !== undefined &&
+    (typeof candidate.activeTargetMinutes !== 'number' ||
+      !Number.isFinite(candidate.activeTargetMinutes) ||
+      candidate.activeTargetMinutes < 10 ||
+      candidate.activeTargetMinutes > 120)
+  ) {
+    return false;
+  }
+  if (
+    candidate.activeTargetGroupId !== undefined &&
+    (typeof candidate.activeTargetGroupId !== 'string' || candidate.activeTargetGroupId.length > 300)
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 export function inspectPersistedRollbackPoint(
@@ -2016,7 +2471,7 @@ export function inspectPersistedRollbackPoint(
   } catch {
     return { valid: false, reason: 'corrupted-json', point: null };
   }
-  if (!isPlainRecord(parsedUnknown)) {
+  if (!isPlainRecord(parsedUnknown) || !isSafeRollbackValueTree(parsedUnknown)) {
     return { valid: false, reason: 'invalid-shape', point: null };
   }
   const parsed = parsedUnknown;
@@ -2035,16 +2490,26 @@ export function inspectPersistedRollbackPoint(
   if (
     typeof parsed.id !== 'string' ||
     parsed.id.trim().length === 0 ||
+    parsed.id.length > 300 ||
+    DANGEROUS_SNAPSHOT_KEYS.has(parsed.id.trim()) ||
     typeof parsed.postRestoreStateFingerprint !== 'string' ||
     parsed.postRestoreStateFingerprint.trim().length === 0 ||
     (parsed.postRestoreStorageFingerprint !== null &&
       parsed.postRestoreStorageFingerprint !== undefined &&
-      typeof parsed.postRestoreStorageFingerprint !== 'string') ||
+      (typeof parsed.postRestoreStorageFingerprint !== 'string' ||
+        parsed.postRestoreStorageFingerprint.trim().length === 0)) ||
+    (parsed.capturedAt !== undefined &&
+      (typeof parsed.capturedAt !== 'string' ||
+        (parsed.capturedAt !== '' && !Number.isFinite(Date.parse(parsed.capturedAt))))) ||
+    (parsed.addedCount !== undefined &&
+      (typeof parsed.addedCount !== 'number' ||
+        !Number.isInteger(parsed.addedCount) ||
+        parsed.addedCount < 0)) ||
     !isValidBackupPreRestoreDomainState(parsed.preRestoreState)
   ) {
     return { valid: false, reason: 'invalid-shape', point: null };
   }
-  const pre = parsed.preRestoreState;
+  const pre = parsed.preRestoreState as BackupPreRestoreDomainState & Record<string, unknown>;
   const resolvedVersion: 0 | 1 = parsed.version === 0 ? 0 : 1;
   return {
     valid: true,
@@ -2073,7 +2538,19 @@ export function inspectPersistedRollbackPoint(
         ownedProps: pre.ownedProps,
         lastCriteria: pre.lastCriteria ?? null,
         draftCriteria: pre.draftCriteria ?? null,
-      },
+        ...(pre.activeSteps !== undefined ? { activeSteps: pre.activeSteps } : {}),
+        ...(pre.activeSequenceId !== undefined ? { activeSequenceId: pre.activeSequenceId } : {}),
+        ...(pre.activeTitle !== undefined ? { activeTitle: pre.activeTitle } : {}),
+        ...(pre.activeSubtitle !== undefined ? { activeSubtitle: pre.activeSubtitle } : {}),
+        ...(pre.activeApparatus !== undefined ? { activeApparatus: pre.activeApparatus } : {}),
+        ...(pre.activeLevel !== undefined ? { activeLevel: pre.activeLevel } : {}),
+        ...(pre.activeTargetMinutes !== undefined
+          ? { activeTargetMinutes: pre.activeTargetMinutes }
+          : {}),
+        ...(pre.activeTargetGroupId !== undefined
+          ? { activeTargetGroupId: pre.activeTargetGroupId }
+          : {}),
+      } as BackupPreRestoreDomainState,
     },
   };
 }
@@ -2161,6 +2638,9 @@ export function recordBackupRestoreRollbackPoint(input: {
     postRestoreStorageFingerprint: input.postRestoreStorageFingerprint,
     preRestoreState: input.preRestoreState,
   };
+  if (!isValidBackupPreRestoreDomainState(point.preRestoreState)) {
+    return point;
+  }
   latestBackupRollbackPoint = point;
   latestRollbackPersistedToDisk = persistRollbackPointToStorage(point);
   return point;
@@ -2168,6 +2648,11 @@ export function recordBackupRestoreRollbackPoint(input: {
 
 export function getLatestBackupRollbackPoint(): BackupRestoreRollbackPoint | null {
   if (latestBackupRollbackPoint) {
+    if (!isValidBackupPreRestoreDomainState(latestBackupRollbackPoint.preRestoreState)) {
+      latestBackupRollbackPoint = null;
+      latestRollbackPersistedToDisk = false;
+      return null;
+    }
     if (
       latestRollbackPersistedToDisk &&
       typeof window !== 'undefined' &&
@@ -2267,7 +2752,7 @@ export function rollbackLatestBackupRestore<
   ) => { ok: boolean; code?: string; message?: string };
 }): { success: boolean; reason?: BackupRollbackFailureReason; message: string } {
   const point = getLatestBackupRollbackPoint();
-  if (!point) {
+  if (!point || !isValidBackupPreRestoreDomainState(point.preRestoreState)) {
     return {
       success: false,
       reason: 'no-rollback-point',

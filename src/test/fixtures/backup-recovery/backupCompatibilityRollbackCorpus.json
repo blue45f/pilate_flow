@@ -1,0 +1,345 @@
+{
+  "corpusId": "pilates-backup-compatibility-rollback-v1",
+  "corpusSeed": 20261106,
+  "corpusVersion": 1,
+  "description": "Deterministic synthetic corpus for full-domain backup compatibility round-trip contracts (Scope A) and nested rollback pre-restore validation guards (Scope B). Contains zero real user, member, health, photo, or secret data.",
+  "bounds": {
+    "maxCaseDurationMs": 2000,
+    "maxSuiteDurationMs": 20000,
+    "maxRunnerHeapDeltaMb": 128,
+    "maxBackupBytes": 15000000,
+    "maxJsonDepth": 64,
+    "realisticLargeSequenceSteps": 120,
+    "realisticLargeHistoryLogs": 150
+  },
+  "baselineFullDomain": {
+    "catalogExercise": {
+      "id": "ex-compat-catalog-1",
+      "nameKo": "합성 헌드레드 호흡 프리프",
+      "nameEn": "Synthetic Hundred Breath Prep",
+      "apparatus": "reformer",
+      "requiredEquipment": ["reformer"],
+      "movementFamily": "supine-abdominal-curl",
+      "sourceReference": {
+        "referenceId": "ref-compat-1",
+        "url": "https://example.org/pilates-synthetic-catalog/hundred-prep",
+        "title": "Synthetic Catalog Reference — Hundred Prep",
+        "publisher": "Pilates Flow Synthetic QA",
+        "region": "kr",
+        "verificationStatus": "official-source-checked",
+        "verifiedAt": "2026-10-01",
+        "rights": "link-only",
+        "rawLedgerFile": "verified-source-catalog.json",
+        "rawItemId": "raw-hundred-prep-1"
+      },
+      "review": {
+        "status": "approved",
+        "reviewerAlias": "합성 검수자",
+        "reviewedAt": "2026-10-15T09:00:00.000Z",
+        "revision": "rev-compat-1",
+        "scope": "planning-metadata",
+        "credentialVerified": false
+      },
+      "props": ["mini-ball"],
+      "blockCategory": "warmup",
+      "spinalPlanes": ["flexion", "neutral"],
+      "bodyPosition": "supine",
+      "level": "1.0",
+      "defaultDurationMin": 5,
+      "defaultRepetitions": 8,
+      "defaultSets": 2,
+      "isUnilateral": false,
+      "springs": "1 Red + 1 Blue",
+      "box": "none",
+      "footbar": "mid",
+      "headrest": "up",
+      "targetMuscles": ["복횡근", "골반저근"],
+      "breathPattern": "들쉬며 준비, 내쉬며 상체 컬업",
+      "cues": ["갈비뼈를 부드럽게 닫아주세요", "목과 어깨 긴장을 내려놓으세요"],
+      "precautions": "경추 불편감 시 헤드레스트 및 미니볼 지지 활용",
+      "layers": {
+        "easy": "머리를 바닥에 두고 팔만 펌핑",
+        "standard": "테이블탑에서 상체 컬업 유지",
+        "hard": "두 다리 45도 뻗어 유지"
+      },
+      "youtube": {
+        "videoId": "synthvid001",
+        "channelName": "Synthetic Pilates Studio",
+        "videoTitle": "Hundred Breath Prep Synthetic Guide",
+        "startSec": 10,
+        "endSec": 75,
+        "url": "https://www.youtube.com/watch?v=synthvid001",
+        "note": "합성 참조 클립",
+        "region": "kr",
+        "historicalVideoLabel": "v1-preserved-video-label"
+      },
+      "favoriteTag": "signature",
+      "tempo": "slow-precise",
+      "isCustom": false,
+      "createdAt": "2026-10-01T00:00:00.000Z",
+      "historicalExtension": {
+        "legacyCatalogMarker": "preserved"
+      }
+    },
+    "customHumanDraftExercise": {
+      "id": "ex-compat-custom-draft-1",
+      "nameKo": "합성 강사 창작 롱박스 스완 변형",
+      "nameEn": "Synthetic Instructor Long-Box Swan Variation",
+      "apparatus": "reformer",
+      "requiredEquipment": ["reformer"],
+      "movementFamily": "prone-thoracic-extension",
+      "props": ["magic-circle"],
+      "blockCategory": "extension",
+      "spinalPlanes": ["extension", "rotation"],
+      "bodyPosition": "prone",
+      "level": "1.5",
+      "defaultDurationMin": 6,
+      "defaultRepetitions": 6,
+      "defaultSets": 3,
+      "isUnilateral": true,
+      "springs": "1 Red",
+      "box": "long-box",
+      "footbar": "down",
+      "headrest": "down",
+      "targetMuscles": ["흉추 신전근", "전거근", "둔근"],
+      "breathPattern": "마시며 흉추 연장, 내쉬며 회전 및 복귀",
+      "cues": ["배꼽을 박스 위로 가볍게 들어올리세요", "어깨와 귀 사이 공간을 넓게 유지하세요"],
+      "precautions": "요추 과신전 방지를 위해 치골 지지 유지",
+      "layers": {
+        "easy": "작은 가동범위로 흉추 상부만 신전",
+        "standard": "매직서클을 잡고 흉추 신전 연결",
+        "hard": "상체 신전 후 좌우 교대 흉추 회전 추가"
+      },
+      "youtube": {
+        "videoId": "",
+        "channelName": "",
+        "videoTitle": "",
+        "startSec": 0,
+        "url": ""
+      },
+      "favoriteTag": "rehab-posture",
+      "tempo": "moderate-flow",
+      "isCustom": true,
+      "createdAt": "2026-11-01T08:00:00.000Z",
+      "capturedAt": "2026-11-01T08:30:00.000Z",
+      "sourceOrigin": "human-created",
+      "humanDraftId": "hdraft-compat-1",
+      "humanDraftRevision": 2,
+      "parentDraftId": "hdraft-compat-root-0",
+      "parentDraftRevision": 1,
+      "variantLabelKo": "매직서클 흉추 회전 변형 v2",
+      "ideaLineSnapshot": "롱박스에서 매직서클을 살짝 조이며 흉추 신전과 회전을 연결하는 새 동작 초안",
+      "feelLogsSnapshot": [
+        {
+          "id": "feel-compat-1",
+          "recordedAt": "2026-11-01T08:15:00.000Z",
+          "feelNoteKo": "직접 시도해보니 1 Red에서 견갑 하강 감각이 선명함",
+          "perceivedIntensity": "moderate",
+          "cautionFeelKo": "호흡을 참으면 목 앞쪽이 긴장됨",
+          "evaluationBasis": "subjective-instructor-feel",
+          "objectiveEfficacyClaimed": false,
+          "safetyGuaranteed": false,
+          "expertVerified": false
+        }
+      ],
+      "modificationLogsSnapshot": [
+        {
+          "id": "mod-compat-1",
+          "recordedAt": "2026-11-01T08:25:00.000Z",
+          "modificationPointKo": "풋바를 완전히 내리고 스트랩 대신 매직서클 그립으로 변경",
+          "setupOrSpringChangeKo": "1 Red 고정, 롱박스 중앙 정렬",
+          "cueChangeKo": "정수리를 사선 앞으로 길게 뽑아내는 큐잉 추가",
+          "appliedToRevision": 2
+        }
+      ],
+      "photoReferencesSnapshot": [
+        {
+          "id": "photo-compat-1",
+          "localRefUri": "local-photo://synthetic-draft-pose-1",
+          "captionKo": "합성 로컬 자세 참조 URI (실제 사진 아님)",
+          "angleTag": "start-pose",
+          "capturedAt": "2026-11-01T08:20:00.000Z",
+          "externalAiUploadAllowed": false
+        }
+      ],
+      "safetyBoundarySnapshot": {
+        "originType": "instructor-created-draft",
+        "evaluationBasis": "subjective-instructor-feel",
+        "aiSafetyGuaranteed": false,
+        "objectiveEfficacyClaimed": false,
+        "expertVerified": false,
+        "disclaimerKo": "강사 개인의 주관적 운동감 기록이며 의학적·객관적 안전 보증이 아닙니다."
+      }
+    },
+    "deletedCustomExerciseSnapshot": {
+      "id": "ex-compat-deleted-custom-99",
+      "nameKo": "카탈로그에서 삭제됐지만 완료 이력에 스냅샷으로 보존된 동작",
+      "nameEn": "Deleted Custom Exercise Preserved in Inline Snapshot",
+      "apparatus": "reformer",
+      "requiredEquipment": ["reformer"],
+      "movementFamily": "hip-extension-strap",
+      "props": ["none"],
+      "blockCategory": "feet-in-straps",
+      "spinalPlanes": ["neutral"],
+      "bodyPosition": "supine",
+      "level": "1.5",
+      "defaultDurationMin": 6,
+      "defaultRepetitions": 10,
+      "defaultSets": 2,
+      "isUnilateral": false,
+      "springs": "2 Red",
+      "box": "none",
+      "footbar": "mid",
+      "headrest": "up",
+      "targetMuscles": ["둔근", "햄스트링"],
+      "breathPattern": "내쉬며 스트랩을 길게 누르고 마시며 복귀",
+      "cues": ["골반 중립과 천골 무게감을 유지하세요"],
+      "precautions": "허리가 뜨지 않는 가동범위까지만 다리를 내리세요",
+      "layers": {
+        "easy": "무릎을 살짝 접은 프로그 프레스",
+        "standard": "두 다리 뻗어 서클 그리기",
+        "hard": "비대칭 템포 컨트롤 서클"
+      },
+      "capturedAt": "2026-10-25T10:00:00.000Z",
+      "sourceOrigin": "human-created",
+      "humanDraftId": "hdraft-deleted-99",
+      "humanDraftRevision": 3,
+      "parentDraftId": "hdraft-deleted-root-1",
+      "parentDraftRevision": 1,
+      "variantLabelKo": "삭제된 스트랩 서클 변형 v3",
+      "ideaLineSnapshot": "스트랩 하강 시 천골 고정을 강조한 삭제 동작 스냅샷"
+    }
+  },
+  "cases": [
+    {
+      "id": "CMP-RT-001",
+      "scope": "A",
+      "category": "roundtrip-compatibility",
+      "title": "Full-domain export -> parse -> inspect -> restore dry-run -> restore -> re-export preserves all allowlisted hierarchy, block, human-draft, history snapshot, schedule, study, dated-plan, equipment, and template fields",
+      "target": "exportBackup+inspectBackupRecovery+restoreBackup+exportBackup",
+      "classification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": null,
+      "expectedOutcome": "semantic_identity_preserved"
+    },
+    {
+      "id": "CMP-DEL-001",
+      "scope": "A",
+      "category": "deleted-custom-inline-snapshot",
+      "title": "History logs and sequence steps referencing a deleted custom exercise (absent from top-level exercises[]) are accepted and preserved when backed by valid inline programSnapshot / sequenceSnapshot / stepsSnapshot / step.exerciseSnapshot",
+      "target": "inspectBackupRecovery+restoreBackup+resolveTeachingHistoryView+cloneTeachingHistoryToNextClassDraft",
+      "classification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "C1",
+      "expectedOutcome": "accepted_and_snapshot_preserved"
+    },
+    {
+      "id": "CMP-SNAP-001",
+      "scope": "A",
+      "category": "snapshot-metadata-preservation",
+      "title": "createTeachingExerciseSnapshot, movementSnapshotToTeachingExerciseSnapshot, reconstructExerciseFromSnapshot, and reconstructStepsSnapshotFromHistoryLog preserve parentDraftId, parentDraftRevision, variantLabelKo, feelLogsSnapshot, photoReferencesSnapshot, and step blockInstanceDetached/classSection/motionStudy",
+      "target": "createTeachingExerciseSnapshot+reconstructExerciseFromSnapshot+reconstructStepsSnapshotFromHistoryLog",
+      "classification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "C2",
+      "expectedOutcome": "all_snapshot_and_step_metadata_preserved"
+    },
+    {
+      "id": "CMP-LEG-001",
+      "scope": "A",
+      "category": "legacy-and-version-differentiation",
+      "title": "Distinguishes supported formats (export-v3, persisted-v3, persisted-original-v0, bare-data) from unsupported versions (v1/v2/v4/v99) and unsupported fields without reverting to unbounded passthrough",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "classification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": null,
+      "expectedOutcome": "supported_accepted_and_unsupported_rejected_with_exact_code"
+    },
+    {
+      "id": "CMP-SCALE-001",
+      "scope": "A",
+      "category": "realistic-large-vs-out-of-bounds",
+      "title": "Realistic large valid backup (120 steps, 150 history logs with snapshots) succeeds within bounds while out-of-bounds payloads (>1000 steps or >15MB or depth >64) are rejected without mutating state",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "classification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": null,
+      "expectedOutcome": "large_valid_accepted_and_over_limit_rejected"
+    },
+    {
+      "id": "RBK-COMPAT-001",
+      "scope": "B",
+      "category": "rollback-valid-compatibility",
+      "title": "Valid v0 and v1 rollback points (including non-empty activeSteps using stepId, deleted custom exercise inline history snapshots, and local-only fields on domain records) pass inspectPersistedRollbackPoint and restore without losing local-only fields",
+      "target": "inspectPersistedRollbackPoint+rollbackLatestBackupRestore",
+      "classification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": null,
+      "expectedOutcome": "accepted_and_restored_with_local_fields_intact"
+    },
+    {
+      "id": "RBK-NEST-001",
+      "scope": "B",
+      "category": "rollback-nested-corruption",
+      "title": "Rejects rollback records where exercises[i] has valid id but corrupted nested fields (cues: non-array, layers: null, youtube: invalid, defaultDurationMin: negative/non-finite) before any localStorage or store mutation",
+      "target": "inspectPersistedRollbackPoint+rollbackLatestBackupRestore",
+      "classification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "R3-EX",
+      "expectedOutcome": "rejected_without_side_effects"
+    },
+    {
+      "id": "RBK-NEST-002",
+      "scope": "B",
+      "category": "rollback-nested-corruption",
+      "title": "Rejects rollback records where savedSequences[i] or activeSteps has valid id/stepId but corrupted nested steps (steps: non-array, step missing stepId/exerciseId, negative durationMin, rest duration >= targetMinutes) before any mutation",
+      "target": "inspectPersistedRollbackPoint+rollbackLatestBackupRestore",
+      "classification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "R3-SEQ",
+      "expectedOutcome": "rejected_without_side_effects"
+    },
+    {
+      "id": "RBK-NEST-003",
+      "scope": "B",
+      "category": "rollback-nested-corruption",
+      "title": "Rejects rollback records where classGroups[i], historyLogs[i], or conditionTemplates[i] has valid id but corrupted internals (invalid defaultLevel, unparseable taughtAt, rating out of range, malformed programSnapshot/sequenceSnapshot, null criteria)",
+      "target": "inspectPersistedRollbackPoint+rollbackLatestBackupRestore",
+      "classification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "R3-DOM",
+      "expectedOutcome": "rejected_without_side_effects"
+    },
+    {
+      "id": "RBK-REF-001",
+      "scope": "B",
+      "category": "rollback-duplicates-and-references",
+      "title": "Rejects rollback records with duplicate record IDs, duplicate stepIds, or dangling/mismatched exerciseIds in savedSequences, activeSteps, or historyLogs before any mutation",
+      "target": "inspectPersistedRollbackPoint+rollbackLatestBackupRestore",
+      "classification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "R4-R5",
+      "expectedOutcome": "rejected_without_side_effects"
+    },
+    {
+      "id": "RBK-AUX-001",
+      "scope": "B",
+      "category": "rollback-auxiliary-and-envelope",
+      "title": "Rejects rollback records with corrupted instructorSchedule, instructorStudyState, datedSequencePlanning, ownedEquipment/ownedApparatus/ownedProps, lastCriteria/draftCriteria, or invalid capturedAt/addedCount metadata",
+      "target": "inspectPersistedRollbackPoint+rollbackLatestBackupRestore",
+      "classification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "R2-R6",
+      "expectedOutcome": "rejected_without_side_effects"
+    },
+    {
+      "id": "RBK-PROTO-001",
+      "scope": "B",
+      "category": "rollback-proto-and-depth",
+      "title": "Rejects rollback records containing __proto__/constructor/prototype keys anywhere in the JSON tree, id='__proto__'/'constructor', or nesting depth > 64 without prototype pollution or storage writes",
+      "target": "inspectPersistedRollbackPoint+rollbackLatestBackupRestore",
+      "classification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "R1-R7",
+      "expectedOutcome": "rejected_without_side_effects"
+    },
+    {
+      "id": "RBK-NEG-001",
+      "scope": "B",
+      "category": "negative-controls",
+      "title": "Negative control self-check detects simulated rollback storage mutation, simulated store state corruption, and simulated local-field loss",
+      "target": "rollbackCompatibilityHarnessSelfCheck",
+      "classification": "PASS_NEGATIVE_CONTROL",
+      "resolvedDefectId": null,
+      "expectedOutcome": "detected_and_blocked"
+    }
+  ]
+}

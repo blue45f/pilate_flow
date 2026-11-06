@@ -377,26 +377,14 @@ function hasInvalidHistorySnapshotExerciseRefs(
   log: z.infer<typeof cloudBackupDataSchema>['historyLogs'][number],
   known: Set<string>,
 ): boolean {
-  if (log.exerciseIds.some((id) => !known.has(id) || DANGEROUS_OBJECT_KEYS.has(id))) {
-    return true;
-  }
-  if (
-    log.stepsSnapshot?.some(
-      (step) =>
-        step.kind !== 'rest' &&
-        (!known.has(step.exerciseId) ||
-          DANGEROUS_OBJECT_KEYS.has(step.exerciseId) ||
-          (step.exerciseSnapshot !== undefined && step.exerciseSnapshot.id !== step.exerciseId)),
-    )
-  ) {
-    return true;
-  }
+  const snapshotExerciseIds = new Set<string>();
   if (log.programSnapshot) {
     const { exercisesById, items } = log.programSnapshot;
     for (const [key, exSnap] of Object.entries(exercisesById)) {
       if (DANGEROUS_OBJECT_KEYS.has(key) || exSnap.id !== key) {
         return true;
       }
+      snapshotExerciseIds.add(key);
     }
     for (const item of items) {
       if (item.kind === 'rest') {
@@ -418,6 +406,9 @@ function hasInvalidHistorySnapshotExerciseRefs(
       const inItemSnapshot =
         item.exerciseSnapshot?.id === item.exerciseId ||
         item.movementSnapshot?.id === item.exerciseId;
+      if (inItemSnapshot) {
+        snapshotExerciseIds.add(item.exerciseId);
+      }
       if (!known.has(item.exerciseId) && !inExercisesById && !inItemSnapshot) {
         return true;
       }
@@ -430,6 +421,7 @@ function hasInvalidHistorySnapshotExerciseRefs(
       if (DANGEROUS_OBJECT_KEYS.has(key) || moveSnap.id !== key) {
         return true;
       }
+      snapshotExerciseIds.add(key);
     }
     for (const step of seqSnap.steps) {
       if (step.kind === 'rest') continue;
@@ -443,10 +435,45 @@ function hasInvalidHistorySnapshotExerciseRefs(
         own(seqSnap.exerciseSnapshots, step.exerciseId) &&
         seqSnap.exerciseSnapshots[step.exerciseId]?.id === step.exerciseId;
       const inStepSnap = step.exerciseSnapshot?.id === step.exerciseId;
+      if (inStepSnap) {
+        snapshotExerciseIds.add(step.exerciseId);
+      }
       if (!known.has(step.exerciseId) && !inSnapMap && !inStepSnap) {
         return true;
       }
     }
+  }
+  if (log.stepsSnapshot) {
+    for (const step of log.stepsSnapshot) {
+      if (step.kind === 'rest') continue;
+      if (!step.exerciseId || DANGEROUS_OBJECT_KEYS.has(step.exerciseId)) {
+        return true;
+      }
+      if (step.exerciseSnapshot !== undefined && step.exerciseSnapshot.id !== step.exerciseId) {
+        return true;
+      }
+      if (step.exerciseSnapshot?.id === step.exerciseId) {
+        snapshotExerciseIds.add(step.exerciseId);
+      }
+    }
+    if (
+      log.stepsSnapshot.some(
+        (step) =>
+          step.kind !== 'rest' &&
+          !known.has(step.exerciseId) &&
+          !snapshotExerciseIds.has(step.exerciseId),
+      )
+    ) {
+      return true;
+    }
+  }
+  if (
+    log.exerciseIds.some(
+      (id) =>
+        DANGEROUS_OBJECT_KEYS.has(id) || (!known.has(id) && !snapshotExerciseIds.has(id)),
+    )
+  ) {
+    return true;
   }
   return false;
 }
@@ -698,10 +725,11 @@ export function inspectBackupRecovery(
         sequence.steps.some(
           (step) =>
             step.kind !== 'rest' &&
-            (!known.has(step.exerciseId) ||
-              DANGEROUS_OBJECT_KEYS.has(step.exerciseId) ||
+            (DANGEROUS_OBJECT_KEYS.has(step.exerciseId) ||
               (step.exerciseSnapshot !== undefined &&
-                step.exerciseSnapshot.id !== step.exerciseId)),
+                step.exerciseSnapshot.id !== step.exerciseId) ||
+              (!known.has(step.exerciseId) &&
+                step.exerciseSnapshot?.id !== step.exerciseId)),
         ),
       )
     )
