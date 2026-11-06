@@ -1231,8 +1231,12 @@ export function SequenceWorkbench({
           )}
           {s.activeSteps.length > 0 && (
             <div className="v3-primary-actions">
-              <PfButton variant="icon" aria-label="동작 추가" onClick={openExerciseFinder}>
-                <Plus size={22} />
+              <PfButton
+                variant="secondary"
+                className="workbench-add-movement"
+                onClick={openExerciseFinder}
+              >
+                <Plus size={18} aria-hidden="true" /> 동작 추가
               </PfButton>
               <PfButton
                 variant="icon"
