@@ -270,66 +270,20 @@ function normalizeVoiceLang(lang: string | undefined | null): string {
   return (lang ?? '').replace(/_/g, '-').trim().toLowerCase();
 }
 
-function isKoreanVoiceCandidate(voice: SpeechSynthesisVoice): boolean {
-  const normLang = normalizeVoiceLang(voice.lang);
-  if (normLang.startsWith('ko')) {
-    return true;
-  }
-  const name = voice.name ?? '';
-  return /korean|한국어|yuna|sora|heami|유나|소라|혜미/i.test(name);
-}
-
-/**
- * Selects the highest-priority Korean SpeechSynthesisVoice available on the device/browser.
+/** Select only an explicitly local Korean voice; never infer locale from its name.
  */
 export function selectBestKoreanVoice(
   voices: readonly SpeechSynthesisVoice[],
 ): SpeechSynthesisVoice | null {
-  if (!Array.isArray(voices) || voices.length === 0) {
-    return null;
-  }
-
-  const koreanCandidates = voices.filter(isKoreanVoiceCandidate);
-  if (koreanCandidates.length === 0) {
-    return null;
-  }
-
-  // 1) localService === true and exact 'ko-kr'
-  const localExactKoKr = koreanCandidates.find(
+  if (!Array.isArray(voices)) return null;
+  const localKorean = voices.filter(
     (voice) =>
-      voice.localService === true && normalizeVoiceLang(voice.lang) === 'ko-kr',
+      voice.localService === true && /^ko(?:-|$)/.test(normalizeVoiceLang(voice.lang)),
   );
-  if (localExactKoKr) {
-    return localExactKoKr;
-  }
-
-  // 2) localService === true and starts with 'ko' (or Korean voice candidate)
-  const localKo = koreanCandidates.find(
-    (voice) =>
-      voice.localService === true &&
-      (normalizeVoiceLang(voice.lang).startsWith('ko') ||
-        isKoreanVoiceCandidate(voice)),
-  );
-  if (localKo) {
-    return localKo;
-  }
-
-  // 3) default === true and starts with 'ko' (or Korean voice candidate)
-  const defaultKo = koreanCandidates.find(
-    (voice) =>
-      voice.default === true &&
-      (normalizeVoiceLang(voice.lang).startsWith('ko') ||
-        isKoreanVoiceCandidate(voice)),
-  );
-  if (defaultKo) {
-    return defaultKo;
-  }
-
-  // 4) Any voice starting with 'ko' or matching Korean voice candidate
   return (
-    koreanCandidates.find((voice) =>
-      normalizeVoiceLang(voice.lang).startsWith('ko'),
-    ) ?? koreanCandidates[0]
+    localKorean.find((voice) => normalizeVoiceLang(voice.lang) === 'ko-kr') ??
+    localKorean[0] ??
+    null
   );
 }
 
@@ -530,18 +484,18 @@ export function inspectMobileAndBrowserTtsSupport(
   return {
     speechSynthesisSupported: true,
     utteranceSupported: true,
-    canAttemptSpeech: true,
+    canAttemptSpeech: false,
     platformCategory: platform.category,
     platformLabelKo: platform.labelKo,
-    koreanVoiceStatus: 'os-default-ko-fallback',
+    koreanVoiceStatus: 'no-local-korean-voice',
     selectedVoiceName: null,
     selectedVoiceLang: 'ko-KR',
-    isLocalFreeDeviceVoice: true,
+    isLocalFreeDeviceVoice: false,
     requiresUserGesture: platform.isMobile,
-    pauseResumeStrategy,
-    summaryLabelKo: 'OS 기본 한국어(ko-KR) 내장 엔진 위임 모드',
+    pauseResumeStrategy: 'text-only-fallback',
+    summaryLabelKo: '기기 내장 한국어 음성 확인 필요 · 대본 제공',
     detailNoteKo:
-      '모바일 Safari·Chrome 또는 비동기 음성 목록 환경에서 getVoices() 목록이 비어 있더라도 utterance.lang = "ko-KR" 설정으로 OS 기본 한국어 TTS 엔진에 직접 위임하여 무료 재생을 시도합니다.',
+      '사용 가능한 기기 내장 한국어 음성을 확인하지 못했습니다. 기기 설정에서 한국어 음성을 설치·활성화한 뒤 다시 확인해 주세요. 음성 목록이 늦게 로드되면 자동으로 다시 확인합니다. 그동안 아래 대본을 이용해 주세요. 원격 음성이나 확인되지 않은 기본 음성으로 재생하지 않습니다.',
   };
 }
 
@@ -663,7 +617,7 @@ export function createKoreanVoiceController(
     activeSection: 'all',
     errorMessageKo: capability.canAttemptSpeech
       ? null
-      : '현재 브라우저·기기에서 음성 합성을 지원하지 않아 아래 한국어 대본 텍스트를 제공합니다.',
+      : capability.detailNoteKo,
     announcementKo: capability.canAttemptSpeech
       ? '한국어 음성 안내 대기 중 (버튼을 눌러 재생)'
       : '음성 합성 미지원 환경 — 화면의 전체 한국어 대본을 확인하세요.',
@@ -748,16 +702,25 @@ export function createKoreanVoiceController(
       utterance.rate = state.speed;
       utterance.pitch = 1;
 
+      // Check again for every segment: voices may change after capability inspection.
+      let selectedVoice: SpeechSynthesisVoice | null = null;
       try {
-        const voices = synth.getVoices?.() ?? [];
-        const selectedVoice = selectBestKoreanVoice(voices);
-        if (selectedVoice) {
-          utterance.voice = selectedVoice;
-          utterance.lang = selectedVoice.lang || 'ko-KR';
-        }
+        selectedVoice = selectBestKoreanVoice(synth.getVoices?.() ?? []);
       } catch {
-        // Fallback to utterance.lang = 'ko-KR'
+        // An unreadable voice list cannot establish local-only playback.
       }
+      if (!selectedVoice) {
+        capability = inspectMobileAndBrowserTtsSupport(env);
+        emitState({
+          capability,
+          status: 'unsupported',
+          errorMessageKo: capability.detailNoteKo,
+          announcementKo: '기기 내장 한국어 음성을 확인할 수 없어 대본만 제공합니다.',
+        });
+        return false;
+      }
+      utterance.voice = selectedVoice;
+      utterance.lang = selectedVoice.lang;
 
       utterance.onend = () => {
         if (destroyed || runId !== playbackRunId || state.status !== 'playing') {
@@ -866,9 +829,9 @@ export function createKoreanVoiceController(
           status: 'unsupported',
           activeSection: section,
           errorMessageKo:
-            '현재 브라우저·기기 환경에서는 무료 TTS 음성 재생을 지원하지 않습니다. 화면에 표시된 전체 한국어 대본을 확인해 주세요.',
+            capability.detailNoteKo,
           announcementKo:
-            '음성 합성 미지원 환경 — 전체 한국어 대본 텍스트를 확인하세요.',
+            capability.summaryLabelKo,
         });
         return false;
       }
@@ -1023,9 +986,9 @@ export function createKoreanVoiceController(
           status: 'unsupported',
           activeSegmentIndex: segmentIndex,
           errorMessageKo:
-            '현재 브라우저·기기 환경에서는 무료 TTS 음성 재생을 지원하지 않습니다. 화면의 한국어 대본을 확인해 주세요.',
+            capability.detailNoteKo,
           announcementKo:
-            '음성 합성 미지원 환경 — 전체 한국어 대본 텍스트를 확인하세요.',
+            capability.summaryLabelKo,
         });
         return false;
       }
@@ -1051,6 +1014,12 @@ export function createKoreanVoiceController(
 
     refreshCapability(): MobileTtsCapabilityReport {
       capability = inspectMobileAndBrowserTtsSupport(env);
+      if (
+        !capability.canAttemptSpeech &&
+        (state.status === 'playing' || state.status === 'paused')
+      ) {
+        controller.stop(capability.summaryLabelKo);
+      }
       const nextStatus =
         !capability.canAttemptSpeech && state.status === 'idle'
           ? 'unsupported'
@@ -1060,6 +1029,7 @@ export function createKoreanVoiceController(
       emitState({
         capability,
         status: nextStatus,
+        errorMessageKo: capability.canAttemptSpeech ? null : capability.detailNoteKo,
       });
       return capability;
     },

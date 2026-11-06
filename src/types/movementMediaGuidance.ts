@@ -149,6 +149,7 @@ export type MobileTtsPlatformCategory =
   | 'unsupported-env';
 
 export type KoreanVoiceAvailabilityStatus =
+  | 'no-local-korean-voice'
   | 'korean-local-voice'
   | 'korean-network-voice'
   | 'os-default-ko-fallback'

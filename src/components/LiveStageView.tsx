@@ -33,6 +33,8 @@ import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { LightDismissDialog } from './LightDismissDialog';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/teaching.css';
+import '../styles/class-voice.css';
+import { useClassVoiceGuidance } from '../hooks/useClassVoiceGuidance';
 
 export interface LiveStageNavigationHandle {
   /** True means Stage owns the pending exit; keep it mounted until a decision. */
@@ -222,6 +224,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   };
   const toggleRunning = () => {
     if (clock.running) {
+      classVoice.pause();
       setClock((value) => ({
         ...sampleClock(value, Date.now(), durations, autoAdvance),
         running: false,
@@ -229,6 +232,18 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       void wakeRef.current?.release().catch(() => undefined);
     } else {
       runningIntent.current = true;
+      classVoice.start(
+        (clock.remainingMs || durations[clock.index]) / 1000,
+        clock.remainingMs > 0
+          ? phase
+          : currentIsRest
+            ? '휴식'
+            : timing && timing.explanationSec > 0
+              ? '설명 · 세팅'
+              : timing?.sides === 2 || current?.sideMode
+                ? `수행 · ${sideLabels[0]}`
+                : '수행',
+      );
       setClock((value) => ({
         ...value,
         remainingMs: value.remainingMs || durations[value.index],
@@ -257,6 +272,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     );
   };
   const pauseForReview = () => {
+    classVoice.pause();
     setReviewTarget(null);
     setClock((value) => ({
       ...sampleClock(value, Date.now(), durations, autoAdvance),
@@ -265,6 +281,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     setReviewOpen(true);
   };
   const pauseForExit = () => {
+    classVoice.pause();
     setExitTarget(null);
     setClock((value) => ({
       ...sampleClock(value, Date.now(), durations, autoAdvance),
@@ -284,6 +301,42 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       const item = exerciseMap.get(step.exerciseId);
       return item ? [getMovementKey(item)] : [];
     });
+  const timing = current ? getStepTiming(current, exercise) : null;
+  const sideLabels = current ? getStepSideLabels(current, exercise) : [];
+  const stepElapsedSec = Math.max(0, (durations[clock.index] - clock.remainingMs) / 1000);
+  const phase =
+    !current || !timing
+      ? ''
+      : currentIsRest
+        ? '휴식'
+        : stepElapsedSec < timing.explanationSec
+          ? '설명 · 세팅'
+          : stepElapsedSec < timing.explanationSec + timing.movementSec
+            ? timing.sides === 2
+              ? stepElapsedSec - timing.explanationSec < timing.perSideSec
+                ? `수행 · ${sideLabels[0]}`
+                : `수행 · ${sideLabels[1]}`
+              : current.sideMode
+                ? `수행 · ${sideLabels[0]}`
+                : '수행'
+            : '다음 동작 전환';
+  const classVoice = useClassVoiceGuidance({
+    stepKey: current?.stepId ?? '',
+    title: currentIsRest ? '휴식' : (exercise?.nameKo ?? ''),
+    breath: currentIsRest ? '' : (exercise?.breathPattern ?? ''),
+    phase,
+    remainingSec: Math.max(0, clock.remainingMs / 1000),
+    nextTitle: next && isRestStep(next) ? '휴식' : (nextExercise?.nameKo ?? ''),
+    running: clock.running,
+    eligible:
+      !!current &&
+      (!!exercise || currentIsRest) &&
+      movementKeys.length > 0 &&
+      unreviewed.length === 0 &&
+      new Set(movementKeys).size === movementKeys.length &&
+      !exitOpen &&
+      !reviewOpen,
+  });
   useImperativeHandle(navigationRef, () => ({
     requestExit(destination) {
       const hasSessionData =
@@ -291,6 +344,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         clock.elapsedMs > 0 ||
         JSON.stringify(steps) !== JSON.stringify(activeSteps);
       if (!hasSessionData) return false;
+      classVoice.pause();
       setExitTarget(destination);
       setClock((value) => ({
         ...sampleClock(value, Date.now(), durations, autoAdvance),
@@ -461,7 +515,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       </>
     );
 
-  if (!current || (!exercise && !currentIsRest) || movementKeys.length === 0)
+  if (!current || !timing || (!exercise && !currentIsRest) || movementKeys.length === 0)
     return (
       <>
         <div className="panel teaching-empty">
@@ -478,22 +532,6 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       </>
     );
 
-  const timing = getStepTiming(current, exercise);
-  const sideLabels = getStepSideLabels(current, exercise);
-  const stepElapsedSec = Math.max(0, (durations[clock.index] - clock.remainingMs) / 1000);
-  const phase = currentIsRest
-    ? '휴식'
-    : stepElapsedSec < timing.explanationSec
-      ? '설명 · 세팅'
-      : stepElapsedSec < timing.explanationSec + timing.movementSec
-        ? timing.sides === 2
-          ? stepElapsedSec - timing.explanationSec < timing.perSideSec
-            ? `수행 · ${sideLabels[0]}`
-            : `수행 · ${sideLabels[1]}`
-          : current.sideMode
-            ? `수행 · ${sideLabels[0]}`
-            : '수행'
-        : '다음 동작 전환';
   const progress = Math.min(
     100,
     Math.max(0, (1 - clock.remainingMs / durations[clock.index]) * 100),
@@ -710,6 +748,61 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               <span>시간 종료 시 다음 동작</span>
             </label>
           </div>
+          <section className="teaching-cue-section" aria-label="수업 음성 안내 설정">
+            <h3>
+              <Volume2 size={18} /> 기기 음성 안내
+            </h3>
+            <p className="muted">
+              이 수업에서 켠 뒤 타이머를 시작하면 검토한 동작·호흡 메모와 계획 시간을 읽습니다. 무료
+              기기 한국어 음성만 사용하며, 호흡 속도나 새 운동 지침을 만들지 않습니다.
+            </p>
+            <div className="button-row">
+              <button
+                type="button"
+                className="btn-secondary"
+                aria-pressed={classVoice.enabled}
+                disabled={!classVoice.available}
+                onClick={classVoice.toggleEnabled}
+              >
+                {classVoice.enabled ? '음성 안내 끄기' : '음성 안내 켜기'}
+              </button>
+              <button
+                type="button"
+                className="btn-ghost"
+                disabled={!classVoice.enabled}
+                onClick={classVoice.stop}
+              >
+                음성 즉시 중지
+              </button>
+            </div>
+            <fieldset className="teaching-voice-options" disabled={!classVoice.available}>
+              <legend>읽어 줄 내용</legend>
+              {(
+                [
+                  ['movement', '동작·구간 안내'],
+                  ['breath', '검토한 호흡 메모'],
+                  ['time', '남은 시간·종료 안내'],
+                ] as const
+              ).map(([key, label]) => (
+                <label className="teaching-switch" key={key}>
+                  <input
+                    type="checkbox"
+                    checked={classVoice.preferences[key]}
+                    onChange={(event) => classVoice.changePreference(key, event.target.checked)}
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </fieldset>
+            <p className="muted" role="status">
+              {classVoice.error ||
+                (!classVoice.available
+                  ? '이 브라우저에서 기기 한국어 음성을 찾지 못했어요. 음성 없이도 수업을 진행할 수 있습니다.'
+                  : classVoice.enabled
+                    ? '음성 켜짐 · 일시정지·화면 이탈·탭 숨김 시 소리를 멈춥니다.'
+                    : '음성 꺼짐 · 수업마다 직접 켜 주세요.')}
+            </p>
+          </section>
           {exercise && !currentIsRest ? (
             <section className="teaching-cue-section">
               <h3>

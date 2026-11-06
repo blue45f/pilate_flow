@@ -42,7 +42,7 @@ function createMockSpeechSynthesis(options?: {
   voices?: SpeechSynthesisVoice[];
   keepSpeakingOnPause?: boolean;
 }) {
-  let voices = options?.voices ?? [];
+  let voices = options?.voices ?? [createMockVoice({ name: 'Yuna', lang: 'ko-KR', localService: true })];
   const spokenUtterances: MockSpeechSynthesisUtterance[] = [];
   const listeners = new Map<string, Set<() => void>>();
 
@@ -194,8 +194,86 @@ describe('koreanVoiceNarration', () => {
     });
   });
 
+  describe('local-only speech boundary', () => {
+    it.each([
+      ['empty', []],
+      [
+        'network Korean',
+        [createMockVoice({ name: 'Remote Korean', lang: 'ko-KR', localService: false })],
+      ],
+      ['non-Korean local', [createMockVoice({ name: 'Yuna', lang: 'en-US', localService: true })]],
+    ])('does not speak with %s voices', (_label, voices) => {
+      const synth = createMockSpeechSynthesis({ voices: voices as SpeechSynthesisVoice[] });
+      const controller = createKoreanVoiceController({
+        script: buildKoreanVoiceScript(INITIAL_EXERCISES[0]),
+        env: {
+          speechSynthesis: synth as unknown as SpeechSynthesis,
+          SpeechSynthesisUtterance:
+            MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
+        },
+      });
+      expect(controller.play()).toBe(false);
+      expect(controller.speakSegment(0)).toBe(false);
+      expect(synth.speak).not.toHaveBeenCalled();
+      expect(controller.getState().capability.isLocalFreeDeviceVoice).toBe(false);
+      controller.destroy();
+    });
+  });
+
+  it('stops on local voice removal and requires manual restart after voices return', () => {
+    const local = createMockVoice({ name: 'Yuna', lang: 'ko-KR', localService: true });
+    const synth = createMockSpeechSynthesis({ voices: [local] });
+    const controller = createKoreanVoiceController({
+      script: buildKoreanVoiceScript(INITIAL_EXERCISES[0]),
+      env: {
+        speechSynthesis: synth as unknown as SpeechSynthesis,
+        SpeechSynthesisUtterance:
+          MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
+      },
+    });
+    controller.play();
+    const previous = synth.spokenUtterances[0];
+    synth.setVoices([]);
+    expect(synth.speaking).toBe(false);
+    expect(controller.getState().status).toBe('unsupported');
+    expect(controller.getState().capability.koreanVoiceStatus).toBe('no-local-korean-voice');
+    previous.onend?.call(
+      previous as unknown as SpeechSynthesisUtterance,
+      {} as SpeechSynthesisEvent,
+    );
+    expect(synth.speak).toHaveBeenCalledTimes(1);
+    synth.setVoices([local]);
+    expect(controller.getState().status).toBe('idle');
+    expect(synth.speak).toHaveBeenCalledTimes(1);
+    expect(controller.play()).toBe(true);
+    expect(synth.speak).toHaveBeenCalledTimes(2);
+    controller.destroy();
+  });
+
+  it('rechecks the local voice before each segment even without voiceschanged', () => {
+    const synth = createMockSpeechSynthesis();
+    const controller = createKoreanVoiceController({
+      script: buildKoreanVoiceScript(INITIAL_EXERCISES[0]),
+      env: {
+        speechSynthesis: synth as unknown as SpeechSynthesis,
+        SpeechSynthesisUtterance:
+          MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
+      },
+    });
+    controller.play();
+    synth.getVoices.mockReturnValue([]);
+    const previous = synth.spokenUtterances[0];
+    previous.onend?.call(
+      previous as unknown as SpeechSynthesisUtterance,
+      {} as SpeechSynthesisEvent,
+    );
+    expect(synth.speak).toHaveBeenCalledTimes(1);
+    expect(controller.getState().status).toBe('unsupported');
+    controller.destroy();
+  });
+
   describe('selectBestKoreanVoice', () => {
-    it('prioritizes localService ko-KR first, then local ko, then default ko, then network ko', () => {
+    it('prioritizes local ko-KR then local ko and rejects remote voices', () => {
       const enVoice = createMockVoice({
         name: 'Samantha',
         lang: 'en-US',
@@ -230,8 +308,8 @@ describe('koreanVoiceNarration', () => {
       expect(selectBestKoreanVoice([enVoice, networkKo, defaultKo, localGenericKo])).toBe(
         localGenericKo,
       );
-      expect(selectBestKoreanVoice([enVoice, networkKo, defaultKo])).toBe(defaultKo);
-      expect(selectBestKoreanVoice([enVoice, networkKo])).toBe(networkKo);
+      expect(selectBestKoreanVoice([enVoice, networkKo, defaultKo])).toBeNull();
+      expect(selectBestKoreanVoice([enVoice, networkKo])).toBeNull();
       expect(selectBestKoreanVoice([enVoice])).toBeNull();
       expect(selectBestKoreanVoice([])).toBeNull();
     });
@@ -263,7 +341,7 @@ describe('koreanVoiceNarration', () => {
       expect(report.pauseResumeStrategy).toBe('native-with-segment-recovery');
     });
 
-    it('detects Android Chrome with empty initial getVoices() as os-default-ko-fallback', () => {
+    it('disables playback while the initial Android voice list is empty', () => {
       const synth = createMockSpeechSynthesis({ voices: [] });
 
       const report = inspectMobileAndBrowserTtsSupport({
@@ -275,11 +353,11 @@ describe('koreanVoiceNarration', () => {
       });
 
       expect(report.platformCategory).toBe('android-chromium');
-      expect(report.canAttemptSpeech).toBe(true);
-      expect(report.koreanVoiceStatus).toBe('os-default-ko-fallback');
+      expect(report.canAttemptSpeech).toBe(false);
+      expect(report.koreanVoiceStatus).toBe('no-local-korean-voice');
       expect(report.selectedVoiceLang).toBe('ko-KR');
       expect(report.requiresUserGesture).toBe(true);
-      expect(report.pauseResumeStrategy).toBe('native-with-segment-recovery');
+      expect(report.pauseResumeStrategy).toBe('text-only-fallback');
     });
 
     it('detects Desktop browser with network Korean voice', () => {
@@ -299,7 +377,8 @@ describe('koreanVoiceNarration', () => {
       });
 
       expect(report.platformCategory).toBe('desktop-browser');
-      expect(report.koreanVoiceStatus).toBe('korean-network-voice');
+      expect(report.koreanVoiceStatus).toBe('no-local-korean-voice');
+      expect(report.canAttemptSpeech).toBe(false);
       expect(report.isLocalFreeDeviceVoice).toBe(false);
       expect(report.requiresUserGesture).toBe(false);
     });
@@ -367,7 +446,7 @@ describe('koreanVoiceNarration', () => {
 
     it('supports pause, mobile segment-recovery resume, speed changes (0.75..1.25), and segment jump', () => {
       const synth = createMockSpeechSynthesis({
-        voices: [],
+        voices: [createMockVoice({ name: 'Yuna', lang: 'ko-KR', localService: true })],
         keepSpeakingOnPause: false, // mobile behavior where pause drops native speaking state
       });
 
@@ -546,7 +625,7 @@ describe('koreanVoiceNarration', () => {
       });
 
       expect(controller.getState().capability.koreanVoiceStatus).toBe(
-        'os-default-ko-fallback',
+        'no-local-korean-voice',
       );
       expect(controller.getState().speed).toBe(0.9);
 
