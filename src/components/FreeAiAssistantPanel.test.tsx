@@ -289,6 +289,9 @@ describe('FreeAiAssistantPanel UI journeys', () => {
     expect(isExerciseAutoEligible(savedExercise)).toBe(false);
     expect(savedContract.reviewStatus).toBe('unreviewed-creative');
     expect(savedContract.guaranteesSafetyOrEffect).toBe(false);
+    expect(savedContract.safetyBoundary?.originType).toBe('instructor-created-draft');
+    expect(savedContract.safetyBoundary?.aiSafetyGuaranteed).toBe(false);
+    expect(savedContract.safetyBoundary?.objectiveEfficacyClaimed).toBe(false);
   });
 
   it('composes a sequence strictly from reviewed movements/blocks, excludes unreviewed items, and blocks AI calls when free quota is exhausted with renewal info', async () => {
@@ -378,5 +381,89 @@ describe('FreeAiAssistantPanel UI journeys', () => {
     expect(applied.steps.some((s: { exerciseId: string }) => s.exerciseId === 'ex-unreviewed-99')).toBe(
       false,
     );
+  });
+
+  it('supports P2 uiContract (renderBadge & renderNotice), P1 items-based blocks, and step reordering in Tab 3 (sequence-compose)', async () => {
+    const p1ItemsBlock: P1ReusableBlockContract = {
+      id: 'blk-p1-items-1',
+      title: 'P1 items 기반 브릿징 블록',
+      apparatus: 'reformer',
+      level: '1.5',
+      isReviewed: true,
+      items: [
+        {
+          itemId: 'item-glute-1',
+          order: 1,
+          exerciseId: 'ex-glute-1',
+          blockCategory: 'bridging',
+          durationMin: 12,
+          selectedLayer: 'standard',
+        },
+      ],
+    };
+
+    const onApplyDraftSequence = vi.fn();
+    const renderBadgeSpy = vi.fn(({ children }) => (
+      <span data-testid="p2-contract-badge">{children}</span>
+    ));
+    const renderNoticeSpy = vi.fn(({ title, description }) => (
+      <div data-testid="p2-contract-notice">
+        <strong>{title}</strong>
+        <span>{description}</span>
+      </div>
+    ));
+
+    render(
+      <FreeAiAssistantPanel
+        exercises={SAMPLE_EXERCISES}
+        reusableBlocks={[p1ItemsBlock]}
+        conditionTemplates={SAMPLE_TEMPLATES}
+        onApplyDraftSequence={onApplyDraftSequence}
+        initialTab="sequence-compose"
+        uiContract={{
+          renderBadge: renderBadgeSpy,
+          renderNotice: renderNoticeSpy,
+        }}
+      />,
+    );
+
+    // P2 contract badge and notice are rendered inside their semantic wrappers
+    expect(renderBadgeSpy).toHaveBeenCalled();
+    expect(screen.getByTestId('p2-contract-badge')).toHaveTextContent('키 설정 불필요 · 무료 전용');
+    expect(renderNoticeSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tone: 'warning',
+        title: '안전·운동 효과 미보장 및 민감 건강정보 전송 금지 안내',
+      }),
+    );
+    const disclaimerWrapper = screen.getByRole('note', {
+      name: '미검토 동작 및 개인정보 보호 안내',
+    });
+    expect(disclaimerWrapper).toContainElement(screen.getByTestId('p2-contract-notice'));
+
+    // P1 items-based block duration fallback is displayed on the block chip
+    expect(
+      screen.getByRole('button', { name: '[블록] P1 items 기반 브릿징 블록 (12분)' }),
+    ).toBeInTheDocument();
+
+    // Compose sequence locally in Tab 3
+    fireEvent.click(screen.getByRole('button', { name: '로컬 규칙으로 시퀀스 구성' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('list', { name: '편집 가능한 시퀀스 단계' })).toBeInTheDocument();
+    });
+
+    // Initially step 1 is warmup ('리포머 호흡 워밍업')
+    const moveWarmupDownBtn = screen.getByRole('button', {
+      name: '리포머 호흡 워밍업 아래로 이동',
+    });
+    expect(moveWarmupDownBtn).not.toBeDisabled();
+    fireEvent.click(moveWarmupDownBtn);
+
+    // Apply reordered composed sequence and verify warmup moved to index 1 (second step)
+    fireEvent.click(screen.getByRole('button', { name: '워크벤치 수업안에 반영' }));
+    expect(onApplyDraftSequence).toHaveBeenCalledTimes(1);
+    const appliedSteps = onApplyDraftSequence.mock.calls[0][0].steps;
+    expect(appliedSteps[1].exerciseId).toBe('ex-warmup-1');
   });
 });

@@ -85,11 +85,27 @@ export interface P1MovementSnapshotContract {
   readonly capturedAt: string;
 }
 
+export interface P1HumanMovementDraftSafetyBoundaryContract {
+  readonly originType: 'instructor-created-draft' | 'catalog-reference';
+  readonly evaluationBasis: 'subjective-instructor-feel' | 'catalog-metadata';
+  readonly aiSafetyGuaranteed: false;
+  readonly objectiveEfficacyClaimed: false;
+  readonly expertVerified: false;
+  readonly disclaimerKo: string;
+}
+
 export interface P1ReusableBlockStepContract {
+  readonly itemId?: string;
+  readonly order?: number;
   readonly exerciseId: string;
-  readonly blockCategory: ClassBlockCategory;
-  readonly durationMin: number;
-  readonly selectedLayer: LayerMode;
+  readonly blockCategory?: ClassBlockCategory;
+  readonly durationMin?: number;
+  readonly selectedLayer?: LayerMode;
+  readonly explanationSec?: number;
+  readonly transitionSec?: number;
+  readonly repetitions?: number;
+  readonly sets?: number;
+  readonly sideMode?: 'both' | 'left' | 'right' | 'alternating' | 'together';
   readonly instructorNote?: string;
   readonly exerciseSnapshot?: P1MovementSnapshotContract;
 }
@@ -100,9 +116,12 @@ export interface P1ReusableBlockContract {
   readonly description?: string;
   readonly apparatus: ApparatusType | 'mixed';
   readonly level: DifficultyLevel;
-  readonly category: ClassBlockCategory;
-  readonly durationMin: number;
-  readonly steps: readonly P1ReusableBlockStepContract[];
+  readonly category?: ClassBlockCategory;
+  readonly sectionRole?: 'preparation' | 'main' | 'cooldown';
+  readonly durationMin?: number;
+  readonly version?: number;
+  readonly steps?: readonly P1ReusableBlockStepContract[];
+  readonly items?: readonly P1ReusableBlockStepContract[];
   /** Only blocks where isReviewed is true are eligible for automatic sequence composition. */
   readonly isReviewed: boolean;
 }
@@ -123,6 +142,7 @@ export interface P1MovementIdeaContract {
   readonly reviewStatus: 'unreviewed-creative';
   readonly guaranteesSafetyOrEffect: false;
   readonly safetyDisclaimer: string;
+  readonly safetyBoundary?: P1HumanMovementDraftSafetyBoundaryContract;
   readonly createdAt: string;
 }
 

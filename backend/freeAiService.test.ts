@@ -146,6 +146,16 @@ describe('backend/freeAiService', () => {
       expect(resolved.model).toBe('gemini-3.5-flash-lite');
       expect(resolved.enabled).toBe(true);
       expect(resolved.reason).toBe('ready');
+
+      const resolved38Flash = resolveFreeAiConfig({
+        GEMINI_API_KEY: 'test-gemini-key',
+        GEMINI_FREE_TIER_UNPAID_CONFIRMED: 'true',
+        GEMINI_FREE_MODEL: 'gemini-3.8-flash',
+      });
+      expect(resolved38Flash.provider).toBe('gemini-free');
+      expect(resolved38Flash.model).toBe('gemini-3.8-flash');
+      expect(resolved38Flash.enabled).toBe(true);
+      expect(resolved38Flash.reason).toBe('ready');
     });
 
     it('blocks gemini-free with billing_guard_unconfirmed when GEMINI_FREE_TIER_UNPAID_CONFIRMED is missing or false', () => {
@@ -164,15 +174,22 @@ describe('backend/freeAiService', () => {
       expect(falseFlag.reason).toBe('billing_guard_unconfirmed');
     });
 
-    it('blocks paid Gemini models with invalid_paid_model_blocked', () => {
-      const paidGemini = resolveFreeAiConfig({
-        GEMINI_API_KEY: 'test-gemini-key',
-        GEMINI_FREE_TIER_UNPAID_CONFIRMED: 'true',
-        GEMINI_FREE_MODEL: 'gemini-3.1-pro-preview',
-      });
-      expect(paidGemini.enabled).toBe(false);
-      expect(paidGemini.reason).toBe('invalid_paid_model_blocked');
-      expect(paidGemini.model).toBeNull();
+    it('blocks paid or retired Gemini models with invalid_paid_model_blocked', () => {
+      for (const blockedModel of [
+        'gemini-3.1-pro-preview',
+        'gemini-4-argon',
+        'gemini-2.0-flash',
+        'gemini-2.0-flash-lite',
+      ]) {
+        const blocked = resolveFreeAiConfig({
+          GEMINI_API_KEY: 'test-gemini-key',
+          GEMINI_FREE_TIER_UNPAID_CONFIRMED: 'true',
+          GEMINI_FREE_MODEL: blockedModel,
+        });
+        expect(blocked.enabled).toBe(false);
+        expect(blocked.reason).toBe('invalid_paid_model_blocked');
+        expect(blocked.model).toBeNull();
+      }
     });
 
     it('enables openrouter-free for openrouter/free or :free models and blocks non-free models', () => {
