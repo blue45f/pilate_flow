@@ -5,4 +5,7 @@ export * from './adapters';
 export * from './integrationExamples';
 export * from './playbackController';
 export * from './catalogSweep';
+export * from './previewHarnessSelectors';
+export * from './previewHarnessLifecycle';
+export * from './PreviewHarnessStageView';
 export * from './MotionCoveragePreviewHarness';

@@ -111,6 +111,7 @@ export interface MotionCoveragePlaybackControllerOptions {
     Window,
     'addEventListener' | 'removeEventListener' | 'matchMedia'
   > | null;
+  readonly autoAttachListeners?: boolean;
   readonly onChange?: (snapshot: MotionCoveragePlaybackSnapshot) => void;
 }
 
@@ -145,6 +146,7 @@ export class MotionCoveragePlaybackController {
   private isBackgroundHidden: boolean;
   private pageHiddenByEvent = false;
   private destroyed = false;
+  private suppressDraftEmit = false;
 
   private readonly rawRequestFrame: (callback: FrameRequestCallback) => number;
   private readonly rawCancelFrame: (handle: number) => void;
@@ -160,11 +162,7 @@ export class MotionCoveragePlaybackController {
   private readonly onChange?: (snapshot: MotionCoveragePlaybackSnapshot) => void;
 
   private readonly draftEngine: DraftPlaybackController;
-  private draftState: DraftPlaybackState = {
-    progress: 0,
-    speed: 1,
-    playing: false,
-  };
+  private draftState: DraftPlaybackState = { progress: 0, speed: 1, playing: false };
   private repeatCount: DraftRepeatCount = 1;
   private pendingFrameHandle: number | null = null;
   private lastMonotonicTimestamp: number | null = null;
@@ -172,10 +170,7 @@ export class MotionCoveragePlaybackController {
 
   constructor(options: MotionCoveragePlaybackControllerOptions) {
     this.resolveOptions = options.resolveOptions ?? {};
-    this.descriptor = resolveRenderableMotionDescriptor(
-      options.exerciseOrId,
-      this.resolveOptions,
-    );
+    this.descriptor = resolveRenderableMotionDescriptor(options.exerciseOrId, this.resolveOptions);
     this.selectedPhase =
       options.initialPhase && DISCRETE_VISUAL_PHASES.includes(options.initialPhase)
         ? options.initialPhase
@@ -248,11 +243,15 @@ export class MotionCoveragePlaybackController {
         if (this.isContinuousMode()) {
           this.selectedPhase = mapContinuousProgressToVisualPhase(safeProgress);
         }
-        this.emitChange();
+        if (!this.suppressDraftEmit) {
+          this.emitChange();
+        }
       },
     });
 
-    this.attachEnvironmentListeners();
+    if (options.autoAttachListeners !== false) {
+      this.attachEnvironmentListeners();
+    }
   }
 
   private evaluateReducedMotion(): boolean {
@@ -546,10 +545,13 @@ export class MotionCoveragePlaybackController {
       this.pendingFrameHandle = null;
     }
     this.selectedPhase = 'start';
-    this.draftEngine.reset();
-    if (!this.isContinuousMode()) {
-      this.emitChange();
+    this.suppressDraftEmit = true;
+    try {
+      this.draftEngine.reset();
+    } finally {
+      this.suppressDraftEmit = false;
     }
+    this.emitChange();
   }
 
   /**
@@ -645,20 +647,25 @@ export class MotionCoveragePlaybackController {
     exerciseOrId: string | PilatesExercise | null | undefined,
     resolveOptions?: ResolveMotionCoverageOptions,
   ): MotionCoveragePlaybackSnapshot {
-    this.pause();
-    this.clearPageHiddenIfDocumentVisible();
-    if (resolveOptions !== undefined) {
-      this.resolveOptions = resolveOptions;
+    this.suppressDraftEmit = true;
+    try {
+      this.pause();
+      this.clearPageHiddenIfDocumentVisible();
+      if (resolveOptions !== undefined) {
+        this.resolveOptions = resolveOptions;
+      }
+      this.descriptor = resolveRenderableMotionDescriptor(
+        exerciseOrId,
+        this.resolveOptions,
+      );
+      this.activeVariantIndex = 0;
+      this.selectedPhase = 'start';
+      this.explicitPlayGrantedUnderReducedMotion = false;
+      this.lastMonotonicTimestamp = null;
+      this.draftEngine.reset();
+    } finally {
+      this.suppressDraftEmit = false;
     }
-    this.descriptor = resolveRenderableMotionDescriptor(
-      exerciseOrId,
-      this.resolveOptions,
-    );
-    this.activeVariantIndex = 0;
-    this.selectedPhase = 'start';
-    this.explicitPlayGrantedUnderReducedMotion = false;
-    this.lastMonotonicTimestamp = null;
-    this.draftEngine.reset();
     this.emitChange();
     return this.getSnapshot();
   }
@@ -668,9 +675,14 @@ export class MotionCoveragePlaybackController {
    */
   destroy(): void {
     if (this.destroyed) return;
-    this.pause();
-    this.draftEngine.setCanPlay(() => false);
     this.destroyed = true;
+    this.suppressDraftEmit = true;
+    try {
+      this.pause();
+    } finally {
+      this.suppressDraftEmit = false;
+    }
+    this.draftEngine.setCanPlay(() => false);
     for (const cleanup of this.cleanupListeners) {
       cleanup();
     }
