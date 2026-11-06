@@ -1,0 +1,25 @@
+/* One scroll owner keeps the title and Close control reachable on long dialogs.
+   Scoped to LightDismissDialog so custom preview layouts retain their own rules. */
+.atelier-modal-dialog.light-dismiss-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#root .atelier-modal-dialog.light-dismiss-dialog > .atelier-modal-shell,
+.atelier-modal-dialog.light-dismiss-dialog > .atelier-modal-shell {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+}
+.atelier-modal-dialog.light-dismiss-dialog > .atelier-modal-shell > .atelier-modal-header {
+  flex: 0 0 auto;
+}
+.atelier-modal-dialog.light-dismiss-dialog > .atelier-modal-shell > .atelier-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}

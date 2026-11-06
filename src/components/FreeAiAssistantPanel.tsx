@@ -425,6 +425,18 @@ export function FreeAiAssistantPanel({
     );
   };
 
+  const moveStepInCompose = (index: number, direction: 'up' | 'down') => {
+    if (!composeResult) return;
+    const ids = composeResult.steps.map((s) => s.stepId);
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= ids.length) return;
+    const swapped = [...ids];
+    [swapped[index], swapped[targetIdx]] = [swapped[targetIdx], swapped[index]];
+    setComposeResult(
+      applyUserEditsToSequenceCompose(composeResult, { reorderStepIds: swapped }),
+    );
+  };
+
   const removeStepInCompose = (stepId: string) => {
     if (!composeResult) return;
     setComposeResult(
@@ -627,9 +639,20 @@ export function FreeAiAssistantPanel({
       )}
 
       <div className="free-ai-disclaimer" role="note" aria-label="미검토 동작 및 개인정보 보호 안내">
-        <strong>안전·운동 효과 미보장 및 민감 건강정보 전송 금지 안내:</strong>{' '}
-        {UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER} 또한 회원의 실명, 연락처, 디스크·수술·임신·통증 등
-        민감 건강정보는 무료 외부 AI로 전송하지 마세요.
+        {uiContract?.renderNotice ? (
+          uiContract.renderNotice({
+            tone: 'warning',
+            title: '안전·운동 효과 미보장 및 민감 건강정보 전송 금지 안내',
+            description: `${UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER} 또한 회원의 실명, 연락처, 디스크·수술·임신·통증 등 민감 건강정보는 무료 외부 AI로 전송하지 마세요.`,
+            children: UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER,
+          })
+        ) : (
+          <>
+            <strong>안전·운동 효과 미보장 및 민감 건강정보 전송 금지 안내:</strong>{' '}
+            {UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER} 또한 회원의 실명, 연락처, 디스크·수술·임신·통증
+            등 민감 건강정보는 무료 외부 AI로 전송하지 마세요.
+          </>
+        )}
       </div>
 
       <div className="free-ai-tabs" role="tablist" aria-label="AI 보조 기능 선택">
@@ -1271,6 +1294,10 @@ export function FreeAiAssistantPanel({
               <div className="free-ai-chip-row" role="group" aria-label="검토 완료 블록 선택">
                 {reviewedBlocks.map((block) => {
                   const pressed = selectedBlockIds.includes(block.id);
+                  const blockSteps = block.steps ?? block.items ?? [];
+                  const resolvedBlockDuration =
+                    block.durationMin ??
+                    (blockSteps.reduce((sum, item) => sum + (item.durationMin ?? 4), 0) || 10);
                   return (
                     <button
                       key={block.id}
@@ -1285,7 +1312,7 @@ export function FreeAiAssistantPanel({
                         )
                       }
                     >
-                      [블록] {block.title} ({block.durationMin}분)
+                      [블록] {block.title} ({resolvedBlockDuration}분)
                     </button>
                   );
                 })}
@@ -1405,6 +1432,7 @@ export function FreeAiAssistantPanel({
                 composeResult.steps,
                 updateStepInCompose,
                 removeStepInCompose,
+                moveStepInCompose,
               )}
 
               <div className="free-ai-disclaimer">{composeResult.safetyDisclaimer}</div>

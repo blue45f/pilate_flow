@@ -4,14 +4,36 @@ import {
   type MotionPatternReference,
 } from '../data/motionPatternReferences';
 import { getBatchPose } from '../models/motionAuthoringBatch';
+import { getChestLiftPose } from '../models/chestLift';
+import { getHeelRaisePose } from '../models/heelRaise';
+import { getLateralDraftPose } from '../models/lateralDrafts';
 import { getPelvicCurlPose } from '../models/pelvicCurl';
+import { getSeatedBandRowPose } from '../models/seatedBandRow';
+import { getSupineDraftPose } from '../models/supineDrafts';
 import { getMotionPatternPhaseContext } from '../utils/motionPatternPhaseContext';
 import * as studyStages from '../utils/motionStudyStages';
 
 const annotatedIds = [
+  'supported-heel-raise',
+  'side-lying-clam',
+  'adult-supine-heel-slide',
+  'supine-knee-fold',
+  'side-lying-straight-leg-lift',
+  'side-lying-open-book',
+  'quadruped-arm-slide',
+  'reformer-parallel-footwork',
+  'chair-seated-pedal-press',
+  'reformer-supine-strap-arm-press',
+  'cadillac-supine-arm-spring-press',
+  'ladder-supported-hip-extension-slide',
+  'ladder-supported-side-leg-slide',
+  'chair-seated-bilateral-arm-raise-v1',
   'chair-seated-overhead-sidebend-v1',
+  'prone-single-straight-leg-extension-v1',
   'prone-forearm-chest-extension-v1',
   'articulated-pelvic-curl',
+  'supine-chest-lift',
+  'floor-seated-band-row',
   'supine-single-leg-reach-v1',
 ] as const;
 
@@ -77,7 +99,7 @@ describe('source-bound authored phase context', () => {
     }
   });
 
-  it('authors phase details for four variants and leaves eighteen explicitly unwritten', () => {
+  it('authors phase details for twenty-one variants and leaves one explicitly unwritten', () => {
     expect(MOTION_PATTERN_REFERENCES).toHaveLength(22);
     const available: string[] = [];
     const unwritten: string[] = [];
@@ -106,7 +128,7 @@ describe('source-bound authored phase context', () => {
       (context.detailStatus === 'available' ? available : unwritten).push(reference.variantId);
     }
     expect(available.sort()).toEqual([...annotatedIds].sort());
-    expect(unwritten).toHaveLength(18);
+    expect(unwritten).toEqual(['quadruped-leg-slide']);
 
     // Stationary geometry does not fill in a missing declaration from the source model.
     const undeclared = MOTION_PATTERN_REFERENCES.filter((reference) =>
@@ -155,6 +177,81 @@ describe('source-bound authored phase context', () => {
       expect(
         getPelvicCurlPose(progress).contacts.find((contact) => contact.id === 'spine-2-mat')?.state,
       ).toBe('released');
+
+      const bilateralChair = referenceFor('chair-seated-bilateral-arm-raise-v1');
+      const bilateralChairContext = getMotionPatternPhaseContext(bilateralChair, progress)!;
+      expect(bilateralChairContext.poseSummaryKo).toContain('양팔');
+      const bilateralChairPose = getBatchPose('chair-seated-bilateral-arm-raise-v1', progress);
+      expect(bilateralChairPose.limbs.left.hand[2]).toBeLessThan(
+        bilateralChairPose.limbs.left.shoulder[2],
+      );
+      expect(bilateralChairPose.contacts.some((contact) => contact.id.includes('hand'))).toBe(false);
+
+      const proneLeg = referenceFor('prone-single-straight-leg-extension-v1');
+      const proneLegContext = getMotionPatternPhaseContext(proneLeg, progress)!;
+      expect(proneLegContext.contactChangeKo).toContain('앞발');
+      expect(
+        getBatchPose('prone-single-straight-leg-extension-v1', progress, { activeSide: 'right' })
+          .contacts.find((contact) => contact.id === 'right-forefoot')?.state,
+      ).toBe('fixed');
+      expect(
+        getBatchPose('prone-single-straight-leg-extension-v1', 0.5, { activeSide: 'right' })
+          .contacts.find((contact) => contact.id === 'right-forefoot')?.state,
+      ).toBe('released');
+
+      const chestLift = referenceFor('supine-chest-lift');
+      const chestLiftContext = getMotionPatternPhaseContext(chestLift, progress)!;
+      expect(chestLiftContext.poseSummaryKo).toContain('뒤통수');
+      expect(chestLiftContext.contactChangeKo).toContain('견갑 하각');
+      expect(
+        getChestLiftPose(progress).contacts.filter(
+          (contact) => contact.sourceNamedSupport === 'scapula-mat',
+        ).every((contact) => contact.state === 'grounded'),
+      ).toBe(true);
+      expect(
+        getChestLiftPose(0.5).contacts.filter(
+          (contact) => contact.sourceNamedSupport === 'scapula-mat',
+        ).every((contact) => contact.state === 'released'),
+      ).toBe(true);
+
+      const bandRow = referenceFor('floor-seated-band-row');
+      const bandRowContext = getMotionPatternPhaseContext(bandRow, progress)!;
+      expect(bandRowContext.poseSummaryKo).toContain('바닥');
+      expect(bandRowContext.contactChangeKo).toContain('밴드');
+      expect(getSeatedBandRowPose(progress).band.force).toBe('not-modeled');
+
+      const heelRaise = referenceFor('supported-heel-raise');
+      const heelRaiseContext = getMotionPatternPhaseContext(heelRaise, progress)!;
+      expect(heelRaiseContext.contactChangeKo).toContain('뒤꿈치');
+      expect(
+        getHeelRaisePose(progress).contacts.find((contact) => contact.id === 'left-heel')?.state,
+      ).toBe('grounded');
+      expect(
+        getHeelRaisePose(0.51).contacts.find((contact) => contact.id === 'left-heel')?.state,
+      ).toBe('released');
+
+      const kneeFold = referenceFor('supine-knee-fold');
+      const kneeFoldContext = getMotionPatternPhaseContext(kneeFold, progress)!;
+      expect(kneeFoldContext.contactChangeKo).toContain('뒤꿈치·발끝');
+      expect(
+        getSupineDraftPose('supine-knee-fold', progress, { activeSide: 'right' }).contacts.find(
+          (contact) => contact.id === 'right-heel',
+        )?.state,
+      ).toBe('fixed');
+      expect(
+        getSupineDraftPose('supine-knee-fold', 0.51, { activeSide: 'right' }).contacts.find(
+          (contact) => contact.id === 'right-heel',
+        )?.state,
+      ).toBe('lifted');
+
+      const sideLegLift = referenceFor('side-lying-straight-leg-lift');
+      const sideLegLiftContext = getMotionPatternPhaseContext(sideLegLift, progress)!;
+      expect(sideLegLiftContext.poseSummaryKo).toContain('머리 받침');
+      expect(
+        getLateralDraftPose('side-lying-straight-leg-lift', progress).supports.find(
+          (support) => support.id === 'head-pad',
+        )?.sourceRequirement,
+      ).toBe('authoring-choice');
     },
   );
 

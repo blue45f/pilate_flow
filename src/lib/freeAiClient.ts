@@ -18,6 +18,7 @@ import type {
   FreeAiRenewalInfo,
   MovementIdeaInput,
   P1ReusableBlockContract,
+  P1ReusableBlockStepContract,
   SequenceComposeInput,
 } from '../types/freeAiAssistant';
 import type { ConditionTemplate, PilatesExercise } from '../types/pilates';
@@ -256,10 +257,6 @@ function extractErrorDetails(cause: unknown): {
         ? errObj.message
         : undefined;
 
-  const isLocalSdkUnavailable =
-    typeof message === 'string' &&
-    message.includes('서버 계정 백업은 배포된 앱에서 사용할 수 있습니다');
-
   const code =
     typeof bodyObj.code === 'string'
       ? bodyObj.code
@@ -278,10 +275,31 @@ function extractErrorDetails(cause: unknown): {
           ? errObj.statusCode
           : undefined;
 
+  // Only the explicit local-adapter contract is a known configuration absence.
+  // Network/auth/server failures must remain errors, not be relabeled as offline success.
+  const isLocalSdkUnavailable =
+    code === 'local_api_unavailable' ||
+    (code === undefined &&
+      httpStatus === undefined &&
+      typeof message === 'string' &&
+      (message ===
+        '서버 기능은 연결되어 있지 않습니다. 수업 자료는 이 브라우저에 보관됩니다. 전체 JSON 백업을 이용해 주세요.' ||
+        message.includes('서버 계정 백업은 배포된 앱에서 사용할 수 있습니다')));
+
   const fallbackStatus = createDefaultFreeAiStatus();
+  const quotaPayload =
+    (bodyObj.status && typeof bodyObj.status === 'object'
+      ? (bodyObj.status as Record<string, unknown>)
+      : null) ??
+    (bodyObj.quotaStatus && typeof bodyObj.quotaStatus === 'object'
+      ? (bodyObj.quotaStatus as Record<string, unknown>)
+      : null);
   const parsedStatus =
-    bodyObj.status || bodyObj.quotaStatus
-      ? parseQuotaStatusPayload(bodyObj, fallbackStatus)
+    quotaPayload &&
+    typeof quotaPayload.provider === 'string' &&
+    typeof quotaPayload.enabled === 'boolean' &&
+    typeof quotaPayload.exhausted === 'boolean'
+      ? parseQuotaStatusPayload(quotaPayload, fallbackStatus)
       : undefined;
 
   const renewal =
@@ -352,7 +370,16 @@ function toReviewedBlockCandidates(
     .filter((block) => block.isReviewed === true)
     .slice(0, 30)
     .map((block) => {
-      const reviewedSteps = block.steps
+      const blockSteps =
+        block.steps ??
+        (block as { items?: readonly P1ReusableBlockStepContract[] }).items ??
+        [];
+      const fallbackCategory =
+        block.category ?? blockSteps[0]?.blockCategory ?? 'core';
+      const defaultLayer =
+        block.level === '1.0' ? 'easy' : block.level === '2.0' ? 'hard' : 'standard';
+
+      const reviewedSteps = blockSteps
         .filter((step) => {
           const ex = exercisesMap.get(step.exerciseId);
           if (ex) return isExerciseAutoEligible(ex);
@@ -366,22 +393,31 @@ function toReviewedBlockCandidates(
             nameKo: (ex?.nameKo ?? step.exerciseSnapshot?.nameKo ?? step.exerciseId).slice(0, 160),
             nameEn: (ex?.nameEn ?? step.exerciseSnapshot?.nameEn ?? '').slice(0, 160),
             apparatus: ex?.apparatus ?? step.exerciseSnapshot?.apparatus ?? 'reformer',
-            blockCategory: step.blockCategory,
-            durationMin: Math.min(30, Math.max(0.5, step.durationMin)),
-            selectedLayer: step.selectedLayer,
+            blockCategory: step.blockCategory ?? ex?.blockCategory ?? fallbackCategory,
+            durationMin: Math.min(
+              30,
+              Math.max(0.5, step.durationMin ?? ex?.defaultDurationMin ?? 4),
+            ),
+            selectedLayer: step.selectedLayer ?? defaultLayer,
             ...(step.instructorNote
               ? { instructorNote: step.instructorNote.slice(0, 500) }
               : {}),
           };
         });
 
+      const stepDurationSum = reviewedSteps.reduce((sum, step) => sum + step.durationMin, 0);
+      const resolvedDurationMin = Math.min(
+        60,
+        Math.max(1, Math.round(block.durationMin ?? (stepDurationSum || 10))),
+      );
+
       return {
         id: block.id.slice(0, 120),
         title: block.title.slice(0, 160),
         apparatus: block.apparatus,
         level: block.level,
-        category: block.category,
-        durationMin: Math.min(60, Math.max(1, block.durationMin)),
+        category: fallbackCategory,
+        durationMin: resolvedDurationMin,
         isReviewed: true as const,
         steps: reviewedSteps,
       };
@@ -624,12 +660,8 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
           renewal,
           statusMessageKo: formatQuotaExhaustedMessage(renewal),
         };
-        throw new FreeAiClientError(
-          'free_quota_exhausted',
-          formatQuotaExhaustedMessage(renewal),
-          syncStatusCounters(),
-          renewal,
-        );
+        // The successful result consumed the final available request. Preserve it;
+        // the exhausted status blocks only subsequent external requests.
       }
 
       const normalizedResult: T = {

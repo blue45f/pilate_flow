@@ -79,6 +79,7 @@ import type {
   MovementIdeaInput,
   P1MovementIdeaContract,
   P1ReusableBlockContract,
+  P1ReusableBlockStepContract,
   SequenceComposeInput,
   StrengthenArea,
 } from '../types/freeAiAssistant';
@@ -973,8 +974,25 @@ export function composeSequenceFromReviewedItems(
       continue;
     }
 
-    for (let stepIdx = 0; stepIdx < block.steps.length; stepIdx++) {
-      const blockStep = block.steps[stepIdx];
+    const blockSteps =
+      block.steps ??
+      (block as { items?: readonly P1ReusableBlockStepContract[] }).items ??
+      [];
+    const fallbackBlockCategory: ClassBlockCategory =
+      block.category ?? blockSteps[0]?.blockCategory ?? 'core';
+    const rawStepDurationSum = blockSteps.reduce(
+      (sum, step) => sum + (Number.isFinite(step.durationMin) ? step.durationMin! : 4),
+      0,
+    );
+    const resolvedBlockDurationMin =
+      block.durationMin ?? (rawStepDurationSum > 0 ? rawStepDurationSum : 10);
+    const perStepFallbackDuration =
+      blockSteps.length > 0
+        ? clampStepDuration(resolvedBlockDurationMin / blockSteps.length, 4)
+        : 4;
+
+    for (let stepIdx = 0; stepIdx < blockSteps.length; stepIdx++) {
+      const blockStep = blockSteps[stepIdx];
       const catalogEx = exercisesMap.get(blockStep.exerciseId);
 
       if (catalogEx) {
@@ -989,10 +1007,11 @@ export function composeSequenceFromReviewedItems(
           nameKo: catalogEx.nameKo.slice(0, 160),
           nameEn: catalogEx.nameEn.slice(0, 160),
           apparatus: catalogEx.apparatus,
-          blockCategory: blockStep.blockCategory || catalogEx.blockCategory,
+          blockCategory:
+            blockStep.blockCategory || catalogEx.blockCategory || fallbackBlockCategory,
           durationMin: clampStepDuration(
-            blockStep.durationMin || catalogEx.defaultDurationMin,
-            4,
+            blockStep.durationMin || catalogEx.defaultDurationMin || perStepFallbackDuration,
+            perStepFallbackDuration,
           ),
           selectedLayer: blockStep.selectedLayer || defaultLayer,
           instructorNote: (
@@ -1011,8 +1030,11 @@ export function composeSequenceFromReviewedItems(
           nameKo: snap.nameKo.slice(0, 160),
           nameEn: snap.nameEn.slice(0, 160),
           apparatus: snap.apparatus,
-          blockCategory: blockStep.blockCategory,
-          durationMin: clampStepDuration(blockStep.durationMin, 4),
+          blockCategory: blockStep.blockCategory || fallbackBlockCategory,
+          durationMin: clampStepDuration(
+            blockStep.durationMin ?? perStepFallbackDuration,
+            perStepFallbackDuration,
+          ),
           selectedLayer: blockStep.selectedLayer || defaultLayer,
           instructorNote: (blockStep.instructorNote || `[블록: ${block.title}]`).slice(0, 500),
           isReviewed: true,
@@ -1433,6 +1455,14 @@ export function movementIdeaToUnreviewedExercise(
     reviewStatus: 'unreviewed-creative',
     guaranteesSafetyOrEffect: false,
     safetyDisclaimer: UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER,
+    safetyBoundary: {
+      originType: 'instructor-created-draft',
+      evaluationBasis: 'subjective-instructor-feel',
+      aiSafetyGuaranteed: false,
+      objectiveEfficacyClaimed: false,
+      expertVerified: false,
+      disclaimerKo: UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER,
+    },
     createdAt: resolvedCreatedAt,
   };
 

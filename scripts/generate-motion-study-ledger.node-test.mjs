@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, mkdir, readFile, writeFile, cp, rm, symlink } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, realpath, writeFile, cp, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +15,7 @@ const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const current = buildMotionStudyLedger(ROOT);
 const sourcePaths = [...new Set(current.entries.flatMap((entry) => entry.sourceFiles.map((file) => file.path)))];
 async function fixture(t) {
-  const root = await mkdtemp(path.join(tmpdir(), 'motion-study-ledger-'));
+  const root = await mkdtemp(path.join(await realpath(tmpdir()), 'motion-study-ledger-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   for (const relative of sourcePaths) {
     await mkdir(path.dirname(path.join(root, relative)), { recursive: true });

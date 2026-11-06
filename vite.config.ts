@@ -25,5 +25,39 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('/node_modules/@firebase/') || id.includes('/node_modules/firebase/')) {
+            return 'vendor-firebase';
+          }
+          if (id.includes('node_modules/react') || id.includes('node_modules/scheduler')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/lucide-react')) {
+            return 'vendor-lucide';
+          }
+          if (
+            id.includes('verifiedPilatesYouTubeCatalog.json') ||
+            id.includes('exerciseYouTubeCatalog')
+          ) {
+            return 'youtube-catalog';
+          }
+          if (
+            id.includes('motionStudyLedger.json') ||
+            id.includes('motionReviewSourceManifest.json')
+          ) {
+            return 'pilates-motion-ledgers';
+          }
+          if (id.includes('/src/data/motion') || id.includes('supineReach')) {
+            return 'pilates-motion-data';
+          }
+          if (id.includes('/src/data/')) {
+            return 'pilates-catalog-data';
+          }
+          return undefined;
+        },
+      },
+    },
   },
 });

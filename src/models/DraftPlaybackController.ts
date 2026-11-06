@@ -1,4 +1,5 @@
 export type DraftSpeed = 0.5 | 0.75 | 1;
+export type DraftRepeatCount = 1 | 2 | 3;
 export interface DraftPlaybackState {
   progress: number;
   speed: DraftSpeed;
@@ -16,6 +17,8 @@ export interface DraftControllerOptions {
 export class DraftPlaybackController {
   private progress = 0;
   private speed: DraftSpeed = 1;
+  private repeat: DraftRepeatCount = 1;
+  private completedCycles = 0;
   private playing = false;
   private frame: number | null = null;
   private lastTime: number | null = null;
@@ -33,6 +36,12 @@ export class DraftPlaybackController {
       playing: this.playing,
     };
   }
+  repeatCount(): DraftRepeatCount {
+    return this.repeat;
+  }
+  currentCycle(): number {
+    return Math.min(this.repeat, this.completedCycles + 1);
+  }
   private emit() {
     this.options.onChange(this.state());
   }
@@ -49,6 +58,7 @@ export class DraftPlaybackController {
   seek(value: number) {
     this.playing = false;
     this.cancel();
+    this.completedCycles = 0;
     this.progress = Number.isFinite(value)
       ? Math.max(0, Math.min(1, value))
       : 0;
@@ -63,9 +73,18 @@ export class DraftPlaybackController {
     this.speed = value as DraftSpeed;
     this.emit();
   }
+  setRepeatCount(value: number) {
+    if (![1, 2, 3].includes(value))
+      throw new RangeError("Unsupported illustration repeat count");
+    this.repeat = value as DraftRepeatCount;
+    this.seek(0);
+  }
   play() {
     if (this.playing || !this.options.canPlay()) return false;
-    if (this.progress >= 1) this.progress = 0;
+    if (this.progress >= 1) {
+      this.progress = 0;
+      this.completedCycles = 0;
+    }
     this.playing = true;
     this.lastTime = null;
     this.emit();
@@ -81,13 +100,17 @@ export class DraftPlaybackController {
       this.pause();
       return;
     }
-    if (this.lastTime !== null)
-      this.progress = Math.min(
-        1,
+    if (this.lastTime !== null) {
+      let nextProgress =
         this.progress +
-          (Math.max(0, time - this.lastTime) * this.speed) /
-            (this.options.cycleMs ?? 8000),
-      );
+        (Math.max(0, time - this.lastTime) * this.speed) /
+          (this.options.cycleMs ?? 8000);
+      while (nextProgress >= 1 && this.completedCycles + 1 < this.repeat) {
+        this.completedCycles += 1;
+        nextProgress -= 1;
+      }
+      this.progress = Math.min(1, nextProgress);
+    }
     this.lastTime = time;
     if (this.progress >= 1) {
       this.progress = 1;
