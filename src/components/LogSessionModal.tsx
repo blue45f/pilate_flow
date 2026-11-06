@@ -193,17 +193,48 @@ const SessionLogForm: React.FC<
       setError(parsed.error.issues[0]?.message ?? '입력값을 확인해 주세요.');
       return;
     }
+    const beforeState = usePilatesStore.getState();
+    const isActiveSeq = sequenceId === beforeState.activeSequenceId;
+    const resolvedApparatus = isActiveSeq
+      ? beforeState.activeApparatus
+      : (saved?.apparatus ?? beforeState.activeApparatus);
+    const resolvedLevel = isActiveSeq
+      ? beforeState.activeLevel
+      : (saved?.level ?? beforeState.activeLevel);
+    const resolvedCriteriaSnapshot = isActiveSeq
+      ? (beforeState.draftCriteria ?? beforeState.lastCriteria ?? undefined)
+      : saved?.criteriaSnapshot;
+    const stepsForLog = taughtSteps.map((step, index) => ({
+      ...structuredClone(step),
+      order: index + 1,
+    }));
+    const programSnapshot = buildTeachingProgramSnapshot({
+      sequenceId,
+      sequenceTitle: title,
+      sequenceSubtitle: sourceSubtitle,
+      sourceKind,
+      sourceSequenceVersion: saved?.version,
+      sourceSequenceUpdatedAt: saved?.updatedAt,
+      sourceProvenance: saved?.sourceProvenance,
+      apparatus: resolvedApparatus,
+      level: resolvedLevel,
+      targetMinutes: resolvedCriteriaSnapshot?.targetMinutes ?? beforeState.activeTargetMinutes,
+      taughtAt: date.toISOString(),
+      groupId,
+      steps: stepsForLog,
+      exercises: exercisesAtOpen,
+      actualDurationSec,
+      actualRestDurationSec: context?.actualRestDurationSec,
+      criteriaSnapshot: resolvedCriteriaSnapshot ?? undefined,
+    });
     const payload = {
       ...parsed.data,
       actualDurationSec,
       actualRestDurationSec: context?.actualRestDurationSec,
-      stepsSnapshot: taughtSteps.map((step, index) => ({
-        ...structuredClone(step),
-        order: index + 1,
-      })),
+      stepsSnapshot: stepsForLog,
       sequenceTitle: title,
+      programSnapshot,
     };
-    const beforeState = usePilatesStore.getState();
     const duplicate = findDuplicateCompletedHistoryLog(beforeState.historyLogs, {
       sequenceId: payload.sequenceId,
       groupId: payload.groupId,
@@ -256,30 +287,13 @@ const SessionLogForm: React.FC<
       return;
     }
     const matchedLog = matchingLogs[0] as ClassHistoryLogWithSnapshot;
-    const programSnapshot = buildTeachingProgramSnapshot({
-      sequenceId: payload.sequenceId,
-      sequenceTitle: payload.sequenceTitle,
-      sequenceSubtitle: sourceSubtitle,
-      sourceKind,
-      sourceSequenceVersion: saved?.version,
-      sourceSequenceUpdatedAt: saved?.updatedAt,
-      sourceProvenance: saved?.sourceProvenance,
-      apparatus: matchedLog.apparatus,
-      level: matchedLog.level,
-      targetMinutes: matchedLog.criteriaSnapshot?.targetMinutes,
-      taughtAt: payload.taughtAt,
-      groupId: payload.groupId,
-      steps: payload.stepsSnapshot,
-      exercises: exercisesAtOpen,
-      actualDurationSec: payload.actualDurationSec,
-      actualRestDurationSec: payload.actualRestDurationSec,
-      criteriaSnapshot: matchedLog.criteriaSnapshot,
-    });
-    attachProgramSnapshotToHistoryLog(
-      matchedLog.id,
-      programSnapshot,
-      usePilatesStore.setState,
-    );
+    if (!matchedLog.programSnapshot) {
+      attachProgramSnapshotToHistoryLog(
+        matchedLog.id,
+        programSnapshot,
+        usePilatesStore.setState,
+      );
+    }
     setActiveTab('history');
     onClose();
   };

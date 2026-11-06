@@ -2,11 +2,13 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
+import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { createEmptyInstructorSchedule } from '../types/instructorSchedule';
 import {
   captureCurrentClassHierarchySnapshot,
   clearIdeaWorkingBuffer,
+  getMovementIdeaMetaMap,
   getSavedReusableBlocks,
   isMovementIdeaExercise,
   moveIdeaReusableBlockItem,
@@ -14,7 +16,10 @@ import {
   readMovementIdeaDraft,
   resetMovementIdeaStateForTests,
   saveMovementIdeaToStore,
+  saveMovementIdeaWorkingBuffer,
 } from '../utils/movementIdeaDraft';
+
+const ACTIVE_OWNER_KEY = `${RECOVERY_STORAGE_KEY}:active-owner`;
 
 const originalStore = usePilatesStore.getState();
 const originalWidth = window.innerWidth;
@@ -472,5 +477,47 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     expect(pastClassSnapshot.exerciseSnapshots[firstStepExerciseId]?.ideaLineSnapshot).toBe(
       '사이드 라잉 한 다리 서클 감각 익히기',
     );
+  });
+
+  it('isolates movement idea metadata and working buffers per account owner and infers apparatus from 1-line text', () => {
+    usePilatesStore.setState({
+      activeApparatus: 'mat',
+      ownedEquipment: ['mat'],
+      draftCriteria: null,
+    });
+
+    // Account A saves a 1-line idea mentioning 체어 (chair) without selecting apparatus explicitly
+    localStorage.setItem(ACTIVE_OWNER_KEY, 'user-alpha');
+    saveMovementIdeaWorkingBuffer({ ideaLine: '알파 강사의 작성 중 버퍼' });
+    expect(readIdeaWorkingBuffer().ideaLine).toBe('알파 강사의 작성 중 버퍼');
+
+    const savedAlpha = saveMovementIdeaToStore({
+      ideaLine: '체어 페달 프레스 중 흉곽 회전 큐잉',
+      subjectiveFeeling: '알파 강사 전용 느낌 기록',
+    });
+    expect(savedAlpha.ok).toBe(true);
+    expect(savedAlpha.exercise?.apparatus).toBe('chair');
+    expect(Object.keys(getMovementIdeaMetaMap())).toHaveLength(1);
+
+    // Switch to Account B ('user-beta'): Account A's metadata and working buffer must not leak
+    localStorage.setItem(ACTIVE_OWNER_KEY, 'user-beta');
+    expect(readIdeaWorkingBuffer().ideaLine).toBe('');
+    expect(Object.keys(getMovementIdeaMetaMap())).toHaveLength(0);
+
+    saveMovementIdeaWorkingBuffer({ ideaLine: '베타 강사의 임시 메모' });
+    const savedBeta = saveMovementIdeaToStore({
+      ideaLine: '캐딜락 롤다운 바 분절 감각 체크',
+    });
+    expect(savedBeta.ok).toBe(true);
+    expect(savedBeta.exercise?.apparatus).toBe('cadillac');
+    expect(Object.keys(getMovementIdeaMetaMap())).toHaveLength(1);
+    expect(getMovementIdeaMetaMap()[savedAlpha.exercise!.id]).toBeUndefined();
+
+    // Switch back to Account A: Account A's metadata is intact and isolated from Account B
+    localStorage.setItem(ACTIVE_OWNER_KEY, 'user-alpha');
+    expect(getMovementIdeaMetaMap()[savedAlpha.exercise!.id]?.subjectiveFeeling).toBe(
+      '알파 강사 전용 느낌 기록',
+    );
+    expect(getMovementIdeaMetaMap()[savedBeta.exercise!.id]).toBeUndefined();
   });
 });
