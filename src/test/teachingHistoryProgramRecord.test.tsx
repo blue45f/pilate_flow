@@ -592,7 +592,7 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
     render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
 
     expect(screen.getByLabelText('진행 완료 이력 스냅샷 보존 안내')).toHaveTextContent(
-      'P3 계정 연결됨 (local-only@studio.kr · 클라우드 백업 미연결 (로컬 전용))',
+      '계정 연결됨 (local-only@studio.kr · 계정 백업 미연결)',
     );
 
     const historyFeed = screen.getByRole('region', { name: '수업 기록 목록' });

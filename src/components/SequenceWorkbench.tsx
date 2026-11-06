@@ -1348,7 +1348,8 @@ export function SequenceWorkbench({
             )}
           </details>
           <details className="workbench-automation-tools workbench-free-ai-details">
-            <summary>AI 티칭 큐·시퀀스 도우미 (무료 한도 보호 · 소진 시 로컬 전환)</summary>
+            <summary>AI 수업 도우미 (선택)</summary>
+            <p className="pf-text-sm">무료 한도 보호 · 소진 시 로컬 전환</p>
             <Suspense fallback={<p className="pf-text-sm">AI 도우미를 불러오는 중...</p>}>
               <LazyFreeAiAssistantPanel
                 exercises={s.exercises}
