@@ -62,6 +62,10 @@ const tabs: readonly { id: FilterTab; label: string }[] = [
   { id: 'duration', label: '시간' },
 ];
 
+function compactSearchText(value: string): string {
+  return value.normalize('NFKC').toLocaleLowerCase().replace(/\s+/gu, '');
+}
+
 export function InlineExerciseFinder({
   onOpenExercise,
   classEquipment = [],
@@ -101,7 +105,12 @@ export function InlineExerciseFinder({
     [exercises],
   );
   const results = useMemo(() => {
-    const terms = filters.query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+    const terms = filters.query
+      .normalize('NFKC')
+      .trim()
+      .split(/\s+/u)
+      .filter(Boolean)
+      .map(compactSearchText);
     return exercises.filter((exercise) => {
       const equipment = getExerciseEquipment(exercise);
       const motionReferences = getMotionPatternReferences(exercise.id);
@@ -119,7 +128,7 @@ export function InlineExerciseFinder({
       )
         return false;
       if (filters.duration === 'long' && exercise.defaultDurationMin <= 5) return false;
-      const text = [
+      const fields = [
         exercise.nameKo,
         exercise.nameEn,
         ...exercise.targetMuscles,
@@ -128,10 +137,8 @@ export function InlineExerciseFinder({
           reference.variant,
           ...reference.equipment,
         ]),
-      ]
-        .join(' ')
-        .toLocaleLowerCase();
-      return terms.every((term) => text.includes(term));
+      ].map(compactSearchText);
+      return terms.every((term) => fields.some((field) => field.includes(term)));
     });
   }, [exercises, filters]);
   const activeFilterCount =

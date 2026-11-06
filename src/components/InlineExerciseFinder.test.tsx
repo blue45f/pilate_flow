@@ -257,3 +257,21 @@ it('pauses a retained preview while the finder is inactive and never resumes it 
   expect(screen.queryByRole('button', { name: '일시정지' })).not.toBeInTheDocument();
   expect(usePilatesStore.getState()).toBe(before);
 });
+
+it('finds names without spacing and composed Korean while preserving AND search and read-only filtering', () => {
+  const before = usePilatesStore.getState();
+  render(<InlineExerciseFinder onOpenExercise={vi.fn()} />);
+  const search = screen.getByRole('searchbox');
+  for (const query of [
+    '골반시계',
+    '골반 시계',
+    '골반시계'.normalize('NFD'),
+    'ＰｅｌｖｉｃＣｌｏｃｋ',
+  ]) {
+    fireEvent.change(search, { target: { value: query } });
+    expect(screen.getByRole('button', { name: '골반 시계 수업안에 추가' })).toBeEnabled();
+  }
+  fireEvent.change(search, { target: { value: '골반시계 존재하지않는단어' } });
+  expect(screen.getByText('조건에 맞는 동작이 없어요')).toBeInTheDocument();
+  expect(usePilatesStore.getState()).toBe(before);
+});
