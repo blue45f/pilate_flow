@@ -80,7 +80,7 @@ body {
   transform: none;
 }
 #root .vnext-shell :is(button, a, summary, input, select, textarea):focus-visible {
-  outline: 3px solid var(--studio-accent);
+  outline: 3px solid var(--pf-color-focus-ring);
   outline-offset: 3px;
 }
 #root .vnext-shell :is(input, select, textarea) {
@@ -548,14 +548,16 @@ body {
   font-family: var(--pf-font-sans);
 }
 #root .vnext-shell .btn-primary {
-  background: var(--studio-accent);
-  border-color: var(--studio-accent);
+  background: var(--pf-color-action-primary);
+  border-color: var(--pf-color-action-primary);
+  color: var(--pf-color-text-on-primary);
   border-radius: 9px;
   box-shadow: none;
 }
 #root .vnext-shell .btn-secondary {
-  background: var(--studio-surface);
-  border-color: var(--studio-line);
+  background: var(--pf-color-action-secondary-bg);
+  border-color: var(--pf-color-action-secondary-border);
+  color: var(--pf-color-text-primary);
   border-radius: 9px;
 }
 #root .vnext-shell .bottom-nav {
