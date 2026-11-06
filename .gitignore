@@ -10,3 +10,6 @@ qa-artifacts/
 .env
 .env.*
 __pycache__/
+.firebase/
+firebase-debug.log*
+

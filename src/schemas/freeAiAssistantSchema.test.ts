@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   detectByokOrSecretExposure,
@@ -41,11 +43,13 @@ describe('freeAiAssistantSchema and policy guards', () => {
   });
 
   it('detects and strips user BYOK fields and browser key exposure', () => {
+    const syntheticGoogleKey = ['AIza', 'Sy', 'T'.repeat(33)].join('');
+    const syntheticOpenRouterKey = ['sk-or', '-v1-', 'b'.repeat(32)].join('');
     const withByok = {
       task: 'class-draft',
-      apiKey: ['AIza', 'Sy', 'T'.repeat(33)].join(''),
+      apiKey: syntheticGoogleKey,
       nested: {
-        openRouterApiKey: ['sk-or', '-v1-', 'a'.repeat(32)].join(''),
+        openRouterApiKey: syntheticOpenRouterKey,
         VITE_GEMINI_API_KEY: 'secret',
         keepMe: 'valid',
       },
@@ -107,5 +111,35 @@ describe('freeAiAssistantSchema and policy guards', () => {
       memberHealthNotes: '좌골신경통',
     });
     expect(payloadHealth.hasSensitiveData).toBe(true);
+  });
+
+  it('contains zero literal API key or secret patterns across all tracked source and test files', () => {
+    const trackedFiles = execFileSync('git', ['ls-files'], { encoding: 'utf8' })
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((file) => file.length > 0 && !/\.(png|jpg|jpeg|webp|gif|tar\.gz|ico)$/i.test(file));
+
+    const secretPatterns = [
+      /\bAIza[0-9A-Za-z_-]{20,}\b/,
+      /\bsk-or-v1-[0-9a-fA-F]{16,}\b/,
+      /\bsk-[0-9A-Za-z_-]{20,}\b/,
+      /\b(?:ghp|gho|ghu|ghs|ghr)_[0-9A-Za-z]{20,}\b/,
+      /\bgithub_pat_[0-9A-Za-z_]{20,}\b/,
+      /\bAKIA[0-9A-Z]{16}\b/,
+      /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
+    ];
+
+    const findings: string[] = [];
+    for (const file of trackedFiles) {
+      const content = readFileSync(file, 'utf8');
+      for (const pattern of secretPatterns) {
+        const match = content.match(pattern);
+        if (match) {
+          findings.push(`${file}: ${match[0].slice(0, 8)}...`);
+        }
+      }
+    }
+
+    expect(findings).toEqual([]);
   });
 });

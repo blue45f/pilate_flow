@@ -17,7 +17,8 @@
     "test:watch": "vitest",
     "check:motion-study": "node scripts/generate-motion-study-ledger.mjs --check && node --test scripts/generate-motion-study-ledger.node-test.mjs",
     "lint": "eslint .",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "deploy": "pnpm build && firebase deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",

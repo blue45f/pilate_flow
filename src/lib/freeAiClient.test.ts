@@ -105,8 +105,12 @@ function makeMockMovementIdeaResult(): EditableMovementIdeaResult {
 
 describe('freeAiClient', () => {
   it('blocks browser key exposure and BYOK fields with byok_forbidden', async () => {
+    const syntheticBrowserGoogleKey = ['AIza', 'Sy', 'B'.repeat(33)].join('');
+    const syntheticOpenRouterKey = ['sk-or', '-v1-', 'a'.repeat(32)].join('');
+    const syntheticPromptGoogleKey = ['AIza', 'Sy', 'P'.repeat(33)].join('');
+
     const exposedEnvCheck = assertNoBrowserKeyExposure({
-      VITE_GEMINI_API_KEY: ['AIza', 'Sy', 'B'.repeat(33)].join(''),
+      VITE_GEMINI_API_KEY: syntheticBrowserGoogleKey,
     });
     expect(exposedEnvCheck.safe).toBe(false);
     expect(exposedEnvCheck.violations.length).toBeGreaterThan(0);
@@ -120,7 +124,7 @@ describe('freeAiClient', () => {
     const clientWithExposedEnv = createFreeAiClient({
       transport,
       envRecord: {
-        VITE_OPENROUTER_API_KEY: ['sk-or', '-v1-', 'a'.repeat(32)].join(''),
+        VITE_OPENROUTER_API_KEY: syntheticOpenRouterKey,
       },
     });
 
@@ -143,7 +147,7 @@ describe('freeAiClient', () => {
     });
 
     const payloadWithSecretKey = {
-      rawIdeaText: '내 키 REDACTED_PROMPT_KEY 로 호출',
+      rawIdeaText: `내 키 ${syntheticPromptGoogleKey} 로 호출`,
       apparatus: 'reformer' as const,
       blockCategory: 'bridging' as const,
       strengthenArea: 'glute-lower' as const,

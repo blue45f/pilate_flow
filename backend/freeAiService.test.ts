@@ -484,10 +484,11 @@ describe('backend/freeAiService', () => {
         fetchFn,
       });
 
+      const syntheticGoogleKey = ['AIza', 'Sy', 'X'.repeat(33)].join('');
       await expect(
         service.assist('instructor-1', {
           ...SAMPLE_MOVEMENT_IDEA_REQ,
-          apiKey: ['AIza', 'Sy', 'X'.repeat(33)].join(''),
+          apiKey: syntheticGoogleKey,
         }),
       ).rejects.toMatchObject({
         code: 'byok_forbidden',
@@ -672,9 +673,10 @@ describe('backend/freeAiService', () => {
       expect(assistBody.guaranteesSafetyOrEffect).toBe(false);
       expect(assistBody.safetyDisclaimer).toBe(UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER);
 
+      const syntheticSkKey = ['sk', '-', 'x'.repeat(24)].join('');
       const byokRes = await routes['POST /api/studio/ai/assist']({
         user: { userId: 'instructor-1', scope: 'user' },
-        body: { ...SAMPLE_MOVEMENT_IDEA_REQ, apiKey: ['sk', '-', 'x'.repeat(24)].join('') },
+        body: { ...SAMPLE_MOVEMENT_IDEA_REQ, apiKey: syntheticSkKey },
       });
       expect(byokRes.statusCode).toBe(400);
       expect(byokRes.headers['Cache-Control']).toBe('private, no-store');
