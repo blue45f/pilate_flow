@@ -87,9 +87,11 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     const notice = screen.getByLabelText('강사 검토 안내');
     const summary = within(notice).getByText('자료·모션의 검토 상태 안내', { selector: 'summary' });
     expect(summary.closest('details')).not.toHaveAttribute('open');
+    expect(within(notice).getByRole('button', { name: '동작 자료·기록 보기' })).not.toBeVisible();
     fireEvent.click(summary);
     const guidance = within(notice).getByText(/검토 기록은 선택 사항입니다/);
     expect(guidance).toBeVisible();
+    expect(within(notice).getByRole('button', { name: '동작 자료·기록 보기' })).toBeVisible();
     expect(guidance).toHaveTextContent(/수업을 구성하는 데 필요하지 않습니다/);
     expect(notice).not.toHaveTextContent(/미승인.*(?:자동추천|자동 추천|수업 금지)|승인.*필수/);
     expect(usePilatesStore.getState()).toBe(before);

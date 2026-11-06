@@ -520,10 +520,10 @@ export function App() {
                   않습니다. 실제 수행 전 몸 상태와 기구 설정을 확인하세요. 검토 기록은 자격 인증이나
                   개인별 운동 적합성 보장이 아닙니다.
                 </p>
+                <button className="text-button" onClick={() => changeTab('atlas')}>
+                  동작 자료·기록 보기
+                </button>
               </details>
-              <button className="text-button" onClick={() => changeTab('atlas')}>
-                동작 검토
-              </button>
             </aside>
           )}
         </main>

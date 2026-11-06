@@ -49,3 +49,18 @@
   min-width: 0;
   white-space: normal;
 }
+
+#root .vnext-shell .vnext-workbench .workbench-material-notes {
+  margin: 0 0 12px;
+  color: var(--studio-ink);
+  font-size: 0.875rem;
+}
+#root .vnext-shell .vnext-workbench .workbench-material-notes > summary {
+  min-height: 44px;
+  padding: 12px 0;
+  cursor: pointer;
+}
+#root .vnext-shell .vnext-workbench .workbench-material-notes > p {
+  margin: 0 0 12px;
+  line-height: 1.6;
+}

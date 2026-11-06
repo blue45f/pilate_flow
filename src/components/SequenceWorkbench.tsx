@@ -1259,10 +1259,17 @@ export function SequenceWorkbench({
           )}
           {s.activeSteps.length > 0 && (
             <p className="workbench-readiness-summary" id="start-class-readiness">
-              {startReadiness}{' '}
-              {pendingStepCount > 0 &&
-                `미검토 자료 ${pendingStepCount}개 · 검토 기록은 선택 사항입니다.`}
+              {startReadiness}
             </p>
+          )}
+          {s.activeSteps.length > 0 && pendingStepCount > 0 && (
+            <details className="workbench-material-notes">
+              <summary>자료 안내</summary>
+              <p>
+                미검토 자료 {pendingStepCount}개 · 검토 기록은 선택 사항입니다. 기록 유무는 동작의
+                정확성이나 개인별 운동 적합성을 보장하지 않습니다.
+              </p>
+            </details>
           )}
           {s.activeSteps.length > 0 && (
             <section className="pf-flow-continuation" aria-label="핵심 흐름 이어가기">

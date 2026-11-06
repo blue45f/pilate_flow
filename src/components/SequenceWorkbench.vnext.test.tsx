@@ -282,3 +282,22 @@ describe('vNext instructor preparation continuity', () => {
     expect(usePilatesStore.getState().historyLogs).toHaveLength(0);
   });
 });
+
+describe('progressive material guidance', () => {
+  it('keeps pending status visible while optional record instructions start collapsed', () => {
+    usePilatesStore.setState({ activeSteps: [{ ...readyStep, exerciseId: pending.id }] });
+    const before = usePilatesStore.getState();
+    renderWorkbench();
+    expect(screen.getByText('검토 전 자료')).toBeVisible();
+    const summary = screen.getByText('자료 안내', { selector: 'summary' });
+    expect(summary.closest('details')).not.toHaveAttribute('open');
+    const note = screen.getByText(/미검토 자료 1개 · 검토 기록은 선택 사항입니다/);
+    expect(note).not.toBeVisible();
+    fireEvent.click(summary);
+    expect(note).toBeVisible();
+    expect(note).toHaveTextContent('개인별 운동 적합성을 보장하지 않습니다');
+    expect(usePilatesStore.getState()).toBe(before);
+    fireEvent.click(summary);
+    expect(note).not.toBeVisible();
+  });
+});

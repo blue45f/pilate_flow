@@ -378,7 +378,7 @@ export function InlineExerciseFinder({
           </button>
         )}
       </div>
-      <p className="ief-review-hint">동작을 바로 추가하세요. 검토 기록은 선택 사항입니다.</p>
+      <p className="ief-review-hint">동작을 골라 수업에 추가하세요.</p>
       {preview && (
         <section
           ref={previewRef}
