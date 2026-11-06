@@ -958,7 +958,6 @@ function normalizeAndValidateAssistResult(
     const normalizedSteps = rawSteps
       .filter((step): step is Record<string, unknown> => Boolean(step && typeof step === 'object'))
       .filter((step) => {
-        if (catalogIds.size === 0) return true;
         return typeof step.exerciseId === 'string' && catalogIds.has(step.exerciseId);
       })
       .map((step, index) => ({
@@ -1039,10 +1038,9 @@ function normalizeAndValidateAssistResult(
     }
   }
 
-  const autoExcluded =
-    reviewedIds.size > 0
-      ? request.compose.selectedExerciseIds.filter((id) => !reviewedIds.has(id))
-      : [];
+  const autoExcluded = request.compose.selectedExerciseIds.filter(
+    (id) => !reviewedIds.has(id),
+  );
   const rawExcluded = Array.isArray(raw.excludedUnreviewedIds)
     ? raw.excludedUnreviewedIds.filter((id): id is string => typeof id === 'string')
     : [];
@@ -1052,7 +1050,6 @@ function normalizeAndValidateAssistResult(
   const normalizedSteps = rawSteps
     .filter((step): step is Record<string, unknown> => Boolean(step && typeof step === 'object'))
     .filter((step) => {
-      if (reviewedIds.size === 0) return true;
       return typeof step.exerciseId === 'string' && reviewedIds.has(step.exerciseId);
     })
     .map((step, index) => ({

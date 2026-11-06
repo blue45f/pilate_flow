@@ -256,10 +256,6 @@ function extractErrorDetails(cause: unknown): {
         ? errObj.message
         : undefined;
 
-  const isLocalSdkUnavailable =
-    typeof message === 'string' &&
-    message.includes('서버 계정 백업은 배포된 앱에서 사용할 수 있습니다');
-
   const code =
     typeof bodyObj.code === 'string'
       ? bodyObj.code
@@ -278,10 +274,31 @@ function extractErrorDetails(cause: unknown): {
           ? errObj.statusCode
           : undefined;
 
+  // Only the explicit local-adapter contract is a known configuration absence.
+  // Network/auth/server failures must remain errors, not be relabeled as offline success.
+  const isLocalSdkUnavailable =
+    code === 'local_api_unavailable' ||
+    (code === undefined &&
+      httpStatus === undefined &&
+      typeof message === 'string' &&
+      (message ===
+        '서버 기능은 연결되어 있지 않습니다. 수업 자료는 이 브라우저에 보관됩니다. 전체 JSON 백업을 이용해 주세요.' ||
+        message.includes('서버 계정 백업은 배포된 앱에서 사용할 수 있습니다')));
+
   const fallbackStatus = createDefaultFreeAiStatus();
+  const quotaPayload =
+    (bodyObj.status && typeof bodyObj.status === 'object'
+      ? (bodyObj.status as Record<string, unknown>)
+      : null) ??
+    (bodyObj.quotaStatus && typeof bodyObj.quotaStatus === 'object'
+      ? (bodyObj.quotaStatus as Record<string, unknown>)
+      : null);
   const parsedStatus =
-    bodyObj.status || bodyObj.quotaStatus
-      ? parseQuotaStatusPayload(bodyObj, fallbackStatus)
+    quotaPayload &&
+    typeof quotaPayload.provider === 'string' &&
+    typeof quotaPayload.enabled === 'boolean' &&
+    typeof quotaPayload.exhausted === 'boolean'
+      ? parseQuotaStatusPayload(quotaPayload, fallbackStatus)
       : undefined;
 
   const renewal =
@@ -624,12 +641,8 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
           renewal,
           statusMessageKo: formatQuotaExhaustedMessage(renewal),
         };
-        throw new FreeAiClientError(
-          'free_quota_exhausted',
-          formatQuotaExhaustedMessage(renewal),
-          syncStatusCounters(),
-          renewal,
-        );
+        // The successful result consumed the final available request. Preserve it;
+        // the exhausted status blocks only subsequent external requests.
       }
 
       const normalizedResult: T = {

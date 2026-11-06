@@ -393,9 +393,16 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     fireEvent.click(detail.getByRole('button', { name: '닫기' }));
     navigate(/오늘의 수업/);
     fireEvent.click(screen.getByText('자동 구성·휴식 먼저 넣기', { selector: 'summary' }));
-    fireEvent.click(screen.getByRole('button', { name: '시퀀스 만들기' }));
+    const beforeAttempt = usePilatesStore.getState();
+    const makeSequence = screen.getByRole('button', { name: '시퀀스 만들기' });
+    expect(makeSequence).toBeDisabled();
+    expect(makeSequence).toHaveAccessibleDescription(/검토 완료 동작이 아직 없어요/);
+    expect(screen.getByRole('button', { name: '검토할 동작 찾기' })).toBeEnabled();
+    fireEvent.click(makeSequence);
+    expect(usePilatesStore.getState().activeSteps).toBe(beforeAttempt.activeSteps);
     expect(usePilatesStore.getState().activeSteps).toEqual([]);
-    expect(screen.getByRole('alert')).toHaveTextContent(/검토|승인/);
+    expect(usePilatesStore.getState().draftCriteria).toBe(beforeAttempt.draftCriteria);
+    expect(usePilatesStore.getState().generationError).toBeNull();
     expect(usePilatesStore.getState().exercises.filter(isExerciseAutoEligible)).toHaveLength(0);
     expect(screen.queryByRole('button', { name: /^수업 시작/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('timer')).not.toBeInTheDocument();

@@ -14,18 +14,17 @@ import type { EquipmentId } from '../data/equipmentCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesExercise } from '../types/pilates';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
-import {
-  addMovementIdeaToCurrentClass,
-  isMovementIdeaExercise,
-} from '../utils/movementIdeaDraft';
+import { addMovementIdeaToCurrentClass, isMovementIdeaExercise } from '../utils/movementIdeaDraft';
 import { isRestStep } from '../utils/sequenceEngine';
 import { getMotionPatternReferences } from '../data/motionPatternReferences';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
 import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';
 import '../styles/inline-exercise-finder.css';
+import '../styles/finder-class-context.css';
 
 interface InlineExerciseFinderProps {
   onOpenExercise: (exercise: PilatesExercise) => void;
+  classEquipment?: readonly EquipmentId[];
 }
 
 type FilterTab = 'equipment' | 'body' | 'duration';
@@ -56,7 +55,10 @@ const tabs: readonly { id: FilterTab; label: string }[] = [
   { id: 'duration', label: '시간' },
 ];
 
-export function InlineExerciseFinder({ onOpenExercise }: InlineExerciseFinderProps) {
+export function InlineExerciseFinder({
+  onOpenExercise,
+  classEquipment = [],
+}: InlineExerciseFinderProps) {
   const exercises = usePilatesStore((state) => state.exercises);
   const activeSteps = usePilatesStore((state) => state.activeSteps);
   const appendExerciseToSequence = usePilatesStore((state) => state.appendExerciseToSequence);
@@ -66,6 +68,7 @@ export function InlineExerciseFinder({ onOpenExercise }: InlineExerciseFinderPro
   const [visibleCount, setVisibleCount] = useState(6);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [preview, setPreview] = useState<MotionPatternReference | null>(null);
+  const [previewExerciseId, setPreviewExerciseId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ success: boolean; message: string } | null>(null);
   const id = useId();
   const previewRef = useRef<HTMLElement>(null);
@@ -129,6 +132,20 @@ export function InlineExerciseFinder({ onOpenExercise }: InlineExerciseFinderPro
     Number(filters.duration !== 'all');
   const selectedCount = activeSteps.filter((step) => !isRestStep(step)).length;
   const hasFilters = Boolean(filters.query.trim() || activeFilterCount || filters.motionOnly);
+  const previewExercise = useMemo(() => {
+    if (!preview) return undefined;
+    return (
+      exercises.find((item) => item.id === previewExerciseId) ??
+      exercises.find((item) => preview.intendedExerciseIds.includes(item.id))
+    );
+  }, [exercises, preview, previewExerciseId]);
+  const previewApproved = previewExercise ? isExerciseAutoEligible(previewExercise) : false;
+  const previewStale = previewExercise
+    ? getExerciseReviewState(previewExercise) === 'stale'
+    : false;
+  const previewAlreadyAdded = previewExercise
+    ? activeSteps.some((step) => !isRestStep(step) && step.exerciseId === previewExercise.id)
+    : false;
   const addExercise = (exercise: PilatesExercise) => {
     if (isMovementIdeaExercise(exercise)) {
       const result = addMovementIdeaToCurrentClass(exercise.id);
@@ -159,6 +176,37 @@ export function InlineExerciseFinder({ onOpenExercise }: InlineExerciseFinderPro
         </div>
         <span>{exercises.length}개 노트</span>
       </div>
+      {classEquipment.length > 0 && (
+        <section className="ief-class-context" aria-label="이번 수업 기구">
+          <p>
+            이번 수업 기구:{' '}
+            {classEquipment
+              .map(
+                (item) => EQUIPMENT_OPTIONS.find((option) => option.id === item)?.labelKo ?? item,
+              )
+              .join(' · ')}
+          </p>
+          <div>
+            <button
+              type="button"
+              aria-pressed={
+                filters.equipment.length === classEquipment.length &&
+                classEquipment.every((item) => filters.equipment.includes(item))
+              }
+              onClick={() => update('equipment', [...classEquipment])}
+            >
+              수업 기구로 좁히기
+            </button>
+            <button
+              type="button"
+              aria-pressed={filters.equipment.length === 0}
+              onClick={() => update('equipment', [])}
+            >
+              전체 기구 보기
+            </button>
+          </div>
+        </section>
+      )}
       <label className="ief-search">
         <Search size={18} aria-hidden="true" />
         <input
@@ -325,6 +373,7 @@ export function InlineExerciseFinder({ onOpenExercise }: InlineExerciseFinderPro
               aria-label="모션 초안 닫기"
               onClick={() => {
                 setPreview(null);
+                setPreviewExerciseId(null);
                 previewTriggerRef.current?.focus();
               }}
             >
@@ -332,6 +381,84 @@ export function InlineExerciseFinder({ onOpenExercise }: InlineExerciseFinderPro
             </button>
           </div>
           <MotionPatternPreview key={preview.variantId} reference={preview} active />
+          {previewExercise && (
+            <section
+              className="ief-preview-exercise-summary"
+              aria-label="연결 동작 설명·주의점 및 시퀀스 삽입"
+            >
+              <div className="ief-preview-exercise-header">
+                <div>
+                  <strong>{previewExercise.nameKo}</strong>
+                  <span>{previewExercise.nameEn}</span>
+                </div>
+                <span className={previewApproved ? 'is-reviewed' : 'is-pending'}>
+                  {previewApproved
+                    ? '내 검토 기록 · 전문가 검토 아님'
+                    : previewStale
+                      ? '정보 변경 · 다시 검토 필요'
+                      : '검토 전 원자료 메모'}
+                </span>
+              </div>
+              <p className="ief-preview-exercise-meta">
+                부위: {previewExercise.targetMuscles.join(', ') || '미지정'} · 계획 기본{' '}
+                {previewExercise.defaultDurationMin}분 · 위 도식 초안은 정확 모션(0/98)이나 전문가
+                검토(0건)가 아닙니다.
+              </p>
+              <dl className="ief-preview-exercise-notes">
+                <div>
+                  <dt>동작 설명·티칭 큐 (원자료 참고)</dt>
+                  <dd>
+                    {previewExercise.cues.length
+                      ? previewExercise.cues.slice(0, 2).join(' · ')
+                      : '등록된 큐 메모 없음 · 노트 상세에서 확인'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>주의점·금기 사항 (원자료 참고)</dt>
+                  <dd>
+                    {previewExercise.precautions?.trim()
+                      ? previewExercise.precautions
+                      : '등록된 주의점 메모 없음 · 노트 상세에서 출처 대조 필요'}
+                  </dd>
+                </div>
+              </dl>
+              <div className="ief-preview-exercise-actions">
+                <button
+                  type="button"
+                  className="ief-preview-open-note"
+                  aria-label={`${previewExercise.nameKo} 설명·주의점 상세 및 검토 열기`}
+                  onClick={() => onOpenExercise(previewExercise)}
+                >
+                  노트 상세·검토 열기
+                </button>
+                <button
+                  type="button"
+                  className="ief-preview-insert-step"
+                  disabled={!previewApproved || previewAlreadyAdded}
+                  aria-label={
+                    !previewApproved
+                      ? `${previewExercise.nameKo} 초안 창에서 검토 후 시퀀스 삽입 가능`
+                      : previewAlreadyAdded
+                        ? `${previewExercise.nameKo} 초안 창에서 이미 시퀀스에 있음`
+                        : `${previewExercise.nameKo} 초안 확인 후 시퀀스 삽입`
+                  }
+                  onClick={() => addExercise(previewExercise)}
+                >
+                  {previewAlreadyAdded ? (
+                    <>
+                      <Check size={16} aria-hidden="true" /> 시퀀스에 추가됨
+                    </>
+                  ) : previewApproved ? (
+                    <>
+                      <Plus size={16} aria-hidden="true" /> 시퀀스에 바로 삽입
+                    </>
+                  ) : (
+                    '노트 검토 후 시퀀스 삽입 가능'
+                  )}
+                </button>
+              </div>
+            </section>
+          )}
         </section>
       )}
       {feedback && (
@@ -401,6 +528,7 @@ export function InlineExerciseFinder({ onOpenExercise }: InlineExerciseFinderPro
                           aria-label={`${reference.title} 초안 보기`}
                           onClick={(event) => {
                             previewTriggerRef.current = event.currentTarget;
+                            setPreviewExerciseId(exercise.id);
                             setPreview(reference);
                           }}
                         >

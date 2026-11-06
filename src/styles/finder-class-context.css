@@ -1,0 +1,27 @@
+.ief-class-context {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid #d8d3c9;
+  border-radius: 10px;
+  background: #f7f5ef;
+}
+.ief-class-context > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ief-class-context button {
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid #d8d3c9;
+  border-radius: 8px;
+  color: inherit;
+  font: inherit;
+}
+.ief-class-context button[aria-pressed="true"] {
+  border-color: #426b5e;
+  background: #e4eee7;
+  font-weight: 700;
+}

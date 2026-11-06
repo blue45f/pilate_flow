@@ -85,4 +85,28 @@ describe("typed illustration controller", () => {
     expect(f.controller.play()).toBe(false);
     expect(() => f.controller.setSpeed(2)).toThrow(RangeError);
   });
+  it("supports finite 1/2/3 cycle repeats and stops at the final cycle boundary", () => {
+    const f = fixture();
+    expect(f.controller.repeatCount()).toBe(1);
+    expect(f.controller.currentCycle()).toBe(1);
+    f.controller.setRepeatCount(2);
+    expect(f.controller.repeatCount()).toBe(2);
+    expect(f.controller.state().playing).toBe(false);
+    f.controller.play();
+    f.frame(0);
+    f.frame(8000);
+    expect(f.controller.state().playing).toBe(true);
+    expect(f.controller.currentCycle()).toBe(2);
+    expect(f.controller.state().progress).toBe(0);
+    f.frame(12000);
+    expect(f.controller.state().progress).toBe(0.5);
+    f.frame(16000);
+    expect(f.controller.state()).toEqual({
+      progress: 1,
+      speed: 1,
+      playing: false,
+    });
+    expect(f.frames.size).toBe(0);
+    expect(() => f.controller.setRepeatCount(4)).toThrow(RangeError);
+  });
 });

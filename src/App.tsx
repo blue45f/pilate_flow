@@ -691,9 +691,9 @@ export function App() {
           <span className="eyebrow">PRIVATE BY DEFAULT</span>
           <h3>이 브라우저에 보관됩니다</h3>
           <p>
-            시퀀스, 동작, 수업 기록은 이 브라우저에 자동 보관됩니다. 다른 기기에서는 계정 백업을
-            불러오거나 JSON 파일로 옮길 수 있습니다. 실시간 자동 동기화는 하지 않습니다. 브라우저
-            데이터를 삭제하기 전 백업해 주세요.
+            시퀀스, 동작, 수업 기록은 이 브라우저에 자동 보관됩니다. Google 로그인만으로 자료가
+            서버에 저장되거나 다른 기기와 동기화되지는 않습니다. 다른 기기로 옮길 때는 JSON 파일을
+            사용하고, 브라우저 데이터를 삭제하기 전 백업해 주세요.
           </p>
           <div className="button-row">
             <button className="btn-primary" onClick={exportData}>
