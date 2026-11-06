@@ -19,6 +19,7 @@ import type { LiveStageNavigationHandle } from './components/LiveStageView';
 import { SequenceWorkbench } from './components/SequenceWorkbench';
 import type { WorkbenchPlanningMode } from './components/SequenceWorkbench';
 import { LightDismissDialog } from './components/LightDismissDialog';
+import { PwaInstallPanel } from './components/PwaInstallPanel';
 import { MovementIdeaSheet } from './components/MovementIdeaSheet';
 import { InventoryPanel } from './components/InventoryPanel';
 import { DeferredPanelBoundary } from './components/DeferredPanelBoundary';
@@ -150,6 +151,7 @@ export function App() {
   }>({ open: false, exercise: null });
   const [clipperOpen, setClipperOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
   const [designSystemOpen, setDesignSystemOpen] = useState(() => {
     if (!(import.meta.env.DEV || import.meta.env.MODE === 'test')) return false;
     if (typeof window === 'undefined') return false;
@@ -362,6 +364,9 @@ export function App() {
             일정 전체 보기 <CalendarRange size={15} />
           </button>
         </section>
+        <button className="pwa-sidebar-button" type="button" onClick={() => setInstallOpen(true)}>
+          <ArrowDownToLine size={18} aria-hidden="true" /> 앱 설치
+        </button>
         <button className="workspace-button" onClick={() => setSettingsOpen(true)}>
           <span className="studio-avatar">F</span>
           <span>
@@ -665,6 +670,14 @@ export function App() {
           }}
         />
       )}
+      <LightDismissDialog
+        open={installOpen}
+        onClose={() => setInstallOpen(false)}
+        title="앱 설치"
+        maxWidth="560px"
+      >
+        <PwaInstallPanel />
+      </LightDismissDialog>
       <LightDismissDialog
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
