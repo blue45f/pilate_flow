@@ -127,6 +127,9 @@ export interface HumanMovementDraftContent {
   cues?: readonly string[];
   precautions?: string;
   layers?: Partial<ExerciseLayers>;
+  parentDraftId?: string;
+  parentDraftRevision?: number;
+  variantLabelKo?: string;
   feelLogs: readonly SubjectiveFeelLog[];
   modificationLogs: readonly DraftModificationLog[];
   photoReferences: readonly DraftPhotoReference[];
@@ -139,6 +142,8 @@ export type DraftRevisionChangeType =
   | 'modification-added'
   | 'photo-added'
   | 'metadata-refined'
+  | 'variant-updated'
+  | 'variant-branched'
   | 'restored-revision';
 
 export interface DraftRevisionEntry {
@@ -279,6 +284,9 @@ export interface MovementSnapshot {
   sourceOrigin?: 'catalog' | 'human-created';
   humanDraftId?: string;
   humanDraftRevision?: number;
+  parentDraftId?: string;
+  parentDraftRevision?: number;
+  variantLabelKo?: string;
   ideaLineSnapshot?: string;
   feelLogsSnapshot?: readonly SubjectiveFeelLog[];
   modificationLogsSnapshot?: readonly DraftModificationLog[];

@@ -1,5 +1,19 @@
 import React, { useId, useRef, useState } from 'react';
-import { Camera, Check, ImagePlus, Play, Plus, RotateCcw, Sparkles, Trash2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  Camera,
+  Check,
+  GitBranch,
+  History,
+  ImagePlus,
+  Layers,
+  Play,
+  Plus,
+  RotateCcw,
+  Sparkles,
+  Trash2,
+} from 'lucide-react';
 import { LightDismissDialog } from './LightDismissDialog';
 import {
   PfAiStatusBadge,
@@ -14,13 +28,26 @@ import {
   PfTextarea,
 } from '../design-system';
 import { usePilatesStore } from '../store/usePilatesStore';
-import type { ApparatusType, DifficultyLevel, PilatesExercise } from '../types/pilates';
+import type {
+  ApparatusType,
+  DifficultyLevel,
+  PilatesExercise,
+  StepSideMode,
+} from '../types/pilates';
 import {
   addMovementIdeaToCurrentClass,
+  calculateIdeaStepTimeBreakdown,
   clearMovementIdeaWorkingBuffer,
+  forkMovementIdeaVariant,
   getMovementIdeaMeta,
+  getReusableBlockTimingSummary,
+  getSavedReusableBlocks,
+  insertIdeaReusableBlockToCurrentClass,
   isMovementIdeaExercise,
   loadMovementIdeaWorkingBuffer,
+  moveIdeaReusableBlockItem,
+  restoreMovementIdeaRevision,
+  saveIdeaToReusableBlock,
   saveMovementIdeaDraft,
   saveMovementIdeaWorkingBuffer,
 } from '../utils/movementIdeaDraft';
@@ -110,6 +137,53 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
       ? initialBuffer.level
       : targetExercise?.level ?? '',
   );
+  const [easyVariation, setEasyVariation] = useState<string>(
+    shouldRestoreBuffer && initialBuffer.easyVariation
+      ? initialBuffer.easyVariation
+      : targetMeta?.easyVariation ?? '',
+  );
+  const [hardVariation, setHardVariation] = useState<string>(
+    shouldRestoreBuffer && initialBuffer.hardVariation
+      ? initialBuffer.hardVariation
+      : targetMeta?.hardVariation ?? '',
+  );
+  const [variantLabelKo, setVariantLabelKo] = useState<string>(
+    shouldRestoreBuffer && initialBuffer.variantLabelKo
+      ? initialBuffer.variantLabelKo
+      : targetMeta?.variantLabelKo ?? '',
+  );
+  const [repetitions, setRepetitions] = useState<string>(
+    shouldRestoreBuffer && initialBuffer.repetitions
+      ? initialBuffer.repetitions
+      : targetMeta?.repetitions !== undefined
+        ? String(targetMeta.repetitions)
+        : '',
+  );
+  const [sets, setSets] = useState<string>(
+    shouldRestoreBuffer && initialBuffer.sets
+      ? initialBuffer.sets
+      : targetMeta?.sets !== undefined
+        ? String(targetMeta.sets)
+        : '',
+  );
+  const [sideMode, setSideMode] = useState<StepSideMode | ''>(
+    shouldRestoreBuffer && initialBuffer.sideMode
+      ? initialBuffer.sideMode
+      : targetMeta?.sideMode ?? '',
+  );
+  const [explanationSec, setExplanationSec] = useState<string>(
+    shouldRestoreBuffer && initialBuffer.explanationSec
+      ? initialBuffer.explanationSec
+      : String(targetMeta?.explanationSec ?? 20),
+  );
+  const [transitionSec, setTransitionSec] = useState<string>(
+    shouldRestoreBuffer && initialBuffer.transitionSec
+      ? initialBuffer.transitionSec
+      : String(targetMeta?.transitionSec ?? 15),
+  );
+  const [reusableBlockTitle, setReusableBlockTitle] = useState<string>('');
+  const [reusableBlocks, setReusableBlocks] = useState(() => getSavedReusableBlocks());
+
   const [reflectionOpen, setReflectionOpen] = useState<boolean>(
     Boolean(
       targetExercise ||
@@ -119,6 +193,10 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
         triedByInstructor,
     ),
   );
+  const [variantOpen, setVariantOpen] = useState<boolean>(
+    Boolean(easyVariation || hardVariation || variantLabelKo),
+  );
+  const [hierarchyOpen, setHierarchyOpen] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [statusMessage, setStatusMessage] = useState<string>(
     shouldRestoreBuffer && initialBuffer.ideaLine && !initialExercise
@@ -133,6 +211,24 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
   const ideaInputRef = useRef<HTMLTextAreaElement | null>(null);
   const submitLockRef = useRef(false);
 
+  const activeEditingExercise = editingId
+    ? exercises.find((item) => item.id === editingId) ?? null
+    : null;
+  const activeEditingMeta = activeEditingExercise
+    ? getMovementIdeaMeta(activeEditingExercise)
+    : null;
+  const currentRevision = activeEditingMeta?.revision ?? 1;
+  const revisionHistory = activeEditingMeta?.revisionHistory ?? [];
+
+  const parsedDurationNum = Number(durationMin);
+  const parsedExplanationNum = Number(explanationSec);
+  const parsedTransitionNum = Number(transitionSec);
+  const stepTiming = calculateIdeaStepTimeBreakdown({
+    durationMin: Number.isFinite(parsedDurationNum) ? parsedDurationNum : 3,
+    explanationSec: Number.isFinite(parsedExplanationNum) ? parsedExplanationNum : 20,
+    transitionSec: Number.isFinite(parsedTransitionNum) ? parsedTransitionNum : 15,
+  });
+
   const syncBuffer = (next: Partial<Parameters<typeof saveMovementIdeaWorkingBuffer>[0]>) => {
     saveMovementIdeaWorkingBuffer({
       editingExerciseId: editingId,
@@ -145,6 +241,14 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
       apparatus,
       durationMin,
       level,
+      easyVariation,
+      hardVariation,
+      variantLabelKo,
+      repetitions,
+      sets,
+      sideMode,
+      explanationSec,
+      transitionSec,
       ...next,
     });
   };
@@ -161,6 +265,14 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
     setApparatus(exercise.apparatus);
     setDurationMin(String(exercise.defaultDurationMin || 3));
     setLevel(exercise.level);
+    setEasyVariation(meta.easyVariation ?? '');
+    setHardVariation(meta.hardVariation ?? '');
+    setVariantLabelKo(meta.variantLabelKo ?? '');
+    setRepetitions(meta.repetitions !== undefined ? String(meta.repetitions) : '');
+    setSets(meta.sets !== undefined ? String(meta.sets) : '');
+    setSideMode(meta.sideMode ?? '');
+    setExplanationSec(String(meta.explanationSec ?? 20));
+    setTransitionSec(String(meta.transitionSec ?? 15));
     setReflectionOpen(true);
     setError('');
     setStatusMessage(`‘${exercise.nameKo}’ 초안을 다시 열었습니다. 직접 해본 느낌이나 수정점을 적어보세요.`);
@@ -175,6 +287,14 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
       apparatus: exercise.apparatus,
       durationMin: String(exercise.defaultDurationMin || 3),
       level: exercise.level,
+      easyVariation: meta.easyVariation ?? '',
+      hardVariation: meta.hardVariation ?? '',
+      variantLabelKo: meta.variantLabelKo ?? '',
+      repetitions: meta.repetitions !== undefined ? String(meta.repetitions) : '',
+      sets: meta.sets !== undefined ? String(meta.sets) : '',
+      sideMode: meta.sideMode ?? '',
+      explanationSec: String(meta.explanationSec ?? 20),
+      transitionSec: String(meta.transitionSec ?? 15),
     });
   };
 
@@ -186,6 +306,11 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
 
     try {
       const parsedDuration = Number(durationMin);
+      const parsedReps = repetitions.trim() ? Number(repetitions) : undefined;
+      const parsedSets = sets.trim() ? Number(sets) : undefined;
+      const parsedExpl = explanationSec.trim() ? Number(explanationSec) : undefined;
+      const parsedTrans = transitionSec.trim() ? Number(transitionSec) : undefined;
+
       const result = saveMovementIdeaDraft({
         existingExerciseId: editingId,
         ideaLine,
@@ -197,6 +322,15 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
         apparatus,
         durationMin: Number.isFinite(parsedDuration) ? parsedDuration : 3,
         level,
+        easyVariation,
+        standardVariation: adjustmentNote,
+        hardVariation,
+        variantLabelKo,
+        repetitions: parsedReps && Number.isFinite(parsedReps) ? parsedReps : undefined,
+        sets: parsedSets && Number.isFinite(parsedSets) ? parsedSets : undefined,
+        sideMode,
+        explanationSec: parsedExpl !== undefined && Number.isFinite(parsedExpl) ? parsedExpl : undefined,
+        transitionSec: parsedTrans !== undefined && Number.isFinite(parsedTrans) ? parsedTrans : undefined,
       });
 
       if (!result.success || !result.exercise) {
@@ -221,13 +355,176 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
 
       setStatusMessage(
         editingId
-          ? `‘${result.exercise.nameKo}’ 수정 내용을 저장했습니다. 바로 수업에 넣거나 창을 닫아도 보존됩니다.`
+          ? `‘${result.exercise.nameKo}’ 수정 내용을 저장했습니다 (v${result.meta?.revision ?? 1}). 바로 수업에 넣거나 창을 닫아도 보존됩니다.`
           : `‘${result.exercise.nameKo}’ 한 줄 초안을 저장했습니다! 직접 해본 뒤 느낀 점·수정점을 언제든 덧붙여 보세요.`,
       );
       setReflectionOpen(true);
     } finally {
       submitLockRef.current = false;
     }
+  };
+
+  const handleForkVariant = () => {
+    setError('');
+    setStatusMessage('');
+
+    let sourceId = editingId;
+    if (!sourceId) {
+      const saved = saveMovementIdeaDraft({
+        ideaLine,
+        workingTitle,
+        subjectiveFeeling,
+        adjustmentNote,
+        photoDataUrl,
+        triedByInstructor,
+        apparatus,
+        durationMin: Number.isFinite(parsedDurationNum) ? parsedDurationNum : 3,
+        level,
+        easyVariation,
+        hardVariation,
+        variantLabelKo,
+      });
+      if (!saved.ok || !saved.exercise) {
+        setError(saved.error || '변형을 파생하기 전에 한 줄 아이디어를 먼저 적어 주세요.');
+        return;
+      }
+      sourceId = saved.exercise.id;
+    }
+
+    const label = variantLabelKo.trim() || '응용 변형';
+    const forked = forkMovementIdeaVariant(sourceId, {
+      variantLabelKo: label,
+      ideaLine,
+      workingTitle,
+      easyVariation,
+      standardVariation: adjustmentNote,
+      hardVariation,
+      apparatus,
+      durationMin: Number.isFinite(parsedDurationNum) ? parsedDurationNum : 3,
+      level,
+    });
+
+    if (!forked.ok || !forked.exercise) {
+      setError(forked.message);
+      return;
+    }
+
+    loadExistingIdeaIntoForm(forked.exercise);
+    setVariantOpen(true);
+    setStatusMessage(forked.message);
+  };
+
+  const handleRestoreRevision = (targetRevision: number) => {
+    if (!editingId) return;
+    setError('');
+    const restored = restoreMovementIdeaRevision(editingId, targetRevision);
+    if (!restored.ok || !restored.exercise) {
+      setError(restored.message);
+      return;
+    }
+    loadExistingIdeaIntoForm(restored.exercise);
+    setVariantOpen(true);
+    setStatusMessage(restored.message);
+  };
+
+  const ensureSavedBeforeBlockLink = (): string | null => {
+    if (editingId && exercises.some((item) => item.id === editingId)) {
+      return editingId;
+    }
+    const saved = saveMovementIdeaDraft({
+      existingExerciseId: editingId,
+      ideaLine,
+      workingTitle,
+      subjectiveFeeling,
+      adjustmentNote,
+      photoDataUrl,
+      triedByInstructor,
+      apparatus,
+      durationMin: Number.isFinite(parsedDurationNum) ? parsedDurationNum : 3,
+      level,
+      easyVariation,
+      hardVariation,
+      variantLabelKo,
+      repetitions: repetitions.trim() ? Number(repetitions) : undefined,
+      sets: sets.trim() ? Number(sets) : undefined,
+      sideMode,
+      explanationSec: stepTiming.explanationSec,
+      transitionSec: stepTiming.transitionSec,
+    });
+    if (!saved.ok || !saved.exercise) {
+      setError(saved.error || '재사용 블록으로 묶으려면 먼저 한 줄 아이디어를 적어 주세요.');
+      return null;
+    }
+    setEditingId(saved.exercise.id);
+    return saved.exercise.id;
+  };
+
+  const handleCreateReusableBlock = () => {
+    setError('');
+    const targetId = ensureSavedBeforeBlockLink();
+    if (!targetId) return;
+
+    const result = saveIdeaToReusableBlock({
+      exerciseId: targetId,
+      blockTitle: reusableBlockTitle.trim() || undefined,
+      durationMin: stepTiming.durationMin,
+      explanationSec: stepTiming.explanationSec,
+      transitionSec: stepTiming.transitionSec,
+      repetitions: repetitions.trim() ? Number(repetitions) : undefined,
+      sets: sets.trim() ? Number(sets) : undefined,
+      sideMode: sideMode || undefined,
+    });
+
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    setReusableBlocks([...result.blocks]);
+    setReusableBlockTitle('');
+    setStatusMessage(result.message);
+  };
+
+  const handleAddToExistingReusableBlock = (blockId: string) => {
+    setError('');
+    const targetId = ensureSavedBeforeBlockLink();
+    if (!targetId) return;
+
+    const result = saveIdeaToReusableBlock({
+      exerciseId: targetId,
+      blockId,
+      durationMin: stepTiming.durationMin,
+      explanationSec: stepTiming.explanationSec,
+      transitionSec: stepTiming.transitionSec,
+      repetitions: repetitions.trim() ? Number(repetitions) : undefined,
+      sets: sets.trim() ? Number(sets) : undefined,
+      sideMode: sideMode || undefined,
+    });
+
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    setReusableBlocks([...result.blocks]);
+    setStatusMessage(result.message);
+  };
+
+  const handleMoveBlockItem = (blockId: string, itemIndex: number, direction: 'up' | 'down') => {
+    const result = moveIdeaReusableBlockItem(blockId, itemIndex, direction);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    setReusableBlocks([...result.blocks]);
+    setStatusMessage(result.message);
+  };
+
+  const handleInsertBlockToClass = (blockId: string) => {
+    const result = insertIdeaReusableBlockToCurrentClass(blockId);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    setStatusMessage(result.message);
   };
 
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,6 +552,14 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
     setApparatus('');
     setDurationMin('3');
     setLevel('');
+    setEasyVariation('');
+    setHardVariation('');
+    setVariantLabelKo('');
+    setRepetitions('');
+    setSets('');
+    setSideMode('');
+    setExplanationSec('20');
+    setTransitionSec('15');
     setError('');
     setStatusMessage('새 한 줄 아이디어를 적을 수 있도록 입력창을 비웠습니다.');
     requestAnimationFrame(() => ideaInputRef.current?.focus());
@@ -315,7 +620,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
               <span className="pf-idea-step-badge">1단계 · 필수 1개</span>
               {editingId && (
                 <PfBadge tone="success">
-                  저장된 초안 편집 중
+                  저장된 초안 편집 중 (v{currentRevision})
                 </PfBadge>
               )}
             </div>
@@ -512,6 +817,338 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
             </div>
           </details>
 
+          <details
+            className="pf-idea-progressive-section"
+            open={variantOpen}
+            onToggle={(event) => setVariantOpen(event.currentTarget.open)}
+          >
+            <summary className="pf-idea-progressive-summary">
+              <span>
+                <GitBranch size={16} aria-hidden="true" />
+                변형 · 버전 관리 (쉬운/심화 변형 · 버전 복원 — 선택)
+              </span>
+              <PfBadge tone={easyVariation || hardVariation || variantLabelKo || currentRevision > 1 ? 'sage' : 'neutral'}>
+                v{currentRevision}
+              </PfBadge>
+            </summary>
+            <div className="pf-idea-progressive-body">
+              <p className="muted">
+                원본 동작을 유지한 채 쉬운·심화 변형을 적거나 새 변형 초안으로 파생(복제)할 수 있습니다.
+                버전을 되돌려도 이미 기록된 과거 수업 스냅샷은 바뀌지 않습니다.
+              </p>
+              <div className="teaching-form-grid">
+                <PfField
+                  label="변형 구분 이름 (선택)"
+                  hint="파생 변형으로 복제할 때 이름 뒤에 붙는 구분 라벨입니다."
+                >
+                  <PfInput
+                    aria-label="변형 구분 이름"
+                    value={variantLabelKo}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setVariantLabelKo(next);
+                      syncBuffer({ variantLabelKo: next });
+                    }}
+                    placeholder="예: 초보자 가동범위 축소 변형"
+                  />
+                </PfField>
+                <PfField label="쉬운 변형 메모 (Easy · 선택)">
+                  <PfInput
+                    aria-label="쉬운 변형 메모"
+                    value={easyVariation}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setEasyVariation(next);
+                      syncBuffer({ easyVariation: next });
+                    }}
+                    placeholder="예: 무릎을 굽히고 지지면을 넓혀 진행"
+                  />
+                </PfField>
+                <PfField label="심화 변형 메모 (Hard · 선택)">
+                  <PfInput
+                    aria-label="심화 변형 메모"
+                    value={hardVariation}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setHardVariation(next);
+                      syncBuffer({ hardVariation: next });
+                    }}
+                    placeholder="예: 정점에서 3초 버티기 및 한 팔 지지"
+                  />
+                </PfField>
+              </div>
+
+              <div className="pf-idea-photo-actions">
+                <PfButton
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  data-testid="idea-fork-variant"
+                  onClick={handleForkVariant}
+                >
+                  <GitBranch size={14} /> 새 변형 초안으로 복제
+                </PfButton>
+                {activeEditingMeta?.parentDraftId && (
+                  <PfBadge tone="sage">
+                    파생 변형 (원본 v{activeEditingMeta.parentDraftRevision ?? 1} 기반)
+                  </PfBadge>
+                )}
+              </div>
+
+              {revisionHistory.length > 0 && (
+                <div className="pf-idea-revision-box" aria-label="초안 버전 이력">
+                  <strong>
+                    <History size={14} aria-hidden="true" /> 버전 이력 ({revisionHistory.length}개 · 현재 v{currentRevision})
+                  </strong>
+                  <ul className="pf-idea-revision-list">
+                    {revisionHistory.map((entry) => (
+                      <li key={entry.revision} className="pf-idea-revision-item">
+                        <span>
+                          <strong>v{entry.revision}</strong> · {entry.summaryKo}
+                        </span>
+                        {entry.revision !== currentRevision && (
+                          <PfButton
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`v${entry.revision} 버전으로 복원`}
+                            onClick={() => handleRestoreRevision(entry.revision)}
+                          >
+                            v{entry.revision} 복원
+                          </PfButton>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </details>
+
+          <details
+            className="pf-idea-progressive-section"
+            open={hierarchyOpen}
+            onToggle={(event) => setHierarchyOpen(event.currentTarget.open)}
+          >
+            <summary className="pf-idea-progressive-summary">
+              <span>
+                <Layers size={16} aria-hidden="true" />
+                순서/반복/좌우 · 하위 시간 합산 · 재사용 블록 (계층 펼쳐보기 — 선택)
+              </span>
+              <PfBadge tone="neutral">
+                동작 → 블록 → 시퀀스 → 수업
+              </PfBadge>
+            </summary>
+            <div className="pf-idea-progressive-body">
+              <p className="muted">
+                처음부터 계층을 배울 필요 없이 필요할 때만 펼쳐서 하위 시간 합산과 재사용 블록 묶음을
+                설정하세요. 블록을 수업에 넣으면 독립 복사본으로 들어가며 과거 수업은 절대 바뀌지 않습니다.
+              </p>
+
+              <div
+                className="pf-idea-time-summary"
+                data-testid="idea-time-breakdown"
+                role="region"
+                aria-label="하위 시간 자동 합산"
+              >
+                <strong>
+                  하위 시간 합산: 총 {stepTiming.totalSec}초 ({stepTiming.durationMin}분)
+                </strong>
+                <span>
+                  순수 동작 {stepTiming.movementSec}초 + 설명 {stepTiming.explanationSec}초 + 전환{' '}
+                  {stepTiming.transitionSec}초
+                </span>
+              </div>
+
+              <div className="teaching-form-grid">
+                <PfField label="반복 횟수 (회 · 선택)">
+                  <PfInput
+                    type="number"
+                    min={1}
+                    max={1000}
+                    aria-label="반복 횟수"
+                    value={repetitions}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setRepetitions(next);
+                      syncBuffer({ repetitions: next });
+                    }}
+                    placeholder="예: 8"
+                  />
+                </PfField>
+                <PfField label="세트 수 (선택)">
+                  <PfInput
+                    type="number"
+                    min={1}
+                    max={100}
+                    aria-label="세트 수"
+                    value={sets}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setSets(next);
+                      syncBuffer({ sets: next });
+                    }}
+                    placeholder="예: 2"
+                  />
+                </PfField>
+                <PfField label="좌우 수행 방식 (선택)">
+                  <PfSelect
+                    aria-label="좌우 수행 방식"
+                    value={sideMode}
+                    onChange={(event) => {
+                      const next = event.target.value as StepSideMode | '';
+                      setSideMode(next);
+                      syncBuffer({ sideMode: next });
+                    }}
+                  >
+                    <option value="">동작 기본 (양쪽 함께)</option>
+                    <option value="together">양쪽 함께 (together)</option>
+                    <option value="left-then-right">왼쪽 먼저 → 오른쪽 (left-then-right)</option>
+                    <option value="right-then-left">오른쪽 먼저 → 왼쪽 (right-then-left)</option>
+                    <option value="left">왼쪽만 (left)</option>
+                    <option value="right">오른쪽만 (right)</option>
+                  </PfSelect>
+                </PfField>
+                <PfField label="설명 시간 · 초 (선택)">
+                  <PfInput
+                    type="number"
+                    min={0}
+                    max={600}
+                    aria-label="설명 시간 (초)"
+                    value={explanationSec}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setExplanationSec(next);
+                      syncBuffer({ explanationSec: next });
+                    }}
+                  />
+                </PfField>
+                <PfField label="전환 시간 · 초 (선택)">
+                  <PfInput
+                    type="number"
+                    min={0}
+                    max={600}
+                    aria-label="전환 시간 (초)"
+                    value={transitionSec}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setTransitionSec(next);
+                      syncBuffer({ transitionSec: next });
+                    }}
+                  />
+                </PfField>
+              </div>
+
+              <div className="pf-idea-reusable-block-box" aria-label="재사용 블록 관리">
+                <div className="pf-idea-photo-header">
+                  <strong>재사용 블록으로 묶기 (동작 → 재사용 블록 → 시퀀스 → 수업)</strong>
+                  <span className="muted">
+                    블록 템플릿을 수정해도 이미 수업에 복사된 단계나 과거 수업 기록은 바뀌지 않습니다.
+                  </span>
+                </div>
+                <div className="teaching-form-grid">
+                  <PfField label="새 재사용 블록 이름 (선택)">
+                    <PfInput
+                      aria-label="재사용 블록 이름"
+                      value={reusableBlockTitle}
+                      onChange={(event) => setReusableBlockTitle(event.target.value)}
+                      placeholder="예: 리포머 흉추 회전 워밍업 묶음"
+                    />
+                  </PfField>
+                </div>
+                <div className="pf-idea-photo-actions">
+                  <PfButton
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    data-testid="create-reusable-block-btn"
+                    onClick={handleCreateReusableBlock}
+                  >
+                    <Layers size={14} /> 현재 동작으로 재사용 블록 만들기
+                  </PfButton>
+                </div>
+
+                {reusableBlocks.length > 0 && (
+                  <div className="pf-idea-block-list" data-testid="saved-reusable-blocks">
+                    {reusableBlocks.map((block) => {
+                      const summary = getReusableBlockTimingSummary(block);
+                      return (
+                        <PfCard key={block.id} variant="subtle" className="pf-idea-block-card">
+                          <div className="pf-idea-saved-card__top">
+                            <strong>
+                              {block.title} (v{block.version})
+                            </strong>
+                            <PfBadge tone="sage">
+                              총 {summary.totalDurationMin}분 ({summary.totalSec}초) · 동작{' '}
+                              {summary.movementSec}초 + 설명 {summary.explanationSec}초 + 전환{' '}
+                              {summary.transitionSec}초
+                            </PfBadge>
+                          </div>
+                          <ul className="pf-idea-block-items">
+                            {summary.itemBreakdowns.map((item, idx) => (
+                              <li key={item.itemId} className="pf-idea-block-item">
+                                <span>
+                                  {idx + 1}. {item.nameKo} ({item.durationMin}분 ·{' '}
+                                  {item.sideMode === 'together' ? '양쪽' : item.sideMode}
+                                  {item.repetitions ? ` · ${item.repetitions}회` : ''}
+                                  {item.sets ? `×${item.sets}세트` : ''})
+                                </span>
+                                {summary.itemBreakdowns.length > 1 && (
+                                  <span className="pf-idea-block-item-actions">
+                                    <PfButton
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      disabled={idx === 0}
+                                      aria-label={`${block.title} ${idx + 1}번 동작 위로`}
+                                      onClick={() => handleMoveBlockItem(block.id, idx, 'up')}
+                                    >
+                                      <ArrowUp size={13} />
+                                    </PfButton>
+                                    <PfButton
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      disabled={idx === summary.itemBreakdowns.length - 1}
+                                      aria-label={`${block.title} ${idx + 1}번 동작 아래로`}
+                                      onClick={() => handleMoveBlockItem(block.id, idx, 'down')}
+                                    >
+                                      <ArrowDown size={13} />
+                                    </PfButton>
+                                  </span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                          <div className="pf-idea-saved-actions">
+                            <PfButton
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              aria-label={`${block.title} 블록에 현재 동작 추가`}
+                              onClick={() => handleAddToExistingReusableBlock(block.id)}
+                            >
+                              <Plus size={14} /> 이 블록에 현재 동작 추가
+                            </PfButton>
+                            <PfButton
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              aria-label={`${block.title} 수업 시퀀스에 블록 복사해 넣기`}
+                              onClick={() => handleInsertBlockToClass(block.id)}
+                            >
+                              <Play size={14} /> 수업 시퀀스에 블록 복사해 넣기
+                            </PfButton>
+                          </div>
+                        </PfCard>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </details>
+
           <details className="pf-idea-progressive-section">
             <summary className="pf-idea-progressive-summary">
               <span>고급 옵션 (임시 이름 · 기구 · 시간 — 안 골라도 자동 설정됨)</span>
@@ -627,11 +1264,18 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                     className="pf-idea-saved-card pf-movement-card pf-movement-card--idea"
                   >
                     <div className="pf-idea-saved-card__top">
-                      <strong>{item.nameKo}</strong>
+                      <strong>
+                        {item.nameKo} (v{meta.revision ?? 1})
+                      </strong>
                       <div className="pf-idea-saved-badges">
                         <PfAiStatusBadge kind={meta.triedByInstructor ? 'tried-memo' : 'creative-memo'}>
                           {meta.triedByInstructor ? '직접 해봄 · 주관적 메모' : '아이디어 초안'}
                         </PfAiStatusBadge>
+                        {meta.parentDraftId && (
+                          <PfBadge tone="sage">
+                            변형 파생
+                          </PfBadge>
+                        )}
                         {inClass && <PfBadge tone="success">수업에 담김</PfBadge>}
                       </div>
                     </div>

@@ -9,8 +9,10 @@ import {
   createHumanMovementIdeaDraft,
   createMovementSnapshotFromHumanDraft,
   evaluateDraftStageReadiness,
+  forkHumanDraftVariant,
   refineHumanDraftMetadata,
   restoreHumanDraftRevision,
+  updateHumanDraftVariants,
 } from '../utils/humanMovementCreation';
 
 describe('humanMovementCreation — Progressive Human-Created Movement Drafts & Safety Boundaries', () => {
@@ -363,5 +365,211 @@ describe('humanMovementCreation — Progressive Human-Created Movement Drafts & 
     expect(exercise.humanDraftId).toBe('draft-stage-1');
     expect(exercise.humanDraftRevision).toBe(1);
     expect(exercise.defaultDurationMin).toBe(5);
+  });
+
+  it('7. updates Easy/Standard/Hard variant layers with revision history tracking and supports rollback to pre-variant revision', () => {
+    const v1 = createHumanMovementIdeaDraft({
+      id: 'draft-variant-layers-1',
+      ideaLine: '롱박스 위에서 프론 스완 준비 호흡과 흉추 신전 연결',
+      now: '2026-03-30T14:00:00.000Z',
+    });
+    expect(v1.layers).toBeUndefined();
+    expect(v1.variantLabelKo).toBeUndefined();
+
+    const v2 = updateHumanDraftVariants(v1, {
+      easy: '손바닥으로 풋바를 가볍게 지지한 채 상부 흉추만 15도 들어 올리기',
+      standard: '전완 지지를 풀고 팔꿈치를 펴며 명치까지 분절 신전',
+      hard: '양팔을 귀 옆으로 뻗어 롱 레버 유지 후 천천히 복귀',
+      variantLabelKo: '가동범위·레버 3단계 변형',
+      now: '2026-03-30T14:05:00.000Z',
+    });
+
+    expect(v2.revision).toBe(2);
+    expect(v2.variantLabelKo).toBe('가동범위·레버 3단계 변형');
+    expect(v2.layers).toEqual({
+      easy: '손바닥으로 풋바를 가볍게 지지한 채 상부 흉추만 15도 들어 올리기',
+      standard: '전완 지지를 풀고 팔꿈치를 펴며 명치까지 분절 신전',
+      hard: '양팔을 귀 옆으로 뻗어 롱 레버 유지 후 천천히 복귀',
+    });
+    expect(v2.revisionHistory).toHaveLength(2);
+    expect(v2.revisionHistory[1].changeType).toBe('variant-updated');
+    expect(v2.revisionHistory[1].parentRevision).toBe(1);
+    expect(v2.revisionHistory[1].contentSnapshot.layers?.hard).toContain('롱 레버 유지');
+    expect(Object.isFrozen(v2.revisionHistory[1])).toBe(true);
+
+    // Partial update preserves existing Easy/Standard while updating Hard
+    const v3 = updateHumanDraftVariants(v2, {
+      hard: '양팔 만세 상태에서 호흡 3회 유지 후 분절 하강',
+      now: '2026-03-30T14:10:00.000Z',
+    });
+    expect(v3.revision).toBe(3);
+    expect(v3.layers?.easy).toBe(v2.layers?.easy);
+    expect(v3.layers?.standard).toBe(v2.layers?.standard);
+    expect(v3.layers?.hard).toBe('양팔 만세 상태에서 호흡 3회 유지 후 분절 하강');
+
+    // Non-destructive rollback to v1 restores pre-variant state as v4
+    const v4 = restoreHumanDraftRevision(v3, 1, '2026-03-30T14:15:00.000Z');
+    expect(v4.revision).toBe(4);
+    expect(v4.layers).toBeUndefined();
+    expect(v4.variantLabelKo).toBeUndefined();
+    expect(v4.revisionHistory).toHaveLength(4);
+    expect(v4.revisionHistory[3].changeType).toBe('restored-revision');
+    expect(v4.revisionHistory[1].contentSnapshot.layers?.easy).toContain('15도');
+  });
+
+  it('8. forks an independent variant draft preserving parentDraftId and parentDraftRevision without mutating the source draft', () => {
+    const baseV1 = createHumanMovementIdeaDraft({
+      id: 'draft-source-parent',
+      ideaLine: '체어 페달을 한 손으로 누르며 복사근 회전 컨트롤',
+      workingNameKo: '체어 원암 페달 로테이션',
+      apparatus: 'chair',
+      defaultDurationMin: 5,
+      springs: '1H',
+      now: '2026-03-30T15:00:00.000Z',
+    });
+    const baseV2 = addSubjectiveFeelToDraft(baseV1, {
+      feelNoteKo: '지지하는 어깨 안정화가 핵심으로 느껴짐',
+      now: '2026-03-30T15:05:00.000Z',
+    });
+
+    const sourceBeforeFork = structuredClone(baseV2);
+
+    const forked = forkHumanDraftVariant(baseV2, {
+      id: 'draft-forked-child',
+      variantLabelKo: '임산부·초보자용 경량 스프링 변형',
+      springs: '1L',
+      layers: {
+        easy: '무릎을 대고 가동범위를 절반으로 줄여 진행',
+      },
+      now: '2026-03-30T15:10:00.000Z',
+    });
+
+    expect(forked.id).toBe('draft-forked-child');
+    expect(forked.revision).toBe(1);
+    expect(forked.parentDraftId).toBe('draft-source-parent');
+    expect(forked.parentDraftRevision).toBe(2);
+    expect(forked.variantLabelKo).toBe('임산부·초보자용 경량 스프링 변형');
+    expect(forked.apparatus).toBe('chair');
+    expect(forked.springs).toBe('1L');
+    expect(forked.layers?.easy).toBe('무릎을 대고 가동범위를 절반으로 줄여 진행');
+    expect(forked.revisionHistory).toHaveLength(1);
+    expect(forked.revisionHistory[0].changeType).toBe('variant-branched');
+    expect(forked.revisionHistory[0].summaryKo).toContain('draft-source-parent v2');
+    expect(forked.revisionHistory[0].summaryKo).toContain('임산부·초보자용 경량 스프링 변형');
+
+    // Mutating/updating the forked variant must never alter the source draft
+    const forkedV2 = addModificationLogToDraft(forked, {
+      modificationPointKo: '쿠션을 무릎 아래 추가 배치',
+      now: '2026-03-30T15:12:00.000Z',
+    });
+    const forkedV3 = updateHumanDraftVariants(forkedV2, {
+      hard: '골반 중립 유지하며 호흡 2회 홀드 추가',
+      now: '2026-03-30T15:14:00.000Z',
+    });
+
+    expect(forkedV3.revision).toBe(3);
+    expect(forkedV3.modificationLogs).toHaveLength(1);
+    expect(baseV2).toEqual(sourceBeforeFork);
+    expect(baseV2.revision).toBe(2);
+    expect(baseV2.modificationLogs).toHaveLength(0);
+    expect(baseV2.springs).toBe('1H');
+
+    // MovementSnapshot preserves parentDraftId, parentDraftRevision, and variantLabelKo
+    const snapshot = createMovementSnapshotFromHumanDraft(
+      forkedV3,
+      undefined,
+      '2026-03-30T15:15:00.000Z',
+    );
+    expect(snapshot.humanDraftId).toBe('draft-forked-child');
+    expect(snapshot.humanDraftRevision).toBe(3);
+    expect(snapshot.parentDraftId).toBe('draft-source-parent');
+    expect(snapshot.parentDraftRevision).toBe(2);
+    expect(snapshot.variantLabelKo).toBe('임산부·초보자용 경량 스프링 변형');
+  });
+
+  it('9. accepts local data:image/svg+xml;utf8,... sketch photo references while still rejecting external https:// URLs', () => {
+    const draft = createHumanMovementIdeaDraft({
+      id: 'draft-svg-sketch-1',
+      ideaLine: '캐딜락 푸시스루바 각도 스케치와 함께 기록하는 흉추 신전 초안',
+      now: '2026-03-30T16:00:00.000Z',
+    });
+
+    const svgSketchUri =
+      'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80"><line x1="10" y1="70" x2="110" y2="20" stroke="black"/></svg>';
+
+    const withSketch = addPhotoReferenceToDraft(draft, {
+      id: 'sketch-photo-1',
+      localRefUri: svgSketchUri,
+      captionKo: '푸시스루바 시작 각도 로컬 스케치',
+      angleTag: 'setup',
+      now: '2026-03-30T16:05:00.000Z',
+    });
+
+    expect(withSketch.revision).toBe(2);
+    expect(withSketch.photoReferences).toHaveLength(1);
+    expect(withSketch.photoReferences[0].localRefUri).toBe(svgSketchUri);
+    expect(withSketch.photoReferences[0].externalAiUploadAllowed).toBe(false);
+
+    // External https:// URLs are still strictly rejected
+    expect(() =>
+      addPhotoReferenceToDraft(withSketch, {
+        localRefUri: 'https://remote-storage.example.com/sketch.svg',
+      }),
+    ).toThrow(/로컬 참조/);
+  });
+
+  it('10. supports repository updateVariants and forkVariant operations with storage persistence and failure preservation', () => {
+    const memoryMap = new Map<string, string>();
+    const storageAdapter = {
+      getItem: (key: string) => memoryMap.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        memoryMap.set(key, value);
+      },
+    };
+
+    const repo = createHumanDraftRepository({ storage: storageAdapter });
+    const saved = repo.saveIdeaDraft({
+      id: 'repo-base-1',
+      ideaLine: '리포머 박스 위 사이드 레그 리프트 감각 메모',
+      apparatus: 'reformer',
+      defaultDurationMin: 4,
+      now: '2026-03-30T17:00:00.000Z',
+    });
+    expect(saved.ok).toBe(true);
+
+    const updatedRes = repo.updateVariants('repo-base-1', {
+      easy: '아래 다리 무릎을 구부려 지지 면적 넓히기',
+      standard: '양다리 길게 뻗어 골반 수직 정렬 유지',
+      hard: '상단에서 작은 서클 5회 추가',
+      variantLabelKo: '중둔근 컨트롤 단계별 변형',
+      now: '2026-03-30T17:05:00.000Z',
+    });
+    expect(updatedRes.ok).toBe(true);
+    expect(updatedRes.draft?.revision).toBe(2);
+    expect(updatedRes.draft?.layers?.hard).toBe('상단에서 작은 서클 5회 추가');
+
+    const forkedRes = repo.forkVariant('repo-base-1', {
+      id: 'repo-fork-1',
+      variantLabelKo: '미니볼 발목 끼우기 파생 변형',
+      ideaLine: '발목 사이에 미니볼을 끼우고 사이드 레그 리프트 진행',
+      now: '2026-03-30T17:10:00.000Z',
+    });
+    expect(forkedRes.ok).toBe(true);
+    expect(repo.drafts).toHaveLength(2);
+    expect(forkedRes.draft?.parentDraftId).toBe('repo-base-1');
+    expect(forkedRes.draft?.parentDraftRevision).toBe(2);
+    expect(forkedRes.draft?.variantLabelKo).toBe('미니볼 발목 끼우기 파생 변형');
+
+    // Validation failure on forkVariant preserves input and leaves existing drafts untouched
+    const invalidForkRes = repo.forkVariant('repo-base-1', {
+      id: 'repo-fork-invalid',
+      variantLabelKo: '   ',
+      ideaLine: '라벨 누락 파생 시도',
+      now: '2026-03-30T17:15:00.000Z',
+    });
+    expect(invalidForkRes.ok).toBe(false);
+    expect(repo.drafts).toHaveLength(2);
+    expect(repo.preservedInput?.draftId).toBe('repo-fork-invalid');
+    expect(repo.preservedInput?.ideaLine).toBe('라벨 누락 파생 시도');
   });
 });

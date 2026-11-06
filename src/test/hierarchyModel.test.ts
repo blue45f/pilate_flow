@@ -29,6 +29,8 @@ import {
   resolveCatalogOrHumanMovement,
   resolveStepMovement,
   scaleReusableBlockDuration,
+  summarizeReusableBlockTiming,
+  updateReusableBlockItemOptions,
   updateReusableBlockTemplate,
 } from '../utils/hierarchyModel';
 
@@ -499,6 +501,202 @@ describe('Tier 2 — Reusable Block template & isolated sequence-instance operat
     seqSteps = removeSequenceBlockInstance(seqSteps, 'inst-beta');
     expect(seqSteps).toHaveLength(4);
     expect(seqSteps.some((s) => s.blockInstanceId === 'inst-beta')).toBe(false);
+  });
+
+  it('computes summarizeReusableBlockTiming accurately across catalog and human-created draft items and updates item options via updateReusableBlockItemOptions without mutating sequence instances or past ClassSequenceSnapshots', () => {
+    const catalog = buildFixtureCatalog();
+    const [warmup, footwork, unilateralLower, , cooldown] = catalog;
+    const humanDraft = buildMinimalIdeaOnlyDraft('human-draft-timing-block-1');
+
+    const baseBlock = createReusableBlock(
+      {
+        id: 'block-timing-summary-1',
+        title: '하위 시간 합산 & 옵션 편집 블록',
+        sectionRole: 'main',
+        items: [
+          {
+            exerciseId: footwork.id,
+            durationMin: 5,
+            explanationSec: 20,
+            transitionSec: 10,
+            repetitions: 10,
+            sets: 3,
+            sideMode: 'together',
+          },
+          {
+            exerciseId: unilateralLower.id,
+            durationMin: 6,
+            explanationSec: 30,
+            transitionSec: 15,
+            repetitions: 8,
+            sets: 2,
+            sideMode: 'left-then-right',
+          },
+        ],
+        now: '2026-11-06T06:00:00.000Z',
+      },
+      catalog,
+    );
+
+    const linked = linkHumanDraftToReusableBlock(
+      baseBlock,
+      humanDraft,
+      {
+        durationMin: 4,
+        repetitions: 6,
+        sets: 2,
+        sideMode: 'right-then-left',
+      },
+      '2026-11-06T06:02:00.000Z',
+    );
+    const blockWithDraft = updateReusableBlockItemOptions(
+      linked.block,
+      2,
+      {
+        explanationSec: 15,
+        transitionSec: 10,
+      },
+      '2026-11-06T06:03:00.000Z',
+    );
+
+    expect(blockWithDraft.version).toBe(3);
+
+    const summary = summarizeReusableBlockTiming(blockWithDraft, catalog, [humanDraft]);
+    expect(summary.blockId).toBe('block-timing-summary-1');
+    expect(summary.blockVersion).toBe(3);
+    expect(summary.itemCount).toBe(3);
+    expect(summary.unilateralItemCount).toBe(2);
+    expect(summary.totalDurationMin).toBe(15);
+    expect(summary.totalSec).toBe(900);
+    expect(summary.explanationSec).toBe(20 + 30 + 15);
+    expect(summary.transitionSec).toBe(10 + 15 + 10);
+    expect(summary.movementSec).toBe(900 - 65 - 35);
+    expect(summary.movementSec + summary.explanationSec + summary.transitionSec).toBe(
+      summary.totalSec,
+    );
+
+    expect(summary.itemBreakdowns).toHaveLength(3);
+    expect(summary.itemBreakdowns[0]).toMatchObject({
+      exerciseId: footwork.id,
+      nameKo: footwork.nameKo,
+      durationMin: 5,
+      totalSec: 300,
+      explanationSec: 20,
+      transitionSec: 10,
+      movementSec: 270,
+      repetitions: 10,
+      sets: 3,
+      sideMode: 'together',
+    });
+    expect(summary.itemBreakdowns[2]).toMatchObject({
+      exerciseId: humanDraft.id,
+      nameKo: humanDraft.ideaLine,
+      durationMin: 4,
+      totalSec: 240,
+      explanationSec: 15,
+      transitionSec: 10,
+      movementSec: 215,
+      repetitions: 6,
+      sets: 2,
+      sideMode: 'right-then-left',
+    });
+
+    // Insert into a sequence and capture a ClassSequenceSnapshot before mutating block item options
+    const preSteps: SequenceStep[] = [
+      {
+        stepId: 's-warmup',
+        order: 1,
+        blockCategory: warmup.blockCategory,
+        exerciseId: warmup.id,
+        durationMin: 3,
+        selectedLayer: 'standard',
+        classSection: 'preparation',
+      },
+      {
+        stepId: 's-cooldown',
+        order: 2,
+        blockCategory: cooldown.blockCategory,
+        exerciseId: cooldown.id,
+        durationMin: 3,
+        selectedLayer: 'standard',
+        classSection: 'cooldown',
+      },
+    ];
+    const inserted = insertReusableBlockIntoSequence(preSteps, blockWithDraft, {
+      afterStepIndex: 0,
+      instanceId: 'inst-options-iso',
+    });
+
+    const classSnapshotBefore = createClassSequenceSnapshot(
+      {
+        id: 'seq-options-iso',
+        title: '블록 아이템 옵션 격리 검증 수업',
+        subtitle: 'v3 블록 기준',
+        apparatus: 'mixed',
+        level: '2.0',
+        targetMinutes: 21,
+        steps: inserted.steps,
+        version: 1,
+      },
+      catalog,
+      '2026-11-06T06:05:00.000Z',
+      [humanDraft],
+    );
+
+    // Update repetitions, sets, sideMode, explanationSec, transitionSec, layer, spring, and note on item 0
+    const updatedBlockV4 = updateReusableBlockItemOptions(
+      blockWithDraft,
+      0,
+      {
+        durationMin: 7,
+        explanationSec: 35,
+        transitionSec: 25,
+        repetitions: 14,
+        sets: 4,
+        sideMode: 'left-then-right',
+        selectedLayer: 'hard',
+        customSpringOverride: '2R 1Y',
+        instructorNote: '블록 템플릿 v4 옵션 업데이트',
+      },
+      '2026-11-06T06:10:00.000Z',
+    );
+
+    expect(updatedBlockV4.version).toBe(4);
+    expect(updatedBlockV4.items[0]).toMatchObject({
+      durationMin: 7,
+      explanationSec: 35,
+      transitionSec: 25,
+      repetitions: 14,
+      sets: 4,
+      sideMode: 'left-then-right',
+      selectedLayer: 'hard',
+      customSpringOverride: '2R 1Y',
+      instructorNote: '블록 템플릿 v4 옵션 업데이트',
+    });
+
+    // Input blockWithDraft remains unmutated at v3
+    expect(blockWithDraft.version).toBe(3);
+    expect(blockWithDraft.items[0].durationMin).toBe(5);
+    expect(blockWithDraft.items[0].repetitions).toBe(10);
+    expect(blockWithDraft.items[0].sets).toBe(3);
+    expect(blockWithDraft.items[0].sideMode).toBe('together');
+
+    // Previously inserted sequence steps remain 100% unchanged
+    expect(inserted.steps[1].sourceBlockVersion).toBe(3);
+    expect(inserted.steps[1].durationMin).toBe(5);
+    expect(inserted.steps[1].explanationSec).toBe(20);
+    expect(inserted.steps[1].transitionSec).toBe(10);
+    expect(inserted.steps[1].repetitions).toBe(10);
+    expect(inserted.steps[1].sets).toBe(3);
+    expect(inserted.steps[1].sideMode).toBe('together');
+
+    // Previously captured ClassSequenceSnapshot remains 100% unchanged
+    expect(classSnapshotBefore.blockSnapshots[0].sourceBlockVersion).toBe(3);
+    expect(classSnapshotBefore.steps[1].durationMin).toBe(5);
+    expect(classSnapshotBefore.steps[1].repetitions).toBe(10);
+    expect(classSnapshotBefore.steps[1].sets).toBe(3);
+    expect(classSnapshotBefore.steps[1].sideMode).toBe('together');
+    expect(classSnapshotBefore.timeBreakdown.totalSec).toBe(21 * 60);
   });
 });
 

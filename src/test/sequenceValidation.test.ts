@@ -6,6 +6,14 @@ import type {
 } from '../types/hierarchy';
 import type { PilatesExercise, SequenceStep } from '../types/pilates';
 import { exerciseRevision } from '../utils/exerciseReview';
+import {
+  createClassSequenceSnapshot,
+  createReusableBlock,
+  insertReusableBlockIntoSequence,
+  linkHumanDraftToReusableBlock,
+  summarizeReusableBlockTiming,
+  updateReusableBlockItemOptions,
+} from '../utils/hierarchyModel';
 import { buildSequenceSimulation } from '../utils/sequenceSimulation';
 import {
   applyAutoApparatusTransitions,
@@ -872,6 +880,130 @@ describe('Human-Created Movement Drafts & AI/Human Boundary', () => {
     expect(humanResult.allowed).toBe(true);
     expect(humanResult.rejectedIds).toEqual([]);
   });
+
+  it('keeps summarizeReusableBlockTiming consistent with calculateSequenceTimeBreakdown and isolates updateReusableBlockItemOptions from existing sequence instances and ClassSequenceSnapshots', () => {
+    const initialBlock = createReusableBlock(
+      {
+        id: 'block-val-timing-1',
+        title: '검증 연동 타이밍 블록',
+        sectionRole: 'main',
+        items: [
+          {
+            exerciseId: 'ex-footwork',
+            durationMin: 5,
+            explanationSec: 20,
+            transitionSec: 15,
+            repetitions: 10,
+            sets: 3,
+            sideMode: 'together',
+          },
+          {
+            exerciseId: 'ex-scooter',
+            durationMin: 6,
+            explanationSec: 25,
+            transitionSec: 15,
+            repetitions: 8,
+            sets: 2,
+            sideMode: 'left-then-right',
+          },
+        ],
+        now: '2026-11-06T07:00:00.000Z',
+      },
+      sampleExercises,
+    );
+
+    const linkedDraft = linkHumanDraftToReusableBlock(
+      initialBlock,
+      classReadyDraft,
+      {
+        durationMin: 6,
+        repetitions: 8,
+        sets: 2,
+        sideMode: 'together',
+      },
+      '2026-11-06T07:01:00.000Z',
+    );
+    const blockV3 = updateReusableBlockItemOptions(
+      linkedDraft.block,
+      2,
+      {
+        explanationSec: 30,
+        transitionSec: 45,
+      },
+      '2026-11-06T07:02:00.000Z',
+    );
+
+    const blockTiming = summarizeReusableBlockTiming(blockV3, sampleExercises, [
+      ideaOnlyDraft,
+      classReadyDraft,
+    ]);
+    expect(blockTiming.blockVersion).toBe(3);
+    expect(blockTiming.totalDurationMin).toBe(17);
+    expect(blockTiming.totalSec).toBe(1020);
+    expect(blockTiming.explanationSec).toBe(75);
+    expect(blockTiming.transitionSec).toBe(75);
+    expect(blockTiming.movementSec).toBe(870);
+    expect(blockTiming.movementSec + blockTiming.explanationSec + blockTiming.transitionSec).toBe(
+      blockTiming.totalSec,
+    );
+
+    const inserted = insertReusableBlockIntoSequence([], blockV3, {
+      instanceId: 'inst-val-1',
+    });
+    const seqTimeBreakdown = calculateSequenceTimeBreakdown(
+      inserted.steps,
+      sampleExercises,
+      17,
+      [ideaOnlyDraft, classReadyDraft],
+    );
+    expect(seqTimeBreakdown.totalSec).toBe(blockTiming.totalSec);
+    expect(seqTimeBreakdown.movementSec).toBe(blockTiming.movementSec);
+    expect(seqTimeBreakdown.explanationSec).toBe(blockTiming.explanationSec);
+    expect(seqTimeBreakdown.transitionSec).toBe(blockTiming.transitionSec);
+
+    const snapshotV1 = createClassSequenceSnapshot(
+      {
+        id: 'seq-val-snap-1',
+        title: '타이밍 합산 수업 스냅샷',
+        subtitle: '블록 v3 기반',
+        apparatus: 'mixed',
+        level: '1.5',
+        targetMinutes: 17,
+        steps: inserted.steps,
+        version: 1,
+      },
+      sampleExercises,
+      '2026-11-06T07:05:00.000Z',
+      [ideaOnlyDraft, classReadyDraft],
+    );
+
+    const blockV4 = updateReusableBlockItemOptions(
+      blockV3,
+      1,
+      {
+        durationMin: 8,
+        explanationSec: 40,
+        transitionSec: 20,
+        repetitions: 12,
+        sets: 4,
+        sideMode: 'right-then-left',
+      },
+      '2026-11-06T07:10:00.000Z',
+    );
+    expect(blockV4.version).toBe(4);
+
+    // Existing sequence steps and snapshot remain 100% unchanged
+    expect(inserted.steps[1].durationMin).toBe(6);
+    expect(inserted.steps[1].repetitions).toBe(8);
+    expect(inserted.steps[1].sets).toBe(2);
+    expect(inserted.steps[1].sideMode).toBe('left-then-right');
+    expect(snapshotV1.steps[1].durationMin).toBe(6);
+    expect(snapshotV1.steps[1].repetitions).toBe(8);
+    expect(snapshotV1.steps[1].sets).toBe(2);
+    expect(snapshotV1.steps[1].sideMode).toBe('left-then-right');
+    expect(snapshotV1.timeBreakdown.totalSec).toBe(1020);
+  });
 });
+
 
 
