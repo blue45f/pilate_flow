@@ -182,6 +182,16 @@ describe('inline exercise finder', () => {
     expect(preview).toHaveFocus();
     expect(within(preview).getByRole('heading', { name: references[1].title })).toBeInTheDocument();
     expect(within(preview).getByText('관련 패턴 참고 · 전문가 미검수')).toBeInTheDocument();
+    const exerciseSummary = within(preview).getByRole('region', {
+      name: '연결 동작 설명·주의점 및 시퀀스 삽입',
+    });
+    expect(within(exerciseSummary).getByText(mapped.nameKo)).toBeInTheDocument();
+    expect(within(exerciseSummary).getByText('검토 전 원자료 메모')).toBeInTheDocument();
+    expect(
+      within(exerciseSummary).getByRole('button', {
+        name: `${mapped.nameKo} 초안 창에서 검토 후 시퀀스 삽입 가능`,
+      }),
+    ).toBeDisabled();
     expect(
       screen.getByRole('button', { name: `${mapped.nameKo} 강사 검토 후 추가 가능` }),
     ).toBeDisabled();

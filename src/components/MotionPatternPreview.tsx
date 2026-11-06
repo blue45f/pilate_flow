@@ -1,8 +1,8 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import { Pause, Play, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw } from 'lucide-react';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
 import { DraftPlaybackController } from '../models/DraftPlaybackController';
-import type { DraftPlaybackState } from '../models/DraftPlaybackController';
+import type { DraftPlaybackState, DraftRepeatCount } from '../models/DraftPlaybackController';
 import type { AnatomicalSide, DraftPhase } from '../models/types';
 import { MotionDraftFigure } from './MotionDraftFigure';
 import { MotionAuthoringBatchFigure } from './MotionAuthoringBatchFigure';
@@ -111,6 +111,7 @@ function PatternPlayback({
   const [side, setSide] = useState<AnatomicalSide>('left');
   const [mirrored, setMirrored] = useState(false);
   const [staticOnly, setStaticOnly] = useState(false);
+  const [repeatCount, setRepeatCount] = useState<DraftRepeatCount>(1);
   const [state, setState] = useState<DraftPlaybackState>({ progress: 0, speed: 1, playing: false });
   const [preference] = useState(() =>
     typeof window !== 'undefined'
@@ -132,6 +133,12 @@ function PatternPlayback({
   const definition = reference.definition;
   const phases: readonly DraftPhase[] = definition.phases;
   const phase = phases.find((item) => state.progress < item.end) ?? phases[phases.length - 1];
+  const phaseIndex = Math.max(
+    0,
+    phases.findIndex((item) => item.id === phase.id),
+  );
+  const prevPhase = phases[phaseIndex - 1];
+  const nextPhase = phases[phaseIndex + 1];
   const stillMode = reducedMotion || staticOnly;
   const solidFollowsSelectedSide =
     reference.family === 'existing-proposal' &&
@@ -252,6 +259,22 @@ function PatternPlayback({
           <RotateCcw size={16} aria-hidden="true" />
         </button>
         <label>
+          반복
+          <select
+            aria-label="관련 패턴 도해 반복"
+            value={repeatCount}
+            onChange={(event) => {
+              const next = Number(event.target.value) as DraftRepeatCount;
+              setRepeatCount(next);
+              controller.setRepeatCount(next);
+            }}
+          >
+            <option value="1">1회</option>
+            <option value="2">2회</option>
+            <option value="3">3회</option>
+          </select>
+        </label>
+        <label>
           속도
           <select
             aria-label="관련 패턴 도해 속도"
@@ -277,6 +300,27 @@ function PatternPlayback({
           onChange={(event) => controller.seek(Number(event.target.value) / 1000)}
         />
       </label>
+      <div className="mpp-phase-stepper" role="group" aria-label="관련 패턴 단계 이동">
+        <button
+          type="button"
+          aria-label="이전 도해 단계"
+          disabled={!prevPhase}
+          onClick={() => prevPhase && controller.seek(prevPhase.sample)}
+        >
+          <ChevronLeft size={15} aria-hidden="true" /> 이전 단계
+        </button>
+        <span className="mpp-phase-counter">
+          단계 {phaseIndex + 1} / {phases.length} · {phase.labelKo ?? phase.label}
+        </span>
+        <button
+          type="button"
+          aria-label="다음 도해 단계"
+          disabled={!nextPhase}
+          onClick={() => nextPhase && controller.seek(nextPhase.sample)}
+        >
+          다음 단계 <ChevronRight size={15} aria-hidden="true" />
+        </button>
+      </div>
       <div className="mpp-phases" role="group" aria-label="관련 패턴 정지 단계">
         {phases.map((item) => (
           <button
@@ -341,10 +385,16 @@ function PatternPlayback({
           : staticOnly
             ? '정지 화면 모드 · 단계나 위치를 선택하세요.'
             : state.playing
-              ? '도해 한 주기를 재생합니다.'
+              ? repeatCount > 1
+                ? `도해 반복 재생 중 (${controller.currentCycle()} / ${repeatCount}회)`
+                : '도해 한 주기를 재생합니다.'
               : state.progress >= 1
-                ? '한 주기 끝 · 일시정지'
-                : '일시정지 · 자동 재생 없음'}
+                ? repeatCount > 1
+                  ? `반복 재생 끝 (${repeatCount}회) · 일시정지`
+                  : '한 주기 끝 · 일시정지'
+                : repeatCount > 1
+                  ? `일시정지 · ${repeatCount}회 반복 설정 · 자동 재생 없음`
+                  : '일시정지 · 자동 재생 없음'}
       </p>
       <details className="mpp-source-details">
         <summary>변형 차이·제작 근거 보기</summary>

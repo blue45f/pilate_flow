@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckCircle2,
   Clock3,
@@ -43,6 +43,7 @@ import {
 import { LightDismissDialog } from './LightDismissDialog';
 import type { DialogCloseRequest } from './LightDismissDialog';
 import { ExerciseEvidencePanel } from './ExerciseEvidencePanel';
+import { ExerciseYouTubeGallery } from './ExerciseYouTubeGallery';
 import { MovementArt } from './MovementArt';
 import { MotionReferencePlayer } from './MotionReferencePlayer';
 import '../styles/library.css';
@@ -724,6 +725,19 @@ const MovementDetails: React.FC<{
     store.activeSteps.some((step) => step.exerciseId === exercise.id),
   );
   const [loadVideo, setLoadVideo] = useState(false);
+  useEffect(() => {
+    const stopVideo = () => setLoadVideo(false);
+    const onVisibility = () => {
+      if (document.hidden) stopVideo();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', stopVideo);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', stopVideo);
+    };
+  }, []);
+
   const [motionLabOpen, setMotionLabOpen] = useState(false);
   const [reviewerAlias, setReviewerAlias] = useState('');
   const [reviewEditorOpen, setReviewEditorOpen] = useState(false);
@@ -743,7 +757,7 @@ const MovementDetails: React.FC<{
   const safeStart = Math.max(0, Math.floor(startSec || 0));
   const safeEnd = endSec && endSec > safeStart ? Math.floor(endSec) : null;
   const embedUrl = link
-    ? `https://www.youtube-nocookie.com/embed/${videoId}?start=${safeStart}${safeEnd ? `&end=${safeEnd}` : ''}&rel=0`
+    ? `https://www.youtube-nocookie.com/embed/${videoId}?start=${safeStart}${safeEnd ? `&end=${safeEnd}` : ''}&rel=0&autoplay=0`
     : '';
   return (
     <div className="movement-detail">
@@ -788,6 +802,7 @@ const MovementDetails: React.FC<{
         </span>
       </div>
       <MotionReferencePlayer exerciseId={exercise.id} exerciseName={exercise.nameKo} />
+      <ExerciseYouTubeGallery exercise={exercise} maxPerRegion={3} />
       <details
         className="pending-instruction-notes"
         onToggle={(event) => setMotionLabOpen(event.currentTarget.open)}

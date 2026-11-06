@@ -590,6 +590,59 @@ describe('backend/freeAiService', () => {
       }
     });
 
+    it.each(['class-draft', 'sequence-compose'] as const)(
+      'fails closed for %s when no reviewed exercise or block authorizes an upstream step',
+      async (task) => {
+        const fetchFn = vi.fn(async () =>
+          makeOpenRouterSuccessResponse({
+            title: '빈 검토 목록의 추천',
+            subtitle: '검토 가능한 동작 없음',
+            coachingSummary: '검토 완료 동작을 먼저 추가하세요.',
+            transitionSummary: '검토 완료 동작을 먼저 추가하세요.',
+            excludedUnreviewedIds: [],
+            steps: [{
+              stepId: 'invented-step',
+              order: 1,
+              exerciseId: 'invented-exercise',
+              nameKo: '검토되지 않은 생성 동작',
+              nameEn: 'Unreviewed Generated Exercise',
+              apparatus: 'reformer',
+              blockCategory: 'core',
+              durationMin: 5,
+              selectedLayer: 'standard',
+              instructorNote: '',
+              isReviewed: true,
+            }],
+          }),
+        );
+        const service = createFreeAiService({ env: VALID_OPENROUTER_ENV, fetchFn });
+        const request: FreeAiServerRequest = task === 'class-draft'
+          ? { ...SAMPLE_CLASS_DRAFT_REQ, reviewedCatalog: [] }
+          : {
+              task: 'sequence-compose',
+              compose: {
+                targetMinutes: 50,
+                level: '1.5',
+                apparatus: 'reformer',
+                strengthenAreas: ['core'],
+                selectedExerciseIds: ['invented-exercise'],
+              },
+              reviewedCatalog: [],
+              reviewedBlocks: [],
+            };
+
+        const result = await service.assist('instructor-1', request);
+        expect(result.kind).toBe(task);
+        if (result.kind === 'movement-idea') throw new Error('Unexpected result kind');
+        expect(result.steps).toEqual([]);
+        expect(result.guaranteesSafetyOrEffect).toBe(false);
+        if (result.kind === 'sequence-compose') {
+          expect(result.excludedUnreviewedIds).toContain('invented-exercise');
+        }
+        expect(fetchFn).toHaveBeenCalledTimes(1);
+      },
+    );
+
     it('exposes GET /api/studio/ai/status and POST /api/studio/ai/assist with Cache-Control: private, no-store', async () => {
       const fetchFn = vi.fn(async () =>
         makeGeminiSuccessResponse(VALID_IDEA_UPSTREAM_JSON),

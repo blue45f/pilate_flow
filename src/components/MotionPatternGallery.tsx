@@ -1,7 +1,10 @@
 import { useRef, useState } from 'react';
-import { ArrowUpRight, X } from 'lucide-react';
+import { ArrowUpRight, Plus, X } from 'lucide-react';
 import { MOTION_PATTERN_REFERENCES } from '../data/motionPatternReferences';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
+import { usePilatesStore } from '../store/usePilatesStore';
+import type { PilatesExercise } from '../types/pilates';
+import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';
 import '../styles/motion-pattern-gallery.css';
 
@@ -29,6 +32,8 @@ function studyTitle(reference: MotionPatternReference): string {
 
 export interface MotionPatternGalleryProps {
   onViewAll?: () => void;
+  onOpenExercise?: (exercise: PilatesExercise) => void;
+  onInsertExercise?: (exercise: PilatesExercise) => void;
   active?: boolean;
   className?: string;
 }
@@ -36,12 +41,19 @@ export interface MotionPatternGalleryProps {
 /** Three authored assets for the workbench entry point; playback is an explicit local action. */
 export function MotionPatternGallery({
   onViewAll,
+  onOpenExercise,
+  onInsertExercise,
   active = true,
   className = '',
 }: MotionPatternGalleryProps) {
   const [selected, setSelected] = useState<MotionPatternReference | null>(null);
+  const exercises = usePilatesStore((state) => state.exercises);
   const preview = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
+  const linkedExercise = selected
+    ? exercises.find((item) => selected.intendedExerciseIds.includes(item.id))
+    : undefined;
+  const linkedApproved = linkedExercise ? isExerciseAutoEligible(linkedExercise) : false;
   return (
     <section className={`motion-pattern-gallery ${className}`} aria-label="모션으로 살펴보기">
       <header className="mpg-heading">
@@ -97,6 +109,60 @@ export function MotionPatternGallery({
             닫기
           </button>
           <MotionPatternPreview reference={selected} active={active} />
+          {linkedExercise && (
+            <section
+              className="mpg-exercise-summary"
+              aria-label="연결 동작 설명·주의점 및 시퀀스 삽입"
+            >
+              <div className="mpg-exercise-summary-header">
+                <strong>연결 동작 노트 · {linkedExercise.nameKo}</strong>
+                <span>
+                  {linkedApproved
+                    ? '내 계획 검토 완료 · 시퀀스 삽입 가능'
+                    : '검토 전 · 노트 검토 후 시퀀스 삽입 가능'}
+                </span>
+              </div>
+              {linkedExercise.cues.length > 0 && (
+                <div className="mpg-exercise-cues">
+                  <h4>동작 설명·티칭 큐</h4>
+                  <ul>
+                    {linkedExercise.cues.slice(0, 3).map((cue) => (
+                      <li key={cue}>{cue}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {linkedExercise.precautions?.trim() && (
+                <div className="mpg-exercise-precautions">
+                  <h4>주의점·금기 사항</h4>
+                  <p>{linkedExercise.precautions}</p>
+                </div>
+              )}
+              {(onOpenExercise || onInsertExercise) && (
+                <div className="mpg-exercise-actions">
+                  {onOpenExercise && (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() => onOpenExercise(linkedExercise)}
+                    >
+                      노트 상세·검토 열기
+                    </button>
+                  )}
+                  {onInsertExercise && (
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      disabled={!linkedApproved}
+                      onClick={() => onInsertExercise(linkedExercise)}
+                    >
+                      <Plus size={15} aria-hidden="true" /> 시퀀스에 바로 삽입
+                    </button>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
         </div>
       )}
     </section>
