@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MotionCoverage Local Browser Verification Fixture</title>
+  </head>
+  <body style="margin: 0; padding: 0; background: #fcfdfc">
+    <div
+      id="motion-coverage-fixture-root"
+      style="margin: 0; padding: 0; width: 100%; max-width: 100%; box-sizing: border-box"
+    ></div>
+    <script type="module">
+      import { createElement } from 'react';
+      import {
+        MotionCoveragePreviewHarness,
+        DRAFT_REPEAT_COUNTS,
+        DRAFT_SPEEDS,
+        MotionCoveragePlaybackController,
+        mountMotionCoveragePreviewHarness,
+        runMotionCoverageCatalogSweep,
+      } from '/src/features/motionCoverage/index.ts';
+
+      const container = document.getElementById('motion-coverage-fixture-root');
+      const snapshotLog = [];
+      let currentProps = { initialExerciseOrId: 'ex-warmup-01' };
+      let activeRoot = mountMotionCoveragePreviewHarness(container, {
+        initialExerciseOrId: 'ex-warmup-01',
+        onSnapshotChange: (snap) => {
+          snapshotLog.push({
+            exerciseId: snap.exerciseId,
+            mode: snap.mode,
+            playing: snap.playing,
+            progress: snap.progress,
+            selectedPhase: snap.selectedPhase,
+            speed: snap.speed,
+            repeatCount: snap.repeatCount,
+            reducedMotion: snap.reducedMotion,
+            isBackgroundHidden: snap.isBackgroundHidden,
+          });
+        },
+      });
+
+      window.__motionCoverageFixture__ = {
+        container,
+        snapshotLog,
+        DRAFT_SPEEDS,
+        DRAFT_REPEAT_COUNTS,
+        MotionCoveragePlaybackController,
+        runMotionCoverageCatalogSweep,
+        updateProps(props = {}) {
+          currentProps = { ...currentProps, ...props };
+          activeRoot.render(
+            createElement(MotionCoveragePreviewHarness, {
+              ...currentProps,
+              onSnapshotChange: (snap) => snapshotLog.push(snap),
+            }),
+          );
+        },
+        remount(props = {}) {
+          currentProps = { initialExerciseOrId: 'ex-warmup-01', ...props };
+          activeRoot = mountMotionCoveragePreviewHarness(container, {
+            initialExerciseOrId: 'ex-warmup-01',
+            ...props,
+            onSnapshotChange: (snap) => {
+              snapshotLog.push({
+                exerciseId: snap.exerciseId,
+                mode: snap.mode,
+                playing: snap.playing,
+                progress: snap.progress,
+                selectedPhase: snap.selectedPhase,
+                speed: snap.speed,
+                repeatCount: snap.repeatCount,
+                reducedMotion: snap.reducedMotion,
+                isBackgroundHidden: snap.isBackgroundHidden,
+              });
+              props.onSnapshotChange?.(snap);
+            },
+          });
+          return activeRoot;
+        },
+        unmount() {
+          if (activeRoot) {
+            activeRoot.unmount();
+            activeRoot = null;
+          }
+        },
+      };
+    </script>
+  </body>
+</html>

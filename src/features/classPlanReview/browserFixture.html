@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Class plan review local verification</title>
+  </head>
+  <body style="margin: 0; background: #f7f5ef">
+    <div id="class-review-fixture-root"></div>
+    <script type="module">
+      import React from 'react';
+      import { createRoot } from 'react-dom/client';
+      import {
+        ClassPlanReviewPreview,
+        ClassPlanReviewFixtureHarness,
+      } from '/src/features/classPlanReview/ClassPlanReviewPreview.tsx';
+      import { reviewClassPlan } from '/src/features/classPlanReview/classPlanReviewAnalyzer.ts';
+      const root = createRoot(document.getElementById('class-review-fixture-root'));
+      const mount = (element) => root.render(React.createElement(React.StrictMode, null, element));
+      window.__classPlanReviewFixture__ = {
+        revision: 'boundary-hardening-v1',
+        showHarness() {
+          mount(React.createElement(ClassPlanReviewFixtureHarness));
+        },
+        showSource(source) {
+          const report = reviewClassPlan(source);
+          mount(React.createElement(ClassPlanReviewPreview, { report }));
+          return report;
+        },
+        showTwo(source) {
+          mount(
+            React.createElement(
+              React.Fragment,
+              null,
+              React.createElement(ClassPlanReviewPreview, { source }),
+              React.createElement(ClassPlanReviewPreview, { source }),
+            ),
+          );
+        },
+        unmount() {
+          root.unmount();
+        },
+      };
+      window.__classPlanReviewFixture__.showHarness();
+    </script>
+  </body>
+</html>
