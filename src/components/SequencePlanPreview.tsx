@@ -508,6 +508,13 @@ export function SequencePlanPreview({
                 닫고 다시 열어 현재 자료를 확인해 주세요.
               </p>
             )}
+            {model.deltaSec !== null && model.deltaSec !== 0 && (
+              <p className="simulation-review-notice">
+                목표보다 {formatSecondsToMMSS(Math.abs(model.deltaSec))}{' '}
+                {model.deltaSec > 0 ? '길어요' : '짧아요'}. 현재 계획 시간으로 미리보기·수업 진행이
+                가능합니다.
+              </p>
+            )}
             <details className="simulation-readiness">
               <summary>
                 {model.gate.canRehearse && !snapshotChanged

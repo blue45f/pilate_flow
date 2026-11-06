@@ -1,4 +1,14 @@
-import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { buildSequenceSimulation } from '../utils/sequenceSimulation';
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   ArrowRight,
   ChartNoAxesCombined,
@@ -80,6 +90,10 @@ import '../styles/workbench-usability.css';
 import '../styles/workbench-vnext.css';
 import '../styles/release-mobile-clarity.css';
 
+const LazyOfflinePresetPicker = lazy(() =>
+  import('./OfflinePresetPicker').then((mod) => ({ default: mod.OfflinePresetPicker })),
+);
+
 const LazyFreeAiAssistantPanel = lazy(() =>
   import('./FreeAiAssistantPanel').then((mod) => ({ default: mod.FreeAiAssistantPanel })),
 );
@@ -160,6 +174,7 @@ export function SequenceWorkbench({
   sourceDetailOpen = false,
 }: Props) {
   const s = usePilatesStore();
+  const [presetsOpen, setPresetsOpen] = useState(false);
   const [localIdeaSheet, setLocalIdeaSheet] = useState<{
     open: boolean;
     exercise: PilatesExercise | null;
@@ -414,16 +429,11 @@ export function SequenceWorkbench({
   const exerciseStepCount = s.activeSteps.filter((step) => !isRestStep(step)).length;
   const restStepCount = s.activeSteps.length - exerciseStepCount;
   const authoringCatalogCount = s.exercises.filter(isExerciseAuthoringEligible).length;
-  const canStartClass =
-    exerciseStepCount > 0 &&
-    delta === 0 &&
-    !hasDuplicateMovements &&
-    s.activeSteps.every(
-      (step) =>
-        isRestStep(step) ||
-        (exerciseMap.has(step.exerciseId) &&
-          isExerciseAuthoringEligible(exerciseMap.get(step.exerciseId)!)),
-    );
+  const readiness = useMemo(
+    () => buildSequenceSimulation(s.activeSteps, s.exercises, s.activeTargetMinutes),
+    [s.activeSteps, s.exercises, s.activeTargetMinutes],
+  );
+  const canStartClass = readiness.gate.canRehearse;
   const locked = s.activeSteps.filter((step) => step.locked).length;
   const sectionRuns: {
     section: (typeof sections)[number];
@@ -515,31 +525,24 @@ export function SequenceWorkbench({
     s.saveCurrentSequenceToBinder();
     setNotice('');
   };
-  const startReadiness = hasDuplicateMovements
-    ? '같은 동작이 중복되어 있어요. 다른 동작으로 바꿔 주세요.'
-    : !exerciseStepCount
-      ? '동작을 추가한 뒤 수업안을 확인하세요.'
+  const startReadiness = !exerciseStepCount
+    ? '동작을 추가한 뒤 수업안을 확인하세요.'
+    : !canStartClass
+      ? '동작 정보와 항목 시간을 확인해 주세요.'
       : delta !== 0
-        ? '수업 시간에 맞춘 뒤 시작할 수 있어요.'
-        : '동작·스프링·대상자 상태를 확인한 뒤 시작하세요.';
+        ? `목표와 차이가 있지만 현재 계획 ${formatSecondsToMMSS(total)}으로 진행할 수 있어요.`
+        : hasDuplicateMovements
+          ? '같은 동작 반복 포함 · 의도한 순서를 확인한 뒤 시작하세요.'
+          : '동작·스프링·대상자 상태를 확인한 뒤 시작하세요.';
   const startClass = () => {
     const current = usePilatesStore.getState();
-    const movements = current.activeSteps.filter((step) => !isRestStep(step));
-    const currentExercises = new Map(current.exercises.map((exercise) => [exercise.id, exercise]));
-    const keys = movements.map((step) => {
-      const exercise = currentExercises.get(step.exerciseId);
-      return exercise ? getMovementKey(exercise) : step.exerciseId;
-    });
-    const ready =
-      movements.length > 0 &&
-      getSequenceDurations(current.activeSteps).totalSec === current.activeTargetMinutes * 60 &&
-      movements.every((step) => {
-        const exercise = currentExercises.get(step.exerciseId);
-        return !!exercise && isExerciseAuthoringEligible(exercise);
-      }) &&
-      new Set(keys).size === keys.length;
+    const ready = buildSequenceSimulation(
+      current.activeSteps,
+      current.exercises,
+      current.activeTargetMinutes,
+    ).gate.canRehearse;
     if (!ready) {
-      setNotice('수업안이 바뀌었어요. 시간·동작 정보·중복 동작을 다시 확인해 주세요.');
+      setNotice('수업안이 바뀌었어요. 동작 정보와 항목 시간을 다시 확인해 주세요.');
       return;
     }
     setPlanPreviewOpen(false);
@@ -716,6 +719,11 @@ export function SequenceWorkbench({
           />
         </details>
       )}
+      <div className="button-row" style={{ marginBlock: 12 }}>
+        <button type="button" className="btn-secondary" onClick={() => setPresetsOpen(true)}>
+          <Copy size={16} aria-hidden="true" /> 프리셋·동작 묶음에서 고르기
+        </button>
+      </div>
       <NextClassBanner collapseEmpty />
       <nav className="workbench-flow-navigation" aria-label="수업 준비 순서">
         <ol className="workbench-preparation-steps">
@@ -1964,6 +1972,25 @@ export function SequenceWorkbench({
             </div>
           )}
         </div>
+      </LightDismissDialog>
+      <LightDismissDialog
+        open={presetsOpen}
+        onClose={() => setPresetsOpen(false)}
+        title="프리셋·동작 묶음"
+        subtitle="무료 오프라인 템플릿 · 선택 후 복사해서 편집"
+        maxWidth="860px"
+      >
+        {presetsOpen && (
+          <Suspense fallback={<p role="status">프리셋을 불러오는 중입니다.</p>}>
+            <LazyOfflinePresetPicker
+              onApplied={(message) => {
+                setNotice(message);
+                setWorkflowStep('arrange');
+                setPresetsOpen(false);
+              }}
+            />
+          </Suspense>
+        )}
       </LightDismissDialog>
       {!onOpenIdeaSheet && localIdeaSheet.open && (
         <MovementIdeaSheet

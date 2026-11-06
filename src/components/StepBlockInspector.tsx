@@ -15,6 +15,7 @@ import type { ClassSectionRole } from '../types/sequenceMotion';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
 import { formatSecondsToMMSS, getStepTiming, isRestStep } from '../utils/sequenceEngine';
 import { assessSequenceMotionStudyBinding } from '../utils/sequenceMotionBinding';
+import { StepTimeEstimateEditor } from './StepTimeEstimateEditor';
 import { StepMotionStudyPicker } from './StepMotionStudyPicker';
 import { ExerciseEvidencePanel } from './ExerciseEvidencePanel';
 import '../styles/step-inspector.css';
@@ -41,6 +42,7 @@ const editableValues = (step: SequenceStep) => ({
   instructorNote: step.instructorNote,
   classSection: step.classSection ?? null,
   motionStudy: step.motionStudy ?? null,
+  timeEstimate: step.timeEstimate ?? null,
 });
 const cloneStep = (step: SequenceStep): SequenceStep => JSON.parse(JSON.stringify(step));
 const draftFrom = (step: SequenceStep) => ({
@@ -55,6 +57,7 @@ const draftFrom = (step: SequenceStep) => ({
   note: step.instructorNote ?? '',
   section: step.classSection ?? '',
   motionStudy: step.motionStudy ? cloneStep(step).motionStudy! : null,
+  timeEstimate: step.timeEstimate ? cloneStep(step).timeEstimate! : null,
 });
 const LAYER_OPTIONS: { value: LayerMode; label: string }[] = [
   { value: 'easy', label: '쉬운 변형' },
@@ -140,6 +143,7 @@ export function StepBlockInspector({
       instructorNote: draft.note || undefined,
       classSection: (draft.section || null) as ClassSectionRole | null,
       motionStudy: draft.motionStudy,
+      timeEstimate: draft.timeEstimate,
     };
     const old = editableValues(base);
     const patch: Partial<typeof values> = {};
@@ -225,7 +229,7 @@ export function StepBlockInspector({
                 type="number"
                 min="0.5"
                 max="20"
-                step="0.25"
+                step="any"
                 value={draft.duration}
                 onChange={(event) => setDraft({ ...draft, duration: event.target.value })}
               />
@@ -331,6 +335,35 @@ export function StepBlockInspector({
           <p className="muted">
             좌우는 회원의 몸 기준입니다. 횟수·세트·좌우 설정으로 총시간을 자동 곱하지 않습니다.
           </p>
+          <StepTimeEstimateEditor
+            key={JSON.stringify(base)}
+            initial={draft.timeEstimate}
+            repetitions={draft.count ? Number(draft.count) : undefined}
+            sets={draft.sets ? Number(draft.sets) : undefined}
+            sideMode={(draft.side || undefined) as StepSideMode | undefined}
+            explanationSec={draft.explanation ? Number(draft.explanation) : undefined}
+            transitionSec={draft.transition ? Number(draft.transition) : undefined}
+            currentDurationMin={Number(draft.duration)}
+            onUse={(estimate, durationMin) =>
+              setDraft({
+                ...draft,
+                timeEstimate: estimate,
+                duration: String(durationMin),
+                count: String(estimate.repetitions),
+                sets: String(estimate.sets),
+                side:
+                  estimate.sides === 2
+                    ? draft.side === 'right-then-left'
+                      ? draft.side
+                      : 'left-then-right'
+                    : draft.side === 'left' || draft.side === 'right'
+                      ? draft.side
+                      : 'together',
+                explanation: String(estimate.explanationSec),
+                transition: String(estimate.transitionSec),
+              })
+            }
+          />
           <details>
             <summary>이번 수업의 기구 세팅·티칭 메모</summary>
             {exercise && isExerciseAutoEligible(exercise) && (

@@ -21,10 +21,16 @@ const sideOptions: readonly { value: StepSideMode | ''; label: string }[] = [
 /** Teacher-entered planning choices. Repetition counts never determine an item's time. */
 export function StepPracticeEditor({ index, step }: StepPracticeEditorProps) {
   const setPracticeOptions = usePilatesStore((state) => state.setStepPracticeOptions);
-  const source = JSON.stringify([step.stepId, step.repetitions ?? null, step.sideMode ?? null]);
+  const source = JSON.stringify([
+    step.stepId,
+    step.repetitions ?? null,
+    step.sets ?? null,
+    step.sideMode ?? null,
+  ]);
   const [edit, setEdit] = useState<{
     source: string;
     repetitions: string;
+    sets: string;
     sideMode: StepSideMode | '';
   } | null>(null);
   const [feedback, setFeedback] = useState<{
@@ -34,9 +40,10 @@ export function StepPracticeEditor({ index, step }: StepPracticeEditorProps) {
   } | null>(null);
   const hintId = useId();
   const repetitions = edit?.source === source ? edit.repetitions : String(step.repetitions ?? '');
+  const sets = edit?.source === source ? edit.sets : String(step.sets ?? '');
   const sideMode = edit?.source === source ? edit.sideMode : (step.sideMode ?? '');
-  const update = (patch: { repetitions?: string; sideMode?: StepSideMode | '' }) => {
-    setEdit({ source, repetitions, sideMode, ...patch });
+  const update = (patch: { repetitions?: string; sets?: string; sideMode?: StepSideMode | '' }) => {
+    setEdit({ source, repetitions, sets, sideMode, ...patch });
     setFeedback(null);
   };
   const apply = () => {
@@ -59,8 +66,18 @@ export function StepPracticeEditor({ index, step }: StepPracticeEditorProps) {
       });
       return;
     }
+    const setCount = sets.trim() ? Number(sets) : undefined;
+    if (setCount !== undefined && (!Number.isInteger(setCount) || setCount < 1 || setCount > 100)) {
+      setFeedback({
+        stepId: step.stepId,
+        success: false,
+        message: '세트는 1–100 사이의 정수로 입력하거나 비워 주세요.',
+      });
+      return;
+    }
     const result = setPracticeOptions(index, {
       repetitions: count,
+      sets: setCount,
       sideMode: sideMode || undefined,
     });
     setFeedback({ stepId: step.stepId, ...result });
@@ -95,6 +112,20 @@ export function StepPracticeEditor({ index, step }: StepPracticeEditorProps) {
               />
             </label>
             <label className="form-field">
+              <span>강사가 정한 세트</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={100}
+                step={1}
+                value={sets}
+                onChange={(event) => update({ sets: event.target.value })}
+                placeholder="미지정"
+                aria-describedby={hintId}
+              />
+            </label>
+            <label className="form-field">
               <span>수행할 쪽</span>
               <select
                 value={sideMode}
@@ -110,13 +141,13 @@ export function StepPracticeEditor({ index, step }: StepPracticeEditorProps) {
             </label>
           </div>
           <button type="submit" className="btn-secondary">
-            <Check size={15} /> 횟수·좌우 적용
+            <Check size={15} /> 횟수·세트·좌우 적용
           </button>
         </fieldset>
       </form>
       <p className="muted" id={hintId}>
-        적용을 눌러 저장합니다. 횟수와 좌우 선택으로 시간을 자동 계산하지 않습니다. 횟수를 비우면
-        미지정으로 저장합니다.
+        적용을 눌러 저장합니다. 횟수·세트·좌우는 수행 메모이며 총시간을 자동으로 곱하지 않습니다.
+        칸을 비우면 미지정으로 저장합니다.
       </p>
       {step.locked && (
         <p className="muted">

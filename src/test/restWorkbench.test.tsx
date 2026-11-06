@@ -122,7 +122,7 @@ describe('rest intervals in the class workbench', () => {
     expect(firstCard.getByRole('button', { name: '1번 휴식 삭제' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: '수업 시작' })).not.toBeInTheDocument();
     const preview = openWorkbenchPlanPreview();
-    expect(preview.getByRole('button', { name: '수업 시작' })).toBeDisabled();
+    expect(preview.getByRole('button', { name: '수업 시작' })).toBeEnabled();
     expect(preview.queryByText('1개 동작의 검토·승인이 필요합니다.')).not.toBeInTheDocument();
     expect(
       usePilatesStore.getState().activeSteps.reduce((sum, step) => sum + step.durationMin, 0),

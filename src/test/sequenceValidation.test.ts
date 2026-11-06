@@ -518,9 +518,9 @@ describe('Left/Right Pairing & Side Balance Validation + Fixes', () => {
       },
     ];
 
-    // Before merging, buildSequenceSimulation rejects duplicate movement key
+    // Split sides can rehearse as separate intentional items with an advisory.
     const rawSim = buildSequenceSimulation(splitSteps, sampleExercises, 10);
-    expect(rawSim.gate.canRehearse).toBe(false);
+    expect(rawSim.gate.canRehearse).toBe(true);
     expect(rawSim.gate.reasons.some((r) => r.code === 'duplicate-movement')).toBe(true);
 
     // After merging, rehearsal gate passes cleanly with preserved total duration
@@ -950,12 +950,10 @@ describe('Human-Created Movement Drafts & AI/Human Boundary', () => {
     const inserted = insertReusableBlockIntoSequence([], blockV3, {
       instanceId: 'inst-val-1',
     });
-    const seqTimeBreakdown = calculateSequenceTimeBreakdown(
-      inserted.steps,
-      sampleExercises,
-      17,
-      [ideaOnlyDraft, classReadyDraft],
-    );
+    const seqTimeBreakdown = calculateSequenceTimeBreakdown(inserted.steps, sampleExercises, 17, [
+      ideaOnlyDraft,
+      classReadyDraft,
+    ]);
     expect(seqTimeBreakdown.totalSec).toBe(blockTiming.totalSec);
     expect(seqTimeBreakdown.movementSec).toBe(blockTiming.movementSec);
     expect(seqTimeBreakdown.explanationSec).toBe(blockTiming.explanationSec);
@@ -1004,6 +1002,3 @@ describe('Human-Created Movement Drafts & AI/Human Boundary', () => {
     expect(snapshotV1.timeBreakdown.totalSec).toBe(1020);
   });
 });
-
-
-

@@ -281,7 +281,7 @@ describe('bounded selected planning timeline', () => {
       });
       render(<SequencePlanPreview onClose={vi.fn()} />);
       const segment = openSegment();
-      if (state === 'pending' || state === 'stale') {
+      if (state !== 'missing') {
         const before = structuredClone(exercises);
         expect(segment.getByRole('button', { name: '구간 반복 연습 시작' })).toBeEnabled();
         fireEvent.click(segment.getByRole('button', { name: '구간 반복 연습 시작' }));

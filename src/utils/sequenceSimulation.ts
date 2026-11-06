@@ -69,7 +69,7 @@ export interface SequenceSimulation {
   readonly segments: readonly SimulationSegment[];
   readonly steps: readonly SimulationStep[];
   readonly totals: SimulationTotals;
-  /** Pass the snapshot's actual target to enforce the class budget. Omission derives the plan total. */
+  /** Compare the snapshot target without blocking a valid rehearsal. Omission derives the plan total. */
   readonly targetSec: number | null;
   readonly targetSource: 'provided' | 'plan-total';
   readonly deltaSec: number | null;
@@ -254,7 +254,7 @@ export function buildSequenceSimulation(
     if (indices.length > 1)
       reason(
         'duplicate-movement',
-        '같은 동작이 중복되어 있습니다. 교체하거나 삭제한 뒤 확인해 주세요.',
+        '같은 동작을 여러 구간에서 반복합니다. 의도한 순서인지 확인해 주세요.',
         indices,
       );
   const totals = {
@@ -290,7 +290,15 @@ export function buildSequenceSimulation(
       : null;
   if (targetSec === null) reason('invalid-target', '리허설 목표 시간을 확인해 주세요.');
   else if (totals.totalSec !== targetSec)
-    reason('target-mismatch', '전체 계획 시간을 목표 수업 시간에 맞춘 뒤 리허설을 실행해 주세요.');
+    reason(
+      'target-mismatch',
+      `목표보다 ${Math.abs(totals.totalSec - targetSec)
+        .toFixed(1)
+        .replace(
+          /\.0$/,
+          '',
+        )}초 ${totals.totalSec > targetSec ? '길어요' : '짧아요'}. 현재 계획 시간으로 미리볼 수 있습니다.`,
+    );
   return Object.freeze({
     segments: Object.freeze(segments),
     steps: Object.freeze(summaries),
@@ -299,7 +307,9 @@ export function buildSequenceSimulation(
     targetSource,
     deltaSec: targetSec === null ? null : totals.totalSec - targetSec,
     gate: Object.freeze({
-      canRehearse: reasons.size === 0,
+      canRehearse: [...reasons.keys()].every(
+        (code) => code === 'target-mismatch' || code === 'duplicate-movement',
+      ),
       reasons: Object.freeze(
         [...reasons.entries()].map(([code, entry]) =>
           Object.freeze({

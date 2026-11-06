@@ -1,0 +1,42 @@
+.step-time-estimate {
+  margin-block: 12px;
+  border: 1px solid var(--line, #dcdedb);
+  border-radius: 12px;
+  padding: 12px;
+  min-width: 0;
+}
+.step-time-estimate summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+  font-weight: 650;
+}
+.step-time-estimate p {
+  font-size: 0.85rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.step-time-estimate-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.step-time-estimate input,
+.step-time-estimate select,
+.step-time-estimate button {
+  min-height: 44px;
+  min-width: 0;
+  max-width: 100%;
+}
+.step-time-estimate label {
+  min-width: 0;
+}
+.step-time-estimate summary:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+@media (max-width: 480px) {
+  .step-time-estimate-fields {
+    grid-template-columns: 1fr;
+  }
+}

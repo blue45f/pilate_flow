@@ -63,16 +63,33 @@ describe('teaching timer and honest session records', () => {
       expect(usePilatesStore.getState().exercises[0]).toEqual(blocked);
     },
   );
-  it('blocks reviewed duplicate movements loaded from an existing class', () => {
-    usePilatesStore.setState({
-      activeSteps: [steps[0], { ...steps[0], stepId: 'duplicate-step', order: 2 }],
-    });
+  it('allows intentional repeats, pause/resume and skipping without changing the plan', () => {
+    const repeated = [steps[0], { ...steps[0], stepId: 'repeat-step', order: 2 }];
+    usePilatesStore.setState({ activeSteps: repeated });
     render(<LiveStageView onOpenLogModal={vi.fn()} />);
-    expect(screen.getByRole('heading', { name: '중복 동작을 확인해 주세요' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '수업 시작' }));
+    jumpWallClock(10);
+    expect(screen.getByRole('timer')).toHaveTextContent('00:50');
+    fireEvent.click(screen.getByRole('button', { name: '일시정지' }));
+    jumpWallClock(60);
+    fireEvent.click(screen.getByRole('button', { name: '이어서 진행' }));
+    fireEvent.click(screen.getByRole('button', { name: '다음 동작' }));
+    expect(screen.getByRole('timer')).toHaveTextContent('01:00');
+    jumpWallClock(5);
+    expect(screen.getByRole('timer')).toHaveTextContent('00:55');
+    expect(usePilatesStore.getState().activeSteps).toEqual(repeated);
+  });
+  it('still blocks duplicate step IDs and malformed timing', () => {
+    usePilatesStore.setState({ activeSteps: [steps[0], { ...steps[0], order: 2 }] });
+    const { unmount } = render(<LiveStageView onOpenLogModal={vi.fn()} />);
+    expect(
+      screen.getByRole('heading', { name: '수업 항목 정보를 확인해 주세요' }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('timer')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '수업 시작' })).not.toBeInTheDocument();
-    expect(screen.queryByText(exercises[0].cues[0])).not.toBeInTheDocument();
-    expect(usePilatesStore.getState().activeSteps).toHaveLength(2);
+    unmount();
+    usePilatesStore.setState({ activeSteps: [{ ...steps[0], durationMin: 0 }] });
+    render(<LiveStageView onOpenLogModal={vi.fn()} />);
+    expect(screen.queryByRole('timer')).not.toBeInTheDocument();
   });
   it('requests screen wake lock only on user start and handles a denied request', async () => {
     const descriptor = Object.getOwnPropertyDescriptor(navigator, 'wakeLock');

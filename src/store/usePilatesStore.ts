@@ -1,3 +1,4 @@
+import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { createRecoveryStorageGuard, RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import { inspectBackupRecovery } from '../utils/backupRecoveryInspection';
 import { assessSequenceMotionStudyBinding } from '../utils/sequenceMotionBinding';
@@ -224,6 +225,12 @@ export interface PilatesStudioState extends SequenceSnapshot {
   }) => void;
   loadSequenceIntoWorkbench: (sequenceId: string) => void;
   applyCuratedProgram: (programId: string) => void;
+  applyPresetDraft: (
+    input: { steps: SequenceStep[]; title: string; subtitle: string; targetMinutes: number },
+    mode: 'replace' | 'append',
+    expectedState: PilatesStudioState,
+  ) => { success: boolean; message: string };
+
   autoGenerateSequence: (criteria: AutoGenerateCriteria) => void;
   setLastCriteria: (criteria: AutoGenerateCriteria) => void;
   setDraftCriteria: (criteria: AutoGenerateCriteria) => void;
@@ -477,6 +484,10 @@ function editedStepOptions(
   if (Object.prototype.hasOwnProperty.call(patch, 'classSection')) {
     if (patch.classSection === undefined || patch.classSection === null) delete next.classSection;
     else next.classSection = patch.classSection;
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'timeEstimate')) {
+    if (patch.timeEstimate == null) delete next.timeEstimate;
+    else next.timeEstimate = structuredClone(patch.timeEstimate);
   }
   if (Object.prototype.hasOwnProperty.call(patch, 'motionStudy')) {
     if (patch.motionStudy === null) delete next.motionStudy;
@@ -1167,6 +1178,78 @@ export const usePilatesStore = create<PilatesStudioState>()(
           }),
         );
       },
+      applyPresetDraft: (input, mode, expectedState) => {
+        const state = get();
+        // Selecting a preset never permits overwriting newer edits or another account's workspace.
+        if (state !== expectedState)
+          return {
+            success: false,
+            message: '수업이나 계정이 바뀌었습니다. 프리셋을 다시 선택해 주세요.',
+          };
+        const parsed = z
+          .object({
+            steps: z.array(stepSchema).min(1).max(1000),
+            title: textSchema.min(1),
+            subtitle: textSchema,
+            targetMinutes: z.number().finite().min(10).max(120),
+          })
+          .safeParse(input);
+        if (!parsed.success || (mode !== 'replace' && mode !== 'append'))
+          return { success: false, message: '프리셋의 동작과 계획 시간을 확인해 주세요.' };
+        const incoming = cloneSteps(parsed.data.steps);
+        const steps = (
+          mode === 'append' ? [...cloneSteps(state.activeSteps), ...incoming] : incoming
+        ).map((step, index) => ({ ...step, order: index + 1 }));
+        if (steps.length > 1000 || new Set(steps.map((step) => step.stepId)).size !== steps.length)
+          return {
+            success: false,
+            message: '항목이 너무 많거나 항목 ID가 겹칩니다. 다시 선택해 주세요.',
+          };
+        const records = steps
+          .filter((step) => !isRestStep(step))
+          .map((step) => state.exercises.find((exercise) => exercise.id === step.exerciseId));
+        if (
+          !records.length ||
+          records.some((exercise) => !exercise || !isExerciseAuthoringEligible(exercise))
+        )
+          return {
+            success: false,
+            message:
+              '현재 동작 목록에서 찾을 수 없는 항목이 있습니다. 프리셋을 다시 확인해 주세요.',
+          };
+        const equipment = [
+          ...new Set(
+            records.flatMap((exercise) => getExerciseEquipment(exercise!).requiredEquipment),
+          ),
+        ];
+        const families = getEquipmentFamilies(equipment);
+        const apparatus = families.length === 1 ? families[0] : 'mixed';
+        const maxLevel = Math.max(
+          ...records.map((exercise) => Number(exercise!.level)),
+          mode === 'append' ? Number(state.activeLevel) : 1,
+        );
+        const level: DifficultyLevel = maxLevel >= 2 ? '2.0' : maxLevel >= 1.5 ? '1.5' : '1.0';
+        const targetMinutes =
+          mode === 'append' ? state.activeTargetMinutes : parsed.data.targetMinutes;
+        const criteria = criteriaForSteps(state, steps, apparatus, level, targetMinutes);
+        set(
+          edit(state, {
+            activeSteps: steps,
+            activeSequenceId: mode === 'replace' ? newId('seq-preset') : state.activeSequenceId,
+            activeTitle: mode === 'replace' ? parsed.data.title : state.activeTitle,
+            activeSubtitle: mode === 'replace' ? parsed.data.subtitle : state.activeSubtitle,
+            activeApparatus: apparatus,
+            activeLevel: level,
+            activeTargetMinutes: targetMinutes,
+            draftCriteria: cloneCriteria(criteria),
+            activeTab: 'workbench',
+          }),
+        );
+        return {
+          success: true,
+          message: `편집 가능한 복사본 ${incoming.length}개 동작을 ${mode === 'append' ? '뒤에 추가' : '불러오기'}했습니다. 되돌리기로 복원할 수 있습니다.${lastStorageError ? ` ${lastStorageError}` : ''}`,
+        };
+      },
       applyCuratedProgram: (programId) => {
         const state = get();
         const program = CURATED_SEQUENCE_PROGRAMS.find((item) => item.id === programId);
@@ -1393,7 +1476,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
         );
         return {
           success: true,
-          message: '횟수와 좌우를 저장했습니다. 전체 수행 시간은 유지됩니다.',
+          message: '횟수·세트·좌우를 저장했습니다. 전체 수행 시간은 유지됩니다.',
         };
       },
       setStepTimingOptions: (index, patch) => {
@@ -1910,7 +1993,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
             activeTab: 'workbench',
             ...(copiedMinutes !== criteria.targetMinutes
               ? {
-                  saveFeedback: `기록의 항목·시간은 그대로 복사했습니다. 새 수업 목표는 지원 범위인 ${criteria.targetMinutes}분으로 설정했습니다. 시작 전에 시간을 조정해 주세요.`,
+                  saveFeedback: `기록의 항목·시간은 그대로 복사했습니다. 새 수업 목표는 지원 범위인 ${criteria.targetMinutes}분으로 설정했습니다. 계획 시간이 목표와 다릅니다. 그대로 시작하거나 시간을 조정할 수 있어요.`,
                 }
               : {}),
           }),

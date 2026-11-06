@@ -321,7 +321,12 @@ describe('actual full-class rehearsal and read-only evidence journeys', { timeou
         return;
       }
       const { dialog, controls, range } = await openPreview();
-      if (kind === 'pending' || kind === 'stale') {
+      if (
+        kind === 'pending' ||
+        kind === 'stale' ||
+        kind === 'normalized-duplicate' ||
+        kind === 'target-mismatch'
+      ) {
         expect(controls.getByRole('button', { name: '시간표 리허설 시작' })).toBeEnabled();
         expect(dialog.getByRole('button', { name: '수업 시작' })).toBeEnabled();
         fakeClock();
@@ -342,10 +347,6 @@ describe('actual full-class rehearsal and read-only evidence journeys', { timeou
       seek(range, Math.min(60, Number(range.max)));
       expect(Number(range.value)).toBeGreaterThan(0);
       expect(controls.getByRole('button', { name: '시간표 리허설 시작' })).toBeDisabled();
-      if (kind === 'normalized-duplicate')
-        expect(controls.getByText(/같은 동작이 중복되어 있습니다/)).toBeInTheDocument();
-      if (kind === 'target-mismatch')
-        expect(controls.getByText(/전체 계획 시간을 목표 수업 시간에 맞춘 뒤/)).toBeInTheDocument();
       if (kind === 'rest-only')
         expect(controls.getByText(/휴식 외의 동작을 추가해 주세요/)).toBeInTheDocument();
       if (kind === 'missing') {

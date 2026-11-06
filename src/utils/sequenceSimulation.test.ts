@@ -310,7 +310,7 @@ describe('whole-class plan simulation timeline', () => {
       nameKo: '머메이드',
     });
     const model = buildSequenceSimulation(steps, [first, second, c], 50);
-    expect(model.gate.canRehearse).toBe(false);
+    expect(model.gate.canRehearse).toBe(true);
     expect(
       model.gate.reasons.find((reason) => reason.code === 'duplicate-movement')?.stepIndices,
     ).toEqual([0, 1]);
@@ -319,10 +319,11 @@ describe('whole-class plan simulation timeline', () => {
     expect(model.totals.totalSec).toBe(3000);
   });
 
-  it('requires an exact provided target match and records when an optional target was derived', () => {
-    for (const target of [49, 50.001]) {
+  it('reports target differences without blocking rehearsal and derives an optional target', () => {
+    for (const target of [49, 50.001, 55]) {
       const model = buildSequenceSimulation(steps, exercises, target);
-      expect(model.gate.canRehearse).toBe(false);
+      expect(model.gate.canRehearse).toBe(true);
+      expect(model.totals.totalSec).toBe(3000);
       expect(model.gate.reasons.some((reason) => reason.code === 'target-mismatch')).toBe(true);
       expect(model.deltaSec).toBe(3000 - target * 60);
     }

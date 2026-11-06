@@ -1,3 +1,4 @@
+import { stepSchema } from '../schemas/cloudBackupSchema';
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
@@ -296,6 +297,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     const item = exerciseMap.get(step.exerciseId);
     return !item || !isExerciseAuthoringEligible(item);
   });
+  const invalidStepData =
+    steps.some((step) => !stepSchema.safeParse(step).success) ||
+    new Set(steps.map((step) => step.stepId)).size !== steps.length;
   const movementKeys = steps
     .filter((step) => !isRestStep(step))
     .flatMap((step) => {
@@ -335,7 +339,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       (!!exercise || currentIsRest) &&
       movementKeys.length > 0 &&
       unavailable.length === 0 &&
-      new Set(movementKeys).size === movementKeys.length &&
+      !invalidStepData &&
       !exitOpen &&
       !reviewOpen,
   });
@@ -497,17 +501,17 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       </>
     );
 
-  if (new Set(movementKeys).size !== movementKeys.length)
+  if (invalidStepData)
     return (
       <>
-        <section className="panel teaching-empty" aria-label="수업 중복 검토 필요">
+        <section className="panel teaching-empty" aria-label="수업 항목 정보 확인">
           <Flag size={32} />
           <h1 id="workspace-main-heading" tabIndex={-1}>
-            중복 동작을 확인해 주세요
+            수업 항목 정보를 확인해 주세요
           </h1>
           <p>
-            현재 구성에 같은 동작이 반복되어 있습니다. 계획에서 중복 동작을 교체하거나 삭제한 뒤
-            전체 수업을 검토해 주세요.
+            항목 식별자가 겹치거나 시간 형식이 올바르지 않습니다. 해당 항목을 다시 추가해 주세요.
+            같은 동작을 서로 다른 항목으로 반복하는 것은 가능합니다.
           </p>
           <button type="button" className="btn-primary" onClick={() => setActiveTab('workbench')}>
             계획으로 돌아가기
@@ -546,8 +550,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       className={`teaching-stage ${highContrast ? 'teaching-high-contrast' : ''}`}
     >
       <p className="teaching-safety">
-        실제 수행 전 몸 상태와 기구 설정을 확인하세요. 검토 기록은 자격 인증이나 개인별 운동
-        적합성 보장이 아닙니다.
+        실제 수행 전 몸 상태와 기구 설정을 확인하세요. 검토 기록은 자격 인증이나 개인별 운동 적합성
+        보장이 아닙니다.
       </p>
       <header className="teaching-stage-header">
         <div>

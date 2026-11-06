@@ -4,6 +4,7 @@ import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { VERIFIED_REFERENCES } from '../data/verifiedReferences';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { SequenceStep } from '../types/pilates';
+import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { syntheticPlanningExercise } from '../test/planningFixtures';
 import { StepBlockInspector } from './StepBlockInspector';
@@ -442,5 +443,69 @@ describe('one-apply class block inspector', () => {
     fireEvent.click(screen.getByRole('button', { name: '변경 적용' }));
     expect(apply).toHaveBeenCalledWith(0, { repetitions: 7 }, base);
     expect(usePilatesStore.getState().activeSteps[0].selectedLayer).toBe('standard');
+  });
+});
+
+describe('optional time calculation inside the block draft', () => {
+  it('keeps browsing local, commits 169 seconds only after two explicit actions, and preserves assumptions across reload and undo', async () => {
+    const before = usePilatesStore.getState();
+    const onClose = vi.fn();
+    render(<Harness onClose={onClose} />);
+    const summary = screen.getByText('반복·유지·호흡으로 시간 계산');
+    expect(summary.closest('details')).not.toHaveAttribute('open');
+    fireEvent.click(summary);
+    change('계산용 횟수 · 한 세트마다', '4');
+    change('계산용 세트 · 한쪽마다', '2');
+    change('계산할 쪽', '2');
+    change('한 회 움직임 · 초', '3');
+    change('한 회마다 추가 유지 · 초', '1');
+    change('세트마다 별도 호흡 · 회', '2');
+    change('별도 호흡 한 회 · 초', '5');
+    change('세트 사이 쉼 · 초', '10');
+    change('좌우 바꾸기 · 초', '15');
+    expect(screen.getByText('가정 총시간 02:49')).toBeInTheDocument();
+    expect(usePilatesStore.getState()).toBe(before);
+    fireEvent.click(screen.getByRole('button', { name: '계산값을 편집란에 넣기' }));
+    expect(screen.getByLabelText('블록 총시간 · 분')).toHaveValue(169 / 60);
+    expect(usePilatesStore.getState()).toBe(before);
+    fireEvent.click(screen.getByRole('button', { name: '변경 적용' }));
+    const after = usePilatesStore.getState();
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(after.activeSteps[0]).toMatchObject({
+      durationMin: 169 / 60,
+      repetitions: 4,
+      sets: 2,
+      sideMode: 'left-then-right',
+      explanationSec: 20,
+      transitionSec: 10,
+      timeEstimate: { version: 1, sides: 2, secondsPerRep: 3 },
+    });
+    expect(after.undoStack).toHaveLength(1);
+    expect(after.exercises).toBe(before.exercises);
+    expect(after.historyLogs).toBe(before.historyLogs);
+    expect(JSON.parse(after.exportBackup()).data).toBeTruthy();
+    const copied = structuredClone(after.activeSteps);
+    const persisted = localStorage.getItem(RECOVERY_STORAGE_KEY)!;
+    cleanup();
+    after.undoSequence();
+    expect(usePilatesStore.getState().activeSteps).toEqual(before.activeSteps);
+    usePilatesStore.setState({ activeSteps: [] });
+    localStorage.setItem(RECOVERY_STORAGE_KEY, persisted);
+    await act(async () => {
+      await usePilatesStore.persist.rehydrate();
+    });
+    expect(usePilatesStore.getState().activeSteps).toEqual(copied);
+  });
+  it('does not apply blank cadence or force extra breath timing', () => {
+    const before = usePilatesStore.getState();
+    render(<Harness />);
+    fireEvent.click(screen.getByText('반복·유지·호흡으로 시간 계산'));
+    expect(screen.getByRole('button', { name: '계산값을 편집란에 넣기' })).toBeDisabled();
+    change('한 회 움직임 · 초', '10');
+    change('세트마다 별도 호흡 · 회', '1');
+    expect(screen.getByRole('button', { name: '계산값을 편집란에 넣기' })).toBeDisabled();
+    expect(usePilatesStore.getState()).toBe(before);
+    change('세트마다 별도 호흡 · 회', '0');
+    expect(screen.getByRole('button', { name: '계산값을 편집란에 넣기' })).toBeEnabled();
   });
 });

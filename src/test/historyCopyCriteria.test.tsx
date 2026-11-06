@@ -326,7 +326,7 @@ describe('history copies create matching independent current conditions', () => 
       expect(after.lastCriteria).toEqual(after.draftCriteria);
       expect(after.saveFeedback).toContain('항목·시간은 그대로');
       expect(after.saveFeedback).toContain(`${target}분`);
-      expect(after.saveFeedback).toContain('시작 전에 시간을 조정');
+      expect(after.saveFeedback).toContain('그대로 시작하거나 시간을 조정');
       expect(cloudBackupDataSchema.safeParse(JSON.parse(after.exportBackup()).data).success).toBe(
         true,
       );
@@ -340,8 +340,7 @@ describe('history copies create matching independent current conditions', () => 
       expect(screen.getByText(after.saveFeedback!)).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: '수업 시작' })).not.toBeInTheDocument();
       const preview = openWorkbenchPlanPreview();
-      expect(preview.getByRole('button', { name: '수업 시작' })).toBeDisabled();
-      expect(preview.getByText('수업 시간에 맞춘 뒤 시작할 수 있어요.')).toBeInTheDocument();
+      expect(preview.getByRole('button', { name: '수업 시작' })).toBeEnabled();
       expect(screen.queryByRole('timer')).not.toBeInTheDocument();
       assertFrozen(before);
       expect(after.historyLogs[0].criteriaSnapshot?.targetMinutes).toBe(50);

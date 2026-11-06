@@ -139,6 +139,8 @@ export interface StepPracticeOptions {
 }
 
 export interface SequenceStep extends StepPracticeOptions {
+  /** Optional saved instructor assumptions; actual time is recorded separately. */
+  timeEstimate?: import('../schemas/stepTimeEstimate').StepTimeEstimate;
   /** Whole-class role; absent keeps category-derived legacy behavior. */
   classSection?: ClassSectionRole;
   /** Explicit source selection for this exercise; never an approval or prescription. */

@@ -239,7 +239,7 @@ describe('clear next action without changing class-readiness gates', () => {
     expect(screen.getByRole('button', { name: '시퀀스 미리보기' })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: '3 미리보기' }));
     const preview = screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
-    expect(within(preview).getByRole('button', { name: '수업 시작' })).toBeDisabled();
+    expect(within(preview).getByRole('button', { name: '수업 시작' })).toBeEnabled();
     fireEvent.click(within(preview).getByRole('button', { name: '편집으로 돌아가기' }));
     // An explicitly selected automatic mode survives the same normal navigation too.
     fireEvent.click(screen.getByRole('button', { name: '자동 구성' }));

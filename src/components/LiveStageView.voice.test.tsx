@@ -138,7 +138,16 @@ describe('live-stage device voice guidance', () => {
     usePilatesStore.setState({
       activeSteps: [
         steps[0],
-        { ...steps[1], stepId: 'rest', kind: 'rest', exerciseId: '', durationMin: 0.5 },
+        {
+          stepId: 'rest',
+          order: 2,
+          kind: 'rest',
+          exerciseId: '',
+          durationMin: 0.5,
+          blockCategory: 'core',
+          selectedLayer: 'standard',
+          instructorNote: '호흡 메모는 휴식에서 읽지 않기',
+        },
         steps[1],
       ],
     });

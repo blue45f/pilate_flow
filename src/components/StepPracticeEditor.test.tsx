@@ -31,7 +31,7 @@ describe('teacher-entered repetitions and side choices', () => {
     fireEvent.change(screen.getByLabelText('수행할 쪽'), { target: { value: 'right-then-left' } });
     fireEvent.blur(screen.getByLabelText('강사가 정한 횟수'));
     expect(usePilatesStore.getState().activeSteps[0]).toEqual(movement);
-    fireEvent.click(screen.getByRole('button', { name: '횟수·좌우 적용' }));
+    fireEvent.click(screen.getByRole('button', { name: '횟수·세트·좌우 적용' }));
     const changed = usePilatesStore.getState().activeSteps[0];
     expect(changed).toEqual({ ...movement, repetitions: 12, sideMode: 'right-then-left' });
     expect(usePilatesStore.getState().undoStack).toHaveLength(1);
@@ -40,7 +40,7 @@ describe('teacher-entered repetitions and side choices', () => {
     rerender(<StepPracticeEditor index={0} step={changed} />);
     fireEvent.change(screen.getByLabelText('강사가 정한 횟수'), { target: { value: '' } });
     fireEvent.change(screen.getByLabelText('수행할 쪽'), { target: { value: '' } });
-    fireEvent.click(screen.getByRole('button', { name: '횟수·좌우 적용' }));
+    fireEvent.click(screen.getByRole('button', { name: '횟수·세트·좌우 적용' }));
     expect(usePilatesStore.getState().activeSteps[0]).toEqual(movement);
     expect(Object.hasOwn(usePilatesStore.getState().activeSteps[0], 'repetitions')).toBe(false);
     expect(Object.hasOwn(usePilatesStore.getState().activeSteps[0], 'sideMode')).toBe(false);
@@ -52,12 +52,12 @@ describe('teacher-entered repetitions and side choices', () => {
     render(<StepPracticeEditor index={0} step={initial} />);
     fireEvent.change(screen.getByLabelText('강사가 정한 횟수'), { target: { value: '2.5' } });
     fireEvent.change(screen.getByLabelText('수행할 쪽'), { target: { value: 'right' } });
-    fireEvent.click(screen.getByRole('button', { name: '횟수·좌우 적용' }));
+    fireEvent.click(screen.getByRole('button', { name: '횟수·세트·좌우 적용' }));
     expect(screen.getByRole('alert')).toHaveTextContent('정수');
     expect(usePilatesStore.getState().activeSteps[0]).toBe(initial);
     expect(usePilatesStore.getState().undoStack).toHaveLength(0);
     fireEvent.change(screen.getByLabelText('강사가 정한 횟수'), { target: { value: '1001' } });
-    fireEvent.click(screen.getByRole('button', { name: '횟수·좌우 적용' }));
+    fireEvent.click(screen.getByRole('button', { name: '횟수·세트·좌우 적용' }));
     expect(usePilatesStore.getState().activeSteps[0]).toBe(initial);
   });
 
@@ -67,7 +67,7 @@ describe('teacher-entered repetitions and side choices', () => {
     const { rerender } = render(<StepPracticeEditor index={0} step={locked} />);
     expect(screen.getByLabelText('강사가 정한 횟수')).toBeDisabled();
     expect(screen.getByLabelText('수행할 쪽')).toBeDisabled();
-    expect(screen.getByRole('button', { name: '횟수·좌우 적용' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '횟수·세트·좌우 적용' })).toBeDisabled();
     const rest: SequenceStep = { ...movement, kind: 'rest', exerciseId: '' };
     rerender(<StepPracticeEditor index={0} step={rest} />);
     expect(screen.queryByLabelText('강사가 정한 횟수')).not.toBeInTheDocument();
@@ -80,8 +80,35 @@ describe('teacher-entered repetitions and side choices', () => {
     fireEvent.change(screen.getByLabelText('강사가 정한 횟수'), { target: { value: '10' } });
     const other = { ...movement, stepId: 'qa-other-current-item' };
     usePilatesStore.setState({ activeSteps: [other] });
-    fireEvent.click(screen.getByRole('button', { name: '횟수·좌우 적용' }));
+    fireEvent.click(screen.getByRole('button', { name: '횟수·세트·좌우 적용' }));
     expect(screen.getByRole('alert')).toHaveTextContent('동작 순서가 바뀌었습니다');
     expect(usePilatesStore.getState().activeSteps[0]).toBe(other);
+  });
+});
+
+describe('optional sets editing', () => {
+  it('prefills, commits and clears sets without changing time or other options', () => {
+    const initial = { ...movement, repetitions: 8, sets: 2, sideMode: 'left' as const };
+    usePilatesStore.setState({ activeSteps: [initial] });
+    const { rerender } = render(<StepPracticeEditor index={0} step={initial} />);
+    expect(screen.getByLabelText('강사가 정한 세트')).toHaveValue(2);
+    fireEvent.change(screen.getByLabelText('강사가 정한 세트'), { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('button', { name: '횟수·세트·좌우 적용' }));
+    const changed = usePilatesStore.getState().activeSteps[0];
+    expect(changed).toEqual({ ...initial, sets: 3 });
+    rerender(<StepPracticeEditor index={0} step={changed} />);
+    fireEvent.change(screen.getByLabelText('강사가 정한 세트'), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: '횟수·세트·좌우 적용' }));
+    expect(usePilatesStore.getState().activeSteps[0]).toEqual({ ...initial, sets: undefined });
+    expect(usePilatesStore.getState().activeSteps[0].durationMin).toBe(movement.durationMin);
+  });
+  it.each(['0', '1.5', '101'])('rejects invalid sets %s atomically', (value) => {
+    render(<StepPracticeEditor index={0} step={movement} />);
+    fireEvent.change(screen.getByLabelText('강사가 정한 세트'), { target: { value } });
+    fireEvent.change(screen.getByLabelText('강사가 정한 횟수'), { target: { value: '12' } });
+    fireEvent.click(screen.getByRole('button', { name: '횟수·세트·좌우 적용' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('세트는 1–100');
+    expect(usePilatesStore.getState().activeSteps[0]).toEqual(movement);
+    expect(usePilatesStore.getState().undoStack).toHaveLength(0);
   });
 });

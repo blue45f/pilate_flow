@@ -16,9 +16,7 @@ vi.mock('./MotionReferencePlayer', () => ({ MotionReferencePlayer: () => null })
 const original = usePilatesStore.getState();
 const originalWidth = window.innerWidth;
 const catalogSnapshot = structuredClone(INITIAL_EXERCISES);
-const exercise = INITIAL_EXERCISES.find(
-  (item) => item.id === 'original-mat-single-leg-stretch',
-)!;
+const exercise = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-single-leg-stretch')!;
 const reference = getMotionPatternReferences(exercise.id)[0];
 const binding = createSequenceMotionStudyBinding(
   exercise.id,
@@ -93,7 +91,7 @@ function expectDraft(editor: HTMLElement) {
 
 async function openSource(editor: HTMLElement) {
   fireEvent.click(within(editor).getByRole('button', { name: '동작 원본·검토 정보' }));
-  const detail = await screen.findByRole('dialog', { name: exercise.nameKo });
+  const detail = await screen.findByRole('dialog', { name: exercise.nameKo }, { timeout: 5000 });
   expect(within(detail).getByRole('region', { name: '내 강사 검토' })).toBeInTheDocument();
   return detail;
 }
@@ -191,7 +189,13 @@ describe.each([
     );
     const after = usePilatesStore.getState();
     expect(after.activeSteps).toEqual([
-      { ...base, durationMin: 7.25, instructorNote: note, classSection: 'main', motionStudy: binding },
+      {
+        ...base,
+        durationMin: 7.25,
+        instructorNote: note,
+        classSection: 'main',
+        motionStudy: binding,
+      },
     ]);
     expect(after.undoStack).toHaveLength(1);
     expect(after.exercises).toBe(before.exercises);

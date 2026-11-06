@@ -196,16 +196,15 @@ describe('connected study integrated with the class cursor', () => {
     expect(usePilatesStore.getState()).toBe(before);
   });
 
-  it('keeps timeline budget and duplicate gates closed in linked mode even with valid saved assets', () => {
+  it('allows intentional repeats and target mismatch in linked mode while retaining advisories', () => {
     usePilatesStore.setState({
       activeSteps: [step, { ...step, order: 2, stepId: 'duplicate-qa' }],
       activeTargetMinutes: 5,
     });
     render(<SequencePlanPreview onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: '동작 흐름 보기' }));
-    expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeDisabled();
-    expect(screen.getByText(/전체 계획 시간을 목표 수업 시간에/)).toBeInTheDocument();
-    expect(screen.getByText(/같은 동작이 중복되어/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeEnabled();
+    expect(screen.getByText(/같은 동작을 여러 구간에서 반복/)).toBeInTheDocument();
     expect(screen.getByRole('region', { name: '수업 시간에 연결한 동작 흐름' })).toHaveAttribute(
       'data-binding-status',
       'matched',

@@ -1,5 +1,6 @@
 import { createDatedPlanningSchema } from './datedSequencePlanningSchema';
 import { z } from 'zod';
+import { stepTimeEstimateSchema } from './stepTimeEstimate';
 import { createGroupPlanningPreferencesSchema } from './instructorPlanningSchema';
 import { instructorStudyStateSchema } from './instructorStudySchema';
 import { instructorScheduleSchema } from './instructorScheduleSchema';
@@ -124,6 +125,7 @@ export const stepTimingOptionsSchema =
 export const stepBlockOptionsSchema = stepTimingOptionsBaseSchema
   .extend(stepPracticeOptionsSchema.shape)
   .extend({
+    timeEstimate: stepTimeEstimateSchema.nullable().optional(),
     instructorNote: textSchema.optional(),
     selectedLayer: layerSchema.optional(),
     classSection: classSectionRoleSchema.nullable().optional(),
@@ -171,6 +173,7 @@ export const stepSchema = z
     sideMode: stepSideModeSchema.optional(),
     classSection: classSectionRoleSchema.optional(),
     motionStudy: sequenceMotionStudyBindingSchema.optional(),
+    timeEstimate: stepTimeEstimateSchema.optional(),
   })
   .passthrough()
   .refine(
@@ -185,7 +188,8 @@ export const stepSchema = z
           !step.transitionSec &&
           step.repetitions === undefined &&
           step.sets === undefined &&
-          step.sideMode === undefined
+          step.sideMode === undefined &&
+          step.timeEstimate === undefined
         : step.exerciseId.length > 0,
     '휴식은 동작 참조·횟수·세트·좌우 지정·설명·전환 없이 저장하고, 동작에는 동작 참조가 필요합니다.',
   );

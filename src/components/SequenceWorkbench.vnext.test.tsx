@@ -240,16 +240,22 @@ describe('vNext instructor preparation continuity', () => {
         },
       ],
     },
-  ])('preserves the start gate for $reason inside preview', ({ steps }) => {
-    usePilatesStore.setState({ activeSteps: steps });
-    renderWorkbench();
-    const dialog = openPreview();
-    const start = within(dialog).getByRole('button', { name: /수업 시작/ });
-    expect(start).toBeDisabled();
-    fireEvent.click(start);
-    expect(usePilatesStore.getState().activeTab).toBe('workbench');
-    expect(usePilatesStore.getState().historyLogs).toHaveLength(0);
-  });
+  ])(
+    'requires valid data but allows repeats and target differences: $reason',
+    ({ steps, reason }) => {
+      usePilatesStore.setState({ activeSteps: steps });
+      renderWorkbench();
+      const dialog = openPreview();
+      const start = within(dialog).getByRole('button', { name: /수업 시작/ });
+      if (reason === 'missing exercise') expect(start).toBeDisabled();
+      else expect(start).toBeEnabled();
+      fireEvent.click(start);
+      expect(usePilatesStore.getState().activeTab).toBe(
+        reason === 'missing exercise' ? 'workbench' : 'stage',
+      );
+      expect(usePilatesStore.getState().historyLogs).toHaveLength(0);
+    },
+  );
 
   it('starts a ready plan from preview without inventing a class record', () => {
     usePilatesStore.setState({ activeSteps: [readyStep] });
