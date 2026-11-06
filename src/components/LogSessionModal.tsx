@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Clock3, Plus } from 'lucide-react';
+import { Check, Clock3, Plus, ShieldCheck } from 'lucide-react';
 import {
   PfButton,
   PfField,
@@ -11,7 +11,12 @@ import {
 import { LogClassHistorySchema } from '../schemas/pilatesSchema';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { SequenceStep } from '../types/pilates';
+import type { ClassHistoryLogWithSnapshot } from '../types/teachingHistorySnapshot';
 import { formatSecondsToMMSS, getSequenceDurations, isRestStep } from '../utils/sequenceEngine';
+import {
+  buildTeachingProgramSnapshot,
+  findDuplicateCompletedHistoryLog,
+} from '../utils/teachingHistorySnapshot';
 import { LightDismissDialog } from './LightDismissDialog';
 import '../styles/design-tokens.css';
 import '../styles/teaching.css';
@@ -52,22 +57,33 @@ const SessionLogForm: React.FC<
     savedSequences,
     classGroups,
     activeTitle,
+    activeSubtitle,
     activeSequenceId,
     activeSteps,
     activeTargetGroupId,
     exercises,
+    persistenceError,
     logClassSession,
     addClassGroup,
     setActiveTab,
   } = usePilatesStore();
   const saved = savedSequences.find((sequence) => sequence.id === sequenceId);
-  // Capture the reviewed plan once; edits elsewhere cannot change this record.
+  // Capture the reviewed plan and exercise definitions once; edits elsewhere cannot change this record.
   const [snapshot] = useState(() =>
     (
       context?.stepsSnapshot ??
       (sequenceId === activeSequenceId ? activeSteps : saved?.steps) ??
       []
-    ).map((step) => ({ ...step })),
+    ).map((step) => structuredClone(step)),
+  );
+  const [exercisesAtOpen] = useState(() =>
+    exercises.map((exercise) => structuredClone(exercise)),
+  );
+  const [sourceSubtitle] = useState(
+    () => (sequenceId === activeSequenceId ? activeSubtitle : saved?.subtitle) ?? '',
+  );
+  const [sourceKind] = useState<'saved-sequence' | 'active-draft'>(() =>
+    saved ? 'saved-sequence' : 'active-draft',
   );
   const [selectedSteps, setSelectedSteps] = useState(
     () => new Set(context?.taughtStepIds ?? snapshot.map((step) => step.stepId)),
@@ -181,12 +197,30 @@ const SessionLogForm: React.FC<
       actualDurationSec,
       actualRestDurationSec: context?.actualRestDurationSec,
       stepsSnapshot: taughtSteps.map((step, index) => ({
-        ...step,
+        ...structuredClone(step),
         order: index + 1,
       })),
       sequenceTitle: title,
     };
-    const previousLogIds = new Set(usePilatesStore.getState().historyLogs.map((log) => log.id));
+    const beforeState = usePilatesStore.getState();
+    const duplicate = findDuplicateCompletedHistoryLog(beforeState.historyLogs, {
+      sequenceId: payload.sequenceId,
+      groupId: payload.groupId,
+      taughtAt: payload.taughtAt,
+      stepsSnapshot: payload.stepsSnapshot,
+      actualDurationSec: payload.actualDurationSec,
+      actualRestDurationSec: payload.actualRestDurationSec,
+    });
+    if (
+      duplicate &&
+      duplicate.rating === payload.rating &&
+      duplicate.intensity === payload.intensity &&
+      duplicate.instructorReflection === payload.instructorReflection
+    ) {
+      setError('이미 동일한 수업 완료 이력이 기록되어 있습니다. 중복 완료 기록을 방지했습니다.');
+      return;
+    }
+    const previousLogIds = new Set(beforeState.historyLogs.map((log) => log.id));
     setSubmitted(true);
     try {
       logClassSession(payload);
@@ -220,6 +254,21 @@ const SessionLogForm: React.FC<
       );
       return;
     }
+    const matchedLog = matchingLogs[0] as ClassHistoryLogWithSnapshot;
+    const programSnapshot = buildTeachingProgramSnapshot({
+      sequenceId: payload.sequenceId,
+      sequenceTitle: payload.sequenceTitle,
+      sequenceSubtitle: sourceSubtitle,
+      sourceKind,
+      taughtAt: payload.taughtAt,
+      groupId: payload.groupId,
+      steps: payload.stepsSnapshot,
+      exercises: exercisesAtOpen,
+      actualDurationSec: payload.actualDurationSec,
+      actualRestDurationSec: payload.actualRestDurationSec,
+      criteriaSnapshot: matchedLog.criteriaSnapshot,
+    });
+    matchedLog.programSnapshot = structuredClone(programSnapshot);
     setActiveTab('history');
     onClose();
   };
@@ -237,14 +286,30 @@ const SessionLogForm: React.FC<
         <div className="teaching-log-summary">
           <Clock3 size={20} />
           <div>
+            <div className="teaching-log-badge-row">
+              <span className="teaching-record-kind-badge is-history">
+                <ShieldCheck size={13} />
+                진행 완료 이력 스냅샷
+              </span>
+              <span className="teaching-record-source-badge">
+                {sourceKind === 'saved-sequence' ? '원본: 저장한 시퀀스 계획' : '원본: 현재 수업 초안'}
+              </span>
+            </div>
             <strong>
               계획 {Number(planned.toFixed(2))}분 · {exerciseCount}개 동작
             </strong>
-            <p className="muted">계획 시간과 실제 진행 시간은 별도로 보관됩니다.</p>
+            <p className="muted">
+              계획 시간과 실제 진행 시간은 별도로 보관되며, 당시 동작·블록·순서·시간이 스냅샷으로 보존되어 나중에 원본 동작이나 블록을 수정해도 이 완료 이력은 바뀌지 않습니다.
+            </p>
             {plannedTiming.restSec > 0 && (
               <p className="muted">
                 운동 {formatSecondsToMMSS(plannedTiming.exerciseSec)} · 휴식{' '}
                 {formatSecondsToMMSS(plannedTiming.restSec)} · 휴식은 전체 시간에 포함
+              </p>
+            )}
+            {persistenceError && (
+              <p className="teaching-storage-warning">
+                브라우저 저장소 경고: {persistenceError}
               </p>
             )}
           </div>

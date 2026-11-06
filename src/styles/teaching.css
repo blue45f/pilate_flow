@@ -1650,3 +1650,181 @@
     flex-wrap: wrap;
   }
 }
+
+.teaching-separation-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f4f7f1;
+  border: 1px solid #d8e1d0;
+  font-size: 12px;
+  color: #36493a;
+}
+.teaching-contract-status {
+  color: #5b6b59;
+  font-size: 11px;
+}
+.teaching-log-badge-row,
+.teaching-history-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.teaching-record-kind-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.teaching-record-kind-badge.is-plan {
+  background: #e9efe4;
+  color: #2f4b37;
+}
+.teaching-record-kind-badge.is-history {
+  background: #2f4b37;
+  color: #ffffff;
+}
+.teaching-record-source-badge,
+.teaching-snapshot-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: #eef2ea;
+  color: #4a5a48;
+}
+.teaching-drift-badge,
+.teaching-step-drift-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #fdf3dc;
+  color: #7c5211;
+  border: 1px solid #efd69f;
+}
+.teaching-storage-warning {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #9b3b2b;
+  font-weight: 550;
+}
+.teaching-history-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.teaching-history-detail-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.teaching-history-detail-meta {
+  padding: 14px;
+  border-radius: 12px;
+  background: #f7f9f4;
+  border: 1px solid #dde5d5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.teaching-history-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 16px;
+  margin: 0;
+}
+.teaching-history-detail-grid dt {
+  font-size: 11px;
+  color: #647360;
+  margin-bottom: 2px;
+}
+.teaching-history-detail-grid dd {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #223026;
+}
+.teaching-history-snapshot-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.teaching-history-snapshot-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.teaching-history-snapshot-item {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #dfe6d7;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.teaching-history-snapshot-item.is-rest {
+  background: #f3f6ee;
+  border-style: dashed;
+}
+.teaching-history-snapshot-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.teaching-step-order {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #e8efe2;
+  color: #2f4b37;
+  font-size: 11px;
+  font-weight: 700;
+}
+.teaching-step-block-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #eff3eb;
+  color: #4a5b48;
+}
+.teaching-step-duration {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2f4b37;
+}
+.teaching-history-snapshot-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 12px;
+  color: #526150;
+  line-height: 1.6;
+}
