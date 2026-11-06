@@ -36,6 +36,7 @@ describe('cloud account backup client', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    localStorage.clear();
     mocks.getUser.mockResolvedValue(user);
     mocks.get.mockResolvedValue({ data: emptyStatus });
     mocks.signOut.mockResolvedValue(undefined);
@@ -263,5 +264,45 @@ describe('cloud account backup client', () => {
     mocks.put.mockResolvedValueOnce({ data: saved });
     await cloud.saveCloudBackup('{"newDraftIgnoredUntilPendingConfirmed":true}');
     expect(mocks.put.mock.calls[1][1]).toEqual(sent);
+  });
+
+  it('requests Google OAuth scope and account selector prompt when signing in with Google', async () => {
+    mocks.getUser.mockResolvedValue(null);
+    const googleUser = {
+      userId: 'google-account-1',
+      email: 'instructor@gmail.com',
+      name: '김필라',
+      picture: 'https://lh3.googleusercontent.com/a/instructor-avatar',
+      scope: 'openid email profile',
+    };
+    mocks.signIn.mockImplementationOnce(async () => {
+      mocks.getUser.mockResolvedValue(googleUser);
+    });
+    const cloud = await import('./cloudSync');
+    await cloud.bootstrapCloudSession();
+    expect(cloud.useCloudSession.getState().phase).toBe('signed-out');
+
+    await cloud.signInWithGoogle();
+    expect(mocks.signIn).toHaveBeenCalledWith({
+      provider: 'google',
+      scope: 'openid email profile',
+      prompt: 'select_account',
+    });
+    expect(cloud.useCloudSession.getState()).toMatchObject({
+      phase: 'signed-in',
+      user: googleUser,
+      backup: emptyStatus,
+    });
+  });
+
+  it('validates Google avatar URLs so only HTTPS picture URLs are accepted', async () => {
+    const cloud = await import('./cloudSync');
+    expect(cloud.safePictureUrl('https://lh3.googleusercontent.com/a/photo')).toBe(
+      'https://lh3.googleusercontent.com/a/photo',
+    );
+    expect(cloud.safePictureUrl('http://insecure.example.test/photo.png')).toBeNull();
+    expect(cloud.safePictureUrl('javascript:alert(1)')).toBeNull();
+    expect(cloud.safePictureUrl('')).toBeNull();
+    expect(cloud.safePictureUrl(null)).toBeNull();
   });
 });

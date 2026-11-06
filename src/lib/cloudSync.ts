@@ -2,6 +2,29 @@ import { api, auth } from '@appdeploy/client';
 import type { AuthUser } from '@appdeploy/client';
 import { create } from 'zustand';
 import { z } from 'zod';
+import { syncAccountWorkspace } from './accountStorage';
+
+export interface GoogleSignInOptions {
+  provider?: 'google';
+  scope?: string;
+  prompt?: string;
+}
+
+export const GOOGLE_SIGN_IN_OPTIONS = Object.freeze({
+  provider: 'google' as const,
+  scope: 'openid email profile',
+  prompt: 'select_account',
+});
+
+export function safePictureUrl(url?: string | null): string | null {
+  if (typeof url !== 'string' || !url.trim()) return null;
+  try {
+    const parsed = new URL(url.trim());
+    return parsed.protocol === 'https:' ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
+}
 
 const statusSchema = z.object({
   exists: z.boolean(),
@@ -148,6 +171,7 @@ export function bootstrapCloudSession(retry = false): Promise<void> {
   startup = (async () => {
     try {
       const user = await auth.getUser();
+      syncAccountWorkspace(user?.userId ?? null);
       useCloudSession.setState({ user, phase: user ? 'signed-in' : 'signed-out', backup: null });
       if (user) await refreshCloudStatus();
     } catch (cause) {
@@ -161,9 +185,48 @@ export function bootstrapCloudSession(retry = false): Promise<void> {
   return startup;
 }
 
+async function completeInteractiveSignIn(): Promise<void> {
+  const nextUser = await auth.getUser().catch(() => null);
+  const current = useCloudSession.getState();
+  if (
+    nextUser &&
+    (current.phase !== 'signed-in' || current.user?.userId !== nextUser.userId)
+  ) {
+    pendingSave = null;
+    pendingDelete = null;
+    recoveryCandidate = null;
+    startup = null;
+    syncAccountWorkspace(nextUser.userId);
+    useCloudSession.setState({
+      user: nextUser,
+      phase: 'signed-in',
+      backup: null,
+      error: null,
+      conflict: false,
+      pendingSave: false,
+      pendingDelete: false,
+    });
+    await refreshCloudStatus();
+  }
+}
+
 export async function signInToCloud(): Promise<void> {
   try {
     await auth.signInWithRedirect();
+    await completeInteractiveSignIn();
+  } catch (cause) {
+    throw requestError(cause);
+  }
+}
+
+export async function signInWithGoogle(options?: { prompt?: string }): Promise<void> {
+  const redirect = auth.signInWithRedirect as (opts?: GoogleSignInOptions) => Promise<void>;
+  try {
+    await redirect({
+      ...GOOGLE_SIGN_IN_OPTIONS,
+      ...(options?.prompt ? { prompt: options.prompt } : {}),
+    });
+    await completeInteractiveSignIn();
   } catch (cause) {
     throw requestError(cause);
   }
@@ -171,9 +234,11 @@ export async function signInToCloud(): Promise<void> {
 
 export async function signOutOfCloud(): Promise<void> {
   await auth.signOut();
+  syncAccountWorkspace(null);
   pendingSave = null;
   pendingDelete = null;
   recoveryCandidate = null;
+  startup = null;
   useCloudSession.setState({
     phase: 'signed-out',
     user: null,
