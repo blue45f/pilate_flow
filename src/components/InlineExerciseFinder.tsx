@@ -84,6 +84,14 @@ export function InlineExerciseFinder({
   const [feedback, setFeedback] = useState<{ success: boolean; message: string } | null>(null);
   const id = useId();
   const previewRef = useRef<HTMLElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const nextPageFocusRef = useRef<number | null>(null);
+  useEffect(() => {
+    const index = nextPageFocusRef.current;
+    if (index === null) return;
+    nextPageFocusRef.current = null;
+    resultsRef.current?.children[index]?.querySelector<HTMLButtonElement>('button')?.focus();
+  }, [visibleCount]);
   const previewTriggerRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
     if (preview) previewRef.current?.focus();
@@ -478,7 +486,7 @@ export function InlineExerciseFinder({
         </p>
       )}
       {results.length ? (
-        <div className="ief-results">
+        <div className="ief-results" ref={resultsRef}>
           {results.slice(0, visibleCount).map((exercise) => {
             const equipment = getExerciseEquipment(exercise);
             const approved = isExerciseAutoEligible(exercise);
@@ -606,7 +614,10 @@ export function InlineExerciseFinder({
         <button
           className="ief-more"
           type="button"
-          onClick={() => setVisibleCount((count) => count + 6)}
+          onClick={() => {
+            nextPageFocusRef.current = visibleCount;
+            setVisibleCount((count) => count + 6);
+          }}
         >
           동작 더 보기{' '}
           <span>

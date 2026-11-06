@@ -45,6 +45,32 @@ afterEach(() => {
 });
 
 describe('inline exercise finder', () => {
+  it('focuses newly revealed cards, including the final page, without changing the class', () => {
+    usePilatesStore.setState({ exercises: INITIAL_EXERCISES.slice(0, 13) });
+    const before = usePilatesStore.getState().activeSteps;
+    render(<InlineExerciseFinder onOpenExercise={vi.fn()} />);
+    const search = screen.getByRole('searchbox');
+    search.focus();
+    fireEvent.change(search, { target: { value: ' ' } });
+    expect(search).toHaveFocus();
+    const more = screen.getByRole('button', { name: /동작 더 보기/ });
+    more.focus();
+    fireEvent.click(more);
+    expect(
+      screen.getByRole('button', {
+        name: INITIAL_EXERCISES[6].nameKo + ' 상세 보기',
+      }),
+    ).toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: /동작 더 보기/ }));
+    expect(
+      screen.getByRole('button', {
+        name: INITIAL_EXERCISES[12].nameKo + ' 상세 보기',
+      }),
+    ).toHaveFocus();
+    expect(screen.queryByRole('button', { name: /동작 더 보기/ })).not.toBeInTheDocument();
+    expect(usePilatesStore.getState().activeSteps).toBe(before);
+  });
+
   it('shows six genuine pending notes, opens detail, paginates, and opens the full library without editing the draft', () => {
     const onOpenExercise = vi.fn();
     const before = usePilatesStore.getState();
