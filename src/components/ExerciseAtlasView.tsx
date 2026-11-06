@@ -42,7 +42,14 @@ import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exercis
 import {
   addMovementIdeaToCurrentClass,
   isMovementIdeaExercise,
+  readMovementIdeaDraft,
 } from '../utils/movementIdeaDraft';
+import {
+  PfAiStatusBadge,
+  PfBadge,
+  PfButton,
+  PfMovementCard,
+} from '../design-system';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type {
   BodyPosition,
@@ -61,6 +68,7 @@ import {
 import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';
 import { CourseReferenceBrowser } from './CourseReferenceBrowser';
 import { SourceNoteDialog } from './SourceNoteDialog';
+import '../styles/design-tokens.css';
 import '../styles/library.css';
 import '../styles/library-learning.css';
 import '../styles/motion-library.css';
@@ -897,20 +905,19 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         </div>
         <div className="library-heading-actions">
           {onOpenIdeaSheet && (
-            <button
-              type="button"
-              className="btn-secondary"
+            <PfButton
+              variant="secondary"
               onClick={() => onOpenIdeaSheet(null)}
             >
               <Plus size={16} /> 한 줄 동작 메모
-            </button>
+            </PfButton>
           )}
-          <button type="button" className="btn-primary" onClick={() => setOwnNoteOpen(true)}>
+          <PfButton variant="primary" onClick={() => setOwnNoteOpen(true)}>
             <Plus size={17} /> 내 동작 직접 등록
-          </button>
-          <button type="button" className="btn-secondary" onClick={onOpenClipper}>
+          </PfButton>
+          <PfButton variant="secondary" onClick={onOpenClipper}>
             <Youtube size={16} /> 유튜브 참조 추가
-          </button>
+          </PfButton>
         </div>
       </header>
 
@@ -1016,19 +1023,18 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   placeholder="한글·영문 이름, 부위로 검색"
                 />
                 {filters.search && (
-                  <button
-                    type="button"
-                    className="icon-btn"
+                  <PfButton
+                    variant="icon"
                     onClick={() => update('search', '')}
                     aria-label="검색어 지우기"
                   >
                     <X size={15} />
-                  </button>
+                  </PfButton>
                 )}
               </label>
-              <button
-                type="button"
-                className={`btn-secondary library-filter-button ${showFilters ? 'is-active' : ''}`}
+              <PfButton
+                variant="secondary"
+                className={`library-filter-button ${showFilters ? 'is-active' : ''}`}
                 onClick={() => setShowFilters(!showFilters)}
                 aria-expanded={showFilters}
                 aria-controls="library-filters"
@@ -1038,7 +1044,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   <span className="library-count">{activeFilterCount}</span>
                 )}
                 <ChevronDown size={14} />
-              </button>
+              </PfButton>
             </div>
             <div className="library-apparatus-tabs" role="group" aria-label="기구 선택">
               <button
@@ -1313,13 +1319,12 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               <span className="muted">· 작은 선택이 좋은 수업을 만듭니다</span>
             </p>
             {(activeFilterCount > 0 || filters.search) && (
-              <button
-                type="button"
-                className="btn-ghost"
+              <PfButton
+                variant="ghost"
                 onClick={() => setFilters({ ...INITIAL_FILTERS })}
               >
                 필터 초기화 <X size={13} />
-              </button>
+              </PfButton>
             )}
           </div>
           <p className="ml-review-note">
@@ -1331,6 +1336,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 const provenance = getMovementProvenance(exercise);
                 const reviewState = getExerciseReviewState(exercise);
                 const approved = isExerciseAutoEligible(exercise);
+                const isIdea = isMovementIdeaExercise(exercise);
+                const ideaMeta = isIdea ? readMovementIdeaDraft(exercise) : null;
+                const canAdd = approved || isIdea;
                 const patterns = getMotionPatternReferences(exercise.id);
                 const isFavorite = exercise.favoriteTag !== 'none';
                 const lastTaught = getExerciseLastTaughtInfo(
@@ -1339,8 +1347,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   activeTargetGroupId,
                 );
                 return (
-                  <article
-                    className={`movement-card pf-movement-card pf-movement-card--catalog movement-${exercise.apparatus}`}
+                  <PfMovementCard
+                    variant={isIdea ? 'idea' : 'catalog'}
+                    className={`movement-card movement-${exercise.apparatus}`}
                     key={exercise.id}
                   >
                     <div className="movement-card-art">
@@ -1394,14 +1403,14 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                     </div>
                     <div className="movement-card-content">
                       <div className="movement-card-tags">
-                        <span>
+                        <PfBadge tone="neutral">
                           {LEVEL_NAMES[exercise.level]} · Lv {exercise.level}
-                        </span>
-                        <span>
+                        </PfBadge>
+                        <PfBadge tone="neutral">
                           <Clock3 size={12} />
                           {exercise.defaultDurationMin}분
                           {exercise.isUnilateral ? ' · 양쪽 포함' : ''}
-                        </span>
+                        </PfBadge>
                       </div>
                       <h2>
                         <button type="button" onClick={() => onOpenYouTubePreview(exercise)}>
@@ -1409,21 +1418,36 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                         </button>
                       </h2>
                       <p className="movement-english">{exercise.nameEn}</p>
-                      <p
-                        className={`movement-review-status review-${reviewState} pf-ai-status ${
-                          approved ? 'pf-ai-status--instructor-reviewed' : 'pf-ai-status--review-pending'
-                        }`}
+                      <PfAiStatusBadge
+                        kind={
+                          isIdea
+                            ? ideaMeta?.triedByInstructor
+                              ? 'tried-memo'
+                              : 'creative-memo'
+                            : approved
+                              ? 'instructor-reviewed'
+                              : 'review-pending'
+                        }
+                        className={`movement-review-status review-${reviewState}`}
                       >
-                        {approved
-                          ? '내 강사 검토 · 자격 인증 미확인'
-                          : reviewState === 'stale'
-                            ? '동작 정보 변경 · 다시 검토 필요'
-                            : '강사 검토 전 · 수업 사용 금지'}
-                      </p>
+                        {isIdea
+                          ? ideaMeta?.triedByInstructor
+                            ? '직접 해봄 · 주관적 메모'
+                            : '내 창작 메모 · 전문가 검증 아님'
+                          : approved
+                            ? '내 강사 검토 · 자격 인증 미확인'
+                            : reviewState === 'stale'
+                              ? '동작 정보 변경 · 다시 검토 필요'
+                              : '강사 검토 전 · 수업 사용 금지'}
+                      </PfAiStatusBadge>
                       <p className="movement-target">
-                        {approved
-                          ? exercise.targetMuscles.slice(0, 3).join(' · ') || '검토한 계획 메모'
-                          : '미검수 입력값 · 검토할 계획 자료'}
+                        {isIdea
+                          ? ideaMeta?.subjectiveFeeling
+                            ? `느낌 메모: ${ideaMeta.subjectiveFeeling}`
+                            : ideaMeta?.ideaLine || exercise.cues[0]
+                          : approved
+                            ? exercise.targetMuscles.slice(0, 3).join(' · ') || '검토한 계획 메모'
+                            : '미검수 입력값 · 검토할 계획 자료'}
                       </p>
                       <div className="movement-provenance">
                         <span className={`source-dot source-${provenance.kind}`} />
@@ -1458,27 +1482,35 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                         </p>
                       )}
                       <div className="movement-card-footer">
-                        <button
-                          type="button"
-                          className="btn-ghost"
-                          onClick={() => onOpenYouTubePreview(exercise)}
+                        <PfButton
+                          variant="ghost"
+                          onClick={() =>
+                            isIdea && onOpenIdeaSheet
+                              ? onOpenIdeaSheet(exercise)
+                              : onOpenYouTubePreview(exercise)
+                          }
                         >
-                          {approved ? '자세히 보기' : '전체 검토하기'} <ArrowUpRight size={14} />
-                        </button>
+                          {isIdea
+                            ? '다시 열기 · 느낌/수정'
+                            : approved
+                              ? '자세히 보기'
+                              : '전체 검토하기'}{' '}
+                          <ArrowUpRight size={14} />
+                        </PfButton>
                         <button
                           type="button"
                           className={`movement-add ${addedId === exercise.id ? 'just-added' : ''}`}
                           onClick={() => addExercise(exercise)}
-                          disabled={!approved}
+                          disabled={!canAdd}
                           aria-label={
-                            approved
+                            canAdd
                               ? `${exercise.nameKo} 수업안에 추가`
                               : `${exercise.nameKo} 강사 검토 필요`
                           }
                         >
                           {addedId === exercise.id ? <Check size={16} /> : <Plus size={16} />}
                           <span>
-                            {!approved
+                            {!canAdd
                               ? '검토 필요'
                               : addedId === exercise.id
                                 ? '추가됨'
@@ -1487,7 +1519,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                         </button>
                       </div>
                     </div>
-                  </article>
+                  </PfMovementCard>
                 );
               })}
             </div>
@@ -1501,16 +1533,15 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 직접 찾은 유튜브 레퍼런스도 추가할 수 있어요.
               </p>
               <div>
-                <button
-                  type="button"
-                  className="btn-primary"
+                <PfButton
+                  variant="primary"
                   onClick={() => setFilters({ ...INITIAL_FILTERS })}
                 >
                   전체 동작 보기
-                </button>
-                <button type="button" className="btn-secondary" onClick={onOpenClipper}>
+                </PfButton>
+                <PfButton variant="secondary" onClick={onOpenClipper}>
                   <Youtube size={16} /> 참조 추가
-                </button>
+                </PfButton>
               </div>
             </div>
           )}
@@ -1519,9 +1550,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               <p>
                 {Math.min(notesVisibleCount, filtered.length)} / {filtered.length}개 동작 노트
               </p>
-              <button
-                type="button"
-                className="btn-secondary"
+              <PfButton
+                variant="secondary"
                 onClick={() =>
                   setNotesVisible({
                     signature: notesSignature,
@@ -1530,7 +1560,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 }
               >
                 동작 노트 더 보기 <Plus size={14} />
-              </button>
+              </PfButton>
             </div>
           )}
           <details className="library-public-references">
@@ -1602,18 +1632,17 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             {(onOpenStudy || onOpenMotionDrafts) && (
               <div className="library-learning-actions">
                 {onOpenStudy && (
-                  <button type="button" className="text-button" onClick={() => onOpenStudy()}>
+                  <PfButton variant="text" onClick={() => onOpenStudy()}>
                     숙지·북마크 연습실 <ArrowUpRight size={15} />
-                  </button>
+                  </PfButton>
                 )}
                 {onOpenMotionDrafts && (
-                  <button
-                    type="button"
-                    className="text-button"
+                  <PfButton
+                    variant="text"
                     onClick={() => onOpenMotionDrafts()}
                   >
                     기존 17종 제작 실험실 <ArrowUpRight size={15} />
-                  </button>
+                  </PfButton>
                 )}
               </div>
             )}
