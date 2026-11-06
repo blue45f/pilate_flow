@@ -30,8 +30,8 @@ Exact canonical motion verified: **0**. Anatomical validation: **0**. Exact sour
 - Export end-to-end Node test passed: all 294 SVGs, unique IDs, finite coordinates, warning text, safe static markup, coordinate peer groups, and manifest byte/hash checks.
 - Existing visual guide, diagram reference, and coverage regression tests: 19/19 passed across three files.
 - Targeted ESLint: passed.
-- Full TypeScript check: blocked by existing unavailable `firebase/app` and `firebase/auth` dependencies and related errors in `firebaseSession.ts`. No dependencies were installed or changed. Full build and full regression are not claimed.
-- Headless Chrome launch terminated with SIGABRT; responsive visual/browser QA is **not completed**. HTML includes 320px-compatible single-column styling but this is not a measured visual pass.
+- Initial TypeScript check failed because the original local dependency installation omitted Firebase. Reused an existing offline installation with an identical lockfile (SHA-256 `c5b1b912976626b35f34e61b94f1f5d2f14276ae593ea576dc3617ee245e5bb9`) without changing/installing dependencies. Final TypeScript, full ESLint (one pre-existing React-refresh warning), production build/PWA, frozen motion ledger and 7 Node tests passed. Full Vitest regression: 190 files / 2,096 tests passed against the integration with main `7b26d57`.
+- Initial local headless Chrome launch failed with SIGABRT. Independent Chrome verification subsequently passed at 320/390/1440px: all 294 images loaded with nonzero natural width and no document horizontal overflow. First-section screenshots at 390/1440px were visually checked for mobile stacked/desktop three-column layout and explicit unverified warnings. This is rendering QA, not exercise or anatomical validation.
 
 Run the export contract test with:
 
