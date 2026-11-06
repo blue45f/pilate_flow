@@ -1,0 +1,53 @@
+/* Review status is essential information, including on a narrow class card. */
+#root .vnext-workbench .step-target.step-review-status {
+  display: block;
+  margin-top: 4px;
+  color: #745630;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* Keep the first action prominent; the photograph is only a quiet background. */
+@media (max-width: 680px) {
+  #root .vnext-shell .vnext-workbench .workbench-welcome {
+    display: block;
+    min-height: 0 !important;
+    padding: 0 !important;
+  }
+  #root .vnext-shell .vnext-workbench .workbench-welcome-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.12;
+    object-fit: cover;
+    object-position: left center;
+    pointer-events: none;
+  }
+  #root .vnext-shell .vnext-workbench .workbench-welcome-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 18px;
+    gap: 12px;
+    background: linear-gradient(90deg, #f7f5efcc, #f7f5eff2);
+  }
+  #root .vnext-shell .vnext-workbench .workbench-welcome-copy > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+  #root .vnext-shell .vnext-workbench .workbench-welcome h2 {
+    max-width: none;
+    font-size: 1.375rem;
+    line-height: 1.45;
+    word-break: keep-all;
+  }
+  #root .vnext-shell .vnext-workbench .workbench-welcome-summary {
+    width: auto;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+}

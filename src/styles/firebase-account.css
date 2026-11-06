@@ -1,0 +1,140 @@
+.firebase-account-panel {
+  --account-forest: #233f37;
+  --account-sage: #49635a;
+  min-width: 0;
+}
+.firebase-account-panel h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--account-forest);
+}
+.firebase-account-panel > p,
+.firebase-account-boundary p {
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.firebase-account-boundary {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid #d8dfd4;
+  border-radius: 14px;
+  background: #f3f5ed;
+  color: var(--account-forest);
+  font-size: 13px;
+}
+.firebase-account-boundary strong {
+  display: block;
+  font-weight: 650;
+}
+.firebase-account-boundary p {
+  margin: 5px 0 0;
+}
+.firebase-google-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 11px 20px;
+  border: 1px solid #aab7ad;
+  border-radius: 12px;
+  background: #fffefa;
+  color: #263d34;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+.firebase-google-button:hover:not(:disabled) {
+  border-color: var(--account-forest);
+  background: #f3f5ed;
+}
+.firebase-account-panel button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.firebase-account-panel button:focus-visible,
+.firebase-account-panel a:focus-visible {
+  outline: 3px solid #587967;
+  outline-offset: 4px;
+}
+.firebase-account-identity {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0;
+}
+.firebase-account-initial {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e7ecdf;
+  color: var(--account-forest);
+  font-weight: 700;
+}
+.firebase-account-details {
+  display: flex;
+  flex: 1 1 170px;
+  flex-direction: column;
+  min-width: 0;
+  gap: 4px;
+  overflow-wrap: anywhere;
+  color: var(--account-forest);
+  font-size: 13px;
+}
+.firebase-account-connected {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--account-sage);
+  font-size: 12px;
+}
+.firebase-account-connected svg {
+  flex-shrink: 0;
+}
+.firebase-account-logout,
+.firebase-account-retry,
+.firebase-account-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 10px 14px;
+  text-decoration: none;
+}
+.firebase-account-error {
+  padding: 12px 14px;
+  border: 1px solid #d9b4a7;
+  border-radius: 12px;
+  background: #fff7ee;
+  color: #7d3d2d;
+  font-size: 13px;
+}
+.firebase-account-status,
+.firebase-account-footnote {
+  color: var(--account-sage);
+  font-size: 12px;
+}
+@media (max-width: 480px) {
+  .firebase-google-button,
+  .firebase-account-retry,
+  .firebase-account-link {
+    width: 100%;
+  }
+  .firebase-account-logout {
+    flex: 1 1 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .firebase-google-button {
+    transition: none;
+  }
+}

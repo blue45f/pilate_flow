@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
   ChartNoAxesCombined,
@@ -17,22 +17,22 @@ import {
   SlidersHorizontal,
   Sparkles,
   UnlockKeyhole,
-} from "lucide-react";
-import { PROP_LABELS } from "../data/pilatesCatalog";
+} from 'lucide-react';
+import { PROP_LABELS } from '../data/pilatesCatalog';
 import {
   EQUIPMENT_OPTIONS,
   getEquipmentFamilies,
   getEquipmentFamily,
   getExerciseEquipment,
-} from "../data/equipmentCatalog";
-import { usePilatesStore } from "../store/usePilatesStore";
+} from '../data/equipmentCatalog';
+import { usePilatesStore } from '../store/usePilatesStore';
 import type {
   AutoGenerateCriteria,
   DifficultyLevel,
   PilatesExercise,
   PropType,
   SequenceStep,
-} from "../types/pilates";
+} from '../types/pilates';
 import {
   exerciseMatchesCriteria,
   formatSecondsToMMSS,
@@ -41,32 +41,34 @@ import {
   getMovementKey,
   getSequenceDurations,
   isRestStep,
-} from "../utils/sequenceEngine";
-import { isExerciseAutoEligible } from "../utils/exerciseReview";
+} from '../utils/sequenceEngine';
+import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import {
   addMovementIdeaToCurrentClass,
   isMovementIdeaExercise,
   readMovementIdeaDraft,
-} from "../utils/movementIdeaDraft";
-import { getSequenceStepClassSection } from "../utils/sequenceMotionBinding";
-import { LightDismissDialog } from "./LightDismissDialog";
-import { MovementIdeaSheet } from "./MovementIdeaSheet";
-import { getMotionPatternReferences } from "../data/motionPatternReferences";
-import { MotionPatternThumbnail } from "./MotionPatternPreview";
-import { GroupPrepPanel } from "./GroupPrepPanel";
-import { RestBudgetControl, RestInsertControl } from "./RestPlanningControls";
-import { RestStepCard } from "./RestStepCard";
-import { NextClassBanner } from "./NextClassBanner";
-import { InlineExerciseFinder } from "./InlineExerciseFinder";
-import { StepBlockInspector } from "./StepBlockInspector";
-import type { StepInspectorDraftCache } from "./StepBlockInspector";
-import { SequencePlanPreview } from "./SequencePlanPreview";
-import { MotionPatternGallery } from "./MotionPatternGallery";
-import { ClassInsightsDialog } from "./ClassInsightsDialog";
-import "../styles/workbench-usability.css";
-import "../styles/workbench-vnext.css";
+} from '../utils/movementIdeaDraft';
+import { getSequenceStepClassSection } from '../utils/sequenceMotionBinding';
+import { LightDismissDialog } from './LightDismissDialog';
+import { MovementIdeaSheet } from './MovementIdeaSheet';
+import { getMotionPatternReferences } from '../data/motionPatternReferences';
+import { MotionPatternThumbnail } from './MotionPatternPreview';
+import { GroupPrepPanel } from './GroupPrepPanel';
+import { RestBudgetControl, RestInsertControl } from './RestPlanningControls';
+import { RestStepCard } from './RestStepCard';
+import { NextClassBanner } from './NextClassBanner';
+import { InlineExerciseFinder } from './InlineExerciseFinder';
+import { StepBlockInspector } from './StepBlockInspector';
+import type { StepInspectorDraftCache } from './StepBlockInspector';
+import { SequencePlanPreview } from './SequencePlanPreview';
+import { MotionPatternGallery } from './MotionPatternGallery';
+import { ClassInsightsDialog } from './ClassInsightsDialog';
+import '../styles/workbench-usability.css';
+import '../styles/workbench-vnext.css';
+import '../styles/release-mobile-clarity.css';
+import { AiSequenceCoPilotPanel } from './AiSequenceCoPilotPanel';
 
-export type WorkbenchPlanningMode = "auto" | "manual";
+export type WorkbenchPlanningMode = 'auto' | 'manual';
 
 interface Props {
   planningMode?: WorkbenchPlanningMode;
@@ -79,58 +81,44 @@ interface Props {
   onOpenInventory?: () => void;
 }
 const focusOptions = [
-  { value: "full-body", label: "전신 균형" },
-  { value: "core-sculpt", label: "코어" },
-  { value: "glute-lower", label: "둔근·하체" },
-  { value: "posture-upper", label: "상체" },
-  { value: "mobility-rehab", label: "가동성" },
+  { value: 'full-body', label: '전신 균형' },
+  { value: 'core-sculpt', label: '코어' },
+  { value: 'glute-lower', label: '둔근·하체' },
+  { value: 'posture-upper', label: '상체' },
+  { value: 'mobility-rehab', label: '가동성' },
 ] as const;
 const equipmentLabel = (ids: readonly string[]) =>
   ids
-    .map(
-      (id) =>
-        EQUIPMENT_OPTIONS.find((equipment) => equipment.id === id)?.labelKo ??
-        id,
-    )
-    .join(" · ");
+    .map((id) => EQUIPMENT_OPTIONS.find((equipment) => equipment.id === id)?.labelKo ?? id)
+    .join(' · ');
 const equipmentSelection = (criteria: AutoGenerateCriteria): string[] =>
   criteria.availableEquipment ??
-  (criteria.apparatus === "mixed"
-    ? (criteria.ownedApparatus ?? [])
-    : [criteria.apparatus]);
-function withExactSelection(
-  criteria: AutoGenerateCriteria,
-): AutoGenerateCriteria {
+  (criteria.apparatus === 'mixed' ? (criteria.ownedApparatus ?? []) : [criteria.apparatus]);
+function withExactSelection(criteria: AutoGenerateCriteria): AutoGenerateCriteria {
   const selected = [...new Set(equipmentSelection(criteria))];
   return {
     ...criteria,
     availableEquipment: selected,
     ownedApparatus: getEquipmentFamilies(selected),
-    apparatus:
-      selected.length > 1
-        ? "mixed"
-        : (getEquipmentFamily(selected[0]) ?? "mat"),
+    apparatus: selected.length > 1 ? 'mixed' : (getEquipmentFamily(selected[0]) ?? 'mat'),
   };
 }
 const sectionOf = (step: SequenceStep) => {
-  if (isRestStep(step)) return "rest";
+  if (isRestStep(step)) return 'rest';
   const role = getSequenceStepClassSection(step);
-  return role === "preparation" ? "warmup" : role;
+  return role === 'preparation' ? 'warmup' : role;
 };
 const sections = [
-  { id: "warmup", label: "준비", english: "WARM-UP" },
-  { id: "main", label: "본운동", english: "MAIN FLOW" },
-  { id: "cooldown", label: "마무리", english: "COOL-DOWN" },
-  { id: "rest", label: "중간 휴식", english: "REST" },
+  { id: 'warmup', label: '준비', english: 'WARM-UP' },
+  { id: 'main', label: '본운동', english: 'MAIN FLOW' },
+  { id: 'cooldown', label: '마무리', english: 'COOL-DOWN' },
+  { id: 'rest', label: '중간 휴식', english: 'REST' },
 ] as const;
 
 function WorkbenchMovementMark({ exercise }: { exercise: PilatesExercise }) {
   const pattern = getMotionPatternReferences(exercise.id)[0];
   return pattern ? (
-    <span
-      className="workbench-movement-mark"
-      title={`${pattern.title} · 관련 패턴 초안`}
-    >
+    <span className="workbench-movement-mark" title={`${pattern.title} · 관련 패턴 초안`}>
       <MotionPatternThumbnail reference={pattern} />
       <small>관련 패턴</small>
     </span>
@@ -169,16 +157,14 @@ export function SequenceWorkbench({
   const currentStepEquipment = [
     ...new Set(
       s.activeSteps.flatMap((step) => {
-        const exercise = s.exercises.find(
-          (item) => item.id === step.exerciseId,
-        );
+        const exercise = s.exercises.find((item) => item.id === step.exerciseId);
         return exercise ? getExerciseEquipment(exercise).requiredEquipment : [];
       }),
     ),
   ];
   const activeEquipment = currentStepEquipment.length
     ? currentStepEquipment
-    : s.activeApparatus === "mixed"
+    : s.activeApparatus === 'mixed'
       ? []
       : [s.activeApparatus];
   const criteria = withExactSelection(
@@ -186,23 +172,19 @@ export function SequenceWorkbench({
       apparatus: s.activeApparatus,
       ownedApparatus: getEquipmentFamilies(activeEquipment),
       level: s.activeLevel,
-      focusPreset: "full-body",
-      preferredProps: ["none"],
+      focusPreset: 'full-body',
+      preferredProps: ['none'],
       availableEquipment: activeEquipment,
       excludeDaysWindow: 14,
       targetGroupId: s.activeTargetGroupId,
       targetMinutes: s.activeTargetMinutes || 50,
-      defaultLayer: "standard",
+      defaultLayer: 'standard',
     },
   );
   const setCriteria = (
-    update:
-      | AutoGenerateCriteria
-      | ((previous: AutoGenerateCriteria) => AutoGenerateCriteria),
+    update: AutoGenerateCriteria | ((previous: AutoGenerateCriteria) => AutoGenerateCriteria),
   ) => {
-    const next = withExactSelection(
-      typeof update === "function" ? update(criteria) : update,
-    );
+    const next = withExactSelection(typeof update === 'function' ? update(criteria) : update);
     if (
       Number.isInteger(next.targetMinutes) &&
       next.targetMinutes >= 10 &&
@@ -219,32 +201,30 @@ export function SequenceWorkbench({
     timeEdit && timeEdit.source === storedCriteria
       ? timeEdit.value
       : String(criteria.targetMinutes);
-  const setCustomTime = (value: string) =>
-    setTimeEdit({ value, source: storedCriteria });
+  const setCustomTime = (value: string) => setTimeEdit({ value, source: storedCriteria });
   const selectedEquipment = equipmentSelection(criteria);
-  const unavailableEquipment = selectedEquipment.filter(
-    (id) => !s.ownedEquipment.includes(id),
-  );
+  const unavailableEquipment = selectedEquipment.filter((id) => !s.ownedEquipment.includes(id));
   const unavailableProps = criteria.preferredProps.filter(
-    (prop) => prop !== "none" && !s.ownedProps.includes(prop),
+    (prop) => prop !== 'none' && !s.ownedProps.includes(prop),
   );
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
-  const [replaceSearch, setReplaceSearch] = useState("");
-  const [notice, setNotice] = useState("");
-  const [templateName, setTemplateName] = useState("");
+  const [replaceSearch, setReplaceSearch] = useState('');
+  const [notice, setNotice] = useState('');
+  const [templateName, setTemplateName] = useState('');
   const [regenerateSection, setRegenerateSection] = useState<
-    "all" | "warmup" | "main" | "cooldown"
-  >("all");
+    'all' | 'warmup' | 'main' | 'cooldown'
+  >('all');
   const [previewStep, setPreviewStep] = useState<string | null>(null);
   const [planPreviewOpen, setPlanPreviewOpen] = useState(false);
   const [finderOpen, setFinderOpen] = useState(false);
   const [finderHasOpened, setFinderHasOpened] = useState(false);
-  const [workflowStep, setWorkflowStep] = useState<"select" | "arrange">(() =>
-    s.activeSteps.length ? "arrange" : "select",
+  const [workflowStep, setWorkflowStep] = useState<'select' | 'arrange'>(() =>
+    s.activeSteps.length ? 'arrange' : 'select',
   );
   const finderContentRef = useRef<HTMLDivElement>(null);
   const finderOpener = useRef<HTMLElement | null>(null);
   const [insightsOpen, setInsightsOpen] = useState(false);
+  const [aiCopilotOpen, setAiCopilotOpen] = useState(false);
   const [wideEditor, setWideEditor] = useState(() => window.innerWidth >= 1200);
   const inspectorContentRef = useRef<HTMLDivElement>(null);
   const inspectorOpener = useRef<HTMLElement | null>(null);
@@ -262,15 +242,12 @@ export function SequenceWorkbench({
   );
   const selectedStep = s.activeSteps[selectedStepIndex];
   const closeInspector = useCallback(() => {
-    const dialog = inspectorContentRef.current?.closest("dialog");
+    const dialog = inspectorContentRef.current?.closest('dialog');
     if (dialog?.open) dialog.close();
     setPreviewStep(null);
     inspectorDraftCache.current = null;
     requestAnimationFrame(() => {
-      if (
-        !document.querySelector("dialog[open]") &&
-        inspectorOpener.current?.isConnected
-      )
+      if (!document.querySelector('dialog[open]') && inspectorOpener.current?.isConnected)
         inspectorOpener.current.focus();
     });
   }, []);
@@ -279,7 +256,7 @@ export function SequenceWorkbench({
     if (
       sourceDetailOpenRef.current ||
       window.innerWidth >= 1200 ||
-      inspectorContentRef.current?.closest("dialog")?.open
+      inspectorContentRef.current?.closest('dialog')?.open
     )
       return;
     closeInspector();
@@ -290,27 +267,26 @@ export function SequenceWorkbench({
       return;
     }
     inspectorDraftCache.current = null;
-    setWorkflowStep("arrange");
+    setWorkflowStep('arrange');
     inspectorOpener.current = opener;
     opener.focus();
     setPreviewStep(step.stepId);
   };
   useEffect(() => {
     const resize = () => setWideEditor(window.innerWidth >= 1200);
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
   }, []);
   useEffect(
     () => () => {
-      const dialog = inspectorContentRef.current?.closest("dialog");
+      const dialog = inspectorContentRef.current?.closest('dialog');
       if (dialog?.open) dialog.close();
     },
     [],
   );
-  const [localPlanningMode, setLocalPlanningMode] =
-    useState<WorkbenchPlanningMode>(() =>
-      s.activeSteps.length ? "auto" : "manual",
-    );
+  const [localPlanningMode, setLocalPlanningMode] = useState<WorkbenchPlanningMode>(() =>
+    s.activeSteps.length ? 'auto' : 'manual',
+  );
   const planningMode = controlledPlanningMode ?? localPlanningMode;
   const setPlanningMode = (mode: WorkbenchPlanningMode) => {
     if (controlledPlanningMode === undefined) setLocalPlanningMode(mode);
@@ -319,12 +295,12 @@ export function SequenceWorkbench({
   const [conditionsOpen, setConditionsOpen] = useState(false);
   const conditionsContentRef = useRef<HTMLDivElement>(null);
   const closeConditions = () => {
-    const dialog = conditionsContentRef.current?.closest("dialog");
+    const dialog = conditionsContentRef.current?.closest('dialog');
     if (dialog?.open) dialog.close();
     setConditionsOpen(false);
   };
   useEffect(() => {
-    const dialog = conditionsContentRef.current?.closest("dialog");
+    const dialog = conditionsContentRef.current?.closest('dialog');
     const closeNative = () => {
       if (dialog?.open) dialog.close();
     };
@@ -337,33 +313,28 @@ export function SequenceWorkbench({
     };
   }, []);
   const closeFinder = () => {
-    const dialog = finderContentRef.current?.closest("dialog");
+    const dialog = finderContentRef.current?.closest('dialog');
     if (dialog?.open) dialog.close();
     setFinderOpen(false);
-    setWorkflowStep(
-      usePilatesStore.getState().activeSteps.length ? "arrange" : "select",
-    );
+    setWorkflowStep(usePilatesStore.getState().activeSteps.length ? 'arrange' : 'select');
     requestAnimationFrame(() => {
-      const heading = document.getElementById("sequence-outline-heading");
-      if (usePilatesStore.getState().activeSteps.length && heading)
-        heading.focus();
+      const heading = document.getElementById('sequence-outline-heading');
+      if (usePilatesStore.getState().activeSteps.length && heading) heading.focus();
       else if (finderOpener.current?.isConnected) finderOpener.current.focus();
     });
   };
   const openExerciseFinder = () => {
     closeInspector();
-    setWorkflowStep("select");
+    setWorkflowStep('select');
     finderOpener.current =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     if (window.innerWidth >= 1200)
       requestAnimationFrame(() => {
         const search = document.querySelector<HTMLInputElement>(
           '.v2-inline-finder .inline-exercise-finder input[type="search"]',
         );
         search?.focus();
-        search?.scrollIntoView?.({ block: "nearest" });
+        search?.scrollIntoView?.({ block: 'nearest' });
       });
     else {
       setFinderHasOpened(true);
@@ -373,11 +344,9 @@ export function SequenceWorkbench({
   const arrangeSequence = () => {
     if (!usePilatesStore.getState().activeSteps.length) return;
     closeFinder();
-    setWorkflowStep("arrange");
+    setWorkflowStep('arrange');
     requestAnimationFrame(() =>
-      document
-        .getElementById("sequence-outline-heading")
-        ?.scrollIntoView?.({ block: "start" }),
+      document.getElementById('sequence-outline-heading')?.scrollIntoView?.({ block: 'start' }),
     );
   };
   const openPlanPreview = () => {
@@ -388,7 +357,7 @@ export function SequenceWorkbench({
   const openInventory = () => {
     closeConditions();
     if (onOpenInventory) onOpenInventory();
-    else s.setActiveTab("atlas");
+    else s.setActiveTab('atlas');
   };
   const durations = getSequenceDurations(s.activeSteps);
   const timingBreakdown = s.activeSteps.reduce(
@@ -421,26 +390,16 @@ export function SequenceWorkbench({
     (step) => !isRestStep(step) && !reviewedExerciseIds.has(step.exerciseId),
   ).length;
   const activeMovementKeys = s.activeSteps.flatMap((step) => {
-    const exercise = !isRestStep(step)
-      ? exerciseMap.get(step.exerciseId)
-      : undefined;
+    const exercise = !isRestStep(step) ? exerciseMap.get(step.exerciseId) : undefined;
     return exercise ? [getMovementKey(exercise)] : [];
   });
-  const duplicateStepCount =
-    activeMovementKeys.length - new Set(activeMovementKeys).size;
+  const duplicateStepCount = activeMovementKeys.length - new Set(activeMovementKeys).size;
   const hasDuplicateMovements = duplicateStepCount > 0;
-  const exerciseStepCount = s.activeSteps.filter(
-    (step) => !isRestStep(step),
-  ).length;
+  const exerciseStepCount = s.activeSteps.filter((step) => !isRestStep(step)).length;
   const restStepCount = s.activeSteps.length - exerciseStepCount;
-  const reviewedCatalogCount = s.exercises.filter(
-    isExerciseAutoEligible,
-  ).length;
+  const reviewedCatalogCount = s.exercises.filter(isExerciseAutoEligible).length;
   const canStartClass =
-    exerciseStepCount > 0 &&
-    delta === 0 &&
-    pendingStepCount === 0 &&
-    !hasDuplicateMovements;
+    exerciseStepCount > 0 && delta === 0 && pendingStepCount === 0 && !hasDuplicateMovements;
   const locked = s.activeSteps.filter((step) => step.locked).length;
   const sectionRuns: {
     section: (typeof sections)[number];
@@ -449,25 +408,16 @@ export function SequenceWorkbench({
   s.activeSteps.forEach((step, index) => {
     const section = sections.find((item) => item.id === sectionOf(step))!;
     const previous = sectionRuns.at(-1);
-    if (previous?.section.id === section.id)
-      previous.entries.push({ step, index });
+    if (previous?.section.id === section.id) previous.entries.push({ step, index });
     else sectionRuns.push({ section, entries: [{ step, index }] });
   });
   const recentLogs = s.historyLogs
-    .filter(
-      (log) =>
-        !criteria.targetGroupId || log.groupId === criteria.targetGroupId,
-    )
+    .filter((log) => !criteria.targetGroupId || log.groupId === criteria.targetGroupId)
     .slice(0, 3);
   const recentIds = new Set(recentLogs.flatMap((log) => log.exerciseIds));
-  const repeated = s.activeSteps.filter((step) =>
-    recentIds.has(step.exerciseId),
-  ).length;
-  const changingStep =
-    replaceIndex === null ? undefined : s.activeSteps[replaceIndex];
-  const changingEx = changingStep
-    ? exerciseMap.get(changingStep.exerciseId)
-    : undefined;
+  const repeated = s.activeSteps.filter((step) => recentIds.has(step.exerciseId)).length;
+  const changingStep = replaceIndex === null ? undefined : s.activeSteps[replaceIndex];
+  const changingEx = changingStep ? exerciseMap.get(changingStep.exerciseId) : undefined;
   const occupiedMovementKeys = new Set(activeMovementKeys);
   const candidateMovementKeys = new Set<string>();
   const candidates = changingEx
@@ -483,17 +433,13 @@ export function SequenceWorkbench({
               apparatus: s.activeApparatus,
               level: s.activeLevel,
               ownedApparatus: s.ownedApparatus,
-              availableEquipment: equipmentSelection(
-                s.lastCriteria ?? criteria,
-              ),
-              preferredProps: (
-                s.lastCriteria?.preferredProps ?? criteria.preferredProps
-              ).filter(
-                (prop) => prop === "none" || s.ownedProps.includes(prop),
+              availableEquipment: equipmentSelection(s.lastCriteria ?? criteria),
+              preferredProps: (s.lastCriteria?.preferredProps ?? criteria.preferredProps).filter(
+                (prop) => prop === 'none' || s.ownedProps.includes(prop),
               ),
             }) &&
             [ex.nameKo, ex.nameEn, ...ex.targetMuscles]
-              .join(" ")
+              .join(' ')
               .toLowerCase()
               .includes(replaceSearch.toLowerCase()),
         )
@@ -516,76 +462,74 @@ export function SequenceWorkbench({
       s.setActiveSequenceMeta({ targetMinutes: minutes });
   };
   const generate = () => {
+    if (reviewedCatalogCount === 0) {
+      setNotice('자동 구성 전에 동작 상세에서 강사 검토를 완료해 주세요.');
+      return;
+    }
     const minutes = Number(customTime);
     if (!Number.isInteger(minutes) || minutes < 10 || minutes > 120) {
-      setNotice("수업 시간은 10~120분 사이의 정수로 입력해 주세요.");
+      setNotice('수업 시간은 10~120분 사이의 정수로 입력해 주세요.');
       return;
     }
     const next = withExactSelection({ ...criteria, targetMinutes: minutes });
     s.setDraftCriteria(next);
     s.autoGenerateSequence(next);
-    if (usePilatesStore.getState().activeSteps.length)
-      setWorkflowStep("arrange");
+    if (usePilatesStore.getState().activeSteps.length) setWorkflowStep('arrange');
     if (window.innerWidth < 768)
       requestAnimationFrame(() =>
         document
           .querySelector(
             usePilatesStore.getState().generationError
-              ? "[data-plan-feedback]"
-              : ".sequence-column",
+              ? '[data-plan-feedback]'
+              : '.sequence-column',
           )
-          ?.scrollIntoView({ block: "start", behavior: "auto" }),
+          ?.scrollIntoView({ block: 'start', behavior: 'auto' }),
       );
-    setNotice("");
+    setNotice('');
   };
   const handleSave = () => {
     s.saveCurrentSequenceToBinder();
-    setNotice("");
+    setNotice('');
   };
   const startReadiness =
     pendingStepCount > 0
       ? `${pendingStepCount}개 동작의 검토·승인이 필요합니다.`
       : hasDuplicateMovements
-        ? "같은 동작이 중복되어 있어요. 다른 동작으로 바꿔 주세요."
+        ? '같은 동작이 중복되어 있어요. 다른 동작으로 바꿔 주세요.'
         : !exerciseStepCount
-          ? "동작을 추가한 뒤 수업안을 확인하세요."
+          ? '동작을 추가한 뒤 수업안을 확인하세요.'
           : delta !== 0
-            ? "수업 시간에 맞춘 뒤 시작할 수 있어요."
-            : "동작·스프링·대상자 상태를 확인한 뒤 시작하세요.";
+            ? '수업 시간에 맞춘 뒤 시작할 수 있어요.'
+            : '동작·스프링·대상자 상태를 확인한 뒤 시작하세요.';
   const startClass = () => {
     const current = usePilatesStore.getState();
     const movements = current.activeSteps.filter((step) => !isRestStep(step));
-    const currentExercises = new Map(
-      current.exercises.map((exercise) => [exercise.id, exercise]),
-    );
+    const currentExercises = new Map(current.exercises.map((exercise) => [exercise.id, exercise]));
     const keys = movements.map((step) => {
       const exercise = currentExercises.get(step.exerciseId);
       return exercise ? getMovementKey(exercise) : step.exerciseId;
     });
     const ready =
       movements.length > 0 &&
-      getSequenceDurations(current.activeSteps).totalSec ===
-        current.activeTargetMinutes * 60 &&
+      getSequenceDurations(current.activeSteps).totalSec === current.activeTargetMinutes * 60 &&
       movements.every((step) => {
         const exercise = currentExercises.get(step.exerciseId);
         return !!exercise && isExerciseAutoEligible(exercise);
       }) &&
       new Set(keys).size === keys.length;
     if (!ready) {
-      setNotice(
-        "수업안이 바뀌었어요. 시간·검토 상태·중복 동작을 다시 확인해 주세요.",
-      );
+      setNotice('수업안이 바뀌었어요. 시간·검토 상태·중복 동작을 다시 확인해 주세요.');
       return;
     }
     setPlanPreviewOpen(false);
-    current.setActiveTab("stage");
+    current.setActiveTab('stage');
   };
   const repeatConditions = () => {
     if (!s.lastCriteria) return;
     setCriteria(s.lastCriteria);
     setCustomTime(String(s.lastCriteria.targetMinutes));
     s.setActiveSequenceMeta({ targetMinutes: s.lastCriteria.targetMinutes });
-    setNotice("지난 수업 조건을 불러왔습니다. 필요한 항목만 바꿔 보세요.");
+    setNotice('지난 수업 조건을 불러왔습니다. 필요한 항목만 바꿔 보세요.');
   };
   const applyTemplate = (id: string) => {
     const template = s.conditionTemplates.find((item) => item.id === id);
@@ -597,20 +541,20 @@ export function SequenceWorkbench({
   };
   return (
     <div
-      className={`plan-view v2-workbench v3-workbench v11-workbench vnext-workbench ${s.activeSteps.length ? "has-sequence" : "is-empty"}`}
+      className={`plan-view v2-workbench v3-workbench v11-workbench vnext-workbench ${s.activeSteps.length ? 'has-sequence' : 'is-empty'}`}
     >
       <div className="page-heading v2-workbench-heading">
         <div>
           <span className="vnext-workbench-eyebrow">YOUR CLASS, YOUR FLOW</span>
           <h1 id="workspace-main-heading" tabIndex={-1}>
-            {s.activeSteps.length ? "수업 구성" : "수업 준비, 가볍게."}
+            {s.activeSteps.length ? '수업 구성' : '수업 준비, 가볍게.'}
           </h1>
         </div>
         <span className="today-label">
-          {new Intl.DateTimeFormat("ko-KR", {
-            month: "long",
-            day: "numeric",
-            weekday: "short",
+          {new Intl.DateTimeFormat('ko-KR', {
+            month: 'long',
+            day: 'numeric',
+            weekday: 'short',
           }).format(new Date())}
         </span>
       </div>
@@ -622,6 +566,16 @@ export function SequenceWorkbench({
             alt=""
           />
           <div className="workbench-welcome-copy">
+            <button
+              type="button"
+              className="workbench-welcome-summary"
+              onClick={() => setConditionsOpen(true)}
+              aria-label={`수업 조건 열기 · ${criteria.targetMinutes}분 · ${equipmentLabel(selectedEquipment) || '기구 선택 필요'}`}
+            >
+              <Clock3 size={16} aria-hidden="true" />
+              {criteria.targetMinutes}분 · {equipmentLabel(selectedEquipment) || '기구 선택 필요'}
+              <ChevronDown size={15} aria-hidden="true" />
+            </button>
             <h2>
               동작을 골라
               <br className="welcome-desktop-break" /> 나만의 흐름으로.
@@ -640,13 +594,11 @@ export function SequenceWorkbench({
                 className="btn-secondary workbench-idea-action"
                 onClick={() => openIdeaSheet(null)}
               >
-                <Sparkles size={18} aria-hidden="true" />
-                한 줄 아이디어 메모
+                <Sparkles size={18} aria-hidden="true" />한 줄 아이디어 메모
               </button>
             </div>
             <p className="workbench-reviewed-count">
-              내 검토 기록 {reviewedCatalogCount}개 · 검토를 마친 동작을 추가할
-              수 있어요.
+              내 검토 기록 {reviewedCatalogCount}개 · 검토를 마친 동작을 추가할 수 있어요.
             </p>
           </div>
         </section>
@@ -657,15 +609,11 @@ export function SequenceWorkbench({
             <div>
               <h2>내 새 동작 메모 ({ideaExercises.length})</h2>
               <p>
-                직접 해본 느낌·수정할 점을 덧붙이거나 바로 수업에 넣으세요 · 주관적
-                메모(전문가 검증·운동 효과 보장 아님)
+                직접 해본 느낌·수정할 점을 덧붙이거나 바로 수업에 넣으세요 · 주관적 메모(전문가
+                검증·운동 효과 보장 아님)
               </p>
             </div>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => openIdeaSheet(null)}
-            >
+            <button type="button" className="btn-secondary" onClick={() => openIdeaSheet(null)}>
               <Plus size={16} aria-hidden="true" /> 새 아이디어 추가
             </button>
           </div>
@@ -682,26 +630,30 @@ export function SequenceWorkbench({
                   aria-label={`${ideaEx.nameKo} 창작 메모`}
                 >
                   <div className="pf-workbench-idea-card__body">
-                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "6px" }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '6px',
+                      }}
+                    >
                       <strong>{ideaEx.nameKo}</strong>
                       <span
-                        className={`pf-badge pf-ai-status ${draft?.triedByInstructor ? "pf-ai-status--tried-memo" : "pf-ai-status--creative-memo"}`}
+                        className={`pf-badge pf-ai-status ${draft?.triedByInstructor ? 'pf-ai-status--tried-memo' : 'pf-ai-status--creative-memo'}`}
                       >
                         <span className="pf-ai-status__dot" aria-hidden="true" />
                         <span>
                           {draft?.triedByInstructor
-                            ? "직접 해봄 · 주관적 메모"
-                            : "내 창작 메모 · 전문가 검증 아님"}
+                            ? '직접 해봄 · 주관적 메모'
+                            : '내 창작 메모 · 전문가 검증 아님'}
                         </span>
                       </span>
                     </div>
                     <p>{draft?.ideaLine || ideaEx.cues[0]}</p>
-                    {draft?.subjectiveFeeling && (
-                      <p>느낌 메모: {draft.subjectiveFeeling}</p>
-                    )}
-                    {draft?.adjustmentNote && (
-                      <p>수정 메모: {draft.adjustmentNote}</p>
-                    )}
+                    {draft?.subjectiveFeeling && <p>느낌 메모: {draft.subjectiveFeeling}</p>}
+                    {draft?.adjustmentNote && <p>수정 메모: {draft.adjustmentNote}</p>}
                   </div>
                   <div className="pf-workbench-idea-card__actions">
                     <button
@@ -718,11 +670,11 @@ export function SequenceWorkbench({
                       onClick={() => {
                         const result = addMovementIdeaToCurrentClass(ideaEx.id);
                         setNotice(result.message);
-                        if (result.ok) setWorkflowStep("arrange");
+                        if (result.ok) setWorkflowStep('arrange');
                       }}
                       aria-label={`${ideaEx.nameKo} 수업에 넣기`}
                     >
-                      {inSequence ? "수업에 한 번 더 넣기" : "수업에 넣기"}
+                      {inSequence ? '수업에 한 번 더 넣기' : '수업에 넣기'}
                     </button>
                   </div>
                 </article>
@@ -737,7 +689,16 @@ export function SequenceWorkbench({
             <span>도해 초안 둘러보기 (선택)</span>
             <ChevronDown size={15} aria-hidden="true" />
           </summary>
-          <MotionPatternGallery onViewAll={() => s.setActiveTab("atlas")} />
+          <MotionPatternGallery
+            onViewAll={() => s.setActiveTab('atlas')}
+            onOpenExercise={onOpenYouTubePreview}
+            onInsertExercise={(exercise) => {
+              s.appendExerciseToSequence(exercise.id, exercise.blockCategory);
+              if (usePilatesStore.getState().activeSteps.length) {
+                setWorkflowStep('arrange');
+              }
+            }}
+          />
         </details>
       )}
       <NextClassBanner collapseEmpty />
@@ -749,10 +710,8 @@ export function SequenceWorkbench({
               onClick={openExerciseFinder}
               aria-current={
                 !planPreviewOpen &&
-                (finderOpen ||
-                  workflowStep === "select" ||
-                  !s.activeSteps.length)
-                  ? "step"
+                (finderOpen || workflowStep === 'select' || !s.activeSteps.length)
+                  ? 'step'
                   : undefined
               }
             >
@@ -767,9 +726,9 @@ export function SequenceWorkbench({
               aria-current={
                 !planPreviewOpen &&
                 !finderOpen &&
-                workflowStep === "arrange" &&
+                workflowStep === 'arrange' &&
                 s.activeSteps.length
-                  ? "step"
+                  ? 'step'
                   : undefined
               }
             >
@@ -781,7 +740,7 @@ export function SequenceWorkbench({
               type="button"
               onClick={openPlanPreview}
               disabled={!s.activeSteps.length}
-              aria-current={planPreviewOpen ? "step" : undefined}
+              aria-current={planPreviewOpen ? 'step' : undefined}
             >
               <span>3</span> 미리보기
             </button>
@@ -800,22 +759,21 @@ export function SequenceWorkbench({
           <button
             type="button"
             onClick={() => setConditionsOpen(true)}
-            aria-label={`이번 수업 기구: ${equipmentLabel(selectedEquipment) || "선택 필요"} · 조건 열기`}
+            aria-label={`이번 수업 기구: ${equipmentLabel(selectedEquipment) || '선택 필요'} · 조건 열기`}
             title={equipmentLabel(selectedEquipment)}
           >
             {selectedEquipment.length > 1
               ? `기구 ${selectedEquipment.length}`
-              : equipmentLabel(selectedEquipment) || "기구 선택"}{" "}
+              : equipmentLabel(selectedEquipment) || '기구 선택'}{' '}
             <ChevronDown size={14} />
           </button>
           <button
             type="button"
             onClick={() => setConditionsOpen(true)}
-            aria-label={`수업 목표 ${focusOptions.find((option) => option.value === criteria.focusPreset)?.label ?? "전신 균형"} · 조건 열기`}
+            aria-label={`수업 목표 ${focusOptions.find((option) => option.value === criteria.focusPreset)?.label ?? '전신 균형'} · 조건 열기`}
           >
-            {focusOptions.find(
-              (option) => option.value === criteria.focusPreset,
-            )?.label ?? "전신 균형"}{" "}
+            {focusOptions.find((option) => option.value === criteria.focusPreset)?.label ??
+              '전신 균형'}{' '}
             <ChevronDown size={14} />
           </button>
           <button
@@ -837,23 +795,20 @@ export function SequenceWorkbench({
             >
               지난 조건
             </button>
-            {planningMode === "auto" ? (
+            {planningMode === 'auto' ? (
               <button
                 type="button"
                 className="btn-primary"
                 onClick={generate}
-                aria-describedby={locked ? "v2-new-draft-scope" : undefined}
+                disabled={reviewedCatalogCount === 0}
+                aria-describedby={locked ? 'v2-new-draft-scope' : undefined}
                 title="전체를 새 초안으로 구성합니다"
               >
                 <RefreshCw size={16} />
                 시퀀스 만들기
               </button>
             ) : (
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={openExerciseFinder}
-              >
+              <button type="button" className="btn-secondary" onClick={openExerciseFinder}>
                 <Plus size={16} />
                 동작 찾기
               </button>
@@ -861,18 +816,17 @@ export function SequenceWorkbench({
           </div>
         )}
       </div>
-      {planningMode === "auto" && locked > 0 && (
+      {planningMode === 'auto' && locked > 0 && (
         <p id="v2-new-draft-scope" className="v2-generation-scope">
-          시퀀스 만들기는 전체를 새 초안으로 바꿉니다. 잠근 {locked}개 항목을
-          유지하려면 아래 ‘잠그지 않은 동작 다시 만들기’를 사용하세요.
+          시퀀스 만들기는 전체를 새 초안으로 바꿉니다. 잠근 {locked}개 항목을 유지하려면 아래
+          ‘잠그지 않은 동작 다시 만들기’를 사용하세요.
         </p>
       )}
-      {(s.generationError ||
-        (!s.persistenceError && (notice || s.saveFeedback))) && (
+      {(s.generationError || (!s.persistenceError && (notice || s.saveFeedback))) && (
         <p
           data-plan-feedback
-          className={`status plan-feedback ${s.generationError ? "error" : ""}`}
-          role={s.generationError ? "alert" : "status"}
+          className={`status plan-feedback ${s.generationError ? 'error' : ''}`}
+          role={s.generationError ? 'alert' : 'status'}
         >
           {s.generationError || notice || s.saveFeedback}
         </p>
@@ -888,14 +842,11 @@ export function SequenceWorkbench({
                     수업 시퀀스
                   </h2>
                   <p>
-                    {exerciseStepCount}개 동작{" "}
-                    {restStepCount > 0 && `· 휴식 ${restStepCount}개`}{" "}
-                    <span>·</span>{" "}
-                    {equipmentLabel(currentStepEquipment) || "기구 미지정"}{" "}
-                    <span>·</span>{" "}
-                    {focusOptions.find(
-                      (option) => option.value === s.lastCriteria?.focusPreset,
-                    )?.label ?? "수업 초안"}
+                    {exerciseStepCount}개 동작 {restStepCount > 0 && `· 휴식 ${restStepCount}개`}{' '}
+                    <span>·</span> {equipmentLabel(currentStepEquipment) || '기구 미지정'}{' '}
+                    <span>·</span>{' '}
+                    {focusOptions.find((option) => option.value === s.lastCriteria?.focusPreset)
+                      ?.label ?? '수업 초안'}
                   </p>
                 </div>
                 <button
@@ -912,28 +863,19 @@ export function SequenceWorkbench({
                 <input
                   aria-label="시퀀스 제목"
                   value={s.activeTitle}
-                  onChange={(event) =>
-                    s.setActiveSequenceMeta({ title: event.target.value })
-                  }
+                  onChange={(event) => s.setActiveSequenceMeta({ title: event.target.value })}
                   maxLength={150}
                 />
               </label>
-              <div
-                className={`time-summary ${!s.activeSteps.length ? "is-empty" : ""}`}
-              >
+              <div className={`time-summary ${!s.activeSteps.length ? 'is-empty' : ''}`}>
                 <div>
                   <span>
                     현재 <strong>{formatSecondsToMMSS(total)}</strong>
-                    <span className="time-divider">/</span>목표{" "}
-                    {s.activeTargetMinutes}분
+                    <span className="time-divider">/</span>목표 {s.activeTargetMinutes}분
                   </span>
-                  <span
-                    className={
-                      delta === 0 ? "time-status exact" : "time-status"
-                    }
-                  >
+                  <span className={delta === 0 ? 'time-status exact' : 'time-status'}>
                     {!s.activeSteps.length ? (
-                      "첫 동작을 추가해 주세요"
+                      '첫 동작을 추가해 주세요'
                     ) : delta === 0 ? (
                       <>
                         <Check size={14} />
@@ -942,7 +884,7 @@ export function SequenceWorkbench({
                     ) : (
                       `${Math.abs(delta / 60)
                         .toFixed(1)
-                        .replace(".0", "")}분 ${delta > 0 ? "초과" : "부족"}`
+                        .replace('.0', '')}분 ${delta > 0 ? '초과' : '부족'}`
                     )}
                   </span>
                 </div>
@@ -987,25 +929,18 @@ export function SequenceWorkbench({
                   </div>
                   <div>
                     <dt>티칭</dt>
-                    <dd>
-                      {formatSecondsToMMSS(timingBreakdown.explanationSec)}
-                    </dd>
+                    <dd>{formatSecondsToMMSS(timingBreakdown.explanationSec)}</dd>
                   </div>
                   <div>
                     <dt>전환</dt>
-                    <dd>
-                      {formatSecondsToMMSS(timingBreakdown.transitionSec)}
-                    </dd>
+                    <dd>{formatSecondsToMMSS(timingBreakdown.transitionSec)}</dd>
                   </div>
                   <div>
                     <dt>휴식</dt>
                     <dd>{formatSecondsToMMSS(timingBreakdown.restSec)}</dd>
                   </div>
                 </dl>
-                <dl
-                  className="class-duration-breakdown sr-only"
-                  aria-label="수업 시간 구성"
-                >
+                <dl className="class-duration-breakdown sr-only" aria-label="수업 시간 구성">
                   <div>
                     <dt>전체</dt>
                     <dd>{formatSecondsToMMSS(durations.totalSec)}</dd>
@@ -1023,22 +958,18 @@ export function SequenceWorkbench({
                   <p>양쪽 수행·설명·전환과 넣은 휴식 시간을 모두 포함합니다.</p>
                 )}
               </div>
-              <div
-                className="v2-mode-toggle"
-                role="group"
-                aria-label="시퀀스 편집 방식"
-              >
+              <div className="v2-mode-toggle" role="group" aria-label="시퀀스 편집 방식">
                 <button
                   type="button"
-                  aria-pressed={planningMode === "auto"}
-                  onClick={() => setPlanningMode("auto")}
+                  aria-pressed={planningMode === 'auto'}
+                  onClick={() => setPlanningMode('auto')}
                 >
                   자동 구성
                 </button>
                 <button
                   type="button"
-                  aria-pressed={planningMode === "manual"}
-                  onClick={() => setPlanningMode("manual")}
+                  aria-pressed={planningMode === 'manual'}
+                  onClick={() => setPlanningMode('manual')}
                 >
                   직접 편집
                 </button>
@@ -1048,16 +979,14 @@ export function SequenceWorkbench({
                   <LockKeyhole size={14} />
                   <span>{locked}개 잠금</span>
                   {recentLogs.length > 0 && (
-                    <span className="recent-count">
-                      최근 3회와 {repeated}개 겹침
-                    </span>
+                    <span className="recent-count">최근 3회와 {repeated}개 겹침</span>
                   )}
                 </div>
                 <button
                   className="text-button"
                   onClick={() => {
                     s.undoSequence();
-                    setNotice("");
+                    setNotice('');
                   }}
                 >
                   <RotateCcw size={14} />
@@ -1083,11 +1012,7 @@ export function SequenceWorkbench({
                       {formatSecondsToMMSS(
                         entries.reduce(
                           (sum, { step }) =>
-                            sum +
-                            getStepTiming(
-                              step,
-                              exerciseMap.get(step.exerciseId),
-                            ).totalSec,
+                            sum + getStepTiming(step, exerciseMap.get(step.exerciseId)).totalSec,
                           0,
                         ),
                       )}
@@ -1104,17 +1029,14 @@ export function SequenceWorkbench({
                           onToggleLock={() => s.toggleStepLock(index)}
                           onMove={(direction) => s.moveStep(index, direction)}
                           onRemove={() => s.removeStep(index)}
-                          onSetDuration={(minutes) =>
-                            s.setRestDuration(index, minutes)
-                          }
+                          onSetDuration={(minutes) => s.setRestDuration(index, minutes)}
                         />
                       );
                     const ex = exerciseMap.get(step.exerciseId);
                     if (!ex)
                       return (
                         <p className="status error" key={step.stepId}>
-                          동작 자료를 찾을 수 없습니다. 백업 자료를 확인해
-                          주세요.
+                          동작 자료를 찾을 수 없습니다. 백업 자료를 확인해 주세요.
                         </p>
                       );
                     const timing = getStepTiming(step, ex);
@@ -1122,13 +1044,11 @@ export function SequenceWorkbench({
                     const expanded = previewStep === step.stepId;
                     return (
                       <article
-                        className={`flow-step pf-movement-card pf-movement-card--step ${step.locked ? "is-locked" : ""} ${expanded ? "is-selected" : ""}`}
+                        className={`flow-step pf-movement-card pf-movement-card--step ${step.locked ? 'is-locked' : ''} ${expanded ? 'is-selected' : ''}`}
                         key={step.stepId}
                       >
                         <div className="step-main">
-                          <span className="step-number">
-                            {String(index + 1).padStart(2, "0")}
-                          </span>
+                          <span className="step-number">{String(index + 1).padStart(2, '0')}</span>
                           <button
                             className="step-art"
                             onClick={() => onOpenYouTubePreview(ex)}
@@ -1138,63 +1058,47 @@ export function SequenceWorkbench({
                           </button>
                           <button
                             className="step-title"
-                            onClick={(event) =>
-                              openInspector(step, event.currentTarget)
-                            }
+                            onClick={(event) => openInspector(step, event.currentTarget)}
                             aria-expanded={expanded}
                           >
                             <strong>{ex.nameKo}</strong>
                             <span>
-                              {equipmentLabel(
-                                getExerciseEquipment(ex).requiredEquipment,
-                              )}
-                              {(step.repetitions !== undefined ||
-                                step.sets !== undefined) && (
+                              {equipmentLabel(getExerciseEquipment(ex).requiredEquipment)}
+                              {(step.repetitions !== undefined || step.sets !== undefined) && (
                                 <>
-                                  {" "}
-                                  ·{" "}
+                                  {' '}
+                                  ·{' '}
                                   {step.repetitions !== undefined
                                     ? `${step.repetitions}회`
-                                    : "횟수 미지정"}
-                                  {step.sets !== undefined
-                                    ? ` × ${step.sets}세트`
-                                    : ""}
+                                    : '횟수 미지정'}
+                                  {step.sets !== undefined ? ` × ${step.sets}세트` : ''}
                                 </>
                               )}
-                              {step.sideMode && (
-                                <>
-                                  {" "}
-                                  · {getStepSideLabels(step, ex).join(" → ")}
-                                </>
-                              )}
-                              <span className="step-target">
-                                {" "}
-                                ·{" "}
+                              {step.sideMode && <> · {getStepSideLabels(step, ex).join(' → ')}</>}
+                              <span
+                                className={`step-target ${!reviewed || isMovementIdeaExercise(ex) ? 'step-review-status' : ''}`}
+                              >
+                                {' '}
+                                ·{' '}
                                 {isMovementIdeaExercise(ex)
-                                  ? "내 창작 메모 · 전문가 검증 아님"
+                                  ? '내 창작 메모 · 전문가 검증 아님'
                                   : reviewed
-                                    ? ex.targetMuscles.slice(0, 2).join("·")
-                                    : "검토 전 자료"}
+                                    ? ex.targetMuscles.slice(0, 2).join('·')
+                                    : '검토 전 자료'}
                               </span>
                             </span>
                           </button>
                           <span className="v3-step-time">
                             {formatSecondsToMMSS(timing.totalSec)}
                             {step.locked && (
-                              <LockKeyhole
-                                className="v3-locked-mark"
-                                size={13}
-                                aria-label="잠금"
-                              />
+                              <LockKeyhole className="v3-locked-mark" size={13} aria-label="잠금" />
                             )}
                           </span>
                           <button
                             className="icon-btn v3-step-more"
                             aria-label={`${index + 1}번 동작 블록 편집`}
                             aria-expanded={expanded}
-                            onClick={(event) =>
-                              openInspector(step, event.currentTarget)
-                            }
+                            onClick={(event) => openInspector(step, event.currentTarget)}
                           >
                             <MoreHorizontal size={19} />
                           </button>
@@ -1210,7 +1114,7 @@ export function SequenceWorkbench({
                             )}
                             <button
                               className="icon-btn"
-                              aria-label={`${index + 1}번 동작 ${step.locked ? "잠금 해제" : "잠금"}`}
+                              aria-label={`${index + 1}번 동작 ${step.locked ? '잠금 해제' : '잠금'}`}
                               aria-pressed={!!step.locked}
                               onClick={() => s.toggleStepLock(index)}
                             >
@@ -1226,7 +1130,7 @@ export function SequenceWorkbench({
                               disabled={step.locked}
                               onClick={() => {
                                 setReplaceIndex(index);
-                                setReplaceSearch("");
+                                setReplaceSearch('');
                               }}
                             >
                               <RefreshCw size={17} />
@@ -1247,9 +1151,7 @@ export function SequenceWorkbench({
                 <select
                   value={regenerateSection}
                   onChange={(event) =>
-                    setRegenerateSection(
-                      event.target.value as typeof regenerateSection,
-                    )
+                    setRegenerateSection(event.target.value as typeof regenerateSection)
                   }
                 >
                   <option value="all">전체 구간</option>
@@ -1268,9 +1170,9 @@ export function SequenceWorkbench({
                       availableEquipment: selectedEquipment,
                       ownedApparatus: getEquipmentFamilies(selectedEquipment),
                     },
-                    regenerateSection === "all" ? undefined : regenerateSection,
+                    regenerateSection === 'all' ? undefined : regenerateSection,
                   );
-                  setNotice("");
+                  setNotice('');
                 }}
               >
                 <RefreshCw size={16} />
@@ -1282,13 +1184,9 @@ export function SequenceWorkbench({
             <RestInsertControl
               steps={s.activeSteps}
               labelForStep={(step) =>
-                isRestStep(step)
-                  ? "휴식"
-                  : (exerciseMap.get(step.exerciseId)?.nameKo ?? "동작")
+                isRestStep(step) ? '휴식' : (exerciseMap.get(step.exerciseId)?.nameKo ?? '동작')
               }
-              onAdd={(duration, afterIndex) =>
-                s.addRestStep(duration, afterIndex)
-              }
+              onAdd={(duration, afterIndex) => s.addRestStep(duration, afterIndex)}
             />
           )}
           {s.activeSteps.length > 0 && (
@@ -1297,7 +1195,7 @@ export function SequenceWorkbench({
                 className="text-button"
                 onClick={() => {
                   s.fitActiveDuration();
-                  setNotice("");
+                  setNotice('');
                 }}
               >
                 <Clock3 size={16} />
@@ -1307,7 +1205,7 @@ export function SequenceWorkbench({
                 className="text-button"
                 onClick={() => {
                   s.saveCurrentSequenceToBinder(true);
-                  setNotice("");
+                  setNotice('');
                 }}
               >
                 <Copy size={16} />
@@ -1346,20 +1244,14 @@ export function SequenceWorkbench({
             </div>
           )}
           {s.activeSteps.length > 0 && (
-            <p
-              className="workbench-readiness-summary"
-              id="start-class-readiness"
-            >
+            <p className="workbench-readiness-summary" id="start-class-readiness">
               {startReadiness} 저장과 수업 시작은 미리보기에서 이어갑니다.
             </p>
           )}
           {!s.activeSteps.length && (
             <details className="workbench-automation-tools">
               <summary>자동 구성·휴식 먼저 넣기</summary>
-              <p>
-                검토한 동작 중 시간·기구·난이도와 최근 수업 기록에 맞춰
-                구성합니다.
-              </p>
+              <p>검토한 동작 중 시간·기구·난이도와 최근 수업 기록에 맞춰 구성합니다.</p>
               <div>
                 <button
                   type="button"
@@ -1379,35 +1271,59 @@ export function SequenceWorkbench({
                 <button
                   type="button"
                   className="btn-secondary"
+                  disabled={reviewedCatalogCount === 0}
+                  aria-describedby={
+                    reviewedCatalogCount === 0 ? 'automatic-review-guidance' : undefined
+                  }
                   onClick={() => {
-                    setPlanningMode("auto");
+                    setPlanningMode('auto');
                     generate();
                   }}
                 >
                   <RefreshCw size={16} /> 시퀀스 만들기
                 </button>
               </div>
+              {reviewedCatalogCount === 0 && (
+                <div>
+                  <p id="automatic-review-guidance">
+                    자동 구성에 사용할 검토 완료 동작이 아직 없어요. 동작 상세에서 출처와 동작
+                    내용을 확인하고 강사 검토를 먼저 완료해 주세요.
+                  </p>
+                  <button type="button" className="btn-secondary" onClick={openExerciseFinder}>
+                    검토할 동작 찾기
+                  </button>
+                </div>
+              )}
               <RestInsertControl
                 steps={s.activeSteps}
-                labelForStep={() => "휴식"}
-                onAdd={(duration, afterIndex) =>
-                  s.addRestStep(duration, afterIndex)
-                }
+                labelForStep={() => '휴식'}
+                onAdd={(duration, afterIndex) => s.addRestStep(duration, afterIndex)}
               />
             </details>
           )}
+          <details
+            className="workbench-automation-tools workbench-ai-copilot-details"
+            open={aiCopilotOpen}
+            onToggle={(event) => setAiCopilotOpen(event.currentTarget.open)}
+          >
+            <summary>주제·이력 맞춤 로컬 추천 · 외부 AI 연결 대기</summary>
+            {aiCopilotOpen && (
+              <AiSequenceCoPilotPanel
+                criteria={criteria}
+                selectedEquipment={selectedEquipment}
+                onAppliedSequence={() => setWorkflowStep('arrange')}
+                onOpenExerciseDetail={onOpenYouTubePreview}
+              />
+            )}
+          </details>
           <div className="workbench-footnotes">
             <button onClick={onOpenClipper}>YouTube 참고 자료 등록</button>
-            <button onClick={() => onOpenLogModal(s.activeSequenceId)}>
-              진행한 수업 기록
-            </button>
+            <button onClick={() => onOpenLogModal(s.activeSequenceId)}>진행한 수업 기록</button>
           </div>
         </section>
         <aside
           className="v2-inline-finder"
-          aria-label={
-            wideEditor && selectedStep ? "선택 동작 속성" : "동작 찾기"
-          }
+          aria-label={wideEditor && selectedStep ? '선택 동작 속성' : '동작 찾기'}
         >
           {wideEditor && selectedStep ? (
             <div className="step-properties-panel">
@@ -1436,12 +1352,17 @@ export function SequenceWorkbench({
                 onReplace={() => {
                   closeInspector();
                   setReplaceIndex(selectedStepIndex);
-                  setReplaceSearch("");
+                  setReplaceSearch('');
                 }}
               />
             </div>
           ) : wideEditor ? (
-            <InlineExerciseFinder onOpenExercise={onOpenYouTubePreview} />
+            <InlineExerciseFinder
+              onOpenExercise={onOpenYouTubePreview}
+              classEquipment={EQUIPMENT_OPTIONS.filter((option) =>
+                selectedEquipment.includes(option.id),
+              ).map((option) => option.id)}
+            />
           ) : null}
         </aside>
       </div>
@@ -1468,7 +1389,7 @@ export function SequenceWorkbench({
               onReplace={() => {
                 closeInspector();
                 setReplaceIndex(selectedStepIndex);
-                setReplaceSearch("");
+                setReplaceSearch('');
               }}
             />
           )}
@@ -1484,13 +1405,17 @@ export function SequenceWorkbench({
       >
         <div ref={finderContentRef} className="workbench-finder-content">
           {!wideEditor && finderHasOpened && (
-            <InlineExerciseFinder onOpenExercise={onOpenYouTubePreview} />
+            <InlineExerciseFinder
+              onOpenExercise={onOpenYouTubePreview}
+              classEquipment={EQUIPMENT_OPTIONS.filter((option) =>
+                selectedEquipment.includes(option.id),
+              ).map((option) => option.id)}
+            />
           )}
         </div>
         <footer className="workbench-finder-footer">
           <p aria-live="polite">
-            <strong>{exerciseStepCount}개 동작</strong> ·{" "}
-            {formatSecondsToMMSS(total)}
+            <strong>{exerciseStepCount}개 동작</strong> · {formatSecondsToMMSS(total)}
           </p>
           <button type="button" className="btn-primary" onClick={closeFinder}>
             수업 구성으로 돌아가기 <ArrowRight size={17} />
@@ -1501,11 +1426,11 @@ export function SequenceWorkbench({
         <SequencePlanPreview
           onClose={() => {
             setPlanPreviewOpen(false);
-            setWorkflowStep("arrange");
+            setWorkflowStep('arrange');
           }}
           onSave={() => {
             s.saveCurrentSequenceToBinder(true);
-            setNotice("");
+            setNotice('');
           }}
           onStart={startClass}
           canStartClass={canStartClass}
@@ -1545,7 +1470,7 @@ export function SequenceWorkbench({
                     type="button"
                     key={minutes}
                     aria-pressed={Number(customTime) === minutes}
-                    className={Number(customTime) === minutes ? "selected" : ""}
+                    className={Number(customTime) === minutes ? 'selected' : ''}
                     onClick={() => setDuration(minutes)}
                   >
                     {minutes}
@@ -1553,7 +1478,7 @@ export function SequenceWorkbench({
                   </button>
                 ))}
                 <label
-                  className={`custom-duration ${![30, 50, 60].includes(Number(customTime)) ? "selected" : ""}`}
+                  className={`custom-duration ${![30, 50, 60].includes(Number(customTime)) ? 'selected' : ''}`}
                 >
                   <span>직접</span>
                   <input
@@ -1570,11 +1495,7 @@ export function SequenceWorkbench({
                         ...previous,
                         targetMinutes: value,
                       }));
-                      if (
-                        Number.isInteger(value) &&
-                        value >= 10 &&
-                        value <= 120
-                      )
+                      if (Number.isInteger(value) && value >= 10 && value <= 120)
                         s.setActiveSequenceMeta({ targetMinutes: value });
                     }}
                   />
@@ -1594,9 +1515,7 @@ export function SequenceWorkbench({
                     ...criteria,
                     restMinutes: minutes,
                     targetMinutes:
-                      Number.isInteger(entered) &&
-                      entered >= 10 &&
-                      entered <= 120
+                      Number.isInteger(entered) && entered >= 10 && entered <= 120
                         ? entered
                         : criteria.targetMinutes,
                   });
@@ -1611,10 +1530,8 @@ export function SequenceWorkbench({
                     type="button"
                     key={option.value}
                     aria-pressed={criteria.focusPreset === option.value}
-                    className={`chip ${criteria.focusPreset === option.value ? "selected" : ""}`}
-                    onClick={() =>
-                      setCriteria({ ...criteria, focusPreset: option.value })
-                    }
+                    className={`chip ${criteria.focusPreset === option.value ? 'selected' : ''}`}
+                    onClick={() => setCriteria({ ...criteria, focusPreset: option.value })}
                   >
                     {option.label}
                   </button>
@@ -1624,8 +1541,7 @@ export function SequenceWorkbench({
             <fieldset className="brief-field">
               <legend>이번 수업에 사용할 기구</legend>
               <p className="muted">
-                여러 기구를 함께 선택할 수 있습니다. 선택한 각 기구의 승인
-                동작을 포함합니다.
+                여러 기구를 함께 선택할 수 있습니다. 선택한 각 기구의 승인 동작을 포함합니다.
               </p>
               <div className="inventory-options">
                 {EQUIPMENT_OPTIONS.map((equipment) => (
@@ -1636,34 +1552,25 @@ export function SequenceWorkbench({
                       disabled={!s.ownedEquipment.includes(equipment.id)}
                       onChange={() => {
                         const next = selectedEquipment.includes(equipment.id)
-                          ? selectedEquipment.filter(
-                              (id) => id !== equipment.id,
-                            )
+                          ? selectedEquipment.filter((id) => id !== equipment.id)
                           : [...selectedEquipment, equipment.id];
                         setCriteria({ ...criteria, availableEquipment: next });
                       }}
                     />
                     <span>
                       {equipment.labelKo}
-                      {!s.ownedEquipment.includes(equipment.id)
-                        ? " · 미보유"
-                        : ""}
+                      {!s.ownedEquipment.includes(equipment.id) ? ' · 미보유' : ''}
                     </span>
                   </label>
                 ))}
               </div>
-              <button
-                className="text-button"
-                type="button"
-                onClick={openInventory}
-              >
+              <button className="text-button" type="button" onClick={openInventory}>
                 내 보유 기구·소도구 설정
               </button>
               {unavailableEquipment.length > 0 && (
                 <p className="status error">
-                  이전에 선택한 {equipmentLabel(unavailableEquipment)}를 현재
-                  보유하지 않습니다. 보유 설정을 확인하거나 선택을 해제해
-                  주세요.
+                  이전에 선택한 {equipmentLabel(unavailableEquipment)}를 현재 보유하지 않습니다.
+                  보유 설정을 확인하거나 선택을 해제해 주세요.
                   <button
                     className="text-button"
                     type="button"
@@ -1681,9 +1588,7 @@ export function SequenceWorkbench({
                 </p>
               )}
               {!selectedEquipment.length && (
-                <p className="muted">
-                  수업에 사용할 기구를 하나 이상 선택해 주세요.
-                </p>
+                <p className="muted">수업에 사용할 기구를 하나 이상 선택해 주세요.</p>
               )}
             </fieldset>
             <div className="brief-pair">
@@ -1731,11 +1636,7 @@ export function SequenceWorkbench({
               </summary>
               <fieldset className="brief-field">
                 <legend>이번 수업에서 쓸 수 있는 소도구</legend>
-                <button
-                  className="text-button"
-                  type="button"
-                  onClick={openInventory}
-                >
+                <button className="text-button" type="button" onClick={openInventory}>
                   보유 소도구 변경
                 </button>
                 <div className="focus-options">
@@ -1743,29 +1644,20 @@ export function SequenceWorkbench({
                     <button
                       type="button"
                       key={key}
-                      className={`chip ${criteria.preferredProps.includes(key as PropType) ? "selected" : ""}`}
-                      aria-pressed={criteria.preferredProps.includes(
-                        key as PropType,
-                      )}
-                      disabled={
-                        key !== "none" &&
-                        !s.ownedProps.includes(key as PropType)
-                      }
+                      className={`chip ${criteria.preferredProps.includes(key as PropType) ? 'selected' : ''}`}
+                      aria-pressed={criteria.preferredProps.includes(key as PropType)}
+                      disabled={key !== 'none' && !s.ownedProps.includes(key as PropType)}
                       onClick={() => {
                         const prop = key as PropType;
                         setCriteria({
                           ...criteria,
                           preferredProps:
-                            prop === "none"
-                              ? ["none"]
+                            prop === 'none'
+                              ? ['none']
                               : criteria.preferredProps.includes(prop)
-                                ? criteria.preferredProps.filter(
-                                    (item) => item !== prop,
-                                  )
+                                ? criteria.preferredProps.filter((item) => item !== prop)
                                 : [
-                                    ...criteria.preferredProps.filter(
-                                      (item) => item !== "none",
-                                    ),
+                                    ...criteria.preferredProps.filter((item) => item !== 'none'),
                                     prop,
                                   ],
                         });
@@ -1785,8 +1677,7 @@ export function SequenceWorkbench({
                         setCriteria({
                           ...criteria,
                           preferredProps: criteria.preferredProps.filter(
-                            (prop) =>
-                              prop === "none" || s.ownedProps.includes(prop),
+                            (prop) => prop === 'none' || s.ownedProps.includes(prop),
                           ),
                         })
                       }
@@ -1800,18 +1691,16 @@ export function SequenceWorkbench({
                 <legend>강사 계획 목표 · 선택</legend>
                 {(
                   [
-                    { id: "pelvic-control", label: "골반 움직임 인지·조절" },
-                    { id: "trunk-hip-coordination", label: "몸통·고관절 협응" },
-                    { id: "mobility", label: "가동성" },
-                    { id: "strength", label: "근력" },
+                    { id: 'pelvic-control', label: '골반 움직임 인지·조절' },
+                    { id: 'trunk-hip-coordination', label: '몸통·고관절 협응' },
+                    { id: 'mobility', label: '가동성' },
+                    { id: 'strength', label: '근력' },
                   ] as const
                 ).map((goal) => (
                   <label key={goal.id}>
                     <input
                       type="checkbox"
-                      checked={
-                        criteria.planningGoals?.includes(goal.id) ?? false
-                      }
+                      checked={criteria.planningGoals?.includes(goal.id) ?? false}
                       onChange={() => {
                         const current = criteria.planningGoals ?? [];
                         setCriteria({
@@ -1830,28 +1719,20 @@ export function SequenceWorkbench({
                 <legend>강사 관찰 메모 · 선택</legend>
                 {(
                   [
-                    { id: "anterior-pelvic-tilt", label: "전방경사 관찰" },
-                    { id: "posterior-pelvic-tilt", label: "후방경사 관찰" },
+                    { id: 'anterior-pelvic-tilt', label: '전방경사 관찰' },
+                    { id: 'posterior-pelvic-tilt', label: '후방경사 관찰' },
                   ] as const
                 ).map((observation) => (
                   <label key={observation.id}>
                     <input
                       type="checkbox"
-                      checked={
-                        criteria.instructorObservations?.includes(
-                          observation.id,
-                        ) ?? false
-                      }
+                      checked={criteria.instructorObservations?.includes(observation.id) ?? false}
                       onChange={() => {
                         const current = criteria.instructorObservations ?? [];
                         setCriteria({
                           ...criteria,
-                          instructorObservations: current.includes(
-                            observation.id,
-                          )
-                            ? current.filter(
-                                (value) => value !== observation.id,
-                              )
+                          instructorObservations: current.includes(observation.id)
+                            ? current.filter((value) => value !== observation.id)
                             : [...current, observation.id],
                         });
                       }}
@@ -1860,8 +1741,7 @@ export function SequenceWorkbench({
                   </label>
                 ))}
                 <p className="muted">
-                  관찰·계획 메모로 보관하며 자동 진단이나 치료 목적의 추천에는
-                  사용하지 않습니다.
+                  관찰·계획 메모로 보관하며 자동 진단이나 치료 목적의 추천에는 사용하지 않습니다.
                 </p>
               </fieldset>
               <label className="form-field">
@@ -1882,8 +1762,8 @@ export function SequenceWorkbench({
                 </select>
               </label>
               <p className="muted">
-                조건에 맞는 동작 안에서 최근 사용 동작의 우선순위를 낮춥니다. 꼭
-                필요한 반복은 포함될 수 있습니다.
+                조건에 맞는 동작 안에서 최근 사용 동작의 우선순위를 낮춥니다. 꼭 필요한 반복은
+                포함될 수 있습니다.
               </p>
             </details>
             <button
@@ -1896,12 +1776,10 @@ export function SequenceWorkbench({
               조건 적용하고 만들기
               <ArrowRight size={18} />
             </button>
-            <p className="recommendation-note">
-              조건 기반 추천 · 승인한 동작으로 구성합니다.
-            </p>
+            <p className="recommendation-note">조건 기반 추천 · 승인한 동작으로 구성합니다.</p>
             <p className="muted">
-              기구가 바뀌면 전환 45초, 같은 기구에서는 15초를 전체 시간에
-              포함합니다. 잠긴 항목의 시간은 유지합니다.
+              기구가 바뀌면 전환 45초, 같은 기구에서는 15초를 전체 시간에 포함합니다. 잠긴 항목의
+              시간은 유지합니다.
             </p>
           </section>
           <details className="condition-template">
@@ -1922,23 +1800,15 @@ export function SequenceWorkbench({
                 disabled={!templateName.trim()}
                 onClick={() => {
                   const minutes = Number(customTime);
-                  if (
-                    !Number.isInteger(minutes) ||
-                    minutes < 10 ||
-                    minutes > 120
-                  ) {
-                    setNotice(
-                      "수업 시간은 10~120분 사이의 정수로 입력해 주세요.",
-                    );
+                  if (!Number.isInteger(minutes) || minutes < 10 || minutes > 120) {
+                    setNotice('수업 시간은 10~120분 사이의 정수로 입력해 주세요.');
                     return;
                   }
-                  s.setDraftCriteria(
-                    withExactSelection({ ...criteria, targetMinutes: minutes }),
-                  );
+                  s.setDraftCriteria(withExactSelection({ ...criteria, targetMinutes: minutes }));
                   if (usePilatesStore.getState().generationError) return;
                   s.saveConditionTemplate(templateName.trim());
-                  setTemplateName("");
-                  setNotice("수업 조건을 보관했습니다.");
+                  setTemplateName('');
+                  setNotice('수업 조건을 보관했습니다.');
                 }}
               >
                 보관
@@ -1956,11 +1826,7 @@ export function SequenceWorkbench({
             ))}
           </details>
           <div className="v2-conditions-actions">
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={closeConditions}
-            >
+            <button type="button" className="btn-secondary" onClick={closeConditions}>
               닫기
             </button>
           </div>
@@ -1986,8 +1852,7 @@ export function SequenceWorkbench({
               className="replacement-item"
               key={ex.id}
               onClick={() => {
-                if (replaceIndex !== null)
-                  s.replaceStepExercise(replaceIndex, ex.id);
+                if (replaceIndex !== null) s.replaceStepExercise(replaceIndex, ex.id);
                 setReplaceIndex(null);
               }}
             >
@@ -1995,10 +1860,10 @@ export function SequenceWorkbench({
               <span>
                 <strong>{ex.nameKo}</strong>
                 <small>
-                  {ex.nameEn} ·{" "}
+                  {ex.nameEn} ·{' '}
                   {ex.blockCategory === changingStep?.blockCategory
-                    ? "같은 구간"
-                    : "다른 구간 · 구성 확인 필요"}
+                    ? '같은 구간'
+                    : '다른 구간 · 구성 확인 필요'}
                 </small>
               </span>
               <ArrowRight size={17} />
@@ -2014,7 +1879,7 @@ export function SequenceWorkbench({
       </LightDismissDialog>
       {!onOpenIdeaSheet && localIdeaSheet.open && (
         <MovementIdeaSheet
-          key={localIdeaSheet.exercise?.id ?? "new-idea"}
+          key={localIdeaSheet.exercise?.id ?? 'new-idea'}
           open={localIdeaSheet.open}
           initialExercise={localIdeaSheet.exercise}
           onClose={() => setLocalIdeaSheet({ open: false, exercise: null })}

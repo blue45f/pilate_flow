@@ -145,21 +145,27 @@
 }
 .ml-pattern-tile-art {
   position: relative;
-  height: 140px;
+  height: 148px;
   overflow: hidden;
-  border-radius: 13px;
-  border: 1px solid #e6e2d7;
-  background: #f1eee4;
+  border-radius: 16px;
+  border: 1px solid #dadfd0;
+  background: radial-gradient(circle at 50% 44%, #fcfaf4 0%, #ede8db 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 6px 16px rgba(23, 63, 54, 0.05);
 }
 .ml-pattern-tile-art > span {
   position: absolute;
   left: 10px;
   top: 9px;
   border-radius: 20px;
-  padding: 4px 7px;
-  background: #dce2d0;
-  color: #355143;
+  padding: 4px 8px;
+  background: rgba(220, 228, 212, 0.92);
+  border: 1px solid rgba(40, 76, 64, 0.12);
+  color: #25493b;
+  font-weight: 700;
   font-size: 9px;
+  z-index: 1;
 }
 .ml-pattern-tile-art svg {
   display: block;
@@ -225,6 +231,68 @@
   background: #fffdf7;
   box-shadow: 0 8px 24px #1d403508;
   scroll-margin-top: 24px;
+}
+.ml-preview-exercise-summary {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f6f4ec;
+  border: 1px solid #d8d9cb;
+  display: grid;
+  gap: 8px;
+}
+.ml-preview-exercise-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ml-preview-exercise-header strong {
+  font-size: 13px;
+  color: #173f36;
+}
+.ml-preview-exercise-header span {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e6eadf;
+  color: #2f5443;
+}
+.ml-preview-exercise-cues h4,
+.ml-preview-exercise-precautions h4 {
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: #4c5f4c;
+}
+.ml-preview-exercise-cues ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #26382b;
+  display: grid;
+  gap: 3px;
+}
+.ml-preview-exercise-precautions p {
+  margin: 0;
+  font-size: 12px;
+  color: #5c3a21;
+  background: #f5ebe1;
+  padding: 6px 9px;
+  border-radius: 8px;
+}
+.ml-preview-exercise-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.ml-preview-exercise-actions button {
+  min-height: 44px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 .ml-preview-heading {
   display: flex;

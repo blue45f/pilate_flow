@@ -65,6 +65,14 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     expect(preview).toHaveTextContent('전문가 미검토');
     expect(preview).toHaveTextContent('일시정지 · 자동 재생 없음');
     expect(within(preview).getByRole('button', { name: '한 주기 재생' })).toBeEnabled();
+    const summary = within(preview).getByRole('region', {
+      name: '연결 동작 설명·주의점 및 시퀀스 삽입',
+    });
+    expect(summary).toHaveTextContent('동작 설명·티칭 큐');
+    expect(summary).toHaveTextContent('주의점·금기 사항');
+    expect(
+      within(summary).getByRole('button', { name: '노트 상세·검토 열기' }),
+    ).toBeEnabled();
     expect(usePilatesStore.getState().exercises).toBe(before.exercises);
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
     expect(usePilatesStore.getState().historyLogs).toBe(before.historyLogs);
