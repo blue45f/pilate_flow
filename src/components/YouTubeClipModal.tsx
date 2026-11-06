@@ -46,6 +46,7 @@ import { ExerciseEvidencePanel } from './ExerciseEvidencePanel';
 import { ExerciseYouTubeGallery } from './ExerciseYouTubeGallery';
 import { MovementArt } from './MovementArt';
 import { MotionReferencePlayer } from './MotionReferencePlayer';
+import { MovementMediaGuidancePanel } from './MovementMediaGuidancePanel';
 import '../styles/library.css';
 import '../styles/review-usability.css';
 
@@ -803,6 +804,7 @@ const MovementDetails: React.FC<{
       </div>
       <MotionReferencePlayer exerciseId={exercise.id} exerciseName={exercise.nameKo} />
       <ExerciseYouTubeGallery exercise={exercise} maxPerRegion={3} />
+      <MovementMediaGuidancePanel key={exercise.id} exercise={exercise} />
       <details
         className="pending-instruction-notes"
         onToggle={(event) => setMotionLabOpen(event.currentTarget.open)}
