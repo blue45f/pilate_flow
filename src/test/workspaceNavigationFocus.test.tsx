@@ -240,3 +240,21 @@ describe('workspace heading focus follows committed lazy navigation', () => {
     expect(usePilatesStore.getState().historyLogs).toHaveLength(0);
   });
 });
+
+it('keeps the active-class exit guard when returning from the beginner guide', async () => {
+  render(<App />);
+  await screen.findByRole('timer');
+  flushFrames();
+  fireEvent.click(screen.getByRole('button', { name: '수업 시작' }));
+  jump(2);
+  const before = usePilatesStore.getState();
+  fireEvent.click(screen.getByRole('button', { name: '강사 연습실과 사용법' }));
+  const guide = await screen.findByRole('dialog', { name: '강사 연습실' });
+  expect(within(guide).getByRole('heading', { name: '수업 조건 정하기' })).toBeInTheDocument();
+  fireEvent.click(within(guide).getByRole('button', { name: '내 수업 구성으로 가기' }));
+  expect(await screen.findByRole('dialog', { name: '수업 화면을 나갈까요?' })).toBeInTheDocument();
+  expect(usePilatesStore.getState().activeTab).toBe('stage');
+  expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
+  expect(usePilatesStore.getState().historyLogs).toBe(before.historyLogs);
+  expect(usePilatesStore.getState().instructorStudyState).toBe(before.instructorStudyState);
+});

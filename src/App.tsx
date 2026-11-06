@@ -370,7 +370,7 @@ export function App() {
           aria-label="강사 연습실과 사용법"
           onClick={() => {
             setMenuOpen(false);
-            setStudyOpen({ mode: 'study' });
+            setStudyOpen({ mode: 'guide' });
           }}
         >
           <BookOpen size={19} aria-hidden="true" /> 사용법·연습실
@@ -567,6 +567,10 @@ export function App() {
           <InstructorStudyDialog
             exercises={state.exercises}
             study={state.instructorStudyState ?? createEmptyInstructorStudyState()}
+            onOpenWorkbench={() => {
+              setStudyOpen(null);
+              changeTab('workbench');
+            }}
             initialMode={studyOpen.mode}
             initialExerciseId={studyOpen.exerciseId}
             onToggleBookmark={(id) => {

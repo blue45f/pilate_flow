@@ -249,3 +249,32 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.study-guide-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  color: #1d695e;
+  background: #e8f2ee;
+}
+.study-guide-actions {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding-left: 24px;
+  line-height: 1.65;
+}
+.study-guide-actions li {
+  padding-left: 4px;
+  overflow-wrap: anywhere;
+}
+.study-guide-actions li::marker {
+  color: #1d695e;
+  font-weight: 700;
+}
+.study-guide-return {
+  width: 100%;
+  min-height: 44px;
+}

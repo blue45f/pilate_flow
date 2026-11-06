@@ -85,3 +85,31 @@ describe('instructor personal study, separate from review', () => {
     expect(screen.getByText('수업 진행과 기록 보관')).toBeInTheDocument();
   });
 });
+
+it('opens the existing workbench only on explicit request without completing tutorial or reviewing data', () => {
+  const onOpenWorkbench = vi.fn();
+  const onTutorialTaskChange = vi.fn();
+  const onOpenReview = vi.fn();
+  render(
+    <InstructorStudyDialog
+      exercises={INITIAL_EXERCISES}
+      study={{ bookmarkedExerciseIds: [], rehearsalCueHidden: true, completedTutorialTaskIds: [] }}
+      onToggleBookmark={vi.fn()}
+      onCueHiddenChange={vi.fn()}
+      onTutorialTaskChange={onTutorialTaskChange}
+      onOpenReview={onOpenReview}
+      onClose={vi.fn()}
+      onOpenWorkbench={onOpenWorkbench}
+      initialMode="guide"
+    />,
+  );
+  expect(onOpenWorkbench).not.toHaveBeenCalled();
+  expect(screen.getByRole('list')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '다음' }));
+  expect(screen.getByText(/검토 기록은 선택/)).toBeInTheDocument();
+  expect(screen.queryByText(/직접 등록·검토한 동작/)).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '내 수업 구성으로 가기' }));
+  expect(onOpenWorkbench).toHaveBeenCalledTimes(1);
+  expect(onTutorialTaskChange).not.toHaveBeenCalled();
+  expect(onOpenReview).not.toHaveBeenCalled();
+});

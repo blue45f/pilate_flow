@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Bookmark, Check, Eye, EyeOff } from 'lucide-react';
+import { Bookmark, Check, Eye, EyeOff, Clock3, ListOrdered, NotebookPen } from 'lucide-react';
 import { CANONICAL_BLOCKS } from '../data/pilatesCatalog';
 import { PfBadge, PfButton, PfCard, PfEmptyState, PfSearchField, PfTabs } from '../design-system';
 import type { PilatesExercise, LayerMode } from '../types/pilates';
@@ -14,23 +14,47 @@ import '../styles/instructor-study.css';
 const INSTRUCTOR_TUTORIAL_TASKS = [
   {
     id: 'conditions',
-    title: '다음 수업 조건 준비',
-    body: '계획의 수업 조건에서 반·장소의 보유 장비, 목표 시간과 휴식을 정합니다. 반별 조건은 명시적으로 저장·적용하며, 나이는 난이도를 자동으로 정하지 않습니다.',
+    icon: Clock3,
+    title: '수업 조건 정하기',
+    body: '먼저 목표 시간과 사용할 기구만 정해 보세요.',
+    steps: [
+      '수업 구성에서 시간·기구 표시를 누르세요.',
+      '목표 시간과 가지고 있는 기구를 골라요.',
+      '나머지 세부 조건은 필요할 때 바꿔도 돼요.',
+    ],
   },
   {
     id: 'compose',
-    title: '블록을 조합하고 검토',
-    body: '직접 등록·검토한 동작을 추가하고 순서·좌우·횟수·시간을 편집합니다. 필요한 블록은 잠근 뒤 나머지만 다시 추천할 수 있습니다. 전체 시간에는 설명·전환·휴식을 포함합니다.',
+    icon: ListOrdered,
+    title: '동작 담고 순서 바꾸기',
+    body: '기존 동작도, 직접 만든 새 아이디어도 담을 수 있어요. 검토 기록은 선택이에요.',
+    steps: [
+      '동작 고르기 → 원하는 동작의 추가를 누르세요.',
+      '직접 만든 동작은 한 줄 아이디어 메모에서 시작해요.',
+      '담은 동작은 끌어서 옮기거나 위·아래 버튼으로 순서를 바꿔요.',
+    ],
   },
   {
     id: 'rehearse',
-    title: '리허설로 흐름 숙지',
-    body: '전체 수업 계획 미리보기에서 항목·구간을 선택하고 느린 속도로 시간표를 연습합니다. 정확한 모션이 없는 동작은 제작 대기로 표시합니다. 동작 라이브러리의 관련 제작 초안에서는 미검토 도해의 선택 구간을 따로 연습할 수 있습니다. 리허설 기록이 운동 검수나 실제 수업 기록이 되지는 않습니다.',
+    icon: Eye,
+    title: '저장하고 미리보기',
+    body: '미리보기는 시간표를 살펴보는 기능이에요. 실제 운동 시범이나 수업 기록은 아니에요.',
+    steps: [
+      '수업 제목을 적고 저장을 누르세요.',
+      '시퀀스 미리보기에서 순서와 전체 시간을 확인해요.',
+      '시간표 리허설은 리허설 시작을 눌러야 시작해요.',
+    ],
   },
   {
     id: 'teach-record',
+    icon: NotebookPen,
     title: '수업 진행과 기록 보관',
-    body: '시간과 검토 조건이 맞는 수업안을 수업 모드로 진행합니다. 휴식도 시간에 포함되며 일시정지·다음 항목으로 이동할 수 있습니다. 종료 후 실제 시간·체감 강도·회고를 기록하고 백업을 보관합니다.',
+    body: '수업이 끝나면 실제 진행 시간과 느낀 점을 남겨 두세요.',
+    steps: [
+      '미리보기의 수업 시작에서 준비 상태를 확인해요.',
+      '수업 중에는 일시정지하거나 다음 항목으로 이동할 수 있어요.',
+      '종료 후 수업 기록을 저장하고 중요한 기록은 백업해 두세요.',
+    ],
   },
 ] as const;
 
@@ -47,6 +71,7 @@ interface InstructorStudyDialogProps {
   onTutorialTaskChange: (taskId: string, complete: boolean) => void;
   onOpenReview: (exercise: PilatesExercise) => void;
   onClose: () => void;
+  onOpenWorkbench?: () => void;
   initialExerciseId?: string;
   initialMode?: 'study' | 'guide';
 }
@@ -59,6 +84,7 @@ export function InstructorStudyDialog({
   onTutorialTaskChange,
   onOpenReview,
   onClose,
+  onOpenWorkbench,
   initialExerciseId,
   initialMode = 'study',
 }: InstructorStudyDialogProps) {
@@ -105,15 +131,28 @@ export function InstructorStudyDialog({
           onChange={setMode}
         />
         {mode === 'guide' ? (
-          <PfCard as="section" variant="subtle" className="study-guide" aria-label="수업 준비 사용법">
+          <PfCard
+            as="section"
+            variant="subtle"
+            className="study-guide"
+            aria-label="수업 준비 사용법"
+          >
             <div className="study-guide-top">
-              <p className="study-step-counter">
-                {tutorialIndex + 1} / {INSTRUCTOR_TUTORIAL_TASKS.length} · 과업별 안내
+              <p className="study-step-counter" role="status">
+                {tutorialIndex + 1} / {INSTRUCTOR_TUTORIAL_TASKS.length} · 짧은 사용법
               </p>
               {taskComplete && <PfBadge tone="success">실습 확인됨</PfBadge>}
             </div>
+            <div className="study-guide-icon" aria-hidden="true">
+              <task.icon size={28} />
+            </div>
             <h3>{task.title}</h3>
             <p>{task.body}</p>
+            <ol className="study-guide-actions">
+              {task.steps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
             <label className="study-task-check">
               <input
                 type="checkbox"
@@ -122,9 +161,7 @@ export function InstructorStudyDialog({
               />
               이 기능을 직접 해봤어요
             </label>
-            <p className="muted">
-              개인 사용법 체크입니다. 전문가 자격이나 동작·모션 검수 완료를 뜻하지 않습니다.
-            </p>
+            <p className="muted">내 사용법 체크이며, 운동·모션 검수와는 달라요.</p>
             <nav className="study-guide-navigation" aria-label="사용법 단계">
               <PfButton
                 variant="secondary"
@@ -141,6 +178,15 @@ export function InstructorStudyDialog({
                 다음
               </PfButton>
             </nav>
+            {onOpenWorkbench && (
+              <PfButton
+                variant="secondary"
+                className="study-guide-return"
+                onClick={onOpenWorkbench}
+              >
+                내 수업 구성으로 가기
+              </PfButton>
+            )}
           </PfCard>
         ) : (
           <div className="study-layout">
@@ -195,10 +241,7 @@ export function InstructorStudyDialog({
                 />
               )}
               {filtered.length > count && (
-                <PfButton
-                  variant="text"
-                  onClick={() => setLimit({ signature, count: count + 6 })}
-                >
+                <PfButton variant="text" onClick={() => setLimit({ signature, count: count + 6 })}>
                   {Math.min(6, filtered.length - count)}개 더 보기
                 </PfButton>
               )}
