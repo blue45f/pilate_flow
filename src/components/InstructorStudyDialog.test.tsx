@@ -22,7 +22,9 @@ describe('instructor personal study, separate from review', () => {
   it('keeps unreviewed teaching cues hidden, retains exact-motion absence and offers review', () => {
     const input = props();
     render(<InstructorStudyDialog {...input} />);
-    expect(screen.getByText('설정·호흡·큐는 강사 검토 후 숙지')).toBeInTheDocument();
+    expect(screen.getByText('티칭 메모 확인')).toBeInTheDocument();
+    expect(screen.getByText(/추가하거나 구성하는 데 검토는 필요하지 않습니다/)).toBeInTheDocument();
+    expect(screen.queryByText(/미검토 자료는 수업 진행/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '큐 확인하기' })).not.toBeInTheDocument();
     expect(screen.getAllByText(/모션 제작 대기/).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: '동작 노트에서 직접 검토' }));

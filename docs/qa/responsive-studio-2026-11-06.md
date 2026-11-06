@@ -38,8 +38,22 @@ The final integrated layout also preserves the new preset-entry button above the
 - Empty-state regression discovered visually: an inherited mobile grid-column rule could leave an implicit second column after removing the decorative image. Explicit child grid placement fixed it; Chrome and actual iOS Safari were recaptured.
 - Integrated teaching screen: high-contrast panel, heading and button colors checked at all four Chrome widths; corrected a white-panel/bright-text conflict and verified no horizontal overflow.
 - Installed iOS 27 Simulator, actual Mobile Safari: first-page render, layout, bottom navigation and primary actions visually checked. Simulator was controlled by app-specific simctl operations, not general desktop coordinate clicks, and shut down after this check.
-- Before latest-main integration: full Vitest 170 files / 1809 tests passed, latest workbench subset 24 tests passed, storage/account copy protection added with 18 new cases and related three-file / 24-case run passed. TypeScript and production build passed. Lint had zero errors and one pre-existing React refresh warning. Final integrated totals must be recorded separately.
+- Before latest-main integration: full Vitest 170 files / 1809 tests passed, latest workbench subset 24 tests passed, storage/account copy protection added with 18 new cases and related three-file / 24-case run passed. TypeScript and production build passed. Lint had zero errors and one pre-existing React refresh warning. Final integrated totals are recorded below.
 
 ## Explicit limits
 
-No claim is made that every feature on every page has been manually exercised. Safari editing, drag, save/reload and keyboard appearance were not exercised in the simulator render check. Desktop Safari automation was unavailable without changing its remote-automation setting, and no such setting was changed. Playwright WebKit was not installed or represented as Safari. Prior Android authoring verification belongs to the earlier authoring patch, not this final redesign. Physical phones and tablets were not tested. No SDK was installed, no production deployment was made for this change, and no real user data was used in the temporary browser contexts.
+No claim is made that every feature on every page has been manually exercised. Safari editing, drag, save/reload and keyboard appearance were not exercised in the simulator render check. Desktop Safari automation was unavailable without changing its remote-automation setting, and no such setting was changed. Playwright WebKit was not installed or represented as Safari. Prior Android authoring verification belongs to the earlier authoring patch, not this final redesign. Physical phones and tablets were not tested. No SDK was installed, this validation did not deploy to production, and no real user data was used in the temporary browser contexts.
+
+## Final integrated verification
+
+Integrated the PWA installation/update work, offline preset and timing work, and the Hosting cleanUrls navigation fix (2e4d60e), without restoring the superseded repository history.
+
+- Full Vitest: **177 files, 1,929 tests passed**. The subsequent study-help wording correction passed its focused four tests. That correction preserves the study recall behavior and clarifies that adding or composing a class does not require a review record.
+- TypeScript, production build, static PWA asset verification and motion-source ledger verification passed. PWA verification covered 40 emitted files; ledger checks covered 22 source identities plus six Node tests.
+- ESLint: zero errors, one existing React fast-refresh warning. Vite retained its existing large-chunk warning.
+- Final integrated Chrome: 320/390/768/1440px authoring, alternative reordering, undo, save/reload, preview, class entry and high-contrast checks passed. Short-height dialog focus/keyboard/save checks passed.
+- Independent review confirmed keyboard access to all four collapsed workbench sections, no horizontal overflow, and current-state validation in an already-open preview. Both first-load and repeat-entry study-dialog focus/restoration passed at all four widths.
+- Production build served with an actual 301 `/index.html` → `/` response: offline reload passed at 390 and 1440px. The old redirected-cache failure was not reproduced with the fixed worker.
+- Two-tab production update: new worker waited, no forced page reload, draft sentinel preserved, and old caches removed only after all old tabs closed.
+
+HTTPS behavior after release remains a separate deployment verification; localhost redirect tests are not described as an operating-site deployment check.

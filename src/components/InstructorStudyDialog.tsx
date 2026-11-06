@@ -297,10 +297,10 @@ export function InstructorStudyDialog({
                     className="study-review-needed"
                     aria-label="티칭 메모 검토 안내"
                   >
-                    <h4>설정·호흡·큐는 강사 검토 후 숙지</h4>
+                    <h4>티칭 메모 확인</h4>
                     <p>
-                      원문 참고값과 계획 메모를 먼저 검토해 주세요. 미검토 자료는 수업 진행이나 암기
-                      체크에 바로 쓰지 않습니다.
+                      이 연습 화면에는 검토 기록이 있는 티칭 메모가 표시됩니다. 동작을 수업에
+                      추가하거나 구성하는 데 검토는 필요하지 않습니다.
                     </p>
                     <PfButton variant="secondary" onClick={() => onOpenReview(selected)}>
                       <Check size={16} /> 동작 노트에서 직접 검토
