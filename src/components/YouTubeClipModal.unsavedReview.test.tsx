@@ -63,6 +63,7 @@ describe('unsaved metadata and the version added to a lesson', () => {
     const add = vi.fn(() => ({ success: true }));
     const close = vi.fn();
     render(<YouTubePreviewModal exercise={current()} onClose={close} onAddToSequence={add} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     openEditor();
     change('검토한 강사 별칭', alias);
     fireEvent.click(consent());
@@ -91,6 +92,7 @@ describe('unsaved metadata and the version added to a lesson', () => {
     const add = vi.fn(() => ({ success: true }));
     const close = vi.fn();
     render(<YouTubePreviewModal exercise={current()} onClose={close} onAddToSequence={add} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     change('검토한 강사 별칭', alias);
     expect(screen.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
     openEditor();
@@ -114,6 +116,7 @@ describe('unsaved metadata and the version added to a lesson', () => {
     const add = vi.fn(() => ({ success: true }));
     const close = vi.fn();
     render(<YouTubePreviewModal exercise={current()} onClose={close} onAddToSequence={add} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     openEditor();
     change('검토한 강사 별칭', alias);
     change(cueLabel, '저장할 합성 수정 큐 · 실제 운동 지시 아님');
@@ -127,7 +130,7 @@ describe('unsaved metadata and the version added to a lesson', () => {
     expect(current().cues).toEqual(['저장할 합성 수정 큐 · 실제 운동 지시 아님']);
     expect(current().review).toEqual(synthetic.review);
     expect(getExerciseReviewState(current())).toBe('stale');
-    expect(screen.getByRole('button', { name: '강사 검토 후 추가 가능' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
     expect(region().getByLabelText('검토한 강사 별칭')).toHaveValue(alias);
     expect(consent()).not.toBeChecked();
     expect(add).not.toHaveBeenCalled();
@@ -153,6 +156,7 @@ describe('unsaved metadata and the version added to a lesson', () => {
     const add = vi.fn(() => ({ success: true }));
     const close = vi.fn();
     render(<YouTubePreviewModal exercise={current()} onClose={close} onAddToSequence={add} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     openEditor();
     change('검토한 강사 별칭', alias);
     change('원본 영상 URL · 없으면 비워 두기', 'https://example.com/invalid-reference');
@@ -189,6 +193,7 @@ describe('unsaved metadata and the version added to a lesson', () => {
     const add = vi.fn();
     const close = vi.fn();
     render(<YouTubePreviewModal exercise={current()} onClose={close} onAddToSequence={add} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     expect(screen.getByRole('button', { name: '수업안에 추가됨' })).toBeDisabled();
     openEditor();
     change(durationLabel, '6');
@@ -209,6 +214,7 @@ describe('unsaved metadata and the version added to a lesson', () => {
     imported.review = { ...imported.review!, revision: exerciseRevision(imported) };
     usePilatesStore.setState({ exercises: [...INITIAL_EXERCISES, imported] });
     render(<YouTubePreviewModal exercise={imported} onClose={vi.fn()} onAddToSequence={vi.fn()} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     openEditor();
     expect(screen.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
     change(durationLabel, '7');
@@ -226,6 +232,7 @@ describe('unsaved metadata and the version added to a lesson', () => {
     const add = vi.fn(() => ({ success: true }));
     const close = vi.fn();
     render(<YouTubePreviewModal exercise={current()} onClose={close} onAddToSequence={add} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     openEditor();
     change(durationLabel, '7');
     expect(

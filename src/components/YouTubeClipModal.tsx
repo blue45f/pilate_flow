@@ -73,7 +73,7 @@ const ExercisePlanningNotes: React.FC<{ exercise: PilatesExercise; pending: bool
       </div>
       <p className="movement-detail-disclaimer">
         {pending
-          ? '아래 내용은 보존된 미검수 입력값입니다. 실제 동작·설정·시간·큐를 전체 검토하기 전 수업에 사용하지 마세요.'
+          ? '보존된 미검토 메모입니다. 실제 수행 전 출처·기구·몸 상태를 확인하세요.'
           : '내가 확인한 계획 메타데이터입니다. 자격 인증과 개인별 적합성에 대한 외부 검증은 별개입니다.'}
       </p>
       <dl className="movement-notes">
@@ -802,6 +802,53 @@ const MovementDetails: React.FC<{
           {primarySource ? '공개 자료를 참고한 내 계획 노트 · 원출처 보존' : source.label}
         </span>
       </div>
+      {onAddToSequence && (
+        <div className="library-modal-footer">
+          {hasUnsavedReview && (
+            <p id={unsavedDescriptionId} className="movement-add-feedback" role="status">
+              저장하지 않은 수정 내용이 있어요. ‘수정 메모만 저장’ 또는 전체 검토·승인을 마친 뒤
+              추가해 주세요.
+            </p>
+          )}
+          {alreadyInSequence && !hasUnsavedReview && (
+            <p className="movement-add-feedback muted" role="status">
+              {approved
+                ? '이미 현재 수업안에 담은 동작입니다. 창을 닫고 수업 구성을 이어가세요.'
+                : '현재 수업안에 담긴 미검토 자료입니다. 검토 기록은 선택 사항입니다.'}
+            </p>
+          )}
+          {additionError && (
+            <p className="movement-add-feedback status error" role="alert">
+              {additionError}
+            </p>
+          )}
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={alreadyInSequence || hasUnsavedReview}
+            aria-describedby={hasUnsavedReview ? unsavedDescriptionId : undefined}
+            onClick={() => {
+              if (alreadyInSequence || hasUnsavedReview) return;
+              setAdditionError('');
+              const result = onAddToSequence(exercise.id);
+              if (result && !result.success) {
+                setAdditionError(
+                  result.message || '동작을 추가하지 못했습니다. 현재 수업 조건을 확인해 주세요.',
+                );
+                return;
+              }
+              onClose();
+            }}
+          >
+            <Plus size={16} />{' '}
+            {hasUnsavedReview
+              ? '수정 내용 저장 후 추가 가능'
+              : alreadyInSequence
+                ? '수업안에 추가됨'
+                : '수업안에 추가'}
+          </button>
+        </div>
+      )}
       <MotionReferencePlayer exerciseId={exercise.id} exerciseName={exercise.nameKo} />
       <ExerciseYouTubeGallery exercise={exercise} maxPerRegion={3} />
       <MovementMediaGuidancePanel key={exercise.id} exercise={exercise} />
@@ -818,116 +865,121 @@ const MovementDetails: React.FC<{
         </summary>
         <MotionReferencePlayer mode="prototype-lab" active={motionLabOpen} />
       </details>
-      <ExerciseEvidencePanel exercise={exercise} />
-      <section className="movement-source-panel">
-        <div className="movement-detail-section-title">
-          <Info size={16} />
-          <h3>자료의 출처와 검토 상태</h3>
-        </div>
-        {primarySource ? (
-          <div className="movement-primary-source">
-            <p>
-              공개 자료를 참고해 직접 작성한 별도 계획 노트입니다. 원출처의 확인 상태와 내 강사 검토
-              기록은 서로 다릅니다.
-            </p>
-            <p className="muted">
-              노트에 보관한 기록이며 현재 출처 대조는 위 근거 패널에서 확인하세요.
-            </p>
+      <details className="optional-source-details">
+        <summary>출처·검토 상태 자세히 보기</summary>
+        <ExerciseEvidencePanel exercise={exercise} />
+        <section className="movement-source-panel">
+          <div className="movement-detail-section-title">
+            <Info size={16} />
+            <h3>자료의 출처와 검토 상태</h3>
+          </div>
+          {primarySource ? (
+            <div className="movement-primary-source">
+              <p>
+                공개 자료를 참고해 직접 작성한 별도 계획 노트입니다. 원출처의 확인 상태와 내 강사
+                검토 기록은 서로 다릅니다.
+              </p>
+              <p className="muted">
+                노트에 보관한 기록이며 현재 출처 대조는 위 근거 패널에서 확인하세요.
+              </p>
+              <dl className="movement-source-fields">
+                <div>
+                  <dt>원출처 제목</dt>
+                  <dd>{primarySource.title}</dd>
+                </div>
+                <div>
+                  <dt>발행처</dt>
+                  <dd>{primarySource.publisher}</dd>
+                </div>
+                <div>
+                  <dt>자료 구분</dt>
+                  <dd>{primarySource.region === 'kr' ? '국내 후보' : '해외 공식 출처'}</dd>
+                </div>
+                <div>
+                  <dt>보관된 출처 확인 상태</dt>
+                  <dd>
+                    {primarySource.verificationStatus === 'partial-playback-checked'
+                      ? '영상 부분 확인 · 동작 구간 미확인'
+                      : primarySource.verificationStatus === 'official-source-checked'
+                        ? '공식 출처 확인 · 운동 검수와 별개'
+                        : '국내 후보 · 영상 품질 미확인'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>출처 기록</dt>
+                  <dd>
+                    {primarySource.referenceId} · {primarySource.verifiedAt}
+                  </dd>
+                </div>
+              </dl>
+              <a
+                href={primarySource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary"
+              >
+                <ExternalLink size={14} /> 보존된 원출처 열기
+              </a>
+              <p className="source-note-url">{primarySource.url}</p>
+              <p className="muted">
+                원본 링크 전용 · 영상·이미지 복제권과 외부 임베드 허용 미확인. 원본 공개 자료는
+                전문가 미검수·자동 추천 제외 상태를 유지합니다. 관찰 시점을 동작 시작·종료 구간으로
+                옮기지 않았습니다.
+              </p>
+            </div>
+          ) : (
+            <>
+              <p>{source.description}</p>
+              <p className="muted">{source.rights}</p>
+              {exercise.sourceReference && (
+                <p className="library-inline-warning">
+                  원출처 기록의 형식을 확인해 주세요. 유효하지 않은 주소는 열지 않습니다.
+                </p>
+              )}
+            </>
+          )}
+          {source.kind !== 'original' && showVideoSource && (
             <dl className="movement-source-fields">
               <div>
-                <dt>원출처 제목</dt>
-                <dd>{primarySource.title}</dd>
+                <dt>입력된 채널명</dt>
+                <dd>{exercise.youtube.channelName || '등록되지 않음'}</dd>
               </div>
               <div>
-                <dt>발행처</dt>
-                <dd>{primarySource.publisher}</dd>
+                <dt>입력된 영상 제목</dt>
+                <dd>{exercise.youtube.videoTitle || '등록되지 않음'}</dd>
               </div>
               <div>
-                <dt>자료 구분</dt>
-                <dd>{primarySource.region === 'kr' ? '국내 후보' : '해외 공식 출처'}</dd>
-              </div>
-              <div>
-                <dt>보관된 출처 확인 상태</dt>
+                <dt>참조 구간</dt>
                 <dd>
-                  {primarySource.verificationStatus === 'partial-playback-checked'
-                    ? '영상 부분 확인 · 동작 구간 미확인'
-                    : primarySource.verificationStatus === 'official-source-checked'
-                      ? '공식 출처 확인 · 운동 검수와 별개'
-                      : '국내 후보 · 영상 품질 미확인'}
-                </dd>
-              </div>
-              <div>
-                <dt>출처 기록</dt>
-                <dd>
-                  {primarySource.referenceId} · {primarySource.verifiedAt}
+                  {formatSecondsToMMSS(safeStart)}
+                  {safeEnd ? `–${formatSecondsToMMSS(safeEnd)}` : '부터 · 종료 미지정'}
                 </dd>
               </div>
             </dl>
-            <a
-              href={primarySource.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-secondary"
-            >
-              <ExternalLink size={14} /> 보존된 원출처 열기
-            </a>
-            <p className="source-note-url">{primarySource.url}</p>
-            <p className="muted">
-              원본 링크 전용 · 영상·이미지 복제권과 외부 임베드 허용 미확인. 원본 공개 자료는 전문가
-              미검수·자동 추천 제외 상태를 유지합니다. 관찰 시점을 동작 시작·종료 구간으로 옮기지
-              않았습니다.
-            </p>
-          </div>
-        ) : (
-          <>
-            <p>{source.description}</p>
-            <p className="muted">{source.rights}</p>
-            {exercise.sourceReference && (
+          )}
+          {link ? (
+            <div className="movement-source-actions">
+              <a href={link} target="_blank" rel="noopener noreferrer" className="btn-secondary">
+                <ExternalLink size={14} /> 원본에서 이 구간 열기
+              </a>
+              <span className="muted">재생을 누르면 YouTube에 연결됩니다.</span>
+            </div>
+          ) : (
+            source.kind !== 'original' &&
+            showVideoSource && (
               <p className="library-inline-warning">
-                원출처 기록의 형식을 확인해 주세요. 유효하지 않은 주소는 열지 않습니다.
+                유효한 영상 링크가 없어 원본을 열 수 없습니다.
               </p>
-            )}
-          </>
-        )}
-        {source.kind !== 'original' && showVideoSource && (
-          <dl className="movement-source-fields">
-            <div>
-              <dt>입력된 채널명</dt>
-              <dd>{exercise.youtube.channelName || '등록되지 않음'}</dd>
-            </div>
-            <div>
-              <dt>입력된 영상 제목</dt>
-              <dd>{exercise.youtube.videoTitle || '등록되지 않음'}</dd>
-            </div>
-            <div>
-              <dt>참조 구간</dt>
-              <dd>
-                {formatSecondsToMMSS(safeStart)}
-                {safeEnd ? `–${formatSecondsToMMSS(safeEnd)}` : '부터 · 종료 미지정'}
-              </dd>
-            </div>
-          </dl>
-        )}
-        {link ? (
-          <div className="movement-source-actions">
-            <a href={link} target="_blank" rel="noopener noreferrer" className="btn-secondary">
-              <ExternalLink size={14} /> 원본에서 이 구간 열기
-            </a>
-            <span className="muted">재생을 누르면 YouTube에 연결됩니다.</span>
-          </div>
-        ) : (
-          source.kind !== 'original' &&
-          showVideoSource && (
-            <p className="library-inline-warning">유효한 영상 링크가 없어 원본을 열 수 없습니다.</p>
-          )
-        )}
-      </section>
+            )
+          )}
+        </section>
+      </details>
       <div className={`movement-use-warning ${approved ? 'reviewed' : ''}`}>
         <Info size={17} />
         <p>
           {approved
             ? '내 강사 검토 기록이 있는 계획 메타데이터입니다. 수업별 기구·회원 조건은 다시 확인하세요.'
-            : '실제 강사의 전체 검토 전 사용 금지 · 미검수 초안입니다. 기존 메모를 확인해도 검토 승인이 기록되기 전에는 자동 편성·수업 진행에 사용할 수 없습니다.'}
+            : '미검토 자료입니다. 수업안에 바로 추가할 수 있으며, 실제 수행 전 기구와 몸 상태를 확인하세요. 안전성·효과를 보장하지 않습니다.'}
         </p>
       </div>
       {approved ? (
@@ -944,68 +996,21 @@ const MovementDetails: React.FC<{
           <ExercisePlanningNotes exercise={exercise} pending />
         </details>
       )}
-      <LocalInstructorReview
-        key={currentRevision}
-        exercise={exercise}
-        reviewerAlias={reviewerAlias}
-        onReviewerAliasChange={setReviewerAlias}
-        editorOpen={reviewEditorOpen}
-        onEditorOpenChange={setReviewEditorOpen}
-        canAddToSequence={
-          Boolean(onAddToSequence) && !alreadyInSequence && !additionError && !hasUnsavedReview
-        }
-        onDraftStatusChange={onDraftStatusChange}
-      />
-      {onAddToSequence && (
-        <div className="library-modal-footer">
-          {hasUnsavedReview && (
-            <p id={unsavedDescriptionId} className="movement-add-feedback" role="status">
-              저장하지 않은 수정 내용이 있어요. ‘수정 메모만 저장’ 또는 전체 검토·승인을 마친 뒤
-              추가해 주세요.
-            </p>
-          )}
-          {alreadyInSequence && !hasUnsavedReview && (
-            <p className="movement-add-feedback muted" role="status">
-              {approved
-                ? '이미 현재 수업안에 담은 동작입니다. 창을 닫고 수업 구성을 이어가세요.'
-                : '현재 수업안에 담겨 있지만 동작 정보의 검토가 필요합니다.'}
-            </p>
-          )}
-          {additionError && (
-            <p className="movement-add-feedback status error" role="alert">
-              {additionError}
-            </p>
-          )}
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={!approved || alreadyInSequence || hasUnsavedReview}
-            aria-describedby={hasUnsavedReview ? unsavedDescriptionId : undefined}
-            onClick={() => {
-              if (!isExerciseAutoEligible(exercise) || alreadyInSequence || hasUnsavedReview)
-                return;
-              setAdditionError('');
-              const result = onAddToSequence(exercise.id);
-              if (result && !result.success) {
-                setAdditionError(
-                  result.message || '동작을 추가하지 못했습니다. 현재 수업 조건을 확인해 주세요.',
-                );
-                return;
-              }
-              onClose();
-            }}
-          >
-            <Plus size={16} />{' '}
-            {!approved
-              ? '강사 검토 후 추가 가능'
-              : hasUnsavedReview
-                ? '수정 내용 저장 후 추가 가능'
-                : alreadyInSequence
-                  ? '수업안에 추가됨'
-                  : '수업안에 추가'}
-          </button>
-        </div>
-      )}
+      <details className="optional-review-details">
+        <summary>내 검토 기록 (선택)</summary>
+        <LocalInstructorReview
+          key={currentRevision}
+          exercise={exercise}
+          reviewerAlias={reviewerAlias}
+          onReviewerAliasChange={setReviewerAlias}
+          editorOpen={reviewEditorOpen}
+          onEditorOpenChange={setReviewEditorOpen}
+          canAddToSequence={
+            Boolean(onAddToSequence) && !alreadyInSequence && !additionError && !hasUnsavedReview
+          }
+          onDraftStatusChange={onDraftStatusChange}
+        />
+      </details>
     </div>
   );
 };

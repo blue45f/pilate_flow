@@ -16,7 +16,6 @@ import type {
   StepSideMode,
 } from '../types/pilates';
 import type { ClassSectionRole } from '../types/sequenceMotion';
-import { exerciseRevision } from './exerciseReview';
 import {
   type ReusableBlockTimingSummary,
   addItemToReusableBlock,
@@ -297,7 +296,11 @@ export function resetMovementIdeaStateForTests(): void {
   }
 }
 
-function buildDisplayTitle(ideaLine: string, workingTitle?: string, variantLabelKo?: string): string {
+function buildDisplayTitle(
+  ideaLine: string,
+  workingTitle?: string,
+  variantLabelKo?: string,
+): string {
   const explicit = (workingTitle ?? '').trim();
   const baseTitle =
     explicit.length >= 2
@@ -602,16 +605,12 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
       state.ownedEquipment[0] ||
       'mat';
     const chosenApparatus: ApparatusType =
-      input.apparatus ||
-      existing?.apparatus ||
-      getEquipmentFamily(fallbackEquipment) ||
-      'mat';
-    const requiredEquipment =
-      input.apparatus
-        ? [input.apparatus]
-        : existing?.requiredEquipment?.length
-          ? [...existing.requiredEquipment]
-          : [fallbackEquipment];
+      input.apparatus || existing?.apparatus || getEquipmentFamily(fallbackEquipment) || 'mat';
+    const requiredEquipment = input.apparatus
+      ? [input.apparatus]
+      : existing?.requiredEquipment?.length
+        ? [...existing.requiredEquipment]
+        : [fallbackEquipment];
 
     const durationMin =
       typeof input.durationMin === 'number' &&
@@ -619,19 +618,15 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
       input.durationMin >= 0.5 &&
       input.durationMin <= 20
         ? input.durationMin
-        : existing?.defaultDurationMin ?? 3;
+        : (existing?.defaultDurationMin ?? 3);
 
     const level: DifficultyLevel =
-      input.level ||
-      existing?.level ||
-      state.draftCriteria?.level ||
-      state.activeLevel ||
-      '1.0';
+      input.level || existing?.level || state.draftCriteria?.level || state.activeLevel || '1.0';
 
     const variantLabelKo =
       input.variantLabelKo !== undefined
         ? input.variantLabelKo.trim()
-        : existingMeta?.variantLabelKo ?? '';
+        : (existingMeta?.variantLabelKo ?? '');
     const nameKo = buildDisplayTitle(trimmedIdea, input.workingTitle, variantLabelKo);
     const subjectiveFeeling = (input.subjectiveFeeling ?? '').trim();
     const adjustmentNote = (input.adjustmentNote ?? '').trim();
@@ -639,15 +634,13 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
     const easyVariation =
       input.easyVariation !== undefined
         ? input.easyVariation.trim()
-        : existing?.layers?.easy ?? '';
+        : (existing?.layers?.easy ?? '');
     const hardVariation =
       input.hardVariation !== undefined
         ? input.hardVariation.trim()
-        : existing?.layers?.hard ?? '';
+        : (existing?.layers?.hard ?? '');
     const standardVariation =
-      input.standardVariation !== undefined
-        ? input.standardVariation.trim()
-        : adjustmentNote;
+      input.standardVariation !== undefined ? input.standardVariation.trim() : adjustmentNote;
     const repetitions =
       typeof input.repetitions === 'number' &&
       Number.isFinite(input.repetitions) &&
@@ -696,10 +689,7 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
       now,
     });
 
-    const cues = [
-      trimmedIdea,
-      ...(adjustmentNote ? [`수정 메모: ${adjustmentNote}`] : []),
-    ];
+    const cues = [trimmedIdea, ...(adjustmentNote ? [`수정 메모: ${adjustmentNote}`] : [])];
     const precautions = subjectiveFeeling
       ? `강사 주관적 느낌 메모 (전문가 검증·효과 보장 아님): ${subjectiveFeeling}`
       : existing?.precautions || '강사 직접 창작 초안 · 수업 전 개인별 상태를 직접 확인하세요.';
@@ -716,14 +706,14 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
           ? 'warmup'
           : sectionRole === 'cooldown'
             ? 'cooldown'
-            : existing?.blockCategory ?? 'core',
+            : (existing?.blockCategory ?? 'core'),
       spinalPlanes: existing?.spinalPlanes ?? [],
       bodyPosition: existing?.bodyPosition ?? 'supine',
       level,
       defaultDurationMin: durationMin,
       defaultRepetitions: repetitions,
       defaultSets: sets,
-      isUnilateral: sideMode ? sideMode !== 'together' : existing?.isUnilateral ?? false,
+      isUnilateral: sideMode ? sideMode !== 'together' : (existing?.isUnilateral ?? false),
       springs: existing?.springs ?? '',
       box: existing?.box ?? 'none',
       footbar: existing?.footbar ?? 'none',
@@ -751,17 +741,9 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
       humanDraftRevision: humanDraft.revision,
     };
 
-    // Preserve self-check review if already approved or if instructor recorded their trial reflection
-    if (existing?.review || triedByInstructor) {
-      baseExercise.review = {
-        status: 'approved',
-        reviewerAlias: existing?.review?.reviewerAlias || '내 창작·직접 시도 메모',
-        reviewedAt: now,
-        revision: exerciseRevision(baseExercise),
-        scope: 'planning-metadata',
-        credentialVerified: false,
-      };
-    }
+    // Authoring and trying a movement do not constitute an instructor review.
+    // Preserve a previous record as-is; material edits naturally make it stale.
+    if (existing?.review) baseExercise.review = existing.review;
 
     try {
       if (existing) {
@@ -777,8 +759,7 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
       return {
         success: false,
         ok: false,
-        error:
-          '저장에 실패했습니다. 작성 중인 내용은 이 화면에 그대로 보관되어 있습니다.',
+        error: '저장에 실패했습니다. 작성 중인 내용은 이 화면에 그대로 보관되어 있습니다.',
       };
     }
 
@@ -884,10 +865,7 @@ export function restoreMovementIdeaRevision(
       defaultRepetitions: restoredDraft.defaultRepetitions,
       defaultSets: restoredDraft.defaultSets,
       isUnilateral: restoredDraft.isUnilateral ?? existing.isUnilateral,
-      cues: [
-        restoredDraft.ideaLine,
-        ...(restoredMod ? [`수정 메모: ${restoredMod}`] : []),
-      ],
+      cues: [restoredDraft.ideaLine, ...(restoredMod ? [`수정 메모: ${restoredMod}`] : [])],
       precautions: restoredFeel
         ? `강사 주관적 느낌 메모 (전문가 검증·효과 보장 아님): ${restoredFeel}`
         : '강사 직접 창작 초안 · 수업 전 개인별 상태를 직접 확인하세요.',
@@ -900,16 +878,7 @@ export function restoreMovementIdeaRevision(
       humanDraftRevision: restoredDraft.revision,
     };
 
-    if (existing.review || triedByInstructor) {
-      updatedExercise.review = {
-        status: 'approved',
-        reviewerAlias: existing.review?.reviewerAlias || '내 창작·직접 시도 메모',
-        reviewedAt: now,
-        revision: exerciseRevision(updatedExercise),
-        scope: 'planning-metadata',
-        credentialVerified: false,
-      };
-    }
+    if (existing.review) updatedExercise.review = existing.review;
 
     usePilatesStore.setState((store) => ({
       exercises: store.exercises.map((item) =>
@@ -960,8 +929,7 @@ export function restoreMovementIdeaRevision(
     return {
       success: false,
       ok: false,
-      message:
-        error instanceof Error ? error.message : '선택한 버전으로 복원하지 못했습니다.',
+      message: error instanceof Error ? error.message : '선택한 버전으로 복원하지 못했습니다.',
     };
   }
 }
@@ -1036,8 +1004,7 @@ export function forkMovementIdeaVariant(
       defaultDurationMin: input.durationMin ?? sourceDraft.defaultDurationMin,
       layers: {
         easy: input.easyVariation ?? sourceMeta.easyVariation ?? sourceEx.layers.easy,
-        standard:
-          input.standardVariation ?? sourceMeta.adjustmentNote ?? sourceEx.layers.standard,
+        standard: input.standardVariation ?? sourceMeta.adjustmentNote ?? sourceEx.layers.standard,
         hard: input.hardVariation ?? sourceMeta.hardVariation ?? sourceEx.layers.hard,
       },
       now,
@@ -1074,14 +1041,8 @@ export function forkMovementIdeaVariant(
       humanDraftRevision: branchedDraft.revision,
     };
 
-    newExercise.review = {
-      status: 'approved',
-      reviewerAlias: '내 창작·변형 파생 메모',
-      reviewedAt: now,
-      revision: exerciseRevision(newExercise),
-      scope: 'planning-metadata',
-      credentialVerified: false,
-    };
+    // A newly forked movement has not been independently reviewed.
+    newExercise.review = undefined;
 
     usePilatesStore.getState().addCustomExercise(newExercise);
 
@@ -1121,8 +1082,7 @@ export function forkMovementIdeaVariant(
     return {
       success: false,
       ok: false,
-      message:
-        error instanceof Error ? error.message : '변형 초안 파생 저장에 실패했습니다.',
+      message: error instanceof Error ? error.message : '변형 초안 파생 저장에 실패했습니다.',
     };
   }
 }
@@ -1137,11 +1097,7 @@ export function getSavedReusableBlocks(): ReusableBlock[] {
 
 export function getReusableBlockTimingSummary(block: ReusableBlock): ReusableBlockTimingSummary {
   const state = usePilatesStore.getState();
-  return summarizeReusableBlockTiming(
-    block,
-    state.exercises,
-    Object.values(inMemoryHumanDraftMap),
-  );
+  return summarizeReusableBlockTiming(block, state.exercises, Object.values(inMemoryHumanDraftMap));
 }
 
 /**
@@ -1201,8 +1157,7 @@ export function saveIdeaToReusableBlock(input: {
   const sets = input.sets ?? meta.sets;
   const sideMode: StepSideMode =
     input.sideMode ?? meta.sideMode ?? (exercise.isUnilateral ? 'left-then-right' : 'together');
-  const sectionRole: ClassSectionRole =
-    input.sectionRole ?? meta.sectionRole ?? 'main';
+  const sectionRole: ClassSectionRole = input.sectionRole ?? meta.sectionRole ?? 'main';
 
   const currentBlocks = getSavedReusableBlocks();
   const existingBlock = input.blockId
@@ -1241,8 +1196,7 @@ export function saveIdeaToReusableBlock(input: {
         Object.values(inMemoryHumanDraftMap),
       );
     } else {
-      const title =
-        (input.blockTitle ?? '').trim() || `${exercise.nameKo} 재사용 블록`;
+      const title = (input.blockTitle ?? '').trim() || `${exercise.nameKo} 재사용 블록`;
       targetBlock = createReusableBlock(
         {
           title,
@@ -1289,8 +1243,7 @@ export function saveIdeaToReusableBlock(input: {
       success: false,
       ok: false,
       blocks: currentBlocks,
-      message:
-        error instanceof Error ? error.message : '재사용 블록 저장에 실패했습니다.',
+      message: error instanceof Error ? error.message : '재사용 블록 저장에 실패했습니다.',
     };
   }
 }
@@ -1366,13 +1319,8 @@ export function insertIdeaReusableBlockToCurrentClass(blockId: string): {
 
   const state = usePilatesStore.getState();
   const inserted = insertReusableBlockIntoSequence(state.activeSteps, block);
-  const blockApparatusList =
-    block.apparatus === 'mixed'
-      ? ['mat', 'reformer']
-      : [block.apparatus];
-  const nextOwnedEquipment = Array.from(
-    new Set([...state.ownedEquipment, ...blockApparatusList]),
-  );
+  const blockApparatusList = block.apparatus === 'mixed' ? ['mat', 'reformer'] : [block.apparatus];
+  const nextOwnedEquipment = Array.from(new Set([...state.ownedEquipment, ...blockApparatusList]));
 
   usePilatesStore.setState({
     activeSteps: inserted.steps,
@@ -1450,7 +1398,6 @@ export function addMovementIdeaToCurrentClass(exerciseId: string): {
   });
 
   // Ensure instructor self-check metadata is recorded with credentialVerified: false
-  const now = new Date().toISOString();
   const baseWithPrecautions: HierarchyPilatesExercise = {
     ...found,
     precautions:
@@ -1459,17 +1406,7 @@ export function addMovementIdeaToCurrentClass(exerciseId: string): {
     humanDraftId: humanDraft?.id ?? found.id,
     humanDraftRevision: humanDraft?.revision ?? meta.revision ?? 1,
   };
-  const checkedExercise: HierarchyPilatesExercise = {
-    ...baseWithPrecautions,
-    review: {
-      status: 'approved',
-      reviewerAlias: found.review?.reviewerAlias || '내 창작·직접 시도 메모',
-      reviewedAt: now,
-      revision: exerciseRevision(baseWithPrecautions),
-      scope: 'planning-metadata',
-      credentialVerified: false,
-    },
-  };
+  const checkedExercise: HierarchyPilatesExercise = baseWithPrecautions;
 
   const embeddedSnapshot = humanDraft
     ? createHumanDraftMovementSnapshot(humanDraft, {
@@ -1533,7 +1470,9 @@ export function addMovementIdeaToCurrentClass(exerciseId: string): {
   }));
 
   // Try standard store append first
-  usePilatesStore.getState().appendExerciseToSequence(checkedExercise.id, checkedExercise.blockCategory);
+  usePilatesStore
+    .getState()
+    .appendExerciseToSequence(checkedExercise.id, checkedExercise.blockCategory);
   const afterAppend = usePilatesStore.getState();
   if (afterAppend.activeSteps.some((step) => step.exerciseId === checkedExercise.id)) {
     usePilatesStore.setState((store) => ({

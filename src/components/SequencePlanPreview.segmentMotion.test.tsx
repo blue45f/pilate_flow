@@ -148,7 +148,7 @@ describe('saved reference projected from the selected segment clock', () => {
     const unsubscribe = usePilatesStore.subscribe(storeChange);
     const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
     openLinkedSegment();
-    expect(segment().getByRole('button', { name: '구간 반복 연습 시작' })).toBeDisabled();
+    expect(segment().getByRole('button', { name: '구간 반복 연습 시작' })).toBeEnabled();
     expect(segment().getByText(/저장한 관련 도해를 이 연습 시간에 연결/)).toBeInTheDocument();
     expect(segment().queryByText(/모션 자동 재생 없음/)).not.toBeInTheDocument();
     expect(screen.queryByTestId('independent-reference')).not.toBeInTheDocument();

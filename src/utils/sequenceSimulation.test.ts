@@ -242,7 +242,7 @@ describe('whole-class plan simulation timeline', () => {
   });
 
   it.each(['pending', 'stale'] as const)(
-    'allows inspection but blocks rehearsal for %s notes using the common review gate',
+    'allows inspection and timed rehearsal for %s notes without changing review evidence',
     (state) => {
       const changed: PilatesExercise =
         state === 'pending'
@@ -250,10 +250,9 @@ describe('whole-class plan simulation timeline', () => {
           : { ...a, cues: [...a.cues, 'Changed material content'] };
       const model = buildSequenceSimulation(steps, [changed, b, c], 50);
       expect(model.steps[0].reviewState).toBe(state);
-      expect(model.gate.canRehearse).toBe(false);
-      expect(
-        model.gate.reasons.find((reason) => reason.code === 'unreviewed-exercise')?.stepIndices,
-      ).toEqual([0]);
+      expect(model.gate.canRehearse).toBe(true);
+      expect(model.gate.reasons).toEqual([]);
+      expect(changed.review).toEqual(state === 'pending' ? undefined : a.review);
       expect(seekSequenceSimulation(model, 60).segment?.kind).toBe('movement');
       expect(model.totals.totalSec).toBe(3000);
       expect(JSON.stringify(model)).not.toContain(changed.cues[0]);

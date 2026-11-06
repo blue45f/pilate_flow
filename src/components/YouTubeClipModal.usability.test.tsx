@@ -63,10 +63,11 @@ describe('local review guidance without weakening explicit review', () => {
     usePilatesStore.setState({ exercises: [...INITIAL_EXERCISES, note] });
     const add = vi.fn();
     render(<YouTubePreviewModal exercise={note} onClose={vi.fn()} onAddToSequence={add} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     expect(review().getByRole('status')).toHaveTextContent('주의·적용 메모를 먼저 작성');
     expect(editor()).not.toHaveAttribute('open');
     expect(review().getByLabelText(aliasLabel)).toHaveValue('');
-    expect(screen.getByRole('button', { name: '강사 검토 후 추가 가능' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
     setValue(aliasLabel, 'Synthetic own reviewer · test only');
     fireEvent.click(consent());
     fireEvent.click(review().getByRole('button', { name: '주의·적용 메모 작성' }));
@@ -96,6 +97,7 @@ describe('local review guidance without weakening explicit review', () => {
     const note = { ...syntheticNote(), precautions: '합성 기존 적용 메모' };
     usePilatesStore.setState({ exercises: [...INITIAL_EXERCISES, note] });
     render(<YouTubePreviewModal exercise={note} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     openEditor();
     setValue(aliasLabel, '내가 직접 입력한 합성 별칭');
     fireEvent.click(consent());
@@ -141,12 +143,14 @@ describe('local review guidance without weakening explicit review', () => {
     setValue(aliasLabel, '이번 창에서 직접 입력');
     fireEvent.click(consent());
     rerender(<YouTubePreviewModal exercise={second} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     expect(review().getByLabelText(aliasLabel)).toHaveValue('');
     expect(editor()).not.toHaveAttribute('open');
     expect(consent()).not.toBeChecked();
     setValue(aliasLabel, '닫기 전 합성 별칭');
     unmount();
     render(<YouTubePreviewModal exercise={second} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     expect(review().getByLabelText(aliasLabel)).toHaveValue('');
     expect(editor()).not.toHaveAttribute('open');
     expect(current(imported.id).review?.reviewerAlias).toBe('다른 사람이 기록한 별칭');
@@ -156,6 +160,7 @@ describe('local review guidance without weakening explicit review', () => {
     const note = { ...syntheticNote(), precautions: '합성 적용 메모' };
     usePilatesStore.setState({ exercises: [...INITIAL_EXERCISES, note] });
     render(<YouTubePreviewModal exercise={note} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     openEditor();
     setValue(aliasLabel, '합성 직접 입력자');
     setValue(cuesLabel, '아직 저장하지 않은 합성 큐');

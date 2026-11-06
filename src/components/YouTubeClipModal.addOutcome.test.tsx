@@ -53,6 +53,7 @@ describe('movement addition reports the actual result without losing the current
       message: '합성 추가 거절 · 현재 수업 조건을 확인해 주세요.',
     }));
     render(<YouTubePreviewModal exercise={note} onClose={close} onAddToSequence={add} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     fireEvent.change(screen.getByLabelText('검토한 강사 별칭'), { target: { value: alias } });
     fireEvent.click(screen.getByRole('button', { name: '수업안에 추가' }));
     expect(add).toHaveBeenCalledExactlyOnceWith(note.id);
@@ -77,6 +78,7 @@ describe('movement addition reports the actual result without losing the current
     });
     const add = vi.fn();
     render(<YouTubePreviewModal exercise={note} onClose={vi.fn()} onAddToSequence={add} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     expect(screen.getByRole('button', { name: '수업안에 추가됨' })).toBeDisabled();
     expect(
       screen.getByText('이미 현재 수업안에 담은 동작입니다. 창을 닫고 수업 구성을 이어가세요.'),
@@ -91,6 +93,7 @@ describe('movement addition reports the actual result without losing the current
     const close = vi.fn();
     const add = vi.fn(() => ({ success: true }));
     render(<YouTubePreviewModal exercise={note} onClose={close} onAddToSequence={add} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     fireEvent.click(screen.getByRole('button', { name: '수업안에 추가' }));
     expect(add).toHaveBeenCalledExactlyOnceWith(note.id);
     expect(close).toHaveBeenCalledTimes(1);
@@ -100,6 +103,7 @@ describe('movement addition reports the actual result without losing the current
     const close = vi.fn();
     const add = vi.fn();
     render(<YouTubePreviewModal exercise={note} onClose={close} onAddToSequence={add} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     fireEvent.click(screen.getByRole('button', { name: '수업안에 추가' }));
     expect(add).toHaveBeenCalledExactlyOnceWith(note.id);
     expect(close).toHaveBeenCalledTimes(1);

@@ -112,11 +112,10 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
 
     expect(within(dialog).getByRole('status')).toHaveTextContent(/한 줄 초안을 저장했습니다/);
 
-    const savedExercises = usePilatesStore
-      .getState()
-      .exercises.filter(isMovementIdeaExercise);
+    const savedExercises = usePilatesStore.getState().exercises.filter(isMovementIdeaExercise);
     expect(savedExercises).toHaveLength(1);
     const created = savedExercises[0]!;
+    expect(created.review).toBeUndefined();
     expect(readMovementIdeaDraft(created)?.ideaLine).toBe(
       '풋바를 밀며 한 팔씩 천장으로 길게 뻗어 흉추 회전 느끼기',
     );
@@ -129,9 +128,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     // 3. Reopen the saved draft directly from the workbench first screen
     const ideaSection = screen.getByRole('region', { name: '내 새 동작 메모' });
     expect(ideaSection).toHaveTextContent('풋바를 밀며 한 팔씩 천장으로 길게 뻗어');
-    fireEvent.click(
-      within(ideaSection).getByRole('button', { name: /다시 열기/ }),
-    );
+    fireEvent.click(within(ideaSection).getByRole('button', { name: /다시 열기/ }));
 
     const reopenedDialog = screen.getByRole('dialog', { name: /내 동작 메모 수정/ });
     expect(within(reopenedDialog).getByLabelText('한 줄 아이디어')).toHaveValue(
@@ -152,9 +149,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
       target: { value: '승모근이 긴장되지 않게 시선은 사선 아래로 낮추기' },
     });
 
-    fireEvent.click(
-      within(reopenedDialog).getByRole('button', { name: '예시 자세 스케치 넣기' }),
-    );
+    fireEvent.click(within(reopenedDialog).getByRole('button', { name: '예시 자세 스케치 넣기' }));
 
     // Save the updated notes
     fireEvent.click(within(reopenedDialog).getByRole('button', { name: '수정 저장' }));
@@ -162,10 +157,8 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
       /수정 내용을 저장했습니다/,
     );
 
-    const updated = usePilatesStore
-      .getState()
-      .exercises.find((item) => item.id === created.id)!;
-    expect(updated.review?.credentialVerified).toBe(false);
+    const updated = usePilatesStore.getState().exercises.find((item) => item.id === created.id)!;
+    expect(updated.review).toBeUndefined();
     const updatedDraft = readMovementIdeaDraft(updated)!;
     expect(updatedDraft.triedByInstructor).toBe(true);
     expect(updatedDraft.subjectiveFeeling).toContain('갈비뼈 옆선이 시원하게 열림');
@@ -173,11 +166,10 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     expect(updatedDraft.photoDataUrl).toMatch(/^data:image\/svg\+xml/);
 
     // 5. Add directly to the current class (even if apparatus differs from draftCriteria)
-    fireEvent.click(
-      within(reopenedDialog).getAllByRole('button', { name: '수업에 넣기' })[0]!,
-    );
+    fireEvent.click(within(reopenedDialog).getAllByRole('button', { name: '수업에 넣기' })[0]!);
 
     const stateAfterAdd = usePilatesStore.getState();
+    expect(stateAfterAdd.exercises.find((item) => item.id === created.id)?.review).toBeUndefined();
     expect(stateAfterAdd.activeSteps).toHaveLength(1);
     expect(stateAfterAdd.activeSteps[0]?.exerciseId).toBe(created.id);
     expect(stateAfterAdd.activeSteps[0]?.instructorNote).toContain('[느낌]');
@@ -258,9 +250,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     expect(secondSave.exercise?.id).toBe(firstSave.exercise?.id);
     const matching = usePilatesStore
       .getState()
-      .exercises.filter((item) =>
-        item.cues.includes('연속 클릭 중복 방지 테스트 동작 아이디어'),
-      );
+      .exercises.filter((item) => item.cues.includes('연속 클릭 중복 방지 테스트 동작 아이디어'));
     expect(matching).toHaveLength(1);
   });
 
@@ -325,6 +315,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     const allIdeaExercises = usePilatesStore.getState().exercises.filter(isMovementIdeaExercise);
     expect(allIdeaExercises).toHaveLength(2);
     const forkedEx = allIdeaExercises.find((item) => item.id !== originalEx.id)!;
+    expect(forkedEx.review).toBeUndefined();
     const forkedMeta = readMovementIdeaDraft(forkedEx)!;
     expect(forkedMeta.parentDraftId).toBe(originalEx.id);
     expect(forkedMeta.variantLabelKo).toBe('초보자 지지면 확장 변형');

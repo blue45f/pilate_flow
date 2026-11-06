@@ -867,10 +867,6 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       }, 2600);
       return;
     }
-    if (!isExerciseAutoEligible(exercise)) {
-      onOpenYouTubePreview(exercise);
-      return;
-    }
     const before = usePilatesStore.getState().activeSteps.length;
     appendExerciseToSequence(exercise.id, exercise.blockCategory);
     const after = usePilatesStore.getState();
@@ -1325,8 +1321,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                       <strong>연결 동작 노트 · {previewExercise.nameKo}</strong>
                       <span>
                         {previewApproved
-                          ? '내 계획 검토 완료 · 시퀀스 삽입 가능'
-                          : '검토 전 · 노트 검토 후 시퀀스 삽입 가능'}
+                          ? '내 검토 기록 있음 · 전문가 검증 아님'
+                          : '미검토 자료 · 수업안에 추가 가능'}
                       </span>
                     </div>
                     {previewExercise.cues.length > 0 && (
@@ -1356,7 +1352,6 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                       <button
                         type="button"
                         className="btn-primary"
-                        disabled={!previewApproved}
                         onClick={() => addExercise(previewExercise)}
                       >
                         <Plus size={15} aria-hidden="true" /> 시퀀스에 바로 삽입
@@ -1383,7 +1378,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             )}
           </div>
           <p className="ml-review-note">
-            수업에 추가는 강사 검토 후 · 도해 초안 보기에는 검토가 필요하지 않습니다.
+            동작을 바로 추가하고 순서를 바꾸세요. 검토 기록은 선택 사항입니다.
           </p>
           {filtered.length > 0 ? (
             <div className="movement-card-grid">
@@ -1393,7 +1388,6 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 const approved = isExerciseAutoEligible(exercise);
                 const isIdea = isMovementIdeaExercise(exercise);
                 const ideaMeta = isIdea ? readMovementIdeaDraft(exercise) : null;
-                const canAdd = approved || isIdea;
                 const patterns = getMotionPatternReferences(exercise.id);
                 const isFavorite = exercise.favoriteTag !== 'none';
                 const lastTaught = getExerciseLastTaughtInfo(
@@ -1493,7 +1487,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                             ? '내 강사 검토 · 자격 인증 미확인'
                             : reviewState === 'stale'
                               ? '동작 정보 변경 · 다시 검토 필요'
-                              : '강사 검토 전 · 수업 사용 금지'}
+                              : '미검토 자료 · 검토 기록은 선택'}
                       </PfAiStatusBadge>
                       <p className="movement-target">
                         {isIdea
@@ -1547,29 +1541,18 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                         >
                           {isIdea
                             ? '다시 열기 · 느낌/수정'
-                            : approved
-                              ? '자세히 보기'
-                              : '전체 검토하기'}{' '}
+                            : '자세히 보기'}{' '}
                           <ArrowUpRight size={14} />
                         </PfButton>
                         <button
                           type="button"
                           className={`movement-add ${addedId === exercise.id ? 'just-added' : ''}`}
                           onClick={() => addExercise(exercise)}
-                          disabled={!canAdd}
-                          aria-label={
-                            canAdd
-                              ? `${exercise.nameKo} 수업안에 추가`
-                              : `${exercise.nameKo} 강사 검토 필요`
-                          }
+                          aria-label={`${exercise.nameKo} 수업안에 추가`}
                         >
                           {addedId === exercise.id ? <Check size={16} /> : <Plus size={16} />}
                           <span>
-                            {!canAdd
-                              ? '검토 필요'
-                              : addedId === exercise.id
-                                ? '추가됨'
-                                : '수업에 추가'}
+                            {addedId === exercise.id ? '추가됨' : '수업에 추가'}
                           </span>
                         </button>
                       </div>

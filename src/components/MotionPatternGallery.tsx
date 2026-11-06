@@ -118,8 +118,8 @@ export function MotionPatternGallery({
                 <strong>연결 동작 노트 · {linkedExercise.nameKo}</strong>
                 <span>
                   {linkedApproved
-                    ? '내 계획 검토 완료 · 시퀀스 삽입 가능'
-                    : '검토 전 · 노트 검토 후 시퀀스 삽입 가능'}
+                    ? '내 검토 기록 있음 · 전문가 검증 아님'
+                    : '미검토 자료 · 수업안에 추가 가능'}
                 </span>
               </div>
               {linkedExercise.cues.length > 0 && (
@@ -153,7 +153,6 @@ export function MotionPatternGallery({
                     <button
                       type="button"
                       className="btn-primary"
-                      disabled={!linkedApproved}
                       onClick={() => onInsertExercise(linkedExercise)}
                     >
                       <Plus size={15} aria-hidden="true" /> 시퀀스에 바로 삽입

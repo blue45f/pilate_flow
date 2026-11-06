@@ -52,9 +52,9 @@ describe('inline exercise finder', () => {
     const finder = within(screen.getByRole('complementary', { name: '작업대 동작 찾기' }));
     expect(finder.getAllByRole('article')).toHaveLength(6);
     expect(finder.getByRole('status')).toHaveTextContent('98개 결과');
-    expect(finder.getAllByRole('button', { name: /강사 검토 후 추가 가능/ })).toHaveLength(6);
-    finder.getAllByRole('button', { name: /강사 검토 후 추가 가능/ }).forEach((button) => {
-      expect(button).toBeDisabled();
+    expect(finder.getAllByRole('button', { name: /수업안에 추가/ })).toHaveLength(6);
+    finder.getAllByRole('button', { name: /수업안에 추가/ }).forEach((button) => {
+      expect(button).toBeEnabled();
     });
     fireEvent.click(
       finder.getByRole('button', { name: `${INITIAL_EXERCISES[0].nameKo} 상세 보기` }),
@@ -189,12 +189,10 @@ describe('inline exercise finder', () => {
     expect(within(exerciseSummary).getByText('검토 전 원자료 메모')).toBeInTheDocument();
     expect(
       within(exerciseSummary).getByRole('button', {
-        name: `${mapped.nameKo} 초안 창에서 검토 후 시퀀스 삽입 가능`,
+        name: `${mapped.nameKo} 초안 확인 후 시퀀스 삽입`,
       }),
-    ).toBeDisabled();
-    expect(
-      screen.getByRole('button', { name: `${mapped.nameKo} 강사 검토 후 추가 가능` }),
-    ).toBeDisabled();
+    ).toBeEnabled();
+    expect(screen.getByRole('button', { name: `${mapped.nameKo} 수업안에 추가` })).toBeEnabled();
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
     expect(usePilatesStore.getState().exercises).toBe(before.exercises);
     fireEvent.click(within(preview).getByRole('button', { name: '모션 초안 닫기' }));

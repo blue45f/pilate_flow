@@ -73,7 +73,7 @@ function openConfiguredLoop(mode: 'connected' | 'timeline') {
   fireEvent.click(screen.getByRole('button', { name: '다음 항목' }));
   const parentRange = screen.getByRole('slider', { name: '수업 시간표 위치' });
   expect(parentRange).toHaveValue(String(model.steps[1].startSec));
-  expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeEnabled();
   fireEvent.click(screen.getByRole('button', { name: '선택한 항목 반복 연습' }));
   const loop = screen.getByRole('region', { name: '선택 구간 반복 연습' });
   const controls = within(loop);
@@ -103,7 +103,7 @@ function expectConfiguredLoop(loop: HTMLElement) {
     String(localCursor),
   );
   expect(controls.getByRole('status')).toHaveTextContent('반복 2 / 2 · 일시정지 · 수행 · 오른쪽');
-  expect(controls.getByRole('button', { name: '구간 반복 연습 시작' })).toBeDisabled();
+  expect(controls.getByRole('button', { name: '구간 반복 연습 시작' })).toBeEnabled();
 }
 
 beforeEach(() => {
@@ -204,10 +204,13 @@ describe('selected preview mode preserves manual loop context', () => {
     openConfiguredLoop('connected');
     fireEvent.click(screen.getByRole('button', { name: '시간표 보기' }));
     expect(screen.queryByRole('region', { name: '선택 구간 반복 연습' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '시간표 보기' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: '시간표 보기' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     const parentRange = screen.getByRole('slider', { name: '수업 시간표 위치' });
     expect(parentRange).toHaveValue(String(model.steps[1].startSec));
-    expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeEnabled();
     expect(screen.getByLabelText('시간표 경과와 전체 시간')).toHaveTextContent('일시정지');
     advance(5_000);
     expect(parentRange).toHaveValue(String(model.steps[1].startSec));
@@ -220,7 +223,7 @@ describe('selected preview mode preserves manual loop context', () => {
     expect(screen.queryByRole('region', { name: '선택 구간 반복 연습' })).not.toBeInTheDocument();
     const parentRange = screen.getByRole('slider', { name: '수업 시간표 위치' });
     expect(parentRange).toHaveValue(String(model.steps[2].startSec));
-    expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeEnabled();
     expect(screen.getByLabelText('시간표 경과와 전체 시간')).toHaveTextContent('일시정지');
     expect(screen.getByRole('region', { name: '수업 시간에 연결한 동작 흐름' })).toHaveAttribute(
       'data-study-kind',

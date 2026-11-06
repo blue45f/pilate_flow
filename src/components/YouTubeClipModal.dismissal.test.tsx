@@ -59,6 +59,7 @@ afterEach(() => {
 describe('materially unsaved movement detail dismissal', () => {
   it('returns to a visible save control when the last edited field belongs to a collapsed metadata editor', async () => {
     render(<YouTubePreviewModal exercise={current()} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     openEditor();
     const input = editCue();
     const editor = input.closest('details')!;
@@ -76,6 +77,7 @@ describe('materially unsaved movement detail dismissal', () => {
   it('keeps the same open dialog and input on X, then returns focus to editing', async () => {
     const close = vi.fn();
     render(<YouTubePreviewModal exercise={current()} onClose={close} onAddToSequence={vi.fn()} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     openEditor();
     fireEvent.change(review().getByLabelText('검토한 강사 별칭'), { target: { value: alias } });
     const input = editCue();
@@ -100,6 +102,7 @@ describe('materially unsaved movement detail dismissal', () => {
   it('blocks cancel, moves to the existing save control and never saves or approves automatically', async () => {
     const close = vi.fn();
     render(<YouTubePreviewModal exercise={current()} onClose={close} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     openEditor();
     fireEvent.change(review().getByLabelText('검토한 강사 별칭'), { target: { value: alias } });
     editCue();
@@ -126,6 +129,7 @@ describe('materially unsaved movement detail dismissal', () => {
   it('blocks fallback outside click, and discards only after the explicit discard-and-close action', () => {
     const close = vi.fn();
     render(<YouTubePreviewModal exercise={current()} onClose={close} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     openEditor();
     editCue();
     const dialog = screen.getByRole('dialog');
@@ -145,6 +149,7 @@ describe('materially unsaved movement detail dismissal', () => {
     (mode) => {
       const close = vi.fn();
       render(<YouTubePreviewModal exercise={current()} onClose={close} />);
+      fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
       if (mode === 'alias-only')
         fireEvent.change(review().getByLabelText('검토한 강사 별칭'), { target: { value: alias } });
       if (mode === 'exact-revert') {

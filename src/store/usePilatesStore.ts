@@ -250,6 +250,7 @@ export interface PilatesStudioState extends SequenceSnapshot {
   scaleAllStepsLayer: (layer: LayerMode) => void;
   updateStepNote: (stepIndex: number, note: string) => void;
   moveStep: (stepIndex: number, direction: 'up' | 'down') => void;
+  reorderStep: (stepId: string, targetStepId: string) => boolean;
   removeStep: (stepIndex: number) => void;
   addRestStep: (durationMin: number, afterIndex?: number) => { success: boolean; message: string };
   setRestDuration: (
@@ -1551,14 +1552,33 @@ export const usePilatesStore = create<PilatesStudioState>()(
             activeSteps: next.map((step, i) => (step.locked ? step : { ...step, order: i + 1 })),
           });
         }),
+      reorderStep: (stepId, targetStepId) => {
+        const state = get();
+        const from = state.activeSteps.findIndex((step) => step.stepId === stepId);
+        const to = state.activeSteps.findIndex((step) => step.stepId === targetStepId);
+        if (from < 0 || to < 0 || from === to) return false;
+        // A locked block keeps both its contents and its exact position.
+        if (
+          state.activeSteps
+            .slice(Math.min(from, to), Math.max(from, to) + 1)
+            .some((step) => step.locked)
+        )
+          return false;
+        const activeSteps = [...state.activeSteps];
+        const [moved] = activeSteps.splice(from, 1);
+        activeSteps.splice(to, 0, moved);
+        set(
+          edit(state, {
+            activeSteps: activeSteps.map((step, index) =>
+              step.locked ? step : { ...step, order: index + 1 },
+            ),
+          }),
+        );
+        return true;
+      },
       removeStep: (index) =>
         set((state) => {
-          if (
-            !state.activeSteps[index] ||
-            state.activeSteps[index].locked ||
-            (state.activeSteps.length <= 1 && !isRestStep(state.activeSteps[index]))
-          )
-            return state;
+          if (!state.activeSteps[index] || state.activeSteps[index].locked) return state;
           return edit(state, {
             activeSteps: state.activeSteps
               .filter((_, i) => i !== index)

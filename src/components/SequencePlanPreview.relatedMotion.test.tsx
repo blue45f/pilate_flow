@@ -139,7 +139,7 @@ describe('actual related-pattern playback within a pending plan preview', () => 
     const before = usePilatesStore.getState();
     const { related, player, onStart } = renderPreview();
 
-    expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeEnabled();
     expect(screen.getByRole('button', { name: '수업 시작' })).toBeDisabled();
     expect(screen.queryByText(canonical.cues[0])).not.toBeInTheDocument();
     expect(screen.queryByText(step.instructorNote!)).not.toBeInTheDocument();
@@ -178,7 +178,7 @@ describe('actual related-pattern playback within a pending plan preview', () => 
 
     fireEvent.click(screen.getByRole('button', { name: '선택한 항목 반복 연습' }));
     const segment = screen.getByRole('region', { name: '선택 구간 반복 연습' });
-    expect(within(segment).getByRole('button', { name: '구간 반복 연습 시작' })).toBeDisabled();
+    expect(within(segment).getByRole('button', { name: '구간 반복 연습 시작' })).toBeEnabled();
     expect(player.getByRole('button', { name: '한 주기 재생' })).toBeDisabled();
     expect(player.getByRole('slider', { name: '도해 위치' })).toHaveValue('250');
     expect(frames.size).toBe(0);

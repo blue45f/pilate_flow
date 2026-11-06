@@ -58,7 +58,7 @@ describe('connected study integrated with the class cursor', () => {
     const continuation = screen.getByRole('contentinfo', { name: '수업안 확인 후 다음 단계' });
     expect(body).not.toContainElement(continuation);
     expect(body.parentElement).toContainElement(continuation);
-    expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeEnabled();
     expect(screen.getByRole('button', { name: '동작 흐름 보기' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -82,7 +82,7 @@ describe('connected study integrated with the class cursor', () => {
       target: { value: '32' },
     });
     expect(view()).toHaveAttribute('data-study-side', 'right');
-    expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '시간표 리허설 시작' })).toBeEnabled();
     expect(screen.getByLabelText('수업 역할별 계획 시간')).toHaveTextContent(
       '준비운동01:00본운동00:00마무리00:00',
     );

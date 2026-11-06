@@ -161,7 +161,6 @@ export function InlineExerciseFinder({
       setFeedback({ success: result.ok, message: result.message });
       return;
     }
-    if (!isExerciseAutoEligible(exercise)) return;
     const before = usePilatesStore.getState().activeSteps.length;
     appendExerciseToSequence(exercise.id);
     const after = usePilatesStore.getState();
@@ -366,7 +365,7 @@ export function InlineExerciseFinder({
         )}
       </div>
       <p className="ief-review-hint">
-        초안은 바로 볼 수 있어요. 수업안 추가는 노트 검토 후 가능합니다.
+        동작을 바로 추가하세요. 검토 기록은 선택 사항입니다.
       </p>
       {preview && (
         <section
@@ -443,11 +442,9 @@ export function InlineExerciseFinder({
                 <button
                   type="button"
                   className="ief-preview-insert-step"
-                  disabled={!previewApproved || previewAlreadyAdded}
+                  disabled={previewAlreadyAdded}
                   aria-label={
-                    !previewApproved
-                      ? `${previewExercise.nameKo} 초안 창에서 검토 후 시퀀스 삽입 가능`
-                      : previewAlreadyAdded
+                    previewAlreadyAdded
                         ? `${previewExercise.nameKo} 초안 창에서 이미 시퀀스에 있음`
                         : `${previewExercise.nameKo} 초안 확인 후 시퀀스 삽입`
                   }
@@ -457,12 +454,10 @@ export function InlineExerciseFinder({
                     <>
                       <Check size={16} aria-hidden="true" /> 시퀀스에 추가됨
                     </>
-                  ) : previewApproved ? (
+                  ) : (
                     <>
                       <Plus size={16} aria-hidden="true" /> 시퀀스에 바로 삽입
                     </>
-                  ) : (
-                    '노트 검토 후 시퀀스 삽입 가능'
                   )}
                 </button>
               </div>
@@ -486,7 +481,6 @@ export function InlineExerciseFinder({
             const stale = getExerciseReviewState(exercise) === 'stale';
             const isIdea = isMovementIdeaExercise(exercise);
             const ideaMeta = isIdea ? readMovementIdeaDraft(exercise) : null;
-            const canAdd = approved || isIdea;
             const references = getMotionPatternReferences(exercise.id);
             const firstReference = references[0];
             const alreadyAdded = activeSteps.some(
@@ -576,24 +570,16 @@ export function InlineExerciseFinder({
                     </PfAiStatusBadge>
                     <button
                       type="button"
-                      disabled={!canAdd || alreadyAdded}
+                      disabled={alreadyAdded}
                       aria-label={
-                        !canAdd
-                          ? `${exercise.nameKo} 강사 검토 후 추가 가능`
-                          : alreadyAdded
+                        alreadyAdded
                             ? `${exercise.nameKo} 이미 수업안에 있음`
                             : `${exercise.nameKo} 수업안에 추가`
                       }
                       onClick={() => addExercise(exercise)}
-                      title={
-                        isIdea
-                          ? '내 창작 메모 · 전문가 검증 아님'
-                          : approved
-                            ? '내 강사 검토 · 자격 인증 미확인'
-                            : '전체 검토 전 추가할 수 없습니다.'
-                      }
+                      title="수업안에 추가 · 검토 상태는 변경되지 않습니다"
                     >
-                      {alreadyAdded ? <Check size={18} /> : <Plus size={18} />}
+                      {alreadyAdded ? <Check size={18} /> : <Plus size={18} />}<span>{alreadyAdded ? '추가됨' : '추가'}</span>
                     </button>
                   </div>
                 </div>

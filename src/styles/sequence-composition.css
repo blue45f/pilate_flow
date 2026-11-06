@@ -1,0 +1,136 @@
+/* Existing atelier layout retained; direct actions and optional detail gain room. */
+#root .sequence-order-card {
+  min-width: 0;
+  margin-bottom: 14px;
+  border: 1px solid #d9ded3;
+  border-radius: 16px;
+  background: #fffdf7;
+}
+#root .sequence-order-card > .flow-step,
+#root .sequence-order-card > .rest-step-card {
+  margin: 0;
+  border: 0;
+  border-radius: 16px 16px 0 0;
+}
+#root .sequence-order-card.is-drop-target {
+  outline: 3px solid #4e795e;
+  outline-offset: 2px;
+}
+#root .sequence-order-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid #e6e8df;
+}
+#root .sequence-order-controls button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 10px;
+  border: 1px solid #d1d9cb;
+  border-radius: 10px;
+  background: #f8faf4;
+  color: #294936;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+#root .sequence-order-controls button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+#root .sequence-order-controls .sequence-drag-handle {
+  margin-right: auto;
+  cursor: grab;
+}
+#root .sequence-order-controls button:focus-visible {
+  outline: 3px solid #24694f;
+  outline-offset: 2px;
+}
+#root .composition-order-hint {
+  margin: 16px 0 12px;
+  color: #536051;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+#root .optional-source-details,
+#root .optional-review-details {
+  margin: 20px 0;
+  padding: 14px;
+  border: 1px solid #dadfd3;
+  border-radius: 12px;
+}
+#root .optional-source-details > summary,
+#root .optional-review-details > summary {
+  min-height: 44px;
+  cursor: pointer;
+  color: #304d3c;
+  line-height: 1.6;
+}
+#root .optional-source-details[open] > summary,
+#root .optional-review-details[open] > summary {
+  margin-bottom: 16px;
+}
+#root .ief-card-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 76px;
+  min-height: 44px;
+  padding: 8px 12px;
+}
+#root .ief-review-hint,
+#root .ml-review-note,
+#root .workbench-readiness-summary {
+  line-height: 1.65;
+  margin-block: 14px;
+  overflow-wrap: anywhere;
+}
+#root .library-modal-footer {
+  gap: 12px;
+  padding-block: 16px;
+}
+@media (max-width: 480px) {
+  #root .sequence-order-controls {
+    gap: 6px;
+    padding: 10px;
+  }
+  #root .sequence-order-controls button {
+    padding-inline: 8px;
+  }
+  #root .sequence-order-controls .sequence-drag-handle {
+    margin-right: 0;
+  }
+  #root .sequence-order-controls button span {
+    font-size: 0.75rem;
+  }
+  #root .vnext-workbench .flow-step .step-main {
+    padding: 14px 12px;
+  }
+  #root .vnext-workbench .flow-step .step-title {
+    min-width: 0;
+  }
+  #root .vnext-workbench .flow-step .step-title strong {
+    overflow-wrap: anywhere;
+    line-height: 1.55;
+  }
+  #root .workbench-preparation-steps button {
+    gap: 5px;
+    padding: 10px 6px;
+    line-height: 1.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .sequence-order-card,
+  #root .sequence-order-controls * {
+    animation: none;
+    transition: none;
+    scroll-behavior: auto;
+  }
+}

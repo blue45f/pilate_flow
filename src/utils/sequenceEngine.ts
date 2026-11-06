@@ -1,4 +1,4 @@
-import { isExerciseAutoEligible } from './exerciseReview';
+import { isExerciseAuthoringEligible } from './exerciseAuthoring';
 import {
   DEFAULT_OWNED_EQUIPMENT,
   EQUIPMENT_OPTIONS,
@@ -511,11 +511,12 @@ function getEligibleExercises(
 ): PilatesExercise[] {
   validateCriteria(criteria);
   const eligible = exercises.filter(
-    (exercise) => isExerciseAutoEligible(exercise) && exerciseMatchesCriteria(exercise, criteria),
+    (exercise) =>
+      isExerciseAuthoringEligible(exercise) && exerciseMatchesCriteria(exercise, criteria),
   );
   if (!eligible.length)
     throw new Error(
-      '선택한 기구·소도구와 최대 난이도에 맞는 승인된 동작이 부족합니다. 라이브러리에서 강사가 동작을 검토·승인한 뒤 다시 만들어 주세요.',
+      '선택한 기구·소도구와 난이도에 맞는 동작이 부족합니다. 수업 조건을 조정하거나 직접 동작을 추가해 주세요.',
     );
   return eligible;
 }
@@ -775,7 +776,7 @@ function assertEquipmentCoverage(
   const missing = requestedEquipment(criteria).filter((id) => !used.has(id));
   if (missing.length)
     throw new Error(
-      `${missing.map(equipmentLabel).join(', ')} 기구가 수업에 포함되지 않았습니다. 승인된 동작이나 잠금·구간 선택을 확인해 주세요.`,
+      `${missing.map(equipmentLabel).join(', ')} 기구가 수업에 포함되지 않았습니다. 동작이나 잠금·구간 선택을 확인해 주세요.`,
     );
 }
 
@@ -927,11 +928,11 @@ export function regenerateSequence(
     const exercise = map.get(step.exerciseId);
     if (
       !exercise ||
-      !isExerciseAutoEligible(exercise) ||
+      !isExerciseAuthoringEligible(exercise) ||
       !exerciseMatchesCriteria(exercise, criteria)
     )
       throw new Error(
-        '유지할 항목의 승인 또는 기구·소도구·난이도 조건이 맞지 않습니다. 검토·승인하거나 잠금과 조건을 확인해 주세요.',
+        '유지할 동작의 정보 또는 기구·소도구·난이도 조건이 맞지 않습니다. 잠금과 수업 조건을 확인해 주세요.',
       );
   }
   assertDistinctSteps(retained, map);
@@ -981,7 +982,7 @@ export function regenerateSequence(
       selected,
       replacedIds,
     );
-    if (!exercise) throw new Error('반복 없이 구성할 승인된 동작이 부족합니다.');
+    if (!exercise) throw new Error('반복 없이 구성할 동작이 부족합니다.');
     selected.push(exercise);
   }
   const categoryOrder = (exercise: PilatesExercise) =>
@@ -1060,7 +1061,7 @@ export function proposeBlockAlternatives(
   );
   const allowedExercises = exercises.filter(
     (exercise) =>
-      isExerciseAutoEligible(exercise) &&
+      isExerciseAuthoringEligible(exercise) &&
       (!criteria || exerciseMatchesCriteria(exercise, criteria)) &&
       !usedKeys.has(getMovementKey(exercise)),
   );
@@ -1198,7 +1199,7 @@ export function swapDuplicateStepsWithFresh(
     if (step.locked || isRestStep(step) || !recentIds.has(step.exerciseId)) return step;
 
     const original = exercises.find((exercise) => exercise.id === step.exerciseId);
-    const approvedExercises = exercises.filter(isExerciseAutoEligible);
+    const approvedExercises = exercises.filter(isExerciseAuthoringEligible);
     const allowed = criteria
       ? approvedExercises.filter((exercise) => exerciseMatchesCriteria(exercise, criteria))
       : approvedExercises.filter(

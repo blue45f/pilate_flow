@@ -1,6 +1,6 @@
 import { exerciseSchema, stepSchema } from '../schemas/cloudBackupSchema';
 import type { PilatesExercise, SequenceStep } from '../types/pilates';
-import { getExerciseReviewState, isExerciseAutoEligible } from './exerciseReview';
+import { getExerciseReviewState } from './exerciseReview';
 import { getMovementKey, getStepSideLabels, getStepTiming, isRestStep } from './sequenceEngine';
 
 export type SimulationSegmentKind = 'teaching' | 'movement' | 'transition' | 'rest' | 'unavailable';
@@ -208,12 +208,6 @@ export function buildSequenceSimulation(
         else {
           title = record.nameKo || record.nameEn || '이름 없는 동작';
           reviewState = getExerciseReviewState(record);
-          if (!isExerciseAutoEligible(record))
-            reason(
-              'unreviewed-exercise',
-              '직접 검토되지 않았거나 내용이 바뀐 동작이 있습니다. 강사 메모를 먼저 확인해 주세요.',
-              [stepIndex],
-            );
           const key = getMovementKey(record);
           movementKeys.set(key, [...(movementKeys.get(key) ?? []), stepIndex]);
           const timing = getStepTiming(step, record);

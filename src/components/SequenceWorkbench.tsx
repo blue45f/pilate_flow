@@ -43,6 +43,9 @@ import {
   isRestStep,
 } from '../utils/sequenceEngine';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
+import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
+import { SequenceOrderCard } from './SequenceOrderCard';
+import '../styles/sequence-composition.css';
 import {
   addMovementIdeaToCurrentClass,
   isMovementIdeaExercise,
@@ -406,9 +409,9 @@ export function SequenceWorkbench({
   const hasDuplicateMovements = duplicateStepCount > 0;
   const exerciseStepCount = s.activeSteps.filter((step) => !isRestStep(step)).length;
   const restStepCount = s.activeSteps.length - exerciseStepCount;
-  const reviewedCatalogCount = s.exercises.filter(isExerciseAutoEligible).length;
+  const authoringCatalogCount = s.exercises.filter(isExerciseAuthoringEligible).length;
   const canStartClass =
-    exerciseStepCount > 0 && delta === 0 && pendingStepCount === 0 && !hasDuplicateMovements;
+    exerciseStepCount > 0 && delta === 0 && !hasDuplicateMovements;
   const locked = s.activeSteps.filter((step) => step.locked).length;
   const sectionRuns: {
     section: (typeof sections)[number];
@@ -434,7 +437,7 @@ export function SequenceWorkbench({
         .filter(
           (ex) =>
             ex.id !== changingEx.id &&
-            isExerciseAutoEligible(ex) &&
+            isExerciseAuthoringEligible(ex) &&
             !occupiedMovementKeys.has(getMovementKey(ex)) &&
             ex.apparatus === changingEx.apparatus &&
             exerciseMatchesCriteria(ex, {
@@ -471,8 +474,8 @@ export function SequenceWorkbench({
       s.setActiveSequenceMeta({ targetMinutes: minutes });
   };
   const generate = () => {
-    if (reviewedCatalogCount === 0) {
-      setNotice('자동 구성 전에 동작 상세에서 강사 검토를 완료해 주세요.');
+    if (authoringCatalogCount === 0) {
+      setNotice('구성할 동작이 없습니다. 먼저 동작을 등록해 주세요.');
       return;
     }
     const minutes = Number(customTime);
@@ -501,9 +504,7 @@ export function SequenceWorkbench({
     setNotice('');
   };
   const startReadiness =
-    pendingStepCount > 0
-      ? `${pendingStepCount}개 동작의 검토·승인이 필요합니다.`
-      : hasDuplicateMovements
+    hasDuplicateMovements
         ? '같은 동작이 중복되어 있어요. 다른 동작으로 바꿔 주세요.'
         : !exerciseStepCount
           ? '동작을 추가한 뒤 수업안을 확인하세요.'
@@ -523,11 +524,11 @@ export function SequenceWorkbench({
       getSequenceDurations(current.activeSteps).totalSec === current.activeTargetMinutes * 60 &&
       movements.every((step) => {
         const exercise = currentExercises.get(step.exerciseId);
-        return !!exercise && isExerciseAutoEligible(exercise);
+        return !!exercise && isExerciseAuthoringEligible(exercise);
       }) &&
       new Set(keys).size === keys.length;
     if (!ready) {
-      setNotice('수업안이 바뀌었어요. 시간·검토 상태·중복 동작을 다시 확인해 주세요.');
+      setNotice('수업안이 바뀌었어요. 시간·동작 정보·중복 동작을 다시 확인해 주세요.');
       return;
     }
     setPlanPreviewOpen(false);
@@ -608,7 +609,7 @@ export function SequenceWorkbench({
               </PfButton>
             </div>
             <p className="workbench-reviewed-count">
-              내 검토 기록 {reviewedCatalogCount}개 · 검토를 마친 동작을 추가할 수 있어요.
+              추가하고, 순서를 바꾸고, 저장하세요. 검토는 선택입니다.
             </p>
           </div>
         </section>
@@ -809,7 +810,7 @@ export function SequenceWorkbench({
               <PfButton
                 variant="primary"
                 onClick={generate}
-                disabled={reviewedCatalogCount === 0}
+                disabled={authoringCatalogCount === 0}
                 aria-describedby={locked ? 'v2-new-draft-scope' : undefined}
                 title="전체를 새 초안으로 구성합니다"
               >
@@ -1019,6 +1020,7 @@ export function SequenceWorkbench({
               </div>
             </>
           )}
+          {s.activeSteps.length > 0 && <p className="composition-order-hint">끌어서 순서를 바꾸세요. 모바일에서는 위로·아래로 버튼도 사용할 수 있어요.</p>}
           <div className="flow-sections">
             {sectionRuns.map(({ section, entries }, runIndex) => {
               return (
@@ -1042,8 +1044,8 @@ export function SequenceWorkbench({
                   {entries.map(({ step, index }) => {
                     if (isRestStep(step))
                       return (
+                        <SequenceOrderCard key={step.stepId} step={step} index={index} label={`${index + 1}번 휴식`} onNotice={setNotice}>
                         <RestStepCard
-                          key={step.stepId}
                           step={step}
                           index={index}
                           lastIndex={s.activeSteps.length - 1}
@@ -1052,6 +1054,7 @@ export function SequenceWorkbench({
                           onRemove={() => s.removeStep(index)}
                           onSetDuration={(minutes) => s.setRestDuration(index, minutes)}
                         />
+                        </SequenceOrderCard>
                       );
                     const ex = exerciseMap.get(step.exerciseId);
                     if (!ex)
@@ -1065,8 +1068,8 @@ export function SequenceWorkbench({
                     const expanded = previewStep === step.stepId;
                     const isIdea = isMovementIdeaExercise(ex);
                     return (
+                      <SequenceOrderCard key={step.stepId} step={step} index={index} label={`${index + 1}번 ${ex.nameKo}`} onNotice={setNotice}>
                       <PfMovementCard
-                        key={step.stepId}
                         variant="step"
                         locked={!!step.locked}
                         selected={expanded}
@@ -1164,6 +1167,7 @@ export function SequenceWorkbench({
                           </div>
                         </div>
                       </PfMovementCard>
+                      </SequenceOrderCard>
                     );
                   })}
                 </PfSequenceBlock>
@@ -1269,7 +1273,7 @@ export function SequenceWorkbench({
           )}
           {s.activeSteps.length > 0 && (
             <p className="workbench-readiness-summary" id="start-class-readiness">
-              {startReadiness} 저장과 수업 시작은 미리보기에서 이어갑니다.
+              {startReadiness} {pendingStepCount > 0 && `미검토 자료 ${pendingStepCount}개 · 검토 기록은 선택 사항입니다.`}
             </p>
           )}
           {s.activeSteps.length > 0 && (
@@ -1299,10 +1303,15 @@ export function SequenceWorkbench({
               </div>
             </section>
           )}
+          {!s.activeSteps.length && s.undoStack.length > 0 && (
+            <PfButton variant="secondary" onClick={() => { s.undoSequence(); setNotice(''); }}>
+              <RotateCcw size={16} /> 되돌리기
+            </PfButton>
+          )}
           {!s.activeSteps.length && (
             <details className="workbench-automation-tools">
               <summary>자동 구성·휴식 먼저 넣기</summary>
-              <p>검토한 동작 중 시간·기구·난이도와 최근 수업 기록에 맞춰 구성합니다.</p>
+              <p>시간·기구·난이도와 최근 수업 기록에 맞춰 초안을 만듭니다. 효과·안전성 판단은 포함하지 않습니다.</p>
               <div>
                 <PfButton
                   variant="secondary"
@@ -1319,9 +1328,9 @@ export function SequenceWorkbench({
                 </PfButton>
                 <PfButton
                   variant="secondary"
-                  disabled={reviewedCatalogCount === 0}
+                  disabled={authoringCatalogCount === 0}
                   aria-describedby={
-                    reviewedCatalogCount === 0 ? 'automatic-review-guidance' : undefined
+                    authoringCatalogCount === 0 ? 'automatic-review-guidance' : undefined
                   }
                   onClick={() => {
                     setPlanningMode('auto');
@@ -1331,14 +1340,13 @@ export function SequenceWorkbench({
                   <RefreshCw size={16} /> 시퀀스 만들기
                 </PfButton>
               </div>
-              {reviewedCatalogCount === 0 && (
+              {authoringCatalogCount === 0 && (
                 <div>
                   <p id="automatic-review-guidance">
-                    자동 구성에 사용할 검토 완료 동작이 아직 없어요. 동작 상세에서 출처와 동작
-                    내용을 확인하고 강사 검토를 먼저 완료해 주세요.
+                    자동 구성에 사용할 동작이 없어요. 먼저 동작을 등록해 주세요.
                   </p>
                   <button type="button" className="btn-secondary" onClick={openExerciseFinder}>
-                    검토할 동작 찾기
+                    동작 찾기
                   </button>
                 </div>
               )}
@@ -1354,7 +1362,7 @@ export function SequenceWorkbench({
             open={aiCopilotOpen}
             onToggle={(event) => setAiCopilotOpen(event.currentTarget.open)}
           >
-            <summary>주제·이력 맞춤 로컬 추천 · 외부 AI 연결 대기</summary>
+            <summary>주제·이력 맞춤 추천 (선택)</summary>
             {aiCopilotOpen && (
               <AiSequenceCoPilotPanel
                 criteria={criteria}

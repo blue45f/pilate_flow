@@ -33,7 +33,6 @@ import {
 } from './utils/instructorSchedule';
 import './styles/controls.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
-import { isExerciseAutoEligible } from './utils/exerciseReview';
 import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 
 const InstructorStudyDialog = lazy(() =>
@@ -619,7 +618,7 @@ export function App() {
             onAddToSequence={(exerciseId) => {
               const before = usePilatesStore.getState();
               const exercise = before.exercises.find((item) => item.id === exerciseId);
-              if (!exercise || !isExerciseAutoEligible(exercise))
+              if (!exercise)
                 return {
                   success: false,
                   message: '동작 정보가 바뀌었습니다. 현재 정보를 다시 확인해 주세요.',

@@ -47,8 +47,12 @@ describe('movement detail motion reference boundary', () => {
     };
     const examples = [INITIAL_EXERCISES[0], INITIAL_EXERCISES.at(-1)!, custom];
     const { rerender } = render(<YouTubePreviewModal exercise={examples[0]} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
+    fireEvent.click(screen.getByText('출처·검토 상태 자세히 보기'));
     for (const exercise of examples) {
       rerender(<YouTubePreviewModal exercise={exercise} onClose={vi.fn()} />);
+      fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
+      fireEvent.click(screen.getByText('출처·검토 상태 자세히 보기'));
       expect(player('exercise')).toHaveAttribute('data-exercise-id', exercise.id);
       expect(player('exercise')).toHaveAttribute('data-exercise-name', exercise.nameKo);
       expect(player('prototype-lab')).not.toHaveAttribute('data-exercise-id');
@@ -81,6 +85,8 @@ describe('movement detail motion reference boundary', () => {
     details.open = true;
     fireEvent(details, new Event('toggle'));
     rerender(<YouTubePreviewModal exercise={INITIAL_EXERCISES[1]} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
+    fireEvent.click(screen.getByText('출처·검토 상태 자세히 보기'));
     expect(
       screen.getByText('미검토 모션 설계 예시 · 운동 시범 아님').closest('details'),
     ).not.toHaveAttribute('open');
@@ -109,6 +115,8 @@ describe('movement detail motion reference boundary', () => {
       ];
       const onAdd = vi.fn();
       render(<YouTubePreviewModal exercise={exercise} onClose={vi.fn()} onAddToSequence={onAdd} />);
+      fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
+      fireEvent.click(screen.getByText('출처·검토 상태 자세히 보기'));
       const modal = within(screen.getByRole('dialog', { name: exercise.nameKo }));
       const evidence = modal.getByRole('region', { name: `${exercise.nameKo} 근거와 검토 상태` });
       const summary = evidence.querySelector('summary')!;
@@ -116,7 +124,7 @@ describe('movement detail motion reference boundary', () => {
       expect(
         modal.getByRole('button', { name: '수정 내용을 저장하고 내 강사 검토로 승인' }),
       ).toBeDisabled();
-      expect(modal.getByRole('button', { name: '강사 검토 후 추가 가능' })).toBeDisabled();
+      expect(modal.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
       fireEvent.click(summary);
       const research = within(
         within(evidence).getByRole('region', { name: '별도 모션 후보 연구' }),
@@ -136,7 +144,7 @@ describe('movement detail motion reference boundary', () => {
       expect(
         modal.getByRole('button', { name: '수정 내용을 저장하고 내 강사 검토로 승인' }),
       ).toBeDisabled();
-      expect(modal.getByRole('button', { name: '강사 검토 후 추가 가능' })).toBeDisabled();
+      expect(modal.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
       expect(usePilatesStore.getState()).toBe(before);
       expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
       expect(fetch).not.toHaveBeenCalled();
@@ -181,6 +189,8 @@ describe('movement detail motion reference boundary', () => {
     const storage = vi.spyOn(Storage.prototype, 'setItem');
     const write = vi.spyOn(usePilatesStore, 'setState');
     render(<YouTubePreviewModal exercise={exercise} onClose={vi.fn()} onAddToSequence={vi.fn()} />);
+    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
+    fireEvent.click(screen.getByText('출처·검토 상태 자세히 보기'));
     const modal = within(screen.getByRole('dialog', { name: exercise.nameKo }));
     const evidence = modal.getByRole('region', { name: `${exercise.nameKo} 근거와 검토 상태` });
     const summary = evidence.querySelector('summary')!;
@@ -211,7 +221,7 @@ describe('movement detail motion reference boundary', () => {
     expect(
       modal.getByRole('button', { name: '수정 내용을 저장하고 내 강사 검토로 승인' }),
     ).toBeDisabled();
-    expect(modal.getByRole('button', { name: '강사 검토 후 추가 가능' })).toBeDisabled();
+    expect(modal.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
     expect(usePilatesStore.getState()).toBe(before);
     expect(JSON.stringify(VERIFIED_REFERENCES)).toBe(ledgerBefore);
     expect(write).not.toHaveBeenCalled();
