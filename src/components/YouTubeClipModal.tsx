@@ -1,3 +1,4 @@
+import { MovementDiagramReference } from './MovementDiagramReference';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckCircle2,
@@ -849,6 +850,7 @@ const MovementDetails: React.FC<{
           </button>
         </div>
       )}
+      <MovementDiagramReference exercise={exercise} />
       <MotionReferencePlayer exerciseId={exercise.id} exerciseName={exercise.nameKo} />
       <ExerciseYouTubeGallery exercise={exercise} maxPerRegion={3} />
       <MovementMediaGuidancePanel key={exercise.id} exercise={exercise} />

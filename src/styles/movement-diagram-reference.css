@@ -1,0 +1,34 @@
+.movement-diagram-reference {
+  border: 1px solid #dce5e1;
+  border-radius: 14px;
+  background: #fff;
+  min-width: 0;
+}
+.movement-diagram-reference > summary {
+  min-height: 44px;
+  padding: 14px 16px;
+  cursor: pointer;
+  color: #24594c;
+  font-weight: 600;
+}
+.movement-diagram-reference-content {
+  padding: 0 16px 16px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.movement-diagram-reference summary:focus-visible {
+  outline: 3px solid #4e795e;
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+.movement-diagram-reference-canvas {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f5f8f6;
+}
+.movement-diagram-reference-canvas > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+}
