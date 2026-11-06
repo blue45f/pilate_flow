@@ -1,0 +1,235 @@
+import type {
+  ApparatusType,
+  AutoGenerateCriteria,
+  BodyPosition,
+  BoxState,
+  ClassBlockCategory,
+  ClassHistoryLog,
+  DifficultyLevel,
+  ExerciseLayers,
+  ExerciseReview,
+  ExerciseSourceReference,
+  FavoriteTag,
+  FootbarState,
+  HeadrestState,
+  LayerMode,
+  PilatesExercise,
+  PropType,
+  SequenceStep,
+  SpinalPlane,
+  StepSideMode,
+  WorkoutTempo,
+  YouTubeClipRef,
+} from './pilates';
+
+/**
+ * Explicit domain classification separating reusable plans/templates from
+ * immutable completed teaching history records.
+ */
+export type TeachingRecordKind = 'plan-sequence' | 'condition-template' | 'completed-history';
+
+/**
+ * Origin of a completed class session at the time it was recorded.
+ */
+export type TeachingHistorySourceKind = 'saved-sequence' | 'active-draft';
+
+/**
+ * Immutable snapshot of a PilatesExercise at the exact time a class was taught.
+ * Later mutations or deletions in the live exercise catalog must never alter this snapshot.
+ */
+export interface TeachingExerciseSnapshot {
+  id: string;
+  nameKo: string;
+  nameEn: string;
+  apparatus: ApparatusType;
+  requiredEquipment?: string[];
+  movementFamily?: string;
+  review?: ExerciseReview;
+  sourceReference?: ExerciseSourceReference;
+  props: PropType[];
+  blockCategory: ClassBlockCategory;
+  spinalPlanes: SpinalPlane[];
+  bodyPosition: BodyPosition;
+  level: DifficultyLevel;
+  defaultDurationMin: number;
+  isUnilateral: boolean;
+  springs: string;
+  box: BoxState;
+  footbar: FootbarState;
+  headrest: HeadrestState;
+  targetMuscles: string[];
+  breathPattern: string;
+  cues: string[];
+  precautions: string;
+  layers: ExerciseLayers;
+  youtube: YouTubeClipRef;
+  favoriteTag: FavoriteTag;
+  tempo?: WorkoutTempo;
+  isCustom?: boolean;
+  createdAt?: string;
+}
+
+/**
+ * Immutable snapshot of a single ordered step/block as taught in the completed class.
+ */
+export interface TeachingProgramSnapshotItem {
+  order: number;
+  stepId: string;
+  kind: 'exercise' | 'rest';
+  exerciseId: string;
+  blockCategory: ClassBlockCategory;
+  blockNameKo: string;
+  blockNameEn: string;
+  classSection: 'opening' | 'main' | 'ending';
+  classSectionLabelKo: string;
+  durationMin: number;
+  explanationSec: number;
+  transitionSec: number;
+  movementSec: number;
+  perSideSec?: number;
+  selectedLayer: LayerMode;
+  selectedLayerLabelKo: string;
+  selectedLayerDescription: string;
+  customSpringOverride?: string;
+  effectiveSprings: string;
+  repetitions?: number;
+  sets?: number;
+  sideMode?: StepSideMode;
+  instructorNote?: string;
+  locked?: boolean;
+  exerciseSnapshot?: TeachingExerciseSnapshot;
+}
+
+/**
+ * Planned vs. actual timing preserved at the moment the class was completed.
+ */
+export interface TeachingProgramTimingSnapshot {
+  plannedTotalSec: number;
+  plannedExerciseSec: number;
+  plannedRestSec: number;
+  actualDurationSec?: number;
+  actualRestDurationSec?: number;
+  actualExerciseDurationSec?: number;
+}
+
+/**
+ * Complete immutable program snapshot attached to a completed ClassHistoryLog.
+ * Stored under `programSnapshot` on `ClassHistoryLog` (preserved by P1 `historySchema.passthrough()`).
+ */
+export interface TeachingProgramSnapshot {
+  snapshotVersion: 1;
+  recordKind: 'completed-history';
+  sourceKind: TeachingHistorySourceKind;
+  sourceSequenceId: string;
+  sourceSequenceTitle: string;
+  sourceSubtitle: string;
+  taughtAt: string;
+  capturedAt: string;
+  completionFingerprint: string;
+  timing: TeachingProgramTimingSnapshot;
+  exercisesById: Record<string, TeachingExerciseSnapshot>;
+  items: TeachingProgramSnapshotItem[];
+}
+
+/**
+ * Extended ClassHistoryLog type carrying the immutable `programSnapshot` payload.
+ * Compatible with shared `ClassHistoryLog` and P1 `historySchema.passthrough()`.
+ */
+export type ClassHistoryLogWithSnapshot = ClassHistoryLog & {
+  programSnapshot?: TeachingProgramSnapshot;
+};
+
+/**
+ * Payload passed to `usePilatesStore.getState().logClassSession(...)` enriched with `programSnapshot`.
+ */
+export type CompletedHistoryLogPayload = Omit<ClassHistoryLog, 'id'> & {
+  programSnapshot?: TeachingProgramSnapshot;
+};
+
+export interface BuildTeachingProgramSnapshotInput {
+  sequenceId: string;
+  sequenceTitle: string;
+  sequenceSubtitle?: string;
+  sourceKind: TeachingHistorySourceKind;
+  taughtAt: string;
+  capturedAt?: string;
+  groupId: string;
+  steps: SequenceStep[];
+  exercises: PilatesExercise[];
+  actualDurationSec?: number;
+  actualRestDurationSec?: number;
+  criteriaSnapshot?: AutoGenerateCriteria;
+}
+
+export interface ResolvedTeachingHistoryStepView {
+  order: number;
+  stepId: string;
+  kind: 'exercise' | 'rest';
+  exerciseId: string;
+  nameKo: string;
+  nameEn: string;
+  apparatus: ApparatusType | 'mixed';
+  blockCategory: ClassBlockCategory;
+  blockNameKo: string;
+  blockNameEn: string;
+  classSection: 'opening' | 'main' | 'ending';
+  classSectionLabelKo: string;
+  durationMin: number;
+  explanationSec: number;
+  transitionSec: number;
+  movementSec: number;
+  perSideSec?: number;
+  selectedLayer: LayerMode;
+  selectedLayerLabelKo: string;
+  selectedLayerDescription: string;
+  effectiveSprings: string;
+  box?: BoxState;
+  footbar?: FootbarState;
+  headrest?: HeadrestState;
+  props: PropType[];
+  cues: string[];
+  precautions: string;
+  breathPattern: string;
+  isUnilateral: boolean;
+  repetitions?: number;
+  sets?: number;
+  sideMode?: StepSideMode;
+  instructorNote?: string;
+  locked?: boolean;
+  /** True when the exercise snapshot was preserved at completion time. */
+  fromSnapshot: boolean;
+  /** True when the live catalog exercise was later modified compared to the taught snapshot. */
+  isCatalogModified: boolean;
+  /** True when the live catalog exercise was later deleted, but snapshot is preserved. */
+  isCatalogDeleted: boolean;
+  /** True only when a legacy log has neither a snapshot nor a live catalog exercise. */
+  isMissingUnrecoverable: boolean;
+}
+
+export interface ResolvedTeachingHistoryView {
+  logId: string;
+  recordKind: 'completed-history';
+  sourceKind: TeachingHistorySourceKind;
+  sourceSequenceId: string;
+  sequenceTitle: string;
+  sourceSubtitle: string;
+  groupId: string;
+  groupName: string;
+  taughtAt: string;
+  apparatus: ApparatusType | 'mixed';
+  level: DifficultyLevel;
+  rating: 1 | 2 | 3 | 4 | 5;
+  intensity: 'relaxed' | 'moderate' | 'intense';
+  instructorReflection: string;
+  timing: TeachingProgramTimingSnapshot;
+  steps: ResolvedTeachingHistoryStepView[];
+  movementCount: number;
+  restCount: number;
+  hasPreservedSnapshot: boolean;
+  hasCatalogDrift: boolean;
+  modifiedExerciseIds: string[];
+  deletedExerciseIds: string[];
+  missingUnrecoverableExerciseIds: string[];
+  sourceSequenceStatus: 'unchanged' | 'modified' | 'deleted' | 'draft-origin';
+  canCopyToNextClass: boolean;
+}
