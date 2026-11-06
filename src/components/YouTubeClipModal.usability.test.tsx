@@ -88,7 +88,7 @@ describe('local review guidance without weakening explicit review', () => {
     });
     expect(isExerciseAutoEligible(current(note.id))).toBe(true);
     expect(consent()).not.toBeChecked();
-    expect(review().getByRole('status')).toHaveTextContent('다음은 아래 ‘수업안에 추가’');
+    expect(review().getByRole('status')).toHaveTextContent('위의 ‘수업안에 추가’');
     expect(screen.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
     expect(add).not.toHaveBeenCalled();
   });

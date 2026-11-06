@@ -85,7 +85,7 @@ describe('movement addition reports the actual result without losing the current
     ).toBeVisible();
     expect(
       within(screen.getByRole('region', { name: '내 강사 검토' })).getByRole('status'),
-    ).not.toHaveTextContent('다음은 아래 ‘수업안에 추가’');
+    ).not.toHaveTextContent('위의 ‘수업안에 추가’');
     expect(add).not.toHaveBeenCalled();
   });
 

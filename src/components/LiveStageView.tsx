@@ -546,8 +546,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       className={`teaching-stage ${highContrast ? 'teaching-high-contrast' : ''}`}
     >
       <p className="teaching-safety">
-        수업 전체를 실제 강사가 검토한 후 사용해 주세요. 사용자 검토 표시는 자격 인증이나 개인별
-        운동 적합성 보장이 아닙니다.
+        실제 수행 전 몸 상태와 기구 설정을 확인하세요. 검토 기록은 자격 인증이나 개인별 운동
+        적합성 보장이 아닙니다.
       </p>
       <header className="teaching-stage-header">
         <div>

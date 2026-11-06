@@ -574,7 +574,7 @@ const LocalInstructorReview: React.FC<{
   const reviewRecorded = state === 'approved' && !draftChanged;
   const nextStep = reviewRecorded
     ? canAddToSequence
-      ? '검토 기록이 있습니다. 다음은 아래 ‘수업안에 추가’로 이어가세요.'
+      ? '검토 기록이 있습니다. 위의 ‘수업안에 추가’로 이어가세요.'
       : '검토 기록이 있습니다. 확인을 마쳤다면 창을 닫아도 됩니다.'
     : (missingNote?.message ??
       (!reviewerAlias.trim()
@@ -598,7 +598,7 @@ const LocalInstructorReview: React.FC<{
           ? '내 강사 검토 기록'
           : state === 'stale'
             ? '동작 정보 변경 · 다시 검토 필요'
-            : '실제 강사의 전체 검토가 필요합니다'}
+            : '검토 기록 남기기 (선택)'}
       </h3>
       {state === 'approved' && (
         <>
@@ -1135,7 +1135,7 @@ interface YouTubeClipperModalProps {
   open: boolean;
   onClose: () => void;
 }
-const REVIEW_TEXT = '강사 검토 필요 · 원본 영상에서 자세와 기구 설정을 직접 확인하세요.';
+const REVIEW_TEXT = '미검토 자료 · 원본 영상에서 자세와 기구 설정을 확인하세요.';
 const SAMPLE_CHAPTERS = '00:00 호흡과 준비\n03:00 첫 번째 동작\n06:00 두 번째 동작';
 
 export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, onClose }) => {
@@ -1619,7 +1619,7 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
             <div className="clipper-review-note">
               <Info size={15} />
               <p>
-                모든 등록 자료는 <strong>강사 검토 필요</strong>로 표시합니다.
+                새 등록 자료는 <strong>미검토 자료</strong>로 표시합니다.
                 {mode === 'batch' &&
                   ' ‘수업안으로 열기’는 현재 편집 중인 수업안을 새 참조 수업으로 바꿉니다.'}
               </p>
