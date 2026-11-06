@@ -46,3 +46,15 @@ Isolated Chrome profiles at 320, 390, 768 and 1440 pixels, reduced motion enable
 6. Check no horizontal overflow or page errors. Inspect actual screenshots of the picker, calculator, preview and classroom.
 
 All four viewport journeys passed. These are real browser UI/timer checks, not physical exercise or speaker tests. Native iPhone/Android execution and audible TTS are not claimed by this feature's QA.
+
+## Final integrated verification
+
+Integrated with the latest history/recovery changes and PWA main `9a0fac43ce521f2b3b4533240d7b39b6f7331321`, without reintroducing pre-rewrite history:
+
+- Full Vitest: 176 files, 1,907 tests passed.
+- TypeScript, ESLint and production build: passed. Existing warnings remain for one Fast Refresh export and a catalog chunk larger than 500 kB.
+- Motion ledger: 22 source identities checked and all 6 ledger regression tests passed.
+- PWA build check: 40 real static files, manifest and PNG icons verified.
+- Real production-preview Chrome, 390px: loaded the service worker, went offline before ever opening the lazy preset picker, copied a preset, edited an explicit time estimate, reloaded offline and recovered the same draft. All 40 shell files were cached; no page errors occurred. This verifies offline app-shell behavior, not installation onto a physical home screen.
+
+Remote production deployment is a separate, coordinated action after the next design integration. This change does not itself claim an operating-site update.
