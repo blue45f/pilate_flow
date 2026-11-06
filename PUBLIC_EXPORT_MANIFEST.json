@@ -3,7 +3,6 @@
   "canonicalCloudCommit": "a9a6716bb460fef48eb8d9dfe1b0fd9781f19c74",
   "validatedApplicationCommit": "ee16febaed5a9fc1c3f0841c12d559f4464638a3",
   "fullHistoryPublished": false,
-  "remoteUploadPerformed": false,
   "deploymentPerformed": false,
   "excluded": [
     ".git/**",
@@ -36,7 +35,7 @@
     },
     {
       "path": "GEMINI_HANDOFF.md",
-      "sha256": "785548118ae62b8338a1dcdc7d644fbd286c7c5f19a5266201ea9fd7a994ab33"
+      "sha256": "1bbee69dfd73f4fd3297074badd58c7e3c4edcd6226f829c5853ecf0fb6b7698"
     },
     {
       "path": "backend/appdeploy.d.ts",
@@ -108,7 +107,7 @@
     },
     {
       "path": "handoff/github-blocker.json",
-      "sha256": "44ef00c839b9cdf501a91b5e4db15bb91280b3664e1a00161014900f7d0a26d8"
+      "sha256": "5e806d00ec81c53a0efaa4a7fe002557161daffbec0475295fc3864ae9f44a59"
     },
     {
       "path": "handoff/history-secret-scan.json",
@@ -1663,5 +1662,8 @@
       "sha256": "0577b980de12639772682c688d24965efb4d9caf6efc25152dcfb46ec00f9b0e"
     }
   ],
-  "limitations": "Minimal export NOT rebuilt/retested; canonical baseline validation and pending validation boundaries are in GEMINI_HANDOFF.md. No external preservation verified."
+  "limitations": "Minimal export NOT rebuilt/retested; canonical baseline validation and pending validation boundaries are in GEMINI_HANDOFF.md. No external preservation verified.",
+  "destination": "https://github.com/blue45f/pilate_flow",
+  "destinationVerifiedPublicAndEmpty": true,
+  "remoteUploadPerformedAtExportCreation": false
 }

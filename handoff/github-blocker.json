@@ -12,5 +12,13 @@
   "newGrantEvidenceFound": false,
   "remoteSourceUpload": "not performed",
   "deployment": "not performed",
-  "requiredNextStep": "Owner or supported already-authorized owner session creates the empty public repository and confirms integration access; then verify exact owner/visibility/contents before upload."
+  "requiredNextStep": "Upload the sanitized public snapshot to the verified user-provided empty repository, then verify remote commit/tree.",
+  "historicalFailureOnly": true,
+  "userProvidedDestination": "https://github.com/blue45f/pilate_flow",
+  "destinationReadVerification": {
+    "owner": "blue45f",
+    "public": true,
+    "empty": true,
+    "permission": "ADMIN"
+  }
 }
