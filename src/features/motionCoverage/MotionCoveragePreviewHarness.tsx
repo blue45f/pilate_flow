@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MotionAuthoringBatchFigure } from '../../components/MotionAuthoringBatchFigure';
 import { MotionDraftFigure } from '../../components/MotionDraftFigure';
@@ -7,12 +7,12 @@ import {
   MovementTriptychDiagramSvg,
 } from '../../components/MovementPhaseDiagramSvg';
 import { SupineReachFigure } from '../../components/SupineReachFigure';
-import { INITIAL_EXERCISES } from '../../data/pilatesCatalog';
 import { MOTION_PATTERN_REFERENCES } from '../../data/motionPatternReferences';
 import {
   MOVEMENT_VISUAL_ASSETS,
   type VisualPhaseId,
 } from '../../data/movementVisualRigCatalog';
+import { INITIAL_EXERCISES } from '../../data/pilatesCatalog';
 import type { BatchVariantId } from '../../models/motionAuthoringBatch';
 import type { MotionDraftId } from '../../models/types';
 import { getMotionPose, type MotionPoint } from '../../utils/motionReferenceModel';
@@ -20,6 +20,7 @@ import {
   resolveRenderableMotionDescriptor,
   toExerciseEvidenceMotionOverlay,
 } from './adapters';
+import { MOTION_COVERAGE_HARNESS_REPRESENTATIVE_TARGETS } from './catalogSweep';
 import {
   DISCRETE_VISUAL_PHASES,
   DRAFT_REPEAT_COUNTS,
@@ -30,201 +31,7 @@ import {
   type MotionCoveragePlaybackControllerOptions,
   type MotionCoveragePlaybackSnapshot,
 } from './playbackController';
-import { verifyZeroDuplicateVisualAssets } from './poseOverrides';
 import type { MotionSupportMode, ResolveMotionCoverageOptions } from './types';
-
-export interface RepresentativeHarnessTarget {
-  readonly id: string;
-  readonly labelKo: string;
-  readonly expectedMode: MotionSupportMode;
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const MOTION_COVERAGE_HARNESS_REPRESENTATIVE_TARGETS: readonly RepresentativeHarnessTarget[] =
-  Object.freeze([
-    {
-      id: 'ex-warmup-01',
-      labelKo: '대표 이산 2D 3단계 (ex-warmup-01 · 3단계 도해)',
-      expectedMode: 'three-phase-2d',
-    },
-    {
-      id: 'original-mat-ankle-reach',
-      labelKo: '대표 2D 평면 연속 초안 (original-mat-ankle-reach)',
-      expectedMode: 'continuous-2d',
-    },
-    {
-      id: 'original-mat-quadruped-reach',
-      labelKo: '대표 3D→2D 사선 투영 초안 (original-mat-quadruped-reach)',
-      expectedMode: 'projected-3d',
-    },
-    {
-      id: 'unknown-nonexistent-id-999',
-      labelKo: '대표 미지원/누락 검수 (unknown-nonexistent-id-999)',
-      expectedMode: 'missing',
-    },
-  ]);
-
-export interface CatalogPlaybackSweepResult {
-  readonly totalCatalogCount: number;
-  readonly countsByMode: Readonly<Record<MotionSupportMode, number>>;
-  readonly reused2dPoseAssetCount: number;
-  readonly newlyCreatedAssetCount: 0;
-  readonly unreviewedPatternReferenceCount: number;
-  readonly discreteExercisesNeverPlayedCount: number;
-  readonly continuousExercisesVerifiedCount: number;
-  readonly representativeModesVerified: Readonly<Record<MotionSupportMode, boolean>>;
-  readonly canonicalMotionReadyTrueCount: 0;
-  readonly manualReadyTrueCount: 0;
-  readonly true3dSupportedTrueCount: 0;
-  readonly controllerDestroyedCleanly: boolean;
-}
-
-/**
- * Programmatic verification harness that iterates over all 98 catalog descriptors plus
- * the representative missing target using a single `MotionCoveragePlaybackController` instance,
- * verifying play/pause/seek/step-select/switch and confirming zero leaked frames/listeners.
- */
-// eslint-disable-next-line react-refresh/only-export-components
-export function runMotionCoverageCatalogSweep(
-  options: ResolveMotionCoverageOptions = {},
-): CatalogPlaybackSweepResult {
-  const frames = new Map<number, FrameRequestCallback>();
-  let nextFrameId = 1;
-  let clockMs = 1000;
-
-  const controller = new MotionCoveragePlaybackController({
-    exerciseOrId: INITIAL_EXERCISES[0]?.id ?? 'ex-warmup-01',
-    resolveOptions: options,
-    isReducedMotion: () => false,
-    isDocumentHidden: () => false,
-    requestFrame: (cb) => {
-      const id = nextFrameId++;
-      frames.set(id, cb);
-      return id;
-    },
-    cancelFrame: (id) => {
-      frames.delete(id);
-    },
-    now: () => clockMs,
-  });
-
-  const countsByMode: Record<MotionSupportMode, number> = {
-    'three-phase-2d': 0,
-    'continuous-2d': 0,
-    'projected-3d': 0,
-    missing: 0,
-  };
-
-  let discreteExercisesNeverPlayedCount = 0;
-  let continuousExercisesVerifiedCount = 0;
-  const representativeModesVerified: Record<MotionSupportMode, boolean> = {
-    'three-phase-2d': false,
-    'continuous-2d': false,
-    'projected-3d': false,
-    missing: false,
-  };
-
-  for (const exercise of INITIAL_EXERCISES) {
-    const snap = controller.switchExercise(exercise.id, options);
-    countsByMode[snap.mode] += 1;
-
-    if (snap.mode === 'three-phase-2d') {
-      const playStarted = controller.play({ explicitUserAction: true });
-      const afterPlayAttempt = controller.getSnapshot();
-      controller.selectPhase('middle');
-      const atMiddle = controller.getSnapshot();
-      controller.selectPhase('end');
-      const atEnd = controller.getSnapshot();
-      controller.restart();
-      const atReset = controller.getSnapshot();
-
-      if (
-        !playStarted &&
-        !afterPlayAttempt.playing &&
-        !afterPlayAttempt.isContinuousInterpolated &&
-        afterPlayAttempt.progress === null &&
-        frames.size === 0 &&
-        atMiddle.selectedPhase === 'middle' &&
-        atEnd.selectedPhase === 'end' &&
-        atReset.selectedPhase === 'start'
-      ) {
-        discreteExercisesNeverPlayedCount += 1;
-        representativeModesVerified['three-phase-2d'] = true;
-      }
-    } else if (snap.mode === 'continuous-2d' || snap.mode === 'projected-3d') {
-      const playStarted = controller.play({ explicitUserAction: true });
-      const pendingCallbacks = [...frames.values()];
-      frames.clear();
-      clockMs += 16;
-      for (const cb of pendingCallbacks) {
-        cb(clockMs);
-      }
-      const nextCallbacks = [...frames.values()];
-      frames.clear();
-      clockMs += 2000;
-      for (const cb of nextCallbacks) {
-        cb(clockMs);
-      }
-      const playingSnap = controller.getSnapshot();
-      controller.seek(0.75);
-      const soughtSnap = controller.getSnapshot();
-      controller.pause();
-      const pausedSnap = controller.getSnapshot();
-      controller.restart();
-      const resetSnap = controller.getSnapshot();
-
-      if (
-        playStarted &&
-        playingSnap.isContinuousInterpolated &&
-        typeof playingSnap.progress === 'number' &&
-        Number.isFinite(playingSnap.progress) &&
-        playingSnap.progress > 0 &&
-        soughtSnap.progress === 0.75 &&
-        !pausedSnap.playing &&
-        resetSnap.progress === 0 &&
-        frames.size === 0
-      ) {
-        continuousExercisesVerifiedCount += 1;
-        representativeModesVerified[snap.mode] = true;
-      }
-    }
-  }
-
-  const missingSnap = controller.switchExercise('unknown-nonexistent-id-999', options);
-  const missingPlayStarted = controller.play({ explicitUserAction: true });
-  if (
-    missingSnap.mode === 'missing' &&
-    !missingPlayStarted &&
-    !missingSnap.playing &&
-    missingSnap.progress === null &&
-    missingSnap.selectedPhase === null &&
-    frames.size === 0
-  ) {
-    representativeModesVerified.missing = true;
-  }
-
-  controller.destroy();
-  const reuseReport = verifyZeroDuplicateVisualAssets();
-
-  return Object.freeze({
-    totalCatalogCount: INITIAL_EXERCISES.length,
-    countsByMode: Object.freeze(countsByMode),
-    reused2dPoseAssetCount: reuseReport.reusedByIdentityCount,
-    newlyCreatedAssetCount: 0,
-    unreviewedPatternReferenceCount: MOTION_PATTERN_REFERENCES.length,
-    discreteExercisesNeverPlayedCount,
-    continuousExercisesVerifiedCount,
-    representativeModesVerified: Object.freeze(representativeModesVerified),
-    canonicalMotionReadyTrueCount: 0,
-    manualReadyTrueCount: 0,
-    true3dSupportedTrueCount: 0,
-    controllerDestroyedCleanly:
-      controller.isDestroyed() &&
-      !controller.hasPendingFrame() &&
-      controller.activeListenerCount() === 0 &&
-      frames.size === 0,
-  });
-}
 
 export interface MotionCoveragePreviewHarnessProps {
   readonly initialExerciseOrId?: string;
@@ -286,12 +93,27 @@ function pointsToSvgPath(points: readonly MotionPoint[]): string {
     .join(' ');
 }
 
+function isInteractiveControlTarget(
+  target: EventTarget | null,
+  currentTarget: EventTarget | null,
+): boolean {
+  if (!target || target === currentTarget) return false;
+  if (typeof Element !== 'undefined' && target instanceof Element) {
+    return Boolean(
+      target.closest(
+        'button, input, select, textarea, a, [role="button"], [role="slider"], [contenteditable="true"]',
+      ),
+    );
+  }
+  return true;
+}
+
 /**
  * Isolated local inspection preview harness (`src/features/motionCoverage/MotionCoveragePreviewHarness.tsx`).
  * - Iterates over all 98 catalog descriptors + representative missing fixture.
  * - Uses `MotionCoveragePlaybackController` to drive continuous drafts (`projected-3d`, `continuous-2d`)
  *   and discrete 3-step selection (`three-phase-2d`, 77 exercises) without fake interpolation.
- * - Enforces >= 44px touch targets, keyboard shortcuts, and responsive 320px/390px zero-overflow layout.
+ * - Enforces >= 44px touch targets, non-interfering keyboard shortcuts, and responsive 320px/390px zero-overflow layout.
  * - Cleans up all RAF handles and listeners on pause, exercise switch, background tab, and unmount.
  */
 export const MotionCoveragePreviewHarness: React.FC<
@@ -308,6 +130,11 @@ export const MotionCoveragePreviewHarness: React.FC<
   );
   const [modeFilter, setModeFilter] = useState<'all' | MotionSupportMode>('all');
 
+  const onSnapshotChangeRef = useRef(onSnapshotChange);
+  useEffect(() => {
+    onSnapshotChangeRef.current = onSnapshotChange;
+  }, [onSnapshotChange]);
+
   const mergedResolveOptions = useMemo<ResolveMotionCoverageOptions>(
     () => ({
       ...resolveOptions,
@@ -319,19 +146,26 @@ export const MotionCoveragePreviewHarness: React.FC<
   const [controllerState] = useState(() => {
     let setSnapRef: ((nextSnap: MotionCoveragePlaybackSnapshot) => void) | null =
       null;
+    let notifyExternalRef:
+      | ((nextSnap: MotionCoveragePlaybackSnapshot) => void)
+      | null = null;
     const ctrl = new MotionCoveragePlaybackController({
       exerciseOrId: initialExerciseOrId,
       resolveOptions: mergedResolveOptions,
       ...controllerOptions,
       onChange: (nextSnap) => {
         setSnapRef?.(nextSnap);
-        onSnapshotChange?.(nextSnap);
+        notifyExternalRef?.(nextSnap);
       },
     });
     return {
       ctrl,
-      bindSetSnap: (fn: (nextSnap: MotionCoveragePlaybackSnapshot) => void) => {
-        setSnapRef = fn;
+      bindCallbacks: (
+        setSnapFn: (nextSnap: MotionCoveragePlaybackSnapshot) => void,
+        notifyFn: (nextSnap: MotionCoveragePlaybackSnapshot) => void,
+      ) => {
+        setSnapRef = setSnapFn;
+        notifyExternalRef = notifyFn;
       },
     };
   });
@@ -342,7 +176,10 @@ export const MotionCoveragePreviewHarness: React.FC<
   );
 
   useEffect(() => {
-    controllerState.bindSetSnap(setSnapshot);
+    controller.reconnect();
+    controllerState.bindCallbacks(setSnapshot, (nextSnap) => {
+      onSnapshotChangeRef.current?.(nextSnap);
+    });
     return () => {
       controller.destroy();
     };
@@ -392,9 +229,7 @@ export const MotionCoveragePreviewHarness: React.FC<
   );
 
   const handleSelectExercise = (nextExerciseId: string) => {
-    const nextSnap = controller.switchExercise(nextExerciseId, mergedResolveOptions);
-    setSnapshot(nextSnap);
-    onSnapshotChange?.(nextSnap);
+    controller.switchExercise(nextExerciseId, mergedResolveOptions);
   };
 
   const handleToggleLabPrototypes = (checked: boolean) => {
@@ -403,9 +238,7 @@ export const MotionCoveragePreviewHarness: React.FC<
       ...resolveOptions,
       includeLabPrototypesInContinuous2d: checked,
     };
-    const nextSnap = controller.switchExercise(snapshot.exerciseId, nextOptions);
-    setSnapshot(nextSnap);
-    onSnapshotChange?.(nextSnap);
+    controller.switchExercise(snapshot.exerciseId, nextOptions);
   };
 
   const handlePrevExercise = () => {
@@ -430,18 +263,20 @@ export const MotionCoveragePreviewHarness: React.FC<
   };
 
   const handleStageKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    // Do NOT intercept or double-fire when focus is inside a child button, range input, or select
+    if (isInteractiveControlTarget(event.target, event.currentTarget)) {
+      return;
+    }
+
     if (event.key === 'ArrowLeft') {
       event.preventDefault();
       controller.prevPhase();
-      setSnapshot(controller.getSnapshot());
     } else if (event.key === 'ArrowRight') {
       event.preventDefault();
       controller.nextPhase();
-      setSnapshot(controller.getSnapshot());
     } else if (event.key === 'Home') {
       event.preventDefault();
       controller.restart();
-      setSnapshot(controller.getSnapshot());
     } else if (event.key === ' ' && snapshot.isContinuousInterpolated) {
       event.preventDefault();
       if (snapshot.playing) {
@@ -449,7 +284,6 @@ export const MotionCoveragePreviewHarness: React.FC<
       } else {
         controller.play({ explicitUserAction: true });
       }
-      setSnapshot(controller.getSnapshot());
     }
   };
 
@@ -487,6 +321,7 @@ export const MotionCoveragePreviewHarness: React.FC<
       data-anatomical-verified="false"
       data-expert-verified="false"
       data-reduced-motion={String(snapshot.reducedMotion)}
+      data-background-hidden={String(snapshot.isBackgroundHidden)}
       data-catalog-total={String(INITIAL_EXERCISES.length)}
       data-reused-2d-asset-count={String(MOVEMENT_VISUAL_ASSETS.length)}
       data-pattern-reference-count={String(MOTION_PATTERN_REFERENCES.length)}
@@ -783,7 +618,7 @@ export const MotionCoveragePreviewHarness: React.FC<
       <div
         tabIndex={0}
         role="region"
-        aria-label="모션 도해 검수 스테이지 (좌우 방향키로 단계 이동, 스페이스바로 연속 초안 재생/일시정지)"
+        aria-label="모션 도해 검수 스테이지 (스테이지 포커스 시 좌우 방향키로 단계 이동, 스페이스바로 연속 초안 재생/일시정지)"
         data-testid="harness-interactive-stage"
         onKeyDown={handleStageKeyDown}
         style={{
@@ -1285,13 +1120,25 @@ export const MotionCoveragePreviewHarness: React.FC<
   );
 };
 
+const activeHarnessRoots = new WeakMap<HTMLElement, Root>();
+
 // eslint-disable-next-line react-refresh/only-export-components
 export function mountMotionCoveragePreviewHarness(
   container: HTMLElement,
   props: MotionCoveragePreviewHarnessProps = {},
 ): Root {
+  const existingRoot = activeHarnessRoots.get(container);
+  if (existingRoot) {
+    existingRoot.unmount();
+    activeHarnessRoots.delete(container);
+  }
   const root = createRoot(container);
+  const origUnmount = root.unmount.bind(root);
+  root.unmount = () => {
+    activeHarnessRoots.delete(container);
+    origUnmount();
+  };
+  activeHarnessRoots.set(container, root);
   root.render(<MotionCoveragePreviewHarness {...props} />);
   return root;
 }
-

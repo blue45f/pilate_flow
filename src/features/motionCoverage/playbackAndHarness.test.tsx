@@ -4,9 +4,12 @@ import { MOVEMENT_VISUAL_ASSET_MAP } from '../../data/movementVisualRigCatalog';
 import { INITIAL_EXERCISES } from '../../data/pilatesCatalog';
 import { getExerciseEvidence } from '../../utils/exerciseEvidence';
 import {
+  DRAFT_REPEAT_COUNTS,
+  DRAFT_SPEEDS,
   MOTION_COVERAGE_HARNESS_REPRESENTATIVE_TARGETS,
   MotionCoveragePlaybackController,
   MotionCoveragePreviewHarness,
+  mountMotionCoveragePreviewHarness,
   runMotionCoverageCatalogSweep,
 } from './index';
 
@@ -193,13 +196,29 @@ describe('motionCoverage playbackController (Part A) & MotionCoveragePreviewHarn
       isDocumentHidden: () => false,
     });
 
+    // Verify exact allowed constants DRAFT_SPEEDS = [0.5, 0.75, 1] and DRAFT_REPEAT_COUNTS = [1, 2, 3]
+    expect(DRAFT_SPEEDS).toEqual([0.5, 0.75, 1]);
+    expect(DRAFT_REPEAT_COUNTS).toEqual([1, 2, 3]);
+
+    for (const validSpeed of DRAFT_SPEEDS) {
+      controller.setSpeed(validSpeed);
+      expect(controller.getSnapshot().speed).toBe(validSpeed);
+    }
+    controller.setSpeed(1);
+
+    for (const validRepeat of DRAFT_REPEAT_COUNTS) {
+      controller.setRepeatCount(validRepeat);
+      expect(controller.getSnapshot().repeatCount).toBe(validRepeat);
+    }
+    controller.setRepeatCount(1);
+
     // Invalid speeds must throw RangeError and keep speed = 1
     for (const badSpeed of [0, -1, 0.25, 1.25, 2, NaN, Infinity, -Infinity]) {
       expect(() => controller.setSpeed(badSpeed)).toThrow(RangeError);
       expect(controller.getSnapshot().speed).toBe(1);
     }
 
-    // Invalid repeat counts must throw RangeError and keep repeatCount = 1
+    // Invalid repeat counts (outside [1, 2, 3]) must throw RangeError and keep repeatCount = 1
     for (const badRepeat of [0, -2, 1.5, 4, NaN, Infinity, -Infinity]) {
       expect(() => controller.setRepeatCount(badRepeat)).toThrow(RangeError);
       expect(controller.getSnapshot().repeatCount).toBe(1);
@@ -279,10 +298,15 @@ describe('motionCoverage playbackController (Part A) & MotionCoveragePreviewHarn
     const handlers: {
       mediaChange?: (ev: MediaQueryListEvent) => void;
       visibility?: () => void;
+      pagehide?: () => void;
+      pageshow?: () => void;
     } = {};
 
     const fakeWindow = {
-      addEventListener: vi.fn(),
+      addEventListener: vi.fn((name: string, cb: () => void) => {
+        if (name === 'pagehide') handlers.pagehide = cb;
+        if (name === 'pageshow') handlers.pageshow = cb;
+      }),
       removeEventListener: vi.fn(),
       matchMedia: vi.fn(() => ({
         get matches() {
@@ -335,6 +359,7 @@ describe('motionCoverage playbackController (Part A) & MotionCoveragePreviewHarn
     handlers.visibility?.();
     expect(controller.getSnapshot().playing).toBe(false);
     expect(controller.getSnapshot().isBackgroundHidden).toBe(true);
+    expect(controller.getSnapshot().explicitPlayGrantedUnderReducedMotion).toBe(false);
     expect(rig.frames.size).toBe(0);
 
     // Return to foreground, play again, then switch exercise -> cleans up RAF
@@ -509,5 +534,336 @@ describe('motionCoverage playbackController (Part A) & MotionCoveragePreviewHarn
     }));
     expect(afterEvidence).toEqual(beforeEvidence);
     expect(MOTION_COVERAGE_HARNESS_REPRESENTATIVE_TARGETS).toHaveLength(4);
+  });
+
+  it('6. does not intercept or double-fire stage shortcuts when native range, button, or select controls have focus', () => {
+    const rig = createInjectableFrameRig(1000);
+    const snapshotEvents: Array<
+      ReturnType<MotionCoveragePlaybackController['getSnapshot']>
+    > = [];
+
+    render(
+      <MotionCoveragePreviewHarness
+        initialExerciseOrId="original-mat-quadruped-reach"
+        controllerOptions={{
+          requestFrame: rig.requestFrame,
+          cancelFrame: rig.cancelFrame,
+          now: rig.now,
+          isReducedMotion: () => false,
+          isDocumentHidden: () => false,
+        }}
+        onSnapshotChange={(snap) => snapshotEvents.push(snap)}
+      />,
+    );
+
+    const harnessRoot = screen.getByTestId('motion-coverage-preview-harness');
+    const stage = screen.getByTestId('harness-interactive-stage');
+    const seekSlider = screen.getByTestId('harness-seek-slider') as HTMLInputElement;
+    const speedBtn05 = screen.getByTestId('harness-speed-0.5');
+    const repeatBtn2 = screen.getByTestId('harness-repeat-2');
+    const playPauseBtn = screen.getByTestId('harness-play-pause-btn');
+    const exerciseSelect = screen.getByTestId('harness-exercise-select');
+
+    // Set progress to 0.37 via seek slider
+    fireEvent.change(seekSlider, { target: { value: '37' } });
+    expect(
+      Number(
+        screen
+          .getByTestId('harness-continuous-figure-surface')
+          .getAttribute('data-progress'),
+      ),
+    ).toBeCloseTo(0.37, 3);
+
+    // Focusing seekSlider and pressing ArrowRight / ArrowLeft / Home must NOT trigger stage phase jump (0, 0.5, 1)
+    seekSlider.focus();
+    const rightEv = new KeyboardEvent('keydown', {
+      key: 'ArrowRight',
+      bubbles: true,
+      cancelable: true,
+    });
+    const rightNotPrevented = seekSlider.dispatchEvent(rightEv);
+    expect(rightNotPrevented).toBe(true);
+    expect(
+      Number(
+        screen
+          .getByTestId('harness-continuous-figure-surface')
+          .getAttribute('data-progress'),
+      ),
+    ).toBeCloseTo(0.37, 3);
+
+    const homeEv = new KeyboardEvent('keydown', {
+      key: 'Home',
+      bubbles: true,
+      cancelable: true,
+    });
+    const homeNotPrevented = seekSlider.dispatchEvent(homeEv);
+    expect(homeNotPrevented).toBe(true);
+    expect(
+      Number(
+        screen
+          .getByTestId('harness-continuous-figure-surface')
+          .getAttribute('data-progress'),
+      ),
+    ).toBeCloseTo(0.37, 3);
+
+    // Focusing speedBtn05 or repeatBtn2 and pressing Space / Enter must NOT trigger stage play/pause
+    speedBtn05.focus();
+    const spaceOnSpeedEv = new KeyboardEvent('keydown', {
+      key: ' ',
+      bubbles: true,
+      cancelable: true,
+    });
+    const spaceNotPrevented = speedBtn05.dispatchEvent(spaceOnSpeedEv);
+    expect(spaceNotPrevented).toBe(true);
+    expect(harnessRoot.getAttribute('data-playing')).toBe('false');
+
+    repeatBtn2.focus();
+    fireEvent.keyDown(repeatBtn2, { key: 'Enter' });
+    fireEvent.click(repeatBtn2);
+    expect(repeatBtn2.getAttribute('aria-pressed')).toBe('true');
+    expect(harnessRoot.getAttribute('data-playing')).toBe('false');
+
+    // Focusing playPauseBtn: keyDown(Space) + native click must toggle play ONCE (not double-toggle back to false)
+    playPauseBtn.focus();
+    fireEvent.keyDown(playPauseBtn, { key: ' ' });
+    expect(harnessRoot.getAttribute('data-playing')).toBe('false'); // keyDown did not prematurely toggle
+    fireEvent.click(playPauseBtn);
+    expect(harnessRoot.getAttribute('data-playing')).toBe('true'); // native click toggled to playing
+    fireEvent.click(playPauseBtn);
+    expect(harnessRoot.getAttribute('data-playing')).toBe('false');
+
+    // Focusing exerciseSelect and pressing ArrowLeft / Space must not trigger stage shortcuts
+    exerciseSelect.focus();
+    fireEvent.keyDown(exerciseSelect, { key: 'ArrowRight' });
+    fireEvent.keyDown(exerciseSelect, { key: ' ' });
+    expect(harnessRoot.getAttribute('data-playing')).toBe('false');
+
+    // Focusing the stage container itself DOES trigger stage shortcuts cleanly (and emits exactly once per key).
+    // Note: clicking repeatBtn2 above called DraftPlaybackController.setRepeatCount(2), which resets progress to 0 ('start').
+    stage.focus();
+    const countBeforeStageRight = snapshotEvents.length;
+    fireEvent.keyDown(stage, { key: 'ArrowRight' });
+    expect(snapshotEvents.length).toBe(countBeforeStageRight + 1);
+    expect(
+      Number(
+        screen
+          .getByTestId('harness-continuous-figure-surface')
+          .getAttribute('data-progress'),
+      ),
+    ).toBe(0.5);
+
+    fireEvent.keyDown(stage, { key: 'ArrowRight' });
+    expect(snapshotEvents.length).toBe(countBeforeStageRight + 2);
+    expect(
+      Number(
+        screen
+          .getByTestId('harness-continuous-figure-surface')
+          .getAttribute('data-progress'),
+      ),
+    ).toBe(1);
+
+    fireEvent.keyDown(stage, { key: 'Home' });
+    expect(
+      Number(
+        screen
+          .getByTestId('harness-continuous-figure-surface')
+          .getAttribute('data-progress'),
+      ),
+    ).toBe(0);
+
+    fireEvent.keyDown(stage, { key: ' ' });
+    expect(harnessRoot.getAttribute('data-playing')).toBe('true');
+  });
+
+  it('7. handles runtime prefers-reduced-motion transitions, pagehide/pageshow/visibilitychange recovery, and finite mount->unmount->remount cycles with zero duplicate RAF or listeners', () => {
+    const rig = createInjectableFrameRig(1000);
+    let docHidden = false;
+    let mediaMatches = false;
+    const windowListeners = new Map<string, Set<EventListener>>();
+    const docListeners = new Map<string, Set<EventListener>>();
+    const mediaListeners = new Set<(ev: MediaQueryListEvent) => void>();
+
+    const fakeWindow = {
+      addEventListener: vi.fn((name: string, cb: EventListener) => {
+        if (!windowListeners.has(name)) windowListeners.set(name, new Set());
+        windowListeners.get(name)!.add(cb);
+      }),
+      removeEventListener: vi.fn((name: string, cb: EventListener) => {
+        windowListeners.get(name)?.delete(cb);
+      }),
+      matchMedia: vi.fn(() => ({
+        get matches() {
+          return mediaMatches;
+        },
+        media: '(prefers-reduced-motion: reduce)',
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn((name: string, cb: (ev: MediaQueryListEvent) => void) => {
+          if (name === 'change') mediaListeners.add(cb);
+        }),
+        removeEventListener: vi.fn((name: string, cb: (ev: MediaQueryListEvent) => void) => {
+          if (name === 'change') mediaListeners.delete(cb);
+        }),
+        dispatchEvent: vi.fn(),
+      })),
+    };
+
+    const fakeDocument = {
+      addEventListener: vi.fn((name: string, cb: EventListener) => {
+        if (!docListeners.has(name)) docListeners.set(name, new Set());
+        docListeners.get(name)!.add(cb);
+      }),
+      removeEventListener: vi.fn((name: string, cb: EventListener) => {
+        docListeners.get(name)?.delete(cb);
+      }),
+    };
+
+    const controller = new MotionCoveragePlaybackController({
+      exerciseOrId: 'original-mat-quadruped-reach',
+      requestFrame: rig.requestFrame,
+      cancelFrame: rig.cancelFrame,
+      now: rig.now,
+      isDocumentHidden: () => docHidden,
+      documentTarget: fakeDocument,
+      windowTarget: fakeWindow as unknown as Window,
+    });
+
+    // 1. Runtime prefers-reduced-motion change (false -> true -> explicit play -> pause -> false)
+    expect(controller.play()).toBe(true);
+    expect(rig.frames.size).toBe(1);
+
+    // Fire runtime media change event EVEN BEFORE mutating mediaMatches getter to verify event override sync
+    for (const cb of mediaListeners) {
+      cb({ matches: true } as MediaQueryListEvent);
+    }
+    mediaMatches = true;
+    expect(controller.getSnapshot().playing).toBe(false);
+    expect(controller.getSnapshot().reducedMotion).toBe(true);
+    expect(rig.frames.size).toBe(0);
+
+    // Subsequent non-explicit play() must still be blocked
+    expect(controller.play()).toBe(false);
+    expect(rig.frames.size).toBe(0);
+
+    // Explicit play under reduced-motion succeeds, and pause resets explicitPlayGrantedUnderReducedMotion
+    expect(controller.play({ explicitUserAction: true })).toBe(true);
+    expect(controller.getSnapshot().explicitPlayGrantedUnderReducedMotion).toBe(true);
+    controller.pause();
+    expect(controller.getSnapshot().explicitPlayGrantedUnderReducedMotion).toBe(false);
+    expect(controller.getSnapshot().statusLabelKo).toContain('동작 줄이기(reduced-motion)');
+
+    // Flip reduced-motion back to false at runtime -> normal play() works again
+    for (const cb of mediaListeners) {
+      cb({ matches: false } as MediaQueryListEvent);
+    }
+    mediaMatches = false;
+    expect(controller.getSnapshot().reducedMotion).toBe(false);
+    expect(controller.play()).toBe(true);
+    expect(rig.frames.size).toBe(1);
+
+    // 2. pagehide -> pause -> explicit play / seek / pageshow recovery
+    for (const cb of windowListeners.get('pagehide') ?? []) {
+      cb(new Event('pagehide'));
+    }
+    expect(controller.getSnapshot().playing).toBe(false);
+    expect(controller.getSnapshot().isBackgroundHidden).toBe(true);
+    expect(rig.frames.size).toBe(0);
+
+    // While pageHiddenByEvent is active, non-explicit autoPlay is blocked
+    expect(controller.requestAutoPlay()).toBe(false);
+
+    // Explicit user action while document is visible clears pageHidden state and plays cleanly
+    expect(controller.play({ explicitUserAction: true })).toBe(true);
+    expect(controller.getSnapshot().isBackgroundHidden).toBe(false);
+    expect(controller.getSnapshot().playing).toBe(true);
+
+    // Trigger pagehide again, then seek(0.4) while document is visible -> clears background status banner
+    for (const cb of windowListeners.get('pagehide') ?? []) {
+      cb(new Event('pagehide'));
+    }
+    expect(controller.getSnapshot().isBackgroundHidden).toBe(true);
+    controller.seek(0.4);
+    expect(controller.getSnapshot().isBackgroundHidden).toBe(false);
+    expect(controller.getSnapshot().statusLabelKo).not.toContain('백그라운드 탭 전환');
+
+    // Trigger pagehide, then pageshow -> restores foreground state
+    for (const cb of windowListeners.get('pagehide') ?? []) {
+      cb(new Event('pagehide'));
+    }
+    expect(controller.getSnapshot().isBackgroundHidden).toBe(true);
+    for (const cb of windowListeners.get('pageshow') ?? []) {
+      cb(new Event('pageshow'));
+    }
+    expect(controller.getSnapshot().isBackgroundHidden).toBe(false);
+
+    // Trigger visibilitychange (docHidden = true -> false) followed by explicit play
+    docHidden = true;
+    for (const cb of docListeners.get('visibilitychange') ?? []) {
+      cb(new Event('visibilitychange'));
+    }
+    expect(controller.getSnapshot().isBackgroundHidden).toBe(true);
+    expect(controller.play({ explicitUserAction: true })).toBe(false);
+    docHidden = false;
+    for (const cb of docListeners.get('visibilitychange') ?? []) {
+      cb(new Event('visibilitychange'));
+    }
+    expect(controller.getSnapshot().isBackgroundHidden).toBe(false);
+    expect(controller.play({ explicitUserAction: true })).toBe(true);
+    controller.pause();
+
+    // 3. Controller destroy -> reconnect -> destroy finite cycle
+    for (let cycle = 0; cycle < 4; cycle++) {
+      controller.reconnect();
+      expect(controller.isDestroyed()).toBe(false);
+      expect(controller.activeListenerCount()).toBe(3);
+      expect(docListeners.get('visibilitychange')?.size).toBe(1);
+      expect(windowListeners.get('pagehide')?.size).toBe(1);
+      expect(windowListeners.get('pageshow')?.size).toBe(1);
+      expect(mediaListeners.size).toBe(1);
+
+      expect(controller.play({ explicitUserAction: true })).toBe(true);
+      expect(rig.frames.size).toBe(1);
+
+      controller.destroy();
+      expect(controller.isDestroyed()).toBe(true);
+      expect(controller.activeListenerCount()).toBe(0);
+      expect(rig.frames.size).toBe(0);
+      expect(docListeners.get('visibilitychange')?.size).toBe(0);
+      expect(windowListeners.get('pagehide')?.size).toBe(0);
+      expect(windowListeners.get('pageshow')?.size).toBe(0);
+      expect(mediaListeners.size).toBe(0);
+    }
+
+    // 4. Component mount -> unmount -> remount finite loop on the same container via mountMotionCoveragePreviewHarness
+    const hostContainer = document.createElement('div');
+    document.body.appendChild(hostContainer);
+    for (let i = 0; i < 4; i++) {
+      let root!: ReturnType<typeof mountMotionCoveragePreviewHarness>;
+      act(() => {
+        root = mountMotionCoveragePreviewHarness(hostContainer, {
+          initialExerciseOrId: 'original-mat-quadruped-reach',
+          controllerOptions: {
+            requestFrame: rig.requestFrame,
+            cancelFrame: rig.cancelFrame,
+            now: rig.now,
+            isReducedMotion: () => false,
+            isDocumentHidden: () => false,
+          },
+        });
+      });
+      act(() => {
+        const playBtn = hostContainer.querySelector<HTMLButtonElement>(
+          '[data-testid="harness-play-pause-btn"]',
+        );
+        playBtn?.click();
+      });
+      expect(rig.frames.size).toBe(1);
+      act(() => {
+        root.unmount();
+      });
+      expect(rig.frames.size).toBe(0);
+    }
+    hostContainer.remove();
   });
 });

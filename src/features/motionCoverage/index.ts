@@ -4,4 +4,5 @@ export * from './resolver';
 export * from './adapters';
 export * from './integrationExamples';
 export * from './playbackController';
+export * from './catalogSweep';
 export * from './MotionCoveragePreviewHarness';

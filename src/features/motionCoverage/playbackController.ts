@@ -140,15 +140,23 @@ export class MotionCoveragePlaybackController {
   private selectedPhase: VisualPhaseId;
   private activeVariantIndex = 0;
   private reducedMotion: boolean;
+  private mediaEventReducedMotionOverride: boolean | null = null;
   private explicitPlayGrantedUnderReducedMotion = false;
   private isBackgroundHidden: boolean;
+  private pageHiddenByEvent = false;
   private destroyed = false;
 
   private readonly rawRequestFrame: (callback: FrameRequestCallback) => number;
   private readonly rawCancelFrame: (handle: number) => void;
   private readonly nowFn: (() => number) | undefined;
-  private readonly isReducedMotionFn: () => boolean;
+  private readonly customReducedMotionFn: (() => boolean) | undefined;
   private readonly isDocumentHiddenFn: () => boolean;
+  private readonly docTarget: Pick<Document, 'addEventListener' | 'removeEventListener'> | null;
+  private readonly winTarget: Pick<
+    Window,
+    'addEventListener' | 'removeEventListener' | 'matchMedia'
+  > | null;
+  private mediaQuery: MediaQueryList | null = null;
   private readonly onChange?: (snapshot: MotionCoveragePlaybackSnapshot) => void;
 
   private readonly draftEngine: DraftPlaybackController;
@@ -189,32 +197,31 @@ export class MotionCoveragePlaybackController {
       });
     this.nowFn = options.now;
 
-    const win =
+    this.winTarget =
       options.windowTarget !== undefined
         ? options.windowTarget
         : typeof window !== 'undefined'
           ? window
           : null;
-    const doc =
+    this.docTarget =
       options.documentTarget !== undefined
         ? options.documentTarget
         : typeof document !== 'undefined'
           ? document
           : null;
 
-    const mediaQuery =
-      win && typeof win.matchMedia === 'function'
-        ? win.matchMedia('(prefers-reduced-motion: reduce)')
+    this.mediaQuery =
+      this.winTarget && typeof this.winTarget.matchMedia === 'function'
+        ? this.winTarget.matchMedia('(prefers-reduced-motion: reduce)')
         : null;
 
-    this.isReducedMotionFn =
-      options.isReducedMotion ?? (() => Boolean(mediaQuery?.matches));
+    this.customReducedMotionFn = options.isReducedMotion;
     this.isDocumentHiddenFn =
       options.isDocumentHidden ??
       (() => Boolean(typeof document !== 'undefined' && document.hidden));
 
-    this.reducedMotion = this.isReducedMotionFn();
-    this.isBackgroundHidden = this.isDocumentHiddenFn();
+    this.reducedMotion = this.evaluateReducedMotion();
+    this.isBackgroundHidden = this.evaluateBackgroundHidden();
 
     const safeCycleDurationMs =
       options.cycleDurationMs !== undefined &&
@@ -235,6 +242,9 @@ export class MotionCoveragePlaybackController {
           speed: nextState.speed,
           playing: nextState.playing,
         };
+        if (!nextState.playing) {
+          this.explicitPlayGrantedUnderReducedMotion = false;
+        }
         if (this.isContinuousMode()) {
           this.selectedPhase = mapContinuousProgressToVisualPhase(safeProgress);
         }
@@ -242,7 +252,54 @@ export class MotionCoveragePlaybackController {
       },
     });
 
-    this.attachEnvironmentListeners(doc, win, mediaQuery);
+    this.attachEnvironmentListeners();
+  }
+
+  private evaluateReducedMotion(): boolean {
+    if (this.mediaEventReducedMotionOverride !== null) {
+      return this.mediaEventReducedMotionOverride;
+    }
+    if (this.customReducedMotionFn) {
+      return Boolean(this.customReducedMotionFn());
+    }
+    return Boolean(this.mediaQuery?.matches);
+  }
+
+  private refreshReducedMotionState(): boolean {
+    if (this.customReducedMotionFn) {
+      const customVal = Boolean(this.customReducedMotionFn());
+      if (
+        this.mediaEventReducedMotionOverride !== null &&
+        customVal === this.mediaEventReducedMotionOverride
+      ) {
+        this.mediaEventReducedMotionOverride = null;
+      }
+      if (this.mediaEventReducedMotionOverride === null) {
+        const prev = this.reducedMotion;
+        this.reducedMotion = customVal;
+        if (!prev && this.reducedMotion) {
+          this.explicitPlayGrantedUnderReducedMotion = false;
+        }
+        return this.reducedMotion;
+      }
+    }
+    const prev = this.reducedMotion;
+    this.reducedMotion = this.evaluateReducedMotion();
+    if (!prev && this.reducedMotion) {
+      this.explicitPlayGrantedUnderReducedMotion = false;
+    }
+    return this.reducedMotion;
+  }
+
+  private evaluateBackgroundHidden(): boolean {
+    return Boolean(this.isDocumentHiddenFn()) || this.pageHiddenByEvent;
+  }
+
+  private clearPageHiddenIfDocumentVisible(): void {
+    if (!this.isDocumentHiddenFn()) {
+      this.pageHiddenByEvent = false;
+    }
+    this.isBackgroundHidden = this.evaluateBackgroundHidden();
   }
 
   private isContinuousMode(): boolean {
@@ -255,9 +312,9 @@ export class MotionCoveragePlaybackController {
   private canContinuousEnginePlay(): boolean {
     if (this.destroyed) return false;
     if (!this.isContinuousMode()) return false;
-    this.isBackgroundHidden = this.isDocumentHiddenFn();
+    this.isBackgroundHidden = this.evaluateBackgroundHidden();
     if (this.isBackgroundHidden) return false;
-    this.reducedMotion = this.isReducedMotionFn();
+    this.refreshReducedMotionState();
     if (this.reducedMotion && !this.explicitPlayGrantedUnderReducedMotion) {
       return false;
     }
@@ -270,8 +327,13 @@ export class MotionCoveragePlaybackController {
       this.pendingFrameHandle = null;
       if (this.destroyed) return;
 
-      this.isBackgroundHidden = this.isDocumentHiddenFn();
-      if (this.isBackgroundHidden || !this.isContinuousMode()) {
+      this.isBackgroundHidden = this.evaluateBackgroundHidden();
+      this.refreshReducedMotionState();
+      if (
+        this.isBackgroundHidden ||
+        !this.isContinuousMode() ||
+        (this.reducedMotion && !this.explicitPlayGrantedUnderReducedMotion)
+      ) {
         this.pause();
         return;
       }
@@ -310,14 +372,20 @@ export class MotionCoveragePlaybackController {
     this.rawCancelFrame(handle);
   }
 
-  private attachEnvironmentListeners(
-    doc: Pick<Document, 'addEventListener' | 'removeEventListener'> | null,
-    win: Pick<Window, 'addEventListener' | 'removeEventListener' | 'matchMedia'> | null,
-    mediaQuery: MediaQueryList | null,
-  ): void {
+  private attachEnvironmentListeners(): void {
+    if (this.cleanupListeners.length > 0) return;
+
+    const doc = this.docTarget;
+    const win = this.winTarget;
+    const mediaQuery = this.mediaQuery;
+
     if (doc && typeof doc.addEventListener === 'function') {
       const onVisibilityChange = () => {
-        this.isBackgroundHidden = this.isDocumentHiddenFn();
+        const docHidden = Boolean(this.isDocumentHiddenFn());
+        if (!docHidden) {
+          this.pageHiddenByEvent = false;
+        }
+        this.isBackgroundHidden = this.evaluateBackgroundHidden();
         if (this.isBackgroundHidden) {
           this.pause();
         } else {
@@ -332,18 +400,27 @@ export class MotionCoveragePlaybackController {
 
     if (win && typeof win.addEventListener === 'function') {
       const onPageHide = () => {
+        this.pageHiddenByEvent = true;
         this.isBackgroundHidden = true;
         this.pause();
       };
+      const onPageShow = () => {
+        this.pageHiddenByEvent = false;
+        this.isBackgroundHidden = this.evaluateBackgroundHidden();
+        this.emitChange();
+      };
       win.addEventListener('pagehide', onPageHide);
-      this.cleanupListeners.push(() =>
-        win.removeEventListener('pagehide', onPageHide),
-      );
+      win.addEventListener('pageshow', onPageShow);
+      this.cleanupListeners.push(() => {
+        win.removeEventListener('pagehide', onPageHide);
+        win.removeEventListener('pageshow', onPageShow);
+      });
     }
 
     if (mediaQuery && typeof mediaQuery.addEventListener === 'function') {
       const onMediaChange = (event: MediaQueryListEvent) => {
-        this.reducedMotion = Boolean(event.matches);
+        this.mediaEventReducedMotionOverride = Boolean(event.matches);
+        this.reducedMotion = this.mediaEventReducedMotionOverride;
         if (this.reducedMotion) {
           this.explicitPlayGrantedUnderReducedMotion = false;
           this.pause();
@@ -356,6 +433,17 @@ export class MotionCoveragePlaybackController {
         mediaQuery.removeEventListener('change', onMediaChange),
       );
     }
+  }
+
+  /**
+   * Re-activates a previously destroyed controller instance (e.g., across React StrictMode
+   * effect cleanup -> re-setup cycles) without duplicating listeners or RAF loops.
+   */
+  reconnect(): void {
+    if (!this.destroyed && this.cleanupListeners.length > 0) return;
+    this.destroyed = false;
+    this.draftEngine.setCanPlay(() => this.canContinuousEnginePlay());
+    this.attachEnvironmentListeners();
   }
 
   /**
@@ -378,13 +466,16 @@ export class MotionCoveragePlaybackController {
       return false;
     }
 
-    this.isBackgroundHidden = this.isDocumentHiddenFn();
+    if (options.explicitUserAction && !this.isDocumentHiddenFn()) {
+      this.pageHiddenByEvent = false;
+    }
+    this.isBackgroundHidden = this.evaluateBackgroundHidden();
     if (this.isBackgroundHidden) {
       this.pause();
       return false;
     }
 
-    this.reducedMotion = this.isReducedMotionFn();
+    this.refreshReducedMotionState();
     if (this.reducedMotion) {
       if (!options.explicitUserAction) {
         this.explicitPlayGrantedUnderReducedMotion = false;
@@ -392,6 +483,8 @@ export class MotionCoveragePlaybackController {
         return false;
       }
       this.explicitPlayGrantedUnderReducedMotion = true;
+    } else {
+      this.explicitPlayGrantedUnderReducedMotion = false;
     }
 
     this.lastMonotonicTimestamp = null;
@@ -404,6 +497,7 @@ export class MotionCoveragePlaybackController {
    */
   pause(): void {
     this.lastMonotonicTimestamp = null;
+    this.explicitPlayGrantedUnderReducedMotion = false;
     if (this.pendingFrameHandle !== null) {
       this.rawCancelFrame(this.pendingFrameHandle);
       this.pendingFrameHandle = null;
@@ -419,6 +513,8 @@ export class MotionCoveragePlaybackController {
   seek(progress: number): void {
     if (this.destroyed) return;
     const safeProgress = sanitizeFiniteProgress(progress);
+    this.clearPageHiddenIfDocumentVisible();
+    this.explicitPlayGrantedUnderReducedMotion = false;
 
     if (!this.isContinuousMode()) {
       if (this.descriptor.mode === 'three-phase-2d') {
@@ -443,6 +539,8 @@ export class MotionCoveragePlaybackController {
   restart(): void {
     if (this.destroyed) return;
     this.lastMonotonicTimestamp = null;
+    this.clearPageHiddenIfDocumentVisible();
+    this.explicitPlayGrantedUnderReducedMotion = false;
     if (this.pendingFrameHandle !== null) {
       this.rawCancelFrame(this.pendingFrameHandle);
       this.pendingFrameHandle = null;
@@ -485,7 +583,6 @@ export class MotionCoveragePlaybackController {
     }
     this.repeatCount = repeatCount as DraftRepeatCount;
     this.draftEngine.setRepeatCount(repeatCount);
-    this.emitChange();
   }
 
   /**
@@ -498,6 +595,7 @@ export class MotionCoveragePlaybackController {
     if (!DISCRETE_VISUAL_PHASES.includes(phase)) {
       throw new RangeError(`Unsupported visual phase: ${String(phase)}`);
     }
+    this.clearPageHiddenIfDocumentVisible();
     this.selectedPhase = phase;
     if (this.isContinuousMode()) {
       const sample = phase === 'start' ? 0 : phase === 'middle' ? 0.5 : 1;
@@ -548,6 +646,7 @@ export class MotionCoveragePlaybackController {
     resolveOptions?: ResolveMotionCoverageOptions,
   ): MotionCoveragePlaybackSnapshot {
     this.pause();
+    this.clearPageHiddenIfDocumentVisible();
     if (resolveOptions !== undefined) {
       this.resolveOptions = resolveOptions;
     }
@@ -606,6 +705,9 @@ export class MotionCoveragePlaybackController {
   }
 
   getSnapshot(): MotionCoveragePlaybackSnapshot {
+    this.refreshReducedMotionState();
+    this.isBackgroundHidden = this.evaluateBackgroundHidden();
+
     const mode = this.descriptor.mode;
     const isContinuous = mode === 'projected-3d' || mode === 'continuous-2d';
     const controlKind: MotionPlaybackControlKind = isContinuous
