@@ -1,3 +1,5 @@
+import type { StepTimeEstimate } from '../schemas/stepTimeEstimate';
+import type { ClassSectionRole, SequenceMotionStudyBinding } from './sequenceMotion';
 import type {
   ClassBlockSnapshot,
   ClassSequenceSnapshot,
@@ -105,6 +107,9 @@ export interface TeachingProgramSnapshotItem {
   blockNameEn: string;
   classSection: 'opening' | 'main' | 'ending';
   classSectionLabelKo: string;
+  stepClassSection?: ClassSectionRole;
+  timeEstimate?: StepTimeEstimate;
+  motionStudy?: SequenceMotionStudyBinding;
   durationMin: number;
   explanationSec: number;
   transitionSec: number;

@@ -1,0 +1,58 @@
+[
+  {
+    "file": "src/utils/backupRecoveryInspection.ts",
+    "sha256": "89ac90f277b0f55f65271bf4f134001cef06abe683c1e0907f36c9663556605e"
+  },
+  {
+    "file": "src/utils/teachingHistorySnapshot.ts",
+    "sha256": "200b6bb32de90473be8a0a764dc01d39d5b2de0b524a729f9eeae0e991e93163"
+  },
+  {
+    "file": "src/test/fixtures/backup-recovery/backupCompatibilityRollbackCorpus.json",
+    "sha256": "1ae698009e8ec88258cc7f664a73a81b4c885bf56210536e5492db31e47fdae2"
+  },
+  {
+    "file": "src/test/backupCompatibilityRollback.test.ts",
+    "sha256": "6e917ccdae27cb62e0a1ea05714edcf6526db413330657a40acda5b30ad08888"
+  },
+  {
+    "file": "scripts/backup-compatibility-rollback.mjs",
+    "sha256": "cb9996ed8434ea4982c129471f52772c66685f8b325fb564c7e49e07c1cf9a62"
+  },
+  {
+    "file": "scripts/README-backup-compatibility-rollback.md",
+    "sha256": "5d1ab20845e4354520f4f9b6ced090373b78c121b1fb2ff93c28663088647886"
+  },
+  {
+    "file": "src/schemas/cloudBackupSchema.ts",
+    "sha256": "bc99dab4133f51792a5961dd891a9b7c6540a509e37bc060f383fe9c1300759b"
+  },
+  {
+    "file": "src/utils/movementIdeaDraft.ts",
+    "sha256": "e21612e6e6d10a46c42e8cafd1195666bdd0d63b1e542c9dde543ad64a968503"
+  },
+  {
+    "file": "src/test/fixtures/backup-recovery/backupInputBoundaryCorpus.json",
+    "sha256": "2d3e00f453a1c8efda8eb06625aaf6914b70aacbde328b74c3cf8632c5917e7a"
+  },
+  {
+    "file": "src/test/backupInputBoundaries.test.ts",
+    "sha256": "a9b7b6dfea54ad5a4deb8587aef940e23e9092c11ece1453d8433c67bc381661"
+  },
+  {
+    "file": "src/types/teachingHistorySnapshot.ts",
+    "sha256": "e0dd955da13eab80c1a207f8995de40ba4d76d595c8e6ce842795bb3f9ce4690"
+  },
+  {
+    "file": "src/utils/backupCompatibilityIndependentReview.test.ts",
+    "sha256": "8d55d2cf733adf1ee144ef6ef620ca6a8640ffaee33bf33eb2172431b4b0d29d"
+  },
+  {
+    "file": "src/test/teachingHistoryProgramRecord.test.tsx",
+    "sha256": "a4bc95238df2392da3088241f913848942048abd7b1967ef32e5e205a07bd36f"
+  },
+  {
+    "file": "src/utils/teachingHistorySnapshot.test.ts",
+    "sha256": "5e9babc59c1c95bde86c884b82a40cb3bf69500840ffcd5886a876d863554ad7"
+  }
+]

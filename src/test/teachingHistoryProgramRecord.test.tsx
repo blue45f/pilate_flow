@@ -656,9 +656,12 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
     fireEvent.click(rollbackBtn);
 
     const afterRollback = usePilatesStore.getState();
-    expect(afterRollback.savedSequences).toBe(before.savedSequences);
-    expect(afterRollback.exercises).toBe(before.exercises);
-    expect(afterRollback.historyLogs).toBe(before.historyLogs);
+    expect(afterRollback.savedSequences).toEqual(before.savedSequences);
+    expect(afterRollback.savedSequences).not.toBe(before.savedSequences);
+    expect(afterRollback.exercises).toEqual(before.exercises);
+    expect(afterRollback.exercises).not.toBe(before.exercises);
+    expect(afterRollback.historyLogs).toEqual(before.historyLogs);
+    expect(afterRollback.historyLogs).not.toBe(before.historyLogs);
     expect(afterRollback.undoStack).toBe(before.undoStack);
     expect(screen.getByRole('status')).toHaveTextContent('백업 복원 이전 상태로 되돌렸습니다.');
   });

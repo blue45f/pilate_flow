@@ -1,0 +1,71 @@
+{
+  "source": "Official Antigravity File Viewer Download File, completed idle session",
+  "source_url": "https://antigravity.google.com/remote/v1%2Fdefault%2Fjetski_remote_agents_3p%2Ff6f49349-8f96-42f4-9cb4-fee47f93ecb9?project=fbc4e0fd-bf9a-497e-8b25-d85ccbd02c1a",
+  "reported_branch": "fix/backup-compatibility-rollback-guards",
+  "reported_commit": "adb8829",
+  "reported_base": "40f97e7",
+  "identity": "Source snapshot only; Git object and exact commit identity not verified.",
+  "completeness": "Latest six-file delta plus all four known runtime files and D1-D6 corpus/test; earlier chain UI, tests and scripts not yet complete.",
+  "files": [
+    {
+      "file": "src/utils/backupRecoveryInspection.ts",
+      "bytes": 40590,
+      "sha256": "364002a80a4a497dd35fbddbb973d449aaad1d3fd28be668bc85b1684e1a0c6b",
+      "lines": 1087
+    },
+    {
+      "file": "src/utils/teachingHistorySnapshot.ts",
+      "bytes": 110366,
+      "sha256": "1f26438ac5c85f8cadd06b3201e7414626a94e7c494f010155782fd19ec446fb",
+      "lines": 2970
+    },
+    {
+      "file": "src/test/fixtures/backup-recovery/backupCompatibilityRollbackCorpus.json",
+      "bytes": 16081,
+      "sha256": "1ae698009e8ec88258cc7f664a73a81b4c885bf56210536e5492db31e47fdae2",
+      "lines": 345
+    },
+    {
+      "file": "src/test/backupCompatibilityRollback.test.ts",
+      "bytes": 64286,
+      "sha256": "58ef60dd6f8713dd67ec4e7854537db8687ce303d3a72df3d4100f897be5c9aa",
+      "lines": 1664
+    },
+    {
+      "file": "scripts/backup-compatibility-rollback.mjs",
+      "bytes": 9312,
+      "sha256": "cb9996ed8434ea4982c129471f52772c66685f8b325fb564c7e49e07c1cf9a62",
+      "lines": 275
+    },
+    {
+      "file": "scripts/README-backup-compatibility-rollback.md",
+      "bytes": 7111,
+      "sha256": "5d1ab20845e4354520f4f9b6ced090373b78c121b1fb2ff93c28663088647886",
+      "lines": 43
+    },
+    {
+      "file": "src/schemas/cloudBackupSchema.ts",
+      "bytes": 24747,
+      "sha256": "77c3b12441ed4e06c426acba0849deddfc900fd3ed9e89020327a16137805b73",
+      "lines": 642
+    },
+    {
+      "file": "src/utils/movementIdeaDraft.ts",
+      "bytes": 61208,
+      "sha256": "e21612e6e6d10a46c42e8cafd1195666bdd0d63b1e542c9dde543ad64a968503",
+      "lines": 1728
+    },
+    {
+      "file": "src/test/fixtures/backup-recovery/backupInputBoundaryCorpus.json",
+      "bytes": 16995,
+      "sha256": "2d3e00f453a1c8efda8eb06625aaf6914b70aacbde328b74c3cf8632c5917e7a",
+      "lines": 389
+    },
+    {
+      "file": "src/test/backupInputBoundaries.test.ts",
+      "bytes": 58841,
+      "sha256": "37981fdced929ab7ff5ca9eba36fd81e0c22eae221237506c2333826cbcf5a40",
+      "lines": 1447
+    }
+  ]
+}

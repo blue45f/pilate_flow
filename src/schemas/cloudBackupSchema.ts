@@ -154,6 +154,140 @@ export const stepBlockOptionsSchema = stepTimingOptionsBaseSchema
       });
   });
 
+const movementSafetyAndEfficacyBoundarySchema = z.object({
+  originType: z.enum(['instructor-created-draft', 'catalog-reference']),
+  evaluationBasis: z.enum(['subjective-instructor-feel', 'catalog-metadata']),
+  aiSafetyGuaranteed: z.literal(false),
+  objectiveEfficacyClaimed: z.literal(false),
+  expertVerified: z.literal(false),
+  disclaimerKo: z.string().trim().min(1).max(1000),
+}).passthrough();
+
+const subjectiveFeelLogSchema = z.object({
+  id: idSchema,
+  recordedAt: textSchema,
+  feelNoteKo: z.string().trim().min(1).max(2000),
+  perceivedIntensity: z.enum(['gentle', 'moderate', 'challenging']).optional(),
+  cautionFeelKo: z.string().trim().max(2000).optional(),
+  evaluationBasis: z.literal('subjective-instructor-feel'),
+  objectiveEfficacyClaimed: z.literal(false),
+  safetyGuaranteed: z.literal(false),
+  expertVerified: z.literal(false),
+}).passthrough();
+
+const draftModificationLogSchema = z.object({
+  id: idSchema,
+  recordedAt: textSchema,
+  modificationPointKo: z.string().trim().min(1).max(2000),
+  setupOrSpringChangeKo: z.string().trim().max(1000).optional(),
+  cueChangeKo: z.string().trim().max(1000).optional(),
+  appliedToRevision: z.number().int().positive().optional(),
+}).passthrough();
+
+const draftPhotoReferenceSchema = z.object({
+  id: idSchema,
+  localRefUri: z
+    .string()
+    .trim()
+    .min(1)
+    .max(200000)
+    .refine((uri) => {
+      const normalizedForExternalCheck = uri.startsWith('data:image/svg+xml')
+        ? uri.replace(/https?:\/\/www\.w3\.org\/2000\/svg/gi, '')
+        : uri;
+      return (
+        (uri.startsWith('local-photo://') ||
+          uri.startsWith('blob:') ||
+          uri.startsWith('asset://') ||
+          uri.startsWith('file://') ||
+          uri.startsWith('data:image/')) &&
+        !/https?:\/\//i.test(normalizedForExternalCheck)
+      );
+    }),
+  captionKo: z.string().trim().max(500).optional(),
+  angleTag: z.enum(['setup', 'start-pose', 'end-pose', 'modification']).optional(),
+  capturedAt: textSchema,
+  externalAiUploadAllowed: z.literal(false),
+}).passthrough();
+
+export const movementSnapshotSchema = z.object({
+  id: idSchema,
+  nameKo: textSchema,
+  nameEn: textSchema,
+  apparatus: apparatusSchema,
+  requiredEquipment: z.array(textSchema.min(1)).max(32).optional(),
+  movementFamily: textSchema.min(1).optional(),
+  blockCategory: categorySchema,
+  level: levelSchema,
+  defaultDurationMin: z.number().finite().positive().max(120),
+  defaultRepetitions: stepRepetitionsSchema.optional(),
+  defaultSets: stepSetsSchema.optional(),
+  isUnilateral: z.boolean(),
+  springs: textSchema,
+  box: z.enum(['none', 'long-box', 'short-box']),
+  footbar: z.enum(['high', 'mid', 'low', 'down', 'none']),
+  headrest: z.enum(['up', 'flat', 'down']),
+  props: z.array(propSchema),
+  spinalPlanes: z.array(z.enum(['flexion', 'extension', 'lateral', 'rotation', 'neutral'])),
+  bodyPosition: z.enum([
+    'supine',
+    'prone',
+    'side-lying',
+    'seated',
+    'kneeling',
+    'standing',
+    'quadruped',
+  ]),
+  targetMuscles: z.array(textSchema),
+  breathPattern: textSchema,
+  cues: z.array(textSchema),
+  precautions: textSchema,
+  layers: z.object({
+    easy: textSchema,
+    standard: textSchema,
+    hard: textSchema,
+  }),
+  capturedAt: textSchema,
+  sourceOrigin: z.enum(['catalog', 'human-created']).optional(),
+  humanDraftId: idSchema.optional(),
+  humanDraftRevision: z.number().int().positive().optional(),
+  parentDraftId: idSchema.optional(),
+  parentDraftRevision: z.number().int().positive().optional(),
+  variantLabelKo: z.string().trim().max(200).optional(),
+  ideaLineSnapshot: textSchema.optional(),
+  feelLogsSnapshot: z.array(subjectiveFeelLogSchema).max(500).optional(),
+  modificationLogsSnapshot: z.array(draftModificationLogSchema).max(500).optional(),
+  photoReferencesSnapshot: z.array(draftPhotoReferenceSchema).max(100).optional(),
+  safetyBoundarySnapshot: movementSafetyAndEfficacyBoundarySchema.optional(),
+}).passthrough();
+
+export const sequenceSourceProvenanceSchema = z.object({
+  kind: z.enum([
+    'history-snapshot',
+    'dated-plan-snapshot',
+    'saved-sequence-clone',
+    'ai-draft',
+    'manual',
+  ]),
+  sourceId: idSchema,
+  sourceTitle: textSchema,
+  sourceSequenceId: textSchema.optional(),
+  sourceVersion: z.number().int().positive().optional(),
+  sourceUpdatedAt: textSchema.optional(),
+  sourceTaughtAt: textSchema.optional(),
+  clonedAt: textSchema,
+  summaryKo: textSchema,
+}).passthrough();
+
+export const classBlockSnapshotSchema = z.object({
+  blockInstanceId: idSchema,
+  sourceBlockId: idSchema,
+  sourceBlockVersion: z.number().int().positive(),
+  sourceBlockTitle: textSchema,
+  detached: z.boolean(),
+  stepIds: z.array(idSchema).max(1000),
+}).passthrough();
+
 export const stepSchema = z
   .object({
     kind: z.enum(['exercise', 'rest']).optional(),
@@ -174,6 +308,16 @@ export const stepSchema = z
     classSection: classSectionRoleSchema.optional(),
     motionStudy: sequenceMotionStudyBindingSchema.optional(),
     timeEstimate: stepTimeEstimateSchema.optional(),
+    blockInstanceId: idSchema.optional(),
+    sourceBlockId: idSchema.optional(),
+    sourceBlockVersion: z.number().int().positive().optional(),
+    sourceBlockTitle: textSchema.optional(),
+    blockInstanceDetached: z.boolean().optional(),
+    exerciseSnapshot: movementSnapshotSchema.optional(),
+    humanDraftId: idSchema.optional(),
+    humanDraftRevision: z.number().int().positive().optional(),
+    futureStep: z.record(z.unknown()).optional(),
+    historicalStepLabel: textSchema.optional(),
   })
   .passthrough()
   .refine(
@@ -193,71 +337,175 @@ export const stepSchema = z
         : step.exerciseId.length > 0,
     '휴식은 동작 참조·횟수·세트·좌우 지정·설명·전환 없이 저장하고, 동작에는 동작 참조가 필요합니다.',
   );
-export const exerciseSchema = z
-  .object({
-    id: idSchema,
-    nameKo: textSchema,
-    nameEn: textSchema,
-    apparatus: apparatusSchema,
-    requiredEquipment: z.array(textSchema.min(1)).max(32).optional(),
-    movementFamily: textSchema.min(1).optional(),
-    sourceReference: sourceReferenceSchema.optional(),
-    review: z
-      .object({
-        status: z.literal('approved'),
-        reviewerAlias: z.string().trim().min(1).max(80),
-        reviewedAt: z.string().min(1),
-        revision: z.string().min(1).max(300),
-        scope: z.literal('planning-metadata'),
-        credentialVerified: z.literal(false),
-      })
-      .optional(),
-    props: z.array(propSchema),
-    blockCategory: categorySchema,
-    spinalPlanes: z.array(z.enum(['flexion', 'extension', 'lateral', 'rotation', 'neutral'])),
-    bodyPosition: z.enum([
-      'supine',
-      'prone',
-      'side-lying',
-      'seated',
-      'kneeling',
-      'standing',
-      'quadruped',
-    ]),
-    level: levelSchema,
-    defaultDurationMin: z.number().finite().positive().max(120),
-    isUnilateral: z.boolean(),
-    springs: textSchema,
-    box: z.enum(['none', 'long-box', 'short-box']),
-    footbar: z.enum(['high', 'mid', 'low', 'down', 'none']),
-    headrest: z.enum(['up', 'flat', 'down']),
-    targetMuscles: z.array(textSchema),
-    breathPattern: textSchema,
-    cues: z.array(textSchema),
-    precautions: textSchema,
-    layers: z.object({
-      easy: textSchema,
-      standard: textSchema,
-      hard: textSchema,
-    }),
-    youtube: z
-      .object({
-        videoId: textSchema,
-        channelName: textSchema,
-        videoTitle: textSchema,
-        startSec: z.number().finite().nonnegative(),
-        endSec: z.number().finite().nonnegative().optional(),
-        url: textSchema,
-        note: textSchema.optional(),
-        region: z.enum(['kr', 'global']).optional(),
-      })
-      .passthrough(),
-    favoriteTag: z.enum(['none', 'signature', 'member-love', 'rehab-posture', 'burn-sculpt']),
-    tempo: z.enum(['slow-precise', 'moderate-flow', 'athletic-burn']).optional(),
-    isCustom: z.boolean().optional(),
-    createdAt: textSchema.optional(),
-  })
-  .passthrough();
+export const exerciseSchema = z.object({
+  id: idSchema,
+  nameKo: textSchema,
+  nameEn: textSchema,
+  apparatus: apparatusSchema,
+  requiredEquipment: z.array(textSchema.min(1)).max(32).optional(),
+  movementFamily: textSchema.min(1).optional(),
+  sourceReference: sourceReferenceSchema.optional(),
+  review: z
+    .object({
+      status: z.literal('approved'),
+      reviewerAlias: z.string().trim().min(1).max(80),
+      reviewedAt: z.string().min(1),
+      revision: z.string().min(1).max(300),
+      scope: z.literal('planning-metadata'),
+      credentialVerified: z.literal(false),
+    })
+    .optional(),
+  props: z.array(propSchema),
+  blockCategory: categorySchema,
+  spinalPlanes: z.array(z.enum(['flexion', 'extension', 'lateral', 'rotation', 'neutral'])),
+  bodyPosition: z.enum([
+    'supine',
+    'prone',
+    'side-lying',
+    'seated',
+    'kneeling',
+    'standing',
+    'quadruped',
+  ]),
+  level: levelSchema,
+  defaultDurationMin: z.number().finite().positive().max(120),
+  defaultRepetitions: stepRepetitionsSchema.optional(),
+  defaultSets: stepSetsSchema.optional(),
+  isUnilateral: z.boolean(),
+  springs: textSchema,
+  box: z.enum(['none', 'long-box', 'short-box']),
+  footbar: z.enum(['high', 'mid', 'low', 'down', 'none']),
+  headrest: z.enum(['up', 'flat', 'down']),
+  targetMuscles: z.array(textSchema),
+  breathPattern: textSchema,
+  cues: z.array(textSchema),
+  precautions: textSchema,
+  layers: z.object({
+    easy: textSchema,
+    standard: textSchema,
+    hard: textSchema,
+  }),
+  youtube: z.object({
+    videoId: textSchema,
+    channelName: textSchema,
+    videoTitle: textSchema,
+    startSec: z.number().finite().nonnegative(),
+    endSec: z.number().finite().nonnegative().optional(),
+    url: textSchema,
+    note: textSchema.optional(),
+    region: z.enum(['kr', 'global']).optional(),
+    historicalVideoLabel: textSchema.optional(),
+  }).passthrough(),
+  favoriteTag: z.enum(['none', 'signature', 'member-love', 'rehab-posture', 'burn-sculpt']),
+  tempo: z.enum(['slow-precise', 'moderate-flow', 'athletic-burn']).optional(),
+  isCustom: z.boolean().optional(),
+  createdAt: textSchema.optional(),
+  capturedAt: textSchema.optional(),
+  sourceOrigin: z.enum(['catalog', 'human-created']).optional(),
+  humanDraftId: idSchema.optional(),
+  humanDraftRevision: z.number().int().positive().optional(),
+  parentDraftId: idSchema.optional(),
+  parentDraftRevision: z.number().int().positive().optional(),
+  variantLabelKo: textSchema.optional(),
+  ideaLineSnapshot: textSchema.optional(),
+  feelLogsSnapshot: z.array(subjectiveFeelLogSchema).max(500).optional(),
+  modificationLogsSnapshot: z.array(draftModificationLogSchema).max(500).optional(),
+  photoReferencesSnapshot: z.array(draftPhotoReferenceSchema).max(100).optional(),
+  safetyBoundarySnapshot: movementSafetyAndEfficacyBoundarySchema.optional(),
+  historicalExtension: z.record(z.unknown()).optional(),
+}).passthrough();
+
+export const teachingProgramSnapshotItemSchema = z.object({
+  order: z.number().int().positive(),
+  stepId: idSchema,
+  kind: z.enum(['exercise', 'rest']),
+  exerciseId: z.string().max(300),
+  blockCategory: categorySchema,
+  blockNameKo: textSchema,
+  blockNameEn: textSchema,
+  classSection: z.enum(['opening', 'main', 'ending']),
+  classSectionLabelKo: textSchema,
+  stepClassSection: classSectionRoleSchema.optional(),
+  timeEstimate: stepTimeEstimateSchema.optional(),
+  motionStudy: sequenceMotionStudyBindingSchema.optional(),
+  durationMin: z.number().finite().positive().max(120),
+  explanationSec: z.number().finite().nonnegative().max(7200),
+  transitionSec: z.number().finite().nonnegative().max(7200),
+  movementSec: z.number().finite().nonnegative().max(7200),
+  perSideSec: z.number().finite().nonnegative().max(7200).optional(),
+  selectedLayer: layerSchema,
+  selectedLayerLabelKo: textSchema,
+  selectedLayerDescription: textSchema,
+  customSpringOverride: textSchema.optional(),
+  effectiveSprings: textSchema,
+  repetitions: stepRepetitionsSchema.optional(),
+  sets: stepSetsSchema.optional(),
+  sideMode: stepSideModeSchema.optional(),
+  instructorNote: textSchema.optional(),
+  locked: z.boolean().optional(),
+  blockInstanceId: idSchema.optional(),
+  sourceBlockId: idSchema.optional(),
+  sourceBlockVersion: z.number().int().positive().optional(),
+  sourceBlockTitle: textSchema.optional(),
+  blockInstanceDetached: z.boolean().optional(),
+  humanDraftId: idSchema.optional(),
+  humanDraftRevision: z.number().int().positive().optional(),
+  movementSnapshot: movementSnapshotSchema.optional(),
+  exerciseSnapshot: exerciseSchema.optional(),
+}).passthrough();
+
+export const teachingProgramTimingSnapshotSchema = z.object({
+  plannedTotalSec: z.number().finite().nonnegative(),
+  plannedExerciseSec: z.number().finite().nonnegative(),
+  plannedRestSec: z.number().finite().nonnegative(),
+  actualDurationSec: z.number().finite().nonnegative().optional(),
+  actualRestDurationSec: z.number().finite().nonnegative().optional(),
+  actualExerciseDurationSec: z.number().finite().nonnegative().optional(),
+}).passthrough();
+
+export const classSequenceSnapshotSchema = z.object({
+  snapshotId: idSchema,
+  capturedAt: textSchema,
+  sourceSequenceId: idSchema,
+  sourceSequenceVersion: z.number().int().positive(),
+  sourceSequenceUpdatedAt: textSchema.optional(),
+  title: textSchema,
+  subtitle: textSchema,
+  apparatus: z.union([apparatusSchema, z.literal('mixed')]),
+  level: levelSchema,
+  targetMinutes: z.number().finite().positive().max(7200),
+  steps: z.array(stepSchema).max(1000),
+  exerciseSnapshots: z.record(idSchema, movementSnapshotSchema),
+  blockSnapshots: z.array(classBlockSnapshotSchema).max(500),
+  timeBreakdown: z.object({
+    movementSec: z.number().finite().nonnegative(),
+    explanationSec: z.number().finite().nonnegative(),
+    transitionSec: z.number().finite().nonnegative(),
+    restSec: z.number().finite().nonnegative(),
+    totalSec: z.number().finite().nonnegative(),
+  }),
+  sourceProvenance: sequenceSourceProvenanceSchema.optional(),
+}).passthrough();
+
+export const teachingProgramSnapshotSchema = z.object({
+  snapshotVersion: z.literal(1),
+  recordKind: z.literal('completed-history'),
+  sourceKind: z.enum(['saved-sequence', 'active-draft']),
+  sourceSequenceId: idSchema,
+  sourceSequenceTitle: textSchema,
+  sourceSubtitle: textSchema,
+  sourceSequenceVersion: z.number().int().positive().optional(),
+  sourceProvenance: sequenceSourceProvenanceSchema.optional(),
+  taughtAt: textSchema,
+  capturedAt: textSchema,
+  completionFingerprint: textSchema,
+  timing: teachingProgramTimingSnapshotSchema,
+  exercisesById: z.record(idSchema, exerciseSchema),
+  blockSnapshots: z.array(classBlockSnapshotSchema).max(500).optional(),
+  sequenceSnapshot: classSequenceSnapshotSchema.optional(),
+  items: z.array(teachingProgramSnapshotItemSchema).max(1000),
+}).passthrough();
+
 export const sequenceSchema = z
   .object({
     recoveredDraftOrigin: z.lazy(() => recoveredDraftOriginSchema).optional(),
@@ -274,6 +522,9 @@ export const sequenceSchema = z
     updatedAt: textSchema,
     lastTaughtAt: textSchema.optional(),
     taughtCount: z.number().int().nonnegative(),
+    version: z.number().int().positive().optional(),
+    sourceProvenance: sequenceSourceProvenanceSchema.optional(),
+    historicalPlanLabel: textSchema.optional(),
   })
   .passthrough()
   .refine(
@@ -283,17 +534,15 @@ export const sequenceSchema = z
         .reduce((sum, step) => sum + step.durationMin, 0) < sequence.targetMinutes,
     '휴식 합계는 전체 수업 시간보다 작아야 합니다.',
   );
-export const groupSchema = z
-  .object({
-    planningPreferences: z.lazy(() => groupPlanningPreferencesSchema).optional(),
-    id: idSchema,
-    name: textSchema,
-    type: z.enum(['group', 'private']),
-    defaultLevel: levelSchema,
-    scheduleLabel: textSchema,
-    notes: textSchema,
-  })
-  .passthrough();
+export const groupSchema = z.object({
+  planningPreferences: z.lazy(() => groupPlanningPreferencesSchema).optional(),
+  id: idSchema,
+  name: textSchema,
+  type: z.enum(['group', 'private']),
+  defaultLevel: levelSchema,
+  scheduleLabel: textSchema,
+  notes: textSchema,
+}).passthrough();
 export const historySchema = z
   .object({
     criteriaSnapshot: z.lazy(() => criteriaSchema).optional(),
@@ -307,13 +556,16 @@ export const historySchema = z
       .refine((value) => Number.isFinite(Date.parse(value)), '수업 날짜가 올바르지 않습니다.'),
     apparatus: z.union([apparatusSchema, z.literal('mixed')]),
     level: levelSchema,
-    exerciseIds: z.array(idSchema),
+    exerciseIds: z.array(idSchema).max(1000),
     rating: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
     intensity: z.enum(['relaxed', 'moderate', 'intense']),
     instructorReflection: textSchema,
     actualDurationSec: z.number().finite().nonnegative().optional(),
     actualRestDurationSec: z.number().finite().nonnegative().optional(),
-    stepsSnapshot: z.array(stepSchema).optional(),
+    stepsSnapshot: z.array(stepSchema).max(1000).optional(),
+    programSnapshot: teachingProgramSnapshotSchema.optional(),
+    sequenceSnapshot: classSequenceSnapshotSchema.optional(),
+    sourceProvenance: sequenceSourceProvenanceSchema.optional(),
   })
   .passthrough()
   .refine(

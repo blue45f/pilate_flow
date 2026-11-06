@@ -161,23 +161,48 @@ let inMemoryReusableBlocksByScope: Record<string, ReusableBlock[]> = {};
 let inMemoryBufferByScope: Record<string, MovementIdeaWorkingBuffer> = {};
 let activeSaveLock = false;
 
+function isNewerVersionedEntry(
+  candidate: { revision?: number; updatedAt?: string },
+  baseline: { revision?: number; updatedAt?: string } | undefined,
+): boolean {
+  if (!baseline) return true;
+  const candRev = candidate.revision ?? 0;
+  const baseRev = baseline.revision ?? 0;
+  if (candRev !== baseRev) return candRev > baseRev;
+  const candTime = candidate.updatedAt ? Date.parse(candidate.updatedAt) : Number.NaN;
+  const baseTime = baseline.updatedAt ? Date.parse(baseline.updatedAt) : Number.NaN;
+  if (!Number.isNaN(candTime) && !Number.isNaN(baseTime) && candTime !== baseTime) {
+    return candTime > baseTime;
+  }
+  return false;
+}
+
+const DANGEROUS_OBJECT_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+function getSafeOwnEntry<T>(record: Record<string, T> | null | undefined, key: string): T | undefined {
+  if (!record || typeof record !== 'object' || DANGEROUS_OBJECT_KEYS.has(key)) {
+    return undefined;
+  }
+  return Object.prototype.hasOwnProperty.call(record, key) ? record[key] : undefined;
+}
+
 function getScopedHumanDraftMap(scope = getActiveOwnerScope()): Record<string, HumanMovementDraft> {
-  const current = inMemoryHumanDraftByScope[scope];
-  if (!current || Object.keys(current).length === 0) {
-    const scopedKey = getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, scope);
-    const stored = readStorageJson<{
-      humanMovementDrafts?: HumanMovementDraft[];
-    } | null>(scopedKey, null);
-    const hydrated: Record<string, HumanMovementDraft> = {};
-    if (stored && Array.isArray(stored.humanMovementDrafts)) {
-      for (const draft of stored.humanMovementDrafts) {
-        if (draft && typeof draft.id === 'string') {
-          hydrated[draft.id] = draft;
+  const current = inMemoryHumanDraftByScope[scope] ?? {};
+  const scopedKey = getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, scope);
+  const stored = readStorageJson<{
+    humanMovementDrafts?: HumanMovementDraft[];
+  } | null>(scopedKey, null);
+  const merged: Record<string, HumanMovementDraft> = { ...current };
+  if (stored && Array.isArray(stored.humanMovementDrafts)) {
+    for (const draft of stored.humanMovementDrafts) {
+      if (draft && typeof draft.id === 'string' && !DANGEROUS_OBJECT_KEYS.has(draft.id)) {
+        if (isNewerVersionedEntry(draft, getSafeOwnEntry(merged, draft.id))) {
+          merged[draft.id] = draft;
         }
       }
     }
-    inMemoryHumanDraftByScope[scope] = current ? { ...hydrated, ...current } : hydrated;
   }
+  inMemoryHumanDraftByScope[scope] = merged;
   return inMemoryHumanDraftByScope[scope];
 }
 
@@ -257,13 +282,26 @@ export function getMovementIdeaMetaMap(
   const scopedKey = getScopedStorageKey(IDEA_META_STORAGE_KEY, scope);
   const stored = readStorageJson<Record<string, MovementIdeaMeta>>(scopedKey, {});
   const current = inMemoryMetaByScope[scope] ?? {};
-  const merged = { ...stored, ...current };
+  const merged: Record<string, MovementIdeaMeta> = { ...current };
+  if (stored && typeof stored === 'object' && !Array.isArray(stored)) {
+    for (const [id, entry] of Object.entries(stored)) {
+      if (
+        !DANGEROUS_OBJECT_KEYS.has(id) &&
+        entry &&
+        typeof entry === 'object' &&
+        !Array.isArray(entry) &&
+        isNewerVersionedEntry(entry, getSafeOwnEntry(merged, id))
+      ) {
+        merged[id] = entry;
+      }
+    }
+  }
   inMemoryMetaByScope[scope] = merged;
   return merged;
 }
 
 export function getHumanDraftForIdeaExercise(exerciseId: string): HumanMovementDraft | undefined {
-  return getScopedHumanDraftMap()[exerciseId];
+  return getSafeOwnEntry(getScopedHumanDraftMap(), exerciseId);
 }
 
 export function getSavedHumanMovementDrafts(scope = getActiveOwnerScope()): HumanMovementDraft[] {
@@ -273,8 +311,8 @@ export function getSavedHumanMovementDrafts(scope = getActiveOwnerScope()): Huma
 export function getMovementIdeaMeta(exercise: PilatesExercise): MovementIdeaMeta {
   const scope = getActiveOwnerScope();
   const map = getMovementIdeaMetaMap(scope);
-  const existing = map[exercise.id];
-  const draft = getScopedHumanDraftMap(scope)[exercise.id];
+  const existing = getSafeOwnEntry(map, exercise.id);
+  const draft = getSafeOwnEntry(getScopedHumanDraftMap(scope), exercise.id);
   if (existing) {
     if (draft) {
       return {
@@ -300,7 +338,7 @@ export function getMovementIdeaMeta(exercise: PilatesExercise): MovementIdeaMeta
     : rawPrecautions === defaultPrecaution
       ? ''
       : rawPrecautions;
-  const ideaLine = draft?.ideaLine || exercise.cues[0] || exercise.nameKo;
+  const ideaLine = draft?.ideaLine || exercise.cues?.[0] || exercise.nameKo;
   const adjustmentNote =
     draft?.modificationLogs.at(-1)?.modificationPointKo ||
     exercise.layers?.standard ||

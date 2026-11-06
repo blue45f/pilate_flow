@@ -1,0 +1,389 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "pilates-flow-backup-input-boundary-corpus-v1",
+  "corpusSeed": "pilates-backup-boundary-seed-20261106-v1",
+  "description": "Deterministic synthetic boundary corpus for backup/history inspection, legacy conversion, normalization, restore planning, rollback validation, and prototype/mutation safety. Contains zero real user, member, health, or class data.",
+  "bounds": {
+    "maxPayloadBytes": 15000000,
+    "maxOversizeTestBytes": 15000128,
+    "maxGeneratedStringBytes": 262144,
+    "maxGeneratedArrayLength": 2000,
+    "maxGeneratedNestingDepth": 128,
+    "maxCaseDurationMs": 5000,
+    "maxSuiteDurationMs": 30000,
+    "maxRunnerHeapDeltaMb": 256
+  },
+  "baselineState": {
+    "customExercise": {
+      "id": "custom-boundary-swan-prep",
+      "nameKo": "합성 스완 프렙 경계 동작",
+      "nameEn": "Synthetic Boundary Swan Prep",
+      "apparatus": "mat",
+      "props": ["mini-ball"],
+      "blockCategory": "extension",
+      "spinalPlanes": ["extension", "neutral"],
+      "bodyPosition": "prone",
+      "level": "1.0",
+      "defaultDurationMin": 6,
+      "isUnilateral": false,
+      "springs": "맨몸 매트 지지",
+      "box": "none",
+      "footbar": "none",
+      "headrest": "flat",
+      "targetMuscles": ["흉추 신전근", "심부 복횡근"],
+      "breathPattern": "들쉬며 흉골 전상방 신전, 내쉬며 복부 지지 하강",
+      "cues": [
+        "경추를 길게 유지하고 시선은 매트 앞쪽을 향합니다.",
+        "치골 결합을 매트에 가볍게 고정합니다."
+      ],
+      "precautions": "급성 요추 신전 불편감이 있는 경우 가동 범위를 축소합니다.",
+      "layers": {
+        "easy": "전완 지지 스완 프렙으로 가동 범위 축소",
+        "standard": "손바닥 어깨 아래 지지 후 흉추 신전 유지",
+        "hard": "양팔 길게 뻗어 후면 사슬 저항 유지"
+      },
+      "youtube": {
+        "videoId": "synbound001",
+        "channelName": "Synthetic Pilates Lab",
+        "videoTitle": "Synthetic Boundary Swan Prep Reference",
+        "startSec": 0,
+        "url": "https://www.youtube.com/watch?v=synbound001",
+        "region": "kr"
+      },
+      "favoriteTag": "rehab-posture",
+      "tempo": "slow-precise",
+      "isCustom": true,
+      "createdAt": "2026-11-06T07:00:00.000Z"
+    },
+    "sequence": {
+      "id": "seq-boundary-baseline-1",
+      "title": "합성 흉추 신전·코어 통합 수업",
+      "subtitle": "결정론적 경계 검증용 합성 시퀀스",
+      "apparatus": "mat",
+      "level": "1.0",
+      "focusTags": ["흉추 가동성", "코어 안정성"],
+      "targetMinutes": 50,
+      "steps": [
+        {
+          "kind": "exercise",
+          "stepId": "step-boundary-1",
+          "order": 1,
+          "blockCategory": "extension",
+          "exerciseId": "custom-boundary-swan-prep",
+          "durationMin": 12,
+          "selectedLayer": "standard",
+          "locked": false,
+          "instructorNote": "합성 1단계 스완 프렙"
+        },
+        {
+          "kind": "rest",
+          "stepId": "step-boundary-2",
+          "order": 2,
+          "blockCategory": "cooldown",
+          "exerciseId": "",
+          "durationMin": 2,
+          "selectedLayer": "standard",
+          "locked": false,
+          "instructorNote": "호흡 정리"
+        }
+      ],
+      "createdAt": "2026-11-06T08:00:00.000Z",
+      "updatedAt": "2026-11-06T08:15:00.000Z",
+      "taughtCount": 1
+    },
+    "classGroup": {
+      "id": "group-boundary-baseline-1",
+      "name": "합성 오전 매트 A반",
+      "type": "group",
+      "defaultLevel": "1.0",
+      "scheduleLabel": "화·목 10:00",
+      "notes": "합성 테스트 전용 그룹"
+    },
+    "historyLog": {
+      "id": "hist-boundary-baseline-1",
+      "sequenceId": "seq-boundary-baseline-1",
+      "sequenceTitle": "합성 흉추 신전·코어 통합 수업",
+      "groupId": "group-boundary-baseline-1",
+      "groupName": "합성 오전 매트 A반",
+      "taughtAt": "2026-11-06T09:00:00.000Z",
+      "apparatus": "mat",
+      "level": "1.0",
+      "exerciseIds": ["custom-boundary-swan-prep"],
+      "rating": 5,
+      "intensity": "moderate",
+      "instructorReflection": "합성 수업 완료 기록 스냅샷 보존 확인용",
+      "actualDurationSec": 840,
+      "actualRestDurationSec": 120,
+      "stepsSnapshot": [
+        {
+          "kind": "exercise",
+          "stepId": "step-boundary-1",
+          "order": 1,
+          "blockCategory": "extension",
+          "exerciseId": "custom-boundary-swan-prep",
+          "durationMin": 12,
+          "selectedLayer": "standard",
+          "locked": false,
+          "instructorNote": "합성 1단계 스완 프렙"
+        },
+        {
+          "kind": "rest",
+          "stepId": "step-boundary-2",
+          "order": 2,
+          "blockCategory": "cooldown",
+          "exerciseId": "",
+          "durationMin": 2,
+          "selectedLayer": "standard",
+          "locked": false,
+          "instructorNote": "호흡 정리"
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "BND-VER-001",
+      "category": "version-envelope",
+      "title": "Export envelope missing version field",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "unsupported_version"
+    },
+    {
+      "id": "BND-VER-002",
+      "category": "version-envelope",
+      "title": "Export envelope with null version",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "unsupported_version"
+    },
+    {
+      "id": "BND-VER-003",
+      "category": "version-envelope",
+      "title": "Export envelope with negative, zero, legacy (1, 2), and future (4, 99, MAX_SAFE_INTEGER) versions",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "unsupported_version"
+    },
+    {
+      "id": "BND-VER-004",
+      "category": "version-envelope",
+      "title": "Persisted state wrapper with unsupported versions (-1, 1, 2, 4, 99, MAX_SAFE_INTEGER, null, missing)",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "unsupported_version"
+    },
+    {
+      "id": "BND-VER-005",
+      "category": "version-envelope",
+      "title": "Unsupported format identifier and non-object JSON roots (array, string, number, boolean, null, malformed JSON)",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "unsupported_format|invalid_format|invalid_json"
+    },
+    {
+      "id": "BND-VER-006",
+      "category": "version-envelope",
+      "title": "Export envelope with non-UTC or unparseable exportedAt timestamp",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "invalid_envelope"
+    },
+    {
+      "id": "BND-VER-007",
+      "category": "version-envelope",
+      "title": "Rollback storage record with unsupported version (version: 2, 99, -1, string)",
+      "target": "inspectPersistedRollbackPoint+rollbackLatestBackupRestore",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "unsupported_version"
+    },
+    {
+      "id": "BND-LEG-001",
+      "category": "legacy-conversion",
+      "title": "Bare domain data object (bare-data) normalizes reproducibly to current state and export-v3",
+      "target": "inspectBackupRecovery+restoreBackup+exportBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "normalized",
+      "expectedSourceKind": "bare-data"
+    },
+    {
+      "id": "BND-LEG-002",
+      "category": "legacy-conversion",
+      "title": "Persisted original v0 wrapper ({ version: 0, state }) normalizes reproducibly to current v3 state",
+      "target": "inspectBackupRecovery+restoreBackup+exportBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "normalized",
+      "expectedSourceKind": "persisted-original-v0"
+    },
+    {
+      "id": "BND-LEG-003",
+      "category": "legacy-conversion",
+      "title": "Persisted v3 wrapper ({ version: 3, state }) normalizes identically to export-v3",
+      "target": "inspectBackupRecovery+restoreBackup+exportBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "normalized",
+      "expectedSourceKind": "persisted-v3"
+    },
+    {
+      "id": "BND-LEG-004",
+      "category": "legacy-conversion",
+      "title": "Legacy ClassHistoryLog without programSnapshot (stepsSnapshot-only and exerciseIds-only) resolves view and clones safely to draft",
+      "target": "resolveTeachingHistoryView+reconstructStepsSnapshotFromHistoryLog+cloneTeachingHistoryToNextClassDraft",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "normalized"
+    },
+    {
+      "id": "BND-LEG-005",
+      "category": "legacy-conversion",
+      "title": "Legacy v0 rollback record upgrades deterministically to version 1 during inspectPersistedRollbackPoint and rollbackLatestBackupRestore",
+      "target": "inspectPersistedRollbackPoint+rollbackLatestBackupRestore",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "normalized"
+    },
+    {
+      "id": "BND-REF-001",
+      "category": "id-reference-fields",
+      "title": "Top-level duplicate IDs in exercises, savedSequences, classGroups, historyLogs, conditionTemplates, and savedSequences vs activeDraft",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "duplicate_id"
+    },
+    {
+      "id": "BND-REF-002",
+      "category": "id-reference-fields",
+      "title": "Dangling exerciseId in savedSequences.steps, activeDraft.steps, historyLogs.exerciseIds, and historyLogs.stepsSnapshot",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "missing_exercise"
+    },
+    {
+      "id": "BND-REF-003",
+      "category": "id-reference-fields",
+      "title": "Unknown fields on strict roots (envelope, data, draftCriteria, instructorSchedule, instructorStudyState, datedSequencePlanning) rejected with unsupported_fields",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "unsupported_fields"
+    },
+    {
+      "id": "BND-REF-004",
+      "category": "id-reference-fields",
+      "title": "Unexpected fields on domain records (savedSequences, steps, exercises, youtube, classGroups, historyLogs, programSnapshot) rejected with unsupported_fields while preserving allowlisted hierarchy/snapshot/extension fields",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "D1",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "unsupported_fields"
+    },
+    {
+      "id": "BND-REF-005",
+      "category": "id-reference-fields",
+      "title": "Partial/malformed historyLog.programSnapshot (items: null, missing exercisesById, wrong snapshotVersion) rejected at inspectBackupRecovery and safely falls back without TypeError in resolveTeachingHistoryView / collectMissingSnapshotExercises",
+      "target": "inspectBackupRecovery+resolveTeachingHistoryView+collectMissingSnapshotExercises",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "D3",
+      "expectedOutcome": "rejected_and_graceful_fallback",
+      "expectedReasonCode": "invalid_data"
+    },
+    {
+      "id": "BND-REF-006",
+      "category": "id-reference-fields",
+      "title": "Duplicate stepId within sequence.steps / activeDraft.steps / historyLog.stepsSnapshot / programSnapshot.items rejected with duplicate_id, and dangling/mismatched exerciseId in programSnapshot.items / sequenceSnapshot.steps rejected with missing_exercise",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "D4",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "duplicate_id|missing_exercise"
+    },
+    {
+      "id": "BND-REF-007",
+      "category": "id-reference-fields",
+      "title": "inspectPersistedRollbackPoint rejects missing version with unsupported-version and rejects non-object/id-less elements inside preRestoreState arrays with invalid-shape",
+      "target": "inspectPersistedRollbackPoint+rollbackLatestBackupRestore",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "D5",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "unsupported-version|invalid-shape"
+    },
+    {
+      "id": "BND-LIM-001",
+      "category": "size-length-depth",
+      "title": "Raw backup string exceeding MAX_LOCAL_BACKUP_BYTES (15 MB UTF-8) rejected before JSON.parse",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "too_large"
+    },
+    {
+      "id": "BND-LIM-002",
+      "category": "size-length-depth",
+      "title": "textSchema (>20,000 chars) and idSchema (>300 chars) boundaries enforced on schema-validated string fields",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "invalid_data"
+    },
+    {
+      "id": "BND-LIM-003",
+      "category": "size-length-depth",
+      "title": "sequence.steps (>1,000 items) and conditionTemplates (>1,000 items) upper bounds enforced",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "invalid_data"
+    },
+    {
+      "id": "BND-LIM-004",
+      "category": "size-length-depth",
+      "title": "Enforces max(1000) on historyLog.stepsSnapshot / exerciseIds, rejects >20,000 char strings, and rejects JSON nesting depth > MAX_BACKUP_JSON_DEPTH (64)",
+      "target": "inspectBackupRecovery+restoreBackup",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "D6",
+      "expectedOutcome": "rejected",
+      "expectedReasonCode": "invalid_data|unsupported_fields"
+    },
+    {
+      "id": "BND-PROTO-001",
+      "category": "proto-constructor-pollution",
+      "title": "JSON payloads with __proto__, constructor, and prototype keys at root, data, and rollback records do not pollute global Object.prototype or partially write storage",
+      "target": "inspectBackupRecovery+restoreBackup+inspectPersistedRollbackPoint",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "zero_global_proto_pollution_and_zero_partial_writes"
+    },
+    {
+      "id": "BND-PROTO-002",
+      "category": "proto-constructor-pollution",
+      "title": "Rejects own __proto__/constructor/prototype keys anywhere in backup JSON (including export-v3 data), prevents local prototype mutation in canonicalRecoveryContent / getMovementIdeaMetaMap, and guards resolveTeachingHistoryView against exerciseId='constructor'",
+      "target": "inspectBackupRecovery+canonicalRecoveryContent+getMovementIdeaMetaMap+resolveTeachingHistoryView",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "resolvedDefectId": "D2",
+      "expectedOutcome": "rejected_and_safe_own_property_lookup",
+      "expectedReasonCode": "unsupported_fields"
+    },
+    {
+      "id": "BND-RT-001",
+      "category": "roundtrip-idempotence",
+      "title": "Multi-cycle export -> inspect -> normalize -> restore -> export preserves canonical state fingerprint, custom exercises, and immutable history programSnapshot",
+      "target": "exportBackup+inspectBackupRecovery+restoreBackup+resolveTeachingHistoryView",
+      "expectedClassification": "PASS_ENFORCED_GUARD",
+      "expectedOutcome": "idempotent"
+    },
+    {
+      "id": "BND-NEG-001",
+      "category": "negative-controls",
+      "title": "Boundary harness negative control detects simulated input mutation, simulated partial storage write, and simulated prototype pollution",
+      "target": "boundaryHarnessSelfCheck",
+      "expectedClassification": "PASS_NEGATIVE_CONTROL",
+      "expectedOutcome": "detected_and_blocked"
+    }
+  ]
+}

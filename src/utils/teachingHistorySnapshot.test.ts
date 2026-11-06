@@ -594,7 +594,7 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
     ).toBeNull();
   });
 
-  it('atomically copies history logs when exercises were deleted or modified, reconstructs omitted stepsSnapshot, ensures review eligibility, and rolls back on validation failure', () => {
+  it('atomically copies history logs when exercises were deleted or modified, reconstructs omitted stepsSnapshot, preserves review status, and rolls back on validation failure', () => {
     const snapshot = buildTeachingProgramSnapshot({
       sequenceId: 'seq-snap-test',
       sequenceTitle: '리포머 코어 집중 프로그램',
@@ -609,14 +609,14 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
       criteriaSnapshot: criteria,
     });
 
-    // 1. Reconstructed exercise always has valid 'approved' planning-metadata review (no review gate blocking)
+    // 1. A historical record must never manufacture a missing review approval.
     const strippedReviewSnap = {
       ...snapshot.exercisesById[coreEx.id],
       review: undefined,
     };
     const reconstructedCore = reconstructExerciseFromSnapshot(strippedReviewSnap);
-    expect(getExerciseReviewState(reconstructedCore)).toBe('approved');
-    expect(reconstructedCore.review?.credentialVerified).toBe(false);
+    expect(getExerciseReviewState(reconstructedCore)).toBe('pending');
+    expect(reconstructedCore.review).toBeUndefined();
 
     // 2. History log where stepsSnapshot is omitted (only programSnapshot present),
     //    coreEx is deleted, and warmEx has its live level/apparatus modified in store
@@ -660,11 +660,12 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
     expect(copyOutcome.ok).toBe(true);
 
     const afterSuccess = usePilatesStore.getState();
-    // Deleted coreEx was restored with valid review, while live mutatedWarmEx kept its live edits in store.exercises
+    // Deleted coreEx retains only its original review, while the live exercise keeps later edits.
     expect(afterSuccess.exercises.some((ex) => ex.id === coreEx.id)).toBe(true);
     expect(
       getExerciseReviewState(afterSuccess.exercises.find((ex) => ex.id === coreEx.id)!),
-    ).toBe('approved');
+    ).toBe(getExerciseReviewState(coreEx));
+    expect(afterSuccess.exercises.find((ex) => ex.id === coreEx.id)?.review).toEqual(snapshot.exercisesById[coreEx.id].review);
     expect(afterSuccess.exercises.find((ex) => ex.id === warmEx.id)?.nameKo).toBe(
       '나중에 매트로 바뀐 웜업',
     );
@@ -787,15 +788,17 @@ describe('teachingHistorySnapshot utility & P1/P3 contracts', () => {
       postRestoreStorageFingerprint: postDisk.ok ? postDisk.fingerprint : null,
     });
 
-    // 1. Rollback succeeds and restores exact pre-restore references
+    // 1. Rollback restores exact values with independent nested references.
     const rollbackRes = rollbackLatestBackupRestore({
       getState: usePilatesStore.getState,
       setState: (partial) => usePilatesStore.setState(partial),
       checkStorage: (expected) => getRecoveryStorageStatus(expected ?? undefined),
     });
     expect(rollbackRes.success).toBe(true);
-    expect(usePilatesStore.getState().exercises).toBe(preRestoreState.exercises);
-    expect(usePilatesStore.getState().savedSequences).toBe(preRestoreState.savedSequences);
+    expect(usePilatesStore.getState().exercises).toEqual(preRestoreState.exercises);
+    expect(usePilatesStore.getState().exercises).not.toBe(preRestoreState.exercises);
+    expect(usePilatesStore.getState().savedSequences).toEqual(preRestoreState.savedSequences);
+    expect(usePilatesStore.getState().savedSequences).not.toBe(preRestoreState.savedSequences);
 
     // 2. If user makes a post-restore edit, rollback refuses to overwrite newer work
     const preRestoreState2 = captureBackupPreRestoreState(usePilatesStore.getState());

@@ -134,6 +134,44 @@ class InspectionError extends Error {
 const own = (value: object, key: string) => Object.prototype.hasOwnProperty.call(value, key);
 const isObject = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === 'object' && !Array.isArray(value);
+const DANGEROUS_OBJECT_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+export const MAX_BACKUP_JSON_DEPTH = 64;
+
+function assertSafeJsonInputTree(root: unknown, maxDepth = MAX_BACKUP_JSON_DEPTH): void {
+  const stack: Array<{ value: unknown; depth: number }> = [{ value: root, depth: 0 }];
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+    const { value, depth } = current;
+    if (value === null || typeof value !== 'object') continue;
+    if (depth > maxDepth) {
+      throw new InspectionError(
+        'invalid_data',
+        '백업 JSON의 중첩 깊이가 허용 상한을 초과하여 복원을 적용하지 않았습니다.',
+      );
+    }
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i += 1) {
+        stack.push({ value: value[i], depth: depth + 1 });
+      }
+      continue;
+    }
+    const ownNames = Object.getOwnPropertyNames(value);
+    for (let i = 0; i < ownNames.length; i += 1) {
+      const key = ownNames[i];
+      if (DANGEROUS_OBJECT_KEYS.has(key)) {
+        throw new InspectionError(
+          'unsupported_fields',
+          '백업 파일에 허용되지 않는 프로토타입 예약 키(__proto__·constructor·prototype)가 포함되어 복원하지 않았습니다.',
+          1,
+        );
+      }
+      stack.push({
+        value: (value as Record<string, unknown>)[key],
+        depth: depth + 1,
+      });
+    }
+  }
+}
 
 /** Canonical persisted JSON content. This is not a signature or an authentication token. */
 export function canonicalRecoveryContent(value: unknown): string {
@@ -322,6 +360,121 @@ function legacyDraft(state: Record<string, unknown>, version: 0 | 3): SavedSeque
     recoveredDraftOrigin: origin,
   });
 }
+function hasDuplicateStepIds(steps: ReadonlyArray<{ stepId: string }> | undefined): boolean {
+  if (!steps || steps.length <= 1) return false;
+  const seen = new Set<string>();
+  for (const step of steps) {
+    if (seen.has(step.stepId)) return true;
+    seen.add(step.stepId);
+  }
+  return false;
+}
+
+function hasInvalidHistorySnapshotExerciseRefs(
+  log: z.infer<typeof cloudBackupDataSchema>['historyLogs'][number],
+  known: Set<string>,
+): boolean {
+  const snapshotExerciseIds = new Set<string>();
+  if (log.programSnapshot) {
+    const { exercisesById, items } = log.programSnapshot;
+    for (const [key, exSnap] of Object.entries(exercisesById)) {
+      if (DANGEROUS_OBJECT_KEYS.has(key) || exSnap.id !== key) {
+        return true;
+      }
+      snapshotExerciseIds.add(key);
+    }
+    for (const item of items) {
+      if (item.kind === 'rest') {
+        if (item.exerciseId !== '') return true;
+        continue;
+      }
+      if (!item.exerciseId || DANGEROUS_OBJECT_KEYS.has(item.exerciseId)) {
+        return true;
+      }
+      if (item.exerciseSnapshot !== undefined && item.exerciseSnapshot.id !== item.exerciseId) {
+        return true;
+      }
+      if (item.movementSnapshot !== undefined && item.movementSnapshot.id !== item.exerciseId) {
+        return true;
+      }
+      const inExercisesById =
+        own(exercisesById, item.exerciseId) &&
+        exercisesById[item.exerciseId]?.id === item.exerciseId;
+      const inItemSnapshot =
+        item.exerciseSnapshot?.id === item.exerciseId ||
+        item.movementSnapshot?.id === item.exerciseId;
+      if (inItemSnapshot) {
+        snapshotExerciseIds.add(item.exerciseId);
+      }
+      if (!known.has(item.exerciseId) && !inExercisesById && !inItemSnapshot) {
+        return true;
+      }
+    }
+  }
+  const sequenceSnapshots = [log.sequenceSnapshot, log.programSnapshot?.sequenceSnapshot];
+  for (const seqSnap of sequenceSnapshots) {
+    if (!seqSnap) continue;
+    for (const [key, moveSnap] of Object.entries(seqSnap.exerciseSnapshots)) {
+      if (DANGEROUS_OBJECT_KEYS.has(key) || moveSnap.id !== key) {
+        return true;
+      }
+      snapshotExerciseIds.add(key);
+    }
+    for (const step of seqSnap.steps) {
+      if (step.kind === 'rest') continue;
+      if (!step.exerciseId || DANGEROUS_OBJECT_KEYS.has(step.exerciseId)) {
+        return true;
+      }
+      if (step.exerciseSnapshot !== undefined && step.exerciseSnapshot.id !== step.exerciseId) {
+        return true;
+      }
+      const inSnapMap =
+        own(seqSnap.exerciseSnapshots, step.exerciseId) &&
+        seqSnap.exerciseSnapshots[step.exerciseId]?.id === step.exerciseId;
+      const inStepSnap = step.exerciseSnapshot?.id === step.exerciseId;
+      if (inStepSnap) {
+        snapshotExerciseIds.add(step.exerciseId);
+      }
+      if (!known.has(step.exerciseId) && !inSnapMap && !inStepSnap) {
+        return true;
+      }
+    }
+  }
+  if (log.stepsSnapshot) {
+    for (const step of log.stepsSnapshot) {
+      if (step.kind === 'rest') continue;
+      if (!step.exerciseId || DANGEROUS_OBJECT_KEYS.has(step.exerciseId)) {
+        return true;
+      }
+      if (step.exerciseSnapshot !== undefined && step.exerciseSnapshot.id !== step.exerciseId) {
+        return true;
+      }
+      if (step.exerciseSnapshot?.id === step.exerciseId) {
+        snapshotExerciseIds.add(step.exerciseId);
+      }
+    }
+    if (
+      log.stepsSnapshot.some(
+        (step) =>
+          step.kind !== 'rest' &&
+          !known.has(step.exerciseId) &&
+          !snapshotExerciseIds.has(step.exerciseId),
+      )
+    ) {
+      return true;
+    }
+  }
+  if (
+    log.exerciseIds.some(
+      (id) =>
+        DANGEROUS_OBJECT_KEYS.has(id) || (!known.has(id) && !snapshotExerciseIds.has(id)),
+    )
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function parseInput(raw: string) {
   const bytes = new TextEncoder().encode(raw).byteLength;
   if (bytes > MAX_LOCAL_BACKUP_BYTES)
@@ -329,6 +482,7 @@ function parseInput(raw: string) {
   const input: unknown = JSON.parse(raw);
   if (!isObject(input))
     throw new InspectionError('invalid_format', '알려진 전체 JSON 백업 형식을 확인해 주세요.');
+  assertSafeJsonInputTree(input);
   let sourceKind: RecoverySourceKind,
     data: Record<string, unknown>,
     draft: SavedSequence | undefined;
@@ -436,6 +590,22 @@ function parseInput(raw: string) {
         '이전 초안의 복구 식별자가 다른 수업 내용과 충돌합니다. 어떤 자료도 적용하지 않았습니다.',
       );
     if (!same) checked.activeDraft = sequenceSchema.parse(draft);
+  }
+  if (
+    checked.savedSequences.some((sequence) => hasDuplicateStepIds(sequence.steps)) ||
+    hasDuplicateStepIds(checked.activeDraft?.steps) ||
+    checked.historyLogs.some(
+      (log) =>
+        hasDuplicateStepIds(log.stepsSnapshot) ||
+        hasDuplicateStepIds(log.programSnapshot?.items) ||
+        hasDuplicateStepIds(log.sequenceSnapshot?.steps) ||
+        hasDuplicateStepIds(log.programSnapshot?.sequenceSnapshot?.steps),
+    )
+  ) {
+    throw new InspectionError(
+      'duplicate_id',
+      '같은 수업 또는 이력 스냅샷 안에 중복된 stepId가 있어 안전하게 복원할 수 없습니다. 어떤 항목도 적용하지 않았습니다.',
+    );
   }
   return { sourceKind, data: checked, draft, bytes };
 }
@@ -549,23 +719,22 @@ export function inspectBackupRecovery(
     ];
     if (
       importedSequences.some((sequence) =>
-        sequence.steps.some((step) => step.kind !== 'rest' && !known.has(step.exerciseId)),
+        sequence.steps.some(
+          (step) =>
+            step.kind !== 'rest' &&
+            (DANGEROUS_OBJECT_KEYS.has(step.exerciseId) ||
+              (step.exerciseSnapshot !== undefined &&
+                step.exerciseSnapshot.id !== step.exerciseId) ||
+              (!known.has(step.exerciseId) &&
+                step.exerciseSnapshot?.id !== step.exerciseId)),
+        ),
       )
     )
       throw new InspectionError(
         'missing_exercise',
         '백업의 저장 수업·초안이 참조하는 동작이 없습니다. 전체 백업을 확인해 주세요.',
       );
-    if (
-      data.historyLogs.some((log) =>
-        [
-          ...log.exerciseIds,
-          ...(log.stepsSnapshot
-            ?.filter((step) => step.kind !== 'rest')
-            .map((step) => step.exerciseId) ?? []),
-        ].some((id) => !known.has(id)),
-      )
-    )
+    if (data.historyLogs.some((log) => hasInvalidHistorySnapshotExerciseRefs(log, known)))
       throw new InspectionError(
         'missing_exercise',
         '백업의 수업 기록이 참조하는 동작이 없습니다. 전체 백업을 확인해 주세요.',
