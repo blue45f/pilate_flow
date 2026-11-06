@@ -165,6 +165,8 @@ const savePersonalNote = async (dialog: ReturnType<typeof within>, name: string)
   fillPersonalNote(dialog, name);
   fireEvent.click(dialog.getByRole('button', { name: '검토 전 노트 저장하고 검토하기' }));
   const detail = within(await screen.findByRole('dialog', { name }));
+  fireEvent.click(detail.getByText('내 검토 기록 (선택)'));
+  fireEvent.click(detail.getByText('출처·검토 상태 자세히 보기'));
   const note = usePilatesStore.getState().exercises.find((item) => item.nameKo === name)!;
   return { detail, note };
 };
@@ -319,7 +321,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     expect(note.youtube.endSec).toBeUndefined();
     expect(note.review).toBeUndefined();
     expect(getExerciseReviewState(note)).toBe('pending');
-    expect(detail.getByRole('button', { name: '강사 검토 후 추가 가능' })).toBeDisabled();
+    expect(detail.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
     expect(
       detail.getByRole('button', { name: '수정 내용을 저장하고 내 강사 검토로 승인' }),
     ).toBeDisabled();
@@ -380,7 +382,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     ).toBeUndefined();
   });
 
-  it('keeps zero-reviewed production and a newly entered pending source note out of generation and direct teaching', async () => {
+  it('allows pending source notes in local composition and teaching without granting review', async () => {
     usePilatesStore.setState({ exercises: INITIAL_EXERCISES, activeSteps: [], lastCriteria: null });
     render(<App />);
     expect(screen.queryByRole('button', { name: /^수업 시작/ })).not.toBeInTheDocument();
@@ -395,24 +397,28 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     fireEvent.click(screen.getByText('자동 구성·휴식 먼저 넣기', { selector: 'summary' }));
     const beforeAttempt = usePilatesStore.getState();
     const makeSequence = screen.getByRole('button', { name: '시퀀스 만들기' });
-    expect(makeSequence).toBeDisabled();
-    expect(makeSequence).toHaveAccessibleDescription(/검토 완료 동작이 아직 없어요/);
-    expect(screen.getByRole('button', { name: '검토할 동작 찾기' })).toBeEnabled();
+    expect(makeSequence).toBeEnabled();
     fireEvent.click(makeSequence);
-    expect(usePilatesStore.getState().activeSteps).toBe(beforeAttempt.activeSteps);
-    expect(usePilatesStore.getState().activeSteps).toEqual([]);
-    expect(usePilatesStore.getState().draftCriteria).toBe(beforeAttempt.draftCriteria);
+    expect(usePilatesStore.getState().activeSteps.length).toBeGreaterThan(0);
+    expect(usePilatesStore.getState().exercises).toBe(beforeAttempt.exercises);
+    expect(usePilatesStore.getState().draftCriteria).toMatchObject({
+      apparatus: beforeAttempt.draftCriteria!.apparatus,
+      level: beforeAttempt.draftCriteria!.level,
+      targetMinutes: beforeAttempt.draftCriteria!.targetMinutes,
+    });
     expect(usePilatesStore.getState().generationError).toBeNull();
     expect(usePilatesStore.getState().exercises.filter(isExerciseAutoEligible)).toHaveLength(0);
-    expect(screen.queryByRole('button', { name: /^수업 시작/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('timer')).not.toBeInTheDocument();
     cleanup();
     usePilatesStore.setState({ activeSteps: [{ ...lockedStep, exerciseId: note.id }] });
     render(<LiveStageView onOpenLogModal={vi.fn()} />);
-    expect(screen.getByRole('region', { name: '수업 검토 필요' })).toBeInTheDocument();
-    expect(screen.queryByRole('timer')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '수업 시작' })).not.toBeInTheDocument();
-    expect(screen.queryByText(note.cues[0])).not.toBeInTheDocument();
+    expect(screen.getByText(/미검토 계획 자료/)).toBeInTheDocument();
+    expect(screen.getByRole('timer')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
+    expect(screen.getByText(note.cues[0])).toBeInTheDocument();
+    expect(
+      usePilatesStore.getState().exercises.find((item) => item.id === note.id)?.review,
+    ).toBeUndefined();
   });
 
   it('registers a no-video synthetic movement, explicitly reviews it, composes an exact class and preserves its taught history through JSON recovery', async () => {
@@ -444,6 +450,8 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     });
     fireEvent.click(form.getByRole('button', { name: '검토 전 노트 저장하고 검토하기' }));
     const detail = within(await screen.findByRole('dialog', { name }));
+    fireEvent.click(detail.getByText('내 검토 기록 (선택)'));
+    fireEvent.click(detail.getByText('출처·검토 상태 자세히 보기'));
     const pending = usePilatesStore.getState().exercises.find((item) => item.nameKo === name)!;
     expect(pending.id).toMatch(/^ex-custom-own-/);
     expect(pending.sourceReference).toBeUndefined();
@@ -457,7 +465,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     expect(pending.isUnilateral).toBe(true);
     expect(pending.defaultDurationMin).toBe(3.5);
     expect(pending.review).toBeUndefined();
-    expect(detail.getByRole('button', { name: '강사 검토 후 추가 가능' })).toBeDisabled();
+    expect(detail.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
     fireEvent.click(detail.getByText('검토 전 메모 수정 · 근거 미확인 입력값'));
     fireEvent.change(detail.getByLabelText('스프링·기구 설정 메모 · 직접 확인'), {
       target: { value: '합성 QA 메모 · 실제 동작 설정 아님' },
@@ -492,9 +500,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     expect(plan.find((step) => step.stepId === ownStep.stepId)).toEqual(ownStep);
     expect(screen.queryByRole('button', { name: /^수업 시작/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '시퀀스 미리보기' }));
-    const preview = within(
-      await screen.findByRole('dialog', { name: '전체 수업 계획 미리보기' }),
-    );
+    const preview = within(await screen.findByRole('dialog', { name: '전체 수업 계획 미리보기' }));
     expect(preview.getByRole('button', { name: '수업 시작' })).toBeEnabled();
     expect(screen.queryByRole('timer')).not.toBeInTheDocument();
     fireEvent.click(preview.getByRole('button', { name: '사본 저장' }));
@@ -560,7 +566,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     ).toBe(true);
   });
 
-  it('preserves origin when editing a stale synthetic source note and refuses to teach it', async () => {
+  it('preserves origin and stale review evidence while allowing teaching', async () => {
     // Adding provenance after a synthetic fixture review deliberately makes that review stale.
     // No production note or public source is approved by this test.
     const stale = {
@@ -577,9 +583,11 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     });
     fireEvent.click(screen.getByRole('button', { name: `${stale.nameKo} 상세 보기` }));
     const detail = within(await screen.findByRole('dialog', { name: stale.nameKo }));
-    expect(detail.getByRole('button', { name: '강사 검토 후 추가 가능' })).toBeDisabled();
+    fireEvent.click(detail.getByText('내 검토 기록 (선택)'));
+    fireEvent.click(detail.getByText('출처·검토 상태 자세히 보기'));
+    expect(detail.getByRole('button', { name: '수업안에 추가됨' })).toBeDisabled();
     expect(
-      detail.getByText('현재 수업안에 담겨 있지만 동작 정보의 검토가 필요합니다.'),
+      detail.getByText('현재 수업안에 담긴 미검토 자료입니다. 검토 기록은 선택 사항입니다.'),
     ).toBeVisible();
     fireEvent.click(detail.getByText('검토 전 메모 수정 · 근거 미확인 입력값'));
     fireEvent.change(detail.getByLabelText('티칭 큐 · 줄마다 하나 · 직접 작성'), {
@@ -592,10 +600,10 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     expect(getExerciseReviewState(edited)).toBe('stale');
     cleanup();
     render(<LiveStageView onOpenLogModal={vi.fn()} />);
-    expect(screen.getByRole('region', { name: '수업 검토 필요' })).toBeInTheDocument();
-    expect(screen.queryByRole('timer')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '수업 시작' })).not.toBeInTheDocument();
-    expect(screen.queryByText(edited.cues[0])).not.toBeInTheDocument();
-    expect(screen.queryByText(edited.springs)).not.toBeInTheDocument();
+    expect(screen.getByText(/미검토 계획 자료/)).toBeInTheDocument();
+    expect(screen.getByRole('timer')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
+    expect(screen.getByText(edited.cues[0])).toBeInTheDocument();
+    expect(edited.review).toEqual(stale.review);
   });
 });

@@ -511,7 +511,7 @@ export function SequencePlanPreview({
             <details className="simulation-readiness">
               <summary>
                 {model.gate.canRehearse && !snapshotChanged
-                  ? '시간표 리허설 조건 충족 · 개인 검토 기록 기준'
+                  ? '시간표 리허설 가능 · 계획 시간 기준'
                   : '리허설 제한 · 수동 탐색 가능'}
               </summary>
               <p>

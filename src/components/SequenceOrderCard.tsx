@@ -1,9 +1,7 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { SequenceStep } from '../types/pilates';
-
-const DRAG_TYPE = 'application/x-pilates-step';
 
 export function SequenceOrderCard({
   step,
@@ -19,7 +17,29 @@ export function SequenceOrderCard({
   children: ReactNode;
 }) {
   const steps = usePilatesStore((state) => state.activeSteps);
-  const [over, setOver] = useState(false);
+  const pointerDrag = useRef<{
+    id: number;
+    x: number;
+    y: number;
+    moved: boolean;
+    target: string | null;
+  } | null>(null);
+  const clearPointerDrag = () => {
+    pointerDrag.current = null;
+    document
+      .querySelectorAll('[data-order-step][data-drag-over]')
+      .forEach((element) => element.removeAttribute('data-drag-over'));
+  };
+
+  useEffect(
+    () => () => {
+      pointerDrag.current = null;
+      document
+        .querySelectorAll('[data-order-step][data-drag-over]')
+        .forEach((element) => element.removeAttribute('data-drag-over'));
+    },
+    [],
+  );
   const restoreFocus = () =>
     requestAnimationFrame(() => document.getElementById(`order-handle-${step.stepId}`)?.focus());
   const move = (targetId: string) => {
@@ -32,47 +52,63 @@ export function SequenceOrderCard({
   const upDisabled = !!step.locked || index === 0 || !!steps[index - 1]?.locked;
   const downDisabled = !!step.locked || index === steps.length - 1 || !!steps[index + 1]?.locked;
   return (
-    <div
-      className={`sequence-order-card ${over ? 'is-drop-target' : ''}`}
-      data-order-step={step.stepId}
-      onDragOver={(event) => {
-        if (event.dataTransfer.types.includes(DRAG_TYPE) && !step.locked) {
-          event.preventDefault();
-          event.dataTransfer.dropEffect = 'move';
-          setOver(true);
-        }
-      }}
-      onDragLeave={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOver(false);
-      }}
-      onDrop={(event) => {
-        event.preventDefault();
-        setOver(false);
-        const id = event.dataTransfer.getData(DRAG_TYPE);
-        if (!id || id === step.stepId) return;
-        const changed = usePilatesStore.getState().reorderStep(id, step.stepId);
-        onNotice(
-          changed ? '순서를 바꿨어요. 되돌릴 수 있습니다.' : '잠긴 항목의 위치는 유지합니다.',
-        );
-        requestAnimationFrame(() => document.getElementById(`order-handle-${id}`)?.focus());
-      }}
-    >
+    <div className="sequence-order-card" data-order-step={step.stepId}>
       {children}
       <div className="sequence-order-controls" role="group" aria-label={`${label} 순서 편집`}>
         <button
           type="button"
           id={`order-handle-${step.stepId}`}
           className="sequence-drag-handle"
-          draggable={!step.locked}
+          draggable={false}
           disabled={step.locked}
+          onPointerDown={(event) => {
+            if (event.button !== 0 || step.locked) return;
+            event.preventDefault();
+            event.currentTarget.focus();
+            event.currentTarget.setPointerCapture(event.pointerId);
+            pointerDrag.current = {
+              id: event.pointerId,
+              x: event.clientX,
+              y: event.clientY,
+              moved: false,
+              target: null,
+            };
+          }}
+          onPointerMove={(event) => {
+            const drag = pointerDrag.current;
+            if (!drag || drag.id !== event.pointerId) return;
+            if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 8 && !drag.moved)
+              return;
+            drag.moved = true;
+            const target = document
+              .elementFromPoint(event.clientX, event.clientY)
+              ?.closest<HTMLElement>('[data-order-step]');
+            document
+              .querySelectorAll('[data-order-step][data-drag-over]')
+              .forEach((element) => element.removeAttribute('data-drag-over'));
+            drag.target = target?.dataset.orderStep ?? null;
+            if (target && drag.target !== step.stepId)
+              target.setAttribute('data-drag-over', 'true');
+          }}
+          onPointerUp={(event) => {
+            const drag = pointerDrag.current;
+            const target = drag?.target;
+            const shouldMove =
+              drag?.id === event.pointerId && drag.moved && target && target !== step.stepId;
+            clearPointerDrag();
+            if (event.currentTarget.hasPointerCapture(event.pointerId))
+              event.currentTarget.releasePointerCapture(event.pointerId);
+            if (shouldMove) move(target);
+          }}
+          onPointerCancel={clearPointerDrag}
+          onLostPointerCapture={clearPointerDrag}
           aria-label={`${label} 순서 이동 · 위아래 방향키 또는 드래그`}
           title="끌어서 순서 이동 · 위아래 방향키도 가능"
-          onDragStart={(event) => {
-            event.dataTransfer.setData(DRAG_TYPE, step.stepId);
-            event.dataTransfer.effectAllowed = 'move';
-          }}
-          onDragEnd={() => setOver(false)}
           onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              clearPointerDrag();
+              return;
+            }
             if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
               event.preventDefault();
               const delta = event.key === 'ArrowUp' ? -1 : 1;
@@ -100,7 +136,7 @@ export function SequenceOrderCard({
           onClick={() => move(steps[index + 1].stepId)}
         >
           <ArrowDown size={17} aria-hidden="true" />
-          <span>아래로</span>
+          <span>아래</span>
         </button>
         <button
           type="button"

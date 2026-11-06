@@ -44,12 +44,7 @@ import {
   isMovementIdeaExercise,
   readMovementIdeaDraft,
 } from '../utils/movementIdeaDraft';
-import {
-  PfAiStatusBadge,
-  PfBadge,
-  PfButton,
-  PfMovementCard,
-} from '../design-system';
+import { PfAiStatusBadge, PfBadge, PfButton, PfMovementCard } from '../design-system';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type {
   BodyPosition,
@@ -901,10 +896,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         </div>
         <div className="library-heading-actions">
           {onOpenIdeaSheet && (
-            <PfButton
-              variant="secondary"
-              onClick={() => onOpenIdeaSheet(null)}
-            >
+            <PfButton variant="secondary" onClick={() => onOpenIdeaSheet(null)}>
               <Plus size={16} /> 한 줄 동작 메모
             </PfButton>
           )}
@@ -1369,10 +1361,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               <span className="muted">· 작은 선택이 좋은 수업을 만듭니다</span>
             </p>
             {(activeFilterCount > 0 || filters.search) && (
-              <PfButton
-                variant="ghost"
-                onClick={() => setFilters({ ...INITIAL_FILTERS })}
-              >
+              <PfButton variant="ghost" onClick={() => setFilters({ ...INITIAL_FILTERS })}>
                 필터 초기화 <X size={13} />
               </PfButton>
             )}
@@ -1539,9 +1528,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                               : onOpenYouTubePreview(exercise)
                           }
                         >
-                          {isIdea
-                            ? '다시 열기 · 느낌/수정'
-                            : '자세히 보기'}{' '}
+                          {isIdea ? '다시 열기 · 느낌/수정' : '자세히 보기'}{' '}
                           <ArrowUpRight size={14} />
                         </PfButton>
                         <button
@@ -1551,9 +1538,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                           aria-label={`${exercise.nameKo} 수업안에 추가`}
                         >
                           {addedId === exercise.id ? <Check size={16} /> : <Plus size={16} />}
-                          <span>
-                            {addedId === exercise.id ? '추가됨' : '수업에 추가'}
-                          </span>
+                          <span>{addedId === exercise.id ? '추가됨' : '수업에 추가'}</span>
                         </button>
                       </div>
                     </div>
@@ -1571,10 +1556,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 직접 찾은 유튜브 레퍼런스도 추가할 수 있어요.
               </p>
               <div>
-                <PfButton
-                  variant="primary"
-                  onClick={() => setFilters({ ...INITIAL_FILTERS })}
-                >
+                <PfButton variant="primary" onClick={() => setFilters({ ...INITIAL_FILTERS })}>
                   전체 동작 보기
                 </PfButton>
                 <PfButton variant="secondary" onClick={onOpenClipper}>
@@ -1675,10 +1657,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   </PfButton>
                 )}
                 {onOpenMotionDrafts && (
-                  <PfButton
-                    variant="text"
-                    onClick={() => onOpenMotionDrafts()}
-                  >
+                  <PfButton variant="text" onClick={() => onOpenMotionDrafts()}>
                     기존 17종 제작 실험실 <ArrowUpRight size={15} />
                   </PfButton>
                 )}

@@ -316,9 +316,15 @@ describe('mixed class coverage and exact timing', () => {
     expect(() => generateOptimal50MinSequence(criteriaFor(['mat'], 50), duplicates, [])).toThrow();
   });
 
-  it('keeps unapproved source material out of automatic class composition', () => {
+  it('composes valid pending source material without manufacturing review records', () => {
     const unapproved = fixtures.map((exercise) => ({ ...exercise, review: undefined }));
-    expect(() => generateOptimal50MinSequence(criteria, unapproved, [])).toThrow();
+    const before = structuredClone(unapproved);
+    const plan = generateOptimal50MinSequence(criteria, unapproved, []);
+    expect(plan.length).toBeGreaterThan(0);
+    expect(plan.reduce((sum, step) => sum + step.durationMin, 0)).toBeCloseTo(
+      criteria.targetMinutes,
+    );
+    expect(unapproved).toEqual(before);
   });
 });
 

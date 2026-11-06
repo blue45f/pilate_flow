@@ -168,7 +168,12 @@ describe('rest inside total class time', () => {
     expect(() =>
       generateOptimal50MinSequence({ ...criteria, restMinutes: 59.9 }, fixtures, []),
     ).toThrow();
-    expect(() => generateOptimal50MinSequence(criteria, INITIAL_EXERCISES, [])).toThrow(/승인/);
+    const before = structuredClone(INITIAL_EXERCISES);
+    const pendingPlan = generateOptimal50MinSequence(criteria, INITIAL_EXERCISES, []);
+    expect(pendingPlan.reduce((sum, step) => sum + step.durationMin, 0)).toBeCloseTo(
+      criteria.targetMinutes,
+    );
+    expect(INITIAL_EXERCISES).toEqual(before);
   });
 });
 

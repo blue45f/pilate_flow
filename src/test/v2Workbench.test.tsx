@@ -148,7 +148,7 @@ describe('v2 shared class editor', () => {
     expect(widths.reduce((sum, width) => sum + width, 0)).toBe(100);
     fireEvent.click(screen.getByRole('button', { name: '3 미리보기' }));
     const preview = screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
-    expect(within(preview).getByRole('button', { name: '수업 시작' })).toBeDisabled();
+    expect(within(preview).getByRole('button', { name: '수업 시작' })).toBeEnabled();
   });
 
   it('closes the native conditions dialog before generation and exposes one global error', () => {
@@ -274,14 +274,14 @@ describe('approved V3 block interactions', () => {
     }
   });
 
-  it('opens the whole-plan preview without starting, editing or enabling an unreviewed class', () => {
+  it('opens the whole-plan preview without starting or editing a pending class', () => {
     renderWorkbench();
     const before = usePilatesStore.getState();
     fireEvent.click(screen.getByRole('button', { name: '시퀀스 미리보기' }));
     const preview = screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
     expect(within(preview).getByText('계획 미리보기 · 모션 시범 미완료')).toBeInTheDocument();
     expect(within(preview).getByLabelText('미리보기 시간 구성')).toHaveTextContent('10:00');
-    expect(within(preview).getByRole('button', { name: '수업 시작' })).toBeDisabled();
+    expect(within(preview).getByRole('button', { name: '수업 시작' })).toBeEnabled();
     fireEvent.click(within(preview).getByRole('button', { name: '계획 미리보기 닫기' }));
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
     expect(usePilatesStore.getState().activeTab).toBe('workbench');

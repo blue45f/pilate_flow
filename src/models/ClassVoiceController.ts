@@ -80,6 +80,17 @@ export class ClassVoiceController {
     } else if (snapshot.remainingSec > previous.remainingSec + 10) {
       this.warned = false;
     }
+    // Do not finish speaking a note that changed or lost its review while playing.
+    // A content edit does not itself request a new spoken instruction.
+    if (
+      previous &&
+      previous.stepKey === snapshot.stepKey &&
+      (previous.title !== snapshot.title || previous.breath !== snapshot.breath)
+    ) {
+      this.cancel();
+      this.spokenPhase = snapshot.phase;
+      return;
+    }
     if (!this.enabled || !snapshot.eligible || !snapshot.visible) {
       this.cancel();
       return;

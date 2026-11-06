@@ -30,6 +30,7 @@ import {
   isRestStep,
 } from '../utils/sequenceEngine';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
+import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { LightDismissDialog } from './LightDismissDialog';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/teaching.css';
@@ -290,10 +291,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     setExitOpen(true);
   };
 
-  const unreviewed = steps.filter((step) => {
+  const unavailable = steps.filter((step) => {
     if (isRestStep(step)) return false;
     const item = exerciseMap.get(step.exerciseId);
-    return !item || !isExerciseAutoEligible(item);
+    return !item || !isExerciseAuthoringEligible(item);
   });
   const movementKeys = steps
     .filter((step) => !isRestStep(step))
@@ -323,7 +324,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const classVoice = useClassVoiceGuidance({
     stepKey: current?.stepId ?? '',
     title: currentIsRest ? '휴식' : (exercise?.nameKo ?? ''),
-    breath: currentIsRest ? '' : (exercise?.breathPattern ?? ''),
+    breath:
+      !currentIsRest && exercise && isExerciseAutoEligible(exercise) ? exercise.breathPattern : '',
     phase,
     remainingSec: Math.max(0, clock.remainingMs / 1000),
     nextTitle: next && isRestStep(next) ? '휴식' : (nextExercise?.nameKo ?? ''),
@@ -332,7 +334,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       !!current &&
       (!!exercise || currentIsRest) &&
       movementKeys.length > 0 &&
-      unreviewed.length === 0 &&
+      unavailable.length === 0 &&
       new Set(movementKeys).size === movementKeys.length &&
       !exitOpen &&
       !reviewOpen,
@@ -466,17 +468,17 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       </LightDismissDialog>
     </>
   );
-  if (unreviewed.length > 0)
+  if (unavailable.length > 0)
     return (
       <>
-        <section className="panel teaching-empty" aria-label="수업 검토 필요">
+        <section className="panel teaching-empty" aria-label="수업 동작 정보 필요">
           <Flag size={32} />
           <h1 id="workspace-main-heading" tabIndex={-1}>
-            강사 검토 후 수업을 시작해 주세요
+            동작 정보를 확인해 주세요
           </h1>
           <p>
-            현재 구성에 검토되지 않았거나 내용이 바뀐 동작 {unreviewed.length}개가 있습니다. 미검증
-            설명과 기구 설정으로 수업을 진행하지 않습니다.
+            현재 구성에서 찾을 수 없거나 형식이 올바르지 않은 동작이 {unavailable.length}개
+            있습니다. 해당 동작을 다시 추가하거나 수업안에서 빼 주세요.
           </p>
           <p className="muted">
             강사가 출처·기구·난이도·설명과 전체 수업의 적합성을 확인해야 합니다. 앱은 개인별
@@ -484,7 +486,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           </p>
           <div className="button-row">
             <button className="btn-primary" onClick={() => setActiveTab('atlas')}>
-              동작 검토로 이동
+              동작 정보로 이동
             </button>
             <button className="btn-secondary" onClick={() => setActiveTab('workbench')}>
               계획으로 돌아가기
@@ -616,6 +618,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             </span>
           </div>
           <h2 className="teaching-current-name">{currentIsRest ? '휴식' : exercise?.nameKo}</h2>
+          {!currentIsRest && exercise && !isExerciseAutoEligible(exercise) && (
+            <p className="muted">
+              미검토 계획 자료 · 실제 수행 전 기구와 몸 상태를 확인하세요. 안전성·효과를 보장하지
+              않습니다.
+            </p>
+          )}
           <p className="teaching-current-en">
             {currentIsRest ? 'BREAK · 다음 동작 전 잠시 쉬어갑니다' : exercise?.nameEn}
           </p>

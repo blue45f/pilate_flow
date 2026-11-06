@@ -19,10 +19,7 @@ import {
   isMovementIdeaExercise,
   readMovementIdeaDraft,
 } from '../utils/movementIdeaDraft';
-import {
-  PfAiStatusBadge,
-  PfMovementCard,
-} from '../design-system';
+import { PfAiStatusBadge, PfMovementCard } from '../design-system';
 import { isRestStep } from '../utils/sequenceEngine';
 import { getMotionPatternReferences } from '../data/motionPatternReferences';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
@@ -364,9 +361,7 @@ export function InlineExerciseFinder({
           </button>
         )}
       </div>
-      <p className="ief-review-hint">
-        동작을 바로 추가하세요. 검토 기록은 선택 사항입니다.
-      </p>
+      <p className="ief-review-hint">동작을 바로 추가하세요. 검토 기록은 선택 사항입니다.</p>
       {preview && (
         <section
           ref={previewRef}
@@ -445,8 +440,8 @@ export function InlineExerciseFinder({
                   disabled={previewAlreadyAdded}
                   aria-label={
                     previewAlreadyAdded
-                        ? `${previewExercise.nameKo} 초안 창에서 이미 시퀀스에 있음`
-                        : `${previewExercise.nameKo} 초안 확인 후 시퀀스 삽입`
+                      ? `${previewExercise.nameKo} 초안 창에서 이미 시퀀스에 있음`
+                      : `${previewExercise.nameKo} 초안 확인 후 시퀀스 삽입`
                   }
                   onClick={() => addExercise(previewExercise)}
                 >
@@ -556,7 +551,7 @@ export function InlineExerciseFinder({
                             ? 'instructor-reviewed'
                             : 'review-pending'
                       }
-                      className={canAdd ? 'is-reviewed' : 'is-pending'}
+                      className={approved ? 'is-reviewed' : 'is-pending'}
                     >
                       {isIdea
                         ? ideaMeta?.triedByInstructor
@@ -573,13 +568,14 @@ export function InlineExerciseFinder({
                       disabled={alreadyAdded}
                       aria-label={
                         alreadyAdded
-                            ? `${exercise.nameKo} 이미 수업안에 있음`
-                            : `${exercise.nameKo} 수업안에 추가`
+                          ? `${exercise.nameKo} 이미 수업안에 있음`
+                          : `${exercise.nameKo} 수업안에 추가`
                       }
                       onClick={() => addExercise(exercise)}
                       title="수업안에 추가 · 검토 상태는 변경되지 않습니다"
                     >
-                      {alreadyAdded ? <Check size={18} /> : <Plus size={18} />}<span>{alreadyAdded ? '추가됨' : '추가'}</span>
+                      {alreadyAdded ? <Check size={18} /> : <Plus size={18} />}
+                      <span>{alreadyAdded ? '추가됨' : '추가'}</span>
                     </button>
                   </div>
                 </div>

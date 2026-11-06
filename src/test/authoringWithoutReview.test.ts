@@ -64,7 +64,7 @@ describe('authoring without synthetic review approval', () => {
 
   it('automatically composes pending local records without manufacturing approval', () => {
     const exercises = SYNTHETIC_APPROVED_EXERCISES.map(
-      ({ review: _review, ...exercise }) => exercise,
+      (exercise) => ({ ...exercise, review: undefined }),
     );
     const before = structuredClone(exercises);
     usePilatesStore.setState({ exercises });

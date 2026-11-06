@@ -163,7 +163,7 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     usePilatesStore.setState(originalStore, true);
     vi.restoreAllMocks();
   });
-  it('starts blank and refuses the reported reformer 50-minute beginner pelvic request with zero reviewed production records', () => {
+  it('starts blank and composes a reformer 50-minute beginner plan without changing pending records', () => {
     expect(originalStore.activeSteps).toEqual([]);
     expect(INITIAL_EXERCISES).toHaveLength(98);
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
@@ -187,16 +187,24 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     expect(screen.queryByRole('button', { name: '시퀀스 미리보기' })).not.toBeInTheDocument();
     const beforeAttempt = usePilatesStore.getState();
     const makeSequence = openWorkbenchAutomation().getByRole('button', { name: '시퀀스 만들기' });
-    expect(makeSequence).toBeDisabled();
-    expect(makeSequence).toHaveAccessibleDescription(/검토 완료 동작이 아직 없어요/);
-    expect(screen.getByRole('button', { name: '검토할 동작 찾기' })).toBeEnabled();
+    expect(makeSequence).toBeEnabled();
     fireEvent.click(makeSequence);
-    expect(usePilatesStore.getState().activeSteps).toBe(beforeAttempt.activeSteps);
-    expect(usePilatesStore.getState().activeSteps).toEqual([]);
-    expect(usePilatesStore.getState().draftCriteria).toBe(beforeAttempt.draftCriteria);
+    expect(usePilatesStore.getState().activeSteps.length).toBeGreaterThan(0);
+    expect(totalMinutes()).toBeCloseTo(50);
+    expect(usePilatesStore.getState().exercises).toBe(beforeAttempt.exercises);
+    expect(usePilatesStore.getState().draftCriteria).toMatchObject({
+      apparatus: beforeAttempt.draftCriteria!.apparatus,
+      level: beforeAttempt.draftCriteria!.level,
+      targetMinutes: beforeAttempt.draftCriteria!.targetMinutes,
+    });
     expect(usePilatesStore.getState().generationError).toBeNull();
     expect(screen.queryByRole('timer')).not.toBeInTheDocument();
-    expect(screen.queryByText(/Short Spine|숏스파인/)).not.toBeInTheDocument();
+    expect(
+      usePilatesStore.getState().activeSteps.every((step) => {
+        const exercise = INITIAL_EXERCISES.find((item) => item.id === step.exerciseId)!;
+        return exercise.apparatus === 'reformer' && Number(exercise.level) <= Number(request.level);
+      }),
+    ).toBe(true);
     expect(screen.queryByText(INITIAL_EXERCISES[0]!.cues[0]!)).not.toBeInTheDocument();
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
   });
@@ -206,7 +214,7 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     { selected: ['chair', 'reformer'], minutes: 50 },
     { selected: ['chair', 'reformer'], minutes: 60 },
   ])(
-    'uses only distinct synthetic approved movements for $selected at $minutes minutes',
+    'uses distinct compatible movements for $selected at $minutes minutes without changing review records',
     ({ selected, minutes }) => {
       render(<App />);
       openWorkbenchConditions();
@@ -225,11 +233,7 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
       const records = current.activeSteps.map((step) =>
         current.exercises.find((exercise) => exercise.id === step.exerciseId)!,
       );
-      expect(
-        records.every(
-          (exercise) => exercise.id.startsWith('qa-synthetic-') && isExerciseAutoEligible(exercise),
-        ),
-      ).toBe(true);
+      expect(records.every((exercise) => current.exercises.includes(exercise))).toBe(true);
       expect(new Set(records.map(getMovementKey)).size).toBe(records.length);
       expect(
         [
@@ -251,7 +255,8 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     });
     fireEvent.click(screen.getByRole('button', { name: `${pending.nameKo} 상세 보기` }));
     const dialog = within(await screen.findByRole('dialog', { name: pending.nameKo }));
-    expect(dialog.getByRole('button', { name: '강사 검토 후 추가 가능' })).toBeDisabled();
+    expect(dialog.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
+    fireEvent.click(dialog.getByText('내 검토 기록 (선택)'));
     fireEvent.click(dialog.getByText('검토 전 메모 수정 · 근거 미확인 입력값'));
     fireEvent.change(dialog.getByRole('textbox', { name: '검토한 강사 별칭' }), {
       target: { value: 'Synthetic QA reviewer' },
@@ -422,7 +427,8 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     expect(preview.getByRole('button', { name: '수업 시작' })).toBeEnabled();
     expect(screen.queryByRole('timer')).not.toBeInTheDocument();
     fireEvent.click(preview.getByRole('button', { name: '수업 시작' }));
-    expect(await screen.findByText('준비되면 시작하세요', { exact: false })).toBeInTheDocument();
+    expect(await screen.findByRole('timer')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
     const timer = screen.getByRole('timer').textContent;
     fireEvent.click(screen.getByRole('button', { name: '현재 동작 1분 추가' }));
     expect(screen.getByRole('timer').textContent).not.toBe(timer);

@@ -134,3 +134,33 @@
     scroll-behavior: auto;
   }
 }
+
+/* Keep the explicit Add label from inheriting circular icon-only card geometry. */
+#root .ief-card-actions button,
+#root .ief-card-actions .pf-button {
+  width: auto;
+  max-width: none;
+  min-width: 76px;
+  flex-shrink: 0;
+  height: auto;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+#root .ief-card-actions {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#root .sequence-order-card[data-drag-over] {
+  outline: 3px solid #4e795e;
+  outline-offset: 2px;
+}
+#root .sequence-drag-handle {
+  touch-action: none;
+  user-select: none;
+}
+
+/* Equal-width actions retain a single baseline at 320px. */
+#root .sequence-order-controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+#root .sequence-order-controls button { min-width: 44px; width: 100%; padding-inline: 6px; gap: 4px; }
+#root .sequence-order-controls .sequence-drag-handle { margin-right: 0; }

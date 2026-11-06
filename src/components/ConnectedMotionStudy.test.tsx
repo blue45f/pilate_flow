@@ -109,8 +109,7 @@ describe('controlled connected study', () => {
       ['move', 'turn', 'return'].includes(phase.id),
     )) {
       const elapsed =
-        ((phase.sample - main.start) / (main.end - main.start)) *
-        CONNECTED_STUDY_DISPLAY_CYCLE_SEC;
+        ((phase.sample - main.start) / (main.end - main.start)) * CONNECTED_STUDY_DISPLAY_CYCLE_SEC;
       rerender(<ConnectedMotionStudy {...parentProps(8 + elapsed)} playing />);
       expect(view()).toHaveAttribute('data-motion-stage', 'main');
       expect(view()).toHaveAttribute('data-motion-phase', phase.id);
@@ -158,7 +157,7 @@ describe('controlled connected study', () => {
     expect(view()).toHaveAttribute('data-motion-stage', 'finish');
     expect(view()).toHaveAttribute('data-motion-phase', 'finish');
     expect(view()).toHaveAttribute('data-study-static', 'true');
-    expect(model.gate.canRehearse).toBe(false);
+    expect(model.gate.canRehearse).toBe(true);
     expect(reachExercise.review).toBeUndefined();
     expect(interval).not.toHaveBeenCalled();
     expect(timeout).not.toHaveBeenCalled();

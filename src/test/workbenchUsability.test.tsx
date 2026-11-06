@@ -73,7 +73,7 @@ describe('clear next action without changing class-readiness gates', () => {
     );
     expect(screen.getByRole('heading', { name: /동작을 골라/ })).toBeVisible();
     expect(screen.getByRole('button', { name: '동작 고르기' })).toBeVisible();
-    expect(screen.getByText(/내 검토 기록 0개/)).toBeInTheDocument();
+    expect(screen.queryByText(/내 검토 기록 0개/)).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: '시퀀스 제목' })).not.toBeInTheDocument();
     expect(screen.queryByText('첫 동작을 추가해 주세요')).not.toBeInTheDocument();
     expect(screen.queryByText('50분 부족')).not.toBeInTheDocument();
@@ -94,7 +94,9 @@ describe('clear next action without changing class-readiness gates', () => {
     expect(screen.getByText('다가오는 수업 일정이 없어요')).toBeVisible();
     expect(screen.getByRole('button', { name: '일정 추가' })).toBeInTheDocument();
     fireEvent.click(calendar);
-    const advanced = screen.getByText('자동 구성·휴식 먼저 넣기', { selector: 'summary' }).closest('details')!;
+    const advanced = screen
+      .getByText('자동 구성·휴식 먼저 넣기', { selector: 'summary' })
+      .closest('details')!;
     expect(advanced).not.toHaveAttribute('open');
     const rest = screen.getByText('휴식 추가', { selector: 'summary span' }).closest('details')!;
     expect(rest).not.toHaveAttribute('open');
@@ -214,13 +216,13 @@ describe('clear next action without changing class-readiness gates', () => {
     });
     expect(usePilatesStore.getState().activeTab).toBe('workbench');
     fireEvent.change(search, { target: { value: synthetic.nameKo } });
-    fireEvent.click(
-      finder.getByRole('button', { name: `${synthetic.nameKo} 수업안에 추가` }),
-    );
+    fireEvent.click(finder.getByRole('button', { name: `${synthetic.nameKo} 수업안에 추가` }));
     expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
     expect(usePilatesStore.getState().activeTab).toBe('workbench');
     fireEvent.click(finder.getByRole('button', { name: '수업 구성으로 돌아가기' }));
-    expect(screen.queryByRole('dialog', { name: '수업에 넣을 동작 고르기' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('dialog', { name: '수업에 넣을 동작 고르기' }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '직접 편집' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -286,7 +288,7 @@ describe('clear next action without changing class-readiness gates', () => {
     fireEvent.click(screen.getByRole('button', { name: '3 미리보기' }));
     const preview = screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
     expect(within(preview).getByRole('button', { name: '사본 저장' })).toBeInTheDocument();
-    expect(within(preview).getByRole('button', { name: '수업 시작' })).toBeDisabled();
+    expect(within(preview).getByRole('button', { name: '수업 시작' })).toBeEnabled();
     fireEvent.click(within(preview).getByRole('button', { name: '편집으로 돌아가기' }));
     view.rerender(
       <SequenceWorkbench {...props} planningMode="manual" onPlanningModeChange={change} />,

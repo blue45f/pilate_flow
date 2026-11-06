@@ -45,8 +45,7 @@ describe('authored motion discovery stays separate from teaching eligibility', (
       expect(rail.querySelectorAll('svg[role="img"]')).toHaveLength(
         Math.min(4, MOTION_PATTERN_REFERENCES.length - page * 4),
       );
-      if (page < pageCount - 1)
-        fireEvent.click(screen.getByRole('button', { name: '다음 도해' }));
+      if (page < pageCount - 1) fireEvent.click(screen.getByRole('button', { name: '다음 도해' }));
     }
     expect([...variants].sort()).toEqual(
       MOTION_PATTERN_REFERENCES.map((reference) => reference.variantId).sort(),
@@ -70,9 +69,7 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     });
     expect(summary).toHaveTextContent('동작 설명·티칭 큐');
     expect(summary).toHaveTextContent('주의점·금기 사항');
-    expect(
-      within(summary).getByRole('button', { name: '노트 상세·검토 열기' }),
-    ).toBeEnabled();
+    expect(within(summary).getByRole('button', { name: '노트 상세·검토 열기' })).toBeEnabled();
     expect(usePilatesStore.getState().exercises).toBe(before.exercises);
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
     expect(usePilatesStore.getState().historyLogs).toBe(before.historyLogs);
@@ -92,12 +89,11 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     expect(cards).toHaveLength(1);
     const card = within(cards[0] as HTMLElement);
     expect(card.getByText('관련 패턴 도해 1종')).toBeInTheDocument();
-    expect(
-      cards[0].querySelector('[data-motion-family="supine-reach"]'),
-    ).toHaveAttribute('data-motion-variant', SUPINE_REACH_DEFINITION.id);
-    fireEvent.click(
-      card.getByRole('button', { name: `${SUPINE_REACH_DEFINITION.title} 보기` }),
+    expect(cards[0].querySelector('[data-motion-family="supine-reach"]')).toHaveAttribute(
+      'data-motion-variant',
+      SUPINE_REACH_DEFINITION.id,
     );
+    fireEvent.click(card.getByRole('button', { name: `${SUPINE_REACH_DEFINITION.title} 보기` }));
     const preview = screen.getByRole('region', { name: '선택한 패턴 도해 미리보기' });
     expect(preview.querySelector('.motion-pattern-preview')).toHaveAttribute(
       'data-motion-family',
@@ -112,7 +108,7 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     expect(preview).toHaveTextContent('전문가 미검토');
     expect(preview).toHaveTextContent('일시정지 · 자동 재생 없음');
     expect(within(preview).getByRole('button', { name: '한 주기 재생' })).toBeEnabled();
-    expect(card.getByRole('button', { name: `${exercise.nameKo} 강사 검토 필요` })).toBeDisabled();
+    expect(card.getByRole('button', { name: `${exercise.nameKo} 수업안에 추가` })).toBeEnabled();
     expect(usePilatesStore.getState().exercises).toBe(before.exercises);
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
     expect(usePilatesStore.getState().historyLogs).toBe(before.historyLogs);
@@ -126,9 +122,7 @@ describe('authored motion discovery stays separate from teaching eligibility', (
       target: { value: 'proposal' },
     });
     expect(container.querySelectorAll('article.movement-card')).toHaveLength(12);
-    expect(container.querySelector('.library-load-more')).toHaveTextContent(
-      '12 / 21개 동작 노트',
-    );
+    expect(container.querySelector('.library-load-more')).toHaveTextContent('12 / 21개 동작 노트');
     fireEvent.change(screen.getByRole('searchbox', { name: '동작 검색' }), {
       target: { value: '네발기기팔다리리치' },
     });
@@ -144,9 +138,7 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     expect(
       container.querySelector('.ml-direct-preview [data-motion-variant="quadruped-leg-slide"]'),
     ).not.toBeNull();
-    expect(
-      card.getByRole('button', { name: '네발기기 팔·다리 리치 강사 검토 필요' }),
-    ).toBeDisabled();
+    expect(card.getByRole('button', { name: '네발기기 팔·다리 리치 수업안에 추가' })).toBeEnabled();
     fireEvent.change(screen.getByRole('combobox', { name: '모션 제작 초안' }), {
       target: { value: 'none' },
     });

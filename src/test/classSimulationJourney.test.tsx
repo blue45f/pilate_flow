@@ -268,7 +268,7 @@ describe('actual full-class rehearsal and read-only evidence journeys', { timeou
     'rest-only',
     'empty',
   ] as const)(
-    'keeps %s plans out of automatic rehearsal and cannot bypass live teaching guards',
+    'preserves data guards and permits valid %s plans without review approval',
     async (kind) => {
       const fixture = seed();
       const state = usePilatesStore.getState();
@@ -321,6 +321,17 @@ describe('actual full-class rehearsal and read-only evidence journeys', { timeou
         return;
       }
       const { dialog, controls, range } = await openPreview();
+      if (kind === 'pending' || kind === 'stale') {
+        expect(controls.getByRole('button', { name: '시간표 리허설 시작' })).toBeEnabled();
+        expect(dialog.getByRole('button', { name: '수업 시작' })).toBeEnabled();
+        fakeClock();
+        fireEvent.click(controls.getByRole('button', { name: '시간표 리허설 시작' }));
+        tick(3);
+        expect(Number(range.value)).toBeGreaterThan(0);
+        expect(storedState()).toEqual(before);
+        expect(screen.queryByRole('timer')).not.toBeInTheDocument();
+        return;
+      }
       expect(controls.getByRole('button', { name: '시간표 리허설 시작' })).toBeDisabled();
       expect(dialog.getByRole('button', { name: '수업 시작' })).toBeDisabled();
       fireEvent.click(dialog.getByRole('button', { name: '수업 시작' }));
@@ -337,7 +348,7 @@ describe('actual full-class rehearsal and read-only evidence journeys', { timeou
         expect(controls.getByText(/전체 계획 시간을 목표 수업 시간에 맞춘 뒤/)).toBeInTheDocument();
       if (kind === 'rest-only')
         expect(controls.getByText(/휴식 외의 동작을 추가해 주세요/)).toBeInTheDocument();
-      if (kind === 'pending' || kind === 'stale' || kind === 'missing') {
+      if (kind === 'missing') {
         const selected = within(dialog.getByRole('region', { name: '선택한 계획 항목' }));
         expect(
           selected.queryByRole('region', { name: '내 강사 검토 티칭 메모' }),
@@ -511,9 +522,9 @@ describe('actual full-class rehearsal and read-only evidence journeys', { timeou
     expect(evidence.getByText('확인된 동작 구간 없음')).toBeVisible();
     expect(evidence.getByText('0건 · 미검토')).toBeVisible();
     expect(evidence.getByText('0종 · ID 대조용 · 정확 연결 아님')).toBeVisible();
-    expect(
-      evidence.getByText('전체 공통 개념 시안').parentElement,
-    ).toHaveTextContent('2개 · 모두 미검토 · 이 노트의 관련 제안 수와 별개');
+    expect(evidence.getByText('전체 공통 개념 시안').parentElement).toHaveTextContent(
+      '2개 · 모두 미검토 · 이 노트의 관련 제안 수와 별개',
+    );
     expect(evidence.getByText('미확인 · 외부 전문가 검수와 별개')).toBeVisible();
     expect(evidence.queryAllByRole('button')).toHaveLength(0);
     expect(
@@ -522,7 +533,7 @@ describe('actual full-class rehearsal and read-only evidence journeys', { timeou
     expect(
       evidence.getAllByRole('link').some((link) => link.getAttribute('href') === reference.url),
     ).toBe(true);
-    expect(controls.getByRole('button', { name: '시간표 리허설 시작' })).toBeDisabled();
+    expect(controls.getByRole('button', { name: '시간표 리허설 시작' })).toBeEnabled();
     expect(
       dialog.queryByRole('region', { name: '내 강사 검토 티칭 메모' }),
     ).not.toBeInTheDocument();

@@ -75,9 +75,9 @@ describe('authored pattern discovery boundaries', () => {
     expect(
       MOTION_PATTERN_REFERENCES.filter((item) => item.family === 'authoring-batch'),
     ).toHaveLength(4);
-    expect(
-      MOTION_PATTERN_REFERENCES.filter((item) => item.family === 'supine-reach'),
-    ).toHaveLength(1);
+    expect(MOTION_PATTERN_REFERENCES.filter((item) => item.family === 'supine-reach')).toHaveLength(
+      1,
+    );
     for (const item of MOTION_PATTERN_REFERENCES.filter(
       (item) => item.family === 'authoring-batch',
     )) {
@@ -137,8 +137,9 @@ describe('authored pattern discovery boundaries', () => {
       expect(markup[index]).not.toContain('<img');
       expect(markup[index]).not.toMatch(/NaN|Infinity/);
     }
-    const geometries = MOTION_PATTERN_REFERENCES
-      .filter((reference) => reference.family === 'authoring-batch')
+    const geometries = MOTION_PATTERN_REFERENCES.filter(
+      (reference) => reference.family === 'authoring-batch',
+    )
       .map((reference) => renderToStaticMarkup(<MotionPatternThumbnail reference={reference} />))
       .map((value) =>
         value.replace(
@@ -181,9 +182,7 @@ describe('authored pattern discovery boundaries', () => {
     expect(figure).toHaveAttribute('data-professional-review-count', '0');
     expect(figure).not.toHaveAttribute('data-motion-draft-id');
     expect(figure).not.toHaveAttribute('data-motion-variant-id');
-    expect(container.querySelector('.mpp-anatomy')).toHaveTextContent(
-      '두 겹 윤곽: 움직이는 다리.',
-    );
+    expect(container.querySelector('.mpp-anatomy')).toHaveTextContent('두 겹 윤곽: 움직이는 다리.');
     expect(screen.getByLabelText('도해 위치')).toHaveValue('0');
     expect(screen.getByText('일시정지 · 자동 재생 없음')).toBeInTheDocument();
     expect(frames.size).toBe(0);
@@ -192,12 +191,7 @@ describe('authored pattern discovery boundaries', () => {
     const onViewAll = vi.fn();
     const onInsertExercise = vi.fn();
     const pelvicBridge = ORIGINAL_MOVEMENTS.find((item) => item.id === 'original-mat-bridge')!;
-    render(
-      <MotionPatternGallery
-        onViewAll={onViewAll}
-        onInsertExercise={onInsertExercise}
-      />,
-    );
+    render(<MotionPatternGallery onViewAll={onViewAll} onInsertExercise={onInsertExercise} />);
     expect(screen.getAllByRole('button', { name: /관련 패턴 초안 보기/ })).toHaveLength(3);
     fireEvent.click(screen.getByRole('button', { name: '모두 보기' }));
     expect(onViewAll).toHaveBeenCalledOnce();
@@ -218,7 +212,9 @@ describe('authored pattern discovery boundaries', () => {
     const insertButton = screen.getByRole('button', {
       name: '시퀀스에 바로 삽입',
     });
-    expect(insertButton).toBeDisabled();
+    expect(insertButton).toBeEnabled();
+    fireEvent.click(insertButton);
+    expect(onInsertExercise).toHaveBeenCalledExactlyOnceWith(pelvicBridge);
 
     fireEvent.click(screen.getByRole('button', { name: '모션 살펴보기 닫기' }));
     expect(screen.queryByRole('button', { name: '한 주기 재생' })).not.toBeInTheDocument();
@@ -229,133 +225,126 @@ describe.each([
   'supine-knee-fold',
   'chair-seated-overhead-sidebend-v1',
   'supine-single-leg-reach-v1',
-] as const)(
-  'inline %s playback',
-  (variantId) => {
-    const reference = MOTION_PATTERN_REFERENCES.find((item) => item.variantId === variantId)!;
-    it('starts paused, changes speed, plays one cycle and does not loop', () => {
-      render(<MotionPatternPreview reference={reference} />);
-      expect(frames.size).toBe(0);
-      expect(screen.getByLabelText('도해 위치')).toHaveValue('0');
-      fireEvent.change(screen.getByLabelText('관련 패턴 도해 속도'), { target: { value: '0.5' } });
-      fireEvent.click(screen.getByRole('button', { name: '한 주기 재생' }));
-      frame(0);
-      frame(8000);
-      expect(screen.getByLabelText('도해 위치')).toHaveValue('500');
-      frame(16000);
-      expect(screen.getByLabelText('도해 위치')).toHaveValue('1000');
-      expect(frames.size).toBe(0);
-      expect(screen.getByText('한 주기 끝 · 일시정지')).toBeInTheDocument();
+] as const)('inline %s playback', (variantId) => {
+  const reference = MOTION_PATTERN_REFERENCES.find((item) => item.variantId === variantId)!;
+  it('starts paused, changes speed, plays one cycle and does not loop', () => {
+    render(<MotionPatternPreview reference={reference} />);
+    expect(frames.size).toBe(0);
+    expect(screen.getByLabelText('도해 위치')).toHaveValue('0');
+    fireEvent.change(screen.getByLabelText('관련 패턴 도해 속도'), { target: { value: '0.5' } });
+    fireEvent.click(screen.getByRole('button', { name: '한 주기 재생' }));
+    frame(0);
+    frame(8000);
+    expect(screen.getByLabelText('도해 위치')).toHaveValue('500');
+    frame(16000);
+    expect(screen.getByLabelText('도해 위치')).toHaveValue('1000');
+    expect(frames.size).toBe(0);
+    expect(screen.getByText('한 주기 끝 · 일시정지')).toBeInTheDocument();
 
-      fireEvent.change(screen.getByLabelText('관련 패턴 도해 반복'), { target: { value: '2' } });
-      expect(screen.getByLabelText('도해 위치')).toHaveValue('0');
-      expect(
-        screen.getByText('일시정지 · 2회 반복 설정 · 자동 재생 없음'),
-      ).toBeInTheDocument();
-      fireEvent.change(screen.getByLabelText('관련 패턴 도해 속도'), { target: { value: '1' } });
-      fireEvent.click(screen.getByRole('button', { name: '한 주기 재생' }));
-      frame(0);
-      frame(8000);
-      expect(screen.getByText('도해 반복 재생 중 (2 / 2회)')).toBeInTheDocument();
-      frame(16000);
-      expect(screen.getByText('반복 재생 끝 (2회) · 일시정지')).toBeInTheDocument();
-      expect(frames.size).toBe(0);
+    fireEvent.change(screen.getByLabelText('관련 패턴 도해 반복'), { target: { value: '2' } });
+    expect(screen.getByLabelText('도해 위치')).toHaveValue('0');
+    expect(screen.getByText('일시정지 · 2회 반복 설정 · 자동 재생 없음')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('관련 패턴 도해 속도'), { target: { value: '1' } });
+    fireEvent.click(screen.getByRole('button', { name: '한 주기 재생' }));
+    frame(0);
+    frame(8000);
+    expect(screen.getByText('도해 반복 재생 중 (2 / 2회)')).toBeInTheDocument();
+    frame(16000);
+    expect(screen.getByText('반복 재생 끝 (2회) · 일시정지')).toBeInTheDocument();
+    expect(frames.size).toBe(0);
+  });
+  it('supports static phases and separates anatomical side from mirroring', () => {
+    render(<MotionPatternPreview reference={reference} />);
+    expect(screen.getByRole('button', { name: '이전 도해 단계' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: '다음 도해 단계' }));
+    expect(screen.getByLabelText('도해 위치')).toHaveValue(
+      String(Math.round(reference.definition.phases[1].sample * 1000)),
+    );
+    fireEvent.click(screen.getByRole('button', { name: '이전 도해 단계' }));
+    expect(screen.getByLabelText('도해 위치')).toHaveValue(
+      String(Math.round(reference.definition.phases[0].sample * 1000)),
+    );
+    fireEvent.click(screen.getByLabelText('정지 화면만 보기'));
+    expect(screen.getByRole('button', { name: '한 주기 재생' })).toBeDisabled();
+    const turn = reference.definition.phases.find((item) => item.id === 'turn')!;
+    fireEvent.click(
+      screen.getByRole('button', { name: 'labelKo' in turn ? turn.labelKo : turn.label }),
+    );
+    expect(screen.getByLabelText('도해 위치')).toHaveValue(String(Math.round(turn.sample * 1000)));
+    fireEvent.change(screen.getByLabelText('관련 패턴 해부학적 쪽'), {
+      target: { value: 'right' },
     });
-    it('supports static phases and separates anatomical side from mirroring', () => {
-      render(<MotionPatternPreview reference={reference} />);
-      expect(screen.getByRole('button', { name: '이전 도해 단계' })).toBeDisabled();
-      fireEvent.click(screen.getByRole('button', { name: '다음 도해 단계' }));
-      expect(screen.getByLabelText('도해 위치')).toHaveValue(
-        String(Math.round(reference.definition.phases[1].sample * 1000)),
-      );
-      fireEvent.click(screen.getByRole('button', { name: '이전 도해 단계' }));
-      expect(screen.getByLabelText('도해 위치')).toHaveValue(
-        String(Math.round(reference.definition.phases[0].sample * 1000)),
-      );
-      fireEvent.click(screen.getByLabelText('정지 화면만 보기'));
-      expect(screen.getByRole('button', { name: '한 주기 재생' })).toBeDisabled();
-      const turn = reference.definition.phases.find((item) => item.id === 'turn')!;
-      fireEvent.click(
-        screen.getByRole('button', { name: 'labelKo' in turn ? turn.labelKo : turn.label }),
-      );
-      expect(screen.getByLabelText('도해 위치')).toHaveValue(
-        String(Math.round(turn.sample * 1000)),
-      );
-      fireEvent.change(screen.getByLabelText('관련 패턴 해부학적 쪽'), {
-        target: { value: 'right' },
-      });
-      expect(screen.getByLabelText('도해 위치')).toHaveValue('0');
-      fireEvent.click(screen.getByLabelText('화면만 좌우 반전'));
-      expect(screen.getByLabelText('관련 패턴 해부학적 쪽')).toHaveValue('right');
+    expect(screen.getByLabelText('도해 위치')).toHaveValue('0');
+    fireEvent.click(screen.getByLabelText('화면만 좌우 반전'));
+    expect(screen.getByLabelText('관련 패턴 해부학적 쪽')).toHaveValue('right');
+    expect(document.querySelector('.mpp-anatomy')).toHaveTextContent(
+      variantId === 'supine-knee-fold'
+        ? '실선: 몸의 오른쪽 · 점선: 몸의 왼쪽'
+        : '실선: 몸의 왼쪽 · 점선: 몸의 오른쪽',
+    );
+    if (variantId === 'supine-single-leg-reach-v1') {
       expect(document.querySelector('.mpp-anatomy')).toHaveTextContent(
-        variantId === 'supine-knee-fold'
-          ? '실선: 몸의 오른쪽 · 점선: 몸의 왼쪽'
-          : '실선: 몸의 왼쪽 · 점선: 몸의 오른쪽',
+        '두 겹 윤곽: 움직이는 다리.',
       );
-      if (variantId === 'supine-single-leg-reach-v1') {
-        expect(document.querySelector('.mpp-anatomy')).toHaveTextContent(
-          '두 겹 윤곽: 움직이는 다리.',
-        );
-        const figure = document.querySelector('svg[data-motion-family="supine-reach"]')!;
-        expect(figure).toHaveAttribute('data-active-side', 'right');
-        expect(figure).toHaveAttribute('data-retained-side', 'left');
-        expect(figure).toHaveAttribute('data-view-mirrored', 'true');
-        expect(figure.querySelector('[data-limb-role="active"]')).toHaveAttribute(
-          'data-anatomical-side',
-          'right',
-        );
-        expect(figure.querySelector('[data-limb-role="retained"]')).toHaveAttribute(
-          'data-anatomical-side',
-          'left',
-        );
-        const leftLines = figure.querySelectorAll('[data-anatomical-line="left"]');
-        const rightLines = figure.querySelectorAll('[data-anatomical-line="right"]');
-        expect(leftLines.length).toBeGreaterThan(0);
-        expect(rightLines.length).toBeGreaterThan(0);
-        leftLines.forEach((line) => expect(line).not.toHaveAttribute('stroke-dasharray'));
-        rightLines.forEach((line) => expect(line).toHaveAttribute('stroke-dasharray', '7 4'));
-      } else {
-        expect(document.querySelector('.mpp-anatomy')).not.toHaveTextContent('두 겹 윤곽');
-      }
-      expect(frames.size).toBe(0);
+      const figure = document.querySelector('svg[data-motion-family="supine-reach"]')!;
+      expect(figure).toHaveAttribute('data-active-side', 'right');
+      expect(figure).toHaveAttribute('data-retained-side', 'left');
+      expect(figure).toHaveAttribute('data-view-mirrored', 'true');
+      expect(figure.querySelector('[data-limb-role="active"]')).toHaveAttribute(
+        'data-anatomical-side',
+        'right',
+      );
+      expect(figure.querySelector('[data-limb-role="retained"]')).toHaveAttribute(
+        'data-anatomical-side',
+        'left',
+      );
+      const leftLines = figure.querySelectorAll('[data-anatomical-line="left"]');
+      const rightLines = figure.querySelectorAll('[data-anatomical-line="right"]');
+      expect(leftLines.length).toBeGreaterThan(0);
+      expect(rightLines.length).toBeGreaterThan(0);
+      leftLines.forEach((line) => expect(line).not.toHaveAttribute('stroke-dasharray'));
+      rightLines.forEach((line) => expect(line).toHaveAttribute('stroke-dasharray', '7 4'));
+    } else {
+      expect(document.querySelector('.mpp-anatomy')).not.toHaveTextContent('두 겹 윤곽');
+    }
+    expect(frames.size).toBe(0);
+  });
+  it('pauses when inactive, hidden, offscreen, reduced-motion or unmounted and never auto-resumes', () => {
+    const { rerender, unmount } = render(<MotionPatternPreview reference={reference} />);
+    const play = () => fireEvent.click(screen.getByRole('button', { name: '한 주기 재생' }));
+    play();
+    expect(frames.size).toBe(1);
+    rerender(<MotionPatternPreview reference={reference} active={false} />);
+    expect(frames.size).toBe(0);
+    rerender(<MotionPatternPreview reference={reference} />);
+    expect(frames.size).toBe(0);
+    play();
+    hidden = true;
+    fireEvent(document, new Event('visibilitychange'));
+    expect(frames.size).toBe(0);
+    hidden = false;
+    fireEvent(document, new Event('visibilitychange'));
+    expect(frames.size).toBe(0);
+    play();
+    act(() => onVisible?.(false));
+    expect(frames.size).toBe(0);
+    act(() => onVisible?.(true));
+    expect(frames.size).toBe(0);
+    play();
+    act(() => {
+      reduced = true;
+      onPreference?.({ matches: true } as MediaQueryListEvent);
     });
-    it('pauses when inactive, hidden, offscreen, reduced-motion or unmounted and never auto-resumes', () => {
-      const { rerender, unmount } = render(<MotionPatternPreview reference={reference} />);
-      const play = () => fireEvent.click(screen.getByRole('button', { name: '한 주기 재생' }));
-      play();
-      expect(frames.size).toBe(1);
-      rerender(<MotionPatternPreview reference={reference} active={false} />);
-      expect(frames.size).toBe(0);
-      rerender(<MotionPatternPreview reference={reference} />);
-      expect(frames.size).toBe(0);
-      play();
-      hidden = true;
-      fireEvent(document, new Event('visibilitychange'));
-      expect(frames.size).toBe(0);
-      hidden = false;
-      fireEvent(document, new Event('visibilitychange'));
-      expect(frames.size).toBe(0);
-      play();
-      act(() => onVisible?.(false));
-      expect(frames.size).toBe(0);
-      act(() => onVisible?.(true));
-      expect(frames.size).toBe(0);
-      play();
-      act(() => {
-        reduced = true;
-        onPreference?.({ matches: true } as MediaQueryListEvent);
-      });
-      expect(frames.size).toBe(0);
-      expect(screen.getByLabelText('정지 화면만 보기')).toBeChecked();
-      expect(screen.getByRole('button', { name: '한 주기 재생' })).toBeDisabled();
-      act(() => {
-        reduced = false;
-        onPreference?.({ matches: false } as MediaQueryListEvent);
-      });
-      expect(frames.size).toBe(0);
-      play();
-      unmount();
-      expect(frames.size).toBe(0);
+    expect(frames.size).toBe(0);
+    expect(screen.getByLabelText('정지 화면만 보기')).toBeChecked();
+    expect(screen.getByRole('button', { name: '한 주기 재생' })).toBeDisabled();
+    act(() => {
+      reduced = false;
+      onPreference?.({ matches: false } as MediaQueryListEvent);
     });
-  },
-);
+    expect(frames.size).toBe(0);
+    play();
+    unmount();
+    expect(frames.size).toBe(0);
+  });
+});

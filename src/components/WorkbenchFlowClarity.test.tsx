@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { syntheticPlanningExercise } from '../test/planningFixtures';
@@ -16,30 +16,58 @@ const pendingMat = syntheticPlanningExercise('mat', 'warmup', 'alpha', false);
 const pendingReformer = syntheticPlanningExercise('reformer', 'core', 'beta', false);
 const reviewed = syntheticPlanningExercise('mat', 'warmup');
 const criteria: AutoGenerateCriteria = {
-  apparatus: 'mat', availableEquipment: ['mat'], ownedApparatus: ['mat'],
-  preferredProps: ['none'], level: '1.0', focusPreset: 'full-body',
-  targetMinutes: 10, excludeDaysWindow: 0, defaultLayer: 'standard',
+  apparatus: 'mat',
+  availableEquipment: ['mat'],
+  ownedApparatus: ['mat'],
+  preferredProps: ['none'],
+  level: '1.0',
+  focusPreset: 'full-body',
+  targetMinutes: 10,
+  excludeDaysWindow: 0,
+  defaultLayer: 'standard',
 };
 
 beforeEach(() => {
   Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
-  usePilatesStore.setState({
-    ...original, activeTab: 'workbench', exercises: [pendingMat, pendingReformer],
-    activeSteps: [], activeSequenceId: 'flow-clarity-test', activeTitle: '흐름 검증용 수업',
-    activeApparatus: 'mat', activeLevel: '1.0', activeTargetMinutes: 10,
-    draftCriteria: criteria, lastCriteria: null, ownedEquipment: ['mat'],
-    ownedApparatus: ['mat'], ownedProps: [], savedSequences: [], historyLogs: [],
-    undoStack: [], generationError: null, persistenceError: null, saveFeedback: null,
-  }, true);
+  usePilatesStore.setState(
+    {
+      ...original,
+      activeTab: 'workbench',
+      exercises: [pendingMat, pendingReformer],
+      activeSteps: [],
+      activeSequenceId: 'flow-clarity-test',
+      activeTitle: '흐름 검증용 수업',
+      activeApparatus: 'mat',
+      activeLevel: '1.0',
+      activeTargetMinutes: 10,
+      draftCriteria: criteria,
+      lastCriteria: null,
+      ownedEquipment: ['mat'],
+      ownedApparatus: ['mat'],
+      ownedProps: [],
+      savedSequences: [],
+      historyLogs: [],
+      undoStack: [],
+      generationError: null,
+      persistenceError: null,
+      saveFeedback: null,
+    },
+    true,
+  );
 });
 afterEach(() => {
   cleanup();
   usePilatesStore.setState(original, true);
   Object.defineProperty(window, 'innerWidth', { configurable: true, value: originalWidth });
 });
-const renderWorkbench = () => render(
-  <SequenceWorkbench onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} onOpenLogModal={vi.fn()} />,
-);
+const renderWorkbench = () =>
+  render(
+    <SequenceWorkbench
+      onOpenYouTubePreview={vi.fn()}
+      onOpenClipper={vi.fn()}
+      onOpenLogModal={vi.fn()}
+    />,
+  );
 
 describe('workbench flow clarity without changing review eligibility', () => {
   it('makes class equipment explicit, while all equipment remains the initial and reversible view', () => {
@@ -47,12 +75,18 @@ describe('workbench flow clarity without changing review eligibility', () => {
     render(<InlineExerciseFinder onOpenExercise={vi.fn()} classEquipment={['mat']} />);
     expect(screen.getByRole('region', { name: '이번 수업 기구' })).toHaveTextContent('매트');
     expect(screen.getByRole('status')).toHaveTextContent('2개 결과');
-    expect(screen.getByRole('button', { name: '전체 기구 보기' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: '전체 기구 보기' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     fireEvent.click(screen.getByRole('button', { name: '수업 기구로 좁히기' }));
     expect(screen.getByRole('status')).toHaveTextContent('1개 결과');
-    expect(screen.getByRole('button', { name: '수업 기구로 좁히기' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: '수업 기구로 좁히기' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     expect(screen.getByRole('button', { name: pendingMat.nameKo + ' 상세 보기' })).toBeVisible();
-    expect(screen.getByRole('button', { name: /강사 검토 후 추가 가능/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /수업안에 추가/ })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: '전체 기구 보기' }));
     expect(screen.getByRole('status')).toHaveTextContent('2개 결과');
     const after = usePilatesStore.getState();
@@ -62,34 +96,29 @@ describe('workbench flow clarity without changing review eligibility', () => {
   });
 
   it('preserves the search and local filter when current class equipment changes', () => {
-    const { rerender } = render(<InlineExerciseFinder onOpenExercise={vi.fn()} classEquipment={['mat']} />);
+    const { rerender } = render(
+      <InlineExerciseFinder onOpenExercise={vi.fn()} classEquipment={['mat']} />,
+    );
     fireEvent.click(screen.getByRole('button', { name: '수업 기구로 좁히기' }));
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: pendingMat.nameKo } });
     rerender(<InlineExerciseFinder onOpenExercise={vi.fn()} classEquipment={['reformer']} />);
     expect(screen.getByRole('region', { name: '이번 수업 기구' })).toHaveTextContent('리포머');
     expect(screen.getByRole('searchbox')).toHaveValue(pendingMat.nameKo);
     expect(screen.getByRole('status')).toHaveTextContent('1개 결과');
-    expect(screen.getByRole('button', { name: '수업 기구로 좁히기' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: '수업 기구로 좁히기' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
   });
 
-  it('blocks empty reviewed-catalog generation and gives a review-first route without mutating the plan', () => {
+  it('allows pending local records to compose while preserving review evidence', () => {
     renderWorkbench();
     const before = usePilatesStore.getState();
     fireEvent.click(screen.getByText('자동 구성·휴식 먼저 넣기'));
-    const generate = screen.getByRole('button', { name: '시퀀스 만들기' });
-    expect(generate).toBeDisabled();
-    expect(generate).toHaveAccessibleDescription(/검토 완료 동작이 아직 없어요/);
-    fireEvent.click(generate);
+    expect(screen.getByRole('button', { name: '시퀀스 만들기' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: '검토할 동작 찾기' })).not.toBeInTheDocument();
+    expect(usePilatesStore.getState().exercises).toBe(before.exercises);
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
-    expect(usePilatesStore.getState().draftCriteria).toBe(before.draftCriteria);
-    fireEvent.click(screen.getByRole('button', { name: '검토할 동작 찾기' }));
-    const dialog = screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' });
-    expect(within(dialog).getByRole('region', { name: '이번 수업 기구' })).toHaveTextContent('매트');
-    within(dialog).getAllByRole('button', { name: /강사 검토 후 추가 가능/ }).forEach((button) => expect(button).toBeDisabled());
-    expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
-    fireEvent.click(within(dialog).getByRole('button', { name: '닫기' }));
-    expect(screen.getByRole('button', { name: '2 수업 구성' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '3 미리보기' })).toBeDisabled();
   });
 
   it('leaves automatic composition available when an eligible reviewed exercise exists', () => {

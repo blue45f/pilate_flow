@@ -211,12 +211,14 @@ describe('partial regeneration commits validated class metadata', () => {
     expect(
       after.activeSteps.some(
         (step) =>
-          fixtures.find((exercise) => exercise.id === step.exerciseId)?.apparatus === 'reformer',
+          after.exercises.find((exercise) => exercise.id === step.exerciseId)?.apparatus ===
+          'reformer',
       ),
     ).toBe(true);
     expect(
       after.activeSteps.some(
-        (step) => fixtures.find((exercise) => exercise.id === step.exerciseId)?.level === '1.5',
+        (step) =>
+          after.exercises.find((exercise) => exercise.id === step.exerciseId)?.level === '1.5',
       ),
     ).toBe(true);
     expect(after.activeApparatus).toBe('mixed');
@@ -309,7 +311,7 @@ describe('partial regeneration commits validated class metadata', () => {
       'main',
     );
     const after = usePilatesStore.getState();
-    expect(after.generationError).toMatch(/유지할 항목/);
+    expect(after.generationError).toMatch(/유지할 동작/);
     for (const field of [
       'activeSequenceId',
       'activeTitle',

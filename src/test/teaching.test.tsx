@@ -49,7 +49,7 @@ const jumpWallClock = (seconds: number) =>
 
 describe('teaching timer and honest session records', () => {
   it.each(['pending', 'stale'] as const)(
-    'blocks %s material even through direct stage navigation',
+    'permits valid %s material with an advisory and unchanged review records',
     (reviewState) => {
       const blocked =
         reviewState === 'pending'
@@ -57,13 +57,10 @@ describe('teaching timer and honest session records', () => {
           : { ...exercises[0], springs: 'changed after review' };
       usePilatesStore.setState({ exercises: [blocked, exercises[1]] });
       render(<LiveStageView onOpenLogModal={vi.fn()} />);
-      expect(
-        screen.getByRole('heading', { name: '강사 검토 후 수업을 시작해 주세요' }),
-      ).toBeInTheDocument();
-      expect(screen.queryByRole('timer')).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: '수업 시작' })).not.toBeInTheDocument();
-      expect(screen.queryByText(blocked.cues[0])).not.toBeInTheDocument();
-      expect(screen.queryByText(blocked.springs)).not.toBeInTheDocument();
+      expect(screen.getByText(/미검토 계획 자료/)).toBeInTheDocument();
+      expect(screen.getByRole('timer')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
+      expect(usePilatesStore.getState().exercises[0]).toEqual(blocked);
     },
   );
   it('blocks reviewed duplicate movements loaded from an existing class', () => {

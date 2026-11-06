@@ -411,7 +411,15 @@ export function SequenceWorkbench({
   const restStepCount = s.activeSteps.length - exerciseStepCount;
   const authoringCatalogCount = s.exercises.filter(isExerciseAuthoringEligible).length;
   const canStartClass =
-    exerciseStepCount > 0 && delta === 0 && !hasDuplicateMovements;
+    exerciseStepCount > 0 &&
+    delta === 0 &&
+    !hasDuplicateMovements &&
+    s.activeSteps.every(
+      (step) =>
+        isRestStep(step) ||
+        (exerciseMap.has(step.exerciseId) &&
+          isExerciseAuthoringEligible(exerciseMap.get(step.exerciseId)!)),
+    );
   const locked = s.activeSteps.filter((step) => step.locked).length;
   const sectionRuns: {
     section: (typeof sections)[number];
@@ -503,14 +511,13 @@ export function SequenceWorkbench({
     s.saveCurrentSequenceToBinder();
     setNotice('');
   };
-  const startReadiness =
-    hasDuplicateMovements
-        ? '같은 동작이 중복되어 있어요. 다른 동작으로 바꿔 주세요.'
-        : !exerciseStepCount
-          ? '동작을 추가한 뒤 수업안을 확인하세요.'
-          : delta !== 0
-            ? '수업 시간에 맞춘 뒤 시작할 수 있어요.'
-            : '동작·스프링·대상자 상태를 확인한 뒤 시작하세요.';
+  const startReadiness = hasDuplicateMovements
+    ? '같은 동작이 중복되어 있어요. 다른 동작으로 바꿔 주세요.'
+    : !exerciseStepCount
+      ? '동작을 추가한 뒤 수업안을 확인하세요.'
+      : delta !== 0
+        ? '수업 시간에 맞춘 뒤 시작할 수 있어요.'
+        : '동작·스프링·대상자 상태를 확인한 뒤 시작하세요.';
   const startClass = () => {
     const current = usePilatesStore.getState();
     const movements = current.activeSteps.filter((step) => !isRestStep(step));
@@ -604,8 +611,7 @@ export function SequenceWorkbench({
                 className="workbench-idea-action"
                 onClick={() => openIdeaSheet(null)}
               >
-                <Sparkles size={18} aria-hidden="true" />
-                한 줄 아이디어 메모
+                <Sparkles size={18} aria-hidden="true" />한 줄 아이디어 메모
               </PfButton>
             </div>
             <p className="workbench-reviewed-count">
@@ -619,18 +625,14 @@ export function SequenceWorkbench({
           <div className="pf-workbench-ideas__header">
             <div>
               <h2>
-                내 새 동작 메모{" "}
-                <PfBadge tone="sage">{ideaExercises.length}</PfBadge>
+                내 새 동작 메모 <PfBadge tone="sage">{ideaExercises.length}</PfBadge>
               </h2>
               <p>
                 직접 해본 느낌·수정할 점을 덧붙이거나 바로 수업에 넣으세요 · 주관적 메모(전문가
                 검증·운동 효과 보장 아님)
               </p>
             </div>
-            <PfButton
-              variant="secondary"
-              onClick={() => openIdeaSheet(null)}
-            >
+            <PfButton variant="secondary" onClick={() => openIdeaSheet(null)}>
               <Plus size={16} aria-hidden="true" /> 새 아이디어 추가
             </PfButton>
           </div>
@@ -659,11 +661,7 @@ export function SequenceWorkbench({
                     >
                       <strong>{ideaEx.nameKo}</strong>
                       <PfAiStatusBadge
-                        kind={
-                          draft?.triedByInstructor
-                            ? 'tried-memo'
-                            : 'creative-memo'
-                        }
+                        kind={draft?.triedByInstructor ? 'tried-memo' : 'creative-memo'}
                       />
                     </div>
                     <p>{draft?.ideaLine || ideaEx.cues[0]}</p>
@@ -789,21 +787,13 @@ export function SequenceWorkbench({
               '전신 균형'}{' '}
             <ChevronDown size={14} />
           </button>
-          <PfButton
-            variant="icon"
-            aria-label="수업 조건"
-            onClick={() => setConditionsOpen(true)}
-          >
+          <PfButton variant="icon" aria-label="수업 조건" onClick={() => setConditionsOpen(true)}>
             <SlidersHorizontal size={18} />
           </PfButton>
         </div>
         {s.activeSteps.length > 0 && (
           <div className="v2-toolbar-actions">
-            <PfButton
-              variant="text"
-              onClick={repeatConditions}
-              disabled={!s.lastCriteria}
-            >
+            <PfButton variant="text" onClick={repeatConditions} disabled={!s.lastCriteria}>
               지난 조건
             </PfButton>
             {planningMode === 'auto' ? (
@@ -818,10 +808,7 @@ export function SequenceWorkbench({
                 시퀀스 만들기
               </PfButton>
             ) : (
-              <PfButton
-                variant="secondary"
-                onClick={openExerciseFinder}
-              >
+              <PfButton variant="secondary" onClick={openExerciseFinder}>
                 <Plus size={16} />
                 동작 찾기
               </PfButton>
@@ -861,14 +848,14 @@ export function SequenceWorkbench({
                     {focusOptions.find((option) => option.value === s.lastCriteria?.focusPreset)
                       ?.label ?? '수업 초안'}
                   </p>
-                  <div style={{ marginTop: "6px" }}>
+                  <div style={{ marginTop: '6px' }}>
                     <PfAiStatusBadge
                       kind={
-                        planningMode === "auto"
-                          ? "ai-draft"
+                        planningMode === 'auto'
+                          ? 'ai-draft'
                           : pendingStepCount > 0
-                            ? "review-pending"
-                            : "instructor-reviewed"
+                            ? 'review-pending'
+                            : 'instructor-reviewed'
                       }
                     />
                   </div>
@@ -1020,7 +1007,11 @@ export function SequenceWorkbench({
               </div>
             </>
           )}
-          {s.activeSteps.length > 0 && <p className="composition-order-hint">끌어서 순서를 바꾸세요. 모바일에서는 위로·아래로 버튼도 사용할 수 있어요.</p>}
+          {s.activeSteps.length > 0 && (
+            <p className="composition-order-hint">
+              끌어서 순서를 바꾸세요. 모바일에서는 위로·아래로 버튼도 사용할 수 있어요.
+            </p>
+          )}
           <div className="flow-sections">
             {sectionRuns.map(({ section, entries }, runIndex) => {
               return (
@@ -1032,11 +1023,7 @@ export function SequenceWorkbench({
                   meta={formatSecondsToMMSS(
                     entries.reduce(
                       (sum, { step }) =>
-                        sum +
-                        getStepTiming(
-                          step,
-                          exerciseMap.get(step.exerciseId),
-                        ).totalSec,
+                        sum + getStepTiming(step, exerciseMap.get(step.exerciseId)).totalSec,
                       0,
                     ),
                   )}
@@ -1044,16 +1031,22 @@ export function SequenceWorkbench({
                   {entries.map(({ step, index }) => {
                     if (isRestStep(step))
                       return (
-                        <SequenceOrderCard key={step.stepId} step={step} index={index} label={`${index + 1}번 휴식`} onNotice={setNotice}>
-                        <RestStepCard
+                        <SequenceOrderCard
+                          key={step.stepId}
                           step={step}
                           index={index}
-                          lastIndex={s.activeSteps.length - 1}
-                          onToggleLock={() => s.toggleStepLock(index)}
-                          onMove={(direction) => s.moveStep(index, direction)}
-                          onRemove={() => s.removeStep(index)}
-                          onSetDuration={(minutes) => s.setRestDuration(index, minutes)}
-                        />
+                          label={`${index + 1}번 휴식`}
+                          onNotice={setNotice}
+                        >
+                          <RestStepCard
+                            step={step}
+                            index={index}
+                            lastIndex={s.activeSteps.length - 1}
+                            onToggleLock={() => s.toggleStepLock(index)}
+                            onMove={(direction) => s.moveStep(index, direction)}
+                            onRemove={() => s.removeStep(index)}
+                            onSetDuration={(minutes) => s.setRestDuration(index, minutes)}
+                          />
                         </SequenceOrderCard>
                       );
                     const ex = exerciseMap.get(step.exerciseId);
@@ -1068,105 +1061,117 @@ export function SequenceWorkbench({
                     const expanded = previewStep === step.stepId;
                     const isIdea = isMovementIdeaExercise(ex);
                     return (
-                      <SequenceOrderCard key={step.stepId} step={step} index={index} label={`${index + 1}번 ${ex.nameKo}`} onNotice={setNotice}>
-                      <PfMovementCard
-                        variant="step"
-                        locked={!!step.locked}
-                        selected={expanded}
-                        className="flow-step"
+                      <SequenceOrderCard
+                        key={step.stepId}
+                        step={step}
+                        index={index}
+                        label={`${index + 1}번 ${ex.nameKo}`}
+                        onNotice={setNotice}
                       >
-                        <div className="step-main">
-                          <span className="step-number">{String(index + 1).padStart(2, '0')}</span>
-                          <button
-                            className="step-art"
-                            onClick={() => onOpenYouTubePreview(ex)}
-                            aria-label={`${ex.nameKo} 자료 보기`}
-                          >
-                            <WorkbenchMovementMark exercise={ex} />
-                          </button>
-                          <button
-                            className="step-title"
-                            onClick={(event) => openInspector(step, event.currentTarget)}
-                            aria-expanded={expanded}
-                          >
-                            <strong>{ex.nameKo}</strong>
-                            <span>
-                              {equipmentLabel(getExerciseEquipment(ex).requiredEquipment)}
-                              {(step.repetitions !== undefined || step.sets !== undefined) && (
-                                <>
-                                  {' '}
-                                  ·{' '}
-                                  {step.repetitions !== undefined
-                                    ? `${step.repetitions}회`
-                                    : '횟수 미지정'}
-                                  {step.sets !== undefined ? ` × ${step.sets}세트` : ''}
-                                </>
-                              )}
-                              {step.sideMode && <> · {getStepSideLabels(step, ex).join(' → ')}</>}
-                              <PfBlockPill
-                                as="span"
-                                kind={isIdea ? 'memo' : 'movement'}
-                                className={`step-target ${!reviewed || isIdea ? 'step-review-status' : ''}`}
-                              >
-                                {isIdea
-                                  ? '내 창작 메모 · 전문가 검증 아님'
-                                  : reviewed
-                                    ? ex.targetMuscles.slice(0, 2).join('·')
-                                    : '검토 전 자료'}
-                              </PfBlockPill>
+                        <PfMovementCard
+                          variant="step"
+                          locked={!!step.locked}
+                          selected={expanded}
+                          className="flow-step"
+                        >
+                          <div className="step-main">
+                            <span className="step-number">
+                              {String(index + 1).padStart(2, '0')}
                             </span>
-                          </button>
-                          <span className="v3-step-time">
-                            {formatSecondsToMMSS(timing.totalSec)}
-                            {step.locked && (
-                              <LockKeyhole className="v3-locked-mark" size={13} aria-label="잠금" />
-                            )}
-                          </span>
-                          <PfButton
-                            variant="icon"
-                            className="v3-step-more"
-                            aria-label={`${index + 1}번 동작 블록 편집`}
-                            aria-expanded={expanded}
-                            onClick={(event) => openInspector(step, event.currentTarget)}
-                          >
-                            <MoreHorizontal size={19} />
-                          </PfButton>
-                          <div className="step-actions">
-                            {isIdea && (
+                            <button
+                              className="step-art"
+                              onClick={() => onOpenYouTubePreview(ex)}
+                              aria-label={`${ex.nameKo} 자료 보기`}
+                            >
+                              <WorkbenchMovementMark exercise={ex} />
+                            </button>
+                            <button
+                              className="step-title"
+                              onClick={(event) => openInspector(step, event.currentTarget)}
+                              aria-expanded={expanded}
+                            >
+                              <strong>{ex.nameKo}</strong>
+                              <span>
+                                {equipmentLabel(getExerciseEquipment(ex).requiredEquipment)}
+                                {(step.repetitions !== undefined || step.sets !== undefined) && (
+                                  <>
+                                    {' '}
+                                    ·{' '}
+                                    {step.repetitions !== undefined
+                                      ? `${step.repetitions}회`
+                                      : '횟수 미지정'}
+                                    {step.sets !== undefined ? ` × ${step.sets}세트` : ''}
+                                  </>
+                                )}
+                                {step.sideMode && <> · {getStepSideLabels(step, ex).join(' → ')}</>}
+                                <PfBlockPill
+                                  as="span"
+                                  kind={isIdea ? 'memo' : 'movement'}
+                                  className={`step-target ${!reviewed || isIdea ? 'step-review-status' : ''}`}
+                                >
+                                  {isIdea
+                                    ? '내 창작 메모 · 전문가 검증 아님'
+                                    : reviewed
+                                      ? ex.targetMuscles.slice(0, 2).join('·')
+                                      : '검토 전 자료'}
+                                </PfBlockPill>
+                              </span>
+                            </button>
+                            <span className="v3-step-time">
+                              {formatSecondsToMMSS(timing.totalSec)}
+                              {step.locked && (
+                                <LockKeyhole
+                                  className="v3-locked-mark"
+                                  size={13}
+                                  aria-label="잠금"
+                                />
+                              )}
+                            </span>
+                            <PfButton
+                              variant="icon"
+                              className="v3-step-more"
+                              aria-label={`${index + 1}번 동작 블록 편집`}
+                              aria-expanded={expanded}
+                              onClick={(event) => openInspector(step, event.currentTarget)}
+                            >
+                              <MoreHorizontal size={19} />
+                            </PfButton>
+                            <div className="step-actions">
+                              {isIdea && (
+                                <PfButton
+                                  variant="icon"
+                                  aria-label={`${ex.nameKo} 느낌·수정 메모 열기`}
+                                  onClick={() => openIdeaSheet(ex)}
+                                >
+                                  <Sparkles size={17} />
+                                </PfButton>
+                              )}
                               <PfButton
                                 variant="icon"
-                                aria-label={`${ex.nameKo} 느낌·수정 메모 열기`}
-                                onClick={() => openIdeaSheet(ex)}
+                                aria-label={`${index + 1}번 동작 ${step.locked ? '잠금 해제' : '잠금'}`}
+                                aria-pressed={!!step.locked}
+                                onClick={() => s.toggleStepLock(index)}
                               >
-                                <Sparkles size={17} />
+                                {step.locked ? (
+                                  <LockKeyhole size={17} />
+                                ) : (
+                                  <UnlockKeyhole size={17} />
+                                )}
                               </PfButton>
-                            )}
-                            <PfButton
-                              variant="icon"
-                              aria-label={`${index + 1}번 동작 ${step.locked ? '잠금 해제' : '잠금'}`}
-                              aria-pressed={!!step.locked}
-                              onClick={() => s.toggleStepLock(index)}
-                            >
-                              {step.locked ? (
-                                <LockKeyhole size={17} />
-                              ) : (
-                                <UnlockKeyhole size={17} />
-                              )}
-                            </PfButton>
-                            <PfButton
-                              variant="icon"
-                              aria-label={`${index + 1}번 동작 교체`}
-                              disabled={step.locked}
-                              onClick={() => {
-                                setReplaceIndex(index);
-                                setReplaceSearch('');
-                              }}
-                            >
-                              <RefreshCw size={17} />
-                            </PfButton>
+                              <PfButton
+                                variant="icon"
+                                aria-label={`${index + 1}번 동작 교체`}
+                                disabled={step.locked}
+                                onClick={() => {
+                                  setReplaceIndex(index);
+                                  setReplaceSearch('');
+                                }}
+                              >
+                                <RefreshCw size={17} />
+                              </PfButton>
+                            </div>
                           </div>
-                        </div>
-                      </PfMovementCard>
+                        </PfMovementCard>
                       </SequenceOrderCard>
                     );
                   })}
@@ -1245,11 +1250,7 @@ export function SequenceWorkbench({
           )}
           {s.activeSteps.length > 0 && (
             <div className="v3-primary-actions">
-              <PfButton
-                variant="icon"
-                aria-label="동작 추가"
-                onClick={openExerciseFinder}
-              >
+              <PfButton variant="icon" aria-label="동작 추가" onClick={openExerciseFinder}>
                 <Plus size={22} />
               </PfButton>
               <PfButton
@@ -1273,14 +1274,13 @@ export function SequenceWorkbench({
           )}
           {s.activeSteps.length > 0 && (
             <p className="workbench-readiness-summary" id="start-class-readiness">
-              {startReadiness} {pendingStepCount > 0 && `미검토 자료 ${pendingStepCount}개 · 검토 기록은 선택 사항입니다.`}
+              {startReadiness}{' '}
+              {pendingStepCount > 0 &&
+                `미검토 자료 ${pendingStepCount}개 · 검토 기록은 선택 사항입니다.`}
             </p>
           )}
           {s.activeSteps.length > 0 && (
-            <section
-              className="pf-flow-continuation"
-              aria-label="핵심 흐름 이어가기"
-            >
+            <section className="pf-flow-continuation" aria-label="핵심 흐름 이어가기">
               <div className="pf-flow-continuation__copy">
                 <strong>다음 단계로 바로 이어가기</strong>
                 <p>
@@ -1288,42 +1288,38 @@ export function SequenceWorkbench({
                 </p>
               </div>
               <div className="pf-flow-continuation__actions">
-                <PfButton
-                  variant="secondary"
-                  onClick={() => openIdeaSheet(null)}
-                >
+                <PfButton variant="secondary" onClick={() => openIdeaSheet(null)}>
                   <Sparkles size={15} aria-hidden="true" /> 한 줄 동작 메모
                 </PfButton>
-                <PfButton
-                  variant="secondary"
-                  onClick={() => s.setActiveTab("binder")}
-                >
+                <PfButton variant="secondary" onClick={() => s.setActiveTab('binder')}>
                   내 수업 서랍 열기 <ArrowRight size={15} aria-hidden="true" />
                 </PfButton>
               </div>
             </section>
           )}
           {!s.activeSteps.length && s.undoStack.length > 0 && (
-            <PfButton variant="secondary" onClick={() => { s.undoSequence(); setNotice(''); }}>
+            <PfButton
+              variant="secondary"
+              onClick={() => {
+                s.undoSequence();
+                setNotice('');
+              }}
+            >
               <RotateCcw size={16} /> 되돌리기
             </PfButton>
           )}
           {!s.activeSteps.length && (
             <details className="workbench-automation-tools">
               <summary>자동 구성·휴식 먼저 넣기</summary>
-              <p>시간·기구·난이도와 최근 수업 기록에 맞춰 초안을 만듭니다. 효과·안전성 판단은 포함하지 않습니다.</p>
+              <p>
+                시간·기구·난이도와 최근 수업 기록에 맞춰 초안을 만듭니다. 효과·안전성 판단은
+                포함하지 않습니다.
+              </p>
               <div>
-                <PfButton
-                  variant="secondary"
-                  onClick={() => setConditionsOpen(true)}
-                >
+                <PfButton variant="secondary" onClick={() => setConditionsOpen(true)}>
                   <SlidersHorizontal size={16} /> 조건 살펴보기
                 </PfButton>
-                <PfButton
-                  variant="secondary"
-                  onClick={repeatConditions}
-                  disabled={!s.lastCriteria}
-                >
+                <PfButton variant="secondary" onClick={repeatConditions} disabled={!s.lastCriteria}>
                   지난 조건
                 </PfButton>
                 <PfButton
@@ -1376,10 +1372,7 @@ export function SequenceWorkbench({
             <PfButton variant="text" onClick={onOpenClipper}>
               YouTube 참고 자료 등록
             </PfButton>
-            <PfButton
-              variant="text"
-              onClick={() => onOpenLogModal(s.activeSequenceId)}
-            >
+            <PfButton variant="text" onClick={() => onOpenLogModal(s.activeSequenceId)}>
               진행한 수업 기록
             </PfButton>
           </div>

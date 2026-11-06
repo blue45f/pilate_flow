@@ -226,20 +226,39 @@ describe('live-stage device voice guidance', () => {
       'true',
     );
   });
-  it('preserves the instructor review gate and cancels if source review becomes stale', () => {
+  it('keeps the stage usable but cancels stale breath without reading changed content', () => {
     render(<LiveStageView onOpenLogModal={vi.fn()} />);
     begin();
+    expect(latest().text).toContain(exercises[0].breathPattern);
+    synth.cancel.mockClear();
+    const count = synth.speak.mock.calls.length;
     act(() =>
       usePilatesStore.setState({
-        exercises: [{ ...exercises[0], breathPattern: 'changed' }, exercises[1]],
+        exercises: [{ ...exercises[0], breathPattern: 'changed private breath' }, exercises[1]],
       }),
     );
-    expect(
-      screen.getByRole('heading', { name: '강사 검토 후 수업을 시작해 주세요' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('timer')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '일시정지' })).toBeEnabled();
     expect(synth.cancel).toHaveBeenCalled();
-    const count = synth.speak.mock.calls.length;
-    tick(60);
     expect(synth.speak).toHaveBeenCalledTimes(count);
+    tick(60);
+    expect(
+      synth.speak.mock.calls.every(
+        ([utterance]) => !utterance.text.includes('changed private breath'),
+      ),
+    ).toBe(true);
+    expect(usePilatesStore.getState().exercises[0].review).toEqual(exercises[0].review);
+  });
+  it('reads pending exercise title and time only after opt-in, never its unreviewed breath', () => {
+    const pending = exercises.map((exercise) => ({ ...exercise, review: undefined }));
+    usePilatesStore.setState({ exercises: pending });
+    render(<LiveStageView onOpenLogModal={vi.fn()} />);
+    expect(synth.speak).not.toHaveBeenCalled();
+    begin();
+    expect(latest().text).toContain(pending[0].nameKo);
+    expect(latest().text).toContain('남은 시간 1분');
+    expect(latest().text).not.toContain(pending[0].breathPattern);
+    expect(latest().voice).toBe(local);
+    expect(usePilatesStore.getState().exercises).toEqual(pending);
   });
 });

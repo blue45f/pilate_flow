@@ -251,9 +251,9 @@ describe('connected study projection of one parent clock', () => {
     expect(unbound.at(10).entry).toBeUndefined();
   });
 
-  it('allows a matched pending binding to be inspected without opening the existing rehearsal gate', () => {
+  it('allows matched pending binding inspection without changing the rehearsal gate', () => {
     const { at, model } = fixture({}, false);
-    expect(model.gate.canRehearse).toBe(false);
+    expect(model.gate.canRehearse).toBe(true);
     const before = JSON.stringify(model.gate);
     expect(at(10)).toMatchObject({ kind: 'study', bindingStatus: 'matched' });
     expect(JSON.stringify(model.gate)).toBe(before);

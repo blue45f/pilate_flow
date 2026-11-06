@@ -341,13 +341,16 @@ describe('actual app navigation preserves an unrecorded teaching session', () =>
     expect(usePilatesStore.getState().activeTab).toBe('workbench');
   });
 
-  it('allows leaving an unreviewed stage without enabling its timer or changing canonical eligibility', async () => {
+  it('allows leaving an idle pending stage without changing review evidence', async () => {
     usePilatesStore.setState({
       exercises: [...INITIAL_EXERCISES, { ...first, review: undefined }, second],
     });
     render(<App />);
-    await screen.findByRole('heading', { name: '강사 검토 후 수업을 시작해 주세요' });
-    expect(screen.queryByRole('timer')).not.toBeInTheDocument();
+    await screen.findByRole('timer');
+    expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
+    expect(
+      usePilatesStore.getState().exercises.find((exercise) => exercise.id === first.id)?.review,
+    ).toBeUndefined();
     destinations[0].click();
     expect(usePilatesStore.getState().activeTab).toBe('history');
     expect(screen.queryByRole('dialog', { name: '수업 화면을 나갈까요?' })).not.toBeInTheDocument();

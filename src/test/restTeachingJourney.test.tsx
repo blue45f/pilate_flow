@@ -293,13 +293,16 @@ describe('rest teaching and actual history journeys', { timeout: 60000 }, () => 
     expect(logged.exerciseIds).toEqual(exercises.map((exercise) => exercise.id));
   });
 
-  it('keeps rests outside movement review/duplicate counts without allowing an unreviewed movement or a rest-only class', () => {
+  it('keeps rests outside movement review/duplicate counts while permitting pending movements and blocking a rest-only class', () => {
     usePilatesStore.setState({
       exercises: [...INITIAL_EXERCISES, { ...exercises[0], review: undefined }, exercises[1]],
     });
     const { unmount } = render(<LiveStageView onOpenLogModal={vi.fn()} />);
-    expect(screen.getByRole('region', { name: '수업 검토 필요' })).toBeInTheDocument();
-    expect(screen.queryByRole('timer')).not.toBeInTheDocument();
+    expect(screen.getByText(/미검토 계획 자료/)).toBeInTheDocument();
+    expect(screen.getByRole('timer')).toBeInTheDocument();
+    expect(
+      usePilatesStore.getState().exercises.find((item) => item.id === exercises[0].id)?.review,
+    ).toBeUndefined();
     unmount();
     usePilatesStore.setState({ activeSteps: [steps[1]] });
     render(<LiveStageView onOpenLogModal={vi.fn()} />);

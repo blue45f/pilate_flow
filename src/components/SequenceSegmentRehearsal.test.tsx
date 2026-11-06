@@ -266,7 +266,7 @@ describe('bounded selected planning timeline', () => {
   });
 
   it.each(['pending', 'stale', 'duplicate', 'wrong-time', 'missing'] as const)(
-    'blocks automatic segment rehearsal for a %s full plan even when the selected item is approved',
+    'keeps data and time validation for a %s full plan without requiring review',
     (state) => {
       let exercises: PilatesExercise[] = [first, second];
       let plan = steps;
@@ -281,6 +281,15 @@ describe('bounded selected planning timeline', () => {
       });
       render(<SequencePlanPreview onClose={vi.fn()} />);
       const segment = openSegment();
+      if (state === 'pending' || state === 'stale') {
+        const before = structuredClone(exercises);
+        expect(segment.getByRole('button', { name: '구간 반복 연습 시작' })).toBeEnabled();
+        fireEvent.click(segment.getByRole('button', { name: '구간 반복 연습 시작' }));
+        advance(1_000);
+        expect(segment.getByRole('button', { name: '구간 반복 연습 일시정지' })).toBeEnabled();
+        expect(usePilatesStore.getState().exercises).toEqual(before);
+        return;
+      }
       expect(segment.getByRole('button', { name: '구간 반복 연습 시작' })).toBeDisabled();
       fireEvent.click(segment.getByRole('button', { name: '구간 반복 연습 시작' }));
       expect(vi.getTimerCount()).toBe(0);
