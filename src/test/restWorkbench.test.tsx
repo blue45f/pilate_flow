@@ -4,6 +4,7 @@ import { SequenceWorkbench } from '../components/SequenceWorkbench';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { AutoGenerateCriteria, SequenceStep } from '../types/pilates';
+import { syntheticPlanningExercise } from './planningFixtures';
 import {
   closeWorkbenchConditions,
   openWorkbenchAutomation,
@@ -57,7 +58,10 @@ afterEach(() => {
 describe('rest intervals in the class workbench', () => {
   it('keeps the overall sixty-minute budget and passes five rest minutes to generation', () => {
     const generate = vi.fn();
-    usePilatesStore.setState({ autoGenerateSequence: generate });
+    usePilatesStore.setState({
+      autoGenerateSequence: generate,
+      exercises: [syntheticPlanningExercise('mat', 'warmup')],
+    });
     renderWorkbench();
     openWorkbenchConditions();
     fireEvent.click(screen.getByRole('button', { name: '자동 휴식 5분' }));

@@ -417,6 +417,126 @@ describe('freeAiClient', () => {
     expect(postAssist).toHaveBeenCalledTimes(2);
   });
 
+  it.each(['minute', 'daily'] as const)(
+    'preserves the successful result that exhausts the %s quota and blocks only later external requests',
+    async (window) => {
+      const exhaustedStatus = makeReadyStatus({
+        exhausted: true,
+        reason: 'free_quota_exhausted',
+        ...(window === 'minute'
+          ? { minuteUsed: 10, minuteRemaining: 0 }
+          : { dailyUsed: 50, dailyRemaining: 0 }),
+        renewal: {
+          ...makeReadyStatus().renewal!,
+          resetWindow: window,
+          resetAt: '2026-11-07T08:00:00.000Z',
+        },
+      });
+      const result = makeMockMovementIdeaResult();
+      const postAssist = vi.fn().mockResolvedValue({ status: exhaustedStatus, result });
+      const client = createFreeAiClient({
+        transport: { getStatus: vi.fn().mockResolvedValue(makeReadyStatus()), postAssist },
+        now: () => Date.parse('2026-11-06T12:00:00.000Z'),
+        envRecord: {},
+      });
+      const input = {
+        rawIdeaText: '미니볼 수파인 브릿지 변형',
+        apparatus: 'reformer' as const,
+        blockCategory: 'bridging' as const,
+        strengthenArea: 'glute-lower' as const,
+        level: '1.5' as const,
+      };
+
+      const response = await client.requestMovementIdea(input);
+      expect(response.result).toEqual(result);
+      expect(response.usedLocalFallback).toBe(false);
+      expect(response.status.exhausted).toBe(true);
+      expect(response.status.reason).toBe('free_quota_exhausted');
+      expect(client.getQuotaStatus().cacheEntries).toBe(1);
+
+      await expect(client.requestMovementIdea(input)).rejects.toMatchObject({
+        code: 'free_quota_exhausted',
+      });
+      const local = await client.requestMovementIdea(input, { preferLocalOnly: true });
+      expect(local.usedLocalFallback).toBe(true);
+      expect(local.result.source).toBe('local-rule-engine');
+      expect(postAssist).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(['exact adapter message', 'explicit adapter code'] as const)(
+    'uses local mode only for a known unavailable contract: %s',
+    async (contract) => {
+      const unavailableError = contract === 'explicit adapter code'
+        ? Object.assign(new Error('Local API is not configured'), {
+            code: 'local_api_unavailable',
+          })
+        : new Error(
+            '서버 기능은 연결되어 있지 않습니다. 수업 자료는 이 브라우저에 보관됩니다. 전체 JSON 백업을 이용해 주세요.',
+          );
+      const transport: FreeAiTransport = {
+        getStatus: vi.fn().mockRejectedValue(unavailableError),
+        postAssist: vi.fn().mockRejectedValue(unavailableError),
+      };
+      const input = {
+        rawIdeaText: '미니볼 수파인 브릿지 변형',
+        apparatus: 'reformer' as const,
+        blockCategory: 'bridging' as const,
+        strengthenArea: 'glute-lower' as const,
+        level: '1.5' as const,
+      };
+      const client = createFreeAiClient({ transport, envRecord: {} });
+      await expect(client.refreshQuotaStatus()).resolves.toMatchObject({
+        enabled: false,
+        exhausted: false,
+        reason: 'unconfigured',
+      });
+      const afterStatus = await client.requestMovementIdea(input);
+      expect(afterStatus.usedLocalFallback).toBe(true);
+      expect(afterStatus.result.source).toBe('local-rule-engine');
+      expect(transport.postAssist).not.toHaveBeenCalled();
+
+      // A first assist request without a prior status read uses the same contract.
+      const freshClient = createFreeAiClient({ transport, envRecord: {} });
+      const firstAssist = await freshClient.requestMovementIdea(input);
+      expect(firstAssist.usedLocalFallback).toBe(true);
+      expect(firstAssist.status.enabled).toBe(false);
+      expect(firstAssist.status.exhausted).toBe(false);
+      expect(firstAssist.result.provider).toBe('none');
+      expect(transport.postAssist).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each([
+    new TypeError('Failed to fetch'),
+    Object.assign(new Error('Authentication required'), { code: 'unauthenticated', status: 401 }),
+    Object.assign(
+      new Error(
+        '서버 기능은 연결되어 있지 않습니다. 수업 자료는 이 브라우저에 보관됩니다. 전체 JSON 백업을 이용해 주세요.',
+      ),
+      { status: 503 },
+    ),
+  ])('does not treat an arbitrary network/auth/server error as known local mode: %s', async (cause) => {
+    const transport: FreeAiTransport = {
+      getStatus: vi.fn().mockRejectedValue(cause),
+      postAssist: vi.fn().mockRejectedValue(cause),
+    };
+    const client = createFreeAiClient({ transport, envRecord: {} });
+    await expect(client.refreshQuotaStatus()).rejects.toMatchObject({
+      code: 'request_failed',
+    });
+    await expect(
+      client.requestMovementIdea({
+        rawIdeaText: '미니볼 수파인 브릿지 변형',
+        apparatus: 'reformer',
+        blockCategory: 'bridging',
+        strengthenArea: 'glute-lower',
+        level: '1.5',
+      }),
+    ).rejects.toMatchObject({ code: 'request_failed' });
+    expect(transport.postAssist).toHaveBeenCalledTimes(1);
+  });
+
   it('gracefully falls back to the local deterministic engine when the server is unconfigured or local SDK is unavailable', async () => {
     const defaultClient = createFreeAiClient({ envRecord: {} });
 
