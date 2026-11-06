@@ -1,3 +1,4 @@
+import { getVisibleWorkbenchButton } from './workbenchControls';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SequenceWorkbench } from '../components/SequenceWorkbench';
@@ -202,10 +203,11 @@ describe('partial regeneration commits validated class metadata', () => {
     });
     expect(before.activeApparatus).toBe('mat');
     expect(before.activeLevel).toBe('1.0');
+    getVisibleWorkbenchButton('잠그지 않은 동작 다시 만들기');
     fireEvent.change(screen.getByRole('combobox', { name: '다시 만들 구간' }), {
       target: { value: 'main' },
     });
-    fireEvent.click(screen.getByRole('button', { name: '잠그지 않은 동작 다시 만들기' }));
+    fireEvent.click(getVisibleWorkbenchButton('잠그지 않은 동작 다시 만들기'));
     const after = usePilatesStore.getState();
     expect(after.generationError).toBeNull();
     expect(

@@ -364,6 +364,17 @@ export function App() {
             일정 전체 보기 <CalendarRange size={15} />
           </button>
         </section>
+        <button
+          type="button"
+          className="sidebar-study-link"
+          aria-label="강사 연습실과 사용법"
+          onClick={() => {
+            setMenuOpen(false);
+            setStudyOpen({ mode: 'study' });
+          }}
+        >
+          <BookOpen size={19} aria-hidden="true" /> 사용법·연습실
+        </button>
         <button className="pwa-sidebar-button" type="button" onClick={() => setInstallOpen(true)}>
           <ArrowDownToLine size={18} aria-hidden="true" /> 앱 설치
         </button>
@@ -408,11 +419,12 @@ export function App() {
             {state.activeTab !== 'stage' && (
               <button
                 type="button"
-                className="icon-btn"
-                aria-label="강사 연습실과 사용법"
-                onClick={() => setStudyOpen({ mode: 'study' })}
+                className="app-create-movement"
+                aria-label="새 동작 메모"
+                onClick={() => setIdeaSheetState({ open: true, exercise: null })}
               >
-                <BookOpen size={20} strokeWidth={1.6} />
+                <Sparkles size={18} aria-hidden="true" />
+                <span>새 동작</span>
               </button>
             )}
             <button
@@ -424,45 +436,6 @@ export function App() {
             </button>
           </div>
         </header>
-        {state.activeTab !== 'stage' && (
-          <nav className="pf-core-quick-bar" aria-label="핵심 빠른 메뉴">
-            <button
-              type="button"
-              className="pf-core-quick-btn pf-core-quick-btn--accent"
-              onClick={() => setIdeaSheetState({ open: true, exercise: null })}
-            >
-              <Sparkles size={15} aria-hidden="true" />
-              <span>새 동작 메모</span>
-            </button>
-            <button
-              type="button"
-              className={`pf-core-quick-btn ${state.activeTab === 'workbench' ? 'is-active' : ''}`}
-              aria-current={state.activeTab === 'workbench' ? 'page' : undefined}
-              onClick={() => changeTab('workbench')}
-            >
-              <CalendarDays size={15} aria-hidden="true" />
-              <span>수업 만들기</span>
-            </button>
-            <button
-              type="button"
-              className={`pf-core-quick-btn ${state.activeTab === 'binder' ? 'is-active' : ''}`}
-              aria-current={state.activeTab === 'binder' ? 'page' : undefined}
-              onClick={() => changeTab('binder')}
-            >
-              <Bookmark size={15} aria-hidden="true" />
-              <span>내 수업</span>
-            </button>
-            <button
-              type="button"
-              className={`pf-core-quick-btn ${state.activeTab === 'history' ? 'is-active' : ''}`}
-              aria-current={state.activeTab === 'history' ? 'page' : undefined}
-              onClick={() => changeTab('history')}
-            >
-              <Clock3 size={15} aria-hidden="true" />
-              <span>기록</span>
-            </button>
-          </nav>
-        )}
         <main id="main-content" className="main-content" tabIndex={-1}>
           {state.persistenceError && (
             <p className="status error" role="alert">
@@ -543,9 +516,9 @@ export function App() {
               <details>
                 <summary>자료·모션의 검토 상태 안내</summary>
                 <p>
-                  실제 강사가 전체 수업을 검토해야 합니다. 미승인 자료는 자동 추천·수업 진행에
-                  사용하지 않습니다. 앱 안의 검토 기록은 자격 인증이나 개인별 운동 적합성 보장이
-                  아닙니다.
+                  검토 기록은 선택 사항입니다. 자료를 추가하거나 수업을 구성하는 데 필요하지
+                  않습니다. 실제 수행 전 몸 상태와 기구 설정을 확인하세요. 검토 기록은 자격 인증이나
+                  개인별 운동 적합성 보장이 아닙니다.
                 </p>
               </details>
               <button className="text-button" onClick={() => changeTab('atlas')}>

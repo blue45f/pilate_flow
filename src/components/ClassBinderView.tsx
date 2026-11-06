@@ -320,18 +320,23 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
       >
         <span className={`teaching-record-kind-badge ${view === 'saved' ? 'is-plan' : 'is-history'}`}>
           <ShieldCheck size={14} />
-          {view === 'saved' ? '계획 / 템플릿 (수정·재사용 가능)' : '진행 완료 이력 (불변 스냅샷 보존)'}
+          {view === 'saved' ? '수업 계획 · 수정하고 다시 사용' : '진행한 수업 · 당시 내용 보존'}
         </span>
-        <span className="teaching-contract-status">
+        <span
+          className="teaching-contract-status"
+          role={persistenceError || !storageStatus.ok ? 'alert' : undefined}
+        >
           {persistenceError || !storageStatus.ok
-            ? `P1 로컬 저장소 주의: ${persistenceError ?? (!storageStatus.ok ? storageStatus.message : '')}`
-            : 'P1 로컬 저장소 정상'}
+            ? `기기 저장 확인 필요: ${persistenceError ?? (!storageStatus.ok ? storageStatus.message : '')}`
+            : '이 기기 저장 사용 중'}
           {' · '}
           {cloudPhase === 'signed-in'
-            ? `P3 계정 연결됨 (${cloudUser?.email ?? '강사 계정'}${cloudBackup?.exists ? ' · 백업 있음' : ' · 클라우드 백업 미연결 (로컬 전용)'})`
+            ? `계정 연결됨 (${cloudUser?.email ?? '강사 계정'}${cloudBackup?.exists ? ' · 백업 있음' : ' · 계정 백업 미연결'})`
             : cloudPhase === 'unavailable'
-              ? 'P3 클라우드 미연결 (로컬 전용)'
-              : 'P3 계정 로그아웃 (로컬 스냅샷 사용 중)'}
+              ? '계정 백업 미연결'
+              : cloudPhase === 'checking'
+                ? '계정 확인 중 · 기기 자료 사용 중'
+                : '로그아웃 상태 · 기기 자료 사용 중'}
         </span>
       </div>
       {message && <PfStatusBanner tone="success">{message}</PfStatusBanner>}

@@ -1,3 +1,4 @@
+import { expect } from 'vitest';
 import { fireEvent, screen, within } from '@testing-library/react';
 
 /** Open the actual conditions dialog only when a journey needs to edit its fields. */
@@ -59,4 +60,18 @@ export function openWorkbenchBlockMemo(index: number) {
   const summary = inspector.getByText('이번 수업의 기구 세팅·티칭 메모', { selector: 'summary' });
   if (!summary.closest('details')?.open) fireEvent.click(summary);
   return inspector;
+}
+
+/** Expand the real disclosure before querying or activating a secondary workbench action. */
+export function getVisibleWorkbenchButton(name: string) {
+  const label = /^(직접 편집|자동 구성)$/.test(name)
+    ? /^편집 방식/
+    : /^[123] /.test(name)
+      ? /^수업 준비 순서$/
+      : /^(조건 불러오기·자동 구성|자동 구성·휴식 먼저 넣기)$/;
+  const summary = screen.getByText(label, { selector: 'summary' });
+  if (!summary.closest('details')?.open) fireEvent.click(summary);
+  const button = screen.getByRole('button', { name });
+  expect(button).toBeVisible();
+  return button;
 }

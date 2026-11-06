@@ -1290,7 +1290,7 @@ export function FreeAiAssistantPanel({
 
           {reviewedBlocks.length > 0 && (
             <div className="free-ai-field">
-              <span className="free-ai-field-label">검토 완료 P1 블록 선택</span>
+              <span className="free-ai-field-label">검토 완료 블록 선택</span>
               <div className="free-ai-chip-row" role="group" aria-label="검토 완료 블록 선택">
                 {reviewedBlocks.map((block) => {
                   const pressed = selectedBlockIds.includes(block.id);

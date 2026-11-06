@@ -1,3 +1,4 @@
+import { getVisibleWorkbenchButton } from './workbenchControls';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SequenceWorkbench } from '../components/SequenceWorkbench';
@@ -94,27 +95,47 @@ afterEach(() => {
 });
 
 describe('v2 shared class editor', () => {
+  it('keeps optional controls collapsed and reveals them without changing the draft', () => {
+    const before = usePilatesStore.getState();
+    renderWorkbench();
+    const summaries = [/^시간 구성$/, /^편집 방식/, /^조건 불러오기·자동 구성$/, /^수업 준비 순서$/];
+    for (const label of summaries) {
+      const summary = screen.getByText(label, { selector: 'summary' });
+      expect(summary).toBeVisible();
+      expect(summary.closest('details')).not.toHaveAttribute('open');
+    }
+    expect(screen.getByRole('button', { name: '직접 편집' })).not.toBeVisible();
+    expect(screen.getByRole('button', { name: '시퀀스 만들기' })).not.toBeVisible();
+    expect(screen.getByRole('button', { name: '3 미리보기' })).not.toBeVisible();
+    getVisibleWorkbenchButton('직접 편집');
+    getVisibleWorkbenchButton('시퀀스 만들기');
+    getVisibleWorkbenchButton('3 미리보기');
+    fireEvent.click(screen.getByText('시간 구성', { selector: 'summary' }));
+    expect(screen.getByLabelText('시간 상세 구성')).toBeVisible();
+    expect(usePilatesStore.getState()).toBe(before);
+  });
+
   it('keeps the editor visible while mode and condition views preserve steps, locks, title and notes', () => {
     const before = usePilatesStore.getState();
     const view = renderWorkbench();
     expect(screen.getByRole('heading', { level: 1, name: '수업 구성' })).toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: '수업 조건' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '자동 구성' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    expect(screen.getByRole('button', { name: '시퀀스 만들기' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '직접 편집' }));
-    expect(screen.getByRole('button', { name: '직접 편집' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('시퀀스 만들기')).toBeInTheDocument();
+    fireEvent.click(getVisibleWorkbenchButton('직접 편집'));
+    expect(getVisibleWorkbenchButton('직접 편집')).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     expect(screen.getByRole('region', { name: '오늘의 시퀀스' })).toBeVisible();
     expect(view.container.querySelector('[data-mobile-view]')).toBeNull();
     expect(screen.queryByRole('button', { name: '시퀀스 만들기' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '동작 찾기' })).toBeInTheDocument();
+    expect(getVisibleWorkbenchButton('동작 찾기')).toBeInTheDocument();
     closeConditions(openConditions());
-    fireEvent.click(screen.getByRole('button', { name: '자동 구성' }));
+    fireEvent.click(getVisibleWorkbenchButton('자동 구성'));
     const after = usePilatesStore.getState();
     expect(after.activeSteps).toBe(before.activeSteps);
     expect(after.activeSteps[0]).toBe(before.activeSteps[0]);
@@ -122,16 +143,17 @@ describe('v2 shared class editor', () => {
     expect(after.draftCriteria).toBe(before.draftCriteria);
     expect(after.activeTab).toBe('workbench');
     expect(generate).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: '시퀀스 만들기' })).toHaveAccessibleDescription(
+    expect(getVisibleWorkbenchButton('시퀀스 만들기')).toHaveAccessibleDescription(
       /전체를 새 초안/,
     );
     expect(
-      screen.getByRole('button', { name: '잠그지 않은 동작 다시 만들기' }),
+      getVisibleWorkbenchButton('잠그지 않은 동작 다시 만들기'),
     ).toBeInTheDocument();
   });
 
   it('uses real movement, teaching, transition and rest seconds exactly once', () => {
     const { container } = renderWorkbench();
+    fireEvent.click(screen.getByText('시간 구성', { selector: 'summary' }));
     const breakdown = within(screen.getByLabelText('시간 상세 구성'));
     expect(breakdown.getByText('07:15')).toBeInTheDocument();
     expect(breakdown.getByText('00:30')).toBeInTheDocument();
@@ -146,7 +168,7 @@ describe('v2 shared class editor', () => {
     ).map((segment) => Number.parseFloat(segment.style.width));
     expect(widths).toEqual([72.5, 5, 2.5, 20]);
     expect(widths.reduce((sum, width) => sum + width, 0)).toBe(100);
-    fireEvent.click(screen.getByRole('button', { name: '3 미리보기' }));
+    fireEvent.click(getVisibleWorkbenchButton('3 미리보기'));
     const preview = screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
     expect(within(preview).getByRole('button', { name: '수업 시작' })).toBeEnabled();
   });

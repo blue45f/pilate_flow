@@ -358,6 +358,9 @@ describe('FreeAiAssistantPanel UI journeys', () => {
     expect(externalBtn).toBeDisabled();
     expect(postAssistSpy).not.toHaveBeenCalled();
 
+    expect(screen.getByRole('group', { name: '검토 완료 블록 선택' })).toBeVisible();
+    expect(screen.queryByRole('group', { name: '검토 완료 P1 블록 선택' })).not.toBeInTheDocument();
+
     // Local composition from reviewed movements/blocks still works while exhausted
     fireEvent.click(screen.getByRole('button', { name: '로컬 규칙으로 시퀀스 구성' }));
 

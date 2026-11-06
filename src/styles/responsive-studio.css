@@ -1,0 +1,1020 @@
+/* Responsive studio: one navigation surface, the sequence before secondary tools.
+   Existing functional classes remain intact. No asset, state or review data is changed. */
+:root {
+  --studio-canvas: #f5f7f7;
+  --studio-surface: #ffffff;
+  --studio-subtle: #eef2f2;
+  --studio-ink: #182c30;
+  --studio-muted: #526267;
+  --studio-line: #d6e0e0;
+  --studio-accent: #17675c;
+  --studio-accent-hover: #105449;
+  --studio-selected: #e5f2ef;
+  --vnext-forest: var(--studio-accent);
+  --vnext-ivory: var(--studio-canvas);
+  --vnext-sage: var(--studio-selected);
+  --vnext-clay: #83532d;
+  --v2-background: var(--studio-canvas);
+  --v2-primary: var(--studio-accent);
+  --v2-ink: var(--studio-ink);
+  --v2-muted: var(--studio-muted);
+  --v2-line: var(--studio-line);
+  --v2-paper: var(--studio-surface);
+  --green: var(--studio-accent);
+  --deep: var(--studio-ink);
+  --sage: var(--studio-selected);
+  --chalk: var(--studio-canvas);
+  --paper: var(--studio-surface);
+  --line: var(--studio-line);
+  --muted: var(--studio-muted);
+  --pf-color-bg-canvas: var(--studio-canvas);
+  --pf-color-bg-surface: var(--studio-surface);
+  --pf-color-bg-surface-subtle: var(--studio-subtle);
+  --pf-color-bg-surface-muted: var(--studio-selected);
+  --pf-color-bg-sidebar: var(--studio-surface);
+  --pf-color-bg-sample: #f2f5f4;
+  --pf-color-text-primary: var(--studio-ink);
+  --pf-color-text-secondary: #3c5156;
+  --pf-color-text-muted: var(--studio-muted);
+  --pf-color-text-on-sidebar: var(--studio-ink);
+  --pf-color-action-primary: var(--studio-accent);
+  --pf-color-action-primary-hover: var(--studio-accent-hover);
+  --pf-color-action-primary-active: #0c443b;
+  --pf-color-action-secondary-bg: var(--studio-surface);
+  --pf-color-action-secondary-hover: var(--studio-subtle);
+  --pf-color-action-secondary-border: var(--studio-line);
+  --pf-color-action-ghost-hover: var(--studio-subtle);
+  --pf-color-border-subtle: #e6ecec;
+  --pf-color-border-default: var(--studio-line);
+  --pf-color-border-strong: #97adad;
+  --pf-color-focus-ring: var(--studio-accent);
+  --pf-color-focus-halo: #17675c26;
+  --pf-color-block-surface: var(--studio-surface);
+  --pf-color-block-header-bg: var(--studio-subtle);
+  --pf-color-ai-draft-bg: var(--studio-subtle);
+  --pf-color-ai-draft-border: var(--studio-line);
+  --pf-color-ai-draft-text: #3c5156;
+  --pf-color-ai-memo-bg: #f5f0e8;
+  --pf-color-ai-memo-border: #e0d4c4;
+  --pf-color-ai-memo-text: #695134;
+  --pf-radius-lg: 12px;
+  --pf-radius-xl: 16px;
+  --pf-shadow-xs: none;
+  --pf-shadow-sm: 0 2px 8px #182c3008;
+}
+body {
+  background: var(--studio-canvas);
+}
+#root .vnext-shell {
+  background: var(--studio-canvas);
+  color: var(--studio-ink);
+  font-family: var(--pf-font-sans);
+}
+#root .vnext-shell :is(button, input, select, textarea, a) {
+  touch-action: manipulation;
+}
+#root .vnext-shell .sequence-drag-handle {
+  touch-action: none;
+}
+#root .vnext-shell button:active {
+  transform: none;
+}
+#root .vnext-shell :is(button, a, summary, input, select, textarea):focus-visible {
+  outline: 3px solid var(--studio-accent);
+  outline-offset: 3px;
+}
+#root .vnext-shell :is(input, select, textarea) {
+  background: var(--studio-surface);
+  color: var(--studio-ink);
+  border-color: var(--studio-line);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+#root .vnext-shell :is(h1, h2, h3) {
+  font-family: var(--pf-font-sans);
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+#root .vnext-shell .sidebar {
+  background: var(--studio-surface);
+  border-right: 1px solid var(--studio-line);
+  color: var(--studio-ink);
+  padding: 24px 16px 16px;
+}
+#root .vnext-shell .brand {
+  color: var(--studio-ink);
+  margin: 0 0 28px;
+  gap: 8px;
+}
+#root .vnext-shell .brand > svg {
+  width: 22px;
+}
+#root .vnext-shell .brand > span {
+  font-size: 1.4rem;
+  letter-spacing: -0.045em;
+}
+#root .vnext-shell :is(.brand small, .sidebar-label, .vnext-wordmark small) {
+  display: none;
+}
+#root .vnext-shell .desktop-nav {
+  gap: 6px;
+}
+#root .vnext-shell .desktop-nav button {
+  min-height: 46px;
+  color: var(--studio-muted);
+  font-size: 0.9375rem;
+  border-radius: 8px;
+}
+#root .vnext-shell .desktop-nav button.active {
+  background: var(--studio-selected);
+  color: var(--studio-accent);
+  font-weight: 650;
+}
+#root .vnext-shell .desktop-nav button:hover:not(.active) {
+  background: var(--studio-subtle);
+}
+#root .vnext-shell .v2-sidebar-upcoming {
+  border-color: var(--studio-line);
+  padding-top: 20px;
+  margin-top: 28px;
+}
+#root .vnext-shell .v2-sidebar-upcoming :is(h2, p, small, .text-button) {
+  color: var(--studio-muted);
+}
+#root .vnext-shell .v2-upcoming-link {
+  color: var(--studio-ink);
+  background: var(--studio-subtle);
+  border-color: var(--studio-line);
+}
+#root .vnext-shell .sidebar-study-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  margin-top: auto;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--studio-muted);
+  text-align: left;
+}
+#root .vnext-shell .sidebar-study-link:hover {
+  background: var(--studio-subtle);
+}
+#root .vnext-shell .workspace-button {
+  color: var(--studio-ink);
+  border-color: var(--studio-line);
+  padding-top: 16px;
+  margin-top: 12px;
+}
+#root .vnext-shell .workspace-button small {
+  color: var(--studio-muted);
+}
+#root .vnext-shell .studio-avatar {
+  background: var(--studio-selected);
+  color: var(--studio-accent);
+}
+#root .vnext-shell .topbar {
+  min-height: 64px;
+  padding: 8px 28px;
+  background: var(--studio-surface);
+  border-bottom: 1px solid var(--studio-line);
+}
+#root .vnext-shell .topbar-actions {
+  gap: 8px;
+}
+#root .vnext-shell .app-create-movement {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--studio-accent);
+  border-radius: 9px;
+  background: var(--studio-accent);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+#root .vnext-shell .app-create-movement:hover {
+  background: var(--studio-accent-hover);
+}
+#root .vnext-shell .topbar .icon-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+}
+#root .vnext-shell .main-content {
+  max-width: 1580px;
+  padding: 24px 28px calc(36px + var(--hosted-obstruction-inset));
+}
+#root .vnext-shell .page-heading {
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+#root .vnext-shell .page-heading h1 {
+  font-family: var(--pf-font-sans);
+  font-size: clamp(1.5rem, 2vw, 1.9rem);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--studio-ink);
+}
+#root .vnext-shell .today-label {
+  font-size: 0.8125rem;
+  color: var(--studio-muted);
+}
+#root .vnext-shell .vnext-workbench-eyebrow {
+  display: none;
+}
+#root .vnext-shell .vnext-workbench {
+  --wb-line: var(--studio-line);
+  color: var(--studio-ink);
+}
+#root .vnext-shell .workbench-welcome {
+  min-height: 0;
+  display: block;
+  background: var(--studio-surface);
+  border: 1px solid var(--studio-line);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+#root .vnext-shell .workbench-welcome-image {
+  display: none;
+}
+#root .vnext-shell .workbench-welcome-copy {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+#root .vnext-shell .workbench-welcome h2 {
+  font-family: var(--pf-font-sans);
+  font-size: 1.375rem;
+  font-weight: 650;
+  line-height: 1.4;
+  letter-spacing: -0.03em;
+}
+#root .vnext-shell .welcome-desktop-break {
+  display: none;
+}
+#root .vnext-shell .workbench-welcome-summary {
+  min-height: 44px;
+  padding: 6px 10px;
+  background: var(--studio-subtle);
+  border-color: var(--studio-line);
+  border-radius: 8px;
+}
+#root .vnext-shell .workbench-welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+#root .vnext-shell .workbench-welcome-actions button {
+  min-height: 44px;
+  border-radius: 9px;
+  padding: 10px 16px;
+}
+#root .vnext-shell .workbench-reviewed-count {
+  max-width: none;
+  color: var(--studio-muted);
+}
+#root
+  .vnext-shell
+  :is(.workbench-navigation-details, .workbench-mode-details, .workbench-timing-details)
+  > summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 11px 0;
+  color: var(--studio-muted);
+  font-size: 0.8125rem;
+  line-height: 22px;
+}
+#root .vnext-shell .workbench-navigation-details {
+  margin-bottom: 8px;
+}
+#root .vnext-shell .workbench-flow-navigation {
+  margin-top: 8px;
+}
+#root .vnext-shell .workbench-preparation-steps {
+  margin-bottom: 8px;
+}
+#root .vnext-shell .workbench-preparation-steps button {
+  min-height: 44px;
+  border-radius: 8px;
+}
+#root .vnext-shell .workbench-timing-details {
+  margin-top: 4px;
+}
+#root .vnext-shell .workbench-timing-details > p {
+  color: var(--studio-muted);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  margin: 8px 0;
+}
+#root .vnext-shell .workbench-mode-details {
+  border-bottom: 1px solid var(--studio-line);
+  margin: 0;
+}
+#root .vnext-shell .v2-mode-toggle {
+  margin: 0 0 8px;
+  gap: 8px;
+}
+#root .vnext-shell .v2-plan-toolbar {
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+#root .vnext-shell .v2-condition-chips {
+  gap: 6px;
+}
+#root .vnext-shell .v2-condition-chips > button {
+  min-height: 44px;
+  font-size: 0.875rem;
+  padding: 8px 10px;
+  border: 1px solid var(--studio-line);
+  background: var(--studio-surface);
+  border-radius: 8px;
+}
+#root .vnext-shell .v2-toolbar-actions {
+  gap: 8px;
+}
+#root .vnext-shell .v2-plan-layout {
+  gap: 24px;
+  align-items: start;
+}
+#root .vnext-shell .sequence-column {
+  padding: 18px;
+  border: 1px solid var(--studio-line);
+  border-radius: 12px;
+  background: var(--studio-surface);
+}
+#root .vnext-shell .sequence-heading {
+  position: relative;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+#root .vnext-shell .sequence-heading h2 {
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+#root .vnext-shell .sequence-heading .eyebrow {
+  display: none;
+}
+#root .vnext-shell .sequence-heading p {
+  font-size: 0.8125rem;
+  margin: 4px 0 0;
+}
+#root .vnext-shell .sequence-heading .pf-ai-status-badge {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+}
+#root .vnext-shell .save-flow {
+  position: static;
+  flex: 0 0 auto;
+  min-height: 44px;
+  min-width: 68px;
+  padding: 8px 12px;
+}
+#root .vnext-shell .sequence-title-label {
+  display: block;
+  margin: 8px 0 0;
+  padding: 0;
+}
+#root .vnext-shell .sequence-title-label input {
+  width: 100%;
+  padding: 8px 12px;
+  min-height: 44px;
+  border: 1px solid var(--studio-line);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--studio-surface);
+}
+#root .vnext-shell .time-summary {
+  margin: 12px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+#root .vnext-shell .time-summary > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+  font-size: 0.8125rem;
+}
+#root .vnext-shell .time-summary strong {
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+#root .vnext-shell .time-status {
+  font-size: 0.8125rem;
+  margin: 0;
+}
+#root .vnext-shell .duration-track.v2-duration-track {
+  height: 4px;
+  margin: 8px 0 0;
+  border-radius: 2px;
+}
+#root .vnext-shell .v2-time-breakdown {
+  margin: 0;
+  gap: 8px 16px;
+  font-size: 0.8125rem;
+}
+#root .vnext-shell .sequence-tools {
+  margin: 0;
+  padding: 0;
+  gap: 8px;
+  border: 0;
+  min-height: 44px;
+}
+#root .vnext-shell .composition-order-hint {
+  margin: 8px 0 12px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--studio-muted);
+}
+#root .vnext-shell .flow-sections {
+  display: grid;
+  gap: 20px;
+}
+#root .vnext-shell .pf-sequence-block {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+#root .vnext-shell :is(.pf-sequence-block__header, .flow-section-label) {
+  background: var(--studio-subtle);
+  border: 0;
+  border-radius: 6px;
+  color: var(--studio-muted);
+  min-height: 32px;
+  padding: 6px 10px;
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+}
+#root .vnext-shell .sequence-order-card {
+  margin-bottom: 10px;
+  border: 1px solid var(--studio-line);
+  border-radius: 10px;
+  background: var(--studio-surface);
+}
+#root .vnext-shell .sequence-order-card > .flow-step {
+  border-radius: 10px 10px 0 0;
+  background: var(--studio-surface);
+}
+#root .vnext-shell .flow-step .step-main {
+  min-height: 76px;
+  padding: 12px;
+}
+#root .vnext-shell .flow-step .step-title strong {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+}
+#root .vnext-shell .flow-step .step-title small {
+  color: var(--studio-muted);
+  font-size: 0.75rem;
+}
+#root .vnext-shell .step-source-state {
+  background: var(--studio-subtle);
+  border: 0;
+  color: var(--studio-muted);
+  padding: 2px 7px;
+  width: fit-content;
+  font-size: 0.6875rem;
+}
+#root .vnext-shell .sequence-order-controls {
+  padding: 6px 8px;
+  border-top: 1px solid #edf1f1;
+  gap: 6px;
+  background: #fafbfb;
+  border-radius: 0 0 10px 10px;
+}
+#root .vnext-shell .sequence-order-controls button {
+  min-height: 44px;
+  border: 1px solid var(--studio-line);
+  background: var(--studio-surface);
+  border-radius: 7px;
+  color: var(--studio-muted);
+}
+#root .vnext-shell .sequence-order-controls button:hover:not(:disabled) {
+  color: var(--studio-accent);
+  border-color: var(--studio-accent);
+}
+#root .vnext-shell .v3-primary-actions {
+  margin-top: 16px;
+  padding-top: 12px;
+  gap: 8px;
+}
+#root .vnext-shell .v3-preview-button {
+  min-height: 44px;
+  border-radius: 9px;
+  font-size: 0.9375rem;
+}
+#root .vnext-shell .workbench-movement-mark {
+  background: var(--studio-subtle);
+}
+#root .vnext-shell .workbench-movement-mark small {
+  background: var(--studio-surface);
+  color: var(--studio-muted);
+}
+#root
+  .vnext-shell
+  :is(
+    .ief-search,
+    .ief-class-context,
+    .ief-card,
+    .optional-source-details,
+    .optional-review-details
+  ) {
+  border-color: var(--studio-line);
+  border-radius: 10px;
+}
+#root .vnext-shell .ief-card {
+  background: var(--studio-surface);
+}
+#root .vnext-shell :is(.ief-heading h2, .page-heading h2) {
+  font-family: var(--pf-font-sans);
+}
+#root .vnext-shell .btn-primary {
+  background: var(--studio-accent);
+  border-color: var(--studio-accent);
+  border-radius: 9px;
+  box-shadow: none;
+}
+#root .vnext-shell .btn-secondary {
+  background: var(--studio-surface);
+  border-color: var(--studio-line);
+  border-radius: 9px;
+}
+#root .vnext-shell .bottom-nav {
+  background: var(--studio-surface);
+  border: 1px solid var(--studio-line);
+  border-radius: 14px;
+  box-shadow: 0 -2px 12px #182c3005;
+  padding: 6px;
+}
+#root .vnext-shell .bottom-nav button {
+  min-height: 48px;
+  border-radius: 9px;
+  color: var(--studio-muted);
+  font-size: 0.75rem;
+  gap: 3px;
+}
+#root .vnext-shell .bottom-nav button.active {
+  background: var(--studio-selected);
+  color: var(--studio-accent);
+}
+#root .vnext-shell .bottom-nav svg {
+  width: 21px;
+  height: 21px;
+}
+#root .vnext-shell .bottom-nav button::after {
+  display: none;
+}
+#root .vnext-shell .v2-review-notice {
+  margin-top: 24px;
+  border-color: var(--studio-line);
+  color: var(--studio-muted);
+}
+#root .vnext-shell dialog {
+  border-color: var(--studio-line);
+  overscroll-behavior: contain;
+}
+@media (min-width: 1100px) {
+  #root .vnext-shell {
+    grid-template-columns: 208px minmax(0, 1fr);
+  }
+  #root .vnext-shell .v2-plan-layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
+@media (max-width: 1099px) {
+  #root .vnext-shell .topbar {
+    min-height: 60px;
+    padding: 8px 20px;
+  }
+  #root .vnext-shell .main-content {
+    padding: 20px 20px calc(92px + env(safe-area-inset-bottom) + var(--hosted-obstruction-inset));
+  }
+  #root .vnext-shell .vnext-wordmark {
+    font-size: 1.35rem;
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+  }
+  #root .vnext-shell .mobile-brand {
+    gap: 8px;
+    min-width: 0;
+  }
+}
+@media (max-width: 767px) {
+  #root .vnext-shell .topbar {
+    min-height: 60px;
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  #root .vnext-shell .topbar-actions {
+    gap: 6px;
+  }
+  #root .vnext-shell .app-create-movement {
+    padding: 8px 10px;
+    font-size: 0.8125rem;
+  }
+  #root .vnext-shell .main-content {
+    padding: 18px 16px calc(100px + env(safe-area-inset-bottom) + var(--hosted-obstruction-inset));
+  }
+  #root .vnext-shell .page-heading {
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 10px;
+  }
+  #root .vnext-shell .page-heading h1 {
+    font-size: 1.6rem;
+    line-height: 1.3;
+  }
+  #root .vnext-shell .today-label {
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  #root .vnext-shell .workbench-welcome-copy {
+    padding: 16px;
+    gap: 10px;
+  }
+  #root .vnext-shell .workbench-welcome h2 {
+    font-size: 1.25rem;
+  }
+  #root .vnext-shell .workbench-welcome-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+  #root .vnext-shell .workbench-welcome-actions button {
+    width: 100%;
+    padding: 10px;
+    font-size: 0.9375rem;
+  }
+  #root .vnext-shell .workbench-reviewed-count {
+    font-size: 0.8125rem;
+  }
+  #root .vnext-shell .v2-plan-toolbar {
+    margin-bottom: 12px;
+    gap: 8px;
+  }
+  #root .vnext-shell .v2-condition-chips {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  #root .vnext-shell .v2-condition-chips > button {
+    font-size: 0.8125rem;
+    padding: 8px;
+  }
+  #root .vnext-shell .v2-condition-chips > button:last-child {
+    margin-left: auto;
+  }
+  #root .vnext-shell .v2-toolbar-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  #root .vnext-shell .v2-toolbar-actions button {
+    min-height: 44px;
+  }
+  #root .vnext-shell .sequence-column {
+    padding: 14px 12px;
+    border-radius: 10px;
+  }
+  #root .vnext-shell .sequence-heading h2 {
+    font-size: 1.0625rem;
+  }
+  #root .vnext-shell .sequence-heading p {
+    font-size: 0.75rem;
+  }
+  #root .vnext-shell .flow-step .step-main {
+    padding: 10px;
+    min-height: 76px;
+  }
+  #root .vnext-shell .sequence-order-controls {
+    padding: 6px;
+    gap: 4px;
+  }
+  #root .vnext-shell .composition-order-hint {
+    font-size: 0.75rem;
+    margin: 6px 0 10px;
+  }
+  #root .vnext-shell .flow-sections {
+    gap: 16px;
+  }
+  #root .vnext-shell .sequence-bottom-actions {
+    gap: 8px;
+  }
+  #root .vnext-shell .sequence-bottom-actions button {
+    flex: 1 1 auto;
+  }
+  #root .vnext-shell .bottom-nav {
+    left: 8px;
+    right: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom) + var(--hosted-obstruction-inset));
+  }
+}
+@media (max-width: 359px) {
+  #root .vnext-shell .app-create-movement span {
+    display: none;
+  }
+  #root .vnext-shell .page-heading {
+    align-items: flex-start;
+  }
+  #root .vnext-shell .today-label {
+    padding-top: 5px;
+  }
+  #root .vnext-shell .v2-condition-chips {
+    gap: 4px;
+  }
+  #root .vnext-shell .v2-condition-chips > button {
+    padding-inline: 6px;
+    font-size: 0.75rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .vnext-shell *,
+  #root .vnext-shell *::before,
+  #root .vnext-shell *::after {
+    transition: none;
+    animation: none;
+    scroll-behavior: auto;
+  }
+}
+@media (forced-colors: active) {
+  #root .vnext-shell :is(button, a, summary, input, select, textarea):focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* Second hierarchy pass: context below the document, compact summary and tools. */
+#root .vnext-shell .sequence-heading {
+  display: flex;
+  justify-content: space-between;
+}
+#root .vnext-shell .sequence-heading > div {
+  min-width: 0;
+  flex: 1;
+}
+#root .vnext-shell .sequence-heading .save-flow {
+  width: auto;
+  margin-left: auto;
+}
+#root .vnext-shell .sequence-inline-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0 12px;
+  border-bottom: 1px solid var(--studio-line);
+}
+#root .vnext-shell .sequence-inline-tools > details {
+  margin: 0;
+  border: 0;
+}
+#root .vnext-shell .sequence-inline-tools > details[open] {
+  flex-basis: 100%;
+}
+#root .vnext-shell .sequence-inline-tools > details > summary {
+  white-space: nowrap;
+}
+#root .vnext-shell .sequence-inline-tools > .sequence-tools {
+  margin-left: auto;
+}
+#root .vnext-shell .workbench-mode-details > div:not(.v2-mode-toggle) {
+  font-size: 0.8125rem;
+  margin-bottom: 8px;
+}
+#root .vnext-shell .workbench-generation-details {
+  border-top: 1px solid var(--studio-line);
+  margin-top: 8px;
+}
+#root .vnext-shell .workbench-generation-details > summary {
+  min-height: 44px;
+  padding: 11px 0;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: var(--studio-muted);
+}
+#root .vnext-shell .workbench-generation-details .v2-toolbar-actions {
+  margin: 4px 0 12px;
+}
+#root
+  .vnext-shell
+  .vnext-workbench
+  > :is(.next-class-banner, .next-class-empty-disclosure, .workbench-navigation-details) {
+  margin-top: 16px;
+}
+
+/* A short material-status label shares the metadata line instead of another full row. */
+#root .vnext-shell .vnext-workbench .sequence-heading h2 {
+  font-family: var(--pf-font-sans);
+}
+#root .vnext-shell .vnext-workbench .step-main .step-title {
+  padding: 0;
+}
+#root .vnext-shell .vnext-workbench .step-title > span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 7px;
+  margin-top: 4px;
+}
+#root .vnext-shell .vnext-workbench .step-title .step-target {
+  display: inline-flex;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--studio-muted);
+}
+#root .vnext-shell .vnext-workbench .workbench-welcome {
+  padding: 0;
+  background: var(--studio-surface);
+}
+#root .vnext-shell .vnext-workbench .workbench-welcome-copy {
+  background: none;
+}
+#root .vnext-shell .sequence-review-detail {
+  margin: 0 0 8px;
+}
+
+/* Put the editable class name beside Save, not below a second heading row. */
+#root .vnext-shell .sequence-heading .sequence-title-label {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+#root .vnext-shell .sequence-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+#root .vnext-shell .sequence-context h2 {
+  font-family: var(--pf-font-sans);
+  font-size: 1rem;
+  font-weight: 600;
+}
+#root .vnext-shell .sequence-context p {
+  font-size: 0.75rem;
+  color: var(--studio-muted);
+  line-height: 1.5;
+}
+#root .vnext-shell .sequence-context .eyebrow {
+  display: none;
+}
+@media (max-width: 767px) {
+  #root .vnext-shell .sequence-context h2 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  #root .vnext-shell .sequence-context {
+    margin: 2px 0 0;
+  }
+}
+
+/* Reset inherited editorial grid tracks when the decorative hero image is absent. */
+#root .vnext-shell .vnext-workbench .workbench-welcome-copy {
+  grid-template-columns: minmax(0, 1fr);
+  grid-column: auto;
+  width: 100%;
+}
+#root .vnext-shell .vnext-workbench .workbench-welcome-copy > * {
+  grid-column: auto;
+}
+#root .vnext-shell .bottom-nav button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+}
+#root .vnext-shell .bottom-nav button.active {
+  background: var(--studio-selected);
+}
+#root .vnext-shell .motion-library {
+  --lib-ink: var(--studio-ink);
+  --lib-muted: var(--studio-muted);
+  --lib-paper: var(--studio-surface);
+  --lib-line: var(--studio-line);
+  --lib-sage: var(--studio-selected);
+}
+#root .vnext-shell .library-heading {
+  align-items: flex-start;
+  gap: 20px;
+}
+#root .vnext-shell .library-heading h1 {
+  font-size: clamp(1.5rem, 2vw, 1.9rem);
+  line-height: 1.35;
+  font-weight: 700;
+}
+#root .vnext-shell .library-heading h1::after,
+#root .vnext-shell .library-heading .eyebrow,
+#root .vnext-shell .ml-section-heading > div > span {
+  display: none;
+}
+#root .vnext-shell .library-heading-actions {
+  gap: 8px;
+}
+#root .vnext-shell .ml-inventory {
+  padding: 12px 16px;
+  background: var(--studio-subtle);
+  border: 1px solid var(--studio-line);
+  border-radius: 10px;
+  gap: 12px 20px;
+}
+#root .vnext-shell .ml-inventory strong {
+  font-family: var(--pf-font-sans);
+  font-size: 1.125rem;
+  font-weight: 650;
+  color: var(--studio-ink);
+}
+#root .vnext-shell .ml-inventory :is(p span, .ml-inventory-note) {
+  color: var(--studio-muted);
+  font-size: 0.75rem;
+}
+#root .vnext-shell .ml-section-heading h2 {
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+@media (max-width: 1099px) {
+  #root .vnext-shell .library-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  #root .vnext-shell .library-heading > div {
+    width: 100%;
+  }
+  #root .vnext-shell .library-heading .library-mobile-break {
+    display: none;
+  }
+  #root .vnext-shell .ml-inventory-note {
+    padding-left: 0;
+    border-left: 0;
+    margin-left: 0;
+  }
+  /* iOS must not auto-zoom a focused field. Rem can be 15px in the legacy base. */
+  #root .vnext-shell :is(input, select, textarea),
+  #root .vnext-shell .sequence-title-label input {
+    font-size: 16px;
+  }
+}
+
+#root .vnext-shell .vnext-workbench .workbench-welcome-copy > h2,
+#root .vnext-shell .vnext-workbench .workbench-welcome-copy > .workbench-welcome-summary,
+#root .vnext-shell .vnext-workbench .workbench-welcome-copy > .workbench-welcome-actions,
+#root .vnext-shell .vnext-workbench .workbench-welcome-copy > .workbench-reviewed-count {
+  grid-area: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#root .vnext-shell .schedule-date-nav .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--studio-line);
+  border-radius: 8px;
+  color: var(--studio-ink);
+  background: var(--studio-surface);
+}
+#root .vnext-shell .schedule-date-nav .icon-button:hover {
+  background: var(--studio-subtle);
+}
+#root .vnext-shell .teaching-separation-banner {
+  padding: 10px 14px;
+  background: var(--studio-subtle);
+  border-color: var(--studio-line);
+}
+#root .vnext-shell .teaching-contract-status[role='alert'] {
+  color: var(--pf-color-status-error-text, #9b382b);
+  font-weight: 600;
+}

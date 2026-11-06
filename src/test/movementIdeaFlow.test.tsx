@@ -81,24 +81,37 @@ afterEach(() => {
 });
 
 describe('1-line movement idea creation, progressive try-out notes, and class integration', () => {
-  it('exposes the 4 plain-language core quick menu actions (새 동작 메모, 수업 만들기, 내 수업, 기록)', () => {
+  it('explains review as optional without presenting an approval gate for composition or teaching', () => {
+    const before = usePilatesStore.getState();
     render(<App />);
-    const quickNav = screen.getByRole('navigation', { name: '핵심 빠른 메뉴' });
-    expect(within(quickNav).getByRole('button', { name: '새 동작 메모' })).toBeVisible();
-    expect(within(quickNav).getByRole('button', { name: '수업 만들기' })).toHaveAttribute(
+    const notice = screen.getByLabelText('강사 검토 안내');
+    const summary = within(notice).getByText('자료·모션의 검토 상태 안내', { selector: 'summary' });
+    expect(summary.closest('details')).not.toHaveAttribute('open');
+    fireEvent.click(summary);
+    const guidance = within(notice).getByText(/검토 기록은 선택 사항입니다/);
+    expect(guidance).toBeVisible();
+    expect(guidance).toHaveTextContent(/수업을 구성하는 데 필요하지 않습니다/);
+    expect(notice).not.toHaveTextContent(/미승인.*(?:자동추천|자동 추천|수업 금지)|승인.*필수/);
+    expect(usePilatesStore.getState()).toBe(before);
+  });
+
+  it('exposes movement creation in the topbar and core destinations in mobile navigation', () => {
+    render(<App />);
+    const mobileNav = screen.getByRole('navigation', { name: '모바일 주 메뉴' });
+    expect(screen.getByRole('button', { name: '새 동작 메모' })).toBeVisible();
+    expect(within(mobileNav).getByRole('button', { name: '수업' })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    expect(within(quickNav).getByRole('button', { name: '내 수업' })).toBeVisible();
-    expect(within(quickNav).getByRole('button', { name: '기록' })).toBeVisible();
+    expect(within(mobileNav).getByRole('button', { name: '저장' })).toBeVisible();
+    expect(within(mobileNav).getByRole('button', { name: '기록' })).toBeVisible();
   });
 
   it('completes the full mobile journey: 1-line idea save -> reopen -> add feeling/adjustments/sketch -> edit -> add to class without requiring anatomy or block hierarchy', () => {
     render(<App />);
 
-    // 1. Open from Core Quick Menu
-    const quickNav = screen.getByRole('navigation', { name: '핵심 빠른 메뉴' });
-    fireEvent.click(within(quickNav).getByRole('button', { name: '새 동작 메모' }));
+    // 1. Open the movement creator from the topbar
+    fireEvent.click(screen.getByRole('button', { name: '새 동작 메모' }));
 
     const dialog = screen.getByRole('dialog', { name: /새 동작 메모/ });
     expect(dialog).toBeVisible();
@@ -187,8 +200,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
 
   it('preserves unsaved draft text across Escape/back close, cancel, simulated save error, and prevents duplicate creation on rapid repeated clicks', () => {
     render(<App />);
-    const quickNav = screen.getByRole('navigation', { name: '핵심 빠른 메뉴' });
-    fireEvent.click(within(quickNav).getByRole('button', { name: '새 동작 메모' }));
+    fireEvent.click(screen.getByRole('button', { name: '새 동작 메모' }));
 
     let dialog = screen.getByRole('dialog', { name: /새 동작 메모/ });
     const ideaInput = within(dialog).getByLabelText('한 줄 아이디어');
@@ -206,7 +218,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     expect(screen.queryByRole('dialog', { name: /새 동작 메모/ })).not.toBeInTheDocument();
 
     // Reopen -> unsaved text is still preserved!
-    fireEvent.click(within(quickNav).getByRole('button', { name: '새 동작 메모' }));
+    fireEvent.click(screen.getByRole('button', { name: '새 동작 메모' }));
     dialog = screen.getByRole('dialog', { name: /새 동작 메모/ });
     expect(within(dialog).getByLabelText('한 줄 아이디어')).toHaveValue(
       '뒤로가기 후에도 보존되어야 하는 새 동작 메모 초안',
@@ -261,8 +273,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
 
   it('supports progressive variant & version management: Easy/Hard variation notes, revision history rollback, and variant forking without altering original draft', () => {
     render(<App />);
-    const quickNav = screen.getByRole('navigation', { name: '핵심 빠른 메뉴' });
-    fireEvent.click(within(quickNav).getByRole('button', { name: '새 동작 메모' }));
+    fireEvent.click(screen.getByRole('button', { name: '새 동작 메모' }));
 
     const dialog = screen.getByRole('dialog', { name: /새 동작 메모/ });
 
@@ -342,8 +353,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
 
   it('supports progressive 4-tier hierarchy (동작 -> 재사용 블록 -> 시퀀스 -> 수업), sub-timing summation, order/reps/L-R, block copy isolation, and past class snapshot immutability', () => {
     render(<App />);
-    const quickNav = screen.getByRole('navigation', { name: '핵심 빠른 메뉴' });
-    fireEvent.click(within(quickNav).getByRole('button', { name: '새 동작 메모' }));
+    fireEvent.click(screen.getByRole('button', { name: '새 동작 메모' }));
 
     const dialog = screen.getByRole('dialog', { name: /새 동작 메모/ });
 

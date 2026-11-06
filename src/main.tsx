@@ -5,6 +5,7 @@ import './styles/studio.css';
 import './styles/atelier-v2.css';
 import './styles/atelier-vnext.css';
 import './styles/design-tokens.css';
+import './styles/responsive-studio.css';
 import { bootstrapCloudSession } from './lib/cloudSync';
 
 import { startPwa } from './lib/pwa';

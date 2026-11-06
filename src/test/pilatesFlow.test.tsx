@@ -1,3 +1,4 @@
+import { getVisibleWorkbenchButton } from './workbenchControls';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   cleanup,
@@ -59,8 +60,8 @@ const generate = () => {
   if (!usePilatesStore.getState().activeSteps.length) {
     fireEvent.click(openWorkbenchAutomation().getByRole('button', { name: '시퀀스 만들기' }));
   } else {
-    fireEvent.click(screen.getByRole('button', { name: '자동 구성' }));
-    fireEvent.click(screen.getByRole('button', { name: '시퀀스 만들기' }));
+    fireEvent.click(getVisibleWorkbenchButton('자동 구성'));
+    fireEvent.click(getVisibleWorkbenchButton('시퀀스 만들기'));
   }
 };
 const save = () =>
@@ -361,7 +362,7 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     fireEvent.change(screen.getByRole('combobox', { name: '다시 만들 구간' }), {
       target: { value: 'main' },
     });
-    fireEvent.click(screen.getByRole('button', { name: '잠그지 않은 동작 다시 만들기' }));
+    fireEvent.click(getVisibleWorkbenchButton('잠그지 않은 동작 다시 만들기'));
     expect(usePilatesStore.getState().activeSteps[0]).toEqual(locked);
     const before = structuredClone(usePilatesStore.getState().activeSteps[1]!);
     fireEvent.click(screen.getByRole('button', { name: '2번 동작 교체' }));

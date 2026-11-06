@@ -48,7 +48,7 @@
   --pf-color-action-primary-hover: var(--pf-palette-forest-700);
   --pf-color-action-primary-active: var(--pf-palette-forest-900);
   --pf-color-action-secondary-bg: var(--pf-palette-paper-50);
-  --pf-color-action-secondary-hover: #eaeFe4;
+  --pf-color-action-secondary-hover: #eaefe4;
   --pf-color-action-secondary-border: var(--pf-palette-sage-300);
   --pf-color-action-ghost-hover: #e7ede1;
 
@@ -1023,7 +1023,10 @@
   text-align: center;
   word-break: keep-all;
   overflow-wrap: anywhere;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .pf-core-quick-btn svg {
@@ -1590,7 +1593,10 @@
   background: var(--pf-color-bg-surface);
   color: var(--pf-color-text-primary);
   box-shadow: var(--pf-shadow-xs);
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
   min-width: 0;
 }
 
@@ -1669,30 +1675,26 @@
 
 @media (max-width: 1023px) {
   .vnext-shell .workbench-welcome {
-    grid-template-columns: 1fr !important;
-    min-height: auto !important;
-    padding: var(--pf-space-4) !important;
-    background-image: linear-gradient(
-      145deg,
-      rgba(255, 254, 249, 0.96),
-      rgba(243, 245, 238, 0.94)
-    ) !important;
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding: var(--pf-space-4);
+    background-image: linear-gradient(145deg, rgba(255, 254, 249, 0.96), rgba(243, 245, 238, 0.94));
   }
 
   .vnext-shell .workbench-welcome::before {
-    opacity: 0.14 !important;
+    opacity: 0.14;
   }
 
   .vnext-shell .workbench-welcome-copy,
   #root .vnext-shell .vnext-workbench .workbench-welcome-copy {
-    grid-column: 1 / -1 !important;
-    max-width: 100% !important;
-    width: 100% !important;
+    grid-column: 1 / -1;
+    max-width: 100%;
+    width: 100%;
   }
 
   #root .vnext-shell .vnext-workbench .workbench-welcome-actions,
   .workbench-welcome-actions {
-    grid-column: 1 / -1 !important;
+    grid-column: 1 / -1;
     width: 100%;
   }
 }
@@ -2043,6 +2045,3 @@
     justify-content: center;
   }
 }
-
-
-

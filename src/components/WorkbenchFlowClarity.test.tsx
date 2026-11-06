@@ -1,3 +1,4 @@
+import { getVisibleWorkbenchButton } from '../test/workbenchControls';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -115,7 +116,7 @@ describe('workbench flow clarity without changing review eligibility', () => {
     renderWorkbench();
     const before = usePilatesStore.getState();
     fireEvent.click(screen.getByText('자동 구성·휴식 먼저 넣기'));
-    expect(screen.getByRole('button', { name: '시퀀스 만들기' })).toBeEnabled();
+    expect(getVisibleWorkbenchButton('시퀀스 만들기')).toBeEnabled();
     expect(screen.queryByRole('button', { name: '검토할 동작 찾기' })).not.toBeInTheDocument();
     expect(usePilatesStore.getState().exercises).toBe(before.exercises);
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
@@ -125,7 +126,7 @@ describe('workbench flow clarity without changing review eligibility', () => {
     usePilatesStore.setState({ exercises: [reviewed, pendingMat] });
     renderWorkbench();
     fireEvent.click(screen.getByText('자동 구성·휴식 먼저 넣기'));
-    expect(screen.getByRole('button', { name: '시퀀스 만들기' })).toBeEnabled();
+    expect(getVisibleWorkbenchButton('시퀀스 만들기')).toBeEnabled();
     expect(screen.queryByRole('button', { name: '검토할 동작 찾기' })).not.toBeInTheDocument();
   });
 });

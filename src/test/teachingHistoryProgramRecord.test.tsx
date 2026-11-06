@@ -279,7 +279,7 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
     // 3. Render Saved view vs. History view to verify separation and snapshot immutability
     const { rerender } = render(<ClassBinderView view="saved" onOpenLogModal={vi.fn()} />);
     expect(screen.getByLabelText('계획 및 템플릿 구분 안내')).toHaveTextContent(
-      '계획 / 템플릿 (수정·재사용 가능)',
+      '수업 계획 · 수정하고 다시 사용',
     );
     expect(
       screen.getByRole('heading', { name: '나중에 수정된 계획 시퀀스 제목' }),
@@ -312,10 +312,10 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
     rerender(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
 
     expect(screen.getByLabelText('진행 완료 이력 스냅샷 보존 안내')).toHaveTextContent(
-      '진행 완료 이력 (불변 스냅샷 보존)',
+      '진행한 수업 · 당시 내용 보존',
     );
     expect(screen.getByLabelText('진행 완료 이력 스냅샷 보존 안내')).toHaveTextContent(
-      'P3 계정 연결됨 (pilates@studio.kr · 백업 있음)',
+      '계정 연결됨 (pilates@studio.kr · 백업 있음)',
     );
 
     const historyCard = within(
@@ -339,13 +339,13 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
 
     // 5. Reopen the completed history snapshot ("이력 다시 열기")
     fireEvent.click(historyCard.getByRole('button', { name: '이력 다시 열기' }));
-    const reopenDialog = within(
-      screen.getByRole('dialog', { name: '진행 완료 수업 이력 상세' }),
-    );
+    const reopenDialog = within(screen.getByRole('dialog', { name: '진행 완료 수업 이력 상세' }));
     expect(reopenDialog.getByText(/진행 완료 이력 스냅샷/)).toBeInTheDocument();
     expect(reopenDialog.getByText(/블록 스냅샷: 당시 리포머 도입 블록 \(v1\)/)).toBeInTheDocument();
     expect(reopenDialog.getByText(/블록: 당시 리포머 도입 블록 v1/)).toBeInTheDocument();
-    expect(reopenDialog.getByText(/원본 동작·블록 수정 후에도 당시 이력 스냅샷 그대로 보존됨/)).toBeInTheDocument();
+    expect(
+      reopenDialog.getByText(/원본 동작·블록 수정 후에도 당시 이력 스냅샷 그대로 보존됨/),
+    ).toBeInTheDocument();
     expect(reopenDialog.getByText('당시 풋워크 예열 동작')).toBeInTheDocument();
     expect(reopenDialog.getByText('당시 헌드레드 코어 동작')).toBeInTheDocument();
     expect(reopenDialog.getByText('원본 동작 수정됨 · 당시 값 표시')).toBeInTheDocument();

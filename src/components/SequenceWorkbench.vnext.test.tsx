@@ -1,3 +1,4 @@
+import { getVisibleWorkbenchButton } from '../test/workbenchControls';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -49,7 +50,7 @@ const renderWorkbench = (onOpenYouTubePreview = vi.fn()) =>
   );
 
 const openPreview = () => {
-  fireEvent.click(screen.getByRole('button', { name: '3 미리보기' }));
+  fireEvent.click(getVisibleWorkbenchButton('3 미리보기'));
   return screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
 };
 
@@ -114,12 +115,12 @@ describe('vNext instructor preparation continuity', () => {
       renderWorkbench();
 
       expect(screen.getByRole('button', { name: nextAction })).toBeEnabled();
-      expect(screen.getByRole('button', { name: '1 동작 선택' })).toHaveAttribute(
+      expect(getVisibleWorkbenchButton('1 동작 선택')).toHaveAttribute(
         'aria-current',
         'step',
       );
-      expect(screen.getByRole('button', { name: '2 수업 구성' })).toBeDisabled();
-      expect(screen.getByRole('button', { name: '3 미리보기' })).toBeDisabled();
+      expect(getVisibleWorkbenchButton('2 수업 구성')).toBeDisabled();
+      expect(getVisibleWorkbenchButton('3 미리보기')).toBeDisabled();
       expect(screen.queryByRole('button', { name: '저장' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: '시퀀스 미리보기' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /수업 시작/ })).not.toBeInTheDocument();
@@ -134,7 +135,7 @@ describe('vNext instructor preparation continuity', () => {
       name: '수업에 넣을 동작 고르기',
     });
     const finder = within(finderDialog);
-    expect(screen.getByRole('button', { name: '1 동작 선택' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('1 동작 선택')).toHaveAttribute(
       'aria-current',
       'step',
     );
@@ -156,7 +157,7 @@ describe('vNext instructor preparation continuity', () => {
     expect(
       screen.queryByRole('dialog', { name: '수업에 넣을 동작 고르기' }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '2 수업 구성' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('2 수업 구성')).toHaveAttribute(
       'aria-current',
       'step',
     );
@@ -192,12 +193,12 @@ describe('vNext instructor preparation continuity', () => {
     usePilatesStore.setState({ activeSteps: [readyStep] });
     const before = usePilatesStore.getState();
     renderWorkbench();
-    expect(screen.getByRole('button', { name: '2 수업 구성' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('2 수업 구성')).toHaveAttribute(
       'aria-current',
       'step',
     );
     const dialog = openPreview();
-    expect(screen.getByRole('button', { name: '3 미리보기' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('3 미리보기')).toHaveAttribute(
       'aria-current',
       'step',
     );
@@ -214,7 +215,7 @@ describe('vNext instructor preparation continuity', () => {
     expect(
       screen.queryByRole('dialog', { name: '전체 수업 계획 미리보기' }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '2 수업 구성' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('2 수업 구성')).toHaveAttribute(
       'aria-current',
       'step',
     );

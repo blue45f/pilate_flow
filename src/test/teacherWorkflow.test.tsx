@@ -1,3 +1,4 @@
+import { getVisibleWorkbenchButton } from './workbenchControls';
 import {
   act,
   cleanup,
@@ -396,7 +397,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     navigate(/오늘의 수업/);
     fireEvent.click(screen.getByText('자동 구성·휴식 먼저 넣기', { selector: 'summary' }));
     const beforeAttempt = usePilatesStore.getState();
-    const makeSequence = screen.getByRole('button', { name: '시퀀스 만들기' });
+    const makeSequence = getVisibleWorkbenchButton('시퀀스 만들기');
     expect(makeSequence).toBeEnabled();
     fireEvent.click(makeSequence);
     expect(usePilatesStore.getState().activeSteps.length).toBeGreaterThan(0);
@@ -430,7 +431,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     });
     render(<App />);
     fireEvent.click(screen.getByText('자동 구성·휴식 먼저 넣기', { selector: 'summary' }));
-    fireEvent.click(screen.getByRole('button', { name: '시퀀스 만들기' }));
+    fireEvent.click(getVisibleWorkbenchButton('시퀀스 만들기'));
     expect(
       usePilatesStore.getState().activeSteps.reduce((sum, step) => sum + step.durationMin, 0),
     ).toBeCloseTo(50, 8);

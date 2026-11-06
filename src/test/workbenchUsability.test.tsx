@@ -1,3 +1,4 @@
+import { getVisibleWorkbenchButton } from './workbenchControls';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
@@ -67,7 +68,7 @@ describe('clear next action without changing class-readiness gates', () => {
     render(<SequenceWorkbench {...props} />);
     expect(screen.queryByRole('button', { name: '직접 편집' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '자동 구성' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '1 동작 선택' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('1 동작 선택')).toHaveAttribute(
       'aria-current',
       'step',
     );
@@ -85,8 +86,8 @@ describe('clear next action without changing class-readiness gates', () => {
     expect(screen.queryByRole('button', { name: '시퀀스 미리보기' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '저장' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /수업 시작/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '2 수업 구성' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '3 미리보기' })).toBeDisabled();
+    expect(getVisibleWorkbenchButton('2 수업 구성')).toBeDisabled();
+    expect(getVisibleWorkbenchButton('3 미리보기')).toBeDisabled();
     const calendar = screen.getByText('일정 확인·추가', { selector: 'summary' });
     expect(calendar.closest('details')).not.toHaveAttribute('open');
     expect(screen.getByText('다가오는 수업 일정이 없어요')).not.toBeVisible();
@@ -133,7 +134,7 @@ describe('clear next action without changing class-readiness gates', () => {
     expect(after.savedSequences).toBe(before.savedSequences);
     expect(after.exercises).toBe(before.exercises);
 
-    fireEvent.click(screen.getByRole('button', { name: '3 미리보기' }));
+    fireEvent.click(getVisibleWorkbenchButton('3 미리보기'));
     const preview = screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
     expect(within(preview).getByRole('button', { name: '수업 시작' })).toBeDisabled();
     expectCatalogBoundaries();
@@ -173,6 +174,7 @@ describe('clear next action without changing class-readiness gates', () => {
     const banner = screen.getByRole('region', { name: '다음 수업' });
     expect(within(banner).getByRole('heading', { name: '합성 다음 수업' })).toBeVisible();
     expect(banner.closest('details')).toBeNull();
+    fireEvent.click(screen.getByText('수업 준비 순서', { selector: 'summary' }));
     const preparation = screen.getByRole('navigation', { name: '수업 준비 순서' });
     expect(
       banner.compareDocumentPosition(preparation) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -223,11 +225,11 @@ describe('clear next action without changing class-readiness gates', () => {
     expect(
       screen.queryByRole('dialog', { name: '수업에 넣을 동작 고르기' }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '직접 편집' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('직접 편집')).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    expect(screen.getByRole('button', { name: '2 수업 구성' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('2 수업 구성')).toHaveAttribute(
       'aria-current',
       'step',
     );
@@ -237,12 +239,12 @@ describe('clear next action without changing class-readiness gates', () => {
     expect(after.draftCriteria).toBe(before.draftCriteria);
     expect(after.exercises).toBe(before.exercises);
     expect(screen.getByRole('button', { name: '시퀀스 미리보기' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: '3 미리보기' }));
+    fireEvent.click(getVisibleWorkbenchButton('3 미리보기'));
     const preview = screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
     expect(within(preview).getByRole('button', { name: '수업 시작' })).toBeEnabled();
     fireEvent.click(within(preview).getByRole('button', { name: '편집으로 돌아가기' }));
     // An explicitly selected automatic mode survives the same normal navigation too.
-    fireEvent.click(screen.getByRole('button', { name: '자동 구성' }));
+    fireEvent.click(getVisibleWorkbenchButton('자동 구성'));
     fireEvent.click(
       within(screen.getByRole('navigation', { name: '모바일 주 메뉴' })).getByRole('button', {
         name: '동작',
@@ -254,7 +256,7 @@ describe('clear next action without changing class-readiness gates', () => {
         name: /^(계획|수업)$/,
       }),
     );
-    expect(screen.getByRole('button', { name: '자동 구성' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -278,14 +280,14 @@ describe('clear next action without changing class-readiness gates', () => {
     const before = usePilatesStore.getState();
     const change = vi.fn();
     const view = render(<SequenceWorkbench {...props} />);
-    expect(screen.getByRole('button', { name: '자동 구성' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     expect(
-      screen.getByRole('button', { name: '잠그지 않은 동작 다시 만들기' }),
+      getVisibleWorkbenchButton('잠그지 않은 동작 다시 만들기'),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '3 미리보기' }));
+    fireEvent.click(getVisibleWorkbenchButton('3 미리보기'));
     const preview = screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
     expect(within(preview).getByRole('button', { name: '사본 저장' })).toBeInTheDocument();
     expect(within(preview).getByRole('button', { name: '수업 시작' })).toBeEnabled();
@@ -293,16 +295,16 @@ describe('clear next action without changing class-readiness gates', () => {
     view.rerender(
       <SequenceWorkbench {...props} planningMode="manual" onPlanningModeChange={change} />,
     );
-    fireEvent.click(screen.getByRole('button', { name: '자동 구성' }));
+    fireEvent.click(getVisibleWorkbenchButton('자동 구성'));
     expect(change).toHaveBeenCalledWith('auto');
-    expect(screen.getByRole('button', { name: '직접 편집' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('직접 편집')).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     view.rerender(
       <SequenceWorkbench {...props} planningMode="auto" onPlanningModeChange={change} />,
     );
-    expect(screen.getByRole('button', { name: '자동 구성' })).toHaveAttribute(
+    expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute(
       'aria-pressed',
       'true',
     );
