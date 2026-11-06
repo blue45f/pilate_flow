@@ -2,6 +2,7 @@
 import { createRequire } from 'node:module';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import artifactDirectories from '../../../scripts/qa/artifact-directory.cjs';
 import assert from 'node:assert/strict';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
@@ -11,7 +12,7 @@ assert.ok(
   'Use a local fixture server, never production',
 );
 const url = new URL('/src/features/classPlanReview/browserFixture.html', base).href;
-const out = resolve(process.env.CLASS_REVIEW_OUT || '/tmp/pilates-class-review-browser');
+const out = artifactDirectories.artifactDirectory(process.env.CLASS_REVIEW_OUT);
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({
   channel: process.env.BROWSER_CHANNEL || 'chrome',
@@ -68,16 +69,14 @@ try {
           `${width}/${preset}: document overflow`,
         );
         assert.equal(dimensions.offenders, 0, `${width}/${preset}: content overflow`);
-        const targets = await page
-          .locator('button')
-          .evaluateAll((nodes) =>
-            nodes
-              .filter((node) => node.getBoundingClientRect().height > 0)
-              .map((node) => ({
-                h: node.getBoundingClientRect().height,
-                w: node.getBoundingClientRect().width,
-              })),
-          );
+        const targets = await page.locator('button').evaluateAll((nodes) =>
+          nodes
+            .filter((node) => node.getBoundingClientRect().height > 0)
+            .map((node) => ({
+              h: node.getBoundingClientRect().height,
+              w: node.getBoundingClientRect().width,
+            })),
+        );
         assert.ok(
           targets.every((target) => target.h >= 43.9 && target.w >= 43.9),
           `${width}/${preset}: touch target below 44px`,

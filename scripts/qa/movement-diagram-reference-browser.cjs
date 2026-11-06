@@ -1,8 +1,9 @@
+const { artifactDirectory } = require('./artifact-directory.cjs');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const base = process.env.BASE_URL || 'http://127.0.0.1:5263';
-const out = process.env.OUT_DIR || '/tmp/pilates-diagram-browser';
+const out = artifactDirectory(process.env.OUT_DIR);
 (async () => {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   fs.mkdirSync(out, { recursive: true });

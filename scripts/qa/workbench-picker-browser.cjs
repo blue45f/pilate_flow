@@ -1,7 +1,8 @@
+const { artifactDirectory } = require('./artifact-directory.cjs');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const fs = require('node:fs'),
   assert = require('node:assert/strict');
-const out = process.env.OUT_DIR || '/tmp/pilates-finder-regression';
+const out = artifactDirectory(process.env.OUT_DIR);
 const base = process.env.BASE_URL || 'http://127.0.0.1:5239';
 (async () => {
   const b = await chromium.launch({ channel: 'chrome', headless: true });

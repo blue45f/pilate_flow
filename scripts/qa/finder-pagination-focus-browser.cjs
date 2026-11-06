@@ -1,10 +1,11 @@
+const { artifactDirectory } = require('./artifact-directory.cjs');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 (async () => {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   const results = [];
-  const out = process.env.OUT_DIR || '/tmp/pilates-pagination';
+  const out = artifactDirectory(process.env.OUT_DIR);
   fs.mkdirSync(out, { recursive: true });
   try {
     for (const width of [320, 390, 768, 1440]) {
