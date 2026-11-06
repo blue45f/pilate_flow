@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
+import '../styles/light-dismiss-dialog.css';
 
 export interface DialogCloseRequest {
   reason: 'close-button' | 'native-cancel' | 'backdrop';
@@ -135,6 +136,7 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
       className={[
         'atelier-modal-dialog',
         'pf-modal-dialog',
+        'light-dismiss-dialog',
         variant === 'sheet' ? 'pf-modal-dialog--sheet' : '',
         className,
       ]

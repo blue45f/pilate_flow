@@ -39,10 +39,7 @@ import reviewQueueCsvUrl from '../data/sourceCatalog/review-queue.csv?url';
 import { EQUIPMENT_OPTIONS, PROP_OPTIONS, getExerciseEquipment } from '../data/equipmentCatalog';
 import { matchesLibraryEquipment } from '../data/libraryEquipmentFilters';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
-import {
-  addMovementIdeaToCurrentClass,
-  isMovementIdeaExercise,
-} from '../utils/movementIdeaDraft';
+import { addMovementIdeaToCurrentClass, isMovementIdeaExercise } from '../utils/movementIdeaDraft';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type {
   BodyPosition,
@@ -897,11 +894,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         </div>
         <div className="library-heading-actions">
           {onOpenIdeaSheet && (
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => onOpenIdeaSheet(null)}
-            >
+            <button type="button" className="btn-secondary" onClick={() => onOpenIdeaSheet(null)}>
               <Plus size={16} /> 한 줄 동작 메모
             </button>
           )}
@@ -1304,6 +1297,61 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 key={`${previewReference.family}-${previewReference.variantId}`}
                 reference={previewReference}
               />
+              {(() => {
+                const previewExercise = exercises.find((item) =>
+                  previewReference.intendedExerciseIds.includes(item.id),
+                );
+                if (!previewExercise) return null;
+                const previewApproved = isExerciseAutoEligible(previewExercise);
+                return (
+                  <section
+                    className="ml-preview-exercise-summary"
+                    aria-label="연결 동작 설명·주의점 및 시퀀스 삽입"
+                  >
+                    <div className="ml-preview-exercise-header">
+                      <strong>연결 동작 노트 · {previewExercise.nameKo}</strong>
+                      <span>
+                        {previewApproved
+                          ? '내 계획 검토 완료 · 시퀀스 삽입 가능'
+                          : '검토 전 · 노트 검토 후 시퀀스 삽입 가능'}
+                      </span>
+                    </div>
+                    {previewExercise.cues.length > 0 && (
+                      <div className="ml-preview-exercise-cues">
+                        <h4>동작 설명·티칭 큐</h4>
+                        <ul>
+                          {previewExercise.cues.slice(0, 3).map((cue) => (
+                            <li key={cue}>{cue}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {previewExercise.precautions?.trim() && (
+                      <div className="ml-preview-exercise-precautions">
+                        <h4>주의점·금기 사항</h4>
+                        <p>{previewExercise.precautions}</p>
+                      </div>
+                    )}
+                    <div className="ml-preview-exercise-actions">
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => onOpenYouTubePreview(previewExercise)}
+                      >
+                        노트 상세·검토 열기
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        disabled={!previewApproved}
+                        onClick={() => addExercise(previewExercise)}
+                      >
+                        <Plus size={15} aria-hidden="true" /> 시퀀스에 바로 삽입
+                      </button>
+                    </div>
+                  </section>
+                );
+              })()}
             </section>
           )}
 
@@ -1411,7 +1459,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                       <p className="movement-english">{exercise.nameEn}</p>
                       <p
                         className={`movement-review-status review-${reviewState} pf-ai-status ${
-                          approved ? 'pf-ai-status--instructor-reviewed' : 'pf-ai-status--review-pending'
+                          approved
+                            ? 'pf-ai-status--instructor-reviewed'
+                            : 'pf-ai-status--review-pending'
                         }`}
                       >
                         {approved

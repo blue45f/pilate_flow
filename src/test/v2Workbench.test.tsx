@@ -5,6 +5,7 @@ import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { AutoGenerateCriteria, SequenceStep } from '../types/pilates';
 import { createEmptyInstructorSchedule } from '../types/instructorSchedule';
+import { syntheticPlanningExercise } from './planningFixtures';
 
 const original = usePilatesStore.getState();
 const pending = INITIAL_EXERCISES.find((exercise) => exercise.apparatus === 'mat')!;
@@ -151,6 +152,8 @@ describe('v2 shared class editor', () => {
   });
 
   it('closes the native conditions dialog before generation and exposes one global error', () => {
+    // Preserve the pending block; a separate synthetic reviewed record admits the generation path.
+    usePilatesStore.setState({ exercises: [pending, syntheticPlanningExercise('mat', 'warmup')] });
     generate.mockImplementation(() => {
       expect(document.querySelector('.v2-conditions-content')?.closest('dialog')?.open).toBe(false);
       usePilatesStore.setState({ generationError: '검토한 동작이 부족합니다.' });

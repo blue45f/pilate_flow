@@ -6,6 +6,7 @@ import {
   getMotionPatternReferences,
 } from '../data/motionPatternReferences';
 import { EXERCISE_MOTION_REFERENCES } from '../data/motionReferences';
+import { ORIGINAL_MOVEMENTS } from '../data/originalMovements';
 import { SUPINE_REACH_DEFINITION } from '../data/supineReach';
 import { SUPINE_REACH_MODEL_VERSION } from '../models/supineReach';
 import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';
@@ -187,9 +188,16 @@ describe('authored pattern discovery boundaries', () => {
     expect(screen.getByText('일시정지 · 자동 재생 없음')).toBeInTheDocument();
     expect(frames.size).toBe(0);
   });
-  it('offers exactly three workbench studies and opens a selected real variant paused', () => {
+  it('offers exactly three workbench studies, opens a selected real variant paused, and shows linked exercise cues/precautions and sequence insert', () => {
     const onViewAll = vi.fn();
-    render(<MotionPatternGallery onViewAll={onViewAll} />);
+    const onInsertExercise = vi.fn();
+    const pelvicBridge = ORIGINAL_MOVEMENTS.find((item) => item.id === 'original-mat-bridge')!;
+    render(
+      <MotionPatternGallery
+        onViewAll={onViewAll}
+        onInsertExercise={onInsertExercise}
+      />,
+    );
     expect(screen.getAllByRole('button', { name: /관련 패턴 초안 보기/ })).toHaveLength(3);
     fireEvent.click(screen.getByRole('button', { name: '모두 보기' }));
     expect(onViewAll).toHaveBeenCalledOnce();
@@ -200,6 +208,18 @@ describe('authored pattern discovery boundaries', () => {
     expect(screen.getByRole('button', { name: '한 주기 재생' })).toBeEnabled();
     expect(screen.getByText('일시정지 · 자동 재생 없음')).toBeInTheDocument();
     expect(frames.size).toBe(0);
+
+    const summary = screen.getByRole('region', {
+      name: '연결 동작 설명·주의점 및 시퀀스 삽입',
+    });
+    expect(summary).toHaveTextContent(pelvicBridge.nameKo);
+    expect(summary).toHaveTextContent('동작 설명·티칭 큐');
+    expect(summary).toHaveTextContent('주의점·금기 사항');
+    const insertButton = screen.getByRole('button', {
+      name: '시퀀스에 바로 삽입',
+    });
+    expect(insertButton).toBeDisabled();
+
     fireEvent.click(screen.getByRole('button', { name: '모션 살펴보기 닫기' }));
     expect(screen.queryByRole('button', { name: '한 주기 재생' })).not.toBeInTheDocument();
   });
@@ -226,9 +246,32 @@ describe.each([
       expect(screen.getByLabelText('도해 위치')).toHaveValue('1000');
       expect(frames.size).toBe(0);
       expect(screen.getByText('한 주기 끝 · 일시정지')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByLabelText('관련 패턴 도해 반복'), { target: { value: '2' } });
+      expect(screen.getByLabelText('도해 위치')).toHaveValue('0');
+      expect(
+        screen.getByText('일시정지 · 2회 반복 설정 · 자동 재생 없음'),
+      ).toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText('관련 패턴 도해 속도'), { target: { value: '1' } });
+      fireEvent.click(screen.getByRole('button', { name: '한 주기 재생' }));
+      frame(0);
+      frame(8000);
+      expect(screen.getByText('도해 반복 재생 중 (2 / 2회)')).toBeInTheDocument();
+      frame(16000);
+      expect(screen.getByText('반복 재생 끝 (2회) · 일시정지')).toBeInTheDocument();
+      expect(frames.size).toBe(0);
     });
     it('supports static phases and separates anatomical side from mirroring', () => {
       render(<MotionPatternPreview reference={reference} />);
+      expect(screen.getByRole('button', { name: '이전 도해 단계' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: '다음 도해 단계' }));
+      expect(screen.getByLabelText('도해 위치')).toHaveValue(
+        String(Math.round(reference.definition.phases[1].sample * 1000)),
+      );
+      fireEvent.click(screen.getByRole('button', { name: '이전 도해 단계' }));
+      expect(screen.getByLabelText('도해 위치')).toHaveValue(
+        String(Math.round(reference.definition.phases[0].sample * 1000)),
+      );
       fireEvent.click(screen.getByLabelText('정지 화면만 보기'));
       expect(screen.getByRole('button', { name: '한 주기 재생' })).toBeDisabled();
       const turn = reference.definition.phases.find((item) => item.id === 'turn')!;

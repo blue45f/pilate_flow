@@ -10,11 +10,16 @@ import {
 } from './freeAiAssistantSchema';
 
 describe('freeAiAssistantSchema and policy guards', () => {
-  it('allows only verified Google Gemini Free Tier text models and blocks paid models', () => {
+  it('allows only verified Google Gemini Free Tier text models and blocks paid or retired models', () => {
+    expect(isGuaranteedFreeGeminiModel('gemini-3.8-flash')).toBe(true);
     expect(isGuaranteedFreeGeminiModel('gemini-3.5-flash-lite')).toBe(true);
     expect(isGuaranteedFreeGeminiModel('gemini-3.1-flash-lite')).toBe(true);
     expect(isGuaranteedFreeGeminiModel('gemini-2.5-flash-lite')).toBe(true);
     expect(isGuaranteedFreeGeminiModel('gemini-2.5-flash')).toBe(true);
+
+    // Retired models shut down on June 1, 2026 must be rejected
+    expect(isGuaranteedFreeGeminiModel('gemini-2.0-flash')).toBe(false);
+    expect(isGuaranteedFreeGeminiModel('gemini-2.0-flash-lite')).toBe(false);
 
     // Paid-only or billing-required models must be rejected
     expect(isGuaranteedFreeGeminiModel('gemini-4-argon')).toBe(false);

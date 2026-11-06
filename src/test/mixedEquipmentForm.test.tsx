@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { SequenceWorkbench } from '../components/SequenceWorkbench';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { AutoGenerateCriteria } from '../types/pilates';
+import { syntheticPlanningExercise } from './planningFixtures';
 import {
   closeWorkbenchConditions,
   openWorkbenchAutomation,
@@ -66,6 +67,8 @@ describe('exact mixed-equipment planning form', () => {
   });
 
   it('passes exactly the checked apparatus to mixed generation without adding another owned apparatus', () => {
+    // This checks request serialization, not permission to use pending catalog notes.
+    usePilatesStore.setState({ exercises: [syntheticPlanningExercise('mat', 'warmup')] });
     renderForm();
     openWorkbenchConditions();
     expect(screen.getByRole('checkbox', { name: '매트' })).toBeChecked();

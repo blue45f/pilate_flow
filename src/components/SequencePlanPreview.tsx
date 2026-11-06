@@ -123,6 +123,8 @@ export function SequencePlanPreview({
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const selectedHeadingRef = useRef<HTMLHeadingElement>(null);
+  const orderHeadingRef = useRef<HTMLHeadingElement>(null);
   const canRehearseInHost = useCallback(
     () => dialogRef.current?.isConnected === true && dialogRef.current.open,
     [],
@@ -167,10 +169,21 @@ export function SequencePlanPreview({
   const selected = snapshot.steps[index];
   const selectedSummary = model.steps[index];
   const selectedSegments = model.segments.filter((segment) => segment.stepIndex === index);
+  const focusHeading = (target: 'selected' | 'order') => {
+    // Only explicit navigation moves focus. Waiting for the selected item to render
+    // also prevents focusing content that is about to be replaced.
+    requestAnimationFrame(() => {
+      const heading = target === 'selected' ? selectedHeadingRef.current : orderHeadingRef.current;
+      if (!dialogRef.current?.open || !heading?.isConnected) return;
+      heading.focus({ preventScroll: true });
+      heading.scrollIntoView?.({ block: 'start', behavior: 'instant' });
+    });
+  };
   const selectStep = (next: number) => {
     setSegmentRehearsalOpen(false);
     setManualSelection(next);
     rehearsal.seek(model.steps[next]?.startSec ?? 0);
+    focusHeading('selected');
   };
   const selectTime = (time: number) => {
     setSegmentRehearsalOpen(false);
@@ -290,6 +303,41 @@ export function SequencePlanPreview({
               <dd style={{ margin: 0 }}>{formatSecondsToMMSS(durations.restSec)}</dd>
             </div>
           </dl>
+          {selected && (
+            <nav className="simulation-item-navigation" aria-label="미리보기 항목 이동">
+              <p>
+                <span>
+                  {String(index + 1).padStart(2, '0')} / {snapshot.steps.length}
+                </span>
+                <strong>{selectedRest ? '휴식' : exercise?.nameKo || '동작 정보 없음'}</strong>
+              </p>
+              <div>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={index === 0}
+                  onClick={() => selectStep(index - 1)}
+                >
+                  <ChevronLeft size={16} /> 이전 항목
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={index === snapshot.steps.length - 1}
+                  onClick={() => selectStep(index + 1)}
+                >
+                  다음 항목 <ChevronRight size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary simulation-order-shortcut"
+                  onClick={() => focusHeading('order')}
+                >
+                  <ListOrdered size={16} /> 전체 순서에서 고르기
+                </button>
+              </div>
+            </nav>
+          )}
           <div
             className="connected-preview-views"
             role="group"
@@ -308,6 +356,7 @@ export function SequencePlanPreview({
                 aria-label={`${view.label} 보기`}
                 aria-pressed={viewMode === view.value}
                 onClick={() => {
+                  if (viewMode === view.value) return;
                   rehearsal.pause();
                   setSegmentRehearsalOpen(false);
                   setViewMode(view.value);
@@ -511,7 +560,13 @@ export function SequencePlanPreview({
                       ? '시간표 리허설'
                       : '수동 확인'}
                 </p>
-                <h3>{selectedRest ? '중간 휴식' : exercise?.nameKo || '동작 정보 없음'}</h3>
+                <h3
+                  ref={selectedHeadingRef}
+                  tabIndex={-1}
+                  className="simulation-navigation-heading"
+                >
+                  {selectedRest ? '중간 휴식' : exercise?.nameKo || '동작 정보 없음'}
+                </h3>
                 {viewMode === 'connected' && (
                   <p className="connected-study-section">
                     수업 역할 ·{' '}
@@ -661,33 +716,8 @@ export function SequencePlanPreview({
                   </>
                 )}
               </section>
-              <nav
-                aria-label="미리보기 항목 이동"
-                style={{
-                  display: 'flex',
-                  gap: '8px',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  disabled={index === 0}
-                  onClick={() => selectStep(index - 1)}
-                >
-                  <ChevronLeft size={16} /> 이전 항목
-                </button>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  disabled={index === snapshot.steps.length - 1}
-                  onClick={() => selectStep(index + 1)}
-                >
-                  다음 항목 <ChevronRight size={16} />
-                </button>
-              </nav>
               <section aria-label="전체 수업 순서">
-                <h3>
+                <h3 ref={orderHeadingRef} tabIndex={-1} className="simulation-navigation-heading">
                   <ListOrdered size={17} /> 전체 순서
                 </h3>
                 <ol className="simulation-order-list">

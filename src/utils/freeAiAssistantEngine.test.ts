@@ -433,6 +433,73 @@ describe('freeAiAssistantEngine', () => {
       expect(result.guaranteesSafetyOrEffect).toBe(false);
       expect(result.safetyDisclaimer).toBe(UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER);
     });
+
+    it('supports P1 items-based ReusableBlock objects with category and durationMin fallbacks while excluding unreviewed blocks', () => {
+      const warmupEx = approvedReformerCatalog.find((ex) => ex.blockCategory === 'warmup')!;
+      const coreEx = approvedReformerCatalog.find((ex) => ex.blockCategory === 'core')!;
+
+      const p1ItemsReviewedBlock: P1ReusableBlockContract = {
+        id: 'block-p1-items-reviewed',
+        title: 'P1 items 기반 검토 완료 블록',
+        apparatus: 'reformer',
+        level: '1.5',
+        sectionRole: 'main',
+        version: 1,
+        isReviewed: true,
+        items: [
+          {
+            itemId: 'item-1',
+            order: 1,
+            exerciseId: warmupEx.id,
+            blockCategory: 'warmup',
+            durationMin: 5,
+            selectedLayer: 'easy',
+            instructorNote: 'P1 블록 워밍업 노트',
+          },
+          {
+            itemId: 'item-2',
+            order: 2,
+            exerciseId: coreEx.id,
+          },
+        ],
+      };
+
+      const p1ItemsUnreviewedBlock: P1ReusableBlockContract = {
+        id: 'block-p1-items-unreviewed',
+        title: 'P1 items 기반 미검토 블록',
+        apparatus: 'reformer',
+        level: '1.5',
+        isReviewed: false,
+        items: [
+          {
+            itemId: 'item-unrev',
+            order: 1,
+            exerciseId: coreEx.id,
+          },
+        ],
+      };
+
+      const result = composeSequenceFromReviewedItems(
+        {
+          targetMinutes: 20,
+          level: '1.5',
+          apparatus: 'reformer',
+          strengthenAreas: ['core'],
+          selectedExerciseIds: [],
+          selectedBlockIds: [p1ItemsReviewedBlock.id, p1ItemsUnreviewedBlock.id],
+        },
+        mixedCatalog,
+        [p1ItemsReviewedBlock, p1ItemsUnreviewedBlock],
+      );
+
+      expect(result.excludedUnreviewedIds).toContain(p1ItemsUnreviewedBlock.id);
+      expect(result.steps).toHaveLength(2);
+      expect(result.steps[0].exerciseId).toBe(warmupEx.id);
+      expect(result.steps[0].sourceBlockId).toBe(p1ItemsReviewedBlock.id);
+      expect(result.steps[1].exerciseId).toBe(coreEx.id);
+      expect(result.steps[1].sourceBlockId).toBe(p1ItemsReviewedBlock.id);
+      expect(result.steps.reduce((acc, s) => acc + s.durationMin, 0)).toBe(20);
+    });
   });
 
   describe('User Editability & Conversion Helpers', () => {
@@ -552,7 +619,7 @@ describe('freeAiAssistantEngine', () => {
       }
     });
 
-    it('movementIdeaToUnreviewedExercise creates a custom unreviewed PilatesExercise that is NEVER auto-eligible', () => {
+    it('movementIdeaToUnreviewedExercise creates a custom unreviewed PilatesExercise that is NEVER auto-eligible and includes P1 safetyBoundary', () => {
       const idea = buildLocalMovementIdea({
         rawIdeaText: '캐딜락 롤다운 바를 활용한 흉추 분절 및 코어 컨트롤',
         apparatus: 'cadillac',
@@ -581,6 +648,14 @@ describe('freeAiAssistantEngine', () => {
       expect(ideaContract.reviewStatus).toBe('unreviewed-creative');
       expect(ideaContract.guaranteesSafetyOrEffect).toBe(false);
       expect(ideaContract.safetyDisclaimer).toBe(UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER);
+      expect(ideaContract.safetyBoundary).toEqual({
+        originType: 'instructor-created-draft',
+        evaluationBasis: 'subjective-instructor-feel',
+        aiSafetyGuaranteed: false,
+        objectiveEfficacyClaimed: false,
+        expertVerified: false,
+        disclaimerKo: UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER,
+      });
     });
   });
 });
