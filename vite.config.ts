@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { pwaBuild } from './scripts/pwa-build';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
@@ -13,7 +14,7 @@ try {
 
 export default defineConfig({
   base: './',
-  plugins: [react()],
+  plugins: [react(), pwaBuild()],
   resolve: {
     alias: localSdkFallback
       ? {

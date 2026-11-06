@@ -1,0 +1,57 @@
+.pwa-install-panel {
+  padding: 20px;
+  border: 1px solid var(--line, #d9dfd7);
+  border-radius: 16px;
+  background: var(--paper, #f6f5f0);
+  margin-block: 12px 24px;
+  overflow-wrap: anywhere;
+}
+.pwa-install-panel h3 {
+  margin: 0 0 12px;
+}
+.pwa-install-panel p,
+.pwa-install-panel li {
+  line-height: 1.65;
+}
+.pwa-install-panel ol {
+  padding-left: 22px;
+}
+.pwa-install-panel li svg {
+  vertical-align: middle;
+}
+.pwa-install-panel summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+}
+.pwa-install-action {
+  min-height: 44px;
+  margin-block: 8px 12px;
+}
+.pwa-install-notes {
+  margin-top: 16px;
+  border-top: 1px solid var(--line, #d9dfd7);
+  padding-top: 8px;
+}
+.pwa-sidebar-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--line, #d9dfd7);
+  border-radius: 12px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+@media (max-width: 400px) {
+  .pwa-install-panel {
+    padding: 16px;
+  }
+  .pwa-install-action {
+    width: 100%;
+    justify-content: center;
+  }
+}

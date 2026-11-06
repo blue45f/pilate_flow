@@ -11,14 +11,15 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/check-pwa-build.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "check:motion-study": "node scripts/generate-motion-study-ledger.mjs --check && node --test scripts/generate-motion-study-ledger.node-test.mjs",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
-    "deploy": "pnpm build && firebase deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth"
+    "deploy": "pnpm build && firebase deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth",
+    "check:pwa": "node scripts/check-pwa-build.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",

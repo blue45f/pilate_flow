@@ -7,6 +7,9 @@ import './styles/atelier-vnext.css';
 import './styles/design-tokens.css';
 import { bootstrapCloudSession } from './lib/cloudSync';
 
+import { startPwa } from './lib/pwa';
+
+startPwa({ registerServiceWorker: import.meta.env.PROD });
 void bootstrapCloudSession();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
