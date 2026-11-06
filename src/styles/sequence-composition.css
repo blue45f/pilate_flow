@@ -174,3 +174,10 @@
 #root .sequence-order-controls .sequence-drag-handle {
   margin-right: 0;
 }
+
+/* Keep short Korean source-status words together in narrow finder thumbnails. */
+#root .ief-motion-caption {
+  word-break: keep-all;
+  overflow-wrap: normal;
+  line-height: 1.4;
+}
