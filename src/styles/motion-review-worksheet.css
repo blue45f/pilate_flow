@@ -1,0 +1,165 @@
+.motion-review-worksheet {
+  min-width: 0;
+  color: #254438;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.motion-review-worksheet *,
+.motion-review-worksheet *::before,
+.motion-review-worksheet *::after {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.motion-review-worksheet > details {
+  border: 1px solid #d6dfca;
+  border-radius: 10px;
+  background: #fcfbf7;
+}
+.motion-review-worksheet summary {
+  display: list-item;
+  list-style-position: inside;
+  min-height: 44px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+.motion-review-worksheet summary > span {
+  display: block;
+  margin-top: 3px;
+  color: #796042;
+  font-size: 0.8125rem;
+}
+.motion-review-worksheet :is(p, h4, dl, ul, ol) {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.motion-review-worksheet :is(code, dd, a, li) {
+  overflow-wrap: anywhere;
+}
+.motion-review-worksheet code {
+  font-size: 0.8125rem;
+}
+.motion-review-worksheet .mrw-body {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid #d6dfca;
+}
+.motion-review-worksheet .mrw-identity {
+  display: grid;
+  gap: 6px;
+}
+.motion-review-worksheet .mrw-identity > div {
+  display: grid;
+  grid-template-columns: minmax(0, 130px) minmax(0, 1fr);
+  gap: 8px;
+}
+.motion-review-worksheet dt,
+.motion-review-worksheet .mrw-note {
+  color: #64735d;
+}
+.motion-review-worksheet dd {
+  margin: 0;
+}
+.motion-review-worksheet .mrw-panes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.motion-review-worksheet button {
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid #bdcdb2;
+  border-radius: 8px;
+  background: #f9faf3;
+  color: #31583e;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.motion-review-worksheet button[aria-pressed='true'],
+.motion-review-worksheet .mrw-export button {
+  background: #285b4c;
+  color: #fffdf7;
+  border-color: #285b4c;
+}
+.motion-review-worksheet button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.motion-review-worksheet :is(button, summary, a):focus-visible,
+.eep-research-candidate summary:focus-visible {
+  outline: 3px solid #b57c56;
+  outline-offset: 3px;
+}
+.motion-review-worksheet :is(.mrw-body > div:not(.mrw-panes), .mrw-export) {
+  display: grid;
+  gap: 8px;
+}
+.motion-review-worksheet [hidden] {
+  display: none !important;
+}
+.motion-review-worksheet h4 {
+  margin-top: 4px;
+  font-size: 0.875rem;
+}
+.motion-review-worksheet :is(ul, ol) {
+  padding-left: 20px;
+}
+.motion-review-worksheet li + li {
+  margin-top: 5px;
+}
+.motion-review-worksheet .mrw-phase-list li > span {
+  display: block;
+  color: #64735d;
+}
+.motion-review-worksheet a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: #285b4c;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.motion-review-worksheet .mrw-sources {
+  list-style: none;
+  padding: 0;
+}
+.motion-review-worksheet .mrw-sources > li + li {
+  border-top: 1px solid #d6dfca;
+  padding-top: 6px;
+}
+.motion-review-worksheet .mrw-export {
+  border-top: 1px solid #d6dfca;
+  padding-top: 10px;
+}
+.exercise-evidence-panel .eep-research-candidate {
+  display: grid;
+  gap: 7px;
+}
+.exercise-evidence-panel .eep-research-candidate summary {
+  min-height: 44px;
+  padding-block: 10px;
+  cursor: pointer;
+  font-weight: 650;
+}
+.exercise-evidence-panel .eep-research-candidate details > :not(summary) {
+  margin-block: 7px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 500px) {
+  .motion-review-worksheet .mrw-identity > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .motion-review-worksheet .mrw-panes button {
+    padding-inline: 5px;
+    font-size: 0.8125rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-review-worksheet * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,3014 @@
+{
+  "format": "pilates-motion-review-source-manifest",
+  "version": 1,
+  "artifactKind": "source-implementation-fingerprint",
+  "hashScope": "Listed original local source bytes and explicit draft/model/renderer/definition identity only. Conservative shared registry/dispatcher runtime-import closure: another draft or shared source change may invalidate this entry. Excludes compiled/exact assets and dependency-package bytes; proves no behavior, clinical suitability, safety, or professional review.",
+  "hashMethod": "Per-file SHA-256 of original bytes. sourceImplementationSha256 = SHA-256 of compact UTF-8 JSON {draftId,modelVersion,sourceBinding,files}, with recursively sorted object keys, original Unicode and array order; files sorted by relative path. No timestamp.",
+  "entries": [
+    {
+      "draftId": "supported-heel-raise",
+      "modelVersion": "heel-raise-authoring-draft-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/heelRaise.ts",
+        "rendererFile": "src/components/MotionDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "761aea2e097c1444c2f2bfef5160ab8eb151532ced5b40ebd8eecd3d24f45474",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "side-lying-clam",
+      "modelVersion": "clam-original-schematic-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/clam.ts",
+        "rendererFile": "src/components/MotionDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "6a2e7b14ba916841ed1c35829031c195a961a7e44399401e28b3c8180bc590bf",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "adult-supine-heel-slide",
+      "modelVersion": "original-supine-schematics-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/supineDrafts.ts",
+        "rendererFile": "src/components/SupineDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "3f0b7f0f2558404ff21360f4dda919bcaf4058930cb92f141eaa0d4c96244488",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "supine-knee-fold",
+      "modelVersion": "original-supine-schematics-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/supineDrafts.ts",
+        "rendererFile": "src/components/SupineDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "faca801341c641310c2a30bbe5410154e92b8efc94efac1bcc4539e7e716f4fd",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "side-lying-straight-leg-lift",
+      "modelVersion": "lateral-original-schematic-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/lateralDrafts.ts",
+        "rendererFile": "src/components/LateralDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "05b208137313ae82ebbae52eb42b35ab9224a157b88f53eff665a06ae38896a3",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "side-lying-open-book",
+      "modelVersion": "lateral-original-schematic-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/lateralDrafts.ts",
+        "rendererFile": "src/components/LateralDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "00b7f1bd5e576e158dc9cd71f996db66f6f3ee51c7159fe942e1e882094d0dd1",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "quadruped-arm-slide",
+      "modelVersion": "quadruped-original-schematic-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/quadrupedDrafts.ts",
+        "rendererFile": "src/components/QuadrupedDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "05da8627d1785bec4f686efa015496c1149ec3f15b2bb975b2c610dd65108940",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "quadruped-leg-slide",
+      "modelVersion": "quadruped-original-schematic-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/quadrupedDrafts.ts",
+        "rendererFile": "src/components/QuadrupedDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "6028f82f60f9a1ecebacede0906c2589e2fb7baa98e2974ae68d6b47789c66fd",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "reformer-parallel-footwork",
+      "modelVersion": "original-apparatus-schematics-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/apparatusDrafts.ts",
+        "rendererFile": "src/components/ApparatusDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "2783557b8f0b337d86e91037868a89f6852c104f0241fcdec93246992ab58109",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "chair-seated-pedal-press",
+      "modelVersion": "original-apparatus-schematics-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/apparatusDrafts.ts",
+        "rendererFile": "src/components/ApparatusDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "2a34d389f4ac430aa630ce629ccb5e2e385b1990df59f892e14a066dd8e29ec4",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "reformer-supine-strap-arm-press",
+      "modelVersion": "original-tension-schematics-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/tensionDrafts.ts",
+        "rendererFile": "src/components/TensionDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDraftExpansion.ts",
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "27ea822c7ba430411b6198c8f740b939f80dc5de8b4a497636a442460c169cb3",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "cadillac-supine-arm-spring-press",
+      "modelVersion": "original-tension-schematics-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/tensionDrafts.ts",
+        "rendererFile": "src/components/TensionDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDraftExpansion.ts",
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "4a9d49b43f25f6c6847ea783c0d76321b6c98030708192d650997329c7ccc645",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "ladder-supported-hip-extension-slide",
+      "modelVersion": "standing-support-original-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/standingSupportDrafts.ts",
+        "rendererFile": "src/components/StandingSupportDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDraftExpansion.ts",
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "a7c84545dcc94eddebe117534de62cea672699241067de7dbcddfb3e9577d805",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "ladder-supported-side-leg-slide",
+      "modelVersion": "standing-support-original-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/standingSupportDrafts.ts",
+        "rendererFile": "src/components/StandingSupportDraftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDraftExpansion.ts",
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "934ec8ca0e2f0058e67bb7b8fbb386f2f28efe3db10938fa73f00629842a3e12",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "floor-seated-band-row",
+      "modelVersion": "original-seated-band-row-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/seatedBandRow.ts",
+        "rendererFile": "src/components/SeatedBandRowFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDraftV5.ts",
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "f30af8d5dbd4c98e74496e13fa9243162638b31c57a87d647215da014769c191",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "supine-chest-lift",
+      "modelVersion": "chest-lift-authored-chain-v1",
+      "sourceBinding": {
+        "modelFile": "src/models/chestLift.ts",
+        "rendererFile": "src/components/ChestLiftFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDraftV6.ts",
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": [
+          "src/models/chestLiftProvenance.ts"
+        ]
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/chestLiftProvenance.ts",
+          "sha256": "75c5284259abbbd4749c570db210310ce3da08efd4e4a45934d988f1cdc17151"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "149e81e69124b6f5a52e70e30225b2a76da6a405067ee4f8fb24e6f12d726504",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    },
+    {
+      "draftId": "articulated-pelvic-curl",
+      "modelVersion": "original-articulated-pelvic-curl-0.1.0",
+      "sourceBinding": {
+        "modelFile": "src/models/pelvicCurl.ts",
+        "rendererFile": "src/components/PelvicCurlFigure.tsx",
+        "definitionFiles": [
+          "src/data/motionDraftV6.ts",
+          "src/data/motionDrafts.ts"
+        ],
+        "rendererDispatch": "src/components/MotionDraftFigure.tsx",
+        "identityRegistry": "src/models/types.ts",
+        "modelProvenanceFiles": []
+      },
+      "files": [
+        {
+          "path": "src/components/ApparatusDraftFigure.tsx",
+          "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+        },
+        {
+          "path": "src/components/ChestLiftFigure.tsx",
+          "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+        },
+        {
+          "path": "src/components/LateralDraftFigure.tsx",
+          "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+        },
+        {
+          "path": "src/components/MotionDraftFigure.tsx",
+          "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+        },
+        {
+          "path": "src/components/PelvicCurlFigure.tsx",
+          "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+        },
+        {
+          "path": "src/components/QuadrupedDraftFigure.tsx",
+          "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+        },
+        {
+          "path": "src/components/SeatedBandRowFigure.tsx",
+          "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+        },
+        {
+          "path": "src/components/StandingSupportDraftFigure.tsx",
+          "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+        },
+        {
+          "path": "src/components/SupineDraftFigure.tsx",
+          "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+        },
+        {
+          "path": "src/components/TensionDraftFigure.tsx",
+          "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+        },
+        {
+          "path": "src/data/motionApparatusSourceLedger.json",
+          "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+        },
+        {
+          "path": "src/data/motionDraftExpansion.ts",
+          "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+        },
+        {
+          "path": "src/data/motionDraftSourceLedger.json",
+          "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+        },
+        {
+          "path": "src/data/motionDraftV5.ts",
+          "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+        },
+        {
+          "path": "src/data/motionDraftV6.ts",
+          "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+        },
+        {
+          "path": "src/data/motionDrafts.ts",
+          "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+        },
+        {
+          "path": "src/data/motionQuadrupedSourceLedger.json",
+          "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+        },
+        {
+          "path": "src/data/motionSelectedV5SourceLedger.json",
+          "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+        },
+        {
+          "path": "src/data/motionSelectedV6SourceLedger.json",
+          "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+        },
+        {
+          "path": "src/data/motionStandingSourceLedger.json",
+          "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+        },
+        {
+          "path": "src/data/motionTensionSourceLedger.json",
+          "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+        },
+        {
+          "path": "src/models/apparatusDrafts.ts",
+          "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+        },
+        {
+          "path": "src/models/apparatusGeometry.ts",
+          "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+        },
+        {
+          "path": "src/models/cadillacArmSpringPress.ts",
+          "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+        },
+        {
+          "path": "src/models/chairPedalPress.ts",
+          "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+        },
+        {
+          "path": "src/models/chestLift.ts",
+          "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+        },
+        {
+          "path": "src/models/clam.ts",
+          "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+        },
+        {
+          "path": "src/models/heelRaise.ts",
+          "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+        },
+        {
+          "path": "src/models/lateralDrafts.ts",
+          "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+        },
+        {
+          "path": "src/models/pelvicCurl.ts",
+          "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+        },
+        {
+          "path": "src/models/quadrupedDrafts.ts",
+          "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+        },
+        {
+          "path": "src/models/reformerFootwork.ts",
+          "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+        },
+        {
+          "path": "src/models/reformerStrapArmPress.ts",
+          "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+        },
+        {
+          "path": "src/models/seatedBandRow.ts",
+          "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+        },
+        {
+          "path": "src/models/standingSupportDrafts.ts",
+          "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+        },
+        {
+          "path": "src/models/supineDrafts.ts",
+          "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+        },
+        {
+          "path": "src/models/tensionDrafts.ts",
+          "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+        },
+        {
+          "path": "src/models/tensionGeometry.ts",
+          "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+        },
+        {
+          "path": "src/models/types.ts",
+          "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+        }
+      ],
+      "sourceImplementationSha256": "076df8c9d0c23e3862adbd9fd9a38176f60fc086de948f39a4b962eb8eb4c948",
+      "reviewedAssetSha256": null,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false
+    }
+  ]
+}

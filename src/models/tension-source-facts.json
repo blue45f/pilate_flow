@@ -1,0 +1,251 @@
+{
+  "recordKind": "tension-relevant-original-factual-records",
+  "accessDateUtc": "2026-11-05",
+  "plannedIntegratedAuthorityPath": "src/data/motionTensionSourceLedger.json",
+  "authorityPathStatus": "planned parent integration, not installed during authoring",
+  "hashScope": "Unchanged research-owner authored factualRecord summaries, not source-document bytes or approvals.",
+  "sources": [
+    {
+      "accessDate": "2026-11-05",
+      "accessStatus": "public-text-accessible",
+      "evidenceType": "primary public text; paraphrased factual record",
+      "checkedMethod": "Public HTML/PDF text only; no video, audio, image, frame, tracing, download, authentication or paid access used.",
+      "mediaTimestamps": [],
+      "rights": {
+        "usage": "reference-only",
+        "embedded": false,
+        "mediaCopied": false,
+        "reproductionPermission": "No license to reuse source media or reproduce instruction text is claimed.",
+        "factualRecord": "Original concise factual paraphrase; external source URL retained."
+      },
+      "sourceChecked": true,
+      "professionalReviewCount": 0,
+      "exactMotionMappingCount": 0,
+      "sourceId": "bb-reformer-supine-arms-context-v1",
+      "title": "All About Reformer Pilates",
+      "publisher": "Balanced Body",
+      "url": "https://www.pilates.com/all-about-reformer-pilates",
+      "publishedDate": null,
+      "locators": [
+        "The Beginner's Blueprint: Your First Reformer Workout, item 3 Supine Arms; web text lines 75–76"
+      ],
+      "context": {
+        "type": "manufacturer general introduction",
+        "intendedAudience": "Beginners and other Reformer users; broader page discusses multiple populations.",
+        "ageExplicit": false,
+        "clinicalPopulationForSelectedItem": "Not specified",
+        "scope": "Generic Supine Arms category; not a complete bilateral arm-press protocol."
+      },
+      "factualRecord": {
+        "variant": "Generic Supine Arms",
+        "facts": [
+          "The user lies on the back, holds loops in the hands, and moves the straps in controlled arcs."
+        ]
+      },
+      "unknownOrNotEstablished": [
+        "Leg or foot support; arm start and finish positions; elbow behavior; headrest position; exact torso contacts; exercise-specific carriage trajectory; pulley and rope routing."
+      ],
+      "useBoundary": "Broad category context only. Do not borrow footbar contact from the separate Footwork item or chest lift from the separate Hundred Prep item.",
+      "factualRecordSha256": "7a00917863198b64f0e4376d10e081c6a0657de7acd637bf7440ea378fce5a6b"
+    },
+    {
+      "accessDate": "2026-11-05",
+      "accessStatus": "public-text-accessible",
+      "evidenceType": "primary public text; paraphrased factual record",
+      "checkedMethod": "Public HTML/PDF text only; no video, audio, image, frame, tracing, download, authentication or paid access used.",
+      "mediaTimestamps": [],
+      "rights": {
+        "usage": "reference-only",
+        "embedded": false,
+        "mediaCopied": false,
+        "reproductionPermission": "No license to reuse source media or reproduce instruction text is claimed.",
+        "factualRecord": "Original concise factual paraphrase; external source URL retained."
+      },
+      "sourceChecked": true,
+      "professionalReviewCount": 0,
+      "exactMotionMappingCount": 0,
+      "sourceId": "merrithew-reformer-moving-carriage-rope-context-v1",
+      "title": "Pilates Reformer Buyers' Guide: How to Choose the Best Pilates Reformer for Your Needs, Fitness Goals and Studio Space",
+      "publisher": "Merrithew",
+      "byline": "Otiena Ellwand",
+      "url": "https://www.merrithew.com/blog/post/2021-09-27/2022-pilates-reformer-buyers-guide-how-to-choose-the-best-pilates-reformer-for-your-needs-fitness-goals-and-studio-space",
+      "publishedDate": "2021-09-27",
+      "locators": [
+        "Section 1 What is a Pilates Reformer?; web text line 271",
+        "Section 5 key features, Carriage and Rope system; web text lines 338–342"
+      ],
+      "context": {
+        "type": "manufacturer apparatus buyers' guide",
+        "intendedAudience": "Equipment buyers, home users and fitness/studio professionals",
+        "ageExplicit": false,
+        "clinicalPopulationForSelectedItem": "Not exercise-specific",
+        "scope": "General apparatus components; not a model specification or an exercise-specific mechanical validation."
+      },
+      "factualRecord": {
+        "variant": "General Reformer apparatus",
+        "facts": [
+          "The apparatus includes a moving carriage, ropes and pulleys.",
+          "The carriage is a wheeled platform attached to springs and travels along rails.",
+          "Ropes or straps usually terminate in handles or loops for arm or leg exercise, with carriage movement described in the general rope-system discussion."
+        ]
+      },
+      "unknownOrNotEstablished": [
+        "Exact pulley number or position, rope attachment topology, chosen exercise's carriage displacement, rope-length equation, quantitative tension or model dimensions."
+      ],
+      "useBoundary": "Only generic moving-carriage and rope/pulley context. Do not import spring values, equipment dimensions, retractable-rope details or Vertical Frame routing into the authored schematic.",
+      "factualRecordSha256": "1bca2e0892dd81a8097ec220e70874c4ca74112e2e3eaff6d8984e32329bbe4c"
+    },
+    {
+      "accessDate": "2026-11-05",
+      "accessStatus": "public-text-accessible",
+      "evidenceType": "primary public text; paraphrased factual record",
+      "checkedMethod": "Public HTML/PDF text only; no video, audio, image, frame, tracing, download, authentication or paid access used.",
+      "mediaTimestamps": [],
+      "rights": {
+        "usage": "reference-only",
+        "embedded": false,
+        "mediaCopied": false,
+        "reproductionPermission": "No license to reuse source media or reproduce instruction text is claimed.",
+        "factualRecord": "Original concise factual paraphrase; external source URL retained."
+      },
+      "sourceChecked": true,
+      "professionalReviewCount": 0,
+      "exactMotionMappingCount": 0,
+      "sourceId": "pa-zola-reformer-supine-basic-arm-down-up-v1",
+      "title": "Seamless Total Body Reformer — Class 6387",
+      "publisher": "Pilates Anytime",
+      "byline": "Zola Williams",
+      "url": "https://www.pilatesanytime.com/class-view/6387/video/Pilates-Seamless-Total-Body-Reformer-by-Zola-Williams",
+      "publishedDate": "2026-08-03",
+      "locators": [
+        "Public transcript basic Supine Arms segment; web text lines 82–86; before optional curl/leg extension"
+      ],
+      "context": {
+        "type": "educator-led class published on the educator platform",
+        "intendedAudience": "Page labels Intermediate, Moderate Pace, Contemporary; full class uses Reformer with Box and Overball.",
+        "ageExplicit": false,
+        "clinicalPopulationForSelectedItem": "Not specified",
+        "scope": "Selected basic supine arm down/up phase only; not the whole class or later progressions.",
+        "educatorProvenanceUrl": "https://www.pilatesanytime.com/instructor-bio/288/Zola-Williams-Pilates-Teacher",
+        "educatorProvenanceNote": "Publisher profile states comprehensive teacher training at Equinox in 2013. This establishes publication provenance only, not external credential verification or review of this proposal."
+      },
+      "factualRecord": {
+        "variant": "Basic supine arms with tabletop legs and a ball between the ankles",
+        "facts": [
+          "The instructor rolls down onto the carriage, places the ball between the ankles, and takes short loops or handles.",
+          "The setup leaves space at the shoulder blocks, reaches the arms above the shoulders, and brings the legs to tabletop.",
+          "The cue keeps knees from collapsing inward and moves the arms down and back up, with inhalation to lift and exhalation to press."
+        ]
+      },
+      "unknownOrNotEstablished": [
+        "Numerical shoulder/hip/knee angles, elbow-lock instruction, exact hand endpoints, headrest angle, complete stationary contact map, exact carriage motion and rope route."
+      ],
+      "useBoundary": "Preserve ball-between-ankles/tabletop if calling this the selected variant. The later chest curl, diagonal leg extension, triceps press and coordination are separate progressions and are excluded. The directional wording does not independently certify straight elbows.",
+      "factualRecordSha256": "84794f6ce0385bbbb641f1027cad323f127d739ec3ba8f165e86a3421650aab4"
+    },
+    {
+      "accessDate": "2026-11-05",
+      "accessStatus": "public-text-accessible",
+      "evidenceType": "primary public text; paraphrased factual record",
+      "checkedMethod": "Public HTML/PDF text only; no video, audio, image, frame, tracing, download, authentication or paid access used.",
+      "mediaTimestamps": [],
+      "rights": {
+        "usage": "reference-only",
+        "embedded": false,
+        "mediaCopied": false,
+        "reproductionPermission": "No license to reuse source media or reproduce instruction text is claimed.",
+        "factualRecord": "Original concise factual paraphrase; external source URL retained."
+      },
+      "sourceChecked": true,
+      "professionalReviewCount": 0,
+      "exactMotionMappingCount": 0,
+      "sourceId": "bb-cadillac-frame-spring-handle-anatomy-v1",
+      "title": "The Balanced Body Trapeze Table (Cadillac)",
+      "publisher": "Balanced Body, Inc.",
+      "url": "https://s3.amazonaws.com/s3.pilates.com/resources/instructions/CE%20Manual%20trap_ENGLISH.pdf",
+      "publishedDate": null,
+      "documentVersion": "400-121 | 12.16.13",
+      "locators": [
+        "Printed page 2: IMPORTANT",
+        "Printed page 2: INTRODUCTION",
+        "Printed page 2: FEATURES / SPRING ATTACHMENT POINTS"
+      ],
+      "context": {
+        "type": "manufacturer apparatus manual",
+        "intendedAudience": "Medical or fitness professionals, or experienced equipment users",
+        "ageExplicit": false,
+        "clinicalPopulationForSelectedItem": "Not exercise-specific",
+        "scope": "Table, frame and spring attachment anatomy; not a complete selected arm-press protocol."
+      },
+      "factualRecord": {
+        "variant": "General Cadillac apparatus",
+        "facts": [
+          "The manufacturer describes a padded table surrounded by a metal-pole frame.",
+          "Frame eyebolts provide spring attachments, and handles or loops attach to springs.",
+          "Attachment locations include a vertical end slider, upper frame corners and an overhead horizontal slider.",
+          "The manual addresses professionals or experienced users."
+        ]
+      },
+      "unknownOrNotEstablished": [
+        "Selected exercise's exact anchor, quantitative table motion, hand path, spring extension/load, or apparatus dimensions."
+      ],
+      "useBoundary": "Frame-to-spring-to-handle topology is supported. A fixed schematic table and chosen fixed anchor positions are authored assumptions/inferences. No pulley or rope route is established for this proposal.",
+      "factualRecordSha256": "8d2bf837e6038419142ec7f1fed187b264433192d01cf7513d5e671fa774ff48"
+    },
+    {
+      "accessDate": "2026-11-05",
+      "accessStatus": "public-text-accessible",
+      "evidenceType": "primary public text; paraphrased factual record",
+      "checkedMethod": "Public HTML/PDF text only; no video, audio, image, frame, tracing, download, authentication or paid access used.",
+      "mediaTimestamps": [],
+      "rights": {
+        "usage": "reference-only",
+        "embedded": false,
+        "mediaCopied": false,
+        "reproductionPermission": "No license to reuse source media or reproduce instruction text is claimed.",
+        "factualRecord": "Original concise factual paraphrase; external source URL retained."
+      },
+      "sourceChecked": true,
+      "professionalReviewCount": 0,
+      "exactMotionMappingCount": 0,
+      "sourceId": "pa-rachel-segel-cadillac-supine-arm-prep-v1",
+      "title": "Mat on the Cadillac — Class 1782",
+      "publisher": "Pilates Anytime",
+      "byline": "Rachel Taylor Segel",
+      "url": "https://www.pilatesanytime.com/class-view/1782/video/Pilates-Mat-on-the-Cadillac-by-Rachel-Taylor-Segel",
+      "publishedDate": "2014-07-20",
+      "locators": [
+        "Public transcript opening equipment/setup paragraphs",
+        "Paragraph beginning She can have her long legs",
+        "Following spring-direction paragraph",
+        "Paragraph beginning All right, so if you would"
+      ],
+      "context": {
+        "type": "educator-led Cadillac class",
+        "intendedAudience": "Page labels Beginner+; beginning/intermediate mat work using Cadillac springs",
+        "ageExplicit": false,
+        "clinicalPopulationForSelectedItem": "Not specified",
+        "scope": "Bent-elbow preparatory presses before a separate Hundred variation.",
+        "educatorProvenanceUrl": "https://www.pilatesanytime.com/instructor-bio/73/Rachel-Taylor-Segel-Pilates-Teacher",
+        "educatorProvenanceNote": "Publisher profile describes the instructor as a teacher trainer, published author and Balanced Body presenter. Publication provenance only; not an independent credential check or proposal review."
+      },
+      "factualRecord": {
+        "variant": "Supine arm-spring preparatory press, bent-knee/feet-planted option selected",
+        "facts": [
+          "The client lies supine with the head toward the arm springs.",
+          "The instructor offers straight legs resting on the mat or bent knees with feet planted.",
+          "Preparatory presses begin with bent elbows and a downward push cue; the springs attach behind and above the client.",
+          "A later repetition adds head/shoulder curl and elbow straightening for the Hundred."
+        ]
+      },
+      "unknownOrNotEstablished": [
+        "Precise preparatory hand endpoints, degree or timing of elbow extension, return path, full stationary contact map, anchor height/spacing, spring load/length or model dimensions."
+      ],
+      "useBoundary": "Select the bent-knee/feet-planted option without borrowing the later Hundred's straight elbows, chest curl or leg position. Constant bent elbows and the complete repeated hand arc remain authored choices.",
+      "factualRecordSha256": "8236d8fcd89ad24ad28e4fa2f4d176aa854297104c555f7a2dfe9f96e168950c"
+    }
+  ],
+  "professionalReviewCount": 0,
+  "exactAsset": false,
+  "autoSubstitution": false
+}

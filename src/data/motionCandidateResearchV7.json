@@ -1,0 +1,410 @@
+{
+  "schemaVersion": "pilates-v7-mat-candidate-source-audit-1",
+  "status": "research recommendations only; root has not selected or authored either candidate through this task",
+  "baseHeadPrefixProvidedByParent": "78ec179",
+  "fullBaseHeadNotProvided": true,
+  "gitHeadIndependentlyChecked": false,
+  "checkedAtUtc": "2026-11-05T05:18:36Z",
+  "accessDateUtc": "2026-11-05",
+  "networkPreflight": {
+    "environmentStatusReadBeforeWeb": true,
+    "observationsCurrent": true,
+    "httpPolicyMode": "unrestricted",
+    "httpPolicyState": "enforced",
+    "executorPolicyRead": true,
+    "vpnConfigured": false,
+    "policyChanged": false
+  },
+  "counts": {
+    "canonicalEntriesRetained": 98,
+    "existingProposalsRetained": 17,
+    "existingUniqueComparisonIdsRetained": 16,
+    "matCatalogEntriesRead": 18,
+    "matComparisonIdsAlreadyCovered": 10,
+    "matCatalogIdsWithoutExistingProposals": 8,
+    "recommendedCandidates": 2,
+    "candidateFactualRecords": 2,
+    "uniquePrimaryUrlsInThisAudit": 2,
+    "reusedPrimaryUrls": 1,
+    "newUniquePrimaryUrlsRelativeToCheckedInventory": 1,
+    "newDedicatedFactualRecords": 2,
+    "reusedExactPriorFactualRecords": 0,
+    "uniquePublishersInThisAudit": 2,
+    "newPublishersRelativeToCheckedInventory": 1,
+    "modelsAuthored": 0,
+    "canonicalAssetsAdded": 0,
+    "exactMappings": 0,
+    "professionalMotionReviews": 0,
+    "approvals": 0
+  },
+  "inventoryScope": {
+    "catalog": "/workspace/pilates-flow/src/data/originalMovements.ts",
+    "comparisonRegistry": "/workspace/pilates-flow/src/data/motionDraftIndex.ts",
+    "priorSourcesReadOrSearched": [
+      "/workspace/pilates-flow/src/data",
+      "/workspace/pilates-motion-blocks-v2-2026-11-05/research",
+      "/workspace/pilates-motion-blocks-v3-2026-11-05/research",
+      "/workspace/pilates-motion-blocks-v4-2026-11-05/research",
+      "/workspace/pilates-motion-blocks-v5-2026-11-05/research",
+      "/workspace/pilates-motion-blocks-v6-2026-11-05/research",
+      "/workspace/pilates-motion-expansion-2026-11-05",
+      "/workspace/pilates-youtube-expansion-2026-11-05"
+    ],
+    "newUrlQualification": "Exact North Tees URL was absent from the searched local JSON/Markdown/CSV records. This bounded local inventory comparison is not a claim that no other source exists.",
+    "retainedReferenceAndCourseRecords": "Existing 30 reference and 32 course records were not edited or recounted as new factual sources."
+  },
+  "hashMethod": "factualRecordSha256 = SHA-256 of UTF-8 canonical JSON of factualRecord only: recursively sorted object keys, preserved array order, original Unicode and compact comma/colon separators. This hashes an original factual paraphrase, not publisher HTML/media, whole-ledger access metadata, authored geometry or approval.",
+  "sources": [
+    {
+      "sourceId": "basi-cjkelly-baby-swan-v1",
+      "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+      "title": "10 Essential Pilates Exercises for Beginners",
+      "section": "10. Back Extension; Baby Swan progression after a separately described head-lift preparation",
+      "publisher": "BASI Pilates",
+      "publishedDate": "2019-10-16",
+      "articleBylineObserved": "CJ Kelly, NCPT, Owner Gumption Collective",
+      "footerAuthorLabelObserved": "By SecoSan",
+      "authorshipBoundary": "Article byline and footer label are distinct. Footer editorial/CMS role and credentials were not independently verified.",
+      "populationContext": {
+        "category": "official educator introduction to Pilates fundamentals",
+        "audienceLabel": "Beginners",
+        "exactAgeEligibilitySpecified": false,
+        "clinicalDiagnosisSpecified": false,
+        "generalAdultSuitabilityEstablished": false,
+        "individualSuitabilityEstablished": false
+      },
+      "locators": [
+        "Public HTML text: title/date/byline lines 103-110",
+        "Section 10 setup and head-lift preparation lines 211-220",
+        "Baby Swan progression and return lines 221-223",
+        "Separate footer author label line 227; copyright lines 277-281"
+      ],
+      "sourceChecked": true,
+      "checkedAtUtc": "2026-11-05T05:18:36Z",
+      "accessDateUtc": "2026-11-05",
+      "access": {
+        "status": "public-body-text-readable",
+        "method": "web.open HTML text",
+        "numericHttpStatus": null,
+        "numericStatusInferred": false,
+        "sourceFileSaved": false
+      },
+      "lineage": {
+        "urlReused": true,
+        "newIndependentUrl": false,
+        "relatedPriorLedger": "/workspace/pilates-motion-blocks-v5-2026-11-05/research/catalog-research.json",
+        "relatedPriorSourceId": "basi-cjkelly-pelvic-curl-baby-swan-v1",
+        "relatedPriorFactualRecordSha256": "da45245f247fc0bf11eb46c75bd0244ba1cbf8f011077d704d8af673c5898daa",
+        "priorRecordScope": "Combined Pelvic Curl/Baby Swan supporting record; no model authored from that recommendation.",
+        "newRecordScope": "Dedicated selected progression facts after fresh public text access; not an identical reused factualRecord and not independent corroboration.",
+        "priorRawRecordsEdited": false
+      },
+      "factualRecord": {
+        "variant": "Prone Baby Swan progression; separate head-only preparation is not the selected cycle.",
+        "start": "Prone, forehead on stacked hands, feet pointed, pubic region gently against mat; chin slightly tucked and gaze down.",
+        "move": "Inhale to lift through head, throat and collarbones, engaging upper-mid-back extension.",
+        "return": "Exhale back to mat.",
+        "contacts": [
+          "Forehead-on-hands is the setup contact.",
+          "Pubic-region mat pressure is cued; continuous hand/arm/foot contact during the progression is not specified."
+        ],
+        "props": "Mat; no additional prop named.",
+        "side": "Central lift; no side alternation specified.",
+        "stageBoundary": "A head-lift-and-lower preparation precedes the separate Baby Swan progression."
+      },
+      "factualRecordSha256": "b9475ba454ce0ee185fc7b3b6133015454c31bd97cad55d11b11aaa1ed393e51",
+      "unknown": [
+        "Exact hand/forearm position and head-hand relationship during the progression.",
+        "Stationary pelvis/leg/foot patches, measured spinal motion, endpoint height and pressures.",
+        "Joint angles, dimensions, timing, pauses, contraindications and individual suitability."
+      ],
+      "rights": {
+        "mode": "reference-only",
+        "embedded": false,
+        "reuseLicenseEstablished": false,
+        "observedNotice": "BASI copyright; all rights reserved",
+        "use": "Original factual paraphrase and original URL only; no source image, frame, artwork or video used."
+      },
+      "sourceMediaObserved": false,
+      "sourceMediaCopied": false,
+      "sourceMediaTraced": false,
+      "mediaTimestamps": [],
+      "professionalReviewCount": 0,
+      "exactMotionMappingCount": 0
+    },
+    {
+      "sourceId": "nth-optimise-elbow-knee-plank-v1",
+      "url": "https://www.nth.nhs.uk/resources/optimise-cancer-prehabilitation/",
+      "title": "OPTIMISE Cancer Prehabilitation Home Exercise Programme - PIL1597 version 1",
+      "section": "Plank on knees",
+      "publisher": "North Tees and Hartlepool NHS Foundation Trust",
+      "namedIndividualAuthor": null,
+      "pageLastReviewed": "2026-03-30",
+      "leafletReviewDue": "2028-09",
+      "publicationReference": "PIL1597 version 1",
+      "upstreamAttributionObserved": {
+        "publisherStatement": "The leaflet attributes its exercises to physiotherapyexercises.com software.",
+        "upstreamUrl": "https://www.physiotherapyexercises.com/",
+        "upstreamAccessed": false,
+        "upstreamLicenseVerified": false,
+        "countedAsIndependentCorroboratingSource": false
+      },
+      "populationContext": {
+        "category": "cancer prehabilitation patient home-exercise programme",
+        "clinicalContextExplicit": true,
+        "exactExerciseSectionAgeEligibilitySpecified": false,
+        "generalActivityContext": "Later programme text references adult/older-adult/disability activity guidance; this does not establish this exercise's eligibility.",
+        "generalAdultSuitabilityEstablished": false,
+        "individualSuitabilityEstablished": false,
+        "publisherLeafletReviewIsMotionReview": false
+      },
+      "locators": [
+        "Public HTML text: title/programme context lines 207-218",
+        "Plank on knees heading/instructions/dosage lines 338-348",
+        "Upstream exercise attribution line 514",
+        "Leaflet reference/review due/page review lines 547-550; copyright line 579"
+      ],
+      "sourceChecked": true,
+      "checkedAtUtc": "2026-11-05T05:18:36Z",
+      "accessDateUtc": "2026-11-05",
+      "access": {
+        "status": "public-body-text-readable",
+        "method": "web.open HTML text",
+        "numericHttpStatus": null,
+        "numericStatusInferred": false,
+        "sourceFileSaved": false
+      },
+      "lineage": {
+        "urlReused": false,
+        "newUniqueUrlRelativeToCheckedLocalInventory": true,
+        "newPublisherRelativeToCheckedLocalInventory": true,
+        "priorMatchingLocalRecordsFound": 0,
+        "independentOriginalExerciseAuthorshipEstablished": false
+      },
+      "factualRecord": {
+        "variant": "Bilateral elbow-and-knee-supported floor/mat plank.",
+        "start": "Lie prone, propped on elbows.",
+        "move": "Lift hips from floor/mat while taking weight through knees.",
+        "middle": "Maintain a plank-like position.",
+        "return": "Not specified.",
+        "contacts": [
+          "Elbow support and knee weight-bearing are named.",
+          "Exact hand/forearm/foot contact is not specified."
+        ],
+        "props": "Floor/mat; table or bench explicitly unnecessary.",
+        "side": "No unilateral or alternating-side instruction.",
+        "clinicalDosageContext": "A 10-second initial hold with gradual increase, five sets of five repetitions every other day; source programme dosage, not a playback prescription."
+      },
+      "factualRecordSha256": "b240f9375555cf74e99ecf36848d20ef01f4ca1c6f510d44916facadd9da7c65",
+      "unknown": [
+        "Descent/release sequence and breathing pattern.",
+        "Exact elbow/shoulder stacking, forearm/hand rotation, feet/toes and knee spacing.",
+        "Exact head-to-knee line, joint range, support pressures, load distribution and individual suitability."
+      ],
+      "rights": {
+        "mode": "reference-only",
+        "embedded": false,
+        "reuseLicenseEstablished": false,
+        "observedNotice": "Copyright 2026 North Tees and Hartlepool NHS Foundation Trust",
+        "upstreamMediaRightsEstablished": false,
+        "use": "Original factual paraphrase and hospital URL only; no publisher or upstream image, artwork or video used."
+      },
+      "sourceMediaObserved": false,
+      "sourceMediaCopied": false,
+      "sourceMediaTraced": false,
+      "mediaTimestamps": [],
+      "professionalReviewCount": 0,
+      "exactMotionMappingCount": 0
+    }
+  ],
+  "recommendations": [
+    {
+      "candidateId": "prone-baby-swan",
+      "intendedComparisonId": "original-mat-swan-prep",
+      "catalogName": "Mat Swan Preparation",
+      "sourceId": "basi-cjkelly-baby-swan-v1",
+      "absentFromExisting17Proposals": true,
+      "authoringSupport": "Conditionally supportable as a separate original prone extension schematic; root decides.",
+      "catalogAlignment": "Both concern a small prone upper-trunk extension. The catalog is broader and does not specify this stacked-hands progression.",
+      "requiredEquipment": [
+        {
+          "id": "mat",
+          "basis": "source-text"
+        },
+        {
+          "id": "stacked-hands-setup",
+          "basis": "source-text"
+        }
+      ],
+      "sourceStages": [
+        {
+          "stage": "setup",
+          "basis": "source-text",
+          "detail": "Use the factualRecord start; do not treat forehead-on-hands as continuous through the lift."
+        },
+        {
+          "stage": "lift",
+          "basis": "source-text",
+          "detail": "Selected progression only; do not include a separate head-only exercise as a verified part of this cycle."
+        },
+        {
+          "stage": "peak",
+          "basis": "author-choice",
+          "detail": "Qualitative upper-back lift is supported; numerical peak and any hold are not."
+        },
+        {
+          "stage": "return",
+          "basis": "mixed",
+          "detail": "Return to mat is stated; exact contact order and trajectory are not."
+        },
+        {
+          "stage": "finish",
+          "basis": "author-choice",
+          "detail": "Exact restored setup, duration and pause are authored."
+        }
+      ],
+      "authoredChoicesRequired": [
+        "Articulated spine/head path, constant link lengths, numerical rise and phase fractions.",
+        "Which pelvis/leg/arm patches remain stationary; any head-hand gap and recontact.",
+        "Camera, mirror behavior, contact glyphs and a closed display cycle."
+      ],
+      "exclude": [
+        "head-only preparation as the selected exercise",
+        "hand-press Cobra",
+        "full Swan Dive",
+        "rocking Swan",
+        "leg-lift or apparatus Swan"
+      ],
+      "canonicalAssetMapping": null,
+      "exactSourceVariantMatched": false,
+      "sourceVariantReconciliationRequired": true,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false,
+      "autoRecommendationEligible": false,
+      "safetyAssessment": "unassessed",
+      "modelAuthoredByThisTask": false
+    },
+    {
+      "candidateId": "kneeling-forearm-plank",
+      "intendedComparisonId": "original-mat-forearm-plank",
+      "catalogName": "Kneeling Forearm Plank",
+      "sourceId": "nth-optimise-elbow-knee-plank-v1",
+      "absentFromExisting17Proposals": true,
+      "authoringSupport": "Supportable for explicit elbow/knee load-bearing setup, hip rise and hold; a complete animated release must remain an authored choice or wait for another source. Root decides.",
+      "catalogAlignment": "Catalog and source share elbow/knee support. Source has clinical-programme context and an unspecified return; no exact exercise equivalence is established.",
+      "requiredEquipment": [
+        {
+          "id": "floor-or-mat",
+          "basis": "source-text"
+        },
+        {
+          "id": "elbow-and-knee-support",
+          "basis": "source-text"
+        }
+      ],
+      "sourceStages": [
+        {
+          "stage": "setup",
+          "basis": "source-text",
+          "detail": "Prone and propped on elbows; detailed foot/hand placement remains open."
+        },
+        {
+          "stage": "rise",
+          "basis": "source-text",
+          "detail": "Hips lift while knee weight-bearing is maintained."
+        },
+        {
+          "stage": "hold",
+          "basis": "mixed",
+          "detail": "A held plank-like position is named; line fit and authored playback duration are not measured source facts."
+        },
+        {
+          "stage": "release",
+          "basis": "author-choice",
+          "detail": "No descent or elbow/knee unloading sequence is supplied."
+        },
+        {
+          "stage": "finish",
+          "basis": "author-choice",
+          "detail": "Exact restored prone pose and display pause are authored."
+        }
+      ],
+      "authoredChoicesRequired": [
+        "Geometric elbow/shoulder/knee arrangement and explicit contact patches, without claiming verified pressure.",
+        "Constant-length chain and chosen pelvis/head trajectory while elbow/knee supports remain consistent.",
+        "Feet/toes orientation and whether any incidental floor contact occurs.",
+        "Descent, return contact order, phase fractions, camera and finite display duration independent of clinical dosage."
+      ],
+      "exclude": [
+        "toe-supported full plank",
+        "hand-supported knee push-up",
+        "side plank",
+        "table or bench support",
+        "single-limb lifts"
+      ],
+      "canonicalAssetMapping": null,
+      "exactSourceVariantMatched": false,
+      "sourceVariantReconciliationRequired": true,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false,
+      "autoRecommendationEligible": false,
+      "safetyAssessment": "unassessed",
+      "modelAuthoredByThisTask": false
+    }
+  ],
+  "otherUncoveredMatCatalogIds": [
+    {
+      "id": "original-mat-rib-breath",
+      "v7Selected": false,
+      "reason": "No new V7 factual audit; an atomic breathing display would need a separate scope."
+    },
+    {
+      "id": "original-mat-pelvic-clock",
+      "v7Selected": false,
+      "reason": "No clock-circle source verified; BASI Spine Twist Supine is a different pattern and is not substituted."
+    },
+    {
+      "id": "original-mat-single-leg-stretch",
+      "v7Selected": false,
+      "reason": "More simultaneous hand/leg/chest contacts; not selected for this bounded two-pattern audit."
+    },
+    {
+      "id": "original-mat-seated-arm-reach",
+      "v7Selected": false,
+      "reason": "Precise seated/support variant not newly checked."
+    },
+    {
+      "id": "original-mat-swimming-prep",
+      "v7Selected": false,
+      "reason": "Prone versus quadruped source variants require reconciliation; no new pattern selected."
+    },
+    {
+      "id": "original-mat-mermaid",
+      "v7Selected": false,
+      "reason": "No suitable adult-context source selected; paediatric search results are not silently generalized."
+    }
+  ],
+  "accessErrors": [],
+  "restrictions": {
+    "previousDeniedTargetsRequested": false,
+    "denialRetries": 0,
+    "bypasses": 0,
+    "libraryAccessed": false,
+    "procAccessed": false,
+    "sourceImagesOrVideoRequested": false,
+    "sourceMediaObserved": false,
+    "mediaTimestampsInvented": false,
+    "externalMessagesSent": false
+  },
+  "workScope": {
+    "newFilesOnlyUnder": "/workspace/pilates-motion-blocks-v7-2026-11-05/source-audit",
+    "activeFilesEdited": false,
+    "priorLedgersOrArchivesEdited": false,
+    "gitInvoked": false,
+    "testsOrBuildsExecuted": false,
+    "modelsAuthored": false,
+    "deploymentPerformed": false,
+    "rootModelSelectionRequired": true
+  },
+  "clockQualification": "UTC clock observation after the public text checks completed; not a publisher update time or media timestamp."
+}

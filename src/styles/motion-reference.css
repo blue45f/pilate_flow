@@ -1,0 +1,381 @@
+.motion-reference {
+  --motion-ink: #28594b;
+  --motion-muted: #596b62;
+  --motion-line: #cbd8d0;
+  --motion-paper: #fffefa;
+  --motion-soft: #edf2ec;
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--motion-line);
+  border-radius: 16px;
+  padding: clamp(14px, 2.5vw, 24px);
+  background: var(--motion-paper);
+  color: #24382e;
+}
+.motion-reference p {
+  margin: 8px 0;
+}
+.motion-reference h3,
+.motion-reference h4 {
+  margin: 10px 0;
+  line-height: 1.4;
+}
+.motion-reference button,
+.motion-reference select,
+.motion-reference input {
+  font: inherit;
+}
+.motion-reference button,
+.motion-reference select {
+  min-height: 44px;
+  max-width: 100%;
+  border: 1px solid var(--motion-line);
+  border-radius: 10px;
+  padding: 9px 12px;
+  color: inherit;
+  background: var(--motion-paper);
+}
+.motion-reference button {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.motion-reference button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.motion-reference button[aria-pressed='true'],
+.motion-reference .motion-reference-play {
+  background: var(--motion-ink);
+  color: #fff;
+  border-color: var(--motion-ink);
+}
+.motion-reference :is(button, select, input, summary, a):focus-visible {
+  outline: 3px solid #b48032;
+  outline-offset: 3px;
+}
+.motion-reference-badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 8px;
+  color: #6d4a20;
+  background: #f8eddc;
+  font-size: 13px;
+  font-weight: 650;
+}
+.motion-reference-pending {
+  margin: 16px 0;
+}
+.motion-reference-muted {
+  color: var(--motion-muted);
+  font-size: 14px;
+}
+.motion-reference-limitation {
+  background: #f8eddc;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.motion-reference-clip-select {
+  display: grid;
+  gap: 7px;
+  margin: 18px 0;
+  font-size: 14px;
+}
+.motion-reference-clip-select select {
+  width: 100%;
+  font-size: 16px;
+}
+.motion-reference-scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2.65;
+  min-width: 0;
+}
+.motion-reference-mat {
+  fill: #b9cfc4;
+}
+.motion-reference-leg,
+.motion-reference-neck {
+  fill: none;
+  stroke: var(--motion-ink);
+  stroke-width: 15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.motion-reference-leg.is-far {
+  stroke-dasharray: 6 5;
+  stroke-width: 12;
+}
+.motion-reference-leg[data-active='false'] {
+  stroke: #718278;
+}
+.motion-reference-torso {
+  fill: none;
+  stroke: var(--motion-ink);
+  stroke-width: 30;
+  stroke-linecap: round;
+}
+.motion-reference-arm {
+  fill: none;
+  stroke: var(--motion-ink);
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+.motion-reference-head {
+  fill: #e4ece6;
+  stroke: var(--motion-ink);
+  stroke-width: 3;
+}
+.motion-reference-nose {
+  fill: none;
+  stroke: var(--motion-ink);
+  stroke-width: 2;
+}
+.motion-reference-joint {
+  fill: #fffefa;
+  stroke: var(--motion-ink);
+  stroke-width: 2;
+}
+.motion-reference-anchor {
+  fill: #b48032;
+  stroke: var(--motion-paper);
+  stroke-width: 1.5;
+}
+.motion-reference-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 16px;
+  font-size: 12px;
+  color: var(--motion-muted);
+}
+.motion-reference-position {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+.motion-reference-playback > input[type='range'] {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  accent-color: var(--motion-ink);
+}
+.motion-reference-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+}
+.motion-reference-controls label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.motion-reference-controls select {
+  font-size: 16px;
+}
+.motion-reference-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 14px;
+}
+.motion-reference-options fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  width: 100%;
+  padding: 0;
+  margin: 0 0 5px;
+  border: 0;
+}
+.motion-reference-options legend {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.motion-reference-options > label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  font-size: 14px;
+}
+.motion-reference-options input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--motion-ink);
+}
+.motion-reference-stills {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+.motion-reference-stills > div {
+  min-width: 0;
+  padding: 10px;
+  background: var(--motion-soft);
+  border-radius: 10px;
+}
+.motion-reference-stills button {
+  width: 100%;
+  padding: 7px;
+  font-size: 13px;
+}
+.motion-reference-stills p {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.motion-reference-provenance {
+  margin-top: 18px;
+  border-top: 1px solid var(--motion-line);
+  padding-top: 10px;
+}
+.motion-reference-provenance summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+}
+.motion-reference-provenance p,
+.motion-reference-provenance dl {
+  font-size: 13px;
+}
+.motion-reference-provenance dl {
+  display: grid;
+  grid-template-columns: 145px minmax(0, 1fr);
+  gap: 9px 14px;
+}
+.motion-reference-provenance dt {
+  font-weight: 600;
+}
+.motion-reference-provenance dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.motion-reference-provenance a {
+  color: var(--motion-ink);
+  overflow-wrap: anywhere;
+}
+.motion-reference-provenance code {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.motion-reference-announcement {
+  min-height: 1.5em;
+  font-size: 13px;
+  color: var(--motion-muted);
+}
+@media (max-width: 600px) {
+  .motion-reference-scene {
+    aspect-ratio: 2.15;
+  }
+  .motion-reference-stills {
+    grid-template-columns: 1fr;
+  }
+  .motion-reference-stills > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 8px;
+    align-items: center;
+  }
+  .motion-reference-stills .motion-reference-scene {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+  .motion-reference-stills p {
+    grid-column: 1;
+    margin: 0;
+  }
+  .motion-reference-provenance dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .motion-reference-provenance dd {
+    margin-bottom: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-reference *,
+  .motion-reference *::before,
+  .motion-reference *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+.motion-reference-related {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.motion-related-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  color: #4c6554;
+}
+.motion-related-context p {
+  font-size: 12px;
+  margin: 0;
+}
+.motion-related-context span {
+  font-size: 10px;
+  color: #74806e;
+}
+.motion-reference-pending {
+  padding: 26px !important;
+  border: 1px dashed #c9d3bf !important;
+  background: linear-gradient(135deg, #f6f5ec, #edeedf) !important;
+  border-radius: 20px !important;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.motion-reference-pending h3 {
+  font:
+    500 20px/1.4 Georgia,
+    'Noto Serif KR',
+    serif;
+  color: #244b3e;
+  margin: 14px 0 5px;
+}
+.motion-reference-pending p {
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 5px 0;
+}
+.motion-reference-pending .motion-reference-badge {
+  align-self: flex-start;
+  font-size: 10px;
+}
+.motion-reference-related > .motion-reference-clip-select {
+  font-size: 11px;
+  margin-bottom: 14px;
+}
+@media (max-width: 540px) {
+  .motion-related-context p {
+    font-size: 11px;
+  }
+  .motion-reference-pending {
+    padding: 20px !important;
+    min-height: 145px;
+  }
+  .motion-reference-pending h3 {
+    font-size: 18px;
+  }
+}

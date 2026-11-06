@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-ssr
+coverage
+*.local
+.vercel
+.DS_Store
+*.tsbuildinfo
+qa-artifacts/
+.env
+.env.*
+__pycache__/

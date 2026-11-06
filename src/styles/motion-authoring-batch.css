@@ -1,0 +1,59 @@
+.motion-authoring-batch {
+  --mab-ink: #243e37;
+  --mab-muted: #55645b;
+  --mab-line: #c7d2c3;
+  --mab-paper: #fbfaf5;
+  box-sizing: border-box;
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  max-width: 960px;
+  padding: clamp(16px, 3vw, 28px);
+  border: 1px solid var(--mab-line);
+  border-radius: 20px;
+  background: var(--mab-paper);
+  color: var(--mab-ink);
+  font: 400 1rem/1.6 system-ui, sans-serif;
+  overflow-wrap: anywhere;
+}
+.motion-authoring-batch * { box-sizing: border-box; }
+.motion-authoring-batch :is(h2, p, figure) { margin: 0; }
+.mab-header { display: flex; align-items: start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.mab-header h2 { font-size: clamp(1.2rem, 3vw, 1.65rem); line-height: 1.4; letter-spacing: -0.03em; }
+.mab-eyebrow { color: var(--mab-muted); font-size: 0.8rem; }
+.mab-status { padding: 4px 10px; border: 1px solid #b79670; border-radius: 99px; background: #f2e7d7; color: #65452c; font-size: 0.8125rem; }
+.mab-note, .mab-legend, .mab-playback-state { color: var(--mab-muted); font-size: 0.875rem; }
+.mab-picker, .mab-progress { display: grid; gap: 6px; }
+.mab-picker select { width: 100%; }
+.mab-figure { display: grid; gap: 12px; }
+.mab-scene { display: block; width: 100%; height: auto; border: 1px solid #dbe1d3; border-radius: 16px; }
+.mab-figure figcaption { display: grid; gap: 4px; }
+.mab-figure figcaption span { color: var(--mab-muted); font-size: 0.875rem; }
+.mab-controls, .mab-phases, .mab-view-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+.mab-controls label, .mab-view-controls > label:not(.mab-checkbox) { display: grid; gap: 4px; }
+.motion-authoring-batch :is(button, select) { min-height: 44px; padding: 8px 13px; border: 1px solid #315e51; border-radius: 9px; font: inherit; }
+.motion-authoring-batch button { background: #315e51; color: #fffdf5; cursor: pointer; }
+.motion-authoring-batch button.mab-secondary, .motion-authoring-batch select { background: #fffdf7; color: var(--mab-ink); border-color: #9bad98; }
+.motion-authoring-batch button[aria-pressed='true'] { box-shadow: inset 0 0 0 2px #315e51; font-weight: 650; }
+.motion-authoring-batch :is(button, select):disabled { opacity: 0.55; cursor: default; }
+.motion-authoring-batch :is(button, select, input):focus-visible { outline: 3px solid #ad6139; outline-offset: 3px; }
+.mab-progress input { width: 100%; min-height: 44px; accent-color: #315e51; }
+.mab-checkbox { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.mab-checkbox input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: #315e51; }
+.mab-evidence { border-top: 1px solid var(--mab-line); padding-top: 12px; font-size: 0.875rem; }
+.mab-evidence summary { min-height: 44px; padding: 8px 0; cursor: pointer; font-weight: 650; }
+.mab-evidence h3 { margin: 14px 0 4px; font-size: 1rem; }
+.mab-evidence ul { padding-left: 22px; margin: 6px 0; }
+.mab-evidence li + li { margin-top: 8px; }
+.mab-evidence a { display: inline-block; min-height: 44px; padding-block: 8px; color: #285c4a; text-underline-offset: 3px; }
+.mab-evidence :is(a, summary):focus-visible { outline: 3px solid #ad6139; outline-offset: 3px; }
+@media (max-width: 480px) {
+  .motion-authoring-batch { border-radius: 12px; padding: 14px; gap: 12px; }
+  .mab-controls > button { flex: 1 1 40%; }
+  .mab-controls > label { flex: 1 1 100%; }
+  .mab-phases > button { flex: 1 1 28%; }
+  .mab-view-controls > label:not(.mab-checkbox) { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-authoring-batch *, .motion-authoring-batch *::before, .motion-authoring-batch *::after { animation: none !important; transition: none !important; }
+}

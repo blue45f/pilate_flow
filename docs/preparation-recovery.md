@@ -1,0 +1,15 @@
+# Class preparation recovery
+
+Typing a new note and then dismissing its dialog used to lose the entire form. Looking up source information from a class block also closed its editor and cleared the unapplied inputs. This change preserves those inputs and makes the next action clear, without automatically saving or granting a review.
+
+A changed note stays in the same native dialog when X, Escape, backdrop or Cancel is used. Continue restores the last input; explicit discard closes once. Pristine and fully reverted forms close directly. Submit focuses the first invalid field in visible order, with local/global feedback and ARIA links. Editing that field clears its old error while other errors remain. Existing store-exception retention is preserved. Precautions are optional for a pending note; copy explains the later personal-review requirement.
+
+Source lookup keeps block note, time, role, side and reference selection against the original Apply base. The mobile sheet suspends beneath the source dialog; resizing keeps source details on top. Desktop reference playback pauses and does not resume automatically. Returning restores the logical editor; one explicit Apply commits the patch, and stale blocks remain protected. Stable native-close callbacks and a layout/passive guard handle queued lower-sheet close notifications. Unit queue simulation and actual browser proof are recorded separately.
+
+The mobile Atlas entry actions now have a 44px minimum height. The previous 36px rule failed a real touch-target guard. Other existing data, store/schema/backend code, authored motion models and all 22 reference fingerprints are unchanged. Canonical exercises remain 98, exact assets 0/98 and expert reviews 0.
+
+Validation: 1,492/1,492 Vitest cases across 138 files passed once after browser cleanup, with unchanged five-second limits. Frontend types, lint (zero errors and one unchanged legacy HMR warning), ledger freshness, six Node integrity tests and build passed. Chromium and WebKit natural journeys contributed 18 checks/50 screenshots; separate postmount CSS200 checks contributed eight checks/14 screenshots. The latter measured actual two-times fonts for newly mounted errors and decisions.
+
+Eight native checkpoint exports were inspected; final exports were not restored. Initial synthetic fixtures used the real file input and preflight/Apply flow. Original records and pending statuses remained intact. Failed attempts, exact source hashes and raw logs are preserved in delivery evidence. The executed CSS supplement reconstruction and the unexecuted postrun replay revision are labeled separately.
+
+This guard covers this note dialog and block source lookup, not page refresh/OS termination or every other editor dismissal. No persistent draft fields or automatic approvals were added. Local export and unit store failures do not establish authenticated server durability. Physical iOS, finger swipes, OS keyboard and OS text scaling remain unverified. No operating deployment, credential change, paid service or external publication was performed. Current-executor Git/source archives are distinct from external backup.

@@ -1,0 +1,21 @@
+{
+  "sourceLibraryId": "libfile_eda8613323a0819196039aeb81371d0b",
+  "sourceVersion": 0,
+  "sourcePath": "/workspace/pilates-redesign-v2/reformer-still-life/flow-atelier-empty-reformer-asset.png",
+  "appAssetPath": "public/images/atelier-reformer-still-life.png",
+  "sha256": "08738f19dac08bfb0da865aee5cdd23fcb6a4d89c752b8e7db21d65d0f1586c7",
+  "bytes": 2178463,
+  "dimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "originalBytesPreserved": true,
+  "generation": "Original AI still-life supplied by the user/design handoff",
+  "permittedUse": "Decorative empty-equipment card background; preserve reference-image label",
+  "notRepresentations": [
+    "Not an actual venue photograph",
+    "Not a person or exercise demonstration",
+    "Not an expert-reviewed motion or safety proof"
+  ],
+  "semanticImageEditing": false
+}

@@ -1,0 +1,10 @@
+SPDX-License-Identifier: 0BSD
+
+The original project-authored geometry in heel-raise-model.mjs and clam-model.mjs
+is provided in these test fixture copies under the BSD Zero Clause License (0BSD).
+Full license terms: https://spdx.org/licenses/0BSD.html
+
+This fixture grant covers the original software copies only. It does not grant
+rights to NHS or other third-party photographs, video, illustrations, text or logos.
+No such media is included in these fixtures. The hashes preserve the unchanged
+original code; source-document approval is not approval of its geometry or safety.

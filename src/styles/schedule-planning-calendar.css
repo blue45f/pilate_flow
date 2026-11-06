@@ -1,0 +1,104 @@
+.dated-planning .planning-calendar-help {
+  font-size: 0.875rem;
+  color: var(--muted, #626a64);
+  line-height: 1.7;
+  max-width: 72ch;
+}
+
+.dated-planning .dated-planning-calendar button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  justify-content: flex-start;
+  min-height: 74px;
+  overflow-wrap: anywhere;
+}
+
+.dated-planning .dated-planning-calendar button > strong {
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+}
+
+.dated-planning .dated-planning-calendar .planning-calendar-state,
+.dated-planning .dated-planning-calendar .planning-calendar-exception {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.dated-planning .dated-planning-calendar button[data-needs-attention='true'] {
+  border-bottom: 3px solid #a96b38;
+}
+
+.dated-planning .dated-planning-calendar .planning-calendar-attention {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  background: #fff2df;
+  color: #794414;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.dated-planning .dated-planning-calendar button[aria-pressed='true'] .planning-calendar-attention {
+  background: rgb(255 255 255 / 15%);
+  color: inherit;
+}
+
+.dated-planning .planning-selected-date-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.dated-planning .planning-selected-date-heading > h3 {
+  margin: 0;
+}
+
+.dated-planning .planning-selected-date-heading > button {
+  min-height: 44px;
+  white-space: normal;
+}
+
+@media (max-width: 600px) {
+  .dated-planning .planning-selected-date-heading > button {
+    width: 100%;
+  }
+}
+
+/* Compact date cells; exact counts remain in the selected-day summary and description. */
+.dated-planning .planning-calendar-count {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dated-planning .dated-planning-calendar .planning-calendar-compact-status {
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  background: #e9ede1;
+  color: #31583e;
+}
+.dated-planning .dated-planning-calendar [data-status='미정'],
+.dated-planning .dated-planning-calendar [data-status='확인'],
+.dated-planning .dated-planning-calendar [data-status='변경'] {
+  background: #fff2df;
+  color: #794414;
+}
+.dated-planning
+  .dated-planning-calendar
+  button[aria-pressed='true']
+  .planning-calendar-compact-status {
+  background: rgb(255 255 255 / 18%);
+  color: inherit;
+}
+.dated-planning .planning-selected-summary {
+  margin: 0 0 0.75rem;
+  color: var(--muted, #626a64);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}

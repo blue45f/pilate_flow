@@ -1,0 +1,367 @@
+{
+  "schemaVersion": "pilates-v6-basi-mat-facts-1",
+  "status": "factual research and authoring requirements only; no models authored by this task",
+  "baseHeadPrefixProvidedByParent": "225a82c",
+  "fullBaseHeadNotProvided": true,
+  "gitHeadIndependentlyChecked": false,
+  "researchCheckedAtUtc": "2026-11-05T04:10:56Z",
+  "networkPreflight": {
+    "environmentStatusReadBeforeWeb": true,
+    "observationsCurrent": true,
+    "policyMode": "unrestricted",
+    "policyState": "enforced",
+    "policyChanged": false,
+    "scope": "One public BASI HTML URL only; no source media or denied target requested."
+  },
+  "counts": {
+    "patternsSelected": 2,
+    "factualSourceRecords": 2,
+    "uniquePrimaryUrls": 1,
+    "uniquePublishers": 1,
+    "reusedV5FactualRecords": 1,
+    "newDedicatedPatternRecords": 1,
+    "newUniqueSourceUrls": 0,
+    "modelsAuthored": 0,
+    "canonicalAssetsAdded": 0,
+    "approvedMappings": 0,
+    "professionalReviews": 0
+  },
+  "hashMethod": "factualRecordSha256 is SHA-256 of UTF-8 canonical JSON of factualRecord only: recursive object-key sorting, original Unicode, preserved array order and compact comma/colon separators. It hashes this researcher's paraphrase, not source HTML, publisher artwork, video, authored geometry or approval.",
+  "sources": [
+    {
+      "publisher": "BASI Pilates",
+      "title": "10 Essential Pilates Exercises for Beginners",
+      "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+      "publishedDate": "2019-10-16",
+      "articleBylineObserved": "CJ Kelly, NCPT, Owner Gumption Collective",
+      "footerAuthorLabelObserved": "By SecoSan",
+      "authorshipBoundary": "The instructional article has an explicit CJ Kelly byline and also a separate footer author label. The footer's editorial/CMS role was not established. Credentials and authorship were not independently verified.",
+      "populationContext": {
+        "type": "official educator introduction to Pilates fundamentals",
+        "audienceLabel": "Beginners",
+        "ageExplicit": false,
+        "clinicalDiagnosisExplicit": false,
+        "generalAdultSuitabilityEstablished": false,
+        "individualSuitabilityEstablished": false
+      },
+      "checkedAtUtc": "2026-11-05T04:10:56Z",
+      "accessDateUtc": "2026-11-05",
+      "access": {
+        "bodyRead": true,
+        "method": "public HTML text via web.open",
+        "numericHttpStatus": null,
+        "statusNote": "Successful tool text access did not expose a numeric HTTP status; 200 is not inferred.",
+        "sourceFileSaved": false
+      },
+      "sourceChecked": true,
+      "mediaTimestamps": [],
+      "sourceMediaObserved": false,
+      "sourceMediaCopied": false,
+      "sourceMediaTraced": false,
+      "rights": {
+        "mode": "reference-only",
+        "embedded": false,
+        "reuseLicenseEstablished": false,
+        "observedNotice": "BASI copyright / All rights reserved footer",
+        "use": "Original factual paraphrase and original URL only; no source text, artwork or media reproduced as an authored model."
+      },
+      "professionalReviewCount": 0,
+      "exactMotionMappingCount": 0,
+      "sourceId": "basi-cjkelly-chest-lift-v1",
+      "locators": [
+        "Article title/date/byline: web text 103–110",
+        "Section 2 Chest Lift: web text 127–134",
+        "Footer author label: web text 227; copyright footer 277–281"
+      ],
+      "lineage": {
+        "reusedV5Record": true,
+        "priorLedger": "/workspace/pilates-flow/src/data/motionSelectedV5SourceLedger.json",
+        "priorCheckedDateUtc": "2026-11-05",
+        "priorResearchCheckpointUtc": "2026-11-05T01:59:39Z",
+        "priorFactualRecordSha256": "30322df79e4cc20e602afd0c3107ccac5eb790d3f840da2de04f1176638cdfae",
+        "factualRecordReusedWithoutAlteration": true,
+        "freshBodyTextReadForV6": true
+      },
+      "factualRecord": {
+        "variant": "Supine chest lift with knees bent, legs together and hands behind the head",
+        "start": "Lie on the back with knees bent and legs together. Interlace fingers behind the head, press the head lightly into the hands, and keep elbows within peripheral view.",
+        "move": "Exhale to lift head, neck and chest, looking toward the thighs, until shoulder-blade tips leave the mat.",
+        "return": "Pause while inhaling, then exhale to lower to the mat.",
+        "contacts": [
+          "Head lightly supported by the hands at setup.",
+          "Mat contact changes as the shoulder-blade tips lift."
+        ],
+        "props": "A mat is referenced; no additional prop is specified for this section.",
+        "side": "A central lift with both hands is described; no rotation or alternating side is specified."
+      },
+      "directlyEstablished": {
+        "kneesBent": true,
+        "legsTogether": true,
+        "interlacedHandsBehindHead": true,
+        "lightHeadPressureIntoHands": true,
+        "shoulderBladeTipsLeaveMatEndpoint": true,
+        "returnToMat": true,
+        "qualitativeBreathingCues": true,
+        "feetFlat": false,
+        "completePelvisFixation": false,
+        "numericalDuration": false
+      },
+      "unknown": [
+        "Feet-flat instruction, exact foot support patches and pressure.",
+        "Complete pelvis fixation or no-tilt instruction.",
+        "Head/neck/elbow geometry, exact contact force, finger interlace geometry and numerical range.",
+        "Spine-segment motion, display duration, cadence, pause length and authored repetition timing."
+      ],
+      "exclusion": "No rotation, tabletop legs, pelvic-curl leg spacing, single-leg stretch or another publisher's shoulder-blade endpoint is imported.",
+      "factualRecordSha256": "30322df79e4cc20e602afd0c3107ccac5eb790d3f840da2de04f1176638cdfae"
+    },
+    {
+      "publisher": "BASI Pilates",
+      "title": "10 Essential Pilates Exercises for Beginners",
+      "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+      "publishedDate": "2019-10-16",
+      "articleBylineObserved": "CJ Kelly, NCPT, Owner Gumption Collective",
+      "footerAuthorLabelObserved": "By SecoSan",
+      "authorshipBoundary": "The instructional article has an explicit CJ Kelly byline and also a separate footer author label. The footer's editorial/CMS role was not established. Credentials and authorship were not independently verified.",
+      "populationContext": {
+        "type": "official educator introduction to Pilates fundamentals",
+        "audienceLabel": "Beginners",
+        "ageExplicit": false,
+        "clinicalDiagnosisExplicit": false,
+        "generalAdultSuitabilityEstablished": false,
+        "individualSuitabilityEstablished": false
+      },
+      "checkedAtUtc": "2026-11-05T04:10:56Z",
+      "accessDateUtc": "2026-11-05",
+      "access": {
+        "bodyRead": true,
+        "method": "public HTML text via web.open",
+        "numericHttpStatus": null,
+        "statusNote": "Successful tool text access did not expose a numeric HTTP status; 200 is not inferred.",
+        "sourceFileSaved": false
+      },
+      "sourceChecked": true,
+      "mediaTimestamps": [],
+      "sourceMediaObserved": false,
+      "sourceMediaCopied": false,
+      "sourceMediaTraced": false,
+      "rights": {
+        "mode": "reference-only",
+        "embedded": false,
+        "reuseLicenseEstablished": false,
+        "observedNotice": "BASI copyright / All rights reserved footer",
+        "use": "Original factual paraphrase and original URL only; no source text, artwork or media reproduced as an authored model."
+      },
+      "professionalReviewCount": 0,
+      "exactMotionMappingCount": 0,
+      "sourceId": "basi-cjkelly-pelvic-curl-v1",
+      "locators": [
+        "Article title/date/byline: web text 103–110",
+        "Section 1 Pelvic Curl: web text 115–125",
+        "Footer author label: web text 227; copyright footer 277–281"
+      ],
+      "lineage": {
+        "reusedV5Record": false,
+        "relatedPriorSupportLedger": "/workspace/pilates-motion-blocks-v5-2026-11-05/research/catalog-research.json",
+        "note": "V5 had a combined Pelvic Curl/Baby Swan supporting record. This is a new dedicated Pelvic Curl record after a fresh V6 body-text read; prior records are unchanged."
+      },
+      "factualRecord": {
+        "variant": "Supine articulated pelvic curl with arms pressing the mat",
+        "start": "Lie supine with knees bent, knees and heels about sit-bone width apart, and long arms pressing the mat beside the hips.",
+        "initiation": "Pause on an inhale, then exhale to tuck the pelvis with abdominal effort before glute engagement.",
+        "move": "Engage glutes and articulate the hips upward toward a line between knees and shoulder blades.",
+        "middle": "Pause while inhaling, with support through the center, arms and legs.",
+        "return": "Exhale, lower the sternum and articulate the spine toward the mat.",
+        "contacts": [
+          "Arms press the mat.",
+          "Lower back touches the mat during the tuck.",
+          "The source names support through arms and legs; exact foot patches are unspecified."
+        ]
+      },
+      "directlyEstablished": {
+        "supine": true,
+        "kneesBent": true,
+        "kneesAndHeelsAboutSitBoneWidth": true,
+        "longArmsPressMatBesideHips": true,
+        "initialPelvicTuck": true,
+        "subsequentGluteEngagement": true,
+        "spinalArticulationUpAndDown": true,
+        "kneeToShoulderBladeLineCue": true,
+        "qualitativeBreathingCues": true,
+        "feetFlat": false,
+        "exactStationaryContactMap": false,
+        "numericalDuration": false
+      },
+      "unknown": [
+        "Feet-flat or full sole/heel patch, ankle angle and pressure distribution.",
+        "Exact hand or arm patch, head/neck/shoulder stationary support map and forces.",
+        "Measured vertebral segmentation, hip/knee angles, peak height or timing.",
+        "Whether a numerical rig achieves a clinically appropriate pattern or individual suitability."
+      ],
+      "exclusion": "Do not reinterpret the articulated tuck/roll as a source-validated rigid torso hinge. No ball, band, raised-foot, single-leg or lifted-arm progression is added.",
+      "factualRecordSha256": "e9411fd267a52e66b1070b777487b79f02987bdd3ea3c5028088a60756c5a8b1"
+    }
+  ],
+  "patterns": [
+    {
+      "patternId": "mat-chest-lift",
+      "proposedDraftId": "mat-chest-lift",
+      "intendedComparisonId": "original-mat-chest-lift",
+      "sourceId": "basi-cjkelly-chest-lift-v1",
+      "status": "viable research pattern; independent original model not yet authored",
+      "sourceTextPatternChecked": true,
+      "exactSourceVariantMatched": false,
+      "sourceVariantReconciliationRequired": true,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false,
+      "autoRecommendationEligible": false,
+      "catalogSnapshot": {
+        "file": "/workspace/pilates-flow/src/data/originalMovements.ts",
+        "lines": "127–138",
+        "requiredEquipment": [
+          "mat"
+        ],
+        "props": [
+          "none"
+        ],
+        "bodyPosition": "supine",
+        "summary": "Hands support the head while the upper body lifts a small amount and lowers."
+      },
+      "sourceRequiredSetup": [
+        "Supine, knees bent and legs together.",
+        "Interlaced hands behind the head with light head pressure; elbows in peripheral view.",
+        "Lift head/neck/chest while looking toward the thighs; shoulder-blade tips leave the mat, then lower to the mat."
+      ],
+      "authoringRequirements": {
+        "sourceEstablishedContactTypes": [
+          "head-supported-by-hands-at-setup",
+          "changing-shoulder-blade-mat-contact"
+        ],
+        "authoredContactChoices": [
+          "Any feet-flat and heel/toe patch.",
+          "Pelvis support or full fixation.",
+          "Exact head/hand offset and hand/elbow path."
+        ],
+        "numericalChoices": [
+          "Original body proportions, spine/head/neck/elbow angles and contact geometry.",
+          "Phase fractions, display speed and hold duration; no observed media timing exists."
+        ],
+        "mustExpose": [
+          "feet-flat is not source-established",
+          "pelvis fixation is not source-established",
+          "source-specific legs-together setup",
+          "professional review 0 / exact false / auto false",
+          "source fact hash is not motion review"
+        ]
+      },
+      "mismatchOrUnknown": [
+        "The catalog's broad small-lift note does not specify the source's leg setup or precise shoulder-blade endpoint.",
+        "Do not count an arbitrary fixed-pelvis/feet-flat rig as observed source contact geometry."
+      ],
+      "additionalPropsEstablished": [],
+      "notMerged": [
+        "Pelvic Curl",
+        "Chest Lift with Rotation",
+        "Single Leg Stretch",
+        "NHS crunch alternative"
+      ]
+    },
+    {
+      "patternId": "mat-pelvic-curl",
+      "proposedDraftId": "articulated-pelvic-curl",
+      "intendedComparisonId": "original-mat-bridge",
+      "sourceId": "basi-cjkelly-pelvic-curl-v1",
+      "status": "viable research pattern; independent original model not yet authored",
+      "sourceTextPatternChecked": true,
+      "exactSourceVariantMatched": false,
+      "sourceVariantReconciliationRequired": true,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false,
+      "autoRecommendationEligible": false,
+      "catalogSnapshot": {
+        "file": "/workspace/pilates-flow/src/data/originalMovements.ts",
+        "lines": "89–100",
+        "requiredEquipment": [
+          "mat"
+        ],
+        "props": [
+          "none"
+        ],
+        "bodyPosition": "supine",
+        "summary": "Lift and lower the pelvis with even foot pressure; generic bridge planning note."
+      },
+      "sourceRequiredSetup": [
+        "Bent knees with knees and heels approximately sit-bone width; long arms pressing mat beside hips.",
+        "Abdominal pelvic tuck precedes glute engagement and spinal articulation upward.",
+        "Knee-to-shoulder-blade line cue, qualitative inhaled pause, sternum/spine lowering to mat."
+      ],
+      "authoringRequirements": {
+        "sourceEstablishedContactTypes": [
+          "arms-pressing-mat",
+          "lower-back-mat-during-tuck",
+          "support-through-arms-and-legs"
+        ],
+        "authoredContactChoices": [
+          "Any flat-foot, heel/toe patch and ankle angle.",
+          "Exact palm/arm/scapula/head/neck patch.",
+          "Contact release order and numerical distribution along a simplified spine."
+        ],
+        "numericalChoices": [
+          "Original spine segmentation and curvature, limb lengths, joint angles, peak height and phase timing.",
+          "A simplified geometric approximation must be labeled as authored, not measured vertebra-by-vertebra motion."
+        ],
+        "mustExpose": [
+          "source requires a tuck and articulated roll, not a source-validated rigid hinge",
+          "feet-flat and a complete stationary support map are not explicit",
+          "professional review 0 / exact false / auto false",
+          "display pauses and numerical body geometry are authored"
+        ]
+      },
+      "mismatchOrUnknown": [
+        "Catalog's extension tag and general pelvis lift do not encode the initial tuck or sequential spinal roll.",
+        "The independent legacy 2D bridge-pattern concept is not an exact asset for this pattern or comparison ID."
+      ],
+      "additionalPropsEstablished": [],
+      "notMerged": [
+        "Legacy rigid bridge concept",
+        "Single-leg bridge",
+        "Ball/band/raised-foot variants",
+        "Chest Lift leg-together setup"
+      ]
+    }
+  ],
+  "optionalSection": {
+    "name": "Spine Twist Supine",
+    "bodyPresentInReadPage": true,
+    "selected": false,
+    "sourceRecordCreated": false,
+    "modelSpecCreated": false,
+    "reason": "Initial selection capped at two viable patterns; do not count the unselected section as another proposed or authored model."
+  },
+  "accessErrors": [],
+  "deniedTargets": {
+    "previous403Or401TargetsRequested": false,
+    "retries": 0,
+    "bypasses": 0,
+    "policy": "No prior denied Merrithew, THERABAND, OPC, YouTube, UHCW, Library or proc target was requested. Any new denial would stop that target; no alternate-path workaround."
+  },
+  "observations": {
+    "sourceMediaTimestamps": [],
+    "sourceMediaObserved": false,
+    "sourceFilesDownloaded": false,
+    "sourceArtworkTraced": false,
+    "exactAnglesMeasured": false
+  },
+  "workScope": {
+    "newFilesOnlyUnder": "/workspace/pilates-motion-blocks-v6-2026-11-05/research",
+    "activeFilesEdited": false,
+    "existingLedgersEdited": false,
+    "gitOperations": false,
+    "deploymentOperations": false,
+    "modelCodeAuthored": false,
+    "testsExecuted": false,
+    "credentialsCreated": false,
+    "externalMessagesSent": false,
+    "note": "Research-freeze state only. Parent authorized separate isolated model authoring after these records were frozen; model work does not change factual records or approvals."
+  }
+}

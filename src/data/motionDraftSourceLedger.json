@@ -1,0 +1,680 @@
+{
+  "schemaVersion": 2,
+  "recordKind": "primary-text-source-ledger-draft",
+  "artifactLabelDate": "2026-11-05",
+  "accessDateUtc": "2026-11-04",
+  "scope": "Four factual movement patterns for independent schematic authoring in an isolated laboratory. Reference checking is not motion review, exact catalog mapping, safety certification or professional approval.",
+  "counts": {
+    "factualPatternsSourceChecked": 4,
+    "accessibleSourceRecords": 8,
+    "deniedSourceRecords": 1,
+    "professionalMotionReviews": 0,
+    "professionalApprovals": 0,
+    "approvedCatalogMappings": 0,
+    "exactProductionMotionAssetsAdded": 0
+  },
+  "catalogFilesRead": [
+    "/workspace/pilates-flow/src/data/originalMovements.ts",
+    "/workspace/pilates-motion-integration-contract-2026-11-05.json"
+  ],
+  "sources": [
+    {
+      "sourceId": "nbt-diep-heel-slide-v1",
+      "url": "https://www.nbt.nhs.uk/our-services/a-z-services/breast-reconstruction/post-operative-exercises-diep-reconstruction",
+      "title": "Post-operative Exercises DIEP Reconstruction",
+      "publisher": "North Bristol NHS Trust",
+      "accessDate": "2026-11-04",
+      "accessStatus": "accessible-primary-text",
+      "evidenceLocation": "3. Heel slide; text extraction lines 54–63; referenced exercise 1 lines 39–44",
+      "observedMediaTimestamps": [],
+      "rights": {
+        "use": "reference-only",
+        "embedded": false,
+        "mediaRead": false,
+        "mediaCopied": false,
+        "tracing": false,
+        "motionCapture": false,
+        "licenseForReproductionVerified": false,
+        "note": "External links and original factual paraphrase only; public access does not establish reproduction permission."
+      },
+      "factualRecord": {
+        "scope": "Adult reconstructive-surgery clinical context inferred from DIEP breast-reconstruction service; no explicit adult age range in inspected exercise text.",
+        "facts": {
+          "start": "Floor lying, knees bent, arms beside body. Referenced abdominal setup uses feet on floor, hip width apart.",
+          "middle": "One leg stays still while the other slides outward toward a straight leg; natural lower-back curve and still pelvis are cues.",
+          "finish": "Slide back to the start; then exchange legs.",
+          "activeSide": "One leg, then the other; no anatomical first side assigned.",
+          "contact": "Floor is explicit. One leg remains stationary; precise head, hand and shoulder contact is unspecified.",
+          "equipmentSupport": "Floor stated; mat and pillow not specified."
+        },
+        "statedConstraints": [
+          "Postoperative context is narrower than general Pilates.",
+          "No cycle duration, quantified leg range, or heel-slide dosage specified."
+        ]
+      },
+      "factualRecordSha256": "1c1c3b47904a399c04042dbe0406e78e117fcafab1b37c41852fc403f5d16f74",
+      "sourceChecked": true,
+      "professionalMotionReviewCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "intendedPopulationContext": {
+        "category": "postoperative",
+        "populationAndSetting": "DIEP breast-reconstruction recovery",
+        "adultEvidence": "adult clinical context inferred; exercise text has no explicit age criterion",
+        "generalAdultSuitabilityEstablished": false,
+        "isPaediatricSource": false,
+        "pregnancySpecificInstructionsUsed": false
+      },
+      "instructionEvidenceScope": "Specific instructions in the identified source section only; not evidence for every generic Pilates variant or an exact authored procedural model."
+    },
+    {
+      "sourceId": "rm-abdominal-operation-single-leg-slide-v1",
+      "url": "https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386",
+      "title": "Exercise and advice to help you recover after your abdominal operation",
+      "publisher": "The Royal Marsden NHS Foundation Trust, Physiotherapy department",
+      "accessDate": "2026-11-04",
+      "accessStatus": "accessible-primary-text",
+      "evidenceLocation": "Single leg slide: printed page 9, physical page 11 (zero-index 10), text lines 163–171; progression restriction lines 146–147",
+      "observedMediaTimestamps": [],
+      "rights": {
+        "use": "reference-only",
+        "embedded": false,
+        "mediaRead": false,
+        "mediaCopied": false,
+        "tracing": false,
+        "motionCapture": false,
+        "licenseForReproductionVerified": false,
+        "note": "External links and original factual paraphrase only; public access does not establish reproduction permission."
+      },
+      "factualRecord": {
+        "scope": "Surgical recovery; adult context inferred, no age criterion stated.",
+        "facts": {
+          "start": "On back; knees bent; feet flat, slightly apart; abdominal brace.",
+          "middle": "The left heel travels forward along the floor.",
+          "finish": "The heel slides back towards the buttock; alternate legs.",
+          "activeSide": "Left is described first; both legs included.",
+          "contact": "Heel slides along floor; other contacts unspecified.",
+          "equipmentSupport": "Floor; other supports unspecified."
+        },
+        "statedConstraints": [
+          "From six weeks after surgery unless surgical team advises otherwise.",
+          "No measured slide length or cycle time."
+        ]
+      },
+      "factualRecordSha256": "eba517990895c0118d1afc2ab7325fe185003196814be5ddff611bd1cd859168",
+      "sourceChecked": true,
+      "professionalMotionReviewCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "intendedPopulationContext": {
+        "category": "postoperative",
+        "populationAndSetting": "Abdominal, gynaecological or pelvic surgery recovery; selected progression from six weeks unless surgical team advises otherwise",
+        "adultEvidence": "adult clinical context inferred; no explicit age criterion in inspected section",
+        "generalAdultSuitabilityEstablished": false,
+        "isPaediatricSource": false,
+        "pregnancySpecificInstructionsUsed": false
+      },
+      "instructionEvidenceScope": "Specific instructions in the identified source section only; not evidence for every generic Pilates variant or an exact authored procedural model."
+    },
+    {
+      "sourceId": "rm-abdominal-operation-single-knee-lift-v1",
+      "url": "https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386",
+      "title": "Exercise and advice to help you recover after your abdominal operation",
+      "publisher": "The Royal Marsden NHS Foundation Trust, Physiotherapy department",
+      "accessDate": "2026-11-04",
+      "accessStatus": "accessible-primary-text",
+      "evidenceLocation": "Single knee lifts: printed page 8, physical page 10 (zero-index 9), text lines 146–155",
+      "observedMediaTimestamps": [],
+      "rights": {
+        "use": "reference-only",
+        "embedded": false,
+        "mediaRead": false,
+        "mediaCopied": false,
+        "tracing": false,
+        "motionCapture": false,
+        "licenseForReproductionVerified": false,
+        "note": "External links and original factual paraphrase only; public access does not establish reproduction permission."
+      },
+      "factualRecord": {
+        "scope": "Surgical recovery; adult context inferred, no age criterion stated.",
+        "facts": {
+          "start": "On back; knees bent; feet flat and slightly apart; abdominal brace.",
+          "middle": "Lift one foot off bed or floor while bending hip to 90 degrees; hold five seconds.",
+          "finish": "Lower foot back to bed or floor.",
+          "activeSide": "Each leg is prescribed; a strict alternation order is not stated.",
+          "contact": "Active foot lifts and returns; other contacts unspecified.",
+          "equipmentSupport": "Bed or floor; head and arms unspecified."
+        },
+        "statedConstraints": [
+          "From six weeks after surgery unless surgical team advises otherwise.",
+          "Five per leg is source-specific dosage.",
+          "Knee angle, neutral pelvis and cycle time unspecified."
+        ]
+      },
+      "factualRecordSha256": "047bfc7dfbe70800a343ec28470f393b1f37333e6a6790046fcffb6416619036",
+      "sourceChecked": true,
+      "professionalMotionReviewCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "intendedPopulationContext": {
+        "category": "postoperative",
+        "populationAndSetting": "Abdominal, gynaecological or pelvic surgery recovery; selected progression from six weeks unless surgical team advises otherwise",
+        "adultEvidence": "adult clinical context inferred; no explicit age criterion in inspected section",
+        "generalAdultSuitabilityEstablished": false,
+        "isPaediatricSource": false,
+        "pregnancySpecificInstructionsUsed": false
+      },
+      "instructionEvidenceScope": "Specific instructions in the identified source section only; not evidence for every generic Pilates variant or an exact authored procedural model."
+    },
+    {
+      "sourceId": "tsd-sui-knee-fold-v1",
+      "url": "https://www.torbayandsouthdevon.nhs.uk/uploads/25988.pdf?last-updated=20260902",
+      "title": "Stress urinary incontinence — Pelvic Health Physiotherapy information leaflet",
+      "publisher": "Torbay and South Devon NHS Foundation Trust",
+      "accessDate": "2026-11-04",
+      "accessStatus": "accessible-primary-text",
+      "evidenceLocation": "4. Knee folds / Scissors: physical page 4 (zero-index 3), text lines 119–134; leaflet reference 25988/V1/Physiotherapy/TSDFT/04.26, review 04.28",
+      "observedMediaTimestamps": [],
+      "rights": {
+        "use": "reference-only",
+        "embedded": false,
+        "mediaRead": false,
+        "mediaCopied": false,
+        "tracing": false,
+        "motionCapture": false,
+        "licenseForReproductionVerified": false,
+        "note": "External links and original factual paraphrase only; public access does not establish reproduction permission."
+      },
+      "factualRecord": {
+        "scope": "Pelvic-health clinical leaflet with pregnancy, childbirth and menopause contexts; adult clinical context, no explicit age criterion.",
+        "facts": {
+          "start": "Adopt preceding supine position on bed or floor; engage abdominal muscles.",
+          "middle": "One foot lifts from mat; knee comes towards body into tabletop; neutral pelvis and engaged core are cues.",
+          "finish": "Slow return to starting position.",
+          "activeSide": "One foot; first anatomical side and strict alternation are unspecified.",
+          "contact": "Active foot leaves mat. Other contact points are unspecified.",
+          "equipmentSupport": "Bed/floor in preceding setup, mat in fold text; no pillow or arm position specified."
+        },
+        "statedConstraints": [
+          "Setup says flatten spine, while fold says neutral pelvis: unresolved variant ambiguity.",
+          "This basic fold differs from following two-leg tabletop toe-tap progression.",
+          "No numeric fold angles or cycle duration given."
+        ]
+      },
+      "factualRecordSha256": "883c5bc1be0ee07157a945aa54268b20cfc080236788563a7d2d97e9b7a49dfd",
+      "sourceChecked": true,
+      "professionalMotionReviewCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "intendedPopulationContext": {
+        "category": "condition-specific",
+        "populationAndSetting": "Stress urinary incontinence / pelvic health; includes reproductive and menopause context, not a general Pilates curriculum",
+        "adultEvidence": "adult clinical context inferred; no explicit age criterion",
+        "generalAdultSuitabilityEstablished": false,
+        "isPaediatricSource": false,
+        "pregnancySpecificInstructionsUsed": false
+      },
+      "instructionEvidenceScope": "Specific instructions in the identified source section only; not evidence for every generic Pilates variant or an exact authored procedural model."
+    },
+    {
+      "sourceId": "roh-hip-oa-side-abduction-v1",
+      "url": "https://roh.nhs.uk/services-information/therapy/exercises-for-osteoarthritis-of-the-hip",
+      "title": "Exercises for Osteoarthritis of the Hip",
+      "publisher": "The Royal Orthopaedic Hospital",
+      "accessStatus": "primary-html-text-read-successfully",
+      "locator": "Hip Abduction in Side Lying; page text lines 74–76. General exercise advice at lines 35–37 and 79–82.",
+      "adultScope": {
+        "evidence": "Adult Physiotherapy Self Referral is a related patient service link on the page.",
+        "classification": "Adult service context supported; exercise paragraph has no age eligibility statement. General adult suitability is not established."
+      },
+      "factualRecord": {
+        "start": "Side lying; lower leg bent on a bed; upper leg straight.",
+        "middle": "Upper leg lifts upwards with ankle flexed and heel leading.",
+        "finish": "Upper leg lowers slowly.",
+        "activeSide": "Upper leg; no first anatomical side named.",
+        "stationaryContactsExplicit": "Lower bent leg is on the bed.",
+        "supportEquipmentExplicit": "Bed.",
+        "constraints": "General advice is gentle, slow performance. Problems with the exercises require stopping and consulting a doctor or physiotherapist."
+      },
+      "unknownOrNotStated": [
+        "Head or neck support",
+        "Arm and hand placement",
+        "Foot contact of lower leg",
+        "Pelvis rotation limit",
+        "Numeric lift angle",
+        "Cycle timing"
+      ],
+      "catalogComparison": {
+        "exerciseId": "original-mat-side-leg-lift",
+        "status": "source-variant-only-unapproved",
+        "matches": [
+          "Side lying and top-leg lift/lower",
+          "Bent lower knee corresponds to the app easier option"
+        ],
+        "mismatchesOrUnresolved": [
+          "Source uses a bed; catalog requires a mat with props none",
+          "Catalog has stacked pelvis and small range; source paragraph does not define either",
+          "Catalog harder front/back movement is not covered"
+        ],
+        "requiredBeforeAnyMapping": [
+          "Resolve support surface and head/hand contacts",
+          "Review exact authored variant and anatomical side",
+          "Review geometry, phases and contact annotations"
+        ]
+      },
+      "reviewStatus": "source-checked; motion-unreviewed",
+      "factualRecordSha256": "2d2122de86315a48bb5f9fe5b4f54686480450169806217e9eb9c74b914d2b2a",
+      "accessDate": "2026-11-04",
+      "rights": {
+        "use": "reference-only",
+        "embeddedExternalAssets": false,
+        "externalFootageImagesTracingOrMocapUsed": false,
+        "storedContent": "Original concise factual paraphrases, provenance links and hashes of these factual records only.",
+        "licenseAssumption": "Public access does not establish permission to reproduce or embed source assets."
+      },
+      "observedMediaTimestamps": [],
+      "sourceChecked": true,
+      "professionalMotionReviewCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "intendedPopulationContext": {
+        "category": "condition-specific",
+        "populationAndSetting": "Hip osteoarthritis therapy material; adult physiotherapy service context",
+        "adultEvidence": "adult service context supported; no age eligibility in exercise paragraph",
+        "generalAdultSuitabilityEstablished": false,
+        "isPaediatricSource": false,
+        "pregnancySpecificInstructionsUsed": false
+      },
+      "instructionEvidenceScope": "Specific instructions in the identified source section only; not evidence for every generic Pilates variant or an exact authored procedural model."
+    },
+    {
+      "sourceId": "ruh-lateral-hip-side-abduction-v1",
+      "url": "https://www.ruh.nhs.uk/patients/services/physiotherapy/documents/PHY067_Lateral_hip_pain.pdf",
+      "title": "Lateral Hip Pain — Physiotherapy Patient Information",
+      "publisher": "Royal United Hospitals Bath NHS Foundation Trust",
+      "documentDate": "July 2022",
+      "documentReference": "RUH PHY/067",
+      "accessStatus": "primary-pdf-text-read-successfully-no-images-opened",
+      "locator": "Printed page 10, PDF zero-index page 9, First exercise set — hip abduction, 3. Side lying hip abduction, text lines 222–229. Adult context printed page 2, lines 26–27.",
+      "adultScope": {
+        "evidence": "The condition section identifies typical patients as ages 40–60, while allowing younger patients.",
+        "classification": "Explicit adult condition context; not universal adult exercise clearance."
+      },
+      "factualRecord": {
+        "start": "Side lying with body aligned in a straight line and both legs straight.",
+        "middle": "Uppermost leg is raised using the buttock muscles.",
+        "finish": "Return to the starting posture.",
+        "activeSide": "Uppermost leg; no first anatomical side named.",
+        "stationaryContactsExplicit": "No stationary contact is described in the exercise paragraph.",
+        "supportEquipmentExplicit": "No support surface or head support is specified for this level. Resistance band belongs to the separate progression.",
+        "constraints": "General booklet advice chooses comfortably performable exercises and adjusts level to symptoms; this is physiotherapy support material."
+      },
+      "unknownOrNotStated": [
+        "Head or neck support",
+        "Arm and hand placement",
+        "Mat versus bed surface",
+        "Ankle posture",
+        "Numeric lift angle",
+        "Cycle timing",
+        "Explicit pelvis fixation"
+      ],
+      "catalogComparison": {
+        "exerciseId": "original-mat-side-leg-lift",
+        "status": "source-pattern-only-unapproved",
+        "matches": [
+          "Side-lying top-leg raise and return",
+          "Both legs straight defines a distinct factual variant"
+        ],
+        "mismatchesOrUnresolved": [
+          "Catalog requires mat but source paragraph specifies no surface",
+          "Catalog does not explicitly fix the base lower-knee posture",
+          "Catalog stacked pelvis, small range and harder front/back movement need independent review"
+        ],
+        "requiredBeforeAnyMapping": [
+          "Declare selected lower-leg variant",
+          "Resolve support and contact geometry",
+          "Review exact authored angles and phases"
+        ]
+      },
+      "reviewStatus": "source-checked; motion-unreviewed",
+      "factualRecordSha256": "fa7d7a99fddf19b1d6cf005742f4b45d3d12dcba1e2001f2fb78d12855c57994",
+      "accessDate": "2026-11-04",
+      "rights": {
+        "use": "reference-only",
+        "embeddedExternalAssets": false,
+        "externalFootageImagesTracingOrMocapUsed": false,
+        "storedContent": "Original concise factual paraphrases, provenance links and hashes of these factual records only.",
+        "licenseAssumption": "Public access does not establish permission to reproduce or embed source assets."
+      },
+      "observedMediaTimestamps": [],
+      "sourceChecked": true,
+      "professionalMotionReviewCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "intendedPopulationContext": {
+        "category": "condition-specific",
+        "populationAndSetting": "Lateral hip pain physiotherapy; typical condition ages 40–60 stated, with younger patients also possible",
+        "adultEvidence": "explicit adult condition context; not exercise clearance for all adults",
+        "generalAdultSuitabilityEstablished": false,
+        "isPaediatricSource": false,
+        "pregnancySpecificInstructionsUsed": false
+      },
+      "instructionEvidenceScope": "Specific instructions in the identified source section only; not evidence for every generic Pilates variant or an exact authored procedural model."
+    },
+    {
+      "sourceId": "dynamichealth-midback-open-book-v1",
+      "url": "https://www.dynamichealth.nhs.uk/help-and-advice/mid-back-pain/",
+      "title": "Mid back pain",
+      "publisher": "Dynamic Health, East of England Community Health and Care NHS Trust",
+      "accessStatus": "primary-html-text-read-successfully",
+      "locator": "Movement exercises — Open book, text lines 212–217; exercise selection/range advice at line 182; publisher footer lines 283 and 299.",
+      "adultScope": {
+        "evidence": "NHS musculoskeletal self-management context; no child-specific or explicit age eligibility statement was present in the reviewed exercise text.",
+        "classification": "Adult context inferred from service framing, not a verified all-adult indication."
+      },
+      "factualRecord": {
+        "start": "Side lying, knees bent, arms extended forward and hands together.",
+        "middle": "Only the top arm reaches toward the ceiling, then moves to the other side as the chest opens. Head follows that arm.",
+        "finish": "Return slowly to the starting posture and perform on both sides.",
+        "activeSide": "Top arm; no first anatomical side named.",
+        "stationaryContactsExplicit": "Only the top arm is instructed to move; fixed lower-arm contact is not explicitly specified.",
+        "supportEquipmentExplicit": "No mat, pillow or head support is named for this exercise.",
+        "constraints": "The movement section advises manageable exercises and gradually building range."
+      },
+      "unknownOrNotStated": [
+        "Head support",
+        "Precise knee and hip angles",
+        "Surface contact details",
+        "Mandatory hand-to-floor endpoint",
+        "Numeric trunk rotation",
+        "Cycle seconds"
+      ],
+      "catalogComparison": {
+        "exerciseId": "original-mat-open-book",
+        "status": "source-pattern-only-unapproved",
+        "matches": [
+          "Side-lying upper-arm opening and slow return"
+        ],
+        "mismatchesOrUnresolved": [
+          "Catalog explicitly allows adjusting head/knee support; source does not specify support",
+          "Catalog mat/props none do not establish selected support geometry",
+          "Catalog bent-elbow easier variant and end-range hold are not established by this paragraph"
+        ],
+        "requiredBeforeAnyMapping": [
+          "Resolve head/knee support",
+          "Keep arm-floor contact optional",
+          "Review trunk-versus-arm rotation and stationary-contact choices"
+        ]
+      },
+      "reviewStatus": "source-checked; motion-unreviewed",
+      "factualRecordSha256": "9a77c3a2d16e32ad6564dfea2752b15aaf5c209476c598576a9fb23e20c0c8d7",
+      "accessDate": "2026-11-04",
+      "rights": {
+        "use": "reference-only",
+        "embeddedExternalAssets": false,
+        "externalFootageImagesTracingOrMocapUsed": false,
+        "storedContent": "Original concise factual paraphrases, provenance links and hashes of these factual records only.",
+        "licenseAssumption": "Public access does not establish permission to reproduce or embed source assets."
+      },
+      "observedMediaTimestamps": [],
+      "sourceChecked": true,
+      "professionalMotionReviewCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "intendedPopulationContext": {
+        "category": "symptom-specific-general-physiotherapy",
+        "populationAndSetting": "NHS musculoskeletal self-management for mid-back pain",
+        "adultEvidence": "adult service context inferred; no explicit age eligibility in exercise paragraph",
+        "generalAdultSuitabilityEstablished": false,
+        "isPaediatricSource": false,
+        "pregnancySpecificInstructionsUsed": false
+      },
+      "instructionEvidenceScope": "Specific instructions in the identified source section only; not evidence for every generic Pilates variant or an exact authored procedural model."
+    },
+    {
+      "sourceId": "leeds-chest-wall-open-book-v1",
+      "url": "https://www.leedsth.nhs.uk/patients/resources/physiotherapy-exercises-for-breast-pain-with-chest-wall-musculoskeletal-symptoms/",
+      "title": "Physiotherapy exercises for breast pain with chest wall musculoskeletal symptoms",
+      "publisher": "Leeds Teaching Hospitals NHS Trust",
+      "accessStatus": "primary-html-text-read-successfully-no-images-opened",
+      "locator": "1. Open book, text lines 249–255; patient context and general constraints at lines 242–247. Image descriptions were not used for geometry.",
+      "adultScope": {
+        "evidence": "Breast clinic patient resource discussing women and chest wall symptoms; no numerical adult eligibility age stated in the reviewed section.",
+        "classification": "Adult patient context inferred; no general-adult clearance."
+      },
+      "factualRecord": {
+        "start": "Side lying with the arms extended forward, one resting over the other.",
+        "middle": "Upper arm arcs behind the body while the eyes follow the hand. Knees remain together and in floor contact.",
+        "finish": "Return slowly to the initial posture; both sides are included.",
+        "activeSide": "Upper arm; no first anatomical side named.",
+        "stationaryContactsExplicit": "Knees stay together touching the floor.",
+        "supportEquipmentExplicit": "Floor contact for knees; no head support named.",
+        "constraints": "A hand-to-floor reach is suggested, not established as mandatory contact. General advice begins gently; worsening symptoms prompt GP review."
+      },
+      "unknownOrNotStated": [
+        "Head support",
+        "Numerical knee flexion",
+        "Mandatory hand-floor completion",
+        "Numeric arm or trunk angle",
+        "Cycle seconds"
+      ],
+      "catalogComparison": {
+        "exerciseId": "original-mat-open-book",
+        "status": "corroborating-constraint-only-unapproved",
+        "matches": [
+          "Top arm opens and returns",
+          "Knee-floor constraint can inform a separately reviewed variant"
+        ],
+        "mismatchesOrUnresolved": [
+          "Do not promote suggested hand-floor reach into required contact; app says not to force it",
+          "Do not infer missing head support from the source",
+          "Do not conflate condition-specific patient guidance with suitability for every adult"
+        ],
+        "requiredBeforeAnyMapping": [
+          "Review exact knee-floor support representation",
+          "Review selected comfortable arm range",
+          "Review head support and variant"
+        ]
+      },
+      "reviewStatus": "source-checked; motion-unreviewed",
+      "factualRecordSha256": "b31daa12ad8dea0f47c8ad033958f88b37161609968f62035fc2acaf3ea2ccc5",
+      "accessDate": "2026-11-04",
+      "rights": {
+        "use": "reference-only",
+        "embeddedExternalAssets": false,
+        "externalFootageImagesTracingOrMocapUsed": false,
+        "storedContent": "Original concise factual paraphrases, provenance links and hashes of these factual records only.",
+        "licenseAssumption": "Public access does not establish permission to reproduce or embed source assets."
+      },
+      "observedMediaTimestamps": [],
+      "sourceChecked": true,
+      "professionalMotionReviewCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "intendedPopulationContext": {
+        "category": "condition-specific",
+        "populationAndSetting": "Breast-clinic patients with breast pain / chest-wall musculoskeletal symptoms",
+        "adultEvidence": "adult patient context inferred; no numerical age eligibility in inspected section",
+        "generalAdultSuitabilityEstablished": false,
+        "isPaediatricSource": false,
+        "pregnancySpecificInstructionsUsed": false
+      },
+      "instructionEvidenceScope": "Specific instructions in the identified source section only; not evidence for every generic Pilates variant or an exact authored procedural model."
+    }
+  ],
+  "patterns": [
+    {
+      "patternId": "supine-heel-slide",
+      "relatedCatalogId": "original-mat-heel-slide",
+      "catalog": {
+        "apparatus": "mat",
+        "requiredEquipment": [
+          "mat"
+        ],
+        "props": [
+          "none"
+        ],
+        "isUnilateral": true,
+        "planningReview": "pending",
+        "motionReview": "no verified motion",
+        "bodyPosition": "supine"
+      },
+      "primarySourceIds": [
+        "nbt-diep-heel-slide-v1"
+      ],
+      "corroboratingSourceIds": [
+        "rm-abdominal-operation-single-leg-slide-v1"
+      ],
+      "sourceCheckStatus": "factual-pattern-checked",
+      "mappingStatus": "unapproved-unmapped",
+      "distinctiveMotion": "Moving heel maintains sliding contact rather than being lifted.",
+      "observedVsChosen": {
+        "observed": "Supine floor variant, bent start, one leg still, slide out and return; natural spinal curve and still pelvis are NBT cues.",
+        "chosenOrUnknown": "Mat versus floor support, head/arm contact geometry, angle limits, exact duration, easing, camera and proportions."
+      },
+      "catalogConstraints": [
+        "Catalog requests a heel slide with trunk position maintained; it does not define the starting knee angle.",
+        "Floor source is not exact evidence for catalog mat/props-none support.",
+        "NBT postoperative setting cannot establish general adult suitability.",
+        "Exact asset, side, support, phases, contact and geometry require review before any mapping."
+      ]
+    },
+    {
+      "patternId": "supine-bent-knee-fold",
+      "relatedCatalogId": "original-mat-knee-fold",
+      "catalog": {
+        "apparatus": "mat",
+        "requiredEquipment": [
+          "mat"
+        ],
+        "props": [
+          "none"
+        ],
+        "isUnilateral": true,
+        "planningReview": "pending",
+        "motionReview": "no verified motion",
+        "bodyPosition": "supine"
+      },
+      "primarySourceIds": [
+        "rm-abdominal-operation-single-knee-lift-v1"
+      ],
+      "corroboratingSourceIds": [
+        "tsd-sui-knee-fold-v1"
+      ],
+      "sourceCheckStatus": "factual-pattern-checked",
+      "mappingStatus": "unapproved-unmapped",
+      "distinctiveMotion": "Active foot leaves the support while the knee remains bent, then foot returns.",
+      "observedVsChosen": {
+        "observed": "Single foot lift and return; RM specifies hip 90 degrees and five-second hold for its clinical progression; Torbay separately cues neutral pelvis.",
+        "chosenOrUnknown": "Do not merge RM foot setup and Torbay spine wording into one observed exact variant. Any different height, first side, timing, arms and head support are authoring choices."
+      },
+      "catalogConstraints": [
+        "Catalog asks light foot lifts with observation of pelvic movement; it does not specify tabletop, 90 degrees, or five-second holds.",
+        "Strict alternation is catalog wording; RM lists each leg without strict order.",
+        "RM six-week postoperative restriction remains source context, not an app prescription.",
+        "Torbay setup flattening-spine cue and neutral-pelvis fold cue need variant clarification.",
+        "No exact mat/support/contact match or professional motion approval exists."
+      ]
+    },
+    {
+      "patternId": "side-lying-straight-leg-lift",
+      "relatedCatalogId": "original-mat-side-leg-lift",
+      "catalog": {
+        "apparatus": "mat",
+        "requiredEquipment": [
+          "mat"
+        ],
+        "props": [
+          "none"
+        ],
+        "isUnilateral": true,
+        "planningReview": "pending",
+        "motionReview": "no verified motion",
+        "bodyPosition": "side-lying"
+      },
+      "primarySourceIds": [
+        "ruh-lateral-hip-side-abduction-v1"
+      ],
+      "alternativeVariantSourceIds": [
+        "roh-hip-oa-side-abduction-v1"
+      ],
+      "sourceCheckStatus": "factual-pattern-checked",
+      "mappingStatus": "unapproved-unmapped",
+      "distinctiveMotion": "Uppermost straight leg raises from side lying; chest and arm do not perform the open-book pattern.",
+      "observedVsChosen": {
+        "observed": "RUH both-legs-straight variant is separate from ROH lower-knee-bent bed variant.",
+        "chosenOrUnknown": "Head/hand supports, mat surface, pelvis fixation, range, angle, timing and camera are unspecified or independent choices."
+      },
+      "catalogConstraints": [
+        "Correct catalog ID is original-mat-side-leg-lift.",
+        "Catalog lower-knee-bent easier option resembles ROH variant, which explicitly uses a bed.",
+        "Catalog base entry leaves lower-knee posture unspecified; do not assign source variant silently.",
+        "Stacked pelvis and small range in catalog are original planning cues; exact source geometry not observed.",
+        "No straight-leg source establishes catalog harder front/back movement."
+      ]
+    },
+    {
+      "patternId": "side-lying-open-book",
+      "relatedCatalogId": "original-mat-open-book",
+      "catalog": {
+        "apparatus": "mat",
+        "requiredEquipment": [
+          "mat"
+        ],
+        "props": [
+          "none"
+        ],
+        "isUnilateral": true,
+        "planningReview": "pending",
+        "motionReview": "no verified motion",
+        "bodyPosition": "side-lying"
+      },
+      "primarySourceIds": [
+        "dynamichealth-midback-open-book-v1"
+      ],
+      "corroboratingSourceIds": [
+        "leeds-chest-wall-open-book-v1"
+      ],
+      "sourceCheckStatus": "factual-pattern-checked",
+      "mappingStatus": "unapproved-unmapped",
+      "distinctiveMotion": "Upper arm opens and head follows; chest opens rather than a top-leg lift.",
+      "observedVsChosen": {
+        "observed": "Dynamic Health describes bent knees, forward arms/hands together, top-arm opening through ceiling, chest opening, head following and slow return. Leeds separately identifies knee-floor contact.",
+        "chosenOrUnknown": "Head pillow, hand contact, selected knee support, degrees of torso rotation, endpoint and timing are not established by combining sources."
+      },
+      "catalogConstraints": [
+        "Catalog specifically asks adjusting knee and head support; props-none metadata is not proof support can be omitted.",
+        "Suggested hand-to-floor reach in Leeds must not become a required contact; catalog says not to force the arm to floor.",
+        "Bent-elbow easier variant and comfortable end hold in catalog are not verified by the primary paragraph.",
+        "Exact support, phase, camera, geometry and anatomical side remain unreviewed."
+      ]
+    }
+  ],
+  "accessDenials": [
+    {
+      "sourceId": "uhcw-pkip-blocked-v1",
+      "url": "https://www.uhcw.nhs.uk/download/clientfiles/files/Personalised%20Knee%20Improvement%20Programme%20PKIP%20%281927%29.pdf",
+      "title": "Personalised Knee Improvement Programme (P-KIP)",
+      "publisher": "University Hospitals Coventry and Warwickshire NHS Trust",
+      "accessDate": "2026-11-04",
+      "accessStatus": "denied-http-403",
+      "attemptedAction": "Read primary PDF with web open",
+      "outcome": "Denied; no source body relied upon",
+      "retryOrBypassPerformed": false,
+      "factualRecord": null,
+      "factualRecordSha256": null,
+      "sourceChecked": false,
+      "use": "Excluded from evidence. Search snippets were not promoted to verified facts."
+    }
+  ],
+  "constraints": {
+    "rights": "External references only. Original factual paraphrases. No source imagery, footage, audio, tracing, mocap or third-party assets embedded or reproduced. Public access is not a reproduction license.",
+    "adultScope": "Sources with explicit adult condition context and those with inferred adult clinical/service context are distinguished. No source establishes universal adult suitability.",
+    "geometry": "Angles, proportions, camera, easing and cycle duration are independent design choices except explicitly documented numeric facts for a specific source variant. No chosen geometry is an observed source measurement.",
+    "anatomicalSide": "Supine active left/right is anatomical. Side-lying active upper right limb implies left-side support, and vice versa. This is an authored side convention; screen mirroring does not change anatomy.",
+    "stationaryContacts": "Keep explicitly stated contacts distinct from plausible anatomical inferences and authored fixed contacts. Missing head/hand/support details are unresolved.",
+    "timestamps": "No video or motion frames observed; no source media timestamps. Text page/section locators are actual evidence points.",
+    "approval": "Source-checked facts do not increment exact assets, professional approval, or catalog motion review. All proposed procedural models remain draft-only and unmapped.",
+    "playback": "Any later lab viewer must remain paused by default with explicit controls, one cycle only, static start/end and reduced-motion alternatives; no autoplay or production mapping is authorized by this ledger."
+  },
+  "hashMethod": "SHA-256 of UTF-8 factualRecord JSON with recursively sorted object keys, no whitespace, ensure_ascii=false. Hashes identify these original factual records only, not source files, images, footage, procedural models or professional review.",
+  "remainingBlockers": [
+    "Resolve all exact support and variant gaps listed for each catalog ID.",
+    "Independent review must cover exact procedural model/data/asset hashes, phases, contact, camera and anatomical sides.",
+    "No professional motion review or exact production asset mapping exists.",
+    "UHCW P-KIP PDF is inaccessible (403) and remains excluded."
+  ],
+  "recordedAtUtc": "2026-11-04T22:21:20Z"
+}

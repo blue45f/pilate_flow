@@ -1,0 +1,432 @@
+.motion-draft-lab {
+  font-family: system-ui, sans-serif;
+  box-sizing: border-box;
+  width: min(1000px, calc(100% - 28px));
+  max-height: calc(100dvh - 28px);
+  padding: 0;
+  border: 1px solid #c6d3bb;
+  border-radius: 16px;
+  background: #fcfbf7;
+  color: #254438;
+  line-height: 1.6;
+}
+.motion-draft-lab * {
+  box-sizing: border-box;
+}
+.motion-draft-lab::backdrop {
+  background: #142d24aa;
+}
+.mdl-shell {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+}
+.mdl-header {
+  position: sticky;
+  top: -1px;
+  z-index: 2;
+  background: #fcfbf7;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #d6dfca;
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 16px;
+}
+.mdl-header h2 {
+  margin: 4px 0 0;
+  font-size: 1.5rem;
+  line-height: 1.4;
+  letter-spacing: -0.04em;
+}
+/* A tall title at large text sizes must not cover controls in short viewports. */
+@media (max-height: 600px) {
+  .mdl-header {
+    position: static;
+  }
+}
+.mdl-eyebrow {
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  color: #6d7a61;
+  margin: 0;
+}
+.mdl-description {
+  font-size: 0.875rem;
+  color: #64735d;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.motion-draft-lab button,
+.motion-draft-lab select,
+.motion-draft-lab input[type='range'],
+.mdl-evidence summary,
+.mdl-evidence a {
+  min-height: 44px;
+}
+.motion-draft-lab button {
+  padding: 8px 14px;
+  border: 1px solid #285b4c;
+  border-radius: 9px;
+  background: #285b4c;
+  color: #fffdf7;
+  cursor: pointer;
+  font: inherit;
+}
+.motion-draft-lab button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.motion-draft-lab .mdl-secondary {
+  background: #f9faf3;
+  color: #31583e;
+  border-color: #bdcdb2;
+}
+.motion-draft-lab :is(button, select, input, a, summary):focus-visible {
+  outline: 3px solid #b57c56;
+  outline-offset: 3px;
+}
+.mdl-boundary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.mdl-boundary > span {
+  background: #f2e6d8;
+  color: #80573d;
+  border: 1px solid #dfc9af;
+  padding: 5px 9px;
+  border-radius: 7px;
+  font-size: 0.8125rem;
+}
+.mdl-proposals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.motion-draft-lab .mdl-proposals > button {
+  display: grid;
+  gap: 3px;
+  padding: 12px;
+  text-align: left;
+  min-width: 0;
+  background: #f5f6ec;
+  color: #31583e;
+  border-color: #ccd6c0;
+}
+.motion-draft-lab .mdl-proposals > button[aria-pressed='true'] {
+  background: #e5eddd;
+  border-color: #76936a;
+}
+.mdl-proposals span,
+.mdl-proposals code {
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+.mdl-proposals span {
+  color: #815e41;
+}
+.mdl-proposals strong {
+  font-size: 1rem;
+}
+.mdl-selected h3 {
+  font-size: 1.125rem;
+  line-height: 1.5;
+  letter-spacing: -0.025em;
+  margin: 0 0 5px;
+}
+.mdl-selected p {
+  margin: 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.mdl-selected code {
+  font-size: 0.8125rem;
+}
+.mdl-support {
+  border-left: 3px solid #b19a6e;
+  padding: 9px 10px;
+  margin: 10px 0 0 !important;
+  background: #f1eee1;
+  color: #796042;
+  font-size: 0.875rem;
+}
+.mdl-scene {
+  border: 1px solid #d6dfca;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.mdl-scene > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.mdl-playback-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.875rem;
+}
+.mdl-playback-heading p {
+  margin: 0;
+  font-weight: 650;
+}
+.mdl-playback {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+.mdl-playback > label,
+.mdl-view-options > label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.8125rem;
+}
+.mdl-playback > label {
+  margin-left: auto;
+}
+.motion-draft-lab select {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 7px 10px;
+  border: 1px solid #becfb1;
+  border-radius: 8px;
+  background: #fffef8;
+  color: inherit;
+  font: inherit;
+}
+.mdl-progress {
+  display: grid;
+  gap: 3px;
+  font-size: 0.875rem;
+}
+.mdl-progress input {
+  width: 100%;
+  accent-color: #285b4c;
+}
+.mdl-phases {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.mdl-phases button {
+  font-size: 0.8125rem;
+  padding: 8px 5px;
+}
+.mdl-view-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+}
+.mdl-view-options .mdl-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+}
+.mdl-checkbox input {
+  width: 19px;
+  height: 19px;
+  accent-color: #285b4c;
+}
+.mdl-static-note {
+  padding: 10px;
+  border-radius: 8px;
+  background: #e4eddf;
+  color: #31583e;
+  margin: 0;
+  font-size: 0.875rem;
+}
+.mdl-evidence {
+  border: 1px solid #d5dfc8;
+  border-radius: 10px;
+  padding: 0 12px 12px;
+  font-size: 0.875rem;
+}
+.mdl-evidence summary {
+  padding: 11px 0;
+  cursor: pointer;
+  font-weight: 650;
+}
+.mdl-evidence section {
+  margin: 8px 0 14px;
+}
+.mdl-evidence h4,
+.mdl-evidence p {
+  margin: 0 0 6px;
+}
+.mdl-evidence ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.mdl-evidence li + li {
+  margin-top: 4px;
+}
+.mdl-evidence a {
+  display: flex;
+  align-items: center;
+  color: #285b4c;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.mdl-footer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid #d6dfca;
+}
+.mdl-footer p {
+  margin: 0;
+  max-width: 600px;
+  font-size: 0.8125rem;
+  color: #68775f;
+}
+.mdl-footer button {
+  flex-shrink: 0;
+}
+@media (max-width: 700px) {
+  .mdl-shell {
+    padding: 16px;
+  }
+  .mdl-header h2 {
+    font-size: 1.3125rem;
+  }
+  .mdl-proposals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mdl-boundary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .mdl-boundary > span {
+    padding: 5px 4px;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+  .mdl-proposals > button {
+    gap: 2px;
+  }
+  .mdl-playback {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .mdl-playback > button {
+    min-width: 0;
+    padding: 8px 6px;
+    font-size: 0.875rem;
+  }
+  .mdl-playback > label {
+    grid-column: 1/-1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+  .mdl-playback select {
+    min-width: 120px;
+  }
+  .mdl-phases {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .mdl-footer {
+    display: grid;
+  }
+  .mdl-playback-heading {
+    flex-wrap: wrap;
+  }
+  .mdl-selected h3 {
+    font-size: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-draft-lab * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.mdl-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.motion-draft-lab .mdl-modes button {
+  color: #31583e;
+  background: #f5f6ec;
+  border-color: #ccd6c0;
+  transition: none;
+}
+.motion-draft-lab .mdl-modes button[aria-pressed='true'] {
+  color: #fffdf7;
+  background: #285b4c;
+  border-color: #285b4c;
+}
+.mdl-picker {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.mdl-picker label {
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+.mdl-picker select {
+  min-width: 0;
+  width: 100%;
+  font-size: 1rem;
+  padding-right: 40px;
+}
+.mdl-picker {
+  grid-template-columns: minmax(0, 1fr);
+}
+.mdl-source-record + .mdl-source-record {
+  margin-top: 12px;
+}
+.mdl-source-hash {
+  font-size: 0.75rem;
+  color: #64735d;
+  overflow-wrap: anywhere;
+}
+
+.mdl-scene {
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+/* Keep the modal exit legible and reachable when a narrow title wraps. */
+.mdl-header > div {
+  min-width: 0;
+}
+.mdl-header > button {
+  flex-shrink: 0;
+  min-width: 58px;
+  white-space: nowrap;
+}
+@media (max-width: 360px) {
+  .mdl-shell {
+    padding: 12px;
+    gap: 12px;
+  }
+  .mdl-header {
+    gap: 12px;
+  }
+  .mdl-boundary {
+    display: flex;
+  }
+  .mdl-boundary > span {
+    max-width: 100%;
+    padding: 4px 6px;
+  }
+  .motion-draft-lab .mdl-modes button {
+    padding-inline: 8px;
+    font-size: 0.875rem;
+  }
+}

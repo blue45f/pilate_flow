@@ -1,0 +1,38 @@
+{
+  "manifestSha256": "34eb8cbbe55b5852ffb49f6faf8a4e8fbe35c3368f119d1bbec4ef46024f6713",
+  "manifestSource": "motion-assets/evidence/motion-authoring-manifest.json",
+  "assets": [
+    {
+      "variantId": "chair-seated-bilateral-arm-raise-v1",
+      "modelVersion": "original-motion-authoring-batch-1.0.0-draft",
+      "assetSha256": "947d026c6d6feffc68903a6e710cd02e9265a20b1b50051204273f7dea0d9336",
+      "dataSha256": "eb6a1960db4d01f50c2a7c95e9f93b841bd4e033648363a69f74f61fdc09d1f8",
+      "sourceSha256": "bcbae30b3f206f610772875176cfb70c0080326f3757d69ecd183705c56e27f6",
+      "rendererSha256": "3a6392f897394ea8fa3795827fd03489afb18879fec17b71533fc944eb69b112"
+    },
+    {
+      "variantId": "chair-seated-overhead-sidebend-v1",
+      "modelVersion": "original-motion-authoring-batch-1.0.0-draft",
+      "assetSha256": "754550261cdfd7b4a5c264e7e834a946f4b91bad5afeb36b772eb6a97ad4446a",
+      "dataSha256": "241cbe121be062b49e92173d38e2e5e50938092b8780333db242ca461cd96052",
+      "sourceSha256": "bcbae30b3f206f610772875176cfb70c0080326f3757d69ecd183705c56e27f6",
+      "rendererSha256": "3a6392f897394ea8fa3795827fd03489afb18879fec17b71533fc944eb69b112"
+    },
+    {
+      "variantId": "prone-single-straight-leg-extension-v1",
+      "modelVersion": "original-motion-authoring-batch-1.0.0-draft",
+      "assetSha256": "a6f7604604be8145370c93f3498c5d48775b391f09f9d94a54686604a5e19e08",
+      "dataSha256": "87625c11d6ecae28fb5bf076934995367358abde6766b9562a5d93ba1f48ea01",
+      "sourceSha256": "bcbae30b3f206f610772875176cfb70c0080326f3757d69ecd183705c56e27f6",
+      "rendererSha256": "3a6392f897394ea8fa3795827fd03489afb18879fec17b71533fc944eb69b112"
+    },
+    {
+      "variantId": "prone-forearm-chest-extension-v1",
+      "modelVersion": "original-motion-authoring-batch-1.0.0-draft",
+      "assetSha256": "3742de457aa8b248a5c4243882d66d800d31314df89b5c53b58b709bb26976d1",
+      "dataSha256": "d4bdc1afde846c8328f17241783d307ab7750053536cbfde22e2a6be8f1c16e4",
+      "sourceSha256": "bcbae30b3f206f610772875176cfb70c0080326f3757d69ecd183705c56e27f6",
+      "rendererSha256": "3a6392f897394ea8fa3795827fd03489afb18879fec17b71533fc944eb69b112"
+    }
+  ]
+}

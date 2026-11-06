@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "checkedAtUtc": "2026-11-05",
+  "sourceId": "basi-single-leg-stretch-public-text-2026-11-05",
+  "publisher": "BASI Pilates",
+  "title": "10 Essential Pilates Exercises for Beginners",
+  "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+  "publishedDate": "2019-10-16",
+  "bodyByline": "CJ Kelly, NCPT",
+  "locator": "Section 5, Single Leg Stretch, numbered text paragraphs 1–4; Section 2, Chest Lift, paragraph 2 for qualitative chest-lift context",
+  "verification": "public-text-checked",
+  "facts": [
+    "본문의 시작은 가슴을 든 누운 자세이며, 무릎을 고관절 위에 두고 정강이를 바닥과 평행하게 배치합니다.",
+    "굽혀 둔 무릎 쪽으로 양손을 옮기고 반대쪽 다리를 길게 뻗는 구간을 설명합니다.",
+    "원문은 다리와 손의 쪽을 번갈아 바꾸는 연속 동작을 설명합니다.",
+    "별도의 가슴 들기 설명은 견갑골 끝이 매트에서 떨어지는 정도와 허벅지 방향의 시선을 언급합니다. 수치 각도나 이 도해의 자세를 확인한 것은 아닙니다."
+  ],
+  "notEstablishedByText": [
+    "정확한 손가락·그립 위치, 접촉 압력, 다리를 뻗는 수치 각도, 좌표와 표시 구간 시간",
+    "머리·발을 바닥에 내려놓는 종료 과정",
+    "특정 사용자나 수업의 적합성·안전성 및 이 앱 도해의 원문 정합성"
+  ],
+  "populationContext": "필라테스 입문 교육 글이며 개인별 임상 평가 자료가 아닙니다.",
+  "rights": {
+    "termsUrl": "https://www.basipilates.com/terms-and-conditions/",
+    "checkedAtUtc": "2026-11-05",
+    "locator": "Intellectual Property, sections 2.1–2.2",
+    "termsRevisionDate": null,
+    "sourceContentReuseGrantEstablished": false,
+    "sourceMediaLicense": null,
+    "notice": "원문은 콘텐츠 권리를 보유하며 재사용에 사전 서면 동의를 요구합니다. 이 기록은 재사용 허가나 법적 승인을 뜻하지 않습니다.",
+    "actualUse": "공개 본문의 좁은 움직임 사실을 자체 문장으로 정리하고 원문·이용조건 링크를 제공합니다. 원문 표현·미디어를 앱 자산으로 재현하지 않습니다.",
+    "sourceMediaOpened": false,
+    "sourceMediaCopied": false,
+    "sourceMediaTraced": false,
+    "sourceTextCopiedVerbatim": false,
+    "motionCaptureUsed": false,
+    "newAgreementOrPermissionCreated": false,
+    "sourcePixelsObserved": false,
+    "referenceImageAccess": {
+      "status": "denied",
+      "httpStatus": 403,
+      "url": "https://www.basipilates.com/wp-content/uploads/2020/05/img-8930-cf75.jpg",
+      "checkedAtUtc": "2026-11-06",
+      "bytesReceived": 0,
+      "retried": false,
+      "scope": "Official article image link resolved; one ordinary proxy/TLS GET denied. No pixels observed, copied, traced, or used. No alternate media route attempted.",
+      "directGetAttempts": 1,
+      "webOpenOutcome": "no-pixels-observed",
+      "webOpenHttpStatus": null
+    },
+    "sourceMediaAccessAttempted": true,
+    "sourceMediaOpenedMeaning": "No successful image decode or pixel observation; access attempts are recorded separately.",
+    "rightsHolderNotice": "BASI Pilates or its licensors; no source-content reuse grant established."
+  },
+  "professionalReviewStatus": "unreviewed",
+  "professionalReviewCount": 0,
+  "exactSourceVariantMatched": false,
+  "safetyStatus": "not_assessed",
+  "chestLiftContextCheckedAtUtc": "2026-11-06",
+  "footerByline": "By SecoSan",
+  "footerBylineRole": "Unestablished; retained separately from the article body byline."
+}

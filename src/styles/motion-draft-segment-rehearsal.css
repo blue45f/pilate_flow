@@ -1,0 +1,177 @@
+.motion-draft-segment-rehearsal {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  color: #254438;
+  font: inherit;
+  line-height: 1.6;
+}
+.motion-draft-segment-rehearsal *,
+.motion-draft-segment-rehearsal *::before,
+.motion-draft-segment-rehearsal *::after {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.motion-draft-segment-rehearsal :is(h4, p) {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.motion-draft-segment-rehearsal .mdsr-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.motion-draft-segment-rehearsal h4 {
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+.motion-draft-segment-rehearsal .mdsr-eyebrow,
+.motion-draft-segment-rehearsal .mdsr-note {
+  color: #64735d;
+  font-size: 0.875rem;
+}
+.motion-draft-segment-rehearsal .mdsr-boundary {
+  padding: 6px 8px;
+  border-radius: 7px;
+  background: #f2e6d8;
+  color: #80573d;
+  font-size: 0.8125rem;
+}
+.motion-draft-segment-rehearsal :is(button, select, input, summary) {
+  min-height: 44px;
+  font: inherit;
+}
+.motion-draft-segment-rehearsal button {
+  padding: 8px 12px;
+  border: 1px solid #285b4c;
+  border-radius: 9px;
+  background: #285b4c;
+  color: #fffdf7;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.motion-draft-segment-rehearsal button.mdsr-secondary {
+  background: #f9faf3;
+  color: #31583e;
+  border-color: #bdcdb2;
+}
+.motion-draft-segment-rehearsal button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.motion-draft-segment-rehearsal :is(button, select, input, summary):focus-visible {
+  outline: 3px solid #b57c56;
+  outline-offset: 3px;
+}
+.motion-draft-segment-rehearsal label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  font-size: 0.875rem;
+}
+.motion-draft-segment-rehearsal select {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.motion-draft-segment-rehearsal :is(select, input[type='number']) {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid #becfb1;
+  border-radius: 8px;
+  background: #fffef8;
+  color: inherit;
+  font-size: 16px;
+}
+.motion-draft-segment-rehearsal .mdsr-range {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.motion-draft-segment-rehearsal .mdsr-scene {
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+  border: 1px solid #d6dfca;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fcfbf7;
+}
+.motion-draft-segment-rehearsal .mdsr-scene > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.motion-draft-segment-rehearsal .mdsr-status {
+  font-size: 0.875rem;
+}
+.motion-draft-segment-rehearsal .mdsr-status [role='status'] {
+  font-weight: 650;
+}
+.motion-draft-segment-rehearsal :is(.mdsr-controls, .mdsr-static) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
+  gap: 8px;
+}
+.motion-draft-segment-rehearsal input[type='range'] {
+  width: 100%;
+  margin: 0;
+  accent-color: #285b4c;
+}
+.motion-draft-segment-rehearsal :is(.mdsr-settings, .mdsr-context) {
+  border-top: 1px solid #d6dfca;
+  padding-top: 4px;
+  font-size: 0.875rem;
+}
+.motion-draft-segment-rehearsal summary {
+  padding-block: 9px;
+  cursor: pointer;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.motion-draft-segment-rehearsal .mdsr-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-block: 10px;
+}
+.motion-draft-segment-rehearsal .mdsr-notice {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #e4eddf;
+  color: #31583e;
+  font-size: 0.875rem;
+}
+.motion-draft-segment-rehearsal [role='alert'] {
+  padding: 8px;
+  background: #f2e6d8;
+  color: #80573d;
+  border-radius: 8px;
+}
+.motion-draft-segment-rehearsal ul {
+  padding-left: 20px;
+  margin-block: 8px;
+}
+@media (max-width: 600px) {
+  .motion-draft-segment-rehearsal .mdsr-heading {
+    display: grid;
+  }
+  .motion-draft-segment-rehearsal .mdsr-heading button {
+    justify-self: start;
+    font-size: 0.875rem;
+  }
+  .motion-draft-segment-rehearsal .mdsr-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .motion-draft-segment-rehearsal :is(.mdsr-controls, .mdsr-static) button {
+    padding-inline: 5px;
+    font-size: 0.875rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-draft-segment-rehearsal * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

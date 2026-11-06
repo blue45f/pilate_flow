@@ -1,0 +1,508 @@
+/* Instructor workspace. Provider chrome is reserved for, never hidden or modified. */
+:root {
+  --vnext-forest: #173d34;
+  --vnext-ivory: #f7f5ef;
+  --vnext-sage: #d8e1d3;
+  --vnext-clay: #b16f48;
+  --hosted-obstruction-inset: 0px;
+  --v2-background: var(--vnext-ivory);
+  --v2-primary: var(--vnext-forest);
+  --v2-sage: var(--vnext-sage);
+  --v2-ink: #24362f;
+  --v2-muted: #59685e;
+  --v2-line: #dfe3d8;
+  --v2-paper: #fffef9;
+}
+html:has(> [popover='manual']:popover-open:not(dialog)) {
+  --hosted-obstruction-inset: 72px;
+}
+#root .vnext-shell {
+  background: radial-gradient(ellipse at 96% 0%, #e2e8d87a, transparent 45%), var(--vnext-ivory);
+  color: var(--v2-ink);
+}
+#root .vnext-shell .sidebar {
+  width: auto;
+  background: var(--vnext-forest);
+  color: #f5f4e8;
+  border: 0;
+  padding: 28px 18px 20px;
+}
+#root .vnext-shell .brand {
+  color: #f5f4e8;
+  gap: 10px;
+  margin-bottom: 38px;
+}
+#root .vnext-shell .brand > span {
+  font-size: 1.45rem;
+  letter-spacing: -0.04em;
+}
+#root .vnext-shell .brand small {
+  display: block;
+  font: 500 0.5rem/1.8 sans-serif;
+  letter-spacing: 0.2em;
+  color: #d3dfce;
+  margin-top: 5px;
+}
+#root .vnext-shell .sidebar-label {
+  color: #becebd;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+}
+#root .vnext-shell .desktop-nav {
+  gap: 8px;
+}
+#root .vnext-shell .desktop-nav button {
+  color: #e0e8d9;
+  min-height: 50px;
+  font-weight: 500;
+  border-radius: 12px;
+  padding-inline: 12px;
+}
+#root .vnext-shell .desktop-nav button.active {
+  background: #dbe3cf;
+  color: var(--vnext-forest);
+}
+#root .vnext-shell .desktop-nav button:hover:not(.active) {
+  background: #ffffff12;
+}
+#root .vnext-shell .desktop-nav small {
+  color: inherit;
+  opacity: 0.8;
+}
+#root .vnext-shell .v2-sidebar-upcoming {
+  border-top: 1px solid #ffffff24;
+  padding-top: 24px;
+  margin-top: 36px;
+}
+#root .vnext-shell .v2-sidebar-upcoming h2,
+#root .vnext-shell .v2-sidebar-upcoming > p,
+#root .vnext-shell .v2-sidebar-upcoming .text-button {
+  color: #d3dfce;
+}
+#root .vnext-shell .v2-upcoming-link {
+  color: #f5f4e8;
+  background: #ffffff08;
+  border-color: #ffffff15;
+  border-radius: 12px;
+  padding: 10px 8px;
+}
+#root .vnext-shell .v2-upcoming-link small {
+  color: #d3dfce;
+}
+#root .vnext-shell .workspace-button {
+  color: #f5f4e8;
+  border-color: #ffffff24;
+  padding-top: 20px;
+}
+#root .vnext-shell .workspace-button small {
+  color: #d3dfce;
+}
+#root .vnext-shell .studio-avatar {
+  background: #dbe3cf;
+  color: var(--vnext-forest);
+  border-radius: 50%;
+}
+#root .vnext-shell .topbar {
+  background: transparent;
+  border-bottom: 1px solid #dfe3d880;
+  min-height: 72px;
+  padding-inline: clamp(24px, 3vw, 48px);
+}
+#root .vnext-shell .main-content {
+  max-width: 1600px;
+  width: 100%;
+  margin-inline: auto;
+  padding: 30px clamp(24px, 3vw, 48px) calc(36px + var(--hosted-obstruction-inset));
+}
+#root .vnext-shell .page-heading h1 {
+  color: var(--vnext-forest);
+  font-size: clamp(1.75rem, 2.4vw, 2.4rem);
+  letter-spacing: -0.065em;
+  line-height: 1.3;
+  font-weight: 650;
+}
+#root .vnext-shell .page-heading {
+  margin-bottom: 24px;
+}
+#root .vnext-shell .eyebrow {
+  color: #65755f;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+}
+#root .vnext-shell .btn-primary {
+  background: var(--vnext-forest);
+  color: #fffef9;
+  box-shadow: 0 3px 7px #173d3412;
+  border: 1px solid var(--vnext-forest);
+  border-radius: 12px;
+}
+#root .vnext-shell .btn-primary:hover:not(:disabled) {
+  background: #235346;
+}
+#root .vnext-shell .btn-secondary {
+  background: #fffef9b3;
+  color: var(--vnext-forest);
+  border: 1px solid #ced7c8;
+  border-radius: 12px;
+}
+#root .vnext-shell button:focus-visible,
+#root .vnext-shell a:focus-visible,
+#root .vnext-shell summary:focus-visible {
+  outline: 3px solid #b16f48;
+  outline-offset: 3px;
+}
+#root .vnext-shell button,
+#root .vnext-shell input,
+#root .vnext-shell select {
+  scroll-margin-block: 90px calc(150px + var(--hosted-obstruction-inset));
+}
+#root .vnext-shell .v2-review-notice {
+  margin-top: 30px;
+  margin-bottom: 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--v2-line);
+  border-radius: 0;
+  padding: 16px 0 0;
+  color: var(--v2-muted);
+  gap: 12px;
+}
+#root .vnext-shell .v2-review-notice summary {
+  font-size: 0.8125rem;
+  color: var(--v2-muted);
+  min-height: 44px;
+  display: list-item;
+  align-content: center;
+}
+#root .vnext-shell .v2-review-notice .text-button {
+  min-height: 44px;
+}
+#root .vnext-shell .app-footer {
+  border: 0;
+  color: #69766b;
+  padding-bottom: calc(20px + var(--hosted-obstruction-inset));
+}
+/* Human-readable study captions; safety details are also present in each player. */
+#root .vnext-shell .mpg-heading > button,
+#root .vnext-shell .mpg-close {
+  min-height: 44px;
+  font-size: 0.8125rem;
+}
+#root .vnext-shell .mpg-inventory {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: #52654e;
+}
+#root .vnext-shell .mpg-inventory span {
+  display: block;
+  margin-left: 0;
+  font-size: 0.75rem;
+  color: #596a53;
+}
+#root .vnext-shell .mpg-card > strong {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  letter-spacing: -0.04em;
+}
+#root .vnext-shell .mpg-card > small {
+  font-size: 0.75rem;
+  color: #52654e;
+}
+#root .vnext-shell .mpg-thumbnail > span {
+  font-size: 0.6875rem;
+  color: #314c37;
+}
+#root .vnext-shell .workbench-reviewed-count {
+  font-size: 0.8125rem;
+}
+/* A motion player also lives inside a narrow desktop inspector. */
+#root .vnext-shell .mpp-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: 10px;
+}
+#root .vnext-shell .mpp-controls > button {
+  min-height: 48px;
+  font-size: 0.875rem;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+#root .vnext-shell .mpp-controls > button svg {
+  flex-shrink: 0;
+}
+#root .vnext-shell .mpp-controls .mpp-reset {
+  width: 44px;
+  min-width: 44px;
+}
+#root .vnext-shell .mpp-controls > label {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  margin-left: 0;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+#root .vnext-shell .motion-pattern-preview select {
+  width: 100%;
+  min-height: 44px;
+  padding-inline: 12px 42px;
+  font-size: 0.875rem;
+}
+#root .vnext-shell .mpp-phases {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+#root .vnext-shell .mpp-phases > button {
+  min-height: 44px;
+  padding: 10px;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+#root .vnext-shell .mpp-phases > button:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+#root .vnext-shell .mpp-heading {
+  flex-wrap: wrap;
+}
+#root .vnext-shell .mpp-status,
+#root .vnext-shell .mpp-equipment,
+#root .vnext-shell .mpp-anatomy,
+#root .vnext-shell .mpp-playback-state,
+#root .vnext-shell .mpp-figure figcaption span {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: #52654e;
+}
+#root .vnext-shell .mpp-support,
+#root .vnext-shell .mpp-source-details,
+#root .vnext-shell .mpp-view-options,
+#root .vnext-shell .mpp-seek {
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+#root .vnext-shell .mpp-view-options label,
+#root .vnext-shell .mpp-source-details summary {
+  min-height: 44px;
+}
+#root .vnext-shell .mpp-view-options label:first-child:has(select) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+#root .vnext-shell .mpp-seek input {
+  min-height: 44px;
+}
+/* The workbench owns its continuation; its phone sheet has a separate footer. */
+#root .vnext-shell .vnext-workbench .ief-selection-bar {
+  display: none;
+}
+#root .vnext-shell .ml-selection-return {
+  bottom: calc(12px + var(--hosted-obstruction-inset));
+  flex-wrap: wrap;
+}
+/* Modals stay within their own safe viewport, including top-layer host chrome. */
+#root .vnext-shell .atelier-modal-dialog {
+  max-height: calc(90dvh - var(--hosted-obstruction-inset));
+  top: 8px;
+  bottom: calc(8px + var(--hosted-obstruction-inset));
+  margin-block: auto;
+  border-color: #d7dfd0;
+  border-radius: 22px;
+  box-shadow: 0 20px 80px #173d3433;
+}
+#root .vnext-shell .atelier-modal-shell {
+  max-height: calc(90dvh - var(--hosted-obstruction-inset));
+}
+/* Miniatures show authored poses. Detailed labels remain in the full player. */
+#root .vnext-shell .motion-pattern-thumbnail svg text {
+  display: none;
+}
+@media (min-width: 1024px) {
+  #root .vnext-shell {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+  #root .vnext-shell .sidebar {
+    padding-bottom: calc(20px + var(--hosted-obstruction-inset));
+  }
+}
+@media (min-width: 1200px) {
+  #root .vnext-shell .vnext-workbench.is-empty .v2-plan-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #root .vnext-shell .vnext-workbench.is-empty .v2-inline-finder {
+    width: auto;
+    max-width: none;
+    padding-left: 0;
+    border-left: 0;
+  }
+  #root .vnext-shell .vnext-workbench.is-empty .inline-exercise-finder {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+  #root .vnext-shell .vnext-workbench.is-empty .ief-results {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  #root .vnext-shell .vnext-workbench.has-sequence .v2-inline-finder {
+    position: sticky;
+    top: 24px;
+    max-height: calc(100dvh - 104px - var(--hosted-obstruction-inset));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+}
+@media (max-width: 1023px) {
+  #root .vnext-shell .sidebar {
+    width: 270px;
+  }
+  #root .vnext-shell .sidebar-close {
+    color: #f5f4e8;
+  }
+  #root .vnext-shell .topbar {
+    min-height: 72px;
+    padding: 10px 16px;
+  }
+  #root .vnext-shell .mobile-brand {
+    gap: 2px;
+  }
+  #root .vnext-shell .vnext-wordmark {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: -0.05em;
+    line-height: 1.1;
+    color: var(--vnext-forest);
+  }
+  #root .vnext-shell .vnext-wordmark small {
+    display: block;
+    margin-top: 5px;
+    font: 500 0.4375rem/1.3 sans-serif;
+    letter-spacing: 0.14em;
+  }
+  #root .vnext-shell .topbar-actions {
+    gap: 0;
+  }
+  #root .vnext-shell .topbar-actions .icon-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  #root .vnext-shell .main-content,
+  #root .vnext-shell .main-content:has(.v3-workbench) {
+    padding: 22px 20px calc(104px + env(safe-area-inset-bottom) + var(--hosted-obstruction-inset));
+  }
+  #root .vnext-shell .vnext-workbench .workbench-welcome-image {
+    width: 44%;
+    height: 172px;
+    opacity: 0.95;
+    object-position: left center;
+  }
+  #root .vnext-shell .vnext-workbench .workbench-welcome-copy {
+    display: grid;
+    grid-template-columns: minmax(88px, 0.72fr) minmax(0, 1fr);
+    gap: 10px;
+    padding: 18px;
+    background: linear-gradient(90deg, transparent 22%, #f7f5efbf 44%, #f7f5efed 64%);
+  }
+  #root .vnext-shell .vnext-workbench .workbench-welcome-summary,
+  #root .vnext-shell .vnext-workbench .workbench-welcome h2 {
+    grid-column: 2;
+  }
+  #root .vnext-shell .vnext-workbench .workbench-welcome h2 {
+    font-size: 1.125rem;
+    line-height: 1.45;
+  }
+  #root .vnext-shell .vnext-workbench .welcome-desktop-break {
+    display: block;
+  }
+  #root .vnext-shell .vnext-workbench .workbench-first-action,
+  #root .vnext-shell .vnext-workbench .workbench-reviewed-count {
+    grid-column: 1 / -1;
+  }
+  #root .vnext-shell .bottom-nav {
+    inset: auto 10px calc(8px + var(--hosted-obstruction-inset));
+    width: auto;
+    border: 1px solid #d9e0d1;
+    border-radius: 22px;
+    min-height: 68px;
+    padding: 5px 7px calc(5px + env(safe-area-inset-bottom));
+    background: #fbfbf4f2;
+    box-shadow: 0 4px 28px #173d3412;
+    backdrop-filter: blur(14px);
+  }
+  #root .vnext-shell .bottom-nav > button {
+    min-height: 52px;
+    min-width: 0;
+    padding: 4px 2px;
+    border-radius: 16px;
+    color: #576a5a;
+    font-size: 0.75rem;
+    gap: 3px;
+  }
+  #root .vnext-shell .bottom-nav > button.active {
+    color: var(--vnext-forest);
+    background: var(--vnext-sage);
+    font-weight: 650;
+  }
+  #root .vnext-shell .ml-selection-return {
+    bottom: calc(96px + env(safe-area-inset-bottom) + var(--hosted-obstruction-inset));
+  }
+  #root .vnext-shell .app-footer {
+    display: none;
+  }
+  #root .vnext-shell .atelier-modal-dialog.step-inspector-sheet {
+    inset: auto 0 var(--hosted-obstruction-inset);
+    max-height: calc(100dvh - 8px - var(--hosted-obstruction-inset));
+    border-radius: 24px 24px 0 0;
+  }
+  #root .vnext-shell .step-inspector-sheet .atelier-modal-shell {
+    max-height: calc(100dvh - 28px - var(--hosted-obstruction-inset));
+  }
+}
+@media (max-width: 359px) {
+  #root .vnext-shell .topbar {
+    padding-inline: 8px;
+  }
+  #root .vnext-shell .vnext-wordmark {
+    font-size: 1.125rem;
+  }
+  #root .vnext-shell .main-content,
+  #root .vnext-shell .main-content:has(.v3-workbench) {
+    padding-inline: 14px;
+  }
+  #root .vnext-shell .bottom-nav {
+    left: 6px;
+    right: 6px;
+    padding-inline: 3px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .vnext-shell *,
+  #root .vnext-shell *::before,
+  #root .vnext-shell *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+  }
+}
+@media print {
+  #root .vnext-shell {
+    display: block;
+    background: white;
+  }
+  #root .vnext-shell .main-content {
+    padding: 0;
+  }
+  #root .vnext-shell .sidebar,
+  #root .vnext-shell .bottom-nav,
+  #root .vnext-shell .topbar,
+  #root .vnext-shell .v2-review-notice {
+    display: none;
+  }
+}

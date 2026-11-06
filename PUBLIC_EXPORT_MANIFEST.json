@@ -1,0 +1,1667 @@
+{
+  "format": "minimal-public-source-handoff-v1",
+  "canonicalCloudCommit": "a9a6716bb460fef48eb8d9dfe1b0fd9781f19c74",
+  "validatedApplicationCommit": "ee16febaed5a9fc1c3f0841c12d559f4464638a3",
+  "fullHistoryPublished": false,
+  "remoteUploadPerformed": false,
+  "deploymentPerformed": false,
+  "excluded": [
+    ".git/**",
+    ".github/**",
+    "deployment/** except3 authored frozen schema/type dependencies",
+    "docs/**/*-evidence/**",
+    "raw backups/logs/screenshots",
+    "env actual values",
+    "node_modules/**",
+    "dist/**",
+    "user records"
+  ],
+  "keptSourceFiles": 411,
+  "files": [
+    {
+      "path": ".gitattributes",
+      "sha256": "7c350d0c0bde6cc66f7c6c280849a814101cc3e89423fdd46b7268510c18bb4c"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "cd5fbc33e9fa53a5c9a417a4440505065740adb9be55d9edc8c05f8c9817a822"
+    },
+    {
+      "path": ".prettierrc",
+      "sha256": "3a8b296a75b09df17e2f70d2c0812f3aa2755c7aee1e8676c08b083252ed5a8b"
+    },
+    {
+      "path": "BACKEND.md",
+      "sha256": "93609ae8b98248a7efbcbba632ef512f652c3c6af98015de696b37c09a48c075"
+    },
+    {
+      "path": "GEMINI_HANDOFF.md",
+      "sha256": "785548118ae62b8338a1dcdc7d644fbd286c7c5f19a5266201ea9fd7a994ab33"
+    },
+    {
+      "path": "backend/appdeploy.d.ts",
+      "sha256": "1c77b132dea8bc12732d38a812dbc378f4d309691bd57d648b20290a7e490fed"
+    },
+    {
+      "path": "backend/backupService.test.ts",
+      "sha256": "20731b49988bbdc8476383da1404ad3040ff6a09c3dfa4124e09828e6b65b35f"
+    },
+    {
+      "path": "backend/backupService.ts",
+      "sha256": "30f083fa81b1dfbd5b54be8760a54b7af4f85709cb5a8bfd5da71ba45d4165e9"
+    },
+    {
+      "path": "backend/backupValidation.ts",
+      "sha256": "a66fe8685e9f2d27f541eb39c641bea5e482bdf91448abc8fa6a1c79b00c6140"
+    },
+    {
+      "path": "backend/backupValidationContract.test.ts",
+      "sha256": "e8ee787b6dfaf70c468ed4b97eee251b6cd0289ae0153eddc4eb1c1aea2dc69e"
+    },
+    {
+      "path": "backend/index.ts",
+      "sha256": "269cbc135b4c8604467dc56bf15f3b69fd0dc4652403e91da85e4b957714cadd"
+    },
+    {
+      "path": "backend/principalAssertion.test.ts",
+      "sha256": "aa11d41ea0a68858fe29a91cc32f37e0a27c6eb7e69f17ab3f5111e666a5c58a"
+    },
+    {
+      "path": "backend/principalAssertion.ts",
+      "sha256": "a1bcbd8eeb78b65abc020188d53bfc7e42847057bf9394da5d7d4ff1f6ff7eec"
+    },
+    {
+      "path": "deployment/appdeploy/platform-source/src/data/equipmentCatalog.ts",
+      "sha256": "ba2a7520698e107739c5d9e261c34150cb506637571c9d24a19286b2fa52e878"
+    },
+    {
+      "path": "deployment/appdeploy/platform-source/src/schemas/cloudBackupSchema.ts",
+      "sha256": "19f9ba1121b7fbba81ee0c721e30a13ab165a735c38244b40777ebdfce3734c9"
+    },
+    {
+      "path": "deployment/appdeploy/platform-source/src/types/pilates.ts",
+      "sha256": "3a5998796d629f570365576b111bf072ceaa67348cff296f3d2d5ca99b4289fd"
+    },
+    {
+      "path": "docs/motion-phase-context-notes.md",
+      "sha256": "0dd2d9f3553464f5b81c4074a1b2304be62c1aa8fb339a10c4c90d61576cee98"
+    },
+    {
+      "path": "docs/motion-study-source-ledger-audit-2026-11-05.md",
+      "sha256": "5cbf35659118c7c9035b762111bc99dda652ef499b782c7ea648a05163085b99"
+    },
+    {
+      "path": "docs/preparation-recovery.md",
+      "sha256": "9eede22b0d32b6f029ff08689c0e19dac9295dbe49b2d8f764fa6c15507a2376"
+    },
+    {
+      "path": "docs/supine-reach-integration.md",
+      "sha256": "30142679b5256ddd095c55230508b0c4abf45b6c7feaf7e54eb13b2b15129b75"
+    },
+    {
+      "path": "docs/vnext-visual-contract.md",
+      "sha256": "35a723ca3d9b01621b1be2867552198e52dc70c0e986207ea901ded12b4836d8"
+    },
+    {
+      "path": "eslint.config.mjs",
+      "sha256": "5a3207c48e503b67999c2f15dec1249e668c8756ab506461196567b7b3d8de81"
+    },
+    {
+      "path": "handoff/github-blocker.json",
+      "sha256": "44ef00c839b9cdf501a91b5e4db15bb91280b3664e1a00161014900f7d0a26d8"
+    },
+    {
+      "path": "handoff/history-secret-scan.json",
+      "sha256": "c7234b4407d4bd73408b705779a251dddc2370022f957c5c2aab21e8ad643a96"
+    },
+    {
+      "path": "handoff/pending-preview-navigation.json",
+      "sha256": "357c65f9768258f0dbfb77206ad42e6760996468a75c84daccfbd35372026b13"
+    },
+    {
+      "path": "handoff/pending-preview-navigation.tar.gz",
+      "sha256": "daa285a63858cf39baaab99a48b52a7c76e013d5342a8f1b2b335f7bfe90c765"
+    },
+    {
+      "path": "index.html",
+      "sha256": "80df99923d10d21fde34445fb144d61e8a7f9116aa8088d94bdf4ad2901735b0"
+    },
+    {
+      "path": "package.json",
+      "sha256": "72888eae1bf6c5d73dbf70c1985955de803ada2552bcd344d79752e59161611b"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "7da9b995395b58a8d35fcdba5a8a49d4570de99373b1315841fea5feb5f1ed97"
+    },
+    {
+      "path": "pnpm-workspace.yaml",
+      "sha256": "683b2ab4e361bdd5f736ad10393f3bdbd414ee44f57702d219f561879d1959fa"
+    },
+    {
+      "path": "public/favicon.svg",
+      "sha256": "dac4fa2d57424fb1a1037ecbcd04e59a6ba1adeccf74dfc1efed5ea3287a2c5c"
+    },
+    {
+      "path": "public/images/atelier-reformer-still-life.png",
+      "sha256": "08738f19dac08bfb0da865aee5cdd23fcb6a4d89c752b8e7db21d65d0f1586c7"
+    },
+    {
+      "path": "public/images/atelier-ring-still-life.png",
+      "sha256": "5da8d4e903f3c098e7eb81f42f4a3403fcd66875d2e74da89c2af79b8e2a35f6"
+    },
+    {
+      "path": "public/images/atelier-studio.webp",
+      "sha256": "826b6876f95da2e4b4cefd82288ad5912a3e0cda52d8580a62e2099d164f7bce"
+    },
+    {
+      "path": "public/site.webmanifest",
+      "sha256": "c6018a8b5bd74b61c499ccc72afe0de40acceed10dedfb4c70dfa0e59561f0e5"
+    },
+    {
+      "path": "scripts/generate-motion-study-ledger.mjs",
+      "sha256": "c7232e5121d5f3705e380f5f3b893740cda2e07f63338daf1c3d87ed79843160"
+    },
+    {
+      "path": "scripts/generate-motion-study-ledger.node-test.mjs",
+      "sha256": "4418d0fbdf72e3cf1d96a1c335fdaff83c05c80fe5c4560770acd14eca438742"
+    },
+    {
+      "path": "src/App.tsx",
+      "sha256": "374954cb0069436e62863ef0a26174967b42a05d5984d7c0630f5f5f115b34d6"
+    },
+    {
+      "path": "src/components/ApparatusDraftFigure.test.tsx",
+      "sha256": "e7ceede0c4901d278efa6f25811f98fd10f453b5a8fda5a2723e1a90adcaf212"
+    },
+    {
+      "path": "src/components/ApparatusDraftFigure.tsx",
+      "sha256": "4de5e7cfdfff781aa467d098a366bab8da77a4bf4650a4bdd29b5a3a281cc0db"
+    },
+    {
+      "path": "src/components/ChestLiftFigure.tsx",
+      "sha256": "67f234057b91cdc423058577496f05c7284d4b0a4184fd3b94caf72954a02ad1"
+    },
+    {
+      "path": "src/components/ClassBinderView.tsx",
+      "sha256": "cbf9ef46557b33e8aab5f107faa8e0c82b9863f1627f3026724e157a3b0cc92b"
+    },
+    {
+      "path": "src/components/ClassInsightsDialog.test.tsx",
+      "sha256": "5ddd2d1ab023126b10cc6524a1b9fc45a4fa933d91cbbf2224232345c5541bd6"
+    },
+    {
+      "path": "src/components/ClassInsightsDialog.tsx",
+      "sha256": "78f42622d7499776a329e8a031c5c028e836e63b28187dbc2c686daa68654e47"
+    },
+    {
+      "path": "src/components/CloudSyncPanel.cleanup.test.tsx",
+      "sha256": "f60b82f41e75b56f29e0cb69879b70e226f9380b93a15952b99d258b86a8aaa0"
+    },
+    {
+      "path": "src/components/CloudSyncPanel.tsx",
+      "sha256": "edc2790d4503c374e81cf4b753fcfbe576418515b1178ba055be4e6f42c8a15d"
+    },
+    {
+      "path": "src/components/ConnectedMotionStudy.test.tsx",
+      "sha256": "083c52ede9de684a5e9e9516697f0112f25965ff8d8de79c845ddf2723bc540f"
+    },
+    {
+      "path": "src/components/ConnectedMotionStudy.tsx",
+      "sha256": "e5e220d56eb486ff3248b904b7f482600a0c6c37dd11a1e6ac797be876744918"
+    },
+    {
+      "path": "src/components/CourseReferenceBrowser.test.tsx",
+      "sha256": "cb63fe4cc1b2b6c19e1b5400b9dad059bfd05e8f5d2f7c3082c93d424af06239"
+    },
+    {
+      "path": "src/components/CourseReferenceBrowser.tsx",
+      "sha256": "d7a8c8d247a3cc707c460c1fc7c4a857d5a1e551cdcba8d6361f9f93f5dca971"
+    },
+    {
+      "path": "src/components/DatedSequencePlanningDialog.test.tsx",
+      "sha256": "677b9a5d70b67e198b6f96bd4e849bac636330dabd3cd970ffdee3cc400a64b4"
+    },
+    {
+      "path": "src/components/DatedSequencePlanningDialog.tsx",
+      "sha256": "f8bdda0c02ee709fc2cd5bb1feac0e36fdfdb42a19474b9d11209f9ffd3c076d"
+    },
+    {
+      "path": "src/components/DeferredPanelBoundary.test.tsx",
+      "sha256": "0cc3bd563e023d36baaf42ea03185f87338cc782ef33440c8245a32ac4455df2"
+    },
+    {
+      "path": "src/components/DeferredPanelBoundary.tsx",
+      "sha256": "1da4f303fa103609394e21b00a2a40ab0c3d9acc408f455c5e2c73ec64df603e"
+    },
+    {
+      "path": "src/components/ExerciseAtlasView.addFeedback.test.tsx",
+      "sha256": "5b68d1bd63abd435c9185a9365261188136c0e057db2287852410540d5b930b2"
+    },
+    {
+      "path": "src/components/ExerciseAtlasView.tsx",
+      "sha256": "e4d2b810dff23d771b34ca26cbae985072f8b411fba758e4cc662e539f86b8a5"
+    },
+    {
+      "path": "src/components/ExerciseEvidencePanel.test.tsx",
+      "sha256": "8328e27dc10253b3cea1d80ab99e3011c42a65852edbb10a5baa663a83908802"
+    },
+    {
+      "path": "src/components/ExerciseEvidencePanel.tsx",
+      "sha256": "2175567b33b1963836cbc17b67a18e78fcc0d3860d51adaa7af68d8ba18fb4f4"
+    },
+    {
+      "path": "src/components/GroupPrepPanel.tsx",
+      "sha256": "44e8c9b010649533e0fa6ef053586771e1544c6ad95e3b12799006a02fd90270"
+    },
+    {
+      "path": "src/components/InlineExerciseFinder.test.tsx",
+      "sha256": "2f1b8a46005131e8d591e252dbb03b24483b43830e46dedd68bee2520a702d2f"
+    },
+    {
+      "path": "src/components/InlineExerciseFinder.tsx",
+      "sha256": "f54aac57cff1e988b8e8282b5e5fad1063bacf11ea6e0951b9e1516df1ba844b"
+    },
+    {
+      "path": "src/components/InstructorScheduleView.calendar.test.tsx",
+      "sha256": "add631fcdc57f70f1c25c642b8ebb08c16d9ea90f8db14652deadb81ea0ca6a3"
+    },
+    {
+      "path": "src/components/InstructorScheduleView.dated.test.tsx",
+      "sha256": "802679903ba7eb42a137a6f3769ae4b2e0330d593cb82e51efe4763174fbba29"
+    },
+    {
+      "path": "src/components/InstructorScheduleView.test.tsx",
+      "sha256": "d7c4cfa6dabc1f95905f9ffb80a28c5a71c5c6ac2242ee24fe1048e7280b5fda"
+    },
+    {
+      "path": "src/components/InstructorScheduleView.tsx",
+      "sha256": "4be5b22c3991a751ded360eae5e996a68eca46eb400bf2770270327bf76ef13d"
+    },
+    {
+      "path": "src/components/InstructorStudyDialog.test.tsx",
+      "sha256": "eb7d6e9411e1e910ea6c0fa4b064cc5351553a87d394ab724e094968004e41aa"
+    },
+    {
+      "path": "src/components/InstructorStudyDialog.tsx",
+      "sha256": "68caa7de9056613740e2b66fe3f340c520c4635e831c9be953eb758ff24501f1"
+    },
+    {
+      "path": "src/components/InventoryPanel.tsx",
+      "sha256": "d670a5dd0e8520c2cb6551d40d375f81354db48fe47939488cff7cc02febbd7e"
+    },
+    {
+      "path": "src/components/LateralDraftFigure.tsx",
+      "sha256": "4653ae1302dde3486963a3f604b6f0be7079e5028bb4e2d5f95f3bfeb5d255bd"
+    },
+    {
+      "path": "src/components/LightDismissDialog.beforeClose.test.tsx",
+      "sha256": "1287982b1e11dc00d175bb1e3c0f45bfdecf9b6d4e4706fd89cb287481647c26"
+    },
+    {
+      "path": "src/components/LightDismissDialog.tsx",
+      "sha256": "61a7a78cff42db1038d3c23e2f023fa36a12b7340fefce062211ebbcb614b824"
+    },
+    {
+      "path": "src/components/LiveStageView.tsx",
+      "sha256": "77b4565fe0c11322a6e98ef2db7c132b9965322ba39a65a29afe83e62e6e0c6d"
+    },
+    {
+      "path": "src/components/LogSessionModal.tsx",
+      "sha256": "50feec9e70fb014e0a8c61bffd31e97a7791284a1b20dd7c33496bc194adc060"
+    },
+    {
+      "path": "src/components/MotionAuthoringBatch.test.tsx",
+      "sha256": "b0c29352fedcd7d05aba1aed9ad13fbd75c3fe4dfa683754d7b8274526d1f799"
+    },
+    {
+      "path": "src/components/MotionAuthoringBatchFigure.tsx",
+      "sha256": "3a6392f897394ea8fa3795827fd03489afb18879fec17b71533fc944eb69b112"
+    },
+    {
+      "path": "src/components/MotionAuthoringBatchPlayer.tsx",
+      "sha256": "996ee14a92ec9e8338facd92b133e3fd3ccfdd78e0e47dbed274dbfed18fe126"
+    },
+    {
+      "path": "src/components/MotionDraftFigure.tsx",
+      "sha256": "9a85dec78cf14d531154412ad6818f0a5b541e88e846f68bb3e65aec98b5b6d2"
+    },
+    {
+      "path": "src/components/MotionDraftLabDialog.tsx",
+      "sha256": "9920044b7d468c7f494189397eb10a79ace7b99b6bf71f27dbafce51d3210706"
+    },
+    {
+      "path": "src/components/MotionDraftReviewWorksheet.tsx",
+      "sha256": "67175b53a6f5d0e6913617eb7ebb06cbd93113ae5be2f928798b05cf02347c09"
+    },
+    {
+      "path": "src/components/MotionDraftSegmentRehearsal.tsx",
+      "sha256": "69fe9ee3fde086f6860d6a7197a3af1a45b4e66e6e78b6fe67cf31e02a069704"
+    },
+    {
+      "path": "src/components/MotionPatternGallery.tsx",
+      "sha256": "2dbdd5bf2c1a2aeec61a489972ce90d4f46ac2af2857e7defd8af8464e7fc415"
+    },
+    {
+      "path": "src/components/MotionPatternPreview.phaseContext.test.tsx",
+      "sha256": "427a0d951d7fb0f1ccf678e8749b895128fe07117baf47c8f403c3552d72655c"
+    },
+    {
+      "path": "src/components/MotionPatternPreview.test.tsx",
+      "sha256": "c202b3f7c9801b8414756033d466ec8dfb44d3541f64ce4f9d606164e14a87bb"
+    },
+    {
+      "path": "src/components/MotionPatternPreview.tsx",
+      "sha256": "dd46f7774f5040f6271db253e48f07d49018c6dbc2e026513b05a4d74097fcae"
+    },
+    {
+      "path": "src/components/MotionPhaseContextPanel.tsx",
+      "sha256": "1c5a24f241ccd808537569276f4885782ba286b9bf05c677f8967909ef67cb37"
+    },
+    {
+      "path": "src/components/MotionReferencePlayer.test.tsx",
+      "sha256": "cfe72cf1a0b21d17e8902609e8b7f309925d0123f2e9d0d562251764f8910a0e"
+    },
+    {
+      "path": "src/components/MotionReferencePlayer.tsx",
+      "sha256": "d397ff8ba06392e0c01fa5d0cea87012c77f0eaf436bb3a4fd01aa733a63ad27"
+    },
+    {
+      "path": "src/components/MotionStoryboardBuilder.tsx",
+      "sha256": "dd93f59b408b293c863d5a77c1c03003bfa012cd0d9c94b5511c2cefcf4555d6"
+    },
+    {
+      "path": "src/components/MovementArt.tsx",
+      "sha256": "72abb761977532546451bc47b728879913181c5edb6d4cc4a99a8dc82ad47682"
+    },
+    {
+      "path": "src/components/NextClassBanner.test.tsx",
+      "sha256": "8d990726b8431370c236475a93216f3eb5cf4e6e77129814e42fd9e7446b9a30"
+    },
+    {
+      "path": "src/components/NextClassBanner.tsx",
+      "sha256": "683e349f1d2ac3d1164dcbd9021a650c0ec6d4c92379208a5d1fb41a86c068c2"
+    },
+    {
+      "path": "src/components/PelvicCurlFigure.tsx",
+      "sha256": "da09da507f5f34af639e8a2800b13321c33a699e00becac329aaa31d71506187"
+    },
+    {
+      "path": "src/components/QuadrupedDraftFigure.tsx",
+      "sha256": "048fb0d2816e04dbdf20b05c973a80d0a5aae00d64cdf44df3d12b343dbd2402"
+    },
+    {
+      "path": "src/components/RecoveryPreview.reviewPacket.test.tsx",
+      "sha256": "6933f178b05fd952e7f75d32dc546c17b8931c2b03f918f7879df14a7066e5dc"
+    },
+    {
+      "path": "src/components/RecoveryPreview.storage.test.tsx",
+      "sha256": "daec18d1c4c6e37aba54a19eecfa456f4d75377a97c6d47233f9f48f45593fe0"
+    },
+    {
+      "path": "src/components/RecoveryPreview.test.tsx",
+      "sha256": "74472c7932a9723d63b27ecdcb58dee000bb2f65b1dae62ba5ee60ae44b1d5dd"
+    },
+    {
+      "path": "src/components/RecoveryPreview.tsx",
+      "sha256": "39d89e9f1770e60391287429c0d0f101090e1d7fa579ba9456d72da38e64634b"
+    },
+    {
+      "path": "src/components/RestPlanningControls.tsx",
+      "sha256": "226d14e38584d6a88e69d5044ed14c2c7f09949a767997a57b445dccfd03433d"
+    },
+    {
+      "path": "src/components/RestStepCard.tsx",
+      "sha256": "fbf47c4aa3fc746db77e80319a286b622f6482401c9213b5797bf4e4ce6d195f"
+    },
+    {
+      "path": "src/components/SeatedBandRowFigure.tsx",
+      "sha256": "b5e07a3f82213469948e6d2ec209ff49d5517105f40c0a893e3cd0fd616e3229"
+    },
+    {
+      "path": "src/components/SequencePlanPreview.connected.test.tsx",
+      "sha256": "482c0a26b860f38f9e48e37cc678204800904242955a7eb6b44d5fb1b7637b17"
+    },
+    {
+      "path": "src/components/SequencePlanPreview.relatedMotion.test.tsx",
+      "sha256": "c7c228ee27c1b30ee85ec242bf4efd463c1b1e7fc628758adaaf855768bf7a3f"
+    },
+    {
+      "path": "src/components/SequencePlanPreview.segmentMotion.test.tsx",
+      "sha256": "0efaed1b2b47509d5e99233f2ac5a1f50ed2881e550b916d356987ecfe42ab97"
+    },
+    {
+      "path": "src/components/SequencePlanPreview.test.tsx",
+      "sha256": "f7224e87a8c6a8e90c5ea604c58a72ea44687ad1903c87870e77da4b1ecaaf0e"
+    },
+    {
+      "path": "src/components/SequencePlanPreview.tsx",
+      "sha256": "db55c9abe0800e2a0cd204329e387fe14a4b0b6c0c2709ba6c92e7c1827669da"
+    },
+    {
+      "path": "src/components/SequenceSegmentRehearsal.test.tsx",
+      "sha256": "6eecf4b60f79fc743a8fc3aee4d481736da19ae6838b8d2c5e35d5ee22b393b6"
+    },
+    {
+      "path": "src/components/SequenceSegmentRehearsal.tsx",
+      "sha256": "747afb9fa3dd6ebab042755790a3409ace80ac19e7bc8968668e4a69e5dc0186"
+    },
+    {
+      "path": "src/components/SequenceWorkbench.classSection.test.tsx",
+      "sha256": "259e1a9b1752e0dfb63693f76f314d2ab8362747e0dc39b87884fbf9b1ce4bb7"
+    },
+    {
+      "path": "src/components/SequenceWorkbench.detailHandoff.test.tsx",
+      "sha256": "0c2ff0385244a2428be569640dbc33c0af8077f2be90a14103c68beddc67d6be"
+    },
+    {
+      "path": "src/components/SequenceWorkbench.finderLifecycle.test.tsx",
+      "sha256": "6d8e8efc68027b3c5944b903606ae5b21e1bc067e2a48ec01f15a860bf51946f"
+    },
+    {
+      "path": "src/components/SequenceWorkbench.tsx",
+      "sha256": "c07c94c1e9fe5d331bd365887a502b10a3e7124292b58e97b25324d5e7185cf4"
+    },
+    {
+      "path": "src/components/SequenceWorkbench.vnext.test.tsx",
+      "sha256": "7bb2aedab3201594ec0299a3a2e99f06c13d463e086a9aec04fe53f41341a807"
+    },
+    {
+      "path": "src/components/SourceNoteDialog.inputRecovery.test.tsx",
+      "sha256": "4cc711d531f16c343f16cb80b60d8fb33236d46e2d8f07278357ffb3c2567218"
+    },
+    {
+      "path": "src/components/SourceNoteDialog.test.tsx",
+      "sha256": "c11df1813570d56b382419d291adc2652843e2dceb7b69ac00dbf2557cd63ffc"
+    },
+    {
+      "path": "src/components/SourceNoteDialog.tsx",
+      "sha256": "3e1166401d823c527613e620747a581f6af1bd3d03ee283e74fdaf9220d0e85b"
+    },
+    {
+      "path": "src/components/SpringBadge.tsx",
+      "sha256": "72f5016b77fe8f7b492f726dfeabbbf7cc257130722287521b1bf82805d62860"
+    },
+    {
+      "path": "src/components/StandingSupportDraftFigure.tsx",
+      "sha256": "44e6c33c608842d36e1d46f9c8cbc251155beefb862b0b15cf3a354e5fb1ce66"
+    },
+    {
+      "path": "src/components/StepBlockInspector.motionStudy.test.tsx",
+      "sha256": "44f99d6afff2862ea31ab86254e064b7280a09bb95d737644ff250859a8edb0f"
+    },
+    {
+      "path": "src/components/StepBlockInspector.test.tsx",
+      "sha256": "cbdfcdc0adb6ac33246df757dd76755f1149d9a7f4e7e1f9e492cf86020085ee"
+    },
+    {
+      "path": "src/components/StepBlockInspector.tsx",
+      "sha256": "b68c64af196aaef977d27739db5d8abb3ef8543ea058b2d8a9302c5141145ee3"
+    },
+    {
+      "path": "src/components/StepMotionStudyPicker.tsx",
+      "sha256": "8d7e3a8de915fe9a904c8335e293ed32a91d3ea9d1262ceaa28778269129fda8"
+    },
+    {
+      "path": "src/components/StepPracticeEditor.test.tsx",
+      "sha256": "e3098a5b92ee9f2881264b0cd7e4aa03de1bb39e8220303227376dc520aaac61"
+    },
+    {
+      "path": "src/components/StepPracticeEditor.tsx",
+      "sha256": "b1da29ffd5bafee88a7f39d1301b091170eccd88af39dfb15e6aa7c771c1eb6d"
+    },
+    {
+      "path": "src/components/SupineDraftFigure.test.tsx",
+      "sha256": "84f169fc5ac28d687e7ffe9f8eb648b2ff1e60a111cdcaeb61aadf3535d57aab"
+    },
+    {
+      "path": "src/components/SupineDraftFigure.tsx",
+      "sha256": "9e8f661a2a78fa8f9162b63303a3873445631dfa97e0fd63d7f0518c0787ab6f"
+    },
+    {
+      "path": "src/components/SupineReachFigure.test.tsx",
+      "sha256": "b599b9df5de071b22ffb4bd833fd9fae15620432a3b2e8d84136aaf8c1dca0a1"
+    },
+    {
+      "path": "src/components/SupineReachFigure.tsx",
+      "sha256": "78510ac3e6e17a265023b8fd895f9952002f7210de6a75a217be46c9652c029c"
+    },
+    {
+      "path": "src/components/TensionDraftFigure.test.tsx",
+      "sha256": "9bb63e360eab33a16b74fe1e8a7184ad13eb333391d083a30c759b572e173cce"
+    },
+    {
+      "path": "src/components/TensionDraftFigure.tsx",
+      "sha256": "dc3f0a61878df6e6e932eb0248eb288734adbf92a03f25651bca4c7ee83b5fc4"
+    },
+    {
+      "path": "src/components/YouTubeClipModal.addOutcome.test.tsx",
+      "sha256": "eb896f8a6e029a31d9f5d0ec2c75a7ddaae1ed415f3800bdd7ccd7e3610408ff"
+    },
+    {
+      "path": "src/components/YouTubeClipModal.dismissal.test.tsx",
+      "sha256": "6ed85d1bddf6ac31d780419eccabe4762d5e8e27b3879f1f486c58cc538b890b"
+    },
+    {
+      "path": "src/components/YouTubeClipModal.motion.test.tsx",
+      "sha256": "7876b305d69acc24b622ba8de0aff077733eb69aa67188e0627e461b411b93ee"
+    },
+    {
+      "path": "src/components/YouTubeClipModal.tsx",
+      "sha256": "83395927221326b647be0cb50a6e5fd04e50702d79b8bfed749df618fc79fa68"
+    },
+    {
+      "path": "src/components/YouTubeClipModal.unsavedReview.test.tsx",
+      "sha256": "ada4ed68ef5e824f87348a2b958659b6405b226ebfc0501c4ef167335f7af641"
+    },
+    {
+      "path": "src/components/YouTubeClipModal.usability.test.tsx",
+      "sha256": "217711612ca192845b9229c9a9a5ce17311c8d500636c5819c5e2b8676e45035"
+    },
+    {
+      "path": "src/data/courseCollectionSource.json",
+      "sha256": "75f937a286703a15af42079dfae5fa328e93bc4fa4fb4db4355e66ad7d63b57a"
+    },
+    {
+      "path": "src/data/coursePublisherAmendments.json",
+      "sha256": "499f42fb5a88e2e32a0105fe29156cee56a5b681ae8053a593b1640845df4655"
+    },
+    {
+      "path": "src/data/courseReferences.ts",
+      "sha256": "8b18e1603695089b9c58a479dc0c7199585f6cfbaa8930f5cc77fe9dc1618647"
+    },
+    {
+      "path": "src/data/equipmentCatalog.ts",
+      "sha256": "c4b1c4b53639592745cbc58f312b9cf1efbc9a5e951897a9f59d023b2b37195f"
+    },
+    {
+      "path": "src/data/libraryEquipmentFilters.test.ts",
+      "sha256": "90ec3ea2379a748c3a5d871deb3b8af3e6d04c675eb8b5d58167434510cf85f0"
+    },
+    {
+      "path": "src/data/libraryEquipmentFilters.ts",
+      "sha256": "9bdb89cba8a6388e7518374f640bfb1294a99c8e94b14f8863465372086fe3d1"
+    },
+    {
+      "path": "src/data/motionApparatusSourceLedger.json",
+      "sha256": "0226f3c314a80d5912879d783441c2d0d33ef901e47907197c371a011ca7e2cd"
+    },
+    {
+      "path": "src/data/motionApparatusSourceLedger.md",
+      "sha256": "8d4761f3156227923f94db3eeaf2759438cba115452f049cdde38e849306c6b6"
+    },
+    {
+      "path": "src/data/motionAuthoringBatch.ts",
+      "sha256": "2001a11eab77b98373b6b149afdde56c2ba363b748259bf73dfc0b4ace01bf26"
+    },
+    {
+      "path": "src/data/motionAuthoringBatchIntegrity.json",
+      "sha256": "4855e2fe58f3086897fcea875c86cd19c8ac63cde5089e654f24ba5a94040685"
+    },
+    {
+      "path": "src/data/motionCandidateResearch.ts",
+      "sha256": "0fd9da65be0427f6739dee92e7734e8c74ebb254ed033d59d02cdfb1bd544f51"
+    },
+    {
+      "path": "src/data/motionCandidateResearchV7.json",
+      "sha256": "a96737cd152bb0885f79ed8bfb68a3fd2391e74ec5af55d39a5f9e0201dc5501"
+    },
+    {
+      "path": "src/data/motionDraftExpansion.ts",
+      "sha256": "afe31c67e78fbbf04d0f1679cc50b2fd88cf0df7af37ec175cfdcd007a8036b5"
+    },
+    {
+      "path": "src/data/motionDraftIndex.ts",
+      "sha256": "99ee70884d90bb8d42f4b22a29c88653ba9c953e31c142fd491169d13b1548be"
+    },
+    {
+      "path": "src/data/motionDraftSourceLedger.json",
+      "sha256": "ccc34ebf0ebdd40e1ff01a5d129333e4878b67662970ad5641ef91096d531809"
+    },
+    {
+      "path": "src/data/motionDraftSourceLedger.source.md",
+      "sha256": "5faa35d0f9f96cf74bf374acb7855c178039bb29708d97cbf70064de21080aa8"
+    },
+    {
+      "path": "src/data/motionDraftV5.ts",
+      "sha256": "6e2d08bf73a7105c69af6747f3ea88ad67598ac92a463606937bb6c5f45cb13f"
+    },
+    {
+      "path": "src/data/motionDraftV6.ts",
+      "sha256": "45f13ec4fd416cf8eadea8d7460bca092322c75bc767443a0fabde87993f40f6"
+    },
+    {
+      "path": "src/data/motionDrafts.ts",
+      "sha256": "929be07084d03e440e25650a5df250a45b22651de128f6aaf7236e7cac5258cd"
+    },
+    {
+      "path": "src/data/motionPatternReferences.ts",
+      "sha256": "ac8c6e8000d7496b3b21362434f3586f07ec640510d02a32528e0a241f91ed39"
+    },
+    {
+      "path": "src/data/motionPhaseContextNotes.ts",
+      "sha256": "fdcfb9fde3131194a2367428898f0b792c3a634667639ae33a59826f295320ca"
+    },
+    {
+      "path": "src/data/motionQuadrupedSourceLedger.json",
+      "sha256": "4baaf5008e30d1287f9618b5a1814e2d2d20c382f1a3a727bf069ac95b24e7ae"
+    },
+    {
+      "path": "src/data/motionQuadrupedSourceLedger.md",
+      "sha256": "85d271ef721e16a7ea73b8fbdf6d9486feb633dfa30f87b15dcc68d2bf5f7452"
+    },
+    {
+      "path": "src/data/motionReferenceSource.json",
+      "sha256": "875ee1895e54cfb855d32ce604e2ab4fd94af02a34e70400caa4f4f5f8b3e477"
+    },
+    {
+      "path": "src/data/motionReferenceSources.md",
+      "sha256": "4b05a0a0186e9d525485f8b7cebfedefe0393ce0b5fdc3266ac50a53973b881c"
+    },
+    {
+      "path": "src/data/motionReferenceVerification.json",
+      "sha256": "d3c0215556ca208a26e7fef211d6be97ebd206e35a7eaa75fc38bcf37a5e502f"
+    },
+    {
+      "path": "src/data/motionReferences.ts",
+      "sha256": "208ec010dae133167000d9fc6dc3296c0b54575be4036ccb69c43dfd5bcf3f71"
+    },
+    {
+      "path": "src/data/motionReviewSourceManifest.json",
+      "sha256": "e5be30632747f88698d7710ea07de382e125f4243e13003b9bc59327c7f9a185"
+    },
+    {
+      "path": "src/data/motionSelectedV5SourceLedger.json",
+      "sha256": "827bd98b59b5cf1edc1d64f5781c8f6b63866843266a4a6cfef07dee29d4bada"
+    },
+    {
+      "path": "src/data/motionSelectedV6SourceLedger.json",
+      "sha256": "2557fabf4e304a578b6367b38543566db768f01afcaa3fc5154a6323e4379b48"
+    },
+    {
+      "path": "src/data/motionStandingSourceLedger.json",
+      "sha256": "02aa07835085e1fd5f6cf133ab386ce700f6334f509aa8c79fda8dac7da4df26"
+    },
+    {
+      "path": "src/data/motionStudyLedger.json",
+      "sha256": "0ff99f03655d6fae11a70713330185a894fd8e8cc2130dcfaea46b17f3415759"
+    },
+    {
+      "path": "src/data/motionTensionSourceLedger.json",
+      "sha256": "63dd9950c28dc81e5a186af5d68988249a4d127723e4f4d5feaa23b49791104b"
+    },
+    {
+      "path": "src/data/movementProvenance.ts",
+      "sha256": "2ca6ba56e73d75e9a07018b2e245c5ac4bdc5032dba209309b6bcee8781727be"
+    },
+    {
+      "path": "src/data/originalMovements.ts",
+      "sha256": "4599077604571fbf092d456f893c9a820e92071c0ee12b021340f86dd65cadce"
+    },
+    {
+      "path": "src/data/pilatesCatalog.ts",
+      "sha256": "17414eb225f88c527da0763fe947b1e0e35d98e174e8628d328bda23fc19997f"
+    },
+    {
+      "path": "src/data/publicReferences.ts",
+      "sha256": "b953664e154fda485bc94b4589bebd88708227bc101a3a3d6be9453477bb8b26"
+    },
+    {
+      "path": "src/data/sourceCatalog/README.ko.md",
+      "sha256": "c023bd560c53f7c6a919ec9891b414b3eaf648c404c38089c8706b15192fd919"
+    },
+    {
+      "path": "src/data/sourceCatalog/korean-candidate-catalog.json",
+      "sha256": "26656da7d758e721a4ad358df41d1fbc45c40f073b0ad0dcf0d39e67489d8984"
+    },
+    {
+      "path": "src/data/sourceCatalog/review-queue.csv",
+      "sha256": "c18ab6e6b5fb4f913178fca86c4c436d0c0555d2dd5895069428c5cb1a65ba1b"
+    },
+    {
+      "path": "src/data/sourceCatalog/verified-source-catalog.json",
+      "sha256": "feb0ae0a288f1d93ccdeeccd9da2e2389f782f65143b0f4febfeeaa25792305e"
+    },
+    {
+      "path": "src/data/supineReach.ts",
+      "sha256": "6ff794104a87fb7179bc73e6c638dd51fabba3865e3098c7d872df602181b431"
+    },
+    {
+      "path": "src/data/supineReachSource.json",
+      "sha256": "65b78bc497fe87330d6e46f85fb859b1e963be0a31237aa181e9a5d3429de783"
+    },
+    {
+      "path": "src/data/verifiedReferences.test.ts",
+      "sha256": "e03fead3e5a3785d10fa7d92509652bfdad32c9d4fd92c08dfab61899327b3a3"
+    },
+    {
+      "path": "src/data/verifiedReferences.ts",
+      "sha256": "87b5f817669f56cade4f6ae03a9175b6a9b4db56ac3ec0d9ce9bbf772cd6016c"
+    },
+    {
+      "path": "src/hooks/useMotionDraftPlayback.ts",
+      "sha256": "f78926e8548fcbef7e8035e9ddb3f5ffa03481e355ec8195dc7c2b1ce8ce9903"
+    },
+    {
+      "path": "src/hooks/useMotionStoryboardPlayback.ts",
+      "sha256": "c12a91c44001c96cbfbb8ecd338b40a9c9d183ff00a39cc0c248c5fdb9a6c26e"
+    },
+    {
+      "path": "src/hooks/usePilatesQueries.ts",
+      "sha256": "6e47df187e48538c766b8187fe492eec2f872633343ea05a4005525b42b565f3"
+    },
+    {
+      "path": "src/hooks/useSequenceRehearsal.test.tsx",
+      "sha256": "cfef3ca68ecbe8527c9e80f0775220895940aaf895cc1ef5ed1d79a8a6965290"
+    },
+    {
+      "path": "src/hooks/useSequenceRehearsal.ts",
+      "sha256": "9087238601f8674392e6e6f296258737a46ced76c0e807347a68100c71738cb8"
+    },
+    {
+      "path": "src/lib/cloudSync.test.ts",
+      "sha256": "98f719ac1d9382455d5c16313bb5f960607c6b8fb41abe0958e29a0293c0074b"
+    },
+    {
+      "path": "src/lib/cloudSync.ts",
+      "sha256": "5bf6e136982236dfd7b9de4b4f6946dd9dfa47e0b4633f53f0348d6ed7a79160"
+    },
+    {
+      "path": "src/lib/localAppDeploy.ts",
+      "sha256": "a0e1de9fc0d6e6059906e2c9abe84d95dd7376589160f8522f3daf8ca003616a"
+    },
+    {
+      "path": "src/lib/recoveryStorageGuard.test.ts",
+      "sha256": "7e44de0f326945253f383eb8931f929cd562b3ff294f799330b0e3a476c199dd"
+    },
+    {
+      "path": "src/lib/recoveryStorageGuard.ts",
+      "sha256": "74af807144ffd7b1a0bceb68b147aef2e43a7c9e6e1e979d0560cfa5c9c59baf"
+    },
+    {
+      "path": "src/main.tsx",
+      "sha256": "570aecbcf8f857f100e75d5b6179ccf7ebfb12c6b886510543c5ca33acf3fbbc"
+    },
+    {
+      "path": "src/models/DraftPlaybackController.ts",
+      "sha256": "568a7d322a840d9ddd2ba16f2a87adab6f3f725a11bf38abe3a54439a61c530a"
+    },
+    {
+      "path": "src/models/LATERAL-LICENSE.txt",
+      "sha256": "34be1cb13a7efac46cb7b798e2e04166d722edb47f3f3d2012d61bafe4461bee"
+    },
+    {
+      "path": "src/models/QUADRUPED-LICENSE.txt",
+      "sha256": "32d5b2b0ce37a0c37c11ae73d1399a1a0aa17bb3ed019e89ba65ca6875277f0a"
+    },
+    {
+      "path": "src/models/SUPINE-LICENSE.txt",
+      "sha256": "4f98116e19fa1d338b83936d6dda6e708aab8091f0d74d9807be2d011fcfef2f"
+    },
+    {
+      "path": "src/models/SUPINE-PROVENANCE.md",
+      "sha256": "c21b96e00b96c8d5ae4bc9d865ed064f3265048de066997862eaf9e82b87148a"
+    },
+    {
+      "path": "src/models/apparatus-LICENSE.txt",
+      "sha256": "470713ea5fd6749bd4a20d5786d0173ffe98ccdd1330eb05dc052f8be05b0dea"
+    },
+    {
+      "path": "src/models/apparatus-provenance.md",
+      "sha256": "a29c6449b5d87c69f75ea091588ffb615d7e08f66a77535baafb236113043b61"
+    },
+    {
+      "path": "src/models/apparatus-source-facts.json",
+      "sha256": "c607e85481dbc9180dccc636233344ca64b93022bb6c95a5029881b4fa3b4072"
+    },
+    {
+      "path": "src/models/apparatusDrafts.test.ts",
+      "sha256": "bbe336d4115edf6d2052022369b844d845dcb6a8e5e4998779e342014ad2bca1"
+    },
+    {
+      "path": "src/models/apparatusDrafts.ts",
+      "sha256": "37f32b7fd39fc5038eab026554b99ee9d8dc63b85611673287768c0d49e8f1ef"
+    },
+    {
+      "path": "src/models/apparatusGeometry.ts",
+      "sha256": "3bdbdb85b36fb1183e631bf3bc8b64ee2d79ff205b95696b80d44cdf1c0bb240"
+    },
+    {
+      "path": "src/models/cadillacArmSpringPress.ts",
+      "sha256": "5f5f9563000fd08f6cbf99a633d21912433709506ffc67595ab345b6c5eff108"
+    },
+    {
+      "path": "src/models/chairPedalPress.ts",
+      "sha256": "d0cdbd4fe5139b49f5eb39ffd39a2bbf189150a70702503a0ea4758fbd9ab9dd"
+    },
+    {
+      "path": "src/models/chestLift.ts",
+      "sha256": "74ce4149cd77555cad2ef0dde694fb48b7462c4a31d08e2e130793dc7889fa05"
+    },
+    {
+      "path": "src/models/chestLiftProvenance.ts",
+      "sha256": "75c5284259abbbd4749c570db210310ce3da08efd4e4a45934d988f1cdc17151"
+    },
+    {
+      "path": "src/models/clam.ts",
+      "sha256": "0f9506ea5f7e61b0507dcd9f549b27459239d8a9e9441d232072f7956f0304c8"
+    },
+    {
+      "path": "src/models/heelRaise.ts",
+      "sha256": "202ede05d7434fe1a40a2b4a751b71606aa7fef0900ce8cc46378171cbf32823"
+    },
+    {
+      "path": "src/models/lateralDrafts.ts",
+      "sha256": "7aadd983d6c9510ce13b874d76f4e967816a8e3ab9cb01ad7869321c213e25aa"
+    },
+    {
+      "path": "src/models/motionAuthoringBatch.ts",
+      "sha256": "bcbae30b3f206f610772875176cfb70c0080326f3757d69ecd183705c56e27f6"
+    },
+    {
+      "path": "src/models/pelvic-curl-LICENSE.txt",
+      "sha256": "e82d35981cd2f45db2391d2777cc19b24179e3b45ca4399bd31193773b7f6db7"
+    },
+    {
+      "path": "src/models/pelvic-curl-provenance.md",
+      "sha256": "f2ebd9c60edf0bde7322ba91acac07a77fa71fb034225d8787b81afa75a6d7b4"
+    },
+    {
+      "path": "src/models/pelvicCurl.ts",
+      "sha256": "1d526d297dc1b98c386850f8f347187aee019f8ff454e95119f0e79feb72a723"
+    },
+    {
+      "path": "src/models/quadrupedDrafts.ts",
+      "sha256": "f22ecc9b624d7f768c527f6985e425d7e58a0ba1cda5b154424e93ccd5fc8164"
+    },
+    {
+      "path": "src/models/reformerFootwork.ts",
+      "sha256": "bde683ff04ddff63afc19ad9ed8dd7077eb72d85228436067597f680c072a9fb"
+    },
+    {
+      "path": "src/models/reformerStrapArmPress.ts",
+      "sha256": "c6b759b413699477399e3a78179e9c05bb72a667c5ea09ada46b89ec48c5ea25"
+    },
+    {
+      "path": "src/models/seated-band-row-LICENSE.txt",
+      "sha256": "c72067cb8008c427644c5f737632b146105a54c033d87e38345330a6a5107d30"
+    },
+    {
+      "path": "src/models/seated-band-row-provenance.md",
+      "sha256": "e482ecf5b0628a9b3e0bb2c317acb997ee492f5345b9ea7fdfd9a7fd41485093"
+    },
+    {
+      "path": "src/models/seatedBandRow.ts",
+      "sha256": "3f2d9b84f439dc66f4793721b05ffe9f8d916da9c16312ed77c19afd820c8a49"
+    },
+    {
+      "path": "src/models/standing-support-LICENSE.txt",
+      "sha256": "8b009d30bfb0c8732ee06cbca406887362e88938d2674d8564bc01d977f75afa"
+    },
+    {
+      "path": "src/models/standingSupportDrafts.ts",
+      "sha256": "8b8ea919b2bb86106e1b4cd198dc637c3ec3f75d28b193d22a2bc998a3826b2f"
+    },
+    {
+      "path": "src/models/supine-source-facts.json",
+      "sha256": "b9e4bdd7175325ab06f0d4e4a38d24c2b21886ec836a48dac9c5d79f6e2d131f"
+    },
+    {
+      "path": "src/models/supineDrafts.test.ts",
+      "sha256": "323c7eb643285589d1f78654bd933e7e4ecaf7b5ebe5cc98d627cdf9261f6550"
+    },
+    {
+      "path": "src/models/supineDrafts.ts",
+      "sha256": "43688af33bd5cbac4b0bf97b782276657380c499e1f66544901254ae5d44e0ea"
+    },
+    {
+      "path": "src/models/supineReach.test.ts",
+      "sha256": "eb1b5da99db92f98571a704d821a33193ae1fc9129a6a59c9b908dacd94b7e50"
+    },
+    {
+      "path": "src/models/supineReach.ts",
+      "sha256": "54e230b8d4ede29ee7fafd9ea7095e06760087a23f502420dcd97a64930c98ad"
+    },
+    {
+      "path": "src/models/tension-LICENSE.txt",
+      "sha256": "e8bf33fe261c10ba990984f616bc770839e873bd9120d553d0859de109c8ce67"
+    },
+    {
+      "path": "src/models/tension-provenance.md",
+      "sha256": "8525d79dc73cbc69eaf8b5ce2f4f27e43af0d506ab0d56983014a75d8cb7a0b5"
+    },
+    {
+      "path": "src/models/tension-source-facts.json",
+      "sha256": "439dd4753aa9e18a682f7fe2b19648d3f31cc2cd54228317e8f25d387a3f3ced"
+    },
+    {
+      "path": "src/models/tensionDrafts.test.ts",
+      "sha256": "fb66531c288e1899e4ecb11be0c66c445bc047d86f11cd57afd0387c7658a7aa"
+    },
+    {
+      "path": "src/models/tensionDrafts.ts",
+      "sha256": "388ca9960227cdba922eb984bce4b045e250a641744aa87983b4fec14d91c931"
+    },
+    {
+      "path": "src/models/tensionGeometry.ts",
+      "sha256": "b2bb746b67653b25dd1f04292457a2995c7bb46ae40cdd6f666836f8e87ad62c"
+    },
+    {
+      "path": "src/models/types.ts",
+      "sha256": "e34a17647cff98992da98a00be2968efb824661316cb3ae5c2af3f79aad6627f"
+    },
+    {
+      "path": "src/schemas/cloudBackupSchema.ts",
+      "sha256": "d4466b25924d501a74aba76416eab67815cadfd5265d8325ef177f6d735acd8b"
+    },
+    {
+      "path": "src/schemas/datedSequencePlanningSchema.ts",
+      "sha256": "9b8913ee183536907a42e1509676ef50af1d72460b4f8f2499a1ddbac49fdbe6"
+    },
+    {
+      "path": "src/schemas/instructorPlanningSchema.ts",
+      "sha256": "77061192995983bf4aaefbc3d091c0466e47af67a5c9a05ce97e2eb3572b850f"
+    },
+    {
+      "path": "src/schemas/instructorScheduleSchema.ts",
+      "sha256": "0f699f6cde60d31c279817a8651615357771c6aebd9c29b25633ebd0142c431a"
+    },
+    {
+      "path": "src/schemas/instructorStudySchema.ts",
+      "sha256": "76edcc71733306604054ef5c92a6c0d6657c1be6b90728d41e8db13610552750"
+    },
+    {
+      "path": "src/schemas/pilatesSchema.test.ts",
+      "sha256": "e5c61c27596aff636e09330ee05e3d6ed5c21791b920884718396bb5d0ab3902"
+    },
+    {
+      "path": "src/schemas/pilatesSchema.ts",
+      "sha256": "24e6fcea6fa11532a6b0a5c8a4b7cf04432434167017e6c1cffbd723603c3e81"
+    },
+    {
+      "path": "src/store/usePilatesStore.ts",
+      "sha256": "07be4e1fd9be773c2d265d4a9786a964e79eef71a3bbfb68b4d8f1335663d962"
+    },
+    {
+      "path": "src/styles/atelier-v2-asset-provenance.json",
+      "sha256": "3958a30793507cd17e07ee57fcff3893c40127464329a1b8580a1613c24023ad"
+    },
+    {
+      "path": "src/styles/atelier-v2-verification.json",
+      "sha256": "df4397b1d68e5cc016ca092de99e5346cd1860b40b403e0d2f28efa04b072a7d"
+    },
+    {
+      "path": "src/styles/atelier-v2.css",
+      "sha256": "5d16fc5db84e8497a03c4f5d04d6d7d80b250c1a418f7f063480d9491f857f64"
+    },
+    {
+      "path": "src/styles/atelier-v2.source.md",
+      "sha256": "bcc659ea0bb13f04ee697d19534861a673b17b60f80b9d4bf9c2d34e7a9b22b9"
+    },
+    {
+      "path": "src/styles/atelier-vnext.css",
+      "sha256": "a4c8a6dd7edbf27bd1fca94e5df82f3289b34b742ef2125d07696ce14c70cc0f"
+    },
+    {
+      "path": "src/styles/class-insights.css",
+      "sha256": "35b9ee3d54e3bf99995adc09a923fdcf9d40cd93614ef7de064b63f2a2f0164e"
+    },
+    {
+      "path": "src/styles/cloud.css",
+      "sha256": "586be0b1b4da9c7a8b839c07cc37af298ef01ae43aa2c3e7f74b8c19a65bc34b"
+    },
+    {
+      "path": "src/styles/connected-motion-study.css",
+      "sha256": "4a76a4f2ccb43fbf24a70b29ff6f4f24132e12f6ea436e06458da6d278eccc97"
+    },
+    {
+      "path": "src/styles/controls.css",
+      "sha256": "a3826ec7bb656301be122cb5480930bfe9ba643d9ce997e9953ab4fcdca379cc"
+    },
+    {
+      "path": "src/styles/course-references.css",
+      "sha256": "760944e0f243ab90625f5de9abbb5148d9e8d0072ce232ab3bf686fbb13e148a"
+    },
+    {
+      "path": "src/styles/dated-sequence-planning.css",
+      "sha256": "db29eafbe8d274e8c8cf364cacb441879066a463baa6159d7eca271942fe1fb0"
+    },
+    {
+      "path": "src/styles/exercise-evidence.css",
+      "sha256": "fd136bbcbbdd2cc4d6a708ba09e30693ca7ab5f7e068d02e231ec5f2beaec54c"
+    },
+    {
+      "path": "src/styles/group-planning.css",
+      "sha256": "45984ff21e61ce37fa8c89642103159197071dea9ae2f8f819f9aba6072f74bb"
+    },
+    {
+      "path": "src/styles/inline-exercise-finder.css",
+      "sha256": "730dd20d7a187d270fbd9dff0246318e017c352c805c45b384228b2125f46187"
+    },
+    {
+      "path": "src/styles/instructor-study.css",
+      "sha256": "a66d76960fb1dd51570267e5f8a458589a32eaa34f4a48e4ccc08fae1e167ad4"
+    },
+    {
+      "path": "src/styles/instructor.css",
+      "sha256": "bf6258bd5ae3d2cdedc5eeb6a4cef29d044416550d8672e1e49d59711a91f7b6"
+    },
+    {
+      "path": "src/styles/library-learning.css",
+      "sha256": "68f2298df5a71d864d03b040b8636cc7606fdf6a059a84ac13da4ac3f7ce617a"
+    },
+    {
+      "path": "src/styles/library.css",
+      "sha256": "0aa42f7b368111c94d7cffad0a71fe3a8c2b967f51883c6cf31be9afb472b66e"
+    },
+    {
+      "path": "src/styles/motion-authoring-batch.css",
+      "sha256": "d7a9e11c78769e5b67001ef13f0369a498d26202fdd911ea4562b8a3005b7020"
+    },
+    {
+      "path": "src/styles/motion-draft-lab.css",
+      "sha256": "dc5eee62efa04c17b38873fd3dc6414d6f40376298bf4858798549bc5bfcc538"
+    },
+    {
+      "path": "src/styles/motion-draft-segment-rehearsal.css",
+      "sha256": "9c78c52e67f00f94ea2966661e5f2b3aa031ffb8a48d4bb1d4e0037834c824d3"
+    },
+    {
+      "path": "src/styles/motion-library.css",
+      "sha256": "ac74580820582dd771cacb1bc26fb9395285dae232cc67975eeed47b18f08bcf"
+    },
+    {
+      "path": "src/styles/motion-pattern-gallery.css",
+      "sha256": "cdb6adde22dde7442b16cef14cf9eb7378de99c32495839f771caf5d8e2c3700"
+    },
+    {
+      "path": "src/styles/motion-pattern-preview.css",
+      "sha256": "3e4740463d17f51071b0fd2c4cb8f0495430b7cbcc8dbdcc34a3da3b332b3157"
+    },
+    {
+      "path": "src/styles/motion-phase-context.css",
+      "sha256": "6043d10a79b03d5c83e502c967cebabb4b1d500328c1f1222b86f79d13a221c2"
+    },
+    {
+      "path": "src/styles/motion-reference.css",
+      "sha256": "2999f9c67703a700d49d88b0ced02236ba527e85a804c252458a1b8334843c36"
+    },
+    {
+      "path": "src/styles/motion-review-worksheet.css",
+      "sha256": "c760bf8ee67164af10116e8b0583359a3fc981b34344b27112b83878bad05b2f"
+    },
+    {
+      "path": "src/styles/motion-storyboard.css",
+      "sha256": "23dd7bedfa9835b1744f39c9adfc3b6dd6b1039b5613f1759b8777f772aee115"
+    },
+    {
+      "path": "src/styles/next-class-banner.css",
+      "sha256": "bbdc23369cd46f4257766645b222bf390135914b8cdec883e3461c109a76db63"
+    },
+    {
+      "path": "src/styles/recovery-preview.css",
+      "sha256": "62fb14a91de825630711fb48ee2718bce5ff32201def7ba2e77c0c198d9e02d0"
+    },
+    {
+      "path": "src/styles/rest.css",
+      "sha256": "13359f4d95af109649b3b15ea4fdbadc84f5600a76302b0d348fe72d7c654050"
+    },
+    {
+      "path": "src/styles/review-usability.css",
+      "sha256": "2fd8ee63d2a89659424b69b1c9142f775c055018176805bf78bf63c4e2b7f2dd"
+    },
+    {
+      "path": "src/styles/schedule-planning-calendar.css",
+      "sha256": "3fccc63149c9934e43c258f0391b89d3b68570f3bb98adc8dc91c1059c6839dc"
+    },
+    {
+      "path": "src/styles/schedule.css",
+      "sha256": "bfca8bda8fa9ec9d76446786c9a5756a633f390a5ea61373ebcbfe2184013149"
+    },
+    {
+      "path": "src/styles/sequence-segment-rehearsal.css",
+      "sha256": "b23402b32cee75be195196a4d7ed5254851e290b924631af72af8c661211542d"
+    },
+    {
+      "path": "src/styles/sequence-simulation.css",
+      "sha256": "16c4734da296497670db404a6989748fdbbf44ef01f1ab32f7a4c7eb67e4e94c"
+    },
+    {
+      "path": "src/styles/source-note-recovery.css",
+      "sha256": "b508adc62ae9e2489dc78e58f1216669cbdf5110ab3fe7ce82af4e904d82b2eb"
+    },
+    {
+      "path": "src/styles/step-inspector.css",
+      "sha256": "42cb42dccb2515da0cb721d9aa8f5b5930fb6162f570e33108ba77476fe532b6"
+    },
+    {
+      "path": "src/styles/step-motion-study.css",
+      "sha256": "db172337480db4d25fb640cde74d9eea4f8865ecfba65dc430147b80776e5a17"
+    },
+    {
+      "path": "src/styles/studio.css",
+      "sha256": "ade2dae73264162fd5e9e9e77608e121700c2514e817b79b545742b87a1c312a"
+    },
+    {
+      "path": "src/styles/teaching.css",
+      "sha256": "e8cd17ff4f086b6a67feb9534c1611c54ecaaf0177836e0e337b48d924249be7"
+    },
+    {
+      "path": "src/styles/workbench-usability.css",
+      "sha256": "cb289e618b3b9d422026cc0ad0d85b9285407a6efee7778006f490cb52065941"
+    },
+    {
+      "path": "src/styles/workbench-vnext.css",
+      "sha256": "d2e1dab2a0b4b16004120b3980223a07bf5221247059997e8e55211bf597e574"
+    },
+    {
+      "path": "src/test/ChestLiftFigure.test.tsx",
+      "sha256": "505ca5775c95aa04e64ec1f28de2fe68543e0acffb2b9cc0db3eed668695cbc9"
+    },
+    {
+      "path": "src/test/MotionDraftLabDialog.test.tsx",
+      "sha256": "6c78adfb40454b58d0d0d53a7a08d26988fca0c873fc4bfee7f259781f63a338"
+    },
+    {
+      "path": "src/test/MotionDraftReviewWorksheet.test.tsx",
+      "sha256": "33f82872bc2a343ad7cd8866423274dbb98a293d9f169899bb9792bce0d1eaae"
+    },
+    {
+      "path": "src/test/MotionDraftSegmentRehearsal.test.tsx",
+      "sha256": "e175062aaeb24a805027c5650c06f3be1a7a9d767121f9a124864cf2026b1b8c"
+    },
+    {
+      "path": "src/test/MotionStoryboardBuilder.test.tsx",
+      "sha256": "136a02228e70bb5c6c0e13bc1ac9408438530d47c4a073d410aeb18f7b5b31d7"
+    },
+    {
+      "path": "src/test/atlasMotionDiscovery.test.tsx",
+      "sha256": "0b6fac49e2bf17d80b8545323022bd6fd7092d7b2a1e50aa334e9d6f543c8fb5"
+    },
+    {
+      "path": "src/test/backupRecoveryStore.test.ts",
+      "sha256": "58ad39828a94273be343679953ab87d1b3ef3068c99e176f139dbb248aa9b53c"
+    },
+    {
+      "path": "src/test/chestLift.test.ts",
+      "sha256": "4a5d39f72d002508b29aee1d9513b35a0532dda76f0edb7166081ab7006a754a"
+    },
+    {
+      "path": "src/test/classSimulationFixtures.ts",
+      "sha256": "2b3becc9e1f2a75e99d2cb85e8d4b91290e77d3c395aed452e4804a982a63fd5"
+    },
+    {
+      "path": "src/test/classSimulationJourney.test.tsx",
+      "sha256": "20df8742291f561e7d5139376c6f90746f9e54b29edc0c1b999130baae6b9388"
+    },
+    {
+      "path": "src/test/controller.test.ts",
+      "sha256": "110e07d8e082cc363a9359cf283ef40255f1647a6b927ea24f7f5d0242689fce"
+    },
+    {
+      "path": "src/test/coursePublisherAmendments.test.ts",
+      "sha256": "b351043ec77b18086a62f348c470f573e7e54d5a281fc4ecd1d2dd4e7b4d7764"
+    },
+    {
+      "path": "src/test/datedRevisionFixtures.ts",
+      "sha256": "c03857a58c072bbae094ca6afea0fa2abbe2ba2759f6c9224d1bcfd963a3bac5"
+    },
+    {
+      "path": "src/test/datedSequencePlanningStore.test.ts",
+      "sha256": "e64a72c36c7e907462d098be697e15dd68796ed092c3e078c450f06b1a555a65"
+    },
+    {
+      "path": "src/test/datedSequenceRevisionStore.test.ts",
+      "sha256": "7be8fefe5af5b45f113cceab2b9c09bd39339385ae39c760a37b40d1aff70352"
+    },
+    {
+      "path": "src/test/discoverySearch.test.ts",
+      "sha256": "51e9e3fdeb74d02cc639dc87780763af40c4f1554971c736ebc549273c8a632f"
+    },
+    {
+      "path": "src/test/equipmentConstraints.test.ts",
+      "sha256": "9e5764556f2b087ed360079324ff574b3199e024025517ac9f0cd4a9391c7c87"
+    },
+    {
+      "path": "src/test/fixtures/motion-models/LICENSE.txt",
+      "sha256": "e6bee6a2fe43745a1bfce222254adaa317e06b54c4c0fcd7ef8bc0ecaced1ffb"
+    },
+    {
+      "path": "src/test/fixtures/motion-models/clam-model.d.mts",
+      "sha256": "95862aa706f81c23f3598d44d8b2a76c0ea0ff64cdf681333742914966a978b8"
+    },
+    {
+      "path": "src/test/fixtures/motion-models/clam-model.mjs",
+      "sha256": "1ca06b135d5eb66a5726f4ed78f4f087534cc99e58d39ed1b8b26b44ffe01837"
+    },
+    {
+      "path": "src/test/fixtures/motion-models/heel-raise-model.d.mts",
+      "sha256": "cb9f0650642bbac2e7074837c06263139661599cbfeccb5976d31fae346fd6fa"
+    },
+    {
+      "path": "src/test/fixtures/motion-models/heel-raise-model.mjs",
+      "sha256": "4168f7830fb50fa8cdf0439578417b8970b068f4dabfa62c6054c3b7c49ddd3e"
+    },
+    {
+      "path": "src/test/fixtures/motion-models/origin.json",
+      "sha256": "d40f1d0c4897f0d774b47d5c4d75d206c4783efab3a66bf11c38885ef0a8b672"
+    },
+    {
+      "path": "src/test/fixtures/pre-supine-reach-fingerprints.json",
+      "sha256": "e74b231f6ea0bb47f4d312537c189d2d4e33ae432dfcabbe911be78c5dddf36a"
+    },
+    {
+      "path": "src/test/groupPlanningUI.test.tsx",
+      "sha256": "735722d58c2cf9e620094d077c964eb9a663f20e39eef7e8ca9cf90786aebf00"
+    },
+    {
+      "path": "src/test/groupPrepPanel.test.tsx",
+      "sha256": "3af79bf9d7a195fbdaae58b08776d2b6e81fd813ce1e1f75b4c8a08565beb810"
+    },
+    {
+      "path": "src/test/historyCopyCriteria.test.tsx",
+      "sha256": "1a361629202eda3f9b9d3ed54b7cc7db2b0e2d52aa87489f8145b761e15f0976"
+    },
+    {
+      "path": "src/test/instructorProfileStudyCore.test.ts",
+      "sha256": "c4735c81f5cf4cf205ea41389cd41157ecbbf3e5d692698ab2be94803eb9eac7"
+    },
+    {
+      "path": "src/test/instructorScheduleStore.test.ts",
+      "sha256": "2f5e31ec36c28cbb75a78361fdc709ae34336a7b565c168c7872030cdc6cad54"
+    },
+    {
+      "path": "src/test/lateralDrafts.test.ts",
+      "sha256": "2cb358f1426e7c21e6bc983002dba44ee87a3eee5b5dd4aee8dcd715e8e6ba8f"
+    },
+    {
+      "path": "src/test/menuBreakpoint.test.tsx",
+      "sha256": "6c246dc8f5b8ef3158c781113c65832e38102935b746a4db37d75d6fecc83359"
+    },
+    {
+      "path": "src/test/menuLoadingFocus.test.tsx",
+      "sha256": "d37f3958c03efccc76c9f63b05f555e6c486485d861682a787c3c676d68b5319"
+    },
+    {
+      "path": "src/test/mixedEquipment.test.ts",
+      "sha256": "692c2cc6728ea703915f4538cda26db6fa35ef0e161c5bbe8c1a0035da3db1e6"
+    },
+    {
+      "path": "src/test/mixedEquipmentForm.test.tsx",
+      "sha256": "0b648d6a9b32f446d0bbff1595850072d2095cc5a490300217897afbc711b92b"
+    },
+    {
+      "path": "src/test/modelPort.test.ts",
+      "sha256": "1fe1f039f3a90ca91e01eb33b6674720f4135fc1b8750f7f09aafa6d44697133"
+    },
+    {
+      "path": "src/test/motionAuthoringBatch.geometry.test.ts",
+      "sha256": "190275767ad3fafb06bf518edb34b7d6e2cefeb05072d8a34137338cc83cd153"
+    },
+    {
+      "path": "src/test/motionCandidateResearch.test.ts",
+      "sha256": "048100381d8d9b39ddc2060347b9a965d84fc76161b339910a4ffda07117ab2a"
+    },
+    {
+      "path": "src/test/motionDraftExpansion.test.ts",
+      "sha256": "6d440ecf7a5291f20f6ba628938c6bce461720610850771fdc69652a78f29a42"
+    },
+    {
+      "path": "src/test/motionDraftIndex.test.ts",
+      "sha256": "7f82c076a77c9dad1da5f4b3487f4857391ff95b1699d3a5fe93e9bf3957e105"
+    },
+    {
+      "path": "src/test/motionDraftRehearsal.test.ts",
+      "sha256": "d2fdb5bdb668800f754f0b325a6266d088d8446d5e1a75952309b7a7398c7203"
+    },
+    {
+      "path": "src/test/motionDraftSources.test.ts",
+      "sha256": "7828fab7c564462c076a4a0c6270b4c04fd3cad680e546385bdefad984906f67"
+    },
+    {
+      "path": "src/test/motionPatternPhaseContext.test.ts",
+      "sha256": "82417cb22cdebd1df100f305402977fd96e3e1b4726af1c5a8ae0e5688c7f410"
+    },
+    {
+      "path": "src/test/motionReviewWorksheet.test.ts",
+      "sha256": "c76507aecef0bebe98144733df94006527fe90ecc0f7cd5a780e84ef8ebc0d7c"
+    },
+    {
+      "path": "src/test/motionStoryboard.test.ts",
+      "sha256": "f2f22e0d1bef0cdc6e49a7c2dff2cb25f94ec6b10c68c40eccb39fb38afefa5a"
+    },
+    {
+      "path": "src/test/motionStudyPhases.test.ts",
+      "sha256": "7f410f486248933d4d4f84a2b09a6efc6291443a150544ead670c4bc6ccccbed"
+    },
+    {
+      "path": "src/test/motionV3Sources.test.ts",
+      "sha256": "0a7486095c37c53fd4edaf5beea331dab0dcbc221c84e5478624dff6cebdd539"
+    },
+    {
+      "path": "src/test/motionV5Sources.test.ts",
+      "sha256": "a89144f7648ba1356525c6ab1a323060ce1273f2eb4dfbe9158298e49a5564b5"
+    },
+    {
+      "path": "src/test/motionV6Sources.test.tsx",
+      "sha256": "4869c81ed17f8322cfc5ee2e45ecc7a8ae57ceaffc20aff09928fbb33cdea163"
+    },
+    {
+      "path": "src/test/partialRegenerationMetadata.test.tsx",
+      "sha256": "1213b9c31e833f7786109dbfec96c7f33b1f3fcb53b9c302aad307d6314d058e"
+    },
+    {
+      "path": "src/test/pelvicCurl.test.ts",
+      "sha256": "1ee3c0d0caec4ea047323e0608ada2926c55894a8eb634731e828cbb0db42e74"
+    },
+    {
+      "path": "src/test/persistenceFeedback.test.ts",
+      "sha256": "c9ae3a94701126d839334ee3f56debc6f5d992b859a032ec442be6d4a8810e97"
+    },
+    {
+      "path": "src/test/pilatesFlow.test.tsx",
+      "sha256": "3b8d94edd1289060462f060bf280575cf3bc766c74cd127455cedf4c3807746d"
+    },
+    {
+      "path": "src/test/planningFixtures.ts",
+      "sha256": "bbe008925431b382d4c4df80a4e7079d1b3b2c5888913c805d4a175940b6119d"
+    },
+    {
+      "path": "src/test/quadrupedDrafts.test.ts",
+      "sha256": "01220748e09ef55279539c94968939d0a75470a14a08d54cd58d63602352a4d2"
+    },
+    {
+      "path": "src/test/recoveryMultiTab.test.ts",
+      "sha256": "9bb3f1e3c75ea244d25e9765ffa710977cdc9f6809830c875f906387bfcca295"
+    },
+    {
+      "path": "src/test/restBinder.test.tsx",
+      "sha256": "fc3956b56cbcbefcbe18898b717dc307a5f15ceab488719b3fea0e6b64b332e3"
+    },
+    {
+      "path": "src/test/restSequence.test.ts",
+      "sha256": "f49752b715ca09517ff1043c9ee2fb57f2b3b55e7dd0615a880b25ccbb189919"
+    },
+    {
+      "path": "src/test/restTeachingJourney.test.tsx",
+      "sha256": "1fe53f9790068ac49c89eb6c5aa95d9084e6bbc1c845257fd047abfeedb6faf3"
+    },
+    {
+      "path": "src/test/restWorkbench.test.tsx",
+      "sha256": "2c4790833fa30288d5f3f5936025a738a30e5bed41b3c8cfaadbfaf8a9570e1b"
+    },
+    {
+      "path": "src/test/scheduleIntegration.test.tsx",
+      "sha256": "27f14391f44d6ecba6ef6ff5ce1b14cc402ecd285971e12fcbe26f0671d4598a"
+    },
+    {
+      "path": "src/test/seatedBandRow.test.ts",
+      "sha256": "ca3f07e889dc360d63475de80a66e15805257d2186497ebd3cb8979587d133e1"
+    },
+    {
+      "path": "src/test/sequenceConstraints.test.ts",
+      "sha256": "c8e6491e551feb3259812da2634feca23ffc74828fc23d158fc47bfb13bb0041"
+    },
+    {
+      "path": "src/test/sequenceMotionBinding.test.ts",
+      "sha256": "230305e817117e57cf08dd721eedcd51a9e158abb719b6c1983c26c9ed39c920"
+    },
+    {
+      "path": "src/test/setup.ts",
+      "sha256": "2efdcdeb0ecac3d20cd76d259c1145e169debb7f75f95a443548a548e36f1d14"
+    },
+    {
+      "path": "src/test/stageGlobalNavigation.test.tsx",
+      "sha256": "bc1c976ea830a7ccdea86b00db685a143fa3b27c5a657c0bb6d08e3661a18576"
+    },
+    {
+      "path": "src/test/standingSupportDrafts.test.ts",
+      "sha256": "ceb8742880b2d41ae9809e1c41c7e96b5a63af1322b1535a6b6f2cfb2636b4bf"
+    },
+    {
+      "path": "src/test/stepBlockLayerOptions.test.ts",
+      "sha256": "941a9e591d75554cfa3df8f451dcea415c800fbef5ac0f8005ee4378b0dff636"
+    },
+    {
+      "path": "src/test/stepBlockOptions.test.ts",
+      "sha256": "0071ce3e1101c17cc820355d4402700eca9afdc7312af335d4cad669c384f747"
+    },
+    {
+      "path": "src/test/stepPracticeOptions.test.ts",
+      "sha256": "d6826cce01d3bf063efd5bdd2c48a79087fdefa9b70098ff9703a9e199937188"
+    },
+    {
+      "path": "src/test/stepTimingOptions.test.ts",
+      "sha256": "83758b8cfcd716e12fca87c4160757e4cde4789fd86c62c031553e6a8004d24c"
+    },
+    {
+      "path": "src/test/targetGroupWorkflow.test.ts",
+      "sha256": "da1678c72f55d5db76321634ff5c60952af52c538a34605f377dfb98609c762b"
+    },
+    {
+      "path": "src/test/teacherWorkflow.test.tsx",
+      "sha256": "0f4cc29cf746b096ebccb6cd6263187d395fedbd0b191fd0337b2f9aa8b0edb9"
+    },
+    {
+      "path": "src/test/teaching.test.tsx",
+      "sha256": "2d21930069a6aba9fa43845b32e64c0391c11e671af24f8b31fa4eb85ea285df"
+    },
+    {
+      "path": "src/test/teachingRecordPersistence.test.tsx",
+      "sha256": "640f58a21abc5b6d3da62f0ef2832c175575201340e4bc9313555e026cecc2f8"
+    },
+    {
+      "path": "src/test/useMotionStoryboardPlayback.test.tsx",
+      "sha256": "a113e1f260db8a85c144ebad9b47daeb796af5e742b6a1c0d8e4127a79ca4dfd"
+    },
+    {
+      "path": "src/test/v2Workbench.test.tsx",
+      "sha256": "d9c8ad8b89481be5ff8c2feba8acef800f77a0304fc2b8f9501441047175207f"
+    },
+    {
+      "path": "src/test/workbenchControls.ts",
+      "sha256": "20307e044a60774f3dcd29ae18763653c28d6ba51419fde506ef1cd378a5197c"
+    },
+    {
+      "path": "src/test/workbenchUsability.test.tsx",
+      "sha256": "1d7db3515ac040f5a661b37490263c03756408aef17b1f1fcf64a30d9f64f5e2"
+    },
+    {
+      "path": "src/test/workspaceNavigationFocus.test.tsx",
+      "sha256": "47eeef8195d7a941f55f6d3356efcad8661fb62f7f54b171c90c914fee9e90df"
+    },
+    {
+      "path": "src/types/appdeploy.d.ts",
+      "sha256": "d8251817ce7e87b7532842c321106896890a16fd3df315cc60b4f7018774e5c7"
+    },
+    {
+      "path": "src/types/datedSequencePlanning.ts",
+      "sha256": "5241dce7af5fc76c5f90231ccc3fdd8a996b5e7214a70a2633d12b9f577391bc"
+    },
+    {
+      "path": "src/types/instructorPlanning.ts",
+      "sha256": "2c01ae5b0ea82e9782b48b3ae821c4e6ae5df9725e70d6c2de52b9ce354d5d2a"
+    },
+    {
+      "path": "src/types/instructorSchedule.ts",
+      "sha256": "bc16516c505e893398f4c41c8aa2aff00672a3527b575287cab444cfcd2d5262"
+    },
+    {
+      "path": "src/types/instructorStudy.ts",
+      "sha256": "76132ee056194bbf5c0d37573e5e757dad5e99a4d9fa661855f0353ff89de159"
+    },
+    {
+      "path": "src/types/pilates.ts",
+      "sha256": "91d8af532af647e30eab9068af434a2122acc23bdbf657b44b29f710936380e1"
+    },
+    {
+      "path": "src/types/sequenceMotion.ts",
+      "sha256": "5d6f9e3e494d8e9a0273d471dd3e1269232d8988efd6ab7c9e00c44e57e71656"
+    },
+    {
+      "path": "src/utils/backupRecoveryInspection.test.ts",
+      "sha256": "b168bd0d5bd42d11ba7c59b174da3db9221addf6801708eadb67dd4b17c5149e"
+    },
+    {
+      "path": "src/utils/backupRecoveryInspection.ts",
+      "sha256": "6742e5b759e064aca26f7091deef865d300cbebd6ddd9d3de5cfd2bc50313765"
+    },
+    {
+      "path": "src/utils/classInsights.test.ts",
+      "sha256": "1b2a630a42ba8cbf6ddb469c28019051f2fba716656f4f17cf57a457dddeb3e1"
+    },
+    {
+      "path": "src/utils/classInsights.ts",
+      "sha256": "2c38e90e02adaca8930d0962c6f36e7a580d0fa96dfcbe00a0663e9194dd3d51"
+    },
+    {
+      "path": "src/utils/connectedMotionStudy.test.ts",
+      "sha256": "7508913c47878b776f1af8d7dfff55893c4c4c64d24d0ab71d9966e6ca6844d4"
+    },
+    {
+      "path": "src/utils/connectedMotionStudy.ts",
+      "sha256": "cc6b117ec9501036d3a20e53fb66e902a682c7de4f8423c8f670718b33c0a85a"
+    },
+    {
+      "path": "src/utils/courseReferences.test.ts",
+      "sha256": "092db9477d4ee90fa934fb599fed9748fa2bcc3e25ea3a23beac01d2edcc3730"
+    },
+    {
+      "path": "src/utils/courseReferences.ts",
+      "sha256": "b8a52b891055d2de56a3cedfabc5968f25d127e9f59892273b5bdf94e7e621d1"
+    },
+    {
+      "path": "src/utils/datedSequencePlanning.test.ts",
+      "sha256": "1e2f63ef5ec638b6754bd344232bd3c5a07e99ca279dabe64bf14a6446336793"
+    },
+    {
+      "path": "src/utils/datedSequencePlanning.ts",
+      "sha256": "303fef27c45eb088dfa0e9d29d1fd779107550bf32566801468dfe5bc97b8cc7"
+    },
+    {
+      "path": "src/utils/datedSequenceRevision.test.ts",
+      "sha256": "f24462b3bead46da44c3f64596b9e3db767ccdf1e3ed97e37bfb8812d42747b3"
+    },
+    {
+      "path": "src/utils/discoverySearch.ts",
+      "sha256": "efecd176a1def08feb4453455696a8deb448dd404231719f0f2a3a5211fadad6"
+    },
+    {
+      "path": "src/utils/exerciseEvidence.test.ts",
+      "sha256": "9bcc6de03624f436ede1f2338b60da34525d68dd199f14173068479f85acaa9d"
+    },
+    {
+      "path": "src/utils/exerciseEvidence.ts",
+      "sha256": "96a3647ce012e91945d2e15aa64b1c903345c95e1da57f3667b25438dbc0323b"
+    },
+    {
+      "path": "src/utils/exerciseReview.test.ts",
+      "sha256": "861701599e76aadfa6a2f20253c2aa017be70d3338a721e860d165313c71c455"
+    },
+    {
+      "path": "src/utils/exerciseReview.ts",
+      "sha256": "730aaf7ef6e88b7018feec130a4c27ec37afec0fa2947adc5348ceab29176e2b"
+    },
+    {
+      "path": "src/utils/instructorPlanning.ts",
+      "sha256": "a2e3c7945dd02db5215c9ead93e3232331c5e5dfad355383f7fb49fe6b315e89"
+    },
+    {
+      "path": "src/utils/instructorSchedule.test.ts",
+      "sha256": "1999e5f820296403b2d9bcd4cebce9ad59506326035f1287759eddb1139bfb64"
+    },
+    {
+      "path": "src/utils/instructorSchedule.ts",
+      "sha256": "0ed83f060d663a333338c841634a0682a4b1f05253d5b0e96826aec4cc4d7b41"
+    },
+    {
+      "path": "src/utils/instructorStudy.ts",
+      "sha256": "44c5066680ff2b5f205c2744ecd25df5ff1cae8e6051a376182e5c35b0b6b1f2"
+    },
+    {
+      "path": "src/utils/motionDraftRehearsal.ts",
+      "sha256": "b8c0cdc57bc10f3ad4df3f9da2303b91a22b230e445b5b18483824793fde132f"
+    },
+    {
+      "path": "src/utils/motionPatternPhaseContext.ts",
+      "sha256": "3a9d42186e68315546cd0110a0414622dbb4f04fb8f3e06889361836b204405f"
+    },
+    {
+      "path": "src/utils/motionReferenceModel.test.ts",
+      "sha256": "f96b5afd9270b59dc92a6637a93a27c957f22b8c76818eb33207bf57453c6183"
+    },
+    {
+      "path": "src/utils/motionReferenceModel.ts",
+      "sha256": "8b017c294f1641c2f2804d690f742eed6095b3b3ddf44386be2ae3f427fc814a"
+    },
+    {
+      "path": "src/utils/motionReviewSourceFacts.ts",
+      "sha256": "df566c4ef3099fe7064fd22314c30c53e480f12876a2df1381635e1ffd3e4218"
+    },
+    {
+      "path": "src/utils/motionReviewWorksheet.ts",
+      "sha256": "e0944594f93f8ad2a507c7a5604d7de79dc25e43ff37ae85fb72610efa2c5dee"
+    },
+    {
+      "path": "src/utils/motionStoryboard.ts",
+      "sha256": "fb64bbc18f8ac6d6280be674ad8197ec2681461edc79b708ccaf1e09074c5c88"
+    },
+    {
+      "path": "src/utils/motionStudyStages.ts",
+      "sha256": "9789237c76139e26380199e6d368ec590c5db46834e2aef5411d2f745ceb139c"
+    },
+    {
+      "path": "src/utils/schedulePlanningCalendar.test.ts",
+      "sha256": "ebf528bf136cdb4d4d73bb92d0544b284a143681cf6f78487e568a432646a06d"
+    },
+    {
+      "path": "src/utils/schedulePlanningCalendar.ts",
+      "sha256": "28ef0e6212c4b12e4bc44c193f930fa5e864d146a81427a757788d59e220d074"
+    },
+    {
+      "path": "src/utils/sequenceEngine.ts",
+      "sha256": "997b959305aadfd8bd3c93397a6f9fcf58193da3eb47aea4b74e36b200df3a90"
+    },
+    {
+      "path": "src/utils/sequenceMotionBinding.ts",
+      "sha256": "b1fde07ed52a2b87ae45b23d77141d9599485c50209048824f2fac5d9a084bd8"
+    },
+    {
+      "path": "src/utils/sequenceSimulation.test.ts",
+      "sha256": "ed0fadf4d9fba934df4a1bdfe78f3e7480bfabd3847b57aa10e31fdb525a7257"
+    },
+    {
+      "path": "src/utils/sequenceSimulation.ts",
+      "sha256": "5dadaf33daf902fd41064b83f47090aa60a83cf902be0eb3167a9631cf61f9d1"
+    },
+    {
+      "path": "src/utils/sourceNote.test.ts",
+      "sha256": "07c10e3d8ef6555bd28fdacfbcacf98013b0ff4a4f877378afa6f07de3494cc0"
+    },
+    {
+      "path": "src/utils/sourceNote.ts",
+      "sha256": "3d9d9bdc61f84f8a079d719dff11d75fd2cdd8a2641fbbfb1a81871a28db7f01"
+    },
+    {
+      "path": "src/vite-env.d.ts",
+      "sha256": "2b23b1d08eeb34df49464dd815171946695fb24a43bb9c553fc311c3b28c0cc5"
+    },
+    {
+      "path": "tsconfig.backend.json",
+      "sha256": "8fecce2fcf2ee76efa3f81128b4e5c1042a02815ec31b9919dd60d0b38f8b606"
+    },
+    {
+      "path": "tsconfig.json",
+      "sha256": "99ead31c2618114291cba21fafda901bbb34ed9abfd88714f0728779d1657072"
+    },
+    {
+      "path": "vite.config.ts",
+      "sha256": "47e4439f7c71b0d79b679b87a8784259c1b2824c68c1a0d8928a2fc994a94468"
+    },
+    {
+      "path": "vitest.config.ts",
+      "sha256": "0577b980de12639772682c688d24965efb4d9caf6efc25152dcfb46ec00f9b0e"
+    }
+  ],
+  "limitations": "Minimal export NOT rebuilt/retested; canonical baseline validation and pending validation boundaries are in GEMINI_HANDOFF.md. No external preservation verified."
+}

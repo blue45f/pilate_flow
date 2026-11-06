@@ -1,0 +1,565 @@
+/* Sequence workspace only. Shell/navigation/hosting reserve are owned by App. */
+#root .vnext-workbench {
+  --wb-forest: var(--vnext-forest, #173d34);
+  --wb-ivory: var(--vnext-ivory, #f7f5ef);
+  --wb-sage: var(--vnext-sage, #d8e1d3);
+  --wb-line: #dcded3;
+  color: #26382e;
+}
+#root .vnext-workbench .v2-workbench-heading {
+  align-items: end;
+  margin-bottom: 24px;
+}
+#root .vnext-workbench .vnext-workbench-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #586c5c;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+}
+#root .vnext-workbench .v2-workbench-heading h1 {
+  margin: 0;
+  color: var(--wb-forest);
+  font-family: 'Noto Serif KR', 'Batang', Georgia, serif;
+  font-size: clamp(2rem, 3.6vw, 3.25rem);
+  line-height: 1.35;
+  font-weight: 500;
+  letter-spacing: -0.06em;
+}
+#root .vnext-workbench .workbench-welcome {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1fr);
+  align-items: center;
+  min-height: 280px;
+  margin-bottom: 28px;
+  overflow: hidden;
+  border: 1px solid #e6e0d5;
+  border-radius: 24px;
+  background: #f1eee5;
+}
+#root .vnext-workbench .workbench-welcome-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left center;
+}
+#root .vnext-workbench .workbench-welcome-copy {
+  position: relative;
+  grid-column: 2;
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  min-width: 0;
+  padding: 30px 32px 30px 18px;
+}
+#root .vnext-workbench .workbench-welcome-summary {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-height: 44px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid #ced4c5;
+  border-radius: 24px;
+  background: #f7f5efb8;
+  color: #4d6253;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+#root .vnext-workbench .workbench-welcome h2 {
+  margin: 0;
+  color: var(--wb-forest);
+  font-family: 'Noto Serif KR', 'Batang', Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(1.75rem, 2.8vw, 2.75rem);
+  line-height: 1.4;
+  letter-spacing: -0.06em;
+}
+#root .vnext-workbench .workbench-first-action {
+  min-height: 52px;
+  padding: 12px 24px;
+  border-radius: 14px;
+  background: var(--wb-forest);
+  color: #fffdf5;
+  font-size: 1rem;
+  font-weight: 650;
+}
+#root .vnext-workbench .workbench-reviewed-count {
+  max-width: 36ch;
+  margin: 0;
+  color: #4f6153;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+#root .vnext-workbench .workbench-preparation-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+#root .vnext-workbench .workbench-preparation-steps li {
+  display: block;
+  min-width: 0;
+}
+#root .vnext-workbench .workbench-preparation-steps button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-bottom-color: var(--wb-line);
+  border-radius: 12px 12px 0 0;
+  background: transparent;
+  color: #56685b;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+#root .vnext-workbench .workbench-preparation-steps button > span {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 24px;
+  height: 24px;
+  border: 1px solid #aebbaa;
+  border-radius: 50%;
+  font-family: Georgia, serif;
+}
+#root .vnext-workbench .workbench-preparation-steps button[aria-current='step'] {
+  border-bottom-color: var(--wb-forest);
+  background: #e5e9df;
+  color: var(--wb-forest);
+  font-weight: 650;
+}
+#root .vnext-workbench .workbench-preparation-steps button[aria-current='step'] > span {
+  border-color: var(--wb-forest);
+  background: var(--wb-forest);
+  color: #fffdf6;
+}
+#root .vnext-workbench .workbench-preparation-steps button:disabled {
+  opacity: 0.6;
+}
+#root .vnext-workbench .v2-plan-toolbar {
+  margin-bottom: 20px;
+}
+#root .vnext-workbench .v2-condition-chips > button {
+  min-height: 44px;
+  background: transparent;
+  border: 1px solid var(--wb-line);
+  border-radius: 24px;
+  color: var(--wb-forest);
+}
+#root .vnext-workbench .sequence-column {
+  border-radius: 18px;
+  border-color: #e0ded2;
+  background: #fffdf8;
+  box-shadow: none;
+}
+#root .vnext-workbench.is-empty .sequence-column {
+  align-self: start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+#root .vnext-workbench .sequence-heading {
+  align-items: start;
+  margin-bottom: 12px;
+}
+#root .vnext-workbench .sequence-heading .eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+}
+#root .vnext-workbench .sequence-heading h2 {
+  font-family: 'Noto Serif KR', 'Batang', Georgia, serif;
+  font-size: 1.375rem;
+  font-weight: 500;
+}
+#root .vnext-workbench .sequence-title-label input {
+  min-height: 44px;
+  font-size: 1rem;
+  color: var(--wb-forest);
+}
+#root .vnext-workbench .flow-section-label {
+  margin-top: 16px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  background: #e7ebdf;
+  color: var(--wb-forest);
+}
+#root .vnext-workbench .flow-section-label strong {
+  margin-left: 8px;
+}
+#root .vnext-workbench .v3-step-row {
+  min-height: 76px;
+}
+#root .vnext-workbench .step-main {
+  min-height: 60px;
+}
+#root .vnext-workbench .step-main strong {
+  line-height: 1.5;
+}
+#root .vnext-workbench .step-art {
+  min-width: 54px;
+  min-height: 54px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+#root .vnext-workbench .workbench-movement-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 54px;
+  background: #e8eade;
+  color: #4e6654;
+}
+#root .vnext-workbench .workbench-movement-mark > svg {
+  width: 100%;
+  height: 100%;
+}
+#root .vnext-workbench .workbench-movement-mark > small {
+  position: absolute;
+  inset: auto 2px 1px;
+  padding: 1px;
+  border-radius: 3px;
+  background: #f7f5efe8;
+  font-size: 8px;
+  line-height: 1.4;
+  text-align: center;
+}
+#root .vnext-workbench .workbench-movement-mark.is-unavailable > small {
+  position: static;
+  font-size: 10px;
+}
+#root .vnext-workbench .step-actions .icon-btn,
+#root .vnext-workbench .v3-step-more,
+#root .vnext-workbench .sequence-tools button {
+  min-width: 44px;
+  min-height: 44px;
+}
+#root .vnext-workbench .v3-primary-actions {
+  position: static;
+  margin-top: 20px;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--wb-line);
+  background: transparent;
+  box-shadow: none;
+}
+#root .vnext-workbench .v3-preview-button {
+  min-height: 52px;
+  border-radius: 12px;
+  background: var(--wb-forest);
+  color: #fffdf7;
+}
+#root .vnext-workbench .workbench-readiness-summary {
+  margin: 12px 0 0;
+  color: #55634f;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+#root .vnext-workbench .workbench-automation-tools {
+  border-top: 1px solid var(--wb-line);
+  border-bottom: 1px solid var(--wb-line);
+  padding: 0 0 8px;
+}
+#root .vnext-workbench .workbench-automation-tools summary {
+  min-height: 48px;
+  padding: 13px 0;
+  color: var(--wb-forest);
+  cursor: pointer;
+}
+#root .vnext-workbench .workbench-automation-tools p {
+  margin: 0 0 12px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+#root .vnext-workbench .workbench-automation-tools > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#root .vnext-workbench .workbench-footnotes {
+  justify-content: start;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: 16px;
+}
+#root .vnext-workbench .workbench-footnotes button {
+  min-height: 44px;
+  font-size: 0.8125rem;
+}
+.workbench-finder-dialog .inline-exercise-finder {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+.workbench-finder-dialog .atelier-modal-body {
+  padding-bottom: 0;
+}
+.workbench-finder-dialog .ief-heading {
+  display: none;
+}
+.workbench-finder-dialog .ief-open-atlas {
+  display: none;
+}
+.workbench-finder-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid #d7dece;
+  background: #f7f5ef;
+}
+.workbench-finder-footer p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.workbench-finder-footer button {
+  min-height: 48px;
+  background: var(--vnext-forest, #173d34);
+  color: #fffdf7;
+}
+/* Keep actions outside the content scrollport, including Safari's native scrolling. */
+#root .vnext-shell .vnext-sequence-preview > .atelier-modal-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+#root .vnext-shell .vnext-sequence-preview .atelier-modal-header {
+  flex: 0 0 auto;
+}
+#root .vnext-shell .vnext-sequence-preview .atelier-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.vnext-sequence-preview .sequence-preview-continuation {
+  flex: 0 0 auto;
+  padding: 14px 24px max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid #d7dece;
+  background: #f7f5ef;
+}
+.vnext-sequence-preview .sequence-preview-readiness,
+.vnext-sequence-preview .sequence-preview-save-feedback {
+  margin: 0 0 10px;
+  color: #4d6152;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.vnext-sequence-preview .sequence-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.vnext-sequence-preview .sequence-preview-actions > button {
+  flex: 1 1 auto;
+  min-height: 48px;
+}
+.vnext-sequence-preview .sequence-preview-actions > .btn-primary {
+  background: var(--vnext-forest, #173d34);
+  color: #fffdf7;
+}
+.vnext-workbench button:focus-visible,
+.workbench-finder-dialog button:focus-visible,
+.vnext-sequence-preview button:focus-visible {
+  outline: 2px solid #173d34;
+  outline-offset: 3px;
+}
+@media (min-width: 1200px) {
+  #root .vnext-workbench .v2-plan-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 370px);
+    gap: 24px;
+  }
+  #root .vnext-workbench .v2-inline-finder {
+    border-left: 1px solid #d7dece;
+    padding-left: 20px;
+  }
+}
+@media (max-width: 1199px) {
+  #root .vnext-workbench .v2-inline-finder {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  #root .vnext-workbench .v2-workbench-heading {
+    align-items: end;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  #root .vnext-workbench .vnext-workbench-eyebrow {
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    margin-bottom: 5px;
+  }
+  #root .vnext-workbench .v2-workbench-heading h1 {
+    font-size: clamp(1.625rem, 6.7vw, 2rem);
+  }
+  #root .vnext-workbench .today-label {
+    font-size: 0.6875rem;
+    line-height: 1.5;
+    max-width: 7em;
+    text-align: right;
+  }
+  #root .vnext-workbench .workbench-welcome {
+    display: block;
+    min-height: 0;
+    margin-bottom: 16px;
+    border-radius: 18px;
+  }
+  #root .vnext-workbench .workbench-welcome-image {
+    opacity: 0.3;
+    width: 65%;
+    object-position: left center;
+  }
+  #root .vnext-workbench .workbench-welcome-copy {
+    gap: 8px;
+    padding: 18px;
+    background: linear-gradient(90deg, #f7f5ef66, #f7f5efd9 64%);
+  }
+  #root .vnext-workbench .workbench-welcome h2 {
+    font-size: 1.375rem;
+    line-height: 1.45;
+  }
+  #root .vnext-workbench .welcome-desktop-break {
+    display: none;
+  }
+  #root .vnext-workbench .workbench-welcome-summary {
+    font-size: 0.8125rem;
+  }
+  #root .vnext-workbench .workbench-first-action {
+    width: 100%;
+    min-height: 52px;
+    padding: 10px 16px;
+    font-size: 1rem;
+  }
+  #root .vnext-workbench .workbench-reviewed-count {
+    font-size: 0.75rem;
+  }
+  #root .vnext-workbench .workbench-preparation-steps {
+    gap: 3px;
+    margin-bottom: 12px;
+  }
+  #root .vnext-workbench .workbench-preparation-steps button {
+    gap: 5px;
+    padding: 8px 3px;
+    font-size: 0.75rem;
+  }
+  #root .vnext-workbench .workbench-preparation-steps button > span {
+    flex-basis: 21px;
+    height: 21px;
+  }
+  #root .vnext-workbench .v2-plan-toolbar {
+    margin: 0 0 16px;
+  }
+  #root .vnext-workbench .v2-condition-chips {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  #root .vnext-workbench .v2-condition-chips > button {
+    padding: 8px 11px;
+    font-size: 0.8125rem;
+  }
+  #root .vnext-workbench .v2-condition-chips > .icon-btn {
+    min-width: 44px;
+    padding: 8px;
+  }
+  #root .vnext-workbench .sequence-column {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  #root .vnext-workbench .sequence-heading h2 {
+    display: block;
+    margin: 0;
+    font-size: 1.25rem;
+  }
+  #root .vnext-workbench .sequence-heading .eyebrow {
+    display: none;
+  }
+  #root .vnext-workbench .v3-primary-actions {
+    position: static;
+    display: grid;
+    grid-template-columns: 44px 44px minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+    padding: 12px 0 0;
+  }
+  #root .vnext-workbench .v3-primary-actions > .icon-btn {
+    min-width: 44px;
+    min-height: 48px;
+  }
+  #root .vnext-workbench .v3-preview-button {
+    font-size: 0.9375rem;
+  }
+  .workbench-finder-dialog .ief-results {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workbench-finder-dialog .ief-card {
+    display: grid;
+    grid-template-columns: 86px minmax(0, 1fr);
+    border-radius: 12px;
+  }
+  .workbench-finder-dialog .ief-card-image {
+    height: 100%;
+    aspect-ratio: auto;
+  }
+  .workbench-finder-dialog .ief-card-image > span {
+    font-size: 0.625rem;
+  }
+  .workbench-finder-dialog .ief-equipment-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .workbench-finder-dialog .ief-search input {
+    font-size: 16px;
+  }
+  .workbench-finder-footer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .workbench-finder-footer button {
+    width: 100%;
+    font-size: 0.875rem;
+  }
+  .vnext-sequence-preview .sequence-preview-actions > button:first-child {
+    flex-basis: 100%;
+  }
+  .vnext-sequence-preview .sequence-preview-continuation {
+    padding-inline: 17px;
+  }
+}
+/* Short phones and landscape need one scroll area, including enlarged text. */
+@media (max-height: 650px) {
+  #root .vnext-shell .vnext-sequence-preview > .atelier-modal-shell {
+    display: block;
+    overflow-y: auto;
+  }
+  #root .vnext-shell .vnext-sequence-preview .atelier-modal-body {
+    overflow: visible;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vnext-workbench *,
+  .workbench-finder-dialog *,
+  .vnext-sequence-preview * {
+    scroll-behavior: auto;
+  }
+}

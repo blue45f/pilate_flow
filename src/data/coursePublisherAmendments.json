@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "purpose": "publisher-identity-metadata-only",
+  "amendments": [
+    {
+      "id": "jvp-publisher-D3TC-tz3TeQ-20261104",
+      "expected": {
+        "id": "yt-expansion-international-17",
+        "videoId": "D3TC-tz3TeQ",
+        "canonicalUrl": "https://www.youtube.com/watch?v=D3TC-tz3TeQ",
+        "title": "Beginner Pilates Mat Exercises",
+        "titleCompleteness": "complete-as-observed",
+        "publisher": null,
+        "researchDisposition": "metadata-incomplete",
+        "publisherEvidence": null
+      },
+      "publisher": "Jessica Valant",
+      "evidence": {
+        "sourceUrl": "https://jessicavalantpilates.com/pilates-beginners-beginner-pilates-exercise-video",
+        "sourceTitle": "Pilates for Beginners – Beginner Pilates Exercise Video",
+        "publisherUrl": "https://www.youtube.com/jessicavalantpilates",
+        "checkedAt": "2026-11-04T23:45:37Z",
+        "factualRecordSha256": "983eb8846cf8895c2ac046e6c251ac0c881c79949ac7e451dbe7e33a0032fafe",
+        "basis": "공식 게시자 글에서 이 영상 ID와 공식 채널로 향하는 링크 관계를 확인했습니다. 원본 재생·현재 접근성은 확인하지 않았습니다.",
+        "relation": "official-publisher-exact-video-link"
+      }
+    }
+  ]
+}

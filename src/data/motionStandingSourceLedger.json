@@ -1,0 +1,497 @@
+{
+  "schema_version": 1,
+  "ledger_id": "standing-ladder-adaptation-source-ledger-v4-2026-11-05",
+  "status": "research-review-only",
+  "language": "ko",
+  "research_checked_at_utc": "2026-11-05T00:55:40Z",
+  "scope": {
+    "output_files": [
+      "/workspace/pilates-motion-blocks-v4-2026-11-05/research/standing-source-ledger.json",
+      "/workspace/pilates-motion-blocks-v4-2026-11-05/research/standing-source-ledger.md"
+    ],
+    "statement": "공개 1차 출처 본문에서 실제 확인한 텍스트 사실과 미확인·저작 선택을 분리한 연구 장부이다.",
+    "no_changes_to": [
+      "active source",
+      "existing ledgers or archives",
+      "Git",
+      "deployment",
+      "Library401",
+      "proc"
+    ],
+    "approved_mapping_count": 0,
+    "expert_review_count": 0,
+    "exact_asset_count": 0,
+    "auto_excluded_from_real_classes": true,
+    "not_a_teaching_plan_or_exercise_prescription": true
+  },
+  "conclusion": {
+    "exact_ladder_barrel_floor_slide_variant_verified": false,
+    "matchedexercise": false,
+    "reconciliation_status": "sourcevariantreconciliationrequired",
+    "basis": "RUH의 일반 firm-support slide와 제조사의 독립적인 Ladder Barrel 구조·지지 설명은 각각 확인했다. 이 결합을 제조사가 검증한 정확 운동으로 표시하지 않는다.",
+    "claim_limit": "검토한 공개 본문에서 정확 변형을 확인하지 못했다는 뜻이며 모든 출처의 부재를 증명하지 않는다."
+  },
+  "counting": {
+    "authored_directional_proposal_count": 2,
+    "shared_movement_family": "supported standing single-leg hip movement",
+    "new_verified_independent_exercise_count": 0,
+    "approved_catalog_addition_count": 0,
+    "note": "두 방향 및 기구 적응을 독립적으로 검증된 운동 수 증가로 계산하지 않는다. 비교 ID는 부모가 제공한 후보명이며 기존 자료를 읽거나 자동 매핑하지 않았다."
+  },
+  "source_factual_records": [
+    {
+      "source_id": "RUH-STANDING-SLIDES",
+      "publisher": "Royal United Hospitals Bath NHS Foundation Trust",
+      "primary_source_type": "official NHS patient leaflet",
+      "title": "Hip strengthening exercises",
+      "url": "https://www.ruh.nhs.uk/patients/patient_information/PHY033_Hip_strengthening_exercises.pdf",
+      "publication": "July 2020; RUH PHY/033",
+      "checked_at_utc": "2026-11-05T00:55:40Z",
+      "access": {
+        "body_read": true,
+        "method": "public PDF text extraction in web tool",
+        "http_status": null,
+        "http_status_note": "Successful body extraction did not expose a numeric HTTP status.",
+        "media_viewed": false,
+        "source_file_saved": false
+      },
+      "source_checked_facts": [
+        {
+          "fact_id": "RUH-START",
+          "locator": "PDF page 1, exercises 2 and 3; extracted lines 5–12",
+          "summary": "단단한 지지면을 잡고 한 다리로 선 자세가 두 동작의 시작 조건이다."
+        },
+        {
+          "fact_id": "RUH-SIDE",
+          "locator": "PDF page 1, exercise 2; lines 5–8",
+          "summary": "반대 다리를 옆으로 slide하고 발끝을 앞으로 향하게 유지하라고 명시한다."
+        },
+        {
+          "fact_id": "RUH-BACK",
+          "locator": "PDF page 1, exercise 3; lines 10–12",
+          "summary": "반대 다리를 뒤로 slide하며 몸을 똑바로 세워 유지하라고 명시한다."
+        },
+        {
+          "fact_id": "RUH-CONTEXT",
+          "locator": "PDF page 1, introductory lines 1–2",
+          "summary": "동작 선택·횟수·빈도는 물리치료사가 제공하는 환자 안내 문맥이다."
+        }
+      ],
+      "not_established": [
+        "Ladder Barrel이나 rung 사용",
+        "연속적인 바닥 접촉의 정확한 발바닥·발가락 패치",
+        "손 개수·그립·하중",
+        "골반의 완전 고정, 무릎 굽힘 또는 IK 수치",
+        "일반 사용자에게의 적합성·안전성"
+      ],
+      "population_context": "NHS 물리치료 환자 안내; 특정 진단 또는 모든 일반 사용자의 적합성은 이 본문으로 확인되지 않는다.",
+      "rights": {
+        "observed_notice": "Leaflet page 2 credits © Royal United Hospitals Bath NHS Foundation Trust.",
+        "reuse_license_established": false,
+        "use_in_this_delivery": "짧은 독자적 사실 요약과 원문 링크만; 도해·사진·PDF 복제 없음."
+      },
+      "evidence_role": "ordinary firm-support movement facts; not apparatus-specific validation",
+      "factual_record_sha256": "a13eccc801230836124a55796ce97daae3a7563c77b4d3053fe5af31b8bea684"
+    },
+    {
+      "source_id": "MERRITHEW-LADDER-SUPPORT",
+      "publisher": "Merrithew",
+      "primary_source_type": "official manufacturer and educator article",
+      "title": "Beat Client Boredom: 3 Barrels to Refresh Workouts",
+      "author": "Stefania Michas",
+      "url": "https://www.merrithew.com/blog/post/2014-10-31/beat-client-boredom-3-barrels-to-refresh-pilates-workouts",
+      "publication": "2014-10-31",
+      "checked_at_utc": "2026-11-05T00:55:40Z",
+      "access": {
+        "body_read": true,
+        "method": "public HTML text in web tool",
+        "http_status": null,
+        "media_viewed": false,
+        "source_file_saved": false
+      },
+      "source_checked_facts": [
+        {
+          "fact_id": "MT-RUNGS",
+          "locator": "Ladder Barrel paragraph; extracted lines 257–259",
+          "summary": "Ladder Barrel의 서기·수직 자세 사용과 나무 rung의 손 또는 발 지지를 설명한다."
+        },
+        {
+          "fact_id": "MT-AUTHOR",
+          "locator": "author biography; lines 269–271",
+          "summary": "저자는 Merrithew programming team 소속 STOTT PILATES Master Instructor Trainer로 소개된다."
+        }
+      ],
+      "not_established": [
+        "두 후보의 바닥 서기 뒤·옆 한발 slide",
+        "특정 rung 그립과 발 접촉",
+        "기구 힘·하중·전도·마찰 시험 또는 개인 안전성"
+      ],
+      "population_context": "Pilates 강사 프로그래밍 기사; 특정 환자나 모든 사용자에 대한 적합성 검증 아님.",
+      "rights": {
+        "observed_notice": "이 기사에서 재사용 허가 조건을 확립하지 않았다.",
+        "reuse_license_established": false,
+        "use_in_this_delivery": "독자적 사실 요약과 링크만; 이미지·영상·상표 도안 복제 없음."
+      },
+      "evidence_role": "general apparatus support context, not a matched exercise",
+      "factual_record_sha256": "11b7af58945e0bee046ac75bab7a07949c8cf361b47951220b68b9be455a9519"
+    },
+    {
+      "source_id": "BB-LADDER-GUIDE-2024",
+      "publisher": "Balanced Body Inc.",
+      "primary_source_type": "official manufacturer user guide linked by official product page",
+      "title": "The Balanced Body Ladder Barrel",
+      "url": "https://s3.amazonaws.com/s3.pilates.com/User%20Guides/17656_UG_ladder_barrel%20FINAL%20web%207-23-24.pdf",
+      "official_referrer": {
+        "url": "https://www.pilates.com/products/pilates-ladder-barrel/",
+        "locator": "Ladder Barrel user guide link; extracted line 84"
+      },
+      "publication": "17656B; 2024-07-23",
+      "checked_at_utc": "2026-11-05T00:55:40Z",
+      "access": {
+        "body_read": true,
+        "method": "public PDF text extraction in web tool",
+        "http_status": null,
+        "media_viewed": false,
+        "source_file_saved": false
+      },
+      "source_checked_facts": [
+        {
+          "fact_id": "BB-STRUCTURE",
+          "locator": "PDF page 1, anatomy; extracted lines 16–30",
+          "summary": "둥근 barrel, 가로 rung으로 연결된 두 나무 기둥, 조절 가능한 ladder–barrel 간격 및 선택 foot plate를 설명한다."
+        },
+        {
+          "fact_id": "BB-STANDING-VARIANTS",
+          "locator": "PDF page 3; extracted lines 66–94",
+          "summary": "서서 한발을 barrel 위에 둔 스트레치와 frame 위 측굴 예시가 있다. 이들은 두 바닥 한발 slide와 다른 변형이다."
+        },
+        {
+          "fact_id": "BB-TORSO-SUPPORT",
+          "locator": "PDF page 3, quadriceps stretch; lines 78–85",
+          "summary": "한발 발등을 barrel에 둔 quadriceps stretch에서 ladder로 몸통을 지지한다고 명시한다."
+        }
+      ],
+      "not_established": [
+        "바닥 한발 뒤·옆 slide의 Ladder Barrel 변형 일치",
+        "후보의 손 위치·발 패치·골반 고정·IK",
+        "단순화 모델의 치수·접촉·하중 검증"
+      ],
+      "population_context": "기구 사용 가이드의 여러 난이도 예시; 개별 적합성이나 일반 사용자 안전을 검증한 자료로 취급하지 않는다.",
+      "rights": {
+        "observed_notice": "PDF page 1: © 2024 Balanced Body Inc.; all rights reserved; reproduction whole or part prohibited in its notice.",
+        "reuse_license_established": false,
+        "use_in_this_delivery": "독자적 사실 요약과 링크만; 도해·사진·문서 파일 저장·트레이싱 없음."
+      },
+      "evidence_role": "apparatus structure and explicit nonmatching standing variants",
+      "factual_record_sha256": "45ee23e13413211f7baae5b84eb9f54a71c371ccd67ef58142c97fb82b3d6d62"
+    },
+    {
+      "source_id": "BB-LADDER-PRODUCT",
+      "publisher": "Balanced Body",
+      "primary_source_type": "official manufacturer product page",
+      "title": "Ladder Barrel",
+      "url": "https://www.pilates.com/products/pilates-ladder-barrel/",
+      "publication": "Publication date not stated in checked body; checked 2026-11-05.",
+      "checked_at_utc": "2026-11-05T00:55:40Z",
+      "access": {
+        "body_read": true,
+        "method": "public HTML text in web tool",
+        "http_status": null,
+        "media_viewed": false,
+        "source_file_saved": false
+      },
+      "source_checked_facts": [
+        {
+          "fact_id": "BB-PRODUCT-STRUCTURE",
+          "locator": "product description; extracted lines 65–84",
+          "summary": "패딩한 barrel, 나무 ladder·frame, 위치 조절 base, barrel 손잡이와 아래 grab bar를 열거한다."
+        },
+        {
+          "fact_id": "BB-ADJUSTMENT-DISTINCTION",
+          "locator": "description; extracted line 76",
+          "summary": "이 문단의 slide는 pedal을 누른 뒤 barrel 위치를 바꾸는 기구 조절이다. 사람의 다리 slide 근거가 아니다."
+        },
+        {
+          "fact_id": "BB-FIRST-PARTY-GUIDE-LINK",
+          "locator": "extracted line 84; followed public link",
+          "summary": "공식 제품 페이지가 BB-LADDER-GUIDE-2024의 공개 PDF로 직접 연결된다."
+        }
+      ],
+      "not_established": [
+        "두 후보의 정확한 운동 변형",
+        "제조사 수치가 저작 모델의 치수·힘·하중을 검증한다는 주장",
+        "free video 접근 문구에 따른 복제·임베드 허가"
+      ],
+      "population_context": "판매·제품 설명; 임상 대상 또는 개별 적합성 검증 아님.",
+      "rights": {
+        "observed_notice": "Official site footer © 2026 Balanced Body; separate legal page checked as BB-LEGAL.",
+        "reuse_license_established": false,
+        "use_in_this_delivery": "원문 링크와 독자적 사실 요약만; 제품 사진·영상·모델 외형 복제 없음."
+      },
+      "evidence_role": "first-party structure and guide provenance, not exercise matching",
+      "factual_record_sha256": "bde2e95f61a118ccbac1fa975dee04dcf42a1a477f2c366dae246ded713c9b74"
+    },
+    {
+      "source_id": "UHSX-STANDING-LIFTS",
+      "publisher": "University Hospitals Sussex NHS Foundation Trust",
+      "primary_source_type": "official NHS patient information",
+      "title": "Standing Exercises",
+      "url": "https://www.uhsussex.nhs.uk/resources/standing-exercises-2/",
+      "publication": "Page last reviewed 2026-09-25",
+      "checked_at_utc": "2026-11-05T00:55:40Z",
+      "access": {
+        "body_read": true,
+        "method": "public HTML text in web tool",
+        "http_status": null,
+        "media_viewed": false,
+        "source_file_saved": false
+      },
+      "source_checked_facts": [
+        {
+          "fact_id": "UHSX-SIDE-LIFT",
+          "locator": "section 2; extracted lines 255–260",
+          "summary": "안정된 지지면을 잡고 다리를 옆으로 들어 올린 뒤 발을 바닥으로 돌려놓는 변형이다."
+        },
+        {
+          "fact_id": "UHSX-BACK-LIFT",
+          "locator": "section 3; extracted lines 262–267",
+          "summary": "안정된 지지면을 잡고 곧은 다리를 뒤로 들어 올리며 앞쪽으로 기울이지 않도록 하는 변형이다."
+        },
+        {
+          "fact_id": "UHSX-CONTEXT",
+          "locator": "patient context; extracted lines 246–248 and 288–292",
+          "summary": "Worthing 진료 환자와 ward 물리치료 안내 문맥이며 전문 임상 조언을 대신하지 않는다고 밝힌다."
+        }
+      ],
+      "not_established": [
+        "floor slide 또는 Ladder Barrel 변형",
+        "RUH slide와의 동일 운동·접촉 판정",
+        "일반 사용자의 개인 적합성"
+      ],
+      "population_context": "Worthing에서 진료받는 환자; 증상과 deconditioning에 대한 치료사 안내.",
+      "rights": {
+        "observed_notice": "Page footer © Copyright 2026 University Hospitals Sussex NHS Foundation Trust.",
+        "reuse_license_established": false,
+        "use_in_this_delivery": "독자적 사실 요약과 링크만; 웹 사진·도해·인쇄 PDF 복제 없음."
+      },
+      "evidence_role": "variant counterexample: explicitly lifted, not floor-slide evidence",
+      "factual_record_sha256": "fe743a1ec2fe8d24b306c3c65d9e9e4b47c18bd572e855c956e47f9affdcbe6e"
+    },
+    {
+      "source_id": "BB-LEGAL",
+      "publisher": "Balanced Body Inc.",
+      "primary_source_type": "official website terms",
+      "title": "Balanced Body, Inc. Terms and Conditions",
+      "url": "https://www.pilates.com/legal/",
+      "publication": "Last updated 2023-03-14",
+      "checked_at_utc": "2026-11-05T00:55:40Z",
+      "access": {
+        "body_read": true,
+        "method": "public HTML text in web tool",
+        "http_status": null,
+        "media_viewed": false,
+        "source_file_saved": false
+      },
+      "source_checked_facts": [
+        {
+          "fact_id": "BB-IP-NOTICE",
+          "locator": "Intellectual Property; extracted lines 187–192",
+          "summary": "원본 콘텐츠의 회사·권리자 소유 및 저작권·상표 보호를 명시한다."
+        }
+      ],
+      "not_established": [
+        "미디어 다운로드·복제·임베드 또는 API 사용에 대한 별도 허가"
+      ],
+      "population_context": "웹사이트 이용 조건; 운동 근거 아님.",
+      "rights": {
+        "observed_notice": "저작권·상표 관련 문구를 확인했으며 포괄적인 재사용 허가로 해석하지 않았다.",
+        "reuse_license_established": false,
+        "use_in_this_delivery": "권리 상태의 짧은 사실 요약과 링크만."
+      },
+      "evidence_role": "rights context only",
+      "factual_record_sha256": "a80edf773e6998841ee8a5a54cb45a5563af4f471c6d71c101a9f0f2a8745a2f"
+    }
+  ],
+  "hash_specification": {
+    "algorithm": "SHA-256",
+    "encoding": "UTF-8",
+    "canonical_json": "json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'))",
+    "individual_scope": "각 source_factual_records 항목 전체에서 factual_record_sha256 키만 제외한다. 체크 시각·권리·미확인·접근 메타데이터도 포함한다.",
+    "aggregate_scope": "순서가 유지된 source_factual_records 6개 항목 전체 배열. 각 factual_record_sha256 및 메타데이터를 포함한다. proposals, access_log 및 그 외 최상위 필드는 포함하지 않는다.",
+    "not_a_raw_source_hash": "이 연구자가 작성한 사실 레코드의 무결성 hash이다. 출판사 HTML/PDF/영상/원본 기하의 파일 hash나 출처의 인증·승인을 뜻하지 않는다.",
+    "factual_records_sha256": "7c9ec0fe701d61d8835f4fd7b6c387d3c49565dc8dbe31dcb6e6224bcff9cc6d"
+  },
+  "proposals": [
+    {
+      "proposal_id": "ladder-supported-hip-extension-slide",
+      "candidate_comparison_id_from_parent": "original-barrel-standing-hip-extension",
+      "candidate_comparison_id_is_a_mapping": false,
+      "status": "unreviewed-original-authored-adaptation",
+      "matchedexercise": false,
+      "exactSourceVariantMatched": false,
+      "source_variant_reconciliation_required": true,
+      "reconciliation_status": "sourcevariantreconciliationrequired",
+      "movement_fact_refs": [
+        "RUH-START",
+        "RUH-BACK"
+      ],
+      "separate_structure_fact_refs": [
+        "MT-RUNGS",
+        "BB-STRUCTURE",
+        "BB-PRODUCT-STRUCTURE"
+      ],
+      "checked_source_vs_authored": {
+        "start_and_support_leg": "일반 firm surface를 잡고 한 다리로 서기: RUH 직접 명시. Ladder Barrel 적용은 저작 적응.",
+        "movement": "다른 다리를 뒤로 slide: RUH 직접 명시. hip-extension 관절 경로의 수학적 구현은 저작 해석.",
+        "torso": "똑바로 서기 유지: RUH 직접 명시. 골반을 공간에 완전히 고정하거나 정해진 각도로 잠그는 것은 저작 선택.",
+        "foot_contact": "정확한 sole/toe 패치와 연속 바닥 접촉은 미명시; 바닥 contact constraint는 저작 선택.",
+        "hand_support_and_knee_ik": "일반 firm surface만 직접 명시; rung grip과 knee IK는 저작 선택."
+      },
+      "author_choices_not_source_facts": [
+        "일반 firm surface 대신 Ladder Barrel의 rung을 손 지지로 선택하는 기구 적응",
+        "바닥 plane, 움직이는 발의 접촉 패치와 slide 높이, 고정된 반대 발의 표시",
+        "손 개수·rung 위치·그립, ladder를 향한 몸의 배치, 단순화한 barrel·frame 형상",
+        "시각화를 위한 몸통·골반 고정, 무릎 IK와 발목 조정, 관절 길이·운동 범위",
+        "위상·반복·속도·시간·easing과 카메라; 출처의 영상·사진·제조 도면을 추적한 값 아님"
+      ],
+      "unknowns": [
+        "검토한 본문에서 정확한 Ladder Barrel 바닥 한발 slide 변형은 확인되지 않았다. 전체 문헌에 존재하지 않는다는 결론은 아니다.",
+        "RUH는 slide라고 쓰지만 발바닥 전체·발가락만의 접촉 패치와 연속 바닥 접촉을 별도 문장으로 지정하지 않는다.",
+        "서 있는 반대 다리는 명시되나 그 발의 압력 분포·하중과 손 지지 하중은 미확인이다.",
+        "손 개수·rung 높이·그립 방향, barrel 또는 frame과의 신체 접촉 및 안전 여유는 미확인이다.",
+        "골반의 완전 고정·측방 이동량, 무릎 굽힘·발목 각도·관절 궤적·IK 수치는 미확인이다.",
+        "개인 적합성·금기·통증 대응·균형 요구·의학적 안전성은 검증하지 않았다.",
+        "제조사 힘·하중·전도·마찰·구조 강도, 모델 치수·거리·시간·회수 설정은 검증하지 않았다."
+      ],
+      "approval_count": 0,
+      "expert_review_count": 0,
+      "exact_asset_count": 0,
+      "auto_excluded_from_real_classes": true
+    },
+    {
+      "proposal_id": "ladder-supported-side-leg-slide",
+      "candidate_comparison_id_from_parent": "original-barrel-standing-side-reach",
+      "candidate_comparison_id_is_a_mapping": false,
+      "status": "unreviewed-original-authored-adaptation",
+      "matchedexercise": false,
+      "exactSourceVariantMatched": false,
+      "source_variant_reconciliation_required": true,
+      "reconciliation_status": "sourcevariantreconciliationrequired",
+      "movement_fact_refs": [
+        "RUH-START",
+        "RUH-SIDE"
+      ],
+      "separate_structure_fact_refs": [
+        "MT-RUNGS",
+        "BB-STRUCTURE",
+        "BB-PRODUCT-STRUCTURE"
+      ],
+      "checked_source_vs_authored": {
+        "start_and_support_leg": "일반 firm surface를 잡고 한 다리로 서기: RUH 직접 명시. Ladder Barrel 적용은 저작 적응.",
+        "movement": "다른 다리를 옆으로 slide하고 발끝을 앞으로 유지: RUH 직접 명시. hip-abduction 관절 경로의 구현은 저작 해석.",
+        "torso_and_pelvis": "이 RUH side-slide 항목은 몸통·골반 완전 고정을 따로 명시하지 않는다. 고정은 저작 선택.",
+        "foot_contact": "정확한 sole/toe 패치와 연속 바닥 접촉은 미명시; 바닥 contact constraint는 저작 선택.",
+        "hand_support_and_knee_ik": "일반 firm surface만 직접 명시; rung grip과 knee IK는 저작 선택.",
+        "candidate_id_ambiguity": "모델 담당자의 설명상 다리의 옆 도달 후보이다. 제조사 가이드의 몸통 측굴과 구분하며 동일 운동으로 취급하지 않는다.",
+        "candidate_id_context_reported_by_model_owner": "모델 담당자가 비교 ID의 한국어 이름을 래더 지지 사이드 레그 리치, cue를 한발을 옆으로 보내는 내용으로 전달했다. 이는 협업 전달 정보이며 본 연구자가 active 자료를 읽어 검증한 사실이나 공개 1차 출처의 정확 운동 매핑이 아니다."
+      },
+      "author_choices_not_source_facts": [
+        "일반 firm surface 대신 Ladder Barrel의 rung을 손 지지로 선택하는 기구 적응",
+        "바닥 plane, 움직이는 발의 접촉 패치와 slide 높이, 고정된 반대 발의 표시",
+        "손 개수·rung 위치·그립, ladder를 향한 몸의 배치, 단순화한 barrel·frame 형상",
+        "시각화를 위한 몸통·골반 고정, 무릎 IK와 발목 조정, 관절 길이·운동 범위",
+        "위상·반복·속도·시간·easing과 카메라; 출처의 영상·사진·제조 도면을 추적한 값 아님"
+      ],
+      "unknowns": [
+        "검토한 본문에서 정확한 Ladder Barrel 바닥 한발 slide 변형은 확인되지 않았다. 전체 문헌에 존재하지 않는다는 결론은 아니다.",
+        "RUH는 slide라고 쓰지만 발바닥 전체·발가락만의 접촉 패치와 연속 바닥 접촉을 별도 문장으로 지정하지 않는다.",
+        "서 있는 반대 다리는 명시되나 그 발의 압력 분포·하중과 손 지지 하중은 미확인이다.",
+        "손 개수·rung 높이·그립 방향, barrel 또는 frame과의 신체 접촉 및 안전 여유는 미확인이다.",
+        "골반의 완전 고정·측방 이동량, 무릎 굽힘·발목 각도·관절 궤적·IK 수치는 미확인이다.",
+        "개인 적합성·금기·통증 대응·균형 요구·의학적 안전성은 검증하지 않았다.",
+        "제조사 힘·하중·전도·마찰·구조 강도, 모델 치수·거리·시간·회수 설정은 검증하지 않았다."
+      ],
+      "approval_count": 0,
+      "expert_review_count": 0,
+      "exact_asset_count": 0,
+      "auto_excluded_from_real_classes": true
+    }
+  ],
+  "access_log": [
+    {
+      "url": "https://www.ruh.nhs.uk/patients/patient_information/PHY033_Hip_strengthening_exercises.pdf",
+      "result": "public_body_text_read",
+      "http_status": null,
+      "source_id": "RUH-STANDING-SLIDES",
+      "numeric_http_status_not_exposed": true
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2014-10-31/beat-client-boredom-3-barrels-to-refresh-pilates-workouts",
+      "result": "public_body_text_read",
+      "http_status": null,
+      "source_id": "MERRITHEW-LADDER-SUPPORT",
+      "numeric_http_status_not_exposed": true
+    },
+    {
+      "url": "https://s3.amazonaws.com/s3.pilates.com/User%20Guides/17656_UG_ladder_barrel%20FINAL%20web%207-23-24.pdf",
+      "result": "public_body_text_read",
+      "http_status": null,
+      "source_id": "BB-LADDER-GUIDE-2024",
+      "numeric_http_status_not_exposed": true
+    },
+    {
+      "url": "https://www.pilates.com/products/pilates-ladder-barrel/",
+      "result": "public_body_text_read",
+      "http_status": null,
+      "source_id": "BB-LADDER-PRODUCT",
+      "numeric_http_status_not_exposed": true
+    },
+    {
+      "url": "https://www.uhsussex.nhs.uk/resources/standing-exercises-2/",
+      "result": "public_body_text_read",
+      "http_status": null,
+      "source_id": "UHSX-STANDING-LIFTS",
+      "numeric_http_status_not_exposed": true
+    },
+    {
+      "url": "https://www.pilates.com/legal/",
+      "result": "public_body_text_read",
+      "http_status": null,
+      "source_id": "BB-LEGAL",
+      "numeric_http_status_not_exposed": true
+    },
+    {
+      "url": "https://s3.amazonaws.com/s3.pilates.com/resources/17656_UG_ladder_barrel_low_rez_4-8-21.pdf",
+      "result": "public_pdf_body_text_read",
+      "http_status": null,
+      "numeric_http_status_not_exposed": true,
+      "use": "2021 공개 구판을 읽었으나 중복 구조 사실은 공식 제품 페이지가 직접 연결한 2024 가이드 레코드로 인용한다. 구판 이미지나 파일은 저장하지 않았다."
+    },
+    {
+      "url": "https://www.merrithew.com/shop/ProductDetail/ST01010_Ladder-Barrel",
+      "operation": "follow public product link from Merrithew article",
+      "result": "denied",
+      "http_status": 403,
+      "observed_tool_error": "Failed to fetch https://www.merrithew.com/shop/ProductDetail/ST01010_Ladder-Barrel: (403) Forbidden",
+      "body_read": false,
+      "attempt_count": 1,
+      "retry_count": 0,
+      "bypass_count": 0,
+      "action": "Stopped this target operation. No retry, authentication, proxy, alternate-path or cookie workaround.",
+      "pending": false,
+      "outcome_uncertain": false
+    }
+  ],
+  "research_method": {
+    "body_evidence_only": true,
+    "search_scope": "공개 제조사·공식 교육자·NHS 본문. 검색 결과 요약만의 주장, 제3자 업로드 매뉴얼, 비공개 자료·영상은 근거로 사용하지 않았다.",
+    "visual_observation": "사진·도해·영상 재생 또는 시점 관찰을 수행하지 않았다. 보지 않은 시점·움직임·접촉은 생성된 출처 사실로 기록하지 않는다.",
+    "media_or_source_files_saved": 0,
+    "tracing_performed": false,
+    "api_access": "No service API used or integrated. Public web text read only.",
+    "link_scope": "검토한 공개 원문으로의 출처 링크만 기록; 링크 접근 가능성을 재사용 허가로 해석하지 않는다.",
+    "embed_scope": "임베드 없음. 임베드 허용 범위는 확립하지 않았고 별도 권한을 추정하지 않는다.",
+    "media_reuse_scope": "미디어 다운로드·사진 복제·트레이싱·비공개 복제 없음. 원문·미디어 라이선스를 이 결과물에 양도하거나 부여하지 않는다.",
+    "approval_and_suitability": "전문가 검토·정확 asset 매핑·개인 적합성·임상/기구 안전성 확인 0; 실제 수업·이력·계획에 쓰거나 승인하지 않는다."
+  }
+}

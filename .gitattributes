@@ -1,0 +1,2 @@
+# Research ledgers retain their original BOM and CRLF bytes for provenance checks.
+**/sourceCatalog/*.csv -text whitespace=cr-at-eol

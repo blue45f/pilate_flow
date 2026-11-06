@@ -1,0 +1,31 @@
+# Pilates movement source ledger — draft only
+
+Four factual patterns checked against 8 accessible primary NHS reference records. Professional motion review, professional approvals, approved catalog mappings and added production motion assets remain **0**.
+
+Artifact label: 2026-11-05. Actual access date: 2026-11-04 UTC. Text-only factual paraphrase; no source images or footage inspected or copied. Hashes identify factual records, never source media.
+
+| Pattern | Catalog comparison | Exact constraint |
+| --- | --- | --- |
+| supine-heel-slide | `original-mat-heel-slide` | Catalog requests a heel slide with trunk position maintained; it does not define the starting knee angle. All mappings remain unapproved. |
+| supine-bent-knee-fold | `original-mat-knee-fold` | Catalog asks light foot lifts with observation of pelvic movement; it does not specify tabletop, 90 degrees, or five-second holds. All mappings remain unapproved. |
+| side-lying-straight-leg-lift | `original-mat-side-leg-lift` | Correct catalog ID is original-mat-side-leg-lift. All mappings remain unapproved. |
+| side-lying-open-book | `original-mat-open-book` | Catalog specifically asks adjusting knee and head support; props-none metadata is not proof support can be omitted. All mappings remain unapproved. |
+
+The JSON classifies each intended population and setting (postoperative, condition-specific, or symptom-specific physiotherapy), and preserves source facts, chosen or unknown geometry, clinical restrictions, stationary contacts and support gaps separately. Named sources with only inferred adult service context do not establish general adult suitability.
+
+| Stable source ID | Primary reference | Evidence location | Factual-record SHA-256 |
+| --- | --- | --- | --- |
+| `nbt-diep-heel-slide-v1` | [Post-operative Exercises DIEP Reconstruction](https://www.nbt.nhs.uk/our-services/a-z-services/breast-reconstruction/post-operative-exercises-diep-reconstruction) — North Bristol NHS Trust | 3. Heel slide; text extraction lines 54–63; referenced exercise 1 lines 39–44 | `1c1c3b47904a399c04042dbe0406e78e117fcafab1b37c41852fc403f5d16f74` |
+| `rm-abdominal-operation-single-leg-slide-v1` | [Exercise and advice to help you recover after your abdominal operation](https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386) — The Royal Marsden NHS Foundation Trust, Physiotherapy department | Single leg slide: printed page 9, physical page 11 (zero-index 10), text lines 163–171; progression restriction lines 146–147 | `eba517990895c0118d1afc2ab7325fe185003196814be5ddff611bd1cd859168` |
+| `rm-abdominal-operation-single-knee-lift-v1` | [Exercise and advice to help you recover after your abdominal operation](https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386) — The Royal Marsden NHS Foundation Trust, Physiotherapy department | Single knee lifts: printed page 8, physical page 10 (zero-index 9), text lines 146–155 | `047bfc7dfbe70800a343ec28470f393b1f37333e6a6790046fcffb6416619036` |
+| `tsd-sui-knee-fold-v1` | [Stress urinary incontinence — Pelvic Health Physiotherapy information leaflet](https://www.torbayandsouthdevon.nhs.uk/uploads/25988.pdf?last-updated=20260902) — Torbay and South Devon NHS Foundation Trust | 4. Knee folds / Scissors: physical page 4 (zero-index 3), text lines 119–134; leaflet reference 25988/V1/Physiotherapy/TSDFT/04.26, review 04.28 | `883c5bc1be0ee07157a945aa54268b20cfc080236788563a7d2d97e9b7a49dfd` |
+| `roh-hip-oa-side-abduction-v1` | [Exercises for Osteoarthritis of the Hip](https://roh.nhs.uk/services-information/therapy/exercises-for-osteoarthritis-of-the-hip) — The Royal Orthopaedic Hospital | Hip Abduction in Side Lying; page text lines 74–76. General exercise advice at lines 35–37 and 79–82. | `2d2122de86315a48bb5f9fe5b4f54686480450169806217e9eb9c74b914d2b2a` |
+| `ruh-lateral-hip-side-abduction-v1` | [Lateral Hip Pain — Physiotherapy Patient Information](https://www.ruh.nhs.uk/patients/services/physiotherapy/documents/PHY067_Lateral_hip_pain.pdf) — Royal United Hospitals Bath NHS Foundation Trust | Printed page 10, PDF zero-index page 9, First exercise set — hip abduction, 3. Side lying hip abduction, text lines 222–229. Adult context printed page 2, lines 26–27. | `fa7d7a99fddf19b1d6cf005742f4b45d3d12dcba1e2001f2fb78d12855c57994` |
+| `dynamichealth-midback-open-book-v1` | [Mid back pain](https://www.dynamichealth.nhs.uk/help-and-advice/mid-back-pain/) — Dynamic Health, East of England Community Health and Care NHS Trust | Movement exercises — Open book, text lines 212–217; exercise selection/range advice at line 182; publisher footer lines 283 and 299. | `9a77c3a2d16e32ad6564dfea2752b15aaf5c209476c598576a9fb23e20c0c8d7` |
+| `leeds-chest-wall-open-book-v1` | [Physiotherapy exercises for breast pain with chest wall musculoskeletal symptoms](https://www.leedsth.nhs.uk/patients/resources/physiotherapy-exercises-for-breast-pain-with-chest-wall-musculoskeletal-symptoms/) — Leeds Teaching Hospitals NHS Trust | 1. Open book, text lines 249–255; patient context and general constraints at lines 242–247. Image descriptions were not used for geometry. | `b31daa12ad8dea0f47c8ad033958f88b37161609968f62035fc2acaf3ea2ccc5` |
+
+The side-lying sources describe separate straight-lower-leg and bent-lower-knee variants. Head and arm support remain unspecified in the relevant text. The open-book sources do not justify mandatory hand-floor contact. Supine clinical sources do not establish an exact catalog mat/support variant. All numeric animation angles and timing must be marked as authored choices unless explicitly tied to the narrower source variant.
+
+One source access was denied: [UHCW P-KIP PDF](https://www.uhcw.nhs.uk/download/clientfiles/files/Personalised%20Knee%20Improvement%20Programme%20PKIP%20%281927%29.pdf) returned HTTP 403 on a single web-open attempt. Access stopped; no retry, bypass or snippet-only verification was used.
+
+Before mapping, review the exact authored model and asset hash, variant, phases, contacts, support, camera and anatomical sides. This ledger was originally delivered as isolated research without app changes. The parent subsequently integrated its unchanged JSON factual records into the draft lab. Production mapping, deployment, authentication, paid services and credentials were not changed.

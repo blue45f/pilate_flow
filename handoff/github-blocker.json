@@ -1,0 +1,16 @@
+{
+  "account": "blue45f",
+  "intendedRepository": "blue45f/pilates-flow",
+  "requestedVisibility": "public",
+  "cliReadUser": "succeeded",
+  "createRepository": "denied",
+  "error": "GraphQL: Resource not accessible by integration (createRepository)",
+  "postFailureRepositoryView": "Could not resolve to a Repository",
+  "createAttempts": 1,
+  "retried": false,
+  "userHistoryCheckedAfterFailure": true,
+  "newGrantEvidenceFound": false,
+  "remoteSourceUpload": "not performed",
+  "deployment": "not performed",
+  "requiredNextStep": "Owner or supported already-authorized owner session creates the empty public repository and confirms integration access; then verify exact owner/visibility/contents before upload."
+}

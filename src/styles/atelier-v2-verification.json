@@ -1,0 +1,58 @@
+{
+  "capturedAt": "2026-11-04T17:44:54.483948+00:00",
+  "scope": "V2 desktop theme plus supplied V3 mobile and native block-inspector sheet CSS; no JS, algorithm, motion, catalog, auth or deployment changes by this styling task",
+  "cssParsedAndFormattedByPrettier": true,
+  "fullApplicationVisualMatrixPerformed": false,
+  "assetBytesUnchanged": true,
+  "finalCssSmoke": {
+    "status": "PASS",
+    "cases": 3,
+    "viewports": [
+      "320x568",
+      "390x844",
+      "320x568 doubled root font"
+    ],
+    "browser": "Chromium154.0.8037.57",
+    "evidence": "/workspace/pilates-redesign-v3/render-smoke/compact-final/results.json",
+    "screenshots": "/workspace/pilates-redesign-v3/render-smoke/compact-final/",
+    "checks": [
+      "No document horizontal overflow",
+      "390px mode tabs are visible and pass center hit-testing above bottom navigation",
+      "Preview action in normal flow does not occlude earlier content",
+      "Native inputs at least16px and44px high",
+      "Single sheet body scroller with header outside and sheet-only sticky footer",
+      "Desktop properties footer remains non-sticky",
+      "98 original exercise objects unchanged; pending referenced fixture only",
+      "No runtime page errors",
+      "390px first80px row fully visible above navigation after bounded density pass"
+    ],
+    "limits": [
+      "Ephemeral local development browser fixture; no authenticated/API flow proof",
+      "Original six-case smoke and intermediate320/390/1440 overlap recheck are retained as historical geometry/desktop evidence. Final density changes only mobile CSS; final320/390/doubled-font cases are current.",
+      "Full cross-browser/functional/keyboard matrix is delegated to parent QA"
+    ],
+    "firstRow390": {
+      "top": 696.640625,
+      "bottom": 776.640625,
+      "navigationTop": 780,
+      "modeButtonsVisibleAndHitTested": true
+    }
+  },
+  "designAssets": {
+    "main": {
+      "path": "/workspace/pilates-redesign-v3/mobile/flow-atelier-mobile-v3-motion-sequence.png",
+      "sha256": "54db47b729acc06fe8c20ee0234db8e2ab97c0476358908eaf6fbdfc588d9c91"
+    },
+    "blockEditor": {
+      "path": "/workspace/pilates-redesign-v3/block-editor/flow-atelier-mobile-v3-block-editor.png",
+      "sha256": "8f6d140437036bae0b8ac6fe1ba7c0122e304cb4c13e244afe6d15a80e83c08b"
+    }
+  },
+  "files": {
+    "src/styles/atelier-v2.css": "5d16fc5db84e8497a03c4f5d04d6d7d80b250c1a418f7f063480d9491f857f64",
+    "src/styles/step-inspector.css": "68652cb1ca52b1718eedc0eea61715ee8fe2ca240910fcf2cf41a9c98fa35248",
+    "src/styles/atelier-v2.source.md": "bcc659ea0bb13f04ee697d19534861a673b17b60f80b9d4bf9c2d34e7a9b22b9",
+    "src/styles/atelier-v2-asset-provenance.json": "3958a30793507cd17e07ee57fcff3893c40127464329a1b8580a1613c24023ad",
+    "public/images/atelier-reformer-still-life.png": "08738f19dac08bfb0da865aee5cdd23fcb6a4d89c752b8e7db21d65d0f1586c7"
+  }
+}

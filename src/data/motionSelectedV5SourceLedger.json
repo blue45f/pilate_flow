@@ -1,0 +1,293 @@
+{
+  "schemaVersion": "pilates-v5-selected-patterns-1",
+  "status": "research specifications for two root-selected original authoring candidates; not completed motions",
+  "sourceHeadProvidedByParent": "18753446677666b8df392e00b17f9e1ae27c47c8",
+  "sourceHeadIndependentlyChecked": false,
+  "researchCheckpointUtc": "2026-11-05T01:59:39Z",
+  "counts": {
+    "selectedPatterns": 2,
+    "primarySourceRecords": 2,
+    "uniquePrimaryUrls": 2,
+    "modelsCompletedByThisResearch": 0,
+    "approvedCatalogMappings": 0,
+    "exactAssets": 0,
+    "professionalReviews": 0
+  },
+  "hashMethod": "factualRecordSha256 = SHA-256 of UTF-8 canonical JSON of factualRecord only, with recursively sorted object keys, original Unicode, preserved array order and comma/colon separators without spaces. This hashes this researcher's factual record, not publisher files, media, authored geometry or a review.",
+  "sources": [
+    {
+      "accessDate": "2026-11-05",
+      "accessStatus": "public-text-accessible",
+      "sourceChecked": true,
+      "evidence": "Public primary instructional text read; original factual paraphrase only.",
+      "mediaTimestamps": [],
+      "professionalReviewCount": 0,
+      "exactMotionMappingCount": 0,
+      "rights": {
+        "use": "reference-only",
+        "embedded": false,
+        "mediaCopied": false,
+        "sourceMediaObserved": false,
+        "reuseLicenseEstablished": false,
+        "notice": "Public access is not permission to reproduce or embed source media."
+      },
+      "sourceId": "harvard-floor-seated-band-row-v1",
+      "title": "Simple core strengtheners for every day of the week",
+      "publisher": "Harvard Health Publishing",
+      "byline": "Heidi Godman",
+      "publishedDate": "2022-09-01",
+      "url": "https://www.harvardhealth.org/healthy-aging-and-longevity/simple-core-strengtheners-for-every-day-of-the-week",
+      "requestedUrl": "https://www.health.harvard.edu/healthy-aging-and-longevity/simple-core-strengtheners-for-every-day-of-the-week",
+      "redirectNote": "An ordinary public redirect to the resolved URL was observed; no access denial or workaround was involved.",
+      "locators": [
+        "Monday: A resistance band workout, web text lines 78–81",
+        "Move of the month: Seated row, web text lines 82–84"
+      ],
+      "populationContext": {
+        "category": "healthy-aging educational article",
+        "ageExplicit": false,
+        "diagnosisExplicit": false,
+        "scope": "General educational context; no individual or general adult suitability certification.",
+        "publicationReview": "The publisher names physician editorial review. This is publication provenance and is not review of this proposed model."
+      },
+      "factualRecord": {
+        "variant": "Floor-seated bilateral row with a long elastic resistance band",
+        "start": "Sit on the floor, legs extended in front, band middle around the soles, one end in each hand.",
+        "move": "Bend the elbows and pull the ends toward the body; keep the back straight and elbows close.",
+        "return": "Straighten the arms.",
+        "contacts": [
+          "Seated on the floor.",
+          "Band middle around the soles.",
+          "Band ends held in both hands."
+        ],
+        "prop": "Long elastic resistance band.",
+        "side": "Both arms are described; no alternating sequence is specified."
+      },
+      "notEstablished": [
+        "Locked knees, precise hip/knee/ankle angles, foot position or exact sole contact patch.",
+        "Pelvis fixation, support pressure, grip orientation or hand endpoint.",
+        "Band construction/type, force/load, numerical dimensions, timing or dosage."
+      ],
+      "variantBoundary": "The route around the feet is not a closed-loop band product classification. No ordinary chair or independent wall/door anchor is part of this selected variant.",
+      "factualRecordSha256": "3fc44322a735ac2ed6d31947c9177181fcb930172ced2fff7687c43619d85d7a"
+    },
+    {
+      "accessDate": "2026-11-05",
+      "accessStatus": "public-text-accessible",
+      "sourceChecked": true,
+      "evidence": "Public primary instructional text read; original factual paraphrase only.",
+      "mediaTimestamps": [],
+      "professionalReviewCount": 0,
+      "exactMotionMappingCount": 0,
+      "rights": {
+        "use": "reference-only",
+        "embedded": false,
+        "mediaCopied": false,
+        "sourceMediaObserved": false,
+        "reuseLicenseEstablished": false,
+        "notice": "Public access is not permission to reproduce or embed source media."
+      },
+      "sourceId": "basi-cjkelly-chest-lift-v1",
+      "title": "10 Essential Pilates Exercises for Beginners",
+      "publisher": "BASI Pilates",
+      "byline": "CJ Kelly",
+      "publishedDate": "2019-10-16",
+      "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+      "locators": [
+        "Section 2: Chest Lift; web text lines 127–134"
+      ],
+      "populationContext": {
+        "category": "official Pilates educator's introduction to fundamentals",
+        "ageExplicit": false,
+        "diagnosisExplicit": false,
+        "scope": "Beginner education; no clinical population or individual suitability established.",
+        "publicationProvenance": "The byline identifies CJ Kelly, NCPT. The credential is a publisher claim; no external credential or model review was performed."
+      },
+      "factualRecord": {
+        "variant": "Supine chest lift with knees bent, legs together and hands behind the head",
+        "start": "Lie on the back with knees bent and legs together. Interlace fingers behind the head, press the head lightly into the hands, and keep elbows within peripheral view.",
+        "move": "Exhale to lift head, neck and chest, looking toward the thighs, until shoulder-blade tips leave the mat.",
+        "return": "Pause while inhaling, then exhale to lower to the mat.",
+        "contacts": [
+          "Head lightly supported by the hands at setup.",
+          "Mat contact changes as the shoulder-blade tips lift."
+        ],
+        "props": "A mat is referenced; no additional prop is specified for this section.",
+        "side": "A central lift with both hands is described; no rotation or alternating side is specified."
+      },
+      "notEstablished": [
+        "Feet-flat instruction, exact foot support patches or pressure distribution.",
+        "Complete pelvis fixation, no-tilt instruction or numerical spine/joint geometry.",
+        "Exact head/neck angles, head-hand contact force, hand spacing and elbow path.",
+        "Numerical movement duration, cadence, hold length or repetition prescription for an authored model."
+      ],
+      "variantBoundary": "Keep this section separate from Pelvic Curl, Chest Lift with Rotation and Single Leg Stretch. Do not import the Pelvic Curl leg spacing or another publisher's shoulder-blade endpoint wording.",
+      "factualRecordSha256": "30322df79e4cc20e602afd0c3107ccac5eb790d3f840da2de04f1176638cdfae"
+    }
+  ],
+  "patterns": [
+    {
+      "patternId": "floor-seated-band-row",
+      "intendedComparisonId": "original-mat-band-row",
+      "selectionStatus": "root-selected for original authoring research only",
+      "sourceIds": [
+        "harvard-floor-seated-band-row-v1"
+      ],
+      "sourceVariantTextChecked": true,
+      "exactSourceVariantMatched": false,
+      "sourceVariantReconciliationRequired": true,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false,
+      "autoRecommendationEligible": false,
+      "catalogSnapshot": {
+        "path": "/workspace/pilates-flow/src/data/originalMovements.ts",
+        "lines": "166–176; generator 843–865",
+        "nameKo": "밴드 시티드 로우",
+        "bodyPosition": "seated",
+        "requiredEquipment": [
+          "mat"
+        ],
+        "props": [
+          "theraband"
+        ],
+        "instructionSummary": "Check band anchoring, move elbows backward and return slowly."
+      },
+      "variantRequirements": [
+        {
+          "id": "floor-seated-support",
+          "basis": "source-text",
+          "detail": "Source says floor; mat material/thickness or sitting support geometry is not specified."
+        },
+        {
+          "id": "long-elastic-resistance-band",
+          "basis": "source-text",
+          "detail": "Band length category is long; exact type, dimensions and resistance are unspecified."
+        },
+        {
+          "id": "sole-band-and-hand-ends",
+          "basis": "mixed",
+          "detail": "Soles and both band ends in hands are explicit; exact contact patches and geometry are authored."
+        }
+      ],
+      "comparison": {
+        "aligned": [
+          "Seated bilateral band pull and return.",
+          "No ordinary chair is required by the selected source."
+        ],
+        "mismatchOrUnknown": [
+          "Catalog mat is a support choice where the source says floor.",
+          "Catalog theraband is a broad unspecified-band category; product type and sufficient length remain unresolved.",
+          "The source says straighten arms to return; slower-return progression is not established.",
+          "Catalog anchoring is unspecified; the selected source explicitly uses the soles."
+        ]
+      },
+      "authoredChoicesOrUnknown": [
+        "Mat depiction, seated pelvis/leg/heel support patches and all rig proportions.",
+        "Knee/ankle angles, full stationary-contact map, elbow and hand endpoints, grip orientation.",
+        "Analytic band route, stretch/force behavior, loading, motion angles and display timing."
+      ],
+      "excludedVariant": "The NHS ordinary-chair band-under-feet alternative is retained only in catalog-research. Do not combine its seat/waist-pull/release instructions with this floor-seated protocol."
+    },
+    {
+      "patternId": "mat-chest-lift",
+      "intendedComparisonId": "original-mat-chest-lift",
+      "selectionStatus": "root-selected for original authoring research only",
+      "sourceIds": [
+        "basi-cjkelly-chest-lift-v1"
+      ],
+      "sourceVariantTextChecked": true,
+      "exactSourceVariantMatched": false,
+      "sourceVariantReconciliationRequired": true,
+      "professionalReviewCount": 0,
+      "exactAssetReady": false,
+      "autoRecommendationEligible": false,
+      "catalogSnapshot": {
+        "path": "/workspace/pilates-flow/src/data/originalMovements.ts",
+        "lines": "127–138; generator 843–865",
+        "nameKo": "체스트 리프트",
+        "bodyPosition": "supine",
+        "requiredEquipment": [
+          "mat"
+        ],
+        "props": [
+          "none"
+        ],
+        "instructionSummary": "Support the head with the hands, lift the upper body a small amount and lower."
+      },
+      "variantRequirements": [
+        {
+          "id": "mat",
+          "basis": "source-text",
+          "detail": "Mat is referenced at the moving shoulder contact and return."
+        },
+        {
+          "id": "interlaced-hands-behind-head",
+          "basis": "source-text",
+          "detail": "Hand support and light head pressure are explicit; force/geometry are not."
+        },
+        {
+          "id": "bent-knees-legs-together",
+          "basis": "source-text",
+          "detail": "Keep source section's paired-leg setup; feet-flat and pelvis fixation are not explicit."
+        }
+      ],
+      "comparison": {
+        "aligned": [
+          "Supine upper-body lift, hand-supported head and lowering.",
+          "No additional prop is specified in the selected section."
+        ],
+        "mismatchOrUnknown": [
+          "Catalog leaves knee/leg setup general; source specifies bent knees and legs together.",
+          "Catalog small-range description does not establish the source's shoulder-blade-tip endpoint as a universal target.",
+          "A numerical pelvis/foot fixation or spine articulation model is not source-checked."
+        ]
+      },
+      "authoredChoicesOrUnknown": [
+        "Foot support and exact contact patches, pelvis support/fixation and leg geometry.",
+        "Spinal segmentation, head/neck/elbow trajectory, interlaced-hand drawing and all numerical dimensions/angles.",
+        "Phase boundaries, speed, display pause and repetition timing."
+      ],
+      "excludedVariant": "No rotation, pelvic curl, tabletop legs or single-leg stretch is included. Do not treat source breathing cues as measured media timing."
+    }
+  ],
+  "accessDenials": [
+    {
+      "url": "https://www.theraband.com/static/version1716409011/frontend/Theraband/default/en_US/instructions/Resistance_Band-Tubing_Instruction_Manual%281%29.pdf",
+      "operation": "Open public PDF instruction target",
+      "result": "denied",
+      "httpStatus": 403,
+      "bodyRead": false,
+      "attemptCount": 1,
+      "retryCount": 0,
+      "bypassCount": 0,
+      "sourceEvidenceIncluded": false,
+      "action": "Stopped the target; no alternate path, mirror, proxy, credentials or retry."
+    },
+    {
+      "url": "https://www.theraband.com/articles/deskercizing-101-how-to-get-a-full-body-workout-right-at-your-desk",
+      "operation": "Open public article target",
+      "result": "denied",
+      "httpStatus": 403,
+      "bodyRead": false,
+      "attemptCount": 1,
+      "retryCount": 0,
+      "bypassCount": 0,
+      "sourceEvidenceIncluded": false,
+      "action": "Stopped the target; no alternate path, mirror, proxy, credentials or retry."
+    }
+  ],
+  "boundaries": {
+    "previouslyDeniedTargetsRevisited": false,
+    "libraryOrProcAccess": false,
+    "credentialsCreated": false,
+    "sourceMediaObserved": false,
+    "sourceMediaDownloaded": false,
+    "sourceMediaTraced": false,
+    "gitOrDeploymentChanged": false,
+    "activeFilesChanged": false,
+    "existingRawCorpusBytesChanged": false,
+    "clinicalSafetyCertified": false,
+    "generalAdultSuitabilityCertified": false
+  },
+  "supplementalResults": "Remaining three recommended research candidates and the held Long Box candidate are recorded separately in catalog-research; none counts as a completed motion."
+}

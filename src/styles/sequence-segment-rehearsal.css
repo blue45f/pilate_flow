@@ -1,0 +1,121 @@
+.sequence-segment-rehearsal {
+  min-width: 0;
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  overflow-wrap: anywhere;
+}
+.segment-rehearsal-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.segment-rehearsal-heading h4 {
+  margin: 0;
+  color: var(--green);
+  font-size: 1rem;
+}
+.segment-rehearsal-options {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+.segment-rehearsal-options label,
+.segment-rehearsal-progress {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.segment-rehearsal-options select,
+.segment-rehearsal-progress input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  font-size: 1rem;
+}
+.segment-rehearsal-progress input {
+  padding: 0;
+  accent-color: var(--green);
+}
+.segment-rehearsal-clock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.segment-rehearsal-clock strong {
+  color: var(--green);
+  font-size: 1.75rem;
+  letter-spacing: -0.03em;
+}
+.segment-rehearsal-clock > span,
+.sequence-segment-rehearsal > .muted,
+.segment-rehearsal-source,
+.segment-rehearsal-budget {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.8;
+}
+.segment-rehearsal-status {
+  color: var(--green);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.8;
+}
+.segment-rehearsal-source,
+.segment-rehearsal-budget {
+  font-variant-numeric: tabular-nums;
+}
+.segment-rehearsal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.segment-rehearsal-actions button,
+.segment-rehearsal-heading button,
+.sequence-plan-preview .segment-rehearsal-entry {
+  min-height: 44px;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  justify-content: center;
+}
+.segment-rehearsal-notice {
+  border-left: 3px solid #8a644a;
+  padding: 10px 12px;
+  background: #f3ece2;
+  color: #674c38;
+  font-size: 0.8125rem;
+  line-height: 1.8;
+}
+@media (max-width: 599px) {
+  .sequence-segment-rehearsal {
+    padding: 12px;
+  }
+  .segment-rehearsal-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .segment-rehearsal-options > label:first-child {
+    grid-column: 1 / -1;
+  }
+  .segment-rehearsal-actions button,
+  .segment-rehearsal-heading button {
+    flex: 1 1 140px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sequence-segment-rehearsal,
+  .sequence-segment-rehearsal * {
+    animation: none;
+    transition: none;
+  }
+}

@@ -1,0 +1,178 @@
+{
+  "recordKind": "apparatus-relevant-original-factual-records",
+  "accessDateUtc": "2026-11-04",
+  "integratedAuthorityPath": "src/data/motionApparatusSourceLedger.json",
+  "hashScope": "Unchanged research-owner original factual records; not source-document bytes or professional approval.",
+  "sources": [
+    {
+      "sourceId": "merrithew-reformer-second-position-parallel-v1",
+      "url": "https://www.merrithew.com/blog/post/2020-05-15/at-home-reformer-challenge-week-2-legs",
+      "title": "At Home Reformer Challenge: Week 2 Legs",
+      "publisher": "Merrithew",
+      "accessDate": "2026-11-04",
+      "accessStatus": "accessible-primary-public-text",
+      "evidenceLocator": "1. Second Position Parallel, text lines 255–262; author/date lines 243–245; separate Lower & Lift variant lines 266–274; author biography lines 321–322.",
+      "sourceContext": {
+        "type": "manufacturer-instructor-exercise-publication",
+        "author": "Bianca Bolissian",
+        "publishedDate": "2020-05-15",
+        "authorEvidence": "Publisher biography identifies the author as a Merrithew Lead Instructor Trainer; credentials were not independently verified.",
+        "population": "Home Reformer exercise challenge, Essential/Intermediate repertoire framing; not a clinical prescription or universal adult indication.",
+        "variant": "Second Position Parallel, heels on bar; other positions in the article are separate exercises."
+      },
+      "sourceChecked": true,
+      "instructionEvidenceScope": "Only the identified text facts are checked. No source media pose, timing, measurement or exact authored motion is verified.",
+      "factualRecord": {
+        "start": "Supine on the carriage, heels on the footbar, hip-distance apart and parallel.",
+        "movement": "Push carriage outward while extending knees, then return.",
+        "explicitContactAndSupport": "Heel-to-footbar placement and supine carriage support are explicit. Exact head, back, pelvis, shoulder-block and hand contact locations are not given.",
+        "variantBoundary": "The following Lower & Lift exercise places toes and balls of feet on the bar; its contact and heel-lowering pattern are not the selected heel variant.",
+        "notEstablished": "Fixed contact coordinates, headrest position, footbar angle, body proportions, measured knee angles, carriage travel and cycle timing are unspecified. Article repetition counts are not adopted."
+      },
+      "observedMediaTimestamps": [],
+      "rights": {
+        "use": "reference-only",
+        "storedContent": "Original factual paraphrase, source links and factual-record hashes only.",
+        "sourceMediaEmbedded": false,
+        "sourceMediaDownloaded": false,
+        "sourceMediaReused": false,
+        "sourceMediaTraced": false,
+        "sourceMotionCaptured": false,
+        "embedPermissionVerified": false,
+        "embedUsed": false,
+        "rightsScope": "Public access is not a license to reproduce or embed source text, illustrations, photographs, video, logos or models. No external assets are part of the proposed schematic."
+      },
+      "professionalReviewCount": 0,
+      "exactMappingApprovedCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "factualRecordSha256": "9a97d0542d910dd1fa2b4cf7456eaa79a8397f2cfb6d0a30d958bb5975480045"
+    },
+    {
+      "sourceId": "bb-reformer-apparatus-anatomy-v1",
+      "url": "https://www.pilates.com/ultimate-guide-to-the-pilates-reformer/",
+      "title": "Guide to the Pilates Reformer",
+      "publisher": "Balanced Body",
+      "accessDate": "2026-11-04",
+      "accessStatus": "accessible-primary-public-text",
+      "evidenceLocator": "What is a Pilates Reformer? and The Anatomy of the Reformer, text lines 41–49.",
+      "sourceContext": {
+        "type": "manufacturer-general-apparatus-description",
+        "population": "Manufacturer guide for studio owners, health professionals and enthusiasts; general equipment description, not exact footwork instructions.",
+        "variant": "Generic Reformer anatomy; not a specific product configuration or schematic approval."
+      },
+      "sourceChecked": true,
+      "instructionEvidenceScope": "Only the identified text facts are checked. No source media pose, timing, measurement or exact authored motion is verified.",
+      "factualRecord": {
+        "apparatus": "A carriage is a flat cushioned platform rolling along tracks or rails inside a frame. A person can lie, sit, kneel or stand on it.",
+        "interaction": "A multi-position footbar can support hands or feet pushing to initiate carriage movement.",
+        "notEstablished": "This general apparatus text does not establish the selected parallel-heel footwork posture, exact contact coordinates, fixed footbar geometry, headrest or shoulder-block placement, carriage displacement, spring setting, equipment dimensions or suitability."
+      },
+      "observedMediaTimestamps": [],
+      "rights": {
+        "use": "reference-only",
+        "storedContent": "Original factual paraphrase, source links and factual-record hashes only.",
+        "sourceMediaEmbedded": false,
+        "sourceMediaDownloaded": false,
+        "sourceMediaReused": false,
+        "sourceMediaTraced": false,
+        "sourceMotionCaptured": false,
+        "embedPermissionVerified": false,
+        "embedUsed": false,
+        "rightsScope": "Public access is not a license to reproduce or embed source text, illustrations, photographs, video, logos or models. No external assets are part of the proposed schematic."
+      },
+      "professionalReviewCount": 0,
+      "exactMappingApprovedCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "factualRecordSha256": "72cb08b70090c8a0fea2bfa5779cef10077d2d5ae1fdd0e8f12955a2f5f1f60b"
+    },
+    {
+      "sourceId": "bb-core-chair-seated-double-heel-pumps-v1",
+      "url": "https://thecore.pilates.com/pilates-cross-training-reformer-exo-chair-sequencing/",
+      "title": "Circuit Training in Pilates: Find, Feel, and Discover",
+      "publisher": "Balanced Body — The CORE",
+      "accessDate": "2026-11-04",
+      "accessStatus": "accessible-primary-public-text",
+      "evidenceLocator": "Connect the Upper Body to the Center, text lines 99–102; separate progressions lines 106–120; contributor disclaimer line 140; biography line 143.",
+      "sourceContext": {
+        "type": "manufacturer-hosted-educator-contribution",
+        "author": "Meghan Uhl",
+        "publishedDate": "2026-08-07",
+        "authorEvidence": "Publisher biography identifies the author as a Balanced Body Educator; credentials were not independently verified.",
+        "publisherDisclaimer": "The CORE says contributor views may not necessarily reflect Balanced Body views.",
+        "population": "Cross-training teaching example using EXO Chair and Allegro 2; not a clinical prescription or universal adult indication.",
+        "variant": "Baseline seated EXO heel pumps; arm props and split-pedal alternation are later progressions."
+      },
+      "sourceChecked": true,
+      "instructionEvidenceScope": "Only the identified text facts are checked. No source media pose, timing, measurement or exact authored motion is verified.",
+      "factualRecord": {
+        "context": "An EXO Chair cross-training example by Meghan Uhl, identified as a Balanced Body Educator; contributor views are not necessarily Balanced Body views.",
+        "start": "Seated on the EXO Chair with both heels on the pedal.",
+        "contact": "Both sit bones are cued evenly on the seat; both heels are on the pedal.",
+        "movement": "The text names simple leg pumps, with cues for balanced pelvis and lengthened spine; it does not specify the complete pedal-down/return sequence.",
+        "variantBoundary": "Magic Circle arm work and later alternating single-leg split-pedal pumps are separate progressions.",
+        "notEstablished": "Baseline hand placement, exact foot spacing, joint or pedal angles, motion endpoints, cycle duration, general adult suitability and exact generic-chair equivalence are unspecified."
+      },
+      "observedMediaTimestamps": [],
+      "rights": {
+        "use": "reference-only",
+        "storedContent": "Original factual paraphrase, source links and factual-record hashes only.",
+        "sourceMediaEmbedded": false,
+        "sourceMediaDownloaded": false,
+        "sourceMediaReused": false,
+        "sourceMediaTraced": false,
+        "sourceMotionCaptured": false,
+        "embedPermissionVerified": false,
+        "embedUsed": false,
+        "rightsScope": "Public access is not a license to reproduce or embed source text, illustrations, photographs, video, logos or models. No external assets are part of the proposed schematic."
+      },
+      "professionalReviewCount": 0,
+      "exactMappingApprovedCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "factualRecordSha256": "7713b97a59dbb4fec26aaad4fe06856bf5ae1c58ce88957e90db10315950f3b6"
+    },
+    {
+      "sourceId": "bb-chair-manual-sample-apparatus-anatomy-v1",
+      "url": "https://s3.amazonaws.com/s3.pilates.com/resources/store/book-samples/bk7002_chair_sample.pdf",
+      "title": "Chair — A Detailed Guide for Practicing Pilates",
+      "publisher": "Balanced Body Education",
+      "accessDate": "2026-11-04",
+      "accessStatus": "accessible-primary-public-text",
+      "evidenceLocator": "Introduction to the Chair, printed page 5 / physical page 3 / zero-index page 2, text lines 43–53; Double Leg Pumps listed only in contents line 9.",
+      "sourceContext": {
+        "type": "manufacturer-education-public-manual-sample",
+        "documentCopyrightDate": "2009",
+        "population": "Equipment introduction and selected exercises in a public education-book sample; not a complete seated press protocol.",
+        "variant": "Generic Chair anatomy; chair configurations differ.",
+        "rightsNotice": "Sample contains an all-rights-reserved and reproduction restriction; only factual paraphrase and original source link are retained."
+      },
+      "sourceChecked": true,
+      "instructionEvidenceScope": "Only the identified text facts are checked. No source media pose, timing, measurement or exact authored motion is verified.",
+      "factualRecord": {
+        "context": "Public sample of Balanced Body Education Chair: A Detailed Guide for Practicing Pilates; apparatus introduction, not the seated double-leg exercise instructions.",
+        "apparatus": "The chair has a seat, base, hinged foot pedal and spring attachment points; hands or feet can push the pedal.",
+        "variantBoundary": "The sample distinguishes single and split pedals; Double Leg Pumps appears in the contents but that exercise page is not included.",
+        "notEstablished": "This apparatus paragraph does not establish heel placement, seated hand support, body posture, full seated press/return sequence, pedal angle limits or timing. Model dimensions, spring settings and suitability are not adopted."
+      },
+      "observedMediaTimestamps": [],
+      "rights": {
+        "use": "reference-only",
+        "storedContent": "Original factual paraphrase, source links and factual-record hashes only.",
+        "sourceMediaEmbedded": false,
+        "sourceMediaDownloaded": false,
+        "sourceMediaReused": false,
+        "sourceMediaTraced": false,
+        "sourceMotionCaptured": false,
+        "embedPermissionVerified": false,
+        "embedUsed": false,
+        "rightsScope": "Public access is not a license to reproduce or embed source text, illustrations, photographs, video, logos or models. No external assets are part of the proposed schematic."
+      },
+      "professionalReviewCount": 0,
+      "exactMappingApprovedCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "factualRecordSha256": "2a5eb5070759c32ca6cc0f01d4c7ab7b557bb01911a08dcb95a4442079acc03f"
+    }
+  ],
+  "professionalReviewCount": 0,
+  "exactAsset": false,
+  "autoSubstitution": false
+}

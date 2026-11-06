@@ -1,0 +1,414 @@
+.step-block-inspector {
+  min-width: 0;
+  color: var(--v2-ink, #272d29);
+}
+.step-inspector-top > span {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.step-inspector-top h2 {
+  margin: 8px 0;
+  font-size: 24px;
+  overflow-wrap: anywhere;
+}
+.step-inspector-top > p {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.step-inspector-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+}
+.step-inspector-badges span {
+  padding: 4px 8px;
+  border-radius: 20px;
+  background: #eceee9;
+  color: #596558;
+  font-size: 0.8125rem;
+}
+.step-block-motion {
+  margin: 16px 0;
+  border: 0;
+  background: #eef0ec;
+}
+.step-block-motion .motion-reference-muted {
+  display: none;
+}
+.step-inspector-summary {
+  margin: 20px 0;
+}
+.step-inspector-summary > span {
+  display: block;
+  font-size: 0.875rem;
+}
+.step-inspector-summary > strong {
+  display: block;
+  margin: 4px 0;
+  font-size: 32px;
+  font-variant-numeric: tabular-nums;
+}
+.step-inspector-summary p,
+.step-inspector-summary small {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.step-inspector-form {
+  display: grid;
+  gap: 20px;
+}
+.step-inspector-form fieldset {
+  display: grid;
+  gap: 18px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+.step-inspector-form legend {
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.step-inspector-layer-note {
+  padding: 0.875rem;
+  border: 1px solid var(--line);
+  border-radius: 0.625rem;
+  background: var(--paper);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.step-inspector-layer-note p {
+  margin: 0.5rem 0 0;
+}
+.step-inspector-layer-note > p:first-child {
+  margin-top: 0;
+}
+.step-inspector-time-fields,
+.step-inspector-count-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.step-inspector-time-fields > label:first-child {
+  grid-column: 1 / -1;
+}
+.step-inspector-form details summary {
+  min-height: 44px;
+  padding: 10px 0;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+.step-inspector-form details .form-field {
+  margin-top: 12px;
+}
+.step-inspector-form details > p {
+  margin-top: 10px;
+}
+.step-inspector-rest-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: 0.875rem;
+}
+.step-inspector-rest-note > svg {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.step-inspector-rest-note small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.step-inspector-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.step-inspector-footer > .btn-primary {
+  flex: 1;
+  justify-content: center;
+  min-height: 48px;
+}
+.step-inspector-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+.step-inspector-inline-actions button {
+  min-height: 44px;
+}
+.step-inspector-form .form-field > input,
+.step-inspector-form .form-field > textarea {
+  width: 100%;
+  min-width: 0;
+}
+.step-properties-panel {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100dvh - 120px);
+  overflow-y: auto;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+}
+.step-properties-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.step-properties-heading h2 {
+  font-size: 1rem;
+}
+
+/* Shared fields preserve native controls, complete labels and the actual timing model. */
+#root .step-block-inspector,
+#root .step-inspector-form,
+#root .step-inspector-form .form-field,
+#root .step-inspector-rest-note > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#root .step-inspector-form .form-field > :is(input, select, textarea) {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+#root .step-inspector-form .form-field > span {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+#root .step-inspector-form .form-field > textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+#root .step-inspector-form fieldset:disabled {
+  opacity: 0.7;
+}
+
+#root .step-inspector-top h2 {
+  color: var(--v2-ink, #272d29);
+  line-height: 1.4;
+  letter-spacing: -0.04em;
+}
+
+#root .step-inspector-top > p {
+  margin: 0;
+  line-height: 1.65;
+}
+
+#root .step-inspector-summary > strong {
+  color: var(--green);
+  font-size: 2rem;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+
+#root .step-inspector-summary p {
+  margin: 8px 0 0;
+}
+
+#root .step-inspector-summary small {
+  display: block;
+  margin-top: 8px;
+}
+
+#root .step-inspector-footer {
+  min-width: 0;
+  align-items: stretch;
+  gap: 12px;
+}
+
+#root .step-inspector-footer > button {
+  min-height: 48px;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+#root .step-inspector-inline-actions {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+#root .step-inspector-inline-actions button {
+  min-width: 44px;
+  min-height: 44px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* A selected desktop row uses the right pane; it does not gain a modal footer. */
+#root .step-properties-panel {
+  padding: 0 0 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+#root .step-properties-heading {
+  gap: 12px;
+  min-width: 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+#root .step-properties-heading h2 {
+  margin: 0;
+  line-height: 1.5;
+}
+
+#root .step-properties-heading button {
+  flex: 0 0 auto;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+@media (max-width: 1199px) {
+  /* One scroller: the body. Header and native close control remain outside it. */
+  #root .atelier-modal-dialog.step-inspector-sheet {
+    inset: auto 0 0;
+    width: 100%;
+    max-height: calc(100dvh - 8px);
+    margin: 0 auto;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 24px 24px 0 0;
+    background: var(--paper);
+  }
+
+  #root .step-inspector-sheet::before {
+    content: '';
+    display: block;
+    width: 44px;
+    height: 5px;
+    margin: 10px auto 5px;
+    border-radius: 10px;
+    background: #b8beb5;
+    pointer-events: none;
+  }
+
+  #root .step-inspector-sheet .atelier-modal-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: calc(100dvh - 28px);
+    overflow: hidden;
+  }
+
+  #root .step-inspector-sheet .atelier-modal-header {
+    flex: 0 0 auto;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 20px 12px;
+    border-bottom: 0;
+  }
+
+  #root .step-inspector-sheet .atelier-modal-title {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  #root .step-inspector-sheet .atelier-modal-header .icon-btn {
+    flex: 0 0 auto;
+    min-width: 44px;
+    min-height: 44px;
+    margin-top: -6px;
+  }
+
+  #root .step-inspector-sheet .atelier-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 8px 20px 20px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-padding-block: 16px calc(100px + env(safe-area-inset-bottom));
+    scrollbar-gutter: stable;
+  }
+
+  #root .step-inspector-sheet .step-inspector-top h2 {
+    margin-top: 6px;
+    font-size: 1.375rem;
+  }
+
+  #root .step-inspector-sheet .step-inspector-summary {
+    margin: 20px 0 24px;
+  }
+
+  #root .step-inspector-sheet .step-block-motion {
+    border-radius: 12px;
+  }
+
+  /* This sticky action bar belongs only to the sheet, never the PC side panel. */
+  #root .step-inspector-sheet .step-inspector-footer {
+    position: sticky;
+    z-index: 2;
+    bottom: -20px;
+    margin: 0 -20px;
+    padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  #root .step-inspector-sheet .step-inspector-footer > .text-button {
+    flex: 0 1 auto;
+    padding-inline: 8px;
+  }
+
+  #root .step-inspector-sheet .step-inspector-footer > .btn-primary {
+    min-height: 52px;
+    border-radius: 12px;
+    font-size: 1rem;
+  }
+
+  #root .step-inspector-sheet .step-inspector-inline-actions {
+    margin-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 359px) {
+  #root .step-inspector-sheet .atelier-modal-header {
+    padding-inline: 16px;
+  }
+  #root .step-inspector-sheet .atelier-modal-body {
+    padding-inline: 16px;
+  }
+  #root .step-inspector-sheet .step-inspector-footer {
+    margin-inline: -16px;
+    padding-inline: 16px;
+  }
+  #root .step-inspector-time-fields,
+  #root .step-inspector-count-fields {
+    gap: 10px;
+  }
+}
+
+@media (max-height: 500px) and (max-width: 1199px) {
+  #root .step-inspector-sheet .atelier-modal-header {
+    padding-block: 4px 8px;
+  }
+  #root .step-inspector-sheet .step-inspector-summary {
+    margin-block: 16px;
+  }
+}

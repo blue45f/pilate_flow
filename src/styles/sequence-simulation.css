@@ -1,0 +1,254 @@
+.sequence-plan-preview .simulation-controls {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  padding: 18px;
+  min-width: 0;
+}
+.sequence-plan-preview .simulation-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sequence-plan-preview .simulation-heading h3 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+.sequence-plan-preview .simulation-heading > span {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.sequence-plan-preview .simulation-clock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin: 18px 0 12px;
+  font-variant-numeric: tabular-nums;
+}
+.sequence-plan-preview .simulation-clock strong {
+  font-size: 2.25rem;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+  color: var(--green);
+}
+.sequence-plan-preview .simulation-clock > span {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.sequence-plan-preview .simulation-partition {
+  display: flex;
+  min-width: 0;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--line);
+  margin: 10px 0 18px;
+}
+.sequence-plan-preview .simulation-partition > span {
+  display: block;
+  flex-shrink: 0;
+}
+.sequence-plan-preview .simulation-partition .is-movement {
+  background: #254d45;
+}
+.sequence-plan-preview .simulation-partition .is-teaching {
+  background: #98af91;
+}
+.sequence-plan-preview .simulation-partition .is-transition {
+  background: #c8b68e;
+}
+.sequence-plan-preview .simulation-partition .is-rest {
+  background: #b78b72;
+}
+.sequence-plan-preview .simulation-partition .is-unavailable {
+  background: #7b7470;
+}
+.sequence-plan-preview .simulation-progress {
+  display: grid;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+.sequence-plan-preview .simulation-progress input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  accent-color: var(--green);
+  padding: 0;
+}
+.sequence-plan-preview .simulation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin: 12px 0;
+  min-width: 0;
+}
+.sequence-plan-preview .simulation-actions > button {
+  min-height: 44px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  justify-content: center;
+}
+.sequence-plan-preview .simulation-actions > label {
+  display: grid;
+  gap: 4px;
+  flex: 1 1 140px;
+  min-width: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.sequence-plan-preview .simulation-actions select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  font-size: 1rem;
+}
+.sequence-plan-preview .simulation-controls > .muted {
+  font-size: 0.8125rem;
+  line-height: 1.8;
+}
+.sequence-plan-preview .simulation-readiness {
+  margin: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 4px 0;
+  font-size: 0.875rem;
+}
+.sequence-plan-preview .simulation-readiness summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 12px 0;
+  line-height: 1.6;
+}
+.sequence-plan-preview .simulation-readiness p,
+.sequence-plan-preview .simulation-readiness li {
+  color: var(--muted);
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.sequence-plan-preview .simulation-review-notice {
+  padding: 12px;
+  border-left: 3px solid #8a644a;
+  background: #f3ece2;
+  color: #674c38;
+  font-size: 0.875rem;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.sequence-plan-preview .simulation-durations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 3rem), 1fr));
+  gap: 10px;
+  margin: 16px 0 0;
+  font-size: 0.875rem;
+}
+.sequence-plan-preview .simulation-durations dt {
+  color: var(--muted);
+}
+.sequence-plan-preview .simulation-durations dd {
+  margin: 4px 0 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.sequence-plan-preview .sequence-preview-totals {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 4.5rem), 1fr)) !important;
+  padding: 16px;
+}
+.sequence-plan-preview .simulation-step-offset {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.sequence-plan-preview .simulation-current-phase {
+  display: block;
+  margin: 14px 0 8px;
+  color: var(--green);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.sequence-plan-preview .simulation-phase-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 18px;
+  min-width: 0;
+}
+.sequence-plan-preview .simulation-phase-list > button {
+  display: flex;
+  flex: 1 1 120px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 0;
+  white-space: normal;
+  text-align: left;
+  font-size: 0.875rem;
+}
+.sequence-plan-preview .simulation-phase-list > button[aria-current='step'] {
+  border-color: var(--green);
+  background: var(--sage);
+}
+.sequence-plan-preview .simulation-phase-list strong {
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sequence-plan-preview .simulation-order-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+}
+.sequence-plan-preview .simulation-order-row {
+  min-height: 64px;
+  font-variant-numeric: tabular-nums;
+}
+.sequence-plan-preview .sequence-preview-current {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 599px) {
+  .sequence-plan-preview .simulation-controls {
+    padding: 14px;
+  }
+  .sequence-plan-preview .simulation-actions > button {
+    flex: 1 1 140px;
+  }
+  .sequence-plan-preview .simulation-order-row {
+    gap: 6px !important;
+    padding: 12px 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sequence-plan-preview .simulation-partition,
+  .sequence-plan-preview .simulation-partition > span {
+    transition: none;
+    animation: none;
+  }
+}
+
+.sequence-plan-preview .simulation-active-summary {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0;
+  padding: 8px 12px;
+  border-left: 3px solid #98af91;
+  background: var(--sage);
+  border-radius: 0 8px 8px 0;
+  overflow-wrap: anywhere;
+}
+.sequence-plan-preview .simulation-active-summary > span {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.sequence-plan-preview .simulation-active-summary > strong {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}

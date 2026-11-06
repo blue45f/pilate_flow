@@ -1,0 +1,18 @@
+{
+  "libraryFileId": "libfile_51ecc32b3adc81919a126b6c014d25af",
+  "version": 0,
+  "archiveFile": "pilates-original-motion-prototype-20261104.zip",
+  "archiveBytes": 105258,
+  "archiveSha256": "f428dc95208f010135ebe3d9ccab4af2218e92f40e29b90feea58c4593919632",
+  "contractFile": "pilates-motion-integration-contract-2026-11-05.json",
+  "contractSha256": "63213bb75d29bb2188d9cc7592be8115fc41d4ebab9b63d9ad486ec32da35c54",
+  "modelFile": "motion-model.mjs",
+  "modelSha256": "100dc3f7014fbe9ced6f2af1c755ba6f385e4351e64e009f1df66176a9eaf3c9",
+  "motionDataFile": "motion-data.json",
+  "motionDataSha256": "ec6e12ae7443c5906c2d57a31783e483ad5a794fb23029d546d63f09ec496345",
+  "licensingFileSha256": "fc0c89776986ca7a11527071b18e848aa0ea0a0a45c7a369beed0b1017287d17",
+  "storyboardSha256": "b83834fd217ca2a69fd59ab5ca3ecb334442e07656f8d15a61896988b6158101",
+  "authoredCatalogMotions": 0,
+  "expertApprovedMotions": 0,
+  "sourceUse": "Original user-supplied procedural schematic; source motion facts referenced, no source media copied according to supplied declaration; not independently validated."
+}

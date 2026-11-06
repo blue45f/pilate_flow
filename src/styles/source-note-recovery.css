@@ -1,0 +1,85 @@
+.source-note-recovery-dialog .atelier-modal-header .icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+}
+
+.source-note-recovery-dialog .source-note-dismissal-decision {
+  margin-bottom: 20px;
+  padding: 18px;
+  border: 1px solid #b7c7ae;
+  border-radius: 12px;
+  background: #eef2e8;
+  color: #34503b;
+  scroll-margin-block: 16px;
+}
+
+.source-note-recovery-dialog .source-note-dismissal-decision:focus {
+  outline: 3px solid #527456;
+  outline-offset: 3px;
+}
+
+.source-note-recovery-dialog .source-note-dismissal-decision h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.source-note-recovery-dialog .source-note-dismissal-decision p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.source-note-recovery-dialog .source-note-dismissal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.source-note-recovery-dialog .source-note-dismissal-actions > button {
+  min-height: 44px;
+  min-width: 44px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.source-note-recovery-dialog .source-note-form .source-note-field-error {
+  display: block;
+  margin-top: 6px;
+  color: #963e2d;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.8;
+}
+
+.source-note-recovery-dialog .source-note-form [aria-invalid='true'] {
+  border-color: #a75744;
+}
+
+.source-note-recovery-dialog .source-note-form input,
+.source-note-recovery-dialog .source-note-form select,
+.source-note-recovery-dialog .source-note-form textarea,
+.source-note-recovery-dialog .source-note-form .library-multi-chips > button {
+  scroll-margin-block: 20px;
+}
+
+.source-note-recovery-dialog .source-note-precautions-help {
+  margin: -10px 0 0;
+  color: #647257;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+@media (max-width: 767px) {
+  .source-note-recovery-dialog .source-note-dismissal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .source-note-recovery-dialog .source-note-dismissal-actions > button {
+    justify-content: center;
+    width: 100%;
+  }
+}

@@ -1,0 +1,95 @@
+.local-instructor-review .local-review-progress {
+  margin: 14px 0 8px;
+}
+
+.local-instructor-review .local-review-progress p {
+  margin: 0;
+  color: #354c3c;
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.local-instructor-review .local-review-next-action {
+  min-height: 44px;
+  margin: 2px 0 0;
+  padding: 7px 0;
+  border: 0;
+  background: transparent;
+  color: #254d45;
+  font-size: 13px;
+  line-height: 1.5;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.local-instructor-review .local-review-next-action:focus-visible {
+  outline: 2px solid #254d45;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.local-instructor-review .local-review-scope,
+.local-instructor-review .local-review-consent {
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.movement-detail .library-modal-footer .movement-add-feedback {
+  flex: 1 0 100%;
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.movement-detail .library-modal-footer > button {
+  min-height: 44px;
+}
+
+.movement-dismissal-decision {
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid #ad946d;
+  border-radius: 10px;
+  background: #fbf4e5;
+  color: #354c3c;
+}
+
+.movement-dismissal-decision:focus {
+  outline: 2px solid #254d45;
+  outline-offset: 3px;
+}
+
+.movement-dismissal-decision h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.movement-dismissal-decision p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.movement-dismissal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.movement-dismissal-actions > button {
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+}
+
+@media (max-width: 479px) {
+  .movement-dismissal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

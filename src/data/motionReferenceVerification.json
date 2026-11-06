@@ -1,0 +1,27 @@
+{
+  "sourceArchiveSha256": "f428dc95208f010135ebe3d9ccab4af2218e92f40e29b90feea58c4593919632",
+  "modelSourceSha256": "100dc3f7014fbe9ced6f2af1c755ba6f385e4351e64e009f1df66176a9eaf3c9",
+  "catalogExactMotionCount": 0,
+  "catalogPendingCount": 98,
+  "labPrototypeCount": 2,
+  "expertApprovedMotionCount": 0,
+  "unitTests": {
+    "model": 13,
+    "modelUniquePoseCount": 4004,
+    "playerController": 10,
+    "clinicalValidation": false
+  },
+  "files": {
+    "src/components/MotionReferencePlayer.tsx": "88f371b9e2975fdc87fc989c3cd4e443dedca66e6e4f62900f3158c56b1eb651",
+    "src/components/MotionReferencePlayer.test.tsx": "42f79d7391cb9303f1c714e1e217c1716dc83a4e49ac3ac44d7b4c6c0ac2cba2",
+    "src/utils/motionReferenceModel.ts": "8b017c294f1641c2f2804d690f742eed6095b3b3ddf44386be2ae3f427fc814a",
+    "src/utils/motionReferenceModel.test.ts": "f96b5afd9270b59dc92a6637a93a27c957f22b8c76818eb33207bf57453c6183",
+    "src/data/motionReferences.ts": "208ec010dae133167000d9fc6dc3296c0b54575be4036ccb69c43dfd5bcf3f71",
+    "src/data/motionReferenceSource.json": "875ee1895e54cfb855d32ce604e2ab4fd94af02a34e70400caa4f4f5f8b3e477",
+    "src/data/motionReferenceSources.md": "4b05a0a0186e9d525485f8b7cebfedefe0393ce0b5fdc3266ac50a53973b881c",
+    "src/styles/motion-reference.css": "6d36ce46349f99bf9b04329a8c4961bd440eb6e851de860a7d19dfae42f1cd1b"
+  },
+  "capturedAt": "2026-11-04T16:42:26.592335+00:00",
+  "scope": "Functional freeze; future CSS-only visual polish is a separate revision",
+  "scopedLint": "passed without warnings"
+}

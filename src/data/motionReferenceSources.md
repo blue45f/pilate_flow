@@ -1,0 +1,11 @@
+# Motion reference source provenance
+
+The user-supplied Library ZIP v0 was formally materialized with the current Library helper and verified as 105,258 bytes / SHA256 f428dc95208f010135ebe3d9ccab4af2218e92f40e29b90feea58c4593919632. Original source files remain unchanged outside this project under /workspace/pilates-motion-original/pilates-motion-original. Library identity was preserved by the official helper; no transfer URL or completion token is included here.
+
+The original schema0.1.0 has exactly two procedural 2D concepts, bridge-pattern and heel-slide, and a 6,500 ms preview cycle. The bridge omits spinal articulation and is not an exact shoulder-bridge demonstration. Heel-slide cites a pediatric NHS physiotherapy document and does not establish adult fitness suitability. Original drawing, factual reference, professional motion review, and individual suitability are separate. All professional review remains unreviewed; no external media was copied according to the supplied source declaration, and no reproduction licence is asserted.
+
+The original coverage manifest lists30 public references; the current integration contract lists98 exercise IDs. They are distinct inventories. All98 exact exercise motions are explicitly not_authored. Neither generic prototype is assigned to any exercise ID. Unknown/custom IDs also receive a pending placeholder from the player. Rest steps receive no motion.
+
+motionReferenceSource.json records exact archive/model/data/storyboard/licensing hashes. A prototype assetSha256 identifies the original motion-model.mjs bytes, and dataSha256 fingerprints that clip's sorted JSON metadata. These are source integrity records, not rendered-video checksums or professional approval. Any mirrored preview is a separately labelled lab view and is not an approved motion asset.
+
+The React port uses no third-party images, mocap or external runtime dependency. Numerical geometry, playback, reduced-motion and browser tests measure implementation behavior only. They do not validate Pilates form, pediatric/adult use, medical safety or all98 exercise motions. No original licensing document grants a new blanket licence over referenced NHS/YouTube media.

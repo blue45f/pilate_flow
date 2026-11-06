@@ -1,0 +1,111 @@
+{
+  "baseCommit": "8fcf89e9cc687e9e4208d0f7e6a0cdaff699e1c6",
+  "scope": "Existing21authored-source fingerprints, not reviewedassetSHAs or approval",
+  "entries": [
+    {
+      "family": "existing-proposal",
+      "variantId": "supported-heel-raise",
+      "sourceFingerprint": "28fc4a7ffca1f6bb58c03150e86a2534d52f8333d9c77821ac67aacbf42b4326"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "side-lying-clam",
+      "sourceFingerprint": "2647b2d5ae15685f36a28246ac67a62e327008a61d46007e3db897e7a7c91832"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "adult-supine-heel-slide",
+      "sourceFingerprint": "86d6763cbca5f8c4f0f3ac530cfb74dab2024bee9efe5c41d5af23a31af0547f"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "supine-knee-fold",
+      "sourceFingerprint": "384987251d0e223a37dd9ee4271ebc32df3510027896cedf0360ae000173da40"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "side-lying-straight-leg-lift",
+      "sourceFingerprint": "9d27755c9052c88cad9c5c6e8d84d1b40013f4f9e4e7269a47c57e20b519ab58"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "side-lying-open-book",
+      "sourceFingerprint": "a79a1c84abc3d961d8224a2aa96d6e24de72e0219803170d4a538529be28a665"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "quadruped-arm-slide",
+      "sourceFingerprint": "39e74fe8a7e5206c337e94e176fb84cd62f7e7bde3d2f03fe575178e21453179"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "quadruped-leg-slide",
+      "sourceFingerprint": "b003dd78d70f6f56add0c44ad60c7762d27adcaad34ec42d12ed39b17a331813"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "reformer-parallel-footwork",
+      "sourceFingerprint": "77659ce03747e406b15b80537133a4f5fbd6850592bdbe88a4db62d027cc571a"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "chair-seated-pedal-press",
+      "sourceFingerprint": "988889979d2a7693dbbcceb91dde7e435767b3ff353444568c6ba6b0d1043111"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "reformer-supine-strap-arm-press",
+      "sourceFingerprint": "6513250f64ebd38b0be4c594e75aec5a5147367ec9552982a122cbd10a3d7251"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "cadillac-supine-arm-spring-press",
+      "sourceFingerprint": "ef04508838a26f27cd5967234311098796feee8db2486199072f9feea3bb33dc"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "ladder-supported-hip-extension-slide",
+      "sourceFingerprint": "ea1a45c0a0c9110ce8f7a198f4037e788be5741a47d43f2316f15d7aeb6cf01e"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "ladder-supported-side-leg-slide",
+      "sourceFingerprint": "1ab9b95d96a418f4ded057dd367a3f92be6f9cd1247ab3c4ccc3c03dd2b0685e"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "floor-seated-band-row",
+      "sourceFingerprint": "91ca6c27ab0bcd56da061598d1b536c5c5c50c03465e52c16348346626ef0e7a"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "supine-chest-lift",
+      "sourceFingerprint": "5873b98e64eb59a5bad029f7035e8538740c6f2bf3d033ac50cd2975ea3e0ef0"
+    },
+    {
+      "family": "existing-proposal",
+      "variantId": "articulated-pelvic-curl",
+      "sourceFingerprint": "e0f80bc25975cb426337b0f0b364909547980780cd84b4ad8d7e89fe21b72c71"
+    },
+    {
+      "family": "authoring-batch",
+      "variantId": "chair-seated-bilateral-arm-raise-v1",
+      "sourceFingerprint": "17ab99ccc38c0c65675ac483c475cc25a7dd8984255c6fbb18998754224a5a93"
+    },
+    {
+      "family": "authoring-batch",
+      "variantId": "chair-seated-overhead-sidebend-v1",
+      "sourceFingerprint": "0f3d509dba7db8c79fc9e92f2c2054a579b221403a03048d9c920e79e116e2db"
+    },
+    {
+      "family": "authoring-batch",
+      "variantId": "prone-single-straight-leg-extension-v1",
+      "sourceFingerprint": "faa16aa76044d8a5ca26f6fa58ea86cb1596bb332d3e0b77c5c656c56e4f4558"
+    },
+    {
+      "family": "authoring-batch",
+      "variantId": "prone-forearm-chest-extension-v1",
+      "sourceFingerprint": "1010511d1fc959d12a1c2c25151bd843a3e02b39ecf6aca4debc34407affbf95"
+    }
+  ]
+}

@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "ledger_id": "quadruped-source-ledger-v3-2026-11-05",
+  "checked_at_utc": "2026-11-04T23:43:18Z",
+  "purpose": "두 미검토 네발기기 변형 제안의 본문 사실·저작 선택·미확인 및 권리 범위 구분. 운동 시범 승인/정확 매핑 아님.",
+  "boundary": {
+    "proposal_ids": [
+      "quadruped-arm-slide",
+      "quadruped-leg-slide"
+    ],
+    "expert_reviews": 0,
+    "exact_assets": 0,
+    "approvals": 0,
+    "automatic_mappings": 0,
+    "media_downloads": 0,
+    "media_copies_or_tracings": 0,
+    "embeds": 0,
+    "source_archives_or_active_src_accessed": false,
+    "Library401_or_proc_accessed": false,
+    "git_or_deployment_used": false,
+    "source_service_api_calls": 0
+  },
+  "retrieval_method": "공개 web search/open/find/click의 HTML 및 PDF 본문 텍스트만 읽음. HTTP 코드는 도구 미제공. 검색 snippet만으로 확인 사실을 만들지 않음.",
+  "source_facts": [
+    {
+      "id": "BH-SLIDE",
+      "publisher": "Body Harmonics",
+      "source_type": "official-educator-primary",
+      "url": "https://www.bodyharmonics.com/arm-leg-reach/",
+      "title": "Postural control series: two things to notice in quadruped arm leg reach",
+      "author": "Margot McKinnon; page identifies Founder and Director of Education",
+      "publication_date_observed": "2014-07-29",
+      "body_location": "How to build up to the full exercise; web text lines 86–100",
+      "access": "public HTML body read; HTTP status code not supplied by tool",
+      "source_checked_facts": [
+        {
+          "id": "BH1",
+          "scope": "single-limb preparation",
+          "fact": "준비 단계에 한 팔씩 멀리 미끄러뜨렸다 되돌리고, 한 다리씩 같은 방식으로 움직이는 순서를 각각 명시한다."
+        },
+        {
+          "id": "BH2",
+          "scope": "next, opposite-two-limb preparation",
+          "fact": "이어지는 반대 팔·다리 동시 슬라이드 단계에 아직 바닥에서 들지 않는다는 조건을 직접 명시한다."
+        },
+        {
+          "id": "BH3",
+          "scope": "subsequent progression",
+          "fact": "그 다음에 한 팔다리 들어올리기를 별도 진행 단계로 나눈다."
+        }
+      ],
+      "not_established": [
+        "BH2의 no-lift 문장을 BH1 단독 단계의 직접 인용처럼 합치지 않는다.",
+        "단독 단계의 손바닥/손끝 또는 발등/발가락 접촉 패치, 능동 무릎 지지해제, 반대 지지점 완전 고정은 미명시.",
+        "관절 각도·거리·부하·속도·개인별 안전성 미검증."
+      ],
+      "applicability": "두 단독 슬라이드 제안의 주된 문서 근거. 바닥 접촉은 준비 단계 문맥의 지지이며 세부 접촉모델 인증이 아니다.",
+      "media_observation": "본문만 확인; 동영상·사진·시점·타임스탬프 확인 없음",
+      "checked_at_utc": "2026-11-04T23:43:18Z",
+      "factual_record_sha256": "ae6e744caf61b171ccaa05d378bafa172fb11f1b1ee8baa519949a07c22b3d4f"
+    },
+    {
+      "id": "CP-MIXED",
+      "publisher": "Complete Pilates",
+      "source_type": "official-educator-primary",
+      "url": "https://complete-pilates.co.uk/quadruped/",
+      "title": "Quadruped Exercise – Your Step By Step Guide With Video!",
+      "author": "Yael Shtrul; page identifies Clinical Pilates Instructor",
+      "publication_date_observed": "2021-09-27",
+      "updated_date_observed": "2026-07-24",
+      "body_location": "How To Do The Quadruped Exercise; Top tips; Who Is The Quadruped Exercise Not Suitable For?",
+      "access": "public HTML body read; HTTP status code not supplied by tool",
+      "source_checked_facts": [
+        {
+          "id": "CP1",
+          "scope": "tabletop start",
+          "fact": "손을 어깨 아래, 무릎을 골반 아래에 놓는 네발기기와 중립 척추를 설명한다."
+        },
+        {
+          "id": "CP2",
+          "scope": "leg slide then lift",
+          "fact": "양손을 누른 채 한 다리를 바닥을 따라 뒤로 미끄러뜨리고 무릎을 펴는 단계 뒤에 다리를 드는 단계가 이어진다."
+        },
+        {
+          "id": "CP3",
+          "scope": "different arm/mixed stages",
+          "fact": "한 손 띄우기와 반대 팔·다리 슬라이드 후 들기가 따로 포함된다. 단독 팔 바닥 슬라이드만의 완결 주기는 아니다."
+        },
+        {
+          "id": "CP4",
+          "scope": "individual suitability boundary",
+          "fact": "악화되는 손목·어깨 문제와 등 부상에서 개인별 전문가 조언을 언급한다."
+        }
+      ],
+      "not_established": [
+        "슬라이드 후 들기를 삭제한 모델을 출처의 완성 운동과 동일시할 수 없다.",
+        "고정 반대쪽 허벅지 관찰 조언은 있으나 각 지지점 좌표 고정·발 접촉 패치·수치 각도는 미명시."
+      ],
+      "applicability": "시작자세 및 slide/lift 구별을 위한 보조 근거. 일반 수업 적합성 인증으로 사용하지 않는다.",
+      "media_observation": "본문만 확인; 링크된 영상·사진은 미확인",
+      "checked_at_utc": "2026-11-04T23:43:18Z",
+      "factual_record_sha256": "172e56d2145a2bd103cb43eca2c9776e45a6769be8f67a4aa2281eb2caed8e8c"
+    },
+    {
+      "id": "ASP-LEG-MIXED",
+      "publisher": "Ashford and St Peter’s Hospitals NHS Foundation Trust",
+      "source_type": "official-nhs-primary",
+      "url": "https://www.ashfordstpeters.info/images/leaflets/pelvic-health/PE95-Pregnancy-Exercise-Class-Handout-Jun-2025.pdf",
+      "title": "Pregnancy Exercise Class Handout (Jun 2025)",
+      "publication_date_observed": "2025-06",
+      "body_location": "PDF page 1 of 4; Swimming Level 4 legs only; text lines 38–47",
+      "access": "public PDF text extraction read in web tool; no PDF/media saved locally; HTTP status code not supplied",
+      "source_checked_facts": [
+        {
+          "id": "ASP1",
+          "scope": "pregnancy/pelvic-health handout start",
+          "fact": "네발기기, 골반 아래 무릎, 어깨보다 약간 앞쪽 손, 부드러운 팔꿈치, 머리·목·척추 정렬 및 중립 골반을 기재한다."
+        },
+        {
+          "id": "ASP2",
+          "scope": "leg slide then lift",
+          "fact": "발을 매트를 따라 멀리 미끄러뜨린 뒤 조절 가능한 범위에서 다리를 매트 밖으로 계속 뻗고, 다시 매트로 내리는 순서다."
+        }
+      ],
+      "not_established": [
+        "임신 운동교실 맥락을 일반 대상의 적합성이나 임신 안전성 인증으로 확장할 수 없다.",
+        "floor-only 왕복·단독 팔 슬라이드·발의 정확한 접촉 부위·반대 지지점 완전 고정은 미명시."
+      ],
+      "applicability": "슬라이드 단계 존재와 뒤따르는 lift의 차이를 확인. floor-only 단독 다리 주기의 직접 증명은 아니다.",
+      "media_observation": "PDF 본문만; 삽화·사진의 포즈·관절좌표는 보지 않았고 추출·복제하지 않음",
+      "checked_at_utc": "2026-11-04T23:43:18Z",
+      "factual_record_sha256": "278810e593371a10300703e292887c41c84bb54634d8e7b7f214c5d89db32b7e"
+    },
+    {
+      "id": "CHFT-SUPERMAN",
+      "publisher": "Calderdale and Huddersfield NHS Foundation Trust",
+      "source_type": "official-nhs-primary",
+      "url": "https://plr.cht.nhs.uk/download/1314/Pilates%20Exercises%20A4",
+      "title": "Pilates Exercises",
+      "document_metadata_observed": "Leaflet csph0176 v1; printed review date 6/26; review completion unverified",
+      "body_location": "PDF page 27 of 31; Superman levels 1–3; text lines 555–574",
+      "access": "public PDF text extraction read; HTTP status code not supplied",
+      "source_checked_facts": [
+        {
+          "id": "CH1",
+          "scope": "Superman start",
+          "fact": "네발기기에서 손은 어깨 아래, 무릎은 골반 아래이며 골반 중립을 찾도록 설명한다."
+        },
+        {
+          "id": "CH2",
+          "scope": "lift-containing progressions",
+          "fact": "레벨 2는 한 팔 들기, 레벨 3은 반대 발 바닥 슬라이드에 다리 들기를 추가한다. 엉덩이 회전·허리 아치/낙하·어깨 올라감을 억제한다."
+        }
+      ],
+      "not_established": [
+        "팔 lift를 arm floor-slide로 바꾸어 인용하지 않는다.",
+        "다리 slide-only 완결 주기·발가락 접촉·능동 무릎 해제는 직접 명시하지 않는다."
+      ],
+      "applicability": "NHS lift/slide 혼합 변형의 구별 근거; floor-only 모델 검증 자료가 아니다.",
+      "media_observation": "본문만; as shown 지시가 있어도 그림 포즈·시점을 확인했다고 기록하지 않음",
+      "checked_at_utc": "2026-11-04T23:43:18Z",
+      "factual_record_sha256": "c80d3d7aedd865ed81bb34868e24a7a25c06465932ded2c03a9cd82fea0b98f4"
+    },
+    {
+      "id": "PT-CLOSED-CHAIN",
+      "publisher": "Physitrack PLC",
+      "source_type": "official-exercise-software-publisher-primary-supplement",
+      "url": "https://uk.physitrack.com/home-exercise-video/pregnancy-arm-and-leg-lift-in-4-point-kneeling-closed-chain",
+      "title": "Pregnancy arm and leg lift in 4 point kneeling closed chain",
+      "body_location": "HTML instructions lines 7–12; copyright lines 16–19",
+      "access": "public HTML instruction text read; HTTP status code not supplied",
+      "source_checked_facts": [
+        {
+          "id": "PT1",
+          "scope": "combined opposite-limb closed-chain text",
+          "fact": "제목에는 lift가 있으나 본문은 손 어깨 아래·무릎 골반 아래·평평한 등으로 시작해 바닥 접촉을 유지하며 반대 팔과 다리를 동시에 슬라이드했다 되돌리도록 한다."
+        },
+        {
+          "id": "PT2",
+          "scope": "equipment and population",
+          "fact": "준비물 항목은 매트이며, 임신 맥락 제목과 개인별 의료전문가 처방 확인 문구가 있다."
+        }
+      ],
+      "not_established": [
+        "두 팔다리 동시 동작을 각각 단독 동작이라고 출처에 귀속할 수 없다.",
+        "정확한 손/발 접촉 패치·능동 무릎 접촉 변화·반대 지지점 완전 고정은 미명시."
+      ],
+      "applicability": "제조사 범주의 운동 소프트웨어 원제작자 보조 자료. NHS나 하드웨어 제조사로 표시하지 않는다.",
+      "media_observation": "제목에 exercise video가 있어도 영상은 재생·다운로드하지 않음",
+      "checked_at_utc": "2026-11-04T23:43:18Z",
+      "factual_record_sha256": "924317d4ee65a191dbba8e5b6f1172b713b034b1f1a6a0f3f26af9e9637d3e0d"
+    }
+  ],
+  "rights_and_access": [
+    {
+      "id": "BH-RIGHTS",
+      "url": "https://www.bodyharmonics.com/terms/",
+      "access": "public HTML terms body read, lines 89–102",
+      "checked_facts": "본문 저작물의 상업적·파생 이용 및 재현, 프레이밍을 제한하며, 오해를 주지 않는 홈페이지 하이퍼링크의 제한적 허용을 설명한다.",
+      "link_scope": "홈페이지 링크의 조건부 허용은 확인. 개별 글 deep-link 재이용 허가나 미디어·API 이용 허가는 확인되지 않음. 연구용 출처 URL은 근거 식별용이다.",
+      "embed_or_media_scope": "프레이밍 허용으로 해석하지 않음. 사진·도해·영상 복제/트레이싱/임베드 없음.",
+      "api_scope": "공개 API 라이선스 확인/호출 없음"
+    },
+    {
+      "id": "CP-RIGHTS",
+      "url": "https://complete-pilates.co.uk/terms-and-conditions/",
+      "access": "public HTML terms opened; copyright search yielded no match",
+      "additional_observation": "동작 설명 페이지 footer에서 ©2026 Complete Pilates, all rights reserved 확인.",
+      "link_scope": "공개 출처 링크를 인용 식별자로 기록. 재배포·API·임베드 허가 미확인.",
+      "embed_or_media_scope": "공개 본문 열람을 사진/영상 라이선스로 보지 않음. 모든 미디어 이용 0.",
+      "api_scope": "확인/호출 없음"
+    },
+    {
+      "id": "ASP-RIGHTS",
+      "url": "https://www.ashfordstpeters.info/images/leaflets/pelvic-health/PE95-Pregnancy-Exercise-Class-Handout-Jun-2025.pdf",
+      "access": "PDF text page 1 copyright line read",
+      "checked_facts": "PDF는 Physiotec의 저작권 및 all rights reserved 표시를 포함한다. NHS 공개 문서라도 제3자 삽화의 공개 라이선스를 추정하지 않는다.",
+      "link_scope": "공개 PDF URL을 출처 식별자로 기록; PDF/삽화 재배포 및 임베드 허가 확인 없음.",
+      "embed_or_media_scope": "원문 PDF·삽화·사진·영상의 로컬 저장/복제/트레이싱/임베드 0.",
+      "api_scope": "확인/호출 없음"
+    },
+    {
+      "id": "CHFT-RIGHTS",
+      "url": "https://plr.cht.nhs.uk/download/1314/Pilates%20Exercises%20A4",
+      "access": "PDF text read",
+      "checked_facts": "확인한 본문에서 미디어 재사용 공개 라이선스를 확인하지 못함. NHS 자료라는 이유로 OGL/CC를 적용하지 않는다.",
+      "link_scope": "공개 PDF 출처 URL 기록만; 미디어 이용 허가 미확인.",
+      "embed_or_media_scope": "미디어 복제/트레이싱/임베드 0.",
+      "api_scope": "확인/호출 없음"
+    },
+    {
+      "id": "PT-RIGHTS",
+      "url": "https://uk.physitrack.com/home-exercise-video/pregnancy-arm-and-leg-lift-in-4-point-kneeling-closed-chain",
+      "access": "HTML copyright line 16 read",
+      "checked_facts": "원문에 Physitrack PLC의 all rights reserved 표시가 있다.",
+      "link_scope": "공개 텍스트 출처 URL을 기록하며, 공개 열람과 라이브러리/API/영상 이용 권한을 구분한다.",
+      "embed_or_media_scope": "영상·사진·로고 재사용이나 임베드 허가 확인 없음; 이용 0.",
+      "api_scope": "API 문서·계정·인증 접근/호출 없음"
+    }
+  ],
+  "proposal_evidence": [
+    {
+      "proposal_id": "quadruped-arm-slide",
+      "existing_intended_exercise_id": "original-mat-quadruped-reach",
+      "status": "variant-proposal",
+      "professional_review_count": 0,
+      "exact_asset_count": 0,
+      "approved": false,
+      "automatic_mapping": false,
+      "source_checked_fact_ids": [
+        "BH1",
+        "BH2",
+        "BH3"
+      ],
+      "support_assessment": "단독 팔 슬라이드는 문서화됨. 바닥접촉은 인접 no-lift 단계의 문맥 지지이고 정확한 접점/관절모델의 직접 검증이 아니다.",
+      "authored_choices_to_label": [
+        "한 팔만 움직이는 별도 도해로 분리하고 lift·반대 다리 동시 움직임을 넣지 않음.",
+        "손의 바닥 경로, 다른 손과 두 무릎의 정지 앵커, 몸통 정렬·어깨/팔꿈치 결합, 관절좌표·범위·카메라는 저작 선택.",
+        "표시 주기·시간·곡선은 표시용 선택이며 운동 처방이 아님."
+      ],
+      "unknown_or_not_source_verified": [
+        "손바닥 전체/손끝 중 실제 접촉 부위와 하중분포, 수건/슬라이더 필요 여부.",
+        "시작 팔꿈치 굽힘과 어깨 이동량; 고정 몸통+거의 편 팔+긴 손 슬라이드를 동시에 충족하는 기하.",
+        "개인의 손목·무릎 지지 허용, 임상 대상·일반 수업 적합성·안전성."
+      ]
+    },
+    {
+      "proposal_id": "quadruped-leg-slide",
+      "existing_intended_exercise_id": "original-mat-quadruped-reach",
+      "status": "variant-proposal",
+      "professional_review_count": 0,
+      "exact_asset_count": 0,
+      "approved": false,
+      "automatic_mapping": false,
+      "source_checked_fact_ids": [
+        "BH1",
+        "BH2",
+        "BH3",
+        "CP2",
+        "ASP2",
+        "CH2"
+      ],
+      "support_assessment": "단독 다리 슬라이드 준비 단계는 문서화됨. 보조 NHS/교육자 자료의 뒤따르는 lift는 별도 차이로 유지함.",
+      "authored_choices_to_label": [
+        "한 다리만 미끄러뜨리는 왕복 도해로 분리하고 lift를 표현하지 않음.",
+        "발 끝점의 바닥 경로, 양손·반대 무릎 고정, 골반 정렬·고관절/무릎 결합 및 활성 무릎 접촉 전환은 저작 기하.",
+        "표시 거리·관절각·리듬·카메라는 출처 측정값이 아님."
+      ],
+      "unknown_or_not_source_verified": [
+        "발등·발끝·발가락 중 접촉 패치, 발목 위치와 마찰, 슬라이더 필요 여부.",
+        "다리를 펴는 동안 능동 무릎 지지가 해제되는지 및 그 시점은 본문 미명시. 무릎과 발의 동시 지속 접촉을 자동 주장하지 않음.",
+        "통증/임신/재활 대상 및 일반 수업 적합성·개인별 안전성 미검증."
+      ]
+    }
+  ],
+  "ancillary_access_log": [
+    {
+      "url": "https://www.ashfordstpeters.nhs.uk/after-your-treatment",
+      "outcome": "public HTML body read",
+      "observed": "Leaflets 항목에서 ashfordstpeters.info/leaflets로 직접 연결되어 .info 자료센터의 Trust 연계를 확인. 이 페이지의 치료 조언은 모델 근거로 사용하지 않음."
+    },
+    {
+      "url": "https://www.physitrack.com/?lang=en-GB",
+      "outcome": "public HTML body read",
+      "observed": "운동 프로그램 소프트웨어의 제작사 공식 페이지임을 확인. 수치·제품주장·인증을 모델 검증으로 사용하지 않음."
+    },
+    {
+      "url": "https://www.leicspart.nhs.uk/wp-content/uploads/2024/08/608-Physio-based-pilates.pdf",
+      "outcome": "public PDF text read; excluded as exact quadruped slide evidence",
+      "observed": "leg slides는 crook-lying, swimming은 prone 문맥이며 네발기기 단독 floor-slide 근거로 전용하지 않음."
+    },
+    {
+      "url": "https://www.bodyharmonics.com/education/",
+      "outcome": "web tool Internal Error: URL not accessible; HTTP status code not supplied",
+      "observed": "본문 미도달. 403이라고 추정하지 않았으며 재시도·우회하지 않음. 교육자 신원은 실제 읽은 BH-SLIDE 저자 소개만 사용."
+    }
+  ],
+  "scope_of_source_check": [
+    "텍스트 본문 사실 확인만. 영상 재생·사진/삽화 시각 확인·타임스탬프/카메라 분석 없음.",
+    "이 기록은 로컬 자체 요약의 무결성을 위한 SHA이며 웹 페이지 원본 바이트 SHA 또는 영구보관 증명이 아님.",
+    "슬라이드라는 말만으로 지지 마찰·체중 부하·관절 병리·개인별 적합성을 검증하지 않음."
+  ],
+  "denials": {
+    "http_403_observed": false,
+    "known_denial_retries": 0,
+    "bypass_attempts": 0,
+    "note": "추후 403/인증 거부 시 해당 접근 중단. 이번 공개 본문 확인에서 코드가 제공되지 않았으므로 HTTP 200 성공도 주장하지 않음."
+  },
+  "hash_method": "각 source_facts record에서 factual_record_sha256만 제외한 객체를 ensure_ascii=False, sort_keys=True, separators=(comma,colon) JSON UTF-8로 SHA-256. aggregate는 각 해시를 포함한 source_facts 배열의 동일 canonical JSON SHA-256.",
+  "factual_records_sha256": "b93b9ef0d1803c6844a8ec3129a964110b80e2b379ed4b12124b662dcece64c9",
+  "coordination": {
+    "recipient": "/root/motion_models_lateral",
+    "method": "직접 collaboration 메시지",
+    "delivered_findings": [
+      "단독 슬라이드 문서 근거와 인접 no-lift 문맥 구분.",
+      "NHS·Complete 자료 slide→lift 혼합 차이, 접점/능동무릎/반대쪽완전고정 미확인.",
+      "BodyHarmonics 권리 제한 및 복제/트레이싱/임베드 금지, 자체 기하 선택 표시."
+    ],
+    "model_definition_inspected": false
+  }
+}

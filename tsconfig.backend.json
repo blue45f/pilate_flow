@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "types": ["node"] },
+  "include": ["backend", "src/schemas/cloudBackupSchema.ts"],
+  "exclude": ["backend/**/*.test.ts"]
+}

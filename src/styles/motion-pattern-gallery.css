@@ -1,0 +1,148 @@
+.motion-pattern-gallery {
+  color: #173f36;
+  min-width: 0;
+  margin: 27px 0;
+}
+.mpg-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.mpg-heading p {
+  font-size: 8px;
+  letter-spacing: 0.17em;
+  margin: 0 0 5px;
+  color: #809078;
+}
+.mpg-heading h2 {
+  font:
+    500 25px/1.3 Georgia,
+    'Noto Serif KR',
+    serif;
+  margin: 0;
+  letter-spacing: -0.04em;
+}
+.mpg-heading > button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 0;
+  color: #405e49;
+  font-size: 11px;
+  min-height: 40px;
+  cursor: pointer;
+  padding: 5px 0;
+}
+.mpg-inventory {
+  font-size: 10px;
+  color: #64775b;
+  margin: 10px 0 15px;
+}
+.mpg-inventory span {
+  margin-left: 10px;
+  color: #819078;
+  font-size: 9px;
+}
+.mpg-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+}
+.mpg-card {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  min-width: 0;
+  cursor: pointer;
+}
+.mpg-thumbnail {
+  height: 145px;
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  background: #efede3;
+  border: 1px solid #e4e5d9;
+}
+.mpg-thumbnail > span {
+  position: absolute;
+  top: 9px;
+  left: 9px;
+  border-radius: 20px;
+  padding: 4px 7px;
+  background: #dde2d2cc;
+  font-size: 8px;
+}
+.mpg-card > strong {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 10px 0 3px;
+}
+.mpg-card > small {
+  font-size: 9px;
+  color: #78886d;
+}
+.mpg-card[aria-pressed='true'] .mpg-thumbnail {
+  outline: 2px solid #6c8b63;
+  outline-offset: 2px;
+}
+.mpg-card:focus-visible,
+.mpg-heading > button:focus-visible,
+.mpg-close:focus-visible {
+  outline: 3px solid #b58153;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+.mpg-selected {
+  margin-top: 15px;
+  scroll-margin-top: 16px;
+}
+.mpg-close {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin: 0 0 8px auto;
+  background: none;
+  border: 0;
+  color: #576d4e;
+  font-size: 11px;
+  min-height: 36px;
+  cursor: pointer;
+}
+@media (max-width: 540px) {
+  .motion-pattern-gallery {
+    margin: 22px 0;
+  }
+  .mpg-heading h2 {
+    font-size: 22px;
+  }
+  .mpg-cards {
+    gap: 9px;
+  }
+  .mpg-thumbnail {
+    height: 108px;
+    border-radius: 14px;
+  }
+  .mpg-thumbnail > span {
+    top: 6px;
+    left: 6px;
+    padding: 3px 5px;
+    font-size: 7px;
+  }
+  .mpg-card > strong {
+    font-size: 10px;
+    line-height: 1.6;
+    margin-top: 8px;
+  }
+  .mpg-inventory {
+    font-size: 9px;
+  }
+  .mpg-inventory span {
+    font-size: 8px;
+    margin-left: 6px;
+  }
+}

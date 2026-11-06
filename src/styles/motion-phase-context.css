@@ -1,0 +1,65 @@
+.motion-phase-context {
+  margin: 12px 0;
+  min-width: 0;
+  padding: 12px 14px;
+  border-inline-start: 3px solid #8fa88b;
+  border-radius: 0 10px 10px 0;
+  background: #f5f6ed;
+  color: #314c40;
+  overflow-wrap: anywhere;
+  font-size: 0.8125rem;
+  line-height: 1.75;
+}
+.motion-phase-context .mpc-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.motion-phase-context .mpc-heading > span {
+  color: #52634f;
+  font-size: 0.75rem;
+}
+.motion-phase-context :is(.mpc-pose, .mpc-contact, .mpc-support, .mpc-stale) {
+  margin: 6px 0;
+}
+.motion-phase-context .mpc-contact > strong {
+  font-weight: 600;
+}
+.motion-phase-context summary {
+  min-height: 44px;
+  padding: 10px 0;
+  cursor: pointer;
+  color: #345445;
+}
+.motion-phase-context summary:focus-visible {
+  outline: 3px solid #a86d46;
+  outline-offset: 3px;
+}
+.motion-phase-context .mpc-detail-body {
+  border-top: 1px solid #dce4d4;
+  padding-top: 8px;
+}
+.motion-phase-context .mpc-detail-body p {
+  margin: 6px 0 10px;
+}
+.motion-phase-context .mpc-detail-body ul {
+  margin: 8px 0;
+  padding-inline-start: 20px;
+}
+.motion-phase-context .mpc-detail-body li + li {
+  margin-top: 6px;
+}
+.motion-phase-context .mpc-stale {
+  color: #6c4d33;
+}
+.motion-phase-context-unavailable {
+  font-size: 0.8125rem;
+  line-height: 1.75;
+  color: #6c4d33;
+}
+@media (max-width: 359px) {
+  .motion-phase-context {
+    padding-inline: 10px;
+  }
+}

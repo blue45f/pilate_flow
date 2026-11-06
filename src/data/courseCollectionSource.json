@@ -1,0 +1,2889 @@
+{
+  "schemaVersion": "1.0",
+  "purpose": "Additional public whole-course/workout discovery links for instructor review; research only, outside app.",
+  "checkedAt": "2026-11-04T19:15:53.935756+00:00",
+  "folderLabelDate": "2026-11-05",
+  "actualCheckTimezone": "UTC",
+  "evidenceLevel": "publisher-metadata",
+  "scope": "Whole courses, workout sessions, and sequence demonstrations; not verified movement or motion records.",
+  "counts": {
+    "additionalUniqueCourseReferences": 32,
+    "koreanTitleOrDescription": 14,
+    "englishTitle": 18,
+    "completeObservedTitle": 31,
+    "partialObservedTitle": 1,
+    "publisherIdentityCaptured": 27,
+    "publisherIdentityUnknown": 5,
+    "publisherLocalityCaptured": 2,
+    "officialNumericRuntimeVerified": 0,
+    "fullPlaybackVerified": 0,
+    "spokenLanguageVerified": 0,
+    "embeddingAvailabilityVerified": 0,
+    "professionallyReviewed": 0,
+    "autoRecommendEnabled": 0,
+    "movementReferencesExtracted": 0,
+    "overlapWithBaseline34Ids": 0,
+    "namedPublisherCompleteObservedTitle": 26,
+    "metadataIncompleteSupplemental": 6
+  },
+  "deduplication": {
+    "keys": [
+      "videoId",
+      "canonicalUrl"
+    ],
+    "baselineFile": "baseline-readonly.json",
+    "baselineUniqueVideoIdCount": 34,
+    "baselineOverlapIds": [],
+    "existingBaselineModified": false
+  },
+  "entries": [
+    {
+      "id": "kr-course-TVNpmcrcuWU",
+      "canonicalUrl": "https://www.youtube.com/watch?v=TVNpmcrcuWU",
+      "videoId": "TVNpmcrcuWU",
+      "title": "리포머 시퀀스 50분 풀영상(feat.강사 대상)",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "필라테스 뽀개기 구쌤",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=TVNpmcrcuWU",
+        "basis": "publisher self-identification in public description",
+        "publisherUrl": null
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko",
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "full-video-claimed",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=TVNpmcrcuWU",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": [
+          "reformer"
+        ],
+        "props": null,
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=TVNpmcrcuWU",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 50,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=TVNpmcrcuWU",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=TVNpmcrcuWU",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "kr-course-robwSLsO9vk",
+      "canonicalUrl": "https://www.youtube.com/watch?v=robwSLsO9vk",
+      "videoId": "robwSLsO9vk",
+      "title": "체어 시퀀스 50분 풀영상 (feat. 티칭멘트 까지) 하지 밸런스와 협응력 강화 Chair pilates",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "@kooteacher",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=robwSLsO9vk",
+        "basis": "public author handle on the same video search result",
+        "publisherUrl": "https://www.youtube.com/@kooteacher"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko",
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "full-video-claimed",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=robwSLsO9vk",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": [
+          "chair"
+        ],
+        "props": null,
+        "difficulty": null,
+        "bodyTags": [
+          "lower-body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=robwSLsO9vk",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": null,
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=robwSLsO9vk",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 50,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=robwSLsO9vk",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=robwSLsO9vk",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "kr-course-FRliHowikgU",
+      "canonicalUrl": "https://www.youtube.com/watch?v=FRliHowikgU",
+      "videoId": "FRliHowikgU",
+      "title": "[체어필라테스] 중급자를 위한 50분시퀀스",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "@pilates_tory",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=FRliHowikgU",
+        "basis": "public author handle on the same video search result",
+        "publisherUrl": "https://www.youtube.com/@pilates_tory"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-sequence",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=FRliHowikgU",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": [
+          "chair"
+        ],
+        "props": null,
+        "difficulty": "intermediate",
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=FRliHowikgU",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=FRliHowikgU",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 50,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=FRliHowikgU",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=FRliHowikgU",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "kr-course-cRi2C0fGtzc",
+      "canonicalUrl": "https://www.youtube.com/watch?v=cRi2C0fGtzc",
+      "videoId": "cRi2C0fGtzc",
+      "title": "체어 필라테스 50분 시퀀스 / 하체 집중 전신, 중급 chair pilates",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "@yeo_kinetic",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=cRi2C0fGtzc",
+        "basis": "public author handle on the same video search result",
+        "publisherUrl": "https://www.youtube.com/@yeo_kinetic"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko",
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-sequence",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=cRi2C0fGtzc",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": [
+          "chair"
+        ],
+        "props": null,
+        "difficulty": "intermediate",
+        "bodyTags": [
+          "lower-body",
+          "full-body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=cRi2C0fGtzc",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=cRi2C0fGtzc",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=cRi2C0fGtzc",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 50,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=cRi2C0fGtzc",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=cRi2C0fGtzc",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "kr-course-ljcclNFy1qA",
+      "canonicalUrl": "https://www.youtube.com/watch?v=ljcclNFy1qA",
+      "videoId": "ljcclNFy1qA",
+      "title": "재미와 운동효과를 단번에 잡는 체어 50분 풀 시퀀스 Chair + Loof band Pilates Sequence",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "@daoom_body_studio",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=ljcclNFy1qA",
+        "basis": "public author handle on the same video search result",
+        "publisherUrl": "https://www.youtube.com/@daoom_body_studio"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko",
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "full-sequence-claimed",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=ljcclNFy1qA",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": [
+          "chair"
+        ],
+        "props": [
+          "Loof band (publisher spelling; band subtype unverified)"
+        ],
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=ljcclNFy1qA",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=ljcclNFy1qA",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 50,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=ljcclNFy1qA",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=ljcclNFy1qA",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding.",
+        "The title spells the prop Loof band; no correction to a specific band type was inferred."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "kr-course-o3acxPAwDWs",
+      "canonicalUrl": "https://www.youtube.com/watch?v=o3acxPAwDWs",
+      "videoId": "o3acxPAwDWs",
+      "title": "바렐 + 미니볼 50분 풀 시퀀스",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "반하다필라테스 평생교육원 정혜선",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=o3acxPAwDWs",
+        "basis": "publisher self-identification in public description",
+        "publisherUrl": null
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "full-sequence-claimed",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=o3acxPAwDWs",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": [
+          "barrel-unspecified"
+        ],
+        "props": [
+          "mini-ball"
+        ],
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=o3acxPAwDWs",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=o3acxPAwDWs",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 50,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=o3acxPAwDWs",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=o3acxPAwDWs",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "kr-course-CTu9ajtENF4",
+      "canonicalUrl": "https://www.youtube.com/watch?v=CTu9ajtENF4",
+      "videoId": "CTu9ajtENF4",
+      "title": "미니볼로 안정성을 잡은 바렐 시퀀스 30분ㅣ척추 구석구석 움직이기",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "@raphapilatesyujin",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=CTu9ajtENF4",
+        "basis": "public author handle on the same video search result",
+        "publisherUrl": "https://www.youtube.com/@raphapilatesyujin"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-sequence",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=CTu9ajtENF4",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": [
+          "barrel-unspecified"
+        ],
+        "props": [
+          "mini-ball"
+        ],
+        "difficulty": null,
+        "bodyTags": [
+          "spine"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=CTu9ajtENF4",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=CTu9ajtENF4",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": null,
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=CTu9ajtENF4",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 30,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=CTu9ajtENF4",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=CTu9ajtENF4",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "kr-course-PO4CEuOipUw",
+      "canonicalUrl": "https://www.youtube.com/watch?v=PO4CEuOipUw",
+      "videoId": "PO4CEuOipUw",
+      "title": "타워 리포머 50분 풀 시퀀스 셋팅부터 큐잉까지/코어와 원위부 ...",
+      "titleCompleteness": "partial-as-observed",
+      "publisher": "@pilates_j",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=PO4CEuOipUw",
+        "basis": "public author handle on the same video search result",
+        "publisherUrl": "https://www.youtube.com/@pilates_j"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "full-sequence-claimed",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=PO4CEuOipUw",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": [
+          "tower",
+          "reformer"
+        ],
+        "props": null,
+        "difficulty": null,
+        "bodyTags": [
+          "core"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=PO4CEuOipUw",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": null,
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=PO4CEuOipUw",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 50,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=PO4CEuOipUw",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=PO4CEuOipUw",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding.",
+        "Search metadata truncated the displayed title; complete original title remains unverified."
+      ],
+      "researchDisposition": "metadata-incomplete"
+    },
+    {
+      "id": "kr-course-AjS0PclWgpo",
+      "canonicalUrl": "https://www.youtube.com/watch?v=AjS0PclWgpo",
+      "videoId": "AjS0PclWgpo",
+      "title": "박스 X 미니볼 X 캐딜락 필라테스 : 30분 홀바디 시퀀스",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "@pilatesua",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=AjS0PclWgpo",
+        "basis": "public author handle on the same video search result",
+        "publisherUrl": "https://www.youtube.com/@pilatesua"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko",
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-sequence",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=AjS0PclWgpo",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": [
+          "cadillac"
+        ],
+        "props": [
+          "box",
+          "mini-ball"
+        ],
+        "difficulty": null,
+        "bodyTags": [
+          "full-body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=AjS0PclWgpo",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=AjS0PclWgpo",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": null,
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=AjS0PclWgpo",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 30,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=AjS0PclWgpo",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=AjS0PclWgpo",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "kr-course-GybUGQXPLh4",
+      "canonicalUrl": "https://www.youtube.com/watch?v=GybUGQXPLh4",
+      "videoId": "GybUGQXPLh4",
+      "title": "미니볼 필라테스 30분 시퀀스 | 전신 운동 | Miniball Pilates",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "@hannim_ohh",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=GybUGQXPLh4",
+        "basis": "public author handle on the same video search result",
+        "publisherUrl": "https://www.youtube.com/@hannim_ohh"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko",
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-sequence",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=GybUGQXPLh4",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": null,
+        "props": [
+          "mini-ball"
+        ],
+        "difficulty": null,
+        "bodyTags": [
+          "full-body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": null,
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=GybUGQXPLh4",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": null,
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=GybUGQXPLh4",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 30,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=GybUGQXPLh4",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=GybUGQXPLh4",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "kr-course-6EB9ny-j20w",
+      "canonicalUrl": "https://www.youtube.com/watch?v=6EB9ny-j20w",
+      "videoId": "6EB9ny-j20w",
+      "title": "소도구 필라테스 | 30분 미니볼 전신 운동 Mini Ball Pilates",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "@hannim_ohh",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=6EB9ny-j20w",
+        "basis": "public author handle on the same video search result",
+        "publisherUrl": "https://www.youtube.com/@hannim_ohh"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko",
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=6EB9ny-j20w",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": null,
+        "props": [
+          "mini-ball"
+        ],
+        "difficulty": null,
+        "bodyTags": [
+          "full-body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": null,
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=6EB9ny-j20w",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": null,
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=6EB9ny-j20w",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 30,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=6EB9ny-j20w",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=6EB9ny-j20w",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "kr-course-P440WTUjHP4",
+      "canonicalUrl": "https://www.youtube.com/watch?v=P440WTUjHP4",
+      "videoId": "P440WTUjHP4",
+      "title": "30분 매트필라테스 | 에너지.활력 충전되는 전신근력운동",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "@onlypilates",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=P440WTUjHP4",
+        "basis": "public author handle on the same video search result",
+        "publisherUrl": "https://www.youtube.com/@onlypilates"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=P440WTUjHP4",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": [
+          "mat"
+        ],
+        "props": null,
+        "difficulty": null,
+        "bodyTags": [
+          "full-body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=P440WTUjHP4",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": null,
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=P440WTUjHP4",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 30,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=P440WTUjHP4",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=P440WTUjHP4",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "kr-course-LWVmjuEzLSE",
+      "canonicalUrl": "https://www.youtube.com/watch?v=LWVmjuEzLSE",
+      "videoId": "LWVmjuEzLSE",
+      "title": "[강사레슨] 필라테스 시퀀스 | 리포머 50분 PILATES WORKOUT",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "@pilamincho",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=LWVmjuEzLSE",
+        "basis": "public author handle on the same video search result",
+        "publisherUrl": "https://www.youtube.com/@pilamincho"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko",
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "instructor-course-reference",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=LWVmjuEzLSE",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": [
+          "reformer"
+        ],
+        "props": null,
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=LWVmjuEzLSE",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 50,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=LWVmjuEzLSE",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=LWVmjuEzLSE",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "kr-course-r1Om67SbixU",
+      "canonicalUrl": "https://www.youtube.com/watch?v=r1Om67SbixU",
+      "videoId": "r1Om67SbixU",
+      "title": "체어 x 스몰볼 50분 풀시퀀스 전신다쓰는 난이도상 약한스프링으로 제어하며 운동하기 #체어시퀀스 #필라짱스",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "@pilazzangs",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=r1Om67SbixU",
+        "basis": "public author handle on the same video search result",
+        "publisherUrl": "https://www.youtube.com/@pilazzangs"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "collectionFocus": "Korean-title-or-description; geographic origin unverified",
+      "titleLanguage": [
+        "ko",
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "full-sequence-claimed",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=r1Om67SbixU",
+        "basis": "publisher labels it a class, sequence or workout; no full playback observed"
+      },
+      "facts": {
+        "apparatus": [
+          "chair"
+        ],
+        "props": [
+          "small-ball-unspecified"
+        ],
+        "difficulty": "publisher-level-high",
+        "bodyTags": [
+          "full-body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=r1Om67SbixU",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=r1Om67SbixU",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=r1Om67SbixU",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=r1Om67SbixU",
+          "basis": "public title, author label, or publisher self-identification in description; surfaced through public search metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 50,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=r1Om67SbixU",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:12:35Z",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "reproductionLicense": null,
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:12:35Z",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=r1Om67SbixU",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:12:35Z"
+        }
+      ],
+      "limitations": [
+        "No video playback, spoken-language verification, exercise observation, transcript, or timing-boundary observation performed.",
+        "A class duration stated in the title is not a verified video runtime.",
+        "Equipment, body focus, and difficulty are publisher statements, not independent or clinical validation.",
+        "Public metadata does not establish permission for commercial reuse, copying, or embedding."
+      ],
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-01",
+      "canonicalUrl": "https://www.youtube.com/watch?v=CeKMBNJvpV4",
+      "videoId": "CeKMBNJvpV4",
+      "title": "30 Minute Pilates Ladder Barrel Workout",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "Andrea Maida",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=CeKMBNJvpV4",
+        "basis": "Andrea Maida"
+      },
+      "publisherRegion": "San Diego, California",
+      "publisherRegionEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=CeKMBNJvpV4",
+        "basis": "San Diego, California"
+      },
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=CeKMBNJvpV4",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": [
+          "Ladder Barrel"
+        ],
+        "props": null,
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=CeKMBNJvpV4",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 30,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=CeKMBNJvpV4",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=CeKMBNJvpV4",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-02",
+      "canonicalUrl": "https://www.youtube.com/watch?v=e_KobOWdfaQ",
+      "videoId": "e_KobOWdfaQ",
+      "title": "Upside-Down Pilates - Level II Cadillac Full 1 Hour Workout",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "@Upsidedownpilates",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=e_KobOWdfaQ",
+        "basis": "@Upsidedownpilates"
+      },
+      "publisherRegion": "Honolulu, HI 96817",
+      "publisherRegionEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=e_KobOWdfaQ",
+        "basis": "Honolulu Hi 96817"
+      },
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=e_KobOWdfaQ",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": [
+          "Cadillac"
+        ],
+        "props": null,
+        "difficulty": "Level II",
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=e_KobOWdfaQ",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=e_KobOWdfaQ",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 60,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=e_KobOWdfaQ",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=e_KobOWdfaQ",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-03",
+      "canonicalUrl": "https://www.youtube.com/watch?v=WjDfaO_qWfk",
+      "videoId": "WjDfaO_qWfk",
+      "title": "Upside-Down Pilates - Level II Barrels Full 1 Hour Workout",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": null,
+      "publisherEvidence": null,
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=WjDfaO_qWfk",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": [
+          "Barrels"
+        ],
+        "props": null,
+        "difficulty": "Level II",
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=WjDfaO_qWfk",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=WjDfaO_qWfk",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 60,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=WjDfaO_qWfk",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=WjDfaO_qWfk",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use.",
+        "Brand named in title; uploader identity not independently established, so publisher is null."
+      ],
+      "publisherBrandDeclaredInTitle": "Upside-Down Pilates",
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "metadata-incomplete"
+    },
+    {
+      "id": "yt-expansion-international-04",
+      "canonicalUrl": "https://www.youtube.com/watch?v=OCpuRcvY6Jo",
+      "videoId": "OCpuRcvY6Jo",
+      "title": "Upside-Down Pilates - Level II Reformer Full 1 Hour Workout",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": null,
+      "publisherEvidence": null,
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=OCpuRcvY6Jo",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": [
+          "Reformer"
+        ],
+        "props": null,
+        "difficulty": "Level II",
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=OCpuRcvY6Jo",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=OCpuRcvY6Jo",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 60,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=OCpuRcvY6Jo",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=OCpuRcvY6Jo",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use.",
+        "Brand named in title; uploader identity not independently established, so publisher is null."
+      ],
+      "publisherBrandDeclaredInTitle": "Upside-Down Pilates",
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "metadata-incomplete"
+    },
+    {
+      "id": "yt-expansion-international-05",
+      "canonicalUrl": "https://www.youtube.com/watch?v=dO4kwNoZmAY",
+      "videoId": "dO4kwNoZmAY",
+      "title": "Upside-Down Pilates - Chair - Level 1 - Full Workout",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": null,
+      "publisherEvidence": null,
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=dO4kwNoZmAY",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": [
+          "Chair"
+        ],
+        "props": null,
+        "difficulty": "Level 1",
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=dO4kwNoZmAY",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher says Chair; exact chair subtype is not independently established. No equipment-readiness mapping is made."
+        },
+        "props": null,
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=dO4kwNoZmAY",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": null,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=dO4kwNoZmAY",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=dO4kwNoZmAY",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use.",
+        "Brand named in title; uploader identity not independently established, so publisher is null."
+      ],
+      "publisherBrandDeclaredInTitle": "Upside-Down Pilates",
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "metadata-incomplete"
+    },
+    {
+      "id": "yt-expansion-international-06",
+      "canonicalUrl": "https://www.youtube.com/watch?v=1NsIH368_lw",
+      "videoId": "1NsIH368_lw",
+      "title": "Pilates Tower Workout #3 (No Props Needed)",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "April Plank Pilates",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=1NsIH368_lw",
+        "basis": "Become a member of April Plank Pilates"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=1NsIH368_lw",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": [
+          "Tower"
+        ],
+        "props": [],
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=1NsIH368_lw",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=1NsIH368_lw",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": null,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=1NsIH368_lw",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=1NsIH368_lw",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-07",
+      "canonicalUrl": "https://www.youtube.com/watch?v=zvfWceHlax4",
+      "videoId": "zvfWceHlax4",
+      "title": "Full Body Flow - Pilates Tower Workout #1 (No Props Needed)",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "April Plank Pilates",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=zvfWceHlax4",
+        "basis": "@aprilplankpilates"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=zvfWceHlax4",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": [
+          "Tower"
+        ],
+        "props": [],
+        "difficulty": null,
+        "bodyTags": [
+          "full body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=zvfWceHlax4",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=zvfWceHlax4",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": null,
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=zvfWceHlax4",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": null,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=zvfWceHlax4",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=zvfWceHlax4",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-08",
+      "canonicalUrl": "https://www.youtube.com/watch?v=rASASOiBco4",
+      "videoId": "rASASOiBco4",
+      "title": "30 Minute at Home Pilates Workout with a Resistance Band",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "Trifecta Pilates",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=rASASOiBco4",
+        "basis": "Trifecta Pilates LLC"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=rASASOiBco4",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": null,
+        "props": [
+          "Resistance Band"
+        ],
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": null,
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=rASASOiBco4",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": null,
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 30,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=rASASOiBco4",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=rASASOiBco4",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-09",
+      "canonicalUrl": "https://www.youtube.com/watch?v=ctCSU8gEFlY",
+      "videoId": "ctCSU8gEFlY",
+      "title": "15 min Full Body Pilates Workout with a Resistance Band",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "Trifecta Pilates",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=ctCSU8gEFlY",
+        "basis": "Trifecta Pilates from all liability"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=ctCSU8gEFlY",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": null,
+        "props": [
+          "Resistance Band"
+        ],
+        "difficulty": null,
+        "bodyTags": [
+          "full body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": null,
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=ctCSU8gEFlY",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": null,
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=ctCSU8gEFlY",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 15,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=ctCSU8gEFlY",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=ctCSU8gEFlY",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-10",
+      "canonicalUrl": "https://www.youtube.com/watch?v=J73ItOdZ0ew",
+      "videoId": "J73ItOdZ0ew",
+      "title": "25 Minute Mini Ball Workout",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "Trifecta Pilates",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=J73ItOdZ0ew",
+        "basis": "Trifecta Pilates from all liability"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=J73ItOdZ0ew",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": [
+          "Mat"
+        ],
+        "props": [
+          "Mini Ball"
+        ],
+        "difficulty": null,
+        "bodyTags": [
+          "total body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=J73ItOdZ0ew",
+          "basis": "publisher-description: total body Pilates mat class",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=J73ItOdZ0ew",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": null,
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=J73ItOdZ0ew",
+          "basis": "publisher-description: total body",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 25,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=J73ItOdZ0ew",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=J73ItOdZ0ew",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-11",
+      "canonicalUrl": "https://www.youtube.com/watch?v=p28_wFVwEfk",
+      "videoId": "p28_wFVwEfk",
+      "title": "15 Minute Pilates Mini Ball Workout | Intermediate Pilates Class",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "Trifecta Pilates",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=p28_wFVwEfk",
+        "basis": "Trifecta Pilates updates"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=p28_wFVwEfk",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": null,
+        "props": [
+          "Mini Ball"
+        ],
+        "difficulty": "Intermediate",
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": null,
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=p28_wFVwEfk",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=p28_wFVwEfk",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 15,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=p28_wFVwEfk",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=p28_wFVwEfk",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-12",
+      "canonicalUrl": "https://www.youtube.com/watch?v=a0qDaVEzLXM",
+      "videoId": "a0qDaVEzLXM",
+      "title": "30 min Full Body Pilates | Beginner to Intermediate Level",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "Flow with Mira",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=a0qDaVEzLXM",
+        "basis": "FLOW WITH MIRA MEMBERSHIP & APP"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=a0qDaVEzLXM",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": null,
+        "props": null,
+        "difficulty": "Beginner to Intermediate",
+        "bodyTags": [
+          "full body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": null,
+        "props": null,
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=a0qDaVEzLXM",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=a0qDaVEzLXM",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 30,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=a0qDaVEzLXM",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=a0qDaVEzLXM",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-13",
+      "canonicalUrl": "https://www.youtube.com/watch?v=Qu5ofjc3Jo0",
+      "videoId": "Qu5ofjc3Jo0",
+      "title": "30 MINUTE Full Body Reformer Workout For Beginners",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "Flow with Mira",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=Qu5ofjc3Jo0",
+        "basis": "FLOW WITH MIRA MEMBERSHIP & APP"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=Qu5ofjc3Jo0",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": [
+          "Reformer"
+        ],
+        "props": null,
+        "difficulty": "For Beginners",
+        "bodyTags": [
+          "full body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=Qu5ofjc3Jo0",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=Qu5ofjc3Jo0",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=Qu5ofjc3Jo0",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 30,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=Qu5ofjc3Jo0",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=Qu5ofjc3Jo0",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-14",
+      "canonicalUrl": "https://www.youtube.com/watch?v=I-6Mu8xpvnU",
+      "videoId": "I-6Mu8xpvnU",
+      "title": "30 min Full Body Workout | Pilates with Weights Intermediate",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "Flow with Mira",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=I-6Mu8xpvnU",
+        "basis": "FLOW WITH MIRA MEMBERSHIP & APP"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=I-6Mu8xpvnU",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": null,
+        "props": [
+          "Weights"
+        ],
+        "difficulty": "Intermediate",
+        "bodyTags": [
+          "full body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": null,
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=I-6Mu8xpvnU",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=I-6Mu8xpvnU",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=I-6Mu8xpvnU",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 30,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=I-6Mu8xpvnU",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=I-6Mu8xpvnU",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-15",
+      "canonicalUrl": "https://www.youtube.com/watch?v=xZbr_4dwsUA",
+      "videoId": "xZbr_4dwsUA",
+      "title": "30 Minute Full Body Pilates Workout - Pilates at Home!",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": null,
+      "publisherEvidence": null,
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=xZbr_4dwsUA",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": null,
+        "props": null,
+        "difficulty": null,
+        "bodyTags": [
+          "full body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": null,
+        "props": null,
+        "difficulty": null,
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=xZbr_4dwsUA",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 30,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=xZbr_4dwsUA",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=xZbr_4dwsUA",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use.",
+        "Inspected result names Jessica but does not establish the full uploader identity; publisher left null."
+      ],
+      "publisherFirstNameInDescription": "Jessica",
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "metadata-incomplete"
+    },
+    {
+      "id": "yt-expansion-international-16",
+      "canonicalUrl": "https://www.youtube.com/watch?v=VJT6CPSK94Q",
+      "videoId": "VJT6CPSK94Q",
+      "title": "20 Minute Full Body Pilates Workout For Beginners - No Equipment!",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "Jessica Valant",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=VJT6CPSK94Q",
+        "basis": "Jessica Valant and Jessica Valant Pilates, LLC"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=VJT6CPSK94Q",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": null,
+        "props": [],
+        "difficulty": "For Beginners",
+        "bodyTags": [
+          "full body"
+        ]
+      },
+      "factEvidence": {
+        "apparatus": null,
+        "props": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=VJT6CPSK94Q",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=VJT6CPSK94Q",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=VJT6CPSK94Q",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        }
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": 20,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=VJT6CPSK94Q",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=VJT6CPSK94Q",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    },
+    {
+      "id": "yt-expansion-international-17",
+      "canonicalUrl": "https://www.youtube.com/watch?v=D3TC-tz3TeQ",
+      "videoId": "D3TC-tz3TeQ",
+      "title": "Beginner Pilates Mat Exercises",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": null,
+      "publisherEvidence": null,
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=D3TC-tz3TeQ",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": [
+          "Mat"
+        ],
+        "props": null,
+        "difficulty": "Beginner",
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=D3TC-tz3TeQ",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "props": null,
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=D3TC-tz3TeQ",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": null,
+        "publisherDescriptionDeclaredMinutes": 30,
+        "sourceUrl": "https://www.youtube.com/watch?v=D3TC-tz3TeQ",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=D3TC-tz3TeQ",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use.",
+        "Inspected result names Jessica but does not establish the full uploader identity; publisher left null."
+      ],
+      "publisherFirstNameInDescription": "Jessica",
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "metadata-incomplete"
+    },
+    {
+      "id": "yt-expansion-international-18",
+      "canonicalUrl": "https://www.youtube.com/watch?v=TM_Mta1xNO4",
+      "videoId": "TM_Mta1xNO4",
+      "title": "Beginner Pilates Chair Workout",
+      "titleCompleteness": "complete-as-observed",
+      "publisher": "Pilates & Fitness TV",
+      "publisherEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=TM_Mta1xNO4",
+        "basis": "PILATES & FITNESS TV Your studio at home"
+      },
+      "publisherRegion": null,
+      "publisherRegionEvidence": null,
+      "titleLanguage": [
+        "en"
+      ],
+      "titleLanguageEvidence": "observed title text only",
+      "spokenLanguage": null,
+      "sourceKind": "course-workout",
+      "courseScopeEvidence": {
+        "evidenceLevel": "publisher-metadata",
+        "sourceUrl": "https://www.youtube.com/watch?v=TM_Mta1xNO4",
+        "basis": "title presents a workout or class, not an extracted movement clip"
+      },
+      "facts": {
+        "apparatus": [
+          "Pilates Chair"
+        ],
+        "props": null,
+        "difficulty": "Beginner",
+        "bodyTags": null
+      },
+      "factEvidence": {
+        "apparatus": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=TM_Mta1xNO4",
+          "basis": "publisher-title: Pilates Chair; chair subtype not established",
+          "note": "Publisher says Chair; exact chair subtype is not independently established. No equipment-readiness mapping is made."
+        },
+        "props": null,
+        "difficulty": {
+          "evidenceLevel": "publisher-metadata",
+          "sourceUrl": "https://www.youtube.com/watch?v=TM_Mta1xNO4",
+          "basis": "publisher-title-or-description-in-primary-search-metadata",
+          "note": "Publisher labels only; not independently observed or clinically assessed."
+        },
+        "bodyTags": null
+      },
+      "duration": {
+        "officialMetadataSeconds": null,
+        "publisherTitleDeclaredMinutes": null,
+        "publisherDescriptionDeclaredMinutes": null,
+        "sourceUrl": "https://www.youtube.com/watch?v=TM_Mta1xNO4",
+        "note": "Declared class length is not verified runtime; no exercise duration or movement bounds inferred."
+      },
+      "availability": {
+        "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+        "method": "public-web-search-index-of-primary-youtube-metadata",
+        "result": "metadata-available",
+        "currentWatchPageAccessibility": "not-established",
+        "fullPlaybackVerified": false,
+        "embeddingAvailability": "unknown"
+      },
+      "rights": "link-only",
+      "professionalReview": 0,
+      "autoRecommend": false,
+      "movementReferencesExtracted": 0,
+      "movementBounds": null,
+      "checkedAt": "2026-11-04T19:13:55.859589+00:00",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=TM_Mta1xNO4",
+          "kind": "primary-youtube-page-via-public-search",
+          "checkedAt": "2026-11-04T19:13:55.859589+00:00"
+        }
+      ],
+      "limitations": [
+        "No full playback, audio, embedding permission, reproduction license, or professional review established.",
+        "Search-index metadata can be stale; verify on the original page before use."
+      ],
+      "collectionFocus": "English-title; geographic origin unverified except a separately recorded publisher locality",
+      "reproductionLicense": null,
+      "researchDisposition": "named-publisher-complete-title"
+    }
+  ],
+  "globalLimits": [
+    "Public search-index metadata is not current playback proof and can be stale or localized.",
+    "Title language does not establish spoken language, nationality or geographic publisher origin.",
+    "Publisher statements about apparatus, props, focus, level or duration are not independent observations or clinical validation.",
+    "Course/sequence links must not be converted into verified movements, exercise timing or start/end bounds without separate authorized review.",
+    "No video, images, captions, transcripts, internal player JSON, streams, protected content or engagement metrics copied.",
+    "No new accounts, credentials, API keys, downloads, rights purchases or app/Library writes performed.",
+    "All entries require human source review before any product integration; professionalReview remains 0 and autoRecommend remains false."
+  ]
+}

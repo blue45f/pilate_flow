@@ -1,0 +1,107 @@
+/* V11: a compact route through the existing Workbench, using the approved palette. */
+#root .v11-workbench .workbench-preparation-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  color: var(--v2-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+#root .v11-workbench .workbench-preparation-steps li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+#root .v11-workbench .workbench-preparation-steps li > span {
+  display: inline-flex;
+  flex: 0 0 1.75em;
+  align-items: center;
+  justify-content: center;
+  width: 1.75em;
+  height: 1.75em;
+  border: 1px solid var(--v2-line);
+  border-radius: 50%;
+  font-variant-numeric: tabular-nums;
+}
+#root .v11-workbench .workbench-preparation-steps [aria-current='step'] {
+  color: var(--v2-primary);
+  font-weight: 600;
+}
+#root .v11-workbench .workbench-preparation-steps [aria-current='step'] > span {
+  border-color: var(--v2-primary);
+  background: var(--v2-primary);
+  color: var(--v2-paper);
+}
+#root .v11-workbench .workbench-first-movement {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 18px 0;
+  text-align: left;
+  color: var(--v2-ink);
+}
+#root .v11-workbench .workbench-first-movement h3 {
+  margin: 0;
+  color: var(--v2-primary);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+#root .v11-workbench .workbench-first-movement p {
+  margin: 0;
+  max-width: 48ch;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+#root .v11-workbench .workbench-first-movement .workbench-reviewed-count {
+  color: var(--v2-muted);
+  font-size: 0.8125rem;
+}
+#root .v11-workbench .workbench-first-movement .btn-primary {
+  min-height: 44px;
+  margin-top: 4px;
+}
+#root .v11-workbench .time-summary [hidden] {
+  display: none !important;
+}
+#root .v11-workbench .time-summary.is-empty .time-status {
+  color: var(--v2-muted);
+}
+#root .v11-workbench .workbench-schedule-context {
+  margin: 0 0 8px;
+  padding: 0;
+  border-bottom: 1px solid var(--v2-line);
+}
+#root .v11-workbench .workbench-schedule-context > summary {
+  display: list-item;
+  list-style-position: inside;
+  min-height: 44px;
+  padding: 8px 0;
+  color: var(--v2-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+#root .v11-workbench .workbench-schedule-context > summary:focus-visible {
+  outline: 2px solid var(--v2-primary);
+  outline-offset: 3px;
+}
+#root .v11-workbench .workbench-schedule-context .next-class-banner {
+  margin-top: 8px;
+}
+@media (max-width: 479px) {
+  #root .v11-workbench .workbench-preparation-steps {
+    gap: 6px 12px;
+    margin-bottom: 8px;
+  }
+  #root .v11-workbench .workbench-first-movement {
+    padding: 12px 0;
+  }
+}

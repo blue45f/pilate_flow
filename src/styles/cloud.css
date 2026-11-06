@@ -1,0 +1,53 @@
+.cloud-panel h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cloud-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 0 8px;
+}
+.cloud-account > span {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+  font-size: 13px;
+}
+.cloud-account .text-button,
+.cloud-delete .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.cloud-backup-status {
+  font-size: 12px;
+  color: var(--sage-dark, #49635a);
+}
+.cloud-actions {
+  flex-wrap: wrap;
+}
+.cloud-actions button {
+  min-height: 42px;
+}
+.cloud-delete {
+  margin-top: 16px;
+}
+.cloud-delete > .text-button {
+  color: #9b5147;
+  font-size: 12px;
+}
+@media (max-width: 480px) {
+  .cloud-account {
+    align-items: flex-start;
+  }
+  .cloud-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .cloud-actions button {
+    justify-content: center;
+    width: 100%;
+  }
+}

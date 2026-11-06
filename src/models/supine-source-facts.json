@@ -1,0 +1,204 @@
+{
+  "recordKind": "supine-relevant-original-factual-records",
+  "accessDateUtc": "2026-11-04",
+  "authority": "../data/motionDraftSourceLedger.json",
+  "hashScope": "Each factualRecordSha256 is the combined ledger hash of its unchanged original authored factualRecord; not source document bytes.",
+  "sources": [
+    {
+      "sourceId": "nbt-diep-heel-slide-v1",
+      "url": "https://www.nbt.nhs.uk/our-services/a-z-services/breast-reconstruction/post-operative-exercises-diep-reconstruction",
+      "title": "Post-operative Exercises DIEP Reconstruction",
+      "publisher": "North Bristol NHS Trust",
+      "accessDate": "2026-11-04",
+      "accessStatus": "accessible-primary-text",
+      "evidenceLocation": "3. Heel slide; text extraction lines 54–63; referenced exercise 1 lines 39–44",
+      "observedMediaTimestamps": [],
+      "rights": {
+        "use": "reference-only",
+        "embedded": false,
+        "mediaRead": false,
+        "mediaCopied": false,
+        "tracing": false,
+        "motionCapture": false,
+        "licenseForReproductionVerified": false,
+        "note": "External links and original factual paraphrase only; public access does not establish reproduction permission."
+      },
+      "factualRecord": {
+        "scope": "Adult reconstructive-surgery clinical context inferred from DIEP breast-reconstruction service; no explicit adult age range in inspected exercise text.",
+        "facts": {
+          "start": "Floor lying, knees bent, arms beside body. Referenced abdominal setup uses feet on floor, hip width apart.",
+          "middle": "One leg stays still while the other slides outward toward a straight leg; natural lower-back curve and still pelvis are cues.",
+          "finish": "Slide back to the start; then exchange legs.",
+          "activeSide": "One leg, then the other; no anatomical first side assigned.",
+          "contact": "Floor is explicit. One leg remains stationary; precise head, hand and shoulder contact is unspecified.",
+          "equipmentSupport": "Floor stated; mat and pillow not specified."
+        },
+        "statedConstraints": [
+          "Postoperative context is narrower than general Pilates.",
+          "No cycle duration, quantified leg range, or heel-slide dosage specified."
+        ]
+      },
+      "factualRecordSha256": "1c1c3b47904a399c04042dbe0406e78e117fcafab1b37c41852fc403f5d16f74",
+      "sourceChecked": true,
+      "professionalMotionReviewCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "intendedPopulationContext": {
+        "category": "postoperative",
+        "populationAndSetting": "DIEP breast-reconstruction recovery",
+        "adultEvidence": "adult clinical context inferred; exercise text has no explicit age criterion",
+        "generalAdultSuitabilityEstablished": false,
+        "isPaediatricSource": false,
+        "pregnancySpecificInstructionsUsed": false
+      },
+      "instructionEvidenceScope": "Specific instructions in the identified source section only; not evidence for every generic Pilates variant or an exact authored procedural model."
+    },
+    {
+      "sourceId": "rm-abdominal-operation-single-leg-slide-v1",
+      "url": "https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386",
+      "title": "Exercise and advice to help you recover after your abdominal operation",
+      "publisher": "The Royal Marsden NHS Foundation Trust, Physiotherapy department",
+      "accessDate": "2026-11-04",
+      "accessStatus": "accessible-primary-text",
+      "evidenceLocation": "Single leg slide: printed page 9, physical page 11 (zero-index 10), text lines 163–171; progression restriction lines 146–147",
+      "observedMediaTimestamps": [],
+      "rights": {
+        "use": "reference-only",
+        "embedded": false,
+        "mediaRead": false,
+        "mediaCopied": false,
+        "tracing": false,
+        "motionCapture": false,
+        "licenseForReproductionVerified": false,
+        "note": "External links and original factual paraphrase only; public access does not establish reproduction permission."
+      },
+      "factualRecord": {
+        "scope": "Surgical recovery; adult context inferred, no age criterion stated.",
+        "facts": {
+          "start": "On back; knees bent; feet flat, slightly apart; abdominal brace.",
+          "middle": "The left heel travels forward along the floor.",
+          "finish": "The heel slides back towards the buttock; alternate legs.",
+          "activeSide": "Left is described first; both legs included.",
+          "contact": "Heel slides along floor; other contacts unspecified.",
+          "equipmentSupport": "Floor; other supports unspecified."
+        },
+        "statedConstraints": [
+          "From six weeks after surgery unless surgical team advises otherwise.",
+          "No measured slide length or cycle time."
+        ]
+      },
+      "factualRecordSha256": "eba517990895c0118d1afc2ab7325fe185003196814be5ddff611bd1cd859168",
+      "sourceChecked": true,
+      "professionalMotionReviewCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "intendedPopulationContext": {
+        "category": "postoperative",
+        "populationAndSetting": "Abdominal, gynaecological or pelvic surgery recovery; selected progression from six weeks unless surgical team advises otherwise",
+        "adultEvidence": "adult clinical context inferred; no explicit age criterion in inspected section",
+        "generalAdultSuitabilityEstablished": false,
+        "isPaediatricSource": false,
+        "pregnancySpecificInstructionsUsed": false
+      },
+      "instructionEvidenceScope": "Specific instructions in the identified source section only; not evidence for every generic Pilates variant or an exact authored procedural model."
+    },
+    {
+      "sourceId": "rm-abdominal-operation-single-knee-lift-v1",
+      "url": "https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386",
+      "title": "Exercise and advice to help you recover after your abdominal operation",
+      "publisher": "The Royal Marsden NHS Foundation Trust, Physiotherapy department",
+      "accessDate": "2026-11-04",
+      "accessStatus": "accessible-primary-text",
+      "evidenceLocation": "Single knee lifts: printed page 8, physical page 10 (zero-index 9), text lines 146–155",
+      "observedMediaTimestamps": [],
+      "rights": {
+        "use": "reference-only",
+        "embedded": false,
+        "mediaRead": false,
+        "mediaCopied": false,
+        "tracing": false,
+        "motionCapture": false,
+        "licenseForReproductionVerified": false,
+        "note": "External links and original factual paraphrase only; public access does not establish reproduction permission."
+      },
+      "factualRecord": {
+        "scope": "Surgical recovery; adult context inferred, no age criterion stated.",
+        "facts": {
+          "start": "On back; knees bent; feet flat and slightly apart; abdominal brace.",
+          "middle": "Lift one foot off bed or floor while bending hip to 90 degrees; hold five seconds.",
+          "finish": "Lower foot back to bed or floor.",
+          "activeSide": "Each leg is prescribed; a strict alternation order is not stated.",
+          "contact": "Active foot lifts and returns; other contacts unspecified.",
+          "equipmentSupport": "Bed or floor; head and arms unspecified."
+        },
+        "statedConstraints": [
+          "From six weeks after surgery unless surgical team advises otherwise.",
+          "Five per leg is source-specific dosage.",
+          "Knee angle, neutral pelvis and cycle time unspecified."
+        ]
+      },
+      "factualRecordSha256": "047bfc7dfbe70800a343ec28470f393b1f37333e6a6790046fcffb6416619036",
+      "sourceChecked": true,
+      "professionalMotionReviewCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "intendedPopulationContext": {
+        "category": "postoperative",
+        "populationAndSetting": "Abdominal, gynaecological or pelvic surgery recovery; selected progression from six weeks unless surgical team advises otherwise",
+        "adultEvidence": "adult clinical context inferred; no explicit age criterion in inspected section",
+        "generalAdultSuitabilityEstablished": false,
+        "isPaediatricSource": false,
+        "pregnancySpecificInstructionsUsed": false
+      },
+      "instructionEvidenceScope": "Specific instructions in the identified source section only; not evidence for every generic Pilates variant or an exact authored procedural model."
+    },
+    {
+      "sourceId": "tsd-sui-knee-fold-v1",
+      "url": "https://www.torbayandsouthdevon.nhs.uk/uploads/25988.pdf?last-updated=20260902",
+      "title": "Stress urinary incontinence — Pelvic Health Physiotherapy information leaflet",
+      "publisher": "Torbay and South Devon NHS Foundation Trust",
+      "accessDate": "2026-11-04",
+      "accessStatus": "accessible-primary-text",
+      "evidenceLocation": "4. Knee folds / Scissors: physical page 4 (zero-index 3), text lines 119–134; leaflet reference 25988/V1/Physiotherapy/TSDFT/04.26, review 04.28",
+      "observedMediaTimestamps": [],
+      "rights": {
+        "use": "reference-only",
+        "embedded": false,
+        "mediaRead": false,
+        "mediaCopied": false,
+        "tracing": false,
+        "motionCapture": false,
+        "licenseForReproductionVerified": false,
+        "note": "External links and original factual paraphrase only; public access does not establish reproduction permission."
+      },
+      "factualRecord": {
+        "scope": "Pelvic-health clinical leaflet with pregnancy, childbirth and menopause contexts; adult clinical context, no explicit age criterion.",
+        "facts": {
+          "start": "Adopt preceding supine position on bed or floor; engage abdominal muscles.",
+          "middle": "One foot lifts from mat; knee comes towards body into tabletop; neutral pelvis and engaged core are cues.",
+          "finish": "Slow return to starting position.",
+          "activeSide": "One foot; first anatomical side and strict alternation are unspecified.",
+          "contact": "Active foot leaves mat. Other contact points are unspecified.",
+          "equipmentSupport": "Bed/floor in preceding setup, mat in fold text; no pillow or arm position specified."
+        },
+        "statedConstraints": [
+          "Setup says flatten spine, while fold says neutral pelvis: unresolved variant ambiguity.",
+          "This basic fold differs from following two-leg tabletop toe-tap progression.",
+          "No numeric fold angles or cycle duration given."
+        ]
+      },
+      "factualRecordSha256": "883c5bc1be0ee07157a945aa54268b20cfc080236788563a7d2d97e9b7a49dfd",
+      "sourceChecked": true,
+      "professionalMotionReviewCount": 0,
+      "generalAdultSuitabilityVerified": false,
+      "intendedPopulationContext": {
+        "category": "condition-specific",
+        "populationAndSetting": "Stress urinary incontinence / pelvic health; includes reproductive and menopause context, not a general Pilates curriculum",
+        "adultEvidence": "adult clinical context inferred; no explicit age criterion",
+        "generalAdultSuitabilityEstablished": false,
+        "isPaediatricSource": false,
+        "pregnancySpecificInstructionsUsed": false
+      },
+      "instructionEvidenceScope": "Specific instructions in the identified source section only; not evidence for every generic Pilates variant or an exact authored procedural model."
+    }
+  ],
+  "mappingStatus": "unapproved-unmapped",
+  "professionalMotionReviewCount": 0
+}

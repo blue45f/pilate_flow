@@ -1,0 +1,353 @@
+.dated-planning-dialog {
+  color: var(--v2-ink, #272d29);
+  background: var(--paper, #fcfbf7);
+}
+
+.dated-planning-dialog .atelier-modal-subtitle {
+  font-size: 0.875rem;
+  max-width: 65ch;
+}
+
+.dated-planning-dialog .atelier-modal-header .icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.dated-planning {
+  font-size: 1rem;
+  line-height: 1.65;
+  min-width: 0;
+}
+
+.dated-planning :is(button, input, select, summary) {
+  min-height: 44px;
+  font: inherit;
+}
+
+.dated-planning button {
+  color: var(--v2-ink, #272d29);
+  background: var(--paper, #fcfbf7);
+  border: 1px solid var(--line, #e7ded1);
+  border-radius: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+
+.dated-planning button:disabled {
+  color: var(--muted, #626a64);
+  cursor: default;
+  opacity: 0.7;
+}
+
+/* Keep foreground and background in sync when the selected state changes. */
+.dated-planning button[aria-pressed] {
+  transition: none;
+}
+
+.dated-planning button[aria-pressed='true'] {
+  color: #fff;
+  background: var(--green, #254d45);
+  border-color: var(--green, #254d45);
+}
+
+.dated-planning :is(button, input, select, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--green, #254d45);
+  outline-offset: 3px;
+}
+
+.dated-planning-toolbar,
+.dated-planning-modes,
+.dated-planning-date-nav,
+.dated-planning-detail-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dated-planning-toolbar {
+  justify-content: space-between;
+}
+
+.dated-planning label {
+  display: grid;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.dated-planning :is(input, select) {
+  max-width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line, #e7ded1);
+  border-radius: 0.5rem;
+  background: var(--paper, #fcfbf7);
+  color: inherit;
+  padding: 0.5rem;
+}
+
+.dated-planning-range {
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.dated-planning h3 {
+  font-size: 1.125rem;
+  margin: 0 0 0.75rem;
+}
+
+.dated-planning h4 {
+  font-size: 1rem;
+  margin: 0 0 0.375rem;
+}
+
+.dated-planning p {
+  margin: 0.5rem 0;
+  overflow-wrap: anywhere;
+}
+
+.dated-planning-note,
+.dated-planning-occurrence p {
+  font-size: 0.875rem;
+  color: var(--muted, #626a64);
+}
+
+.dated-planning-calendar-scroll {
+  overflow-x: auto;
+  margin-bottom: 1.25rem;
+}
+
+.dated-planning-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(44px, 1fr));
+  gap: 0.25rem;
+  min-width: 21rem;
+}
+
+.dated-planning-calendar button {
+  min-width: 44px;
+  padding: 0.375rem 0.125rem;
+}
+
+.dated-planning-calendar button span {
+  display: block;
+  font-size: 0.75rem;
+}
+
+.dated-planning-weekday {
+  text-align: center;
+  font-size: 0.875rem;
+  padding: 0.375rem 0;
+}
+
+.dated-planning-occurrence {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  border-top: 1px solid var(--line, #e7ded1);
+  padding: 0.875rem 0;
+}
+
+.dated-planning-occurrence > div {
+  min-width: 0;
+}
+
+.dated-planning-occurrence > button {
+  flex-shrink: 0;
+}
+
+.dated-planning-occurrence-cancelled,
+.dated-planning-occurrence-closed,
+.dated-planning-occurrence-moved {
+  border-left: 3px solid var(--line, #e7ded1);
+  padding-left: 0.75rem;
+}
+
+.dated-planning-detail,
+.dated-planning-copy,
+.dated-planning-unresolved {
+  padding: 1rem;
+  margin: 1.25rem 0;
+  border: 1px solid var(--line, #e7ded1);
+  border-radius: 0.75rem;
+}
+
+.dated-planning summary {
+  display: list-item;
+  cursor: pointer;
+  padding: 0.5rem 0;
+}
+
+.dated-planning-detail form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dated-planning-detail-actions {
+  margin-top: 1rem;
+}
+
+.dated-planning-feedback,
+.dated-planning-confirm,
+.dated-planning-empty {
+  background: var(--sage, #e4e9dc);
+  padding: 0.875rem;
+  border-radius: 0.625rem;
+}
+
+.dated-planning-confirm button {
+  margin: 0.5rem 0.5rem 0 0;
+}
+
+.dated-planning-warning {
+  border-left: 3px solid var(--green, #254d45);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.dated-planning-steps {
+  padding-left: 1.5rem;
+}
+
+.dated-planning-steps li {
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+}
+
+.dated-planning-steps li > span {
+  display: block;
+}
+
+.dated-planning-copy-preview ul {
+  padding-left: 1.5rem;
+}
+
+.dated-planning-copy-preview li {
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.dated-planning-revision,
+.dated-planning-version-history {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line, #e7ded1);
+}
+
+.dated-planning-revision-preview {
+  padding: 0.875rem;
+  margin-top: 0.875rem;
+  border: 1px solid var(--line, #e7ded1);
+  border-radius: 0.625rem;
+}
+
+.dated-planning-revision-preview > button {
+  margin: 0.5rem 0.5rem 0 0;
+}
+
+.dated-planning-revision-preview li {
+  font-size: 0.875rem;
+  margin: 0.5rem 0;
+  overflow-wrap: anywhere;
+}
+
+.dated-planning-revision-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 0.75rem 0;
+}
+
+.dated-planning-revision table {
+  width: 100%;
+  min-width: 30rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.dated-planning-revision :is(th, td) {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.625rem;
+  border: 1px solid var(--line, #e7ded1);
+}
+
+.dated-planning-revision caption {
+  text-align: left;
+  font-weight: 600;
+  padding: 0.5rem 0;
+}
+
+.dated-planning-condition-record > div {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1fr) minmax(0, 2fr);
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--line, #e7ded1);
+  font-size: 0.875rem;
+}
+
+.dated-planning-condition-record dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.dated-planning-unresolved > button {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.schedule-planning-entry {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.schedule-planning-entry button {
+  min-height: 44px;
+}
+
+@media (max-width: 600px) {
+  .dated-planning-dialog .atelier-modal-body,
+  .dated-planning-dialog .atelier-modal-header {
+    padding: 1rem;
+  }
+
+  .dated-planning-dialog .atelier-modal-title {
+    font-size: 1.25rem;
+  }
+
+  .dated-planning-toolbar,
+  .dated-planning-occurrence {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dated-planning-modes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dated-planning-date-nav {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+  }
+
+  .dated-planning-detail,
+  .dated-planning-copy,
+  .dated-planning-unresolved {
+    padding: 0.875rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dated-planning-dialog,
+  .dated-planning-dialog * {
+    animation: none;
+    transition: none;
+    scroll-behavior: auto;
+  }
+}

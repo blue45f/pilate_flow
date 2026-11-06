@@ -1,0 +1,9 @@
+{
+  "license": "0BSD",
+  "origin": "Original Flow Atelier schematic draft code; no third-party source media",
+  "originalArchiveSha256": "62e2ce01015176cce64b18c1c739556aa5df45d1992f81575de8c54a60700301",
+  "files": {
+    "heel-raise-model.mjs": "4168f7830fb50fa8cdf0439578417b8970b068f4dabfa62c6054c3b7c49ddd3e",
+    "clam-model.mjs": "1ca06b135d5eb66a5726f4ed78f4f087534cc99e58d39ed1b8b26b44ffe01837"
+  }
+}
