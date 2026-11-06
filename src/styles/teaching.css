@@ -1,10 +1,10 @@
 .teaching-collection,
 .teaching-stage {
-  --teaching-ink: #263e33;
-  --teaching-muted: #5f6c58;
-  --teaching-paper: #fffef9;
-  --teaching-sage: #e9eee5;
-  --teaching-line: #dde2d8;
+  --teaching-ink: var(--pf-color-text-primary, #1e3129);
+  --teaching-muted: var(--pf-color-text-muted, #526358);
+  --teaching-paper: var(--pf-color-bg-surface, #fffef9);
+  --teaching-sage: var(--pf-color-bg-surface-muted, #e4eadf);
+  --teaching-line: var(--pf-color-border-default, #d5ddd0);
   color: var(--teaching-ink);
   min-width: 0;
 }
@@ -1632,5 +1632,21 @@
 @media (max-width: 560px) {
   .teaching-log-steps > div {
     grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 420px) {
+  .teaching-inline-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .teaching-inline-group > button {
+    width: 100%;
+  }
+  .teaching-log-form .teaching-form-two,
+  .teaching-duration-field > div {
+    grid-template-columns: 1fr;
+  }
+  .teaching-card-tools {
+    flex-wrap: wrap;
   }
 }

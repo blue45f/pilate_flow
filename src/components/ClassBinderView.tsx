@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowDownToLine,
   ArrowRight,
   BookOpen,
   CalendarDays,
-  Check,
   Clock3,
   Copy,
   FileText,
@@ -13,7 +12,6 @@ import {
   Play,
   Plus,
   Printer,
-  Search,
   Trash2,
   Users,
 } from 'lucide-react';
@@ -22,6 +20,19 @@ import {
   INITIAL_HISTORY_LOGS,
   INITIAL_SAVED_SEQUENCES,
 } from '../data/pilatesCatalog';
+import {
+  PfBadge,
+  PfButton,
+  PfCard,
+  PfEmptyState,
+  PfField,
+  PfFormError,
+  PfInput,
+  PfSearchField,
+  PfSelect,
+  PfStatusBanner,
+  PfTabs,
+} from '../design-system';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type {
   ClassHistoryLog,
@@ -37,6 +48,7 @@ import {
 } from '../utils/sequenceEngine';
 import { LightDismissDialog } from './LightDismissDialog';
 import type { TeachingLogContext } from './LogSessionModal';
+import '../styles/design-tokens.css';
 import '../styles/teaching.css';
 import '../styles/rest.css';
 
@@ -88,10 +100,14 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   const [groupName, setGroupName] = useState('');
   const [groupSchedule, setGroupSchedule] = useState('');
   const [groupLevel, setGroupLevel] = useState<DifficultyLevel>('1.5');
+  const [groupFormError, setGroupFormError] = useState('');
   const [message, setMessage] = useState('');
   const [historyCopyError, setHistoryCopyError] = useState('');
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [printSequence, setPrintSequence] = useState<SavedSequence | null>(null);
+  const groupNameInputRef = useRef<HTMLInputElement | null>(null);
+  const groupErrorId = useId();
+
   const exercisesMap = useMemo(
     () => new Map(exercises.map((exercise) => [exercise.id, exercise])),
     [exercises],
@@ -111,6 +127,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
         .filter((log) => selectedGroup === 'all' || log.groupId === selectedGroup)
         .sort((a, b) => Date.parse(b.taughtAt) - Date.parse(a.taughtAt)),
     [historyLogs, selectedGroup],
+  );
+  const groupFilterItems = useMemo(
+    () => [
+      { id: 'all', label: '전체 기록' },
+      ...classGroups.map((group) => ({ id: group.id, label: group.name })),
+    ],
+    [classGroups],
   );
   const actualLogs = logs.filter((log) => !sampleHistoryIds.has(log.id));
   const recent = actualLogs.slice(0, 3);
@@ -144,7 +167,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   };
   const createGroup = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!groupName.trim()) return;
+    if (!groupName.trim()) {
+      setGroupFormError('수업 그룹 별칭을 입력해 주세요.');
+      groupNameInputRef.current?.focus();
+      return;
+    }
+    setGroupFormError('');
     addClassGroup({
       name: groupName.trim(),
       type: 'group',
@@ -173,9 +201,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
           </span>
           <h1 id="workspace-main-heading" tabIndex={-1}>
             {view === 'saved' ? '저장한 시퀀스' : '수업 기록'}
-            <span className="teaching-count">
+            <PfBadge tone="sage" className="teaching-count">
               {view === 'saved' ? savedSequences.length : actualLogs.length}
-            </span>
+            </PfBadge>
           </h1>
           <p className="muted">
             {view === 'saved'
@@ -183,12 +211,17 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
               : '직접 남긴 수업과 메모를 모아 봅니다. 반 이름은 별칭으로 충분해요.'}
           </p>
         </div>
-        <button
-          type="button"
-          className={view === 'saved' ? 'btn-primary' : 'btn-secondary'}
-          onClick={() =>
-            view === 'saved' ? setActiveTab('workbench') : setShowGroupForm((value) => !value)
-          }
+        <PfButton
+          variant={view === 'saved' ? 'primary' : 'secondary'}
+          aria-expanded={view === 'history' ? showGroupForm : undefined}
+          onClick={() => {
+            if (view === 'saved') {
+              setActiveTab('workbench');
+            } else {
+              setGroupFormError('');
+              setShowGroupForm((value) => !value);
+            }
+          }}
         >
           {view === 'saved' ? (
             <>
@@ -199,51 +232,41 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
               <Users size={17} /> 수업 그룹 추가
             </>
           )}
-        </button>
+        </PfButton>
       </header>
-      {message && (
-        <p className="teaching-feedback" role="status">
-          <Check size={16} />
-          {message}
-        </p>
-      )}
-      {view === 'history' && historyCopyError && (
-        <p className="teaching-error" role="alert">
-          {historyCopyError}
-        </p>
-      )}
+      {message && <PfStatusBanner tone="success">{message}</PfStatusBanner>}
+      {view === 'history' && historyCopyError && <PfFormError>{historyCopyError}</PfFormError>}
       {view === 'saved' ? (
         <>
           <div className="teaching-collection-toolbar">
-            <label className="teaching-search">
-              <Search size={18} />
-              <input
-                aria-label="저장한 시퀀스 검색"
-                placeholder="시퀀스 이름으로 찾기"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </label>
+            <PfSearchField
+              label="저장한 시퀀스 검색"
+              wrapperClassName="teaching-search"
+              placeholder="시퀀스 이름으로 찾기"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
             <span className="muted">최근 수정 순 · 이 브라우저에 저장됨</span>
           </div>
           {sequences.length === 0 ? (
-            <div className="panel teaching-empty">
-              <FolderHeart size={32} />
-              <h2>{query ? '검색한 시퀀스가 없어요' : '첫 수업의 흐름을 저장해 보세요'}</h2>
-              <p className="muted">
-                {query
+            <PfEmptyState
+              icon={<FolderHeart size={28} />}
+              title={query ? '검색한 시퀀스가 없어요' : '첫 수업의 흐름을 저장해 보세요'}
+              description={
+                query
                   ? '다른 이름으로 검색해 주세요.'
-                  : '계획에서 시퀀스를 만들고 저장하면 이곳에 모입니다.'}
-              </p>
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => (query ? setQuery('') : setActiveTab('workbench'))}
-              >
-                {query ? '검색 지우기' : '수업 계획하기'}
-                <ArrowRight size={16} />
-              </button>
-            </div>
+                  : '계획에서 시퀀스를 만들고 저장하면 이곳에 모입니다.'
+              }
+              action={
+                <PfButton
+                  variant="secondary"
+                  onClick={() => (query ? setQuery('') : setActiveTab('workbench'))}
+                >
+                  {query ? '검색 지우기' : '수업 계획하기'}
+                  <ArrowRight size={16} />
+                </PfButton>
+              }
+            />
           ) : (
             <div className="teaching-saved-grid">
               {sequences.map((sequence, index) => {
@@ -251,7 +274,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                 const exerciseCount = movementCount(sequence.steps);
                 const restCount = sequence.steps.length - exerciseCount;
                 return (
-                  <article className="panel teaching-sequence-card" key={sequence.id}>
+                  <PfCard
+                    as="article"
+                    variant="interactive"
+                    className="teaching-sequence-card"
+                    key={sequence.id}
+                  >
                     <div className="teaching-card-top">
                       <span className="teaching-card-label">
                         {String(index + 1).padStart(2, '0')} ·{' '}
@@ -260,7 +288,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                           : APPARATUS_LABELS[sequence.apparatus].ko}
                         {sampleSequenceIds.has(sequence.id) && ' · 예시'}
                       </span>
-                      <span className="teaching-level">Lv {sequence.level}</span>
+                      <PfBadge tone="sage" shape="rect" className="teaching-level">
+                        Lv {sequence.level}
+                      </PfBadge>
                     </div>
                     <h2>{sequence.title}</h2>
                     <p className="muted teaching-sequence-subtitle">
@@ -297,14 +327,17 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                     )}
                     <ol className="teaching-flow-preview">
                       {sequence.steps.slice(0, 4).map((step) => (
-                        <li key={step.stepId}>
+                        <li
+                          key={step.stepId}
+                          className={`pf-block-pill ${isRestStep(step) ? 'pf-block-pill--rest' : 'pf-block-pill--movement'}`}
+                        >
                           {isRestStep(step)
                             ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}`
                             : (exercisesMap.get(step.exerciseId)?.nameKo ?? '삭제된 동작')}
                         </li>
                       ))}
                       {sequence.steps.length > 4 && (
-                        <li className="muted">외 {sequence.steps.length - 4}개 항목</li>
+                        <li className="muted pf-block-pill">외 {sequence.steps.length - 4}개 항목</li>
                       )}
                     </ol>
                     <p className="teaching-card-date">
@@ -313,17 +346,15 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                         : `수정 ${formatDate(sequence.updatedAt)}`}
                     </p>
                     <div className="teaching-card-main-actions">
-                      <button
-                        type="button"
-                        className="btn-primary"
+                      <PfButton
+                        variant="primary"
                         onClick={() => loadSequenceIntoWorkbench(sequence.id)}
                       >
                         <BookOpen size={16} />
                         불러오기
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-secondary"
+                      </PfButton>
+                      <PfButton
+                        variant="secondary"
                         onClick={() => {
                           loadSequenceIntoWorkbench(sequence.id);
                           setActiveTab('stage');
@@ -331,12 +362,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       >
                         <Play size={16} />
                         수업 시작
-                      </button>
+                      </PfButton>
                     </div>
                     <div className="teaching-card-tools">
-                      <button
-                        type="button"
-                        className="btn-ghost"
+                      <PfButton
+                        variant="ghost"
                         onClick={() => {
                           const id = duplicateSavedSequence(sequence.id);
                           if (id)
@@ -345,31 +375,23 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       >
                         <Copy size={15} />
                         복제
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-ghost"
-                        onClick={() => setPrintSequence(sequence)}
-                      >
+                      </PfButton>
+                      <PfButton variant="ghost" onClick={() => setPrintSequence(sequence)}>
                         <Printer size={15} />
                         인쇄
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-ghost"
-                        onClick={() => exportText(sequence)}
-                      >
+                      </PfButton>
+                      <PfButton variant="ghost" onClick={() => exportText(sequence)}>
                         <ArrowDownToLine size={15} />
                         텍스트
-                      </button>
-                      <button
-                        type="button"
-                        className="icon-btn teaching-delete"
+                      </PfButton>
+                      <PfButton
+                        variant="icon"
+                        className="teaching-delete"
                         aria-label={`${sequence.title} 삭제`}
                         onClick={() => setPendingDelete(sequence.id)}
                       >
                         <Trash2 size={16} />
-                      </button>
+                      </PfButton>
                     </div>
                     <button
                       type="button"
@@ -385,18 +407,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       이미 진행한 수업 기록하기
                     </button>
                     {pendingDelete === sequence.id && (
-                      <div className="teaching-delete-confirm">
+                      <div className="teaching-delete-confirm" role="region" aria-label="시퀀스 삭제 확인">
                         <p>이 시퀀스를 삭제할까요? 남긴 수업 기록은 유지됩니다.</p>
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          onClick={() => setPendingDelete(null)}
-                        >
+                        <PfButton variant="secondary" onClick={() => setPendingDelete(null)}>
                           취소
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-secondary teaching-delete"
+                        </PfButton>
+                        <PfButton
+                          variant="danger"
                           onClick={() => {
                             deleteSavedSequence(sequence.id);
                             setPendingDelete(null);
@@ -404,16 +421,16 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                           }}
                         >
                           삭제 확인
-                        </button>
+                        </PfButton>
                       </div>
                     )}
-                  </article>
+                  </PfCard>
                 );
               })}
             </div>
           )}
           {conditionTemplates.length > 0 && (
-            <section className="panel teaching-template-panel">
+            <PfCard as="section" className="teaching-template-panel">
               <div>
                 <span className="eyebrow">다시 쓰는 조건</span>
                 <h2 className="section-heading">저장한 수업 조건</h2>
@@ -421,9 +438,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
               </div>
               <div className="teaching-template-list">
                 {conditionTemplates.map((template) => (
-                  <button
-                    type="button"
-                    className="btn-secondary"
+                  <PfButton
+                    variant="secondary"
                     key={template.id}
                     onClick={() => {
                       applyConditionTemplate(template.id);
@@ -432,104 +448,102 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   >
                     {template.name}
                     <ArrowRight size={16} />
-                  </button>
+                  </PfButton>
                 ))}
               </div>
-            </section>
+            </PfCard>
           )}
         </>
       ) : (
         <>
           {showGroupForm && (
-            <form className="panel teaching-group-form" onSubmit={createGroup}>
+            <form className="panel pf-card teaching-group-form" noValidate onSubmit={createGroup}>
               <h2 className="section-heading">수업 그룹 추가</h2>
               <p className="muted">실명과 건강 정보 없이 반 번호나 별칭을 사용해 주세요.</p>
               <div className="teaching-form-grid">
-                <label className="form-field">
-                  <span>그룹 별칭 *</span>
-                  <input
+                <PfField
+                  label="그룹 별칭 *"
+                  error={groupFormError}
+                  errorId={groupErrorId}
+                >
+                  <PfInput
+                    ref={groupNameInputRef}
                     required
                     maxLength={60}
+                    hasError={Boolean(groupFormError)}
+                    aria-describedby={groupFormError ? groupErrorId : undefined}
                     placeholder="예: 저녁 A반, 개인 01"
                     value={groupName}
-                    onChange={(event) => setGroupName(event.target.value)}
+                    onChange={(event) => {
+                      setGroupName(event.target.value);
+                      if (groupFormError) setGroupFormError('');
+                    }}
                   />
-                </label>
-                <label className="form-field">
-                  <span>일정 (선택)</span>
-                  <input
+                </PfField>
+                <PfField label="일정 (선택)">
+                  <PfInput
                     placeholder="예: 화·목 저녁"
                     value={groupSchedule}
                     onChange={(event) => setGroupSchedule(event.target.value)}
                   />
-                </label>
-                <label className="form-field">
-                  <span>기본 난이도</span>
-                  <select
+                </PfField>
+                <PfField label="기본 난이도">
+                  <PfSelect
                     value={groupLevel}
                     onChange={(event) => setGroupLevel(event.target.value as DifficultyLevel)}
                   >
                     <option value="1.0">Lv 1.0</option>
                     <option value="1.5">Lv 1.5</option>
                     <option value="2.0">Lv 2.0</option>
-                  </select>
-                </label>
+                  </PfSelect>
+                </PfField>
               </div>
               <div className="teaching-form-actions">
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => setShowGroupForm(false)}
+                <PfButton
+                  variant="secondary"
+                  onClick={() => {
+                    setGroupFormError('');
+                    setShowGroupForm(false);
+                  }}
                 >
                   취소
-                </button>
-                <button type="submit" className="btn-primary">
+                </PfButton>
+                <PfButton type="submit" variant="primary">
                   그룹 추가
-                </button>
+                </PfButton>
               </div>
             </form>
           )}
-          <div className="teaching-group-filters" aria-label="수업 그룹 필터">
-            <button
-              type="button"
-              className={`teaching-filter ${selectedGroup === 'all' ? 'active' : ''}`}
-              aria-pressed={selectedGroup === 'all'}
-              onClick={() => setSelectedGroup('all')}
-            >
-              전체 기록
-            </button>
-            {classGroups.map((group) => (
-              <button
-                type="button"
-                className={`teaching-filter ${selectedGroup === group.id ? 'active' : ''}`}
-                aria-pressed={selectedGroup === group.id}
-                key={group.id}
-                onClick={() => setSelectedGroup(group.id)}
-              >
-                {group.name}
-              </button>
-            ))}
-          </div>
+          <PfTabs
+            ariaLabel="수업 그룹 필터"
+            semantics="group"
+            variant="pills"
+            className="teaching-group-filters"
+            itemClassName="teaching-filter"
+            items={groupFilterItems}
+            value={selectedGroup}
+            onChange={setSelectedGroup}
+          />
           <div className="teaching-history-layout">
             <section className="teaching-history-feed" aria-label="수업 기록 목록">
               {actualLogs.length === 0 && (
-                <div className="panel teaching-empty">
-                  <History size={32} />
-                  <h2>아직 남긴 수업 기록이 없어요</h2>
-                  <p className="muted">
-                    수업을 마친 뒤 날짜와 짧은 메모를 남겨 보세요.
-                    <br />
-                    아래 예시 기록은 내 수업 분석에 포함되지 않아요.
-                  </p>
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => setActiveTab('workbench')}
-                  >
-                    오늘 수업 계획하기
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
+                <PfEmptyState
+                  icon={<History size={28} />}
+                  title="아직 남긴 수업 기록이 없어요"
+                  description={
+                    <>
+                      수업을 마친 뒤 날짜와 짧은 메모를 남겨 보세요.
+                      <br />
+                      아래 예시 기록은 내 수업 분석에 포함되지 않아요.
+                    </>
+                  }
+                  action={
+                    <PfButton variant="secondary" onClick={() => setActiveTab('workbench')}>
+                      오늘 수업 계획하기
+                      <ArrowRight size={16} />
+                    </PfButton>
+                  }
+                />
               )}
               {logs.map((log) => {
                 const isSample = sampleHistoryIds.has(log.id);
@@ -539,9 +553,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                 const durations = snapshot ? getSequenceDurations(snapshot) : null;
                 const missingExercise = exerciseIds.some((id) => !exercisesMap.has(id));
                 return (
-                  <article
+                  <PfCard
+                    as="article"
                     key={log.id}
-                    className={`panel teaching-history-card ${isSample ? 'teaching-sample-record' : ''}`}
+                    variant={isSample ? 'sample' : 'default'}
+                    className="teaching-history-card"
                   >
                     <div className="teaching-card-top">
                       <span className="teaching-history-group">
@@ -551,7 +567,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       <time dateTime={log.taughtAt}>{formatDate(log.taughtAt)}</time>
                     </div>
                     {isSample && (
-                      <span className="teaching-sample-label">예시 기록 · 실제 수업 아님</span>
+                      <PfBadge tone="sample" shape="rect" className="teaching-sample-label">
+                        예시 기록 · 실제 수업 아님
+                      </PfBadge>
                     )}
                     <h2>{log.sequenceTitle}</h2>
                     <div className="teaching-card-stats">
@@ -577,14 +595,17 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                     <div className="teaching-history-exercises">
                       {snapshot
                         ? snapshot.map((step) => (
-                            <span key={step.stepId}>
+                            <span
+                              key={step.stepId}
+                              className={`pf-block-pill ${isRestStep(step) ? 'pf-block-pill--rest' : 'pf-block-pill--movement'}`}
+                            >
                               {isRestStep(step)
                                 ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}`
                                 : (exercisesMap.get(step.exerciseId)?.nameKo ?? '삭제된 동작')}
                             </span>
                           ))
                         : exerciseIds.map((id, index) => (
-                            <span key={`${id}-${index}`}>
+                            <span key={`${id}-${index}`} className="pf-block-pill pf-block-pill--movement">
                               {exercisesMap.get(id)?.nameKo ?? '삭제된 동작'}
                             </span>
                           ))}
@@ -599,21 +620,20 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                               : '당시 저장한 동작·시간으로 불러옵니다.'
                             : '구성 참고 · 시간은 현재 기본값으로 복원'}
                       </span>
-                      <button
-                        type="button"
-                        className="btn-secondary"
+                      <PfButton
+                        variant="secondary"
                         disabled={missingExercise}
                         onClick={() => copyHistory(log.id)}
                       >
                         <Copy size={15} />이 수업 다시 계획
-                      </button>
+                      </PfButton>
                     </div>
-                  </article>
+                  </PfCard>
                 );
               })}
             </section>
             <aside className="teaching-memory-aside">
-              <section className="panel teaching-memory-card">
+              <PfCard as="section" className="teaching-memory-card">
                 <span className="eyebrow">반복을 살펴보세요</span>
                 <h2 className="section-heading">현재 초안과 최근 수업</h2>
                 <p className="muted">선택한 그룹의 실제 기록 최근 3회와 같은 동작 수입니다.</p>
@@ -638,8 +658,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                     );
                   })
                 )}
-              </section>
-              <section className="panel teaching-memory-card">
+              </PfCard>
+              <PfCard as="section" className="teaching-memory-card">
                 <FileText size={20} />
                 <h2 className="section-heading">최근 5회에 포함된 동작</h2>
                 {mostUsed.length === 0 ? (
@@ -657,7 +677,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                 <p className="muted">
                   반복 여부는 참고 정보입니다. 회원과 수업 목표에 따라 강사가 판단해 주세요.
                 </p>
-              </section>
+              </PfCard>
             </aside>
           </div>
         </>
@@ -676,13 +696,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
           <pre>{printSequence ? sheetFor(printSequence) : ''}</pre>
         </div>
         <div className="teaching-form-actions">
-          <button type="button" className="btn-secondary" onClick={() => setPrintSequence(null)}>
+          <PfButton variant="secondary" onClick={() => setPrintSequence(null)}>
             닫기
-          </button>
-          <button type="button" className="btn-primary" onClick={() => window.print()}>
+          </PfButton>
+          <PfButton variant="primary" onClick={() => window.print()}>
             <Printer size={16} />
             인쇄하기
-          </button>
+          </PfButton>
         </div>
       </LightDismissDialog>
     </div>

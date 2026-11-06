@@ -1,10 +1,19 @@
 import React, { useState } from 'react';
 import { Check, Clock3, Plus } from 'lucide-react';
+import {
+  PfButton,
+  PfField,
+  PfFormError,
+  PfInput,
+  PfSelect,
+  PfTextarea,
+} from '../design-system';
 import { LogClassHistorySchema } from '../schemas/pilatesSchema';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { SequenceStep } from '../types/pilates';
 import { formatSecondsToMMSS, getSequenceDurations, isRestStep } from '../utils/sequenceEngine';
 import { LightDismissDialog } from './LightDismissDialog';
+import '../styles/design-tokens.css';
 import '../styles/teaching.css';
 
 export interface TeachingLogContext {
@@ -219,6 +228,7 @@ const SessionLogForm: React.FC<
     <LightDismissDialog
       open
       onClose={onClose}
+      variant="sheet"
       title="수업 기록 남기기"
       subtitle={title}
       maxWidth="640px"
@@ -240,9 +250,12 @@ const SessionLogForm: React.FC<
           </div>
         </div>
         <div className="teaching-form-grid teaching-form-two">
-          <label className="form-field">
-            <span>수업 그룹 *</span>
-            <select required value={groupId} onChange={(event) => setGroupId(event.target.value)}>
+          <PfField label="수업 그룹 *">
+            <PfSelect
+              required
+              value={groupId}
+              onChange={(event) => setGroupId(event.target.value)}
+            >
               <option value="" disabled>
                 그룹을 선택해 주세요
               </option>
@@ -251,18 +264,17 @@ const SessionLogForm: React.FC<
                   {group.name}
                 </option>
               ))}
-            </select>
-          </label>
-          <label className="form-field">
-            <span>수업 일자 *</span>
-            <input
+            </PfSelect>
+          </PfField>
+          <PfField label="수업 일자 *">
+            <PfInput
               type="date"
               required
               max={localDate()}
               value={taughtDate}
               onChange={(event) => setTaughtDate(event.target.value)}
             />
-          </label>
+          </PfField>
         </div>
         <button
           type="button"
@@ -275,26 +287,24 @@ const SessionLogForm: React.FC<
         </button>
         {showGroup && (
           <div className="teaching-inline-group">
-            <label className="form-field">
-              <span>그룹 별칭 · 실명은 필요 없어요</span>
-              <input
+            <PfField label="그룹 별칭 · 실명은 필요 없어요">
+              <PfInput
                 maxLength={60}
                 placeholder="예: 저녁 A반, 개인 01"
                 value={newGroupName}
                 onChange={(event) => setNewGroupName(event.target.value)}
               />
-            </label>
-            <button type="button" className="btn-secondary" onClick={createGroup}>
+            </PfField>
+            <PfButton variant="secondary" onClick={createGroup}>
               추가
-            </button>
+            </PfButton>
           </div>
         )}
         <fieldset className="teaching-duration-field">
           <legend>실제 진행 시간 (선택)</legend>
           <div>
-            <label className="form-field">
-              <span>분</span>
-              <input
+            <PfField label="분">
+              <PfInput
                 inputMode="numeric"
                 type="number"
                 min="0"
@@ -304,10 +314,9 @@ const SessionLogForm: React.FC<
                 value={minutes}
                 onChange={(event) => setMinutes(event.target.value)}
               />
-            </label>
-            <label className="form-field">
-              <span>초</span>
-              <input
+            </PfField>
+            <PfField label="초">
+              <PfInput
                 inputMode="numeric"
                 type="number"
                 min="0"
@@ -317,7 +326,7 @@ const SessionLogForm: React.FC<
                 value={seconds}
                 onChange={(event) => setSeconds(event.target.value)}
               />
-            </label>
+            </PfField>
           </div>
           <p className="muted">
             {context?.actualDurationSec === undefined
@@ -369,20 +378,18 @@ const SessionLogForm: React.FC<
           </div>
         </details>
         <div className="teaching-form-grid teaching-form-two">
-          <label className="form-field">
-            <span>강사가 느낀 강도</span>
-            <select
+          <PfField label="강사가 느낀 강도">
+            <PfSelect
               value={intensity}
               onChange={(event) => setIntensity(event.target.value as typeof intensity)}
             >
               <option value="relaxed">가볍게</option>
               <option value="moderate">보통</option>
               <option value="intense">높게</option>
-            </select>
-          </label>
-          <label className="form-field">
-            <span>강사의 수업 평가</span>
-            <select
+            </PfSelect>
+          </PfField>
+          <PfField label="강사의 수업 평가">
+            <PfSelect
               value={rating}
               onChange={(event) => setRating(Number(event.target.value) as typeof rating)}
             >
@@ -391,12 +398,14 @@ const SessionLogForm: React.FC<
                   {value} / 5
                 </option>
               ))}
-            </select>
-          </label>
+            </PfSelect>
+          </PfField>
         </div>
-        <label className="form-field">
-          <span>다음 수업을 위한 메모 (선택)</span>
-          <textarea
+        <PfField
+          label="다음 수업을 위한 메모 (선택)"
+          hint="학생 실명이나 건강 정보는 적지 않아도 돼요."
+        >
+          <PfTextarea
             aria-label="다음 수업을 위한 메모 (선택)"
             rows={3}
             maxLength={3000}
@@ -404,25 +413,20 @@ const SessionLogForm: React.FC<
             value={reflection}
             onChange={(event) => setReflection(event.target.value)}
           />
-          <small className="muted">학생 실명이나 건강 정보는 적지 않아도 돼요.</small>
-        </label>
-        {error && (
-          <p role="alert" className="teaching-error">
-            {error}
-          </p>
-        )}
+        </PfField>
+        {error && <PfFormError>{error}</PfFormError>}
         <div className="teaching-form-actions">
-          <button type="button" className="btn-secondary" onClick={onClose}>
+          <PfButton variant="secondary" onClick={onClose}>
             취소
-          </button>
-          <button
+          </PfButton>
+          <PfButton
             type="submit"
-            className="btn-primary"
+            variant="primary"
             disabled={submitted || classGroups.length === 0}
           >
             <Check size={17} />
             수업 기록 저장
-          </button>
+          </PfButton>
         </div>
         <p className="teaching-log-footnote muted">
           이 브라우저에 저장됩니다. 기록이 실제 수업과 맞는지 확인해 주세요.

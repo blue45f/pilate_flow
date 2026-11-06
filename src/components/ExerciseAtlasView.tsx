@@ -39,6 +39,10 @@ import reviewQueueCsvUrl from '../data/sourceCatalog/review-queue.csv?url';
 import { EQUIPMENT_OPTIONS, PROP_OPTIONS, getExerciseEquipment } from '../data/equipmentCatalog';
 import { matchesLibraryEquipment } from '../data/libraryEquipmentFilters';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
+import {
+  addMovementIdeaToCurrentClass,
+  isMovementIdeaExercise,
+} from '../utils/movementIdeaDraft';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type {
   BodyPosition,
@@ -64,6 +68,7 @@ import { COURSE_REFERENCES } from '../data/courseReferences';
 
 interface ExerciseAtlasViewProps {
   onOpenYouTubePreview: (exercise: PilatesExercise) => void;
+  onOpenIdeaSheet?: (exercise?: PilatesExercise | null) => void;
   onOpenClipper: () => void;
   onOpenStudy?: (exerciseId?: string) => void;
   onOpenMotionDrafts?: (draftId?: MotionDraftId) => void;
@@ -716,6 +721,7 @@ const VerifiedReferencesSection: React.FC<{
 
 export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   onOpenYouTubePreview,
+  onOpenIdeaSheet,
   onOpenClipper,
   onOpenStudy,
   onOpenMotionDrafts,
@@ -841,6 +847,18 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     timer.current = null;
     setAddedId(null);
     setToast(null);
+    if (isMovementIdeaExercise(exercise)) {
+      const result = addMovementIdeaToCurrentClass(exercise.id);
+      setToast({ success: result.ok, message: result.message });
+      if (!result.ok) return;
+      setAddedId(exercise.id);
+      timer.current = setTimeout(() => {
+        timer.current = null;
+        setToast(null);
+        setAddedId(null);
+      }, 2600);
+      return;
+    }
     if (!isExerciseAutoEligible(exercise)) {
       onOpenYouTubePreview(exercise);
       return;
@@ -878,6 +896,15 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
           <p className="muted">동작 노트와 원본 도해 초안을 살펴보세요.</p>
         </div>
         <div className="library-heading-actions">
+          {onOpenIdeaSheet && (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => onOpenIdeaSheet(null)}
+            >
+              <Plus size={16} /> 한 줄 동작 메모
+            </button>
+          )}
           <button type="button" className="btn-primary" onClick={() => setOwnNoteOpen(true)}>
             <Plus size={17} /> 내 동작 직접 등록
           </button>
@@ -1313,7 +1340,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 );
                 return (
                   <article
-                    className={`movement-card movement-${exercise.apparatus}`}
+                    className={`movement-card pf-movement-card pf-movement-card--catalog movement-${exercise.apparatus}`}
                     key={exercise.id}
                   >
                     <div className="movement-card-art">
@@ -1382,7 +1409,11 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                         </button>
                       </h2>
                       <p className="movement-english">{exercise.nameEn}</p>
-                      <p className={`movement-review-status review-${reviewState}`}>
+                      <p
+                        className={`movement-review-status review-${reviewState} pf-ai-status ${
+                          approved ? 'pf-ai-status--instructor-reviewed' : 'pf-ai-status--review-pending'
+                        }`}
+                      >
                         {approved
                           ? '내 강사 검토 · 자격 인증 미확인'
                           : reviewState === 'stale'

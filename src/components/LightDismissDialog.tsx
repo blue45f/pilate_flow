@@ -16,6 +16,8 @@ interface LightDismissDialogProps {
   subtitle?: string;
   maxWidth?: string;
   className?: string;
+  /** 'modal' (centered) or 'sheet' (bottom sheet on mobile, centered on desktop). */
+  variant?: 'modal' | 'sheet';
   children: React.ReactNode;
 }
 
@@ -27,10 +29,12 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
   subtitle,
   maxWidth = '760px',
   className = '',
+  variant = 'modal',
   children,
 }) => {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const titleId = useId();
+  const subtitleId = useId();
   const requestClose = useCallback(
     (reason: DialogCloseRequest['reason']) => {
       const dialog = dialogRef.current;
@@ -127,7 +131,15 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
     <dialog
       ref={dialogRef}
       aria-labelledby={titleId}
-      className={`atelier-modal-dialog ${className}`}
+      aria-describedby={subtitle ? subtitleId : undefined}
+      className={[
+        'atelier-modal-dialog',
+        'pf-modal-dialog',
+        variant === 'sheet' ? 'pf-modal-dialog--sheet' : '',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       style={{ maxWidth }}
       {...({ closedby: 'any' } as Record<string, string>)}
     >
@@ -137,11 +149,15 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
             <h2 id={titleId} className="atelier-modal-title">
               {title}
             </h2>
-            {subtitle && <p className="atelier-modal-subtitle">{subtitle}</p>}
+            {subtitle && (
+              <p id={subtitleId} className="atelier-modal-subtitle">
+                {subtitle}
+              </p>
+            )}
           </div>
           <button
             type="button"
-            className="icon-btn"
+            className="icon-btn pf-btn pf-btn--icon"
             onClick={() => requestClose('close-button')}
             aria-label="닫기"
           >

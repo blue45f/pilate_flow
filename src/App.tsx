@@ -11,6 +11,7 @@ import {
   Library,
   Menu,
   Settings2,
+  Sparkles,
   X,
 } from 'lucide-react';
 import type { TeachingLogContext } from './components/LogSessionModal';
@@ -18,6 +19,7 @@ import type { LiveStageNavigationHandle } from './components/LiveStageView';
 import { SequenceWorkbench } from './components/SequenceWorkbench';
 import type { WorkbenchPlanningMode } from './components/SequenceWorkbench';
 import { LightDismissDialog } from './components/LightDismissDialog';
+import { MovementIdeaSheet } from './components/MovementIdeaSheet';
 import { InventoryPanel } from './components/InventoryPanel';
 import { DeferredPanelBoundary } from './components/DeferredPanelBoundary';
 import { type ActiveWorkspaceTab, usePilatesStore } from './store/usePilatesStore';
@@ -32,6 +34,7 @@ import {
 import './styles/controls.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
 import { isExerciseAutoEligible } from './utils/exerciseReview';
+import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 
 const InstructorStudyDialog = lazy(() =>
   import('./components/InstructorStudyDialog').then((module) => ({
@@ -86,6 +89,11 @@ const YouTubePreviewModal = lazy(() =>
     default: module.YouTubePreviewModal,
   })),
 );
+const DesignSystemInspector = lazy(() =>
+  import('./design-system/DesignSystemInspector').then((module) => ({
+    default: module.DesignSystemInspector,
+  })),
+);
 
 const navigation = [
   { id: 'workbench', label: '수업', detail: '오늘의 수업', icon: CalendarDays },
@@ -137,8 +145,17 @@ export function App() {
     usePilatesStore.getState().activeSteps.length ? 'auto' : 'manual',
   );
   const [preview, setPreview] = useState<PilatesExercise | null>(null);
+  const [ideaSheetState, setIdeaSheetState] = useState<{
+    open: boolean;
+    exercise: PilatesExercise | null;
+  }>({ open: false, exercise: null });
   const [clipperOpen, setClipperOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [designSystemOpen, setDesignSystemOpen] = useState(() => {
+    if (!(import.meta.env.DEV || import.meta.env.MODE === 'test')) return false;
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('pf_ds_inspect') === '1';
+  });
   const [menuOpen, setMenuOpen] = useState(false);
   const [workspaceFocusRequest, setWorkspaceFocusRequest] = useState(0);
   const [logId, setLogId] = useState<string | null>(null);
@@ -403,6 +420,45 @@ export function App() {
             </button>
           </div>
         </header>
+        {state.activeTab !== 'stage' && (
+          <nav className="pf-core-quick-bar" aria-label="핵심 빠른 메뉴">
+            <button
+              type="button"
+              className="pf-core-quick-btn pf-core-quick-btn--accent"
+              onClick={() => setIdeaSheetState({ open: true, exercise: null })}
+            >
+              <Sparkles size={15} aria-hidden="true" />
+              <span>새 동작 메모</span>
+            </button>
+            <button
+              type="button"
+              className={`pf-core-quick-btn ${state.activeTab === 'workbench' ? 'is-active' : ''}`}
+              aria-current={state.activeTab === 'workbench' ? 'page' : undefined}
+              onClick={() => changeTab('workbench')}
+            >
+              <CalendarDays size={15} aria-hidden="true" />
+              <span>수업 만들기</span>
+            </button>
+            <button
+              type="button"
+              className={`pf-core-quick-btn ${state.activeTab === 'binder' ? 'is-active' : ''}`}
+              aria-current={state.activeTab === 'binder' ? 'page' : undefined}
+              onClick={() => changeTab('binder')}
+            >
+              <Bookmark size={15} aria-hidden="true" />
+              <span>내 수업</span>
+            </button>
+            <button
+              type="button"
+              className={`pf-core-quick-btn ${state.activeTab === 'history' ? 'is-active' : ''}`}
+              aria-current={state.activeTab === 'history' ? 'page' : undefined}
+              onClick={() => changeTab('history')}
+            >
+              <Clock3 size={15} aria-hidden="true" />
+              <span>기록</span>
+            </button>
+          </nav>
+        )}
         <main id="main-content" className="main-content" tabIndex={-1}>
           {state.persistenceError && (
             <p className="status error" role="alert">
@@ -416,8 +472,17 @@ export function App() {
             <SequenceWorkbench
               planningMode={planningMode}
               onPlanningModeChange={setPlanningMode}
-              sourceDetailOpen={!!preview}
-              onOpenYouTubePreview={setPreview}
+              sourceDetailOpen={!!preview || ideaSheetState.open}
+              onOpenYouTubePreview={(exercise) => {
+                if (isMovementIdeaExercise(exercise)) {
+                  setIdeaSheetState({ open: true, exercise });
+                  return;
+                }
+                setPreview(exercise);
+              }}
+              onOpenIdeaSheet={(exercise) =>
+                setIdeaSheetState({ open: true, exercise: exercise ?? null })
+              }
               onOpenClipper={() => setClipperOpen(true)}
               onOpenLogModal={openLog}
               onOpenInventory={() => setSettingsOpen(true)}
@@ -438,7 +503,16 @@ export function App() {
                   setMotionDraftInitialId(draftId);
                   setMotionDraftLabOpen(true);
                 }}
-                onOpenYouTubePreview={setPreview}
+                onOpenYouTubePreview={(exercise) => {
+                  if (isMovementIdeaExercise(exercise)) {
+                    setIdeaSheetState({ open: true, exercise });
+                    return;
+                  }
+                  setPreview(exercise);
+                }}
+                onOpenIdeaSheet={(exercise) =>
+                  setIdeaSheetState({ open: true, exercise: exercise ?? null })
+                }
                 onOpenClipper={() => setClipperOpen(true)}
               />
             )}
@@ -529,6 +603,10 @@ export function App() {
             }}
             onOpenReview={(exercise) => {
               setStudyOpen(null);
+              if (isMovementIdeaExercise(exercise)) {
+                setIdeaSheetState({ open: true, exercise });
+                return;
+              }
               setPreview(exercise);
             }}
             onClose={() => setStudyOpen(null)}
@@ -575,6 +653,19 @@ export function App() {
           </div>
         )}
       </Suspense>
+      {ideaSheetState.open && (
+        <MovementIdeaSheet
+          key={ideaSheetState.exercise?.id ?? 'new-idea'}
+          open={ideaSheetState.open}
+          initialExercise={ideaSheetState.exercise}
+          onClose={() => setIdeaSheetState({ open: false, exercise: null })}
+          onAddedToClass={() => {
+            if (usePilatesStore.getState().activeTab !== 'workbench') {
+              commitTabChange('workbench');
+            }
+          }}
+        />
+      )}
       <LightDismissDialog
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
@@ -656,7 +747,43 @@ export function App() {
             NHS 허리 통증·응급 증상 안내
           </a>
         </details>
+        {(import.meta.env.DEV || import.meta.env.MODE === 'test') && (
+          <section className="settings-section" aria-label="개발용 내부 검수">
+            <span className="eyebrow">INTERNAL DEV ONLY</span>
+            <h3>디자인 시스템 내부 검수</h3>
+            <p>
+              개발·테스트 환경에서만 표시되는 내부 검수 도구입니다. 토큰·공통 컴포넌트 상태·반응형
+              뷰포트를 외부 공개 없이 확인합니다.
+            </p>
+            <div className="button-row">
+              <button
+                type="button"
+                className="pf-ds-trigger"
+                onClick={() => {
+                  setSettingsOpen(false);
+                  setDesignSystemOpen(true);
+                }}
+              >
+                디자인 시스템 검수 열기
+              </button>
+            </div>
+          </section>
+        )}
       </LightDismissDialog>
+      {designSystemOpen && (
+        <Suspense
+          fallback={
+            <p className="modal-loading" role="status">
+              검수 화면을 열고 있어요…
+            </p>
+          }
+        >
+          <DesignSystemInspector
+            open={designSystemOpen}
+            onClose={() => setDesignSystemOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

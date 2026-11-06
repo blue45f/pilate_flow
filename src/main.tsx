@@ -4,6 +4,7 @@ import { App } from './App';
 import './styles/studio.css';
 import './styles/atelier-v2.css';
 import './styles/atelier-vnext.css';
+import './styles/design-tokens.css';
 import { bootstrapCloudSession } from './lib/cloudSync';
 
 void bootstrapCloudSession();

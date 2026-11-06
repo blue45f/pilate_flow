@@ -1,0 +1,1763 @@
+/* ==========================================================================
+   Pilates Flow Atelier — Semantic Design System Tokens & Common Primitives
+   Maintains full backward compatibility with studio.css, atelier-v2.css,
+   atelier-vnext.css, and .teaching-high-contrast theme.
+   ========================================================================== */
+
+:root {
+  /* 1. Primitive Palette (Brand Editorial Foundations) */
+  --pf-palette-forest-900: #112e27;
+  --pf-palette-forest-800: #173d34;
+  --pf-palette-forest-700: #214f43;
+  --pf-palette-forest-600: #2e6354;
+  --pf-palette-sage-300: #c4d0be;
+  --pf-palette-sage-200: #d8e1d3;
+  --pf-palette-sage-150: #e4eadf;
+  --pf-palette-sage-100: #eef2ea;
+  --pf-palette-ivory-200: #efede4;
+  --pf-palette-ivory-100: #f7f5ef;
+  --pf-palette-paper-50: #fffef9;
+  --pf-palette-white: #ffffff;
+  --pf-palette-ink-900: #1e3129;
+  --pf-palette-ink-700: #3d4f45;
+  --pf-palette-ink-500: #526358;
+  --pf-palette-clay-600: #9c5b36;
+  --pf-palette-clay-500: #b16f48;
+  --pf-palette-clay-100: #f9ede5;
+
+  /* 2. Semantic Color Tokens — Surfaces */
+  --pf-color-bg-canvas: var(--vnext-ivory, var(--pf-palette-ivory-100));
+  --pf-color-bg-surface: var(--v2-paper, var(--pf-palette-paper-50));
+  --pf-color-bg-surface-subtle: #f3f5ee;
+  --pf-color-bg-surface-muted: var(--vnext-sage, var(--pf-palette-sage-150));
+  --pf-color-bg-surface-elevated: var(--pf-palette-white);
+  --pf-color-bg-sidebar: var(--vnext-forest, var(--pf-palette-forest-800));
+  --pf-color-bg-sample: #f8f8ef;
+  --pf-color-bg-overlay: rgba(23, 45, 36, 0.48);
+
+  /* 3. Semantic Color Tokens — Text & Iconography (WCAG AA >= 4.5:1 verified) */
+  --pf-color-text-primary: var(--v2-ink, var(--pf-palette-ink-900));
+  --pf-color-text-secondary: var(--pf-palette-ink-700);
+  --pf-color-text-muted: var(--pf-palette-ink-500);
+  --pf-color-text-on-primary: #fffef9;
+  --pf-color-text-on-sidebar: #f5f4e8;
+  --pf-color-text-brand: var(--vnext-forest, var(--pf-palette-forest-800));
+
+  /* 4. Semantic Color Tokens — Interactive Actions */
+  --pf-color-action-primary: var(--vnext-forest, var(--pf-palette-forest-800));
+  --pf-color-action-primary-hover: var(--pf-palette-forest-700);
+  --pf-color-action-primary-active: var(--pf-palette-forest-900);
+  --pf-color-action-secondary-bg: var(--pf-palette-paper-50);
+  --pf-color-action-secondary-hover: #eaeFe4;
+  --pf-color-action-secondary-border: var(--pf-palette-sage-300);
+  --pf-color-action-ghost-hover: #e7ede1;
+
+  /* 5. Semantic Color Tokens — Borders & Focus Rings */
+  --pf-color-border-subtle: #e3e8dd;
+  --pf-color-border-default: var(--v2-line, #d5ddd0);
+  --pf-color-border-strong: #aab9a3;
+  --pf-color-focus-ring: var(--vnext-clay, var(--pf-palette-clay-500));
+  --pf-color-focus-halo: rgba(177, 111, 72, 0.22);
+
+  /* 6. Semantic Color Tokens — Status & Feedback (Success, Warning, Danger, Info) */
+  --pf-color-status-success-bg: #eaf2e6;
+  --pf-color-status-success-border: #b5cbb0;
+  --pf-color-status-success-text: #254b29;
+
+  --pf-color-status-warning-bg: #fdf3e1;
+  --pf-color-status-warning-border: #e0c08b;
+  --pf-color-status-warning-text: #6b4010;
+
+  --pf-color-status-danger-bg: #fbede7;
+  --pf-color-status-danger-border: #dcb09e;
+  --pf-color-status-danger-text: #8a341e;
+  --pf-color-status-danger-hover: #f5ddd3;
+
+  --pf-color-status-info-bg: #edf1ec;
+  --pf-color-status-info-border: #c5d1c3;
+  --pf-color-status-info-text: #2e4639;
+
+  /* 6b. Domain Semantic Tokens — Sequence Blocks & AI/Provenance Status */
+  --pf-color-block-surface: #f6f7f2;
+  --pf-color-block-header-bg: #e7ebdf;
+  --pf-color-ai-draft-bg: #eef2ea;
+  --pf-color-ai-draft-border: #b8c8b0;
+  --pf-color-ai-draft-text: #1e3b2f;
+  --pf-color-ai-memo-bg: #f4f1e3;
+  --pf-color-ai-memo-border: #d4ccb3;
+  --pf-color-ai-memo-text: #4a3f28;
+
+  /* 7. Typography Tokens */
+  --pf-font-sans:
+    'Apple SD Gothic Neo', 'Pretendard', 'Malgun Gothic', 'Noto Sans KR', system-ui, -apple-system,
+    sans-serif;
+  --pf-font-serif: Georgia, 'Noto Serif KR', serif;
+  --pf-font-mono: 'DM Sans', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --pf-text-2xs: 0.6875rem; /* 11px */
+  --pf-text-xs: 0.75rem; /* 12px */
+  --pf-text-sm: 0.8125rem; /* 13px */
+  --pf-text-md: 0.9375rem; /* 15px */
+  --pf-text-base: 1rem; /* 16px — mobile input safe size */
+  --pf-text-lg: 1.1875rem; /* 19px */
+  --pf-text-xl: 1.375rem; /* 22px */
+  --pf-text-2xl: clamp(1.5rem, 2.4vw, 2.125rem);
+  --pf-text-display: clamp(1.75rem, 2.8vw, 2.4rem);
+
+  --pf-leading-tight: 1.3;
+  --pf-leading-snug: 1.45;
+  --pf-leading-normal: 1.65;
+  --pf-leading-relaxed: 1.8;
+
+  --pf-tracking-tight: -0.04em;
+  --pf-tracking-normal: -0.01em;
+  --pf-tracking-wide: 0.12em;
+
+  --pf-weight-regular: 400;
+  --pf-weight-medium: 500;
+  --pf-weight-semibold: 600;
+  --pf-weight-bold: 650;
+
+  /* 8. Spacing & Touch Target Tokens (4px/8px grid + 44px WCAG target) */
+  --pf-space-1: 0.25rem; /* 4px */
+  --pf-space-2: 0.5rem; /* 8px */
+  --pf-space-3: 0.75rem; /* 12px */
+  --pf-space-4: 1rem; /* 16px */
+  --pf-space-5: 1.25rem; /* 20px */
+  --pf-space-6: 1.5rem; /* 24px */
+  --pf-space-8: 2rem; /* 32px */
+  --pf-space-10: 2.5rem; /* 40px */
+
+  --pf-touch-min: 44px;
+  --pf-touch-comfortable: 48px;
+
+  /* 9. Border Radius Tokens */
+  --pf-radius-xs: 6px;
+  --pf-radius-sm: 8px;
+  --pf-radius-md: 12px;
+  --pf-radius-lg: 16px;
+  --pf-radius-xl: 20px;
+  --pf-radius-pill: 9999px;
+
+  /* 10. Elevation / Shadow Tokens */
+  --pf-shadow-xs: 0 1px 2px rgba(23, 61, 52, 0.05);
+  --pf-shadow-sm: 0 3px 12px rgba(23, 61, 52, 0.06);
+  --pf-shadow-md: 0 8px 24px rgba(23, 61, 52, 0.09);
+  --pf-shadow-lg: 0 18px 42px rgba(23, 61, 52, 0.16);
+}
+
+/* High-Contrast Theme Compatibility (.teaching-high-contrast & [data-pf-theme="high-contrast"]) */
+.teaching-high-contrast,
+[data-pf-theme='high-contrast'] {
+  --pf-color-bg-canvas: #102218;
+  --pf-color-bg-surface: #182e24;
+  --pf-color-bg-surface-subtle: #1f392c;
+  --pf-color-bg-surface-muted: #2d4939;
+  --pf-color-bg-surface-elevated: #223e30;
+  --pf-color-bg-sample: #1c3328;
+  --pf-color-text-primary: #fffef2;
+  --pf-color-text-secondary: #dce8db;
+  --pf-color-text-muted: #c5d6c4;
+  --pf-color-text-on-primary: #142a1c;
+  --pf-color-text-brand: #dceacb;
+  --pf-color-action-primary: #dceacb;
+  --pf-color-action-primary-hover: #eef7e3;
+  --pf-color-action-secondary-bg: #264232;
+  --pf-color-action-secondary-hover: #325440;
+  --pf-color-action-secondary-border: #6e866e;
+  --pf-color-action-ghost-hover: #294535;
+  --pf-color-border-subtle: #3d5746;
+  --pf-color-border-default: #516a54;
+  --pf-color-border-strong: #849f87;
+  --pf-color-focus-ring: #f2b880;
+  --pf-color-status-success-bg: #23422b;
+  --pf-color-status-success-border: #659470;
+  --pf-color-status-success-text: #e8f8eb;
+  --pf-color-status-warning-bg: #473214;
+  --pf-color-status-warning-border: #b88b4a;
+  --pf-color-status-warning-text: #fdebd0;
+  --pf-color-status-danger-bg: #4a2018;
+  --pf-color-status-danger-border: #c97a67;
+  --pf-color-status-danger-text: #fde8e3;
+  --pf-color-status-info-bg: #1f382d;
+  --pf-color-status-info-border: #688778;
+  --pf-color-status-info-text: #e6f2ec;
+  --pf-color-block-surface: #1b3327;
+  --pf-color-block-header-bg: #264435;
+  --pf-color-ai-draft-bg: #213d2e;
+  --pf-color-ai-draft-border: #6f987d;
+  --pf-color-ai-draft-text: #eaf6ee;
+  --pf-color-ai-memo-bg: #3b331d;
+  --pf-color-ai-memo-border: #a8925a;
+  --pf-color-ai-memo-text: #f9f1dc;
+}
+
+/* ==========================================================================
+   Common Design System Component Styles (.pf-*)
+   ========================================================================== */
+
+/* 1. Button (.pf-btn) */
+.pf-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pf-space-2);
+  min-height: var(--pf-touch-min);
+  padding: 0.625rem 1rem;
+  border-radius: var(--pf-radius-md);
+  font-family: var(--pf-font-sans);
+  font-size: var(--pf-text-xs);
+  font-weight: var(--pf-weight-medium);
+  line-height: var(--pf-leading-snug);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.1s ease;
+}
+
+.pf-btn:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring);
+  outline-offset: 3px;
+}
+
+.pf-btn:disabled,
+.pf-btn[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.48;
+  box-shadow: none;
+}
+
+.pf-btn--primary {
+  background: var(--pf-color-action-primary);
+  color: var(--pf-color-text-on-primary);
+  border: 1px solid var(--pf-color-action-primary);
+  box-shadow: var(--pf-shadow-xs);
+}
+
+.pf-btn--primary:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--pf-color-action-primary-hover);
+  border-color: var(--pf-color-action-primary-hover);
+}
+
+.pf-btn--secondary {
+  background: var(--pf-color-action-secondary-bg);
+  color: var(--pf-color-text-primary);
+  border: 1px solid var(--pf-color-action-secondary-border);
+}
+
+.pf-btn--secondary:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--pf-color-action-secondary-hover);
+  border-color: var(--pf-color-border-strong);
+}
+
+.pf-btn--secondary[aria-pressed='true'] {
+  background: var(--pf-color-bg-surface-muted);
+  border-color: var(--pf-color-action-primary);
+  color: var(--pf-color-text-brand);
+  font-weight: var(--pf-weight-semibold);
+}
+
+.pf-btn--ghost {
+  background: transparent;
+  color: var(--pf-color-text-secondary);
+  border: 1px solid transparent;
+}
+
+.pf-btn--ghost:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--pf-color-action-ghost-hover);
+  color: var(--pf-color-text-primary);
+}
+
+.pf-btn--danger {
+  background: var(--pf-color-status-danger-bg);
+  color: var(--pf-color-status-danger-text);
+  border: 1px solid var(--pf-color-status-danger-border);
+}
+
+.pf-btn--danger:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--pf-color-status-danger-hover);
+}
+
+.pf-btn--icon {
+  min-width: var(--pf-touch-min);
+  min-height: var(--pf-touch-min);
+  padding: 0.625rem;
+  border-radius: var(--pf-radius-sm);
+  background: transparent;
+  color: var(--pf-color-text-secondary);
+  border: 1px solid transparent;
+}
+
+.pf-btn--icon:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--pf-color-action-ghost-hover);
+  color: var(--pf-color-text-primary);
+}
+
+.pf-btn--text {
+  min-height: var(--pf-touch-min);
+  padding: 0.375rem 0.5rem;
+  border: 0;
+  border-radius: var(--pf-radius-xs);
+  background: transparent;
+  color: var(--pf-color-text-secondary);
+  font-size: var(--pf-text-xs);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.pf-btn--text:hover:not(:disabled):not([aria-disabled='true']) {
+  color: var(--pf-color-text-brand);
+}
+
+.pf-btn--sm {
+  min-height: var(--pf-touch-min);
+  padding: 0.5rem 0.75rem;
+  font-size: var(--pf-text-2xs);
+}
+
+.pf-btn--lg {
+  min-height: var(--pf-touch-comfortable);
+  padding: 0.75rem 1.25rem;
+  font-size: var(--pf-text-sm);
+  font-weight: var(--pf-weight-semibold);
+}
+
+.pf-btn--full {
+  width: 100%;
+}
+
+.pf-btn--loading {
+  cursor: progress;
+}
+
+.pf-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: pf-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-spinner {
+    animation: none;
+    border-right-color: currentColor;
+    border-style: dashed;
+  }
+}
+
+/* 2. Form Field, Input, Select, Textarea, SearchField, FormError */
+.pf-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-2);
+  min-width: 0;
+}
+
+.pf-field__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pf-space-1);
+  font-size: var(--pf-text-xs);
+  font-weight: var(--pf-weight-semibold);
+  color: var(--pf-color-text-primary);
+  line-height: var(--pf-leading-snug);
+}
+
+.pf-field__required {
+  color: var(--pf-color-status-danger-text);
+  font-weight: var(--pf-weight-bold);
+}
+
+.pf-field__hint {
+  font-size: var(--pf-text-2xs);
+  color: var(--pf-color-text-muted);
+  line-height: var(--pf-leading-normal);
+  margin: 0;
+}
+
+.pf-input,
+.pf-select,
+.pf-textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: var(--pf-touch-min);
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--pf-color-border-default);
+  border-radius: var(--pf-radius-sm);
+  background: var(--pf-color-bg-surface-elevated);
+  color: var(--pf-color-text-primary);
+  font-family: var(--pf-font-sans);
+  font-size: var(--pf-text-sm);
+  line-height: var(--pf-leading-snug);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.pf-input::placeholder,
+.pf-textarea::placeholder {
+  color: var(--pf-color-text-muted);
+  opacity: 0.85;
+}
+
+.pf-input:hover:not(:disabled),
+.pf-select:hover:not(:disabled),
+.pf-textarea:hover:not(:disabled) {
+  border-color: var(--pf-color-border-strong);
+}
+
+.pf-input:focus-visible,
+.pf-select:focus-visible,
+.pf-textarea:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring);
+  outline-offset: 2px;
+  border-color: var(--pf-color-action-primary);
+}
+
+.pf-input:disabled,
+.pf-select:disabled,
+.pf-textarea:disabled {
+  background: var(--pf-color-bg-surface-subtle);
+  color: var(--pf-color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.pf-input[aria-invalid='true'],
+.pf-select[aria-invalid='true'],
+.pf-textarea[aria-invalid='true'],
+.pf-field--error .pf-input,
+.pf-field--error .pf-select,
+.pf-field--error .pf-textarea {
+  border-color: var(--pf-color-status-danger-text);
+  background: #fffafa;
+}
+
+.pf-search {
+  display: flex;
+  align-items: center;
+  gap: var(--pf-space-2);
+  min-height: 46px;
+  padding: 0 var(--pf-space-3);
+  border: 1px solid var(--pf-color-border-default);
+  border-radius: var(--pf-radius-sm);
+  background: var(--pf-color-bg-surface-elevated);
+  color: var(--pf-color-text-muted);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.pf-search:hover {
+  border-color: var(--pf-color-border-strong);
+}
+
+.pf-search:focus-within {
+  outline: 3px solid var(--pf-color-focus-ring);
+  outline-offset: 2px;
+  border-color: var(--pf-color-action-primary);
+}
+
+.pf-search input {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--pf-color-text-primary);
+  font-size: var(--pf-text-sm);
+}
+
+.pf-search input:focus,
+.pf-search input:focus-visible {
+  outline: none;
+}
+
+.pf-form-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--pf-space-2);
+  padding: var(--pf-space-3) var(--pf-space-4);
+  border-radius: var(--pf-radius-sm);
+  border: 1px solid var(--pf-color-status-danger-border);
+  background: var(--pf-color-status-danger-bg);
+  color: var(--pf-color-status-danger-text);
+  font-size: var(--pf-text-xs);
+  line-height: var(--pf-leading-normal);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.pf-form-error--inline {
+  padding: 0.375rem 0.625rem;
+  font-size: var(--pf-text-2xs);
+}
+
+.pf-form-error svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* 3. Card (.pf-card) */
+.pf-card {
+  background: var(--pf-color-bg-surface);
+  border: 1px solid var(--pf-color-border-default);
+  border-radius: var(--pf-radius-lg);
+  box-shadow: var(--pf-shadow-sm);
+  padding: var(--pf-space-6);
+  color: var(--pf-color-text-primary);
+  min-width: 0;
+}
+
+.pf-card--subtle {
+  background: var(--pf-color-bg-surface-subtle);
+  border-color: var(--pf-color-border-subtle);
+  box-shadow: none;
+}
+
+.pf-card--muted {
+  background: var(--pf-color-bg-surface-muted);
+  border-color: var(--pf-color-border-default);
+  box-shadow: none;
+}
+
+.pf-card--sample {
+  background: var(--pf-color-bg-sample);
+  border-style: dashed;
+}
+
+.pf-card--interactive {
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+
+.pf-card--interactive:hover {
+  border-color: var(--pf-color-border-strong);
+  box-shadow: var(--pf-shadow-md);
+}
+
+.pf-card--warning {
+  background: var(--pf-color-status-warning-bg);
+  border-color: var(--pf-color-status-warning-border);
+  color: var(--pf-color-status-warning-text);
+}
+
+.pf-card--danger {
+  background: var(--pf-color-status-danger-bg);
+  border-color: var(--pf-color-status-danger-border);
+  color: var(--pf-color-status-danger-text);
+}
+
+/* 4. Badge (.pf-badge) */
+.pf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--pf-radius-pill);
+  font-size: var(--pf-text-2xs);
+  font-weight: var(--pf-weight-semibold);
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.pf-badge--rect {
+  border-radius: var(--pf-radius-xs);
+}
+
+.pf-badge--neutral {
+  background: var(--pf-color-bg-surface-subtle);
+  color: var(--pf-color-text-secondary);
+  border-color: var(--pf-color-border-subtle);
+}
+
+.pf-badge--brand {
+  background: var(--pf-color-action-primary);
+  color: var(--pf-color-text-on-primary);
+}
+
+.pf-badge--sage {
+  background: var(--pf-color-bg-surface-muted);
+  color: var(--pf-color-text-brand);
+  border-color: var(--pf-color-border-default);
+}
+
+.pf-badge--success {
+  background: var(--pf-color-status-success-bg);
+  color: var(--pf-color-status-success-text);
+  border-color: var(--pf-color-status-success-border);
+}
+
+.pf-badge--warning {
+  background: var(--pf-color-status-warning-bg);
+  color: var(--pf-color-status-warning-text);
+  border-color: var(--pf-color-status-warning-border);
+}
+
+.pf-badge--danger {
+  background: var(--pf-color-status-danger-bg);
+  color: var(--pf-color-status-danger-text);
+  border-color: var(--pf-color-status-danger-border);
+}
+
+.pf-badge--sample {
+  background: #f0f0df;
+  color: var(--pf-color-text-secondary);
+  border-color: #d6d5c2;
+  border-radius: var(--pf-radius-xs);
+}
+
+/* 5. Tabs & Segmented / Pill Filter Groups (.pf-tabs) */
+.pf-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--pf-space-2);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  min-width: 0;
+}
+
+.pf-tabs--segmented {
+  padding: 0.3rem;
+  background: var(--pf-color-bg-surface-subtle);
+  border: 1px solid var(--pf-color-border-subtle);
+  border-radius: var(--pf-radius-md);
+}
+
+.pf-tabs--pills {
+  padding: 2px 2px var(--pf-space-3);
+}
+
+.pf-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: var(--pf-touch-min);
+  padding: 0.5rem 1rem;
+  font-family: var(--pf-font-sans);
+  font-size: var(--pf-text-xs);
+  font-weight: var(--pf-weight-medium);
+  color: var(--pf-color-text-secondary);
+  background: var(--pf-color-bg-surface);
+  border: 1px solid var(--pf-color-border-default);
+  border-radius: var(--pf-radius-pill);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.pf-tabs--segmented .pf-tab {
+  flex: 1;
+  border: 0;
+  border-radius: var(--pf-radius-sm);
+  background: transparent;
+  font-weight: var(--pf-weight-semibold);
+}
+
+.pf-tab:hover:not(:disabled) {
+  color: var(--pf-color-text-primary);
+  background: var(--pf-color-action-secondary-hover);
+}
+
+.pf-tab[aria-selected='true'],
+.pf-tab[aria-pressed='true'],
+.pf-tab.active {
+  background: var(--pf-color-action-primary);
+  border-color: var(--pf-color-action-primary);
+  color: var(--pf-color-text-on-primary);
+  font-weight: var(--pf-weight-semibold);
+}
+
+.pf-tabs--segmented .pf-tab[aria-selected='true'],
+.pf-tabs--segmented .pf-tab[aria-pressed='true'],
+.pf-tabs--segmented .pf-tab.active {
+  background: var(--pf-color-bg-surface-elevated);
+  color: var(--pf-color-text-brand);
+  box-shadow: var(--pf-shadow-xs);
+}
+
+.pf-tab:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.pf-tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 6. Feedback States: Empty, Loading, Error, Status Banner */
+.pf-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--pf-space-3);
+  padding: var(--pf-space-3) var(--pf-space-4);
+  border-radius: var(--pf-radius-md);
+  border: 1px solid var(--pf-color-status-info-border);
+  background: var(--pf-color-status-info-bg);
+  color: var(--pf-color-status-info-text);
+  font-size: var(--pf-text-sm);
+  line-height: var(--pf-leading-normal);
+  margin-bottom: var(--pf-space-4);
+}
+
+.pf-status-banner__content {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pf-space-2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pf-status-banner__content svg {
+  flex-shrink: 0;
+}
+
+.pf-status-banner--success {
+  background: var(--pf-color-status-success-bg);
+  border-color: var(--pf-color-status-success-border);
+  color: var(--pf-color-status-success-text);
+}
+
+.pf-status-banner--warning {
+  background: var(--pf-color-status-warning-bg);
+  border-color: var(--pf-color-status-warning-border);
+  color: var(--pf-color-status-warning-text);
+}
+
+.pf-status-banner--danger {
+  background: var(--pf-color-status-danger-bg);
+  border-color: var(--pf-color-status-danger-border);
+  color: var(--pf-color-status-danger-text);
+}
+
+.pf-empty-state,
+.pf-loading-state,
+.pf-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--pf-space-3);
+  padding: var(--pf-space-8) var(--pf-space-5);
+  min-height: 240px;
+  background: var(--pf-color-bg-surface);
+  border: 1px solid var(--pf-color-border-default);
+  border-radius: var(--pf-radius-lg);
+  color: var(--pf-color-text-primary);
+}
+
+.pf-error-state {
+  background: var(--pf-color-status-danger-bg);
+  border-color: var(--pf-color-status-danger-border);
+  color: var(--pf-color-status-danger-text);
+}
+
+.pf-empty-state__icon,
+.pf-loading-state__icon,
+.pf-error-state__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--pf-color-bg-surface-muted);
+  color: var(--pf-color-text-brand);
+}
+
+.pf-error-state__icon {
+  background: rgba(138, 52, 30, 0.12);
+  color: var(--pf-color-status-danger-text);
+}
+
+.pf-empty-state h2,
+.pf-empty-state h3,
+.pf-loading-state h2,
+.pf-loading-state h3,
+.pf-error-state h2,
+.pf-error-state h3 {
+  font-size: var(--pf-text-lg);
+  font-weight: var(--pf-weight-semibold);
+  letter-spacing: var(--pf-tracking-tight);
+  line-height: var(--pf-leading-snug);
+  margin: 0;
+  word-break: keep-all;
+}
+
+.pf-empty-state p,
+.pf-loading-state p,
+.pf-error-state p {
+  font-size: var(--pf-text-sm);
+  line-height: var(--pf-leading-relaxed);
+  color: var(--pf-color-text-secondary);
+  max-width: 46ch;
+  margin: 0;
+  word-break: keep-all;
+}
+
+.pf-error-state p {
+  color: var(--pf-color-status-danger-text);
+}
+
+/* 7. Modal & Sheet Enhancements (.pf-modal-dialog) */
+.atelier-modal-dialog.pf-modal-dialog {
+  border: 1px solid var(--pf-color-border-default);
+  border-radius: var(--pf-radius-lg);
+  background: var(--pf-color-bg-surface);
+  color: var(--pf-color-text-primary);
+  box-shadow: var(--pf-shadow-lg);
+}
+
+@media (max-width: 680px) {
+  .atelier-modal-dialog.pf-modal-dialog--sheet {
+    margin: auto 0 0 0;
+    width: 100%;
+    max-width: 100% !important;
+    max-height: calc(92dvh - var(--hosted-obstruction-inset, 0px));
+    border-radius: var(--pf-radius-xl) var(--pf-radius-xl) 0 0;
+  }
+
+  .pf-input,
+  .pf-select,
+  .pf-textarea,
+  .pf-search input {
+    font-size: var(--pf-text-base); /* 16px on mobile to prevent auto-zoom */
+  }
+}
+
+/* ==========================================================================
+   Internal Dev-Only Design System Inspector Styles (.pf-ds-inspector)
+   ========================================================================== */
+.pf-ds-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--pf-touch-min);
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--pf-radius-sm);
+  border: 1px dashed var(--pf-color-border-strong);
+  background: var(--pf-color-bg-surface-subtle);
+  color: var(--pf-color-text-secondary);
+  font-size: var(--pf-text-2xs);
+  font-weight: var(--pf-weight-semibold);
+}
+
+.pf-ds-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-6);
+}
+
+.pf-ds-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pf-space-3);
+  padding: var(--pf-space-3) var(--pf-space-4);
+  background: var(--pf-color-bg-surface-subtle);
+  border: 1px solid var(--pf-color-border-subtle);
+  border-radius: var(--pf-radius-md);
+}
+
+.pf-ds-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-4);
+}
+
+.pf-ds-section h3 {
+  font-size: var(--pf-text-lg);
+  color: var(--pf-color-text-brand);
+  letter-spacing: var(--pf-tracking-tight);
+}
+
+.pf-ds-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--pf-space-3);
+}
+
+.pf-ds-swatch {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--pf-color-border-default);
+  border-radius: var(--pf-radius-md);
+  overflow: hidden;
+  background: var(--pf-color-bg-surface);
+}
+
+.pf-ds-swatch__preview {
+  height: 56px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: var(--pf-space-2) var(--pf-space-3);
+  font-family: var(--pf-font-mono);
+  font-size: var(--pf-text-2xs);
+  border-bottom: 1px solid var(--pf-color-border-subtle);
+}
+
+.pf-ds-swatch__meta {
+  padding: var(--pf-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pf-ds-swatch__meta strong {
+  font-size: var(--pf-text-xs);
+}
+
+.pf-ds-swatch__meta code {
+  font-family: var(--pf-font-mono);
+  font-size: var(--pf-text-2xs);
+  color: var(--pf-color-text-muted);
+}
+
+.pf-ds-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--pf-space-4);
+}
+
+.pf-ds-viewport-frame {
+  margin-inline: auto;
+  width: 100%;
+  border: 2px solid var(--pf-color-border-strong);
+  border-radius: var(--pf-radius-lg);
+  background: var(--pf-color-bg-canvas);
+  padding: var(--pf-space-4);
+  overflow-x: hidden;
+  transition: max-width 0.2s ease;
+}
+
+/* 8. Accessible Tooltip Primitive (.pf-tooltip-content via @radix-ui/react-tooltip) */
+.pf-tooltip-content {
+  z-index: 1200;
+  max-width: 280px;
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--pf-radius-xs);
+  border: 1px solid var(--pf-color-border-strong);
+  background: var(--pf-color-text-primary);
+  color: var(--pf-color-bg-surface-elevated);
+  font-family: var(--pf-font-sans);
+  font-size: var(--pf-text-2xs);
+  font-weight: var(--pf-weight-medium);
+  line-height: var(--pf-leading-normal);
+  box-shadow: var(--pf-shadow-md);
+  word-break: keep-all;
+}
+
+.teaching-high-contrast .pf-tooltip-content,
+[data-pf-theme='high-contrast'] .pf-tooltip-content {
+  background: #ffffff;
+  color: #0e100f;
+  border: 2px solid #9bd1af;
+}
+
+/* ==========================================================================
+   9. Creative Movement Draft Flow (.pf-core-quick-bar, .pf-idea-sheet, .pf-workbench-ideas)
+   ========================================================================== */
+.pf-core-quick-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.375rem;
+  padding: 0.5rem var(--page-gutter, 1rem);
+  background: var(--pf-color-bg-surface-subtle);
+  border-bottom: 1px solid var(--pf-color-border-subtle);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.pf-core-quick-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: var(--pf-touch-min);
+  min-width: 0;
+  padding: 0.375rem 0.35rem;
+  border-radius: var(--pf-radius-sm);
+  border: 1px solid var(--pf-color-border-default);
+  background: var(--pf-color-bg-surface);
+  color: var(--pf-color-text-secondary);
+  font-family: var(--pf-font-sans);
+  font-size: var(--pf-text-xs);
+  font-weight: var(--pf-weight-semibold);
+  line-height: 1.2;
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.pf-core-quick-btn svg {
+  flex-shrink: 0;
+}
+
+.pf-core-quick-btn.is-active {
+  background: var(--pf-color-bg-surface-muted);
+  border-color: var(--pf-color-border-brand);
+  color: var(--pf-color-text-brand);
+}
+
+.pf-core-quick-btn--accent,
+.vnext-shell .pf-core-quick-btn.pf-core-quick-btn--accent {
+  background: var(--pf-color-action-primary, #173d34) !important;
+  border-color: var(--pf-color-action-primary, #173d34) !important;
+  color: var(--pf-color-text-on-primary, #fffef9) !important;
+}
+
+.pf-core-quick-btn--accent span,
+.pf-core-quick-btn--accent svg,
+.vnext-shell .pf-core-quick-btn.pf-core-quick-btn--accent span,
+.vnext-shell .pf-core-quick-btn.pf-core-quick-btn--accent svg {
+  color: inherit !important;
+}
+
+.pf-core-quick-btn--accent:hover:not(:disabled),
+.vnext-shell .pf-core-quick-btn.pf-core-quick-btn--accent:hover:not(:disabled) {
+  background: var(--pf-color-action-primary-hover, #214f43) !important;
+  border-color: var(--pf-color-action-primary-hover, #214f43) !important;
+}
+
+.pf-core-quick-btn:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (max-width: 389px) {
+  .pf-core-quick-bar {
+    gap: 0.25rem;
+    padding-inline: 0.5rem;
+  }
+
+  .pf-core-quick-btn {
+    font-size: 0.75rem;
+    padding-inline: 0.2rem;
+  }
+
+  .pf-core-quick-btn svg {
+    display: none;
+  }
+}
+
+.atelier-modal-dialog.pf-idea-sheet-dialog {
+  max-height: calc(94dvh - var(--hosted-obstruction-inset, 0px));
+  overflow-y: auto;
+}
+
+.pf-idea-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-3);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pf-idea-trust-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pf-space-2);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--pf-radius-md);
+  border: 1px solid var(--pf-color-ai-memo-border, var(--pf-color-border-subtle));
+  background: var(--pf-color-ai-memo-bg, var(--pf-color-bg-surface-subtle));
+  color: var(--pf-color-ai-memo-text, var(--pf-color-text-secondary));
+  font-size: var(--pf-text-xs);
+  line-height: var(--pf-leading-snug);
+  word-break: keep-all;
+}
+
+.pf-idea-trust-banner svg {
+  flex-shrink: 0;
+  color: var(--pf-color-text-brand);
+}
+
+.pf-idea-trust-banner p {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 200px;
+}
+
+.pf-idea-step-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-3);
+  padding: var(--pf-space-4);
+  border-radius: var(--pf-radius-lg);
+  border: 1px solid var(--pf-color-border-default);
+  background: var(--pf-color-bg-surface-elevated);
+  min-width: 0;
+}
+
+.pf-idea-step-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pf-space-2);
+}
+
+.pf-idea-primary-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: var(--pf-space-2);
+}
+
+.pf-idea-progressive-section {
+  border: 1px solid var(--pf-color-border-default);
+  border-radius: var(--pf-radius-md);
+  background: var(--pf-color-bg-surface);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.pf-idea-progressive-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pf-space-2);
+  min-height: var(--pf-touch-min);
+  padding: var(--pf-space-3) var(--pf-space-4);
+  cursor: pointer;
+  font-size: var(--pf-text-sm);
+  font-weight: var(--pf-weight-semibold);
+  color: var(--pf-color-text-primary);
+  list-style: none;
+  user-select: none;
+}
+
+.pf-idea-progressive-summary::-webkit-details-marker {
+  display: none;
+}
+
+.pf-idea-progressive-summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pf-space-2);
+  min-width: 0;
+}
+
+.pf-idea-progressive-summary small {
+  font-size: var(--pf-text-2xs);
+  font-weight: var(--pf-weight-medium);
+  color: var(--pf-color-text-muted);
+}
+
+.pf-idea-progressive-summary:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring);
+  outline-offset: -2px;
+}
+
+.pf-idea-progressive-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-3);
+  padding: 0 var(--pf-space-4) var(--pf-space-4);
+  border-top: 1px solid var(--pf-color-border-subtle);
+  padding-top: var(--pf-space-3);
+  min-width: 0;
+}
+
+.pf-idea-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.pf-idea-quick-chips__label {
+  font-size: var(--pf-text-2xs);
+  font-weight: var(--pf-weight-semibold);
+  color: var(--pf-color-text-muted);
+  width: 100%;
+}
+
+.pf-idea-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--pf-touch-min);
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--pf-radius-pill);
+  border: 1px solid var(--pf-color-border-default);
+  background: var(--pf-color-bg-surface-subtle);
+  color: var(--pf-color-text-secondary);
+  font-size: var(--pf-text-xs);
+  font-weight: var(--pf-weight-medium);
+  word-break: keep-all;
+}
+
+.pf-idea-chip.is-selected {
+  background: var(--pf-color-bg-surface-muted);
+  border-color: var(--pf-color-border-brand);
+  color: var(--pf-color-text-brand);
+  font-weight: var(--pf-weight-semibold);
+}
+
+.pf-idea-photo-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-2);
+  padding: var(--pf-space-3);
+  border-radius: var(--pf-radius-md);
+  border: 1px dashed var(--pf-color-border-strong);
+  background: var(--pf-color-bg-surface-subtle);
+}
+
+.pf-idea-photo-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pf-space-1);
+}
+
+.pf-idea-photo-header strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--pf-text-xs);
+  color: var(--pf-color-text-primary);
+}
+
+.pf-idea-photo-header span {
+  font-size: var(--pf-text-2xs);
+  color: var(--pf-color-text-muted);
+}
+
+.pf-idea-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pf-space-2);
+}
+
+.pf-idea-photo-upload-label {
+  cursor: pointer;
+}
+
+.pf-idea-photo-upload-label input[type='file'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.pf-idea-photo-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--pf-space-2);
+  margin: 0;
+}
+
+.pf-idea-photo-preview img {
+  max-width: 100%;
+  max-height: 160px;
+  border-radius: var(--pf-radius-sm);
+  border: 1px solid var(--pf-color-border-default);
+  object-fit: contain;
+  background: #f5f2eb;
+}
+
+.pf-idea-photo-preview figcaption {
+  font-size: var(--pf-text-2xs);
+  color: var(--pf-color-text-muted);
+}
+
+.pf-idea-advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--pf-space-3);
+}
+
+.pf-idea-footer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pf-space-2);
+  padding-top: var(--pf-space-2);
+  border-top: 1px solid var(--pf-color-border-subtle);
+}
+
+.pf-idea-saved-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-2);
+  padding-top: var(--pf-space-3);
+  border-top: 1px solid var(--pf-color-border-default);
+}
+
+.pf-idea-saved-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--pf-space-2);
+}
+
+.pf-idea-saved-header h3 {
+  font-size: var(--pf-text-sm);
+  font-weight: var(--pf-weight-semibold);
+  margin: 0;
+}
+
+.pf-idea-saved-header span {
+  font-size: var(--pf-text-2xs);
+  color: var(--pf-color-text-muted);
+}
+
+.pf-idea-saved-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-2);
+}
+
+.pf-idea-saved-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pf-space-2);
+  padding: var(--pf-space-3);
+  border-radius: var(--pf-radius-md);
+  border: 1px solid var(--pf-color-border-default);
+  background: var(--pf-color-bg-surface);
+}
+
+.pf-idea-saved-item.is-active {
+  border-color: var(--pf-color-border-brand);
+  background: var(--pf-color-bg-surface-muted);
+}
+
+.pf-idea-saved-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 180px;
+}
+
+.pf-idea-saved-info strong {
+  font-size: var(--pf-text-sm);
+  color: var(--pf-color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.pf-idea-saved-info p {
+  margin: 0;
+  font-size: var(--pf-text-xs);
+  color: var(--pf-color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.pf-idea-saved-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.pf-idea-saved-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.workbench-welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pf-workbench-ideas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-3);
+  padding: var(--pf-space-4);
+  margin-block: var(--pf-space-3);
+  border-radius: var(--pf-radius-lg);
+  border: 1px solid var(--pf-color-border-default);
+  background: var(--pf-color-bg-surface);
+}
+
+.pf-workbench-ideas__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pf-space-2);
+}
+
+.pf-workbench-ideas__header h2 {
+  font-size: var(--pf-text-base);
+  font-weight: var(--pf-weight-semibold);
+  margin: 0;
+}
+
+.pf-workbench-ideas__header p {
+  margin: 2px 0 0;
+  font-size: var(--pf-text-xs);
+  color: var(--pf-color-text-secondary);
+}
+
+.pf-workbench-ideas__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--pf-space-3);
+}
+
+.pf-workbench-idea-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--pf-space-3);
+  padding: var(--pf-space-3);
+  border-radius: var(--pf-radius-md);
+  border: 1px solid var(--pf-color-border-default);
+  background: var(--pf-color-bg-surface-elevated);
+  min-width: 0;
+}
+
+.pf-workbench-idea-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.pf-workbench-idea-card__body strong {
+  font-size: var(--pf-text-sm);
+  color: var(--pf-color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.pf-workbench-idea-card__body p {
+  margin: 0;
+  font-size: var(--pf-text-xs);
+  color: var(--pf-color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.pf-workbench-idea-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.workbench-motion-gallery-disclosure {
+  margin-block: var(--pf-space-2);
+  border: 1px solid var(--pf-color-border-subtle);
+  border-radius: var(--pf-radius-md);
+  background: var(--pf-color-bg-surface-subtle);
+  overflow: hidden;
+}
+
+.workbench-motion-gallery-disclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--pf-touch-min);
+  padding: 0.5rem 0.875rem;
+  cursor: pointer;
+  font-size: var(--pf-text-xs);
+  font-weight: var(--pf-weight-semibold);
+  color: var(--pf-color-text-secondary);
+  list-style: none;
+}
+
+.workbench-motion-gallery-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* ==========================================================================
+   10. Domain Design System Primitives:
+       - AI & Provenance Status Badge (.pf-ai-status)
+       - Movement Card (.pf-movement-card)
+       - Sequence Block & Step Pill (.pf-sequence-block, .pf-block-pill)
+   ========================================================================== */
+
+.pf-ai-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 24px;
+  padding: 0.1875rem 0.625rem;
+  border-radius: var(--pf-radius-pill);
+  font-family: var(--pf-font-sans);
+  font-size: var(--pf-text-2xs);
+  font-weight: var(--pf-weight-semibold);
+  line-height: 1.3;
+  letter-spacing: var(--pf-tracking-normal);
+  border: 1px solid var(--pf-color-border-default);
+  background: var(--pf-color-bg-surface-subtle);
+  color: var(--pf-color-text-secondary);
+  word-break: keep-all;
+}
+
+.pf-ai-status__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.pf-ai-status--ai-draft {
+  background: var(--pf-color-ai-draft-bg);
+  border-color: var(--pf-color-ai-draft-border);
+  color: var(--pf-color-ai-draft-text);
+}
+
+.pf-ai-status--creative-memo {
+  background: var(--pf-color-ai-memo-bg);
+  border-color: var(--pf-color-ai-memo-border);
+  color: var(--pf-color-ai-memo-text);
+}
+
+.pf-ai-status--tried-memo {
+  background: var(--pf-color-status-success-bg);
+  border-color: var(--pf-color-status-success-border);
+  color: var(--pf-color-status-success-text);
+}
+
+.pf-ai-status--instructor-reviewed {
+  background: var(--pf-color-bg-surface-muted);
+  border-color: var(--pf-color-border-strong);
+  color: var(--pf-color-text-brand);
+}
+
+.pf-ai-status--review-pending {
+  background: var(--pf-color-status-warning-bg);
+  border-color: var(--pf-color-status-warning-border);
+  color: var(--pf-color-status-warning-text);
+}
+
+.pf-ai-status--sample-data {
+  background: var(--pf-color-bg-sample);
+  border-color: var(--pf-color-border-strong);
+  color: var(--pf-color-text-secondary);
+  border-radius: var(--pf-radius-xs);
+}
+
+.pf-movement-card {
+  border-radius: var(--pf-radius-md);
+  border: 1px solid var(--pf-color-border-default);
+  background: var(--pf-color-bg-surface);
+  color: var(--pf-color-text-primary);
+  box-shadow: var(--pf-shadow-xs);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+  min-width: 0;
+}
+
+.pf-movement-card--idea {
+  background: var(--pf-color-bg-surface-elevated);
+  border-color: var(--pf-color-ai-memo-border, var(--pf-color-border-default));
+}
+
+.pf-movement-card--step.is-selected {
+  border-color: var(--pf-color-action-primary);
+  box-shadow: var(--pf-shadow-sm);
+}
+
+.pf-sequence-block {
+  border-radius: var(--pf-radius-md);
+  border: 1px solid var(--pf-color-border-subtle);
+  background: var(--pf-color-block-surface);
+  padding: var(--pf-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-2);
+  min-width: 0;
+}
+
+.pf-sequence-block__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pf-space-2);
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--pf-radius-sm);
+  background: var(--pf-color-block-header-bg);
+  color: var(--pf-color-text-primary);
+  font-size: var(--pf-text-xs);
+  font-weight: var(--pf-weight-semibold);
+}
+
+.pf-sequence-block__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-2);
+  min-width: 0;
+}
+
+.pf-block-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--pf-radius-pill);
+  border: 1px solid var(--pf-color-border-default);
+  background: var(--pf-color-bg-surface-subtle);
+  color: var(--pf-color-text-secondary);
+  font-size: var(--pf-text-xs);
+  font-weight: var(--pf-weight-medium);
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.pf-block-pill--rest {
+  background: var(--pf-color-bg-surface-muted);
+  border-color: var(--pf-color-border-strong);
+  color: var(--pf-color-text-brand);
+}
+
+.pf-block-pill--memo {
+  background: var(--pf-color-ai-memo-bg);
+  border-color: var(--pf-color-ai-memo-border);
+  color: var(--pf-color-ai-memo-text);
+}
+
+/* ==========================================================================
+   11. First-Time User Clarity, Mobile (320px/390px) & Tablet (768px) Polish
+   ========================================================================== */
+
+@media (max-width: 1023px) {
+  .vnext-shell .workbench-welcome {
+    grid-template-columns: 1fr !important;
+    min-height: auto !important;
+    padding: var(--pf-space-4) !important;
+    background-image: linear-gradient(
+      145deg,
+      rgba(255, 254, 249, 0.96),
+      rgba(243, 245, 238, 0.94)
+    ) !important;
+  }
+
+  .vnext-shell .workbench-welcome::before {
+    opacity: 0.14 !important;
+  }
+
+  .vnext-shell .workbench-welcome-copy,
+  #root .vnext-shell .vnext-workbench .workbench-welcome-copy {
+    grid-column: 1 / -1 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  #root .vnext-shell .vnext-workbench .workbench-welcome-actions,
+  .workbench-welcome-actions {
+    grid-column: 1 / -1 !important;
+    width: 100%;
+  }
+}
+
+@media (max-width: 680px) {
+  .vnext-shell .topbar {
+    min-height: 54px;
+    padding-block: 0.375rem;
+  }
+
+  .vnext-shell .vnext-wordmark small {
+    display: none;
+  }
+
+  .workbench-welcome-actions,
+  #root .vnext-shell .vnext-workbench .workbench-welcome-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .workbench-welcome-actions button,
+  .workbench-welcome-actions .btn-primary,
+  .workbench-welcome-actions .btn-secondary {
+    width: 100%;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  /* Keep 1-line idea input & primary actions visible above the fold when mobile keyboard is open */
+  .atelier-modal-dialog.pf-idea-sheet-dialog .atelier-modal-header {
+    padding: 0.625rem 0.875rem;
+    gap: 0.5rem;
+  }
+
+  .atelier-modal-dialog.pf-idea-sheet-dialog .atelier-modal-header h2 {
+    font-size: var(--pf-text-base);
+    line-height: 1.25;
+  }
+
+  .atelier-modal-dialog.pf-idea-sheet-dialog .atelier-modal-header p {
+    font-size: var(--pf-text-2xs);
+    line-height: 1.3;
+    margin-top: 2px;
+  }
+
+  .atelier-modal-dialog.pf-idea-sheet-dialog .atelier-modal-body {
+    padding: 0.625rem 0.875rem 0.875rem;
+  }
+
+  .pf-idea-sheet {
+    gap: 0.5rem;
+  }
+
+  .pf-idea-trust-banner {
+    padding: 0.375rem 0.625rem;
+    font-size: var(--pf-text-2xs);
+  }
+
+  .pf-idea-step-card {
+    padding: 0.625rem 0.75rem;
+    gap: 0.5rem;
+  }
+}
+
+
+

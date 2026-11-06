@@ -15,6 +15,7 @@ import {
   RefreshCw,
   RotateCcw,
   SlidersHorizontal,
+  Sparkles,
   UnlockKeyhole,
 } from "lucide-react";
 import { PROP_LABELS } from "../data/pilatesCatalog";
@@ -42,8 +43,14 @@ import {
   isRestStep,
 } from "../utils/sequenceEngine";
 import { isExerciseAutoEligible } from "../utils/exerciseReview";
+import {
+  addMovementIdeaToCurrentClass,
+  isMovementIdeaExercise,
+  readMovementIdeaDraft,
+} from "../utils/movementIdeaDraft";
 import { getSequenceStepClassSection } from "../utils/sequenceMotionBinding";
 import { LightDismissDialog } from "./LightDismissDialog";
+import { MovementIdeaSheet } from "./MovementIdeaSheet";
 import { getMotionPatternReferences } from "../data/motionPatternReferences";
 import { MotionPatternThumbnail } from "./MotionPatternPreview";
 import { GroupPrepPanel } from "./GroupPrepPanel";
@@ -66,6 +73,7 @@ interface Props {
   onPlanningModeChange?: (mode: WorkbenchPlanningMode) => void;
   sourceDetailOpen?: boolean;
   onOpenYouTubePreview: (exercise: PilatesExercise) => void;
+  onOpenIdeaSheet?: (exercise?: PilatesExercise | null) => void;
   onOpenClipper: () => void;
   onOpenLogModal: (sequenceId: string) => void;
   onOpenInventory?: () => void;
@@ -139,6 +147,7 @@ function WorkbenchMovementMark({ exercise }: { exercise: PilatesExercise }) {
 
 export function SequenceWorkbench({
   onOpenYouTubePreview,
+  onOpenIdeaSheet,
   onOpenClipper,
   onOpenLogModal,
   onOpenInventory,
@@ -147,6 +156,15 @@ export function SequenceWorkbench({
   sourceDetailOpen = false,
 }: Props) {
   const s = usePilatesStore();
+  const [localIdeaSheet, setLocalIdeaSheet] = useState<{
+    open: boolean;
+    exercise: PilatesExercise | null;
+  }>({ open: false, exercise: null });
+  const openIdeaSheet = (exercise?: PilatesExercise | null) => {
+    if (onOpenIdeaSheet) onOpenIdeaSheet(exercise ?? null);
+    else setLocalIdeaSheet({ open: true, exercise: exercise ?? null });
+  };
+  const ideaExercises = s.exercises.filter(isMovementIdeaExercise);
   const storedCriteria = s.draftCriteria ?? s.lastCriteria;
   const currentStepEquipment = [
     ...new Set(
@@ -604,29 +622,28 @@ export function SequenceWorkbench({
             alt=""
           />
           <div className="workbench-welcome-copy">
-            <button
-              type="button"
-              className="workbench-welcome-summary"
-              onClick={() => setConditionsOpen(true)}
-              aria-label={`수업 조건 열기 · ${criteria.targetMinutes}분 · ${equipmentLabel(selectedEquipment) || "기구 선택 필요"}`}
-            >
-              <Clock3 size={16} aria-hidden="true" />
-              {criteria.targetMinutes}분 ·{" "}
-              {equipmentLabel(selectedEquipment) || "기구 선택 필요"}
-              <ChevronDown size={15} aria-hidden="true" />
-            </button>
             <h2>
               동작을 골라
               <br className="welcome-desktop-break" /> 나만의 흐름으로.
             </h2>
-            <button
-              type="button"
-              className="btn-primary workbench-first-action"
-              onClick={openExerciseFinder}
-            >
-              <Plus size={20} aria-hidden="true" />
-              동작 고르기
-            </button>
+            <div className="workbench-welcome-actions">
+              <button
+                type="button"
+                className="btn-primary workbench-first-action"
+                onClick={openExerciseFinder}
+              >
+                <Plus size={20} aria-hidden="true" />
+                동작 고르기
+              </button>
+              <button
+                type="button"
+                className="btn-secondary workbench-idea-action"
+                onClick={() => openIdeaSheet(null)}
+              >
+                <Sparkles size={18} aria-hidden="true" />
+                한 줄 아이디어 메모
+              </button>
+            </div>
             <p className="workbench-reviewed-count">
               내 검토 기록 {reviewedCatalogCount}개 · 검토를 마친 동작을 추가할
               수 있어요.
@@ -634,8 +651,94 @@ export function SequenceWorkbench({
           </div>
         </section>
       )}
+      {ideaExercises.length > 0 && (
+        <section className="pf-workbench-ideas" aria-label="내 새 동작 메모">
+          <div className="pf-workbench-ideas__header">
+            <div>
+              <h2>내 새 동작 메모 ({ideaExercises.length})</h2>
+              <p>
+                직접 해본 느낌·수정할 점을 덧붙이거나 바로 수업에 넣으세요 · 주관적
+                메모(전문가 검증·운동 효과 보장 아님)
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => openIdeaSheet(null)}
+            >
+              <Plus size={16} aria-hidden="true" /> 새 아이디어 추가
+            </button>
+          </div>
+          <div className="pf-workbench-ideas__list">
+            {ideaExercises.map((ideaEx) => {
+              const draft = readMovementIdeaDraft(ideaEx);
+              const inSequence = s.activeSteps.some(
+                (step) => !isRestStep(step) && step.exerciseId === ideaEx.id,
+              );
+              return (
+                <article
+                  key={ideaEx.id}
+                  className="pf-workbench-idea-card pf-movement-card pf-movement-card--idea"
+                  aria-label={`${ideaEx.nameKo} 창작 메모`}
+                >
+                  <div className="pf-workbench-idea-card__body">
+                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "6px" }}>
+                      <strong>{ideaEx.nameKo}</strong>
+                      <span
+                        className={`pf-badge pf-ai-status ${draft?.triedByInstructor ? "pf-ai-status--tried-memo" : "pf-ai-status--creative-memo"}`}
+                      >
+                        <span className="pf-ai-status__dot" aria-hidden="true" />
+                        <span>
+                          {draft?.triedByInstructor
+                            ? "직접 해봄 · 주관적 메모"
+                            : "내 창작 메모 · 전문가 검증 아님"}
+                        </span>
+                      </span>
+                    </div>
+                    <p>{draft?.ideaLine || ideaEx.cues[0]}</p>
+                    {draft?.subjectiveFeeling && (
+                      <p>느낌 메모: {draft.subjectiveFeeling}</p>
+                    )}
+                    {draft?.adjustmentNote && (
+                      <p>수정 메모: {draft.adjustmentNote}</p>
+                    )}
+                  </div>
+                  <div className="pf-workbench-idea-card__actions">
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() => openIdeaSheet(ideaEx)}
+                      aria-label={`${ideaEx.nameKo} 다시 열기`}
+                    >
+                      다시 열기 · 느낌/수정
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => {
+                        const result = addMovementIdeaToCurrentClass(ideaEx.id);
+                        setNotice(result.message);
+                        if (result.ok) setWorkflowStep("arrange");
+                      }}
+                      aria-label={`${ideaEx.nameKo} 수업에 넣기`}
+                    >
+                      {inSequence ? "수업에 한 번 더 넣기" : "수업에 넣기"}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
       {!s.activeSteps.length && (
-        <MotionPatternGallery onViewAll={() => s.setActiveTab("atlas")} />
+        <details className="workbench-motion-gallery-disclosure">
+          <summary>
+            <span>도해 초안 둘러보기 (선택)</span>
+            <ChevronDown size={15} aria-hidden="true" />
+          </summary>
+          <MotionPatternGallery onViewAll={() => s.setActiveTab("atlas")} />
+        </details>
       )}
       <NextClassBanner collapseEmpty />
       <nav className="workbench-flow-navigation" aria-label="수업 준비 순서">
@@ -966,8 +1069,12 @@ export function SequenceWorkbench({
           <div className="flow-sections">
             {sectionRuns.map(({ section, entries }, runIndex) => {
               return (
-                <div className="flow-section" key={`${section.id}-${runIndex}`}>
-                  <div className="flow-section-label">
+                <div
+                  className={`flow-section pf-sequence-block pf-sequence-block--${section.id}`}
+                  data-pf-block-phase={section.id}
+                  key={`${section.id}-${runIndex}`}
+                >
+                  <div className="flow-section-label pf-sequence-block__header">
                     <span>
                       {section.english}
                       <strong>{section.label}</strong>
@@ -1015,7 +1122,7 @@ export function SequenceWorkbench({
                     const expanded = previewStep === step.stepId;
                     return (
                       <article
-                        className={`flow-step ${step.locked ? "is-locked" : ""} ${expanded ? "is-selected" : ""}`}
+                        className={`flow-step pf-movement-card pf-movement-card--step ${step.locked ? "is-locked" : ""} ${expanded ? "is-selected" : ""}`}
                         key={step.stepId}
                       >
                         <div className="step-main">
@@ -1063,9 +1170,11 @@ export function SequenceWorkbench({
                               <span className="step-target">
                                 {" "}
                                 ·{" "}
-                                {reviewed
-                                  ? ex.targetMuscles.slice(0, 2).join("·")
-                                  : "검토 전 자료"}
+                                {isMovementIdeaExercise(ex)
+                                  ? "내 창작 메모 · 전문가 검증 아님"
+                                  : reviewed
+                                    ? ex.targetMuscles.slice(0, 2).join("·")
+                                    : "검토 전 자료"}
                               </span>
                             </span>
                           </button>
@@ -1090,6 +1199,15 @@ export function SequenceWorkbench({
                             <MoreHorizontal size={19} />
                           </button>
                           <div className="step-actions">
+                            {isMovementIdeaExercise(ex) && (
+                              <button
+                                className="icon-btn"
+                                aria-label={`${ex.nameKo} 느낌·수정 메모 열기`}
+                                onClick={() => openIdeaSheet(ex)}
+                              >
+                                <Sparkles size={17} />
+                              </button>
+                            )}
                             <button
                               className="icon-btn"
                               aria-label={`${index + 1}번 동작 ${step.locked ? "잠금 해제" : "잠금"}`}
@@ -1894,6 +2012,14 @@ export function SequenceWorkbench({
           )}
         </div>
       </LightDismissDialog>
+      {!onOpenIdeaSheet && localIdeaSheet.open && (
+        <MovementIdeaSheet
+          key={localIdeaSheet.exercise?.id ?? "new-idea"}
+          open={localIdeaSheet.open}
+          initialExercise={localIdeaSheet.exercise}
+          onClose={() => setLocalIdeaSheet({ open: false, exercise: null })}
+        />
+      )}
     </div>
   );
 }

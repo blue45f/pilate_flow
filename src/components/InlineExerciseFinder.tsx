@@ -14,6 +14,10 @@ import type { EquipmentId } from '../data/equipmentCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesExercise } from '../types/pilates';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
+import {
+  addMovementIdeaToCurrentClass,
+  isMovementIdeaExercise,
+} from '../utils/movementIdeaDraft';
 import { isRestStep } from '../utils/sequenceEngine';
 import { getMotionPatternReferences } from '../data/motionPatternReferences';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
@@ -126,6 +130,11 @@ export function InlineExerciseFinder({ onOpenExercise }: InlineExerciseFinderPro
   const selectedCount = activeSteps.filter((step) => !isRestStep(step)).length;
   const hasFilters = Boolean(filters.query.trim() || activeFilterCount || filters.motionOnly);
   const addExercise = (exercise: PilatesExercise) => {
+    if (isMovementIdeaExercise(exercise)) {
+      const result = addMovementIdeaToCurrentClass(exercise.id);
+      setFeedback({ success: result.ok, message: result.message });
+      return;
+    }
     if (!isExerciseAutoEligible(exercise)) return;
     const before = usePilatesStore.getState().activeSteps.length;
     appendExerciseToSequence(exercise.id);

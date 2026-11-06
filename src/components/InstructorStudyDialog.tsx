@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Bookmark, Check, Eye, EyeOff, Search } from 'lucide-react';
+import { Bookmark, Check, Eye, EyeOff } from 'lucide-react';
 import { CANONICAL_BLOCKS } from '../data/pilatesCatalog';
+import { PfBadge, PfButton, PfCard, PfEmptyState, PfSearchField, PfTabs } from '../design-system';
 import type { PilatesExercise, LayerMode } from '../types/pilates';
 import type { InstructorStudyState } from '../types/instructorStudy';
 import { getExerciseReviewState } from '../utils/exerciseReview';
 import { ExerciseEvidencePanel } from './ExerciseEvidencePanel';
 import { LightDismissDialog } from './LightDismissDialog';
 import { MotionReferencePlayer } from './MotionReferencePlayer';
+import '../styles/design-tokens.css';
 import '../styles/instructor-study.css';
 
 const INSTRUCTOR_TUTORIAL_TASKS = [
@@ -32,6 +34,11 @@ const INSTRUCTOR_TUTORIAL_TASKS = [
   },
 ] as const;
 
+const STUDY_MODE_ITEMS = [
+  { id: 'study', label: '동작 숙지' },
+  { id: 'guide', label: '사용법 다시 보기' },
+] as const;
+
 interface InstructorStudyDialogProps {
   exercises: readonly PilatesExercise[];
   study: InstructorStudyState;
@@ -55,7 +62,7 @@ export function InstructorStudyDialog({
   initialExerciseId,
   initialMode = 'study',
 }: InstructorStudyDialogProps) {
-  const [mode, setMode] = useState(initialMode);
+  const [mode, setMode] = useState<'study' | 'guide'>(initialMode);
   const [search, setSearch] = useState('');
   const [bookmarksOnly, setBookmarksOnly] = useState(false);
   const [selectedId, setSelectedId] = useState(initialExerciseId ?? exercises[0]?.id ?? '');
@@ -88,19 +95,23 @@ export function InstructorStudyDialog({
       maxWidth="900px"
     >
       <div className="instructor-study">
-        <div className="study-modes" role="group" aria-label="연습실 보기">
-          <button type="button" aria-pressed={mode === 'study'} onClick={() => setMode('study')}>
-            동작 숙지
-          </button>
-          <button type="button" aria-pressed={mode === 'guide'} onClick={() => setMode('guide')}>
-            사용법 다시 보기
-          </button>
-        </div>
+        <PfTabs
+          ariaLabel="연습실 보기"
+          semantics="group"
+          variant="segmented"
+          className="study-modes"
+          items={STUDY_MODE_ITEMS}
+          value={mode}
+          onChange={setMode}
+        />
         {mode === 'guide' ? (
-          <section className="study-guide" aria-label="수업 준비 사용법">
-            <p className="study-step-counter">
-              {tutorialIndex + 1} / {INSTRUCTOR_TUTORIAL_TASKS.length} · 과업별 안내
-            </p>
+          <PfCard as="section" variant="subtle" className="study-guide" aria-label="수업 준비 사용법">
+            <div className="study-guide-top">
+              <p className="study-step-counter">
+                {tutorialIndex + 1} / {INSTRUCTOR_TUTORIAL_TASKS.length} · 과업별 안내
+              </p>
+              {taskComplete && <PfBadge tone="success">실습 확인됨</PfBadge>}
+            </div>
             <h3>{task.title}</h3>
             <p>{task.body}</p>
             <label className="study-task-check">
@@ -115,41 +126,37 @@ export function InstructorStudyDialog({
               개인 사용법 체크입니다. 전문가 자격이나 동작·모션 검수 완료를 뜻하지 않습니다.
             </p>
             <nav className="study-guide-navigation" aria-label="사용법 단계">
-              <button
-                type="button"
-                className="btn-secondary"
+              <PfButton
+                variant="secondary"
                 disabled={tutorialIndex === 0}
                 onClick={() => setTutorialIndex((index) => index - 1)}
               >
                 이전
-              </button>
-              <button
-                type="button"
-                className="btn-primary"
+              </PfButton>
+              <PfButton
+                variant="primary"
                 disabled={tutorialIndex === INSTRUCTOR_TUTORIAL_TASKS.length - 1}
                 onClick={() => setTutorialIndex((index) => index + 1)}
               >
                 다음
-              </button>
+              </PfButton>
             </nav>
-          </section>
+          </PfCard>
         ) : (
           <div className="study-layout">
             <aside className="study-browser" aria-label="숙지할 동작 선택">
-              <label className="study-search">
-                <Search size={16} aria-hidden="true" />
-                <span className="sr-only">연습할 동작 검색</span>
-                <input
-                  type="search"
-                  value={search}
-                  placeholder="동작 이름 검색"
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-              </label>
-              <button
-                type="button"
+              <PfSearchField
+                label="연습할 동작 검색"
+                type="search"
+                wrapperClassName="study-search"
+                value={search}
+                placeholder="동작 이름 검색"
+                onChange={(event) => setSearch(event.target.value)}
+              />
+              <PfButton
+                variant="secondary"
                 className="study-bookmark-filter"
-                aria-pressed={bookmarksOnly}
+                pressed={bookmarksOnly}
                 onClick={() => setBookmarksOnly((value) => !value)}
               >
                 <Bookmark size={15} /> 북마크만{' '}
@@ -158,7 +165,7 @@ export function InstructorStudyDialog({
                     exercises.some((exercise) => exercise.id === id),
                   ).length
                 }
-              </button>
+              </PfButton>
               <p className="muted" role="status">
                 {filtered.length}개 동작 노트
               </p>
@@ -181,16 +188,19 @@ export function InstructorStudyDialog({
                 ))}
               </div>
               {filtered.length === 0 && (
-                <p>조건에 맞는 동작이 없습니다. 검색어나 북마크 조건을 바꿔 주세요.</p>
+                <PfEmptyState
+                  headingLevel="h3"
+                  className="study-empty-state"
+                  title="조건에 맞는 동작이 없습니다. 검색어나 북마크 조건을 바꿔 주세요."
+                />
               )}
               {filtered.length > count && (
-                <button
-                  type="button"
-                  className="text-button"
+                <PfButton
+                  variant="text"
                   onClick={() => setLimit({ signature, count: count + 6 })}
                 >
                   {Math.min(6, filtered.length - count)}개 더 보기
-                </button>
+                </PfButton>
               )}
             </aside>
             {selected ? (
@@ -201,15 +211,15 @@ export function InstructorStudyDialog({
                     <h3>{selected.nameKo}</h3>
                     <p className="muted">{selected.nameEn}</p>
                   </div>
-                  <button
-                    type="button"
+                  <PfButton
+                    variant="secondary"
                     className="study-save-bookmark"
-                    aria-pressed={study.bookmarkedExerciseIds.includes(selected.id)}
+                    pressed={study.bookmarkedExerciseIds.includes(selected.id)}
                     onClick={() => onToggleBookmark(selected.id)}
                   >
                     <Bookmark size={17} />
                     {study.bookmarkedExerciseIds.includes(selected.id) ? '북마크됨' : '북마크'}
-                  </button>
+                  </PfButton>
                 </header>
                 <p className="study-metadata">
                   계획 노트 역할 ·{' '}
@@ -224,18 +234,22 @@ export function InstructorStudyDialog({
                 />
                 <ExerciseEvidencePanel exercise={selected} />
                 {reviewed ? (
-                  <section className="study-recall" aria-label="티칭 큐 기억 연습">
+                  <PfCard
+                    as="section"
+                    variant="subtle"
+                    className="study-recall"
+                    aria-label="티칭 큐 기억 연습"
+                  >
                     <div className="study-recall-heading">
                       <h4>내가 검토한 티칭 메모</h4>
-                      <button
-                        type="button"
-                        className="btn-secondary"
+                      <PfButton
+                        variant="secondary"
                         aria-expanded={!study.rehearsalCueHidden}
                         onClick={() => onCueHiddenChange(!study.rehearsalCueHidden)}
                       >
                         {study.rehearsalCueHidden ? <Eye size={16} /> : <EyeOff size={16} />}
                         {study.rehearsalCueHidden ? '큐 확인하기' : '큐 숨기기'}
-                      </button>
+                      </PfButton>
                     </div>
                     {study.rehearsalCueHidden ? (
                       <p>호흡·큐·난이도 대안을 먼저 떠올린 뒤 확인해 보세요.</p>
@@ -249,55 +263,52 @@ export function InstructorStudyDialog({
                             <li key={`${index}-${cue}`}>{cue}</li>
                           ))}
                         </ul>
-                        <label className="form-field">
-                          <span>강사가 작성한 난이도 대안</span>
-                          <select
-                            value={layer}
-                            onChange={(event) => setLayer(event.target.value as LayerMode)}
-                          >
-                            <option value="easy">쉬운 대안</option>
-                            <option value="standard">기본 대안</option>
-                            <option value="hard">진행 대안</option>
-                          </select>
-                        </label>
-                        <p>{selected.layers[layer] || '이 대안은 작성하지 않았습니다.'}</p>
-                        <p>
-                          <strong>주의 메모</strong> {selected.precautions || '미입력'}
-                        </p>
+                        <div className="study-modes" role="group" aria-label="단계별 변형">
+                          {(
+                            [
+                              ['easy', '쉽게'],
+                              ['standard', '기본'],
+                              ['hard', '심화'],
+                            ] as const
+                          ).map(([id, label]) => (
+                            <button
+                              type="button"
+                              key={id}
+                              aria-pressed={layer === id}
+                              onClick={() => setLayer(id)}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        <p>{selected.layers[layer] || '등록된 단계별 메모가 없습니다.'}</p>
+                        {selected.precautions && (
+                          <p>
+                            <strong>주의 메모</strong> {selected.precautions}
+                          </p>
+                        )}
                       </div>
                     )}
-                  </section>
+                  </PfCard>
                 ) : (
-                  <div className="study-review-needed">
+                  <PfCard
+                    as="section"
+                    variant="subtle"
+                    className="study-review-needed"
+                    aria-label="티칭 메모 검토 안내"
+                  >
                     <h4>설정·호흡·큐는 강사 검토 후 숙지</h4>
                     <p>
-                      현재 노트는 미검토이거나 내용 변경 후 재검토가 필요합니다. 개인 검토와 실제
-                      전문가 자격 확인은 별개입니다.
+                      원문 참고값과 계획 메모를 먼저 검토해 주세요. 미검토 자료는 수업 진행이나 암기
+                      체크에 바로 쓰지 않습니다.
                     </p>
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={(event) => {
-                        event.currentTarget.closest('dialog')?.close();
-                        onOpenReview(selected);
-                      }}
-                    >
-                      동작 노트에서 직접 검토
-                    </button>
-                  </div>
+                    <PfButton variant="secondary" onClick={() => onOpenReview(selected)}>
+                      <Check size={16} /> 동작 노트에서 직접 검토
+                    </PfButton>
+                  </PfCard>
                 )}
-                <p className="study-learning-boundary">
-                  <Check size={15} aria-hidden="true" />
-                  북마크·큐 연습·사용법 체크는 동작 검토나 자격 인증 상태를 바꾸지 않습니다. 정확한
-                  모션이 없는 동작은 임의 시범으로 대체하지 않습니다.
-                </p>
               </section>
-            ) : (
-              <section>
-                <h3>숙지할 동작을 선택하세요</h3>
-                <p>동작 노트를 직접 등록하면 이곳에서 다시 확인할 수 있습니다.</p>
-              </section>
-            )}
+            ) : null}
           </div>
         )}
       </div>
