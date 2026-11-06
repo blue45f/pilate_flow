@@ -1200,10 +1200,14 @@ export const usePilatesStore = create<PilatesStudioState>()(
         const steps = (
           mode === 'append' ? [...cloneSteps(state.activeSteps), ...incoming] : incoming
         ).map((step, index) => ({ ...step, order: index + 1 }));
-        if (steps.length > 1000 || new Set(steps.map((step) => step.stepId)).size !== steps.length)
+        if (
+          steps.length > 1000 ||
+          steps.some((step) => !stepSchema.safeParse(step).success) ||
+          new Set(steps.map((step) => step.stepId)).size !== steps.length
+        )
           return {
             success: false,
-            message: '항목이 너무 많거나 항목 ID가 겹칩니다. 다시 선택해 주세요.',
+            message: '현재 수업과 프리셋의 항목·시간·항목 ID를 확인해 주세요.',
           };
         const records = steps
           .filter((step) => !isRestStep(step))

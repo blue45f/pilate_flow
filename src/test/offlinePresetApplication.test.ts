@@ -106,6 +106,14 @@ describe('explicit offline preset copies', () => {
       expect(usePilatesStore.getState()).toBe(state);
     }
   });
+  it('does not rewrite malformed existing steps when appending a valid preset', () => {
+    usePilatesStore.setState({ activeSteps: [{ ...classInput().steps[0], durationMin: -1 }] });
+    const before = usePilatesStore.getState();
+    const persisted = localStorage.getItem(RECOVERY_STORAGE_KEY);
+    expect(before.applyPresetDraft(classInput(), 'append', before).success).toBe(false);
+    expect(usePilatesStore.getState()).toBe(before);
+    expect(localStorage.getItem(RECOVERY_STORAGE_KEY)).toBe(persisted);
+  });
   it('persists an editable copy without changing the template or history', async () => {
     const state = usePilatesStore.getState();
     const input = classInput();
