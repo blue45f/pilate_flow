@@ -927,6 +927,102 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
           expect(entry.scrollX, `phase=${entry.phase}`).toBe(0);
         }
       }
+
+      // Verify in real Chromium:
+      // 1) Single aria-live / role="status" announcement region
+      // 2) Keyboard shortcuts inside <input>, <textarea>, and [contenteditable="true"] do not preventDefault or change step
+      // 3) visibilitychange (hidden -> visible) and print emulation return preserve step position with single-step advancement
+      const chromiumLifecycleAndA11yCheck = await session.evaluate<{
+        liveRegionCount: number;
+        liveRegionTestId: string | null;
+        stepBeforeEditableKeys: string | null;
+        stepAfterEditableKeys: string | null;
+        anyEditableKeyPrevented: boolean;
+        stepBeforePrintAndVisibility: string | null;
+        cueIdBeforePrintAndVisibility: string | null;
+        stepAfterPrintAndVisibility: string | null;
+        cueIdAfterPrintAndVisibility: string | null;
+        stepAfterSingleArrowRight: string | null;
+      }>(`(async () => {
+        await window.__renderCueSheetProps({
+          key: 'chromium-a11y-lifecycle-check',
+          showFixtureSwitcher: true,
+          initialFixtureId: 'standard-mixed',
+          initialStepIndex: 1,
+        });
+        const root = document.querySelector('[data-testid="class-cue-sheet-root"]');
+        const deck = root.querySelector('[data-testid="cue-sheet-focus-deck"]');
+        const liveRegions = Array.from(root.querySelectorAll('[aria-live], [role="status"]'));
+
+        const stepBeforeEditableKeys = root.getAttribute('data-current-step-index');
+
+        const probeContainer = document.createElement('div');
+        const inputEl = document.createElement('input');
+        const textareaEl = document.createElement('textarea');
+        const editableDiv = document.createElement('div');
+        editableDiv.setAttribute('contenteditable', 'true');
+        probeContainer.appendChild(inputEl);
+        probeContainer.appendChild(textareaEl);
+        probeContainer.appendChild(editableDiv);
+        deck.appendChild(probeContainer);
+
+        let anyEditableKeyPrevented = false;
+        for (const el of [inputEl, textareaEl, editableDiv]) {
+          el.focus();
+          for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'j', 'k', 'n', 'p']) {
+            const ev = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+            const notCanceled = el.dispatchEvent(ev);
+            if (!notCanceled || ev.defaultPrevented) {
+              anyEditableKeyPrevented = true;
+            }
+          }
+        }
+        probeContainer.remove();
+        const stepAfterEditableKeys = root.getAttribute('data-current-step-index');
+
+        const stepBeforePrintAndVisibility = root.getAttribute('data-current-step-index');
+        const cueIdBeforePrintAndVisibility = root.getAttribute('data-current-cue-item-id');
+
+        window.dispatchEvent(new Event('beforeprint'));
+        window.dispatchEvent(new Event('afterprint'));
+        document.dispatchEvent(new Event('visibilitychange'));
+        window.dispatchEvent(new Event('blur'));
+        window.dispatchEvent(new Event('focus'));
+
+        const stepAfterPrintAndVisibility = root.getAttribute('data-current-step-index');
+        const cueIdAfterPrintAndVisibility = root.getAttribute('data-current-cue-item-id');
+
+        deck.focus();
+        deck.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const stepAfterSingleArrowRight = root.getAttribute('data-current-step-index');
+
+        return {
+          liveRegionCount: liveRegions.length,
+          liveRegionTestId: liveRegions[0]?.getAttribute('data-testid') ?? null,
+          stepBeforeEditableKeys,
+          stepAfterEditableKeys,
+          anyEditableKeyPrevented,
+          stepBeforePrintAndVisibility,
+          cueIdBeforePrintAndVisibility,
+          stepAfterPrintAndVisibility,
+          cueIdAfterPrintAndVisibility,
+          stepAfterSingleArrowRight,
+        };
+      })()`);
+
+      expect(chromiumLifecycleAndA11yCheck.liveRegionCount).toBe(1);
+      expect(chromiumLifecycleAndA11yCheck.liveRegionTestId).toBe('cue-sheet-a11y-status');
+      expect(chromiumLifecycleAndA11yCheck.anyEditableKeyPrevented).toBe(false);
+      expect(chromiumLifecycleAndA11yCheck.stepBeforeEditableKeys).toBe('1');
+      expect(chromiumLifecycleAndA11yCheck.stepAfterEditableKeys).toBe('1');
+      expect(chromiumLifecycleAndA11yCheck.stepAfterPrintAndVisibility).toBe(
+        chromiumLifecycleAndA11yCheck.stepBeforePrintAndVisibility,
+      );
+      expect(chromiumLifecycleAndA11yCheck.cueIdAfterPrintAndVisibility).toBe(
+        chromiumLifecycleAndA11yCheck.cueIdBeforePrintAndVisibility,
+      );
+      expect(chromiumLifecycleAndA11yCheck.stepAfterSingleArrowRight).toBe('2');
     },
     45000,
   );

@@ -317,6 +317,30 @@ function renderItemCueBlock(item: ClassCueSheetItem): React.ReactNode {
   );
 }
 
+const EDITABLE_KEYBOARD_TARGET_SELECTOR =
+  'input, textarea, select, [contenteditable=""], [contenteditable="true"], [contenteditable="plaintext-only"], [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="searchbox"], [role="combobox"]';
+
+function isEditableKeyboardTarget(target: EventTarget | null): boolean {
+  if (!target || !(target instanceof Element)) {
+    return false;
+  }
+  if (target instanceof HTMLElement && target.isContentEditable) {
+    return true;
+  }
+  if (target.closest(EDITABLE_KEYBOARD_TARGET_SELECTOR) !== null) {
+    return true;
+  }
+  let cur: HTMLElement | null =
+    target instanceof HTMLElement ? target.parentElement : null;
+  while (cur) {
+    if (cur.isContentEditable) {
+      return true;
+    }
+    cur = cur.parentElement;
+  }
+  return false;
+}
+
 export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
   projection,
   sourceInput,
@@ -333,6 +357,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const focusDeckRef = useRef<HTMLDivElement | null>(null);
   const hadFocusInsideRootRef = useRef<boolean>(false);
+  const focusedElementRef = useRef<HTMLElement | null>(null);
 
   const shouldShowFixtureSwitcher =
     showFixtureSwitcher ??
@@ -405,8 +430,28 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
       return;
     }
     const activeEl = document.activeElement;
-    if (!activeEl || activeEl === document.body || !rootEl.contains(activeEl)) {
+    if (activeEl && rootEl.contains(activeEl)) {
+      if (activeEl instanceof HTMLElement) {
+        focusedElementRef.current = activeEl;
+      }
+      return;
+    }
+    if (activeEl && activeEl !== document.body && !rootEl.contains(activeEl)) {
+      hadFocusInsideRootRef.current = false;
+      focusedElementRef.current = null;
+      return;
+    }
+    const lastFocusedEl = focusedElementRef.current;
+    const lostFocusDueToUnmountOrDisable =
+      lastFocusedEl !== null &&
+      (!rootEl.contains(lastFocusedEl) ||
+        (lastFocusedEl as HTMLButtonElement).disabled === true);
+    if (lostFocusDueToUnmountOrDisable) {
       deckEl.focus({ preventScroll: true });
+      focusedElementRef.current = deckEl;
+    } else {
+      hadFocusInsideRootRef.current = false;
+      focusedElementRef.current = null;
     }
   });
 
@@ -441,8 +486,9 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
 
   const transferFocusToDeckIfBoundary = (willDisableButton: boolean) => {
     hadFocusInsideRootRef.current = true;
-    if (willDisableButton) {
-      focusDeckRef.current?.focus({ preventScroll: true });
+    if (willDisableButton && focusDeckRef.current) {
+      focusDeckRef.current.focus({ preventScroll: true });
+      focusedElementRef.current = focusDeckRef.current;
     }
   };
 
@@ -487,7 +533,32 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
   };
 
   const handleDeckKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
-    if (totalItems === 0) {
+    if (totalItems === 0 || event.defaultPrevented) {
+      return;
+    }
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+      return;
+    }
+    const nativeEvt = event.nativeEvent as KeyboardEvent & {
+      isComposing?: boolean;
+      keyCode?: number;
+    };
+    const syntheticComposing = (
+      event as unknown as { isComposing?: boolean; keyCode?: number }
+    ).isComposing;
+    if (
+      Boolean(nativeEvt?.isComposing) ||
+      Boolean(syntheticComposing) ||
+      nativeEvt?.keyCode === 229 ||
+      event.keyCode === 229 ||
+      event.key === 'Process'
+    ) {
+      return;
+    }
+    if (
+      isEditableKeyboardTarget(event.target) ||
+      isEditableKeyboardTarget(document.activeElement)
+    ) {
       return;
     }
     if (
@@ -518,19 +589,33 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
     }
   };
 
-  const handleRootFocusCapture = () => {
+  const handleRootFocusCapture = (event: React.FocusEvent<HTMLDivElement>) => {
     hadFocusInsideRootRef.current = true;
+    if (event.target instanceof HTMLElement) {
+      focusedElementRef.current = event.target;
+    }
   };
 
   const handleRootBlurCapture = (event: React.FocusEvent<HTMLDivElement>) => {
     const nextFocused = event.relatedTarget;
-    if (
-      nextFocused instanceof Node &&
-      rootRef.current &&
-      !rootRef.current.contains(nextFocused)
-    ) {
-      hadFocusInsideRootRef.current = false;
+    if (nextFocused instanceof Node) {
+      if (rootRef.current && !rootRef.current.contains(nextFocused)) {
+        hadFocusInsideRootRef.current = false;
+        focusedElementRef.current = null;
+      }
+      return;
     }
+    queueMicrotask(() => {
+      const rootEl = rootRef.current;
+      if (!rootEl) {
+        return;
+      }
+      const activeEl = document.activeElement;
+      if (!activeEl || !rootEl.contains(activeEl)) {
+        hadFocusInsideRootRef.current = false;
+        focusedElementRef.current = null;
+      }
+    });
   };
 
   const firstExpandedRowIdForCurrent = currentItem
@@ -696,6 +781,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
           data-testid="cue-sheet-a11y-status"
           role="status"
           aria-live="polite"
+          aria-atomic="true"
         >
           {!currentItem
             ? '현재 진행 항목 없음 (0/0) · 다음 준비 항목 없음'
@@ -707,6 +793,12 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
                 nextItem
                   ? `#${formatStepNumber(nextItem.order)} ${nextItem.nameKo}`
                   : '없음 (마지막 항목)'
+              }${
+                selectionResolution === 'fallback-adjacent-after-delete'
+                  ? ` · 이전 선택 항목${
+                      removedItemNameKo ? `(${removedItemNameKo})` : ''
+                    } 삭제됨, 인접 항목으로 위치 유지`
+                  : ''
               }`}
         </p>
 
@@ -715,7 +807,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
             <div
               className="cue-sheet-selection-fallback-notice"
               data-testid="cue-sheet-selection-fallback-notice"
-              role="status"
+              role="note"
             >
               {`이전 선택 항목${
                 removedItemNameKo ? `(${removedItemNameKo})` : ''
@@ -729,7 +821,6 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
           <div
             className="cue-sheet-empty-state"
             data-testid="cue-sheet-empty-state"
-            role="status"
           >
             <p className="cue-sheet-title">
               수업 진행 항목이 비어 있습니다 (0개 항목)
@@ -744,7 +835,6 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
         <div className="cue-sheet-focus-grid">
           <section
             aria-label="현재 진행 항목"
-            aria-live="polite"
             className="cue-sheet-focus-card is-current"
             data-testid="cue-sheet-current-card"
           >
@@ -979,7 +1069,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
           }`}
         >
           {activeProjection.isEmpty ? (
-            <div className="cue-sheet-empty-state" role="status">
+            <div className="cue-sheet-empty-state">
               <p className="cue-sheet-title">
                 수업 진행 항목이 비어 있습니다 (0개 항목)
               </p>

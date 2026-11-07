@@ -64,10 +64,10 @@
 - `classCueSheetTypes.ts` — 프로젝션, 스텝 아이템, 펼치기 행, 프라이버시 리포트, 유한 상한(`DEFAULT_MAX_*`) 타입 계약
 - `classCueSheetProjection.ts` — 순수 읽기 전용 어댑터(`buildClassCueSheetProjection`), 순서 불변 안정 `cueItemId` 생성, 평문 포맷터(`formatClassCueSheetAsPlainText`), 민감 키 필터링 및 HTML 평문 이스케이프
 - `classCueSheetFixtures.ts` — 7종 합성 픽스처
-- `ClassCueSheetPreview.tsx` — 독립 픽스처 프리뷰 컴포넌트 (초보 강사 모바일 우선 포커스 데크, 기본 접기 디클로저, 100%~200% 글자 확대, 라이브 편집 안정 ID·fallback, 키보드 포커스 보호)
+- `ClassCueSheetPreview.tsx` — 독립 픽스처 프리뷰 컴포넌트 (초보 강사 모바일 우선 포커스 데크, 기본 접기 디클로저, 100%~200% 글자 확대, 라이브 편집 안정 ID·fallback, 입력 컨트롤·IME·수정키 단축키 간섭 방지, 단일 `aria-live` 상태 알림, 비탈취 키보드 포커스 보호)
 - `classCueSheet.css` — `.class-cue-sheet-root` 스코프 스타일, `44px` 터치 타겟, `320px`/`390px`/`768px`/`1440px` & `200%` 확대 반응형 레이아웃, `prefers-reduced-motion`, `@media print` 다중 페이지 분할 규칙
 - `classCueSheetProjection.test.ts` — 어댑터·프로젝션·안정 ID·프라이버시 경계 단위 테스트 (15개 테스트)
-- `ClassCueSheetPreview.test.tsx` — 프리뷰 UI·라이브 편집 상태 전이·키보드 포커스·로컬 상태 격리 테스트 (15개 테스트)
+- `ClassCueSheetPreview.test.tsx` — 프리뷰 UI·라이브 편집 상태 전이·편집 타겟 단축키 보호·단일 라이브 리전·키보드 포커스·로컬 상태 격리 테스트 (18개 테스트)
 - `classCueSheetUsability.test.tsx` — 초보 강사 UX·읽기 순서·접기/펼치기·글자 확대(200%)·긴 한글 큐·키보드·삭제/교체 회귀 전용 테스트 (7개 테스트)
 - `classCueSheetChromium.test.ts` — 실제 Headless Chromium + Poppler 기반 `320/390/768/1440px`·`200%` 확대·`44px` 타겟 검증 및 A4/Letter 다중 페이지 PDF·PGM 래스터 검증 (2개 통합 테스트)
 - `browserFixture.html` — 독립 브라우저 프로브용 로컬 HTML 픽스처
@@ -86,7 +86,7 @@ npx tsc -b
 # ESLint 검증 (src/features/classCueSheet)
 npx eslint src/features/classCueSheet
 
-# Vitest 전체 검증 (총 4개 테스트 파일, 39개 테스트)
+# Vitest 전체 검증
 pnpm vitest run src/features/classCueSheet
 
 # 독립 브라우저 프로브 및 스크린샷 생성 (320/390/768/1440px, 200% 확대, A4/Letter PDF)

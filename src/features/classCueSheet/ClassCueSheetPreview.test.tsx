@@ -992,4 +992,256 @@ describe('ClassCueSheetPreview', () => {
     expect(document.activeElement).not.toBe(document.body);
     expect(document.activeElement).toBe(focusDeck);
   });
+
+  it('does not preventDefault or change the active step when keyboard shortcuts are dispatched from input, textarea, select, contenteditable, modifier keys, or IME composition', () => {
+    render(
+      <ClassCueSheetPreview
+        showFixtureSwitcher={true}
+        initialStepIndex={1}
+        sourceInput={{
+          id: 'editable-guard-seq',
+          title: '편집 입력 키보드 보호 시퀀스',
+          steps: [
+            { id: 'eg-1', nameKo: '동작 1', durationMin: 3 },
+            { id: 'eg-2', nameKo: '동작 2', durationMin: 3 },
+            { id: 'eg-3', nameKo: '동작 3', durationMin: 3 },
+          ],
+        }}
+      />,
+    );
+
+    const rootEl = screen.getByTestId('class-cue-sheet-root');
+    const focusDeck = screen.getByTestId('cue-sheet-focus-deck');
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('1');
+
+    // Mount editable elements inside focusDeck to prove bubbling keydowns from editable controls are never intercepted
+    const inputEl = document.createElement('input');
+    inputEl.type = 'text';
+    const textareaEl = document.createElement('textarea');
+    const selectEl = document.createElement('select');
+    const contentEditableEl = document.createElement('div');
+    contentEditableEl.setAttribute('contenteditable', 'true');
+    const nestedSpanInContentEditable = document.createElement('span');
+    contentEditableEl.appendChild(nestedSpanInContentEditable);
+
+    focusDeck.appendChild(inputEl);
+    focusDeck.appendChild(textareaEl);
+    focusDeck.appendChild(selectEl);
+    focusDeck.appendChild(contentEditableEl);
+
+    const shortcutKeys = [
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+      'Home',
+      'End',
+      'j',
+      'k',
+      'n',
+      'p',
+    ];
+
+    for (const target of [
+      inputEl,
+      textareaEl,
+      selectEl,
+      contentEditableEl,
+      nestedSpanInContentEditable,
+    ]) {
+      target.focus();
+      for (const key of shortcutKeys) {
+        const evt = new KeyboardEvent('keydown', {
+          key,
+          bubbles: true,
+          cancelable: true,
+        });
+        const notCancelled = fireEvent(target, evt);
+        expect(notCancelled).toBe(true);
+        expect(evt.defaultPrevented).toBe(false);
+        expect(rootEl.getAttribute('data-current-step-index')).toBe('1');
+      }
+    }
+
+    // Remove temporary editable elements and focus the deck itself
+    inputEl.remove();
+    textareaEl.remove();
+    selectEl.remove();
+    contentEditableEl.remove();
+    focusDeck.focus();
+
+    // Modifier keys (ctrlKey, metaKey, altKey, shiftKey) and IME composition must not intercept or navigate
+    for (const key of shortcutKeys) {
+      for (const mod of [
+        { ctrlKey: true },
+        { metaKey: true },
+        { altKey: true },
+        { shiftKey: true },
+        { isComposing: true },
+        { keyCode: 229 },
+      ]) {
+        const evt = new KeyboardEvent('keydown', {
+          key,
+          bubbles: true,
+          cancelable: true,
+          ...mod,
+        });
+        const notCancelled = fireEvent(focusDeck, evt);
+        expect(notCancelled).toBe(true);
+        expect(evt.defaultPrevented).toBe(false);
+        expect(rootEl.getAttribute('data-current-step-index')).toBe('1');
+      }
+    }
+
+    // Plain unmodified shortcut on focusDeck still navigates and prevents default
+    const validEvt = new KeyboardEvent('keydown', {
+      key: 'j',
+      bubbles: true,
+      cancelable: true,
+    });
+    const validNotCancelled = fireEvent(focusDeck, validEvt);
+    expect(validNotCancelled).toBe(false);
+    expect(validEvt.defaultPrevented).toBe(true);
+    expect(rootEl.getAttribute('data-current-step-index')).toBe('2');
+  });
+
+  it('maintains a single aria-live / role="status" announcement region (cue-sheet-a11y-status) across normal, empty, and delete-fallback states', () => {
+    const { container, rerender } = render(
+      <ClassCueSheetPreview
+        initialFullListOpen={true}
+        sourceInput={{
+          id: 'single-live-region-seq',
+          title: '단일 라이브 리전 검증 시퀀스',
+          steps: [
+            { id: 'sl-1', nameKo: '풋워크', durationMin: 4 },
+            { id: 'sl-2', nameKo: '헌드레드', durationMin: 3 },
+            { id: 'sl-3', nameKo: '레그 서클즈', durationMin: 4 },
+          ],
+        }}
+      />,
+    );
+
+    const assertSingleLiveStatusRegion = () => {
+      const liveOrStatusEls = container.querySelectorAll(
+        '[aria-live], [role="status"]',
+      );
+      expect(liveOrStatusEls.length).toBe(1);
+      expect(liveOrStatusEls[0]?.getAttribute('data-testid')).toBe(
+        'cue-sheet-a11y-status',
+      );
+      expect(liveOrStatusEls[0]?.getAttribute('role')).toBe('status');
+      expect(liveOrStatusEls[0]?.getAttribute('aria-live')).toBe('polite');
+      expect(liveOrStatusEls[0]?.getAttribute('aria-atomic')).toBe('true');
+      expect(
+        screen.getByTestId('cue-sheet-current-card').getAttribute('aria-live'),
+      ).toBeNull();
+    };
+
+    // 1. Normal state
+    assertSingleLiveStatusRegion();
+
+    // 2. Delete active step -> fallback-adjacent-after-delete state with fallback notice visible
+    fireEvent.click(screen.getByRole('button', { name: '다음 진행 항목' }));
+    rerender(
+      <ClassCueSheetPreview
+        initialFullListOpen={true}
+        sourceInput={{
+          id: 'single-live-region-seq',
+          title: '단일 라이브 리전 검증 시퀀스',
+          steps: [
+            { id: 'sl-1', nameKo: '풋워크', durationMin: 4 },
+            { id: 'sl-3', nameKo: '레그 서클즈', durationMin: 4 },
+          ],
+        }}
+      />,
+    );
+    const fallbackNotice = screen.getByTestId(
+      'cue-sheet-selection-fallback-notice',
+    );
+    expect(fallbackNotice.getAttribute('role')).toBe('note');
+    expect(screen.getByTestId('cue-sheet-a11y-status').textContent).toContain(
+      '이전 선택 항목(헌드레드) 삭제됨, 인접 항목으로 위치 유지',
+    );
+    assertSingleLiveStatusRegion();
+
+    // 3. Empty class state
+    rerender(
+      <ClassCueSheetPreview
+        initialFullListOpen={true}
+        sourceInput={{
+          id: 'single-live-region-seq',
+          title: '단일 라이브 리전 검증 시퀀스 (비움)',
+          steps: [],
+        }}
+      />,
+    );
+    expect(
+      screen.getByTestId('cue-sheet-empty-state').getAttribute('role'),
+    ).toBeNull();
+    assertSingleLiveStatusRegion();
+  });
+
+  it('does not steal focus back to the cue sheet when the user blurs to document.body or focuses an external input before a re-render', () => {
+    const externalInput = document.createElement('input');
+    externalInput.type = 'text';
+    document.body.appendChild(externalInput);
+
+    try {
+      const { rerender } = render(
+        <ClassCueSheetPreview
+          sourceInput={{
+            id: 'no-focus-steal-seq',
+            title: '포커스 비탈취 검증 시퀀스',
+            steps: [
+              { id: 'nfs-1', nameKo: '동작 1', durationMin: 3 },
+              { id: 'nfs-2', nameKo: '동작 2', durationMin: 3 },
+            ],
+          }}
+        />,
+      );
+
+      const nextBtn = screen.getByTestId('cue-sheet-nav-next');
+
+      // 1. Focus inside root, then blur to document.body (relatedTarget === null)
+      nextBtn.focus();
+      expect(document.activeElement).toBe(nextBtn);
+      nextBtn.blur();
+      expect(document.activeElement).toBe(document.body);
+
+      // Re-render with updated steps while nextBtn is still mounted and enabled -> must NOT steal focus
+      rerender(
+        <ClassCueSheetPreview
+          sourceInput={{
+            id: 'no-focus-steal-seq',
+            title: '포커스 비탈취 검증 시퀀스 (업데이트 1)',
+            steps: [
+              { id: 'nfs-1', nameKo: '동작 1', durationMin: 3 },
+              { id: 'nfs-2', nameKo: '동작 2', durationMin: 3 },
+              { id: 'nfs-3', nameKo: '동작 3', durationMin: 3 },
+            ],
+          }}
+        />,
+      );
+      expect(document.activeElement).toBe(document.body);
+
+      // 2. Focus inside root, then move focus to external input outside root
+      nextBtn.focus();
+      expect(document.activeElement).toBe(nextBtn);
+      externalInput.focus();
+      expect(document.activeElement).toBe(externalInput);
+
+      rerender(
+        <ClassCueSheetPreview
+          sourceInput={{
+            id: 'no-focus-steal-seq',
+            title: '포커스 비탈취 검증 시퀀스 (업데이트 2)',
+            steps: [{ id: 'nfs-1', nameKo: '동작 1', durationMin: 3 }],
+          }}
+        />,
+      );
+      expect(document.activeElement).toBe(externalInput);
+    } finally {
+      externalInput.remove();
+    }
+  });
 });
