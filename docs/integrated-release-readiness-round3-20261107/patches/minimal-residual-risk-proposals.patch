@@ -1,0 +1,49 @@
+# Minimal Patch Proposals for Round 3 Residual Risks (R3-01 & R3-02)
+# Note: Per Round 3 ownership rules, src/** and build scripts outside
+# scripts/integrated-release-readiness-round3-20261107 were NOT modified.
+# Apply these minimal patches if query-string offline navigation or Safari < 18
+# backdrop-filter blur support is desired before production release.
+
+# ============================================================================
+# Proposal R3-01: Allow root navigation with query parameters (/?utm_source=...)
+# to use the cached '/index.html' app shell when offline in scripts/pwa-build.ts
+# ============================================================================
+--- a/scripts/pwa-build.ts
++++ b/scripts/pwa-build.ts
+@@ -55,9 +55,9 @@ self.addEventListener('activate', (event) => {
+ self.addEventListener('fetch', (event) => {
+   const request = event.request;
+   const url = new URL(request.url);
+-  if (request.method !== 'GET' || url.origin !== self.location.origin || url.search) return;
++  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+   // Navigations outside the app root (including /__/auth/*) are never intercepted.
+   if (request.mode === 'navigate' && (url.pathname === '/' || url.pathname === '/index.html')) {
+     event.respondWith(fetch(request).catch(async () => {
+       const cache = await caches.open(CACHE);
+       const cached = await cache.match('/index.html');
+@@ -71,6 +71,7 @@ self.addEventListener('fetch', (event) => {
+     }));
+     return;
+   }
++  if (url.search) return;
+   if (!ASSETS.includes(url.pathname) || url.pathname === '/index.html') return;
+   event.respondWith(caches.open(CACHE).then(async (cache) => (await cache.match(url.pathname)) || fetch(request)));
+ });
+
+# ============================================================================
+# Proposal R3-02: Pair -webkit-backdrop-filter with backdrop-filter in CSS
+# for iOS Safari / macOS Safari < 18 compatibility
+# ============================================================================
+--- a/src/styles/studio.css
++++ b/src/styles/studio.css
+@@ -1052,6 +1052,7 @@
+   background: rgba(24, 29, 26, 0.36);
++  -webkit-backdrop-filter: blur(3px);
+   backdrop-filter: blur(3px);
+ }
+@@ -1710,6 +1711,7 @@
+     background: rgba(246, 245, 240, 0.92);
++    -webkit-backdrop-filter: blur(15px);
+     backdrop-filter: blur(15px);
+     padding: 7px 13px max(7px, env(safe-area-inset-bottom));
+   }
