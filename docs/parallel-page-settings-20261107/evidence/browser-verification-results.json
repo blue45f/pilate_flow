@@ -1,0 +1,375 @@
+{
+  "featureId": "parallel-page-settings-20261107",
+  "track": "Track B — Independent Boundary, Security & Headless Chromium Browser Verification",
+  "verifiedAt": "2026-11-07T05:01:14.993Z",
+  "passed": true,
+  "driver": "cdp-native-chromium",
+  "chromeBinary": "/usr/bin/chromium",
+  "honestyBoundaries": {
+    "realChromiumCdpExecuted": true,
+    "realSafariExecuted": false,
+    "productionFirebaseMutated": false,
+    "sharedAppOrStoreModified": false
+  },
+  "screenshots": [
+    "docs/parallel-page-settings-20261107/evidence/screenshots/settings-320-100.png",
+    "docs/parallel-page-settings-20261107/evidence/screenshots/settings-320-200zoom.png",
+    "docs/parallel-page-settings-20261107/evidence/screenshots/settings-390-100.png",
+    "docs/parallel-page-settings-20261107/evidence/screenshots/settings-768-100.png",
+    "docs/parallel-page-settings-20261107/evidence/screenshots/settings-1440-100.png"
+  ],
+  "viewportResults": [
+    {
+      "viewport": "320x640",
+      "width": 320,
+      "height": 640,
+      "presetsVerified": 6,
+      "presetChecks": [
+        {
+          "presetId": "default-local-studio",
+          "docScrollWidth": 320,
+          "winInnerWidth": 320,
+          "rootScrollWidth": 296,
+          "rootClientWidth": 296,
+          "interactiveTargetCount": 43,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "signed-in-active-instructor",
+          "docScrollWidth": 320,
+          "winInnerWidth": 320,
+          "rootScrollWidth": 296,
+          "rootClientWidth": 296,
+          "interactiveTargetCount": 44,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "ios-safari-no-korean-voice",
+          "docScrollWidth": 320,
+          "winInnerWidth": 320,
+          "rootScrollWidth": 296,
+          "rootClientWidth": 296,
+          "interactiveTargetCount": 43,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "unsupported-host-update-ready",
+          "docScrollWidth": 320,
+          "winInnerWidth": 320,
+          "rootScrollWidth": 296,
+          "rootClientWidth": 296,
+          "interactiveTargetCount": 42,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "storage-warning-stale-preview",
+          "docScrollWidth": 320,
+          "winInnerWidth": 320,
+          "rootScrollWidth": 296,
+          "rootClientWidth": 296,
+          "interactiveTargetCount": 43,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "adversarial-untrusted-input",
+          "docScrollWidth": 320,
+          "winInnerWidth": 320,
+          "rootScrollWidth": 296,
+          "rootClientWidth": 296,
+          "interactiveTargetCount": 42,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        }
+      ],
+      "horizontalOverflow100Pct": false,
+      "horizontalOverflow200PctFont": false,
+      "horizontalOverflow200PctCssZoom": false,
+      "minTouchTarget44x44Verified": true,
+      "touchSiblingOverlapCount": 0,
+      "keyboardNavVerified": true,
+      "reducedMotionVerified": true,
+      "twoInstanceUniqueIds": {
+        "totalIds": 19,
+        "uniqueIds": 19
+      },
+      "localStorageLength": 0,
+      "sessionStorageLength": 0,
+      "pageErrors": []
+    },
+    {
+      "viewport": "390x844",
+      "width": 390,
+      "height": 844,
+      "presetsVerified": 6,
+      "presetChecks": [
+        {
+          "presetId": "default-local-studio",
+          "docScrollWidth": 390,
+          "winInnerWidth": 390,
+          "rootScrollWidth": 366,
+          "rootClientWidth": 366,
+          "interactiveTargetCount": 43,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "signed-in-active-instructor",
+          "docScrollWidth": 390,
+          "winInnerWidth": 390,
+          "rootScrollWidth": 366,
+          "rootClientWidth": 366,
+          "interactiveTargetCount": 44,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "ios-safari-no-korean-voice",
+          "docScrollWidth": 390,
+          "winInnerWidth": 390,
+          "rootScrollWidth": 366,
+          "rootClientWidth": 366,
+          "interactiveTargetCount": 43,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "unsupported-host-update-ready",
+          "docScrollWidth": 390,
+          "winInnerWidth": 390,
+          "rootScrollWidth": 366,
+          "rootClientWidth": 366,
+          "interactiveTargetCount": 42,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "storage-warning-stale-preview",
+          "docScrollWidth": 390,
+          "winInnerWidth": 390,
+          "rootScrollWidth": 366,
+          "rootClientWidth": 366,
+          "interactiveTargetCount": 43,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "adversarial-untrusted-input",
+          "docScrollWidth": 390,
+          "winInnerWidth": 390,
+          "rootScrollWidth": 366,
+          "rootClientWidth": 366,
+          "interactiveTargetCount": 42,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        }
+      ],
+      "horizontalOverflow100Pct": false,
+      "horizontalOverflow200PctFont": false,
+      "horizontalOverflow200PctCssZoom": false,
+      "minTouchTarget44x44Verified": true,
+      "touchSiblingOverlapCount": 0,
+      "keyboardNavVerified": true,
+      "reducedMotionVerified": true,
+      "twoInstanceUniqueIds": {
+        "totalIds": 19,
+        "uniqueIds": 19
+      },
+      "localStorageLength": 0,
+      "sessionStorageLength": 0,
+      "pageErrors": []
+    },
+    {
+      "viewport": "768x1024",
+      "width": 768,
+      "height": 1024,
+      "presetsVerified": 6,
+      "presetChecks": [
+        {
+          "presetId": "default-local-studio",
+          "docScrollWidth": 768,
+          "winInnerWidth": 768,
+          "rootScrollWidth": 744,
+          "rootClientWidth": 744,
+          "interactiveTargetCount": 43,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "signed-in-active-instructor",
+          "docScrollWidth": 768,
+          "winInnerWidth": 768,
+          "rootScrollWidth": 744,
+          "rootClientWidth": 744,
+          "interactiveTargetCount": 44,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "ios-safari-no-korean-voice",
+          "docScrollWidth": 768,
+          "winInnerWidth": 768,
+          "rootScrollWidth": 744,
+          "rootClientWidth": 744,
+          "interactiveTargetCount": 43,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "unsupported-host-update-ready",
+          "docScrollWidth": 768,
+          "winInnerWidth": 768,
+          "rootScrollWidth": 744,
+          "rootClientWidth": 744,
+          "interactiveTargetCount": 42,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "storage-warning-stale-preview",
+          "docScrollWidth": 768,
+          "winInnerWidth": 768,
+          "rootScrollWidth": 744,
+          "rootClientWidth": 744,
+          "interactiveTargetCount": 43,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "adversarial-untrusted-input",
+          "docScrollWidth": 768,
+          "winInnerWidth": 768,
+          "rootScrollWidth": 744,
+          "rootClientWidth": 744,
+          "interactiveTargetCount": 42,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        }
+      ],
+      "horizontalOverflow100Pct": false,
+      "horizontalOverflow200PctFont": false,
+      "horizontalOverflow200PctCssZoom": false,
+      "minTouchTarget44x44Verified": true,
+      "touchSiblingOverlapCount": 0,
+      "keyboardNavVerified": true,
+      "reducedMotionVerified": true,
+      "twoInstanceUniqueIds": {
+        "totalIds": 19,
+        "uniqueIds": 19
+      },
+      "localStorageLength": 0,
+      "sessionStorageLength": 0,
+      "pageErrors": []
+    },
+    {
+      "viewport": "1440x900",
+      "width": 1440,
+      "height": 900,
+      "presetsVerified": 6,
+      "presetChecks": [
+        {
+          "presetId": "default-local-studio",
+          "docScrollWidth": 1440,
+          "winInnerWidth": 1440,
+          "rootScrollWidth": 960,
+          "rootClientWidth": 960,
+          "interactiveTargetCount": 43,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "signed-in-active-instructor",
+          "docScrollWidth": 1440,
+          "winInnerWidth": 1440,
+          "rootScrollWidth": 960,
+          "rootClientWidth": 960,
+          "interactiveTargetCount": 44,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "ios-safari-no-korean-voice",
+          "docScrollWidth": 1440,
+          "winInnerWidth": 1440,
+          "rootScrollWidth": 960,
+          "rootClientWidth": 960,
+          "interactiveTargetCount": 43,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "unsupported-host-update-ready",
+          "docScrollWidth": 1440,
+          "winInnerWidth": 1440,
+          "rootScrollWidth": 960,
+          "rootClientWidth": 960,
+          "interactiveTargetCount": 42,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "storage-warning-stale-preview",
+          "docScrollWidth": 1440,
+          "winInnerWidth": 1440,
+          "rootScrollWidth": 960,
+          "rootClientWidth": 960,
+          "interactiveTargetCount": 43,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        },
+        {
+          "presetId": "adversarial-untrusted-input",
+          "docScrollWidth": 1440,
+          "winInnerWidth": 1440,
+          "rootScrollWidth": 960,
+          "rootClientWidth": 960,
+          "interactiveTargetCount": 42,
+          "undersizedTargetCount": 0,
+          "overlapCount": 0,
+          "leakedSecret": false
+        }
+      ],
+      "horizontalOverflow100Pct": false,
+      "horizontalOverflow200PctFont": false,
+      "horizontalOverflow200PctCssZoom": false,
+      "minTouchTarget44x44Verified": true,
+      "touchSiblingOverlapCount": 0,
+      "keyboardNavVerified": true,
+      "reducedMotionVerified": true,
+      "twoInstanceUniqueIds": {
+        "totalIds": 19,
+        "uniqueIds": 19
+      },
+      "localStorageLength": 0,
+      "sessionStorageLength": 0,
+      "pageErrors": []
+    }
+  ]
+}
