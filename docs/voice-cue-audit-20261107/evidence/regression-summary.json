@@ -1,0 +1,161 @@
+{
+  "auditId": "voice-cue-audit-20261107",
+  "executedAt": "2026-11-07T00:43:18.552Z",
+  "nodeVersion": "v24.22.2",
+  "overallStatus": "PASSED",
+  "tracks": {
+    "trackA": {
+      "suite": "scripts/voice-cue-audit-20261107/track-a-implementation/track-a-lifecycle-regression.node-test.mjs",
+      "testsPassed": 15,
+      "testsFailed": 0
+    },
+    "trackB": {
+      "nodeSuite": "scripts/voice-cue-audit-20261107/track-b-verification/track-b-adversarial-audit.node-test.mjs",
+      "nodeTestsPassed": 7,
+      "nodeTestsFailed": 0,
+      "browserRunner": "scripts/voice-cue-audit-20261107/track-b-verification/track-b-browser-lifecycle-verify.mjs",
+      "browserPass1ViewportsVerified": [
+        320,
+        390,
+        768,
+        1440
+      ],
+      "browserPass2ScenariosVerified": 10
+    }
+  },
+  "reproducedDefectsAndCandidateFixes": [
+    {
+      "id": "F-01",
+      "targetReadOnlyFile": "src/models/ClassVoiceController.ts",
+      "reproducedOnReadOnlyBaseline": true,
+      "verifiedFixedOnCandidate": true,
+      "summary": "Calling this.cancel() on newVisit even when say([]) produces empty parts prevents previous step speech from leaking into rest/unreviewed steps."
+    },
+    {
+      "id": "F-02",
+      "targetReadOnlyFile": "src/models/ClassVoiceController.ts",
+      "reproducedOnReadOnlyBaseline": true,
+      "verifiedFixedOnCandidate": true,
+      "summary": "Marking this.announced = true on mid-step title/breath edit and tracking spokenPhase/warned while tab is hidden prevents speaking edited notes on the next tick or replaying stale phase cues on tab restore."
+    },
+    {
+      "id": "F-03",
+      "targetReadOnlyFile": "src/hooks/useClassVoiceGuidance.ts",
+      "reproducedOnReadOnlyBaseline": true,
+      "verifiedFixedOnCandidate": true,
+      "summary": "Guarding undefined/non-EventTarget window.speechSynthesis, re-checking getVoices() on speak() with ko-KR priority, and using synchronous refs for toggleEnabled/changePreference prevents TypeError crashes and stale voice/closure state."
+    },
+    {
+      "id": "F-04",
+      "targetReadOnlyFile": "src/utils/koreanVoiceNarration.ts & src/components/MovementMediaGuidancePanel.tsx",
+      "reproducedOnReadOnlyBaseline": true,
+      "verifiedFixedOnCandidate": true,
+      "summary": "Gating synth.cancel() by ownsSpeech, re-verifying capability & activeUtteranceSpeed in resume(), and gating notifyMovementActivated by active===true prevents idle unmount from killing active speech and ensures paused speed changes take effect on resume."
+    }
+  ],
+  "unverifiedBoundaries": {
+    "physicalSpeakerAcousticQuality": "UNVERIFIED (Linux headless VM has no audio output device)",
+    "physicalAppleSafariWebKit": "UNVERIFIED (Physical iOS/iPadOS/macOS Safari hardware & AVSpeechSynthesizer not present)",
+    "physicalAndroidTtsEngine": "UNVERIFIED (Physical Android hardware TTS daemon not present)"
+  },
+  "steps": [
+    {
+      "name": "syntax-check:scripts/voice-cue-audit-20261107/shared/ts-loader-hooks.mjs",
+      "status": "PASSED",
+      "durationMs": 55,
+      "outputSummary": [
+        ""
+      ]
+    },
+    {
+      "name": "syntax-check:scripts/voice-cue-audit-20261107/shared/web-speech-mock-harness.mjs",
+      "status": "PASSED",
+      "durationMs": 58,
+      "outputSummary": [
+        ""
+      ]
+    },
+    {
+      "name": "syntax-check:scripts/voice-cue-audit-20261107/track-a-implementation/candidate-minimal-fixes.mjs",
+      "status": "PASSED",
+      "durationMs": 50,
+      "outputSummary": [
+        ""
+      ]
+    },
+    {
+      "name": "syntax-check:scripts/voice-cue-audit-20261107/track-a-implementation/track-a-lifecycle-regression.node-test.mjs",
+      "status": "PASSED",
+      "durationMs": 50,
+      "outputSummary": [
+        ""
+      ]
+    },
+    {
+      "name": "syntax-check:scripts/voice-cue-audit-20261107/track-b-verification/track-b-adversarial-audit.node-test.mjs",
+      "status": "PASSED",
+      "durationMs": 57,
+      "outputSummary": [
+        ""
+      ]
+    },
+    {
+      "name": "syntax-check:scripts/voice-cue-audit-20261107/track-b-verification/track-b-browser-lifecycle-verify.mjs",
+      "status": "PASSED",
+      "durationMs": 51,
+      "outputSummary": [
+        ""
+      ]
+    },
+    {
+      "name": "syntax-check:scripts/voice-cue-audit-20261107/run-all-voice-cue-audit.mjs",
+      "status": "PASSED",
+      "durationMs": 47,
+      "outputSummary": [
+        ""
+      ]
+    },
+    {
+      "name": "track-a-lifecycle-regression-node-tests",
+      "status": "PASSED",
+      "durationMs": 658,
+      "outputSummary": [
+        "  ✔ 8. Privacy, No Microphone/Camera, & No External Voice API Enforcement (2.145997ms)",
+        "✔ Track A — Pilates Free Browser Voice Guidance Lifecycle Regression Suite (13.891141ms)",
+        "ℹ tests 15",
+        "ℹ suites 9",
+        "ℹ pass 15",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 604.555365"
+      ]
+    },
+    {
+      "name": "track-b-adversarial-audit-node-tests",
+      "status": "PASSED",
+      "durationMs": 810,
+      "outputSummary": [
+        "  ✔ B. Static Source Compliance, Catalog Coverage, & Git Read-Only Boundary Verification (47.117866ms)",
+        "✔ Track B — Independent Adversarial Defect Reproduction & Compliance Audit (53.856249ms)",
+        "ℹ tests 7",
+        "ℹ suites 3",
+        "ℹ pass 7",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 750.945052"
+      ]
+    },
+    {
+      "name": "track-b-real-chromium-browser-verification",
+      "status": "PASSED",
+      "durationMs": 6468,
+      "outputSummary": [
+        "[Track B Browser Verification] Completed successfully. Evidence saved to docs/voice-cue-audit-20261107/evidence/browser-verification-results.json"
+      ]
+    }
+  ]
+}

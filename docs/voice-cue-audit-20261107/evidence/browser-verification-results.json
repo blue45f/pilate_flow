@@ -1,0 +1,207 @@
+{
+  "auditId": "voice-cue-audit-20261107",
+  "executedAt": "2026-11-07T00:43:18.539Z",
+  "environment": {
+    "os": "Linux Debian 12 (bookworm)",
+    "nodeVersion": "v24.22.2",
+    "browserExecutable": "/usr/bin/chromium",
+    "browserVersion": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+  },
+  "unverifiedBoundaries": {
+    "physicalAcousticOutputQuality": "UNVERIFIED — Headless Linux container has no physical speaker/audio hardware and 0 OS local Korean TTS voice packs installed; actual acoustic waveform, prosody, and volume are not verified.",
+    "physicalAppleSafariDevices": "UNVERIFIED — Physical iOS/iPadOS/macOS Safari (WebKit AVSpeechSynthesizer, hardware mute switch, Yuna/Sora native voice packs) was not executed in this Linux VM.",
+    "physicalAndroidDevices": "UNVERIFIED — Physical Android Chrome / Samsung Internet hardware TTS engine was not executed in this Linux VM."
+  },
+  "privacyAndSecurity": {
+    "externalNetworkRequestsCount": 0,
+    "microphoneOrCameraCallsCount": 0,
+    "paidVoiceApiUsed": false,
+    "userVoiceTransmitted": false
+  },
+  "pass1NativeUnmockedChromium": [
+    {
+      "viewport": {
+        "width": 320,
+        "height": 850,
+        "label": "mobile-320"
+      },
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+      "nativeSynthExists": true,
+      "nativeUtteranceExists": true,
+      "nativeVoicesCount": 0,
+      "capability": {
+        "speechSynthesisSupported": true,
+        "utteranceSupported": true,
+        "canAttemptSpeech": false,
+        "platformCategory": "desktop-browser",
+        "platformLabelKo": "데스크톱 브라우저 무료 내장 TTS",
+        "koreanVoiceStatus": "no-local-korean-voice",
+        "selectedVoiceName": null,
+        "selectedVoiceLang": "ko-KR",
+        "isLocalFreeDeviceVoice": false,
+        "requiresUserGesture": false,
+        "pauseResumeStrategy": "text-only-fallback",
+        "summaryLabelKo": "기기 내장 한국어 음성 확인 필요 · 대본 제공",
+        "detailNoteKo": "사용 가능한 기기 내장 한국어 음성을 확인하지 못했습니다. 기기 설정에서 한국어 음성을 설치·활성화한 뒤 다시 확인해 주세요. 음성 목록이 늦게 로드되면 자동으로 다시 확인합니다. 그동안 아래 대본을 이용해 주세요. 원격 음성이나 확인되지 않은 기본 음성으로 재생하지 않습니다."
+      },
+      "playAttemptOnEmptyNativeVoices": false,
+      "controllerStatusOnEmptyNativeVoices": "unsupported",
+      "stageToggleDisabled": true,
+      "stageStatusText": "이 브라우저에서 기기 한국어 음성을 찾지 못했어요. 음성 없이도 수업을 진행할 수 있습니다.",
+      "scriptSegmentsCount": 6,
+      "noHorizontalOverflow": true,
+      "scrollWidth": 320,
+      "innerWidth": 320
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 850,
+        "label": "mobile-390"
+      },
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+      "nativeSynthExists": true,
+      "nativeUtteranceExists": true,
+      "nativeVoicesCount": 0,
+      "capability": {
+        "speechSynthesisSupported": true,
+        "utteranceSupported": true,
+        "canAttemptSpeech": false,
+        "platformCategory": "desktop-browser",
+        "platformLabelKo": "데스크톱 브라우저 무료 내장 TTS",
+        "koreanVoiceStatus": "no-local-korean-voice",
+        "selectedVoiceName": null,
+        "selectedVoiceLang": "ko-KR",
+        "isLocalFreeDeviceVoice": false,
+        "requiresUserGesture": false,
+        "pauseResumeStrategy": "text-only-fallback",
+        "summaryLabelKo": "기기 내장 한국어 음성 확인 필요 · 대본 제공",
+        "detailNoteKo": "사용 가능한 기기 내장 한국어 음성을 확인하지 못했습니다. 기기 설정에서 한국어 음성을 설치·활성화한 뒤 다시 확인해 주세요. 음성 목록이 늦게 로드되면 자동으로 다시 확인합니다. 그동안 아래 대본을 이용해 주세요. 원격 음성이나 확인되지 않은 기본 음성으로 재생하지 않습니다."
+      },
+      "playAttemptOnEmptyNativeVoices": false,
+      "controllerStatusOnEmptyNativeVoices": "unsupported",
+      "stageToggleDisabled": true,
+      "stageStatusText": "이 브라우저에서 기기 한국어 음성을 찾지 못했어요. 음성 없이도 수업을 진행할 수 있습니다.",
+      "scriptSegmentsCount": 6,
+      "noHorizontalOverflow": true,
+      "scrollWidth": 390,
+      "innerWidth": 390
+    },
+    {
+      "viewport": {
+        "width": 768,
+        "height": 1024,
+        "label": "tablet-768"
+      },
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+      "nativeSynthExists": true,
+      "nativeUtteranceExists": true,
+      "nativeVoicesCount": 0,
+      "capability": {
+        "speechSynthesisSupported": true,
+        "utteranceSupported": true,
+        "canAttemptSpeech": false,
+        "platformCategory": "desktop-browser",
+        "platformLabelKo": "데스크톱 브라우저 무료 내장 TTS",
+        "koreanVoiceStatus": "no-local-korean-voice",
+        "selectedVoiceName": null,
+        "selectedVoiceLang": "ko-KR",
+        "isLocalFreeDeviceVoice": false,
+        "requiresUserGesture": false,
+        "pauseResumeStrategy": "text-only-fallback",
+        "summaryLabelKo": "기기 내장 한국어 음성 확인 필요 · 대본 제공",
+        "detailNoteKo": "사용 가능한 기기 내장 한국어 음성을 확인하지 못했습니다. 기기 설정에서 한국어 음성을 설치·활성화한 뒤 다시 확인해 주세요. 음성 목록이 늦게 로드되면 자동으로 다시 확인합니다. 그동안 아래 대본을 이용해 주세요. 원격 음성이나 확인되지 않은 기본 음성으로 재생하지 않습니다."
+      },
+      "playAttemptOnEmptyNativeVoices": false,
+      "controllerStatusOnEmptyNativeVoices": "unsupported",
+      "stageToggleDisabled": true,
+      "stageStatusText": "이 브라우저에서 기기 한국어 음성을 찾지 못했어요. 음성 없이도 수업을 진행할 수 있습니다.",
+      "scriptSegmentsCount": 6,
+      "noHorizontalOverflow": true,
+      "scrollWidth": 768,
+      "innerWidth": 768
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "label": "desktop-1440"
+      },
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+      "nativeSynthExists": true,
+      "nativeUtteranceExists": true,
+      "nativeVoicesCount": 0,
+      "capability": {
+        "speechSynthesisSupported": true,
+        "utteranceSupported": true,
+        "canAttemptSpeech": false,
+        "platformCategory": "desktop-browser",
+        "platformLabelKo": "데스크톱 브라우저 무료 내장 TTS",
+        "koreanVoiceStatus": "no-local-korean-voice",
+        "selectedVoiceName": null,
+        "selectedVoiceLang": "ko-KR",
+        "isLocalFreeDeviceVoice": false,
+        "requiresUserGesture": false,
+        "pauseResumeStrategy": "text-only-fallback",
+        "summaryLabelKo": "기기 내장 한국어 음성 확인 필요 · 대본 제공",
+        "detailNoteKo": "사용 가능한 기기 내장 한국어 음성을 확인하지 못했습니다. 기기 설정에서 한국어 음성을 설치·활성화한 뒤 다시 확인해 주세요. 음성 목록이 늦게 로드되면 자동으로 다시 확인합니다. 그동안 아래 대본을 이용해 주세요. 원격 음성이나 확인되지 않은 기본 음성으로 재생하지 않습니다."
+      },
+      "playAttemptOnEmptyNativeVoices": false,
+      "controllerStatusOnEmptyNativeVoices": "unsupported",
+      "stageToggleDisabled": true,
+      "stageStatusText": "이 브라우저에서 기기 한국어 음성을 찾지 못했어요. 음성 없이도 수업을 진행할 수 있습니다.",
+      "scriptSegmentsCount": 6,
+      "noHorizontalOverflow": true,
+      "scrollWidth": 1440,
+      "innerWidth": 1440
+    }
+  ],
+  "pass2InstrumentedChromiumLifecycle": {
+    "languageCheck": {
+      "chosenVoiceName": "Yuna (Chromium Local ko-KR)",
+      "chosenLocalService": true,
+      "chosenLang": "ko-KR",
+      "capability": {
+        "speechSynthesisSupported": true,
+        "utteranceSupported": true,
+        "canAttemptSpeech": true,
+        "platformCategory": "desktop-browser",
+        "platformLabelKo": "데스크톱 브라우저 무료 내장 TTS",
+        "koreanVoiceStatus": "korean-local-voice",
+        "selectedVoiceName": "Yuna (Chromium Local ko-KR)",
+        "selectedVoiceLang": "ko-KR",
+        "isLocalFreeDeviceVoice": true,
+        "requiresUserGesture": false,
+        "pauseResumeStrategy": "native-with-segment-recovery",
+        "summaryLabelKo": "무료 기기 내장 한국어 음성 (Yuna (Chromium Local ko-KR))",
+        "detailNoteKo": "기기·브라우저 내장 무료 Web Speech API 한국어 음성을 사용하여 추가 과금 없이 동작 설명을 읽어줍니다."
+      }
+    },
+    "stageLifecycle": {
+      "afterOptInSpeaks": 1,
+      "afterDuplicateTicksSpeaks": 1,
+      "afterPhaseChangeSpeaks": 2,
+      "afterTenSecWarningSpeaks": 3,
+      "cancelsAfterPause": 3,
+      "speaksAfterResume": 3,
+      "cancelsAfterHidden": 3,
+      "completionCueText": "계획 시간이 끝났습니다. 다음은 헌드레드입니다.",
+      "cancelsAfterPageHide": 5
+    },
+    "mediaNarrationLifecycle": {
+      "listenersAfterStrictMode": 2,
+      "segment2Started": true,
+      "pausedStatus": "paused",
+      "resumedStatus": "playing",
+      "speaksAfterMobileRecovery": 2,
+      "speedAfterChange": 1.25,
+      "statusAAfterBSwitch": "idle",
+      "statusBPlaying": "playing",
+      "statusBAfterRevisitA": "idle",
+      "noAutoplayOnRevisitA": true,
+      "statusAfterVoiceRemoved": "unsupported",
+      "listenersAfterDestroyAll": 0
+    },
+    "mediaViolationsCount": 0
+  }
+}
