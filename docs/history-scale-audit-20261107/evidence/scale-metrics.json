@@ -1,0 +1,370 @@
+{
+  "capturedAt": "2026-11-07T07:43:25.758Z",
+  "environment": {
+    "os": "Linux 6.12.105+ (x64)",
+    "nodeVersion": "v24.22.2",
+    "cpuModel": "Intel(R) Xeon(R) Platinum 8481C",
+    "cpuCores": 2,
+    "totalMemGiB": 7.76,
+    "timezoneOffsetMin": -540,
+    "timezone": "Asia/Seoul",
+    "engines": {
+      "chromium": {
+        "supported": true,
+        "version": "Chromium 156.0.8078.79 built on Debian GNU/Linux 12 (bookworm)",
+        "binary": "/usr/bin/chromium"
+      },
+      "webkit": {
+        "supported": false,
+        "version": null,
+        "reason": "WebKit browser binary / Playwright WebKit cache is not installed in the sandboxed Debian 12 Linux VM (/usr/bin/chromium only; read-only root filesystem without apt/Playwright download)."
+      }
+    }
+  },
+  "results": {
+    "scale100": {
+      "scaleCount": 100,
+      "hydrationMs": 3483.51,
+      "memoryAndEngineMetrics": {
+        "afterHydration": {
+          "jsHeapUsedMB": 26.7,
+          "jsHeapTotalMB": 50.79,
+          "domNodes": 10070,
+          "layoutCount": 4,
+          "recalcStyleCount": 8,
+          "scriptDurationSec": 0.893,
+          "layoutDurationSec": 0.235
+        },
+        "afterInteractions": {
+          "jsHeapUsedMB": 49.83,
+          "jsHeapTotalMB": 104.21,
+          "domNodes": 10848,
+          "layoutCount": 39,
+          "recalcStyleCount": 33,
+          "scriptDurationSec": 3.413,
+          "layoutDurationSec": 0.912
+        }
+      },
+      "viewports": [
+        {
+          "id": "mobile-320",
+          "label": "Mobile 320px",
+          "width": 320,
+          "height": 694,
+          "zoom": 1,
+          "screenshot": "docs/history-scale-audit-20261107/evidence/screenshots/scale-100-mobile-320.png",
+          "docOverflowPx": 0,
+          "cardCount": 100,
+          "totalDomNodes": 6390,
+          "exercisePillCount": 305,
+          "maxCardOverflowPx": 0,
+          "dateChipCount": 35,
+          "dateGroupCount": 34,
+          "dateNavHeightPx": 1471,
+          "dateNavViewportRatio": 1.8,
+          "firstCardTopPx": 2229,
+          "duplicateDateChipLabels": []
+        },
+        {
+          "id": "mobile-390",
+          "label": "Mobile 390px",
+          "width": 390,
+          "height": 844,
+          "zoom": 1,
+          "screenshot": "docs/history-scale-audit-20261107/evidence/screenshots/scale-100-mobile-390.png",
+          "docOverflowPx": 0,
+          "cardCount": 100,
+          "totalDomNodes": 6390,
+          "exercisePillCount": 305,
+          "maxCardOverflowPx": 0,
+          "dateChipCount": 35,
+          "dateGroupCount": 34,
+          "dateNavHeightPx": 1486,
+          "dateNavViewportRatio": 1.67,
+          "firstCardTopPx": 2244,
+          "duplicateDateChipLabels": []
+        },
+        {
+          "id": "tablet-768",
+          "label": "Tablet 768px",
+          "width": 768,
+          "height": 1024,
+          "zoom": 1,
+          "screenshot": "docs/history-scale-audit-20261107/evidence/screenshots/scale-100-tablet-768.png",
+          "docOverflowPx": 0,
+          "cardCount": 100,
+          "totalDomNodes": 6390,
+          "exercisePillCount": 305,
+          "maxCardOverflowPx": 0,
+          "dateChipCount": 35,
+          "dateGroupCount": 34,
+          "dateNavHeightPx": 520,
+          "dateNavViewportRatio": 0.51,
+          "firstCardTopPx": 1045,
+          "duplicateDateChipLabels": []
+        },
+        {
+          "id": "desktop-1440",
+          "label": "Desktop 1440px",
+          "width": 1440,
+          "height": 900,
+          "zoom": 1,
+          "screenshot": "docs/history-scale-audit-20261107/evidence/screenshots/scale-100-desktop-1440.png",
+          "docOverflowPx": 0,
+          "cardCount": 100,
+          "totalDomNodes": 6390,
+          "exercisePillCount": 305,
+          "maxCardOverflowPx": 0,
+          "dateChipCount": 35,
+          "dateGroupCount": 34,
+          "dateNavHeightPx": 268,
+          "dateNavViewportRatio": 0.3,
+          "firstCardTopPx": 753,
+          "duplicateDateChipLabels": []
+        },
+        {
+          "id": "desktop-1440-zoom200",
+          "label": "Desktop 1440px @ 200%",
+          "width": 1440,
+          "height": 900,
+          "zoom": 2,
+          "screenshot": "docs/history-scale-audit-20261107/evidence/screenshots/scale-100-desktop-1440-zoom200.png",
+          "docOverflowPx": 0,
+          "cardCount": 100,
+          "totalDomNodes": 6390,
+          "exercisePillCount": 305,
+          "maxCardOverflowPx": 0,
+          "dateChipCount": 35,
+          "dateGroupCount": 34,
+          "dateNavHeightPx": 1544,
+          "dateNavViewportRatio": 1.72,
+          "firstCardTopPx": 2971,
+          "duplicateDateChipLabels": []
+        },
+        {
+          "id": "mobile-390-zoom200",
+          "label": "Mobile 390px @ 200%",
+          "width": 390,
+          "height": 844,
+          "zoom": 2,
+          "screenshot": "docs/history-scale-audit-20261107/evidence/screenshots/scale-100-mobile-390-zoom200.png",
+          "docOverflowPx": 0,
+          "cardCount": 100,
+          "totalDomNodes": 6390,
+          "exercisePillCount": 305,
+          "maxCardOverflowPx": 0,
+          "dateChipCount": 35,
+          "dateGroupCount": 34,
+          "dateNavHeightPx": 2942,
+          "dateNavViewportRatio": 1.81,
+          "firstCardTopPx": 4458,
+          "duplicateDateChipLabels": []
+        }
+      ],
+      "interactions": {
+        "searchFilterMs": 228.8,
+        "sameNameMatchedCount": 26,
+        "searchResetMs": 621.6,
+        "dateFilterMs": 92.9,
+        "dateFilteredCards": 1,
+        "emptyWithStaleDateTitle": "선택한 날짜에 남긴 수업 기록이 없어요",
+        "emptyGroupFilterMs": 46.4,
+        "emptyGroupTitle": "선택한 그룹에 남긴 수업 기록이 없어요",
+        "modalOpenMs": 581.8,
+        "modalOpen": true,
+        "scrollFrameTimesMs": [
+          9.6,
+          11,
+          13.8,
+          13.4,
+          16.9,
+          16.4,
+          16.6,
+          16.7,
+          16.7,
+          16.6
+        ],
+        "maxScrollFrameMs": 16.9,
+        "avgScrollFrameMs": 14.77
+      }
+    },
+    "scale1000": {
+      "scaleCount": 1000,
+      "hydrationMs": 6282.7,
+      "memoryAndEngineMetrics": {
+        "afterHydration": {
+          "jsHeapUsedMB": 66.92,
+          "jsHeapTotalMB": 130.05,
+          "domNodes": 90119,
+          "layoutCount": 4,
+          "recalcStyleCount": 8,
+          "scriptDurationSec": 2.469,
+          "layoutDurationSec": 0.848
+        },
+        "afterInteractions": {
+          "jsHeapUsedMB": 95.65,
+          "jsHeapTotalMB": 239.05,
+          "domNodes": 182551,
+          "layoutCount": 39,
+          "recalcStyleCount": 34,
+          "scriptDurationSec": 17.194,
+          "layoutDurationSec": 6.021
+        }
+      },
+      "viewports": [
+        {
+          "id": "mobile-320",
+          "label": "Mobile 320px",
+          "width": 320,
+          "height": 694,
+          "zoom": 1,
+          "screenshot": "docs/history-scale-audit-20261107/evidence/screenshots/scale-1000-mobile-320.png",
+          "docOverflowPx": 0,
+          "cardCount": 1000,
+          "totalDomNodes": 57690,
+          "exercisePillCount": 3005,
+          "maxCardOverflowPx": 0,
+          "dateChipCount": 335,
+          "dateGroupCount": 334,
+          "dateNavHeightPx": 14113,
+          "dateNavViewportRatio": 17.3,
+          "firstCardTopPx": 14871,
+          "duplicateDateChipLabels": [
+            "2026년 11월 7일"
+          ]
+        },
+        {
+          "id": "mobile-390",
+          "label": "Mobile 390px",
+          "width": 390,
+          "height": 844,
+          "zoom": 1,
+          "screenshot": "docs/history-scale-audit-20261107/evidence/screenshots/scale-1000-mobile-390.png",
+          "docOverflowPx": 0,
+          "cardCount": 1000,
+          "totalDomNodes": 57690,
+          "exercisePillCount": 3005,
+          "maxCardOverflowPx": 0,
+          "dateChipCount": 335,
+          "dateGroupCount": 334,
+          "dateNavHeightPx": 14086,
+          "dateNavViewportRatio": 15.83,
+          "firstCardTopPx": 14844,
+          "duplicateDateChipLabels": [
+            "2026년 11월 7일"
+          ]
+        },
+        {
+          "id": "tablet-768",
+          "label": "Tablet 768px",
+          "width": 768,
+          "height": 1024,
+          "zoom": 1,
+          "screenshot": "docs/history-scale-audit-20261107/evidence/screenshots/scale-1000-tablet-768.png",
+          "docOverflowPx": 0,
+          "cardCount": 1000,
+          "totalDomNodes": 57690,
+          "exercisePillCount": 3005,
+          "maxCardOverflowPx": 0,
+          "dateChipCount": 335,
+          "dateGroupCount": 334,
+          "dateNavHeightPx": 4468,
+          "dateNavViewportRatio": 4.36,
+          "firstCardTopPx": 4993,
+          "duplicateDateChipLabels": [
+            "2026년 11월 7일"
+          ]
+        },
+        {
+          "id": "desktop-1440",
+          "label": "Desktop 1440px",
+          "width": 1440,
+          "height": 900,
+          "zoom": 1,
+          "screenshot": "docs/history-scale-audit-20261107/evidence/screenshots/scale-1000-desktop-1440.png",
+          "docOverflowPx": 0,
+          "cardCount": 1000,
+          "totalDomNodes": 57690,
+          "exercisePillCount": 3005,
+          "maxCardOverflowPx": 0,
+          "dateChipCount": 335,
+          "dateGroupCount": 334,
+          "dateNavHeightPx": 2326,
+          "dateNavViewportRatio": 2.58,
+          "firstCardTopPx": 2811,
+          "duplicateDateChipLabels": [
+            "2026년 11월 7일"
+          ]
+        },
+        {
+          "id": "desktop-1440-zoom200",
+          "label": "Desktop 1440px @ 200%",
+          "width": 1440,
+          "height": 900,
+          "zoom": 2,
+          "screenshot": "docs/history-scale-audit-20261107/evidence/screenshots/scale-1000-desktop-1440-zoom200.png",
+          "docOverflowPx": 0,
+          "cardCount": 1000,
+          "totalDomNodes": 57690,
+          "exercisePillCount": 3005,
+          "maxCardOverflowPx": 0,
+          "dateChipCount": 335,
+          "dateGroupCount": 334,
+          "dateNavHeightPx": 14144,
+          "dateNavViewportRatio": 15.72,
+          "firstCardTopPx": 15571,
+          "duplicateDateChipLabels": [
+            "2026년 11월 7일"
+          ]
+        },
+        {
+          "id": "mobile-390-zoom200",
+          "label": "Mobile 390px @ 200%",
+          "width": 390,
+          "height": 844,
+          "zoom": 2,
+          "screenshot": "docs/history-scale-audit-20261107/evidence/screenshots/scale-1000-mobile-390-zoom200.png",
+          "docOverflowPx": 0,
+          "cardCount": 1000,
+          "totalDomNodes": 57690,
+          "exercisePillCount": 3005,
+          "maxCardOverflowPx": 0,
+          "dateChipCount": 335,
+          "dateGroupCount": 334,
+          "dateNavHeightPx": 28226,
+          "dateNavViewportRatio": 17.34,
+          "firstCardTopPx": 29742,
+          "duplicateDateChipLabels": [
+            "2026년 11월 7일"
+          ]
+        }
+      ],
+      "interactions": {
+        "searchFilterMs": 871.9,
+        "sameNameMatchedCount": 26,
+        "searchResetMs": 3537.3,
+        "dateFilterMs": 707,
+        "dateFilteredCards": 1,
+        "emptyWithStaleDateTitle": "선택한 날짜에 남긴 수업 기록이 없어요",
+        "emptyGroupFilterMs": 406.8,
+        "emptyGroupTitle": "선택한 그룹에 남긴 수업 기록이 없어요",
+        "modalOpenMs": 2907.5,
+        "modalOpen": true,
+        "scrollFrameTimesMs": [
+          13.2,
+          45.8,
+          83.9,
+          18.4,
+          27,
+          44.7,
+          40.7,
+          46.2,
+          37.1,
+          22.5
+        ],
+        "maxScrollFrameMs": 83.9,
+        "avgScrollFrameMs": 37.95
+      }
+    }
+  }
+}
