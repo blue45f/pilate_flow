@@ -11,11 +11,7 @@ import {
 import * as teachingHistorySnapshotModule from '../utils/teachingHistorySnapshot';
 import { buildTeachingProgramSnapshot } from '../utils/teachingHistorySnapshot';
 
-const makeStepSnapshot = (
-  stepId: string,
-  exerciseId: string,
-  order = 1,
-) => ({
+const makeStepSnapshot = (stepId: string, exerciseId: string, order = 1) => ({
   stepId,
   order,
   kind: 'exercise' as const,
@@ -27,6 +23,29 @@ const makeStepSnapshot = (
   transitionSec: 30,
   selectedLayer: 'standard' as const,
   customNote: '',
+});
+
+const makeHistoryLog = (
+  id: string,
+  sequenceTitle: string,
+  taughtAt: string,
+  exerciseId: string,
+  extra: Record<string, unknown> = {},
+) => ({
+  id,
+  sequenceId: `seq-${id}`,
+  sequenceTitle,
+  groupId: 'group-evening-a',
+  groupName: '화목 저녁 A반',
+  apparatus: 'reformer' as const,
+  level: '1.5' as const,
+  taughtAt,
+  instructorReflection: `메모 ${id}`,
+  intensity: 'moderate' as const,
+  rating: 5 as const,
+  exerciseIds: [exerciseId],
+  stepsSnapshot: [makeStepSnapshot(`step-${id}`, exerciseId, 1)],
+  ...extra,
 });
 
 describe('ClassBinderView history date exploration, hierarchy & reuse workflow', () => {
@@ -118,38 +137,46 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     );
     expect(dateChips).toHaveLength(3);
 
-    // Keyboard arrow navigation between date chips
     allDatesChip.focus();
     fireEvent.keyDown(dateNav, { key: 'ArrowRight' });
     expect(document.activeElement).toBe(dateChips[1]);
 
-    // Click the first date chip
     fireEvent.click(dateChips[1]);
     expect(dateChips[1]).toHaveAttribute('aria-pressed', 'true');
 
     const feed = screen.getByRole('region', { name: '수업 기록 목록' });
-    const articles = within(feed).getAllByRole('article');
-    expect(articles.length).toBeGreaterThanOrEqual(1);
+    expect(within(feed).getAllByRole('article').length).toBeGreaterThanOrEqual(1);
 
-    // Quick reset button appears when a specific date is selected
     const showAllDatesBtn = within(dateNav).getByRole('button', { name: '전체 날짜 보기' });
     fireEvent.click(showAllDatesBtn);
     expect(within(feed).getAllByRole('article')).toHaveLength(3);
   });
 
-  it('distinguishes empty group filter state from initial empty history and resets filters in one click', () => {
+  it('distinguishes empty group filter state from initial empty history via progressive group disclosure and resets filters in one click', () => {
     render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
 
     const groupTabs = screen.getByRole('group', { name: '수업 그룹 필터' });
+    expect(groupTabs).toHaveClass('is-collapsed');
+
+    // Expand group filters to select the 5th group ("기록 없는 새벽반")
+    const expandGroupsBtn = within(groupTabs).getByRole('button', { name: /그룹 더보기/ });
+    fireEvent.click(expandGroupsBtn);
+    expect(groupTabs).toHaveClass('is-expanded');
+
     fireEvent.click(within(groupTabs).getByRole('button', { name: '기록 없는 새벽반' }));
 
-    // Total actual logs badge in header stays 3 even when filtered group is empty
+    // Collapse group filters and verify selected group stays pinned while collapsed
+    fireEvent.click(within(groupTabs).getByRole('button', { name: '그룹 접기' }));
+    expect(groupTabs).toHaveClass('is-collapsed');
+    expect(
+      within(groupTabs).getByRole('button', { name: '기록 없는 새벽반' }),
+    ).toHaveAttribute('aria-pressed', 'true');
+
     const heading = screen.getByRole('heading', { level: 1, name: /수업 기록/ });
     expect(within(heading).getByText('3')).toBeInTheDocument();
 
     expect(screen.getByText('선택한 그룹에 남긴 수업 기록이 없어요')).toBeInTheDocument();
-    const resetBtn = screen.getByRole('button', { name: /필터 초기화/ });
-    fireEvent.click(resetBtn);
+    fireEvent.click(screen.getByRole('button', { name: /필터 초기화/ }));
 
     const feed = screen.getByRole('region', { name: '수업 기록 목록' });
     expect(within(feed).getAllByRole('article')).toHaveLength(3);
@@ -165,7 +192,6 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     expect(within(feed).getAllByRole('article')).toHaveLength(1);
     expect(within(feed).getByText('개인 레슨 골반 안정화 프로그램')).toBeInTheDocument();
 
-    // Compact title search without spaces
     fireEvent.change(searchInput, { target: { value: '저녁코어고관절정렬' } });
     expect(within(feed).getAllByRole('article')).toHaveLength(1);
     expect(within(feed).getByText('저녁 코어 & 고관절 정렬 플로우')).toBeInTheDocument();
@@ -177,10 +203,8 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     const feed = screen.getByRole('region', { name: '수업 기록 목록' });
     const firstCard = within(feed).getAllByRole('article')[0];
 
-    // Date and duration pill in header
     expect(within(firstCard).getByText('50분 진행')).toBeInTheDocument();
 
-    // Class name heading appears before snapshot badges in DOM order
     const titleEl = within(firstCard).getByRole('heading', {
       level: 2,
       name: '저녁 코어 & 고관절 정렬 플로우',
@@ -190,7 +214,6 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
       true,
     );
 
-    // Reuse button has primary CTA styling and copies into workbench
     const reuseBtn = within(firstCard).getByRole('button', { name: /이 수업 다시 계획/ });
     expect(reuseBtn.className).toContain('pf-btn--primary');
 
@@ -210,165 +233,22 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     });
     const expectedUtcMidnightLabel = new Date('2026-11-05T00:00:00.000Z').toLocaleTimeString(
       'ko-KR',
-      {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      },
+      { hour: '2-digit', minute: '2-digit', hour12: false },
     );
 
     const rawLogs = [
-      {
-        id: 'midnight-1',
-        sequenceId: 'seq-m1',
-        sequenceTitle: '자정 경계 검증 A (UTC 14:50 / KST 23:50)',
-        groupId: 'group-evening-a',
-        groupName: '화목 저녁 A반',
-        apparatus: 'reformer' as const,
-        level: '1.5' as const,
-        taughtAt: '2026-11-06T14:50:00.000Z',
-        instructorReflection: '메모 A',
-        intensity: 'moderate' as const,
-        rating: 5 as const,
-        exerciseIds: [ex1.id],
-        stepsSnapshot: [makeStepSnapshot('m-1', ex1.id, 1)],
-      },
-      {
-        id: 'midnight-2',
-        sequenceId: 'seq-m2',
-        sequenceTitle: '자정 경계 검증 B (UTC 15:10 / KST 00:10)',
-        groupId: 'group-evening-a',
-        groupName: '화목 저녁 A반',
-        apparatus: 'reformer' as const,
-        level: '1.5' as const,
-        taughtAt: '2026-11-06T15:10:00.000Z',
-        instructorReflection: '메모 B',
-        intensity: 'moderate' as const,
-        rating: 5 as const,
-        exerciseIds: [ex1.id],
-        stepsSnapshot: [makeStepSnapshot('m-2', ex1.id, 1)],
-      },
-      {
-        id: 'midnight-3',
-        sequenceId: 'seq-m3',
-        sequenceTitle: '자정 경계 검증 C (UTC 23:55 / KST 08:55)',
-        groupId: 'group-evening-a',
-        groupName: '화목 저녁 A반',
-        apparatus: 'reformer' as const,
-        level: '1.5' as const,
-        taughtAt: '2026-11-06T23:55:00.000Z',
-        instructorReflection: '메모 C',
-        intensity: 'moderate' as const,
-        rating: 5 as const,
-        exerciseIds: [ex1.id],
-        stepsSnapshot: [makeStepSnapshot('m-3', ex1.id, 1)],
-      },
-      {
-        id: 'midnight-4',
-        sequenceId: 'seq-m4',
-        sequenceTitle: '자정 경계 검증 D (UTC 00:05 / KST 09:05)',
-        groupId: 'group-evening-a',
-        groupName: '화목 저녁 A반',
-        apparatus: 'reformer' as const,
-        level: '1.5' as const,
-        taughtAt: '2026-11-07T00:05:00.000Z',
-        instructorReflection: '메모 D',
-        intensity: 'moderate' as const,
-        rating: 5 as const,
-        exerciseIds: [ex1.id],
-        stepsSnapshot: [makeStepSnapshot('m-4', ex1.id, 1)],
-      },
-      {
-        id: 'actual-utc-noon',
-        sequenceId: 'seq-noon-utc',
-        sequenceTitle: '실제 정오 UTC ISO 수업 기록',
-        groupId: 'group-evening-a',
-        groupName: '화목 저녁 A반',
-        apparatus: 'reformer' as const,
-        level: '1.5' as const,
-        taughtAt: '2026-11-05T12:00:00.000Z',
-        instructorReflection: '메모 정오 UTC',
-        intensity: 'moderate' as const,
-        rating: 5 as const,
-        exerciseIds: [ex1.id],
-        stepsSnapshot: [makeStepSnapshot('m-5', ex1.id, 1)],
-      },
-      {
-        id: 'actual-local-noon',
-        sequenceId: 'seq-noon-local',
-        sequenceTitle: '실제 로컬 12:00 런치타임 수업 기록',
-        groupId: 'group-evening-a',
-        groupName: '화목 저녁 A반',
-        apparatus: 'reformer' as const,
-        level: '1.5' as const,
-        taughtAt: localNoonIso,
-        instructorReflection: '메모 정오 로컬',
-        intensity: 'moderate' as const,
-        rating: 5 as const,
-        exerciseIds: [ex1.id],
-        stepsSnapshot: [makeStepSnapshot('m-6', ex1.id, 1)],
-      },
-      {
-        id: 'actual-utc-midnight',
-        sequenceId: 'seq-midnight-utc',
-        sequenceTitle: '실제 자정 UTC ISO 수업 기록',
-        groupId: 'group-evening-a',
-        groupName: '화목 저녁 A반',
-        apparatus: 'reformer' as const,
-        level: '1.5' as const,
-        taughtAt: '2026-11-05T00:00:00.000Z',
-        instructorReflection: '메모 자정 UTC',
-        intensity: 'moderate' as const,
-        rating: 5 as const,
-        exerciseIds: [ex1.id],
-        stepsSnapshot: [makeStepSnapshot('m-7', ex1.id, 1)],
-      },
-      {
-        id: 'actual-local-midnight',
-        sequenceId: 'seq-midnight-local',
-        sequenceTitle: '실제 로컬 00:00 심야 수업 기록',
-        groupId: 'group-evening-a',
-        groupName: '화목 저녁 A반',
-        apparatus: 'reformer' as const,
-        level: '1.5' as const,
-        taughtAt: localMidnightIso,
-        instructorReflection: '메모 자정 로컬',
-        intensity: 'moderate' as const,
-        rating: 5 as const,
-        exerciseIds: [ex1.id],
-        stepsSnapshot: [makeStepSnapshot('m-8', ex1.id, 1)],
-      },
-      {
-        id: 'date-only-plain-string',
-        sequenceId: 'seq-date-only-plain',
-        sequenceTitle: '날짜 전용 문자열(YYYY-MM-DD) 수업 기록',
-        groupId: 'group-evening-a',
-        groupName: '화목 저녁 A반',
-        apparatus: 'reformer' as const,
-        level: '1.5' as const,
-        taughtAt: '2026-11-05',
-        instructorReflection: '날짜만 저장된 기록',
-        intensity: 'moderate' as const,
-        rating: 5 as const,
-        exerciseIds: [ex1.id],
-        stepsSnapshot: [makeStepSnapshot('m-9', ex1.id, 1)],
-      },
-      {
-        id: 'date-only-unrecorded-metadata',
-        sequenceId: 'seq-date-only-meta',
-        sequenceTitle: '원본 메타데이터(timestamps: unrecorded) 날짜 전용 기록',
-        groupId: 'group-evening-a',
-        groupName: '화목 저녁 A반',
-        apparatus: 'reformer' as const,
-        level: '1.5' as const,
-        taughtAt: localNoonIso,
+      makeHistoryLog('midnight-1', '자정 경계 검증 A (UTC 14:50 / KST 23:50)', '2026-11-06T14:50:00.000Z', ex1.id),
+      makeHistoryLog('midnight-2', '자정 경계 검증 B (UTC 15:10 / KST 00:10)', '2026-11-06T15:10:00.000Z', ex1.id),
+      makeHistoryLog('midnight-3', '자정 경계 검증 C (UTC 23:55 / KST 08:55)', '2026-11-06T23:55:00.000Z', ex1.id),
+      makeHistoryLog('midnight-4', '자정 경계 검증 D (UTC 00:05 / KST 09:05)', '2026-11-07T00:05:00.000Z', ex1.id),
+      makeHistoryLog('actual-utc-noon', '실제 정오 UTC ISO 수업 기록', '2026-11-05T12:00:00.000Z', ex1.id),
+      makeHistoryLog('actual-local-noon', '실제 로컬 12:00 런치타임 수업 기록', localNoonIso, ex1.id),
+      makeHistoryLog('actual-utc-midnight', '실제 자정 UTC ISO 수업 기록', '2026-11-05T00:00:00.000Z', ex1.id),
+      makeHistoryLog('actual-local-midnight', '실제 로컬 00:00 심야 수업 기록', localMidnightIso, ex1.id),
+      makeHistoryLog('date-only-plain-string', '날짜 전용 문자열(YYYY-MM-DD) 수업 기록', '2026-11-05', ex1.id),
+      makeHistoryLog('date-only-unrecorded-metadata', '원본 메타데이터(timestamps: unrecorded) 날짜 전용 기록', localNoonIso, ex1.id, {
         timestamps: 'unrecorded' as const,
-        instructorReflection: '원본 메타데이터로 시각 미기록 명시',
-        intensity: 'moderate' as const,
-        rating: 5 as const,
-        exerciseIds: [ex1.id],
-        stepsSnapshot: [makeStepSnapshot('m-10', ex1.id, 1)],
-      },
+      }),
     ];
     usePilatesStore.setState({ historyLogs: rawLogs });
 
@@ -377,116 +257,58 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     const dateNav = screen.getByRole('group', { name: '날짜별 기록 탐색' });
     const dateChips = Array.from(
       dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip'),
-    ).slice(1); // exclude "전체 날짜"
+    ).slice(1);
     const labels = dateChips.map((chip) => chip.childNodes[0]?.textContent?.trim() ?? '');
-    // Zero duplicate date chip labels in both UTC and KST
     expect(new Set(labels).size).toBe(labels.length);
 
     const feed = screen.getByRole('region', { name: '수업 기록 목록' });
+    const getCardTimeText = (headingName: string) =>
+      (
+        within(feed).getByRole('heading', { level: 2, name: headingName }).closest('article') as HTMLElement
+      ).querySelector('.teaching-history-time-of-day')?.textContent ?? null;
 
-    // 1. Ambiguous / actual ISO 12:00 and 00:00 records MUST preserve and display their valid time badges
-    const utcNoonCard = within(feed)
-      .getByRole('heading', { level: 2, name: '실제 정오 UTC ISO 수업 기록' })
-      .closest('article') as HTMLElement;
-    expect(utcNoonCard.querySelector('.teaching-history-time-of-day')?.textContent).toBe(
-      expectedUtcNoonLabel,
-    );
+    expect(getCardTimeText('실제 정오 UTC ISO 수업 기록')).toBe(expectedUtcNoonLabel);
+    expect(getCardTimeText('실제 로컬 12:00 런치타임 수업 기록')).toBe('12:00');
+    expect(getCardTimeText('실제 자정 UTC ISO 수업 기록')).toBe(expectedUtcMidnightLabel);
+    expect(getCardTimeText('실제 로컬 00:00 심야 수업 기록')).toBe('00:00');
+    expect(getCardTimeText('날짜 전용 문자열(YYYY-MM-DD) 수업 기록')).toBeNull();
+    expect(getCardTimeText('원본 메타데이터(timestamps: unrecorded) 날짜 전용 기록')).toBeNull();
 
-    const localNoonCard = within(feed)
-      .getByRole('heading', { level: 2, name: '실제 로컬 12:00 런치타임 수업 기록' })
-      .closest('article') as HTMLElement;
-    expect(localNoonCard.querySelector('.teaching-history-time-of-day')?.textContent).toBe('12:00');
-
-    const utcMidnightCard = within(feed)
-      .getByRole('heading', { level: 2, name: '실제 자정 UTC ISO 수업 기록' })
-      .closest('article') as HTMLElement;
-    expect(utcMidnightCard.querySelector('.teaching-history-time-of-day')?.textContent).toBe(
-      expectedUtcMidnightLabel,
-    );
-
-    const localMidnightCard = within(feed)
-      .getByRole('heading', { level: 2, name: '실제 로컬 00:00 심야 수업 기록' })
-      .closest('article') as HTMLElement;
-    expect(localMidnightCard.querySelector('.teaching-history-time-of-day')?.textContent).toBe(
-      '00:00',
-    );
-
-    // 2. Unambiguous date-only records (YYYY-MM-DD or explicit timestamps: 'unrecorded' metadata) MUST hide time badge
-    const plainDateOnlyCard = within(feed)
-      .getByRole('heading', { level: 2, name: '날짜 전용 문자열(YYYY-MM-DD) 수업 기록' })
-      .closest('article') as HTMLElement;
-    expect(plainDateOnlyCard.querySelector('.teaching-history-time-of-day')).toBeNull();
-
-    const metaDateOnlyCard = within(feed)
-      .getByRole('heading', {
-        level: 2,
-        name: '원본 메타데이터(timestamps: unrecorded) 날짜 전용 기록',
-      })
-      .closest('article') as HTMLElement;
-    expect(metaDateOnlyCard.querySelector('.teaching-history-time-of-day')).toBeNull();
-
-    // 3. Original stored taughtAt timestamps in store remain 100% immutable
     const storedLogs = usePilatesStore.getState().historyLogs;
-    expect(storedLogs.find((l) => l.id === 'actual-utc-noon')?.taughtAt).toBe(
-      '2026-11-05T12:00:00.000Z',
-    );
+    expect(storedLogs.find((l) => l.id === 'actual-utc-noon')?.taughtAt).toBe('2026-11-05T12:00:00.000Z');
     expect(storedLogs.find((l) => l.id === 'actual-local-noon')?.taughtAt).toBe(localNoonIso);
-    expect(storedLogs.find((l) => l.id === 'actual-utc-midnight')?.taughtAt).toBe(
-      '2026-11-05T00:00:00.000Z',
-    );
-    expect(storedLogs.find((l) => l.id === 'actual-local-midnight')?.taughtAt).toBe(
-      localMidnightIso,
-    );
+    expect(storedLogs.find((l) => l.id === 'actual-utc-midnight')?.taughtAt).toBe('2026-11-05T00:00:00.000Z');
+    expect(storedLogs.find((l) => l.id === 'actual-local-midnight')?.taughtAt).toBe(localMidnightIso);
     expect(storedLogs.find((l) => l.id === 'date-only-plain-string')?.taughtAt).toBe('2026-11-05');
   });
 
-  it('caps initial date chips to 12 with expand/collapse, recovers selectedDate when search filters it out, and paginates cards in batches of 30 while preserving full aggregation', () => {
+  it('caps initial date chips to 3 recent dates with expand/collapse across viewports, recovers selectedDate when search filters it out, and paginates cards in batches of 30 while preserving full aggregation', () => {
     const [ex1] = usePilatesStore.getState().exercises;
-    // Generate 45 logs across 20 distinct dates
     const logs45 = Array.from({ length: 45 }, (_, idx) => {
-      const dayOffset = idx % 20;
-      const day = String(28 - dayOffset).padStart(2, '0');
-      return {
-        id: `scale-batch-${idx}`,
-        sequenceId: `seq-batch-${idx}`,
-        sequenceTitle: `배치 검증 수업 #${idx + 1}`,
-        groupId: 'group-evening-a',
-        groupName: '화목 저녁 A반',
-        apparatus: 'reformer' as const,
-        level: '1.5' as const,
-        taughtAt: `2026-10-${day}T18:30:00.000Z`,
-        instructorReflection: `회고 메모 ${idx + 1}`,
-        intensity: 'moderate' as const,
-        rating: 5 as const,
-        exerciseIds: [ex1.id],
-        stepsSnapshot: [makeStepSnapshot(`sb-${idx}`, ex1.id, 1)],
-      };
+      const day = String(28 - (idx % 20)).padStart(2, '0');
+      return makeHistoryLog(`scale-batch-${idx}`, `배치 검증 수업 #${idx + 1}`, `2026-10-${day}T18:30:00.000Z`, ex1.id);
     });
     usePilatesStore.setState({ historyLogs: logs45 });
 
     render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
 
-    // Full aggregation preserved: header badge and "전체 날짜" chip both show 45
     const heading = screen.getByRole('heading', { level: 1, name: /수업 기록/ });
     expect(within(heading).getByText('45')).toBeInTheDocument();
 
     const dateNav = screen.getByRole('group', { name: '날짜별 기록 탐색' });
     const initialChips = dateNav.querySelectorAll('button.teaching-date-chip');
-    // 1 "전체 날짜" + 12 recent dates = 13 chips initially
-    expect(initialChips).toHaveLength(13);
+    // 1 "전체 날짜" + 3 recent dates = 4 chips initially
+    expect(initialChips).toHaveLength(4);
 
     const moreDatesBtn = within(dateNav).getByRole('button', {
-      name: /이전 날짜 더보기 \(\+8일\)/,
+      name: /이전 날짜 더보기 \(\+17일\)/,
     });
     fireEvent.click(moreDatesBtn);
-    // Expanded: 1 "전체 날짜" + 20 dates = 21 chips
     expect(dateNav.querySelectorAll('button.teaching-date-chip')).toHaveLength(21);
 
-    // Collapse back to 12
     fireEvent.click(within(dateNav).getByRole('button', { name: '날짜 접기' }));
-    expect(dateNav.querySelectorAll('button.teaching-date-chip')).toHaveLength(13);
+    expect(dateNav.querySelectorAll('button.teaching-date-chip')).toHaveLength(4);
 
-    // Initial rendered cards capped at 30, with load-more button showing remaining 15
     const feed = screen.getByRole('region', { name: '수업 기록 목록' });
     expect(within(feed).getAllByRole('article')).toHaveLength(30);
 
@@ -496,10 +318,7 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     fireEvent.click(loadMoreBtn);
     expect(within(feed).getAllByRole('article')).toHaveLength(45);
 
-    // Select a specific date chip, then enter a search query with 0 matches -> selectedDate recovers so empty state is search-specific
-    const firstDateChip = dateNav.querySelectorAll<HTMLButtonElement>(
-      'button.teaching-date-chip',
-    )[1];
+    const firstDateChip = dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip')[1];
     fireEvent.click(firstDateChip);
     const searchInput = screen.getByLabelText('수업 기록 검색');
     fireEvent.change(searchInput, { target: { value: '존재하지않는검색어_XYZ' } });
@@ -557,43 +376,35 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
       humanDrafts: getSavedHumanMovementDrafts(),
     });
 
-    const logItem = {
-      id: 'log-memo-regression',
-      sequenceId: 'seq-memo-test',
-      sequenceTitle: '메모이제이션 의존성 회귀 검증 수업',
-      groupId: 'group-evening-a',
-      groupName: '화목 저녁 A반',
-      apparatus: 'reformer' as const,
-      level: '1.5' as const,
-      taughtAt: '2026-11-06T18:00:00.000Z',
-      instructorReflection: '메모이제이션 회귀 검증',
-      intensity: 'moderate' as const,
-      rating: 5 as const,
-      exerciseIds: [baseEx.id, customIdeaEx.id],
-      stepsSnapshot: stepsForSnapshot,
-      programSnapshot,
-    };
-
     usePilatesStore.setState({
-      historyLogs: [logItem],
+      historyLogs: [
+        makeHistoryLog(
+          'log-memo-regression',
+          '메모이제이션 의존성 회귀 검증 수업',
+          '2026-11-06T18:00:00.000Z',
+          baseEx.id,
+          {
+            sequenceId: 'seq-memo-test',
+            exerciseIds: [baseEx.id, customIdeaEx.id],
+            stepsSnapshot: stepsForSnapshot,
+            programSnapshot,
+          },
+        ),
+      ],
     });
 
     const resolveSpy = vi.spyOn(teachingHistorySnapshotModule, 'resolveTeachingHistoryView');
     const { rerender } = render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
     expect(resolveSpy).toHaveBeenCalledTimes(1);
 
-    // 1. Opening and closing detail modal must NOT re-parse snapshots (0 extra calls)
     const feed = screen.getByRole('region', { name: '수업 기록 목록' });
     fireEvent.click(within(feed).getByRole('button', { name: /이력 다시 열기/ }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(resolveSpy).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(
-      within(screen.getByRole('dialog')).getAllByRole('button', { name: '닫기' }).at(-1)!,
-    );
+    fireEvent.click(within(screen.getByRole('dialog')).getAllByRole('button', { name: '닫기' }).at(-1)!);
     expect(resolveSpy).toHaveBeenCalledTimes(1);
 
-    // 2. Editing `exercises` in store (without changing savedSequences or historyLogs) immediately triggers drift recomputation
     act(() => {
       usePilatesStore.setState((prev) => ({
         exercises: prev.exercises.map((item) =>
@@ -604,7 +415,6 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     expect(resolveSpy).toHaveBeenCalledTimes(2);
     expect(within(feed).getByText('원본 수정 후에도 당시 스냅샷 유지됨')).toBeInTheDocument();
 
-    // 3. Editing `reusableBlocks` (adding another item to bump block version, without changing savedSequences or historyLogs) is detected on re-render
     saveIdeaToReusableBlock({
       exerciseId: customIdeaEx.id,
       blockId: initialBlock.id,
@@ -615,14 +425,9 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
 
     fireEvent.click(within(feed).getByRole('button', { name: /이력 다시 열기/ }));
     const dialogAfterBlockEdit = screen.getByRole('dialog');
-    expect(
-      within(dialogAfterBlockEdit).getByText('원본 블록 수정됨 · 당시 블록 유지'),
-    ).toBeInTheDocument();
-    fireEvent.click(
-      within(dialogAfterBlockEdit).getAllByRole('button', { name: '닫기' }).at(-1)!,
-    );
+    expect(within(dialogAfterBlockEdit).getByText('원본 블록 수정됨 · 당시 블록 유지')).toBeInTheDocument();
+    fireEvent.click(within(dialogAfterBlockEdit).getAllByRole('button', { name: '닫기' }).at(-1)!);
 
-    // 4. Editing `humanDrafts` (updating the movement idea draft to revision 2) is also immediately detected
     act(() => {
       saveMovementIdeaDraft({
         existingExerciseId: customIdeaEx.id,
@@ -634,252 +439,189 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
       });
     });
     expect(resolveSpy.mock.calls.length).toBeGreaterThanOrEqual(4);
-
     resolveSpy.mockRestore();
   });
 
-  it('shows only current selection and 3 recent dates by default on mobile (<=640px), preserves selected older date when collapsed without changing filter, and restores focus on toggle/reset/modal close', () => {
-    const originalInnerWidth = window.innerWidth;
-    Object.defineProperty(window, 'innerWidth', {
-      configurable: true,
-      writable: true,
-      value: 390,
+  it('shows only current selection and 3 recent dates by default, preserves selected older date when collapsed without changing filter, and restores focus on toggle/reset/modal close', () => {
+    const [ex1] = usePilatesStore.getState().exercises;
+    const logs20 = Array.from({ length: 20 }, (_, idx) => {
+      const day = String(28 - idx).padStart(2, '0');
+      return makeHistoryLog(`mobile-date-log-${idx}`, `모바일 날짜 탐색 수업 #${idx + 1}`, `2026-10-${day}T10:30:00.000Z`, ex1.id);
     });
+    usePilatesStore.setState({ historyLogs: logs20 });
 
-    try {
-      const [ex1] = usePilatesStore.getState().exercises;
-      const logs20 = Array.from({ length: 20 }, (_, idx) => {
-        const day = String(28 - idx).padStart(2, '0');
-        return {
-          id: `mobile-date-log-${idx}`,
-          sequenceId: `seq-mobile-${idx}`,
-          sequenceTitle: `모바일 날짜 탐색 수업 #${idx + 1}`,
-          groupId: 'group-evening-a',
-          groupName: '화목 저녁 A반',
-          apparatus: 'reformer' as const,
-          level: '1.5' as const,
-          taughtAt: `2026-10-${day}T10:30:00.000Z`,
-          instructorReflection: `모바일 날짜 검증 메모 ${idx + 1}`,
-          intensity: 'moderate' as const,
-          rating: 5 as const,
-          exerciseIds: [ex1.id],
-          stepsSnapshot: [makeStepSnapshot(`mob-step-${idx}`, ex1.id, 1)],
-        };
-      });
-      usePilatesStore.setState({ historyLogs: logs20 });
+    render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
 
-      render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
+    const dateNav = screen.getByRole('group', { name: '날짜별 기록 탐색' });
+    expect(dateNav).toHaveClass('is-collapsed');
 
-      const dateNav = screen.getByRole('group', { name: '날짜별 기록 탐색' });
-      expect(dateNav).toHaveClass('is-collapsed');
+    const initialChips = dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip');
+    expect(initialChips).toHaveLength(4);
+    expect(initialChips[0]).toHaveAttribute('aria-pressed', 'true');
 
-      // On mobile (390px), default view shows 1 "전체 날짜" chip + 3 recent date chips = 4 chips
-      const initialMobileChips = dateNav.querySelectorAll<HTMLButtonElement>(
-        'button.teaching-date-chip',
-      );
-      expect(initialMobileChips).toHaveLength(4);
-      expect(initialMobileChips[0]).toHaveAttribute('aria-pressed', 'true');
+    initialChips[0].focus();
+    fireEvent.keyDown(dateNav, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(initialChips[1]);
+    fireEvent.keyDown(dateNav, { key: 'ArrowUp' });
+    expect(document.activeElement).toBe(initialChips[0]);
 
-      // Keyboard ArrowDown / ArrowUp / End / Home navigation on compact mobile chips
-      initialMobileChips[0].focus();
-      fireEvent.keyDown(dateNav, { key: 'ArrowDown' });
-      expect(document.activeElement).toBe(initialMobileChips[1]);
-      fireEvent.keyDown(dateNav, { key: 'ArrowUp' });
-      expect(document.activeElement).toBe(initialMobileChips[0]);
+    const toggleBtn = within(dateNav).getByRole('button', { name: /이전 날짜 더보기 \(\+17일\)/ });
+    fireEvent.click(toggleBtn);
+    expect(dateNav).toHaveClass('is-expanded');
+    expect(toggleBtn).toHaveAttribute('aria-expanded', 'true');
+    expect(document.activeElement).toBe(toggleBtn);
 
-      // Explicit expand button shows remaining +17 dates and keeps focus on toggle
-      const toggleBtn = within(dateNav).getByRole('button', {
-        name: /이전 날짜 더보기 \(\+17일\)/,
-      });
-      fireEvent.click(toggleBtn);
-      expect(dateNav).toHaveClass('is-expanded');
-      expect(toggleBtn).toHaveAttribute('aria-expanded', 'true');
-      expect(document.activeElement).toBe(toggleBtn);
+    const expandedChips = dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip');
+    expect(expandedChips).toHaveLength(21);
 
-      const expandedChips = dateNav.querySelectorAll<HTMLButtonElement>(
-        'button.teaching-date-chip',
-      );
-      expect(expandedChips).toHaveLength(21);
+    const olderDateChip = expandedChips[15];
+    const olderDateLabel = olderDateChip.childNodes[0]?.textContent?.trim() ?? '';
+    fireEvent.click(olderDateChip);
+    expect(olderDateChip).toHaveAttribute('aria-pressed', 'true');
 
-      // Select an older date (15th date chip, index 15 -> 2026-10-14)
-      const olderDateChip = expandedChips[15];
-      const olderDateLabel = olderDateChip.childNodes[0]?.textContent?.trim() ?? '';
-      fireEvent.click(olderDateChip);
-      expect(olderDateChip).toHaveAttribute('aria-pressed', 'true');
+    const feed = screen.getByRole('region', { name: '수업 기록 목록' });
+    expect(within(feed).getAllByRole('article')).toHaveLength(1);
+    expect(within(feed).getByText('모바일 날짜 탐색 수업 #15')).toBeInTheDocument();
 
-      const feed = screen.getByRole('region', { name: '수업 기록 목록' });
-      expect(within(feed).getAllByRole('article')).toHaveLength(1);
-      expect(within(feed).getByText('모바일 날짜 탐색 수업 #15')).toBeInTheDocument();
+    const collapseBtn = within(dateNav).getByRole('button', { name: '날짜 접기' });
+    fireEvent.click(collapseBtn);
+    expect(dateNav).toHaveClass('is-collapsed');
+    expect(document.activeElement).toBe(collapseBtn);
 
-      // Collapse the date list: selected older date MUST remain visible and active, and filter MUST NOT silently change
-      const collapseBtn = within(dateNav).getByRole('button', { name: '날짜 접기' });
-      fireEvent.click(collapseBtn);
-      expect(dateNav).toHaveClass('is-collapsed');
-      expect(document.activeElement).toBe(collapseBtn);
+    const collapsedWithSelectionChips = Array.from(
+      dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip'),
+    );
+    expect(collapsedWithSelectionChips).toHaveLength(5);
+    const pinnedChip = collapsedWithSelectionChips.find((chip) => chip.textContent?.includes(olderDateLabel));
+    expect(pinnedChip).toHaveAttribute('aria-pressed', 'true');
+    expect(within(feed).getAllByRole('article')).toHaveLength(1);
+    expect(within(dateNav).getByRole('button', { name: /이전 날짜 더보기 \(\+16일\)/ })).toBeInTheDocument();
 
-      const collapsedWithSelectionChips = Array.from(
-        dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip'),
-      );
-      // 1 "전체 날짜" + 3 recent dates + 1 pinned selected older date = 5 chips
-      expect(collapsedWithSelectionChips).toHaveLength(5);
-      const pinnedChip = collapsedWithSelectionChips.find((chip) =>
-        chip.textContent?.includes(olderDateLabel),
-      );
-      expect(pinnedChip).toBeTruthy();
-      expect(pinnedChip).toHaveAttribute('aria-pressed', 'true');
-      expect(within(feed).getAllByRole('article')).toHaveLength(1);
-      expect(within(feed).getByText('모바일 날짜 탐색 수업 #15')).toBeInTheDocument();
+    const resetDateBtn = within(dateNav).getByRole('button', { name: '전체 날짜 보기' });
+    fireEvent.click(resetDateBtn);
+    expect(within(feed).getAllByRole('article')).toHaveLength(20);
+    expect(document.activeElement).toBe(
+      dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip')[0],
+    );
 
-      // Hidden date count reflects 20 - 4 visible dates = +16일
-      expect(
-        within(dateNav).getByRole('button', { name: /이전 날짜 더보기 \(\+16일\)/ }),
-      ).toBeInTheDocument();
-
-      // Clicking "전체 날짜 보기" resets filter to 'all' and restores focus to "전체 날짜" chip
-      const resetDateBtn = within(dateNav).getByRole('button', { name: '전체 날짜 보기' });
-      fireEvent.click(resetDateBtn);
-      expect(within(feed).getAllByRole('article')).toHaveLength(20);
-      const allDatesChipAfterReset = dateNav.querySelectorAll<HTMLButtonElement>(
-        'button.teaching-date-chip',
-      )[0];
-      expect(document.activeElement).toBe(allDatesChipAfterReset);
-
-      // Opening and closing detail modal restores focus to the trigger button
-      const reopenBtn = within(feed).getAllByRole('button', { name: /이력 다시 열기/ })[0];
-      reopenBtn.focus();
-      fireEvent.click(reopenBtn);
-      const dialog = screen.getByRole('dialog');
-      fireEvent.click(within(dialog).getAllByRole('button', { name: '닫기' }).at(-1)!);
-      expect(document.activeElement).toBe(reopenBtn);
-    } finally {
-      Object.defineProperty(window, 'innerWidth', {
-        configurable: true,
-        writable: true,
-        value: originalInnerWidth,
-      });
-      act(() => {
-        window.dispatchEvent(new Event('resize'));
-      });
-    }
+    const reopenBtn = within(feed).getAllByRole('button', { name: /이력 다시 열기/ })[0];
+    reopenBtn.focus();
+    fireEvent.click(reopenBtn);
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(within(dialog).getAllByRole('button', { name: '닫기' }).at(-1)!);
+    expect(document.activeElement).toBe(reopenBtn);
   });
 
-  it('scopes Round 4 compact header/filter spacing to history view and preserves first-card date, title, primary reuse action, and active selections across 320px/390px mobile viewports', () => {
-    const originalInnerWidth = window.innerWidth;
-    Object.defineProperty(window, 'innerWidth', {
-      configurable: true,
-      writable: true,
-      value: 320,
+  it('scopes compact header/filter spacing to history view and preserves first-card date, title, primary reuse action, and active selections across 320px/390px viewports', () => {
+    const [ex1] = usePilatesStore.getState().exercises;
+    const logs6 = Array.from({ length: 6 }, (_, i) => {
+      const day = String(28 - i).padStart(2, '0');
+      return makeHistoryLog(`round4-log-${i + 1}`, `Round4 모바일 첫카드 수업 #${i + 1}`, `2026-10-${day}T09:00:00.000Z`, ex1.id, {
+        groupId: 'grp-mon-wed-7pm',
+        groupName: '월·수 저녁반',
+      });
     });
+    usePilatesStore.setState({ historyLogs: logs6 });
 
-    try {
-      const [ex1] = usePilatesStore.getState().exercises;
-      const logs6 = Array.from({ length: 6 }, (_, i) => {
-        const day = String(28 - i).padStart(2, '0');
-        return {
-          id: `round4-log-${i + 1}`,
-          sequenceId: `seq-round4-${i + 1}`,
-          sequenceTitle: `Round4 모바일 첫카드 수업 #${i + 1}`,
-          groupId: 'grp-mon-wed-7pm',
-          groupName: '월·수 저녁반',
-          apparatus: 'reformer' as const,
-          level: '1.5' as const,
-          taughtAt: `2026-10-${day}T09:00:00.000Z`,
-          instructorReflection: `Round4 검증 메모 ${i + 1}`,
-          intensity: 'moderate' as const,
-          rating: 5 as const,
-          exerciseIds: [ex1.id],
-          stepsSnapshot: [makeStepSnapshot(`r4-step-${i + 1}`, ex1.id, 1)],
-        };
-      });
+    const onOpenLogModal = vi.fn();
+    const { container, rerender } = render(
+      <ClassBinderView view="history" onOpenLogModal={onOpenLogModal} />,
+    );
 
-      usePilatesStore.setState({ historyLogs: logs6 });
+    const section = container.querySelector('.teaching-collection');
+    expect(section).toHaveClass('teaching-collection--history');
+    expect(section).not.toHaveClass('teaching-collection--saved');
 
-      const onOpenLogModal = vi.fn();
-      const { container, rerender } = render(
-        <ClassBinderView view="history" onOpenLogModal={onOpenLogModal} />,
+    expect(screen.getByRole('heading', { level: 1, name: /수업 기록/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /수업 그룹 추가/ })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: '수업 기록 검색' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /월·수 저녁반/ })).toBeInTheDocument();
+
+    const feed = screen.getByRole('region', { name: '수업 기록 목록' });
+    const firstCard = within(feed).getAllByRole('article')[0];
+    const timeEl = firstCard.querySelector('time');
+    const titleEl = firstCard.querySelector('h2');
+    const primaryReuseBtn = within(firstCard).getByRole('button', { name: /이 수업 다시 계획/ });
+
+    expect(timeEl).toBeTruthy();
+    expect(titleEl).toHaveTextContent('Round4 모바일 첫카드 수업 #1');
+    expect(Boolean(timeEl!.compareDocumentPosition(titleEl!) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    expect(Boolean(titleEl!.compareDocumentPosition(primaryReuseBtn) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: /월·수 저녁반/ }));
+    const dateNav = screen.getByRole('group', { name: '날짜별 기록 탐색' });
+    fireEvent.click(within(dateNav).getByRole('button', { name: /이전 날짜 더보기/ }));
+    const expandedDateChips = dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip');
+    fireEvent.click(expandedDateChips[expandedDateChips.length - 1]);
+    fireEvent.click(within(dateNav).getByRole('button', { name: '날짜 접기' }));
+
+    expect(within(feed).getAllByRole('article')).toHaveLength(1);
+    expect(within(feed).getByText('Round4 모바일 첫카드 수업 #6')).toBeInTheDocument();
+
+    fireEvent.click(within(feed).getByRole('button', { name: /이 수업 다시 계획/ }));
+    expect(usePilatesStore.getState().activeTab).toBe('workbench');
+
+    rerender(<ClassBinderView view="saved" onOpenLogModal={onOpenLogModal} />);
+    expect(container.querySelector('.teaching-collection')).toHaveClass('teaching-collection--saved');
+  });
+
+  it('supports Round 5 progressive group/date disclosure, keyboard Escape collapse + focus restoration, and 1,000-record scale performance without extra snapshot re-parses', () => {
+    const [ex1] = usePilatesStore.getState().exercises;
+    const logs1000 = Array.from({ length: 1000 }, (_, idx) => {
+      const day = String(28 - (idx % 25)).padStart(2, '0');
+      const month = idx % 50 < 25 ? '10' : '09';
+      return makeHistoryLog(
+        `scale-1000-${idx}`,
+        `Round5 1000건 대량 검증 수업 #${idx + 1}`,
+        `2026-${month}-${day}T10:00:00.000Z`,
+        ex1.id,
+        { groupId: 'grp-mon-wed-7pm', groupName: '월·수 저녁반' },
       );
+    });
+    usePilatesStore.setState({ historyLogs: logs1000 });
 
-      const section = container.querySelector('.teaching-collection');
-      expect(section).toHaveClass('teaching-collection--history');
-      expect(section).not.toHaveClass('teaching-collection--saved');
+    const resolveSpy = vi.spyOn(teachingHistorySnapshotModule, 'resolveTeachingHistoryView');
+    render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
 
-      // All header, summary, group filter, and date filter controls remain present (no feature deletion)
-      expect(screen.getByRole('heading', { level: 1, name: /수업 기록/ })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /수업 그룹 추가/ })).toBeInTheDocument();
-      expect(screen.getByRole('textbox', { name: '수업 기록 검색' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /월·수 저녁반/ })).toBeInTheDocument();
+    // 1,000 logs resolved once on mount; initial DOM is capped at 30 cards
+    expect(resolveSpy).toHaveBeenCalledTimes(1000);
+    const feed = screen.getByRole('region', { name: '수업 기록 목록' });
+    expect(within(feed).getAllByRole('article')).toHaveLength(30);
 
-      // First card exposes date (<time>), title (<h2>), reopen button, and primary reuse button in natural DOM order
-      const feed = screen.getByRole('region', { name: '수업 기록 목록' });
-      const firstCard = within(feed).getAllByRole('article')[0];
-      const timeEl = firstCard.querySelector('time');
-      const titleEl = firstCard.querySelector('h2');
-      const reopenBtn = within(firstCard).getByRole('button', { name: /이력 다시 열기/ });
-      const primaryReuseBtn = within(firstCard).getByRole('button', {
-        name: /이 수업 다시 계획/,
-      });
+    // Group filter progressive disclosure: initially 1 "전체 기록" + 2 groups = 3 pills + "+3개" toggle
+    const groupBar = screen.getByRole('group', { name: '수업 그룹 필터' });
+    expect(groupBar).toHaveClass('is-collapsed');
+    expect(groupBar.querySelectorAll('button.teaching-group-pill')).toHaveLength(3);
 
-      expect(timeEl).toBeTruthy();
-      expect(titleEl).toHaveTextContent('Round4 모바일 첫카드 수업 #1');
-      expect(
-        Boolean(timeEl!.compareDocumentPosition(titleEl!) & Node.DOCUMENT_POSITION_FOLLOWING),
-      ).toBe(true);
-      expect(
-        Boolean(
-          titleEl!.compareDocumentPosition(primaryReuseBtn) & Node.DOCUMENT_POSITION_FOLLOWING,
-        ),
-      ).toBe(true);
-      expect(reopenBtn).toBeInTheDocument();
+    const groupMoreBtn = within(groupBar).getByRole('button', { name: /그룹 더보기 \(\+3개\)/ });
+    fireEvent.click(groupMoreBtn);
+    expect(groupBar).toHaveClass('is-expanded');
+    expect(groupBar.querySelectorAll('button.teaching-group-pill')).toHaveLength(6);
 
-      // Select a group filter and an older date, then resize 320 -> 390 -> 320: selections must not reset
-      fireEvent.click(screen.getByRole('button', { name: /월·수 저녁반/ }));
-      const dateNav = screen.getByRole('group', { name: '날짜별 기록 탐색' });
-      fireEvent.click(within(dateNav).getByRole('button', { name: /이전 날짜 더보기/ }));
-      const expandedDateChips = dateNav.querySelectorAll<HTMLButtonElement>(
-        'button.teaching-date-chip',
-      );
-      const olderChip = expandedDateChips[expandedDateChips.length - 1];
-      fireEvent.click(olderChip);
-      fireEvent.click(within(dateNav).getByRole('button', { name: '날짜 접기' }));
+    // Keyboard Escape inside expanded group bar collapses it and restores focus to the toggle button
+    const lastGroupPill = groupBar.querySelectorAll<HTMLButtonElement>('button.teaching-group-pill')[5];
+    lastGroupPill.focus();
+    fireEvent.keyDown(groupBar, { key: 'Escape' });
+    expect(groupBar).toHaveClass('is-collapsed');
+    expect(document.activeElement).toBe(
+      within(groupBar).getByRole('button', { name: /그룹 더보기 \(\+3개\)/ }),
+    );
 
-      Object.defineProperty(window, 'innerWidth', {
-        configurable: true,
-        writable: true,
-        value: 390,
-      });
-      act(() => {
-        window.dispatchEvent(new Event('resize'));
-      });
+    // Date filter progressive disclosure: Escape collapses expanded date bar and restores focus to date toggle
+    const dateNav = screen.getByRole('group', { name: '날짜별 기록 탐색' });
+    const dateMoreBtn = within(dateNav).getByRole('button', { name: /이전 날짜 더보기/ });
+    fireEvent.click(dateMoreBtn);
+    expect(dateNav).toHaveClass('is-expanded');
+    const expandedDateChip = dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip')[5];
+    expandedDateChip.focus();
+    fireEvent.keyDown(dateNav, { key: 'Escape' });
+    expect(dateNav).toHaveClass('is-collapsed');
+    expect(document.activeElement).toBe(
+      within(dateNav).getByRole('button', { name: /이전 날짜 더보기/ }),
+    );
 
-      expect(within(feed).getAllByRole('article')).toHaveLength(1);
-      expect(within(feed).getByText('Round4 모바일 첫카드 수업 #6')).toBeInTheDocument();
-
-      // Primary reuse action still loads the historical snapshot into the workbench and switches activeTab to workbench
-      fireEvent.click(
-        within(feed).getByRole('button', {
-          name: /이 수업 다시 계획/,
-        }),
-      );
-      expect(usePilatesStore.getState().activeTab).toBe('workbench');
-
-      // Rerendering as saved view switches modifier class cleanly to teaching-collection--saved
-      rerender(<ClassBinderView view="saved" onOpenLogModal={onOpenLogModal} />);
-      expect(container.querySelector('.teaching-collection')).toHaveClass(
-        'teaching-collection--saved',
-      );
-      expect(container.querySelector('.teaching-collection')).not.toHaveClass(
-        'teaching-collection--history',
-      );
-    } finally {
-      Object.defineProperty(window, 'innerWidth', {
-        configurable: true,
-        writable: true,
-        value: originalInnerWidth,
-      });
-      act(() => {
-        window.dispatchEvent(new Event('resize'));
-      });
-    }
+    // Zero additional snapshot parses during group/date expand/collapse interactions
+    expect(resolveSpy).toHaveBeenCalledTimes(1000);
+    resolveSpy.mockRestore();
   });
 });
-
