@@ -1,0 +1,377 @@
+{
+  "checkedAt": "2026-11-07T11:49:11.716Z",
+  "baseUrl": "http://127.0.0.1:5173",
+  "scenario1_imageLoadingFailure": {
+    "atlasCardIdeaPhotoSurface": {
+      "ideaCardFound": true,
+      "brokenImgRemovedAfterOnError": false,
+      "diagramFallbackRenderedInstead": false,
+      "diagramFallbackText": null
+    },
+    "detailModalYouTubeGalleryThumbnailSurface": {
+      "totalThumbnails": 5,
+      "anyFallbackRendered": false,
+      "sampleStatuses": [
+        {
+          "src": "https://i.ytimg.com/vi/00000000000/mqdefault.jpg",
+          "alt": "",
+          "complete": true,
+          "naturalWidth": 0,
+          "naturalHeight": 0,
+          "broken404OrPlaceholder120x90": true,
+          "clientWidth": 292,
+          "clientHeight": 164,
+          "hasOnErrorAttributeOrFallbackNode": false
+        },
+        {
+          "src": "https://i.ytimg.com/vi/M2Y9FWJYO0k/mqdefault.jpg",
+          "alt": "",
+          "complete": true,
+          "naturalWidth": 0,
+          "naturalHeight": 0,
+          "broken404OrPlaceholder120x90": true,
+          "clientWidth": 292,
+          "clientHeight": 164,
+          "hasOnErrorAttributeOrFallbackNode": false
+        },
+        {
+          "src": "https://i.ytimg.com/vi/0dhzD6d1ru0/mqdefault.jpg",
+          "alt": "",
+          "complete": true,
+          "naturalWidth": 0,
+          "naturalHeight": 0,
+          "broken404OrPlaceholder120x90": true,
+          "clientWidth": 292,
+          "clientHeight": 164,
+          "hasOnErrorAttributeOrFallbackNode": false
+        },
+        {
+          "src": "https://i.ytimg.com/vi/Bkgcbd1nabU/mqdefault.jpg",
+          "alt": "",
+          "complete": true,
+          "naturalWidth": 0,
+          "naturalHeight": 0,
+          "broken404OrPlaceholder120x90": true,
+          "clientWidth": 292,
+          "clientHeight": 164,
+          "hasOnErrorAttributeOrFallbackNode": false
+        }
+      ],
+      "afterForcedBrokenThumb": {
+        "src": "https://i.ytimg.com/vi/INVALID_ID_404/mqdefault.jpg",
+        "complete": true,
+        "naturalWidth": 0,
+        "naturalHeight": 0,
+        "stillInDomWithZeroNaturalWidth": true,
+        "fallbackUiPresent": false
+      }
+    }
+  },
+  "scenario2_embedRestrictedAndAutoplay": {
+    "embedRestrictedFallback": {
+      "dialogOpen": true,
+      "iframeCountOnInitialOpen": 0,
+      "heroIgnoresEmbedRestrictedFlagAndShowsLoadBtn": true,
+      "mmgAlwaysProvidesExternalOriginalLink": true,
+      "mmgExternalOriginalHref": "https://www.youtube.com/watch?v=pmwYs3uqhWc&t=23s",
+      "mmgExternalOriginalTarget": "_blank",
+      "mmgExternalOriginalRel": "noopener noreferrer",
+      "mmgEmbedBlockedFallbackCheck": {
+        "fallbackNoticeRendered": true,
+        "fallbackNoticeText": "원본 채널 설정 또는 출처 정책에 의해 앱 내 임베드 재생이 제한되었습니다. 아래 외부 원본 보기 링크를 통해 공식 페이지에서 확인해 주세요.아래 외부 원본 보기 링크를 통해 게시 기관(Merrithew & KR Studio Official Reference)의 원본 페이지에서 안전하게 열람할 수 있습니다.수동 대기 상태로 초기화",
+        "externalLinkPresent": true,
+        "externalLinkHref": "https://www.youtube.com/watch?v=pmwYs3uqhWc&t=23s"
+      }
+    },
+    "manualLoadAutoplayPolicy": {
+      "beforeClick": {
+        "iframeCountOnInitialOpen": 0,
+        "loadVideoButtonPresent": true,
+        "loadVideoButtonText": "YouTube 영상 불러오기"
+      },
+      "afterClick": {
+        "iframeMountedAfterClick": true,
+        "iframeSrc": "https://www.youtube-nocookie.com/embed/K56Z12XNQ5c?rel=0&autoplay=0&start=45&end=210",
+        "iframeAllow": "encrypted-media; gyroscope; picture-in-picture",
+        "iframeReferrerPolicy": "strict-origin-when-cross-origin",
+        "usesYoutubeNocookie": true,
+        "hasAutoplayZeroParam": true,
+        "allowContainsAutoplayToken": false
+      }
+    }
+  },
+  "scenario3_longSourceNamesResponsiveAndZoom": [
+    {
+      "viewport": "mobile-320",
+      "width": 320,
+      "height": 640,
+      "zoom": 1,
+      "windowInnerWidth": 320,
+      "docScrollWidth": 320,
+      "pageHorizontalOverflowPx": 0,
+      "dialogClientWidth": 296,
+      "dialogScrollWidth": 296,
+      "headerClientWidth": 296,
+      "headerScrollWidth": 296,
+      "titleScrollWidth": 192,
+      "titleClientWidth": 192,
+      "subtitleScrollWidth": 192,
+      "subtitleClientWidth": 192,
+      "modalBodyClientWidth": 296,
+      "modalBodyScrollWidth": 345,
+      "modalBodyHorizontalOverflowPx": 49,
+      "sourcePanelScrollWidth": 230,
+      "sourcePanelClientWidth": 230,
+      "evidenceScrollWidth": 232,
+      "evidenceClientWidth": 232,
+      "eygSectionScrollWidth": 260,
+      "eygSectionClientWidth": 260,
+      "eygGridScrollWidth": 224,
+      "eygGridClientWidth": 224,
+      "overflowingDescendantsCount": 2,
+      "overflowingDescendantsSample": [
+        {
+          "tag": "div",
+          "className": "mmg-badge-row",
+          "elementWidth": 294,
+          "bodyClientWidth": 296,
+          "overflowPx": 49,
+          "textPreview": "내가 등록한 참고 자료 · 직접 등록 · 출처 자동 미확인참고 시연·도해 자료"
+        },
+        {
+          "tag": "span",
+          "className": "mmg-badge mmg-badge--info",
+          "elementWidth": 294,
+          "bodyClientWidth": 296,
+          "overflowPx": 49,
+          "textPreview": "내가 등록한 참고 자료 · 직접 등록 · 출처 자동 미확인"
+        }
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "width": 390,
+      "height": 844,
+      "zoom": 1,
+      "windowInnerWidth": 390,
+      "docScrollWidth": 390,
+      "pageHorizontalOverflowPx": 0,
+      "dialogClientWidth": 366,
+      "dialogScrollWidth": 366,
+      "headerClientWidth": 366,
+      "headerScrollWidth": 366,
+      "titleScrollWidth": 262,
+      "titleClientWidth": 262,
+      "subtitleScrollWidth": 262,
+      "subtitleClientWidth": 262,
+      "modalBodyClientWidth": 366,
+      "modalBodyScrollWidth": 366,
+      "modalBodyHorizontalOverflowPx": 0,
+      "sourcePanelScrollWidth": 300,
+      "sourcePanelClientWidth": 300,
+      "evidenceScrollWidth": 302,
+      "evidenceClientWidth": 302,
+      "eygSectionScrollWidth": 330,
+      "eygSectionClientWidth": 330,
+      "eygGridScrollWidth": 294,
+      "eygGridClientWidth": 294,
+      "overflowingDescendantsCount": 0,
+      "overflowingDescendantsSample": []
+    },
+    {
+      "viewport": "tablet-768",
+      "width": 768,
+      "height": 1024,
+      "zoom": 1,
+      "windowInnerWidth": 768,
+      "docScrollWidth": 768,
+      "pageHorizontalOverflowPx": 0,
+      "dialogClientWidth": 734,
+      "dialogScrollWidth": 734,
+      "headerClientWidth": 734,
+      "headerScrollWidth": 734,
+      "titleScrollWidth": 630,
+      "titleClientWidth": 630,
+      "subtitleScrollWidth": 397,
+      "subtitleClientWidth": 397,
+      "modalBodyClientWidth": 734,
+      "modalBodyScrollWidth": 734,
+      "modalBodyHorizontalOverflowPx": 0,
+      "sourcePanelScrollWidth": 654,
+      "sourcePanelClientWidth": 654,
+      "evidenceScrollWidth": 656,
+      "evidenceClientWidth": 656,
+      "eygSectionScrollWidth": 684,
+      "eygSectionClientWidth": 684,
+      "eygGridScrollWidth": 648,
+      "eygGridClientWidth": 648,
+      "overflowingDescendantsCount": 0,
+      "overflowingDescendantsSample": []
+    },
+    {
+      "viewport": "desktop-1440",
+      "width": 1440,
+      "height": 900,
+      "zoom": 1,
+      "windowInnerWidth": 1440,
+      "docScrollWidth": 1440,
+      "pageHorizontalOverflowPx": 0,
+      "dialogClientWidth": 898,
+      "dialogScrollWidth": 898,
+      "headerClientWidth": 898,
+      "headerScrollWidth": 898,
+      "titleScrollWidth": 794,
+      "titleClientWidth": 794,
+      "subtitleScrollWidth": 397,
+      "subtitleClientWidth": 397,
+      "modalBodyClientWidth": 898,
+      "modalBodyScrollWidth": 898,
+      "modalBodyHorizontalOverflowPx": 0,
+      "sourcePanelScrollWidth": 818,
+      "sourcePanelClientWidth": 818,
+      "evidenceScrollWidth": 820,
+      "evidenceClientWidth": 820,
+      "eygSectionScrollWidth": 848,
+      "eygSectionClientWidth": 848,
+      "eygGridScrollWidth": 812,
+      "eygGridClientWidth": 812,
+      "overflowingDescendantsCount": 0,
+      "overflowingDescendantsSample": []
+    },
+    {
+      "viewport": "desktop-1440-zoom200",
+      "width": 1440,
+      "height": 900,
+      "zoom": 2,
+      "windowInnerWidth": 1440,
+      "docScrollWidth": 1440,
+      "pageHorizontalOverflowPx": 0,
+      "dialogClientWidth": 686,
+      "dialogScrollWidth": 686,
+      "headerClientWidth": 686,
+      "headerScrollWidth": 686,
+      "titleScrollWidth": 582,
+      "titleClientWidth": 582,
+      "subtitleScrollWidth": 397,
+      "subtitleClientWidth": 397,
+      "modalBodyClientWidth": 686,
+      "modalBodyScrollWidth": 686,
+      "modalBodyHorizontalOverflowPx": 0,
+      "sourcePanelScrollWidth": 606,
+      "sourcePanelClientWidth": 606,
+      "evidenceScrollWidth": 608,
+      "evidenceClientWidth": 608,
+      "eygSectionScrollWidth": 636,
+      "eygSectionClientWidth": 636,
+      "eygGridScrollWidth": 600,
+      "eygGridClientWidth": 600,
+      "overflowingDescendantsCount": 0,
+      "overflowingDescendantsSample": []
+    },
+    {
+      "viewport": "mobile-320-zoom200",
+      "width": 320,
+      "height": 640,
+      "zoom": 2,
+      "windowInnerWidth": 320,
+      "docScrollWidth": 640,
+      "pageHorizontalOverflowPx": 320,
+      "dialogClientWidth": 136,
+      "dialogScrollWidth": 136,
+      "headerClientWidth": 136,
+      "headerScrollWidth": 156,
+      "titleScrollWidth": 76,
+      "titleClientWidth": 76,
+      "subtitleScrollWidth": 76,
+      "subtitleClientWidth": 76,
+      "modalBodyClientWidth": 136,
+      "modalBodyScrollWidth": 345,
+      "modalBodyHorizontalOverflowPx": 209,
+      "sourcePanelScrollWidth": 121,
+      "sourcePanelClientWidth": 70,
+      "evidenceScrollWidth": 75,
+      "evidenceClientWidth": 72,
+      "eygSectionScrollWidth": 233,
+      "eygSectionClientWidth": 100,
+      "eygGridScrollWidth": 215,
+      "eygGridClientWidth": 64,
+      "overflowingDescendantsCount": 154,
+      "overflowingDescendantsSample": [
+        {
+          "tag": "div",
+          "className": "eyg-filter-pills",
+          "elementWidth": 357,
+          "bodyClientWidth": 136,
+          "overflowPx": 157,
+          "textPreview": "전체 7국내 (KR) 3해외 (Global) 4"
+        },
+        {
+          "tag": "button",
+          "className": "",
+          "elementWidth": 152,
+          "bodyClientWidth": 136,
+          "overflowPx": 149,
+          "textPreview": "해외 (Global) 4"
+        },
+        {
+          "tag": "article",
+          "className": "eyg-card ",
+          "elementWidth": 430,
+          "bodyClientWidth": 136,
+          "overflowPx": 230,
+          "textPreview": "해외영상 불러오기Reformer_Cadillac_StabilityChair_LadderBarrel_Compr"
+        },
+        {
+          "tag": "button",
+          "className": "eyg-thumb-button",
+          "elementWidth": 426,
+          "bodyClientWidth": 136,
+          "overflowPx": 228,
+          "textPreview": "해외영상 불러오기"
+        },
+        {
+          "tag": "img",
+          "className": "eyg-thumb-img",
+          "elementWidth": 426,
+          "bodyClientWidth": 136,
+          "overflowPx": 228,
+          "textPreview": ""
+        },
+        {
+          "tag": "span",
+          "className": "eyg-play-overlay",
+          "elementWidth": 221,
+          "bodyClientWidth": 136,
+          "overflowPx": 212,
+          "textPreview": "영상 불러오기"
+        }
+      ]
+    }
+  ],
+  "scenario4_mobileBackAndDismissal": {
+    "closeButtonDismissal": {
+      "openBefore": true,
+      "openAfter": false,
+      "passed": true
+    },
+    "escapeKeyDismissal": {
+      "openBefore": true,
+      "openAfter": false,
+      "passed": true
+    },
+    "unsavedReviewCloseGuard": {
+      "dialogKeptOpenOnUnsavedCloseAttempt": true,
+      "confirmationAlertRendered": false,
+      "confirmationAlertText": null,
+      "closedAfterExplicitDiscard": true
+    },
+    "mobileBrowserHardwareBackPopstate": {
+      "dialogOpenAfterClick": true,
+      "modalPushedHistoryEntry": false,
+      "hashBeforeModalOpen": "#atlas-list",
+      "hashAfterHistoryBack": "#before-atlas",
+      "dialogStillOpenAfterHistoryBack": true,
+      "defectConfirmed": true
+    }
+  }
+}

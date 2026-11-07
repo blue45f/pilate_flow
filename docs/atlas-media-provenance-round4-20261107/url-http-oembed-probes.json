@@ -1,0 +1,2378 @@
+{
+  "checkedAt": "2026-11-07T11:52:33.275Z",
+  "totalEntriesChecked": 125,
+  "uniqueUrlsChecked": 113,
+  "http404Count": 0,
+  "http404Entries": [],
+  "directYoutube22DistinctOembedProbes": [
+    {
+      "refId": "ex-warmup-01 (K56Z12XNQ5c)",
+      "apparatus": "reformer",
+      "catalogClaimedTitle": "Reformer & Mat Warm-up Breath & Pelvic Imprint Flow",
+      "catalogClaimedChannel": "Move With Nicole · Studio Reference",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "30 MIN FULL BODY WORKOUT | At-Home Pilates",
+      "liveYoutubeOembedAuthor": "Move With Nicole",
+      "exactTitleMatch": false,
+      "exactChannelMatch": true
+    },
+    {
+      "refId": "ex-warmup-02 (C2HX2pNbUCM)",
+      "apparatus": "cadillac",
+      "catalogClaimedTitle": "Cadillac Roll-Down Bar & Spine Articulation Essentials",
+      "catalogClaimedChannel": "Balanced Body Education",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "30 MIN FULL BODY WORKOUT || At-Home Pilates (No Equipment)",
+      "liveYoutubeOembedAuthor": "Move With Nicole",
+      "exactTitleMatch": false,
+      "exactChannelMatch": false
+    },
+    {
+      "refId": "ex-warmup-03 (sTANio_2E0Q)",
+      "apparatus": "mat",
+      "catalogClaimedTitle": "Foam Roller Pilates Warmup & Chest Opener Sequence",
+      "catalogClaimedChannel": "Jessica Valant Pilates",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "20 min Full Body STRETCH/YOGA for STRESS & ANXIETY Relief",
+      "liveYoutubeOembedAuthor": "MadFit",
+      "exactTitleMatch": false,
+      "exactChannelMatch": false
+    },
+    {
+      "refId": "ex-footwork-01 (lCg_gh_fppI)",
+      "apparatus": "reformer",
+      "catalogClaimedTitle": "50-Minute Reformer Footwork & Ball Variations",
+      "catalogClaimedChannel": "gone adventuring Pilates",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "POP Pilates for Beginners - Total Body Workout",
+      "liveYoutubeOembedAuthor": "blogilates",
+      "exactTitleMatch": false,
+      "exactChannelMatch": false
+    },
+    {
+      "refId": "ex-footwork-02 (UItWltVZZmE)",
+      "apparatus": "reformer",
+      "catalogClaimedTitle": "Magic Circle Reformer Footwork & Hip Stabilizer Flow",
+      "catalogClaimedChannel": "Pilates Anytime Studio",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "20 MIN FULL BODY WORKOUT - Beginner Version // No Equipment I Pamela Reif",
+      "liveYoutubeOembedAuthor": "Pamela Reif",
+      "exactTitleMatch": false,
+      "exactChannelMatch": false
+    },
+    {
+      "refId": "ex-footwork-03 (g_tea8ZNk5A)",
+      "apparatus": "chair",
+      "catalogClaimedTitle": "Stability Chair Seated Footwork & Torso Alignment",
+      "catalogClaimedChannel": "Merrithew Stott Pilates",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "15 Min. Full Body Stretch | Daily Routine for Flexibility, Mobility & Relaxation | DAY 7",
+      "liveYoutubeOembedAuthor": "Mady Morrison",
+      "exactTitleMatch": false,
+      "exactChannelMatch": false
+    },
+    {
+      "refId": "ex-bridging-01 (v7AYKMP6rOE)",
+      "apparatus": "reformer",
+      "catalogClaimedTitle": "Reformer Bridging Variations & Posterior Chain Control",
+      "catalogClaimedChannel": "Nell Hoess Pilates",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "Yoga For Complete Beginners - 20 Minute Home Yoga Workout!",
+      "liveYoutubeOembedAuthor": "Yoga With Adriene",
+      "exactTitleMatch": false,
+      "exactChannelMatch": false
+    },
+    {
+      "refId": "ex-bridging-02 (4pKly2JojMw)",
+      "apparatus": "cadillac",
+      "catalogClaimedTitle": "Cadillac Tower Bridge & Articulation Flow",
+      "catalogClaimedChannel": "Korin Nolan · The Class Plan",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "10 min Morning Yoga Full Body Stretch - Yoga with Kassandra",
+      "liveYoutubeOembedAuthor": "Yoga with Kassandra",
+      "exactTitleMatch": false,
+      "exactChannelMatch": false
+    },
+    {
+      "refId": "ex-core-01 (inpok4MKVLM)",
+      "apparatus": "reformer",
+      "catalogClaimedTitle": "Reformer Abs in Straps: Hundred, Coordination & Oblique Criss-Cross",
+      "catalogClaimedChannel": "Dez Fit · Reformer Flows",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "5-Minute Meditation You Can Do Anywhere | Goodful",
+      "liveYoutubeOembedAuthor": "Goodful",
+      "exactTitleMatch": false,
+      "exactChannelMatch": false
+    },
+    {
+      "refId": "ex-core-02 (1f8yoFFdkcY)",
+      "apparatus": "reformer",
+      "catalogClaimedTitle": "Short Box Abdominal Series & Oblique Sculpt on Reformer",
+      "catalogClaimedChannel": "Alo Moves Pilates",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "10 MIN BEGINNER AB WORKOUT // No Equipment | Pamela Reif",
+      "liveYoutubeOembedAuthor": "Pamela Reif",
+      "exactTitleMatch": false,
+      "exactChannelMatch": false
+    },
+    {
+      "refId": "ex-core-03 (bTo4NrSriWw)",
+      "apparatus": "mat",
+      "catalogClaimedTitle": "Classical Pilates Series of 5 Core Burn Routine",
+      "catalogClaimedChannel": "Lottie Murphy Pilates",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "20 MIN FULL BODY WORKOUT (Intense Routine, No Equipment)",
+      "liveYoutubeOembedAuthor": "TRAIN WITH GAINSBYBRAINS",
+      "exactTitleMatch": false,
+      "exactChannelMatch": false
+    },
+    {
+      "refId": "ex-kr-reformer-01 (9h__STRp5dA)",
+      "apparatus": "reformer",
+      "catalogClaimedTitle": "리포머 50분 풀시퀀스 실전 티칭 루틴",
+      "catalogClaimedChannel": "정혜선 · 공부하는 필라테스 원장 (KR)",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "리포머 50분 풀시퀀스",
+      "liveYoutubeOembedAuthor": "정혜선",
+      "exactTitleMatch": false,
+      "exactChannelMatch": true
+    },
+    {
+      "refId": "ex-kr-cadillac-01 (E_K5eAr-D5M)",
+      "apparatus": "cadillac",
+      "catalogClaimedTitle": "캐딜락시퀀스 | 강사레슨 50분수업 | 힘들고 재밌고 알차게🌸",
+      "catalogClaimedChannel": "단필라 (KR)",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "캐딜락시퀀스 | 강사레슨 50분수업 | 힘들고 재밌고 알차게🌸",
+      "liveYoutubeOembedAuthor": "단필라",
+      "exactTitleMatch": true,
+      "exactChannelMatch": true
+    },
+    {
+      "refId": "ex-kr-reformer-02 (J-kF8o1WJoI)",
+      "apparatus": "reformer",
+      "catalogClaimedTitle": "🌶 리포머 50분 시퀀스 🌶 매운맛 🔥 Reformer advanced sequence 🔥",
+      "catalogClaimedChannel": "필라테스 지영쌤 (KR)",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "🌶 리포머 50분 시퀀스 🌶 매운맛 🔥 Reformer advanced sequence 🔥",
+      "liveYoutubeOembedAuthor": "필라테스 지영쌤",
+      "exactTitleMatch": true,
+      "exactChannelMatch": true
+    },
+    {
+      "refId": "ex-kr-barrel-01 (l3WQl2L__qQ)",
+      "apparatus": "barrel",
+      "catalogClaimedTitle": "[기구필라테스] 바렐 볼 시퀀스 지루할 틈이 없는 50분 수업!",
+      "catalogClaimedChannel": "혀니쌤 플라잉요가&필라테스 (KR)",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "[기구필라테스] 바렐 볼 시퀀스 지루할 틈이 없는 50분 수업! 근력 빵빵하게 채워봐요!",
+      "liveYoutubeOembedAuthor": "혀니쌤 플라잉요가&필라테스",
+      "exactTitleMatch": false,
+      "exactChannelMatch": true
+    },
+    {
+      "refId": "ex-kr-reformer-03 (wNRfJ45tDDo)",
+      "apparatus": "reformer",
+      "catalogClaimedTitle": "[기구필라테스] 리포머 50분 풀 시퀀스! 여름대비 팔뚝라인 다져주는 동작들",
+      "catalogClaimedChannel": "혀니쌤 플라잉요가&필라테스 (KR)",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "[기구필라테스]리포머 50분 풀 시퀀스! 여름대비 팔뚝라인 다져주는 동작들 가져왔습니다🌞",
+      "liveYoutubeOembedAuthor": "혀니쌤 플라잉요가&필라테스",
+      "exactTitleMatch": false,
+      "exactChannelMatch": true
+    },
+    {
+      "refId": "ex-kr-chair-01 (pmwYs3uqhWc)",
+      "apparatus": "chair",
+      "catalogClaimedTitle": "필라테스 체어 시퀀스ㅣ체어에서 플랭크 동작으로 복부 엉덩이를 한번에!",
+      "catalogClaimedChannel": "Today sequence (KR)",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "필라테스 체어 시퀀스ㅣ체어에서 플랭크 동작으로 복부 엉덩이를 한번에!/plank on pilates chair abs & glue workout",
+      "liveYoutubeOembedAuthor": "Today sequence",
+      "exactTitleMatch": false,
+      "exactChannelMatch": true
+    },
+    {
+      "refId": "ex-kr-reformer-04 (IKIjw-5-AmI)",
+      "apparatus": "reformer",
+      "catalogClaimedTitle": "상·하체를 단단하게 연결하는 리포머 시퀀스 30분ㅣ쉼 없이 이어지는 자연스러운 빌드업",
+      "catalogClaimedChannel": "유진쌤 움직임 회복 필라테스 (KR)",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "상·하체를 단단하게 연결하는 리포머 시퀀스 30분ㅣ쉼 없이 이어지는 자연스러운 빌드업",
+      "liveYoutubeOembedAuthor": "유진쌤 움직임 회복 필라테스",
+      "exactTitleMatch": true,
+      "exactChannelMatch": true
+    },
+    {
+      "refId": "ex-kr-cadillac-02 (tU8cPEKkLSM)",
+      "apparatus": "cadillac",
+      "catalogClaimedTitle": "[Pilates] 캐딜락 50분 시퀀스 | 전신 골고루 자극 주기",
+      "catalogClaimedChannel": "서아앤헤이즐 | Seoah and Hazel (KR)",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "[Pilates] 캐딜락 50분 시퀀스 | 전신 골고루 자극 주기 | 다양한 동작으로 풍성하게 수업해요💪",
+      "liveYoutubeOembedAuthor": "서아앤헤이즐 | Seoah and Hazel",
+      "exactTitleMatch": false,
+      "exactChannelMatch": true
+    },
+    {
+      "refId": "ex-global-reformer-01 (XMHUw3EhBlI)",
+      "apparatus": "reformer",
+      "catalogClaimedTitle": "Pilates Reformer Workout | Full Body | 45 min (Intermediate)",
+      "catalogClaimedChannel": "Dez Fit (Global)",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "Pilates Reformer Workout | Full Body | 45 min (Intermediate)",
+      "liveYoutubeOembedAuthor": "Dez Fit",
+      "exactTitleMatch": true,
+      "exactChannelMatch": true
+    },
+    {
+      "refId": "ex-global-reformer-02 (1WDNTwAUjIw)",
+      "apparatus": "mat",
+      "catalogClaimedTitle": "15 min Pilates Core Flow That Feels Like Wearing a Corset for Your Spine",
+      "catalogClaimedChannel": "Flow with Mira · BASI Faculty (Global)",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "15 min Pilates Core Flow That Feels Like Wearing a Corset for Your Spine",
+      "liveYoutubeOembedAuthor": "Flow with Mira",
+      "exactTitleMatch": true,
+      "exactChannelMatch": true
+    },
+    {
+      "refId": "ex-global-reformer-03 (sTYt4di0zzU)",
+      "apparatus": "reformer",
+      "catalogClaimedTitle": "Pilates Fundamentals: Beginner Reformer Strength & Stretch Routine",
+      "catalogClaimedChannel": "Balanced Body Official (Global)",
+      "httpStatus": 200,
+      "liveYoutubeOembedTitle": "Pilates Fundamentals: Beginner Reformer Strength & Stretch Routine - Exercise Break",
+      "liveYoutubeOembedAuthor": "Balanced Body",
+      "exactTitleMatch": false,
+      "exactChannelMatch": true
+    }
+  ],
+  "allProbes": [
+    {
+      "url": "https://www.merrithew.com/blog/post/2019-01-04/exercise-of-the-month-footwork-on-stability-chair",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-01",
+      "title": "체어 풋워크",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "chair",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2019-01-04/exercise-of-the-month-footwork-on-stability-chair",
+        "checkedAt": "2026-11-07T11:52:15.470Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2019-01-04/exercise-of-the-month-footwork-on-stability-chair",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2020-06-23/stott-pilates-matwork-with-the-mini-stability-ball",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-02",
+      "title": "미니볼 사이드 린",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "mat",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2020-06-23/stott-pilates-matwork-with-the-mini-stability-ball",
+        "checkedAt": "2026-11-07T11:52:15.476Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2020-06-23/stott-pilates-matwork-with-the-mini-stability-ball",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2020-06-23/stott-pilates-matwork-with-the-mini-stability-ball",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-03",
+      "title": "미니볼 힙 익스텐션",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "mat",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2020-06-23/stott-pilates-matwork-with-the-mini-stability-ball",
+        "checkedAt": "2026-11-07T11:52:15.476Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2020-06-23/stott-pilates-matwork-with-the-mini-stability-ball",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2018-10-22/exercise-of-the-month-ladder-barrel-swan-dive",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-04",
+      "title": "래더바렐 스완 다이브",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "ladder-barrel",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2018-10-22/exercise-of-the-month-ladder-barrel-swan-dive",
+        "checkedAt": "2026-11-07T11:52:15.477Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2018-10-22/exercise-of-the-month-ladder-barrel-swan-dive",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2025-01-27/exercise-of-the-month-side-bend-with-the-flex-band",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-05",
+      "title": "밴드 사이드 벤드",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "mat",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2025-01-27/exercise-of-the-month-side-bend-with-the-flex-band",
+        "checkedAt": "2026-11-07T11:52:15.477Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2025-01-27/exercise-of-the-month-side-bend-with-the-flex-band",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2022-09-23/exercise-of-the-month-warm-up-with-reformer-fitness-circle",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "sr-01",
+      "title": "리포머 링 준비운동 시리즈",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2022-09-23/exercise-of-the-month-warm-up-with-reformer-fitness-circle",
+        "checkedAt": "2026-11-07T11:52:15.478Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2022-09-23/exercise-of-the-month-warm-up-with-reformer-fitness-circle",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-06",
+      "title": "루프밴드 리포머 점프 변형",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence",
+        "checkedAt": "2026-11-07T11:52:15.478Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-07",
+      "title": "루프밴드 랫 풀다운",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence",
+        "checkedAt": "2026-11-07T11:52:15.478Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-08",
+      "title": "미니볼 네발기기 전후 스텝",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "mat",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+        "checkedAt": "2026-11-07T11:52:15.479Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-09",
+      "title": "미니볼 옆누운 보행 패턴",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "mat",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+        "checkedAt": "2026-11-07T11:52:15.479Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2024-01-22/exercise-of-the-month-sidekick-kneeling",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-10",
+      "title": "닐링 사이드킥",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "mat",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2024-01-22/exercise-of-the-month-sidekick-kneeling",
+        "checkedAt": "2026-11-07T11:52:15.479Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2024-01-22/exercise-of-the-month-sidekick-kneeling",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2023-09-07/exercise-of-the-month-thigh-stretch-on-the-cadillac",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-11",
+      "title": "캐딜락 타이 스트레치 힌지",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "cadillac",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2023-09-07/exercise-of-the-month-thigh-stretch-on-the-cadillac",
+        "checkedAt": "2026-11-07T11:52:16.110Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2023-09-07/exercise-of-the-month-thigh-stretch-on-the-cadillac",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2023-09-07/exercise-of-the-month-thigh-stretch-on-the-cadillac",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-12",
+      "title": "캐딜락 타이 스트레치 신전 변형",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "cadillac",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2023-09-07/exercise-of-the-month-thigh-stretch-on-the-cadillac",
+        "checkedAt": "2026-11-07T11:52:16.110Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2023-09-07/exercise-of-the-month-thigh-stretch-on-the-cadillac",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2023-07-06/exercise-of-the-month-thigh-stretch-on-the-reformer",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-13",
+      "title": "리포머 타이 스트레치",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2023-07-06/exercise-of-the-month-thigh-stretch-on-the-reformer",
+        "checkedAt": "2026-11-07T11:52:16.111Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2023-07-06/exercise-of-the-month-thigh-stretch-on-the-reformer",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2023-08-13/exercise-of-the-month-swan-dive",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-14",
+      "title": "매트 스완 다이브",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "mat",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2023-08-13/exercise-of-the-month-swan-dive",
+        "checkedAt": "2026-11-07T11:52:16.111Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2023-08-13/exercise-of-the-month-swan-dive",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2023-08-13/exercise-of-the-month-swan-dive",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-15",
+      "title": "리포머 스완 다이브 변형",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2023-08-13/exercise-of-the-month-swan-dive",
+        "checkedAt": "2026-11-07T11:52:16.111Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2023-08-13/exercise-of-the-month-swan-dive",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2023-02-27/exercise-of-the-month-knee-stretch-prep-with-rotations",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-16",
+      "title": "회전 니 스트레치 프렙",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2023-02-27/exercise-of-the-month-knee-stretch-prep-with-rotations",
+        "checkedAt": "2026-11-07T11:52:16.112Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2023-02-27/exercise-of-the-month-knee-stretch-prep-with-rotations",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2024-08-28/exercise-of-the-month-back-splits",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-17",
+      "title": "리포머 백 스플릿",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2024-08-28/exercise-of-the-month-back-splits",
+        "checkedAt": "2026-11-07T11:52:16.112Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2024-08-28/exercise-of-the-month-back-splits",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2024-03-20/exercise-of-the-month-standing-integration-series",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "sr-02",
+      "title": "스탠딩 밴드 통합 시리즈",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "unspecified",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2024-03-20/exercise-of-the-month-standing-integration-series",
+        "checkedAt": "2026-11-07T11:52:16.112Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2024-03-20/exercise-of-the-month-standing-integration-series",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/28-days-of-mindfulness/day-20",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "sr-03",
+      "title": "폼롤러 활용 시리즈",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "unspecified",
+      "probe": {
+        "url": "https://www.merrithew.com/28-days-of-mindfulness/day-20",
+        "checkedAt": "2026-11-07T11:52:16.112Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/28-days-of-mindfulness/day-20",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2025-06-26/exercise-of-the-month-roll-over-using-the-stability-ball",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "mv-18",
+      "title": "짐볼 롤오버",
+      "publisher": "Merrithew 공식 웹사이트",
+      "apparatus": "mat",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2025-06-26/exercise-of-the-month-roll-over-using-the-stability-ball",
+        "checkedAt": "2026-11-07T11:52:16.112Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2025-06-26/exercise-of-the-month-roll-over-using-the-stability-ball",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=Bkgcbd1nabU",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "kr-01",
+      "title": "헌드레드",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "apparatus": "mat",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=Bkgcbd1nabU",
+        "checkedAt": "2026-11-07T11:52:16.719Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=Bkgcbd1nabU",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=Z0gTRuo7uvY",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "kr-02",
+      "title": "캣 스트레칭",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "apparatus": "unspecified",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=Z0gTRuo7uvY",
+        "checkedAt": "2026-11-07T11:52:16.720Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=Z0gTRuo7uvY",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=CYSX6eaoA2w",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "kr-03",
+      "title": "밴드 롤업",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "apparatus": "unspecified",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=CYSX6eaoA2w",
+        "checkedAt": "2026-11-07T11:52:16.720Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=CYSX6eaoA2w",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=NNarvotdxiY",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "kr-04",
+      "title": "싱글 레그 익스텐션",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "apparatus": "unspecified",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=NNarvotdxiY",
+        "checkedAt": "2026-11-07T11:52:16.720Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=NNarvotdxiY",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=8xlVtNo1R8U",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "kr-05",
+      "title": "숄더 브릿지",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "apparatus": "unspecified",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=8xlVtNo1R8U",
+        "checkedAt": "2026-11-07T11:52:16.720Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=8xlVtNo1R8U",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=g8YsXEVRAZg",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "kr-06",
+      "title": "폼롤러 롤오버",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "apparatus": "unspecified",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=g8YsXEVRAZg",
+        "checkedAt": "2026-11-07T11:52:16.720Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=g8YsXEVRAZg",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=sftEAepTdUA",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "kr-07",
+      "title": "롤오버",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "apparatus": "unspecified",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=sftEAepTdUA",
+        "checkedAt": "2026-11-07T11:52:16.721Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=sftEAepTdUA",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=Y_9c3NFbm1A",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "kr-08",
+      "title": "필라테스 기초 호흡",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "apparatus": "unspecified",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=Y_9c3NFbm1A",
+        "checkedAt": "2026-11-07T11:52:16.721Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=Y_9c3NFbm1A",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=DJtd3AqZzH0",
+      "sourceCatalog": "VERIFIED_REFERENCES",
+      "refId": "kr-09",
+      "title": "횡격막 호흡",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "apparatus": "unspecified",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=DJtd3AqZzH0",
+        "checkedAt": "2026-11-07T11:52:18.028Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=DJtd3AqZzH0",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=TVNpmcrcuWU",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-TVNpmcrcuWU",
+      "title": "리포머 시퀀스 50분 풀영상(feat.강사 대상)",
+      "publisher": "필라테스 뽀개기 구쌤",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=TVNpmcrcuWU",
+        "checkedAt": "2026-11-07T11:52:18.029Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=TVNpmcrcuWU",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=robwSLsO9vk",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-robwSLsO9vk",
+      "title": "체어 시퀀스 50분 풀영상 (feat. 티칭멘트 까지) 하지 밸런스와 협응력 강화 Chair pilates",
+      "publisher": "@kooteacher",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=robwSLsO9vk",
+        "checkedAt": "2026-11-07T11:52:18.029Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=robwSLsO9vk",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=FRliHowikgU",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-FRliHowikgU",
+      "title": "[체어필라테스] 중급자를 위한 50분시퀀스",
+      "publisher": "@pilates_tory",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=FRliHowikgU",
+        "checkedAt": "2026-11-07T11:52:18.029Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=FRliHowikgU",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=cRi2C0fGtzc",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-cRi2C0fGtzc",
+      "title": "체어 필라테스 50분 시퀀스 / 하체 집중 전신, 중급 chair pilates",
+      "publisher": "@yeo_kinetic",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=cRi2C0fGtzc",
+        "checkedAt": "2026-11-07T11:52:18.029Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=cRi2C0fGtzc",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=ljcclNFy1qA",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-ljcclNFy1qA",
+      "title": "재미와 운동효과를 단번에 잡는 체어 50분 풀 시퀀스 Chair + Loof band Pilates Sequence",
+      "publisher": "@daoom_body_studio",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=ljcclNFy1qA",
+        "checkedAt": "2026-11-07T11:52:18.029Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=ljcclNFy1qA",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=o3acxPAwDWs",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-o3acxPAwDWs",
+      "title": "바렐 + 미니볼 50분 풀 시퀀스",
+      "publisher": "반하다필라테스 평생교육원 정혜선",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=o3acxPAwDWs",
+        "checkedAt": "2026-11-07T11:52:18.029Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=o3acxPAwDWs",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=CTu9ajtENF4",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-CTu9ajtENF4",
+      "title": "미니볼로 안정성을 잡은 바렐 시퀀스 30분ㅣ척추 구석구석 움직이기",
+      "publisher": "@raphapilatesyujin",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=CTu9ajtENF4",
+        "checkedAt": "2026-11-07T11:52:18.029Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=CTu9ajtENF4",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=PO4CEuOipUw",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-PO4CEuOipUw",
+      "title": "타워 리포머 50분 풀 시퀀스 셋팅부터 큐잉까지/코어와 원위부 ...",
+      "publisher": "@pilates_j",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=PO4CEuOipUw",
+        "checkedAt": "2026-11-07T11:52:19.249Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=PO4CEuOipUw",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=AjS0PclWgpo",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-AjS0PclWgpo",
+      "title": "박스 X 미니볼 X 캐딜락 필라테스 : 30분 홀바디 시퀀스",
+      "publisher": "@pilatesua",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=AjS0PclWgpo",
+        "checkedAt": "2026-11-07T11:52:19.251Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=AjS0PclWgpo",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=GybUGQXPLh4",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-GybUGQXPLh4",
+      "title": "미니볼 필라테스 30분 시퀀스 | 전신 운동 | Miniball Pilates",
+      "publisher": "@hannim_ohh",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=GybUGQXPLh4",
+        "checkedAt": "2026-11-07T11:52:19.251Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=GybUGQXPLh4",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=6EB9ny-j20w",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-6EB9ny-j20w",
+      "title": "소도구 필라테스 | 30분 미니볼 전신 운동 Mini Ball Pilates",
+      "publisher": "@hannim_ohh",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=6EB9ny-j20w",
+        "checkedAt": "2026-11-07T11:52:19.251Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=6EB9ny-j20w",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=P440WTUjHP4",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-P440WTUjHP4",
+      "title": "30분 매트필라테스 | 에너지.활력 충전되는 전신근력운동",
+      "publisher": "@onlypilates",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=P440WTUjHP4",
+        "checkedAt": "2026-11-07T11:52:19.251Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=P440WTUjHP4",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=LWVmjuEzLSE",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-LWVmjuEzLSE",
+      "title": "[강사레슨] 필라테스 시퀀스 | 리포머 50분 PILATES WORKOUT",
+      "publisher": "@pilamincho",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=LWVmjuEzLSE",
+        "checkedAt": "2026-11-07T11:52:19.251Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=LWVmjuEzLSE",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=r1Om67SbixU",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "kr-course-r1Om67SbixU",
+      "title": "체어 x 스몰볼 50분 풀시퀀스 전신다쓰는 난이도상 약한스프링으로 제어하며 운동하기 #체어시퀀스 #필라짱스",
+      "publisher": "@pilazzangs",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=r1Om67SbixU",
+        "checkedAt": "2026-11-07T11:52:19.251Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=r1Om67SbixU",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=CeKMBNJvpV4",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-01",
+      "title": "30 Minute Pilates Ladder Barrel Workout",
+      "publisher": "Andrea Maida",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=CeKMBNJvpV4",
+        "checkedAt": "2026-11-07T11:52:19.251Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=CeKMBNJvpV4",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=e_KobOWdfaQ",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-02",
+      "title": "Upside-Down Pilates - Level II Cadillac Full 1 Hour Workout",
+      "publisher": "@Upsidedownpilates",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=e_KobOWdfaQ",
+        "checkedAt": "2026-11-07T11:52:20.352Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=e_KobOWdfaQ",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=WjDfaO_qWfk",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-03",
+      "title": "Upside-Down Pilates - Level II Barrels Full 1 Hour Workout",
+      "publisher": "unspecified",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=WjDfaO_qWfk",
+        "checkedAt": "2026-11-07T11:52:20.352Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=WjDfaO_qWfk",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=OCpuRcvY6Jo",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-04",
+      "title": "Upside-Down Pilates - Level II Reformer Full 1 Hour Workout",
+      "publisher": "unspecified",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=OCpuRcvY6Jo",
+        "checkedAt": "2026-11-07T11:52:20.353Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=OCpuRcvY6Jo",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=dO4kwNoZmAY",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-05",
+      "title": "Upside-Down Pilates - Chair - Level 1 - Full Workout",
+      "publisher": "unspecified",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=dO4kwNoZmAY",
+        "checkedAt": "2026-11-07T11:52:20.353Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=dO4kwNoZmAY",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=1NsIH368_lw",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-06",
+      "title": "Pilates Tower Workout #3 (No Props Needed)",
+      "publisher": "April Plank Pilates",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=1NsIH368_lw",
+        "checkedAt": "2026-11-07T11:52:20.353Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=1NsIH368_lw",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=zvfWceHlax4",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-07",
+      "title": "Full Body Flow - Pilates Tower Workout #1 (No Props Needed)",
+      "publisher": "April Plank Pilates",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=zvfWceHlax4",
+        "checkedAt": "2026-11-07T11:52:20.353Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=zvfWceHlax4",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=rASASOiBco4",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-08",
+      "title": "30 Minute at Home Pilates Workout with a Resistance Band",
+      "publisher": "Trifecta Pilates",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=rASASOiBco4",
+        "checkedAt": "2026-11-07T11:52:20.353Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=rASASOiBco4",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=ctCSU8gEFlY",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-09",
+      "title": "15 min Full Body Pilates Workout with a Resistance Band",
+      "publisher": "Trifecta Pilates",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=ctCSU8gEFlY",
+        "checkedAt": "2026-11-07T11:52:20.353Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=ctCSU8gEFlY",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=J73ItOdZ0ew",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-10",
+      "title": "25 Minute Mini Ball Workout",
+      "publisher": "Trifecta Pilates",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=J73ItOdZ0ew",
+        "checkedAt": "2026-11-07T11:52:21.218Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=J73ItOdZ0ew",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=p28_wFVwEfk",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-11",
+      "title": "15 Minute Pilates Mini Ball Workout | Intermediate Pilates Class",
+      "publisher": "Trifecta Pilates",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=p28_wFVwEfk",
+        "checkedAt": "2026-11-07T11:52:21.219Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=p28_wFVwEfk",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=a0qDaVEzLXM",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-12",
+      "title": "30 min Full Body Pilates | Beginner to Intermediate Level",
+      "publisher": "Flow with Mira",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=a0qDaVEzLXM",
+        "checkedAt": "2026-11-07T11:52:21.219Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=a0qDaVEzLXM",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=Qu5ofjc3Jo0",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-13",
+      "title": "30 MINUTE Full Body Reformer Workout For Beginners",
+      "publisher": "Flow with Mira",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=Qu5ofjc3Jo0",
+        "checkedAt": "2026-11-07T11:52:21.219Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=Qu5ofjc3Jo0",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=I-6Mu8xpvnU",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-14",
+      "title": "30 min Full Body Workout | Pilates with Weights Intermediate",
+      "publisher": "Flow with Mira",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=I-6Mu8xpvnU",
+        "checkedAt": "2026-11-07T11:52:21.219Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=I-6Mu8xpvnU",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=xZbr_4dwsUA",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-15",
+      "title": "30 Minute Full Body Pilates Workout - Pilates at Home!",
+      "publisher": "unspecified",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=xZbr_4dwsUA",
+        "checkedAt": "2026-11-07T11:52:21.219Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=xZbr_4dwsUA",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=VJT6CPSK94Q",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-16",
+      "title": "20 Minute Full Body Pilates Workout For Beginners - No Equipment!",
+      "publisher": "Jessica Valant",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=VJT6CPSK94Q",
+        "checkedAt": "2026-11-07T11:52:21.219Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=VJT6CPSK94Q",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=D3TC-tz3TeQ",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-17",
+      "title": "Beginner Pilates Mat Exercises",
+      "publisher": "Jessica Valant",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=D3TC-tz3TeQ",
+        "checkedAt": "2026-11-07T11:52:21.219Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=D3TC-tz3TeQ",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=TM_Mta1xNO4",
+      "sourceCatalog": "COURSE_REFERENCES",
+      "refId": "yt-expansion-international-18",
+      "title": "Beginner Pilates Chair Workout",
+      "publisher": "Pilates & Fitness TV",
+      "apparatus": "course",
+      "probe": {
+        "url": "https://www.youtube.com/watch?v=TM_Mta1xNO4",
+        "checkedAt": "2026-11-07T11:52:22.422Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/watch?v=TM_Mta1xNO4",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://nfa.kspo.or.kr/classroom/program/0/selectPhysicalUpProgramByAgeSe04.kspo",
+      "sourceCatalog": "PUBLIC_REFERENCES",
+      "refId": "pub-01",
+      "title": "성인 운동 프로그램 분류",
+      "publisher": "국민체육진흥공단 · 국민체력100",
+      "apparatus": "mat / general",
+      "probe": {
+        "url": "https://nfa.kspo.or.kr/classroom/program/0/selectPhysicalUpProgramByAgeSe04.kspo",
+        "checkedAt": "2026-11-07T11:52:22.423Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://nfa.kspo.or.kr/classroom/program/0/selectPhysicalUpProgramByAgeSe04.kspo",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://nfa.kspo.or.kr/classroom/program/7/selectPhysicalUpProgramByAgeSe03.kspo",
+      "sourceCatalog": "PUBLIC_REFERENCES",
+      "refId": "pub-02",
+      "title": "필라테스와 유연성 운동 개요",
+      "publisher": "국민체육진흥공단 · 국민체력100",
+      "apparatus": "mat / general",
+      "probe": {
+        "url": "https://nfa.kspo.or.kr/classroom/program/7/selectPhysicalUpProgramByAgeSe03.kspo",
+        "checkedAt": "2026-11-07T11:52:22.423Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://nfa.kspo.or.kr/classroom/program/7/selectPhysicalUpProgramByAgeSe03.kspo",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://health.kdca.go.kr/healthinfo/biz/health/gnrlzHealthInfo/gnrlzHealthInfo/gnrlzHealthInfoView.do?cntnts_sn=5293",
+      "sourceCatalog": "PUBLIC_REFERENCES",
+      "refId": "pub-03",
+      "title": "일반 운동 교육 정보",
+      "publisher": "질병관리청 · 국가건강정보포털",
+      "apparatus": "mat / general",
+      "probe": {
+        "url": "https://health.kdca.go.kr/healthinfo/biz/health/gnrlzHealthInfo/gnrlzHealthInfo/gnrlzHealthInfoView.do?cntnts_sn=5293",
+        "checkedAt": "2026-11-07T11:52:22.423Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://health.kdca.go.kr/healthinfo/biz/health/gnrlzHealthInfo/gnrlzHealthInfo/gnrlzHealthInfoView.do?cntnts_sn=5293",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.nhs.uk/live-well/exercise/strength-exercises/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "supported-heel-raise",
+      "title": "서서 발목 움직임 (NHS · Strength exercises / Calf raises)",
+      "publisher": "NHS",
+      "apparatus": "일반 고정 의자 지지",
+      "probe": {
+        "url": "https://www.nhs.uk/live-well/exercise/strength-exercises/",
+        "checkedAt": "2026-11-07T11:52:22.423Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.nhs.uk/live-well/exercise/strength-exercises/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.uhsussex.nhs.uk/resources/standing-exercises-2/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "supported-heel-raise",
+      "title": "서서 발목 움직임 (UHSussex · Standing Exercises / Heel raises)",
+      "publisher": "UHSussex",
+      "apparatus": "일반 고정 의자 지지",
+      "probe": {
+        "url": "https://www.uhsussex.nhs.uk/resources/standing-exercises-2/",
+        "checkedAt": "2026-11-07T11:52:22.424Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.uhsussex.nhs.uk/resources/standing-exercises-2/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.southtees.nhs.uk/resources/the-clam/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "side-lying-clam",
+      "title": "사이드 클램 (South Tees · The clam)",
+      "publisher": "South Tees",
+      "apparatus": "매트, 머리 베개",
+      "probe": {
+        "url": "https://www.southtees.nhs.uk/resources/the-clam/",
+        "checkedAt": "2026-11-07T11:52:22.424Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.southtees.nhs.uk/resources/the-clam/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.cuh.nhs.uk/patient-information/general-stability-exercises1/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "side-lying-clam",
+      "title": "사이드 클램 (CUH · General stability exercises / Clam shell)",
+      "publisher": "CUH",
+      "apparatus": "매트, 머리 베개",
+      "probe": {
+        "url": "https://www.cuh.nhs.uk/patient-information/general-stability-exercises1/",
+        "checkedAt": "2026-11-07T11:52:22.424Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.cuh.nhs.uk/patient-information/general-stability-exercises1/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.nbt.nhs.uk/our-services/a-z-services/breast-reconstruction/post-operative-exercises-diep-reconstruction",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "adult-supine-heel-slide",
+      "title": "누워서 뒤꿈치 슬라이드 (North Bristol NHS Trust · Post-operative Exercises DIEP Reconstruction)",
+      "publisher": "North Bristol NHS Trust",
+      "apparatus": "매트",
+      "probe": {
+        "url": "https://www.nbt.nhs.uk/our-services/a-z-services/breast-reconstruction/post-operative-exercises-diep-reconstruction",
+        "checkedAt": "2026-11-07T11:52:26.415Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.nbt.nhs.uk/our-services/a-z-services/breast-reconstruction/post-operative-exercises-diep-reconstruction",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "adult-supine-heel-slide",
+      "title": "누워서 뒤꿈치 슬라이드 (The Royal Marsden NHS Foundation Trust, Physiotherapy department · Exercise and advice to help you recover after your abdominal operation)",
+      "publisher": "The Royal Marsden NHS Foundation Trust, Physiotherapy department",
+      "apparatus": "매트",
+      "probe": {
+        "url": "https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386",
+        "checkedAt": "2026-11-07T11:52:26.416Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "supine-knee-fold",
+      "title": "누워서 한쪽 니 폴드 (The Royal Marsden NHS Foundation Trust, Physiotherapy department · Exercise and advice to help you recover after your abdominal operation)",
+      "publisher": "The Royal Marsden NHS Foundation Trust, Physiotherapy department",
+      "apparatus": "매트",
+      "probe": {
+        "url": "https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386",
+        "checkedAt": "2026-11-07T11:52:26.416Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.torbayandsouthdevon.nhs.uk/uploads/25988.pdf?last-updated=20260902",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "supine-knee-fold",
+      "title": "누워서 한쪽 니 폴드 (Torbay and South Devon NHS Foundation Trust · Stress urinary incontinence — Pelvic Health Physiotherapy information leaflet)",
+      "publisher": "Torbay and South Devon NHS Foundation Trust",
+      "apparatus": "매트",
+      "probe": {
+        "url": "https://www.torbayandsouthdevon.nhs.uk/uploads/25988.pdf?last-updated=20260902",
+        "checkedAt": "2026-11-07T11:52:26.416Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.torbayandsouthdevon.nhs.uk/uploads/25988.pdf?last-updated=20260902",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.ruh.nhs.uk/patients/services/physiotherapy/documents/PHY067_Lateral_hip_pain.pdf",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "side-lying-straight-leg-lift",
+      "title": "옆으로 누워 곧은 다리 들기 (Royal United Hospitals Bath NHS Foundation Trust · Lateral Hip Pain — Physiotherapy Patient Information)",
+      "publisher": "Royal United Hospitals Bath NHS Foundation Trust",
+      "apparatus": "매트, 머리 지지",
+      "probe": {
+        "url": "https://www.ruh.nhs.uk/patients/services/physiotherapy/documents/PHY067_Lateral_hip_pain.pdf",
+        "checkedAt": "2026-11-07T11:52:26.416Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.ruh.nhs.uk/patients/services/physiotherapy/documents/PHY067_Lateral_hip_pain.pdf",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://roh.nhs.uk/services-information/therapy/exercises-for-osteoarthritis-of-the-hip",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "side-lying-straight-leg-lift",
+      "title": "옆으로 누워 곧은 다리 들기 (The Royal Orthopaedic Hospital · Exercises for Osteoarthritis of the Hip · 다른 변형 비교)",
+      "publisher": "The Royal Orthopaedic Hospital",
+      "apparatus": "매트, 머리 지지",
+      "probe": {
+        "url": "https://roh.nhs.uk/services-information/therapy/exercises-for-osteoarthritis-of-the-hip",
+        "checkedAt": "2026-11-07T11:52:26.417Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://roh.nhs.uk/services-information/therapy/exercises-for-osteoarthritis-of-the-hip",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.dynamichealth.nhs.uk/help-and-advice/mid-back-pain/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "side-lying-open-book",
+      "title": "옆으로 누워 오픈 북 (Dynamic Health, East of England Community Health and Care NHS Trust · Mid back pain)",
+      "publisher": "Dynamic Health, East of England Community Health and Care NHS Trust",
+      "apparatus": "매트, 머리 베개",
+      "probe": {
+        "url": "https://www.dynamichealth.nhs.uk/help-and-advice/mid-back-pain/",
+        "checkedAt": "2026-11-07T11:52:26.417Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.dynamichealth.nhs.uk/help-and-advice/mid-back-pain/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.leedsth.nhs.uk/patients/resources/physiotherapy-exercises-for-breast-pain-with-chest-wall-musculoskeletal-symptoms/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "side-lying-open-book",
+      "title": "옆으로 누워 오픈 북 (Leeds Teaching Hospitals NHS Trust · Physiotherapy exercises for breast pain with chest wall musculoskeletal symptoms)",
+      "publisher": "Leeds Teaching Hospitals NHS Trust",
+      "apparatus": "매트, 머리 베개",
+      "probe": {
+        "url": "https://www.leedsth.nhs.uk/patients/resources/physiotherapy-exercises-for-breast-pain-with-chest-wall-musculoskeletal-symptoms/",
+        "checkedAt": "2026-11-07T11:52:26.417Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.leedsth.nhs.uk/patients/resources/physiotherapy-exercises-for-breast-pain-with-chest-wall-musculoskeletal-symptoms/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.bodyharmonics.com/arm-leg-reach/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "quadruped-arm-slide",
+      "title": "네발기기 한 팔 슬라이드 (Body Harmonics · Postural control series: two things to notice in quadruped arm leg reach)",
+      "publisher": "Body Harmonics",
+      "apparatus": "매트",
+      "probe": {
+        "url": "https://www.bodyharmonics.com/arm-leg-reach/",
+        "checkedAt": "2026-11-07T11:52:26.417Z",
+        "httpStatus": 503,
+        "ok": false,
+        "finalUrl": "https://www.bodyharmonics.com/arm-leg-reach/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.bodyharmonics.com/arm-leg-reach/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "quadruped-leg-slide",
+      "title": "네발기기 한 다리 슬라이드 (Body Harmonics · Postural control series: two things to notice in quadruped arm leg reach)",
+      "publisher": "Body Harmonics",
+      "apparatus": "매트",
+      "probe": {
+        "url": "https://www.bodyharmonics.com/arm-leg-reach/",
+        "checkedAt": "2026-11-07T11:52:26.417Z",
+        "httpStatus": 503,
+        "ok": false,
+        "finalUrl": "https://www.bodyharmonics.com/arm-leg-reach/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2020-05-15/at-home-reformer-challenge-week-2-legs",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "reformer-parallel-footwork",
+      "title": "리포머 양발 풋워크 (Merrithew · At Home Reformer Challenge: Week 2 Legs)",
+      "publisher": "Merrithew",
+      "apparatus": "리포머, 풋바 · 스프링 설정 미검증",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2020-05-15/at-home-reformer-challenge-week-2-legs",
+        "checkedAt": "2026-11-07T11:52:28.676Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2020-05-15/at-home-reformer-challenge-week-2-legs",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.pilates.com/ultimate-guide-to-the-pilates-reformer/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "reformer-parallel-footwork",
+      "title": "리포머 양발 풋워크 (Balanced Body · Guide to the Pilates Reformer)",
+      "publisher": "Balanced Body",
+      "apparatus": "리포머, 풋바 · 스프링 설정 미검증",
+      "probe": {
+        "url": "https://www.pilates.com/ultimate-guide-to-the-pilates-reformer/",
+        "checkedAt": "2026-11-07T11:52:28.677Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.pilates.com/ultimate-guide-to-the-pilates-reformer/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://thecore.pilates.com/pilates-cross-training-reformer-exo-chair-sequencing/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "chair-seated-pedal-press",
+      "title": "체어 양발 페달 프레스 (Balanced Body — The CORE · Circuit Training in Pilates: Find, Feel, and Discover)",
+      "publisher": "Balanced Body — The CORE",
+      "apparatus": "필라테스 체어, 스프링 설정 미검증",
+      "probe": {
+        "url": "https://thecore.pilates.com/pilates-cross-training-reformer-exo-chair-sequencing/",
+        "checkedAt": "2026-11-07T11:52:28.677Z",
+        "httpStatus": 503,
+        "ok": false,
+        "finalUrl": "https://thecore.pilates.com/pilates-cross-training-reformer-exo-chair-sequencing/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://s3.amazonaws.com/s3.pilates.com/resources/store/book-samples/bk7002_chair_sample.pdf",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "chair-seated-pedal-press",
+      "title": "체어 양발 페달 프레스 (Balanced Body Education · Chair — A Detailed Guide for Practicing Pilates)",
+      "publisher": "Balanced Body Education",
+      "apparatus": "필라테스 체어, 스프링 설정 미검증",
+      "probe": {
+        "url": "https://s3.amazonaws.com/s3.pilates.com/resources/store/book-samples/bk7002_chair_sample.pdf",
+        "checkedAt": "2026-11-07T11:52:28.677Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://s3.amazonaws.com/s3.pilates.com/resources/store/book-samples/bk7002_chair_sample.pdf",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.pilatesanytime.com/class-view/6387/video/Pilates-Seamless-Total-Body-Reformer-by-Zola-Williams",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "reformer-supine-strap-arm-press",
+      "title": "리포머 팔 프레스 · 발목 사이 볼 (Pilates Anytime · Seamless Total Body Reformer — Class 6387)",
+      "publisher": "Pilates Anytime",
+      "apparatus": "리포머, 스트랩, 발목 사이 볼 · 종류 미확인",
+      "probe": {
+        "url": "https://www.pilatesanytime.com/class-view/6387/video/Pilates-Seamless-Total-Body-Reformer-by-Zola-Williams",
+        "checkedAt": "2026-11-07T11:52:28.677Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.pilatesanytime.com/class-view/6387/video/Pilates-Seamless-Total-Body-Reformer-by-Zola-Williams",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.pilates.com/all-about-reformer-pilates",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "reformer-supine-strap-arm-press",
+      "title": "리포머 팔 프레스 · 발목 사이 볼 (Balanced Body · All About Reformer Pilates)",
+      "publisher": "Balanced Body",
+      "apparatus": "리포머, 스트랩, 발목 사이 볼 · 종류 미확인",
+      "probe": {
+        "url": "https://www.pilates.com/all-about-reformer-pilates",
+        "checkedAt": "2026-11-07T11:52:28.677Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.pilates.com/all-about-reformer-pilates",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2021-09-27/2022-pilates-reformer-buyers-guide-how-to-choose-the-best-pilates-reformer-for-your-needs-fitness-goals-and-studio-space",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "reformer-supine-strap-arm-press",
+      "title": "리포머 팔 프레스 · 발목 사이 볼 (Merrithew · Pilates Reformer Buyers' Guide: How to Choose the Best Pilates Reformer for Your Needs, Fitness Goals and Studio Space)",
+      "publisher": "Merrithew",
+      "apparatus": "리포머, 스트랩, 발목 사이 볼 · 종류 미확인",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2021-09-27/2022-pilates-reformer-buyers-guide-how-to-choose-the-best-pilates-reformer-for-your-needs-fitness-goals-and-studio-space",
+        "checkedAt": "2026-11-07T11:52:28.678Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2021-09-27/2022-pilates-reformer-buyers-guide-how-to-choose-the-best-pilates-reformer-for-your-needs-fitness-goals-and-studio-space",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.pilatesanytime.com/class-view/1782/video/Pilates-Mat-on-the-Cadillac-by-Rachel-Taylor-Segel",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "cadillac-supine-arm-spring-press",
+      "title": "캐딜락 굽힌 팔 프레스 (Pilates Anytime · Mat on the Cadillac — Class 1782)",
+      "publisher": "Pilates Anytime",
+      "apparatus": "캐딜락, 암 스프링 · 설정 미검증",
+      "probe": {
+        "url": "https://www.pilatesanytime.com/class-view/1782/video/Pilates-Mat-on-the-Cadillac-by-Rachel-Taylor-Segel",
+        "checkedAt": "2026-11-07T11:52:28.678Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.pilatesanytime.com/class-view/1782/video/Pilates-Mat-on-the-Cadillac-by-Rachel-Taylor-Segel",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://s3.amazonaws.com/s3.pilates.com/resources/instructions/CE%20Manual%20trap_ENGLISH.pdf",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "cadillac-supine-arm-spring-press",
+      "title": "캐딜락 굽힌 팔 프레스 (Balanced Body, Inc. · The Balanced Body Trapeze Table (Cadillac))",
+      "publisher": "Balanced Body, Inc.",
+      "apparatus": "캐딜락, 암 스프링 · 설정 미검증",
+      "probe": {
+        "url": "https://s3.amazonaws.com/s3.pilates.com/resources/instructions/CE%20Manual%20trap_ENGLISH.pdf",
+        "checkedAt": "2026-11-07T11:52:30.105Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://s3.amazonaws.com/s3.pilates.com/resources/instructions/CE%20Manual%20trap_ENGLISH.pdf",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.ruh.nhs.uk/patients/patient_information/PHY033_Hip_strengthening_exercises.pdf",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "ladder-supported-hip-extension-slide",
+      "title": "래더 지지 뒤 슬라이드 · 저작 적응 (Royal United Hospitals Bath NHS Foundation Trust · Hip strengthening exercises)",
+      "publisher": "Royal United Hospitals Bath NHS Foundation Trust",
+      "apparatus": "래더바렐 지지 · 저작 적응",
+      "probe": {
+        "url": "https://www.ruh.nhs.uk/patients/patient_information/PHY033_Hip_strengthening_exercises.pdf",
+        "checkedAt": "2026-11-07T11:52:30.106Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.ruh.nhs.uk/patients/patient_information/PHY033_Hip_strengthening_exercises.pdf",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://s3.amazonaws.com/s3.pilates.com/User%20Guides/17656_UG_ladder_barrel%20FINAL%20web%207-23-24.pdf",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "ladder-supported-hip-extension-slide",
+      "title": "래더 지지 뒤 슬라이드 · 저작 적응 (Balanced Body Inc. · The Balanced Body Ladder Barrel)",
+      "publisher": "Balanced Body Inc.",
+      "apparatus": "래더바렐 지지 · 저작 적응",
+      "probe": {
+        "url": "https://s3.amazonaws.com/s3.pilates.com/User%20Guides/17656_UG_ladder_barrel%20FINAL%20web%207-23-24.pdf",
+        "checkedAt": "2026-11-07T11:52:30.106Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://s3.amazonaws.com/s3.pilates.com/User%20Guides/17656_UG_ladder_barrel%20FINAL%20web%207-23-24.pdf",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2014-10-31/beat-client-boredom-3-barrels-to-refresh-pilates-workouts",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "ladder-supported-hip-extension-slide",
+      "title": "래더 지지 뒤 슬라이드 · 저작 적응 (Merrithew · Beat Client Boredom: 3 Barrels to Refresh Workouts)",
+      "publisher": "Merrithew",
+      "apparatus": "래더바렐 지지 · 저작 적응",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2014-10-31/beat-client-boredom-3-barrels-to-refresh-pilates-workouts",
+        "checkedAt": "2026-11-07T11:52:30.106Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2014-10-31/beat-client-boredom-3-barrels-to-refresh-pilates-workouts",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.ruh.nhs.uk/patients/patient_information/PHY033_Hip_strengthening_exercises.pdf",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "ladder-supported-side-leg-slide",
+      "title": "래더 지지 옆 슬라이드 · 저작 적응 (Royal United Hospitals Bath NHS Foundation Trust · Hip strengthening exercises)",
+      "publisher": "Royal United Hospitals Bath NHS Foundation Trust",
+      "apparatus": "래더바렐 지지 · 저작 적응",
+      "probe": {
+        "url": "https://www.ruh.nhs.uk/patients/patient_information/PHY033_Hip_strengthening_exercises.pdf",
+        "checkedAt": "2026-11-07T11:52:30.106Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.ruh.nhs.uk/patients/patient_information/PHY033_Hip_strengthening_exercises.pdf",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://s3.amazonaws.com/s3.pilates.com/User%20Guides/17656_UG_ladder_barrel%20FINAL%20web%207-23-24.pdf",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "ladder-supported-side-leg-slide",
+      "title": "래더 지지 옆 슬라이드 · 저작 적응 (Balanced Body Inc. · The Balanced Body Ladder Barrel)",
+      "publisher": "Balanced Body Inc.",
+      "apparatus": "래더바렐 지지 · 저작 적응",
+      "probe": {
+        "url": "https://s3.amazonaws.com/s3.pilates.com/User%20Guides/17656_UG_ladder_barrel%20FINAL%20web%207-23-24.pdf",
+        "checkedAt": "2026-11-07T11:52:30.106Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://s3.amazonaws.com/s3.pilates.com/User%20Guides/17656_UG_ladder_barrel%20FINAL%20web%207-23-24.pdf",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.merrithew.com/blog/post/2014-10-31/beat-client-boredom-3-barrels-to-refresh-pilates-workouts",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "ladder-supported-side-leg-slide",
+      "title": "래더 지지 옆 슬라이드 · 저작 적응 (Merrithew · Beat Client Boredom: 3 Barrels to Refresh Workouts)",
+      "publisher": "Merrithew",
+      "apparatus": "래더바렐 지지 · 저작 적응",
+      "probe": {
+        "url": "https://www.merrithew.com/blog/post/2014-10-31/beat-client-boredom-3-barrels-to-refresh-pilates-workouts",
+        "checkedAt": "2026-11-07T11:52:30.106Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.merrithew.com/blog/post/2014-10-31/beat-client-boredom-3-barrels-to-refresh-pilates-workouts",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.harvardhealth.org/healthy-aging-and-longevity/simple-core-strengtheners-for-every-day-of-the-week",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "floor-seated-band-row",
+      "title": "바닥 앉은 긴 밴드 로우 (Harvard Health Publishing · Simple core strengtheners for every day of the week)",
+      "publisher": "Harvard Health Publishing",
+      "apparatus": "매트, 긴 탄성밴드",
+      "probe": {
+        "url": "https://www.harvardhealth.org/healthy-aging-and-longevity/simple-core-strengtheners-for-every-day-of-the-week",
+        "checkedAt": "2026-11-07T11:52:30.106Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.harvardhealth.org/healthy-aging-and-longevity/simple-core-strengtheners-for-every-day-of-the-week",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "supine-chest-lift",
+      "title": "누워 가슴 들기 · 분절 도해 (BASI Pilates · 10 Essential Pilates Exercises for Beginners)",
+      "publisher": "BASI Pilates",
+      "apparatus": "매트",
+      "probe": {
+        "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+        "checkedAt": "2026-11-07T11:52:30.106Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "articulated-pelvic-curl",
+      "title": "분절 골반 말기 · 저작 도해 (BASI Pilates · 10 Essential Pilates Exercises for Beginners)",
+      "publisher": "BASI Pilates",
+      "apparatus": "매트",
+      "probe": {
+        "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+        "checkedAt": "2026-11-07T11:52:30.106Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.uhsussex.nhs.uk/resources/chair-exercises-with-seated-arm-exercises/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "chair-seated-bilateral-arm-raise-v1",
+      "title": "일반 의자 · 양팔 앞·위 리치 (University Hospitals Sussex NHS Foundation Trust · Chair exercises (with seated arm exercises) · Lift your arms above your head)",
+      "publisher": "University Hospitals Sussex NHS Foundation Trust",
+      "apparatus": "일반 고정 의자",
+      "probe": {
+        "url": "https://www.uhsussex.nhs.uk/resources/chair-exercises-with-seated-arm-exercises/",
+        "checkedAt": "2026-11-07T11:52:30.106Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.uhsussex.nhs.uk/resources/chair-exercises-with-seated-arm-exercises/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.leicspart.nhs.uk/wp-content/uploads/2022/07/134-Falls-service-stretching-and-strengthening-exercises-edition-5.pdf",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "chair-seated-overhead-sidebend-v1",
+      "title": "일반 의자 · 한 팔 위 옆굽힘 (Leicestershire Partnership NHS Trust · Community Falls Service · Seated stretching and strengthening exercises for the whole body · Trunk stretch)",
+      "publisher": "Leicestershire Partnership NHS Trust",
+      "apparatus": "일반 고정 의자",
+      "probe": {
+        "url": "https://www.leicspart.nhs.uk/wp-content/uploads/2022/07/134-Falls-service-stretching-and-strengthening-exercises-edition-5.pdf",
+        "checkedAt": "2026-11-07T11:52:30.107Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.leicspart.nhs.uk/wp-content/uploads/2022/07/134-Falls-service-stretching-and-strengthening-exercises-edition-5.pdf",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.rnoh.nhs.uk/patients-and-visitors/patient-information-guides/functional-fitness-exercise-pack",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "prone-single-straight-leg-extension-v1",
+      "title": "엎드림 · 한쪽 편 다리 들기 (Royal National Orthopaedic Hospital NHS Trust · Functional Fitness Exercise Pack · Posterior Chain · Prone hip extension)",
+      "publisher": "Royal National Orthopaedic Hospital NHS Trust",
+      "apparatus": "매트",
+      "probe": {
+        "url": "https://www.rnoh.nhs.uk/patients-and-visitors/patient-information-guides/functional-fitness-exercise-pack",
+        "checkedAt": "2026-11-07T11:52:31.952Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.rnoh.nhs.uk/patients-and-visitors/patient-information-guides/functional-fitness-exercise-pack",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://northcheshireandmersey.nhs.uk/media/4lnldy0f/lower-back-range-of-motion-exercises-patient-advice-sheet.pdf",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "prone-forearm-chest-extension-v1",
+      "title": "엎드림 · 팔뚝 지지 가슴 들기 (North Cheshire and Mersey NHS · Musculoskeletal Physiotherapy OCATS · Low Back Mobility Exercises · Level 1 Prone Lumbar Extension on Forearms)",
+      "publisher": "North Cheshire and Mersey NHS",
+      "apparatus": "매트",
+      "probe": {
+        "url": "https://northcheshireandmersey.nhs.uk/media/4lnldy0f/lower-back-range-of-motion-exercises-patient-advice-sheet.pdf",
+        "checkedAt": "2026-11-07T11:52:31.953Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://northcheshireandmersey.nhs.uk/media/4lnldy0f/lower-back-range-of-motion-exercises-patient-advice-sheet.pdf",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "supine-single-leg-reach-v1",
+      "title": "싱글 레그 · 가슴 든 한쪽 뻗기 (BASI · 싱글 레그 스트레치 공개 본문)",
+      "publisher": "BASI",
+      "apparatus": "매트",
+      "probe": {
+        "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+        "checkedAt": "2026-11-07T11:52:30.106Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.basipilates.com/terms-and-conditions/",
+      "sourceCatalog": "MOTION_PATTERN_REFERENCES",
+      "refId": "supine-single-leg-reach-v1",
+      "title": "싱글 레그 · 가슴 든 한쪽 뻗기 (BASI · 원문 이용 조건)",
+      "publisher": "BASI",
+      "apparatus": "매트",
+      "probe": {
+        "url": "https://www.basipilates.com/terms-and-conditions/",
+        "checkedAt": "2026-11-07T11:52:31.953Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.basipilates.com/terms-and-conditions/",
+        "oembedTitle": null,
+        "oembedAuthor": null
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DK56Z12XNQ5c&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-warmup-01 (K56Z12XNQ5c)",
+      "title": "Reformer & Mat Warm-up Breath & Pelvic Imprint Flow",
+      "publisher": "Move With Nicole · Studio Reference",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DK56Z12XNQ5c&format=json",
+        "checkedAt": "2026-11-07T11:52:31.953Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DK56Z12XNQ5c&format=json",
+        "oembedTitle": "30 MIN FULL BODY WORKOUT | At-Home Pilates",
+        "oembedAuthor": "Move With Nicole"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DC2HX2pNbUCM&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-warmup-02 (C2HX2pNbUCM)",
+      "title": "Cadillac Roll-Down Bar & Spine Articulation Essentials",
+      "publisher": "Balanced Body Education",
+      "apparatus": "cadillac",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DC2HX2pNbUCM&format=json",
+        "checkedAt": "2026-11-07T11:52:31.953Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DC2HX2pNbUCM&format=json",
+        "oembedTitle": "30 MIN FULL BODY WORKOUT || At-Home Pilates (No Equipment)",
+        "oembedAuthor": "Move With Nicole"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DsTANio_2E0Q&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-warmup-03 (sTANio_2E0Q)",
+      "title": "Foam Roller Pilates Warmup & Chest Opener Sequence",
+      "publisher": "Jessica Valant Pilates",
+      "apparatus": "mat",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DsTANio_2E0Q&format=json",
+        "checkedAt": "2026-11-07T11:52:31.953Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DsTANio_2E0Q&format=json",
+        "oembedTitle": "20 min Full Body STRETCH/YOGA for STRESS & ANXIETY Relief",
+        "oembedAuthor": "MadFit"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DlCg_gh_fppI&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-footwork-01 (lCg_gh_fppI)",
+      "title": "50-Minute Reformer Footwork & Ball Variations",
+      "publisher": "gone adventuring Pilates",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DlCg_gh_fppI&format=json",
+        "checkedAt": "2026-11-07T11:52:31.954Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DlCg_gh_fppI&format=json",
+        "oembedTitle": "POP Pilates for Beginners - Total Body Workout",
+        "oembedAuthor": "blogilates"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DUItWltVZZmE&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-footwork-02 (UItWltVZZmE)",
+      "title": "Magic Circle Reformer Footwork & Hip Stabilizer Flow",
+      "publisher": "Pilates Anytime Studio",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DUItWltVZZmE&format=json",
+        "checkedAt": "2026-11-07T11:52:31.954Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DUItWltVZZmE&format=json",
+        "oembedTitle": "20 MIN FULL BODY WORKOUT - Beginner Version // No Equipment I Pamela Reif",
+        "oembedAuthor": "Pamela Reif"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dg_tea8ZNk5A&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-footwork-03 (g_tea8ZNk5A)",
+      "title": "Stability Chair Seated Footwork & Torso Alignment",
+      "publisher": "Merrithew Stott Pilates",
+      "apparatus": "chair",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dg_tea8ZNk5A&format=json",
+        "checkedAt": "2026-11-07T11:52:32.989Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dg_tea8ZNk5A&format=json",
+        "oembedTitle": "15 Min. Full Body Stretch | Daily Routine for Flexibility, Mobility & Relaxation | DAY 7",
+        "oembedAuthor": "Mady Morrison"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dv7AYKMP6rOE&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-bridging-01 (v7AYKMP6rOE)",
+      "title": "Reformer Bridging Variations & Posterior Chain Control",
+      "publisher": "Nell Hoess Pilates",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dv7AYKMP6rOE&format=json",
+        "checkedAt": "2026-11-07T11:52:32.990Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dv7AYKMP6rOE&format=json",
+        "oembedTitle": "Yoga For Complete Beginners - 20 Minute Home Yoga Workout!",
+        "oembedAuthor": "Yoga With Adriene"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D4pKly2JojMw&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-bridging-02 (4pKly2JojMw)",
+      "title": "Cadillac Tower Bridge & Articulation Flow",
+      "publisher": "Korin Nolan · The Class Plan",
+      "apparatus": "cadillac",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D4pKly2JojMw&format=json",
+        "checkedAt": "2026-11-07T11:52:32.990Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D4pKly2JojMw&format=json",
+        "oembedTitle": "10 min Morning Yoga Full Body Stretch - Yoga with Kassandra",
+        "oembedAuthor": "Yoga with Kassandra"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dinpok4MKVLM&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-core-01 (inpok4MKVLM)",
+      "title": "Reformer Abs in Straps: Hundred, Coordination & Oblique Criss-Cross",
+      "publisher": "Dez Fit · Reformer Flows",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dinpok4MKVLM&format=json",
+        "checkedAt": "2026-11-07T11:52:32.990Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dinpok4MKVLM&format=json",
+        "oembedTitle": "5-Minute Meditation You Can Do Anywhere | Goodful",
+        "oembedAuthor": "Goodful"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D1f8yoFFdkcY&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-core-02 (1f8yoFFdkcY)",
+      "title": "Short Box Abdominal Series & Oblique Sculpt on Reformer",
+      "publisher": "Alo Moves Pilates",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D1f8yoFFdkcY&format=json",
+        "checkedAt": "2026-11-07T11:52:32.990Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D1f8yoFFdkcY&format=json",
+        "oembedTitle": "10 MIN BEGINNER AB WORKOUT // No Equipment | Pamela Reif",
+        "oembedAuthor": "Pamela Reif"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DbTo4NrSriWw&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-core-03 (bTo4NrSriWw)",
+      "title": "Classical Pilates Series of 5 Core Burn Routine",
+      "publisher": "Lottie Murphy Pilates",
+      "apparatus": "mat",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DbTo4NrSriWw&format=json",
+        "checkedAt": "2026-11-07T11:52:32.990Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DbTo4NrSriWw&format=json",
+        "oembedTitle": "20 MIN FULL BODY WORKOUT (Intense Routine, No Equipment)",
+        "oembedAuthor": "TRAIN WITH GAINSBYBRAINS"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D9h__STRp5dA&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-kr-reformer-01 (9h__STRp5dA)",
+      "title": "리포머 50분 풀시퀀스 실전 티칭 루틴",
+      "publisher": "정혜선 · 공부하는 필라테스 원장 (KR)",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D9h__STRp5dA&format=json",
+        "checkedAt": "2026-11-07T11:52:32.990Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D9h__STRp5dA&format=json",
+        "oembedTitle": "리포머 50분 풀시퀀스",
+        "oembedAuthor": "정혜선"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DE_K5eAr-D5M&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-kr-cadillac-01 (E_K5eAr-D5M)",
+      "title": "캐딜락시퀀스 | 강사레슨 50분수업 | 힘들고 재밌고 알차게🌸",
+      "publisher": "단필라 (KR)",
+      "apparatus": "cadillac",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DE_K5eAr-D5M&format=json",
+        "checkedAt": "2026-11-07T11:52:32.991Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DE_K5eAr-D5M&format=json",
+        "oembedTitle": "캐딜락시퀀스 | 강사레슨 50분수업 | 힘들고 재밌고 알차게🌸",
+        "oembedAuthor": "단필라"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DJ-kF8o1WJoI&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-kr-reformer-02 (J-kF8o1WJoI)",
+      "title": "🌶 리포머 50분 시퀀스 🌶 매운맛 🔥 Reformer advanced sequence 🔥",
+      "publisher": "필라테스 지영쌤 (KR)",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DJ-kF8o1WJoI&format=json",
+        "checkedAt": "2026-11-07T11:52:33.128Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DJ-kF8o1WJoI&format=json",
+        "oembedTitle": "🌶 리포머 50분 시퀀스 🌶 매운맛 🔥 Reformer advanced sequence 🔥",
+        "oembedAuthor": "필라테스 지영쌤"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dl3WQl2L__qQ&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-kr-barrel-01 (l3WQl2L__qQ)",
+      "title": "[기구필라테스] 바렐 볼 시퀀스 지루할 틈이 없는 50분 수업!",
+      "publisher": "혀니쌤 플라잉요가&필라테스 (KR)",
+      "apparatus": "barrel",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dl3WQl2L__qQ&format=json",
+        "checkedAt": "2026-11-07T11:52:33.128Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dl3WQl2L__qQ&format=json",
+        "oembedTitle": "[기구필라테스] 바렐 볼 시퀀스 지루할 틈이 없는 50분 수업! 근력 빵빵하게 채워봐요!",
+        "oembedAuthor": "혀니쌤 플라잉요가&필라테스"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DwNRfJ45tDDo&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-kr-reformer-03 (wNRfJ45tDDo)",
+      "title": "[기구필라테스] 리포머 50분 풀 시퀀스! 여름대비 팔뚝라인 다져주는 동작들",
+      "publisher": "혀니쌤 플라잉요가&필라테스 (KR)",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DwNRfJ45tDDo&format=json",
+        "checkedAt": "2026-11-07T11:52:33.128Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DwNRfJ45tDDo&format=json",
+        "oembedTitle": "[기구필라테스]리포머 50분 풀 시퀀스! 여름대비 팔뚝라인 다져주는 동작들 가져왔습니다🌞",
+        "oembedAuthor": "혀니쌤 플라잉요가&필라테스"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DpmwYs3uqhWc&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-kr-chair-01 (pmwYs3uqhWc)",
+      "title": "필라테스 체어 시퀀스ㅣ체어에서 플랭크 동작으로 복부 엉덩이를 한번에!",
+      "publisher": "Today sequence (KR)",
+      "apparatus": "chair",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DpmwYs3uqhWc&format=json",
+        "checkedAt": "2026-11-07T11:52:33.128Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DpmwYs3uqhWc&format=json",
+        "oembedTitle": "필라테스 체어 시퀀스ㅣ체어에서 플랭크 동작으로 복부 엉덩이를 한번에!/plank on pilates chair abs & glue workout",
+        "oembedAuthor": "Today sequence"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DIKIjw-5-AmI&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-kr-reformer-04 (IKIjw-5-AmI)",
+      "title": "상·하체를 단단하게 연결하는 리포머 시퀀스 30분ㅣ쉼 없이 이어지는 자연스러운 빌드업",
+      "publisher": "유진쌤 움직임 회복 필라테스 (KR)",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DIKIjw-5-AmI&format=json",
+        "checkedAt": "2026-11-07T11:52:33.128Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DIKIjw-5-AmI&format=json",
+        "oembedTitle": "상·하체를 단단하게 연결하는 리포머 시퀀스 30분ㅣ쉼 없이 이어지는 자연스러운 빌드업",
+        "oembedAuthor": "유진쌤 움직임 회복 필라테스"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DtU8cPEKkLSM&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-kr-cadillac-02 (tU8cPEKkLSM)",
+      "title": "[Pilates] 캐딜락 50분 시퀀스 | 전신 골고루 자극 주기",
+      "publisher": "서아앤헤이즐 | Seoah and Hazel (KR)",
+      "apparatus": "cadillac",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DtU8cPEKkLSM&format=json",
+        "checkedAt": "2026-11-07T11:52:33.128Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DtU8cPEKkLSM&format=json",
+        "oembedTitle": "[Pilates] 캐딜락 50분 시퀀스 | 전신 골고루 자극 주기 | 다양한 동작으로 풍성하게 수업해요💪",
+        "oembedAuthor": "서아앤헤이즐 | Seoah and Hazel"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DXMHUw3EhBlI&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-global-reformer-01 (XMHUw3EhBlI)",
+      "title": "Pilates Reformer Workout | Full Body | 45 min (Intermediate)",
+      "publisher": "Dez Fit (Global)",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DXMHUw3EhBlI&format=json",
+        "checkedAt": "2026-11-07T11:52:33.128Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DXMHUw3EhBlI&format=json",
+        "oembedTitle": "Pilates Reformer Workout | Full Body | 45 min (Intermediate)",
+        "oembedAuthor": "Dez Fit"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D1WDNTwAUjIw&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-global-reformer-02 (1WDNTwAUjIw)",
+      "title": "15 min Pilates Core Flow That Feels Like Wearing a Corset for Your Spine",
+      "publisher": "Flow with Mira · BASI Faculty (Global)",
+      "apparatus": "mat",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D1WDNTwAUjIw&format=json",
+        "checkedAt": "2026-11-07T11:52:33.128Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D1WDNTwAUjIw&format=json",
+        "oembedTitle": "15 min Pilates Core Flow That Feels Like Wearing a Corset for Your Spine",
+        "oembedAuthor": "Flow with Mira"
+      }
+    },
+    {
+      "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DsTYt4di0zzU&format=json",
+      "sourceCatalog": "INITIAL_EXERCISES_DIRECT_YOUTUBE_OEMBED",
+      "refId": "ex-global-reformer-03 (sTYt4di0zzU)",
+      "title": "Pilates Fundamentals: Beginner Reformer Strength & Stretch Routine",
+      "publisher": "Balanced Body Official (Global)",
+      "apparatus": "reformer",
+      "probe": {
+        "url": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DsTYt4di0zzU&format=json",
+        "checkedAt": "2026-11-07T11:52:33.223Z",
+        "httpStatus": 200,
+        "ok": true,
+        "finalUrl": "https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DsTYt4di0zzU&format=json",
+        "oembedTitle": "Pilates Fundamentals: Beginner Reformer Strength & Stretch Routine - Exercise Break",
+        "oembedAuthor": "Balanced Body"
+      }
+    }
+  ]
+}
