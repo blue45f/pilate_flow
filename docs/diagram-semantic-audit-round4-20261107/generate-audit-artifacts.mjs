@@ -182,19 +182,9 @@ async function main() {
   const mdPath = path.join(AUDIT_DIR, 'GROUP_INVENTORY_AND_MISMATCH_TABLE.md');
   fs.writeFileSync(mdPath, buildMarkdownReport(analysis), 'utf8');
 
-  const patchPath = path.join(
-    AUDIT_DIR,
-    'patches/minimal-semantic-differentiation-proposal.patch',
-  );
-  fs.writeFileSync(patchPath, buildPatchContent(), 'utf8');
-
-  // Verify the candidate patch applies cleanly against current read-only src/data/movementVisualRigCatalog.ts
-  execFileSync('git', ['apply', '--check', patchPath], { cwd: REPO_ROOT });
-
-  console.log('Generated artifacts successfully:');
+  console.log('Generated post-fix artifacts successfully:');
   console.log(' -', path.relative(REPO_ROOT, jsonPath));
   console.log(' -', path.relative(REPO_ROOT, mdPath));
-  console.log(' -', path.relative(REPO_ROOT, patchPath), '(git apply --check PASSED)');
 }
 
 main().catch((err) => {

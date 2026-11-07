@@ -4666,9 +4666,729 @@ function resolveSeparatedApparatusContactBlueprint(
   return null;
 }
 
+
+interface SemanticOverrideSpec {
+  readonly archetypeId: string;
+  readonly archetypeTitleKo: string;
+  readonly baseArchetypeId: string;
+  readonly fixedAnchorJoints: readonly { joint: keyof RigJointMap; defaultSurfaceKo: string }[];
+  readonly movingJoints: readonly (keyof RigJointMap)[];
+  readonly startJoints: RigJointMap;
+  readonly middleJoints: RigJointMap;
+  readonly endJoints: RigJointMap;
+  readonly carriageOffsets: readonly [number, number, number];
+  readonly pedalAngles: readonly [number, number, number];
+  readonly phaseTitlesKo: readonly [string, string, string];
+  readonly startToMiddleKo: string;
+  readonly middleToEndKo: string;
+  readonly invariantAnchorsKo: string;
+  readonly keyJointChangeKo: string;
+  readonly middleVectorLabelKo: string;
+  readonly middleVectorKind: MovementDirectionVector['kind'];
+  readonly middleVectorPoints: readonly Point2D[];
+  readonly endVectorLabelKo: string;
+  readonly endVectorPoints: readonly Point2D[];
+}
+
+function buildSemanticOverrideBlueprint(spec: SemanticOverrideSpec): ArchetypeRigBlueprint {
+  const base = ARCHETYPE_BY_ID.get(spec.baseArchetypeId)!;
+  return {
+    ...base,
+    archetypeId: spec.archetypeId,
+    archetypeTitleKo: spec.archetypeTitleKo,
+    fixedAnchorJoints: spec.fixedAnchorJoints,
+    movingJoints: spec.movingJoints,
+    startJoints: spec.startJoints,
+    middleJoints: spec.middleJoints,
+    endJoints: spec.endJoints,
+    carriageOffsets: spec.carriageOffsets,
+    pedalAngles: spec.pedalAngles,
+    phaseTitlesKo: spec.phaseTitlesKo,
+    directionVectors: {
+      start: base.directionVectors.start,
+      middle: [
+        {
+          id: `vec-${spec.archetypeId}-mid`,
+          labelKo: spec.middleVectorLabelKo,
+          kind: spec.middleVectorKind,
+          points: spec.middleVectorPoints,
+          phaseScope: "start-to-middle",
+        },
+      ],
+      end: [
+        {
+          id: `vec-${spec.archetypeId}-end`,
+          labelKo: spec.endVectorLabelKo,
+          kind: "return-control",
+          points: spec.endVectorPoints,
+          phaseScope: "middle-to-end",
+        },
+      ],
+    },
+    poseDeltaSummary: {
+      startToMiddleKo: spec.startToMiddleKo,
+      middleToEndKo: spec.middleToEndKo,
+      invariantAnchorsKo: spec.invariantAnchorsKo,
+      keyJointChangeKo: spec.keyJointChangeKo,
+    },
+  };
+}
+
+/**
+ * Round 4 Semantic Audit minimal blueprint differentiation for clear-evidence mismatches (SM-01..SM-09).
+ * Note: 4 pure breath-observation items (original-mat-rib-breath, original-cadillac-table-breath,
+ * original-chair-seated-breath, original-barrel-standing-breath) are intentionally left unmodified
+ * because catalog cues do not specify limb trajectory coordinates.
+ * Clinical/anatomical accuracy is NOT assumed (anatomicalAccuracyAssumed: false).
+ */
+function resolveSeparatedSemanticMismatchBlueprint(
+  exercise: PilatesExercise,
+): ArchetypeRigBlueprint | null {
+  // SM-08A: Chair Seated Knee Lift (upward knee lift with stationary pedal vs downward pedal press)
+  if (exercise.id === "original-chair-seated-knee-lift") {
+    const startJoints = makeJointMap({
+      head: { x: 132, y: 26 }, neck: { x: 132, y: 40 }, shoulder: { x: 132, y: 54 },
+      elbow: { x: 124, y: 80 }, wrist: { x: 128, y: 102 }, hand: { x: 132, y: 106 },
+      thoracic: { x: 132, y: 72 }, lumbar: { x: 132, y: 90 }, pelvis: { x: 132, y: 108 },
+      hip: { x: 140, y: 108 }, knee: { x: 184, y: 126 }, ankle: { x: 188, y: 170 },
+      heel: { x: 182, y: 176 }, toe: { x: 200, y: 176 },
+      farHip: { x: 140, y: 108 }, farKnee: { x: 182, y: 128 }, farAnkle: { x: 184, y: 172 }, farToe: { x: 196, y: 176 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      knee: { x: 174, y: 88 }, ankle: { x: 184, y: 132 }, heel: { x: 178, y: 138 }, toe: { x: 196, y: 136 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      knee: { x: 182, y: 120 }, ankle: { x: 187, y: 164 }, heel: { x: 181, y: 170 }, toe: { x: 199, y: 170 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "chair-seated-knee-lift-isolated",
+      archetypeTitleKo: "체어 시티드 니 리프트 · 시트 좌골 고정 & 단측 무릎 상방 리프트 분리",
+      baseArchetypeId: "chair-seated-pedal-footwork",
+      fixedAnchorJoints: [
+        { joint: "pelvis", defaultSurfaceKo: "체어 시트 상단 좌골 수직 지지점 (132,108)" },
+        { joint: "farAnkle", defaultSurfaceKo: "바닥 지지측 발목 고정점 (184,172 · 페달 미사용)" },
+      ],
+      movingJoints: ["hip", "knee", "ankle", "heel", "toe"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["체어 시트 수직 착석 & 양발 바닥 지지 준비", "골반 수평 유지 · 단측 무릎 상방 리프트 정점", "지지측 흔들림 없이 발바닥 바닥 감속 착지"],
+      startToMiddleKo: "체어 시트(132,108)와 바닥 지지 발(farAnkle: 184,172)을 고정한 채 가동 무릎(184,126→174,88)과 발목(188,170→184,132)을 위로 들어 올립니다.",
+      middleToEndKo: "움직이는 페달을 밟지 않고 코어 제어로 무릎(174,88→182,120)과 발목을 바닥 쪽으로 감속 하강합니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "체어 시트 좌골(pelvis: 132,108)과 바닥 지지 다리(farAnkle: 184,172)가 고정됩니다.",
+      keyJointChangeKo: "페달 하방 프레스와 분리된 단측 고관절 굴곡·무릎 상방 리프트(knee dy -38px · 2D 개략도)",
+      middleVectorLabelKo: "단측 무릎 상방 리프트 (y:126→88)",
+      middleVectorKind: "limb-excursion",
+      middleVectorPoints: [pt(184, 126), pt(174, 88)],
+      endVectorLabelKo: "바닥 지지점 방향 감속 착지",
+      endVectorPoints: [pt(174, 88), pt(182, 120)],
+    });
+  }
+
+  // SM-08B: Barrel Standing Side Leg Reach (straight-leg lateral abduction vs flexed-knee hip extension)
+  if (exercise.id === "original-barrel-standing-side-reach") {
+    const startJoints = makeJointMap({
+      head: { x: 140, y: 38 }, neck: { x: 140, y: 54 }, shoulder: { x: 140, y: 70 },
+      elbow: { x: 116, y: 84 }, wrist: { x: 96, y: 80 }, hand: { x: 88, y: 76 },
+      thoracic: { x: 140, y: 90 }, lumbar: { x: 140, y: 110 }, pelvis: { x: 140, y: 126 },
+      hip: { x: 144, y: 128 }, knee: { x: 148, y: 150 }, ankle: { x: 152, y: 170 },
+      heel: { x: 148, y: 174 }, toe: { x: 162, y: 174 },
+      farHip: { x: 138, y: 128 }, farKnee: { x: 138, y: 152 }, farAnkle: { x: 138, y: 172 }, farToe: { x: 148, y: 174 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      knee: { x: 184, y: 126 }, ankle: { x: 228, y: 118 }, heel: { x: 222, y: 122 }, toe: { x: 238, y: 116 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      knee: { x: 154, y: 146 }, ankle: { x: 160, y: 166 }, heel: { x: 156, y: 170 }, toe: { x: 170, y: 170 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "barrel-standing-side-reach-isolated",
+      archetypeTitleKo: "래더 바렐 스탠딩 사이드 레그 리치 · 사다리 손 지지 & 직선 다리 외전 분리",
+      baseArchetypeId: "standing-scooter-lunge-splits",
+      fixedAnchorJoints: [
+        { joint: "hand", defaultSurfaceKo: "래더 바렐 사다리 상단 가로대 손 파지점 (88,76)" },
+        { joint: "farAnkle", defaultSurfaceKo: "바렐 외측 바닥 지지 다리 발목 고정점 (138,172)" },
+      ],
+      movingJoints: ["hip", "knee", "ankle", "heel", "toe"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["래더 가로대 손 지지 & 수직 기립 준비", "몸통 수직 유지 · 바깥 다리 직선 외전(Side Reach) 정점", "중둔근 편심성 제어로 지지 다리 옆 모으기"],
+      startToMiddleKo: "사다리 가로대 손 지지(88,76)와 몸통 수직 축(x:140)을 유지한 채 무릎을 편 바깥 다리를 옆·위로 길게 들어 올립니다(ankle: 152,170→228,118).",
+      middleToEndKo: "골반 기울어짐 없이 외전된 다리를 천천히 내전하여 시작 자세 근처(ankle: 160,166)로 모읍니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "사다리 가로대 손(hand: 88,76), 수직 몸통(head/thoracic/pelvis x:140), 바닥 지지 발(farAnkle: 138,172)이 고정됩니다.",
+      keyJointChangeKo: "후방 힙 익스텐션과 분리된 무릎 신전 관상면 외전 리치(ankle: 228,118 · 2D 개략도)",
+      middleVectorLabelKo: "바깥 다리 직선 외전 리치 (152,170→228,118)",
+      middleVectorKind: "limb-excursion",
+      middleVectorPoints: [pt(152, 170), pt(228, 118)],
+      endVectorLabelKo: "외전 다리 감속 내전 복귀",
+      endVectorPoints: [pt(228, 118), pt(160, 166)],
+    });
+  }
+
+  // SM-07A: Barrel Side-Lying Side Bend / Side Sit-Up (draped over barrel dome + feet on ladder rungs vs floor Z-Sit)
+  if (
+    exercise.id === "original-barrel-supported-side-bend" ||
+    exercise.id === "ex-kr-barrel-01"
+  ) {
+    const startJoints = makeJointMap({
+      head: { x: 52, y: 88 }, neck: { x: 64, y: 94 }, shoulder: { x: 76, y: 100 },
+      elbow: { x: 62, y: 74 }, wrist: { x: 48, y: 66 }, hand: { x: 40, y: 62 },
+      thoracic: { x: 90, y: 106 }, lumbar: { x: 108, y: 112 }, pelvis: { x: 126, y: 116 },
+      hip: { x: 136, y: 118 }, knee: { x: 182, y: 126 }, ankle: { x: 228, y: 132 },
+      heel: { x: 224, y: 136 }, toe: { x: 238, y: 130 },
+      farShoulder: { x: 80, y: 104 }, farElbow: { x: 68, y: 82 }, farWrist: { x: 54, y: 72 },
+      farKnee: { x: 184, y: 132 }, farAnkle: { x: 242, y: 142 }, farToe: { x: 252, y: 140 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      head: { x: 84, y: 32 }, neck: { x: 90, y: 46 }, shoulder: { x: 96, y: 60 },
+      elbow: { x: 82, y: 38 }, wrist: { x: 74, y: 24 }, hand: { x: 70, y: 18 },
+      thoracic: { x: 104, y: 78 }, lumbar: { x: 114, y: 98 },
+      farShoulder: { x: 100, y: 66 }, farElbow: { x: 90, y: 46 }, farWrist: { x: 82, y: 32 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      head: { x: 56, y: 74 }, neck: { x: 68, y: 82 }, shoulder: { x: 80, y: 90 },
+      elbow: { x: 66, y: 62 }, wrist: { x: 52, y: 52 }, hand: { x: 44, y: 48 },
+      thoracic: { x: 94, y: 98 }, lumbar: { x: 110, y: 108 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "barrel-side-lying-side-bend-isolated",
+      archetypeTitleKo: "래더 바렐 사이드라잉 사이드 벤드 · 바렐 아치 골반 지지 & 래더 발 고정 분리",
+      baseArchetypeId: "lateral-mermaid-side-bend",
+      fixedAnchorJoints: [
+        { joint: "pelvis", defaultSurfaceKo: "바렐 아치 상단 측면 골반 지지점 (126,116)" },
+        { joint: "ankle", defaultSurfaceKo: "래더 가로대 위·아래 발 걸기 고정점 (228,132 / 242,142)" },
+      ],
+      movingJoints: ["head", "neck", "shoulder", "thoracic", "lumbar", "elbow", "wrist", "hand"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["바렐 아치 측면 골반 지지 & 사다리 발 걸기 사선 준비", "위쪽 복사근 수축 · 사이드 시트업 측굴 리프트 정점", "바렐 곡선을 따라 긴 사선 지지선으로 제어 복귀"],
+      startToMiddleKo: "바렐 아치 상단(pelvis: 126,116)과 우측 사다리 가로대 발 지지(ankle: 228,132)를 고정한 채 상체(head: 52,88→84,32)를 옆구리 힘으로 들어 올립니다.",
+      middleToEndKo: "측면 복사근 편심성 제어로 상체를 바렐 곡선 사선 정렬(head: 56,74)로 내려놓습니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "바렐 아치 위 골반(pelvis: 126,116)과 사다리 가로대에 건 양발(ankle: 228,132, farAnkle: 242,142)이 고정됩니다.",
+      keyJointChangeKo: "바닥 Z-Sit 착석과 분리된 바렐 아치 측면 지지 + 사다리 발 고정 측굴 리프트(2D 개략도)",
+      middleVectorLabelKo: "사이드라잉 상체 측굴 리프트 (head 52,88→84,32)",
+      middleVectorKind: "spine-articulation",
+      middleVectorPoints: [pt(52, 88), pt(84, 32)],
+      endVectorLabelKo: "바렐 아치 사선 정렬 감속 복귀",
+      endVectorPoints: [pt(84, 32), pt(56, 74)],
+    });
+  }
+
+  // SM-07B: Barrel Standing Side Stretch (standing upright beside barrel vs floor Z-Sit)
+  if (exercise.id === "original-barrel-standing-side-stretch") {
+    const startJoints = makeJointMap({
+      head: { x: 148, y: 34 }, neck: { x: 148, y: 50 }, shoulder: { x: 148, y: 66 },
+      elbow: { x: 168, y: 50 }, wrist: { x: 176, y: 32 }, hand: { x: 180, y: 22 },
+      thoracic: { x: 148, y: 84 }, lumbar: { x: 148, y: 104 }, pelvis: { x: 148, y: 122 },
+      hip: { x: 148, y: 124 }, knee: { x: 148, y: 148 }, ankle: { x: 148, y: 170 },
+      heel: { x: 144, y: 174 }, toe: { x: 158, y: 174 },
+      farShoulder: { x: 138, y: 68 }, farElbow: { x: 114, y: 78 }, farWrist: { x: 96, y: 78 },
+      farKnee: { x: 140, y: 148 }, farAnkle: { x: 140, y: 170 }, farToe: { x: 150, y: 174 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      head: { x: 110, y: 40 }, neck: { x: 118, y: 54 }, shoulder: { x: 126, y: 68 },
+      elbow: { x: 118, y: 34 }, wrist: { x: 98, y: 26 }, hand: { x: 88, y: 24 },
+      thoracic: { x: 136, y: 84 }, lumbar: { x: 144, y: 104 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      elbow: { x: 164, y: 76 }, wrist: { x: 172, y: 94 }, hand: { x: 176, y: 104 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "barrel-standing-side-stretch-isolated",
+      archetypeTitleKo: "바렐 스탠딩 사이드 리치 · 양발 바닥 기립 & 오버헤드 측굴 스트레치 분리",
+      baseArchetypeId: "lateral-mermaid-side-bend",
+      fixedAnchorJoints: [
+        { joint: "ankle", defaultSurfaceKo: "바렐 옆 바닥 양발 수직 기립 지지점 (148,170)" },
+        { joint: "pelvis", defaultSurfaceKo: "양다리 위 수평 골반 고정축 (148,122)" },
+      ],
+      movingJoints: ["head", "neck", "shoulder", "thoracic", "elbow", "wrist", "hand"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["바렐 옆 양발 기립 & 반대 팔 상방 리치 준비", "하체 수직 고정 · 기구 방향 오버헤드 측굴 정점", "측면 늑간 이완 후 수직 기립 자세 복귀"],
+      startToMiddleKo: "양발(ankle: 148,170)로 바닥에 서서 골반(148,122)을 고정한 채 반대 팔(hand: 180,22→88,24)과 흉곽을 바렐 쪽으로 길게 측굴합니다.",
+      middleToEndKo: "골반과 하체 기둥을 흔들림 없이 유지하며 상체를 수직으로 세우고 팔(hand: 176,104)을 내립니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "바닥에 디딘 양발(ankle: 148,170)과 기립 골반(pelvis: 148,122)이 고정됩니다.",
+      keyJointChangeKo: "바닥 Z-Sit 착석과 분리된 양발 스탠딩 오버헤드 측굴(hand Δ92px · 2D 개략도)",
+      middleVectorLabelKo: "스탠딩 오버헤드 측굴 아크 (180,22→88,24)",
+      middleVectorKind: "spine-articulation",
+      middleVectorPoints: [pt(180, 22), pt(134, 18), pt(88, 24)],
+      endVectorLabelKo: "수직 기립 재적층 복귀",
+      endVectorPoints: [pt(88, 24), pt(176, 104)],
+    });
+  }
+
+  // SM-01A: Chair Seated Pelvic Rock (pelvis/lumbar tilt on chair seat with hands on thighs vs 80.5px arm row)
+  if (exercise.id === "original-chair-seated-pelvic-rock") {
+    const startJoints = makeJointMap({
+      head: { x: 132, y: 26 }, neck: { x: 132, y: 40 }, shoulder: { x: 132, y: 56 },
+      elbow: { x: 142, y: 82 }, wrist: { x: 152, y: 98 }, hand: { x: 158, y: 102 },
+      thoracic: { x: 132, y: 74 }, lumbar: { x: 132, y: 92 }, pelvis: { x: 132, y: 108 },
+      hip: { x: 140, y: 108 }, knee: { x: 182, y: 126 }, ankle: { x: 186, y: 170 },
+      heel: { x: 180, y: 176 }, toe: { x: 198, y: 176 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      head: { x: 126, y: 30 }, neck: { x: 124, y: 44 }, shoulder: { x: 124, y: 60 },
+      thoracic: { x: 120, y: 78 }, lumbar: { x: 116, y: 96 }, pelvis: { x: 124, y: 110 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      thoracic: { x: 136, y: 72 }, lumbar: { x: 137, y: 90 }, pelvis: { x: 136, y: 107 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "chair-seated-pelvic-rock-isolated",
+      archetypeTitleKo: "체어 시티드 골반 록 · 시트 착석 & 손 허벅지 고정 골반 틸트 분리",
+      baseArchetypeId: "seated-row-arm-arc",
+      fixedAnchorJoints: [
+        { joint: "hand", defaultSurfaceKo: "허벅지 위 손 가볍게 고정 (158,102)" },
+        { joint: "ankle", defaultSurfaceKo: "체어 앞 바닥 양발 평행 지지점 (186,170)" },
+      ],
+      movingJoints: ["pelvis", "lumbar", "thoracic", "head"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["체어 시트 좌골 수직 착석 & 양손 허벅지 지지", "날숨 골반 후방 록킹(Posterior Tilt) & 하부 요추 라운딩", "좌골 중심 복귀 및 중립 골반 세우기"],
+      startToMiddleKo: "양손(158,102)과 발(186,170)을 고정한 채 체어 시트 위에서 골반(132,108→124,110)과 요추(132,92→116,96)를 뒤로 부드럽게 굴립니다.",
+      middleToEndKo: "복부 지지로 골반과 요추(116,96→137,90)를 다시 좌골 수직 중심 위로 세워 복귀합니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "허벅지 위 양손(hand: 158,102)과 바닥에 둔 발목(ankle: 186,170)이 고정됩니다.",
+      keyJointChangeKo: "시티드 로잉 팔 당김을 제거한 순수 골반·요추 전후방 록킹(lumbar Δ16.5px · 2D 개략도)",
+      middleVectorLabelKo: "골반 후방 록킹 & 요추 굴곡 (132,92→116,96)",
+      middleVectorKind: "spine-articulation",
+      middleVectorPoints: [pt(132, 92), pt(116, 96)],
+      endVectorLabelKo: "좌골 중심 수직 복귀",
+      endVectorPoints: [pt(116, 96), pt(137, 90)],
+    });
+  }
+
+  // SM-01B: Chair Seated Back/Chest Reach (upper-thoracic extension on chair seat vs posterior arm row)
+  if (exercise.id === "original-chair-seated-back-reach") {
+    const startJoints = makeJointMap({
+      head: { x: 132, y: 26 }, neck: { x: 132, y: 40 }, shoulder: { x: 132, y: 56 },
+      elbow: { x: 144, y: 80 }, wrist: { x: 156, y: 94 }, hand: { x: 162, y: 98 },
+      thoracic: { x: 132, y: 74 }, lumbar: { x: 132, y: 92 }, pelvis: { x: 132, y: 108 },
+      hip: { x: 140, y: 108 }, knee: { x: 182, y: 126 }, ankle: { x: 186, y: 170 },
+      heel: { x: 180, y: 176 }, toe: { x: 198, y: 176 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      head: { x: 142, y: 20 }, neck: { x: 140, y: 36 }, shoulder: { x: 140, y: 52 },
+      elbow: { x: 154, y: 74 }, wrist: { x: 168, y: 84 }, hand: { x: 176, y: 86 },
+      thoracic: { x: 142, y: 68 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      head: { x: 136, y: 24 }, thoracic: { x: 136, y: 71 }, hand: { x: 166, y: 94 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "chair-seated-back-reach-isolated",
+      archetypeTitleKo: "체어 시티드 가슴 리치 · 좌골 지지 & 상부 흉추 전상방 신전 분리",
+      baseArchetypeId: "seated-row-arm-arc",
+      fixedAnchorJoints: [
+        { joint: "pelvis", defaultSurfaceKo: "체어 시트 상단 좌골 수직 지지점 (132,108)" },
+        { joint: "ankle", defaultSurfaceKo: "바닥 양발 평행 지지점 (186,170)" },
+      ],
+      movingJoints: ["thoracic", "shoulder", "neck", "head", "hand"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["체어 시트 좌골 지지 & 중립 척추 세팅", "들숨 흉골 전상방 리프트 · 상부 흉추 신전 정점", "허리 과신전 없이 수직 중립 정렬 복귀"],
+      startToMiddleKo: "좌골(132,108)과 요추(132,92)를 안정적으로 지지한 채 흉추(132,74→142,68)와 머리(132,26→142,20)를 앞·위로 길게 뻗어 가슴을 엽니다.",
+      middleToEndKo: "갈비뼈를 부드럽게 정돈하며 상부 흉추(142,68→136,71)가 중립 수직선으로 돌아옵니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "체어 시트 좌골(pelvis: 132,108), 요추(lumbar: 132,92), 바닥 양발(ankle: 186,170)이 고정됩니다.",
+      keyJointChangeKo: "후방 로잉 당김과 분리된 상부 흉추·흉골 전상방 신전 리치(thoracic Δ11.7px · 2D 개략도)",
+      middleVectorLabelKo: "흉골·상부 흉추 전상방 신전 리치",
+      middleVectorKind: "spine-articulation",
+      middleVectorPoints: [pt(132, 74), pt(142, 68), pt(142, 20)],
+      endVectorLabelKo: "상부 흉추 중립 정렬 복귀",
+      endVectorPoints: [pt(142, 68), pt(136, 71)],
+    });
+  }
+
+  // SM-02A: Supported Calf Raise with hands anchored on Barrel ladder or Chair frame (no 50.5px overhead arm swing)
+  if (
+    exercise.id === "original-barrel-supported-ankle" ||
+    exercise.id === "original-chair-supported-calf-raise"
+  ) {
+    const isBarrel = exercise.apparatus === "barrel";
+    const standX = isBarrel ? 146 : 84;
+    const handPt = isBarrel ? { x: 88, y: 76 } : { x: 116, y: 106 };
+    const wristPt = isBarrel ? { x: 96, y: 80 } : { x: 110, y: 104 };
+    const elbowPt = isBarrel ? { x: 118, y: 84 } : { x: 96, y: 92 };
+    const toeX = isBarrel ? 164 : 102;
+    const startJoints = makeJointMap({
+      head: { x: standX, y: 26 }, neck: { x: standX, y: 44 }, shoulder: { x: standX, y: 62 },
+      elbow: elbowPt, wrist: wristPt, hand: handPt,
+      thoracic: { x: standX, y: 84 }, lumbar: { x: standX, y: 102 }, pelvis: { x: standX, y: 116 },
+      hip: { x: standX, y: 118 }, knee: { x: standX + 2, y: 146 }, ankle: { x: standX + 2, y: 170 },
+      heel: { x: standX - 4, y: 174 }, toe: { x: toeX, y: 176 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      head: { x: standX + 2, y: 16 }, neck: { x: standX + 2, y: 34 }, shoulder: { x: standX + 2, y: 52 },
+      thoracic: { x: standX + 2, y: 74 }, lumbar: { x: standX + 2, y: 92 }, pelvis: { x: standX + 2, y: 106 },
+      hip: { x: standX + 2, y: 108 }, knee: { x: standX + 4, y: 136 }, ankle: { x: standX + 6, y: 158 },
+      heel: { x: standX, y: 160 }, toe: { x: toeX, y: 176 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      head: { x: standX + 1, y: 22 }, pelvis: { x: standX + 1, y: 112 },
+      ankle: { x: standX + 4, y: 165 }, heel: { x: standX - 2, y: 169 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: isBarrel ? "barrel-supported-ankle-isolated" : "chair-supported-calf-raise-isolated",
+      archetypeTitleKo: isBarrel
+        ? "래더 지지 발목 움직임 · 사다리 손 고정 & 카프 레이즈 분리"
+        : "체어 지지 카프 레이즈 · 체어 손 고정 & 카프 레이즈 분리",
+      baseArchetypeId: "standing-ankle-calf-upper-reach",
+      fixedAnchorJoints: [
+        { joint: "hand", defaultSurfaceKo: isBarrel ? "래더 가로대 손 지지 고정점 (88,76)" : "체어 시트 상단 손 지지 고정점 (116,106)" },
+        { joint: "toe", defaultSurfaceKo: `바닥 발볼 지지 앵커 (${toeX},176)` },
+      ],
+      movingJoints: ["heel", "ankle", "knee", "pelvis", "head"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["기구 손 지지 & 양발 평행 접지 세팅", "손 지지 유지 · 뒤꿈치 수직 상승(Calf Raise) 정점", "발목 흔들림 없이 뒤꿈치 바닥 감속 착지"],
+      startToMiddleKo: `손(${handPt.x},${handPt.y})으로 기구를 안정적으로 잡은 채 발볼(${toeX},176) 위에서 뒤꿈치(y:174→160)와 정수리(y:26→16)가 수직 상승합니다.`,
+      middleToEndKo: "기구 손 지지를 유지하며 종아리 편심성 조절로 뒤꿈치(y:160→169)를 바닥으로 천천히 내립니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: `기구 지지 손(hand: ${handPt.x},${handPt.y})과 바닥 발볼(toe: ${toeX},176)이 고정됩니다.`,
+      keyJointChangeKo: "허공 팔 뻗기(50.5px)를 제거하고 기구 손 고정 하에 순수 족관절 저측굴곡만 표현(heel Δ14.6px · 2D 개략도)",
+      middleVectorLabelKo: "손 지지 고정 & 뒤꿈치 수직 상승 (y:174→160)",
+      middleVectorKind: "limb-excursion",
+      middleVectorPoints: [pt(standX - 4, 174), pt(standX, 160)],
+      endVectorLabelKo: "뒤꿈치 편심성 착지 복귀",
+      endVectorPoints: [pt(standX, 160), pt(standX - 2, 169)],
+    });
+  }
+
+  // SM-02B: Barrel Standing Torso Rotation (flat-footed thoracic rotation vs tiptoe calf raise)
+  if (exercise.id === "original-barrel-standing-rotation") {
+    const startJoints = makeJointMap({
+      head: { x: 146, y: 28 }, neck: { x: 146, y: 44 }, shoulder: { x: 146, y: 62 },
+      elbow: { x: 122, y: 78 }, wrist: { x: 102, y: 78 }, hand: { x: 88, y: 76 },
+      thoracic: { x: 146, y: 84 }, lumbar: { x: 146, y: 102 }, pelvis: { x: 146, y: 118 },
+      hip: { x: 146, y: 120 }, knee: { x: 148, y: 146 }, ankle: { x: 148, y: 170 },
+      heel: { x: 142, y: 174 }, toe: { x: 164, y: 176 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      shoulder: { x: 156, y: 62 }, elbow: { x: 186, y: 68 }, wrist: { x: 212, y: 66 }, hand: { x: 224, y: 64 },
+      thoracic: { x: 154, y: 84 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      elbow: { x: 132, y: 78 }, wrist: { x: 112, y: 78 }, hand: { x: 100, y: 76 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "barrel-standing-rotation-isolated",
+      archetypeTitleKo: "래더 지지 스탠딩 몸통 회전 · 양발 접지 고정 & 수평 흉곽 회전 분리",
+      baseArchetypeId: "standing-ankle-calf-upper-reach",
+      fixedAnchorJoints: [
+        { joint: "heel", defaultSurfaceKo: "바닥 양발 뒤꿈치 접지 고정점 (142,174)" },
+        { joint: "pelvis", defaultSurfaceKo: "정면 수평 골반 고정축 (146,118)" },
+      ],
+      movingJoints: ["thoracic", "shoulder", "elbow", "wrist", "hand"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["양발 바닥 접지 & 래더 손 지지 세팅", "골반·뒤꿈치 고정 · 흉곽 수평 회전 오픈 정점", "가슴 정면 정렬로 부드럽게 복귀"],
+      startToMiddleKo: "양발 뒤꿈치(142,174)와 골반(146,118)을 바닥에 고정한 채 흉곽(146,84→154,84)과 팔(hand: 88,76→224,64)을 수평 회전합니다.",
+      middleToEndKo: "까치발 상승 없이 발바닥 접지를 유지하며 가슴과 팔(hand: 100,76)이 정면으로 돌아옵니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "바닥에 디딘 뒤꿈치(heel: 142,174)와 골반(pelvis: 146,118)이 고정됩니다.",
+      keyJointChangeKo: "까치발 상승(heel Δ14.6px)을 제거한 평발 접지 스탠딩 흉추 회전(2D 개략도)",
+      middleVectorLabelKo: "평발 접지 흉곽·상지 수평 회전 오픈",
+      middleVectorKind: "limb-excursion",
+      middleVectorPoints: [pt(88, 76), pt(224, 64)],
+      endVectorLabelKo: "정면 정렬 수평 복귀",
+      endVectorPoints: [pt(224, 64), pt(100, 76)],
+    });
+  }
+
+  // SM-02C: Cadillac Standing Arm Spring Punch & Triceps Press (grounded heels vs tiptoe calf raise)
+  if (exercise.id === "ex-upper-03") {
+    const startJoints = makeJointMap({
+      head: { x: 148, y: 26 }, neck: { x: 146, y: 42 }, shoulder: { x: 146, y: 58 },
+      elbow: { x: 132, y: 78 }, wrist: { x: 158, y: 76 }, hand: { x: 168, y: 74 },
+      thoracic: { x: 146, y: 80 }, lumbar: { x: 144, y: 98 }, pelvis: { x: 142, y: 114 },
+      hip: { x: 142, y: 116 }, knee: { x: 146, y: 144 }, ankle: { x: 146, y: 170 },
+      heel: { x: 140, y: 174 }, toe: { x: 162, y: 176 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      shoulder: { x: 154, y: 58 }, elbow: { x: 194, y: 66 }, wrist: { x: 226, y: 64 }, hand: { x: 238, y: 62 },
+      thoracic: { x: 152, y: 80 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      elbow: { x: 140, y: 78 }, wrist: { x: 168, y: 75 }, hand: { x: 178, y: 73 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "cadillac-standing-punch-press-isolated",
+      archetypeTitleKo: "캐딜락 스탠딩 암 스프링 펀치 · 뒤꿈치 접지 고정 & 상지 펀치/회전 분리",
+      baseArchetypeId: "standing-ankle-calf-upper-reach",
+      fixedAnchorJoints: [
+        { joint: "heel", defaultSurfaceKo: "바닥 양발 뒤꿈치 완전 접지 (140,174 · 카프 레이즈 제외)" },
+        { joint: "pelvis", defaultSurfaceKo: "필라테스 스탠스 골반 고정축 (142,114)" },
+      ],
+      movingJoints: ["thoracic", "shoulder", "elbow", "wrist", "hand"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["필라테스 스탠스 뒤꿈치 접지 & 그립 준비", "뒤꿈치 고정 · 정면 스탠딩 펀치 & 흉추 회전 정점", "스프링 장력 저항하며 시작 자세 감속 복귀"],
+      startToMiddleKo: "뒤꿈치(140,174)를 바닥에 단단히 뿌리내린 채 암 스프링을 정면 어깨 높이(hand: 168,74→238,62)로 펀치하며 흉추를 회전합니다.",
+      middleToEndKo: "몸통이 뒤로 끌려가지 않게 발바닥 접지를 유지하며 손(238,62→178,73)을 감속 복귀합니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "바닥에 뿌리내린 뒤꿈치(heel: 140,174), 발목(ankle: 146,170), 골반(pelvis: 142,114)이 고정됩니다.",
+      keyJointChangeKo: "불필요한 까치발(heel Δ14.6px)을 제거한 평발 접지 스탠딩 펀치 프레스(hand Δ71px · 2D 개략도)",
+      middleVectorLabelKo: "스탠딩 암 스프링 전방 펀치 (168,74→238,62)",
+      middleVectorKind: "spring-resistance",
+      middleVectorPoints: [pt(168, 74), pt(238, 62)],
+      endVectorLabelKo: "전완·견갑 장력 제어 복귀",
+      endVectorPoints: [pt(238, 62), pt(178, 73)],
+    });
+  }
+
+  // SM-03: Supine Pelvic Clock / Pelvic Rock (arms resting on mat/table + pelvic tilt vs 129.3px overhead arm circle)
+  if (
+    exercise.id === "original-mat-pelvic-clock" ||
+    exercise.id === "original-cadillac-pelvic-rock"
+  ) {
+    const startJoints = makeJointMap({
+      head: { x: 56, y: 128 }, neck: { x: 74, y: 132 }, shoulder: { x: 92, y: 134 },
+      elbow: { x: 122, y: 138 }, wrist: { x: 148, y: 140 }, hand: { x: 160, y: 140 },
+      thoracic: { x: 118, y: 134 }, lumbar: { x: 146, y: 132 }, pelvis: { x: 174, y: 136 },
+      hip: { x: 180, y: 134 }, knee: { x: 214, y: 96 }, ankle: { x: 248, y: 140 },
+      heel: { x: 242, y: 144 }, toe: { x: 260, y: 144 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      lumbar: { x: 146, y: 140 }, pelvis: { x: 170, y: 128 }, hip: { x: 176, y: 126 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      lumbar: { x: 146, y: 127 }, pelvis: { x: 176, y: 134 }, hip: { x: 182, y: 132 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "supine-pelvic-clock-isolated",
+      archetypeTitleKo: "수파인 골반 시계 · 상지 지지면 고정 & 골반 전후방 틸트 분리",
+      baseArchetypeId: "supine-breath-pelvic-clock",
+      fixedAnchorJoints: [
+        { joint: "hand", defaultSurfaceKo: "몸통 옆 매트/테이블 상지 이완 고정점 (160,140)" },
+        { joint: "ankle", defaultSurfaceKo: "무릎 세운 양발 지지면 고정점 (248,140)" },
+      ],
+      movingJoints: ["pelvis", "lumbar", "hip"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["무릎 세우고 누워 상지 매트 이완 & 중립 골반", "날숨 골반 후방 경사(12시 임프린트) 굴림", "들숨 6시 방향 탐색 후 중립 천골 안착 복귀"],
+      startToMiddleKo: "양팔(hand: 160,140)과 어깨(92,134)를 바닥에 편안히 내려놓은 채 골반(174,136→170,128)과 요추(146,132→146,140)만 부드럽게 굴립니다.",
+      middleToEndKo: "팔의 오버헤드 이동 없이 천골 무게중심을 굴려 중립 골반(146,127 / 176,134)으로 돌아옵니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "매트/테이블에 내려놓은 손(hand: 160,140), 흉곽(thoracic: 118,134), 양발(ankle: 248,140)이 고정됩니다.",
+      keyJointChangeKo: "오버헤드 암 서클(129.3px)을 제거한 순수 골반 시계·요추 전후방 틸트(lumbar/pelvis Δ8.9px · 2D 개략도)",
+      middleVectorLabelKo: "골반 후방 틸트 & 요추 임프린트",
+      middleVectorKind: "spine-articulation",
+      middleVectorPoints: [pt(174, 136), pt(170, 128), pt(146, 140)],
+      endVectorLabelKo: "중립 천골 골반 시계 복귀",
+      endVectorPoints: [pt(146, 140), pt(146, 127)],
+    });
+  }
+
+  // SM-04A: Chair Sit to Stand (bilateral grounded feet + vertical pelvis rise vs single-leg scooter kick)
+  if (exercise.id === "original-chair-sit-to-stand") {
+    const startJoints = makeJointMap({
+      head: { x: 142, y: 28 }, neck: { x: 140, y: 42 }, shoulder: { x: 138, y: 58 },
+      elbow: { x: 152, y: 78 }, wrist: { x: 170, y: 80 }, hand: { x: 180, y: 80 },
+      thoracic: { x: 136, y: 76 }, lumbar: { x: 136, y: 92 }, pelvis: { x: 136, y: 108 },
+      hip: { x: 142, y: 108 }, knee: { x: 182, y: 128 }, ankle: { x: 186, y: 170 },
+      heel: { x: 180, y: 176 }, toe: { x: 198, y: 176 },
+      farHip: { x: 140, y: 108 }, farKnee: { x: 180, y: 130 }, farAnkle: { x: 184, y: 172 }, farToe: { x: 196, y: 176 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      head: { x: 178, y: 16 }, neck: { x: 178, y: 32 }, shoulder: { x: 178, y: 48 },
+      elbow: { x: 190, y: 68 }, wrist: { x: 204, y: 72 }, hand: { x: 212, y: 72 },
+      thoracic: { x: 178, y: 68 }, lumbar: { x: 178, y: 86 }, pelvis: { x: 178, y: 102 },
+      hip: { x: 180, y: 104 }, knee: { x: 184, y: 138 },
+      farHip: { x: 178, y: 104 }, farKnee: { x: 182, y: 140 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      head: { x: 148, y: 26 }, shoulder: { x: 144, y: 56 }, thoracic: { x: 142, y: 74 },
+      lumbar: { x: 142, y: 90 }, pelvis: { x: 142, y: 106 }, hip: { x: 148, y: 106 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "chair-sit-to-stand-isolated",
+      archetypeTitleKo: "체어 앉았다 일어서기 · 양발 바닥 고정 & 좌골 수직 기립 분리",
+      baseArchetypeId: "standing-scooter-lunge-splits",
+      fixedAnchorJoints: [
+        { joint: "ankle", defaultSurfaceKo: "체어 앞 바닥 양발 평행 고정점 (186,170)" },
+        { joint: "heel", defaultSurfaceKo: "바닥 양발 뒤꿈치 지지점 (180,176)" },
+      ],
+      movingJoints: ["pelvis", "hip", "knee", "lumbar", "thoracic", "shoulder", "head"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["체어 시트 앞쪽 착석 & 양발 바닥 11자 지지", "양발 바닥 푸시 · 수직 기립(Sit to Stand) 정점", "고관절·무릎 굴곡 제어하며 시트 착석 복귀"],
+      startToMiddleKo: "양발(ankle: 186,170)을 바닥에 고정한 채 체어 시트(pelvis: 136,108)에서 발바닥으로 바닥을 밀며 상체와 골반(178,102, head: 178,16)을 수직으로 일으켜 세웁니다.",
+      middleToEndKo: "엉덩이를 뒤·아래로 천천히 보내며 체어 시트 좌면(pelvis: 142,106)으로 안전하게 앉아 복귀합니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "바닥에 평행하게 디딘 양발 발목(ankle: 186,170)과 뒤꿈치(heel: 180,176)가 고정됩니다.",
+      keyJointChangeKo: "단측 후방 스쿠터 킥(65.5px)을 제거한 양발 접지 시트 투 스탠드 기립(pelvis Δ42.4px · 2D 개략도)",
+      middleVectorLabelKo: "시트 착석 → 양발 지지 수직 기립",
+      middleVectorKind: "axial-lengthening",
+      middleVectorPoints: [pt(136, 108), pt(178, 102), pt(178, 16)],
+      endVectorLabelKo: "시트 좌면 방향 편심성 착석 복귀",
+      endVectorPoints: [pt(178, 102), pt(142, 106)],
+    });
+  }
+
+  // SM-04B: Reformer Standing Side Splits & Skater (upright frontal bilateral abduction on carriage vs sagittal scooter kick)
+  if (exercise.id === "ex-lower-02") {
+    const startJoints = makeJointMap({
+      head: { x: 176, y: 28 }, neck: { x: 176, y: 42 }, shoulder: { x: 176, y: 58 },
+      elbow: { x: 162, y: 76 }, wrist: { x: 168, y: 84 }, hand: { x: 174, y: 84 },
+      thoracic: { x: 176, y: 76 }, lumbar: { x: 176, y: 92 }, pelvis: { x: 176, y: 106 },
+      hip: { x: 170, y: 108 }, knee: { x: 158, y: 124 }, ankle: { x: 148, y: 138 },
+      heel: { x: 152, y: 142 }, toe: { x: 140, y: 142 },
+      farHip: { x: 182, y: 108 }, farKnee: { x: 198, y: 124 }, farAnkle: { x: 214, y: 138 }, farToe: { x: 222, y: 142 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      head: { x: 158, y: 30 }, neck: { x: 158, y: 44 }, shoulder: { x: 158, y: 60 },
+      elbow: { x: 132, y: 62 }, wrist: { x: 112, y: 62 }, hand: { x: 102, y: 62 },
+      thoracic: { x: 158, y: 78 }, lumbar: { x: 158, y: 94 }, pelvis: { x: 158, y: 108 },
+      hip: { x: 150, y: 110 }, knee: { x: 124, y: 124 }, ankle: { x: 96, y: 138 },
+      heel: { x: 100, y: 142 }, toe: { x: 88, y: 142 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      head: { x: 170, y: 28 }, pelvis: { x: 170, y: 106 },
+      knee: { x: 152, y: 124 }, ankle: { x: 140, y: 138 }, heel: { x: 144, y: 142 }, toe: { x: 132, y: 142 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "reformer-standing-side-splits-isolated",
+      archetypeTitleKo: "리포머 스탠딩 사이드 스플릿 · 플랫폼/캐리지 수평 양다리 외전·내전 분리",
+      baseArchetypeId: "standing-scooter-lunge-splits",
+      fixedAnchorJoints: [
+        { joint: "farAnkle", defaultSurfaceKo: "우측 고정 플랫폼 발바닥 11자 지지점 (214,138)" },
+        { joint: "ankle", defaultSurfaceKo: "좌측 슬라이딩 캐리지 발바닥 수평 지지점 (y:138)" },
+      ],
+      movingJoints: ["ankle", "knee", "hip", "pelvis", "thoracic", "head", "hand"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [4, 42, 10], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["플랫폼·캐리지 11자 평행 스쿼트 세팅", "양다리 대칭 외전 · 캐리지 수평 사이드 스플릿 정점", "내전근 제어로 상체 바운스 없이 캐리지 홈 복귀"],
+      startToMiddleKo: "우측 플랫폼 발(farAnkle: 214,138)을 고정하고 상체 수직 축을 유지한 채 좌측 캐리지 발(ankle: 148,138→96,138)을 옆으로 밀어냅니다.",
+      middleToEndKo: "상체 높이를 일정하게 유지하며 내전근과 중둔근 제어로 캐리지 발(96,138→140,138)을 모읍니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "우측 플랫폼 지지 발(farAnkle: 214,138)과 양발 수평 지지 높이(y:138)가 유지됩니다.",
+      keyJointChangeKo: "전방 힌지 단측 후방 킥과 분리된 직립 관상면 사이드 스플릿 활주(ankle dx -52px · 2D 개략도)",
+      middleVectorLabelKo: "캐리지 수평 사이드 스플릿 외전 활주 (148,138→96,138)",
+      middleVectorKind: "carriage-travel",
+      middleVectorPoints: [pt(148, 138), pt(96, 138)],
+      endVectorLabelKo: "내전근 제어 수평 복귀",
+      endVectorPoints: [pt(96, 138), pt(140, 138)],
+    });
+  }
+
+  // SM-05: Cadillac Roll-Down Bar Kneeling Cat Stretch (anterior spinal flexion/extension vs rigid-spine chest expansion)
+  if (exercise.id === "ex-warmup-02") {
+    const startJoints = makeJointMap({
+      head: { x: 142, y: 30 }, neck: { x: 142, y: 46 }, shoulder: { x: 142, y: 64 },
+      elbow: { x: 168, y: 74 }, wrist: { x: 188, y: 78 }, hand: { x: 198, y: 78 },
+      thoracic: { x: 142, y: 86 }, lumbar: { x: 142, y: 106 }, pelvis: { x: 142, y: 124 },
+      hip: { x: 144, y: 126 }, knee: { x: 146, y: 142 }, ankle: { x: 108, y: 144 },
+      heel: { x: 102, y: 140 }, toe: { x: 94, y: 146 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      head: { x: 188, y: 76 }, neck: { x: 178, y: 66 }, shoulder: { x: 168, y: 70 },
+      elbow: { x: 196, y: 94 }, wrist: { x: 220, y: 110 }, hand: { x: 230, y: 114 },
+      thoracic: { x: 152, y: 68 }, lumbar: { x: 138, y: 92 }, pelvis: { x: 138, y: 122 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      head: { x: 148, y: 34 }, shoulder: { x: 146, y: 66 }, thoracic: { x: 146, y: 84 },
+      wrist: { x: 196, y: 82 }, hand: { x: 206, y: 84 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "cadillac-kneeling-cat-stretch-isolated",
+      archetypeTitleKo: "캐딜락 롤다운 바 닐링 캣 스트레치 · 전방 척추 분절 굴곡·신전 분리",
+      baseArchetypeId: "kneeling-chest-expansion-triceps",
+      fixedAnchorJoints: [
+        { joint: "knee", defaultSurfaceKo: "캐딜락 테이블 양무릎 지지점 (146,142)" },
+        { joint: "ankle", defaultSurfaceKo: "정강이·발등 테이블 고정점 (108,144)" },
+      ],
+      movingJoints: ["head", "neck", "thoracic", "lumbar", "shoulder", "elbow", "wrist", "hand"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["톨 닐링 롤다운 바 전방 파지 준비", "배꼽 스쿱 C-커브 분절 · 전하방 캣 스트레치 정점", "꼬리뼈부터 척추 재적층 수직 복귀"],
+      startToMiddleKo: "양무릎(146,142) 지지 위에서 복부를 등 쪽으로 당기며 정수리(142,30→188,76)와 흉추(142,86→152,68)를 둥글게 말아 롤다운 바(hand: 198,78→230,114)를 아래로 밀어냅니다.",
+      middleToEndKo: "하단 흉추 신전 후 골반 위에 요추·흉추·머리를 차례로 쌓아 올려(head: 148,34) 복귀합니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "캐딜락 테이블 위 양무릎(knee: 146,142)과 정강이(ankle: 108,144)가 고정됩니다.",
+      keyJointChangeKo: "수직 척추 체스트 익스팬션과 분리된 전방 척추 C-커브 분절 굴곡(head Δ65px · 2D 개략도)",
+      middleVectorLabelKo: "경추·흉추 C-커브 분절 굴곡 & 바 하방 프레스",
+      middleVectorKind: "spine-articulation",
+      middleVectorPoints: [pt(142, 30), pt(168, 48), pt(188, 76)],
+      endVectorLabelKo: "척추 수직 재적층 복귀",
+      endVectorPoints: [pt(188, 76), pt(148, 34)],
+    });
+  }
+
+  // SM-06: Chair & Cadillac Seated Upright Spine Twist (vertical axial rotation vs 56.4px backward C-curve roll-back)
+  if (
+    exercise.id === "original-chair-seated-spine-twist" ||
+    exercise.id === "original-cadillac-seated-rotation"
+  ) {
+    const isChair = exercise.apparatus === "chair";
+    const seatY = isChair ? 108 : 138;
+    const footY = isChair ? 170 : 142;
+    const startJoints = makeJointMap({
+      head: { x: 136, y: seatY - 82 }, neck: { x: 136, y: seatY - 66 }, shoulder: { x: 136, y: seatY - 50 },
+      elbow: { x: 164, y: seatY - 34 }, wrist: { x: 186, y: seatY - 36 }, hand: { x: 196, y: seatY - 36 },
+      thoracic: { x: 136, y: seatY - 32 }, lumbar: { x: 136, y: seatY - 16 }, pelvis: { x: 136, y: seatY },
+      hip: { x: 144, y: seatY }, knee: { x: 188, y: isChair ? 126 : 136 }, ankle: { x: isChair ? 192 : 242, y: footY },
+      heel: { x: isChair ? 186 : 240, y: footY + 6 }, toe: { x: isChair ? 204 : 254, y: footY + 4 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      shoulder: { x: 130, y: seatY - 50 }, elbow: { x: 108, y: seatY - 36 }, wrist: { x: 92, y: seatY - 38 }, hand: { x: 82, y: seatY - 38 },
+      thoracic: { x: 134, y: seatY - 32 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      elbow: { x: 156, y: seatY - 34 }, wrist: { x: 178, y: seatY - 36 }, hand: { x: 188, y: seatY - 36 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: isChair ? "chair-seated-spine-twist-isolated" : "cadillac-seated-rotation-isolated",
+      archetypeTitleKo: isChair
+        ? "체어 시티드 스파인 트위스트 · 좌골 수직 축 유지 & 흉곽 수평 회전 분리"
+        : "캐딜락 앉아서 흉곽 회전 · 좌골 수직 축 유지 & 흉곽 수평 회전 분리",
+      baseArchetypeId: "seated-roll-back-spine-twist",
+      fixedAnchorJoints: [
+        { joint: "pelvis", defaultSurfaceKo: `양쪽 좌골 수직 지지점 (136,${seatY} · 후방 롤백 금지)` },
+        { joint: "head", defaultSurfaceKo: `정수리-좌골 수직 추선 유지 (136,${seatY - 82})` },
+      ],
+      movingJoints: ["thoracic", "shoulder", "elbow", "wrist", "hand"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ["좌골 위 수직 척추 세우기 & 정면 세팅", "척추 수직 고정 · 흉곽 및 상지 수평 회전 정점", "키 커지는 정렬 유지하며 정면 복귀"],
+      startToMiddleKo: `머리(136,${seatY - 82})부터 좌골(136,${seatY})까지 수직 축이 뒤로 무너지지 않게 유지한 채 흉곽과 양팔(hand: 196,${seatY - 36}→82,${seatY - 38})만 수평 회전합니다.`,
+      middleToEndKo: `좌골 무게를 균등하게 지키며 가슴과 팔(hand: 188,${seatY - 36})을 정면으로 되돌립니다. (해부학적 실측 아님)`,
+      invariantAnchorsKo: `좌골(pelvis: 136,${seatY}), 요추(lumbar: 136,${seatY - 16}), 정수리(head: 136,${seatY - 82}) 수직 기둥이 고정됩니다.`,
+      keyJointChangeKo: "후방 C-커브 롤백(head Δ56.4px)을 제거한 수직 축 순수 흉곽 회전(hand Δ114px · 2D 개략도)",
+      middleVectorLabelKo: "수직 축 유지 · 흉곽 수평 회전",
+      middleVectorKind: "spine-articulation",
+      middleVectorPoints: [pt(196, seatY - 36), pt(136, seatY - 38), pt(82, seatY - 38)],
+      endVectorLabelKo: "정면 수평 회전 복귀",
+      endVectorPoints: [pt(82, seatY - 38), pt(188, seatY - 36)],
+    });
+  }
+
+  return null;
+}
+
 function resolveArchetypeBlueprint(exercise: PilatesExercise): ArchetypeRigBlueprint {
   const separated = resolveSeparatedSideLyingBlueprint(exercise);
   if (separated) return separated;
+  const semanticSeparated = resolveSeparatedSemanticMismatchBlueprint(exercise);
+  if (semanticSeparated) return semanticSeparated;
   const apparatusContactSeparated = resolveSeparatedApparatusContactBlueprint(exercise);
   if (apparatusContactSeparated) return apparatusContactSeparated;
   const explicitId = EXPLICIT_EXERCISE_ARCHETYPE_IDS[exercise.id];
