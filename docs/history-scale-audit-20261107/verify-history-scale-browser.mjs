@@ -312,7 +312,7 @@ async function getCdpPerfMap(cdp) {
   return map;
 }
 
-async function measureScaleInBrowser(cdp, scaleCount) {
+async function measureScaleInBrowser(cdp, scaleCount, screenshotPrefix = 'post-patch-scale') {
   await cdp.send('Page.enable');
   await cdp.send('Runtime.enable');
   await cdp.send('Performance.enable');
@@ -330,16 +330,17 @@ async function measureScaleInBrowser(cdp, scaleCount) {
     mobile: false,
   });
 
+  const expectedInitialCards = Math.min(scaleCount, 30);
   const navStart = performance.now();
   await cdp.send('Page.reload', { ignoreCache: true });
   while (performance.now() - navStart < 30000) {
     try {
       const count = await cdp.eval(`document.querySelectorAll('.teaching-history-card').length`);
-      if (count >= scaleCount) break;
+      if (count >= expectedInitialCards) break;
     } catch {
       // page execution context is still navigating
     }
-    await sleep(80);
+    await sleep(40);
   }
   const hydrationMs = Number((performance.now() - navStart).toFixed(2));
   await sleep(300);
@@ -368,6 +369,7 @@ async function measureScaleInBrowser(cdp, scaleCount) {
       const dateNav = document.querySelector('.teaching-date-nav');
       const dateNavRect = dateNav ? dateNav.getBoundingClientRect() : null;
       const dateChips = Array.from(document.querySelectorAll('.teaching-date-chip'));
+      const dateChipToggle = document.querySelector('.teaching-date-more-toggle');
       const dateGroups = Array.from(document.querySelectorAll('.teaching-history-date-group'));
       const firstCard = cards[0];
       const firstCardRect = firstCard ? firstCard.getBoundingClientRect() : null;
@@ -383,6 +385,8 @@ async function measureScaleInBrowser(cdp, scaleCount) {
         exercisePillCount: document.querySelectorAll('.teaching-history-exercises span').length,
         maxCardOverflowPx: Math.round(maxCardOverflowPx),
         dateChipCount: dateChips.length,
+        hasDateChipToggle: Boolean(dateChipToggle),
+        dateChipToggleText: dateChipToggle?.textContent?.trim() || null,
         dateGroupCount: dateGroups.length,
         dateNavHeightPx: dateNavRect ? Math.round(dateNavRect.height) : 0,
         dateNavViewportRatio: dateNavRect ? Number((dateNavRect.height / window.innerHeight).toFixed(2)) : 0,
@@ -392,7 +396,7 @@ async function measureScaleInBrowser(cdp, scaleCount) {
     })()`);
 
     // Capture screenshots for N=100 and N=1000 across key viewports
-    const screenshotRel = `docs/history-scale-audit-20261107/evidence/screenshots/scale-${scaleCount}-${vp.id}.png`;
+    const screenshotRel = `docs/history-scale-audit-20261107/evidence/screenshots/${screenshotPrefix}-${scaleCount}-${vp.id}.png`;
     await cdp.screenshot(path.join(ROOT, screenshotRel));
 
     viewportResults.push({
@@ -421,6 +425,17 @@ async function measureScaleInBrowser(cdp, scaleCount) {
       input.dispatchEvent(new Event('change', { bubbles: true }));
     };
 
+    const fullCountText = document.querySelector('.teaching-header p.muted')?.textContent?.trim() || '';
+    const allDatesChipCount = document.querySelector('.teaching-date-chip .teaching-date-chip-count')?.textContent?.trim() || '';
+
+    // Check synthetic 12:00 suppression on date-only card
+    const dateOnlyCard = Array.from(document.querySelectorAll('.teaching-history-card')).find((card) =>
+      card.textContent?.includes('날짜만 선택된 과거 수업')
+    );
+    const synthetic1200BadgeShownOnDateOnlyCard = Boolean(
+      dateOnlyCard?.querySelector('.teaching-history-time')
+    );
+
     const searchInput = document.querySelector('input[type="search"], .teaching-search input');
 
     // 1. Search filter latency (same-name class query)
@@ -436,7 +451,24 @@ async function measureScaleInBrowser(cdp, scaleCount) {
     await raf();
     const searchResetMs = Number((performance.now() - tReset0).toFixed(2));
 
-    // 2. Date chip filter latency
+    // 2. Date chip filter latency + expand/collapse toggle latency
+    const dateChipToggle = document.querySelector('.teaching-date-more-toggle');
+    const dateChipExpandButtonText = dateChipToggle?.textContent?.trim() || null;
+    let dateChipExpandMs = 0;
+    let dateChipsAfterExpand = document.querySelectorAll('.teaching-date-chip').length;
+    if (dateChipToggle) {
+      const tExpand0 = performance.now();
+      dateChipToggle.click();
+      await raf();
+      dateChipExpandMs = Number((performance.now() - tExpand0).toFixed(2));
+      dateChipsAfterExpand = document.querySelectorAll('.teaching-date-chip').length;
+      const collapseToggle = document.querySelector('.teaching-date-more-toggle');
+      if (collapseToggle) {
+        collapseToggle.click();
+        await raf();
+      }
+    }
+
     const dateChips = Array.from(document.querySelectorAll('.teaching-date-chip'));
     const secondChip = dateChips[1];
     const tDate0 = performance.now();
@@ -445,12 +477,15 @@ async function measureScaleInBrowser(cdp, scaleCount) {
     const dateFilterMs = Number((performance.now() - tDate0).toFixed(2));
     const dateFilteredCards = document.querySelectorAll('.teaching-history-card').length;
 
-    // 3. Stale selectedDate + search query edge case check
+    // 3. Stale selectedDate + search query recovery check
     setInputValue(searchInput, '존재하지않는특수검색어XYZ');
     await raf();
     const emptyWithStaleDateTitle = document.querySelector('.pf-empty-state h2')?.textContent?.trim() || '';
-    const dateResetBtn = document.querySelector('.pf-empty-state button');
-    if (dateResetBtn) dateResetBtn.click();
+    const resetSearchAfterStaleDateBtn = document.querySelector('.pf-empty-state button');
+    if (resetSearchAfterStaleDateBtn) resetSearchAfterStaleDateBtn.click();
+    await raf();
+    const allDatesChipReset = Array.from(document.querySelectorAll('.teaching-date-chip'))[0];
+    if (allDatesChipReset) allDatesChipReset.click();
     await raf();
 
     // 4. Empty group filter latency
@@ -474,13 +509,27 @@ async function measureScaleInBrowser(cdp, scaleCount) {
     await raf();
     const modalOpenMs = Number((performance.now() - tModal0).toFixed(2));
     const modalOpen = Boolean(document.querySelector('.teaching-history-detail-modal'));
-    const closeBtn = Array.from(document.querySelectorAll('.teaching-history-detail-modal button')).find((b) =>
+    const closeBtns = Array.from(document.querySelectorAll('.teaching-history-detail-modal button')).filter((b) =>
       b.textContent.trim() === '닫기'
     );
+    const closeBtn = closeBtns.at(-1);
     if (closeBtn) closeBtn.click();
     await raf();
 
-    // 6. Scroll responsiveness across 10 steps on mobile 390px
+    // 6. Load more cards benchmark (+30 cards)
+    const loadMoreBtn = document.querySelector('.teaching-history-load-more button');
+    const loadMoreButtonText = loadMoreBtn?.textContent?.trim() || null;
+    let loadMoreMs = 0;
+    let cardsAfterLoadMore = document.querySelectorAll('.teaching-history-card').length;
+    if (loadMoreBtn) {
+      const tMore0 = performance.now();
+      loadMoreBtn.click();
+      await raf();
+      loadMoreMs = Number((performance.now() - tMore0).toFixed(2));
+      cardsAfterLoadMore = document.querySelectorAll('.teaching-history-card').length;
+    }
+
+    // 7. Scroll responsiveness across 10 steps on mobile 390px
     const frameTimes = [];
     for (let i = 0; i < 10; i += 1) {
       const ts = performance.now();
@@ -492,9 +541,15 @@ async function measureScaleInBrowser(cdp, scaleCount) {
     await raf();
 
     return {
+      fullCountText,
+      allDatesChipCount,
+      synthetic1200BadgeShownOnDateOnlyCard,
       searchFilterMs,
       sameNameMatchedCount,
       searchResetMs,
+      dateChipExpandButtonText,
+      dateChipExpandMs,
+      dateChipsAfterExpand,
       dateFilterMs,
       dateFilteredCards,
       emptyWithStaleDateTitle,
@@ -502,6 +557,9 @@ async function measureScaleInBrowser(cdp, scaleCount) {
       emptyGroupTitle,
       modalOpenMs,
       modalOpen,
+      loadMoreButtonText,
+      loadMoreMs,
+      cardsAfterLoadMore,
       scrollFrameTimesMs: frameTimes,
       maxScrollFrameMs: Math.max(...frameTimes),
       avgScrollFrameMs: Number((frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length).toFixed(2)),
@@ -540,6 +598,9 @@ async function measureScaleInBrowser(cdp, scaleCount) {
 
 async function main() {
   const scaleArg = process.argv.find((a) => a.startsWith('--scale='))?.split('=')[1];
+  const outArg = process.argv.find((a) => a.startsWith('--out='))?.split('=')[1] || 'post-patch-scale-metrics.json';
+  const screenshotPrefixArg =
+    process.argv.find((a) => a.startsWith('--screenshot-prefix='))?.split('=')[1] || 'post-patch-scale';
   const scalesToRun = scaleArg ? [Number(scaleArg)] : [100, 1000];
   const environment = probeEngines();
   const viteProc = spawn(
@@ -571,7 +632,7 @@ async function main() {
     const cdp = new CdpSession(pageTarget.webSocketDebuggerUrl);
     await cdp.connect();
 
-    const outPath = path.join(OUT_DIR, 'scale-metrics.json');
+    const outPath = path.join(OUT_DIR, outArg);
     let existing = { results: {} };
     if (fs.existsSync(outPath)) {
       try {
@@ -583,7 +644,7 @@ async function main() {
 
     const results = { ...(existing.results || {}) };
     for (const s of scalesToRun) {
-      results[`scale${s}`] = await measureScaleInBrowser(cdp, s);
+      results[`scale${s}`] = await measureScaleInBrowser(cdp, s, screenshotPrefixArg);
       const report = {
         capturedAt: new Date().toISOString(),
         environment,
@@ -598,7 +659,12 @@ async function main() {
   } finally {
     chromeProc.kill('SIGKILL');
     viteProc.kill('SIGKILL');
-    fs.rmSync(userDataDir, { recursive: true, force: true });
+    await sleep(300);
+    try {
+      fs.rmSync(userDataDir, { recursive: true, force: true });
+    } catch {
+      // ignore asynchronous chromium file handle cleanup race
+    }
   }
 }
 

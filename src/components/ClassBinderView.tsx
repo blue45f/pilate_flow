@@ -75,6 +75,10 @@ interface ClassBinderViewProps {
   view?: 'saved' | 'history';
 }
 
+const INITIAL_VISIBLE_DATE_CHIPS = 12;
+const INITIAL_VISIBLE_HISTORY_LOGS = 30;
+const HISTORY_LOGS_PAGE_SIZE = 30;
+
 const sampleSequenceIds = new Set(INITIAL_SAVED_SEQUENCES.map((sequence) => sequence.id));
 const sampleHistoryIds = new Set(INITIAL_HISTORY_LOGS.map((log) => log.id));
 const historyMovementIds = (log: ClassHistoryLog) =>
@@ -83,41 +87,68 @@ const historyMovementIds = (log: ClassHistoryLog) =>
     : log.exerciseIds.filter(Boolean);
 const movementCount = (steps: SequenceStep[]) => steps.filter((step) => !isRestStep(step)).length;
 const minutesLabel = (seconds: number) => Number((seconds / 60).toFixed(2));
-const formatDate = (date: string) =>
-  Number.isNaN(Date.parse(date))
+const parseHistoryDate = (date: string): Date | null => {
+  const trimmed = date.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const [year, month, day] = trimmed.split('-').map(Number);
+    return new Date(year, month - 1, day, 0, 0, 0, 0);
+  }
+  const parsed = Date.parse(trimmed);
+  return Number.isNaN(parsed) ? null : new Date(parsed);
+};
+const formatDate = (date: string) => {
+  const dt = parseHistoryDate(date);
+  return !dt
     ? '날짜 미상'
-    : new Date(date).toLocaleDateString('ko-KR', {
+    : dt.toLocaleDateString('ko-KR', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
       });
+};
 const getHistoryDateKey = (date: string) => {
-  const raw = date.trim().slice(0, 10);
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-  const parsed = Date.parse(date);
-  if (Number.isNaN(parsed)) return 'unknown';
-  const dt = new Date(parsed);
+  const trimmed = date.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const dt = parseHistoryDate(trimmed);
+  if (!dt) return 'unknown';
   return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
 };
+const isSyntheticDateOnlyTimestamp = (date: string, dt: Date) => {
+  const trimmed = date.trim();
+  if (!trimmed.includes('T')) return true;
+  if (/T(?:00|12):00:00(?:\.000)?(?:Z|[+-]\d{2}:?\d{2})?$/i.test(trimmed)) {
+    return true;
+  }
+  if (
+    dt.getSeconds() === 0 &&
+    dt.getMilliseconds() === 0 &&
+    dt.getMinutes() === 0 &&
+    (dt.getHours() === 0 || dt.getHours() === 12)
+  ) {
+    return true;
+  }
+  return false;
+};
 const formatHistoryTimeOfDay = (date: string) => {
-  if (!date.includes('T') || Number.isNaN(Date.parse(date))) return null;
-  const rawTime = date.split('T')[1]?.slice(0, 5);
-  if (rawTime === '00:00') return null;
-  return new Date(date).toLocaleTimeString('ko-KR', {
+  const dt = parseHistoryDate(date);
+  if (!dt || isSyntheticDateOnlyTimestamp(date, dt)) return null;
+  return dt.toLocaleTimeString('ko-KR', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   });
 };
-const formatDateWithWeekday = (date: string) =>
-  Number.isNaN(Date.parse(date))
+const formatDateWithWeekday = (date: string) => {
+  const dt = parseHistoryDate(date);
+  return !dt
     ? '날짜 미상'
-    : new Date(date).toLocaleDateString('ko-KR', {
+    : dt.toLocaleDateString('ko-KR', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         weekday: 'short',
       });
+};
 const normalizeSearchToken = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ');
 const normalizeCompactSearch = (value: string) =>
   value
@@ -158,6 +189,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   const [historyQuery, setHistoryQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedDate, setSelectedDate] = useState('all');
+  const [showAllDateChips, setShowAllDateChips] = useState(false);
+  const [visibleHistoryCount, setVisibleHistoryCount] = useState(INITIAL_VISIBLE_HISTORY_LOGS);
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupSchedule, setGroupSchedule] = useState('');
@@ -176,8 +209,25 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     () => new Map(exercises.map((exercise) => [exercise.id, exercise])),
     [exercises],
   );
-  const reusableBlocks = getSavedReusableBlocks();
-  const humanDrafts = getSavedHumanMovementDrafts();
+  const rawReusableBlocks = getSavedReusableBlocks();
+  const reusableBlocksKey =
+    rawReusableBlocks.length === 0 ? '[]' : JSON.stringify(rawReusableBlocks);
+  const reusableBlocks = useMemo(
+    () =>
+      reusableBlocksKey === '[]'
+        ? ([] as ReturnType<typeof getSavedReusableBlocks>)
+        : (JSON.parse(reusableBlocksKey) as ReturnType<typeof getSavedReusableBlocks>),
+    [reusableBlocksKey],
+  );
+  const rawHumanDrafts = getSavedHumanMovementDrafts();
+  const humanDraftsKey = rawHumanDrafts.length === 0 ? '[]' : JSON.stringify(rawHumanDrafts);
+  const humanDrafts = useMemo(
+    () =>
+      humanDraftsKey === '[]'
+        ? ([] as ReturnType<typeof getSavedHumanMovementDrafts>)
+        : (JSON.parse(humanDraftsKey) as ReturnType<typeof getSavedHumanMovementDrafts>),
+    [humanDraftsKey],
+  );
   const resolvedHistoryMap = useMemo(() => {
     const map = new Map<string, ResolvedTeachingHistoryView>();
     for (const log of historyLogs) {
@@ -222,9 +272,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
               )
               .join(' ') ?? '';
           const dateKey = getHistoryDateKey(log.taughtAt);
+          const rawIsoDate = log.taughtAt.trim().slice(0, 10);
           const dateKo = formatDate(log.taughtAt);
           const searchable = normalizeSearchToken(
-            `${log.sequenceTitle} ${log.groupName} ${log.instructorReflection} ${dateKey} ${dateKo} ${stepNames}`,
+            `${log.sequenceTitle} ${log.groupName} ${log.instructorReflection} ${dateKey} ${rawIsoDate} ${dateKo} ${stepNames}`,
           );
           if (searchable.includes(trimmed)) return true;
           if (!compactQuery) return false;
@@ -249,17 +300,48 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
         });
       }
     }
-    return [...map.values()].sort(
-      (a, b) => Date.parse(b.sampleLogTaughtAt) - Date.parse(a.sampleLogTaughtAt),
-    );
+    return [...map.values()].sort((a, b) => b.dateKey.localeCompare(a.dateKey));
   }, [groupAndQueryLogs]);
+  const effectiveSelectedDate = useMemo(() => {
+    if (selectedDate === 'all') return 'all';
+    return dateFilterOptions.some((option) => option.dateKey === selectedDate)
+      ? selectedDate
+      : 'all';
+  }, [selectedDate, dateFilterOptions]);
+  const visibleDateFilterOptions = useMemo(() => {
+    if (showAllDateChips || dateFilterOptions.length <= INITIAL_VISIBLE_DATE_CHIPS) {
+      return dateFilterOptions;
+    }
+    const recentSlice = dateFilterOptions.slice(0, INITIAL_VISIBLE_DATE_CHIPS);
+    if (
+      effectiveSelectedDate !== 'all' &&
+      !recentSlice.some((option) => option.dateKey === effectiveSelectedDate)
+    ) {
+      const selectedOption = dateFilterOptions.find(
+        (option) => option.dateKey === effectiveSelectedDate,
+      );
+      if (selectedOption) {
+        return [...recentSlice, selectedOption];
+      }
+    }
+    return recentSlice;
+  }, [dateFilterOptions, showAllDateChips, effectiveSelectedDate]);
+  const hiddenDateChipCount = Math.max(
+    0,
+    dateFilterOptions.length - visibleDateFilterOptions.length,
+  );
   const logs = useMemo(
     () =>
-      selectedDate === 'all'
+      effectiveSelectedDate === 'all'
         ? groupAndQueryLogs
-        : groupAndQueryLogs.filter((log) => getHistoryDateKey(log.taughtAt) === selectedDate),
-    [groupAndQueryLogs, selectedDate],
+        : groupAndQueryLogs.filter((log) => getHistoryDateKey(log.taughtAt) === effectiveSelectedDate),
+    [groupAndQueryLogs, effectiveSelectedDate],
   );
+  const visibleLogs = useMemo(
+    () => logs.slice(0, visibleHistoryCount),
+    [logs, visibleHistoryCount],
+  );
+  const remainingHistoryCount = Math.max(0, logs.length - visibleLogs.length);
   const groupedLogsByDate = useMemo(() => {
     const groups: Array<{
       dateKey: string;
@@ -267,7 +349,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
       weekdayLabel: string;
       items: ClassHistoryLog[];
     }> = [];
-    for (const log of logs) {
+    for (const log of visibleLogs) {
       const dateKey = getHistoryDateKey(log.taughtAt);
       const last = groups[groups.length - 1];
       if (last && last.dateKey === dateKey) {
@@ -282,7 +364,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
       }
     }
     return groups;
-  }, [logs]);
+  }, [visibleLogs]);
   const groupFilterItems = useMemo(
     () => [
       { id: 'all', label: '전체 기록' },
@@ -290,32 +372,44 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     ],
     [classGroups],
   );
-  const actualLogs = logs.filter((log) => !sampleHistoryIds.has(log.id));
+  const actualLogs = useMemo(
+    () => logs.filter((log) => !sampleHistoryIds.has(log.id)),
+    [logs],
+  );
   const hasActiveHistoryFilter =
-    Boolean(historyQuery.trim()) || selectedGroup !== 'all' || selectedDate !== 'all';
+    Boolean(historyQuery.trim()) || selectedGroup !== 'all' || effectiveSelectedDate !== 'all';
   const resetHistoryFilters = () => {
     setHistoryQuery('');
     setSelectedGroup('all');
     setSelectedDate('all');
+    setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
   };
-  const recent = actualLogs.slice(0, 3);
-  const draftIds = new Set(
-    activeSteps.filter((step) => !isRestStep(step)).map((step) => step.exerciseId),
+  const recent = useMemo(() => actualLogs.slice(0, 3), [actualLogs]);
+  const draftIds = useMemo(
+    () => new Set(activeSteps.filter((step) => !isRestStep(step)).map((step) => step.exerciseId)),
+    [activeSteps],
   );
-  const counts = new Map<string, number>();
-  const snapshotExerciseNames = new Map<string, string>();
-  for (const log of actualLogs.slice(0, 5)) {
-    const resolved = resolvedHistoryMap.get(log.id);
-    if (resolved) {
-      for (const step of resolved.steps) {
-        if (step.kind === 'exercise' && step.exerciseId && step.fromSnapshot) {
-          snapshotExerciseNames.set(step.exerciseId, step.nameKo);
+  const { snapshotExerciseNames, mostUsed } = useMemo(() => {
+    const nextCounts = new Map<string, number>();
+    const nextSnapshotExerciseNames = new Map<string, string>();
+    for (const log of actualLogs.slice(0, 5)) {
+      const resolved = resolvedHistoryMap.get(log.id);
+      if (resolved) {
+        for (const step of resolved.steps) {
+          if (step.kind === 'exercise' && step.exerciseId && step.fromSnapshot) {
+            nextSnapshotExerciseNames.set(step.exerciseId, step.nameKo);
+          }
         }
       }
+      for (const id of new Set(historyMovementIds(log))) {
+        nextCounts.set(id, (nextCounts.get(id) ?? 0) + 1);
+      }
     }
-    for (const id of new Set(historyMovementIds(log))) counts.set(id, (counts.get(id) ?? 0) + 1);
-  }
-  const mostUsed = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    return {
+      snapshotExerciseNames: nextSnapshotExerciseNames,
+      mostUsed: [...nextCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5),
+    };
+  }, [actualLogs, resolvedHistoryMap]);
   const reopenedView = reopenedHistoryId ? (resolvedHistoryMap.get(reopenedHistoryId) ?? null) : null;
   const storageStatus = getRecoveryStorageStatus();
 
@@ -748,7 +842,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
               wrapperClassName="teaching-search"
               placeholder="수업 제목, 반 이름, 날짜, 당시 동작·블록으로 찾기"
               value={historyQuery}
-              onChange={(event) => setHistoryQuery(event.target.value)}
+              onChange={(event) => {
+                setHistoryQuery(event.target.value);
+                setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
+              }}
             />
             <span className="muted">최근 진행 순 · 당시 동작·블록·순서·시간 스냅샷 보존</span>
           </div>
@@ -763,6 +860,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
             onChange={(nextGroup) => {
               setSelectedGroup(nextGroup);
               setSelectedDate('all');
+              setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
             }}
           />
           {dateFilterOptions.length > 0 && (
@@ -798,31 +896,52 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
               <div className="teaching-date-chip-list">
                 <button
                   type="button"
-                  className={`teaching-date-chip ${selectedDate === 'all' ? 'is-active' : ''}`}
-                  aria-pressed={selectedDate === 'all'}
-                  onClick={() => setSelectedDate('all')}
+                  className={`teaching-date-chip ${effectiveSelectedDate === 'all' ? 'is-active' : ''}`}
+                  aria-pressed={effectiveSelectedDate === 'all'}
+                  onClick={() => {
+                    setSelectedDate('all');
+                    setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
+                  }}
                 >
                   전체 날짜
                   <span className="teaching-date-chip-count">{groupAndQueryLogs.length}</span>
                 </button>
-                {dateFilterOptions.map((option) => (
+                {visibleDateFilterOptions.map((option) => (
                   <button
                     type="button"
                     key={option.dateKey}
-                    className={`teaching-date-chip ${selectedDate === option.dateKey ? 'is-active' : ''}`}
-                    aria-pressed={selectedDate === option.dateKey}
-                    onClick={() => setSelectedDate(option.dateKey)}
+                    className={`teaching-date-chip ${effectiveSelectedDate === option.dateKey ? 'is-active' : ''}`}
+                    aria-pressed={effectiveSelectedDate === option.dateKey}
+                    onClick={() => {
+                      setSelectedDate(option.dateKey);
+                      setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
+                    }}
                   >
                     {option.label}
                     <span className="teaching-date-chip-count">{option.count}</span>
                   </button>
                 ))}
               </div>
-              {selectedDate !== 'all' && (
+              {dateFilterOptions.length > INITIAL_VISIBLE_DATE_CHIPS && (
+                <button
+                  type="button"
+                  className="teaching-date-reset teaching-date-more-toggle"
+                  aria-expanded={showAllDateChips}
+                  onClick={() => setShowAllDateChips((prev) => !prev)}
+                >
+                  {showAllDateChips
+                    ? '날짜 접기'
+                    : `이전 날짜 더보기 (+${hiddenDateChipCount}일)`}
+                </button>
+              )}
+              {effectiveSelectedDate !== 'all' && (
                 <button
                   type="button"
                   className="teaching-date-reset"
-                  onClick={() => setSelectedDate('all')}
+                  onClick={() => {
+                    setSelectedDate('all');
+                    setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
+                  }}
                 >
                   전체 날짜 보기
                 </button>
@@ -836,9 +955,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   icon={<History size={28} />}
                   title={
                     hasActiveHistoryFilter
-                      ? historyQuery.trim() && selectedGroup === 'all' && selectedDate === 'all'
+                      ? historyQuery.trim() &&
+                        selectedGroup === 'all' &&
+                        effectiveSelectedDate === 'all'
                         ? '검색한 수업 완료 기록이 없어요'
-                        : selectedDate !== 'all'
+                        : effectiveSelectedDate !== 'all'
                           ? '선택한 날짜에 남긴 수업 기록이 없어요'
                           : '선택한 그룹에 남긴 수업 기록이 없어요'
                       : '아직 남긴 수업 기록이 없어요'
@@ -862,7 +983,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       }
                     >
                       {hasActiveHistoryFilter
-                        ? historyQuery.trim() && selectedGroup === 'all' && selectedDate === 'all'
+                        ? historyQuery.trim() &&
+                          selectedGroup === 'all' &&
+                          effectiveSelectedDate === 'all'
                           ? '검색 지우기'
                           : '필터 초기화'
                         : '오늘 수업 계획하기'}
@@ -1042,6 +1165,19 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   })}
                 </div>
               ))}
+              {remainingHistoryCount > 0 && (
+                <div className="teaching-history-load-more">
+                  <PfButton
+                    variant="secondary"
+                    className="teaching-history-load-more-btn"
+                    onClick={() =>
+                      setVisibleHistoryCount((prev) => prev + HISTORY_LOGS_PAGE_SIZE)
+                    }
+                  >
+                    이전 수업 기록 더 보기 ({visibleLogs.length} / {logs.length}건 표시 중 · 남은 {remainingHistoryCount}건)
+                  </PfButton>
+                </div>
+              )}
             </section>
             <aside className="teaching-memory-aside">
               <PfCard as="section" className="teaching-memory-card">
@@ -1059,7 +1195,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       <div className="teaching-overlap-row" key={log.id}>
                         <div>
                           <strong>{log.groupName}</strong>
-                          <span>{formatDate(log.taughtAt)}</span>
+                          <span>
+                            {formatDate(log.taughtAt)} · {log.sequenceTitle}
+                          </span>
                         </div>
                         <b>
                           {shared}
@@ -1170,7 +1308,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                 <div>
                   <dt>진행 일시</dt>
                   <dd>
-                    {formatDate(reopenedView.taughtAt)} ({reopenedView.taughtAt.slice(0, 10)})
+                    {formatDate(reopenedView.taughtAt)} ({getHistoryDateKey(reopenedView.taughtAt)})
                   </dd>
                 </div>
                 <div>
