@@ -1,0 +1,174 @@
+# Round 4 필라테스 첫 사용자 동선 감사 — 상위 3개 재현가능 개선안 통합 패치 제안서
+# 기준 커밋: origin/main (ca3817497e1c3eb97f4700b2b44688ba5fb1f63a)
+# 주의: 본 감사 브랜치(docs/home-first-use-round4-20261107)는 src/** 수정 금지 지침을 준수하여
+# 프로덕션 소스를 수정하지 않고, 통합 담당이 SequenceWorkbench 빌더 병합 후 즉시 적용할 수 있도록
+# 정확한 소유 파일·줄번호 기반 Unified Diff로 제공합니다.
+
+# ==============================================================================
+# [IMP-R4-01] (P1) 동작 고르기(InlineExerciseFinder) 초기 기구 필터를 현재 수업 기구(classEquipment)와 동기화
+# - 소유 파일: src/components/InlineExerciseFinder.tsx (31~52행, 78~106행)
+# - 문제 현상: 빈 홈 화면에서 '동작 고르기'를 열면 classEquipment(['mat'] 또는 ['reformer'])가 전달되는데도
+#   filters.equipment 초기값이 빈 배열([])로 시작되어 1번째 카드('캐리지 호흡 & 암 아크', 리포머)와
+#   2번째 카드('누워서 호흡 관찰', 매트)가 혼재 노출됨. 초보 강사가 설명문 없이 1·2번째 카드의 '+ 추가'를
+#   누르면 1개만 담기고 나머지 1개는 '현재 선택한 기구·소도구와 최대 난이도 조건에 맞는 동작만 추가할 수 있습니다.'
+#   오류로 거부되어 +2클릭('수업 기구로 좁히기' + 재추가) 손실 발생.
+# - 해결 효과: 모달 진입 즉시 현재 수업 기구 동작만 상단에 노출되어 1·2번째 '+ 추가' 2클릭만으로 즉시 2개 동작 추가 성공.
+# ==============================================================================
+--- a/src/components/InlineExerciseFinder.tsx
++++ b/src/components/InlineExerciseFinder.tsx
+@@ -33,6 +33,8 @@ interface InlineExerciseFinderProps {
+   onOpenExercise: (exercise: PilatesExercise) => void;
+   classEquipment?: readonly EquipmentId[];
+   active?: boolean;
++  hideSelectionBar?: boolean;
++  onReturnToWorkbench?: () => void;
+ }
+ 
+ type FilterTab = 'equipment' | 'body' | 'duration';
+@@ -44,9 +46,9 @@ interface FinderFilters {
+   duration: DurationFilter;
+   motionOnly: boolean;
+ }
+-const emptyFilters = (): FinderFilters => ({
++const emptyFilters = (initialEquipment: readonly EquipmentId[] = []): FinderFilters => ({
+   query: '',
+-  equipment: [],
++  equipment: [...initialEquipment],
+   bodyTag: '',
+   duration: 'all',
+   motionOnly: false,
+@@ -71,12 +73,14 @@ export function InlineExerciseFinder({
+   onOpenExercise,
+   classEquipment = [],
+   active = true,
++  hideSelectionBar = false,
++  onReturnToWorkbench,
+ }: InlineExerciseFinderProps) {
+   const exercises = usePilatesStore((state) => state.exercises);
+   const activeSteps = usePilatesStore((state) => state.activeSteps);
+   const appendExerciseToSequence = usePilatesStore((state) => state.appendExerciseToSequence);
+   const setActiveTab = usePilatesStore((state) => state.setActiveTab);
+-  const [filters, setFilters] = useState(emptyFilters);
++  const [filters, setFilters] = useState(() => emptyFilters(classEquipment));
+   const [tab, setTab] = useState<FilterTab>('equipment');
+   const [visibleCount, setVisibleCount] = useState(6);
+   const [filtersOpen, setFiltersOpen] = useState(false);
+@@ -101,7 +105,7 @@ export function InlineExerciseFinder({
+     setVisibleCount(6);
+   };
+   const reset = () => {
+-    setFilters(emptyFilters());
++    setFilters(emptyFilters(classEquipment));
+     setVisibleCount(6);
+     setFeedback(null);
+   };
+@@ -632,14 +636,22 @@ export function InlineExerciseFinder({
+       <button className="ief-open-atlas" type="button" onClick={() => setActiveTab('atlas')}>
+         동작 라이브러리 전체 보기 <ArrowUpRight size={17} />
+       </button>
+-      <div className="ief-selection-bar">
+-        <span>
+-          수업안에 <strong>{selectedCount}개</strong> 선택
+-        </span>
+-        <button type="button" onClick={() => setActiveTab('workbench')}>
+-          <ArrowLeft size={15} aria-hidden="true" /> 수업안으로
+-        </button>
+-      </div>
++      {!hideSelectionBar && (
++        <div className="ief-selection-bar">
++          <span>
++            수업안에 <strong>{selectedCount}개</strong> 선택
++          </span>
++          <button
++            type="button"
++            onClick={() => {
++              if (onReturnToWorkbench) onReturnToWorkbench();
++              else setActiveTab('workbench');
++            }}
++          >
++            <ArrowLeft size={15} aria-hidden="true" /> 수업안으로
++          </button>
++        </div>
++      )}
+     </aside>
+   );
+ }
+
+# ==============================================================================
+# [IMP-R4-02] (P1) 동작 고르기 모달 내부 중복 하단 바(.ief-selection-bar) 제거 및 모달 푸터 Sticky 고정
+# & [IMP-R4-03] (P2) 빈 첫 화면 중복 수업 조건 바(.v2-plan-toolbar) 숨김 및 320px/저장 CTA 가시성 강화
+# - 소유 파일:
+#   1) src/components/SequenceWorkbench.tsx (1054~1087행, 1117~1125행, 1951~1968행)
+#   2) src/styles/release-mobile-clarity.css (38~56행, 290~312행)
+# ==============================================================================
+--- a/src/components/SequenceWorkbench.tsx
++++ b/src/components/SequenceWorkbench.tsx
+@@ -1051,7 +1051,8 @@ export function SequenceWorkbench({
+           </button>
+         </div>
+       )}
+-      <div className="v2-plan-toolbar" aria-label="시퀀스 준비">
++      {s.activeSteps.length > 0 && (
++        <div className="v2-plan-toolbar" aria-label="시퀀스 준비">
+         <div className="v2-condition-chips" aria-label="이번 수업 조건 요약">
+           <button
+             type="button"
+@@ -1084,7 +1085,8 @@ export function SequenceWorkbench({
+             <SlidersHorizontal size={18} />
+           </PfButton>
+         </div>
+-      </div>
++        </div>
++      )}
+       {planningMode === 'auto' && locked > 0 && (
+         <p id="v2-new-draft-scope" className="v2-generation-scope">
+           시퀀스 만들기는 전체를 새 초안으로 바꿉니다. 잠근 {locked}개 항목을 유지하려면 아래
+@@ -1115,7 +1117,7 @@ export function SequenceWorkbench({
+                   />
+                 </label>
+                 <PfButton
+-                  variant="secondary"
++                  variant={!s.activeSequenceId ? "primary" : "secondary"}
+                   className="save-flow"
+                   onClick={handleSave}
+                   disabled={!s.activeSteps.length}
+@@ -1952,6 +1954,8 @@ export function SequenceWorkbench({
+             <InlineExerciseFinder
+               active={finderOpen}
+               onOpenExercise={onOpenYouTubePreview}
++              hideSelectionBar
++              onReturnToWorkbench={closeFinder}
+               classEquipment={EQUIPMENT_OPTIONS.filter((option) =>
+                 selectedEquipment.includes(option.id),
+               ).map((option) => option.id)}
+
+--- a/src/styles/release-mobile-clarity.css
++++ b/src/styles/release-mobile-clarity.css
+@@ -42,6 +42,14 @@
+     max-height: 150px;
+     object-fit: cover;
+   }
++
++  @media (max-width: 389px), (max-height: 640px) {
++    .vnext-workbench .workbench-welcome-image {
++      height: 84px;
++      max-height: 84px;
++    }
++  }
+ }
+ 
+ .vnext-workbench .workbench-welcome-top-row {
+@@ -305,3 +313,13 @@
+   max-width: 100%;
+   box-sizing: border-box;
+ }
++
++.workbench-finder-dialog .workbench-finder-footer {
++  position: sticky;
++  bottom: 0;
++  z-index: 4;
++  background: rgba(251, 248, 242, 0.96);
++  -webkit-backdrop-filter: blur(8px);
++  backdrop-filter: blur(8px);
++  border-top: 1px solid rgba(28, 39, 34, 0.12);
++}
