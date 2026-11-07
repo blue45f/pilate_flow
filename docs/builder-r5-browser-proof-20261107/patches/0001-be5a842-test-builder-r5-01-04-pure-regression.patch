@@ -1,0 +1,467 @@
+From be5a84246d51b8b059c464d3d8ef608129a6924f Mon Sep 17 00:00:00 2001
+From: blue45f <18352425+blue45f@users.noreply.github.com>
+Date: Sat, 7 Nov 2026 15:38:24 +0000
+Subject: [PATCH] test(builder): add conflict-free R5-01..04 regression suite
+ and patch-id coordination spec
+
+---
+ .../R5_CONFLICT_COORDINATION_AND_PATCH_ID.md  |  70 +++++
+ .../builder-round5-minimal-candidates.patch   |  52 +++-
+ src/components/SequenceOrderCard.r5.test.tsx  | 240 ++++++++++++++++++
+ 3 files changed, 350 insertions(+), 12 deletions(-)
+ create mode 100644 docs/builder-cross-input-round5-20261107/R5_CONFLICT_COORDINATION_AND_PATCH_ID.md
+ create mode 100644 src/components/SequenceOrderCard.r5.test.tsx
+
+diff --git a/docs/builder-cross-input-round5-20261107/R5_CONFLICT_COORDINATION_AND_PATCH_ID.md b/docs/builder-cross-input-round5-20261107/R5_CONFLICT_COORDINATION_AND_PATCH_ID.md
+new file mode 100644
+index 0000000..c5fec04
+--- /dev/null
++++ b/docs/builder-cross-input-round5-20261107/R5_CONFLICT_COORDINATION_AND_PATCH_ID.md
+@@ -0,0 +1,70 @@
++# R5-01 ~ R5-04 원본 보존 · 후보(`4804fcb` / `543685b`) 비교 및 충돌 조율 명세
++
++## 1. 후보 커밋(`4804fcb`, `543685b`) 및 최신 `main` 존재 여부 실측 보고
++
++1. **최신 `main` (`origin/main`) 상태**:
++   - SHA: `1f0356a3e959eb460bb72b3aa28f5d4800b2e381` (`docs(builder): add round 5 cross-input, stress, and WebKit compatibility audit without source modifications`)
++   - 직전 빌더 소스 병합 커밋: `8de04fb0c96067fa53a0406b0a9542a6d33a8935` (부모 빌더 구현 커밋 `51f1e6a587dc90e9606beba15b0969872ca32662`, Round 1 빌더 커밋 `884da341dab8e728ae51cd21d27a860ec964df2d`)
++2. **외부 미반영 후보 `4804fcb` 및 `543685b` 조회 결과 (`원격/로컬 부재 확인`)**:
++   - 로컬 Git 객체 데이터베이스 (`git cat-file -t 4804fcb`, `git cat-file -t 543685b`, `git fsck --full`):
++     - `fatal: Not a valid object name 4804fcb`
++     - `fatal: Not a valid object name 543685b`
++   - GitHub 원격 API 조회 (`gh api repos/blue45f/pilate_flow/commits/4804fcb`, `gh api repos/blue45f/pilate_flow/commits/543685b`):
++     - `HTTP 422: {"message":"No commit found for SHA: 4804fcb"}`
++     - `HTTP 422: {"message":"No commit found for SHA: 543685b"}`
++   - **결론 및 조치**:
++     - `4804fcb` 및 `543685b`는 별도 원격 세션의 로컬에만 존재하고 현재 원격(`origin`) 및 본 VM 로컬 저장소에는 푸시/공유되지 않아 직접 diff를 읽을 수 없는 상태입니다.
++     - 지시사항(`후보가 원격/로컬에 없어 비교할 수 없다면 정확히 보고하고 통합 또는 공유소스 수정은 보류하세요`)에 따라 **기본 워크스페이스(`/home/antigravity/blue45f/pilate_flow`, `main` 브랜치 `1f0356a`)의 공유 소스는 단 1바이트도 수정하지 않고 보존**했으며, **`main` 병합 및 원격 `push`를 전면 보류**했습니다.
++
++---
++
++## 2. 기존 빌더 변경 Diff 및 `git patch-id --stable` 대조표
++
++별도 통합 세션에서 `4804fcb` / `543685b`와 대조할 수 있도록 현재 `main`에 반영된 빌더 커밋들과 본 R5-01~04 최소 패치 후보의 전체 및 파일별 `git patch-id --stable` 값을 아래에 기록합니다.
++
++| 구분 | 대상 커밋 / 패치 | 전체 `git patch-id --stable` | `SequenceOrderCard.tsx` `patch-id` | `sequenceDrag.ts` `patch-id` | `sequence-composition.css` `patch-id` |
++| --- | --- | --- | --- | --- | --- |
++| Round 1 빌더 | `884da341dab8e728ae51cd21d27a860ec964df2d` | `9732bb7ba41099cc31f7c25e801a5ed760fa9612` | (미수정) | `d43fc2ea732688bb942bbfb279bffb3e2ca27ed7` | `0da6977bf33087d83144a61aca53ac17d264234e` |
++| Round 4 빌더 | `51f1e6a587dc90e9606beba15b0969872ca32662` | `2adb6b50e5bc4c38dd214974d9aac8dbee73098b` | `9dccca43031ea8146d843bf1417f908d29106b20` | (미수정) | `3f033397b7e2338d948aa2076a9569ba0402bf24` |
++| Round 5 문서 | `1f0356a3e959eb460bb72b3aa28f5d4800b2e381` | `f4094e1fc950cb55dcd9fdeda4453aa265d263eb` | (미수정) | (미수정) | (미수정) |
++| **Round 5 최소 패치 후보** | [`patches/builder-round5-minimal-candidates.patch`](file:///home/antigravity/blue45f/pilate_flow-worktrees/r5-candidate-20261107/docs/builder-cross-input-round5-20261107/patches/builder-round5-minimal-candidates.patch) | `315fba0cefb8448bdafe9824bd35765b40142e54` | `4a2d8641c49097e6775e9386b23403671a3d37ea` | `c6955d3bd2d286a0015e9eaff7ce81b73c108e18` | `219cd68f58552604614267ee1232f13ce9c66851` |
++
++---
++
++## 3. 독립 Worktree 및 2단계 분리 브랜치 보존 구조
++
++공유 소스 충돌을 방지하고 양쪽 변경(`4804fcb`/`543685b` 및 `R5-01~04`)을 모두 무손실로 반영할 수 있도록 독립 worktree (`/home/antigravity/blue45f/pilate_flow-worktrees/r5-candidate-20261107`)에 2개 커밋(2개 브랜치 포인터)으로 분리 보존했습니다:
++
++1. **순수 회귀 테스트 + 조율 문서 브랜치 (`test/builder-r5-01-04-pure-regression-20261107`)**:
++   - **기존 파일 수정 0건**: `SequenceOrderCard.tsx`, `sequenceDrag.ts`, `sequence-composition.css`, `SequenceOrderCard.test.tsx`를 전혀 건드리지 않고 새 테스트 파일 [`src/components/SequenceOrderCard.r5.test.tsx`](file:///home/antigravity/blue45f/pilate_flow-worktrees/r5-candidate-20261107/src/components/SequenceOrderCard.r5.test.tsx) 및 본 문서만 추가합니다.
++   - 따라서 `4804fcb` / `543685b`와 **충돌 확률 0%**로 즉시 병합 가능하며, 패치 전 4개 결함(`R5-01 ~ R5-04`)이 모두 실패로 재현됨을 검증했습니다.
++2. **R5-01 ~ R5-04 최소 패치 포함 후보 브랜치 (`candidate/builder-r5-01-04-20261107`)**:
++   - 위 순수 회귀 테스트 커밋 위에 [`patches/builder-round5-minimal-candidates.patch`](file:///home/antigravity/blue45f/pilate_flow/docs/builder-cross-input-round5-20261107/patches/builder-round5-minimal-candidates.patch)를 적용한 커밋입니다.
++   - 기존 `main`(`884da34` + `51f1e6a`)의 모든 코드를 100% 보존하면서 최소 28줄 추가/6줄 수정만으로 `R5-01 ~ R5-04` 4개 회귀 테스트와 기존 58개 빌더 단위 테스트(총 62개 테스트) 및 `tsc -b`를 모두 통과합니다.
++
++---
++
++## 4. R5-03 WebKit / Safari 정직한 한계 명시 (`실제 런타임 미검증` 유지)
++
++- **실제 WebKit / Safari 브라우저 런타임 실행 여부: `미검증 (UNVERIFIED)`**
++- `R5-03` 관련 수정 후보(`window` 캡처 단계 `Escape` 리스너 추가, `getBoundingClientRect().width / cardEl.offsetWidth` 기반 `rectZoom` 폴백, `.sequence-drag-handle`의 `-webkit-user-select: none; -webkit-touch-callout: none;`)는 Chromium 156 (Blink) 및 `jsdom` 단위 테스트에서 포커스 분리 상태의 `window` `Escape` 취소 동작과 `offsetWidth` 비율 폴백을 검증한 것이며, **실제 Safari / WebKit 브라우저 런타임에서 실행 검증된 것이 아님(`미검증`)**을 그대로 유지합니다.
++
++---
++
++## 5. `4804fcb` / `543685b` 수신 후 양쪽 변경 무손실 통합 절차
++
++통합 담당자가 `4804fcb` 또는 `543685b`를 원격 브랜치로 공유한 직후 아래 순서로 양쪽 변경을 모두 보존해 병합할 수 있습니다:
++
++```bash
++# 1. 독립 worktree에서 원격 후보 커밋 fetch 및 diff / patch-id 대조
++git fetch --all
++git show 4804fcb | git patch-id --stable
++git show 543685b | git patch-id --stable
++git diff 1f0356a..543685b -- src/components/SequenceOrderCard.tsx src/utils/sequenceDrag.ts src/styles/sequence-composition.css
++
++# 2. 충돌 0%인 순수 회귀 테스트 커밋을 먼저 cherry-pick
++git cherry-pick test/builder-r5-01-04-pure-regression-20261107
++
++# 3. 3-way merge로 R5-01~04 최소 패치 커밋을 양쪽 변경 보존 방식으로 적용
++git cherry-pick -X patience candidate/builder-r5-01-04-20261107
++```
+diff --git a/docs/builder-cross-input-round5-20261107/patches/builder-round5-minimal-candidates.patch b/docs/builder-cross-input-round5-20261107/patches/builder-round5-minimal-candidates.patch
+index 9c04653..b1e7905 100644
+--- a/docs/builder-cross-input-round5-20261107/patches/builder-round5-minimal-candidates.patch
++++ b/docs/builder-cross-input-round5-20261107/patches/builder-round5-minimal-candidates.patch
+@@ -1,14 +1,15 @@
+ diff --git a/src/components/SequenceOrderCard.tsx b/src/components/SequenceOrderCard.tsx
++index 464995d..930fa3c 100644
+ --- a/src/components/SequenceOrderCard.tsx
+ +++ b/src/components/SequenceOrderCard.tsx
+-@@ -38,18 +38,31 @@ export function SequenceOrderCard({
++@@ -38,9 +38,20 @@ export function SequenceOrderCard({
+      const cardEl = cardRef.current;
+      if (!cardEl) return;
+      const list = cardEl.closest<HTMLElement>('.flow-sections') ?? cardEl.parentElement;
+ -    if (!list || !list.hasAttribute('data-drag-session')) return;
+ +    if (!list || !list.hasAttribute('data-drag-session') || !pointerDrag.current?.session.isActive()) {
+ +      clearHeaderTranslations();
+-+      if (pointerDrag.current && !pointerDrag.current.session.isActive()) {
+++      if (pointerDrag.current?.rafId && !pointerDrag.current.session.isActive()) {
+ +        cancelAnimationFrame(pointerDrag.current.rafId);
+ +        pointerDrag.current = null;
+ +      }
+@@ -23,8 +24,7 @@ diff --git a/src/components/SequenceOrderCard.tsx b/src/components/SequenceOrder
+      const htmlZoom = Number.parseFloat(
+        document.documentElement.style.zoom ||
+          window.getComputedStyle(document.documentElement).zoom ||
+-         '1',
+-     );
++@@ -49,9 +60,11 @@ export function SequenceOrderCard({
+      const zoomFactor =
+        typeof cssZoom === 'number' && Number.isFinite(cssZoom) && cssZoom > 0 && cssZoom !== 1
+          ? cssZoom
+@@ -37,6 +37,8 @@ diff --git a/src/components/SequenceOrderCard.tsx b/src/components/SequenceOrder
+ +            ? htmlZoom
+ +            : 1;
+  
++     const cards = Array.from(list.querySelectorAll<HTMLElement>('[data-order-step]'));
++     const from = cards.findIndex((el) => el.dataset.orderStep === step.stepId);
+ @@ -122,7 +135,8 @@ export function SequenceOrderCard({
+          rec.transform = scaled;
+        };
+@@ -57,7 +59,27 @@ diff --git a/src/components/SequenceOrderCard.tsx b/src/components/SequenceOrder
+              if (event.button !== 0 || step.locked || pointerDrag.current || !cardRef.current)
+                return;
+              event.preventDefault();
+-@@ -276,9 +293,12 @@ export function SequenceOrderCard({
++@@ -240,11 +257,17 @@ export function SequenceOrderCard({
++             if (pointerDrag.current?.id === event.pointerId) {
++               pointerDrag.current.session.move(event.clientX, event.clientY);
++               syncActiveDragDom();
++-              if (!pointerDrag.current.rafId && pointerDrag.current.session.isActive()) {
+++              if (
+++                pointerDrag.current &&
+++                !pointerDrag.current.rafId &&
+++                pointerDrag.current.session.isActive()
+++              ) {
++                 const loop = () => {
++                   if (!pointerDrag.current) return;
++                   syncActiveDragDom();
++-                  pointerDrag.current.rafId = requestAnimationFrame(loop);
+++                  if (pointerDrag.current) {
+++                    pointerDrag.current.rafId = requestAnimationFrame(loop);
+++                  }
++                 };
++                 pointerDrag.current.rafId = requestAnimationFrame(loop);
++               }
++@@ -276,9 +299,12 @@ export function SequenceOrderCard({
+              if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                event.preventDefault();
+                clearPointerDrag();
+@@ -73,9 +95,11 @@ diff --git a/src/components/SequenceOrderCard.tsx b/src/components/SequenceOrder
+            }}
+          >
+ diff --git a/src/styles/sequence-composition.css b/src/styles/sequence-composition.css
++index fa7b8aa..689343d 100644
+ --- a/src/styles/sequence-composition.css
+ +++ b/src/styles/sequence-composition.css
+-@@ -140,6 +140,6 @@
++@@ -139,7 +139,7 @@
++ }
+  
+  /* Preserve 0 bottom margin on the last real card in a section when the fixed drag overlay clone is appended after it. */
+ -#root .vnext-shell .v2-workbench .pf-sequence-block__body > .sequence-order-card:nth-last-child(2):has(+ .sequence-drag-overlay) {
+@@ -83,26 +107,28 @@ diff --git a/src/styles/sequence-composition.css b/src/styles/sequence-compositi
+    margin-bottom: 0;
+  }
+  
+-@@ -166,4 +166,6 @@
++@@ -165,6 +165,8 @@
++ }
+  #root .sequence-drag-handle {
+    touch-action: none;
+ +  -webkit-user-select: none;
+ +  -webkit-touch-callout: none;
+    user-select: none;
+  }
++ 
+ diff --git a/src/utils/sequenceDrag.ts b/src/utils/sequenceDrag.ts
++index 61cd3f6..49c3a2b 100644
+ --- a/src/utils/sequenceDrag.ts
+ +++ b/src/utils/sequenceDrag.ts
+-@@ -118,6 +118,7 @@ export function createSequenceDrag({
+-     card.removeAttribute('data-drag-source');
++@@ -119,6 +119,7 @@ export function createSequenceDrag(options: Options) {
+      list.removeAttribute('data-drag-session');
+      window.removeEventListener('blur', cancel);
+      window.removeEventListener('resize', cancel);
+ +    window.removeEventListener('keydown', onKeyDown, true);
+      document.removeEventListener('visibilitychange', onVisibility);
+      if (cancelActiveDrag === cancel) cancelActiveDrag = null;
+-@@ -134,5 +135,10 @@ export function createSequenceDrag({
+-   };
++     indicator?.remove();
++@@ -135,6 +136,11 @@ export function createSequenceDrag(options: Options) {
+    const onVisibility = () => {
+      if (document.hidden) cancel();
+    };
+@@ -112,7 +138,9 @@ diff --git a/src/utils/sequenceDrag.ts b/src/utils/sequenceDrag.ts
+ +    }
+ +  };
+    const begin = () => {
+-@@ -193,6 +199,7 @@ export function createSequenceDrag({
++     active = true;
++     cards = Array.from(list.querySelectorAll<HTMLElement>('[data-order-step]'));
++@@ -193,6 +199,7 @@ export function createSequenceDrag(options: Options) {
+      });
+      window.addEventListener('blur', cancel);
+      window.addEventListener('resize', cancel);
+diff --git a/src/components/SequenceOrderCard.r5.test.tsx b/src/components/SequenceOrderCard.r5.test.tsx
+new file mode 100644
+index 0000000..7c5ae16
+--- /dev/null
++++ b/src/components/SequenceOrderCard.r5.test.tsx
+@@ -0,0 +1,240 @@
++import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
++import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
++import { SequenceOrderCard } from './SequenceOrderCard';
++import { usePilatesStore } from '../store/usePilatesStore';
++import type { SequenceStep } from '../types/pilates';
++
++/**
++ * Round 5 (R5-01 ~ R5-04) Isolated Regression Suite
++ * Note on R5-03 WebKit/Safari: Real WebKit/Safari browser runtime execution remains
++ * UNVERIFIED (미검증) in the Debian 12 sandbox (Chromium/jsdom only). These unit tests
++ * verify the DOM/event/zoom-fallback contracts in jsdom without claiming Safari runtime execution.
++ */
++
++const original = usePilatesStore.getState();
++const notice = vi.fn();
++
++const build80Steps = (): SequenceStep[] =>
++  Array.from({ length: 80 }, (_, idx) => {
++    const isRest = idx === 12 || idx === 32 || idx === 52 || idx === 68;
++    return {
++      stepId: isRest ? `rest-${idx + 1}` : `move-${idx + 1}`,
++      exerciseId: isRest ? '__rest__' : `ex-${(idx % 8) + 1}`,
++      kind: isRest ? 'rest' : 'exercise',
++      order: idx + 1,
++      blockCategory: idx < 15 ? 'warmup' : idx < 70 ? 'extension' : 'cooldown',
++      durationMin: 1,
++      selectedLayer: 'standard',
++    };
++  });
++
++const pointer = (
++  element: HTMLElement,
++  type: string,
++  x = 20,
++  y = 80,
++  pointerId = 1,
++  pointerType = 'touch',
++) => {
++  const event = new MouseEvent(type, {
++    bubbles: true,
++    cancelable: true,
++    button: 0,
++    clientX: x,
++    clientY: y,
++  });
++  Object.defineProperties(event, {
++    pointerId: { value: pointerId },
++    pointerType: { value: pointerType },
++    isPrimary: { value: pointerId === 1 },
++  });
++  fireEvent(element, event);
++};
++
++const rect = (top: number, height = 100, width = 300) => ({
++  x: 0,
++  y: top,
++  left: 0,
++  top,
++  width,
++  height,
++  right: width,
++  bottom: top + height,
++  toJSON: () => ({}),
++});
++
++const cards = () => [...document.querySelectorAll<HTMLElement>('.flow-sections [data-order-step]')];
++const handle = (label: string) =>
++  screen.getByRole('button', { name: `${label} 순서 이동 · 위아래 방향키 또는 드래그` });
++
++function SectionedBoard() {
++  const items = usePilatesStore((state) => state.activeSteps);
++  const runs: { phase: string; entries: { step: SequenceStep; index: number }[] }[] = [];
++  items.forEach((step, index) => {
++    const phase = step.kind === 'rest' ? 'rest' : (step.blockCategory ?? 'main');
++    const prev = runs.at(-1);
++    if (prev && prev.phase === phase) prev.entries.push({ step, index });
++    else runs.push({ phase, entries: [{ step, index }] });
++  });
++  return (
++    <div className="flow-sections" data-sequence-order-list>
++      {runs.map((run, rIdx) => (
++        <section key={`${run.phase}-${rIdx}`} className="pf-sequence-block">
++          <header className="pf-sequence-block__header">{run.phase}</header>
++          <div className="pf-sequence-block__body">
++            {run.entries.map(({ step, index }) => (
++              <SequenceOrderCard
++                key={step.stepId}
++                step={step}
++                index={index}
++                label={`${index + 1}번 ${step.stepId}`}
++                onNotice={notice}
++              >
++                <p>{step.stepId}</p>
++              </SequenceOrderCard>
++            ))}
++          </div>
++        </section>
++      ))}
++    </div>
++  );
++}
++
++describe('Round 5 (R5-01 ~ R5-04) cross-input and stress regression suite', () => {
++  beforeEach(() => {
++    usePilatesStore.setState(
++      { ...original, activeSteps: build80Steps(), undoStack: [] },
++      true,
++    );
++    notice.mockClear();
++    HTMLElement.prototype.setPointerCapture = vi.fn();
++    HTMLElement.prototype.releasePointerCapture = vi.fn();
++    HTMLElement.prototype.hasPointerCapture = vi.fn(() => true);
++    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
++      this: HTMLElement,
++    ) {
++      const card = this.closest<HTMLElement>('[data-order-step]');
++      if (card) return rect(Math.max(0, cards().indexOf(card)) * 110);
++      if (this.matches('.flow-sections')) return rect(0, Math.max(0, cards().length * 110 - 10));
++      return rect(0);
++    });
++    document.elementFromPoint = vi.fn(
++      (x: number, y: number) =>
++        cards().find((card) => {
++          const box = card.getBoundingClientRect();
++          return x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
++        }) ?? null,
++    );
++    vi.spyOn(window, 'scrollBy').mockImplementation(() => {});
++  });
++
++  afterEach(() => {
++    cleanup();
++    document
++      .querySelectorAll('.sequence-drag-overlay, .sequence-drop-indicator')
++      .forEach((node) => node.remove());
++    document.documentElement.style.zoom = '';
++    usePilatesStore.setState(original, true);
++    vi.restoreAllMocks();
++  });
++
++  it('R5-01: clears crossed section header translate and unblocks subsequent drag when screen rotation (resize) cancels an active drag', () => {
++    render(<SectionedBoard />);
++    const handle14 = handle('14번 move-14');
++    const y14 = 13 * 110 + 50;
++    const y12 = 11 * 110 + 20;
++
++    pointer(handle14, 'pointerdown', 20, y14, 1, 'touch');
++    pointer(handle14, 'pointermove', 20, y12, 1, 'touch');
++
++    const c14BlockHeader = document
++      .querySelector('[data-order-step="move-14"]')
++      ?.closest('.pf-sequence-block')
++      ?.querySelector<HTMLElement>('.pf-sequence-block__header');
++    expect(c14BlockHeader?.style.translate).toContain('110px');
++
++    // Simulate screen rotation (window resize) mid-drag before pointerup/pointercancel
++    window.dispatchEvent(new Event('resize'));
++    pointer(handle14, 'pointermove', 20, y12 - 5, 1, 'touch');
++
++    expect(document.querySelector('.sequence-drag-overlay')).toBeNull();
++    expect(c14BlockHeader?.style.translate).toBe('');
++
++    // Verify a subsequent drag on the same card starts cleanly without needing pointercancel
++    pointer(handle14, 'pointerdown', 20, y14, 2, 'touch');
++    pointer(handle14, 'pointermove', 20, y12, 2, 'touch');
++    expect(document.querySelector('.sequence-drag-overlay')).not.toBeNull();
++    pointer(handle14, 'pointercancel', 20, y12, 2, 'touch');
++  });
++
++  it('R5-02: scales the newest active drag overlay at 200% CSS zoom even while a retiring drop-return overlay clone remains in DOM', () => {
++    document.documentElement.style.zoom = '2';
++    render(<SectionedBoard />);
++
++    // Simulate a retiring drop-return overlay clone from a drag that finished < 160ms ago
++    const retiringOverlay = document.createElement('div');
++    retiringOverlay.className = 'sequence-drag-overlay';
++    retiringOverlay.style.width = '150px';
++    document.querySelector('.pf-sequence-block__body')?.appendChild(retiringOverlay);
++
++    const handle1 = handle('1번 move-1');
++    pointer(handle1, 'pointerdown', 20, 40, 1, 'touch');
++    pointer(handle1, 'pointermove', 20, 160, 1, 'touch');
++
++    const overlays = document.querySelectorAll<HTMLElement>('.sequence-drag-overlay');
++    expect(overlays.length).toBe(2);
++    const activeOverlay = overlays[overlays.length - 1];
++    expect(activeOverlay.style.width).toBe('150px');
++
++    pointer(handle1, 'pointercancel', 20, 160, 1, 'touch');
++  });
++
++  it('R5-03: cancels an active touch drag on window Escape even when focus is not on the handle and supports rect/offsetWidth zoom ratio fallback', () => {
++    render(<SectionedBoard />);
++    const handle14 = handle('14번 move-14');
++    const y14 = 13 * 110 + 50;
++    const y12 = 11 * 110 + 20;
++
++    pointer(handle14, 'pointerdown', 20, y14, 1, 'touch');
++    pointer(handle14, 'pointermove', 20, y12, 1, 'touch');
++    expect(document.querySelector('.sequence-drag-overlay')).not.toBeNull();
++
++    // Simulate iPadOS/touch environment where button does not retain keyboard focus during touch
++    handle14.blur();
++    fireEvent.keyDown(window, { key: 'Escape' });
++    pointer(handle14, 'pointermove', 20, y12 - 4, 1, 'touch');
++
++    expect(document.querySelector('.sequence-drag-overlay')).toBeNull();
++    expect(document.querySelector('.sequence-drop-indicator')).toBeNull();
++    expect(
++      usePilatesStore.getState().activeSteps.findIndex((s) => s.stepId === 'move-14'),
++    ).toBe(13);
++
++    // Also verify rectZoom fallback when offsetWidth is half of getBoundingClientRect().width (zoom 2x without currentCSSZoom)
++    const card1 = document.querySelector<HTMLElement>('[data-order-step="move-1"]')!;
++    Object.defineProperty(card1, 'offsetWidth', { configurable: true, value: 150 });
++    const handle1 = handle('1번 move-1');
++    pointer(handle1, 'pointerdown', 20, 40, 3, 'touch');
++    pointer(handle1, 'pointermove', 20, 160, 3, 'touch');
++    const overlay = document.querySelector<HTMLElement>('.sequence-drag-overlay');
++    expect(overlay?.style.width).toBe('150px');
++    pointer(handle1, 'pointercancel', 20, 160, 3, 'touch');
++  });
++
++  it('R5-04: advances 5 positions on 5 rapid synchronous ArrowDown key repeats before React frame commit', () => {
++    render(<SectionedBoard />);
++    const handle1 = handle('1번 move-1');
++
++    act(() => {
++      for (let i = 0; i < 5; i += 1) {
++        handle1.dispatchEvent(
++          new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
++        );
++      }
++    });
++
++    expect(
++      usePilatesStore.getState().activeSteps.findIndex((s) => s.stepId === 'move-1'),
++    ).toBe(5);
++  });
++});
+-- 
+2.39.5
+

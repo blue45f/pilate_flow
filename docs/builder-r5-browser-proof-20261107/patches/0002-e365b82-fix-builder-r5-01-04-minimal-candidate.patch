@@ -1,0 +1,165 @@
+From e365b8284e3fc81bf455da76e4acbfb9e7d0b701 Mon Sep 17 00:00:00 2001
+From: blue45f <18352425+blue45f@users.noreply.github.com>
+Date: Sat, 7 Nov 2026 15:38:24 +0000
+Subject: [PATCH] fix(builder): apply minimal R5-01..04 candidate preserving
+ existing main changes
+
+---
+ src/components/SequenceOrderCard.tsx | 44 ++++++++++++++++++++++------
+ src/styles/sequence-composition.css  |  4 ++-
+ src/utils/sequenceDrag.ts            |  7 +++++
+ 3 files changed, 45 insertions(+), 10 deletions(-)
+
+diff --git a/src/components/SequenceOrderCard.tsx b/src/components/SequenceOrderCard.tsx
+index 464995d..930fa3c 100644
+--- a/src/components/SequenceOrderCard.tsx
++++ b/src/components/SequenceOrderCard.tsx
+@@ -38,9 +38,20 @@ export function SequenceOrderCard({
+     const cardEl = cardRef.current;
+     if (!cardEl) return;
+     const list = cardEl.closest<HTMLElement>('.flow-sections') ?? cardEl.parentElement;
+-    if (!list || !list.hasAttribute('data-drag-session')) return;
++    if (!list || !list.hasAttribute('data-drag-session') || !pointerDrag.current?.session.isActive()) {
++      clearHeaderTranslations();
++      if (pointerDrag.current?.rafId && !pointerDrag.current.session.isActive()) {
++        cancelAnimationFrame(pointerDrag.current.rafId);
++        pointerDrag.current = null;
++      }
++      return;
++    }
+ 
+     const cssZoom = (cardEl as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom;
++    const rectZoom =
++      cardEl.offsetWidth > 0
++        ? Math.round((cardEl.getBoundingClientRect().width / cardEl.offsetWidth) * 100) / 100
++        : 1;
+     const htmlZoom = Number.parseFloat(
+       document.documentElement.style.zoom ||
+         window.getComputedStyle(document.documentElement).zoom ||
+@@ -49,9 +60,11 @@ export function SequenceOrderCard({
+     const zoomFactor =
+       typeof cssZoom === 'number' && Number.isFinite(cssZoom) && cssZoom > 0 && cssZoom !== 1
+         ? cssZoom
+-        : Number.isFinite(htmlZoom) && htmlZoom > 0 && htmlZoom !== 1
+-          ? htmlZoom
+-          : 1;
++        : Number.isFinite(rectZoom) && rectZoom > 0 && rectZoom !== 1
++          ? rectZoom
++          : Number.isFinite(htmlZoom) && htmlZoom > 0 && htmlZoom !== 1
++            ? htmlZoom
++            : 1;
+ 
+     const cards = Array.from(list.querySelectorAll<HTMLElement>('[data-order-step]'));
+     const from = cards.findIndex((el) => el.dataset.orderStep === step.stepId);
+@@ -122,7 +135,8 @@ export function SequenceOrderCard({
+         rec.transform = scaled;
+       };
+ 
+-      const overlay = document.querySelector<HTMLElement>('.sequence-drag-overlay');
++      const overlays = document.querySelectorAll<HTMLElement>('.sequence-drag-overlay');
++      const overlay = overlays[overlays.length - 1];
+       if (overlay) {
+         scalePx(overlay, 'left');
+         scalePx(overlay, 'top');
+@@ -194,6 +208,9 @@ export function SequenceOrderCard({
+           draggable={false}
+           disabled={step.locked}
+           onPointerDown={(event) => {
++            if (pointerDrag.current && !pointerDrag.current.session.isActive()) {
++              clearPointerDrag();
++            }
+             if (event.button !== 0 || step.locked || pointerDrag.current || !cardRef.current)
+               return;
+             event.preventDefault();
+@@ -240,11 +257,17 @@ export function SequenceOrderCard({
+             if (pointerDrag.current?.id === event.pointerId) {
+               pointerDrag.current.session.move(event.clientX, event.clientY);
+               syncActiveDragDom();
+-              if (!pointerDrag.current.rafId && pointerDrag.current.session.isActive()) {
++              if (
++                pointerDrag.current &&
++                !pointerDrag.current.rafId &&
++                pointerDrag.current.session.isActive()
++              ) {
+                 const loop = () => {
+                   if (!pointerDrag.current) return;
+                   syncActiveDragDom();
+-                  pointerDrag.current.rafId = requestAnimationFrame(loop);
++                  if (pointerDrag.current) {
++                    pointerDrag.current.rafId = requestAnimationFrame(loop);
++                  }
+                 };
+                 pointerDrag.current.rafId = requestAnimationFrame(loop);
+               }
+@@ -276,9 +299,12 @@ export function SequenceOrderCard({
+             if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+               event.preventDefault();
+               clearPointerDrag();
++              const liveSteps = usePilatesStore.getState().activeSteps;
++              const liveIndex = liveSteps.findIndex((item) => item.stepId === step.stepId);
+               const delta = event.key === 'ArrowUp' ? -1 : 1;
+-              if ((delta < 0 && upDisabled) || (delta > 0 && downDisabled)) return;
+-              move(steps[index + delta].stepId);
++              const target = liveIndex >= 0 ? liveSteps[liveIndex + delta] : undefined;
++              if (!target || step.locked || target.locked) return;
++              move(target.stepId);
+             }
+           }}
+         >
+diff --git a/src/styles/sequence-composition.css b/src/styles/sequence-composition.css
+index fa7b8aa..689343d 100644
+--- a/src/styles/sequence-composition.css
++++ b/src/styles/sequence-composition.css
+@@ -139,7 +139,7 @@
+ }
+ 
+ /* Preserve 0 bottom margin on the last real card in a section when the fixed drag overlay clone is appended after it. */
+-#root .vnext-shell .v2-workbench .pf-sequence-block__body > .sequence-order-card:nth-last-child(2):has(+ .sequence-drag-overlay) {
++#root .vnext-shell .v2-workbench .pf-sequence-block__body > .sequence-order-card:has(~ .sequence-drag-overlay):not(:has(~ .sequence-order-card)) {
+   margin-bottom: 0;
+ }
+ 
+@@ -165,6 +165,8 @@
+ }
+ #root .sequence-drag-handle {
+   touch-action: none;
++  -webkit-user-select: none;
++  -webkit-touch-callout: none;
+   user-select: none;
+ }
+ 
+diff --git a/src/utils/sequenceDrag.ts b/src/utils/sequenceDrag.ts
+index 61cd3f6..49c3a2b 100644
+--- a/src/utils/sequenceDrag.ts
++++ b/src/utils/sequenceDrag.ts
+@@ -119,6 +119,7 @@ export function createSequenceDrag(options: Options) {
+     list.removeAttribute('data-drag-session');
+     window.removeEventListener('blur', cancel);
+     window.removeEventListener('resize', cancel);
++    window.removeEventListener('keydown', onKeyDown, true);
+     document.removeEventListener('visibilitychange', onVisibility);
+     if (cancelActiveDrag === cancel) cancelActiveDrag = null;
+     indicator?.remove();
+@@ -135,6 +136,11 @@ export function createSequenceDrag(options: Options) {
+   const onVisibility = () => {
+     if (document.hidden) cancel();
+   };
++  const onKeyDown = (event: KeyboardEvent) => {
++    if (event.key === 'Escape') {
++      cancel();
++    }
++  };
+   const begin = () => {
+     active = true;
+     cards = Array.from(list.querySelectorAll<HTMLElement>('[data-order-step]'));
+@@ -193,6 +199,7 @@ export function createSequenceDrag(options: Options) {
+     });
+     window.addEventListener('blur', cancel);
+     window.addEventListener('resize', cancel);
++    window.addEventListener('keydown', onKeyDown, true);
+     document.addEventListener('visibilitychange', onVisibility);
+     onNotice(`${label} 이동 중. 놓을 위치로 끌어 주세요. Escape 키로 취소할 수 있습니다.`);
+   };
+-- 
+2.39.5
+

@@ -1,0 +1,556 @@
+{
+  "capturedAt": "2026-11-07T16:38:03.955Z",
+  "environment": {
+    "chromiumRuntime": "Chromium 156.0.8078.79 built on Debian GNU/Linux 12 (bookworm) (Blink)",
+    "webkitSafariRuntime": {
+      "available": false,
+      "status": "UNVERIFIED (미검증)",
+      "note": "No real Safari or WebKit runtime exists in the Debian 12 sandbox VM. All browser measurements are recorded on Chromium 156 (Blink) and never claimed as Safari."
+    },
+    "beforeTargetCommit": "1f0356a3e959eb460bb72b3aa28f5d4800b2e381 (origin/main)",
+    "afterTargetCommit": "e365b8284e3fc81bf455da76e4acbfb9e7d0b701 (candidate/builder-r5-01-04-20261107)"
+  },
+  "before": {
+    "r5_01": {
+      "overlayCountAfterResize": 0,
+      "indicatorCountAfterResize": 0,
+      "headerStyleTranslate": "0px 282px",
+      "headerRect": {
+        "left": 39,
+        "top": 647,
+        "width": 766,
+        "height": 24,
+        "bottom": 671
+      },
+      "card13Rect": {
+        "left": 39,
+        "top": 393,
+        "width": 766,
+        "height": 218,
+        "bottom": 611
+      },
+      "headerOverlapsCard13": true,
+      "orderSlice10To15": [
+        "syn-move-11",
+        "syn-move-12",
+        "syn-rest-13",
+        "syn-move-14",
+        "syn-move-15"
+      ],
+      "reDragOverlayCount": 0,
+      "reDragOverlayRect": null,
+      "overlayCountAfterBlur": 0,
+      "headerStyleTranslateAfterBlur": "0px 282px",
+      "overlayCountAfterVisibilityChange": 0,
+      "headerStyleTranslateAfterVisibilityChange": "0px 282px"
+    },
+    "r5_02": {
+      "overlaysBeforeSecondDrag": 1,
+      "concurrentOverlayCount": 2,
+      "activeOverlayStyleWidth": "258px",
+      "activeOverlayRect": {
+        "left": 132,
+        "top": 4075,
+        "width": 516,
+        "height": 941
+      },
+      "retiringOverlayRect": {
+        "left": 66,
+        "top": 1603,
+        "width": 324,
+        "height": 156
+      },
+      "sourceCardRect": {
+        "left": 66,
+        "top": 3361,
+        "width": 258,
+        "height": 470
+      },
+      "activeOverlayWidthMatchesSourceCard": false,
+      "dropTargetX": 100,
+      "dropTargetY": 2411,
+      "overlayCountAfterSettle": 0,
+      "topThreeStepsAfterSettle": [
+        "syn-move-2",
+        "syn-move-3",
+        "syn-move-1"
+      ]
+    },
+    "r5_03": {
+      "overlayCountAfterUnfocusedEscape": 1,
+      "indicatorCountAfterUnfocusedEscape": 1,
+      "neighborCard2TransformAfterUnfocusedEscape": "translateY(-174.188px)",
+      "card1Rect": {
+        "left": 33,
+        "top": 40,
+        "width": 324,
+        "height": 156
+      },
+      "card2Rect": {
+        "left": 33,
+        "top": 40,
+        "width": 324,
+        "height": 143
+      },
+      "step1Index": 0,
+      "webkitUserSelect": "none",
+      "touchAction": "none"
+    },
+    "r5_04": {
+      "beforeCardRect": {
+        "left": 33,
+        "top": 660,
+        "width": 324,
+        "height": 156
+      },
+      "after5ArrowDownCardRect": {
+        "left": 33,
+        "top": 545,
+        "width": 324,
+        "height": 156
+      },
+      "indexAfter5ArrowDown": 1,
+      "topSixAfter5ArrowDown": [
+        "syn-move-2",
+        "syn-move-1",
+        "syn-move-3",
+        "syn-move-4",
+        "syn-move-5",
+        "syn-move-6"
+      ],
+      "indexAfter5ArrowUp": 0,
+      "overlayCountDuringKeyboard": 0
+    }
+  },
+  "after": {
+    "r5_01": {
+      "overlayCountAfterResize": 0,
+      "indicatorCountAfterResize": 0,
+      "headerStyleTranslate": "",
+      "headerRect": {
+        "left": 39,
+        "top": 365,
+        "width": 766,
+        "height": 24,
+        "bottom": 389
+      },
+      "card13Rect": {
+        "left": 39,
+        "top": 393,
+        "width": 766,
+        "height": 218,
+        "bottom": 611
+      },
+      "headerOverlapsCard13": false,
+      "orderSlice10To15": [
+        "syn-move-11",
+        "syn-move-12",
+        "syn-rest-13",
+        "syn-move-14",
+        "syn-move-15"
+      ],
+      "reDragOverlayCount": 1,
+      "reDragOverlayRect": {
+        "left": 39,
+        "top": 353,
+        "width": 766,
+        "height": 218
+      },
+      "overlayCountAfterBlur": 0,
+      "headerStyleTranslateAfterBlur": "",
+      "overlayCountAfterVisibilityChange": 0,
+      "headerStyleTranslateAfterVisibilityChange": ""
+    },
+    "r5_02": {
+      "overlaysBeforeSecondDrag": 1,
+      "concurrentOverlayCount": 2,
+      "activeOverlayStyleWidth": "129px",
+      "activeOverlayRect": {
+        "left": 66,
+        "top": 2037,
+        "width": 258,
+        "height": 235
+      },
+      "retiringOverlayRect": {
+        "left": 66,
+        "top": 1603,
+        "width": 648,
+        "height": 312
+      },
+      "sourceCardRect": {
+        "left": 66,
+        "top": 3361,
+        "width": 258,
+        "height": 470
+      },
+      "activeOverlayWidthMatchesSourceCard": true,
+      "dropTargetX": 100,
+      "dropTargetY": 2411,
+      "overlayCountAfterSettle": 0,
+      "topThreeStepsAfterSettle": [
+        "syn-move-2",
+        "syn-move-3",
+        "syn-move-1"
+      ]
+    },
+    "r5_03": {
+      "overlayCountAfterUnfocusedEscape": 0,
+      "indicatorCountAfterUnfocusedEscape": 0,
+      "neighborCard2TransformAfterUnfocusedEscape": "",
+      "card1Rect": {
+        "left": 33,
+        "top": 40,
+        "width": 324,
+        "height": 156
+      },
+      "card2Rect": {
+        "left": 33,
+        "top": 214,
+        "width": 324,
+        "height": 143
+      },
+      "step1Index": 0,
+      "webkitUserSelect": "none",
+      "touchAction": "none"
+    },
+    "r5_04": {
+      "beforeCardRect": {
+        "left": 33,
+        "top": 660,
+        "width": 324,
+        "height": 156
+      },
+      "after5ArrowDownCardRect": {
+        "left": 33,
+        "top": 545,
+        "width": 324,
+        "height": 156
+      },
+      "indexAfter5ArrowDown": 5,
+      "topSixAfter5ArrowDown": [
+        "syn-move-2",
+        "syn-move-3",
+        "syn-move-4",
+        "syn-move-5",
+        "syn-move-6",
+        "syn-move-1"
+      ],
+      "indexAfter5ArrowUp": 0,
+      "overlayCountDuringKeyboard": 0
+    }
+  },
+  "candidateViewportMatrix": {
+    "320x640-100": {
+      "name": "320x640-100",
+      "width": 320,
+      "height": 640,
+      "zoom": 1,
+      "pointerType": "touch",
+      "horizontalOverflowPx": 0,
+      "overlayCountDuringDrag": 1,
+      "sourceCardRect": {
+        "left": 27,
+        "top": 70,
+        "width": 266,
+        "height": 178
+      },
+      "overlayRect": {
+        "left": 27,
+        "top": 229,
+        "width": 266,
+        "height": 178
+      },
+      "indicatorRect": {
+        "left": 27,
+        "top": 245,
+        "width": 266,
+        "height": 178
+      },
+      "neighborCardRect": {
+        "left": 27,
+        "top": 266,
+        "width": 266,
+        "height": 156
+      },
+      "overlayCountAfterDrop": 0,
+      "topThreeOrder": [
+        "syn-move-2",
+        "syn-move-1",
+        "syn-move-3"
+      ]
+    },
+    "390x844-100": {
+      "name": "390x844-100",
+      "width": 390,
+      "height": 844,
+      "zoom": 1,
+      "pointerType": "touch",
+      "horizontalOverflowPx": 0,
+      "overlayCountDuringDrag": 1,
+      "sourceCardRect": {
+        "left": 33,
+        "top": 70,
+        "width": 324,
+        "height": 156
+      },
+      "overlayRect": {
+        "left": 33,
+        "top": 220,
+        "width": 324,
+        "height": 156
+      },
+      "indicatorRect": {
+        "left": 33,
+        "top": 231,
+        "width": 324,
+        "height": 156
+      },
+      "neighborCardRect": {
+        "left": 33,
+        "top": 244,
+        "width": 324,
+        "height": 143
+      },
+      "overlayCountAfterDrop": 0,
+      "topThreeOrder": [
+        "syn-move-2",
+        "syn-move-1",
+        "syn-move-3"
+      ]
+    },
+    "768x1024-100": {
+      "name": "768x1024-100",
+      "width": 768,
+      "height": 1024,
+      "zoom": 1,
+      "pointerType": "touch",
+      "horizontalOverflowPx": 0,
+      "overlayCountDuringDrag": 1,
+      "sourceCardRect": {
+        "left": 39,
+        "top": 70,
+        "width": 690,
+        "height": 136
+      },
+      "overlayRect": {
+        "left": 39,
+        "top": 215,
+        "width": 690,
+        "height": 136
+      },
+      "indicatorRect": {
+        "left": 39,
+        "top": 224,
+        "width": 690,
+        "height": 136
+      },
+      "neighborCardRect": {
+        "left": 39,
+        "top": 224,
+        "width": 690,
+        "height": 136
+      },
+      "overlayCountAfterDrop": 0,
+      "topThreeOrder": [
+        "syn-move-2",
+        "syn-move-1",
+        "syn-move-3"
+      ]
+    },
+    "1440x900-100": {
+      "name": "1440x900-100",
+      "width": 1440,
+      "height": 900,
+      "zoom": 1,
+      "pointerType": "mouse",
+      "horizontalOverflowPx": 0,
+      "overlayCountDuringDrag": 1,
+      "sourceCardRect": {
+        "left": 255,
+        "top": 70,
+        "width": 1123,
+        "height": 136
+      },
+      "overlayRect": {
+        "left": 255,
+        "top": 215,
+        "width": 1123,
+        "height": 136
+      },
+      "indicatorRect": {
+        "left": 255,
+        "top": 224,
+        "width": 1123,
+        "height": 136
+      },
+      "neighborCardRect": {
+        "left": 255,
+        "top": 224,
+        "width": 1123,
+        "height": 136
+      },
+      "overlayCountAfterDrop": 0,
+      "topThreeOrder": [
+        "syn-move-2",
+        "syn-move-1",
+        "syn-move-3"
+      ]
+    },
+    "320x640-200": {
+      "name": "320x640-200",
+      "width": 320,
+      "height": 640,
+      "zoom": 2,
+      "pointerType": "touch",
+      "horizontalOverflowPx": 0,
+      "overlayCountDuringDrag": 1,
+      "sourceCardRect": {
+        "left": 54,
+        "top": 17,
+        "width": 212,
+        "height": 514
+      },
+      "overlayRect": {
+        "left": 54,
+        "top": 479,
+        "width": 212,
+        "height": 128
+      },
+      "indicatorRect": {
+        "left": 54,
+        "top": 498,
+        "width": 212,
+        "height": 514
+      },
+      "neighborCardRect": {
+        "left": 54,
+        "top": 17,
+        "width": 212,
+        "height": 428
+      },
+      "overlayCountAfterDrop": 0,
+      "topThreeOrder": [
+        "syn-move-2",
+        "syn-move-1",
+        "syn-move-3"
+      ]
+    },
+    "390x844-200": {
+      "name": "390x844-200",
+      "width": 390,
+      "height": 844,
+      "zoom": 2,
+      "pointerType": "touch",
+      "horizontalOverflowPx": 0,
+      "overlayCountDuringDrag": 1,
+      "sourceCardRect": {
+        "left": 66,
+        "top": 51,
+        "width": 258,
+        "height": 471
+      },
+      "overlayRect": {
+        "left": 66,
+        "top": 480,
+        "width": 258,
+        "height": 471
+      },
+      "indicatorRect": {
+        "left": 66,
+        "top": 533,
+        "width": 258,
+        "height": 471
+      },
+      "neighborCardRect": {
+        "left": 66,
+        "top": 51,
+        "width": 258,
+        "height": 428
+      },
+      "overlayCountAfterDrop": 0,
+      "topThreeOrder": [
+        "syn-move-2",
+        "syn-move-1",
+        "syn-move-3"
+      ]
+    },
+    "768x1024-200": {
+      "name": "768x1024-200",
+      "width": 768,
+      "height": 1024,
+      "zoom": 2,
+      "pointerType": "touch",
+      "horizontalOverflowPx": 0,
+      "overlayCountDuringDrag": 1,
+      "sourceCardRect": {
+        "left": 78,
+        "top": 17,
+        "width": 612,
+        "height": 1107
+      },
+      "overlayRect": {
+        "left": 78,
+        "top": 870,
+        "width": 612,
+        "height": 1107
+      },
+      "indicatorRect": {
+        "left": 78,
+        "top": 1051,
+        "width": 612,
+        "height": 1107
+      },
+      "neighborCardRect": {
+        "left": 78,
+        "top": 17,
+        "width": 612,
+        "height": 981
+      },
+      "overlayCountAfterDrop": 0,
+      "topThreeOrder": [
+        "syn-move-2",
+        "syn-move-1",
+        "syn-move-3"
+      ]
+    },
+    "1440x900-200": {
+      "name": "1440x900-200",
+      "width": 1440,
+      "height": 900,
+      "zoom": 2,
+      "pointerType": "mouse",
+      "horizontalOverflowPx": 0,
+      "overlayCountDuringDrag": 1,
+      "sourceCardRect": {
+        "left": 510,
+        "top": 70,
+        "width": 821,
+        "height": 346
+      },
+      "overlayRect": {
+        "left": 510,
+        "top": 382,
+        "width": 821,
+        "height": 346
+      },
+      "indicatorRect": {
+        "left": 510,
+        "top": 409,
+        "width": 821,
+        "height": 346
+      },
+      "neighborCardRect": {
+        "left": 510,
+        "top": 70,
+        "width": 821,
+        "height": 303
+      },
+      "overlayCountAfterDrop": 0,
+      "topThreeOrder": [
+        "syn-move-2",
+        "syn-move-1",
+        "syn-move-3"
+      ]
+    }
+  }
+}
