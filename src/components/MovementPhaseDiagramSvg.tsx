@@ -425,20 +425,22 @@ function renderApparatusSupportLayer(
           stroke="#f7f5ef"
           strokeWidth={1}
         />
-        <path
-          d={renderSpringCoilPath(
-            springAnchor.x,
-            springAnchor.y,
-            handTarget.x,
-            handTarget.y,
-            6,
-            2.6,
-          )}
-          fill="none"
-          stroke={springColor}
-          strokeWidth={1.4}
-          opacity={0.78}
-        />
+        {apparatusState.springTensionLevel !== 'none' ? (
+          <path
+            d={renderSpringCoilPath(
+              springAnchor.x,
+              springAnchor.y,
+              handTarget.x,
+              handTarget.y,
+              6,
+              2.6,
+            )}
+            fill="none"
+            stroke={springColor}
+            strokeWidth={1.4}
+            opacity={0.78}
+          />
+        ) : null}
       </g>
     );
   }

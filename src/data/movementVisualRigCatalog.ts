@@ -383,13 +383,18 @@ function buildMuscleHighlights(
     }
   }
 
+  const primaryGroupId: MuscleGroupId =
+    matchedByGroup.has(defaults.primary) || matchedByGroup.size === 0
+      ? defaults.primary
+      : (Array.from(matchedByGroup.keys())[0] ?? defaults.primary);
+
   const orderedRoles: { groupId: MuscleGroupId; role: MuscleActivationRole; phases: readonly VisualPhaseId[] }[] = [
-    { groupId: defaults.primary, role: 'primary', phases: ['middle', 'end'] },
+    { groupId: primaryGroupId, role: 'primary', phases: ['middle', 'end'] },
   ];
 
   if (
     defaults.extraPrimary &&
-    defaults.extraPrimary !== defaults.primary &&
+    defaults.extraPrimary !== primaryGroupId &&
     defaults.extraPrimary !== defaults.stabilizer &&
     defaults.extraPrimary !== defaults.lengthening
   ) {
@@ -403,7 +408,7 @@ function buildMuscleHighlights(
   orderedRoles.push(
     {
       groupId:
-        defaults.stabilizer === defaults.primary
+        defaults.stabilizer === primaryGroupId
           ? 'core-transversus'
           : defaults.stabilizer,
       role: 'stabilizer',
@@ -411,7 +416,7 @@ function buildMuscleHighlights(
     },
     {
       groupId:
-        defaults.lengthening === defaults.primary ||
+        defaults.lengthening === primaryGroupId ||
         defaults.lengthening === defaults.stabilizer
           ? 'thoracic-extensors'
           : defaults.lengthening,
@@ -4679,6 +4684,8 @@ interface SemanticOverrideSpec {
   readonly carriageOffsets: readonly [number, number, number];
   readonly pedalAngles: readonly [number, number, number];
   readonly phaseTitlesKo: readonly [string, string, string];
+  readonly phaseSummariesKo?: readonly [string, string, string];
+  readonly muscles?: ArchetypeRigBlueprint['muscles'];
   readonly startToMiddleKo: string;
   readonly middleToEndKo: string;
   readonly invariantAnchorsKo: string;
@@ -4704,6 +4711,13 @@ function buildSemanticOverrideBlueprint(spec: SemanticOverrideSpec): ArchetypeRi
     carriageOffsets: spec.carriageOffsets,
     pedalAngles: spec.pedalAngles,
     phaseTitlesKo: spec.phaseTitlesKo,
+    phaseSummariesKo:
+      spec.phaseSummariesKo ?? [
+        spec.invariantAnchorsKo,
+        spec.startToMiddleKo,
+        spec.middleToEndKo,
+      ],
+    muscles: spec.muscles ?? base.muscles,
     directionVectors: {
       start: base.directionVectors.start,
       middle: [
@@ -4735,15 +4749,239 @@ function buildSemanticOverrideBlueprint(spec: SemanticOverrideSpec): ArchetypeRi
 }
 
 /**
- * Round 4 Semantic Audit minimal blueprint differentiation for clear-evidence mismatches (SM-01..SM-09).
- * Note: 4 pure breath-observation items (original-mat-rib-breath, original-cadillac-table-breath,
- * original-chair-seated-breath, original-barrel-standing-breath) are intentionally left unmodified
- * because catalog cues do not specify limb trajectory coordinates.
+ * Round 4 & Round 5 Semantic Audit minimal blueprint differentiation for clear-evidence mismatches
+ * (SM-01..SM-09, including Round 5 pure breath-observation 4 exercises).
  * Clinical/anatomical accuracy is NOT assumed (anatomicalAccuracyAssumed: false).
  */
 function resolveSeparatedSemanticMismatchBlueprint(
   exercise: PilatesExercise,
 ): ArchetypeRigBlueprint | null {
+  // Round 5-A: Mat Supine Breath Observation (stationary arms/legs on mat y:148 + pure ribcage breath modulation)
+  if (exercise.id === "original-mat-rib-breath") {
+    const startJoints = makeJointMap({
+      head: { x: 56, y: 132 }, neck: { x: 74, y: 136 }, shoulder: { x: 92, y: 138 },
+      elbow: { x: 116, y: 140 }, wrist: { x: 136, y: 136 }, hand: { x: 144, y: 134 },
+      thoracic: { x: 124, y: 140 }, lumbar: { x: 152, y: 140 }, pelvis: { x: 182, y: 142 },
+      hip: { x: 186, y: 140 }, knee: { x: 214, y: 98 }, ankle: { x: 242, y: 142 },
+      heel: { x: 248, y: 148 }, toe: { x: 262, y: 148 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      thoracic: { x: 124, y: 134 }, lumbar: { x: 152, y: 138 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      thoracic: { x: 124, y: 137 }, lumbar: { x: 152, y: 139 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "mat-supine-rib-breath-isolated",
+      archetypeTitleKo: "매트 수파인 호흡 관찰 · 사지 매트 고정 & 360도 흉곽 호흡 분리",
+      baseArchetypeId: "supine-breath-pelvic-clock",
+      fixedAnchorJoints: [
+        { joint: "pelvis", defaultSurfaceKo: "매트 위 천골·골반 수평 지지점 (182,142)" },
+        { joint: "heel", defaultSurfaceKo: "무릎 세운 양발 뒤꿈치 매트 지지점 (248,148)" },
+      ],
+      movingJoints: ["thoracic", "lumbar"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: [
+        "지지 자세: 무릎 세우고 누워 골반·발·양손 매트 고정",
+        "호흡 관찰(들숨): 사지 고정(Δ0px) · 옆·등 흉곽 확장",
+        "호흡 관찰(날숨): 지지 유지 · 하부 갈비뼈 정돈 이완",
+      ],
+      phaseSummariesKo: [
+        "지지 자세: 무릎을 세우고 매트(y:148)에 누워 천골(182,142)·양발 뒤꿈치(248,148)·양손(144,134)을 팔다리 이동 없이 안정적으로 지지합니다.",
+        "호흡 관찰(들숨): 팔(hand Δ0px)·다리(heel Δ0px) 움직임 없이 마시는 숨에 흉곽(124,140→124,134)이 옆과 등 쪽으로 넓어지는 감각만 관찰합니다.",
+        "호흡 관찰(날숨): 매트 지지 자세를 유지한 채 내쉬는 숨에 흉곽(124,134→124,137)이 부드럽게 가라앉는 호흡 흐름을 관찰합니다. (해부학적 실측 아님)",
+      ],
+      muscles: {
+        primary: "core-transversus",
+        extraPrimary: "glute-med",
+        stabilizer: "rectus-obliques",
+        lengthening: "thoracic-extensors",
+      },
+      startToMiddleKo: "양손(144,134)·골반(182,142)·양발 뒤꿈치(248,148)를 매트에 고정한 채 들숨에 흉곽(124,140→124,134)의 확장만 관찰합니다.",
+      middleToEndKo: "사지 이동(Δ0px) 없이 날숨에 흉곽(124,134→124,137)이 차분히 정돈되는 흐름을 관찰합니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "매트 위 골반(pelvis: 182,142), 뒤꿈치(heel: 248,148), 몸통 옆 손(hand: 144,134)이 고정됩니다.",
+      keyJointChangeKo: "큐에 없는 오버헤드 팔 스윕(64.1px)을 제거하고 지지 자세와 순수 흉곽 호흡 관찰을 분리(thoracic dy -6px · 2D 개략도)",
+      middleVectorLabelKo: "들숨 360도 흉곽 확장 관찰 (사지 고정)",
+      middleVectorKind: "axial-lengthening",
+      middleVectorPoints: [pt(124, 140), pt(124, 134)],
+      endVectorLabelKo: "날숨 하부 늑골 정돈 관찰",
+      endVectorPoints: [pt(124, 134), pt(124, 137)],
+    });
+  }
+
+  // Round 5-B: Cadillac Table Breath Observation (no springs used, supine on table y:145, stationary limbs + breath observation)
+  if (exercise.id === "original-cadillac-table-breath") {
+    const startJoints = makeJointMap({
+      head: { x: 58, y: 130 }, neck: { x: 76, y: 134 }, shoulder: { x: 94, y: 136 },
+      elbow: { x: 118, y: 138 }, wrist: { x: 138, y: 134 }, hand: { x: 146, y: 132 },
+      thoracic: { x: 126, y: 138 }, lumbar: { x: 154, y: 138 }, pelvis: { x: 182, y: 140 },
+      hip: { x: 186, y: 138 }, knee: { x: 214, y: 96 }, ankle: { x: 242, y: 140 },
+      heel: { x: 248, y: 145 }, toe: { x: 262, y: 145 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      thoracic: { x: 126, y: 132 }, lumbar: { x: 154, y: 136 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      thoracic: { x: 126, y: 135 }, lumbar: { x: 154, y: 137 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "cadillac-table-breath-isolated",
+      archetypeTitleKo: "캐딜락 테이블 호흡 · 스프링 미사용 테이블 지지 & 순수 흉곽 호흡 분리",
+      baseArchetypeId: "supine-breath-pelvic-clock",
+      fixedAnchorJoints: [
+        { joint: "pelvis", defaultSurfaceKo: "캐딜락 테이블 상면 골반 지지점 (182,140)" },
+        { joint: "heel", defaultSurfaceKo: "캐딜락 테이블 상면 양발 뒤꿈치 접지점 (248,145 · 스프링 미사용)" },
+      ],
+      movingJoints: ["thoracic", "lumbar"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: [
+        "지지 자세: 스프링 미사용 · 캐딜락 테이블 누운 정렬",
+        "호흡 관찰(들숨): 사지 고정(Δ0px) · 등·옆구리 호흡 확장",
+        "호흡 관찰(날숨): 테이블 지지 유지 · 흉곽 이완 관찰",
+      ],
+      phaseSummariesKo: [
+        "지지 자세(스프링 미사용): 캐딜락 테이블(y:145) 위에 누워 스프링 연결 없이 골반(182,140)·뒤꿈치(248,145)·양손(146,132)을 편안히 지지합니다.",
+        "호흡 관찰(들숨): 팔(hand Δ0px)·다리(heel Δ0px) 이동 없이 마시는 숨에 테이블에 닿은 등 뒤쪽과 옆구리 흉곽(126,138→126,132)이 넓어지는 감각을 관찰합니다.",
+        "호흡 관찰(날숨): 테이블 지지 자세를 유지하며 내쉬는 숨에 어깨 긴장을 풀고 흉곽(126,132→126,135)이 안정되는 흐름을 관찰합니다. (해부학적 실측 아님)",
+      ],
+      muscles: {
+        primary: "core-transversus",
+        extraPrimary: "glute-med",
+        stabilizer: "rectus-obliques",
+        lengthening: "thoracic-extensors",
+      },
+      startToMiddleKo: "스프링 미사용 상태에서 양손(146,132)과 뒤꿈치(248,145)를 테이블에 고정한 채 들숨 흉곽(126,138→126,132) 확장을 관찰합니다.",
+      middleToEndKo: "팔·다리 움직임 없이 날숨에 흉곽(126,132→126,135)과 어깨가 테이블 위에서 편안히 가라앉는 흐름을 관찰합니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "캐딜락 테이블 위 골반(pelvis: 182,140), 뒤꿈치(heel: 248,145), 손(hand: 146,132 · 스프링 미연결)이 고정됩니다.",
+      keyJointChangeKo: "스프링 미사용(none) 반영 및 손 스프링 코일/팔 스윕 제거 후 순수 호흡 관찰 분리(thoracic dy -6px · 2D 개략도)",
+      middleVectorLabelKo: "테이블 지지 들숨 흉곽 확장 관찰",
+      middleVectorKind: "axial-lengthening",
+      middleVectorPoints: [pt(126, 138), pt(126, 132)],
+      endVectorLabelKo: "날숨 흉곽 정돈 및 이완 관찰",
+      endVectorPoints: [pt(126, 132), pt(126, 135)],
+    });
+  }
+
+  // Round 5-C: Chair Seated Breath Observation (pelvis on seat y:108, heels on floor y:176, hands resting on thighs Δ0px)
+  if (exercise.id === "original-chair-seated-breath") {
+    const startJoints = makeJointMap({
+      head: { x: 132, y: 26 }, neck: { x: 132, y: 40 }, shoulder: { x: 132, y: 56 },
+      elbow: { x: 126, y: 80 }, wrist: { x: 140, y: 94 }, hand: { x: 148, y: 96 },
+      thoracic: { x: 132, y: 78 }, lumbar: { x: 132, y: 94 }, pelvis: { x: 132, y: 108 },
+      hip: { x: 140, y: 108 }, knee: { x: 184, y: 126 }, ankle: { x: 202, y: 170 },
+      heel: { x: 198, y: 176 }, toe: { x: 216, y: 176 },
+      farHip: { x: 140, y: 108 }, farKnee: { x: 182, y: 128 }, farAnkle: { x: 200, y: 172 }, farToe: { x: 212, y: 176 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      thoracic: { x: 136, y: 73 }, lumbar: { x: 134, y: 92 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      thoracic: { x: 134, y: 75 }, lumbar: { x: 133, y: 93 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "chair-seated-breath-isolated",
+      archetypeTitleKo: "체어 시티드 호흡 · 시트 상단 좌골 착석 & 바닥 양발 접지 순수 호흡 분리",
+      baseArchetypeId: "seated-row-arm-arc",
+      fixedAnchorJoints: [
+        { joint: "pelvis", defaultSurfaceKo: "운다 체어 시트 상단 좌골 지지점 (132,108 · 시트 관통 없음)" },
+        { joint: "heel", defaultSurfaceKo: "체어 앞 바닥 양발 뒤꿈치 접지점 (198,176 · 허공 부유 없음)" },
+      ],
+      movingJoints: ["thoracic", "lumbar"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: [
+        "지지 자세: 체어 시트(y:108) 착석 & 양발 바닥(y:176) 접지",
+        "호흡 관찰(들숨): 사지 고정(Δ0px) · 수직 축 위 흉곽 확장",
+        "호흡 관찰(날숨): 좌골 지지 유지 · 갈비뼈 정돈 관찰",
+      ],
+      phaseSummariesKo: [
+        "지지 자세: 체어 시트 상단(y:106~115) 위 좌골(132,108)에 앉아 양발 뒤꿈치(198,176)를 바닥(y:178)에 디디고 양손(148,96)은 허벅지 위에 고정합니다.",
+        "호흡 관찰(들숨): 팔 로잉(hand Δ0px)이나 다리 이동(heel Δ0px) 없이 마시는 숨에 골반 위 흉곽(132,78→136,73)이 수직 정렬 위에서 넓어지는 감각을 관찰합니다.",
+        "호흡 관찰(날숨): 시트 착석과 바닥 접지를 유지한 채 내쉬는 숨에 갈비뼈(136,73→134,75)가 부드럽게 정돈되는 호흡을 관찰합니다. (해부학적 실측 아님)",
+      ],
+      muscles: {
+        primary: "core-transversus",
+        extraPrimary: "glute-med",
+        stabilizer: "rectus-obliques",
+        lengthening: "thoracic-extensors",
+      },
+      startToMiddleKo: "체어 시트 좌골(132,108)·바닥 뒤꿈치(198,176)·허벅지 위 손(148,96)을 고정한 채 들숨 흉곽(132,78→136,73) 확장을 관찰합니다.",
+      middleToEndKo: "팔·다리 움직임 없이 날숨에 흉곽(136,73→134,75)이 좌골 수직 중심 위에서 정돈되는 흐름을 관찰합니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "체어 시트 위 좌골(pelvis: 132,108), 바닥 뒤꿈치(heel: 198,176), 허벅지 위 양손(hand: 148,96)이 고정됩니다.",
+      keyJointChangeKo: "시트 관통(y:138)·발 부유(y:148)·로잉 팔 스윕(80.5px)을 제거하고 착석 지지와 호흡 관찰을 분리(thoracic Δ6.4px · 2D 개략도)",
+      middleVectorLabelKo: "시트 착석 들숨 흉곽 확장 관찰 (사지 고정)",
+      middleVectorKind: "axial-lengthening",
+      middleVectorPoints: [pt(132, 78), pt(136, 73)],
+      endVectorLabelKo: "날숨 수직 정렬 내 흉곽 정돈 관찰",
+      endVectorPoints: [pt(136, 73), pt(134, 75)],
+    });
+  }
+
+  // Round 5-D: Barrel Standing Breath Observation (hands on ladder rung 88,76 Δ0px, heels grounded on floor 140,176 Δ0px, no calves fallback)
+  if (exercise.id === "original-barrel-standing-breath") {
+    const startJoints = makeJointMap({
+      head: { x: 140, y: 34 }, neck: { x: 140, y: 50 }, shoulder: { x: 140, y: 66 },
+      elbow: { x: 116, y: 82 }, wrist: { x: 96, y: 78 }, hand: { x: 88, y: 76 },
+      thoracic: { x: 138, y: 84 }, lumbar: { x: 140, y: 104 }, pelvis: { x: 140, y: 120 },
+      hip: { x: 142, y: 122 }, knee: { x: 144, y: 146 }, ankle: { x: 146, y: 170 },
+      heel: { x: 140, y: 176 }, toe: { x: 158, y: 176 },
+      farHip: { x: 138, y: 122 }, farKnee: { x: 138, y: 148 }, farAnkle: { x: 138, y: 172 }, farToe: { x: 150, y: 176 },
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      thoracic: { x: 142, y: 79 }, lumbar: { x: 142, y: 102 },
+    });
+    const endJoints = makeJointMap({
+      ...startJoints,
+      thoracic: { x: 140, y: 81 }, lumbar: { x: 141, y: 103 },
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: "barrel-standing-breath-isolated",
+      archetypeTitleKo: "바렐 앞 스탠딩 호흡 · 래더 가로대 손 지지 & 평발 바닥 접지 순수 호흡 분리",
+      baseArchetypeId: "standing-ankle-calf-upper-reach",
+      fixedAnchorJoints: [
+        { joint: "hand", defaultSurfaceKo: "래더 바렐 사다리 상단 가로대 가벼운 손 지지점 (88,76)" },
+        { joint: "heel", defaultSurfaceKo: "바닥 양발 뒤꿈치 완전 접지점 (140,176 · 카프 레이즈 없음)" },
+      ],
+      movingJoints: ["thoracic", "lumbar"],
+      startJoints, middleJoints, endJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: [
+        "지지 자세: 래더 가로대 손 지지(88,76) & 양발 바닥 접지",
+        "호흡 관찰(들숨): 손·뒤꿈치 고정(Δ0px) · 입체 흉곽 확장",
+        "호흡 관찰(날숨): 발바닥 무게중심 유지 · 흉곽 정돈 관찰",
+      ],
+      phaseSummariesKo: [
+        "지지 자세: 바렐 사다리 앞 바닥(y:178)에 양발 뒤꿈치(140,176)를 편평하게 딛고 서서 양손(88,76)을 상단 래더 가로대에 가볍게 얹어 지지합니다.",
+        "호흡 관찰(들숨): 까치발 상승(heel Δ0px)이나 팔 스윕(hand Δ0px) 없이 마시는 숨에 갈비뼈(138,84→142,79)가 앞·옆·뒤로 확장되는 감각을 관찰합니다.",
+        "호흡 관찰(날숨): 래더 손 지지와 발바닥 접지를 그대로 유지한 채 내쉬는 숨에 흉곽(142,79→140,81)이 차분히 가라앉는 흐름을 관찰합니다. (해부학적 실측 아님)",
+      ],
+      muscles: {
+        primary: "core-transversus",
+        extraPrimary: "rectus-obliques",
+        stabilizer: "glute-med",
+        lengthening: "thoracic-extensors",
+      },
+      startToMiddleKo: "래더 가로대 위 손(88,76)과 바닥 뒤꿈치(140,176)를 고정한 채 들숨에 흉곽(138,84→142,79)의 입체적 확장을 관찰합니다.",
+      middleToEndKo: "카프 레이즈나 팔 이동(Δ0px) 없이 날숨에 발바닥 접지를 느끼며 흉곽(142,79→140,81)을 정돈합니다. (해부학적 실측 아님)",
+      invariantAnchorsKo: "래더 상단 가로대 손(hand: 88,76), 바닥 양발 뒤꿈치(heel: 140,176), 기립 골반(pelvis: 140,120)이 고정됩니다.",
+      keyJointChangeKo: "허공 손(dist 98px)·카프 레이즈(heel Δ14.6px)·calves 근육 fallback을 제거하고 기립 지지와 호흡 관찰을 분리(thoracic Δ6.4px · 2D 개략도)",
+      middleVectorLabelKo: "래더 손 지지 들숨 흉곽 확장 관찰 (평발 고정)",
+      middleVectorKind: "axial-lengthening",
+      middleVectorPoints: [pt(138, 84), pt(142, 79)],
+      endVectorLabelKo: "날숨 기립 정렬 내 흉곽 정돈 관찰",
+      endVectorPoints: [pt(142, 79), pt(140, 81)],
+    });
+  }
+
   // SM-08A: Chair Seated Knee Lift (upward knee lift with stationary pedal vs downward pedal press)
   if (exercise.id === "original-chair-seated-knee-lift") {
     const startJoints = makeJointMap({
@@ -5488,9 +5726,13 @@ function resolveSpringTensionLevel(
   exercise: PilatesExercise,
 ): 'low' | 'medium' | 'high' | 'none' {
   const s = exercise.springs.toLowerCase();
+  const cuesText = exercise.cues.join(' ');
   if (
     exercise.apparatus === 'mat' ||
     exercise.apparatus === 'barrel' ||
+    exercise.id === 'original-cadillac-table-breath' ||
+    exercise.id === 'original-chair-seated-breath' ||
+    cuesText.includes('스프링을 사용하지 않고') ||
     s.includes('bodyweight') ||
     s.includes('스프링 사용 없음') ||
     s.includes('no spring') ||
