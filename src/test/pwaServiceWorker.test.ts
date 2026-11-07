@@ -89,17 +89,34 @@ describe('static-only service worker', () => {
     expect(h.request('/', 'navigate', 'POST')).not.toHaveBeenCalled();
     expect(h.request('/private.json')).not.toHaveBeenCalled();
   });
-  it('preserves the original navigation request online, without caching the response', async () => {
+  it('never intercepts non-navigation or API requests that carry query strings', () => {
     const h = harness();
-    const response = h.request('/', 'navigate');
-    expect((await response.mock.calls[0][0]).body).toBe('network');
-    expect(h.fetch.mock.calls[0][0].url).toBe('https://example.test/');
-    expect(h.cache.addAll).not.toHaveBeenCalled();
+    expect(h.request('/?utm_source=pwa', 'cors')).not.toHaveBeenCalled();
+    expect(h.request('/index.html?utm_source=pwa', 'cors')).not.toHaveBeenCalled();
+    expect(h.request('/api/session?utm_source=pwa', 'cors')).not.toHaveBeenCalled();
+    expect(h.request('/icons/app-192.png?v=1', 'no-cors')).not.toHaveBeenCalled();
+    expect(h.fetch).not.toHaveBeenCalled();
   });
-  it('opens its exact cached app shell offline', async () => {
+  it.each(['/', '/?utm_source=pwa', '/?q=%ED%97%8C%EB%93%9C%EB%A0%88%EB%93%9C&apparatus=mat'])(
+    'preserves the original navigation request (%s) online, without caching the response',
+    async (url) => {
+      const h = harness();
+      const response = h.request(url, 'navigate');
+      expect((await response.mock.calls[0][0]).body).toBe('network');
+      expect(h.fetch.mock.calls[0][0].url).toBe(new URL(url, h.self.location.origin).href);
+      expect(h.cache.addAll).not.toHaveBeenCalled();
+    },
+  );
+  it.each([
+    '/',
+    '/index.html',
+    '/?utm_source=pwa',
+    '/index.html?utm_source=pwa',
+    '/?q=%ED%97%8C%EB%93%9C%EB%A0%88%EB%93%9C&apparatus=mat',
+  ])('opens its exact cached app shell offline for root navigation %s', async (url) => {
     const h = harness();
     h.fetch.mockRejectedValue(new Error('offline'));
-    const response = h.request('/', 'navigate');
+    const response = h.request(url, 'navigate');
     expect(await response.mock.calls[0][0]).toBe(h.cached);
     expect(h.cache.match).toHaveBeenCalledWith('/index.html');
   });

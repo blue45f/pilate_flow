@@ -55,9 +55,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
-  if (request.method !== 'GET' || url.origin !== self.location.origin || url.search) return;
-  // Navigations outside the app root (including /__/auth/*) are never intercepted.
-  if (request.mode === 'navigate' && (url.pathname === '/' || url.pathname === '/index.html')) {
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  // Navigations outside the app root (including /__/auth/* and auth callback params) are never intercepted.
+  if (
+    request.mode === 'navigate' &&
+    (url.pathname === '/' || url.pathname === '/index.html') &&
+    !/(?:^|[?&])(?:code|state|oobCode|apiKey)=/.test(url.search)
+  ) {
     event.respondWith(fetch(request).catch(async () => {
       const cache = await caches.open(CACHE);
       const cached = await cache.match('/index.html');
@@ -71,7 +75,7 @@ self.addEventListener('fetch', (event) => {
     }));
     return;
   }
-  if (!ASSETS.includes(url.pathname) || url.pathname === '/index.html') return;
+  if (url.search || !ASSETS.includes(url.pathname) || url.pathname === '/index.html') return;
   event.respondWith(caches.open(CACHE).then(async (cache) => (await cache.match(url.pathname)) || fetch(request)));
 });
 `;
