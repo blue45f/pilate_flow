@@ -5,13 +5,11 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
+import { createControllableStaticServer } from './controllable-static-server.mjs';
 
 const ROOT_DIR = '/home/antigravity/blue45f/pilate_flow';
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
@@ -20,17 +18,6 @@ const EVIDENCE_DIR = path.join(ROUND4_DIR, 'evidence');
 const SCREENSHOT_DIR = path.join(EVIDENCE_DIR, 'screenshots');
 const SUMMARY_JSON_PATH = path.join(EVIDENCE_DIR, 'round4-cross-regression-summary.json');
 
-const MIME_TYPES = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.webmanifest': 'application/manifest+json; charset=utf-8',
-  '.png': 'image/png',
-  '.svg': 'image/svg+xml',
-  '.csv': 'text/csv; charset=utf-8',
-  '.ico': 'image/x-icon',
-};
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -134,60 +121,6 @@ function probeWebKitAvailability() {
   };
 }
 
-function createControllableStaticServer(distRoot) {
-  let rejectAllNetworkRequests = false;
-  const sockets = new Set();
-
-  const server = http.createServer((req, res) => {
-    const reqUrl = req.url || '/';
-    if (rejectAllNetworkRequests) {
-      req.socket.destroy();
-      return;
-    }
-    const parsed = new URL(reqUrl, 'http://127.0.0.1');
-    let pathname = decodeURIComponent(parsed.pathname);
-    if (pathname === '/') pathname = '/index.html';
-    const candidate = path.resolve(distRoot, `.${pathname}`);
-    if (!candidate.startsWith(distRoot) || !existsSync(candidate) || !statSync(candidate).isFile()) {
-      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Not found');
-      return;
-    }
-    const ext = path.extname(candidate);
-    res.writeHead(200, {
-      'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
-      'Cache-Control': 'no-cache',
-    });
-    res.end(readFileSync(candidate));
-  });
-
-  server.on('connection', (socket) => {
-    sockets.add(socket);
-    socket.on('close', () => sockets.delete(socket));
-  });
-
-  return {
-    setOffline(offline) {
-      rejectAllNetworkRequests = Boolean(offline);
-      if (rejectAllNetworkRequests) {
-        for (const s of sockets) s.destroy();
-      }
-    },
-    listen() {
-      return new Promise((resolve, reject) => {
-        server.listen(0, '127.0.0.1', () => {
-          const addr = server.address();
-          resolve(addr.port);
-        });
-        server.on('error', reject);
-      });
-    },
-    close() {
-      for (const s of sockets) s.destroy();
-      return new Promise((resolve) => server.close(() => resolve()));
-    },
-  };
-}
 
 class CdpSession {
   constructor(wsUrl) {
