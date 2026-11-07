@@ -13,7 +13,6 @@ import {
 import { AiSequenceCoPilotPanel } from '../../../src/components/AiSequenceCoPilotPanel';
 import { FreeAiAssistantPanel } from '../../../src/components/FreeAiAssistantPanel';
 import {
-  FreeAiClientError,
   createDefaultFreeAiStatus,
   createFreeAiClient,
   type FreeAiTransport,
