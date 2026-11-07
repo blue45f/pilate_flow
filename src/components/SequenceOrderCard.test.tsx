@@ -315,3 +315,106 @@ it('reveals keyboard and button destinations without jumping on pointer drop', a
     else Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
   }
 });
+
+describe('80-step mixed sequence touch drag, cross-section headers, zoom200, and announcements', () => {
+  const build80Steps = (): SequenceStep[] =>
+    Array.from({ length: 80 }, (_, idx) => {
+      const isRest = idx === 12 || idx === 32 || idx === 52 || idx === 68;
+      return {
+        stepId: isRest ? `rest-${idx + 1}` : `move-${idx + 1}`,
+        exerciseId: isRest ? '__rest__' : `ex-${(idx % 8) + 1}`,
+        kind: isRest ? 'rest' : 'exercise',
+        order: idx + 1,
+        blockCategory: idx < 15 ? 'warmup' : idx < 70 ? 'extension' : 'cooldown',
+        durationMin: 1,
+        selectedLayer: 'standard',
+      };
+    });
+
+  function SectionedBoard() {
+    const items = usePilatesStore((state) => state.activeSteps);
+    const runs: { phase: string; entries: { step: SequenceStep; index: number }[] }[] = [];
+    items.forEach((step, index) => {
+      const phase = step.kind === 'rest' ? 'rest' : (step.blockCategory ?? 'main');
+      const prev = runs.at(-1);
+      if (prev && prev.phase === phase) prev.entries.push({ step, index });
+      else runs.push({ phase, entries: [{ step, index }] });
+    });
+    return (
+      <div className="flow-sections" data-sequence-order-list>
+        {runs.map((run, rIdx) => (
+          <section key={`${run.phase}-${rIdx}`} className="pf-sequence-block">
+            <header className="pf-sequence-block__header">{run.phase}</header>
+            <div className="pf-sequence-block__body">
+              {run.entries.map(({ step, index }) => (
+                <SequenceOrderCard
+                  key={step.stepId}
+                  step={step}
+                  index={index}
+                  label={`${index + 1}번 ${step.stepId}`}
+                  onNotice={notice}
+                >
+                  <p>{step.stepId}</p>
+                </SequenceOrderCard>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    );
+  }
+
+  it('shifts crossed section headers during upward touch drag across a rest card in an 80-step sequence and announces committed target position', () => {
+    usePilatesStore.setState({ activeSteps: build80Steps(), undoStack: [] });
+    render(<SectionedBoard />);
+    expect(cards()).toHaveLength(80);
+
+    // Card 13 (move-14) is the first card of the warmup section after rest-13 (index 12)
+    const handle14 = handle('14번 move-14');
+    const y14 = 13 * 110 + 50;
+    const y12 = 11 * 110 + 20;
+
+    pointer(handle14, 'pointerdown', 20, y14, 1, 'touch');
+    // Initial move within same slot preserves drag-start announcement
+    pointer(handle14, 'pointermove', 20, y14 - 12, 1, 'touch');
+    expect(notice).toHaveBeenLastCalledWith(
+      expect.stringContaining('14번 move-14 이동 중. 놓을 위치로 끌어 주세요.'),
+    );
+
+    // Drag upward across rest-13 (index 12) to move-12 (index 11)
+    pointer(handle14, 'pointermove', 20, y12, 1, 'touch');
+    const c14BlockHeader = document
+      .querySelector('[data-order-step="move-14"]')
+      ?.closest('.pf-sequence-block')
+      ?.querySelector<HTMLElement>('.pf-sequence-block__header');
+    expect(c14BlockHeader?.style.translate || c14BlockHeader?.style.transform).toContain('110px');
+
+    pointer(handle14, 'pointerup', 20, y12, 1, 'touch');
+    expect(c14BlockHeader?.style.translate).toBe('');
+    expect(
+      usePilatesStore.getState().activeSteps.findIndex((s) => s.stepId === 'move-14'),
+    ).toBe(11);
+    expect(notice).toHaveBeenLastCalledWith(
+      '14번 move-14 순서를 12번째 위치로 바꿨어요. 되돌릴 수 있습니다.',
+    );
+  });
+
+  it('scales drag overlay, drop indicator, and card transforms when CSS zoom is 200%', () => {
+    document.documentElement.style.zoom = '2';
+    try {
+      render(<Board />);
+      pointer(handle(), 'pointerdown', 20, 80, 1, 'touch');
+      pointer(handle(), 'pointermove', 40, 280, 1, 'touch');
+      const overlay = document.querySelector<HTMLElement>('.sequence-drag-overlay');
+      const indicator = document.querySelector<HTMLElement>('.sequence-drop-indicator');
+      const cardB = document.querySelector<HTMLElement>('[data-order-step="b"]');
+      expect(overlay?.style.width).toBe('150px');
+      expect(indicator?.style.width).toBe('150px');
+      expect(cardB?.style.transform).toBe('translateY(-55px)');
+      pointer(handle(), 'pointercancel', 40, 280, 1, 'touch');
+    } finally {
+      document.documentElement.style.zoom = '';
+    }
+  });
+});
+
