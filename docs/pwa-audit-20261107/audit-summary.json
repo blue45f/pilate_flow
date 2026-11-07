@@ -1,0 +1,53 @@
+{
+  "auditId": "pwa-audit-20261107",
+  "workflow": "2-track-parallel",
+  "overallStatus": "PASS",
+  "durationMs": 15415,
+  "honestyDisclosure": {
+    "realSafariExecuted": false,
+    "realIosDeviceExecuted": false,
+    "realAndroidDeviceExecuted": false,
+    "userBrowserModified": false,
+    "isolatedTempBrowserProfilesUsedAndCleaned": true,
+    "note": "Real Apple Safari / WebKit and physical mobile devices were NOT executed on this Debian 12 Linux host. Track B iOS/Android checks used Vitest/jsdom mocks and isolated Headless Chromium 156 CDP emulation."
+  },
+  "readOnlyCheck": {
+    "existingAppFilesReadOnly": true,
+    "disallowedChanges": []
+  },
+  "tracks": {
+    "trackA": {
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 15405,
+      "vitestPassed": 7,
+      "vitestTotal": 7,
+      "chromiumPhasesVerified": 5,
+      "syntheticStorageKeysVerified": 7,
+      "syntheticStorageBytesVerified": 1564596,
+      "syntheticStorageSha256": "ab29e22436fd04fb0c0b223627bd2d5dd56e988b68c36ea3b12e1e402ac55a56",
+      "dataLossBytes": 0,
+      "findingsReproduced": [
+        "A-F1",
+        "A-F2",
+        "A-F3"
+      ]
+    },
+    "trackB": {
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 8164,
+      "vitestPassed": 28,
+      "vitestTotal": 28,
+      "chromiumCdpScenariosPassed": 4,
+      "chromiumCdpScenariosTotal": 4,
+      "realSafariExecuted": false,
+      "findingsReproduced": [
+        "B-F1",
+        "B-F2",
+        "B-F3",
+        "B-F4"
+      ]
+    }
+  }
+}
