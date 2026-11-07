@@ -1,0 +1,1220 @@
+From 51a6f6bd89687730aba87d004740a34bca4b9c51 Mon Sep 17 00:00:00 2001
+From: blue45f <18352425+blue45f@users.noreply.github.com>
+Date: Sat, 7 Nov 2026 00:24:50 +0000
+Subject: [PATCH 4/4] fix(classCueSheet): guard editable keyboard shortcuts,
+ deduplicate aria-live, and verify lifecycle resilience
+
+---
+ .../ClassCueSheetPreview.test.tsx             | 252 ++++++++
+ .../classCueSheet/ClassCueSheetPreview.tsx    | 120 +++-
+ src/features/classCueSheet/README.md          |   6 +-
+ .../classCueSheetChromium.test.ts             |  96 +++
+ .../classCueSheetLifecycle.test.tsx           | 587 ++++++++++++++++++
+ 5 files changed, 1043 insertions(+), 18 deletions(-)
+ create mode 100644 src/features/classCueSheet/classCueSheetLifecycle.test.tsx
+
+diff --git a/src/features/classCueSheet/ClassCueSheetPreview.test.tsx b/src/features/classCueSheet/ClassCueSheetPreview.test.tsx
+index abd568c..6b67c50 100644
+--- a/src/features/classCueSheet/ClassCueSheetPreview.test.tsx
++++ b/src/features/classCueSheet/ClassCueSheetPreview.test.tsx
+@@ -992,4 +992,256 @@ describe('ClassCueSheetPreview', () => {
+     expect(document.activeElement).not.toBe(document.body);
+     expect(document.activeElement).toBe(focusDeck);
+   });
++
++  it('does not preventDefault or change the active step when keyboard shortcuts are dispatched from input, textarea, select, contenteditable, modifier keys, or IME composition', () => {
++    render(
++      <ClassCueSheetPreview
++        showFixtureSwitcher={true}
++        initialStepIndex={1}
++        sourceInput={{
++          id: 'editable-guard-seq',
++          title: '편집 입력 키보드 보호 시퀀스',
++          steps: [
++            { id: 'eg-1', nameKo: '동작 1', durationMin: 3 },
++            { id: 'eg-2', nameKo: '동작 2', durationMin: 3 },
++            { id: 'eg-3', nameKo: '동작 3', durationMin: 3 },
++          ],
++        }}
++      />,
++    );
++
++    const rootEl = screen.getByTestId('class-cue-sheet-root');
++    const focusDeck = screen.getByTestId('cue-sheet-focus-deck');
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('1');
++
++    // Mount editable elements inside focusDeck to prove bubbling keydowns from editable controls are never intercepted
++    const inputEl = document.createElement('input');
++    inputEl.type = 'text';
++    const textareaEl = document.createElement('textarea');
++    const selectEl = document.createElement('select');
++    const contentEditableEl = document.createElement('div');
++    contentEditableEl.setAttribute('contenteditable', 'true');
++    const nestedSpanInContentEditable = document.createElement('span');
++    contentEditableEl.appendChild(nestedSpanInContentEditable);
++
++    focusDeck.appendChild(inputEl);
++    focusDeck.appendChild(textareaEl);
++    focusDeck.appendChild(selectEl);
++    focusDeck.appendChild(contentEditableEl);
++
++    const shortcutKeys = [
++      'ArrowLeft',
++      'ArrowRight',
++      'ArrowUp',
++      'ArrowDown',
++      'Home',
++      'End',
++      'j',
++      'k',
++      'n',
++      'p',
++    ];
++
++    for (const target of [
++      inputEl,
++      textareaEl,
++      selectEl,
++      contentEditableEl,
++      nestedSpanInContentEditable,
++    ]) {
++      target.focus();
++      for (const key of shortcutKeys) {
++        const evt = new KeyboardEvent('keydown', {
++          key,
++          bubbles: true,
++          cancelable: true,
++        });
++        const notCancelled = fireEvent(target, evt);
++        expect(notCancelled).toBe(true);
++        expect(evt.defaultPrevented).toBe(false);
++        expect(rootEl.getAttribute('data-current-step-index')).toBe('1');
++      }
++    }
++
++    // Remove temporary editable elements and focus the deck itself
++    inputEl.remove();
++    textareaEl.remove();
++    selectEl.remove();
++    contentEditableEl.remove();
++    focusDeck.focus();
++
++    // Modifier keys (ctrlKey, metaKey, altKey, shiftKey) and IME composition must not intercept or navigate
++    for (const key of shortcutKeys) {
++      for (const mod of [
++        { ctrlKey: true },
++        { metaKey: true },
++        { altKey: true },
++        { shiftKey: true },
++        { isComposing: true },
++        { keyCode: 229 },
++      ]) {
++        const evt = new KeyboardEvent('keydown', {
++          key,
++          bubbles: true,
++          cancelable: true,
++          ...mod,
++        });
++        const notCancelled = fireEvent(focusDeck, evt);
++        expect(notCancelled).toBe(true);
++        expect(evt.defaultPrevented).toBe(false);
++        expect(rootEl.getAttribute('data-current-step-index')).toBe('1');
++      }
++    }
++
++    // Plain unmodified shortcut on focusDeck still navigates and prevents default
++    const validEvt = new KeyboardEvent('keydown', {
++      key: 'j',
++      bubbles: true,
++      cancelable: true,
++    });
++    const validNotCancelled = fireEvent(focusDeck, validEvt);
++    expect(validNotCancelled).toBe(false);
++    expect(validEvt.defaultPrevented).toBe(true);
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('2');
++  });
++
++  it('maintains a single aria-live / role="status" announcement region (cue-sheet-a11y-status) across normal, empty, and delete-fallback states', () => {
++    const { container, rerender } = render(
++      <ClassCueSheetPreview
++        initialFullListOpen={true}
++        sourceInput={{
++          id: 'single-live-region-seq',
++          title: '단일 라이브 리전 검증 시퀀스',
++          steps: [
++            { id: 'sl-1', nameKo: '풋워크', durationMin: 4 },
++            { id: 'sl-2', nameKo: '헌드레드', durationMin: 3 },
++            { id: 'sl-3', nameKo: '레그 서클즈', durationMin: 4 },
++          ],
++        }}
++      />,
++    );
++
++    const assertSingleLiveStatusRegion = () => {
++      const liveOrStatusEls = container.querySelectorAll(
++        '[aria-live], [role="status"]',
++      );
++      expect(liveOrStatusEls.length).toBe(1);
++      expect(liveOrStatusEls[0]?.getAttribute('data-testid')).toBe(
++        'cue-sheet-a11y-status',
++      );
++      expect(liveOrStatusEls[0]?.getAttribute('role')).toBe('status');
++      expect(liveOrStatusEls[0]?.getAttribute('aria-live')).toBe('polite');
++      expect(liveOrStatusEls[0]?.getAttribute('aria-atomic')).toBe('true');
++      expect(
++        screen.getByTestId('cue-sheet-current-card').getAttribute('aria-live'),
++      ).toBeNull();
++    };
++
++    // 1. Normal state
++    assertSingleLiveStatusRegion();
++
++    // 2. Delete active step -> fallback-adjacent-after-delete state with fallback notice visible
++    fireEvent.click(screen.getByRole('button', { name: '다음 진행 항목' }));
++    rerender(
++      <ClassCueSheetPreview
++        initialFullListOpen={true}
++        sourceInput={{
++          id: 'single-live-region-seq',
++          title: '단일 라이브 리전 검증 시퀀스',
++          steps: [
++            { id: 'sl-1', nameKo: '풋워크', durationMin: 4 },
++            { id: 'sl-3', nameKo: '레그 서클즈', durationMin: 4 },
++          ],
++        }}
++      />,
++    );
++    const fallbackNotice = screen.getByTestId(
++      'cue-sheet-selection-fallback-notice',
++    );
++    expect(fallbackNotice.getAttribute('role')).toBe('note');
++    expect(screen.getByTestId('cue-sheet-a11y-status').textContent).toContain(
++      '이전 선택 항목(헌드레드) 삭제됨, 인접 항목으로 위치 유지',
++    );
++    assertSingleLiveStatusRegion();
++
++    // 3. Empty class state
++    rerender(
++      <ClassCueSheetPreview
++        initialFullListOpen={true}
++        sourceInput={{
++          id: 'single-live-region-seq',
++          title: '단일 라이브 리전 검증 시퀀스 (비움)',
++          steps: [],
++        }}
++      />,
++    );
++    expect(
++      screen.getByTestId('cue-sheet-empty-state').getAttribute('role'),
++    ).toBeNull();
++    assertSingleLiveStatusRegion();
++  });
++
++  it('does not steal focus back to the cue sheet when the user blurs to document.body or focuses an external input before a re-render', () => {
++    const externalInput = document.createElement('input');
++    externalInput.type = 'text';
++    document.body.appendChild(externalInput);
++
++    try {
++      const { rerender } = render(
++        <ClassCueSheetPreview
++          sourceInput={{
++            id: 'no-focus-steal-seq',
++            title: '포커스 비탈취 검증 시퀀스',
++            steps: [
++              { id: 'nfs-1', nameKo: '동작 1', durationMin: 3 },
++              { id: 'nfs-2', nameKo: '동작 2', durationMin: 3 },
++            ],
++          }}
++        />,
++      );
++
++      const nextBtn = screen.getByTestId('cue-sheet-nav-next');
++
++      // 1. Focus inside root, then blur to document.body (relatedTarget === null)
++      nextBtn.focus();
++      expect(document.activeElement).toBe(nextBtn);
++      nextBtn.blur();
++      expect(document.activeElement).toBe(document.body);
++
++      // Re-render with updated steps while nextBtn is still mounted and enabled -> must NOT steal focus
++      rerender(
++        <ClassCueSheetPreview
++          sourceInput={{
++            id: 'no-focus-steal-seq',
++            title: '포커스 비탈취 검증 시퀀스 (업데이트 1)',
++            steps: [
++              { id: 'nfs-1', nameKo: '동작 1', durationMin: 3 },
++              { id: 'nfs-2', nameKo: '동작 2', durationMin: 3 },
++              { id: 'nfs-3', nameKo: '동작 3', durationMin: 3 },
++            ],
++          }}
++        />,
++      );
++      expect(document.activeElement).toBe(document.body);
++
++      // 2. Focus inside root, then move focus to external input outside root
++      nextBtn.focus();
++      expect(document.activeElement).toBe(nextBtn);
++      externalInput.focus();
++      expect(document.activeElement).toBe(externalInput);
++
++      rerender(
++        <ClassCueSheetPreview
++          sourceInput={{
++            id: 'no-focus-steal-seq',
++            title: '포커스 비탈취 검증 시퀀스 (업데이트 2)',
++            steps: [{ id: 'nfs-1', nameKo: '동작 1', durationMin: 3 }],
++          }}
++        />,
++      );
++      expect(document.activeElement).toBe(externalInput);
++    } finally {
++      externalInput.remove();
++    }
++  });
+ });
+diff --git a/src/features/classCueSheet/ClassCueSheetPreview.tsx b/src/features/classCueSheet/ClassCueSheetPreview.tsx
+index f9344b6..f5b40d2 100644
+--- a/src/features/classCueSheet/ClassCueSheetPreview.tsx
++++ b/src/features/classCueSheet/ClassCueSheetPreview.tsx
+@@ -317,6 +317,30 @@ function renderItemCueBlock(item: ClassCueSheetItem): React.ReactNode {
+   );
+ }
+ 
++const EDITABLE_KEYBOARD_TARGET_SELECTOR =
++  'input, textarea, select, [contenteditable=""], [contenteditable="true"], [contenteditable="plaintext-only"], [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="searchbox"], [role="combobox"]';
++
++function isEditableKeyboardTarget(target: EventTarget | null): boolean {
++  if (!target || !(target instanceof Element)) {
++    return false;
++  }
++  if (target instanceof HTMLElement && target.isContentEditable) {
++    return true;
++  }
++  if (target.closest(EDITABLE_KEYBOARD_TARGET_SELECTOR) !== null) {
++    return true;
++  }
++  let cur: HTMLElement | null =
++    target instanceof HTMLElement ? target.parentElement : null;
++  while (cur) {
++    if (cur.isContentEditable) {
++      return true;
++    }
++    cur = cur.parentElement;
++  }
++  return false;
++}
++
+ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+   projection,
+   sourceInput,
+@@ -333,6 +357,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+   const rootRef = useRef<HTMLDivElement | null>(null);
+   const focusDeckRef = useRef<HTMLDivElement | null>(null);
+   const hadFocusInsideRootRef = useRef<boolean>(false);
++  const focusedElementRef = useRef<HTMLElement | null>(null);
+ 
+   const shouldShowFixtureSwitcher =
+     showFixtureSwitcher ??
+@@ -405,8 +430,28 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+       return;
+     }
+     const activeEl = document.activeElement;
+-    if (!activeEl || activeEl === document.body || !rootEl.contains(activeEl)) {
++    if (activeEl && rootEl.contains(activeEl)) {
++      if (activeEl instanceof HTMLElement) {
++        focusedElementRef.current = activeEl;
++      }
++      return;
++    }
++    if (activeEl && activeEl !== document.body && !rootEl.contains(activeEl)) {
++      hadFocusInsideRootRef.current = false;
++      focusedElementRef.current = null;
++      return;
++    }
++    const lastFocusedEl = focusedElementRef.current;
++    const lostFocusDueToUnmountOrDisable =
++      lastFocusedEl !== null &&
++      (!rootEl.contains(lastFocusedEl) ||
++        (lastFocusedEl as HTMLButtonElement).disabled === true);
++    if (lostFocusDueToUnmountOrDisable) {
+       deckEl.focus({ preventScroll: true });
++      focusedElementRef.current = deckEl;
++    } else {
++      hadFocusInsideRootRef.current = false;
++      focusedElementRef.current = null;
+     }
+   });
+ 
+@@ -441,8 +486,9 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+ 
+   const transferFocusToDeckIfBoundary = (willDisableButton: boolean) => {
+     hadFocusInsideRootRef.current = true;
+-    if (willDisableButton) {
+-      focusDeckRef.current?.focus({ preventScroll: true });
++    if (willDisableButton && focusDeckRef.current) {
++      focusDeckRef.current.focus({ preventScroll: true });
++      focusedElementRef.current = focusDeckRef.current;
+     }
+   };
+ 
+@@ -487,7 +533,32 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+   };
+ 
+   const handleDeckKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+-    if (totalItems === 0) {
++    if (totalItems === 0 || event.defaultPrevented) {
++      return;
++    }
++    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
++      return;
++    }
++    const nativeEvt = event.nativeEvent as KeyboardEvent & {
++      isComposing?: boolean;
++      keyCode?: number;
++    };
++    const syntheticComposing = (
++      event as unknown as { isComposing?: boolean; keyCode?: number }
++    ).isComposing;
++    if (
++      Boolean(nativeEvt?.isComposing) ||
++      Boolean(syntheticComposing) ||
++      nativeEvt?.keyCode === 229 ||
++      event.keyCode === 229 ||
++      event.key === 'Process'
++    ) {
++      return;
++    }
++    if (
++      isEditableKeyboardTarget(event.target) ||
++      isEditableKeyboardTarget(document.activeElement)
++    ) {
+       return;
+     }
+     if (
+@@ -518,19 +589,33 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+     }
+   };
+ 
+-  const handleRootFocusCapture = () => {
++  const handleRootFocusCapture = (event: React.FocusEvent<HTMLDivElement>) => {
+     hadFocusInsideRootRef.current = true;
++    if (event.target instanceof HTMLElement) {
++      focusedElementRef.current = event.target;
++    }
+   };
+ 
+   const handleRootBlurCapture = (event: React.FocusEvent<HTMLDivElement>) => {
+     const nextFocused = event.relatedTarget;
+-    if (
+-      nextFocused instanceof Node &&
+-      rootRef.current &&
+-      !rootRef.current.contains(nextFocused)
+-    ) {
+-      hadFocusInsideRootRef.current = false;
++    if (nextFocused instanceof Node) {
++      if (rootRef.current && !rootRef.current.contains(nextFocused)) {
++        hadFocusInsideRootRef.current = false;
++        focusedElementRef.current = null;
++      }
++      return;
+     }
++    queueMicrotask(() => {
++      const rootEl = rootRef.current;
++      if (!rootEl) {
++        return;
++      }
++      const activeEl = document.activeElement;
++      if (!activeEl || !rootEl.contains(activeEl)) {
++        hadFocusInsideRootRef.current = false;
++        focusedElementRef.current = null;
++      }
++    });
+   };
+ 
+   const firstExpandedRowIdForCurrent = currentItem
+@@ -696,6 +781,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+           data-testid="cue-sheet-a11y-status"
+           role="status"
+           aria-live="polite"
++          aria-atomic="true"
+         >
+           {!currentItem
+             ? '현재 진행 항목 없음 (0/0) · 다음 준비 항목 없음'
+@@ -707,6 +793,12 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+                 nextItem
+                   ? `#${formatStepNumber(nextItem.order)} ${nextItem.nameKo}`
+                   : '없음 (마지막 항목)'
++              }${
++                selectionResolution === 'fallback-adjacent-after-delete'
++                  ? ` · 이전 선택 항목${
++                      removedItemNameKo ? `(${removedItemNameKo})` : ''
++                    } 삭제됨, 인접 항목으로 위치 유지`
++                  : ''
+               }`}
+         </p>
+ 
+@@ -715,7 +807,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+             <div
+               className="cue-sheet-selection-fallback-notice"
+               data-testid="cue-sheet-selection-fallback-notice"
+-              role="status"
++              role="note"
+             >
+               {`이전 선택 항목${
+                 removedItemNameKo ? `(${removedItemNameKo})` : ''
+@@ -729,7 +821,6 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+           <div
+             className="cue-sheet-empty-state"
+             data-testid="cue-sheet-empty-state"
+-            role="status"
+           >
+             <p className="cue-sheet-title">
+               수업 진행 항목이 비어 있습니다 (0개 항목)
+@@ -744,7 +835,6 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+         <div className="cue-sheet-focus-grid">
+           <section
+             aria-label="현재 진행 항목"
+-            aria-live="polite"
+             className="cue-sheet-focus-card is-current"
+             data-testid="cue-sheet-current-card"
+           >
+@@ -979,7 +1069,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+           }`}
+         >
+           {activeProjection.isEmpty ? (
+-            <div className="cue-sheet-empty-state" role="status">
++            <div className="cue-sheet-empty-state">
+               <p className="cue-sheet-title">
+                 수업 진행 항목이 비어 있습니다 (0개 항목)
+               </p>
+diff --git a/src/features/classCueSheet/README.md b/src/features/classCueSheet/README.md
+index 9bf7b53..ffe9ba0 100644
+--- a/src/features/classCueSheet/README.md
++++ b/src/features/classCueSheet/README.md
+@@ -64,10 +64,10 @@
+ - `classCueSheetTypes.ts` — 프로젝션, 스텝 아이템, 펼치기 행, 프라이버시 리포트, 유한 상한(`DEFAULT_MAX_*`) 타입 계약
+ - `classCueSheetProjection.ts` — 순수 읽기 전용 어댑터(`buildClassCueSheetProjection`), 순서 불변 안정 `cueItemId` 생성, 평문 포맷터(`formatClassCueSheetAsPlainText`), 민감 키 필터링 및 HTML 평문 이스케이프
+ - `classCueSheetFixtures.ts` — 7종 합성 픽스처
+-- `ClassCueSheetPreview.tsx` — 독립 픽스처 프리뷰 컴포넌트 (초보 강사 모바일 우선 포커스 데크, 기본 접기 디클로저, 100%~200% 글자 확대, 라이브 편집 안정 ID·fallback, 키보드 포커스 보호)
++- `ClassCueSheetPreview.tsx` — 독립 픽스처 프리뷰 컴포넌트 (초보 강사 모바일 우선 포커스 데크, 기본 접기 디클로저, 100%~200% 글자 확대, 라이브 편집 안정 ID·fallback, 입력 컨트롤·IME·수정키 단축키 간섭 방지, 단일 `aria-live` 상태 알림, 비탈취 키보드 포커스 보호)
+ - `classCueSheet.css` — `.class-cue-sheet-root` 스코프 스타일, `44px` 터치 타겟, `320px`/`390px`/`768px`/`1440px` & `200%` 확대 반응형 레이아웃, `prefers-reduced-motion`, `@media print` 다중 페이지 분할 규칙
+ - `classCueSheetProjection.test.ts` — 어댑터·프로젝션·안정 ID·프라이버시 경계 단위 테스트 (15개 테스트)
+-- `ClassCueSheetPreview.test.tsx` — 프리뷰 UI·라이브 편집 상태 전이·키보드 포커스·로컬 상태 격리 테스트 (15개 테스트)
++- `ClassCueSheetPreview.test.tsx` — 프리뷰 UI·라이브 편집 상태 전이·편집 타겟 단축키 보호·단일 라이브 리전·키보드 포커스·로컬 상태 격리 테스트 (18개 테스트)
+ - `classCueSheetUsability.test.tsx` — 초보 강사 UX·읽기 순서·접기/펼치기·글자 확대(200%)·긴 한글 큐·키보드·삭제/교체 회귀 전용 테스트 (7개 테스트)
+ - `classCueSheetChromium.test.ts` — 실제 Headless Chromium + Poppler 기반 `320/390/768/1440px`·`200%` 확대·`44px` 타겟 검증 및 A4/Letter 다중 페이지 PDF·PGM 래스터 검증 (2개 통합 테스트)
+ - `browserFixture.html` — 독립 브라우저 프로브용 로컬 HTML 픽스처
+@@ -86,7 +86,7 @@ npx tsc -b
+ # ESLint 검증 (src/features/classCueSheet)
+ npx eslint src/features/classCueSheet
+ 
+-# Vitest 전체 검증 (총 4개 테스트 파일, 39개 테스트)
++# Vitest 전체 검증
+ pnpm vitest run src/features/classCueSheet
+ 
+ # 독립 브라우저 프로브 및 스크린샷 생성 (320/390/768/1440px, 200% 확대, A4/Letter PDF)
+diff --git a/src/features/classCueSheet/classCueSheetChromium.test.ts b/src/features/classCueSheet/classCueSheetChromium.test.ts
+index 4ac02e3..fddc499 100644
+--- a/src/features/classCueSheet/classCueSheetChromium.test.ts
++++ b/src/features/classCueSheet/classCueSheetChromium.test.ts
+@@ -927,6 +927,102 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
+           expect(entry.scrollX, `phase=${entry.phase}`).toBe(0);
+         }
+       }
++
++      // Verify in real Chromium:
++      // 1) Single aria-live / role="status" announcement region
++      // 2) Keyboard shortcuts inside <input>, <textarea>, and [contenteditable="true"] do not preventDefault or change step
++      // 3) visibilitychange (hidden -> visible) and print emulation return preserve step position with single-step advancement
++      const chromiumLifecycleAndA11yCheck = await session.evaluate<{
++        liveRegionCount: number;
++        liveRegionTestId: string | null;
++        stepBeforeEditableKeys: string | null;
++        stepAfterEditableKeys: string | null;
++        anyEditableKeyPrevented: boolean;
++        stepBeforePrintAndVisibility: string | null;
++        cueIdBeforePrintAndVisibility: string | null;
++        stepAfterPrintAndVisibility: string | null;
++        cueIdAfterPrintAndVisibility: string | null;
++        stepAfterSingleArrowRight: string | null;
++      }>(`(async () => {
++        await window.__renderCueSheetProps({
++          key: 'chromium-a11y-lifecycle-check',
++          showFixtureSwitcher: true,
++          initialFixtureId: 'standard-mixed',
++          initialStepIndex: 1,
++        });
++        const root = document.querySelector('[data-testid="class-cue-sheet-root"]');
++        const deck = root.querySelector('[data-testid="cue-sheet-focus-deck"]');
++        const liveRegions = Array.from(root.querySelectorAll('[aria-live], [role="status"]'));
++
++        const stepBeforeEditableKeys = root.getAttribute('data-current-step-index');
++
++        const probeContainer = document.createElement('div');
++        const inputEl = document.createElement('input');
++        const textareaEl = document.createElement('textarea');
++        const editableDiv = document.createElement('div');
++        editableDiv.setAttribute('contenteditable', 'true');
++        probeContainer.appendChild(inputEl);
++        probeContainer.appendChild(textareaEl);
++        probeContainer.appendChild(editableDiv);
++        deck.appendChild(probeContainer);
++
++        let anyEditableKeyPrevented = false;
++        for (const el of [inputEl, textareaEl, editableDiv]) {
++          el.focus();
++          for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'j', 'k', 'n', 'p']) {
++            const ev = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
++            const notCanceled = el.dispatchEvent(ev);
++            if (!notCanceled || ev.defaultPrevented) {
++              anyEditableKeyPrevented = true;
++            }
++          }
++        }
++        probeContainer.remove();
++        const stepAfterEditableKeys = root.getAttribute('data-current-step-index');
++
++        const stepBeforePrintAndVisibility = root.getAttribute('data-current-step-index');
++        const cueIdBeforePrintAndVisibility = root.getAttribute('data-current-cue-item-id');
++
++        window.dispatchEvent(new Event('beforeprint'));
++        window.dispatchEvent(new Event('afterprint'));
++        document.dispatchEvent(new Event('visibilitychange'));
++        window.dispatchEvent(new Event('blur'));
++        window.dispatchEvent(new Event('focus'));
++
++        const stepAfterPrintAndVisibility = root.getAttribute('data-current-step-index');
++        const cueIdAfterPrintAndVisibility = root.getAttribute('data-current-cue-item-id');
++
++        deck.focus();
++        deck.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
++        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
++        const stepAfterSingleArrowRight = root.getAttribute('data-current-step-index');
++
++        return {
++          liveRegionCount: liveRegions.length,
++          liveRegionTestId: liveRegions[0]?.getAttribute('data-testid') ?? null,
++          stepBeforeEditableKeys,
++          stepAfterEditableKeys,
++          anyEditableKeyPrevented,
++          stepBeforePrintAndVisibility,
++          cueIdBeforePrintAndVisibility,
++          stepAfterPrintAndVisibility,
++          cueIdAfterPrintAndVisibility,
++          stepAfterSingleArrowRight,
++        };
++      })()`);
++
++      expect(chromiumLifecycleAndA11yCheck.liveRegionCount).toBe(1);
++      expect(chromiumLifecycleAndA11yCheck.liveRegionTestId).toBe('cue-sheet-a11y-status');
++      expect(chromiumLifecycleAndA11yCheck.anyEditableKeyPrevented).toBe(false);
++      expect(chromiumLifecycleAndA11yCheck.stepBeforeEditableKeys).toBe('1');
++      expect(chromiumLifecycleAndA11yCheck.stepAfterEditableKeys).toBe('1');
++      expect(chromiumLifecycleAndA11yCheck.stepAfterPrintAndVisibility).toBe(
++        chromiumLifecycleAndA11yCheck.stepBeforePrintAndVisibility,
++      );
++      expect(chromiumLifecycleAndA11yCheck.cueIdAfterPrintAndVisibility).toBe(
++        chromiumLifecycleAndA11yCheck.cueIdBeforePrintAndVisibility,
++      );
++      expect(chromiumLifecycleAndA11yCheck.stepAfterSingleArrowRight).toBe('2');
+     },
+     45000,
+   );
+diff --git a/src/features/classCueSheet/classCueSheetLifecycle.test.tsx b/src/features/classCueSheet/classCueSheetLifecycle.test.tsx
+new file mode 100644
+index 0000000..3a54c46
+--- /dev/null
++++ b/src/features/classCueSheet/classCueSheetLifecycle.test.tsx
+@@ -0,0 +1,587 @@
++import React from 'react';
++import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
++import { afterEach, describe, expect, it, vi } from 'vitest';
++import { ClassCueSheetPreview } from './ClassCueSheetPreview';
++import type { CueSheetFlexibleClassInput } from './classCueSheetTypes';
++
++const ORIGINAL_VISIBILITY_DESCRIPTOR = Object.getOwnPropertyDescriptor(
++  Document.prototype,
++  'visibilityState',
++);
++const ORIGINAL_HIDDEN_DESCRIPTOR = Object.getOwnPropertyDescriptor(
++  Document.prototype,
++  'hidden',
++);
++
++function setDocumentVisibility(state: DocumentVisibilityState): void {
++  Object.defineProperty(document, 'visibilityState', {
++    configurable: true,
++    get: () => state,
++  });
++  Object.defineProperty(document, 'hidden', {
++    configurable: true,
++    get: () => state === 'hidden',
++  });
++}
++
++function restoreDocumentVisibility(): void {
++  if (ORIGINAL_VISIBILITY_DESCRIPTOR) {
++    Object.defineProperty(document, 'visibilityState', ORIGINAL_VISIBILITY_DESCRIPTOR);
++  } else {
++    Reflect.deleteProperty(document, 'visibilityState');
++  }
++  if (ORIGINAL_HIDDEN_DESCRIPTOR) {
++    Object.defineProperty(document, 'hidden', ORIGINAL_HIDDEN_DESCRIPTOR);
++  } else {
++    Reflect.deleteProperty(document, 'hidden');
++  }
++}
++
++function createFiveStepClassInput(
++  id = 'lifecycle-test-class',
++): CueSheetFlexibleClassInput {
++  return {
++    id,
++    title: '라이프사이클·StrictMode·인쇄 복귀 검증 시퀀스',
++    apparatus: 'reformer',
++    level: '1.5',
++    targetMinutes: 50,
++    steps: [
++      {
++        stepId: 'lc-step-1',
++        nameKo: '호흡 & 임프린트 워밍업',
++        durationMin: 4,
++        sets: 1,
++        repetitions: 6,
++        sideMode: 'together',
++        springs: '1B',
++        cues: ['늑골 측면 확장과 골반 중립을 확인합니다.'],
++      },
++      {
++        stepId: 'lc-step-2',
++        nameKo: '풋워크 패러렐 & 필라테스 V',
++        durationMin: 6,
++        sets: 2,
++        repetitions: 10,
++        sideMode: 'together',
++        springs: '2R 1B',
++        cues: ['뒤꿈치부터 좌골까지 연결감을 유지합니다.'],
++      },
++      {
++        stepId: 'lc-step-3',
++        nameKo: '헌드레드 코어 호흡',
++        durationMin: 5,
++        sets: 1,
++        repetitions: 10,
++        sideMode: 'together',
++        springs: '1R 1B',
++        cues: ['흉곽 하단을 닫고 일정한 템포로 펌핑합니다.'],
++      },
++      {
++        stepId: 'lc-step-4',
++        nameKo: '사이드 레그 스트랩 시리즈',
++        durationMin: 8,
++        sets: 2,
++        repetitions: 8,
++        sideMode: 'left-then-right',
++        springs: '1R',
++        cues: ['지지측 골반과 요추 중립을 끝까지 유지합니다.'],
++      },
++      {
++        stepId: 'lc-step-5',
++        nameKo: '머메이드 흉추 사이드 벤드',
++        durationMin: 5,
++        sets: 1,
++        repetitions: 4,
++        sideMode: 'left-then-right',
++        springs: '1B',
++        cues: ['양쪽 좌골을 균등하게 내리고 늑골 사이를 넓힙니다.'],
++      },
++    ],
++  };
++}
++
++afterEach(() => {
++  cleanup();
++  restoreDocumentVisibility();
++  vi.restoreAllMocks();
++});
++
++describe('ClassCueSheetPreview lifecycle, StrictMode, visibilitychange & print-return verification', () => {
++  it('does not duplicate keyboard or button event handlers under <React.StrictMode> and advances by exactly 1 step per interaction', () => {
++    const sourceInput = createFiveStepClassInput();
++
++    render(
++      <React.StrictMode>
++        <ClassCueSheetPreview sourceInput={sourceInput} />
++      </React.StrictMode>,
++    );
++
++    const root = screen.getByTestId('class-cue-sheet-root');
++    const deck = screen.getByTestId('cue-sheet-focus-deck');
++    const nextBtn = screen.getByTestId('cue-sheet-nav-next');
++    const prevBtn = screen.getByTestId('cue-sheet-nav-prev');
++    const firstBtn = screen.getByTestId('cue-sheet-nav-first');
++    const lastBtn = screen.getByTestId('cue-sheet-nav-last');
++
++    expect(root.getAttribute('data-current-step-index')).toBe('0');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-1-1',
++    );
++
++    // Single button click advances by 1 (0 -> 1), never by 2
++    fireEvent.click(nextBtn);
++    expect(root.getAttribute('data-current-step-index')).toBe('1');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-2-1',
++    );
++
++    // Single Prev button click moves back by 1 (1 -> 0)
++    fireEvent.click(prevBtn);
++    expect(root.getAttribute('data-current-step-index')).toBe('0');
++
++    // Keyboard navigation on focus deck under StrictMode: each keydown moves by 1
++    deck.focus();
++    fireEvent.keyDown(deck, { key: 'ArrowRight' });
++    expect(root.getAttribute('data-current-step-index')).toBe('1');
++
++    fireEvent.keyDown(deck, { key: 'j' });
++    expect(root.getAttribute('data-current-step-index')).toBe('2');
++
++    fireEvent.keyDown(deck, { key: 'ArrowDown' });
++    expect(root.getAttribute('data-current-step-index')).toBe('3');
++
++    fireEvent.keyDown(deck, { key: 'n' });
++    expect(root.getAttribute('data-current-step-index')).toBe('4');
++
++    fireEvent.keyDown(deck, { key: 'ArrowLeft' });
++    expect(root.getAttribute('data-current-step-index')).toBe('3');
++
++    fireEvent.keyDown(deck, { key: 'k' });
++    expect(root.getAttribute('data-current-step-index')).toBe('2');
++
++    fireEvent.keyDown(deck, { key: 'ArrowUp' });
++    expect(root.getAttribute('data-current-step-index')).toBe('1');
++
++    fireEvent.keyDown(deck, { key: 'p' });
++    expect(root.getAttribute('data-current-step-index')).toBe('0');
++
++    // Home / End keys
++    fireEvent.keyDown(deck, { key: 'End' });
++    expect(root.getAttribute('data-current-step-index')).toBe('4');
++
++    fireEvent.keyDown(deck, { key: 'Home' });
++    expect(root.getAttribute('data-current-step-index')).toBe('0');
++
++    // Boundary buttons transfer focus cleanly to focus deck inside StrictMode
++    lastBtn.focus();
++    fireEvent.click(lastBtn);
++    expect(root.getAttribute('data-current-step-index')).toBe('4');
++    expect(document.activeElement).toBe(deck);
++
++    firstBtn.focus();
++    fireEvent.click(firstBtn);
++    expect(root.getAttribute('data-current-step-index')).toBe('0');
++    expect(document.activeElement).toBe(deck);
++  });
++
++  it('preserves active cueItemId across live sourceInput edits inside <React.StrictMode>', () => {
++    const baseInput = createFiveStepClassInput('strict-live-edit-class');
++    const baseSteps = [...(baseInput.steps ?? [])];
++
++    const { rerender } = render(
++      <React.StrictMode>
++        <ClassCueSheetPreview sourceInput={baseInput} />
++      </React.StrictMode>,
++    );
++
++    const root = screen.getByTestId('class-cue-sheet-root');
++    const nextBtn = screen.getByTestId('cue-sheet-nav-next');
++
++    // Navigate to step #3 ('헌드레드 코어 호흡', index 2)
++    fireEvent.click(nextBtn);
++    fireEvent.click(nextBtn);
++    expect(root.getAttribute('data-current-step-index')).toBe('2');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-3-1',
++    );
++
++    // Insert a new step before step #1 while wrapped in <React.StrictMode>
++    rerender(
++      <React.StrictMode>
++        <ClassCueSheetPreview
++          sourceInput={{
++            ...baseInput,
++            steps: [
++              {
++                stepId: 'lc-step-0-prep',
++                nameKo: '사전 골반 시계 워밍업',
++                durationMin: 3,
++                sideMode: 'together',
++              },
++              ...baseSteps,
++            ],
++          }}
++        />
++      </React.StrictMode>,
++    );
++
++    expect(root.getAttribute('data-selection-resolution')).toBe('preserved-by-id');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-3-1',
++    );
++    expect(root.getAttribute('data-current-step-index')).toBe('3');
++    expect(screen.getByTestId('cue-sheet-current-card').textContent).toContain(
++      '헌드레드 코어 호흡',
++    );
++
++    // Single Next click after StrictMode live-edit reconciliation advances by 1 (3 -> 4)
++    fireEvent.click(nextBtn);
++    expect(root.getAttribute('data-current-step-index')).toBe('4');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-4-1',
++    );
++  });
++
++  it('preserves progression position, textScale, viewMode, and focus across document visibilitychange (hidden <-> visible) and window blur/focus cycles', () => {
++    const baseInput = createFiveStepClassInput('visibility-cycle-class');
++    const baseSteps = [...(baseInput.steps ?? [])];
++
++    const { rerender } = render(
++      <React.StrictMode>
++        <ClassCueSheetPreview sourceInput={baseInput} />
++      </React.StrictMode>,
++    );
++
++    const root = screen.getByTestId('class-cue-sheet-root');
++    const deck = screen.getByTestId('cue-sheet-focus-deck');
++    const nextBtn = screen.getByTestId('cue-sheet-nav-next');
++
++    // Navigate to step #3 (index 2)
++    fireEvent.click(nextBtn);
++    fireEvent.click(nextBtn);
++    expect(root.getAttribute('data-current-step-index')).toBe('2');
++    const targetCueItemId = root.getAttribute('data-current-cue-item-id');
++    expect(targetCueItemId).toBe('cue-item-id-lc-step-3-1');
++
++    // Change textScale to 150% and switch to expanded view mode
++    fireEvent.click(screen.getByTestId('cue-sheet-scale-150'));
++    fireEvent.click(
++      screen.getByRole('button', { name: /반복·좌우 펼침 진행표/ }),
++    );
++    expect(root.getAttribute('data-text-scale')).toBe('150');
++    expect(root.getAttribute('data-full-list-open')).toBe('true');
++
++    deck.focus();
++    expect(document.activeElement).toBe(deck);
++
++    // Cycle 1: Tab hidden + window blur -> Tab visible + window focus
++    setDocumentVisibility('hidden');
++    window.dispatchEvent(new Event('blur'));
++    document.dispatchEvent(new Event('visibilitychange'));
++
++    expect(root.getAttribute('data-current-step-index')).toBe('2');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(targetCueItemId);
++    expect(root.getAttribute('data-text-scale')).toBe('150');
++    expect(root.getAttribute('data-full-list-open')).toBe('true');
++
++    setDocumentVisibility('visible');
++    document.dispatchEvent(new Event('visibilitychange'));
++    window.dispatchEvent(new Event('focus'));
++
++    expect(root.getAttribute('data-current-step-index')).toBe('2');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(targetCueItemId);
++    expect(root.getAttribute('data-text-scale')).toBe('150');
++    expect(root.getAttribute('data-full-list-open')).toBe('true');
++    expect(root.contains(document.activeElement)).toBe(true);
++
++    // Live edit while tab is hidden, then return to visible and navigate
++    setDocumentVisibility('hidden');
++    document.dispatchEvent(new Event('visibilitychange'));
++
++    rerender(
++      <React.StrictMode>
++        <ClassCueSheetPreview
++          sourceInput={{
++            ...baseInput,
++            steps: [
++              {
++                stepId: 'lc-step-pre',
++                nameKo: '사전 브레스 체크',
++                durationMin: 2,
++                sideMode: 'together',
++              },
++              ...baseSteps,
++            ],
++          }}
++        />
++      </React.StrictMode>,
++    );
++
++    setDocumentVisibility('visible');
++    document.dispatchEvent(new Event('visibilitychange'));
++    window.dispatchEvent(new Event('focus'));
++
++    expect(root.getAttribute('data-selection-resolution')).toBe('preserved-by-id');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(targetCueItemId);
++    expect(root.getAttribute('data-current-step-index')).toBe('3');
++    expect(root.getAttribute('data-text-scale')).toBe('150');
++    expect(screen.getByRole('list', { name: '펼친 진행표 항목 목록' })).toBeTruthy();
++
++    // Subsequent single keydown advances by exactly 1 step (3 -> 4)
++    fireEvent.keyDown(deck, { key: 'ArrowRight' });
++    expect(root.getAttribute('data-current-step-index')).toBe('4');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-4-1',
++    );
++  });
++
++  it('maintains clean unmount() hygiene with zero leaked window/document listeners and zero post-unmount errors', () => {
++    const winAddSpy = vi.spyOn(window, 'addEventListener');
++    const winRemoveSpy = vi.spyOn(window, 'removeEventListener');
++    const docAddSpy = vi.spyOn(document, 'addEventListener');
++    const docRemoveSpy = vi.spyOn(document, 'removeEventListener');
++    const consoleErrorSpy = vi.spyOn(console, 'error');
++
++    const countNetListeners = (
++      addCalls: ReadonlyArray<unknown[]>,
++      removeCalls: ReadonlyArray<unknown[]>,
++    ): number => {
++      const active = new Map<string, Set< unknown >>();
++      for (const [type, listener] of addCalls) {
++        if (typeof type === 'string' && listener) {
++          let set = active.get(type);
++          if (!set) {
++            set = new Set();
++            active.set(type, set);
++          }
++          set.add(listener);
++        }
++      }
++      for (const [type, listener] of removeCalls) {
++        if (typeof type === 'string' && listener) {
++          active.get(type)?.delete(listener);
++        }
++      }
++      let remaining = 0;
++      for (const set of active.values()) {
++        remaining += set.size;
++      }
++      return remaining;
++    };
++
++    const { unmount } = render(
++      <React.StrictMode>
++        <ClassCueSheetPreview
++          sourceInput={createFiveStepClassInput('unmount-hygiene-class')}
++        />
++      </React.StrictMode>,
++    );
++
++    // Record baseline calls created by React's root delegation before component interactions
++    winAddSpy.mockClear();
++    winRemoveSpy.mockClear();
++    docAddSpy.mockClear();
++    docRemoveSpy.mockClear();
++
++    const deck = screen.getByTestId('cue-sheet-focus-deck');
++    deck.focus();
++    fireEvent.keyDown(deck, { key: 'ArrowRight' });
++    fireEvent.click(screen.getByTestId('cue-sheet-scale-125'));
++    fireEvent.click(screen.getByTestId('cue-sheet-full-list-toggle'));
++    fireEvent.click(screen.getByTestId('cue-sheet-diagnostics-toggle'));
++    fireEvent.click(
++      screen.getByRole('button', { name: '로컬 인쇄 미리보기 보기' }),
++    );
++
++    unmount();
++
++    expect(
++      countNetListeners(winAddSpy.mock.calls, winRemoveSpy.mock.calls),
++    ).toBe(0);
++    expect(
++      countNetListeners(docAddSpy.mock.calls, docRemoveSpy.mock.calls),
++    ).toBe(0);
++
++    // Dispatch global events after unmount to ensure no stray handlers or React warnings fire
++    expect(() => {
++      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
++      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
++      setDocumentVisibility('hidden');
++      document.dispatchEvent(new Event('visibilitychange'));
++      setDocumentVisibility('visible');
++      document.dispatchEvent(new Event('visibilitychange'));
++      window.dispatchEvent(new Event('blur'));
++      window.dispatchEvent(new Event('focus'));
++      window.dispatchEvent(new Event('beforeprint'));
++      window.dispatchEvent(new Event('afterprint'));
++    }).not.toThrow();
++
++    expect(consoleErrorSpy).not.toHaveBeenCalled();
++  });
++
++  it('preserves active step, cueItemId, textScale, and viewMode across local print preview toggle and native beforeprint/afterprint events', () => {
++    render(
++      <React.StrictMode>
++        <ClassCueSheetPreview
++          sourceInput={createFiveStepClassInput('print-return-class')}
++        />
++      </React.StrictMode>,
++    );
++
++    const root = screen.getByTestId('class-cue-sheet-root');
++    const deck = screen.getByTestId('cue-sheet-focus-deck');
++    const nextBtn = screen.getByTestId('cue-sheet-nav-next');
++    const printPreviewBtn = screen.getByRole('button', {
++      name: '로컬 인쇄 미리보기 보기',
++    });
++
++    // 1. Navigate to step #3 (index 2), set 150% text scale, and switch to expanded view
++    fireEvent.click(nextBtn);
++    fireEvent.click(nextBtn);
++    fireEvent.click(screen.getByTestId('cue-sheet-scale-150'));
++    fireEvent.click(
++      screen.getByRole('button', { name: /반복·좌우 펼침 진행표/ }),
++    );
++
++    expect(root.getAttribute('data-current-step-index')).toBe('2');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-3-1',
++    );
++    expect(root.getAttribute('data-text-scale')).toBe('150');
++    expect(root.getAttribute('data-print-preview')).toBe('false');
++
++    // 2. Toggle local print preview ON
++    fireEvent.click(printPreviewBtn);
++    expect(root.getAttribute('data-print-preview')).toBe('true');
++    expect(root.classList.contains('is-print-preview')).toBe(true);
++    expect(printPreviewBtn.getAttribute('aria-pressed')).toBe('true');
++
++    // Both panels uncollapse while in print preview mode
++    expect(
++      screen.getByTestId('cue-sheet-full-list-panel').getAttribute('data-collapsed'),
++    ).toBe('false');
++    expect(
++      screen
++        .getByTestId('cue-sheet-diagnostics-panel')
++        .getAttribute('data-collapsed'),
++    ).toBe('false');
++
++    // 3. Dispatch native browser beforeprint and afterprint events
++    window.dispatchEvent(new Event('beforeprint'));
++    expect(root.getAttribute('data-current-step-index')).toBe('2');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-3-1',
++    );
++
++    window.dispatchEvent(new Event('afterprint'));
++    expect(root.getAttribute('data-current-step-index')).toBe('2');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-3-1',
++    );
++
++    // 4. Toggle local print preview OFF and fire another native beforeprint/afterprint cycle
++    fireEvent.click(printPreviewBtn);
++    expect(root.getAttribute('data-print-preview')).toBe('false');
++    expect(root.classList.contains('is-print-preview')).toBe(false);
++    expect(printPreviewBtn.getAttribute('aria-pressed')).toBe('false');
++
++    window.dispatchEvent(new Event('beforeprint'));
++    window.dispatchEvent(new Event('afterprint'));
++
++    // Verify all state is intact on return from print
++    expect(root.getAttribute('data-current-step-index')).toBe('2');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-3-1',
++    );
++    expect(root.getAttribute('data-text-scale')).toBe('150');
++
++    const expandedList = screen.getByRole('list', {
++      name: '펼친 진행표 항목 목록',
++    });
++    const currentParentRows = expandedList.querySelectorAll(
++      'li[data-is-current-parent="true"]',
++    );
++    expect(currentParentRows.length).toBe(1);
++    expect(currentParentRows[0]?.getAttribute('data-parent-cue-item-id')).toBe(
++      'cue-item-id-lc-step-3-1',
++    );
++
++    // 5. Press ArrowRight once after print return -> advances by exactly 1 step to step #4 (index 3)
++    deck.focus();
++    fireEvent.keyDown(deck, { key: 'ArrowRight' });
++    expect(root.getAttribute('data-current-step-index')).toBe('3');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-4-1',
++    );
++    expect(
++      within(screen.getByTestId('cue-sheet-current-card')).getByText(
++        '사이드 레그 스트랩 시리즈',
++      ),
++    ).toBeTruthy();
++  });
++
++  it('preserves progression position across parent re-renders with cloned sourceInput, initialStepIndex prop changes, and view-mode switches', () => {
++    const initialInput = createFiveStepClassInput('parent-rerender-class');
++
++    const { rerender } = render(
++      <React.StrictMode>
++        <ClassCueSheetPreview
++          sourceInput={initialInput}
++          initialStepIndex={2}
++        />
++      </React.StrictMode>,
++    );
++
++    const root = screen.getByTestId('class-cue-sheet-root');
++    expect(root.getAttribute('data-current-step-index')).toBe('2');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-3-1',
++    );
++    expect(root.getAttribute('data-selection-resolution')).toBe('initial');
++
++    // User advances to step #4 (index 3)
++    fireEvent.click(screen.getByTestId('cue-sheet-nav-next'));
++    expect(root.getAttribute('data-current-step-index')).toBe('3');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-4-1',
++    );
++    expect(root.getAttribute('data-selection-resolution')).toBe('user-navigation');
++
++    // Parent re-renders with a freshly cloned sourceInput object AND a different initialStepIndex
++    const clonedInput = createFiveStepClassInput('parent-rerender-class');
++    rerender(
++      <React.StrictMode>
++        <ClassCueSheetPreview
++          sourceInput={clonedInput}
++          initialStepIndex={0}
++        />
++      </React.StrictMode>,
++    );
++
++    // Active position stays at step #4 (index 3) and is not reset by initialStepIndex changing
++    expect(root.getAttribute('data-current-step-index')).toBe('3');
++    expect(root.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-lc-step-4-1',
++    );
++
++    // Switch between compact and expanded views and verify active step synchronization
++    fireEvent.click(
++      screen.getByRole('button', { name: /반복·좌우 펼침 진행표/ }),
++    );
++    const expandedList = screen.getByRole('list', {
++      name: '펼친 진행표 항목 목록',
++    });
++    const activeExpandedRows = expandedList.querySelectorAll(
++      'li[data-is-current-parent="true"]',
++    );
++    expect(activeExpandedRows.length).toBe(4); // 2 sets * 2 sides for lc-step-4
++
++    fireEvent.click(screen.getByRole('button', { name: /기본 진행표/ }));
++    const compactList = screen.getByRole('list', {
++      name: '기본 진행표 항목 목록',
++    });
++    const compactRowBtns = within(compactList).getAllByRole('button');
++    expect(compactRowBtns[3]?.getAttribute('aria-current')).toBe('step');
++  });
++});
+-- 
+2.39.5
+
