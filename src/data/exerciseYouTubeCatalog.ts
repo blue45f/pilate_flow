@@ -32,6 +32,14 @@ export interface CuratedYouTubeVideoItem {
 export const VERIFIED_YOUTUBE_VIDEO_POOL: readonly RawVerifiedYouTubeItem[] =
   rawCatalog as RawVerifiedYouTubeItem[];
 
+export const VERIFIED_YOUTUBE_BY_ID: ReadonlyMap<string, RawVerifiedYouTubeItem> = new Map(
+  VERIFIED_YOUTUBE_VIDEO_POOL.map((item) => [item.videoId, item]),
+);
+
+export function getVerifiedYouTubeItemById(videoId: string): RawVerifiedYouTubeItem | undefined {
+  return VERIFIED_YOUTUBE_BY_ID.get(videoId.trim());
+}
+
 export const VERIFIED_YOUTUBE_CATALOG_STATS = {
   totalVideos: VERIFIED_YOUTUBE_VIDEO_POOL.length,
   koreanVideos: VERIFIED_YOUTUBE_VIDEO_POOL.filter((item) => item.region === 'kr').length,
@@ -174,24 +182,39 @@ export function getRelatedYouTubeVideosForExercise(
   const results: CuratedYouTubeVideoItem[] = [];
   const seenIds = new Set<string>();
 
-  // If the exercise already has an explicit valid YouTube videoId, put it first
+  // If the exercise already has an explicit valid YouTube videoId, verify against public oEmbed pool first
   if (exercise.youtube?.videoId && /^[A-Za-z0-9_-]{11}$/.test(exercise.youtube.videoId)) {
-    seenIds.add(exercise.youtube.videoId);
-    results.push(
-      toCuratedItem(
-        {
-          videoId: exercise.youtube.videoId,
-          title: exercise.youtube.videoTitle || `${exercise.nameKo} 참조 영상`,
-          authorName: exercise.youtube.channelName || '등록된 채널',
-          region: exercise.youtube.region ?? 'global',
-          apparatus: [exercise.apparatus],
-          blocks: [exercise.blockCategory],
-          keywords: [slug],
-        },
-        '직접 연결한 참조 · 동작 일치와 적합성 미검수',
-        exercise.youtube.startSec || 0,
-      ),
-    );
+    const linkedId = exercise.youtube.videoId;
+    const verifiedEntry = VERIFIED_YOUTUBE_BY_ID.get(linkedId);
+    if (verifiedEntry) {
+      if (verifiedEntry.apparatus.includes(exercise.apparatus)) {
+        seenIds.add(linkedId);
+        results.push(
+          toCuratedItem(
+            verifiedEntry,
+            '직접 연결한 참조 · 공개 oEmbed 제목·채널 확인 · 동일 시범 미검수',
+            exercise.youtube.startSec || 0,
+          ),
+        );
+      }
+    } else if (exercise.isCustom || !exercise.id.startsWith('ex-')) {
+      seenIds.add(linkedId);
+      results.push(
+        toCuratedItem(
+          {
+            videoId: linkedId,
+            title: exercise.youtube.videoTitle || `${exercise.nameKo} 참조 영상`,
+            authorName: exercise.youtube.channelName || '등록된 채널',
+            region: exercise.youtube.region ?? 'global',
+            apparatus: [exercise.apparatus],
+            blocks: [exercise.blockCategory],
+            keywords: [slug],
+          },
+          '직접 연결한 참조 · 동작 일치와 적합성 미검수',
+          exercise.youtube.startSec || 0,
+        ),
+      );
+    }
   }
 
   const krPicks = eligible
