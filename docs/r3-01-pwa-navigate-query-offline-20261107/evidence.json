@@ -1,0 +1,139 @@
+{
+  "verifiedAt": "2026-11-07T08:34:17.754Z",
+  "defectId": "R3-01",
+  "swSha256": "2ea33eab4bf6b63623b7631dffbbb885f8f5003582d74c3d6953e0fca4115817",
+  "safariRuntimeVerdict": "UNVERIFIED (미검증 — Linux Debian 12 컨테이너 내 WebKit 런타임 부재)",
+  "cssOrSafariBlurModified": false,
+  "baselineSyntheticState": {
+    "title": "[합성-R3-01] 쿼리스트링 오프라인 새로진입 비교 검증",
+    "stepCount": 3,
+    "stepIds": [
+      "step-add-1794040456546-cuqe70",
+      "step-add-1794040456580-mkvxfs",
+      "rest-1794040456670-89u4rm"
+    ],
+    "stepHeadings": [
+      "중간 휴식"
+    ],
+    "savedCount": 4,
+    "savedTitles": [
+      "[합성-R3-01] 쿼리스트링 오프라인 새로진입 비교 검증",
+      "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+      "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+      "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+    ],
+    "rawStorageBytes": 113993,
+    "storageSha256": "7778090659956f79e99af37d30e43ed2bc2ec50cc895e2c32b2b979f4634b713"
+  },
+  "offlineNavigationComparison": [
+    {
+      "id": "normal-root",
+      "requestedPath": "/",
+      "pathname": "/",
+      "search": "",
+      "navigatorOnLine": false,
+      "controlledByServiceWorker": true,
+      "title": "[합성-R3-01] 쿼리스트링 오프라인 새로진입 비교 검증",
+      "stepCount": 3,
+      "stepIds": [
+        "step-add-1794040456546-cuqe70",
+        "step-add-1794040456580-mkvxfs",
+        "rest-1794040456670-89u4rm"
+      ],
+      "stepHeadings": [
+        "중간 휴식"
+      ],
+      "savedCount": 4,
+      "savedTitles": [
+        "[합성-R3-01] 쿼리스트링 오프라인 새로진입 비교 검증",
+        "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+        "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+        "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+      ],
+      "rawStorageBytes": 113993,
+      "storageSha256": "7778090659956f79e99af37d30e43ed2bc2ec50cc895e2c32b2b979f4634b713",
+      "matchesBaselineExactly": true
+    },
+    {
+      "id": "pwa-utm-query",
+      "requestedPath": "/?utm_source=pwa",
+      "pathname": "/",
+      "search": "?utm_source=pwa",
+      "navigatorOnLine": false,
+      "controlledByServiceWorker": true,
+      "title": "[합성-R3-01] 쿼리스트링 오프라인 새로진입 비교 검증",
+      "stepCount": 3,
+      "stepIds": [
+        "step-add-1794040456546-cuqe70",
+        "step-add-1794040456580-mkvxfs",
+        "rest-1794040456670-89u4rm"
+      ],
+      "stepHeadings": [
+        "중간 휴식"
+      ],
+      "savedCount": 4,
+      "savedTitles": [
+        "[합성-R3-01] 쿼리스트링 오프라인 새로진입 비교 검증",
+        "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+        "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+        "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+      ],
+      "rawStorageBytes": 113993,
+      "storageSha256": "7778090659956f79e99af37d30e43ed2bc2ec50cc895e2c32b2b979f4634b713",
+      "matchesBaselineExactly": true
+    },
+    {
+      "id": "existing-search-query",
+      "requestedPath": "/?q=%ED%97%8C%EB%93%9C%EB%A0%88%EB%93%9C&apparatus=mat",
+      "pathname": "/",
+      "search": "?q=%ED%97%8C%EB%93%9C%EB%A0%88%EB%93%9C&apparatus=mat",
+      "navigatorOnLine": false,
+      "controlledByServiceWorker": true,
+      "title": "[합성-R3-01] 쿼리스트링 오프라인 새로진입 비교 검증",
+      "stepCount": 3,
+      "stepIds": [
+        "step-add-1794040456546-cuqe70",
+        "step-add-1794040456580-mkvxfs",
+        "rest-1794040456670-89u4rm"
+      ],
+      "stepHeadings": [
+        "중간 휴식"
+      ],
+      "savedCount": 4,
+      "savedTitles": [
+        "[합성-R3-01] 쿼리스트링 오프라인 새로진입 비교 검증",
+        "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+        "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+        "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+      ],
+      "rawStorageBytes": 113993,
+      "storageSha256": "7778090659956f79e99af37d30e43ed2bc2ec50cc895e2c32b2b979f4634b713",
+      "matchesBaselineExactly": true
+    }
+  ],
+  "nonNavigationQueryProbes": [
+    {
+      "url": "/?utm_source=pwa",
+      "bypassedAsExpected": true,
+      "error": "TypeError: Failed to fetch"
+    },
+    {
+      "url": "/index.html?utm_source=pwa",
+      "bypassedAsExpected": true,
+      "error": "TypeError: Failed to fetch"
+    },
+    {
+      "url": "/api/session?utm_source=pwa",
+      "bypassedAsExpected": true,
+      "error": "TypeError: Failed to fetch"
+    },
+    {
+      "url": "/icons/app-192.png?v=1",
+      "bypassedAsExpected": true,
+      "error": "TypeError: Failed to fetch"
+    }
+  ],
+  "consoleErrorCount": 0,
+  "pageErrorCount": 0,
+  "allChecksPass": true
+}
