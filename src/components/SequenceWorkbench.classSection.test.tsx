@@ -230,4 +230,64 @@ describe("workbench class-role headings", () => {
       snapshot,
     );
   });
+
+  it("keeps three canonical sections without duplicate MAIN FLOW headers after reordering a step across section boundaries", () => {
+    const fourExercises = [
+      syntheticPlanningExercise("mat", "warmup", "alpha", false),
+      syntheticPlanningExercise("mat", "core", "alpha", false),
+      syntheticPlanningExercise("mat", "extension", "beta", false),
+      syntheticPlanningExercise("mat", "cooldown", "alpha", false),
+    ];
+    // Simulate state after dragging step 0 (preparation) between m1 and m2
+    const reorderedSteps: SequenceStep[] = [
+      {
+        stepId: "reordered-m1",
+        order: 1,
+        exerciseId: fourExercises[1].id,
+        blockCategory: "core",
+        classSection: "main",
+        durationMin: 3,
+        selectedLayer: "standard",
+      },
+      {
+        stepId: "reordered-w1",
+        order: 2,
+        exerciseId: fourExercises[0].id,
+        blockCategory: "warmup",
+        classSection: "preparation",
+        durationMin: 2,
+        selectedLayer: "standard",
+      },
+      {
+        stepId: "reordered-m2",
+        order: 3,
+        exerciseId: fourExercises[2].id,
+        blockCategory: "extension",
+        classSection: "main",
+        durationMin: 4,
+        selectedLayer: "standard",
+      },
+      {
+        stepId: "reordered-c1",
+        order: 4,
+        exerciseId: fourExercises[3].id,
+        blockCategory: "cooldown",
+        classSection: "cooldown",
+        durationMin: 2,
+        selectedLayer: "standard",
+      },
+    ];
+    usePilatesStore.setState({
+      activeSteps: reorderedSteps,
+      exercises: fourExercises,
+    });
+    const { container } = renderWorkbench();
+    const groups = visibleGroups(container);
+    expect(groups.map((g) => g.korean)).toEqual(["준비", "본운동", "마무리"]);
+    expect(groups[1]?.names).toEqual([
+      fourExercises[0].nameKo,
+      fourExercises[2].nameKo,
+    ]);
+  });
 });
+

@@ -49,7 +49,8 @@
 }
 @media (prefers-reduced-motion: reduce) {
   #root .sequence-drag-overlay,
-  #root .sequence-order-card {
+  #root .sequence-order-card,
+  #root .pf-sequence-block__header {
     transition: none;
     animation: none;
   }
@@ -58,3 +59,24 @@
 #root .sequence-drag-handle {
   scroll-margin-block: 96px;
 }
+
+#root .vnext-shell .v2-workbench .flow-sections {
+  gap: 4px;
+}
+
+#root .vnext-shell .v2-workbench .flow-section {
+  margin: 0;
+  gap: 4px;
+}
+
+#root .vnext-shell .v2-workbench .pf-sequence-block__body > .sequence-order-card:last-child {
+  margin-bottom: 0;
+}
+
+#root .vnext-shell .v2-workbench :is(.pf-sequence-block__header, .flow-section-label) {
+  min-height: 24px;
+  padding: 2px 10px;
+  margin: 0;
+  line-height: 1.25;
+}
+
