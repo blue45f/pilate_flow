@@ -1,6 +1,6 @@
 .class-insights-dialog {
-  color: var(--v2-ink, #272d29);
-  background: var(--paper, #fcfbf7);
+  color: var(--pf-color-text-primary, #272d29);
+  background: var(--pf-color-bg-surface, #fcfbf7);
 }
 
 .class-insights-dialog .atelier-modal-subtitle,
@@ -37,7 +37,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.375rem;
-  border-bottom: 1px solid var(--line, #e7ded1);
+  border-bottom: 1px solid var(--pf-color-border-default, #e7ded1);
   padding-bottom: 0.5rem;
 }
 
@@ -52,27 +52,27 @@
 
 .class-insights-tabs button,
 .class-insights-disclosure {
-  border: 1px solid var(--line, #e7ded1);
+  border: 1px solid var(--pf-color-border-default, #e7ded1);
   border-radius: 0.625rem;
-  color: var(--v2-ink, #272d29);
-  background: var(--paper, #fcfbf7);
+  color: var(--pf-color-text-primary, #272d29);
+  background: var(--pf-color-bg-surface, #fcfbf7);
 }
 
 .class-insights-tabs button[aria-selected='true'] {
-  background: var(--green, #254d45);
+  background: var(--pf-color-action-primary, #254d45);
   color: #fff;
-  border-color: var(--green, #254d45);
+  border-color: var(--pf-color-action-primary, #254d45);
 }
 
 .class-insights :is(button, summary, input, [tabindex]):focus-visible {
-  outline: 3px solid var(--green, #254d45);
+  outline: 3px solid var(--pf-color-action-primary, #254d45);
   outline-offset: 3px;
 }
 
 .class-insights-summary,
 .class-insights-missing {
   padding: 0.875rem 1rem;
-  border: 1px solid var(--line, #e7ded1);
+  border: 1px solid var(--pf-color-border-default, #e7ded1);
   border-radius: 0.75rem;
   margin-top: 1rem;
 }
@@ -85,7 +85,7 @@
 .class-insights-note,
 .class-insights-cell-note {
   font-size: 0.875rem;
-  color: var(--muted, #626a64);
+  color: var(--pf-color-text-muted, #626a64);
 }
 
 .class-insights-note {
@@ -112,7 +112,7 @@
 .class-insights-bar-track {
   height: 0.5rem;
   margin-top: 0.375rem;
-  background: var(--sage, #e4e9dc);
+  background: var(--pf-color-bg-surface-muted, #e4e9dc);
   border-radius: 0.25rem;
   overflow: hidden;
 }
@@ -120,12 +120,12 @@
 .class-insights-bar-track span {
   height: 100%;
   display: block;
-  background: var(--green, #254d45);
+  background: var(--pf-color-action-primary, #254d45);
 }
 
 .class-insights-data {
   margin: 1rem 0;
-  border: 1px solid var(--line, #e7ded1);
+  border: 1px solid var(--pf-color-border-default, #e7ded1);
   border-radius: 0.625rem;
 }
 
@@ -133,7 +133,7 @@
   overflow-x: auto;
   max-width: 100%;
   margin-top: 1rem;
-  border: 1px solid var(--line, #e7ded1);
+  border: 1px solid var(--pf-color-border-default, #e7ded1);
   border-radius: 0.625rem;
 }
 
@@ -158,11 +158,11 @@
   text-align: left;
   vertical-align: top;
   padding: 0.75rem;
-  border-top: 1px solid var(--line, #e7ded1);
+  border-top: 1px solid var(--pf-color-border-default, #e7ded1);
 }
 
 .class-insights thead {
-  background: var(--sage, #e4e9dc);
+  background: var(--pf-color-bg-surface-muted, #e4e9dc);
 }
 
 .class-insights td,
@@ -195,7 +195,7 @@
 .class-insights-checkbox input {
   width: 1.25rem;
   height: 1.25rem;
-  accent-color: var(--green, #254d45);
+  accent-color: var(--pf-color-action-primary, #254d45);
 }
 
 .class-insights-categories {
@@ -211,14 +211,14 @@
   display: inline-block;
   margin-left: 0.5rem;
   padding: 0.125rem 0.375rem;
-  border: 1px solid var(--line, #e7ded1);
+  border: 1px solid var(--pf-color-border-default, #e7ded1);
   font-size: 0.75rem;
   font-weight: 400;
 }
 
 .class-insights-empty {
   padding: 1rem;
-  background: var(--sage, #e4e9dc);
+  background: var(--pf-color-bg-surface-muted, #e4e9dc);
   border-radius: 0.625rem;
 }
 
@@ -251,5 +251,214 @@
     animation: none;
     transition: none;
     scroll-behavior: auto;
+  }
+}
+
+/* A single reading column mirrors the compact class-plan inspector. */
+#root .atelier-modal-dialog.class-insights-dialog {
+  width: calc(100% - 2rem);
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  border-radius: 12px;
+  background: var(--pf-color-bg-surface, #fff);
+}
+
+.class-insights-dialog .atelier-modal-header,
+.class-insights-dialog .atelier-modal-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.class-insights-dialog .atelier-modal-title {
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
+.class-insights-dialog .atelier-modal-header > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.class-insights-dialog .atelier-modal-header .icon-btn {
+  flex-shrink: 0;
+}
+
+.class-insights-tabs {
+  gap: 0;
+  padding: 3px;
+  border: 1px solid var(--pf-color-border-default, #dce5e1);
+  border-radius: 8px;
+  background: var(--pf-color-bg-surface-subtle, #f2f6f4);
+}
+
+.class-insights-tabs button {
+  border-color: transparent;
+  border-radius: 6px;
+  background: transparent;
+  font-weight: 600;
+}
+
+.class-insights-tabs button[aria-selected='true'] {
+  background: var(--pf-color-action-ghost-hover, #d4eee4);
+  color: var(--pf-color-text-primary, #203c35);
+  border-color: transparent;
+}
+
+.class-insights-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--pf-color-bg-surface-subtle, #f4f6f5);
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.class-insights-summary p:first-child strong {
+  display: block;
+  color: var(--pf-color-text-brand, #007565);
+  font-size: 1.75rem;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.class-insights-summary p + p {
+  border-left: 1px solid var(--pf-color-border-default, #dce5e1);
+  padding-left: 1rem;
+}
+
+.class-insights-bar-row--timing {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(1rem, 1fr) minmax(7rem, auto);
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0.75rem 0;
+}
+
+.class-insights-bar-row--timing .class-insights-bar-label {
+  display: contents;
+}
+
+.class-insights-bar-row--timing .class-insights-bar-label > span {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 0.875rem;
+}
+
+.class-insights-bar-row--timing .class-insights-bar-label strong {
+  grid-column: 3;
+  grid-row: 1;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: right;
+  margin: 0;
+}
+
+.class-insights-bar-row--timing .class-insights-bar-track {
+  grid-column: 2;
+  grid-row: 1;
+  height: 1rem;
+  margin: 0;
+  background: var(--pf-color-bg-surface-subtle, #edf1ef);
+}
+
+.class-insights-bar-row--timing ~ .class-insights-bar-row--timing .class-insights-bar-track span {
+  opacity: 0.72;
+}
+
+.class-insights-timing-note {
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--pf-color-border-default, #dce5e1);
+  margin-top: 1rem;
+}
+
+.class-insights-data summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  list-style: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.class-insights-data summary::-webkit-details-marker {
+  display: none;
+}
+
+.class-insights-data summary::after {
+  content: '';
+  flex: 0 0 7px;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.class-insights-data[open] > summary::after {
+  transform: rotate(225deg);
+}
+
+.class-insights h3.class-insights-tag-heading {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--pf-color-border-default, #dce5e1);
+}
+
+@media (max-width: 600px) {
+  #root .atelier-modal-dialog.class-insights-dialog {
+    width: 100%;
+    max-width: 100% !important;
+    max-height: calc(94dvh - var(--hosted-obstruction-inset, 0px));
+    margin: auto 0 0;
+    border-radius: 16px 16px 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .class-insights-dialog .atelier-modal-header,
+  .class-insights-dialog .atelier-modal-body {
+    padding: 1rem;
+  }
+
+  .class-insights-dialog .atelier-modal-title {
+    font-size: 1.375rem;
+  }
+
+  .class-insights-summary {
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .class-insights-summary p:first-child strong {
+    font-size: 1.5rem;
+  }
+
+  .class-insights-summary p + p {
+    padding-left: 0.75rem;
+  }
+
+  .class-insights-bar-row--timing {
+    grid-template-columns: 2rem minmax(1rem, 1fr) minmax(6rem, auto);
+    gap: 0.375rem;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 768px) {
+  #root .atelier-modal-dialog.class-insights-dialog {
+    max-width: 520px !important;
+    padding-bottom: 0;
+  }
+}
+
+@media (max-width: 360px) {
+  .class-insights-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .class-insights-summary p + p {
+    padding: 0.5rem 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--pf-color-border-default, #dce5e1);
   }
 }
