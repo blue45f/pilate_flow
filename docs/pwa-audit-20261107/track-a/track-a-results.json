@@ -1,0 +1,218 @@
+{
+  "track": "Track A — Manifest / Service-Worker / Cache Version Update, Offline Revisit & Existing Lesson Data Preservation",
+  "executedAt": "2026-11-07T00:43:45.612Z",
+  "completedAt": "2026-11-07T00:43:57.999Z",
+  "environment": {
+    "nodeVersion": "v24.22.2",
+    "platform": "linux 6.12.105+",
+    "chromiumBinary": "/usr/bin/chromium",
+    "isolatedTempDirPattern": "/tmp/pwa-track-a-*",
+    "isolatedTempDirCleanedUp": true
+  },
+  "vitestSuite": {
+    "testFile": "scripts/pwa-audit-20261107/track-a/track-a-sw-cache-data-preservation.test.ts",
+    "success": true,
+    "numTotalTests": 7,
+    "numPassedTests": 7,
+    "numFailedTests": 0,
+    "assertions": [
+      {
+        "title": "Test 1: verifies manifest & dist/ build artifact contract, PNG signatures/dimensions, and pwaBuild() deterministic 16-char SHA-256 version",
+        "fullName": "Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit & Synthetic Lesson Data Preservation Test 1: verifies manifest & dist/ build artifact contract, PNG signatures/dimensions, and pwaBuild() deterministic 16-char SHA-256 version",
+        "status": "passed",
+        "durationMs": 8.222467000000051
+      },
+      {
+        "title": "Test 2: verifies Service Worker version update lifecycle (v1 -> v2 -> v3) without skipWaiting/clients.claim and with selective cache cleanup",
+        "fullName": "Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit & Synthetic Lesson Data Preservation Test 2: verifies Service Worker version update lifecycle (v1 -> v2 -> v3) without skipWaiting/clients.claim and with selective cache cleanup",
+        "status": "passed",
+        "durationMs": 14.608334000000013
+      },
+      {
+        "title": "Test 3: verifies offline revisit, cleanUrls redirect neutralization, fail-closed Response.error(), and strict bypass of auth/API/query/POST/cross-origin",
+        "fullName": "Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit & Synthetic Lesson Data Preservation Test 3: verifies offline revisit, cleanUrls redirect neutralization, fail-closed Response.error(), and strict bypass of auth/API/query/POST/cross-origin",
+        "status": "passed",
+        "durationMs": 10.40563300000008
+      },
+      {
+        "title": "Test 4: preserves 100% of synthetic Pilates lesson data across full SW lifecycle (v1 install -> offline revisit -> v2 waiting -> v2 activate -> offline revisit)",
+        "fullName": "Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit & Synthetic Lesson Data Preservation Test 4: preserves 100% of synthetic Pilates lesson data across full SW lifecycle (v1 install -> offline revisit -> v2 waiting -> v2 activate -> offline revisit)",
+        "status": "passed",
+        "durationMs": 447.7251899999999
+      },
+      {
+        "title": "Finding A-F1: uncached/unhashed auxiliary PWA assets (site.webmanifest, favicon.svg, apple-touch-icon.png, app-maskable-512.png) are omitted from ASSETS and version hash input",
+        "fullName": "Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit & Synthetic Lesson Data Preservation Test 5: Reproduces and characterizes Track A audit findings (A-F1, A-F2, A-F3) Finding A-F1: uncached/unhashed auxiliary PWA assets (site.webmanifest, favicon.svg, apple-touch-icon.png, app-maskable-512.png) are omitted from ASSETS and version hash input",
+        "status": "passed",
+        "durationMs": 13.907672000000048
+      },
+      {
+        "title": "Finding A-F2: online root navigation (/) while v2 SW is waiting fetches v2 HTML under active v1 SW controller, causing offline chunk miss if offline before tab close",
+        "fullName": "Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit & Synthetic Lesson Data Preservation Test 5: Reproduces and characterizes Track A audit findings (A-F1, A-F2, A-F3) Finding A-F2: online root navigation (/) while v2 SW is waiting fetches v2 HTML under active v1 SW controller, causing offline chunk miss if offline before tab close",
+        "status": "passed",
+        "durationMs": 7.813282000000072
+      },
+      {
+        "title": "Finding A-F3: during first-time SW install, pwa.ts reports offlineStatus as \"update-ready\" when worker enters registration.waiting before active exists",
+        "fullName": "Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit & Synthetic Lesson Data Preservation Test 5: Reproduces and characterizes Track A audit findings (A-F1, A-F2, A-F3) Finding A-F3: during first-time SW install, pwa.ts reports offlineStatus as \"update-ready\" when worker enters registration.waiting before active exists",
+        "status": "passed",
+        "durationMs": 50.32864100000006
+      }
+    ]
+  },
+  "chromiumCdpE2e": {
+    "v1CacheName": "flow-atelier-shell-bad4e3f640aa9380",
+    "v2CacheName": "flow-atelier-shell-v2audit",
+    "phase1InitialHydrationAndSwV1": {
+      "title": "Flow Atelier · 필라테스 수업 플래너",
+      "rootTextLength": 1715,
+      "hasSyntheticTitleInDom": true,
+      "activeState": "activated",
+      "waitingState": null,
+      "cacheKeys": [
+        "flow-atelier-shell-bad4e3f640aa9380"
+      ],
+      "cachedEntryCount": 40,
+      "storageSha256": "ab29e22436fd04fb0c0b223627bd2d5dd56e988b68c36ea3b12e1e402ac55a56",
+      "matchesBaseline100Percent": true
+    },
+    "phase2OfflineReloadUnderV1": {
+      "navigatorOnLine": false,
+      "title": "Flow Atelier · 필라테스 수업 플래너",
+      "rootTextLength": 1715,
+      "hasController": true,
+      "cacheKeys": [
+        "flow-atelier-shell-bad4e3f640aa9380"
+      ],
+      "storageSha256": "ab29e22436fd04fb0c0b223627bd2d5dd56e988b68c36ea3b12e1e402ac55a56",
+      "matchesBaseline100Percent": true
+    },
+    "phase3OnlineV2WaitingUpdate": {
+      "activeState": "activated",
+      "waitingState": "installed",
+      "openLessonMarkerPreservedWithoutAutoReload": true,
+      "cacheKeys": [
+        "flow-atelier-shell-bad4e3f640aa9380",
+        "flow-atelier-shell-v2audit"
+      ],
+      "bothV1AndV2CachesPresentWhileWaiting": true,
+      "storageSha256": "ab29e22436fd04fb0c0b223627bd2d5dd56e988b68c36ea3b12e1e402ac55a56",
+      "matchesBaseline100Percent": true
+    },
+    "phase4NavigateAwayAndReopenV2Activate": {
+      "title": "Flow Atelier · 필라테스 수업 플래너",
+      "rootTextLength": 1715,
+      "activeState": "activated",
+      "waitingState": null,
+      "cacheKeys": [
+        "flow-atelier-shell-v2audit"
+      ],
+      "obsoleteV1CacheDeleted": true,
+      "v2CacheActiveOnly": true,
+      "storageSha256": "ab29e22436fd04fb0c0b223627bd2d5dd56e988b68c36ea3b12e1e402ac55a56",
+      "matchesBaseline100Percent": true
+    },
+    "phase5OfflineReloadUnderV2": {
+      "navigatorOnLine": false,
+      "title": "Flow Atelier · 필라테스 수업 플래너",
+      "rootTextLength": 1715,
+      "cacheKeys": [
+        "flow-atelier-shell-v2audit"
+      ],
+      "storageSha256": "ab29e22436fd04fb0c0b223627bd2d5dd56e988b68c36ea3b12e1e402ac55a56",
+      "matchesBaseline100Percent": true
+    }
+  },
+  "syntheticDataPreservation": {
+    "baselineOverallSha256": "ab29e22436fd04fb0c0b223627bd2d5dd56e988b68c36ea3b12e1e402ac55a56",
+    "totalKeysVerified": 7,
+    "totalBytesVerified": 1564596,
+    "zeroByteLossAcrossAllLifecycleTransitions": true,
+    "domainSummary": {
+      "activeSequenceId": "seq-track-a-active-50m",
+      "activeTargetMinutes": 50,
+      "activeStepsCount": 10,
+      "activeStepsTotalMinutes": 50,
+      "customExercisesCount": 2,
+      "totalExercisesCount": 100,
+      "savedSequencesCount": 2,
+      "classGroupsCount": 6,
+      "historyLogsCount": 1,
+      "conditionTemplatesCount": 2,
+      "scheduledClassesCount": 2,
+      "datedAssignmentsCount": 2,
+      "bookmarkedExercisesCount": 4
+    },
+    "perKeyDigests": {
+      "pilates-flow-atelier-storage-v3": {
+        "bytes": 308724,
+        "rawSha256": "fc8b7808efd03fb803eadc563814293b5960797c9e767f263def6c3def4fa67d",
+        "canonicalSha256": "6b0128ac25cc5d642d743dac01672c95ed92e078ce8cfc55c7461c6c2f256be1"
+      },
+      "pilates-flow-atelier-storage-v3:account:instructor-track-a": {
+        "bytes": 308724,
+        "rawSha256": "fc8b7808efd03fb803eadc563814293b5960797c9e767f263def6c3def4fa67d",
+        "canonicalSha256": "6b0128ac25cc5d642d743dac01672c95ed92e078ce8cfc55c7461c6c2f256be1"
+      },
+      "pilates-flow-atelier-storage-v3:active-owner": {
+        "bytes": 18,
+        "rawSha256": "6e411c1ff6be4d87ae37b14131234cd11e496b868f84c9ea33092268c41c7043",
+        "canonicalSha256": "e3019ff80c98154b09c35aeec8ee7a3a3e778c91322d171a2a29b9f0374c2820"
+      },
+      "pilates-flow-atelier-storage-v3:guest": {
+        "bytes": 308715,
+        "rawSha256": "8f65827198fb32ef670c514ee1f387f80d39f417f0edc138c61287a85f2d2fb9",
+        "canonicalSha256": "292c159ad9fcf719a1af814d71ae52bff49a61f1f592938bfbaf2cc79fcddfc1"
+      },
+      "pilates-flow-atelier-storage-v3:known-accounts": {
+        "bytes": 22,
+        "rawSha256": "512527ed269bfb223729efc2875def71373261caca84668e808b0053e05df7fc",
+        "canonicalSha256": "512527ed269bfb223729efc2875def71373261caca84668e808b0053e05df7fc"
+      },
+      "pilates-flow-atelier-storage-v3:preserved:snapshot-1": {
+        "bytes": 334392,
+        "rawSha256": "816e949f53d646a65b763d49a4fe4a01e65ad3b5f0ccc2e17c9d76e6edf03990",
+        "canonicalSha256": "90b7d0183e72341b34ac37146fa33b21370fad1cd512c33ed82339c5822cf207"
+      },
+      "pilates-flow-backup-rollback-v1": {
+        "bytes": 304001,
+        "rawSha256": "3d292dc3cd219ae1956b882b9f9874a0299ed2747d422728c8454eb06d7f327e",
+        "canonicalSha256": "3294624adb73122c3c13f8c1ad74e77f9bac2df20a9e9b61b3cbf241cacce0e7"
+      }
+    }
+  },
+  "findings": [
+    {
+      "id": "A-F1",
+      "severity": "low",
+      "title": "보조 PWA 정적 자산 4종(site.webmanifest, favicon.svg, apple-touch-icon.png, app-maskable-512.png) 프리캐시(ASSETS) 및 버전 해시 입력 누락",
+      "files": [
+        "scripts/pwa-build.ts",
+        "dist/sw.js"
+      ],
+      "reproducedInTest": true,
+      "summary": "serviceWorkerSource()의 ASSETS 배열과 pwaBuild()의 SHA-256 버전 계산 입력에 /site.webmanifest, /favicon.svg, /icons/apple-touch-icon.png, /icons/app-maskable-512.png 4개 파일이 누락되어 오프라인 상태에서 해당 URL 요청 시 서비스 워커가 응답을 가로채지 않으며, 해당 파일만 단독 수정될 경우 SW 캐시 버전 해시가 갱신되지 않습니다."
+    },
+    {
+      "id": "A-F2",
+      "severity": "medium",
+      "title": "대기 중(waiting)인 신규 SW(v2)가 존재할 때 온라인 루트 탐색(/) 시 신규 v2 HTML과 기존 활성 v1 SW 컨트롤러 간 버전 불일치 가능성",
+      "files": [
+        "scripts/pwa-build.ts",
+        "dist/sw.js"
+      ],
+      "reproducedInTest": true,
+      "summary": "열린 수업을 보호하기 위해 skipWaiting()을 호출하지 않는 설계에서, v2 SW가 waiting 상태일 때 기존 탭에서 온라인 새로고침(/)을 수행하면 활성 v1 SW의 network-first 전략이 서버의 최신 v2 index.html(v2 해시 청크 참조)을 반환합니다. 모든 탭을 닫아 v2가 활성화되기 전에 오프라인으로 전환되면, v1 SW의 ASSETS 목록에는 v2 청크 경로가 없어 오프라인 청크 요청이 실패할 수 있습니다."
+    },
+    {
+      "id": "A-F3",
+      "severity": "low",
+      "title": "최초 서비스 워커 설치 시 worker.state가 installed(registration.waiting)를 거치는 순간 offlineStatus가 일시적으로 update-ready로 표시됨",
+      "files": [
+        "src/lib/pwa.ts"
+      ],
+      "reproducedInTest": true,
+      "summary": "src/lib/pwa.ts의 update() 함수가 registration.active 존재 여부를 확인하지 않고 registration.waiting ? \"update-ready\" : ...를 평가하여, 기존 활성 컨트롤러가 없는 최초 설치(registration.active === null) 중에도 워커가 installed 상태에 도달해 waiting 슬롯에 잠시 머무는 동안 offlineStatus가 \"update-ready\"로 보고됩니다."
+    }
+  ]
+}
