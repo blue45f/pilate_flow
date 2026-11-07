@@ -178,6 +178,8 @@
   line-height: 1.7;
   font-weight: 500;
   padding: 9px 2px 0;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .ml-pattern-tile-link {
   display: flex;
@@ -190,6 +192,17 @@
 .ml-pattern-tile:hover .ml-pattern-tile-art {
   border-color: #8f9d87;
   background: #eceee1;
+}
+.ml-pattern-tile.is-selected .ml-pattern-tile-art,
+.ml-pattern-tile[aria-pressed='true'] .ml-pattern-tile-art {
+  border-color: #2f5b46;
+  background: #e3ece0;
+  box-shadow: inset 0 0 0 1px #2f5b46;
+}
+.ml-pattern-tile.is-selected strong,
+.ml-pattern-tile[aria-pressed='true'] strong {
+  color: #1f4634;
+  font-weight: 600;
 }
 .ml-pattern-tile:focus-visible {
   outline: 2px solid #335f4a;
@@ -325,6 +338,32 @@
   margin: -1px 0 15px;
   font-size: 11px;
 }
+.library-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px 12px;
+  border-top: 1px solid #ecebe0;
+}
+.library-active-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #c8d4be;
+  background: #eef3e8;
+  color: #284b39;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.library-active-filter-chip:hover {
+  background: #e2ebd9;
+}
 .motion-library .movement-card-grid {
   gap: 18px;
 }
@@ -334,6 +373,11 @@
   border-radius: 15px;
   border-color: #e2dfd2;
 }
+.motion-library .movement-card.is-in-sequence {
+  border-color: #4f775e;
+  box-shadow: 0 0 0 1px #4f775e29, 0 8px 22px #203f3312;
+  background: #fbfcf8;
+}
 .motion-library .movement-card:hover {
   transform: none;
   box-shadow: 0 8px 23px #243f3509;
@@ -341,6 +385,28 @@
 .motion-library .movement-card-art {
   background: #efeee4;
   height: 175px;
+}
+.motion-library .movement-card.movement-mat .movement-card-art {
+  background: #e7ece3;
+}
+.motion-library .movement-card.movement-reformer .movement-card-art {
+  background: #eceee4;
+}
+.motion-library .movement-card.movement-cadillac .movement-card-art {
+  background: #efe8dd;
+}
+.motion-library .movement-card.movement-chair .movement-card-art {
+  background: #eee9de;
+}
+.motion-library .movement-card.movement-barrel .movement-card-art {
+  background: #eaece1;
+}
+.movement-idea-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
 }
 .motion-library .movement-art-trigger {
   padding: 12px 10px 20px;
@@ -390,6 +456,44 @@
   margin-bottom: 8px;
   font-size: 11px;
 }
+.movement-selected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 600;
+}
+.movement-card-focus-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 0 0 10px;
+}
+.movement-focus-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #d6decb;
+  background: #f4f6ee;
+  color: #3f5843;
+  font: inherit;
+  font-size: 10px;
+  line-height: 1.4;
+  cursor: pointer;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.movement-focus-tag:hover {
+  background: #e7ede0;
+  border-color: #b8c6ab;
+}
+.movement-focus-tag.is-selected,
+.movement-focus-tag[aria-pressed='true'] {
+  background: #284b39;
+  border-color: #284b39;
+  color: #fcfbf5;
+}
 .motion-library .movement-provenance {
   margin-bottom: 10px;
   line-height: 1.6;
@@ -401,23 +505,45 @@
   justify-content: center;
   flex-direction: column;
   height: 100%;
-  gap: 9px;
-  color: #77806b;
+  gap: 5px;
+  color: #636e59;
+  padding: 6px 8px;
+  text-align: center;
 }
-.ml-unmapped-art span:first-child {
+.ml-unmapped-art .ml-unmapped-meta {
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #465d49;
+  background: rgba(255, 252, 244, 0.78);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(90, 112, 88, 0.18);
+}
+.ml-unmapped-art span:nth-of-type(2) {
   font-family: Georgia, 'Noto Serif KR', serif;
-  font-size: 17px;
-  letter-spacing: -0.6px;
+  font-size: 15px;
+  letter-spacing: -0.5px;
+  color: #55614d;
+}
+.ml-unmapped-art .ml-unmapped-focus {
+  font-size: 10px;
+  letter-spacing: 0;
+  color: #5b6955;
+  max-width: 100%;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .ml-unmapped-art span:last-child {
   font-size: 7px;
-  letter-spacing: 2px;
-  color: #89917f;
+  letter-spacing: 1.6px;
+  color: #828b78;
 }
 .ml-unmapped-art i {
   display: block;
   height: 1px;
-  width: 45px;
+  width: 42px;
   background: #c6cdbb;
 }
 .ml-card-patterns {
@@ -441,7 +567,7 @@
   min-height: 44px;
   text-align: left;
   width: 100%;
-  border: 0;
+  border: 1px solid transparent;
   background: #eef1e5;
   color: #365a42;
   border-radius: 7px;
@@ -451,12 +577,20 @@
   line-height: 1.7;
   font-size: 11px;
   cursor: pointer;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .ml-card-patterns button svg {
   flex-shrink: 0;
 }
 .ml-card-patterns button:hover {
   background: #e2e8d8;
+}
+.ml-card-patterns button.is-selected,
+.ml-card-patterns button[aria-pressed='true'] {
+  background: #dce7d7;
+  border-color: #365a42;
+  font-weight: 600;
 }
 .ml-card-pending {
   padding-top: 10px;
@@ -513,6 +647,11 @@
   border: 1px solid #315445;
   border-radius: 14px;
   box-shadow: 0 7px 25px #14382f22;
+}
+.ml-selection-return[data-has-selection='true'] {
+  background: #134e3e;
+  border-color: #4a836b;
+  box-shadow: 0 10px 28px #123c3138;
 }
 .ml-selection-return p {
   margin: 0;
@@ -620,12 +759,13 @@
     font-size: 13px;
   }
   .motion-library .library-apparatus-tabs {
-    padding-inline: 13px;
-    gap: 20px;
-    display: none;
-  }
-  .motion-library[data-filters-expanded='true'] .library-apparatus-tabs {
     display: flex;
+    flex-wrap: wrap;
+    padding: 8px 13px 10px;
+    gap: 6px 10px;
+  }
+  .library-active-filters {
+    padding: 8px 13px 10px;
   }
   .ml-pattern-discovery {
     margin-top: 21px;
@@ -657,7 +797,7 @@
     gap: 12px;
   }
   .motion-library .movement-card-art {
-    height: 135px;
+    height: 142px;
   }
   .motion-library .movement-card-content {
     padding: 13px 12px 0;
@@ -684,7 +824,7 @@
     font-size: 8px;
     bottom: 7px;
   }
-  .ml-unmapped-art span:first-child {
+  .ml-unmapped-art span:nth-of-type(2) {
     font-size: 13px;
   }
   .ml-unmapped-art span:last-child {
@@ -701,7 +841,7 @@
   }
   .motion-library .movement-card-footer {
     flex-wrap: wrap;
-    gap: 2px;
+    gap: 4px;
   }
   .motion-library .movement-card-footer > button {
     font-size: 10px;
@@ -734,6 +874,9 @@
   }
   .motion-library .library-heading-actions {
     flex-direction: row;
+  }
+  .motion-library .movement-card-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
   .ml-selection-return button {
     font-size: 10px;
