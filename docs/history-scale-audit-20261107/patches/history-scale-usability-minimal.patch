@@ -1,0 +1,145 @@
+--- a/src/components/ClassBinderView.tsx
++++ b/src/components/ClassBinderView.tsx
+@@ -91,18 +91,26 @@ function formatDateWithWeekday(date: string) {
+ }
+ 
+ function getHistoryDateKey(date: string) {
+   const trimmed = date.trim();
+-  if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+-    return trimmed.slice(0, 10);
++  // Exact calendar-only string (YYYY-MM-DD) has no time/timezone component
++  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
++    return trimmed;
+   }
+   const parsed = Date.parse(trimmed);
+   if (Number.isNaN(parsed)) {
+     return trimmed;
+   }
++  // Align date grouping key with local calendar day used by formatDate / formatDateWithWeekday
+   const d = new Date(parsed);
+   const year = d.getFullYear();
+   const month = String(d.getMonth() + 1).padStart(2, '0');
+   const day = String(d.getDate()).padStart(2, '0');
+   return `${year}-${month}-${day}`;
+ }
+ 
+ function formatHistoryTimeOfDay(date: string) {
+   const trimmed = date.trim();
+   // Only show time if an explicit non-midnight time component is present in ISO string
+-  if (!trimmed.includes('T')) return null;
++  // Also omit synthetic T12:00:00.000Z noon timestamps generated from date-only inputs
++  if (!trimmed.includes('T') || /T12:00:00(?:\.000)?Z?$/.test(trimmed)) return null;
+   const parsed = Date.parse(trimmed);
+   if (Number.isNaN(parsed)) return null;
+   const d = new Date(parsed);
+   const hours = d.getHours();
+   const minutes = d.getMinutes();
+   if (hours === 0 && minutes === 0) return null;
+   return d.toLocaleTimeString('ko-KR', {
+     hour: '2-digit',
+     minute: '2-digit',
+     hour12: false,
+   });
+ }
+@@ -161,20 +169,25 @@ export function ClassBinderView({
+   const [groupDraft, setGroupDraft] = useState(
+     activeTeachingGroup === 'all' ? '' : activeTeachingGroup,
+   );
+   const [historyQuery, setHistoryQuery] = useState('');
+   const [selectedDate, setSelectedDate] = useState<string>('all');
++  const [showAllDateChips, setShowAllDateChips] = useState(false);
++  const [visibleHistoryCount, setVisibleHistoryCount] = useState(30);
+   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+   const [reopenedHistoryId, setReopenedHistoryId] = useState<string | null>(null);
+   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
+   const reopenDialogRef = useRef<HTMLDivElement | null>(null);
+   const reopenCloseBtnRef = useRef<HTMLButtonElement | null>(null);
+ 
+   const groups = useMemo(() => collectGroups(savedSequences, historyLogs), [savedSequences, historyLogs]);
+   const exercisesMap = useMemo(() => new Map(exercises.map((ex) => [ex.id, ex])), [exercises]);
+-  const reusableBlocks = getSavedReusableBlocks();
+-  const humanDrafts = getSavedHumanMovementDrafts();
++  // [P1-1] Memoize localStorage helpers so resolvedHistoryMap is not invalidated on every state update
++  const reusableBlocks = useMemo(() => getSavedReusableBlocks(), [savedSequences, historyLogs]);
++  const humanDrafts = useMemo(() => getSavedHumanMovementDrafts(), [savedSequences, historyLogs]);
+ 
+   const resolvedHistoryMap = useMemo(() => {
+     const map = new Map<string, ResolvedTeachingHistoryView>();
+     for (const log of historyLogs) {
+       map.set(
+         log.id,
+         resolveTeachingHistoryView({
+           log,
+           exercisesById: exercisesMap,
+           savedSequences,
+           reusableBlocks,
+           humanDrafts,
+         }),
+       );
+     }
+     return map;
+   }, [historyLogs, exercisesMap, savedSequences, reusableBlocks, humanDrafts]);
+@@ -220,16 +233,27 @@ export function ClassBinderView({
+     return Array.from(countsByDate.entries())
+       .sort((a, b) => b[0].localeCompare(a[0]))
+       .map(([dateKey, info]) => ({
+         dateKey,
+         label: formatDate(info.sampleRawDate),
+         weekdayLabel: formatDateWithWeekday(info.sampleRawDate),
+         count: info.count,
+       }));
+   }, [groupAndQueryLogs]);
+ 
++  // [P1-3] Fall back to 'all' if selectedDate is no longer present in current query's dateFilterOptions
++  const effectiveSelectedDate = useMemo(() => {
++    if (selectedDate === 'all') return 'all';
++    return dateFilterOptions.some((opt) => opt.dateKey === selectedDate) ? selectedDate : 'all';
++  }, [selectedDate, dateFilterOptions]);
++
+   const logs = useMemo(() => {
+-    if (selectedDate === 'all') return groupAndQueryLogs;
+-    return groupAndQueryLogs.filter((log) => getHistoryDateKey(log.taughtAt) === selectedDate);
+-  }, [groupAndQueryLogs, selectedDate]);
++    if (effectiveSelectedDate === 'all') return groupAndQueryLogs;
++    return groupAndQueryLogs.filter((log) => getHistoryDateKey(log.taughtAt) === effectiveSelectedDate);
++  }, [groupAndQueryLogs, effectiveSelectedDate]);
++
++  // [P2-1] Window rendered DOM cards to keep initial DOM node count and scroll frame cost bounded at 1,000+ logs
++  const visibleLogs = useMemo(() => logs.slice(0, visibleHistoryCount), [logs, visibleHistoryCount]);
+ 
+   const groupedLogsByDate = useMemo(() => {
+     const groupsMap = new Map<
+@@ -239,7 +263,7 @@ export function ClassBinderView({
+     >();
+-    for (const log of logs) {
++    for (const log of visibleLogs) {
+       const dateKey = getHistoryDateKey(log.taughtAt);
+       const existing = groupsMap.get(dateKey);
+       if (existing) {
+         existing.items.push(log);
+       } else {
+         groupsMap.set(dateKey, {
+           dateKey,
+           dateLabel: formatDateWithWeekday(log.taughtAt),
+           items: [log],
+         });
+       }
+     }
+     return Array.from(groupsMap.values());
+-  }, [logs]);
++  }, [visibleLogs]);
+ 
+   const visibleDateFilterOptions = useMemo(() => {
+     if (showAllDateChips || dateFilterOptions.length <= 12) {
+       return dateFilterOptions;
+     }
+     const top12 = dateFilterOptions.slice(0, 12);
+     if (
+       effectiveSelectedDate !== 'all' &&
+       !top12.some((opt) => opt.dateKey === effectiveSelectedDate)
+     ) {
+       const activeChip = dateFilterOptions.find((opt) => opt.dateKey === effectiveSelectedDate);
+       if (activeChip) return [...top12, activeChip];
+     }
+     return top12;
+   }, [dateFilterOptions, showAllDateChips, effectiveSelectedDate]);
