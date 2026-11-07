@@ -1,0 +1,2392 @@
+{
+  "auditId": "diagram-contact-audit-20261107",
+  "startedAt": "2026-11-07T07:04:51.806Z",
+  "completedAt": "2026-11-07T07:05:03.518Z",
+  "baseCommit": "338f912a8ae2c07b501befd3e160c725ec40b559",
+  "readOnlyBoundary": {
+    "srcModifiedLines": 0,
+    "ownedPathsOnly": true,
+    "ownedPaths": [
+      "scripts/diagram-contact-audit-20261107/**",
+      "docs/diagram-contact-audit-20261107/**"
+    ]
+  },
+  "honestyAndTruthfulnessBoundary": {
+    "anatomicalAccuracyAssumed": false,
+    "anatomicalVerificationCompleted": false,
+    "expertVerificationCompleted": false,
+    "canonicalMotionReady": false,
+    "manualReady": false,
+    "true3dSupported": false,
+    "professionalReviewCount": 0,
+    "disclaimerKo": "본 감사는 2D 개략 도해의 자세-기구 접점 좌표 결함(D-01~D-05)에 대한 정적 좌표·실제 화면 회귀 검증 및 최소 패치 제안이며, 해부학적·임상적·전문가 검증 완료를 주장하지 않습니다."
+  },
+  "parallelWorkflowGates": {
+    "syntaxCheckPassed": true,
+    "trackANodeTestPassed": true,
+    "trackBNodeTestPassed": true,
+    "motionEvidenceAndCoverageValidated": true,
+    "candidatePatchGitApplyCheckPassed": true,
+    "browserMultiViewportPassed": true
+  },
+  "excludedAlreadyResolvedBaseline": {
+    "id": "R-01",
+    "titleKo": "기해결 제외 항목: 매트 클램(Clam) · 오픈 북(Open Book) 교차 오염 분리 및 원근 어깨선 조건부 렌더링",
+    "status": "ALREADY_RESOLVED_ON_MAIN",
+    "metrics": {
+      "clamArchetypeId": "mat-clam-isolated",
+      "openBookArchetypeId": "mat-open-book-isolated",
+      "clamKneeMovePx": 48.04,
+      "clamHandLeakPx": 0,
+      "clamThoracicLeakPx": 0,
+      "openBookHandMovePx": 156.59,
+      "openBookKneeLeakPx": 0,
+      "clamZeroLenShoulderLine": false,
+      "openBookShoulderBridgeRendered": true,
+      "correctionsCount": 2
+    }
+  },
+  "baselineEvaluation": {
+    "allFiveDefectsPassed": false,
+    "defects": {
+      "D01": {
+        "id": "D-01",
+        "titleKo": "리포머 프로그(original-reformer-strap-frog) 끝 자세(end) 무릎 굴곡 복귀 누락 · 천장 다리 리프트 오적용",
+        "passed": false,
+        "exerciseId": "original-reformer-strap-frog",
+        "archetypeId": "supine-feet-in-straps",
+        "metrics": {
+          "startKnee": {
+            "x": 182,
+            "y": 92
+          },
+          "middleKnee": {
+            "x": 242,
+            "y": 108
+          },
+          "endKnee": {
+            "x": 204,
+            "y": 76
+          },
+          "startAnkle": {
+            "x": 214,
+            "y": 74
+          },
+          "middleAnkle": {
+            "x": 284,
+            "y": 80
+          },
+          "endAnkle": {
+            "x": 222,
+            "y": 40
+          },
+          "startToEndAnkleDistPx": 34.93,
+          "startToEndKneeDistPx": 27.2,
+          "endAnkleDeltaYFromStartPx": -34,
+          "carriageOffsets": [
+            6,
+            36,
+            12
+          ]
+        }
+      },
+      "D02": {
+        "id": "D-02",
+        "titleKo": "리포머 플랭크(ex-plank-01) 손·발 기구 접점 좌우 반전 및 체어 플랭크 시트·페달 접점 이탈",
+        "passed": false,
+        "reformerPlank": {
+          "exerciseId": "ex-plank-01",
+          "archetypeId": "plank-long-stretch-chair-pike",
+          "footbarTop": {
+            "x": 266,
+            "y": 126
+          },
+          "startHand": {
+            "x": 88,
+            "y": 148
+          },
+          "startWrist": {
+            "x": 96,
+            "y": 144
+          },
+          "startAnkle": {
+            "x": 280,
+            "y": 144
+          },
+          "middleAnkle": {
+            "x": 242,
+            "y": 146
+          },
+          "endAnkle": {
+            "x": 286,
+            "y": 144
+          },
+          "startCarriageRect": {
+            "x": 44,
+            "y": 143,
+            "width": 178,
+            "height": 9
+          },
+          "middleCarriageRect": {
+            "x": 39,
+            "y": 143,
+            "width": 178,
+            "height": 9
+          },
+          "handToFootbarDistPx": 170.95,
+          "handOnFootbarSide": false,
+          "ankleOnCarriageStart": false,
+          "ankleOnCarriageMiddle": false
+        },
+        "chairPlanks": [
+          {
+            "exerciseId": "ex-plank-02",
+            "archetypeId": "plank-long-stretch-chair-pike",
+            "hand": {
+              "x": 88,
+              "y": 148
+            },
+            "wrist": {
+              "x": 96,
+              "y": 144
+            },
+            "seatTopY": 106,
+            "seatRangeX": [
+              108,
+              196
+            ],
+            "handSeatVerticalGapPx": 42,
+            "handWithinSeatX": false,
+            "startAnkle": {
+              "x": 280,
+              "y": 144
+            },
+            "middleAnkle": {
+              "x": 242,
+              "y": 146
+            },
+            "endAnkle": {
+              "x": 286,
+              "y": 144
+            },
+            "startPedalTip": {
+              "x": 226.2,
+              "y": 125.8
+            },
+            "middlePedalTip": {
+              "x": 235.5,
+              "y": 138.2
+            },
+            "endPedalTip": {
+              "x": 225.2,
+              "y": 124.8
+            },
+            "startAnkleToPedalTipDistPx": 56.8,
+            "middleAnkleToPedalTipDistPx": 10.15,
+            "endAnkleToPedalTipDistPx": 63.76,
+            "passed": false
+          },
+          {
+            "exerciseId": "original-chair-incline-support",
+            "archetypeId": "plank-long-stretch-chair-pike",
+            "hand": {
+              "x": 88,
+              "y": 148
+            },
+            "wrist": {
+              "x": 96,
+              "y": 144
+            },
+            "seatTopY": 106,
+            "seatRangeX": [
+              108,
+              196
+            ],
+            "handSeatVerticalGapPx": 42,
+            "handWithinSeatX": false,
+            "startAnkle": {
+              "x": 280,
+              "y": 144
+            },
+            "middleAnkle": {
+              "x": 242,
+              "y": 146
+            },
+            "endAnkle": {
+              "x": 286,
+              "y": 144
+            },
+            "startPedalTip": {
+              "x": 226.2,
+              "y": 125.8
+            },
+            "middlePedalTip": {
+              "x": 235.5,
+              "y": 138.2
+            },
+            "endPedalTip": {
+              "x": 225.2,
+              "y": 124.8
+            },
+            "startAnkleToPedalTipDistPx": 56.8,
+            "middleAnkleToPedalTipDistPx": 10.15,
+            "endAnkleToPedalTipDistPx": 63.76,
+            "passed": false
+          },
+          {
+            "exerciseId": "ex-kr-chair-01",
+            "archetypeId": "plank-long-stretch-chair-pike",
+            "hand": {
+              "x": 88,
+              "y": 148
+            },
+            "wrist": {
+              "x": 96,
+              "y": 144
+            },
+            "seatTopY": 106,
+            "seatRangeX": [
+              108,
+              196
+            ],
+            "handSeatVerticalGapPx": 42,
+            "handWithinSeatX": false,
+            "startAnkle": {
+              "x": 280,
+              "y": 144
+            },
+            "middleAnkle": {
+              "x": 242,
+              "y": 146
+            },
+            "endAnkle": {
+              "x": 286,
+              "y": 144
+            },
+            "startPedalTip": {
+              "x": 226.2,
+              "y": 125.8
+            },
+            "middlePedalTip": {
+              "x": 235.5,
+              "y": 138.2
+            },
+            "endPedalTip": {
+              "x": 225.2,
+              "y": 124.8
+            },
+            "startAnkleToPedalTipDistPx": 56.8,
+            "middleAnkleToPedalTipDistPx": 10.15,
+            "endAnkleToPedalTipDistPx": 63.76,
+            "passed": false
+          }
+        ]
+      },
+      "D03": {
+        "id": "D-03",
+        "titleKo": "캐딜락(Cadillac) 고정 베드 기구에 비정상 캐리지 활주(carriageOffsetPx > 0) 오적용 (18개 중 15개)",
+        "passed": false,
+        "totalCadillacExercises": 18,
+        "nonZeroCadillacCount": 15,
+        "nonZeroCadillacExerciseIds": [
+          "original-cadillac-table-breath",
+          "original-cadillac-pelvic-rock",
+          "original-cadillac-table-bridge",
+          "original-cadillac-seated-roll-back",
+          "original-cadillac-arm-spring-press",
+          "original-cadillac-seated-rotation",
+          "original-cadillac-side-leg-reach",
+          "original-cadillac-prone-back-reach",
+          "original-cadillac-seated-side-reach",
+          "ex-warmup-02",
+          "ex-bridging-02",
+          "ex-upper-03",
+          "ex-straps-02",
+          "ex-kr-cadillac-01",
+          "ex-kr-cadillac-02"
+        ],
+        "sampleDetails": [
+          {
+            "exerciseId": "original-cadillac-table-breath",
+            "archetypeId": "supine-breath-pelvic-clock",
+            "carriageOffsets": [
+              0,
+              4,
+              0
+            ],
+            "barEndStart": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndMiddle": {
+              "x": 97,
+              "y": 64
+            },
+            "barEndShiftXPx": 1,
+            "hasNonZeroCarriageOffset": true
+          },
+          {
+            "exerciseId": "original-cadillac-pelvic-rock",
+            "archetypeId": "supine-breath-pelvic-clock",
+            "carriageOffsets": [
+              0,
+              4,
+              0
+            ],
+            "barEndStart": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndMiddle": {
+              "x": 97,
+              "y": 64
+            },
+            "barEndShiftXPx": 1,
+            "hasNonZeroCarriageOffset": true
+          },
+          {
+            "exerciseId": "original-cadillac-table-ankle",
+            "archetypeId": "supine-heel-slide-ankle",
+            "carriageOffsets": [
+              0,
+              0,
+              0
+            ],
+            "barEndStart": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndMiddle": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndShiftXPx": 0,
+            "hasNonZeroCarriageOffset": false
+          },
+          {
+            "exerciseId": "original-cadillac-table-bridge",
+            "archetypeId": "supine-articulated-bridge",
+            "carriageOffsets": [
+              0,
+              14,
+              0
+            ],
+            "barEndStart": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndMiddle": {
+              "x": 99,
+              "y": 65
+            },
+            "barEndShiftXPx": 3,
+            "hasNonZeroCarriageOffset": true
+          },
+          {
+            "exerciseId": "original-cadillac-table-knee-fold",
+            "archetypeId": "supine-knee-fold",
+            "carriageOffsets": [
+              0,
+              0,
+              0
+            ],
+            "barEndStart": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndMiddle": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndShiftXPx": 0,
+            "hasNonZeroCarriageOffset": false
+          },
+          {
+            "exerciseId": "original-cadillac-seated-roll-back",
+            "archetypeId": "seated-roll-back-spine-twist",
+            "carriageOffsets": [
+              0,
+              4,
+              0
+            ],
+            "barEndStart": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndMiddle": {
+              "x": 97,
+              "y": 64
+            },
+            "barEndShiftXPx": 1,
+            "hasNonZeroCarriageOffset": true
+          }
+        ]
+      },
+      "D04": {
+        "id": "D-04",
+        "titleKo": "운다 체어(Chair) 페달 하방 프레스 시 페달 팁이 반대(상방)로 회전하여 발-페달 50px 분리 발생",
+        "passed": false,
+        "checks": [
+          {
+            "exerciseId": "original-chair-seated-pedal-press",
+            "archetypeId": "chair-seated-pedal-footwork",
+            "pedalAngles": [
+              8,
+              36,
+              12
+            ],
+            "startAnkle": {
+              "x": 204,
+              "y": 136
+            },
+            "middleAnkle": {
+              "x": 218,
+              "y": 168
+            },
+            "endAnkle": {
+              "x": 206,
+              "y": 142
+            },
+            "startHeel": {
+              "x": 198,
+              "y": 140
+            },
+            "middleHeel": {
+              "x": 212,
+              "y": 172
+            },
+            "startPedalTip": {
+              "x": 234.8,
+              "y": 137
+            },
+            "middlePedalTip": {
+              "x": 222,
+              "y": 122
+            },
+            "endPedalTip": {
+              "x": 233.3,
+              "y": 134.6
+            },
+            "footDeltaYPx": 32,
+            "pedalTipDeltaYPx": -15,
+            "sameDirection": false,
+            "middleAnkleToPedalTipVerticalGapPx": 46,
+            "middleHeelToPedalTipVerticalGapPx": 50,
+            "middleAnkleToPedalTipDistPx": 46.17,
+            "passed": false
+          },
+          {
+            "exerciseId": "original-chair-alternating-pedal",
+            "archetypeId": "chair-seated-pedal-footwork",
+            "pedalAngles": [
+              8,
+              36,
+              12
+            ],
+            "startAnkle": {
+              "x": 204,
+              "y": 136
+            },
+            "middleAnkle": {
+              "x": 218,
+              "y": 168
+            },
+            "endAnkle": {
+              "x": 206,
+              "y": 142
+            },
+            "startHeel": {
+              "x": 198,
+              "y": 140
+            },
+            "middleHeel": {
+              "x": 212,
+              "y": 172
+            },
+            "startPedalTip": {
+              "x": 234.8,
+              "y": 137
+            },
+            "middlePedalTip": {
+              "x": 222,
+              "y": 122
+            },
+            "endPedalTip": {
+              "x": 233.3,
+              "y": 134.6
+            },
+            "footDeltaYPx": 32,
+            "pedalTipDeltaYPx": -15,
+            "sameDirection": false,
+            "middleAnkleToPedalTipVerticalGapPx": 46,
+            "middleHeelToPedalTipVerticalGapPx": 50,
+            "middleAnkleToPedalTipDistPx": 46.17,
+            "passed": false
+          },
+          {
+            "exerciseId": "original-chair-seated-knee-lift",
+            "archetypeId": "chair-seated-pedal-footwork",
+            "pedalAngles": [
+              8,
+              36,
+              12
+            ],
+            "startAnkle": {
+              "x": 204,
+              "y": 136
+            },
+            "middleAnkle": {
+              "x": 218,
+              "y": 168
+            },
+            "endAnkle": {
+              "x": 206,
+              "y": 142
+            },
+            "startHeel": {
+              "x": 198,
+              "y": 140
+            },
+            "middleHeel": {
+              "x": 212,
+              "y": 172
+            },
+            "startPedalTip": {
+              "x": 234.8,
+              "y": 137
+            },
+            "middlePedalTip": {
+              "x": 222,
+              "y": 122
+            },
+            "endPedalTip": {
+              "x": 233.3,
+              "y": 134.6
+            },
+            "footDeltaYPx": 32,
+            "pedalTipDeltaYPx": -15,
+            "sameDirection": false,
+            "middleAnkleToPedalTipVerticalGapPx": 46,
+            "middleHeelToPedalTipVerticalGapPx": 50,
+            "middleAnkleToPedalTipDistPx": 46.17,
+            "passed": false
+          },
+          {
+            "exerciseId": "ex-footwork-03",
+            "archetypeId": "chair-seated-pedal-footwork",
+            "pedalAngles": [
+              8,
+              36,
+              12
+            ],
+            "startAnkle": {
+              "x": 204,
+              "y": 136
+            },
+            "middleAnkle": {
+              "x": 218,
+              "y": 168
+            },
+            "endAnkle": {
+              "x": 206,
+              "y": 142
+            },
+            "startHeel": {
+              "x": 198,
+              "y": 140
+            },
+            "middleHeel": {
+              "x": 212,
+              "y": 172
+            },
+            "startPedalTip": {
+              "x": 234.8,
+              "y": 137
+            },
+            "middlePedalTip": {
+              "x": 222,
+              "y": 122
+            },
+            "endPedalTip": {
+              "x": 233.3,
+              "y": 134.6
+            },
+            "footDeltaYPx": 32,
+            "pedalTipDeltaYPx": -15,
+            "sameDirection": false,
+            "middleAnkleToPedalTipVerticalGapPx": 46,
+            "middleHeelToPedalTipVerticalGapPx": 50,
+            "middleAnkleToPedalTipDistPx": 46.17,
+            "passed": false
+          }
+        ]
+      },
+      "D05": {
+        "id": "D-05",
+        "titleKo": "래더 배럴 스탠딩(original-barrel-standing-hip-extension 외) 돔 내부 하지 관통 · 래더 렁 허공 파지 · 사다리 프레임 관통",
+        "passed": false,
+        "standingBarrelCount": 7,
+        "nonStandingBarrelPreserved": true,
+        "checks": [
+          {
+            "exerciseId": "original-barrel-standing-breath",
+            "archetypeId": "standing-ankle-calf-upper-reach",
+            "domeBounds": {
+              "minX": 68,
+              "maxX": 174,
+              "minY": 102,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 222,
+              "maxX": 256,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 194,
+              "y": 80
+            },
+            "middleHand": {
+              "x": 236,
+              "y": 52
+            },
+            "middleKnee": {
+              "x": 152,
+              "y": 138
+            },
+            "middleAnkle": {
+              "x": 154,
+              "y": 160
+            },
+            "penetratingDomeJointCount": 17,
+            "penetratingDomeJoints": [
+              {
+                "phase": "start",
+                "joint": "pelvis",
+                "point": {
+                  "x": 146,
+                  "y": 116
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "hip",
+                "point": {
+                  "x": 148,
+                  "y": 118
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "knee",
+                "point": {
+                  "x": 150,
+                  "y": 146
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "ankle",
+                "point": {
+                  "x": 148,
+                  "y": 170
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "heel",
+                "point": {
+                  "x": 142,
+                  "y": 176
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "toe",
+                "point": {
+                  "x": 164,
+                  "y": 176
+                }
+              }
+            ],
+            "ladderCrossingCount": 0,
+            "ladderCrossings": [],
+            "handDistToLadderStartPx": 28,
+            "handDistToLadderMiddlePx": 0,
+            "passed": false
+          },
+          {
+            "exerciseId": "original-barrel-supported-ankle",
+            "archetypeId": "standing-ankle-calf-upper-reach",
+            "domeBounds": {
+              "minX": 68,
+              "maxX": 174,
+              "minY": 102,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 222,
+              "maxX": 256,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 194,
+              "y": 80
+            },
+            "middleHand": {
+              "x": 236,
+              "y": 52
+            },
+            "middleKnee": {
+              "x": 152,
+              "y": 138
+            },
+            "middleAnkle": {
+              "x": 154,
+              "y": 160
+            },
+            "penetratingDomeJointCount": 17,
+            "penetratingDomeJoints": [
+              {
+                "phase": "start",
+                "joint": "pelvis",
+                "point": {
+                  "x": 146,
+                  "y": 116
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "hip",
+                "point": {
+                  "x": 148,
+                  "y": 118
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "knee",
+                "point": {
+                  "x": 150,
+                  "y": 146
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "ankle",
+                "point": {
+                  "x": 148,
+                  "y": 170
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "heel",
+                "point": {
+                  "x": 142,
+                  "y": 176
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "toe",
+                "point": {
+                  "x": 164,
+                  "y": 176
+                }
+              }
+            ],
+            "ladderCrossingCount": 0,
+            "ladderCrossings": [],
+            "handDistToLadderStartPx": 28,
+            "handDistToLadderMiddlePx": 0,
+            "passed": false
+          },
+          {
+            "exerciseId": "original-barrel-supported-arm-reach",
+            "archetypeId": "standing-ankle-calf-upper-reach",
+            "domeBounds": {
+              "minX": 68,
+              "maxX": 174,
+              "minY": 102,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 222,
+              "maxX": 256,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 194,
+              "y": 80
+            },
+            "middleHand": {
+              "x": 236,
+              "y": 52
+            },
+            "middleKnee": {
+              "x": 152,
+              "y": 138
+            },
+            "middleAnkle": {
+              "x": 154,
+              "y": 160
+            },
+            "penetratingDomeJointCount": 17,
+            "penetratingDomeJoints": [
+              {
+                "phase": "start",
+                "joint": "pelvis",
+                "point": {
+                  "x": 146,
+                  "y": 116
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "hip",
+                "point": {
+                  "x": 148,
+                  "y": 118
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "knee",
+                "point": {
+                  "x": 150,
+                  "y": 146
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "ankle",
+                "point": {
+                  "x": 148,
+                  "y": 170
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "heel",
+                "point": {
+                  "x": 142,
+                  "y": 176
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "toe",
+                "point": {
+                  "x": 164,
+                  "y": 176
+                }
+              }
+            ],
+            "ladderCrossingCount": 0,
+            "ladderCrossings": [],
+            "handDistToLadderStartPx": 28,
+            "handDistToLadderMiddlePx": 0,
+            "passed": false
+          },
+          {
+            "exerciseId": "original-barrel-standing-rotation",
+            "archetypeId": "standing-ankle-calf-upper-reach",
+            "domeBounds": {
+              "minX": 68,
+              "maxX": 174,
+              "minY": 102,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 222,
+              "maxX": 256,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 194,
+              "y": 80
+            },
+            "middleHand": {
+              "x": 236,
+              "y": 52
+            },
+            "middleKnee": {
+              "x": 152,
+              "y": 138
+            },
+            "middleAnkle": {
+              "x": 154,
+              "y": 160
+            },
+            "penetratingDomeJointCount": 17,
+            "penetratingDomeJoints": [
+              {
+                "phase": "start",
+                "joint": "pelvis",
+                "point": {
+                  "x": 146,
+                  "y": 116
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "hip",
+                "point": {
+                  "x": 148,
+                  "y": 118
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "knee",
+                "point": {
+                  "x": 150,
+                  "y": 146
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "ankle",
+                "point": {
+                  "x": 148,
+                  "y": 170
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "heel",
+                "point": {
+                  "x": 142,
+                  "y": 176
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "toe",
+                "point": {
+                  "x": 164,
+                  "y": 176
+                }
+              }
+            ],
+            "ladderCrossingCount": 0,
+            "ladderCrossings": [],
+            "handDistToLadderStartPx": 28,
+            "handDistToLadderMiddlePx": 0,
+            "passed": false
+          },
+          {
+            "exerciseId": "original-barrel-standing-hip-extension",
+            "archetypeId": "standing-scooter-lunge-splits",
+            "domeBounds": {
+              "minX": 68,
+              "maxX": 174,
+              "minY": 102,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 222,
+              "maxX": 256,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 90,
+              "y": 78
+            },
+            "middleHand": {
+              "x": 76,
+              "y": 72
+            },
+            "middleKnee": {
+              "x": 228,
+              "y": 134
+            },
+            "middleAnkle": {
+              "x": 278,
+              "y": 148
+            },
+            "middleFarAnkle": {
+              "x": 124,
+              "y": 174
+            },
+            "penetratingDomeJointCount": 15,
+            "penetratingDomeJoints": [
+              {
+                "phase": "start",
+                "joint": "pelvis",
+                "point": {
+                  "x": 152,
+                  "y": 118
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "hip",
+                "point": {
+                  "x": 156,
+                  "y": 120
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "farKnee",
+                "point": {
+                  "x": 124,
+                  "y": 146
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "farAnkle",
+                "point": {
+                  "x": 124,
+                  "y": 174
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "farToe",
+                "point": {
+                  "x": 108,
+                  "y": 176
+                }
+              },
+              {
+                "phase": "middle",
+                "joint": "pelvis",
+                "point": {
+                  "x": 154,
+                  "y": 120
+                }
+              }
+            ],
+            "ladderCrossingCount": 2,
+            "ladderCrossings": [
+              {
+                "phase": "middle",
+                "segment": "hip->knee",
+                "from": {
+                  "x": 160,
+                  "y": 122
+                },
+                "to": {
+                  "x": 228,
+                  "y": 134
+                },
+                "ladderRangeX": [
+                  222,
+                  256
+                ]
+              },
+              {
+                "phase": "middle",
+                "segment": "knee->ankle",
+                "from": {
+                  "x": 228,
+                  "y": 134
+                },
+                "to": {
+                  "x": 278,
+                  "y": 148
+                },
+                "ladderRangeX": [
+                  222,
+                  256
+                ]
+              }
+            ],
+            "handDistToLadderStartPx": 132,
+            "handDistToLadderMiddlePx": 146,
+            "passed": false
+          },
+          {
+            "exerciseId": "original-barrel-standing-side-reach",
+            "archetypeId": "standing-scooter-lunge-splits",
+            "domeBounds": {
+              "minX": 68,
+              "maxX": 174,
+              "minY": 102,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 222,
+              "maxX": 256,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 90,
+              "y": 78
+            },
+            "middleHand": {
+              "x": 76,
+              "y": 72
+            },
+            "middleKnee": {
+              "x": 228,
+              "y": 134
+            },
+            "middleAnkle": {
+              "x": 278,
+              "y": 148
+            },
+            "middleFarAnkle": {
+              "x": 124,
+              "y": 174
+            },
+            "penetratingDomeJointCount": 15,
+            "penetratingDomeJoints": [
+              {
+                "phase": "start",
+                "joint": "pelvis",
+                "point": {
+                  "x": 152,
+                  "y": 118
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "hip",
+                "point": {
+                  "x": 156,
+                  "y": 120
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "farKnee",
+                "point": {
+                  "x": 124,
+                  "y": 146
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "farAnkle",
+                "point": {
+                  "x": 124,
+                  "y": 174
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "farToe",
+                "point": {
+                  "x": 108,
+                  "y": 176
+                }
+              },
+              {
+                "phase": "middle",
+                "joint": "pelvis",
+                "point": {
+                  "x": 154,
+                  "y": 120
+                }
+              }
+            ],
+            "ladderCrossingCount": 2,
+            "ladderCrossings": [
+              {
+                "phase": "middle",
+                "segment": "hip->knee",
+                "from": {
+                  "x": 160,
+                  "y": 122
+                },
+                "to": {
+                  "x": 228,
+                  "y": 134
+                },
+                "ladderRangeX": [
+                  222,
+                  256
+                ]
+              },
+              {
+                "phase": "middle",
+                "segment": "knee->ankle",
+                "from": {
+                  "x": 228,
+                  "y": 134
+                },
+                "to": {
+                  "x": 278,
+                  "y": 148
+                },
+                "ladderRangeX": [
+                  222,
+                  256
+                ]
+              }
+            ],
+            "handDistToLadderStartPx": 132,
+            "handDistToLadderMiddlePx": 146,
+            "passed": false
+          },
+          {
+            "exerciseId": "original-barrel-standing-side-stretch",
+            "archetypeId": "lateral-mermaid-side-bend",
+            "domeBounds": {
+              "minX": 68,
+              "maxX": 174,
+              "minY": 102,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 222,
+              "maxX": 256,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 88,
+              "y": 50
+            },
+            "middleHand": {
+              "x": 236,
+              "y": 36
+            },
+            "middleKnee": {
+              "x": 196,
+              "y": 148
+            },
+            "middleAnkle": {
+              "x": 228,
+              "y": 152
+            },
+            "penetratingDomeJointCount": 6,
+            "penetratingDomeJoints": [
+              {
+                "phase": "start",
+                "joint": "pelvis",
+                "point": {
+                  "x": 148,
+                  "y": 138
+                }
+              },
+              {
+                "phase": "start",
+                "joint": "hip",
+                "point": {
+                  "x": 158,
+                  "y": 140
+                }
+              },
+              {
+                "phase": "middle",
+                "joint": "pelvis",
+                "point": {
+                  "x": 148,
+                  "y": 138
+                }
+              },
+              {
+                "phase": "middle",
+                "joint": "hip",
+                "point": {
+                  "x": 158,
+                  "y": 140
+                }
+              },
+              {
+                "phase": "end",
+                "joint": "pelvis",
+                "point": {
+                  "x": 148,
+                  "y": 138
+                }
+              },
+              {
+                "phase": "end",
+                "joint": "hip",
+                "point": {
+                  "x": 158,
+                  "y": 140
+                }
+              }
+            ],
+            "ladderCrossingCount": 3,
+            "ladderCrossings": [
+              {
+                "phase": "start",
+                "segment": "knee->ankle",
+                "from": {
+                  "x": 196,
+                  "y": 148
+                },
+                "to": {
+                  "x": 228,
+                  "y": 152
+                },
+                "ladderRangeX": [
+                  222,
+                  256
+                ]
+              },
+              {
+                "phase": "middle",
+                "segment": "knee->ankle",
+                "from": {
+                  "x": 196,
+                  "y": 148
+                },
+                "to": {
+                  "x": 228,
+                  "y": 152
+                },
+                "ladderRangeX": [
+                  222,
+                  256
+                ]
+              },
+              {
+                "phase": "end",
+                "segment": "knee->ankle",
+                "from": {
+                  "x": 196,
+                  "y": 148
+                },
+                "to": {
+                  "x": 228,
+                  "y": 152
+                },
+                "ladderRangeX": [
+                  222,
+                  256
+                ]
+              }
+            ],
+            "handDistToLadderStartPx": 134,
+            "handDistToLadderMiddlePx": 0,
+            "passed": false
+          }
+        ]
+      }
+    }
+  },
+  "candidateEvaluation": {
+    "allFiveDefectsPassed": true,
+    "defects": {
+      "D01": {
+        "id": "D-01",
+        "titleKo": "리포머 프로그(original-reformer-strap-frog) 끝 자세(end) 무릎 굴곡 복귀 누락 · 천장 다리 리프트 오적용",
+        "passed": true,
+        "exerciseId": "original-reformer-strap-frog",
+        "archetypeId": "reformer-strap-frog-isolated",
+        "metrics": {
+          "startKnee": {
+            "x": 182,
+            "y": 92
+          },
+          "middleKnee": {
+            "x": 242,
+            "y": 108
+          },
+          "endKnee": {
+            "x": 182,
+            "y": 92
+          },
+          "startAnkle": {
+            "x": 214,
+            "y": 74
+          },
+          "middleAnkle": {
+            "x": 284,
+            "y": 80
+          },
+          "endAnkle": {
+            "x": 214,
+            "y": 74
+          },
+          "startToEndAnkleDistPx": 0,
+          "startToEndKneeDistPx": 0,
+          "endAnkleDeltaYFromStartPx": 0,
+          "carriageOffsets": [
+            6,
+            36,
+            6
+          ]
+        }
+      },
+      "D02": {
+        "id": "D-02",
+        "titleKo": "리포머 플랭크(ex-plank-01) 손·발 기구 접점 좌우 반전 및 체어 플랭크 시트·페달 접점 이탈",
+        "passed": true,
+        "reformerPlank": {
+          "exerciseId": "ex-plank-01",
+          "archetypeId": "reformer-plank-long-stretch-isolated",
+          "footbarTop": {
+            "x": 266,
+            "y": 126
+          },
+          "startHand": {
+            "x": 268,
+            "y": 126
+          },
+          "startWrist": {
+            "x": 262,
+            "y": 126
+          },
+          "startAnkle": {
+            "x": 80,
+            "y": 138
+          },
+          "middleAnkle": {
+            "x": 114,
+            "y": 138
+          },
+          "endAnkle": {
+            "x": 82,
+            "y": 138
+          },
+          "startCarriageRect": {
+            "x": 40,
+            "y": 143,
+            "width": 178,
+            "height": 9
+          },
+          "middleCarriageRect": {
+            "x": 51,
+            "y": 143,
+            "width": 178,
+            "height": 9
+          },
+          "handToFootbarDistPx": 2,
+          "handOnFootbarSide": true,
+          "ankleOnCarriageStart": true,
+          "ankleOnCarriageMiddle": true
+        },
+        "chairPlanks": [
+          {
+            "exerciseId": "ex-plank-02",
+            "archetypeId": "chair-plank-pike-isolated",
+            "hand": {
+              "x": 124,
+              "y": 106
+            },
+            "wrist": {
+              "x": 132,
+              "y": 106
+            },
+            "seatTopY": 106,
+            "seatRangeX": [
+              108,
+              196
+            ],
+            "handSeatVerticalGapPx": 0,
+            "handWithinSeatX": true,
+            "startAnkle": {
+              "x": 216,
+              "y": 156
+            },
+            "middleAnkle": {
+              "x": 208,
+              "y": 134
+            },
+            "endAnkle": {
+              "x": 216,
+              "y": 158
+            },
+            "startPedalTip": {
+              "x": 217.9,
+              "y": 160.9
+            },
+            "middlePedalTip": {
+              "x": 210.3,
+              "y": 137.4
+            },
+            "endPedalTip": {
+              "x": 218,
+              "y": 163.1
+            },
+            "startAnkleToPedalTipDistPx": 5.26,
+            "middleAnkleToPedalTipDistPx": 4.1,
+            "endAnkleToPedalTipDistPx": 5.48,
+            "passed": true
+          },
+          {
+            "exerciseId": "original-chair-incline-support",
+            "archetypeId": "chair-plank-pike-isolated",
+            "hand": {
+              "x": 124,
+              "y": 106
+            },
+            "wrist": {
+              "x": 132,
+              "y": 106
+            },
+            "seatTopY": 106,
+            "seatRangeX": [
+              108,
+              196
+            ],
+            "handSeatVerticalGapPx": 0,
+            "handWithinSeatX": true,
+            "startAnkle": {
+              "x": 216,
+              "y": 156
+            },
+            "middleAnkle": {
+              "x": 208,
+              "y": 134
+            },
+            "endAnkle": {
+              "x": 216,
+              "y": 158
+            },
+            "startPedalTip": {
+              "x": 217.9,
+              "y": 160.9
+            },
+            "middlePedalTip": {
+              "x": 210.3,
+              "y": 137.4
+            },
+            "endPedalTip": {
+              "x": 218,
+              "y": 163.1
+            },
+            "startAnkleToPedalTipDistPx": 5.26,
+            "middleAnkleToPedalTipDistPx": 4.1,
+            "endAnkleToPedalTipDistPx": 5.48,
+            "passed": true
+          },
+          {
+            "exerciseId": "ex-kr-chair-01",
+            "archetypeId": "chair-plank-pike-isolated",
+            "hand": {
+              "x": 124,
+              "y": 106
+            },
+            "wrist": {
+              "x": 132,
+              "y": 106
+            },
+            "seatTopY": 106,
+            "seatRangeX": [
+              108,
+              196
+            ],
+            "handSeatVerticalGapPx": 0,
+            "handWithinSeatX": true,
+            "startAnkle": {
+              "x": 216,
+              "y": 156
+            },
+            "middleAnkle": {
+              "x": 208,
+              "y": 134
+            },
+            "endAnkle": {
+              "x": 216,
+              "y": 158
+            },
+            "startPedalTip": {
+              "x": 217.9,
+              "y": 160.9
+            },
+            "middlePedalTip": {
+              "x": 210.3,
+              "y": 137.4
+            },
+            "endPedalTip": {
+              "x": 218,
+              "y": 163.1
+            },
+            "startAnkleToPedalTipDistPx": 5.26,
+            "middleAnkleToPedalTipDistPx": 4.1,
+            "endAnkleToPedalTipDistPx": 5.48,
+            "passed": true
+          }
+        ]
+      },
+      "D03": {
+        "id": "D-03",
+        "titleKo": "캐딜락(Cadillac) 고정 베드 기구에 비정상 캐리지 활주(carriageOffsetPx > 0) 오적용 (18개 중 15개)",
+        "passed": true,
+        "totalCadillacExercises": 18,
+        "nonZeroCadillacCount": 0,
+        "nonZeroCadillacExerciseIds": [],
+        "sampleDetails": [
+          {
+            "exerciseId": "original-cadillac-table-breath",
+            "archetypeId": "supine-breath-pelvic-clock",
+            "carriageOffsets": [
+              0,
+              0,
+              0
+            ],
+            "barEndStart": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndMiddle": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndShiftXPx": 0,
+            "hasNonZeroCarriageOffset": false
+          },
+          {
+            "exerciseId": "original-cadillac-pelvic-rock",
+            "archetypeId": "supine-breath-pelvic-clock",
+            "carriageOffsets": [
+              0,
+              0,
+              0
+            ],
+            "barEndStart": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndMiddle": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndShiftXPx": 0,
+            "hasNonZeroCarriageOffset": false
+          },
+          {
+            "exerciseId": "original-cadillac-table-ankle",
+            "archetypeId": "supine-heel-slide-ankle",
+            "carriageOffsets": [
+              0,
+              0,
+              0
+            ],
+            "barEndStart": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndMiddle": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndShiftXPx": 0,
+            "hasNonZeroCarriageOffset": false
+          },
+          {
+            "exerciseId": "original-cadillac-table-bridge",
+            "archetypeId": "supine-articulated-bridge",
+            "carriageOffsets": [
+              0,
+              0,
+              0
+            ],
+            "barEndStart": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndMiddle": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndShiftXPx": 0,
+            "hasNonZeroCarriageOffset": false
+          },
+          {
+            "exerciseId": "original-cadillac-table-knee-fold",
+            "archetypeId": "supine-knee-fold",
+            "carriageOffsets": [
+              0,
+              0,
+              0
+            ],
+            "barEndStart": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndMiddle": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndShiftXPx": 0,
+            "hasNonZeroCarriageOffset": false
+          },
+          {
+            "exerciseId": "original-cadillac-seated-roll-back",
+            "archetypeId": "seated-roll-back-spine-twist",
+            "carriageOffsets": [
+              0,
+              0,
+              0
+            ],
+            "barEndStart": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndMiddle": {
+              "x": 96,
+              "y": 64
+            },
+            "barEndShiftXPx": 0,
+            "hasNonZeroCarriageOffset": false
+          }
+        ]
+      },
+      "D04": {
+        "id": "D-04",
+        "titleKo": "운다 체어(Chair) 페달 하방 프레스 시 페달 팁이 반대(상방)로 회전하여 발-페달 50px 분리 발생",
+        "passed": true,
+        "checks": [
+          {
+            "exerciseId": "original-chair-seated-pedal-press",
+            "archetypeId": "chair-seated-pedal-footwork",
+            "pedalAngles": [
+              8,
+              36,
+              12
+            ],
+            "startAnkle": {
+              "x": 204,
+              "y": 136
+            },
+            "middleAnkle": {
+              "x": 218,
+              "y": 168
+            },
+            "endAnkle": {
+              "x": 206,
+              "y": 142
+            },
+            "startHeel": {
+              "x": 198,
+              "y": 140
+            },
+            "middleHeel": {
+              "x": 212,
+              "y": 172
+            },
+            "startPedalTip": {
+              "x": 211.5,
+              "y": 139.3
+            },
+            "middlePedalTip": {
+              "x": 217.6,
+              "y": 169.9
+            },
+            "endPedalTip": {
+              "x": 213.5,
+              "y": 143.3
+            },
+            "footDeltaYPx": 32,
+            "pedalTipDeltaYPx": 30.6,
+            "sameDirection": true,
+            "middleAnkleToPedalTipVerticalGapPx": 1.9,
+            "middleHeelToPedalTipVerticalGapPx": 2.1,
+            "middleAnkleToPedalTipDistPx": 1.94,
+            "passed": true
+          },
+          {
+            "exerciseId": "original-chair-alternating-pedal",
+            "archetypeId": "chair-seated-pedal-footwork",
+            "pedalAngles": [
+              8,
+              36,
+              12
+            ],
+            "startAnkle": {
+              "x": 204,
+              "y": 136
+            },
+            "middleAnkle": {
+              "x": 218,
+              "y": 168
+            },
+            "endAnkle": {
+              "x": 206,
+              "y": 142
+            },
+            "startHeel": {
+              "x": 198,
+              "y": 140
+            },
+            "middleHeel": {
+              "x": 212,
+              "y": 172
+            },
+            "startPedalTip": {
+              "x": 211.5,
+              "y": 139.3
+            },
+            "middlePedalTip": {
+              "x": 217.6,
+              "y": 169.9
+            },
+            "endPedalTip": {
+              "x": 213.5,
+              "y": 143.3
+            },
+            "footDeltaYPx": 32,
+            "pedalTipDeltaYPx": 30.6,
+            "sameDirection": true,
+            "middleAnkleToPedalTipVerticalGapPx": 1.9,
+            "middleHeelToPedalTipVerticalGapPx": 2.1,
+            "middleAnkleToPedalTipDistPx": 1.94,
+            "passed": true
+          },
+          {
+            "exerciseId": "original-chair-seated-knee-lift",
+            "archetypeId": "chair-seated-pedal-footwork",
+            "pedalAngles": [
+              8,
+              36,
+              12
+            ],
+            "startAnkle": {
+              "x": 204,
+              "y": 136
+            },
+            "middleAnkle": {
+              "x": 218,
+              "y": 168
+            },
+            "endAnkle": {
+              "x": 206,
+              "y": 142
+            },
+            "startHeel": {
+              "x": 198,
+              "y": 140
+            },
+            "middleHeel": {
+              "x": 212,
+              "y": 172
+            },
+            "startPedalTip": {
+              "x": 211.5,
+              "y": 139.3
+            },
+            "middlePedalTip": {
+              "x": 217.6,
+              "y": 169.9
+            },
+            "endPedalTip": {
+              "x": 213.5,
+              "y": 143.3
+            },
+            "footDeltaYPx": 32,
+            "pedalTipDeltaYPx": 30.6,
+            "sameDirection": true,
+            "middleAnkleToPedalTipVerticalGapPx": 1.9,
+            "middleHeelToPedalTipVerticalGapPx": 2.1,
+            "middleAnkleToPedalTipDistPx": 1.94,
+            "passed": true
+          },
+          {
+            "exerciseId": "ex-footwork-03",
+            "archetypeId": "chair-seated-pedal-footwork",
+            "pedalAngles": [
+              8,
+              36,
+              12
+            ],
+            "startAnkle": {
+              "x": 204,
+              "y": 136
+            },
+            "middleAnkle": {
+              "x": 218,
+              "y": 168
+            },
+            "endAnkle": {
+              "x": 206,
+              "y": 142
+            },
+            "startHeel": {
+              "x": 198,
+              "y": 140
+            },
+            "middleHeel": {
+              "x": 212,
+              "y": 172
+            },
+            "startPedalTip": {
+              "x": 211.5,
+              "y": 139.3
+            },
+            "middlePedalTip": {
+              "x": 217.6,
+              "y": 169.9
+            },
+            "endPedalTip": {
+              "x": 213.5,
+              "y": 143.3
+            },
+            "footDeltaYPx": 32,
+            "pedalTipDeltaYPx": 30.6,
+            "sameDirection": true,
+            "middleAnkleToPedalTipVerticalGapPx": 1.9,
+            "middleHeelToPedalTipVerticalGapPx": 2.1,
+            "middleAnkleToPedalTipDistPx": 1.94,
+            "passed": true
+          }
+        ]
+      },
+      "D05": {
+        "id": "D-05",
+        "titleKo": "래더 배럴 스탠딩(original-barrel-standing-hip-extension 외) 돔 내부 하지 관통 · 래더 렁 허공 파지 · 사다리 프레임 관통",
+        "passed": true,
+        "standingBarrelCount": 7,
+        "nonStandingBarrelPreserved": true,
+        "checks": [
+          {
+            "exerciseId": "original-barrel-standing-breath",
+            "archetypeId": "standing-ankle-calf-upper-reach",
+            "domeBounds": {
+              "minX": 18,
+              "maxX": 70,
+              "minY": 106,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 76,
+              "maxX": 96,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 194,
+              "y": 80
+            },
+            "middleHand": {
+              "x": 236,
+              "y": 52
+            },
+            "middleKnee": {
+              "x": 152,
+              "y": 138
+            },
+            "middleAnkle": {
+              "x": 154,
+              "y": 160
+            },
+            "penetratingDomeJointCount": 0,
+            "penetratingDomeJoints": [],
+            "ladderCrossingCount": 0,
+            "ladderCrossings": [],
+            "handDistToLadderStartPx": 98,
+            "handDistToLadderMiddlePx": 140,
+            "passed": true
+          },
+          {
+            "exerciseId": "original-barrel-supported-ankle",
+            "archetypeId": "standing-ankle-calf-upper-reach",
+            "domeBounds": {
+              "minX": 18,
+              "maxX": 70,
+              "minY": 106,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 76,
+              "maxX": 96,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 194,
+              "y": 80
+            },
+            "middleHand": {
+              "x": 236,
+              "y": 52
+            },
+            "middleKnee": {
+              "x": 152,
+              "y": 138
+            },
+            "middleAnkle": {
+              "x": 154,
+              "y": 160
+            },
+            "penetratingDomeJointCount": 0,
+            "penetratingDomeJoints": [],
+            "ladderCrossingCount": 0,
+            "ladderCrossings": [],
+            "handDistToLadderStartPx": 98,
+            "handDistToLadderMiddlePx": 140,
+            "passed": true
+          },
+          {
+            "exerciseId": "original-barrel-supported-arm-reach",
+            "archetypeId": "standing-ankle-calf-upper-reach",
+            "domeBounds": {
+              "minX": 18,
+              "maxX": 70,
+              "minY": 106,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 76,
+              "maxX": 96,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 194,
+              "y": 80
+            },
+            "middleHand": {
+              "x": 236,
+              "y": 52
+            },
+            "middleKnee": {
+              "x": 152,
+              "y": 138
+            },
+            "middleAnkle": {
+              "x": 154,
+              "y": 160
+            },
+            "penetratingDomeJointCount": 0,
+            "penetratingDomeJoints": [],
+            "ladderCrossingCount": 0,
+            "ladderCrossings": [],
+            "handDistToLadderStartPx": 98,
+            "handDistToLadderMiddlePx": 140,
+            "passed": true
+          },
+          {
+            "exerciseId": "original-barrel-standing-rotation",
+            "archetypeId": "standing-ankle-calf-upper-reach",
+            "domeBounds": {
+              "minX": 18,
+              "maxX": 70,
+              "minY": 106,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 76,
+              "maxX": 96,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 194,
+              "y": 80
+            },
+            "middleHand": {
+              "x": 236,
+              "y": 52
+            },
+            "middleKnee": {
+              "x": 152,
+              "y": 138
+            },
+            "middleAnkle": {
+              "x": 154,
+              "y": 160
+            },
+            "penetratingDomeJointCount": 0,
+            "penetratingDomeJoints": [],
+            "ladderCrossingCount": 0,
+            "ladderCrossings": [],
+            "handDistToLadderStartPx": 98,
+            "handDistToLadderMiddlePx": 140,
+            "passed": true
+          },
+          {
+            "exerciseId": "original-barrel-standing-hip-extension",
+            "archetypeId": "barrel-standing-hip-extension-isolated",
+            "domeBounds": {
+              "minX": 18,
+              "maxX": 70,
+              "minY": 106,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 76,
+              "maxX": 96,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 88,
+              "y": 76
+            },
+            "middleHand": {
+              "x": 88,
+              "y": 76
+            },
+            "middleKnee": {
+              "x": 228,
+              "y": 134
+            },
+            "middleAnkle": {
+              "x": 278,
+              "y": 148
+            },
+            "middleFarAnkle": {
+              "x": 124,
+              "y": 174
+            },
+            "penetratingDomeJointCount": 0,
+            "penetratingDomeJoints": [],
+            "ladderCrossingCount": 0,
+            "ladderCrossings": [],
+            "handDistToLadderStartPx": 0,
+            "handDistToLadderMiddlePx": 0,
+            "passed": true
+          },
+          {
+            "exerciseId": "original-barrel-standing-side-reach",
+            "archetypeId": "barrel-standing-hip-extension-isolated",
+            "domeBounds": {
+              "minX": 18,
+              "maxX": 70,
+              "minY": 106,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 76,
+              "maxX": 96,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 88,
+              "y": 76
+            },
+            "middleHand": {
+              "x": 88,
+              "y": 76
+            },
+            "middleKnee": {
+              "x": 228,
+              "y": 134
+            },
+            "middleAnkle": {
+              "x": 278,
+              "y": 148
+            },
+            "middleFarAnkle": {
+              "x": 124,
+              "y": 174
+            },
+            "penetratingDomeJointCount": 0,
+            "penetratingDomeJoints": [],
+            "ladderCrossingCount": 0,
+            "ladderCrossings": [],
+            "handDistToLadderStartPx": 0,
+            "handDistToLadderMiddlePx": 0,
+            "passed": true
+          },
+          {
+            "exerciseId": "original-barrel-standing-side-stretch",
+            "archetypeId": "lateral-mermaid-side-bend",
+            "domeBounds": {
+              "minX": 18,
+              "maxX": 70,
+              "minY": 106,
+              "maxY": 174
+            },
+            "ladderBounds": {
+              "minX": 76,
+              "maxX": 96,
+              "minY": 46,
+              "maxY": 176
+            },
+            "startHand": {
+              "x": 88,
+              "y": 50
+            },
+            "middleHand": {
+              "x": 236,
+              "y": 36
+            },
+            "middleKnee": {
+              "x": 196,
+              "y": 148
+            },
+            "middleAnkle": {
+              "x": 228,
+              "y": 152
+            },
+            "penetratingDomeJointCount": 0,
+            "penetratingDomeJoints": [],
+            "ladderCrossingCount": 0,
+            "ladderCrossings": [],
+            "handDistToLadderStartPx": 0,
+            "handDistToLadderMiddlePx": 140,
+            "passed": true
+          }
+        ]
+      }
+    },
+    "svgRenderIntegrity": {
+      "expectedSvgCount": 294,
+      "renderedSvgCount": 294,
+      "invalidSvgCount": 0,
+      "passed": true
+    },
+    "truthfulnessBoundary": {
+      "coverageRecordCount": 98,
+      "violationCount": 0,
+      "anatomicalVerificationCompleted": false,
+      "expertVerificationCompleted": false,
+      "passed": true
+    }
+  },
+  "browserMultiViewportSummary": {
+    "allViewportsPassed": true,
+    "consoleErrorCount": 0,
+    "pageErrorCount": 0,
+    "viewports": [
+      {
+        "viewportId": "mobile-320",
+        "width": 320,
+        "height": 850,
+        "zoom": 1,
+        "screenshotFile": "docs/diagram-contact-audit-20261107/evidence/screenshots/contact-audit-320x850.png",
+        "innerWidth": 320,
+        "innerHeight": 850,
+        "scrollWidth": 320,
+        "horizontalOverflowPx": 0,
+        "svgCount": 14,
+        "allSvgsVisible": true,
+        "minSvgWidthPx": 260,
+        "minSvgHeightPx": 162.5,
+        "disclaimerPresent": true,
+        "passed": true
+      },
+      {
+        "viewportId": "mobile-390",
+        "width": 390,
+        "height": 850,
+        "zoom": 1,
+        "screenshotFile": "docs/diagram-contact-audit-20261107/evidence/screenshots/contact-audit-390x850.png",
+        "innerWidth": 390,
+        "innerHeight": 850,
+        "scrollWidth": 390,
+        "horizontalOverflowPx": 0,
+        "svgCount": 14,
+        "allSvgsVisible": true,
+        "minSvgWidthPx": 330,
+        "minSvgHeightPx": 206.3,
+        "disclaimerPresent": true,
+        "passed": true
+      },
+      {
+        "viewportId": "tablet-768",
+        "width": 768,
+        "height": 1024,
+        "zoom": 1,
+        "screenshotFile": "docs/diagram-contact-audit-20261107/evidence/screenshots/contact-audit-768x1024.png",
+        "innerWidth": 768,
+        "innerHeight": 1024,
+        "scrollWidth": 768,
+        "horizontalOverflowPx": 0,
+        "svgCount": 14,
+        "allSvgsVisible": true,
+        "minSvgWidthPx": 343,
+        "minSvgHeightPx": 214.4,
+        "disclaimerPresent": true,
+        "passed": true
+      },
+      {
+        "viewportId": "desktop-1440",
+        "width": 1440,
+        "height": 900,
+        "zoom": 1,
+        "screenshotFile": "docs/diagram-contact-audit-20261107/evidence/screenshots/contact-audit-1440x900.png",
+        "innerWidth": 1440,
+        "innerHeight": 900,
+        "scrollWidth": 1440,
+        "horizontalOverflowPx": 0,
+        "svgCount": 14,
+        "allSvgsVisible": true,
+        "minSvgWidthPx": 308,
+        "minSvgHeightPx": 192.5,
+        "disclaimerPresent": true,
+        "passed": true
+      },
+      {
+        "viewportId": "desktop-1440-zoom200",
+        "width": 1440,
+        "height": 900,
+        "zoom": 2,
+        "screenshotFile": "docs/diagram-contact-audit-20261107/evidence/screenshots/contact-audit-1440x900-zoom200.png",
+        "innerWidth": 1440,
+        "innerHeight": 900,
+        "scrollWidth": 1440,
+        "horizontalOverflowPx": 0,
+        "svgCount": 14,
+        "allSvgsVisible": true,
+        "minSvgWidthPx": 284,
+        "minSvgHeightPx": 177.5,
+        "disclaimerPresent": true,
+        "passed": true
+      }
+    ],
+    "domContactMeasurements": {
+      "D01_frogEnd": {
+        "baselineEndAnkle": {
+          "x": 222,
+          "y": 40
+        },
+        "candidateEndAnkle": {
+          "x": 214,
+          "y": 74
+        },
+        "candidateEndKnee": {
+          "x": 182,
+          "y": 92
+        }
+      },
+      "D02_reformerPlank": {
+        "baselineStartHand": {
+          "x": 88,
+          "y": 148
+        },
+        "candidateStartHand": {
+          "x": 268,
+          "y": 126
+        },
+        "candidateStartAnkle": {
+          "x": 80,
+          "y": 138
+        }
+      },
+      "D03_cadillacCarriage": {
+        "baselineCarriageOffsetPx": 24,
+        "candidateCarriageOffsetPx": 0
+      },
+      "D04_chairPedal": {
+        "baselineMiddlePedalTipY": 122,
+        "candidateMiddlePedalTipY": 169.9,
+        "candidateMiddleAnkleY": 168,
+        "candidateVerticalGapPx": 1.9
+      },
+      "D05_barrelStanding": {
+        "baselineDomeBBox": {
+          "x": 68,
+          "y": 120,
+          "width": 106,
+          "height": 54
+        },
+        "candidateDomeBBox": {
+          "x": 18,
+          "y": 123,
+          "width": 52,
+          "height": 51
+        },
+        "candidateHand": {
+          "x": 88,
+          "y": 76
+        },
+        "candidateStandingFarAnkle": {
+          "x": 124,
+          "y": 174
+        }
+      }
+    }
+  }
+}
