@@ -1,0 +1,364 @@
+{
+  "round": "round5-cross-input-webkit-audit",
+  "capturedAt": "2026-11-07T14:50:33.320Z",
+  "environment": {
+    "os": "Linux 6.12.105+ (x64)",
+    "nodeVersion": "v24.22.2",
+    "chromiumRuntime": {
+      "available": true,
+      "engine": "Chromium (Blink)",
+      "version": "Chromium 156.0.8078.79 built on Debian GNU/Linux 12 (bookworm)",
+      "binary": "/usr/bin/chromium"
+    },
+    "webkitSafariRuntime": {
+      "available": false,
+      "status": "UNVERIFIED (미검증)",
+      "binary": null,
+      "reason": "No WebKit or Safari browser binary is installed in the read-only Debian 12 Linux sandbox VM (/usr/bin/chromium only), and new package installation or privilege escalation is prohibited. All live browser measurements below are explicitly recorded on Chromium (Blink) and never claimed as Safari/WebKit runtime execution."
+    }
+  },
+  "viewportMatrix": {
+    "mobile-320": {
+      "viewport": "mobile-320",
+      "width": 320,
+      "height": 640,
+      "zoom": 1,
+      "pointerType": "touch",
+      "horizontalOverflowPx": 0,
+      "cardLift": {
+        "overlayPresent": true,
+        "sourceDimmed": true,
+        "overlayAriaHidden": true,
+        "overlayInert": true,
+        "overlayWidthDiffPx": 0,
+        "overlayLeftDiffPx": 0,
+        "pointerTrackingDeltaDiffPx": 0
+      },
+      "neighborShift": {
+        "c1ShiftedUpPx": 195,
+        "c1Transform": "translateY(-195.938px)",
+        "shiftedCleanly": true
+      },
+      "insertionPlaceholder": {
+        "indicatorVisible": true,
+        "indicatorLabel": "2번째 위치",
+        "indicatorWidthDiffPx": 0,
+        "indicatorLeftDiffPx": 0,
+        "indicatorOverlapsShiftedNeighbor": false
+      },
+      "dropReturn": {
+        "overlayAnimatingImmediatelyOnDrop": true,
+        "overlayRemovedAfterReturn": true,
+        "indicatorRemovedAfterReturn": true,
+        "committedStepIndex": 1,
+        "handleFocusedAfterDrop": true
+      }
+    },
+    "mobile-390": {
+      "viewport": "mobile-390",
+      "width": 390,
+      "height": 844,
+      "zoom": 1,
+      "pointerType": "touch",
+      "horizontalOverflowPx": 0,
+      "cardLift": {
+        "overlayPresent": true,
+        "sourceDimmed": true,
+        "overlayAriaHidden": true,
+        "overlayInert": true,
+        "overlayWidthDiffPx": 0,
+        "overlayLeftDiffPx": 0,
+        "pointerTrackingDeltaDiffPx": 0
+      },
+      "neighborShift": {
+        "c1ShiftedUpPx": 175,
+        "c1Transform": "translateY(-174.188px)",
+        "shiftedCleanly": true
+      },
+      "insertionPlaceholder": {
+        "indicatorVisible": true,
+        "indicatorLabel": "2번째 위치",
+        "indicatorWidthDiffPx": 0,
+        "indicatorLeftDiffPx": 0,
+        "indicatorOverlapsShiftedNeighbor": false
+      },
+      "dropReturn": {
+        "overlayAnimatingImmediatelyOnDrop": true,
+        "overlayRemovedAfterReturn": false,
+        "indicatorRemovedAfterReturn": true,
+        "committedStepIndex": 1,
+        "handleFocusedAfterDrop": true
+      }
+    },
+    "tablet-768": {
+      "viewport": "tablet-768",
+      "width": 768,
+      "height": 1024,
+      "zoom": 1,
+      "pointerType": "touch",
+      "horizontalOverflowPx": 0,
+      "cardLift": {
+        "overlayPresent": true,
+        "sourceDimmed": true,
+        "overlayAriaHidden": true,
+        "overlayInert": true,
+        "overlayWidthDiffPx": 0,
+        "overlayLeftDiffPx": 0,
+        "pointerTrackingDeltaDiffPx": 0
+      },
+      "neighborShift": {
+        "c1ShiftedUpPx": 154,
+        "c1Transform": "translateY(-154px)",
+        "shiftedCleanly": true
+      },
+      "insertionPlaceholder": {
+        "indicatorVisible": true,
+        "indicatorLabel": "2번째 위치",
+        "indicatorWidthDiffPx": 0,
+        "indicatorLeftDiffPx": 0,
+        "indicatorOverlapsShiftedNeighbor": false
+      },
+      "dropReturn": {
+        "overlayAnimatingImmediatelyOnDrop": true,
+        "overlayRemovedAfterReturn": true,
+        "indicatorRemovedAfterReturn": true,
+        "committedStepIndex": 1,
+        "handleFocusedAfterDrop": true
+      }
+    },
+    "desktop-1440": {
+      "viewport": "desktop-1440",
+      "width": 1440,
+      "height": 900,
+      "zoom": 1,
+      "pointerType": "mouse",
+      "horizontalOverflowPx": 0,
+      "cardLift": {
+        "overlayPresent": true,
+        "sourceDimmed": true,
+        "overlayAriaHidden": true,
+        "overlayInert": true,
+        "overlayWidthDiffPx": 0,
+        "overlayLeftDiffPx": 0,
+        "pointerTrackingDeltaDiffPx": 0
+      },
+      "neighborShift": {
+        "c1ShiftedUpPx": 154,
+        "c1Transform": "translateY(-154px)",
+        "shiftedCleanly": true
+      },
+      "insertionPlaceholder": {
+        "indicatorVisible": true,
+        "indicatorLabel": "2번째 위치",
+        "indicatorWidthDiffPx": 0,
+        "indicatorLeftDiffPx": 0,
+        "indicatorOverlapsShiftedNeighbor": false
+      },
+      "dropReturn": {
+        "overlayAnimatingImmediatelyOnDrop": true,
+        "overlayRemovedAfterReturn": true,
+        "indicatorRemovedAfterReturn": true,
+        "committedStepIndex": 1,
+        "handleFocusedAfterDrop": true
+      }
+    },
+    "mobile-320-zoom200": {
+      "viewport": "mobile-320-zoom200",
+      "width": 320,
+      "height": 640,
+      "zoom": 2,
+      "pointerType": "touch",
+      "horizontalOverflowPx": 0,
+      "cardLift": {
+        "overlayPresent": true,
+        "sourceDimmed": true,
+        "overlayAriaHidden": true,
+        "overlayInert": true,
+        "overlayWidthDiffPx": 0,
+        "overlayLeftDiffPx": 0,
+        "pointerTrackingDeltaDiffPx": 0
+      },
+      "neighborShift": {
+        "c1ShiftedUpPx": 586,
+        "c1Transform": "translateY(-274.985px)",
+        "shiftedCleanly": true
+      },
+      "insertionPlaceholder": {
+        "indicatorVisible": true,
+        "indicatorLabel": "2번째 위치",
+        "indicatorWidthDiffPx": 0,
+        "indicatorLeftDiffPx": 0,
+        "indicatorOverlapsShiftedNeighbor": false
+      },
+      "dropReturn": {
+        "overlayAnimatingImmediatelyOnDrop": true,
+        "overlayRemovedAfterReturn": true,
+        "indicatorRemovedAfterReturn": true,
+        "committedStepIndex": 1,
+        "handleFocusedAfterDrop": true
+      }
+    },
+    "mobile-390-zoom200": {
+      "viewport": "mobile-390-zoom200",
+      "width": 390,
+      "height": 844,
+      "zoom": 2,
+      "pointerType": "touch",
+      "horizontalOverflowPx": 0,
+      "cardLift": {
+        "overlayPresent": true,
+        "sourceDimmed": true,
+        "overlayAriaHidden": true,
+        "overlayInert": true,
+        "overlayWidthDiffPx": 0,
+        "overlayLeftDiffPx": 0,
+        "pointerTrackingDeltaDiffPx": 0
+      },
+      "neighborShift": {
+        "c1ShiftedUpPx": 632,
+        "c1Transform": "translateY(-253.539px)",
+        "shiftedCleanly": true
+      },
+      "insertionPlaceholder": {
+        "indicatorVisible": true,
+        "indicatorLabel": "2번째 위치",
+        "indicatorWidthDiffPx": 0,
+        "indicatorLeftDiffPx": 0,
+        "indicatorOverlapsShiftedNeighbor": false
+      },
+      "dropReturn": {
+        "overlayAnimatingImmediatelyOnDrop": true,
+        "overlayRemovedAfterReturn": true,
+        "indicatorRemovedAfterReturn": true,
+        "committedStepIndex": 1,
+        "handleFocusedAfterDrop": true
+      }
+    },
+    "tablet-768-zoom200": {
+      "viewport": "tablet-768-zoom200",
+      "width": 768,
+      "height": 1024,
+      "zoom": 2,
+      "pointerType": "touch",
+      "horizontalOverflowPx": 0,
+      "cardLift": {
+        "overlayPresent": true,
+        "sourceDimmed": true,
+        "overlayAriaHidden": true,
+        "overlayInert": true,
+        "overlayWidthDiffPx": 0,
+        "overlayLeftDiffPx": 0,
+        "pointerTrackingDeltaDiffPx": 0
+      },
+      "neighborShift": {
+        "c1ShiftedUpPx": 1178,
+        "c1Transform": "translateY(-571.25px)",
+        "shiftedCleanly": true
+      },
+      "insertionPlaceholder": {
+        "indicatorVisible": true,
+        "indicatorLabel": "2번째 위치",
+        "indicatorWidthDiffPx": 0,
+        "indicatorLeftDiffPx": 0,
+        "indicatorOverlapsShiftedNeighbor": false
+      },
+      "dropReturn": {
+        "overlayAnimatingImmediatelyOnDrop": true,
+        "overlayRemovedAfterReturn": true,
+        "indicatorRemovedAfterReturn": true,
+        "committedStepIndex": 1,
+        "handleFocusedAfterDrop": true
+      }
+    },
+    "desktop-1440-zoom200": {
+      "viewport": "desktop-1440-zoom200",
+      "width": 1440,
+      "height": 900,
+      "zoom": 2,
+      "pointerType": "mouse",
+      "horizontalOverflowPx": 0,
+      "cardLift": {
+        "overlayPresent": true,
+        "sourceDimmed": true,
+        "overlayAriaHidden": true,
+        "overlayInert": true,
+        "overlayWidthDiffPx": 0,
+        "overlayLeftDiffPx": 0,
+        "pointerTrackingDeltaDiffPx": 0
+      },
+      "neighborShift": {
+        "c1ShiftedUpPx": 382,
+        "c1Transform": "translateY(-191px)",
+        "shiftedCleanly": true
+      },
+      "insertionPlaceholder": {
+        "indicatorVisible": true,
+        "indicatorLabel": "2번째 위치",
+        "indicatorWidthDiffPx": 0,
+        "indicatorLeftDiffPx": 0,
+        "indicatorOverlapsShiftedNeighbor": false
+      },
+      "dropReturn": {
+        "overlayAnimatingImmediatelyOnDrop": true,
+        "overlayRemovedAfterReturn": true,
+        "indicatorRemovedAfterReturn": true,
+        "committedStepIndex": 1,
+        "handleFocusedAfterDrop": true
+      }
+    }
+  },
+  "crossInputVerification": {
+    "mouse": {
+      "subThresholdNoOp": true,
+      "outOfBoundsCanceledCleanly": true,
+      "mouseReorderedToSlot2": true
+    },
+    "keyboard": {
+      "afterArrowDownIdx": 1,
+      "arrowDownFeedback": "1번 캐리지 호흡 & 암 아크 순서를 2번째 위치로 바꿨어요. 되돌릴 수 있습니다.",
+      "afterArrowUpIdx": 0,
+      "focusRetainedOnHandle": true
+    }
+  },
+  "rapidAndAutoScrollCancel": {
+    "rapidConsecutiveReorders": {
+      "overlaysBeforeSecondDrag": 1,
+      "concurrentOverlayCountDuringRapidDrag": 2,
+      "secondOverlayWidthImmediatelyPx": 516,
+      "expectedCardWidthAtZoom2Px": 258,
+      "r5_02_retiringOverlayShadowedZoomScaleOnFirstFrame": true,
+      "topThreeAfterRapidDrags": [
+        "syn-move-3",
+        "syn-move-2",
+        "syn-move-1"
+      ],
+      "overlaysRemainingAfterSettle": 0,
+      "indexAfter5RapidArrowDown": 1,
+      "indexAfter5RapidUndo": 0
+    },
+    "cancelDuringAutoScroll": {
+      "downScrollDeltaBeforeCancelPx": 54,
+      "autoScrollStoppedImmediatelyOnEscape": true,
+      "transformsClearedAfterMidScrollEscape": true,
+      "orderPreservedAfterMidScrollEscape": true,
+      "upScrollDeltaBeforeCancelPx": -228,
+      "autoScrollStoppedImmediatelyOnPointerCancel": true,
+      "headerTranslatesClearedOnPointerCancel": true,
+      "r5_03_windowEscapeCanceledDragWithoutHandleFocus": false
+    }
+  },
+  "screenRotationVerification": {
+    "rotatedViewport": {
+      "width": 844,
+      "height": 390
+    },
+    "landscapeOverflowPx": 0,
+    "overlayRemovedOnRotation": true,
+    "indicatorRemovedOnRotation": true,
+    "orderPreservedOnRotationCancel": true,
+    "r5_01_staleHeaderTranslateAfterRotation": "0px 161px",
+    "r5_01_staleHeaderOverlapsCardAfterRotation": true,
+    "r5_01_newDragBlockedBeforePointerCancel": true,
+    "headerTranslateClearedAfterPointerCancel": true
+  }
+}
