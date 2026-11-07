@@ -1,6 +1,6 @@
 {
   "base": "ca0fef4309e5d2b416d14254579cd6ede669d1cb",
-  "candidate": "date-only metadata and TXT fix; uncommitted at check time",
+  "head": "df181edca2e5bf1ca7c1a28370a925d921e95ff2",
   "scope": "isolated real Chrome component integration; synthetic local data only",
   "results": [
     {
