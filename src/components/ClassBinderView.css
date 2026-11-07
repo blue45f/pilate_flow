@@ -1,581 +1,625 @@
-/* Dedicated styles for ClassBinderView history date filter & mobile first-card readability */
+/* Dedicated styles for ClassBinderView history progressive disclosure & 100%/200% zoom readability */
 
-#root .teaching-collection .teaching-date-nav,
-.teaching-collection .teaching-date-nav {
+#root .vnext-shell .teaching-collection.teaching-collection--history,
+#root .teaching-collection.teaching-collection--history,
+.teaching-collection.teaching-collection--history {
+  container-type: inline-size;
+  container-name: history-collection;
+  padding-top: 0;
+  margin-top: -32px;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+#root .teaching-collection--history > *,
+.teaching-collection--history > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#root .vnext-shell .teaching-collection--history .teaching-page-header,
+#root .teaching-collection--history .teaching-page-header,
+.teaching-collection--history .teaching-page-header {
+  display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 6px 10px;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 1px;
+  min-height: 44px;
+  max-width: 100%;
+  min-width: 0;
 }
 
-#root .teaching-collection .teaching-date-nav-label,
-.teaching-collection .teaching-date-nav-label {
-  order: 1;
-  margin-right: auto;
-  min-height: 32px;
+#root .teaching-collection--history .teaching-page-header > div,
+.teaching-collection--history .teaching-page-header > div {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
 }
 
-#root .teaching-collection .teaching-date-more-toggle,
-#root .teaching-collection .teaching-date-reset,
-.teaching-collection .teaching-date-more-toggle,
-.teaching-collection .teaching-date-reset {
-  order: 2;
+#root .teaching-collection--history .teaching-page-header .eyebrow,
+.teaching-collection--history .teaching-page-header .eyebrow {
+  display: none;
+}
+
+#root .teaching-collection--history .teaching-page-header h1,
+.teaching-collection--history .teaching-page-header h1 {
+  font-size: 16px;
+  line-height: 1.15;
+  margin: 0;
+  gap: 5px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+#root .teaching-collection--history .teaching-page-header .teaching-count,
+.teaching-collection--history .teaching-page-header .teaching-count {
+  font-size: 12px;
+  padding: 1px 6px;
+}
+
+#root .teaching-collection--history .teaching-page-header p,
+.teaching-collection--history .teaching-page-header p {
+  font-size: 12px;
+  line-height: 1.15;
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#root .teaching-collection--history .teaching-page-header > button,
+.teaching-collection--history .teaching-page-header > button {
+  margin-top: 0;
   min-height: 44px;
   min-width: 44px;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.15;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+#root .vnext-shell .teaching-collection--history .teaching-separation-banner,
+#root .teaching-collection--history .teaching-separation-banner,
+.teaching-collection--history .teaching-separation-banner {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 1px 6px;
+  margin-bottom: 1px;
+  gap: 6px;
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 1.15;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#root .teaching-collection--history .teaching-separation-banner .teaching-record-kind-badge,
+.teaching-collection--history .teaching-separation-banner .teaching-record-kind-badge {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  font-size: 12px;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+#root .teaching-collection--history .teaching-separation-banner .teaching-contract-status,
+.teaching-collection--history .teaching-separation-banner .teaching-contract-status {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#root .teaching-collection--history .teaching-collection-toolbar,
+.teaching-collection--history .teaching-collection-toolbar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 1px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#root .teaching-collection--history .teaching-search,
+.teaching-collection--history .teaching-search {
+  min-height: 44px;
+  height: 44px;
+  padding: 0 8px;
+  flex: 1 1 180px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#root .teaching-collection--history .teaching-search input,
+.teaching-collection--history .teaching-search input {
+  font-size: 12px;
+  min-width: 0;
+}
+
+#root .teaching-collection--history .teaching-collection-toolbar > .muted,
+.teaching-collection--history .teaching-collection-toolbar > .muted {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Group filter progressive disclosure bar */
+#root .teaching-collection--history .teaching-group-filters,
+.teaching-collection--history .teaching-group-filters {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  margin-bottom: 1px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#root .teaching-collection--history .teaching-group-filters.is-collapsed,
+.teaching-collection--history .teaching-group-filters.is-collapsed {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+#root .teaching-collection--history .teaching-group-filters.is-collapsed::-webkit-scrollbar,
+.teaching-collection--history .teaching-group-filters.is-collapsed::-webkit-scrollbar {
+  display: none;
+}
+
+#root .teaching-collection--history .teaching-group-filters.is-collapsed .teaching-group-chip-list,
+.teaching-collection--history .teaching-group-filters.is-collapsed .teaching-group-chip-list {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+#root .teaching-collection--history .teaching-group-filters.is-expanded,
+.teaching-collection--history .teaching-group-filters.is-expanded {
+  flex-wrap: wrap;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background: #f6f8f2;
+  border: 1px solid #dce4d5;
+}
+
+#root .teaching-collection--history .teaching-group-filters.is-expanded .teaching-group-chip-list,
+.teaching-collection--history .teaching-group-filters.is-expanded .teaching-group-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 100%;
+  max-height: 156px;
+  overflow-y: auto;
+}
+
+#root .teaching-collection--history .teaching-group-filters .teaching-filter,
+.teaching-collection--history .teaching-group-filters .teaching-filter {
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 180px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 4px 10px;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-#root .teaching-collection .teaching-date-chip-list,
-.teaching-collection .teaching-date-chip-list {
+#root .teaching-collection--history .teaching-group-filters.is-expanded .teaching-filter,
+.teaching-collection--history .teaching-group-filters.is-expanded .teaching-filter {
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
+}
+
+/* Date filter progressive disclosure bar */
+#root .teaching-collection--history .teaching-date-nav,
+.teaching-collection--history .teaching-date-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
+  margin-bottom: 2px;
+  border-radius: 8px;
+  border: 0;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#root .teaching-collection--history .teaching-date-nav.is-collapsed,
+.teaching-collection--history .teaching-date-nav.is-collapsed {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+#root .teaching-collection--history .teaching-date-nav.is-collapsed::-webkit-scrollbar,
+.teaching-collection--history .teaching-date-nav.is-collapsed::-webkit-scrollbar {
+  display: none;
+}
+
+#root .teaching-collection--history .teaching-date-nav-label,
+.teaching-collection--history .teaching-date-nav-label {
+  flex: 0 0 auto;
+  min-height: 28px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#root .teaching-collection--history .teaching-date-nav.is-collapsed .teaching-date-chip-list,
+.teaching-collection--history .teaching-date-nav.is-collapsed .teaching-date-chip-list {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  width: auto;
+}
+
+#root .teaching-collection--history .teaching-date-nav.is-expanded,
+.teaching-collection--history .teaching-date-nav.is-expanded {
+  flex-wrap: wrap;
+  padding: 4px 8px;
+  border: 1px solid #dce4d5;
+}
+
+#root .teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-nav-label,
+.teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-nav-label {
+  order: 1;
+  margin-right: auto;
+}
+
+#root .teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-more-toggle,
+#root .teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-reset,
+.teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-more-toggle,
+.teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-reset {
+  order: 2;
+}
+
+#root .teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-chip-list,
+.teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-chip-list {
   order: 3;
   flex: 1 1 100%;
   width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(144px, 1fr));
+  gap: 4px;
+  max-height: 176px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
-#root .teaching-collection .teaching-date-chip,
-.teaching-collection .teaching-date-chip {
+#root .teaching-collection--history .teaching-date-chip,
+.teaching-collection--history .teaching-date-chip {
+  flex: 0 0 auto;
   min-height: 44px;
   min-width: 44px;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.15;
+  white-space: nowrap;
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 4px;
 }
 
-#root .teaching-collection .teaching-group-filters .teaching-filter,
-#root .teaching-collection .teaching-group-filters .pf-tabs-trigger,
-#root .teaching-collection .teaching-filter-row .pf-tabs-trigger,
-.teaching-collection .teaching-group-filters .teaching-filter,
-.teaching-collection .teaching-group-filters .pf-tabs-trigger,
-.teaching-collection .teaching-filter-row .pf-tabs-trigger {
-  max-width: 100%;
-  height: auto;
+#root .teaching-collection--history .teaching-date-chip-count,
+.teaching-collection--history .teaching-date-chip-count {
+  font-size: 12px;
+}
+
+#root .teaching-collection--history .teaching-date-more-toggle,
+#root .teaching-collection--history .teaching-date-reset,
+#root .teaching-collection--history .teaching-group-more-toggle,
+#root .teaching-collection--history .teaching-group-reset,
+.teaching-collection--history .teaching-date-more-toggle,
+.teaching-collection--history .teaching-date-reset,
+.teaching-collection--history .teaching-group-more-toggle,
+.teaching-collection--history .teaching-group-reset {
+  flex: 0 0 auto;
   min-height: 44px;
-  white-space: normal;
-  line-height: 1.35;
-  text-align: center;
-  overflow-wrap: anywhere;
+  min-width: 44px;
+  padding: 4px 6px;
+  font-size: 12px;
+  line-height: 1.15;
+  white-space: nowrap;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-@media (min-width: 641px) {
-  #root .teaching-collection--history .teaching-page-header,
-  .teaching-collection--history .teaching-page-header {
-    margin-bottom: 10px;
-  }
-
-  #root .teaching-collection--history .teaching-page-header h1,
-  .teaching-collection--history .teaching-page-header h1 {
-    font-size: clamp(22px, 2.4vw, 28px);
-    margin: 2px 0 4px;
-  }
-
-  #root .teaching-collection--history .teaching-page-header p,
-  .teaching-collection--history .teaching-page-header p {
-    font-size: 12.5px;
-    line-height: 1.4;
-  }
-
-  #root .vnext-shell .teaching-collection--history .teaching-separation-banner,
-  #root .teaching-collection--history .teaching-separation-banner,
-  .teaching-collection--history .teaching-separation-banner {
-    padding: 6px 12px;
-    margin-bottom: 8px;
-  }
-
-  #root .teaching-collection--history .teaching-collection-toolbar,
-  .teaching-collection--history .teaching-collection-toolbar {
-    margin-bottom: 8px;
-  }
-
-  #root .teaching-collection--history .teaching-group-filters,
-  .teaching-collection--history .teaching-group-filters {
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-
-  #root .teaching-collection--history .teaching-group-filters .teaching-filter,
-  #root .teaching-collection--history .teaching-group-filters .pf-tabs-trigger,
-  .teaching-collection--history .teaching-group-filters .teaching-filter,
-  .teaching-collection--history .teaching-group-filters .pf-tabs-trigger {
-    padding: 6px 12px;
-  }
-
-  #root .teaching-collection--history .teaching-date-nav,
-  .teaching-collection--history .teaching-date-nav {
-    padding: 6px 12px;
-    margin-bottom: 8px;
-    gap: 4px 8px;
-  }
-
-  #root .teaching-collection--history .teaching-history-date-group,
-  .teaching-collection--history .teaching-history-date-group {
+/* Container-responsive history feed & compact 2-column card layout */
+@container history-collection (max-width: 860px) {
+  #root .teaching-collection--history .teaching-history-layout,
+  .teaching-collection--history .teaching-history-layout {
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
-  }
-
-  #root .teaching-collection--history .teaching-history-date-header,
-  .teaching-collection--history .teaching-history-date-header {
-    padding: 5px 10px;
-  }
-
-  #root .teaching-collection--history .teaching-history-card,
-  .teaching-collection--history .teaching-history-card {
-    padding: 12px 16px;
-  }
-
-  #root .teaching-collection--history .teaching-history-card .teaching-card-top,
-  .teaching-collection--history .teaching-history-card .teaching-card-top {
-    margin-bottom: 4px;
-  }
-
-  #root .teaching-collection--history .teaching-history-card h2,
-  .teaching-collection--history .teaching-history-card h2 {
-    font-size: 16px;
-    line-height: 1.35;
-    margin: 2px 0 4px;
-  }
-
-  #root .teaching-collection--history .teaching-history-card .teaching-rest-summary,
-  .teaching-collection--history .teaching-history-card .teaching-rest-summary {
-    padding: 4px 8px;
-    margin: 4px 0;
-  }
-
-  #root .teaching-collection--history .teaching-history-badges,
-  .teaching-collection--history .teaching-history-badges {
-    margin: 4px 0;
-  }
-
-  #root .teaching-collection--history .teaching-reflection,
-  .teaching-collection--history .teaching-reflection {
-    margin: 5px 0;
-    line-height: 1.45;
-  }
-
-  #root .teaching-collection--history .teaching-history-bottom,
-  .teaching-collection--history .teaching-history-bottom {
-    margin-top: 8px;
-    padding-top: 8px;
-  }
-}
-
-@media (max-width: 640px) {
-  #root .vnext-shell .teaching-collection.teaching-collection--history,
-  #root .teaching-collection.teaching-collection--history,
-  .teaching-collection.teaching-collection--history {
-    padding-top: 0;
-    margin-top: -12px;
-  }
-
-  #root .vnext-shell .teaching-collection--history .teaching-page-header,
-  #root .teaching-collection--history .teaching-page-header,
-  .teaching-collection--history .teaching-page-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2px 8px;
-    margin-bottom: 3px;
-  }
-
-  #root .teaching-collection--history .teaching-page-header > div,
-  .teaching-collection--history .teaching-page-header > div {
-    flex: 1 1 140px;
-    min-width: 0;
-  }
-
-  #root .teaching-collection--history .teaching-page-header .eyebrow,
-  .teaching-collection--history .teaching-page-header .eyebrow {
-    display: none;
-  }
-
-  #root .teaching-collection--history .teaching-page-header h1,
-  .teaching-collection--history .teaching-page-header h1 {
-    font-size: 17.5px;
-    line-height: 1.15;
-    margin: 0;
-    gap: 5px;
-  }
-
-  #root .teaching-collection--history .teaching-page-header .teaching-count,
-  .teaching-collection--history .teaching-page-header .teaching-count {
-    font-size: 10.5px;
-    padding: 2px 6px;
-  }
-
-  #root .teaching-collection--history .teaching-page-header p,
-  .teaching-collection--history .teaching-page-header p {
-    font-size: 10px;
-    line-height: 1.15;
-    margin: 1px 0 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  #root .teaching-collection--history .teaching-page-header > button,
-  .teaching-collection--history .teaching-page-header > button {
-    margin-top: 0;
-    min-height: 44px;
-    min-width: 44px;
-    padding: 4px 9px;
-    font-size: 11px;
-    flex: 0 0 auto;
-  }
-
-  #root .vnext-shell .teaching-collection--history .teaching-separation-banner,
-  #root .teaching-collection--history .teaching-separation-banner,
-  .teaching-collection--history .teaching-separation-banner {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: space-between;
-    overflow: hidden;
-    padding: 2px 6px;
-    margin-bottom: 3px;
-    gap: 4px;
-    border-radius: 6px;
-    font-size: 10px;
-    line-height: 1.15;
-  }
-
-  #root .teaching-collection--history .teaching-separation-banner .teaching-record-kind-badge,
-  .teaching-collection--history .teaching-separation-banner .teaching-record-kind-badge {
-    flex: 0 0 auto;
-    padding: 1px 5px;
-    font-size: 9.5px;
-    gap: 3px;
-    white-space: nowrap;
-  }
-
-  #root .teaching-collection--history .teaching-separation-banner .teaching-contract-status,
-  .teaching-collection--history .teaching-separation-banner .teaching-contract-status {
-    flex: 1 1 auto;
-    min-width: 0;
-    font-size: 9.5px;
-    line-height: 1.15;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  #root .teaching-collection--history .teaching-collection-toolbar,
-  .teaching-collection--history .teaching-collection-toolbar {
-    margin-bottom: 3px;
-    gap: 1px;
-  }
-
-  #root .teaching-collection--history .teaching-search,
-  .teaching-collection--history .teaching-search {
-    min-height: 36px;
-    height: 36px;
-    padding: 0 8px;
   }
 
   #root .teaching-collection--history .teaching-collection-toolbar > .muted,
   .teaching-collection--history .teaching-collection-toolbar > .muted {
-    margin-top: 1px;
-    font-size: 9.5px;
-    line-height: 1.1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  #root .teaching-collection--history .teaching-group-filters,
-  .teaching-collection--history .teaching-group-filters {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    max-width: 100%;
-    min-width: 0;
-    gap: 4px;
-    padding: 0;
-    margin-bottom: 3px;
-    scrollbar-width: none;
-  }
-
-  #root .teaching-collection--history .teaching-group-filters::-webkit-scrollbar,
-  .teaching-collection--history .teaching-group-filters::-webkit-scrollbar {
     display: none;
   }
+}
 
-  #root .teaching-collection--history .teaching-group-filters .teaching-filter,
-  #root .teaching-collection--history .teaching-group-filters .pf-tabs-trigger,
-  .teaching-collection--history .teaching-group-filters .teaching-filter,
-  .teaching-collection--history .teaching-group-filters .pf-tabs-trigger {
-    flex: 0 0 auto;
-    width: auto;
-    max-width: 200px;
-    min-height: 44px;
-    min-width: 44px;
-    padding: 4px 9px;
-    font-size: 11px;
-    line-height: 1.15;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+#root .teaching-collection--history .teaching-history-layout,
+.teaching-collection--history .teaching-history-layout {
+  max-width: 100%;
+  min-width: 0;
+}
 
-  #root .teaching-collection--history .teaching-date-nav,
-  .teaching-collection--history .teaching-date-nav {
-    align-items: center;
-    gap: 2px 6px;
-    padding: 3px 6px;
-    margin-bottom: 3px;
-  }
+#root .teaching-collection--history .teaching-history-feed,
+.teaching-collection--history .teaching-history-feed {
+  gap: 4px;
+  max-width: 100%;
+  min-width: 0;
+}
 
-  #root .teaching-collection--history .teaching-date-nav-label,
-  .teaching-collection--history .teaching-date-nav-label {
-    min-height: 20px;
-    font-size: 10.5px;
-  }
+#root .teaching-collection--history .teaching-history-date-group,
+.teaching-collection--history .teaching-history-date-group {
+  gap: 2px;
+  max-width: 100%;
+  min-width: 0;
+}
 
-  #root .teaching-collection--history .teaching-date-more-toggle,
-  #root .teaching-collection--history .teaching-date-reset,
-  .teaching-collection--history .teaching-date-more-toggle,
-  .teaching-collection--history .teaching-date-reset {
-    padding: 2px 5px;
-    font-size: 10.5px;
-    min-height: 44px;
-    min-width: 44px;
-  }
+#root .teaching-collection--history .teaching-history-date-header,
+.teaching-collection--history .teaching-history-date-header {
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 1.15;
+}
 
-  #root .teaching-collection--history .teaching-date-nav.is-collapsed .teaching-date-chip-list,
-  .teaching-collection--history .teaching-date-nav.is-collapsed .teaching-date-chip-list {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    max-width: 100%;
-    min-width: 0;
-    gap: 4px;
-    scrollbar-width: none;
-  }
+#root .teaching-collection--history .teaching-history-date-count,
+.teaching-collection--history .teaching-history-date-count {
+  font-size: 12px;
+  padding: 1px 6px;
+}
 
-  #root .teaching-collection--history .teaching-date-nav.is-collapsed .teaching-date-chip-list::-webkit-scrollbar,
-  .teaching-collection--history .teaching-date-nav.is-collapsed .teaching-date-chip-list::-webkit-scrollbar {
+#root .teaching-collection--history .teaching-history-card,
+.teaching-collection--history .teaching-history-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1px 6px;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 8px;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#root .teaching-collection--history .teaching-history-card .teaching-card-top,
+.teaching-collection--history .teaching-history-card .teaching-card-top {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin-bottom: 0;
+  overflow: hidden;
+  min-width: 0;
+}
+
+#root .teaching-collection--history .teaching-history-datetime,
+.teaching-collection--history .teaching-history-datetime {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.15;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+#root .teaching-collection--history .teaching-history-time-of-day,
+#root .teaching-collection--history .teaching-history-time-pill,
+.teaching-collection--history .teaching-history-time-of-day,
+.teaching-collection--history .teaching-history-time-pill {
+  padding: 0 4px;
+  font-size: 12px;
+  line-height: 1.15;
+}
+
+#root .teaching-collection--history .teaching-history-group,
+.teaching-collection--history .teaching-history-group {
+  padding: 0 5px;
+  font-size: 12px;
+  line-height: 1.15;
+  max-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#root .teaching-collection--history .teaching-history-card h2,
+.teaching-collection--history .teaching-history-card h2 {
+  grid-column: 1 / -1;
+  font-size: 14px;
+  line-height: 1.15;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#root .teaching-collection--history .teaching-history-card .teaching-card-stats,
+.teaching-collection--history .teaching-history-card .teaching-card-stats {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  gap: 5px;
+  font-size: 12px;
+  line-height: 1.15;
+  margin: 0;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+#root .teaching-collection--history .teaching-history-card .teaching-rest-summary,
+.teaching-collection--history .teaching-history-card .teaching-rest-summary {
+  padding: 0 4px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.15;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+#root .teaching-collection--history .teaching-history-badges,
+.teaching-collection--history .teaching-history-badges {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  gap: 4px;
+  margin: 0;
+  min-width: 0;
+}
+
+#root .teaching-collection--history .teaching-history-badges > span,
+.teaching-collection--history .teaching-history-badges > span {
+  padding: 0 5px;
+  font-size: 12px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+#root .teaching-collection--history .teaching-reflection,
+.teaching-collection--history .teaching-reflection {
+  margin: 0;
+  padding: 0 0 0 5px;
+  font-size: 12px;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+#root .teaching-collection--history .teaching-history-exercises,
+.teaching-collection--history .teaching-history-exercises {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 4px;
+  margin: 0;
+  scrollbar-width: none;
+  min-width: 0;
+}
+
+#root .teaching-collection--history .teaching-history-exercises::-webkit-scrollbar,
+.teaching-collection--history .teaching-history-exercises::-webkit-scrollbar {
+  display: none;
+}
+
+#root .teaching-collection--history .teaching-history-exercises .pf-block-pill,
+.teaching-collection--history .teaching-history-exercises .pf-block-pill {
+  flex: 0 0 auto;
+  padding: 0 5px;
+  font-size: 12px;
+  line-height: 1.15;
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#root .teaching-collection--history .teaching-history-bottom,
+.teaching-collection--history .teaching-history-bottom {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1px;
+  padding-top: 1px;
+  gap: 6px;
+  min-width: 0;
+}
+
+#root .teaching-collection--history .teaching-history-bottom > .muted,
+.teaching-collection--history .teaching-history-bottom > .muted {
+  font-size: 12px;
+  line-height: 1.15;
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@container history-collection (max-width: 520px) {
+  #root .teaching-collection--history .teaching-page-header p,
+  .teaching-collection--history .teaching-page-header p,
+  #root .teaching-collection--history .teaching-history-bottom > .muted,
+  .teaching-collection--history .teaching-history-bottom > .muted {
     display: none;
-  }
-
-  #root .teaching-collection--history .teaching-date-nav.is-collapsed .teaching-date-chip,
-  .teaching-collection--history .teaching-date-nav.is-collapsed .teaching-date-chip {
-    flex: 0 0 auto;
-    width: auto;
-    min-height: 44px;
-    min-width: 44px;
-    padding: 4px 8px;
-    font-size: 10.5px;
-    white-space: nowrap;
-  }
-
-  #root .teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-chip-list,
-  .teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-chip-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(124px, 1fr));
-    gap: 6px;
-    max-height: 210px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding-right: 2px;
-  }
-
-  #root .teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-chip,
-  .teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-chip {
-    width: 100%;
-    justify-content: space-between;
-    padding: 6px 10px;
-    font-size: 11px;
-    min-height: 44px;
-  }
-
-  #root .teaching-collection--history .teaching-history-feed,
-  .teaching-collection--history .teaching-history-feed {
-    gap: 8px;
-  }
-
-  #root .teaching-collection--history .teaching-history-date-group,
-  .teaching-collection--history .teaching-history-date-group {
-    gap: 3px;
-  }
-
-  #root .teaching-collection--history .teaching-history-date-header,
-  .teaching-collection--history .teaching-history-date-header {
-    padding: 2px 6px;
-    margin-bottom: 0;
-  }
-
-  #root .teaching-collection--history .teaching-history-date-title,
-  .teaching-collection--history .teaching-history-date-title {
-    font-size: 11px;
-    gap: 4px;
-  }
-
-  #root .teaching-collection--history .teaching-history-date-count,
-  .teaching-collection--history .teaching-history-date-count {
-    font-size: 9.5px;
-    padding: 1px 6px;
-  }
-
-  #root .teaching-collection--history .teaching-history-card,
-  .teaching-collection--history .teaching-history-card {
-    padding: 6px 8px;
-  }
-
-  #root .teaching-collection--history .teaching-history-card .teaching-card-top,
-  .teaching-collection--history .teaching-history-card .teaching-card-top {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 4px;
-    margin-bottom: 2px;
-    min-width: 0;
-  }
-
-  #root .teaching-collection--history .teaching-history-datetime,
-  .teaching-collection--history .teaching-history-datetime {
-    flex: 0 0 auto;
-    flex-wrap: nowrap;
-    font-size: 10.5px;
-    gap: 2px 3px;
-    min-width: 0;
-    white-space: nowrap;
-  }
-
-  #root .teaching-collection--history .teaching-history-time-of-day,
-  #root .teaching-collection--history .teaching-history-time-pill,
-  .teaching-collection--history .teaching-history-time-of-day,
-  .teaching-collection--history .teaching-history-time-pill {
-    font-size: 9px;
-    padding: 1px 4px;
-    flex: 0 0 auto;
-  }
-
-  #root .teaching-collection--history .teaching-history-group,
-  .teaching-collection--history .teaching-history-group {
-    flex: 0 1 auto;
-    min-width: 0;
-    max-width: 96px;
-    font-size: 9.5px;
-    padding: 1px 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: inline-block;
-  }
-
-  #root .teaching-collection--history .teaching-history-card h2,
-  .teaching-collection--history .teaching-history-card h2 {
-    font-size: 13px;
-    line-height: 1.22;
-    margin: 1px 0 2px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  #root .teaching-collection--history .teaching-history-card .teaching-card-stats,
-  .teaching-collection--history .teaching-history-card .teaching-card-stats {
-    font-size: 10px;
-    gap: 2px 5px;
-    line-height: 1.15;
-  }
-
-  #root .teaching-collection--history .teaching-history-card .teaching-rest-summary,
-  .teaching-collection--history .teaching-history-card .teaching-rest-summary {
-    font-size: 9.5px;
-    line-height: 1.15;
-    padding: 1px 5px;
-    margin: 1px 0;
-  }
-
-  #root .teaching-collection--history .teaching-history-badges,
-  .teaching-collection--history .teaching-history-badges {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    max-width: 100%;
-    gap: 3px;
-    margin: 1px 0;
-    scrollbar-width: none;
-  }
-
-  #root .teaching-collection--history .teaching-history-badges::-webkit-scrollbar,
-  .teaching-collection--history .teaching-history-badges::-webkit-scrollbar {
-    display: none;
-  }
-
-  #root .teaching-collection--history .teaching-history-badges > span,
-  .teaching-collection--history .teaching-history-badges > span {
-    flex: 0 0 auto;
-    font-size: 9.5px;
-    padding: 1px 5px;
-    white-space: nowrap;
-  }
-
-  #root .teaching-collection--history .teaching-reflection,
-  .teaching-collection--history .teaching-reflection {
-    font-size: 10.5px;
-    line-height: 1.2;
-    margin: 1px 0;
-    padding-left: 6px;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  #root .teaching-collection--history .teaching-history-exercises,
-  .teaching-collection--history .teaching-history-exercises {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    max-width: 100%;
-    gap: 3px;
-    margin: 1px 0;
-    scrollbar-width: none;
-  }
-
-  #root .teaching-collection--history .teaching-history-exercises::-webkit-scrollbar,
-  .teaching-collection--history .teaching-history-exercises::-webkit-scrollbar {
-    display: none;
-  }
-
-  #root .teaching-collection--history .teaching-history-exercises > span,
-  .teaching-collection--history .teaching-history-exercises > span {
-    flex: 0 0 auto;
-    font-size: 9.5px;
-    padding: 1px 5px;
-    white-space: nowrap;
-  }
-
-  #root .teaching-collection--history .teaching-history-bottom,
-  .teaching-collection--history .teaching-history-bottom {
-    margin-top: 2px;
-    padding-top: 2px;
-    gap: 2px;
-  }
-
-  #root .teaching-collection--history .teaching-history-bottom .muted,
-  .teaching-collection--history .teaching-history-bottom .muted {
-    font-size: 9.5px;
-    line-height: 1.1;
   }
 
   #root .teaching-collection--history .teaching-history-actions,
   .teaching-collection--history .teaching-history-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 5px;
     width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 4px;
   }
+}
 
-  #root .teaching-collection--history .teaching-history-actions button,
-  .teaching-collection--history .teaching-history-actions button {
-    min-height: 44px;
-    padding: 3px 5px;
-    font-size: 11px;
-  }
+#root .teaching-collection--history .teaching-history-actions button,
+.teaching-collection--history .teaching-history-actions button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.15;
+  white-space: nowrap;
 }
