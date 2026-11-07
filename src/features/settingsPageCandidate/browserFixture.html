@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pilates Settings Page Candidate — Local Browser Verification</title>
+  </head>
+  <body style="margin: 0; background: #f7f5ef">
+    <div id="pilates-settings-fixture-root"></div>
+    <script type="module">
+      import React from 'react';
+      import { createRoot } from 'react-dom/client';
+      import { PilatesSettingsFixtureHarness } from '/src/features/settingsPageCandidate/PilatesSettingsPage.tsx';
+
+      const root = createRoot(document.getElementById('pilates-settings-fixture-root'));
+      root.render(
+        React.createElement(
+          React.StrictMode,
+          null,
+          React.createElement(PilatesSettingsFixtureHarness),
+        ),
+      );
+    </script>
+  </body>
+</html>

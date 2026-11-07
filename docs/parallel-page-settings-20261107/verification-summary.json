@@ -1,0 +1,65 @@
+{
+  "featureId": "parallel-page-settings-20261107",
+  "branch": "feat/parallel-page-settings-20261107",
+  "workflow": "dynamic-2-track-parallel",
+  "ownership": {
+    "ownedPaths": [
+      "src/features/settingsPageCandidate/**",
+      "docs/parallel-page-settings-20261107/**"
+    ],
+    "sharedFilesModifiedCount": 0,
+    "sharedRoutesOrStoreOrThemeModified": false
+  },
+  "safetyContract": {
+    "ownsLocalSettingsUiOnly": true,
+    "canMutateAuthOrSecurityConfig": false,
+    "canDeleteUserData": false,
+    "hasDestructiveDeleteAction": false,
+    "usesMockAdaptersInTests": true,
+    "groups": ["account", "voice", "install", "data"],
+    "minTouchTargetPx": 44,
+    "minTouchGapPx": 8,
+    "supportedViewports": [320, 390, 768, 1440]
+  },
+  "verification": {
+    "vitest": {
+      "testFiles": 3,
+      "testsPassed": 36,
+      "testsFailed": 0,
+      "suites": [
+        "src/features/settingsPageCandidate/settingsPageModel.test.ts (12 passed)",
+        "src/features/settingsPageCandidate/PilatesSettingsPage.mock.test.tsx (12 passed)",
+        "src/features/settingsPageCandidate/independentVerification/settingsPage.independent.test.tsx (12 passed)"
+      ]
+    },
+    "typecheck": {
+      "command": "tsc -b --pretty false",
+      "passed": true
+    },
+    "eslint": {
+      "command": "eslint src/features/settingsPageCandidate --max-warnings=0",
+      "errors": 0,
+      "warnings": 0,
+      "passed": true
+    },
+    "browserCdp": {
+      "runner": "src/features/settingsPageCandidate/independentVerification/verifySettingsPageBrowser.mjs",
+      "viewports": [320, 390, 768, 1440],
+      "presetsVerifiedPerViewport": 6,
+      "zoom200Verified": true,
+      "horizontalOverflowPx": 0,
+      "undersizedTouchTargets": 0,
+      "overlappingInteractiveSiblings": 0,
+      "localStorageKeysWritten": 0,
+      "sessionStorageKeysWritten": 0,
+      "runtimePageErrors": 0,
+      "passed": true
+    }
+  },
+  "honestyBoundaries": {
+    "realChromiumCdpExecuted": true,
+    "realSafariExecuted": false,
+    "productionFirebaseMutated": false,
+    "productionDeploymentExecuted": false
+  }
+}
