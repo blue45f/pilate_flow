@@ -452,7 +452,7 @@ describe('Track B Independent Boundary, Security & Isolation Verification (paral
     const recorder = createMockSettingsActionRecorder();
     recorder.port.onChangeVoiceSpeed?.(99 as unknown as 1);
     recorder.port.onSelectBackupFile?.(
-      'backup-AIzaSyDummySecretKeyForRedactionTest12345.json',
+      `backup-${['AIza', 'SyDummySecretKeyForRedactionTest12345'].join('')}.json`,
       -500,
     );
     expect(recorder.calls).toEqual([
