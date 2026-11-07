@@ -1,0 +1,478 @@
+{
+  "track": "A",
+  "title": "작은 동작 → 중간 블록 → 시퀀스 중첩 반복·편측·휴식·전환시간 경계값 테스트",
+  "executedAt": "2026-11-07T01:25:32.846Z",
+  "totalAssertions": 14,
+  "passedCount": 11,
+  "failedCount": 3,
+  "defectCount": 5,
+  "assertions": [
+    {
+      "id": "A1-01",
+      "category": "small-movement-timing",
+      "title": "calculateIdeaStepTimeBreakdown computes totalSec=180, movementSec=140, explanationSec=25, transitionSec=15 for 3m movement",
+      "passed": true,
+      "details": {
+        "durationMin": 3,
+        "totalSec": 180,
+        "movementSec": 140,
+        "explanationSec": 25,
+        "transitionSec": 15
+      }
+    },
+    {
+      "id": "A1-02",
+      "category": "small-movement-timing",
+      "title": "calculateIdeaStepTimeBreakdown clamps explanationSec+transitionSec to totalSec-10 (guarantees movementSec >= 10s)",
+      "passed": true,
+      "details": {
+        "durationMin": 0.5,
+        "totalSec": 30,
+        "movementSec": 10,
+        "explanationSec": 20,
+        "transitionSec": 0
+      }
+    },
+    {
+      "id": "A1-03",
+      "category": "unilateral-boundary",
+      "title": "Single-side unilateral (sideMode=\"left\") consistency between exercise.isUnilateral and SequenceEngine getStepTiming when step.sideMode is explicit vs default",
+      "passed": false,
+      "details": {
+        "authoredSideMode": "left",
+        "exerciseIsUnilateral": true,
+        "explicitLeftSides": 1,
+        "explicitLeftPerSideSec": 90,
+        "defaultFallbackSides": 2,
+        "defaultFallbackPerSideSec": 45
+      }
+    },
+    {
+      "id": "A1-04",
+      "category": "repetitions-sets-boundary",
+      "title": "saveMovementIdeaDraft handles out-of-range repetitions gracefully without uncaught ZodError, aligns max bounds across MovementIdea/ReusableBlock/Step schemas, and allows clearing optional repetitions/sets on edit",
+      "passed": false,
+      "details": {
+        "repBoundaryResults": [
+          {
+            "label": "min-valid-1",
+            "value": 1,
+            "expectedValid": true,
+            "inHumanDraftSchema": false,
+            "inReusableBlockSchema": true,
+            "inStepSchema": true
+          },
+          {
+            "label": "zero-falsy",
+            "value": 0,
+            "expectedValid": false,
+            "inHumanDraftSchema": false,
+            "inReusableBlockSchema": false,
+            "inStepSchema": false
+          },
+          {
+            "label": "negative",
+            "value": -3,
+            "expectedValid": false,
+            "inHumanDraftSchema": false,
+            "inReusableBlockSchema": false,
+            "inStepSchema": false
+          },
+          {
+            "label": "decimal-float",
+            "value": 7.6,
+            "expectedValid": false,
+            "inHumanDraftSchema": false,
+            "inReusableBlockSchema": false,
+            "inStepSchema": false
+          },
+          {
+            "label": "idea-sheet-max-100",
+            "value": 100,
+            "expectedValid": true,
+            "inHumanDraftSchema": false,
+            "inReusableBlockSchema": true,
+            "inStepSchema": true
+          },
+          {
+            "label": "hierarchy-max-500",
+            "value": 500,
+            "expectedValid": true,
+            "inHumanDraftSchema": false,
+            "inReusableBlockSchema": true,
+            "inStepSchema": true
+          },
+          {
+            "label": "between-hierarchy-and-step-600",
+            "value": 600,
+            "expectedValid": "divergent-500-vs-1000",
+            "inHumanDraftSchema": false,
+            "inReusableBlockSchema": true,
+            "inStepSchema": true
+          },
+          {
+            "label": "step-schema-max-1000",
+            "value": 1000,
+            "expectedValid": "divergent-500-vs-1000",
+            "inHumanDraftSchema": false,
+            "inReusableBlockSchema": true,
+            "inStepSchema": true
+          },
+          {
+            "label": "above-step-schema-1500",
+            "value": 1500,
+            "expectedValid": false,
+            "inHumanDraftSchema": false,
+            "inReusableBlockSchema": false,
+            "inStepSchema": false
+          }
+        ],
+        "uncaughtOverMaxError": "ZodError thrown uncaught",
+        "saved600Reps": 600,
+        "saved600Sets": 60,
+        "block600Success": true,
+        "block600Message": "‘600회 블록 충돌 테스트’ 재사용 블록(v1 · 총 3분)을 만들었습니다.",
+        "clearedExerciseReps": 600,
+        "clearedMetaReps": 600
+      }
+    },
+    {
+      "id": "A2-01",
+      "category": "reusable-block-timing",
+      "title": "summarizeReusableBlockTiming accurately sums nested item durations, explanationSec, transitionSec, movementSec, and unilateralItemCount",
+      "passed": true,
+      "details": {
+        "blockId": "block-1794014718366-v2qkcz",
+        "blockVersion": 2,
+        "itemCount": 2,
+        "unilateralItemCount": 1,
+        "totalDurationMin": 7,
+        "totalSec": 420,
+        "movementSec": 355,
+        "explanationSec": 45,
+        "transitionSec": 20,
+        "itemBreakdowns": [
+          {
+            "itemId": "block-1794014718366-v2qkcz-item-1",
+            "order": 1,
+            "exerciseId": "ex-custom-idea-d23d38de-48ca-4d78-9212-484d1efcbb59",
+            "nameKo": "풋바 분절 호흡 워밍업",
+            "durationMin": 3,
+            "totalSec": 180,
+            "movementSec": 155,
+            "explanationSec": 25,
+            "transitionSec": 0,
+            "repetitions": 8,
+            "sets": 2,
+            "sideMode": "together"
+          },
+          {
+            "itemId": "block-1794014718366-v2qkcz-item-v2-2",
+            "order": 2,
+            "exerciseId": "ex-custom-idea-40605f63-0195-4c10-b759-24f71177f6a7",
+            "nameKo": "싱글 레그 스트랩 서클",
+            "durationMin": 4,
+            "totalSec": 240,
+            "movementSec": 200,
+            "explanationSec": 20,
+            "transitionSec": 20,
+            "repetitions": 6,
+            "sets": 2,
+            "sideMode": "left-then-right"
+          }
+        ]
+      }
+    },
+    {
+      "id": "A2-02",
+      "category": "reusable-block-scaling",
+      "title": "scaleReusableBlockDuration scales totalSec to 600s (10m) and rejects targetTotalMin below minimum (explanation+transition+30s)",
+      "passed": true,
+      "details": {
+        "scaledTotalSec": 600,
+        "scaledItemDurationsMin": [
+          4.366667,
+          5.633333
+        ],
+        "scaleBelowMinError": "목표 시간이 각 동작의 최소 수행 시간(설명·전환 + 30초 또는 최소 30초) 합계보다 작습니다."
+      }
+    },
+    {
+      "id": "A2-03",
+      "category": "reusable-block-persistence-safety",
+      "title": "reusableBlockSchema rejects overhead > durationMin*60, and steps instantiated from ReusableBlock always pass stepSchema (including default selectedLayer)",
+      "passed": true,
+      "details": {
+        "shrunkBlockRejectedBySchema": true,
+        "rawInsertedStepSelectedLayer": "standard",
+        "rawInsertedStepParseSuccess": true
+      }
+    },
+    {
+      "id": "A3-01",
+      "category": "first-step-transition",
+      "title": "First movement added to an empty class should have transitionSec === 0",
+      "passed": true,
+      "details": {
+        "addFirstResult": {
+          "success": true,
+          "ok": true,
+          "message": "‘풋바 분절 호흡 워밍업 (초보 호흡 유도형)’ 동작을 현재 수업에 넣었습니다."
+        },
+        "firstStepTransitionSec": 0,
+        "firstStepExplanationSec": 25,
+        "firstStepDurationMin": 3
+      }
+    },
+    {
+      "id": "A3-02",
+      "category": "block-insert-undo-and-transition",
+      "title": "insertIdeaReusableBlockToCurrentClass records undo snapshot in undoStack and sets non-zero transitionSec when appended after existing steps",
+      "passed": false,
+      "details": {
+        "insertBlockRes": {
+          "success": true,
+          "ok": true,
+          "blockInstanceId": "block-inst-block-1794014718366-v2qkcz-v2-1794014718525-tqrx",
+          "addedStepCount": 2,
+          "message": "‘리포머 코어·스트랩 세트 블록’ 재사용 블록(2개 동작)을 현재 수업 시퀀스에 복사해 넣었습니다."
+        },
+        "undoDepthBeforeBlock": 0,
+        "undoDepthAfterBlock": 0,
+        "blockFirstInsertedStepOrder": 2,
+        "blockFirstInsertedStepTransitionSec": 0
+      }
+    },
+    {
+      "id": "A3-03",
+      "category": "block-instance-isolation",
+      "title": "Editing, scaling, duplicating, and removing a sequence block instance marks detached=true and never mutates the ReusableBlock template",
+      "passed": true,
+      "details": {
+        "templateItem0Duration": 3,
+        "detachedFlags": [
+          true,
+          true
+        ],
+        "scaledInstanceDurations": [
+          6.083333,
+          4.916667
+        ],
+        "duplicatedStepCount": 5,
+        "afterRemoveCopyStepCount": 3
+      }
+    },
+    {
+      "id": "A4-01",
+      "category": "rest-step-boundaries",
+      "title": "Rest steps carry 0 explanation/transition/movementSec, count toward restSec+totalSec, and sequenceSchema rejects restSec >= targetMinutes",
+      "passed": true,
+      "details": {
+        "restStep": {
+          "kind": "rest",
+          "stepId": "step-rest-1794014718562-azvq",
+          "order": 3,
+          "blockCategory": "warmup",
+          "exerciseId": "",
+          "durationMin": 2,
+          "selectedLayer": "standard"
+        },
+        "durationsWithRest": {
+          "totalSec": 960,
+          "exerciseSec": 840,
+          "restSec": 120
+        },
+        "excessiveRestSeqValid": false
+      }
+    },
+    {
+      "id": "A4-02",
+      "category": "step-time-estimate-boundaries",
+      "title": "calculateStepTimeEstimate computes movingSec + holdingSec + breathingSec + restingSec + switchingSec + explanationSec + transitionSec and enforces 30..1200s bounds",
+      "passed": true,
+      "details": {
+        "estUnilateral2Sets": {
+          "success": true,
+          "value": {
+            "version": 1,
+            "repetitions": 8,
+            "sets": 3,
+            "sides": 2,
+            "secondsPerRep": 6,
+            "holdSecPerRep": 0,
+            "breathsPerSet": 0,
+            "secondsPerBreath": 0,
+            "restBetweenSetsSec": 15,
+            "sideSwitchSec": 10,
+            "explanationSec": 20,
+            "transitionSec": 15
+          },
+          "movingSec": 288,
+          "holdingSec": 0,
+          "breathingSec": 0,
+          "restingSec": 60,
+          "switchingSec": 10,
+          "totalSec": 393,
+          "durationMin": 6.55
+        },
+        "estBelowMinRejected": {
+          "success": false,
+          "message": "계산한 블록 총시간은 30초–20분이어야 합니다. 긴 구성은 여러 블록으로 나누어 주세요."
+        },
+        "estAboveMaxRejected": {
+          "success": false,
+          "message": "계산한 블록 총시간은 30초–20분이어야 합니다. 긴 구성은 여러 블록으로 나누어 주세요."
+        },
+        "estRepeatingFloat": {
+          "success": true,
+          "value": {
+            "version": 1,
+            "repetitions": 8,
+            "sets": 2,
+            "sides": 1,
+            "secondsPerRep": 6,
+            "holdSecPerRep": 0,
+            "breathsPerSet": 0,
+            "secondsPerBreath": 0,
+            "restBetweenSetsSec": 13,
+            "sideSwitchSec": 0,
+            "explanationSec": 25,
+            "transitionSec": 15
+          },
+          "movingSec": 96,
+          "holdingSec": 0,
+          "breathingSec": 0,
+          "restingSec": 13,
+          "switchingSec": 0,
+          "totalSec": 149,
+          "durationMin": 2.4833333333333334
+        },
+        "durationMinString": "2.4833333333333334"
+      }
+    },
+    {
+      "id": "A5-01",
+      "category": "sequence-simulation-and-snapshot",
+      "title": "buildSequenceSimulation & createClassSequenceSnapshot preserve movementSec + teachingSec + transitionSec + restSec === totalSec, seek cleanly into rest/side segments, and clone snapshots without mutating originals",
+      "passed": true,
+      "details": {
+        "simTotals": {
+          "totalSec": 870,
+          "exerciseSec": 810,
+          "movementSec": 681,
+          "teachingSec": 80,
+          "transitionSec": 49,
+          "restSec": 60,
+          "unavailableSec": 0
+        },
+        "simGate": {
+          "canRehearse": true,
+          "reasons": [
+            {
+              "code": "target-mismatch",
+              "message": "목표보다 30초 짧아요. 현재 계획 시간으로 미리볼 수 있습니다.",
+              "stepIndices": []
+            }
+          ]
+        },
+        "seekMidRestKind": "rest",
+        "oddUnilateralPerSideSec": 25.5,
+        "snapshotTimeBreakdown": {
+          "movementSec": 750,
+          "explanationSec": 70,
+          "transitionSec": 20,
+          "restSec": 120,
+          "totalSec": 960
+        }
+      }
+    },
+    {
+      "id": "A6-01",
+      "category": "browser-timing-ui",
+      "title": "Browser UI renders live timing breakdown in MovementIdeaSheet and StepTimeEstimateEditor inside StepBlockInspector",
+      "passed": true,
+      "details": {
+        "ideaUiState": {
+          "previewText": "하위 시간 합산: 총 240초 (4분)순수 동작 200초 + 설명 20초 + 전환 20초"
+        },
+        "afterEnableEstimate": {
+          "detailsFound": true,
+          "liveRegionText": "가정 총시간 02:37움직임 120초 + 유지 0초 + 별도 호흡 0초 + 세트 쉼 12초 + 좌우 이동 5초 + 티칭 20초 + 기구·동작 전환 0초현재 편집란 04:00. 확인 후 아래 버튼으로만 바뀝니다."
+        },
+        "durationAfterApply": "2.6166666666666667",
+        "reopenedDurationInput": {
+          "durationInputValue": "2.6166666666666667"
+        }
+      }
+    }
+  ],
+  "defects": [
+    {
+      "id": "DEF-A01",
+      "track": "A",
+      "severity": "medium",
+      "title": "단일 방향 편측(sideMode=\"left\"|\"right\") 동작 저장 시 isUnilateral=true로 기록되어 기본 좌우 모드(동작 기본)에서 2방향(양쪽 교대)으로 오계산됨",
+      "files": [
+        "src/utils/movementIdeaDraft.ts:875",
+        "src/utils/sequenceEngine.ts:393-400",
+        "src/utils/sequenceEngine.ts:412-428"
+      ],
+      "reproduction": "MovementIdeaSheet에서 좌우 수행 방식을 \"왼쪽만(left)\" 또는 \"오른쪽만(right)\"으로 선택해 저장하면 saveMovementIdeaDraft(875행)는 isUnilateral: sideMode !== \"together\"로 true를 저장합니다. 이후 해당 동작을 보관함에서 추가하거나 인스펙터에서 수행할 쪽을 \"동작 기본\"(undefined)으로 두면 getStepTiming(398행)과 getStepSideLabels(426행)가 exercise.isUnilateral === true만 보고 sides=2(첫 번째 쪽 45초 + 반대쪽 45초)로 2분할 계산합니다.",
+      "minimalFix": "saveMovementIdeaDraft(875행)에서 isUnilateral은 양방향 교대 수행(sideMode === \"left-then-right\" || sideMode === \"right-then-left\")일 때만 true로 설정하거나, 동작 기본 sideMode 메타데이터를 보존해 단일 방향(sides=1)과 양방향 교대(sides=2)를 구분합니다."
+    },
+    {
+      "id": "DEF-A02",
+      "track": "A",
+      "severity": "high",
+      "title": "반복·세트 경계값 불일치(블록 500/50 vs 동작·스텝 1000/100)로 인한 미처리 ZodError 예외 발생, 블록 생성 거부 및 기존 반복·세트 값 초기화 불가",
+      "files": [
+        "src/components/MovementIdeaSheet.tsx:314-340",
+        "src/utils/movementIdeaDraft.ts:802-849",
+        "src/utils/humanMovementCreation.ts:96",
+        "src/utils/hierarchyModel.ts:127-128",
+        "src/utils/hierarchyModel.ts:185-186"
+      ],
+      "reproduction": "1) MovementIdeaSheet는 <form noValidate>를 사용하므로 횟수 1000 초과(예: 1500) 또는 세트 100 초과(예: 150) 입력 후 저장 시, saveMovementIdeaDraft(830행) 내부 syncHumanDraftOnSave가 try/catch 없이 ZodError를 던져 UI 에러 배너 표시 없이 클릭 핸들러가 중단됩니다.\n2) 횟수 501~1000(예: 600) 또는 세트 51~100(예: 60)은 새 동작 저장에서는 통과(humanMovementCreation.ts 상한 1000/100)하지만, 해당 동작으로 중간 블록 생성(saveIdeaToReusableBlock) 시 reusableBlockItemSchema(hierarchyModel.ts:185행, 상한 500/50)에서 ZodError로 실패합니다.\n3) 이미 저장한 동작을 다시 열어 횟수·세트·설명·전환 입력칸을 비우거나 0을 입력해도 saveMovementIdeaDraft(807, 811, 817, 821행)가 existingMeta 값을 재사용해 값을 지울 수 없습니다.",
+      "minimalFix": "saveMovementIdeaDraft에서 repetitions/sets 상한을 전 계층 공통 범위(예: 1..500 / 1..50)로 클램프하거나 검증 실패 시 { success: false, error }를 반환하도록 try/catch로 감싸고, 수정 시 빈 값(undefined)이 전달되면 existingMeta 폴백 대신 undefined로 초기화합니다."
+    },
+    {
+      "id": "DEF-A05",
+      "track": "A",
+      "severity": "medium",
+      "title": "재사용 블록을 현재 수업에 삽입할 때 실행 취소 스택(undoStack) 및 수업 기구(activeApparatus) 동기화가 누락됨",
+      "files": [
+        "src/utils/movementIdeaDraft.ts:1503-1514",
+        "src/utils/hierarchyModel.ts:1462-1521"
+      ],
+      "reproduction": "insertIdeaReusableBlockToCurrentClass(1508행)가 edit(state, ...) 헬퍼를 거치지 않고 usePilatesStore.setState({ activeSteps: inserted.steps, ... })를 직접 호출하여 undoStack에 이전 스냅샷이 저장되지 않습니다. 그 결과 블록 삽입 직후 \"되돌리기(undoSequence)\"를 누르면 블록 삽입만 취소되는 대신 그 이전 단계로 되돌아가거나 되돌리기 버튼이 비활성화되며, 빈 수업에 리포머 블록을 넣어도 activeApparatus가 기본값(\"mat\")으로 남습니다.",
+      "minimalFix": "insertIdeaReusableBlockToCurrentClass에서 undoStack에 현재 스냅샷을 추가하고, 기존 activeSteps가 비어 있었을 경우 activeApparatus를 block.apparatus로 동기화합니다."
+    },
+    {
+      "id": "DEF-A06",
+      "track": "A",
+      "severity": "low",
+      "title": "반복·세트 자동 시간 계산(calculateStepTimeEstimate) 시 60으로 나누어떨어지지 않는 초(totalSec)가 무한소수 분(예: 2.4833333333333334)으로 블록 총시간 입력칸에 그대로 노출됨",
+      "files": [
+        "src/utils/stepTimeEstimate.ts:42",
+        "src/components/StepBlockInspector.tsx:232",
+        "src/components/StepBlockInspector.tsx:351"
+      ],
+      "reproduction": "StepBlockInspector의 \"반복·유지·호흡으로 시간 계산\"에서 60으로 나누어떨어지지 않는 합계(예: 149초 또는 179초)를 계산한 뒤 \"계산값을 편집란에 넣기\"를 누르면 totalSec / 60이 반올림 없이 그대로 String(durationMin)에 대입되어, 블록 총시간(분) 입력칸에 \"2.4833333333333334\" 같은 17자리 부동소수점 문자열이 표시됩니다.",
+      "minimalFix": "calculateStepTimeEstimate(stepTimeEstimate.ts:42행) 또는 StepBlockInspector(351행)에서 Number((totalSec / 60).toFixed(2))로 소수 둘째 자리 반올림 처리합니다."
+    },
+    {
+      "id": "DEF-A07",
+      "track": "A",
+      "severity": "low",
+      "title": "홀수 실제 동작 시간(movementSec)의 양방향 편측 동작에서 시퀀스 엔진(getStepTiming/buildSequenceSimulation)은 소수점 초(.5초)를 반환하고 인스펙터/초안 시트는 내림(Math.floor) 초를 표시함",
+      "files": [
+        "src/utils/sequenceEngine.ts:404",
+        "src/utils/sequenceSimulation.ts:220",
+        "src/utils/movementIdeaDraft.ts:501",
+        "src/components/StepBlockInspector.tsx:266"
+      ],
+      "reproduction": "양방향 편측 동작(left-then-right)의 실제 동작 시간(movementSec)이 51초(예: 전체 90초 - 설명 20초 - 전환 19초)일 때 getStepTiming과 buildSequenceSimulation은 perSideSec = 25.5초를 반환하는 반면, StepBlockInspector(266행)와 calculateIdeaStepTimeBreakdown(501행)은 Math.floor(51 / 2) = 25초로 표시합니다.",
+      "minimalFix": "getStepTiming 및 buildSequenceSimulation의 편측 시간 표시/계산을 계약서(MOVEMENT_CREATION_HIERARCHY_CONTRACT.md)에 맞춰 Math.floor(movementSec / 2)로 통일하거나 나머지 1초 배분 규칙을 명시합니다."
+    }
+  ]
+}

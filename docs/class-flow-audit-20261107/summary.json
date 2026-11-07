@@ -1,0 +1,149 @@
+{
+  "auditId": "class-flow-audit-20261107",
+  "startedAt": "2026-11-07T01:25:13.326Z",
+  "completedAt": "2026-11-07T01:25:41.153Z",
+  "totalAssertions": 26,
+  "totalPassed": 19,
+  "totalFailed": 7,
+  "totalReproducedDefects": 9,
+  "tracks": {
+    "trackA": {
+      "passedCount": 11,
+      "failedCount": 3,
+      "totalAssertions": 14,
+      "defectCount": 5
+    },
+    "trackB": {
+      "passedCount": 5,
+      "failedCount": 2,
+      "totalAssertions": 7,
+      "defectCount": 2
+    },
+    "trackC": {
+      "passedCount": 3,
+      "failedCount": 2,
+      "totalAssertions": 5,
+      "defectCount": 2
+    }
+  },
+  "defects": [
+    {
+      "id": "DEF-A01",
+      "track": "A",
+      "severity": "medium",
+      "title": "단일 방향 편측(sideMode=\"left\"|\"right\") 동작 저장 시 isUnilateral=true로 기록되어 기본 좌우 모드(동작 기본)에서 2방향(양쪽 교대)으로 오계산됨",
+      "files": [
+        "src/utils/movementIdeaDraft.ts:875",
+        "src/utils/sequenceEngine.ts:393-400",
+        "src/utils/sequenceEngine.ts:412-428"
+      ],
+      "reproduction": "MovementIdeaSheet에서 좌우 수행 방식을 \"왼쪽만(left)\" 또는 \"오른쪽만(right)\"으로 선택해 저장하면 saveMovementIdeaDraft(875행)는 isUnilateral: sideMode !== \"together\"로 true를 저장합니다. 이후 해당 동작을 보관함에서 추가하거나 인스펙터에서 수행할 쪽을 \"동작 기본\"(undefined)으로 두면 getStepTiming(398행)과 getStepSideLabels(426행)가 exercise.isUnilateral === true만 보고 sides=2(첫 번째 쪽 45초 + 반대쪽 45초)로 2분할 계산합니다.",
+      "minimalFix": "saveMovementIdeaDraft(875행)에서 isUnilateral은 양방향 교대 수행(sideMode === \"left-then-right\" || sideMode === \"right-then-left\")일 때만 true로 설정하거나, 동작 기본 sideMode 메타데이터를 보존해 단일 방향(sides=1)과 양방향 교대(sides=2)를 구분합니다."
+    },
+    {
+      "id": "DEF-A02",
+      "track": "A",
+      "severity": "high",
+      "title": "반복·세트 경계값 불일치(블록 500/50 vs 동작·스텝 1000/100)로 인한 미처리 ZodError 예외 발생, 블록 생성 거부 및 기존 반복·세트 값 초기화 불가",
+      "files": [
+        "src/components/MovementIdeaSheet.tsx:314-340",
+        "src/utils/movementIdeaDraft.ts:802-849",
+        "src/utils/humanMovementCreation.ts:96",
+        "src/utils/hierarchyModel.ts:127-128",
+        "src/utils/hierarchyModel.ts:185-186"
+      ],
+      "reproduction": "1) MovementIdeaSheet는 <form noValidate>를 사용하므로 횟수 1000 초과(예: 1500) 또는 세트 100 초과(예: 150) 입력 후 저장 시, saveMovementIdeaDraft(830행) 내부 syncHumanDraftOnSave가 try/catch 없이 ZodError를 던져 UI 에러 배너 표시 없이 클릭 핸들러가 중단됩니다.\n2) 횟수 501~1000(예: 600) 또는 세트 51~100(예: 60)은 새 동작 저장에서는 통과(humanMovementCreation.ts 상한 1000/100)하지만, 해당 동작으로 중간 블록 생성(saveIdeaToReusableBlock) 시 reusableBlockItemSchema(hierarchyModel.ts:185행, 상한 500/50)에서 ZodError로 실패합니다.\n3) 이미 저장한 동작을 다시 열어 횟수·세트·설명·전환 입력칸을 비우거나 0을 입력해도 saveMovementIdeaDraft(807, 811, 817, 821행)가 existingMeta 값을 재사용해 값을 지울 수 없습니다.",
+      "minimalFix": "saveMovementIdeaDraft에서 repetitions/sets 상한을 전 계층 공통 범위(예: 1..500 / 1..50)로 클램프하거나 검증 실패 시 { success: false, error }를 반환하도록 try/catch로 감싸고, 수정 시 빈 값(undefined)이 전달되면 existingMeta 폴백 대신 undefined로 초기화합니다."
+    },
+    {
+      "id": "DEF-A05",
+      "track": "A",
+      "severity": "medium",
+      "title": "재사용 블록을 현재 수업에 삽입할 때 실행 취소 스택(undoStack) 및 수업 기구(activeApparatus) 동기화가 누락됨",
+      "files": [
+        "src/utils/movementIdeaDraft.ts:1503-1514",
+        "src/utils/hierarchyModel.ts:1462-1521"
+      ],
+      "reproduction": "insertIdeaReusableBlockToCurrentClass(1508행)가 edit(state, ...) 헬퍼를 거치지 않고 usePilatesStore.setState({ activeSteps: inserted.steps, ... })를 직접 호출하여 undoStack에 이전 스냅샷이 저장되지 않습니다. 그 결과 블록 삽입 직후 \"되돌리기(undoSequence)\"를 누르면 블록 삽입만 취소되는 대신 그 이전 단계로 되돌아가거나 되돌리기 버튼이 비활성화되며, 빈 수업에 리포머 블록을 넣어도 activeApparatus가 기본값(\"mat\")으로 남습니다.",
+      "minimalFix": "insertIdeaReusableBlockToCurrentClass에서 undoStack에 현재 스냅샷을 추가하고, 기존 activeSteps가 비어 있었을 경우 activeApparatus를 block.apparatus로 동기화합니다."
+    },
+    {
+      "id": "DEF-A06",
+      "track": "A",
+      "severity": "low",
+      "title": "반복·세트 자동 시간 계산(calculateStepTimeEstimate) 시 60으로 나누어떨어지지 않는 초(totalSec)가 무한소수 분(예: 2.4833333333333334)으로 블록 총시간 입력칸에 그대로 노출됨",
+      "files": [
+        "src/utils/stepTimeEstimate.ts:42",
+        "src/components/StepBlockInspector.tsx:232",
+        "src/components/StepBlockInspector.tsx:351"
+      ],
+      "reproduction": "StepBlockInspector의 \"반복·유지·호흡으로 시간 계산\"에서 60으로 나누어떨어지지 않는 합계(예: 149초 또는 179초)를 계산한 뒤 \"계산값을 편집란에 넣기\"를 누르면 totalSec / 60이 반올림 없이 그대로 String(durationMin)에 대입되어, 블록 총시간(분) 입력칸에 \"2.4833333333333334\" 같은 17자리 부동소수점 문자열이 표시됩니다.",
+      "minimalFix": "calculateStepTimeEstimate(stepTimeEstimate.ts:42행) 또는 StepBlockInspector(351행)에서 Number((totalSec / 60).toFixed(2))로 소수 둘째 자리 반올림 처리합니다."
+    },
+    {
+      "id": "DEF-A07",
+      "track": "A",
+      "severity": "low",
+      "title": "홀수 실제 동작 시간(movementSec)의 양방향 편측 동작에서 시퀀스 엔진(getStepTiming/buildSequenceSimulation)은 소수점 초(.5초)를 반환하고 인스펙터/초안 시트는 내림(Math.floor) 초를 표시함",
+      "files": [
+        "src/utils/sequenceEngine.ts:404",
+        "src/utils/sequenceSimulation.ts:220",
+        "src/utils/movementIdeaDraft.ts:501",
+        "src/components/StepBlockInspector.tsx:266"
+      ],
+      "reproduction": "양방향 편측 동작(left-then-right)의 실제 동작 시간(movementSec)이 51초(예: 전체 90초 - 설명 20초 - 전환 19초)일 때 getStepTiming과 buildSequenceSimulation은 perSideSec = 25.5초를 반환하는 반면, StepBlockInspector(266행)와 calculateIdeaStepTimeBreakdown(501행)은 Math.floor(51 / 2) = 25초로 표시합니다.",
+      "minimalFix": "getStepTiming 및 buildSequenceSimulation의 편측 시간 표시/계산을 계약서(MOVEMENT_CREATION_HIERARCHY_CONTRACT.md)에 맞춰 Math.floor(movementSec / 2)로 통일하거나 나머지 1초 배분 규칙을 명시합니다."
+    },
+    {
+      "id": "DEF-B01",
+      "track": "B",
+      "severity": "medium",
+      "title": "구간(준비·본운동·마무리) 경계를 넘어 동작 순서를 변경하면 classSection/blockCategory가 갱신되지 않아 동일 구간 헤더(\"본운동\")가 여러 개로 쪼개짐",
+      "files": [
+        "src/store/usePilatesStore.ts:1660-1695",
+        "src/components/SequenceWorkbench.tsx:436-445"
+      ],
+      "reproduction": "1) 기본 8동작 시퀀스(준비 1 + 본운동 6 + 마무리 1)에서 1번 '준비(warmup)' 카드를 드래그하여 '본운동' 2번째 위치로 이동합니다.\n2) reorderStep(usePilatesStore.ts:1660행)은 배열 순서와 order만 변경하고 이동한 위치의 구간(classSection/blockCategory)을 갱신하지 않습니다.\n3) 그 결과 SequenceWorkbench.tsx:440-445행의 sectionRuns가 [] 총 4개 섹션 블록으로 쪼개져 '본운동' 헤더가 중복 렌더링됩니다.",
+      "screenshot": "docs/class-flow-audit-20261107/track-b/screenshots/track-b-04-section-header-fragmentation.png",
+      "minimalFix": "reorderStep/moveStep 수행 시 인접 목표 카드의 구간(getSequenceStepClassSection)에 맞춰 이동한 스텝의 classSection을 동기화하거나, 섹션 그룹핑을 고정 3구간으로 유지합니다."
+    },
+    {
+      "id": "DEF-B02",
+      "track": "B",
+      "severity": "low",
+      "title": "구간 헤더(.pf-sequence-block)를 넘어 드래그할 때 sequenceDrag.ts의 gap 계산이 섹션 헤더 높이를 카드 간격으로 오인해 대상 카드들이 섹션 헤더 위로 과도하게 밀려 올라감",
+      "files": [
+        "src/utils/sequenceDrag.ts:205-215"
+      ],
+      "reproduction": "1) 1번 '준비' 카드와 2번 '본운동' 첫 카드 사이에는 '본운동' 섹션 헤더가 있어 수직 간격이 79px인 반면, 같은 섹션 내부 카드 간격은 18px입니다.\n2) sequenceDrag.ts:207행은 positions[from + 1].top - source.top - source.height(79px)를 모든 카드의 공통 gap으로 사용하여 shift = source.height + gap(translateY(-234.734px))만큼 이동시킵니다.\n3) 이로 인해 드래그 중 본운동 카드들이 실제 카드 간격보다 61px 더 위로 이동하여 본운동 섹션 헤더와 겹칩니다.",
+      "screenshot": "docs/class-flow-audit-20261107/track-b/screenshots/track-b-04-section-header-fragmentation.png",
+      "minimalFix": "sequenceDrag.ts:205-215에서 단일 인접 간격(positions[from ± 1]) 대신 이동 대상 카드가 속한 섹션 내 표준 카드 간격(또는 각 인접 쌍 중 동일 부모 컨테이너 내 간격, 기본 10~12px)을 사용하도록 수정합니다."
+    },
+    {
+      "id": "DEF-C01",
+      "track": "C",
+      "severity": "medium",
+      "title": "모바일(320·390px)에서 시퀀스가 있을 때 새 동작 추가 버튼이 화면 최하단으로 숨겨지고, 동작 생성 후에는 접기(collapse) 없는 .pf-workbench-ideas 섹션이 시퀀스 상단을 차지해 첫 수업 카드를 아래로 밀어냄",
+      "files": [
+        "src/components/SequenceWorkbench.tsx:583-701",
+        "src/components/SequenceWorkbench.tsx:1274-1291"
+      ],
+      "reproduction": "1) 시퀀스에 동작이 1개 이상 있고(activeSteps.length > 0) 아직 저장한 새 동작 메모가 0개일 때, 상단 환영 배너(.workbench-welcome)가 사라지면서 \"한 줄 동작 메모\" 진입 버튼이 시퀀스 전체 목록 맨 아래(.pf-flow-continuation, 390x844 기준 y=3050px, 3.61화면 아래)에만 존재합니다.\n2) 반대로 새 동작 메모를 1개 이상 저장하면 .pf-workbench-ideas 섹션이 접기 토글 없이 시퀀스 상단(628행)에 펼쳐져 첫 시퀀스 동작 카드(.flow-step-card) 위치가 390px에서 +601px(y=1155px), 320px에서 y=1174px(2.07화면 아래)로 밀려납니다.",
+      "screenshot": "docs/class-flow-audit-20261107/track-c/screenshots/track-c-workbench-320-100.png",
+      "minimalFix": "1) 시퀀스 상단 .sequence-tools(945행, \"동작 더 담기\" 옆)에 \"한 줄 동작 메모\" 빠른 진입 버튼을 상시 배치합니다.\n2) .pf-workbench-ideas 섹션을 접을 수 있는 요약형(<details> 또는 카운트 칩)으로 제공하여 모바일에서 첫 시퀀스 동작 카드가 첫 화면 내에 보이도록 개선합니다."
+    },
+    {
+      "id": "DEF-C02",
+      "track": "C",
+      "severity": "low",
+      "title": "320px·390px 200% 확대 시 일부 툴바/모달 요소에서 가로 스크롤(overflow) 발생",
+      "files": [
+        "src/App.css",
+        "src/components/MovementIdeaSheet.tsx:860-1065"
+      ],
+      "reproduction": "320px/390px 뷰포트에서 200% 확대 적용 시 최소 폭이 있는 상단 영역 및 모달 내부 컨트롤이 실효 폭을 초과하여 가로 오버플로우가 발생합니다.",
+      "screenshot": "docs/class-flow-audit-20261107/track-c/screenshots/track-c-workbench-320-200.png",
+      "minimalFix": "초소형 실효 폭(@media (max-width: 360px))에서 .teaching-form-grid 및 툴바 버튼 그룹에 grid-template-columns: minmax(0, 1fr)과 flex-wrap: wrap; min-width: 0을 적용합니다."
+    }
+  ]
+}
