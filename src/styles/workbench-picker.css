@@ -33,3 +33,34 @@
     grid-column: 1 / -1;
   }
 }
+
+/* Keep the replacement scope readable beside a long action label. */
+#root .vnext-shell .vnext-workbench .regenerate-bar > label {
+  flex: 0 0 auto;
+}
+#root .vnext-shell .vnext-workbench .regenerate-bar select {
+  width: 144px;
+  min-width: 144px;
+  max-width: 100%;
+  min-height: 44px;
+}
+#root .vnext-shell .vnext-workbench .regenerate-bar > button {
+  flex: 1 1 240px;
+  min-width: 0;
+  white-space: normal;
+}
+
+#root .vnext-shell .vnext-workbench .workbench-material-notes {
+  margin: 0 0 12px;
+  color: var(--studio-ink);
+  font-size: 0.875rem;
+}
+#root .vnext-shell .vnext-workbench .workbench-material-notes > summary {
+  min-height: 44px;
+  padding: 12px 0;
+  cursor: pointer;
+}
+#root .vnext-shell .vnext-workbench .workbench-material-notes > p {
+  margin: 0 0 12px;
+  line-height: 1.6;
+}

@@ -15,6 +15,45 @@ const { artifactDirectory } = require('./artifact-directory.cjs');
       await p.getByRole('searchbox').fill('골반시계');
       await p.getByRole('button', { name: '골반 시계 수업안에 추가', exact: true }).click();
       await p.getByRole('button', { name: '수업 구성으로 돌아가기', exact: true }).click();
+      const material = p.locator('.workbench-material-notes');
+      assert.equal(await material.getAttribute('open'), null);
+      assert.equal(await material.locator('p').isVisible(), false);
+      assert.ok(await p.getByText('검토 전 자료', { exact: true }).first().isVisible());
+      await material.locator('summary').focus();
+      await p.keyboard.press('Enter');
+      assert.ok(await material.locator('p').isVisible());
+      await p.keyboard.press('Enter');
+      assert.equal(await material.locator('p').isVisible(), false);
+      const globalNotice = p.locator('.instructor-review-notice');
+      const recordsLink = globalNotice.getByRole('button', { name: '동작 자료·기록 보기' });
+      assert.equal(await recordsLink.isVisible(), false);
+      await globalNotice.locator('summary').click();
+      assert.ok(await recordsLink.isVisible());
+      await globalNotice.locator('summary').click();
+      assert.equal(await recordsLink.isVisible(), false);
+      const scope = p.getByRole('combobox', { name: '다시 만들 구간' });
+      await scope.scrollIntoViewIfNeeded();
+      const scopeMetrics = await scope.evaluate((el) => {
+        const style = getComputedStyle(el);
+        const ctx = document.createElement('canvas').getContext('2d');
+        ctx.font = style.font;
+        return {
+          width: el.getBoundingClientRect().width,
+          needed:
+            ctx.measureText(el.selectedOptions[0].text).width +
+            parseFloat(style.paddingLeft) +
+            parseFloat(style.paddingRight) +
+            24,
+        };
+      });
+      assert.ok(
+        scopeMetrics.width >= scopeMetrics.needed,
+        JSON.stringify({ width, ...scopeMetrics }),
+      );
+      for (const value of ['warmup', 'main', 'cooldown', 'all']) {
+        await scope.selectOption(value);
+        assert.equal(await scope.inputValue(), value);
+      }
       const add = p.locator('.workbench-add-movement');
       await add.scrollIntoViewIfNeeded();
       assert.equal((await add.innerText()).trim(), '동작 추가');
@@ -42,6 +81,12 @@ const { artifactDirectory } = require('./artifact-directory.cjs');
           assert.ok(a.right <= z.x || z.right <= a.x || a.bottom <= z.y || z.bottom <= a.y);
         }
       await p.screenshot({ path: out + '/next-' + width + '.png' });
+      await material.scrollIntoViewIfNeeded();
+      await p.screenshot({ path: out + '/material-closed-' + width + '.png' });
+      await material.locator('summary').click();
+      await material.locator('p').scrollIntoViewIfNeeded();
+      await p.screenshot({ path: out + '/material-open-' + width + '.png' });
+      await material.locator('summary').click();
       await add.focus();
       await p.keyboard.press('Enter');
       await p.getByRole('searchbox').fill('서서 발목 움직임');
