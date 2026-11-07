@@ -76,7 +76,11 @@ export function verifyPwaBuild(outputDirectory = 'dist') {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
-  assert.ok(process.argv.length <= 3, 'Usage: node scripts/check-pwa-build.mjs [build-directory]');
-  const count = verifyPwaBuild(process.argv[2]);
+  assert.ok(
+    process.argv.length <= 3 && (process.argv[2] === undefined || process.argv[2] === 'dist'),
+    'Usage: node scripts/check-pwa-build.mjs [dist]. Only this checkout’s dist is supported.',
+  );
+  // The production build always emits dist. Never turn a CLI argument into a filesystem path.
+  const count = verifyPwaBuild();
   console.log(`PWA build verified: ${count} real static files, manifest and PNG icons.`);
 }

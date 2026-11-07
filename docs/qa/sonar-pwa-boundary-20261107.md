@@ -31,7 +31,7 @@
 
 PWA 검사 CLI만 수정했다. 앱, 서비스 워커 생성기, 인증, 사용자 데이터는 변경하지 않았다.
 
-- 빌드 루트는 이 checkout의 하위 디렉터리만 허용한다. 상대 경로는 checkout 기준으로 해석한다. 저장소 밖 빌드 출력은 더 이상 허용하지 않는다.
+- CLI는 실제 빌드가 사용하는 이 checkout의 `dist`만 검사한다. 인자 생략 또는 정확히 `dist`만 허용하고, 임의 CLI 문자열은 파일시스템 경로로 전달하지 않는다. 회귀 테스트용 프로그램 인터페이스도 checkout 하위 경로와 실제 경로 경계를 검증한다.
 - 루트, 파일, assets 디렉터리의 실제 경로를 확인해 심볼릭 링크가 승인 범위를 벗어나면 읽기 전에 거부한다.
 - manifest 아이콘은 icons 하위 PNG 경로만 허용한다.
 - 정규 파일 여부, 기존 precache 중복/누락/비어 있음, manifest 및 PNG 검사를 유지한다.
@@ -40,7 +40,7 @@ PWA 검사 CLI만 수정했다. 앱, 서비스 워커 생성기, 인증, 사용�
 ## 검증
 
 - 합성 외부 빌드 입력: 기존 코드 exit 0, 수정 코드 경로 거부 exit 1.
-- Node 회귀 15/15: 내부 절대/상대 경로, 다른 cwd, 외부 경로, 루트/파일/assets 심볼릭 링크, 아이콘 경로 이탈, 기존 중복/누락 검사.
+- Node 회귀 15/15: 내부 절대/상대 경로, 다른 cwd의 CLI 임의 경로 거부, 외부 경로, 루트/파일/assets 심볼릭 링크, 아이콘 경로 이탈, 기존 중복/누락 검사.
 - TypeScript 빌드 검사 통과. Vite 빌드와 PWA 실제 40파일 검사 통과.
 - ESLint 오류 0, 기존 MotionAuthoringBatchFigure의 Fast Refresh 경고 1. 번들 크기 경고는 그대로 유지했다.
 - motion-study ledger 검사와 Node 회귀 6/6 통과.
@@ -48,6 +48,6 @@ PWA 검사 CLI만 수정했다. 앱, 서비스 워커 생성기, 인증, 사용�
 
 검증에는 기존 설치 의존성을 사용했다. 최초 연결한 이전 설치에 Firebase가 빠져 타입 검사와 일부 테스트 로딩이 실패했다. 불완전한 테스트 실행은 중단하고 동일 package.json의 Firebase 13.2.0이 설치된 의존성으로 다시 검증했다. 공유 설치를 삭제하거나 의존성을 변경하지 않았다. pnpm의 자동 설치 제안은 진행하지 않고 설치된 eslint, tsc, vite, vitest 실행 파일로 package scripts와 동등한 명령을 실행했다.
 
-SonarCloud의 이 변경에 대한 새 분석은 아직 실행하지 않았다. 보완 성공을 전체 Quality Gate 통과로 주장하지 않는다. 운영 배포, 유료 API, Gemini 요청은 수행하지 않았다.
+PR #1의 첫 실제 SonarCloud 분석에서는 신규 신뢰성 A, 중복 0%였으나 임의 CLI 경로 흐름에 대한 보안 C가 남았다. 이에 CLI 입력을 고정된 dist로 제한해 경로 주입 표면 자체를 제거했다. 후속 분석 결과는 원격에서 확인한다. PR 결과와 전체 main Quality Gate를 구분한다. 운영 배포, 유료 API, Gemini 요청은 수행하지 않았다.
 
 재현 명령: `node --test scripts/check-pwa-build.node-test.mjs`, `pnpm test`, `pnpm lint`, `pnpm check:motion-study`, `pnpm build`.

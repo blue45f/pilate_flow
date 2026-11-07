@@ -42,14 +42,17 @@ test('accepts absolute and checkout-relative build directories', (t) => {
   assert.equal(verifyPwaBuild(path.relative(projectRoot, root)), 3);
 });
 
-test('CLI succeeds from another working directory without reading that directory', (t) => {
+test('CLI rejects directory overrides from another working directory', (t) => {
   const { root } = fixture(t);
-  const result = spawnSync(process.execPath, [script, path.relative(projectRoot, root)], {
-    cwd: os.tmpdir(),
-    encoding: 'utf8',
-  });
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /PWA build verified: 3 real static files/);
+  for (const argument of [root, path.relative(projectRoot, root), '../dist', 'dist/../dist', '']) {
+    const result = spawnSync(process.execPath, [script, argument], {
+      cwd: os.tmpdir(),
+      encoding: 'utf8',
+    });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Only this checkout’s dist is supported/);
+    assert.doesNotMatch(result.stdout, /PWA build verified/);
+  }
 });
 
 test('rejects an outside build root even when its build files are otherwise valid', (t) => {
