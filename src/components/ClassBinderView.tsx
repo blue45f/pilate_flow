@@ -91,6 +91,39 @@ const formatDate = (date: string) =>
         month: 'short',
         day: 'numeric',
       });
+const getHistoryDateKey = (date: string) => {
+  const raw = date.trim().slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const parsed = Date.parse(date);
+  if (Number.isNaN(parsed)) return 'unknown';
+  const dt = new Date(parsed);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+};
+const formatHistoryTimeOfDay = (date: string) => {
+  if (!date.includes('T') || Number.isNaN(Date.parse(date))) return null;
+  const rawTime = date.split('T')[1]?.slice(0, 5);
+  if (rawTime === '00:00') return null;
+  return new Date(date).toLocaleTimeString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+};
+const formatDateWithWeekday = (date: string) =>
+  Number.isNaN(Date.parse(date))
+    ? '날짜 미상'
+    : new Date(date).toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        weekday: 'short',
+      });
+const normalizeSearchToken = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ');
+const normalizeCompactSearch = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s.\-/년월일&·,()[\]]+/g, '');
 
 const INTENSITY_LABELS: Record<'relaxed' | 'moderate' | 'intense', string> = {
   relaxed: '여유롭게',
@@ -124,6 +157,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   const [query, setQuery] = useState('');
   const [historyQuery, setHistoryQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('all');
+  const [selectedDate, setSelectedDate] = useState('all');
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupSchedule, setGroupSchedule] = useState('');
@@ -167,13 +201,18 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
         .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
     [savedSequences, query],
   );
-  const logs = useMemo(
+  const totalActualLogsCount = useMemo(
+    () => historyLogs.filter((log) => !sampleHistoryIds.has(log.id)).length,
+    [historyLogs],
+  );
+  const groupAndQueryLogs = useMemo(
     () =>
       historyLogs
         .filter((log) => selectedGroup === 'all' || log.groupId === selectedGroup)
         .filter((log) => {
-          const trimmed = historyQuery.trim().toLowerCase();
+          const trimmed = normalizeSearchToken(historyQuery);
           if (!trimmed) return true;
+          const compactQuery = normalizeCompactSearch(historyQuery);
           const resolved = resolvedHistoryMap.get(log.id);
           const stepNames =
             resolved?.steps
@@ -182,12 +221,68 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   `${step.nameKo} ${step.nameEn} ${step.blockNameKo} ${step.sourceBlockTitle ?? ''} ${step.ideaLineSnapshot ?? ''}`,
               )
               .join(' ') ?? '';
-          const searchable = `${log.sequenceTitle} ${log.groupName} ${log.instructorReflection} ${log.taughtAt.slice(0, 10)} ${stepNames}`.toLowerCase();
-          return searchable.includes(trimmed);
+          const dateKey = getHistoryDateKey(log.taughtAt);
+          const dateKo = formatDate(log.taughtAt);
+          const searchable = normalizeSearchToken(
+            `${log.sequenceTitle} ${log.groupName} ${log.instructorReflection} ${dateKey} ${dateKo} ${stepNames}`,
+          );
+          if (searchable.includes(trimmed)) return true;
+          if (!compactQuery) return false;
+          return normalizeCompactSearch(searchable).includes(compactQuery);
         })
         .sort((a, b) => Date.parse(b.taughtAt) - Date.parse(a.taughtAt)),
     [historyLogs, selectedGroup, historyQuery, resolvedHistoryMap],
   );
+  const dateFilterOptions = useMemo(() => {
+    const map = new Map<string, { dateKey: string; label: string; count: number; sampleLogTaughtAt: string }>();
+    for (const log of groupAndQueryLogs) {
+      const dateKey = getHistoryDateKey(log.taughtAt);
+      const existing = map.get(dateKey);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        map.set(dateKey, {
+          dateKey,
+          label: formatDate(log.taughtAt),
+          count: 1,
+          sampleLogTaughtAt: log.taughtAt,
+        });
+      }
+    }
+    return [...map.values()].sort(
+      (a, b) => Date.parse(b.sampleLogTaughtAt) - Date.parse(a.sampleLogTaughtAt),
+    );
+  }, [groupAndQueryLogs]);
+  const logs = useMemo(
+    () =>
+      selectedDate === 'all'
+        ? groupAndQueryLogs
+        : groupAndQueryLogs.filter((log) => getHistoryDateKey(log.taughtAt) === selectedDate),
+    [groupAndQueryLogs, selectedDate],
+  );
+  const groupedLogsByDate = useMemo(() => {
+    const groups: Array<{
+      dateKey: string;
+      dateLabel: string;
+      weekdayLabel: string;
+      items: ClassHistoryLog[];
+    }> = [];
+    for (const log of logs) {
+      const dateKey = getHistoryDateKey(log.taughtAt);
+      const last = groups[groups.length - 1];
+      if (last && last.dateKey === dateKey) {
+        last.items.push(log);
+      } else {
+        groups.push({
+          dateKey,
+          dateLabel: formatDate(log.taughtAt),
+          weekdayLabel: formatDateWithWeekday(log.taughtAt),
+          items: [log],
+        });
+      }
+    }
+    return groups;
+  }, [logs]);
   const groupFilterItems = useMemo(
     () => [
       { id: 'all', label: '전체 기록' },
@@ -196,6 +291,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     [classGroups],
   );
   const actualLogs = logs.filter((log) => !sampleHistoryIds.has(log.id));
+  const hasActiveHistoryFilter =
+    Boolean(historyQuery.trim()) || selectedGroup !== 'all' || selectedDate !== 'all';
+  const resetHistoryFilters = () => {
+    setHistoryQuery('');
+    setSelectedGroup('all');
+    setSelectedDate('all');
+  };
   const recent = actualLogs.slice(0, 3);
   const draftIds = new Set(
     activeSteps.filter((step) => !isRestStep(step)).map((step) => step.exerciseId),
@@ -291,7 +393,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
           <h1 id="workspace-main-heading" tabIndex={-1}>
             {view === 'saved' ? '저장한 시퀀스' : '수업 기록'}
             <PfBadge tone="sage" className="teaching-count">
-              {view === 'saved' ? savedSequences.length : actualLogs.length}
+              {view === 'saved' ? savedSequences.length : totalActualLogsCount}
             </PfBadge>
           </h1>
           <p className="muted">
@@ -658,21 +760,92 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
             itemClassName="teaching-filter"
             items={groupFilterItems}
             value={selectedGroup}
-            onChange={setSelectedGroup}
+            onChange={(nextGroup) => {
+              setSelectedGroup(nextGroup);
+              setSelectedDate('all');
+            }}
           />
+          {dateFilterOptions.length > 0 && (
+            <div
+              className="teaching-date-nav"
+              role="group"
+              aria-label="날짜별 기록 탐색"
+              onKeyDown={(event) => {
+                if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
+                const buttons = Array.from(
+                  event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                    'button.teaching-date-chip:not(:disabled)',
+                  ),
+                );
+                const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+                if (currentIndex === -1 || buttons.length === 0) return;
+                event.preventDefault();
+                const nextIndex =
+                  event.key === 'Home'
+                    ? 0
+                    : event.key === 'End'
+                      ? buttons.length - 1
+                      : event.key === 'ArrowRight'
+                        ? (currentIndex + 1) % buttons.length
+                        : (currentIndex - 1 + buttons.length) % buttons.length;
+                buttons[nextIndex]?.focus();
+              }}
+            >
+              <span className="teaching-date-nav-label">
+                <CalendarDays size={14} aria-hidden="true" />
+                날짜별 탐색
+              </span>
+              <div className="teaching-date-chip-list">
+                <button
+                  type="button"
+                  className={`teaching-date-chip ${selectedDate === 'all' ? 'is-active' : ''}`}
+                  aria-pressed={selectedDate === 'all'}
+                  onClick={() => setSelectedDate('all')}
+                >
+                  전체 날짜
+                  <span className="teaching-date-chip-count">{groupAndQueryLogs.length}</span>
+                </button>
+                {dateFilterOptions.map((option) => (
+                  <button
+                    type="button"
+                    key={option.dateKey}
+                    className={`teaching-date-chip ${selectedDate === option.dateKey ? 'is-active' : ''}`}
+                    aria-pressed={selectedDate === option.dateKey}
+                    onClick={() => setSelectedDate(option.dateKey)}
+                  >
+                    {option.label}
+                    <span className="teaching-date-chip-count">{option.count}</span>
+                  </button>
+                ))}
+              </div>
+              {selectedDate !== 'all' && (
+                <button
+                  type="button"
+                  className="teaching-date-reset"
+                  onClick={() => setSelectedDate('all')}
+                >
+                  전체 날짜 보기
+                </button>
+              )}
+            </div>
+          )}
           <div className="teaching-history-layout">
             <section className="teaching-history-feed" aria-label="수업 기록 목록">
-              {actualLogs.length === 0 && (
+              {(logs.length === 0 || (!hasActiveHistoryFilter && actualLogs.length === 0)) && (
                 <PfEmptyState
                   icon={<History size={28} />}
                   title={
-                    historyQuery.trim()
-                      ? '검색한 수업 완료 기록이 없어요'
+                    hasActiveHistoryFilter
+                      ? historyQuery.trim() && selectedGroup === 'all' && selectedDate === 'all'
+                        ? '검색한 수업 완료 기록이 없어요'
+                        : selectedDate !== 'all'
+                          ? '선택한 날짜에 남긴 수업 기록이 없어요'
+                          : '선택한 그룹에 남긴 수업 기록이 없어요'
                       : '아직 남긴 수업 기록이 없어요'
                   }
                   description={
-                    historyQuery.trim() ? (
-                      '다른 검색어나 그룹 필터를 선택해 보세요.'
+                    hasActiveHistoryFilter ? (
+                      '다른 날짜·그룹을 선택하거나 필터를 초기화해 전체 기록을 확인해 보세요.'
                     ) : (
                       <>
                         수업을 마친 뒤 날짜와 짧은 메모를 남겨 보세요.
@@ -685,152 +858,190 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                     <PfButton
                       variant="secondary"
                       onClick={() =>
-                        historyQuery.trim() ? setHistoryQuery('') : setActiveTab('workbench')
+                        hasActiveHistoryFilter ? resetHistoryFilters() : setActiveTab('workbench')
                       }
                     >
-                      {historyQuery.trim() ? '검색 지우기' : '오늘 수업 계획하기'}
+                      {hasActiveHistoryFilter
+                        ? historyQuery.trim() && selectedGroup === 'all' && selectedDate === 'all'
+                          ? '검색 지우기'
+                          : '필터 초기화'
+                        : '오늘 수업 계획하기'}
                       <ArrowRight size={16} />
                     </PfButton>
                   }
                 />
               )}
-              {logs.map((log) => {
-                const isSample = sampleHistoryIds.has(log.id);
-                const resolved =
-                  resolvedHistoryMap.get(log.id) ??
-                  resolveTeachingHistoryView(log, exercisesMap, savedSequences, {
-                    reusableBlocks,
-                    humanDrafts,
-                  });
-                const hasStepTimings = Boolean(
-                  log.stepsSnapshot || resolved.hasPreservedSnapshot,
-                );
-                const missingExercise = !resolved.canCopyToNextClass;
-                return (
-                  <PfCard
-                    as="article"
-                    key={log.id}
-                    variant={isSample ? 'sample' : 'default'}
-                    className="teaching-history-card"
-                  >
-                    <div className="teaching-card-top">
-                      <span className="teaching-history-group">
-                        <Users size={14} />
-                        {resolved.groupName}
-                      </span>
-                      <time dateTime={resolved.taughtAt}>{formatDate(resolved.taughtAt)}</time>
+              {groupedLogsByDate.map((dateGroup) => (
+                <div
+                  className="teaching-history-date-group"
+                  key={dateGroup.dateKey}
+                  data-date-group={dateGroup.dateKey}
+                >
+                  <div className="teaching-history-date-header">
+                    <div className="teaching-history-date-title">
+                      <CalendarDays size={15} aria-hidden="true" />
+                      <strong>{dateGroup.weekdayLabel}</strong>
                     </div>
-                    <div className="teaching-history-badges">
-                      <span className="teaching-record-kind-badge is-history">
-                        진행 완료 이력
-                      </span>
-                      <span className="teaching-record-source-badge">
-                        {resolved.sourceKind === 'saved-sequence'
-                          ? '저장 시퀀스 기반'
-                          : '수업 초안 기반'}
-                      </span>
-                      {resolved.hasPreservedSnapshot && (
-                        <span className="teaching-snapshot-badge">
-                          당시 동작·블록·시간 스냅샷 보존
-                        </span>
-                      )}
-                      {resolved.blockSnapshots.length > 0 && (
-                        <span className="teaching-snapshot-badge">
-                          재사용 블록 {resolved.blockSnapshots.length}개 스냅샷
-                        </span>
-                      )}
-                      {resolved.hasCatalogDrift && (
-                        <span
-                          className="teaching-drift-badge"
-                          data-snapshot-preserved="true"
-                        >
-                          원본 수정 후에도 당시 스냅샷 유지됨
-                        </span>
-                      )}
-                    </div>
-                    {isSample && (
-                      <PfAiStatusBadge
-                        kind="sample-data"
-                        className="teaching-sample-label"
-                      />
-                    )}
-                    <h2>{resolved.sequenceTitle}</h2>
-                    <div className="teaching-card-stats">
-                      <span>{resolved.movementCount}개 동작</span>
-                      {resolved.restCount > 0 && <span>휴식 {resolved.restCount}개</span>}
-                      <span>
-                        {log.actualDurationSec !== undefined
-                          ? `타이머/입력 시간 ${Math.floor(log.actualDurationSec / 60)}분 ${Math.round(log.actualDurationSec % 60)}초`
-                          : '실제 진행 시간 미기록'}
-                      </span>
-                      <span>강사 평가 {log.rating}/5</span>
-                    </div>
-                    {hasStepTimings && (
-                      <p className="teaching-rest-summary" aria-label="기록한 수업 계획 시간 구성">
-                        계획 총 {formatSecondsToMMSS(resolved.timing.plannedTotalSec)} · 동작·설명·전환{' '}
-                        {formatSecondsToMMSS(resolved.timing.plannedExerciseSec)} · 휴식{' '}
-                        {formatSecondsToMMSS(resolved.timing.plannedRestSec)}
-                      </p>
-                    )}
-                    <p className="teaching-reflection">
-                      {log.instructorReflection || '남긴 메모가 없습니다.'}
-                    </p>
-                    <div className="teaching-history-exercises">
-                      {resolved.steps.map((step) => (
-                        <PfBlockPill
-                          as="span"
-                          key={step.stepId}
-                          kind={
-                            step.kind === 'rest'
-                              ? 'rest'
-                              : step.exerciseId?.startsWith('ex-custom-idea-')
-                                ? 'memo'
-                                : 'movement'
-                          }
-                          title={
-                            step.kind === 'rest'
-                              ? `휴식 (${step.durationMin}분)`
-                              : `${String(step.order).padStart(2, '0')}. [${step.sourceBlockTitle ? `${step.blockNameKo} · ${step.sourceBlockTitle}` : step.blockNameKo}] ${step.nameKo} (${step.durationMin}분)`
-                          }
-                        >
-                          {step.kind === 'rest'
-                            ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}`
-                            : step.isMissingUnrecoverable
-                              ? '삭제된 동작'
-                              : step.nameKo}
-                        </PfBlockPill>
-                      ))}
-                    </div>
-                    <div className="teaching-history-bottom">
-                      <span className="muted">
-                        {missingExercise
-                          ? '삭제된 동작이 있어 불러올 수 없습니다.'
-                          : hasStepTimings
-                            ? resolved.restCount > 0
-                              ? '당시 저장한 동작·휴식·시간으로 불러옵니다.'
-                              : '당시 저장한 동작·시간으로 불러옵니다.'
-                            : '구성 참고 · 시간은 현재 기본값으로 복원'}
-                      </span>
-                      <div className="teaching-history-actions">
-                        <PfButton
-                          variant="ghost"
-                          onClick={() => setReopenedHistoryId(log.id)}
-                        >
-                          <Eye size={15} />
-                          이력 다시 열기
-                        </PfButton>
-                        <PfButton
-                          variant="secondary"
-                          disabled={missingExercise}
-                          onClick={() => copyHistory(log.id)}
-                        >
-                          <Copy size={15} />이 수업 다시 계획
-                        </PfButton>
-                      </div>
-                    </div>
-                  </PfCard>
-                );
-              })}
+                    <span className="teaching-history-date-count">
+                      수업 기록 {dateGroup.items.length}건
+                    </span>
+                  </div>
+                  {dateGroup.items.map((log) => {
+                    const isSample = sampleHistoryIds.has(log.id);
+                    const resolved =
+                      resolvedHistoryMap.get(log.id) ??
+                      resolveTeachingHistoryView(log, exercisesMap, savedSequences, {
+                        reusableBlocks,
+                        humanDrafts,
+                      });
+                    const hasStepTimings = Boolean(
+                      log.stepsSnapshot || resolved.hasPreservedSnapshot,
+                    );
+                    const missingExercise = !resolved.canCopyToNextClass;
+                    const timeOfDay = formatHistoryTimeOfDay(resolved.taughtAt);
+                    const plannedMinutes = Math.max(
+                      1,
+                      Math.round(resolved.timing.plannedTotalSec / 60),
+                    );
+                    return (
+                      <PfCard
+                        as="article"
+                        key={log.id}
+                        variant={isSample ? 'sample' : 'default'}
+                        className="teaching-history-card"
+                      >
+                        <div className="teaching-card-top">
+                          <div className="teaching-history-datetime">
+                            <CalendarDays size={14} aria-hidden="true" />
+                            <time dateTime={resolved.taughtAt}>{formatDate(resolved.taughtAt)}</time>
+                            {timeOfDay && (
+                              <span className="teaching-history-time-of-day">{timeOfDay}</span>
+                            )}
+                            <span className="teaching-history-time-pill">
+                              <Clock3 size={12} aria-hidden="true" />
+                              {log.actualDurationSec !== undefined
+                                ? `${Math.max(1, Math.round(log.actualDurationSec / 60))}분 진행`
+                                : `계획 ${plannedMinutes}분`}
+                            </span>
+                          </div>
+                          <span className="teaching-history-group">
+                            <Users size={14} aria-hidden="true" />
+                            {resolved.groupName}
+                          </span>
+                        </div>
+                        <h2>{resolved.sequenceTitle}</h2>
+                        <div className="teaching-card-stats">
+                          <span>{resolved.movementCount}개 동작</span>
+                          {resolved.restCount > 0 && <span>휴식 {resolved.restCount}개</span>}
+                          <span>
+                            {log.actualDurationSec !== undefined
+                              ? `타이머/입력 시간 ${Math.floor(log.actualDurationSec / 60)}분 ${Math.round(log.actualDurationSec % 60)}초`
+                              : '실제 진행 시간 미기록'}
+                          </span>
+                          <span>강사 평가 {log.rating}/5</span>
+                        </div>
+                        {hasStepTimings && (
+                          <p className="teaching-rest-summary" aria-label="기록한 수업 계획 시간 구성">
+                            계획 총 {formatSecondsToMMSS(resolved.timing.plannedTotalSec)} · 동작·설명·전환{' '}
+                            {formatSecondsToMMSS(resolved.timing.plannedExerciseSec)} · 휴식{' '}
+                            {formatSecondsToMMSS(resolved.timing.plannedRestSec)}
+                          </p>
+                        )}
+                        <div className="teaching-history-badges">
+                          <span className="teaching-record-kind-badge is-history">
+                            진행 완료 이력
+                          </span>
+                          <span className="teaching-record-source-badge">
+                            {resolved.sourceKind === 'saved-sequence'
+                              ? '저장 시퀀스 기반'
+                              : '수업 초안 기반'}
+                          </span>
+                          {resolved.hasPreservedSnapshot && (
+                            <span className="teaching-snapshot-badge">
+                              당시 동작·블록·시간 스냅샷 보존
+                            </span>
+                          )}
+                          {resolved.blockSnapshots.length > 0 && (
+                            <span className="teaching-snapshot-badge">
+                              재사용 블록 {resolved.blockSnapshots.length}개 스냅샷
+                            </span>
+                          )}
+                          {resolved.hasCatalogDrift && (
+                            <span
+                              className="teaching-drift-badge"
+                              data-snapshot-preserved="true"
+                            >
+                              원본 수정 후에도 당시 스냅샷 유지됨
+                            </span>
+                          )}
+                        </div>
+                        {isSample && (
+                          <PfAiStatusBadge
+                            kind="sample-data"
+                            className="teaching-sample-label"
+                          />
+                        )}
+                        <p className="teaching-reflection">
+                          {log.instructorReflection || '남긴 메모가 없습니다.'}
+                        </p>
+                        <div className="teaching-history-exercises">
+                          {resolved.steps.map((step) => (
+                            <PfBlockPill
+                              as="span"
+                              key={step.stepId}
+                              kind={
+                                step.kind === 'rest'
+                                  ? 'rest'
+                                  : step.exerciseId?.startsWith('ex-custom-idea-')
+                                    ? 'memo'
+                                    : 'movement'
+                              }
+                              title={
+                                step.kind === 'rest'
+                                  ? `휴식 (${step.durationMin}분)`
+                                  : `${String(step.order).padStart(2, '0')}. [${step.sourceBlockTitle ? `${step.blockNameKo} · ${step.sourceBlockTitle}` : step.blockNameKo}] ${step.nameKo} (${step.durationMin}분)`
+                              }
+                            >
+                              {step.kind === 'rest'
+                                ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}`
+                                : step.isMissingUnrecoverable
+                                  ? '삭제된 동작'
+                                  : step.nameKo}
+                            </PfBlockPill>
+                          ))}
+                        </div>
+                        <div className="teaching-history-bottom">
+                          <span className="muted">
+                            {missingExercise
+                              ? '삭제된 동작이 있어 불러올 수 없습니다.'
+                              : hasStepTimings
+                                ? resolved.restCount > 0
+                                  ? '당시 저장한 동작·휴식·시간으로 불러옵니다.'
+                                  : '당시 저장한 동작·시간으로 불러옵니다.'
+                                : '구성 참고 · 시간은 현재 기본값으로 복원'}
+                          </span>
+                          <div className="teaching-history-actions">
+                            <PfButton
+                              variant="secondary"
+                              onClick={() => setReopenedHistoryId(log.id)}
+                            >
+                              <Eye size={15} />
+                              이력 다시 열기
+                            </PfButton>
+                            <PfButton
+                              variant="primary"
+                              disabled={missingExercise}
+                              onClick={() => copyHistory(log.id)}
+                            >
+                              <Copy size={15} />이 수업 다시 계획
+                            </PfButton>
+                          </div>
+                        </div>
+                      </PfCard>
+                    );
+                  })}
+                </div>
+              ))}
             </section>
             <aside className="teaching-memory-aside">
               <PfCard as="section" className="teaching-memory-card">
