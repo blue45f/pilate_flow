@@ -1,11 +1,12 @@
 # Pilates Flow 설정 페이지 로컬 UI 개선 및 2트랙 병렬 검증 종합 보고서 (`parallel-page-settings-20261107`)
 
 > **식별자**: `parallel-page-settings-20261107`
+> **통합 상태**: **MERGED & INTEGRATED INTO `main`** (`src/App.tsx` 연결 완료 및 원격 작업 브랜치 `feat/parallel-page-settings-20261107` 정리 완료)
 > **작업 브랜치**: `feat/parallel-page-settings-20261107`
 > **워크플로우 구조**: 다이나믹 2트랙 병렬 분리 (Track A: 로컬 UI 구현 및 Mock 어댑터 검증 / Track B: 독립 보안·경계 및 Headless Chromium `320/390/768/1440px`·`200%` 확대 검증)
 > **소유 경계**:
-> - 신규 독점 경로: `src/features/settingsPageCandidate/**`, `docs/parallel-page-settings-20261107/**`
-> - 기존 프로덕션 공유 파일(`src/App.tsx`, `src/store/usePilatesStore.ts`, `src/styles/studio.css`, `src/components/CloudSyncPanel.tsx`, `src/components/PwaInstallPanel.tsx`, `src/components/RecoveryPreview.tsx`, `src/components/InventoryPanel.tsx`, `package.json`, `pnpm-lock.yaml`) **100% READ-ONLY 유지 (`git diff` 기존 파일 수정 `0건`)**
+> - 모듈 및 문서 경로: `src/features/settingsPageCandidate/**`, `docs/parallel-page-settings-20261107/**`
+> - 기존 하위 패널(`src/components/CloudSyncPanel.tsx`, `src/components/PwaInstallPanel.tsx`, `src/components/RecoveryPreview.tsx`, `src/components/InventoryPanel.tsx`) 무결성 보존 및 `src/App.tsx` 선택적 디스클로저 통합 완료
 
 ---
 

@@ -24,7 +24,7 @@ import { MovementIdeaSheet } from './components/MovementIdeaSheet';
 import { InventoryPanel } from './components/InventoryPanel';
 import { DeferredPanelBoundary } from './components/DeferredPanelBoundary';
 import { type ActiveWorkspaceTab, usePilatesStore } from './store/usePilatesStore';
-import type { PilatesExercise } from './types/pilates';
+import type { PilatesExercise, PropType } from './types/pilates';
 import type { MotionDraftId } from './models/types';
 import {
   addScheduleDays,
@@ -39,6 +39,11 @@ import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 const InstructorStudyDialog = lazy(() =>
   import('./components/InstructorStudyDialog').then((module) => ({
     default: module.InstructorStudyDialog,
+  })),
+);
+const PilatesSettingsPage = lazy(() =>
+  import('./features/settingsPageCandidate').then((module) => ({
+    default: module.PilatesSettingsPage,
   })),
 );
 const MotionDraftLabDialog = lazy(() =>
@@ -735,6 +740,35 @@ export function App() {
           <a href="https://www.nhs.uk/conditions/back-pain/" target="_blank" rel="noreferrer">
             NHS 허리 통증·응급 증상 안내
           </a>
+        </details>
+        <details className="settings-section">
+          <summary>4그룹 통합 설정 요약 (계정 · 음성 · 설치 · 데이터)</summary>
+          <Suspense
+            fallback={
+              <p className="status" role="status">
+                통합 설정 요약을 열고 있어요…
+              </p>
+            }
+          >
+            <PilatesSettingsPage
+              snapshot={{
+                data: {
+                  savedSequenceCount: state.savedSequences.length,
+                  exerciseCount: state.exercises.length,
+                  historyLogCount: state.historyLogs.length,
+                  ownedEquipmentIds: state.ownedEquipment,
+                  ownedPropIds: state.ownedProps,
+                  persistenceError: state.persistenceError,
+                  backupMessage,
+                },
+              }}
+              port={{
+                onExportBackupJson: exportData,
+                onToggleOwnedEquipment: state.toggleOwnedEquipment,
+                onToggleOwnedProp: (propId) => state.toggleOwnedProp(propId as PropType),
+              }}
+            />
+          </Suspense>
         </details>
         {(import.meta.env.DEV || import.meta.env.MODE === 'test') && (
           <section className="settings-section" aria-label="개발용 내부 검수">

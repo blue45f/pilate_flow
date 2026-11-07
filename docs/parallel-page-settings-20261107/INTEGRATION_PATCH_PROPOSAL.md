@@ -1,8 +1,8 @@
 # `settingsPageCandidate` — 공통 파일 무수정 원칙 및 최소 통합 Patch 제안서 (`INTEGRATION_PATCH_PROPOSAL.md`)
 
 > [!IMPORTANT]
-> - 본 문서는 `src/features/settingsPageCandidate/**` 및 `docs/parallel-page-settings-20261107/**` 독점 소유 범위 안에서 작성된 **통합 전 후보(Pre-Integration Candidate) 최소 Patch 제안서**입니다.
-> - 병렬 통합 세션과의 충돌을 방지하기 위해 공유 라우트/셸(`src/App.tsx`), 전역 스토어(`src/store/usePilatesStore.ts`), 공용 테마/스타일(`src/styles/studio.css`), 기존 하위 패널(`CloudSyncPanel.tsx`, `PwaInstallPanel.tsx`, `RecoveryPreview.tsx`, `InventoryPanel.tsx`), 설정 파일(`package.json`, `pnpm-lock.yaml`)은 **단 1바이트도 수정하지 않았습니다(`git diff` 기존 파일 0건)**.
+> - **통합 상태: APPLIED & INTEGRATED INTO `main`** (`src/App.tsx`의 `'나의 스튜디오'` 설정 모달 내 4그룹 통합 설정 섹션으로 연결 완료).
+> - 기존 감사(Audit) 스위트와의 무결성을 보존하기 위해 기존 `CloudSyncPanel.tsx`, `PwaInstallPanel.tsx`, `RecoveryPreview.tsx`, `InventoryPanel.tsx`는 그대로 유지하면서 선택적(Opt-In) 디스클로저로 병행 연결되었습니다.
 
 ---
 
