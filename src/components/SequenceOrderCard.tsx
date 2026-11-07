@@ -38,9 +38,20 @@ export function SequenceOrderCard({
     const cardEl = cardRef.current;
     if (!cardEl) return;
     const list = cardEl.closest<HTMLElement>('.flow-sections') ?? cardEl.parentElement;
-    if (!list || !list.hasAttribute('data-drag-session')) return;
+    if (!list || !list.hasAttribute('data-drag-session') || !pointerDrag.current?.session.isActive()) {
+      clearHeaderTranslations();
+      if (pointerDrag.current?.rafId && !pointerDrag.current.session.isActive()) {
+        cancelAnimationFrame(pointerDrag.current.rafId);
+        pointerDrag.current = null;
+      }
+      return;
+    }
 
     const cssZoom = (cardEl as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom;
+    const rectZoom =
+      cardEl.offsetWidth > 0
+        ? Math.round((cardEl.getBoundingClientRect().width / cardEl.offsetWidth) * 100) / 100
+        : 1;
     const htmlZoom = Number.parseFloat(
       document.documentElement.style.zoom ||
         window.getComputedStyle(document.documentElement).zoom ||
@@ -49,9 +60,11 @@ export function SequenceOrderCard({
     const zoomFactor =
       typeof cssZoom === 'number' && Number.isFinite(cssZoom) && cssZoom > 0 && cssZoom !== 1
         ? cssZoom
-        : Number.isFinite(htmlZoom) && htmlZoom > 0 && htmlZoom !== 1
-          ? htmlZoom
-          : 1;
+        : Number.isFinite(rectZoom) && rectZoom > 0 && rectZoom !== 1
+          ? rectZoom
+          : Number.isFinite(htmlZoom) && htmlZoom > 0 && htmlZoom !== 1
+            ? htmlZoom
+            : 1;
 
     const cards = Array.from(list.querySelectorAll<HTMLElement>('[data-order-step]'));
     const from = cards.findIndex((el) => el.dataset.orderStep === step.stepId);
@@ -122,7 +135,8 @@ export function SequenceOrderCard({
         rec.transform = scaled;
       };
 
-      const overlay = document.querySelector<HTMLElement>('.sequence-drag-overlay');
+      const overlays = document.querySelectorAll<HTMLElement>('.sequence-drag-overlay');
+      const overlay = overlays[overlays.length - 1];
       if (overlay) {
         scalePx(overlay, 'left');
         scalePx(overlay, 'top');
@@ -194,6 +208,9 @@ export function SequenceOrderCard({
           draggable={false}
           disabled={step.locked}
           onPointerDown={(event) => {
+            if (pointerDrag.current && !pointerDrag.current.session.isActive()) {
+              clearPointerDrag();
+            }
             if (event.button !== 0 || step.locked || pointerDrag.current || !cardRef.current)
               return;
             event.preventDefault();
@@ -240,11 +257,17 @@ export function SequenceOrderCard({
             if (pointerDrag.current?.id === event.pointerId) {
               pointerDrag.current.session.move(event.clientX, event.clientY);
               syncActiveDragDom();
-              if (!pointerDrag.current.rafId && pointerDrag.current.session.isActive()) {
+              if (
+                pointerDrag.current &&
+                !pointerDrag.current.rafId &&
+                pointerDrag.current.session.isActive()
+              ) {
                 const loop = () => {
                   if (!pointerDrag.current) return;
                   syncActiveDragDom();
-                  pointerDrag.current.rafId = requestAnimationFrame(loop);
+                  if (pointerDrag.current) {
+                    pointerDrag.current.rafId = requestAnimationFrame(loop);
+                  }
                 };
                 pointerDrag.current.rafId = requestAnimationFrame(loop);
               }
@@ -276,9 +299,12 @@ export function SequenceOrderCard({
             if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
               event.preventDefault();
               clearPointerDrag();
+              const liveSteps = usePilatesStore.getState().activeSteps;
+              const liveIndex = liveSteps.findIndex((item) => item.stepId === step.stepId);
               const delta = event.key === 'ArrowUp' ? -1 : 1;
-              if ((delta < 0 && upDisabled) || (delta > 0 && downDisabled)) return;
-              move(steps[index + delta].stepId);
+              const target = liveIndex >= 0 ? liveSteps[liveIndex + delta] : undefined;
+              if (!target || step.locked || target.locked) return;
+              move(target.stepId);
             }
           }}
         >

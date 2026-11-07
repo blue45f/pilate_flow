@@ -119,6 +119,7 @@ export function createSequenceDrag(options: Options) {
     list.removeAttribute('data-drag-session');
     window.removeEventListener('blur', cancel);
     window.removeEventListener('resize', cancel);
+    window.removeEventListener('keydown', onKeyDown, true);
     document.removeEventListener('visibilitychange', onVisibility);
     if (cancelActiveDrag === cancel) cancelActiveDrag = null;
     indicator?.remove();
@@ -134,6 +135,11 @@ export function createSequenceDrag(options: Options) {
   };
   const onVisibility = () => {
     if (document.hidden) cancel();
+  };
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      cancel();
+    }
   };
   const begin = () => {
     active = true;
@@ -193,6 +199,7 @@ export function createSequenceDrag(options: Options) {
     });
     window.addEventListener('blur', cancel);
     window.addEventListener('resize', cancel);
+    window.addEventListener('keydown', onKeyDown, true);
     document.addEventListener('visibilitychange', onVisibility);
     onNotice(`${label} 이동 중. 놓을 위치로 끌어 주세요. Escape 키로 취소할 수 있습니다.`);
   };
