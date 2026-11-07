@@ -51,3 +51,16 @@ node --experimental-transform-types scripts/diagram-contact-audit-20261107/run-a
 # 후보 패치 적용 가능성 단독 확인
 git apply --check docs/diagram-contact-audit-20261107/patches/minimal-diagram-contact-fixes.patch
 ```
+
+
+## 후속 실제 앱(`src/`) 반영 및 실렌더러 재검증 요약 (Follow-up Real-App Integration)
+
+- **반영 대상 파일**:
+  - `src/components/MovementPhaseDiagramSvg.tsx` (D-04 체어 페달 힌지·하방 동조 회전, D-05 스탠딩 배럴 비관통 돔·사다리 배치)
+  - `src/data/movementVisualRigCatalog.ts` (D-01 프로그 끝 자세 홈 복귀 `ankle: (217,74), knee: (185,90)`, D-02A 리포머 플랭크 풋바 손·캐리지 발 접점, D-02B 체어 플랭크 시트 손·페달 발 접점, D-03 캐딜락 18개 운동 `carriageOffsetPx: 0`, D-05 스탠딩 배럴 사다리 가로대 손 파지 `(88,76)`)
+  - `src/test/diagramApparatusContactRegression.test.tsx` (직접 도해 접점 회귀 테스트 추가 · `ExerciseAtlasView` 및 타 페이지 테스트 무수정)
+- **실제 앱 렌더러 재검증 범위**:
+  - `MOVEMENT_VISUAL_ASSETS` 및 `MovementPhaseDiagramSvg` / `MovementTriptychDiagramSvg` 직접 실행 (래퍼/후보 하네스 미사용 `Object.is` 동일성 검증)
+  - 294개 표준 위상 SVG + 294개 미러링(`mirrored: true`) 위상 SVG + 196개 3분할 Triptych(`start/middle/end`) 전수 렌더링 및 `[data-pose-delta-vector]`·관절 경계·미러 대칭 검증
+  - Headless Chromium 5개 뷰포트(`320×850`, `390×850`, `768×1024`, `1440×900`, `1440×900 @ 200% zoom`) 실측 DOM `getBBox()` 및 무오버플로우 검증 통과
+- **정직성 경계 유지**: `anatomicalAccuracyAssumed: false`, `anatomicalVerificationCompleted: false`, `expertVerificationCompleted: false`, `professionalReviewCount: 0` (2D 개략 도해의 기구 접점 좌표 정합 수정이며 의학적·전문가 검증 완료가 아님)

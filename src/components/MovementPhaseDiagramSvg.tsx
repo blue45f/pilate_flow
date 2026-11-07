@@ -448,12 +448,12 @@ function renderApparatusSupportLayer(
     const boxRight = mx(192, mirrored);
     const boxMinX = Math.min(boxLeft, boxRight);
     const boxW = Math.abs(boxRight - boxLeft);
-    const hinge = p(188, 164);
-    const angleRad = ((24 + apparatusState.pedalAngleDeg * 0.75) * Math.PI) / 180;
+    const hinge = p(168, 164);
+    const angleRad = ((40 - apparatusState.pedalAngleDeg * 1.3) * Math.PI) / 180;
     const dirSign = mirrored ? -1 : 1;
     const pedalTip = {
-      x: Math.round((hinge.x + dirSign * Math.cos(angleRad) * 54) * 10) / 10,
-      y: Math.round((hinge.y - Math.sin(angleRad) * 54) * 10) / 10,
+      x: Math.round((hinge.x + dirSign * Math.cos(angleRad) * 50) * 10) / 10,
+      y: Math.round((hinge.y - Math.sin(angleRad) * 50) * 10) / 10,
     };
     const springBase = p(148, 168);
 
@@ -541,12 +541,13 @@ function renderApparatusSupportLayer(
   }
 
   if (asset.apparatus === 'barrel') {
-    const arcLeft = p(68, 174);
-    const arcPeak1 = p(76, 102);
-    const arcPeak2 = p(164, 102);
-    const arcRight = p(174, 174);
-    const ladderFrontX = mx(222, mirrored);
-    const ladderBackX = mx(256, mirrored);
+    const isStandingBarrel = asset.bodyPosition === 'standing';
+    const arcLeft = isStandingBarrel ? p(18, 174) : p(68, 174);
+    const arcPeak1 = isStandingBarrel ? p(24, 106) : p(76, 102);
+    const arcPeak2 = isStandingBarrel ? p(64, 106) : p(164, 102);
+    const arcRight = isStandingBarrel ? p(70, 174) : p(174, 174);
+    const ladderFrontX = mx(isStandingBarrel ? 76 : 222, mirrored);
+    const ladderBackX = mx(isStandingBarrel ? 96 : 256, mirrored);
 
     return (
       <g

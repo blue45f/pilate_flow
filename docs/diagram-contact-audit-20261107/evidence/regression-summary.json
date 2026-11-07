@@ -1,12 +1,20 @@
 {
   "auditId": "diagram-contact-audit-20261107",
-  "startedAt": "2026-11-07T07:04:51.806Z",
-  "completedAt": "2026-11-07T07:05:03.518Z",
-  "baseCommit": "338f912a8ae2c07b501befd3e160c725ec40b559",
+  "startedAt": "2026-11-07T07:50:42.633Z",
+  "completedAt": "2026-11-07T07:50:54.808Z",
+  "baseCommit": "338e7bdd01d36e0c3854ee084a8bfdd829ec72de",
   "readOnlyBoundary": {
-    "srcModifiedLines": 0,
+    "srcModifiedFiles": [
+      "src/components/MovementPhaseDiagramSvg.tsx",
+      "src/data/movementVisualRigCatalog.ts",
+      "src/test/diagramApparatusContactRegression.test.tsx"
+    ],
+    "exerciseAtlasAndOtherPagesUntouched": true,
     "ownedPathsOnly": true,
     "ownedPaths": [
+      "src/components/MovementPhaseDiagramSvg.tsx",
+      "src/data/movementVisualRigCatalog.ts",
+      "src/test/diagramApparatusContactRegression.test.tsx",
       "scripts/diagram-contact-audit-20261107/**",
       "docs/diagram-contact-audit-20261107/**"
     ]
@@ -287,17 +295,19 @@
         "titleKo": "캐딜락(Cadillac) 고정 베드 기구에 비정상 캐리지 활주(carriageOffsetPx > 0) 오적용 (18개 중 15개)",
         "passed": false,
         "totalCadillacExercises": 18,
-        "nonZeroCadillacCount": 15,
+        "nonZeroCadillacCount": 17,
         "nonZeroCadillacExerciseIds": [
           "original-cadillac-table-breath",
           "original-cadillac-pelvic-rock",
+          "original-cadillac-table-ankle",
           "original-cadillac-table-bridge",
+          "original-cadillac-table-knee-fold",
           "original-cadillac-seated-roll-back",
           "original-cadillac-arm-spring-press",
           "original-cadillac-seated-rotation",
           "original-cadillac-side-leg-reach",
+          "original-cadillac-quadruped-slide",
           "original-cadillac-prone-back-reach",
-          "original-cadillac-seated-side-reach",
           "ex-warmup-02",
           "ex-bridging-02",
           "ex-upper-03",
@@ -310,114 +320,114 @@
             "exerciseId": "original-cadillac-table-breath",
             "archetypeId": "supine-breath-pelvic-clock",
             "carriageOffsets": [
-              0,
               4,
-              0
+              24,
+              8
             ],
             "barEndStart": {
-              "x": 96,
-              "y": 64
-            },
-            "barEndMiddle": {
               "x": 97,
               "y": 64
             },
-            "barEndShiftXPx": 1,
+            "barEndMiddle": {
+              "x": 101,
+              "y": 66
+            },
+            "barEndShiftXPx": 4,
             "hasNonZeroCarriageOffset": true
           },
           {
             "exerciseId": "original-cadillac-pelvic-rock",
             "archetypeId": "supine-breath-pelvic-clock",
             "carriageOffsets": [
-              0,
               4,
-              0
+              24,
+              8
             ],
             "barEndStart": {
-              "x": 96,
-              "y": 64
-            },
-            "barEndMiddle": {
               "x": 97,
               "y": 64
             },
-            "barEndShiftXPx": 1,
+            "barEndMiddle": {
+              "x": 101,
+              "y": 66
+            },
+            "barEndShiftXPx": 4,
             "hasNonZeroCarriageOffset": true
           },
           {
             "exerciseId": "original-cadillac-table-ankle",
             "archetypeId": "supine-heel-slide-ankle",
             "carriageOffsets": [
-              0,
-              0,
-              0
+              4,
+              24,
+              8
             ],
             "barEndStart": {
-              "x": 96,
+              "x": 97,
               "y": 64
             },
             "barEndMiddle": {
-              "x": 96,
-              "y": 64
+              "x": 101,
+              "y": 66
             },
-            "barEndShiftXPx": 0,
-            "hasNonZeroCarriageOffset": false
+            "barEndShiftXPx": 4,
+            "hasNonZeroCarriageOffset": true
           },
           {
             "exerciseId": "original-cadillac-table-bridge",
             "archetypeId": "supine-articulated-bridge",
             "carriageOffsets": [
-              0,
-              14,
-              0
+              4,
+              24,
+              8
             ],
             "barEndStart": {
-              "x": 96,
+              "x": 97,
               "y": 64
             },
             "barEndMiddle": {
-              "x": 99,
-              "y": 65
+              "x": 101,
+              "y": 66
             },
-            "barEndShiftXPx": 3,
+            "barEndShiftXPx": 4,
             "hasNonZeroCarriageOffset": true
           },
           {
             "exerciseId": "original-cadillac-table-knee-fold",
             "archetypeId": "supine-knee-fold",
             "carriageOffsets": [
-              0,
-              0,
-              0
+              4,
+              24,
+              8
             ],
             "barEndStart": {
-              "x": 96,
+              "x": 97,
               "y": 64
             },
             "barEndMiddle": {
-              "x": 96,
-              "y": 64
+              "x": 101,
+              "y": 66
             },
-            "barEndShiftXPx": 0,
-            "hasNonZeroCarriageOffset": false
+            "barEndShiftXPx": 4,
+            "hasNonZeroCarriageOffset": true
           },
           {
             "exerciseId": "original-cadillac-seated-roll-back",
             "archetypeId": "seated-roll-back-spine-twist",
             "carriageOffsets": [
-              0,
               4,
-              0
+              24,
+              8
             ],
             "barEndStart": {
-              "x": 96,
-              "y": 64
-            },
-            "barEndMiddle": {
               "x": 97,
               "y": 64
             },
-            "barEndShiftXPx": 1,
+            "barEndMiddle": {
+              "x": 101,
+              "y": 66
+            },
+            "barEndShiftXPx": 4,
             "hasNonZeroCarriageOffset": true
           }
         ]
@@ -1390,8 +1400,8 @@
             "y": 108
           },
           "endKnee": {
-            "x": 182,
-            "y": 92
+            "x": 185,
+            "y": 90
           },
           "startAnkle": {
             "x": 214,
@@ -1402,11 +1412,11 @@
             "y": 80
           },
           "endAnkle": {
-            "x": 214,
+            "x": 217,
             "y": 74
           },
-          "startToEndAnkleDistPx": 0,
-          "startToEndKneeDistPx": 0,
+          "startToEndAnkleDistPx": 3,
+          "startToEndKneeDistPx": 3.61,
           "endAnkleDeltaYFromStartPx": 0,
           "carriageOffsets": [
             6,
@@ -1443,7 +1453,7 @@
             "y": 138
           },
           "endAnkle": {
-            "x": 82,
+            "x": 84,
             "y": 138
           },
           "startCarriageRect": {
@@ -1492,23 +1502,23 @@
             },
             "endAnkle": {
               "x": 216,
-              "y": 158
+              "y": 159
             },
             "startPedalTip": {
               "x": 217.9,
               "y": 160.9
             },
             "middlePedalTip": {
-              "x": 210.3,
-              "y": 137.4
+              "x": 211.5,
+              "y": 139.3
             },
             "endPedalTip": {
-              "x": 218,
-              "y": 163.1
+              "x": 217.9,
+              "y": 160.9
             },
             "startAnkleToPedalTipDistPx": 5.26,
-            "middleAnkleToPedalTipDistPx": 4.1,
-            "endAnkleToPedalTipDistPx": 5.48,
+            "middleAnkleToPedalTipDistPx": 6.35,
+            "endAnkleToPedalTipDistPx": 2.69,
             "passed": true
           },
           {
@@ -1539,23 +1549,23 @@
             },
             "endAnkle": {
               "x": 216,
-              "y": 158
+              "y": 159
             },
             "startPedalTip": {
               "x": 217.9,
               "y": 160.9
             },
             "middlePedalTip": {
-              "x": 210.3,
-              "y": 137.4
+              "x": 211.5,
+              "y": 139.3
             },
             "endPedalTip": {
-              "x": 218,
-              "y": 163.1
+              "x": 217.9,
+              "y": 160.9
             },
             "startAnkleToPedalTipDistPx": 5.26,
-            "middleAnkleToPedalTipDistPx": 4.1,
-            "endAnkleToPedalTipDistPx": 5.48,
+            "middleAnkleToPedalTipDistPx": 6.35,
+            "endAnkleToPedalTipDistPx": 2.69,
             "passed": true
           },
           {
@@ -1586,23 +1596,23 @@
             },
             "endAnkle": {
               "x": 216,
-              "y": 158
+              "y": 159
             },
             "startPedalTip": {
               "x": 217.9,
               "y": 160.9
             },
             "middlePedalTip": {
-              "x": 210.3,
-              "y": 137.4
+              "x": 211.5,
+              "y": 139.3
             },
             "endPedalTip": {
-              "x": 218,
-              "y": 163.1
+              "x": 217.9,
+              "y": 160.9
             },
             "startAnkleToPedalTipDistPx": 5.26,
-            "middleAnkleToPedalTipDistPx": 4.1,
-            "endAnkleToPedalTipDistPx": 5.48,
+            "middleAnkleToPedalTipDistPx": 6.35,
+            "endAnkleToPedalTipDistPx": 2.69,
             "passed": true
           }
         ]
@@ -2117,16 +2127,16 @@
               "y": 76
             },
             "middleKnee": {
-              "x": 228,
-              "y": 134
+              "x": 184,
+              "y": 138
             },
             "middleAnkle": {
-              "x": 278,
+              "x": 222,
               "y": 148
             },
             "middleFarAnkle": {
-              "x": 124,
-              "y": 174
+              "x": 138,
+              "y": 172
             },
             "penetratingDomeJointCount": 0,
             "penetratingDomeJoints": [],
@@ -2160,16 +2170,16 @@
               "y": 76
             },
             "middleKnee": {
-              "x": 228,
-              "y": 134
+              "x": 184,
+              "y": 138
             },
             "middleAnkle": {
-              "x": 278,
+              "x": 222,
               "y": 148
             },
             "middleFarAnkle": {
-              "x": 124,
-              "y": 174
+              "x": 138,
+              "y": 172
             },
             "penetratingDomeJointCount": 0,
             "penetratingDomeJoints": [],
@@ -2333,12 +2343,12 @@
           "y": 40
         },
         "candidateEndAnkle": {
-          "x": 214,
+          "x": 217,
           "y": 74
         },
         "candidateEndKnee": {
-          "x": 182,
-          "y": 92
+          "x": 185,
+          "y": 90
         }
       },
       "D02_reformerPlank": {
@@ -2383,8 +2393,8 @@
           "y": 76
         },
         "candidateStandingFarAnkle": {
-          "x": 124,
-          "y": 174
+          "x": 138,
+          "y": 172
         }
       }
     }
