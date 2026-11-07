@@ -3,11 +3,10 @@
 ## 1. 요약 및 소유 경계 (Executive Summary & Ownership)
 
 - **독립 작업 브랜치**: `voice-cue-audit-20261107` (기준 커밋: `main` `ac3f61d`)
-- **신규 작성 독점 경로**:
+- **통합 상태**: **MERGED & INTEGRATED INTO `main`** (`F-01..F-04` 최소 수명주기 패치가 `src/models/ClassVoiceController.ts`, `src/hooks/useClassVoiceGuidance.ts`, `src/utils/koreanVoiceNarration.ts`, `src/components/MovementMediaGuidancePanel.tsx`에 적용 완료되었으며, 중복 패치 파일은 정리됨)
+- **검증 및 문서 경로**:
   - `scripts/voice-cue-audit-20261107/**`
   - `docs/voice-cue-audit-20261107/**`
-- **기존 구현 및 공통 설정 보호**: `src/**`, `package.json`, `pnpm-lock.yaml`, `docs/**`(기존 파일), `scripts/**`(기존 파일)는 **100% 읽기 전용(Read-Only)**으로 유지하여 변경이 `0건`임을 검증했습니다.
-- **공유 `main` 동시 수정 · 원격 push · 운영 배포 금지 준수**: 공유 `main` 브랜치를 수정하지 않았으며, 원격 저장소 push나 배포 명령을 실행하지 않았습니다.
 
 ---
 

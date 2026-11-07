@@ -1,10 +1,8 @@
 # `presetSuggestionCandidate` 비침투적 통합 제안서 (Coordinator Hand-off)
 
 > [!IMPORTANT]
-> **후보 브랜치 격리 및 무변경 원칙 준수 명시**
-> - 본 작업에서는 **`src/App.tsx`, `src/components/SequenceWorkbench.tsx`, `src/components/OfflinePresetPicker.tsx`, `src/store/usePilatesStore.ts` 등 기존 운영 라우트·스토어·컴포넌트를 단 한 줄도 수정하지 않았습니다.**
-> - 모든 구현과 테스트는 `src/features/presetSuggestionCandidate/**` 하위에서만 독립된 순수 TypeScript + React 미리보기 후보로 작성되었습니다.
-> - 아래의 통합 코드 및 unified diff 예시는 코디네이터가 후속 통합 단계에서 선택적으로 적용할 수 있는 **통합 전 제안(Pre-Integration Proposal)** 이며, 이미 운영 라우트에 반영되었다는 주장이 아닙니다.
+> **통합 상태: APPLIED & INTEGRATED INTO `main`**
+> - 본 후보 모듈(`src/features/presetSuggestionCandidate/**`)은 `src/components/OfflinePresetPicker.tsx`의 `'시간·휴식 맞춤 후보'` 탭으로 비침투적 통합 완료되었습니다.
 
 ---
 

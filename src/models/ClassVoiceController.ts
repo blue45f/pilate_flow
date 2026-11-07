@@ -74,6 +74,7 @@ export class ClassVoiceController {
       previous.stepKey !== snapshot.stepKey ||
       (previous.remainingSec === 0 && snapshot.remainingSec > 0);
     if (newVisit) {
+      this.cancel();
       this.announced = false;
       this.spokenPhase = '';
       this.warned = false;
@@ -88,10 +89,18 @@ export class ClassVoiceController {
       (previous.title !== snapshot.title || previous.breath !== snapshot.breath)
     ) {
       this.cancel();
+      if (snapshot.running) {
+        this.announced = true;
+        if (snapshot.remainingSec <= 10) this.warned = true;
+      }
       this.spokenPhase = snapshot.phase;
       return;
     }
     if (!this.enabled || !snapshot.eligible || !snapshot.visible) {
+      if (this.enabled && snapshot.eligible && !snapshot.visible && snapshot.running && this.announced) {
+        this.spokenPhase = snapshot.phase;
+        if (snapshot.remainingSec <= 10) this.warned = true;
+      }
       this.cancel();
       return;
     }

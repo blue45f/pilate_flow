@@ -1,8 +1,7 @@
 # `referenceLinkPolicyCandidate` — 공통 파일 무수정 원칙 및 최소 통합 Patch 제안서
 
 > [!IMPORTANT]
-> - 본 문서는 `src/features/referenceLinkPolicyCandidate/**` 독점 소유 범위 안에서 작성된 **통합 전 후보(pre-integration candidate) 최소 Patch 제안서**입니다.
-> - 기존 카탈로그(`src/data/**`), 유틸리티(`src/utils/**`), 스키마(`src/schemas/**`), 공유 라우트 및 컴포넌트(`src/App.tsx`, `src/components/**`)는 **직접 수정하지 않았습니다(`git diff` 0건)**.
+> - **통합 상태: APPLIED & INTEGRATED INTO `main`** (`src/components/ExerciseYouTubeGallery.tsx`, `src/components/YouTubeClipModal.tsx`, `src/components/ExerciseEvidencePanel.tsx` 연결 완료).
 > - 본 모듈은 **참고 링크 정규화·중복 병합·악성 스킴 차단·임베드 불가 시 외부 링크 분리·사용자 클릭 전 autoplay 방지·개인정보/추적 쿼리 제거** 및 **플레이어 표시 계약**만 소유합니다. 동작 해부학 근거 조사(`motionEvidenceReview`), 임상 적합성 판정, 전문가 모션 검수는 소유하지 않습니다.
 
 ---

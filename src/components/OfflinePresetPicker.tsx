@@ -12,11 +12,12 @@ import {
 import { formatSecondsToMMSS, getStepTiming } from '../utils/sequenceEngine';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesStudioState } from '../store/usePilatesStore';
+import { PresetSuggestionCandidatePreview } from '../features/presetSuggestionCandidate';
 import '../styles/offline-presets.css';
 
-type Kind = 'class' | 'block';
+type Kind = 'class' | 'block' | 'suggested';
 interface Selection {
-  kind: Kind;
+  kind: 'class' | 'block';
   id: string;
   expected: PilatesStudioState;
 }
@@ -92,6 +93,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
     setLimit(6);
   };
   const choose = (id: string) => {
+    if (kind === 'suggested') return;
     const current = usePilatesStore.getState();
     setSelection({ kind, id, expected: current });
     setMode(kind === 'class' && !current.activeSteps.length ? 'replace' : 'append');
@@ -143,90 +145,128 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
         >
           연계 동작 묶음 · {OFFLINE_BLOCK_PRESETS.length}
         </button>
-      </div>
-      <div className="offline-presets-filters">
-        <label className="form-field">
-          <span>프리셋 기구</span>
-          <select
-            value={apparatus}
-            onChange={(event) => {
-              setApparatus(event.target.value);
-              resetSelection();
-            }}
-          >
-            <option value="all">모든 기구</option>
-            {Object.entries(APPARATUS_LABELS).map(([id, item]) => (
-              <option key={id} value={id}>
-                {item.ko}
-              </option>
-            ))}
-            <option value="mixed">혼합 기구</option>
-          </select>
-        </label>
-        <label className="form-field">
-          <span>프리셋 주제</span>
-          <select
-            value={theme}
-            onChange={(event) => {
-              setTheme(event.target.value);
-              resetSelection();
-            }}
-          >
-            <option value="all">모든 주제</option>
-            {PRESET_THEME_CATALOG.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.labelKo}
-              </option>
-            ))}
-          </select>
-        </label>
-        {kind === 'class' && (
-          <label className="form-field">
-            <span>프리셋 계획 시간</span>
-            <select
-              value={minutes}
-              onChange={(event) => {
-                setMinutes(event.target.value);
-                resetSelection();
-              }}
-            >
-              <option value="all">모든 시간</option>
-              {[15, 20, 30, 45, 50, 60].map((value) => (
-                <option key={value} value={value}>
-                  {value}분
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-      </div>
-      <p role="status">{matches.length}개 프리셋 · 시간은 편집 가능한 계획값입니다.</p>
-      <div className="offline-presets-list">
-        {matches.slice(0, limit).map((item) => (
-          <button
-            type="button"
-            className="offline-preset-card"
-            key={item.id}
-            aria-pressed={selection?.id === item.id}
-            onClick={() => choose(item.id)}
-          >
-            <strong>{item.title}</strong>
-            <span>
-              {item.presetKind === 'class-sequence' ? item.durationMinutes : item.durationMin}분 ·{' '}
-              {item.presetKind === 'class-sequence' ? item.steps.length : item.items.length}개 동작
-            </span>
-          </button>
-        ))}
-      </div>
-      {!matches.length && (
-        <p>
-          조건에 맞는 프리셋이 없어요. 기구·주제·시간을 넓혀 보세요. 직접 구성은 언제든 가능합니다.
-        </p>
-      )}
-      {matches.length > limit && (
-        <button type="button" className="btn-secondary" onClick={() => setLimit(limit + 6)}>
-          프리셋 더 보기
+        <button
+          type="button"
+          aria-pressed={kind === 'suggested'}
+          onClick={() => {
+            setKind('suggested');
+            resetSelection();
+          }}
+        >
+          시간·휴식 맞춤 후보
         </button>
+      </div>
+      {kind === 'suggested' ? (
+        <PresetSuggestionCandidatePreview
+          request={{
+            apparatus: apparatus === 'all' ? 'reformer' : apparatus,
+            theme: theme === 'all' ? undefined : theme,
+            targetMinutes: minutes === 'all' ? 50 : Number(minutes),
+            catalogExercises: state.exercises,
+          }}
+          onInstantiateEditableDraft={(draft) => {
+            const current = usePilatesStore.getState();
+            const applyMode = current.activeSteps.length > 0 ? 'append' : 'replace';
+            const result = current.applyPresetDraft(
+              {
+                steps: draft.sequence.steps,
+                title: draft.sequence.title,
+                subtitle: draft.sequence.subtitle,
+                targetMinutes: draft.sequence.targetMinutes,
+              },
+              applyMode,
+              current,
+            );
+            if (result.success) onApplied(result.message);
+          }}
+        />
+      ) : (
+        <>
+          <div className="offline-presets-filters">
+            <label className="form-field">
+              <span>프리셋 기구</span>
+              <select
+                value={apparatus}
+                onChange={(event) => {
+                  setApparatus(event.target.value);
+                  resetSelection();
+                }}
+              >
+                <option value="all">모든 기구</option>
+                {Object.entries(APPARATUS_LABELS).map(([id, item]) => (
+                  <option key={id} value={id}>
+                    {item.ko}
+                  </option>
+                ))}
+                <option value="mixed">혼합 기구</option>
+              </select>
+            </label>
+            <label className="form-field">
+              <span>프리셋 주제</span>
+              <select
+                value={theme}
+                onChange={(event) => {
+                  setTheme(event.target.value);
+                  resetSelection();
+                }}
+              >
+                <option value="all">모든 주제</option>
+                {PRESET_THEME_CATALOG.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.labelKo}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {kind === 'class' && (
+              <label className="form-field">
+                <span>프리셋 계획 시간</span>
+                <select
+                  value={minutes}
+                  onChange={(event) => {
+                    setMinutes(event.target.value);
+                    resetSelection();
+                  }}
+                >
+                  <option value="all">모든 시간</option>
+                  {[15, 20, 30, 45, 50, 60].map((value) => (
+                    <option key={value} value={value}>
+                      {value}분
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
+          <p role="status">{matches.length}개 프리셋 · 시간은 편집 가능한 계획값입니다.</p>
+          <div className="offline-presets-list">
+            {matches.slice(0, limit).map((item) => (
+              <button
+                type="button"
+                className="offline-preset-card"
+                key={item.id}
+                aria-pressed={selection?.id === item.id}
+                onClick={() => choose(item.id)}
+              >
+                <strong>{item.title}</strong>
+                <span>
+                  {item.presetKind === 'class-sequence' ? item.durationMinutes : item.durationMin}분 ·{' '}
+                  {item.presetKind === 'class-sequence' ? item.steps.length : item.items.length}개 동작
+                </span>
+              </button>
+            ))}
+          </div>
+          {!matches.length && (
+            <p>
+              조건에 맞는 프리셋이 없어요. 기구·주제·시간을 넓혀 보세요. 직접 구성은 언제든 가능합니다.
+            </p>
+          )}
+          {matches.length > limit && (
+            <button type="button" className="btn-secondary" onClick={() => setLimit(limit + 6)}>
+              프리셋 더 보기
+            </button>
+          )}
+        </>
       )}
       {selected && selection && (
         <section

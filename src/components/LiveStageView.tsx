@@ -20,6 +20,7 @@ import {
   POSITION_LABELS,
   PROP_LABELS,
 } from '../data/pilatesCatalog';
+import { ClassCueSheetPreview } from '../features/classCueSheet/ClassCueSheetPreview';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { ActiveWorkspaceTab } from '../store/usePilatesStore';
 import {
@@ -112,7 +113,14 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   navigationRef,
   onNavigate,
 }) => {
-  const { activeSequenceId, activeTitle, activeSteps, exercises, setActiveTab } = usePilatesStore();
+  const {
+    activeSequenceId,
+    activeTitle,
+    activeSteps,
+    activeTargetMinutes,
+    exercises,
+    setActiveTab,
+  } = usePilatesStore();
   const [session] = useState(() => ({ id: activeSequenceId, title: activeTitle }));
   const [steps, setSteps] = useState(() => activeSteps.map((step) => ({ ...step })));
   const durations = useMemo(
@@ -134,6 +142,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const [reviewOpen, setReviewOpen] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [showAllCues, setShowAllCues] = useState(false);
+  const [showCueSheet, setShowCueSheet] = useState(false);
   const wakeRef = useRef<WakeLockSentinel | null>(null);
   const mounted = useRef(true);
   const runningIntent = useRef(false);
@@ -598,12 +607,33 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           >
             <Expand size={19} />
           </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            aria-expanded={showCueSheet}
+            onClick={() => setShowCueSheet((value) => !value)}
+          >
+            {showCueSheet ? '큐시트 닫기' : '큐시트 보기'}
+          </button>
           <button type="button" className="btn-secondary" onClick={pauseForReview}>
             <Flag size={17} />
             종료 / 기록
           </button>
         </div>
       </header>
+      {showCueSheet && (
+        <section className="panel teaching-cue-sheet-panel" aria-label="수업 진행 큐시트">
+          <ClassCueSheetPreview
+            sourceInput={{
+              title: session.title,
+              steps,
+              exercises,
+              targetMinutes: activeTargetMinutes,
+            }}
+            initialStepIndex={clock.index}
+          />
+        </section>
+      )}
       <div className="teaching-stage-layout">
         <section
           className={`panel teaching-current-panel ${currentIsRest ? 'is-rest' : ''}`}

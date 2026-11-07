@@ -83,6 +83,7 @@ import { StepBlockInspector } from './StepBlockInspector';
 import type { StepInspectorDraftCache } from './StepBlockInspector';
 import { SequencePlanPreview } from './SequencePlanPreview';
 import { MotionPatternGallery } from './MotionPatternGallery';
+import { FirstClassTutorialCandidate } from '../features/firstClassTutorialCandidate';
 import { ClassInsightsDialog } from './ClassInsightsDialog';
 import { AiSequenceCoPilotPanel } from './AiSequenceCoPilotPanel';
 import '../styles/design-tokens.css';
@@ -176,6 +177,7 @@ export function SequenceWorkbench({
 }: Props) {
   const s = usePilatesStore();
   const [presetsOpen, setPresetsOpen] = useState(false);
+  const [showWelcomeTutorial, setShowWelcomeTutorial] = useState(false);
   const [localIdeaSheet, setLocalIdeaSheet] = useState<{
     open: boolean;
     exercise: PilatesExercise | null;
@@ -622,6 +624,23 @@ export function SequenceWorkbench({
             <p className="workbench-reviewed-count">
               추가하고, 순서를 바꾸고, 저장하세요. 검토는 선택입니다.
             </p>
+            <details
+              className="workbench-visual-tutorial-disclosure"
+              open={showWelcomeTutorial}
+              onToggle={(event) => setShowWelcomeTutorial(event.currentTarget.open)}
+            >
+              <summary>첫 수업 3단계 시각 도해 가이드 보기</summary>
+              {showWelcomeTutorial && (
+                <FirstClassTutorialCandidate
+                  variant="inline-card"
+                  onStepAction={(stepId) => {
+                    if (stepId === 'new-movement') openIdeaSheet(null);
+                    else if (stepId === 'block-composition') openExerciseFinder();
+                  }}
+                  onDismiss={() => setShowWelcomeTutorial(false)}
+                />
+              )}
+            </details>
           </div>
         </section>
       )}

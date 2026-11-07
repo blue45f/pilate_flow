@@ -1,5 +1,6 @@
 # Class Cue Sheet 실제 앱 통합 패치 제안서 (`INTEGRATION_PATCH_PROPOSAL.md`)
 
+> **통합 상태**: **APPLIED & INTEGRATED INTO `main`** (`src/components/SequencePlanPreview.tsx`, `src/components/ClassBinderView.tsx`, `src/components/LiveStageView.tsx`)
 > **기준 원격 브랜치**: `origin/main` @ `222b59edf47653a36c4f754b2a572c19cd12cb30`
 > **기능 브랜치**: `feat/class-cue-sheet` @ `51a6f6bd89687730aba87d004740a34bca4b9c51`
 > **문서 목적**: `src/features/classCueSheet/**` 14개 파일을 `origin/main`에 반입한 뒤, 실제 앱 화면 3곳(`SequencePlanPreview.tsx`, `ClassBinderView.tsx`, `LiveStageView.tsx`)에 최소 변경으로 안전하게 연결하기 위한 구체적 `diff --git` 패치와 검증 계약을 정의합니다.

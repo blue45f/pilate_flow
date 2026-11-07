@@ -1,4 +1,5 @@
 import { ClassPlanSummary } from './ClassPlanSummary';
+import { ClassCueSheetPreview } from '../features/classCueSheet/ClassCueSheetPreview';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
@@ -113,6 +114,7 @@ export function SequencePlanPreview({
     snapshot.steps.some((step) => !isRestStep(step) && step.motionStudy) ? 'connected' : 'timeline',
   );
   const [segmentRehearsalOpen, setSegmentRehearsalOpen] = useState(false);
+  const [showCueSheet, setShowCueSheet] = useState(false);
   const segmentEntryRef = useRef<HTMLButtonElement>(null);
   const liveSteps = usePilatesStore((state) => state.activeSteps);
   const liveExercises = usePilatesStore((state) => state.exercises);
@@ -305,6 +307,19 @@ export function SequencePlanPreview({
             </div>
           </dl>
           <ClassPlanSummary {...snapshot} />
+          <details
+            className="class-plan-summary class-cue-sheet-summary"
+            open={showCueSheet}
+            onToggle={(event) => setShowCueSheet(event.currentTarget.open)}
+          >
+            <summary>수업 진행 큐시트 · 인쇄 보기</summary>
+            {showCueSheet && (
+              <ClassCueSheetPreview
+                sourceInput={snapshot}
+                initialStepIndex={index}
+              />
+            )}
+          </details>
           {selected && (
             <nav className="simulation-item-navigation" aria-label="미리보기 항목 이동">
               <p>

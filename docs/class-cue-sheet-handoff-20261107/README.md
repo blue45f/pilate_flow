@@ -1,6 +1,7 @@
 # Class Cue Sheet (`src/features/classCueSheet`) 통합 인계 가이드 (Handoff Guide)
 
 > **문서 기준일**: 2026-11-07
+> **통합 상태**: **MERGED & INTEGRATED INTO `main`** (`SequencePlanPreview.tsx`, `ClassBinderView.tsx`, `LiveStageView.tsx` 연결 완료 및 중복 패치 파일 정리 완료)
 > **작성 브랜치 / HEAD**: `feat/class-cue-sheet` @ `51a6f6bd89687730aba87d004740a34bca4b9c51`
 > **분기 베이스 커밋**: `29a6edbb28c45646f5c237805a8466bc7b42921c` (`Open the movement picker only when requested`)
 > **비교 기준 원격 `origin/main`**: `222b59edf47653a36c4f754b2a572c19cd12cb30` (`feat(motionEvidenceReview): add 3-track mat/apparatus evidence records, validator, tests, and docs`)
@@ -11,27 +12,16 @@
 ## 1. 현재 상태 및 원격 반영 여부 (Current Status & Remote Sync State)
 
 ### 1.1 로컬 구현 및 검증 완료 상태
-- **모듈 경로**: `src/features/classCueSheet/**` (총 **14개 신규 파일**, `10,605` lines 추가, 기존 앱 코드 수정 **0건**)
+- **모듈 경로**: `src/features/classCueSheet/**` (총 **14개 신규 파일**, `10,605` lines 추가)
 - **로컬 커밋 체인 (4개 연속 커밋)**:
   1. `d66e44a742608dedd59cdfb4033f9d440ed90ae4` — `feat(classCueSheet): add standalone instructor cue sheet projection, preview, and print candidate`
   2. `62dcf7e92b06e3f7fd9eb8496a0f46352479ba5a` — `feat(classCueSheet): preserve active step across live edits and verify multi-page PDF pagination`
   3. `1a78a9525090b96b1e278c71e3fd1d86103fa299` — `feat(classCueSheet): refine novice mobile focus UX, text scaling, and multi-viewport usability probe`
   4. `51a6f6bd89687730aba87d004740a34bca4b9c51` — `fix(classCueSheet): guard editable keyboard shortcuts, deduplicate aria-live, and verify lifecycle resilience`
 
-### 1.2 원격(`origin`) 미반영 상태 명시 (`NOT PUSHED / NOT MERGED`)
-- 본 `feat/class-cue-sheet` 브랜치의 4개 커밋(`d66e44a` → `62dcf7e` → `1a78a95` → `51a6f6b`)은 **로컬 저장소에만 존재하며, 원격(`origin/main` `222b59e` 및 `origin`의 모든 원격 브랜치)에 아직 푸시되거나 병합되지 않은(`not pushed / not merged`) 상태**입니다.
-- **Git 검증 증거**:
-  ```text
-  $ git branch -r --contains 51a6f6bd89687730aba87d004740a34bca4b9c51
-  (출력 없음 — 원격 브랜치 중 해당 커밋을 포함하는 브랜치 없음)
-
-  $ git ls-remote --heads origin
-  d9486533d0ba422a58f80ebb1a8706010104216c	refs/heads/feat/teaching-history-backup-recovery-hardening
-  052b6d3cf34a0bddfd7729b724767f4e82d9f018	refs/heads/fix/regenerate-scope-mobile-20261107
-  89dda1bfbfa7dcfa0901ca16dc92d16e51bf3721	refs/heads/gh-pages
-  222b59edf47653a36c4f754b2a572c19cd12cb30	refs/heads/main
-  ```
-- 따라서 조정 담당자는 아래 **3절(권장 적용 순서)**의 방법 A(`git cherry-pick`), 방법 B(`git am`), 방법 C(`git apply`) 중 하나로 `origin/main` 통합 브랜치에 반입한 뒤 원격에 반영해야 합니다.
+### 1.2 원격(`origin/main`) 병합 및 프로덕션 컴포넌트 연결 완료 (`MERGED & INTEGRATED`)
+- `feat/class-cue-sheet` 브랜치의 커밋 체인이 `origin/main`에 병합되었으며, `INTEGRATION_PATCH_PROPOSAL.md`의 3개 화면(`SequencePlanPreview.tsx`, `ClassBinderView.tsx`, `LiveStageView.tsx`) 선택적(Opt-In) 통합 패치가 `main`에 적용 완료되었습니다.
+- 통합 완료에 따라 임시 패치 번들(`docs/class-cue-sheet-handoff-20261107/patches/`)은 정리되었습니다.
 
 ---
 

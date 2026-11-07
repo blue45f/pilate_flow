@@ -177,7 +177,9 @@ function MovementMediaGuidanceInner({
       },
     );
 
-    movementMediaSessionCoordinator.notifyMovementActivated(exercise.id);
+    if (active) {
+      movementMediaSessionCoordinator.notifyMovementActivated(exercise.id);
+    }
 
     return () => {
       unregister();

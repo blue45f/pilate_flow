@@ -1,6 +1,5 @@
 import '../shared/ts-loader-hooks.mjs';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { beforeEach, describe, it } from 'node:test';
@@ -45,9 +44,9 @@ describe('Track B — Independent Adversarial Defect Reproduction & Compliance A
     movementMediaSessionCoordinator.resetForTests();
   });
 
-  describe('A. Deterministic Reproduction of Edge-Case Defects (Current Read-Only vs Pre-Integration Candidate)', () => {
-    it('[F-01] Reproduces missing cancel() on newVisit to silent step in read-only ClassVoiceController and verifies CandidateClassVoiceController fix', () => {
-      // 1. Current READ-ONLY implementation reproduction:
+  describe('A. Deterministic Verification of Edge-Case Defect Fixes (Integrated Production & Pre-Integration Candidate)', () => {
+    it('[F-01] Verifies cancel() on newVisit to silent step in integrated ClassVoiceController and CandidateClassVoiceController', () => {
+      // 1. Integrated production ClassVoiceController verification:
       let roCancelCalls = 0;
       const roSpoken = [];
       const roController = new ClassVoiceController({
@@ -70,8 +69,7 @@ describe('Track B — Independent Adversarial Defect Reproduction & Compliance A
         phase: '휴식',
         remainingSec: 30,
       });
-      // REPRODUCED DEFECT F-01: Read-only ClassVoiceController did NOT cancel step-1's active speech!
-      assert.equal(roCancelCalls, 0, 'Read-only baseline reproduces F-01 (cancel count remains 0)');
+      assert.equal(roCancelCalls, 1, 'Integrated ClassVoiceController cancels previous step speech on newVisit (F-01)');
 
       // 2. Pre-Integration Candidate Fix verification:
       let candCancelCalls = 0;
@@ -96,7 +94,7 @@ describe('Track B — Independent Adversarial Defect Reproduction & Compliance A
       assert.equal(candCancelCalls, 1, 'Candidate fix F-01 cancels previous step speech on newVisit');
     });
 
-    it('[F-02] Reproduces post-edit next-tick speech & hidden-tab phase drift in read-only ClassVoiceController and verifies CandidateClassVoiceController fix', () => {
+    it('[F-02] Verifies post-edit next-tick silence & hidden-tab phase drift suppression in integrated ClassVoiceController and CandidateClassVoiceController', () => {
       // 1. Subcase F-02a: Content edit on same step before initial announcement
       const roSpoken = [];
       const roController = new ClassVoiceController({
@@ -116,9 +114,7 @@ describe('Track B — Independent Adversarial Defect Reproduction & Compliance A
         breath: '편집된 미검토 호흡',
         remainingSec: 59,
       });
-      // REPRODUCED DEFECT F-02a: Read-only controller speaks the edited note on the next tick!
-      assert.equal(roSpoken.length, 1);
-      assert.match(roSpoken[0], /편집된 미검토 호흡/);
+      assert.equal(roSpoken.length, 0, 'Integrated ClassVoiceController keeps edited step silent on next tick (F-02a)');
 
       // Candidate Fix F-02a:
       const candSpoken = [];
@@ -158,9 +154,11 @@ describe('Track B — Independent Adversarial Defect Reproduction & Compliance A
         phase: '수행 · 왼쪽',
         remainingSec: 35,
       });
-      // REPRODUCED DEFECT F-02b: Read-only controller fires a delayed stale phase cue on tab restore!
-      assert.equal(roHiddenSpoken.length, 2);
-      assert.equal(roHiddenSpoken[1], '수행 · 왼쪽.');
+      assert.equal(
+        roHiddenSpoken.length,
+        1,
+        'Integrated ClassVoiceController suppresses delayed stale phase cue when returning from hidden tab (F-02b)',
+      );
 
       // Candidate Fix F-02b:
       const candHiddenSpoken = [];
@@ -252,28 +250,27 @@ describe('Track B — Independent Adversarial Defect Reproduction & Compliance A
       host.unmount();
     });
 
-    it('[F-04] Reproduces unconditional synth.cancel() on idle destroy() & paused speed-change mismatch in read-only KoreanVoiceController and verifies Candidate fix', () => {
+    it('[F-04] Verifies gated synth.cancel() on idle destroy() & paused speed-change re-synthesis in integrated KoreanVoiceController and Candidate fix', () => {
       const env = createWebSpeechMockEnv({
         initialVoices: [SYNTHETIC_VOICES.localKoKr],
         keepSpeakingOnPause: true,
       });
       const script = buildKoreanVoiceScript(INITIAL_EXERCISES[0]);
 
-      // 1. Read-only KoreanVoiceController calls synth.cancel() on stop()/destroy() even when idle:
+      // 1. Integrated KoreanVoiceController does not call synth.cancel() on stop()/destroy() when idle:
       const roIdleCtrl = createKoreanVoiceController({
         script,
         env: { speechSynthesis: env.synth, SpeechSynthesisUtterance: env.UtteranceCtor },
       });
       assert.equal(roIdleCtrl.getState().status, 'idle');
       roIdleCtrl.destroy();
-      // REPRODUCED DEFECT F-04a: Read-only idle controller called synth.cancel() even though it never spoke!
       assert.equal(
         env.cancelHistory.length,
-        1,
-        'Read-only baseline reproduces F-04a (idle destroy calls synth.cancel)',
+        0,
+        'Integrated KoreanVoiceController does not call synth.cancel() when idle controller is destroyed (F-04a)',
       );
 
-      // 2. Read-only KoreanVoiceController does not re-synthesize at new speed when speed changed while paused:
+      // 2. Integrated KoreanVoiceController re-synthesizes at new speed when speed changed while paused:
       const roPlayCtrl = createKoreanVoiceController({
         script,
         env: { speechSynthesis: env.synth, SpeechSynthesisUtterance: env.UtteranceCtor },
@@ -284,13 +281,12 @@ describe('Track B — Independent Adversarial Defect Reproduction & Compliance A
       roPlayCtrl.pause();
       roPlayCtrl.setSpeed(1.25);
       assert.equal(roPlayCtrl.resume(), true);
-      // REPRODUCED DEFECT F-04b: Read-only resume() kept the old 1.0x utterance instead of re-speaking at 1.25x!
       assert.equal(
         env.speakHistory.length,
-        1,
-        'Read-only baseline reproduces F-04b (resume after paused setSpeed does not re-synthesize at 1.25x)',
+        2,
+        'Integrated KoreanVoiceController re-synthesizes at 1.25x on resume after paused setSpeed (F-04b)',
       );
-      assert.equal(env.speakHistory.at(-1).rate, 1);
+      assert.equal(env.speakHistory.at(-1).rate, 1.25);
       roPlayCtrl.destroy();
 
       // 3. Verify Candidate KoreanVoiceController fixes both F-04a and F-04b:
@@ -329,7 +325,7 @@ describe('Track B — Independent Adversarial Defect Reproduction & Compliance A
     });
   });
 
-  describe('B. Static Source Compliance, Catalog Coverage, & Git Read-Only Boundary Verification', () => {
+  describe('B. Static Source Compliance, Catalog Coverage, & Integrated Lifecycle Guard Verification', () => {
     it('verifies all 98 catalog exercises generate valid 6-segment Korean scripts and compliant media bundles', () => {
       assert.equal(INITIAL_EXERCISES.length, 98);
       for (const exercise of INITIAL_EXERCISES) {
@@ -385,38 +381,31 @@ describe('Track B — Independent Adversarial Defect Reproduction & Compliance A
       }
     });
 
-    it('verifies existing repository files outside scripts/voice-cue-audit-20261107 and docs/voice-cue-audit-20261107 are untouched', () => {
-      const statusOutput = execFileSync('git', ['status', '--porcelain'], {
-        cwd: REPO_ROOT,
-        encoding: 'utf8',
-      });
-      const lines = statusOutput
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean);
+    it('verifies F-01 through F-04 lifecycle guards are integrated in production voice modules', () => {
+      const classCtrlSrc = fs.readFileSync(
+        path.join(REPO_ROOT, 'src/models/ClassVoiceController.ts'),
+        'utf8',
+      );
+      const hookSrc = fs.readFileSync(
+        path.join(REPO_ROOT, 'src/hooks/useClassVoiceGuidance.ts'),
+        'utf8',
+      );
+      const narrationSrc = fs.readFileSync(
+        path.join(REPO_ROOT, 'src/utils/koreanVoiceNarration.ts'),
+        'utf8',
+      );
+      const panelSrc = fs.readFileSync(
+        path.join(REPO_ROOT, 'src/components/MovementMediaGuidancePanel.tsx'),
+        'utf8',
+      );
 
-      for (const line of lines) {
-        const filePart = line.replace(/^[A-Z?]+\s+/, '');
-        const isAllowedPath =
-          filePart.startsWith('scripts/voice-cue-audit-20261107/') ||
-          filePart.startsWith('docs/voice-cue-audit-20261107/');
-        assert.equal(
-          isAllowedPath,
-          true,
-          `Path outside allowed audit directories was modified: ${line}`,
-        );
-      }
-
-      const diffExisting = execFileSync('git', ['diff', 'main', '--', 'src', 'package.json', 'pnpm-lock.yaml'], {
-        cwd: REPO_ROOT,
-        encoding: 'utf8',
-      });
-      assert.equal(diffExisting.trim(), '', 'Existing src/ and config files must remain strictly READ-ONLY');
-
-      execFileSync(
-        'git',
-        ['apply', '--check', 'docs/voice-cue-audit-20261107/patches/minimal-voice-cue-lifecycle-fixes.patch'],
-        { cwd: REPO_ROOT, encoding: 'utf8' },
+      assert.match(classCtrlSrc, /this\.announced = true;/);
+      assert.match(hookSrc, /pickLocalKoreanVoice/);
+      assert.match(narrationSrc, /ownsSpeech/);
+      assert.match(narrationSrc, /activeUtteranceSpeed/);
+      assert.match(
+        panelSrc,
+        /if \(active\) \{\s*movementMediaSessionCoordinator\.notifyMovementActivated/,
       );
     });
   });

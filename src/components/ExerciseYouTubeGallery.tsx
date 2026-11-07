@@ -6,6 +6,10 @@ import {
 } from '../data/exerciseYouTubeCatalog';
 import type { CuratedYouTubeVideoItem } from '../data/exerciseYouTubeCatalog';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
+import {
+  isStrictNoAutoplayEmbedUrl,
+  normalizeReferenceUrlPolicy,
+} from '../features/referenceLinkPolicyCandidate';
 import type { PilatesExercise } from '../types/pilates';
 import '../styles/exercise-youtube-gallery.css';
 
@@ -86,6 +90,15 @@ const ExerciseYouTubeGalleryContent: React.FC<ExerciseYouTubeGalleryProps> = ({
   const activeVideo = useMemo(
     () => videos.find((v) => v.videoId === activeVideoId) ?? null,
     [videos, activeVideoId],
+  );
+  const activeVideoPolicy = useMemo(
+    () =>
+      activeVideo
+        ? normalizeReferenceUrlPolicy(activeVideo.watchUrl, {
+            startSec: activeVideo.startSec,
+          })
+        : null,
+    [activeVideo],
   );
 
   const krCount = videos.filter((v) => v.region === 'kr').length;
@@ -194,7 +207,7 @@ const ExerciseYouTubeGalleryContent: React.FC<ExerciseYouTubeGalleryProps> = ({
                     </button>
                   )}
                   <a
-                    href={activeVideo.watchUrl}
+                    href={activeVideoPolicy?.canonicalExternalUrl ?? activeVideo.watchUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="eyg-ext-link"
@@ -212,13 +225,20 @@ const ExerciseYouTubeGalleryContent: React.FC<ExerciseYouTubeGalleryProps> = ({
                 </div>
               </div>
               <div className="eyg-iframe-wrap">
-                <iframe
-                  src={`${activeVideo.embedUrl}&autoplay=0`}
-                  title={`${activeVideo.title} - ${activeVideo.authorName}`}
-                  allow="encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  referrerPolicy="strict-origin-when-cross-origin"
-                />
+                {(() => {
+                  const candidateEmbedUrl =
+                    activeVideoPolicy?.embedUrl ?? `${activeVideo.embedUrl}&autoplay=0`;
+                  if (!isStrictNoAutoplayEmbedUrl(candidateEmbedUrl)) return null;
+                  return (
+                    <iframe
+                      src={candidateEmbedUrl}
+                      title={`${activeVideo.title} - ${activeVideo.authorName}`}
+                      allow="encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      referrerPolicy="strict-origin-when-cross-origin"
+                    />
+                  );
+                })()}
               </div>
             </div>
           )}

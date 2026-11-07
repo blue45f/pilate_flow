@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { APPARATUS_LABELS, CANONICAL_BLOCKS, POSITION_LABELS } from '../data/pilatesCatalog';
 import { getMovementProvenance, getMovementVideoLink } from '../data/movementProvenance';
+import { normalizeReferenceUrlPolicy } from '../features/referenceLinkPolicyCandidate';
 import {
   EQUIPMENT_OPTIONS,
   PROP_OPTIONS,
@@ -754,12 +755,20 @@ const MovementDetails: React.FC<{
   const hasOptionalVideo = Boolean(exercise.youtube.url.trim());
   const showVideoSource =
     hasOptionalVideo || (!primarySource && !exercise.id.startsWith('ex-custom-own-'));
-  const link = getMovementVideoLink(exercise);
+  const rawLink = getMovementVideoLink(exercise);
   const { videoId, startSec, endSec } = exercise.youtube;
   const safeStart = Math.max(0, Math.floor(startSec || 0));
   const safeEnd = endSec && endSec > safeStart ? Math.floor(endSec) : null;
+  const linkPolicy = rawLink
+    ? normalizeReferenceUrlPolicy(rawLink, {
+        startSec: safeStart,
+        endSec: safeEnd,
+      })
+    : null;
+  const link = linkPolicy?.canonicalExternalUrl ?? rawLink;
   const embedUrl = link
-    ? `https://www.youtube-nocookie.com/embed/${videoId}?start=${safeStart}${safeEnd ? `&end=${safeEnd}` : ''}&rel=0&autoplay=0`
+    ? (linkPolicy?.embedUrl ??
+      `https://www.youtube-nocookie.com/embed/${videoId}?start=${safeStart}${safeEnd ? `&end=${safeEnd}` : ''}&rel=0&autoplay=0`)
     : '';
   return (
     <div className="movement-detail">

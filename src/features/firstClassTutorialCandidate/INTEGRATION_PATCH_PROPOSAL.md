@@ -1,8 +1,7 @@
 # 첫 수업 3단계 시각 가이드 후보 모듈 통합 제안서 (`INTEGRATION_PATCH_PROPOSAL.md`)
 
 > [!IMPORTANT]
-> 본 문서는 [`src/features/firstClassTutorialCandidate/`](file:///home/antigravity/blue45f/pilate_flow/src/features/firstClassTutorialCandidate/firstClassTutorialTypes.ts) 범위 내에서 작성된 **통합 전 후보(Pre-integration Candidate) 패치 제안서**입니다.
-> 기존 공유 파일([`src/App.tsx`](file:///home/antigravity/blue45f/pilate_flow/src/App.tsx), [`src/components/InstructorStudyDialog.tsx`](file:///home/antigravity/blue45f/pilate_flow/src/components/InstructorStudyDialog.tsx), [`src/components/SequenceWorkbench.tsx`](file:///home/antigravity/blue45f/pilate_flow/src/components/SequenceWorkbench.tsx), [`src/store/usePilatesStore.ts`](file:///home/antigravity/blue45f/pilate_flow/src/store/usePilatesStore.ts), `package.json`, `pnpm-lock.yaml`)은 **직접 수정하지 않았습니다(`git diff` 공유 파일 0건)**.
+> **통합 상태**: **APPLIED & INTEGRATED INTO `main`** ([`src/components/InstructorStudyDialog.tsx`](file:///home/antigravity/blue45f/pilate_flow/src/components/InstructorStudyDialog.tsx) 및 [`src/components/SequenceWorkbench.tsx`](file:///home/antigravity/blue45f/pilate_flow/src/components/SequenceWorkbench.tsx) 선택적 디스클로저 연결 완료)
 
 ---
 

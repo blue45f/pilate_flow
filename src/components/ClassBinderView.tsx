@@ -22,6 +22,7 @@ import {
   INITIAL_HISTORY_LOGS,
   INITIAL_SAVED_SEQUENCES,
 } from '../data/pilatesCatalog';
+import { ClassCueSheetPreview } from '../features/classCueSheet/ClassCueSheetPreview';
 import {
   PfAiStatusBadge,
   PfBadge,
@@ -132,6 +133,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   const [historyCopyError, setHistoryCopyError] = useState('');
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [printSequence, setPrintSequence] = useState<SavedSequence | null>(null);
+  const [showBinderCueSheet, setShowBinderCueSheet] = useState(false);
   const [reopenedHistoryId, setReopenedHistoryId] = useState<string | null>(null);
   const groupNameInputRef = useRef<HTMLInputElement | null>(null);
   const groupErrorId = useId();
@@ -896,6 +898,21 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
         <div className="teaching-print-sheet">
           <p>강사 검토용 계획 · 스프링과 세팅은 실제 기구에서 확인해 주세요.</p>
           <pre>{printSequence ? sheetFor(printSequence) : ''}</pre>
+          {printSequence && (
+            <details
+              className="teaching-cue-sheet-disclosure"
+              open={showBinderCueSheet}
+              onToggle={(event) => setShowBinderCueSheet(event.currentTarget.open)}
+            >
+              <summary>구조형 수업 큐시트 보기</summary>
+              {showBinderCueSheet && (
+                <ClassCueSheetPreview
+                  sourceInput={printSequence}
+                  projectionOptions={{ exercises }}
+                />
+              )}
+            </details>
+          )}
         </div>
         <div className="teaching-form-actions">
           <PfButton variant="secondary" onClick={() => setPrintSequence(null)}>

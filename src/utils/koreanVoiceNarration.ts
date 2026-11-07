@@ -626,6 +626,8 @@ export function createKoreanVoiceController(
 
   let playbackRunId = 0;
   let isInternalCancel = false;
+  let ownsSpeech = false;
+  let activeUtteranceSpeed: KoreanVoicePlaybackSpeed = state.speed;
   let currentQueueIndices: number[] = script.segments.map((_, index) => index);
   let destroyed = false;
 
@@ -638,6 +640,10 @@ export function createKoreanVoiceController(
   }
 
   function cancelSpeechSafely(): void {
+    if (!ownsSpeech) {
+      return;
+    }
+    ownsSpeech = false;
     const synth = resolveSpeechSynthesis(env);
     if (!synth) {
       return;
@@ -721,6 +727,7 @@ export function createKoreanVoiceController(
       }
       utterance.voice = selectedVoice;
       utterance.lang = selectedVoice.lang;
+      activeUtteranceSpeed = state.speed;
 
       utterance.onend = () => {
         if (destroyed || runId !== playbackRunId || state.status !== 'playing') {
@@ -730,6 +737,7 @@ export function createKoreanVoiceController(
         if (nextQueuePos < currentQueueIndices.length) {
           speakQueueFromPosition(nextQueuePos, runId);
         } else {
+          ownsSpeech = false;
           emitState({
             status: 'completed',
             errorMessageKo: null,
@@ -746,6 +754,7 @@ export function createKoreanVoiceController(
         if (errCode === 'canceled' || errCode === 'interrupted') {
           return;
         }
+        ownsSpeech = false;
         emitState({
           status: 'error',
           errorMessageKo:
@@ -755,9 +764,11 @@ export function createKoreanVoiceController(
         });
       };
 
+      ownsSpeech = true;
       synth.speak(utterance);
       return true;
     } catch {
+      ownsSpeech = false;
       emitState({
         status: 'error',
         errorMessageKo:
@@ -875,29 +886,46 @@ export function createKoreanVoiceController(
       if (destroyed || state.status !== 'paused') {
         return false;
       }
+      movementMediaSessionCoordinator.notifyMovementActivated(script.exerciseId);
+      capability = inspectMobileAndBrowserTtsSupport(env);
       const synth = resolveSpeechSynthesis(env);
-      if (!synth || !capability.canAttemptSpeech) {
+      let selectedVoice: SpeechSynthesisVoice | null;
+      try {
+        selectedVoice = synth ? selectBestKoreanVoice(synth.getVoices?.() ?? []) : null;
+      } catch {
+        selectedVoice = null;
+      }
+      if (!synth || !capability.canAttemptSpeech || !selectedVoice) {
+        playbackRunId += 1;
+        cancelSpeechSafely();
+        emitState({
+          capability,
+          status: 'unsupported',
+          errorMessageKo: capability.detailNoteKo,
+          announcementKo: capability.summaryLabelKo,
+        });
         return false;
       }
 
-      movementMediaSessionCoordinator.notifyMovementActivated(script.exerciseId);
+      if (state.speed === activeUtteranceSpeed) {
+        try {
+          synth.resume?.();
+        } catch {
+          // Ignore resume errors and fall back to segment recovery below.
+        }
 
-      try {
-        synth.resume?.();
-      } catch {
-        // Ignore resume errors and fall back to segment recovery below.
-      }
-
-      const isStillSpeakingOrPaused = Boolean(synth.speaking || synth.paused);
-      if (isStillSpeakingOrPaused) {
-        emitState({
-          status: 'playing',
-          errorMessageKo: null,
-          announcementKo: `${
-            script.segments[state.activeSegmentIndex]?.labelKo ?? '현재'
-          } 구간 한국어 음성 안내 이어듣기 중 (${state.speed}배속)`,
-        });
-        return true;
+        const isStillSpeakingOrPaused = Boolean(synth.speaking || synth.paused);
+        if (isStillSpeakingOrPaused) {
+          emitState({
+            capability,
+            status: 'playing',
+            errorMessageKo: null,
+            announcementKo: `${
+              script.segments[state.activeSegmentIndex]?.labelKo ?? '현재'
+            } 구간 한국어 음성 안내 이어듣기 중 (${state.speed}배속)`,
+          });
+          return true;
+        }
       }
 
       // Mobile segment recovery: re-speak starting from state.activeSegmentIndex

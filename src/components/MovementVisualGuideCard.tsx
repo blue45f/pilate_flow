@@ -19,6 +19,10 @@ import type {
   VisualPhaseId,
 } from '../data/movementVisualRigCatalog';
 import {
+  resolveMotionCoverage,
+  resolveVisualAssetForRenderer,
+} from '../features/motionCoverage';
+import {
   compareCatalogMovements,
   evaluateVisualAssetIntegrity,
   getRecommendedComparisonPeers,
@@ -759,8 +763,14 @@ export function MovementVisualGuideCard({
     peer: PilatesExercise;
   } | null>(null);
 
+  const motionCoverage = useMemo(
+    () => resolveMotionCoverage(exercise),
+    [exercise],
+  );
+
   const asset = useMemo(
     () =>
+      resolveVisualAssetForRenderer(exercise) ??
       getMovementVisualAsset(exercise) ??
       buildMovementVisualAssetForExercise(exercise),
     [exercise],
@@ -1439,6 +1449,10 @@ export function MovementVisualGuideCard({
         <div
           data-testid="visual-diagram-viewport"
           data-view-mode={viewMode}
+          data-motion-primary-mode={motionCoverage.primaryMode}
+          data-readiness-state={motionCoverage.readinessState}
+          data-canonical-motion-ready={String(motionCoverage.canonicalMotionReady)}
+          data-true-3d={String(motionCoverage.safetyFlags.true3dSupported)}
           style={{
             display: 'flex',
             flexDirection: 'column',

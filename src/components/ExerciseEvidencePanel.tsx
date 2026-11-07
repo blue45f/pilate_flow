@@ -1,5 +1,7 @@
 import { useId } from 'react';
 import { ChevronDown, ExternalLink, FileCheck2 } from 'lucide-react';
+import { MotionCoverageEvidenceDlItems } from '../features/motionCoverage/integrationExamples';
+import { normalizeReferenceUrlPolicy } from '../features/referenceLinkPolicyCandidate';
 import type { PilatesExercise, SequenceStep } from '../types/pilates';
 import { getExerciseEvidence, safeEvidenceHttpUrl } from '../utils/exerciseEvidence';
 import { isRestStep } from '../utils/sequenceEngine';
@@ -162,16 +164,20 @@ export function ExerciseEvidencePanel({ exercise, step }: ExerciseEvidencePanelP
             )}
             {evidence.links.length > 0 && (
               <div className="eep-links">
-                {evidence.links.map((link) => (
-                  <a
-                    key={`${link.kind}-${link.href}`}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {link.label} <ExternalLink size={14} aria-hidden="true" />
-                  </a>
-                ))}
+                {evidence.links.map((link) => {
+                  const policy = normalizeReferenceUrlPolicy(link.href);
+                  return (
+                    <a
+                      key={`${link.kind}-${link.href}`}
+                      href={link.href}
+                      data-url-policy={policy.ok ? policy.provider : 'external-http'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {link.label} <ExternalLink size={14} aria-hidden="true" />
+                    </a>
+                  );
+                })}
               </div>
             )}
             <p className="eep-disclaimer">
@@ -200,6 +206,7 @@ export function ExerciseEvidencePanel({ exercise, step }: ExerciseEvidencePanelP
                   별개
                 </dd>
               </div>
+              <MotionCoverageEvidenceDlItems exercise={exercise} />
             </dl>
             {motion.relatedProposals.length > 0 && (
               <ul aria-label="이 기록 ID와 대조하는 제작 제안">

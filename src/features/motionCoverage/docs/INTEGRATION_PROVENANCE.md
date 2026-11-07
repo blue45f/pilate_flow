@@ -7,11 +7,11 @@ The original archive and extracted snapshot are preserved separately from this e
 
 Independent baseline on main `29a6edb6cbdb4f53523e1c64fff35f6890768ba4`: 3 feature test files, **19 tests passed**, and `tsc -b` passed. The previous self-reported 54-test total has not been reproduced as this feature's test count.
 
-This module is an isolated inspection tool. It is not connected to production app routes, shared UI, stores, class playback, source ledgers or deployment. It does not replace `ConnectedMotionStudy`, whose cursor, anatomical side and mirroring remain parent-controlled. The inspector figures use their default anatomical side and orientation; they must not be presented as the selected side of a class plan.
+This module provides verified motion coverage resolution and adapters. Safe non-recursive adapters (`toMovementPhaseDiagramProps`, `resolveMotionCoverage`, `resolveVisualAssetForRenderer`, `MotionCoverageEvidenceDlItems`) are connected to `MovementDiagramReference.tsx`, `MovementVisualGuideCard.tsx`, and `ExerciseEvidencePanel.tsx`. It does not replace `ConnectedMotionStudy`, whose cursor, anatomical side and mirroring remain parent-controlled. The inspector figures use their default anatomical side and orientation; they must not be presented as the selected side of a class plan.
 
 Integration changes enforce explicit playback, reduced-motion stills, live host guards, stale-frame cancellation and options synchronization. Edited catalog facts cannot inherit unchanged catalog verification. Review status remains optional and does not gate class authoring. No canonical asset, expert review, anatomical validation or true 3D capability is granted.
 
-Do not apply Patch 1 from the historical integration proposal: adding coverage to `getExerciseEvidence` creates a recursive dependency through `getVisualSourceComparison`. The safe boundary is an external wrapper or separate UI composition. No shared evidence function has been modified.
+Do not apply Patch 1 from the historical integration proposal: adding coverage to `getExerciseEvidence` creates a recursive dependency through `getVisualSourceComparison`. The safe boundary is an external wrapper or separate UI composition (`MotionCoverageEvidenceDlItems`), which has been applied without modifying `getExerciseEvidence`.
 
 ## Independent integration verification
 

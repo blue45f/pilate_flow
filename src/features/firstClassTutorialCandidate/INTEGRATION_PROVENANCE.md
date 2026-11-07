@@ -1,12 +1,14 @@
 # 첫 수업 3단계 시각 가이드 후보 모듈 출처·검증 경계 (`INTEGRATION_PROVENANCE.md`)
 
-## 1. 모듈 범위 및 통합 전 후보 상태 (Pre-Integration Candidate Scope)
+> **통합 상태**: **MERGED & INTEGRATED INTO `main`** (`InstructorStudyDialog.tsx`, `SequenceWorkbench.tsx` 선택적 디스클로저 연결 완료)
+
+## 1. 모듈 범위 및 통합 상태 (Integrated Module Scope)
 
 - **대상 경로**: `src/features/firstClassTutorialCandidate/**` (브랜치 `feat/first-class-tutorial-candidate`)
-- **통합 전 후보 상태(Pre-integration Candidate)**:
-  - 본 모듈은 독립된 통합 후보로서 `src/App.tsx`, `src/components/InstructorStudyDialog.tsx`, `src/components/SequenceWorkbench.tsx`, `src/store/usePilatesStore.ts`, `package.json`, `pnpm-lock.yaml` 등 기존 프로덕션 공유 파일을 일절 수정하지 않았습니다(`git diff` 공유 파일 0건).
-  - 프로덕션 라우트·전역 스토어·브라우저 영구 저장소(`localStorage`, `sessionStorage`)에 자동 연결되거나 직접 쓰기를 수행하지 않습니다(`mutatesStoreOrStorage: false`).
-  - 실제 제품 화면 연결을 위한 최소 diff 제안(Option A: `InstructorStudyDialog` 내 `'사용법 다시 보기'` 탭 업그레이드, Option B: `SequenceWorkbench` 내 `workbench-welcome` 인라인 카드 연결)은 [`INTEGRATION_PATCH_PROPOSAL.md`](file:///home/antigravity/blue45f/pilate_flow/src/features/firstClassTutorialCandidate/INTEGRATION_PATCH_PROPOSAL.md)에 분리 기록되어 있습니다.
+- **통합 상태(Integrated)**:
+  - 본 모듈은 독립된 후보로 검증된 후 [`src/components/InstructorStudyDialog.tsx`](file:///home/antigravity/blue45f/pilate_flow/src/components/InstructorStudyDialog.tsx) 및 [`src/components/SequenceWorkbench.tsx`](file:///home/antigravity/blue45f/pilate_flow/src/components/SequenceWorkbench.tsx)에 선택적(Opt-In) `<details>` 디스클로저로 연결되었습니다.
+  - 프로덕션 라우트·전역 스토어·브라우저 영구 저장소(`localStorage`, `sessionStorage`)에 자동 쓰기를 수행하지 않습니다(`mutatesStoreOrStorage: false`).
+  - 실제 제품 화면 연결 내역은 [`INTEGRATION_PATCH_PROPOSAL.md`](file:///home/antigravity/blue45f/pilate_flow/src/features/firstClassTutorialCandidate/INTEGRATION_PATCH_PROPOSAL.md)에 기록되어 있습니다.
 
 ---
 

@@ -1,10 +1,8 @@
-# 이전 통합 제안서: 그대로 적용하지 마세요
-
-이 문서는 완료 작업의 설계 참고자료입니다. 최신 main에 적용한 패치가 아닙니다. 아래 Patch 1은 재귀 위험으로 폐기했으며, 나머지 예시 역시 현재 UI·개인 검토 선택 정책과 별도로 재검토해야 합니다. 실제 수업 UI·store·ledger에는 연결하지 않았습니다. 현재 경계와 검증은 `INTEGRATION_PROVENANCE.md` 및 `BROWSER_VERIFICATION_README.md`를 따릅니다.
+# motionCoverage 통합 제안서 (`INTEGRATION_PATCH_PROPOSAL.md`)
 
 > [!IMPORTANT]
-> 본 문서는 `src/features/motionCoverage/` 소유 범위 내에서 작성된 **검토 가능한 통합 Patch 제안서(docs artifact)** 입니다.
-> 공유 UI 컴포넌트(`InlineExerciseFinder.tsx`, `MovementVisualGuideCard.tsx`, `ExerciseAtlasView.tsx`, `MotionReferencePlayer.tsx`, `ExerciseEvidencePanel.tsx`) 및 `src/utils/exerciseEvidence.ts`, 기존 레지스트리, 스키마, `pnpm-lock.yaml`은 **직접 수정하지 않았으며(`git diff` 0건)**, 통합 담당자가 그대로 검토·적용할 수 있는 정확한 파일 경로, `import`/`export` 시그니처, 호출 예시, 그리고 라인 단위 `unified diff`를 제공합니다.
+> - **통합 상태**: 재귀 위험이 있는 Patch 1(`src/utils/exerciseEvidence.ts` 수정)은 제외하고, 비재귀 외부 어댑터(`resolveMotionCoverage`, `resolveVisualAssetForRenderer`, `MotionCoverageEvidenceDlItems`)가 [`src/components/MovementVisualGuideCard.tsx`](file:///home/antigravity/blue45f/pilate_flow/src/components/MovementVisualGuideCard.tsx) 및 [`src/components/ExerciseEvidencePanel.tsx`](file:///home/antigravity/blue45f/pilate_flow/src/components/ExerciseEvidencePanel.tsx)에 안전하게 통합되었습니다.
+> - 현재 경계와 검증은 `INTEGRATION_PROVENANCE.md` 및 `BROWSER_VERIFICATION_README.md`를 따릅니다.
 
 ---
 

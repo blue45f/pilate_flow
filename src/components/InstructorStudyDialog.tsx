@@ -6,6 +6,7 @@ import type { PilatesExercise, LayerMode } from '../types/pilates';
 import type { InstructorStudyState } from '../types/instructorStudy';
 import { getExerciseReviewState } from '../utils/exerciseReview';
 import { ExerciseEvidencePanel } from './ExerciseEvidencePanel';
+import { FirstClassTutorialCandidate } from '../features/firstClassTutorialCandidate';
 import { LightDismissDialog } from './LightDismissDialog';
 import { MotionReferencePlayer } from './MotionReferencePlayer';
 import '../styles/design-tokens.css';
@@ -95,6 +96,7 @@ export function InstructorStudyDialog({
   const [layer, setLayer] = useState<LayerMode>('standard');
   const [limit, setLimit] = useState({ signature: '', count: 6 });
   const [tutorialIndex, setTutorialIndex] = useState(0);
+  const [showVisualTutorial, setShowVisualTutorial] = useState(false);
   const filtered = useMemo(() => {
     const terms = search.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
     return exercises.filter(
@@ -187,6 +189,21 @@ export function InstructorStudyDialog({
                 내 수업 구성으로 가기
               </PfButton>
             )}
+            <details
+              className="study-visual-tutorial-disclosure"
+              open={showVisualTutorial}
+              onToggle={(event) => setShowVisualTutorial(event.currentTarget.open)}
+            >
+              <summary>첫 수업 3단계 시각 도해 가이드 보기</summary>
+              {showVisualTutorial && (
+                <FirstClassTutorialCandidate
+                  variant="study-guide-panel"
+                  completedTaskIds={study.completedTutorialTaskIds}
+                  onTaskToggle={(taskId, completed) => onTutorialTaskChange(taskId, completed)}
+                  onReturnToWorkbench={onOpenWorkbench}
+                />
+              )}
+            </details>
           </PfCard>
         ) : (
           <div className="study-layout">
