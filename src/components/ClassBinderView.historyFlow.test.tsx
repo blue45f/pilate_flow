@@ -762,5 +762,124 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
       });
     }
   });
+
+  it('scopes Round 4 compact header/filter spacing to history view and preserves first-card date, title, primary reuse action, and active selections across 320px/390px mobile viewports', () => {
+    const originalInnerWidth = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value: 320,
+    });
+
+    try {
+      const [ex1] = usePilatesStore.getState().exercises;
+      const logs6 = Array.from({ length: 6 }, (_, i) => {
+        const day = String(28 - i).padStart(2, '0');
+        return {
+          id: `round4-log-${i + 1}`,
+          sequenceId: `seq-round4-${i + 1}`,
+          sequenceTitle: `Round4 모바일 첫카드 수업 #${i + 1}`,
+          groupId: 'grp-mon-wed-7pm',
+          groupName: '월·수 저녁반',
+          apparatus: 'reformer' as const,
+          level: '1.5' as const,
+          taughtAt: `2026-10-${day}T09:00:00.000Z`,
+          instructorReflection: `Round4 검증 메모 ${i + 1}`,
+          intensity: 'moderate' as const,
+          rating: 5 as const,
+          exerciseIds: [ex1.id],
+          stepsSnapshot: [makeStepSnapshot(`r4-step-${i + 1}`, ex1.id, 1)],
+        };
+      });
+
+      usePilatesStore.setState({ historyLogs: logs6 });
+
+      const onOpenLogModal = vi.fn();
+      const { container, rerender } = render(
+        <ClassBinderView view="history" onOpenLogModal={onOpenLogModal} />,
+      );
+
+      const section = container.querySelector('.teaching-collection');
+      expect(section).toHaveClass('teaching-collection--history');
+      expect(section).not.toHaveClass('teaching-collection--saved');
+
+      // All header, summary, group filter, and date filter controls remain present (no feature deletion)
+      expect(screen.getByRole('heading', { level: 1, name: /수업 기록/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /수업 그룹 추가/ })).toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: '수업 기록 검색' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /월·수 저녁반/ })).toBeInTheDocument();
+
+      // First card exposes date (<time>), title (<h2>), reopen button, and primary reuse button in natural DOM order
+      const feed = screen.getByRole('region', { name: '수업 기록 목록' });
+      const firstCard = within(feed).getAllByRole('article')[0];
+      const timeEl = firstCard.querySelector('time');
+      const titleEl = firstCard.querySelector('h2');
+      const reopenBtn = within(firstCard).getByRole('button', { name: /이력 다시 열기/ });
+      const primaryReuseBtn = within(firstCard).getByRole('button', {
+        name: /이 수업 다시 계획/,
+      });
+
+      expect(timeEl).toBeTruthy();
+      expect(titleEl).toHaveTextContent('Round4 모바일 첫카드 수업 #1');
+      expect(
+        Boolean(timeEl!.compareDocumentPosition(titleEl!) & Node.DOCUMENT_POSITION_FOLLOWING),
+      ).toBe(true);
+      expect(
+        Boolean(
+          titleEl!.compareDocumentPosition(primaryReuseBtn) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ),
+      ).toBe(true);
+      expect(reopenBtn).toBeInTheDocument();
+
+      // Select a group filter and an older date, then resize 320 -> 390 -> 320: selections must not reset
+      fireEvent.click(screen.getByRole('button', { name: /월·수 저녁반/ }));
+      const dateNav = screen.getByRole('group', { name: '날짜별 기록 탐색' });
+      fireEvent.click(within(dateNav).getByRole('button', { name: /이전 날짜 더보기/ }));
+      const expandedDateChips = dateNav.querySelectorAll<HTMLButtonElement>(
+        'button.teaching-date-chip',
+      );
+      const olderChip = expandedDateChips[expandedDateChips.length - 1];
+      fireEvent.click(olderChip);
+      fireEvent.click(within(dateNav).getByRole('button', { name: '날짜 접기' }));
+
+      Object.defineProperty(window, 'innerWidth', {
+        configurable: true,
+        writable: true,
+        value: 390,
+      });
+      act(() => {
+        window.dispatchEvent(new Event('resize'));
+      });
+
+      expect(within(feed).getAllByRole('article')).toHaveLength(1);
+      expect(within(feed).getByText('Round4 모바일 첫카드 수업 #6')).toBeInTheDocument();
+
+      // Primary reuse action still loads the historical snapshot into the workbench and switches activeTab to workbench
+      fireEvent.click(
+        within(feed).getByRole('button', {
+          name: /이 수업 다시 계획/,
+        }),
+      );
+      expect(usePilatesStore.getState().activeTab).toBe('workbench');
+
+      // Rerendering as saved view switches modifier class cleanly to teaching-collection--saved
+      rerender(<ClassBinderView view="saved" onOpenLogModal={onOpenLogModal} />);
+      expect(container.querySelector('.teaching-collection')).toHaveClass(
+        'teaching-collection--saved',
+      );
+      expect(container.querySelector('.teaching-collection')).not.toHaveClass(
+        'teaching-collection--history',
+      );
+    } finally {
+      Object.defineProperty(window, 'innerWidth', {
+        configurable: true,
+        writable: true,
+        value: originalInnerWidth,
+      });
+      act(() => {
+        window.dispatchEvent(new Event('resize'));
+      });
+    }
+  });
 });
 
