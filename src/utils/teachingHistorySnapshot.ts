@@ -2685,6 +2685,65 @@ export function clearBackupRestoreRollbackPoint(): void {
 }
 
 
+function computePersistedStorageFingerprint(
+  raw: string | null,
+): { ok: true; fingerprint: string } | { ok: false; code: 'storage_invalid' } {
+  if (raw === null) return { ok: true, fingerprint: 'missing' };
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (
+      !value ||
+      typeof value !== 'object' ||
+      Array.isArray(value) ||
+      !('version' in value) ||
+      ((value as { version?: unknown }).version !== 0 &&
+        (value as { version?: unknown }).version !== 3) ||
+      !('state' in value) ||
+      !(value as { state?: unknown }).state ||
+      typeof (value as { state?: unknown }).state !== 'object' ||
+      Array.isArray((value as { state?: unknown }).state)
+    ) {
+      return { ok: false, code: 'storage_invalid' };
+    }
+    const state: Record<string, unknown> = {
+      ...((value as { state: Record<string, unknown> }).state ?? {}),
+    };
+    if (
+      typeof state.activeTab === 'string' &&
+      ['workbench', 'atlas', 'binder', 'history', 'stage', 'schedule'].includes(state.activeTab)
+    ) {
+      delete state.activeTab;
+    }
+    if (
+      typeof state.themeMode === 'string' &&
+      ['system', 'light', 'dark'].includes(state.themeMode)
+    ) {
+      delete state.themeMode;
+    }
+    const normalize = (item: unknown): unknown => {
+      if (typeof item === 'number' && !Number.isFinite(item)) {
+        throw new Error('non-finite persisted number');
+      }
+      if (Array.isArray(item)) return item.map(normalize);
+      if (item !== null && typeof item === 'object') {
+        const object = item as Record<string, unknown>;
+        return Object.fromEntries(
+          Object.keys(object)
+            .sort()
+            .map((key) => [key, normalize(object[key])]),
+        );
+      }
+      return item;
+    };
+    return {
+      ok: true,
+      fingerprint: JSON.stringify(normalize({ ...(value as Record<string, unknown>), state })),
+    };
+  } catch {
+    return { ok: false, code: 'storage_invalid' };
+  }
+}
+
 export function rollbackLatestBackupRestore<
   T extends RecoveryCurrentState & {
     ownedApparatus: ApparatusType[];
@@ -2721,11 +2780,33 @@ export function rollbackLatestBackupRestore<
   if (storeApi.checkStorage) {
     const disk = storeApi.checkStorage(point.postRestoreStorageFingerprint ?? undefined);
     if (!disk.ok) {
-      return {
-        success: false,
-        reason: disk.code === 'storage_unavailable' ? 'storage-unavailable' : 'storage-changed',
-        message: disk.message ?? '브라우저 저장 자료를 확인할 수 없어 자동 되돌리기를 중단했습니다.',
-      };
+      if (point.postRestoreStorageFingerprint !== null && disk.code === 'storage_unavailable') {
+        let rawDisk: string | null = null;
+        let canReadDisk = false;
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            rawDisk = window.localStorage.getItem('pilates-flow-atelier-storage-v3');
+            canReadDisk = true;
+          }
+        } catch {
+          canReadDisk = false;
+        }
+        const directFp = canReadDisk ? computePersistedStorageFingerprint(rawDisk) : null;
+        if (!directFp || !directFp.ok || directFp.fingerprint !== point.postRestoreStorageFingerprint) {
+          return {
+            success: false,
+            reason: canReadDisk ? 'storage-changed' : 'storage-unavailable',
+            message:
+              disk.message ?? '브라우저 저장 자료를 확인할 수 없어 자동 되돌리기를 중단했습니다.',
+          };
+        }
+      } else {
+        return {
+          success: false,
+          reason: disk.code === 'storage_unavailable' ? 'storage-unavailable' : 'storage-changed',
+          message: disk.message ?? '브라우저 저장 자료를 확인할 수 없어 자동 되돌리기를 중단했습니다.',
+        };
+      }
     }
   }
 

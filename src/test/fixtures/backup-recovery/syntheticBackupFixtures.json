@@ -1,0 +1,64 @@
+{
+  "description": "Synthetic local-only fixtures for backup/restore and rollback browser regression harness. Contains zero real user or production data.",
+  "incomingBackupV3": {
+    "format": "pilates-flow-atelier",
+    "version": 3,
+    "exportedAt": "2026-11-06T08:00:00.000Z",
+    "data": {
+      "savedSequences": [
+        {
+          "id": "seq-synthetic-harness-imported-1",
+          "title": "백업에서 복원된 리포머 시퀀스",
+          "subtitle": "합성 테스트 픽스처 시퀀스",
+          "apparatus": "reformer",
+          "level": "1.5",
+          "focusTags": ["core-control", "reformer-flow"],
+          "targetMinutes": 50,
+          "taughtCount": 0,
+          "createdAt": "2026-11-05T09:00:00.000Z",
+          "updatedAt": "2026-11-05T09:30:00.000Z",
+          "version": 1
+        }
+      ],
+      "historyLogs": [
+        {
+          "id": "log-synthetic-harness-imported-1",
+          "sequenceId": "seq-synthetic-harness-imported-1",
+          "sequenceTitle": "백업에서 복원된 리포머 시퀀스",
+          "taughtAt": "2026-11-05T10:00:00.000Z",
+          "apparatus": "reformer",
+          "level": "1.5",
+          "rating": 5,
+          "intensity": "moderate",
+          "instructorReflection": "합성 백업 픽스처 완료 기록 스냅샷"
+        }
+      ]
+    }
+  },
+  "rollbackKeyFaultFixtures": {
+    "storageKey": "pilates-flow-backup-rollback-v1",
+    "corruptedJsonRaw": "{corrupted-rollback-json-payload",
+    "legacyVersion0Template": {
+      "version": 0,
+      "id": "rollback-synthetic-legacy-v0",
+      "capturedAt": "2026-11-06T08:10:00.000Z",
+      "addedCount": 2
+    },
+    "unsupportedVersion99Template": {
+      "version": 99,
+      "id": "rollback-synthetic-unsupported-v99",
+      "capturedAt": "2026-11-06T08:15:00.000Z",
+      "addedCount": 2
+    },
+    "invalidPreRestoreShapeTemplate": {
+      "version": 1,
+      "id": "rollback-synthetic-invalid-shape",
+      "capturedAt": "2026-11-06T08:20:00.000Z",
+      "addedCount": 1,
+      "preRestoreState": {
+        "exercises": "invalid-non-array",
+        "savedSequences": null
+      }
+    }
+  }
+}

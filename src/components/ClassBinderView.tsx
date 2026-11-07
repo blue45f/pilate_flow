@@ -265,11 +265,18 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     setShowGroupForm(false);
     setMessage('수업 그룹을 추가했습니다.');
   };
+  const copyingRef = useRef(false);
   const copyHistory = (logId: string) => {
-    const stateBeforeLoad = usePilatesStore.getState();
-    copyHistoryLogIntoWorkbenchSafely(logId, usePilatesStore);
-    const after = usePilatesStore.getState();
-    setHistoryCopyError(after === stateBeforeLoad ? '' : (after.generationError ?? ''));
+    if (copyingRef.current) return;
+    copyingRef.current = true;
+    try {
+      const stateBeforeLoad = usePilatesStore.getState();
+      copyHistoryLogIntoWorkbenchSafely(logId, usePilatesStore);
+      const after = usePilatesStore.getState();
+      setHistoryCopyError(after === stateBeforeLoad ? '' : (after.generationError ?? ''));
+    } finally {
+      copyingRef.current = false;
+    }
   };
 
   return (

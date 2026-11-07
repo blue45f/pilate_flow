@@ -11,6 +11,7 @@ import type { BackupRecoveryInspection } from '../utils/backupRecoveryInspection
 import {
   captureBackupPreRestoreState,
   clearBackupRestoreRollbackPoint,
+  getLatestBackupRollbackPoint,
   recordBackupRestoreRollbackPoint,
   rollbackLatestBackupRestore,
 } from '../utils/teachingHistorySnapshot';
@@ -23,13 +24,23 @@ export function RecoveryPreview() {
   const input = useRef<HTMLInputElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const request = useRef(0);
+  const applyingRef = useRef(false);
+  const rollingBackRef = useRef(false);
   const [raw, setRaw] = useState<string | null>(null);
   const [inspection, setInspection] = useState<BackupRecoveryInspection | null>(null);
   const [reading, setReading] = useState(false);
   const [message, setMessage] = useState('');
   const [storageStatus, setStorageStatus] = useState<RecoveryStorageStatus | null>(null);
   const [storageFingerprint, setStorageFingerprint] = useState<string | undefined>();
-  const [rollbackPoint, setRollbackPoint] = useState<BackupRestoreRollbackPoint | null>(null);
+  const [rollbackPoint, setRollbackPoint] = useState<BackupRestoreRollbackPoint | null>(() => {
+    const candidate = getLatestBackupRollbackPoint();
+    if (!candidate) return null;
+    const currentState = usePilatesStore.getState();
+    if (candidate.postRestoreStateFingerprint !== backupRecoveryStateFingerprint(currentState)) {
+      return null;
+    }
+    return candidate;
+  });
   useLayoutEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (raw === null || (event.key !== null && event.key !== RECOVERY_STORAGE_KEY)) return;
@@ -227,39 +238,53 @@ export function RecoveryPreview() {
                   className="btn-primary"
                   disabled={!!stale || diskBlocked || reading}
                   onClick={() => {
-                    if (raw === null) return;
-                    const preRestoreState = captureBackupPreRestoreState(
-                      usePilatesStore.getState(),
-                    );
-                    const result = usePilatesStore.getState().restoreBackup(raw, {
-                      expectedStateFingerprint: inspection.stateFingerprint,
-                      expectedStorageFingerprint: storageFingerprint,
-                    });
-                    setMessage(result.message);
-                    if (!result.success) {
-                      const disk = getRecoveryStorageStatus(storageFingerprint);
-                      setStorageStatus(disk);
-                      if (!disk.ok) setMessage('');
-                    }
-                    if (result.success) {
-                      if (!result.unchanged) {
-                        const postDisk = getRecoveryStorageStatus();
-                        const point = recordBackupRestoreRollbackPoint({
-                          preRestoreState,
-                          addedCount: result.added,
-                          postRestoreStateFingerprint: backupRecoveryStateFingerprint(
-                            usePilatesStore.getState(),
-                          ),
-                          postRestoreStorageFingerprint: postDisk.ok ? postDisk.fingerprint : null,
-                        });
-                        setRollbackPoint(point);
-                      } else {
-                        clearBackupRestoreRollbackPoint();
-                        setRollbackPoint(null);
+                    if (raw === null || applyingRef.current) return;
+                    applyingRef.current = true;
+                    try {
+                      const preRestoreState = captureBackupPreRestoreState(
+                        usePilatesStore.getState(),
+                      );
+                      const result = usePilatesStore.getState().restoreBackup(raw, {
+                        expectedStateFingerprint: inspection.stateFingerprint,
+                        expectedStorageFingerprint: storageFingerprint,
+                      });
+                      setMessage(result.message);
+                      if (!result.success) {
+                        const disk = getRecoveryStorageStatus(storageFingerprint);
+                        setStorageStatus(disk);
+                        if (!disk.ok) setMessage('');
                       }
-                      setRaw(null);
-                      setInspection(null);
-                      focusChooser();
+                      if (result.success) {
+                        if (!result.unchanged) {
+                          const postDisk = getRecoveryStorageStatus();
+                          const point = recordBackupRestoreRollbackPoint({
+                            preRestoreState,
+                            addedCount: result.added,
+                            postRestoreStateFingerprint: backupRecoveryStateFingerprint(
+                              usePilatesStore.getState(),
+                            ),
+                            postRestoreStorageFingerprint: postDisk.ok ? postDisk.fingerprint : null,
+                          });
+                          setRollbackPoint(point);
+                        } else {
+                          const existingPoint = getLatestBackupRollbackPoint();
+                          const currentFp = backupRecoveryStateFingerprint(
+                            usePilatesStore.getState(),
+                          );
+                          if (
+                            !existingPoint ||
+                            existingPoint.postRestoreStateFingerprint !== currentFp
+                          ) {
+                            clearBackupRestoreRollbackPoint();
+                            setRollbackPoint(null);
+                          }
+                        }
+                        setRaw(null);
+                        setInspection(null);
+                        focusChooser();
+                      }
+                    } finally {
+                      applyingRef.current = false;
                     }
                   }}
                 >
@@ -280,15 +305,21 @@ export function RecoveryPreview() {
             type="button"
             className="btn-secondary"
             onClick={() => {
-              const outcome = rollbackLatestBackupRestore({
-                getState: usePilatesStore.getState,
-                setState: (partial) => usePilatesStore.setState(partial),
-                checkStorage: (expected) => getRecoveryStorageStatus(expected ?? undefined),
-              });
-              setMessage(outcome.message);
-              if (outcome.success) {
-                setRollbackPoint(null);
-                focusChooser();
+              if (rollingBackRef.current) return;
+              rollingBackRef.current = true;
+              try {
+                const outcome = rollbackLatestBackupRestore({
+                  getState: usePilatesStore.getState,
+                  setState: (partial) => usePilatesStore.setState(partial),
+                  checkStorage: (expected) => getRecoveryStorageStatus(expected ?? undefined),
+                });
+                setMessage(outcome.message);
+                if (outcome.success || !getLatestBackupRollbackPoint()) {
+                  setRollbackPoint(null);
+                  if (outcome.success) focusChooser();
+                }
+              } finally {
+                rollingBackRef.current = false;
               }
             }}
           >

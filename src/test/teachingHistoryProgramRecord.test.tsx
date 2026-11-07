@@ -26,6 +26,10 @@ import {
   saveIdeaToReusableBlock,
   saveMovementIdeaDraft,
 } from '../utils/movementIdeaDraft';
+import {
+  BACKUP_ROLLBACK_STORAGE_KEY,
+  resetInMemoryBackupRollbackPointForTest,
+} from '../utils/teachingHistorySnapshot';
 import { syntheticPlanningExercise } from './planningFixtures';
 
 const originalStore = usePilatesStore.getState();
@@ -665,4 +669,315 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
     expect(afterRollback.undoStack).toBe(before.undoStack);
     expect(screen.getByRole('status')).toHaveTextContent('백업 복원 이전 상태로 되돌렸습니다.');
   });
+
+  it('guards LogSessionModal against rapid double-click on save and attaches top-level sequenceSnapshot and sourceProvenance', () => {
+    const onClose = vi.fn();
+    const planWithProvenance: SavedSequence = {
+      ...savedPlan,
+      sourceProvenance: {
+        kind: 'saved-sequence-clone',
+        sourceId: savedPlan.id,
+        sourceTitle: savedPlan.title,
+        sourceSequenceId: savedPlan.id,
+        clonedAt: '2026-11-01T09:00:00.000Z',
+        summaryKo: '저장 시퀀스에서 복제',
+      },
+    };
+    usePilatesStore.setState({
+      savedSequences: [planWithProvenance],
+      activeTitle: '진행 중 루틴',
+      activeSteps: planWithProvenance.steps,
+    });
+
+    render(<LogSessionModal sequenceId={planWithProvenance.id} onClose={onClose} />);
+    const saveBtn = screen.getByRole('button', { name: '수업 기록 저장' });
+
+    // Rapid synchronous double-click
+    fireEvent.click(saveBtn);
+    fireEvent.click(saveBtn);
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    const logs = usePilatesStore.getState().historyLogs as ClassHistoryLogWithSnapshot[];
+    expect(logs).toHaveLength(1);
+    expect(logs[0].programSnapshot).toBeDefined();
+    expect(logs[0].sequenceSnapshot).toBeDefined();
+    expect(logs[0].sequenceSnapshot?.sourceSequenceId).toBe(planWithProvenance.id);
+    expect(logs[0].sourceProvenance).toBeDefined();
+    expect(logs[0].sourceProvenance?.kind).toBe('saved-sequence-clone');
+    expect(logs[0].sourceProvenance?.sourceSequenceId).toBe(planWithProvenance.id);
+  });
+
+  it('guards ClassBinderView copyHistory against rapid double-click and preserves unreviewed snapshot status on reconstruction', () => {
+    const unreviewedExercise: PilatesExercise = {
+      ...exCore,
+      id: 'custom-unreviewed-in-binder',
+      nameKo: '미검토 시퀀스 동작',
+      isCustom: true,
+      review: undefined,
+    };
+    const unrevSteps: SequenceStep[] = [
+      {
+        stepId: 'step-unrev',
+        order: 1,
+        exerciseId: unreviewedExercise.id,
+        blockCategory: 'core',
+        durationMin: 10,
+        selectedLayer: 'standard',
+      },
+    ];
+    usePilatesStore.setState({
+      exercises: [exWarm, unreviewedExercise],
+      activeTitle: '수업 중',
+      activeSteps: unrevSteps,
+    });
+    const onClose = vi.fn();
+    const { unmount } = render(
+      <LogSessionModal
+        sequenceId={savedPlan.id}
+        onClose={onClose}
+        context={{
+          stepsSnapshot: unrevSteps,
+          sequenceTitle: '미검토 포함 수업',
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: '수업 기록 저장' }));
+    unmount();
+
+    // Delete the custom unreviewed exercise after logging
+    usePilatesStore.setState({
+      exercises: [exWarm],
+      activeTitle: '새 수업',
+      activeSteps: [
+        {
+          stepId: 's-1',
+          order: 1,
+          exerciseId: exWarm.id,
+          blockCategory: 'warmup',
+          durationMin: 8,
+          selectedLayer: 'standard',
+        },
+      ],
+    });
+
+    render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
+
+    const copyBtn = screen.getByRole('button', { name: '이 수업 다시 계획' });
+    fireEvent.click(copyBtn);
+    fireEvent.click(copyBtn);
+
+    const reconstructed = usePilatesStore
+      .getState()
+      .exercises.find((ex) => ex.id === unreviewedExercise.id);
+    expect(reconstructed).toBeDefined();
+    expect(reconstructed?.review?.status).not.toBe('approved');
+  });
+
+  it('persists rollback across simulated page reload (remount), blocks double-click races, and handles cancel and legacy/future/duplicate/malformed inputs in RecoveryPreview', async () => {
+    vi.useRealTimers();
+    const activeDraftSteps: SequenceStep[] = [
+      {
+        stepId: 'draft-step-stay',
+        order: 1,
+        exerciseId: exWarm.id,
+        blockCategory: 'warmup',
+        durationMin: 6,
+        selectedLayer: 'standard',
+      },
+    ];
+    usePilatesStore.setState({
+      savedSequences: [savedPlan],
+      activeTitle: '작성 중인 새 수업 초안',
+      activeSteps: activeDraftSteps,
+    });
+    const before = usePilatesStore.getState();
+
+    // 1. Future version (version: 99) -> blocked, preflight cannot apply, existing state intact
+    const firstRender = render(<RecoveryPreview />);
+    const futureRaw = JSON.stringify({
+      format: 'pilates-flow-atelier',
+      version: 99,
+      exportedAt: '2026-11-05T10:00:00.000Z',
+      data: { savedSequences: [], historyLogs: [] },
+    });
+    const futureFile = new File([futureRaw], 'future.json', { type: 'application/json' });
+    Object.defineProperty(futureFile, 'text', { value: vi.fn().mockResolvedValue(futureRaw) });
+    fireEvent.change(screen.getByLabelText('백업 JSON 파일 선택'), {
+      target: { files: [futureFile] },
+    });
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /이 백업 버전은 현재 앱에서 지원하지 않습니다/,
+    );
+    expect(
+      screen.queryByRole('button', { name: '이 내용으로 복원 적용' }),
+    ).not.toBeInTheDocument();
+    expect(usePilatesStore.getState().savedSequences).toBe(before.savedSequences);
+
+    // 2. Partially missing required collections (missing exercises & classGroups) -> blocked without modifying state
+    const partialMissingRaw = JSON.stringify({
+      savedSequences: [
+        { ...savedPlan, title: '백업 안의 중복 시퀀스 (무시되어야 함)' },
+        { ...savedPlan, id: 'seq-legacy-new', title: '구버전 백업 새 시퀀스' },
+      ],
+      historyLogs: [],
+    });
+    const partialMissingFile = new File([partialMissingRaw], 'partial.json', {
+      type: 'application/json',
+    });
+    Object.defineProperty(partialMissingFile, 'text', {
+      value: vi.fn().mockResolvedValue(partialMissingRaw),
+    });
+    fireEvent.change(screen.getByLabelText('백업 JSON 파일 선택'), {
+      target: { files: [partialMissingFile] },
+    });
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /백업의 필수 자료·조건·블록 형식이 올바르지 않습니다/,
+    );
+    expect(usePilatesStore.getState().savedSequences).toBe(before.savedSequences);
+
+    // 3. Valid backup with duplicate ID conflict + new sequence -> cancel first, then apply, then simulate reload + rollback
+    const validWithDupAndNew = JSON.stringify({
+      format: 'pilates-flow-atelier',
+      version: 3,
+      exportedAt: '2026-11-05T10:30:00.000Z',
+      data: {
+        exercises: [exWarm, exCore],
+        classGroups: INITIAL_CLASS_GROUPS,
+        savedSequences: [
+          { ...savedPlan, title: '백업 안의 중복 시퀀스 (무시되어야 함)' },
+          { ...savedPlan, id: 'seq-legacy-new', title: '구버전 백업 새 시퀀스' },
+        ],
+        historyLogs: [],
+      },
+    });
+    const validFile = new File([validWithDupAndNew], 'valid-dup.json', {
+      type: 'application/json',
+    });
+    Object.defineProperty(validFile, 'text', {
+      value: vi.fn().mockResolvedValue(validWithDupAndNew),
+    });
+    fireEvent.change(screen.getByLabelText('백업 JSON 파일 선택'), {
+      target: { files: [validFile] },
+    });
+
+    const preflight = await screen.findByRole('region', { name: '복구 전 확인' });
+    expect(preflight).toHaveTextContent(/충돌·되돌리기 안내/);
+    expect(preflight).toHaveTextContent(/충돌 1/);
+
+    // Cancel restore -> state untouched
+    fireEvent.click(screen.getByRole('button', { name: '복원 취소' }));
+    expect(screen.queryByRole('region', { name: '복구 전 확인' })).not.toBeInTheDocument();
+    expect(usePilatesStore.getState().savedSequences).toBe(before.savedSequences);
+
+    // Re-select file and rapid double-click Apply
+    fireEvent.change(screen.getByLabelText('백업 JSON 파일 선택'), {
+      target: { files: [validFile] },
+    });
+    const applyBtn = await screen.findByRole('button', { name: '이 내용으로 복원 적용' });
+    fireEvent.click(applyBtn);
+    fireEvent.click(applyBtn);
+
+    const afterApply = usePilatesStore.getState();
+    expect(afterApply.savedSequences).toHaveLength(2);
+    expect(afterApply.savedSequences.find((s) => s.id === savedPlan.id)?.title).toBe(
+      savedPlan.title,
+    );
+    expect(afterApply.activeTitle).toBe('작성 중인 새 수업 초안');
+    expect(afterApply.activeSteps).toEqual(activeDraftSteps);
+
+    // Simulate page refresh: unmount RecoveryPreview and remount a fresh instance
+    firstRender.unmount();
+    render(<RecoveryPreview />);
+
+    // Rollback button should still be rendered after simulated page reload because rollback point persisted to localStorage
+    const rollbackBtnAfterReload = screen.getByRole('button', {
+      name: '복원 이전 상태로 되돌리기',
+    });
+    fireEvent.click(rollbackBtnAfterReload);
+    fireEvent.click(rollbackBtnAfterReload);
+
+    const afterRollback = usePilatesStore.getState();
+    expect(afterRollback.savedSequences).toHaveLength(1);
+    expect(afterRollback.savedSequences[0].id).toBe(savedPlan.id);
+    expect(afterRollback.activeTitle).toBe('작성 중인 새 수업 초안');
+    expect(afterRollback.activeSteps).toEqual(activeDraftSteps);
+    expect(
+      screen.queryByRole('button', { name: '복원 이전 상태로 되돌리기' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('preserves valid rollback point across duplicate unchanged backup import, hydrates legacy v0 rollback key, and blocks rollback after a post-restore session log', async () => {
+    vi.useRealTimers();
+    const validBackupRaw = JSON.stringify({
+      format: 'pilates-flow-atelier',
+      version: 3,
+      exportedAt: '2026-11-06T09:00:00.000Z',
+      data: {
+        exercises: [exWarm, exCore],
+        classGroups: INITIAL_CLASS_GROUPS,
+        savedSequences: [
+          savedPlan,
+          { ...savedPlan, id: 'seq-added-by-restore', title: '복원으로 추가된 수업' },
+        ],
+        historyLogs: [],
+      },
+    });
+    const backupFile = new File([validBackupRaw], 'restore.json', { type: 'application/json' });
+    Object.defineProperty(backupFile, 'text', {
+      value: vi.fn().mockResolvedValue(validBackupRaw),
+    });
+
+    const view = render(<RecoveryPreview />);
+    fireEvent.change(screen.getByLabelText('백업 JSON 파일 선택'), {
+      target: { files: [backupFile] },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: '이 내용으로 복원 적용' }));
+    expect(usePilatesStore.getState().savedSequences).toHaveLength(2);
+    expect(
+      screen.getByRole('button', { name: '복원 이전 상태로 되돌리기' }),
+    ).toBeInTheDocument();
+
+    // Re-importing the exact same backup (duplicate import -> result.unchanged === true) must NOT lose the valid rollback point
+    fireEvent.change(screen.getByLabelText('백업 JSON 파일 선택'), {
+      target: { files: [backupFile] },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: '이 내용으로 복원 적용' }));
+    expect(
+      screen.getByRole('button', { name: '복원 이전 상태로 되돌리기' }),
+    ).toBeInTheDocument();
+
+    // Downgrade stored rollback payload to legacy version 0 and simulate reload
+    const storedRollbackRaw = localStorage.getItem(BACKUP_ROLLBACK_STORAGE_KEY);
+    expect(storedRollbackRaw).toBeTruthy();
+    const legacyPayload = { ...JSON.parse(storedRollbackRaw!), version: 0 };
+    localStorage.setItem(BACKUP_ROLLBACK_STORAGE_KEY, JSON.stringify(legacyPayload));
+    resetInMemoryBackupRollbackPointForTest();
+    view.unmount();
+
+    // Remount after reload with legacy v0 rollback payload -> valid rollback point is still available
+    render(<RecoveryPreview />);
+    const rollbackBtn = screen.getByRole('button', { name: '복원 이전 상태로 되돌리기' });
+    expect(rollbackBtn).toBeInTheDocument();
+
+    // Record a new completed session after restore -> clicking rollback must be blocked so the new session log is not lost
+    const onCloseModal = vi.fn();
+    const modalView = render(
+      <LogSessionModal sequenceId="seq-added-by-restore" onClose={onCloseModal} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: '수업 기록 저장' }));
+    modalView.unmount();
+    expect(usePilatesStore.getState().historyLogs).toHaveLength(1);
+
+    fireEvent.click(rollbackBtn);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      /복원 이후 추가 변경이 발생해 자동 되돌리기를 중단했습니다/,
+    );
+    expect(usePilatesStore.getState().historyLogs).toHaveLength(1);
+    expect(usePilatesStore.getState().savedSequences).toHaveLength(2);
+  });
 });
+
+
+
