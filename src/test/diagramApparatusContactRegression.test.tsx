@@ -295,19 +295,94 @@ describe('Round 4 semantic differentiation regression (SM-01..SM-08 + ambiguous-
     }
   });
 
-  it('leaves ambiguous-evidence breath-observation exercises unmodified & unverified, and renders all 98x3 diagrams cleanly', () => {
-    const ambiguousBreathIds = [
-      'original-mat-rib-breath',
-      'original-cadillac-table-breath',
-      'original-chair-seated-breath',
-      'original-barrel-standing-breath',
-    ] as const;
+  it('resolves Round 5 pure breath-observation semantic, contact, spring, and muscle-fallback defects across 4 exercises x 3 phases x mirrored', () => {
+    const matBreath = getMovementVisualAsset('original-mat-rib-breath')!;
+    const cadillacBreath = getMovementVisualAsset('original-cadillac-table-breath')!;
+    const chairBreath = getMovementVisualAsset('original-chair-seated-breath')!;
+    const barrelBreath = getMovementVisualAsset('original-barrel-standing-breath')!;
 
-    for (const id of ambiguousBreathIds) {
-      const asset = getMovementVisualAsset(id)!;
-      expect(asset.anatomicalAccuracyAssumed).toBe(false);
+    expect(matBreath.archetypeId).toBe('mat-supine-rib-breath-isolated');
+    expect(cadillacBreath.archetypeId).toBe('cadillac-table-breath-isolated');
+    expect(chairBreath.archetypeId).toBe('chair-seated-breath-isolated');
+    expect(barrelBreath.archetypeId).toBe('barrel-standing-breath-isolated');
+
+    // 1. Chair Seated Breath: pelvis on seat (y=108 within seat 106..115, not 138), heels on floor (y=176 near floor 178, not 148), stationary hands/heels (Δ0px)
+    for (const phase of ['start', 'middle', 'end'] as const) {
+      expect(chairBreath.phases[phase].joints.pelvis).toEqual({ x: 132, y: 108 });
+      expect(chairBreath.phases[phase].joints.heel).toEqual({ x: 198, y: 176 });
+      expect(chairBreath.phases[phase].joints.hand).toEqual({ x: 148, y: 96 });
+      expect(chairBreath.phases[phase].apparatusState.pedalAngleDeg).toBe(0);
+      expect(chairBreath.phases[phase].apparatusState.springTensionLevel).toBe('none');
     }
 
+    // 2. Cadillac Table Breath: springTensionLevel === 'none' and NO hand-connected spring coil path rendered
+    for (const phase of ['start', 'middle', 'end'] as const) {
+      expect(cadillacBreath.phases[phase].apparatusState.springTensionLevel).toBe('none');
+      expect(cadillacBreath.phases[phase].joints.pelvis).toEqual({ x: 182, y: 140 });
+      expect(cadillacBreath.phases[phase].joints.heel).toEqual({ x: 248, y: 145 });
+      expect(cadillacBreath.phases[phase].joints.hand).toEqual({ x: 146, y: 132 });
+      for (const mirrored of [false, true]) {
+        const svg = parseSvgFromMarkup(
+          renderToStaticMarkup(
+            <MovementPhaseDiagramSvg asset={cadillacBreath} phase={phase} mirrored={mirrored} />,
+          ),
+        );
+        const supportPaths = svg.querySelectorAll('g[data-layer="apparatus-support"] path');
+        expect(supportPaths.length).toBe(0);
+      }
+    }
+
+    // 3. Barrel Standing Breath: hand on top ladder rung (88,76 within ladder x:76..96, Δ0px), heel grounded on floor (140,176, Δ0px), NO calves muscle fallback
+    for (const phase of ['start', 'middle', 'end'] as const) {
+      expect(barrelBreath.phases[phase].joints.hand).toEqual({ x: 88, y: 76 });
+      expect(barrelBreath.phases[phase].joints.heel).toEqual({ x: 140, y: 176 });
+    }
+    const barrelMuscleIds = barrelBreath.primaryMuscles.map((m) => m.muscleGroupId);
+    expect(barrelMuscleIds).not.toContain('calves');
+    expect(barrelMuscleIds).not.toContain('shoulder-deltoid');
+    expect(barrelMuscleIds).toContain('core-transversus');
+
+    // 4. All 4 pure breath exercises: zero arm/leg excursion (hand Δ0, heel Δ0), separated support posture vs breath observation, and valid mirrored rendering
+    for (const breathAsset of [matBreath, cadillacBreath, chairBreath, barrelBreath]) {
+      expect(breathAsset.anatomicalAccuracyAssumed).toBe(false);
+      expect(breathAsset.phases.start.summaryKo).toContain('지지 자세');
+      expect(breathAsset.phases.middle.summaryKo).toContain('호흡 관찰');
+      expect(breathAsset.phases.end.summaryKo).toContain('호흡 관찰');
+      expect(
+        Math.hypot(
+          breathAsset.phases.middle.joints.hand.x - breathAsset.phases.start.joints.hand.x,
+          breathAsset.phases.middle.joints.hand.y - breathAsset.phases.start.joints.hand.y,
+        ),
+      ).toBe(0);
+      expect(
+        Math.hypot(
+          breathAsset.phases.middle.joints.heel.x - breathAsset.phases.start.joints.heel.x,
+          breathAsset.phases.middle.joints.heel.y - breathAsset.phases.start.joints.heel.y,
+        ),
+      ).toBe(0);
+      expect(
+        Math.hypot(
+          breathAsset.phases.middle.joints.thoracic.x - breathAsset.phases.start.joints.thoracic.x,
+          breathAsset.phases.middle.joints.thoracic.y - breathAsset.phases.start.joints.thoracic.y,
+        ),
+      ).toBeGreaterThanOrEqual(6);
+
+      for (const phase of ['start', 'middle', 'end'] as const) {
+        for (const mirrored of [false, true]) {
+          const svg = parseSvgFromMarkup(
+            renderToStaticMarkup(
+              <MovementPhaseDiagramSvg asset={breathAsset} phase={phase} mirrored={mirrored} />,
+            ),
+          );
+          expect(svg.querySelectorAll('circle[data-joint-node]').length).toBe(7);
+          if (phase !== 'start') {
+            expect(svg.querySelectorAll('[data-pose-delta-vector]').length).toBeGreaterThan(0);
+          }
+        }
+      }
+    }
+
+    // 5. Full 98-exercise muscle fallback & 294 SVG regression
     expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(98);
     for (const asset of MOVEMENT_VISUAL_ASSETS) {
       expect(asset.anatomicalAccuracyAssumed).toBe(false);
