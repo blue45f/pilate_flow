@@ -1,8 +1,20 @@
 diff --git a/src/components/ClassBinderView.tsx b/src/components/ClassBinderView.tsx
-index 0338f07..aedc519 100644
+index 0338f07..689e3aa 100644
 --- a/src/components/ClassBinderView.tsx
 +++ b/src/components/ClassBinderView.tsx
-@@ -75,6 +75,10 @@ interface ClassBinderViewProps {
+@@ -47,7 +47,10 @@ import type {
+   SavedSequence,
+   SequenceStep,
+ } from '../types/pilates';
+-import type { ResolvedTeachingHistoryView } from '../types/teachingHistorySnapshot';
++import type {
++  ClassHistoryLogWithSnapshot,
++  ResolvedTeachingHistoryView,
++} from '../types/teachingHistorySnapshot';
+ import {
+   getSavedHumanMovementDrafts,
+   getSavedReusableBlocks,
+@@ -75,6 +78,10 @@ interface ClassBinderViewProps {
    view?: 'saved' | 'history';
  }
  
@@ -13,7 +25,7 @@ index 0338f07..aedc519 100644
  const sampleSequenceIds = new Set(INITIAL_SAVED_SEQUENCES.map((sequence) => sequence.id));
  const sampleHistoryIds = new Set(INITIAL_HISTORY_LOGS.map((log) => log.id));
  const historyMovementIds = (log: ClassHistoryLog) =>
-@@ -83,41 +87,68 @@ const historyMovementIds = (log: ClassHistoryLog) =>
+@@ -83,41 +90,99 @@ const historyMovementIds = (log: ClassHistoryLog) =>
      : log.exerciseIds.filter(Boolean);
  const movementCount = (steps: SequenceStep[]) => steps.filter((step) => !isRestStep(step)).length;
  const minutesLabel = (seconds: number) => Number((seconds / 60).toFixed(2));
@@ -51,29 +63,61 @@ index 0338f07..aedc519 100644
 +  if (!dt) return 'unknown';
    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
  };
-+const isSyntheticDateOnlyTimestamp = (date: string, dt: Date) => {
-+  const trimmed = date.trim();
-+  if (!trimmed.includes('T')) return true;
-+  if (/T(?:00|12):00:00(?:\.000)?(?:Z|[+-]\d{2}:?\d{2})?$/i.test(trimmed)) {
-+    return true;
-+  }
-+  if (
-+    dt.getSeconds() === 0 &&
-+    dt.getMilliseconds() === 0 &&
-+    dt.getMinutes() === 0 &&
-+    (dt.getHours() === 0 || dt.getHours() === 12)
-+  ) {
-+    return true;
-+  }
-+  return false;
-+};
- const formatHistoryTimeOfDay = (date: string) => {
+-const formatHistoryTimeOfDay = (date: string) => {
 -  if (!date.includes('T') || Number.isNaN(Date.parse(date))) return null;
 -  const rawTime = date.split('T')[1]?.slice(0, 5);
 -  if (rawTime === '00:00') return null;
 -  return new Date(date).toLocaleTimeString('ko-KR', {
++const isDateOnlyTimestampString = (date: string) => {
++  const trimmed = date.trim();
++  if (!trimmed) return true;
++  return !trimmed.includes('T') && !/\d{1,2}:\d{2}/.test(trimmed);
++};
++const hasExplicitDateOnlyMetadata = (log?: ClassHistoryLog): boolean => {
++  if (!log) return false;
++  if (isDateOnlyTimestampString(log.taughtAt)) return true;
++  const raw = log as ClassHistoryLogWithSnapshot & {
++    timestamps?: unknown;
++    dateOnly?: unknown;
++    isDateOnly?: unknown;
++    timeRecorded?: unknown;
++    recoveredDraftOrigin?: { timestamps?: unknown };
++  };
++  if (
++    raw.timestamps === 'unrecorded' ||
++    raw.recoveredDraftOrigin?.timestamps === 'unrecorded' ||
++    raw.dateOnly === true ||
++    raw.isDateOnly === true ||
++    raw.timeRecorded === false
++  ) {
++    return true;
++  }
++  const snap = raw.programSnapshot as
++    | (NonNullable<ClassHistoryLogWithSnapshot['programSnapshot']> & {
++        timestamps?: unknown;
++        dateOnly?: unknown;
++        isDateOnly?: unknown;
++        timeRecorded?: unknown;
++      })
++    | undefined;
++  if (snap) {
++    if (typeof snap.taughtAt === 'string' && isDateOnlyTimestampString(snap.taughtAt)) {
++      return true;
++    }
++    if (
++      snap.timestamps === 'unrecorded' ||
++      snap.dateOnly === true ||
++      snap.isDateOnly === true ||
++      snap.timeRecorded === false
++    ) {
++      return true;
++    }
++  }
++  return false;
++};
++const formatHistoryTimeOfDay = (date: string, log?: ClassHistoryLog) => {
 +  const dt = parseHistoryDate(date);
-+  if (!dt || isSyntheticDateOnlyTimestamp(date, dt)) return null;
++  if (!dt || isDateOnlyTimestampString(date) || hasExplicitDateOnlyMetadata(log)) return null;
 +  return dt.toLocaleTimeString('ko-KR', {
      hour: '2-digit',
      minute: '2-digit',
@@ -97,7 +141,7 @@ index 0338f07..aedc519 100644
  const normalizeSearchToken = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ');
  const normalizeCompactSearch = (value: string) =>
    value
-@@ -158,6 +189,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -158,6 +223,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
    const [historyQuery, setHistoryQuery] = useState('');
    const [selectedGroup, setSelectedGroup] = useState('all');
    const [selectedDate, setSelectedDate] = useState('all');
@@ -106,7 +150,7 @@ index 0338f07..aedc519 100644
    const [showGroupForm, setShowGroupForm] = useState(false);
    const [groupName, setGroupName] = useState('');
    const [groupSchedule, setGroupSchedule] = useState('');
-@@ -176,8 +209,25 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -176,8 +243,25 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
      () => new Map(exercises.map((exercise) => [exercise.id, exercise])),
      [exercises],
    );
@@ -134,7 +178,7 @@ index 0338f07..aedc519 100644
    const resolvedHistoryMap = useMemo(() => {
      const map = new Map<string, ResolvedTeachingHistoryView>();
      for (const log of historyLogs) {
-@@ -222,9 +272,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -222,9 +306,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                )
                .join(' ') ?? '';
            const dateKey = getHistoryDateKey(log.taughtAt);
@@ -146,7 +190,7 @@ index 0338f07..aedc519 100644
            );
            if (searchable.includes(trimmed)) return true;
            if (!compactQuery) return false;
-@@ -249,17 +300,48 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -249,17 +334,48 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
          });
        }
      }
@@ -201,7 +245,7 @@ index 0338f07..aedc519 100644
    const groupedLogsByDate = useMemo(() => {
      const groups: Array<{
        dateKey: string;
-@@ -267,7 +349,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -267,7 +383,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
        weekdayLabel: string;
        items: ClassHistoryLog[];
      }> = [];
@@ -210,7 +254,7 @@ index 0338f07..aedc519 100644
        const dateKey = getHistoryDateKey(log.taughtAt);
        const last = groups[groups.length - 1];
        if (last && last.dateKey === dateKey) {
-@@ -282,7 +364,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -282,7 +398,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
        }
      }
      return groups;
@@ -219,7 +263,7 @@ index 0338f07..aedc519 100644
    const groupFilterItems = useMemo(
      () => [
        { id: 'all', label: '전체 기록' },
-@@ -290,32 +372,44 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -290,32 +406,44 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
      ],
      [classGroups],
    );
@@ -280,7 +324,7 @@ index 0338f07..aedc519 100644
    const reopenedView = reopenedHistoryId ? (resolvedHistoryMap.get(reopenedHistoryId) ?? null) : null;
    const storageStatus = getRecoveryStorageStatus();
  
-@@ -748,7 +842,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -748,7 +876,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                wrapperClassName="teaching-search"
                placeholder="수업 제목, 반 이름, 날짜, 당시 동작·블록으로 찾기"
                value={historyQuery}
@@ -292,7 +336,7 @@ index 0338f07..aedc519 100644
              />
              <span className="muted">최근 진행 순 · 당시 동작·블록·순서·시간 스냅샷 보존</span>
            </div>
-@@ -763,6 +860,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -763,6 +894,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
              onChange={(nextGroup) => {
                setSelectedGroup(nextGroup);
                setSelectedDate('all');
@@ -300,7 +344,7 @@ index 0338f07..aedc519 100644
              }}
            />
            {dateFilterOptions.length > 0 && (
-@@ -798,31 +896,52 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -798,31 +930,52 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                <div className="teaching-date-chip-list">
                  <button
                    type="button"
@@ -362,7 +406,7 @@ index 0338f07..aedc519 100644
                  >
                    전체 날짜 보기
                  </button>
-@@ -836,9 +955,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -836,9 +989,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                    icon={<History size={28} />}
                    title={
                      hasActiveHistoryFilter
@@ -376,7 +420,7 @@ index 0338f07..aedc519 100644
                            ? '선택한 날짜에 남긴 수업 기록이 없어요'
                            : '선택한 그룹에 남긴 수업 기록이 없어요'
                        : '아직 남긴 수업 기록이 없어요'
-@@ -862,7 +983,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -862,7 +1017,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                        }
                      >
                        {hasActiveHistoryFilter
@@ -387,7 +431,16 @@ index 0338f07..aedc519 100644
                            ? '검색 지우기'
                            : '필터 초기화'
                          : '오늘 수업 계획하기'}
-@@ -1042,6 +1165,19 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -898,7 +1055,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+                       log.stepsSnapshot || resolved.hasPreservedSnapshot,
+                     );
+                     const missingExercise = !resolved.canCopyToNextClass;
+-                    const timeOfDay = formatHistoryTimeOfDay(resolved.taughtAt);
++                    const timeOfDay = formatHistoryTimeOfDay(resolved.taughtAt, log);
+                     const plannedMinutes = Math.max(
+                       1,
+                       Math.round(resolved.timing.plannedTotalSec / 60),
+@@ -1042,6 +1199,19 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                    })}
                  </div>
                ))}
@@ -407,7 +460,7 @@ index 0338f07..aedc519 100644
              </section>
              <aside className="teaching-memory-aside">
                <PfCard as="section" className="teaching-memory-card">
-@@ -1059,7 +1195,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -1059,7 +1229,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                        <div className="teaching-overlap-row" key={log.id}>
                          <div>
                            <strong>{log.groupName}</strong>
@@ -418,7 +471,7 @@ index 0338f07..aedc519 100644
                          </div>
                          <b>
                            {shared}
-@@ -1170,7 +1308,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
+@@ -1170,7 +1342,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                  <div>
                    <dt>진행 일시</dt>
                    <dd>

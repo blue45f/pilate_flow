@@ -198,8 +198,9 @@ TZ=Asia/Seoul node docs/history-scale-audit-20261107/verify-history-scale-browse
 4. **실제 데이터 변경 의존성을 모두 보존한 `resolvedHistoryMap` 메모이제이션 (`불필요한 1000건 snapshot 재파싱 제거` + React Compiler `react-hooks/refs` 준수)**:
    - 단순히 `[savedSequences, historyLogs]`에만 의존하면 카탈로그 동작(`exercises`), 재사용 블록(`reusableBlocks`), 동작 초안(`humanDrafts`) 편집 시 변경 감지를 놓칠 수 있으므로, [`ClassBinderView.tsx:222-253`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L222-L253)에서 `getSavedReusableBlocks()`와 `getSavedHumanMovementDrafts()`의 직렬화 키(`reusableBlocksKey`, `humanDraftsKey`)를 `useMemo` 의존성으로 사용하여 **실제 데이터가 변경될 때만 새 참조를 방출**하도록 구성했습니다.
    - 이를 통해 React 19 `eslint-plugin-react-hooks` (`react-hooks/refs`) 규칙을 100% 준수하면서도 상세 모달 열기/닫기(`reopenedHistoryId`), 날짜 칩 전환(`selectedDate`), 검색어 입력(`historyQuery`), 더보기(`visibleHistoryCount`) 등 **단순 UI 상태 변경 시에는 `resolveTeachingHistoryView` 재파싱이 `0회` 발생**하고, 카탈로그 동작·시퀀스·블록·초안이 실제 수정될 때만 즉시 재계산됨을 스파이 테스트로 회귀 검증했습니다.
-5. **날짜만 입력된 기록의 임의 시각(`12:00` / `00:00`) 배지 비노출 및 원본 스키마 불변**:
-   - [`isSyntheticDateOnlyTimestamp`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L116-L131) 및 `formatHistoryTimeOfDay`에서 `LogSessionModal`이 날짜만 입력받아 생성한 정오/자정 타임스탬프(`T12:00:00`, `T00:00:00`, 로컬 `12:00:00.000` / `00:00:00.000`)를 감지해 UI 시각 배지를 숨기되(`null` 반환), 저장된 `log.taughtAt` 원본 값과 스토어/스키마는 일체 변경하지 않았습니다.
+5. **날짜 전용(`date-only`) 기록 식별 정밀화 (`cc718b0` 회귀 수정: 실제 정오 `12:00`·자정 `00:00` ISO 수업 시각 보존)**:
+   - 초기 `cc718b0`의 `isSyntheticDateOnlyTimestamp`가 시각값이 `12:00` 또는 `00:00`이라는 이유만으로 날짜 전용으로 추정하여 실제 정오(`12:00`)·자정(`00:00`) 수업 및 KST 기준 `09:00`(`T00:00:00.000Z`)·`21:00`(`T12:00:00.000Z`) 수업의 유효한 시각 배지까지 숨기던 회귀를 제거했습니다.
+   - [`isDateOnlyTimestampString`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L116-L120), [`hasExplicitDateOnlyMetadata`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L122-L152), [`formatHistoryTimeOfDay`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L154-L173)는 **원본 문자열에 시각 파트가 없는 순수 날짜 문자열(`'2026-11-05'`)이거나 기존 원본/스냅샷 메타데이터(`timestamps: 'unrecorded'`, `recoveredDraftOrigin.timestamps === 'unrecorded'`, `dateOnly: true`, `isDateOnly: true`, `timeRecorded: false`)로 날짜 전용임이 확실히 식별되는 경우에만 시각 배지를 숨기며**, 모호한 실제 ISO 기록(`2026-11-05T12:00:00.000Z`, `2026-11-05T00:00:00.000Z`, 로컬 `12:00`/`00:00` ISO 등)의 시각 배지는 `UTC`와 `Asia/Seoul`(`KST`) 모두에서 온전히 보존해 표시합니다. 저장된 `log.taughtAt` 원본 값과 스토어/스키마는 100% 불변입니다.
 
 ---
 
@@ -212,7 +213,7 @@ TZ=Asia/Seoul node docs/history-scale-audit-20261107/verify-history-scale-browse
 | **초기 노출 날짜 칩 수 (`dateChipCount`)** | `36개` | **`13개` (`+22일 더보기`)** | `336개` | **`13개` (`+321일 더보기`)** | 최근 12일 + 전체 날짜 칩만 기본 노출 |
 | **페이지 전체 HTML Element 수 (`totalDomNodes`)** | `5,839개` | **`2,411개` (`-58.7%`)** | `57,690개` | **`2,395개` (`-95.8%`)** | `1,000건` 기준 **DOM 폭증 `95.8%` 제거** |
 | **KST 자정 전후 중복 날짜 칩 (`duplicateDateChipLabels`)** | `[]` | **`[]`** | `["2026년 11월 7일"]` | **`[]` (`0건`)** | 로컬 날짜키 일치로 KST 중복 칩 완전 해소 |
-| **날짜만 입력된 기록의 `12:00` 배지 노출 여부** | `true` (`12:00` 노출) | **`false` (비노출)** | `true` (`12:00` 노출) | **`false` (비노출)** | 원본 `taughtAt` 불변 유지하며 가짜 시각 배지 제거 |
+| **정오(`12:00`)·자정(`00:00`) ISO 시각 보존 / 순수 `date-only` 비노출** | `ISO 12:00` 노출 | **`ISO 12:00·00:00` 보존 / `date-only`만 비노출** | `ISO 12:00` 노출 | **`ISO 12:00·00:00` 보존 / `date-only`만 비노출** | 유효 정오·자정 시각 보존 + 확정 date-only만 숨김 |
 | **상세 모달 열기/닫기 시 `resolveTeachingHistoryView` 재파싱 횟수** | `100회` / 토글 | **`0회` / 토글** | `1,000회` / 토글 | **`0회` / 토글** | UI 토글 시 스냅샷 재파싱 `0회` (데이터 편집 시에만 재계산) |
 | **모바일 `390px` 날짜 칩 바 높이 (`dateNavHeightPx`)** | `1,486px` (`1.67x` 화면) | **`606px` (`0.68x` 화면)** | `14,086px` (`15.83x` 화면) | **`606px` (`0.68x` 화면)** | `1,000건` 모바일 날짜바 높이 **`-95.7%` 단축** |
 | **데스크톱 `1440px` 날짜 칩 바 높이 (`dateNavHeightPx`)** | `286px` (`0.32x` 화면) | **`142px` (`0.16x` 화면)** | `2,326px` (`2.58x` 화면) | **`142px` (`0.16x` 화면)** | `1,000건` PC 날짜바 높이 **`-93.9%` 단축** |

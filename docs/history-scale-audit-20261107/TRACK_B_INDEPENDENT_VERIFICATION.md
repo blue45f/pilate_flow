@@ -145,3 +145,29 @@ Track B에서 독립적으로 Git 상태, 변경 범위, 그리고 선행 히스
 2. **[`post-patch-scale-1000-desktop-1440.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-1000-desktop-1440.png) (`1440×900`, `1,000건`)**:
    - `전체 날짜 1000` 칩과 최근 12일 날짜 칩(`2026년 11월 7일 3` ~ `2026년 10월 27일 3`, 중복 라벨 0개) 및 우측 `이전 날짜 더보기 (+321일)` 토글이 단 3줄(`dateNavHeightPx: 142px`) 안에 정돈되어 있고, 바로 아래 첫 번째 날짜 그룹(`2026년 11월 7일 (토) 수업 기록 3건`)과 첫 수업 카드(`심야 개인 레슨 흉추 가동성 플로우 (UTC 00:05)`, `09:05` KST 시각 배지 정상 표시) 및 우측 보조 패널(`2026년 11월 7일 · 심야 개인 레슨 흉추 가동성 플로우 (UTC 00:05)`)이 첫 화면(`firstCardTopPx: 627px`)에 한눈에 노출됨을 시각적으로 확인했습니다.
 
+---
+
+## 8. cc718b0 정오(12:00)·자정(00:00) 시각 숨김 회귀 수정 독립 검증
+
+- **검증 브랜치**: `fix/history-noon-midnight-time-regression-20261107`
+- **검증 판정**: **PASS (정오 `12:00`·자정 `00:00` 실제 시각 배지 보존 및 명시적 날짜 전용 기록만 선택적 비노출 검증 완료)**
+
+### 8.1 코드 및 범위(`git diff`) 독립 감사 결과
+
+1. **`isSyntheticDateOnlyTimestamp` 제거 및 명시적 날짜 전용 판별 교체 확인**:
+   - [`src/components/ClassBinderView.tsx:119-174`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L119-L174) 및 [`ClassBinderView.tsx:1058`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L1058)에서 기존 시각 값(`12:00` / `00:00`) 기반 추론 함수 `isSyntheticDateOnlyTimestamp`가 완전히 제거되고, `isDateOnlyTimestampString(date)` + `hasExplicitDateOnlyMetadata(log)` + `formatHistoryTimeOfDay(date, log)` 조합으로 교체되었음을 확인했습니다.
+2. **모호하거나 실제인 `12:00` 정오·`00:00` 자정 ISO 타임스탬프 시각 보존 확인**:
+   - 시각 값(`12:00`, `00:00`) 자체로 날짜 전용 여부를 추론하지 않으므로, `2026-11-05T12:00:00.000Z`, `2026-11-05T00:00:00.000Z`, 로컬 `12:00` 런치타임 수업, 로컬 `00:00` 심야 수업 등 모든 유효 ISO 타임스탬프가 `UTC` 및 `Asia/Seoul`(`KST`) 양쪽에서 `.teaching-history-time-of-day` 배지를 정상 표시함을 확인했습니다.
+3. **비모호한(Unambiguous) 날짜 전용 기록만 선택적 시각 숨김 확인**:
+   - 시각 배지는 오직 원시 문자열에 시각 파트가 없는 날짜 전용 문자열(예: `'2026-11-05'`)이거나 원본/스냅샷 메타데이터가 날짜 전용임을 명시한 경우(`timestamps: 'unrecorded'`, `recoveredDraftOrigin.timestamps === 'unrecorded'`, `dateOnly: true`, `isDateOnly: true`, `timeRecorded: false`)에만 `null`을 반환하여 숨겨집니다.
+4. **저장된 `taughtAt` 및 스키마 무결성·UI 범위 준수 확인**:
+   - 스토어의 `historyLogs[*].taughtAt` 원본 값과 스키마(`src/store/**`, `src/schemas/**`)는 **100% 무수정(Untouched)** 상태이며, 불필요한 UI 확장 없이 최소 수정 원칙을 준수했음을 확인했습니다.
+
+### 8.2 정적 분석 및 Vitest (`TZ=UTC` & `TZ=Asia/Seoul`) 독립 실행 결과
+
+| 검증 항목 | 실행 명령 | 실행 결과 | 상세 |
+| :--- | :--- | :---: | :--- |
+| **TypeScript (`tsc -b`)** | `npx tsc -b` | **PASS (Exit `0`)** | 타입 에러 `0건` |
+| **ESLint** | `npx eslint src/components/ClassBinderView.tsx src/components/ClassBinderView.historyFlow.test.tsx docs/history-scale-audit-20261107/historyScaleUsability.audit.test.tsx` | **PASS (Exit `0`)** | 에러 `0건`, 경고 `0건` |
+| **Vitest (`TZ=UTC`)** | `TZ=UTC npx vitest run src/components/ClassBinderView.historyFlow.test.tsx docs/history-scale-audit-20261107/historyScaleUsability.audit.test.tsx` | **PASS (`2 files, 9 tests`)** | `historyFlow.test.tsx` (`7 passed`, `2,005ms`), `historyScaleUsability.audit.test.tsx` (`2 passed`, `6,712ms`) |
+| **Vitest (`TZ=Asia/Seoul`)** | `TZ=Asia/Seoul npx vitest run src/components/ClassBinderView.historyFlow.test.tsx docs/history-scale-audit-20261107/historyScaleUsability.audit.test.tsx` | **PASS (`2 files, 9 tests`)** | `historyFlow.test.tsx` (`7 passed`, `2,021ms`), `historyScaleUsability.audit.test.tsx` (`2 passed`, `5,547ms`) |

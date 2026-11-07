@@ -15,7 +15,7 @@ describe('History Page Long-Term Accumulated Scale (100 / 1000) Post-Patch Verif
     usePilatesStore.getState().resetDemoData();
   });
 
-  it('verifies 100 accumulated records post-patch: 30-card initial window + load-more to 100, 12-chip date nav + expand, KST/UTC midnight alignment, synthetic 12:00 suppression, and zero redundant modal re-parses', () => {
+  it('verifies 100 accumulated records post-patch: 30-card initial window + load-more to 100, 12-chip date nav + expand, KST/UTC midnight alignment, 12:00/00:00 valid ISO time preservation, and zero redundant modal re-parses', () => {
     const baseExercises = usePilatesStore.getState().exercises;
     const bundle100 = buildSyntheticHistoryScaleDataset(100, baseExercises);
 
@@ -66,6 +66,30 @@ describe('History Page Long-Term Accumulated Scale (100 / 1000) Post-Patch Verif
     // 3. Feed initially renders 30 cards and progressively loads 60 -> 90 -> 100 via load-more
     const feed = screen.getByRole('region', { name: '수업 기록 목록' });
     expect(within(feed).getAllByRole('article')).toHaveLength(30);
+
+    // Verify 12:00 UTC (scale-log-midnight-5) and 00:00 UTC (scale-log-midnight-6) preserve valid time badges
+    const expectedNoonUtcBadge = new Intl.DateTimeFormat('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date('2026-11-05T12:00:00.000Z'));
+    const expectedMidnightUtcBadge = new Intl.DateTimeFormat('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date('2026-11-05T00:00:00.000Z'));
+    const noonCard = within(feed)
+      .getByText(/자정 전후 경계 테스트 5/)
+      .closest('article') as HTMLElement;
+    const midnightCard = within(feed)
+      .getByText(/자정 전후 경계 테스트 6/)
+      .closest('article') as HTMLElement;
+    expect(
+      noonCard.querySelector('.teaching-history-time-of-day')?.textContent,
+    ).toBe(expectedNoonUtcBadge);
+    expect(
+      midnightCard.querySelector('.teaching-history-time-of-day')?.textContent,
+    ).toBe(expectedMidnightUtcBadge);
 
     // Long Korean sequence title & group name are rendered intact in the first 30 cards
     expect(within(feed).getByText(LONG_KOREAN_SEQUENCE_TITLE)).toBeInTheDocument();
