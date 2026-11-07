@@ -1,0 +1,2897 @@
+From 62dcf7e92b06e3f7fd9eb8496a0f46352479ba5a Mon Sep 17 00:00:00 2001
+From: blue45f <18352425+blue45f@users.noreply.github.com>
+Date: Fri, 6 Nov 2026 17:05:48 +0000
+Subject: [PATCH 2/4] feat(classCueSheet): preserve active step across live
+ edits and verify multi-page PDF pagination
+
+---
+ .../ClassCueSheetPreview.test.tsx             |  527 +++++++++
+ .../classCueSheet/ClassCueSheetPreview.tsx    |  543 +++++++--
+ src/features/classCueSheet/README.md          |   50 +-
+ src/features/classCueSheet/classCueSheet.css  |  123 +-
+ .../classCueSheetChromium.test.ts             | 1038 ++++++++++++++---
+ .../classCueSheet/classCueSheetFixtures.ts    |   27 +-
+ .../classCueSheetProjection.test.ts           |   54 +-
+ .../classCueSheet/classCueSheetProjection.ts  |   23 +-
+ .../classCueSheet/classCueSheetTypes.ts       |    2 +
+ src/features/classCueSheet/index.ts           |    5 +-
+ 10 files changed, 2113 insertions(+), 279 deletions(-)
+
+diff --git a/src/features/classCueSheet/ClassCueSheetPreview.test.tsx b/src/features/classCueSheet/ClassCueSheetPreview.test.tsx
+index 0efffe6..3156f21 100644
+--- a/src/features/classCueSheet/ClassCueSheetPreview.test.tsx
++++ b/src/features/classCueSheet/ClassCueSheetPreview.test.tsx
+@@ -360,4 +360,531 @@ describe('ClassCueSheetPreview', () => {
+     expect(localClearSpy).not.toHaveBeenCalled();
+     expect(JSON.stringify(rawInput)).toBe(snapshotBefore);
+   });
++
++  it('preserves active movement identity across live edits when steps are inserted before, deleted before, or reordered', () => {
++    const baseSteps = [
++      {
++        id: 'step-1',
++        nameKo: '풋워크 패러렐',
++        durationMin: 4,
++        cues: ['뒤꿈치 정렬 유지'],
++      },
++      {
++        id: 'step-2',
++        nameKo: '헌드레드 프렙',
++        durationMin: 3,
++        cues: ['흉곽 하단 고정 및 호흡 연결'],
++      },
++      {
++        id: 'step-3',
++        nameKo: '레그 서클즈',
++        durationMin: 4,
++        cues: ['골반 중립 유지'],
++      },
++    ];
++
++    const { rerender } = render(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'live-edit-seq',
++          title: '실시간 편집 시퀀스',
++          steps: baseSteps,
++        }}
++      />,
++    );
++
++    const rootEl = screen.getByTestId('class-cue-sheet-root');
++    const currentSection = screen.getByRole('region', { name: '현재 진행 항목' });
++    const nextSection = screen.getByRole('region', { name: '다음 준비 항목' });
++
++    // Navigate to step-2 ('헌드레드 프렙', index 1)
++    fireEvent.click(screen.getByRole('button', { name: '다음 진행 항목' }));
++    expect(within(currentSection).getByText('헌드레드 프렙')).toBeTruthy();
++    expect(rootEl.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-step-2-1',
++    );
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('1');
++    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
++      'user-navigation',
++    );
++
++    // 1. Insert a new step BEFORE the current item
++    rerender(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'live-edit-seq',
++          title: '실시간 편집 시퀀스',
++          steps: [
++            {
++              id: 'step-0',
++              nameKo: '호흡 워밍업',
++              durationMin: 2,
++              cues: ['갈비뼈 3차원 호흡'],
++            },
++            ...baseSteps,
++          ],
++        }}
++      />,
++    );
++
++    expect(within(currentSection).getByText('헌드레드 프렙')).toBeTruthy();
++    expect(within(currentSection).getByText('03 / 04')).toBeTruthy();
++    expect(within(nextSection).getByText('레그 서클즈')).toBeTruthy();
++    expect(rootEl.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-step-2-1',
++    );
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('2');
++    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
++      'preserved-by-id',
++    );
++    expect(screen.getByTestId('cue-sheet-a11y-status').textContent).toContain(
++      '현재 진행: #03/04 헌드레드 프렙 · 다음 준비: #04 레그 서클즈',
++    );
++
++    // 2. Delete the two steps BEFORE the current item
++    rerender(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'live-edit-seq',
++          title: '실시간 편집 시퀀스',
++          steps: [baseSteps[1]!, baseSteps[2]!],
++        }}
++      />,
++    );
++
++    expect(within(currentSection).getByText('헌드레드 프렙')).toBeTruthy();
++    expect(within(currentSection).getByText('01 / 02')).toBeTruthy();
++    expect(within(nextSection).getByText('레그 서클즈')).toBeTruthy();
++    expect(rootEl.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-step-2-1',
++    );
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('0');
++    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
++      'preserved-by-id',
++    );
++
++    // 3. Reorder steps so step-2 is moved to the last position
++    rerender(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'live-edit-seq',
++          title: '실시간 편집 시퀀스',
++          steps: [baseSteps[2]!, baseSteps[0]!, baseSteps[1]!],
++        }}
++      />,
++    );
++
++    expect(within(currentSection).getByText('헌드레드 프렙')).toBeTruthy();
++    expect(within(currentSection).getByText('03 / 03')).toBeTruthy();
++    expect(
++      within(nextSection).getByText(/마지막 항목입니다 · 다음 예정 항목 없음/),
++    ).toBeTruthy();
++    expect(rootEl.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-step-2-1',
++    );
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('2');
++    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
++      'preserved-by-id',
++    );
++
++    const progressionList = screen.getByRole('list', {
++      name: '기본 진행표 항목 목록',
++    });
++    const rowButtons = within(progressionList).getAllByRole('button');
++    expect(rowButtons[2]?.getAttribute('aria-current')).toBe('step');
++  });
++
++  it('tracks the exact movement instance when multiple steps share the same Korean name (same-name different-id) across insertions and reorders', () => {
++    const { rerender } = render(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'dup-name-live-seq',
++          title: '동일 이름 구분 라이브 편집 시퀀스',
++          steps: [
++            {
++              id: 'bridge-warmup',
++              nameKo: '브릿징',
++              durationMin: 3,
++              cues: ['워밍업 기본 척추 분절 브릿징'],
++            },
++            {
++              id: 'bridge-challenge',
++              nameKo: '브릿징',
++              durationMin: 5,
++              cues: ['심화 싱글 레그 챌린지 브릿징'],
++            },
++          ],
++        }}
++      />,
++    );
++
++    // Select the 2nd '브릿징' (bridge-challenge)
++    fireEvent.click(screen.getByRole('button', { name: '다음 진행 항목' }));
++
++    const currentSection = screen.getByRole('region', { name: '현재 진행 항목' });
++    const rootEl = screen.getByTestId('class-cue-sheet-root');
++
++    expect(
++      within(currentSection).getByText('심화 싱글 레그 챌린지 브릿징'),
++    ).toBeTruthy();
++    expect(rootEl.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-bridge-challenge-1',
++    );
++
++    // Insert another '브릿징' at the beginning AND swap bridge-challenge before bridge-warmup
++    rerender(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'dup-name-live-seq',
++          title: '동일 이름 구분 라이브 편집 시퀀스',
++          steps: [
++            {
++              id: 'bridge-prep',
++              nameKo: '브릿징',
++              durationMin: 2,
++              cues: ['사전 골반 틸트 브릿징'],
++            },
++            {
++              id: 'bridge-challenge',
++              nameKo: '브릿징',
++              durationMin: 5,
++              cues: ['심화 싱글 레그 챌린지 브릿징'],
++            },
++            {
++              id: 'bridge-warmup',
++              nameKo: '브릿징',
++              durationMin: 3,
++              cues: ['워밍업 기본 척추 분절 브릿징'],
++            },
++          ],
++        }}
++      />,
++    );
++
++    expect(
++      within(currentSection).getByText('심화 싱글 레그 챌린지 브릿징'),
++    ).toBeTruthy();
++    expect(within(currentSection).getByText('02 / 03')).toBeTruthy();
++    expect(rootEl.getAttribute('data-current-cue-item-id')).toBe(
++      'cue-item-id-bridge-challenge-1',
++    );
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('1');
++    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
++      'preserved-by-id',
++    );
++  });
++
++  it('falls back to the adjacent step and shows an explicit fallback notice when the active item is deleted, then clears the notice on manual navigation', () => {
++    const { rerender } = render(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'delete-active-seq',
++          title: '선택 항목 삭제 폴백 시퀀스',
++          steps: [
++            { id: 's-1', nameKo: '풋워크', durationMin: 4 },
++            { id: 's-2', nameKo: '헌드레드', durationMin: 3 },
++            { id: 's-3', nameKo: '레그 서클즈', durationMin: 4 },
++          ],
++        }}
++      />,
++    );
++
++    const rootEl = screen.getByTestId('class-cue-sheet-root');
++    const currentSection = screen.getByRole('region', { name: '현재 진행 항목' });
++
++    // Move to s-2 ('헌드레드', index 1)
++    fireEvent.click(screen.getByRole('button', { name: '다음 진행 항목' }));
++    expect(within(currentSection).getByText('헌드레드')).toBeTruthy();
++
++    // Delete s-2 while it is active -> should fallback to s-3 ('레그 서클즈') at clamped index 1
++    rerender(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'delete-active-seq',
++          title: '선택 항목 삭제 폴백 시퀀스',
++          steps: [
++            { id: 's-1', nameKo: '풋워크', durationMin: 4 },
++            { id: 's-3', nameKo: '레그 서클즈', durationMin: 4 },
++          ],
++        }}
++      />,
++    );
++
++    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
++      'fallback-adjacent-after-delete',
++    );
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('1');
++    expect(within(currentSection).getByText('레그 서클즈')).toBeTruthy();
++
++    const fallbackNotice = screen.getByTestId(
++      'cue-sheet-selection-fallback-notice',
++    );
++    expect(fallbackNotice.textContent).toContain('헌드레드');
++    expect(fallbackNotice.textContent).toContain('#02 레그 서클즈');
++
++    // Manual navigation clears the fallback notice
++    fireEvent.click(screen.getByRole('button', { name: '이전 진행 항목' }));
++    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
++      'user-navigation',
++    );
++    expect(
++      screen.queryByTestId('cue-sheet-selection-fallback-notice'),
++    ).toBeNull();
++  });
++
++  it('keeps expanded view rows synchronized with the current item across view toggles and live edits', () => {
++    const { rerender } = render(
++      <ClassCueSheetPreview
++        initialViewMode="expanded"
++        sourceInput={{
++          id: 'expanded-sync-seq',
++          title: '펼침 보기 동기화 시퀀스',
++          steps: [
++            {
++              id: 'exp-1',
++              nameKo: '풋워크',
++              durationMin: 3,
++              sets: 2,
++              sideMode: 'together',
++            },
++            {
++              id: 'exp-2',
++              nameKo: '사이드 레그 리프트',
++              durationMin: 4,
++              sets: 2,
++              sideMode: 'left-then-right',
++            },
++          ],
++        }}
++      />,
++    );
++
++    const expandedList = screen.getByRole('list', {
++      name: '펼친 진행표 항목 목록',
++    });
++    const expandedButtons = within(expandedList).getAllByRole('button');
++    // Click an expanded row belonging to exp-2 ('사이드 레그 리프트')
++    const exp2RowButton = expandedButtons.find((btn) =>
++      btn.textContent?.includes('사이드 레그 리프트'),
++    );
++    expect(exp2RowButton).toBeTruthy();
++    fireEvent.click(exp2RowButton!);
++
++    const currentSection = screen.getByRole('region', { name: '현재 진행 항목' });
++    expect(within(currentSection).getByText('사이드 레그 리프트')).toBeTruthy();
++
++    const activeExpandedRows = expandedList.querySelectorAll(
++      'li[data-is-current-parent="true"]',
++    );
++    expect(activeExpandedRows.length).toBe(4); // 2 sets * 2 sides
++
++    // Live-edit: insert exp-0 before exp-1 while in expanded view
++    rerender(
++      <ClassCueSheetPreview
++        initialViewMode="expanded"
++        sourceInput={{
++          id: 'expanded-sync-seq',
++          title: '펼침 보기 동기화 시퀀스',
++          steps: [
++            {
++              id: 'exp-0',
++              nameKo: '임프린트 앤 릴리즈',
++              durationMin: 2,
++              sets: 1,
++              sideMode: 'together',
++            },
++            {
++              id: 'exp-1',
++              nameKo: '풋워크',
++              durationMin: 3,
++              sets: 2,
++              sideMode: 'together',
++            },
++            {
++              id: 'exp-2',
++              nameKo: '사이드 레그 리프트',
++              durationMin: 4,
++              sets: 2,
++              sideMode: 'left-then-right',
++            },
++          ],
++        }}
++      />,
++    );
++
++    expect(within(currentSection).getByText('사이드 레그 리프트')).toBeTruthy();
++    expect(within(currentSection).getByText('03 / 03')).toBeTruthy();
++
++    const updatedActiveExpandedRows = expandedList.querySelectorAll(
++      'li[data-is-current-parent="true"]',
++    );
++    expect(updatedActiveExpandedRows.length).toBe(4);
++    expect(
++      updatedActiveExpandedRows[0]?.getAttribute('data-parent-cue-item-id'),
++    ).toBe('cue-item-id-exp-2-1');
++
++    // Switch to compact view and verify aria-current="step" is on #03 사이드 레그 리프트
++    fireEvent.click(screen.getByRole('button', { name: /기본 진행표/ }));
++    const compactList = screen.getByRole('list', {
++      name: '기본 진행표 항목 목록',
++    });
++    const compactButtons = within(compactList).getAllByRole('button');
++    expect(compactButtons[2]?.getAttribute('aria-current')).toBe('step');
++  });
++
++  it('handles empty ↔ 100+ item transitions and resets to step #1 when sourceInput is replaced with a different class', () => {
++    const { rerender } = render(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'empty-seq',
++          title: '빈 수업',
++          steps: [],
++        }}
++      />,
++    );
++
++    const rootEl = screen.getByTestId('class-cue-sheet-root');
++    const currentSection = screen.getByRole('region', { name: '현재 진행 항목' });
++
++    expect(rootEl.getAttribute('data-selection-resolution')).toBe('empty-class');
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('-1');
++    expect(screen.getByTestId('cue-sheet-a11y-status').textContent).toBe(
++      '현재 진행 항목 없음 (0/0) · 다음 준비 항목 없음',
++    );
++
++    // Transition from empty class to a 160-step class
++    rerender(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'long-160-seq',
++          title: '대용량 160개 동작 수업',
++          steps: Array.from({ length: 160 }, (_, idx) => ({
++            id: `long-step-${idx + 1}`,
++            nameKo: `대용량 동작 ${idx + 1}`,
++            durationMin: 1,
++          })),
++        }}
++      />,
++    );
++
++    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
++      'reset-on-class-change',
++    );
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('0');
++    expect(within(currentSection).getByText('대용량 동작 1')).toBeTruthy();
++
++    // Jump to the last bounded step (#150 / index 149)
++    fireEvent.click(
++      screen.getByRole('button', { name: '마지막 진행 항목으로 이동' }),
++    );
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('149');
++    expect(within(currentSection).getByText('대용량 동작 150')).toBeTruthy();
++
++    // Replace with a different class -> resets to step #1 (index 0)
++    rerender(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'brand-new-class',
++          title: '완전히 다른 신규 수업',
++          steps: [
++            { id: 'new-1', nameKo: '신규 첫 동작', durationMin: 5 },
++            { id: 'new-2', nameKo: '신규 둘째 동작', durationMin: 5 },
++          ],
++        }}
++      />,
++    );
++
++    expect(rootEl.getAttribute('data-selection-resolution')).toBe(
++      'reset-on-class-change',
++    );
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('0');
++    expect(within(currentSection).getByText('신규 첫 동작')).toBeTruthy();
++
++    // Transition back to empty class
++    rerender(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'brand-new-class',
++          title: '완전히 다른 신규 수업 (비움)',
++          steps: [],
++        }}
++      />,
++    );
++
++    expect(rootEl.getAttribute('data-selection-resolution')).toBe('empty-class');
++    expect(rootEl.getAttribute('data-current-step-index')).toBe('-1');
++  });
++
++  it('retains keyboard focus inside the focus deck (never dropping to document.body) when boundary buttons disable or a focused step is deleted', () => {
++    const { rerender } = render(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'focus-retention-seq',
++          title: '포커스 유지 검증 시퀀스',
++          steps: [
++            { id: 'f-1', nameKo: '동작 1', durationMin: 3 },
++            { id: 'f-2', nameKo: '동작 2', durationMin: 3 },
++          ],
++        }}
++      />,
++    );
++
++    const focusDeck = screen.getByTestId('cue-sheet-focus-deck');
++    const nextBtn = screen.getByTestId('cue-sheet-nav-next');
++    const prevBtn = screen.getByTestId('cue-sheet-nav-prev');
++
++    // Focus nextBtn and click it to reach the last step (which disables nextBtn)
++    nextBtn.focus();
++    expect(document.activeElement).toBe(nextBtn);
++    fireEvent.click(nextBtn);
++
++    expect((nextBtn as HTMLButtonElement).disabled).toBe(true);
++    expect(document.activeElement).not.toBe(document.body);
++    expect(document.activeElement).toBe(focusDeck);
++
++    // Focus prevBtn and click it to reach the first step (which disables prevBtn)
++    prevBtn.focus();
++    expect(document.activeElement).toBe(prevBtn);
++    fireEvent.click(prevBtn);
++
++    expect((prevBtn as HTMLButtonElement).disabled).toBe(true);
++    expect(document.activeElement).not.toBe(document.body);
++    expect(document.activeElement).toBe(focusDeck);
++
++    // Navigate with ArrowDown / j / ArrowUp / k on the focus deck
++    fireEvent.keyDown(focusDeck, { key: 'ArrowDown' });
++    expect(
++      screen.getByTestId('class-cue-sheet-root').getAttribute(
++        'data-current-step-index',
++      ),
++    ).toBe('1');
++    fireEvent.keyDown(focusDeck, { key: 'ArrowUp' });
++    expect(
++      screen.getByTestId('class-cue-sheet-root').getAttribute(
++        'data-current-step-index',
++      ),
++    ).toBe('0');
++
++    // Focus the row button for '동작 2', select it, and then delete '동작 2' in a live edit
++    const progressionList = screen.getByRole('list', {
++      name: '기본 진행표 항목 목록',
++    });
++    const rowButtons = within(progressionList).getAllByRole('button');
++    rowButtons[1]!.focus();
++    fireEvent.click(rowButtons[1]!);
++    expect(document.activeElement).toBe(rowButtons[1]);
++
++    rerender(
++      <ClassCueSheetPreview
++        sourceInput={{
++          id: 'focus-retention-seq',
++          title: '포커스 유지 검증 시퀀스',
++          steps: [{ id: 'f-1', nameKo: '동작 1', durationMin: 3 }],
++        }}
++      />,
++    );
++
++    expect(document.activeElement).not.toBe(document.body);
++    expect(document.activeElement).toBe(focusDeck);
++  });
+ });
+diff --git a/src/features/classCueSheet/ClassCueSheetPreview.tsx b/src/features/classCueSheet/ClassCueSheetPreview.tsx
+index c0ea1bf..a47db10 100644
+--- a/src/features/classCueSheet/ClassCueSheetPreview.tsx
++++ b/src/features/classCueSheet/ClassCueSheetPreview.tsx
+@@ -1,4 +1,4 @@
+-import React, { useMemo, useState } from 'react';
++import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+ import {
+   CLASS_CUE_SHEET_FIXTURES,
+   getCueSheetFixtureById,
+@@ -14,6 +14,14 @@ import type {
+ } from './classCueSheetTypes';
+ import './classCueSheet.css';
+ 
++export type CueSheetSelectionResolution =
++  | 'initial'
++  | 'user-navigation'
++  | 'preserved-by-id'
++  | 'fallback-adjacent-after-delete'
++  | 'reset-on-class-change'
++  | 'empty-class';
++
+ export interface ClassCueSheetPreviewProps {
+   readonly projection?: ClassCueSheetProjection;
+   readonly sourceInput?: CueSheetSourceInput;
+@@ -25,6 +33,202 @@ export interface ClassCueSheetPreviewProps {
+   readonly showFixtureSwitcher?: boolean;
+ }
+ 
++interface SelectionTrackerState {
++  readonly projection: ClassCueSheetProjection;
++  readonly currentIndex: number;
++  readonly currentCueItemId: string | null;
++  readonly currentSourceStepId: string | null;
++  readonly currentItemNameKo: string | null;
++  readonly resolution: CueSheetSelectionResolution;
++  readonly removedItemNameKo: string | null;
++}
++
++function isExplicitSourceId(sourceId: string): boolean {
++  const trimmed = sourceId.trim();
++  return (
++    trimmed.length > 0 &&
++    trimmed !== 'cue-source-unspecified' &&
++    trimmed !== 'recovered-empty'
++  );
++}
++
++function isAutoPositionalStepId(sourceStepId: string): boolean {
++  return /^step-\d{3,}$/.test(sourceStepId);
++}
++
++function createInitialSelectionState(
++  projection: ClassCueSheetProjection,
++  initialStepIndex: number,
++): SelectionTrackerState {
++  const items = projection.items;
++  if (items.length === 0) {
++    return {
++      projection,
++      currentIndex: 0,
++      currentCueItemId: null,
++      currentSourceStepId: null,
++      currentItemNameKo: null,
++      resolution: 'empty-class',
++      removedItemNameKo: null,
++    };
++  }
++  const safeInitial = Math.min(
++    Math.max(0, Math.trunc(initialStepIndex || 0)),
++    items.length - 1,
++  );
++  const item = items[safeInitial]!;
++  return {
++    projection,
++    currentIndex: safeInitial,
++    currentCueItemId: item.cueItemId,
++    currentSourceStepId: item.sourceStepId,
++    currentItemNameKo: item.nameKo,
++    resolution: 'initial',
++    removedItemNameKo: null,
++  };
++}
++
++function reconcileSelectionState(
++  prev: SelectionTrackerState,
++  nextProjection: ClassCueSheetProjection,
++): SelectionTrackerState {
++  if (prev.projection === nextProjection) {
++    return prev;
++  }
++
++  const nextItems = nextProjection.items;
++  if (nextItems.length === 0) {
++    return {
++      projection: nextProjection,
++      currentIndex: 0,
++      currentCueItemId: null,
++      currentSourceStepId: null,
++      currentItemNameKo: null,
++      resolution: 'empty-class',
++      removedItemNameKo: null,
++    };
++  }
++
++  const prevProjection = prev.projection;
++  const prevItems = prevProjection.items;
++
++  if (prevItems.length === 0) {
++    const firstItem = nextItems[0]!;
++    return {
++      projection: nextProjection,
++      currentIndex: 0,
++      currentCueItemId: firstItem.cueItemId,
++      currentSourceStepId: firstItem.sourceStepId,
++      currentItemNameKo: firstItem.nameKo,
++      resolution: 'reset-on-class-change',
++      removedItemNameKo: null,
++    };
++  }
++
++  const prevHasExplicitSource = isExplicitSourceId(prevProjection.sourceId);
++  const nextHasExplicitSource = isExplicitSourceId(nextProjection.sourceId);
++
++  if (
++    prevHasExplicitSource &&
++    nextHasExplicitSource &&
++    prevProjection.sourceId !== nextProjection.sourceId
++  ) {
++    const firstItem = nextItems[0]!;
++    return {
++      projection: nextProjection,
++      currentIndex: 0,
++      currentCueItemId: firstItem.cueItemId,
++      currentSourceStepId: firstItem.sourceStepId,
++      currentItemNameKo: firstItem.nameKo,
++      resolution: 'reset-on-class-change',
++      removedItemNameKo: null,
++    };
++  }
++
++  // 1. Primary match by stable cueItemId
++  let matchedIndex = prev.currentCueItemId
++    ? nextItems.findIndex((item) => item.cueItemId === prev.currentCueItemId)
++    : -1;
++
++  // 2. Secondary match by explicit unique sourceStepId if custom projection changed cueItemId
++  if (
++    matchedIndex === -1 &&
++    prev.currentSourceStepId &&
++    !isAutoPositionalStepId(prev.currentSourceStepId)
++  ) {
++    const matchingStepIdIndices: number[] = [];
++    for (let i = 0; i < nextItems.length; i += 1) {
++      if (nextItems[i]!.sourceStepId === prev.currentSourceStepId) {
++        matchingStepIdIndices.push(i);
++      }
++    }
++    if (matchingStepIdIndices.length === 1) {
++      matchedIndex = matchingStepIdIndices[0]!;
++    }
++  }
++
++  if (matchedIndex !== -1) {
++    const matchedItem = nextItems[matchedIndex]!;
++    return {
++      projection: nextProjection,
++      currentIndex: matchedIndex,
++      currentCueItemId: matchedItem.cueItemId,
++      currentSourceStepId: matchedItem.sourceStepId,
++      currentItemNameKo: matchedItem.nameKo,
++      resolution: 'preserved-by-id',
++      removedItemNameKo: null,
++    };
++  }
++
++  // Active item was not found in nextItems. Check whether this is the same class with the current item deleted,
++  // or a replacement with a completely different class.
++  const prevCueIds = new Set(prevItems.map((item) => item.cueItemId));
++  const prevExplicitStepIds = new Set(
++    prevItems
++      .map((item) => item.sourceStepId)
++      .filter((id) => !isAutoPositionalStepId(id)),
++  );
++
++  const hasSharedItems = nextItems.some(
++    (item) =>
++      prevCueIds.has(item.cueItemId) ||
++      (!isAutoPositionalStepId(item.sourceStepId) &&
++        prevExplicitStepIds.has(item.sourceStepId)),
++  );
++  const hasSameExplicitSource =
++    prevHasExplicitSource &&
++    nextHasExplicitSource &&
++    prevProjection.sourceId === nextProjection.sourceId;
++
++  if (hasSharedItems || hasSameExplicitSource) {
++    const clampedIndex = Math.min(
++      Math.max(0, prev.currentIndex),
++      nextItems.length - 1,
++    );
++    const fallbackItem = nextItems[clampedIndex]!;
++    return {
++      projection: nextProjection,
++      currentIndex: clampedIndex,
++      currentCueItemId: fallbackItem.cueItemId,
++      currentSourceStepId: fallbackItem.sourceStepId,
++      currentItemNameKo: fallbackItem.nameKo,
++      resolution: 'fallback-adjacent-after-delete',
++      removedItemNameKo: prev.currentItemNameKo,
++    };
++  }
++
++  const firstItem = nextItems[0]!;
++  return {
++    projection: nextProjection,
++    currentIndex: 0,
++    currentCueItemId: firstItem.cueItemId,
++    currentSourceStepId: firstItem.sourceStepId,
++    currentItemNameKo: firstItem.nameKo,
++    resolution: 'reset-on-class-change',
++    removedItemNameKo: null,
++  };
++}
++
+ function getOriginBadgeLabelKo(originKind: CueSheetItemOriginKind): string {
+   switch (originKind) {
+     case 'name-only':
+@@ -104,15 +308,16 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+   initialPrintPreviewMode = false,
+   showFixtureSwitcher,
+ }) => {
++  const rootRef = useRef<HTMLDivElement | null>(null);
++  const focusDeckRef = useRef<HTMLDivElement | null>(null);
++  const hadFocusInsideRootRef = useRef<boolean>(false);
++
+   const shouldShowFixtureSwitcher =
+     showFixtureSwitcher ??
+     (projection === undefined && sourceInput === undefined);
+ 
+   const [selectedFixtureId, setSelectedFixtureId] =
+     useState<CueSheetFixtureEntry['fixtureId']>(initialFixtureId);
+-  const [rawStepIndex, setRawStepIndex] = useState<number>(() =>
+-    Math.max(0, Math.trunc(initialStepIndex || 0)),
+-  );
+   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>(
+     initialViewMode,
+   );
+@@ -132,10 +337,27 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+     return fixture.buildProjection();
+   }, [projection, sourceInput, projectionOptions, selectedFixtureId]);
+ 
++  const [selectionState, setSelectionState] = useState<SelectionTrackerState>(
++    () => createInitialSelectionState(activeProjection, initialStepIndex),
++  );
++
++  const effectiveSelection =
++    selectionState.projection === activeProjection
++      ? selectionState
++      : reconcileSelectionState(selectionState, activeProjection);
++
++  if (selectionState.projection !== activeProjection) {
++    setSelectionState(effectiveSelection);
++  }
++
+   const totalItems = activeProjection.items.length;
+   const maxStepIndex = Math.max(0, totalItems - 1);
+   const currentIndex =
+-    totalItems === 0 ? 0 : Math.min(Math.max(0, rawStepIndex), maxStepIndex);
++    totalItems === 0
++      ? 0
++      : Math.min(Math.max(0, effectiveSelection.currentIndex), maxStepIndex);
++  const selectionResolution = effectiveSelection.resolution;
++  const removedItemNameKo = effectiveSelection.removedItemNameKo;
+ 
+   const currentItem =
+     totalItems > 0 ? activeProjection.items[currentIndex] : undefined;
+@@ -144,48 +366,147 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+       ? activeProjection.items[currentIndex + 1]
+       : undefined;
+ 
++  useLayoutEffect(() => {
++    if (!hadFocusInsideRootRef.current) {
++      return;
++    }
++    const rootEl = rootRef.current;
++    const deckEl = focusDeckRef.current;
++    if (!rootEl || !deckEl) {
++      return;
++    }
++    const activeEl = document.activeElement;
++    if (!activeEl || activeEl === document.body || !rootEl.contains(activeEl)) {
++      deckEl.focus({ preventScroll: true });
++    }
++  });
++
++  const selectStepByIndex = (
++    nextIdx: number,
++    resolution: CueSheetSelectionResolution = 'user-navigation',
++  ) => {
++    if (totalItems === 0) {
++      return;
++    }
++    const clamped = Math.min(Math.max(0, nextIdx), maxStepIndex);
++    const targetItem = activeProjection.items[clamped]!;
++    setSelectionState({
++      projection: activeProjection,
++      currentIndex: clamped,
++      currentCueItemId: targetItem.cueItemId,
++      currentSourceStepId: targetItem.sourceStepId,
++      currentItemNameKo: targetItem.nameKo,
++      resolution,
++      removedItemNameKo: null,
++    });
++  };
++
++  const selectByCueItemId = (cueItemId: string) => {
++    const idx = activeProjection.items.findIndex(
++      (item) => item.cueItemId === cueItemId,
++    );
++    if (idx !== -1) {
++      selectStepByIndex(idx, 'user-navigation');
++    }
++  };
++
++  const transferFocusToDeckIfBoundary = (willDisableButton: boolean) => {
++    hadFocusInsideRootRef.current = true;
++    if (willDisableButton) {
++      focusDeckRef.current?.focus({ preventScroll: true });
++    }
++  };
++
+   const handleSelectFixture = (
+     nextFixtureId: CueSheetFixtureEntry['fixtureId'],
+   ) => {
+     setSelectedFixtureId(nextFixtureId);
+-    setRawStepIndex(0);
+   };
+ 
+   const handleGoFirst = () => {
+-    setRawStepIndex(0);
++    if (totalItems === 0) {
++      return;
++    }
++    transferFocusToDeckIfBoundary(true);
++    selectStepByIndex(0, 'user-navigation');
+   };
+ 
+   const handleGoPrev = () => {
+-    setRawStepIndex(Math.max(0, currentIndex - 1));
++    if (totalItems === 0) {
++      return;
++    }
++    const targetIndex = Math.max(0, currentIndex - 1);
++    transferFocusToDeckIfBoundary(targetIndex === 0);
++    selectStepByIndex(targetIndex, 'user-navigation');
+   };
+ 
+   const handleGoNext = () => {
+-    setRawStepIndex(Math.min(maxStepIndex, currentIndex + 1));
++    if (totalItems === 0) {
++      return;
++    }
++    const targetIndex = Math.min(maxStepIndex, currentIndex + 1);
++    transferFocusToDeckIfBoundary(targetIndex >= maxStepIndex);
++    selectStepByIndex(targetIndex, 'user-navigation');
+   };
+ 
+   const handleGoLast = () => {
+-    setRawStepIndex(maxStepIndex);
++    if (totalItems === 0) {
++      return;
++    }
++    transferFocusToDeckIfBoundary(true);
++    selectStepByIndex(maxStepIndex, 'user-navigation');
+   };
+ 
+   const handleDeckKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+     if (totalItems === 0) {
+       return;
+     }
+-    if (event.key === 'ArrowLeft') {
++    if (
++      event.key === 'ArrowLeft' ||
++      event.key === 'ArrowUp' ||
++      event.key === 'k' ||
++      event.key === 'p'
++    ) {
+       event.preventDefault();
+-      handleGoPrev();
+-    } else if (event.key === 'ArrowRight') {
++      selectStepByIndex(Math.max(0, currentIndex - 1), 'user-navigation');
++    } else if (
++      event.key === 'ArrowRight' ||
++      event.key === 'ArrowDown' ||
++      event.key === 'j' ||
++      event.key === 'n'
++    ) {
+       event.preventDefault();
+-      handleGoNext();
++      selectStepByIndex(Math.min(maxStepIndex, currentIndex + 1), 'user-navigation');
+     } else if (event.key === 'Home') {
+       event.preventDefault();
+-      handleGoFirst();
++      selectStepByIndex(0, 'user-navigation');
+     } else if (event.key === 'End') {
+       event.preventDefault();
+-      handleGoLast();
++      selectStepByIndex(maxStepIndex, 'user-navigation');
++    }
++  };
++
++  const handleRootFocusCapture = () => {
++    hadFocusInsideRootRef.current = true;
++  };
++
++  const handleRootBlurCapture = (event: React.FocusEvent<HTMLDivElement>) => {
++    const nextFocused = event.relatedTarget;
++    if (
++      nextFocused instanceof Node &&
++      rootRef.current &&
++      !rootRef.current.contains(nextFocused)
++    ) {
++      hadFocusInsideRootRef.current = false;
+     }
+   };
+ 
++  const firstExpandedRowIdForCurrent = currentItem
++    ? activeProjection.expandedRows.find(
++        (r) => r.parentCueItemId === currentItem.cueItemId,
++      )?.expandedRowId
++    : undefined;
++
+   const rootClassName = [
+     'class-cue-sheet-root',
+     printPreviewMode ? 'is-print-preview' : '',
+@@ -195,9 +516,15 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+ 
+   return (
+     <div
++      ref={rootRef}
+       className={rootClassName}
+       data-testid="class-cue-sheet-root"
+       data-print-preview={printPreviewMode ? 'true' : 'false'}
++      data-current-cue-item-id={currentItem?.cueItemId ?? ''}
++      data-current-step-index={currentItem ? String(currentIndex) : '-1'}
++      data-selection-resolution={selectionResolution}
++      onFocusCapture={handleRootFocusCapture}
++      onBlurCapture={handleRootBlurCapture}
+     >
+       <header
+         className="cue-sheet-boundary-banner"
+@@ -351,9 +678,9 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+               className="cue-sheet-badge"
+               data-testid="privacy-stripped-badge"
+             >
+-              민감 필드 제외 ({activeProjection.privacy.strippedSensitiveKeys.length}
+-              종) · 인라인 보호 ({activeProjection.privacy.redactedInlineTextCount}
+-              건)
++              민감 키 제외 ({activeProjection.privacy.strippedSensitiveKeys.length}
++              종) · 보조 휴리스틱 마스킹 ({activeProjection.privacy.redactedInlineTextCount}
++              건, 전체 제거 보장 아님)
+             </span>
+           )}
+         </div>
+@@ -386,20 +713,23 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+       )}
+ 
+       <div
++        ref={focusDeckRef}
+         className="cue-sheet-focus-deck"
++        data-testid="cue-sheet-focus-deck"
+         tabIndex={0}
+         aria-label="현재 및 다음 진행 포커스 데크"
+         onKeyDown={handleDeckKeyDown}
+       >
+         <div className="cue-sheet-focus-controls cue-sheet-no-print">
+           <strong>
+-            진행 포커스 이동 (방향키 좌·우 / Home·End 지원)
++            진행 포커스 이동 (방향키 좌·우·상·하 / Home·End 지원)
+           </strong>
+           <div className="cue-sheet-badge-row">
+             <button
+               type="button"
+               className="cue-sheet-btn"
+               aria-label="첫 진행 항목으로 이동"
++              data-testid="cue-sheet-nav-first"
+               disabled={totalItems === 0 || currentIndex === 0}
+               onClick={handleGoFirst}
+             >
+@@ -409,6 +739,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+               type="button"
+               className="cue-sheet-btn"
+               aria-label="이전 진행 항목"
++              data-testid="cue-sheet-nav-prev"
+               disabled={totalItems === 0 || currentIndex === 0}
+               onClick={handleGoPrev}
+             >
+@@ -418,14 +749,59 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+               type="button"
+               className="cue-sheet-btn"
+               aria-label="다음 진행 항목"
++              data-testid="cue-sheet-nav-next"
+               disabled={totalItems === 0 || currentIndex >= totalItems - 1}
+               onClick={handleGoNext}
+             >
+               다음 항목
+             </button>
++            <button
++              type="button"
++              className="cue-sheet-btn"
++              aria-label="마지막 진행 항목으로 이동"
++              data-testid="cue-sheet-nav-last"
++              disabled={totalItems === 0 || currentIndex >= totalItems - 1}
++              onClick={handleGoLast}
++            >
++              마지막 항목으로
++            </button>
+           </div>
+         </div>
+ 
++        <p
++          className="cue-sheet-meta-line"
++          data-testid="cue-sheet-a11y-status"
++          role="status"
++          aria-live="polite"
++        >
++          {!currentItem
++            ? '현재 진행 항목 없음 (0/0) · 다음 준비 항목 없음'
++            : `현재 진행: #${formatStepNumber(currentItem.order)}/${formatStepNumber(totalItems)} ${currentItem.nameKo}${
++                currentItem.duplicateDisambiguatorKo
++                  ? ` (${currentItem.duplicateDisambiguatorKo})`
++                  : ''
++              } · 다음 준비: ${
++                nextItem
++                  ? `#${formatStepNumber(nextItem.order)} ${nextItem.nameKo}`
++                  : '없음 (마지막 항목)'
++              }`}
++        </p>
++
++        {selectionResolution === 'fallback-adjacent-after-delete' &&
++          currentItem && (
++            <p
++              className="cue-sheet-badge is-warning"
++              data-testid="cue-sheet-selection-fallback-notice"
++              role="status"
++            >
++              {`이전 선택 항목${
++                removedItemNameKo ? `(${removedItemNameKo})` : ''
++              }이 편집으로 삭제되어 인접 항목(#${formatStepNumber(
++                currentItem.order,
++              )} ${currentItem.nameKo})으로 위치를 유지했습니다.`}
++            </p>
++          )}
++
+         <div className="cue-sheet-focus-grid">
+           <section
+             aria-label="현재 진행 항목"
+@@ -635,7 +1011,7 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+                       type="button"
+                       className="cue-sheet-item-select-btn"
+                       aria-current={isCurrent ? 'step' : undefined}
+-                      onClick={() => setRawStepIndex(idx)}
++                      onClick={() => selectStepByIndex(idx, 'user-navigation')}
+                     >
+                       <span>#{formatStepNumber(item.order)}</span>
+                       <span>{item.nameKo}</span>
+@@ -701,57 +1077,82 @@ export const ClassCueSheetPreview: React.FC<ClassCueSheetPreviewProps> = ({
+             className="cue-sheet-expanded-list"
+             aria-label="펼친 진행표 항목 목록"
+           >
+-            {activeProjection.expandedRows.map((row) => (
+-              <li
+-                key={row.expandedRowId}
+-                data-expanded-row-id={row.expandedRowId}
+-                className="cue-sheet-expanded-row"
+-              >
+-                <div className="cue-sheet-badge-row">
+-                  <span className="cue-sheet-badge">
+-                    펼침 #{formatStepNumber(row.expandedOrder)} (원본 #
+-                    {formatStepNumber(row.parentItemOrder)})
+-                  </span>
+-                  <strong>{row.nameKo}</strong>
+-                  {row.duplicateDisambiguatorKo && (
+-                    <span className="cue-sheet-badge is-warning">
+-                      {row.duplicateDisambiguatorKo}
+-                    </span>
+-                  )}
+-                  {row.blockHeaderKo && (
+-                    <span className="cue-sheet-badge">{row.blockHeaderKo}</span>
+-                  )}
+-                  {row.sideLabelKo && (
+-                    <span className="cue-sheet-badge">{row.sideLabelKo}</span>
+-                  )}
+-                  {row.setIndex !== null && row.setCount !== null && (
+-                    <span className="cue-sheet-badge">
+-                      세트 {row.setIndex}/{row.setCount}
+-                    </span>
+-                  )}
+-                  {row.blockRepetitionCount > 1 && (
+-                    <span className="cue-sheet-badge">
+-                      블록 반복 {row.blockRepetitionIndex}/
+-                      {row.blockRepetitionCount}
++            {activeProjection.expandedRows.map((row) => {
++              const isCurrentParent = Boolean(
++                currentItem && row.parentCueItemId === currentItem.cueItemId,
++              );
++              const isFirstRowForCurrentItem = Boolean(
++                isCurrentParent &&
++                  row.expandedRowId === firstExpandedRowIdForCurrent,
++              );
++              const expandedRowClasses = [
++                'cue-sheet-expanded-row',
++                isCurrentParent ? 'is-active-step' : '',
++              ]
++                .filter(Boolean)
++                .join(' ');
++
++              return (
++                <li
++                  key={row.expandedRowId}
++                  data-expanded-row-id={row.expandedRowId}
++                  data-parent-cue-item-id={row.parentCueItemId}
++                  data-is-current-parent={isCurrentParent ? 'true' : 'false'}
++                  className={expandedRowClasses}
++                >
++                  <div className="cue-sheet-badge-row">
++                    <button
++                      type="button"
++                      className="cue-sheet-item-select-btn"
++                      aria-current={isFirstRowForCurrentItem ? 'step' : undefined}
++                      onClick={() => selectByCueItemId(row.parentCueItemId)}
++                    >
++                      <span className="cue-sheet-badge">
++                        펼침 #{formatStepNumber(row.expandedOrder)} (원본 #
++                        {formatStepNumber(row.parentItemOrder)})
++                      </span>
++                      <strong>{row.nameKo}</strong>
++                      {row.duplicateDisambiguatorKo && (
++                        <span className="cue-sheet-badge is-warning">
++                          {row.duplicateDisambiguatorKo}
++                        </span>
++                      )}
++                    </button>
++                    {row.blockHeaderKo && (
++                      <span className="cue-sheet-badge">{row.blockHeaderKo}</span>
++                    )}
++                    {row.sideLabelKo && (
++                      <span className="cue-sheet-badge">{row.sideLabelKo}</span>
++                    )}
++                    {row.setIndex !== null && row.setCount !== null && (
++                      <span className="cue-sheet-badge">
++                        세트 {row.setIndex}/{row.setCount}
++                      </span>
++                    )}
++                    {row.blockRepetitionCount > 1 && (
++                      <span className="cue-sheet-badge">
++                        블록 반복 {row.blockRepetitionIndex}/
++                        {row.blockRepetitionCount}
++                      </span>
++                    )}
++                    <span
++                      className={`cue-sheet-badge ${
++                        row.timingStatus === 'unspecified' ? 'is-warning' : ''
++                      }`}
++                    >
++                      {row.timingLabelKo}
+                     </span>
+-                  )}
+-                  <span
+-                    className={`cue-sheet-badge ${
+-                      row.timingStatus === 'unspecified' ? 'is-warning' : ''
+-                    }`}
+-                  >
+-                    {row.timingLabelKo}
+-                  </span>
+-                </div>
+-                <p className="cue-sheet-meta-line">
+-                  세팅: {row.setupSummaryKo}
+-                </p>
+-                <p className="cue-sheet-note">
+-                  큐: {row.primaryCueKo}
+-                  {row.instructorNote ? ` · 메모: ${row.instructorNote}` : ''}
+-                </p>
+-              </li>
+-            ))}
++                  </div>
++                  <p className="cue-sheet-meta-line">
++                    세팅: {row.setupSummaryKo}
++                  </p>
++                  <p className="cue-sheet-note">
++                    큐: {row.primaryCueKo}
++                    {row.instructorNote ? ` · 메모: ${row.instructorNote}` : ''}
++                  </p>
++                </li>
++              );
++            })}
+             {activeProjection.truncation.omittedExpandedRowCount > 0 && (
+               <li
+                 className="cue-sheet-expanded-omitted-footer"
+diff --git a/src/features/classCueSheet/README.md b/src/features/classCueSheet/README.md
+index 47c2423..a7d77b7 100644
+--- a/src/features/classCueSheet/README.md
++++ b/src/features/classCueSheet/README.md
+@@ -14,19 +14,26 @@
+   - 현재 순서, 동작 이름(강사가 이름만 적은 미분류 동작 포함), 사용자 작성 큐·메모, 준비물/기구, 알려진 시간만 보존합니다.
+   - 미정 시간은 `'시간 미정'`(`status: 'unspecified'`)으로 명시하며 새 시간을 추정하거나 분배하지 않습니다.
+   - 블록 반복(`repeatCount`), 세트(`sets`), 횟수(`reps`), 좌우 표기(`sideMode`) 의미를 보존하며, 완전 펼치기(`expandedRows`)는 유한 상한(`maxExpandedRows` 등)을 적용하고 잘림 발생 시 `truncation.isTruncated`와 한국어 사유(`reasonsKo`)를 숨기지 않고 노출합니다.
+-  - 긴 한국어 제목·메모, 빈 큐, 중복 동작 이름을 결정론적(deterministic)이고 충돌 없는 안정적 ID(`cueItemId`, `expandedRowId`)와 중복 순번(`duplicateOccurrenceIndex / duplicateTotalCount`)으로 구분합니다.
+-- **프라이버시 Allowlist 및 Plain Text 이스케이프**:
+-  - 참가자 이름, 회원 정보, 연락처, 건강/통증/부상/임신/수술/병력 등 민감 키(`SENSITIVE_CUE_SHEET_KEYS`)는 프로젝션에서 제외하고 `privacy.strippedSensitiveKeys`에 기록합니다.
+-  - 자유 메모 내 인라인 민감 토큰(`회원명: ...`, `주의 질환: ...` 등)을 마스킹하고, HTML/script 유사 문자열은 실행 불가능한 평문으로 이스케이프합니다.
+-- **독립 픽스처 프리뷰 및 로컬 인쇄 스타일시트 (`ClassCueSheetPreview`, `classCueSheet.css`)**:
+-  - 현재/다음 항목 이동 컨트롤, 키보드 단축키(`ArrowDown`/`ArrowRight`/`j`/`n`, `ArrowUp`/`ArrowLeft`/`k`/`p`, `Home`, `End`), 요약/완전 펼치기 전환, 전체 진행표 테이블을 제공합니다.
+-  - 진행 상태는 **로컬 임시 상태(local ephemeral state)**로만 유지하며 새 수업 완료 기록이나 브라우저 스토리지에 저장하지 않습니다.
+-  - `320px` / `390px` 모바일 뷰포트에서 가로 넘침(horizontal overflow) 없이 읽을 수 있으며, `@media print` 및 로컬 인쇄 미리보기 모드에서 컨트롤 UI를 숨기고 흑백 고대비 타이포그래피와 긴 문단 페이지 나눔(`break-inside: auto`, `orphans`, `widows`)을 보장합니다.
++  - 긴 한국어 제목·메모, 빈 큐, 중복 동작 이름을 결정론적(deterministic)이고 순서 변경에도 보존되는 안정적 ID(`cueItemId`, `expandedRowId`)와 중복 순번(`duplicateNameOccurrence / duplicateNameTotal`)으로 구분합니다.
++- **프라이버시 Allowlist 및 보조 휴리스틱 마스킹 경계**:
++  - 구조화된 객체 프로퍼티는 허용 목록(Allowlist)에 포함된 수업·동작·세팅 필드만 추출하며, 참가자 이름, 회원 정보, 연락처, 건강/통증/부상/임신/수술/병력 등 민감 키(`SENSITIVE_CUE_SHEET_KEYS`)는 제외하고 `privacy.strippedSensitiveKeys`에 기록합니다.
++  - 자유 서술 메모 내 인라인 패턴(`회원명: ...`, 전화번호, 이메일 등)에는 보조적 휴리스틱 마스킹(`inlineRedactionIsHeuristicOnly: true`)을 적용하지만, **휴리스틱 문자열 마스킹은 자유 텍스트 내 모든 건강·개인정보를 완벽히 제거한다는 보장이 아닙니다** (`privacy.privacyPolicyNoteKo`에 명시).
++  - HTML/script 유사 문자열은 실행 불가능한 평문으로 이스케이프합니다.
++- **수업 편집 중 현재/다음 진행 위치 안정 유지 및 명시적 Fallback 계약 (`ClassCueSheetPreview`)**:
++  - 프리뷰가 마운트된 상태에서 수업 입력(`sourceInput` 또는 `projection`)이 편집될 때 단순 배열 인덱스가 아니라 **안정적 항목 식별자(`cueItemId`, 보조 `sourceStepId`)**를 기준으로 현재 진행 위치를 보존합니다(`CueSheetSelectionResolution`):
++    - 현재 항목 앞 삽입/삭제/순서 변경, 동일 동작명·다른 ID 편집, 기본↔펼치기 보기 전환 시: 동일 동작을 계속 현재 항목으로 유지(`preserved-by-id`)하고 `#순번 / #전체`, 다음 준비 항목, 전체 목록(`aria-current="step"`), 보조기술 요약(`data-testid="cue-sheet-a11y-status"`)을 동기화합니다.
++    - 현재 항목이 삭제된 경우(동일 수업 내 편집): 인접 순번(`Math.min(prevIndex, nextItems.length - 1)`)으로 이동(`fallback-adjacent-after-delete`)하고 삭제 이동 안내 배너(`data-testid="cue-sheet-selection-fallback-notice"`)를 노출합니다.
++    - 다른 수업으로 교체되거나 빈 수업에서 새 수업으로 전환된 경우: 이전 수업의 인덱스를 유지하지 않고 새 수업의 첫 항목(`#01`, `index 0`)으로 초기화(`reset-on-class-change`)합니다.
++    - 빈 수업(`0개 항목`)으로 전환된 경우: 이전 항목 잔상을 남기지 않고 빈 상태(`empty-class`)와 이동 버튼 비활성화를 적용합니다.
++  - 키보드 단축키(`ArrowDown`/`ArrowRight`/`j`/`n`, `ArrowUp`/`ArrowLeft`/`k`/`p`, `Home`, `End`) 및 경계 버튼 클릭 시 버튼이 `disabled`로 바뀌거나 선택 행이 삭제되더라도 포커스를 포커스 데크(`data-testid="cue-sheet-focus-deck"`)로 복구하여 `document.body`로의 포커스 유실이나 `320px`/`390px` 화면 밖 가로 이동이 발생하지 않습니다.
++- **다중 페이지 인쇄 및 로컬 PDF 내용 보존 계약 (`classCueSheet.css`, `classCueSheetChromium.test.ts`)**:
++  - `@page { margin: 12mm; }` 및 `@media print` 블록 분할 규칙을 통해 A4(`8.27in × 11.69in`) 및 US Letter(`8.5in × 11in`) 용지에서 현재 항목뿐만 아니라 **전체 진행표 목록과 상한 잘림 안내 배너·생략 푸터**를 모두 인쇄합니다.
++  - 긴 한국어 큐잉 문단은 페이지 경계에서 잘리거나 숨겨지지 않고 자연스럽게 다음 페이지로 분할(`break-inside: auto`, `overflow: visible`)되며, 항목 헤더(`cue-sheet-item-header`)는 페이지 하단에 고립되지 않도록 보호합니다.
+ 
+ ### 비목표 (금지 사항 준수)
+ - 자동 운동 처방, 안전성·운동 효과 보장, 이름만 적은 새 동작의 강제 카탈로그 분류를 수행하지 않습니다.
+ - `classPlanReview` 트랙이 담당하는 수업 총시간 적절성 판정이나 좌우 균형 분석/경고를 중복 구현하지 않습니다.
+-- 외부 AI/네트워크 요청, 원본 객체 변경, 저장소 쓰기, 다운로드 자동 실행을 수행하지 않습니다.
++- 외부 AI/네트워크 요청, 원본 객체 변경, 저장소 쓰기, 다운로드/인쇄 자동 실행을 수행하지 않습니다.
+ 
+ ---
+ 
+@@ -47,20 +54,20 @@
+ 
+ 모든 변경 사항은 `src/features/classCueSheet/**` 내부에만 위치합니다.
+ 
+-- `classCueSheetTypes.ts` — 프로젝션, 스텝 아이템, 펼치기 행, 프라이버시 리포트, 유한 상한(`DEFAULT_MAX_*`) 및 프리뷰 Props 타입 계약
+-- `classCueSheetProjection.ts` — 순수 읽기 전용 어댑터(`buildClassCueSheetProjection`), 평문 포맷터(`formatClassCueSheetAsPlainText`), 민감 키 필터링 및 HTML 평문 이스케이프
++- `classCueSheetTypes.ts` — 프로젝션, 스텝 아이템, 펼치기 행, 프라이버시 리포트(`inlineRedactionIsHeuristicOnly`), 유한 상한(`DEFAULT_MAX_*`) 타입 계약
++- `classCueSheetProjection.ts` — 순수 읽기 전용 어댑터(`buildClassCueSheetProjection`), 순서 불변 안정 `cueItemId` 생성, 평문 포맷터(`formatClassCueSheetAsPlainText`), 민감 키 필터링 및 HTML 평문 이스케이프
+ - `classCueSheetFixtures.ts` — 7종 합성 픽스처(`standard-mixed`, `empty-class`, `name-only-drafts`, `long-korean-cues-empty-cues-duplicates`, `nested-repeats-unilateral-unspecified-time`, `hundred-items-bounded`, `corrupted-circular-sensitive-html`)
+-- `ClassCueSheetPreview.tsx` — 독립 픽스처 프리뷰 컴포넌트 (현재/다음 이동, 키보드 네비게이션, 요약/펼치기 전환, 잘림 경고 배너, 로컬 인쇄 미리보기)
+-- `classCueSheet.css` — `.class-cue-sheet-root` 스코프 스타일, `320px`/`390px` 반응형 레이아웃, `@media print` 흑백 인쇄 및 페이지 나눔 규칙
+-- `classCueSheetProjection.test.ts` — 어댑터·프로젝션 단위 테스트 (14개 테스트 스위트)
+-- `ClassCueSheetPreview.test.tsx` — 프리뷰 UI·키보드·접근성·로컬 상태 격리 테스트 (7개 테스트 스위트)
+-- `classCueSheetChromium.test.ts` — 실제 Headless Chromium + Vite 기반 `320px`/`390px` 가로 넘침 검증 및 `@media print` / `Page.printToPDF` 검증 (2개 통합 테스트)
++- `ClassCueSheetPreview.tsx` — 독립 픽스처 프리뷰 컴포넌트 (라이브 편집 시 안정 ID 위치 유지·명시적 fallback, 현재/다음/전체/보조기술 동기화, 키보드 포커스 보호, 요약/펼치기 전환, 잘림 경고 배너, 로컬 인쇄 미리보기)
++- `classCueSheet.css` — `.class-cue-sheet-root` 스코프 스타일, `320px`/`390px` 반응형 레이아웃, `@media print` 다중 페이지 블록 분할·흑백 고대비 규칙
++- `classCueSheetProjection.test.ts` — 어댑터·프로젝션·안정 ID·프라이버시 경계 단위 테스트 (15개 테스트)
++- `ClassCueSheetPreview.test.tsx` — 프리뷰 UI·라이브 편집 상태 전이·키보드 포커스·로컬 상태 격리 테스트 (13개 테스트)
++- `classCueSheetChromium.test.ts` — 실제 Headless Chromium + Vite + Poppler(`pdfinfo`/`pdftotext`/`pdftoppm`) 기반 `320px`/`390px` 가로 넘침·포커스 검증 및 A4/Letter 다중 페이지 PDF 페이지별 텍스트·PGM 래스터 검증 (2개 통합 테스트)
+ - `index.ts` — 모듈 공개 배럴 익스포트
+ - `README.md` — 아키텍처, 재사용 계약 및 통합 후보 문서
+ 
+ ---
+ 
+-## 4. 검증 명령어 (Verification Commands)
++## 4. 검증 명령어 및 검증 범위 구분 (Verification & Boundaries)
+ 
+ ```bash
+ # 타입스크립트 빌드 검증
+@@ -69,6 +76,13 @@ npx tsc -b
+ # ESLint 검증 (src/features/classCueSheet)
+ npx eslint src/features/classCueSheet
+ 
+-# Vitest 단위 + 컴포넌트 + 실제 Chromium(320px/390px/@media print) 전체 검증
++# Vitest 단위(15) + 컴포넌트(13) + 실제 Chromium/Poppler PDF(2) 전체 검증 (총 30개 테스트)
+ pnpm vitest run src/features/classCueSheet
+ ```
++
++- **검증 완료 범위**:
++  - JSDOM 컴포넌트 단위/통합 테스트 및 실제 `/usr/bin/chromium` Headless 브라우저(`320px`/`390px` 뷰포트, `@media print` 에뮬레이션, `Page.printToPDF` A4/Letter PDF 생성)
++  - 로컬 설치된 Poppler 도구(`/usr/bin/pdfinfo`, `/usr/bin/pdftotext -f p -l p`, `/usr/bin/pdftoppm -gray -r 72`)를 통한 페이지 수, 페이지별 텍스트(첫·마지막 항목, `#001`~`#150`, `펼침 #01`~`#240`, 장문 한국어 큐 시작·끝 마커, 잘림 배너·푸터 누락/중복 0건), 빈 페이지 0건, 페이지 가장자리 여백 침범 없음 확인
++- **미검증 및 미연결 범위**:
++  - 제품 앱 라우트(`src/App.tsx`), 전역 스타일, 스토어(`usePilatesStore`)와의 실제 연결은 통합 전 후보 단계이므로 수행하지 않았습니다.
++  - 물리적 프린터 기기 및 용지 급지 하드웨어 출력은 로컬 VM 환경 범위 밖이므로 미검증 상태입니다.
+diff --git a/src/features/classCueSheet/classCueSheet.css b/src/features/classCueSheet/classCueSheet.css
+index 205326c..e0765d3 100644
+--- a/src/features/classCueSheet/classCueSheet.css
++++ b/src/features/classCueSheet/classCueSheet.css
+@@ -9,6 +9,8 @@
+   font-family:
+     'Pretendard Variable',
+     'Pretendard',
++    'Noto Sans CJK KR',
++    'Noto Sans KR',
+     -apple-system,
+     BlinkMacSystemFont,
+     system-ui,
+@@ -25,6 +27,7 @@
+   box-sizing: border-box;
+   min-width: 0;
+   max-width: 100%;
++  font-family: inherit;
+ }
+ 
+ .class-cue-sheet-root h1,
+@@ -267,6 +270,27 @@
+   gap: 0.75rem;
+ }
+ 
++.class-cue-sheet-root [data-testid='cue-sheet-a11y-status'],
++.class-cue-sheet-root .cue-sheet-a11y-status,
++.class-cue-sheet-root [data-testid='cue-sheet-selection-fallback-notice'],
++.class-cue-sheet-root .cue-sheet-selection-fallback-notice {
++  margin: 0;
++  max-width: 100%;
++  overflow-wrap: anywhere;
++  word-break: keep-all;
++}
++
++.class-cue-sheet-root [data-testid='cue-sheet-selection-fallback-notice'],
++.class-cue-sheet-root .cue-sheet-selection-fallback-notice {
++  border: 1px solid #b45309;
++  background-color: #fffbeb;
++  color: #78350f;
++  border-radius: 0.375rem;
++  padding: 0.5rem 0.75rem;
++  font-size: 0.8125rem;
++  font-weight: 600;
++}
++
+ .class-cue-sheet-root .cue-sheet-focus-controls {
+   display: flex;
+   flex-wrap: wrap;
+@@ -472,6 +496,11 @@
+     align-items: stretch;
+   }
+ 
++  .class-cue-sheet-root .cue-sheet-focus-controls .cue-sheet-badge-row,
++  .class-cue-sheet-root .cue-sheet-view-buttons {
++    width: 100%;
++  }
++
+   .class-cue-sheet-root .cue-sheet-btn,
+   .class-cue-sheet-root .cue-sheet-fixture-select,
+   .class-cue-sheet-root .cue-sheet-item-select-btn {
+@@ -488,6 +517,10 @@
+   box-shadow: none !important;
+ }
+ 
++@page {
++  margin: 12mm;
++}
++
+ @media print {
+   .class-cue-sheet-root,
+   .class-cue-sheet-root * {
+@@ -501,23 +534,103 @@
+     display: none !important;
+   }
+ 
+-  .class-cue-sheet-root .cue-sheet-item-header,
++  .class-cue-sheet-root,
++  .class-cue-sheet-root .cue-sheet-focus-deck,
++  .class-cue-sheet-root .cue-sheet-focus-grid,
++  .class-cue-sheet-root .cue-sheet-progression-section,
++  .class-cue-sheet-root .cue-sheet-item-list,
++  .class-cue-sheet-root .cue-sheet-expanded-list {
++    display: block !important;
++    overflow: visible !important;
++    max-height: none !important;
++    padding: 0 !important;
++    border: none !important;
++    margin: 0 0 0.5rem 0 !important;
++  }
++
++  .class-cue-sheet-root {
++    margin: 0 !important;
++  }
++
++  .class-cue-sheet-root .cue-sheet-boundary-banner,
+   .class-cue-sheet-root .cue-sheet-summary-card,
+-  .class-cue-sheet-root .cue-sheet-focus-card,
+   .class-cue-sheet-root .cue-sheet-truncation-banner {
++    margin: 0 0 0.5rem 0 !important;
++    padding: 0.5rem 0.625rem 0.25rem 0.625rem !important;
++  }
++
++  .class-cue-sheet-root .cue-sheet-item,
++  .class-cue-sheet-root .cue-sheet-expanded-row,
++  .class-cue-sheet-root .cue-sheet-focus-card {
++    display: block !important;
++    margin: 0 0 0.5rem 0 !important;
++    padding: 0.375rem 0.25rem 0 0.25rem !important;
++    border-top: 1px solid #111 !important;
++    border-right: none !important;
++    border-bottom: none !important;
++    border-left: none !important;
++    border-radius: 0 !important;
++    break-inside: auto;
++    page-break-inside: auto;
++    overflow: visible !important;
++    max-height: none !important;
++  }
++
++  .class-cue-sheet-root .cue-sheet-item:last-child,
++  .class-cue-sheet-root .cue-sheet-expanded-row:last-child,
++  .class-cue-sheet-root .cue-sheet-progression-section:last-child {
++    margin-bottom: 0 !important;
++  }
++
++  .class-cue-sheet-root .cue-sheet-item-header,
++  .class-cue-sheet-root .cue-sheet-expanded-row > .cue-sheet-badge-row {
+     break-inside: avoid;
+     page-break-inside: avoid;
++    break-after: avoid;
++    page-break-after: avoid;
++  }
++
++  .class-cue-sheet-root .cue-sheet-summary-card,
++  .class-cue-sheet-root .cue-sheet-truncation-banner,
++  .class-cue-sheet-root .cue-sheet-expanded-omitted-footer {
++    break-inside: avoid;
++    page-break-inside: avoid;
++  }
++
++  .class-cue-sheet-root .cue-sheet-expanded-omitted-footer {
++    margin: 0.375rem 0 0 0 !important;
++    padding: 0.375rem 0.5rem 0 0.5rem !important;
++    border-top: 2px dashed #111 !important;
++    border-right: none !important;
++    border-bottom: none !important;
++    border-left: none !important;
++    border-radius: 0 !important;
+   }
+ 
+   .class-cue-sheet-root .cue-sheet-item.is-long-cue,
+   .class-cue-sheet-root .cue-sheet-long-note,
+-  .class-cue-sheet-root .cue-sheet-cue-list {
++  .class-cue-sheet-root .cue-sheet-cue-list,
++  .class-cue-sheet-root .cue-sheet-cue-text,
++  .class-cue-sheet-root .cue-sheet-note {
++    display: block !important;
+     break-inside: auto;
+     page-break-inside: auto;
+     overflow: visible !important;
+     max-height: none !important;
+     white-space: pre-wrap;
+-    orphans: 3;
+-    widows: 3;
++    orphans: 2;
++    widows: 2;
++  }
++
++  .class-cue-sheet-root .cue-sheet-cue-list {
++    list-style: none !important;
++    padding-left: 0 !important;
++    margin: 0.25rem 0 0 0 !important;
++    font-size: 0.8125rem !important;
++  }
++
++  .class-cue-sheet-root .cue-sheet-cue-text {
++    display: block !important;
++    margin-bottom: 0.1875rem !important;
+   }
+ }
+diff --git a/src/features/classCueSheet/classCueSheetChromium.test.ts b/src/features/classCueSheet/classCueSheetChromium.test.ts
+index c11b34b..e90c0e4 100644
+--- a/src/features/classCueSheet/classCueSheetChromium.test.ts
++++ b/src/features/classCueSheet/classCueSheetChromium.test.ts
+@@ -1,6 +1,13 @@
+ // @vitest-environment node
+-import { spawn, type ChildProcess } from 'node:child_process';
+-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
++import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
++import {
++  existsSync,
++  mkdtempSync,
++  readFileSync,
++  readdirSync,
++  rmSync,
++  writeFileSync,
++} from 'node:fs';
+ import { tmpdir } from 'node:os';
+ import { join } from 'node:path';
+ import { createServer, type ViteDevServer } from 'vite';
+@@ -10,19 +17,187 @@ if (typeof globalThis.window === 'undefined') {
+   (globalThis as Record<string, unknown>).window = globalThis;
+ }
+ 
+-const CHROMIUM_CANDIDATES = [
+-  '/usr/bin/chromium',
+-  '/usr/bin/google-chrome',
+-  '/usr/bin/chromium-browser',
+-];
++const CHROMIUM_BINARY = '/usr/bin/chromium';
++const PDFINFO_BINARY = '/usr/bin/pdfinfo';
++const PDFTOTEXT_BINARY = '/usr/bin/pdftotext';
++const PDFTOPPM_BINARY = '/usr/bin/pdftoppm';
+ 
+-function findChromiumBinary(): string {
+-  for (const candidate of CHROMIUM_CANDIDATES) {
+-    if (existsSync(candidate)) {
+-      return candidate;
++function assertLocalPopplerAndChromiumBinaries(): void {
++  for (const bin of [CHROMIUM_BINARY, PDFINFO_BINARY, PDFTOTEXT_BINARY, PDFTOPPM_BINARY]) {
++    if (!existsSync(bin)) {
++      throw new Error(`Required local binary missing at ${bin}`);
+     }
+   }
+-  throw new Error('No Chromium binary found at /usr/bin/chromium or /usr/bin/google-chrome.');
++}
++
++interface PgmPageAnalysis {
++  pageNumber: number;
++  width: number;
++  height: number;
++  darkPixelCount: number;
++  nonWhitePixelCount: number;
++  edgeMarginCleanRatio: number;
++}
++
++function analyzePgmRaster(buf: Buffer, pageNumber: number): PgmPageAnalysis {
++  let offset = 0;
++  const readToken = (): string => {
++    while (offset < buf.length) {
++      const b = buf[offset];
++      if (b === 0x23) {
++        while (offset < buf.length && buf[offset] !== 0x0a) {
++          offset++;
++        }
++      } else if (b === 0x20 || b === 0x09 || b === 0x0a || b === 0x0d) {
++        offset++;
++      } else {
++        break;
++      }
++    }
++    const start = offset;
++    while (offset < buf.length) {
++      const b = buf[offset];
++      if (b === 0x20 || b === 0x09 || b === 0x0a || b === 0x0d || b === 0x23) {
++        break;
++      }
++      offset++;
++    }
++    return buf.subarray(start, offset).toString('ascii');
++  };
++
++  const magic = readToken();
++  if (magic !== 'P5') {
++    throw new Error(`Unexpected PGM magic "${magic}" on page ${pageNumber}`);
++  }
++  const width = Number(readToken());
++  const height = Number(readToken());
++  const maxval = Number(readToken());
++  if (!Number.isFinite(width) || !Number.isFinite(height) || maxval !== 255) {
++    throw new Error(
++      `Invalid PGM header on page ${pageNumber}: ${width}x${height} maxval=${maxval}`,
++    );
++  }
++  offset++;
++
++  const pixelCount = width * height;
++  const pixels = buf.subarray(offset, offset + pixelCount);
++  let darkPixelCount = 0;
++  let nonWhitePixelCount = 0;
++  for (let i = 0; i < pixels.length; i++) {
++    const val = pixels[i]!;
++    if (val < 250) {
++      nonWhitePixelCount++;
++    }
++    if (val < 180) {
++      darkPixelCount++;
++    }
++  }
++
++  const borderPx = 6;
++  let borderTotal = 0;
++  let borderWhite = 0;
++  for (let y = 0; y < height; y++) {
++    for (let x = 0; x < width; x++) {
++      if (
++        x < borderPx ||
++        x >= width - borderPx ||
++        y < borderPx ||
++        y >= height - borderPx
++      ) {
++        borderTotal++;
++        if (pixels[y * width + x]! >= 250) {
++          borderWhite++;
++        }
++      }
++    }
++  }
++
++  return {
++    pageNumber,
++    width,
++    height,
++    darkPixelCount,
++    nonWhitePixelCount,
++    edgeMarginCleanRatio: borderTotal > 0 ? borderWhite / borderTotal : 1,
++  };
++}
++
++interface PdfInspectionResult {
++  pageCount: number;
++  fullText: string;
++  pageTexts: string[];
++  pgmPages: PgmPageAnalysis[];
++}
++
++function inspectGeneratedPdf(
++  workDir: string,
++  caseSlug: string,
++  pdfBytes: Buffer,
++): PdfInspectionResult {
++  expect(pdfBytes.subarray(0, 4).toString('ascii')).toBe('%PDF');
++  expect(pdfBytes.byteLength).toBeGreaterThan(5000);
++
++  const pdfPath = join(workDir, `${caseSlug}.pdf`);
++  writeFileSync(pdfPath, pdfBytes);
++
++  const infoOut = execFileSync(PDFINFO_BINARY, [pdfPath], { encoding: 'utf8' });
++  const pagesMatch = infoOut.match(/^Pages:\s+(\d+)/m);
++  if (!pagesMatch?.[1]) {
++    throw new Error(`Failed to parse Pages from pdfinfo output:\n${infoOut}`);
++  }
++  const pageCount = Number(pagesMatch[1]);
++
++  const fullText = execFileSync(PDFTOTEXT_BINARY, [pdfPath, '-'], {
++    encoding: 'utf8',
++  });
++
++  const pageTexts: string[] = [];
++  for (let p = 1; p <= pageCount; p++) {
++    const pageText = execFileSync(
++      PDFTOTEXT_BINARY,
++      ['-f', String(p), '-l', String(p), pdfPath, '-'],
++      { encoding: 'utf8' },
++    );
++    pageTexts.push(pageText);
++  }
++
++  const ppmPrefix = join(workDir, `${caseSlug}-page`);
++  execFileSync(PDFTOPPM_BINARY, ['-gray', '-r', '72', pdfPath, ppmPrefix]);
++
++  const pgmFiles = readdirSync(workDir)
++    .filter((f) => f.startsWith(`${caseSlug}-page-`) && f.endsWith('.pgm'))
++    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
++
++  expect(pgmFiles.length).toBe(pageCount);
++
++  const pgmPages = pgmFiles.map((fileName, idx) => {
++    const buf = readFileSync(join(workDir, fileName));
++    return analyzePgmRaster(buf, idx + 1);
++  });
++
++  return {
++    pageCount,
++    fullText,
++    pageTexts,
++    pgmPages,
++  };
++}
++
++function countOccurrences(haystack: string, needle: string): number {
++  if (!needle) {
++    return 0;
++  }
++  let count = 0;
++  let pos = 0;
++  while (true) {
++    const idx = haystack.indexOf(needle, pos);
++    if (idx === -1) {
++      break;
++    }
++    count++;
++    pos = idx + needle.length;
++  }
++  return count;
+ }
+ 
+ class CdpSession {
+@@ -59,9 +234,11 @@ class CdpSession {
+     const ws = new WebSocket(wsUrl);
+     await new Promise<void>((resolve, reject) => {
+       ws.addEventListener('open', () => resolve(), { once: true });
+-      ws.addEventListener('error', (err) => reject(new Error(`WebSocket error: ${String(err)}`)), {
+-        once: true,
+-      });
++      ws.addEventListener(
++        'error',
++        (err) => reject(new Error(`WebSocket error: ${String(err)}`)),
++        { once: true },
++      );
+     });
+     return new CdpSession(ws);
+   }
+@@ -127,17 +304,24 @@ const STANDALONE_FIXTURE_HTML = `<!doctype html>
+     <div id="cue-sheet-mount"></div>
+     <script type="module">
+       import React from 'react';
++      import { flushSync } from 'react-dom';
+       import { createRoot } from 'react-dom/client';
+       import { ClassCueSheetPreview } from '/src/features/classCueSheet/ClassCueSheetPreview.tsx';
+ 
+       const mount = document.getElementById('cue-sheet-mount');
+       const root = createRoot(mount);
++      window.__renderCueSheetProps = async (props) => {
++        flushSync(() => {
++          root.render(React.createElement(ClassCueSheetPreview, props));
++        });
++        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
++      };
+       root.render(React.createElement(ClassCueSheetPreview, { showFixtureSwitcher: true }));
+     </script>
+   </body>
+ </html>`;
+ 
+-describe('ClassCueSheetPreview real Chromium 320px / 390px and @media print verification', () => {
++describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media print PDF verification', () => {
+   let viteServer: ViteDevServer | null = null;
+   let baseUrl = '';
+   let chromeProcess: ChildProcess | null = null;
+@@ -145,6 +329,8 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and @media print veri
+   let cdp: CdpSession | null = null;
+ 
+   beforeAll(async () => {
++    assertLocalPopplerAndChromiumBinaries();
++
+     viteServer = await createServer({
+       root: process.cwd(),
+       logLevel: 'silent',
+@@ -186,10 +372,9 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and @media print veri
+     baseUrl = `http://127.0.0.1:${address.port}/__cue-sheet-fixture`;
+ 
+     userDataDir = mkdtempSync(join(tmpdir(), 'cue-sheet-chromium-'));
+-    const chromiumBin = findChromiumBinary();
+ 
+     chromeProcess = spawn(
+-      chromiumBin,
++      CHROMIUM_BINARY,
+       [
+         '--headless=new',
+         '--no-sandbox',
+@@ -239,13 +424,15 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and @media print veri
+     await cdp.send('Page.enable');
+     await cdp.send('Runtime.enable');
+     await cdp.send('DOM.enable');
++    await cdp.send('Page.bringToFront');
++    await cdp.send('Emulation.setFocusEmulationEnabled', { enabled: true });
+     await cdp.send('Page.navigate', { url: baseUrl });
+ 
+     await cdp.evaluate(`new Promise((resolve, reject) => {
+       const deadline = Date.now() + 10000;
+       const check = () => {
+         const root = document.querySelector('[data-testid="class-cue-sheet-root"]');
+-        if (root) {
++        if (root && typeof window.__renderCueSheetProps === 'function') {
+           resolve(true);
+           return;
+         }
+@@ -272,179 +459,688 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and @media print veri
+     }
+   });
+ 
+-  it('renders all 7 synthetic fixtures at 320px and 390px in real Chromium with zero horizontal overflow', async () => {
+-    expect(cdp).not.toBeNull();
+-    const session = cdp!;
+-
+-    const fixtureIds = [
+-      'standard-mixed',
+-      'empty-class',
+-      'name-only-drafts',
+-      'long-korean-cues-empty-cues-duplicates',
+-      'nested-repeats-unilateral-unspecified-time',
+-      'hundred-items-bounded',
+-      'corrupted-circular-sensitive-html',
+-    ] as const;
+-
+-    for (const width of [320, 390] as const) {
+-      await session.send('Emulation.setEmulatedMedia', { media: 'screen' });
+-      await session.send('Emulation.setDeviceMetricsOverride', {
+-        width,
+-        height: 844,
+-        deviceScaleFactor: 1,
+-        mobile: true,
+-      });
++  it(
++    'renders all 7 synthetic fixtures at 320px and 390px with zero horizontal overflow and retains focus + selection across live class edits and boundary navigation in real Chromium',
++    async () => {
++      expect(cdp).not.toBeNull();
++      const session = cdp!;
++
++      const fixtureIds = [
++        'standard-mixed',
++        'empty-class',
++        'name-only-drafts',
++        'long-korean-cues-empty-cues-duplicates',
++        'nested-repeats-unilateral-unspecified-time',
++        'hundred-items-bounded',
++        'corrupted-circular-sensitive-html',
++      ] as const;
++
++      for (const width of [320, 390] as const) {
++        await session.send('Emulation.setEmulatedMedia', { media: 'screen' });
++        await session.send('Emulation.setDeviceMetricsOverride', {
++          width,
++          height: 844,
++          deviceScaleFactor: 1,
++          mobile: true,
++        });
++
++        await session.evaluate(
++          `window.__renderCueSheetProps({ key: 'fixture-switcher-${width}', showFixtureSwitcher: true, initialViewMode: 'compact' })`,
++        );
++
++        for (const fixtureId of fixtureIds) {
++          const metrics = await session.evaluate<{
++            fixtureId: string;
++            innerWidth: number;
++            docScrollWidth: number;
++            rootScrollWidth: number;
++            maxChildRight: number;
++            scrollX: number;
++            localStorageLen: number;
++            sessionStorageLen: number;
++            injectedScriptCount: number;
++          }>(`(async () => {
++            const btn = document.querySelector('button[data-fixture-id="${fixtureId}"]');
++            if (!btn) throw new Error('Missing fixture button: ${fixtureId}');
++            btn.click();
++            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+ 
+-      for (const fixtureId of fixtureIds) {
+-        const metrics = await session.evaluate<{
+-          fixtureId: string;
+-          innerWidth: number;
++            const compactBtn = Array.from(document.querySelectorAll('.cue-sheet-view-buttons button'))
++              .find((b) => b.textContent && b.textContent.includes('기본 진행표'));
++            if (compactBtn) compactBtn.click();
++            await new Promise((r) => requestAnimationFrame(r));
++
++            const root = document.querySelector('[data-testid="class-cue-sheet-root"]');
++            const children = Array.from(root.querySelectorAll('.cue-sheet-summary-card, .cue-sheet-focus-deck, .cue-sheet-focus-card, .cue-sheet-item, .cue-sheet-truncation-banner'));
++            const maxChildRight = children.reduce((max, el) => Math.max(max, Math.round(el.getBoundingClientRect().right)), 0);
++
++            return {
++              fixtureId: '${fixtureId}',
++              innerWidth: window.innerWidth,
++              docScrollWidth: document.documentElement.scrollWidth,
++              rootScrollWidth: root.scrollWidth,
++              maxChildRight,
++              scrollX: window.scrollX,
++              localStorageLen: window.localStorage.length,
++              sessionStorageLen: window.sessionStorage.length,
++              injectedScriptCount: root.querySelectorAll('script').length,
++            };
++          })()`);
++
++          expect(metrics.innerWidth).toBe(width);
++          expect(metrics.docScrollWidth).toBeLessThanOrEqual(width);
++          expect(metrics.rootScrollWidth).toBeLessThanOrEqual(width);
++          expect(metrics.maxChildRight).toBeLessThanOrEqual(width);
++          expect(metrics.scrollX).toBe(0);
++          expect(metrics.localStorageLen).toBe(0);
++          expect(metrics.sessionStorageLen).toBe(0);
++          expect(metrics.injectedScriptCount).toBe(0);
++        }
++
++        // Verify expanded view at 320px and 390px on the 100-item bounded fixture
++        const expandedMetrics = await session.evaluate<{
+           docScrollWidth: number;
+           rootScrollWidth: number;
+-          maxChildRight: number;
+-          localStorageLen: number;
+-          sessionStorageLen: number;
+-          injectedScriptCount: number;
++          scrollX: number;
++          expandedRowCount: number;
++          hasTruncationBanner: boolean;
++          hasOmittedFooter: boolean;
+         }>(`(async () => {
+-          const btn = document.querySelector('button[data-fixture-id="${fixtureId}"]');
+-          if (!btn) throw new Error('Missing fixture button: ${fixtureId}');
++          const btn = document.querySelector('button[data-fixture-id="hundred-items-bounded"]');
+           btn.click();
+-          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+-
+-          const compactBtn = Array.from(document.querySelectorAll('.cue-sheet-view-buttons button'))
+-            .find((b) => b.textContent && b.textContent.includes('기본 진행표'));
+-          if (compactBtn) compactBtn.click();
+           await new Promise((r) => requestAnimationFrame(r));
+-
++          const expandedBtn = Array.from(document.querySelectorAll('.cue-sheet-view-buttons button'))
++            .find((b) => b.textContent && b.textContent.includes('반복·좌우 펼침 진행표'));
++          expandedBtn.click();
++          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+           const root = document.querySelector('[data-testid="class-cue-sheet-root"]');
+-          const children = Array.from(root.querySelectorAll('.cue-sheet-summary-card, .cue-sheet-focus-card, .cue-sheet-item, .cue-sheet-truncation-banner'));
+-          const maxChildRight = children.reduce((max, el) => Math.max(max, Math.round(el.getBoundingClientRect().right)), 0);
+-
+           return {
+-            fixtureId: '${fixtureId}',
+-            innerWidth: window.innerWidth,
+             docScrollWidth: document.documentElement.scrollWidth,
+             rootScrollWidth: root.scrollWidth,
+-            maxChildRight,
+-            localStorageLen: window.localStorage.length,
+-            sessionStorageLen: window.sessionStorage.length,
+-            injectedScriptCount: root.querySelectorAll('script').length,
++            scrollX: window.scrollX,
++            expandedRowCount: document.querySelectorAll('.cue-sheet-expanded-row').length,
++            hasTruncationBanner: Boolean(document.querySelector('[data-testid="cue-sheet-truncation-banner"]')),
++            hasOmittedFooter: Boolean(document.querySelector('[data-testid="expanded-omitted-footer"]')),
+           };
+         })()`);
+ 
+-        expect(metrics.innerWidth).toBe(width);
+-        expect(metrics.docScrollWidth).toBeLessThanOrEqual(width);
+-        expect(metrics.rootScrollWidth).toBeLessThanOrEqual(width);
+-        expect(metrics.maxChildRight).toBeLessThanOrEqual(width);
+-        expect(metrics.localStorageLen).toBe(0);
+-        expect(metrics.sessionStorageLen).toBe(0);
+-        expect(metrics.injectedScriptCount).toBe(0);
++        expect(expandedMetrics.docScrollWidth).toBeLessThanOrEqual(width);
++        expect(expandedMetrics.rootScrollWidth).toBeLessThanOrEqual(width);
++        expect(expandedMetrics.scrollX).toBe(0);
++        expect(expandedMetrics.expandedRowCount).toBe(240);
++        expect(expandedMetrics.hasTruncationBanner).toBe(true);
++        expect(expandedMetrics.hasOmittedFooter).toBe(true);
++
++        // Verify live-edit re-renders on mounted ClassCueSheetPreview + keyboard/button navigation to boundaries (0 and last)
++        const liveEditChecks = await session.evaluate<
++          Array<{
++            phase: string;
++            currentIndex: number;
++            currentTitle: string;
++            resolution: string;
++            hasA11yStatus: boolean;
++            hasFallbackNotice: boolean;
++            activeTag: string;
++            activeInsideRoot: boolean;
++            activeNotBody: boolean;
++            activeLeft: number;
++            activeRight: number;
++            docScrollWidth: number;
++            rootScrollWidth: number;
++            scrollX: number;
++          }>
++        >(`(async () => {
++          const results = [];
++          const liveKey = 'live-edit-mounted-${width}';
++          const snap = (phase) => {
++            const root = document.querySelector('[data-testid="class-cue-sheet-root"]');
++            const active = document.activeElement;
++            const rect = active ? active.getBoundingClientRect() : { left: 0, right: 0 };
++            const currentHeading = root.querySelector('.cue-sheet-focus-card.is-current .cue-sheet-title');
++            results.push({
++              phase,
++              currentIndex: Number(root.getAttribute('data-current-step-index') ?? '-1'),
++              currentTitle: currentHeading ? currentHeading.textContent.trim() : '',
++              resolution: root.getAttribute('data-selection-resolution') ?? '',
++              hasA11yStatus: Boolean(root.querySelector('[data-testid="cue-sheet-a11y-status"]')),
++              hasFallbackNotice: Boolean(root.querySelector('[data-testid="cue-sheet-selection-fallback-notice"]')),
++              activeTag: active ? active.tagName : 'NONE',
++              activeInsideRoot: Boolean(active && root.contains(active)),
++              activeNotBody: Boolean(active && active !== document.body),
++              activeLeft: Math.floor(rect.left),
++              activeRight: Math.ceil(rect.right),
++              docScrollWidth: document.documentElement.scrollWidth,
++              rootScrollWidth: root.scrollWidth,
++              scrollX: window.scrollX,
++            });
++          };
++
++          const stepA = { stepId: 'live-step-a', nameKo: '첫 번째 웜업 브리딩', durationMin: 4 };
++          const stepB = { stepId: 'live-step-b', nameKo: '두 번째 풋워크 패럴렐', durationMin: 6 };
++          const stepC = { stepId: 'live-step-c', nameKo: '세 번째 헌드레드 코어', durationMin: 5 };
++          const stepD = { stepId: 'live-step-d', nameKo: '네 번째 머메이드 스트레치', durationMin: 4 };
++
++          await window.__renderCueSheetProps({
++            key: liveKey,
++            showFixtureSwitcher: false,
++            initialViewMode: 'compact',
++            sourceInput: {
++              id: 'live-class-1',
++              title: '실시간 편집 검증 수업',
++              steps: [stepA, stepB, stepC, stepD],
++            },
++          });
++
++          // Select stepC (index 2) via item select button
++          const itemButtons = document.querySelectorAll('.cue-sheet-item-select-btn');
++          itemButtons[2].focus();
++          itemButtons[2].click();
++          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
++          snap('select-stepC');
++
++          // 1) Insert before current
++          const stepInserted = { stepId: 'live-step-pre', nameKo: '사전 추가 흉곽 호흡', durationMin: 3 };
++          await window.__renderCueSheetProps({
++            key: liveKey,
++            showFixtureSwitcher: false,
++            initialViewMode: 'compact',
++            sourceInput: {
++              id: 'live-class-1',
++              title: '실시간 편집 검증 수업',
++              steps: [stepInserted, stepA, stepB, stepC, stepD],
++            },
++          });
++          snap('insert-before-current');
++
++          // 2) Delete before current
++          await window.__renderCueSheetProps({
++            key: liveKey,
++            showFixtureSwitcher: false,
++            initialViewMode: 'compact',
++            sourceInput: {
++              id: 'live-class-1',
++              title: '실시간 편집 검증 수업',
++              steps: [stepB, stepC, stepD],
++            },
++          });
++          snap('delete-before-current');
++
++          // 3) Reorder (move stepC to last position)
++          await window.__renderCueSheetProps({
++            key: liveKey,
++            showFixtureSwitcher: false,
++            initialViewMode: 'compact',
++            sourceInput: {
++              id: 'live-class-1',
++              title: '실시간 편집 검증 수업',
++              steps: [stepB, stepD, stepC],
++            },
++          });
++          snap('reorder-stepC-to-end');
++
++          // 4) Same-name different-id inserted before stepC
++          const stepCSameNameOtherId = {
++            stepId: 'live-step-c-other',
++            nameKo: '세 번째 헌드레드 코어',
++            durationMin: 3,
++          };
++          await window.__renderCueSheetProps({
++            key: liveKey,
++            showFixtureSwitcher: false,
++            initialViewMode: 'compact',
++            sourceInput: {
++              id: 'live-class-1',
++              title: '실시간 편집 검증 수업',
++              steps: [stepCSameNameOtherId, stepB, stepC, stepD],
++            },
++          });
++          snap('same-name-different-id');
++
++          // 5) Delete current item (remove stepC while selected -> adjacent fallback notice)
++          await window.__renderCueSheetProps({
++            key: liveKey,
++            showFixtureSwitcher: false,
++            initialViewMode: 'compact',
++            sourceInput: {
++              id: 'live-class-1',
++              title: '실시간 편집 검증 수업',
++              steps: [stepCSameNameOtherId, stepB, stepD],
++            },
++          });
++          snap('delete-current-item');
++
++          // 6) Empty <-> long class transition
++          await window.__renderCueSheetProps({
++            key: liveKey,
++            showFixtureSwitcher: false,
++            initialViewMode: 'compact',
++            sourceInput: {
++              id: 'live-class-1',
++              title: '빈 상태 전환 테스트',
++              steps: [],
++            },
++          });
++          snap('to-empty-class');
++
++          const longSteps = Array.from({ length: 12 }, (_, idx) => ({
++            stepId: 'long-step-' + (idx + 1),
++            nameKo: '장문 복귀 동작 #' + String(idx + 1).padStart(2, '0'),
++            durationMin: 2,
++          }));
++          await window.__renderCueSheetProps({
++            key: liveKey,
++            showFixtureSwitcher: false,
++            initialViewMode: 'compact',
++            sourceInput: {
++              id: 'live-class-1',
++              title: '장문 복귀 테스트',
++              steps: longSteps,
++            },
++          });
++          snap('empty-to-long-class');
++
++          // 7) Replace with different class
++          await window.__renderCueSheetProps({
++            key: liveKey,
++            showFixtureSwitcher: false,
++            initialViewMode: 'compact',
++            sourceInput: {
++              id: 'live-class-2-completely-different',
++              title: '완전히 다른 신규 수업',
++              steps: [
++                { stepId: 'new-1', nameKo: '신규 수업 동작 1', durationMin: 5 },
++                { stepId: 'new-2', nameKo: '신규 수업 동작 2', durationMin: 5 },
++                { stepId: 'new-3', nameKo: '신규 수업 동작 3', durationMin: 5 },
++              ],
++            },
++          });
++          snap('replace-different-class');
++
++          // 8) Button navigation to last and first boundaries (disabling buttons must not lose focus to body)
++          const nextBtn = document.querySelector('[data-testid="cue-sheet-nav-next"]');
++          nextBtn.focus();
++          nextBtn.click();
++          await new Promise((r) => requestAnimationFrame(r));
++          nextBtn.click();
++          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
++          snap('button-nav-to-last-boundary');
++
++          const firstBtn = document.querySelector('[data-testid="cue-sheet-nav-first"]');
++          firstBtn.focus();
++          firstBtn.click();
++          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
++          snap('button-nav-to-first-boundary');
++
++          // 9) Keyboard navigation on focus deck to End and Home boundaries
++          const deck = document.querySelector('[data-testid="cue-sheet-focus-deck"]');
++          deck.focus();
++          deck.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
++          await new Promise((r) => requestAnimationFrame(r));
++          snap('keyboard-nav-end');
++
++          deck.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
++          await new Promise((r) => requestAnimationFrame(r));
++          snap('keyboard-nav-home');
++
++          return results;
++        })()`);
++
++        const byPhase = Object.fromEntries(liveEditChecks.map((c) => [c.phase, c]));
++        expect(byPhase['select-stepC']?.currentIndex).toBe(2);
++        expect(byPhase['insert-before-current']?.currentIndex).toBe(3);
++        expect(byPhase['insert-before-current']?.currentTitle).toBe('세 번째 헌드레드 코어');
++        expect(byPhase['delete-before-current']?.currentIndex).toBe(1);
++        expect(byPhase['delete-before-current']?.currentTitle).toBe('세 번째 헌드레드 코어');
++        expect(byPhase['reorder-stepC-to-end']?.currentIndex).toBe(2);
++        expect(byPhase['reorder-stepC-to-end']?.currentTitle).toBe('세 번째 헌드레드 코어');
++        expect(byPhase['same-name-different-id']?.currentIndex).toBe(2);
++        expect(byPhase['same-name-different-id']?.currentTitle).toBe('세 번째 헌드레드 코어');
++        expect(byPhase['delete-current-item']?.hasFallbackNotice).toBe(true);
++        expect(byPhase['to-empty-class']?.currentIndex).toBe(-1);
++        expect(byPhase['empty-to-long-class']?.currentIndex).toBe(0);
++        expect(byPhase['replace-different-class']?.currentIndex).toBe(0);
++        expect(byPhase['replace-different-class']?.currentTitle).toBe('신규 수업 동작 1');
++        expect(byPhase['button-nav-to-last-boundary']?.currentIndex).toBe(2);
++        expect(byPhase['button-nav-to-first-boundary']?.currentIndex).toBe(0);
++        expect(byPhase['keyboard-nav-end']?.currentIndex).toBe(2);
++        expect(byPhase['keyboard-nav-home']?.currentIndex).toBe(0);
++
++        for (const entry of liveEditChecks) {
++          expect(entry.hasA11yStatus, `phase=${entry.phase}`).toBe(true);
++          expect(entry.activeInsideRoot, `phase=${entry.phase} activeTag=${entry.activeTag}`).toBe(true);
++          expect(entry.activeNotBody, `phase=${entry.phase} activeTag=${entry.activeTag}`).toBe(true);
++          expect(entry.activeLeft, `phase=${entry.phase}`).toBeGreaterThanOrEqual(0);
++          expect(entry.activeRight, `phase=${entry.phase}`).toBeLessThanOrEqual(width);
++          expect(entry.docScrollWidth, `phase=${entry.phase}`).toBeLessThanOrEqual(width);
++          expect(entry.rootScrollWidth, `phase=${entry.phase}`).toBeLessThanOrEqual(width);
++          expect(entry.scrollX, `phase=${entry.phase}`).toBe(0);
++        }
+       }
++    },
++    30000,
++  );
++
++  it(
++    'verifies @media print multi-page pagination, real PDF content preservation, and per-page PGM raster ink across A4 and US Letter in real Chromium',
++    async () => {
++      expect(cdp).not.toBeNull();
++      const session = cdp!;
++
++      await session.send('Emulation.setDeviceMetricsOverride', {
++        width: 794,
++        height: 1123,
++        deviceScaleFactor: 1,
++        mobile: false,
++      });
++
++      await session.evaluate(
++        `window.__renderCueSheetProps({
++          key: 'print-computed-check',
++          showFixtureSwitcher: true,
++          initialFixtureId: 'long-korean-cues-empty-cues-duplicates',
++          initialViewMode: 'compact',
++        })`,
++      );
++
++      // Activate @media print emulation in Chromium
++      await session.send('Emulation.setEmulatedMedia', { media: 'print' });
++
++      const printComputed = await session.evaluate<{
++        noPrintDisplays: string[];
++        rootColor: string;
++        rootBg: string;
++        rootDisplay: string;
++        progressionDisplay: string;
++        itemListDisplay: string;
++        itemDisplay: string;
++        itemBreakInside: string;
++        headerBreakInside: string;
++        headerBreakAfter: string;
++        summaryBreakInside: string;
++        longCueOverflow: string;
++        longCueMaxHeight: string;
++        longCueWhiteSpace: string;
++        longCueBreakInside: string;
++        itemCountVisible: number;
++      }>(`(() => {
++        const root = document.querySelector('[data-testid="class-cue-sheet-root"]');
++        const rootStyle = window.getComputedStyle(root);
++        const noPrintEls = Array.from(root.querySelectorAll('.cue-sheet-no-print'));
++        const progression = root.querySelector('.cue-sheet-progression-section');
++        const itemList = root.querySelector('.cue-sheet-item-list');
++        const firstItem = root.querySelector('.cue-sheet-item');
++        const firstHeader = root.querySelector('.cue-sheet-item-header');
++        const summaryCard = root.querySelector('.cue-sheet-summary-card');
++        const longNote = root.querySelector('.cue-sheet-long-note');
++        const items = Array.from(root.querySelectorAll('.cue-sheet-item'));
+ 
+-      // Also verify expanded view at 320px and 390px on the 100-item bounded fixture
+-      const expandedMetrics = await session.evaluate<{
+-        docScrollWidth: number;
+-        expandedRowCount: number;
+-        hasTruncationBanner: boolean;
+-        hasOmittedFooter: boolean;
+-      }>(`(async () => {
+-        const btn = document.querySelector('button[data-fixture-id="hundred-items-bounded"]');
+-        btn.click();
+-        await new Promise((r) => requestAnimationFrame(r));
+-        const expandedBtn = Array.from(document.querySelectorAll('.cue-sheet-view-buttons button'))
+-          .find((b) => b.textContent && b.textContent.includes('반복·좌우 펼침 진행표'));
+-        expandedBtn.click();
+-        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+         return {
+-          docScrollWidth: document.documentElement.scrollWidth,
+-          expandedRowCount: document.querySelectorAll('.cue-sheet-expanded-row').length,
+-          hasTruncationBanner: Boolean(document.querySelector('[data-testid="cue-sheet-truncation-banner"]')),
+-          hasOmittedFooter: Boolean(document.querySelector('[data-testid="expanded-omitted-footer"]')),
++          noPrintDisplays: noPrintEls.map((el) => window.getComputedStyle(el).display),
++          rootColor: rootStyle.color,
++          rootBg: rootStyle.backgroundColor,
++          rootDisplay: rootStyle.display,
++          progressionDisplay: window.getComputedStyle(progression).display,
++          itemListDisplay: window.getComputedStyle(itemList).display,
++          itemDisplay: window.getComputedStyle(firstItem).display,
++          itemBreakInside: window.getComputedStyle(firstItem).breakInside,
++          headerBreakInside: window.getComputedStyle(firstHeader).breakInside,
++          headerBreakAfter: window.getComputedStyle(firstHeader).breakAfter,
++          summaryBreakInside: window.getComputedStyle(summaryCard).breakInside,
++          longCueOverflow: window.getComputedStyle(longNote).overflow,
++          longCueMaxHeight: window.getComputedStyle(longNote).maxHeight,
++          longCueWhiteSpace: window.getComputedStyle(longNote).whiteSpace,
++          longCueBreakInside: window.getComputedStyle(longNote).breakInside,
++          itemCountVisible: items.filter((el) => window.getComputedStyle(el).display !== 'none').length,
+         };
+       })()`);
+ 
+-      expect(expandedMetrics.docScrollWidth).toBeLessThanOrEqual(width);
+-      expect(expandedMetrics.expandedRowCount).toBeGreaterThan(0);
+-      expect(expandedMetrics.hasTruncationBanner).toBe(true);
+-      expect(expandedMetrics.hasOmittedFooter).toBe(true);
+-    }
+-  });
++      expect(printComputed.noPrintDisplays.length).toBeGreaterThan(0);
++      expect(printComputed.noPrintDisplays.every((d) => d === 'none')).toBe(true);
++      expect(printComputed.rootColor).toBe('rgb(0, 0, 0)');
++      expect(printComputed.rootBg).toBe('rgb(255, 255, 255)');
++      expect(printComputed.rootDisplay).toBe('block');
++      expect(printComputed.progressionDisplay).toBe('block');
++      expect(printComputed.itemListDisplay).toBe('block');
++      expect(printComputed.itemDisplay).toBe('block');
++      expect(printComputed.itemBreakInside).toBe('auto');
++      expect(printComputed.headerBreakInside).toBe('avoid');
++      expect(printComputed.headerBreakAfter).toBe('avoid');
++      expect(printComputed.summaryBreakInside).toBe('avoid');
++      expect(printComputed.longCueOverflow).toBe('visible');
++      expect(printComputed.longCueMaxHeight).toBe('none');
++      expect(printComputed.longCueWhiteSpace).toBe('pre-wrap');
++      expect(printComputed.longCueBreakInside).toBe('auto');
++      expect(printComputed.itemCountVisible).toBe(6);
+ 
+-  it('verifies @media print monochrome readability, hidden interactive chrome, long-cue page break rules, and PDF generation in real Chromium', async () => {
+-    expect(cdp).not.toBeNull();
+-    const session = cdp!;
++      const paperSizes = [
++        { name: 'a4', paperWidth: 8.27, paperHeight: 11.69 },
++        { name: 'letter', paperWidth: 8.5, paperHeight: 11 },
++      ] as const;
+ 
+-    await session.send('Emulation.setDeviceMetricsOverride', {
+-      width: 794,
+-      height: 1123,
+-      deviceScaleFactor: 1,
+-      mobile: false,
+-    });
++      const printPdfForCurrentDom = async (
++        slug: string,
++        paperWidth: number,
++        paperHeight: number,
++      ): Promise<PdfInspectionResult> => {
++        const pdfResult = await session.send<{ data: string }>('Page.printToPDF', {
++          printBackground: true,
++          preferCSSPageSize: false,
++          paperWidth,
++          paperHeight,
++          marginTop: 0.4,
++          marginBottom: 0.4,
++          marginLeft: 0.4,
++          marginRight: 0.4,
++        });
++        const pdfBytes = Buffer.from(pdfResult.data, 'base64');
++        const inspection = inspectGeneratedPdf(userDataDir, slug, pdfBytes);
+ 
+-    // Switch to long-korean-cues-empty-cues-duplicates in compact mode
+-    await session.evaluate(`(async () => {
+-      const btn = document.querySelector('button[data-fixture-id="long-korean-cues-empty-cues-duplicates"]');
+-      btn.click();
+-      const compactBtn = Array.from(document.querySelectorAll('.cue-sheet-view-buttons button'))
+-        .find((b) => b.textContent && b.textContent.includes('기본 진행표'));
+-      compactBtn.click();
+-      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+-    })()`);
+-
+-    // Activate @media print emulation in Chromium
+-    await session.send('Emulation.setEmulatedMedia', { media: 'print' });
+-
+-    const printComputed = await session.evaluate<{
+-      noPrintDisplays: string[];
+-      rootColor: string;
+-      rootBg: string;
+-      summaryBreakInside: string;
+-      longCueOverflow: string;
+-      longCueMaxHeight: string;
+-      longCueWhiteSpace: string;
+-      longCueBreakInside: string;
+-      itemCountVisible: number;
+-    }>(`(() => {
+-      const root = document.querySelector('[data-testid="class-cue-sheet-root"]');
+-      const rootStyle = window.getComputedStyle(root);
+-      const noPrintEls = Array.from(root.querySelectorAll('.cue-sheet-no-print'));
+-      const summaryCard = root.querySelector('.cue-sheet-summary-card');
+-      const summaryStyle = window.getComputedStyle(summaryCard);
+-      const longNote = root.querySelector('.cue-sheet-long-note');
+-      const longNoteStyle = window.getComputedStyle(longNote);
+-      const items = Array.from(root.querySelectorAll('.cue-sheet-item'));
+-
+-      return {
+-        noPrintDisplays: noPrintEls.map((el) => window.getComputedStyle(el).display),
+-        rootColor: rootStyle.color,
+-        rootBg: rootStyle.backgroundColor,
+-        summaryBreakInside: summaryStyle.breakInside,
+-        longCueOverflow: longNoteStyle.overflow,
+-        longCueMaxHeight: longNoteStyle.maxHeight,
+-        longCueWhiteSpace: longNoteStyle.whiteSpace,
+-        longCueBreakInside: longNoteStyle.breakInside,
+-        itemCountVisible: items.filter((el) => window.getComputedStyle(el).display !== 'none').length,
++        // Every page 1..N must be non-blank (both extracted text and dark PGM ink pixels) with clean white margins
++        expect(inspection.pageCount, `slug=${slug}`).toBeGreaterThan(1);
++        for (let p = 0; p < inspection.pageCount; p++) {
++          expect(
++            inspection.pageTexts[p]!.trim().length,
++            `slug=${slug} page=${p + 1}/${inspection.pageCount} dark=${inspection.pgmPages[p]!.darkPixelCount} allLengths=${JSON.stringify(inspection.pageTexts.map((t) => t.trim().length))}`,
++          ).toBeGreaterThan(10);
++          expect(inspection.pgmPages[p]!.darkPixelCount, `slug=${slug} page=${p + 1}`).toBeGreaterThan(150);
++          expect(inspection.pgmPages[p]!.edgeMarginCleanRatio, `slug=${slug} page=${p + 1}`).toBeGreaterThan(0.99);
++        }
++        return inspection;
+       };
+-    })()`);
+-
+-    expect(printComputed.noPrintDisplays.length).toBeGreaterThan(0);
+-    expect(printComputed.noPrintDisplays.every((d) => d === 'none')).toBe(true);
+-    expect(printComputed.rootColor).toBe('rgb(0, 0, 0)');
+-    expect(printComputed.rootBg).toBe('rgb(255, 255, 255)');
+-    expect(printComputed.summaryBreakInside).toBe('avoid');
+-    expect(printComputed.longCueOverflow).toBe('visible');
+-    expect(printComputed.longCueMaxHeight).toBe('none');
+-    expect(printComputed.longCueWhiteSpace).toBe('pre-wrap');
+-    expect(printComputed.longCueBreakInside).toBe('auto');
+-    expect(printComputed.itemCountVisible).toBeGreaterThanOrEqual(3);
+-
+-    // Also verify real Chromium Page.printToPDF succeeds and produces a valid multi-kilobyte PDF
+-    const pdfResult = await session.send<{ data: string }>('Page.printToPDF', {
+-      printBackground: true,
+-      preferCSSPageSize: true,
+-    });
+-    const pdfBytes = Buffer.from(pdfResult.data, 'base64');
+-    expect(pdfBytes.subarray(0, 4).toString('ascii')).toBe('%PDF');
+-    expect(pdfBytes.byteLength).toBeGreaterThan(5000);
+-  });
++
++      // Case A1: long-korean-cues-empty-cues-duplicates (compact view)
++      await session.evaluate(
++        `window.__renderCueSheetProps({
++          key: 'pdf-case-a1',
++          showFixtureSwitcher: false,
++          initialFixtureId: 'long-korean-cues-empty-cues-duplicates',
++          initialViewMode: 'compact',
++        })`,
++      );
++      for (const paper of paperSizes) {
++        const res = await printPdfForCurrentDom(
++          `long-korean-cues-${paper.name}`,
++          paper.paperWidth,
++          paper.paperHeight,
++        );
++        for (const marker of [
++          '[장문큐-시작-01]',
++          '[장문큐-끝-01]',
++          '[장문큐-시작-03]',
++          '[장문큐-끝-03]',
++          '[장문큐-시작-05]',
++          '[장문큐-끝-05]',
++          '[장문큐-시작-06]',
++          '[장문큐-끝-06]',
++          '무큐잉 자유 스트레칭 동작',
++          '사이드 킥 시리즈',
++        ]) {
++          expect(res.fullText).toContain(marker);
++        }
++        // Items #03, #05, #06 appear only in the progression list -> exactly 1 occurrence each
++        for (const nonDeckMarker of [
++          '[장문큐-시작-03]',
++          '[장문큐-끝-03]',
++          '[장문큐-시작-05]',
++          '[장문큐-끝-05]',
++          '[장문큐-시작-06]',
++          '[장문큐-끝-06]',
++        ]) {
++          expect(countOccurrences(res.fullText, nonDeckMarker)).toBe(1);
++        }
++      }
++
++      // Case A2: Multi-page single-item long-paragraph stress input (35 long Korean cue lines [장문단락-01]..[장문단락-35] spanning across page 1 and page 2)
++      await session.evaluate(`(async () => {
++        const longCueLines = Array.from({ length: 35 }, (_, idx) => {
++          const tag = '[장문단락-' + String(idx + 1).padStart(2, '0') + ']';
++          return tag + ' 리포머 캐리지 위에서 양쪽 좌골의 균등한 지지와 흉곽 하부 호흡을 연결하며 척추 분절 정렬을 끝까지 유지합니다.';
++        });
++        await window.__renderCueSheetProps({
++          key: 'pdf-case-a2',
++          showFixtureSwitcher: false,
++          initialStepIndex: 0,
++          initialViewMode: 'compact',
++          sourceInput: {
++            id: 'single-item-35-lines-stress',
++            title: '단일 동작 35개 장문 단락 페이지 분할 스트레스 검증',
++            apparatus: 'reformer',
++            level: '1.5',
++            targetMinutes: 30,
++            steps: [
++              {
++                stepId: 'stress-warmup-1',
++                order: 1,
++                nameKo: '오프닝 호흡 정렬 준비',
++                durationMin: 3,
++                cues: ['코로 들이마시고 입으로 내쉬며 흉곽을 닫습니다.'],
++              },
++              {
++                stepId: 'stress-long-35-step',
++                order: 2,
++                nameKo: '초장문 35단락 연속 큐잉 동작',
++                durationMin: 15,
++                cues: [
++                  '초장문 단일 동작 연속 큐잉 시작 안내 문구입니다.',
++                  ...longCueLines,
++                ],
++              },
++            ],
++          },
++        });
++      })()`);
++
++      for (const paper of paperSizes) {
++        const res = await printPdfForCurrentDom(
++          `single-item-35-lines-${paper.name}`,
++          paper.paperWidth,
++          paper.paperHeight,
++        );
++        for (let i = 1; i <= 35; i++) {
++          const marker = `[장문단락-${String(i).padStart(2, '0')}]`;
++          expect(countOccurrences(res.fullText, marker)).toBe(1);
++        }
++        // Prove the single 35-line item starts on page 1 and continues onto page 2+
++        expect(res.pageTexts[0]).toContain('[장문단락-01]');
++        expect(res.pageTexts[res.pageCount - 1]).toContain('[장문단락-35]');
++      }
++
++      // Case B: nested-repeats-unilateral-unspecified-time (expanded view)
++      const nestedExpandedCount = await session.evaluate<number>(`(async () => {
++        await window.__renderCueSheetProps({
++          key: 'pdf-case-b',
++          showFixtureSwitcher: false,
++          initialFixtureId: 'nested-repeats-unilateral-unspecified-time',
++          initialViewMode: 'expanded',
++        });
++        return document.querySelectorAll('.cue-sheet-expanded-row').length;
++      })()`);
++      expect(nestedExpandedCount).toBeGreaterThan(20);
++      for (const paper of paperSizes) {
++        const res = await printPdfForCurrentDom(
++          `nested-repeats-expanded-${paper.name}`,
++          paper.paperWidth,
++          paper.paperHeight,
++        );
++        expect(res.fullText).toContain('진행표 상한 적용 및 생략 안내');
++        for (let rowIdx = 1; rowIdx <= nestedExpandedCount; rowIdx++) {
++          const rowMarker = `펼침 #${String(rowIdx).padStart(2, '0')} (`;
++          expect(
++            countOccurrences(res.fullText, rowMarker),
++            `nested rowIdx=${rowIdx}/${nestedExpandedCount} paper=${paper.name}`,
++          ).toBe(1);
++        }
++        expect(res.pageTexts[0]).toContain('중첩 블록 반복 · 좌우 편측 · 시간 미정 보존 시퀀스');
++        expect(res.pageTexts.slice(0, 2).join('\n')).toContain('펼침 #01 (');
++        expect(res.pageTexts[res.pageCount - 1]).toContain(
++          `펼침 #${String(nestedExpandedCount).padStart(2, '0')} (`,
++        );
++      }
++
++      // Case C1: hundred-items-bounded in compact view (150 items #01..#150)
++      await session.evaluate(
++        `window.__renderCueSheetProps({
++          key: 'pdf-case-c1',
++          showFixtureSwitcher: false,
++          initialFixtureId: 'hundred-items-bounded',
++          initialViewMode: 'compact',
++        })`,
++      );
++      for (const paper of paperSizes) {
++        const res = await printPdfForCurrentDom(
++          `hundred-items-compact-${paper.name}`,
++          paper.paperWidth,
++          paper.paperHeight,
++        );
++        expect(res.pageCount).toBeGreaterThanOrEqual(8);
++        expect(res.fullText).toContain('진행표 상한 적용 및 생략 안내');
++        expect(res.fullText).toContain('생략된 입력 항목: 10개');
++        for (let num = 1; num <= 150; num++) {
++          const itemTitle = `대규모 내구성 검증 동작 #${String(num).padStart(3, '0')}`;
++          const itemCue = `${num}번 동작 호흡과 척추 중립 정렬을 유지하며 일정한 템포로 수행합니다.`;
++          expect(res.fullText).toContain(itemTitle);
++          expect(res.fullText).toContain(itemCue);
++          // Items 3..150 are not in the 2-card focus deck, so their zero-padded title appears exactly once
++          if (num >= 3) {
++            expect(countOccurrences(res.fullText, itemTitle)).toBe(1);
++          }
++        }
++        expect(res.fullText).not.toContain('대규모 내구성 검증 동작 #151');
++        expect(res.pageTexts[0]).toContain('대규모 내구성 검증 동작 #001');
++        expect(res.pageTexts[res.pageCount - 1]).toContain('대규모 내구성 검증 동작 #150');
++      }
++
++      // Case C2: hundred-items-bounded in expanded view (240 rows 펼침 #01..펼침 #240 + truncation banner + omitted footer)
++      await session.evaluate(
++        `window.__renderCueSheetProps({
++          key: 'pdf-case-c2',
++          showFixtureSwitcher: false,
++          initialFixtureId: 'hundred-items-bounded',
++          initialViewMode: 'expanded',
++        })`,
++      );
++      for (const paper of paperSizes) {
++        const res = await printPdfForCurrentDom(
++          `hundred-items-expanded-${paper.name}`,
++          paper.paperWidth,
++          paper.paperHeight,
++        );
++        expect(res.pageCount).toBeGreaterThanOrEqual(10);
++        expect(res.fullText).toContain('진행표 상한 적용 및 생략 안내');
++        expect(res.fullText).toContain(
++          '펼침 행 상한(240행) 초과로 210개 펼침 행이 생략되었습니다. (임의 숨김 없음)',
++        );
++        for (let rowNum = 1; rowNum <= 240; rowNum++) {
++          const rowLabel = `펼침 #${String(rowNum).padStart(2, '0')} (`;
++          expect(countOccurrences(res.fullText, rowLabel)).toBe(1);
++        }
++        expect(res.fullText).not.toContain('펼침 #241');
++        expect(res.pageTexts[0]).toContain('대규모 내구성 검증 동작 #001');
++        expect(res.pageTexts.slice(0, 2).join('\n')).toContain('펼침 #01 (');
++        expect(res.pageTexts[res.pageCount - 1]).toContain('펼침 #240 (');
++        expect(res.pageTexts[res.pageCount - 1]).toContain('펼침 행 상한(240행) 초과로');
++      }
++    },
++    60000,
++  );
+ });
+diff --git a/src/features/classCueSheet/classCueSheetFixtures.ts b/src/features/classCueSheet/classCueSheetFixtures.ts
+index 83e27c1..2c6002d 100644
+--- a/src/features/classCueSheet/classCueSheetFixtures.ts
++++ b/src/features/classCueSheet/classCueSheetFixtures.ts
+@@ -223,11 +223,13 @@ function createLongKoreanCuesEmptyCuesDuplicatesInput(): CueSheetFlexibleClassIn
+         durationMin: 4,
+         sideMode: 'together',
+         cues: [
+-          '양쪽 갈비뼈 하단(10번~12번 늑골)이 매트에서 들뜨지 않도록 등 뒤쪽 공간을 넓게 채우며 코로 깊게 들이마시고, 입술 사이로 가늘고 길게 내쉬면서 양쪽 좌골과 치골이 이루는 삼각형 수평면을 끝까지 유지해 주세요.',
++          '[장문큐-시작-01] 양쪽 갈비뼈 하단(10번~12번 늑골)이 매트에서 들뜨지 않도록 등 뒤쪽 공간을 넓게 채우며 코로 깊게 들이마시고, 입술 사이로 가늘고 길게 내쉬면서 양쪽 좌골과 치골이 이루는 삼각형 수평면을 끝까지 유지해 주세요.',
+           '목 앞쪽 흉쇄유돌근이나 상부 승모근에 불필요한 긴장이 올라오지 않도록 턱 끝을 가볍게 당기고 시선은 천장 수직 위를 바라보며 경추의 자연스러운 C-커브를 지켜냅니다.',
++          '골반 시계(Pelvic Clock) 12시와 6시 방향 미세 움직임을 진행할 때 대둔근을 과도하게 조이지 말고, 복횡근과 골반저근의 부드러운 연결로 천골의 무게 중심만 매트 위에서 굴려줍니다.',
++          '양발 뒤꿈치와 엄지발가락 볼, 새끼발가락 볼의 삼각 지지점을 리포머 풋바 또는 매트 바닥에 균등하게 내려놓고 무릎이 안쪽이나 바깥쪽으로 흔들리지 않도록 고관절-무릎-두 번째 발가락 정렬선을 계속 확인합니다. [장문큐-끝-01]',
+         ],
+         instructorNote:
+-          '첫 번째 웜업 세팅 구간: 호흡이 짧은 경우 카운트를 4초 들숨 - 6초 날숨으로 천천히 리드하고 흉곽 닫힘 타이밍을 손끝으로 가볍게 터치해 안내합니다.',
++          '첫 번째 웜업 세팅 구간: 호흡이 짧은 경우 카운트를 4초 들숨 - 6초 날숨으로 천천히 리드하고 흉곽 닫힘 타이밍을 손끝으로 가볍게 터치해 안내합니다. 긴 문단이 인쇄 페이지 경계를 넘어갈 때도 문장 잘림 없이 이어져야 합니다.',
+       },
+       {
+         stepId: 'dup-step-01',
+@@ -246,8 +248,11 @@ function createLongKoreanCuesEmptyCuesDuplicatesInput(): CueSheetFlexibleClassIn
+         durationMin: 5,
+         sideMode: 'together',
+         selectedLayer: 'hard',
+-        cues: ['중간 리셋 구간: 테이블탑에서 골반 흔들림 없이 호흡과 코어 압력 재확인'],
+-        instructorNote: '두 번째 등장하는 동일 동작 (심화 레이어 적용)',
++        cues: [
++          '[장문큐-시작-03] 중간 리셋 구간: 테이블탑 포지션에서 고관절 90도와 무릎 90도를 유지하며 골반 흔들림 없이 호흡과 코어 복강 내압을 재확인합니다.',
++          '한 다리씩 매트 쪽으로 토 탭(Toe Tap)을 내려갈 때 허리가 아치형으로 들리지 않도록 전면 갈비뼈와 장골능 사이의 거리를 일정하게 유지하고, 돌아올 때는 대퇴직근 대신 하복부 심부 근육의 조절력을 사용하도록 큐잉합니다. [장문큐-끝-03]',
++        ],
++        instructorNote: '두 번째 등장하는 동일 동작 (심화 레이어 적용 · 복부 컨트롤 집중)',
+       },
+       {
+         stepId: 'step-mid-4',
+@@ -266,8 +271,11 @@ function createLongKoreanCuesEmptyCuesDuplicatesInput(): CueSheetFlexibleClassIn
+         nameKo: '사이드 킥 시리즈',
+         durationMin: 4,
+         sideMode: 'right-then-left',
+-        cues: ['두 번째 사이드 킥 시리즈: 반대쪽부터 시작해 작은 서클 8회씩 연결합니다.'],
+-        instructorNote: '둔근 피로도 확인 후 가동범위 조절',
++        cues: [
++          '[장문큐-시작-05] 두 번째 사이드 킥 시리즈: 반대쪽(오른쪽)부터 시작해 몸통이 흔들리지 않는 가동범위 안에서 전방 2회 펄스 후 후방 신전으로 고관절 굴곡근을 길게 늘려줍니다.',
++          '아래쪽 옆구리(요방형근과 내·외복사근)가 매트 바닥으로 무너지지 않도록 작은 개미집 공간을 유지하고, 위쪽 다리를 원형(레그 서클)으로 8회씩 회전할 때 골반 상단 장골능이 앞뒤로 회전하지 않게 고정합니다. [장문큐-끝-05]',
++        ],
++        instructorNote: '둔근 피로도 확인 후 가동범위 조절 및 좌우 편차 구두 피드백 제공',
+       },
+       {
+         stepId: 'step-end-6',
+@@ -277,8 +285,11 @@ function createLongKoreanCuesEmptyCuesDuplicatesInput(): CueSheetFlexibleClassIn
+         durationMin: 3,
+         sideMode: 'together',
+         selectedLayer: 'easy',
+-        cues: ['마무리 호흡 정리: 처음과 비교해 골반 주변 긴장이 얼마나 부드러워졌는지 관찰합니다.'],
+-        instructorNote: '세 번째 등장하는 동일 동작 (마무리 이완)',
++        cues: [
++          '[장문큐-시작-06] 마무리 호흡 정리: 수업 시작 첫 동작과 비교해 골반 주변과 흉추 하부의 긴장이 얼마나 부드러워졌는지 스스로 인지하도록 천천히 안내합니다.',
++          '마지막 세 번의 호흡 동안 어깨와 귀 사이의 거리를 멀게 두고, 턱과 미간, 손끝의 잔여 긴장을 모두 내려놓으며 수업을 마무리합니다. [장문큐-끝-06]',
++        ],
++        instructorNote: '세 번째 등장하는 동일 동작 (마무리 이완 · 최종 정렬 체크)',
+       },
+     ],
+   };
+diff --git a/src/features/classCueSheet/classCueSheetProjection.test.ts b/src/features/classCueSheet/classCueSheetProjection.test.ts
+index 007f02a..d9cb0d8 100644
+--- a/src/features/classCueSheet/classCueSheetProjection.test.ts
++++ b/src/features/classCueSheet/classCueSheetProjection.test.ts
+@@ -180,6 +180,53 @@ describe('classCueSheetProjection', () => {
+       expect(codes).toContain('duplicate-movement-name');
+       expect(codes).toContain('duplicate-step-id');
+     });
++
++    it('preserves stable cueItemIds across insertions, deletions, reorderings, and same-name items with different IDs', () => {
++      const baseClass = {
++        id: 'live-edit-seq',
++        title: '라이브 편집 안정 ID 검증',
++        steps: [
++          { stepId: 'step-a', nameKo: '풋워크 패러렐', durationMin: 4 },
++          { stepId: 'step-b', nameKo: '브릿징', durationMin: 4 },
++          { stepId: 'step-c', nameKo: '브릿징', durationMin: 3 },
++        ],
++      };
++
++      const projBase = buildClassCueSheetProjection(baseClass);
++      const idStepA = projBase.items[0].cueItemId;
++      const idStepB = projBase.items[1].cueItemId;
++      const idStepC = projBase.items[2].cueItemId;
++      expect(idStepB).not.toBe(idStepC);
++
++      // 1. Insert before step-b (including another item with the same name '브릿징'!)
++      const projInserted = buildClassCueSheetProjection({
++        ...baseClass,
++        steps: [
++          { stepId: 'step-intro', nameKo: '브릿징', durationMin: 2 },
++          ...baseClass.steps,
++        ],
++      });
++      expect(projInserted.items.find((i) => i.sourceStepId === 'step-a')?.cueItemId).toBe(idStepA);
++      expect(projInserted.items.find((i) => i.sourceStepId === 'step-b')?.cueItemId).toBe(idStepB);
++      expect(projInserted.items.find((i) => i.sourceStepId === 'step-c')?.cueItemId).toBe(idStepC);
++
++      // 2. Delete step-a before step-b
++      const projDeletedBefore = buildClassCueSheetProjection({
++        ...baseClass,
++        steps: [baseClass.steps[1], baseClass.steps[2]],
++      });
++      expect(projDeletedBefore.items[0].cueItemId).toBe(idStepB);
++      expect(projDeletedBefore.items[1].cueItemId).toBe(idStepC);
++
++      // 3. Reorder step-c before step-b
++      const projReordered = buildClassCueSheetProjection({
++        ...baseClass,
++        steps: [baseClass.steps[2], baseClass.steps[0], baseClass.steps[1]],
++      });
++      expect(projReordered.items[0].cueItemId).toBe(idStepC);
++      expect(projReordered.items[1].cueItemId).toBe(idStepA);
++      expect(projReordered.items[2].cueItemId).toBe(idStepB);
++    });
+   });
+ 
+   describe('Nested block repetitions, unilateral L/R modes, sets, and unspecified time preservation', () => {
+@@ -296,7 +343,7 @@ describe('classCueSheetProjection', () => {
+   });
+ 
+   describe('Corrupted & circular inputs, privacy allowlist filtering, and HTML escaping', () => {
+-    it('terminates finitely on circular references, strips all sensitive keys/inline PII, and escapes HTML/scripts', () => {
++    it('terminates finitely on circular references, strips structured sensitive keys via allowlist, applies heuristic inline masking without claiming full free-text guarantee, and escapes HTML/scripts', () => {
+       const projection = getCueSheetFixtureById(
+         'corrupted-circular-sensitive-html',
+       ).buildProjection();
+@@ -308,8 +355,11 @@ describe('classCueSheetProjection', () => {
+       expect(projection.diagnostics.some((d) => d.code === 'corrupted-item')).toBe(true);
+       expect(projection.diagnostics.some((d) => d.code === 'sensitive-fields-stripped')).toBe(true);
+ 
+-      // Privacy allowlist verification
++      // Privacy allowlist & heuristic boundary verification
+       expect(projection.privacy.allowlistApplied).toBe(true);
++      expect(projection.privacy.inlineRedactionIsHeuristicOnly).toBe(true);
++      expect(projection.privacy.privacyPolicyNoteKo).toContain('보조적 휴리스틱');
++      expect(projection.privacy.privacyPolicyNoteKo).toContain('완전 제거를 보장하지 않습니다');
+       expect(projection.privacy.strippedSensitiveKeys).toEqual(
+         expect.arrayContaining([
+           'participantName',
+diff --git a/src/features/classCueSheet/classCueSheetProjection.ts b/src/features/classCueSheet/classCueSheetProjection.ts
+index 7ba02f0..c9e1c02 100644
+--- a/src/features/classCueSheet/classCueSheetProjection.ts
++++ b/src/features/classCueSheet/classCueSheetProjection.ts
+@@ -663,8 +663,11 @@ export function buildClassCueSheetProjection(
+ 
+     const emptyPrivacy: CueSheetPrivacyMeta = {
+       allowlistApplied: true,
++      inlineRedactionIsHeuristicOnly: true,
+       strippedSensitiveKeys: [],
+       redactedInlineTextCount: 0,
++      privacyPolicyNoteKo:
++        '구조화된 필드는 허용 목록(Allowlist)으로만 추출하며, 자유 서술 텍스트 내 인라인 마스킹은 보조적 휴리스틱으로 모든 건강·개인정보의 완전 제거를 보장하지 않습니다.',
+     };
+ 
+     const emptyProjection: ClassCueSheetProjection = {
+@@ -1826,6 +1829,7 @@ export function buildClassCueSheetProjection(
+   }
+ 
+   const nameOccurrenceCounter = new Map<string, number>();
++  const identityKeyCounter = new Map<string, number>();
+   const items: ClassCueSheetItem[] = intermediateItems.map((item) => {
+     const normName = item.nameKo.trim().normalize('NFKC');
+     const totalForName = nameOrdersMap.get(normName)?.length ?? 1;
+@@ -1837,8 +1841,18 @@ export function buildClassCueSheetProjection(
+       ? `동일 이름 #${occurrence} (${String(item.order).padStart(2, '0')}번 항목)`
+       : null;
+ 
+-    const slug = makeSlug(item.exerciseId ?? item.sourceStepId ?? item.nameKo);
+-    const cueItemId = `cue-item-${String(item.order).padStart(3, '0')}-${slug}-${occurrence}`;
++    const explicitStepSlug = item.explicitStepId ? makeSlug(item.explicitStepId) : '';
++    const blockScopeSlug = item.blockMeta.blockInstanceId
++      ? makeSlug(item.blockMeta.blockInstanceId)
++      : item.blockMeta.sourceBlockId
++        ? makeSlug(item.blockMeta.sourceBlockId)
++        : '';
++    const identityBase = explicitStepSlug
++      ? `id-${blockScopeSlug ? `${blockScopeSlug}-` : ''}${explicitStepSlug}`
++      : `auto-${blockScopeSlug ? `${blockScopeSlug}-` : ''}${makeSlug(item.exerciseId ?? item.nameKo ?? item.kind)}`;
++    const identityOccurrence = (identityKeyCounter.get(identityBase) ?? 0) + 1;
++    identityKeyCounter.set(identityBase, identityOccurrence);
++    const cueItemId = `cue-item-${identityBase}-${identityOccurrence}`;
+ 
+     return {
+       cueItemId,
+@@ -1967,7 +1981,7 @@ export function buildClassCueSheetProjection(
+   if (strippedSensitiveKeys.length > 0 || redactionTracker.redactedCount > 0) {
+     recordDiagnostic(
+       'sensitive-fields-stripped',
+-      '허용 목록(Allowlist) 정책에 따라 회원·참가자·건강·관찰 등 민감 필드 및 개인정보가 큐시트에서 제외되었습니다.',
++      '허용 목록(Allowlist) 정책에 따라 구조화된 민감 필드를 제외하고 자유 텍스트 내 인라인 패턴에 보조적 휴리스틱 마스킹을 적용했습니다(자유 서술 내 모든 민감 정보 제거를 보장하지 않음).',
+     );
+   }
+ 
+@@ -2021,8 +2035,11 @@ export function buildClassCueSheetProjection(
+ 
+   const privacy: CueSheetPrivacyMeta = {
+     allowlistApplied: true,
++    inlineRedactionIsHeuristicOnly: true,
+     strippedSensitiveKeys,
+     redactedInlineTextCount: redactionTracker.redactedCount,
++    privacyPolicyNoteKo:
++      '구조화된 필드는 허용 목록(Allowlist)으로만 추출하며, 자유 서술 텍스트 내 인라인 마스킹은 보조적 휴리스틱으로 모든 건강·개인정보의 완전 제거를 보장하지 않습니다.',
+   };
+ 
+   // Compute timingSummary (NEVER inventing time for unspecified items)
+diff --git a/src/features/classCueSheet/classCueSheetTypes.ts b/src/features/classCueSheet/classCueSheetTypes.ts
+index e57c53c..29e1eb0 100644
+--- a/src/features/classCueSheet/classCueSheetTypes.ts
++++ b/src/features/classCueSheet/classCueSheetTypes.ts
+@@ -299,8 +299,10 @@ export interface CueSheetTruncationMeta {
+ 
+ export interface CueSheetPrivacyMeta {
+   readonly allowlistApplied: true;
++  readonly inlineRedactionIsHeuristicOnly: true;
+   readonly strippedSensitiveKeys: readonly string[];
+   readonly redactedInlineTextCount: number;
++  readonly privacyPolicyNoteKo: string;
+ }
+ 
+ export type CueSheetDiagnosticCode =
+diff --git a/src/features/classCueSheet/index.ts b/src/features/classCueSheet/index.ts
+index d3c01b0..ae52cc3 100644
+--- a/src/features/classCueSheet/index.ts
++++ b/src/features/classCueSheet/index.ts
+@@ -14,4 +14,7 @@ export {
+   getCueSheetFixtureById,
+ } from './classCueSheetFixtures';
+ export { ClassCueSheetPreview } from './ClassCueSheetPreview';
+-export type { ClassCueSheetPreviewProps } from './ClassCueSheetPreview';
++export type {
++  ClassCueSheetPreviewProps,
++  CueSheetSelectionResolution,
++} from './ClassCueSheetPreview';
+-- 
+2.39.5
+
