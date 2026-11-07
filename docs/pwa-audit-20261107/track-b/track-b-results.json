@@ -1,0 +1,365 @@
+{
+  "track": "track-b",
+  "title": "Track B — iOS Safari 설치 안내, Android 설치 프롬프트 분기/거절 후 재노출, 미지원 브라우저 안내 모의 테스트 감사 결과",
+  "generatedAt": "2026-11-07T00:43:53.696Z",
+  "environmentDisclosure": {
+    "os": "Debian GNU/Linux 12 (bookworm)",
+    "nodeVersion": "v24.22.2",
+    "chromiumBinary": "/usr/bin/chromium",
+    "realSafariExecuted": false,
+    "realIosDeviceExecuted": false,
+    "realAndroidDeviceExecuted": false,
+    "honestyStatement": "본 검증은 Linux 환경에서 수행된 모의 테스트(Vitest + jsdom 단위/통합 모의 테스트 및 독립 Headless Chromium CDP User-Agent/플랫폼/이벤트 에뮬레이션) 결과이며, 실제 Apple Safari(macOS/iOS Safari, WebKit) 및 실물 iOS/Android 기기는 실행되지 않았습니다(realSafariExecuted: false)."
+  },
+  "overallSuccess": true,
+  "vitestSuite": {
+    "exitCode": 0,
+    "success": true,
+    "numTotalTestSuites": 7,
+    "numPassedTestSuites": 7,
+    "numTotalTests": 28,
+    "numPassedTests": 28,
+    "numFailedTests": 0,
+    "assertions": [
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) declares honesty disclosure metadata explicitly (realSafariExecuted: false)",
+        "title": "declares honesty disclosure metadata explicitly (realSafariExecuted: false)",
+        "status": "passed",
+        "durationMs": 2
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 1: iOS Safari & iPadOS Install Guide Mock Tests (Emulated UA/Platform — NOT Real Safari) detects platform=\"ios-safari\" on mocked iPhone Safari and renders 3-step install guide + storage separation warning without install button",
+        "title": "detects platform=\"ios-safari\" on mocked iPhone Safari and renders 3-step install guide + storage separation warning without install button",
+        "status": "passed",
+        "durationMs": 773
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 1: iOS Safari & iPadOS Install Guide Mock Tests (Emulated UA/Platform — NOT Real Safari) detects platform=\"ios-safari\" on mocked iPadOS desktop-class UA (MacIntel + maxTouchPoints=5) and renders 3-step guide",
+        "title": "detects platform=\"ios-safari\" on mocked iPadOS desktop-class UA (MacIntel + maxTouchPoints=5) and renders 3-step guide",
+        "status": "passed",
+        "durationMs": 15
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 1: iOS Safari & iPadOS Install Guide Mock Tests (Emulated UA/Platform — NOT Real Safari) detects platform=\"ios-other\" for ios-chrome-crios (Chrome on iOS (CriOS)) and prompts user to open in Safari",
+        "title": "detects platform=\"ios-other\" for ios-chrome-crios (Chrome on iOS (CriOS)) and prompts user to open in Safari",
+        "status": "passed",
+        "durationMs": 8
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 1: iOS Safari & iPadOS Install Guide Mock Tests (Emulated UA/Platform — NOT Real Safari) detects platform=\"ios-other\" for ios-firefox-fxios (Firefox on iOS (FxiOS)) and prompts user to open in Safari",
+        "title": "detects platform=\"ios-other\" for ios-firefox-fxios (Firefox on iOS (FxiOS)) and prompts user to open in Safari",
+        "status": "passed",
+        "durationMs": 9
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 1: iOS Safari & iPadOS Install Guide Mock Tests (Emulated UA/Platform — NOT Real Safari) detects platform=\"ios-other\" for ios-edge-edgios (Edge on iOS (EdgiOS)) and prompts user to open in Safari",
+        "title": "detects platform=\"ios-other\" for ios-edge-edgios (Edge on iOS (EdgiOS)) and prompts user to open in Safari",
+        "status": "passed",
+        "durationMs": 10
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 1: iOS Safari & iPadOS Install Guide Mock Tests (Emulated UA/Platform — NOT Real Safari) detects platform=\"ios-other\" for ios-opera-opios (Opera on iOS (OPiOS)) and prompts user to open in Safari",
+        "title": "detects platform=\"ios-other\" for ios-opera-opios (Opera on iOS (OPiOS)) and prompts user to open in Safari",
+        "status": "passed",
+        "durationMs": 7
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 1: iOS Safari & iPadOS Install Guide Mock Tests (Emulated UA/Platform — NOT Real Safari) detects standalone mode via both iOS navigator.standalone === true and matchMedia(\"(display-mode: standalone)\")",
+        "title": "detects standalone mode via both iOS navigator.standalone === true and matchMedia(\"(display-mode: standalone)\")",
+        "status": "passed",
+        "durationMs": 61
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 2: Android Install Prompt Branching & Single-Use Guard intercepts beforeinstallprompt (defaultPrevented=true) without auto-prompting, sets canInstall=true, collapses <details>, and exposes install button",
+        "title": "intercepts beforeinstallprompt (defaultPrevented=true) without auto-prompting, sets canInstall=true, collapses <details>, and exposes install button",
+        "status": "passed",
+        "durationMs": 25
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 2: Android Install Prompt Branching & Single-Use Guard transitions to installStatus=\"prompting\" on click, hides install button, and blocks duplicate concurrent requestPwaInstall() calls",
+        "title": "transitions to installStatus=\"prompting\" on click, hides install button, and blocks duplicate concurrent requestPwaInstall() calls",
+        "status": "passed",
+        "durationMs": 31
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 2: Android Install Prompt Branching & Single-Use Guard separates outcome=\"accepted\" (installed=false) from appinstalled event (installed=true)",
+        "title": "separates outcome=\"accepted\" (installed=false) from appinstalled event (installed=true)",
+        "status": "passed",
+        "durationMs": 24
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 2: Android Install Prompt Branching & Single-Use Guard handles race condition where appinstalled fires before userChoice resolves cleanly",
+        "title": "handles race condition where appinstalled fires before userChoice resolves cleanly",
+        "status": "passed",
+        "durationMs": 13
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 3: Dismissal & Re-exposure After Dismissal (거절 후 재노출) + Error Recovery sets canInstall=false, installStatus=\"dismissed\", shows dismissal guidance, and auto-expands manual <details open>",
+        "title": "sets canInstall=false, installStatus=\"dismissed\", shows dismissal guidance, and auto-expands manual <details open>",
+        "status": "passed",
+        "durationMs": 18
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 3: Dismissal & Re-exposure After Dismissal (거절 후 재노출) + Error Recovery retains dismissed status and open manual fallback without a dead button when unmounting and remounting <PwaInstallPanel />",
+        "title": "retains dismissed status and open manual fallback without a dead button when unmounting and remounting <PwaInstallPanel />",
+        "status": "passed",
+        "durationMs": 19
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 3: Dismissal & Re-exposure After Dismissal (거절 후 재노출) + Error Recovery re-exposes \"이 기기에 설치\" button when a fresh beforeinstallprompt fires after dismissal or error, and invokes the new prompt()",
+        "title": "re-exposes \"이 기기에 설치\" button when a fresh beforeinstallprompt fires after dismissal or error, and invokes the new prompt()",
+        "status": "passed",
+        "durationMs": 36
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 4: Unsupported Browser / Private Window / Insecure Context Fallback renders open manual fallback without install button for firefox-desktop (Firefox 136 Desktop (No beforeinstallprompt))",
+        "title": "renders open manual fallback without install button for firefox-desktop (Firefox 136 Desktop (No beforeinstallprompt))",
+        "status": "passed",
+        "durationMs": 38
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 4: Unsupported Browser / Private Window / Insecure Context Fallback renders open manual fallback without install button for firefox-android (Firefox 136 Android (No beforeinstallprompt))",
+        "title": "renders open manual fallback without install button for firefox-android (Firefox 136 Android (No beforeinstallprompt))",
+        "status": "passed",
+        "durationMs": 11
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 4: Unsupported Browser / Private Window / Insecure Context Fallback renders open manual fallback without install button for macos-safari-desktop (macOS Sequoia Safari 18.3 Desktop (maxTouchPoints=0, no beforeinstallprompt))",
+        "title": "renders open manual fallback without install button for macos-safari-desktop (macOS Sequoia Safari 18.3 Desktop (maxTouchPoints=0, no beforeinstallprompt))",
+        "status": "passed",
+        "durationMs": 6
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 4: Unsupported Browser / Private Window / Insecure Context Fallback renders open manual fallback without install button for chromium-private-incognito (Chromium Private / Incognito Window (beforeinstallprompt suppressed))",
+        "title": "renders open manual fallback without install button for chromium-private-incognito (Chromium Private / Incognito Window (beforeinstallprompt suppressed))",
+        "status": "passed",
+        "durationMs": 9
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 4: Unsupported Browser / Private Window / Insecure Context Fallback renders open manual fallback without install button for insecure-http-context (Insecure HTTP Context (isSecureContext=false))",
+        "title": "renders open manual fallback without install button for insecure-http-context (Insecure HTTP Context (isSecureContext=false))",
+        "status": "passed",
+        "durationMs": 9
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 4: Unsupported Browser / Private Window / Insecure Context Fallback renders open manual fallback without install button for missing-service-worker-api (Browser Missing navigator.serviceWorker API)",
+        "title": "renders open manual fallback without install button for missing-service-worker-api (Browser Missing navigator.serviceWorker API)",
+        "status": "passed",
+        "durationMs": 12
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 5: Reproduced Audit Findings / Edge-Case Defects in src/lib/pwa.ts & src/components/PwaInstallPanel.tsx [Finding B-F1] reproduces iOS in-app/third-party WebKit browser ios-kakaotalk-inapp (KakaoTalk iOS In-App Browser (KAKAOTALK)) misclassified as \"ios-safari\" instead of \"ios-other\"",
+        "title": "[Finding B-F1] reproduces iOS in-app/third-party WebKit browser ios-kakaotalk-inapp (KakaoTalk iOS In-App Browser (KAKAOTALK)) misclassified as \"ios-safari\" instead of \"ios-other\"",
+        "status": "passed",
+        "durationMs": 12
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 5: Reproduced Audit Findings / Edge-Case Defects in src/lib/pwa.ts & src/components/PwaInstallPanel.tsx [Finding B-F1] reproduces iOS in-app/third-party WebKit browser ios-naver-inapp (Naver iOS In-App Browser (NAVER(inapp))) misclassified as \"ios-safari\" instead of \"ios-other\"",
+        "title": "[Finding B-F1] reproduces iOS in-app/third-party WebKit browser ios-naver-inapp (Naver iOS In-App Browser (NAVER(inapp))) misclassified as \"ios-safari\" instead of \"ios-other\"",
+        "status": "passed",
+        "durationMs": 7
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 5: Reproduced Audit Findings / Edge-Case Defects in src/lib/pwa.ts & src/components/PwaInstallPanel.tsx [Finding B-F1] reproduces iOS in-app/third-party WebKit browser ios-google-search-app-gsa (Google Search App on iOS (GSA)) misclassified as \"ios-safari\" instead of \"ios-other\"",
+        "title": "[Finding B-F1] reproduces iOS in-app/third-party WebKit browser ios-google-search-app-gsa (Google Search App on iOS (GSA)) misclassified as \"ios-safari\" instead of \"ios-other\"",
+        "status": "passed",
+        "durationMs": 9
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 5: Reproduced Audit Findings / Edge-Case Defects in src/lib/pwa.ts & src/components/PwaInstallPanel.tsx [Finding B-F1] reproduces iOS in-app/third-party WebKit browser ios-whale-browser (Naver Whale on iOS (Whale)) misclassified as \"ios-safari\" instead of \"ios-other\"",
+        "title": "[Finding B-F1] reproduces iOS in-app/third-party WebKit browser ios-whale-browser (Naver Whale on iOS (Whale)) misclassified as \"ios-safari\" instead of \"ios-other\"",
+        "status": "passed",
+        "durationMs": 8
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 5: Reproduced Audit Findings / Edge-Case Defects in src/lib/pwa.ts & src/components/PwaInstallPanel.tsx [Finding B-F2] reproduces stale installStatus (\"dismissed\" / \"error\") remaining visible alongside re-exposed \"이 기기에 설치\" button when a new beforeinstallprompt arrives",
+        "title": "[Finding B-F2] reproduces stale installStatus (\"dismissed\" / \"error\") remaining visible alongside re-exposed \"이 기기에 설치\" button when a new beforeinstallprompt arrives",
+        "status": "passed",
+        "durationMs": 20
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 5: Reproduced Audit Findings / Edge-Case Defects in src/lib/pwa.ts & src/components/PwaInstallPanel.tsx [Finding B-F3] reproduces display-mode standalone -> false transition leaving installed=true and blocking future beforeinstallprompt events",
+        "title": "[Finding B-F3] reproduces display-mode standalone -> false transition leaving installed=true and blocking future beforeinstallprompt events",
+        "status": "passed",
+        "durationMs": 7
+      },
+      {
+        "fullName": "Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: false) Test Group 5: Reproduced Audit Findings / Edge-Case Defects in src/lib/pwa.ts & src/components/PwaInstallPanel.tsx [Finding B-F4] reproduces dual <p role=\"status\"> regions rendered simultaneously when installStatus !== \"idle\" and offlineStatus === \"update-ready\"",
+        "title": "[Finding B-F4] reproduces dual <p role=\"status\"> regions rendered simultaneously when installStatus !== \"idle\" and offlineStatus === \"update-ready\"",
+        "status": "passed",
+        "durationMs": 18
+      }
+    ]
+  },
+  "cdpBrowserScenarios": [
+    {
+      "id": "cdp-scenario-1-ios-safari-mock",
+      "name": "Scenario 1: Mocked iOS Safari UA (390x844) via Emulation.setUserAgentOverride (NOT real Safari)",
+      "emulatedOnly": true,
+      "realSafariExecuted": false,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "passed": true,
+      "details": {
+        "heading": "홈 화면에 앱 설치",
+        "orderedStepsCount": 3,
+        "orderedSteps": [
+          "Safari의  공유 버튼을 누르세요. 메뉴 안에 있을 수도 있어요.",
+          "홈 화면에 추가를 선택하세요.",
+          "웹 앱으로 열기가 보이면 켠 뒤 추가를 누르세요."
+        ],
+        "hasInstallButton": false,
+        "hasManualFallbackDetails": false,
+        "hasStorageSeparationWarning": true,
+        "scrollWidth": 390,
+        "innerWidth": 390,
+        "noHorizontalOverflow": true
+      }
+    },
+    {
+      "id": "cdp-scenario-2-ios-chrome-crios-mock",
+      "name": "Scenario 2: Mocked iOS Chrome CriOS UA (390x844) via Emulation.setUserAgentOverride",
+      "emulatedOnly": true,
+      "realSafariExecuted": false,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "passed": true,
+      "details": {
+        "hasOpenInSafariGuidance": true,
+        "orderedStepsCount": 0,
+        "hasInstallButton": false,
+        "scrollWidth": 390,
+        "innerWidth": 390,
+        "noHorizontalOverflow": true
+      }
+    },
+    {
+      "id": "cdp-scenario-3-android-chrome-lifecycle-mock",
+      "name": "Scenario 3: Mocked Android Chrome (412x915) Prompt Branching, Dismissal, Re-exposure, Accepted, and appinstalled",
+      "emulatedOnly": true,
+      "realSafariExecuted": false,
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "passed": true,
+      "details": {
+        "initial": {
+          "nativeBeforeInstallPromptInterceptedCount": 0,
+          "hasInstallButton": false,
+          "fallbackDetailsOpen": true
+        },
+        "afterFirstPromptEvent": {
+          "defaultPrevented": true,
+          "firstPromptCallsBeforeClick": 0,
+          "hasInstallButton": true,
+          "installButtonText": "이 기기에 설치",
+          "fallbackDetailsOpen": false
+        },
+        "duringPrompting": {
+          "hasInstallButton": false,
+          "statusTexts": [
+            "브라우저의 설치 창에서 선택해 주세요."
+          ]
+        },
+        "afterDismissed": {
+          "firstPromptCallsAfterClick": 1,
+          "hasInstallButton": false,
+          "fallbackDetailsOpen": true,
+          "statusTexts": [
+            "설치를 취소했어요. 계속 웹에서 사용하거나 브라우저 메뉴에서 다시 설치할 수 있어요."
+          ]
+        },
+        "afterReopenBeforeSecondEvent": {
+          "dialogClosedInBetween": true,
+          "hasInstallButton": false,
+          "fallbackDetailsOpen": true,
+          "statusTexts": [
+            "설치를 취소했어요. 계속 웹에서 사용하거나 브라우저 메뉴에서 다시 설치할 수 있어요."
+          ]
+        },
+        "afterSecondPromptReExposure": {
+          "hasInstallButton": true,
+          "fallbackDetailsOpen": false,
+          "statusTexts": [
+            "설치를 취소했어요. 계속 웹에서 사용하거나 브라우저 메뉴에서 다시 설치할 수 있어요."
+          ],
+          "findingBF2StaleDismissedBannerPresentAlongsideButton": true
+        },
+        "afterAcceptedBeforeAppInstalled": {
+          "secondPromptCalls": 1,
+          "hasInstallButton": false,
+          "statusTexts": [
+            "설치를 요청했어요. 기기의 설치가 끝나면 앱 목록에서 열어 주세요."
+          ]
+        },
+        "afterAppInstalled": {
+          "hasInstallButton": false,
+          "statusTexts": [
+            "브라우저에서 설치 완료를 확인했어요. 홈 화면이나 앱 목록에서 열어 주세요."
+          ],
+          "noHorizontalOverflow": true
+        }
+      }
+    },
+    {
+      "id": "cdp-scenario-4-unsupported-browser-fallback",
+      "name": "Scenario 4: Unsupported Browser Fallback (1280x800 Desktop Firefox UA without beforeinstallprompt)",
+      "emulatedOnly": true,
+      "realSafariExecuted": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "passed": true,
+      "details": {
+        "hasInstallButton": false,
+        "fallbackDetailsOpen": true,
+        "fallbackSummary": "설치 버튼이 보이지 않나요?",
+        "hasAndroidChromeManualSteps": true,
+        "hasMacSafariManualSteps": true,
+        "scrollWidth": 1265,
+        "innerWidth": 1280,
+        "noHorizontalOverflow": true
+      }
+    }
+  ],
+  "findings": [
+    {
+      "id": "B-F1",
+      "severity": "medium",
+      "title": "iOS 인앱 브라우저 및 서드파티 WebKit 브라우저(KAKAOTALK, NAVER(inapp), GSA, Whale)가 ios-safari로 오분류됨",
+      "location": "src/lib/pwa.ts:52-53",
+      "status": "reproduced-in-mock-test",
+      "summary": "navigator.userAgent에 Safari/ 토큰이 포함되고 CriOS|FxiOS|EdgiOS|OPiOS에 해당하지 않는 iOS 인앱 브라우저(카카오톡, 네이버 앱, Google 앱 GSA, 웨일 등)가 ios-safari로 분류되어 \"이 주소를 Safari에서 연 다음...\" 안내 대신 Safari 전용 3단계 안내가 노출됨."
+    },
+    {
+      "id": "B-F2",
+      "severity": "low",
+      "title": "설치 취소(dismissed) 또는 오류(error) 이후 새 beforeinstallprompt 수신 시 이전 상태 문구와 재노출된 설치 버튼이 동시에 표시됨",
+      "location": "src/lib/pwa.ts:68, src/components/PwaInstallPanel.tsx:19-43",
+      "status": "reproduced-in-mock-and-cdp",
+      "summary": "beforeinstallprompt 핸들러가 canInstall: true만 발행하고 installStatus를 idle로 초기화하지 않아, 재노출된 \"이 기기에 설치\" 버튼 바로 아래에 이전 \"설치를 취소했어요...\" 또는 \"설치 창을 열지 못했어요...\" 문구가 함께 남음."
+    },
+    {
+      "id": "B-F3",
+      "severity": "low",
+      "title": "display-mode: standalone 해제(change 이벤트) 시 installed: true가 고정되어 이후 beforeinstallprompt 수신이 차단됨",
+      "location": "src/lib/pwa.ts:59-64, src/lib/pwa.ts:68",
+      "status": "reproduced-in-mock-test",
+      "summary": "matchMedia(\"(display-mode: standalone)\")의 change 리스너가 standalone: false로 전환될 때 installed를 갱신하지 않아 installed: true가 유지되며, 이후 브라우저 탭에서 발생하는 beforeinstallprompt 이벤트가 무시됨."
+    },
+    {
+      "id": "B-F4",
+      "severity": "low",
+      "title": "installStatus !== \"idle\"(또는 standalone/installed) 상태와 offlineStatus === \"update-ready\"가 동시에 활성화될 때 복수의 role=\"status\" 영역이 렌더링됨",
+      "location": "src/components/PwaInstallPanel.tsx:12-43, src/components/PwaInstallPanel.tsx:82",
+      "status": "reproduced-in-mock-test",
+      "summary": "설치 상태 배너(<p role=\"status\">)와 하단 업데이트 준비 배너(<p role=\"status\">)가 동시에 존재할 수 있어 보조기술(스크린 리더) 및 단일 role=\"status\" 탐색 시 중첩 알림이 발생할 수 있음."
+    }
+  ]
+}
