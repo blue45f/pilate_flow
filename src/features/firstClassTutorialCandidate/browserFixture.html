@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>First Class 3-Step Visual Tutorial Candidate — Local Verification</title>
+  </head>
+  <body style="margin: 0; background: #f7f5ef">
+    <div id="first-class-tutorial-fixture-root"></div>
+    <script type="module">
+      import React from 'react';
+      import { createRoot } from 'react-dom/client';
+      import { FirstClassTutorialFixtureHarness } from '/src/features/firstClassTutorialCandidate/FirstClassTutorialCandidate.tsx';
+
+      const root = createRoot(document.getElementById('first-class-tutorial-fixture-root'));
+      root.render(
+        React.createElement(
+          React.StrictMode,
+          null,
+          React.createElement(FirstClassTutorialFixtureHarness),
+        ),
+      );
+    </script>
+  </body>
+</html>
