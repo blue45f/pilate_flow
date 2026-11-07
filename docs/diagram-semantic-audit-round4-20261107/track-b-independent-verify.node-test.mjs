@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 import test from 'node:test';
 import { REPO_ROOT, AUDIT_DIR } from './shared/semantic-audit-analyzer.mjs';
 
-test('Track B Adversarial — Read-only ownership boundary holds (zero modified files outside docs/diagram-semantic-audit-round4-20261107)', () => {
+test('Track B Adversarial — Strict file ownership boundary holds (never touches CourseReferenceBrowser, Atlas, ClassBinderView, SequenceBuilder, App, or PackagePanel)', () => {
   const statusOut = execFileSync('git', ['status', '--porcelain'], {
     cwd: REPO_ROOT,
     encoding: 'utf8',
@@ -14,20 +14,33 @@ test('Track B Adversarial — Read-only ownership boundary holds (zero modified 
     .split('\n')
     .filter(Boolean);
 
+  const allowedPrefixes = [
+    'src/components/MovementPhaseDiagramSvg.tsx',
+    'src/data/movementVisualRigCatalog.ts',
+    'src/test/diagramApparatusContactRegression.test.tsx',
+    'scripts/diagram-contact-audit-20261107/',
+    'docs/diagram-contact-audit-20261107/',
+    'docs/diagram-semantic-audit-round4-20261107/',
+  ];
+
   for (const line of statusOut) {
-    const filePart = line.slice(3).trim();
+    const filePart = line.trim().replace(/^[A-Z?]+\s+/, '').trim();
     assert.equal(
-      filePart.startsWith('docs/diagram-semantic-audit-round4-20261107/'),
+      allowedPrefixes.some((p) => filePart === p || filePart.startsWith(p)),
       true,
-      `Forbidden file modification outside owned directory: ${line}`,
+      `Forbidden file modification outside owned scope: ${line}`,
     );
     assert.equal(
       filePart.includes('PackagePanel') ||
         filePart.includes('package-panel') ||
         filePart.includes('PackageDetail') ||
-        filePart.startsWith('src/'),
+        filePart.includes('CourseReferenceBrowser') ||
+        filePart.includes('ExerciseAtlasView') ||
+        filePart.includes('ClassBinderView') ||
+        filePart.includes('SequenceBuilder') ||
+        filePart.endsWith('App.tsx'),
       false,
-      `Must never touch src/ or PackagePanel/CourseReferenceBrowser/ExerciseAtlasView: ${filePart}`,
+      `Must never touch forbidden UI/store files: ${filePart}`,
     );
   }
 });

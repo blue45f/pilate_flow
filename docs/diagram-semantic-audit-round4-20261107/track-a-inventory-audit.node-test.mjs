@@ -9,105 +9,138 @@ import {
   runSemanticAuditAnalysis,
 } from './shared/semantic-audit-analyzer.mjs';
 
-test('Track A — 98-exercise inventory & 28 coordinate-trajectory groups are complete and exclude prior resolved defects', async () => {
+test('Track A — 98-exercise inventory & 44 post-fix coordinate-trajectory groups are complete and preserve prior resolved fixes', async () => {
   const analysis = await runSemanticAuditAnalysis();
 
   assert.equal(analysis.summary.totalExercisesAudited, 98);
   assert.equal(analysis.inventory.length, 98);
-  assert.equal(analysis.summary.totalCoordinateGroups, 28);
-  assert.equal(analysis.coordinateGroups.length, 28);
-  assert.equal(analysis.summary.sharedCoordinateGroupsCount, 21);
-  assert.equal(analysis.summary.singletonCoordinateGroupsCount, 7);
+  assert.equal(analysis.summary.totalCoordinateGroups, 44);
+  assert.equal(analysis.coordinateGroups.length, 44);
 
-  // Verify prior resolved fixes (R-01, D-01..D-05) are isolated or excluded from residual semantic mismatch defects
-  const mismatchedIds = new Set(
-    analysis.inventory
-      .filter((i) => i.semanticClassification === 'residual-semantic-mismatch')
-      .map((i) => i.exerciseId),
+  const byId = new Map(analysis.inventory.map((i) => [i.exerciseId, i]));
+
+  // Verify prior resolved fixes (R-01, D-01..D-05) remain intact
+  assert.equal(byId.get('original-mat-clam').archetypeId, 'mat-clam-isolated');
+  assert.equal(byId.get('original-mat-open-book').archetypeId, 'mat-open-book-isolated');
+  assert.equal(byId.get('original-reformer-strap-frog').archetypeId, 'reformer-strap-frog-isolated');
+  assert.equal(byId.get('ex-plank-01').archetypeId, 'reformer-plank-long-stretch-isolated');
+  assert.equal(byId.get('ex-plank-02').archetypeId, 'chair-plank-pike-isolated');
+  assert.equal(
+    byId.get('original-barrel-standing-hip-extension').archetypeId,
+    'barrel-standing-hip-extension-isolated',
   );
-
-  for (const resolvedId of [
-    'original-mat-clam',
-    'original-mat-open-book',
-    'original-reformer-strap-frog',
-    'ex-plank-01',
-    'original-chair-incline-support',
-    'ex-plank-02',
-    'ex-kr-chair-01',
-    'original-cadillac-arm-spring-press',
-    'ex-bridging-02',
-    'original-chair-seated-pedal-press',
-    'original-chair-alternating-pedal',
-    'ex-footwork-03',
-    'original-barrel-standing-hip-extension',
-  ]) {
-    assert.equal(
-      mismatchedIds.has(resolvedId),
-      false,
-      `Already-resolved exercise ${resolvedId} must not be re-reported as a residual mismatch`,
-    );
-  }
 });
 
-test('Track A — Quantitative joint-delta proofs hold for top residual semantic mismatches SM-01..SM-08', async () => {
+test('Track A — Quantitative joint-delta proofs hold for separated SM-01..SM-08 clear-evidence exercises', async () => {
   const analysis = await runSemanticAuditAnalysis();
   const byId = new Map(analysis.inventory.map((i) => [i.exerciseId, i]));
 
-  // SM-01: Chair Seated Pelvic Rock & Breath have 0px pelvis delta and 80.5px hand rowing delta
+  // SM-01: Chair Seated Pelvic Rock & Back Reach separated from Seated Row
   const chairPelvicRock = byId.get('original-chair-seated-pelvic-rock');
-  assert.equal(chairPelvicRock.archetypeId, 'seated-row-arm-arc');
-  assert.equal(chairPelvicRock.jointDeltas.pelvis.maxPhaseDist, 0);
-  assert.equal(chairPelvicRock.jointDeltas.hand.dist_sm, 80.5);
-  assert.equal(chairPelvicRock.jointDeltas.hand.maxPhaseDist, 103.2);
+  assert.equal(chairPelvicRock.archetypeId, 'chair-seated-pelvic-rock-isolated');
+  assert.equal(chairPelvicRock.jointDeltas.hand.maxPhaseDist, 0);
+  assert.ok(chairPelvicRock.jointDeltas.lumbar.maxPhaseDist > 10);
 
-  // SM-02: Barrel/Chair Supported Calf Raise swings hand 50.5px into air; Cadillac Standing Punch rises 14.6px onto tiptoes
+  const chairBackReach = byId.get('original-chair-seated-back-reach');
+  assert.equal(chairBackReach.archetypeId, 'chair-seated-back-reach-isolated');
+  assert.ok(chairBackReach.jointDeltas.thoracic.dy_sm < -5);
+
+  // SM-02: Supported calf raises keep hands anchored; standing rotation & punch keep heels grounded
   const barrelAnkle = byId.get('original-barrel-supported-ankle');
-  assert.equal(barrelAnkle.archetypeId, 'standing-ankle-calf-upper-reach');
-  assert.equal(barrelAnkle.jointDeltas.hand.dist_sm, 50.5);
+  assert.equal(barrelAnkle.archetypeId, 'barrel-supported-ankle-isolated');
+  assert.equal(barrelAnkle.jointDeltas.hand.maxPhaseDist, 0);
+  assert.ok(barrelAnkle.jointDeltas.heel.dy_sm < -10);
+
+  const chairCalf = byId.get('original-chair-supported-calf-raise');
+  assert.equal(chairCalf.archetypeId, 'chair-supported-calf-raise-isolated');
+  assert.equal(chairCalf.jointDeltas.hand.maxPhaseDist, 0);
+  assert.ok(chairCalf.jointDeltas.heel.dy_sm < -10);
+
+  const barrelRot = byId.get('original-barrel-standing-rotation');
+  assert.equal(barrelRot.archetypeId, 'barrel-standing-rotation-isolated');
+  assert.equal(barrelRot.jointDeltas.heel.maxPhaseDist, 0);
+
   const cadillacPunch = byId.get('ex-upper-03');
-  assert.equal(cadillacPunch.jointDeltas.heel.dist_sm, 14.6);
+  assert.equal(cadillacPunch.archetypeId, 'cadillac-standing-punch-press-isolated');
+  assert.equal(cadillacPunch.jointDeltas.heel.maxPhaseDist, 0);
+  assert.ok(cadillacPunch.jointDeltas.hand.dx_sm > 40);
 
-  // SM-03: Mat Pelvic Clock & Rib Breath have 0px pelvis delta and 64.1px overhead arm arc
+  // SM-03: Mat Pelvic Clock & Cadillac Pelvic Rock keep hands stationary on mat/table
   const matPelvicClock = byId.get('original-mat-pelvic-clock');
-  assert.equal(matPelvicClock.archetypeId, 'supine-breath-pelvic-clock');
-  assert.equal(matPelvicClock.jointDeltas.pelvis.dist_sm, 6.3);
-  assert.equal(matPelvicClock.jointDeltas.hand.dist_sm, 64.1);
-  assert.equal(matPelvicClock.jointDeltas.hand.maxPhaseDist, 129.3);
+  const cadillacPelvicRock = byId.get('original-cadillac-pelvic-rock');
+  assert.equal(matPelvicClock.archetypeId, 'supine-pelvic-clock-isolated');
+  assert.equal(cadillacPelvicRock.archetypeId, 'supine-pelvic-clock-isolated');
+  assert.equal(matPelvicClock.jointDeltas.hand.maxPhaseDist, 0);
+  assert.ok(matPelvicClock.jointDeltas.lumbar.maxPhaseDist > 5);
 
-  // SM-04: Chair Sit-to-Stand kicks one leg 65.5px backward with pelvis height flat (118->120)
+  // SM-04: Chair Sit-to-Stand rises from seat with grounded feet; Reformer Side Splits abducts laterally
   const chairSitToStand = byId.get('original-chair-sit-to-stand');
-  assert.equal(chairSitToStand.archetypeId, 'standing-scooter-lunge-splits');
-  assert.equal(chairSitToStand.jointDeltas.ankle.maxPhaseDist, 65.5);
-  assert.equal(chairSitToStand.jointDeltas.pelvis.dy_sm, 2);
+  assert.equal(chairSitToStand.archetypeId, 'chair-sit-to-stand-isolated');
+  assert.equal(chairSitToStand.jointDeltas.ankle.maxPhaseDist, 0);
+  assert.ok(chairSitToStand.jointDeltas.pelvis.maxPhaseDist > 35);
 
-  // SM-05: Cadillac Roll-Down Bar Cat Stretch keeps spine rigid (thoracic Δ2.8px) while pulling hands 118.3px behind hips
+  const sideSplits = byId.get('ex-lower-02');
+  assert.equal(sideSplits.archetypeId, 'reformer-standing-side-splits-isolated');
+  assert.ok(sideSplits.jointDeltas.ankle.dx_sm < -45);
+  assert.deepEqual(sideSplits.carriageOffsets, [4, 42, 10]);
+
+  // SM-05: Cadillac Roll-Down Bar Cat Stretch articulates spine into anterior C-curve flexion
   const catStretch = byId.get('ex-warmup-02');
-  assert.equal(catStretch.archetypeId, 'kneeling-chest-expansion-triceps');
-  assert.equal(catStretch.jointDeltas.thoracic.maxPhaseDist, 2.8);
-  assert.equal(catStretch.jointDeltas.hand.maxPhaseDist, 118.3);
+  assert.equal(catStretch.archetypeId, 'cadillac-kneeling-cat-stretch-isolated');
+  assert.ok(catStretch.jointDeltas.head.dx_sm > 40);
+  assert.ok(catStretch.jointDeltas.thoracic.maxPhaseDist > 15);
 
-  // SM-06: Chair/Cadillac Seated Spine Twist leans backward 56.4px into C-curve roll-back
+  // SM-06: Chair/Cadillac Seated Spine Twist maintains vertical spine plumb line (zero backward roll-back)
   const chairTwist = byId.get('original-chair-seated-spine-twist');
-  assert.equal(chairTwist.archetypeId, 'seated-roll-back-spine-twist');
-  assert.equal(chairTwist.jointDeltas.head.maxPhaseDist, 56.4);
+  const cadillacTwist = byId.get('original-cadillac-seated-rotation');
+  assert.equal(chairTwist.archetypeId, 'chair-seated-spine-twist-isolated');
+  assert.equal(cadillacTwist.archetypeId, 'cadillac-seated-rotation-isolated');
+  assert.equal(chairTwist.jointDeltas.head.dx_sm, 0);
+  assert.equal(cadillacTwist.jointDeltas.head.dx_sm, 0);
 
-  // SM-07: Barrel Standing Side Stretch & Side-Lying Side Bend sit on floor in Z-Sit (pelvis.y: 138, knee.y: 148)
+  // SM-07A & SM-07B: Barrel side-lying side bend (pelvis on dome + feet on ladder) & standing side stretch separated from Z-Sit
+  for (const id of ['original-barrel-supported-side-bend', 'ex-kr-barrel-01']) {
+    const barrelSideBend = byId.get(id);
+    assert.equal(barrelSideBend.archetypeId, 'barrel-side-lying-side-bend-isolated');
+    assert.deepEqual(barrelSideBend.jointDeltas.pelvis.start, { x: 126, y: 116 });
+    assert.deepEqual(barrelSideBend.jointDeltas.ankle.start, { x: 228, y: 132 });
+    assert.ok(barrelSideBend.jointDeltas.head.dy_sm < -50);
+  }
   const barrelStandingSide = byId.get('original-barrel-standing-side-stretch');
-  assert.equal(barrelStandingSide.bodyPosition, 'standing');
-  assert.equal(barrelStandingSide.jointDeltas.pelvis.start.y, 138);
-  assert.equal(barrelStandingSide.jointDeltas.knee.start.y, 148);
+  assert.equal(barrelStandingSide.archetypeId, 'barrel-standing-side-stretch-isolated');
+  assert.deepEqual(barrelStandingSide.jointDeltas.pelvis.start, { x: 148, y: 122 });
+  assert.deepEqual(barrelStandingSide.jointDeltas.ankle.start, { x: 148, y: 170 });
 
-  // SM-08: Chair Seated Knee Lift pushes knee DOWNWARD +34px (y: 98 -> 132) instead of lifting
+  // SM-08A & SM-08B: Chair Seated Knee Lift (upward dy = -38px, pedal [0,0,0]) & Barrel Standing Side Reach (straight-knee abduction)
   const chairKneeLift = byId.get('original-chair-seated-knee-lift');
-  assert.equal(chairKneeLift.archetypeId, 'chair-seated-pedal-footwork');
-  assert.equal(chairKneeLift.jointDeltas.knee.dy_sm, 34);
+  assert.equal(chairKneeLift.archetypeId, 'chair-seated-knee-lift-isolated');
+  assert.equal(chairKneeLift.jointDeltas.knee.dy_sm, -38);
+  assert.deepEqual(chairKneeLift.pedalAngles, [0, 0, 0]);
+
+  const barrelSideReach = byId.get('original-barrel-standing-side-reach');
+  assert.equal(barrelSideReach.archetypeId, 'barrel-standing-side-reach-isolated');
+  assert.deepEqual(barrelSideReach.jointDeltas.ankle.middle, { x: 228, y: 118 });
 });
 
-test('Track A — Minimal follow-up differentiation proposal patch passes git apply --check cleanly', () => {
-  const patchPath = path.join(
-    AUDIT_DIR,
-    'patches/minimal-semantic-differentiation-proposal.patch',
+test('Track A — Ambiguous-evidence breath-observation exercises remain unmodified & unverified', async () => {
+  const analysis = await runSemanticAuditAnalysis();
+  const byId = new Map(analysis.inventory.map((i) => [i.exerciseId, i]));
+
+  assert.equal(byId.get('original-mat-rib-breath').archetypeId, 'supine-breath-pelvic-clock');
+  assert.equal(byId.get('original-cadillac-table-breath').archetypeId, 'supine-breath-pelvic-clock');
+  assert.equal(byId.get('original-chair-seated-breath').archetypeId, 'seated-row-arm-arc');
+  assert.equal(
+    byId.get('original-barrel-standing-breath').archetypeId,
+    'standing-ankle-calf-upper-reach',
   );
-  assert.equal(fs.existsSync(patchPath), true);
-  execFileSync('git', ['apply', '--check', patchPath], { cwd: REPO_ROOT });
+  for (const id of [
+    'original-mat-rib-breath',
+    'original-cadillac-table-breath',
+    'original-chair-seated-breath',
+    'original-barrel-standing-breath',
+  ]) {
+    assert.equal(byId.get(id).truthfulnessBoundary.anatomicalAccuracyAssumed, false);
+    assert.equal(byId.get(id).truthfulnessBoundary.expertVerificationCompleted, false);
+  }
 });
+

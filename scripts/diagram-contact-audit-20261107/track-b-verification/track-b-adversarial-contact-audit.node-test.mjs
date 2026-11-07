@@ -172,6 +172,7 @@ describe('Track B — Independent Adversarial Contact Audit on Real App Renderer
       'src/test/diagramApparatusContactRegression.test.tsx',
       'scripts/diagram-contact-audit-20261107/',
       'docs/diagram-contact-audit-20261107/',
+      'docs/diagram-semantic-audit-round4-20261107/',
     ];
 
     const outsideAllowed = lines.filter((line) => {

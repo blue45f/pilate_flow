@@ -110,22 +110,222 @@ describe('2D diagram pose-apparatus contact regression (D-01..D-05 + mirrored sy
   });
 
   it('D-05: prevents standing Barrel lower-limb penetration of dome/ladder and anchors hands on ladder rung', () => {
-    for (const id of [
-      'original-barrel-standing-hip-extension',
-      'original-barrel-standing-side-reach',
-    ] as const) {
-      const barrelStanding = getMovementVisualAsset(id)!;
-      expect(barrelStanding.archetypeId).toBe('barrel-standing-hip-extension-isolated');
-      expect(barrelStanding.phases.start.joints.hand).toEqual({ x: 88, y: 76 });
-      expect(barrelStanding.phases.middle.joints.hand).toEqual({ x: 88, y: 76 });
-      expect(barrelStanding.phases.middle.joints.farAnkle).toEqual({ x: 138, y: 172 });
-      expect(barrelStanding.phases.middle.joints.ankle).toEqual({ x: 222, y: 148 });
-      expect(calculatePhaseJointDelta(barrelStanding).maxDeltaPx).toBeGreaterThan(0);
+    const hipExt = getMovementVisualAsset('original-barrel-standing-hip-extension')!;
+    expect(hipExt.archetypeId).toBe('barrel-standing-hip-extension-isolated');
+    expect(hipExt.phases.start.joints.hand).toEqual({ x: 88, y: 76 });
+    expect(hipExt.phases.middle.joints.hand).toEqual({ x: 88, y: 76 });
+    expect(hipExt.phases.middle.joints.farAnkle).toEqual({ x: 138, y: 172 });
+    expect(hipExt.phases.middle.joints.ankle).toEqual({ x: 222, y: 148 });
+    expect(calculatePhaseJointDelta(hipExt).maxDeltaPx).toBeGreaterThan(0);
 
+    const sideReach = getMovementVisualAsset('original-barrel-standing-side-reach')!;
+    expect(sideReach.archetypeId).toBe('barrel-standing-side-reach-isolated');
+    expect(sideReach.phases.start.joints.hand).toEqual({ x: 88, y: 76 });
+    expect(sideReach.phases.middle.joints.hand).toEqual({ x: 88, y: 76 });
+    expect(sideReach.phases.middle.joints.farAnkle).toEqual({ x: 138, y: 172 });
+    expect(sideReach.phases.middle.joints.ankle).toEqual({ x: 228, y: 118 });
+    expect(calculatePhaseJointDelta(sideReach).maxDeltaPx).toBeGreaterThan(0);
+
+    for (const asset of [hipExt, sideReach]) {
       const triptychMarkup = renderToStaticMarkup(
-        <MovementTriptychDiagramSvg asset={barrelStanding} />,
+        <MovementTriptychDiagramSvg asset={asset} />,
       );
       expect(triptychMarkup).toContain('data-testid="movement-triptych-diagram"');
     }
   });
 });
+
+describe('Round 4 semantic differentiation regression (SM-01..SM-08 + ambiguous-evidence non-modification)', () => {
+  it('SM-08A: separates Chair Seated Knee Lift (upward knee flexion, stationary pedal) from Seated Pedal Press (downward pedal extension)', () => {
+    const kneeLift = getMovementVisualAsset('original-chair-seated-knee-lift')!;
+    const pedalPress = getMovementVisualAsset('original-chair-seated-pedal-press')!;
+
+    expect(kneeLift.archetypeId).toBe('chair-seated-knee-lift-isolated');
+    expect(pedalPress.archetypeId).toBe('chair-seated-pedal-footwork');
+
+    // Knee lift elevates the working knee and ankle upward (negative dy) with stationary pedal (0 deg)
+    expect(kneeLift.phases.middle.joints.knee.y - kneeLift.phases.start.joints.knee.y).toBeLessThan(-30);
+    expect(kneeLift.phases.middle.joints.ankle.y - kneeLift.phases.start.joints.ankle.y).toBeLessThan(-35);
+    expect([
+      kneeLift.phases.start.apparatusState.pedalAngleDeg,
+      kneeLift.phases.middle.apparatusState.pedalAngleDeg,
+      kneeLift.phases.end.apparatusState.pedalAngleDeg,
+    ]).toEqual([0, 0, 0]);
+    expect(kneeLift.phases.middle.joints.farAnkle).toEqual({ x: 184, y: 172 });
+
+    // Pedal press pushes the working knee and ankle downward (positive dy) with downward pedal rotation
+    expect(pedalPress.phases.middle.joints.knee.y - pedalPress.phases.start.joints.knee.y).toBeGreaterThan(25);
+    expect(pedalPress.phases.middle.joints.ankle.y - pedalPress.phases.start.joints.ankle.y).toBeGreaterThan(25);
+    expect([
+      pedalPress.phases.start.apparatusState.pedalAngleDeg,
+      pedalPress.phases.middle.apparatusState.pedalAngleDeg,
+      pedalPress.phases.end.apparatusState.pedalAngleDeg,
+    ]).toEqual([8, 36, 12]);
+  });
+
+  it('SM-08B: separates Barrel Standing Side Reach (upright torso, straight-knee lateral abduction) from Standing Hip Extension (flexed-knee posterior kick)', () => {
+    const sideReach = getMovementVisualAsset('original-barrel-standing-side-reach')!;
+    const hipExt = getMovementVisualAsset('original-barrel-standing-hip-extension')!;
+
+    expect(sideReach.archetypeId).toBe('barrel-standing-side-reach-isolated');
+    expect(hipExt.archetypeId).toBe('barrel-standing-hip-extension-isolated');
+
+    // Side reach maintains upright shoulder/head and elevates straight leg higher laterally
+    expect(sideReach.phases.middle.joints.shoulder).toEqual({ x: 140, y: 70 });
+    expect(sideReach.phases.middle.joints.knee).toEqual({ x: 184, y: 126 });
+    expect(sideReach.phases.middle.joints.ankle).toEqual({ x: 228, y: 118 });
+    expect(hipExt.phases.middle.joints.knee).toEqual({ x: 184, y: 138 });
+    expect(hipExt.phases.middle.joints.ankle).toEqual({ x: 222, y: 148 });
+    expect(sideReach.phases.middle.joints.ankle.y).toBeLessThan(hipExt.phases.middle.joints.ankle.y - 25);
+  });
+
+  it('SM-07A & SM-07B: separates Barrel side-lying side bend (pelvis on dome + feet on ladder) and standing side stretch from floor Z-sit', () => {
+    const zSit = MOVEMENT_VISUAL_ASSETS.find((a) => a.archetypeId === 'lateral-mermaid-side-bend')!;
+    expect(zSit).toBeDefined();
+    expect(zSit.phases.start.joints.pelvis).toEqual({ x: 148, y: 138 });
+
+    for (const id of ['original-barrel-supported-side-bend', 'ex-kr-barrel-01'] as const) {
+      const barrelSideLying = getMovementVisualAsset(id)!;
+      expect(barrelSideLying.archetypeId).toBe('barrel-side-lying-side-bend-isolated');
+      // Lateral pelvis rests on Barrel dome apex (x=126, y=116) and feet hook on right ladder rungs (x=228..248)
+      expect(barrelSideLying.phases.start.joints.pelvis).toEqual({ x: 126, y: 116 });
+      expect(barrelSideLying.phases.middle.joints.pelvis).toEqual({ x: 126, y: 116 });
+      expect(barrelSideLying.phases.start.joints.ankle).toEqual({ x: 228, y: 132 });
+      expect(barrelSideLying.phases.start.joints.farAnkle).toEqual({ x: 242, y: 142 });
+      // Upper torso lifts from side-lying into lateral flexion (head.y: 88 -> 32)
+      expect(barrelSideLying.phases.middle.joints.head.y).toBeLessThan(
+        barrelSideLying.phases.start.joints.head.y - 50,
+      );
+    }
+
+    const barrelStandingStretch = getMovementVisualAsset('original-barrel-standing-side-stretch')!;
+    expect(barrelStandingStretch.archetypeId).toBe('barrel-standing-side-stretch-isolated');
+    // Upright standing on both feet (ankle y=170, pelvis y=122) clear of barrel dome and ladder
+    expect(barrelStandingStretch.phases.start.joints.ankle).toEqual({ x: 148, y: 170 });
+    expect(barrelStandingStretch.phases.start.joints.pelvis).toEqual({ x: 148, y: 122 });
+    expect(barrelStandingStretch.phases.middle.joints.hand.x).toBeLessThan(
+      barrelStandingStretch.phases.start.joints.hand.x - 80,
+    );
+  });
+
+  it('SM-01..SM-06: separates clear-evidence Chair/Cadillac/Reformer/Barrel/Mat exercises from shared multi-exercise rigs', () => {
+    // SM-01: Chair pelvic rock & back reach vs Seated Row
+    const chairPelvicRock = getMovementVisualAsset('original-chair-seated-pelvic-rock')!;
+    const chairBackReach = getMovementVisualAsset('original-chair-seated-back-reach')!;
+    expect(chairPelvicRock.archetypeId).toBe('chair-seated-pelvic-rock-isolated');
+    expect(chairPelvicRock.phases.start.joints.hand).toEqual(
+      chairPelvicRock.phases.middle.joints.hand,
+    );
+    expect(chairPelvicRock.phases.middle.joints.lumbar.x).toBeLessThan(
+      chairPelvicRock.phases.start.joints.lumbar.x,
+    );
+    expect(chairBackReach.archetypeId).toBe('chair-seated-back-reach-isolated');
+    expect(chairBackReach.phases.middle.joints.thoracic.y).toBeLessThan(
+      chairBackReach.phases.start.joints.thoracic.y,
+    );
+
+    // SM-02: Supported calf raises & grounded standing rotations/punches
+    const barrelAnkle = getMovementVisualAsset('original-barrel-supported-ankle')!;
+    expect(barrelAnkle.archetypeId).toBe('barrel-supported-ankle-isolated');
+    expect(barrelAnkle.phases.middle.joints.hand).toEqual({ x: 88, y: 76 });
+    expect(barrelAnkle.phases.middle.joints.heel.y).toBeLessThan(
+      barrelAnkle.phases.start.joints.heel.y,
+    );
+
+    const chairCalf = getMovementVisualAsset('original-chair-supported-calf-raise')!;
+    expect(chairCalf.archetypeId).toBe('chair-supported-calf-raise-isolated');
+    expect(chairCalf.phases.middle.joints.hand).toEqual({ x: 116, y: 106 });
+    expect(chairCalf.phases.middle.joints.heel.y).toBeLessThan(chairCalf.phases.start.joints.heel.y);
+
+    const barrelRot = getMovementVisualAsset('original-barrel-standing-rotation')!;
+    expect(barrelRot.archetypeId).toBe('barrel-standing-rotation-isolated');
+    expect(barrelRot.phases.middle.joints.heel).toEqual(barrelRot.phases.start.joints.heel);
+
+    const cadillacPunch = getMovementVisualAsset('ex-upper-03')!;
+    expect(cadillacPunch.archetypeId).toBe('cadillac-standing-punch-press-isolated');
+    expect(cadillacPunch.phases.middle.joints.heel).toEqual(cadillacPunch.phases.start.joints.heel);
+    expect(cadillacPunch.phases.middle.joints.hand.x).toBeGreaterThan(
+      cadillacPunch.phases.start.joints.hand.x + 40,
+    );
+
+    // SM-03: Supine pelvic clock (stationary arms on mat/table) vs supine arm arc
+    for (const id of ['original-mat-pelvic-clock', 'original-cadillac-pelvic-rock'] as const) {
+      const pelvicClock = getMovementVisualAsset(id)!;
+      expect(pelvicClock.archetypeId).toBe('supine-pelvic-clock-isolated');
+      expect(pelvicClock.phases.middle.joints.hand).toEqual(pelvicClock.phases.start.joints.hand);
+      expect(pelvicClock.phases.middle.joints.lumbar.y).not.toBe(
+        pelvicClock.phases.start.joints.lumbar.y,
+      );
+    }
+
+    // SM-04: Chair sit-to-stand & Reformer standing side splits vs Scooter
+    const sitToStand = getMovementVisualAsset('original-chair-sit-to-stand')!;
+    expect(sitToStand.archetypeId).toBe('chair-sit-to-stand-isolated');
+    expect(sitToStand.phases.start.joints.pelvis).toEqual({ x: 136, y: 108 });
+    expect(sitToStand.phases.middle.joints.pelvis).toEqual({ x: 178, y: 102 });
+    expect(sitToStand.phases.middle.joints.ankle).toEqual(sitToStand.phases.start.joints.ankle);
+
+    const sideSplits = getMovementVisualAsset('ex-lower-02')!;
+    expect(sideSplits.archetypeId).toBe('reformer-standing-side-splits-isolated');
+    expect(sideSplits.phases.middle.joints.farAnkle).toEqual({ x: 214, y: 138 });
+    expect(sideSplits.phases.middle.joints.ankle.x).toBeLessThan(
+      sideSplits.phases.start.joints.ankle.x - 45,
+    );
+    expect(sideSplits.phases.middle.apparatusState.carriageOffsetPx).toBe(42);
+
+    // SM-05: Cadillac kneeling cat stretch (anterior C-curve spinal flexion)
+    const catStretch = getMovementVisualAsset('ex-warmup-02')!;
+    expect(catStretch.archetypeId).toBe('cadillac-kneeling-cat-stretch-isolated');
+    expect(catStretch.phases.middle.joints.head.x).toBeGreaterThan(
+      catStretch.phases.start.joints.head.x + 40,
+    );
+    expect(catStretch.phases.middle.joints.hand.x).toBeGreaterThan(
+      catStretch.phases.start.joints.hand.x + 25,
+    );
+
+    // SM-06: Upright seated spine twist / rotation (vertical spine x=136 without backward roll-back)
+    const chairTwist = getMovementVisualAsset('original-chair-seated-spine-twist')!;
+    const cadillacTwist = getMovementVisualAsset('original-cadillac-seated-rotation')!;
+    expect(chairTwist.archetypeId).toBe('chair-seated-spine-twist-isolated');
+    expect(cadillacTwist.archetypeId).toBe('cadillac-seated-rotation-isolated');
+    for (const twist of [chairTwist, cadillacTwist]) {
+      expect(twist.phases.middle.joints.head.x).toBe(twist.phases.start.joints.head.x);
+      expect(twist.phases.middle.joints.lumbar.x).toBe(twist.phases.start.joints.lumbar.x);
+      expect(twist.phases.middle.joints.pelvis.x).toBe(twist.phases.start.joints.pelvis.x);
+    }
+  });
+
+  it('leaves ambiguous-evidence breath-observation exercises unmodified & unverified, and renders all 98x3 diagrams cleanly', () => {
+    const ambiguousBreathIds = [
+      'original-mat-rib-breath',
+      'original-cadillac-table-breath',
+      'original-chair-seated-breath',
+      'original-barrel-standing-breath',
+    ] as const;
+
+    for (const id of ambiguousBreathIds) {
+      const asset = getMovementVisualAsset(id)!;
+      expect(asset.anatomicalAccuracyAssumed).toBe(false);
+    }
+
+    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(98);
+    for (const asset of MOVEMENT_VISUAL_ASSETS) {
+      expect(asset.anatomicalAccuracyAssumed).toBe(false);
+      expect(calculatePhaseJointDelta(asset).maxDeltaPx).toBeGreaterThan(0);
+      for (const phase of ['start', 'middle', 'end'] as const) {
+        const svg = parseSvgFromMarkup(
+          renderToStaticMarkup(<MovementPhaseDiagramSvg asset={asset} phase={phase} />),
+        );
+        expect(svg.querySelectorAll('circle[data-joint-node]').length).toBe(7);
+        if (
+          phase !== 'start' &&
+          asset.exerciseId !== 'original-mat-clam' &&
+          asset.exerciseId !== 'original-mat-open-book'
+        ) {
+          expect(svg.querySelectorAll('[data-pose-delta-vector]').length).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+});
+

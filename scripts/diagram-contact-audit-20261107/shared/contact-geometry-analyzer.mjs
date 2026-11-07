@@ -496,7 +496,6 @@ export function evaluateContactAccuracySuite({
   const chairPedalFootworkIds = [
     'original-chair-seated-pedal-press',
     'original-chair-alternating-pedal',
-    'original-chair-seated-knee-lift',
     'ex-footwork-03',
   ];
   const chairPedalChecks = chairPedalFootworkIds.map((id) => {

@@ -1,5 +1,5 @@
 {
-  "verifiedAt": "2026-11-07T12:04:36.808Z",
+  "verifiedAt": "2026-11-07T12:36:40.195Z",
   "rendererSource": "src/components/MovementPhaseDiagramSvg.tsx (READ-ONLY current main)",
   "consoleErrorCount": 0,
   "pageErrorCount": 0,
@@ -14,7 +14,7 @@
         "SM-03"
       ],
       "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/apparatus-mat-sm03-sample.png",
-      "bytes": 274165
+      "bytes": 257244
     },
     {
       "apparatus": "reformer",
@@ -22,7 +22,7 @@
         "SM-04"
       ],
       "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/apparatus-reformer-sm04-sample.png",
-      "bytes": 207813
+      "bytes": 194449
     },
     {
       "apparatus": "cadillac",
@@ -31,7 +31,7 @@
         "SM-06"
       ],
       "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/apparatus-cadillac-sm05-sm06-sample.png",
-      "bytes": 290119
+      "bytes": 272342
     },
     {
       "apparatus": "chair",
@@ -41,7 +41,7 @@
         "SM-08"
       ],
       "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/apparatus-chair-sm01-sm08-sample.png",
-      "bytes": 258818
+      "bytes": 248106
     },
     {
       "apparatus": "barrel",
@@ -51,7 +51,7 @@
         "SM-08"
       ],
       "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/apparatus-barrel-sm02-sm07-sm08-sample.png",
-      "bytes": 279394
+      "bytes": 264302
     }
   ],
   "viewportResults": [
@@ -91,7 +91,7 @@
       "height": 1024,
       "zoom": 1,
       "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/viewport-tablet-768x1024.png",
-      "bytes": 197711,
+      "bytes": 191763,
       "innerWidth": 768,
       "innerHeight": 1024,
       "scrollWidth": 768,
@@ -106,7 +106,7 @@
       "height": 900,
       "zoom": 1,
       "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/viewport-desktop-1440x900.png",
-      "bytes": 225940,
+      "bytes": 209781,
       "innerWidth": 1440,
       "innerHeight": 900,
       "scrollWidth": 1440,
