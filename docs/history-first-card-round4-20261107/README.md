@@ -92,20 +92,18 @@
 
 ## 5. 시각적 증거 (실제 Chromium 스크린샷)
 
-- 모바일 `320×694` (`1,000`건):
-  - 기본 접힘 (첫 카드 날짜·제목·`이력 다시 열기`·`이 수업 다시 계획` 모두 하단 탭바 위에 100% 노출): [`scale1000-mobile-320x694-collapsed.png`](./evidence/screenshots/scale1000-mobile-320x694-collapsed.png)
-  - 날짜 펼침 (`+17일` 펼침 상태에서도 첫 카드 날짜·제목 노출 유지): [`scale1000-mobile-320x694-expanded.png`](./evidence/screenshots/scale1000-mobile-320x694-expanded.png)
-  - 이전 날짜 선택 후 접힘 (`5`개 칩 고정 + 선택된 날짜의 첫 카드 전체 노출): [`scale1000-mobile-320x694-pinned-older.png`](./evidence/screenshots/scale1000-mobile-320x694-pinned-older.png)
-- 모바일 `390×844` (`1,000`건):
-  - 기본 접힘 (첫 번째 카드 100% + 두 번째 카드까지 하단 탭바 위에 노출): [`scale1000-mobile-390x844-collapsed.png`](./evidence/screenshots/scale1000-mobile-390x844-collapsed.png)
-  - 날짜 펼침: [`scale1000-mobile-390x844-expanded.png`](./evidence/screenshots/scale1000-mobile-390x844-expanded.png)
-  - 이전 날짜 선택 후 접힘: [`scale1000-mobile-390x844-pinned-older.png`](./evidence/screenshots/scale1000-mobile-390x844-pinned-older.png)
-- 태블릿 `768×1024` 및 데스크톱 `1440×900` (`1,000`건):
-  - 태블릿 `768×1024`: [`scale1000-tablet-768x1024.png`](./evidence/screenshots/scale1000-tablet-768x1024.png)
-  - 데스크톱 `1440×900`: [`scale1000-desktop-1440x900.png`](./evidence/screenshots/scale1000-desktop-1440x900.png)
-- `200%` 확대 (`1,000`건):
-  - 모바일 `390×844 @ 200%`: [`scale1000-mobile-390x844-zoom200.png`](./evidence/screenshots/scale1000-mobile-390x844-zoom200.png)
-  - 데스크톱 `1440×900 @ 200%`: [`scale1000-desktop-1440x900-zoom200.png`](./evidence/screenshots/scale1000-desktop-1440x900-zoom200.png)
+- 모바일 `320×694`:
+  - `1,000`건 (첫 카드 날짜·제목·`이력 다시 열기`·`이 수업 다시 계획` 모두 하단 탭바 위에 100% 노출): [`round4-scale-1000-mobile-320.png`](./evidence/screenshots/round4-scale-1000-mobile-320.png)
+  - `100`건: [`round4-scale-100-mobile-320.png`](./evidence/screenshots/round4-scale-100-mobile-320.png)
+- 모바일 `390×844`:
+  - `1,000`건 (첫 번째 카드 100% + 두 번째 카드까지 하단 탭바 위에 노출): [`round4-scale-1000-mobile-390.png`](./evidence/screenshots/round4-scale-1000-mobile-390.png)
+  - `100`건: [`round4-scale-100-mobile-390.png`](./evidence/screenshots/round4-scale-100-mobile-390.png)
+- 태블릿 `768×1024` 및 데스크톱 `1440×900`:
+  - 태블릿 `768×1024` (`1,000`건 / `100`건): [`round4-scale-1000-tablet-768.png`](./evidence/screenshots/round4-scale-1000-tablet-768.png) · [`round4-scale-100-tablet-768.png`](./evidence/screenshots/round4-scale-100-tablet-768.png)
+  - 데스크톱 `1440×900` (`1,000`건 / `100`건): [`round4-scale-1000-desktop-1440.png`](./evidence/screenshots/round4-scale-1000-desktop-1440.png) · [`round4-scale-100-desktop-1440.png`](./evidence/screenshots/round4-scale-100-desktop-1440.png)
+- `200%` 확대:
+  - 모바일 `390×844 @ 200%` (`1,000`건 / `100`건): [`round4-scale-1000-mobile-390-zoom200.png`](./evidence/screenshots/round4-scale-1000-mobile-390-zoom200.png) · [`round4-scale-100-mobile-390-zoom200.png`](./evidence/screenshots/round4-scale-100-mobile-390-zoom200.png)
+  - 데스크톱 `1440×900 @ 200%` (`1,000`건 / `100`건): [`round4-scale-1000-desktop-1440-zoom200.png`](./evidence/screenshots/round4-scale-1000-desktop-1440-zoom200.png) · [`round4-scale-100-desktop-1440-zoom200.png`](./evidence/screenshots/round4-scale-100-desktop-1440-zoom200.png)
 
 ---
 
