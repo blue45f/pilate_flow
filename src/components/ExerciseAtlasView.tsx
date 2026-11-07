@@ -443,7 +443,6 @@ const VerifiedReferencesSection: React.FC<{
     Number(ownedOnly) +
     Number(region !== 'all') +
     Number(Boolean(search.trim()));
-  const terms = search.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
   const references = VERIFIED_REFERENCES.filter((reference) => {
     if (region !== 'all' && reference.region !== region) return false;
     if (verification === 'official' && reference.region !== 'global') return false;
@@ -478,8 +477,10 @@ const VerifiedReferencesSection: React.FC<{
     if (!['all', 'unknown'].includes(bodyFocus) && !reference.bodyFocus.includes(bodyFocus))
       return false;
     if (language !== 'all' && reference.language !== language) return false;
-    const haystack = [
+    const fields = [
+      reference.id,
       reference.title,
+      reference.originalTitle || '',
       reference.sourceName,
       reference.language,
       reference.levelLabel || '',
@@ -488,10 +489,8 @@ const VerifiedReferencesSection: React.FC<{
       ...reference.requiredEquipment.map(equipmentLabel),
       ...reference.requiredProps,
       ...reference.requiredProps.map(propLabel),
-    ]
-      .join(' ')
-      .toLocaleLowerCase();
-    return terms.every((term) => haystack.includes(term));
+    ];
+    return matchesDiscoverySearch(fields, search);
   }).sort((a, b) => Number(a.region !== 'kr') - Number(b.region !== 'kr'));
   const sourceSignature = JSON.stringify({
     search,
@@ -553,14 +552,24 @@ const VerifiedReferencesSection: React.FC<{
       </details>
       <div className="verified-reference-controls">
         <label className="verified-reference-search">
-          <Search size={16} />
+          <Search size={16} aria-hidden="true" />
           <span className="sr-only">공개 참고 자료 검색</span>
           <input
             type="search"
+            aria-label="공개 참고 자료 검색"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="채널·영상·기구·부위 검색"
           />
+          {search && (
+            <PfButton
+              variant="icon"
+              onClick={() => setSearch('')}
+              aria-label="공개 자료 검색어 지우기"
+            >
+              <X size={14} />
+            </PfButton>
+          )}
         </label>
         <div className="verified-reference-regions" role="group" aria-label="공개 참고 자료 지역">
           {(
@@ -706,12 +715,19 @@ const VerifiedReferencesSection: React.FC<{
         </div>
       )}
       {references.length === 0 && (
-        <div className="verified-reference-empty">
-          <Search size={22} />
+        <div className="verified-reference-empty" role="status" aria-live="polite">
+          <Search size={22} aria-hidden="true" />
           <p>조건에 맞는 공개 참고 자료가 없어요.</p>
-          <button type="button" className="btn-secondary" onClick={reset}>
-            전체 참고 자료 보기
-          </button>
+          <div className="verified-reference-empty-actions">
+            {search.trim() && (
+              <button type="button" className="btn-secondary" onClick={() => setSearch('')}>
+                검색어 지우기
+              </button>
+            )}
+            <button type="button" className="btn-secondary" onClick={reset}>
+              전체 참고 자료 보기
+            </button>
+          </div>
         </div>
       )}
       <p className="verified-reference-footer">
@@ -753,9 +769,11 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [toast, setToast] = useState<{ success: boolean; message: string } | null>(null);
   const [addedId, setAddedId] = useState<string | null>(null);
+  const [brokenPhotoIds, setBrokenPhotoIds] = useState<Record<string, boolean>>({});
   const [previewReference, setPreviewReference] = useState<MotionPatternReference | null>(null);
   const [patternPage, setPatternPage] = useState(0);
   const previewHeading = useRef<HTMLHeadingElement>(null);
+  const cardGridRef = useRef<HTMLDivElement>(null);
   const selectedCount = activeSteps.filter((step) => !isRestStep(step)).length;
   const openPatternPreview = (reference: MotionPatternReference) => {
     setPreviewReference(reference);
@@ -781,8 +799,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   ) => setFilters((previous) => ({ ...previous, [key]: value }));
   const filtered = useMemo(() => {
     return exercises.filter((exercise) => {
+      const equipmentMeta = getExerciseEquipment(exercise);
       if (
-        !matchesLibraryEquipment(getExerciseEquipment(exercise), {
+        !matchesLibraryEquipment(equipmentMeta, {
           equipment: filters.equipment,
           props: filters.props,
           ownedOnly: filters.owned,
@@ -811,14 +830,28 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       )
         return false;
       if (filters.duration === 'long' && exercise.defaultDurationMin <= 5) return false;
+      const blockMeta = CANONICAL_BLOCKS.find((item) => item.category === exercise.blockCategory);
+      const ideaDraft = isMovementIdeaExercise(exercise) ? readMovementIdeaDraft(exercise) : null;
       const fields = [
         exercise.id,
         exercise.nameKo,
         exercise.nameEn,
         APPARATUS_LABELS[exercise.apparatus].ko,
+        APPARATUS_LABELS[exercise.apparatus].short,
         POSITION_LABELS[exercise.bodyPosition].ko,
+        LEVEL_NAMES[exercise.level],
+        `Lv ${exercise.level}`,
+        blockMeta?.nameKo ?? '',
+        blockMeta?.nameEn ?? '',
+        exercise.favoriteTag !== 'none' ? FAVORITE_TAG_META[exercise.favoriteTag].label : '',
+        ...equipmentMeta.requiredEquipment.map(equipmentLabel),
+        ...equipmentMeta.requiredProps.map(propLabel),
         ...exercise.targetMuscles,
         ...exercise.cues,
+        exercise.precautions ?? '',
+        ideaDraft?.ideaLine ?? '',
+        ideaDraft?.subjectiveFeeling ?? '',
+        ideaDraft?.adjustmentNote ?? '',
         exercise.youtube.channelName,
         exercise.sourceReference?.title ?? '',
         exercise.sourceReference?.publisher ?? '',
@@ -845,6 +878,112 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             : 0),
     0,
   );
+  const activeFilterChips = useMemo(() => {
+    const chips: { key: string; label: string; onClear: () => void }[] = [];
+    if (filters.search.trim()) {
+      chips.push({
+        key: 'search',
+        label: `검색: ${filters.search.trim()}`,
+        onClear: () => update('search', ''),
+      });
+    }
+    filters.equipment.forEach((eqId) => {
+      chips.push({
+        key: `eq-${eqId}`,
+        label: `기구: ${equipmentLabel(eqId)}`,
+        onClear: () => update('equipment', toggleSelection(filters.equipment, eqId)),
+      });
+    });
+    filters.props.forEach((propId) => {
+      chips.push({
+        key: `prop-${propId}`,
+        label: `소도구: ${propLabel(propId)}`,
+        onClear: () => update('props', toggleSelection(filters.props, propId)),
+      });
+    });
+    if (filters.block !== 'all') {
+      const blockName =
+        CANONICAL_BLOCKS.find((item) => item.category === filters.block)?.nameKo ?? filters.block;
+      chips.push({
+        key: 'block',
+        label: `구간: ${blockName}`,
+        onClear: () => update('block', 'all'),
+      });
+    }
+    if (filters.position !== 'all') {
+      chips.push({
+        key: 'position',
+        label: `자세: ${POSITION_LABELS[filters.position as BodyPosition].ko}`,
+        onClear: () => update('position', 'all'),
+      });
+    }
+    if (filters.level !== 'all') {
+      chips.push({
+        key: 'level',
+        label: `난이도: ${LEVEL_NAMES[filters.level as DifficultyLevel]}`,
+        onClear: () => update('level', 'all'),
+      });
+    }
+    if (filters.duration !== 'all') {
+      const durationLabel =
+        filters.duration === 'short'
+          ? '3분 이하'
+          : filters.duration === 'medium'
+            ? '3~5분'
+            : '5분 초과';
+      chips.push({
+        key: 'duration',
+        label: `시간: ${durationLabel}`,
+        onClear: () => update('duration', 'all'),
+      });
+    }
+    if (filters.review !== 'all') {
+      const reviewLabel =
+        filters.review === 'approved'
+          ? '검토 완료'
+          : filters.review === 'pending'
+            ? '검토 전'
+            : '재검토 필요';
+      chips.push({
+        key: 'review',
+        label: `검토: ${reviewLabel}`,
+        onClear: () => update('review', 'all'),
+      });
+    }
+    if (filters.motionDraft !== 'all') {
+      chips.push({
+        key: 'motionDraft',
+        label: filters.motionDraft === 'proposal' ? '도해 초안 있음' : '도해 초안 없음',
+        onClear: () => update('motionDraft', 'all'),
+      });
+    }
+    if (filters.favorite !== 'all') {
+      const favLabel =
+        filters.favorite === 'saved'
+          ? '저장됨'
+          : FAVORITE_TAG_META[filters.favorite as FavoriteTag]?.label ?? filters.favorite;
+      chips.push({
+        key: 'favorite',
+        label: `즐겨찾기: ${favLabel}`,
+        onClear: () => update('favorite', 'all'),
+      });
+    }
+    if (filters.owned) {
+      chips.push({
+        key: 'owned',
+        label: '내 보유 장비만',
+        onClear: () => update('owned', false),
+      });
+    }
+    if (filters.hideRecent) {
+      chips.push({
+        key: 'hideRecent',
+        label: '최근 10일 제외',
+        onClear: () => update('hideRecent', false),
+      });
+    }
+    return chips;
+  }, [filters]);
   const addExercise = (exercise: PilatesExercise) => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
@@ -1008,7 +1147,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   aria-label="동작 검색"
                   value={filters.search}
                   onChange={(event) => update('search', event.target.value)}
-                  placeholder="한글·영문 이름, 부위로 검색"
+                  placeholder="한글·영문 이름, 부위·기구·소도구로 검색"
                 />
                 {filters.search && (
                   <PfButton
@@ -1064,6 +1203,22 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 즐겨찾기
               </button>
             </div>
+            {activeFilterChips.length > 0 && (
+              <div className="library-active-filters" role="group" aria-label="적용된 검색·필터">
+                {activeFilterChips.map((chip) => (
+                  <button
+                    type="button"
+                    key={chip.key}
+                    className="library-active-filter-chip"
+                    onClick={chip.onClear}
+                    aria-label={`${chip.label} 필터 해제`}
+                  >
+                    <span>{chip.label}</span>
+                    <X size={12} aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            )}
             {showFilters && (
               <p className="library-filter-explanation">
                 기구는 여러 개 선택할 수 있어요. 선택 기구 중 하나와 일치하는 동작을 찾으며, ‘내
@@ -1237,24 +1392,30 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 {PATTERN_STUDIES.slice(
                   patternPage * PATTERNS_PER_PAGE,
                   (patternPage + 1) * PATTERNS_PER_PAGE,
-                ).map((reference) => (
-                  <button
-                    type="button"
-                    className="ml-pattern-tile"
-                    key={`${reference.family}-${reference.variantId}`}
-                    onClick={() => openPatternPreview(reference)}
-                    aria-label={`${reference.title} 도해 초안 보기`}
-                  >
-                    <div className="ml-pattern-tile-art">
-                      <MotionPatternThumbnail reference={reference} />
-                      <span>도해 초안</span>
-                    </div>
-                    <strong>{reference.title}</strong>
-                    <span className="ml-pattern-tile-link">
-                      패턴 참고 <Play size={12} />
-                    </span>
-                  </button>
-                ))}
+                ).map((reference) => {
+                  const isPatternSelected =
+                    previewReference?.family === reference.family &&
+                    previewReference?.variantId === reference.variantId;
+                  return (
+                    <button
+                      type="button"
+                      className={`ml-pattern-tile ${isPatternSelected ? 'is-selected' : ''}`.trim()}
+                      key={`${reference.family}-${reference.variantId}`}
+                      onClick={() => openPatternPreview(reference)}
+                      aria-label={`${reference.title} 도해 초안 보기`}
+                      aria-pressed={isPatternSelected}
+                    >
+                      <div className="ml-pattern-tile-art">
+                        <MotionPatternThumbnail reference={reference} />
+                        <span>도해 초안</span>
+                      </div>
+                      <strong>{reference.title}</strong>
+                      <span className="ml-pattern-tile-link">
+                        패턴 참고 <Play size={12} />
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
               <div className="ml-pattern-pages">
                 <span>
@@ -1356,7 +1517,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
           )}
 
           <div className="library-results-bar">
-            <p>
+            <p role="status" aria-live="polite">
               <strong>{filtered.length}</strong>개의 동작{' '}
               <span className="muted">· 작은 선택이 좋은 수업을 만듭니다</span>
             </p>
@@ -1370,7 +1531,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             동작을 바로 추가하고 순서를 바꾸세요. 검토 기록은 선택 사항입니다.
           </p>
           {filtered.length > 0 ? (
-            <div className="movement-card-grid">
+            <div className="movement-card-grid" ref={cardGridRef}>
               {filtered.slice(0, notesVisibleCount).map((exercise) => {
                 const provenance = getMovementProvenance(exercise);
                 const reviewState = getExerciseReviewState(exercise);
@@ -1379,6 +1540,13 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 const ideaMeta = isIdea ? readMovementIdeaDraft(exercise) : null;
                 const patterns = getMotionPatternReferences(exercise.id);
                 const isFavorite = exercise.favoriteTag !== 'none';
+                const inSequence = activeSteps.some(
+                  (step) => !isRestStep(step) && step.exerciseId === exercise.id,
+                );
+                const equipmentMeta = getExerciseEquipment(exercise);
+                const hasValidIdeaPhoto = Boolean(
+                  ideaMeta?.photoDataUrl && !brokenPhotoIds[exercise.id],
+                );
                 const lastTaught = getExerciseLastTaughtInfo(
                   exercise.id,
                   historyLogs,
@@ -1387,7 +1555,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 return (
                   <PfMovementCard
                     variant={isIdea ? 'idea' : 'catalog'}
-                    className={`movement-card movement-${exercise.apparatus}`}
+                    selected={inSequence}
+                    className={`movement-card movement-${exercise.apparatus} ${
+                      inSequence ? 'is-in-sequence' : ''
+                    }`.trim()}
                     key={exercise.id}
                   >
                     <div className="movement-card-art">
@@ -1408,10 +1579,34 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                       >
                         {patterns[0] ? (
                           <MotionPatternThumbnail reference={patterns[0]} />
+                        ) : hasValidIdeaPhoto && ideaMeta?.photoDataUrl ? (
+                          <img
+                            src={ideaMeta.photoDataUrl}
+                            alt=""
+                            aria-hidden="true"
+                            className="movement-idea-photo"
+                            loading="lazy"
+                            onError={() =>
+                              setBrokenPhotoIds((previous) => ({
+                                ...previous,
+                                [exercise.id]: true,
+                              }))
+                            }
+                          />
                         ) : (
-                          <div className="ml-unmapped-art" aria-hidden="true">
+                          <div
+                            className={`ml-unmapped-art ml-unmapped-art--${exercise.apparatus}`}
+                            aria-hidden="true"
+                          >
+                            <span className="ml-unmapped-meta">
+                              {APPARATUS_LABELS[exercise.apparatus].ko} ·{' '}
+                              {POSITION_LABELS[exercise.bodyPosition].ko}
+                            </span>
                             <span>움직임을 기록할 자리</span>
                             <i />
+                            <span className="ml-unmapped-focus">
+                              {exercise.targetMuscles.slice(0, 2).join(' · ') || '호흡 · 정렬'}
+                            </span>
                             <span>MOTION STUDY PENDING</span>
                           </div>
                         )}
@@ -1441,14 +1636,27 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                     </div>
                     <div className="movement-card-content">
                       <div className="movement-card-tags">
+                        {inSequence && (
+                          <PfBadge tone="sage" className="movement-selected-badge">
+                            <Check size={11} aria-hidden="true" /> 수업안 포함
+                          </PfBadge>
+                        )}
                         <PfBadge tone="neutral">
                           {LEVEL_NAMES[exercise.level]} · Lv {exercise.level}
+                        </PfBadge>
+                        <PfBadge tone="neutral" className="movement-position-badge">
+                          {POSITION_LABELS[exercise.bodyPosition].ko}
                         </PfBadge>
                         <PfBadge tone="neutral">
                           <Clock3 size={12} />
                           {exercise.defaultDurationMin}분
                           {exercise.isUnilateral ? ' · 양쪽 포함' : ''}
                         </PfBadge>
+                        {equipmentMeta.requiredProps.slice(0, 2).map((propId) => (
+                          <PfBadge key={propId} tone="neutral" className="movement-prop-badge">
+                            {propLabel(propId)}
+                          </PfBadge>
+                        ))}
                       </div>
                       <h2>
                         <button type="button" onClick={() => onOpenYouTubePreview(exercise)}>
@@ -1483,16 +1691,39 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                           ? ideaMeta?.subjectiveFeeling
                             ? `느낌 메모: ${ideaMeta.subjectiveFeeling}`
                             : ideaMeta?.ideaLine || exercise.cues[0]
-                          : approved
-                            ? exercise.targetMuscles.slice(0, 3).join(' · ') || '검토한 계획 메모'
-                            : '미검수 입력값 · 검토할 계획 자료'}
+                          : exercise.targetMuscles.slice(0, 3).join(' · ') ||
+                            exercise.cues[0] ||
+                            '체간 안정 · 호흡 연결'}
                       </p>
+                      {exercise.targetMuscles.length > 0 && (
+                        <div className="movement-card-focus-tags" aria-label="타겟 부위 태그">
+                          {exercise.targetMuscles.slice(0, 3).map((muscle) => {
+                            const isTagSelected =
+                              filters.search.trim().toLocaleLowerCase() ===
+                              muscle.trim().toLocaleLowerCase();
+                            return (
+                              <button
+                                type="button"
+                                key={muscle}
+                                className={`movement-focus-tag ${
+                                  isTagSelected ? 'is-selected' : ''
+                                }`.trim()}
+                                aria-pressed={isTagSelected}
+                                aria-label={`${muscle} 태그로 검색`}
+                                onClick={() => update('search', isTagSelected ? '' : muscle)}
+                              >
+                                #{muscle}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                       <div className="movement-provenance">
                         <span className={`source-dot source-${provenance.kind}`} />
                         {exercise.sourceReference
                           ? `원출처 보존 · ${exercise.sourceReference.publisher}`
                           : provenance.shortLabel}
-                        {!getExerciseEquipment(exercise).requirementsKnown && (
+                        {!equipmentMeta.requirementsKnown && (
                           <span className="movement-requirements-unknown">요구 조건 미확인</span>
                         )}
                         {recent.has(exercise.id) && (
@@ -1504,15 +1735,22 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                           <p>
                             관련 패턴 도해 {patterns.length}종 <span>· 전문가 미검토</span>
                           </p>
-                          {patterns.map((pattern) => (
-                            <button
-                              type="button"
-                              key={`${pattern.family}-${pattern.variantId}`}
-                              onClick={() => openPatternPreview(pattern)}
-                            >
-                              <Play size={13} /> {pattern.title} 보기
-                            </button>
-                          ))}
+                          {patterns.map((pattern) => {
+                            const isPatternSelected =
+                              previewReference?.family === pattern.family &&
+                              previewReference?.variantId === pattern.variantId;
+                            return (
+                              <button
+                                type="button"
+                                key={`${pattern.family}-${pattern.variantId}`}
+                                className={isPatternSelected ? 'is-selected' : undefined}
+                                aria-pressed={isPatternSelected}
+                                onClick={() => openPatternPreview(pattern)}
+                              >
+                                <Play size={13} /> {pattern.title} 보기
+                              </button>
+                            );
+                          })}
                         </div>
                       ) : (
                         <p className="ml-card-pending">
@@ -1547,15 +1785,27 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               })}
             </div>
           ) : (
-            <div className="library-empty panel">
-              <Search size={29} />
+            <div className="library-empty panel" role="status" aria-live="polite">
+              <Search size={29} aria-hidden="true" />
               <h2>조건에 맞는 동작이 없어요.</h2>
+              {(filters.search.trim() || activeFilterCount > 0) && (
+                <p className="library-empty-context">
+                  {filters.search.trim() ? `‘${filters.search.trim()}’ 검색어` : ''}
+                  {filters.search.trim() && activeFilterCount > 0 ? ' · ' : ''}
+                  {activeFilterCount > 0 ? `필터 ${activeFilterCount}개 적용 중` : ''}
+                </p>
+              )}
               <p className="muted">
                 검색어를 줄이거나 필터를 조정해 보세요.
                 <br />
                 직접 찾은 유튜브 레퍼런스도 추가할 수 있어요.
               </p>
-              <div>
+              <div className="library-empty-actions">
+                {filters.search.trim() && (
+                  <PfButton variant="secondary" onClick={() => update('search', '')}>
+                    검색어 지우기
+                  </PfButton>
+                )}
                 <PfButton variant="primary" onClick={() => setFilters({ ...INITIAL_FILTERS })}>
                   전체 동작 보기
                 </PfButton>
@@ -1572,12 +1822,20 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               </p>
               <PfButton
                 variant="secondary"
-                onClick={() =>
+                onClick={() => {
+                  const firstNewIndex = notesVisibleCount;
                   setNotesVisible({
                     signature: notesSignature,
                     limit: notesVisibleCount + 12,
-                  })
-                }
+                  });
+                  requestAnimationFrame(() => {
+                    const cards =
+                      cardGridRef.current?.querySelectorAll<HTMLElement>('.movement-card');
+                    const nextCardButton =
+                      cards?.[firstNewIndex]?.querySelector<HTMLElement>('h2 button');
+                    nextCardButton?.focus();
+                  });
+                }}
               >
                 동작 노트 더 보기 <Plus size={14} />
               </PfButton>
@@ -1670,7 +1928,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
           </p>
         </div>
       )}
-      <div className="ml-selection-return">
+      <div className="ml-selection-return" data-has-selection={selectedCount > 0}>
         <p>
           <strong>{selectedCount}개</strong>
           <span>현재 수업안에 담긴 동작</span>

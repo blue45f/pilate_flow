@@ -119,4 +119,72 @@ describe('Atlas reports actual append outcome', () => {
       screen.getByRole('button', { name: `${mat.nameKo} 수업안에 추가` }),
     ).not.toHaveTextContent('추가됨');
   });
+
+  it('surfaces real target muscle tags, active filter chips, Korean prop/level search, and empty-state recovery', () => {
+    const { container } = renderAtlas();
+
+    // Unapproved catalog cards display real targetMuscles and clickable focus tags instead of placeholder
+    expect(container.textContent).not.toContain('미검수 입력값 · 검토할 계획 자료');
+    const focusTagButtons = container.querySelectorAll('.movement-focus-tag');
+    expect(focusTagButtons.length).toBeGreaterThan(0);
+
+    // Clicking a focus tag filters by that muscle and renders an active filter chip
+    const firstTag = focusTagButtons[0] as HTMLButtonElement;
+    const tagLabel = firstTag.textContent?.replace(/^#/, '') ?? '';
+    fireEvent.click(firstTag);
+    const activeChipGroup = screen.getByRole('group', { name: '적용된 검색·필터' });
+    expect(activeChipGroup).toHaveTextContent(`검색: ${tagLabel}`);
+
+    // Clearing via the active filter chip restores all movements
+    fireEvent.click(screen.getByRole('button', { name: `검색: ${tagLabel} 필터 해제` }));
+    expect(screen.queryByRole('group', { name: '적용된 검색·필터' })).toBeNull();
+
+    // Korean prop search ("써클링") finds exercises requiring magic circle
+    const searchInput = screen.getByRole('searchbox', { name: '동작 검색' });
+    fireEvent.change(searchInput, { target: { value: '써클링' } });
+    expect(container.querySelectorAll('.movement-card').length).toBeGreaterThan(0);
+
+    // Empty search shows query context and "검색어 지우기" action
+    fireEvent.change(searchInput, { target: { value: '없는동작검색어999' } });
+    const emptyRegion = container.querySelector('.library-empty') as HTMLElement;
+    expect(emptyRegion).not.toBeNull();
+    expect(emptyRegion).toHaveTextContent('‘없는동작검색어999’ 검색어');
+    const emptyClearBtn = Array.from(emptyRegion.querySelectorAll('button')).find((btn) =>
+      btn.textContent?.includes('검색어 지우기'),
+    );
+    expect(emptyClearBtn).toBeDefined();
+    fireEvent.click(emptyClearBtn!);
+    expect(container.querySelector('.library-empty')).toBeNull();
+  });
+
+  it('reflects persistent sequence selection state, pattern tile selection, and enriched unmapped fallback', () => {
+    const { container } = renderAtlas();
+
+    // Add mat movement and verify persistent in-sequence state remains even after toast timer expires
+    add(mat.nameKo);
+    act(() => vi.advanceTimersByTime(3000));
+    const matCard = screen
+      .getByRole('button', { name: mat.nameKo })
+      .closest('.movement-card') as HTMLElement;
+    expect(matCard).toHaveClass('is-selected', 'is-in-sequence');
+    expect(matCard.querySelector('.movement-selected-badge')).toHaveTextContent('수업안 포함');
+    expect(container.querySelector('.ml-selection-return')).toHaveAttribute(
+      'data-has-selection',
+      'true',
+    );
+
+    // Pattern tile reflects aria-pressed and .is-selected when active
+    const firstTile = container.querySelector('.ml-pattern-tile') as HTMLButtonElement;
+    expect(firstTile).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(firstTile);
+    expect(firstTile).toHaveAttribute('aria-pressed', 'true');
+    expect(firstTile).toHaveClass('is-selected');
+
+    // Unmapped movement card shows apparatus + posture meta and target focus in .ml-unmapped-art
+    const unmappedArt = matCard.querySelector('.ml-unmapped-art');
+    expect(unmappedArt).not.toBeNull();
+    expect(unmappedArt?.querySelector('.ml-unmapped-meta')).not.toBeNull();
+    expect(unmappedArt?.querySelector('.ml-unmapped-focus')).not.toBeNull();
+  });
 });
+

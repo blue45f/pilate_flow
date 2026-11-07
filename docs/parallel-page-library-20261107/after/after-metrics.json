@@ -1,0 +1,121 @@
+{
+  "mode": "after",
+  "capturedAt": "2026-11-07T05:01:14.398Z",
+  "viewports": {
+    "320": {
+      "innerWidth": 320,
+      "docScrollWidth": 320,
+      "hasHorizontalOverflow": false,
+      "visibleCardCount": 12,
+      "apparatusTabsVisible": true,
+      "placeholderTargetCount": 0,
+      "realMuscleTagCount": 12,
+      "englishWhiteSpace": "normal",
+      "targetWhiteSpace": "normal",
+      "cardOverflowCount": 0,
+      "distinctCardArtBackgrounds": [
+        "rgb(236, 238, 228)",
+        "rgb(231, 236, 227)",
+        "rgb(239, 232, 221)",
+        "rgb(238, 233, 222)",
+        "rgb(234, 236, 225)"
+      ]
+    },
+    "390": {
+      "innerWidth": 390,
+      "docScrollWidth": 390,
+      "hasHorizontalOverflow": false,
+      "visibleCardCount": 12,
+      "apparatusTabsVisible": true,
+      "placeholderTargetCount": 0,
+      "realMuscleTagCount": 12,
+      "englishWhiteSpace": "normal",
+      "targetWhiteSpace": "normal",
+      "cardOverflowCount": 0,
+      "distinctCardArtBackgrounds": [
+        "rgb(236, 238, 228)",
+        "rgb(231, 236, 227)",
+        "rgb(239, 232, 221)",
+        "rgb(238, 233, 222)",
+        "rgb(234, 236, 225)"
+      ]
+    },
+    "768": {
+      "innerWidth": 768,
+      "docScrollWidth": 768,
+      "hasHorizontalOverflow": false,
+      "visibleCardCount": 12,
+      "apparatusTabsVisible": true,
+      "placeholderTargetCount": 0,
+      "realMuscleTagCount": 12,
+      "englishWhiteSpace": "normal",
+      "targetWhiteSpace": "normal",
+      "cardOverflowCount": 0,
+      "distinctCardArtBackgrounds": [
+        "rgb(236, 238, 228)",
+        "rgb(231, 236, 227)",
+        "rgb(239, 232, 221)",
+        "rgb(238, 233, 222)",
+        "rgb(234, 236, 225)"
+      ]
+    },
+    "1440": {
+      "innerWidth": 1440,
+      "docScrollWidth": 1440,
+      "hasHorizontalOverflow": false,
+      "visibleCardCount": 12,
+      "apparatusTabsVisible": true,
+      "placeholderTargetCount": 0,
+      "realMuscleTagCount": 12,
+      "englishWhiteSpace": "normal",
+      "targetWhiteSpace": "normal",
+      "cardOverflowCount": 0,
+      "distinctCardArtBackgrounds": [
+        "rgb(236, 238, 228)",
+        "rgb(231, 236, 227)",
+        "rgb(239, 232, 221)",
+        "rgb(238, 233, 222)",
+        "rgb(234, 236, 225)"
+      ]
+    },
+    "zoom200": {
+      "innerWidth": 1280,
+      "docScrollWidth": 1280,
+      "hasHorizontalOverflow": false,
+      "visibleCardCount": 12,
+      "apparatusTabsVisible": true,
+      "placeholderTargetCount": 0,
+      "realMuscleTagCount": 12,
+      "englishWhiteSpace": "normal",
+      "targetWhiteSpace": "normal",
+      "cardOverflowCount": 0,
+      "distinctCardArtBackgrounds": [
+        "rgb(236, 238, 228)",
+        "rgb(231, 236, 227)",
+        "rgb(239, 232, 221)",
+        "rgb(238, 233, 222)",
+        "rgb(234, 236, 225)"
+      ]
+    }
+  },
+  "functionalProbes": {
+    "addResult": {
+      "returnBarText": "0개현재 수업안에 담긴 동작수업 구성으로 돌아가기 ",
+      "returnBarHasSelection": false,
+      "hasSelectedClass": false,
+      "hasSelectedBadge": false
+    },
+    "patternResult": {
+      "ariaPressed": "true",
+      "hasSelectedClass": true,
+      "previewRegionOpen": true
+    },
+    "propSearchCount": 3,
+    "emptyStateProbe": {
+      "rendered": true,
+      "text": "조건에 맞는 동작이 없어요.‘써클링존재하지않는동작검색어999’ 검색어검색어를 줄이거나 필터를 조정해 보세요.직접 찾은 유튜브 레퍼런스도 추가할 수 있어요.검색어 지우기전체 동작 보기 참조 추가",
+      "hasClearSearchBtn": true,
+      "hasShowAllBtn": true
+    }
+  }
+}

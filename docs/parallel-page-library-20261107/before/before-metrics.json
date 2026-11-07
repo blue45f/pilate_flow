@@ -1,0 +1,120 @@
+{
+  "mode": "before",
+  "capturedAt": "2026-11-07T04:45:41.310Z",
+  "viewports": {
+    "320": {
+      "innerWidth": 320,
+      "docScrollWidth": 320,
+      "hasHorizontalOverflow": false,
+      "visibleCardCount": 12,
+      "apparatusTabsVisible": false,
+      "placeholderTargetCount": 12,
+      "realMuscleTagCount": 0,
+      "englishWhiteSpace": "nowrap",
+      "targetWhiteSpace": "nowrap",
+      "cardOverflowCount": 0,
+      "distinctCardArtBackgrounds": [
+        "rgb(239, 238, 228)",
+        "rgb(229, 234, 226)",
+        "rgb(234, 236, 226)",
+        "rgb(240, 231, 220)",
+        "rgb(239, 233, 222)"
+      ]
+    },
+    "390": {
+      "innerWidth": 390,
+      "docScrollWidth": 390,
+      "hasHorizontalOverflow": false,
+      "visibleCardCount": 12,
+      "apparatusTabsVisible": false,
+      "placeholderTargetCount": 12,
+      "realMuscleTagCount": 0,
+      "englishWhiteSpace": "nowrap",
+      "targetWhiteSpace": "nowrap",
+      "cardOverflowCount": 0,
+      "distinctCardArtBackgrounds": [
+        "rgb(239, 238, 228)",
+        "rgb(229, 234, 226)",
+        "rgb(234, 236, 226)",
+        "rgb(240, 231, 220)",
+        "rgb(239, 233, 222)"
+      ]
+    },
+    "768": {
+      "innerWidth": 768,
+      "docScrollWidth": 768,
+      "hasHorizontalOverflow": false,
+      "visibleCardCount": 12,
+      "apparatusTabsVisible": true,
+      "placeholderTargetCount": 12,
+      "realMuscleTagCount": 0,
+      "englishWhiteSpace": "nowrap",
+      "targetWhiteSpace": "nowrap",
+      "cardOverflowCount": 0,
+      "distinctCardArtBackgrounds": [
+        "rgb(239, 238, 228)",
+        "rgb(229, 234, 226)",
+        "rgb(234, 236, 226)",
+        "rgb(240, 231, 220)",
+        "rgb(239, 233, 222)"
+      ]
+    },
+    "1440": {
+      "innerWidth": 1440,
+      "docScrollWidth": 1440,
+      "hasHorizontalOverflow": false,
+      "visibleCardCount": 12,
+      "apparatusTabsVisible": true,
+      "placeholderTargetCount": 12,
+      "realMuscleTagCount": 0,
+      "englishWhiteSpace": "nowrap",
+      "targetWhiteSpace": "nowrap",
+      "cardOverflowCount": 0,
+      "distinctCardArtBackgrounds": [
+        "rgb(239, 238, 228)",
+        "rgb(229, 234, 226)",
+        "rgb(234, 236, 226)",
+        "rgb(240, 231, 220)",
+        "rgb(239, 233, 222)"
+      ]
+    },
+    "zoom200": {
+      "innerWidth": 1280,
+      "docScrollWidth": 1280,
+      "hasHorizontalOverflow": false,
+      "visibleCardCount": 12,
+      "apparatusTabsVisible": true,
+      "placeholderTargetCount": 12,
+      "realMuscleTagCount": 0,
+      "englishWhiteSpace": "nowrap",
+      "targetWhiteSpace": "nowrap",
+      "cardOverflowCount": 0,
+      "distinctCardArtBackgrounds": [
+        "rgb(239, 238, 228)",
+        "rgb(229, 234, 226)",
+        "rgb(234, 236, 226)",
+        "rgb(240, 231, 220)",
+        "rgb(239, 233, 222)"
+      ]
+    }
+  },
+  "functionalProbes": {
+    "addResult": {
+      "returnBarText": "0개현재 수업안에 담긴 동작수업 구성으로 돌아가기 ",
+      "hasSelectedClass": false,
+      "hasSelectedBadge": false
+    },
+    "patternResult": {
+      "ariaPressed": null,
+      "hasSelectedClass": false,
+      "previewRegionOpen": true
+    },
+    "propSearchCount": 2,
+    "emptyStateProbe": {
+      "rendered": true,
+      "text": "조건에 맞는 동작이 없어요.검색어를 줄이거나 필터를 조정해 보세요.직접 찾은 유튜브 레퍼런스도 추가할 수 있어요.전체 동작 보기 참조 추가",
+      "hasClearSearchBtn": false,
+      "hasShowAllBtn": true
+    }
+  }
+}
