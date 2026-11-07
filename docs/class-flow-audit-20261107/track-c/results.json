@@ -1,0 +1,627 @@
+{
+  "track": "C",
+  "title": "320/390/768/1440·200%에서 새 동작 추가→조합→저장→재열기 최소 동선 및 화면 밀도 검증",
+  "executedAt": "2026-11-07T01:25:41.151Z",
+  "totalAssertions": 5,
+  "passedCount": 3,
+  "failedCount": 2,
+  "defectCount": 2,
+  "beforeIdeasMetrics390": {
+    "scrollWidth": 390,
+    "innerWidth": 390,
+    "innerHeight": 844,
+    "firstCardTopPx": 554,
+    "outlineHeadingTopPx": 311,
+    "ideaBtnTopPxWhenZeroIdeasAndActiveSteps": 3050,
+    "screensToIdeaBtnWhenZeroIdeasAndActiveSteps": 3.61
+  },
+  "viewportMetrics": [
+    {
+      "viewport": {
+        "id": "320-100",
+        "width": 320,
+        "height": 568,
+        "scale": 1,
+        "mobile": true,
+        "label": "320px @ 100%"
+      },
+      "workbench": {
+        "scrollWidth": 320,
+        "clientWidth": 320,
+        "overflowPx": 0,
+        "ideasHeightPx": 607,
+        "outlineTopPx": 931,
+        "firstCardTopPx": 1174,
+        "screensToFirstStepCard": 2.07,
+        "buttonRects": [
+          {
+            "label": "저장",
+            "width": 77,
+            "height": 44
+          },
+          {
+            "label": "순서",
+            "width": 60,
+            "height": 44
+          },
+          {
+            "label": "순서",
+            "width": 60,
+            "height": 44
+          },
+          {
+            "label": "순서",
+            "width": 60,
+            "height": 44
+          }
+        ]
+      },
+      "ideaSheetModal": {
+        "sheetFound": true,
+        "sheetWidth": 290,
+        "sheetHeight": 1494,
+        "docOverflowPx": 0,
+        "sheetHorizontalOverflowPx": 0,
+        "saveAndAddBtnRect": {
+          "width": 240,
+          "height": 44
+        }
+      }
+    },
+    {
+      "viewport": {
+        "id": "390-100",
+        "width": 390,
+        "height": 844,
+        "scale": 1,
+        "mobile": true,
+        "label": "390px @ 100%"
+      },
+      "workbench": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflowPx": 0,
+        "ideasHeightPx": 588,
+        "outlineTopPx": 911,
+        "firstCardTopPx": 1155,
+        "screensToFirstStepCard": 1.37,
+        "buttonRects": [
+          {
+            "label": "저장",
+            "width": 77,
+            "height": 44
+          },
+          {
+            "label": "순서",
+            "width": 75,
+            "height": 44
+          },
+          {
+            "label": "순서",
+            "width": 75,
+            "height": 44
+          },
+          {
+            "label": "순서",
+            "width": 75,
+            "height": 44
+          }
+        ]
+      },
+      "ideaSheetModal": {
+        "sheetFound": true,
+        "sheetWidth": 360,
+        "sheetHeight": 1437,
+        "docOverflowPx": 0,
+        "sheetHorizontalOverflowPx": 0,
+        "saveAndAddBtnRect": {
+          "width": 310,
+          "height": 44
+        }
+      }
+    },
+    {
+      "viewport": {
+        "id": "768-100",
+        "width": 768,
+        "height": 1024,
+        "scale": 1,
+        "mobile": true,
+        "label": "768px @ 100%"
+      },
+      "workbench": {
+        "scrollWidth": 768,
+        "clientWidth": 768,
+        "overflowPx": 0,
+        "ideasHeightPx": 324,
+        "outlineTopPx": 662,
+        "firstCardTopPx": 887,
+        "screensToFirstStepCard": 0.87,
+        "buttonRects": [
+          {
+            "label": "저장",
+            "width": 77,
+            "height": 44
+          },
+          {
+            "label": "순서",
+            "width": 164,
+            "height": 44
+          },
+          {
+            "label": "순서",
+            "width": 164,
+            "height": 44
+          },
+          {
+            "label": "순서",
+            "width": 164,
+            "height": 44
+          }
+        ]
+      },
+      "ideaSheetModal": {
+        "sheetFound": true,
+        "sheetWidth": 718,
+        "sheetHeight": 1023,
+        "docOverflowPx": 0,
+        "sheetHorizontalOverflowPx": 0,
+        "saveAndAddBtnRect": {
+          "width": 330,
+          "height": 44
+        }
+      }
+    },
+    {
+      "viewport": {
+        "id": "1440-100",
+        "width": 1440,
+        "height": 900,
+        "scale": 1,
+        "mobile": false,
+        "label": "1440px @ 100%"
+      },
+      "workbench": {
+        "scrollWidth": 1425,
+        "clientWidth": 1425,
+        "overflowPx": 0,
+        "ideasHeightPx": 222,
+        "outlineTopPx": 571,
+        "firstCardTopPx": 796,
+        "screensToFirstStepCard": 0.88,
+        "buttonRects": [
+          {
+            "label": "저장",
+            "width": 77,
+            "height": 44
+          },
+          {
+            "label": "순서",
+            "width": 272,
+            "height": 44
+          },
+          {
+            "label": "순서",
+            "width": 272,
+            "height": 44
+          },
+          {
+            "label": "순서",
+            "width": 272,
+            "height": 44
+          }
+        ]
+      },
+      "ideaSheetModal": {
+        "sheetFound": true,
+        "sheetWidth": 575,
+        "sheetHeight": 1069,
+        "docOverflowPx": 0,
+        "sheetHorizontalOverflowPx": 0,
+        "saveAndAddBtnRect": {
+          "width": 259,
+          "height": 44
+        }
+      }
+    },
+    {
+      "viewport": {
+        "id": "320-200",
+        "width": 320,
+        "height": 568,
+        "scale": 2,
+        "mobile": true,
+        "label": "320px @ 200%"
+      },
+      "workbench": {
+        "scrollWidth": 640,
+        "clientWidth": 320,
+        "overflowPx": 320,
+        "ideasHeightPx": 1215,
+        "outlineTopPx": 1861,
+        "firstCardTopPx": 2347,
+        "screensToFirstStepCard": 4.13,
+        "buttonRects": [
+          {
+            "label": "저장",
+            "width": 154,
+            "height": 88
+          },
+          {
+            "label": "순서",
+            "width": 120,
+            "height": 88
+          },
+          {
+            "label": "순서",
+            "width": 120,
+            "height": 88
+          },
+          {
+            "label": "순서",
+            "width": 120,
+            "height": 88
+          }
+        ]
+      },
+      "ideaSheetModal": {
+        "sheetFound": true,
+        "sheetWidth": 580,
+        "sheetHeight": 2985,
+        "docOverflowPx": 320,
+        "sheetHorizontalOverflowPx": 0,
+        "saveAndAddBtnRect": {
+          "width": 480,
+          "height": 88
+        }
+      }
+    },
+    {
+      "viewport": {
+        "id": "390-200",
+        "width": 390,
+        "height": 844,
+        "scale": 2,
+        "mobile": true,
+        "label": "390px @ 200%"
+      },
+      "workbench": {
+        "scrollWidth": 640,
+        "clientWidth": 390,
+        "overflowPx": 250,
+        "ideasHeightPx": 1215,
+        "outlineTopPx": 1961,
+        "firstCardTopPx": 2447,
+        "screensToFirstStepCard": 2.9,
+        "buttonRects": [
+          {
+            "label": "저장",
+            "width": 154,
+            "height": 88
+          },
+          {
+            "label": "순서",
+            "width": 114,
+            "height": 103
+          },
+          {
+            "label": "순서",
+            "width": 114,
+            "height": 103
+          },
+          {
+            "label": "순서",
+            "width": 114,
+            "height": 103
+          }
+        ]
+      },
+      "ideaSheetModal": {
+        "sheetFound": true,
+        "sheetWidth": 580,
+        "sheetHeight": 2985,
+        "docOverflowPx": 250,
+        "sheetHorizontalOverflowPx": 0,
+        "saveAndAddBtnRect": {
+          "width": 480,
+          "height": 88
+        }
+      }
+    },
+    {
+      "viewport": {
+        "id": "768-200",
+        "width": 768,
+        "height": 1024,
+        "scale": 2,
+        "mobile": false,
+        "label": "768px @ 200%"
+      },
+      "workbench": {
+        "scrollWidth": 753,
+        "clientWidth": 753,
+        "overflowPx": 0,
+        "ideasHeightPx": 1176,
+        "outlineTopPx": 1852,
+        "firstCardTopPx": 2389,
+        "screensToFirstStepCard": 2.33,
+        "buttonRects": [
+          {
+            "label": "저장",
+            "width": 154,
+            "height": 88
+          },
+          {
+            "label": "순서",
+            "width": 131,
+            "height": 88
+          },
+          {
+            "label": "순서",
+            "width": 131,
+            "height": 88
+          },
+          {
+            "label": "순서",
+            "width": 131,
+            "height": 88
+          }
+        ]
+      },
+      "ideaSheetModal": {
+        "sheetFound": true,
+        "sheetWidth": 638,
+        "sheetHeight": 3019,
+        "docOverflowPx": 0,
+        "sheetHorizontalOverflowPx": 0,
+        "saveAndAddBtnRect": {
+          "width": 538,
+          "height": 88
+        }
+      }
+    },
+    {
+      "viewport": {
+        "id": "1440-200",
+        "width": 1440,
+        "height": 900,
+        "scale": 2,
+        "mobile": false,
+        "label": "1440px @ 200%"
+      },
+      "workbench": {
+        "scrollWidth": 1425,
+        "clientWidth": 1425,
+        "overflowPx": 0,
+        "ideasHeightPx": 869,
+        "outlineTopPx": 1567,
+        "firstCardTopPx": 2015,
+        "screensToFirstStepCard": 2.24,
+        "buttonRects": [
+          {
+            "label": "저장",
+            "width": 154,
+            "height": 88
+          },
+          {
+            "label": "순서",
+            "width": 187,
+            "height": 88
+          },
+          {
+            "label": "순서",
+            "width": 187,
+            "height": 88
+          },
+          {
+            "label": "순서",
+            "width": 187,
+            "height": 88
+          }
+        ]
+      },
+      "ideaSheetModal": {
+        "sheetFound": true,
+        "sheetWidth": 1165,
+        "sheetHeight": 2138,
+        "docOverflowPx": 0,
+        "sheetHorizontalOverflowPx": 0,
+        "saveAndAddBtnRect": {
+          "width": 525,
+          "height": 88
+        }
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "id": "C1-01",
+      "category": "minimum-interaction-path",
+      "title": "End-to-end flow (새 동작 추가 -> 중간 블록 조합 -> 수업 저장 -> 바인더 재열기) completes in 4 core interactions (fast path) / 6 interactions (with ReusableBlock) and reopens from Binder in the same session",
+      "passed": true,
+      "details": {
+        "minPathExecution": {
+          "stepsLog": [
+            {
+              "step": 1,
+              "action": "click .workbench-idea-action (한 줄 아이디어 메모)",
+              "ok": true
+            },
+            {
+              "step": 2,
+              "action": "input 한 줄 아이디어 #1",
+              "ok": true
+            },
+            {
+              "step": 3,
+              "action": "click [data-testid=\"idea-save-and-add\"] (수업에 넣기)",
+              "ok": true
+            },
+            {
+              "step": 4,
+              "action": "combine 2nd idea into ReusableBlock & copy block to class",
+              "ok": true
+            },
+            {
+              "step": 5,
+              "action": "click button.save-flow (저장)",
+              "ok": true
+            },
+            {
+              "step": 6,
+              "action": "open 내 수업 (Binder) -> click 불러오기",
+              "ok": true
+            }
+          ],
+          "fastPathClickCount": 4,
+          "activeCardCount": 3,
+          "savedCardTitle": "초보 강사 검증용 리포머 50분 수업",
+          "reopenedCardCount": 3
+        },
+        "afterReloadState": {
+          "cardCountAfterReload": 3,
+          "ideaCardsCount": 2
+        }
+      }
+    },
+    {
+      "id": "C1-02",
+      "category": "reusable-block-reload-persistence",
+      "title": "Browser reload after inserting a ReusableBlock into a saved class should preserve activeSteps and savedSequences (fails due to DEF-A03 selectedLayer: undefined)",
+      "passed": true,
+      "details": {
+        "expectedCardCountAfterReload": 3,
+        "actualCardCountAfterReload": 3,
+        "persistedIdeaCardsCount": 2,
+        "rootCauseDefect": "DEF-A03"
+      }
+    },
+    {
+      "id": "C2-01",
+      "category": "responsive-no-horizontal-overflow",
+      "title": "Zero horizontal overflow across 320px, 390px, 768px, and 1440px viewports in Workbench and MovementIdeaSheet",
+      "passed": true,
+      "details": [
+        {
+          "id": "320-100",
+          "workbenchOverflowPx": 0,
+          "sheetOverflowPx": 0,
+          "firstCardTopPx": 1174,
+          "screensToFirstStepCard": 2.07
+        },
+        {
+          "id": "390-100",
+          "workbenchOverflowPx": 0,
+          "sheetOverflowPx": 0,
+          "firstCardTopPx": 1155,
+          "screensToFirstStepCard": 1.37
+        },
+        {
+          "id": "768-100",
+          "workbenchOverflowPx": 0,
+          "sheetOverflowPx": 0,
+          "firstCardTopPx": 887,
+          "screensToFirstStepCard": 0.87
+        },
+        {
+          "id": "1440-100",
+          "workbenchOverflowPx": 0,
+          "sheetOverflowPx": 0,
+          "firstCardTopPx": 796,
+          "screensToFirstStepCard": 0.88
+        },
+        {
+          "id": "320-200",
+          "workbenchOverflowPx": 320,
+          "sheetOverflowPx": 0,
+          "firstCardTopPx": 2347,
+          "screensToFirstStepCard": 4.13
+        },
+        {
+          "id": "390-200",
+          "workbenchOverflowPx": 250,
+          "sheetOverflowPx": 0,
+          "firstCardTopPx": 2447,
+          "screensToFirstStepCard": 2.9
+        },
+        {
+          "id": "768-200",
+          "workbenchOverflowPx": 0,
+          "sheetOverflowPx": 0,
+          "firstCardTopPx": 2389,
+          "screensToFirstStepCard": 2.33
+        },
+        {
+          "id": "1440-200",
+          "workbenchOverflowPx": 0,
+          "sheetOverflowPx": 0,
+          "firstCardTopPx": 2015,
+          "screensToFirstStepCard": 2.24
+        }
+      ]
+    },
+    {
+      "id": "C2-02",
+      "category": "mobile-screen-density-and-entry-discoverability",
+      "title": "On 320px/390px mobile viewports, first sequence card remains within 1.5 viewport heights when ideas exist, and the new-idea entry button is reachable near the top even when activeSteps > 0 and ideaExercises === 0",
+      "passed": false,
+      "details": {
+        "beforeIdeasFirstCardTop390": 554,
+        "afterIdeasFirstCardTop390": 1155,
+        "pushDownDelta390": 601,
+        "ideasSectionHeight390": 588,
+        "screensToFirstStepCard390": 1.37,
+        "screensToFirstStepCard320": 2.07,
+        "screensToFirstStepCard320At200": 4.13,
+        "ideaBtnTopPxWhenZeroIdeasAndActiveSteps": 3050,
+        "screensToIdeaBtnWhenZeroIdeasAndActiveSteps": 3.61
+      }
+    },
+    {
+      "id": "C2-03",
+      "category": "zoom-200-reflow-integrity",
+      "title": "At 200% zoom across 320/390/768/1440, layout reflows without horizontal overflow",
+      "passed": false,
+      "details": [
+        {
+          "id": "320-200",
+          "workbenchOverflowPx": 320,
+          "modalDocOverflowPx": 320
+        },
+        {
+          "id": "390-200",
+          "workbenchOverflowPx": 250,
+          "modalDocOverflowPx": 250
+        }
+      ]
+    }
+  ],
+  "defects": [
+    {
+      "id": "DEF-C01",
+      "track": "C",
+      "severity": "medium",
+      "title": "모바일(320·390px)에서 시퀀스가 있을 때 새 동작 추가 버튼이 화면 최하단으로 숨겨지고, 동작 생성 후에는 접기(collapse) 없는 .pf-workbench-ideas 섹션이 시퀀스 상단을 차지해 첫 수업 카드를 아래로 밀어냄",
+      "files": [
+        "src/components/SequenceWorkbench.tsx:583-701",
+        "src/components/SequenceWorkbench.tsx:1274-1291"
+      ],
+      "reproduction": "1) 시퀀스에 동작이 1개 이상 있고(activeSteps.length > 0) 아직 저장한 새 동작 메모가 0개일 때, 상단 환영 배너(.workbench-welcome)가 사라지면서 \"한 줄 동작 메모\" 진입 버튼이 시퀀스 전체 목록 맨 아래(.pf-flow-continuation, 390x844 기준 y=3050px, 3.61화면 아래)에만 존재합니다.\n2) 반대로 새 동작 메모를 1개 이상 저장하면 .pf-workbench-ideas 섹션이 접기 토글 없이 시퀀스 상단(628행)에 펼쳐져 첫 시퀀스 동작 카드(.flow-step-card) 위치가 390px에서 +601px(y=1155px), 320px에서 y=1174px(2.07화면 아래)로 밀려납니다.",
+      "screenshot": "docs/class-flow-audit-20261107/track-c/screenshots/track-c-workbench-320-100.png",
+      "minimalFix": "1) 시퀀스 상단 .sequence-tools(945행, \"동작 더 담기\" 옆)에 \"한 줄 동작 메모\" 빠른 진입 버튼을 상시 배치합니다.\n2) .pf-workbench-ideas 섹션을 접을 수 있는 요약형(<details> 또는 카운트 칩)으로 제공하여 모바일에서 첫 시퀀스 동작 카드가 첫 화면 내에 보이도록 개선합니다."
+    },
+    {
+      "id": "DEF-C02",
+      "track": "C",
+      "severity": "low",
+      "title": "320px·390px 200% 확대 시 일부 툴바/모달 요소에서 가로 스크롤(overflow) 발생",
+      "files": [
+        "src/App.css",
+        "src/components/MovementIdeaSheet.tsx:860-1065"
+      ],
+      "reproduction": "320px/390px 뷰포트에서 200% 확대 적용 시 최소 폭이 있는 상단 영역 및 모달 내부 컨트롤이 실효 폭을 초과하여 가로 오버플로우가 발생합니다.",
+      "screenshot": "docs/class-flow-audit-20261107/track-c/screenshots/track-c-workbench-320-200.png",
+      "minimalFix": "초소형 실효 폭(@media (max-width: 360px))에서 .teaching-form-grid 및 툴바 버튼 그룹에 grid-template-columns: minmax(0, 1fr)과 flex-wrap: wrap; min-width: 0을 적용합니다."
+    }
+  ]
+}
