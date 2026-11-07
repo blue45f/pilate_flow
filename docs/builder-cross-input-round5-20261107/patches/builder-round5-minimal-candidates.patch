@@ -1,14 +1,15 @@
 diff --git a/src/components/SequenceOrderCard.tsx b/src/components/SequenceOrderCard.tsx
+index 464995d..930fa3c 100644
 --- a/src/components/SequenceOrderCard.tsx
 +++ b/src/components/SequenceOrderCard.tsx
-@@ -38,18 +38,31 @@ export function SequenceOrderCard({
+@@ -38,9 +38,20 @@ export function SequenceOrderCard({
      const cardEl = cardRef.current;
      if (!cardEl) return;
      const list = cardEl.closest<HTMLElement>('.flow-sections') ?? cardEl.parentElement;
 -    if (!list || !list.hasAttribute('data-drag-session')) return;
 +    if (!list || !list.hasAttribute('data-drag-session') || !pointerDrag.current?.session.isActive()) {
 +      clearHeaderTranslations();
-+      if (pointerDrag.current && !pointerDrag.current.session.isActive()) {
++      if (pointerDrag.current?.rafId && !pointerDrag.current.session.isActive()) {
 +        cancelAnimationFrame(pointerDrag.current.rafId);
 +        pointerDrag.current = null;
 +      }
@@ -23,8 +24,7 @@ diff --git a/src/components/SequenceOrderCard.tsx b/src/components/SequenceOrder
      const htmlZoom = Number.parseFloat(
        document.documentElement.style.zoom ||
          window.getComputedStyle(document.documentElement).zoom ||
-         '1',
-     );
+@@ -49,9 +60,11 @@ export function SequenceOrderCard({
      const zoomFactor =
        typeof cssZoom === 'number' && Number.isFinite(cssZoom) && cssZoom > 0 && cssZoom !== 1
          ? cssZoom
@@ -37,6 +37,8 @@ diff --git a/src/components/SequenceOrderCard.tsx b/src/components/SequenceOrder
 +            ? htmlZoom
 +            : 1;
  
+     const cards = Array.from(list.querySelectorAll<HTMLElement>('[data-order-step]'));
+     const from = cards.findIndex((el) => el.dataset.orderStep === step.stepId);
 @@ -122,7 +135,8 @@ export function SequenceOrderCard({
          rec.transform = scaled;
        };
@@ -57,7 +59,27 @@ diff --git a/src/components/SequenceOrderCard.tsx b/src/components/SequenceOrder
              if (event.button !== 0 || step.locked || pointerDrag.current || !cardRef.current)
                return;
              event.preventDefault();
-@@ -276,9 +293,12 @@ export function SequenceOrderCard({
+@@ -240,11 +257,17 @@ export function SequenceOrderCard({
+             if (pointerDrag.current?.id === event.pointerId) {
+               pointerDrag.current.session.move(event.clientX, event.clientY);
+               syncActiveDragDom();
+-              if (!pointerDrag.current.rafId && pointerDrag.current.session.isActive()) {
++              if (
++                pointerDrag.current &&
++                !pointerDrag.current.rafId &&
++                pointerDrag.current.session.isActive()
++              ) {
+                 const loop = () => {
+                   if (!pointerDrag.current) return;
+                   syncActiveDragDom();
+-                  pointerDrag.current.rafId = requestAnimationFrame(loop);
++                  if (pointerDrag.current) {
++                    pointerDrag.current.rafId = requestAnimationFrame(loop);
++                  }
+                 };
+                 pointerDrag.current.rafId = requestAnimationFrame(loop);
+               }
+@@ -276,9 +299,12 @@ export function SequenceOrderCard({
              if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
                event.preventDefault();
                clearPointerDrag();
@@ -73,9 +95,11 @@ diff --git a/src/components/SequenceOrderCard.tsx b/src/components/SequenceOrder
            }}
          >
 diff --git a/src/styles/sequence-composition.css b/src/styles/sequence-composition.css
+index fa7b8aa..689343d 100644
 --- a/src/styles/sequence-composition.css
 +++ b/src/styles/sequence-composition.css
-@@ -140,6 +140,6 @@
+@@ -139,7 +139,7 @@
+ }
  
  /* Preserve 0 bottom margin on the last real card in a section when the fixed drag overlay clone is appended after it. */
 -#root .vnext-shell .v2-workbench .pf-sequence-block__body > .sequence-order-card:nth-last-child(2):has(+ .sequence-drag-overlay) {
@@ -83,26 +107,28 @@ diff --git a/src/styles/sequence-composition.css b/src/styles/sequence-compositi
    margin-bottom: 0;
  }
  
-@@ -166,4 +166,6 @@
+@@ -165,6 +165,8 @@
+ }
  #root .sequence-drag-handle {
    touch-action: none;
 +  -webkit-user-select: none;
 +  -webkit-touch-callout: none;
    user-select: none;
  }
+ 
 diff --git a/src/utils/sequenceDrag.ts b/src/utils/sequenceDrag.ts
+index 61cd3f6..49c3a2b 100644
 --- a/src/utils/sequenceDrag.ts
 +++ b/src/utils/sequenceDrag.ts
-@@ -118,6 +118,7 @@ export function createSequenceDrag({
-     card.removeAttribute('data-drag-source');
+@@ -119,6 +119,7 @@ export function createSequenceDrag(options: Options) {
      list.removeAttribute('data-drag-session');
      window.removeEventListener('blur', cancel);
      window.removeEventListener('resize', cancel);
 +    window.removeEventListener('keydown', onKeyDown, true);
      document.removeEventListener('visibilitychange', onVisibility);
      if (cancelActiveDrag === cancel) cancelActiveDrag = null;
-@@ -134,5 +135,10 @@ export function createSequenceDrag({
-   };
+     indicator?.remove();
+@@ -135,6 +136,11 @@ export function createSequenceDrag(options: Options) {
    const onVisibility = () => {
      if (document.hidden) cancel();
    };
@@ -112,7 +138,9 @@ diff --git a/src/utils/sequenceDrag.ts b/src/utils/sequenceDrag.ts
 +    }
 +  };
    const begin = () => {
-@@ -193,6 +199,7 @@ export function createSequenceDrag({
+     active = true;
+     cards = Array.from(list.querySelectorAll<HTMLElement>('[data-order-step]'));
+@@ -193,6 +199,7 @@ export function createSequenceDrag(options: Options) {
      });
      window.addEventListener('blur', cancel);
      window.addEventListener('resize', cancel);
