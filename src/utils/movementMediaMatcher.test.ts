@@ -151,7 +151,7 @@ describe('movementMediaMatcher', () => {
     expect(blockedFallback.state).toBe('embed-blocked');
     expect(blockedFallback.embedUrl).toBeNull();
     expect(blockedFallback.externalOriginalUrl).toBe(
-      'https://www.youtube.com/watch?v=K56Z12XNQ5c&t=45s',
+      'https://www.youtube.com/watch?v=DJtd3AqZzH0',
     );
     expect(blockedFallback.noticeKo).toContain('외부 원본 보기');
 
@@ -159,9 +159,19 @@ describe('movementMediaMatcher', () => {
     expect(failedFallback.state).toBe('playback-failed');
     expect(failedFallback.embedUrl).toBeNull();
     expect(failedFallback.externalOriginalUrl).toBe(
-      'https://www.youtube.com/watch?v=K56Z12XNQ5c&t=45s',
+      'https://www.youtube.com/watch?v=DJtd3AqZzH0',
     );
     expect(failedFallback.noticeKo).toContain('오류');
+
+    const verifiedFootwork = INITIAL_EXERCISES.find((ex) => ex.id === 'ex-footwork-01')!;
+    const footworkBundle = resolveMovementMediaBundle(verifiedFootwork);
+    const footworkFallback = resolveEmbedFailureFallback(
+      footworkBundle.primaryMatch,
+      'embed-blocked',
+    );
+    expect(footworkFallback.externalOriginalUrl).toBe(
+      'https://www.youtube.com/watch?v=QDBzjlhKsco&t=0s',
+    );
   });
 
   it('resolves at least 2 credible matches for custom instructor-authored movements with no YouTube URL', () => {

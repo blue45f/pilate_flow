@@ -1,0 +1,143 @@
+{
+  "checkedAtUtc": "2026-11-07T17:03:31.929Z",
+  "viewports": [
+    {
+      "viewport": "mobile-320",
+      "width": 320,
+      "height": 640,
+      "zoom": 1,
+      "dialogContainsPilatesAnytime": true,
+      "dialogContainsVerifiedTitle": true,
+      "dialogContainsFakeGoodfulOrMoveWithNicole": false,
+      "pageClientWidth": 320,
+      "pageScrollWidth": 320,
+      "pageHorizontalOverflowPx": 0,
+      "modalBodyClientWidth": 296,
+      "modalBodyScrollWidth": 297,
+      "modalBodyHorizontalOverflowPx": 1,
+      "screenshot": "screenshots/verified-footwork01-mobile-320.png"
+    },
+    {
+      "viewport": "mobile-390",
+      "width": 390,
+      "height": 844,
+      "zoom": 1,
+      "dialogContainsPilatesAnytime": true,
+      "dialogContainsVerifiedTitle": true,
+      "dialogContainsFakeGoodfulOrMoveWithNicole": false,
+      "pageClientWidth": 390,
+      "pageScrollWidth": 390,
+      "pageHorizontalOverflowPx": 0,
+      "modalBodyClientWidth": 366,
+      "modalBodyScrollWidth": 366,
+      "modalBodyHorizontalOverflowPx": 0,
+      "screenshot": "screenshots/verified-footwork01-mobile-390.png"
+    },
+    {
+      "viewport": "tablet-768",
+      "width": 768,
+      "height": 1024,
+      "zoom": 1,
+      "dialogContainsPilatesAnytime": true,
+      "dialogContainsVerifiedTitle": true,
+      "dialogContainsFakeGoodfulOrMoveWithNicole": false,
+      "pageClientWidth": 768,
+      "pageScrollWidth": 768,
+      "pageHorizontalOverflowPx": 0,
+      "modalBodyClientWidth": 734,
+      "modalBodyScrollWidth": 734,
+      "modalBodyHorizontalOverflowPx": 0,
+      "screenshot": "screenshots/verified-footwork01-tablet-768.png"
+    },
+    {
+      "viewport": "desktop-1440",
+      "width": 1440,
+      "height": 900,
+      "zoom": 1,
+      "dialogContainsPilatesAnytime": true,
+      "dialogContainsVerifiedTitle": true,
+      "dialogContainsFakeGoodfulOrMoveWithNicole": false,
+      "pageClientWidth": 1440,
+      "pageScrollWidth": 1440,
+      "pageHorizontalOverflowPx": 0,
+      "modalBodyClientWidth": 898,
+      "modalBodyScrollWidth": 898,
+      "modalBodyHorizontalOverflowPx": 0,
+      "screenshot": "screenshots/verified-footwork01-desktop-1440.png"
+    },
+    {
+      "viewport": "desktop-1440-zoom200",
+      "width": 1440,
+      "height": 900,
+      "zoom": 2,
+      "dialogContainsPilatesAnytime": true,
+      "dialogContainsVerifiedTitle": true,
+      "dialogContainsFakeGoodfulOrMoveWithNicole": false,
+      "pageClientWidth": 1440,
+      "pageScrollWidth": 1440,
+      "pageHorizontalOverflowPx": 0,
+      "modalBodyClientWidth": 686,
+      "modalBodyScrollWidth": 686,
+      "modalBodyHorizontalOverflowPx": 0,
+      "screenshot": "screenshots/verified-footwork01-desktop-1440-zoom200.png"
+    },
+    {
+      "viewport": "mobile-320-zoom200",
+      "width": 320,
+      "height": 640,
+      "zoom": 2,
+      "dialogContainsPilatesAnytime": true,
+      "dialogContainsVerifiedTitle": true,
+      "dialogContainsFakeGoodfulOrMoveWithNicole": false,
+      "pageClientWidth": 320,
+      "pageScrollWidth": 640,
+      "pageHorizontalOverflowPx": 320,
+      "modalBodyClientWidth": 136,
+      "modalBodyScrollWidth": 297,
+      "modalBodyHorizontalOverflowPx": 161,
+      "screenshot": "screenshots/verified-footwork01-mobile-320-zoom200.png"
+    }
+  ],
+  "unverifiedRemovalChecks": [
+    {
+      "exerciseId": "ex-warmup-01",
+      "nameKo": "펠빅 클락 & 흉식 호흡 임프린팅",
+      "movementPreservedInAtlas": true,
+      "containsUnverifiedNotice": true,
+      "containsOldMislinkedVideoId": false,
+      "screenshot": "screenshots/unverified-ex-warmup-01-mobile-390.png"
+    },
+    {
+      "exerciseId": "ex-footwork-02",
+      "nameKo": "써클링 와이드 세컨드 & 내전근/외전근 풋워크",
+      "movementPreservedInAtlas": true,
+      "containsUnverifiedNotice": true,
+      "containsOldMislinkedVideoId": false,
+      "screenshot": "screenshots/unverified-ex-footwork-02-mobile-390.png"
+    },
+    {
+      "exerciseId": "ex-cooldown-02",
+      "nameKo": "스탠딩 척추 롤다운 & 센터링 호흡 피날레",
+      "movementPreservedInAtlas": true,
+      "containsUnverifiedNotice": true,
+      "containsOldMislinkedVideoId": false,
+      "screenshot": "screenshots/unverified-ex-cooldown-02-mobile-390.png"
+    },
+    {
+      "exerciseId": "ex-core-04",
+      "nameKo": "리포머 리버스 앱스 & 닐링 크런치",
+      "movementPreservedInAtlas": true,
+      "containsUnverifiedNotice": true,
+      "containsOldMislinkedVideoId": false,
+      "screenshot": "screenshots/unverified-ex-core-04-mobile-390.png"
+    },
+    {
+      "exerciseId": "ex-lower-04",
+      "nameKo": "리포머 사이드 라잉 스트랩 싱글 레그 시리즈",
+      "movementPreservedInAtlas": true,
+      "containsUnverifiedNotice": true,
+      "containsOldMislinkedVideoId": false,
+      "screenshot": "screenshots/unverified-ex-lower-04-mobile-390.png"
+    }
+  ]
+}

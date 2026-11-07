@@ -215,4 +215,52 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
     expect(document.querySelector('.eyg-section img')).not.toBeNull();
     expect(document.querySelector('iframe')).toBeNull();
   });
+
+  it('enforces Round 5 DEF-MEDIA-01 corrections: all 98 IDs preserved, linked ex-* videos match oEmbed pool title/channel/apparatus, and unverified items are explicitly marked 자료 미확인', () => {
+    expect(INITIAL_EXERCISES).toHaveLength(98);
+    const poolById = new Map(VERIFIED_YOUTUBE_VIDEO_POOL.map((v) => [v.videoId, v]));
+
+    // None of the 9 unrelated non-Pilates/yoga/HIIT/meditation video IDs from DEF-MEDIA-01 may remain linked
+    const forbiddenMislinkedIds = new Set([
+      'lCg_gh_fppI',
+      'UItWltVZZmE',
+      'g_tea8ZNk5A',
+      'v7AYKMP6rOE',
+      '4pKly2JojMw',
+      'inpok4MKVLM',
+      '1f8yoFFdkcY',
+      'bTo4NrSriWw',
+      'sTANio_2E0Q',
+    ]);
+
+    const legacyExercises = INITIAL_EXERCISES.filter((ex) => ex.id.startsWith('ex-'));
+    expect(legacyExercises).toHaveLength(38);
+
+    const unverifiedLegacyIds: string[] = [];
+    for (const ex of legacyExercises) {
+      expect(forbiddenMislinkedIds.has(ex.youtube.videoId)).toBe(false);
+      if (ex.youtube.videoId === '') {
+        unverifiedLegacyIds.push(ex.id);
+        expect(ex.youtube.url).toBe('');
+        expect(ex.youtube.videoTitle).toBe('');
+        expect(ex.youtube.channelName).toContain('자료 미확인');
+        expect(ex.youtube.note).toContain('자료 미확인');
+      } else {
+        const verified = poolById.get(ex.youtube.videoId);
+        expect(verified, `Expected ${ex.id} (${ex.youtube.videoId}) in verified oEmbed pool`).toBeDefined();
+        expect(verified!.apparatus).toContain(ex.apparatus);
+        expect(ex.youtube.videoTitle).toBe(verified!.title);
+        expect(ex.youtube.channelName).toBe(verified!.authorName);
+        expect(ex.youtube.url).toBe(`https://www.youtube.com/watch?v=${ex.youtube.videoId}`);
+      }
+    }
+
+    expect(unverifiedLegacyIds).toEqual([
+      'ex-warmup-01',
+      'ex-footwork-02',
+      'ex-cooldown-02',
+      'ex-core-04',
+      'ex-lower-04',
+    ]);
+  });
 });
