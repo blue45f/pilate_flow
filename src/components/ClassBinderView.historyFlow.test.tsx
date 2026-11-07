@@ -637,5 +637,130 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
 
     resolveSpy.mockRestore();
   });
+
+  it('shows only current selection and 3 recent dates by default on mobile (<=640px), preserves selected older date when collapsed without changing filter, and restores focus on toggle/reset/modal close', () => {
+    const originalInnerWidth = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value: 390,
+    });
+
+    try {
+      const [ex1] = usePilatesStore.getState().exercises;
+      const logs20 = Array.from({ length: 20 }, (_, idx) => {
+        const day = String(28 - idx).padStart(2, '0');
+        return {
+          id: `mobile-date-log-${idx}`,
+          sequenceId: `seq-mobile-${idx}`,
+          sequenceTitle: `모바일 날짜 탐색 수업 #${idx + 1}`,
+          groupId: 'group-evening-a',
+          groupName: '화목 저녁 A반',
+          apparatus: 'reformer' as const,
+          level: '1.5' as const,
+          taughtAt: `2026-10-${day}T10:30:00.000Z`,
+          instructorReflection: `모바일 날짜 검증 메모 ${idx + 1}`,
+          intensity: 'moderate' as const,
+          rating: 5 as const,
+          exerciseIds: [ex1.id],
+          stepsSnapshot: [makeStepSnapshot(`mob-step-${idx}`, ex1.id, 1)],
+        };
+      });
+      usePilatesStore.setState({ historyLogs: logs20 });
+
+      render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
+
+      const dateNav = screen.getByRole('group', { name: '날짜별 기록 탐색' });
+      expect(dateNav).toHaveClass('is-collapsed');
+
+      // On mobile (390px), default view shows 1 "전체 날짜" chip + 3 recent date chips = 4 chips
+      const initialMobileChips = dateNav.querySelectorAll<HTMLButtonElement>(
+        'button.teaching-date-chip',
+      );
+      expect(initialMobileChips).toHaveLength(4);
+      expect(initialMobileChips[0]).toHaveAttribute('aria-pressed', 'true');
+
+      // Keyboard ArrowDown / ArrowUp / End / Home navigation on compact mobile chips
+      initialMobileChips[0].focus();
+      fireEvent.keyDown(dateNav, { key: 'ArrowDown' });
+      expect(document.activeElement).toBe(initialMobileChips[1]);
+      fireEvent.keyDown(dateNav, { key: 'ArrowUp' });
+      expect(document.activeElement).toBe(initialMobileChips[0]);
+
+      // Explicit expand button shows remaining +17 dates and keeps focus on toggle
+      const toggleBtn = within(dateNav).getByRole('button', {
+        name: /이전 날짜 더보기 \(\+17일\)/,
+      });
+      fireEvent.click(toggleBtn);
+      expect(dateNav).toHaveClass('is-expanded');
+      expect(toggleBtn).toHaveAttribute('aria-expanded', 'true');
+      expect(document.activeElement).toBe(toggleBtn);
+
+      const expandedChips = dateNav.querySelectorAll<HTMLButtonElement>(
+        'button.teaching-date-chip',
+      );
+      expect(expandedChips).toHaveLength(21);
+
+      // Select an older date (15th date chip, index 15 -> 2026-10-14)
+      const olderDateChip = expandedChips[15];
+      const olderDateLabel = olderDateChip.childNodes[0]?.textContent?.trim() ?? '';
+      fireEvent.click(olderDateChip);
+      expect(olderDateChip).toHaveAttribute('aria-pressed', 'true');
+
+      const feed = screen.getByRole('region', { name: '수업 기록 목록' });
+      expect(within(feed).getAllByRole('article')).toHaveLength(1);
+      expect(within(feed).getByText('모바일 날짜 탐색 수업 #15')).toBeInTheDocument();
+
+      // Collapse the date list: selected older date MUST remain visible and active, and filter MUST NOT silently change
+      const collapseBtn = within(dateNav).getByRole('button', { name: '날짜 접기' });
+      fireEvent.click(collapseBtn);
+      expect(dateNav).toHaveClass('is-collapsed');
+      expect(document.activeElement).toBe(collapseBtn);
+
+      const collapsedWithSelectionChips = Array.from(
+        dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip'),
+      );
+      // 1 "전체 날짜" + 3 recent dates + 1 pinned selected older date = 5 chips
+      expect(collapsedWithSelectionChips).toHaveLength(5);
+      const pinnedChip = collapsedWithSelectionChips.find((chip) =>
+        chip.textContent?.includes(olderDateLabel),
+      );
+      expect(pinnedChip).toBeTruthy();
+      expect(pinnedChip).toHaveAttribute('aria-pressed', 'true');
+      expect(within(feed).getAllByRole('article')).toHaveLength(1);
+      expect(within(feed).getByText('모바일 날짜 탐색 수업 #15')).toBeInTheDocument();
+
+      // Hidden date count reflects 20 - 4 visible dates = +16일
+      expect(
+        within(dateNav).getByRole('button', { name: /이전 날짜 더보기 \(\+16일\)/ }),
+      ).toBeInTheDocument();
+
+      // Clicking "전체 날짜 보기" resets filter to 'all' and restores focus to "전체 날짜" chip
+      const resetDateBtn = within(dateNav).getByRole('button', { name: '전체 날짜 보기' });
+      fireEvent.click(resetDateBtn);
+      expect(within(feed).getAllByRole('article')).toHaveLength(20);
+      const allDatesChipAfterReset = dateNav.querySelectorAll<HTMLButtonElement>(
+        'button.teaching-date-chip',
+      )[0];
+      expect(document.activeElement).toBe(allDatesChipAfterReset);
+
+      // Opening and closing detail modal restores focus to the trigger button
+      const reopenBtn = within(feed).getAllByRole('button', { name: /이력 다시 열기/ })[0];
+      reopenBtn.focus();
+      fireEvent.click(reopenBtn);
+      const dialog = screen.getByRole('dialog');
+      fireEvent.click(within(dialog).getAllByRole('button', { name: '닫기' }).at(-1)!);
+      expect(document.activeElement).toBe(reopenBtn);
+    } finally {
+      Object.defineProperty(window, 'innerWidth', {
+        configurable: true,
+        writable: true,
+        value: originalInnerWidth,
+      });
+      act(() => {
+        window.dispatchEvent(new Event('resize'));
+      });
+    }
+  });
 });
 

@@ -1,0 +1,170 @@
+/* Dedicated styles for ClassBinderView history date filter & mobile layout */
+
+#root .teaching-collection .teaching-date-nav,
+.teaching-collection .teaching-date-nav {
+  align-items: center;
+  gap: 6px 10px;
+}
+
+#root .teaching-collection .teaching-date-nav-label,
+.teaching-collection .teaching-date-nav-label {
+  order: 1;
+  margin-right: auto;
+  min-height: 32px;
+}
+
+#root .teaching-collection .teaching-date-more-toggle,
+#root .teaching-collection .teaching-date-reset,
+.teaching-collection .teaching-date-more-toggle,
+.teaching-collection .teaching-date-reset {
+  order: 2;
+  min-height: 44px;
+  min-width: 44px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#root .teaching-collection .teaching-date-chip-list,
+.teaching-collection .teaching-date-chip-list {
+  order: 3;
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+#root .teaching-collection .teaching-date-chip,
+.teaching-collection .teaching-date-chip {
+  min-height: 44px;
+  min-width: 44px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+}
+
+#root .teaching-collection .teaching-group-filters .teaching-filter,
+#root .teaching-collection .teaching-group-filters .pf-tabs-trigger,
+#root .teaching-collection .teaching-filter-row .pf-tabs-trigger,
+.teaching-collection .teaching-group-filters .teaching-filter,
+.teaching-collection .teaching-group-filters .pf-tabs-trigger,
+.teaching-collection .teaching-filter-row .pf-tabs-trigger {
+  max-width: 100%;
+  height: auto;
+  min-height: 44px;
+  white-space: normal;
+  line-height: 1.35;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  #root .teaching-collection,
+  .teaching-collection {
+    padding-top: 8px;
+  }
+
+  #root .teaching-collection .teaching-page-header,
+  .teaching-collection .teaching-page-header {
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+
+  #root .teaching-collection .teaching-page-header h1,
+  .teaching-collection .teaching-page-header h1 {
+    font-size: 24px;
+    margin: 2px 0 4px;
+  }
+
+  #root .teaching-collection .teaching-page-header p,
+  .teaching-collection .teaching-page-header p {
+    font-size: 12px;
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  #root .teaching-collection .teaching-page-header > button,
+  .teaching-collection .teaching-page-header > button {
+    margin-top: 8px;
+    min-height: 44px;
+  }
+
+  #root .vnext-shell .teaching-collection .teaching-separation-banner,
+  #root .teaching-collection .teaching-separation-banner,
+  .teaching-collection .teaching-separation-banner {
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    gap: 4px;
+  }
+
+  #root .teaching-collection .teaching-collection-toolbar,
+  .teaching-collection .teaching-collection-toolbar {
+    margin-bottom: 8px;
+    gap: 4px;
+  }
+
+  #root .teaching-collection .teaching-collection-toolbar > .muted,
+  .teaching-collection .teaching-collection-toolbar > .muted {
+    margin-top: 4px;
+  }
+
+  #root .teaching-collection .teaching-group-filters,
+  .teaching-collection .teaching-group-filters {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  #root .teaching-collection .teaching-group-filters .teaching-filter,
+  #root .teaching-collection .teaching-group-filters .pf-tabs-trigger,
+  .teaching-collection .teaching-group-filters .teaching-filter,
+  .teaching-collection .teaching-group-filters .pf-tabs-trigger {
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  #root .teaching-collection .teaching-date-nav,
+  .teaching-collection .teaching-date-nav {
+    align-items: center;
+    gap: 4px 8px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+  }
+
+  #root .teaching-collection .teaching-date-more-toggle,
+  #root .teaching-collection .teaching-date-reset,
+  .teaching-collection .teaching-date-more-toggle,
+  .teaching-collection .teaching-date-reset {
+    padding: 4px 8px;
+    font-size: 11.5px;
+    min-height: 44px;
+  }
+
+  #root .teaching-collection .teaching-date-chip-list,
+  .teaching-collection .teaching-date-chip-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(124px, 1fr));
+    gap: 6px;
+  }
+
+  #root .teaching-collection .teaching-date-nav.is-expanded .teaching-date-chip-list,
+  .teaching-collection .teaching-date-nav.is-expanded .teaching-date-chip-list {
+    max-height: 236px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 2px;
+  }
+
+  #root .teaching-collection .teaching-date-chip,
+  .teaching-collection .teaching-date-chip {
+    width: 100%;
+    justify-content: space-between;
+    padding: 6px 10px;
+    font-size: 11.5px;
+    min-height: 44px;
+  }
+
+  #root .teaching-collection .teaching-history-date-header,
+  .teaching-collection .teaching-history-date-header {
+    margin-bottom: 6px;
+  }
+}
