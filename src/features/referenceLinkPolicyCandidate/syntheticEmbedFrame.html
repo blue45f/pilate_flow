@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Local Synthetic Iframe Fixture (No External Network)</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 16px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
+        background: #101714;
+        color: #ecf3ef;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: calc(100vh - 32px);
+        box-sizing: border-box;
+      }
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #1b5e43;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      h1 {
+        margin: 0 0 8px 0;
+        font-size: 15px;
+      }
+      p {
+        margin: 0;
+        font-size: 12px;
+        color: #b7c8be;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="synthetic-embed-frame-root" data-testid="synthetic-embed-frame-root">
+      <span class="badge">로컬 합성 Iframe 픽스처 · 외부 네트워크 호출 0건</span>
+      <h1 id="frame-title">수동 클릭 검증 완료 · 자동 재생 없음 (autoplay=0)</h1>
+      <p id="frame-meta"></p>
+    </div>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var videoId = params.get('videoId') || 'unknown';
+        var autoplay = params.get('autoplay') || '0';
+        var rel = params.get('rel') || '0';
+        var start = params.get('start') || '0';
+        var end = params.get('end') || '';
+        var meta = document.getElementById('frame-meta');
+        if (meta) {
+          meta.textContent =
+            'videoId=' +
+            videoId +
+            ' | autoplay=' +
+            autoplay +
+            ' | rel=' +
+            rel +
+            ' | start=' +
+            start +
+            (end ? ' | end=' + end : '');
+        }
+      })();
+    </script>
+  </body>
+</html>

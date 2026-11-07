@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Reference Link Policy Candidate — Local Verification Fixture</title>
+  </head>
+  <body style="margin: 0; background: #f3f1ea">
+    <div id="reference-link-policy-fixture-root"></div>
+    <script type="module">
+      import React from 'react';
+      import { createRoot } from 'react-dom/client';
+      import {
+        ReferenceLinkPolicyPreview,
+        ReferenceLinkPolicyFixtureHarness,
+        evaluateReferenceLinkCandidates,
+        auditExistingPublicUrlSamples,
+      } from '/src/features/referenceLinkPolicyCandidate/index.ts';
+
+      const container = document.getElementById('reference-link-policy-fixture-root');
+      const root = createRoot(container);
+      const mount = (element) =>
+        root.render(React.createElement(React.StrictMode, null, element));
+
+      window.__referenceLinkPolicyFixture__ = {
+        revision: 'reference-link-policy-candidate-v1',
+        auditCatalogSamples() {
+          return auditExistingPublicUrlSamples();
+        },
+        showHarness() {
+          mount(React.createElement(ReferenceLinkPolicyFixtureHarness));
+        },
+        showCandidates(subjectId, subjectTitleKo, candidates) {
+          const report = evaluateReferenceLinkCandidates(
+            subjectId,
+            subjectTitleKo,
+            candidates,
+          );
+          mount(
+            React.createElement(ReferenceLinkPolicyPreview, {
+              report,
+              iframeMode: 'local-synthetic-fixture',
+            }),
+          );
+          return report;
+        },
+        showTwoInstances(candidates) {
+          const report = evaluateReferenceLinkCandidates(
+            'dual-instance',
+            '다중 인스턴스 ID 충돌 검증',
+            candidates,
+          );
+          mount(
+            React.createElement(
+              React.Fragment,
+              null,
+              React.createElement(ReferenceLinkPolicyPreview, {
+                report,
+                iframeMode: 'local-synthetic-fixture',
+              }),
+              React.createElement(ReferenceLinkPolicyPreview, {
+                report,
+                iframeMode: 'local-synthetic-fixture',
+              }),
+            ),
+          );
+        },
+        unmount() {
+          root.unmount();
+        },
+      };
+
+      window.__referenceLinkPolicyFixture__.showHarness();
+    </script>
+  </body>
+</html>
