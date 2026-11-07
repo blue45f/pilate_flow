@@ -1,0 +1,162 @@
+{
+  "verifiedAt": "2026-11-07T07:05:03.497Z",
+  "browserEngine": "HeadlessChromium (/usr/bin/chromium via puppeteer)",
+  "honestyBoundary": {
+    "anatomicalAccuracyAssumed": false,
+    "anatomicalVerificationCompleted": false,
+    "expertVerificationCompleted": false,
+    "professionalReviewCount": 0
+  },
+  "consoleErrorCount": 0,
+  "pageErrorCount": 0,
+  "allViewportsPassed": true,
+  "viewports": [
+    {
+      "viewportId": "mobile-320",
+      "width": 320,
+      "height": 850,
+      "zoom": 1,
+      "screenshotFile": "docs/diagram-contact-audit-20261107/evidence/screenshots/contact-audit-320x850.png",
+      "innerWidth": 320,
+      "innerHeight": 850,
+      "scrollWidth": 320,
+      "horizontalOverflowPx": 0,
+      "svgCount": 14,
+      "allSvgsVisible": true,
+      "minSvgWidthPx": 260,
+      "minSvgHeightPx": 162.5,
+      "disclaimerPresent": true,
+      "passed": true
+    },
+    {
+      "viewportId": "mobile-390",
+      "width": 390,
+      "height": 850,
+      "zoom": 1,
+      "screenshotFile": "docs/diagram-contact-audit-20261107/evidence/screenshots/contact-audit-390x850.png",
+      "innerWidth": 390,
+      "innerHeight": 850,
+      "scrollWidth": 390,
+      "horizontalOverflowPx": 0,
+      "svgCount": 14,
+      "allSvgsVisible": true,
+      "minSvgWidthPx": 330,
+      "minSvgHeightPx": 206.3,
+      "disclaimerPresent": true,
+      "passed": true
+    },
+    {
+      "viewportId": "tablet-768",
+      "width": 768,
+      "height": 1024,
+      "zoom": 1,
+      "screenshotFile": "docs/diagram-contact-audit-20261107/evidence/screenshots/contact-audit-768x1024.png",
+      "innerWidth": 768,
+      "innerHeight": 1024,
+      "scrollWidth": 768,
+      "horizontalOverflowPx": 0,
+      "svgCount": 14,
+      "allSvgsVisible": true,
+      "minSvgWidthPx": 343,
+      "minSvgHeightPx": 214.4,
+      "disclaimerPresent": true,
+      "passed": true
+    },
+    {
+      "viewportId": "desktop-1440",
+      "width": 1440,
+      "height": 900,
+      "zoom": 1,
+      "screenshotFile": "docs/diagram-contact-audit-20261107/evidence/screenshots/contact-audit-1440x900.png",
+      "innerWidth": 1440,
+      "innerHeight": 900,
+      "scrollWidth": 1440,
+      "horizontalOverflowPx": 0,
+      "svgCount": 14,
+      "allSvgsVisible": true,
+      "minSvgWidthPx": 308,
+      "minSvgHeightPx": 192.5,
+      "disclaimerPresent": true,
+      "passed": true
+    },
+    {
+      "viewportId": "desktop-1440-zoom200",
+      "width": 1440,
+      "height": 900,
+      "zoom": 2,
+      "screenshotFile": "docs/diagram-contact-audit-20261107/evidence/screenshots/contact-audit-1440x900-zoom200.png",
+      "innerWidth": 1440,
+      "innerHeight": 900,
+      "scrollWidth": 1440,
+      "horizontalOverflowPx": 0,
+      "svgCount": 14,
+      "allSvgsVisible": true,
+      "minSvgWidthPx": 284,
+      "minSvgHeightPx": 177.5,
+      "disclaimerPresent": true,
+      "passed": true
+    }
+  ],
+  "domContactMeasurements": {
+    "D01_frogEnd": {
+      "baselineEndAnkle": {
+        "x": 222,
+        "y": 40
+      },
+      "candidateEndAnkle": {
+        "x": 214,
+        "y": 74
+      },
+      "candidateEndKnee": {
+        "x": 182,
+        "y": 92
+      }
+    },
+    "D02_reformerPlank": {
+      "baselineStartHand": {
+        "x": 88,
+        "y": 148
+      },
+      "candidateStartHand": {
+        "x": 268,
+        "y": 126
+      },
+      "candidateStartAnkle": {
+        "x": 80,
+        "y": 138
+      }
+    },
+    "D03_cadillacCarriage": {
+      "baselineCarriageOffsetPx": 24,
+      "candidateCarriageOffsetPx": 0
+    },
+    "D04_chairPedal": {
+      "baselineMiddlePedalTipY": 122,
+      "candidateMiddlePedalTipY": 169.9,
+      "candidateMiddleAnkleY": 168,
+      "candidateVerticalGapPx": 1.9
+    },
+    "D05_barrelStanding": {
+      "baselineDomeBBox": {
+        "x": 68,
+        "y": 120,
+        "width": 106,
+        "height": 54
+      },
+      "candidateDomeBBox": {
+        "x": 18,
+        "y": 123,
+        "width": 52,
+        "height": 51
+      },
+      "candidateHand": {
+        "x": 88,
+        "y": 76
+      },
+      "candidateStandingFarAnkle": {
+        "x": 124,
+        "y": 174
+      }
+    }
+  }
+}
