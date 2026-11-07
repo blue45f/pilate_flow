@@ -33,3 +33,16 @@
 전체 검사 순서는 타입/lint → build/PWA → tests입니다. 번들 경계 검사는 이미 생성된 dist를 요구합니다. Mac에서는 하드코딩된 /usr/bin/chromium, /usr/bin/pdfinfo, /usr/bin/pdftotext, /usr/bin/pdftoppm이 없어 src/features/classCueSheet/classCueSheetChromium.test.ts의 실제 PDF 검사는 수행하지 않았습니다. 그 파일을 제외한 통과를 전체 플랫폼 통과라고 표시하지 않습니다.
 
 운영 배포는 실행하지 않았습니다. Firebase 설정은 기존 수동 배포이며 저장소 webhook은 0개입니다. GitHub Pages 과거 동적 실행은 gh-pages 브랜치로 main과 분리되어 있습니다.
+
+## 검증 runner 후속 정리
+
+f234284의 SonarCloud 분석은 2026-11-07 21:58 UTC에 실패로 완료됐습니다. 기준 ca0fef4와 게이트 수치(중복 8.6%, 보안 E, 신뢰성 D)는 같았지만 새 runner에 경고 24개가 추가됐습니다. 제품 코드의 해당 시점 이후 새 경고는 없었습니다. 아래 변경은 분석 설정, 규칙 제외, suppress 주석 없이 runner 자체만 다룹니다.
+
+- 순차 UI 검증을 각각의 함수로 분리하고 고정된 8조합을 한 번에 하나씩 실행합니다. 루프 내부 await 18건을 제거하되 동시 브라우저 컨텍스트를 늘리거나 검사 순서를 바꾸지 않았습니다.
+- Vite 모듈은 same-origin URL로 해석해 불러옵니다. 파일 시스템의 절대 경로 import 5건으로 오인되던 문자열을 실제 URL 의미로 명시합니다. 외부 origin은 차단합니다.
+- Git은 /usr/bin/git 고정 경로, shell:false, 고정 PATH와 최소 환경으로 실행합니다. 호출자의 PATH/GIT_DIR가 revision 판독을 바꾸지 않는 회귀를 추가했습니다. 이 runner는 해당 실행 파일과 Chrome이 있는 Mac/Linux 환경을 대상으로 합니다.
+- 컨텍스트는 실패해도 finally에서 닫고, 첫 실패 뒤 나머지 조합은 실행하지 않습니다. 시각 입력이 0개인지와 실행 중 HEAD 불변도 추가 확인합니다. 결과에는 실제 runner SHA256을 기록합니다.
+
+새 Node 회귀 6개(8조합 보존, 로컬 URL 한정, 순차 실행, 실패 중단, 빈 입력, PATH/GIT_DIR 격리)와 ESLint recommended 검사 오류·경고 0건을 확인했습니다. 실제 Chrome 8조합은 통과했고 결과의 모든 기존 필드가 이전 after-browser.json과 deepEqual로 일치했습니다. runner-refactor-browser.json은 수정된 runner와 제품 소스 f234284를 조합한 결과이며 runnerSha256으로 정확한 검증 스크립트를 식별합니다. 기존 시각 보존·시각 없는 신규 기록·overflow·pageerror 검사를 삭제하거나 완화하지 않았습니다.
+
+재실행: node --test scripts/qa/history-date-only-browser.node-test.cjs. 브라우저 실행법은 위와 같습니다. 제품 src/backend/package/lockfile은 변경하지 않았으며 기존 2,425개 전체 회귀를 이번 runner 후속에서 새로 실행했다고 주장하지 않습니다. 외부 SonarCloud 최종 경고 해소 여부는 원격의 이 후속 커밋 분석으로 따로 확인해야 합니다. 운영 배포는 포함하지 않습니다.
