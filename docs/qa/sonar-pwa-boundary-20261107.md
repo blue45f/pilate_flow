@@ -40,7 +40,7 @@ PWA 검사 CLI만 수정했다. 앱, 서비스 워커 생성기, 인증, 사용�
 ## 검증
 
 - 합성 외부 빌드 입력: 기존 코드 exit 0, 수정 코드 경로 거부 exit 1.
-- Node 회귀 15/15: 내부 절대/상대 경로, 다른 cwd의 CLI 임의 경로 거부, 외부 경로, 루트/파일/assets 심볼릭 링크, 아이콘 경로 이탈, 기존 중복/누락 검사.
+- Node 회귀 17/17: 내부 절대/상대 경로, 다른 cwd의 CLI 임의 경로 거부, 외부 경로, 루트/파일/assets 심볼릭 링크, 아이콘 경로 이탈, 기존 중복/누락 검사, symlink/디렉터리 alias 진입점(보존 플래그 포함), 가상 import 진입점.
 - TypeScript 빌드 검사 통과. Vite 빌드와 PWA 실제 40파일 검사 통과.
 - ESLint 오류 0, 기존 MotionAuthoringBatchFigure의 Fast Refresh 경고 1. 번들 크기 경고는 그대로 유지했다.
 - motion-study ledger 검사와 Node 회귀 6/6 통과.
@@ -48,6 +48,6 @@ PWA 검사 CLI만 수정했다. 앱, 서비스 워커 생성기, 인증, 사용�
 
 검증에는 기존 설치 의존성을 사용했다. 최초 연결한 이전 설치에 Firebase가 빠져 타입 검사와 일부 테스트 로딩이 실패했다. 불완전한 테스트 실행은 중단하고 동일 package.json의 Firebase 13.2.0이 설치된 의존성으로 다시 검증했다. 공유 설치를 삭제하거나 의존성을 변경하지 않았다. pnpm의 자동 설치 제안은 진행하지 않고 설치된 eslint, tsc, vite, vitest 실행 파일로 package scripts와 동등한 명령을 실행했다.
 
-PR #1의 첫 실제 SonarCloud 분석에서는 신규 신뢰성 A, 중복 0%였으나 임의 CLI 경로 흐름에 대한 보안 C가 남았다. 이에 CLI 입력을 고정된 dist로 제한해 경로 주입 표면 자체를 제거했다. 후속 분석 결과는 원격에서 확인한다. PR 결과와 전체 main Quality Gate를 구분한다. 운영 배포, 유료 API, Gemini 요청은 수행하지 않았다.
+PR #1의 첫 실제 SonarCloud 분석에서는 신규 신뢰성 A, 중복 0%였으나 임의 CLI 경로 흐름에 대한 보안 C가 남았다. 이에 CLI 입력을 고정된 dist로 제한해 경로 주입 표면 자체를 제거했다. 43554fd에 대한 후속 PR 분석은 Quality Gate OK, bugs/vulnerabilities/codeSmells 0으로 확인했다. 독립 리뷰에서 symlink 진입점이 검사를 건너뛰던 문제를 추가로 재현하여 실제 파일 경로로 진입점을 비교하도록 수정했다. 최종 커밋의 분석 결과도 원격에서 다시 확인한다. PR 결과와 전체 main Quality Gate를 구분한다. 운영 배포, 유료 API, Gemini 요청은 수행하지 않았다.
 
 재현 명령: `node --test scripts/check-pwa-build.node-test.mjs`, `pnpm test`, `pnpm lint`, `pnpm check:motion-study`, `pnpm build`.

@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFileSync, realpathSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
-const projectRoot = realpathSync(fileURLToPath(new URL('..', import.meta.url)));
+const modulePath = realpathSync(fileURLToPath(import.meta.url));
+const projectRoot = path.dirname(path.dirname(modulePath));
 
 function assertInside(parent, candidate) {
   const relative = path.relative(parent, candidate);
@@ -75,7 +76,17 @@ export function verifyPwaBuild(outputDirectory = 'dist') {
   return assets.length;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+function isCliEntryPoint() {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === modulePath;
+  } catch {
+    // Import-only callers may use a virtual or missing entrypoint.
+    return false;
+  }
+}
+
+if (isCliEntryPoint()) {
   assert.ok(
     process.argv.length <= 3 && (process.argv[2] === undefined || process.argv[2] === 'dist'),
     'Usage: node scripts/check-pwa-build.mjs [dist]. Only this checkout’s dist is supported.',

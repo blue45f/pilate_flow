@@ -55,6 +55,39 @@ test('CLI rejects directory overrides from another working directory', (t) => {
   }
 });
 
+test('symlink and directory-alias entrypoints cannot skip CLI validation', (t) => {
+  const { root } = fixture(t);
+  const fileLink = path.join(root, 'entry.mjs');
+  const directoryLink = path.join(root, 'scripts-alias');
+  symlinkSync(script, fileLink);
+  symlinkSync(path.dirname(script), directoryLink);
+  for (const entry of [fileLink, path.join(directoryLink, path.basename(script))]) {
+    for (const flags of [[], ['--preserve-symlinks-main']]) {
+      const result = spawnSync(process.execPath, [...flags, entry, '../dist'], {
+        cwd: os.tmpdir(),
+        encoding: 'utf8',
+      });
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /Only this checkout’s dist is supported/);
+      assert.doesNotMatch(result.stdout, /PWA build verified/);
+    }
+  }
+});
+
+test('import-only callers with virtual entrypoints do not execute the CLI', () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      `process.argv[1] = 'nonexistent-virtual-entrypoint'; await import(${JSON.stringify(new URL('./check-pwa-build.mjs', import.meta.url).href)});`,
+    ],
+    { cwd: os.tmpdir(), encoding: 'utf8' },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, '');
+});
+
 test('rejects an outside build root even when its build files are otherwise valid', (t) => {
   const { root } = fixture(t, os.tmpdir());
   assert.throws(() => verifyPwaBuild(root), /approved directory/);
