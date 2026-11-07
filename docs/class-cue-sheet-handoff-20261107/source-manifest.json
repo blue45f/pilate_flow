@@ -1,0 +1,286 @@
+{
+  "feature": "classCueSheet",
+  "branch": "feat/class-cue-sheet",
+  "head_commit": "51a6f6bd89687730aba87d004740a34bca4b9c51",
+  "merge_base_with_origin_main": "29a6edb6cbdb4f53523e1c64fff35f6890768ba4",
+  "compared_origin_main": "222b59edf47653a36c4f754b2a572c19cd12cb30",
+  "remote_status": "not_pushed_local_only",
+  "remote_status_details": {
+    "status": "not_pushed_local_only",
+    "label_ko": "원격 미반영 (local-only)",
+    "included_in_origin_main": false,
+    "remote_branch_exists": false,
+    "overlapping_files_with_origin_main": 0,
+    "target_directory_exists_in_origin_main": false,
+    "merge_tree_with_origin_main_clean": true,
+    "merge_tree_oid": "eeaada5578b1a0b7d090ff87aaeb4f005d9470b7",
+    "verification_commands": {
+      "git_branch_r_contains_head": "",
+      "git_ls_remote_origin_branch": "",
+      "git_log_origin_main_grep_classCueSheet": "",
+      "git_ls_tree_origin_main_dir": ""
+    }
+  },
+  "commit_chain": [
+    {
+      "order": 1,
+      "hash": "d66e44a742608dedd59cdfb4033f9d440ed90ae4",
+      "short_hash": "d66e44a",
+      "parent": "29a6edb6cbdb4f53523e1c64fff35f6890768ba4",
+      "subject": "feat(classCueSheet): add standalone instructor cue sheet projection, preview, and print candidate",
+      "timestamp": "2026-11-06T16:03:09+00:00",
+      "files_changed": 10,
+      "insertions": 6022,
+      "deletions": 0
+    },
+    {
+      "order": 2,
+      "hash": "62dcf7e92b06e3f7fd9eb8496a0f46352479ba5a",
+      "short_hash": "62dcf7e",
+      "parent": "d66e44a742608dedd59cdfb4033f9d440ed90ae4",
+      "subject": "feat(classCueSheet): preserve active step across live edits and verify multi-page PDF pagination",
+      "timestamp": "2026-11-06T17:05:48+00:00",
+      "files_changed": 10,
+      "insertions": 2113,
+      "deletions": 279
+    },
+    {
+      "order": 3,
+      "hash": "1a78a9525090b96b1e278c71e3fd1d86103fa299",
+      "short_hash": "1a78a95",
+      "parent": "62dcf7e92b06e3f7fd9eb8496a0f46352479ba5a",
+      "subject": "feat(classCueSheet): refine novice mobile focus UX, text scaling, and multi-viewport usability probe",
+      "timestamp": "2026-11-06T23:25:26+00:00",
+      "files_changed": 9,
+      "insertions": 2156,
+      "deletions": 432
+    },
+    {
+      "order": 4,
+      "hash": "51a6f6bd89687730aba87d004740a34bca4b9c51",
+      "short_hash": "51a6f6b",
+      "parent": "1a78a9525090b96b1e278c71e3fd1d86103fa299",
+      "subject": "fix(classCueSheet): guard editable keyboard shortcuts, deduplicate aria-live, and verify lifecycle resilience",
+      "timestamp": "2026-11-07T00:24:50+00:00",
+      "files_changed": 5,
+      "insertions": 1043,
+      "deletions": 18
+    }
+  ],
+  "shared_ReadOnly_contracts": [
+    {
+      "file": "src/data/equipmentCatalog.ts",
+      "sha256_on_head": "c4b1c4b53639592745cbc58f312b9cf1efbc9a5e951897a9f59d023b2b37195f",
+      "sha256_on_origin_main": "c4b1c4b53639592745cbc58f312b9cf1efbc9a5e951897a9f59d023b2b37195f",
+      "git_blob_on_head": "d491036e09ef2fa2c812f49c7d715846d0166b7b",
+      "git_blob_on_origin_main": "d491036e09ef2fa2c812f49c7d715846d0166b7b",
+      "identical_between_head_and_origin_main": true,
+      "breaking_changes": false
+    },
+    {
+      "file": "src/data/pilatesCatalog.ts",
+      "sha256_on_head": "17414eb225f88c527da0763fe947b1e0e35d98e174e8628d328bda23fc19997f",
+      "sha256_on_origin_main": "17414eb225f88c527da0763fe947b1e0e35d98e174e8628d328bda23fc19997f",
+      "git_blob_on_head": "ec96455a9871c38f8b0195c4b213af7f9f4c61d8",
+      "git_blob_on_origin_main": "ec96455a9871c38f8b0195c4b213af7f9f4c61d8",
+      "identical_between_head_and_origin_main": true,
+      "breaking_changes": false
+    },
+    {
+      "file": "src/types/classBlockPresets.ts",
+      "sha256_on_head": "552175f4389a0653198e71262bb53ea7485159e5e34ab12e139378cb118531b6",
+      "sha256_on_origin_main": "552175f4389a0653198e71262bb53ea7485159e5e34ab12e139378cb118531b6",
+      "git_blob_on_head": "286817ec5c077abd2802594f0e4fe2575ca13893",
+      "git_blob_on_origin_main": "286817ec5c077abd2802594f0e4fe2575ca13893",
+      "identical_between_head_and_origin_main": true,
+      "breaking_changes": false
+    },
+    {
+      "file": "src/types/hierarchy.ts",
+      "sha256_on_head": "9de45b9fbe6d04c15b12d4c5b17b70da401de93a28275ebb3240b9c400aa26e1",
+      "sha256_on_origin_main": "9de45b9fbe6d04c15b12d4c5b17b70da401de93a28275ebb3240b9c400aa26e1",
+      "git_blob_on_head": "2d6cca9384d6868ed579f890cd3b32b6cf944dc2",
+      "git_blob_on_origin_main": "2d6cca9384d6868ed579f890cd3b32b6cf944dc2",
+      "identical_between_head_and_origin_main": true,
+      "breaking_changes": false
+    },
+    {
+      "file": "src/types/pilates.ts",
+      "sha256_on_head": "b0d27f6b96640d032b2417e59c174f085cd1783bf636d8448a31bb37ffbb741e",
+      "sha256_on_origin_main": "b0d27f6b96640d032b2417e59c174f085cd1783bf636d8448a31bb37ffbb741e",
+      "git_blob_on_head": "cc5e482b17c95e67bdb355fc82318247363838b9",
+      "git_blob_on_origin_main": "cc5e482b17c95e67bdb355fc82318247363838b9",
+      "identical_between_head_and_origin_main": true,
+      "breaking_changes": false
+    },
+    {
+      "file": "src/types/sequenceMotion.ts",
+      "sha256_on_head": "5d6f9e3e494d8e9a0273d471dd3e1269232d8988efd6ab7c9e00c44e57e71656",
+      "sha256_on_origin_main": "5d6f9e3e494d8e9a0273d471dd3e1269232d8988efd6ab7c9e00c44e57e71656",
+      "git_blob_on_head": "d8b274be550688d6225fd56a38f972dd0857629e",
+      "git_blob_on_origin_main": "d8b274be550688d6225fd56a38f972dd0857629e",
+      "identical_between_head_and_origin_main": true,
+      "breaking_changes": false
+    },
+    {
+      "file": "src/types/teachingHistorySnapshot.ts",
+      "sha256_on_head": "2dee3cafd96eeac501c930add25e0fdb60d34bfaa4356da2ef8c08ea2ad16ea2",
+      "sha256_on_origin_main": "e0dd955da13eab80c1a207f8995de40ba4d76d595c8e6ce842795bb3f9ce4690",
+      "git_blob_on_head": "2380c3584e15b88d66af518ea02e130e24f9c60f",
+      "git_blob_on_origin_main": "db89747a5891dfdc76c097a79bd1c2d2fdbbdd4b",
+      "identical_between_head_and_origin_main": false,
+      "breaking_changes": false,
+      "compatibility_note": "origin/main adds 3 optional fields (stepClassSection?, timeEstimate?, motionStudy?) to TeachingProgramSnapshotItem; TeachingExerciseSnapshot and TeachingProgramSnapshot remain 100% backward-compatible."
+    },
+    {
+      "file": "src/utils/hierarchyModel.ts",
+      "sha256_on_head": "cac0568adccdc6c19fd726f8f2ba7180ab9c8d81acfa3f21d5f1f340d371b4f7",
+      "sha256_on_origin_main": "cac0568adccdc6c19fd726f8f2ba7180ab9c8d81acfa3f21d5f1f340d371b4f7",
+      "git_blob_on_head": "80bdf1912871afc5cf7005d5c9e44fe36d5e9f3b",
+      "git_blob_on_origin_main": "80bdf1912871afc5cf7005d5c9e44fe36d5e9f3b",
+      "identical_between_head_and_origin_main": true,
+      "breaking_changes": false
+    },
+    {
+      "file": "src/utils/sequenceEngine.ts",
+      "sha256_on_head": "4b956e839d9a72fee5a235b7b83dd27927a722593739252e47988b9ecad23914",
+      "sha256_on_origin_main": "4b956e839d9a72fee5a235b7b83dd27927a722593739252e47988b9ecad23914",
+      "git_blob_on_head": "25a0a9f6c3b4d08e2615288840a9f46543d8561f",
+      "git_blob_on_origin_main": "25a0a9f6c3b4d08e2615288840a9f46543d8561f",
+      "identical_between_head_and_origin_main": true,
+      "breaking_changes": false
+    }
+  ],
+  "files": [
+    {
+      "file": "src/features/classCueSheet/ClassCueSheetPreview.test.tsx",
+      "bytes": 46551,
+      "lines": 1247,
+      "sha256": "450879e9abaa65472350f6079d3f5d12f1b5a6ca1b96f4af49611c7cc387e5bf",
+      "git_blob_sha1": "6b67c502aba1936cf9cab38be8662589387928da"
+    },
+    {
+      "file": "src/features/classCueSheet/ClassCueSheetPreview.tsx",
+      "bytes": 53067,
+      "lines": 1463,
+      "sha256": "07bd200b291de30059c1e13cb03fb665a42fc3a02faadde1bbf13eeedd61d8a0",
+      "git_blob_sha1": "f5b40d206c8c5389ec0acb965fc1b0cb2cbe25d3"
+    },
+    {
+      "file": "src/features/classCueSheet/README.md",
+      "bytes": 10844,
+      "lines": 94,
+      "sha256": "c3b335bc332acfbad197f1fd184bdb948fabf8d0ac7bd1db8e8d4c63b75b9fe9",
+      "git_blob_sha1": "ffe9ba0c21d98fcf4098d299edf1252445a19086"
+    },
+    {
+      "file": "src/features/classCueSheet/browserFixture.html",
+      "bytes": 6296,
+      "lines": 158,
+      "sha256": "4a5e9418ae3dab31d32d25dd646d605d3af5786798b4da7e4dba8b2b04f216ea",
+      "git_blob_sha1": "622b8f79a63bc68b7c2ec83148e22dc7456cce33"
+    },
+    {
+      "file": "src/features/classCueSheet/classCueSheet.css",
+      "bytes": 18800,
+      "lines": 759,
+      "sha256": "a95bf198aba0d2b81cf5aaeba26bf158a5eaaf02f46cf34dae587299865c52bd",
+      "git_blob_sha1": "3b33b592cbd60e67bfe729f91d1eba95480faa0f"
+    },
+    {
+      "file": "src/features/classCueSheet/classCueSheetChromium.test.ts",
+      "bytes": 55721,
+      "lines": 1361,
+      "sha256": "42550ff094c821ecf6d380443ed9e7b89ddd2055fff8f5c736649c0617400176",
+      "git_blob_sha1": "fddc499765b63cd44ffba6e0fe88db1717858f06"
+    },
+    {
+      "file": "src/features/classCueSheet/classCueSheetFixtures.ts",
+      "bytes": 24651,
+      "lines": 612,
+      "sha256": "4c293b89913a2c47216fb21959f74a32d3ed2962483900bf909a3a02f32cb089",
+      "git_blob_sha1": "2c6002d81b14a1b1e3bf1348076d41a803e15491"
+    },
+    {
+      "file": "src/features/classCueSheet/classCueSheetLifecycle.test.tsx",
+      "bytes": 21651,
+      "lines": 587,
+      "sha256": "b62f0bd2117359146c0f8ebed5702f3488813270025bbff383fbf88921ffb231",
+      "git_blob_sha1": "3a54c466f4210059631fd7ff88cb25c8c52c162c"
+    },
+    {
+      "file": "src/features/classCueSheet/classCueSheetProjection.test.ts",
+      "bytes": 27461,
+      "lines": 611,
+      "sha256": "86fe3339522f5dab063ac0938a3cfceed864d9e1dc80832ce0b99da9504a9bab",
+      "git_blob_sha1": "d9cb0d8e36afcc4a5d348b43b886cb78f4b2f25f"
+    },
+    {
+      "file": "src/features/classCueSheet/classCueSheetProjection.ts",
+      "bytes": 79239,
+      "lines": 2316,
+      "sha256": "f60a06e2b67c6ee5e005b28b2098daf93819b7eec747e8b6674f242324f6ece8",
+      "git_blob_sha1": "c9e1c02d421cdc79f8f663effb3284593e54ab3d"
+    },
+    {
+      "file": "src/features/classCueSheet/classCueSheetTypes.ts",
+      "bytes": 12576,
+      "lines": 366,
+      "sha256": "2d1ae5293d7c25434be1ae628d2c206c28ae28f1bf641e381a15521a6f9f0a2e",
+      "git_blob_sha1": "29e1eb03a2a073930e59821b181b47bbe989da57"
+    },
+    {
+      "file": "src/features/classCueSheet/classCueSheetUsability.test.tsx",
+      "bytes": 15870,
+      "lines": 341,
+      "sha256": "6d727b94aa2ab4752b7693ad6808713ac975313228afcfcd77a9264549f6da47",
+      "git_blob_sha1": "cce5e05cd0c6473e548d9442e7663a07cd66d103"
+    },
+    {
+      "file": "src/features/classCueSheet/index.ts",
+      "bytes": 613,
+      "lines": 21,
+      "sha256": "c3d373263ff647a8821b25b663deed6087fdff9dba1667ce66749f314be71d27",
+      "git_blob_sha1": "c3291aaaf93e955956968019885f4401c6b97c73"
+    },
+    {
+      "file": "src/features/classCueSheet/verifyClassCueSheetBrowser.mjs",
+      "bytes": 23960,
+      "lines": 669,
+      "sha256": "83913487c960c950435272a83ff193cc74c316148232f35b5679a6d68361f522",
+      "git_blob_sha1": "d06fcd9ed93fbcf4f32c8123f2344ca127b9e325"
+    }
+  ],
+  "patches": [
+    {
+      "file": "docs/class-cue-sheet-handoff-20261107/patches/0001-feat-classCueSheet-add-standalone-instructor-cue-she.patch",
+      "bytes": 226353,
+      "lines": 6114,
+      "sha256": "4d0294d0363dccf27dfd33beb5349207a712752e7d9411ff869ea8dced1f07e4"
+    },
+    {
+      "file": "docs/class-cue-sheet-handoff-20261107/patches/0002-feat-classCueSheet-preserve-active-step-across-live-.patch",
+      "bytes": 126686,
+      "lines": 2897,
+      "sha256": "e4a3c8ad1fa0fe8db5f3378dd0e7c5a46f1c028e160e132168f2c09a75452bf6"
+    },
+    {
+      "file": "docs/class-cue-sheet-handoff-20261107/patches/0003-feat-classCueSheet-refine-novice-mobile-focus-UX-tex.patch",
+      "bytes": 149525,
+      "lines": 3371,
+      "sha256": "1cd62bbd7bc69747392e93323ef5c163c923dce8b510ee1324f0f95bdfe9e58d"
+    },
+    {
+      "file": "docs/class-cue-sheet-handoff-20261107/patches/0004-fix-classCueSheet-guard-editable-keyboard-shortcuts-.patch",
+      "bytes": 49160,
+      "lines": 1220,
+      "sha256": "78aa4952b967e6fb8c09f985cead4d37be0b95114c5a2d5e7c7a829cae94d406"
+    },
+    {
+      "file": "docs/class-cue-sheet-handoff-20261107/patches/classCueSheet-squashed-29a6edb-to-51a6f6b.diff",
+      "bytes": 411428,
+      "lines": 10689,
+      "sha256": "d081e11f4f5a7d6d7fcce997b9089494640fb4dd38f80ce73484eada6b14a4f6"
+    }
+  ]
+}
