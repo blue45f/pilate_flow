@@ -1,0 +1,711 @@
+{
+  "round": "integration-round4-20261107",
+  "verifiedAtUtc": "2026-11-07T11:02:20.416Z",
+  "ancestry": {
+    "checkedAtUtc": "2026-11-07T11:02:05.777Z",
+    "originMainHead": "606f7ad41777e6366eb15b168e6b80486f2ed112",
+    "allTargetsPreservedOnOriginMain": true,
+    "targets": [
+      {
+        "domain": "diagram-merge",
+        "shortRef": "b2d6022b",
+        "fullSha": "b2d6022b8109ad74b01bca817a0788c49aa63cd2",
+        "subject": "Merge branch 'feat/apply-diagram-contact-fixes-20261107': apply minimal 2D diagram pose-apparatus contact fixes to src and re-verify",
+        "isAncestorOfOriginMain": true
+      },
+      {
+        "domain": "diagram-impl",
+        "shortRef": "55ce22d3",
+        "fullSha": "55ce22d30d19a9ed7a080f314f82f94ba10987fc",
+        "subject": "fix(diagrams): apply minimal pose-apparatus contact fixes (D-01..D-05) and verify real app renderer",
+        "isAncestorOfOriginMain": true
+      },
+      {
+        "domain": "pwa-merge",
+        "shortRef": "644185d8",
+        "fullSha": "644185d8c3a29a0f5967f6acecd5647ab90e2681",
+        "subject": "Merge branch 'fix/r3-01-pwa-navigate-query-offline-20261107': fix R3-01 root navigate query-string offline fallback",
+        "isAncestorOfOriginMain": true
+      },
+      {
+        "domain": "pwa-impl",
+        "shortRef": "c477422d",
+        "fullSha": "c477422dbbcb057764f78ec6be43b63c5869ec58",
+        "subject": "fix(pwa): allow root navigate with non-auth query strings to use offline shell fallback (R3-01)",
+        "isAncestorOfOriginMain": true
+      },
+      {
+        "domain": "history-noon-midnight-merge",
+        "shortRef": "606f7ad4",
+        "fullSha": "606f7ad41777e6366eb15b168e6b80486f2ed112",
+        "subject": "Merge branch 'fix/history-noon-midnight-time-regression-20261107': preserve valid 12:00/00:00 ISO class times and hide only explicit date-only records",
+        "isAncestorOfOriginMain": true
+      },
+      {
+        "domain": "history-noon-midnight-impl",
+        "shortRef": "624e2c18",
+        "fullSha": "624e2c189fb7845205bc5b6954778d0cd5372d13",
+        "subject": "fix(history): preserve valid 12:00/00:00 ISO class times and hide only explicit date-only records",
+        "isAncestorOfOriginMain": true
+      }
+    ]
+  },
+  "webkitProbe": {
+    "webkitRuntimeAvailable": false,
+    "probedPaths": [
+      "/usr/bin/safari",
+      "/usr/bin/MiniBrowser",
+      "/usr/bin/WebKitWebProcess",
+      "/usr/bin/epiphany",
+      "/usr/bin/midori",
+      "/usr/local/bin/webkit"
+    ],
+    "foundBinaries": [],
+    "verdict": "UNVERIFIED (미검증 — Linux Debian 12 컨테이너 내 WebKit 바이너리 부재, Chromium 결과를 Safari PASS로 간주하지 않음)"
+  },
+  "ownershipAndConstraints": {
+    "ownedPathOnly": "docs/integration-round4-20261107",
+    "srcModified": false,
+    "sharedCssModified": false,
+    "storeModified": false,
+    "diagramModified": false,
+    "pwaModified": false,
+    "mainBranchModified": false,
+    "productionDeployed": false
+  },
+  "crossFeatureObservations": [
+    {
+      "id": "R4-OBS-01",
+      "severity": "info / cross-module contract note",
+      "modules": [
+        "src/components/LogSessionModal.tsx:161",
+        "src/components/ClassBinderView.tsx:124"
+      ],
+      "summary": "LogSessionModal은 날짜 입력(YYYY-MM-DD)만 받고 내부적으로 new Date(`${taughtDate}T12:00:00`).toISOString()을 생성하며 timestamps: \"unrecorded\" 또는 dateOnly: true 메타데이터를 부여하지 않습니다. 606f7ad4(ClassBinderView)에서 실제 정오(12:00)/자정(00:00) ISO 시각 보존을 위해 휴리스틱을 제거하고 명시적 date-only 메타데이터만 숨기도록 변경됨에 따라, LogSessionModal UI를 통해 새로 기록한 수업 카드에도 .teaching-history-time-of-day 배지(\"12:00\")가 함께 표시됩니다(기능 블로커 아님, 스냅샷·복사·오프라인 보존 정상)."
+    }
+  ],
+  "continuousFlowViewports": [
+    {
+      "viewport": "390x844",
+      "width": 390,
+      "height": 844,
+      "step1_exerciseSearchAndDiagram": {
+        "archetypeId": "reformer-strap-frog-isolated",
+        "apparatus": "reformer",
+        "jointNodeCount": 7,
+        "hasNaNOrUndefined": false,
+        "overflowPx": 0
+      },
+      "step2_addAndReorderSteps": {
+        "beforeReorderTitles": [
+          "누워서 호흡 관찰",
+          "골반 시계",
+          "중간 휴식"
+        ],
+        "afterReorderTitles": [
+          "골반 시계",
+          "누워서 호흡 관찰",
+          "중간 휴식"
+        ],
+        "orderSwapped": true,
+        "overflowPx": 0
+      },
+      "step3_saveAndSeedHistoryFixtures": {
+        "syntheticTitle": "[합성-R4-390] 도해·순서변경·기록·오프라인 연속흐름",
+        "uiLoggedId": "log-1794049328964-9k46cn",
+        "uiLoggedTaughtAt": "2026-11-07T03:00:00.000Z",
+        "localNoonIso": "2026-11-06T03:00:00.000Z",
+        "localMidnightIso": "2026-11-05T15:00:00.000Z",
+        "plainDateOnly": "2026-11-05"
+      },
+      "step4_historyNoonMidnightAndReuse": {
+        "historyTimeVerification": {
+          "noonCard": {
+            "heading": "[합성-R4-390] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존]",
+            "timeAttr": "2026-11-06T03:00:00.000Z",
+            "timeOfDayBadge": "12:00"
+          },
+          "midnightCard": {
+            "heading": "[합성-R4-390] 도해·순서변경·기록·오프라인 연속흐름 [자정 00:00 보존]",
+            "timeAttr": "2026-11-05T15:00:00.000Z",
+            "timeOfDayBadge": "00:00"
+          },
+          "dateOnlyCard": {
+            "heading": "[합성-R4-390] 도해·순서변경·기록·오프라인 연속흐름 [날짜전용 YYYY-MM-DD]",
+            "timeAttr": "2026-11-05",
+            "timeOfDayBadge": null
+          },
+          "uiModalCard": {
+            "heading": "[합성-R4-390] 도해·순서변경·기록·오프라인 연속흐름",
+            "timeOfDayBadge": "12:00",
+            "reflection": "[합성-R4] UI 모달에서 남긴 수업 기록 메모"
+          },
+          "overflowPx": 0
+        },
+        "afterHistoryReuse": {
+          "restoredTitle": "[합성-R4-390] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존] (기록에서 복사)",
+          "stepCount": 3,
+          "stepTitles": [
+            "골반 시계",
+            "누워서 호흡 관찰",
+            "중간 휴식"
+          ],
+          "overflowPx": 0
+        }
+      },
+      "step5_offlineFreshEntryInvariance": {
+        "preOfflineStorageBytes": 187450,
+        "preOfflineStorageSha256": "d8a3bed9ea49bbf386e6ed2a5fbf7053163730cc330fc5a9d82be4da88744c98",
+        "offlineEntryComparisons": [
+          {
+            "entryId": "pwa-query",
+            "requestedPath": "/?utm_source=pwa",
+            "pathname": "/",
+            "search": "?utm_source=pwa",
+            "navigatorOnLine": false,
+            "controlledByServiceWorker": true,
+            "activeTitle": "[합성-R4-390] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존] (기록에서 복사)",
+            "stepIds": [
+              "step-add-1794049328110-vwvvem",
+              "step-add-1794049328082-0tjwlv",
+              "rest-1794049328179-wrdt8z"
+            ],
+            "stepTitles": [
+              "골반 시계",
+              "누워서 호흡 관찰",
+              "중간 휴식"
+            ],
+            "savedTitles": [
+              "[합성-R4-390] 도해·순서변경·기록·오프라인 연속흐름",
+              "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+              "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+              "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+            ],
+            "historyTimestamps": [
+              {
+                "id": "r4-synth-local-noon",
+                "taughtAt": "2026-11-06T03:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-local-midnight",
+                "taughtAt": "2026-11-05T15:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-date-only",
+                "taughtAt": "2026-11-05"
+              }
+            ],
+            "rawStorageBytes": 187450,
+            "overflowPx": 0,
+            "storageSha256": "d8a3bed9ea49bbf386e6ed2a5fbf7053163730cc330fc5a9d82be4da88744c98",
+            "dataInvariant": true
+          },
+          {
+            "entryId": "search-query",
+            "requestedPath": "/?q=%EC%8A%A4%ED%8A%B8%EB%9E%A9&apparatus=reformer",
+            "pathname": "/",
+            "search": "?q=%EC%8A%A4%ED%8A%B8%EB%9E%A9&apparatus=reformer",
+            "navigatorOnLine": false,
+            "controlledByServiceWorker": true,
+            "activeTitle": "[합성-R4-390] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존] (기록에서 복사)",
+            "stepIds": [
+              "step-add-1794049328110-vwvvem",
+              "step-add-1794049328082-0tjwlv",
+              "rest-1794049328179-wrdt8z"
+            ],
+            "stepTitles": [
+              "골반 시계",
+              "누워서 호흡 관찰",
+              "중간 휴식"
+            ],
+            "savedTitles": [
+              "[합성-R4-390] 도해·순서변경·기록·오프라인 연속흐름",
+              "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+              "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+              "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+            ],
+            "historyTimestamps": [
+              {
+                "id": "r4-synth-local-noon",
+                "taughtAt": "2026-11-06T03:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-local-midnight",
+                "taughtAt": "2026-11-05T15:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-date-only",
+                "taughtAt": "2026-11-05"
+              }
+            ],
+            "rawStorageBytes": 187450,
+            "overflowPx": 0,
+            "storageSha256": "d8a3bed9ea49bbf386e6ed2a5fbf7053163730cc330fc5a9d82be4da88744c98",
+            "dataInvariant": true
+          },
+          {
+            "entryId": "normal-root",
+            "requestedPath": "/",
+            "pathname": "/",
+            "search": "",
+            "navigatorOnLine": false,
+            "controlledByServiceWorker": true,
+            "activeTitle": "[합성-R4-390] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존] (기록에서 복사)",
+            "stepIds": [
+              "step-add-1794049328110-vwvvem",
+              "step-add-1794049328082-0tjwlv",
+              "rest-1794049328179-wrdt8z"
+            ],
+            "stepTitles": [
+              "골반 시계",
+              "누워서 호흡 관찰",
+              "중간 휴식"
+            ],
+            "savedTitles": [
+              "[합성-R4-390] 도해·순서변경·기록·오프라인 연속흐름",
+              "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+              "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+              "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+            ],
+            "historyTimestamps": [
+              {
+                "id": "r4-synth-local-noon",
+                "taughtAt": "2026-11-06T03:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-local-midnight",
+                "taughtAt": "2026-11-05T15:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-date-only",
+                "taughtAt": "2026-11-05"
+              }
+            ],
+            "rawStorageBytes": 187450,
+            "overflowPx": 0,
+            "storageSha256": "d8a3bed9ea49bbf386e6ed2a5fbf7053163730cc330fc5a9d82be4da88744c98",
+            "dataInvariant": true
+          }
+        ]
+      },
+      "consoleErrorCount": 0,
+      "pageErrorCount": 0,
+      "viewportPass": true
+    },
+    {
+      "viewport": "768x1024",
+      "width": 768,
+      "height": 1024,
+      "step1_exerciseSearchAndDiagram": {
+        "archetypeId": "reformer-strap-frog-isolated",
+        "apparatus": "reformer",
+        "jointNodeCount": 7,
+        "hasNaNOrUndefined": false,
+        "overflowPx": 0
+      },
+      "step2_addAndReorderSteps": {
+        "beforeReorderTitles": [
+          "누워서 호흡 관찰",
+          "골반 시계",
+          "중간 휴식"
+        ],
+        "afterReorderTitles": [
+          "골반 시계",
+          "누워서 호흡 관찰",
+          "중간 휴식"
+        ],
+        "orderSwapped": true,
+        "overflowPx": 0
+      },
+      "step3_saveAndSeedHistoryFixtures": {
+        "syntheticTitle": "[합성-R4-768] 도해·순서변경·기록·오프라인 연속흐름",
+        "uiLoggedId": "log-1794049333851-pn933s",
+        "uiLoggedTaughtAt": "2026-11-07T03:00:00.000Z",
+        "localNoonIso": "2026-11-06T03:00:00.000Z",
+        "localMidnightIso": "2026-11-05T15:00:00.000Z",
+        "plainDateOnly": "2026-11-05"
+      },
+      "step4_historyNoonMidnightAndReuse": {
+        "historyTimeVerification": {
+          "noonCard": {
+            "heading": "[합성-R4-768] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존]",
+            "timeAttr": "2026-11-06T03:00:00.000Z",
+            "timeOfDayBadge": "12:00"
+          },
+          "midnightCard": {
+            "heading": "[합성-R4-768] 도해·순서변경·기록·오프라인 연속흐름 [자정 00:00 보존]",
+            "timeAttr": "2026-11-05T15:00:00.000Z",
+            "timeOfDayBadge": "00:00"
+          },
+          "dateOnlyCard": {
+            "heading": "[합성-R4-768] 도해·순서변경·기록·오프라인 연속흐름 [날짜전용 YYYY-MM-DD]",
+            "timeAttr": "2026-11-05",
+            "timeOfDayBadge": null
+          },
+          "uiModalCard": {
+            "heading": "[합성-R4-768] 도해·순서변경·기록·오프라인 연속흐름",
+            "timeOfDayBadge": "12:00",
+            "reflection": "[합성-R4] UI 모달에서 남긴 수업 기록 메모"
+          },
+          "overflowPx": 0
+        },
+        "afterHistoryReuse": {
+          "restoredTitle": "[합성-R4-768] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존] (기록에서 복사)",
+          "stepCount": 3,
+          "stepTitles": [
+            "골반 시계",
+            "누워서 호흡 관찰",
+            "중간 휴식"
+          ],
+          "overflowPx": 0
+        }
+      },
+      "step5_offlineFreshEntryInvariance": {
+        "preOfflineStorageBytes": 187450,
+        "preOfflineStorageSha256": "4976c0c8906f0655ca217bf6cbe778d8b7622f7ee8f53ce69b7b28bd50e0b10d",
+        "offlineEntryComparisons": [
+          {
+            "entryId": "pwa-query",
+            "requestedPath": "/?utm_source=pwa",
+            "pathname": "/",
+            "search": "?utm_source=pwa",
+            "navigatorOnLine": false,
+            "controlledByServiceWorker": true,
+            "activeTitle": "[합성-R4-768] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존] (기록에서 복사)",
+            "stepIds": [
+              "step-add-1794049333007-8zuq3t",
+              "step-add-1794049332973-halqao",
+              "rest-1794049333071-67v01c"
+            ],
+            "stepTitles": [
+              "골반 시계",
+              "누워서 호흡 관찰",
+              "중간 휴식"
+            ],
+            "savedTitles": [
+              "[합성-R4-768] 도해·순서변경·기록·오프라인 연속흐름",
+              "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+              "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+              "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+            ],
+            "historyTimestamps": [
+              {
+                "id": "r4-synth-local-noon",
+                "taughtAt": "2026-11-06T03:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-local-midnight",
+                "taughtAt": "2026-11-05T15:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-date-only",
+                "taughtAt": "2026-11-05"
+              }
+            ],
+            "rawStorageBytes": 187450,
+            "overflowPx": 0,
+            "storageSha256": "4976c0c8906f0655ca217bf6cbe778d8b7622f7ee8f53ce69b7b28bd50e0b10d",
+            "dataInvariant": true
+          },
+          {
+            "entryId": "search-query",
+            "requestedPath": "/?q=%EC%8A%A4%ED%8A%B8%EB%9E%A9&apparatus=reformer",
+            "pathname": "/",
+            "search": "?q=%EC%8A%A4%ED%8A%B8%EB%9E%A9&apparatus=reformer",
+            "navigatorOnLine": false,
+            "controlledByServiceWorker": true,
+            "activeTitle": "[합성-R4-768] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존] (기록에서 복사)",
+            "stepIds": [
+              "step-add-1794049333007-8zuq3t",
+              "step-add-1794049332973-halqao",
+              "rest-1794049333071-67v01c"
+            ],
+            "stepTitles": [
+              "골반 시계",
+              "누워서 호흡 관찰",
+              "중간 휴식"
+            ],
+            "savedTitles": [
+              "[합성-R4-768] 도해·순서변경·기록·오프라인 연속흐름",
+              "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+              "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+              "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+            ],
+            "historyTimestamps": [
+              {
+                "id": "r4-synth-local-noon",
+                "taughtAt": "2026-11-06T03:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-local-midnight",
+                "taughtAt": "2026-11-05T15:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-date-only",
+                "taughtAt": "2026-11-05"
+              }
+            ],
+            "rawStorageBytes": 187450,
+            "overflowPx": 0,
+            "storageSha256": "4976c0c8906f0655ca217bf6cbe778d8b7622f7ee8f53ce69b7b28bd50e0b10d",
+            "dataInvariant": true
+          },
+          {
+            "entryId": "normal-root",
+            "requestedPath": "/",
+            "pathname": "/",
+            "search": "",
+            "navigatorOnLine": false,
+            "controlledByServiceWorker": true,
+            "activeTitle": "[합성-R4-768] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존] (기록에서 복사)",
+            "stepIds": [
+              "step-add-1794049333007-8zuq3t",
+              "step-add-1794049332973-halqao",
+              "rest-1794049333071-67v01c"
+            ],
+            "stepTitles": [
+              "골반 시계",
+              "누워서 호흡 관찰",
+              "중간 휴식"
+            ],
+            "savedTitles": [
+              "[합성-R4-768] 도해·순서변경·기록·오프라인 연속흐름",
+              "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+              "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+              "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+            ],
+            "historyTimestamps": [
+              {
+                "id": "r4-synth-local-noon",
+                "taughtAt": "2026-11-06T03:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-local-midnight",
+                "taughtAt": "2026-11-05T15:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-date-only",
+                "taughtAt": "2026-11-05"
+              }
+            ],
+            "rawStorageBytes": 187450,
+            "overflowPx": 0,
+            "storageSha256": "4976c0c8906f0655ca217bf6cbe778d8b7622f7ee8f53ce69b7b28bd50e0b10d",
+            "dataInvariant": true
+          }
+        ]
+      },
+      "consoleErrorCount": 0,
+      "pageErrorCount": 0,
+      "viewportPass": true
+    },
+    {
+      "viewport": "1440x900",
+      "width": 1440,
+      "height": 900,
+      "step1_exerciseSearchAndDiagram": {
+        "archetypeId": "reformer-strap-frog-isolated",
+        "apparatus": "reformer",
+        "jointNodeCount": 7,
+        "hasNaNOrUndefined": false,
+        "overflowPx": 0
+      },
+      "step2_addAndReorderSteps": {
+        "beforeReorderTitles": [
+          "누워서 호흡 관찰",
+          "골반 시계",
+          "중간 휴식"
+        ],
+        "afterReorderTitles": [
+          "골반 시계",
+          "누워서 호흡 관찰",
+          "중간 휴식"
+        ],
+        "orderSwapped": true,
+        "overflowPx": 0
+      },
+      "step3_saveAndSeedHistoryFixtures": {
+        "syntheticTitle": "[합성-R4-1440] 도해·순서변경·기록·오프라인 연속흐름",
+        "uiLoggedId": "log-1794049338734-e3eptu",
+        "uiLoggedTaughtAt": "2026-11-07T03:00:00.000Z",
+        "localNoonIso": "2026-11-06T03:00:00.000Z",
+        "localMidnightIso": "2026-11-05T15:00:00.000Z",
+        "plainDateOnly": "2026-11-05"
+      },
+      "step4_historyNoonMidnightAndReuse": {
+        "historyTimeVerification": {
+          "noonCard": {
+            "heading": "[합성-R4-1440] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존]",
+            "timeAttr": "2026-11-06T03:00:00.000Z",
+            "timeOfDayBadge": "12:00"
+          },
+          "midnightCard": {
+            "heading": "[합성-R4-1440] 도해·순서변경·기록·오프라인 연속흐름 [자정 00:00 보존]",
+            "timeAttr": "2026-11-05T15:00:00.000Z",
+            "timeOfDayBadge": "00:00"
+          },
+          "dateOnlyCard": {
+            "heading": "[합성-R4-1440] 도해·순서변경·기록·오프라인 연속흐름 [날짜전용 YYYY-MM-DD]",
+            "timeAttr": "2026-11-05",
+            "timeOfDayBadge": null
+          },
+          "uiModalCard": {
+            "heading": "[합성-R4-1440] 도해·순서변경·기록·오프라인 연속흐름",
+            "timeOfDayBadge": "12:00",
+            "reflection": "[합성-R4] UI 모달에서 남긴 수업 기록 메모"
+          },
+          "overflowPx": 0
+        },
+        "afterHistoryReuse": {
+          "restoredTitle": "[합성-R4-1440] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존] (기록에서 복사)",
+          "stepCount": 3,
+          "stepTitles": [
+            "골반 시계",
+            "누워서 호흡 관찰",
+            "중간 휴식"
+          ],
+          "overflowPx": 0
+        }
+      },
+      "step5_offlineFreshEntryInvariance": {
+        "preOfflineStorageBytes": 187468,
+        "preOfflineStorageSha256": "ce82fea450ba7cc24e35078aaf76377c5f1ff788460a0ddfac7b210836bce2fe",
+        "offlineEntryComparisons": [
+          {
+            "entryId": "pwa-query",
+            "requestedPath": "/?utm_source=pwa",
+            "pathname": "/",
+            "search": "?utm_source=pwa",
+            "navigatorOnLine": false,
+            "controlledByServiceWorker": true,
+            "activeTitle": "[합성-R4-1440] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존] (기록에서 복사)",
+            "stepIds": [
+              "step-add-1794049337863-dzqv18",
+              "step-add-1794049337839-46htoe",
+              "rest-1794049337933-qwhnbj"
+            ],
+            "stepTitles": [
+              "골반 시계",
+              "누워서 호흡 관찰",
+              "중간 휴식"
+            ],
+            "savedTitles": [
+              "[합성-R4-1440] 도해·순서변경·기록·오프라인 연속흐름",
+              "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+              "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+              "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+            ],
+            "historyTimestamps": [
+              {
+                "id": "r4-synth-local-noon",
+                "taughtAt": "2026-11-06T03:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-local-midnight",
+                "taughtAt": "2026-11-05T15:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-date-only",
+                "taughtAt": "2026-11-05"
+              }
+            ],
+            "rawStorageBytes": 187468,
+            "overflowPx": 0,
+            "storageSha256": "ce82fea450ba7cc24e35078aaf76377c5f1ff788460a0ddfac7b210836bce2fe",
+            "dataInvariant": true
+          },
+          {
+            "entryId": "search-query",
+            "requestedPath": "/?q=%EC%8A%A4%ED%8A%B8%EB%9E%A9&apparatus=reformer",
+            "pathname": "/",
+            "search": "?q=%EC%8A%A4%ED%8A%B8%EB%9E%A9&apparatus=reformer",
+            "navigatorOnLine": false,
+            "controlledByServiceWorker": true,
+            "activeTitle": "[합성-R4-1440] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존] (기록에서 복사)",
+            "stepIds": [
+              "step-add-1794049337863-dzqv18",
+              "step-add-1794049337839-46htoe",
+              "rest-1794049337933-qwhnbj"
+            ],
+            "stepTitles": [
+              "골반 시계",
+              "누워서 호흡 관찰",
+              "중간 휴식"
+            ],
+            "savedTitles": [
+              "[합성-R4-1440] 도해·순서변경·기록·오프라인 연속흐름",
+              "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+              "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+              "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+            ],
+            "historyTimestamps": [
+              {
+                "id": "r4-synth-local-noon",
+                "taughtAt": "2026-11-06T03:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-local-midnight",
+                "taughtAt": "2026-11-05T15:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-date-only",
+                "taughtAt": "2026-11-05"
+              }
+            ],
+            "rawStorageBytes": 187468,
+            "overflowPx": 0,
+            "storageSha256": "ce82fea450ba7cc24e35078aaf76377c5f1ff788460a0ddfac7b210836bce2fe",
+            "dataInvariant": true
+          },
+          {
+            "entryId": "normal-root",
+            "requestedPath": "/",
+            "pathname": "/",
+            "search": "",
+            "navigatorOnLine": false,
+            "controlledByServiceWorker": true,
+            "activeTitle": "[합성-R4-1440] 도해·순서변경·기록·오프라인 연속흐름 [정오 12:00 보존] (기록에서 복사)",
+            "stepIds": [
+              "step-add-1794049337863-dzqv18",
+              "step-add-1794049337839-46htoe",
+              "rest-1794049337933-qwhnbj"
+            ],
+            "stepTitles": [
+              "골반 시계",
+              "누워서 호흡 관찰",
+              "중간 휴식"
+            ],
+            "savedTitles": [
+              "[합성-R4-1440] 도해·순서변경·기록·오프라인 연속흐름",
+              "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+              "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+              "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+            ],
+            "historyTimestamps": [
+              {
+                "id": "r4-synth-local-noon",
+                "taughtAt": "2026-11-06T03:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-local-midnight",
+                "taughtAt": "2026-11-05T15:00:00.000Z"
+              },
+              {
+                "id": "r4-synth-date-only",
+                "taughtAt": "2026-11-05"
+              }
+            ],
+            "rawStorageBytes": 187468,
+            "overflowPx": 0,
+            "storageSha256": "ce82fea450ba7cc24e35078aaf76377c5f1ff788460a0ddfac7b210836bce2fe",
+            "dataInvariant": true
+          }
+        ]
+      },
+      "consoleErrorCount": 0,
+      "pageErrorCount": 0,
+      "viewportPass": true
+    }
+  ],
+  "allViewportsPass": true
+}
