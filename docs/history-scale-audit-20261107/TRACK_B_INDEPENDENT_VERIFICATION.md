@@ -97,3 +97,51 @@ Track B에서 독립적으로 Git 상태, 변경 범위, 그리고 선행 히스
    - [`ClassBinderView.tsx:874-1044`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L874-L1044)에서 전체 `logs`를 한 번에 마운트하고 있어, 초기 `30건`(`visibleHistoryCount = 30`) 점진적 노출(`visibleLogs = logs.slice(0, visibleHistoryCount)`)을 제안한 최소 패치가 기존 날짜 그룹 구조를 해치지 않으면서 DOM 비용을 95% 이상 절감합니다.
 5. **`[P2-2]` 우측 보조 패널 동명 수업 구분 정보 보강**:
    - [`ClassBinderView.tsx:1066-1075`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L1066-L1075)의 최근 3회 비교 리스트에 `sequenceTitle` 또는 시각 정보를 보강하는 제안이 타당합니다.
+
+---
+
+## 6. 후속 최소 패치(`ClassBinderView.tsx`) 실제 앱 반영 독립 검증 결과 (`감사재현PASS` vs `패치후 실제앱 결과`)
+
+- **후속 검증 일자**: `2026-11-07`
+- **후속 검증 판정**: **PASS (5대 최소 패치 실제 반영, 정적 분석·단위/스케일 테스트(`UTC`/`KST`)·실제 Chromium 브라우저 지표 및 스크린샷 전 항목 검증 완료)**
+
+### 6.1 변경 범위(`git status --short`) 및 소유권 경계 독립 검증
+
+- 실행 명령: `git status --short`
+- 확인 결과:
+  - 수정/추가된 파일은 오직 [`src/components/ClassBinderView.tsx`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx), [`src/components/ClassBinderView.historyFlow.test.tsx`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.historyFlow.test.tsx), 그리고 `docs/history-scale-audit-20261107/**` 경로뿐임을 확인했습니다.
+  - 공유 스토어(`src/store/**`), 스키마(`src/schemas/**`), 공용 스타일(`src/styles/**`), 다이어그램/큐시트, 내비게이션, PWA 관련 파일은 **100% 무수정(Untouched)** 상태임을 독립 확인했습니다.
+  - 또한 Track B 검증 과정에서 React 19 `eslint-plugin-react-hooks` (`react-hooks/refs`) 규칙을 엄격히 통과하도록 [`ClassBinderView.tsx:222-253`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L222-L253)의 `reusableBlocks`·`humanDrafts`·`resolvedHistoryMap` 메모이제이션을 렌더링 중 `ref.current` 접근 없는 직렬화 키(`reusableBlocksKey`, `humanDraftsKey`) 기반 `useMemo`로 정제하여 TypeScript 빌드 및 ESLint 에러 `0건`을 달성했습니다.
+
+### 6.2 정적 타입 검사, ESLint, Vitest (`TZ=UTC` & `TZ=Asia/Seoul`) 독립 실행 결과
+
+| 검증 단계 | 실행 명령 | 실행 결과 | 소요 시간 / 상세 |
+| :--- | :--- | :---: | :--- |
+| **TypeScript & ESLint** | `npx tsc -b && npx eslint src/components/ClassBinderView.tsx src/components/ClassBinderView.historyFlow.test.tsx docs/history-scale-audit-20261107/historyScaleUsability.audit.test.tsx` | **PASS (Exit `0`)** | 에러 `0건`, 경고 `0건` (`react-hooks/refs` 포함 전 규칙 통과) |
+| **Vitest (`TZ=UTC`)** | `TZ=UTC npx vitest run src/components/ClassBinderView.historyFlow.test.tsx docs/history-scale-audit-20261107/historyScaleUsability.audit.test.tsx` | **PASS (`2 files, 9 tests`)** | `historyFlow.test.tsx` (`7 passed`, `2,259ms`), `historyScaleUsability.audit.test.tsx` (`2 passed`, `4,809ms`) |
+| **Vitest (`TZ=Asia/Seoul`)** | `TZ=Asia/Seoul npx vitest run src/components/ClassBinderView.historyFlow.test.tsx docs/history-scale-audit-20261107/historyScaleUsability.audit.test.tsx` | **PASS (`2 files, 9 tests`)** | `historyFlow.test.tsx` (`7 passed`, `2,112ms`), `historyScaleUsability.audit.test.tsx` (`2 passed`, `4,854ms`) |
+
+### 6.3 5대 최소 패치 항목별 코드·실측 지표([`post-patch-scale-metrics.json`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/post-patch-scale-metrics.json))·스크린샷 대조 검증
+
+1. **로컬 날짜키 정렬 (`KST` 자정 전후 중복 날짜 칩 제거)**:
+   - [`ClassBinderView.tsx:90-115`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L90-L115)에서 `parseHistoryDate`와 `getHistoryDateKey`가 `formatDate`와 동일한 로컬 연·월·일(`getFullYear()` / `getMonth()` / `getDate()`)을 반환하도록 정렬됨을 확인했습니다.
+   - `TZ=Asia/Seoul` 기준 [`post-patch-scale-metrics.json`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/post-patch-scale-metrics.json)의 `scale1000` 전 뷰포트에서 `duplicateDateChipLabels: []` (`0건`, 패치 전 `["2026년 11월 7일"]`)로 중복 날짜 칩이 완전히 제거되었습니다.
+2. **날짜 칩 초기 `12개` 노출 + 더보기/접기 토글 및 잔류 `selectedDate` 자동 복구**:
+   - [`ClassBinderView.tsx:78`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L78), [`328-355`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L328-L355), [`948-959`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L948-L959)에서 기본 노출 날짜 칩을 최근 `12일`(`전체 날짜` 포함 `dateChipCount: 13`)로 캡핑하고 `"이전 날짜 더보기 (+22일)"`(`100건`) / `"이전 날짜 더보기 (+321일)"`(`1,000건`) 토글을 제공함을 확인했습니다.
+   - 그 결과 `1,000건` 모바일(`390px`) 날짜 탐색 바 높이(`dateNavHeightPx`)가 패치 전 `14,086px`(`15.83x` 화면 높이)에서 패치 후 **`606px`(`0.68x` 화면 높이, `-95.7%`)**로, 데스크톱(`1440px`)에서는 `2,326px`에서 **`142px`(`0.16x` 화면 높이, `-93.9%`)**로 단축되었습니다.
+   - 또한 특정 날짜 선택 후 매칭 `0건` 검색어 입력 시 `effectiveSelectedDate`가 `'all'`로 자동 복구되어 `emptyWithStaleDateTitle: "검색한 수업 완료 기록이 없어요"`가 정확히 표시됨을 확인했습니다.
+3. **카드 초기 `30개` 노출 + 더보기 페이지네이션 (`전체 100 / 1,000 집계 보존`)**:
+   - [`ClassBinderView.tsx:79-80`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L79-L80), [`363-367`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L363-L367), [`1191-1203`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L1191-L1203)에서 상단 총 건수 배지(`100` / `1000`) 및 `"전체 날짜"` 칩 카운트(`allDatesChipCount: "100"` / `"1000"`)는 전체 기록 기준으로 보존하면서 초기 DOM 카드를 `cardCount: 30`으로 제한하고 `"이전 수업 기록 더 보기 (30 / 1000건 표시 중 · 남은 970건)"` 버튼을 제공함을 확인했습니다.
+   - `1,000건` 기준 페이지 전체 DOM 요소 수(`totalDomNodes`)가 패치 전 `57,690개`에서 패치 후 **`2,395개` (`-95.8%`)**로 감소했고, 검색 초기화(`searchResetMs`)는 `2,671.8ms` -> **`253.8ms` (`10.5x` 단축)**, 모바일 연속 스크롤 평균 프레임은 `37.95ms` -> **`16.39ms` (`~60fps`)**로 개선되었습니다.
+4. **불필요한 `resolveTeachingHistoryView` 스냅샷 재파싱 `0회` 및 실제 데이터 변경 즉시 감지**:
+   - [`ClassBinderView.tsx:222-253`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L222-L253) 및 [`ClassBinderView.historyFlow.test.tsx:404-532`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.historyFlow.test.tsx#L404-L532) 스파이 검증을 통해 상세 모달 열기/닫기(`reopenedHistoryId`), 날짜 칩 전환(`selectedDate`), 검색어 입력(`historyQuery`), 더보기(`visibleHistoryCount`) 시에는 추가 스냅샷 파싱이 **`0회`** 발생하고, `exercises`·`savedSequences`·`reusableBlocks`·`humanDrafts`가 실제 수정될 때는 즉시 재계산됨을 확인했습니다.
+5. **날짜만 입력한 기록의 합성 `12:00` 시각 배지 비노출 및 원본 스키마 불변**:
+   - [`ClassBinderView.tsx:116-140`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L116-L140)의 `isSyntheticDateOnlyTimestamp` 및 `formatHistoryTimeOfDay`를 통해 `LogSessionModal`이 날짜만 입력받아 생성한 정오/자정 타임스탬프에서 가짜 `12:00` 시각 배지가 숨겨짐(`synthetic1200BadgeShownOnDateOnlyCard: false`)을 확인했으며, 스토어의 `log.taughtAt` 원본 값과 스키마는 100% 불변으로 유지됩니다.
+
+### 6.4 패치 후 시각 증거 스크린샷 독립 검수
+
+1. **[`post-patch-scale-1000-mobile-320.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-1000-mobile-320.png) (`320×694`, `1,000건`)**:
+   - 상단 `수업 기록 1000` 배지, 검색창, 수업반 필터 탭, `날짜별 탐색` 박스가 `320px` 초소형 모바일 폭에서도 가로 오버플로(`docOverflowPx: 0`, `maxCardOverflowPx: 0`) 없이 깔끔하게 배치되어 있음을 확인했습니다.
+2. **[`post-patch-scale-1000-desktop-1440.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-1000-desktop-1440.png) (`1440×900`, `1,000건`)**:
+   - `전체 날짜 1000` 칩과 최근 12일 날짜 칩(`2026년 11월 7일 3` ~ `2026년 10월 27일 3`, 중복 라벨 0개) 및 우측 `이전 날짜 더보기 (+321일)` 토글이 단 3줄(`dateNavHeightPx: 142px`) 안에 정돈되어 있고, 바로 아래 첫 번째 날짜 그룹(`2026년 11월 7일 (토) 수업 기록 3건`)과 첫 수업 카드(`심야 개인 레슨 흉추 가동성 플로우 (UTC 00:05)`, `09:05` KST 시각 배지 정상 표시) 및 우측 보조 패널(`2026년 11월 7일 · 심야 개인 레슨 흉추 가동성 플로우 (UTC 00:05)`)이 첫 화면(`firstCardTopPx: 627px`)에 한눈에 노출됨을 시각적으로 확인했습니다.
+

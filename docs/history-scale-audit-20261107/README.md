@@ -169,10 +169,63 @@
 ## 7. 검증 재실행 명령어
 
 ```bash
-# 1. 독립 Vitest 장기 누적(100/1000건) 및 5대 경계값 테스트 실행
-npx vitest run docs/history-scale-audit-20261107/historyScaleUsability.audit.test.tsx
+# 1. 로컬 기능 회귀 + 장기 누적(100/1000건) 및 5대 경계값 테스트 실행 (UTC & KST 교차 검증)
+TZ=UTC npx vitest run src/components/ClassBinderView.historyFlow.test.tsx docs/history-scale-audit-20261107/historyScaleUsability.audit.test.tsx
+TZ=Asia/Seoul npx vitest run src/components/ClassBinderView.historyFlow.test.tsx docs/history-scale-audit-20261107/historyScaleUsability.audit.test.tsx
 
-# 2. 실제 Chromium 브라우저 100건 / 1,000건 멀티 뷰포트(320/390/768/1440/200%) 및 메모리/렌더 측정
-node docs/history-scale-audit-20261107/verify-history-scale-browser.mjs --scale=100
-TZ=Asia/Seoul node docs/history-scale-audit-20261107/verify-history-scale-browser.mjs --scale=1000
+# 2. 실제 Chromium 브라우저 100건(UTC) / 1,000건(TZ=Asia/Seoul) 패치 후 멀티 뷰포트 및 메모리/렌더 측정
+node docs/history-scale-audit-20261107/verify-history-scale-browser.mjs --scale=100 --out=post-patch-scale-metrics.json
+TZ=Asia/Seoul node docs/history-scale-audit-20261107/verify-history-scale-browser.mjs --scale=1000 --out=post-patch-scale-metrics.json
 ```
+
+---
+
+## 8. 후속 최소 반영 패치 적용 및 전·후(`b899651 감사재현` vs `패치후 실제앱 결과`) 비교 검증
+
+> [!IMPORTANT]
+> 위 `4절 ~ 6절`의 수치는 패치 전 `b899651` 감사 시점의 결함 재현 기준선([`scale-metrics.json`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/scale-metrics.json), **`감사재현PASS`**)이며, 아래 `8절`은 [`src/components/ClassBinderView.tsx`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx)에 5대 사용성·스케일 최소 패치를 실제 반영한 뒤 측정한 **`패치후 실제앱 결과`**([`post-patch-scale-metrics.json`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/post-patch-scale-metrics.json))입니다.
+
+### 8.1 반영된 5대 최소 패치 요약 (`src/components/ClassBinderView.tsx` 단일 컴포넌트 소유)
+
+1. **로컬 날짜키 정렬 (`KST 자정전후 중복날짜칩 제거`)**:
+   - [`parseHistoryDate`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L90-L98) 및 [`getHistoryDateKey`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L109-L115)가 `formatDate` / `formatDateWithWeekday`와 동일한 브라우저 로컬 달력 연·월·일(`getFullYear()` / `getMonth()` / `getDate()`)을 사용하도록 정렬했습니다.
+   - `TZ=Asia/Seoul`에서 자정 전후 기록(`2026-11-06T14:50:00.000Z` = `11/06 23:50 KST`, `2026-11-06T15:10:00.000Z` = `11/07 00:10 KST`, `2026-11-06T23:55:00.000Z` = `11/07 08:55 KST`, `2026-11-07T00:05:00.000Z` = `11/07 09:05 KST`)이 로컬 날짜와 100% 일치하게 그룹핑되어 중복 `"2026년 11월 7일"` 날짜 칩이 완전히 제거(`duplicateDateChipLabels: []`)되었습니다.
+2. **날짜 칩 최근 12개 + 더보기/접기 및 선택 필터 자동 복구 (`INITIAL_VISIBLE_DATE_CHIPS = 12`)**:
+   - 상단 날짜 탐색 바(`.teaching-date-nav`)의 기본 노출 날짜 칩을 최근 `12일`(`전체 날짜` 포함 총 `13개` 버튼)로 제한하고 `"이전 날짜 더보기 (+N일)"` / `"날짜 접기"` 토글(`.teaching-date-more-toggle`)을 추가했습니다.
+   - 특정 날짜 칩을 선택한 상태에서 검색어 입력 등으로 해당 날짜가 `dateFilterOptions`에서 사라지면 `effectiveSelectedDate`가 자동으로 `'all'`로 복구되어, 검색 결과 0건 빈 상태가 `"선택한 날짜에 남긴 수업 기록이 없어요"`에 갇히지 않고 `"검색한 수업 완료 기록이 없어요"`와 `"검색 지우기"` 액션을 정확히 노출합니다.
+3. **카드 초기 30개 + 더보기로 전체 집계 유지 및 DOM 폭증 제거 (`INITIAL_VISIBLE_HISTORY_LOGS = 30`)**:
+   - 상단 전체 기록 수(`100건` / `1,000건`), 수업반별 카운트, `"전체 날짜"` 칩 카운트(`100` / `1000`), 날짜별 칩 카운트는 전체 `logs` 기준으로 100% 유지하면서, 화면에 마운트되는 카드 목록만 `visibleLogs = logs.slice(0, visibleHistoryCount)`(초기 `30개`, 페이지당 `+30개`)로 슬라이싱하고 하단에 `"이전 수업 기록 더 보기 (30 / 1000건 표시 중 · 남은 970건)"` 버튼을 배치했습니다.
+4. **실제 데이터 변경 의존성을 모두 보존한 `resolvedHistoryMap` 메모이제이션 (`불필요한 1000건 snapshot 재파싱 제거` + React Compiler `react-hooks/refs` 준수)**:
+   - 단순히 `[savedSequences, historyLogs]`에만 의존하면 카탈로그 동작(`exercises`), 재사용 블록(`reusableBlocks`), 동작 초안(`humanDrafts`) 편집 시 변경 감지를 놓칠 수 있으므로, [`ClassBinderView.tsx:222-253`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L222-L253)에서 `getSavedReusableBlocks()`와 `getSavedHumanMovementDrafts()`의 직렬화 키(`reusableBlocksKey`, `humanDraftsKey`)를 `useMemo` 의존성으로 사용하여 **실제 데이터가 변경될 때만 새 참조를 방출**하도록 구성했습니다.
+   - 이를 통해 React 19 `eslint-plugin-react-hooks` (`react-hooks/refs`) 규칙을 100% 준수하면서도 상세 모달 열기/닫기(`reopenedHistoryId`), 날짜 칩 전환(`selectedDate`), 검색어 입력(`historyQuery`), 더보기(`visibleHistoryCount`) 등 **단순 UI 상태 변경 시에는 `resolveTeachingHistoryView` 재파싱이 `0회` 발생**하고, 카탈로그 동작·시퀀스·블록·초안이 실제 수정될 때만 즉시 재계산됨을 스파이 테스트로 회귀 검증했습니다.
+5. **날짜만 입력된 기록의 임의 시각(`12:00` / `00:00`) 배지 비노출 및 원본 스키마 불변**:
+   - [`isSyntheticDateOnlyTimestamp`](file:///home/antigravity/blue45f/pilate_flow/src/components/ClassBinderView.tsx#L116-L131) 및 `formatHistoryTimeOfDay`에서 `LogSessionModal`이 날짜만 입력받아 생성한 정오/자정 타임스탬프(`T12:00:00`, `T00:00:00`, 로컬 `12:00:00.000` / `00:00:00.000`)를 감지해 UI 시각 배지를 숨기되(`null` 반환), 저장된 `log.taughtAt` 원본 값과 스토어/스키마는 일체 변경하지 않았습니다.
+
+---
+
+### 8.2 `b899651 감사재현` vs `패치후 실제앱 결과` 정량 비교 (`100건 UTC` & `1,000건 KST`)
+
+| 측정 항목 | `100건` 패치 전 (`감사재현`) | `100건` 패치 후 (`실제앱 결과`) | `1,000건` 패치 전 (`감사재현`) | `1,000건` 패치 후 (`실제앱 결과`) | 개선 효과 요약 |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **전체 기록 집계 (`전체 날짜` 칩 카운트)** | `100` | **`100` (유지)** | `1000` | **`1000` (유지)** | 전체 건수·날짜별 카운트 100% 보존 |
+| **초기 렌더링 카드 수 (`cardCount`)** | `100개` | **`30개` (`+더보기 70건`)** | `1,000개` | **`30개` (`+더보기 970건`)** | 초기 카드 30개 캡 + 30개 단위 더보기 |
+| **초기 노출 날짜 칩 수 (`dateChipCount`)** | `36개` | **`13개` (`+22일 더보기`)** | `336개` | **`13개` (`+321일 더보기`)** | 최근 12일 + 전체 날짜 칩만 기본 노출 |
+| **페이지 전체 HTML Element 수 (`totalDomNodes`)** | `5,839개` | **`2,411개` (`-58.7%`)** | `57,690개` | **`2,395개` (`-95.8%`)** | `1,000건` 기준 **DOM 폭증 `95.8%` 제거** |
+| **KST 자정 전후 중복 날짜 칩 (`duplicateDateChipLabels`)** | `[]` | **`[]`** | `["2026년 11월 7일"]` | **`[]` (`0건`)** | 로컬 날짜키 일치로 KST 중복 칩 완전 해소 |
+| **날짜만 입력된 기록의 `12:00` 배지 노출 여부** | `true` (`12:00` 노출) | **`false` (비노출)** | `true` (`12:00` 노출) | **`false` (비노출)** | 원본 `taughtAt` 불변 유지하며 가짜 시각 배지 제거 |
+| **상세 모달 열기/닫기 시 `resolveTeachingHistoryView` 재파싱 횟수** | `100회` / 토글 | **`0회` / 토글** | `1,000회` / 토글 | **`0회` / 토글** | UI 토글 시 스냅샷 재파싱 `0회` (데이터 편집 시에만 재계산) |
+| **모바일 `390px` 날짜 칩 바 높이 (`dateNavHeightPx`)** | `1,486px` (`1.67x` 화면) | **`606px` (`0.68x` 화면)** | `14,086px` (`15.83x` 화면) | **`606px` (`0.68x` 화면)** | `1,000건` 모바일 날짜바 높이 **`-95.7%` 단축** |
+| **데스크톱 `1440px` 날짜 칩 바 높이 (`dateNavHeightPx`)** | `286px` (`0.32x` 화면) | **`142px` (`0.16x` 화면)** | `2,326px` (`2.58x` 화면) | **`142px` (`0.16x` 화면)** | `1,000건` PC 날짜바 높이 **`-93.9%` 단축** |
+| **모바일 `390px` 첫 카드 시작 Y좌표 (`firstCardTopPx`)** | `2,244px` | **`1,364px`** | `14,844px` | **`1,364px`** | 첫 수업 카드 도달 스크롤 거리 **`-90.8%` 단축** |
+| **초기 하이드레이션 소요 시간 (`hydrationMs`)** | `2,775.4 ms` | **`2,658.7 ms`** | `4,578.9 ms` | **`1,767.2 ms` (`2.59x` 단축)** | `1,000건` 초기 진입 시간 대폭 단축 |
+| **검색 초기화 (`0건 -> 전체 목록 복원`, `searchResetMs`)** | `621.6 ms` | **`214.4 ms`** | `2,671.8 ms` | **`253.8 ms` (`10.5x` 단축)** | `1,000개` 동시 마운트 제거로 즉시 복원 |
+| **날짜 칩 필터 클릭 (`dateFilterMs`)** | `92.9 ms` | **`33.7 ms`** | `935.7 ms` | **`88.4 ms` (`10.6x` 단축)** | 캐시 무효화 제거로 즉각 반응 |
+| **상세 모달 열기 (`modalOpenMs`)** | `581.8 ms` | **`264.0 ms`** | `828.2 ms` | **`336.1 ms` (`2.46x` 단축)** | `1,000건` 스냅샷 재파싱 제거 |
+| **특정 날짜 선택 후 매칭 0건 검색 시 빈 상태 제목** | `"선택한 날짜에 남긴 수업 기록이 없어요"` | **`"검색한 수업 완료 기록이 없어요"`** | `"선택한 날짜에 남긴 수업 기록이 없어요"` | **`"검색한 수업 완료 기록이 없어요"`** | 숨겨진 날짜 필터 자동 복구 완료 |
+| **모바일 `390px` 연속 스크롤 프레임 (`avg` / `max`)** | `14.77 ms` / `45.6 ms` | **`16.25 ms` / `22.0 ms`** | `37.95 ms` / `83.9 ms` | **`16.39 ms` / `17.0 ms` (`60fps` 유지)** | `1,000건`에서도 `16.4ms`(`~60fps`) 프레임 유지 |
+| **전 뷰포트(`320/390/768/1440/200%`) 가로 오버플로** | `0px` / `0px` | **`0px` / `0px` (PASS)** | `0px` / `0px` | **`0px` / `0px` (PASS)** | 모든 뷰포트 및 200% 확대 레이아웃 무결성 유지 |
+
+- **패치 후 시각 증거 스크린샷 경로 (`docs/history-scale-audit-20261107/evidence/screenshots/post-patch-*`)**:
+  - `100건`: [`post-patch-scale-100-mobile-320.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-100-mobile-320.png), [`post-patch-scale-100-mobile-390.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-100-mobile-390.png), [`post-patch-scale-100-tablet-768.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-100-tablet-768.png), [`post-patch-scale-100-desktop-1440.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-100-desktop-1440.png), [`post-patch-scale-100-desktop-1440-zoom200.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-100-desktop-1440-zoom200.png), [`post-patch-scale-100-mobile-390-zoom200.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-100-mobile-390-zoom200.png)
+  - `1,000건`: [`post-patch-scale-1000-mobile-320.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-1000-mobile-320.png), [`post-patch-scale-1000-mobile-390.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-1000-mobile-390.png), [`post-patch-scale-1000-tablet-768.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-1000-tablet-768.png), [`post-patch-scale-1000-desktop-1440.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-1000-desktop-1440.png), [`post-patch-scale-1000-desktop-1440-zoom200.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-1000-desktop-1440-zoom200.png), [`post-patch-scale-1000-mobile-390-zoom200.png`](file:///home/antigravity/blue45f/pilate_flow/docs/history-scale-audit-20261107/evidence/screenshots/post-patch-scale-1000-mobile-390-zoom200.png)
+
