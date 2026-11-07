@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Class Cue Sheet Standalone Browser Fixture</title>
+    <style>
+      html,
+      body,
+      #cue-sheet-mount {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        max-width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cue-sheet-mount"></div>
+    <script type="module">
+      import React from 'react';
+      import { flushSync } from 'react-dom';
+      import { createRoot } from 'react-dom/client';
+      import { ClassCueSheetPreview } from '/src/features/classCueSheet/ClassCueSheetPreview.tsx';
+
+      const mount = document.getElementById('cue-sheet-mount');
+      const root = createRoot(mount);
+
+      const renderProps = async (props = {}) => {
+        flushSync(() => {
+          root.render(React.createElement(ClassCueSheetPreview, props));
+        });
+        await new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        );
+      };
+
+      const isElementVisible = (el) => {
+        if (!el) return false;
+        let cur = el;
+        while (cur && cur instanceof HTMLElement) {
+          const style = window.getComputedStyle(cur);
+          if (style.display === 'none' || style.visibility === 'hidden') {
+            return false;
+          }
+          cur = cur.parentElement;
+        }
+        const rect = el.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      };
+
+      const getRootMetrics = () => {
+        const rootEl = document.querySelector('[data-testid="class-cue-sheet-root"]');
+        if (!rootEl) {
+          return null;
+        }
+
+        const headerEl = rootEl.querySelector('[data-testid="cue-sheet-compact-header"]');
+        const focusDeckEl = rootEl.querySelector('[data-testid="cue-sheet-focus-deck"]');
+        const currentCardEl = rootEl.querySelector('[data-testid="cue-sheet-current-card"]');
+        const nextCardEl = rootEl.querySelector('[data-testid="cue-sheet-next-card"]');
+        const progressionSectionEl = rootEl.querySelector(
+          '[data-testid="cue-sheet-progression-section"]',
+        );
+        const diagnosticsSectionEl = rootEl.querySelector(
+          '[data-testid="cue-sheet-diagnostics-section"]',
+        );
+        const fullListPanelEl = rootEl.querySelector(
+          '[data-testid="cue-sheet-full-list-panel"]',
+        );
+        const diagnosticsPanelEl = rootEl.querySelector(
+          '[data-testid="cue-sheet-diagnostics-panel"]',
+        );
+
+        const visibleControls = Array.from(
+          rootEl.querySelectorAll('button, select'),
+        )
+          .filter(isElementVisible)
+          .map((el) => {
+            const rect = el.getBoundingClientRect();
+            return {
+              tag: el.tagName.toLowerCase(),
+              testId: el.getAttribute('data-testid') || el.getAttribute('data-fixture-id') || '',
+              text: (el.textContent || '').trim().slice(0, 40),
+              width: Number(rect.width.toFixed(2)),
+              height: Number(rect.height.toFixed(2)),
+              left: Math.floor(rect.left),
+              right: Math.ceil(rect.right),
+            };
+          });
+
+        const majorCards = Array.from(
+          rootEl.querySelectorAll(
+            '[data-testid="cue-sheet-compact-header"], .cue-sheet-focus-deck, .cue-sheet-focus-card, .cue-sheet-item, .cue-sheet-expanded-row, .cue-sheet-summary-card, .cue-sheet-truncation-banner',
+          ),
+        ).filter(isElementVisible);
+
+        const maxChildRight = majorCards.reduce(
+          (max, el) => Math.max(max, Math.round(el.getBoundingClientRect().right)),
+          0,
+        );
+
+        return {
+          innerWidth: window.innerWidth,
+          innerHeight: window.innerHeight,
+          docScrollWidth: document.documentElement.scrollWidth,
+          rootScrollWidth: rootEl.scrollWidth,
+          maxChildRight,
+          scrollX: window.scrollX,
+          textScale: rootEl.getAttribute('data-text-scale') ?? '100',
+          fullListOpen: rootEl.getAttribute('data-full-list-open') === 'true',
+          diagnosticsOpen: rootEl.getAttribute('data-diagnostics-open') === 'true',
+          reducedMotion: rootEl.getAttribute('data-reduced-motion') ?? '',
+          mandatoryReviewGate: rootEl.getAttribute('data-mandatory-review-gate') ?? '',
+          currentStepIndex: Number(rootEl.getAttribute('data-current-step-index') ?? '-1'),
+          currentCueItemId: rootEl.getAttribute('data-current-cue-item-id') ?? '',
+          selectionResolution: rootEl.getAttribute('data-selection-resolution') ?? '',
+          fullListDisplay: fullListPanelEl
+            ? window.getComputedStyle(fullListPanelEl).display
+            : 'missing',
+          diagnosticsDisplay: diagnosticsPanelEl
+            ? window.getComputedStyle(diagnosticsPanelEl).display
+            : 'missing',
+          readingOrder: {
+            headerTop: headerEl ? Math.round(headerEl.getBoundingClientRect().top) : null,
+            focusDeckTop: focusDeckEl
+              ? Math.round(focusDeckEl.getBoundingClientRect().top)
+              : null,
+            currentCardTop: currentCardEl
+              ? Math.round(currentCardEl.getBoundingClientRect().top)
+              : null,
+            nextCardTop: nextCardEl
+              ? Math.round(nextCardEl.getBoundingClientRect().top)
+              : null,
+            progressionSectionTop: progressionSectionEl
+              ? Math.round(progressionSectionEl.getBoundingClientRect().top)
+              : null,
+            diagnosticsSectionTop: diagnosticsSectionEl
+              ? Math.round(diagnosticsSectionEl.getBoundingClientRect().top)
+              : null,
+          },
+          touchTargets: visibleControls,
+          localStorageLen: window.localStorage.length,
+          sessionStorageLen: window.sessionStorage.length,
+          injectedScriptCount: rootEl.querySelectorAll('script').length,
+        };
+      };
+
+      window.__cueSheetProbe__ = {
+        renderProps,
+        getRootMetrics,
+      };
+      window.__renderCueSheetProps = renderProps;
+
+      root.render(React.createElement(ClassCueSheetPreview, { showFixtureSwitcher: true }));
+    </script>
+  </body>
+</html>

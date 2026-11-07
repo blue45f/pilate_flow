@@ -1,0 +1,188 @@
+.psc-root {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-family: inherit;
+  color: #1f2924;
+  background-color: #fbfaf6;
+  border: 1px solid #d8d3c5;
+  border-radius: 12px;
+  padding: 1rem;
+  overflow-x: hidden;
+}
+
+.psc-section {
+  box-sizing: border-box;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e2ddd0;
+  border-radius: 10px;
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.psc-section--banner {
+  background: #f4f1e8;
+  border-color: #cfc8b6;
+}
+
+.psc-header-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.psc-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.psc-section-title {
+  margin: 0;
+  font-size: 0.975rem;
+  font-weight: 700;
+}
+
+.psc-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.psc-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #eae5d7;
+  color: #26352d;
+}
+
+.psc-badge--ready {
+  background: #d9ece2;
+  color: #154c33;
+}
+
+.psc-badge--blocked {
+  background: #f9dedc;
+  color: #7a1c18;
+}
+
+.psc-disclaimer {
+  margin: 0;
+  padding: 0.5rem 0.625rem;
+  border-radius: 8px;
+  background: #fffdf8;
+  border-left: 3px solid #4a6b5b;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #36453d;
+}
+
+.psc-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 0.5rem;
+}
+
+.psc-metric-card {
+  padding: 0.5rem 0.625rem;
+  border-radius: 8px;
+  background: #f8f6f0;
+  border: 1px solid #e5e0d3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.psc-metric-label {
+  font-size: 0.75rem;
+  color: #55635b;
+}
+
+.psc-metric-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.psc-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.psc-tab-btn,
+.psc-candidate-btn,
+.psc-jump-btn,
+.psc-copy-btn,
+.psc-fixture-btn {
+  min-height: 44px;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #c5beae;
+  background: #ffffff;
+  color: #1f2924;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.psc-tab-btn[aria-selected='true'],
+.psc-candidate-btn[aria-pressed='true'],
+.psc-fixture-btn[aria-pressed='true'] {
+  background: #234233;
+  color: #ffffff;
+  border-color: #234233;
+}
+
+.psc-issue-list,
+.psc-step-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.psc-issue-card {
+  padding: 0.625rem;
+  border-radius: 8px;
+  border: 1px solid #e3d6c1;
+  background: #fffaf0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.psc-issue-card--blocking {
+  border-color: #e4b4b1;
+  background: #fff5f5;
+}
+
+.psc-step-card {
+  padding: 0.625rem;
+  border-radius: 8px;
+  border: 1px solid #e1dcd0;
+  background: #fcfbf8;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.psc-step-card--highlighted {
+  outline: 2px solid #234233;
+  background: #eef6f1;
+}

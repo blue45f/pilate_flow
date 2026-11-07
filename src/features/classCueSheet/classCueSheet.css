@@ -1,0 +1,759 @@
+.class-cue-sheet-root {
+  --cue-sheet-font-scale: 1;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  padding: 1rem;
+  color: #18181b;
+  background-color: #fafafa;
+  font-family:
+    'Pretendard Variable',
+    'Pretendard',
+    'Noto Sans CJK KR',
+    'Noto Sans KR',
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    sans-serif;
+  font-size: calc(1rem * var(--cue-sheet-font-scale, 1));
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.class-cue-sheet-root *,
+.class-cue-sheet-root *::before,
+.class-cue-sheet-root *::after {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  font-family: inherit;
+}
+
+.class-cue-sheet-root h1,
+.class-cue-sheet-root h2,
+.class-cue-sheet-root h3,
+.class-cue-sheet-root h4,
+.class-cue-sheet-root p,
+.class-cue-sheet-root span,
+.class-cue-sheet-root strong,
+.class-cue-sheet-root label,
+.class-cue-sheet-root button,
+.class-cue-sheet-root select,
+.class-cue-sheet-root li,
+.class-cue-sheet-root dt,
+.class-cue-sheet-root dd,
+.class-cue-sheet-root td,
+.class-cue-sheet-root th,
+.class-cue-sheet-root .cue-sheet-badge,
+.class-cue-sheet-root .cue-sheet-title,
+.class-cue-sheet-root .cue-sheet-subtitle,
+.class-cue-sheet-root .cue-sheet-note,
+.class-cue-sheet-root .cue-sheet-long-note,
+.class-cue-sheet-root .cue-sheet-cue-text {
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.class-cue-sheet-root .cue-sheet-compact-header {
+  border: 1px solid #d4d4d8;
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.class-cue-sheet-root .cue-sheet-compact-header-main {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.class-cue-sheet-root .cue-sheet-scale-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.class-cue-sheet-root .cue-sheet-scale-label {
+  font-size: calc(0.8125rem * var(--cue-sheet-font-scale, 1));
+  font-weight: 700;
+  color: #27272a;
+}
+
+.class-cue-sheet-root .cue-sheet-boundary-banner {
+  border: 1px solid #d4d4d8;
+  background-color: #f4f4f5;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.class-cue-sheet-root .cue-sheet-boundary-title {
+  margin: 0;
+  font-size: calc(0.875rem * var(--cue-sheet-font-scale, 1));
+  font-weight: 700;
+  color: #18181b;
+}
+
+.class-cue-sheet-root .cue-sheet-boundary-text {
+  margin: 0;
+  font-size: calc(0.8125rem * var(--cue-sheet-font-scale, 1));
+  color: #3f3f46;
+}
+
+.class-cue-sheet-root .cue-sheet-diagnostics-list {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+}
+
+.class-cue-sheet-root .cue-sheet-fixture-toolbar {
+  border: 1px solid #e4e4e7;
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.class-cue-sheet-root .cue-sheet-fixture-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: calc(0.875rem * var(--cue-sheet-font-scale, 1));
+}
+
+.class-cue-sheet-root .cue-sheet-fixture-select {
+  min-height: 44px;
+  min-width: 44px;
+  max-width: 100%;
+  padding: 0.375rem 0.625rem;
+  border: 1px solid #a1a1aa;
+  border-radius: 0.375rem;
+  background-color: #ffffff;
+  color: #18181b;
+  font-size: calc(0.875rem * var(--cue-sheet-font-scale, 1));
+}
+
+.class-cue-sheet-root .cue-sheet-fixture-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.class-cue-sheet-root .cue-sheet-btn,
+.class-cue-sheet-root .cue-sheet-disclosure-btn {
+  min-height: 44px;
+  min-width: 44px;
+  max-width: 100%;
+  padding: 0.4375rem 0.75rem;
+  border: 1px solid #a1a1aa;
+  border-radius: 0.375rem;
+  background-color: #ffffff;
+  color: #18181b;
+  font-size: calc(0.875rem * var(--cue-sheet-font-scale, 1));
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: normal;
+  cursor: pointer;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  text-align: left;
+}
+
+.class-cue-sheet-root .cue-sheet-btn:hover:not(:disabled) {
+  background-color: #f4f4f5;
+}
+
+.class-cue-sheet-root .cue-sheet-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.class-cue-sheet-root .cue-sheet-btn.is-active {
+  background-color: #18181b;
+  color: #ffffff;
+  border-color: #18181b;
+}
+
+.class-cue-sheet-root .cue-sheet-summary-card {
+  border: 1px solid #d4d4d8;
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.class-cue-sheet-root .cue-sheet-summary-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.class-cue-sheet-root .cue-sheet-title {
+  margin: 0;
+  font-size: calc(1.25rem * var(--cue-sheet-font-scale, 1));
+  font-weight: 800;
+  line-height: 1.35;
+  color: #09090b;
+}
+
+.class-cue-sheet-root .cue-sheet-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: calc(0.875rem * var(--cue-sheet-font-scale, 1));
+  color: #52525b;
+}
+
+.class-cue-sheet-root .cue-sheet-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 1rem;
+  margin: 0;
+}
+
+.class-cue-sheet-root .cue-sheet-summary-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.5rem;
+  border: 1px solid #e4e4e7;
+  border-radius: 0.375rem;
+  background-color: #fafafa;
+}
+
+.class-cue-sheet-root .cue-sheet-summary-label {
+  font-size: calc(0.75rem * var(--cue-sheet-font-scale, 1));
+  font-weight: 600;
+  color: #52525b;
+}
+
+.class-cue-sheet-root .cue-sheet-summary-value {
+  font-size: calc(0.875rem * var(--cue-sheet-font-scale, 1));
+  font-weight: 700;
+  color: #18181b;
+}
+
+.class-cue-sheet-root .cue-sheet-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  align-items: center;
+}
+
+.class-cue-sheet-root .cue-sheet-badge {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid #a1a1aa;
+  background-color: #f4f4f5;
+  color: #18181b;
+  font-size: calc(0.75rem * var(--cue-sheet-font-scale, 1));
+  font-weight: 600;
+  white-space: normal;
+}
+
+.class-cue-sheet-root .cue-sheet-badge.is-warning {
+  border-color: #b45309;
+  background-color: #fef3c7;
+  color: #78350f;
+}
+
+.class-cue-sheet-root .cue-sheet-badge.is-emphasis {
+  border-color: #1d4ed8;
+  background-color: #dbeafe;
+  color: #1e3a8a;
+}
+
+.class-cue-sheet-root .cue-sheet-truncation-banner {
+  border: 2px solid #b45309;
+  background-color: #fffbeb;
+  color: #78350f;
+  border-radius: 0.5rem;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.class-cue-sheet-root .cue-sheet-truncation-title {
+  margin: 0;
+  font-size: calc(0.9375rem * var(--cue-sheet-font-scale, 1));
+  font-weight: 800;
+}
+
+.class-cue-sheet-root .cue-sheet-truncation-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: calc(0.8125rem * var(--cue-sheet-font-scale, 1));
+}
+
+.class-cue-sheet-root .cue-sheet-focus-deck {
+  border: 2px solid #18181b;
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.class-cue-sheet-root [data-testid='cue-sheet-a11y-status'],
+.class-cue-sheet-root .cue-sheet-a11y-status,
+.class-cue-sheet-root [data-testid='cue-sheet-selection-fallback-notice'],
+.class-cue-sheet-root .cue-sheet-selection-fallback-notice {
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.class-cue-sheet-root [data-testid='cue-sheet-selection-fallback-notice'],
+.class-cue-sheet-root .cue-sheet-selection-fallback-notice {
+  border: 1px solid #b45309;
+  background-color: #fffbeb;
+  color: #78350f;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: calc(0.8125rem * var(--cue-sheet-font-scale, 1));
+  font-weight: 600;
+}
+
+.class-cue-sheet-root .cue-sheet-focus-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: calc(0.875rem * var(--cue-sheet-font-scale, 1));
+}
+
+.class-cue-sheet-root .cue-sheet-focus-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.class-cue-sheet-root[data-text-scale='150'] .cue-sheet-focus-grid,
+.class-cue-sheet-root[data-text-scale='200'] .cue-sheet-focus-grid,
+.class-cue-sheet-root[data-text-scale='150'] .cue-sheet-summary-grid,
+.class-cue-sheet-root[data-text-scale='200'] .cue-sheet-summary-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.class-cue-sheet-root .cue-sheet-focus-card {
+  border: 1px solid #a1a1aa;
+  border-radius: 0.5rem;
+  padding: 0.875rem;
+  background-color: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.class-cue-sheet-root .cue-sheet-focus-card.is-current {
+  border-width: 2px;
+  border-color: #18181b;
+  background-color: #ffffff;
+}
+
+.class-cue-sheet-root .cue-sheet-progression-section,
+.class-cue-sheet-root .cue-sheet-diagnostics-section {
+  border: 1px solid #d4d4d8;
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.class-cue-sheet-root .cue-sheet-collapsible-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.class-cue-sheet-root .cue-sheet-collapsible-panel.is-collapsed-screen {
+  display: none !important;
+}
+
+.class-cue-sheet-root.is-print-preview
+  .cue-sheet-collapsible-panel.is-collapsed-screen {
+  display: block !important;
+}
+
+.class-cue-sheet-root .cue-sheet-view-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.class-cue-sheet-root .cue-sheet-view-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.class-cue-sheet-root .cue-sheet-item-list,
+.class-cue-sheet-root .cue-sheet-expanded-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.class-cue-sheet-root .cue-sheet-item {
+  border: 1px solid #d4d4d8;
+  border-radius: 0.5rem;
+  padding: 0.875rem;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.class-cue-sheet-root .cue-sheet-item.is-active-step {
+  border-width: 2px;
+  border-color: #18181b;
+  background-color: #f4f4f5;
+}
+
+.class-cue-sheet-root .cue-sheet-item-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.class-cue-sheet-root .cue-sheet-item-select-btn {
+  min-height: 44px;
+  min-width: 44px;
+  max-width: 100%;
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid #a1a1aa;
+  border-radius: 0.375rem;
+  background-color: #ffffff;
+  color: #18181b;
+  font-size: calc(0.9375rem * var(--cue-sheet-font-scale, 1));
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: normal;
+  cursor: pointer;
+  text-align: left;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.class-cue-sheet-root .cue-sheet-item-select-btn[aria-current='step'] {
+  background-color: #18181b;
+  color: #ffffff;
+  border-color: #18181b;
+}
+
+.class-cue-sheet-root .cue-sheet-meta-line {
+  font-size: calc(0.8125rem * var(--cue-sheet-font-scale, 1));
+  color: #3f3f46;
+  margin: 0;
+}
+
+.class-cue-sheet-root .cue-sheet-cue-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: calc(0.875rem * var(--cue-sheet-font-scale, 1));
+  break-inside: auto;
+  page-break-inside: auto;
+  overflow: visible !important;
+  max-height: none !important;
+  white-space: pre-wrap;
+  orphans: 3;
+  widows: 3;
+}
+
+.class-cue-sheet-root .cue-sheet-item.is-long-cue,
+.class-cue-sheet-root .cue-sheet-long-note {
+  break-inside: auto;
+  page-break-inside: auto;
+  overflow: visible !important;
+  max-height: none !important;
+  white-space: pre-wrap;
+  orphans: 3;
+  widows: 3;
+}
+
+.class-cue-sheet-root .cue-sheet-note {
+  margin: 0;
+  font-size: calc(0.8125rem * var(--cue-sheet-font-scale, 1));
+  color: #27272a;
+  white-space: pre-wrap;
+}
+
+.class-cue-sheet-root .cue-sheet-expanded-row {
+  border: 1px solid #d4d4d8;
+  border-radius: 0.375rem;
+  padding: 0.625rem 0.75rem;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.class-cue-sheet-root .cue-sheet-expanded-omitted-footer {
+  border: 2px dashed #b45309;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  background-color: #fffbeb;
+  color: #78350f;
+  font-weight: 700;
+  font-size: calc(0.875rem * var(--cue-sheet-font-scale, 1));
+}
+
+.class-cue-sheet-root .cue-sheet-empty-state {
+  border: 1px dashed #a1a1aa;
+  border-radius: 0.5rem;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .class-cue-sheet-root {
+    padding: 0.625rem;
+    gap: 0.75rem;
+  }
+
+  .class-cue-sheet-root .cue-sheet-summary-grid,
+  .class-cue-sheet-root .cue-sheet-focus-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .class-cue-sheet-root .cue-sheet-focus-controls,
+  .class-cue-sheet-root .cue-sheet-view-toolbar,
+  .class-cue-sheet-root .cue-sheet-fixture-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .class-cue-sheet-root .cue-sheet-focus-controls .cue-sheet-badge-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.375rem;
+  }
+
+  .class-cue-sheet-root .cue-sheet-view-buttons {
+    width: 100%;
+  }
+
+  .class-cue-sheet-root .cue-sheet-btn,
+  .class-cue-sheet-root .cue-sheet-disclosure-btn,
+  .class-cue-sheet-root .cue-sheet-fixture-select,
+  .class-cue-sheet-root .cue-sheet-item-select-btn {
+    width: 100%;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .class-cue-sheet-root .cue-sheet-scale-controls .cue-sheet-btn {
+    width: auto;
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .class-cue-sheet-root,
+  .class-cue-sheet-root *,
+  .class-cue-sheet-root *::before,
+  .class-cue-sheet-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.class-cue-sheet-root.is-print-preview,
+.class-cue-sheet-root.is-print-preview * {
+  color: #000 !important;
+  background: #fff !important;
+  border-color: #111 !important;
+  box-shadow: none !important;
+}
+
+@page {
+  margin: 12mm;
+}
+
+@media print {
+  .class-cue-sheet-root,
+  .class-cue-sheet-root * {
+    color: #000 !important;
+    background: #fff !important;
+    border-color: #111 !important;
+    box-shadow: none !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-no-print {
+    display: none !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-collapsible-panel,
+  .class-cue-sheet-root .cue-sheet-collapsible-panel.is-collapsed-screen {
+    display: block !important;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .class-cue-sheet-root,
+  .class-cue-sheet-root .cue-sheet-focus-deck,
+  .class-cue-sheet-root .cue-sheet-focus-grid,
+  .class-cue-sheet-root .cue-sheet-progression-section,
+  .class-cue-sheet-root .cue-sheet-diagnostics-section,
+  .class-cue-sheet-root .cue-sheet-item-list,
+  .class-cue-sheet-root .cue-sheet-expanded-list {
+    display: block !important;
+    overflow: visible !important;
+    max-height: none !important;
+    padding: 0 !important;
+    border: none !important;
+    margin: 0 0 0.5rem 0 !important;
+  }
+
+  .class-cue-sheet-root {
+    margin: 0 !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-compact-header,
+  .class-cue-sheet-root .cue-sheet-boundary-banner,
+  .class-cue-sheet-root .cue-sheet-summary-card,
+  .class-cue-sheet-root .cue-sheet-truncation-banner {
+    margin: 0 0 0.5rem 0 !important;
+    padding: 0.5rem 0.625rem 0.25rem 0.625rem !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-item,
+  .class-cue-sheet-root .cue-sheet-expanded-row,
+  .class-cue-sheet-root .cue-sheet-focus-card {
+    display: block !important;
+    margin: 0 0 0.5rem 0 !important;
+    padding: 0.375rem 0.25rem 0 0.25rem !important;
+    border-top: 1px solid #111 !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-radius: 0 !important;
+    break-inside: auto;
+    page-break-inside: auto;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-item:last-child,
+  .class-cue-sheet-root .cue-sheet-expanded-row:last-child,
+  .class-cue-sheet-root .cue-sheet-progression-section:last-child,
+  .class-cue-sheet-root .cue-sheet-diagnostics-section:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-item-header,
+  .class-cue-sheet-root .cue-sheet-expanded-row > .cue-sheet-badge-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .class-cue-sheet-root .cue-sheet-compact-header,
+  .class-cue-sheet-root .cue-sheet-summary-card,
+  .class-cue-sheet-root .cue-sheet-truncation-banner,
+  .class-cue-sheet-root .cue-sheet-expanded-omitted-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .class-cue-sheet-root .cue-sheet-expanded-omitted-footer {
+    margin: 0.375rem 0 0 0 !important;
+    padding: 0.375rem 0.5rem 0 0.5rem !important;
+    border-top: 2px dashed #111 !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-radius: 0 !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-item.is-long-cue,
+  .class-cue-sheet-root .cue-sheet-long-note,
+  .class-cue-sheet-root .cue-sheet-cue-list,
+  .class-cue-sheet-root .cue-sheet-cue-text,
+  .class-cue-sheet-root .cue-sheet-note {
+    display: block !important;
+    break-inside: auto;
+    page-break-inside: auto;
+    overflow: visible !important;
+    max-height: none !important;
+    white-space: pre-wrap;
+    orphans: 2;
+    widows: 2;
+  }
+
+  .class-cue-sheet-root .cue-sheet-cue-list {
+    list-style: none !important;
+    padding-left: 0 !important;
+    margin: 0.25rem 0 0 0 !important;
+    font-size: 0.8125rem !important;
+  }
+
+  .class-cue-sheet-root .cue-sheet-cue-text {
+    display: block !important;
+    margin-bottom: 0.1875rem !important;
+  }
+}
