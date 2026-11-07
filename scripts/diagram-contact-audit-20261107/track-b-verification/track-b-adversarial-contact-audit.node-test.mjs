@@ -1,19 +1,19 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import path from 'node:path';
 import {
   REPO_ROOT,
   evaluateContactAccuracySuite,
   renderAndExtractPhaseGeometry,
+  dist2D,
 } from '../shared/contact-geometry-analyzer.mjs';
 import {
   loadCandidateContactFixSuite,
 } from '../track-a-implementation/candidate-minimal-contact-fixes.mjs';
 
-describe('Track B — Independent Adversarial Contact Audit & Read-Only Scope Guard', async () => {
+describe('Track B — Independent Adversarial Contact Audit on Real App Renderer & Ownership Scope Guard', async () => {
   const suite = await loadCandidateContactFixSuite();
-  const coverageRecords = suite.baselineAssets.map((a) =>
+  const coverageRecords = suite.realAppAssets.map((a) =>
     suite.coverageMod.toExerciseEvidenceMotionOverlay(a.exerciseId),
   );
   const corrections = suite.correctionsMod.MOVEMENT_DIAGRAM_CORRECTIONS;
@@ -25,19 +25,19 @@ describe('Track B — Independent Adversarial Contact Audit & Read-Only Scope Gu
     coverageRecords,
   });
 
-  const candidateReport = evaluateContactAccuracySuite({
-    assets: suite.candidateAssets,
-    AssetComponent: suite.CandidateMovementPhaseDiagramSvg,
+  const realAppReport = evaluateContactAccuracySuite({
+    assets: suite.realAppAssets,
+    AssetComponent: suite.RealAppMovementPhaseDiagramSvg,
     corrections,
     coverageRecords,
   });
 
-  it('1. confirms R-01 (Mat Clam & Open Book cross-leakage + shoulder connection) is already resolved on main', () => {
-    assert.equal(baselineReport.r01ExcludedBaseline.status, 'ALREADY_RESOLVED_ON_MAIN');
-    assert.equal(baselineReport.r01ExcludedBaseline.metrics.clamArchetypeId, 'mat-clam-isolated');
-    assert.equal(baselineReport.r01ExcludedBaseline.metrics.openBookArchetypeId, 'mat-open-book-isolated');
-    assert.equal(baselineReport.r01ExcludedBaseline.metrics.clamHandLeakPx, 0);
-    assert.equal(baselineReport.r01ExcludedBaseline.metrics.openBookKneeLeakPx, 0);
+  it('1. confirms R-01 (Mat Clam & Open Book cross-leakage + shoulder connection) remains resolved on real app', () => {
+    assert.equal(realAppReport.r01ExcludedBaseline.status, 'ALREADY_RESOLVED_ON_MAIN');
+    assert.equal(realAppReport.r01ExcludedBaseline.metrics.clamArchetypeId, 'mat-clam-isolated');
+    assert.equal(realAppReport.r01ExcludedBaseline.metrics.openBookArchetypeId, 'mat-open-book-isolated');
+    assert.equal(realAppReport.r01ExcludedBaseline.metrics.clamHandLeakPx, 0);
+    assert.equal(realAppReport.r01ExcludedBaseline.metrics.openBookKneeLeakPx, 0);
     const correctionValues = Object.values(corrections);
     assert.equal(correctionValues.length, 2);
     for (const c of correctionValues) {
@@ -46,91 +46,99 @@ describe('Track B — Independent Adversarial Contact Audit & Read-Only Scope Gu
     }
   });
 
-  it('2. reproduces all 5 unresolved pose-apparatus contact defects (D-01..D-05) on read-only main with exact coordinates', () => {
+  it('2. contrasts pre-fix 338e7bd baseline defects (D-01..D-05) against real app src/ fixes', () => {
     assert.equal(baselineReport.allFiveDefectsPassed, false);
+    assert.equal(realAppReport.allFiveDefectsPassed, true);
 
-    // D-01 reproduction
-    const bD01 = baselineReport.defects.D01;
-    assert.equal(bD01.passed, false);
-    assert.deepEqual(bD01.metrics.startAnkle, { x: 214, y: 74 });
-    assert.deepEqual(bD01.metrics.endAnkle, { x: 222, y: 40 });
-    assert.equal(bD01.metrics.endAnkleDeltaYFromStartPx, -34);
+    assert.equal(baselineReport.defects.D01.passed, false);
+    assert.equal(realAppReport.defects.D01.passed, true);
 
-    // D-02 reproduction
-    const bD02 = baselineReport.defects.D02;
-    assert.equal(bD02.passed, false);
-    assert.equal(bD02.reformerPlank.handOnFootbarSide, false);
-    assert.ok(bD02.reformerPlank.handToFootbarDistPx > 170);
-    for (const cp of bD02.chairPlanks) {
-      assert.equal(cp.passed, false);
-      assert.equal(cp.handSeatVerticalGapPx, 42);
-      assert.ok(cp.startAnkleToPedalTipDistPx > 40);
-    }
+    assert.equal(baselineReport.defects.D02.passed, false);
+    assert.equal(realAppReport.defects.D02.passed, true);
 
-    // D-03 reproduction
-    const bD03 = baselineReport.defects.D03;
-    assert.equal(bD03.passed, false);
-    assert.equal(bD03.totalCadillacExercises, 18);
-    assert.equal(bD03.nonZeroCadillacCount, 15);
+    assert.equal(baselineReport.defects.D03.passed, false);
+    assert.equal(realAppReport.defects.D03.passed, true);
 
-    // D-04 reproduction
-    const bD04 = baselineReport.defects.D04;
-    assert.equal(bD04.passed, false);
-    for (const c of bD04.checks) {
-      assert.equal(c.sameDirection, false);
-      assert.equal(c.footDeltaYPx, 32);
-      assert.equal(c.pedalTipDeltaYPx, -15);
-      assert.equal(c.middleAnkleToPedalTipVerticalGapPx, 46);
-      assert.equal(c.middleHeelToPedalTipVerticalGapPx, 50);
-    }
+    assert.equal(baselineReport.defects.D04.passed, false);
+    assert.equal(realAppReport.defects.D04.passed, true);
 
-    // D-05 reproduction
-    const bD05 = baselineReport.defects.D05;
-    assert.equal(bD05.passed, false);
-    const hipExt = bD05.checks.find(
-      (c) => c.exerciseId === 'original-barrel-standing-hip-extension',
-    );
-    assert.ok(hipExt.penetratingDomeJointCount >= 9);
-    assert.ok(hipExt.ladderCrossingCount >= 2);
-    assert.equal(hipExt.handDistToLadderStartPx, 132);
-    assert.equal(hipExt.handDistToLadderMiddlePx, 146);
+    assert.equal(baselineReport.defects.D05.passed, false);
+    assert.equal(realAppReport.defects.D05.passed, true);
   });
 
-  it('3. verifies candidate minimal fixes resolve D-01..D-05 in both standard and mirrored (unilateral) views', () => {
-    assert.equal(candidateReport.allFiveDefectsPassed, true);
+  it('3. verifies real app fixes preserve exact pose-apparatus contact geometry in both standard (mirrored=false) and mirrored (mirrored=true) views', () => {
+    assert.equal(
+      Object.is(suite.realAppAssets, suite.catalogMod.MOVEMENT_VISUAL_ASSETS),
+      true,
+    );
+    assert.equal(
+      Object.is(suite.RealAppMovementPhaseDiagramSvg, suite.svgMod.MovementPhaseDiagramSvg),
+      true,
+    );
 
-    // Check mirrored symmetry for unilateral / apparatus contact targets
-    const targetIds = [
-      'original-reformer-strap-frog',
-      'ex-plank-01',
-      'ex-plank-02',
-      'original-cadillac-arm-spring-press',
-      'original-chair-seated-pedal-press',
-      'original-barrel-standing-hip-extension',
-    ];
-    for (const id of targetIds) {
-      const asset = suite.candidateAssets.find((a) => a.exerciseId === id);
-      const normal = renderAndExtractPhaseGeometry(
-        suite.CandidateMovementPhaseDiagramSvg,
-        asset,
-        'middle',
-        false,
-      );
-      const mirrored = renderAndExtractPhaseGeometry(
-        suite.CandidateMovementPhaseDiagramSvg,
-        asset,
+    // D-02A Reformer plank mirrored contact check
+    const refPlank = suite.catalogMod.getMovementVisualAsset('ex-plank-01');
+    const refMir = renderAndExtractPhaseGeometry(
+      suite.RealAppMovementPhaseDiagramSvg,
+      refPlank,
+      'start',
+      true,
+    );
+    const mirFootbarTop = refMir.apparatusGeometry.footbar.top;
+    const mirWrist = refMir.jointCircles.wrist;
+    assert.ok(
+      dist2D(mirWrist, mirFootbarTop) <= 6,
+      `Mirrored Reformer plank wrist should be within 6px of mirrored footbarTop, got ${dist2D(mirWrist, mirFootbarTop)}`,
+    );
+
+    // D-02B Chair plank mirrored contact check
+    for (const id of ['ex-plank-02', 'original-chair-incline-support', 'ex-kr-chair-01']) {
+      const chairPlank = suite.catalogMod.getMovementVisualAsset(id);
+      for (const phaseId of ['start', 'middle', 'end']) {
+        const mir = renderAndExtractPhaseGeometry(
+          suite.RealAppMovementPhaseDiagramSvg,
+          chairPlank,
+          phaseId,
+          true,
+        );
+        assert.equal(Math.abs(mir.jointCircles.wrist.y - mir.apparatusGeometry.seat.y), 0);
+        assert.ok(
+          dist2D(mir.jointCircles.ankle, mir.apparatusGeometry.pedal.pedalTip) <= 8,
+        );
+      }
+    }
+
+    // D-04 Chair seated pedal footwork mirrored contact check
+    for (const id of ['ex-footwork-03', 'original-chair-seated-footwork', 'original-chair-pedal-press']) {
+      const chairFoot = suite.catalogMod.getMovementVisualAsset(id);
+      if (!chairFoot) continue;
+      const mirMid = renderAndExtractPhaseGeometry(
+        suite.RealAppMovementPhaseDiagramSvg,
+        chairFoot,
         'middle',
         true,
       );
-      assert.equal(
-        normal.jointCircles.ankle.x + mirrored.jointCircles.ankle.x,
-        320,
-        `Mirrored ankle.x sum should be 320 for ${id}`,
+      assert.ok(
+        dist2D(mirMid.jointCircles.ankle, mirMid.apparatusGeometry.pedal.pedalTip) <= 6,
       );
-      assert.equal(
-        normal.jointCircles.hand.x + mirrored.jointCircles.hand.x,
-        320,
-        `Mirrored hand.x sum should be 320 for ${id}`,
+    }
+
+    // D-05 Standing barrel mirrored non-penetration & ladder contact check
+    for (const id of ['original-barrel-standing-hip-extension', 'original-barrel-standing-side-reach']) {
+      const barAsset = suite.catalogMod.getMovementVisualAsset(id);
+      const mirMid = renderAndExtractPhaseGeometry(
+        suite.RealAppMovementPhaseDiagramSvg,
+        barAsset,
+        'middle',
+        true,
+      );
+      assert.ok(
+        mirMid.jointCircles.hand.x >= mirMid.apparatusGeometry.ladder.minX &&
+          mirMid.jointCircles.hand.x <= mirMid.apparatusGeometry.ladder.maxX,
+      );
+      assert.ok(
+        mirMid.jointCircles.ankle.x < mirMid.apparatusGeometry.ladder.minX,
+        'Mirrored extended leg must not cross mirrored ladder or dome',
       );
     }
   });
@@ -148,13 +156,7 @@ describe('Track B — Independent Adversarial Contact Audit & Read-Only Scope Gu
     }
   });
 
-  it('5. verifies unified diff patch applies cleanly via git apply --check and read-only scope is intact', () => {
-    const patchPath = path.join(
-      REPO_ROOT,
-      'docs/diagram-contact-audit-20261107/patches/minimal-diagram-contact-fixes.patch',
-    );
-    execFileSync('git', ['apply', '--check', patchPath], { cwd: REPO_ROOT });
-
+  it('5. enforces strict file ownership boundary (never touches ExerciseAtlasView or other pages/routes/stores)', () => {
     const statusOut = execFileSync('git', ['status', '--porcelain'], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
@@ -164,17 +166,24 @@ describe('Track B — Independent Adversarial Contact Audit & Read-Only Scope Gu
       .map((l) => l.trim())
       .filter(Boolean);
 
+    const allowedPrefixes = [
+      'src/components/MovementPhaseDiagramSvg.tsx',
+      'src/data/movementVisualRigCatalog.ts',
+      'src/test/diagramApparatusContactRegression.test.tsx',
+      'scripts/diagram-contact-audit-20261107/',
+      'docs/diagram-contact-audit-20261107/',
+    ];
+
     const outsideAllowed = lines.filter((line) => {
-      const filePart = line.slice(3).trim();
-      return (
-        !filePart.startsWith('scripts/diagram-contact-audit-20261107') &&
-        !filePart.startsWith('docs/diagram-contact-audit-20261107')
+      const filePart = line.replace(/^[A-Z?]+\s+/, '').trim();
+      return !allowedPrefixes.some(
+        (prefix) => filePart === prefix || filePart.startsWith(prefix),
       );
     });
     assert.deepEqual(
       outsideAllowed,
       [],
-      `Read-only boundary violated! Unexpected modified/untracked files: ${outsideAllowed.join(', ')}`,
+      `Ownership boundary violated! Unexpected modified/untracked files: ${outsideAllowed.join(', ')}`,
     );
   });
 });

@@ -1,5 +1,5 @@
 {
-  "verifiedAt": "2026-11-07T07:05:03.497Z",
+  "verifiedAt": "2026-11-07T07:50:54.787Z",
   "browserEngine": "HeadlessChromium (/usr/bin/chromium via puppeteer)",
   "honestyBoundary": {
     "anatomicalAccuracyAssumed": false,
@@ -104,12 +104,12 @@
         "y": 40
       },
       "candidateEndAnkle": {
-        "x": 214,
+        "x": 217,
         "y": 74
       },
       "candidateEndKnee": {
-        "x": 182,
-        "y": 92
+        "x": 185,
+        "y": 90
       }
     },
     "D02_reformerPlank": {
@@ -154,8 +154,8 @@
         "y": 76
       },
       "candidateStandingFarAnkle": {
-        "x": 124,
-        "y": 174
+        "x": 138,
+        "y": 172
       }
     }
   }

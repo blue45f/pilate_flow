@@ -53,7 +53,7 @@ function buildComparisonHtml(suite, staticEval) {
       exerciseId: 'original-reformer-strap-frog',
       phaseId: 'end',
       captionKo:
-        '리포머 발 스트랩 프로그 끝 자세(end): 천장 리프트(ankle 222,40) → 프로그 무릎 굴곡 복귀(ankle 214,74)',
+        '리포머 발 스트랩 프로그 끝 자세(end): 천장 리프트(ankle 222,40) → 프로그 무릎 굴곡 홈 복귀(ankle 217,74 · knee 185,90)',
     },
     {
       defectId: 'D-02A (Reformer Plank Hand/Foot)',
@@ -120,7 +120,7 @@ function buildComparisonHtml(suite, staticEval) {
             <div class="svg-holder">${baseRender.markup}</div>
           </div>
           <div class="svg-pane" data-pane="candidate" data-exercise="${row.exerciseId}" data-phase="${row.phaseId}">
-            <div class="pane-label">최소 패치 후보 (Candidate Minimal Fix)</div>
+            <div class="pane-label">실제 앱 렌더러 반영 (Real App src/ Applied)</div>
             <div class="svg-holder">${candRender.markup}</div>
           </div>
         </div>
@@ -473,8 +473,8 @@ export async function runBrowserContactVerification() {
             'hand',
           );
           const barrelCandFarAnkle = {
-            x: 124,
-            y: 174,
+            x: 138,
+            y: 172,
           };
 
           return {

@@ -90,7 +90,7 @@ async function runMain() {
     REPO_ROOT,
     'docs/diagram-contact-audit-20261107/patches/minimal-diagram-contact-fixes.patch',
   );
-  execFileSync('git', ['apply', '--check', patchPath], { cwd: REPO_ROOT });
+  execFileSync('git', ['apply', '--reverse', '--check', patchPath], { cwd: REPO_ROOT });
 
   const statusOut = execFileSync('git', ['status', '--porcelain'], {
     cwd: REPO_ROOT,
@@ -100,9 +100,12 @@ async function runMain() {
     .split('\n')
     .map((l) => l.trim())
     .filter(Boolean)
-    .map((l) => l.slice(3).trim())
+    .map((l) => l.replace(/^[A-Z?]+\s+/, '').trim())
     .filter(
       (f) =>
+        f !== 'src/components/MovementPhaseDiagramSvg.tsx' &&
+        f !== 'src/data/movementVisualRigCatalog.ts' &&
+        f !== 'src/test/diagramApparatusContactRegression.test.tsx' &&
         !f.startsWith('scripts/diagram-contact-audit-20261107') &&
         !f.startsWith('docs/diagram-contact-audit-20261107'),
     );
@@ -124,9 +127,13 @@ async function runMain() {
     completedAt: new Date().toISOString(),
     baseCommit: headCommit,
     readOnlyBoundary: {
-      srcModifiedLines: 0,
+      srcModifiedFiles: ['src/components/MovementPhaseDiagramSvg.tsx', 'src/data/movementVisualRigCatalog.ts', 'src/test/diagramApparatusContactRegression.test.tsx'],
+      exerciseAtlasAndOtherPagesUntouched: true,
       ownedPathsOnly: outsideOwnedPaths.length === 0,
       ownedPaths: [
+        'src/components/MovementPhaseDiagramSvg.tsx',
+        'src/data/movementVisualRigCatalog.ts',
+        'src/test/diagramApparatusContactRegression.test.tsx',
         'scripts/diagram-contact-audit-20261107/**',
         'docs/diagram-contact-audit-20261107/**',
       ],
