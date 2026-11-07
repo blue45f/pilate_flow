@@ -53,4 +53,31 @@ describe('offline preset picker', () => {
     fireEvent.click(within(region).getByRole('checkbox'));
     expect(within(region).getByRole('button', { name: '복사해서 편집' })).toBeEnabled();
   });
+  it('previews and applies a saved ReusableBlock from the reusable blocks tab with normalized selectedLayer', async () => {
+    const { resetMovementIdeaStateForTests, saveIdeaToReusableBlock } = await import(
+      '../utils/movementIdeaDraft'
+    );
+    resetMovementIdeaStateForTests();
+    const firstEx = usePilatesStore.getState().exercises[0]!;
+    const created = saveIdeaToReusableBlock({
+      exerciseId: firstEx.id,
+      blockTitle: '테스트 전용 코어 재사용 블록',
+      durationMin: 4,
+    });
+    expect(created.ok).toBe(true);
+    const onApplied = vi.fn();
+    render(<OfflinePresetPicker onApplied={onApplied} />);
+    fireEvent.click(screen.getByRole('button', { name: /내 재사용 블록/ }));
+    fireEvent.click(screen.getByRole('button', { name: /테스트 전용 코어 재사용 블록/ }));
+    expect(screen.getByRole('region', { name: '선택한 프리셋 확인' })).toHaveTextContent(
+      '테스트 전용 코어 재사용 블록',
+    );
+    fireEvent.click(screen.getByRole('button', { name: '현재 수업 뒤에 추가' }));
+    expect(onApplied).toHaveBeenCalledOnce();
+    const activeSteps = usePilatesStore.getState().activeSteps;
+    expect(activeSteps).toHaveLength(1);
+    expect(activeSteps[0]?.selectedLayer).toBe('standard');
+    resetMovementIdeaStateForTests();
+  });
 });
+

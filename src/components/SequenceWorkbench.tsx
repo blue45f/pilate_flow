@@ -58,8 +58,12 @@ import { SequenceOrderCard } from './SequenceOrderCard';
 import '../styles/sequence-composition.css';
 import {
   addMovementIdeaToCurrentClass,
+  getReusableBlockTimingSummary,
+  getSavedReusableBlocks,
+  insertIdeaReusableBlockToCurrentClass,
   isMovementIdeaExercise,
   readMovementIdeaDraft,
+  saveIdeaToReusableBlock,
 } from '../utils/movementIdeaDraft';
 import {
   PfAiStatusBadge,
@@ -435,12 +439,26 @@ export function SequenceWorkbench({
   );
   const canStartClass = readiness.gate.canRehearse;
   const locked = s.activeSteps.filter((step) => step.locked).length;
+  const rawSectionIds = s.activeSteps.map((step) => sectionOf(step));
+  const phaseOrder: Record<string, number> = { warmup: 0, main: 1, cooldown: 2 };
+  const nonRestSectionIds = rawSectionIds.filter((id) => id !== 'rest');
+  const isMonotonicNonRest = nonRestSectionIds.every(
+    (id, idx) => idx === 0 || phaseOrder[id] >= phaseOrder[nonRestSectionIds[idx - 1]],
+  );
+  const sortedNonRestIds = isMonotonicNonRest
+    ? nonRestSectionIds
+    : [...nonRestSectionIds].sort((a, b) => phaseOrder[a] - phaseOrder[b]);
+  let nonRestCursor = 0;
+  const resolvedSectionIds = rawSectionIds.map((id) =>
+    id === 'rest' ? 'rest' : sortedNonRestIds[nonRestCursor++]!,
+  );
   const sectionRuns: {
     section: (typeof sections)[number];
     entries: { step: SequenceStep; index: number }[];
   }[] = [];
   s.activeSteps.forEach((step, index) => {
-    const section = sections.find((item) => item.id === sectionOf(step))!;
+    const sectionId = resolvedSectionIds[index] ?? sectionOf(step);
+    const section = sections.find((item) => item.id === sectionId)!;
     const previous = sectionRuns.at(-1);
     if (previous?.section.id === section.id) previous.entries.push({ step, index });
     else sectionRuns.push({ section, entries: [{ step, index }] });
@@ -521,7 +539,75 @@ export function SequenceWorkbench({
       );
     setNotice('');
   };
+  useEffect(() => {
+    if (s.activeSteps.some((step) => !step.selectedLayer)) {
+      usePilatesStore.setState((state) => ({
+        activeSteps: state.activeSteps.map((step) =>
+          step.selectedLayer ? step : { ...step, selectedLayer: 'standard' },
+        ),
+      }));
+    }
+  }, [s.activeSteps]);
+  const [blockTitleInput, setBlockTitleInput] = useState('');
+  const [, setBlockLibraryTick] = useState(0);
+  const savedReusableBlocks = getSavedReusableBlocks();
+  const handleCombineCurrentStepsToBlock = () => {
+    const nonRestSteps = s.activeSteps.filter((step) => !isRestStep(step));
+    if (!nonRestSteps.length) {
+      setNotice('블록으로 묶을 동작을 먼저 추가해 주세요.');
+      return;
+    }
+    const title = blockTitleInput.trim() || `${s.activeTitle || '오늘의 시퀀스'} 블록`;
+    let createdBlockId: string | undefined;
+    let lastResultMessage = '';
+    for (let i = 0; i < nonRestSteps.length; i += 1) {
+      const step = nonRestSteps[i]!;
+      const res = saveIdeaToReusableBlock({
+        exerciseId: step.exerciseId,
+        blockId: createdBlockId,
+        blockTitle: i === 0 ? title : undefined,
+        durationMin: step.durationMin,
+        explanationSec: step.explanationSec,
+        transitionSec: step.transitionSec,
+        repetitions: step.repetitions,
+        sets: step.sets,
+        sideMode: step.sideMode,
+      });
+      if (!res.ok || !res.block) {
+        setNotice(res.message);
+        return;
+      }
+      createdBlockId = res.block.id;
+      lastResultMessage = `‘${res.block.title}’ 블록(${res.block.items.length}개 동작)으로 묶어 저장했습니다.`;
+    }
+    setBlockTitleInput('');
+    setBlockLibraryTick((n) => n + 1);
+    setNotice(lastResultMessage);
+  };
+  const handleInsertReusableBlock = (blockId: string) => {
+    const res = insertIdeaReusableBlockToCurrentClass(blockId);
+    if (res.ok) {
+      const current = usePilatesStore.getState();
+      if (current.activeSteps.some((step) => !step.selectedLayer)) {
+        usePilatesStore.setState({
+          activeSteps: current.activeSteps.map((step) =>
+            step.selectedLayer ? step : { ...step, selectedLayer: 'standard' },
+          ),
+        });
+      }
+      setWorkflowStep('arrange');
+    }
+    setNotice(res.message);
+  };
   const handleSave = () => {
+    const current = usePilatesStore.getState();
+    if (current.activeSteps.some((step) => !step.selectedLayer)) {
+      usePilatesStore.setState({
+        activeSteps: current.activeSteps.map((step) =>
+          step.selectedLayer ? step : { ...step, selectedLayer: 'standard' },
+        ),
+      });
+    }
     s.saveCurrentSequenceToBinder();
     setNotice('');
   };
@@ -636,62 +722,72 @@ export function SequenceWorkbench({
           <Plus size={16} aria-hidden="true" /> 새 아이디어 추가
         </PfButton>
       </div>
-      <div className="pf-workbench-ideas__list">
-        {ideaExercises.map((ideaEx) => {
-          const draft = readMovementIdeaDraft(ideaEx);
-          const inSequence = s.activeSteps.some(
-            (step) => !isRestStep(step) && step.exerciseId === ideaEx.id,
-          );
-          return (
-            <PfMovementCard
-              key={ideaEx.id}
-              variant="idea"
-              className="pf-workbench-idea-card"
-              aria-label={`${ideaEx.nameKo} 창작 메모`}
-            >
-              <div className="pf-workbench-idea-card__body">
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "6px",
-                  }}
-                >
-                  <strong>{ideaEx.nameKo}</strong>
-                  <PfAiStatusBadge
-                    kind={draft?.triedByInstructor ? "tried-memo" : "creative-memo"}
-                  />
+      <details
+        className="pf-workbench-ideas__details"
+        key={s.activeSteps.length > 0 ? 'compact' : 'expanded'}
+        open={!s.activeSteps.length ? true : undefined}
+      >
+        <summary className="pf-workbench-ideas__summary">
+          <span>저장한 새 동작 메모 {ideaExercises.length}개 보기</span>
+          <ChevronDown size={15} aria-hidden="true" />
+        </summary>
+        <div className="pf-workbench-ideas__list">
+          {ideaExercises.map((ideaEx) => {
+            const draft = readMovementIdeaDraft(ideaEx);
+            const inSequence = s.activeSteps.some(
+              (step) => !isRestStep(step) && step.exerciseId === ideaEx.id,
+            );
+            return (
+              <PfMovementCard
+                key={ideaEx.id}
+                variant="idea"
+                className="pf-workbench-idea-card"
+                aria-label={`${ideaEx.nameKo} 창작 메모`}
+              >
+                <div className="pf-workbench-idea-card__body">
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "6px",
+                    }}
+                  >
+                    <strong>{ideaEx.nameKo}</strong>
+                    <PfAiStatusBadge
+                      kind={draft?.triedByInstructor ? "tried-memo" : "creative-memo"}
+                    />
+                  </div>
+                  <p>{draft?.ideaLine || ideaEx.cues[0]}</p>
+                  {draft?.subjectiveFeeling && <p>느낌 메모: {draft.subjectiveFeeling}</p>}
+                  {draft?.adjustmentNote && <p>수정 메모: {draft.adjustmentNote}</p>}
                 </div>
-                <p>{draft?.ideaLine || ideaEx.cues[0]}</p>
-                {draft?.subjectiveFeeling && <p>느낌 메모: {draft.subjectiveFeeling}</p>}
-                {draft?.adjustmentNote && <p>수정 메모: {draft.adjustmentNote}</p>}
-              </div>
-              <div className="pf-workbench-idea-card__actions">
-                <PfButton
-                  variant="secondary"
-                  onClick={() => openIdeaSheet(ideaEx)}
-                  aria-label={`${ideaEx.nameKo} 다시 열기`}
-                >
-                  다시 열기 · 느낌/수정
-                </PfButton>
-                <PfButton
-                  variant="primary"
-                  onClick={() => {
-                    const result = addMovementIdeaToCurrentClass(ideaEx.id);
-                    setNotice(result.message);
-                    if (result.ok) setWorkflowStep("arrange");
-                  }}
-                  aria-label={`${ideaEx.nameKo} 수업에 넣기`}
-                >
-                  {inSequence ? "수업에 한 번 더 넣기" : "수업에 넣기"}
-                </PfButton>
-              </div>
-            </PfMovementCard>
-          );
-        })}
-      </div>
+                <div className="pf-workbench-idea-card__actions">
+                  <PfButton
+                    variant="secondary"
+                    onClick={() => openIdeaSheet(ideaEx)}
+                    aria-label={`${ideaEx.nameKo} 다시 열기`}
+                  >
+                    다시 열기 · 느낌/수정
+                  </PfButton>
+                  <PfButton
+                    variant="primary"
+                    onClick={() => {
+                      const result = addMovementIdeaToCurrentClass(ideaEx.id);
+                      setNotice(result.message);
+                      if (result.ok) setWorkflowStep("arrange");
+                    }}
+                    aria-label={`${ideaEx.nameKo} 수업에 넣기`}
+                  >
+                    {inSequence ? "수업에 한 번 더 넣기" : "수업에 넣기"}
+                  </PfButton>
+                </div>
+              </PfMovementCard>
+            );
+          })}
+        </div>
+      </details>
     </section>
   );
   return (
@@ -1175,10 +1271,72 @@ export function SequenceWorkbench({
                     </button>
                   </div>
                 </details>
+                <details className="workbench-block-combo-details">
+                  <summary>
+                    블록 조합{savedReusableBlocks.length > 0 ? ` · ${savedReusableBlocks.length}` : ''}
+                  </summary>
+                  <div className="workbench-block-combo-panel">
+                    <div className="workbench-block-combo-create">
+                      <label className="form-field">
+                        <span>현재 시퀀스 동작들을 재사용 블록으로 묶기</span>
+                        <input
+                          type="text"
+                          value={blockTitleInput}
+                          onChange={(event) => setBlockTitleInput(event.target.value)}
+                          placeholder={`${s.activeTitle || '오늘의 시퀀스'} 블록`}
+                          aria-label="새 재사용 블록 이름"
+                        />
+                      </label>
+                      <div className="workbench-block-combo-actions">
+                        <PfButton
+                          variant="secondary"
+                          onClick={handleCombineCurrentStepsToBlock}
+                        >
+                          현재 동작 묶어 블록 저장
+                        </PfButton>
+                        <PfButton
+                          variant="text"
+                          onClick={() => setPresetsOpen(true)}
+                        >
+                          <Copy size={14} aria-hidden="true" /> 프리셋·동작 묶음 열기
+                        </PfButton>
+                      </div>
+                    </div>
+                    {savedReusableBlocks.length > 0 && (
+                      <div className="workbench-block-combo-list" aria-label="내 저장된 재사용 블록">
+                        {savedReusableBlocks.map((block) => {
+                          const summary = getReusableBlockTimingSummary(block);
+                          return (
+                            <div key={block.id} className="workbench-block-combo-item">
+                              <div>
+                                <strong>{block.title}</strong>
+                                <span>
+                                  {block.items.length}개 동작 · 총 {summary.totalDurationMin}분 (v
+                                  {block.version})
+                                </span>
+                              </div>
+                              <PfButton
+                                variant="secondary"
+                                onClick={() => handleInsertReusableBlock(block.id)}
+                                aria-label={`${block.title} 수업에 블록 넣기`}
+                              >
+                                수업에 블록 넣기
+                              </PfButton>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </details>
                 <div className="sequence-tools">
                   <PfButton variant="text" onClick={openExerciseFinder}>
                     <Plus size={16} aria-hidden="true" />
                     동작 더 담기
+                  </PfButton>
+                  <PfButton variant="text" onClick={() => openIdeaSheet(null)}>
+                    <Sparkles size={15} aria-hidden="true" />
+                    한 줄 동작 메모
                   </PfButton>
                   <PfButton
                     variant="text"

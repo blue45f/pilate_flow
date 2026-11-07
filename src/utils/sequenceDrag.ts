@@ -75,8 +75,10 @@ export function createSequenceDrag(options: Options) {
     indicator: HTMLElement | null = null,
     status: HTMLElement | null = null;
   let cards: HTMLElement[] = [],
+    headers: HTMLElement[] = [],
     rects: SequenceDragRect[] = [];
   let savedStyles: { transform: string; transition: string }[] = [];
+  let savedHeaderStyles: { transform: string; transition: string }[] = [];
   let lastAnnouncement = '';
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   const locked = new Set(steps.filter((s) => s.locked).map((s) => s.stepId));
@@ -91,11 +93,15 @@ export function createSequenceDrag(options: Options) {
     requestAnimationFrame(() =>
       document.getElementById(`order-handle-${stepId}`)?.focus({ preventScroll: true }),
     );
-  const resetPreview = () =>
+  const resetPreview = () => {
     cards.forEach((element, i) => {
       element.style.transform = savedStyles[i].transform;
       element.removeAttribute('data-drag-over');
     });
+    headers.forEach((header, i) => {
+      header.style.transform = savedHeaderStyles[i]?.transform ?? '';
+    });
+  };
   const cleanup = () => {
     ended = true;
     if (pointerId !== undefined && handle.hasPointerCapture?.(pointerId)) {
@@ -105,6 +111,9 @@ export function createSequenceDrag(options: Options) {
     resetPreview();
     cards.forEach((element, i) => {
       element.style.transition = savedStyles[i].transition;
+    });
+    headers.forEach((header, i) => {
+      header.style.transition = savedHeaderStyles[i]?.transition ?? '';
     });
     card.removeAttribute('data-drag-source');
     list.removeAttribute('data-drag-session');
@@ -129,6 +138,7 @@ export function createSequenceDrag(options: Options) {
   const begin = () => {
     active = true;
     cards = Array.from(list.querySelectorAll<HTMLElement>('[data-order-step]'));
+    headers = Array.from(list.querySelectorAll<HTMLElement>('.pf-sequence-block__header'));
     rects = cards.map((element) => {
       const r = element.getBoundingClientRect();
       return {
@@ -142,6 +152,10 @@ export function createSequenceDrag(options: Options) {
     savedStyles = cards.map((element) => ({
       transform: element.style.transform,
       transition: element.style.transition,
+    }));
+    savedHeaderStyles = headers.map((header) => ({
+      transform: header.style.transform,
+      transition: header.style.transition,
     }));
     const source = rects.find((r) => r.id === stepId)!;
     overlay = card.cloneNode(true) as HTMLElement;
@@ -174,6 +188,9 @@ export function createSequenceDrag(options: Options) {
     cards.forEach((element) => {
       element.style.transition = reduced ? 'none' : 'transform 160ms cubic-bezier(.2,.7,.2,1)';
     });
+    headers.forEach((header) => {
+      header.style.transition = reduced ? 'none' : 'transform 160ms cubic-bezier(.2,.7,.2,1)';
+    });
     window.addEventListener('blur', cancel);
     window.addEventListener('resize', cancel);
     document.addEventListener('visibilitychange', onVisibility);
@@ -202,16 +219,73 @@ export function createSequenceDrag(options: Options) {
     const from = positions.findIndex((r) => r.id === stepId),
       to = destination.index;
     const source = positions[from];
-    const gap =
-      from < to
+    const sourceCard = cards[from];
+    const sameParentNext =
+      from < positions.length - 1 &&
+      cards[from + 1]?.parentElement === sourceCard?.parentElement;
+    const sameParentPrev =
+      from > 0 && cards[from - 1]?.parentElement === sourceCard?.parentElement;
+    const nextGap =
+      from < positions.length - 1
         ? Math.max(0, positions[from + 1].top - source.top - source.height)
-        : from > to
-          ? Math.max(0, source.top - positions[from - 1].top - positions[from - 1].height)
-          : 10;
+        : 0;
+    const prevGap =
+      from > 0
+        ? Math.max(0, source.top - positions[from - 1].top - positions[from - 1].height)
+        : 0;
+    let intraSectionGap =
+      from < to && sameParentNext
+        ? nextGap
+        : from > to && sameParentPrev
+          ? prevGap
+          : sameParentNext
+            ? nextGap
+            : sameParentPrev
+              ? prevGap
+              : 0;
+    if (!intraSectionGap) {
+      for (let i = 0; i < cards.length - 1; i += 1) {
+        if (cards[i]?.parentElement === cards[i + 1]?.parentElement) {
+          const pairGap = Math.max(
+            0,
+            positions[i + 1].top - positions[i].top - positions[i].height,
+          );
+          if (pairGap > 0) {
+            intraSectionGap = pairGap;
+            break;
+          }
+        }
+      }
+    }
+    const gap =
+      from === to
+        ? 10
+        : intraSectionGap || (from < to ? nextGap : prevGap);
     const shift = source.height + gap;
     cards.forEach((element, i) => {
-      if (from < to && i > from && i <= to) element.style.transform = `translateY(${-shift}px)`;
-      else if (from > to && i >= to && i < from) element.style.transform = `translateY(${shift}px)`;
+      if (from < to && i > from && i <= to) {
+        element.style.transform = `translateY(${-shift}px)`;
+        if (
+          element.parentElement !== sourceCard?.parentElement &&
+          element.previousElementSibling === null
+        ) {
+          const sectionHeader = element
+            .closest('.pf-sequence-block')
+            ?.querySelector<HTMLElement>('.pf-sequence-block__header');
+          if (sectionHeader) sectionHeader.style.transform = `translateY(${-shift}px)`;
+        }
+      } else if (from > to && i >= to && i < from) {
+        element.style.transform = `translateY(${shift}px)`;
+        if (
+          element.parentElement !== sourceCard?.parentElement &&
+          element.previousElementSibling === null
+        ) {
+          const sectionHeader = element
+            .closest('.pf-sequence-block')
+            ?.querySelector<HTMLElement>('.pf-sequence-block__header');
+          if (sectionHeader) sectionHeader.style.transform = `translateY(${shift}px)`;
+        }
+      }
     });
     cards[to]?.setAttribute('data-drag-over', 'true');
     const top =

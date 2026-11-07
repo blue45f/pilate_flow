@@ -9,15 +9,20 @@ import {
   instantiateClassPresetAsEditableSequence,
   insertBlockPresetIntoSequence,
 } from '../utils/classBlockPresetValidator';
+import { insertReusableBlockIntoSequence } from '../utils/hierarchyModel';
+import {
+  getReusableBlockTimingSummary,
+  getSavedReusableBlocks,
+} from '../utils/movementIdeaDraft';
 import { formatSecondsToMMSS, getStepTiming } from '../utils/sequenceEngine';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesStudioState } from '../store/usePilatesStore';
 import { PresetSuggestionCandidatePreview } from '../features/presetSuggestionCandidate';
 import '../styles/offline-presets.css';
 
-type Kind = 'class' | 'block' | 'suggested';
+type Kind = 'class' | 'block' | 'reusable' | 'suggested';
 interface Selection {
-  kind: 'class' | 'block';
+  kind: 'class' | 'block' | 'reusable';
   id: string;
   expected: PilatesStudioState;
 }
@@ -38,23 +43,56 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
   const [mode, setMode] = useState<'append' | 'replace'>('append');
   const [confirmed, setConfirmed] = useState(false);
   const [message, setMessage] = useState('');
+  const savedReusableBlocks = getSavedReusableBlocks();
   const options = kind === 'class' ? OFFLINE_CLASS_PRESETS : OFFLINE_BLOCK_PRESETS;
-  const matches = options.filter(
-    (item) =>
-      (apparatus === 'all' || item.apparatus === apparatus) &&
-      (theme === 'all' || item.theme === theme) &&
-      (kind === 'block' ||
-        minutes === 'all' ||
-        ('durationMinutes' in item && item.durationMinutes === Number(minutes))),
-  );
+  const matches =
+    kind === 'reusable'
+      ? []
+      : options.filter(
+          (item) =>
+            (apparatus === 'all' || item.apparatus === apparatus) &&
+            (theme === 'all' || item.theme === theme) &&
+            (kind === 'block' ||
+              minutes === 'all' ||
+              ('durationMinutes' in item && item.durationMinutes === Number(minutes))),
+        );
+  const reusableMatches =
+    kind === 'reusable'
+      ? savedReusableBlocks.filter(
+          (block) => apparatus === 'all' || block.apparatus === apparatus,
+        )
+      : [];
   const selected =
     selection?.kind === 'class'
       ? OFFLINE_CLASS_PRESETS.find((item) => item.id === selection.id)
       : selection?.kind === 'block'
         ? OFFLINE_BLOCK_PRESETS.find((item) => item.id === selection.id)
         : undefined;
+  const selectedReusable =
+    selection?.kind === 'reusable'
+      ? savedReusableBlocks.find((item) => item.id === selection.id)
+      : undefined;
   const prepared = useMemo(() => {
-    if (!selected || !selection) return null;
+    if (!selection) return null;
+    if (selection.kind === 'reusable') {
+      const reusable = getSavedReusableBlocks().find((item) => item.id === selection.id);
+      if (!reusable) return null;
+      try {
+        const inserted = insertReusableBlockIntoSequence([], reusable);
+        const summary = getReusableBlockTimingSummary(reusable);
+        return {
+          steps: inserted.steps.map((step) =>
+            step.selectedLayer ? step : { ...step, selectedLayer: 'standard' as const },
+          ),
+          title: reusable.title,
+          subtitle: `내가 만든 재사용 블록 (v${reusable.version}) 복사본`,
+          targetMinutes: Math.max(10, summary.totalDurationMin),
+        };
+      } catch {
+        return null;
+      }
+    }
+    if (!selected) return null;
     try {
       if (selected.presetKind === 'class-sequence') {
         const { sequence } = instantiateClassPresetAsEditableSequence(
@@ -118,6 +156,13 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
       (sum, step) => sum + getStepTiming(step, names.get(step.exerciseId)).totalSec,
       0,
     ) ?? 0;
+  const activeCount = kind === 'reusable' ? reusableMatches.length : matches.length;
+  const previewTitle = selected?.title ?? selectedReusable?.title;
+  const previewEquipmentList = selected
+    ? selected.requiredEquipment
+    : selectedReusable
+      ? [selectedReusable.apparatus]
+      : [];
   return (
     <section className="offline-presets" aria-label="오프라인 수업·연계 블록 프리셋">
       <p className="muted">
@@ -144,6 +189,16 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
           }}
         >
           연계 동작 묶음 · {OFFLINE_BLOCK_PRESETS.length}
+        </button>
+        <button
+          type="button"
+          aria-pressed={kind === 'reusable'}
+          onClick={() => {
+            setKind('reusable');
+            resetSelection();
+          }}
+        >
+          내 재사용 블록 · {savedReusableBlocks.length}
         </button>
         <button
           type="button"
@@ -201,23 +256,25 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                 <option value="mixed">혼합 기구</option>
               </select>
             </label>
-            <label className="form-field">
-              <span>프리셋 주제</span>
-              <select
-                value={theme}
-                onChange={(event) => {
-                  setTheme(event.target.value);
-                  resetSelection();
-                }}
-              >
-                <option value="all">모든 주제</option>
-                {PRESET_THEME_CATALOG.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.labelKo}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {kind !== 'reusable' && (
+              <label className="form-field">
+                <span>프리셋 주제</span>
+                <select
+                  value={theme}
+                  onChange={(event) => {
+                    setTheme(event.target.value);
+                    resetSelection();
+                  }}
+                >
+                  <option value="all">모든 주제</option>
+                  {PRESET_THEME_CATALOG.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.labelKo}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             {kind === 'class' && (
               <label className="form-field">
                 <span>프리셋 계획 시간</span>
@@ -238,46 +295,64 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
               </label>
             )}
           </div>
-          <p role="status">{matches.length}개 프리셋 · 시간은 편집 가능한 계획값입니다.</p>
+          <p role="status">{activeCount}개 프리셋 · 시간은 편집 가능한 계획값입니다.</p>
           <div className="offline-presets-list">
-            {matches.slice(0, limit).map((item) => (
-              <button
-                type="button"
-                className="offline-preset-card"
-                key={item.id}
-                aria-pressed={selection?.id === item.id}
-                onClick={() => choose(item.id)}
-              >
-                <strong>{item.title}</strong>
-                <span>
-                  {item.presetKind === 'class-sequence' ? item.durationMinutes : item.durationMin}분 ·{' '}
-                  {item.presetKind === 'class-sequence' ? item.steps.length : item.items.length}개 동작
-                </span>
-              </button>
-            ))}
+            {kind === 'reusable'
+              ? reusableMatches.slice(0, limit).map((block) => {
+                  const summary = getReusableBlockTimingSummary(block);
+                  return (
+                    <button
+                      type="button"
+                      className="offline-preset-card"
+                      key={block.id}
+                      aria-pressed={selection?.id === block.id}
+                      onClick={() => choose(block.id)}
+                    >
+                      <strong>{block.title}</strong>
+                      <span>
+                        {summary.totalDurationMin}분 · {block.items.length}개 동작 · v{block.version}
+                      </span>
+                    </button>
+                  );
+                })
+              : matches.slice(0, limit).map((item) => (
+                  <button
+                    type="button"
+                    className="offline-preset-card"
+                    key={item.id}
+                    aria-pressed={selection?.id === item.id}
+                    onClick={() => choose(item.id)}
+                  >
+                    <strong>{item.title}</strong>
+                    <span>
+                      {item.presetKind === 'class-sequence' ? item.durationMinutes : item.durationMin}분 ·{' '}
+                      {item.presetKind === 'class-sequence' ? item.steps.length : item.items.length}개 동작
+                    </span>
+                  </button>
+                ))}
           </div>
-          {!matches.length && (
+          {!activeCount && (
             <p>
               조건에 맞는 프리셋이 없어요. 기구·주제·시간을 넓혀 보세요. 직접 구성은 언제든 가능합니다.
             </p>
           )}
-          {matches.length > limit && (
+          {activeCount > limit && (
             <button type="button" className="btn-secondary" onClick={() => setLimit(limit + 6)}>
               프리셋 더 보기
             </button>
           )}
         </>
       )}
-      {selected && selection && (
+      {(selected || selectedReusable) && selection && (
         <section
           ref={previewRef}
           className="offline-preset-preview"
           aria-label="선택한 프리셋 확인"
         >
-          <h3>{selected.title}</h3>
+          <h3>{previewTitle}</h3>
           <p>
             복사할 계획 {formatSecondsToMMSS(totalSeconds)} · 기구:{' '}
-            {selected.requiredEquipment
+            {previewEquipmentList
               .map((id) => APPARATUS_LABELS[id as keyof typeof APPARATUS_LABELS]?.ko ?? id)
               .join(' · ')}
           </p>

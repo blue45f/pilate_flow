@@ -1,0 +1,235 @@
+{
+  "track": "B",
+  "title": "모바일 드래그/키보드 순서변경·취소·자동스크롤과 시각 피드백 실제 브라우저 검증",
+  "executedAt": "2026-11-07T05:13:42.613Z",
+  "totalAssertions": 7,
+  "passedCount": 7,
+  "failedCount": 0,
+  "defectCount": 0,
+  "assertions": [
+    {
+      "id": "B1-01",
+      "category": "keyboard-reorder",
+      "title": "Keyboard ArrowUp/ArrowDown reorders steps, preserves focus on #order-handle-{stepId}, respects top boundary (index 0), and applies scroll-margin",
+      "passed": true,
+      "details": {
+        "beforeOrder": [
+          "s-1",
+          "s-2",
+          "s-3",
+          "s-4",
+          "s-5",
+          "s-6",
+          "s-7",
+          "s-8",
+          "s-9",
+          "s-10"
+        ],
+        "afterUpOrder": [
+          "s-2",
+          "s-1",
+          "s-3",
+          "s-4",
+          "s-5",
+          "s-6",
+          "s-7",
+          "s-8",
+          "s-9",
+          "s-10"
+        ],
+        "afterTopBoundaryOrder": [
+          "s-2",
+          "s-1",
+          "s-3",
+          "s-4",
+          "s-5",
+          "s-6",
+          "s-7",
+          "s-8",
+          "s-9",
+          "s-10"
+        ],
+        "afterDownOrder": [
+          "s-1",
+          "s-2",
+          "s-3",
+          "s-4",
+          "s-5",
+          "s-6",
+          "s-7",
+          "s-8",
+          "s-9",
+          "s-10"
+        ],
+        "activeAfterUp": "order-handle-s-2",
+        "activeAfterDown": "order-handle-s-2",
+        "expectedHandleId": "order-handle-s-2",
+        "upButtonDisabledAtTop": true,
+        "scrollMarginTop": "0px"
+      }
+    },
+    {
+      "id": "B2-01",
+      "category": "mobile-drag-visual-and-commit",
+      "title": "Touch pointer drag respects 8px threshold, renders .sequence-drag-overlay + .sequence-drop-indicator + data-drag-source/over, and commits new order on pointerup",
+      "passed": true,
+      "details": {
+        "dragStartState": {
+          "beforeOrder": [
+            "s-1",
+            "s-2",
+            "s-3",
+            "s-4",
+            "s-5",
+            "s-6",
+            "s-7",
+            "s-8",
+            "s-9",
+            "s-10"
+          ],
+          "secondId": "s-2",
+          "thirdId": "s-3",
+          "startX": 77.25,
+          "targetY": 634.46875,
+          "draggingAt4px": false,
+          "draggingActive": true,
+          "sourceAttr": "true",
+          "overCardId": "s-3",
+          "hasOverlay": true,
+          "overlayBlockedAttr": "false",
+          "hasIndicator": true,
+          "indicatorText": "3번째 위치",
+          "statusText": "3번째에 놓기 · Esc 취소"
+        },
+        "dragCommitState": {
+          "afterOrder": [
+            "s-1",
+            "s-3",
+            "s-2",
+            "s-4",
+            "s-5",
+            "s-6",
+            "s-7",
+            "s-8",
+            "s-9",
+            "s-10"
+          ],
+          "draggingAfterUp": false
+        }
+      }
+    },
+    {
+      "id": "B3-01",
+      "category": "drag-cancel-escape-pointercancel-oob-blur",
+      "title": "Escape key, pointercancel, out-of-bounds drop, and window blur all cancel active drag cleanly and preserve original step order",
+      "passed": true,
+      "details": {
+        "escInitActive": true,
+        "escRestored": true,
+        "escNotice": "순서 이동을 취소했어요. 원래 순서를 유지합니다.",
+        "pcInitActive": true,
+        "pcRestored": true,
+        "oobInitActive": true,
+        "oobBlockedAttr": "true",
+        "oobStatusText": "목록 안에 놓아 주세요",
+        "oobRestored": true,
+        "blurInitActive": true,
+        "blurRestored": true
+      }
+    },
+    {
+      "id": "B4-01",
+      "category": "locked-step-barrier",
+      "title": "Dragging across a locked step sets data-drag-blocked=\"true\", hides drop indicator, displays \"잠긴 항목을 넘을 수 없어요\", and blocks reordering on drop",
+      "passed": true,
+      "details": {
+        "lockedBarrierTest": {
+          "beforeOrder": [
+            "s-1",
+            "s-3",
+            "s-2",
+            "s-4",
+            "s-5",
+            "s-6",
+            "s-7",
+            "s-8",
+            "s-9",
+            "s-10"
+          ],
+          "sourceId": "s-3",
+          "startX": 77.25,
+          "targetY": 460.8125,
+          "overlayBlocked": "true",
+          "indicatorHidden": true,
+          "statusText": "잠긴 항목을 넘을 수 없어요"
+        },
+        "lockedBarrierFinish": {
+          "afterOrder": [
+            "s-1",
+            "s-3",
+            "s-2",
+            "s-4",
+            "s-5",
+            "s-6",
+            "s-7",
+            "s-8",
+            "s-9",
+            "s-10"
+          ],
+          "noticeText": "잠긴 항목의 위치는 유지합니다."
+        }
+      }
+    },
+    {
+      "id": "B5-01",
+      "category": "stationary-edge-autoscroll",
+      "title": "Holding dragged card stationary near bottom edge (above .bottom-nav) continuously auto-scrolls the page via requestAnimationFrame",
+      "passed": true,
+      "details": {
+        "startScrollY": 593,
+        "endScrollY": 873,
+        "scrollDeltaPx": 280,
+        "edgeY": 750
+      }
+    },
+    {
+      "id": "B6-01",
+      "category": "cross-section-reorder-coherence",
+      "title": "Reordering a step across section boundaries should not fragment sectionRuns into duplicate \"본운동\" headers",
+      "passed": true,
+      "details": {
+        "crossSectionGapPx": 32,
+        "normalIntraSectionGapPx": 18,
+        "mainCard1TransformDuringDrag": "translateY(-173.938px)",
+        "overlapsMainSectionHeader": false,
+        "sectionCountAfterDrop": 3,
+        "sectionTitlesAfterDrop": [],
+        "sectionPhasesAfterDrop": [
+          "flow-section pf-sequence-block pf-sequence-block--warmup",
+          "flow-section pf-sequence-block pf-sequence-block--main",
+          "flow-section pf-sequence-block pf-sequence-block--cooldown"
+        ]
+      }
+    },
+    {
+      "id": "B6-02",
+      "category": "cross-section-drag-shift-alignment",
+      "title": "Dragging a step across a section header should shift intermediate cards by normal intra-section gap rather than the full section-header height",
+      "passed": true,
+      "details": {
+        "crossSectionGapPx": 32,
+        "normalIntraSectionGapPx": 18,
+        "mainCard1TransformDuringDrag": "translateY(-173.938px)",
+        "overlapsMainSectionHeader": false,
+        "sectionCountAfterDrop": 3,
+        "sectionTitlesAfterDrop": [],
+        "sectionPhasesAfterDrop": [
+          "flow-section pf-sequence-block pf-sequence-block--warmup",
+          "flow-section pf-sequence-block pf-sequence-block--main",
+          "flow-section pf-sequence-block pf-sequence-block--cooldown"
+        ]
+      }
+    }
+  ],
+  "defects": []
+}

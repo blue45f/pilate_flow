@@ -181,3 +181,106 @@
   overflow-wrap: normal;
   line-height: 1.4;
 }
+
+/* Prevent body min-width: 320px from inflating documentElement.scrollWidth to 640px at 200% zoom on 320px/390px viewports. */
+html:has(#root .vnext-workbench),
+body:has(#root .vnext-workbench) {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+/* Progressive disclosure for saved movement ideas when activeSteps > 0 */
+#root .pf-workbench-ideas {
+  padding: 10px 12px;
+  gap: 6px;
+}
+
+#root .pf-workbench-ideas__details {
+  margin: 0;
+}
+
+#root .pf-workbench-ideas__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--studio-subtle, #eef1ea);
+  color: var(--studio-ink, #203d35);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+#root .pf-workbench-ideas__summary::-webkit-details-marker {
+  display: none;
+}
+
+#root .pf-workbench-ideas__details[open] > .pf-workbench-ideas__summary {
+  margin-bottom: 8px;
+}
+
+/* Progressive disclosure for Block Combination (.workbench-block-combo-details) */
+#root .workbench-block-combo-details > summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+#root .workbench-block-combo-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--studio-line, #dce0d7);
+  border-radius: 10px;
+  background: var(--studio-surface, #fffefa);
+}
+
+#root .workbench-block-combo-create {
+  display: grid;
+  gap: 8px;
+}
+
+#root .workbench-block-combo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+#root .workbench-block-combo-list {
+  display: grid;
+  gap: 8px;
+}
+
+#root .workbench-block-combo-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--studio-subtle, #f3f5ef);
+}
+
+#root .workbench-block-combo-item > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+#root .workbench-block-combo-item span {
+  font-size: 0.75rem;
+  color: var(--studio-muted, #6c756c);
+}
+
