@@ -35,4 +35,13 @@ The NHS ordinary-chair sit-to-stand source was investigated but rejected as exac
 
 ## Verification
 
-The regression tests assert distinct geometry, stationary nonmoving joints, return-to-start, and unchanged anatomical status. Test results and render checks will be recorded after final validation. No deployment is authorized by this record.
+Final validation on 2026-11-07, integrated with main `da06641`:
+
+- Full regression: 191 files / 2,101 tests passed. TypeScript passed. Full ESLint passed with one existing React-refresh warning outside this change.
+- Production build/PWA, frozen motion ledger check and 7 Node tests passed. Production bundle size warnings remain; no deployment was performed.
+- Export comparison against the previous gallery: only the six SVGs for these two movements changed; all other 288 SVG byte hashes and 96 pose-sequence signatures remained identical.
+- Actual Chrome app QA: 320/390/1440px for both movements (six cases) passed. The diagram and source record begin collapsed, links/content correspond to the current exercise, the static SVG count remains one, there are no playback controls, and no document overflow was measured. Closing and opening the other exercise resets disclosure state. localStorage was unchanged; browser QA did not separately compare the entire in-memory store.
+- Final 1440px three-phase screenshots were visually inspected for stationary clam arms/trunk, stationary open-book knees/lower arm, and the connected shoulder line. A 390px actual-app screenshot was also inspected. This is visual/software verification of the limited correction, not anatomical certification or observed-source-frame matching.
+- Existing warning, professional-review count zero, canonical-motion status and no-autoplay behavior are preserved.
+
+The regression tests assert distinct geometry, stationary nonmoving joints, return-to-start, and unchanged anatomical status. No deployment is authorized by this record.
