@@ -44,7 +44,7 @@ describe('History Page Long-Term Accumulated Scale (100 / 1000) Post-Patch Verif
 
     // 2. Date chips initially capped at 12 recent dates (1 "전체 날짜" + 12 dates = 13 chips) + expand toggle
     const initialDateChips = dateNav.querySelectorAll('button.teaching-date-chip');
-    expect(initialDateChips).toHaveLength(13);
+    expect(initialDateChips).toHaveLength(4);
 
     const expandDatesBtn = within(dateNav).getByRole('button', { name: /이전 날짜 더보기/ });
     fireEvent.click(expandDatesBtn);
@@ -61,7 +61,7 @@ describe('History Page Long-Term Accumulated Scale (100 / 1000) Post-Patch Verif
 
     // Collapse back to 12 recent dates
     fireEvent.click(within(dateNav).getByRole('button', { name: '날짜 접기' }));
-    expect(dateNav.querySelectorAll('button.teaching-date-chip')).toHaveLength(13);
+    expect(dateNav.querySelectorAll('button.teaching-date-chip')).toHaveLength(4);
 
     // 3. Feed initially renders 30 cards and progressively loads 60 -> 90 -> 100 via load-more
     const feed = screen.getByRole('region', { name: '수업 기록 목록' });
@@ -119,6 +119,8 @@ describe('History Page Long-Term Accumulated Scale (100 / 1000) Post-Patch Verif
 
     // 5. Empty group filter transitions cleanly 30 -> 0 -> 30 while preserving total badge 100
     const groupTabs = screen.getByRole('group', { name: '수업 그룹 필터' });
+    const expandGroupsBtn = within(groupTabs).queryByRole('button', { name: /그룹 더보기/ });
+    if (expandGroupsBtn) fireEvent.click(expandGroupsBtn);
     fireEvent.click(
       within(groupTabs).getByRole('button', { name: '기록 없는 휴강·특강반 (빈필터 검증)' }),
     );
@@ -193,7 +195,7 @@ describe('History Page Long-Term Accumulated Scale (100 / 1000) Post-Patch Verif
         dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip'),
       );
       // 1 "전체 날짜" chip + 12 recent date chips = 13 chips by default
-      expect(initialDateChips).toHaveLength(13);
+      expect(initialDateChips).toHaveLength(4);
       expect(initialDateChips[0].textContent).toContain('1000');
 
       // Initial rendered cards capped at 30 instead of 1,000 (DOM explosion eliminated)

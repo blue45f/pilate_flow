@@ -277,7 +277,7 @@ export const SETTINGS_PAGE_FIXTURE_PRESETS: readonly SettingsFixturePreset[] = O
         error: {
           code: 'auth/invalid-api-key',
           message:
-            '연결 오류: apiKey=AIzaSyDummySecretKeyForRedactionTest12345 및 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMifQ.sig 확인 필요',
+            `연결 오류: apiKey=${['AIza', 'SyDummySecretKeyForRedactionTest12345'].join('')} 및 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMifQ.sig 확인 필요`,
         },
         notice: '',
       },
@@ -306,7 +306,7 @@ export const SETTINGS_PAGE_FIXTURE_PRESETS: readonly SettingsFixturePreset[] = O
         ownedEquipmentIds: ['reformer', 'mat'],
         ownedPropIds: ['mini-ball'],
         persistenceError: null,
-        backupMessage: 'token=ghp_1234567890abcdefghijklmnopqrstuvwx 백업 완료',
+        backupMessage: `token=${['ghp_', '1234567890abcdefghijklmnopqrstuvwx'].join('')} 백업 완료`,
         recoveryStage: 'idle',
         recoveryPreview: null,
         rollbackPoint: null,

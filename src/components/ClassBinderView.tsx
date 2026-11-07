@@ -307,6 +307,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
     isExpanded: boolean,
     setExpanded: React.Dispatch<React.SetStateAction<boolean>>,
     toggleRef: React.RefObject<HTMLButtonElement | null>,
+    activateOnNavigate = false,
   ) => {
     if (event.key === 'Escape' && isExpanded) {
       event.preventDefault(); setExpanded(false); toggleRef.current?.focus(); return;
@@ -320,7 +321,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
       event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1
       : event.key === 'ArrowRight' || event.key === 'ArrowDown' ? (currentIndex + 1) % buttons.length
       : (currentIndex - 1 + buttons.length) % buttons.length;
-    buttons[nextIndex]?.focus();
+    const nextButton = buttons[nextIndex];
+    nextButton?.focus();
+    if (activateOnNavigate) nextButton?.click();
   };
 
   const closeReopenedModal = () => {
@@ -488,7 +491,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
           <div
             className={`pf-tabs pf-tabs--pills teaching-group-filters ${showAllGroupChips ? 'is-expanded' : 'is-collapsed'}`}
             role="group" aria-label="수업 그룹 필터"
-            onKeyDown={(e) => handleRovingKeyDown(e, 'button.teaching-filter:not(:disabled)', showAllGroupChips, setShowAllGroupChips, groupMoreToggleRef)}
+            onKeyDown={(e) => handleRovingKeyDown(e, 'button.teaching-filter:not(:disabled)', showAllGroupChips, setShowAllGroupChips, groupMoreToggleRef, true)}
           >
             <div className="teaching-group-chip-list">
               <button

@@ -374,7 +374,7 @@ export const TRACK_B_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenceReviewRe
         },
       },
       discrepancyAudit: {
-        targetVisualAssetId: 'supine-feet-in-straps',
+        targetVisualAssetId: 'reformer-strap-frog-isolated',
         targetPatternVariantIds: [],
         facts: [
           {
@@ -385,13 +385,13 @@ export const TRACK_B_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenceReviewRe
           },
           {
             category: 'fact',
-            targetId: 'supine-feet-in-straps',
+            targetId: 'reformer-strap-frog-isolated',
             summaryKo:
               '2D rig(supine-feet-in-straps)의 end 단계는 무릎을 다시 접는 프로그 복귀가 아니라 무릎을 편 채 천장 쪽으로 들어 올리는 Leg Circle 상방 리프트(knee: 210,58 / ankle: 222,40)로 그려져 있다.',
           },
           {
             category: 'fact',
-            targetId: 'supine-feet-in-straps',
+            targetId: 'reformer-strap-frog-isolated',
             summaryKo:
               '또한 MovementPhaseDiagramSvg.tsx에서 로프가 헤드 끝(46,114)에서 발목으로 직선 연결되며, carriageOffsetPx(6 -> 36 -> 12) 이동 시 신체 좌표는 고정되어 있다.',
           },
@@ -399,7 +399,7 @@ export const TRACK_B_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenceReviewRe
         inferences: [
           {
             category: 'inference',
-            targetId: 'supine-feet-in-straps',
+            targetId: 'reformer-strap-frog-isolated',
             summaryKo:
               'supine-feet-in-straps 아키타입이 Frog와 Leg Circles/Lower & Lift를 한 도해에 혼합하면서 end 단계가 무릎 굴곡 복귀 대신 직선 다리 거상으로 표현된 것이다.',
           },
@@ -407,7 +407,7 @@ export const TRACK_B_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenceReviewRe
         unverifiedOrMismatched: [
           {
             category: 'unverified',
-            targetId: 'supine-feet-in-straps',
+            targetId: 'reformer-strap-frog-isolated',
             summaryKo:
               'original-reformer-strap-frog의 end 단계는 무릎을 굽힌 프로그 시작 자세로 돌아와야 하나, 현재 2D rig end 프레임은 무릎을 편 천장 리프트(ankle y:40)를 표시하여 동작 설명과 불일치한다.',
           },
@@ -505,18 +505,18 @@ export const TRACK_B_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenceReviewRe
         },
       },
       discrepancyAudit: {
-        targetVisualAssetId: 'plank-long-stretch-chair-pike',
+        targetVisualAssetId: 'reformer-plank-long-stretch-isolated',
         targetPatternVariantIds: [],
         facts: [
           {
             category: 'fact',
-            targetId: 'plank-long-stretch-chair-pike',
+            targetId: 'reformer-plank-long-stretch-isolated',
             summaryKo:
               'MovementPhaseDiagramSvg.tsx의 리포머 도식(case reformer)에서는 풋바가 오른쪽(x: 278~288)에 있고 헤드레스트/풀리가 왼쪽(x: 42~72)에 그려진다.',
           },
           {
             category: 'fact',
-            targetId: 'plank-long-stretch-chair-pike',
+            targetId: 'reformer-plank-long-stretch-isolated',
             summaryKo:
               '그러나 plank-long-stretch-chair-pike 2D rig는 손(wrist x:96, hand x:88)을 왼쪽에 두고 발(ankle x:280->242)을 오른쪽에 배치하여, 리포머 도식 위에서 손이 헤드레스트 쪽 허공을 짚고 발이 풋바에 놓이는 좌우 역전 오류가 발생한다.',
           },
@@ -524,7 +524,7 @@ export const TRACK_B_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenceReviewRe
         inferences: [
           {
             category: 'inference',
-            targetId: 'plank-long-stretch-chair-pike',
+            targetId: 'reformer-plank-long-stretch-isolated',
             summaryKo:
               '운다 체어 파이크(왼쪽 시트, 오른쪽 페달) 기준 좌표를 리포머 플랭크(오른쪽 풋바, 왼쪽 헤드레스트)에 좌우 반전 없이 그대로 재사용하면서 기구 지지점이 완전히 뒤바뀐 것이다.',
           },
@@ -1151,18 +1151,18 @@ export const TRACK_B_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenceReviewRe
         },
       },
       discrepancyAudit: {
-        targetVisualAssetId: 'plank-long-stretch-chair-pike',
+        targetVisualAssetId: 'chair-plank-pike-isolated',
         targetPatternVariantIds: [],
         facts: [
           {
             category: 'fact',
-            targetId: 'plank-long-stretch-chair-pike',
+            targetId: 'chair-plank-pike-isolated',
             summaryKo:
               'MovementPhaseDiagramSvg.tsx(case "chair")에서 체어 시트 상판은 x: 104~152, y: 122이고 페달 끝은 x: 약 198~204, y: 131~155에 그려진다.',
           },
           {
             category: 'fact',
-            targetId: 'plank-long-stretch-chair-pike',
+            targetId: 'chair-plank-pike-isolated',
             summaryKo:
               '그러나 공유 2D rig(plank-long-stretch-chair-pike)는 손목(wrist: 96,144)이 시트 상판(y:122)보다 22px 아래 허공에 있고, 발목(ankle: 280,150 -> 242,148)은 페달 끝(x: 약 200)보다 오른쪽으로 40~80px 떨어진 바닥 허공에서 수평 이동한다.',
           },
@@ -1170,7 +1170,7 @@ export const TRACK_B_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenceReviewRe
         inferences: [
           {
             category: 'inference',
-            targetId: 'plank-long-stretch-chair-pike',
+            targetId: 'chair-plank-pike-isolated',
             summaryKo:
               '매트/리포머 플랭크용 넓은 수평 좌표(x: 88~280)를 폭이 좁은 운다 체어(시트 x:104~152, 페달 x:152~204) 위에 스케일 조정 없이 겹쳐 그리면서 손과 발 모두 기구에서 이탈한 것이다.',
           },
@@ -1278,18 +1278,18 @@ export const TRACK_B_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenceReviewRe
         },
       },
       discrepancyAudit: {
-        targetVisualAssetId: 'standing-scooter-lunge-splits',
+        targetVisualAssetId: 'barrel-standing-hip-extension-isolated',
         targetPatternVariantIds: ['ladder-supported-hip-extension-slide'],
         facts: [
           {
             category: 'fact',
-            targetId: 'standing-scooter-lunge-splits',
+            targetId: 'barrel-standing-hip-extension-isolated',
             summaryKo:
               '2D rig(standing-scooter-lunge-splits)는 리포머 스쿠터·런지·바렐 스탠딩 13개 동작에 공유되며, MovementPhaseDiagramSvg.tsx(case "barrel")에서 래더는 왼쪽(x: 58~82), 바렐 돔은 오른쪽(x: 122~246, y: 92~166)에 그려진다.',
           },
           {
             category: 'fact',
-            targetId: 'standing-scooter-lunge-splits',
+            targetId: 'barrel-standing-hip-extension-isolated',
             summaryKo:
               '그 결과 2D rig의 서 있는 인체(pelvis x:152, 지지발 farAnkle x:124, 가동발 ankle x: 214 -> 278)가 래더 바깥이 아니라 바렐 돔 내부(x: 122~246)를 관통하여 서 있는 기구 충돌 오류가 발생한다.',
           },
@@ -1303,7 +1303,7 @@ export const TRACK_B_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenceReviewRe
         inferences: [
           {
             category: 'inference',
-            targetId: 'standing-scooter-lunge-splits',
+            targetId: 'barrel-standing-hip-extension-isolated',
             summaryKo:
               '리포머 스쿠터용 2D 좌표를 바렐 도식 위에 오프셋 조정 없이 그대로 렌더링하면서 인체가 바렐 몸통 한가운데를 뚫고 서 있는 시각적 오류가 발생한 것이다.',
           },
@@ -1311,7 +1311,7 @@ export const TRACK_B_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenceReviewRe
         unverifiedOrMismatched: [
           {
             category: 'unverified',
-            targetId: 'standing-scooter-lunge-splits',
+            targetId: 'barrel-standing-hip-extension-isolated',
             summaryKo:
               '2D rig에서 인체가 바렐 곡면 내부(x: 124~278)에 겹쳐 그려지는 배치 불일치(mismatched)가 있으며, 연속 초안 또한 고전 래더바렐 정식 매뉴얼 검증이 아닌 일반 지지 운동의 저작 적응 상태이다.',
           },

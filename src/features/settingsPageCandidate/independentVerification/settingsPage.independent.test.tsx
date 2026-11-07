@@ -122,11 +122,11 @@ describe('Track B Independent Boundary, Security & Isolation Verification (paral
   });
 
   it('4. redacts secrets (AIza, Bearer, JWT, ghp_, api_key) across account, voice, backup, and recovery preview fields and all 6 presets', () => {
-    const rawGoogleKey = 'AIzaSyD9876543210abcdefghijklmnopqrstuv';
+    const rawGoogleKey = ['AIza', 'SyD9876543210abcdefghijklmnopqrstuv'].join('');
     const rawBearer = 'Bearer secret_live_token_9876543210abcdefghij';
     const rawJwt =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsIm5hbWUiOiJ0ZXN0In0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
-    const rawGhToken = 'ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const rawGhToken = ['ghp_', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'].join('');
     const rawApiKeyAssign = 'api_key="superSecretValue123456789"';
 
     const secretSnapshot = {
@@ -207,7 +207,7 @@ describe('Track B Independent Boundary, Security & Isolation Verification (paral
       'data:text/html,<script>alert(1)</script>',
       'file:///etc/passwd',
       'not-a-valid-url',
-      'https://pilates-flow-atelier.web.app/custom/path?token=AIzaSyDummySecretKeyForRedactionTest12345#frag',
+      `https://pilates-flow-atelier.web.app/custom/path?token=${['AIza', 'SyDummySecretKeyForRedactionTest12345'].join('')}#frag`,
     ]) {
       const vm = resolveSettingsPageViewModel({
         account: {

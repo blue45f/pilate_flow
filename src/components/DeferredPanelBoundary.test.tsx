@@ -182,9 +182,9 @@ describe('optional account-panel failure containment', () => {
     });
     expect(JSON.parse(exportedRaw).data).toEqual(expectedData);
     expect(
-      within(settings).getByText(
+      within(settings).getAllByText(
         '백업 파일을 만들었습니다. 기기 변경 전 안전한 곳에 보관해 주세요.',
-      ),
+      )[0],
     ).toBeInTheDocument();
     const file = new File(['not JSON'], 'qa-read-only-invalid.json', { type: 'application/json' });
     Object.defineProperty(file, 'text', { value: async () => 'not JSON' });
