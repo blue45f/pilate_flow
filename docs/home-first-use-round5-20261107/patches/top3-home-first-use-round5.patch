@@ -1,0 +1,229 @@
+# Top 3 Minimal Owner-Ready Patch Proposals — Home First-Use Round 5 (2026-11-07)
+# Base Commit: db3d90a1b6692602220146dad4b86472b0d85b1e (origin/main)
+# Target Owners:
+# - IMP-R5-01: InlineExerciseFinder owner (src/components/InlineExerciseFinder.tsx)
+# - IMP-R5-02: InlineExerciseFinder + SequenceWorkbench + release-mobile-clarity.css owners
+# - IMP-R5-03: SequenceWorkbench + release-mobile-clarity.css owners
+
+diff --git a/src/components/InlineExerciseFinder.tsx b/src/components/InlineExerciseFinder.tsx
+index 8e7521d..3c91a42 100644
+--- a/src/components/InlineExerciseFinder.tsx
++++ b/src/components/InlineExerciseFinder.tsx
+@@ -33,6 +33,8 @@ interface InlineExerciseFinderProps {
+   onOpenExercise: (exercise: PilatesExercise) => void;
+   classEquipment?: readonly EquipmentId[];
+   active?: boolean;
++  hideSelectionBar?: boolean;
++  onReturnToWorkbench?: () => void;
+ }
+ 
+ type FilterTab = 'equipment' | 'body' | 'duration';
+@@ -44,9 +46,9 @@ interface FinderFilters {
+   duration: DurationFilter;
+   motionOnly: boolean;
+ }
+-const emptyFilters = (): FinderFilters => ({
++const emptyFilters = (equipment: readonly EquipmentId[] = []): FinderFilters => ({
+   query: '',
+-  equipment: [],
++  equipment: [...equipment],
+   bodyTag: '',
+   duration: 'all',
+   motionOnly: false,
+@@ -71,12 +73,19 @@ export function InlineExerciseFinder({
+   onOpenExercise,
+   classEquipment = [],
+   active = true,
++  hideSelectionBar = false,
++  onReturnToWorkbench,
+ }: InlineExerciseFinderProps) {
+   const exercises = usePilatesStore((state) => state.exercises);
+   const activeSteps = usePilatesStore((state) => state.activeSteps);
+   const appendExerciseToSequence = usePilatesStore((state) => state.appendExerciseToSequence);
+   const setActiveTab = usePilatesStore((state) => state.setActiveTab);
+-  const [filters, setFilters] = useState(emptyFilters);
++  const [filters, setFilters] = useState(() => emptyFilters(classEquipment));
++  const classEquipmentKey = classEquipment.join(',');
++  useEffect(() => {
++    if (!classEquipment.length) return;
++    setFilters((previous) => ({ ...previous, equipment: [...classEquipment] }));
++  }, [classEquipmentKey]);
+   const [tab, setTab] = useState<FilterTab>('equipment');
+   const [visibleCount, setVisibleCount] = useState(6);
+   const [filtersOpen, setFiltersOpen] = useState(false);
+@@ -102,7 +111,7 @@ export function InlineExerciseFinder({
+     setVisibleCount(6);
+   };
+   const reset = () => {
+-    setFilters(emptyFilters());
++    setFilters(emptyFilters(classEquipment));
+     setVisibleCount(6);
+     setFeedback(null);
+   };
+@@ -632,14 +641,23 @@ export function InlineExerciseFinder({
+       <button className="ief-open-atlas" type="button" onClick={() => setActiveTab('atlas')}>
+         동작 라이브러리 전체 보기 <ArrowUpRight size={17} />
+       </button>
+-      <div className="ief-selection-bar">
+-        <span>
+-          수업안에 <strong>{selectedCount}개</strong> 선택
+-        </span>
+-        <button type="button" onClick={() => setActiveTab('workbench')}>
+-          <ArrowLeft size={15} aria-hidden="true" /> 수업안으로
+-        </button>
+-      </div>
++      {!hideSelectionBar && (
++        <div className="ief-selection-bar">
++          <span>
++            수업안에 <strong>{selectedCount}개</strong> 선택
++          </span>
++          <button
++            type="button"
++            onClick={() => {
++              if (onReturnToWorkbench) onReturnToWorkbench();
++              else setActiveTab('workbench');
++            }}
++          >
++            <ArrowLeft size={15} aria-hidden="true" /> 수업안으로
++          </button>
++        </div>
++      )}
+     </aside>
+   );
+ }
+diff --git a/src/components/SequenceWorkbench.tsx b/src/components/SequenceWorkbench.tsx
+index 644d719..d84a910 100644
+--- a/src/components/SequenceWorkbench.tsx
++++ b/src/components/SequenceWorkbench.tsx
+@@ -1060,40 +1060,42 @@ export function SequenceWorkbench({
+           </button>
+         </div>
+       )}
+-      <div className="v2-plan-toolbar" aria-label="시퀀스 준비">
+-        <div className="v2-condition-chips" aria-label="이번 수업 조건 요약">
+-          <button
+-            type="button"
+-            onClick={() => setConditionsOpen(true)}
+-            aria-label={`수업 시간 ${criteria.targetMinutes}분 · 조건 열기`}
+-          >
+-            {criteria.targetMinutes}분 <ChevronDown size={14} />
+-          </button>
+-          <button
+-            type="button"
+-            onClick={() => setConditionsOpen(true)}
+-            aria-label={`이번 수업 기구: ${equipmentLabel(selectedEquipment) || '선택 필요'} · 조건 열기`}
+-            title={equipmentLabel(selectedEquipment)}
+-          >
+-            {selectedEquipment.length > 1
+-              ? `기구 ${selectedEquipment.length}`
+-              : equipmentLabel(selectedEquipment) || '기구 선택'}{' '}
+-            <ChevronDown size={14} />
+-          </button>
+-          <button
+-            type="button"
+-            onClick={() => setConditionsOpen(true)}
+-            aria-label={`수업 목표 ${focusOptions.find((option) => option.value === criteria.focusPreset)?.label ?? '전신 균형'} · 조건 열기`}
+-          >
+-            {focusOptions.find((option) => option.value === criteria.focusPreset)?.label ??
+-              '전신 균형'}{' '}
+-            <ChevronDown size={14} />
+-          </button>
+-          <PfButton variant="icon" aria-label="수업 조건" onClick={() => setConditionsOpen(true)}>
+-            <SlidersHorizontal size={18} />
+-          </PfButton>
++      {s.activeSteps.length > 0 && (
++        <div className="v2-plan-toolbar" aria-label="시퀀스 준비">
++          <div className="v2-condition-chips" aria-label="이번 수업 조건 요약">
++            <button
++              type="button"
++              onClick={() => setConditionsOpen(true)}
++              aria-label={`수업 시간 ${criteria.targetMinutes}분 · 조건 열기`}
++            >
++              {criteria.targetMinutes}분 <ChevronDown size={14} />
++            </button>
++            <button
++              type="button"
++              onClick={() => setConditionsOpen(true)}
++              aria-label={`이번 수업 기구: ${equipmentLabel(selectedEquipment) || '선택 필요'} · 조건 열기`}
++              title={equipmentLabel(selectedEquipment)}
++            >
++              {selectedEquipment.length > 1
++                ? `기구 ${selectedEquipment.length}`
++                : equipmentLabel(selectedEquipment) || '기구 선택'}{' '}
++              <ChevronDown size={14} />
++            </button>
++            <button
++              type="button"
++              onClick={() => setConditionsOpen(true)}
++              aria-label={`수업 목표 ${focusOptions.find((option) => option.value === criteria.focusPreset)?.label ?? '전신 균형'} · 조건 열기`}
++            >
++              {focusOptions.find((option) => option.value === criteria.focusPreset)?.label ??
++                '전신 균형'}{' '}
++              <ChevronDown size={14} />
++            </button>
++            <PfButton variant="icon" aria-label="수업 조건" onClick={() => setConditionsOpen(true)}>
++              <SlidersHorizontal size={18} />
++            </PfButton>
++          </div>
+         </div>
+-      </div>
++      )}
+       {planningMode === 'auto' && locked > 0 && (
+         <p id="v2-new-draft-scope" className="v2-generation-scope">
+           시퀀스 만들기는 전체를 새 초안으로 바꿉니다. 잠근 {locked}개 항목을 유지하려면 아래
+@@ -1126,7 +1128,7 @@ export function SequenceWorkbench({
+                   />
+                 </label>
+                 <PfButton
+-                  variant="secondary"
++                  variant={s.activeSequenceId ? 'secondary' : 'primary'}
+                   className="save-flow"
+                   onClick={handleSave}
+                   disabled={!s.activeSteps.length}
+@@ -1979,6 +1981,8 @@ export function SequenceWorkbench({
+             <InlineExerciseFinder
+               active={finderOpen}
+               onOpenExercise={onOpenYouTubePreview}
++              hideSelectionBar
++              onReturnToWorkbench={closeFinder}
+               classEquipment={EQUIPMENT_OPTIONS.filter((option) =>
+                 selectedEquipment.includes(option.id),
+               ).map((option) => option.id)}
+@@ -2400,6 +2404,16 @@ export function SequenceWorkbench({
+           <div className="v2-conditions-actions">
++            <button
++              type="button"
++              className="btn-primary"
++              onClick={() => {
++                closeConditions();
++                openExerciseFinder();
++              }}
++            >
++              기구·조건 적용 후 동작 고르기
++            </button>
+             <button type="button" className="btn-secondary" onClick={closeConditions}>
+               닫기
+             </button>
+diff --git a/src/styles/release-mobile-clarity.css b/src/styles/release-mobile-clarity.css
+index f23b1a8..a41e821 100644
+--- a/src/styles/release-mobile-clarity.css
++++ b/src/styles/release-mobile-clarity.css
+@@ -310,3 +310,19 @@ body:has(.plan-view) {
+     white-space: nowrap;
+   }
+ }
++
++#root .workbench-finder-dialog .workbench-finder-footer {
++  position: sticky;
++  bottom: 0;
++  z-index: 4;
++  background: rgba(251, 248, 242, 0.98);
++  backdrop-filter: blur(8px);
++}
++
++@media (max-width: 359px) {
++  #root .vnext-workbench.is-empty .workbench-welcome-image {
++    max-height: 84px;
++    object-fit: cover;
++  }
++}
