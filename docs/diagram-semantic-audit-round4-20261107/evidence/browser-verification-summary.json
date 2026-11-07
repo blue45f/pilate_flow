@@ -1,0 +1,134 @@
+{
+  "verifiedAt": "2026-11-07T12:04:36.808Z",
+  "rendererSource": "src/components/MovementPhaseDiagramSvg.tsx (READ-ONLY current main)",
+  "consoleErrorCount": 0,
+  "pageErrorCount": 0,
+  "consoleErrors": [],
+  "pageErrors": [],
+  "allViewportsZeroHorizontalOverflow": true,
+  "allViewportsSvgsVisible": true,
+  "apparatusScreenshots": [
+    {
+      "apparatus": "mat",
+      "mismatchIds": [
+        "SM-03"
+      ],
+      "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/apparatus-mat-sm03-sample.png",
+      "bytes": 274165
+    },
+    {
+      "apparatus": "reformer",
+      "mismatchIds": [
+        "SM-04"
+      ],
+      "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/apparatus-reformer-sm04-sample.png",
+      "bytes": 207813
+    },
+    {
+      "apparatus": "cadillac",
+      "mismatchIds": [
+        "SM-05",
+        "SM-06"
+      ],
+      "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/apparatus-cadillac-sm05-sm06-sample.png",
+      "bytes": 290119
+    },
+    {
+      "apparatus": "chair",
+      "mismatchIds": [
+        "SM-01",
+        "SM-04",
+        "SM-08"
+      ],
+      "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/apparatus-chair-sm01-sm08-sample.png",
+      "bytes": 258818
+    },
+    {
+      "apparatus": "barrel",
+      "mismatchIds": [
+        "SM-02",
+        "SM-07",
+        "SM-08"
+      ],
+      "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/apparatus-barrel-sm02-sm07-sm08-sample.png",
+      "bytes": 279394
+    }
+  ],
+  "viewportResults": [
+    {
+      "viewportId": "mobile-320",
+      "width": 320,
+      "height": 850,
+      "zoom": 1,
+      "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/viewport-mobile-320x850.png",
+      "bytes": 85448,
+      "innerWidth": 320,
+      "innerHeight": 850,
+      "scrollWidth": 320,
+      "horizontalOverflowPx": 0,
+      "renderedSvgCount": 42,
+      "allSvgsVisibleAndSized": true,
+      "hasTruthfulnessBanner": true
+    },
+    {
+      "viewportId": "mobile-390",
+      "width": 390,
+      "height": 850,
+      "zoom": 1,
+      "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/viewport-mobile-390x850.png",
+      "bytes": 88849,
+      "innerWidth": 390,
+      "innerHeight": 850,
+      "scrollWidth": 390,
+      "horizontalOverflowPx": 0,
+      "renderedSvgCount": 42,
+      "allSvgsVisibleAndSized": true,
+      "hasTruthfulnessBanner": true
+    },
+    {
+      "viewportId": "tablet-768",
+      "width": 768,
+      "height": 1024,
+      "zoom": 1,
+      "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/viewport-tablet-768x1024.png",
+      "bytes": 197711,
+      "innerWidth": 768,
+      "innerHeight": 1024,
+      "scrollWidth": 768,
+      "horizontalOverflowPx": 0,
+      "renderedSvgCount": 42,
+      "allSvgsVisibleAndSized": true,
+      "hasTruthfulnessBanner": true
+    },
+    {
+      "viewportId": "desktop-1440",
+      "width": 1440,
+      "height": 900,
+      "zoom": 1,
+      "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/viewport-desktop-1440x900.png",
+      "bytes": 225940,
+      "innerWidth": 1440,
+      "innerHeight": 900,
+      "scrollWidth": 1440,
+      "horizontalOverflowPx": 0,
+      "renderedSvgCount": 42,
+      "allSvgsVisibleAndSized": true,
+      "hasTruthfulnessBanner": true
+    },
+    {
+      "viewportId": "desktop-1440-zoom200",
+      "width": 1440,
+      "height": 900,
+      "zoom": 2,
+      "screenshotPath": "docs/diagram-semantic-audit-round4-20261107/screenshots/viewport-desktop-1440x900-zoom200.png",
+      "bytes": 455987,
+      "innerWidth": 1440,
+      "innerHeight": 900,
+      "scrollWidth": 1440,
+      "horizontalOverflowPx": 0,
+      "renderedSvgCount": 42,
+      "allSvgsVisibleAndSized": true,
+      "hasTruthfulnessBanner": true
+    }
+  ]
+}
