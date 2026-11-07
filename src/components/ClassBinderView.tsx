@@ -1,4 +1,4 @@
-import React, { useId, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowDownToLine,
   ArrowRight,
@@ -72,6 +72,7 @@ import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/design-tokens.css';
 import '../styles/teaching.css';
 import '../styles/rest.css';
+import './ClassBinderView.css';
 
 interface ClassBinderViewProps {
   onOpenLogModal: (sequenceId: string, context?: TeachingLogContext) => void;
@@ -79,8 +80,21 @@ interface ClassBinderViewProps {
 }
 
 const INITIAL_VISIBLE_DATE_CHIPS = 12;
+const MOBILE_INITIAL_VISIBLE_DATE_CHIPS = 3;
+const MOBILE_DATE_NAV_MAX_WIDTH_PX = 640;
 const INITIAL_VISIBLE_HISTORY_LOGS = 30;
 const HISTORY_LOGS_PAGE_SIZE = 30;
+
+const isMobileDateNavViewport = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  if (typeof window.innerWidth === 'number' && window.innerWidth > 0) {
+    return window.innerWidth <= MOBILE_DATE_NAV_MAX_WIDTH_PX;
+  }
+  if (typeof window.matchMedia === 'function') {
+    return window.matchMedia(`(max-width: ${MOBILE_DATE_NAV_MAX_WIDTH_PX}px)`).matches;
+  }
+  return false;
+};
 
 const sampleSequenceIds = new Set(INITIAL_SAVED_SEQUENCES.map((sequence) => sequence.id));
 const sampleHistoryIds = new Set(INITIAL_HISTORY_LOGS.map((log) => log.id));
@@ -224,6 +238,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedDate, setSelectedDate] = useState('all');
   const [showAllDateChips, setShowAllDateChips] = useState(false);
+  const [isMobileDateNav, setIsMobileDateNav] = useState<boolean>(isMobileDateNavViewport);
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(INITIAL_VISIBLE_HISTORY_LOGS);
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [groupName, setGroupName] = useState('');
@@ -237,7 +252,36 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   const [showBinderCueSheet, setShowBinderCueSheet] = useState(false);
   const [reopenedHistoryId, setReopenedHistoryId] = useState<string | null>(null);
   const groupNameInputRef = useRef<HTMLInputElement | null>(null);
+  const allDatesChipRef = useRef<HTMLButtonElement | null>(null);
+  const dateMoreToggleRef = useRef<HTMLButtonElement | null>(null);
+  const reopenedTriggerRef = useRef<HTMLButtonElement | null>(null);
   const groupErrorId = useId();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const syncViewport = () => {
+      setIsMobileDateNav(isMobileDateNavViewport());
+    };
+    syncViewport();
+    window.addEventListener('resize', syncViewport);
+    const mql =
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia(`(max-width: ${MOBILE_DATE_NAV_MAX_WIDTH_PX}px)`)
+        : null;
+    if (mql && typeof mql.addEventListener === 'function') {
+      mql.addEventListener('change', syncViewport);
+    }
+    return () => {
+      window.removeEventListener('resize', syncViewport);
+      if (mql && typeof mql.removeEventListener === 'function') {
+        mql.removeEventListener('change', syncViewport);
+      }
+    };
+  }, []);
+
+  const initialVisibleDateChipLimit = isMobileDateNav
+    ? MOBILE_INITIAL_VISIBLE_DATE_CHIPS
+    : INITIAL_VISIBLE_DATE_CHIPS;
 
   const exercisesMap = useMemo(
     () => new Map(exercises.map((exercise) => [exercise.id, exercise])),
@@ -343,10 +387,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
       : 'all';
   }, [selectedDate, dateFilterOptions]);
   const visibleDateFilterOptions = useMemo(() => {
-    if (showAllDateChips || dateFilterOptions.length <= INITIAL_VISIBLE_DATE_CHIPS) {
+    if (showAllDateChips || dateFilterOptions.length <= initialVisibleDateChipLimit) {
       return dateFilterOptions;
     }
-    const recentSlice = dateFilterOptions.slice(0, INITIAL_VISIBLE_DATE_CHIPS);
+    const recentSlice = dateFilterOptions.slice(0, initialVisibleDateChipLimit);
     if (
       effectiveSelectedDate !== 'all' &&
       !recentSlice.some((option) => option.dateKey === effectiveSelectedDate)
@@ -359,11 +403,14 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
       }
     }
     return recentSlice;
-  }, [dateFilterOptions, showAllDateChips, effectiveSelectedDate]);
+  }, [dateFilterOptions, showAllDateChips, effectiveSelectedDate, initialVisibleDateChipLimit]);
   const hiddenDateChipCount = Math.max(
     0,
     dateFilterOptions.length - visibleDateFilterOptions.length,
   );
+  const hasCollapsibleDateChips = showAllDateChips
+    ? dateFilterOptions.length > initialVisibleDateChipLimit
+    : hiddenDateChipCount > 0;
   const logs = useMemo(
     () =>
       effectiveSelectedDate === 'all'
@@ -899,11 +946,17 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
           />
           {dateFilterOptions.length > 0 && (
             <div
-              className="teaching-date-nav"
+              className={`teaching-date-nav ${showAllDateChips ? 'is-expanded' : 'is-collapsed'}`}
               role="group"
               aria-label="날짜별 기록 탐색"
               onKeyDown={(event) => {
-                if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
+                if (
+                  !['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'].includes(
+                    event.key,
+                  )
+                ) {
+                  return;
+                }
                 const buttons = Array.from(
                   event.currentTarget.querySelectorAll<HTMLButtonElement>(
                     'button.teaching-date-chip:not(:disabled)',
@@ -917,7 +970,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                     ? 0
                     : event.key === 'End'
                       ? buttons.length - 1
-                      : event.key === 'ArrowRight'
+                      : event.key === 'ArrowRight' || event.key === 'ArrowDown'
                         ? (currentIndex + 1) % buttons.length
                         : (currentIndex - 1 + buttons.length) % buttons.length;
                 buttons[nextIndex]?.focus();
@@ -930,6 +983,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
               <div className="teaching-date-chip-list">
                 <button
                   type="button"
+                  ref={allDatesChipRef}
                   className={`teaching-date-chip ${effectiveSelectedDate === 'all' ? 'is-active' : ''}`}
                   aria-pressed={effectiveSelectedDate === 'all'}
                   onClick={() => {
@@ -956,12 +1010,16 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   </button>
                 ))}
               </div>
-              {dateFilterOptions.length > INITIAL_VISIBLE_DATE_CHIPS && (
+              {hasCollapsibleDateChips && (
                 <button
                   type="button"
+                  ref={dateMoreToggleRef}
                   className="teaching-date-reset teaching-date-more-toggle"
                   aria-expanded={showAllDateChips}
-                  onClick={() => setShowAllDateChips((prev) => !prev)}
+                  onClick={() => {
+                    setShowAllDateChips((prev) => !prev);
+                    dateMoreToggleRef.current?.focus();
+                  }}
                 >
                   {showAllDateChips
                     ? '날짜 접기'
@@ -975,6 +1033,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   onClick={() => {
                     setSelectedDate('all');
                     setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
+                    allDatesChipRef.current?.focus();
                   }}
                 >
                   전체 날짜 보기
@@ -1180,7 +1239,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                           <div className="teaching-history-actions">
                             <PfButton
                               variant="secondary"
-                              onClick={() => setReopenedHistoryId(log.id)}
+                              onClick={(event) => {
+                                reopenedTriggerRef.current = event.currentTarget;
+                                setReopenedHistoryId(log.id);
+                              }}
                             >
                               <Eye size={15} />
                               이력 다시 열기
@@ -1309,7 +1371,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
       </LightDismissDialog>
       <LightDismissDialog
         open={Boolean(reopenedView)}
-        onClose={() => setReopenedHistoryId(null)}
+        onClose={() => {
+          setReopenedHistoryId(null);
+          const trigger = reopenedTriggerRef.current;
+          if (trigger?.isConnected) {
+            trigger.focus();
+          }
+        }}
         title="진행 완료 수업 이력 상세"
         subtitle={reopenedView ? `${reopenedView.sequenceTitle} · ${formatDate(reopenedView.taughtAt)}` : ''}
         maxWidth="760px"
@@ -1488,7 +1556,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
             <div className="teaching-form-actions">
               <PfButton
                 variant="secondary"
-                onClick={() => setReopenedHistoryId(null)}
+                onClick={() => {
+                  setReopenedHistoryId(null);
+                  const trigger = reopenedTriggerRef.current;
+                  if (trigger?.isConnected) {
+                    trigger.focus();
+                  }
+                }}
               >
                 닫기
               </PfButton>
