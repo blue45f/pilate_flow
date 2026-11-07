@@ -1,0 +1,286 @@
+{
+  "featureId": "settings-real-entry-round4-20261107",
+  "track": "Track B — Round 4 Real-Entry & Headless Chromium Browser Verification",
+  "verifiedAt": "2026-11-07T11:56:28.049Z",
+  "passed": true,
+  "driver": "cdp-native-chromium",
+  "chromeBinary": "/usr/bin/chromium",
+  "realEntryPathFactCheck": {
+    "entryTriggerSelector": "[aria-label=\"데이터 백업과 사용 안내\"]",
+    "modalTitle": "나의 스튜디오",
+    "topLevelLegacyPanels": [
+      "CloudSyncPanel",
+      "InventoryPanel",
+      "RecoveryPreview"
+    ],
+    "candidateMountLocation": "Bottom <details class=\"settings-section\"> -> <summary>4그룹 통합 설정 요약 (계정 · 음성 · 설치 · 데이터)</summary>",
+    "candidateInitiallyCollapsed": true,
+    "wiredSnapshotProps": [
+      "data.savedSequenceCount",
+      "data.exerciseCount",
+      "data.historyLogCount",
+      "data.ownedEquipmentIds",
+      "data.ownedPropIds",
+      "data.persistenceError",
+      "data.backupMessage"
+    ],
+    "wiredPortCallbacks": [
+      "onExportBackupJson",
+      "onToggleOwnedEquipment",
+      "onToggleOwnedProp"
+    ],
+    "unwiredGroupsInAppTsx": [
+      "account (snapshot.account undefined; sign-in/switch/sign-out/recheck port callbacks omitted)",
+      "voice (snapshot.voice undefined; voice toggle/speed/preferences/sample/recheck not connected to useClassVoiceGuidance)",
+      "reducedMotion (preferReducedMotion prop & onToggleReducedMotion omitted; candidate-local + OS matchMedia only)",
+      "install (snapshot.install undefined; onRequestPwaInstall not connected to usePwa/requestPwaInstall)",
+      "data.recovery (recoveryStage/recoveryPreview/rollbackPoint & select/apply/cancel/rollback callbacks omitted in candidate port)"
+    ]
+  },
+  "interactiveRevisitReport": {
+    "viewport": "390x844",
+    "voiceNoticeAfterEnable": "한국어 음성 안내 설정을 저장했습니다. 실제 발화는 수업 화면의 사용자 명시적 토글·브라우저 음성 허용 시에만 동작하며, 참고 영상은 자동 재생하지 않습니다.",
+    "afterStoreRerender": {
+      "voiceEnabled": true,
+      "speed085": true,
+      "breathChecked": false,
+      "reducedMotionAttr": "true",
+      "chairChecked": false
+    },
+    "afterRevisit": {
+      "voiceEnabled": true,
+      "speed085": true,
+      "voiceBadgeText": "현재값: 음성 켜짐 · 0.85x (천천히)",
+      "breathChecked": false,
+      "reducedMotionAttr": "true",
+      "reducedMotionStatusText": "모션 감소 켜짐 (즉시 전환 · 스크롤 애니메이션 생략)",
+      "chairChecked": false
+    },
+    "revisitConsistencyVerified": true
+  },
+  "realEntryViewportResults": [
+    {
+      "viewport": "320x640",
+      "width": 320,
+      "height": 640,
+      "entryInspection": {
+        "dialogTitle": "나의 스튜디오",
+        "hasLegacyCloudSyncPanel": true,
+        "hasLegacyInventoryPanel": true,
+        "hasLegacyRecoveryPreview": true,
+        "hasCandidateSummaryDisclosure": true,
+        "candidateDetailsInitiallyOpen": false
+      },
+      "groupsPresent": true,
+      "visibleRequiredTestIds": {
+        "settings-voice-autoplay-prerequisite": true,
+        "settings-video-autoplay-policy": true,
+        "settings-reduced-motion-status": true,
+        "settings-reduced-motion-toggle": true,
+        "settings-install-offline-summary": true,
+        "settings-install-offline-scope": true
+      },
+      "horizontalOverflow100Pct": false,
+      "horizontalOverflow200PctFont": false,
+      "minTouchTarget44x44Verified": true,
+      "interactiveTargetCount": 43,
+      "touchSiblingOverlapCount": 0,
+      "pageErrors": []
+    },
+    {
+      "viewport": "390x844",
+      "width": 390,
+      "height": 844,
+      "entryInspection": {
+        "dialogTitle": "나의 스튜디오",
+        "hasLegacyCloudSyncPanel": true,
+        "hasLegacyInventoryPanel": true,
+        "hasLegacyRecoveryPreview": true,
+        "hasCandidateSummaryDisclosure": true,
+        "candidateDetailsInitiallyOpen": false
+      },
+      "groupsPresent": true,
+      "visibleRequiredTestIds": {
+        "settings-voice-autoplay-prerequisite": true,
+        "settings-video-autoplay-policy": true,
+        "settings-reduced-motion-status": true,
+        "settings-reduced-motion-toggle": true,
+        "settings-install-offline-summary": true,
+        "settings-install-offline-scope": true
+      },
+      "horizontalOverflow100Pct": false,
+      "horizontalOverflow200PctFont": false,
+      "minTouchTarget44x44Verified": true,
+      "interactiveTargetCount": 43,
+      "touchSiblingOverlapCount": 0,
+      "pageErrors": []
+    },
+    {
+      "viewport": "768x1024",
+      "width": 768,
+      "height": 1024,
+      "entryInspection": {
+        "dialogTitle": "나의 스튜디오",
+        "hasLegacyCloudSyncPanel": true,
+        "hasLegacyInventoryPanel": true,
+        "hasLegacyRecoveryPreview": true,
+        "hasCandidateSummaryDisclosure": true,
+        "candidateDetailsInitiallyOpen": false
+      },
+      "groupsPresent": true,
+      "visibleRequiredTestIds": {
+        "settings-voice-autoplay-prerequisite": true,
+        "settings-video-autoplay-policy": true,
+        "settings-reduced-motion-status": true,
+        "settings-reduced-motion-toggle": true,
+        "settings-install-offline-summary": true,
+        "settings-install-offline-scope": true
+      },
+      "horizontalOverflow100Pct": false,
+      "horizontalOverflow200PctFont": false,
+      "minTouchTarget44x44Verified": true,
+      "interactiveTargetCount": 43,
+      "touchSiblingOverlapCount": 0,
+      "pageErrors": []
+    },
+    {
+      "viewport": "1440x900",
+      "width": 1440,
+      "height": 900,
+      "entryInspection": {
+        "dialogTitle": "나의 스튜디오",
+        "hasLegacyCloudSyncPanel": true,
+        "hasLegacyInventoryPanel": true,
+        "hasLegacyRecoveryPreview": true,
+        "hasCandidateSummaryDisclosure": true,
+        "candidateDetailsInitiallyOpen": false
+      },
+      "groupsPresent": true,
+      "visibleRequiredTestIds": {
+        "settings-voice-autoplay-prerequisite": true,
+        "settings-video-autoplay-policy": true,
+        "settings-reduced-motion-status": true,
+        "settings-reduced-motion-toggle": true,
+        "settings-install-offline-summary": true,
+        "settings-install-offline-scope": true
+      },
+      "horizontalOverflow100Pct": false,
+      "horizontalOverflow200PctFont": false,
+      "minTouchTarget44x44Verified": true,
+      "interactiveTargetCount": 43,
+      "touchSiblingOverlapCount": 0,
+      "pageErrors": []
+    }
+  ],
+  "fixtureViewportResults": [
+    {
+      "viewport": "320x640",
+      "presetsVerified": 6,
+      "horizontalOverflow100Pct": false,
+      "pageErrors": []
+    },
+    {
+      "viewport": "390x844",
+      "presetsVerified": 6,
+      "horizontalOverflow100Pct": false,
+      "pageErrors": []
+    },
+    {
+      "viewport": "768x1024",
+      "presetsVerified": 6,
+      "horizontalOverflow100Pct": false,
+      "pageErrors": []
+    },
+    {
+      "viewport": "1440x900",
+      "presetsVerified": 6,
+      "horizontalOverflow100Pct": false,
+      "pageErrors": []
+    }
+  ],
+  "screenshots": [
+    "docs/settings-real-entry-round4-20261107/evidence/screenshots/real-entry-settings-320-100.png",
+    "docs/settings-real-entry-round4-20261107/evidence/screenshots/real-entry-settings-320-200zoom.png",
+    "docs/settings-real-entry-round4-20261107/evidence/screenshots/real-entry-settings-390-100.png",
+    "docs/settings-real-entry-round4-20261107/evidence/screenshots/real-entry-settings-768-100.png",
+    "docs/settings-real-entry-round4-20261107/evidence/screenshots/real-entry-settings-1440-100.png",
+    "docs/settings-real-entry-round4-20261107/evidence/screenshots/real-entry-settings-revisit-390.png"
+  ],
+  "candidateSourceMetrics": {
+    "totalFiles": 14,
+    "totalLines": 6591,
+    "totalBytes": 253044,
+    "files": [
+      {
+        "path": "src/features/settingsPageCandidate/browserFixture.html",
+        "lines": 26,
+        "bytes": 860
+      },
+      {
+        "path": "src/features/settingsPageCandidate/independentVerification/settingsPage.independent.test.tsx",
+        "lines": 455,
+        "bytes": 18353
+      },
+      {
+        "path": "src/features/settingsPageCandidate/independentVerification/verifySettingsPageBrowser.mjs",
+        "lines": 682,
+        "bytes": 24531
+      },
+      {
+        "path": "src/features/settingsPageCandidate/independentVerification/verifySettingsRealEntryRound4.mjs",
+        "lines": 995,
+        "bytes": 39767
+      },
+      {
+        "path": "src/features/settingsPageCandidate/index.ts",
+        "lines": 49,
+        "bytes": 1304
+      },
+      {
+        "path": "src/features/settingsPageCandidate/pilatesSettingsPage.css",
+        "lines": 387,
+        "bytes": 7705
+      },
+      {
+        "path": "src/features/settingsPageCandidate/PilatesSettingsPage.mock.test.tsx",
+        "lines": 310,
+        "bytes": 14324
+      },
+      {
+        "path": "src/features/settingsPageCandidate/PilatesSettingsPage.tsx",
+        "lines": 1327,
+        "bytes": 54147
+      },
+      {
+        "path": "src/features/settingsPageCandidate/README.md",
+        "lines": 35,
+        "bytes": 2922
+      },
+      {
+        "path": "src/features/settingsPageCandidate/settingsPageFixtures.ts",
+        "lines": 332,
+        "bytes": 10733
+      },
+      {
+        "path": "src/features/settingsPageCandidate/settingsPageModel.test.ts",
+        "lines": 372,
+        "bytes": 15417
+      },
+      {
+        "path": "src/features/settingsPageCandidate/settingsPageModel.ts",
+        "lines": 906,
+        "bytes": 34853
+      },
+      {
+        "path": "src/features/settingsPageCandidate/settingsRealEntryRound4.test.tsx",
+        "lines": 421,
+        "bytes": 17670
+      },
+      {
+        "path": "src/features/settingsPageCandidate/types.ts",
+        "lines": 294,
+        "bytes": 10458
+      }
+    ]
+  }
+}

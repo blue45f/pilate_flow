@@ -3,12 +3,14 @@ import {
   EQUIPMENT_OPTIONS,
   PROP_OPTIONS,
 } from '../../data/equipmentCatalog';
+import { SETTINGS_PAGE_FIXTURE_PRESETS } from './settingsPageFixtures';
 import {
   type MockSettingsActionRecorder,
   type SettingsAccountInput,
   type SettingsAccountViewModel,
   type SettingsDataInput,
   type SettingsDataViewModel,
+  type SettingsGroupId,
   type SettingsGroupSummary,
   type SettingsInstallInput,
   type SettingsInstallViewModel,
@@ -217,6 +219,7 @@ function buildVoiceViewModel(rawVoice: unknown): {
   redacted: boolean;
 } {
   let redacted = false;
+  const hasExplicitVoiceInput = isPlainRecord(rawVoice);
   const rawCap = readOwnProp(rawVoice, 'capabilityStatus');
   const capabilityStatus: SettingsVoiceInput['capabilityStatus'] =
     rawCap === 'available' || rawCap === 'no-korean-voice' || rawCap === 'unsupported'
@@ -225,7 +228,11 @@ function buildVoiceViewModel(rawVoice: unknown): {
 
   const nameRes = sanitizeSettingsText(
     readOwnProp(rawVoice, 'voiceName'),
-    capabilityStatus === 'available' ? '한국어 기기 내장 음성' : '',
+    capabilityStatus === 'available'
+      ? hasExplicitVoiceInput
+        ? '한국어 기기 내장 음성'
+        : ''
+      : '',
   );
   const langRes = sanitizeSettingsText(
     readOwnProp(rawVoice, 'voiceLang'),
@@ -280,7 +287,9 @@ function buildVoiceViewModel(rawVoice: unknown): {
   if (capabilityStatus === 'available' && localService) {
     currentCapabilityLabelKo = nameRes.text
       ? `기기 내장 한국어 음성 준비됨 (${nameRes.text})`
-      : '기기 내장 한국어 음성 준비됨';
+      : hasExplicitVoiceInput
+        ? '기기 내장 한국어 음성 준비됨'
+        : '기기 내장 한국어 음성 (수업 화면 진입·명시 토글 시 확인)';
   } else if (capabilityStatus === 'no-korean-voice') {
     currentCapabilityLabelKo = '기기 한국어 음성 미확인 · 화면 대본 제공';
   } else {
@@ -289,7 +298,9 @@ function buildVoiceViewModel(rawVoice: unknown): {
 
   const defaultAnnouncement = canToggleEnabled
     ? enabled
-      ? `수업 한국어 음성 안내 켜짐 · ${speedName} · ${currentPreferencesLabelKo}`
+      ? enabledPreferenceCount > 0
+        ? `수업 한국어 음성 안내 켜짐 · ${speedName} · ${currentPreferencesLabelKo} (사용자 명시 토글·브라우저 허용 전제)`
+        : `수업 한국어 음성 안내가 켜져 있으나 선택된 안내 항목이 없습니다(0/3). 최소 1개 항목을 켜야 발화됩니다.`
       : `수업 한국어 음성 안내 꺼짐 (수업 중 수동 시작 가능) · ${speedName}`
     : currentCapabilityLabelKo;
 
@@ -308,6 +319,10 @@ function buildVoiceViewModel(rawVoice: unknown): {
       currentSpeedLabelKo: speedName,
       currentPreferencesLabelKo,
       privacyBoundaryLabelKo: '무료 온디바이스 음성 전용 · 외부 유료 API 전송 없음',
+      autoSpeechPolicyLabelKo:
+        '사용자 명시적 토글 ON + 브라우저 음성 허용 전제 (자동 발화 금지)',
+      videoAutoplayPolicyLabelKo:
+        '참고 영상 자동재생 금지 (수업 중 강사가 직접 열 때만 실행)',
       errorMessageKo: errRes.text || null,
       statusAnnouncementKo: statusRes.text || defaultAnnouncement,
     },
@@ -370,18 +385,23 @@ function buildInstallViewModel(rawInstall: unknown): SettingsInstallViewModel {
 
   let currentOfflineLabelKo = '온라인 연결 필요 (오프라인 미확인)';
   let offlineDetailSummaryKo =
-    '현재 오프라인 준비를 확인하지 못했어요. 인터넷에 연결해서 사용해 주세요.';
+    '현재 오프라인 준비를 확인하지 못했어요. 인터넷에 연결해서 사용해 주세요. 로그인·클라우드 백업·외부 참고 영상(자동재생 금지)은 온라인 연결이 필요합니다.';
   if (offlineStatus === 'ready') {
     currentOfflineLabelKo = '오프라인 기본 화면 준비 완료';
-    offlineDetailSummaryKo = '기본 화면을 오프라인에서 열 준비가 됐어요.';
+    offlineDetailSummaryKo =
+      '기본 화면을 오프라인에서 열 준비가 됐어요. 단, Google 로그인·클라우드 백업·외부 참고 영상(자동재생 금지)은 인터넷 연결이 필요합니다.';
   } else if (offlineStatus === 'preparing') {
     currentOfflineLabelKo = '오프라인 기본 화면 준비 중';
     offlineDetailSummaryKo =
-      '기본 화면을 기기에 준비하고 있어요. 처음에는 인터넷 연결을 유지해 주세요.';
+      '기본 화면을 기기에 준비하고 있어요. 처음에는 인터넷 연결을 유지해 주세요. 로그인·클라우드 백업·외부 참고 영상은 온라인 전용입니다.';
   } else if (offlineStatus === 'update-ready') {
     currentOfflineLabelKo = '새 버전 대기 중 (수업 후 재실행 시 적용)';
     offlineDetailSummaryKo =
       '새 버전이 준비됐어요. 수업을 마치고 백업한 뒤 모든 탭과 앱 창을 닫고 다시 열어 주세요. 작성 중 자동으로 새로고침하지 않아요.';
+  } else if (offlineStatus === 'error') {
+    currentOfflineLabelKo = '오프라인 준비 오류 (온라인 연결 필요)';
+    offlineDetailSummaryKo =
+      '오프라인 기본 화면 캐시를 준비하지 못했어요. 현재 온라인 연결에서는 정상 사용할 수 있으며, 일반 브라우저 창에서 다시 확인해 주세요.';
   }
 
   const statusParts: string[] = [];
@@ -421,6 +441,8 @@ function buildInstallViewModel(rawInstall: unknown): SettingsInstallViewModel {
     currentOfflineLabelKo,
     liveStatusAnnouncementKo: statusParts.length > 0 ? statusParts.join(' ') : null,
     offlineDetailSummaryKo,
+    offlineScopeNoticeKo:
+      '기본 화면만 오프라인 열람 가능 · 로그인·클라우드 백업·외부 참고 영상(자동재생 금지)은 인터넷 연결 필요 · 설치는 기기 간 자동 동기화가 아님',
     manualGuideOpenByDefault,
   };
 }
@@ -587,8 +609,14 @@ export function resolveSettingsPageViewModel(
       eyebrow: 'GROUP 2 · VOICE GUIDANCE',
       titleKo: '한국어 음성 안내',
       shortDescriptionKo:
-        '기기 내장 무료 한국어 음성(Web Speech API)과 화면 대본으로 수업 진행·동작 설명을 보조합니다.',
-      currentValueBadgeKo: `${voiceRes.model.enabled ? '음성 켜짐' : '음성 꺼짐'} · ${voiceRes.model.currentSpeedLabelKo}`,
+        '기기 내장 무료 한국어 음성(Web Speech API)과 화면 대본으로 수업을 보조합니다. 음성 자동발화는 사용자의 명시적 토글·브라우저 허용을 전제로 하며, 참고 영상은 자동 재생하지 않습니다.',
+      currentValueBadgeKo: `${
+        voiceRes.model.enabled
+          ? voiceRes.model.enabledPreferenceCount > 0
+            ? '음성 켜짐'
+            : '음성 대기 (항목 0/3)'
+          : '음성 꺼짐'
+      } · ${voiceRes.model.currentSpeedLabelKo}`,
       secondaryValueKo: `${voiceRes.model.currentCapabilityLabelKo} · ${voiceRes.model.currentPreferencesLabelKo}`,
       safetyNoteKo: voiceRes.model.privacyBoundaryLabelKo,
     },
@@ -598,7 +626,7 @@ export function resolveSettingsPageViewModel(
       eyebrow: 'GROUP 3 · APP INSTALL',
       titleKo: '앱 설치 및 오프라인',
       shortDescriptionKo:
-        '앱스토어 없이 홈 화면·앱 목록에 설치합니다. 수업 작성 중에는 새 버전이 와도 자동 새로고침하지 않습니다.',
+        '앱스토어 없이 홈 화면·앱 목록에 설치합니다. 기본 화면만 오프라인 열람되며 로그인·백업·외부 영상(자동재생 금지)은 인터넷 연결이 필요하고, 수업 중 자동 새로고침하지 않습니다.',
       currentValueBadgeKo: installModel.currentRunModeLabelKo,
       secondaryValueKo: installModel.currentOfflineLabelKo,
       safetyNoteKo: '설치는 기기 간 동기화가 아니며, 기기 이동 전 전체 JSON 백업이 필요합니다.',
@@ -683,6 +711,13 @@ export function createMockSettingsActionRecorder(
       record({ type: 'voice:preview-sample' });
       delegate?.onPreviewVoiceSample?.();
     },
+    onToggleReducedMotion: (nextReducedMotion: boolean) => {
+      record({
+        type: 'motion:toggle-reduced-motion',
+        nextReducedMotion: Boolean(nextReducedMotion),
+      });
+      delegate?.onToggleReducedMotion?.(Boolean(nextReducedMotion));
+    },
     onRequestPwaInstall: () => {
       record({ type: 'install:request-pwa-install' });
       delegate?.onRequestPwaInstall?.();
@@ -737,3 +772,134 @@ export function createMockSettingsActionRecorder(
     },
   };
 }
+
+export interface CandidateVoiceOverride {
+  enabled?: boolean;
+  speed?: SettingsVoiceSpeed;
+  preferences?: Partial<Record<SettingsVoicePreferenceKey, boolean>>;
+  sampleNotice?: string;
+}
+
+export interface CandidateInstallOverride {
+  requestFeedback?: string;
+  manualGuideOpen?: boolean;
+  offlineNotesOpen?: boolean;
+}
+
+export interface CandidateSessionSlice {
+  activeGroup?: SettingsGroupId;
+  voice: CandidateVoiceOverride;
+  reducedMotion?: boolean;
+  install: CandidateInstallOverride;
+  equip: Record<string, boolean>;
+  props: Record<string, boolean>;
+  feedback: string;
+}
+
+const STATIC_PRESET_SNAPSHOTS = new Set<unknown>(
+  SETTINGS_PAGE_FIXTURE_PRESETS.map((item) => item.snapshot),
+);
+
+let snapshotSessionMap = new WeakMap<object, CandidateSessionSlice>();
+const namedSessionMap = new Map<string, CandidateSessionSlice>();
+let uncontrolledEntrySession: CandidateSessionSlice = {
+  voice: {},
+  install: {},
+  equip: {},
+  props: {},
+  feedback: '',
+};
+
+export function resetSettingsCandidateSessionForTests(): void {
+  snapshotSessionMap = new WeakMap<object, CandidateSessionSlice>();
+  namedSessionMap.clear();
+  uncontrolledEntrySession = {
+    voice: {},
+    install: {},
+    equip: {},
+    props: {},
+    feedback: '',
+  };
+}
+
+export function safeReadSettingsProp(target: unknown, key: string): unknown {
+  return readOwnProp(target, key);
+}
+
+export function safeSettingsBaselineKey(value: unknown): string {
+  if (value === undefined) return '__undefined__';
+  if (value === null) return '__null__';
+  if (typeof value !== 'object') return String(value);
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return '__unserializable__';
+  }
+}
+
+export function isDataOnlyEntrySnapshot(
+  snapshot: unknown,
+  preferReducedMotionProp: boolean | undefined,
+): boolean {
+  if (typeof snapshot !== 'object' || snapshot === null || Array.isArray(snapshot)) {
+    return false;
+  }
+  if (STATIC_PRESET_SNAPSHOTS.has(snapshot)) return false;
+  const hasData = readOwnProp(snapshot, 'data') !== undefined;
+  const hasAccount = readOwnProp(snapshot, 'account') !== undefined;
+  const hasVoice = readOwnProp(snapshot, 'voice') !== undefined;
+  const hasInstall = readOwnProp(snapshot, 'install') !== undefined;
+  const hasMotion = readOwnProp(snapshot, 'preferReducedMotion') !== undefined;
+  return (
+    hasData &&
+    !hasAccount &&
+    !hasVoice &&
+    !hasInstall &&
+    !hasMotion &&
+    preferReducedMotionProp === undefined
+  );
+}
+
+export function readPersistedSettingsSessionSlice(
+  snapshot: unknown,
+  preferReducedMotionProp: boolean | undefined,
+  sessionKey: string | undefined,
+): CandidateSessionSlice | null {
+  if (sessionKey && namedSessionMap.has(sessionKey)) {
+    return namedSessionMap.get(sessionKey) ?? null;
+  }
+  if (isDataOnlyEntrySnapshot(snapshot, preferReducedMotionProp)) {
+    return uncontrolledEntrySession;
+  }
+  if (
+    typeof snapshot === 'object' &&
+    snapshot !== null &&
+    !STATIC_PRESET_SNAPSHOTS.has(snapshot)
+  ) {
+    return snapshotSessionMap.get(snapshot) ?? null;
+  }
+  return null;
+}
+
+export function writePersistedSettingsSessionSlice(
+  snapshot: unknown,
+  preferReducedMotionProp: boolean | undefined,
+  sessionKey: string | undefined,
+  nextSlice: CandidateSessionSlice,
+): void {
+  if (sessionKey) {
+    namedSessionMap.set(sessionKey, nextSlice);
+  }
+  if (isDataOnlyEntrySnapshot(snapshot, preferReducedMotionProp)) {
+    uncontrolledEntrySession = nextSlice;
+    return;
+  }
+  if (
+    typeof snapshot === 'object' &&
+    snapshot !== null &&
+    !STATIC_PRESET_SNAPSHOTS.has(snapshot)
+  ) {
+    snapshotSessionMap.set(snapshot, nextSlice);
+  }
+}
+

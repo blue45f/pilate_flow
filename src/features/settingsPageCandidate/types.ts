@@ -148,6 +148,8 @@ export interface SettingsVoiceViewModel {
   readonly currentSpeedLabelKo: string;
   readonly currentPreferencesLabelKo: string;
   readonly privacyBoundaryLabelKo: string;
+  readonly autoSpeechPolicyLabelKo: string;
+  readonly videoAutoplayPolicyLabelKo: string;
   readonly errorMessageKo: string | null;
   readonly statusAnnouncementKo: string;
 }
@@ -164,6 +166,7 @@ export interface SettingsInstallViewModel {
   readonly currentOfflineLabelKo: string;
   readonly liveStatusAnnouncementKo: string | null;
   readonly offlineDetailSummaryKo: string;
+  readonly offlineScopeNoticeKo: string;
   readonly manualGuideOpenByDefault: boolean;
 }
 
@@ -228,6 +231,7 @@ export type SettingsRecordedAction =
     }
   | { readonly type: 'voice:recheck-capability' }
   | { readonly type: 'voice:preview-sample' }
+  | { readonly type: 'motion:toggle-reduced-motion'; readonly nextReducedMotion: boolean }
   | { readonly type: 'install:request-pwa-install' }
   | { readonly type: 'data:export-backup' }
   | {
@@ -255,6 +259,7 @@ export interface SettingsPageActionPort {
   ) => void;
   readonly onRecheckVoiceCapability?: () => void;
   readonly onPreviewVoiceSample?: () => void;
+  readonly onToggleReducedMotion?: (nextReducedMotion: boolean) => void;
   readonly onRequestPwaInstall?: () => void;
   readonly onExportBackupJson?: () => void;
   readonly onSelectBackupFile?: (fileName: string, byteSize: number) => void;
