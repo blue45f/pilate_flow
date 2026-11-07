@@ -1,0 +1,247 @@
+{
+  "featureId": "settings-honest-controls-round5-20261107",
+  "track": "Round 5 Honest Controls & Real-Entry Browser Verification",
+  "verifiedAt": "2026-11-07T16:52:26.150Z",
+  "passed": true,
+  "driver": "cdp-native-chromium",
+  "chromeBinary": "/usr/bin/chromium",
+  "maxLineLimit800Enforced": true,
+  "maxFileLinesObserved": 682,
+  "interactiveHonestControlsReport": {
+    "viewport": "390x844",
+    "revisitCheck": {
+      "dataChipPressed": true,
+      "chairChecked": false,
+      "voiceToggleDisabled": true,
+      "importBtnDisabled": true
+    },
+    "verified": true
+  },
+  "realEntryViewportResults": [
+    {
+      "viewport": "320x640",
+      "width": 320,
+      "height": 640,
+      "unconnectedControlsAllDisabled": true,
+      "connectedControlsAllEnabled": true,
+      "visibleGuides": {
+        "settings-account-unconnected-guide": true,
+        "settings-voice-unconnected-guide": true,
+        "settings-install-unconnected-guide": true,
+        "settings-data-unconnected-guide": true,
+        "settings-voice-speed-status": true
+      },
+      "hasForbiddenDevJargon": false,
+      "horizontalOverflow100Pct": false,
+      "horizontalOverflow200PctFont": false,
+      "minTouchTarget44x44Verified": true,
+      "interactiveTargetCount": 43,
+      "touchSiblingOverlapCount": 0,
+      "pageErrors": []
+    },
+    {
+      "viewport": "390x844",
+      "width": 390,
+      "height": 844,
+      "unconnectedControlsAllDisabled": true,
+      "connectedControlsAllEnabled": true,
+      "visibleGuides": {
+        "settings-account-unconnected-guide": true,
+        "settings-voice-unconnected-guide": true,
+        "settings-install-unconnected-guide": true,
+        "settings-data-unconnected-guide": true,
+        "settings-voice-speed-status": true
+      },
+      "hasForbiddenDevJargon": false,
+      "horizontalOverflow100Pct": false,
+      "horizontalOverflow200PctFont": false,
+      "minTouchTarget44x44Verified": true,
+      "interactiveTargetCount": 43,
+      "touchSiblingOverlapCount": 0,
+      "pageErrors": []
+    },
+    {
+      "viewport": "768x1024",
+      "width": 768,
+      "height": 1024,
+      "unconnectedControlsAllDisabled": true,
+      "connectedControlsAllEnabled": true,
+      "visibleGuides": {
+        "settings-account-unconnected-guide": true,
+        "settings-voice-unconnected-guide": true,
+        "settings-install-unconnected-guide": true,
+        "settings-data-unconnected-guide": true,
+        "settings-voice-speed-status": true
+      },
+      "hasForbiddenDevJargon": false,
+      "horizontalOverflow100Pct": false,
+      "horizontalOverflow200PctFont": false,
+      "minTouchTarget44x44Verified": true,
+      "interactiveTargetCount": 43,
+      "touchSiblingOverlapCount": 0,
+      "pageErrors": []
+    },
+    {
+      "viewport": "1440x900",
+      "width": 1440,
+      "height": 900,
+      "unconnectedControlsAllDisabled": true,
+      "connectedControlsAllEnabled": true,
+      "visibleGuides": {
+        "settings-account-unconnected-guide": true,
+        "settings-voice-unconnected-guide": true,
+        "settings-install-unconnected-guide": true,
+        "settings-data-unconnected-guide": true,
+        "settings-voice-speed-status": true
+      },
+      "hasForbiddenDevJargon": false,
+      "horizontalOverflow100Pct": false,
+      "horizontalOverflow200PctFont": false,
+      "minTouchTarget44x44Verified": true,
+      "interactiveTargetCount": 43,
+      "touchSiblingOverlapCount": 0,
+      "pageErrors": []
+    }
+  ],
+  "fixtureViewportResults": [
+    {
+      "viewport": "320x640",
+      "presetsVerified": 6,
+      "horizontalOverflow100Pct": false,
+      "pageErrors": []
+    },
+    {
+      "viewport": "390x844",
+      "presetsVerified": 6,
+      "horizontalOverflow100Pct": false,
+      "pageErrors": []
+    },
+    {
+      "viewport": "768x1024",
+      "presetsVerified": 6,
+      "horizontalOverflow100Pct": false,
+      "pageErrors": []
+    },
+    {
+      "viewport": "1440x900",
+      "presetsVerified": 6,
+      "horizontalOverflow100Pct": false,
+      "pageErrors": []
+    }
+  ],
+  "screenshots": [
+    "docs/settings-honest-controls-round5-20261107/evidence/screenshots/round5-real-entry-320-100.png",
+    "docs/settings-honest-controls-round5-20261107/evidence/screenshots/round5-real-entry-320-200zoom.png",
+    "docs/settings-honest-controls-round5-20261107/evidence/screenshots/round5-real-entry-390-100.png",
+    "docs/settings-honest-controls-round5-20261107/evidence/screenshots/round5-real-entry-768-100.png",
+    "docs/settings-honest-controls-round5-20261107/evidence/screenshots/round5-real-entry-1440-100.png",
+    "docs/settings-honest-controls-round5-20261107/evidence/screenshots/round5-real-entry-1440-200zoom.png",
+    "docs/settings-honest-controls-round5-20261107/evidence/screenshots/round5-real-entry-voice-group-390.png"
+  ],
+  "candidateSourceMetrics": {
+    "totalFiles": 20,
+    "filesOver800Lines": 0,
+    "files": [
+      {
+        "path": "src/features/settingsPageCandidate/browserFixture.html",
+        "lines": 26,
+        "bytes": 860
+      },
+      {
+        "path": "src/features/settingsPageCandidate/independentVerification/cdpBrowserHelper.mjs",
+        "lines": 313,
+        "bytes": 9429
+      },
+      {
+        "path": "src/features/settingsPageCandidate/independentVerification/settingsPage.independent.test.tsx",
+        "lines": 469,
+        "bytes": 18694
+      },
+      {
+        "path": "src/features/settingsPageCandidate/independentVerification/verifySettingsHonestControlsRound5.mjs",
+        "lines": 521,
+        "bytes": 21036
+      },
+      {
+        "path": "src/features/settingsPageCandidate/independentVerification/verifySettingsPageBrowser.mjs",
+        "lines": 682,
+        "bytes": 24531
+      },
+      {
+        "path": "src/features/settingsPageCandidate/independentVerification/verifySettingsRealEntryRound4.mjs",
+        "lines": 445,
+        "bytes": 17726
+      },
+      {
+        "path": "src/features/settingsPageCandidate/index.ts",
+        "lines": 49,
+        "bytes": 1304
+      },
+      {
+        "path": "src/features/settingsPageCandidate/PilatesSettingsGroupSections.tsx",
+        "lines": 529,
+        "bytes": 22662
+      },
+      {
+        "path": "src/features/settingsPageCandidate/PilatesSettingsInstallDataSections.tsx",
+        "lines": 479,
+        "bytes": 20306
+      },
+      {
+        "path": "src/features/settingsPageCandidate/pilatesSettingsPage.css",
+        "lines": 393,
+        "bytes": 7842
+      },
+      {
+        "path": "src/features/settingsPageCandidate/PilatesSettingsPage.mock.test.tsx",
+        "lines": 310,
+        "bytes": 14324
+      },
+      {
+        "path": "src/features/settingsPageCandidate/PilatesSettingsPage.tsx",
+        "lines": 521,
+        "bytes": 18676
+      },
+      {
+        "path": "src/features/settingsPageCandidate/README.md",
+        "lines": 35,
+        "bytes": 2922
+      },
+      {
+        "path": "src/features/settingsPageCandidate/settingsHonestControlsRound5.test.tsx",
+        "lines": 343,
+        "bytes": 12464
+      },
+      {
+        "path": "src/features/settingsPageCandidate/settingsPageFixtures.ts",
+        "lines": 332,
+        "bytes": 10733
+      },
+      {
+        "path": "src/features/settingsPageCandidate/settingsPageModel.test.ts",
+        "lines": 372,
+        "bytes": 15417
+      },
+      {
+        "path": "src/features/settingsPageCandidate/settingsPageModel.ts",
+        "lines": 612,
+        "bytes": 25486
+      },
+      {
+        "path": "src/features/settingsPageCandidate/settingsPageSession.ts",
+        "lines": 316,
+        "bytes": 10043
+      },
+      {
+        "path": "src/features/settingsPageCandidate/settingsRealEntryRound4.test.tsx",
+        "lines": 451,
+        "bytes": 18259
+      },
+      {
+        "path": "src/features/settingsPageCandidate/types.ts",
+        "lines": 294,
+        "bytes": 10458
+      }
+    ]
+  }
+}

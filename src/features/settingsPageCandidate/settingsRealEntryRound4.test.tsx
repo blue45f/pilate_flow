@@ -20,7 +20,7 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
     resetSettingsCandidateSessionForTests();
   });
 
-  it('1. [음성안내 토글 · 잘못된 성공 차단] Real App.tsx entry shape (data-only snapshot, no voice port) does NOT falsely claim verified named voice or live speech on toggle', () => {
+  it('1. [음성안내 토글 · 잘못된 성공 차단] Real App.tsx entry shape (data-only snapshot, no voice port) disables unconnected voice controls and shows honest guidance without fake success', () => {
     const appEntrySnapshot = {
       data: {
         savedSequenceCount: 2,
@@ -50,17 +50,28 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
     const voiceSection = screen.getByTestId('settings-group-voice');
     expect(within(voiceSection).queryByText(/Yuna|Sora/)).toBeNull();
 
-    fireEvent.click(screen.getByTestId('settings-voice-enable-toggle'));
+    const voiceToggle = screen.getByTestId('settings-voice-enable-toggle') as HTMLButtonElement;
+    expect(voiceToggle.disabled).toBe(true);
+    expect(voiceToggle.getAttribute('aria-pressed')).toBe('false');
 
-    const announcement = screen.getByTestId('settings-voice-announcement').textContent ?? '';
-    expect(announcement).toContain('한국어 음성 안내 설정을 저장했습니다.');
-    expect(announcement).toContain('사용자 명시적 토글·브라우저 음성 허용');
-    expect(announcement).toContain('참고 영상은 자동 재생하지 않습니다');
+    fireEvent.click(voiceToggle);
+    expect(voiceToggle.getAttribute('aria-pressed')).toBe('false');
+
+    const guide = screen.getByTestId('settings-voice-unconnected-guide').textContent ?? '';
+    expect(guide).toContain('수업 진행');
+    expect(guide).toContain('기기 음성 안내');
+    expect(guide).toContain('1.0x');
   });
 
   it('2. [음성안내 토글 · 0/3 항목 선택 방어] Unchecking all 3 voice preferences while voice is enabled updates badge to "음성 대기 (항목 0/3)" and warns that no speech occurs', () => {
     const preset = getSettingsFixturePreset('default-local-studio');
-    render(<PilatesSettingsPage snapshot={cloneSettingsSnapshotInput(preset.snapshot)} />);
+    const recorder = createMockSettingsActionRecorder();
+    render(
+      <PilatesSettingsPage
+        snapshot={cloneSettingsSnapshotInput(preset.snapshot)}
+        port={recorder.port}
+      />,
+    );
 
     // Enable voice first
     fireEvent.click(screen.getByTestId('settings-voice-enable-toggle'));
@@ -88,9 +99,13 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
   });
 
   it('3. [음성안내 토글 · 샘플/재확인 잘못된 성공 차단] Sample button when voice is OFF and Recheck button when capability is unavailable report honest non-speaking status', () => {
+    const recorder = createMockSettingsActionRecorder();
     const defaultPreset = getSettingsFixturePreset('default-local-studio');
     const { unmount } = render(
-      <PilatesSettingsPage snapshot={cloneSettingsSnapshotInput(defaultPreset.snapshot)} />,
+      <PilatesSettingsPage
+        snapshot={cloneSettingsSnapshotInput(defaultPreset.snapshot)}
+        port={recorder.port}
+      />,
     );
 
     // Voice is OFF by default in default-local-studio
@@ -103,7 +118,10 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
     // Test no-korean-voice preset recheck
     const noKoreanPreset = getSettingsFixturePreset('ios-safari-no-korean-voice');
     const { unmount: unmountNoKo } = render(
-      <PilatesSettingsPage snapshot={cloneSettingsSnapshotInput(noKoreanPreset.snapshot)} />,
+      <PilatesSettingsPage
+        snapshot={cloneSettingsSnapshotInput(noKoreanPreset.snapshot)}
+        port={recorder.port}
+      />,
     );
     fireEvent.click(screen.getByTestId('settings-voice-recheck-btn'));
     expect(screen.getByTestId('settings-voice-announcement').textContent).toContain(
@@ -114,7 +132,10 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
     // Test unsupported preset recheck
     const unsupportedPreset = getSettingsFixturePreset('storage-warning-stale-preview');
     render(
-      <PilatesSettingsPage snapshot={cloneSettingsSnapshotInput(unsupportedPreset.snapshot)} />,
+      <PilatesSettingsPage
+        snapshot={cloneSettingsSnapshotInput(unsupportedPreset.snapshot)}
+        port={recorder.port}
+      />,
     );
     fireEvent.click(screen.getByTestId('settings-voice-recheck-btn'));
     expect(screen.getByTestId('settings-voice-announcement').textContent).toContain(
@@ -123,8 +144,14 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
   });
 
   it('4. [음성안내 토글 · 반영누락 수정] Toggling a voice preference after speed/sample action clears stale sampleNotice and reflects updated preference count immediately', () => {
+    const recorder = createMockSettingsActionRecorder();
     const preset = getSettingsFixturePreset('signed-in-active-instructor');
-    render(<PilatesSettingsPage snapshot={cloneSettingsSnapshotInput(preset.snapshot)} />);
+    render(
+      <PilatesSettingsPage
+        snapshot={cloneSettingsSnapshotInput(preset.snapshot)}
+        port={recorder.port}
+      />,
+    );
 
     // Click speed 0.85x, which sets sampleNotice
     fireEvent.click(screen.getByTestId('settings-voice-speed-0.85'));
@@ -251,7 +278,7 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
     expect(scopeText).toContain('설치는 기기 간 자동 동기화가 아님');
   });
 
-  it('9. [오프라인설치 설명 · 포트 미연결 시 정직한 안내] Clicking install button when port.onRequestPwaInstall is undefined shows honest fallback notice and opens manual guide', () => {
+  it('9. [오프라인설치 설명 · 포트 미연결 시 비활성화 및 안내] Disables install button, shows honest fallback guide, and opens manual guide when port.onRequestPwaInstall is undefined', () => {
     render(
       <PilatesSettingsPage
         snapshot={{
@@ -268,21 +295,21 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
       />,
     );
 
+    const installBtn = screen.getByTestId('settings-install-action-btn') as HTMLButtonElement;
+    expect(installBtn.disabled).toBe(true);
+
     const manualGuide = screen.getByTestId('settings-install-manual-guide') as HTMLDetailsElement;
-    expect(manualGuide.open).toBe(false);
-
-    fireEvent.click(screen.getByTestId('settings-install-action-btn'));
-
-    expect(screen.getByTestId('settings-install-status').textContent).toContain(
-      '이 요약 화면에는 자동 설치 실행이 연결되어 있지 않아요. 상단 앱 설치 버튼이나 아래 수동 설치 방법을 이용해 주세요.',
-    );
     expect(manualGuide.open).toBe(true);
+
+    expect(screen.getByTestId('settings-install-unconnected-guide').textContent).toContain(
+      '메뉴의 ‘앱 설치’ 버튼이나 아래 브라우저 메뉴 설치 방법을 이용해 주세요.',
+    );
   });
 
-  it('10. [설정 재방문 불일치 수정 · App.tsx 실진입 라이프사이클] Preserves voice, speed, preference, reduced motion, and active group across parent re-renders and modal unmount/remount revisit', () => {
-    const onToggleOwnedEquipment = vi.fn();
+  it('10. [설정 재방문 불일치 수정 · 포트 연결 라이프사이클] Preserves voice, speed, preference, reduced motion, and active group across parent re-renders and modal unmount/remount revisit when connected', () => {
+    const recorder = createMockSettingsActionRecorder();
 
-    // Step 1: Mount with inline data-only snapshot (exact App.tsx lines 753-770 pattern)
+    // Step 1: Mount with inline data-only snapshot and connected port
     const { rerender, unmount } = render(
       <PilatesSettingsPage
         snapshot={{
@@ -294,7 +321,7 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
             ownedPropIds: ['mini-ball'],
           },
         }}
-        port={{ onToggleOwnedEquipment }}
+        port={recorder.port}
       />,
     );
 
@@ -333,7 +360,7 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
             ownedPropIds: ['mini-ball'],
           },
         }}
-        port={{ onToggleOwnedEquipment }}
+        port={recorder.port}
       />,
     );
 
@@ -368,7 +395,7 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
             ownedPropIds: ['mini-ball'],
           },
         }}
-        port={{ onToggleOwnedEquipment }}
+        port={recorder.port}
       />,
     );
 
@@ -396,8 +423,11 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
   it('11. [설정 재방문 불일치 수정 · 명시적 스냅샷 참조 유지] Preserves overrides when unmounting and remounting with the same explicit snapshot object reference', () => {
     const preset = getSettingsFixturePreset('default-local-studio');
     const sharedSnapshot = cloneSettingsSnapshotInput(preset.snapshot);
+    const recorder = createMockSettingsActionRecorder();
 
-    const { unmount } = render(<PilatesSettingsPage snapshot={sharedSnapshot} />);
+    const { unmount } = render(
+      <PilatesSettingsPage snapshot={sharedSnapshot} port={recorder.port} />,
+    );
 
     fireEvent.click(screen.getByTestId('settings-voice-enable-toggle'));
     fireEvent.click(screen.getByTestId('settings-voice-speed-1.15'));
@@ -405,7 +435,7 @@ describe('settingsRealEntryRound4 — Real Entry Wiring, Honest Voice/Install Fe
 
     unmount();
 
-    render(<PilatesSettingsPage snapshot={sharedSnapshot} />);
+    render(<PilatesSettingsPage snapshot={sharedSnapshot} port={recorder.port} />);
 
     expect(screen.getByTestId('settings-voice-enable-toggle').getAttribute('aria-pressed')).toBe(
       'true',

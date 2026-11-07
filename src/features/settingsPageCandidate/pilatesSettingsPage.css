@@ -259,6 +259,12 @@
   margin: 0;
 }
 
+.pf-settings-check-label--disabled,
+.pf-settings-check-label input[type='checkbox']:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .pf-settings-alert,
 .pf-settings-status,
 .pf-settings-guard-box {
