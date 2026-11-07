@@ -1,0 +1,255 @@
+diff --git a/src/data/movementVisualRigCatalog.ts b/src/data/movementVisualRigCatalog.ts
+--- a/src/data/movementVisualRigCatalog.ts
++++ b/src/data/movementVisualRigCatalog.ts
+@@ -4666,11 +4666,251 @@ function resolveSeparatedApparatusContactBlueprint(
+   return null;
+ }
+ 
++/**
++ * Round 4 Semantic Audit minimal follow-up differentiation candidate (SM-01 .. SM-08).
++ * Separates exercises that previously shared identical start/middle/end coordinates
++ * despite conflicting spinal planes, apparatus body positions, or active joints.
++ * NOTE: 2D planning schematic only; anatomicalAccuracyAssumed remains false.
++ */
++function resolveSeparatedSemanticMismatchBlueprint(
++  exercise: PilatesExercise,
++): ArchetypeRigBlueprint | null {
++  // SM-01: Chair Seated Pelvic Rock & Breath & Back Reach separated from Seated Row (hand Δ80.5px)
++  if (exercise.id === 'original-chair-seated-pelvic-rock') {
++    const base = ARCHETYPE_BY_ID.get('seated-row-arm-arc')!;
++    const startJoints = makeJointMap({
++      ...base.startJoints,
++      head: { x: 132, y: 26 },
++      neck: { x: 132, y: 42 },
++      shoulder: { x: 132, y: 58 },
++      elbow: { x: 144, y: 84 },
++      wrist: { x: 152, y: 98 },
++      hand: { x: 158, y: 102 },
++      thoracic: { x: 130, y: 78 },
++      lumbar: { x: 130, y: 94 },
++      pelvis: { x: 132, y: 106 },
++      hip: { x: 140, y: 106 },
++      knee: { x: 176, y: 124 },
++      ankle: { x: 180, y: 168 },
++      heel: { x: 174, y: 174 },
++      toe: { x: 192, y: 174 },
++    });
++    const middleJoints = makeJointMap({
++      ...startJoints,
++      head: { x: 126, y: 30 },
++      neck: { x: 124, y: 46 },
++      shoulder: { x: 124, y: 62 },
++      thoracic: { x: 120, y: 82 },
++      lumbar: { x: 118, y: 98 },
++      pelvis: { x: 126, y: 108 },
++    });
++    const endJoints = makeJointMap({
++      ...startJoints,
++      thoracic: { x: 134, y: 76 },
++      lumbar: { x: 134, y: 92 },
++    });
++    return {
++      ...base,
++      archetypeId: 'chair-seated-pelvic-rock-isolated',
++      archetypeTitleKo: '체어 시티드 골반 록 · 시트 착석 & 허벅지 손 고정 골반 틸트 분리',
++      movingJoints: ['pelvis', 'lumbar', 'thoracic', 'head'],
++      startJoints,
++      middleJoints,
++      endJoints,
++      carriageOffsets: [0, 0, 0],
++      pedalAngles: [0, 0, 0],
++    };
++  }
++
++  // SM-02: Supported Calf Raise & Standing Rotation/Breath/Punch separated from overhead arm reach + tiptoe combo
++  if (
++    exercise.id === 'original-barrel-supported-ankle' ||
++    exercise.id === 'original-chair-supported-calf-raise'
++  ) {
++    const base = ARCHETYPE_BY_ID.get('standing-ankle-calf-upper-reach')!;
++    const supportHand = exercise.apparatus === 'barrel' ? { x: 88, y: 76 } : { x: 132, y: 96 };
++    const supportWrist = exercise.apparatus === 'barrel' ? { x: 96, y: 80 } : { x: 136, y: 94 };
++    const supportElbow = exercise.apparatus === 'barrel' ? { x: 118, y: 86 } : { x: 142, y: 82 };
++    const startJoints = makeJointMap({
++      ...base.startJoints,
++      elbow: supportElbow,
++      wrist: supportWrist,
++      hand: supportHand,
++    });
++    const middleJoints = makeJointMap({
++      ...base.middleJoints,
++      elbow: supportElbow,
++      wrist: supportWrist,
++      hand: supportHand,
++    });
++    const endJoints = makeJointMap({
++      ...base.endJoints,
++      elbow: supportElbow,
++      wrist: supportWrist,
++      hand: supportHand,
++    });
++    return {
++      ...base,
++      archetypeId: 'supported-calf-raise-hand-anchored-isolated',
++      archetypeTitleKo: '기구 지지 카프 레이즈 · 손 지지 고정 & 순수 족관절 저측굴곡 분리',
++      movingJoints: ['heel', 'ankle', 'knee', 'pelvis', 'head'],
++      startJoints,
++      middleJoints,
++      endJoints,
++    };
++  }
++
++  // SM-03: Supine Pelvic Clock / Pelvic Rock separated from 64.1px overhead arm arc
++  if (
++    exercise.id === 'original-mat-pelvic-clock' ||
++    exercise.id === 'original-cadillac-pelvic-rock'
++  ) {
++    const base = ARCHETYPE_BY_ID.get('supine-breath-pelvic-clock')!;
++    const startJoints = makeJointMap({ ...base.startJoints });
++    const middleJoints = makeJointMap({
++      ...base.startJoints,
++      lumbar: { x: 148, y: 132 },
++      pelvis: { x: 174, y: 124 },
++      hip: { x: 180, y: 122 },
++    });
++    const endJoints = makeJointMap({
++      ...base.startJoints,
++      lumbar: { x: 148, y: 124 },
++      pelvis: { x: 174, y: 128 },
++    });
++    return {
++      ...base,
++      archetypeId: 'supine-pelvic-clock-isolated',
++      archetypeTitleKo: '수파인 골반 시계 · 상지 매트 고정 & 골반 전후방 틸트 분리',
++      movingJoints: ['pelvis', 'lumbar', 'hip'],
++      startJoints,
++      middleJoints,
++      endJoints,
++      carriageOffsets: [0, 0, 0],
++    };
++  }
++
++  // SM-04: Chair Sit-to-Stand separated from single-leg backward Scooter kick
++  if (exercise.id === 'original-chair-sit-to-stand') {
++    const base = ARCHETYPE_BY_ID.get('standing-scooter-lunge-splits')!;
++    const startJoints = makeJointMap({
++      head: { x: 142, y: 34 },
++      neck: { x: 140, y: 48 },
++      shoulder: { x: 138, y: 62 },
++      elbow: { x: 154, y: 82 },
++      wrist: { x: 172, y: 82 },
++      hand: { x: 182, y: 82 },
++      thoracic: { x: 136, y: 78 },
++      lumbar: { x: 136, y: 92 },
++      pelvis: { x: 136, y: 106 },
++      hip: { x: 144, y: 108 },
++      knee: { x: 176, y: 132 },
++      ankle: { x: 176, y: 172 },
++      heel: { x: 170, y: 174 },
++      toe: { x: 188, y: 174 },
++    });
++    const middleJoints = makeJointMap({
++      ...startJoints,
++      head: { x: 168, y: 20 },
++      neck: { x: 168, y: 34 },
++      shoulder: { x: 168, y: 50 },
++      elbow: { x: 182, y: 70 },
++      wrist: { x: 196, y: 74 },
++      hand: { x: 204, y: 74 },
++      thoracic: { x: 168, y: 70 },
++      lumbar: { x: 168, y: 88 },
++      pelvis: { x: 168, y: 104 },
++      hip: { x: 170, y: 108 },
++      knee: { x: 174, y: 140 },
++    });
++    const endJoints = makeJointMap({ ...startJoints });
++    return {
++      ...base,
++      archetypeId: 'chair-sit-to-stand-isolated',
++      archetypeTitleKo: '체어 시트 투 스탠드 · 양발 바닥 고정 & 좌골 수직 기립 분리',
++      movingJoints: ['pelvis', 'hip', 'knee', 'thoracic', 'shoulder', 'head'],
++      startJoints,
++      middleJoints,
++      endJoints,
++      carriageOffsets: [0, 0, 0],
++      pedalAngles: [0, 0, 0],
++    };
++  }
++
++  // SM-05: Cadillac Roll-Down Bar Kneeling Cat Stretch separated from rigid-spine Chest Expansion
++  if (exercise.id === 'ex-warmup-02') {
++    const base = ARCHETYPE_BY_ID.get('kneeling-chest-expansion-triceps')!;
++    const startJoints = makeJointMap({ ...base.startJoints });
++    const middleJoints = makeJointMap({
++      ...base.startJoints,
++      head: { x: 188, y: 72 },
++      neck: { x: 178, y: 66 },
++      shoulder: { x: 168, y: 74 },
++      elbow: { x: 196, y: 96 },
++      wrist: { x: 222, y: 112 },
++      hand: { x: 232, y: 116 },
++      thoracic: { x: 154, y: 76 },
++      lumbar: { x: 144, y: 98 },
++      pelvis: { x: 142, y: 124 },
++    });
++    const endJoints = makeJointMap({ ...base.endJoints });
++    return {
++      ...base,
++      archetypeId: 'cadillac-kneeling-cat-stretch-isolated',
++      archetypeTitleKo: '캐딜락 롤다운 바 닐링 캣 스트레치 · 전방 척추 분절 굴곡 분리',
++      movingJoints: ['head', 'neck', 'thoracic', 'lumbar', 'shoulder', 'wrist', 'hand'],
++      startJoints,
++      middleJoints,
++      endJoints,
++      carriageOffsets: [0, 0, 0],
++    };
++  }
++
++  // SM-08: Chair Seated Knee Lift separated from downward Pedal Press (knee.y: 124 → 88 lift)
++  if (exercise.id === 'original-chair-seated-knee-lift') {
++    const base = ARCHETYPE_BY_ID.get('chair-seated-pedal-footwork')!;
++    const startJoints = makeJointMap({
++      ...base.startJoints,
++      pelvis: { x: 132, y: 106 },
++      hip: { x: 140, y: 106 },
++      knee: { x: 178, y: 126 },
++      ankle: { x: 182, y: 168 },
++      heel: { x: 176, y: 174 },
++      toe: { x: 194, y: 174 },
++      farKnee: { x: 174, y: 128 },
++      farAnkle: { x: 176, y: 172 },
++    });
++    const middleJoints = makeJointMap({
++      ...startJoints,
++      knee: { x: 172, y: 88 },
++      ankle: { x: 184, y: 132 },
++      heel: { x: 178, y: 138 },
++      toe: { x: 196, y: 136 },
++    });
++    const endJoints = makeJointMap({ ...startJoints });
++    return {
++      ...base,
++      archetypeId: 'chair-seated-knee-lift-isolated',
++      archetypeTitleKo: '체어 시티드 니 리프트 · 좌골 고정 & 단측 무릎 상방 굴곡 리프트 분리',
++      movingJoints: ['hip', 'knee', 'ankle', 'toe'],
++      startJoints,
++      middleJoints,
++      endJoints,
++      carriageOffsets: [0, 0, 0],
++      pedalAngles: [0, 0, 0],
++    };
++  }
++
++  return null;
++}
++
+ function resolveArchetypeBlueprint(exercise: PilatesExercise): ArchetypeRigBlueprint {
+   const separated = resolveSeparatedSideLyingBlueprint(exercise);
+   if (separated) return separated;
+   const apparatusContactSeparated = resolveSeparatedApparatusContactBlueprint(exercise);
+   if (apparatusContactSeparated) return apparatusContactSeparated;
++  const semanticSeparated = resolveSeparatedSemanticMismatchBlueprint(exercise);
++  if (semanticSeparated) return semanticSeparated;
+   const explicitId = EXPLICIT_EXERCISE_ARCHETYPE_IDS[exercise.id];
+   if (explicitId) {
+     const found = ARCHETYPE_BY_ID.get(explicitId);
