@@ -300,14 +300,22 @@ describe('Track B Independent Boundary, Security & Isolation Verification (paral
   it('8. guarantees 100% unique [id] attributes and independent state when two instances render simultaneously', () => {
     const presetA = getSettingsFixturePreset('default-local-studio');
     const presetB = getSettingsFixturePreset('signed-in-active-instructor');
+    const recorderA = createMockSettingsActionRecorder();
+    const recorderB = createMockSettingsActionRecorder();
 
     const { container } = render(
       <div>
         <div data-testid="instance-a">
-          <PilatesSettingsPage snapshot={cloneSettingsSnapshotInput(presetA.snapshot)} />
+          <PilatesSettingsPage
+            snapshot={cloneSettingsSnapshotInput(presetA.snapshot)}
+            port={recorderA.port}
+          />
         </div>
         <div data-testid="instance-b">
-          <PilatesSettingsPage snapshot={cloneSettingsSnapshotInput(presetB.snapshot)} />
+          <PilatesSettingsPage
+            snapshot={cloneSettingsSnapshotInput(presetB.snapshot)}
+            port={recorderB.port}
+          />
         </div>
       </div>,
     );
@@ -398,7 +406,13 @@ describe('Track B Independent Boundary, Security & Isolation Verification (paral
 
   it('11. disables restore apply button when recoveryPreview is stale or diskBlocked', () => {
     const warningPreset = getSettingsFixturePreset('storage-warning-stale-preview');
-    render(<PilatesSettingsPage snapshot={cloneSettingsSnapshotInput(warningPreset.snapshot)} />);
+    const recorder = createMockSettingsActionRecorder();
+    render(
+      <PilatesSettingsPage
+        snapshot={cloneSettingsSnapshotInput(warningPreset.snapshot)}
+        port={recorder.port}
+      />,
+    );
 
     const applyBtn = screen.getByTestId('settings-data-preview-apply-btn') as HTMLButtonElement;
     const cancelBtn = screen.getByTestId('settings-data-preview-cancel-btn') as HTMLButtonElement;
