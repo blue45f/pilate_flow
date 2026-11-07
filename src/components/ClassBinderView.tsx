@@ -559,7 +559,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
   };
 
   return (
-    <div className="teaching-collection">
+    <div
+      className={`teaching-collection ${view === 'history' ? 'teaching-collection--history' : 'teaching-collection--saved'}`}
+    >
       <header className="teaching-page-header">
         <div>
           <span className="eyebrow">
