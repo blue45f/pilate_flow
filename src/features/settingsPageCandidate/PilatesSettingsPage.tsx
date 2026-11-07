@@ -6,7 +6,13 @@ import {
 } from './settingsPageFixtures';
 import {
   createMockSettingsActionRecorder,
+  readPersistedSettingsSessionSlice as readPersistedSlice,
   resolveSettingsPageViewModel,
+  safeReadSettingsProp as safeReadProp,
+  safeSettingsBaselineKey as safeBaselineKey,
+  writePersistedSettingsSessionSlice as writePersistedSlice,
+  type CandidateInstallOverride,
+  type CandidateVoiceOverride,
 } from './settingsPageModel';
 import {
   SETTINGS_PAGE_SAFETY_CONTRACT,
@@ -24,6 +30,7 @@ export interface PilatesSettingsPageProps {
   readonly port?: Partial<SettingsPageActionPort>;
   readonly initialActiveGroup?: SettingsGroupId;
   readonly preferReducedMotion?: boolean;
+  readonly sessionKey?: string;
   readonly className?: string;
 }
 
@@ -44,28 +51,65 @@ export function PilatesSettingsPage({
   port,
   initialActiveGroup = 'account',
   preferReducedMotion: preferReducedMotionProp,
+  sessionKey,
   className = '',
 }: PilatesSettingsPageProps) {
   const instanceId = useId();
-  const [activeGroup, setActiveGroup] = useState<SettingsGroupId>(initialActiveGroup);
+  const initialPersisted = useMemo(
+    () => readPersistedSlice(snapshot, preferReducedMotionProp, sessionKey),
+    [snapshot, preferReducedMotionProp, sessionKey],
+  );
+
+  const voiceBaselineKey = useMemo(
+    () => safeBaselineKey(safeReadProp(snapshot, 'voice')),
+    [snapshot],
+  );
+  const motionBaselineKey = useMemo(
+    () =>
+      safeBaselineKey({
+        prop: preferReducedMotionProp ?? null,
+        snap: safeReadProp(snapshot, 'preferReducedMotion') ?? null,
+      }),
+    [snapshot, preferReducedMotionProp],
+  );
+  const installBaselineKey = useMemo(
+    () => safeBaselineKey(safeReadProp(snapshot, 'install')),
+    [snapshot],
+  );
+  const dataBaselineKey = useMemo(() => {
+    const rawData = safeReadProp(snapshot, 'data');
+    return safeBaselineKey({
+      equip: safeReadProp(rawData, 'ownedEquipmentIds') ?? null,
+      props: safeReadProp(rawData, 'ownedPropIds') ?? null,
+    });
+  }, [snapshot]);
+
+  const [activeGroup, setActiveGroup] = useState<SettingsGroupId>(
+    () => initialPersisted?.activeGroup ?? initialActiveGroup,
+  );
   const [overrideState, setOverrideState] = useState<{
-    snapshotRef: unknown;
-    voice: {
-      enabled?: boolean;
-      speed?: SettingsVoiceSpeed;
-      preferences?: Partial<Record<SettingsVoicePreferenceKey, boolean>>;
-      sampleNotice?: string;
-    };
+    voiceKey: string;
+    motionKey: string;
+    installKey: string;
+    dataKey: string;
+    voice: CandidateVoiceOverride;
+    reducedMotion?: boolean;
+    install: CandidateInstallOverride;
     equip: Record<string, boolean>;
     props: Record<string, boolean>;
     feedback: string;
-  }>({
-    snapshotRef: snapshot,
-    voice: {},
-    equip: {},
-    props: {},
-    feedback: '',
-  });
+  }>(() => ({
+    voiceKey: voiceBaselineKey,
+    motionKey: motionBaselineKey,
+    installKey: installBaselineKey,
+    dataKey: dataBaselineKey,
+    voice: initialPersisted?.voice ?? {},
+    reducedMotion: initialPersisted?.reducedMotion,
+    install: initialPersisted?.install ?? {},
+    equip: initialPersisted?.equip ?? {},
+    props: initialPersisted?.props ?? {},
+    feedback: initialPersisted?.feedback ?? '',
+  }));
   const [mediaReducedMotion, setMediaReducedMotion] = useState<boolean>(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -84,58 +128,115 @@ export function PilatesSettingsPage({
     data: null,
   });
 
-  const activeOverrides = useMemo(
-    () =>
-      overrideState.snapshotRef === snapshot
-        ? overrideState
-        : { snapshotRef: snapshot, voice: {}, equip: {}, props: {}, feedback: '' },
-    [overrideState, snapshot],
-  );
+  const activeOverrides = useMemo(() => {
+    const persisted = readPersistedSlice(snapshot, preferReducedMotionProp, sessionKey);
+    return {
+      voiceKey: voiceBaselineKey,
+      motionKey: motionBaselineKey,
+      installKey: installBaselineKey,
+      dataKey: dataBaselineKey,
+      voice:
+        overrideState.voiceKey === voiceBaselineKey
+          ? overrideState.voice
+          : (persisted?.voice ?? {}),
+      reducedMotion:
+        overrideState.motionKey === motionBaselineKey
+          ? overrideState.reducedMotion
+          : persisted?.reducedMotion,
+      install:
+        overrideState.installKey === installBaselineKey
+          ? overrideState.install
+          : (persisted?.install ?? {}),
+      equip:
+        overrideState.dataKey === dataBaselineKey
+          ? overrideState.equip
+          : (persisted?.equip ?? {}),
+      props:
+        overrideState.dataKey === dataBaselineKey
+          ? overrideState.props
+          : (persisted?.props ?? {}),
+      feedback:
+        overrideState.dataKey === dataBaselineKey
+          ? overrideState.feedback
+          : (persisted?.feedback ?? ''),
+    };
+  }, [
+    overrideState,
+    voiceBaselineKey,
+    motionBaselineKey,
+    installBaselineKey,
+    dataBaselineKey,
+    snapshot,
+    preferReducedMotionProp,
+    sessionKey,
+  ]);
 
-  const setLocalVoiceOverrides = (
-    updater: (prev: typeof activeOverrides.voice) => typeof activeOverrides.voice,
+  const commitOverrides = (
+    updater: (prev: typeof activeOverrides) => typeof activeOverrides,
+    nextActiveGroup: SettingsGroupId = activeGroup,
   ) => {
     setOverrideState((prev) => {
-      const base =
-        prev.snapshotRef === snapshot
-          ? prev
-          : { snapshotRef: snapshot, voice: {}, equip: {}, props: {}, feedback: '' };
-      return { ...base, voice: updater(base.voice) };
+      const normalizedPrev = {
+        voiceKey: voiceBaselineKey,
+        motionKey: motionBaselineKey,
+        installKey: installBaselineKey,
+        dataKey: dataBaselineKey,
+        voice: prev.voiceKey === voiceBaselineKey ? prev.voice : activeOverrides.voice,
+        reducedMotion:
+          prev.motionKey === motionBaselineKey
+            ? prev.reducedMotion
+            : activeOverrides.reducedMotion,
+        install:
+          prev.installKey === installBaselineKey ? prev.install : activeOverrides.install,
+        equip: prev.dataKey === dataBaselineKey ? prev.equip : activeOverrides.equip,
+        props: prev.dataKey === dataBaselineKey ? prev.props : activeOverrides.props,
+        feedback:
+          prev.dataKey === dataBaselineKey ? prev.feedback : activeOverrides.feedback,
+      };
+      const next = updater(normalizedPrev);
+      writePersistedSlice(snapshot, preferReducedMotionProp, sessionKey, {
+        activeGroup: nextActiveGroup,
+        voice: next.voice,
+        reducedMotion: next.reducedMotion,
+        install: next.install,
+        equip: next.equip,
+        props: next.props,
+        feedback: next.feedback,
+      });
+      return next;
     });
+  };
+
+  const setLocalVoiceOverrides = (
+    updater: (prev: CandidateVoiceOverride) => CandidateVoiceOverride,
+  ) => {
+    commitOverrides((prev) => ({ ...prev, voice: updater(prev.voice) }));
+  };
+
+  const setLocalInstallOverrides = (
+    updater: (prev: CandidateInstallOverride) => CandidateInstallOverride,
+  ) => {
+    commitOverrides((prev) => ({ ...prev, install: updater(prev.install) }));
+  };
+
+  const setLocalReducedMotionOverride = (nextReducedMotion: boolean) => {
+    commitOverrides((prev) => ({ ...prev, reducedMotion: nextReducedMotion }));
   };
 
   const setLocalEquipOverrides = (
     updater: (prev: Record<string, boolean>) => Record<string, boolean>,
   ) => {
-    setOverrideState((prev) => {
-      const base =
-        prev.snapshotRef === snapshot
-          ? prev
-          : { snapshotRef: snapshot, voice: {}, equip: {}, props: {}, feedback: '' };
-      return { ...base, equip: updater(base.equip) };
-    });
+    commitOverrides((prev) => ({ ...prev, equip: updater(prev.equip) }));
   };
 
   const setLocalPropOverrides = (
     updater: (prev: Record<string, boolean>) => Record<string, boolean>,
   ) => {
-    setOverrideState((prev) => {
-      const base =
-        prev.snapshotRef === snapshot
-          ? prev
-          : { snapshotRef: snapshot, voice: {}, equip: {}, props: {}, feedback: '' };
-      return { ...base, props: updater(base.props) };
-    });
+    commitOverrides((prev) => ({ ...prev, props: updater(prev.props) }));
   };
 
   const setLocalActionFeedback = (feedback: string) => {
-    setOverrideState((prev) => {
-      const base =
-        prev.snapshotRef === snapshot
-          ? prev
-          : { snapshotRef: snapshot, voice: {}, equip: {}, props: {}, feedback: '' };
-      return { ...base, feedback };
-    });
+    commitOverrides((prev) => ({ ...prev, feedback }));
   };
 
   useEffect(() => {
@@ -147,6 +248,26 @@ export function PilatesSettingsPage({
   }, []);
 
   const baseModel = useMemo(() => resolveSettingsPageViewModel(snapshot), [snapshot]);
+
+  const effectiveReducedMotion = useMemo<boolean>(() => {
+    if (typeof activeOverrides.reducedMotion === 'boolean') {
+      return activeOverrides.reducedMotion;
+    }
+    const rawSnapMotion = safeReadProp(snapshot, 'preferReducedMotion');
+    if (typeof preferReducedMotionProp === 'boolean') {
+      return preferReducedMotionProp || rawSnapMotion === true || mediaReducedMotion;
+    }
+    if (typeof rawSnapMotion === 'boolean') {
+      return rawSnapMotion || mediaReducedMotion;
+    }
+    return baseModel.preferReducedMotion || mediaReducedMotion;
+  }, [
+    activeOverrides.reducedMotion,
+    preferReducedMotionProp,
+    snapshot,
+    baseModel.preferReducedMotion,
+    mediaReducedMotion,
+  ]);
 
   const effectiveSnapshot = useMemo<SettingsPageSnapshotInput>(() => {
     const localVoiceOverrides = activeOverrides.voice;
@@ -165,15 +286,21 @@ export function PilatesSettingsPage({
       .filter((item) => localPropOverrides[item.id] ?? item.selected)
       .map((item) => item.id);
 
-    const rawRecord =
-      typeof snapshot === 'object' && snapshot !== null
-        ? (snapshot as Record<string, unknown>)
-        : {};
+    const rawAccount = safeReadProp(snapshot, 'account') as
+      | SettingsPageSnapshotInput['account']
+      | undefined;
+    const rawVoice = safeReadProp(snapshot, 'voice');
+    const rawInstall = safeReadProp(snapshot, 'install') as
+      | SettingsPageSnapshotInput['install']
+      | undefined;
+    const rawData = safeReadProp(snapshot, 'data');
 
     return {
-      account: (rawRecord.account as SettingsPageSnapshotInput['account']) ?? undefined,
+      account: rawAccount ?? undefined,
       voice: {
-        ...((rawRecord.voice as SettingsPageSnapshotInput['voice']) ?? {}),
+        ...(typeof rawVoice === 'object' && rawVoice !== null
+          ? (rawVoice as SettingsPageSnapshotInput['voice'])
+          : {}),
         capabilityStatus: baseModel.voice.capabilityStatus,
         voiceName: baseModel.voice.voiceName,
         voiceLang: baseModel.voice.voiceLang,
@@ -186,9 +313,11 @@ export function PilatesSettingsPage({
           ? { statusAnnouncementKo: localVoiceOverrides.sampleNotice }
           : {}),
       },
-      install: (rawRecord.install as SettingsPageSnapshotInput['install']) ?? undefined,
+      install: rawInstall ?? undefined,
       data: {
-        ...((rawRecord.data as SettingsPageSnapshotInput['data']) ?? {}),
+        ...(typeof rawData === 'object' && rawData !== null
+          ? (rawData as SettingsPageSnapshotInput['data'])
+          : {}),
         savedSequenceCount: baseModel.data.savedSequenceCount,
         exerciseCount: baseModel.data.exerciseCount,
         historyLogCount: baseModel.data.historyLogCount,
@@ -200,15 +329,13 @@ export function PilatesSettingsPage({
         recoveryPreview: baseModel.data.recoveryPreview,
         rollbackPoint: baseModel.data.rollbackPoint,
       },
-      preferReducedMotion:
-        preferReducedMotionProp ?? (baseModel.preferReducedMotion || mediaReducedMotion),
+      preferReducedMotion: effectiveReducedMotion,
     };
   }, [
     snapshot,
     baseModel,
     activeOverrides,
-    preferReducedMotionProp,
-    mediaReducedMotion,
+    effectiveReducedMotion,
   ]);
 
   const model = useMemo(
@@ -216,14 +343,17 @@ export function PilatesSettingsPage({
     [effectiveSnapshot],
   );
 
-  const reducedMotion = Boolean(
-    preferReducedMotionProp ?? (model.preferReducedMotion || mediaReducedMotion),
-  );
+  const reducedMotion = effectiveReducedMotion;
+
+  const updateActiveGroup = (nextGroup: SettingsGroupId) => {
+    setActiveGroup(nextGroup);
+    commitOverrides((prev) => prev, nextGroup);
+  };
 
   const handleGroupJump = (groupId: SettingsGroupId) => {
-    setActiveGroup(groupId);
+    updateActiveGroup(groupId);
     const target = sectionRefs.current[groupId];
-    if (target && !reducedMotion && typeof target.scrollIntoView === 'function') {
+    if (target && typeof target.scrollIntoView === 'function') {
       try {
         target.scrollIntoView({ behavior: 'instant', block: 'nearest' });
       } catch {
@@ -251,7 +381,7 @@ export function PilatesSettingsPage({
     }
     event.preventDefault();
     const nextGroup = order[nextIndex];
-    setActiveGroup(nextGroup);
+    updateActiveGroup(nextGroup);
     navRefs.current[nextGroup]?.focus();
   };
 
@@ -262,6 +392,22 @@ export function PilatesSettingsPage({
   const voiceSummary = getGroupSummary('voice');
   const installSummary = getGroupSummary('install');
   const dataSummary = getGroupSummary('data');
+
+  const combinedInstallStatusAnnouncement = useMemo(() => {
+    const parts: string[] = [];
+    if (activeOverrides.install.requestFeedback) {
+      parts.push(activeOverrides.install.requestFeedback);
+    }
+    if (model.install.liveStatusAnnouncementKo) {
+      parts.push(model.install.liveStatusAnnouncementKo);
+    }
+    return parts.length > 0 ? parts.join(' ') : null;
+  }, [activeOverrides.install.requestFeedback, model.install.liveStatusAnnouncementKo]);
+
+  const manualGuideOpen =
+    activeOverrides.install.manualGuideOpen ?? model.install.manualGuideOpenByDefault;
+  const offlineNotesOpen =
+    activeOverrides.install.offlineNotesOpen ?? model.install.offlineStatus !== 'ready';
 
   return (
     <div
@@ -481,6 +627,26 @@ export function PilatesSettingsPage({
               <dt>음성 개인정보 보호</dt>
               <dd>{model.voice.privacyBoundaryLabelKo}</dd>
             </div>
+            <div className="pf-settings-kv-item">
+              <dt>시각 모션 감소</dt>
+              <dd data-testid="settings-reduced-motion-status">
+                {reducedMotion
+                  ? '모션 감소 켜짐 (즉시 전환 · 스크롤 애니메이션 생략)'
+                  : '기본 모션 (표준 화면 전환)'}
+              </dd>
+            </div>
+            <div className="pf-settings-kv-item">
+              <dt>음성 자동발화 전제</dt>
+              <dd data-testid="settings-voice-autoplay-prerequisite">
+                {model.voice.autoSpeechPolicyLabelKo}
+              </dd>
+            </div>
+            <div className="pf-settings-kv-item">
+              <dt>참고 영상 재생 정책</dt>
+              <dd data-testid="settings-video-autoplay-policy">
+                {model.voice.videoAutoplayPolicyLabelKo}
+              </dd>
+            </div>
           </dl>
 
           {model.voice.errorMessageKo && (
@@ -498,12 +664,24 @@ export function PilatesSettingsPage({
               disabled={!model.voice.canToggleEnabled}
               onClick={() => {
                 const next = !model.voice.enabled;
+                const hasLiveVoicePort = typeof port?.onToggleVoiceEnabled === 'function';
+                let nextNotice: string;
+                if (!next) {
+                  nextNotice = '한국어 음성 안내를 껐습니다. 자동 발화 없이 화면 대본만 표시됩니다.';
+                } else if (model.voice.enabledPreferenceCount === 0) {
+                  nextNotice =
+                    '한국어 음성 안내를 켰으나 안내 항목이 모두 꺼져 있어(0/3) 실제 발화되지 않습니다. 최소 1개 항목을 선택해 주세요.';
+                } else if (!hasLiveVoicePort) {
+                  nextNotice =
+                    '한국어 음성 안내 설정을 저장했습니다. 실제 발화는 수업 화면의 사용자 명시적 토글·브라우저 음성 허용 시에만 동작하며, 참고 영상은 자동 재생하지 않습니다.';
+                } else {
+                  nextNotice =
+                    '한국어 음성 안내를 켰습니다. 수업 진행 중 사용자의 명시적 토글·브라우저 허용 하에 기기 음성으로 안내하며, 참고 영상은 자동 재생하지 않습니다.';
+                }
                 setLocalVoiceOverrides((prev) => ({
                   ...prev,
                   enabled: next,
-                  sampleNotice: next
-                    ? '한국어 음성 안내를 켰습니다. 수업 진행 중 기기 음성으로 안내합니다.'
-                    : '한국어 음성 안내를 껐습니다. 화면 대본은 계속 표시됩니다.',
+                  sampleNotice: nextNotice,
                 }));
                 port?.onToggleVoiceEnabled?.(next);
               }}
@@ -519,9 +697,17 @@ export function PilatesSettingsPage({
               data-testid="settings-voice-sample-btn"
               disabled={!model.voice.canToggleEnabled}
               onClick={() => {
+                let sampleNotice: string;
+                if (!model.voice.enabled) {
+                  sampleNotice = `음성 안내가 꺼져 있어 자동 발화 없이 화면 대본만 표시합니다 (${model.voice.currentSpeedLabelKo}): "호흡을 내쉬며 골반을 천천히 말아 올립니다." (발화는 사용자 명시 토글·브라우저 허용 전제)`;
+                } else if (model.voice.enabledPreferenceCount === 0) {
+                  sampleNotice = `선택된 안내 항목이 없어(0/3) 샘플 발화를 생략하고 화면 대본만 표시합니다 (${model.voice.currentSpeedLabelKo}).`;
+                } else {
+                  sampleNotice = `샘플 안내 확인 (${model.voice.currentSpeedLabelKo}): "호흡을 내쉬며 골반을 천천히 말아 올립니다."`;
+                }
                 setLocalVoiceOverrides((prev) => ({
                   ...prev,
-                  sampleNotice: `샘플 안내 확인 (${model.voice.currentSpeedLabelKo}): "호흡을 내쉬며 골반을 천천히 말아 올립니다."`,
+                  sampleNotice,
                 }));
                 port?.onPreviewVoiceSample?.();
               }}
@@ -534,14 +720,52 @@ export function PilatesSettingsPage({
               className="pf-settings-page__btn"
               data-testid="settings-voice-recheck-btn"
               onClick={() => {
+                let recheckNotice: string;
+                if (model.voice.capabilityStatus === 'unsupported') {
+                  recheckNotice =
+                    '음성 상태 확인 결과: 현재 브라우저에서 Web Speech API 음성 합성을 지원하지 않아 화면 대본으로만 안내합니다.';
+                } else if (
+                  model.voice.capabilityStatus === 'no-korean-voice' ||
+                  !model.voice.localService
+                ) {
+                  recheckNotice =
+                    '음성 상태 확인 결과: 기기 내장 한국어(ko-KR) 음성이 아직 확인되지 않아 화면 대본으로 대체합니다.';
+                } else {
+                  recheckNotice =
+                    '기기 내장 한국어 음성 목록을 다시 확인했습니다. (사용자 명시 토글·브라우저 허용 시 발화)';
+                }
                 setLocalVoiceOverrides((prev) => ({
                   ...prev,
-                  sampleNotice: '기기 내장 한국어 음성 목록을 다시 확인했습니다.',
+                  sampleNotice: recheckNotice,
                 }));
                 port?.onRecheckVoiceCapability?.();
               }}
             >
               음성 상태 다시 확인
+            </button>
+
+            <button
+              type="button"
+              className={`pf-settings-page__btn ${reducedMotion ? 'pf-settings-page__btn--primary' : ''}`}
+              data-testid="settings-reduced-motion-toggle"
+              aria-pressed={reducedMotion}
+              onClick={() => {
+                const next = !reducedMotion;
+                setLocalReducedMotionOverride(next);
+                setLocalVoiceOverrides((prev) => ({
+                  ...prev,
+                  sampleNotice: next
+                    ? '시각 모션 감소를 켰습니다. 설정 화면의 전환 효과와 부드러운 스크롤을 줄입니다.'
+                    : mediaReducedMotion
+                      ? '설정 내 모션 감소 토글을 해제했습니다. 기기·브라우저 모션 감소 설정이 켜져 있으면 기기 설정도 함께 확인해 주세요.'
+                      : '시각 모션 감소를 껐습니다. 기본 화면 전환을 사용합니다.',
+                }));
+                port?.onToggleReducedMotion?.(next);
+              }}
+            >
+              {reducedMotion
+                ? '시각 모션 감소 켜짐 (누르면 기본 모션)'
+                : '시각 모션 감소 켜기'}
             </button>
           </div>
 
@@ -587,12 +811,24 @@ export function PilatesSettingsPage({
                       checked={checked}
                       onChange={() => {
                         const nextChecked = !checked;
+                        const nextPrefs = {
+                          ...model.voice.preferences,
+                          [key]: nextChecked,
+                        };
+                        const nextActiveCount =
+                          (nextPrefs.movement ? 1 : 0) +
+                          (nextPrefs.breath ? 1 : 0) +
+                          (nextPrefs.time ? 1 : 0);
                         setLocalVoiceOverrides((prev) => ({
                           ...prev,
                           preferences: {
                             ...prev.preferences,
                             [key]: nextChecked,
                           },
+                          sampleNotice:
+                            model.voice.enabled && nextActiveCount === 0
+                              ? '안내 항목이 모두 꺼져(0/3) 수업 중 음성이 발화되지 않습니다. 화면 대본만 유지됩니다.'
+                              : undefined,
                         }));
                         port?.onToggleVoicePreference?.(key, nextChecked);
                       }}
@@ -645,6 +881,18 @@ export function PilatesSettingsPage({
               <dt>오프라인 기본 화면</dt>
               <dd>{model.install.currentOfflineLabelKo}</dd>
             </div>
+            <div className="pf-settings-kv-item">
+              <dt>오프라인 상태 설명</dt>
+              <dd data-testid="settings-install-offline-summary">
+                {model.install.offlineDetailSummaryKo}
+              </dd>
+            </div>
+            <div className="pf-settings-kv-item">
+              <dt>오프라인·미디어 범위</dt>
+              <dd data-testid="settings-install-offline-scope">
+                {model.install.offlineScopeNoticeKo}
+              </dd>
+            </div>
           </dl>
 
           {model.install.showInstallButton && (
@@ -653,20 +901,30 @@ export function PilatesSettingsPage({
                 type="button"
                 className="pf-settings-page__btn pf-settings-page__btn--primary"
                 data-testid="settings-install-action-btn"
-                onClick={() => port?.onRequestPwaInstall?.()}
+                onClick={() => {
+                  const hasInstallPort = typeof port?.onRequestPwaInstall === 'function';
+                  setLocalInstallOverrides((prev) => ({
+                    ...prev,
+                    requestFeedback: hasInstallPort
+                      ? '설치 창 열기를 요청했어요. 브라우저 안내에 따라 선택해 주세요.'
+                      : '이 요약 화면에는 자동 설치 실행이 연결되어 있지 않아요. 상단 앱 설치 버튼이나 아래 수동 설치 방법을 이용해 주세요.',
+                    ...(hasInstallPort ? {} : { manualGuideOpen: true }),
+                  }));
+                  port?.onRequestPwaInstall?.();
+                }}
               >
                 이 기기에 설치
               </button>
             </div>
           )}
 
-          {model.install.liveStatusAnnouncementKo && (
+          {combinedInstallStatusAnnouncement && (
             <p
               role="status"
               className="pf-settings-status"
               data-testid="settings-install-status"
             >
-              {model.install.liveStatusAnnouncementKo}
+              {combinedInstallStatusAnnouncement}
             </p>
           )}
 
@@ -683,7 +941,14 @@ export function PilatesSettingsPage({
             ) : (
               <details
                 className="pf-settings-details"
-                open={model.install.manualGuideOpenByDefault}
+                open={manualGuideOpen}
+                onToggle={(event) => {
+                  const isOpen = (event.currentTarget as HTMLDetailsElement).open;
+                  setLocalInstallOverrides((prev) => ({
+                    ...prev,
+                    manualGuideOpen: isOpen,
+                  }));
+                }}
                 data-testid="settings-install-manual-guide"
               >
                 <summary>설치 버튼이 보이지 않을 때 수동 설치 방법</summary>
@@ -702,11 +967,20 @@ export function PilatesSettingsPage({
 
           <details
             className="pf-settings-details"
+            open={offlineNotesOpen}
+            onToggle={(event) => {
+              const isOpen = (event.currentTarget as HTMLDetailsElement).open;
+              setLocalInstallOverrides((prev) => ({
+                ...prev,
+                offlineNotesOpen: isOpen,
+              }));
+            }}
             data-testid="settings-install-offline-notes"
           >
             <summary>오프라인·자료 분리 보관 안내</summary>
             <div className="pf-settings-details__body">
               <p>{model.install.offlineDetailSummaryKo}</p>
+              <p>{model.install.offlineScopeNoticeKo}</p>
               <p>
                 특히 iPhone·iPad는 Safari와 홈 화면 앱의 저장 공간이 분리될 수 있으니, 앱으로 옮기기
                 전 아래 데이터 관리에서 전체 JSON 백업을 먼저 보관해 주세요.

@@ -30,6 +30,7 @@ export {
 
 export {
   createMockSettingsActionRecorder,
+  resetSettingsCandidateSessionForTests,
   resolveSettingsPageViewModel,
   sanitizeSettingsText,
 } from './settingsPageModel';
