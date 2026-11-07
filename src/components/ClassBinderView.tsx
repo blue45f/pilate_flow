@@ -47,7 +47,10 @@ import type {
   SavedSequence,
   SequenceStep,
 } from '../types/pilates';
-import type { ResolvedTeachingHistoryView } from '../types/teachingHistorySnapshot';
+import type {
+  ClassHistoryLogWithSnapshot,
+  ResolvedTeachingHistoryView,
+} from '../types/teachingHistorySnapshot';
 import {
   getSavedHumanMovementDrafts,
   getSavedReusableBlocks,
@@ -113,25 +116,56 @@ const getHistoryDateKey = (date: string) => {
   if (!dt) return 'unknown';
   return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
 };
-const isSyntheticDateOnlyTimestamp = (date: string, dt: Date) => {
+const isDateOnlyTimestampString = (date: string) => {
   const trimmed = date.trim();
-  if (!trimmed.includes('T')) return true;
-  if (/T(?:00|12):00:00(?:\.000)?(?:Z|[+-]\d{2}:?\d{2})?$/i.test(trimmed)) {
-    return true;
-  }
+  if (!trimmed) return true;
+  return !trimmed.includes('T') && !/\d{1,2}:\d{2}/.test(trimmed);
+};
+const hasExplicitDateOnlyMetadata = (log?: ClassHistoryLog): boolean => {
+  if (!log) return false;
+  if (isDateOnlyTimestampString(log.taughtAt)) return true;
+  const raw = log as ClassHistoryLogWithSnapshot & {
+    timestamps?: unknown;
+    dateOnly?: unknown;
+    isDateOnly?: unknown;
+    timeRecorded?: unknown;
+    recoveredDraftOrigin?: { timestamps?: unknown };
+  };
   if (
-    dt.getSeconds() === 0 &&
-    dt.getMilliseconds() === 0 &&
-    dt.getMinutes() === 0 &&
-    (dt.getHours() === 0 || dt.getHours() === 12)
+    raw.timestamps === 'unrecorded' ||
+    raw.recoveredDraftOrigin?.timestamps === 'unrecorded' ||
+    raw.dateOnly === true ||
+    raw.isDateOnly === true ||
+    raw.timeRecorded === false
   ) {
     return true;
   }
+  const snap = raw.programSnapshot as
+    | (NonNullable<ClassHistoryLogWithSnapshot['programSnapshot']> & {
+        timestamps?: unknown;
+        dateOnly?: unknown;
+        isDateOnly?: unknown;
+        timeRecorded?: unknown;
+      })
+    | undefined;
+  if (snap) {
+    if (typeof snap.taughtAt === 'string' && isDateOnlyTimestampString(snap.taughtAt)) {
+      return true;
+    }
+    if (
+      snap.timestamps === 'unrecorded' ||
+      snap.dateOnly === true ||
+      snap.isDateOnly === true ||
+      snap.timeRecorded === false
+    ) {
+      return true;
+    }
+  }
   return false;
 };
-const formatHistoryTimeOfDay = (date: string) => {
+const formatHistoryTimeOfDay = (date: string, log?: ClassHistoryLog) => {
   const dt = parseHistoryDate(date);
-  if (!dt || isSyntheticDateOnlyTimestamp(date, dt)) return null;
+  if (!dt || isDateOnlyTimestampString(date) || hasExplicitDateOnlyMetadata(log)) return null;
   return dt.toLocaleTimeString('ko-KR', {
     hour: '2-digit',
     minute: '2-digit',
@@ -1021,7 +1055,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                       log.stepsSnapshot || resolved.hasPreservedSnapshot,
                     );
                     const missingExercise = !resolved.canCopyToNextClass;
-                    const timeOfDay = formatHistoryTimeOfDay(resolved.taughtAt);
+                    const timeOfDay = formatHistoryTimeOfDay(resolved.taughtAt, log);
                     const plannedMinutes = Math.max(
                       1,
                       Math.round(resolved.timing.plannedTotalSec / 60),

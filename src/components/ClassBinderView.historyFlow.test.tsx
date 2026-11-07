@@ -199,9 +199,24 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     expect(usePilatesStore.getState().activeSteps).toHaveLength(2);
   });
 
-  it('aligns date keys with local display across pre/post-midnight timestamps (zero duplicate date chip labels) and hides synthetic 12:00 noon time badges on date-only logs without mutating records', () => {
+  it('aligns date keys with local display across pre/post-midnight timestamps, preserves valid 12:00 noon and 00:00 midnight ISO times, and only hides time badges on unambiguous date-only records without mutating stored values', () => {
     const [ex1] = usePilatesStore.getState().exercises;
     const localNoonIso = new Date('2026-11-05T12:00:00').toISOString();
+    const localMidnightIso = new Date('2026-11-05T00:00:00').toISOString();
+    const expectedUtcNoonLabel = new Date('2026-11-05T12:00:00.000Z').toLocaleTimeString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    const expectedUtcMidnightLabel = new Date('2026-11-05T00:00:00.000Z').toLocaleTimeString(
+      'ko-KR',
+      {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      },
+    );
+
     const rawLogs = [
       {
         id: 'midnight-1',
@@ -264,9 +279,9 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
         stepsSnapshot: [makeStepSnapshot('m-4', ex1.id, 1)],
       },
       {
-        id: 'date-only-utc-noon',
+        id: 'actual-utc-noon',
         sequenceId: 'seq-noon-utc',
-        sequenceTitle: '날짜만 입력한 정오 UTC 기록',
+        sequenceTitle: '실제 정오 UTC ISO 수업 기록',
         groupId: 'group-evening-a',
         groupName: '화목 저녁 A반',
         apparatus: 'reformer' as const,
@@ -279,9 +294,9 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
         stepsSnapshot: [makeStepSnapshot('m-5', ex1.id, 1)],
       },
       {
-        id: 'date-only-local-noon',
+        id: 'actual-local-noon',
         sequenceId: 'seq-noon-local',
-        sequenceTitle: 'LogSessionModal 날짜만 입력 로컬 정오 기록',
+        sequenceTitle: '실제 로컬 12:00 런치타임 수업 기록',
         groupId: 'group-evening-a',
         groupName: '화목 저녁 A반',
         apparatus: 'reformer' as const,
@@ -293,6 +308,67 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
         exerciseIds: [ex1.id],
         stepsSnapshot: [makeStepSnapshot('m-6', ex1.id, 1)],
       },
+      {
+        id: 'actual-utc-midnight',
+        sequenceId: 'seq-midnight-utc',
+        sequenceTitle: '실제 자정 UTC ISO 수업 기록',
+        groupId: 'group-evening-a',
+        groupName: '화목 저녁 A반',
+        apparatus: 'reformer' as const,
+        level: '1.5' as const,
+        taughtAt: '2026-11-05T00:00:00.000Z',
+        instructorReflection: '메모 자정 UTC',
+        intensity: 'moderate' as const,
+        rating: 5 as const,
+        exerciseIds: [ex1.id],
+        stepsSnapshot: [makeStepSnapshot('m-7', ex1.id, 1)],
+      },
+      {
+        id: 'actual-local-midnight',
+        sequenceId: 'seq-midnight-local',
+        sequenceTitle: '실제 로컬 00:00 심야 수업 기록',
+        groupId: 'group-evening-a',
+        groupName: '화목 저녁 A반',
+        apparatus: 'reformer' as const,
+        level: '1.5' as const,
+        taughtAt: localMidnightIso,
+        instructorReflection: '메모 자정 로컬',
+        intensity: 'moderate' as const,
+        rating: 5 as const,
+        exerciseIds: [ex1.id],
+        stepsSnapshot: [makeStepSnapshot('m-8', ex1.id, 1)],
+      },
+      {
+        id: 'date-only-plain-string',
+        sequenceId: 'seq-date-only-plain',
+        sequenceTitle: '날짜 전용 문자열(YYYY-MM-DD) 수업 기록',
+        groupId: 'group-evening-a',
+        groupName: '화목 저녁 A반',
+        apparatus: 'reformer' as const,
+        level: '1.5' as const,
+        taughtAt: '2026-11-05',
+        instructorReflection: '날짜만 저장된 기록',
+        intensity: 'moderate' as const,
+        rating: 5 as const,
+        exerciseIds: [ex1.id],
+        stepsSnapshot: [makeStepSnapshot('m-9', ex1.id, 1)],
+      },
+      {
+        id: 'date-only-unrecorded-metadata',
+        sequenceId: 'seq-date-only-meta',
+        sequenceTitle: '원본 메타데이터(timestamps: unrecorded) 날짜 전용 기록',
+        groupId: 'group-evening-a',
+        groupName: '화목 저녁 A반',
+        apparatus: 'reformer' as const,
+        level: '1.5' as const,
+        taughtAt: localNoonIso,
+        timestamps: 'unrecorded' as const,
+        instructorReflection: '원본 메타데이터로 시각 미기록 명시',
+        intensity: 'moderate' as const,
+        rating: 5 as const,
+        exerciseIds: [ex1.id],
+        stepsSnapshot: [makeStepSnapshot('m-10', ex1.id, 1)],
+      },
     ];
     usePilatesStore.setState({ historyLogs: rawLogs });
 
@@ -302,35 +378,66 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     const dateChips = Array.from(
       dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip'),
     ).slice(1); // exclude "전체 날짜"
-    const labels = dateChips.map((chip) => {
-      const countEl = chip.querySelector('.teaching-date-chip-count');
-      return chip.textContent?.replace(countEl?.textContent ?? '', '').trim() ?? '';
-    });
+    const labels = dateChips.map((chip) => chip.childNodes[0]?.textContent?.trim() ?? '');
     // Zero duplicate date chip labels in both UTC and KST
     expect(new Set(labels).size).toBe(labels.length);
 
-    // Date-only records must NOT display a synthetic 12:00 time-of-day badge
     const feed = screen.getByRole('region', { name: '수업 기록 목록' });
-    const utcNoonHeading = within(feed).getByRole('heading', {
-      level: 2,
-      name: '날짜만 입력한 정오 UTC 기록',
-    });
-    const utcNoonCard = utcNoonHeading.closest('article') as HTMLElement;
-    expect(utcNoonCard.querySelector('.teaching-history-time-of-day')).toBeNull();
 
-    const localNoonHeading = within(feed).getByRole('heading', {
-      level: 2,
-      name: 'LogSessionModal 날짜만 입력 로컬 정오 기록',
-    });
-    const localNoonCard = localNoonHeading.closest('article') as HTMLElement;
-    expect(localNoonCard.querySelector('.teaching-history-time-of-day')).toBeNull();
+    // 1. Ambiguous / actual ISO 12:00 and 00:00 records MUST preserve and display their valid time badges
+    const utcNoonCard = within(feed)
+      .getByRole('heading', { level: 2, name: '실제 정오 UTC ISO 수업 기록' })
+      .closest('article') as HTMLElement;
+    expect(utcNoonCard.querySelector('.teaching-history-time-of-day')?.textContent).toBe(
+      expectedUtcNoonLabel,
+    );
 
-    // Original stored taughtAt timestamps in store remain 100% immutable
+    const localNoonCard = within(feed)
+      .getByRole('heading', { level: 2, name: '실제 로컬 12:00 런치타임 수업 기록' })
+      .closest('article') as HTMLElement;
+    expect(localNoonCard.querySelector('.teaching-history-time-of-day')?.textContent).toBe('12:00');
+
+    const utcMidnightCard = within(feed)
+      .getByRole('heading', { level: 2, name: '실제 자정 UTC ISO 수업 기록' })
+      .closest('article') as HTMLElement;
+    expect(utcMidnightCard.querySelector('.teaching-history-time-of-day')?.textContent).toBe(
+      expectedUtcMidnightLabel,
+    );
+
+    const localMidnightCard = within(feed)
+      .getByRole('heading', { level: 2, name: '실제 로컬 00:00 심야 수업 기록' })
+      .closest('article') as HTMLElement;
+    expect(localMidnightCard.querySelector('.teaching-history-time-of-day')?.textContent).toBe(
+      '00:00',
+    );
+
+    // 2. Unambiguous date-only records (YYYY-MM-DD or explicit timestamps: 'unrecorded' metadata) MUST hide time badge
+    const plainDateOnlyCard = within(feed)
+      .getByRole('heading', { level: 2, name: '날짜 전용 문자열(YYYY-MM-DD) 수업 기록' })
+      .closest('article') as HTMLElement;
+    expect(plainDateOnlyCard.querySelector('.teaching-history-time-of-day')).toBeNull();
+
+    const metaDateOnlyCard = within(feed)
+      .getByRole('heading', {
+        level: 2,
+        name: '원본 메타데이터(timestamps: unrecorded) 날짜 전용 기록',
+      })
+      .closest('article') as HTMLElement;
+    expect(metaDateOnlyCard.querySelector('.teaching-history-time-of-day')).toBeNull();
+
+    // 3. Original stored taughtAt timestamps in store remain 100% immutable
     const storedLogs = usePilatesStore.getState().historyLogs;
-    expect(storedLogs.find((l) => l.id === 'date-only-utc-noon')?.taughtAt).toBe(
+    expect(storedLogs.find((l) => l.id === 'actual-utc-noon')?.taughtAt).toBe(
       '2026-11-05T12:00:00.000Z',
     );
-    expect(storedLogs.find((l) => l.id === 'date-only-local-noon')?.taughtAt).toBe(localNoonIso);
+    expect(storedLogs.find((l) => l.id === 'actual-local-noon')?.taughtAt).toBe(localNoonIso);
+    expect(storedLogs.find((l) => l.id === 'actual-utc-midnight')?.taughtAt).toBe(
+      '2026-11-05T00:00:00.000Z',
+    );
+    expect(storedLogs.find((l) => l.id === 'actual-local-midnight')?.taughtAt).toBe(
+      localMidnightIso,
+    );
+    expect(storedLogs.find((l) => l.id === 'date-only-plain-string')?.taughtAt).toBe('2026-11-05');
   });
 
   it('caps initial date chips to 12 with expand/collapse, recovers selectedDate when search filters it out, and paginates cards in batches of 30 while preserving full aggregation', () => {
