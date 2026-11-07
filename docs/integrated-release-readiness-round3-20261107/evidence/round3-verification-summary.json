@@ -1,0 +1,436 @@
+{
+  "verifiedAt": "2026-11-07T08:14:19.970Z",
+  "suite": "integrated-release-readiness-round3-20261107",
+  "ancestry": {
+    "headSha": "b2d6022b8109ad74b01bca817a0788c49aa63cd2",
+    "originMainSha": "b2d6022b8109ad74b01bca817a0788c49aa63cd2",
+    "allIncluded": true,
+    "commits": [
+      {
+        "short": "c6acd66",
+        "role": "설정 (Settings)",
+        "round": "Round 1",
+        "fullSha": "c6acd66c353d1c5f126fc1b9eca4ffc076412a1e",
+        "subject": "Merge branch 'feat/parallel-page-settings-20261107' into main",
+        "commitDate": "2026-11-07 05:02:40 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "f3c093e",
+        "role": "통합 (Integration)",
+        "round": "Round 1",
+        "fullSha": "f3c093e942795a5e16e28abd62d510bcda876c84",
+        "subject": "feat(settings): integrate PilatesSettingsPage into App settings dialog and mark proposal integrated",
+        "commitDate": "2026-11-07 05:10:40 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "f95b188",
+        "role": "라이브러리 (Library)",
+        "round": "Round 1",
+        "fullSha": "f95b188f70f0a7a4fcfdbadfb0ff2cc237a7733d",
+        "subject": "Merge branch 'feat/parallel-page-library-20261107' into main",
+        "commitDate": "2026-11-07 05:15:01 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "4256230",
+        "role": "홈 (Home)",
+        "round": "Round 1",
+        "fullSha": "42562302db99a89a0722c3fe033cfe84ea300f00",
+        "subject": "Merge branch 'feat/parallel-page-home-20261107' into main",
+        "commitDate": "2026-11-07 05:23:46 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "45839ff",
+        "role": "히스토리 (History)",
+        "round": "Round 1",
+        "fullSha": "45839ffadbad3dbac26238415e190ba0a8dde544",
+        "subject": "Merge branch 'feat/parallel-page-history-20261107' into main",
+        "commitDate": "2026-11-07 05:34:31 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "338f912",
+        "role": "빌더 (Builder)",
+        "round": "Round 1",
+        "fullSha": "338f912a8ae2c07b501befd3e160c725ec40b559",
+        "subject": "Merge branch 'feat/parallel-page-builder-20261107' into main",
+        "commitDate": "2026-11-07 05:41:02 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "0d5e054",
+        "role": "통합 사용자 동선 Round 2 증적",
+        "round": "Round 2",
+        "fullSha": "0d5e0542923a8dcac7374dd339489957015d8a80",
+        "subject": "docs(journey): record final round 2 verification SHA (98517300f5eba58f2355412f52762472d8252805)",
+        "commitDate": "2026-11-07 07:39:15 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "55ce22d",
+        "role": "새 도해 구현 (D-01..D-05 접촉 정합성 수정)",
+        "round": "Post-Round 2 Diagram Fix",
+        "fullSha": "55ce22d30d19a9ed7a080f314f82f94ba10987fc",
+        "subject": "fix(diagrams): apply minimal pose-apparatus contact fixes (D-01..D-05) and verify real app renderer",
+        "commitDate": "2026-11-07 07:52:45 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "b2d6022",
+        "role": "새 도해 구현 main 병합 커밋",
+        "round": "Post-Round 2 Diagram Merge",
+        "fullSha": "b2d6022b8109ad74b01bca817a0788c49aa63cd2",
+        "subject": "Merge branch 'feat/apply-diagram-contact-fixes-20261107': apply minimal 2D diagram pose-apparatus contact fixes to src and re-verify",
+        "commitDate": "2026-11-07 07:52:49 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      }
+    ]
+  },
+  "safariWebkitAudit": {
+    "webkitRuntimeAvailable": false,
+    "safariRuntimeVerdict": "UNVERIFIED (미검증 — Linux Debian 12 컨테이너에 Safari/WebKit 런타임 바이너리가 없으므로 Chromium 결과를 Safari PASS로 간주하지 않음)",
+    "probedBinaries": [
+      {
+        "path": "/usr/bin/safari",
+        "exists": false
+      },
+      {
+        "path": "/usr/bin/MiniBrowser",
+        "exists": false
+      },
+      {
+        "path": "/usr/bin/WebKitWebProcess",
+        "exists": false
+      },
+      {
+        "path": "/usr/bin/epiphany",
+        "exists": false
+      },
+      {
+        "path": "/usr/bin/midori",
+        "exists": false
+      },
+      {
+        "path": "/usr/local/bin/webkit",
+        "exists": false
+      }
+    ],
+    "playwrightWebkitCacheFound": false,
+    "staticSafariCompatibility": {
+      "hasViewportFitCover": true,
+      "hasAppleMobileWebAppCapable": true,
+      "hasAppleTouchIconLink": true,
+      "iconChecks": [
+        {
+          "file": "public/icons/apple-touch-icon.png",
+          "validPngSignature": true,
+          "dimensions": "180x180"
+        },
+        {
+          "file": "public/icons/app-192.png",
+          "validPngSignature": true,
+          "dimensions": "192x192"
+        },
+        {
+          "file": "public/icons/app-512.png",
+          "validPngSignature": true,
+          "dimensions": "512x512"
+        },
+        {
+          "file": "public/icons/app-maskable-512.png",
+          "validPngSignature": true,
+          "dimensions": "512x512"
+        }
+      ],
+      "safeAreaInsetCount": 20,
+      "dvhUsageCount": 10,
+      "unprefixedBackdropFilterCount": 6,
+      "unprefixedBackdropFilterLocations": [
+        {
+          "file": "src/styles/atelier-vnext.css",
+          "line": 437,
+          "declaration": "backdrop-filter: blur(14px);"
+        },
+        {
+          "file": "src/styles/exercise-youtube-gallery.css",
+          "line": 222,
+          "declaration": "backdrop-filter: blur(4px);"
+        },
+        {
+          "file": "src/styles/inline-exercise-finder.css",
+          "line": 546,
+          "declaration": "backdrop-filter: blur(8px);"
+        },
+        {
+          "file": "src/styles/motion-pattern-gallery.css",
+          "line": 97,
+          "declaration": "backdrop-filter: blur(4px);"
+        },
+        {
+          "file": "src/styles/studio.css",
+          "line": 1055,
+          "declaration": "backdrop-filter: blur(3px);"
+        },
+        {
+          "file": "src/styles/studio.css",
+          "line": 1713,
+          "declaration": "backdrop-filter: blur(15px);"
+        }
+      ]
+    }
+  },
+  "pwaOfflineTrack": {
+    "pwaAudit": {
+      "isSecureContext": true,
+      "manifestHref": "./site.webmanifest",
+      "manifestId": "/",
+      "manifestStartUrl": "/",
+      "manifestScope": "/",
+      "manifestDisplay": "standalone",
+      "manifestIconsCount": 3,
+      "hasServiceWorkerController": true,
+      "swScope": "http://127.0.0.1:35481/",
+      "swActiveState": "activated",
+      "shellCacheName": "flow-atelier-shell-c263e4e9ab22fa3b",
+      "cachedAssetCount": 42,
+      "hasCachedIndexHtml": true,
+      "hasCachedAppIcons": true,
+      "cachedJsCount": 25,
+      "cachedCssCount": 14
+    },
+    "pwaSettingsCardState": {
+      "rendered": true,
+      "showsOfflineReadyBadge": true,
+      "showsCanInstallButtonAfterSyntheticPrompt": true,
+      "installButtonLabel": "이 기기에 설치",
+      "cardTextSummary": "홈 화면에 앱 설치Flow Atelier를 홈 화면이나 앱 목록에서 바로 여세요. 앱스토어 다운로드 없이 설치합니다. 이 기기에 설치설치 버튼이 보이지 않나요?Android Chrome에서는 ⋮ 메뉴 → 홈 화면에 추가 → 설치를 선택하세요. 컴퓨터에서는 주소창의 설치 아이콘이나 브라우저 메뉴의 앱 설치를 확인하세요.Mac Safari에서는 파일 → Dock에 추가를 선택하세요. 지원하는 macOS 버전에서 사용할 수 있어요. 메뉴가 없다면 일반 창의 최신 Chrome·Edge·Safari에서 다시 열어 주세요. 브라우저나 기기 설정에 따라 설치를 지원하지 않을 수 있어요.오프라인·자료 보관·업데이트기본 화면을 오프라인에서 열 준비가 됐어요.로그인, 계정 백업, 영상과 일부 그림은 인터넷이 필요해요. 설치는 계정 백업이나 다른 기기와의 동기화가 아닙니다.자료는 이 기기의 브라우저에 보관돼요. 특히 iPhone·iPad는 Safari와 홈 화면 앱의 자료가 따로 보일 수 있으니 기존 자료를 전체 백업한 뒤 옮겨 주세요. 앱 삭제나 브라우저 데이터 삭제 전에도 백업해 주세요."
+    },
+    "preOfflineSnapshot": {
+      "title": "[합성-R3] 오프라인 재진입 수업안 보존 검증",
+      "stepCount": 3,
+      "stepIds": [
+        "step-add-1794039255181-btlb37",
+        "step-add-1794039255217-5ctx6c",
+        "rest-1794039255304-w31j46"
+      ],
+      "stepHeadings": [
+        "중간 휴식"
+      ],
+      "savedSeqTitles": [
+        "[합성-R3] 오프라인 재진입 수업안 보존 검증",
+        "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+        "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+        "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+      ],
+      "hasSavedSyntheticSequence": true,
+      "localStorageBytes": 113981
+    },
+    "postOfflineSnapshot": {
+      "navigatorOnLine": false,
+      "controlledByServiceWorker": true,
+      "title": "[합성-R3] 오프라인 재진입 수업안 보존 검증",
+      "stepCount": 3,
+      "stepIds": [
+        "step-add-1794039255181-btlb37",
+        "step-add-1794039255217-5ctx6c",
+        "rest-1794039255304-w31j46"
+      ],
+      "stepHeadings": [
+        "중간 휴식"
+      ],
+      "savedSeqTitles": [
+        "[합성-R3] 오프라인 재진입 수업안 보존 검증",
+        "리포머 Lv 1.5 전신 밸런스 & 힙업 시그니처 50분",
+        "리포머+소도구 Lv 1.0 체형교정 & 속근육 정렬 50분",
+        "리포머 & 체어 Lv 2.0 주말 불타는 코어·힙 스컬프 50분"
+      ],
+      "hasSavedSyntheticSequence": true,
+      "localStorageBytes": 113981
+    },
+    "sequencePreservedExactly": true,
+    "queryStringOfflineProbe": {
+      "ok": false,
+      "error": "TypeError: Failed to fetch",
+      "reason": "sw.js line 58 (if (... || url.search) return;) skips requests with query parameters"
+    }
+  },
+  "diagramRevisitTrack": [
+    {
+      "viewport": "320px",
+      "patternPreviewMetrics": {
+        "svgCount": 7,
+        "overflowPx": 0,
+        "zeroHorizontalOverflow": true
+      },
+      "exerciseDiagramResults": [
+        {
+          "exerciseId": "original-reformer-strap-frog",
+          "defectId": "D-01",
+          "nameKo": "스트랩 프로그 준비",
+          "archetype": "reformer-strap-frog-isolated",
+          "apparatus": "reformer",
+          "phase": "start",
+          "jointNodeCount": 7,
+          "hasNaNOrUndefined": false,
+          "hasHonestDisclaimer": true,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true
+        },
+        {
+          "exerciseId": "ex-plank-01",
+          "defectId": "D-02A",
+          "nameKo": "리포머 롱 스트레치 & 엘리펀트 / 니 스트레치",
+          "archetype": "reformer-plank-long-stretch-isolated",
+          "apparatus": "reformer",
+          "phase": "start",
+          "jointNodeCount": 7,
+          "hasNaNOrUndefined": false,
+          "hasHonestDisclaimer": true,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true
+        },
+        {
+          "exerciseId": "ex-plank-02",
+          "defectId": "D-02B",
+          "nameKo": "운다 체어 파이크(Pike) & 플랭크 풀업",
+          "archetype": "chair-plank-pike-isolated",
+          "apparatus": "chair",
+          "phase": "start",
+          "jointNodeCount": 7,
+          "hasNaNOrUndefined": false,
+          "hasHonestDisclaimer": true,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true
+        },
+        {
+          "exerciseId": "ex-footwork-03",
+          "defectId": "D-04",
+          "nameKo": "운다 체어 시티드 & 스탠딩 풋워크 프레스",
+          "archetype": "chair-seated-pedal-footwork",
+          "apparatus": "chair",
+          "phase": "start",
+          "jointNodeCount": 7,
+          "hasNaNOrUndefined": false,
+          "hasHonestDisclaimer": true,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true
+        },
+        {
+          "exerciseId": "original-barrel-standing-hip-extension",
+          "defectId": "D-05",
+          "nameKo": "래더 지지 힙 익스텐션",
+          "archetype": "barrel-standing-hip-extension-isolated",
+          "apparatus": "barrel",
+          "phase": "start",
+          "jointNodeCount": 7,
+          "hasNaNOrUndefined": false,
+          "hasHonestDisclaimer": true,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true
+        }
+      ],
+      "planPreviewOverflow": {
+        "overflowPx": 0,
+        "zeroHorizontalOverflow": true,
+        "svgCount": 13
+      }
+    },
+    {
+      "viewport": "1440px",
+      "patternPreviewMetrics": {
+        "svgCount": 7,
+        "overflowPx": 0,
+        "zeroHorizontalOverflow": true
+      },
+      "exerciseDiagramResults": [
+        {
+          "exerciseId": "original-reformer-strap-frog",
+          "defectId": "D-01",
+          "nameKo": "스트랩 프로그 준비",
+          "archetype": "reformer-strap-frog-isolated",
+          "apparatus": "reformer",
+          "phase": "start",
+          "jointNodeCount": 7,
+          "hasNaNOrUndefined": false,
+          "hasHonestDisclaimer": true,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true
+        },
+        {
+          "exerciseId": "ex-plank-01",
+          "defectId": "D-02A",
+          "nameKo": "리포머 롱 스트레치 & 엘리펀트 / 니 스트레치",
+          "archetype": "reformer-plank-long-stretch-isolated",
+          "apparatus": "reformer",
+          "phase": "start",
+          "jointNodeCount": 7,
+          "hasNaNOrUndefined": false,
+          "hasHonestDisclaimer": true,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true
+        },
+        {
+          "exerciseId": "ex-plank-02",
+          "defectId": "D-02B",
+          "nameKo": "운다 체어 파이크(Pike) & 플랭크 풀업",
+          "archetype": "chair-plank-pike-isolated",
+          "apparatus": "chair",
+          "phase": "start",
+          "jointNodeCount": 7,
+          "hasNaNOrUndefined": false,
+          "hasHonestDisclaimer": true,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true
+        },
+        {
+          "exerciseId": "ex-footwork-03",
+          "defectId": "D-04",
+          "nameKo": "운다 체어 시티드 & 스탠딩 풋워크 프레스",
+          "archetype": "chair-seated-pedal-footwork",
+          "apparatus": "chair",
+          "phase": "start",
+          "jointNodeCount": 7,
+          "hasNaNOrUndefined": false,
+          "hasHonestDisclaimer": true,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true
+        },
+        {
+          "exerciseId": "original-barrel-standing-hip-extension",
+          "defectId": "D-05",
+          "nameKo": "래더 지지 힙 익스텐션",
+          "archetype": "barrel-standing-hip-extension-isolated",
+          "apparatus": "barrel",
+          "phase": "start",
+          "jointNodeCount": 7,
+          "hasNaNOrUndefined": false,
+          "hasHonestDisclaimer": true,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true
+        }
+      ],
+      "planPreviewOverflow": {
+        "overflowPx": 0,
+        "zeroHorizontalOverflow": true,
+        "svgCount": 13
+      }
+    }
+  ],
+  "consoleErrorCount": 0,
+  "pageErrorCount": 0,
+  "consoleErrors": [],
+  "pageErrors": [],
+  "overallChromiumTracksPass": true
+}
