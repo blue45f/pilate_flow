@@ -1,0 +1,666 @@
+{
+  "verifiedAt": "2026-11-07T07:38:37.651Z",
+  "suite": "integrated-journey-round2-20261107",
+  "ancestry": {
+    "headSha": "338e7bdd01d36e0c3854ee084a8bfdd829ec72de",
+    "originMainSha": "338e7bdd01d36e0c3854ee084a8bfdd829ec72de",
+    "allIncluded": true,
+    "commits": [
+      {
+        "short": "c6acd66",
+        "area": "설정 (Settings)",
+        "branch": "feat/parallel-page-settings-20261107",
+        "fullSha": "c6acd66c353d1c5f126fc1b9eca4ffc076412a1e",
+        "subject": "Merge branch 'feat/parallel-page-settings-20261107' into main",
+        "commitDate": "2026-11-07 05:02:40 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "f3c093e",
+        "area": "통합 (Integration)",
+        "branch": "main (candidate & voice/settings integration)",
+        "fullSha": "f3c093e942795a5e16e28abd62d510bcda876c84",
+        "subject": "feat(settings): integrate PilatesSettingsPage into App settings dialog and mark proposal integrated",
+        "commitDate": "2026-11-07 05:10:40 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "f95b188",
+        "area": "라이브러리 (Library/Atlas)",
+        "branch": "feat/parallel-page-library-20261107",
+        "fullSha": "f95b188f70f0a7a4fcfdbadfb0ff2cc237a7733d",
+        "subject": "Merge branch 'feat/parallel-page-library-20261107' into main",
+        "commitDate": "2026-11-07 05:15:01 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "4256230",
+        "area": "홈 (Home)",
+        "branch": "feat/parallel-page-home-20261107",
+        "fullSha": "42562302db99a89a0722c3fe033cfe84ea300f00",
+        "subject": "Merge branch 'feat/parallel-page-home-20261107' into main",
+        "commitDate": "2026-11-07 05:23:46 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "45839ff",
+        "area": "히스토리 (History)",
+        "branch": "feat/parallel-page-history-20261107",
+        "fullSha": "45839ffadbad3dbac26238415e190ba0a8dde544",
+        "subject": "Merge branch 'feat/parallel-page-history-20261107' into main",
+        "commitDate": "2026-11-07 05:34:31 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      },
+      {
+        "short": "338f912",
+        "area": "빌더 (Builder)",
+        "branch": "feat/parallel-page-builder-20261107",
+        "fullSha": "338f912a8ae2c07b501befd3e160c725ec40b559",
+        "subject": "Merge branch 'feat/parallel-page-builder-20261107' into main",
+        "commitDate": "2026-11-07 05:41:02 +0000",
+        "isAncestorOfOriginMain": true,
+        "isAncestorOfHead": true
+      }
+    ]
+  },
+  "viewports": [
+    {
+      "viewport": {
+        "width": 320,
+        "height": 640,
+        "label": "320px (Compact Mobile)",
+        "mobile": true
+      },
+      "homeState": {
+        "hasWelcomeRegion": true,
+        "hasRecentRegion": true,
+        "hasPickMovementBtn": true,
+        "hasPresetEntryBtn": true
+      },
+      "atlasAddResult": {
+        "addedCount": 2,
+        "addedNames": [
+          "누워서 호흡 관찰",
+          "골반 시계"
+        ],
+        "statusText": "22개의 동작 · 작은 선택이 좋은 수업을 만듭니다 | 골반 시계 · 현재 수업안에 추가했어요."
+      },
+      "reorderCheck": {
+        "cardsBefore": [
+          "step-add-1794037101269-581yes",
+          "step-add-1794037101293-qp2lqh",
+          "rest-1794037101971-t3j51c"
+        ],
+        "cardsAfterDown": [
+          "step-add-1794037101293-qp2lqh",
+          "step-add-1794037101269-581yes",
+          "rest-1794037101971-t3j51c"
+        ],
+        "cardsAfterUp": [
+          "step-add-1794037101269-581yes",
+          "step-add-1794037101293-qp2lqh",
+          "rest-1794037101971-t3j51c"
+        ],
+        "downMovedFirstToSecond": true,
+        "upRestoredFirst": true
+      },
+      "liveStageResult": {
+        "cuePanelOpen": true,
+        "hasVoiceRegion": true,
+        "voiceToggledOrGracefullyUnavailable": true
+      },
+      "historyVerification": {
+        "hasDateNav": true,
+        "matchingArticleCount": 1,
+        "cardTitle": "크로미움 통합검증 320px 수업안",
+        "titleAboveBadges": true,
+        "hasPrimaryReuseCta": true
+      },
+      "restoredWorkbench": {
+        "restoredTitle": "크로미움 통합검증 320px 수업안 (기록에서 복사)",
+        "restoredStepCount": 2
+      },
+      "stageMetrics": [
+        {
+          "stageId": "01-home",
+          "viewportWidth": 320,
+          "viewportHeight": 640,
+          "docScrollWidth": 320,
+          "bodyScrollWidth": 320,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "02-settings",
+          "viewportWidth": 320,
+          "viewportHeight": 640,
+          "docScrollWidth": 320,
+          "bodyScrollWidth": 320,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "03-atlas-search",
+          "viewportWidth": 320,
+          "viewportHeight": 640,
+          "docScrollWidth": 320,
+          "bodyScrollWidth": 320,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "04-builder-block-drag",
+          "viewportWidth": 320,
+          "viewportHeight": 640,
+          "docScrollWidth": 320,
+          "bodyScrollWidth": 320,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "05-save-preview-cuesheet",
+          "viewportWidth": 320,
+          "viewportHeight": 640,
+          "docScrollWidth": 320,
+          "bodyScrollWidth": 320,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "06-live-stage-voice",
+          "viewportWidth": 320,
+          "viewportHeight": 640,
+          "docScrollWidth": 320,
+          "bodyScrollWidth": 320,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "07-log-modal",
+          "viewportWidth": 320,
+          "viewportHeight": 640,
+          "docScrollWidth": 320,
+          "bodyScrollWidth": 320,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "08-history-reuse",
+          "viewportWidth": 320,
+          "viewportHeight": 640,
+          "docScrollWidth": 320,
+          "bodyScrollWidth": 320,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        }
+      ],
+      "allStagesZeroOverflow": true,
+      "consoleErrorCount": 0,
+      "pageErrorCount": 0,
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "label": "390px (Standard Mobile)",
+        "mobile": true
+      },
+      "homeState": {
+        "hasWelcomeRegion": true,
+        "hasRecentRegion": true,
+        "hasPickMovementBtn": true,
+        "hasPresetEntryBtn": true
+      },
+      "atlasAddResult": {
+        "addedCount": 2,
+        "addedNames": [
+          "누워서 호흡 관찰",
+          "골반 시계"
+        ],
+        "statusText": "22개의 동작 · 작은 선택이 좋은 수업을 만듭니다 | 골반 시계 · 현재 수업안에 추가했어요."
+      },
+      "reorderCheck": {
+        "cardsBefore": [
+          "step-add-1794037105272-fdtl3z",
+          "step-add-1794037105302-vrsh3l",
+          "rest-1794037105990-8u6y3u"
+        ],
+        "cardsAfterDown": [
+          "step-add-1794037105302-vrsh3l",
+          "step-add-1794037105272-fdtl3z",
+          "rest-1794037105990-8u6y3u"
+        ],
+        "cardsAfterUp": [
+          "step-add-1794037105272-fdtl3z",
+          "step-add-1794037105302-vrsh3l",
+          "rest-1794037105990-8u6y3u"
+        ],
+        "downMovedFirstToSecond": true,
+        "upRestoredFirst": true
+      },
+      "liveStageResult": {
+        "cuePanelOpen": true,
+        "hasVoiceRegion": true,
+        "voiceToggledOrGracefullyUnavailable": true
+      },
+      "historyVerification": {
+        "hasDateNav": true,
+        "matchingArticleCount": 1,
+        "cardTitle": "크로미움 통합검증 390px 수업안",
+        "titleAboveBadges": true,
+        "hasPrimaryReuseCta": true
+      },
+      "restoredWorkbench": {
+        "restoredTitle": "크로미움 통합검증 390px 수업안 (기록에서 복사)",
+        "restoredStepCount": 2
+      },
+      "stageMetrics": [
+        {
+          "stageId": "01-home",
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "docScrollWidth": 390,
+          "bodyScrollWidth": 390,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "02-settings",
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "docScrollWidth": 390,
+          "bodyScrollWidth": 390,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "03-atlas-search",
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "docScrollWidth": 390,
+          "bodyScrollWidth": 390,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "04-builder-block-drag",
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "docScrollWidth": 390,
+          "bodyScrollWidth": 390,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "05-save-preview-cuesheet",
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "docScrollWidth": 390,
+          "bodyScrollWidth": 390,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "06-live-stage-voice",
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "docScrollWidth": 390,
+          "bodyScrollWidth": 390,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "07-log-modal",
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "docScrollWidth": 390,
+          "bodyScrollWidth": 390,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "08-history-reuse",
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "docScrollWidth": 390,
+          "bodyScrollWidth": 390,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        }
+      ],
+      "allStagesZeroOverflow": true,
+      "consoleErrorCount": 0,
+      "pageErrorCount": 0,
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    {
+      "viewport": {
+        "width": 768,
+        "height": 1024,
+        "label": "768px (Tablet)",
+        "mobile": false
+      },
+      "homeState": {
+        "hasWelcomeRegion": true,
+        "hasRecentRegion": true,
+        "hasPickMovementBtn": true,
+        "hasPresetEntryBtn": true
+      },
+      "atlasAddResult": {
+        "addedCount": 2,
+        "addedNames": [
+          "누워서 호흡 관찰",
+          "골반 시계"
+        ],
+        "statusText": "22개의 동작 · 작은 선택이 좋은 수업을 만듭니다 | 골반 시계 · 현재 수업안에 추가했어요."
+      },
+      "reorderCheck": {
+        "cardsBefore": [
+          "step-add-1794037109385-ln1cn6",
+          "step-add-1794037109450-2v779s",
+          "rest-1794037110128-z36io7"
+        ],
+        "cardsAfterDown": [
+          "step-add-1794037109450-2v779s",
+          "step-add-1794037109385-ln1cn6",
+          "rest-1794037110128-z36io7"
+        ],
+        "cardsAfterUp": [
+          "step-add-1794037109385-ln1cn6",
+          "step-add-1794037109450-2v779s",
+          "rest-1794037110128-z36io7"
+        ],
+        "downMovedFirstToSecond": true,
+        "upRestoredFirst": true
+      },
+      "liveStageResult": {
+        "cuePanelOpen": true,
+        "hasVoiceRegion": true,
+        "voiceToggledOrGracefullyUnavailable": true
+      },
+      "historyVerification": {
+        "hasDateNav": true,
+        "matchingArticleCount": 1,
+        "cardTitle": "크로미움 통합검증 768px 수업안",
+        "titleAboveBadges": true,
+        "hasPrimaryReuseCta": true
+      },
+      "restoredWorkbench": {
+        "restoredTitle": "크로미움 통합검증 768px 수업안 (기록에서 복사)",
+        "restoredStepCount": 2
+      },
+      "stageMetrics": [
+        {
+          "stageId": "01-home",
+          "viewportWidth": 768,
+          "viewportHeight": 1024,
+          "docScrollWidth": 753,
+          "bodyScrollWidth": 753,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "02-settings",
+          "viewportWidth": 768,
+          "viewportHeight": 1024,
+          "docScrollWidth": 753,
+          "bodyScrollWidth": 753,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "03-atlas-search",
+          "viewportWidth": 768,
+          "viewportHeight": 1024,
+          "docScrollWidth": 753,
+          "bodyScrollWidth": 753,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "04-builder-block-drag",
+          "viewportWidth": 768,
+          "viewportHeight": 1024,
+          "docScrollWidth": 753,
+          "bodyScrollWidth": 753,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "05-save-preview-cuesheet",
+          "viewportWidth": 768,
+          "viewportHeight": 1024,
+          "docScrollWidth": 753,
+          "bodyScrollWidth": 753,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "06-live-stage-voice",
+          "viewportWidth": 768,
+          "viewportHeight": 1024,
+          "docScrollWidth": 753,
+          "bodyScrollWidth": 753,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "07-log-modal",
+          "viewportWidth": 768,
+          "viewportHeight": 1024,
+          "docScrollWidth": 753,
+          "bodyScrollWidth": 753,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "08-history-reuse",
+          "viewportWidth": 768,
+          "viewportHeight": 1024,
+          "docScrollWidth": 753,
+          "bodyScrollWidth": 753,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        }
+      ],
+      "allStagesZeroOverflow": true,
+      "consoleErrorCount": 0,
+      "pageErrorCount": 0,
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "label": "1440px (Desktop)",
+        "mobile": false
+      },
+      "homeState": {
+        "hasWelcomeRegion": true,
+        "hasRecentRegion": true,
+        "hasPickMovementBtn": true,
+        "hasPresetEntryBtn": true
+      },
+      "atlasAddResult": {
+        "addedCount": 2,
+        "addedNames": [
+          "누워서 호흡 관찰",
+          "골반 시계"
+        ],
+        "statusText": "22개의 동작 · 작은 선택이 좋은 수업을 만듭니다 | 골반 시계 · 현재 수업안에 추가했어요."
+      },
+      "reorderCheck": {
+        "cardsBefore": [
+          "step-add-1794037113780-xynmq3",
+          "step-add-1794037113802-6r0ngi",
+          "rest-1794037114472-cbj04t"
+        ],
+        "cardsAfterDown": [
+          "step-add-1794037113802-6r0ngi",
+          "step-add-1794037113780-xynmq3",
+          "rest-1794037114472-cbj04t"
+        ],
+        "cardsAfterUp": [
+          "step-add-1794037113780-xynmq3",
+          "step-add-1794037113802-6r0ngi",
+          "rest-1794037114472-cbj04t"
+        ],
+        "downMovedFirstToSecond": true,
+        "upRestoredFirst": true
+      },
+      "liveStageResult": {
+        "cuePanelOpen": true,
+        "hasVoiceRegion": true,
+        "voiceToggledOrGracefullyUnavailable": true
+      },
+      "historyVerification": {
+        "hasDateNav": true,
+        "matchingArticleCount": 1,
+        "cardTitle": "크로미움 통합검증 1440px 수업안",
+        "titleAboveBadges": true,
+        "hasPrimaryReuseCta": true
+      },
+      "restoredWorkbench": {
+        "restoredTitle": "크로미움 통합검증 1440px 수업안 (기록에서 복사)",
+        "restoredStepCount": 2
+      },
+      "stageMetrics": [
+        {
+          "stageId": "01-home",
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "docScrollWidth": 1425,
+          "bodyScrollWidth": 1425,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "02-settings",
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "docScrollWidth": 1425,
+          "bodyScrollWidth": 1425,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "03-atlas-search",
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "docScrollWidth": 1425,
+          "bodyScrollWidth": 1425,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "04-builder-block-drag",
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "docScrollWidth": 1425,
+          "bodyScrollWidth": 1425,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "05-save-preview-cuesheet",
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "docScrollWidth": 1425,
+          "bodyScrollWidth": 1425,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "06-live-stage-voice",
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "docScrollWidth": 1425,
+          "bodyScrollWidth": 1425,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "07-log-modal",
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "docScrollWidth": 1425,
+          "bodyScrollWidth": 1425,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        },
+        {
+          "stageId": "08-history-reuse",
+          "viewportWidth": 1440,
+          "viewportHeight": 900,
+          "docScrollWidth": 1425,
+          "bodyScrollWidth": 1425,
+          "overflowPx": 0,
+          "zeroHorizontalOverflow": true,
+          "activeHeading": "다가오는 수업"
+        }
+      ],
+      "allStagesZeroOverflow": true,
+      "consoleErrorCount": 0,
+      "pageErrorCount": 0,
+      "consoleErrors": [],
+      "pageErrors": []
+    }
+  ],
+  "zoom200Results": [
+    {
+      "viewportWidth": 320,
+      "textScalePercent": 200,
+      "docScrollWidth": 320,
+      "overflowPx": 0,
+      "zeroHorizontalOverflow": true
+    },
+    {
+      "viewportWidth": 1440,
+      "textScalePercent": 200,
+      "docScrollWidth": 1425,
+      "overflowPx": 0,
+      "zeroHorizontalOverflow": true
+    }
+  ],
+  "overallPass": true
+}
