@@ -395,12 +395,10 @@ export function SequenceWorkbench({
     else s.setActiveTab('atlas');
   };
   const durations = getSequenceDurations(s.activeSteps);
+  const exerciseMap = new Map(s.exercises.map((ex) => [ex.id, ex]));
   const timingBreakdown = s.activeSteps.reduce(
     (sum, step) => {
-      const timing = getStepTiming(
-        step,
-        s.exercises.find((exercise) => exercise.id === step.exerciseId),
-      );
+      const timing = getStepTiming(step, exerciseMap.get(step.exerciseId));
       if (isRestStep(step)) sum.restSec += timing.totalSec;
       else {
         sum.movementSec += timing.movementSec;
@@ -414,7 +412,6 @@ export function SequenceWorkbench({
   const total = durations.totalSec;
   const target = s.activeTargetMinutes * 60;
   const delta = total - target;
-  const exerciseMap = new Map(s.exercises.map((ex) => [ex.id, ex]));
   const reviewedExerciseIds = new Set(
     s.activeSteps.flatMap((step) => {
       const exercise = exerciseMap.get(step.exerciseId);
@@ -585,16 +582,28 @@ export function SequenceWorkbench({
     setNotice(lastResultMessage);
   };
   const handleInsertReusableBlock = (blockId: string) => {
+    const beforeState = usePilatesStore.getState();
+    const snapshot = {
+      activeSequenceId: beforeState.activeSequenceId,
+      activeTitle: beforeState.activeTitle,
+      activeSubtitle: beforeState.activeSubtitle,
+      activeApparatus: beforeState.activeApparatus,
+      activeLevel: beforeState.activeLevel,
+      activeTargetMinutes: beforeState.activeTargetMinutes,
+      activeTargetGroupId: beforeState.activeTargetGroupId,
+      activeSteps: structuredClone(beforeState.activeSteps),
+      lastCriteria: beforeState.lastCriteria ? structuredClone(beforeState.lastCriteria) : null,
+      draftCriteria: beforeState.draftCriteria ? structuredClone(beforeState.draftCriteria) : null,
+    };
     const res = insertIdeaReusableBlockToCurrentClass(blockId);
     if (res.ok) {
       const current = usePilatesStore.getState();
-      if (current.activeSteps.some((step) => !step.selectedLayer)) {
-        usePilatesStore.setState({
-          activeSteps: current.activeSteps.map((step) =>
-            step.selectedLayer ? step : { ...step, selectedLayer: 'standard' },
-          ),
-        });
-      }
+      usePilatesStore.setState({
+        undoStack: [...beforeState.undoStack.slice(-19), snapshot],
+        activeSteps: current.activeSteps.map((step) =>
+          step.selectedLayer ? step : { ...step, selectedLayer: 'standard' },
+        ),
+      });
       setWorkflowStep('arrange');
     }
     setNotice(res.message);
@@ -1096,6 +1105,8 @@ export function SequenceWorkbench({
           data-plan-feedback
           className={`status plan-feedback ${s.generationError ? 'error' : ''}`}
           role={s.generationError ? 'alert' : 'status'}
+          aria-live={s.generationError ? 'assertive' : 'polite'}
+          aria-atomic="true"
         >
           {s.generationError || notice || s.saveFeedback}
         </p>
@@ -1341,8 +1352,13 @@ export function SequenceWorkbench({
                   <PfButton
                     variant="text"
                     onClick={() => {
+                      const canUndo = usePilatesStore.getState().undoStack.length > 0;
                       s.undoSequence();
-                      setNotice('');
+                      setNotice(
+                        canUndo
+                          ? `이전 순서로 되돌렸어요. 현재 총 ${usePilatesStore.getState().activeSteps.length}개 항목입니다.`
+                          : '되돌릴 이전 순서 기록이 없습니다.',
+                      );
                     }}
                   >
                     <RotateCcw size={14} />
@@ -1386,8 +1402,19 @@ export function SequenceWorkbench({
                             index={index}
                             lastIndex={s.activeSteps.length - 1}
                             onToggleLock={() => s.toggleStepLock(index)}
-                            onMove={(direction) => s.moveStep(index, direction)}
-                            onRemove={() => s.removeStep(index)}
+                            onMove={(direction) => {
+                              s.moveStep(index, direction);
+                              const nextIndex = direction === 'up' ? index - 1 : index + 1;
+                              setNotice(
+                                `${index + 1}번 휴식 순서를 ${nextIndex + 1}번째 위치로 바꿨어요. 되돌릴 수 있습니다.`,
+                              );
+                            }}
+                            onRemove={() => {
+                              s.removeStep(index);
+                              setNotice(
+                                `${index + 1}번 휴식을 수업안에서 뺐어요. 되돌릴 수 있습니다.`,
+                              );
+                            }}
                             onSetDuration={(minutes) => s.setRestDuration(index, minutes)}
                           />
                         </SequenceOrderCard>

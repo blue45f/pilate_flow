@@ -1,4 +1,4 @@
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { usePilatesStore } from "../store/usePilatesStore";
 import { syntheticPlanningExercise } from "../test/planningFixtures";
@@ -289,5 +289,27 @@ describe("workbench class-role headings", () => {
       fourExercises[2].nameKo,
     ]);
   });
+
+  it("announces the new target position on reorder and announces restoration on Undo in a polite live region", () => {
+    const { container, getByRole } = renderWorkbench();
+    const downBtn = getByRole("button", {
+      name: `1번 ${exercises[0].nameKo} 아래로 이동`,
+    });
+    fireEvent.click(downBtn);
+    const feedback = container.querySelector("[data-plan-feedback]");
+    expect(feedback).toHaveAttribute("role", "status");
+    expect(feedback).toHaveAttribute("aria-live", "polite");
+    expect(feedback).toHaveTextContent("2번째 위치로 바꿨어요. 되돌릴 수 있습니다.");
+
+    const undoBtn = getByRole("button", { name: "되돌리기" });
+    fireEvent.click(undoBtn);
+    expect(container.querySelector("[data-plan-feedback]")).toHaveTextContent(
+      "이전 순서로 되돌렸어요. 현재 총 3개 항목입니다.",
+    );
+    expect(usePilatesStore.getState().activeSteps[0]?.stepId).toBe(
+      "role-label-preparation",
+    );
+  });
 });
+
 

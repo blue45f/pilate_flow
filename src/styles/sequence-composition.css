@@ -127,12 +127,20 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  #root .sequence-drag-overlay,
+  #root .sequence-drop-indicator,
   #root .sequence-order-card,
+  #root .pf-sequence-block__header,
   #root .sequence-order-controls * {
-    animation: none;
-    transition: none;
-    scroll-behavior: auto;
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
+}
+
+/* Preserve 0 bottom margin on the last real card in a section when the fixed drag overlay clone is appended after it. */
+#root .vnext-shell .v2-workbench .pf-sequence-block__body > .sequence-order-card:nth-last-child(2):has(+ .sequence-drag-overlay) {
+  margin-bottom: 0;
 }
 
 /* Keep the explicit Add label from inheriting circular icon-only card geometry. */
@@ -187,6 +195,17 @@ html:has(#root .vnext-workbench),
 body:has(#root .vnext-workbench) {
   min-width: 0;
   overflow-x: clip;
+}
+
+@media (max-width: 480px) {
+  html[style*='zoom'] #root .vnext-workbench .flow-step .step-main {
+    grid-template-columns: 22px auto 1fr auto;
+    row-gap: 6px;
+  }
+  html[style*='zoom'] #root .vnext-workbench .flow-step .step-title {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
 }
 
 /* Progressive disclosure for saved movement ideas when activeSteps > 0 */
