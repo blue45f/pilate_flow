@@ -55,3 +55,17 @@ it('resets disclosure when the displayed exercise changes', async () => {
   expect(container.querySelectorAll('svg')).toHaveLength(1);
   expect(screen.queryByRole('button')).not.toBeInTheDocument();
 });
+
+
+it('shows specific source comparison without promoting anatomical or professional approval', async () => {
+  const exercise = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-clam')!;
+  const { container } = render(<MovementDiagramReference exercise={exercise} />);
+  await open(container);
+  const summary = screen.getByText('출처 대조 기록');
+  expect(summary.closest('details')).not.toHaveAttribute('open');
+  expect(screen.getByText(/오픈 북의 팔·몸통 회전을 제거/)).toBeInTheDocument();
+  expect(screen.getByText(/2D 좌표·가동범위/)).toBeInTheDocument();
+  expect(screen.getByText('South Tees NHS · The clam')).toHaveAttribute('href', 'https://www.southtees.nhs.uk/resources/the-clam/');
+  expect(container.querySelectorAll('svg')).toHaveLength(1);
+  expect(screen.queryByRole('button', { name: /재생/ })).not.toBeInTheDocument();
+});

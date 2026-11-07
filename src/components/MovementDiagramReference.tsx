@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { PilatesExercise } from '../types/pilates';
 import { toMovementPhaseDiagramProps } from '../features/motionCoverage/adapters';
 import { MovementPhaseDiagramSvg } from './MovementPhaseDiagramSvg';
+import { MOVEMENT_DIAGRAM_CORRECTIONS } from '../data/movementDiagramCorrections';
 import '../styles/movement-diagram-reference.css';
 
 /** Single authored reference only; no verified motion sequence or class-side instruction. */
@@ -36,6 +37,8 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
       }),
     [exercise],
   );
+  const correction = MOVEMENT_DIAGRAM_CORRECTIONS[exercise.id];
+  const matchedCorrection = correction?.archetypeId === props?.asset.archetypeId ? correction : null;
   return (
     <section className="movement-diagram-reference-content" aria-label="참고 자세 정지 그림">
       {!props ? (
@@ -46,6 +49,19 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
             직접 작성한 정지 그림 한 장이에요. 실제 단계별 프레임이 검증되지 않아 단계 탐색이나
             재생은 제공하지 않아요.
           </p>
+          {matchedCorrection && (
+            <details>
+              <summary>출처 대조 기록</summary>
+              <p>{matchedCorrection.reviewedScopeKo}</p>
+              <p>{matchedCorrection.correctionKo}</p>
+              <p className="muted">{matchedCorrection.limitationKo}</p>
+              <ul>
+                {matchedCorrection.sources.map((source) => (
+                  <li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a></li>
+                ))}
+              </ul>
+            </details>
+          )}
           <div className="movement-diagram-reference-canvas">
             <MovementPhaseDiagramSvg {...props} />
           </div>

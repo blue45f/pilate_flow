@@ -4127,7 +4127,75 @@ const EXPLICIT_EXERCISE_ARCHETYPE_IDS: Readonly<Record<string, string>> = Object
   'ex-global-reformer-03': 'kneeling-chest-expansion-triceps',
 });
 
+/**
+ * Source-text-constrained separation of two previously conflated mat patterns.
+ * See docs/clam-open-book-source-comparison.md. This corrects cross-movement
+ * motion leakage only; coordinates/ROM/anatomy are not clinically verified.
+ */
+function resolveSeparatedSideLyingBlueprint(exercise: PilatesExercise): ArchetypeRigBlueprint | null {
+  const isClam = exercise.id === 'original-mat-clam';
+  const isOpenBook = exercise.id === 'original-mat-open-book';
+  if ((!isClam && !isOpenBook) || exercise.apparatus !== 'mat' || exercise.bodyPosition !== 'side-lying') return null;
+  const base = ARCHETYPE_BY_ID.get('side-lying-clam-open-book')!;
+  const start = makeJointMap({
+    ...base.startJoints,
+    farShoulder: base.startJoints.shoulder,
+    farElbow: base.startJoints.elbow,
+    farWrist: base.startJoints.wrist,
+  });
+  // Retain the author's existing 2D projection, but never combine knee opening
+  // with arm/trunk opening. No source image or video coordinates were copied.
+  const middle = isClam
+    ? makeJointMap({ ...start, knee: base.middleJoints.knee })
+    : makeJointMap({ ...base.middleJoints, hip: start.hip, knee: start.knee, farShoulder: start.farShoulder, farElbow: start.farElbow, farWrist: start.farWrist });
+  const name = isClam ? '클램' : '오픈 북';
+  const movingJoints: readonly (keyof RigJointMap)[] = isClam
+    ? ['knee']
+    : ['head', 'neck', 'shoulder', 'elbow', 'wrist', 'hand', 'thoracic'];
+  const anchors: readonly (keyof RigJointMap)[] = isClam
+    ? ['pelvis', 'ankle']
+    : ['pelvis', 'knee', 'ankle'];
+  const anchorGuides = (joints: RigJointMap): readonly JointAlignmentGuide[] => [{
+    id: isClam ? 'clam-pelvis-ankle-still' : 'open-book-lower-body-still',
+    labelKo: isClam ? '골반·발 위치 유지' : '굽힌 무릎·골반 위치 유지',
+    cueKo: isClam ? '위 무릎을 여는 동안 몸통이 함께 뒤로 구르지 않도록 합니다.' : '팔을 열기 위해 무릎을 클램처럼 벌리지 않습니다.',
+    kind: 'anchor-lock', from: joints.pelvis, to: isClam ? joints.ankle : joints.knee,
+    cautionKo: '정확한 각도와 개인별 허용 범위를 이 2D 그림에서 판단하지 않습니다.',
+  }];
+  const movingStart = isClam ? start.knee : start.hand;
+  const movingMiddle = isClam ? middle.knee : middle.hand;
+  return {
+    ...base,
+    archetypeId: isClam ? 'mat-clam-isolated' : 'mat-open-book-isolated',
+    archetypeTitleKo: isClam ? '매트 클램 · 무릎 열기 분리' : '매트 오픈 북 · 상지·흉곽 열기 분리',
+    startJoints: start, middleJoints: middle, endJoints: start,
+    fixedAnchorJoints: anchors.map((joint) => ({ joint, defaultSurfaceKo: '출처 본문과 대조한 유지 부위 · 2D 개략 위치' })),
+    movingJoints,
+    phaseTitlesKo: isClam
+      ? ['옆으로 누워 무릎 포개기', '위쪽 무릎만 열기', '위쪽 무릎을 처음 위치로 복귀']
+      : ['옆으로 누워 팔을 앞으로 모으기', '위쪽 팔·흉곽 열기', '팔을 처음 위치로 복귀'],
+    phaseSummariesKo: isClam
+      ? ['발을 붙이고 무릎을 굽힌 옆으로 누운 자세입니다.', '골반과 몸통을 함께 돌리지 않고 위쪽 무릎을 엽니다. 오픈 북의 팔 회전은 포함하지 않습니다.', '무릎을 천천히 내려 처음 자세로 돌아옵니다.']
+      : ['무릎을 굽힌 옆으로 누운 자세에서 팔을 앞으로 모읍니다.', '굽힌 무릎 위치를 유지하며 위팔과 흉곽을 편한 범위에서 엽니다. 클램의 무릎 벌림은 포함하지 않습니다.', '사용자가 작성한 동작 계획에 따라 팔을 처음 위치로 되돌립니다.'],
+    breathCuesKo: ['편안한 호흡 유지 · 출처별 호흡 타이밍 미확정', '억지로 범위를 늘리지 않기', '호흡을 유지하며 제어해 복귀'],
+    alignments: { start: anchorGuides(start), middle: anchorGuides(middle), end: anchorGuides(start) },
+    directionVectors: {
+      start: [{ id: `${name}-setup`, labelKo: '준비 위치', kind: 'axial-lengthening', points: [start.pelvis, start.ankle], phaseScope: 'start' }],
+      middle: [{ id: `${name}-open`, labelKo: isClam ? '위 무릎 열기' : '위팔 열기', kind: 'limb-excursion', points: [movingStart, movingMiddle], phaseScope: 'start-to-middle' }],
+      end: [{ id: `${name}-return`, labelKo: '처음 위치로 복귀', kind: 'return-control', points: [movingMiddle, movingStart], phaseScope: 'middle-to-end' }],
+    },
+    poseDeltaSummary: {
+      startToMiddleKo: isClam ? '위 무릎만 이동하고 팔·몸통은 준비 위치를 유지합니다.' : '팔·흉곽을 열고 무릎·골반은 준비 위치를 유지합니다.',
+      middleToEndKo: '준비 자세의 좌표로 복귀합니다. 실제 시간·속도는 검증되지 않았습니다.',
+      invariantAnchorsKo: isClam ? '발과 골반 유지 · 몸통 회전 제외' : '무릎과 골반 유지 · 무릎 벌림 제외',
+      keyJointChangeKo: `${name}의 움직이는 부위를 분리한 2D 개략도 · 해부학적 실측 아님`,
+    },
+  };
+}
+
 function resolveArchetypeBlueprint(exercise: PilatesExercise): ArchetypeRigBlueprint {
+  const separated = resolveSeparatedSideLyingBlueprint(exercise);
+  if (separated) return separated;
   const explicitId = EXPLICIT_EXERCISE_ARCHETYPE_IDS[exercise.id];
   if (explicitId) {
     const found = ARCHETYPE_BY_ID.get(explicitId);

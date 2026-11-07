@@ -818,6 +818,7 @@ function renderKinematicFigureLayer(
   phaseSpec: PhasePoseSpec,
   activeSide: 'left' | 'right',
   mirrored: boolean,
+  showShoulderConnection = false,
 ): React.JSX.Element {
   const { joints } = phaseSpec;
   const nearSide = activeSide;
@@ -896,6 +897,15 @@ function renderKinematicFigureLayer(
         />
       </g>
 
+      {showShoulderConnection && (
+        <path
+          data-segment="schematic-shoulder-connection"
+          d={buildPolylinePath([j('neck'), j('shoulder'), j('thoracic')])}
+          stroke="#1c3f36"
+          strokeWidth={2.4}
+          fill="none"
+        />
+      )}
       {/* Articulated Spine & Torso Silhouette */}
       <g data-segment="spine-torso" fill="none">
         <path
@@ -1312,7 +1322,7 @@ export function MovementPhaseDiagramSvg({
         : null}
 
       {/* 4. Multi-Joint Human Figure Layer */}
-      {renderKinematicFigureLayer(phaseSpec, activeSide, mirrored)}
+      {renderKinematicFigureLayer(phaseSpec, activeSide, mirrored, asset.archetypeId === 'mat-clam-isolated' || asset.archetypeId === 'mat-open-book-isolated')}
 
       {/* 5. Joint Alignment Layer */}
       {showAlignment ? renderJointAlignmentLayer(phaseSpec, mirrored) : null}
