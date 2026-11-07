@@ -1366,6 +1366,7 @@ export function resolveTeachingHistoryView(
     groupId: log.groupId,
     groupName: log.groupName,
     taughtAt: log.taughtAt,
+    ...(snapshot?.dateOnly === true ? { dateOnly: true } : {}),
     apparatus: log.apparatus,
     level: log.level,
     rating: log.rating,
@@ -2892,7 +2893,9 @@ export function formatTeachingHistorySnapshotText(view: ResolvedTeachingHistoryV
   const headerLines = [
     `[진행 완료 수업 이력 스냅샷] ${view.sequenceTitle}`,
     `구분: 진행 완료 이력 (계획/템플릿과 분리된 불변 스냅샷)`,
-    `진행 날짜: ${dateText} (${view.taughtAt})`,
+    view.dateOnly === true
+      ? `진행 날짜: ${dateText} (시각 미기록)`
+      : `진행 날짜: ${dateText} (${view.taughtAt})`,
     `대상 반: ${view.groupName} · 기구: ${apparatusLabel} · 레벨: Lv. ${view.level}`,
     `시간 스냅샷: ${plannedText} / ${actualText}`,
     `만족도·체감 강도: ${view.rating}점 · ${intensityLabel}`,

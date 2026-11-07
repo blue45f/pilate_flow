@@ -240,6 +240,9 @@ const SessionLogForm: React.FC<
       actualRestDurationSec: context?.actualRestDurationSec,
       criteriaSnapshot: resolvedCriteriaSnapshot ?? undefined,
     });
+    // This form captures a calendar date, not an observed start time.
+    // Keep the existing ISO/fingerprint contract and annotate only this new snapshot.
+    programSnapshot.dateOnly = true;
     const payload = {
       ...parsed.data,
       actualDurationSec,

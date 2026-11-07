@@ -162,6 +162,8 @@ export interface TeachingProgramSnapshot {
   sourceSequenceVersion?: number;
   sourceProvenance?: SequenceSourceProvenance;
   taughtAt: string;
+  /** The date was entered without an observed class start time; preserve the ISO anchor. */
+  dateOnly?: boolean;
   capturedAt: string;
   completionFingerprint: string;
   timing: TeachingProgramTimingSnapshot;
@@ -285,6 +287,7 @@ export interface ResolvedTeachingHistoryView {
   groupId: string;
   groupName: string;
   taughtAt: string;
+  dateOnly?: boolean;
   apparatus: ApparatusType | 'mixed';
   level: DifficultyLevel;
   rating: 1 | 2 | 3 | 4 | 5;
