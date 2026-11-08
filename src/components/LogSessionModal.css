@@ -264,7 +264,7 @@
   margin: 0;
 }
 
-.class-log-modal .class-log-footer:has(> [role='alert']) .teaching-form-actions,
-.class-log-modal .class-log-footer:has(> [role='alert']) .teaching-log-footnote {
+.class-log-modal .class-log-footer > [role='alert'] ~ .teaching-form-actions,
+.class-log-modal .class-log-footer > [role='alert'] ~ .teaching-log-footnote {
   grid-row: 2;
 }

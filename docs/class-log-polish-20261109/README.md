@@ -2,7 +2,7 @@
 
 ## Scope
 
-Follow-up to the class-log design already integrated in main. The local three-device concept image was visually inspected: 1599 × 984, SHA-256 `e35b0e3257be8b0a59adaa7c8df3ca98410e710a7184068a1890edee9a947d8b`. It is a design proposal with example inputs, not an operating product screenshot.
+Follow-up to the class-log design already integrated in main. The local three-device concept image was visually inspected: 1599 × 984, SHA-256 `e35b0e3257be8b0a59adaa7c8df3ca98410e710a7184068a1890edee9a947d8b`. The newly attached `(1)` file has different PNG bytes (RGBA encoding), but an independent RGBA pixel comparison confirmed exact visual equality: pixel SHA-256 `a3df3fac183344abfa139872828f2c4adf3513e7be44d303c0f78d012aefc8d7`. It is a design proposal with example inputs, not an operating product screenshot.
 
 Changes are confined to `LogSessionModal.tsx`, its private CSS and its presentation tests:
 
@@ -35,4 +35,10 @@ Representative current screenshots and visible-flow results accompany this repor
 
 ## Release boundary
 
-No deployment command was run. The repository workflow is a tracked-file secret scan; package.json exposes Firebase deployment as an explicit manual script. This observation does not prove the absence of separately configured hosting hooks. Exact remote integration and aggregate results are recorded separately by the integrating worker.
+No deployment command was run. The repository workflow is a tracked-file secret scan; package.json exposes Firebase deployment as an explicit manual script. The GitHub API also confirmed Pages uses the separate `gh-pages` branch (`legacy`, `/`), not `main`. Recent main pushes ran only the secret scan; the latest Pages deployment used a different gh-pages commit. Neither gh-pages nor Firebase deployment is changed here. Exact remote integration and aggregate results are recorded separately by the integrating worker.
+
+## Integration checks
+
+With upstream main `38ac8db` merged into candidate `8a2906b`, the entire unfiltered Vitest suite ran: 257 files, 2,715 tests; 256 files / 2,714 tests passed. The only failure is the existing `dynamicWorkflowFullCompletion.test.tsx:478` expectation that `ex-cooldown-01` has a rotation disclosure. The schedule worker independently reproduced that mismatch on the unchanged baseline and on upstream main. Neither that assertion nor the diagram mapping was changed. The real Chromium/PDF suite passed without exclusions.
+
+The existing visible-flow runner now opens a saved card's optional More disclosure when necessary, so its actual record/timer entry works both before and after the independent saved-card simplification. All flow assertions remain.

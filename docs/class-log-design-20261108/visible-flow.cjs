@@ -68,6 +68,20 @@ fs.mkdirSync(out, { recursive: true });
         s.getState().saveCurrentSequenceToBinder();
         s.setState({ activeTab: 'binder' });
       });
+      // The saved-card view may keep secondary tools behind its visible disclosure.
+      // Open it through the same button a user sees, never by a hidden DOM click.
+      const revealSavedTools = async (actionName) => {
+        const card = p.locator('.teaching-sequence-card').filter({
+          has: p.getByRole('heading', { name: '저장한 수업 실제 진입 · 합성 QA', exact: true }),
+        });
+        await card.waitFor({ state: 'visible' });
+        const action = card.getByRole('button', { name: actionName, exact: true });
+        if (!(await action.isVisible())) {
+          await card.getByRole('button', { name: /더보기$/ }).click();
+        }
+        await action.waitFor({ state: 'visible' });
+      };
+      await revealSavedTools('이미 진행한 수업 기록하기');
       const trigger = p.getByRole('button', { name: '이미 진행한 수업 기록하기', exact: true });
       await trigger.waitFor({ state: 'visible' });
       assert(await trigger.isVisible());
@@ -156,6 +170,7 @@ fs.mkdirSync(out, { recursive: true });
         .getByRole('button', { name: /^(저장|저장한 플로우)$/ })
         .first()
         .click();
+      await revealSavedTools('수업 시작');
       await p.getByRole('button', { name: '수업 시작', exact: true }).click();
       await p.getByRole('button', { name: '수업 시작', exact: true }).click();
       await p.waitForTimeout(1300);
