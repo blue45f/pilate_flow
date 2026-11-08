@@ -1,9 +1,14 @@
 import type { ClassHistoryLogWithSnapshot } from '../types/teachingHistorySnapshot';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { syntheticPlanningExercise } from '../test/planningFixtures';
 import { cloudBackupDataSchema } from '../schemas/cloudBackupSchema';
 import { parseRecoverableNativeBackup } from '../../backend/backupValidation';
-import { usePilatesStore, type PilatesStudioState } from '../store/usePilatesStore';
+import {
+  getRecoveryStorageStatus,
+  usePilatesStore,
+  type PilatesStudioState,
+} from '../store/usePilatesStore';
+import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import { backupRecoveryStateFingerprint, inspectBackupRecovery } from './backupRecoveryInspection';
 import {
   buildTeachingProgramSnapshot,
@@ -129,7 +134,9 @@ describe('independent main compatibility review', () => {
   it('accepts a deleted catalog movement backed by valid inline program snapshots', () => {
     const payload = data();
     payload.exercises = [];
-    const result = inspectBackupRecovery(raw(payload), current());
+    const serialized = raw(payload);
+    expect(parseRecoverableNativeBackup(serialized).historyLogs).toHaveLength(1);
+    const result = inspectBackupRecovery(serialized, current());
     expect(result).toMatchObject({ success: true });
   });
   it('preserves modern fields when restoring programSnapshot without stepsSnapshot', () => {
@@ -331,5 +338,148 @@ describe('rollback write verification', () => {
     expect(checks).toBe(2);
     expect(current.exercises).toEqual(state.exercises);
     expect(getLatestBackupRollbackPoint()).not.toBeNull();
+  });
+
+  it('reports zero false conflicts when re-importing semantically identical study, schedule, and dated planning with reversed key order', () => {
+    const seq = {
+      id: 'seq-key-order-1',
+      title: '키 순서 무관 비교 검증 (합성)',
+      subtitle: '',
+      apparatus: 'mat' as const,
+      level: '1.0' as const,
+      focusTags: ['core'],
+      targetMinutes: 50,
+      steps: [
+        {
+          stepId: 'step-key-order-1',
+          order: 1,
+          blockCategory: 'core' as const,
+          exerciseId: ex.id,
+          durationMin: 50,
+          selectedLayer: 'standard' as const,
+          locked: true,
+        },
+      ],
+      createdAt: now,
+      updatedAt: now,
+      taughtCount: 0,
+    };
+    const baseState: PilatesStudioState = {
+      ...simpleState(),
+      savedSequences: [seq],
+      activeSequenceId: seq.id,
+      activeTitle: seq.title,
+      activeSubtitle: seq.subtitle,
+      activeApparatus: seq.apparatus,
+      activeLevel: seq.level,
+      activeTargetMinutes: seq.targetMinutes,
+      activeSteps: [
+        {
+          locked: true,
+          selectedLayer: 'standard',
+          durationMin: 50,
+          exerciseId: ex.id,
+          blockCategory: 'core',
+          order: 1,
+          stepId: 'step-key-order-1',
+        },
+      ],
+      instructorStudyState: {
+        bookmarkedExerciseIds: [ex.id],
+        rehearsalCueHidden: true,
+        completedTutorialTaskIds: ['atlas-search'],
+      },
+      datedSequencePlanning: {
+        assignments: [
+          {
+            id: 'assign-key-order-1',
+            classId: 'cls-key-order-1',
+            originalDate: '2026-11-09',
+            state: 'draft',
+            sourceSequenceId: seq.id,
+            sourceSequenceUpdatedAt: now,
+            sequenceSnapshot: seq,
+            occurrenceSnapshot: {
+              date: '2026-11-09',
+              startTime: '10:00',
+              endTime: '10:50',
+              locationId: 'loc-key-order-1',
+            },
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
+      },
+    };
+    usePilatesStore.setState(baseState);
+    const exported = JSON.parse(usePilatesStore.getState().exportBackup());
+    expect(exported.data.activeDraft).toBeUndefined();
+
+    // Reverse object key order on instructorStudyState and datedSequencePlanning
+    const reversedPayload = {
+      ...exported.data,
+      instructorStudyState: {
+        completedTutorialTaskIds: ['atlas-search'],
+        rehearsalCueHidden: true,
+        bookmarkedExerciseIds: [ex.id],
+      },
+      datedSequencePlanning: {
+        assignments: [
+          {
+            updatedAt: now,
+            createdAt: now,
+            occurrenceSnapshot: {
+              locationId: 'loc-key-order-1',
+              endTime: '10:50',
+              startTime: '10:00',
+              date: '2026-11-09',
+            },
+            sequenceSnapshot: seq,
+            sourceSequenceUpdatedAt: now,
+            sourceSequenceId: seq.id,
+            state: 'draft',
+            originalDate: '2026-11-09',
+            classId: 'cls-key-order-1',
+            id: 'assign-key-order-1',
+          },
+        ],
+      },
+    };
+    const inspection = inspectBackupRecovery(raw(reversedPayload), usePilatesStore.getState());
+    expect(inspection.success).toBe(true);
+    if (inspection.success) {
+      expect(inspection.summary.changed).toBe(false);
+      expect(inspection.summary.conflicts).toBe(0);
+    }
+  });
+
+  it('atomically preserves in-memory and disk state when localStorage.setItem throws QuotaExceededError during restoreBackup', async () => {
+    usePilatesStore.setState(simpleState());
+    await Promise.resolve();
+    const before = usePilatesStore.getState();
+    const diskBefore = localStorage.getItem(RECOVERY_STORAGE_KEY);
+    expect(getRecoveryStorageStatus().ok).toBe(true);
+
+    const incomingEx = { ...structuredClone(ex), id: 'ex-quota-atomic-synthetic' };
+    const candidateRaw = raw({
+      exercises: [incomingEx],
+      savedSequences: [],
+      classGroups: [],
+      historyLogs: [],
+    });
+    const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Synthetic restore quota failure', 'QuotaExceededError');
+    });
+
+    const outcome = before.restoreBackup(candidateRaw);
+    expect(outcome.success).toBe(false);
+    expect(usePilatesStore.getState()).toBe(before);
+    expect(localStorage.getItem(RECOVERY_STORAGE_KEY)).toBe(diskBefore);
+    expect(spy.mock.calls.filter(([key]) => key === RECOVERY_STORAGE_KEY)).toHaveLength(1);
+
+    await Promise.resolve();
+    expect(usePilatesStore.getState()).toBe(before);
+    spy.mockRestore();
+    expect(getRecoveryStorageStatus().ok).toBe(true);
   });
 });

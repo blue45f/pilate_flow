@@ -1,7 +1,10 @@
 import { compareTeachingHistoryDates, getTeachingHistoryDateSource } from '../utils/teachingHistoryDate';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { createRecoveryStorageGuard, RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
-import { inspectBackupRecovery } from '../utils/backupRecoveryInspection';
+import {
+  canonicalRecoveryContent,
+  inspectBackupRecovery,
+} from '../utils/backupRecoveryInspection';
 import { assessSequenceMotionStudyBinding } from '../utils/sequenceMotionBinding';
 import type { BackupRecoveryOptions } from '../utils/backupRecoveryInspection';
 import { resolveDatedPlanOccurrence, getDatedPlanWarnings } from '../utils/datedSequencePlanning';
@@ -374,6 +377,7 @@ export function getRecoveryStorageStatus(expectedFingerprint?: string) {
 
 // Storage errors must not interrupt editing or claim a successful browser save.
 let lastStorageError: string | null = null;
+let suppressRecoveryRevertWrite = false;
 function storageResult(error: unknown | null): void {
   lastStorageError =
     error === null
@@ -404,6 +408,7 @@ const browserStorage = createJSONStorage(() => ({
     }
   },
   setItem: (name: string, value: string) => {
+    if (suppressRecoveryRevertWrite) return;
     try {
       localStorage.setItem(name, value);
       if (name === RECOVERY_STORAGE_KEY) recoveryStorageGuard.observedWrite(value);
@@ -550,10 +555,10 @@ function mergeSchedule(
   let added = 0;
   let conflicts = 0;
   for (const key of ['locations', 'classes', 'exceptions'] as const) {
-    const local = new Map(existing[key].map((item) => [item.id, JSON.stringify(item)]));
+    const local = new Map(existing[key].map((item) => [item.id, canonicalRecoveryContent(item)]));
     for (const item of incoming[key]) {
       if (!local.has(item.id)) added += 1;
-      else if (local.get(item.id) !== JSON.stringify(item)) conflicts += 1;
+      else if (local.get(item.id) !== canonicalRecoveryContent(item)) conflicts += 1;
     }
   }
   const parsed = instructorScheduleSchema.safeParse({
@@ -741,7 +746,7 @@ function draftForBackup(state: PilatesStudioState): SavedSequence | undefined {
     saved.apparatus === state.activeApparatus &&
     saved.level === state.activeLevel &&
     saved.targetMinutes === state.activeTargetMinutes &&
-    JSON.stringify(saved.steps) === JSON.stringify(state.activeSteps)
+    canonicalRecoveryContent(saved.steps) === canonicalRecoveryContent(state.activeSteps)
   )
     return undefined;
   const contents = JSON.stringify(snapshot(state));
@@ -2393,7 +2398,8 @@ export const usePilatesStore = create<PilatesStudioState>()(
       restoreBackup: (raw, options) => {
         const disk = getRecoveryStorageStatus(options?.expectedStorageFingerprint);
         if (!disk.ok) return { success: false, message: disk.message };
-        const inspection = inspectBackupRecovery(raw, get(), options);
+        const before = get();
+        const inspection = inspectBackupRecovery(raw, before, options);
         // Failure and no-op results stay local to the caller; even a feedback-only set persists.
         if (!inspection.success) return { success: false, message: inspection.message };
         if (!inspection.summary.changed)
@@ -2407,6 +2413,30 @@ export const usePilatesStore = create<PilatesStudioState>()(
         const finalDisk = getRecoveryStorageStatus(disk.fingerprint);
         if (!finalDisk.ok) return { success: false, message: finalDisk.message };
         set({ ...inspection.next, saveFeedback: inspection.message, generationError: null });
+        const postDisk = getRecoveryStorageStatus();
+        if (!postDisk.ok) {
+          const message = lastStorageError ?? postDisk.message;
+          lastStorageError = before.persistenceError;
+          suppressRecoveryRevertWrite = true;
+          try {
+            set(before, true);
+          } finally {
+            suppressRecoveryRevertWrite = false;
+          }
+          try {
+            const intactRaw = localStorage.getItem(RECOVERY_STORAGE_KEY);
+            const intactStatus = recoveryStorageGuard.check(finalDisk.fingerprint);
+            if (!intactStatus.ok) {
+              recoveryStorageGuard.observedWrite(intactRaw);
+              if (!recoveryStorageGuard.check(finalDisk.fingerprint).ok) {
+                recoveryStorageGuard.observedWriteFailure();
+              }
+            }
+          } catch {
+            recoveryStorageGuard.observedWriteFailure();
+          }
+          return { success: false, message };
+        }
         return {
           success: true,
           message: lastStorageError

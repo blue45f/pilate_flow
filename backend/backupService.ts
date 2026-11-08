@@ -88,21 +88,7 @@ function parseBackup(raw: string): void {
       '서버 백업은 2MB까지 지원합니다. 전체 JSON 백업을 이용해 주세요.',
     );
   try {
-    const data = parseRecoverableNativeBackup(raw);
-    const ids = new Set(data.exercises.map((exercise) => exercise.id));
-    const sequences = [...data.savedSequences, ...(data.activeDraft ? [data.activeDraft] : [])];
-    const references = [
-      ...sequences.flatMap((sequence) =>
-        sequence.steps.filter((step) => step.kind !== 'rest').map((step) => step.exerciseId),
-      ),
-      ...data.historyLogs.flatMap((log) => [
-        ...log.exerciseIds,
-        ...(log.stepsSnapshot
-          ?.filter((step) => step.kind !== 'rest')
-          .map((step) => step.exerciseId) ?? []),
-      ]),
-    ];
-    if (references.some((id) => !ids.has(id))) throw new Error('Missing exercise');
+    parseRecoverableNativeBackup(raw);
   } catch {
     throw new BackupError(
       'invalid_backup',

@@ -3,6 +3,7 @@ import type { z } from 'zod';
 import { INITIAL_EXERCISES } from '../src/data/pilatesCatalog';
 import { usePilatesStore } from '../src/store/usePilatesStore';
 import { inspectBackupRecovery } from '../src/utils/backupRecoveryInspection';
+import { createTeachingExerciseSnapshot } from '../src/utils/teachingHistorySnapshot';
 import { cloudBackupDataSchema } from '../src/schemas/cloudBackupSchema';
 import { createBackupService } from './backupService';
 import type { BackupRecord, BackupRepository } from './backupService';
@@ -146,12 +147,32 @@ const rejectedCases: { label: string; change: (wire: Wire) => void }[] = [
       wire.exportedAt = '2026-11-05T01:00:00.1234567890Z';
     },
   },
+  {
+    label: 'duplicate stepId inside a saved sequence',
+    change: (wire) => {
+      const firstStep = structuredClone(wire.data.savedSequences[0]!.steps[0]!);
+      wire.data.savedSequences[0]!.steps.push({ ...firstStep, order: 2 });
+    },
+  },
 ];
 
 const acceptedCases: { label: string; raw: () => string }[] = [
   {
     label: 'actual current UI canonical export',
     raw: () => usePilatesStore.getState().exportBackup(),
+  },
+  {
+    label: 'deleted custom exercise backed by valid inline step.exerciseSnapshot',
+    raw: () => {
+      const wire = fixture();
+      const ex = wire.data.exercises[0]!;
+      wire.data.savedSequences[0]!.steps[0]!.exerciseSnapshot = createTeachingExerciseSnapshot(
+        ex,
+        '2026-11-05T01:00:00.000Z',
+      );
+      wire.data.exercises = [];
+      return JSON.stringify(wire);
+    },
   },
   {
     label: 'supported empty native export with optionals omitted',

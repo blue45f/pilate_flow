@@ -240,20 +240,24 @@ export function setDatedPlanState(input: {
   }
 }
 
-/** Exact, deterministic JSON token for a reviewed source, including same-timestamp edits. */
-export function getDatedPlanSourceFingerprint(sequence: SavedSequence): string {
-  const checked = cloneAndFreezePlan(sequenceSchema.parse(sequence));
-  const canonical = (value: unknown): unknown => {
-    if (Array.isArray(value)) return value.map(canonical);
-    if (value !== null && typeof value === 'object')
+function canonicalJson(value: unknown): string {
+  const canonical = (entry: unknown): unknown => {
+    if (Array.isArray(entry)) return entry.map(canonical);
+    if (entry !== null && typeof entry === 'object')
       return Object.fromEntries(
-        Object.entries(value)
+        Object.entries(entry)
           .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
           .map(([key, item]) => [key, canonical(item)]),
       );
-    return value;
+    return entry;
   };
-  return JSON.stringify(canonical(checked));
+  return JSON.stringify(canonical(value));
+}
+
+/** Exact, deterministic JSON token for a reviewed source, including same-timestamp edits. */
+export function getDatedPlanSourceFingerprint(sequence: SavedSequence): string {
+  const checked = cloneAndFreezePlan(sequenceSchema.parse(sequence));
+  return canonicalJson(checked);
 }
 
 /** Explicit revision of one occurrence; never changes its identity or drops earlier versions. */
@@ -394,7 +398,7 @@ export function mergeDatedSequencePlanning(
       throw new Error('서로 다른 날짜별 계획이 같은 ID를 사용합니다. 현재 자료를 유지했습니다.');
     const existing = byKey.get(key);
     if (existing) {
-      if (JSON.stringify(existing) !== JSON.stringify(item)) conflictKeys.push(key);
+      if (canonicalJson(existing) !== canonicalJson(item)) conflictKeys.push(key);
       continue;
     }
     assignments.push(item);
