@@ -574,6 +574,7 @@ describe('Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit 
     expect(storeAfterHydrate.activeApparatus).toBe('reformer');
     expect(storeAfterHydrate.activeLevel).toBe('1.5');
     expect(storeAfterHydrate.activeTargetMinutes).toBe(50);
+    expect(storeAfterHydrate.exerciseBrowseScope).toBe('all');
     expect(storeAfterHydrate.activeSteps).toHaveLength(10);
     expect(storeAfterHydrate.savedSequences).toHaveLength(2);
     expect(storeAfterHydrate.historyLogs).toHaveLength(1);
@@ -630,6 +631,7 @@ describe('Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit 
     expect(offlineNavV2.response?.status).toBe(200);
     await usePilatesStore.persist.rehydrate();
 
+    expect(usePilatesStore.getState().exerciseBrowseScope).toBe('all');
     const finalDigest = captureStorageSnapshotDigest(localStorage);
     expect(verifyStorageSnapshotIntegrity(baselineDigest, finalDigest)).toEqual({
       intact: true,
