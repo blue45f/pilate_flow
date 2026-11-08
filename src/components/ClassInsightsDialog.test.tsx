@@ -269,4 +269,31 @@ describe('read-only class insights dialog', () => {
     expect(push).not.toHaveBeenCalled();
     expect(replace).not.toHaveBeenCalled();
   });
+
+  it('exposes progressbar ARIA semantics on LabeledBar and handles 200-character titles and long body tags cleanly', () => {
+    const longTitle = '수업제목'.repeat(50);
+    const longTag = '척추분절안정성및심부코어협응력강화태그'.repeat(10);
+    render(
+      <ClassInsightsDialog
+        {...props({
+          title: longTitle,
+          exercises: [{ ...exercise, targetMuscles: [longTag] }],
+        })}
+      />,
+    );
+
+    expect(screen.getByText(new RegExp(longTitle))).toBeVisible();
+    const tagList = screen.getByRole('list', { name: '부위 태그 목록' });
+    expect(within(tagList).getByText(longTag)).toBeVisible();
+
+    const movementBar = screen.getByRole('progressbar', { name: '동작 비율' });
+    expect(movementBar).toHaveAttribute('aria-valuemin', '0');
+    expect(movementBar).toHaveAttribute('aria-valuemax', '100');
+    expect(movementBar).toHaveAttribute('aria-valuenow', '60');
+
+    const restBar = screen.getByRole('progressbar', { name: '휴식 비율' });
+    expect(restBar).toHaveAttribute('aria-valuemin', '0');
+    expect(restBar).toHaveAttribute('aria-valuemax', '100');
+    expect(restBar).toHaveAttribute('aria-valuenow', '20');
+  });
 });
