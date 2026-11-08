@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useId, useMemo, useState } from 'react';
 import {
   calculateCorePhaseJointDelta,
@@ -19,7 +20,6 @@ import type {
   VisualPhaseId,
 } from '../data/movementVisualRigCatalog';
 import {
-  MovementPhaseDiagramSvg,
   MovementTriptychDiagramSvg,
   type MovementPhaseDiagramSvgProps,
   type MovementTriptychDiagramSvgProps,

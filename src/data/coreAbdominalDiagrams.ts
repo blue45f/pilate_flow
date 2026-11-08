@@ -133,6 +133,8 @@ export interface CoreAbdominalDiagramSpec {
   readonly catalogVisualAsset: CatalogMovementVisualAsset;
 }
 
+function definePoseSpec(spec: PhasePoseSpec): PhasePoseSpec { return Object.freeze(spec); }
+function defineCoreSpec(spec: CoreAbdominalDiagramSpec): CoreAbdominalDiagramSpec { return Object.freeze(spec); }
 function pt(x: number, y: number): Point2D {
   const clampedX = Math.round(Math.min(304, Math.max(16, x)));
   const clampedY = Math.round(Math.min(184, Math.max(16, y)));
@@ -334,7 +336,7 @@ const hundredEndJoints: RigJointMap = Object.freeze({
   farToe: pt(220, 88),
 });
 
-const hundredStartPose: PhasePoseSpec = Object.freeze({
+const hundredStartPose: PhasePoseSpec = definePoseSpec({
   phaseId: 'start',
   badgeKo: '시작 자세 (준비·정렬)',
   shortTitleKo: '상체 견갑골 하각 컬업 · 90/90 테이블탑 · 수평 암 리치',
@@ -387,7 +389,7 @@ const hundredStartPose: PhasePoseSpec = Object.freeze({
   ],
 });
 
-const hundredMiddlePose: PhasePoseSpec = Object.freeze({
+const hundredMiddlePose: PhasePoseSpec = definePoseSpec({
   phaseId: 'middle',
   badgeKo: '중간 자세 (최대 가동·정점)',
   shortTitleKo: '양다리 45° 사선 신전 유지 · 상지 5박 들숨/5박 날숨 상하 펌핑',
@@ -447,7 +449,7 @@ const hundredMiddlePose: PhasePoseSpec = Object.freeze({
   ],
 });
 
-const hundredEndPose: PhasePoseSpec = Object.freeze({
+const hundredEndPose: PhasePoseSpec = definePoseSpec({
   phaseId: 'end',
   badgeKo: '끝 자세 (제어 복귀·마무리)',
   shortTitleKo: '상체 컬업 유지한 채 90/90 테이블탑 회수 후 순차 하강',
@@ -491,7 +493,7 @@ const hundredEndPose: PhasePoseSpec = Object.freeze({
   ],
 });
 
-const HUNDRED_SPEC: CoreAbdominalDiagramSpec = Object.freeze({
+const HUNDRED_SPEC: CoreAbdominalDiagramSpec = defineCoreSpec({
   coreId: 'core-hundred',
   primaryExerciseId: 'ex-core-01',
   linkedCatalogExerciseIds: ['ex-core-01', 'core-hundred', 'mat-hundred'],
@@ -812,7 +814,7 @@ const HUNDRED_SPEC: CoreAbdominalDiagramSpec = Object.freeze({
     nameEn: 'The Hundred (Abdominal Stability)',
     apparatus: 'mat',
     bodyPosition: 'supine',
-    blockCategory: 'core_abdominal',
+    blockCategory: 'core',
     spinalPlanes: ['flexion'],
     isUnilateral: false,
     archetypeId: 'core-hundred-2d-v1',
@@ -919,7 +921,7 @@ const slsEndJoints: RigJointMap = Object.freeze({
   farToe: pt(192, 96),
 });
 
-const slsStartPose: PhasePoseSpec = Object.freeze({
+const slsStartPose: PhasePoseSpec = definePoseSpec({
   phaseId: 'start',
   badgeKo: '시작 자세 (준비·정렬)',
   shortTitleKo: '상체 컬업 · 한쪽 무릎 가슴 당김 및 양손 정강이/무릎 가이드 세팅',
@@ -971,7 +973,7 @@ const slsStartPose: PhasePoseSpec = Object.freeze({
   ],
 });
 
-const slsMiddlePose: PhasePoseSpec = Object.freeze({
+const slsMiddlePose: PhasePoseSpec = definePoseSpec({
   phaseId: 'middle',
   badgeKo: '중간 자세 (최대 가동·정점)',
   shortTitleKo: '당긴 정강이 양손 지지 + 반대쪽 다리 45° 사선 완전 신전',
@@ -1035,7 +1037,7 @@ const slsMiddlePose: PhasePoseSpec = Object.freeze({
   ],
 });
 
-const slsEndPose: PhasePoseSpec = Object.freeze({
+const slsEndPose: PhasePoseSpec = definePoseSpec({
   phaseId: 'end',
   badgeKo: '끝 자세 (제어 복귀·마무리)',
   shortTitleKo: '상체·골반 고정 유지한 채 좌우 다리 교대 스위치 및 그립 전환',
@@ -1078,7 +1080,7 @@ const slsEndPose: PhasePoseSpec = Object.freeze({
   ],
 });
 
-const SINGLE_LEG_STRETCH_SPEC: CoreAbdominalDiagramSpec = Object.freeze({
+const SINGLE_LEG_STRETCH_SPEC: CoreAbdominalDiagramSpec = defineCoreSpec({
   coreId: 'core-single-leg-stretch',
   primaryExerciseId: 'original-mat-single-leg-stretch',
   linkedCatalogExerciseIds: ['original-mat-single-leg-stretch', 'core-single-leg-stretch'],
@@ -1376,7 +1378,7 @@ const SINGLE_LEG_STRETCH_SPEC: CoreAbdominalDiagramSpec = Object.freeze({
     nameEn: 'Single Leg Stretch (Abdominal Stability)',
     apparatus: 'mat',
     bodyPosition: 'supine',
-    blockCategory: 'core_abdominal',
+    blockCategory: 'core',
     spinalPlanes: ['flexion'],
     isUnilateral: true,
     archetypeId: 'core-single-leg-stretch-2d-v1',
@@ -1483,7 +1485,7 @@ const dlsEndJoints: RigJointMap = Object.freeze({
   farToe: pt(192, 96),
 });
 
-const dlsStartPose: PhasePoseSpec = Object.freeze({
+const dlsStartPose: PhasePoseSpec = definePoseSpec({
   phaseId: 'start',
   badgeKo: '시작 자세 (준비·정렬)',
   shortTitleKo: '상체 컬업 · 양 무릎 가슴 쪽 밀착 및 양손 정강이/발목 감싸기',
@@ -1526,7 +1528,7 @@ const dlsStartPose: PhasePoseSpec = Object.freeze({
   ],
 });
 
-const dlsMiddlePose: PhasePoseSpec = Object.freeze({
+const dlsMiddlePose: PhasePoseSpec = definePoseSpec({
   phaseId: 'middle',
   badgeKo: '중간 자세 (최대 가동·정점)',
   shortTitleKo: '상체 컬업 고정 유지 · 양팔 귀 옆 오버헤드 & 양다리 45° 양방향 동시 신전',
@@ -1586,7 +1588,7 @@ const dlsMiddlePose: PhasePoseSpec = Object.freeze({
   ],
 });
 
-const dlsEndPose: PhasePoseSpec = Object.freeze({
+const dlsEndPose: PhasePoseSpec = definePoseSpec({
   phaseId: 'end',
   badgeKo: '끝 자세 (제어 복귀·마무리)',
   shortTitleKo: '날숨에 양팔 넓은 원형 스윕(Arm Circle) & 양 무릎 접어 정강이 그립 복귀',
@@ -1636,7 +1638,7 @@ const dlsEndPose: PhasePoseSpec = Object.freeze({
   ],
 });
 
-const DOUBLE_LEG_STRETCH_SPEC: CoreAbdominalDiagramSpec = Object.freeze({
+const DOUBLE_LEG_STRETCH_SPEC: CoreAbdominalDiagramSpec = defineCoreSpec({
   coreId: 'core-double-leg-stretch',
   primaryExerciseId: 'ex-core-03',
   linkedCatalogExerciseIds: ['ex-core-03', 'core-double-leg-stretch'],
@@ -1947,7 +1949,7 @@ const DOUBLE_LEG_STRETCH_SPEC: CoreAbdominalDiagramSpec = Object.freeze({
     nameEn: 'Double Leg Stretch (Abdominal Stability)',
     apparatus: 'mat',
     bodyPosition: 'supine',
-    blockCategory: 'core_abdominal',
+    blockCategory: 'core',
     spinalPlanes: ['flexion'],
     isUnilateral: false,
     archetypeId: 'core-double-leg-stretch-2d-v1',
