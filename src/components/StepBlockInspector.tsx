@@ -18,6 +18,7 @@ import { assessSequenceMotionStudyBinding } from '../utils/sequenceMotionBinding
 import { StepTimeEstimateEditor } from './StepTimeEstimateEditor';
 import { StepMotionStudyPicker } from './StepMotionStudyPicker';
 import { ExerciseEvidencePanel } from './ExerciseEvidencePanel';
+import { MovementVisualGuideCard } from './MovementVisualGuideCard';
 import '../styles/step-inspector.css';
 
 interface Props {
@@ -94,6 +95,7 @@ export function StepBlockInspector({
     return { ...draftFrom(step), ...saved, layer: saved?.layer ?? step.selectedLayer };
   });
   const [message, setMessage] = useState('');
+  const [showVisualGuide, setShowVisualGuide] = useState(false);
   useEffect(() => {
     onDraftChange?.({ stepId: step.stepId, exerciseId: step.exerciseId, base, draft });
   }, [onDraftChange, step.stepId, step.exerciseId, base, draft]);
@@ -103,6 +105,7 @@ export function StepBlockInspector({
     current.stepId !== step.stepId ||
     current.exerciseId !== base.exerciseId ||
     JSON.stringify(current) !== JSON.stringify(base);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(draftFrom(base));
   const disabled = !!step.locked || !exercise || isRestStep(step);
   if (isRestStep(step)) return null;
   const timing = getStepTiming(step, exercise);
@@ -422,14 +425,52 @@ export function StepBlockInspector({
         )}
         {step.locked && <p className="muted">잠금을 해제한 뒤 계획을 수정할 수 있습니다.</p>}
         {message && (
-          <p role="alert" className="status error">
+          <p
+            role={
+              message === '수정한 입력값을 적용 전 상태로 되돌렸습니다.' ? 'status' : 'alert'
+            }
+            className={
+              message === '수정한 입력값을 적용 전 상태로 되돌렸습니다.'
+                ? 'status'
+                : 'status error'
+            }
+          >
             {message}
           </p>
+        )}
+        {exercise && (
+          <details
+            className="step-inspector-visual-guide"
+            data-testid="step-inspector-visual-guide"
+            open={showVisualGuide}
+            onToggle={(event) => setShowVisualGuide(event.currentTarget.open)}
+          >
+            <summary>시작·중간·끝 관절 정렬 도해 및 유사 동작 차이 비교</summary>
+            {showVisualGuide && (
+              <MovementVisualGuideCard
+                exercise={exercise}
+                availablePeers={store.exercises}
+                initialPhase="middle"
+              />
+            )}
+          </details>
         )}
         {exercise && <ExerciseEvidencePanel exercise={exercise} step={step} />}
         <div className="step-inspector-footer">
           <button type="button" className="text-button" disabled={disabled} onClick={onReplace}>
             <RefreshCw size={16} /> 동작 교체
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            data-testid="step-inspector-reset-draft"
+            disabled={!dirty || disabled}
+            onClick={() => {
+              setDraft(draftFrom(base));
+              setMessage('수정한 입력값을 적용 전 상태로 되돌렸습니다.');
+            }}
+          >
+            입력 되돌리기
           </button>
           <button className="btn-primary" type="submit" disabled={disabled}>
             변경 적용
