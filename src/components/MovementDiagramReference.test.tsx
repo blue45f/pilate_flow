@@ -69,3 +69,22 @@ it('shows specific source comparison without promoting anatomical or professiona
   expect(container.querySelectorAll('svg')).toHaveLength(1);
   expect(screen.queryByRole('button', { name: /재생/ })).not.toBeInTheDocument();
 });
+
+it('provides matched source comparison records and specialized track diagram disclosures across all 98 catalog exercises', async () => {
+  expect(INITIAL_EXERCISES).toHaveLength(98);
+  for (const exercise of [
+    INITIAL_EXERCISES.find((item) => item.id === 'original-reformer-supine-breath')!,
+    INITIAL_EXERCISES.find((item) => item.id === 'original-reformer-parallel-footwork')!,
+    INITIAL_EXERCISES.find((item) => item.id === 'original-reformer-supine-arm-press')!,
+    INITIAL_EXERCISES.find((item) => item.id === 'original-barrel-supported-side-bend')!,
+  ]) {
+    const { container, unmount } = render(<MovementDiagramReference exercise={exercise} />);
+    await open(container);
+    expect(screen.getByText('출처 대조 기록')).toBeInTheDocument();
+    expect(
+      container.querySelector('[data-testid="movement-diagram-extended-verification-disclosure"]'),
+    ).not.toBeNull();
+    unmount();
+  }
+});
+

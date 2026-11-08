@@ -26,6 +26,23 @@ import {
   CoreAbdominalDiagramFigure,
   resolveCoreAbdominalDiagram,
 } from './CoreAbdominalDiagramFigure';
+import {
+  BreathingPelvicDiagramFigure,
+  resolveBreathingPelvicDiagram,
+} from './BreathingPelvicDiagramFigure';
+import {
+  FootworkLowerDiagramFigure,
+  resolveFootworkLowerDiagram,
+} from './FootworkLowerDiagramFigure';
+import {
+  UpperBodyArmDiagramFigure,
+  resolveUpperBodyArmDiagram,
+} from './UpperBodyArmDiagramFigure';
+import {
+  LateralAndApparatusDiagramFigure,
+  resolveLateralAndApparatusDiagram,
+} from './LateralAndApparatusDiagramFigure';
+import { ExtendedMotionVerificationPanel } from './ExtendedMotionVerificationPanel';
 import { ExtensionMovementTriptych } from './ExtensionMovementDiagram';
 import { ShoulderSupportTriptychDiagram } from './ShoulderSupportDiagramFigure';
 import { MOVEMENT_DIAGRAM_CORRECTIONS } from '../data/movementDiagramCorrections';
@@ -59,6 +76,11 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
   const [showExtensionDiagram, setShowExtensionDiagram] = useState(false);
   const [showShoulderDiagram, setShowShoulderDiagram] = useState(false);
   const [showRotationTriptych, setShowRotationTriptych] = useState(false);
+  const [showBreathingPelvicDiagram, setShowBreathingPelvicDiagram] = useState(false);
+  const [showFootworkLowerDiagram, setShowFootworkLowerDiagram] = useState(false);
+  const [showUpperBodyArmDiagram, setShowUpperBodyArmDiagram] = useState(false);
+  const [showLateralApparatusDiagram, setShowLateralApparatusDiagram] = useState(false);
+  const [showExtendedVerification, setShowExtendedVerification] = useState(false);
   const props = useMemo(
     () =>
       toMovementPhaseDiagramProps(exercise, 'start', {
@@ -102,6 +124,22 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
   const rotCandidate = useMemo(
     () => (isRotation ? resolveRotationDiagramCandidate(exercise.id) : null),
     [exercise.id, isRotation],
+  );
+  const breathingPelvicSpec = useMemo(
+    () => resolveBreathingPelvicDiagram(exercise.id),
+    [exercise.id],
+  );
+  const footworkLowerSpec = useMemo(
+    () => resolveFootworkLowerDiagram(exercise.id),
+    [exercise.id],
+  );
+  const upperBodyArmSpec = useMemo(
+    () => resolveUpperBodyArmDiagram(exercise.id),
+    [exercise.id],
+  );
+  const lateralApparatusSpec = useMemo(
+    () => resolveLateralAndApparatusDiagram(exercise.id),
+    [exercise.id],
   );
   const correction = MOVEMENT_DIAGRAM_CORRECTIONS[exercise.id];
   const matchedCorrection = correction?.archetypeId === props?.asset.archetypeId ? correction : null;
@@ -277,6 +315,86 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
               )}
             </details>
           )}
+          {breathingPelvicSpec && (
+            <details
+              className="movement-diagram-breathing-pelvic-disclosure"
+              data-testid="movement-diagram-breathing-pelvic-disclosure"
+              onToggle={(event) => setShowBreathingPelvicDiagram(event.currentTarget.open)}
+            >
+              <summary className="movement-diagram-correction-summary">
+                호흡·센터링·골반 시계 3단계 상세 도해 보기
+              </summary>
+              {showBreathingPelvicDiagram && (
+                <BreathingPelvicDiagramFigure
+                  exerciseId={exercise.id}
+                  initialPhase="middle"
+                />
+              )}
+            </details>
+          )}
+          {footworkLowerSpec && (
+            <details
+              className="movement-diagram-footwork-lower-disclosure"
+              data-testid="movement-diagram-footwork-lower-disclosure"
+              onToggle={(event) => setShowFootworkLowerDiagram(event.currentTarget.open)}
+            >
+              <summary className="movement-diagram-correction-summary">
+                풋워크·발목·페달·하지 정렬 3단계 상세 도해 보기
+              </summary>
+              {showFootworkLowerDiagram && (
+                <FootworkLowerDiagramFigure
+                  exerciseId={exercise.id}
+                  initialPhase="middle"
+                />
+              )}
+            </details>
+          )}
+          {upperBodyArmSpec && (
+            <details
+              className="movement-diagram-upper-body-arm-disclosure"
+              data-testid="movement-diagram-upper-body-arm-disclosure"
+              onToggle={(event) => setShowUpperBodyArmDiagram(event.currentTarget.open)}
+            >
+              <summary className="movement-diagram-correction-summary">
+                상지 스트랩·로우·암 아크 3단계 상세 도해 보기
+              </summary>
+              {showUpperBodyArmDiagram && (
+                <UpperBodyArmDiagramFigure
+                  exerciseId={exercise.id}
+                  initialPhase="middle"
+                />
+              )}
+            </details>
+          )}
+          {lateralApparatusSpec && (
+            <details
+              className="movement-diagram-lateral-apparatus-disclosure"
+              data-testid="movement-diagram-lateral-apparatus-disclosure"
+              onToggle={(event) => setShowLateralApparatusDiagram(event.currentTarget.open)}
+            >
+              <summary className="movement-diagram-correction-summary">
+                측굴·기구 회전·테이블탑·사지 지지 3단계 상세 도해 보기
+              </summary>
+              {showLateralApparatusDiagram && (
+                <LateralAndApparatusDiagramFigure
+                  exerciseId={exercise.id}
+                  initialPhase="middle"
+                />
+              )}
+            </details>
+          )}
+          <details
+            className="movement-diagram-extended-verification-disclosure"
+            data-testid="movement-diagram-extended-verification-disclosure"
+            onToggle={(event) => setShowExtendedVerification(event.currentTarget.open)}
+          >
+            <summary className="movement-diagram-correction-summary">
+              후보 연속 모션·출처 원장 전수 검증 기록 보기
+            </summary>
+            {showExtendedVerification && (
+              <ExtendedMotionVerificationPanel exercise={exercise} />
+            )}
+          </details>
         </>
       )}
     </section>
