@@ -77,7 +77,7 @@ export function SpineArticulationDiagramReference({
             role="tablist"
             aria-label="척추 분절 대표 동작 선택"
           >
-            {ARCHETYPE_IDS.map((id) => {
+            {ARCHETYPE_IDS.map((id, index) => {
               const item = SPINE_ARTICULATION_DIAGRAM_SPECS[id];
               const isCurrent = spec.archetypeId === id;
               return (
@@ -86,8 +86,31 @@ export function SpineArticulationDiagramReference({
                   type="button"
                   role="tab"
                   aria-selected={isCurrent}
+                  tabIndex={isCurrent ? 0 : -1}
                   className={`spine-archetype-tab ${isCurrent ? 'is-active' : ''}`}
                   onClick={() => setSelectedArchetype(id)}
+                  onKeyDown={(event) => {
+                    let nextIndex: number | null = null;
+                    if (event.key === 'ArrowRight') {
+                      nextIndex = (index + 1) % ARCHETYPE_IDS.length;
+                    } else if (event.key === 'ArrowLeft') {
+                      nextIndex =
+                        (index - 1 + ARCHETYPE_IDS.length) % ARCHETYPE_IDS.length;
+                    } else if (event.key === 'Home') {
+                      nextIndex = 0;
+                    } else if (event.key === 'End') {
+                      nextIndex = ARCHETYPE_IDS.length - 1;
+                    }
+                    if (nextIndex !== null) {
+                      event.preventDefault();
+                      setSelectedArchetype(ARCHETYPE_IDS[nextIndex]);
+                      const tabButtons =
+                        event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+                          '[role="tab"]',
+                        );
+                      tabButtons?.[nextIndex]?.focus();
+                    }
+                  }}
                   data-testid={`spine-archetype-tab-${id}`}
                 >
                   {item.nameKo}
@@ -104,7 +127,7 @@ export function SpineArticulationDiagramReference({
         role="tablist"
         aria-label={`${spec.nameKo} 3단계 자세 선택`}
       >
-        {PHASE_IDS.map((phaseId) => {
+        {PHASE_IDS.map((phaseId, index) => {
           const itemPhase = spec.phases[phaseId];
           const isCurrent = activePhase === phaseId;
           return (
@@ -113,8 +136,30 @@ export function SpineArticulationDiagramReference({
               type="button"
               role="tab"
               aria-selected={isCurrent}
+              tabIndex={isCurrent ? 0 : -1}
               className={`spine-phase-tab ${isCurrent ? 'is-active' : ''}`}
               onClick={() => setActivePhase(phaseId)}
+              onKeyDown={(event) => {
+                let nextIndex: number | null = null;
+                if (event.key === 'ArrowRight') {
+                  nextIndex = (index + 1) % PHASE_IDS.length;
+                } else if (event.key === 'ArrowLeft') {
+                  nextIndex = (index - 1 + PHASE_IDS.length) % PHASE_IDS.length;
+                } else if (event.key === 'Home') {
+                  nextIndex = 0;
+                } else if (event.key === 'End') {
+                  nextIndex = PHASE_IDS.length - 1;
+                }
+                if (nextIndex !== null) {
+                  event.preventDefault();
+                  setActivePhase(PHASE_IDS[nextIndex]);
+                  const tabButtons =
+                    event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+                      '[role="tab"]',
+                    );
+                  tabButtons?.[nextIndex]?.focus();
+                }
+              }}
               data-testid={`spine-phase-tab-${phaseId}`}
             >
               <span className="spine-phase-tab-badge">{itemPhase.badgeKo}</span>

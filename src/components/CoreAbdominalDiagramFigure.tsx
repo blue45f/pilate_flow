@@ -15,6 +15,9 @@ import {
 import type { Point2D, VisualPhaseId } from '../data/movementVisualRigCatalog';
 import { MovementPhaseDiagramSvg } from './MovementPhaseDiagramSvg';
 
+// eslint-disable-next-line react-refresh/only-export-components
+export { resolveCoreAbdominalDiagram };
+
 const PHASE_ORDER: readonly VisualPhaseId[] = ['start', 'middle', 'end'];
 
 const PHASE_TAB_LABELS: Readonly<Record<VisualPhaseId, string>> = {
@@ -520,7 +523,7 @@ export function CoreAbdominalDiagramFigure({
             aria-label="코어 복부 동작 선택"
             style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}
           >
-            {CORE_ABDOMINAL_DIAGRAM_IDS.map((id) => {
+            {CORE_ABDOMINAL_DIAGRAM_IDS.map((id, index) => {
               const spec = CORE_ABDOMINAL_DIAGRAM_SPECS[id];
               const selected = id === activeDiagramId;
               return (
@@ -529,8 +532,32 @@ export function CoreAbdominalDiagramFigure({
                   type="button"
                   role="tab"
                   aria-selected={selected}
+                  tabIndex={selected ? 0 : -1}
                   data-testid={`core-movement-tab-${id}`}
                   onClick={() => setActiveDiagramId(id)}
+                  onKeyDown={(event) => {
+                    let nextIndex: number | null = null;
+                    if (event.key === 'ArrowRight') {
+                      nextIndex = (index + 1) % CORE_ABDOMINAL_DIAGRAM_IDS.length;
+                    } else if (event.key === 'ArrowLeft') {
+                      nextIndex =
+                        (index - 1 + CORE_ABDOMINAL_DIAGRAM_IDS.length) %
+                        CORE_ABDOMINAL_DIAGRAM_IDS.length;
+                    } else if (event.key === 'Home') {
+                      nextIndex = 0;
+                    } else if (event.key === 'End') {
+                      nextIndex = CORE_ABDOMINAL_DIAGRAM_IDS.length - 1;
+                    }
+                    if (nextIndex !== null) {
+                      event.preventDefault();
+                      setActiveDiagramId(CORE_ABDOMINAL_DIAGRAM_IDS[nextIndex]);
+                      const tabButtons =
+                        event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+                          '[role="tab"]',
+                        );
+                      tabButtons?.[nextIndex]?.focus();
+                    }
+                  }}
                   style={{
                     padding: '7px 12px',
                     borderRadius: 8,
@@ -560,7 +587,7 @@ export function CoreAbdominalDiagramFigure({
           }}
         >
           <div role="tablist" aria-label="동작 단계 선택" style={{ display: 'flex', gap: 6 }}>
-            {PHASE_ORDER.map((phaseId) => {
+            {PHASE_ORDER.map((phaseId, index) => {
               const selected = phaseId === activePhase;
               return (
                 <button
@@ -568,8 +595,30 @@ export function CoreAbdominalDiagramFigure({
                   type="button"
                   role="tab"
                   aria-selected={selected}
+                  tabIndex={selected ? 0 : -1}
                   data-testid={`core-phase-tab-${phaseId}`}
                   onClick={() => setActivePhase(phaseId)}
+                  onKeyDown={(event) => {
+                    let nextIndex: number | null = null;
+                    if (event.key === 'ArrowRight') {
+                      nextIndex = (index + 1) % PHASE_ORDER.length;
+                    } else if (event.key === 'ArrowLeft') {
+                      nextIndex = (index - 1 + PHASE_ORDER.length) % PHASE_ORDER.length;
+                    } else if (event.key === 'Home') {
+                      nextIndex = 0;
+                    } else if (event.key === 'End') {
+                      nextIndex = PHASE_ORDER.length - 1;
+                    }
+                    if (nextIndex !== null) {
+                      event.preventDefault();
+                      setActivePhase(PHASE_ORDER[nextIndex]);
+                      const tabButtons =
+                        event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+                          '[role="tab"]',
+                        );
+                      tabButtons?.[nextIndex]?.focus();
+                    }
+                  }}
                   style={{
                     padding: '5px 10px',
                     borderRadius: 6,
