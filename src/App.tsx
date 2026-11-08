@@ -23,6 +23,7 @@ import { PwaInstallPanel } from './components/PwaInstallPanel';
 import { MovementIdeaSheet } from './components/MovementIdeaSheet';
 import { InventoryPanel } from './components/InventoryPanel';
 import { DeferredPanelBoundary } from './components/DeferredPanelBoundary';
+import { InstructorStudyBoundary } from './components/InstructorStudyBoundary';
 import { type ActiveWorkspaceTab, usePilatesStore } from './store/usePilatesStore';
 import type { PilatesExercise, PropType } from './types/pilates';
 import type { MotionDraftId } from './models/types';
@@ -569,34 +570,44 @@ export function App() {
           />
         )}
         {studyOpen && (
-          <InstructorStudyDialog
-            exercises={state.exercises}
-            study={state.instructorStudyState ?? createEmptyInstructorStudyState()}
-            onOpenWorkbench={() => {
-              setStudyOpen(null);
-              changeTab('workbench');
-            }}
-            initialMode={studyOpen.mode}
-            initialExerciseId={studyOpen.exerciseId}
-            onToggleBookmark={(id) => {
-              state.toggleStudyBookmark(id);
-            }}
-            onCueHiddenChange={(hidden) => {
-              state.setRehearsalCueHidden(hidden);
-            }}
-            onTutorialTaskChange={(id, complete) => {
-              state.setStudyTutorialTaskCompleted(id, complete);
-            }}
-            onOpenReview={(exercise) => {
-              setStudyOpen(null);
-              if (isMovementIdeaExercise(exercise)) {
-                setIdeaSheetState({ open: true, exercise });
-                return;
+          <InstructorStudyBoundary onClose={() => setStudyOpen(null)}>
+            <Suspense
+              fallback={
+                <p className="modal-loading" role="status">
+                  연습실을 열고 있어요…
+                </p>
               }
-              setPreview(exercise);
-            }}
-            onClose={() => setStudyOpen(null)}
-          />
+            >
+              <InstructorStudyDialog
+                exercises={state.exercises}
+                study={state.instructorStudyState ?? createEmptyInstructorStudyState()}
+                onOpenWorkbench={() => {
+                  setStudyOpen(null);
+                  changeTab('workbench');
+                }}
+                initialMode={studyOpen.mode}
+                initialExerciseId={studyOpen.exerciseId}
+                onToggleBookmark={(id) => {
+                  state.toggleStudyBookmark(id);
+                }}
+                onCueHiddenChange={(hidden) => {
+                  state.setRehearsalCueHidden(hidden);
+                }}
+                onTutorialTaskChange={(id, complete) => {
+                  state.setStudyTutorialTaskCompleted(id, complete);
+                }}
+                onOpenReview={(exercise) => {
+                  setStudyOpen(null);
+                  if (isMovementIdeaExercise(exercise)) {
+                    setIdeaSheetState({ open: true, exercise });
+                    return;
+                  }
+                  setPreview(exercise);
+                }}
+                onClose={() => setStudyOpen(null)}
+              />
+            </Suspense>
+          </InstructorStudyBoundary>
         )}
         {preview && (
           <YouTubePreviewModal
