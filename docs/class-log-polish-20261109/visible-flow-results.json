@@ -1,0 +1,82 @@
+[
+  {
+    "width": 320,
+    "height": 568,
+    "visibleEntry": true,
+    "escapeFocusRestored": true,
+    "savedExactReload": true,
+    "historyReopened": true,
+    "stageTimerToRecord": true,
+    "measuredSecondsPreserved": 1,
+    "dialogWidth": 320,
+    "contentBottom": 404.59375,
+    "footerTop": 404.59375,
+    "save": {
+      "top": 417.59375,
+      "bottom": 461.59375,
+      "height": 44,
+      "hit": true
+    },
+    "overflow": 0
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "visibleEntry": true,
+    "escapeFocusRestored": true,
+    "savedExactReload": true,
+    "historyReopened": true,
+    "stageTimerToRecord": true,
+    "measuredSecondsPreserved": 1,
+    "dialogWidth": 390,
+    "contentBottom": 686.296875,
+    "footerTop": 686.296875,
+    "save": {
+      "top": 699.296875,
+      "bottom": 743.296875,
+      "height": 44,
+      "hit": true
+    },
+    "overflow": 0
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "visibleEntry": true,
+    "escapeFocusRestored": true,
+    "savedExactReload": true,
+    "historyReopened": true,
+    "stageTimerToRecord": true,
+    "measuredSecondsPreserved": 1,
+    "dialogWidth": 768,
+    "contentBottom": 880.796875,
+    "footerTop": 880.796875,
+    "save": {
+      "top": 895.796875,
+      "bottom": 939.796875,
+      "height": 44,
+      "hit": true
+    },
+    "overflow": 0
+  },
+  {
+    "width": 1440,
+    "height": 1000,
+    "visibleEntry": true,
+    "escapeFocusRestored": true,
+    "savedExactReload": true,
+    "historyReopened": true,
+    "stageTimerToRecord": true,
+    "measuredSecondsPreserved": 1,
+    "dialogWidth": 640,
+    "contentBottom": 874,
+    "footerTop": 874,
+    "save": {
+      "top": 889,
+      "bottom": 933,
+      "height": 44,
+      "hit": true
+    },
+    "overflow": 0
+  }
+]

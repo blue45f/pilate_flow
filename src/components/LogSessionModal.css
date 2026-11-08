@@ -31,27 +31,65 @@
   gap: 20px;
 }
 .class-log-modal .teaching-log-summary {
-  align-items: flex-start;
-  background: #f4f8f6;
-  padding: 14px 16px;
+  display: grid;
   gap: 12px;
+  padding: 0;
+  background: transparent;
 }
-.class-log-modal .teaching-log-summary > svg {
+.class-log-summary-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.class-log-modal .class-log-plan-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #def4e9;
+  color: #14665e;
+  font-size: 14px;
+  font-weight: 650;
+}
+.class-log-plan-badge > svg,
+.class-log-info > svg,
+.class-log-privacy-hint > svg {
   flex-shrink: 0;
+}
+.class-log-modal .class-log-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #e0e7e3;
+  border-radius: 10px;
+  background: #f6f8f7;
+}
+.class-log-info > svg {
   margin-top: 2px;
 }
-.class-log-modal .teaching-log-summary > div {
-  min-width: 0;
+.class-log-summary-status:empty {
+  display: none;
 }
-.class-log-modal .teaching-log-summary strong {
-  font-size: 15px;
-  color: #14665e;
+.class-log-summary-status {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .class-log-modal .teaching-log-summary p,
 .class-log-modal .teaching-duration-field > p,
 .class-log-modal .form-field small {
   font-size: 12px;
   line-height: 1.65;
+}
+.class-log-provenance {
+  min-width: 0;
+  flex: 1 1 160px;
+}
+.class-log-provenance[open] {
+  flex-basis: 100%;
 }
 .class-log-provenance summary {
   min-height: 44px;
@@ -66,7 +104,26 @@
 .class-log-modal .teaching-log-link {
   min-height: 44px;
   align-self: flex-start;
-  margin: -16px 0 -12px;
+  margin: 0;
+  color: #14665e;
+  text-decoration: none;
+}
+.class-log-group-column {
+  min-width: 0;
+}
+.class-log-modal .class-log-group-fields {
+  align-items: start;
+  row-gap: 8px;
+}
+.class-log-modal .teaching-inline-group {
+  flex-wrap: wrap;
+  padding: 12px;
+}
+.class-log-modal .teaching-inline-group > .form-field {
+  flex-basis: 100%;
+}
+.class-log-modal .teaching-inline-group > button {
+  margin-left: auto;
 }
 .class-log-modal .teaching-form-two {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -74,15 +131,45 @@
 .class-log-modal .teaching-form-two .form-field {
   grid-column: auto;
 }
+.class-log-modal .teaching-duration-field {
+  border: 0;
+  border-top: 1px solid #e4ebe6;
+  border-radius: 0;
+  padding: 12px 0 0;
+}
+.class-log-modal .teaching-duration-field legend {
+  padding: 0 8px 0 0;
+  font-size: 13px;
+}
 .class-log-modal .teaching-duration-field > div {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 .class-log-modal .teaching-duration-field .form-field {
   grid-column: auto;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
 }
 .class-log-modal .teaching-log-steps summary {
   min-height: 44px;
-  align-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  list-style: none;
+}
+.class-log-modal .teaching-log-steps {
+  background: #f6f8f7;
+}
+.class-log-modal .teaching-log-steps summary::-webkit-details-marker {
+  display: none;
+}
+.class-log-modal .teaching-log-steps summary > svg {
+  flex-shrink: 0;
+}
+.class-log-modal .teaching-log-steps[open] summary > svg {
+  transform: rotate(180deg);
 }
 .class-log-modal .teaching-log-steps label {
   min-height: 44px;
@@ -94,8 +181,20 @@
   max-width: 100%;
   min-width: 0;
 }
+.class-log-privacy-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.class-log-privacy-hint > svg {
+  margin-top: 3px;
+}
 .class-log-footer {
   flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 16px;
   padding: 14px 24px 16px;
   background: #fff;
   border-top: 1px solid #dce6e1;
@@ -108,14 +207,18 @@
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+  grid-column: 2;
+  grid-row: 1;
 }
 .class-log-modal .class-log-footer button {
   min-height: 44px;
 }
 .class-log-modal .teaching-log-footnote {
-  margin: 10px 0 0;
+  margin: 0;
   font-size: 12px;
   line-height: 1.5;
+  grid-column: 1;
+  grid-row: 1;
 }
 @media (max-width: 600px) {
   .class-log-content {
@@ -125,10 +228,10 @@
   .class-log-modal .teaching-form-two {
     grid-template-columns: minmax(0, 1fr);
   }
-  .class-log-modal .teaching-log-summary {
-    padding: 12px;
-  }
   .class-log-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     padding: 12px 16px max(12px, env(safe-area-inset-bottom));
   }
   .class-log-modal .class-log-footer button {
@@ -151,10 +254,17 @@
   }
 }
 .class-log-modal .class-log-footer > [role='alert'] {
+  grid-column: 1 / -1;
+  grid-row: 1;
   max-height: 20vh;
   overflow-y: auto;
   margin: 0 0 10px;
 }
 .class-log-modal .class-log-content .form-field {
   margin: 0;
+}
+
+.class-log-modal .class-log-footer:has(> [role='alert']) .teaching-form-actions,
+.class-log-modal .class-log-footer:has(> [role='alert']) .teaching-log-footnote {
+  grid-row: 2;
 }

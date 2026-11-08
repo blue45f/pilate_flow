@@ -122,3 +122,26 @@ it('restores unsaved reflection edits from sessionStorage on reopen and clears t
   );
   expect(window.sessionStorage.getItem('pf_log_session_draft_v1:qa-modal')).toBeNull();
 });
+it('keeps group creation next to its select and before the date in reading order', () => {
+  render(<LogSessionModal sequenceId="qa-modal" onClose={vi.fn()} />);
+  const group = screen.getByLabelText('수업 그룹 *');
+  const add = screen.getByRole('button', { name: '수업 그룹 추가' });
+  const date = screen.getByLabelText('수업 일자 *');
+  expect(group.closest('.class-log-group-column')).toContainElement(add);
+  expect(add.compareDocumentPosition(date) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+it('shows the privacy guidance before the memo and exposes it as a description', () => {
+  render(<LogSessionModal sequenceId="qa-modal" onClose={vi.fn()} />);
+  const memo = screen.getByLabelText('다음 수업을 위한 메모 (선택)');
+  const hint = screen.getByText('학생 실명이나 건강 정보는 적지 않아도 돼요.');
+  expect(memo).toHaveAccessibleDescription('학생 실명이나 건강 정보는 적지 않아도 돼요.');
+  expect(hint.compareDocumentPosition(memo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+it('keeps the plan badge separate from the plan-versus-actual explanation', () => {
+  render(<LogSessionModal sequenceId="qa-modal" onClose={vi.fn()} />);
+  expect(screen.getByText('계획 4분 · 1개 동작')).toHaveClass('class-log-plan-badge');
+  expect(
+    screen.getByText('계획 시간과 실제 진행 시간은 별도로 보관됩니다.').closest('.class-log-info'),
+  ).not.toBeNull();
+  expect(screen.getByText('완료 이력 보관 방식').closest('details')).not.toHaveAttribute('open');
+});

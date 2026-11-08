@@ -1,21 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Check, Clock3, Plus, ShieldCheck } from 'lucide-react';
-import {
-  PfButton,
-  PfField,
-  PfFormError,
-  PfInput,
-  PfSelect,
-  PfTextarea,
-} from '../design-system';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { Check, ChevronDown, Clock3, Info, Plus, ShieldCheck } from 'lucide-react';
+import { PfButton, PfField, PfFormError, PfInput, PfSelect, PfTextarea } from '../design-system';
 import { LogClassHistorySchema } from '../schemas/pilatesSchema';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { SequenceStep } from '../types/pilates';
 import type { ClassHistoryLogWithSnapshot } from '../types/teachingHistorySnapshot';
-import {
-  getSavedHumanMovementDrafts,
-  getSavedReusableBlocks,
-} from '../utils/movementIdeaDraft';
+import { getSavedHumanMovementDrafts, getSavedReusableBlocks } from '../utils/movementIdeaDraft';
 import { formatSecondsToMMSS, getSequenceDurations, isRestStep } from '../utils/sequenceEngine';
 import {
   attachProgramSnapshotToHistoryLog,
@@ -99,6 +89,7 @@ const SessionLogForm: React.FC<
     addClassGroup,
     setActiveTab,
   } = usePilatesStore();
+  const reflectionHintId = useId();
   const saved = savedSequences.find((sequence) => sequence.id === sequenceId);
   const [initialDraft] = useState(() => readSessionLogDraft(sequenceId));
   const [draftRestored] = useState(() => initialDraft !== null);
@@ -111,9 +102,7 @@ const SessionLogForm: React.FC<
       []
     ).map((step) => structuredClone(step)),
   );
-  const [exercisesAtOpen] = useState(() =>
-    exercises.map((exercise) => structuredClone(exercise)),
-  );
+  const [exercisesAtOpen] = useState(() => exercises.map((exercise) => structuredClone(exercise)));
   const [humanDraftsAtOpen] = useState(() =>
     getSavedHumanMovementDrafts().map((draft) => structuredClone(draft)),
   );
@@ -435,11 +424,7 @@ const SessionLogForm: React.FC<
       (!matchedLog.sequenceSnapshot && programSnapshot.sequenceSnapshot) ||
       (!matchedLog.sourceProvenance && programSnapshot.sourceProvenance)
     ) {
-      attachProgramSnapshotToHistoryLog(
-        matchedLog.id,
-        programSnapshot,
-        usePilatesStore.setState,
-      );
+      attachProgramSnapshotToHistoryLog(matchedLog.id, programSnapshot, usePilatesStore.setState);
     }
     try {
       window.sessionStorage.removeItem(getDraftStorageKey(sequenceId));
@@ -463,12 +448,11 @@ const SessionLogForm: React.FC<
       <form className="teaching-log-form" onSubmit={submit}>
         <div className="class-log-content">
           <div className="teaching-log-summary">
-            <Clock3 size={20} />
-            <div>
-              <strong>
+            <div className="class-log-summary-heading">
+              <strong className="class-log-plan-badge">
+                <Clock3 size={16} aria-hidden="true" />
                 계획 {Number(planned.toFixed(2))}분 · {exerciseCount}개 동작
               </strong>
-              <p className="muted">계획 시간과 실제 진행 시간은 별도로 보관됩니다.</p>
               <details className="class-log-provenance">
                 <summary>완료 이력 보관 방식</summary>
                 <div className="teaching-log-badge-row">
@@ -486,6 +470,12 @@ const SessionLogForm: React.FC<
                   수정해도 이 완료 이력은 바뀌지 않습니다.
                 </p>
               </details>
+            </div>
+            <p className="class-log-info muted">
+              <Info size={16} aria-hidden="true" />
+              <span>계획 시간과 실제 진행 시간은 별도로 보관됩니다.</span>
+            </p>
+            <div className="class-log-summary-status">
               {plannedTiming.restSec > 0 && (
                 <p className="muted">
                   운동 {formatSecondsToMMSS(plannedTiming.exerciseSec)} · 휴식{' '}
@@ -502,26 +492,58 @@ const SessionLogForm: React.FC<
               )}
             </div>
           </div>
-          <div className="teaching-form-grid teaching-form-two">
-            <PfField label="수업 그룹 *">
-              <PfSelect
-                required
-                value={groupId}
-                onChange={(event) => {
-                  setHasEditedDraft(true);
-                  setGroupId(event.target.value);
-                }}
-              >
-                <option value="" disabled>
-                  그룹을 선택해 주세요
-                </option>
-                {classGroups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
+          <div className="teaching-form-grid teaching-form-two class-log-group-fields">
+            <div className="class-log-group-column">
+              <PfField label="수업 그룹 *">
+                <PfSelect
+                  required
+                  value={groupId}
+                  onChange={(event) => {
+                    setHasEditedDraft(true);
+                    setGroupId(event.target.value);
+                  }}
+                >
+                  <option value="" disabled>
+                    그룹을 선택해 주세요
                   </option>
-                ))}
-              </PfSelect>
-            </PfField>
+                  {classGroups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </PfSelect>
+              </PfField>
+              <button
+                type="button"
+                className="teaching-log-link"
+                aria-expanded={showGroup}
+                onClick={() => setShowGroup((value) => !value)}
+              >
+                <Plus size={15} />
+                수업 그룹 추가
+              </button>
+              {showGroup && (
+                <div className="teaching-inline-group">
+                  <PfField label="그룹 별칭 · 실명은 필요 없어요">
+                    <PfInput
+                      maxLength={60}
+                      placeholder="예: 저녁 A반, 개인 01"
+                      value={newGroupName}
+                      onChange={(event) => setNewGroupName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          createGroup();
+                        }
+                      }}
+                    />
+                  </PfField>
+                  <PfButton variant="secondary" onClick={createGroup}>
+                    추가
+                  </PfButton>
+                </div>
+              )}
+            </div>
             <PfField label="수업 일자 *">
               <PfInput
                 type="date"
@@ -535,36 +557,6 @@ const SessionLogForm: React.FC<
               />
             </PfField>
           </div>
-          <button
-            type="button"
-            className="teaching-log-link"
-            aria-expanded={showGroup}
-            onClick={() => setShowGroup((value) => !value)}
-          >
-            <Plus size={15} />
-            수업 그룹 추가
-          </button>
-          {showGroup && (
-            <div className="teaching-inline-group">
-              <PfField label="그룹 별칭 · 실명은 필요 없어요">
-                <PfInput
-                  maxLength={60}
-                  placeholder="예: 저녁 A반, 개인 01"
-                  value={newGroupName}
-                  onChange={(event) => setNewGroupName(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault();
-                      createGroup();
-                    }
-                  }}
-                />
-              </PfField>
-              <PfButton variant="secondary" onClick={createGroup}>
-                추가
-              </PfButton>
-            </div>
-          )}
           <fieldset className="teaching-duration-field">
             <legend>실제 진행 시간 (선택)</legend>
             <div>
@@ -616,7 +608,10 @@ const SessionLogForm: React.FC<
             open={context?.taughtStepIds !== undefined ? true : undefined}
           >
             <summary>
-              실제로 진행한 동작 확인 · {selectedExerciseCount} / {exerciseCount}개
+              <span>
+                실제로 진행한 동작 확인 · {selectedExerciseCount} / {exerciseCount}개
+              </span>
+              <ChevronDown size={18} aria-hidden="true" />
             </summary>
             <p className="muted">
               {context?.taughtStepIds !== undefined
@@ -688,12 +683,14 @@ const SessionLogForm: React.FC<
               </PfSelect>
             </PfField>
           </div>
-          <PfField
-            label="다음 수업을 위한 메모 (선택)"
-            hint="학생 실명이나 건강 정보는 적지 않아도 돼요."
-          >
+          <PfField label="다음 수업을 위한 메모 (선택)" className="class-log-reflection">
+            <small id={reflectionHintId} className="class-log-privacy-hint muted">
+              <Info size={14} aria-hidden="true" />
+              <span>학생 실명이나 건강 정보는 적지 않아도 돼요.</span>
+            </small>
             <PfTextarea
               aria-label="다음 수업을 위한 메모 (선택)"
+              aria-describedby={reflectionHintId}
               rows={3}
               maxLength={3000}
               placeholder="잘 이어진 전환, 다음에 바꿔볼 동작 등을 남겨 주세요."
