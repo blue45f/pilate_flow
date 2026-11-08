@@ -90,6 +90,7 @@ import { MotionPatternGallery } from './MotionPatternGallery';
 import { FirstClassTutorialCandidate } from '../features/firstClassTutorialCandidate';
 import { ClassInsightsDialog } from './ClassInsightsDialog';
 import { AiSequenceCoPilotPanel } from './AiSequenceCoPilotPanel';
+import { SequenceFlowTelemetryStrip } from './SequenceFlowTelemetryStrip';
 import '../styles/design-tokens.css';
 import '../styles/workbench-usability.css';
 import '../styles/workbench-vnext.css';
@@ -263,6 +264,7 @@ export function SequenceWorkbench({
   const finderOpener = useRef<HTMLElement | null>(null);
   const [insightsOpen, setInsightsOpen] = useState(false);
   const [aiCopilotOpen, setAiCopilotOpen] = useState(false);
+  const [flowTelemetryOpen, setFlowTelemetryOpen] = useState(false);
   const [wideEditor, setWideEditor] = useState(() => window.innerWidth >= 1200);
   const inspectorContentRef = useRef<HTMLDivElement>(null);
   const inspectorOpener = useRef<HTMLElement | null>(null);
@@ -1804,6 +1806,31 @@ export function SequenceWorkbench({
               />
             )}
           </details>
+          {s.activeSteps.length > 0 && (
+            <details
+              className="workbench-automation-tools workbench-flow-telemetry-details"
+              open={flowTelemetryOpen}
+              onToggle={(event) => setFlowTelemetryOpen(event.currentTarget.open)}
+            >
+              <summary>기구 세팅 전환·척추 움직임 밸런스 점검 (선택)</summary>
+              {flowTelemetryOpen && (
+                <SequenceFlowTelemetryStrip
+                  steps={s.activeSteps}
+                  exercisesById={exerciseMap}
+                  onApplyTransitionBuffers={(nextSteps) => {
+                    usePilatesStore.setState({
+                      activeSteps: nextSteps,
+                      saveFeedback:
+                        '기구·체위 전환 구간에 권장 여유 시간(Transition Buffer)을 반영했어요.',
+                    });
+                  }}
+                  onSelectStep={(stepId) => {
+                    setPreviewStep(stepId);
+                  }}
+                />
+              )}
+            </details>
+          )}
           <details className="workbench-automation-tools workbench-free-ai-details">
             <summary>AI 수업 도우미 (선택)</summary>
             <p className="pf-text-sm sr-only">무료 한도 보호 · 소진 시 로컬 전환</p>

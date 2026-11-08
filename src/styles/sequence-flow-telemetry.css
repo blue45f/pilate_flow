@@ -1,0 +1,445 @@
+/* ==========================================================================
+   Sequence Flow Telemetry Strip & Hardware Diff Inspector (Atelier Theme)
+   WCAG AA >= 4.5:1 verified, >= 44px touch targets, reduced-motion safe
+   ========================================================================== */
+
+.sequence-flow-telemetry {
+  border: 1px solid var(--pf-color-border-default, #d5ddd0);
+  border-radius: 16px;
+  background: var(--pf-color-bg-surface-elevated, #ffffff);
+  color: var(--pf-color-text-primary, #1e3129);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 2px 10px rgba(23, 45, 36, 0.04);
+  min-width: 0;
+}
+
+.sequence-flow-telemetry__summary-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sequence-flow-telemetry__identity {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sequence-flow-telemetry__score-badge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 74px;
+  min-height: 54px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid #b5cbb0;
+  background: #eaf2e6;
+  color: #1d3f21;
+  font-variant-numeric: tabular-nums;
+}
+
+.sequence-flow-telemetry__score-badge--caution {
+  border-color: #e0c08b;
+  background: #fdf3e1;
+  color: #6b4010;
+}
+
+.sequence-flow-telemetry__score-badge--alert {
+  border-color: #dcb09e;
+  background: #fbede7;
+  color: #8a341e;
+}
+
+.sequence-flow-telemetry__score-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.sequence-flow-telemetry__score-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.sequence-flow-telemetry__title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sequence-flow-telemetry__eyebrow {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #214f43;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.sequence-flow-telemetry__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #173d34;
+  line-height: 1.3;
+}
+
+.sequence-flow-telemetry__subtitle {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #3d4f45;
+  line-height: 1.4;
+}
+
+.sequence-flow-telemetry__counters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.sequence-flow-telemetry__counter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid #d5ddd0;
+  background: #f6f7f2;
+  color: #1e3129;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.sequence-flow-telemetry__counter-chip--active {
+  border-color: #c5d1c3;
+  background: #edf1ec;
+  color: #173d34;
+}
+
+.sequence-flow-telemetry__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.sequence-flow-telemetry__btn {
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.sequence-flow-telemetry__btn:focus-visible {
+  outline: 2px solid var(--pf-color-focus-ring, #b16f48);
+  outline-offset: 2px;
+}
+
+.sequence-flow-telemetry__btn--primary {
+  border: 1px solid #173d34;
+  background: #173d34;
+  color: #fffef9;
+}
+
+.sequence-flow-telemetry__btn--primary:hover:not(:disabled) {
+  background: #214f43;
+  border-color: #214f43;
+}
+
+.sequence-flow-telemetry__btn--primary:disabled {
+  background: #e4eadf;
+  border-color: #c4d0be;
+  color: #3d4f45;
+  cursor: default;
+}
+
+.sequence-flow-telemetry__btn--toggle {
+  border: 1px solid #c4d0be;
+  background: #fffef9;
+  color: #1e3129;
+}
+
+.sequence-flow-telemetry__btn--toggle:hover {
+  background: #eaefe4;
+}
+
+.sequence-flow-telemetry__middle-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.sequence-flow-telemetry__wave-card,
+.sequence-flow-telemetry__planes-card {
+  border: 1px solid #e3e8dd;
+  border-radius: 12px;
+  background: #fafaf6;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sequence-flow-telemetry__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sequence-flow-telemetry__card-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e3129;
+}
+
+.sequence-flow-telemetry__card-meta {
+  font-size: 0.75rem;
+  color: #3d4f45;
+  font-variant-numeric: tabular-nums;
+}
+
+.sequence-flow-telemetry__sparkline-svg {
+  width: 100%;
+  height: 64px;
+  display: block;
+  overflow: visible;
+}
+
+.sequence-flow-telemetry__plane-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sequence-flow-telemetry__plane-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 8px;
+  border: 1px solid #d5ddd0;
+  background: #ffffff;
+  color: #1e3129;
+  font-size: 0.76rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.sequence-flow-telemetry__plane-pill--zero {
+  background: #f3f5ee;
+  color: #526358;
+  border-style: dashed;
+}
+
+.sequence-flow-telemetry__inspector {
+  border-top: 1px solid #e3e8dd;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sequence-flow-telemetry__alerts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.sequence-flow-telemetry__alert-box {
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e0c08b;
+  background: #fdf3e1;
+  color: #5c350b;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.sequence-flow-telemetry__alert-box--info {
+  border-color: #c5d1c3;
+  background: #edf1ec;
+  color: #1e3b2f;
+}
+
+.sequence-flow-telemetry__alert-title {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.sequence-flow-telemetry__alert-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sequence-flow-telemetry__diff-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sequence-flow-telemetry__diff-item {
+  border: 1px solid #e3e8dd;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 10px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sequence-flow-telemetry__diff-item--major {
+  border-color: #dcb09e;
+  background: #fffaf8;
+}
+
+.sequence-flow-telemetry__diff-item--minor {
+  border-color: #e0c08b;
+  background: #fffdf8;
+}
+
+.sequence-flow-telemetry__diff-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sequence-flow-telemetry__step-order {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #173d34;
+  color: #fffef9;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.sequence-flow-telemetry__step-name-btn {
+  min-height: 44px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #173d34;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sequence-flow-telemetry__step-name-btn:hover {
+  background: #eef2ea;
+}
+
+.sequence-flow-telemetry__step-name-btn:focus-visible {
+  outline: 2px solid var(--pf-color-focus-ring, #b16f48);
+  outline-offset: 2px;
+}
+
+.sequence-flow-telemetry__step-name-static {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #173d34;
+}
+
+.sequence-flow-telemetry__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.sequence-flow-telemetry__diff-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #d5ddd0;
+  background: #f3f5ee;
+  color: #1e3129;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.sequence-flow-telemetry__diff-badge--change {
+  border-color: #c89678;
+  background: #f9ede5;
+  color: #6e3517;
+}
+
+.sequence-flow-telemetry__diff-badge--smooth {
+  border-color: #b5cbb0;
+  background: #eaf2e6;
+  color: #254b29;
+}
+
+.sequence-flow-telemetry__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 768px) {
+  .sequence-flow-telemetry__middle-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sequence-flow-telemetry__actions {
+    width: 100%;
+  }
+
+  .sequence-flow-telemetry__btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sequence-flow-telemetry__btn {
+    transition: none;
+  }
+}
