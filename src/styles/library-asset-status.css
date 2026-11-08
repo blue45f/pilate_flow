@@ -1,4 +1,9 @@
 /* Keep safety context visible; only the detailed asset counts are progressive. */
+#root .vnext-shell .motion-library .library-heading h1 {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
 #root .vnext-shell .motion-library .library-asset-status {
   min-width: 0;
   border: 1px solid var(--studio-line, #d6dfd9);
