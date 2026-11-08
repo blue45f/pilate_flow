@@ -6,7 +6,7 @@
 - That value is absent from current tracked source. The Firebase auth rewrite in `bab6ae3` removed the hardcoded config. The application now reads public client config from the same-origin Firebase Hosting `/__/firebase/init.json` endpoint.
 - An in-memory comparison confirmed that the historical value still matches the public operating site's Firebase client config. No key value is included in this report, logs, or a new fixture.
 - Firebase explains that its client API keys generally identify a project rather than authorize access to its data. They are intentionally present in public web config. This does not prove that every API enabled for a project is safe to expose. See [Firebase API key guidance](https://firebase.google.com/docs/projects/api-keys).
-- Read-only project API-key metadata lists a Firebase-created Browser key with an API allowlist and no HTTP referrer allowlist. Restrictions, authorized domains, quotas, and any non-Firebase API use need an owner-approved review. No provider settings or credentials were changed, and no inference of unauthorized usage was made.
+- Read-only project API-key metadata lists a Firebase-created Browser key with an API allowlist and no HTTP referrer allowlist. Restrictions, authorized domains, quotas, and any non-Firebase API use need an owner-approved review. No provider settings or credentials were changed during the initial investigation, and no inference of unauthorized usage was made. The later, explicitly approved restriction change is recorded below.
 - [Alert 2](https://github.com/blue45f/pilate_flow/security/secret-scanning/2) is a different, synthetic value in a historical independent redaction test. It is already marked `hidden_by_config`, not revoked. The test intentionally exercises redaction and does not send the fixture to a provider. Current Google/GitHub test examples are assembled at runtime instead of storing complete credential-shaped literals.
 - The existing `.github/secret_scanning.yml` broadly excludes test paths. This patch leaves that security configuration unchanged. A hidden alert must not be treated as proof that all excluded files are safe.
 
@@ -20,7 +20,7 @@ This lightweight guard supplements GitHub/provider scanning. It is not a compreh
 
 ## Remaining incident decisions
 
-Alert 1 remains open pending an owner-approved restriction/rotation decision or a documented classification of the intentionally public Firebase client configuration. Changing browser/API restrictions can break existing Firebase applications that share this project; inventory consumers before narrowing them. Do not test the exposed key against additional services, revoke it, create replacements, rewrite shared history, or dismiss the alert as a side effect of a source-only fix.
+Alert 1 remains open. The owner subsequently approved the restriction change recorded below; the intentionally public Firebase configuration has not been misrepresented as a revoked credential. Changing browser/API restrictions can break existing Firebase applications that share this project; inventory consumers before narrowing them. Do not test the exposed key against additional services, revoke it, create replacements, rewrite shared history, or dismiss the alert as a side effect of a source-only fix.
 
 Removing a literal in a new commit does not remove it from prior commits, clones, forks, caches, or artifacts. History cleanup, if needed after provider remediation, is a separate coordinated operation. Never force-push shared history merely to make an alert disappear.
 
@@ -36,7 +36,7 @@ The Pilates operating site returns the expected app/config. The default `deskclo
 
 Cloud Monitoring `consumed_api` request-series metadata for 2026-11-01 through 2026-11-08 associates this key with `identitytoolkit.googleapis.com` and `securetoken.googleapis.com`. The seven-day result was complete, but does not establish that there are no dormant or external consumers.
 
-A concrete owner-approved tightening would retain HTTPS referrers for all three domains above (`https://<domain>/*`) and reduce allowed APIs to those two Auth services. Keep the `firebaseapp.com` auth-helper domain: excluding it can disrupt popup/redirect handling. Narrowing APIs can break other consumers using database, storage, ML, or other Firebase services. Referrer restrictions can reject other origins, local development, custom domains, or referrer-suppressing clients. Confirm the consumers and approval, then verify Google sign-in and refreshed sessions after applying any restriction. No such change was applied as part of this patch.
+A concrete owner-approved tightening would retain HTTPS referrers for all three domains above (`https://<domain>/*`) and reduce allowed APIs to those two Auth services. Keep the `firebaseapp.com` auth-helper domain: excluding it can disrupt popup/redirect handling. Narrowing APIs can break other consumers using database, storage, ML, or other Firebase services. Referrer restrictions can reject other origins, local development, custom domains, or referrer-suppressing clients. Confirm the consumers and approval, then verify Google sign-in and refreshed sessions after applying any restriction. The change was subsequently applied only after explicit owner approval, as recorded below.
 
 ## Source-patch verification
 
@@ -47,3 +47,17 @@ A concrete owner-approved tightening would retain HTTPS referrers for all three 
 - Full Vitest attempt: 2,456 tests passed. A clean-worktree audit failed because this patch was still uncommitted. A separate browser/PDF suite cannot run on this Mac because it hardcodes Linux `/usr/bin/chromium` and Poppler paths; its two tests were not executed. These limitations are not reported as a full aggregate pass.
 
 After committing the source patch, the clean-worktree audit and all three changed fixture suites passed together: 4 files, 37 tests. The Linux-only browser/PDF suite remains unexecuted on this Mac.
+
+## Approved provider restriction change
+
+The owner approved the specific existing Browser-key restriction change after the domains, API scope, and potential shared-consumer impact were explained. Google API Keys reported the update operation complete at `2026-11-08T04:18:59Z`. A read-back confirmed exactly these allowed HTTPS referrers:
+
+- `https://pilates-flow-atelier.web.app/*`
+- `https://deskcloud-fleet-auth.firebaseapp.com/*`
+- `https://deskcloud-fleet-auth.web.app/*`
+
+Allowed APIs are now only `identitytoolkit.googleapis.com` and `securetoken.googleapis.com`, down from 27 services. The existing key was not replaced or revoked, no new credentials were created, no application was deployed, and neither GitHub alert was dismissed.
+
+After the change, real Google popup sign-in on the operating site succeeded with the existing project-operator account. The UI confirmed Google sign-in, and sanitized network metadata showed HTTP 200 for Identity Toolkit project discovery, `accounts:signInWithIdp`, and `accounts:lookup`. A page reload restored the signed-in session and `accounts:lookup` again returned HTTP 200. No token, credential value, request body, or private account identity is recorded here.
+
+A real Secure Token refresh request has not yet been observed because the newly issued ID token is still valid. Session restoration is not claimed as proof of token refresh. A later normal-expiry check is required to complete that validation; no hidden token was extracted and no expiry or provider security setting was fabricated for the test.
