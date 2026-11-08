@@ -1,0 +1,508 @@
+[
+  {
+    "spec": {
+      "w": 320,
+      "h": 760
+    },
+    "geometry": {
+      "overflow": 0,
+      "timer": {
+        "x": 88.359375,
+        "y": 513.21875,
+        "w": 143.28125,
+        "h": 66.875,
+        "bottom": 580.09375
+      },
+      "controls": {
+        "x": 29,
+        "y": 703.375,
+        "w": 262,
+        "h": 49,
+        "bottom": 752.375
+      },
+      "header": {
+        "x": 16,
+        "y": 79,
+        "w": 288,
+        "h": 218.4375,
+        "bottom": 297.4375
+      },
+      "next": {
+        "x": 16,
+        "y": 1372.015625,
+        "w": 288,
+        "h": 205.375,
+        "bottom": 1577.390625
+      },
+      "summaryDisplay": "list-item",
+      "buttons": [
+        {
+          "x": 29,
+          "y": 703.375,
+          "w": 69.84375,
+          "h": 49,
+          "bottom": 752.375
+        },
+        {
+          "x": 104.84375,
+          "y": 703.375,
+          "w": 110.296875,
+          "h": 49,
+          "bottom": 752.375
+        },
+        {
+          "x": 221.140625,
+          "y": 703.375,
+          "w": 69.859375,
+          "h": 49,
+          "bottom": 752.375
+        }
+      ]
+    },
+    "errors": [],
+    "checks": "keyboard disclosure, setup placement, voice opt-in, timer/pause/add/next/previous, high contrast, cancel/exit, original and log preservation"
+  },
+  {
+    "spec": {
+      "w": 390,
+      "h": 844
+    },
+    "geometry": {
+      "overflow": 0,
+      "timer": {
+        "x": 106.59375,
+        "y": 491.125,
+        "w": 176.8125,
+        "h": 81.5,
+        "bottom": 572.625
+      },
+      "controls": {
+        "x": 29,
+        "y": 695.90625,
+        "w": 332,
+        "h": 49,
+        "bottom": 744.90625
+      },
+      "header": {
+        "x": 16,
+        "y": 79,
+        "w": 358,
+        "h": 218.4375,
+        "bottom": 297.4375
+      },
+      "next": {
+        "x": 16,
+        "y": 1320.265625,
+        "w": 358,
+        "h": 205.375,
+        "bottom": 1525.640625
+      },
+      "summaryDisplay": "list-item",
+      "buttons": [
+        {
+          "x": 29,
+          "y": 695.90625,
+          "w": 89.40625,
+          "h": 49,
+          "bottom": 744.90625
+        },
+        {
+          "x": 124.40625,
+          "y": 695.90625,
+          "w": 141.171875,
+          "h": 49,
+          "bottom": 744.90625
+        },
+        {
+          "x": 271.578125,
+          "y": 695.90625,
+          "w": 89.40625,
+          "h": 49,
+          "bottom": 744.90625
+        }
+      ]
+    },
+    "errors": [],
+    "checks": "keyboard disclosure, setup placement, voice opt-in, timer/pause/add/next/previous, high contrast, cancel/exit, original and log preservation"
+  },
+  {
+    "spec": {
+      "w": 768,
+      "h": 1024
+    },
+    "geometry": {
+      "overflow": 0,
+      "timer": {
+        "x": 300.734375,
+        "y": 453.109375,
+        "w": 166.515625,
+        "h": 79.1875,
+        "bottom": 532.296875
+      },
+      "controls": {
+        "x": 41,
+        "y": 665.578125,
+        "w": 686,
+        "h": 48,
+        "bottom": 713.578125
+      },
+      "header": {
+        "x": 20,
+        "y": 81,
+        "w": 728,
+        "h": 168.234375,
+        "bottom": 249.234375
+      },
+      "next": {
+        "x": 20,
+        "y": 1237.234375,
+        "w": 356,
+        "h": 205.375,
+        "bottom": 1442.609375
+      },
+      "summaryDisplay": "list-item",
+      "buttons": [
+        {
+          "x": 41,
+          "y": 665.578125,
+          "w": 158.5625,
+          "h": 48,
+          "bottom": 713.578125
+        },
+        {
+          "x": 209.5625,
+          "y": 665.578125,
+          "w": 348.859375,
+          "h": 48,
+          "bottom": 713.578125
+        },
+        {
+          "x": 568.421875,
+          "y": 665.578125,
+          "w": 158.578125,
+          "h": 48,
+          "bottom": 713.578125
+        }
+      ]
+    },
+    "errors": [],
+    "checks": "keyboard disclosure, setup placement, voice opt-in, timer/pause/add/next/previous, high contrast, cancel/exit, original and log preservation"
+  },
+  {
+    "spec": {
+      "w": 1440,
+      "h": 900
+    },
+    "geometry": {
+      "overflow": 0,
+      "timer": {
+        "x": 458.625,
+        "y": 480.359375,
+        "w": 267.359375,
+        "h": 123.1875,
+        "bottom": 603.546875
+      },
+      "controls": {
+        "x": 257,
+        "y": 736.828125,
+        "w": 670.609375,
+        "h": 48,
+        "bottom": 784.828125
+      },
+      "header": {
+        "x": 236,
+        "y": 88,
+        "w": 1176,
+        "h": 177.6875,
+        "bottom": 265.6875
+      },
+      "next": {
+        "x": 966.609375,
+        "y": 337.1875,
+        "w": 445.390625,
+        "h": 205.375,
+        "bottom": 542.5625
+      },
+      "summaryDisplay": "list-item",
+      "buttons": [
+        {
+          "x": 257,
+          "y": 736.828125,
+          "w": 154.90625,
+          "h": 48,
+          "bottom": 784.828125
+        },
+        {
+          "x": 421.90625,
+          "y": 736.828125,
+          "w": 340.78125,
+          "h": 48,
+          "bottom": 784.828125
+        },
+        {
+          "x": 772.6875,
+          "y": 736.828125,
+          "w": 154.921875,
+          "h": 48,
+          "bottom": 784.828125
+        }
+      ]
+    },
+    "errors": [],
+    "checks": "keyboard disclosure, setup placement, voice opt-in, timer/pause/add/next/previous, high contrast, cancel/exit, original and log preservation"
+  },
+  {
+    "spec": {
+      "w": 900,
+      "h": 500
+    },
+    "geometry": {
+      "overflow": 0,
+      "timer": {
+        "x": 366.734375,
+        "y": 453.109375,
+        "w": 166.515625,
+        "h": 79.1875,
+        "bottom": 532.296875
+      },
+      "controls": {
+        "x": 41,
+        "y": 665.578125,
+        "w": 818,
+        "h": 48,
+        "bottom": 713.578125
+      },
+      "header": {
+        "x": 20,
+        "y": 81,
+        "w": 860,
+        "h": 168.234375,
+        "bottom": 249.234375
+      },
+      "next": {
+        "x": 20,
+        "y": 1237.234375,
+        "w": 860,
+        "h": 205.375,
+        "bottom": 1442.609375
+      },
+      "summaryDisplay": "list-item",
+      "buttons": [
+        {
+          "x": 41,
+          "y": 665.578125,
+          "w": 190,
+          "h": 48,
+          "bottom": 713.578125
+        },
+        {
+          "x": 241,
+          "y": 665.578125,
+          "w": 418,
+          "h": 48,
+          "bottom": 713.578125
+        },
+        {
+          "x": 669,
+          "y": 665.578125,
+          "w": 190,
+          "h": 48,
+          "bottom": 713.578125
+        }
+      ]
+    },
+    "errors": [],
+    "checks": "keyboard disclosure, setup placement, voice opt-in, timer/pause/add/next/previous, high contrast, cancel/exit, original and log preservation"
+  },
+  {
+    "spec": {
+      "w": 390,
+      "h": 500
+    },
+    "geometry": {
+      "overflow": 0,
+      "timer": {
+        "x": 106.59375,
+        "y": 491.125,
+        "w": 176.8125,
+        "h": 81.5,
+        "bottom": 572.625
+      },
+      "controls": {
+        "x": 29,
+        "y": 695.90625,
+        "w": 332,
+        "h": 49,
+        "bottom": 744.90625
+      },
+      "header": {
+        "x": 16,
+        "y": 79,
+        "w": 358,
+        "h": 218.4375,
+        "bottom": 297.4375
+      },
+      "next": {
+        "x": 16,
+        "y": 1320.265625,
+        "w": 358,
+        "h": 205.375,
+        "bottom": 1525.640625
+      },
+      "summaryDisplay": "list-item",
+      "buttons": [
+        {
+          "x": 29,
+          "y": 695.90625,
+          "w": 89.40625,
+          "h": 49,
+          "bottom": 744.90625
+        },
+        {
+          "x": 124.40625,
+          "y": 695.90625,
+          "w": 141.171875,
+          "h": 49,
+          "bottom": 744.90625
+        },
+        {
+          "x": 271.578125,
+          "y": 695.90625,
+          "w": 89.40625,
+          "h": 49,
+          "bottom": 744.90625
+        }
+      ]
+    },
+    "errors": [],
+    "checks": "keyboard disclosure, setup placement, voice opt-in, timer/pause/add/next/previous, high contrast, cancel/exit, original and log preservation"
+  },
+  {
+    "spec": {
+      "w": 320,
+      "h": 760,
+      "text": 200
+    },
+    "geometry": {
+      "overflow": 0,
+      "timer": {
+        "x": 11.71875,
+        "y": 1067.90625,
+        "w": 296.5625,
+        "h": 133.75,
+        "bottom": 1201.65625
+      },
+      "controls": {
+        "x": 29,
+        "y": 1403.625,
+        "w": 262,
+        "h": 96,
+        "bottom": 1499.625
+      },
+      "header": {
+        "x": 16,
+        "y": 138.6875,
+        "w": 288,
+        "h": 416.6875,
+        "bottom": 555.375
+      },
+      "next": {
+        "x": 16,
+        "y": 2591.578125,
+        "w": 288,
+        "h": 409.765625,
+        "bottom": 3001.34375
+      },
+      "summaryDisplay": "list-item",
+      "buttons": [
+        {
+          "x": 29,
+          "y": 1403.625,
+          "w": 69.84375,
+          "h": 96,
+          "bottom": 1499.625
+        },
+        {
+          "x": 104.84375,
+          "y": 1403.625,
+          "w": 110.296875,
+          "h": 96,
+          "bottom": 1499.625
+        },
+        {
+          "x": 221.140625,
+          "y": 1403.625,
+          "w": 69.859375,
+          "h": 96,
+          "bottom": 1499.625
+        }
+      ]
+    },
+    "errors": [],
+    "checks": "keyboard disclosure, setup placement, voice opt-in, timer/pause/add/next/previous, high contrast, cancel/exit, original and log preservation"
+  },
+  {
+    "spec": {
+      "w": 390,
+      "h": 844,
+      "long": true
+    },
+    "geometry": {
+      "overflow": 0,
+      "timer": {
+        "x": 106.59375,
+        "y": 792.53125,
+        "w": 176.8125,
+        "h": 81.5,
+        "bottom": 874.03125
+      },
+      "controls": {
+        "x": 29,
+        "y": 997.3125,
+        "w": 332,
+        "h": 49,
+        "bottom": 1046.3125
+      },
+      "header": {
+        "x": 16,
+        "y": 79,
+        "w": 358,
+        "h": 311.578125,
+        "bottom": 390.578125
+      },
+      "next": {
+        "x": 16,
+        "y": 1621.671875,
+        "w": 358,
+        "h": 205.375,
+        "bottom": 1827.046875
+      },
+      "summaryDisplay": "list-item",
+      "buttons": [
+        {
+          "x": 29,
+          "y": 997.3125,
+          "w": 89.40625,
+          "h": 49,
+          "bottom": 1046.3125
+        },
+        {
+          "x": 124.40625,
+          "y": 997.3125,
+          "w": 141.171875,
+          "h": 49,
+          "bottom": 1046.3125
+        },
+        {
+          "x": 271.578125,
+          "y": 997.3125,
+          "w": 89.40625,
+          "h": 49,
+          "bottom": 1046.3125
+        }
+      ]
+    },
+    "errors": [],
+    "checks": "keyboard disclosure, setup placement, voice opt-in, timer/pause/add/next/previous, high contrast, cancel/exit, original and log preservation"
+  }
+]

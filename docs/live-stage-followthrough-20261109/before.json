@@ -1,0 +1,47 @@
+[
+  {
+    "width": 320,
+    "height": 760,
+    "overflow": 0,
+    "timerTop": 592.78125,
+    "playBottom": 831.9375,
+    "errors": [],
+    "interactionChecks": false
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "overflow": 0,
+    "timerTop": 570.6875,
+    "playBottom": 824.46875,
+    "errors": [],
+    "interactionChecks": false
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "overflow": 0,
+    "timerTop": 453.109375,
+    "playBottom": 713.578125,
+    "errors": [],
+    "interactionChecks": false
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "overflow": 0,
+    "timerTop": 480.359375,
+    "playBottom": 784.828125,
+    "errors": [],
+    "interactionChecks": false
+  },
+  {
+    "width": 390,
+    "height": 500,
+    "overflow": 0,
+    "timerTop": 570.6875,
+    "playBottom": 824.46875,
+    "errors": [],
+    "interactionChecks": false
+  }
+]

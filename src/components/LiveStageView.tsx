@@ -40,6 +40,7 @@ import '../styles/teaching.css';
 import '../styles/class-voice.css';
 import '../styles/live-stage-design.css';
 import './LiveStageView.css';
+import '../styles/live-stage-summary.css';
 import { useClassVoiceGuidance } from '../hooks/useClassVoiceGuidance';
 
 export interface LiveStageNavigationHandle {
@@ -1187,51 +1188,6 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               {current.instructorNote && <p>{current.instructorNote}</p>}
             </section>
           )}
-        </section>
-        <aside className="teaching-stage-aside">
-          <section className="panel teaching-next-panel">
-            <span className="eyebrow">다음 동작</span>
-            {next && isRestStep(next) ? (
-              <>
-                <h2>휴식</h2>
-                <p className="muted">
-                  전체 {formatSecondsToMMSS(getStepTiming(next).totalSec)} · 전체 수업 시간에 포함
-                </p>
-              </>
-            ) : next && nextExercise ? (
-              <>
-                <h2>{nextExercise.nameKo}</h2>
-                <p className="muted">
-                  전체 {formatSecondsToMMSS(getStepTiming(next, nextExercise).totalSec)} ·{' '}
-                  {POSITION_LABELS[nextExercise.bodyPosition].ko}
-                </p>
-                {(next.repetitions !== undefined || next.sets !== undefined || next.sideMode) && (
-                  <p className="muted">
-                    {next.repetitions !== undefined ? `${next.repetitions}회` : '횟수 미지정'}
-                    {next.sets !== undefined ? ` × ${next.sets}세트` : ''}
-                    {next.sideMode ? ` · ${getStepSideLabels(next, nextExercise).join(' → ')}` : ''}
-                  </p>
-                )}
-                <div className="teaching-next-setup">
-                  <span>스프링 원문</span>
-                  <strong>
-                    {next.customSpringOverride || nextExercise.springs || '별도 세팅 확인'}
-                  </strong>
-                  <span>박스 · 풋바 · 헤드레스트</span>
-                  <strong>
-                    {BOX_LABELS[nextExercise.box]} · {nextExercise.footbar} ·{' '}
-                    {nextExercise.headrest}
-                  </strong>
-                </div>
-                <p className="teaching-next-cue">{nextExercise.cues[0]}</p>
-              </>
-            ) : (
-              <>
-                <h2>마지막 동작이에요</h2>
-                <p className="muted">마무리한 뒤 진행 내용을 확인하고 기록을 남겨 주세요.</p>
-              </>
-            )}
-          </section>
           {exercise && !currentIsRest && (
             <details className="panel teaching-setup-panel teaching-stage-details">
               <summary>현재 세팅 · 주의사항</summary>
@@ -1270,6 +1226,54 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               </p>
             </details>
           )}
+        </section>
+        <aside className="teaching-stage-aside">
+          <section className="panel teaching-next-panel">
+            <span className="eyebrow">다음 동작</span>
+            {next && isRestStep(next) ? (
+              <>
+                <h2>휴식</h2>
+                <p className="muted">
+                  전체 {formatSecondsToMMSS(getStepTiming(next).totalSec)} · 전체 수업 시간에 포함
+                </p>
+              </>
+            ) : next && nextExercise ? (
+              <>
+                <h2>{nextExercise.nameKo}</h2>
+                <p className="muted">
+                  전체 {formatSecondsToMMSS(getStepTiming(next, nextExercise).totalSec)} ·{' '}
+                  {POSITION_LABELS[nextExercise.bodyPosition].ko}
+                </p>
+                {(next.repetitions !== undefined || next.sets !== undefined || next.sideMode) && (
+                  <p className="muted">
+                    {next.repetitions !== undefined ? `${next.repetitions}회` : '횟수 미지정'}
+                    {next.sets !== undefined ? ` × ${next.sets}세트` : ''}
+                    {next.sideMode ? ` · ${getStepSideLabels(next, nextExercise).join(' → ')}` : ''}
+                  </p>
+                )}
+                <details className="teaching-next-details">
+                  <summary>다음 동작 세팅과 큐</summary>
+                  <div className="teaching-next-setup">
+                    <span>스프링 원문</span>
+                    <strong>
+                      {next.customSpringOverride || nextExercise.springs || '별도 세팅 확인'}
+                    </strong>
+                    <span>박스 · 풋바 · 헤드레스트</span>
+                    <strong>
+                      {BOX_LABELS[nextExercise.box]} · {nextExercise.footbar} ·{' '}
+                      {nextExercise.headrest}
+                    </strong>
+                  </div>
+                  <p className="teaching-next-cue">{nextExercise.cues[0]}</p>
+                </details>
+              </>
+            ) : (
+              <>
+                <h2>마지막 동작이에요</h2>
+                <p className="muted">마무리한 뒤 진행 내용을 확인하고 기록을 남겨 주세요.</p>
+              </>
+            )}
+          </section>
           <details
             className="panel teaching-stage-outline teaching-stage-details"
             open={outlineInitiallyOpen}

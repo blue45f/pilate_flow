@@ -55,12 +55,22 @@ describe('teaching timer and honest session records', () => {
       '음성 안내 내용과 설정',
       '티칭 큐와 메모',
       '현재 세팅 · 주의사항',
+      '다음 동작 세팅과 큐',
     ]) {
       const summary = screen.getByText(label, { selector: 'summary' });
       expect(summary.closest('details')).not.toHaveAttribute('open');
       fireEvent.click(summary);
       expect(summary.closest('details')).toHaveAttribute('open');
     }
+    const currentPanel = screen.getByRole('region', { name: '현재 동작' });
+    const currentSetup = screen.getByText('현재 세팅 · 주의사항', { selector: 'summary' });
+    expect(currentPanel).toContainElement(currentSetup);
+    const nextDetails = screen.getByText('다음 동작 세팅과 큐', { selector: 'summary' }).closest('details')!;
+    expect(nextDetails).toHaveAttribute('open');
+    expect(nextDetails.querySelector('.teaching-next-setup')).not.toBeNull();
+    expect(nextDetails).toHaveTextContent(exercises[1].cues[0]);
+    expect(usePilatesStore.getState().activeSteps).toEqual(steps);
+    expect(usePilatesStore.getState().historyLogs).toHaveLength(0);
     expect(screen.getByRole('button', { name: '수업 시작' })).toBeVisible();
     expect(screen.getByRole('button', { name: '음성 안내 켜기' })).toBeVisible();
     expect(screen.getByRole('button', { name: '음성 안내 켜기' })).toHaveAttribute(
