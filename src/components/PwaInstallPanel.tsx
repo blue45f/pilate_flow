@@ -21,16 +21,16 @@ export function PwaInstallPanel() {
             : !pwa.canInstall && pwa.installStatus === 'error'
               ? '설치 창을 열지 못했어요. 아래 브라우저 메뉴 방법으로 다시 시도해 주세요.'
               : null;
-  const primaryStatusMessage = [installStatusMessage, updateReadyMessage]
-    .filter(Boolean)
-    .join(' ');
+  const primaryStatusMessage = [installStatusMessage, updateReadyMessage].filter(Boolean).join(' ');
 
   return (
     <section className="pwa-install-panel" aria-labelledby="pwa-install-heading">
       <h3 id="pwa-install-heading">홈 화면에 앱 설치</h3>
       <p>Flow Atelier를 홈 화면이나 앱 목록에서 바로 여세요. 앱스토어 다운로드 없이 설치합니다.</p>
       {pwa.standalone || pwa.installed ? (
-        <p role="status">{primaryStatusMessage}</p>
+        <p role="status" aria-live="polite">
+          {primaryStatusMessage}
+        </p>
       ) : (
         <>
           {pwa.canInstall && (
@@ -42,7 +42,11 @@ export function PwaInstallPanel() {
               <Download size={18} aria-hidden="true" /> 이 기기에 설치
             </button>
           )}
-          {installStatusMessage && <p role="status">{primaryStatusMessage}</p>}
+          {installStatusMessage && (
+            <p role="status" aria-live="polite">
+              {primaryStatusMessage}
+            </p>
+          )}
           {pwa.platform === 'ios-safari' ? (
             <ol>
               <li>
@@ -81,7 +85,9 @@ export function PwaInstallPanel() {
           <p>기본 화면을 기기에 준비하고 있어요. 처음에는 인터넷 연결을 유지해 주세요.</p>
         )}
         {updateReadyMessage && !installStatusMessage && (
-          <p role="status">{updateReadyMessage}</p>
+          <p role="status" aria-live="polite">
+            {updateReadyMessage}
+          </p>
         )}
         {(pwa.offlineStatus === 'error' || pwa.offlineStatus === 'unavailable') && (
           <p>현재 오프라인 준비를 확인하지 못했어요. 인터넷에 연결해서 사용해 주세요.</p>

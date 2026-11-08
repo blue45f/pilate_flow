@@ -149,6 +149,15 @@ describe('static-only service worker', () => {
     expect(expectedExtras).toContain('/images/movement-guides/cadillac-phase-alignment-guide.svg');
     expect(expectedExtras).toContain('/images/movement-guides/chair-phase-alignment-guide.svg');
     expect(expectedExtras).toContain('/images/movement-guides/barrel-phase-alignment-guide.svg');
+    expect(expectedExtras).toContain('/images/movement-guides/hip-leg-side-kick-guide.svg');
+    expect(expectedExtras).toContain('/images/movement-guides/hip-leg-single-leg-circle-guide.svg');
+    expect(expectedExtras).toContain(
+      '/images/movement-guides/shoulder-support-leg-pull-front-guide.svg',
+    );
+    expect(expectedExtras).toContain('/images/movement-guides/shoulder-support-push-up-guide.svg');
+    expect(expectedExtras).not.toContain('/images/movement-guides/MANIFEST.json');
+    expect(expectedExtras).not.toContain('/images/movement-guides/hip-leg-manifest.json');
+    expect(expectedExtras).not.toContain('/images/movement-guides/LICENSE.txt');
 
     const h = harness();
     const waitUntil = vi.fn();
@@ -245,6 +254,66 @@ describe('static-only service worker', () => {
     const response = h.request('/', 'navigate');
     expect(await response.mock.calls[0][0]).toBe(networkDoc);
     expect(h.cache.put).toHaveBeenCalledWith('/index.html', { body: '<html>fresh</html>' });
+  });
+
+  it('pins cached /index.html on navigation when an active worker wakes from idle and a sibling shell cache or installing worker exists', async () => {
+    const h = harness();
+    (
+      h.self.registration as {
+        active?: unknown;
+        installing?: unknown;
+        waiting: unknown;
+      }
+    ).active = { state: 'activated' };
+    (
+      h.self.registration as {
+        active?: unknown;
+        installing?: unknown;
+        waiting: unknown;
+      }
+    ).installing = { state: 'installing' };
+    const response = h.request('/', 'navigate');
+    expect(await response.mock.calls[0][0]).toBe(h.cached);
+    expect(h.cache.match).toHaveBeenCalledWith('/index.html');
+    expect(h.fetch).not.toHaveBeenCalled();
+    expect(h.cache.put).not.toHaveBeenCalled();
+  });
+
+  it('falls back to a sibling flow-atelier-shell-* cache when a chunk request misses in active CACHE and network fails offline', async () => {
+    const h = harness();
+    const v3ChunkResponse = { body: 'export const stage = "v3";', status: 200 };
+    const v2Cache = {
+      addAll: vi.fn().mockResolvedValue(undefined),
+      match: vi.fn().mockResolvedValue(undefined),
+      put: vi.fn().mockResolvedValue(undefined),
+    };
+    const v3Cache = {
+      addAll: vi.fn().mockResolvedValue(undefined),
+      match: vi.fn(async (pathname: string) =>
+        pathname === '/assets/LiveStageView-v3.js' ? v3ChunkResponse : undefined,
+      ),
+      put: vi.fn().mockResolvedValue(undefined),
+    };
+    h.caches.keys.mockResolvedValue(['flow-atelier-shell-v2', 'flow-atelier-shell-v3']);
+    h.caches.open.mockImplementation(async (cacheName: string) =>
+      cacheName === 'flow-atelier-shell-v3' ? v3Cache : v2Cache,
+    );
+    h.fetch.mockRejectedValueOnce(new Error('offline chunk miss'));
+
+    const response = h.request('/assets/LiveStageView-v3.js', 'cors');
+    expect(await response.mock.calls[0][0]).toBe(v3ChunkResponse);
+    expect(v2Cache.match).toHaveBeenCalledWith('/assets/LiveStageView-v3.js');
+    expect(v3Cache.match).toHaveBeenCalledWith('/assets/LiveStageView-v3.js');
+    expect(v2Cache.put).not.toHaveBeenCalled();
+  });
+
+  it('does not intercept non-SVG metadata files under /images/movement-guides/', () => {
+    const h = harness();
+    expect(h.request('/images/movement-guides/MANIFEST.json', 'cors')).not.toHaveBeenCalled();
+    expect(
+      h.request('/images/movement-guides/hip-leg-manifest.json', 'cors'),
+    ).not.toHaveBeenCalled();
+    expect(h.request('/images/movement-guides/LICENSE.txt', 'cors')).not.toHaveBeenCalled();
   });
 
   it.each([

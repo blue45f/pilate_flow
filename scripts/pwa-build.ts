@@ -100,8 +100,18 @@ const toDocumentResponse = (cached) =>
       })
     : cached;
 const hasWaitingUpdate = async () => {
-  if (self.registration && self.registration.waiting) return true;
-  if (!activated || typeof caches.keys !== 'function') return false;
+  if (
+    self.registration &&
+    (self.registration.waiting || (self.registration.active && self.registration.installing))
+  ) {
+    return true;
+  }
+  if (
+    (!activated && !(self.registration && self.registration.active)) ||
+    typeof caches.keys !== 'function'
+  ) {
+    return false;
+  }
   const keys = await caches.keys();
   return Array.isArray(keys) && keys.some((key) => key.startsWith(PREFIX) && key !== CACHE);
 };
@@ -186,25 +196,39 @@ self.addEventListener('fetch', (event) => {
     PRECACHE.includes(url.pathname) ||
     url.pathname.startsWith('/assets/') ||
     url.pathname.startsWith('/icons/') ||
-    url.pathname.startsWith('/images/movement-guides/');
+    (url.pathname.startsWith('/images/movement-guides/') && url.pathname.endsWith('.svg'));
   if (!isShellAsset) return;
   event.respondWith(
     caches.open(CACHE).then(async (cache) => {
       const cached = await cache.match(url.pathname);
       if (cached) return cached;
-      const response = await fetch(request);
-      if (
-        response &&
-        response.status === 200 &&
-        response.type === 'basic' &&
-        typeof cache.put === 'function'
-      ) {
-        await cache.put(
-          url.pathname,
-          typeof response.clone === 'function' ? response.clone() : response,
-        );
+      try {
+        const response = await fetch(request);
+        if (
+          response &&
+          response.status === 200 &&
+          response.type === 'basic' &&
+          typeof cache.put === 'function'
+        ) {
+          await cache.put(
+            url.pathname,
+            typeof response.clone === 'function' ? response.clone() : response,
+          );
+        }
+        return response;
+      } catch (error) {
+        if (typeof caches.keys === 'function') {
+          const keys = await caches.keys();
+          for (const key of Array.isArray(keys) ? keys : []) {
+            if (key.startsWith(PREFIX) && key !== CACHE) {
+              const siblingCache = await caches.open(key);
+              const siblingMatch = await siblingCache.match(url.pathname);
+              if (siblingMatch) return siblingMatch;
+            }
+          }
+        }
+        throw error;
       }
-      return response;
     }),
   );
 });

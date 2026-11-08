@@ -23,28 +23,32 @@ export interface RegisterPwaServiceWorkerOptions {
 }
 
 const IOS_OTHER_BROWSER_PATTERN =
-  /CriOS|FxiOS|EdgiOS|OPiOS|GSA|KAKAOTALK|NAVER|Whale|Instagram|FBAN|FBAV|Line/i;
+  /CriOS|FxiOS|EdgiOS|OPiOS|GSA|KAKAOTALK|NAVER|Whale|Instagram|FBAN|FBAV|Line|DaumApps|DaumDevice|BAND|MicroMessenger|Twitter|Barcelona|BytedanceWebview|musical_ly|DuckDuckGo|YaBrowser|Brave|UCBrowser|SamsungBrowser/i;
 
 export function detectPwaPlatform(
-  nav: Partial<Pick<Navigator, 'userAgent' | 'platform' | 'maxTouchPoints'>> =
-    typeof navigator !== 'undefined' ? navigator : {},
+  nav: Partial<Pick<Navigator, 'userAgent' | 'platform' | 'maxTouchPoints'>> = typeof navigator !==
+  'undefined'
+    ? navigator
+    : {},
 ): 'ios-safari' | 'ios-other' | 'browser' {
   const userAgent = nav.userAgent ?? '';
   const platform = nav.platform ?? '';
   const maxTouchPoints = nav.maxTouchPoints ?? 0;
-  const ios =
-    /iPad|iPhone|iPod/.test(userAgent) || (platform === 'MacIntel' && maxTouchPoints > 1);
+  const ios = /iPad|iPhone|iPod/.test(userAgent) || (platform === 'MacIntel' && maxTouchPoints > 1);
   if (!ios) return 'browser';
-  const safari = /Safari/.test(userAgent) && !IOS_OTHER_BROWSER_PATTERN.test(userAgent);
+  const isBareMobileWebView =
+    /Mobile\/[A-Z0-9]+/i.test(userAgent) && !/Version\/[\d.]+/i.test(userAgent);
+  const safari =
+    /Safari/.test(userAgent) && !IOS_OTHER_BROWSER_PATTERN.test(userAgent) && !isBareMobileWebView;
   return safari ? 'ios-safari' : 'ios-other';
 }
 
 export function isStandaloneDisplayMode(
   win: Window | undefined = typeof window !== 'undefined' ? window : undefined,
-  nav: (Partial<Navigator> & { standalone?: boolean }) | undefined =
-    typeof navigator !== 'undefined'
-      ? (navigator as Navigator & { standalone?: boolean })
-      : undefined,
+  nav: (Partial<Navigator> & { standalone?: boolean }) | undefined = typeof navigator !==
+  'undefined'
+    ? (navigator as Navigator & { standalone?: boolean })
+    : undefined,
 ): boolean {
   const display = win?.matchMedia?.('(display-mode: standalone)');
   return Boolean(display?.matches || nav?.standalone);
@@ -85,7 +89,7 @@ function bindDisplayMediaListener() {
         : undefined;
     const standalone = Boolean(
       (eventMatches ?? display.matches) ||
-        (navigator as Navigator & { standalone?: boolean }).standalone,
+      (navigator as Navigator & { standalone?: boolean }).standalone,
     );
     publish({
       standalone,
@@ -105,12 +109,35 @@ function ensureDomInitialized() {
     bindDisplayMediaListener();
     const nextPlatform = detectPwaPlatform(navigator);
     const nextStandalone = isStandaloneDisplayMode(window, navigator);
-    if (state.platform !== nextPlatform || state.standalone !== nextStandalone) {
+    const standaloneChanged = state.standalone !== nextStandalone;
+    const nextInstalled = standaloneChanged
+      ? nextStandalone
+      : nextStandalone
+        ? true
+        : state.installed;
+    const nextCanInstall = nextInstalled
+      ? false
+      : standaloneChanged
+        ? pendingPrompt !== null
+        : state.canInstall;
+    const nextInstallStatus =
+      nextCanInstall && (state.installStatus === 'dismissed' || state.installStatus === 'error')
+        ? 'idle'
+        : state.installStatus;
+    if (
+      state.platform !== nextPlatform ||
+      state.standalone !== nextStandalone ||
+      state.installed !== nextInstalled ||
+      state.canInstall !== nextCanInstall ||
+      state.installStatus !== nextInstallStatus
+    ) {
       state = {
         ...state,
         platform: nextPlatform,
         standalone: nextStandalone,
-        installed: nextStandalone ? true : state.installed,
+        installed: nextInstalled,
+        canInstall: nextCanInstall,
+        installStatus: nextInstallStatus,
       };
     }
   }
@@ -142,8 +169,7 @@ export function resetPwaInstallStatus() {
 
 export function registerPwaServiceWorker(
   optionsOrCallback?:
-    | RegisterPwaServiceWorkerOptions
-    | ((registration: ServiceWorkerRegistration) => void),
+    RegisterPwaServiceWorkerOptions | ((registration: ServiceWorkerRegistration) => void),
 ): () => void {
   const callbacks: RegisterPwaServiceWorkerOptions =
     typeof optionsOrCallback === 'function'
@@ -158,6 +184,7 @@ export function registerPwaServiceWorker(
   let disposed = false;
   let onlineListenerAttached = false;
   let registrationSucceeded = false;
+  let activeRegistration: ServiceWorkerRegistration | null = null;
   let attemptId = 0;
   const cleanups: Array<() => void> = [];
 
@@ -168,24 +195,28 @@ export function registerPwaServiceWorker(
   };
 
   const addOnlineListener = () => {
-    if (disposed || onlineListenerAttached || registrationSucceeded) return;
+    if (disposed || onlineListenerAttached) return;
     onlineListenerAttached = true;
     window.addEventListener('online', handleOnline);
   };
 
   function handleOnline() {
-    if (disposed || registrationSucceeded) return;
-    removeOnlineListener();
-    registerSw();
+    if (disposed) return;
+    if (!registrationSucceeded) {
+      removeOnlineListener();
+      registerSw();
+      return;
+    }
+    if (activeRegistration && typeof activeRegistration.update === 'function') {
+      void Promise.resolve(activeRegistration.update()).catch(() => {});
+    }
   }
 
   function registerSw() {
     if (disposed || registrationSucceeded) return;
     const currentAttempt = ++attemptId;
 
-    if (navigator.onLine === false) {
-      addOnlineListener();
-    }
+    addOnlineListener();
 
     publish({ offlineStatus: 'preparing' });
     callbacks.onPreparing?.();
@@ -195,8 +226,25 @@ export function registerPwaServiceWorker(
     )
       .then((registration) => {
         if (disposed || currentAttempt !== attemptId) return;
+
+        const installingState = registration.installing?.state;
+        const hasUsableWorker = Boolean(
+          registration.active ||
+          registration.waiting ||
+          (registration.installing && installingState !== 'redundant'),
+        );
+        if (!hasUsableWorker && (installingState === 'redundant' || navigator.onLine === false)) {
+          registrationSucceeded = false;
+          activeRegistration = null;
+          publish({ offlineStatus: 'error' });
+          callbacks.onError?.(new Error('Service worker registration unavailable while offline'));
+          addOnlineListener();
+          return;
+        }
+
         registrationSucceeded = true;
-        removeOnlineListener();
+        activeRegistration = registration;
+        addOnlineListener();
 
         const hasExistingControllerOrActive = () =>
           Boolean(navigator.serviceWorker.controller || registration.active);
@@ -224,6 +272,7 @@ export function registerPwaServiceWorker(
             if (disposed || currentAttempt !== attemptId) return;
             if (worker.state === 'redundant' && !registration.active) {
               registrationSucceeded = false;
+              activeRegistration = null;
               publish({ offlineStatus: 'error' });
               callbacks.onError?.(new Error('Service worker installation became redundant'));
               addOnlineListener();
@@ -245,6 +294,9 @@ export function registerPwaServiceWorker(
         const initialHadActive = hasExistingControllerOrActive();
         update(initialHadActive);
         watchWorker(registration.installing, initialHadActive);
+        if (!initialHadActive && registration.waiting) {
+          watchWorker(registration.waiting, false);
+        }
 
         const onUpdateFound = () => {
           if (disposed || currentAttempt !== attemptId) return;
@@ -258,6 +310,8 @@ export function registerPwaServiceWorker(
       })
       .catch((error: unknown) => {
         if (disposed || currentAttempt !== attemptId) return;
+        registrationSucceeded = false;
+        activeRegistration = null;
         publish({ offlineStatus: 'error' });
         callbacks.onError?.(error);
         addOnlineListener();

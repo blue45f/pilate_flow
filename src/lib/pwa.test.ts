@@ -106,10 +106,21 @@ describe('PWA install lifecycle', () => {
   it.each([
     ['Mozilla/5.0 (iPhone) Version/27.0 Mobile Safari/605.1.15', 'ios-safari'],
     ['Mozilla/5.0 (iPhone) CriOS/140.0 Mobile Safari/604.1', 'ios-other'],
+    ['Mozilla/5.0 (iPhone) Mobile/15E148 KAKAOTALK 11.1.0 Safari/604.1', 'ios-other'],
+    ['Mozilla/5.0 (iPhone) Version/18.0 Mobile/15E148 Safari/604.1 DaumApps/6.54.0', 'ios-other'],
+    ['Mozilla/5.0 (iPhone) Mobile/15E148 Safari/604.1', 'ios-other'],
   ])('detects iOS guidance for %s', async (agent, platform) => {
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(agent);
     const pwa = await start();
     expect(pwa.getPwaState().platform).toBe(platform);
+  });
+  it('resets dismissed or error installStatus to idle via resetPwaInstallStatus', async () => {
+    const pwa = await start();
+    installEvent('dismissed');
+    await pwa.requestPwaInstall();
+    expect(pwa.getPwaState().installStatus).toBe('dismissed');
+    pwa.resetPwaInstallStatus();
+    expect(pwa.getPwaState().installStatus).toBe('idle');
   });
   it('detects iPad desktop user agent and navigator.standalone', async () => {
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla Macintosh Safari');

@@ -76,7 +76,9 @@ describe('P4 PWA Install Panel & Lifecycle Fixes', () => {
       expect(register).toHaveBeenCalledTimes(1);
       expect(pwa.getPwaState().offlineStatus).toBe('error');
       expect(
-        screen.getByText('현재 오프라인 준비를 확인하지 못했어요. 인터넷에 연결해서 사용해 주세요.'),
+        screen.getByText(
+          '현재 오프라인 준비를 확인하지 못했어요. 인터넷에 연결해서 사용해 주세요.',
+        ),
       ).toBeInTheDocument();
 
       // Network recovers -> dispatch 'online'
@@ -117,6 +119,57 @@ describe('P4 PWA Install Panel & Lifecycle Fixes', () => {
       await Promise.resolve();
       expect(register).toHaveBeenCalledTimes(1);
     });
+
+    it('recovers when register() resolves while offline with an already-redundant worker and triggers registration.update() on reconnection', async () => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      const redundantRegistration = Object.assign(new EventTarget(), {
+        active: null,
+        waiting: null,
+        installing: Object.assign(new EventTarget(), { state: 'redundant' as ServiceWorkerState }),
+      });
+      const updateSpy = vi.fn().mockResolvedValue(undefined);
+      const activeRegistration = Object.assign(new EventTarget(), {
+        active: { state: 'activated' },
+        waiting: null,
+        installing: null,
+        update: updateSpy,
+      });
+      const register = vi
+        .fn()
+        .mockResolvedValueOnce(redundantRegistration)
+        .mockResolvedValueOnce(activeRegistration);
+
+      Object.defineProperty(navigator, 'serviceWorker', {
+        configurable: true,
+        value: { controller: null, register },
+      });
+
+      const pwa = await import('../lib/pwa');
+      pwa.startPwa({ registerServiceWorker: true });
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(register).toHaveBeenCalledTimes(1);
+      expect(pwa.getPwaState().offlineStatus).toBe('error');
+
+      // Reconnect online -> retries registration and transitions to ready
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);
+      await act(async () => {
+        window.dispatchEvent(new Event('online'));
+        await Promise.resolve();
+      });
+
+      expect(register).toHaveBeenCalledTimes(2);
+      expect(pwa.getPwaState().offlineStatus).toBe('ready');
+
+      // Subsequent reconnection online triggers registration.update() to check for waiting updates
+      await act(async () => {
+        window.dispatchEvent(new Event('online'));
+        await Promise.resolve();
+      });
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('Fix 3: iOS in-app and alternative browser detection', () => {
@@ -148,6 +201,18 @@ describe('P4 PWA Install Panel & Lifecycle Fixes', () => {
       [
         'LINE iOS in-app',
         'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Safari Line/15.2.0',
+      ],
+      [
+        'Daum iOS in-app (DaumApps)',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1 DaumApps/6.54.0',
+      ],
+      [
+        'Naver BAND iOS in-app',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1 BAND/10.5.1',
+      ],
+      [
+        'Generic iOS WKWebView without Version/ token',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Safari/604.1',
       ],
       [
         'Chrome iOS (CriOS)',
@@ -252,6 +317,48 @@ describe('P4 PWA Install Panel & Lifecycle Fixes', () => {
       expect(pwa.getPwaState().offlineStatus).toBe('ready');
     });
 
+    it('transitions from preparing to ready when register() resolves with a first-install worker already in registration.waiting and it subsequently activates', async () => {
+      const waitingWorker = Object.assign(new EventTarget(), {
+        state: 'installed' as ServiceWorkerState,
+      });
+      const registration = Object.assign(new EventTarget(), {
+        active: null as ServiceWorker | null,
+        waiting: waitingWorker as unknown as ServiceWorker | null,
+        installing: null as ServiceWorker | null,
+      });
+
+      Object.defineProperty(navigator, 'serviceWorker', {
+        configurable: true,
+        value: {
+          controller: null,
+          register: vi.fn().mockResolvedValue(registration),
+        },
+      });
+
+      const onUpdateReady = vi.fn();
+      const onReady = vi.fn();
+      const pwa = await import('../lib/pwa');
+
+      pwa.registerPwaServiceWorker({ onUpdateReady, onReady });
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(onUpdateReady).not.toHaveBeenCalled();
+      expect(pwa.getPwaState().offlineStatus).toBe('preparing');
+
+      waitingWorker.state = 'activated';
+      registration.waiting = null;
+      registration.active = waitingWorker as unknown as ServiceWorker;
+      act(() => {
+        waitingWorker.dispatchEvent(new Event('statechange'));
+      });
+
+      expect(onUpdateReady).not.toHaveBeenCalled();
+      expect(onReady).toHaveBeenCalledTimes(1);
+      expect(pwa.getPwaState().offlineStatus).toBe('ready');
+    });
+
     it('reports update-ready when a new worker reaches installed while an existing active worker is already present', async () => {
       const existingWorker = Object.assign(new EventTarget(), {
         state: 'activated' as ServiceWorkerState,
@@ -336,6 +443,36 @@ describe('P4 PWA Install Panel & Lifecycle Fixes', () => {
       expect(screen.getByRole('button', { name: /이 기기에 설치/ })).toBeInTheDocument();
       expect(screen.queryByText(/설치를 취소했어요/)).not.toBeInTheDocument();
     });
+
+    it('normalizes installStatus to idle when a new beforeinstallprompt arrives while PwaInstallPanel is closed and then reopened', async () => {
+      const pwa = await import('../lib/pwa');
+      const { PwaInstallPanel } = await import('../components/PwaInstallPanel');
+
+      pwa.startPwa({ registerServiceWorker: false });
+      const view = render(<PwaInstallPanel />);
+
+      act(() => {
+        window.dispatchEvent(createInstallEvent('dismissed'));
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /이 기기에 설치/ }));
+      });
+      expect(pwa.getPwaState().installStatus).toBe('dismissed');
+
+      // Close/unmount panel -> fresh beforeinstallprompt arrives while closed -> reopen panel
+      view.unmount();
+      act(() => {
+        window.dispatchEvent(createInstallEvent('accepted'));
+      });
+      render(<PwaInstallPanel />);
+
+      expect(pwa.getPwaState()).toMatchObject({
+        canInstall: true,
+        installStatus: 'idle',
+      });
+      expect(screen.getByRole('button', { name: /이 기기에 설치/ })).toBeInTheDocument();
+      expect(screen.queryByText(/설치를 취소했어요/)).not.toBeInTheDocument();
+    });
   });
 
   describe('Fix 4c: Standalone display-mode media query exit updates installed to false', () => {
@@ -372,6 +509,22 @@ describe('P4 PWA Install Panel & Lifecycle Fixes', () => {
 
       expect(pwa.getPwaState().canInstall).toBe(true);
       expect(screen.getByRole('button', { name: /이 기기에 설치/ })).toBeInTheDocument();
+    });
+
+    it('clears installed=false when standalone mode exits while PwaInstallPanel is unmounted and then remounted', async () => {
+      mediaQuery.matches = true;
+      const pwa = await import('../lib/pwa');
+      const { PwaInstallPanel } = await import('../components/PwaInstallPanel');
+
+      pwa.startPwa({ registerServiceWorker: false });
+      const view = render(<PwaInstallPanel />);
+      expect(pwa.getPwaState()).toMatchObject({ standalone: true, installed: true });
+
+      view.unmount();
+      mediaQuery.matches = false;
+      render(<PwaInstallPanel />);
+
+      expect(pwa.getPwaState()).toMatchObject({ standalone: false, installed: false });
     });
   });
 });

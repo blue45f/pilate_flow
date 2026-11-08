@@ -54,4 +54,25 @@ describe('PWA install panel', () => {
     expect(screen.getByText(/작성 중 자동으로 새로고침하지/)).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
+  it('shows Open in Safari guidance for ios-other in-app browsers without Safari step list', () => {
+    mock.state.platform = 'ios-other';
+    const { container } = render(<PwaInstallPanel />);
+    expect(
+      screen.getByText('이 주소를 Safari에서 연 다음 공유 → 홈 화면에 추가를 선택하세요.'),
+    ).toBeInTheDocument();
+    expect(container.querySelectorAll('ol > li')).toHaveLength(0);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+  it('hides stale dismissed/error status when canInstall is re-enabled and keeps a single status region when update-ready coincides with install status', () => {
+    mock.state.canInstall = true;
+    mock.state.installStatus = 'dismissed';
+    mock.state.offlineStatus = 'update-ready';
+    render(<PwaInstallPanel />);
+    expect(screen.getByRole('button', { name: '이 기기에 설치' })).toBeInTheDocument();
+    expect(screen.queryByText(/설치를 취소했어요/)).not.toBeInTheDocument();
+    const statuses = screen.getAllByRole('status');
+    expect(statuses).toHaveLength(1);
+    expect(statuses[0]).toHaveAttribute('aria-live', 'polite');
+    expect(statuses[0]).toHaveTextContent('새 버전이 준비됐어요');
+  });
 });
