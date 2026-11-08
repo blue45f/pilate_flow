@@ -3,10 +3,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  createFreeAiRoutes,
-  createFreeAiService,
-} from '../../../backend/freeAiService';
+import { createFreeAiRoutes, createFreeAiService } from '../../../backend/freeAiService';
 import { FreeAiAssistantPanel } from '../../../src/components/FreeAiAssistantPanel';
 import {
   assertNoBrowserKeyExposure,
@@ -521,7 +518,9 @@ describe('Track B Audit — 2. Client Bundle Zero-Secret & Server-Boundary Verif
 
     const hasIndexHtml = distFiles.some((f) => f.endsWith('index.html'));
     const hasSwJs = distFiles.some((f) => f.endsWith('sw.js'));
-    const jsAssets = distFiles.filter((f) => f.includes(`${path.sep}assets${path.sep}`) && f.endsWith('.js'));
+    const jsAssets = distFiles.filter(
+      (f) => f.includes(`${path.sep}assets${path.sep}`) && f.endsWith('.js'),
+    );
     expect(hasIndexHtml).toBe(true);
     expect(hasSwJs).toBe(true);
     expect(jsAssets.length).toBeGreaterThan(0);
@@ -662,9 +661,7 @@ describe('Track B Audit — 2. Client Bundle Zero-Secret & Server-Boundary Verif
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('status', { name: '외부 AI 비활성화 및 로컬 모드 안내' }),
-      ).toBeInTheDocument();
+      expect(screen.getByText('조건 기반 추천')).toBeInTheDocument();
     });
 
     const tabs = [
@@ -692,13 +689,14 @@ describe('Track B Audit — 2. Client Bundle Zero-Secret & Server-Boundary Verif
 });
 
 describe('Track B Audit — 3. Provider Error UX Regression (provider 오류 UX 회귀 검사)', () => {
-  it('3a. free_quota_exhausted (429) across all 3 tabs renders alert banner, renewal metadata (resetAt & resetTimezone), disables external AI button, and keeps local engine button functional', async () => {
+  it('3a. free_quota_exhausted (429) across all 3 tabs renders alert banner, readable renewal timing, hides unavailable external AI button, and keeps local engine button functional', async () => {
     const renewalInfo = {
       resetAt: '2026-11-07T08:00:00.000Z',
       resetWindow: 'daily' as const,
       resetTimezone: 'America/Los_Angeles' as const,
       remainingSeconds: 7200,
-      formattedResetKo: '미국 태평양 시간 자정(00:00 PT) 기준 일일 무료 한도 갱신 · 약 2시간 0분 후',
+      formattedResetKo:
+        '미국 태평양 시간 자정(00:00 PT) 기준 일일 무료 한도 갱신 · 약 2시간 0분 후',
       policyNoteKo: '유료 모델 자동 전환 차단',
     };
 
@@ -723,8 +721,7 @@ describe('Track B Audit — 3. Provider Error UX Regression (provider 오류 UX 
     const postAssistMock = vi.fn().mockRejectedValue({
       status: 429,
       code: 'free_quota_exhausted',
-      message:
-        '무료 사용량 소진: 현재 무료 AI 호출 한도에 도달하여 외부 AI 호출이 차단되었습니다.',
+      message: '무료 사용량 소진: 현재 무료 AI 호출 한도에 도달하여 외부 AI 호출이 차단되었습니다.',
       quotaStatus: exhaustedStatus,
       renewal: renewalInfo,
     });
@@ -757,32 +754,39 @@ describe('Track B Audit — 3. Provider Error UX Regression (provider 오류 UX 
       expect(screen.getByRole('alert', { name: '무료 사용량 소진 안내' })).toBeInTheDocument();
     });
     expect(screen.getByTestId('free-ai-renewal-info')).toHaveTextContent(
-      '2026-11-07T08:00:00.000Z',
+      renewalInfo.formattedResetKo,
     );
-    expect(screen.getByTestId('free-ai-renewal-info')).toHaveTextContent('America/Los_Angeles');
-    expect(screen.getByRole('button', { name: '무료 사용량 소진 (호출 차단됨)' })).toBeDisabled();
+    expect(client.getQuotaStatus().renewal?.resetAt).toBe('2026-11-07T08:00:00.000Z');
+    expect(client.getQuotaStatus().renewal?.resetTimezone).toBe('America/Los_Angeles');
+    expect(
+      screen.queryByRole('button', { name: '무료 사용량 소진 (호출 차단됨)' }),
+    ).not.toBeInTheDocument();
 
     // Local button on Tab 1 still works
-    fireEvent.click(screen.getByRole('button', { name: '로컬 조건 추천으로 초안 만들기' }));
+    fireEvent.click(screen.getByRole('button', { name: '조건으로 초안 만들기' }));
     await waitFor(() => {
       expect(screen.getByLabelText('초안 제목 편집')).toBeInTheDocument();
     });
 
-    // Switch to Tab 2 (movement-idea): external AI button is disabled, local button works
+    // Switch to Tab 2 (movement-idea): unavailable external action is absent, local button works
     fireEvent.click(screen.getByRole('tab', { name: '2. 새 동작 아이디어·변형' }));
-    expect(screen.getByRole('button', { name: '무료 사용량 소진 (호출 차단됨)' })).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: '무료 사용량 소진 (호출 차단됨)' }),
+    ).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('새 동작 아이디어 설명'), {
       target: { value: '풋바 아치 지지 골반 분절 브릿지 변형' },
     });
-    fireEvent.click(screen.getByRole('button', { name: '로컬 규칙으로 아이디어·변형 정리' }));
+    fireEvent.click(screen.getByRole('button', { name: '아이디어 정리하기' }));
     await waitFor(() => {
       expect(screen.getByLabelText('동작 이름 (국문) 편집')).toBeInTheDocument();
     });
 
-    // Switch to Tab 3 (sequence-compose): external AI button is disabled, local button works
+    // Switch to Tab 3 (sequence-compose): unavailable external action is absent, local button works
     fireEvent.click(screen.getByRole('tab', { name: '3. 검토 동작·블록 시퀀스 구성' }));
-    expect(screen.getByRole('button', { name: '무료 사용량 소진 (호출 차단됨)' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: '로컬 규칙으로 시퀀스 구성' }));
+    expect(
+      screen.queryByRole('button', { name: '무료 사용량 소진 (호출 차단됨)' }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '시퀀스 구성하기' }));
     await waitFor(() => {
       expect(screen.getByLabelText('시퀀스 제목 편집')).toBeInTheDocument();
     });
@@ -824,7 +828,7 @@ describe('Track B Audit — 3. Provider Error UX Regression (provider 오류 UX 
     });
     expect(screen.getByText(/무료 외부 AI로 전송할 수 없습니다/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '무료 AI 초안 만들기' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: '로컬 조건 추천으로 초안 만들기' }));
+    fireEvent.click(screen.getByRole('button', { name: '조건으로 초안 만들기' }));
     await waitFor(() => {
       expect(screen.getByLabelText('초안 제목 편집')).toBeInTheDocument();
     });
@@ -839,7 +843,7 @@ describe('Track B Audit — 3. Provider Error UX Regression (provider 오류 UX 
     });
     expect(screen.getByText(/무료 외부 AI로 전송할 수 없습니다/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '무료 AI로 아이디어·변형 정리' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: '로컬 규칙으로 아이디어·변형 정리' }));
+    fireEvent.click(screen.getByRole('button', { name: '아이디어 정리하기' }));
     await waitFor(() => {
       expect(screen.getByLabelText('동작 이름 (국문) 편집')).toBeInTheDocument();
     });
@@ -850,7 +854,7 @@ describe('Track B Audit — 3. Provider Error UX Regression (provider 오류 UX 
       target: { value: '척추관 협착증 환자 재활 시퀀스' },
     });
     expect(screen.getByRole('button', { name: '무료 AI로 시퀀스 구성' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: '로컬 규칙으로 시퀀스 구성' }));
+    fireEvent.click(screen.getByRole('button', { name: '시퀀스 구성하기' }));
     await waitFor(() => {
       expect(screen.getByLabelText('시퀀스 제목 편집')).toBeInTheDocument();
     });
@@ -884,9 +888,7 @@ describe('Track B Audit — 3. Provider Error UX Regression (provider 오류 UX 
       () =>
         new Promise<Response>((resolve) => {
           resolveInFlight = () =>
-            resolve(
-              new Response(JSON.stringify({ error: 'upstream fail' }), { status: 500 }),
-            );
+            resolve(new Response(JSON.stringify({ error: 'upstream fail' }), { status: 500 }));
         }),
     );
     const concurrentService = createFreeAiService({
@@ -1097,8 +1099,7 @@ describe('Track B Audit — 4. Exact Reproduction of Discovered Track B Defects 
     expect(detectByokOrSecretExposure(stripped).safe).toBe(false);
 
     // Part B: inspectSensitiveHealthText misses realistic member names, postpartum weeks, and general pain terms
-    const realisticPostpartumAndName =
-      '김민지 회원(34세) 출산 8주차 복직근 이개 및 허리 통증 완화';
+    const realisticPostpartumAndName = '김민지 회원(34세) 출산 8주차 복직근 이개 및 허리 통증 완화';
     const realisticJointPainAndName = '박서연님 무릎 통증·어깨 충돌증후군 주의';
 
     const inspection1 = inspectSensitiveHealthText(realisticPostpartumAndName);
@@ -1157,18 +1158,16 @@ describe('Track B Audit — 4. Exact Reproduction of Discovered Track B Defects 
       ).toBeInTheDocument();
     });
 
-    // REPRODUCED DEFECT-B3 (Part 1): While 502 error alert is displayed, header badge and top status banner
-    // simultaneously claim "무료 AI 연결됨 (gemini-free)" and "무료 전용 AI 사용 가능"
-    expect(screen.getByText('무료 AI 연결됨 (gemini-free)')).toBeInTheDocument();
-    expect(
-      screen.getByText(/무료 전용 AI 사용 가능 \(gemini-free · gemini-3\.5-flash-lite\)/),
-    ).toBeInTheDocument();
+    // The simplified header exposes the failure without claiming a working connection.
+    expect(screen.getByText('AI 응답 확인 필요')).toBeInTheDocument();
+    expect(screen.queryByText(/무료 AI 연결됨|무료 전용 AI 사용 가능/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '무료 AI 초안 만들기' })).toBeEnabled();
 
     // 2. Generate local draft on Tab 1 (sets actionFeedback), then switch to Tab 2
-    fireEvent.click(screen.getByRole('button', { name: '로컬 조건 추천으로 초안 만들기' }));
+    fireEvent.click(screen.getByRole('button', { name: '조건으로 초안 만들기' }));
     await waitFor(() => {
       expect(
-        screen.getByText('로컬 규칙 엔진으로 편집 가능한 수업 초안을 만들었습니다.'),
+        screen.getByText('수업 초안을 만들었습니다. 수업에 맞게 편집해 주세요.'),
       ).toBeInTheDocument();
     });
 
@@ -1176,7 +1175,7 @@ describe('Track B Audit — 4. Exact Reproduction of Discovered Track B Defects 
     // REPRODUCED DEFECT-B3 (Part 2): Tab click clears errorBanner but does NOT clear actionFeedback,
     // so Tab 1's "수업 초안을 만들었습니다" feedback remains visible on Tab 2!
     expect(
-      screen.getByText('로컬 규칙 엔진으로 편집 가능한 수업 초안을 만들었습니다.'),
+      screen.getByText('수업 초안을 만들었습니다. 수업에 맞게 편집해 주세요.'),
     ).toBeInTheDocument();
 
     // 3. REPRODUCED DEFECT-B3 (Part 3): When server returns reason: 'invalid_paid_model_blocked' (enabled: false),

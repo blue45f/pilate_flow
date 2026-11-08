@@ -116,8 +116,8 @@ export function FreeAiAssistantPanel({
   initialTab = 'class-draft',
 }: FreeAiAssistantPanelProps) {
   const [activeTab, setActiveTab] = useState<FreeAiTaskKind>(initialTab);
-  const [quotaStatus, setQuotaStatus] = useState<FreeAiQuotaStatus>(() =>
-    client.getQuotaStatus() ?? createDefaultFreeAiStatus(),
+  const [quotaStatus, setQuotaStatus] = useState<FreeAiQuotaStatus>(
+    () => client.getQuotaStatus() ?? createDefaultFreeAiStatus(),
   );
   const [isLoading, setIsLoading] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
@@ -190,10 +190,7 @@ export function FreeAiAssistantPanel({
     };
   }, [client]);
 
-  const draftHealthInspection = useMemo(
-    () => inspectSensitiveHealthText(draftTheme),
-    [draftTheme],
-  );
+  const draftHealthInspection = useMemo(() => inspectSensitiveHealthText(draftTheme), [draftTheme]);
   const ideaHealthInspection = useMemo(
     () => inspectSensitiveHealthText(`${rawIdeaText} ${baseExerciseName}`),
     [rawIdeaText, baseExerciseName],
@@ -274,7 +271,7 @@ export function FreeAiAssistantPanel({
       setClassDraftResult(response.result);
       setActionFeedback(
         response.usedLocalFallback
-          ? '로컬 규칙 엔진으로 편집 가능한 수업 초안을 만들었습니다.'
+          ? '수업 초안을 만들었습니다. 수업에 맞게 편집해 주세요.'
           : response.result.cached
             ? '캐시된 무료 AI 수업 초안을 불러왔습니다 (무료 한도 차감 없음).'
             : '무료 AI로 편집 가능한 수업 초안을 만들었습니다.',
@@ -319,7 +316,7 @@ export function FreeAiAssistantPanel({
       setMovementIdeaResult(response.result);
       setActionFeedback(
         response.usedLocalFallback
-          ? '로컬 규칙으로 새 동작 아이디어와 3단계 변형을 정리했습니다.'
+          ? '동작 아이디어와 3단계 변형을 정리했습니다.'
           : response.result.cached
             ? '캐시된 무료 AI 동작 아이디어·변형 제안을 불러왔습니다.'
             : '무료 AI로 새 동작 아이디어와 3단계 변형을 정리했습니다.',
@@ -365,7 +362,7 @@ export function FreeAiAssistantPanel({
       setComposeResult(response.result);
       setActionFeedback(
         response.usedLocalFallback
-          ? '검토 완료 동작·블록으로 로컬 시퀀스를 구성했습니다.'
+          ? '검토 완료 동작·블록으로 시퀀스를 구성했습니다.'
           : response.result.cached
             ? '캐시된 무료 AI 시퀀스 구성을 불러왔습니다.'
             : '무료 AI로 검토 완료 동작·블록 시퀀스를 구성했습니다.',
@@ -408,9 +405,7 @@ export function FreeAiAssistantPanel({
 
   const removeStepInClassDraft = (stepId: string) => {
     if (!classDraftResult) return;
-    setClassDraftResult(
-      applyUserEditsToClassDraft(classDraftResult, { removeStepIds: [stepId] }),
-    );
+    setClassDraftResult(applyUserEditsToClassDraft(classDraftResult, { removeStepIds: [stepId] }));
   };
 
   const updateStepInCompose = (
@@ -432,16 +427,12 @@ export function FreeAiAssistantPanel({
     if (targetIdx < 0 || targetIdx >= ids.length) return;
     const swapped = [...ids];
     [swapped[index], swapped[targetIdx]] = [swapped[targetIdx], swapped[index]];
-    setComposeResult(
-      applyUserEditsToSequenceCompose(composeResult, { reorderStepIds: swapped }),
-    );
+    setComposeResult(applyUserEditsToSequenceCompose(composeResult, { reorderStepIds: swapped }));
   };
 
   const removeStepInCompose = (stepId: string) => {
     if (!composeResult) return;
-    setComposeResult(
-      applyUserEditsToSequenceCompose(composeResult, { removeStepIds: [stepId] }),
-    );
+    setComposeResult(applyUserEditsToSequenceCompose(composeResult, { removeStepIds: [stepId] }));
   };
 
   const renderStepsEditor = (
@@ -456,8 +447,8 @@ export function FreeAiAssistantPanel({
     if (steps.length === 0) {
       return (
         <p className="free-ai-subtitle">
-          현재 조건에 해당하는 검토 완료(Approved) 동작이 없습니다. 동작 라이브러리에서 검토를 완료한
-          뒤 다시 구성해 주세요.
+          현재 조건에 해당하는 검토 완료(Approved) 동작이 없습니다. 동작 라이브러리에서 검토를
+          완료한 뒤 다시 구성해 주세요.
         </p>
       );
     }
@@ -551,42 +542,27 @@ export function FreeAiAssistantPanel({
   };
 
   const externalAiDisabledOrExhausted = !quotaStatus.enabled || quotaStatus.exhausted;
+  const recommendationModeLabel = externalAiDisabledOrExhausted
+    ? '조건 기반 추천'
+    : errorBanner
+      ? 'AI 응답 확인 필요'
+      : 'AI 초안';
 
   return (
-    <section className="free-ai-panel" aria-label="무료 전용 AI 수업 보조">
+    <section className="free-ai-panel" aria-label="수업·동작 초안">
       <header className="free-ai-header">
         <div className="free-ai-title-group">
-          <span className="free-ai-eyebrow">FREE-ONLY AI CO-PILOT · ZERO KEY SETUP</span>
-          <h2 className="free-ai-title">무료 전용 AI 수업·동작 보조</h2>
-          <p className="free-ai-subtitle">
-            API 키 입력 없이 무료 한도 안에서만 동작하며, 유료 자동 전환이나 결제가 절대 발생하지
-            않습니다. 모든 결과는 강사가 직접 편집·검토할 수 있습니다.
-          </p>
+          <h2 className="free-ai-title">수업·동작 초안</h2>
         </div>
         <div className="free-ai-badges">
           {uiContract?.renderBadge ? (
             uiContract.renderBadge({
-              tone: 'success',
-              children: '키 설정 불필요 · 무료 전용',
+              tone: 'default',
+              children: recommendationModeLabel,
             })
           ) : (
-            <span className="free-ai-badge">키 설정 불필요 · 무료 전용</span>
+            <span className="free-ai-badge">{recommendationModeLabel}</span>
           )}
-          <span
-            className={`free-ai-badge ${
-              quotaStatus.exhausted
-                ? 'is-warning'
-                : !quotaStatus.enabled
-                  ? 'is-offline'
-                  : ''
-            }`}
-          >
-            {quotaStatus.exhausted
-              ? '무료 사용량 소진'
-              : quotaStatus.enabled
-                ? `무료 AI 연결됨 (${quotaStatus.provider})`
-                : '외부 AI 비활성화 · 로컬 추천 활성'}
-          </span>
         </div>
       </header>
 
@@ -596,49 +572,30 @@ export function FreeAiAssistantPanel({
           role="alert"
           aria-label="무료 사용량 소진 안내"
         >
-          <strong>무료 사용량 소진 — 외부 AI 호출이 차단되었습니다</strong>
-          <span>
-            {quotaStatus.statusMessageKo ||
-              '현재 무료 티어 호출 한도를 모두 사용했습니다. 유료 자동 전환(fallback)이나 과금은 이루어지지 않습니다.'}
-          </span>
+          <strong>AI 사용량을 모두 사용했어요.</strong>
+          <span>조건 기반 추천과 직접 편집은 계속 사용할 수 있어요.</span>
           {quotaStatus.renewal && (
             <span data-testid="free-ai-renewal-info">
-              갱신 정보: {quotaStatus.renewal.formattedResetKo} (갱신 시각:{' '}
-              <code>{quotaStatus.renewal.resetAt}</code> · 기준 시간대:{' '}
-              {quotaStatus.renewal.resetTimezone})
+              다음 이용: {quotaStatus.renewal.formattedResetKo}
             </span>
           )}
-          <span>
-            외부 AI가 차단된 동안에도 아래 <strong>로컬 조건 추천·수동 편집·저장 프리셋</strong>은
-            제한 없이 사용할 수 있습니다.
-          </span>
         </div>
-      ) : !quotaStatus.enabled ? (
-        <div
-          className="free-ai-status-banner is-disabled"
-          role="status"
-          aria-label="외부 AI 비활성화 및 로컬 모드 안내"
-        >
-          <strong>외부 무료 AI 비활성화 (로컬 추천·수동 편집·저장 프리셋 유지)</strong>
-          <span>
-            {quotaStatus.statusMessageKo ||
-              '무료 서버/API 구성이 없어 외부 AI 호출을 비활성화했습니다. 로컬 조건 추천 엔진, 수동 편집, 저장된 프리셋은 그대로 사용할 수 있습니다.'}
-          </span>
-        </div>
-      ) : (
-        <div className="free-ai-status-banner" role="status" aria-label="무료 AI 사용량 상태">
-          <strong>
-            무료 전용 AI 사용 가능 ({quotaStatus.provider} · {quotaStatus.model ?? '기본 무료 모델'})
-          </strong>
-          <span>
-            분당 남은 횟수: {quotaStatus.minuteRemaining}/{quotaStatus.minuteLimit}회 · 일일 남은
-            횟수: {quotaStatus.dailyRemaining}/{quotaStatus.dailyLimit}회
-            {quotaStatus.renewal ? ` · 갱신 예정: ${quotaStatus.renewal.formattedResetKo}` : ''}
-          </span>
-        </div>
-      )}
+      ) : quotaStatus.enabled ? (
+        <details className="free-ai-status-banner">
+          <summary>AI 사용량</summary>
+          <p>
+            분당 {quotaStatus.minuteRemaining}/{quotaStatus.minuteLimit}회 · 오늘{' '}
+            {quotaStatus.dailyRemaining}/{quotaStatus.dailyLimit}회 남음
+            {quotaStatus.renewal ? ` · 갱신: ${quotaStatus.renewal.formattedResetKo}` : ''}
+          </p>
+        </details>
+      ) : null}
 
-      <div className="free-ai-disclaimer" role="note" aria-label="미검토 동작 및 개인정보 보호 안내">
+      <div
+        className="free-ai-disclaimer"
+        role="note"
+        aria-label="미검토 동작 및 개인정보 보호 안내"
+      >
         {uiContract?.renderNotice ? (
           uiContract.renderNotice({
             tone: 'warning',
@@ -803,11 +760,7 @@ export function FreeAiAssistantPanel({
                   onChange={(e) => setNewPresetName(e.target.value)}
                   placeholder="프리셋 이름 (예: 오전 코어 50분)"
                 />
-                <button
-                  type="button"
-                  className="free-ai-btn-secondary"
-                  onClick={handleSavePreset}
-                >
+                <button type="button" className="free-ai-btn-secondary" onClick={handleSavePreset}>
                   프리셋 저장
                 </button>
               </div>
@@ -821,29 +774,33 @@ export function FreeAiAssistantPanel({
           )}
 
           <div className="free-ai-actions">
+            {!externalAiDisabledOrExhausted && (
+              <button
+                type="button"
+                className="free-ai-btn-primary"
+                disabled={
+                  isLoading ||
+                  externalAiDisabledOrExhausted ||
+                  draftHealthInspection.hasSensitiveData
+                }
+                onClick={() => runClassDraft(false)}
+              >
+                {quotaStatus.exhausted
+                  ? '무료 사용량 소진 (호출 차단됨)'
+                  : !quotaStatus.enabled
+                    ? '외부 AI 비활성화됨'
+                    : '무료 AI 초안 만들기'}
+              </button>
+            )}
             <button
               type="button"
-              className="free-ai-btn-primary"
-              disabled={
-                isLoading ||
-                externalAiDisabledOrExhausted ||
-                draftHealthInspection.hasSensitiveData
+              className={
+                externalAiDisabledOrExhausted ? 'free-ai-btn-primary' : 'free-ai-btn-secondary'
               }
-              onClick={() => runClassDraft(false)}
-            >
-              {quotaStatus.exhausted
-                ? '무료 사용량 소진 (호출 차단됨)'
-                : !quotaStatus.enabled
-                  ? '외부 AI 비활성화됨'
-                  : '무료 AI 초안 만들기'}
-            </button>
-            <button
-              type="button"
-              className="free-ai-btn-secondary"
               disabled={isLoading}
               onClick={() => runClassDraft(true)}
             >
-              로컬 조건 추천으로 초안 만들기
+              조건으로 초안 만들기
             </button>
           </div>
 
@@ -1014,29 +971,33 @@ export function FreeAiAssistantPanel({
           )}
 
           <div className="free-ai-actions">
+            {!externalAiDisabledOrExhausted && (
+              <button
+                type="button"
+                className="free-ai-btn-primary"
+                disabled={
+                  isLoading ||
+                  externalAiDisabledOrExhausted ||
+                  ideaHealthInspection.hasSensitiveData
+                }
+                onClick={() => runMovementIdea(false)}
+              >
+                {quotaStatus.exhausted
+                  ? '무료 사용량 소진 (호출 차단됨)'
+                  : !quotaStatus.enabled
+                    ? '외부 AI 비활성화됨'
+                    : '무료 AI로 아이디어·변형 정리'}
+              </button>
+            )}
             <button
               type="button"
-              className="free-ai-btn-primary"
-              disabled={
-                isLoading ||
-                externalAiDisabledOrExhausted ||
-                ideaHealthInspection.hasSensitiveData
+              className={
+                externalAiDisabledOrExhausted ? 'free-ai-btn-primary' : 'free-ai-btn-secondary'
               }
-              onClick={() => runMovementIdea(false)}
-            >
-              {quotaStatus.exhausted
-                ? '무료 사용량 소진 (호출 차단됨)'
-                : !quotaStatus.enabled
-                  ? '외부 AI 비활성화됨'
-                  : '무료 AI로 아이디어·변형 정리'}
-            </button>
-            <button
-              type="button"
-              className="free-ai-btn-secondary"
               disabled={isLoading}
               onClick={() => runMovementIdea(true)}
             >
-              로컬 규칙으로 아이디어·변형 정리
+              아이디어 정리하기
             </button>
           </div>
 
@@ -1333,9 +1294,7 @@ export function FreeAiAssistantPanel({
                     aria-pressed={pressed}
                     onClick={() =>
                       setSelectedExerciseIds((prev) =>
-                        prev.includes(ex.id)
-                          ? prev.filter((id) => id !== ex.id)
-                          : [...prev, ex.id],
+                        prev.includes(ex.id) ? prev.filter((id) => id !== ex.id) : [...prev, ex.id],
                       )
                     }
                   >
@@ -1364,29 +1323,33 @@ export function FreeAiAssistantPanel({
           </div>
 
           <div className="free-ai-actions">
+            {!externalAiDisabledOrExhausted && (
+              <button
+                type="button"
+                className="free-ai-btn-primary"
+                disabled={
+                  isLoading ||
+                  externalAiDisabledOrExhausted ||
+                  composeHealthInspection.hasSensitiveData
+                }
+                onClick={() => runSequenceCompose(false)}
+              >
+                {quotaStatus.exhausted
+                  ? '무료 사용량 소진 (호출 차단됨)'
+                  : !quotaStatus.enabled
+                    ? '외부 AI 비활성화됨'
+                    : '무료 AI로 시퀀스 구성'}
+              </button>
+            )}
             <button
               type="button"
-              className="free-ai-btn-primary"
-              disabled={
-                isLoading ||
-                externalAiDisabledOrExhausted ||
-                composeHealthInspection.hasSensitiveData
+              className={
+                externalAiDisabledOrExhausted ? 'free-ai-btn-primary' : 'free-ai-btn-secondary'
               }
-              onClick={() => runSequenceCompose(false)}
-            >
-              {quotaStatus.exhausted
-                ? '무료 사용량 소진 (호출 차단됨)'
-                : !quotaStatus.enabled
-                  ? '외부 AI 비활성화됨'
-                  : '무료 AI로 시퀀스 구성'}
-            </button>
-            <button
-              type="button"
-              className="free-ai-btn-secondary"
               disabled={isLoading}
               onClick={() => runSequenceCompose(true)}
             >
-              로컬 규칙으로 시퀀스 구성
+              시퀀스 구성하기
             </button>
           </div>
 

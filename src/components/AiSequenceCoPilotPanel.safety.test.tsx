@@ -55,19 +55,18 @@ describe('local-only recommendation safety boundary', () => {
     const before = usePilatesStore.getState();
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     render(<AiSequenceCoPilotPanel criteria={criteria} selectedEquipment={['mat']} />);
-    expect(screen.getByRole('heading', { level: 3, name: '로컬 시퀀스 추천' })).toBeVisible();
+    expect(screen.getByRole('heading', { level: 3, name: '주제별 수업 추천' })).toBeVisible();
     expect(screen.queryByRole('heading', { name: /AI 시퀀스 생성/ })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Google Gemini API Key')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /외부 AI 생성/ })).not.toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: '외부 AI 생성 · 무료 서버 연결 대기' }),
-    ).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: '50분 로컬 추천 만들기' }));
-    await screen.findByRole('region', { name: '로컬 추천 시퀀스 미리보기' });
+      screen.queryByText(/LOCAL PRESETS|무료 전용 서버|API 키를 입력/),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '50분 수업 추천받기' }));
+    await screen.findByRole('region', { name: '추천 수업 미리보기' });
     expect(usePilatesStore.getState()).toBe(before);
     expect(fetchSpy).not.toHaveBeenCalled();
-    fireEvent.click(
-      screen.getByRole('button', { name: '새 수업 초안으로 적용 · 이전 구성 되돌리기 가능' }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: '새 수업 초안으로 적용' }));
     expect(usePilatesStore.getState().activeSequenceId).toBe('');
     expect(usePilatesStore.getState().activeSteps).not.toEqual(before.activeSteps);
     expect(usePilatesStore.getState().savedSequences).toBe(before.savedSequences);
@@ -120,10 +119,10 @@ describe('local-only recommendation safety boundary', () => {
           onAppliedSequence={onAppliedSequence}
         />,
       );
-      fireEvent.click(screen.getByRole('button', { name: '50분 로컬 추천 만들기' }));
-      await screen.findByRole('region', { name: '로컬 추천 시퀀스 미리보기' });
+      fireEvent.click(screen.getByRole('button', { name: '50분 수업 추천받기' }));
+      await screen.findByRole('region', { name: '추천 수업 미리보기' });
       const applyButton = screen.getByRole('button', {
-        name: '새 수업 초안으로 적용 · 이전 구성 되돌리기 가능',
+        name: '새 수업 초안으로 적용',
       });
       expect(applyButton).toBeEnabled();
 
@@ -155,24 +154,20 @@ describe('local-only recommendation safety boundary', () => {
 
   it('blocks stale conditions and reports an insufficient reviewed catalog without replacing a draft', async () => {
     const view = render(<AiSequenceCoPilotPanel criteria={criteria} selectedEquipment={['mat']} />);
-    fireEvent.click(screen.getByRole('button', { name: '50분 로컬 추천 만들기' }));
-    await screen.findByRole('region', { name: '로컬 추천 시퀀스 미리보기' });
+    fireEvent.click(screen.getByRole('button', { name: '50분 수업 추천받기' }));
+    await screen.findByRole('region', { name: '추천 수업 미리보기' });
     view.rerender(
       <AiSequenceCoPilotPanel
         criteria={{ ...criteria, targetMinutes: 30 }}
         selectedEquipment={['mat']}
       />,
     );
-    expect(
-      screen.getByRole('button', { name: '새 수업 초안으로 적용 · 이전 구성 되돌리기 가능' }),
-    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: '새 수업 초안으로 적용' })).toBeDisabled();
     act(() => usePilatesStore.setState({ exercises: INITIAL_EXERCISES }));
     const before = usePilatesStore.getState();
-    fireEvent.click(screen.getByRole('button', { name: '30분 로컬 추천 만들기' }));
+    fireEvent.click(screen.getByRole('button', { name: '30분 수업 추천받기' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('검토 완료 동작이 4개 이상');
     expect(usePilatesStore.getState()).toBe(before);
-    expect(
-      screen.queryByRole('region', { name: '로컬 추천 시퀀스 미리보기' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: '추천 수업 미리보기' })).not.toBeInTheDocument();
   });
 });

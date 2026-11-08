@@ -40,7 +40,7 @@ export const KOREAN_VOICE_SECTION_LABELS: Readonly<
 };
 
 export const KOREAN_VOICE_DISCLAIMER_KO =
-  '무료 브라우저·기기 내장 TTS(Web Speech API)와 수업 계획 메모로 생성된 한국어 안내입니다. 유료 외부 음성 API를 사용하지 않으며, 전문가 시범·의학적 처방을 대체하지 않습니다.';
+  '수업 계획 메모를 읽어 주는 안내입니다. 전문가 시범·의학적 처방을 대체하지 않습니다.';
 
 const BOX_STATE_LABELS_KO: Readonly<Record<BoxState, string>> = {
   none: '박스 없음',

@@ -2,17 +2,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FreeAiAssistantPanel } from './FreeAiAssistantPanel';
 import { createFreeAiClient } from '../lib/freeAiClient';
-import type {
-  ConditionTemplate,
-  PilatesExercise,
-} from '../types/pilates';
-import type {
-  FreeAiQuotaStatus,
-  P1ReusableBlockContract,
-} from '../types/freeAiAssistant';
+import type { ConditionTemplate, PilatesExercise } from '../types/pilates';
+import type { FreeAiQuotaStatus, P1ReusableBlockContract } from '../types/freeAiAssistant';
 import { exerciseRevision, isExerciseAutoEligible } from '../utils/exerciseReview';
 
-function makeReviewedExercise(overrides: Partial<PilatesExercise> & { id: string; nameKo: string }): PilatesExercise {
+function makeReviewedExercise(
+  overrides: Partial<PilatesExercise> & { id: string; nameKo: string },
+): PilatesExercise {
   const base: PilatesExercise = {
     id: overrides.id,
     nameKo: overrides.nameKo,
@@ -198,16 +194,17 @@ describe('FreeAiAssistantPanel UI journeys', () => {
     // Verify no BYOK / password / API key input exists anywhere in the panel
     expect(screen.queryByPlaceholderText(/api key|sk-|AIza/i)).toBeNull();
     expect(document.querySelector('input[type="password"]')).toBeNull();
-    expect(screen.getByText('키 설정 불필요 · 무료 전용')).toBeInTheDocument();
+    expect(screen.getByText('조건 기반 추천')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('status', { name: '외부 AI 비활성화 및 로컬 모드 안내' }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '조건으로 초안 만들기' })).toBeEnabled();
     });
 
-    // External AI button should be disabled when server AI is unconfigured, while local button is active
-    expect(screen.getByRole('button', { name: '외부 AI 비활성화됨' })).toBeDisabled();
+    // Unavailable external actions and setup explanations do not compete with the usable action.
+    expect(screen.queryByRole('button', { name: '외부 AI 비활성화됨' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/무료 서버\/API|ZERO KEY SETUP|유료 자동 전환/),
+    ).not.toBeInTheDocument();
 
     // Load saved preset
     fireEvent.change(screen.getByLabelText('저장된 조건 프리셋'), {
@@ -216,7 +213,7 @@ describe('FreeAiAssistantPanel UI journeys', () => {
     expect(onApplyConditionTemplate).toHaveBeenCalledWith('tpl-morning-40');
 
     // Generate class draft using local rule engine
-    fireEvent.click(screen.getByRole('button', { name: '로컬 조건 추천으로 초안 만들기' }));
+    fireEvent.click(screen.getByRole('button', { name: '조건으로 초안 만들기' }));
 
     await waitFor(() => {
       expect(screen.getByLabelText('초안 제목 편집')).toBeInTheDocument();
@@ -257,16 +254,14 @@ describe('FreeAiAssistantPanel UI journeys', () => {
       target: { value: '발바닥 아치로 풋바를 밀며 골반을 분절해 올리는 아티큘레이션 변형' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: '로컬 규칙으로 아이디어·변형 정리' }));
+    fireEvent.click(screen.getByRole('button', { name: '아이디어 정리하기' }));
 
     await waitFor(() => {
       expect(screen.getByLabelText('동작 이름 (국문) 편집')).toBeInTheDocument();
     });
 
     // Explicit unreviewed creative disclaimer is shown
-    expect(
-      screen.getByText('미검토 창작 동작 · 안전 및 운동 효과 보장 안 함'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('미검토 창작 동작 · 안전 및 운동 효과 보장 안 함')).toBeInTheDocument();
 
     // User edits the movement name and easy variation
     fireEvent.change(screen.getByLabelText('동작 이름 (국문) 편집'), {
@@ -277,9 +272,7 @@ describe('FreeAiAssistantPanel UI journeys', () => {
     });
 
     // Save as unreviewed creative movement
-    fireEvent.click(
-      screen.getByRole('button', { name: '미검토 창작 동작으로 보관함에 저장' }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: '미검토 창작 동작으로 보관함에 저장' }));
 
     expect(onSaveUnreviewedMovementIdea).toHaveBeenCalledTimes(1);
     const [savedExercise, savedContract] = onSaveUnreviewedMovementIdea.mock.calls[0];
@@ -349,20 +342,24 @@ describe('FreeAiAssistantPanel UI journeys', () => {
       expect(screen.getByRole('alert', { name: '무료 사용량 소진 안내' })).toBeInTheDocument();
     });
     expect(screen.getByTestId('free-ai-renewal-info')).toHaveTextContent(
-      '2026-11-07T00:00:00.000Z',
+      exhaustedStatus.renewal!.formattedResetKo,
     );
     expect(screen.getByTestId('free-ai-renewal-info')).toHaveTextContent('UTC');
 
-    // External AI button is disabled and shows "무료 사용량 소진 (호출 차단됨)"
-    const externalBtn = screen.getByRole('button', { name: '무료 사용량 소진 (호출 차단됨)' });
-    expect(externalBtn).toBeDisabled();
+    // Hide the unavailable external action and keep the usable local action prominent.
+    expect(
+      screen.queryByRole('button', { name: '무료 사용량 소진 (호출 차단됨)' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '시퀀스 구성하기' })).toHaveClass(
+      'free-ai-btn-primary',
+    );
     expect(postAssistSpy).not.toHaveBeenCalled();
 
     expect(screen.getByRole('group', { name: '검토 완료 블록 선택' })).toBeVisible();
     expect(screen.queryByRole('group', { name: '검토 완료 P1 블록 선택' })).not.toBeInTheDocument();
 
     // Local composition from reviewed movements/blocks still works while exhausted
-    fireEvent.click(screen.getByRole('button', { name: '로컬 규칙으로 시퀀스 구성' }));
+    fireEvent.click(screen.getByRole('button', { name: '시퀀스 구성하기' }));
 
     await waitFor(() => {
       expect(screen.getByLabelText('시퀀스 제목 편집')).toBeInTheDocument();
@@ -381,9 +378,9 @@ describe('FreeAiAssistantPanel UI journeys', () => {
     const applied = onApplyDraftSequence.mock.calls[0][0];
     expect(applied.title).toBe('검토 완료 블록·동작 50분 시퀀스');
     // Unreviewed exercise ex-unreviewed-99 must never be in applied steps
-    expect(applied.steps.some((s: { exerciseId: string }) => s.exerciseId === 'ex-unreviewed-99')).toBe(
-      false,
-    );
+    expect(
+      applied.steps.some((s: { exerciseId: string }) => s.exerciseId === 'ex-unreviewed-99'),
+    ).toBe(false);
   });
 
   it('supports P2 uiContract (renderBadge & renderNotice), P1 items-based blocks, and step reordering in Tab 3 (sequence-compose)', async () => {
@@ -432,7 +429,7 @@ describe('FreeAiAssistantPanel UI journeys', () => {
 
     // P2 contract badge and notice are rendered inside their semantic wrappers
     expect(renderBadgeSpy).toHaveBeenCalled();
-    expect(screen.getByTestId('p2-contract-badge')).toHaveTextContent('키 설정 불필요 · 무료 전용');
+    expect(screen.getByTestId('p2-contract-badge')).toHaveTextContent('조건 기반 추천');
     expect(renderNoticeSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         tone: 'warning',
@@ -450,7 +447,7 @@ describe('FreeAiAssistantPanel UI journeys', () => {
     ).toBeInTheDocument();
 
     // Compose sequence locally in Tab 3
-    fireEvent.click(screen.getByRole('button', { name: '로컬 규칙으로 시퀀스 구성' }));
+    fireEvent.click(screen.getByRole('button', { name: '시퀀스 구성하기' }));
 
     await waitFor(() => {
       expect(screen.getByRole('list', { name: '편집 가능한 시퀀스 단계' })).toBeInTheDocument();

@@ -454,9 +454,7 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
         expect(directResult.steps.length).toBeGreaterThanOrEqual(4);
         expect(
           directResult.steps.every((step) =>
-            REVIEWED_CATALOG.some(
-              (ex) => ex.id === step.exerciseId && isExerciseAutoEligible(ex),
-            ),
+            REVIEWED_CATALOG.some((ex) => ex.id === step.exerciseId && isExerciseAutoEligible(ex)),
           ),
         ).toBe(true);
         expect(fetchSpy).not.toHaveBeenCalled();
@@ -471,34 +469,20 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
           defaultLayer: 'standard',
         };
 
-        render(
-          <AiSequenceCoPilotPanel
-            criteria={criteria}
-            selectedEquipment={['reformer']}
-          />,
-        );
+        render(<AiSequenceCoPilotPanel criteria={criteria} selectedEquipment={['reformer']} />);
 
-        expect(
-          screen.getByText('외부 AI 생성은 아직 연결되지 않았습니다.'),
-        ).toBeInTheDocument();
-        const waitingBtn = screen.getByRole('button', {
-          name: '외부 AI 생성 · 무료 서버 연결 대기',
-        });
-        expect(waitingBtn).toBeDisabled();
+        expect(screen.getByRole('heading', { name: '주제별 수업 추천' })).toBeVisible();
+        expect(screen.queryByRole('button', { name: /외부 AI 생성/ })).not.toBeInTheDocument();
 
-        fireEvent.click(
-          screen.getByRole('button', { name: '50분 로컬 추천 만들기' }),
-        );
+        fireEvent.click(screen.getByRole('button', { name: '50분 수업 추천받기' }));
 
         await waitFor(() => {
-          expect(
-            screen.getByText('로컬 규칙 추천 · 외부 AI 미연결'),
-          ).toBeInTheDocument();
+          expect(screen.getByRole('region', { name: '추천 수업 미리보기' })).toBeInTheDocument();
         });
 
         fireEvent.click(
           screen.getByRole('button', {
-            name: /새 수업 초안으로 적용 · 이전 구성 되돌리기 가능/,
+            name: /새 수업 초안으로 적용/,
           }),
         );
 
@@ -912,11 +896,7 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
             apparatus: 'reformer',
             theme: '검토 완료 블록 시퀀스',
             strengthenAreas: ['core', 'glute-lower'],
-            selectedExerciseIds: [
-              'audit-ex-warmup',
-              'audit-ex-cooldown',
-              'audit-ex-unreviewed-99',
-            ],
+            selectedExerciseIds: ['audit-ex-warmup', 'audit-ex-cooldown', 'audit-ex-unreviewed-99'],
             selectedBlockIds: ['audit-blk-reviewed-1', 'audit-blk-unreviewed-2'],
           },
           REVIEWED_CATALOG,
@@ -1006,9 +986,7 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
         // 4c. Save sequence to binder
         const savedSeqId = usePilatesStore.getState().saveCurrentSequenceToBinder(true);
         expect(savedSeqId).toMatch(/^seq-/);
-        const savedSeq = usePilatesStore
-          .getState()
-          .savedSequences.find((s) => s.id === savedSeqId);
+        const savedSeq = usePilatesStore.getState().savedSequences.find((s) => s.id === savedSeqId);
         expect(savedSeq).toBeDefined();
         expect(savedSeq?.title).toBe(localDraftResp.result.title);
         expect(usePilatesStore.getState().saveFeedback).toBe('이 브라우저에 수업을 저장했습니다.');
@@ -1047,15 +1025,15 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
 
         // Remove the sequence locally and restore from backup
         usePilatesStore.getState().deleteSavedSequence(savedSeqId);
-        expect(
-          usePilatesStore.getState().savedSequences.some((s) => s.id === savedSeqId),
-        ).toBe(false);
+        expect(usePilatesStore.getState().savedSequences.some((s) => s.id === savedSeqId)).toBe(
+          false,
+        );
 
         const restoreRes = usePilatesStore.getState().restoreBackup(exportedJson);
         expect(restoreRes.success).toBe(true);
-        expect(
-          usePilatesStore.getState().savedSequences.some((s) => s.id === savedSeqId),
-        ).toBe(true);
+        expect(usePilatesStore.getState().savedSequences.some((s) => s.id === savedSeqId)).toBe(
+          true,
+        );
 
         // 5) FreeAiAssistantPanel UI survival: local draft generation + edit + apply to workbench
         const { unmount } = render(
@@ -1077,9 +1055,7 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
           />,
         );
 
-        fireEvent.click(
-          screen.getByRole('button', { name: '로컬 조건 추천으로 초안 만들기' }),
-        );
+        fireEvent.click(screen.getByRole('button', { name: '조건으로 초안 만들기' }));
 
         await waitFor(() => {
           expect(screen.getByLabelText('초안 제목 편집')).toBeInTheDocument();
@@ -1113,7 +1089,7 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
       expect(fetchInit?.signal).toBeUndefined();
 
       // Part 2: Verify a hung transport.postAssist keeps FreeAiAssistantPanel in isLoading=true,
-      // which disables the local fallback button ('로컬 조건 추천으로 초안 만들기')
+      // which disables the local fallback button ('조건으로 초안 만들기')
       let rejectHungRequest!: (reason?: unknown) => void;
       const hungTransport: FreeAiTransport = {
         getStatus: async () =>
@@ -1147,16 +1123,14 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
       );
 
       await waitFor(() => {
-        expect(
-          screen.getByRole('button', { name: '무료 AI 초안 만들기' }),
-        ).not.toBeDisabled();
+        expect(screen.getByRole('button', { name: '무료 AI 초안 만들기' })).not.toBeDisabled();
       });
 
       // Click external AI button -> transport.postAssist hangs
       fireEvent.click(screen.getByRole('button', { name: '무료 AI 초안 만들기' }));
 
       const localFallbackBtn = screen.getByRole('button', {
-        name: '로컬 조건 추천으로 초안 만들기',
+        name: '조건으로 초안 만들기',
       });
 
       // DEFECT-A1 reproduction: while external AI call is hung, the local fallback UI button is ALSO disabled!
@@ -1291,7 +1265,7 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
       );
 
       await waitFor(() => {
-        expect(screen.getByText('무료 AI 연결됨 (gemini-free)')).toBeInTheDocument();
+        expect(screen.getByText('AI 초안')).toBeInTheDocument();
       });
 
       const primaryBtn = screen.getByRole('button', { name: '무료 AI 초안 만들기' });
@@ -1301,8 +1275,9 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
         expect(screen.getByRole('alert')).toHaveTextContent('Failed to fetch');
       });
 
-      // DEFECT-A2 UI reproduction: badge still claims '무료 AI 연결됨 (gemini-free)' and primary external AI button remains enabled
-      expect(screen.getByText('무료 AI 연결됨 (gemini-free)')).toBeInTheDocument();
+      // The failed request is visible without claiming a live connection.
+      // Existing retry behavior remains enabled; client status is still asserted above.
+      expect(screen.getByText('AI 응답 확인 필요')).toBeInTheDocument();
       expect(primaryBtn).not.toBeDisabled();
       unmount();
     });
@@ -1411,9 +1386,7 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
       );
 
       await waitFor(() => {
-        expect(
-          screen.getByRole('status', { name: '외부 AI 비활성화 및 로컬 모드 안내' }),
-        ).toBeInTheDocument();
+        expect(screen.getByText('조건 기반 추천')).toBeInTheDocument();
       });
 
       const presetNameInput = screen.getByLabelText('현재 조건을 새 프리셋으로 저장');

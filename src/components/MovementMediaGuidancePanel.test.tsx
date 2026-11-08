@@ -4,7 +4,11 @@ import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { VERIFIED_REFERENCES } from '../data/verifiedReferences';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesExercise } from '../types/pilates';
-import { movementMediaSessionCoordinator } from '../utils/koreanVoiceNarration';
+import {
+  buildKoreanVoiceScript,
+  movementMediaSessionCoordinator,
+} from '../utils/koreanVoiceNarration';
+import { resolveMovementMediaBundle } from '../utils/movementMediaMatcher';
 import { MovementMediaGuidancePanel } from './MovementMediaGuidancePanel';
 import { YouTubePreviewModal } from './YouTubeClipModal';
 
@@ -157,10 +161,31 @@ describe('MovementMediaGuidancePanel — reference video/materials & Korean voic
       expect(externalLink).toHaveAttribute('target', '_blank');
       expect(externalLink).toHaveAttribute('rel', 'noopener noreferrer');
 
-      // Korean script text is visible by default
+      // Keep the entry compact, but preserve safety and an accessible script toggle.
+      expect(screen.queryByTestId('voice-script-text')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/유료 음성 API|한눈에 보기|Web Speech API|검증된 기관/),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId('full-script-copy-view')).not.toBeInTheDocument();
+      expect(screen.getByText(buildKoreanVoiceScript(exercise).disclaimerKo)).toBeVisible();
+      expect(
+        screen.getByText(
+          resolveMovementMediaBundle(exercise).primaryMatch.source.safetyDisclaimerKo,
+        ),
+      ).toBeVisible();
+      const sourceDetails = screen.getByText('자료 정보').closest('details');
+      expect(sourceDetails).not.toHaveAttribute('open');
+      const scriptToggle = screen.getByRole('button', { name: '대본 보기' });
+      expect(scriptToggle).toHaveAttribute('aria-expanded', 'false');
+      fireEvent.click(scriptToggle);
+      expect(scriptToggle).toHaveAttribute('aria-expanded', 'true');
       const scriptPanel = screen.getByTestId('voice-script-text');
       expect(scriptPanel).toBeVisible();
       expect(scriptPanel).toHaveTextContent(exercise.nameKo);
+      expect(scriptToggle).toHaveAttribute('aria-controls', scriptPanel.id);
+      fireEvent.click(scriptToggle);
+      expect(screen.queryByTestId('voice-script-text')).not.toBeInTheDocument();
+      expect(screen.getByText(buildKoreanVoiceScript(exercise).disclaimerKo)).toBeVisible();
     } finally {
       speechEnv.restore();
     }
@@ -218,11 +243,11 @@ describe('MovementMediaGuidancePanel — reference video/materials & Korean voic
       const exercise = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-bridge')!;
       render(<MovementMediaGuidancePanel exercise={exercise} />);
 
-      // Find a match tab with '외부 원본 전용'
+      // Find a match tab with '원본에서 보기'
       const tabs = screen
         .getAllByRole('button')
         .filter((btn) => btn.getAttribute('data-testid')?.startsWith('media-match-tab-'));
-      const externalOnlyTab = tabs.find((tab) => tab.textContent?.includes('외부 원본 전용'));
+      const externalOnlyTab = tabs.find((tab) => tab.textContent?.includes('원본에서 보기'));
       expect(externalOnlyTab).toBeDefined();
 
       fireEvent.click(externalOnlyTab!);
@@ -322,6 +347,7 @@ describe('MovementMediaGuidancePanel — reference video/materials & Korean voic
       expect(speechEnv.resumeSpy).toHaveBeenCalled();
 
       // Speak specific segment (e.g., segment 3: 티칭 큐)
+      fireEvent.click(screen.getByRole('button', { name: '대본 보기' }));
       fireEvent.click(screen.getByTestId('speak-segment-btn-3'));
       expect(speechEnv.speakCalls.at(-1)?.text).toContain('첫째');
 
@@ -353,7 +379,7 @@ describe('MovementMediaGuidancePanel — reference video/materials & Korean voic
       render(<MovementMediaGuidancePanel exercise={exercise} />);
 
       expect(screen.getByTestId('mobile-tts-capability-badge')).toHaveTextContent(
-        /미지원|텍스트 대본/,
+        /한국어 음성을 사용할 수 없어요/,
       );
       const scriptText = screen.getByTestId('voice-script-text');
       expect(scriptText).toBeVisible();
@@ -403,15 +429,13 @@ describe('MovementMediaGuidancePanel — reference video/materials & Korean voic
         },
       };
 
-      const { rerender } = render(
-        <YouTubePreviewModal exercise={exercise1} onClose={vi.fn()} />,
-      );
+      const { rerender } = render(<YouTubePreviewModal exercise={exercise1} onClose={vi.fn()} />);
 
       const dialog = screen.getByRole('dialog', { name: exercise1.nameKo });
       const mediaPanel = within(dialog).getByTestId('movement-media-guidance-panel');
       expect(mediaPanel).toHaveAttribute('data-exercise-id', exercise1.id);
       expect(within(mediaPanel).getByTestId('external-original-source-link')).toBeVisible();
-      expect(within(mediaPanel).getByTestId('voice-script-text')).toBeVisible();
+      expect(within(mediaPanel).queryByTestId('voice-script-text')).not.toBeInTheDocument();
 
       expect(fetchSpy).not.toHaveBeenCalled();
       expect(setItemSpy).not.toHaveBeenCalled();

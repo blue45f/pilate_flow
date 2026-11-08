@@ -53,9 +53,7 @@ interface ScopedEmbedState {
   failureInfo: EmbedFailureFallbackResult | null;
 }
 
-function buildInitialVoiceControllerState(
-  exerciseId: string,
-): KoreanVoiceControllerState {
+function buildInitialVoiceControllerState(exerciseId: string): KoreanVoiceControllerState {
   const capability = inspectMobileAndBrowserTtsSupport();
   return {
     exerciseId,
@@ -109,7 +107,9 @@ function MovementMediaGuidanceInner({
     failureInfo: null,
   }));
 
-  const [showScriptText, setShowScriptText] = useState<boolean>(true);
+  const [showScriptText, setShowScriptText] = useState(
+    () => !inspectMobileAndBrowserTtsSupport().canAttemptSpeech,
+  );
   const [voiceState, setVoiceState] = useState<KoreanVoiceControllerState>(() =>
     buildInitialVoiceControllerState(exercise.id),
   );
@@ -127,23 +127,16 @@ function MovementMediaGuidanceInner({
     scopedSelection.exerciseId === exercise.id ? scopedSelection.section : 'all';
 
   const activeMatch: MovementMediaMatch = useMemo(() => {
-    return (
-      bundle.matches.find((item) => item.matchId === selectedMatchId) ??
-      bundle.primaryMatch
-    );
+    return bundle.matches.find((item) => item.matchId === selectedMatchId) ?? bundle.primaryMatch;
   }, [bundle, selectedMatchId]);
 
   const embedState: EmbedPlaybackState =
-    active &&
-    scopedEmbed.exerciseId === exercise.id &&
-    scopedEmbed.matchId === activeMatch.matchId
+    active && scopedEmbed.exerciseId === exercise.id && scopedEmbed.matchId === activeMatch.matchId
       ? scopedEmbed.state
       : 'idle';
 
   const failureInfo: EmbedFailureFallbackResult | null =
-    active &&
-    scopedEmbed.exerciseId === exercise.id &&
-    scopedEmbed.matchId === activeMatch.matchId
+    active && scopedEmbed.exerciseId === exercise.id && scopedEmbed.matchId === activeMatch.matchId
       ? scopedEmbed.failureInfo
       : null;
 
@@ -162,21 +155,18 @@ function MovementMediaGuidanceInner({
       controller.stop('동작 화면이 비활성화되어 음성을 멈췄습니다.');
     }
 
-    const unregister = movementMediaSessionCoordinator.registerActiveSession(
-      exercise.id,
-      {
-        stopVideo: () => {
-          setScopedEmbed((prev) => ({
-            ...prev,
-            state: 'idle',
-            failureInfo: null,
-          }));
-        },
-        stopVoice: () => {
-          controller.stop('다른 동작으로 이동하여 음성을 멈췄습니다.');
-        },
+    const unregister = movementMediaSessionCoordinator.registerActiveSession(exercise.id, {
+      stopVideo: () => {
+        setScopedEmbed((prev) => ({
+          ...prev,
+          state: 'idle',
+          failureInfo: null,
+        }));
       },
-    );
+      stopVoice: () => {
+        controller.stop('다른 동작으로 이동하여 음성을 멈췄습니다.');
+      },
+    });
 
     if (active) {
       movementMediaSessionCoordinator.notifyMovementActivated(exercise.id);
@@ -201,9 +191,7 @@ function MovementMediaGuidanceInner({
           state: 'idle',
           failureInfo: null,
         }));
-        controllerRef.current?.stop(
-          '화면이 백그라운드로 전환되어 음성을 멈췄습니다.',
-        );
+        controllerRef.current?.stop('화면이 백그라운드로 전환되어 음성을 멈췄습니다.');
       }
     };
 
@@ -322,7 +310,7 @@ function MovementMediaGuidanceInner({
     });
   };
 
-  const handleSpeedChange = ( nextSpeedRaw: string ) => {
+  const handleSpeedChange = (nextSpeedRaw: string) => {
     const parsed = Number(nextSpeedRaw) as KoreanVoicePlaybackSpeed;
     if ((KOREAN_VOICE_SPEED_OPTIONS as readonly number[]).includes(parsed)) {
       controllerRef.current?.setSpeed(parsed);
@@ -333,17 +321,13 @@ function MovementMediaGuidanceInner({
     if (selectedSection === 'all') {
       return voiceScript.segments;
     }
-    return voiceScript.segments.filter(
-      (segment) => segment.section === selectedSection,
-    );
+    return voiceScript.segments.filter((segment) => segment.section === selectedSection);
   }, [voiceScript.segments, selectedSection]);
 
   const canLoadEmbed =
-    activeMatch.embedResolution.allowed &&
-    Boolean(activeMatch.embedResolution.embedUrl);
+    activeMatch.embedResolution.allowed && Boolean(activeMatch.embedResolution.embedUrl);
 
-  const fallbackNoticeText =
-    failureInfo?.noticeKo ?? activeMatch.embedResolution.reasonKo;
+  const fallbackNoticeText = failureInfo?.noticeKo ?? activeMatch.embedResolution.reasonKo;
 
   const rootClassName = `movement-media-guidance-panel ${className}`.trim();
 
@@ -358,29 +342,11 @@ function MovementMediaGuidanceInner({
       <div className="mmg-section">
         <div className="mmg-section-header">
           <div className="mmg-section-title-group">
-            <p className="mmg-section-eyebrow">신뢰 공개 자료 매칭 · 수동 재생 정책</p>
-            <h3 className="mmg-section-title">
-              동작별 참고 영상·신뢰 출처 자료
-            </h3>
-            <p className="mmg-section-subtitle">
-              검증된 기관·공식 채널의 공개 자료를 연결하며, 임베드 가능 여부와 관계없이 외부 원본 보기 링크를 항상 제공합니다.
-            </p>
-          </div>
-          <div className="mmg-badge-row">
-            <span className="mmg-badge mmg-badge--primary">
-              신뢰 출처 매칭 {bundle.matches.length}건
-            </span>
-            <span className="mmg-badge mmg-badge--info">
-              자동 재생 없음 · 수동 시작 전용
-            </span>
+            <h3 className="mmg-section-title">참고 영상·자료</h3>
           </div>
         </div>
 
-        <div
-          className="mmg-match-tabs"
-          role="group"
-          aria-label="매칭된 공개 참고 출처 선택"
-        >
+        <div className="mmg-match-tabs" role="group" aria-label="매칭된 공개 참고 출처 선택">
           {bundle.matches.map((match, index) => {
             const isSelected = match.matchId === activeMatch.matchId;
             return (
@@ -393,22 +359,15 @@ function MovementMediaGuidanceInner({
                 onClick={() => handleSelectMatch(match)}
               >
                 <div className="mmg-match-tab__top">
-                  <span className="mmg-badge">{match.matchTierLabelKo}</span>
                   <span
                     className={`mmg-badge ${
-                      match.embedResolution.allowed
-                        ? 'mmg-badge--allowed'
-                        : 'mmg-badge--external'
+                      match.embedResolution.allowed ? 'mmg-badge--allowed' : 'mmg-badge--external'
                     }`}
                   >
-                    {match.embedResolution.allowed
-                      ? '공식 임베드 가능'
-                      : '외부 원본 전용'}
+                    {match.embedResolution.allowed ? '여기서 보기' : '원본에서 보기'}
                   </span>
                 </div>
-                <span className="mmg-match-tab__title">
-                  {match.source.titleKo}
-                </span>
+                <span className="mmg-match-tab__title">{match.source.titleKo}</span>
                 <span className="mmg-match-tab__publisher">
                   {match.source.publisher} · {match.source.languageLabelKo}
                 </span>
@@ -420,51 +379,41 @@ function MovementMediaGuidanceInner({
         <div className="mmg-match-card" data-testid="selected-media-match-card">
           <div className="mmg-match-card__header">
             <div>
-              <h4 className="mmg-match-card__title">
-                {activeMatch.source.titleKo}
-              </h4>
+              <h4 className="mmg-match-card__title">{activeMatch.source.titleKo}</h4>
               <p className="mmg-match-card__subtitle">
-                게시 기관·채널: {activeMatch.source.publisher} (
-                {activeMatch.source.languageLabelKo})
+                {activeMatch.source.publisher} ({activeMatch.source.languageLabelKo})
               </p>
             </div>
             <div className="mmg-badge-row">
-              <span className="mmg-badge mmg-badge--info">
-                {activeMatch.source.verificationStatusLabelKo}
-              </span>
               <span className="mmg-badge">
-                {activeMatch.isExactDemonstration
-                  ? '원출처 시연 자료'
-                  : '참고 시연·도해 자료'}
+                {activeMatch.isExactDemonstration ? '원출처 시연 자료' : '참고 시연·도해 자료'}
               </span>
             </div>
           </div>
 
-          <ul className="mmg-match-meta-list">
-            <li className="mmg-match-meta-item">
-              <strong>동작 매칭 근거</strong>
-              <span>{activeMatch.matchReasonKo}</span>
-            </li>
-            <li className="mmg-match-meta-item">
-              <strong>권리 및 출처 정책</strong>
-              <span>{activeMatch.source.rightsNoteKo}</span>
-            </li>
-            <li className="mmg-match-meta-item">
-              <strong>수업 안전 고지</strong>
-              <span>{activeMatch.source.safetyDisclaimerKo}</span>
-            </li>
-          </ul>
+          <p className="mmg-voice-disclaimer">{activeMatch.source.safetyDisclaimerKo}</p>
+          <details className="mmg-full-script-details">
+            <summary>자료 정보</summary>
+            <ul className="mmg-match-meta-list">
+              <li className="mmg-match-meta-item">
+                <strong>연결 이유</strong>
+                <span>{activeMatch.matchReasonKo}</span>
+              </li>
+              <li className="mmg-match-meta-item">
+                <strong>확인 기록</strong>
+                <span>{activeMatch.source.verificationStatusLabelKo}</span>
+              </li>
+              <li className="mmg-match-meta-item">
+                <strong>이용 안내</strong>
+                <span>{activeMatch.source.rightsNoteKo}</span>
+              </li>
+            </ul>
+          </details>
 
           {activeMatch.source.observationPoints.length > 0 && (
-            <ul
-              className="mmg-observation-list"
-              aria-label="출처 관찰 포인트"
-            >
+            <ul className="mmg-observation-list" aria-label="출처 관찰 포인트">
               {activeMatch.source.observationPoints.map((pt, idx) => (
-                <li
-                  key={`${activeMatch.matchId}-obs-${idx}`}
-                  className="mmg-observation-chip"
-                >
+                <li key={`${activeMatch.matchId}-obs-${idx}`} className="mmg-observation-chip">
                   {pt.seconds}초 · {pt.note}
                 </li>
               ))}
@@ -479,16 +428,14 @@ function MovementMediaGuidanceInner({
           >
             {canLoadEmbed && embedState === 'idle' && (
               <div className="mmg-embed-idle">
-                <p className="mmg-embed-idle__text">
-                  초기 진입·동작 전환·재방문 시 자동 재생하지 않습니다. 버튼을 눌렀을 때만 공식 개인정보 보호 모드(youtube-nocookie) 플레이어를 불러옵니다.
-                </p>
+                <p className="mmg-embed-idle__text">버튼을 누르면 YouTube 영상을 불러옵니다.</p>
                 <button
                   type="button"
                   className="mmg-btn mmg-btn-primary"
                   data-testid="manual-load-video-btn"
                   onClick={handleManualLoadVideo}
                 >
-                  참고 영상 수동 불러오기
+                  영상 보기
                 </button>
               </div>
             )}
@@ -523,7 +470,7 @@ function MovementMediaGuidanceInner({
                     data-testid="report-embed-failure-btn"
                     onClick={handleReportEmbedBlocked}
                   >
-                    임베드 불가·재생 실패 시 전환
+                    영상이 안 나오나요?
                   </button>
                 </div>
               </>
@@ -539,19 +486,15 @@ function MovementMediaGuidanceInner({
                 aria-live="polite"
               >
                 <p>{fallbackNoticeText}</p>
-                <p>
-                  아래 외부 원본 보기 링크를 통해 게시 기관({activeMatch.source.publisher})의 원본 페이지에서 안전하게 열람할 수 있습니다.
-                </p>
                 {canLoadEmbed &&
-                  (embedState === 'embed-blocked' ||
-                    embedState === 'playback-failed') && (
+                  (embedState === 'embed-blocked' || embedState === 'playback-failed') && (
                     <button
                       type="button"
                       className="mmg-btn mmg-btn-secondary mmg-btn-sm"
                       data-testid="reset-embed-state-btn"
                       onClick={handleResetEmbedState}
                     >
-                      수동 대기 상태로 초기화
+                      다시 시도
                     </button>
                   )}
               </div>
@@ -559,9 +502,6 @@ function MovementMediaGuidanceInner({
           </div>
 
           <div className="mmg-external-link-bar">
-            <p className="mmg-external-link-hint">
-              임베드 재생 전·재생 중·임베드 비허용 또는 재생 오류 시 언제나 원본 출처를 새 창에서 열 수 있습니다.
-            </p>
             <a
               href={activeMatch.embedResolution.externalOriginalUrl}
               target="_blank"
@@ -569,7 +509,7 @@ function MovementMediaGuidanceInner({
               className="mmg-external-link"
               data-testid="external-original-source-link"
             >
-              외부 원본 보기 ({activeMatch.source.publisher})
+              원본 보기 ({activeMatch.source.publisher})
             </a>
           </div>
         </div>
@@ -579,40 +519,18 @@ function MovementMediaGuidanceInner({
       <div className="mmg-section">
         <div className="mmg-section-header">
           <div className="mmg-section-title-group">
-            <p className="mmg-section-eyebrow">
-              유료 음성 API 미사용 · Web Speech API & 한국어 대본
-            </p>
-            <h3 className="mmg-section-title">
-              한국어 음성 설명 (무료 브라우저·기기 TTS)
-            </h3>
-            <p className="mmg-section-subtitle">
-              예상 낭독 시간 약 {voiceScript.estimatedDurationSec}초 · 버튼을 직접 눌렀을 때만 한국어 음성이 시작되며, 모든 설명은 아래 텍스트 대본으로 함께 제공됩니다.
-            </p>
+            <h3 className="mmg-section-title">음성 안내</h3>
+            <p className="mmg-section-subtitle">약 {voiceScript.estimatedDurationSec}초</p>
           </div>
         </div>
 
-        <div
-          className="mmg-tts-capability-box"
-          data-testid="mobile-tts-capability-badge"
-        >
-          <div className="mmg-tts-capability-box__top">
-            <span className="mmg-badge mmg-badge--primary">
-              {voiceState.capability.summaryLabelKo}
-            </span>
-            <span className="mmg-badge">
-              {voiceState.capability.platformLabelKo}
-            </span>
-          </div>
-          <p className="mmg-tts-capability-box__note">
-            {voiceState.capability.detailNoteKo}
+        {!voiceState.capability.canAttemptSpeech && (
+          <p className="mmg-tts-capability-box" data-testid="mobile-tts-capability-badge">
+            이 기기에서 한국어 음성을 사용할 수 없어요. 아래 대본을 확인해 주세요.
           </p>
-        </div>
+        )}
 
-        <div
-          className="mmg-voice-toolbar"
-          role="group"
-          aria-label="한국어 음성 설명 제어"
-        >
+        <div className="mmg-voice-toolbar" role="group" aria-label="한국어 음성 설명 제어">
           <div className="mmg-voice-toolbar__buttons">
             <button
               type="button"
@@ -626,9 +544,7 @@ function MovementMediaGuidanceInner({
                 }
               }}
             >
-              {voiceState.status === 'paused'
-                ? '음성 이어 듣기'
-                : '한국어 음성 설명 재생'}
+              {voiceState.status === 'paused' ? '음성 이어 듣기' : '음성 듣기'}
             </button>
 
             <button
@@ -645,13 +561,8 @@ function MovementMediaGuidanceInner({
               type="button"
               className="mmg-btn mmg-btn-secondary"
               data-testid="voice-stop-btn"
-              disabled={
-                voiceState.status === 'idle' ||
-                voiceState.status === 'unsupported'
-              }
-              onClick={() =>
-                controllerRef.current?.stop('사용자가 음성 설명을 멈췄습니다.')
-              }
+              disabled={voiceState.status === 'idle' || voiceState.status === 'unsupported'}
+              onClick={() => controllerRef.current?.stop('사용자가 음성 설명을 멈췄습니다.')}
             >
               음성 정지
             </button>
@@ -661,12 +572,10 @@ function MovementMediaGuidanceInner({
               className="mmg-btn mmg-btn-ghost"
               data-testid="toggle-voice-script-btn"
               aria-expanded={showScriptText}
-              aria-controls={scriptPanelId}
+              aria-controls={showScriptText ? scriptPanelId : undefined}
               onClick={() => setShowScriptText((prev) => !prev)}
             >
-              {showScriptText
-                ? '음성 설명 텍스트 대본 접기'
-                : '음성 설명 텍스트 대본 펼치기'}
+              {showScriptText ? '대본 접기' : '대본 보기'}
             </button>
           </div>
 
@@ -688,11 +597,7 @@ function MovementMediaGuidanceInner({
           </label>
         </div>
 
-        <div
-          className="mmg-section-chips"
-          role="group"
-          aria-label="음성 설명 구간 선택"
-        >
+        <div className="mmg-section-chips" role="group" aria-label="음성 설명 구간 선택">
           {VOICE_SECTION_ORDER.map((sectionKey) => {
             const isSelected = selectedSection === sectionKey;
             return (
@@ -716,7 +621,9 @@ function MovementMediaGuidanceInner({
           className="mmg-voice-status"
           data-testid="voice-status-announcement"
         >
-          {voiceState.announcementKo}
+          {voiceState.status === 'idle' || voiceState.status === 'unsupported'
+            ? ''
+            : voiceState.announcementKo}
         </p>
 
         {showScriptText && (
@@ -742,9 +649,7 @@ function MovementMediaGuidanceInner({
                         className="mmg-btn mmg-btn-secondary mmg-btn-sm"
                         data-testid={`speak-segment-btn-${segment.index}`}
                         aria-label={`${segment.index + 1}. ${segment.labelKo} 구간 듣기`}
-                        onClick={() =>
-                          controllerRef.current?.speakSegment(segment.index)
-                        }
+                        onClick={() => controllerRef.current?.speakSegment(segment.index)}
                       >
                         이 구간 듣기
                       </button>
@@ -754,18 +659,9 @@ function MovementMediaGuidanceInner({
                 );
               })}
             </ol>
-
-            <details
-              className="mmg-full-script-details"
-              data-testid="full-script-copy-view"
-            >
-              <summary>전체 한국어 음성 대본 한눈에 보기</summary>
-              <p>{voiceScript.fullTextKo}</p>
-            </details>
-
-            <p className="mmg-voice-disclaimer">{voiceScript.disclaimerKo}</p>
           </div>
         )}
+        <p className="mmg-voice-disclaimer">{voiceScript.disclaimerKo}</p>
       </div>
     </section>
   );

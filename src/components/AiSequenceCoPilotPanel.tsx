@@ -176,8 +176,7 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
       draftCriteria: structuredClone(criteria),
       undoStack: [...current.undoStack.slice(-19), previous],
       generationError: null,
-      saveFeedback:
-        '로컬 추천을 새 수업 초안으로 적용했습니다. 되돌리기로 이전 구성을 복원할 수 있습니다.',
+      saveFeedback: '새 수업 초안을 적용했습니다. 되돌리기로 이전 구성을 복원할 수 있습니다.',
     });
     setAppliedBanner(
       `‘${result.titleKo}’ 시퀀스가 현재 수업 구성에 반영되었습니다. 각 동작의 검토 상태와 세팅을 확인해 주세요.`,
@@ -186,24 +185,20 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
   };
 
   return (
-    <section className="ai-copilot-panel" aria-label="로컬 주제별 수업 추천">
+    <section className="ai-copilot-panel" aria-label="주제별 수업 추천">
       <div className="ai-copilot-header">
         <div className="ai-copilot-title-row">
-          <span className="ai-copilot-badge">
-            <Sparkles size={14} aria-hidden="true" />
-            LOCAL PRESETS · PRIVATE ON DEVICE
-          </span>
           <span className="ai-copilot-overlap-pill">
             <ShieldCheck size={13} aria-hidden="true" />
-            최근 {excludeWindow}일 수업 중복 배제 ({excludedIds.size}개 동작 제외)
+            {excludeWindow > 0
+              ? `최근 ${excludeWindow}일 동작 ${excludedIds.size}개 제외`
+              : '이전 수업과 중복 허용'}
           </span>
         </div>
-        <h3>로컬 시퀀스 추천</h3>
+        <h3>주제별 수업 추천</h3>
         <p className="ai-copilot-desc">
-          목표 수업 시간(<strong>{criteria.targetMinutes}분</strong>
-          {criteria.restMinutes ? ` · 휴식 ${criteria.restMinutes}분 포함` : ''})에 초 단위로
-          합산하고, 최근 진행·저장한 수업 동작과의 중복을 피해 선택한 주제에 맞는 시퀀스를
-          설계합니다.
+          {criteria.targetMinutes}분 수업에 맞는 주제를 고르세요.
+          {criteria.restMinutes ? ` 휴식 ${criteria.restMinutes}분 포함` : ''}
         </p>
       </div>
 
@@ -227,7 +222,7 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
 
       <div className="ai-copilot-controls-row">
         <label className="ai-copilot-prompt-field">
-          <span>맞춤 수업 주제·요청사항 (자연어 입력 · 선택)</span>
+          <span>요청사항 (선택)</span>
           <input
             type="text"
             value={customPrompt}
@@ -252,22 +247,11 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
 
       {excludedNames.length > 0 && (
         <p className="ai-copilot-excluded-list">
-          <strong>자동 배제되는 최근 수업 동작:</strong> {excludedNames.slice(0, 6).join(' · ')}
+          <strong>제외 동작:</strong> {excludedNames.slice(0, 6).join(' · ')}
           {excludedNames.length > 6 ? ` 외 ${excludedNames.length - 6}개` : ''}
         </p>
       )}
 
-      <div className="ai-copilot-key-box" role="note">
-        <strong>외부 AI 생성은 아직 연결되지 않았습니다.</strong>
-        <p>
-          무료 전용 서버와 비용 차단이 검증될 때까지 외부 AI는 비활성입니다. 아래 추천은 이 기기의
-          규칙 기반 프리셋이며, 입력·수업 이력·건강정보를 외부로 보내지 않습니다. API 키를 입력하지
-          마세요.
-        </p>
-        <button type="button" className="btn-secondary" disabled>
-          외부 AI 생성 · 무료 서버 연결 대기
-        </button>
-      </div>
       {error && (
         <p role="alert" className="ai-applied-banner">
           {error}
@@ -283,9 +267,7 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
         >
           {loading ? <RefreshCw size={17} className="spin" /> : <Sparkles size={17} />}
           <span>
-            {loading
-              ? '검토 완료 동작으로 로컬 초안을 구성 중...'
-              : `${criteria.targetMinutes}분 로컬 추천 만들기`}
+            {loading ? '수업 초안 만드는 중...' : `${criteria.targetMinutes}분 수업 추천받기`}
           </span>
         </button>
       </div>
@@ -294,11 +276,10 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
         <p role="status">조건 또는 이전 수업 이력이 바뀌었습니다. 적용하려면 다시 추천해 주세요.</p>
       )}
       {result && (
-        <div className="ai-copilot-result" role="region" aria-label="로컬 추천 시퀀스 미리보기">
+        <div className="ai-copilot-result" role="region" aria-label="추천 수업 미리보기">
           <div className="ai-result-header">
             <div>
               <div className="ai-result-badges">
-                <span className="ai-badge-engine">{result.modelName}</span>
                 <span className="ai-badge-time">
                   <Clock3 size={13} /> 총 {formatSecondsToMMSS(result.totalSeconds)} / 목표{' '}
                   {result.targetMinutes}분 (강사 검토 필요)
@@ -323,7 +304,7 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
               onClick={handleApplyToWorkbench}
               disabled={loading || resultInput !== inputKey}
             >
-              <Play size={16} /> 새 수업 초안으로 적용 · 이전 구성 되돌리기 가능
+              <Play size={16} /> 새 수업 초안으로 적용
             </button>
           </div>
 
@@ -388,8 +369,8 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
             })}
           </ol>
           <p className="ai-result-disclaimer">
-            로컬 규칙 추천은 시간·이전 수업 이력·주제 키워드를 조합한 수업 계획 초안입니다. 실제
-            수업 전 강사가 기구 스프링, 회원별 금기 사항, 동작 검토 상태를 직접 확인하세요.
+            추천은 수업 계획 초안입니다. 수업 전 강사가 기구 스프링, 회원별 금기 사항, 동작 검토
+            상태를 직접 확인하세요.
           </p>
         </div>
       )}
