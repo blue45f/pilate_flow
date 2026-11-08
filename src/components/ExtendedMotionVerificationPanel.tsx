@@ -73,9 +73,9 @@ export function ExtendedMotionVerificationPanel({
         marginTop: '14px',
         padding: '16px',
         borderRadius: '14px',
-        border: '1px solid #cbd5e1',
-        background: '#f8fafc',
-        color: '#0f172a',
+        border: '1px solid var(--pf-color-border-default, #cbd5e1)',
+        background: 'var(--pf-color-bg-surface-subtle, #f8fafc)',
+        color: 'var(--pf-color-text-primary, #0f172a)',
         minWidth: 0,
         maxWidth: '100%',
       }}
@@ -91,10 +91,21 @@ export function ExtendedMotionVerificationPanel({
         }}
       >
         <div>
-          <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>
+          <strong
+            style={{
+              fontSize: '0.95rem',
+              color: 'var(--pf-color-text-primary, #0f172a)',
+            }}
+          >
             출처·근거 대조 원장 &amp; 후보 모션 초안 기록
           </strong>
-          <div style={{ fontSize: '0.78rem', color: '#475569', marginTop: '2px' }}>
+          <div
+            style={{
+              fontSize: '0.78rem',
+              color: 'var(--pf-color-text-secondary, #475569)',
+              marginTop: '2px',
+            }}
+          >
             {auditBundle.verificationBoundaryNoticeKo} · 기준일 {auditBundle.checkedAt}
           </div>
         </div>
@@ -105,8 +116,8 @@ export function ExtendedMotionVerificationPanel({
             fontFamily: 'monospace',
             padding: '4px 8px',
             borderRadius: '999px',
-            background: '#e2e8f0',
-            color: '#1e293b',
+            background: 'var(--pf-color-bg-surface-muted, #e2e8f0)',
+            color: 'var(--pf-color-text-primary, #1e293b)',
           }}
         >
           SHA-256: {auditBundle.primaryFactualRecordSha256.slice(0, 16)}…
@@ -120,8 +131,8 @@ export function ExtendedMotionVerificationPanel({
             marginBottom: '14px',
             padding: '14px',
             borderRadius: '12px',
-            background: '#ffffff',
-            border: '1px solid #dbeafe',
+            background: 'var(--pf-color-bg-surface, #ffffff)',
+            border: '1px solid var(--pf-color-border-default, #dbeafe)',
           }}
         >
           <div
@@ -142,16 +153,28 @@ export function ExtendedMotionVerificationPanel({
                   fontWeight: 700,
                   padding: '2px 8px',
                   borderRadius: '999px',
-                  background: '#dbeafe',
-                  color: '#1e40af',
+                  background: 'var(--pf-color-bg-surface-muted, #dbeafe)',
+                  color: 'var(--pf-color-action-primary, #1e40af)',
                   marginRight: '8px',
                 }}
               >
                 후보 매트 모션 도해 ({candidateModel.candidateId})
               </span>
-              <strong style={{ fontSize: '0.9rem' }}>{candidateModel.titleKo}</strong>
+              <strong
+                style={{
+                  fontSize: '0.9rem',
+                  color: 'var(--pf-color-text-primary, #0f172a)',
+                }}
+              >
+                {candidateModel.titleKo}
+              </strong>
             </div>
-            <span style={{ fontSize: '0.78rem', color: '#334155' }}>
+            <span
+              style={{
+                fontSize: '0.78rem',
+                color: 'var(--pf-color-text-secondary, #334155)',
+              }}
+            >
               진행률: <strong>{progressPercent}%</strong> · {pose.phaseLabelKo}
             </span>
           </div>
@@ -187,9 +210,15 @@ export function ExtendedMotionVerificationPanel({
                     minWidth: '44px',
                     padding: '8px 12px',
                     borderRadius: '8px',
-                    border: isSelected ? '1.5px solid #0f766e' : '1px solid #cbd5e1',
-                    background: isSelected ? '#ccfbf1' : '#f8fafc',
-                    color: isSelected ? '#115e59' : '#334155',
+                    border: isSelected
+                      ? '1.5px solid var(--pf-color-action-primary, #0f766e)'
+                      : '1px solid var(--pf-color-border-default, #cbd5e1)',
+                    background: isSelected
+                      ? 'var(--pf-color-bg-surface-muted, #ccfbf1)'
+                      : 'var(--pf-color-bg-surface-subtle, #f8fafc)',
+                    color: isSelected
+                      ? 'var(--pf-color-action-primary, #115e59)'
+                      : 'var(--pf-color-text-primary, #334155)',
                     fontWeight: isSelected ? 700 : 500,
                     fontSize: '0.8rem',
                     cursor: 'pointer',
@@ -212,7 +241,11 @@ export function ExtendedMotionVerificationPanel({
           >
             <label
               htmlFor={`${baseId}-progress-range`}
-              style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155' }}
+              style={{
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                color: 'var(--pf-color-text-primary, #334155)',
+              }}
             >
               연속 동작 진행률 조절 ({progressPercent}%)
             </label>
@@ -229,7 +262,11 @@ export function ExtendedMotionVerificationPanel({
             />
           </div>
 
-          <div id={`${baseId}-motion-tabpanel`} role="tabpanel">
+          <div
+            id={`${baseId}-motion-tabpanel`}
+            role="tabpanel"
+            aria-labelledby={`${baseId}-tab-${PHASE_TABS[activePhaseIndex].id}`}
+          >
             <svg
               data-testid="extended-candidate-motion-svg"
               data-candidate-id={candidateModel.candidateId}
@@ -243,8 +280,8 @@ export function ExtendedMotionVerificationPanel({
                 width: '100%',
                 maxHeight: '240px',
                 borderRadius: '10px',
-                background: '#f1f5f9',
-                border: '1px solid #cbd5e1',
+                background: 'var(--pf-color-bg-surface-subtle, #f1f5f9)',
+                border: '1px solid var(--pf-color-border-default, #cbd5e1)',
               }}
             >
               <title>{`${candidateModel.titleKo} · ${pose.phaseLabelKo} (${progressPercent}%)`}</title>
@@ -395,12 +432,17 @@ export function ExtendedMotionVerificationPanel({
                 marginTop: '8px',
                 marginBottom: '6px',
                 fontSize: '0.82rem',
-                color: '#1e293b',
+                color: 'var(--pf-color-text-primary, #1e293b)',
               }}
             >
               <strong>국면 큐:</strong> {pose.phaseCueKo}
             </p>
-            <div style={{ fontSize: '0.76rem', color: '#475569' }}>
+            <div
+              style={{
+                fontSize: '0.76rem',
+                color: 'var(--pf-color-text-secondary, #475569)',
+              }}
+            >
               <strong>지지 앵커:</strong>{' '}
               {pose.supportAnchors.map((a) => a.labelKo).join(' · ')}
             </div>
@@ -414,14 +456,21 @@ export function ExtendedMotionVerificationPanel({
         style={{
           padding: '12px',
           borderRadius: '10px',
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
+          background: 'var(--pf-color-bg-surface, #ffffff)',
+          border: '1px solid var(--pf-color-border-default, #e2e8f0)',
+          color: 'var(--pf-color-text-primary, #0f172a)',
           fontSize: '0.82rem',
           minWidth: 0,
           maxWidth: '100%',
         }}
       >
-        <div style={{ fontWeight: 700, marginBottom: '8px', color: '#0f172a' }}>
+        <div
+          style={{
+            fontWeight: 700,
+            marginBottom: '8px',
+            color: 'var(--pf-color-text-primary, #0f172a)',
+          }}
+        >
           출처·근거 대조 원장 요약 ({exercise.id})
         </div>
 
@@ -431,8 +480,8 @@ export function ExtendedMotionVerificationPanel({
             style={{
               padding: '8px 10px',
               borderRadius: '8px',
-              background: '#f0fdf4',
-              border: '1px solid #bbf7d0',
+              background: 'var(--pf-color-bg-surface-subtle, #f0fdf4)',
+              border: '1px solid var(--pf-color-border-default, #bbf7d0)',
               marginBottom: '8px',
               minWidth: 0,
               maxWidth: '100%',
@@ -465,11 +514,22 @@ export function ExtendedMotionVerificationPanel({
                 {auditBundle.verifiedReferenceAuditRecord.originalTitle})
               </a>
             </div>
-            <div style={{ marginTop: '3px', color: '#166534' }}>
+            <div
+              style={{
+                marginTop: '3px',
+                color: 'var(--pf-color-status-success-text, #166534)',
+              }}
+            >
               {auditBundle.verifiedReferenceAuditRecord.reviewedScopeKo} ·{' '}
               {auditBundle.verifiedReferenceAuditRecord.biomechanicalAlignmentNoteKo}
             </div>
-            <div style={{ marginTop: '2px', fontSize: '0.75rem', color: '#475569' }}>
+            <div
+              style={{
+                marginTop: '2px',
+                fontSize: '0.75rem',
+                color: 'var(--pf-color-text-secondary, #475569)',
+              }}
+            >
               레코드 SHA-256:{' '}
               <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
                 {auditBundle.verifiedReferenceAuditRecord.factualRecordSha256}
@@ -484,8 +544,8 @@ export function ExtendedMotionVerificationPanel({
             style={{
               padding: '8px 10px',
               borderRadius: '8px',
-              background: '#fffbeb',
-              border: '1px solid #fde68a',
+              background: 'var(--pf-color-bg-surface-subtle, #fffbeb)',
+              border: '1px solid var(--pf-color-border-default, #fde68a)',
               marginBottom: '8px',
               minWidth: 0,
               maxWidth: '100%',
@@ -497,7 +557,12 @@ export function ExtendedMotionVerificationPanel({
                 {auditBundle.clearedYoutubeReplacementAudit.exerciseId}):
               </strong>
             </div>
-            <div style={{ marginTop: '3px', color: '#92400e' }}>
+            <div
+              style={{
+                marginTop: '3px',
+                color: 'var(--pf-color-status-warning-text, #92400e)',
+              }}
+            >
               {auditBundle.clearedYoutubeReplacementAudit.clearedReasonKo}
             </div>
             <ul style={{ margin: '6px 0 4px 18px', padding: 0 }}>
@@ -521,7 +586,12 @@ export function ExtendedMotionVerificationPanel({
                 </li>
               ))}
             </ul>
-            <div style={{ fontSize: '0.75rem', color: '#475569' }}>
+            <div
+              style={{
+                fontSize: '0.75rem',
+                color: 'var(--pf-color-text-secondary, #475569)',
+              }}
+            >
               대체 감사 SHA-256:{' '}
               <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
                 {auditBundle.clearedYoutubeReplacementAudit.factualRecordSha256}
@@ -536,8 +606,8 @@ export function ExtendedMotionVerificationPanel({
             style={{
               padding: '8px 10px',
               borderRadius: '8px',
-              background: '#eff6ff',
-              border: '1px solid #bfdbfe',
+              background: 'var(--pf-color-bg-surface-subtle, #eff6ff)',
+              border: '1px solid var(--pf-color-border-default, #bfdbfe)',
               marginBottom: '8px',
               minWidth: 0,
               maxWidth: '100%',
@@ -549,7 +619,13 @@ export function ExtendedMotionVerificationPanel({
               </strong>{' '}
               {auditBundle.previouslyUnboundMotionModel.titleKo}
             </div>
-            <div style={{ marginTop: '2px', fontSize: '0.75rem', color: '#1e3a8a' }}>
+            <div
+              style={{
+                marginTop: '2px',
+                fontSize: '0.75rem',
+                color: 'var(--pf-color-text-secondary, #1e3a8a)',
+              }}
+            >
               바인딩 SHA-256:{' '}
               <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
                 {auditBundle.previouslyUnboundMotionModel.factualRecordSha256}
@@ -563,9 +639,9 @@ export function ExtendedMotionVerificationPanel({
           style={{
             marginTop: '6px',
             paddingTop: '6px',
-            borderTop: '1px dashed #cbd5e1',
+            borderTop: '1px dashed var(--pf-color-border-default, #cbd5e1)',
             fontSize: '0.76rem',
-            color: '#475569',
+            color: 'var(--pf-color-text-secondary, #475569)',
             overflowWrap: 'anywhere',
           }}
         >

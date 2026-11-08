@@ -220,6 +220,130 @@ function stepSignature(step?: Readonly<SequenceStep>) {
   ]);
 }
 
+export const DATED_PLANNING_DRAFT_STORAGE_KEY = 'pf_dated_planning_draft_v1';
+
+interface DatedPlanningDraftEntry {
+  classId: string;
+  originalDate: string;
+  sequenceId: string;
+  revisionSequenceId: string;
+}
+
+type DatedPlanningDraftMap = Record<string, DatedPlanningDraftEntry>;
+
+function readDatedPlanningDraftMap(): DatedPlanningDraftMap {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.sessionStorage.getItem(DATED_PLANNING_DRAFT_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object') return {};
+    return parsed as DatedPlanningDraftMap;
+  } catch {
+    return {};
+  }
+}
+
+function readDatedPlanningDraft(
+  target: OccurrenceIdentity | null,
+  savedSequences: readonly SavedSequence[],
+): { sequenceId: string; revisionSequenceId: string } | null {
+  if (!target) return null;
+  const map = readDatedPlanningDraftMap();
+  const planKey = getDatedPlanKey(target.classId, target.originalDate);
+  const colonKey = `${target.classId}:${target.originalDate}`;
+  const plusKey = `${target.classId}+${target.originalDate}`;
+  const direct =
+    map[planKey] ??
+    map[colonKey] ??
+    map[plusKey] ??
+    Object.values(map).find(
+      (item) =>
+        item &&
+        typeof item === 'object' &&
+        item.classId === target.classId &&
+        item.originalDate === target.originalDate,
+    );
+  if (!direct || typeof direct !== 'object') return null;
+  const validSequenceId =
+    typeof direct.sequenceId === 'string' &&
+    savedSequences.some((item) => item.id === direct.sequenceId)
+      ? direct.sequenceId
+      : '';
+  const validRevisionSequenceId =
+    typeof direct.revisionSequenceId === 'string' &&
+    savedSequences.some((item) => item.id === direct.revisionSequenceId)
+      ? direct.revisionSequenceId
+      : '';
+  if (!validSequenceId && !validRevisionSequenceId) return null;
+  return {
+    sequenceId: validSequenceId,
+    revisionSequenceId: validRevisionSequenceId,
+  };
+}
+
+function writeDatedPlanningDraft(
+  target: OccurrenceIdentity,
+  draft: { sequenceId: string; revisionSequenceId: string },
+) {
+  if (typeof window === 'undefined') return;
+  try {
+    const map = readDatedPlanningDraftMap();
+    const planKey = getDatedPlanKey(target.classId, target.originalDate);
+    const colonKey = `${target.classId}:${target.originalDate}`;
+    const plusKey = `${target.classId}+${target.originalDate}`;
+    if (!draft.sequenceId && !draft.revisionSequenceId) {
+      delete map[planKey];
+      delete map[colonKey];
+      delete map[plusKey];
+    } else {
+      map[planKey] = {
+        classId: target.classId,
+        originalDate: target.originalDate,
+        sequenceId: draft.sequenceId,
+        revisionSequenceId: draft.revisionSequenceId,
+      };
+    }
+    if (Object.keys(map).length === 0) {
+      window.sessionStorage.removeItem(DATED_PLANNING_DRAFT_STORAGE_KEY);
+    } else {
+      window.sessionStorage.setItem(DATED_PLANNING_DRAFT_STORAGE_KEY, JSON.stringify(map));
+    }
+  } catch {
+    // Ignore sessionStorage errors in restricted environments.
+  }
+}
+
+function clearDatedPlanningDraft(target: OccurrenceIdentity | null) {
+  if (!target || typeof window === 'undefined') return;
+  try {
+    const map = readDatedPlanningDraftMap();
+    const planKey = getDatedPlanKey(target.classId, target.originalDate);
+    const colonKey = `${target.classId}:${target.originalDate}`;
+    const plusKey = `${target.classId}+${target.originalDate}`;
+    delete map[planKey];
+    delete map[colonKey];
+    delete map[plusKey];
+    for (const [key, value] of Object.entries(map)) {
+      if (
+        value &&
+        typeof value === 'object' &&
+        value.classId === target.classId &&
+        value.originalDate === target.originalDate
+      ) {
+        delete map[key];
+      }
+    }
+    if (Object.keys(map).length === 0) {
+      window.sessionStorage.removeItem(DATED_PLANNING_DRAFT_STORAGE_KEY);
+    } else {
+      window.sessionStorage.setItem(DATED_PLANNING_DRAFT_STORAGE_KEY, JSON.stringify(map));
+    }
+  } catch {
+    // Ignore sessionStorage errors in restricted environments.
+  }
+}
+
 /** One bounded local planner. All writes are explicit callbacks owned by the schedule view. */
 export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogProps) {
   const {
@@ -234,6 +358,24 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
     onCopyWeek,
     onLoadDraft,
   } = props;
+  const assignments = planning?.assignments ?? EMPTY_ASSIGNMENTS;
+  const initialRestoredDraft = useMemo(() => {
+    const target = props.initialOccurrence ?? null;
+    if (!target) return null;
+    const restored = readDatedPlanningDraft(target, savedSequences);
+    if (!restored) return null;
+    const hasExistingAssignment = assignments.some(
+      (item) =>
+        item.classId === target.classId && item.originalDate === target.originalDate,
+    );
+    const nextSequenceId = !hasExistingAssignment ? restored.sequenceId : '';
+    const nextRevisionSequenceId = hasExistingAssignment ? restored.revisionSequenceId : '';
+    if (!nextSequenceId && !nextRevisionSequenceId) return null;
+    return {
+      sequenceId: nextSequenceId,
+      revisionSequenceId: nextRevisionSequenceId,
+    };
+  }, []);
   const [selectedDate, setSelectedDate] = useState(
     isScheduleDate(props.initialDate) ? props.initialDate : localScheduleDate(),
   );
@@ -241,10 +383,17 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
   const [identity, setIdentity] = useState<OccurrenceIdentity | null>(
     props.initialOccurrence ?? null,
   );
-  const [sequenceId, setSequenceId] = useState('');
+  const [sequenceId, setSequenceId] = useState(() => initialRestoredDraft?.sequenceId ?? '');
   const [feedback, setFeedback] = useState<ActionResult | null>(null);
   const [loadConfirmed, setLoadConfirmed] = useState(false);
-  const [revisionSequenceId, setRevisionSequenceId] = useState('');
+  const [revisionSequenceId, setRevisionSequenceId] = useState(
+    () => initialRestoredDraft?.revisionSequenceId ?? '',
+  );
+  const [draftRestored, setDraftRestored] = useState(() => Boolean(initialRestoredDraft));
+  const [planningStep, setPlanningStep] = useState<1 | 2 | 3>(() =>
+    props.initialOccurrence ? 3 : 1,
+  );
+  const hasUserChangedDraftRef = useRef(false);
   const [revisionPreview, setRevisionPreview] = useState<{
     assignmentId: string;
     sequenceId: string;
@@ -257,6 +406,11 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
   } | null>(null);
   const [priorVersionIndex, setPriorVersionIndex] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const calendarScrollRef = useRef<HTMLDivElement>(null);
+  const occurrencesRef = useRef<HTMLElement>(null);
+  const detailRef = useRef<HTMLElement>(null);
+  const copyRef = useRef<HTMLDetailsElement>(null);
   const calendarFocusTarget = useRef<string | null>(null);
   const calendarHelpId = useId();
   useEffect(() => {
@@ -271,6 +425,13 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
       button.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     }
   }, [selectedDate, mode]);
+  useEffect(() => {
+    if (!identity || !hasUserChangedDraftRef.current) return;
+    writeDatedPlanningDraft(identity, {
+      sequenceId,
+      revisionSequenceId,
+    });
+  }, [identity, sequenceId, revisionSequenceId]);
   const closing = useRef(false);
   const [copyPreview, setCopyPreview] = useState<{
     result: CopyPreview;
@@ -278,7 +439,6 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
     source: string;
     target: string;
   } | null>(null);
-  const assignments = planning?.assignments ?? EMPTY_ASSIGNMENTS;
   const month = planningCalendarMonth(selectedDate);
   const start =
     mode === 'month'
@@ -413,6 +573,52 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
     onClose();
   }
 
+  function navigatePlanningStep(nextStep: 1 | 2 | 3) {
+    setPlanningStep(nextStep);
+    if (nextStep === 1) {
+      if (mode === 'month' && calendarScrollRef.current) {
+        calendarScrollRef.current.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        const activeDateBtn =
+          calendarScrollRef.current.querySelector<HTMLButtonElement>('[aria-pressed="true"]');
+        (activeDateBtn ?? calendarScrollRef.current).focus();
+        return;
+      }
+      if (toolbarRef.current) {
+        toolbarRef.current.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        const focusTarget = toolbarRef.current.querySelector<HTMLElement>(
+          'input[type="date"], button[aria-pressed="true"], button',
+        );
+        (focusTarget ?? toolbarRef.current).focus();
+      }
+      return;
+    }
+    if (nextStep === 2) {
+      if (occurrencesRef.current) {
+        occurrencesRef.current.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        const firstOccurrenceBtn = occurrencesRef.current.querySelector<HTMLButtonElement>(
+          'article button:not(:disabled)',
+        );
+        (firstOccurrenceBtn ?? occurrencesRef.current).focus();
+      }
+      return;
+    }
+    if (detailRef.current) {
+      detailRef.current.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      const detailControl = detailRef.current.querySelector<HTMLElement>(
+        'select:not(:disabled), button:not(:disabled), summary',
+      );
+      (detailControl ?? detailRef.current).focus();
+      return;
+    }
+    if (copyRef.current) {
+      copyRef.current.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      const copySummary = copyRef.current.querySelector<HTMLElement>(
+        'summary, button:not(:disabled)',
+      );
+      (copySummary ?? copyRef.current).focus();
+    }
+  }
+
   function selectDate(date: string) {
     if (!isScheduleDate(date)) {
       setFeedback({
@@ -421,6 +627,8 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
       });
       return;
     }
+    hasUserChangedDraftRef.current = false;
+    setDraftRestored(false);
     setSelectedDate(date);
     setIdentity(null);
     setSequenceId('');
@@ -454,10 +662,17 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
   function selectOccurrence(row: OccurrenceIdentity) {
     const current = resolveDatedPlanOccurrence(schedule, row.classId, row.originalDate).occurrence;
     if (current) setSelectedDate(current.date);
+    const existing = byKey.get(getDatedPlanKey(row.classId, row.originalDate));
+    const restored = readDatedPlanningDraft(row, savedSequences);
+    const restoredSequenceId = !existing ? (restored?.sequenceId ?? '') : '';
+    const restoredRevisionSequenceId = existing ? (restored?.revisionSequenceId ?? '') : '';
+    hasUserChangedDraftRef.current = false;
     setIdentity({ classId: row.classId, originalDate: row.originalDate });
-    setSequenceId('');
+    setSequenceId(restoredSequenceId);
     setLoadConfirmed(false);
-    setRevisionSequenceId('');
+    setRevisionSequenceId(restoredRevisionSequenceId);
+    setDraftRestored(Boolean(restoredSequenceId || restoredRevisionSequenceId));
+    setPlanningStep(3);
     setRevisionPreview(null);
     setPriorVersionIndex(null);
     setFeedback(null);
@@ -472,6 +687,17 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
     }
   }
 
+  const nextActionText =
+    planningStep === 1
+      ? '지금 할 일: 상단에서 보기 방식과 기준 날짜를 고른 뒤 다음 단계로 이동하세요.'
+      : planningStep === 2
+        ? '지금 할 일: 아래 목록에서 시퀀스를 지정하거나 확인할 수업 회차를 고르세요.'
+        : identity && !assignment
+          ? '지금 할 일: 시퀀스 목록에서 사용할 구성을 고르고 사본 저장을 완료하세요.'
+          : identity && assignment
+            ? '지금 할 일: 연결된 계획 사본을 검토하거나 수정본 교체·주간 복사를 진행하세요.'
+            : '지금 할 일: 회차를 선택해 시퀀스를 배정하거나 아래에서 주간 복사를 진행하세요.';
+
   return (
     <LightDismissDialog
       open
@@ -482,7 +708,61 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
       className="dated-planning-dialog"
     >
       <div className="dated-planning" ref={contentRef}>
-        <div className="dated-planning-toolbar">
+        <nav
+          className="pf-step-guide-bar dated-planning-step-guide"
+          aria-label="날짜별 계획 진행 단계"
+          data-testid="dated-planning-step-guide"
+        >
+          <ol className="pf-step-guide-list">
+            {(
+              [
+                { step: 1 as const, label: '1 기간·날짜 선택' },
+                { step: 2 as const, label: '2 수업 회차 선택' },
+                { step: 3 as const, label: '3 시퀀스 배정·주간 복사' },
+              ] as const
+            ).map((item) => (
+              <li key={item.step}>
+                <button
+                  type="button"
+                  aria-current={planningStep === item.step ? 'step' : undefined}
+                  className={`pf-step-guide-chip ${planningStep === item.step ? 'is-active' : ''}`}
+                  onClick={() => navigatePlanningStep(item.step)}
+                >
+                  {item.label}
+                </button>
+              </li>
+            ))}
+          </ol>
+          <div className="pf-step-guide-subrow">
+            <p
+              className="pf-step-guide-focus"
+              data-testid="dated-planning-next-action"
+              aria-live="polite"
+            >
+              {nextActionText}
+            </p>
+            <div className="pf-step-guide-nav">
+              <button
+                type="button"
+                className="pf-step-nav-btn"
+                disabled={planningStep === 1}
+                onClick={() => navigatePlanningStep(planningStep === 3 ? 2 : 1)}
+              >
+                이전 단계
+              </button>
+              <button
+                type="button"
+                className="pf-step-nav-btn"
+                disabled={planningStep === 3}
+                onClick={() => navigatePlanningStep(planningStep === 1 ? 2 : 3)}
+              >
+                다음 단계
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        <div className="dated-planning-toolbar" ref={toolbarRef} tabIndex={-1}>
           <div role="group" aria-label="계획 기간 보기" className="dated-planning-modes">
             {(['day', 'week', 'month'] as const).map((value) => (
               <button
@@ -535,6 +815,7 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
             role="region"
             aria-label="월간 계획 날짜 선택"
             tabIndex={0}
+            ref={calendarScrollRef}
           >
             <div
               className="dated-planning-calendar"
@@ -616,7 +897,12 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
           </div>
         )}
 
-        <section aria-label="계획할 수업 회차" className="dated-planning-occurrences">
+        <section
+          aria-label="계획할 수업 회차"
+          className="dated-planning-occurrences"
+          ref={occurrencesRef}
+          tabIndex={-1}
+        >
           <div className="planning-selected-date-heading">
             <h3>{mode === 'month' ? formatScheduleDate(selectedDate) : '선택 기간의 수업'}</h3>
             {props.onOpenScheduleDate && (
@@ -691,7 +977,12 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
         </section>
 
         {identity && (
-          <section className="dated-planning-detail" aria-label="선택한 회차 계획">
+          <section
+            className="dated-planning-detail"
+            aria-label="선택한 회차 계획"
+            ref={detailRef}
+            tabIndex={-1}
+          >
             <h3>{occurrence?.title ?? '원본 수업을 찾을 수 없는 계획'}</h3>
             <p>
               원래 회차 {identity.originalDate}
@@ -699,6 +990,15 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                 ? ` · 현재 ${occurrence.date} ${occurrence.startTime}–${occurrence.endTime} · ${locationName(occurrence.locationId)}`
                 : ''}
             </p>
+            {draftRestored && (
+              <p
+                className="dated-planning-draft-restored"
+                data-testid="dated-planning-draft-restored"
+                aria-live="polite"
+              >
+                선택 초안 복원됨 · 저장 전 선택한 시퀀스를 불러왔습니다.
+              </p>
+            )}
             {resolved?.status !== 'scheduled' && (
               <p className="dated-planning-warning">
                 현재 회차는{' '}
@@ -715,14 +1015,18 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                 onSubmit={(event) => {
                   event.preventDefault();
                   if (!sequenceId) return;
-                  setFeedback(
-                    onAssign({
-                      sequenceId,
-                      classId: identity.classId,
-                      originalDate: identity.originalDate,
-                      state: 'draft',
-                    }),
-                  );
+                  const result = onAssign({
+                    sequenceId,
+                    classId: identity.classId,
+                    originalDate: identity.originalDate,
+                    state: 'draft',
+                  });
+                  setFeedback(result);
+                  if (result.success) {
+                    hasUserChangedDraftRef.current = false;
+                    setDraftRestored(false);
+                    clearDatedPlanningDraft(identity);
+                  }
                 }}
               >
                 <label>
@@ -730,7 +1034,16 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                   <select
                     required
                     value={sequenceId}
-                    onChange={(event) => setSequenceId(event.target.value)}
+                    onChange={(event) => {
+                      const nextValue = event.target.value;
+                      hasUserChangedDraftRef.current = true;
+                      setSequenceId(nextValue);
+                      setDraftRestored(false);
+                      writeDatedPlanningDraft(identity, {
+                        sequenceId: nextValue,
+                        revisionSequenceId,
+                      });
+                    }}
                   >
                     <option value="">저장 시퀀스 선택</option>
                     {savedSequences.map((sequence) => (
@@ -943,8 +1256,15 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                       value={revisionSequenceId}
                       disabled={!canReviseAssignment}
                       onChange={(event) => {
-                        setRevisionSequenceId(event.target.value);
+                        const nextValue = event.target.value;
+                        hasUserChangedDraftRef.current = true;
+                        setRevisionSequenceId(nextValue);
                         setRevisionPreview(null);
+                        setDraftRestored(false);
+                        writeDatedPlanningDraft(identity, {
+                          sequenceId,
+                          revisionSequenceId: nextValue,
+                        });
                       }}
                     >
                       <option value="">저장 수정본 선택</option>
@@ -1171,6 +1491,9 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                           });
                           setFeedback(result);
                           if (result.success) {
+                            hasUserChangedDraftRef.current = false;
+                            setDraftRestored(false);
+                            clearDatedPlanningDraft(identity);
                             setRevisionPreview(null);
                             setRevisionSequenceId('');
                             setPriorVersionIndex(null);
@@ -1205,7 +1528,7 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
           </details>
         )}
 
-        <details className="dated-planning-copy">
+        <details className="dated-planning-copy" ref={copyRef}>
           <summary>선택한 주를 다음 주로 복사</summary>
           <p>
             {sourceStart}–{addScheduleDays(sourceStart, 6)} → {targetStart}–{targetEnd}

@@ -148,22 +148,22 @@ const MUSCLE_ROLE_STYLES: Record<
   }
 > = {
   primary: {
-    bg: '#FDF4F0',
-    border: '#DFB19E',
-    text: '#7C2D12',
-    badgeBg: '#F9E2D8',
+    bg: 'var(--pf-color-bg-surface-subtle, #FDF4F0)',
+    border: 'var(--pf-color-border-default, #DFB19E)',
+    text: 'var(--pf-color-text-primary, #7C2D12)',
+    badgeBg: 'var(--pf-color-bg-surface-muted, #F9E2D8)',
   },
   stabilizer: {
-    bg: '#EFF6F2',
-    border: '#A9C8B6',
-    text: '#173D34',
-    badgeBg: '#DCECE2',
+    bg: 'var(--pf-color-bg-surface-subtle, #EFF6F2)',
+    border: 'var(--pf-color-border-default, #A9C8B6)',
+    text: 'var(--pf-color-text-primary, #173D34)',
+    badgeBg: 'var(--pf-color-bg-surface-muted, #DCECE2)',
   },
   lengthening: {
-    bg: '#FDF8EE',
-    border: '#DEC28E',
-    text: '#6B4010',
-    badgeBg: '#F6E7C8',
+    bg: 'var(--pf-color-bg-surface-subtle, #FDF8EE)',
+    border: 'var(--pf-color-border-default, #DEC28E)',
+    text: 'var(--pf-color-text-primary, #6B4010)',
+    badgeBg: 'var(--pf-color-bg-surface-muted, #F6E7C8)',
   },
 };
 
@@ -444,7 +444,7 @@ export function MovementDifferenceCompareView({
                       ? 'var(--pf-color-action-primary, #173D34)'
                       : 'var(--pf-color-bg-surface-subtle, #F3F5EE)',
                     color: isSelected
-                      ? '#FFFEF9'
+                      ? 'var(--pf-color-text-on-accent, #FFFEF9)'
                       : 'var(--pf-color-text-primary, #1E3129)',
                     border: isSelected
                       ? '1px solid var(--pf-color-action-primary, #173D34)'
@@ -487,22 +487,46 @@ export function MovementDifferenceCompareView({
         >
           동시 비교 단계:
         </span>
-        {PHASE_ORDER.map((phaseId) => {
+        {PHASE_ORDER.map((phaseId, index) => {
           const isCurrent = currentPhase === phaseId;
           return (
             <button
               key={phaseId}
               type="button"
               aria-pressed={isCurrent}
+              tabIndex={isCurrent ? 0 : -1}
               data-testid={`compare-phase-btn-${phaseId}`}
               onClick={() => handleSelectPhase(phaseId)}
+              onKeyDown={(event) => {
+                let nextIndex: number | null = null;
+                if (event.key === 'ArrowRight') {
+                  nextIndex = (index + 1) % PHASE_ORDER.length;
+                } else if (event.key === 'ArrowLeft') {
+                  nextIndex = (index - 1 + PHASE_ORDER.length) % PHASE_ORDER.length;
+                } else if (event.key === 'Home') {
+                  nextIndex = 0;
+                } else if (event.key === 'End') {
+                  nextIndex = PHASE_ORDER.length - 1;
+                }
+                if (nextIndex !== null) {
+                  event.preventDefault();
+                  const nextPhase = PHASE_ORDER[nextIndex];
+                  handleSelectPhase(nextPhase);
+                  const phaseButtons =
+                    event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+                      '[data-testid^="compare-phase-btn-"]',
+                    );
+                  phaseButtons?.[nextIndex]?.focus();
+                }
+              }}
               style={{
                 ...TOUCH_BUTTON_BASE_STYLE,
+                minHeight: '44px',
                 backgroundColor: isCurrent
                   ? 'var(--pf-color-action-primary, #173D34)'
                   : 'var(--pf-color-bg-surface, #FFFEF9)',
                 color: isCurrent
-                  ? '#FFFEF9'
+                  ? 'var(--pf-color-text-on-accent, #FFFEF9)'
                   : 'var(--pf-color-text-primary, #1E3129)',
                 border: isCurrent
                   ? '1px solid var(--pf-color-action-primary, #173D34)'
@@ -520,7 +544,7 @@ export function MovementDifferenceCompareView({
         data-testid="difference-compare-diagrams-grid"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
           gap: '12px',
         }}
       >
@@ -654,7 +678,7 @@ export function MovementDifferenceCompareView({
         data-testid="teaching-distinction-tip"
         style={{
           backgroundColor: 'var(--pf-color-ai-memo-bg, #F4F1E3)',
-          border: '1px solid #DFD6B8',
+          border: '1px solid var(--pf-color-border-default, #DFD6B8)',
           borderRadius: 'var(--pf-radius-sm, 8px)',
           padding: '10px 12px',
           fontSize: 'var(--pf-text-xs, 0.75rem)',
@@ -671,7 +695,7 @@ export function MovementDifferenceCompareView({
         data-testid="comparison-dimensions-list"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
           gap: '10px',
         }}
       >
@@ -868,6 +892,10 @@ export function MovementVisualGuideCard({
     [asset],
   );
 
+  const visualDiagramViewportId = `visual-diagram-viewport-${exercise.id}`;
+  const getViewModeTabId = (mode: VisualGuideViewMode) =>
+    `view-mode-tab-${exercise.id}-${mode}`;
+
   return (
     <section
       className={['pf-movement-visual-guide-card', className]
@@ -925,14 +953,14 @@ export function MovementVisualGuideCard({
               padding: '4px 10px',
               borderRadius: 'var(--pf-radius-pill, 9999px)',
               backgroundColor: sourceAudit.isPostReview
-                ? '#E4EADF'
+                ? 'var(--pf-color-bg-surface-muted, #E4EADF)'
                 : 'var(--pf-color-ai-memo-bg, #F4F1E3)',
               color: sourceAudit.isPostReview
                 ? 'var(--pf-color-status-success-text, #254B29)'
                 : 'var(--pf-color-status-warning-text, #6B4010)',
               border: sourceAudit.isPostReview
-                ? '1px solid #B7C9B9'
-                : '1px solid #DFC59A',
+                ? '1px solid var(--pf-color-border-default, #B7C9B9)'
+                : '1px solid var(--pf-color-border-default, #DFC59A)',
             }}
           >
             {sourceAudit.isPostReview ? '[검토 후]' : '[검토 전]'}{' '}
@@ -963,9 +991,9 @@ export function MovementVisualGuideCard({
               fontWeight: 700,
               padding: '4px 10px',
               borderRadius: 'var(--pf-radius-pill, 9999px)',
-              backgroundColor: '#FDF4F0',
+              backgroundColor: 'var(--pf-color-bg-surface-subtle, #FDF4F0)',
               color: 'var(--pf-color-status-danger-text, #8A341E)',
-              border: '1px solid #E5BBAE',
+              border: '1px solid var(--pf-color-border-default, #E5BBAE)',
             }}
           >
             해부학적 정확성 자동 추정 안 함 · 신뢰 출처 대조 기반
@@ -1081,7 +1109,7 @@ export function MovementVisualGuideCard({
           data-testid="visual-integrity-quarantine-banner"
           data-production-method={integrity.productionMethod}
           style={{
-            backgroundColor: '#FDF2EF',
+            backgroundColor: 'var(--pf-color-bg-surface-subtle, #FDF2EF)',
             border: '2px solid var(--pf-color-status-danger-text, #8A341E)',
             borderRadius: 'var(--pf-radius-md, 12px)',
             padding: '14px 16px',
@@ -1159,9 +1187,11 @@ export function MovementVisualGuideCard({
             return (
               <button
                 key={tab.id}
+                id={getViewModeTabId(tab.id)}
                 type="button"
                 role="tab"
                 aria-selected={isActive}
+                aria-controls={visualDiagramViewportId}
                 tabIndex={isActive ? 0 : -1}
                 data-testid={`view-mode-tab-${tab.id}`}
                 onClick={() => setViewMode(tab.id)}
@@ -1195,7 +1225,7 @@ export function MovementVisualGuideCard({
                     ? 'var(--pf-color-action-primary, #173D34)'
                     : 'var(--pf-color-bg-surface, #FFFEF9)',
                   color: isActive
-                    ? '#FFFEF9'
+                    ? 'var(--pf-color-text-on-accent, #FFFEF9)'
                     : 'var(--pf-color-text-primary, #1E3129)',
                   border: isActive
                     ? '1px solid var(--pf-color-action-primary, #173D34)'
@@ -1409,7 +1439,7 @@ export function MovementVisualGuideCard({
           data-testid="pose-delta-summary-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
             gap: '8px',
           }}
         >
@@ -1519,6 +1549,10 @@ export function MovementVisualGuideCard({
       {/* Primary Visual Diagram Viewport (Only rendered when integrity passes) */}
       {integrity.integrityPassed && (
         <div
+          id={visualDiagramViewportId}
+          className="visual-diagram-viewport"
+          role="tabpanel"
+          aria-labelledby={getViewModeTabId(viewMode)}
           data-testid="visual-diagram-viewport"
           data-view-mode={viewMode}
           data-motion-primary-mode={motionCoverage.primaryMode}
@@ -1580,7 +1614,7 @@ export function MovementVisualGuideCard({
                           ? 'var(--pf-color-action-primary, #173D34)'
                           : 'var(--pf-color-bg-surface-subtle, #F3F5EE)',
                         color: isSelected
-                          ? '#FFFEF9'
+                          ? 'var(--pf-color-text-on-accent, #FFFEF9)'
                           : 'var(--pf-color-text-primary, #1E3129)',
                         border: isSelected
                           ? '1px solid var(--pf-color-action-primary, #173D34)'
@@ -1637,7 +1671,7 @@ export function MovementVisualGuideCard({
         data-testid="visual-detail-panels-grid"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
           gap: '12px',
         }}
       >

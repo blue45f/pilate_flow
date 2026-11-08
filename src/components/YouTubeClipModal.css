@@ -1,0 +1,264 @@
+/* Wave 2 UX, 2-step guide, edit draft recovery banner, and 320px/360px/390px touch targets & text wrapping for YouTubePreviewModal / YouTubeClipModal */
+
+.movement-detail,
+.clipper-layout {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.yt-preview-step-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f2f6f0;
+  border: 1px solid var(--line, #d3ddcf);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.yt-preview-step-guide .pf-step-guide-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.yt-preview-step-guide .pf-step-guide-list li {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.yt-preview-step-guide .pf-step-guide-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #d3ddcf;
+  color: #354c3c;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+
+.yt-preview-step-guide .pf-step-guide-chip[aria-current='step'],
+.yt-preview-step-guide .pf-step-guide-chip.is-active {
+  background: var(--forest, #214e40);
+  border-color: var(--forest, #214e40);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.yt-preview-step-guide .pf-step-guide-Subrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+.yt-preview-step-guide .pf-step-guide-focus {
+  flex: 1 1 200px;
+  margin: 0;
+  color: #254d45;
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.yt-preview-step-guide .pf-step-guide-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.yt-preview-draft-recovery-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fbf4e5;
+  border: 1px solid #ad946d;
+  color: #354c3c;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.yt-preview-draft-recovery-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.yt-preview-draft-recovery-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #214e40;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* >= 44x44px touch targets for all buttons, inputs, selects, summaries, and external links */
+.movement-detail button,
+.movement-detail input:not([type='checkbox']):not([type='radio']),
+.movement-detail select,
+.movement-detail summary,
+.movement-detail a[href],
+.movement-dismissal-decision button,
+.clipper-layout button,
+.clipper-layout input:not([type='checkbox']):not([type='radio']),
+.clipper-layout select,
+.clipper-layout summary,
+.clipper-layout a[href] {
+  min-height: 44px;
+  min-width: 44px;
+  box-sizing: border-box;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.movement-detail a[href] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.movement-detail .local-review-consent,
+.clipper-layout .clipper-unilateral {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* Long text, video titles, Korean cues, and URL wrapping without clipping on 320px */
+.movement-detail p,
+.movement-detail h3,
+.movement-detail dt,
+.movement-detail dd,
+.movement-detail li,
+.movement-detail span,
+.movement-detail small,
+.movement-detail label,
+.movement-detail legend,
+.movement-detail textarea,
+.movement-detail .movement-cue-list li,
+.movement-detail .movement-source-fields dd,
+.movement-detail .movement-review-note,
+.clipper-layout p,
+.clipper-layout h3,
+.clipper-layout label,
+.clipper-layout legend,
+.clipper-layout span,
+.clipper-layout small,
+.clipper-layout textarea {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.movement-detail .source-note-url,
+.movement-detail input[type='url'],
+.clipper-layout input[type='url'] {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 390px) {
+  .movement-detail-grid,
+  .movement-detail .library-form-grid,
+  .movement-source-fields,
+  .clipper-layout .library-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .yt-preview-step-guide .pf-step-guide-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .yt-preview-step-guide .pf-step-guide-chip {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .yt-preview-step-guide .pf-step-guide-Subrow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .yt-preview-step-guide .pf-step-guide-nav {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .yt-preview-draft-recovery-banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .yt-preview-draft-recovery-banner button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .local-review-actions,
+  .movement-source-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .local-review-actions > button,
+  .movement-source-actions > a {
+    width: 100%;
+    justify-content: center;
+  }
+}

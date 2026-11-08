@@ -581,3 +581,25 @@ dialog .custom-duration input[aria-label='직접 지정 수업 시간'] {
   }
 }
 
+/* Landscape mobile & short-height viewport compaction (max-height: 540px) */
+@media (max-height: 540px) {
+  dialog.atelier-modal-dialog > .atelier-modal-shell > .atelier-modal-header {
+    padding-block: 10px;
+  }
+  .pf-step-guide-bar {
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+  .pf-step-guide-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Preserve high-contrast form control colors against #root .vnext-shell specificity */
+#root .vnext-shell .teaching-high-contrast :is(input, select, textarea) {
+  background: var(--teaching-paper, #161a18);
+  color: var(--teaching-ink, #f5f7f6);
+  border-color: var(--teaching-line, #4a5751);
+}
+

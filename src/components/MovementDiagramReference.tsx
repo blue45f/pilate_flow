@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { PilatesExercise } from '../types/pilates';
 import { toMovementPhaseDiagramProps } from '../features/motionCoverage/adapters';
 import {
@@ -68,6 +68,8 @@ function DiagramDisclosure({ exercise }: { exercise: PilatesExercise }) {
 }
 
 function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [showCorrectionRecord, setShowCorrectionRecord] = useState(false);
   const [showVisualGuide, setShowVisualGuide] = useState(false);
   const [showFallbackGuide, setShowFallbackGuide] = useState(false);
   const [showSpineDiagram, setShowSpineDiagram] = useState(false);
@@ -82,6 +84,53 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
   const [showUpperBodyArmDiagram, setShowUpperBodyArmDiagram] = useState(false);
   const [showLateralApparatusDiagram, setShowLateralApparatusDiagram] = useState(false);
   const [showExtendedVerification, setShowExtendedVerification] = useState(false);
+
+  const hasExpandedSubSection =
+    showCorrectionRecord ||
+    showVisualGuide ||
+    showFallbackGuide ||
+    showSpineDiagram ||
+    showPelvisDiagram ||
+    showHipLegDiagram ||
+    showCoreDiagram ||
+    showExtensionDiagram ||
+    showShoulderDiagram ||
+    showRotationTriptych ||
+    showBreathingPelvicDiagram ||
+    showFootworkLowerDiagram ||
+    showUpperBodyArmDiagram ||
+    showLateralApparatusDiagram ||
+    showExtendedVerification;
+
+  const handleCollapseAll = () => {
+    setShowCorrectionRecord(false);
+    setShowVisualGuide(false);
+    setShowFallbackGuide(false);
+    setShowSpineDiagram(false);
+    setShowPelvisDiagram(false);
+    setShowHipLegDiagram(false);
+    setShowCoreDiagram(false);
+    setShowExtensionDiagram(false);
+    setShowShoulderDiagram(false);
+    setShowRotationTriptych(false);
+    setShowBreathingPelvicDiagram(false);
+    setShowFootworkLowerDiagram(false);
+    setShowUpperBodyArmDiagram(false);
+    setShowLateralApparatusDiagram(false);
+    setShowExtendedVerification(false);
+
+    const nestedDetails = sectionRef.current?.querySelectorAll('details');
+    nestedDetails?.forEach((detailEl) => {
+      detailEl.open = false;
+      detailEl.removeAttribute('open');
+    });
+
+    if (typeof sectionRef.current?.scrollIntoView === 'function') {
+      sectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    sectionRef.current?.focus({ preventScroll: true });
+  };
+
   const isRotation = isRotationDiagramExercise(exercise.id);
   const rotCandidate = useMemo(
     () => (isRotation ? resolveRotationDiagramCandidate(exercise.id) : null),
@@ -159,7 +208,48 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
   const correction = MOVEMENT_DIAGRAM_CORRECTIONS[exercise.id];
   const matchedCorrection = correction?.archetypeId === props?.asset.archetypeId ? correction : null;
   return (
-    <section className="movement-diagram-reference-content" aria-label="참고 자세 정지 그림">
+    <section
+      ref={sectionRef}
+      className="movement-diagram-reference-content"
+      aria-label="참고 자세 정지 그림"
+      tabIndex={-1}
+    >
+      <div
+        className="movement-diagram-collapse-toolbar"
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          marginBottom: '8px',
+        }}
+      >
+        <button
+          type="button"
+          className="movement-diagram-collapse-all-btn"
+          data-testid="diagram-ref-collapse-all-btn"
+          aria-hidden={hasExpandedSubSection ? undefined : 'true'}
+          tabIndex={hasExpandedSubSection ? 0 : -1}
+          onClick={handleCollapseAll}
+          style={{
+            minHeight: '44px',
+            minWidth: '44px',
+            wordBreak: 'keep-all',
+            overflowWrap: 'anywhere',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '8px 12px',
+            borderRadius: '10px',
+            border: '1px solid #c5d6cf',
+            background: '#f5f8f6',
+            color: '#24594c',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          열린 참고 섹션 모두 접기
+        </button>
+      </div>
       {!props ? (
         <>
           <p>이 동작과 일치하는 도해가 아직 없어요. 다른 동작의 그림으로 대신하지 않아요.</p>
@@ -181,7 +271,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
             재생은 제공하지 않아요.
           </p>
           {matchedCorrection && (
-            <details>
+            <details onToggle={(event) => setShowCorrectionRecord(event.currentTarget.open)}>
               <summary>출처 대조 기록</summary>
               <p>{matchedCorrection.reviewedScopeKo}</p>
               <p>{matchedCorrection.correctionKo}</p>
