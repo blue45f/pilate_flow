@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "2026-11-08.i4.core.v1",
+  "ownerTrack": "I4",
+  "branch": "gemini/diagram-i4-core-20261108",
+  "domainKo": "필라테스 복부 안정 (Core Abdominal Stability) 2D 도해",
+  "governance": {
+    "anatomicalAccuracyAssumed": false,
+    "professionalReviewCount": 0,
+    "exactAssetReady": false,
+    "containsMedicalDiagnosis": false,
+    "containsTreatmentEfficacyClaim": false,
+    "nonMedicalDisclaimerKo": "본 2D 도해와 운동학 지표는 필라테스 시퀀스 이해를 돕기 위한 교육·시각 참고 자료이며, 의학적 진단·처방·치료 효과를 보증하지 않습니다. 통증이나 질환이 있는 경우 반드시 자격을 갖춘 의료 전문가와 상담하세요."
+  },
+  "publicSources": [
+    {
+      "sourceId": "cuh-nhs-pilates-principles",
+      "organization": "Cambridge University Hospitals NHS Foundation Trust",
+      "title": "Pilates exercises and principles — Patient Information",
+      "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
+      "licenseOrAccess": "Public NHS patient guidance (educational reference)",
+      "verifiedClaimsKo": [
+        "앙와위(Supine) 복부 안정 동작에서 골반·요추 중립/임프린트 지지(pelvic/lumbar mat contact) 유지",
+        "두경부 과신전 방지를 위한 턱 끝 끄덕임(cranio-cervical nod) 및 견갑골 하각 기준 상체 컬업 정렬",
+        "사지 신전(One Leg Stretch / Hundred preparation) 중 요추 들림(arch) 및 골반 회전(rocking) 억제"
+      ]
+    },
+    {
+      "sourceId": "ouh-nhs-pilates-leaflet",
+      "organization": "Oxford University Hospitals NHS Foundation Trust",
+      "title": "Pilates Exercises — Physiotherapy Patient Leaflet (107625exercises.pdf)",
+      "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+      "licenseOrAccess": "Public NHS physiotherapy educational PDF",
+      "verifiedClaimsKo": [
+        "90/90 테이블탑(Hip 90°, Knee 90°) 시작 정렬과 심부 복횡근(Transversus Abdominis) 선행 수축",
+        "단측·양측 하지 부하 증가 시 늑골 들림(rib flare) 없이 흉곽-골반 간격 유지"
+      ]
+    },
+    {
+      "sourceId": "basi-pilates-essential-chest-lift",
+      "organization": "BASI Pilates",
+      "title": "10 Essential Pilates Exercises for Beginners & Exercise Series: The Chest Lift",
+      "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+      "secondaryUrl": "https://www.basipilates.com/blog/exercise-series-the-chest-lift/",
+      "licenseOrAccess": "Public educational curriculum guide",
+      "verifiedClaimsKo": [
+        "헌드레드(The Hundred), 싱글 레그 스트레치(Single Leg Stretch), 더블 레그 스트레치(Double Leg Stretch)의 상부 흉추 굴곡(T-spine curl to inferior scapular angle) 기준점",
+        "더블 레그 스트레치 중간 자세에서 팔 오버헤드 리치 시 상체 컬업 높이가 바닥으로 떨어지지 않도록 유지하는 원칙"
+      ]
+    },
+    {
+      "sourceId": "pilates-return-to-life-1945",
+      "organization": "Joseph H. Pilates & William J. Miller (1945 Public Domain / Pilatesology Archive)",
+      "title": "Return to Life Through Contrology — #1 The Hundred, #6 The One Leg Stretch, #7 The Double Leg Stretch",
+      "url": "https://pilatesology.com/blog/the-one-leg-stretch/",
+      "secondaryUrl": "https://www.youtube.com/watch?v=DhO6u5pB0xo",
+      "licenseOrAccess": "1945 Classical Contrology sequence specification & public educational demonstration",
+      "verifiedClaimsKo": [
+        "헌드레드(#1): 양다리 사선 신전(또는 테이블탑) + 골반 옆 수평 팔 5박 들숨/5박 날숨 상하 펌핑(10세트=100회)",
+        "싱글 레그 스트레치(#6): 한쪽 무릎을 가슴 쪽으로 당겨 양손으로 정강이/발목·무릎을 지지하고 반대쪽 다리를 45° 사선으로 길게 뻗으며 교차",
+        "더블 레그 스트레치(#7): 양손으로 정강이를 감싼 시작 자세 -> 들숨에 양팔 귀 옆 오버헤드 & 양다리 45° 사선 동시 양방향 신전 -> 날숨에 팔을 크게 원형으로 돌려 무릎을 접어 정강이를 다시 감싸는 복귀"
+      ]
+    }
+  ],
+  "movements": {
+    "core-hundred": {
+      "catalogExerciseIds": ["ex-core-01", "core-hundred"],
+      "nameKo": "헌드레드",
+      "nameEn": "The Hundred",
+      "primarySourceIds": ["pilates-return-to-life-1945", "basi-pilates-essential-chest-lift", "cuh-nhs-pilates-principles"],
+      "resolvedAuditIssueKo": "기존 공용 아키타입(supine-leg-stretch-hundred)에서 싱글/더블 레그 스트레치와 혼용되던 포즈를 분리하여, 헌드레드 고유의 양다리 사선 레버 유지 + 고관절 옆 수평 상하 펌핑 벡터 + 5박 호흡 리듬을 독립 2D 도해로 구현함."
+    },
+    "core-single-leg-stretch": {
+      "catalogExerciseIds": ["original-mat-single-leg-stretch", "core-single-leg-stretch"],
+      "nameKo": "싱글 레그 스트레치",
+      "nameEn": "Single Leg Stretch",
+      "primarySourceIds": ["pilates-return-to-life-1945", "cuh-nhs-pilates-principles", "ouh-nhs-pilates-leaflet"],
+      "resolvedAuditIssueKo": "기존 공용 아키타입에서 양손이 바닥 근처(hand: 158,136 -> 168,128)에서 펌핑 자세로 잘못 그려지던 문제를 해결하여, 당긴 쪽 무릎·정강이(knee/ankle 라인)에 양손 접촉 앵커(hand-shin-contact)를 배치하고 반대쪽 다리(`far*`)를 45° 사선 신전하는 비대칭 가위 교차 도해로 완성함."
+    },
+    "core-double-leg-stretch": {
+      "catalogExerciseIds": ["ex-core-03", "core-double-leg-stretch"],
+      "nameKo": "더블 레그 스트레치",
+      "nameEn": "Double Leg Stretch",
+      "primarySourceIds": ["pilates-return-to-life-1945", "basi-pilates-essential-chest-lift", "ouh-nhs-pilates-leaflet"],
+      "resolvedAuditIssueKo": "기존 공용 아키타입에서 팔이 골반 옆에만 머물러 더블 레그 스트레치의 핵심인 '양손 정강이 감싸기(Start) -> 양팔 귀 옆 오버헤드 & 양다리 사선 양방향 반대 신전(Middle) -> 양팔 서클 스윕 복귀(End)'가 누락된 문제를 전용 3단계 도해로 해결함."
+    }
+  }
+}
