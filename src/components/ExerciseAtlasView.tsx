@@ -61,6 +61,7 @@ import {
   isRestStep,
 } from '../utils/sequenceEngine';
 import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';
+import { EquipmentDiscoveryScope } from './EquipmentDiscoveryScope';
 import { CourseReferenceBrowser } from './CourseReferenceBrowser';
 import { SourceNoteDialog } from './SourceNoteDialog';
 import '../styles/design-tokens.css';
@@ -91,7 +92,6 @@ const INITIAL_FILTERS = {
   review: 'all',
   motionDraft: 'all',
   props: [] as PropType[],
-  owned: false,
   hideRecent: false,
 };
 const LEVEL_NAMES = { '1.0': '기초', '1.5': '중급', '2.0': '심화' };
@@ -396,7 +396,8 @@ const VerifiedReferenceCard: React.FC<{
 const VerifiedReferencesSection: React.FC<{
   onCreateNote: (reference: VerifiedPublicReference) => void;
 }> = ({ onCreateNote }) => {
-  const { ownedEquipment, ownedProps } = usePilatesStore();
+  const { ownedEquipment, ownedProps, exerciseBrowseScope, setExerciseBrowseScope } =
+    usePilatesStore();
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState<'all' | 'kr' | 'global'>('all');
   const [equipment, setEquipment] = useState<string[]>([]);
@@ -405,7 +406,8 @@ const VerifiedReferencesSection: React.FC<{
   const [level, setLevel] = useState('all');
   const [bodyFocus, setBodyFocus] = useState('all');
   const [language, setLanguage] = useState('all');
-  const [ownedOnly, setOwnedOnly] = useState(false);
+  const ownedOnly = exerciseBrowseScope === 'owned';
+  const setOwnedOnly = (owned: boolean) => setExerciseBrowseScope(owned ? 'owned' : 'all');
   const [verification, setVerification] = useState('all');
   const [sourceVisible, setSourceVisible] = useState({
     signature: '',
@@ -420,7 +422,6 @@ const VerifiedReferencesSection: React.FC<{
     setLevel('all');
     setBodyFocus('all');
     setLanguage('all');
-    setOwnedOnly(false);
     setVerification('all');
     setSourceVisible({ signature: '', limit: 6 });
   };
@@ -727,7 +728,14 @@ const VerifiedReferencesSection: React.FC<{
                 검색어 지우기
               </button>
             )}
-            <button type="button" className="btn-secondary" onClick={reset}>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => {
+                setOwnedOnly(false);
+                reset();
+              }}
+            >
               전체 참고 자료 보기
             </button>
           </div>
@@ -752,6 +760,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     exercises,
     ownedEquipment,
     ownedProps,
+    exerciseBrowseScope,
+    setExerciseBrowseScope,
     classGroups,
     historyLogs,
     activeTargetGroupId,
@@ -852,7 +862,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         !matchesLibraryEquipment(equipmentMeta, {
           equipment: filters.equipment,
           props: filters.props,
-          ownedOnly: filters.owned,
+          ownedOnly: exerciseBrowseScope === 'owned',
           ownedEquipment,
           ownedProps,
         })
@@ -907,9 +917,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       ];
       return matchesDiscoverySearch(fields, filters.search);
     });
-  }, [exercises, filters, ownedEquipment, ownedProps, recent]);
+  }, [exercises, filters, exerciseBrowseScope, ownedEquipment, ownedProps, recent]);
   const notesSignature = JSON.stringify({
     filters,
+    exerciseBrowseScope,
     ownedEquipment,
     ownedProps,
   });
@@ -1016,13 +1027,6 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         onClear: () => update('favorite', 'all'),
       });
     }
-    if (filters.owned) {
-      chips.push({
-        key: 'owned',
-        label: '내 보유 장비만',
-        onClear: () => update('owned', false),
-      });
-    }
     if (filters.hideRecent) {
       chips.push({
         key: 'hideRecent',
@@ -1095,6 +1099,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         </div>
       </header>
 
+      <EquipmentDiscoveryScope />
       <details className="library-asset-status">
         <summary>
           <span>도해 초안 {MOTION_PATTERN_REFERENCES.length}개</span>
@@ -1398,8 +1403,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   <label>
                     <input
                       type="checkbox"
-                      checked={filters.owned}
-                      onChange={(event) => update('owned', event.target.checked)}
+                      checked={exerciseBrowseScope === 'owned'}
+                      onChange={(event) =>
+                        setExerciseBrowseScope(event.target.checked ? 'owned' : 'all')
+                      }
                     />
                     내 보유 기구·소도구로 모두 가능한 동작만
                   </label>
@@ -1736,7 +1743,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                     </p>
                   )}
                   <p className="muted">
-                    검색어를 줄이거나 필터를 조정해 보세요.
+                    {exerciseBrowseScope === 'owned'
+                      ? '내 보유 장비 범위에서 일치하는 동작이 없습니다. 설정의 기구·소도구 또는 검색 조건을 확인해 주세요.'
+                      : '검색어를 줄이거나 필터를 조정해 보세요.'}
                     <br />
                     직접 찾은 유튜브 레퍼런스도 추가할 수 있어요.
                   </p>
@@ -1746,7 +1755,13 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                         검색어 지우기
                       </PfButton>
                     )}
-                    <PfButton variant="primary" onClick={resetFilters}>
+                    <PfButton
+                      variant="primary"
+                      onClick={() => {
+                        setExerciseBrowseScope('all');
+                        resetFilters();
+                      }}
+                    >
                       전체 동작 보기
                     </PfButton>
                     <PfButton variant="secondary" onClick={onOpenClipper}>

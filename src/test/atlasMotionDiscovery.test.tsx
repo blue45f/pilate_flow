@@ -15,6 +15,7 @@ beforeEach(() =>
       activeSteps: [],
       historyLogs: [],
       activeTab: 'atlas',
+      exerciseBrowseScope: 'all',
     },
     true,
   ),

@@ -71,15 +71,17 @@ const renderWorkbench = () =>
   );
 
 describe('workbench flow clarity without changing review eligibility', () => {
-  it('makes class equipment explicit, while all equipment remains the initial and reversible view', () => {
+  it('starts with owned equipment and keeps class narrowing separate from reversible all-equipment browsing', () => {
     const before = usePilatesStore.getState();
     render(<InlineExerciseFinder onOpenExercise={vi.fn()} classEquipment={['mat']} />);
     expect(screen.getByRole('region', { name: '이번 수업 기구' })).toHaveTextContent('매트');
-    expect(screen.getByRole('status')).toHaveTextContent('2개 결과');
-    expect(screen.getByRole('button', { name: '전체 기구 보기' })).toHaveAttribute(
+    expect(screen.getByRole('status')).toHaveTextContent('1개 결과');
+    expect(screen.getByRole('button', { name: '내 보유 장비' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
+    fireEvent.click(screen.getByRole('button', { name: '전체 장비 보기' }));
+    expect(screen.getByRole('status')).toHaveTextContent('2개 결과');
     fireEvent.click(screen.getByRole('button', { name: '수업 기구로 좁히기' }));
     expect(screen.getByRole('status')).toHaveTextContent('1개 결과');
     expect(screen.getByRole('button', { name: '수업 기구로 좁히기' })).toHaveAttribute(
@@ -88,7 +90,7 @@ describe('workbench flow clarity without changing review eligibility', () => {
     );
     expect(screen.getByRole('button', { name: pendingMat.nameKo + ' 상세 보기' })).toBeVisible();
     expect(screen.getByRole('button', { name: /수업안에 추가/ })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: '전체 기구 보기' }));
+    fireEvent.click(screen.getByRole('button', { name: '수업 기구 조건 해제' }));
     expect(screen.getByRole('status')).toHaveTextContent('2개 결과');
     const after = usePilatesStore.getState();
     expect(after.draftCriteria).toBe(before.draftCriteria);

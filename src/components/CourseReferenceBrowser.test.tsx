@@ -1,6 +1,14 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { usePilatesStore } from '../store/usePilatesStore';
 import { CourseReferenceBrowser } from './CourseReferenceBrowser';
+
+const originalScope = usePilatesStore.getState().exerciseBrowseScope;
+beforeEach(() => usePilatesStore.getState().setExerciseBrowseScope('all'));
+afterEach(() => {
+  cleanup();
+  usePilatesStore.getState().setExerciseBrowseScope(originalScope);
+});
 
 describe('whole-course reference exploration', () => {
   it('labels the list honestly and opens original links without embedding or recommendation', () => {
@@ -32,6 +40,8 @@ describe('whole-course reference exploration', () => {
       screen.getByText(/전체 필수 장비가 확인된 링크가 없어/),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '필터 초기화' }));
+    expect(screen.getByRole('status')).toHaveTextContent('0 / 32건');
+    fireEvent.click(screen.getByRole('button', { name: '보유 장비 조건만 해제' }));
     expect(screen.getByRole('status')).toHaveTextContent('27 / 32건');
     fireEvent.change(
       screen.getByRole('searchbox', { name: '수업 영상 검색' }),
