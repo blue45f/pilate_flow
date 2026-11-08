@@ -480,22 +480,40 @@ dialog details > summary {
   box-sizing: border-box;
 }
 
-/* Ensure focus tags in ExerciseAtlasView and chips in SequenceWorkbench meet 44x44px */
+/* Ensure focus tags and filter buttons in ExerciseAtlasView and chips in SequenceWorkbench meet 44x44px */
 #root .movement-focus-tag,
+#root .movement-library button,
 #root .library-view button,
 #root .focus-options .chip,
 dialog .focus-options .chip {
-  min-height: 44px;
-  min-width: 44px;
+  min-height: 44px !important;
+  min-width: 44px !important;
   box-sizing: border-box;
 }
 
-/* Ensure custom duration number input in SequenceWorkbench conditions modal meets 44x44px */
-#root .custom-duration input[aria-label='직접 지정 수업 시간'],
-dialog .custom-duration input[aria-label='직접 지정 수업 시간'] {
-  min-width: 52px;
-  min-height: 44px;
-  padding: 4px 6px;
+/* Prevent horizontal overflow on 320px inside DatedSequencePlanningDialog while keeping calendar scrollable */
+#root dialog.dated-planning-dialog[open],
+dialog.dated-planning-dialog[open] {
+  min-width: 0 !important;
+  max-width: calc(100vw - 22px) !important;
+  overflow-x: hidden !important;
+}
+
+#root dialog.dated-planning-dialog > .atelier-modal-shell,
+#root dialog.dated-planning-dialog > .atelier-modal-shell > .atelier-modal-body,
+#root .dated-planning {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box;
+}
+
+#root .dated-planning-calendar-scroll {
+  width: 0 !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
   box-sizing: border-box;
 }
 
@@ -538,6 +556,16 @@ dialog textarea {
   max-width: 100% !important;
   box-sizing: border-box;
   text-overflow: ellipsis;
+}
+
+/* Ensure custom duration number input in SequenceWorkbench conditions modal meets 44x44px (placed after generic dialog input rule) */
+#root .custom-duration input[aria-label='직접 지정 수업 시간'],
+dialog .custom-duration input[aria-label='직접 지정 수업 시간'] {
+  min-width: 52px !important;
+  width: 56px !important;
+  min-height: 44px !important;
+  padding: 4px 6px;
+  box-sizing: border-box;
 }
 
 @media (max-width: 680px) {

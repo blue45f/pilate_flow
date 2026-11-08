@@ -112,9 +112,10 @@
 }
 
 .dated-planning-calendar-scroll {
-  width: 100%;
+  position: relative;
+  width: 0;
+  min-width: 100%;
   max-width: 100%;
-  min-width: 0;
   overflow-x: auto;
   margin-bottom: 1.25rem;
 }
@@ -127,6 +128,7 @@
 }
 
 .dated-planning-calendar button {
+  position: relative;
   min-width: 44px;
   min-height: 44px;
   padding: 0.375rem 0.125rem;
