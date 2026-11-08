@@ -121,13 +121,13 @@
 
 .dated-planning-calendar {
   display: grid;
-  grid-template-columns: repeat(7, minmax(36px, 1fr));
+  grid-template-columns: repeat(7, minmax(44px, 1fr));
   gap: 0.25rem;
-  min-width: min(100%, 21rem);
+  min-width: 21rem;
 }
 
 .dated-planning-calendar button {
-  min-width: 36px;
+  min-width: 44px;
   min-height: 44px;
   padding: 0.375rem 0.125rem;
 }

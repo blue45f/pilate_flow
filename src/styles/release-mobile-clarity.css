@@ -345,10 +345,12 @@ body:has(.plan-view) {
   min-width: 0;
 }
 
-.pf-step-guide-chip {
+.pf-step-guide-chip,
+.pf-step-guide-list button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   width: 100%;
   min-height: 44px;
   padding: 6px 10px;
@@ -365,14 +367,16 @@ body:has(.plan-view) {
 }
 
 .pf-step-guide-chip.is-active,
-.pf-step-guide-chip[aria-current='step'] {
+.pf-step-guide-chip[aria-current='step'],
+.pf-step-guide-list button[aria-current='step'] {
   border-color: #1b4332;
   background: #1b4332;
   color: #ffffff;
   font-weight: 700;
 }
 
-.pf-step-guide-subrow {
+.pf-step-guide-subrow,
+.pf-step-guide-Subrow {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -383,6 +387,7 @@ body:has(.plan-view) {
 
 .pf-step-guide-focus {
   flex: 1 1 200px;
+  margin: 0;
   font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.45;
@@ -477,14 +482,11 @@ dialog details > summary {
 
 /* Ensure focus tags in ExerciseAtlasView and chips in SequenceWorkbench meet 44x44px */
 #root .movement-focus-tag,
+#root .library-view button,
 #root .focus-options .chip,
 dialog .focus-options .chip {
   min-height: 44px;
   min-width: 44px;
-  padding-inline: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   box-sizing: border-box;
 }
 
@@ -497,14 +499,16 @@ dialog .custom-duration input[aria-label='직접 지정 수업 시간'] {
   box-sizing: border-box;
 }
 
-/* Ensure public reference and safety external links have >= 44px touch target height */
+/* Ensure public reference, posture/anatomy guide, and safety external links have >= 44px touch target height */
 #root .verified-reference-card a,
 #root .library-public-references a,
 #root .exercise-evidence-panel a,
 dialog .exercise-evidence-panel a,
 dialog .safety-notes a,
 dialog .settings-section a,
-#root .settings-section a {
+#root .settings-section a,
+dialog a[href],
+#root a[href] {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
@@ -526,16 +530,20 @@ dialog .yt-clip-modal select,
 dialog .yt-clip-modal textarea,
 dialog .yt-preview-modal input,
 dialog .yt-preview-modal select,
-dialog .yt-preview-modal textarea {
+dialog .yt-preview-modal textarea,
+dialog input,
+dialog select,
+dialog textarea {
   min-width: 0 !important;
-  width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box;
+  text-overflow: ellipsis;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 680px) {
   #root .local-instructor-review .library-form-grid,
   dialog .local-instructor-review .library-form-grid,
+  dialog .library-form-grid,
   dialog .yt-clip-modal .library-form-grid,
   dialog .yt-preview-modal .library-form-grid,
   dialog .form-grid,
