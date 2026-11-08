@@ -322,9 +322,9 @@ function renderPelvisHipApparatusLayer(
           stroke="#8a7254"
           strokeWidth={1.2}
         />
-        <line x1={leftPoleX} y1={22} x2={leftPoleX} y2={145} stroke="#5c7068" strokeWidth={3} />
-        <line x1={rightPoleX} y1={22} x2={rightPoleX} y2={145} stroke="#5c7068" strokeWidth={3} />
-        <line x1={24} y1={22} x2={296} y2={22} stroke="#495e56" strokeWidth={3.4} />
+        <line x1={leftPoleX} y1={29} x2={leftPoleX} y2={145} stroke="#5c7068" strokeWidth={3} />
+        <line x1={rightPoleX} y1={29} x2={rightPoleX} y2={145} stroke="#5c7068" strokeWidth={3} />
+        <line x1={24} y1={29} x2={296} y2={29} stroke="#495e56" strokeWidth={3.4} />
         {/* Angled foot-end tower bar */}
         <line
           x1={towerPivot.x}
@@ -412,15 +412,15 @@ function renderPelvisHipApparatusLayer(
       {/* Vertical upright arm posts */}
       <line
         x1={leftPoleX}
-        y1={22}
+        y1={29}
         x2={leftPoleX}
         y2={145}
         stroke="#35584e"
         strokeWidth={3.8}
         data-upright-arm-post="head-end"
       />
-      <line x1={rightPoleX} y1={22} x2={rightPoleX} y2={145} stroke="#5c7068" strokeWidth={3} />
-      <line x1={24} y1={22} x2={296} y2={22} stroke="#495e56" strokeWidth={3.4} />
+      <line x1={rightPoleX} y1={29} x2={rightPoleX} y2={145} stroke="#5c7068" strokeWidth={3} />
+      <line x1={24} y1={29} x2={296} y2={29} stroke="#495e56" strokeWidth={3.4} />
       <circle
         cx={handGrip.x}
         cy={handGrip.y}
@@ -535,6 +535,20 @@ export function PelvisHipDiagramSvg({
         {`${phaseSpec.summaryKo} ${PELVIS_HIP_TRUTHFULNESS_METADATA.disclaimerKo}`}
       </desc>
 
+      <defs>
+        <marker
+          id={`${uid}-dir-arrow`}
+          viewBox="0 0 10 10"
+          refX="7"
+          refY="5"
+          markerWidth="5"
+          markerHeight="5"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#b85d2e" />
+        </marker>
+      </defs>
+
       <rect width={VIEWBOX_WIDTH} height={VIEWBOX_HEIGHT} rx={10} fill="#f7f5ef" />
 
       {/* Apparatus layer */}
@@ -545,25 +559,39 @@ export function PelvisHipDiagramSvg({
         mirrored,
       )}
 
-      {/* Alignment guides */}
+      {/* Alignment guides & Joint Axes */}
       {showAlignment && (
         <g data-layer="alignment-guides">
-          {phaseSpec.alignments.map((guide) => {
+          {phaseSpec.alignments.map((guide, idx) => {
             const from = mpt(guide.from, mirrored);
             const to = mpt(guide.to, mirrored);
             return (
-              <line
-                key={guide.id}
-                x1={from.x}
-                y1={from.y}
-                x2={to.x}
-                y2={to.y}
-                stroke="#2b6a58"
-                strokeWidth={1.5}
-                strokeDasharray="4 3"
-                data-guide-id={guide.id}
-                data-guide-kind={guide.kind}
-              />
+              <g key={guide.id}>
+                <line
+                  x1={from.x}
+                  y1={from.y}
+                  x2={to.x}
+                  y2={to.y}
+                  stroke="#1d6b57"
+                  strokeWidth={1.6}
+                  strokeDasharray="4 3"
+                  data-guide-id={guide.id}
+                  data-guide-kind={guide.kind}
+                />
+                {idx === 0 && (
+                  <text
+                    x={32}
+                    y={40}
+                    fontSize={5.9}
+                    fontWeight={600}
+                    fill="#1d6b57"
+                    fontFamily="system-ui, sans-serif"
+                    data-axis-label={guide.id}
+                  >
+                    {`관절축: ${guide.labelKo}`}
+                  </text>
+                )}
+              </g>
             );
           })}
         </g>
@@ -602,7 +630,11 @@ export function PelvisHipDiagramSvg({
                   key={muscle.muscleGroupId}
                   points={buildPolylinePoints(pts, mirrored)}
                   fill="none"
-                  stroke={muscle.role === 'primary' ? 'rgba(200,109,68,0.34)' : 'rgba(43,106,88,0.28)'}
+                  stroke={
+                    muscle.role === 'primary'
+                      ? 'rgba(200,109,68,0.34)'
+                      : 'rgba(43,106,88,0.28)'
+                  }
                   strokeWidth={9}
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -669,70 +701,112 @@ export function PelvisHipDiagramSvg({
       />
 
       {/* Key Joint Nodes */}
-      {(['shoulder', 'thoracic', 'lumbar', 'pelvis', 'hip', 'knee', 'ankle', 'heel', 'hand'] as const).map(
-        (jointKey) => {
-          const ptVal = mpt(joints[jointKey], mirrored);
-          return (
-            <circle
-              key={jointKey}
-              cx={ptVal.x}
-              cy={ptVal.y}
-              r={jointKey === 'pelvis' || jointKey === 'hip' ? 3.2 : 2.5}
-              fill="#faf4e7"
-              stroke="#254d45"
-              strokeWidth={1.3}
-              data-joint={jointKey}
-              data-joint-x={joints[jointKey].x}
-              data-joint-y={joints[jointKey].y}
-            />
-          );
-        },
-      )}
+      {(
+        [
+          'shoulder',
+          'thoracic',
+          'lumbar',
+          'pelvis',
+          'hip',
+          'knee',
+          'ankle',
+          'heel',
+          'hand',
+        ] as const
+      ).map((jointKey) => {
+        const ptVal = mpt(joints[jointKey], mirrored);
+        return (
+          <circle
+            key={jointKey}
+            cx={ptVal.x}
+            cy={ptVal.y}
+            r={jointKey === 'pelvis' || jointKey === 'hip' ? 3.2 : 2.5}
+            fill="#faf4e7"
+            stroke="#254d45"
+            strokeWidth={1.3}
+            data-joint={jointKey}
+            data-joint-x={joints[jointKey].x}
+            data-joint-y={joints[jointKey].y}
+          />
+        );
+      })}
 
-      {/* Direction vectors */}
+      {/* Direction vectors with arrowheads */}
       {showDirection && (
         <g data-layer="direction-vectors">
-          {phaseSpec.directionVectors.map((vec) => (
-            <polyline
-              key={vec.id}
-              points={buildPolylinePoints(vec.points, mirrored)}
-              fill="none"
-              stroke="#b85d2e"
-              strokeWidth={1.8}
-              strokeDasharray="2 2"
-              data-vector-id={vec.id}
-              data-vector-kind={vec.kind}
-            />
+          {phaseSpec.directionVectors.map((vec, idx) => (
+            <g key={vec.id}>
+              <polyline
+                points={buildPolylinePoints(vec.points, mirrored)}
+                fill="none"
+                stroke="#b85d2e"
+                strokeWidth={1.9}
+                strokeDasharray="3 2"
+                markerEnd={`url(#${uid}-dir-arrow)`}
+                data-vector-id={vec.id}
+                data-vector-kind={vec.kind}
+              />
+              {idx === 0 && (
+                <text
+                  x={32}
+                  y={50}
+                  fontSize={5.9}
+                  fontWeight={600}
+                  fill="#9a4220"
+                  fontFamily="system-ui, sans-serif"
+                  data-direction-label={vec.id}
+                >
+                  {`방향: ${vec.labelKo}`}
+                </text>
+              )}
+            </g>
           ))}
         </g>
       )}
 
-      {/* Fixed anchors */}
+      {/* Fixed anchors & Contact points */}
       <g data-layer="fixed-anchors">
-        {phaseSpec.fixedAnchors.map((anchor) => {
+        {phaseSpec.fixedAnchors.map((anchor, idx) => {
           const ptVal = mpt(anchor.point, mirrored);
           return (
-            <circle
-              key={anchor.joint}
-              cx={ptVal.x}
-              cy={ptVal.y}
-              r={4.2}
-              fill="none"
-              stroke="#c86d44"
-              strokeWidth={1.2}
-              data-fixed-anchor={anchor.joint}
-            />
+            <g key={anchor.joint}>
+              <circle
+                cx={ptVal.x}
+                cy={ptVal.y}
+                r={4.4}
+                fill="none"
+                stroke="#c86d44"
+                strokeWidth={1.4}
+                data-fixed-anchor={anchor.joint}
+              />
+              {idx === 0 && (
+                <text
+                  x={18}
+                  y={172}
+                  fontSize={5.8}
+                  fontWeight={600}
+                  fill="#6e4b35"
+                  fontFamily="system-ui, sans-serif"
+                  data-contact-label={anchor.joint}
+                >
+                  {`접촉점: ${anchor.surfaceKo}`}
+                </text>
+              )}
+            </g>
           );
         })}
       </g>
 
-      {/* Header & Truthfulness Caption */}
+      {/* Two-line non-clipping Header & Truthfulness Caption */}
       {showTruthfulnessCaption && (
         <g data-layer="truthfulness-disclaimer" fontFamily="system-ui, sans-serif">
-          <text x={12} y={16} fontSize={8.5} fontWeight={700} fill="#254d45">
-            {`${resolvedAsset.nameKo} · ${phaseSpec.shortTitleKo}`}
+          <text x={12} y={13} fontSize={7.8} fontWeight={700} fill="#254d45">
+            {`[${phaseSpec.badgeKo}] ${resolvedAsset.nameKo}`}
           </text>
-          <text x={12} y={194} fontSize={7} fill="#6c6a61">
+          <text x={12} y={23} fontSize={6.8} fontWeight={500} fill="#46635b">
+            {phaseSpec.shortTitleKo}
+          </text>
+          <text x={12} y={194} fontSize={6.6} fill="#6c6a61">
             자체 제작 2D 개략도 · 해부학·임상 실측 아님 (전문 감수 0 · 프레임 매핑 0 · 비의료 참고용)
           </text>
         </g>
@@ -740,6 +814,15 @@ export function PelvisHipDiagramSvg({
     </svg>
   );
 }
+
+const PELVIS_HIP_LEGEND_ITEMS = [
+  { id: 'spine-limb', label: '주 체절 골격선 (척추·골반·주측 하지)', color: '#254d45' },
+  { id: 'far-limb', label: '반대측 지지 사지 (원위 다리·팔)', color: '#5a7d6f' },
+  { id: 'axis', label: '관절축 · 사선 정렬 기준선 (점선)', color: '#1d6b57' },
+  { id: 'contact', label: '고정·지지 접촉점 (견갑·발·풋바·타워바)', color: '#c86d44' },
+  { id: 'direction', label: '분절·신전·활주 방향 화살표', color: '#b85d2e' },
+  { id: 'muscle', label: '주동근·안정근 활성 영역', color: '#d98a5f' },
+] as const;
 
 export function PelvisHipTriptychSvg({
   variantId,
@@ -791,6 +874,44 @@ export function PelvisHipTriptychSvg({
           );
         })}
       </div>
+      <div
+        data-testid="pelvis-hip-legend"
+        aria-label="2D 도해 범례"
+        style={{
+          marginTop: '8px',
+          padding: '6px 10px',
+          borderRadius: '6px',
+          background: '#f3efe6',
+          border: '1px solid #ded7c8',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '10px',
+          fontSize: '12px',
+          color: '#3b4a45',
+        }}
+      >
+        <strong style={{ color: '#254d45' }}>범례 (Legend):</strong>
+        {PELVIS_HIP_LEGEND_ITEMS.map((item) => (
+          <span
+            key={item.id}
+            data-legend-item={item.id}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                display: 'inline-block',
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: item.color,
+              }}
+            />
+            {item.label}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
+

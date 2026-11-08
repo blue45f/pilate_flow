@@ -674,6 +674,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
               </label>
 
               <PfField
+                as="div"
                 label="직접 해본 느낌 (주관적 체감 · 선택)"
                 htmlFor={feelingInputId}
                 hint="주관적 느낌은 객관적 운동 효과 판정과 구분되어 내 참고 메모로만 기록됩니다."
@@ -759,7 +760,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                       accept="image/*"
                       aria-label="참고 사진 선택"
                       onChange={handlePhotoUpload}
-                      hidden
+                      className="sr-only"
                     />
                   </label>
                   <PfButton

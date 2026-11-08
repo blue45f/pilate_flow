@@ -1,0 +1,52 @@
+{
+  "track": "I6",
+  "branch": "gemini/diagram-i6-shoulder-20261108",
+  "verifiedAt": "2026-11-08T10:25:00Z",
+  "anatomicalAccuracyAssumed": false,
+  "professionalReviewCount": 0,
+  "sourceFrameMappings": 0,
+  "exactAssetReady": false,
+  "safetyAssessment": "unassessed",
+  "movements": [
+    "shoulder-support-push-up",
+    "shoulder-support-leg-pull-front"
+  ],
+  "supportLines": [
+    "wrist-vertical-support",
+    "scapula-thoracic-support",
+    "shoulder-pelvis-ankle-plank-line"
+  ],
+  "browserVerification": {
+    "triptychCount": 2,
+    "figureCount": 6,
+    "legendCount": 2,
+    "sourcesBlockCount": 2,
+    "outboundSourceLinkCount": 8,
+    "supportLines": [
+      {
+        "id": "wrist-vertical-support",
+        "count": 12
+      },
+      {
+        "id": "scapula-thoracic-support",
+        "count": 12
+      },
+      {
+        "id": "shoulder-pelvis-ankle-plank-line",
+        "count": 12
+      }
+    ],
+    "horizontalOverflowPx": 0,
+    "mobile390OverflowPx": 0,
+    "mobile320OverflowPx": 0,
+    "consoleErrorCount": 0,
+    "pageErrorCount": 0
+  },
+  "screenshots": [
+    "docs/shoulder-support-diagrams-i6-20261108/screenshots/shoulder-support-desktop-1440.png",
+    "docs/shoulder-support-diagrams-i6-20261108/screenshots/shoulder-support-push-up-triptych.png",
+    "docs/shoulder-support-diagrams-i6-20261108/screenshots/shoulder-support-leg-pull-front-triptych.png",
+    "docs/shoulder-support-diagrams-i6-20261108/screenshots/shoulder-support-mobile-390.png",
+    "docs/shoulder-support-diagrams-i6-20261108/screenshots/shoulder-support-mobile-320-zoom200.png"
+  ]
+}

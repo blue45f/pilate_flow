@@ -25,9 +25,12 @@
   text-align: left;
   cursor: pointer;
 }
-.next-class-open:focus-visible,
+.next-class-open:focus-visible {
+  outline: 3px solid #fffdf7;
+  outline-offset: -5px;
+}
 .next-class-empty-action:focus-visible {
-  outline: 3px solid #d8a381;
+  outline: 3px solid #173d34;
   outline-offset: -5px;
 }
 .next-class-when {

@@ -329,7 +329,7 @@ export function RotationDraftFigure({
 
         {/* Compact telemetry overlay */}
         {!compact && (
-          <g fontFamily="system-ui, sans-serif" fontSize={8.5} fill="#254d45">
+          <g fontFamily="system-ui, sans-serif" fontSize={8.2} fill="#254d45">
             <text x={12} y={16} fontWeight={700}>
               {asset.nameKo} · {PHASE_BUTTON_LABELS[pose.visualPhaseId]}
             </text>
@@ -337,7 +337,7 @@ export function RotationDraftFigure({
               회전각 {telemetry.yawDeg}° · 2D 어깨폭 {telemetry.shoulderSpan2D}px /{' '}
               {telemetry.restShoulderSpan}px · 좌골변위 {telemetry.pelvisShiftMm}mm
             </text>
-            <text x={12} y={191} fill="#6b6a65">
+            <text x={12} y={191} fontSize={7.3} fill="#6b6a65">
               해부학 미검증(anatomicalAccuracyAssumed: false) · 전문가 검토 0 · 프레임 매핑 0
             </text>
           </g>

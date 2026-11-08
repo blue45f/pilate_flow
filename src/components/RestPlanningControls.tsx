@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Coffee, Plus } from 'lucide-react';
 import type { SequenceStep } from '../types/pilates';
 import '../styles/rest.css';
@@ -12,6 +12,7 @@ interface RestBudgetControlProps {
 export function RestBudgetControl({ minutes, totalMinutes, onChange }: RestBudgetControlProps) {
   const [custom, setCustom] = useState(false);
   const [edit, setEdit] = useState<{ value: string; source: number } | null>(null);
+  const errorId = useId();
   const customOpen = custom || ![0, 5, 10].includes(minutes);
   const value = edit?.source === minutes ? edit.value : String(minutes);
   const editedMinutes = Number(value);
@@ -53,6 +54,8 @@ export function RestBudgetControl({ minutes, totalMinutes, onChange }: RestBudge
           <span>휴식 직접 지정 · 분</span>
           <input
             aria-label="자동 휴식 직접 지정 · 분"
+            aria-invalid={!valid ? true : undefined}
+            aria-describedby={!valid ? errorId : undefined}
             type="number"
             min={0}
             max={Math.max(0, totalMinutes - 0.5)}
@@ -69,7 +72,7 @@ export function RestBudgetControl({ minutes, totalMinutes, onChange }: RestBudge
         </label>
       )}
       {customOpen && !valid ? (
-        <p className="rest-field-error" role="status">
+        <p id={errorId} className="rest-field-error" role="status">
           휴식은 0분 이상, 전체 수업 시간보다 짧게 입력해 주세요.
         </p>
       ) : null}

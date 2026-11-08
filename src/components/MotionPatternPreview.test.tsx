@@ -245,7 +245,7 @@ describe.each([
     expect(screen.getByLabelText('도해 위치')).toHaveValue('0');
     expect(screen.getByText('일시정지 · 2회 반복 설정 · 자동 재생 없음')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('관련 패턴 도해 속도'), { target: { value: '1' } });
-    fireEvent.click(screen.getByRole('button', { name: '한 주기 재생' }));
+    fireEvent.click(screen.getByRole('button', { name: '2회 반복 재생' }));
     frame(0);
     frame(8000);
     expect(screen.getByText('도해 반복 재생 중 (2 / 2회)')).toBeInTheDocument();
@@ -253,6 +253,76 @@ describe.each([
     expect(screen.getByText('반복 재생 끝 (2회) · 일시정지')).toBeInTheDocument();
     expect(frames.size).toBe(0);
   });
+  it.each([2, 3] as const)(
+    'keeps the %i-repeat play label accurate through playback and interruptions',
+    (repeatCount) => {
+      const { rerender } = render(<MotionPatternPreview reference={reference} />);
+      const repeat = screen.getByLabelText('관련 패턴 도해 반복');
+      const playLabel = `${repeatCount}회 반복 재생`;
+      const playButton = () => screen.getByRole('button', { name: playLabel });
+
+      fireEvent.change(repeat, { target: { value: String(repeatCount) } });
+      expect(playButton()).toBeEnabled();
+      expect(screen.queryByRole('button', { name: '한 주기 재생' })).not.toBeInTheDocument();
+      expect(frames.size).toBe(0);
+
+      fireEvent.click(playButton());
+      expect(screen.getByRole('button', { name: '일시정지' })).toBeEnabled();
+      frame(0);
+      frame(4000);
+      fireEvent.click(screen.getByRole('button', { name: '일시정지' }));
+      expect(playButton()).toBeEnabled();
+      expect(screen.getByLabelText('도해 위치')).toHaveValue('500');
+      expect(frames.size).toBe(0);
+
+      fireEvent.click(playButton());
+      frame(5000);
+      frame(9000);
+      expect(screen.getByRole('button', { name: '일시정지' })).toBeEnabled();
+      expect(screen.getByText(`도해 반복 재생 중 (2 / ${repeatCount}회)`)).toBeInTheDocument();
+
+      const otherCount = repeatCount === 2 ? 3 : 2;
+      fireEvent.change(repeat, { target: { value: String(otherCount) } });
+      expect(screen.getByRole('button', { name: `${otherCount}회 반복 재생` })).toBeEnabled();
+      expect(screen.getByLabelText('도해 위치')).toHaveValue('0');
+      expect(frames.size).toBe(0);
+      fireEvent.change(repeat, { target: { value: String(repeatCount) } });
+      fireEvent.click(playButton());
+      frame(0);
+      frame(repeatCount * 8000);
+      expect(screen.getByText(`반복 재생 끝 (${repeatCount}회) · 일시정지`)).toBeInTheDocument();
+      expect(playButton()).toBeEnabled();
+      expect(frames.size).toBe(0);
+
+      fireEvent.click(screen.getByRole('button', { name: '관련 패턴 처음으로' }));
+      expect(playButton()).toBeEnabled();
+      expect(screen.getByLabelText('도해 위치')).toHaveValue('0');
+      fireEvent.change(repeat, { target: { value: '1' } });
+      expect(screen.getByRole('button', { name: '한 주기 재생' })).toBeEnabled();
+      fireEvent.change(repeat, { target: { value: String(repeatCount) } });
+      expect(playButton()).toBeEnabled();
+
+      fireEvent.click(screen.getByLabelText('정지 화면만 보기'));
+      expect(playButton()).toBeDisabled();
+      fireEvent.click(screen.getByLabelText('정지 화면만 보기'));
+      expect(playButton()).toBeEnabled();
+      rerender(<MotionPatternPreview reference={reference} active={false} />);
+      expect(playButton()).toBeDisabled();
+      rerender(<MotionPatternPreview reference={reference} />);
+      expect(playButton()).toBeEnabled();
+      act(() => {
+        reduced = true;
+        onPreference?.({ matches: true } as MediaQueryListEvent);
+      });
+      expect(playButton()).toBeDisabled();
+      act(() => {
+        reduced = false;
+        onPreference?.({ matches: false } as MediaQueryListEvent);
+      });
+      expect(playButton()).toBeEnabled();
+      expect(frames.size).toBe(0);
+    },
+  );
   it('supports static phases and separates anatomical side from mirroring', () => {
     render(<MotionPatternPreview reference={reference} />);
     expect(screen.getByRole('button', { name: '이전 도해 단계' })).toBeDisabled();

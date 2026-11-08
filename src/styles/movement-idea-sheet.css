@@ -60,6 +60,10 @@
   outline: 3px solid var(--pf-color-focus-ring, #3b9f93);
   outline-offset: -3px;
 }
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-file-label:focus-within {
+  outline: 3px solid var(--pf-color-focus-ring, #17675c);
+  outline-offset: 2px;
+}
 #root .vnext-shell .pf-idea-sheet-dialog .pf-idea-progressive-summary {
   padding: 10px 12px;
   min-height: 48px;

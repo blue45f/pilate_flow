@@ -115,9 +115,9 @@ function selectedSide(
     case 'together':
       return 'both';
     case 'left-then-right':
-      return position.status === 'complete' ? 'right' : 'left';
+      return position.status === 'complete' && index === model.steps.length - 1 ? 'right' : 'left';
     case 'right-then-left':
-      return position.status === 'complete' ? 'left' : 'right';
+      return position.status === 'complete' && index === model.steps.length - 1 ? 'left' : 'right';
     default:
       return sideFromLabel(model.steps[index]?.sideLabels[0]) ?? 'unknown';
   }
@@ -204,9 +204,14 @@ export function resolveConnectedMotionStudy({
     };
   }
   const main = entry.stages.find((stage) => stage.id === 'main');
-  const complete = position.status === 'complete';
-  const teaching = segment?.kind === 'teaching';
-  const movement = segment?.kind === 'movement';
+  const isManualDifferentStep =
+    selectedIndex !== undefined &&
+    selectedIndex !== null &&
+    position.stepIndex !== index &&
+    !(position.status === 'complete' && index === steps.length - 1);
+  const complete = position.status === 'complete' && !isManualDifferentStep;
+  const teaching = segment?.kind === 'teaching' || isManualDifferentStep;
+  const movement = segment?.kind === 'movement' && !isManualDifferentStep;
   const staticOnly =
     reducedMotion ||
     !active ||
