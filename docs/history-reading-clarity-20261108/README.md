@@ -40,7 +40,7 @@ Passed on final source:
 - ClassBinderView.historyFlow: 11 tests, including new disclosure/visible-action structure coverage.
 - LogSessionModal.dateOnly: 9 tests.
 - TypeScript build.
-- Full eslint . (no output, success).
+- Full eslint . succeeds with 0 errors and 1 existing react-refresh/only-export-components warning in MotionAuthoringBatchFigure.tsx:241:20 (independently rechecked).
 - Vite production build and PWA verification: 43 real static files, manifest and PNG icons. Existing >500kB chunk warning remains.
 
 Actual browser checks, on all four viewport widths:
@@ -59,10 +59,10 @@ Pixels directly inspected: before-390, after-390, after-1440, normal/qa-390-1x, 
 
 ## Limits and follow-up
 
-Full regression is being run independently by the parent against 2b2b19c; its final result belongs in the independent verification report. The Linux-only classCueSheetChromium test was not run on this Mac. Text export was preserved but not newly clicked in this browser pass; existing focused/full tests provide the regression evidence where applicable.
+Full regression and independent short-height/TXT checks are now complete; see INDEPENDENT_VERIFICATION.md. The Linux-only classCueSheetChromium test was not run on this Mac. Text export was preserved but not newly clicked in this browser pass; existing focused/full tests provide the regression evidence where applicable.
 
 At 320px/200% CSS zoom, the shared app-header logo and new-movement control overlap. The history body and actions reflow without horizontal overflow, but this screenshot must not be reported as a complete whole-app zoom pass. Shared header redesign is outside this history-only change.
 
-Short-height navigation occlusion requires separate review. No claim of first-action visibility at every height is made.
+Short-height navigation occlusion was subsequently checked independently: actions remain reachable and unobscured after scrolling. No claim of first-action visibility at every height is made.
 
 Execution-only runners are preserved outside the checkout at /tmp/history-reading-runners-20261108. They were not committed; historical fixture extraction and Mac-specific executable paths are not production code. Evidence contains synthetic data only.

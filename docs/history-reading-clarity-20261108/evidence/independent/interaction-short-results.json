@@ -1,0 +1,86 @@
+[
+  {
+    "width": 320,
+    "height": 568,
+    "zoom": 1,
+    "overflow": 0,
+    "cardTop": 561.171875,
+    "actionTop": 866.125,
+    "buttons": [
+      44,
+      44
+    ],
+    "visibleAction": {
+      "top": 224.125,
+      "bottom": 268.125,
+      "navTop": 492,
+      "headerBottom": -581,
+      "hit": true,
+      "height": 568
+    },
+    "txtDownloadVerified": true
+  },
+  {
+    "width": 320,
+    "height": 568,
+    "zoom": 2,
+    "overflow": 0,
+    "cardTop": 1729.21875,
+    "actionTop": 3216.34375,
+    "buttons": [
+      170,
+      212
+    ],
+    "visibleAction": {
+      "top": 110.34375,
+      "bottom": 322.34375,
+      "navTop": 416,
+      "headerBottom": -2968.3125,
+      "hit": true,
+      "height": 568
+    },
+    "txtDownloadVerified": true
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "zoom": 1,
+    "overflow": 0,
+    "cardTop": 526.484375,
+    "actionTop": 804.25,
+    "buttons": [
+      44,
+      44
+    ],
+    "visibleAction": {
+      "top": 362.25,
+      "bottom": 406.25,
+      "navTop": 768,
+      "headerBottom": -381,
+      "hit": true,
+      "height": 844
+    },
+    "txtDownloadVerified": true
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "zoom": 2,
+    "overflow": 0,
+    "cardTop": 1452.4375,
+    "actionTop": 2525.984375,
+    "buttons": [
+      128,
+      128
+    ],
+    "visibleAction": {
+      "top": 289.984375,
+      "bottom": 417.984375,
+      "navTop": 692,
+      "headerBottom": -2098.3125,
+      "hit": true,
+      "height": 844
+    },
+    "txtDownloadVerified": true
+  }
+]
