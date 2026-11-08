@@ -4,7 +4,7 @@ import path from 'node:path';
 import process from 'node:process';
 import vm from 'node:vm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { pwaBuild, serviceWorkerSource } from '../../pwa-build';
+import { getShellExtras, ICON_PATHS, pwaBuild, serviceWorkerSource } from '../../pwa-build';
 import { syncAccountWorkspace } from '../../../src/lib/accountStorage';
 import { createRecoveryStorageGuard, RECOVERY_STORAGE_KEY } from '../../../src/lib/recoveryStorageGuard';
 import { getRecoveryStorageStatus, usePilatesStore } from '../../../src/store/usePilatesStore';
@@ -300,7 +300,7 @@ describe('Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit 
       handler: (
         this: { emitFile: (emitted: { type: string; fileName: string; source: string }) => void },
         options: unknown,
-        bundle: Record<string, { type: string; source?: string }>,
+        bundle: Record<string, { type: string; source?: string; code?: string }>,
       ) => void;
     };
     expect(generateBundle.order).toBe('post');
@@ -311,11 +311,23 @@ describe('Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit 
       .sort();
     const distHtml = readFileSync(path.join(DIST_DIR, 'index.html'), 'utf8');
 
-    const expectedVersion = createHash('sha256')
+    const hash = createHash('sha256')
       .update(JSON.stringify(distAssets))
-      .update(distHtml)
-      .update(readFileSync(path.join(PUBLIC_DIR, 'icons/app-192.png')))
-      .update(readFileSync(path.join(PUBLIC_DIR, 'icons/app-512.png')))
+      .update(distHtml);
+    for (const file of distAssets) {
+      hash.update(readFileSync(path.join(DIST_DIR, file), 'utf8'));
+    }
+    const shellExtras = getShellExtras(path.join(PUBLIC_DIR, 'images', 'movement-guides'));
+    const staticInputPaths = [
+      ...ICON_PATHS.map((iconPath) => path.join(PUBLIC_DIR, iconPath)),
+      ...shellExtras.map((extraPath) => path.join(PUBLIC_DIR, extraPath)),
+    ];
+    for (const filePath of staticInputPaths) {
+      if (existsSync(filePath)) {
+        hash.update(readFileSync(filePath));
+      }
+    }
+    const expectedVersion = hash
       .update(serviceWorkerSource.toString())
       .digest('hex')
       .slice(0, 16);
@@ -323,11 +335,14 @@ describe('Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit 
     expect(expectedVersion).toMatch(/^[a-f0-9]{16}$/);
 
     const emittedFiles: Array<{ type: string; fileName: string; source: string }> = [];
-    const bundleMock: Record<string, { type: string; source?: string }> = {
+    const bundleMock: Record<string, { type: string; source?: string; code?: string }> = {
       'index.html': { type: 'asset', source: distHtml },
     };
     for (const file of distAssets) {
-      bundleMock[file] = { type: 'chunk' };
+      const content = readFileSync(path.join(DIST_DIR, file), 'utf8');
+      bundleMock[file] = file.endsWith('.js')
+        ? { type: 'chunk', code: content }
+        : { type: 'asset', source: content };
     }
     generateBundle.handler.call(
       {
@@ -378,7 +393,9 @@ describe('Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit 
     expect(swV1.skipWaitingCalled).toBe(false);
     expect(swV1.clientsClaimCalled).toBe(false);
     expect(sharedCacheStore.has('flow-atelier-shell-1111111111111111')).toBe(true);
-    expect(sharedCacheStore.get('flow-atelier-shell-1111111111111111')?.size).toBe(5);
+    expect(sharedCacheStore.get('flow-atelier-shell-1111111111111111')?.size).toBe(
+      1 + ICON_PATHS.length + v1Files.length + getShellExtras().length,
+    );
 
     await swV1.dispatchActivate();
     expect(swV1.clientsClaimCalled).toBe(false);
@@ -636,22 +653,25 @@ describe('Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit 
     }
   });
 
-  describe('Test 5: Reproduces and characterizes Track A audit findings (A-F1, A-F2, A-F3)', () => {
-    it('Finding A-F1: uncached/unhashed auxiliary PWA assets (site.webmanifest, favicon.svg, apple-touch-icon.png, app-maskable-512.png) are omitted from ASSETS and version hash input', async () => {
+  describe('Test 5: Verifies Track P4 remediations for Track A audit findings (A-F1, A-F2, A-F3)', () => {
+    it('Finding A-F1 (Remediated): auxiliary PWA assets (site.webmanifest, favicon.svg, apple-touch-icon.png, app-maskable-512.png) are precached and included in version hash input', async () => {
       const swCode = readFileSync(path.join(DIST_DIR, 'sw.js'), 'utf8');
       const assetsMatch = swCode.match(/const ASSETS = (\[.*\]);/);
+      const shellExtrasMatch = swCode.match(/const SHELL_EXTRAS = (\[.*\]);/);
       const swAssets = JSON.parse(assetsMatch![1]) as string[];
+      const swExtras = JSON.parse(shellExtrasMatch![1]) as string[];
+      const precacheList = [...swAssets, ...swExtras];
 
-      const omittedPwaFiles = [
+      const auxiliaryPwaFiles = [
         '/site.webmanifest',
         '/favicon.svg',
         '/icons/apple-touch-icon.png',
         '/icons/app-maskable-512.png',
       ];
 
-      for (const file of omittedPwaFiles) {
+      for (const file of auxiliaryPwaFiles) {
         expect(existsSync(path.join(DIST_DIR, file))).toBe(true);
-        expect(swAssets).not.toContain(file);
+        expect(precacheList).toContain(file);
       }
 
       const sw = createServiceWorkerVmHarness(swCode);
@@ -661,22 +681,23 @@ describe('Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit 
         throw new Error('offline');
       });
 
-      for (const file of omittedPwaFiles) {
+      for (const file of auxiliaryPwaFiles) {
         const res = await sw.dispatchFetch({ url: file, mode: 'cors' });
-        expect(res.intercepted).toBe(false);
+        expect(res.intercepted).toBe(true);
+        expect(res.response?.status).toBe(200);
       }
 
-      // Also verify pwa-build.ts source does not include these 4 files in its SHA-256 hash calculation
+      // Also verify pwa-build.ts source includes these files in its SHA-256 hash calculation
       const pwaBuildSource = readFileSync(path.join(REPO_ROOT, 'scripts/pwa-build.ts'), 'utf8');
-      expect(pwaBuildSource).toContain("readFileSync('public/icons/app-192.png')");
-      expect(pwaBuildSource).toContain("readFileSync('public/icons/app-512.png')");
-      expect(pwaBuildSource).not.toContain('site.webmanifest');
-      expect(pwaBuildSource).not.toContain('favicon.svg');
-      expect(pwaBuildSource).not.toContain('apple-touch-icon.png');
-      expect(pwaBuildSource).not.toContain('app-maskable-512.png');
+      expect(pwaBuildSource).toContain('/icons/app-192.png');
+      expect(pwaBuildSource).toContain('/icons/app-512.png');
+      expect(pwaBuildSource).toContain('/site.webmanifest');
+      expect(pwaBuildSource).toContain('/favicon.svg');
+      expect(pwaBuildSource).toContain('/icons/apple-touch-icon.png');
+      expect(pwaBuildSource).toContain('/icons/app-maskable-512.png');
     });
 
-    it('Finding A-F2: online root navigation (/) while v2 SW is waiting fetches v2 HTML under active v1 SW controller, causing offline chunk miss if offline before tab close', async () => {
+    it('Finding A-F2 (Remediated): online root navigation (/) while v2 SW is waiting serves v1 cached /index.html instead of fetching v2 HTML under active v1 SW controller', async () => {
       const cacheStore = new Map<string, Map<string, VmResponse>>();
       const v1Files = ['assets/index-v1.js'];
       const v2Files = ['assets/index-v2.js'];
@@ -708,21 +729,23 @@ describe('Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit 
         throw new Error(`network unavailable for ${pathname}`);
       });
 
-      // User reloads '/' while online: active v1 SW uses network-first for '/', receiving v2 HTML!
+      // User reloads '/' while online: active v1 SW detects waiting v2 cache via hasWaitingUpdate()
+      // and serves v1's cached /index.html so HTML and JS chunks never mismatch!
       const onlineReload = await swV1.dispatchFetch({ url: '/', mode: 'navigate' });
       expect(onlineReload.intercepted).toBe(true);
-      expect(onlineReload.response?.body).toContain('/assets/index-v2.js');
+      expect(onlineReload.response?.body).toBe('network:/index.html');
+      expect(onlineReload.response?.body).not.toContain('/assets/index-v2.js');
 
-      // Because v1 SW is still the active controller and /assets/index-v2.js is NOT in v1's ASSETS,
-      // v1 SW does not intercept /assets/index-v2.js at all (even though v2 already cached it in flow-atelier-shell-v2!).
-      const v2ScriptUnderV1Controller = await swV1.dispatchFetch({
-        url: '/assets/index-v2.js',
+      // v1's own script remains served from v1's cache offline
+      const v1ScriptUnderV1Controller = await swV1.dispatchFetch({
+        url: '/assets/index-v1.js',
         mode: 'cors',
       });
-      expect(v2ScriptUnderV1Controller.intercepted).toBe(false);
+      expect(v1ScriptUnderV1Controller.intercepted).toBe(true);
+      expect(v1ScriptUnderV1Controller.response?.body).toBe('network:/assets/index-v1.js');
     });
 
-    it('Finding A-F3: during first-time SW install, pwa.ts reports offlineStatus as "update-ready" when worker enters registration.waiting before active exists', async () => {
+    it('Finding A-F3 (Remediated): during first-time SW install, pwa.ts keeps offlineStatus as "preparing" when worker enters registration.waiting before active exists', async () => {
       vi.resetModules();
       vi.stubGlobal('isSecureContext', true);
       vi.stubGlobal(
@@ -758,10 +781,10 @@ describe('Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit 
       registration.waiting = worker as unknown as ServiceWorker;
       worker.dispatchEvent(new Event('statechange'));
 
-      // Because update() checks `registration.waiting ? 'update-ready' : ...` without checking `registration.active`,
-      // a brand-new first install briefly reports 'update-ready' before transitioning to 'ready'.
+      // Because update() checks `registration.waiting && registration.active ? 'update-ready' : ...`,
+      // a brand-new first install remains 'preparing' until activation completes.
       expect(registration.active).toBeNull();
-      expect(pwa.getPwaState().offlineStatus).toBe('update-ready');
+      expect(pwa.getPwaState().offlineStatus).toBe('preparing');
 
       // Once activation completes, it becomes 'ready'
       worker.state = 'activated';

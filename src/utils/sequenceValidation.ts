@@ -1,3 +1,4 @@
+import { compareCodeUnits } from './compareCodeUnits';
 import {
   EQUIPMENT_IDS,
   PROP_IDS,
@@ -360,10 +361,10 @@ export function calculateApparatusTransitionDetail(
   );
 
   const fromEquipmentSig = fromExercise
-    ? [...getExerciseEquipment(fromExercise).requiredEquipment].sort().join('|')
+    ? [...getExerciseEquipment(fromExercise).requiredEquipment].sort(compareCodeUnits).join('|')
     : '';
   const toEquipmentSig = toExercise
-    ? [...getExerciseEquipment(toExercise).requiredEquipment].sort().join('|')
+    ? [...getExerciseEquipment(toExercise).requiredEquipment].sort(compareCodeUnits).join('|')
     : '';
   const equipmentChanged = Boolean(
     fromExercise && toExercise && (fromEquipmentSig !== toEquipmentSig || apparatusChanged),

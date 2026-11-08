@@ -677,6 +677,7 @@ function renderPoseDeltaGhostLayer(
   startJoints: RigJointMap,
   currentJoints: RigJointMap,
   mirrored: boolean,
+  fallbackReferenceJoints?: RigJointMap,
 ): React.JSX.Element {
   const s = (k: keyof RigJointMap): Point2D =>
     mpt(startJoints[k] ?? startJoints.pelvis, mirrored);
@@ -703,7 +704,7 @@ function renderPoseDeltaGhostLayer(
     'toe',
   ];
 
-  const movedVectors = trackedJoints
+  let movedVectors = trackedJoints
     .map((joint) => {
       const fromPt = s(joint);
       const toPt = c(joint);
@@ -711,6 +712,19 @@ function renderPoseDeltaGhostLayer(
       return { joint, fromPt, toPt, dist };
     })
     .filter((item) => item.dist >= 3);
+
+  if (movedVectors.length === 0 && fallbackReferenceJoints) {
+    const f = (k: keyof RigJointMap): Point2D =>
+      mpt(fallbackReferenceJoints[k] ?? fallbackReferenceJoints.pelvis, mirrored);
+    movedVectors = trackedJoints
+      .map((joint) => {
+        const fromPt = f(joint);
+        const toPt = c(joint);
+        const dist = Math.hypot(toPt.x - fromPt.x, toPt.y - fromPt.y);
+        return { joint, fromPt, toPt, dist };
+      })
+      .filter((item) => item.dist >= 3);
+  }
 
   return (
     <g data-layer="pose-delta-ghost">
@@ -1316,6 +1330,7 @@ export function MovementPhaseDiagramSvg({
             asset.phases.start.joints,
             phaseSpec.joints,
             mirrored,
+            phase === 'end' ? asset.phases.middle.joints : undefined,
           )
         : null}
 

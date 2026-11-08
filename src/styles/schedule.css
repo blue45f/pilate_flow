@@ -358,3 +358,48 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Keep date navigation and day-level actions usable on narrow screens. */
+.schedule-day-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.schedule-day-actions .text-button {
+  min-height: 44px;
+  padding: 8px;
+  font-size: 12px;
+}
+.schedule-date-nav input {
+  box-sizing: border-box;
+  min-height: 44px;
+  width: 100%;
+}
+.schedule-date-nav button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.schedule-day h2:focus-visible {
+  outline: 2px solid #466c58;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+@media (max-width: 720px) {
+  .schedule-date-nav {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: end;
+  }
+  .schedule-date-nav > .btn-secondary {
+    grid-column: 1 / -1;
+    min-height: 44px;
+  }
+  .schedule-day > header {
+    flex-wrap: wrap;
+  }
+  .schedule-day-actions {
+    margin-left: auto;
+  }
+}

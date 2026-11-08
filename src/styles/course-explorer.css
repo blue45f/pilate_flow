@@ -1,0 +1,278 @@
+.course-explorer {
+  gap: 16px;
+}
+.course-explorer > header {
+  align-items: flex-start;
+}
+.course-explorer > header .eyebrow {
+  display: none;
+}
+.course-explorer > header > svg {
+  color: var(--lib-muted, #687460);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.course-explorer h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+}
+.course-explorer .course-browser-intro {
+  font-size: 13px;
+  color: var(--lib-muted, #687460);
+}
+.course-explorer .course-browser-search-row {
+  gap: 8px;
+}
+.course-explorer .course-browser-search {
+  padding-inline: 12px 4px;
+  border-radius: 10px;
+}
+.course-explorer .course-browser-search > svg {
+  flex-shrink: 0;
+}
+.course-explorer .course-browser-search input {
+  font-size: 16px;
+}
+.course-explorer .course-search-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--lib-muted, #687460);
+  cursor: pointer;
+}
+.course-explorer .course-filter-toggle {
+  flex-shrink: 0;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-inline: 12px;
+}
+.course-explorer .course-filter-count {
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #e1eadc;
+  color: #294b3d;
+  font-size: 12px;
+}
+.course-explorer .course-language-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.course-explorer .course-language-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.course-explorer .course-language-choices button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--lib-line, #d8dfd7);
+  border-radius: 8px;
+  background: #fff;
+  color: #40564b;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.course-explorer .course-language-choices button[aria-pressed='true'] {
+  color: #173f35;
+  border-color: #93ad9d;
+  background: #e8f1e9;
+  font-weight: 600;
+}
+.course-explorer .course-language-row > span {
+  font-size: 12px;
+  color: var(--lib-muted, #687460);
+  line-height: 1.6;
+}
+.course-explorer .course-active-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.course-explorer .course-active-filters > span {
+  font-size: 12px;
+  color: var(--lib-muted, #687460);
+}
+.course-explorer .course-active-filters button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #cbd8c9;
+  border-radius: 8px;
+  background: #eff4ec;
+  color: #294c3c;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.course-explorer .course-active-filters button > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.course-explorer .course-active-filters button > svg {
+  flex-shrink: 0;
+}
+.course-explorer .course-filters {
+  border-radius: 12px;
+  background: #f8faf7;
+}
+.course-explorer .course-filters > p {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.course-explorer .course-result-row {
+  padding-top: 4px;
+}
+.course-explorer .course-result-row p {
+  font-size: 12px;
+  line-height: 1.8;
+}
+.course-explorer .course-reference-grid {
+  gap: 16px;
+}
+.course-explorer .course-reference-card {
+  padding: 18px;
+  border-radius: 12px;
+  gap: 12px;
+}
+.course-explorer .course-card-kicker {
+  justify-content: flex-start;
+  gap: 6px;
+}
+.course-explorer .course-card-kicker > span {
+  padding: 3px 7px;
+  border: 1px solid #e2e6df;
+  border-radius: 6px;
+  background: #f6f8f4;
+  font-size: 11px;
+}
+.course-explorer .course-reference-card h3 {
+  font-size: 16px;
+  line-height: 1.65;
+  scroll-margin-top: 24px;
+}
+.course-explorer .course-reference-card h3:focus {
+  outline: 3px solid #a86d46;
+  outline-offset: 4px;
+  border-radius: 3px;
+}
+.course-explorer .course-card-publisher {
+  font-size: 13px;
+}
+.course-explorer .course-reference-card dl {
+  padding-block: 12px;
+  border-block: 1px solid #e8ece5;
+  font-size: 13px;
+  gap: 10px;
+}
+.course-explorer .course-reference-card dd {
+  font-weight: 500;
+}
+.course-explorer .course-card-state {
+  font-size: 12px;
+}
+.course-explorer .course-reference-card summary {
+  font-size: 13px;
+}
+.course-explorer .course-open-original {
+  font-size: 13px;
+}
+.course-explorer .course-empty {
+  border-radius: 12px;
+  padding: 24px 16px;
+}
+.course-explorer .course-empty h3 {
+  font-size: 17px;
+}
+.course-explorer .course-empty p {
+  font-size: 13px;
+}
+.course-explorer .course-empty-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.course-explorer .course-empty-actions button {
+  min-height: 44px;
+}
+.course-explorer .course-more {
+  width: min(100%, 360px);
+}
+.course-explorer :is(button, summary, a):focus-visible {
+  outline: 3px solid #a86d46;
+  outline-offset: 3px;
+}
+@media (min-width: 1280px) {
+  .course-explorer .course-reference-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 680px) {
+  .course-explorer {
+    gap: 14px;
+  }
+  .course-explorer h2 {
+    font-size: 20px;
+  }
+  .course-explorer .course-language-choices {
+    width: 100%;
+  }
+  .course-explorer .course-language-choices button {
+    flex: 1;
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+  .course-explorer .course-reference-card {
+    padding: 16px;
+  }
+  .course-explorer .course-result-row {
+    align-items: flex-start;
+  }
+  .course-explorer .course-result-row p {
+    flex: 1;
+    min-width: 0;
+  }
+  .course-explorer .course-empty-actions {
+    flex-direction: column;
+  }
+}
+
+.course-explorer .course-browser-search input::-webkit-search-cancel-button {
+  display: none;
+}
+#root .vnext-shell .course-explorer .course-browser-search input:focus-visible {
+  outline: none;
+}
+#root .vnext-shell .course-explorer .course-browser-search:focus-within {
+  outline: 3px solid var(--pf-color-focus-ring, #256652);
+  outline-offset: 3px;
+}
+@media (forced-colors: active) {
+  #root .vnext-shell .course-explorer .course-browser-search:focus-within {
+    outline-color: Highlight;
+  }
+}

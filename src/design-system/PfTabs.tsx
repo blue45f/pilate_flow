@@ -42,7 +42,8 @@ export function PfTabs<T extends string = string>({
 }: PfTabsProps<T>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (event.defaultPrevented) return;
     const keys = ['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Home', 'End'];
     if (!keys.includes(event.key)) return;
 
@@ -113,6 +114,7 @@ export function PfTabs<T extends string = string>({
                 data-tab-id={item.id}
                 disabled={item.disabled}
                 className={btnClasses}
+                onKeyDown={handleKeyDown}
                 onClick={() => {
                   if (!item.disabled && item.id !== value) {
                     onChange(item.id);

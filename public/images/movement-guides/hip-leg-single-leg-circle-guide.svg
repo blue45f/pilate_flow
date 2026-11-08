@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 560" width="1120" height="560" role="img" aria-labelledby="slc-guide-title slc-guide-desc" data-movement-id="hip-leg-single-leg-circle" data-anatomical-accuracy-assumed="false" data-professional-review-count="0" data-source-frame-mappings="0">
+  <title id="slc-guide-title">싱글 레그 서클 3단계 고관절 분리 및 골반 고정 도해 (Single Leg Circle 3-Phase Kinematic Guide)</title>
+  <desc id="slc-guide-desc">Original app-authored 2D kinematic schematic (free license, anatomicalAccuracyAssumed: false, professionalReviewCount: 0, sourceFrameMappings: 0). Depicts Start (앙와위 골반 수평·지지 다리 뒤꿈치 매트 고정 및 작동 다리 90° 수직), Middle (고관절 분리 내전 교차→하방·외측 360° 원 궤적), and End (골반 흔들림 0mm 상태에서 상방 정점 제어 복귀) with rigid femur/tibia lengths, pelvis anchor lock, and circumduction trajectory arc.</desc>
+  <defs>
+    <marker id="slc-arrow-arc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#9a502d" />
+    </marker>
+    <marker id="slc-arrow-return" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#244d44" />
+    </marker>
+    <linearGradient id="slc-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbfaf5" />
+      <stop offset="100%" stop-color="#f2ede1" />
+    </linearGradient>
+    <radialGradient id="slc-muscle-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c17c52" stop-opacity="0.46" />
+      <stop offset="100%" stop-color="#c17c52" stop-opacity="0.06" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1120" height="560" rx="18" fill="url(#slc-bg)" stroke="#d9d1c1" stroke-width="1.5" />
+
+  <!-- Header -->
+  <g font-family="Pretendard, -apple-system, BlinkMacSystemFont, sans-serif">
+    <text x="28" y="34" font-size="13.5" font-weight="700" fill="#244d44">TRACK I3 · 싱글 레그 서클 (Single Leg Circle) 3단계 고관절 분리(Hip Dissociation) &amp; 골반 앵커 도해</text>
+    <text x="1092" y="34" text-anchor="end" font-size="10" font-weight="600" fill="#875641">ORIGINAL FREE-LICENSE KINEMATIC SVG · anatomicalAccuracyAssumed: false</text>
+    <text x="28" y="54" font-size="11" fill="#5e6761">불변 조건: 241 샘플 강체 분절 길이 보존(drift &lt; 1e-6) · 앙와위 천골 수평 고정(pelvisDriftMm = 0) · 반대쪽 지지 다리 뒤꿈치 매트(y=144) 고정</text>
+  </g>
+
+  <!-- ==================== PANEL 1: START (x: 24..368) ==================== -->
+  <g id="phase-start" data-phase="start">
+    <rect x="24" y="70" width="344" height="416" rx="14" fill="#ffffff" fill-opacity="0.88" stroke="#d8cfc0" stroke-width="1.3" />
+    <rect x="40" y="86" width="144" height="26" rx="7" fill="#244d44" />
+    <text x="112" y="103" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11.5" font-weight="700" fill="#fbfaf5">1. START · 시작 자세</text>
+    <text x="352" y="103" text-anchor="end" font-family="Pretendard, sans-serif" font-size="10.5" font-weight="600" fill="#5e6761">작동 다리 90° 수직 · 지지 뒤꿈치 고정</text>
+
+    <!-- Mat Surface Baseline -->
+    <rect x="42" y="380" width="308" height="10" rx="5" fill="#6b826d" fill-opacity="0.32" stroke="#244d44" stroke-width="1.1" />
+    <line x1="42" y1="366" x2="350" y2="366" stroke="#2b6a58" stroke-width="1.3" stroke-dasharray="5 4" data-alignment-guide="supine-pelvis-level" />
+
+    <!-- Pelvis Anchor Callout & Highlight -->
+    <g data-element="pelvis-anchor">
+      <ellipse cx="192" cy="364" rx="28" ry="14" fill="url(#slc-muscle-glow)" stroke="#9a502d" stroke-width="1.2" />
+      <rect x="180" y="356" width="24" height="16" rx="4" fill="#fbfaf5" stroke="#9a502d" stroke-width="2" />
+      <text x="192" y="412" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="10" font-weight="700" fill="#9a502d">천골·ASIS 수평 앵커 (pelvisDriftMm = 0)</text>
+    </g>
+
+    <!-- Circumduction Preview Arc -->
+    <path data-element="leg-trajectory-arc" d="M 198 208 C 154 214, 162 292, 232 298 C 276 296, 266 226, 198 208" fill="none" stroke="#9a502d" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#slc-arrow-arc)" />
+
+    <!-- Right Support Leg (Dashed, anchored on mat) -->
+    <g data-limb="right-support" stroke="#875641" stroke-width="3.8" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 198 366 L 280 370 L 336 373 L 328 380 L 348 368" />
+    </g>
+    <circle cx="328" cy="380" r="4.5" fill="#9a502d" data-anchor="support-heel" />
+
+    <!-- Supine Torso & Left Working Leg (Solid, 90 deg vertical: femur 82px + tibia 76px) -->
+    <g data-limb="left-working" stroke="#244d44" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 68 366 L 94 366 L 116 366 L 154 366 L 192 366 L 198 366" />
+      <path d="M 116 366 L 164 374 L 208 378" />
+      <path d="M 198 366 L 198 284 L 198 208 L 224 202" />
+    </g>
+    <circle cx="56" cy="362" r="12" fill="#e6dec8" stroke="#244d44" stroke-width="2.4" />
+    <circle cx="116" cy="366" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="198" cy="366" r="5" fill="#fbfaf5" stroke="#9a502d" stroke-width="2.2" />
+    <circle cx="198" cy="284" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="198" cy="208" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+
+    <text x="196" y="444" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700" fill="#244d44">후두부·견갑·천골 수평 안착 &amp; 작동 다리 12시 수직</text>
+    <text x="196" y="464" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="10" fill="#5e6761">지지 다리 뒤꿈치 매트 고정 · 들숨에 중심선 내전 진입 준비</text>
+  </g>
+
+  <!-- ==================== PANEL 2: MIDDLE / ROTATION (x: 388..732) ==================== -->
+  <g id="phase-middle" data-phase="middle">
+    <rect x="388" y="70" width="344" height="416" rx="14" fill="#ffffff" fill-opacity="0.95" stroke="#c17c52" stroke-width="1.8" />
+    <rect x="404" y="86" width="164" height="26" rx="7" fill="#9a502d" />
+    <text x="486" y="103" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11.5" font-weight="700" fill="#fbfaf5">2. MIDDLE · 원 궤적 공전</text>
+    <text x="716" y="103" text-anchor="end" font-family="Pretendard, sans-serif" font-size="10.5" font-weight="700" fill="#9a502d">내전 교차 → 원위 하방·외측 스윕</text>
+
+    <!-- Mat Surface Baseline -->
+    <rect x="406" y="380" width="308" height="10" rx="5" fill="#6b826d" fill-opacity="0.32" stroke="#244d44" stroke-width="1.1" />
+    <line x1="406" y1="366" x2="714" y2="366" stroke="#2b6a58" stroke-width="1.3" stroke-dasharray="5 4" data-alignment-guide="supine-pelvis-level" />
+
+    <!-- Pelvis Anchor Callout & Highlight -->
+    <g data-element="pelvis-anchor">
+      <ellipse cx="556" cy="364" rx="32" ry="16" fill="url(#slc-muscle-glow)" stroke="#9a502d" stroke-width="1.4" />
+      <rect x="544" y="356" width="24" height="16" rx="4" fill="#fbfaf5" stroke="#9a502d" stroke-width="2.2" />
+      <text x="556" y="412" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="10" font-weight="700" fill="#9a502d">반대측 골반 들림 0mm · 고관절 소켓 분리 공전</text>
+    </g>
+
+    <!-- Active 360 Circumduction Trajectory Arc -->
+    <path data-element="leg-trajectory-arc" d="M 562 208 C 514 218, 528 296, 686 269 C 696 226, 624 202, 562 208" fill="none" stroke="#9a502d" stroke-width="2.4" stroke-dasharray="6 4" marker-end="url(#slc-arrow-arc)" />
+
+    <!-- Start Ghost Leg -->
+    <path d="M 562 366 L 562 284 L 562 208" stroke="#244d44" stroke-opacity="0.22" stroke-width="3" fill="none" />
+
+    <!-- Right Support Leg (Dashed, stationary on mat) -->
+    <g data-limb="right-support" stroke="#875641" stroke-width="3.8" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 562 366 L 644 370 L 700 373 L 692 380 L 712 368" />
+    </g>
+    <circle cx="692" cy="380" r="4.5" fill="#9a502d" data-anchor="support-heel" />
+
+    <!-- Supine Torso & Left Working Leg at -38 deg (femur 82px -> (626.6, 315.5), tibia 76px -> (686.5, 268.7)) -->
+    <g data-limb="left-working" stroke="#244d44" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 432 366 L 458 366 L 480 366 L 518 366 L 556 366 L 562 366" />
+      <path d="M 480 366 L 528 374 L 572 378" />
+      <path d="M 562 366 L 626.6 315.5 L 686.5 268.7 L 708 285" />
+    </g>
+    <circle cx="420" cy="362" r="12" fill="#e6dec8" stroke="#244d44" stroke-width="2.4" />
+    <circle cx="480" cy="366" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="562" cy="366" r="5.5" fill="#fbfaf5" stroke="#9a502d" stroke-width="2.4" />
+    <circle cx="626.6" cy="315.5" r="4" fill="#fbfaf5" stroke="#9a502d" stroke-width="2" />
+    <circle cx="686.5" cy="268.7" r="4" fill="#fbfaf5" stroke="#9a502d" stroke-width="2" />
+
+    <text x="560" y="444" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700" fill="#9a502d">무릎 신전 강체 길이 유지 · 중심선 교차 후 하방·외측 아크</text>
+    <text x="560" y="464" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="10" fill="#5e6761">골반이 흔들리지 않는 범위 내에서만 원 반경 설정</text>
+  </g>
+
+  <!-- ==================== PANEL 3: END (x: 752..1096) ==================== -->
+  <g id="phase-end" data-phase="end">
+    <rect x="752" y="70" width="344" height="416" rx="14" fill="#ffffff" fill-opacity="0.88" stroke="#d8cfc0" stroke-width="1.3" />
+    <rect x="768" y="86" width="152" height="26" rx="7" fill="#244d44" />
+    <text x="844" y="103" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11.5" font-weight="700" fill="#fbfaf5">3. END · 정점 제어 복귀</text>
+    <text x="1080" y="103" text-anchor="end" font-family="Pretendard, sans-serif" font-size="10.5" font-weight="600" fill="#5e6761">상방 정점 정지 &amp; 역방향 전환</text>
+
+    <!-- Mat Surface Baseline -->
+    <rect x="770" y="380" width="308" height="10" rx="5" fill="#6b826d" fill-opacity="0.32" stroke="#244d44" stroke-width="1.1" />
+    <line x1="770" y1="366" x2="1078" y2="366" stroke="#2b6a58" stroke-width="1.3" stroke-dasharray="5 4" data-alignment-guide="supine-pelvis-level" />
+
+    <!-- Pelvis Anchor Callout & Highlight -->
+    <g data-element="pelvis-anchor">
+      <ellipse cx="920" cy="364" rx="28" ry="14" fill="url(#slc-muscle-glow)" stroke="#244d44" stroke-width="1.2" />
+      <rect x="908" y="356" width="24" height="16" rx="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+      <text x="920" y="412" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="10" font-weight="700" fill="#244d44">천골·지지 뒤꿈치 변위 0px 완료 확인</text>
+    </g>
+
+    <!-- Return Arc -->
+    <path data-element="leg-trajectory-arc" d="M 1048 269 C 1054 224, 996 204, 959 211" fill="none" stroke="#244d44" stroke-width="2.2" marker-end="url(#slc-arrow-return)" />
+
+    <!-- Right Support Leg (Dashed, stationary on mat) -->
+    <g data-limb="right-support" stroke="#875641" stroke-width="3.8" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 926 366 L 1008 370 L 1064 373 L 1056 380 L 1076 368" />
+    </g>
+    <circle cx="1056" cy="380" r="4.5" fill="#244d44" data-anchor="support-heel" />
+
+    <!-- Supine Torso & Left Working Leg at -78 deg (femur 82px -> (943.0, 285.8), tibia 76px -> (958.9, 211.5)) -->
+    <g data-limb="left-working" stroke="#244d44" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 796 366 L 822 366 L 844 366 L 882 366 L 920 366 L 926 366" />
+      <path d="M 844 366 L 892 374 L 936 378" />
+      <path d="M 926 366 L 943.0 285.8 L 958.9 211.5 L 985 210" />
+    </g>
+    <circle cx="784" cy="362" r="12" fill="#e6dec8" stroke="#244d44" stroke-width="2.4" />
+    <circle cx="844" cy="366" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="926" cy="366" r="5" fill="#fbfaf5" stroke="#244d44" stroke-width="2.2" />
+    <circle cx="943.0" cy="285.8" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+    <circle cx="958.9" cy="211.5" r="4" fill="#fbfaf5" stroke="#244d44" stroke-width="2" />
+
+    <text x="924" y="444" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700" fill="#244d44">날숨 복부 중심으로 고관절 상방 정점 회수 및 정지</text>
+    <text x="924" y="464" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="10" fill="#5e6761">정지(Pause) 후 골반 중립 유지 상태에서 역방향 서클 반복</text>
+  </g>
+
+  <!-- ==================== FOOTER LEGEND & DISCLOSURE ==================== -->
+  <g transform="translate(24, 504)" font-family="Pretendard, sans-serif" font-size="10.5" fill="#244d44">
+    <line x1="8" y1="14" x2="36" y2="14" stroke="#244d44" stroke-width="3.6" />
+    <text x="44" y="18" font-weight="700">좌측 작동 다리 (실선 · 강체 대퇴 82px / 경골 76px)</text>
+
+    <line x1="312" y1="14" x2="340" y2="14" stroke="#875641" stroke-width="3.2" stroke-dasharray="7 5" />
+    <text x="348" y="18" font-weight="700" fill="#875641">우측 지지 다리 (점선 · 매트 뒤꿈치 앵커 고정)</text>
+
+    <rect x="612" y="6" width="16" height="14" rx="3" fill="#fbfaf5" stroke="#9a502d" stroke-width="2" />
+    <text x="636" y="18" font-weight="700" fill="#9a502d">골반 수평 앵커 (pelvisDriftMm = 0)</text>
+
+    <text x="1072" y="18" text-anchor="end" font-size="10" fill="#5e6761">※ 비의료 교육용 참고 도해 (전문 임상 검수 0 · 프레임 매핑 0)</text>
+  </g>
+</svg>

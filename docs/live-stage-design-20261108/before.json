@@ -1,0 +1,30 @@
+[
+  {
+    "width": 320,
+    "overflow": 0,
+    "timerTop": 601.109375,
+    "playBottom": 856.484375,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "overflow": 0,
+    "timerTop": 521.125,
+    "playBottom": 772,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "overflow": 0,
+    "timerTop": 524.125,
+    "playBottom": 798.609375,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "overflow": 0,
+    "timerTop": 549.53125,
+    "playBottom": 845.609375,
+    "errors": []
+  }
+]

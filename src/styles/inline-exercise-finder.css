@@ -564,6 +564,9 @@
   outline: 2px solid #48745e;
   outline-offset: 3px;
 }
+.ief-filter-tabs > button[aria-selected='true']:focus-visible {
+  outline-color: #fffdf7;
+}
 @media (max-width: 399px) {
   .ief-results {
     gap: 8px;

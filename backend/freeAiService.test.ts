@@ -303,6 +303,8 @@ describe('backend/freeAiService', () => {
         task: 'movement-idea',
       });
       expect(keyA).toBe(keyB);
+      // Pin the pre-refactor cache identity so ordering changes cannot invalidate entries.
+      expect(keyA).toMatchInlineSnapshot(`"ea051a29ecbd08773cfd81a18d76d3aec6210a309f9a005c41a3ba4223f32695"`);
 
       const second = await service.assist('instructor-1', SAMPLE_MOVEMENT_IDEA_REQ);
       expect(second.cached).toBe(true);

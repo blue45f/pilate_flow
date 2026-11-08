@@ -13,7 +13,7 @@
   font-size: 8px;
   letter-spacing: 0.17em;
   margin: 0 0 5px;
-  color: #809078;
+  color: #4f594b;
 }
 .mpg-heading h2 {
   font:
@@ -42,7 +42,7 @@
 }
 .mpg-inventory span {
   margin-left: 10px;
-  color: #819078;
+  color: #4f594b;
   font-size: 9px;
 }
 .mpg-cards {
@@ -104,7 +104,7 @@
 }
 .mpg-card > small {
   font-size: 9px;
-  color: #78886d;
+  color: #4f594b;
 }
 .mpg-card[aria-pressed='true'] .mpg-thumbnail {
   outline: 2px solid #6c8b63;
@@ -226,5 +226,18 @@
   .mpg-inventory span {
     font-size: 8px;
     margin-left: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-pattern-gallery *,
+  .motion-pattern-gallery *::before,
+  .motion-pattern-gallery *::after,
+  .mpg-thumbnail,
+  .motion-pattern-thumbnail > svg {
+    transition: none !important;
+  }
+  .mpg-card:hover .motion-pattern-thumbnail > svg {
+    transform: none !important;
   }
 }

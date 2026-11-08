@@ -472,33 +472,29 @@ describe('Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: fal
     );
   });
 
-  describe('Test Group 5: Reproduced Audit Findings / Edge-Case Defects in src/lib/pwa.ts & src/components/PwaInstallPanel.tsx', () => {
+  describe('Test Group 5: Verifies Track P4 Remediations for Audit Findings in src/lib/pwa.ts & src/components/PwaInstallPanel.tsx', () => {
     it.each(INSTALL_FLOW_FIXTURES['ios-inapp-browsers'].map((f) => [f.id, f.label, f]))(
-      '[Finding B-F1] reproduces iOS in-app/third-party WebKit browser %s (%s) misclassified as "ios-safari" instead of "ios-other"',
+      '[Finding B-F1 Remediated] classifies iOS in-app/third-party WebKit browser %s (%s) as "ios-other"',
       async (_id, _label, profile) => {
         applyMockBrowserProfile(profile);
         const { startPwa, getPwaState, PwaInstallPanel } = await loadFreshPwaSuite();
 
         startPwa({ registerServiceWorker: false });
 
-        // Current implementation in src/lib/pwa.ts:53 checks:
-        // /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent)
-        // Because KAKAOTALK, NAVER(inapp), GSA, and Whale on iOS include "Safari/..." in their UA,
-        // they are misclassified as 'ios-safari' instead of 'ios-other'.
-        expect(getPwaState().platform).toBe('ios-safari');
+        expect(getPwaState().platform).toBe('ios-other');
         expect(profile.idealPlatform).toBe('ios-other');
 
         const { container } = render(<PwaInstallPanel />);
-        expect(container.querySelectorAll('ol > li')).toHaveLength(3);
+        expect(container.querySelectorAll('ol > li')).toHaveLength(0);
         expect(
-          screen.queryByText(
+          screen.getByText(
             '이 주소를 Safari에서 연 다음 공유 → 홈 화면에 추가를 선택하세요.',
           ),
-        ).not.toBeInTheDocument();
+        ).toBeInTheDocument();
       },
     );
 
-    it('[Finding B-F2] reproduces stale installStatus ("dismissed" / "error") remaining visible alongside re-exposed "이 기기에 설치" button when a new beforeinstallprompt arrives', async () => {
+    it('[Finding B-F2 Remediated] resets stale installStatus ("dismissed" / "error") to "idle" when a new beforeinstallprompt arrives', async () => {
       const profile = getFixture('android-chrome', 'android-15-chrome-mobile');
       applyMockBrowserProfile(profile);
       const { startPwa, getPwaState, PwaInstallPanel } = await loadFreshPwaSuite();
@@ -516,8 +512,6 @@ describe('Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: fal
 
       expect(getPwaState().installStatus).toBe('dismissed');
 
-      // Fresh beforeinstallprompt arrives: src/lib/pwa.ts:68 publishes { canInstall: true }
-      // without resetting installStatus to 'idle'.
       const secondEvent = createMockBeforeInstallPromptEvent();
       act(() => {
         window.dispatchEvent(secondEvent);
@@ -525,17 +519,18 @@ describe('Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: fal
 
       expect(getPwaState()).toMatchObject({
         canInstall: true,
-        installStatus: 'dismissed',
+        installStatus: 'idle',
       });
 
-      // Both the re-exposed install button AND the stale "설치를 취소했어요..." status render simultaneously
       expect(screen.getByRole('button', { name: /이 기기에 설치/ })).toBeInTheDocument();
-      expect(screen.getByRole('status')).toHaveTextContent(
-        '설치를 취소했어요. 계속 웹에서 사용하거나 브라우저 메뉴에서 다시 설치할 수 있어요.',
-      );
+      expect(
+        screen.queryByText(
+          '설치를 취소했어요. 계속 웹에서 사용하거나 브라우저 메뉴에서 다시 설치할 수 있어요.',
+        ),
+      ).not.toBeInTheDocument();
     });
 
-    it('[Finding B-F3] reproduces display-mode standalone -> false transition leaving installed=true and blocking future beforeinstallprompt events', async () => {
+    it('[Finding B-F3 Remediated] display-mode standalone -> false transition updates installed=false and allows future beforeinstallprompt events', async () => {
       const profile = {
         ...getFixture('android-chrome', 'android-15-chrome-mobile'),
         displayModeStandalone: true,
@@ -551,28 +546,25 @@ describe('Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: fal
 
       render(<PwaInstallPanel />);
 
-      // Simulate leaving standalone display mode (e.g. "Open in Chrome" or uninstalling PWA)
       act(() => {
         env.matchMediaController.setStandalone(false);
       });
 
-      // src/lib/pwa.ts:60-63 sets standalone: false, but leaves installed: true
       expect(getPwaState()).toMatchObject({
         standalone: false,
-        installed: true,
+        installed: false,
       });
 
-      // Subsequent beforeinstallprompt is ignored because state.installed is still true
       const promptEvent = createMockBeforeInstallPromptEvent();
       act(() => {
         window.dispatchEvent(promptEvent);
       });
 
-      expect(getPwaState().canInstall).toBe(false);
-      expect(screen.queryByRole('button', { name: /이 기기에 설치/ })).not.toBeInTheDocument();
+      expect(getPwaState().canInstall).toBe(true);
+      expect(screen.getByRole('button', { name: /이 기기에 설치/ })).toBeInTheDocument();
     });
 
-    it('[Finding B-F4] reproduces dual <p role="status"> regions rendered simultaneously when installStatus !== "idle" and offlineStatus === "update-ready"', async () => {
+    it('[Finding B-F4 Remediated] prevents spurious update-ready <p role="status"> during first-time waiting install when installStatus !== "idle"', async () => {
       const profile = getFixture('android-chrome', 'android-15-chrome-mobile');
       applyMockBrowserProfile(profile, { registrationState: 'waiting' });
       const { startPwa, getPwaState, PwaInstallPanel } = await loadFreshPwaSuite();
@@ -581,7 +573,7 @@ describe('Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: fal
         startPwa({ registerServiceWorker: true });
       });
 
-      expect(getPwaState().offlineStatus).toBe('update-ready');
+      expect(getPwaState().offlineStatus).toBe('preparing');
 
       render(<PwaInstallPanel />);
 
@@ -594,9 +586,8 @@ describe('Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: fal
       });
 
       const statusElements = screen.getAllByRole('status');
-      expect(statusElements).toHaveLength(2);
+      expect(statusElements).toHaveLength(1);
       expect(statusElements[0]).toHaveTextContent('설치를 취소했어요.');
-      expect(statusElements[1]).toHaveTextContent('새 버전이 준비됐어요.');
     });
   });
 });

@@ -4,16 +4,33 @@ import '../styles/pwa-install.css';
 
 export function PwaInstallPanel() {
   const pwa = usePwa();
+  const updateReadyMessage =
+    pwa.offlineStatus === 'update-ready'
+      ? '새 버전이 준비됐어요. 수업을 마치고 백업한 뒤 이 사이트의 모든 탭과 앱 창을 닫고 다시 열어 주세요. 작성 중 자동으로 새로고침하지 않아요.'
+      : null;
+  const installStatusMessage = pwa.standalone
+    ? '지금 앱으로 실행 중이에요.'
+    : pwa.installed
+      ? '브라우저에서 설치 완료를 확인했어요. 홈 화면이나 앱 목록에서 열어 주세요.'
+      : pwa.installStatus === 'prompting'
+        ? '브라우저의 설치 창에서 선택해 주세요.'
+        : pwa.installStatus === 'accepted'
+          ? '설치를 요청했어요. 기기의 설치가 끝나면 앱 목록에서 열어 주세요.'
+          : !pwa.canInstall && pwa.installStatus === 'dismissed'
+            ? '설치를 취소했어요. 계속 웹에서 사용하거나 브라우저 메뉴에서 다시 설치할 수 있어요.'
+            : !pwa.canInstall && pwa.installStatus === 'error'
+              ? '설치 창을 열지 못했어요. 아래 브라우저 메뉴 방법으로 다시 시도해 주세요.'
+              : null;
+  const primaryStatusMessage = [installStatusMessage, updateReadyMessage]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <section className="pwa-install-panel" aria-labelledby="pwa-install-heading">
       <h3 id="pwa-install-heading">홈 화면에 앱 설치</h3>
       <p>Flow Atelier를 홈 화면이나 앱 목록에서 바로 여세요. 앱스토어 다운로드 없이 설치합니다.</p>
-      {pwa.standalone ? (
-        <p role="status">지금 앱으로 실행 중이에요.</p>
-      ) : pwa.installed ? (
-        <p role="status">
-          브라우저에서 설치 완료를 확인했어요. 홈 화면이나 앱 목록에서 열어 주세요.
-        </p>
+      {pwa.standalone || pwa.installed ? (
+        <p role="status">{primaryStatusMessage}</p>
       ) : (
         <>
           {pwa.canInstall && (
@@ -25,22 +42,7 @@ export function PwaInstallPanel() {
               <Download size={18} aria-hidden="true" /> 이 기기에 설치
             </button>
           )}
-          {pwa.installStatus === 'prompting' && (
-            <p role="status">브라우저의 설치 창에서 선택해 주세요.</p>
-          )}
-          {pwa.installStatus === 'accepted' && (
-            <p role="status">설치를 요청했어요. 기기의 설치가 끝나면 앱 목록에서 열어 주세요.</p>
-          )}
-          {pwa.installStatus === 'dismissed' && (
-            <p role="status">
-              설치를 취소했어요. 계속 웹에서 사용하거나 브라우저 메뉴에서 다시 설치할 수 있어요.
-            </p>
-          )}
-          {pwa.installStatus === 'error' && (
-            <p role="status">
-              설치 창을 열지 못했어요. 아래 브라우저 메뉴 방법으로 다시 시도해 주세요.
-            </p>
-          )}
+          {installStatusMessage && <p role="status">{primaryStatusMessage}</p>}
           {pwa.platform === 'ios-safari' ? (
             <ol>
               <li>
@@ -78,11 +80,8 @@ export function PwaInstallPanel() {
         {pwa.offlineStatus === 'preparing' && (
           <p>기본 화면을 기기에 준비하고 있어요. 처음에는 인터넷 연결을 유지해 주세요.</p>
         )}
-        {pwa.offlineStatus === 'update-ready' && (
-          <p role="status">
-            새 버전이 준비됐어요. 수업을 마치고 백업한 뒤 이 사이트의 모든 탭과 앱 창을 닫고 다시
-            열어 주세요. 작성 중 자동으로 새로고침하지 않아요.
-          </p>
+        {updateReadyMessage && !installStatusMessage && (
+          <p role="status">{updateReadyMessage}</p>
         )}
         {(pwa.offlineStatus === 'error' || pwa.offlineStatus === 'unavailable') && (
           <p>현재 오프라인 준비를 확인하지 못했어요. 인터넷에 연결해서 사용해 주세요.</p>

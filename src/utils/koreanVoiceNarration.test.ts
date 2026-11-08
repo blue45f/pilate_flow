@@ -316,6 +316,22 @@ describe('koreanVoiceNarration', () => {
   });
 
   describe('inspectMobileAndBrowserTtsSupport', () => {
+    it.each([
+      ['Mozilla/5.0 (Macintosh; Intel Mac OS X) Chrome/124.0.0.0 Safari/537.36', false],
+      ['Mozilla/5.0 (Linux; Android 14; Pixel 8) Chrome/123.0.0.0 Mobile Safari/537.36', true],
+    ])('uses segment recovery with a local Korean voice on %s', (userAgent, requiresUserGesture) => {
+      const synth = createMockSpeechSynthesis();
+      const report = inspectMobileAndBrowserTtsSupport({
+        speechSynthesis: synth as unknown as SpeechSynthesis,
+        SpeechSynthesisUtterance:
+          MockSpeechSynthesisUtterance as unknown as typeof SpeechSynthesisUtterance,
+        userAgent,
+      });
+      expect(report.canAttemptSpeech).toBe(true);
+      expect(report.pauseResumeStrategy).toBe('native-with-segment-recovery');
+      expect(report.requiresUserGesture).toBe(requiresUserGesture);
+    });
+
     it('detects iOS Safari WebKit with local Korean voice and user gesture requirement', () => {
       const yuna = createMockVoice({
         name: 'Yuna',

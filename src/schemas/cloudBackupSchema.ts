@@ -321,7 +321,8 @@ export const stepSchema = z
   })
   .passthrough()
   .refine(
-    (step) => (step.explanationSec ?? 0) + (step.transitionSec ?? 0) <= step.durationMin * 60,
+    (step) =>
+      (step.explanationSec ?? 0) + (step.transitionSec ?? 0) <= Math.round(step.durationMin * 60),
     '설명·전환 시간이 항목 전체 시간을 초과합니다.',
   )
   .refine(

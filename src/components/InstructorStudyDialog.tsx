@@ -1,9 +1,20 @@
-import { useMemo, useState } from 'react';
-import { Bookmark, Check, Eye, EyeOff, Clock3, ListOrdered, NotebookPen } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ArrowLeft,
+  Bookmark,
+  Check,
+  Eye,
+  EyeOff,
+  Clock3,
+  ListOrdered,
+  NotebookPen,
+  X,
+} from 'lucide-react';
 import { CANONICAL_BLOCKS } from '../data/pilatesCatalog';
 import { PfBadge, PfButton, PfCard, PfEmptyState, PfSearchField, PfTabs } from '../design-system';
 import type { PilatesExercise, LayerMode } from '../types/pilates';
 import type { InstructorStudyState } from '../types/instructorStudy';
+import { matchesDiscoverySearch } from '../utils/discoverySearch';
 import { getExerciseReviewState } from '../utils/exerciseReview';
 import { ExerciseEvidencePanel } from './ExerciseEvidencePanel';
 import { FirstClassTutorialCandidate } from '../features/firstClassTutorialCandidate';
@@ -93,24 +104,70 @@ export function InstructorStudyDialog({
   const [search, setSearch] = useState('');
   const [bookmarksOnly, setBookmarksOnly] = useState(false);
   const [selectedId, setSelectedId] = useState(initialExerciseId ?? exercises[0]?.id ?? '');
-  const [layer, setLayer] = useState<LayerMode>('standard');
+  const [layerChoice, setLayerChoice] = useState<{ exerciseId: string; value: LayerMode } | null>(
+    null,
+  );
+  const searchRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const detailHeadingRef = useRef<HTMLHeadingElement>(null);
+  const queuedFocus = useRef<number | null>(null);
+  const cancelQueuedFocus = () => {
+    if (queuedFocus.current !== null) cancelAnimationFrame(queuedFocus.current);
+    queuedFocus.current = null;
+  };
+  const focusAfterRender = (
+    resolve: () => HTMLElement | null,
+    block: ScrollLogicalPosition = 'nearest',
+  ) => {
+    cancelQueuedFocus();
+    queuedFocus.current = requestAnimationFrame(() => {
+      queuedFocus.current = null;
+      const target = resolve();
+      if (!target?.isConnected) return;
+      target.focus({ preventScroll: true });
+      target.scrollIntoView?.({ block, inline: 'nearest', behavior: 'auto' });
+    });
+  };
+  useEffect(
+    () => () => {
+      if (queuedFocus.current !== null) cancelAnimationFrame(queuedFocus.current);
+    },
+    [],
+  );
   const [limit, setLimit] = useState({ signature: '', count: 6 });
   const [tutorialIndex, setTutorialIndex] = useState(0);
   const [showVisualTutorial, setShowVisualTutorial] = useState(false);
-  const filtered = useMemo(() => {
-    const terms = search.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
-    return exercises.filter(
-      (exercise) =>
-        (!bookmarksOnly || study.bookmarkedExerciseIds.includes(exercise.id)) &&
-        terms.every((term) =>
-          `${exercise.nameKo} ${exercise.nameEn}`.toLocaleLowerCase().includes(term),
-        ),
-    );
-  }, [exercises, search, bookmarksOnly, study.bookmarkedExerciseIds]);
+  const filtered = useMemo(
+    () =>
+      exercises.filter(
+        (exercise) =>
+          (!bookmarksOnly || study.bookmarkedExerciseIds.includes(exercise.id)) &&
+          matchesDiscoverySearch([exercise.nameKo, exercise.nameEn], search),
+      ),
+    [exercises, search, bookmarksOnly, study.bookmarkedExerciseIds],
+  );
   const selected = filtered.find((exercise) => exercise.id === selectedId) ?? filtered[0];
+  const layer =
+    layerChoice?.exerciseId === selected?.id ? (layerChoice?.value ?? 'standard') : 'standard';
   const reviewed = selected && getExerciseReviewState(selected) === 'approved';
   const signature = JSON.stringify([search, bookmarksOnly]);
   const count = limit.signature === signature ? limit.count : 6;
+  const clearFilters = () => {
+    setSearch('');
+    setBookmarksOnly(false);
+    focusAfterRender(() => searchRef.current);
+  };
+  const returnToList = () => {
+    const selectedIndex = filtered.findIndex((exercise) => exercise.id === selected?.id);
+    if (selectedIndex >= count)
+      setLimit({ signature, count: Math.ceil((selectedIndex + 1) / 6) * 6 });
+    focusAfterRender(
+      () =>
+        [...(listRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find(
+          (button) => button.dataset.studyExercise === selected?.id,
+        ) ?? searchRef.current,
+    );
+  };
   const task = INSTRUCTOR_TUTORIAL_TASKS[tutorialIndex];
   const taskComplete = study.completedTutorialTaskIds.includes(task.id);
 
@@ -121,6 +178,7 @@ export function InstructorStudyDialog({
       title="강사 연습실"
       subtitle="동작 자료를 기억하고, 수업 준비 과정을 짧게 연습하세요."
       maxWidth="900px"
+      className="instructor-study-dialog"
     >
       <div className="instructor-study">
         <PfTabs
@@ -208,14 +266,34 @@ export function InstructorStudyDialog({
         ) : (
           <div className="study-layout">
             <aside className="study-browser" aria-label="숙지할 동작 선택">
-              <PfSearchField
-                label="연습할 동작 검색"
-                type="search"
-                wrapperClassName="study-search"
-                value={search}
-                placeholder="동작 이름 검색"
-                onChange={(event) => setSearch(event.target.value)}
-              />
+              <div className="study-browser-heading">
+                <h3>동작 고르기</h3>
+                <p>이름을 누르면 학습 노트로 이동해요.</p>
+              </div>
+              <div className="study-search-row">
+                <PfSearchField
+                  ref={searchRef}
+                  label="연습할 동작 검색"
+                  type="search"
+                  wrapperClassName="study-search"
+                  value={search}
+                  placeholder="동작 이름 검색"
+                  onFocus={cancelQueuedFocus}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+                {search && (
+                  <PfButton
+                    variant="icon"
+                    aria-label="검색어 지우기"
+                    onClick={() => {
+                      setSearch('');
+                      focusAfterRender(() => searchRef.current);
+                    }}
+                  >
+                    <X size={17} aria-hidden="true" />
+                  </PfButton>
+                )}
+              </div>
               <PfButton
                 variant="secondary"
                 className="study-bookmark-filter"
@@ -229,18 +307,28 @@ export function InstructorStudyDialog({
                   ).length
                 }
               </PfButton>
-              <p className="muted" role="status">
-                {filtered.length}개 동작 노트
-              </p>
-              <div className="study-exercise-list">
+              <div className="study-results-row">
+                <p className="muted" role="status" aria-live="polite" aria-atomic="true">
+                  {filtered.length}개 동작 노트
+                  {bookmarksOnly && ' · 북마크만'}
+                </p>
+                {(search.trim() || bookmarksOnly) && (
+                  <PfButton variant="text" onClick={clearFilters}>
+                    필터 초기화
+                  </PfButton>
+                )}
+              </div>
+              <div className="study-exercise-list" ref={listRef}>
                 {filtered.slice(0, count).map((exercise) => (
                   <button
                     type="button"
                     key={exercise.id}
                     aria-pressed={selected?.id === exercise.id}
+                    data-study-exercise={exercise.id}
                     onClick={() => {
                       setSelectedId(exercise.id);
-                      setLayer('standard');
+                      setLayerChoice({ exerciseId: exercise.id, value: 'standard' });
+                      focusAfterRender(() => detailHeadingRef.current, 'start');
                     }}
                   >
                     <span>{exercise.nameKo}</span>
@@ -254,21 +342,44 @@ export function InstructorStudyDialog({
                 <PfEmptyState
                   headingLevel="h3"
                   className="study-empty-state"
-                  title="조건에 맞는 동작이 없습니다. 검색어나 북마크 조건을 바꿔 주세요."
+                  title="조건에 맞는 동작이 없습니다."
+                  description="검색어나 북마크 조건을 바꿔 주세요."
+                  action={
+                    search.trim() || bookmarksOnly ? (
+                      <PfButton variant="secondary" onClick={clearFilters}>
+                        전체 동작 보기
+                      </PfButton>
+                    ) : undefined
+                  }
                 />
               )}
               {filtered.length > count && (
-                <PfButton variant="text" onClick={() => setLimit({ signature, count: count + 6 })}>
+                <PfButton
+                  variant="text"
+                  onClick={() => {
+                    setLimit({ signature, count: count + 6 });
+                    focusAfterRender(
+                      () =>
+                        listRef.current?.querySelectorAll<HTMLButtonElement>('button')[count] ??
+                        null,
+                    );
+                  }}
+                >
                   {Math.min(6, filtered.length - count)}개 더 보기
                 </PfButton>
               )}
             </aside>
             {selected ? (
               <section className="study-detail" aria-label="선택한 동작 숙지">
+                <PfButton variant="text" className="study-return-browser" onClick={returnToList}>
+                  <ArrowLeft size={16} aria-hidden="true" /> 동작 목록으로
+                </PfButton>
                 <header>
                   <div>
                     <span className="eyebrow">MOVEMENT STUDY</span>
-                    <h3>{selected.nameKo}</h3>
+                    <h3 ref={detailHeadingRef} tabIndex={-1}>
+                      {selected.nameKo}
+                    </h3>
                     <p className="muted">{selected.nameEn}</p>
                   </div>
                   <PfButton
@@ -335,7 +446,7 @@ export function InstructorStudyDialog({
                               type="button"
                               key={id}
                               aria-pressed={layer === id}
-                              onClick={() => setLayer(id)}
+                              onClick={() => setLayerChoice({ exerciseId: selected.id, value: id })}
                             >
                               {label}
                             </button>

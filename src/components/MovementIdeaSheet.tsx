@@ -3,7 +3,6 @@ import {
   ArrowDown,
   ArrowUp,
   Camera,
-  Check,
   GitBranch,
   History,
   ImagePlus,
@@ -15,6 +14,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { LightDismissDialog } from './LightDismissDialog';
+import '../styles/movement-idea-sheet.css';
 import {
   PfAiStatusBadge,
   PfBadge,
@@ -579,33 +579,19 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
         return false;
       }}
       variant="sheet"
-      title={editingId ? '내 동작 메모 수정 · 수업에 넣기' : '새 동작 메모 (한 줄 초안)'}
-      subtitle="분류·해부학 용어·완성된 이름 없이 한 줄 아이디어만 적으면 바로 저장됩니다."
+      title={editingId ? '내 동작 메모 수정 · 수업에 넣기' : '새 동작 메모'}
+      subtitle="한 줄부터 시작하세요. 추가 정보는 나중에 적어도 돼요."
       maxWidth="640px"
       className="pf-movement-idea-dialog pf-idea-sheet-dialog"
     >
       <div className="pf-idea-sheet" data-testid="movement-idea-sheet">
-        <div className="pf-idea-trust-banner" role="note" aria-label="창작 메모 안내">
-          <PfAiStatusBadge kind="creative-memo">
-            내 창작 초안 · 주관적 메모
-          </PfAiStatusBadge>
-          <span>
-            강사 본인의 구상과 주관적 체감을 기록하는 공간입니다. 객관적 운동 효과 판정, 안전성
-            보장, 또는 전문가 검증을 뜻하지 않습니다.
-          </span>
-        </div>
-
         {statusMessage && (
           <PfStatusBanner tone="success" role="status">
             {statusMessage}
           </PfStatusBanner>
         )}
 
-        {error && (
-          <PfFormError id={ideaErrorId}>
-            {error}
-          </PfFormError>
-        )}
+        {error && <PfFormError id={ideaErrorId}>{error}</PfFormError>}
 
         <form
           className="pf-idea-form"
@@ -617,26 +603,18 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
         >
           <PfCard className="pf-idea-step-card">
             <div className="pf-idea-step-header">
-              <span className="pf-idea-step-badge">1단계 · 필수 1개</span>
               {editingId && (
-                <PfBadge tone="success">
-                  저장된 초안 편집 중 (v{currentRevision})
-                </PfBadge>
+                <PfBadge tone="success">저장된 초안 편집 중 (v{currentRevision})</PfBadge>
               )}
             </div>
-            <PfField
-              label="떠오른 동작 아이디어 한 줄"
-              htmlFor={ideaInputId}
-              required
-              hint="완성된 동작 이름이나 구간 분류 없이 떠오른 움직임만 편하게 적어보세요."
-            >
+            <PfField label="떠오른 동작 아이디어 한 줄" htmlFor={ideaInputId} required>
               <PfTextarea
                 ref={ideaInputRef}
                 id={ideaInputId}
                 aria-label="한 줄 아이디어"
                 hasError={Boolean(error)}
                 aria-describedby={error ? ideaErrorId : undefined}
-                rows={2}
+                rows={3}
                 value={ideaLine}
                 onChange={(event) => {
                   const next = event.target.value;
@@ -648,25 +626,16 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
               />
             </PfField>
 
-            <div className="pf-idea-primary-actions">
-              <PfButton
-                type="submit"
-                variant="primary"
-                data-testid="idea-save-draft"
-              >
-                <Check size={16} />
-                {editingId ? '수정 저장' : '초안 바로 저장'}
-              </PfButton>
-              <PfButton
-                type="button"
-                variant="secondary"
-                data-testid="idea-save-and-add"
-                onClick={() => handleSaveDraft(true)}
-              >
-                <Plus size={16} />
-                {isAlreadyInClass ? '수정 후 수업에 반영' : '수업에 넣기'}
-              </PfButton>
-            </div>
+            <details className="pf-idea-note-guidance">
+              <summary>개인 아이디어 메모 · 안전성 검증 아님</summary>
+              <div className="pf-idea-trust-banner" role="note" aria-label="창작 메모 안내">
+                <PfAiStatusBadge kind="creative-memo">내 창작 초안 · 주관적 메모</PfAiStatusBadge>
+                <span>
+                  강사 본인의 구상과 주관적 체감을 기록하는 공간입니다. 객관적 운동 효과 판정,
+                  안전성 보장, 또는 전문가 검증을 뜻하지 않습니다.
+                </span>
+              </div>
+            </details>
           </PfCard>
 
           <details
@@ -677,10 +646,14 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
             <summary className="pf-idea-progressive-summary">
               <span>
                 <Sparkles size={16} aria-hidden="true" />
-                직접 해본 뒤 느낀 점 · 수정할 점 · 사진 추가 (선택)
+                직접 해본 느낌 · 수정할 점 · 사진
               </span>
-              <PfBadge tone={triedByInstructor || subjectiveFeeling || adjustmentNote ? 'sage' : 'neutral'}>
-                {triedByInstructor || subjectiveFeeling || adjustmentNote ? '작성됨' : '나중에 써도 됨'}
+              <PfBadge
+                tone={triedByInstructor || subjectiveFeeling || adjustmentNote ? 'sage' : 'neutral'}
+              >
+                {triedByInstructor || subjectiveFeeling || adjustmentNote
+                  ? '작성됨'
+                  : '나중에 써도 됨'}
               </PfBadge>
             </summary>
 
@@ -695,15 +668,22 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                     syncBuffer({ triedByInstructor: checked });
                   }}
                 />
-                <span>내가 직접 움직여 보고 확인했어요 (전문가 검증·안전성 보장이 아닌 내 연습 기록)</span>
+                <span>
+                  내가 직접 움직여 보고 확인했어요 (전문가 검증·안전성 보장이 아닌 내 연습 기록)
+                </span>
               </label>
 
               <PfField
+                as="div"
                 label="직접 해본 느낌 (주관적 체감 · 선택)"
                 htmlFor={feelingInputId}
                 hint="주관적 느낌은 객관적 운동 효과 판정과 구분되어 내 참고 메모로만 기록됩니다."
               >
-                <div className="pf-idea-quick-chips" role="group" aria-label="자주 쓰는 느낌 빠른 입력">
+                <div
+                  className="pf-idea-quick-chips"
+                  role="group"
+                  aria-label="자주 쓰는 느낌 빠른 입력"
+                >
                   {QUICK_FEELING_CHIPS.map((chip) => (
                     <button
                       key={chip}
@@ -725,7 +705,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                 <PfTextarea
                   id={feelingInputId}
                   aria-label="직접 해본 느낌"
-                  rows={2}
+                  rows={3}
                   value={subjectiveFeeling}
                   onChange={(event) => {
                     const next = event.target.value;
@@ -748,7 +728,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                 <PfTextarea
                   id={adjustmentInputId}
                   aria-label="수정할 점"
-                  rows={2}
+                  rows={3}
                   value={adjustmentNote}
                   onChange={(event) => {
                     const next = event.target.value;
@@ -766,7 +746,8 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
               <div className="pf-idea-photo-box">
                 <div className="pf-idea-photo-header">
                   <strong>
-                    <Camera size={15} aria-hidden="true" /> 참고 사진 · 자세 스케치 (선택 · 이 기기에만 저장)
+                    <Camera size={15} aria-hidden="true" /> 참고 사진 · 자세 스케치 (선택 · 이
+                    기기에만 저장)
                   </strong>
                   <span className="muted">외부 AI나 서버로 전송되지 않습니다.</span>
                 </div>
@@ -779,7 +760,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                       accept="image/*"
                       aria-label="참고 사진 선택"
                       onChange={handlePhotoUpload}
-                      hidden
+                      className="sr-only"
                     />
                   </label>
                   <PfButton
@@ -825,16 +806,22 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
             <summary className="pf-idea-progressive-summary">
               <span>
                 <GitBranch size={16} aria-hidden="true" />
-                변형 · 버전 관리 (쉬운/심화 변형 · 버전 복원 — 선택)
+                변형 · 이전 버전
               </span>
-              <PfBadge tone={easyVariation || hardVariation || variantLabelKo || currentRevision > 1 ? 'sage' : 'neutral'}>
+              <PfBadge
+                tone={
+                  easyVariation || hardVariation || variantLabelKo || currentRevision > 1
+                    ? 'sage'
+                    : 'neutral'
+                }
+              >
                 v{currentRevision}
               </PfBadge>
             </summary>
             <div className="pf-idea-progressive-body">
               <p className="muted">
-                원본 동작을 유지한 채 쉬운·심화 변형을 적거나 새 변형 초안으로 파생(복제)할 수 있습니다.
-                버전을 되돌려도 이미 기록된 과거 수업 스냅샷은 바뀌지 않습니다.
+                원본 동작을 유지한 채 쉬운·심화 변형을 적거나 새 변형 초안으로 파생(복제)할 수
+                있습니다. 버전을 되돌려도 이미 기록된 과거 수업 스냅샷은 바뀌지 않습니다.
               </p>
               <div className="teaching-form-grid">
                 <PfField
@@ -898,7 +885,8 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
               {revisionHistory.length > 0 && (
                 <div className="pf-idea-revision-box" aria-label="초안 버전 이력">
                   <strong>
-                    <History size={14} aria-hidden="true" /> 버전 이력 ({revisionHistory.length}개 · 현재 v{currentRevision})
+                    <History size={14} aria-hidden="true" /> 버전 이력 ({revisionHistory.length}개 ·
+                    현재 v{currentRevision})
                   </strong>
                   <ul className="pf-idea-revision-list">
                     {revisionHistory.map((entry) => (
@@ -933,16 +921,15 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
             <summary className="pf-idea-progressive-summary">
               <span>
                 <Layers size={16} aria-hidden="true" />
-                순서/반복/좌우 · 하위 시간 합산 · 재사용 블록 (계층 펼쳐보기 — 선택)
+                순서 · 반복 · 좌우 · 동작 묶음
               </span>
-              <PfBadge tone="neutral">
-                동작 → 블록 → 시퀀스 → 수업
-              </PfBadge>
+              <PfBadge tone="neutral">선택</PfBadge>
             </summary>
             <div className="pf-idea-progressive-body">
               <p className="muted">
-                처음부터 계층을 배울 필요 없이 필요할 때만 펼쳐서 하위 시간 합산과 재사용 블록 묶음을
-                설정하세요. 블록을 수업에 넣으면 독립 복사본으로 들어가며 과거 수업은 절대 바뀌지 않습니다.
+                처음부터 계층을 배울 필요 없이 필요할 때만 펼쳐서 하위 시간 합산과 재사용 블록
+                묶음을 설정하세요. 블록을 수업에 넣으면 독립 복사본으로 들어가며 과거 수업은 절대
+                바뀌지 않습니다.
               </p>
 
               <div
@@ -1043,7 +1030,8 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                 <div className="pf-idea-photo-header">
                   <strong>재사용 블록으로 묶기 (동작 → 재사용 블록 → 시퀀스 → 수업)</strong>
                   <span className="muted">
-                    블록 템플릿을 수정해도 이미 수업에 복사된 단계나 과거 수업 기록은 바뀌지 않습니다.
+                    블록 템플릿을 수정해도 이미 수업에 복사된 단계나 과거 수업 기록은 바뀌지
+                    않습니다.
                   </span>
                 </div>
                 <div className="teaching-form-grid">
@@ -1151,7 +1139,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
 
           <details className="pf-idea-progressive-section">
             <summary className="pf-idea-progressive-summary">
-              <span>고급 옵션 (임시 이름 · 기구 · 시간 — 안 골라도 자동 설정됨)</span>
+              <span>이름 · 기구 · 시간</span>
               <PfBadge tone="neutral">선택</PfBadge>
             </summary>
             <div className="pf-idea-progressive-body teaching-form-grid">
@@ -1208,13 +1196,8 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
 
           <div className="pf-idea-footer-bar">
             <div className="pf-idea-footer-secondary">
-              <PfButton
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-              >
-                나중에 이어서 쓰기 (초안 유지)
+              <PfButton type="button" variant="ghost" size="sm" onClick={onClose}>
+                나중에 이어서 쓰기
               </PfButton>
               {(ideaLine || subjectiveFeeling || adjustmentNote || editingId) && (
                 <PfButton
@@ -1228,15 +1211,13 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
               )}
             </div>
             <div className="pf-idea-footer-primary">
-              <PfButton
-                type="submit"
-                variant="secondary"
-              >
+              <PfButton type="submit" variant="secondary" data-testid="idea-save-draft">
                 {editingId ? '수정 내용 저장' : '초안 저장'}
               </PfButton>
               <PfButton
                 type="button"
                 variant="primary"
+                data-testid="idea-save-and-add"
                 onClick={() => handleSaveDraft(true)}
               >
                 <Play size={15} />

@@ -1,0 +1,421 @@
+.spine-diagram-reference {
+  border: 1px solid #d5e1dc;
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  color: #1f352e;
+}
+
+.spine-diagram-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.spine-diagram-title-block {
+  min-width: 0;
+  flex: 1 1 260px;
+}
+
+.spine-diagram-eyebrow {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #2c6858;
+  background: #eaf3ef;
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+
+.spine-diagram-title {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.35;
+  color: #18322a;
+}
+
+.spine-diagram-title-en {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #4f6b61;
+}
+
+.spine-diagram-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.88rem;
+  color: #466157;
+  line-height: 1.45;
+}
+
+.spine-archetype-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.spine-archetype-tab {
+  min-height: 44px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  border: 1px solid #cad8d2;
+  background: #f6faf8;
+  color: #24483d;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.spine-archetype-tab.is-active {
+  background: #24594c;
+  border-color: #24594c;
+  color: #ffffff;
+}
+
+.spine-phase-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.spine-phase-tab {
+  min-height: 48px;
+  padding: 8px 10px;
+  border-radius: 11px;
+  border: 1px solid #d2dfd9;
+  background: #f8fbf9;
+  color: #1f3b32;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.spine-phase-tab.is-active {
+  border-color: #c86d44;
+  background: #fff7f2;
+  box-shadow: 0 0 0 1px rgba(200, 109, 68, 0.35);
+}
+
+.spine-phase-tab-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #9e4923;
+}
+
+.spine-phase-tab-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e362e;
+}
+
+.spine-primary-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.spine-primary-canvas {
+  border: 1px solid #dce6e1;
+  border-radius: 12px;
+  background: #f7faf8;
+  overflow: hidden;
+}
+
+.spine-articulation-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.spine-phase-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.spine-phase-meta-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.spine-meta-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #ebf2ef;
+  color: #24594c;
+}
+
+.spine-meta-pill.is-wall {
+  background: #fdf2ec;
+  color: #9e4923;
+}
+
+.spine-phase-heading {
+  margin: 0;
+  font-size: 1rem;
+  color: #19332b;
+}
+
+.spine-phase-summary {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #355046;
+}
+
+.spine-cue-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  font-size: 0.82rem;
+}
+
+.spine-cue-grid > div {
+  background: #f8fbf9;
+  border: 1px solid #e3ece8;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.spine-cue-grid dt {
+  font-weight: 700;
+  color: #24594c;
+  margin-bottom: 2px;
+}
+
+.spine-cue-grid dd {
+  margin: 0;
+  color: #365047;
+}
+
+.spine-vertebra-readout {
+  background: #fcfaf8;
+  border: 1px solid #eadad0;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.spine-readout-title {
+  display: block;
+  font-size: 0.78rem;
+  color: #7d3b1c;
+  margin-bottom: 6px;
+}
+
+.spine-vertebra-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.spine-vertebra-chip {
+  font-size: 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e4cfc2;
+  border-radius: 6px;
+  padding: 2px 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.spine-chip-code {
+  font-weight: 700;
+  color: #9e4923;
+}
+
+.spine-chip-coord {
+  color: #4a5d55;
+}
+
+.spine-articulation-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f5f9f7;
+  font-size: 0.78rem;
+  color: #334e44;
+}
+
+.spine-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.spine-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.spine-legend-dot.is-vertebra {
+  background: #fff8f3;
+  border: 2px solid #c86d44;
+}
+
+.spine-legend-dot.is-anchored {
+  background: #24594c;
+  border: 2px solid #1d5c4b;
+}
+
+.spine-legend-line {
+  width: 18px;
+  height: 0;
+  display: inline-block;
+}
+
+.spine-legend-line.is-vector {
+  border-top: 2px dashed #b85a32;
+}
+
+.spine-legend-line.is-wall {
+  border-top: 2px dashed #24594c;
+}
+
+.spine-triptych-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spine-section-subtitle {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #203c33;
+}
+
+.spine-triptych-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.spine-triptych-card {
+  border: 1px solid #d5e1dc;
+  border-radius: 12px;
+  background: #fafcfb;
+  padding: 10px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.spine-triptych-card.is-selected {
+  border-color: #24594c;
+  background: #f1f7f4;
+  box-shadow: 0 0 0 1px rgba(36, 89, 76, 0.3);
+}
+
+.spine-triptych-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.spine-triptych-phase-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #24594c;
+}
+
+.spine-triptych-phase-title {
+  font-size: 0.82rem;
+  color: #1b352c;
+}
+
+.spine-triptych-focus {
+  margin: 0;
+  font-size: 0.76rem;
+  color: #466157;
+  line-height: 1.4;
+}
+
+.spine-source-disclosure {
+  border: 1px solid #dce6e1;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #fbfdfc;
+}
+
+.spine-source-disclosure > summary {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #24594c;
+  cursor: pointer;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+.spine-source-body {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: #365047;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spine-source-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.spine-source-aspect {
+  margin: 2px 0 0;
+  color: #526c62;
+  font-size: 0.78rem;
+}
+
+.spine-truthfulness-footer {
+  border-top: 1px solid #e2ebe7;
+  padding-top: 10px;
+  font-size: 0.78rem;
+  color: #4c645b;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spine-non-medical-text,
+.spine-limitation-text {
+  margin: 0;
+  line-height: 1.45;
+}
+
+@media (max-width: 840px) {
+  .spine-primary-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .spine-triptych-strip,
+  .spine-phase-tabs {
+    grid-template-columns: 1fr;
+  }
+}

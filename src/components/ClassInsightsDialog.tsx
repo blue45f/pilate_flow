@@ -33,14 +33,16 @@ function LabeledBar({
   label,
   seconds,
   denominator,
+  compact = false,
 }: {
   label: string;
   seconds: number;
   denominator: number;
+  compact?: boolean;
 }) {
   const percent = denominator > 0 ? (seconds / denominator) * 100 : 0;
   return (
-    <div className="class-insights-bar-row">
+    <div className={`class-insights-bar-row${compact ? ' class-insights-bar-row--timing' : ''}`}>
       <div className="class-insights-bar-label">
         <span>{label}</span>
         <strong>
@@ -104,7 +106,8 @@ export function ClassInsightsDialog({
       onClose={onClose}
       title="수업 구성 살펴보기"
       subtitle={`${snapshot.title || '현재 수업 계획'} · 열 때의 계획과 기록을 기준으로 표시합니다.`}
-      maxWidth="960px"
+      maxWidth="520px"
+      variant="sheet"
       className="class-insights-dialog"
     >
       <div className="class-insights">
@@ -142,17 +145,18 @@ export function ClassInsightsDialog({
             </p>
           </div>
           <h3>계획 시간의 구성</h3>
-          <p className="class-insights-note">
-            전체 계획 시간 안에 동작·설명·전환·휴식을 각각 한 번만 포함합니다.
-          </p>
           {timingRows.map((row) => (
             <LabeledBar
               key={row.label}
               label={row.label}
               seconds={row.seconds}
               denominator={plan.totalSec}
+              compact
             />
           ))}
+          <p className="class-insights-note class-insights-timing-note">
+            전체 계획 시간 안에 동작·설명·전환·휴식을 각각 한 번만 포함합니다.
+          </p>
           <details className="class-insights-data">
             <summary>계획 시간 표 보기</summary>
             <table>
@@ -178,7 +182,7 @@ export function ClassInsightsDialog({
             </table>
           </details>
 
-          <h3>부위 태그의 계획 범위</h3>
+          <h3 className="class-insights-tag-heading">부위 태그의 계획 범위</h3>
           <p className="class-insights-note">
             동작 메타데이터의 태그 범위이며 실제 근육 부하가 아닙니다. 한 동작에 여러 태그가 겹칠 수
             있어 비율 합계는 100%를 넘을 수 있습니다.

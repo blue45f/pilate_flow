@@ -391,11 +391,11 @@ describe('80-step mixed sequence touch drag, cross-section headers, zoom200, and
 
     pointer(handle14, 'pointerup', 20, y12, 1, 'touch');
     expect(c14BlockHeader?.style.translate).toBe('');
-    expect(
-      usePilatesStore.getState().activeSteps.findIndex((s) => s.stepId === 'move-14'),
-    ).toBe(11);
+    expect(usePilatesStore.getState().activeSteps.findIndex((s) => s.stepId === 'move-14')).toBe(
+      11,
+    );
     expect(notice).toHaveBeenLastCalledWith(
-      '14번 move-14 순서를 12번째 위치로 바꿨어요. 되돌릴 수 있습니다.',
+      '14번 move-14 순서를 12번째 위치로 바꿨어요. 되돌릴 수 있습니다. 전체 80개 중 12번째입니다.',
     );
   });
 
@@ -418,3 +418,101 @@ describe('80-step mixed sequence touch drag, cross-section headers, zoom200, and
   });
 });
 
+describe('long sequence keyboard and removal continuity', () => {
+  it('announces the new absolute position and exposes keyboard help', () => {
+    render(<Board />);
+    expect(handle()).toHaveAccessibleDescription(expect.stringContaining('전체 3개 중 1번째'));
+    expect(handle()).toHaveAttribute('aria-keyshortcuts', 'ArrowUp ArrowDown Home End Escape');
+    fireEvent.keyDown(handle(), { key: 'End' });
+    expect(order()).toEqual(['b', 'c', 'a']);
+    expect(notice).toHaveBeenLastCalledWith(expect.stringContaining('전체 3개 중 3번째'));
+    expect(handle()).toHaveAccessibleDescription(expect.stringContaining('전체 3개 중 3번째'));
+    expect(usePilatesStore.getState().undoStack).toHaveLength(1);
+    fireEvent.keyDown(handle(), { key: 'End' });
+    expect(usePilatesStore.getState().undoStack).toHaveLength(1);
+    fireEvent.keyDown(handle(), { key: 'Home' });
+    expect(order()).toEqual(['a', 'b', 'c']);
+    expect(usePilatesStore.getState().undoStack).toHaveLength(2);
+  });
+
+  it('keeps Home/End within the current unlocked run', () => {
+    usePilatesStore.setState({
+      activeSteps: ['a', 'b', 'c', 'd', 'e', 'f'].map((stepId, index) => ({
+        ...steps[0],
+        stepId,
+        exerciseId: stepId,
+        order: index + 1,
+        locked: stepId === 'b' || stepId === 'f',
+      })),
+    });
+    render(<Board />);
+    fireEvent.keyDown(handle('d'), { key: 'Home' });
+    expect(order()).toEqual(['a', 'b', 'd', 'c', 'e', 'f']);
+    fireEvent.keyDown(handle('d'), { key: 'End' });
+    expect(order()).toEqual(['a', 'b', 'c', 'e', 'd', 'f']);
+    fireEvent.keyDown(handle('a'), { key: 'End' });
+    expect(order()).toEqual(['a', 'b', 'c', 'e', 'd', 'f']);
+    expect(usePilatesStore.getState().undoStack).toHaveLength(2);
+  });
+
+  it('cancels a pointer preview before an End shortcut and commits only once', () => {
+    render(<Board />);
+    pointer(handle(), 'pointerdown');
+    pointer(handle(), 'pointermove', 20, 180);
+    fireEvent.keyDown(handle(), { key: 'End' });
+    pointer(handle(), 'pointerup', 20, 180);
+    expect(order()).toEqual(['b', 'c', 'a']);
+    expect(usePilatesStore.getState().undoStack).toHaveLength(1);
+    expect(document.querySelector('.sequence-drag-overlay')).toBeNull();
+  });
+
+  it.each([
+    ['b', 'c'],
+    ['c', 'b'],
+  ])('focuses the nearest remaining row after removing %s', async (removed, next) => {
+    render(<Board />);
+    const remove = screen.getByRole('button', { name: `${removed} 수업안에서 빼기` });
+    remove.focus();
+    fireEvent.click(remove);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 30)));
+    expect(handle(next)).toHaveFocus();
+    expect(order()).not.toContain(removed);
+    expect(notice).toHaveBeenLastCalledWith(expect.stringContaining('2개 남았습니다'));
+    expect(usePilatesStore.getState().undoStack).toHaveLength(1);
+  });
+
+  it('returns to the first action after the last row is removed', async () => {
+    usePilatesStore.setState({ activeSteps: [steps[0]] });
+    render(
+      <>
+        <button className="workbench-first-action">동작 고르기</button>
+        <Board />
+      </>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'a 수업안에서 빼기' }));
+    await act(() => new Promise((resolve) => setTimeout(resolve, 30)));
+    expect(screen.getByRole('button', { name: '동작 고르기' })).toHaveFocus();
+    expect(order()).toEqual([]);
+  });
+
+  it('does not steal focus from a newer action after removal', async () => {
+    render(
+      <>
+        <button>다른 작업</button>
+        <Board />
+      </>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'a 수업안에서 빼기' }));
+    screen.getByRole('button', { name: '다른 작업' }).focus();
+    await act(() => new Promise((resolve) => setTimeout(resolve, 30)));
+    expect(screen.getByRole('button', { name: '다른 작업' })).toHaveFocus();
+  });
+});
+
+it('leaves browser modified navigation shortcuts alone', () => {
+  render(<Board />);
+  fireEvent.keyDown(handle(), { key: 'End', ctrlKey: true });
+  fireEvent.keyDown(handle(), { key: 'ArrowDown', metaKey: true });
+  expect(order()).toEqual(['a', 'b', 'c']);
+  expect(usePilatesStore.getState().undoStack).toHaveLength(0);
+});

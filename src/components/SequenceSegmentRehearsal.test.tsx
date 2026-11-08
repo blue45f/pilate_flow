@@ -491,4 +491,57 @@ describe('bounded selected planning timeline', () => {
     expect(preferenceListeners.size).toBe(0);
     expect(vi.getTimerCount()).toBe(0);
   });
+
+  it('guards IEEE-754 startSec + elapsedInCycle rounding at large offsets so incomplete ticks never lose the current phase or leak into the next step', () => {
+    const projections: Array<{ classTimeSec: number; complete: boolean } | null> = [];
+    const offsetStep = {
+      ...buildSequenceSimulation(steps, [first, second], 2).steps[0],
+      startSec: 1000,
+      endSec: 1020.5,
+      durationSec: 20.5,
+      explanationSec: 0,
+      movementSec: 20.5,
+      perSideSec: 20.5,
+      transitionSec: 0,
+      sides: 1 as const,
+      sideLabels: ['오른쪽'] as const,
+    };
+    const offsetSegments = [
+      {
+        id: '0:0:movement:right',
+        stepIndex: offsetStep.stepIndex,
+        stepId: offsetStep.stepId,
+        kind: 'movement' as const,
+        label: '수행 · 오른쪽',
+        title: offsetStep.title,
+        startSec: 1000,
+        endSec: 1020.5,
+        durationSec: 20.5,
+        sideLabel: '오른쪽',
+      },
+    ];
+    render(
+      <SequenceSegmentRehearsal
+        step={offsetStep}
+        segments={offsetSegments}
+        fullPlanCanRehearse
+        sourceUnchanged
+        onExit={vi.fn()}
+        renderProjection={(cursor) => {
+          projections.push(cursor);
+          return null;
+        }}
+      />,
+    );
+    const segment = player();
+    fireEvent.click(segment.getByRole('button', { name: '구간 반복 연습 시작' }));
+    // 1000 + (20.5 - 1e-14) === 1020.5 in IEEE-754 double precision, while elapsedSec < 20.5.
+    advance((20.5 - 1e-14) * 1000);
+    expect(segment.getByRole('status')).toHaveTextContent('연습 진행 중 · 수행 · 오른쪽');
+    expect(segment.getByRole('status')).not.toHaveTextContent('구간 정보 확인 필요');
+    const latest = projections[projections.length - 1];
+    expect(latest).not.toBeNull();
+    expect(latest!.complete).toBe(false);
+    expect(latest!.classTimeSec).toBeLessThan(1020.5);
+  });
 });

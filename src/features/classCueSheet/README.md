@@ -30,6 +30,7 @@
 - **다중 페이지 인쇄 및 로컬 PDF 내용 보존 계약 (`classCueSheet.css`, `classCueSheetChromium.test.ts`)**:
   - 화면에서 전체 진행표나 요약 패널이 접혀 있더라도 `@media print` 및 로컬 인쇄 미리보기(`.is-print-preview`)에서는 자동으로 전체 목록과 잘림 안내 배너·생략 푸터를 모두 펼쳐 인쇄합니다.
   - A4(`8.27in × 11.69in`) 및 US Letter(`8.5in × 11in`) 용지에서 긴 한국어 문단이 잘림이나 빈 페이지 없이 자연스럽게 분할됩니다.
+  - PDF 내용 검사는 `pdftotext -layout`으로 물리 줄끝의 원문 하이픈을 보존합니다. 기본 추출 모드의 하이픈 제거를 내용 누락으로 오인하지 않도록 공백·줄바꿈만 정규화하며, 문장부호·글자 누락과 중복은 계속 실패로 검출합니다. 강제 줄바꿈 하이픈 회귀 및 전체 장문 큐 내용 비교를 포함합니다.
 
 ---
 
@@ -69,7 +70,7 @@
 - `classCueSheetProjection.test.ts` — 어댑터·프로젝션·안정 ID·프라이버시 경계 단위 테스트 (15개 테스트)
 - `ClassCueSheetPreview.test.tsx` — 프리뷰 UI·라이브 편집 상태 전이·편집 타겟 단축키 보호·단일 라이브 리전·키보드 포커스·로컬 상태 격리 테스트 (18개 테스트)
 - `classCueSheetUsability.test.tsx` — 초보 강사 UX·읽기 순서·접기/펼치기·글자 확대(200%)·긴 한글 큐·키보드·삭제/교체 회귀 전용 테스트 (7개 테스트)
-- `classCueSheetChromium.test.ts` — 실제 Headless Chromium + Poppler 기반 `320/390/768/1440px`·`200%` 확대·`44px` 타겟 검증 및 A4/Letter 다중 페이지 PDF·PGM 래스터 검증 (2개 통합 테스트)
+- `classCueSheetChromium.test.ts` — 실제 Headless Chromium + Poppler 기반 `320/390/768/1440px`·`200%` 확대·`44px` 타겟 검증 및 A4/Letter 다중 페이지 PDF·PGM 래스터 검증 (2개 통합 테스트 + PDF 내용 비교 회귀 테스트)
 - `browserFixture.html` — 독립 브라우저 프로브용 로컬 HTML 픽스처
 - `verifyClassCueSheetBrowser.mjs` — `320/390/768/1440px`·`200%` 확대·스크린샷·A4/Letter PDF 검증용 독립 브라우저 프로브 스크립트
 - `index.ts` — 모듈 공개 배럴 익스포트

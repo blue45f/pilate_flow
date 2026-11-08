@@ -1,3 +1,4 @@
+import { compareCodeUnits } from '../../utils/compareCodeUnits';
 import { INITIAL_EXERCISES } from '../../data/pilatesCatalog';
 import { ORIGINAL_MOVEMENTS } from '../../data/originalMovements';
 import {
@@ -460,8 +461,8 @@ function changedCatalogFacts(input: PilatesExercise, catalog: PilatesExercise): 
     const right = catalog[field];
     if (key === 'props' || key === 'spinalPlanes') {
       return (
-        JSON.stringify(Array.isArray(left) ? [...left].sort() : left) !==
-        JSON.stringify(Array.isArray(right) ? [...right].sort() : right)
+        JSON.stringify(Array.isArray(left) ? [...left].sort(compareCodeUnits) : left) !==
+        JSON.stringify(Array.isArray(right) ? [...right].sort(compareCodeUnits) : right)
       );
     }
     return JSON.stringify(normalize(left)) !== JSON.stringify(normalize(right));

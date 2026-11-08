@@ -28,7 +28,8 @@ export function SequenceOrderCard({
   const zoomStyleCache = useRef(new WeakMap<HTMLElement, Record<string, string>>());
 
   const clearHeaderTranslations = () => {
-    const list = cardRef.current?.closest<HTMLElement>('.flow-sections') ?? cardRef.current?.parentElement;
+    const list =
+      cardRef.current?.closest<HTMLElement>('.flow-sections') ?? cardRef.current?.parentElement;
     list?.querySelectorAll<HTMLElement>('.pf-sequence-block__header').forEach((header) => {
       header.style.translate = '';
     });
@@ -38,7 +39,11 @@ export function SequenceOrderCard({
     const cardEl = cardRef.current;
     if (!cardEl) return;
     const list = cardEl.closest<HTMLElement>('.flow-sections') ?? cardEl.parentElement;
-    if (!list || !list.hasAttribute('data-drag-session') || !pointerDrag.current?.session.isActive()) {
+    if (
+      !list ||
+      !list.hasAttribute('data-drag-session') ||
+      !pointerDrag.current?.session.isActive()
+    ) {
       clearHeaderTranslations();
       if (pointerDrag.current?.rafId && !pointerDrag.current.session.isActive()) {
         cancelAnimationFrame(pointerDrag.current.rafId);
@@ -86,9 +91,7 @@ export function SequenceOrderCard({
         if (shouldShift && shiftVal !== 0) {
           if (!sectionHeader.style.transform) {
             sectionHeader.style.transition =
-              reduced || zoomFactor !== 1
-                ? 'none'
-                : 'translate 160ms cubic-bezier(.2,.7,.2,1)';
+              reduced || zoomFactor !== 1 ? 'none' : 'translate 160ms cubic-bezier(.2,.7,.2,1)';
             sectionHeader.style.translate = `0px ${shiftVal}px`;
           } else {
             sectionHeader.style.translate = '';
@@ -189,18 +192,32 @@ export function SequenceOrderCard({
       const updatedSteps = usePilatesStore.getState().activeSteps;
       const nextIndex = updatedSteps.findIndex((item) => item.stepId === step.stepId);
       const positionText = nextIndex >= 0 ? `${nextIndex + 1}번째 위치로 ` : '';
-      onNotice(`${label} 순서를 ${positionText}바꿨어요. 되돌릴 수 있습니다.`);
+      onNotice(
+        `${label} 순서를 ${positionText}바꿨어요. 되돌릴 수 있습니다. 전체 ${updatedSteps.length}개 중 ${nextIndex + 1}번째입니다.`,
+      );
     } else {
       onNotice('잠긴 항목의 위치는 유지합니다.');
     }
     restoreFocus(ensureVisible);
   };
+  const positionDescriptionId = `order-position-${step.stepId}`;
   const upDisabled = !!step.locked || index === 0 || !!steps[index - 1]?.locked;
   const downDisabled = !!step.locked || index === steps.length - 1 || !!steps[index + 1]?.locked;
   return (
     <div ref={cardRef} className="sequence-order-card" data-order-step={step.stepId}>
       {children}
-      <div className="sequence-order-controls" role="group" aria-label={`${label} 순서 편집`}>
+      <p id={positionDescriptionId} className="sr-only">
+        전체 {steps.length}개 중 {index + 1}번째.
+        {step.locked
+          ? '잠긴 항목입니다. 동작 편집에서 잠금을 해제하면 순서를 바꾸거나 뺄 수 있습니다.'
+          : '위아래 방향키로 한 칸 이동. Home과 End로 잠긴 항목 사이의 처음과 끝으로 이동. 드래그 취소는 Escape.'}
+      </p>
+      <div
+        className="sequence-order-controls"
+        role="group"
+        aria-label={`${label} 순서 편집`}
+        aria-describedby={positionDescriptionId}
+      >
         <button
           type="button"
           id={`order-handle-${step.stepId}`}
@@ -290,26 +307,34 @@ export function SequenceOrderCard({
           onPointerCancel={clearPointerDrag}
           onLostPointerCapture={clearPointerDrag}
           aria-label={`${label} 순서 이동 · 위아래 방향키 또는 드래그`}
-          title="끌어서 순서 이동 · 위아래 방향키도 가능"
+          aria-describedby={positionDescriptionId}
+          aria-keyshortcuts="ArrowUp ArrowDown Home End Escape"
+          title="끌어서 순서 이동 · 방향키 한 칸 · Home/End 처음/끝 · Esc 취소"
           onKeyDown={(event) => {
             if (event.key === 'Escape') {
               clearPointerDrag();
               return;
             }
-            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            if (event.altKey || event.ctrlKey || event.metaKey) return;
+            if (['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
               event.preventDefault();
               clearPointerDrag();
-              const liveSteps = usePilatesStore.getState().activeSteps;
-              const liveIndex = liveSteps.findIndex((item) => item.stepId === step.stepId);
-              const delta = event.key === 'ArrowUp' ? -1 : 1;
-              const target = liveIndex >= 0 ? liveSteps[liveIndex + delta] : undefined;
-              if (!target || step.locked || target.locked) return;
-              move(target.stepId);
+              const current = usePilatesStore.getState().activeSteps;
+              const currentIndex = current.findIndex((item) => item.stepId === step.stepId);
+              if (currentIndex < 0 || current[currentIndex].locked) return;
+              const direction = event.key === 'ArrowUp' || event.key === 'Home' ? -1 : 1;
+              let targetIndex = currentIndex;
+              do {
+                const nextIndex = targetIndex + direction;
+                if (!current[nextIndex] || current[nextIndex].locked) break;
+                targetIndex = nextIndex;
+              } while (event.key === 'Home' || event.key === 'End');
+              if (targetIndex !== currentIndex) move(current[targetIndex].stepId);
             }
           }}
         >
           <GripVertical size={17} aria-hidden="true" />
-          <span>순서</span>
+          <span>끌기</span>
         </button>
         <button
           type="button"
@@ -333,13 +358,43 @@ export function SequenceOrderCard({
           type="button"
           disabled={step.locked}
           aria-label={`${label} 수업안에서 빼기`}
-          onClick={() => {
+          onClick={(event) => {
+            const removalControl = event.currentTarget;
             const current = usePilatesStore.getState();
             const currentIndex = current.activeSteps.findIndex(
               (item) => item.stepId === step.stepId,
             );
+            if (currentIndex < 0 || current.activeSteps[currentIndex].locked) return;
             current.removeStep(currentIndex);
-            onNotice(`${label}을 수업안에서 뺐어요. 되돌릴 수 있습니다.`);
+            const remaining = usePilatesStore.getState().activeSteps;
+            if (remaining.some((item) => item.stepId === step.stepId)) return;
+            const nextId = remaining[Math.min(currentIndex, remaining.length - 1)]?.stepId;
+            onNotice(
+              `${label}을 수업안에서 뺐어요. ${remaining.length}개 남았습니다. 되돌릴 수 있습니다.`,
+            );
+            requestAnimationFrame(() => {
+              if (
+                document.activeElement !== document.body &&
+                document.activeElement !== removalControl
+              )
+                return;
+              // Follow the nearest remaining row, including a locked row's edit control.
+              // Never send keyboard users back to the beginning of a long page.
+              const nextCard = nextId
+                ? [...document.querySelectorAll<HTMLElement>('[data-order-step]')].find(
+                    (card) => card.dataset.orderStep === nextId,
+                  )
+                : null;
+              const target =
+                nextCard?.querySelector<HTMLElement>('.sequence-drag-handle:not(:disabled)') ??
+                nextCard?.querySelector<HTMLElement>('.step-title') ??
+                nextCard?.querySelector<HTMLElement>('button:not(:disabled)') ??
+                document.querySelector<HTMLElement>(
+                  '.workbench-first-action, #sequence-outline-heading',
+                );
+              target?.focus({ preventScroll: true });
+              target?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
+            });
           }}
         >
           <Trash2 size={16} aria-hidden="true" />

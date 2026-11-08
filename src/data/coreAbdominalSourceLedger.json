@@ -1,87 +1,142 @@
 {
-  "schemaVersion": "2026-11-08.i4.core.v1",
-  "ownerTrack": "I4",
-  "branch": "gemini/diagram-i4-core-20261108",
-  "domainKo": "필라테스 복부 안정 (Core Abdominal Stability) 2D 도해",
-  "governance": {
+  "schemaVersion": "1.0.0",
+  "trackId": "I4-core-abdominal-2d-diagrams",
+  "checkedAt": "2026-11-06",
+  "ledgerUpdatedAt": "2026-11-08",
+  "truthfulness": {
     "anatomicalAccuracyAssumed": false,
     "professionalReviewCount": 0,
+    "sourceFrameMappings": 0,
     "exactAssetReady": false,
-    "containsMedicalDiagnosis": false,
-    "containsTreatmentEfficacyClaim": false,
-    "nonMedicalDisclaimerKo": "본 2D 도해와 운동학 지표는 필라테스 시퀀스 이해를 돕기 위한 교육·시각 참고 자료이며, 의학적 진단·처방·치료 효과를 보증하지 않습니다. 통증이나 질환이 있는 경우 반드시 자격을 갖춘 의료 전문가와 상담하세요."
+    "medicalDiagnosisProhibited": true,
+    "therapeuticEffectGuaranteeProhibited": true,
+    "nonMedicalDisclosureKo": "본 2D 도해와 운동학 지표는 필라테스 시퀀스 이해를 돕기 위한 교육·시각 참고 자료이며, 의학적 진단·처방·치료 효과를 보증하지 않습니다. 2D 좌표·가동범위·근육 표현은 전문 검증 전이며 개인에게 안전한 범위를 뜻하지 않습니다.",
+    "sourceUsePolicy": "Movement biomechanics facts and alignment cues only; no copying or frame-by-frame tracing of copyrighted media."
   },
   "publicSources": [
     {
-      "sourceId": "cuh-nhs-pilates-principles",
-      "organization": "Cambridge University Hospitals NHS Foundation Trust",
-      "title": "Pilates exercises and principles — Patient Information",
-      "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
-      "licenseOrAccess": "Public NHS patient guidance (educational reference)",
-      "verifiedClaimsKo": [
-        "앙와위(Supine) 복부 안정 동작에서 골반·요추 중립/임프린트 지지(pelvic/lumbar mat contact) 유지",
-        "두경부 과신전 방지를 위한 턱 끝 끄덕임(cranio-cervical nod) 및 견갑골 하각 기준 상체 컬업 정렬",
-        "사지 신전(One Leg Stretch / Hundred preparation) 중 요추 들림(arch) 및 골반 회전(rocking) 억제"
-      ]
-    },
-    {
-      "sourceId": "ouh-nhs-pilates-leaflet",
-      "organization": "Oxford University Hospitals NHS Foundation Trust",
-      "title": "Pilates Exercises — Physiotherapy Patient Leaflet (107625exercises.pdf)",
-      "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
-      "licenseOrAccess": "Public NHS physiotherapy educational PDF",
-      "verifiedClaimsKo": [
-        "90/90 테이블탑(Hip 90°, Knee 90°) 시작 정렬과 심부 복횡근(Transversus Abdominis) 선행 수축",
-        "단측·양측 하지 부하 증가 시 늑골 들림(rib flare) 없이 흉곽-골반 간격 유지"
-      ]
-    },
-    {
-      "sourceId": "basi-pilates-essential-chest-lift",
-      "organization": "BASI Pilates",
-      "title": "10 Essential Pilates Exercises for Beginners & Exercise Series: The Chest Lift",
-      "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
-      "secondaryUrl": "https://www.basipilates.com/blog/exercise-series-the-chest-lift/",
-      "licenseOrAccess": "Public educational curriculum guide",
-      "verifiedClaimsKo": [
-        "헌드레드(The Hundred), 싱글 레그 스트레치(Single Leg Stretch), 더블 레그 스트레치(Double Leg Stretch)의 상부 흉추 굴곡(T-spine curl to inferior scapular angle) 기준점",
-        "더블 레그 스트레치 중간 자세에서 팔 오버헤드 리치 시 상체 컬업 높이가 바닥으로 떨어지지 않도록 유지하는 원칙"
-      ]
-    },
-    {
-      "sourceId": "pilates-return-to-life-1945",
-      "organization": "Joseph H. Pilates & William J. Miller (1945 Public Domain / Pilatesology Archive)",
-      "title": "Return to Life Through Contrology — #1 The Hundred, #6 The One Leg Stretch, #7 The Double Leg Stretch",
+      "id": "pilates-1945-return-to-life",
+      "title": "Joseph H. Pilates & William J. Miller (1945 Public Domain) · Return to Life Through Contrology (#1 The Hundred, #6 The One Leg Stretch, #7 The Double Leg Stretch)",
+      "publisher": "J.J. Augustin / Public Domain Contrology Plates & Pilatesology Reference",
       "url": "https://pilatesology.com/blog/the-one-leg-stretch/",
       "secondaryUrl": "https://www.youtube.com/watch?v=DhO6u5pB0xo",
-      "licenseOrAccess": "1945 Classical Contrology sequence specification & public educational demonstration",
-      "verifiedClaimsKo": [
-        "헌드레드(#1): 양다리 사선 신전(또는 테이블탑) + 골반 옆 수평 팔 5박 들숨/5박 날숨 상하 펌핑(10세트=100회)",
-        "싱글 레그 스트레치(#6): 한쪽 무릎을 가슴 쪽으로 당겨 양손으로 정강이/발목·무릎을 지지하고 반대쪽 다리를 45° 사선으로 길게 뻗으며 교차",
-        "더블 레그 스트레치(#7): 양손으로 정강이를 감싼 시작 자세 -> 들숨에 양팔 귀 옆 오버헤드 & 양다리 45° 사선 동시 양방향 신전 -> 날숨에 팔을 크게 원형으로 돌려 무릎을 접어 정강이를 다시 감싸는 복귀"
+      "licenseScope": "1945 US Public Domain text/plates (movement sequence facts only)",
+      "verifiedFactsKo": [
+        "헌드레드(#1 The Hundred): 견갑골 하각 컬업 및 요추·천골 매트 지지 상태에서 양다리를 사선으로 뻗고 골반 옆에서 5박 들숨·5박 날숨 수직 암 펌핑 수행",
+        "싱글 레그 스트레치(#6 The One Leg Stretch): 한쪽 무릎을 가슴 쪽으로 깊게 당겨 양손으로 정강이·발목을 감싸 쥐고 반대쪽 다리를 45° 사선으로 길게 교차 신전",
+        "더블 레그 스트레치(#7 The Double Leg Stretch): 두 무릎을 모아 정강이를 감싼 컴팩트 볼 자세에서 양팔 귀 옆 135° 오버헤드 및 양다리 45° 사선 동시 반대 신전 후 양팔 원형 스윕(Arm Circle) 복귀"
+      ]
+    },
+    {
+      "id": "cuh-nhs-pilates-principles",
+      "title": "Cambridge University Hospitals NHS Foundation Trust · Pilates exercises and principles (Patient Information)",
+      "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+      "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
+      "licenseScope": "UK NHS public patient education leaflet (alignment & safety principles only)",
+      "verifiedFactsKo": [
+        "앙와위 복부 안정화 시 골반·요추의 매트 지지 유지 및 사지 신전 시 허리 들림·골반 흔들림 억제 원칙",
+        "두경부 가벼운 끄덕임(Chin nod) 정렬을 통한 경추 과긴장 예방"
+      ]
+    },
+    {
+      "id": "ouh-nhs-pilates-leaflet",
+      "title": "Oxford University Hospitals NHS Foundation Trust · Pilates Exercises Physiotherapy Leaflet",
+      "publisher": "Oxford University Hospitals NHS Foundation Trust",
+      "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+      "licenseScope": "UK NHS public physiotherapy guidance (tabletop & neutral/imprint control facts only)",
+      "verifiedFactsKo": [
+        "90/90 테이블탑 시작 정렬에서 복횡근 선행 수축 및 늑골 들림(Rib flare) 억제",
+        "하지 교대 및 양측 신전 중 천골·요추 지지 압력 일정 유지"
+      ]
+    },
+    {
+      "id": "merrithew-stott-basi-abdominal-series",
+      "title": "Merrithew STOTT PILATES & BASI Pilates · Abdominal Series & Reformer/Mat Hundred Technical Guidance",
+      "publisher": "Merrithew / BASI Pilates / Pilates Anytime Archives",
+      "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+      "secondaryUrl": "https://www.youtube.com/watch?v=vx4DdBWY6kQ",
+      "licenseScope": "Publicly accessible instructor education articles (kinematic cues only)",
+      "verifiedFactsKo": [
+        "상체 컬업 시 견갑골 하각(y=135..136) 기준 흉추 굴곡을 유지하고 꼬리뼈(y=143..144)가 매트에서 말려 들리지 않도록 고정",
+        "더블 레그 스트레치 오버헤드 리치 구간에서 흉추 컬업 높이가 바닥으로 무너지지 않도록 상복부 스쿱 유지"
       ]
     }
   ],
-  "movements": {
+  "movementReviews": {
     "core-hundred": {
-      "catalogExerciseIds": ["ex-core-01", "core-hundred"],
-      "nameKo": "헌드레드",
-      "nameEn": "The Hundred",
-      "primarySourceIds": ["pilates-return-to-life-1945", "basi-pilates-essential-chest-lift", "cuh-nhs-pilates-principles"],
-      "resolvedAuditIssueKo": "기존 공용 아키타입(supine-leg-stretch-hundred)에서 싱글/더블 레그 스트레치와 혼용되던 포즈를 분리하여, 헌드레드 고유의 양다리 사선 레버 유지 + 고관절 옆 수평 상하 펌핑 벡터 + 5박 호흡 리듬을 독립 2D 도해로 구현함."
+      "diagramId": "core-hundred",
+      "archetypeId": "core-hundred-isolated",
+      "mappedExerciseIds": ["ex-core-01", "original-mat-hundred-prep", "core-hundred"],
+      "checkedAt": "2026-11-06",
+      "reviewedScopeKo": "Joseph Pilates 1945 Return to Life(#1 The Hundred) 및 NHS·Merrithew/BASI 복부 안정 가이드의 90/90 테이블탑 컬업 준비·45° 사선 양다리 신전·골반 옆 수직 암 펌핑·테이블탑 제어 회수를 대조했어요.",
+      "correctionKo": "기존 공용 템플릿(supine-leg-stretch-hundred)에서 싱글·더블 레그 스트레치와 동일한 좌표로 혼용되던 결함을 분리하고, 견갑골 하각(y=136)과 요추·골반 매트 밀착(y=143..144) 고정 아래 골반 옆 수직 암 펌핑([0, -14] ↔ [0, 14]) 벡터를 명시했어요.",
+      "limitationKo": "2D 좌표·다리 사선 각도·호흡 카운트·근육 표현은 전문 검증 전이에요. 목 불편 시 머리를 내리고 진행하며 개인에게 안전한 범위를 뜻하지 않아요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "Joseph Pilates (1945 Public Domain) · Return to Life Through Contrology · #1 The Hundred",
+          "url": "https://www.youtube.com/watch?v=vx4DdBWY6kQ"
+        },
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Centering & supine abdominal control",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/"
+        },
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · 90/90 Tabletop & lumbar stability",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf"
+        }
+      ]
     },
     "core-single-leg-stretch": {
-      "catalogExerciseIds": ["original-mat-single-leg-stretch", "core-single-leg-stretch"],
-      "nameKo": "싱글 레그 스트레치",
-      "nameEn": "Single Leg Stretch",
-      "primarySourceIds": ["pilates-return-to-life-1945", "cuh-nhs-pilates-principles", "ouh-nhs-pilates-leaflet"],
-      "resolvedAuditIssueKo": "기존 공용 아키타입에서 양손이 바닥 근처(hand: 158,136 -> 168,128)에서 펌핑 자세로 잘못 그려지던 문제를 해결하여, 당긴 쪽 무릎·정강이(knee/ankle 라인)에 양손 접촉 앵커(hand-shin-contact)를 배치하고 반대쪽 다리(`far*`)를 45° 사선 신전하는 비대칭 가위 교차 도해로 완성함."
+      "diagramId": "core-single-leg-stretch",
+      "archetypeId": "core-single-leg-stretch-isolated",
+      "mappedExerciseIds": ["original-mat-single-leg-stretch", "ex-core-02", "core-single-leg-stretch"],
+      "checkedAt": "2026-11-06",
+      "reviewedScopeKo": "Return to Life(#6 The One Leg Stretch)와 NHS·BASI 매트 복부 가이드를 대조해 한쪽 무릎 가슴 당김·양손 정강이/발목 그립·반대쪽 다리 45° 사선 신전(대퇴 간 78° 시저 스플릿)·공중 교차 스위치·반대 다리 교대 완료를 구현했어요.",
+      "correctionKo": "기존 공용 도해에서 양손이 바닥 근처에서 펌핑 자세로 그려지고 양다리가 대칭으로 움직이던 오류를 제거하고, 양손(wrist/hand) 정강이 직접 파지(hand-shin clasp)와 좌우 다리 78° 비대칭 가위 교차(Scissor split)를 분리했어요.",
+      "limitationKo": "원본 영상 프레임·2D 교차 각도·손 그립 위치·해부학적 정확성은 전문 검증 전이에요. 허리나 목에 부담이 없는 개인별 범위를 강사가 먼저 확인해야 해요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "Pilatesology / Return to Life (1945) · The One Leg Stretch (Single Leg Stretch)",
+          "url": "https://pilatesology.com/blog/the-one-leg-stretch/"
+        },
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Pelvic anti-rotation in leg switches",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/"
+        },
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · Alternating leg stretch control",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf"
+        }
+      ]
     },
     "core-double-leg-stretch": {
-      "catalogExerciseIds": ["ex-core-03", "core-double-leg-stretch"],
-      "nameKo": "더블 레그 스트레치",
-      "nameEn": "Double Leg Stretch",
-      "primarySourceIds": ["pilates-return-to-life-1945", "basi-pilates-essential-chest-lift", "ouh-nhs-pilates-leaflet"],
-      "resolvedAuditIssueKo": "기존 공용 아키타입에서 팔이 골반 옆에만 머물러 더블 레그 스트레치의 핵심인 '양손 정강이 감싸기(Start) -> 양팔 귀 옆 오버헤드 & 양다리 사선 양방향 반대 신전(Middle) -> 양팔 서클 스윕 복귀(End)'가 누락된 문제를 전용 3단계 도해로 해결함."
+      "diagramId": "core-double-leg-stretch",
+      "archetypeId": "core-double-leg-stretch-isolated",
+      "mappedExerciseIds": ["ex-core-03", "original-mat-double-leg-stretch", "core-double-leg-stretch"],
+      "checkedAt": "2026-11-06",
+      "reviewedScopeKo": "Return to Life(#7 The Double Leg Stretch) 및 STOTT/BASI 앱 시리즈 가이드를 대조해 정강이 감싸기 컴팩트 볼(Start) → 귀 옆 135° 오버헤드 암 리치 & 45° 사선 양다리 동시 반대 신전(Middle) → 와이드 서클 스윕 및 무릎 회수(End) 3단계를 분리했어요.",
+      "correctionKo": "팔이 골반 옆에만 머물던 기존 공용 도해를 교정해 양방향 상·하지 반대 신전(135° 오버헤드 팔 + 45° 사선 다리)과 와이드 암 서클(farElbow/elbow 외측 스윕) 복귀 궤적을 반영하고, 꼬리뼈(y=143)가 매트에서 들리지 않도록 고정했어요.",
+      "limitationKo": "2D 관절 좌표·오버헤드 팔 각도·암 서클 궤적·근육 표현은 전문 검증 전이에요. 늑골 들림이나 허리 통증이 생기면 팔·다리 범위를 즉시 줄여야 해요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "Return to Life Through Contrology (1945) & Classical Mat Ab Series of 5 · Double Leg Stretch",
+          "url": "https://www.youtube.com/watch?v=DhO6u5pB0xo"
+        },
+        {
+          "title": "BASI Pilates · 10 Essential Pilates Exercises & Chest Lift Maintenance",
+          "url": "https://www.basipilates.com/blog/exercise-series-the-chest-lift/"
+        },
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Ribcage closure during overhead reach",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/"
+        }
+      ]
     }
   }
 }

@@ -1,0 +1,331 @@
+.hip-leg-diagram-figure {
+  border: 1px solid #d6dfd9;
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  color: #1e352e;
+}
+
+.hip-leg-diagram-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.hip-leg-diagram-title-group {
+  min-width: 0;
+  flex: 1 1 280px;
+}
+
+.hip-leg-diagram-eyebrow {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #244d44;
+  background: #eaf3ef;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+
+.hip-leg-diagram-title {
+  margin: 0;
+  font-size: 1.14rem;
+  line-height: 1.35;
+  color: #18322a;
+}
+
+.hip-leg-diagram-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.86rem;
+  color: #4b655c;
+  line-height: 1.45;
+}
+
+.hip-leg-diagram-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.hip-leg-movement-btn,
+.hip-leg-toggle-btn {
+  min-height: 40px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid #cad8d2;
+  background: #f6faf8;
+  color: #21453b;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hip-leg-movement-btn.is-active,
+.hip-leg-toggle-btn.is-active {
+  background: #244d44;
+  border-color: #244d44;
+  color: #fbfaf5;
+}
+
+.hip-leg-phase-selector {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.hip-leg-phase-btn {
+  min-height: 52px;
+  padding: 8px 11px;
+  border-radius: 11px;
+  border: 1px solid #d4dfd9;
+  background: #f8fbf9;
+  color: #1f3b32;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.hip-leg-phase-btn.is-active {
+  border-color: #9a502d;
+  background: #fff7f2;
+  box-shadow: 0 0 0 1px rgba(154, 80, 45, 0.32);
+}
+
+.hip-leg-phase-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #9a502d;
+}
+
+.hip-leg-phase-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1d352d;
+}
+
+.hip-leg-scrub-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #f6f9f7;
+  border: 1px solid #dce6e1;
+}
+
+.hip-leg-scrub-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #244d44;
+}
+
+.hip-leg-scrub-input {
+  flex: 1 1 180px;
+  accent-color: #9a502d;
+  cursor: pointer;
+}
+
+.hip-leg-scrub-readout {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #7c4225;
+  font-variant-numeric: tabular-nums;
+}
+
+.hip-leg-stage-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.hip-leg-canvas-card {
+  border: 1px solid #dce6e1;
+  border-radius: 12px;
+  background: #fbfaf5;
+  overflow: hidden;
+  padding: 8px;
+}
+
+.hip-leg-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hip-leg-info-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.hip-leg-pelvis-callout {
+  padding: 11px 13px;
+  border-radius: 11px;
+  background: #fff8f3;
+  border: 1px solid #e6c5b3;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hip-leg-pelvis-callout-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #9a502d;
+}
+
+.hip-leg-pelvis-callout-body {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #2d2018;
+  line-height: 1.45;
+}
+
+.hip-leg-invariants-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hip-leg-invariant-chip {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #eef5f2;
+  color: #214a3f;
+  border: 1px solid #cfe0d9;
+}
+
+.hip-leg-narrative-box {
+  padding: 11px 13px;
+  border-radius: 11px;
+  background: #f7faf8;
+  border: 1px solid #dbe5e0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hip-leg-narrative-summary {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #1f362f;
+}
+
+.hip-leg-narrative-breath {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2b6a58;
+}
+
+.hip-leg-muscle-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.hip-leg-muscle-card {
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid #dfe7e3;
+  background: #fbfdfc;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hip-leg-muscle-role {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #9a502d;
+}
+
+.hip-leg-muscle-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e352e;
+}
+
+.hip-leg-muscle-reason {
+  font-size: 0.75rem;
+  color: #4f665e;
+  line-height: 1.35;
+}
+
+.hip-leg-triptych-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.hip-leg-triptych-card {
+  border: 1px solid #d8e2dd;
+  border-radius: 10px;
+  padding: 8px;
+  background: #fafcfb;
+  cursor: pointer;
+}
+
+.hip-leg-triptych-card.is-selected {
+  border-color: #9a502d;
+  background: #fff9f5;
+}
+
+.hip-leg-triptych-caption {
+  margin-top: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #244d44;
+  text-align: center;
+}
+
+.hip-leg-disclosure-box {
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: #f9f7f2;
+  border: 1px solid #e1d8c7;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #4b4337;
+}
+
+.hip-leg-sources-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hip-leg-sources-list a {
+  color: #244d44;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+@media (max-width: 820px) {
+  .hip-leg-stage-grid,
+  .hip-leg-phase-selector,
+  .hip-leg-triptych-grid,
+  .hip-leg-muscle-list {
+    grid-template-columns: 1fr;
+  }
+}

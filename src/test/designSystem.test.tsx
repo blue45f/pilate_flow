@@ -380,7 +380,11 @@ describe('Representative screens upgraded with the Design System', () => {
     fireEvent.change(aliasInput, { target: { value: '새벽 소그룹 (예시)' } });
     expect(aliasInput).not.toHaveAttribute('aria-invalid', 'true');
     fireEvent.click(screen.getByRole('button', { name: '그룹 추가' }));
-    expect(screen.getByRole('status')).toHaveTextContent('수업 그룹을 추가했습니다.');
+    // Action feedback is separate from the named history search-results announcement.
+    expect(screen.getByRole('status', { name: '' })).toHaveTextContent('수업 그룹을 추가했습니다.');
+    expect(screen.getByRole('status', { name: '수업 기록 검색 결과' })).not.toHaveTextContent(
+      '수업 그룹을 추가했습니다.',
+    );
 
     // Keyboard navigation on group filter pills
     const filterGroup = screen.getByRole('group', { name: '수업 그룹 필터' });

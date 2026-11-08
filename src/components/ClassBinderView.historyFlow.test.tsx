@@ -624,4 +624,19 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     expect(resolveSpy).toHaveBeenCalledTimes(1000);
     resolveSpy.mockRestore();
   });
+  it('keeps memo and reuse visible while disclosing filters and full class composition on demand', () => {
+    const { container } = render(<ClassBinderView view="history" onOpenLogModal={() => {}} />);
+    const filters = container.querySelector<HTMLDetailsElement>('.teaching-history-filters');
+    expect(filters?.open).toBe(false);
+    expect(filters?.querySelector('summary')).toHaveTextContent('날짜·그룹 필터');
+    const card = container.querySelector('.teaching-history-card')!;
+    const details = card.querySelector<HTMLDetailsElement>('.teaching-history-details');
+    expect(details?.open).toBe(false);
+    expect(details?.querySelector('.teaching-card-stats')).not.toBeNull();
+    expect(details?.querySelector('.teaching-history-exercises')).not.toBeNull();
+    expect(details?.contains(card.querySelector('.teaching-reflection'))).toBe(false);
+    expect(details?.contains(within(card as HTMLElement).getByRole('button', { name: '이 수업 다시 계획' }))).toBe(false);
+    expect(card.querySelector('h2')?.compareDocumentPosition(card.querySelector('.teaching-reflection')!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
 });

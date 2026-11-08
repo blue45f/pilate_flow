@@ -48,6 +48,27 @@ const jumpWallClock = (seconds: number) =>
   });
 
 describe('teaching timer and honest session records', () => {
+  it('prioritizes timer controls while keeping optional cue, voice and setup details accessible', () => {
+    render(<LiveStageView onOpenLogModal={vi.fn()} />);
+    for (const label of [
+      '운동·휴식 시간 상세',
+      '음성 안내 내용과 설정',
+      '티칭 큐와 메모',
+      '현재 세팅 · 주의사항',
+    ]) {
+      const summary = screen.getByText(label, { selector: 'summary' });
+      expect(summary.closest('details')).not.toHaveAttribute('open');
+      fireEvent.click(summary);
+      expect(summary.closest('details')).toHaveAttribute('open');
+    }
+    expect(screen.getByRole('button', { name: '수업 시작' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '음성 안내 켜기' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '음성 안내 켜기' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    expect(screen.getByText(/실제 수행 전 몸 상태와 기구 설정을 확인하세요/)).toBeVisible();
+  });
   it.each(['pending', 'stale'] as const)(
     'permits valid %s material with an advisory and unchanged review records',
     (reviewState) => {

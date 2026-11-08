@@ -17,6 +17,19 @@ import {
 } from '../utils/teachingHistorySnapshot';
 import type { BackupRestoreRollbackPoint } from '../utils/teachingHistorySnapshot';
 import '../styles/recovery-preview.css';
+import '../styles/recovery-preview-layout.css';
+
+function focusRecoveryControl(control: HTMLElement | null | undefined) {
+  if (!control) return;
+  control.focus({ preventScroll: true });
+  const body = control.closest<HTMLElement>('.atelier-modal-body');
+  if (body) {
+    const offset = control.getBoundingClientRect().top - body.getBoundingClientRect().top;
+    body.scrollTo?.({ top: body.scrollTop + offset - 16, behavior: 'instant' });
+  } else {
+    control.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
+  }
+}
 
 /** File selection is read-only. Only the explicit Apply calls the atomic store recovery. */
 export function RecoveryPreview() {
@@ -56,6 +69,9 @@ export function RecoveryPreview() {
     },
     [],
   );
+  useLayoutEffect(() => {
+    if (inspection) focusRecoveryControl(heading.current);
+  }, [inspection]);
   const stale =
     inspection?.success && inspection.stateFingerprint !== backupRecoveryStateFingerprint(state);
 
@@ -67,13 +83,13 @@ export function RecoveryPreview() {
     setStorageFingerprint(disk.ok ? disk.fingerprint : undefined);
     setInspection(inspectBackupRecovery(contents, usePilatesStore.getState()));
     setMessage('');
-    requestAnimationFrame(() => heading.current?.focus({ preventScroll: true }));
   }
   function focusChooser() {
-    input.current
-      ?.closest('.recovery-preview')
-      ?.querySelector<HTMLButtonElement>('[data-recovery-choose]')
-      ?.focus();
+    focusRecoveryControl(
+      input.current
+        ?.closest('.recovery-preview')
+        ?.querySelector<HTMLButtonElement>('[data-recovery-choose]'),
+    );
   }
   function cancel() {
     request.current++;
@@ -86,7 +102,7 @@ export function RecoveryPreview() {
     focusChooser();
   }
   return (
-    <div className="recovery-preview">
+    <div className="recovery-preview recovery-preview-layout">
       <button
         type="button"
         className="btn-secondary"
@@ -95,6 +111,9 @@ export function RecoveryPreview() {
       >
         백업 불러오기
       </button>
+      <p className="recovery-choose-help">
+        JSON 파일 · 최대 15MB. 먼저 내용을 확인하고, 적용할 때만 자료를 바꿉니다.
+      </p>
       <input
         ref={input}
         className="sr-only"
@@ -132,15 +151,20 @@ export function RecoveryPreview() {
         }}
       />
       {reading && (
-        <p role="status">파일을 읽고 복구 내용을 확인하고 있어요. 아직 자료를 바꾸지 않았습니다.</p>
+        <p role="status" className="recovery-status-message">
+          파일을 읽고 복구 내용을 확인하고 있어요. 아직 자료를 바꾸지 않았습니다.
+        </p>
       )}
       {inspection && (
         <section className="recovery-preview-details" aria-label="복구 전 확인">
-          <h4 ref={heading} tabIndex={-1}>
-            복구 전 확인
-          </h4>
+          <header className="recovery-preview-heading">
+            <h4 ref={heading} tabIndex={-1}>
+              복구 전 확인
+            </h4>
+            <span>아직 적용 전</span>
+          </header>
           {!inspection.success ? (
-            <div role="alert">
+            <div role="alert" className="recovery-format-error">
               <p>{inspection.message}</p>
               {inspection.unsupportedItems !== undefined && (
                 <p>
@@ -148,79 +172,101 @@ export function RecoveryPreview() {
                 </p>
               )}
               <p>현재 자료와 초안은 바꾸지 않았습니다.</p>
-              <button type="button" className="btn-secondary" onClick={cancel}>
-                닫기
-              </button>
+              <div className="recovery-preview-actions">
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => input.current?.click()}
+                >
+                  다른 백업 선택
+                </button>
+                <button type="button" className="btn-secondary" onClick={cancel}>
+                  닫기
+                </button>
+              </div>
             </div>
           ) : (
             <>
-              <p>
+              <p className="recovery-source-kind">
                 {inspection.summary.sourceLabel} · {Math.ceil(inspection.summary.bytes / 1024)}KB
               </p>
-              <p>
-                새로 추가 {inspection.summary.newItems}개 · 기존 충돌 {inspection.summary.conflicts}
-                개 · 기본 예시 복원 {inspection.summary.restoredExamples}개
-              </p>
+              <div className="recovery-summary-counts" aria-label="복원 변경 요약">
+                <span>새로 추가 {inspection.summary.newItems}개</span>
+                <span>기존 충돌 {inspection.summary.conflicts}개</span>
+                <span>기본 예시 복원 {inspection.summary.restoredExamples}개</span>
+              </div>
               {!inspection.summary.changed && (
                 <p>추가하거나 바꿀 자료가 없습니다. 현재 자료를 그대로 유지합니다.</p>
               )}
-              <div
-                className="recovery-count-scroll"
-                role="region"
-                aria-label="복구 자료 개수 비교"
-                tabIndex={0}
-              >
-                <table>
-                  <caption>파일을 적용할 때의 자료 개수</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">자료 유형</th>
-                      <th scope="col">파일 포함</th>
-                      <th scope="col">새로 추가</th>
-                      <th scope="col">기존 유지</th>
-                      <th scope="col">충돌</th>
-                      <th scope="col">기본 예시 복원</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {inspection.summary.rows.map((row) => (
-                      <tr key={row.key}>
-                        <th scope="row">{row.label}</th>
-                        <td>{row.incoming}</td>
-                        <td>{row.newItems}</td>
-                        <td>{row.keptExisting}</td>
-                        <td>{row.conflicts}</td>
-                        <td>{row.restoredExamples}</td>
+              <details className="recovery-count-details">
+                <summary>자료 유형별 개수 자세히 보기</summary>
+                <div
+                  className="recovery-count-scroll"
+                  role="region"
+                  aria-label="복구 자료 개수 비교"
+                  tabIndex={0}
+                >
+                  <table>
+                    <caption>파일을 적용할 때의 자료 개수</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">자료 유형</th>
+                        <th scope="col">파일 포함</th>
+                        <th scope="col">새로 추가</th>
+                        <th scope="col">기존 유지</th>
+                        <th scope="col">충돌</th>
+                        <th scope="col">기본 예시 복원</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p>
-                수정한 기존 자료는 유지합니다. 바뀌지 않은 기본 예시에만 백업 값을 반영하며, 백업
-                초안은 별도 바인더 사본으로 보관합니다. 현재 블록·제목·시간·잠금은 유지합니다. 블록
-                없는 작업대의 비어 있는 수업 조건·최근 조건은 아래 표시된 경우에만 백업 값으로
-                채웁니다.
-              </p>
-              <p>
-                충돌·되돌리기 안내: 복원 실패 시 기존 정상 데이터는 변경되지 않으며, 복원 적용
-                직후에는 ‘복원 이전 상태로 되돌리기’ 버튼으로 적용 전 상태로 즉시 원복할 수
-                있습니다.
-              </p>
+                    </thead>
+                    <tbody>
+                      {inspection.summary.rows.map((row) => (
+                        <tr key={row.key}>
+                          <th scope="row">{row.label}</th>
+                          <td>{row.incoming}</td>
+                          <td>{row.newItems}</td>
+                          <td>{row.keptExisting}</td>
+                          <td>{row.conflicts}</td>
+                          <td>{row.restoredExamples}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+              <section className="recovery-preservation" aria-label="복원 시 유지할 자료">
+                <h5>현재 작성 중인 수업은 유지합니다</h5>
+                <p>
+                  수정한 기존 자료는 유지합니다. 바뀌지 않은 기본 예시에만 백업 값을 반영하며, 백업
+                  초안은 별도 바인더 사본으로 보관합니다. 현재 블록·제목·시간·잠금은 유지합니다.
+                  블록 없는 작업대의 비어 있는 수업 조건·최근 조건은 아래 표시된 경우에만 백업
+                  값으로 채웁니다.
+                </p>
+                <p>
+                  충돌·되돌리기 안내: 복원 실패 시 기존 정상 데이터는 변경되지 않으며, 복원 적용
+                  직후에는 ‘복원 이전 상태로 되돌리기’ 버튼으로 적용 전 상태로 즉시 원복할 수
+                  있습니다.
+                </p>
+              </section>
               {inspection.summary.notices.map((notice) => (
                 <p className="recovery-notice" key={notice.code}>
                   {notice.message}
                   {notice.count !== undefined ? ` (${notice.count}개)` : ''}
                 </p>
               ))}
-              <p>
+              <p className="recovery-scope-note">
                 파일 형식과 병합 내용을 확인하는 절차입니다. 작성자·무결성 서명·전문가 검수나 자격을
                 인증하지 않습니다.
               </p>
               {stale && (
-                <p role="status">검토 후 현재 자료가 달라졌습니다. 다시 검토한 뒤 적용해 주세요.</p>
+                <p role="status" className="recovery-blocked-message">
+                  검토 후 현재 자료가 달라졌습니다. 다시 검토한 뒤 적용해 주세요.
+                </p>
               )}
-              {diskBlocked && <p role="alert">{storageStatus.message}</p>}
+              {diskBlocked && (
+                <p role="alert" className="recovery-blocked-message">
+                  {storageStatus.message}
+                </p>
+              )}
               <div className="recovery-preview-actions">
                 {(stale || diskBlocked) && (
                   <button
@@ -298,7 +344,11 @@ export function RecoveryPreview() {
           )}
         </section>
       )}
-      {message && <p role="status">{message}</p>}
+      {message && (
+        <p role="status" className="recovery-status-message">
+          {message}
+        </p>
+      )}
       {rollbackPoint && !inspection && (
         <div className="recovery-preview-actions" data-testid="recovery-rollback-bar">
           <button

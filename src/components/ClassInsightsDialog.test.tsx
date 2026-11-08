@@ -75,6 +75,27 @@ describe('read-only class insights dialog', () => {
     expect(within(panel).getByText(/동작 정보 없음: 0개/)).toBeVisible();
   });
 
+  it('keeps the compact timing overview in reading order with its exact source table', () => {
+    const { container } = render(<ClassInsightsDialog {...props()} />);
+    const dialog = screen.getByRole('dialog', { name: '수업 구성 살펴보기' });
+    expect(dialog).toHaveClass('pf-modal-dialog--sheet');
+    expect(dialog).toHaveStyle({ maxWidth: '520px' });
+    const rows = container.querySelectorAll('.class-insights-bar-row--timing');
+    expect(rows).toHaveLength(4);
+    expect(
+      Array.from(rows, (row) => row.querySelector('.class-insights-bar-label > span')?.textContent),
+    ).toEqual(['동작', '설명', '전환', '휴식']);
+    expect(rows[0]).toHaveTextContent('1분 30초 · 60.0%');
+    const note = screen.getByText(/전체 계획 시간 안에/);
+    expect(rows[3].compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(screen.getByText('계획 시간 표 보기'));
+    const table = screen.getByRole('table', { name: '계획 시간 구성 원자료' });
+    expect(within(table).getByRole('row', { name: '전체 2분 30초' })).toBeVisible();
+    fireEvent.click(screen.getByRole('tab', { name: '좌우' }));
+    fireEvent.click(screen.getByRole('tab', { name: '구성' }));
+    expect(table).toBeVisible();
+  });
+
   it('supports keyboard tab navigation and makes all panels accessible by name', () => {
     render(<ClassInsightsDialog {...props()} />);
     const composition = screen.getByRole('tab', { name: '구성' });

@@ -36,6 +36,7 @@ export const PfFormError: React.FC<PfFormErrorProps> = ({
 export interface PfFieldProps {
   label: React.ReactNode;
   htmlFor?: string;
+  as?: 'label' | 'div';
   required?: boolean;
   hint?: React.ReactNode;
   error?: React.ReactNode;
@@ -48,6 +49,7 @@ export interface PfFieldProps {
 export const PfField: React.FC<PfFieldProps> = ({
   label,
   htmlFor,
+  as = 'label',
   required = false,
   hint,
   error,
@@ -60,16 +62,41 @@ export const PfField: React.FC<PfFieldProps> = ({
     .filter(Boolean)
     .join(' ');
 
+  const labelContent = (
+    <>
+      {label}
+      {required && (
+        <span className="pf-field__required" aria-hidden="true">
+          *
+        </span>
+      )}
+    </>
+  );
+
+  if (as === 'div') {
+    return (
+      <div className={classes}>
+        <label className="pf-field__label" htmlFor={htmlFor}>
+          {labelContent}
+        </label>
+        {children}
+        {hint && (
+          <small id={hintId} className="muted pf-field__hint">
+            {hint}
+          </small>
+        )}
+        {error && (
+          <PfFormError id={errorId} inline>
+            {error}
+          </PfFormError>
+        )}
+      </div>
+    );
+  }
+
   return (
     <label className={classes} htmlFor={htmlFor}>
-      <span className="pf-field__label">
-        {label}
-        {required && (
-          <span className="pf-field__required" aria-hidden="true">
-            *
-          </span>
-        )}
-      </span>
+      <span className="pf-field__label">{labelContent}</span>
       {children}
       {hint && (
         <small id={hintId} className="muted pf-field__hint">

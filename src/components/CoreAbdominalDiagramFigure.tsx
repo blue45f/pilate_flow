@@ -1,296 +1,110 @@
-/* eslint-disable react-refresh/only-export-components */
-import React, { useId, useMemo, useState } from 'react';
+import React, { useId, useState } from 'react';
 import {
-  calculateCorePhaseJointDelta,
-  CORE_ABDOMINAL_DIAGRAM_LIST,
+  CORE_ABDOMINAL_DIAGRAM_IDS,
   CORE_ABDOMINAL_DIAGRAM_SPECS,
+  CORE_ABDOMINAL_SOURCE_LEDGER,
+  CORE_DIAGRAM_LEGEND_ITEMS,
+  computeFemurScissorSplitDeg,
+  computeHipLegExtensionDeg,
+  computeShoulderArmElevationDeg,
   getCoreI7RegistryPatch,
-  interpolateCorePhaseJoints,
   resolveCoreAbdominalDiagram,
+  type CoreAbdominalDiagramId,
   type CoreAbdominalDiagramSpec,
-  type CoreCalloutLabelSpec,
-  type CoreContactPointSpec,
-  type CoreJointAxisSpec,
-  type CoreMovementId,
 } from '../data/coreAbdominalDiagrams';
-import type {
-  MovementDirectionVector,
-  Point2D,
-  RigJointMap,
-  VisualPhaseId,
-} from '../data/movementVisualRigCatalog';
-import {
-  MovementTriptychDiagramSvg,
-  type MovementPhaseDiagramSvgProps,
-  type MovementTriptychDiagramSvgProps,
-} from './MovementPhaseDiagramSvg';
+import type { Point2D, VisualPhaseId } from '../data/movementVisualRigCatalog';
+import { MovementPhaseDiagramSvg } from './MovementPhaseDiagramSvg';
 
-const VIEWBOX_WIDTH = 320;
-const VIEWBOX_HEIGHT = 200;
-const MAT_Y = 148;
+const PHASE_ORDER: readonly VisualPhaseId[] = ['start', 'middle', 'end'];
+
+const PHASE_TAB_LABELS: Readonly<Record<VisualPhaseId, string>> = {
+  start: '시작 (Start)',
+  middle: '중간 (Middle)',
+  end: '끝 (End)',
+};
 
 export interface CoreAbdominalPhaseSvgProps {
-  readonly movementId: CoreMovementId | string;
+  readonly diagramId: CoreAbdominalDiagramId;
   readonly phase: VisualPhaseId;
-  readonly progress01?: number;
-  readonly activeSide?: 'left' | 'right';
-  readonly mirrored?: boolean;
-  readonly showJointAxes?: boolean;
-  readonly showContactPoints?: boolean;
-  readonly showDirectionVectors?: boolean;
-  readonly showMuscles?: boolean;
-  readonly showLabels?: boolean;
-  readonly showGhostStartPose?: boolean;
+  readonly showTrajectoryOverlay?: boolean;
+  readonly showLumbarAnchorGuide?: boolean;
+  readonly showCallouts?: boolean;
   readonly compact?: boolean;
   readonly className?: string;
 }
 
-function mx(x: number, mirrored: boolean): number {
-  const value = mirrored ? VIEWBOX_WIDTH - x : x;
-  return Math.round(value * 10) / 10;
+function polylinePoints(pts: readonly Point2D[]): string {
+  return pts.map((p) => `${p.x},${p.y}`).join(' ');
 }
 
-function mpt(pt: Point2D, mirrored: boolean): Point2D {
-  return {
-    x: mx(pt.x, mirrored),
-    y: Math.round(pt.y * 10) / 10,
-  };
-}
-
-function transformJointsForSideAndMirror(
-  joints: RigJointMap,
-  isUnilateral: boolean,
-  activeSide: 'left' | 'right',
-  mirrored: boolean,
-): RigJointMap {
-  const swapLegs = isUnilateral && activeSide === 'right';
-  const source: RigJointMap = swapLegs
-    ? {
-        ...joints,
-        hip: joints.farHip ?? joints.hip,
-        knee: joints.farKnee ?? joints.knee,
-        ankle: joints.farAnkle ?? joints.ankle,
-        toe: joints.farToe ?? joints.toe,
-        heel: joints.farAnkle
-          ? { x: joints.farAnkle.x + 2, y: joints.farAnkle.y + 6 }
-          : joints.heel,
-        farHip: joints.hip,
-        farKnee: joints.knee,
-        farAnkle: joints.ankle,
-        farToe: joints.toe,
-      }
-    : joints;
-
-  return {
-    head: mpt(source.head, mirrored),
-    neck: mpt(source.neck, mirrored),
-    shoulder: mpt(source.shoulder, mirrored),
-    elbow: mpt(source.elbow, mirrored),
-    wrist: mpt(source.wrist, mirrored),
-    hand: mpt(source.hand, mirrored),
-    thoracic: mpt(source.thoracic, mirrored),
-    lumbar: mpt(source.lumbar, mirrored),
-    pelvis: mpt(source.pelvis, mirrored),
-    hip: mpt(source.hip, mirrored),
-    knee: mpt(source.knee, mirrored),
-    ankle: mpt(source.ankle, mirrored),
-    heel: mpt(source.heel, mirrored),
-    toe: mpt(source.toe, mirrored),
-    farShoulder: source.farShoulder ? mpt(source.farShoulder, mirrored) : undefined,
-    farElbow: source.farElbow ? mpt(source.farElbow, mirrored) : undefined,
-    farWrist: source.farWrist ? mpt(source.farWrist, mirrored) : undefined,
-    farHip: source.farHip ? mpt(source.farHip, mirrored) : undefined,
-    farKnee: source.farKnee ? mpt(source.farKnee, mirrored) : undefined,
-    farAnkle: source.farAnkle ? mpt(source.farAnkle, mirrored) : undefined,
-    farToe: source.farToe ? mpt(source.farToe, mirrored) : undefined,
-  };
-}
-
-function buildArcPath(
-  center: Point2D,
-  radius: number,
-  startAngleDeg: number,
-  endAngleDeg: number,
-  mirrored: boolean,
-): string {
-  const sDeg = mirrored ? 180 - endAngleDeg : startAngleDeg;
-  const eDeg = mirrored ? 180 - startAngleDeg : endAngleDeg;
-  const startRad = (sDeg * Math.PI) / 180;
-  const endRad = (eDeg * Math.PI) / 180;
-  const x1 = Math.round((center.x + radius * Math.cos(startRad)) * 10) / 10;
-  const y1 = Math.round((center.y + radius * Math.sin(startRad)) * 10) / 10;
-  const x2 = Math.round((center.x + radius * Math.cos(endRad)) * 10) / 10;
-  const y2 = Math.round((center.y + radius * Math.sin(endRad)) * 10) / 10;
-  const largeArc = Math.abs(eDeg - sDeg) > 180 ? 1 : 0;
-  return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
-}
-
-function buildCurvePath(points: readonly Point2D[]): string {
-  if (points.length === 0) return '';
-  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
-  if (points.length === 2) {
-    return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
-  }
-  return `M ${points[0].x} ${points[0].y} Q ${points[1].x} ${points[1].y} ${points[2].x} ${points[2].y}`;
-}
-
-function renderContactMarker(
-  cp: CoreContactPointSpec,
-  mirrored: boolean,
-): React.ReactNode {
-  const p = mpt(cp.point, mirrored);
-  if (cp.state === 'anchored-mat') {
-    return (
-      <g
-        key={cp.id}
-        data-testid={`core-contact-${cp.id}`}
-        data-contact-state={cp.state}
-      >
-        <circle
-          cx={p.x}
-          cy={p.y}
-          r={6.5}
-          fill="rgba(31, 111, 84, 0.16)"
-          stroke="#1f6f54"
-          strokeWidth={1.5}
-        />
-        <circle cx={p.x} cy={p.y} r={2.8} fill="#1f6f54" />
-      </g>
-    );
-  }
-  if (cp.state === 'hand-shin-clasp') {
-    return (
-      <g
-        key={cp.id}
-        data-testid={`core-contact-${cp.id}`}
-        data-contact-state={cp.state}
-      >
-        <circle
-          cx={p.x}
-          cy={p.y}
-          r={7}
-          fill="rgba(200, 109, 45, 0.2)"
-          stroke="#c86d2d"
-          strokeWidth={1.8}
-          strokeDasharray="3 1.5"
-        />
-        <circle cx={p.x} cy={p.y} r={3} fill="#c86d2d" />
-      </g>
-    );
-  }
-  if (cp.state === 'scapular-tip-hinge') {
-    return (
-      <g
-        key={cp.id}
-        data-testid={`core-contact-${cp.id}`}
-        data-contact-state={cp.state}
-      >
-        <polygon
-          points={`${p.x},${p.y - 5.5} ${p.x + 5.5},${p.y} ${p.x},${p.y + 5.5} ${p.x - 5.5},${p.y}`}
-          fill="rgba(15, 118, 110, 0.22)"
-          stroke="#0f766e"
-          strokeWidth={1.5}
-        />
-      </g>
-    );
-  }
-  return (
-    <g
-      key={cp.id}
-      data-testid={`core-contact-${cp.id}`}
-      data-contact-state={cp.state}
-    >
-      <circle
-        cx={p.x}
-        cy={p.y}
-        r={5}
-        fill="rgba(71, 85, 105, 0.12)"
-        stroke="#475569"
-        strokeWidth={1.2}
-        strokeDasharray="2 2"
-      />
-    </g>
-  );
-}
-
-export const CoreAbdominalPhaseSvg: React.FC<CoreAbdominalPhaseSvgProps> = ({
-  movementId,
+export function CoreAbdominalPhaseSvg({
+  diagramId,
   phase,
-  progress01,
-  activeSide = 'left',
-  mirrored = false,
-  showJointAxes = true,
-  showContactPoints = true,
-  showDirectionVectors = true,
-  showMuscles = true,
-  showLabels = true,
-  showGhostStartPose = true,
+  showTrajectoryOverlay = true,
+  showLumbarAnchorGuide = true,
+  showCallouts = true,
   compact = false,
-  className = '',
-}) => {
-  const uid = useId().replace(/:/g, '');
-  const spec: CoreAbdominalDiagramSpec =
-    resolveCoreAbdominalDiagram(movementId) ?? CORE_ABDOMINAL_DIAGRAM_SPECS['core-hundred'];
-  const phaseDetail = spec.phaseDetails[phase];
+  className,
+}: CoreAbdominalPhaseSvgProps): React.JSX.Element {
+  const uid = useId();
+  const spec = CORE_ABDOMINAL_DIAGRAM_SPECS[diagramId];
+  const phaseSpec = spec.asset.phases[phase];
+  const { joints } = phaseSpec;
 
-  const rawJoints = useMemo(() => {
-    if (typeof progress01 === 'number' && Number.isFinite(progress01)) {
-      return interpolateCorePhaseJoints(spec, progress01);
-    }
-    return phaseDetail.poseSpec.joints;
-  }, [spec, phaseDetail, progress01]);
+  const spinePathD = `M ${joints.head.x} ${joints.head.y} L ${joints.neck.x} ${joints.neck.y} L ${joints.shoulder.x} ${joints.shoulder.y} Q ${joints.thoracic.x} ${joints.thoracic.y} ${joints.lumbar.x} ${joints.lumbar.y} L ${joints.pelvis.x} ${joints.pelvis.y}`;
 
-  const joints = useMemo(
-    () =>
-      transformJointsForSideAndMirror(
-        rawJoints,
-        spec.catalogVisualAsset.isUnilateral,
-        activeSide,
-        mirrored,
-      ),
-    [rawJoints, spec.catalogVisualAsset.isUnilateral, activeSide, mirrored],
-  );
+  const nearArmPts: readonly Point2D[] = [
+    joints.shoulder,
+    joints.elbow,
+    joints.wrist,
+    joints.hand,
+  ];
 
-  const ghostJoints = useMemo(
-    () =>
-      transformJointsForSideAndMirror(
-        spec.phaseDetails.start.poseSpec.joints,
-        spec.catalogVisualAsset.isUnilateral,
-        activeSide,
-        mirrored,
-      ),
-    [spec, activeSide, mirrored],
-  );
+  const farArmPts: readonly Point2D[] | null =
+    joints.farShoulder && joints.farElbow && joints.farWrist
+      ? [joints.farShoulder, joints.farElbow, joints.farWrist]
+      : null;
 
-  const arrowMarkerId = `core-arrow-${uid}`;
-  const pumpMarkerId = `core-pump-${uid}`;
+  const nearLegPts: readonly Point2D[] = [
+    joints.hip,
+    joints.knee,
+    joints.ankle,
+    joints.heel,
+    joints.toe,
+  ];
+
+  const farLegPts: readonly Point2D[] | null =
+    joints.farHip && joints.farKnee && joints.farAnkle && joints.farToe
+      ? [joints.farHip, joints.farKnee, joints.farAnkle, joints.farToe]
+      : null;
+
+  const activeCallouts = spec.calloutLabels.filter((c) => c.phaseId === phase);
+  const activeContacts = spec.contactPoints.filter((c) => c.phases.includes(phase));
 
   return (
     <svg
-      viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
+      viewBox="0 0 320 200"
       role="img"
-      aria-label={`${spec.nameKo} (${spec.nameEn}) - ${phaseDetail.poseSpec.badgeKo} 2D 도해`}
-      data-testid={`core-phase-svg-${spec.coreId}-${phase}`}
-      data-core-id={spec.coreId}
+      aria-label={`${spec.nameKo} · ${phaseSpec.badgeKo} 2D 도해`}
+      data-testid={`core-phase-svg-${diagramId}-${phase}`}
+      data-diagram-id={diagramId}
       data-phase={phase}
-      data-active-side={activeSide}
-      data-mirrored={String(mirrored)}
-      className={`w-full h-auto select-none rounded-xl border border-stone-200/90 bg-[#faf7f2] ${className}`}
+      data-lumbar-y={joints.lumbar.y}
+      data-pelvis-y={joints.pelvis.y}
+      data-thoracic-y={joints.thoracic.y}
+      className={className}
+      style={{
+        width: '100%',
+        height: 'auto',
+        display: 'block',
+        background: '#faf8f5',
+        borderRadius: compact ? 8 : 10,
+        border: '1px solid #e5dec9',
+      }}
     >
       <defs>
         <marker
-          id={arrowMarkerId}
-          viewBox="0 0 10 10"
-          refX="7"
-          refY="5"
-          markerWidth="5.5"
-          markerHeight="5.5"
-          orient="auto-start-reverse"
-        >
-          <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#b45309" />
-        </marker>
-        <marker
-          id={pumpMarkerId}
+          id={`arrow-${uid}`}
           viewBox="0 0 10 10"
           refX="7"
           refY="5"
@@ -298,836 +112,694 @@ export const CoreAbdominalPhaseSvg: React.FC<CoreAbdominalPhaseSvgProps> = ({
           markerHeight="5"
           orient="auto-start-reverse"
         >
-          <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#1d4ed8" />
+          <path d="M 0 1 L 8 5 L 0 9 z" fill="#c86d44" />
         </marker>
       </defs>
 
-      {/* Background Reference Grid & Studio Mat */}
-      <g data-testid="core-studio-mat-layer">
-        <line
-          x1={16}
-          y1={68}
-          x2={304}
-          y2={68}
-          stroke="#e7e0d6"
-          strokeWidth={0.75}
-          strokeDasharray="3 3"
-        />
-        <line
-          x1={16}
-          y1={108}
-          x2={304}
-          y2={108}
-          stroke="#e7e0d6"
-          strokeWidth={0.75}
-          strokeDasharray="3 3"
-        />
-        <rect
-          x={20}
-          y={MAT_Y}
-          width={280}
-          height={8}
-          rx={4}
-          fill="#d6ccc2"
-          stroke="#a89f91"
-          strokeWidth={1}
-        />
-        <rect
-          x={mx(96, mirrored) < mx(164, mirrored) ? mx(96, mirrored) : mx(164, mirrored)}
-          y={MAT_Y - 3}
-          width={68}
-          height={6}
-          rx={3}
-          fill="rgba(31, 111, 84, 0.25)"
-          stroke="#1f6f54"
-          strokeWidth={1}
-        />
+      {/* Mat support surface baseline (y = 148) */}
+      <g data-layer="mat-surface">
+        <rect x={16} y={146} width={288} height={8} rx={4} fill="#dfd6c3" stroke="#9b8b70" strokeWidth={1} />
+        <line x1={12} y1={spec.matBaselineY} x2={308} y2={spec.matBaselineY} stroke="#8c7a5b" strokeWidth={1.4} />
       </g>
 
-      {/* Optional Start Pose Ghost Overlay */}
-      {showGhostStartPose && phase !== 'start' && (
-        <g
-          data-testid="core-ghost-start-pose"
-          opacity={0.34}
-          stroke="#64748b"
-          strokeDasharray="2.5 2.5"
-          fill="none"
-        >
-          <path
-            d={`M ${ghostJoints.head.x} ${ghostJoints.head.y} L ${ghostJoints.neck.x} ${ghostJoints.neck.y} L ${ghostJoints.shoulder.x} ${ghostJoints.shoulder.y} L ${ghostJoints.thoracic.x} ${ghostJoints.thoracic.y} L ${ghostJoints.lumbar.x} ${ghostJoints.lumbar.y} L ${ghostJoints.pelvis.x} ${ghostJoints.pelvis.y}`}
+      {/* Lumbar & Pelvis Imprint Anchor Guide */}
+      {showLumbarAnchorGuide && (
+        <g data-layer="lumbar-imprint-guide" data-testid={`lumbar-anchor-guide-${diagramId}-${phase}`}>
+          <rect
+            x={joints.thoracic.x - 4}
+            y={141}
+            width={joints.pelvis.x - joints.thoracic.x + 12}
+            height={7}
+            rx={3}
+            fill="rgba(43, 106, 88, 0.22)"
+            stroke="#2b6a58"
+            strokeWidth={1.2}
+          />
+          <line
+            x1={joints.lumbar.x}
+            y1={joints.lumbar.y}
+            x2={joints.pelvis.x}
+            y2={joints.pelvis.y}
+            stroke="#2b6a58"
             strokeWidth={3}
-          />
-          <path
-            d={`M ${ghostJoints.hip.x} ${ghostJoints.hip.y} L ${ghostJoints.knee.x} ${ghostJoints.knee.y} L ${ghostJoints.ankle.x} ${ghostJoints.ankle.y} L ${ghostJoints.toe.x} ${ghostJoints.toe.y}`}
-            strokeWidth={2.5}
-          />
-          <path
-            d={`M ${ghostJoints.shoulder.x} ${ghostJoints.shoulder.y} L ${ghostJoints.elbow.x} ${ghostJoints.elbow.y} L ${ghostJoints.wrist.x} ${ghostJoints.wrist.y} L ${ghostJoints.hand.x} ${ghostJoints.hand.y}`}
-            strokeWidth={2}
-          />
-        </g>
-      )}
-
-      {/* Muscle Activation Highlights */}
-      {showMuscles && (
-        <g data-testid="core-muscle-layer">
-          <path
-            d={`M ${joints.thoracic.x} ${joints.thoracic.y} Q ${joints.lumbar.x} ${joints.lumbar.y - 10} ${joints.pelvis.x} ${joints.pelvis.y}`}
-            stroke="rgba(43, 106, 88, 0.35)"
-            strokeWidth={14}
-            strokeLinecap="round"
-            fill="none"
-          />
-          <path
-            d={`M ${joints.shoulder.x} ${joints.shoulder.y} Q ${joints.thoracic.x + (mirrored ? -8 : 8)} ${joints.thoracic.y - 12} ${joints.pelvis.x} ${joints.pelvis.y - 4}`}
-            stroke="rgba(200, 109, 68, 0.42)"
-            strokeWidth={8}
-            strokeLinecap="round"
-            fill="none"
-          />
-          <line
-            x1={joints.hip.x}
-            y1={joints.hip.y}
-            x2={joints.knee.x}
-            y2={joints.knee.y}
-            stroke="rgba(43, 106, 88, 0.28)"
-            strokeWidth={9}
             strokeLinecap="round"
           />
-        </g>
-      )}
-
-      {/* Far-Side Contralateral Limb Layer */}
-      <g data-testid="core-far-limbs-layer" opacity={0.62}>
-        {joints.farHip && joints.farKnee && joints.farAnkle && joints.farToe && (
-          <>
-            <path
-              d={`M ${joints.farHip.x} ${joints.farHip.y} L ${joints.farKnee.x} ${joints.farKnee.y} L ${joints.farAnkle.x} ${joints.farAnkle.y} L ${joints.farToe.x} ${joints.farToe.y}`}
-              stroke="#6b7280"
-              strokeWidth={5.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-            <circle cx={joints.farKnee.x} cy={joints.farKnee.y} r={3} fill="#4b5563" />
-            <circle cx={joints.farAnkle.x} cy={joints.farAnkle.y} r={2.5} fill="#4b5563" />
-          </>
-        )}
-        {joints.farShoulder && joints.farElbow && joints.farWrist && (
-          <path
-            d={`M ${joints.farShoulder.x} ${joints.farShoulder.y} L ${joints.farElbow.x} ${joints.farElbow.y} L ${joints.farWrist.x} ${joints.farWrist.y}`}
-            stroke="#6b7280"
-            strokeWidth={4}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
+          <circle
+            cx={joints.thoracic.x}
+            cy={joints.thoracic.y}
+            r={3.8}
+            fill="#1d4ed8"
+            stroke="#ffffff"
+            strokeWidth={1}
           />
-        )}
-      </g>
-
-      {/* Primary Near-Side Anatomical Silhouette */}
-      <g data-testid="core-near-body-layer">
-        <path
-          d={`M ${joints.shoulder.x} ${joints.shoulder.y} Q ${joints.thoracic.x} ${joints.thoracic.y} ${joints.lumbar.x} ${joints.lumbar.y} L ${joints.pelvis.x} ${joints.pelvis.y}`}
-          stroke="#1e293b"
-          strokeWidth={10}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        <line
-          x1={joints.shoulder.x}
-          y1={joints.shoulder.y}
-          x2={joints.neck.x}
-          y2={joints.neck.y}
-          stroke="#1e293b"
-          strokeWidth={5.5}
-          strokeLinecap="round"
-        />
-        <circle
-          cx={joints.head.x}
-          cy={joints.head.y}
-          r={10.5}
-          fill="#f8fafc"
-          stroke="#1e293b"
-          strokeWidth={3}
-        />
-        <line
-          x1={joints.head.x + (mirrored ? -4 : 4)}
-          y1={joints.head.y + 2}
-          x2={joints.head.x + (mirrored ? -11 : 11)}
-          y2={joints.head.y + 6}
-          stroke="#0f766e"
-          strokeWidth={1.6}
-          strokeLinecap="round"
-        />
-        <path
-          d={`M ${joints.hip.x} ${joints.hip.y} L ${joints.knee.x} ${joints.knee.y} L ${joints.ankle.x} ${joints.ankle.y}`}
-          stroke="#0f172a"
-          strokeWidth={7}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        <path
-          d={`M ${joints.ankle.x} ${joints.ankle.y} L ${joints.heel.x} ${joints.heel.y} L ${joints.toe.x} ${joints.toe.y} Z`}
-          fill="#0f172a"
-          stroke="#0f172a"
-          strokeWidth={2}
-          strokeLinejoin="round"
-        />
-        <path
-          d={`M ${joints.shoulder.x} ${joints.shoulder.y} L ${joints.elbow.x} ${joints.elbow.y} L ${joints.wrist.x} ${joints.wrist.y} L ${joints.hand.x} ${joints.hand.y}`}
-          stroke="#334155"
-          strokeWidth={5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        {(
-          ['shoulder', 'thoracic', 'lumbar', 'pelvis', 'hip', 'knee', 'ankle', 'wrist', 'hand'] as const
-        ).map((key) => {
-          const p = joints[key];
-          return (
-            <circle
-              key={key}
-              cx={p.x}
-              cy={p.y}
-              r={2.8}
-              fill="#f8fafc"
-              stroke="#0f172a"
-              strokeWidth={1.5}
-            />
-          );
-        })}
-      </g>
-
-      {/* Movement-Specific Biomechanical Overlay */}
-      <g data-testid={`core-special-overlay-${phaseDetail.specialOverlayKind}`}>
-        {phaseDetail.specialOverlayKind === 'hundred-pump-oscillation' && (
-          <>
-            <line
-              x1={joints.shoulder.x}
-              y1={joints.shoulder.y}
-              x2={joints.hand.x}
-              y2={joints.hand.y - 12}
-              stroke="#1d4ed8"
-              strokeWidth={1.4}
-              strokeDasharray="2.5 2"
-            />
-            <line
-              x1={joints.shoulder.x}
-              y1={joints.shoulder.y}
-              x2={joints.hand.x}
-              y2={joints.hand.y + 8}
-              stroke="#1d4ed8"
-              strokeWidth={1.4}
-              strokeDasharray="2.5 2"
-            />
-            <path
-              d={`M ${joints.hand.x + (mirrored ? -8 : 8)} ${joints.hand.y - 13} L ${joints.hand.x + (mirrored ? -8 : 8)} ${joints.hand.y + 9}`}
-              stroke="#1d4ed8"
-              strokeWidth={1.8}
-              markerStart={`url(#${pumpMarkerId})`}
-              markerEnd={`url(#${pumpMarkerId})`}
-            />
-          </>
-        )}
-
-        {(phaseDetail.specialOverlayKind === 'sls-shin-clasp-prep' ||
-          phaseDetail.specialOverlayKind === 'sls-reciprocal-scissors' ||
-          phaseDetail.specialOverlayKind === 'sls-switch-return' ||
-          phaseDetail.specialOverlayKind === 'dls-compact-shin-hug' ||
-          phaseDetail.specialOverlayKind === 'dls-wide-arm-circle-return') && (
-          <line
-            x1={joints.wrist.x}
-            y1={joints.wrist.y}
-            x2={joints.hand.x}
-            y2={joints.hand.y}
-            stroke="#c86d2d"
-            strokeWidth={4}
-            strokeLinecap="round"
-          />
-        )}
-
-        {phaseDetail.specialOverlayKind === 'dls-opposing-overhead-reach' && (
-          <line
-            x1={joints.hand.x}
-            y1={joints.hand.y}
-            x2={joints.toe.x}
-            y2={joints.toe.y}
-            stroke="#b45309"
-            strokeWidth={1.3}
-            strokeDasharray="4 3"
-          />
-        )}
-
-        {phaseDetail.specialOverlayKind === 'dls-wide-arm-circle-return' && (
-          <path
-            d={`M ${mx(24, mirrored)} 58 Q ${mx(88, mirrored)} 138 ${joints.hand.x} ${joints.hand.y}`}
-            stroke="#1d4ed8"
-            strokeWidth={1.8}
-            strokeDasharray="3.5 2.5"
-            fill="none"
-            markerEnd={`url(#${pumpMarkerId})`}
-          />
-        )}
-      </g>
-
-      {/* Joint Axes Layer */}
-      {showJointAxes && (
-        <g data-testid="core-joint-axes-layer">
-          {phaseDetail.jointAxes.map((axis: CoreJointAxisSpec) => {
-            const center = mpt(axis.pivot, mirrored);
-            const arcD = buildArcPath(
-              center,
-              axis.radiusPx,
-              axis.startAngleDeg,
-              axis.endAngleDeg,
-              mirrored,
-            );
-            return (
-              <g key={axis.id} data-testid={`core-axis-${axis.id}`}>
-                <path
-                  d={arcD}
-                  stroke="#1d4ed8"
-                  strokeWidth={2}
-                  fill="none"
-                />
-                <circle
-                  cx={center.x}
-                  cy={center.y}
-                  r={3.2}
-                  fill="#1d4ed8"
-                />
-                {!compact && (
-                  <text
-                    x={center.x + (mirrored ? -8 : 8)}
-                    y={center.y - 8}
-                    fontSize={7.5}
-                    fontWeight={700}
-                    fill="#1e3a8a"
-                  >
-                    {axis.nominalAngleText}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </g>
-      )}
-
-      {/* Contact Points Layer */}
-      {showContactPoints && (
-        <g data-testid="core-contact-points-layer">
-          {phaseDetail.contactPoints.map((cp: CoreContactPointSpec) =>
-            renderContactMarker(cp, mirrored),
+          {!compact && (
+            <text x={96} y={168} fontSize={8.5} fill="#2b6a58" fontWeight={600}>
+              {`요추·천골 임프린트 앵커 (y=${joints.lumbar.y}/${joints.pelvis.y}) · 견갑 하각 y=${joints.thoracic.y}`}
+            </text>
           )}
         </g>
       )}
 
-      {/* Movement Direction Vectors Layer */}
-      {showDirectionVectors && (
-        <g data-testid="core-direction-vectors-layer">
-          {phaseDetail.poseSpec.directionVectors.map((vec: MovementDirectionVector) => {
-            const pts = vec.points.map((p) => mpt(p, mirrored));
-            const d = buildCurvePath(pts);
-            return (
-              <path
-                key={vec.id}
-                data-testid={`core-vector-${vec.id}`}
-                d={d}
-                stroke="#b45309"
+      {/* Trajectory Overlays (Arm Pump / Reciprocal Leg Scissor / Overhead Opposition & Wide Arm Circle) */}
+      {showTrajectoryOverlay && (
+        <g data-layer="trajectory-overlays" data-testid={`trajectory-overlay-${diagramId}-${phase}`}>
+          {diagramId === 'core-hundred' && phase === 'middle' && (
+            <g data-overlay-kind="vertical-arm-pump">
+              <line
+                x1={joints.hand.x}
+                y1={joints.hand.y - 14}
+                x2={joints.hand.x}
+                y2={joints.hand.y + 14}
+                stroke="#c86d44"
                 strokeWidth={2.2}
+                strokeDasharray="3 2"
+                markerStart={`url(#arrow-${uid})`}
+                markerEnd={`url(#arrow-${uid})`}
+              />
+              <text x={joints.hand.x + 8} y={joints.hand.y + 3} fontSize={8} fill="#c86d44" fontWeight={700}>
+                펌핑 [0,-14]↔[0,14]
+              </text>
+            </g>
+          )}
+
+          {diagramId === 'core-single-leg-stretch' && joints.farKnee && (
+            <g data-overlay-kind="reciprocal-leg-scissor">
+              <path
+                d={`M ${joints.knee.x} ${joints.knee.y} Q ${(joints.knee.x + joints.farKnee.x) / 2} ${Math.min(joints.knee.y, joints.farKnee.y) - 22} ${joints.farKnee.x} ${joints.farKnee.y}`}
                 fill="none"
-                markerEnd={`url(#${arrowMarkerId})`}
+                stroke="#8b5cf6"
+                strokeWidth={1.8}
+                strokeDasharray="4 2"
+                markerEnd={`url(#arrow-${uid})`}
+              />
+              <text
+                x={(joints.knee.x + joints.farKnee.x) / 2 - 20}
+                y={Math.min(joints.knee.y, joints.farKnee.y) - 14}
+                fontSize={8}
+                fill="#6d28d9"
+                fontWeight={700}
+              >
+                {phase === 'middle'
+                  ? '왕복 시저 교차'
+                  : `${computeFemurScissorSplitDeg(joints)}° 시저 스플릿`}
+              </text>
+            </g>
+          )}
+
+          {diagramId === 'core-double-leg-stretch' && phase === 'middle' && (
+            <g data-overlay-kind="double-limb-opposition">
+              <line
+                x1={joints.shoulder.x}
+                y1={joints.shoulder.y}
+                x2={joints.hand.x}
+                y2={joints.hand.y}
+                stroke="#c86d44"
+                strokeWidth={1.8}
+                strokeDasharray="4 2"
+                markerEnd={`url(#arrow-${uid})`}
+              />
+              <line
+                x1={joints.hip.x}
+                y1={joints.hip.y}
+                x2={joints.toe.x}
+                y2={joints.toe.y}
+                stroke="#c86d44"
+                strokeWidth={1.8}
+                strokeDasharray="4 2"
+                markerEnd={`url(#arrow-${uid})`}
+              />
+              <text x={20} y={50} fontSize={8} fill="#c86d44" fontWeight={700}>
+                135° 귀 옆 오버헤드 ↔ 45° 양다리 신전
+              </text>
+            </g>
+          )}
+
+          {diagramId === 'core-double-leg-stretch' && phase === 'end' && (
+            <g data-overlay-kind="wide-arm-circle">
+              <path
+                d="M 24 60 Q 96 154 168 104"
+                fill="none"
+                stroke="#c86d44"
+                strokeWidth={1.8}
+                strokeDasharray="4 2"
+                markerEnd={`url(#arrow-${uid})`}
+              />
+              <text x={60} y={142} fontSize={8} fill="#c86d44" fontWeight={700}>
+                와이드 암 서클 스윕
+              </text>
+            </g>
+          )}
+        </g>
+      )}
+
+      {/* Far-side limbs (contralateral dashed representation) */}
+      {farLegPts && (
+        <polyline
+          data-layer="far-leg"
+          points={polylinePoints(farLegPts)}
+          fill="none"
+          stroke="#7c8594"
+          strokeWidth={3}
+          strokeDasharray="4 3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+      {farArmPts && (
+        <polyline
+          data-layer="far-arm"
+          points={polylinePoints(farArmPts)}
+          fill="none"
+          stroke="#8a94a6"
+          strokeWidth={2.4}
+          strokeDasharray="3 3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+
+      {/* Spine & Torso Curve */}
+      <path
+        data-layer="spine-curve"
+        d={spinePathD}
+        fill="none"
+        stroke="#1e293b"
+        strokeWidth={4.2}
+        strokeLinecap="round"
+      />
+
+      {/* Near Leg */}
+      <polyline
+        data-layer="near-leg"
+        points={polylinePoints(nearLegPts)}
+        fill="none"
+        stroke="#0f172a"
+        strokeWidth={3.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Near Arm */}
+      <polyline
+        data-layer="near-arm"
+        points={polylinePoints(nearArmPts)}
+        fill="none"
+        stroke="#c86d44"
+        strokeWidth={3.2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Head */}
+      <circle
+        cx={joints.head.x}
+        cy={joints.head.y}
+        r={9}
+        fill="#f8fafc"
+        stroke="#1e293b"
+        strokeWidth={2.4}
+      />
+
+      {/* Active Contact Points (Hand-Shin Clasp / Mat Imprint) */}
+      <g data-layer="contact-points">
+        {activeContacts.map((cp) => (
+          <circle
+            key={cp.id}
+            cx={cp.point.x}
+            cy={cp.point.y}
+            r={cp.kind === 'hand-shin-clasp' ? 5.2 : 4}
+            fill={cp.kind === 'hand-shin-clasp' ? 'rgba(139, 92, 246, 0.28)' : 'rgba(43, 106, 88, 0.3)'}
+            stroke={cp.kind === 'hand-shin-clasp' ? '#7c3aed' : '#2b6a58'}
+            strokeWidth={1.6}
+          />
+        ))}
+      </g>
+
+      {/* Primary Joint Dots */}
+      <g data-layer="joint-nodes">
+        {(['shoulder', 'elbow', 'hand', 'thoracic', 'lumbar', 'pelvis', 'hip', 'knee', 'ankle'] as const).map(
+          (jointKey) => {
+            const ptVal = joints[jointKey];
+            return (
+              <circle
+                key={jointKey}
+                data-joint={jointKey}
+                cx={ptVal.x}
+                cy={ptVal.y}
+                r={2.8}
+                fill="#ffffff"
+                stroke="#0f172a"
+                strokeWidth={1.5}
               />
             );
-          })}
-        </g>
-      )}
+          },
+        )}
+      </g>
 
-      {/* Callout Labels Layer */}
-      {showLabels && !compact && (
-        <g data-testid="core-callout-labels-layer">
-          {phaseDetail.calloutLabels.map((lbl: CoreCalloutLabelSpec) => {
-            const anchor = mpt(lbl.anchorPoint, mirrored);
-            const box = mpt(lbl.labelBoxPoint, mirrored);
-            const boxX = mirrored ? Math.max(8, box.x - 118) : box.x;
-            const strokeColor =
-              lbl.tone === 'anchor'
-                ? '#1f6f54'
-                : lbl.tone === 'axis'
-                  ? '#1d4ed8'
-                  : '#b45309';
-
-            return (
-              <g key={lbl.id} data-testid={`core-label-${lbl.id}`}>
-                <line
-                  x1={anchor.x}
-                  y1={anchor.y}
-                  x2={boxX + 12}
-                  y2={box.y}
-                  stroke={strokeColor}
-                  strokeWidth={0.9}
-                  strokeDasharray="2 2"
-                />
-                <rect
-                  x={boxX}
-                  y={box.y - 10}
-                  width={126}
-                  height={lbl.subtextKo ? 22 : 14}
-                  rx={4}
-                  fill="rgba(255, 255, 255, 0.92)"
-                  stroke={strokeColor}
-                  strokeWidth={0.9}
-                />
-                <text
-                  x={boxX + 5}
-                  y={box.y - 0.5}
-                  fontSize={7.4}
-                  fontWeight={700}
-                  fill="#1c1917"
-                >
-                  {lbl.textKo}
-                </text>
-                {lbl.subtextKo && (
-                  <text
-                    x={boxX + 5}
-                    y={box.y + 8.5}
-                    fontSize={6.5}
-                    fill="#57534e"
-                  >
-                    {lbl.subtextKo}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </g>
-      )}
+      {/* Callouts */}
+      {showCallouts &&
+        !compact &&
+        activeCallouts.map((callout) => (
+          <g key={callout.id} data-layer="callout-label">
+            <line
+              x1={callout.anchor.x}
+              y1={callout.anchor.y}
+              x2={callout.badgePosition.x}
+              y2={callout.badgePosition.y + 4}
+              stroke="#64748b"
+              strokeWidth={1}
+              strokeDasharray="2 2"
+            />
+            <text
+              x={callout.badgePosition.x}
+              y={callout.badgePosition.y}
+              fontSize={8.5}
+              fontWeight={700}
+              fill="#1e293b"
+            >
+              {callout.textKo}
+            </text>
+          </g>
+        ))}
     </svg>
   );
-};
-
-export interface CoreAbdominalTriptychFigureProps {
-  readonly initialMovementId?: CoreMovementId | string;
-  readonly initialPhase?: VisualPhaseId;
-  readonly allowMovementSwitch?: boolean;
-  readonly className?: string;
 }
 
-const PHASES: readonly VisualPhaseId[] = ['start', 'middle', 'end'] as const;
+export interface CoreAbdominalTriptychFigureProps {
+  readonly diagramId: CoreAbdominalDiagramId;
+  readonly selectedPhase?: VisualPhaseId;
+  readonly onSelectPhase?: (phase: VisualPhaseId) => void;
+  readonly showTrajectoryOverlay?: boolean;
+  readonly showLumbarAnchorGuide?: boolean;
+}
 
-export const CoreAbdominalTriptychFigure: React.FC<
-  CoreAbdominalTriptychFigureProps
-> = ({
-  initialMovementId = 'core-hundred',
+export function CoreAbdominalTriptychFigure({
+  diagramId,
+  selectedPhase = 'middle',
+  onSelectPhase,
+  showTrajectoryOverlay = true,
+  showLumbarAnchorGuide = true,
+}: CoreAbdominalTriptychFigureProps): React.JSX.Element {
+  const spec = CORE_ABDOMINAL_DIAGRAM_SPECS[diagramId];
+
+  return (
+    <div
+      data-testid={`core-triptych-${diagramId}`}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: 12,
+      }}
+    >
+      {PHASE_ORDER.map((phaseId) => {
+        const phaseSpec = spec.asset.phases[phaseId];
+        const isSelected = selectedPhase === phaseId;
+        return (
+          <div
+            key={phaseId}
+            data-testid={`core-triptych-card-${diagramId}-${phaseId}`}
+            onClick={() => onSelectPhase?.(phaseId)}
+            style={{
+              padding: 10,
+              borderRadius: 10,
+              border: isSelected ? '2px solid #2b6a58' : '1px solid #dcd5c5',
+              background: isSelected ? '#f3f8f5' : '#ffffff',
+              cursor: onSelectPhase ? 'pointer' : 'default',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <strong style={{ fontSize: 12, color: '#1e293b' }}>{PHASE_TAB_LABELS[phaseId]}</strong>
+              <span style={{ fontSize: 11, color: '#475569' }}>{phaseSpec.shortTitleKo}</span>
+            </div>
+            <CoreAbdominalPhaseSvg
+              diagramId={diagramId}
+              phase={phaseId}
+              showTrajectoryOverlay={showTrajectoryOverlay}
+              showLumbarAnchorGuide={showLumbarAnchorGuide}
+            />
+            <p style={{ fontSize: 11.5, color: '#334155', margin: '8px 0 4px' }}>
+              {phaseSpec.summaryKo}
+            </p>
+            <p style={{ fontSize: 11, color: '#0f766e', margin: 0, fontWeight: 600 }}>
+              {phaseSpec.breathCueKo}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export interface CoreAbdominalDiagramFigureProps {
+  readonly initialDiagramId?: CoreAbdominalDiagramId;
+  readonly exerciseId?: string;
+  readonly initialPhase?: VisualPhaseId;
+  readonly showComparisonStrip?: boolean;
+}
+
+export function CoreAbdominalDiagramFigure({
+  initialDiagramId = 'core-hundred',
+  exerciseId,
   initialPhase = 'middle',
-  allowMovementSwitch = true,
-  className = '',
-}) => {
-  const initialSpec =
-    resolveCoreAbdominalDiagram(initialMovementId) ??
-    CORE_ABDOMINAL_DIAGRAM_SPECS['core-hundred'];
+  showComparisonStrip = true,
+}: CoreAbdominalDiagramFigureProps): React.JSX.Element {
+  const resolvedInitial =
+    (exerciseId ? resolveCoreAbdominalDiagram(exerciseId)?.id : null) ?? initialDiagramId;
 
-  const [selectedCoreId, setSelectedCoreId] = useState<CoreMovementId>(
-    initialSpec.coreId,
-  );
-  const [selectedPhase, setSelectedPhase] = useState<VisualPhaseId>(initialPhase);
-  const [activeSide, setActiveSide] = useState<'left' | 'right'>('left');
-  const [mirrored, setMirrored] = useState<boolean>(false);
-  const [showJointAxes, setShowJointAxes] = useState<boolean>(true);
-  const [showContactPoints, setShowContactPoints] = useState<boolean>(true);
-  const [showDirectionVectors, setShowDirectionVectors] = useState<boolean>(true);
-  const [showMuscles, setShowMuscles] = useState<boolean>(true);
-  const [showLabels, setShowLabels] = useState<boolean>(true);
-  const [showGhostStartPose, setShowGhostStartPose] = useState<boolean>(true);
+  const [activeDiagramId, setActiveDiagramId] = useState<CoreAbdominalDiagramId>(resolvedInitial);
+  const [activePhase, setActivePhase] = useState<VisualPhaseId>(initialPhase);
+  const [showTrajectoryOverlay, setShowTrajectoryOverlay] = useState<boolean>(true);
+  const [showLumbarAnchorGuide, setShowLumbarAnchorGuide] = useState<boolean>(true);
 
-  const spec = CORE_ABDOMINAL_DIAGRAM_SPECS[selectedCoreId];
-  const focusedDetail = spec.phaseDetails[selectedPhase];
-  const startToMiddleDelta = useMemo(
-    () => calculateCorePhaseJointDelta(spec, 'start', 'middle'),
-    [spec],
-  );
-  const middleToEndDelta = useMemo(
-    () => calculateCorePhaseJointDelta(spec, 'middle', 'end'),
-    [spec],
-  );
+  const activeSpec: CoreAbdominalDiagramSpec = CORE_ABDOMINAL_DIAGRAM_SPECS[activeDiagramId];
+  const activePhaseSpec = activeSpec.asset.phases[activePhase];
+  const middleJoints = activeSpec.asset.phases.middle.joints;
 
   return (
     <section
-      aria-label={`${spec.nameKo} (${spec.nameEn}) 복부 안정 2D 도해`}
-      data-testid={`core-triptych-figure-${spec.coreId}`}
-      className={`rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm space-y-5 text-stone-800 ${className}`}
+      aria-label="코어 복부 안정 3대 동작 2D 도해"
+      data-testid="core-abdominal-diagram-figure"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 16,
+        padding: 16,
+        borderRadius: 14,
+        background: '#f7f4ec',
+        border: '1px solid #dfd7c6',
+        color: '#1e293b',
+      }}
     >
-      {/* Header & Movement Switcher */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between border-b border-stone-200 pb-4">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200">
-            <span>I4 복부 안정 2D 도해</span>
-            <span>·</span>
-            <span>{spec.seriesBadgeKo}</span>
-          </div>
-          <h2 className="text-lg sm:text-xl font-bold text-stone-900">
-            {spec.nameKo}{' '}
-            <span className="text-sm font-medium text-stone-500">
-              ({spec.nameEn} · ID: {spec.primaryExerciseId})
+      {/* Header & Movement Selector Tabs */}
+      <header style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8 }}>
+          <div>
+            <span
+              style={{
+                display: 'inline-block',
+                fontSize: 11,
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: 999,
+                background: '#e0f2fe',
+                color: '#0369a1',
+                marginBottom: 4,
+              }}
+            >
+              Track I4 · 복부 코어 3종 독립 2D 키네마틱 도해
             </span>
-          </h2>
-          <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-            {spec.summaryKo}
-          </p>
-        </div>
+            <h3 style={{ margin: 0, fontSize: 18 }}>{activeSpec.nameKo}</h3>
+            <p style={{ margin: '4px 0 0', fontSize: 12.5, color: '#475569' }}>
+              {activeSpec.subtitleKo}
+            </p>
+          </div>
 
-        {allowMovementSwitch && (
+          {/* Movement selector buttons */}
           <div
             role="tablist"
-            aria-label="복부 안정 동작 선택"
-            className="flex flex-wrap gap-1.5"
+            aria-label="코어 복부 동작 선택"
+            style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}
           >
-            {CORE_ABDOMINAL_DIAGRAM_LIST.map((item) => {
-              const active = item.coreId === selectedCoreId;
+            {CORE_ABDOMINAL_DIAGRAM_IDS.map((id) => {
+              const spec = CORE_ABDOMINAL_DIAGRAM_SPECS[id];
+              const selected = id === activeDiagramId;
               return (
                 <button
-                  key={item.coreId}
+                  key={id}
                   type="button"
                   role="tab"
-                  aria-selected={active}
-                  data-testid={`core-switch-${item.coreId}`}
-                  onClick={() => setSelectedCoreId(item.coreId)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                    active
-                      ? 'bg-stone-900 text-white shadow-xs'
-                      : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                  }`}
+                  aria-selected={selected}
+                  data-testid={`core-movement-tab-${id}`}
+                  onClick={() => setActiveDiagramId(id)}
+                  style={{
+                    padding: '7px 12px',
+                    borderRadius: 8,
+                    border: selected ? '2px solid #1e293b' : '1px solid #cbd5e1',
+                    background: selected ? '#1e293b' : '#ffffff',
+                    color: selected ? '#ffffff' : '#1e293b',
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
                 >
-                  {item.orderIndex}. {item.nameKo}
+                  {spec.nameKo}
                 </button>
               );
             })}
           </div>
-        )}
-      </div>
-
-      {/* Controls Bar: Side, Mirror, Layer Toggles */}
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-stone-50 p-3 border border-stone-200/80 text-xs">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="font-semibold text-stone-700 mr-1">기준 측/반전:</span>
-          <button
-            type="button"
-            data-testid="core-toggle-side"
-            onClick={() =>
-              setActiveSide((prev) => (prev === 'left' ? 'right' : 'left'))
-            }
-            className="rounded-md border border-stone-300 bg-white px-2.5 py-1 font-medium text-stone-700 hover:bg-stone-100"
-          >
-            {activeSide === 'left' ? '좌측 기준 (Left)' : '우측 기준 (Right)'}
-          </button>
-          <button
-            type="button"
-            data-testid="core-toggle-mirror"
-            aria-pressed={mirrored}
-            onClick={() => setMirrored((prev) => !prev)}
-            className={`rounded-md border px-2.5 py-1 font-medium ${
-              mirrored
-                ? 'border-amber-600 bg-amber-50 text-amber-900'
-                : 'border-stone-300 bg-white text-stone-700 hover:bg-stone-100'
-            }`}
-          >
-            좌우 미러링 {mirrored ? 'ON' : 'OFF'}
-          </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          {(
-            [
-              ['axes', '관절축', showJointAxes, setShowJointAxes],
-              ['contacts', '접촉점', showContactPoints, setShowContactPoints],
-              ['vectors', '방향 벡터', showDirectionVectors, setShowDirectionVectors],
-              ['muscles', '근육 활성', showMuscles, setShowMuscles],
-              ['labels', '레이블', showLabels, setShowLabels],
-              ['ghost', '시작 고스트', showGhostStartPose, setShowGhostStartPose],
-            ] as const
-          ).map(([key, label, value, setter]) => (
-            <button
-              key={key}
-              type="button"
-              data-testid={`core-layer-toggle-${key}`}
-              aria-pressed={value}
-              onClick={() => setter((prev: boolean) => !prev)}
-              className={`rounded-md px-2 py-1 font-medium border ${
-                value
-                  ? 'border-stone-800 bg-stone-800 text-white'
-                  : 'border-stone-300 bg-white text-stone-600'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+        {/* Phase Tabs & Overlay Toggles */}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <div role="tablist" aria-label="동작 단계 선택" style={{ display: 'flex', gap: 6 }}>
+            {PHASE_ORDER.map((phaseId) => {
+              const selected = phaseId === activePhase;
+              return (
+                <button
+                  key={phaseId}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  data-testid={`core-phase-tab-${phaseId}`}
+                  onClick={() => setActivePhase(phaseId)}
+                  style={{
+                    padding: '5px 10px',
+                    borderRadius: 6,
+                    border: selected ? '1.5px solid #2b6a58' : '1px solid #cbd5e1',
+                    background: selected ? '#2b6a58' : '#ffffff',
+                    color: selected ? '#ffffff' : '#334155',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {PHASE_TAB_LABELS[phaseId]}
+                </button>
+              );
+            })}
+          </div>
 
-      {/* 3-Phase Triptych Grid (Start / Middle / End) */}
-      <div
-        data-testid="core-triptych-grid"
-        className="grid grid-cols-1 gap-4 lg:grid-cols-3"
-      >
-        {PHASES.map((phaseKey) => {
-          const detail = spec.phaseDetails[phaseKey];
-          const isSelected = selectedPhase === phaseKey;
-          return (
-            <article
-              key={phaseKey}
-              data-testid={`core-phase-card-${phaseKey}`}
-              onClick={() => setSelectedPhase(phaseKey)}
-              className={`cursor-pointer rounded-xl border p-3 transition ${
-                isSelected
-                  ? 'border-stone-900 bg-stone-50/90 ring-2 ring-stone-900/15'
-                  : 'border-stone-200 bg-white hover:border-stone-300'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="inline-flex items-center rounded-md bg-stone-900 px-2 py-0.5 text-[11px] font-semibold text-white">
-                  {detail.poseSpec.badgeKo}
-                </span>
-                <span className="text-[11px] font-medium text-stone-500">
-                  축 {detail.jointAxes.length} · 접촉 {detail.contactPoints.length}
-                </span>
-              </div>
-              <h3 className="text-xs sm:text-sm font-bold text-stone-900 mb-2">
-                {detail.poseSpec.shortTitleKo}
-              </h3>
-
-              <CoreAbdominalPhaseSvg
-                movementId={spec.coreId}
-                phase={phaseKey}
-                activeSide={activeSide}
-                mirrored={mirrored}
-                showJointAxes={showJointAxes}
-                showContactPoints={showContactPoints}
-                showDirectionVectors={showDirectionVectors}
-                showMuscles={showMuscles}
-                showLabels={showLabels}
-                showGhostStartPose={showGhostStartPose}
+          <div style={{ display: 'flex', gap: 12, fontSize: 12 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={showTrajectoryOverlay}
+                onChange={(e) => setShowTrajectoryOverlay(e.target.checked)}
+                data-testid="toggle-trajectory-overlay"
               />
+              사지 궤적 오버레이
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={showLumbarAnchorGuide}
+                onChange={(e) => setShowLumbarAnchorGuide(e.target.checked)}
+                data-testid="toggle-lumbar-anchor-guide"
+              />
+              요추·천골 매트 임프린트 가이드
+            </label>
+          </div>
+        </div>
+      </header>
 
-              <p className="mt-2.5 text-xs text-stone-600 leading-relaxed">
-                {detail.poseSpec.summaryKo}
-              </p>
-              <div className="mt-2 rounded-lg bg-amber-50/80 border border-amber-200/80 px-2.5 py-1.5 text-[11px] font-medium text-amber-900">
-                호흡 큐: {detail.poseSpec.breathCueKo}
-              </div>
-            </article>
-          );
-        })}
-      </div>
-
-      {/* Focused Phase Verification: Joint Axes & Contact Points */}
+      {/* Active Phase Highlight & Kinematic Metrics Bar */}
       <div
-        data-testid="core-focused-verification-panel"
-        className="grid grid-cols-1 gap-4 md:grid-cols-2 rounded-xl border border-stone-200 bg-stone-50/70 p-4"
+        data-testid="core-kinematic-metrics-bar"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 8,
+          padding: 10,
+          borderRadius: 10,
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          fontSize: 12,
+        }}
       >
-        <div className="space-y-2">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-stone-700">
-            [{focusedDetail.poseSpec.badgeKo}] 관절축 검증 ({focusedDetail.jointAxes.length}개)
-          </h4>
-          <ul className="space-y-2 text-xs">
-            {focusedDetail.jointAxes.map((axis) => (
-              <li
-                key={axis.id}
-                className="rounded-lg border border-stone-200 bg-white p-2.5"
-              >
-                <div className="flex items-center justify-between font-semibold text-blue-900">
-                  <span>{axis.labelKo}</span>
-                  <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[11px] text-blue-800">
-                    {axis.nominalAngleText} · {axis.planeKo}
-                  </span>
-                </div>
-                <p className="mt-1 text-stone-600">{axis.biomechanicalRuleKo}</p>
-              </li>
-            ))}
-          </ul>
+        <div>
+          <strong>현재 단계:</strong> {activePhaseSpec.badgeKo} ({activePhaseSpec.shortTitleKo})
         </div>
-
-        <div className="space-y-2">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-stone-700">
-            [{focusedDetail.poseSpec.badgeKo}] 접촉점·앵커 검증 ({focusedDetail.contactPoints.length}개)
-          </h4>
-          <ul className="space-y-2 text-xs">
-            {focusedDetail.contactPoints.map((cp) => (
-              <li
-                key={cp.id}
-                className="rounded-lg border border-stone-200 bg-white p-2.5"
-              >
-                <div className="flex items-center justify-between font-semibold text-emerald-900">
-                  <span>{cp.labelKo}</span>
-                  <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] text-emerald-800">
-                    {cp.surfaceKo} ({cp.point.x}, {cp.point.y})
-                  </span>
-                </div>
-                <p className="mt-1 text-stone-600">{cp.verificationRuleKo}</p>
-              </li>
-            ))}
-          </ul>
+        <div>
+          <strong>요추·천골 매트 앵커:</strong>{' '}
+          {`lumbar y=${activePhaseSpec.joints.lumbar.y}px · pelvis y=${activePhaseSpec.joints.pelvis.y}px`}
+        </div>
+        <div>
+          <strong>견갑골 하각 컬업 피벗:</strong> {`thoracic y=${activePhaseSpec.joints.thoracic.y}px`}
+        </div>
+        <div>
+          <strong>핵심 각도·궤적 지표:</strong>{' '}
+          {activeDiagramId === 'core-hundred' &&
+            `시작 무릎 ${activeSpec.kinematicMetrics.startKneeAngleDeg}° · 중간 다리 ${computeHipLegExtensionDeg(middleJoints)}° · 암 펌핑 [0,-14]~[0,14]`}
+          {activeDiagramId === 'core-single-leg-stretch' &&
+            `대퇴 시저 스플릿 ${computeFemurScissorSplitDeg(activeSpec.asset.phases.start.joints)}° · 뻗은 다리 ${activeSpec.kinematicMetrics.legDiagonalAngleDeg}°`}
+          {activeDiagramId === 'core-double-leg-stretch' &&
+            `오버헤드 팔 ${computeShoulderArmElevationDeg(middleJoints)}° ↔ 양다리 ${computeHipLegExtensionDeg(middleJoints)}°`}
         </div>
       </div>
 
-      {/* Kinematic Delta & Audit Defect Resolution */}
-      <div className="rounded-xl border border-stone-200 bg-white p-3.5 text-xs space-y-1.5">
-        <div className="flex flex-wrap items-center justify-between gap-2 font-semibold text-stone-800">
-          <span>동작 단계별 변위 요약 및 감사 교정 내역</span>
-          <span className="text-stone-500">
-            Start→Middle 총 변위 {startToMiddleDelta.totalDisplacementPx}px (손 {startToMiddleDelta.handDeltaPx}px · 발목 {startToMiddleDelta.ankleDeltaPx}px · 요추 흔들림 {startToMiddleDelta.lumbarAnchorDriftPx}px) / Middle→End {middleToEndDelta.totalDisplacementPx}px
-          </span>
-        </div>
-        <p className="text-stone-600">{spec.resolvedAuditDefectKo}</p>
-      </div>
+      {/* 3-Phase Triptych for the Selected Core Exercise */}
+      <CoreAbdominalTriptychFigure
+        diagramId={activeDiagramId}
+        selectedPhase={activePhase}
+        onSelectPhase={setActivePhase}
+        showTrajectoryOverlay={showTrajectoryOverlay}
+        showLumbarAnchorGuide={showLumbarAnchorGuide}
+      />
 
-      {/* Legend Panel */}
+      {/* 3-Up Cross-Movement Comparison Strip (Hundred vs Single Leg Stretch vs Double Leg Stretch) */}
+      {showComparisonStrip && (
+        <section
+          aria-label="코어 3대 동작 동시 비교 스트립"
+          data-testid="core-three-up-comparison-strip"
+          style={{
+            padding: 12,
+            borderRadius: 10,
+            background: '#ffffff',
+            border: '1px solid #dcd5c5',
+          }}
+        >
+          <h4 style={{ margin: '0 0 8px', fontSize: 13.5 }}>
+            3대 복부 동작 단계별 자세 비교 ({PHASE_TAB_LABELS[activePhase]})
+          </h4>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: 10,
+            }}
+          >
+            {CORE_ABDOMINAL_DIAGRAM_IDS.map((id) => {
+              const spec = CORE_ABDOMINAL_DIAGRAM_SPECS[id];
+              return (
+                <div
+                  key={id}
+                  data-testid={`comparison-strip-item-${id}`}
+                  style={{
+                    padding: 8,
+                    borderRadius: 8,
+                    border: id === activeDiagramId ? '1.5px solid #1e293b' : '1px solid #e2e8f0',
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                    {spec.nameKo}
+                  </div>
+                  <CoreAbdominalPhaseSvg
+                    diagramId={id}
+                    phase={activePhase}
+                    showTrajectoryOverlay={showTrajectoryOverlay}
+                    showLumbarAnchorGuide={showLumbarAnchorGuide}
+                    compact
+                  />
+                  <div style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>
+                    {spec.asset.poseDeltaSummary.keyJointChangeKo}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Legend */}
       <div
         data-testid="core-diagram-legend"
-        className="rounded-xl border border-stone-200 bg-stone-50/50 p-4 space-y-2.5"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: 8,
+          padding: 10,
+          borderRadius: 8,
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          fontSize: 11.5,
+        }}
       >
-        <h4 className="text-xs font-bold text-stone-800">
-          도해 범례 (관절축 · 접촉점 · 이동 방향 · 근육 활성 · 시작 고스트)
-        </h4>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 text-xs">
-          {spec.legendItems.map((item) => (
-            <div
-              key={item.id}
-              data-testid={`core-legend-item-${item.id}`}
-              className="rounded-lg border border-stone-200 bg-white p-2.5 space-y-1"
-            >
-              <div className="flex items-center gap-1.5 font-semibold text-stone-900">
-                <span
-                  className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: item.colorHex }}
-                />
-                <span>{item.symbolKo}</span>
-              </div>
-              <div className="font-medium text-stone-800">{item.labelKo}</div>
-              <p className="text-[11px] text-stone-500 leading-snug">
-                {item.descriptionKo}
-              </p>
+        {CORE_DIAGRAM_LEGEND_ITEMS.map((item) => (
+          <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 999,
+                background: item.swatchColor,
+                marginTop: 3,
+                flexShrink: 0,
+              }}
+            />
+            <div>
+              <strong>{item.labelKo}</strong>
+              <div style={{ color: '#475569', fontSize: 11 }}>{item.descriptionKo}</div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
-      {/* Public Evidence Sources & Non-Medical Disclaimer */}
+      {/* Source & Truthfulness Disclosure */}
       <footer
-        data-testid="core-evidence-footer"
-        className="rounded-xl border border-stone-200 bg-stone-50 p-4 space-y-3 text-xs"
+        data-testid="core-source-truthfulness-disclosure"
+        style={{
+          padding: 12,
+          borderRadius: 10,
+          background: '#f1efe7',
+          border: '1px solid #d6cfc0',
+          fontSize: 11.5,
+          color: '#334155',
+        }}
       >
-        <div className="space-y-1.5">
-          <h4 className="font-bold text-stone-800">
-            검증된 공개 근거 출처 (Public Biomechanical & Curriculum References)
-          </h4>
-          <ul className="space-y-1.5">
-            {spec.evidenceSources.map((src) => (
-              <li
-                key={src.sourceId}
-                data-testid={`core-source-${src.sourceId}`}
-                className="rounded-lg border border-stone-200 bg-white p-2.5"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-semibold text-stone-900">
-                    {src.organization} — {src.title}
-                  </span>
-                  <a
-                    href={src.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-700 underline font-medium hover:text-blue-900"
-                  >
-                    원문 출처 링크
-                  </a>
-                </div>
-                <p className="mt-1 text-[11px] text-stone-600">
-                  검증 항목: {src.verifiedClaimsKo.join(' · ')}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div
-          data-testid="core-non-medical-disclaimer"
-          className="rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2 text-[11px] text-amber-950 leading-relaxed"
-        >
-          <strong>비의료·비진단 안내:</strong> {spec.governance.nonMedicalDisclaimerKo}
-        </div>
+        <p style={{ margin: '0 0 6px', fontWeight: 700 }}>
+          출처 대조 및 비의료·비검증 고지 (anatomicalAccuracyAssumed:{' '}
+          {String(CORE_ABDOMINAL_SOURCE_LEDGER.truthfulness.anatomicalAccuracyAssumed)} ·
+          professionalReviewCount: {CORE_ABDOMINAL_SOURCE_LEDGER.truthfulness.professionalReviewCount}{' '}
+          · sourceFrameMappings: {CORE_ABDOMINAL_SOURCE_LEDGER.truthfulness.sourceFrameMappings})
+        </p>
+        <p style={{ margin: '0 0 6px' }}>{activeSpec.correction.reviewedScopeKo}</p>
+        <p style={{ margin: '0 0 6px' }}>{activeSpec.correction.correctionKo}</p>
+        <p style={{ margin: '0 0 8px', color: '#475569' }}>
+          {CORE_ABDOMINAL_SOURCE_LEDGER.truthfulness.nonMedicalDisclosureKo}
+        </p>
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          {activeSpec.correction.sources.map((src) => (
+            <li key={src.url}>
+              <a href={src.url} target="_blank" rel="noopener noreferrer">
+                {src.title}
+              </a>
+            </li>
+          ))}
+        </ul>
       </footer>
     </section>
   );
-};
-
-export function toCorePhaseDiagramProps(
-  movementIdOrExerciseId: string,
-  phase: VisualPhaseId = 'middle',
-  overrides?: Partial<Omit<MovementPhaseDiagramSvgProps, 'asset' | 'phase'>>,
-): MovementPhaseDiagramSvgProps {
-  const spec =
-    resolveCoreAbdominalDiagram(movementIdOrExerciseId) ??
-    CORE_ABDOMINAL_DIAGRAM_SPECS['core-hundred'];
-  return {
-    asset: spec.catalogVisualAsset,
-    phase,
-    showAlignment: true,
-    showDirection: true,
-    showMuscles: true,
-    showGhostStartPose: true,
-    ...overrides,
-  };
 }
 
-export function toCoreTriptychDiagramProps(
-  movementIdOrExerciseId: string,
-  overrides?: Partial<Omit<MovementTriptychDiagramSvgProps, 'asset'>>,
-): MovementTriptychDiagramSvgProps {
-  const spec =
-    resolveCoreAbdominalDiagram(movementIdOrExerciseId) ??
-    CORE_ABDOMINAL_DIAGRAM_SPECS['core-hundred'];
-  return {
-    asset: spec.catalogVisualAsset,
-    selectedPhase: 'middle',
-    showAlignment: true,
-    showDirection: true,
-    showMuscles: true,
-    showGhostStartPose: true,
-    ...overrides,
-  };
-}
-
-export const CoreAbdominalI7IntegrationPreview: React.FC = () => {
-  const patch = useMemo(() => getCoreI7RegistryPatch(), []);
+export function CoreAbdominalI7IntegrationPreview({
+  exerciseId = 'original-mat-single-leg-stretch',
+  phase = 'start',
+}: {
+  readonly exerciseId?: string;
+  readonly phase?: VisualPhaseId;
+}): React.JSX.Element | null {
+  const patch = getCoreI7RegistryPatch();
+  const asset = patch.assets[exerciseId];
+  if (!asset) return null;
   return (
-    <div
-      data-testid="core-i7-integration-preview"
-      className="space-y-8 p-4 bg-stone-100 rounded-2xl"
-    >
-      {CORE_ABDOMINAL_DIAGRAM_LIST.map((spec) => (
-        <div key={spec.coreId} className="space-y-3">
-          <CoreAbdominalTriptychFigure
-            initialMovementId={spec.coreId}
-            allowMovementSwitch={false}
-          />
-          <div className="rounded-xl border border-stone-200 bg-white p-3 space-y-2">
-            <div className="text-xs font-semibold text-stone-700">
-              I7 공용 렌더러 호환 검증 (MovementTriptychDiagramSvg · {spec.primaryExerciseId})
-            </div>
-            <MovementTriptychDiagramSvg
-              {...toCoreTriptychDiagramProps(spec.primaryExerciseId)}
-            />
-          </div>
-        </div>
-      ))}
-      <div className="hidden" data-testid="core-i7-patch-count">
-        {Object.keys(patch.byCatalogExerciseId).length}
-      </div>
+    <div data-testid={`core-i7-preview-${exerciseId}`}>
+      <MovementPhaseDiagramSvg
+        asset={asset}
+        phase={phase}
+        showAlignment
+        showDirection
+        showMuscles
+      />
     </div>
   );
-};
+}
 
-export default CoreAbdominalTriptychFigure;
+export default CoreAbdominalDiagramFigure;

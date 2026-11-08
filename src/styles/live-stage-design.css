@@ -1,0 +1,188 @@
+/* Local stage hierarchy based on the three-device visual concept. */
+#root .vnext-shell .teaching-stage-header {
+  margin-bottom: 16px;
+  gap: 16px;
+}
+#root .vnext-shell .teaching-stage-header h1 {
+  font-size: clamp(23px, 2.4vw, 30px);
+  margin: 8px 0;
+}
+#root .vnext-shell .teaching-stage-header p {
+  font-size: 13px;
+}
+#root .vnext-shell .teaching-time-details {
+  margin-top: 8px;
+}
+#root .vnext-shell .teaching-stage details > summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+  font-size: 14px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+#root .vnext-shell .teaching-stage summary:focus-visible {
+  outline: 3px solid #08796a;
+  outline-offset: 3px;
+  border-radius: 5px;
+}
+#root .vnext-shell .teaching-stage-layout {
+  grid-template-columns: minmax(0, 1.6fr) minmax(250px, 1fr);
+  gap: 18px;
+}
+#root .vnext-shell .teaching-current-panel {
+  padding: 20px;
+}
+#root .vnext-shell .teaching-current-meta {
+  background: #e2f5ed;
+  color: #105d4f;
+  margin: -20px -20px 16px;
+  padding: 12px 20px;
+  border-radius: 16px 16px 0 0;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+#root .vnext-shell .teaching-current-name {
+  font-size: clamp(24px, 2.5vw, 32px);
+  margin-top: 8px;
+  line-height: 1.35;
+}
+#root .vnext-shell .teaching-timer-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0 12px;
+}
+#root .vnext-shell .teaching-timer-digits {
+  order: -1;
+  font-size: clamp(72px, 8vw, 112px);
+  line-height: 1.1;
+  margin: 0 0 12px;
+  letter-spacing: -3px;
+}
+#root .vnext-shell .teaching-timing-breakdown {
+  margin-top: 12px;
+}
+#root .vnext-shell .teaching-play-controls {
+  margin-top: 16px;
+}
+#root .vnext-shell .teaching-stage .teaching-safety {
+  margin: 12px 0;
+}
+#root .vnext-shell .teaching-voice-section h3 {
+  margin: 0 0 8px;
+}
+#root .vnext-shell .teaching-voice-details {
+  margin: 8px 0;
+}
+#root .vnext-shell .teaching-voice-details p {
+  font-size: 13px;
+}
+#root .vnext-shell .teaching-stage-details {
+  padding: 12px 18px;
+}
+#root .vnext-shell .teaching-stage-details.teaching-cue-section {
+  padding: 0;
+  margin-top: 12px;
+}
+#root .vnext-shell .teaching-next-panel {
+  padding: 18px;
+  border-top-color: #a3d9c8;
+}
+#root .vnext-shell .teaching-next-panel h2 {
+  font-size: 23px;
+  line-height: 1.4;
+  margin: 12px 0;
+}
+#root .vnext-shell .teaching-stage-aside {
+  display: grid;
+  gap: 16px;
+}
+#root .vnext-shell .teaching-stage-outline {
+  margin-top: 0;
+}
+#root .vnext-shell .teaching-outline-heading {
+  margin: 8px 0;
+}
+#root .vnext-shell .teaching-stage-outline ol {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+#root .vnext-shell .teaching-stage-outline li {
+  min-width: 0;
+}
+#root .vnext-shell .teaching-stage-outline li button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px;
+}
+#root .vnext-shell .teaching-stage-outline li strong {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+#root .vnext-shell .teaching-stage-outline li small {
+  white-space: nowrap;
+}
+#root .vnext-shell .teaching-high-contrast .teaching-current-meta {
+  color: #fff;
+  background: #153c32;
+}
+@media (max-width: 1000px) {
+  #root .vnext-shell .teaching-stage-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  #root .vnext-shell .teaching-current-panel {
+    padding: 16px;
+  }
+  #root .vnext-shell .teaching-current-meta {
+    margin: -16px -16px 12px;
+    padding: 12px 16px;
+    gap: 6px;
+  }
+  #root .vnext-shell .teaching-stage-header {
+    gap: 8px;
+  }
+  #root .vnext-shell .teaching-stage-header h1 {
+    margin-bottom: 6px;
+  }
+  #root .vnext-shell .teaching-timer-digits {
+    font-size: clamp(68px, 22vw, 96px);
+  }
+  #root .vnext-shell .teaching-current-name {
+    font-size: 24px;
+  }
+  #root .vnext-shell .teaching-timer-area {
+    padding-top: 12px;
+  }
+  #root .vnext-shell .teaching-play-controls {
+    gap: 6px;
+  }
+  #root .vnext-shell .teaching-play-controls button {
+    min-height: 48px;
+    padding-inline: 8px;
+  }
+}
+@media (max-width: 600px) {
+  #root .vnext-shell .teaching-play-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr) minmax(0, 1fr);
+  }
+  #root .vnext-shell .teaching-step-control {
+    white-space: nowrap;
+    gap: 3px !important;
+    padding-inline: 4px !important;
+  }
+}
+@media (max-width: 360px) {
+  #root .vnext-shell .teaching-stage-utility {
+    position: static;
+    justify-content: flex-start;
+    margin-top: 8px;
+  }
+}

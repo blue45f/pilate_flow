@@ -1,0 +1,160 @@
+.recovery-preview-layout {
+  display: grid;
+  gap: 12px;
+}
+.recovery-preview-layout > [data-recovery-choose] {
+  justify-self: start;
+}
+.recovery-preview-layout .recovery-choose-help {
+  margin: 0;
+  color: #57666c;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.recovery-preview-layout .recovery-preview-details {
+  margin-top: 0;
+  padding: 18px;
+  border-color: #d3dfdc;
+  background: #fff;
+}
+.recovery-preview-layout .recovery-preview-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.recovery-preview-layout .recovery-preview-heading h4 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+  color: #243f3a;
+}
+.recovery-preview-layout .recovery-preview-heading span {
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: #75512d;
+  background: #faf1e7;
+  font-size: 12px;
+}
+.recovery-preview-layout .recovery-source-kind {
+  margin: 0 0 12px;
+  color: #53676b;
+  font-size: 13px;
+}
+.recovery-preview-layout .recovery-summary-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.recovery-preview-layout .recovery-summary-counts span {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #eff5f2;
+  color: #34564a;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.recovery-preview-layout .recovery-count-details {
+  margin: 14px 0;
+  border-block: 1px solid #dce5e1;
+}
+.recovery-preview-layout .recovery-count-details summary {
+  min-height: 44px;
+  padding: 12px 0;
+  color: #285d52;
+  font-size: 14px;
+  line-height: 1.6;
+  cursor: pointer;
+}
+.recovery-preview-layout .recovery-count-scroll {
+  margin: 0 0 12px;
+}
+.recovery-preview-layout .recovery-count-scroll table {
+  min-width: 520px;
+}
+.recovery-preview-layout .recovery-count-scroll th:first-child {
+  position: sticky;
+  left: 0;
+  background: #f7faf8;
+  min-width: 110px;
+}
+.recovery-preview-layout .recovery-count-scroll thead th {
+  background: #f7faf8;
+}
+.recovery-preview-layout .recovery-preservation {
+  margin-top: 16px;
+}
+.recovery-preview-layout .recovery-preservation h5 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #294d45;
+}
+.recovery-preview-layout .recovery-preservation p {
+  margin: 8px 0;
+  font-size: 13px;
+  color: #526267;
+  line-height: 1.8;
+}
+.recovery-preview-layout .recovery-scope-note {
+  margin: 14px 0;
+  padding-top: 12px;
+  border-top: 1px solid #e2e9e6;
+  color: #57666c;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.recovery-preview-layout .recovery-preview-actions {
+  gap: 10px;
+}
+.recovery-preview-layout .recovery-preview-actions button {
+  min-height: 46px;
+  font-size: 14px;
+}
+.recovery-preview-layout :is(.recovery-blocked-message, .recovery-status-message) {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #d2ded8;
+  border-radius: 8px;
+  background: #f5f8f6;
+  color: #344f44;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.recovery-preview-layout .recovery-blocked-message {
+  border-color: #e2c29d;
+  background: #fff8ee;
+  color: #79512b;
+}
+.recovery-preview-layout .recovery-format-error > p:first-child {
+  color: #9e3527;
+  font-weight: 600;
+}
+.recovery-preview-layout :is(summary, .recovery-preview-heading h4):focus-visible {
+  outline: 3px solid #a86d46;
+  outline-offset: 3px;
+}
+.recovery-preview-layout .recovery-notice {
+  padding: 10px 12px;
+  background: #fff8ee;
+  font-size: 13px;
+  line-height: 1.8;
+}
+@media (max-width: 600px) {
+  .recovery-preview-layout .recovery-preview-details {
+    padding: 14px;
+  }
+  .recovery-preview-layout .recovery-preview-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .recovery-preview-layout .recovery-preview-actions button {
+    width: 100%;
+  }
+  .recovery-preview-layout .recovery-count-scroll th:first-child {
+    min-width: 100px;
+  }
+}

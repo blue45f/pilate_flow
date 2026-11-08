@@ -67,6 +67,7 @@ import '../styles/design-tokens.css';
 import '../styles/library.css';
 import '../styles/library-learning.css';
 import '../styles/motion-library.css';
+import '../styles/library-asset-status.css';
 import { COURSE_REFERENCES } from '../data/courseReferences';
 
 interface ExerciseAtlasViewProps {
@@ -774,8 +775,32 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const [patternPage, setPatternPage] = useState(0);
   const previewHeading = useRef<HTMLHeadingElement>(null);
   const cardGridRef = useRef<HTMLDivElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const previewTrigger = useRef<HTMLButtonElement | null>(null);
+  const focusSearch = () => requestAnimationFrame(() => searchInput.current?.focus());
+  const resetFilters = () => {
+    setFilters({ ...INITIAL_FILTERS });
+    focusSearch();
+  };
+  const clearSearch = () => {
+    update('search', '');
+    focusSearch();
+  };
+  const closePatternPreview = () => {
+    setPreviewReference(null);
+    requestAnimationFrame(() => {
+      const trigger = previewTrigger.current;
+      if (trigger?.isConnected && !trigger.closest('details:not([open])')) {
+        trigger.focus({ preventScroll: true });
+        trigger.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
+      } else {
+        searchInput.current?.focus();
+      }
+    });
+  };
   const selectedCount = activeSteps.filter((step) => !isRestStep(step)).length;
-  const openPatternPreview = (reference: MotionPatternReference) => {
+  const openPatternPreview = (reference: MotionPatternReference, trigger: HTMLButtonElement) => {
+    previewTrigger.current = trigger;
     setPreviewReference(reference);
     requestAnimationFrame(() => {
       previewHeading.current?.focus();
@@ -961,7 +986,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       const favLabel =
         filters.favorite === 'saved'
           ? '저장됨'
-          : FAVORITE_TAG_META[filters.favorite as FavoriteTag]?.label ?? filters.favorite;
+          : (FAVORITE_TAG_META[filters.favorite as FavoriteTag]?.label ?? filters.favorite);
       chips.push({
         key: 'favorite',
         label: `즐겨찾기: ${favLabel}`,
@@ -1048,21 +1073,28 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         </div>
       </header>
 
-      <div className="ml-inventory" aria-label="모션 자산 현황">
-        <p>
-          <strong>{MOTION_PATTERN_REFERENCES.length}</strong>
-          <span>직접 제작한 도해 초안</span>
-        </p>
-        <p>
-          <strong>0</strong>
-          <span>정확히 일치하는 모션</span>
-        </p>
-        <p>
-          <strong>0</strong>
-          <span>전문가 검토 완료</span>
-        </p>
-        <span className="ml-inventory-note">관련 패턴 참고용 · 전문가 미검토</span>
-      </div>
+      <details className="library-asset-status">
+        <summary>
+          <span>도해 초안 {MOTION_PATTERN_REFERENCES.length}개</span>
+          <span className="library-asset-status-warning">전문가 미검토</span>
+          <ChevronDown size={16} aria-hidden="true" />
+        </summary>
+        <div className="ml-inventory" aria-label="모션 자산 현황">
+          <p>
+            <strong>{MOTION_PATTERN_REFERENCES.length}</strong>
+            <span>직접 제작한 도해 초안</span>
+          </p>
+          <p>
+            <strong>0</strong>
+            <span>정확히 일치하는 모션</span>
+          </p>
+          <p>
+            <strong>0</strong>
+            <span>전문가 검토 완료</span>
+          </p>
+        </div>
+      </details>
+      <p className="library-asset-status-note">관련 패턴 참고용 · 검증된 운동 시범이 아닙니다.</p>
       <div
         className="library-collection-tabs"
         role="tablist"
@@ -1143,6 +1175,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 <Search size={19} aria-hidden="true" />
                 <span className="sr-only">동작 검색</span>
                 <input
+                  ref={searchInput}
                   type="search"
                   aria-label="동작 검색"
                   value={filters.search}
@@ -1150,11 +1183,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   placeholder="한글·영문 이름, 부위·기구·소도구로 검색"
                 />
                 {filters.search && (
-                  <PfButton
-                    variant="icon"
-                    onClick={() => update('search', '')}
-                    aria-label="검색어 지우기"
-                  >
+                  <PfButton variant="icon" onClick={clearSearch} aria-label="검색어 지우기">
                     <X size={15} />
                   </PfButton>
                 )}
@@ -1210,7 +1239,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                     type="button"
                     key={chip.key}
                     className="library-active-filter-chip"
-                    onClick={chip.onClear}
+                    onClick={() => {
+                      chip.onClear();
+                      focusSearch();
+                    }}
                     aria-label={`${chip.label} 필터 해제`}
                   >
                     <span>{chip.label}</span>
@@ -1401,7 +1433,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                       type="button"
                       className={`ml-pattern-tile ${isPatternSelected ? 'is-selected' : ''}`.trim()}
                       key={`${reference.family}-${reference.variantId}`}
-                      onClick={() => openPatternPreview(reference)}
+                      onClick={(event) => openPatternPreview(reference, event.currentTarget)}
                       aria-label={`${reference.title} 도해 초안 보기`}
                       aria-pressed={isPatternSelected}
                     >
@@ -1449,7 +1481,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 </h2>
                 <button
                   type="button"
-                  onClick={() => setPreviewReference(null)}
+                  onClick={closePatternPreview}
                   aria-label="패턴 도해 미리보기 닫기"
                 >
                   <X size={18} />
@@ -1522,7 +1554,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               <span className="muted">· 작은 선택이 좋은 수업을 만듭니다</span>
             </p>
             {(activeFilterCount > 0 || filters.search) && (
-              <PfButton variant="ghost" onClick={() => setFilters({ ...INITIAL_FILTERS })}>
+              <PfButton variant="ghost" onClick={resetFilters}>
                 필터 초기화 <X size={13} />
               </PfButton>
             )}
@@ -1570,9 +1602,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                             ? `${exercise.nameKo} 관련 패턴 도해 보기`
                             : `${exercise.nameKo} 상세 보기`
                         }
-                        onClick={() =>
+                        onClick={(event) =>
                           patterns[0]
-                            ? openPatternPreview(patterns[0])
+                            ? openPatternPreview(patterns[0], event.currentTarget)
                             : onOpenYouTubePreview(exercise)
                         }
                         aria-describedby={`motion-caption-${exercise.id}`}
@@ -1745,7 +1777,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                 key={`${pattern.family}-${pattern.variantId}`}
                                 className={isPatternSelected ? 'is-selected' : undefined}
                                 aria-pressed={isPatternSelected}
-                                onClick={() => openPatternPreview(pattern)}
+                                onClick={(event) =>
+                                  openPatternPreview(pattern, event.currentTarget)
+                                }
                               >
                                 <Play size={13} /> {pattern.title} 보기
                               </button>
@@ -1802,11 +1836,11 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               </p>
               <div className="library-empty-actions">
                 {filters.search.trim() && (
-                  <PfButton variant="secondary" onClick={() => update('search', '')}>
+                  <PfButton variant="secondary" onClick={clearSearch}>
                     검색어 지우기
                   </PfButton>
                 )}
-                <PfButton variant="primary" onClick={() => setFilters({ ...INITIAL_FILTERS })}>
+                <PfButton variant="primary" onClick={resetFilters}>
                   전체 동작 보기
                 </PfButton>
                 <PfButton variant="secondary" onClick={onOpenClipper}>

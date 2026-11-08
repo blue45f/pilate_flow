@@ -155,6 +155,8 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     if (isScheduleDate(date)) setSelectedDate(date);
     else setMessage("일정 날짜는 1900년부터 2199년까지 선택해 주세요.");
   };
+  const previousDate = addScheduleDays(selectedDate, mode === "day" ? -1 : -7);
+  const nextDate = addScheduleDays(selectedDate, mode === "day" ? 1 : 7);
   const dates = useMemo(() => scheduleDateRange(start, end), [start, end]);
   const rows = useMemo(
     () => expandInstructorSchedule(data, start, end),
@@ -445,11 +447,9 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             type="button"
             className="icon-button"
             aria-label="이전 기간"
-            onClick={() =>
-              selectDate(
-                addScheduleDays(selectedDate, mode === "day" ? -1 : -7),
-              )
-            }
+            title={mode === "day" ? "이전 날짜" : "이전 주"}
+            disabled={!isScheduleDate(previousDate)}
+            onClick={() => selectDate(previousDate)}
           >
             <ChevronLeft size={18} />
           </button>
@@ -469,9 +469,9 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             type="button"
             className="icon-button"
             aria-label="다음 기간"
-            onClick={() =>
-              selectDate(addScheduleDays(selectedDate, mode === "day" ? 1 : 7))
-            }
+            title={mode === "day" ? "다음 날짜" : "다음 주"}
+            disabled={!isScheduleDate(nextDate)}
+            onClick={() => selectDate(nextDate)}
           >
             <ChevronRight size={18} />
           </button>
@@ -487,7 +487,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           </button>
         </div>
       </div>
-      <p className="schedule-summary">
+      <p className="schedule-summary" aria-live="polite" aria-atomic="true">
         {formatScheduleDate(start)}
         {end !== start ? ` – ${formatScheduleDate(end)}` : ""} · 예정{" "}
         {rows.filter((row) => row.status === "scheduled").length}회
@@ -530,6 +530,21 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 {formatScheduleDate(date)}
                 {date === today && <span className="schedule-badge">오늘</span>}
               </h2>
+              <div className="schedule-day-actions">
+                {mode === "week" && (
+                  <button
+                    type="button"
+                    className="text-button"
+                    aria-label={`${formatScheduleDate(date)} 일간 보기`}
+                    onClick={() => {
+                      pendingDayFocus.current = true;
+                      selectDate(date);
+                      setMode("day");
+                    }}
+                  >
+                    이 날짜만 보기
+                  </button>
+                )}
               <button
                 type="button"
                 className="icon-button"
@@ -538,6 +553,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
               >
                 <Plus size={16} />
               </button>
+              </div>
             </header>
             {data.exceptions
               .filter((item) => item.kind === "closed" && item.date === date)
