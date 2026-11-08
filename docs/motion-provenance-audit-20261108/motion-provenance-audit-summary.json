@@ -1,0 +1,178 @@
+{
+  "auditId": "P7-ADD14-MOTION-PROVENANCE-20261108",
+  "title": "[P7/추가14] Pilates Flow 모션 출처 감사 (동작 데이터·모션 캡처·참조 영상·이름 매핑·라이선스/인용 근거)",
+  "baseBranch": "origin/main",
+  "baseCommit": "f676075",
+  "auditedAtUtc": "2026-11-08T10:45:00Z",
+  "mode": "read-only-analysis-and-synthetic-data-test",
+  "p2SeparationAndNonClinicalBoundary": {
+    "binary3dOrMocapFilesInRepo": 0,
+    "checkedExtensions": [
+      ".bvh",
+      ".c3d",
+      ".fbx",
+      ".gltf",
+      ".glb",
+      ".obj",
+      ".dae",
+      ".usd",
+      ".usdz",
+      ".asf",
+      ".amc",
+      ".trc"
+    ],
+    "motionCaptureUsed": false,
+    "true3dReadyCount": 0,
+    "canonicalReadyCount": 0,
+    "expertApprovedCount": 0,
+    "anatomicalAccuracyAssumed": false,
+    "objectiveEfficacyClaimed": false,
+    "aiSafetyGuaranteed": false,
+    "professionalReviewCount": 0
+  },
+  "inventoryCounts": {
+    "catalogExercisesTotal": 98,
+    "originalMovementsCount": 60,
+    "legacyAndCuratedSequenceCount": 38,
+    "continuousMotionPatternReferencesTotal": 22,
+    "continuousMotionUniqueCatalogExerciseIds": 21,
+    "motionDraftsCount": 17,
+    "batchVariantsCount": 4,
+    "supineReachCount": 1,
+    "motionStudyLedgerEntries": 22,
+    "motionStudyLedgerSha256": "0ff99f03655d6fae11a70713330185a894fd8e8cc2130dcfaea46b17f3415759",
+    "threePhase2dVisualAssetsCount": 98,
+    "movementDiagramCorrectionsCount": 47,
+    "verifiedReferencesCount": 30,
+    "verifiedReferencesUniqueUrls": 25,
+    "verifiedYouTubePoolCount": 141,
+    "verifiedYouTubeKrCount": 76,
+    "verifiedYouTubeGlobalCount": 65,
+    "courseReferencesCount": 32,
+    "publicReferencesCount": 3
+  },
+  "licenseInventory": [
+    {
+      "file": "src/models/motionDrafts-LICENSE.txt",
+      "spdxIdentifier": "MIT",
+      "scope": "heelRaise, clam, supineDrafts, lateralDrafts, quadrupedDrafts (8 initial draft models)"
+    },
+    {
+      "file": "src/models/apparatusMotionDrafts-LICENSE.txt",
+      "spdxIdentifier": "MIT",
+      "scope": "reformerFootwork, chairPedalPress (2 apparatus draft models)"
+    },
+    {
+      "file": "src/models/tensionMotionDrafts-LICENSE.txt",
+      "spdxIdentifier": "MIT",
+      "scope": "reformerStrapArmPress, cadillacArmSpringPress (2 tension draft models)"
+    },
+    {
+      "file": "src/models/standingSupportDrafts-LICENSE.txt",
+      "spdxIdentifier": "MIT",
+      "scope": "standingSupportDrafts (2 ladder-supported standing models)"
+    },
+    {
+      "file": "src/models/seatedBandRow-LICENSE.txt",
+      "spdxIdentifier": "MIT",
+      "scope": "seatedBandRow (1 seated band row model)"
+    },
+    {
+      "file": "src/models/chestLift-LICENSE.txt",
+      "spdxIdentifier": "CC0-1.0 OR MIT",
+      "scope": "chestLift (supine-chest-lift 5-link model)"
+    },
+    {
+      "file": "src/models/pelvicCurl-LICENSE.txt",
+      "spdxIdentifier": "CC0-1.0 OR MIT",
+      "scope": "pelvicCurl (articulated-pelvic-curl 6-link model)"
+    },
+    {
+      "file": "src/models/supineReach-LICENSE.txt",
+      "spdxIdentifier": "MIT",
+      "scope": "supineReach (supine-Alternating-leg-reach model)"
+    },
+    {
+      "file": "src/models/motionAuthoringBatch-LICENSE.txt",
+      "spdxIdentifier": "0BSD",
+      "scope": "motionAuthoringBatch (4 batch continuous variants)"
+    },
+    {
+      "file": "public/images/movement-guides/LICENSE.txt",
+      "spdxIdentifier": "CC-BY-4.0 / MIT",
+      "scope": "11 clean-room static SVG movement guides in public/images/movement-guides/"
+    }
+  ],
+  "top5Findings": [
+    {
+      "priority": 1,
+      "severity": "high",
+      "id": "P7-F1-UNBOUND-SOURCE-FACTS-AND-LEDGER-OMISSION",
+      "titleKo": "연속 모션 초안 2종의 원장 해시 미결속(unbound-reference) 및 getMotionReviewSourceFacts의 원장 조회 누락",
+      "ownedFiles": [
+        "src/data/motionDrafts.ts",
+        "src/utils/motionReviewSourceFacts.ts",
+        "src/data/supineReach.ts",
+        "src/data/supineReachSource.json",
+        "src/data/motionAuthoringBatch.ts",
+        "src/test/motionReviewWorksheet.test.ts"
+      ],
+      "reproductionEvidence": "supported-heel-raise and side-lying-clam omit sourceId/factualRecordSha256 and resolve to binding='unbound-reference'; RAW_SOURCES in src/utils/motionReviewSourceFacts.ts omits supineReachSource.json and BATCH_SOURCE_FACTS."
+    },
+    {
+      "priority": 2,
+      "severity": "high",
+      "id": "P7-F2-LEDGER-ASYMMETRY-AND-7TRACK-HASH-MANIFEST-GAPS",
+      "titleKo": "모션·기구학 원장 간 커버리지 비대칭(17 vs 22 vs 98) 및 신규 7-트랙 원장(b89a1d2)의 해시·매니페스트 불일치",
+      "ownedFiles": [
+        "src/data/motionReviewSourceManifest.json",
+        "src/data/motionStudyLedger.json",
+        "src/data/motionPatternReferences.ts",
+        "src/data/motionReferences.ts",
+        "src/data/rotationDiagramData.ts",
+        "src/data/rotationSourceFacts.json",
+        "src/data/shoulderSupportSourceLedger.json",
+        "public/images/movement-guides/MANIFEST.json"
+      ],
+      "reproductionEvidence": "motionReviewSourceManifest has 17 entries vs motionStudyLedger 22 vs EXERCISE_MOTION_REFERENCES 98 not_authored; ROTATION_PATTERN_REFERENCES assigns rotationSourceFacts.sources[0].factualRecordSha256 to assetSha256 with placeholder hex ending in 123456789abcdef0; shoulder-support-*.svg files on disk are absent from MANIFEST.json."
+    },
+    {
+      "priority": 3,
+      "severity": "medium",
+      "id": "P7-F3-LEGACY-PREFIX-CLASSIFICATION-AND-CLEARED-YOUTUBE-NOTE-LOSS",
+      "titleKo": "ID 접두사(ex-*) 기반 출처 분류와 getExerciseEvidence의 미확인 사유(youtube.note) 유실",
+      "ownedFiles": [
+        "src/data/movementProvenance.ts",
+        "src/utils/exerciseEvidence.ts",
+        "src/data/pilatesCatalog.ts"
+      ],
+      "reproductionEvidence": "getMovementProvenance classifies all 38 ex-* items as kind='legacy'; getExerciseEvidence maps the 5 cleared ex-* items (channelName='자료 미확인') to source.kind='none' and drops exercise.youtube.note."
+    },
+    {
+      "priority": 4,
+      "severity": "medium",
+      "id": "P7-F4-CATEGORY-HEURISTIC-FALLBACK-IN-VISUAL-AND-MEDIA-MATCHERS",
+      "titleKo": "getVisualSourceComparison 및 resolveMovementMediaBundle의 카테고리·키워드 휴리스틱 폴백 연결",
+      "ownedFiles": [
+        "src/data/movementVisualSourceAudit.ts",
+        "src/utils/movementMediaMatcher.ts",
+        "src/data/verifiedReferences.ts",
+        "src/data/exerciseYouTubeCatalog.ts"
+      ],
+      "reproductionEvidence": "VERIFIED_REFERENCES has 30 entries across 25 unique URLs (Merrithew shop URL shared 5 times, observationPoints present on 3/30); synthetic unmapped mat exercise still receives 4 category-level matchedReliableSources."
+    },
+    {
+      "priority": 5,
+      "severity": "low",
+      "id": "P7-F5-CATALOG-ID-SLUG-VS-APPARATUS-MISMATCH",
+      "titleKo": "영구 카탈로그 ID 슬러그(ex-global-reformer-02)와 실제 기구 메타데이터(apparatus: 'mat') 간 명칭 불일치",
+      "ownedFiles": [
+        "src/data/pilatesCatalog.ts",
+        "src/data/motionReferences.ts",
+        "src/data/movementVisualRigCatalog.ts"
+      ],
+      "reproductionEvidence": "INITIAL_EXERCISES entry ex-global-reformer-02 has 'reformer' in its permanent ID slug while apparatus='mat' (Flow with Mira 15 Min Pilates Corset Abs Workout)."
+    }
+  ],
+  "verificationSuite": "src/test/motionProvenanceAudit.test.ts"
+}
