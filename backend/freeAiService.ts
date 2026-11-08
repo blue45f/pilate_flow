@@ -1,3 +1,4 @@
+import { compareCodeUnits } from '../src/utils/compareCodeUnits';
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import type { RouterContext, RouterResponse } from '@appdeploy/sdk';
@@ -853,7 +854,7 @@ function canonicalizeForHash(value: unknown): string {
     const record = value as Record<string, unknown>;
     const sortedKeys = Object.keys(record)
       .filter((key) => record[key] !== undefined)
-      .sort();
+      .sort(compareCodeUnits);
     const entries = sortedKeys.map(
       (key) => `${JSON.stringify(key)}:${canonicalizeForHash(record[key])}`,
     );

@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import vm from 'node:vm';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { serviceWorkerSource, pwaBuild } from '../../scripts/pwa-build';
 
 function harness() {
@@ -43,6 +45,42 @@ function harness() {
   return { handlers, cached, cache, caches, fetch, self, request };
 }
 describe('static-only service worker', () => {
+  it('keeps the pre-cache list and version in locale-independent UTF-16 order', async () => {
+    const plugin = pwaBuild();
+    const hook = plugin.generateBundle;
+    const handler = typeof hook === 'function' ? hook : hook?.handler;
+    if (!handler) throw new Error('Expected PWA bundle handler');
+    const emitFile = vi.fn();
+    const html = '<html>deterministic ordering fixture</html>';
+    const bundle = {
+      'assets/é.js': {},
+      'assets/a.css': {},
+      'assets/Z.js': {},
+      'assets/가.js': {},
+      'assets/z.js': {},
+      'assets/a.js': {},
+      'assets/A.js': {},
+      'assets/ignored.map': {},
+      'index.html': { type: 'asset', source: html },
+    };
+    const files = [
+      'assets/A.js', 'assets/Z.js', 'assets/a.css', 'assets/a.js',
+      'assets/z.js', 'assets/é.js', 'assets/가.js',
+    ];
+    const version = createHash('sha256')
+      .update(JSON.stringify(files))
+      .update(html)
+      .update(readFileSync('public/icons/app-192.png'))
+      .update(readFileSync('public/icons/app-512.png'))
+      .update(serviceWorkerSource.toString())
+      .digest('hex')
+      .slice(0, 16);
+    await Reflect.apply(handler, { emitFile }, [{}, bundle, false]);
+    expect(emitFile).toHaveBeenCalledExactlyOnceWith({
+      type: 'asset', fileName: 'sw.js', source: serviceWorkerSource(version, files),
+    });
+  });
+
   it('builds its manifest after Vite prunes empty CSS-only chunks', () => {
     const plugin = pwaBuild();
     expect(plugin.enforce).toBe('post');

@@ -450,9 +450,8 @@ export function inspectMobileAndBrowserTtsSupport(
   }
 
   const bestKoreanVoice = selectBestKoreanVoice(voices);
-  const pauseResumeStrategy = platform.isMobile
-    ? 'native-with-segment-recovery'
-    : 'native-with-segment-recovery';
+  // Both desktop and mobile recover from an interrupted speech segment.
+  const pauseResumeStrategy = 'native-with-segment-recovery';
 
   if (bestKoreanVoice) {
     const isLocal = Boolean(bestKoreanVoice.localService);

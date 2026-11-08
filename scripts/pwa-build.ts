@@ -1,3 +1,4 @@
+import { compareCodeUnits } from '../src/utils/compareCodeUnits';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import type { Plugin } from 'vite';
@@ -13,7 +14,7 @@ export function pwaBuild(): Plugin {
       handler(_, bundle) {
         const files = Object.keys(bundle)
           .filter((file) => /\.(?:js|css)$/.test(file))
-          .sort();
+          .sort(compareCodeUnits);
         const html = bundle['index.html'];
         const version = createHash('sha256')
           .update(JSON.stringify(files))

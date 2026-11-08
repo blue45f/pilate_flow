@@ -1,3 +1,4 @@
+import { compareCodeUnits } from '../utils/compareCodeUnits';
 import React, { useState } from 'react';
 import { CheckCircle2, Clock3, Play, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
 import { CANONICAL_BLOCKS, APPARATUS_LABELS } from '../data/pilatesCatalog';
@@ -79,7 +80,7 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
                 criteria.targetGroupId,
                 exercises,
               ).excludedIds,
-            ].sort(),
+            ].sort(compareCodeUnits),
           }
         : null,
     ]);
