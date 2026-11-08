@@ -18,3 +18,5 @@
 
 ## 자동 검사
 전체 Vitest 최초 실행: 223파일 중 222통과, 테스트2455통과/1실패. 유일한 실패는 이전 감사의 소스 working tree 무수정 assertion으로, 실제 구현이 미커밋인 상태라 발생했다. 커밋 후 해당 검사를 재실행한다. Linux 전용 classCueSheetChromium 테스트는 제외했다. TypeScript/lint/build/PWA 및 새 회귀 테스트 최종 결과는 커밋 인계 보고를 따른다.
+
+최종 보완 결과: tsc -b, 대상 ESLint, movementIdeaFlow 8/8, Vite build, PWA 43파일 검증 통과. 소스 커밋 후 기존 감사 테스트4/4 통과로 위 유일한 실패를 해소했다. 전체223파일을 커밋 후 다시 한 번 실행하지는 않았으므로 단일 전체 재실행 통과라고 표현하지 않는다. 브라우저 context와 이 작업의5273 서버를 종료했다.
