@@ -37,11 +37,16 @@ export function StepPracticeEditor({ index, step }: StepPracticeEditorProps) {
     stepId: string;
     success: boolean;
     message: string;
+    field?: 'repetitions' | 'sets';
   } | null>(null);
   const hintId = useId();
+  const feedbackId = useId();
   const repetitions = edit?.source === source ? edit.repetitions : String(step.repetitions ?? '');
   const sets = edit?.source === source ? edit.sets : String(step.sets ?? '');
   const sideMode = edit?.source === source ? edit.sideMode : (step.sideMode ?? '');
+  const activeFeedback = feedback?.stepId === step.stepId ? feedback : null;
+  const repetitionsInvalid = activeFeedback?.field === 'repetitions';
+  const setsInvalid = activeFeedback?.field === 'sets';
   const update = (patch: { repetitions?: string; sets?: string; sideMode?: StepSideMode | '' }) => {
     setEdit({ source, repetitions, sets, sideMode, ...patch });
     setFeedback(null);
@@ -62,6 +67,7 @@ export function StepPracticeEditor({ index, step }: StepPracticeEditorProps) {
       setFeedback({
         stepId: step.stepId,
         success: false,
+        field: 'repetitions',
         message: '횟수는 1–1000 사이의 정수로 입력하거나 비워 주세요.',
       });
       return;
@@ -71,6 +77,7 @@ export function StepPracticeEditor({ index, step }: StepPracticeEditorProps) {
       setFeedback({
         stepId: step.stepId,
         success: false,
+        field: 'sets',
         message: '세트는 1–100 사이의 정수로 입력하거나 비워 주세요.',
       });
       return;
@@ -108,7 +115,8 @@ export function StepPracticeEditor({ index, step }: StepPracticeEditorProps) {
                 value={repetitions}
                 onChange={(event) => update({ repetitions: event.target.value })}
                 placeholder="미지정"
-                aria-describedby={hintId}
+                aria-invalid={repetitionsInvalid ? true : undefined}
+                aria-describedby={repetitionsInvalid ? `${hintId} ${feedbackId}` : hintId}
               />
             </label>
             <label className="form-field">
@@ -122,7 +130,8 @@ export function StepPracticeEditor({ index, step }: StepPracticeEditorProps) {
                 value={sets}
                 onChange={(event) => update({ sets: event.target.value })}
                 placeholder="미지정"
-                aria-describedby={hintId}
+                aria-invalid={setsInvalid ? true : undefined}
+                aria-describedby={setsInvalid ? `${hintId} ${feedbackId}` : hintId}
               />
             </label>
             <label className="form-field">
@@ -154,8 +163,10 @@ export function StepPracticeEditor({ index, step }: StepPracticeEditorProps) {
           <LockKeyhole size={13} /> 잠근 동작은 횟수·좌우를 바꿀 수 없습니다.
         </p>
       )}
-      {feedback?.stepId === step.stepId && (
-        <p role={feedback.success ? 'status' : 'alert'}>{feedback.message}</p>
+      {activeFeedback && (
+        <p id={feedbackId} role={activeFeedback.success ? 'status' : 'alert'}>
+          {activeFeedback.message}
+        </p>
       )}
     </section>
   );

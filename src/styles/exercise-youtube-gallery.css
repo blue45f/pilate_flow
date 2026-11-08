@@ -389,8 +389,13 @@
   min-width: 44px;
 }
 @media (prefers-reduced-motion: reduce) {
+  .eyg-card,
+  .eyg-thumb-img,
   .eyg-disclosure-chevron {
-    transition: none;
+    transition: none !important;
+  }
+  .eyg-thumb-button:hover .eyg-thumb-img {
+    transform: none !important;
   }
 }
 

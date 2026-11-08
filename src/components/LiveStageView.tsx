@@ -691,7 +691,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             <div
               className="teaching-timer-digits"
               role="timer"
-              aria-label={`${currentIsRest ? '현재 휴식' : '현재 동작'} 남은 시간 ${Math.ceil(clock.remainingMs / 1000)}초`}
+              aria-live="off"
+              aria-label={`${currentIsRest ? '현재 휴식' : '현재 동작'} 남은 시간`}
             >
               {formatSecondsToMMSS(Math.ceil(clock.remainingMs / 1000))}
             </div>

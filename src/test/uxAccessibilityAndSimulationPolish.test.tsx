@@ -203,9 +203,27 @@ describe('UX accessibility and simulation polish regressions', () => {
     );
     const aiCopilotCss = readFileSync(resolve(process.cwd(), 'src/styles/ai-copilot.css'), 'utf8');
 
-    // 1. Focus indicator >= 3.0:1 in teaching.css
+    const youtubeGalleryCss = readFileSync(
+      resolve(process.cwd(), 'src/styles/exercise-youtube-gallery.css'),
+      'utf8',
+    );
+    const finderCss = readFileSync(
+      resolve(process.cwd(), 'src/styles/inline-exercise-finder.css'),
+      'utf8',
+    );
+    const nextClassBannerCss = readFileSync(
+      resolve(process.cwd(), 'src/styles/next-class-banner.css'),
+      'utf8',
+    );
+
+    // 1. Focus indicator >= 3.0:1 in teaching.css, inline-exercise-finder.css, and next-class-banner.css
     expect(teachingCss).toContain('outline: 3px solid #2d5a4c;');
     expect(contrastRatio('#2d5a4c', '#f7f5ef')).toBeGreaterThanOrEqual(3.0);
+    expect(finderCss).toContain('outline-color: #fffdf7;');
+    expect(contrastRatio('#fffdf7', '#254d45')).toBeGreaterThanOrEqual(3.0);
+    expect(nextClassBannerCss).toContain('outline: 3px solid #fffdf7;');
+    expect(nextClassBannerCss).toContain('outline: 3px solid #173d34;');
+    expect(contrastRatio('#173d34', '#f7f5ef')).toBeGreaterThanOrEqual(3.0);
 
     // 2. Text contrast >= 4.5:1 in motion-library.css and motion-pattern-gallery.css
     for (const legacyLowContrast of [
@@ -224,11 +242,101 @@ describe('UX accessibility and simulation polish regressions', () => {
     expect(contrastRatio('#4f594b', '#fffcf6')).toBeGreaterThanOrEqual(4.5);
     expect(contrastRatio('#4a5446', '#e7ece3')).toBeGreaterThanOrEqual(4.5);
 
-    // 3. @media (prefers-reduced-motion: reduce) present in all 4 stylesheets
-    for (const cssContent of [previewCss, galleryCss, mediaGuidanceCss, aiCopilotCss]) {
+    // 3. @media (prefers-reduced-motion: reduce) present in all 5 stylesheets
+    for (const cssContent of [
+      previewCss,
+      galleryCss,
+      mediaGuidanceCss,
+      aiCopilotCss,
+      youtubeGalleryCss,
+    ]) {
       expect(cssContent).toContain('@media (prefers-reduced-motion: reduce)');
       expect(cssContent).toContain('transition: none !important;');
     }
     expect(galleryCss).toContain('transform: none !important;');
+    expect(youtubeGalleryCss).toContain('transform: none !important;');
+  });
+
+  it('keeps MovementIdeaSheet photo input keyboard-focusable, avoids nesting buttons inside label, and links ARIA validation/segment labels', async () => {
+    const { MovementIdeaSheet } = await import('../components/MovementIdeaSheet');
+    const { MovementMediaGuidancePanel } = await import('../components/MovementMediaGuidancePanel');
+    const { RestStepCard } = await import('../components/RestStepCard');
+    const { RestBudgetControl } = await import('../components/RestPlanningControls');
+
+    // 1. MovementIdeaSheet: photo input is not [hidden] and quick feeling chips are not nested inside a <label>
+    const { unmount: unmountIdea } = render(
+      <MovementIdeaSheet open onClose={() => {}} />,
+    );
+    const dialog = screen.getByRole('dialog');
+    const fileInput = within(dialog).getByLabelText('참고 사진 선택');
+    expect(fileInput).not.toHaveAttribute('hidden');
+    expect(fileInput).toHaveClass('sr-only');
+
+    const chipButton = within(dialog).getByRole('button', { name: '+ 호흡 연결이 자연스러움' });
+    expect(chipButton.closest('label')).toBeNull();
+    unmountIdea();
+
+    // 2. MovementMediaGuidancePanel: unique accessible names on segment buttons and aria-controls on script toggle
+    const { unmount: unmountMedia } = render(
+      <MovementMediaGuidancePanel exercise={INITIAL_EXERCISES[0]} />,
+    );
+    const scriptToggle = screen.getByTestId('toggle-voice-script-btn');
+    const scriptPanel = screen.getByTestId('voice-script-text');
+    expect(scriptToggle).toHaveAttribute('aria-controls', scriptPanel.getAttribute('id'));
+
+    const segmentBtn0 = screen.getByTestId('speak-segment-btn-0');
+    const segmentBtn1 = screen.getByTestId('speak-segment-btn-1');
+    expect(segmentBtn0.getAttribute('aria-label')).toMatch(/^1\..*구간 듣기$/);
+    expect(segmentBtn1.getAttribute('aria-label')).toMatch(/^2\..*구간 듣기$/);
+    expect(segmentBtn0.getAttribute('aria-label')).not.toBe(
+      segmentBtn1.getAttribute('aria-label'),
+    );
+    unmountMedia();
+
+    // 3. RestStepCard & RestBudgetControl: aria-invalid and aria-describedby on out-of-range input
+    const restStep: SequenceStep = {
+      stepId: 'rest-a11y-1',
+      order: 1,
+      kind: 'rest',
+      blockCategory: 'warmup',
+      exerciseId: 'rest',
+      durationMin: 5,
+      selectedLayer: 'standard',
+      explanationSec: 0,
+      transitionSec: 0,
+    };
+    render(
+      <div>
+        <RestStepCard
+          step={restStep}
+          index={0}
+          lastIndex={0}
+          onToggleLock={() => {}}
+          onMove={() => {}}
+          onRemove={() => {}}
+          onSetDuration={() => ({ success: true, message: '' })}
+        />
+        <RestBudgetControl minutes={5} totalMinutes={50} onChange={() => {}} />
+      </div>,
+    );
+
+    const restInput = screen.getByLabelText('1번 휴식 시간 · 분');
+    fireEvent.change(restInput, { target: { value: '0' } });
+    expect(restInput).toHaveAttribute('aria-invalid', 'true');
+    const restErrorId = restInput.getAttribute('aria-describedby');
+    expect(restErrorId).toBeTruthy();
+    expect(document.getElementById(restErrorId!)).toHaveTextContent(
+      '휴식 시간을 0.5–120분 사이로 입력해 주세요.',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '직접 지정' }));
+    const budgetInput = screen.getByLabelText('자동 휴식 직접 지정 · 분');
+    fireEvent.change(budgetInput, { target: { value: '60' } });
+    expect(budgetInput).toHaveAttribute('aria-invalid', 'true');
+    const budgetErrorId = budgetInput.getAttribute('aria-describedby');
+    expect(budgetErrorId).toBeTruthy();
+    expect(document.getElementById(budgetErrorId!)).toHaveTextContent(
+      '휴식은 0분 이상, 전체 수업 시간보다 짧게 입력해 주세요.',
+    );
   });
 });
