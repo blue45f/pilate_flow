@@ -1,6 +1,10 @@
 import { MotionDraftSegmentRehearsal } from './MotionDraftSegmentRehearsal';
 import { MotionDraftReviewWorksheet } from './MotionDraftReviewWorksheet';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import {
+  EXTENDED_CANDIDATE_JOINT_KEYS,
+  EXTENDED_CANDIDATE_MOTION_MODELS,
+} from '../data/extendedMotionVerificationCatalog';
 import { MOTION_DRAFTS, getMotionDraft } from '../data/motionDrafts';
 import { groupMotionDraftOptions } from '../data/motionDraftIndex';
 import { useMotionDraftPlayback } from '../hooks/useMotionDraftPlayback';
@@ -506,6 +510,7 @@ function OpenMotionDraftLab({ initialDraftId, onClose }: Omit<MotionDraftLabDial
             )}
           </>
         )}
+        <ExtendedCandidateLabSection />
         <footer className="mdl-footer">
           <p>제안 상태만 유지합니다. 계획 검토·자격·모션 전문가 승인 상태를 변경하지 않습니다.</p>
           <button type="button" className="mdl-secondary" onClick={close}>
@@ -514,6 +519,173 @@ function OpenMotionDraftLab({ initialDraftId, onClose }: Omit<MotionDraftLabDial
         </footer>
       </div>
     </dialog>
+  );
+}
+
+function ExtendedCandidateLabSection() {
+  const [candidateId, setCandidateId] = useState<string>(
+    EXTENDED_CANDIDATE_MOTION_MODELS[0]?.candidateId ?? 'prone-baby-swan',
+  );
+  const [candidateProgressPct, setCandidateProgressPct] = useState<number>(50);
+
+  const candidateModel =
+    EXTENDED_CANDIDATE_MOTION_MODELS.find((m) => m.candidateId === candidateId) ??
+    EXTENDED_CANDIDATE_MOTION_MODELS[0];
+
+  const pose = candidateModel.samplePose(candidateProgressPct / 100);
+
+  return (
+    <details className="mdl-evidence" data-testid="extended-candidate-models-lab-section">
+      <summary>매트 미완 후보 8종 연속·3단계 모션 스터디 대조 (확장 카탈로그)</summary>
+      <div style={{ paddingTop: '8px' }}>
+        <p className="mdl-description">
+          MOTION_DRAFTS 17종과 별도로 관리되는 매트 후보 8종의 연속·3단계 모션 도해 및 SHA-256 원문 사실 대조 섹션입니다 (전문가 모션 검토 0건 · 해부학적 정밀성 가정 안 함).
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+          <label>
+            확장 후보 모션 선택{' '}
+            <select
+              aria-label="확장 후보 모션 선택"
+              data-testid="extended-candidate-select"
+              value={candidateModel.candidateId}
+              onChange={(e) => {
+                setCandidateId(e.target.value);
+                setCandidateProgressPct(50);
+              }}
+            >
+              {EXTENDED_CANDIDATE_MOTION_MODELS.map((item) => (
+                <option key={item.candidateId} value={item.candidateId}>
+                  {item.titleKo} ({item.candidateId})
+                </option>
+              ))}
+            </select>
+          </label>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              type="button"
+              className="mdl-secondary"
+              onClick={() => setCandidateProgressPct(0)}
+            >
+              후보 시작 0%
+            </button>
+            <button
+              type="button"
+              className="mdl-secondary"
+              onClick={() => setCandidateProgressPct(50)}
+            >
+              후보 정점 50%
+            </button>
+            <button
+              type="button"
+              className="mdl-secondary"
+              onClick={() => setCandidateProgressPct(100)}
+            >
+              후보 복귀 100%
+            </button>
+          </div>
+        </div>
+        <label style={{ display: 'block', marginBottom: '8px' }}>
+          확장 후보 연속 진행률 ({candidateProgressPct}%)
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            aria-label="확장 후보 연속 진행률"
+            data-testid="extended-candidate-progress-range"
+            value={candidateProgressPct}
+            onChange={(e) => setCandidateProgressPct(Number(e.target.value))}
+          />
+        </label>
+        <svg
+          data-testid="extended-lab-candidate-svg"
+          data-candidate-id={candidateModel.candidateId}
+          data-exercise-id={candidateModel.exerciseId}
+          data-phase-id={pose.phaseId}
+          data-progress={pose.progress}
+          viewBox={candidateModel.viewBox}
+          aria-label={`${candidateModel.titleKo} ${pose.phaseLabelKo}`}
+          style={{
+            width: '100%',
+            maxHeight: '200px',
+            borderRadius: '8px',
+            background: '#f8fafc',
+            border: '1px solid #cbd5e1',
+          }}
+        >
+          <line x1={70} y1={252} x2={590} y2={252} stroke="#64748b" strokeWidth={4} />
+          <polyline
+            fill="none"
+            stroke="#0f766e"
+            strokeWidth={6}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            points={[
+              `${pose.joints.head.x},${pose.joints.head.y}`,
+              `${pose.joints.neck.x},${pose.joints.neck.y}`,
+              `${pose.joints.shoulder.x},${pose.joints.shoulder.y}`,
+              `${pose.joints.thoracic.x},${pose.joints.thoracic.y}`,
+              `${pose.joints.lumbar.x},${pose.joints.lumbar.y}`,
+              `${pose.joints.pelvis.x},${pose.joints.pelvis.y}`,
+            ].join(' ')}
+          />
+          <polyline
+            fill="none"
+            stroke="#1e40af"
+            strokeWidth={5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            points={[
+              `${pose.joints.pelvis.x},${pose.joints.pelvis.y}`,
+              `${pose.joints.hip.x},${pose.joints.hip.y}`,
+              `${pose.joints.knee.x},${pose.joints.knee.y}`,
+              `${pose.joints.ankle.x},${pose.joints.ankle.y}`,
+              `${pose.joints.heel.x},${pose.joints.heel.y}`,
+              `${pose.joints.toe.x},${pose.joints.toe.y}`,
+            ].join(' ')}
+          />
+          <polyline
+            fill="none"
+            stroke="#7c3aed"
+            strokeWidth={4.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            points={[
+              `${pose.joints.shoulder.x},${pose.joints.shoulder.y}`,
+              `${pose.joints.elbow.x},${pose.joints.elbow.y}`,
+              `${pose.joints.wrist.x},${pose.joints.wrist.y}`,
+              `${pose.joints.hand.x},${pose.joints.hand.y}`,
+            ].join(' ')}
+          />
+          {EXTENDED_CANDIDATE_JOINT_KEYS.map((jk) => (
+            <circle
+              key={jk}
+              cx={pose.joints[jk].x}
+              cy={pose.joints[jk].y}
+              r={3}
+              fill="#ffffff"
+              stroke="#0f172a"
+            />
+          ))}
+        </svg>
+        <p data-testid="extended-lab-candidate-cue">
+          <strong>{pose.phaseLabelKo}:</strong> {pose.phaseCueKo}
+        </p>
+        <p data-testid="extended-lab-candidate-sha256">
+          대조 카탈로그 ID: <code>{candidateModel.exerciseId}</code> · 사실 기록 해시(SHA-256):{' '}
+          <code>{candidateModel.factualRecordSha256}</code> · 확인일: {candidateModel.checkedAt}
+        </p>
+        <ul>
+          {candidateModel.sources.map((src) => (
+            <li key={src.sourceId}>
+              <a href={src.url} target="_blank" rel="noopener noreferrer">
+                {src.publisher} · {src.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </details>
   );
 }
 
