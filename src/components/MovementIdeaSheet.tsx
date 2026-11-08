@@ -605,6 +605,23 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
         >
           <PfCard className="pf-idea-step-card">
             <div className="pf-idea-step-header">
+              <div className="pf-idea-step-progress" data-testid="idea-step-guide">
+                <span className="pf-idea-step-pill is-active">1 한 줄 메모</span>
+                <span className="pf-idea-step-arrow" aria-hidden="true">
+                  →
+                </span>
+                <span
+                  className={`pf-idea-step-pill ${reflectionOpen || variantOpen || hierarchyOpen ? 'is-active' : ''}`}
+                >
+                  2 체감·시퀀스 정보(선택)
+                </span>
+                <span className="pf-idea-step-arrow" aria-hidden="true">
+                  →
+                </span>
+                <span className={`pf-idea-step-pill ${ideaLine.trim() ? 'is-ready' : ''}`}>
+                  3 저장·수업 반영
+                </span>
+              </div>
               {editingId && (
                 <PfBadge tone="success">저장된 초안 편집 중 (v{currentRevision})</PfBadge>
               )}

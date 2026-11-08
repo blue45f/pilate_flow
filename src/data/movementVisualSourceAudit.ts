@@ -482,7 +482,7 @@ function resolveSourceVerificationCategoryKo(
   extendedAudit: ReturnType<typeof resolveExtendedMotionSourceAudit>,
 ): string {
   if (extendedAudit.clearedYoutubeReplacementAudit) {
-    return '레거시 미검증 링크 제거 후 공공·공식 대체 출처 대조 완료';
+    return '레거시 미검증 링크 제거 후 공공·공식 대체 출처 대조 기록 (전문가 검증 전)';
   }
   if (
     exercise.id.startsWith('ex-kr-') ||
@@ -491,7 +491,7 @@ function resolveSourceVerificationCategoryKo(
       extendedAudit.verifiedReferenceAuditRecord?.originalVerificationStatus ===
         'korean-candidate')
   ) {
-    return '국내 교육기관 후보 자료 메타데이터·역학 범위 대조 완료';
+    return '국내 교육기관 후보 자료 메타데이터·역학 범위 대조 기록 (전문가 검증 전)';
   }
   if (
     extendedAudit.candidateMatMotionModel ||
@@ -501,9 +501,9 @@ function resolveSourceVerificationCategoryKo(
     extendedAudit.verifiedReferenceAuditRecord?.originalVerificationStatus ===
       'partial-playback-checked'
   ) {
-    return '공식·학술·임상 출처 본문 및 생체역학 범위 검증 완료';
+    return '공식·학술·임상 출처 본문 및 생체역학 범위 대조 기록 (전문가 검증 전)';
   }
-  return '카탈로그 기구·자세·근육 표준 원장 대조 완료';
+  return '카탈로그 기구·자세·근육 표준 원장 대조 기록 (전문가 검증 전)';
 }
 
 /**

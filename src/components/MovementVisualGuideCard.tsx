@@ -1054,8 +1054,8 @@ export function MovementVisualGuideCard({
             <strong>
               {sourceAudit.extendedAuditSummary.sourceVerificationCategoryKo}
             </strong>{' '}
-            · 검증 기준일: {sourceAudit.extendedAuditSummary.auditCheckedAt} ·
-            전문가 모션 검수 0건 · 해부학적 정밀성 가정 안 함
+            · 대조 기준일: {sourceAudit.extendedAuditSummary.auditCheckedAt} ·
+            전문가 모션 검수 0건 · 해부학적 정밀성 가정 안 함 (해시·연결은 원장 무결성 확인용)
           </span>
           <code
             data-testid="visual-guide-extended-audit-sha256"

@@ -32,6 +32,7 @@ interface LogSessionModalProps {
 }
 
 interface SessionLogDraft {
+  step?: 1 | 2 | 3;
   reflection?: string;
   rating?: 1 | 2 | 3 | 4 | 5;
   intensity?: 'relaxed' | 'moderate' | 'intense';
@@ -94,6 +95,25 @@ const SessionLogForm: React.FC<
   const [initialDraft] = useState(() => readSessionLogDraft(sequenceId));
   const [draftRestored] = useState(() => initialDraft !== null);
   const [hasEditedDraft, setHasEditedDraft] = useState(false);
+  const [logStep, setLogStep] = useState<1 | 2 | 3>(() =>
+    initialDraft?.step === 2 || initialDraft?.step === 3 ? initialDraft.step : 1,
+  );
+  const logStep1Ref = useRef<HTMLDivElement>(null);
+  const logStep2Ref = useRef<HTMLDetailsElement>(null);
+  const logStep3Ref = useRef<HTMLDivElement>(null);
+  const navigateLogStep = (nextStep: 1 | 2 | 3) => {
+    setHasEditedDraft(true);
+    setLogStep(nextStep);
+    requestAnimationFrame(() => {
+      if (nextStep === 1) {
+        logStep1Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      } else if (nextStep === 2) {
+        logStep2Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        logStep3Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+  };
   // Capture the reviewed plan and exercise definitions once; edits elsewhere cannot change this record.
   const [snapshot] = useState(() =>
     (
@@ -205,6 +225,7 @@ const SessionLogForm: React.FC<
     if (!hasEditedDraft || submitted) return;
     try {
       const draft: SessionLogDraft = {
+        step: logStep,
         reflection,
         rating,
         intensity,
@@ -222,6 +243,7 @@ const SessionLogForm: React.FC<
     hasEditedDraft,
     submitted,
     sequenceId,
+    logStep,
     reflection,
     rating,
     intensity,
@@ -447,6 +469,57 @@ const SessionLogForm: React.FC<
     >
       <form className="teaching-log-form" onSubmit={submit}>
         <div className="class-log-content">
+          <nav
+            className="pf-step-guide-bar"
+            aria-label="수업 기록 단계 안내"
+            data-testid="log-session-step-guide"
+          >
+            <ol className="pf-step-guide-list">
+              {(
+                [
+                  { step: 1 as const, label: '1 그룹·시간 확인' },
+                  { step: 2 as const, label: '2 진행 동작 점검' },
+                  { step: 3 as const, label: '3 강도·피드백 메모' },
+                ] as const
+              ).map((item) => (
+                <li key={item.step}>
+                  <button
+                    type="button"
+                    aria-current={logStep === item.step ? 'step' : undefined}
+                    className={`pf-step-guide-chip ${logStep === item.step ? 'is-active' : ''}`}
+                    onClick={() => navigateLogStep(item.step)}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <div className="pf-step-guide-subrow">
+              <span className="pf-step-guide-focus" role="status" aria-live="polite">
+                {logStep === 1 && '지금 할 일: 수업 그룹과 일자, 실제 진행 시간을 확인하세요.'}
+                {logStep === 2 && '지금 할 일: 계획 동작 중 실제로 진행한 동작을 점검하세요.'}
+                {logStep === 3 && '지금 할 일: 수업 강도와 다음 수업 메모를 적고 기록을 완료하세요.'}
+              </span>
+              <div className="pf-step-guide-nav">
+                <button
+                  type="button"
+                  className="pf-step-nav-btn"
+                  disabled={logStep === 1}
+                  onClick={() => navigateLogStep(logStep === 3 ? 2 : 1)}
+                >
+                  이전 단계
+                </button>
+                <button
+                  type="button"
+                  className="pf-step-nav-btn"
+                  disabled={logStep === 3}
+                  onClick={() => navigateLogStep(logStep === 1 ? 2 : 3)}
+                >
+                  다음 단계
+                </button>
+              </div>
+            </div>
+          </nav>
           <div className="teaching-log-summary">
             <div className="class-log-summary-heading">
               <strong className="class-log-plan-badge">
@@ -492,7 +565,14 @@ const SessionLogForm: React.FC<
               )}
             </div>
           </div>
-          <div className="teaching-form-grid teaching-form-two class-log-group-fields">
+          <div
+            ref={logStep1Ref}
+            className={`teaching-form-grid teaching-form-two class-log-group-fields ${logStep === 1 ? 'is-step-focused' : ''}`}
+            onFocusCapture={() => {
+              setHasEditedDraft(true);
+              setLogStep(1);
+            }}
+          >
             <div className="class-log-group-column">
               <PfField label="수업 그룹 *">
                 <PfSelect
@@ -557,7 +637,10 @@ const SessionLogForm: React.FC<
               />
             </PfField>
           </div>
-          <fieldset className="teaching-duration-field">
+          <fieldset
+            className={`teaching-duration-field ${logStep === 1 ? 'is-step-focused' : ''}`}
+            onFocusCapture={() => setLogStep(1)}
+          >
             <legend>실제 진행 시간 (선택)</legend>
             <div>
               <PfField label="분">
@@ -604,8 +687,10 @@ const SessionLogForm: React.FC<
             )}
           </fieldset>
           <details
-            className="teaching-log-steps"
+            ref={logStep2Ref}
+            className={`teaching-log-steps ${logStep === 2 ? 'is-step-focused' : ''}`}
             open={context?.taughtStepIds !== undefined ? true : undefined}
+            onFocusCapture={() => setLogStep(2)}
           >
             <summary>
               <span>
@@ -653,7 +738,11 @@ const SessionLogForm: React.FC<
               ))}
             </div>
           </details>
-          <div className="teaching-form-grid teaching-form-two">
+          <div
+            ref={logStep3Ref}
+            className={`teaching-form-grid teaching-form-two ${logStep === 3 ? 'is-step-focused' : ''}`}
+            onFocusCapture={() => setLogStep(3)}
+          >
             <PfField label="강사가 느낀 강도">
               <PfSelect
                 value={intensity}

@@ -84,11 +84,11 @@ describe('movementVisualSourceAuditExtended — 98-exercise extended audit summa
     expect(strip).toHaveAttribute('data-has-candidate-motion-model', 'true');
     expect(strip).toHaveAttribute('data-has-cleared-youtube-audit', 'false');
     expect(strip).toHaveTextContent(
-      '공식·학술·임상 출처 본문 및 생체역학 범위 검증 완료',
+      '공식·학술·임상 출처 본문 및 생체역학 범위 대조 기록 (전문가 검증 전)',
     );
-    expect(strip).toHaveTextContent('검증 기준일: 2026-11-08');
+    expect(strip).toHaveTextContent('대조 기준일: 2026-11-08');
     expect(strip).toHaveTextContent(
-      '전문가 모션 검수 0건 · 해부학적 정밀성 가정 안 함',
+      '전문가 모션 검수 0건 · 해부학적 정밀성 가정 안 함 (해시·연결은 원장 무결성 확인용)',
     );
     expect(strip).toHaveTextContent(
       matComparison.extendedAuditSummary.factualRecordSha256.slice(0, 12),
@@ -103,9 +103,9 @@ describe('movementVisualSourceAuditExtended — 98-exercise extended audit summa
       reformerComparison.extendedAuditSummary.factualRecordSha256,
     );
     expect(strip).toHaveTextContent(
-      '공식·학술·임상 출처 본문 및 생체역학 범위 검증 완료',
+      '공식·학술·임상 출처 본문 및 생체역학 범위 대조 기록 (전문가 검증 전)',
     );
-    expect(strip).toHaveTextContent('검증 기준일: 2026-11-08');
+    expect(strip).toHaveTextContent('대조 기준일: 2026-11-08');
 
     // 3. Korean candidate exercise (ex-kr-reformer-01)
     rerender(<MovementVisualGuideCard exercise={koreanCandidateExercise} />);
@@ -116,11 +116,11 @@ describe('movementVisualSourceAuditExtended — 98-exercise extended audit summa
       krComparison.extendedAuditSummary.factualRecordSha256,
     );
     expect(strip).toHaveTextContent(
-      '국내 교육기관 후보 자료 메타데이터·역학 범위 대조 완료',
+      '국내 교육기관 후보 자료 메타데이터·역학 범위 대조 기록 (전문가 검증 전)',
     );
-    expect(strip).toHaveTextContent('검증 기준일: 2026-11-08');
+    expect(strip).toHaveTextContent('대조 기준일: 2026-11-08');
     expect(strip).toHaveTextContent(
-      '전문가 모션 검수 0건 · 해부학적 정밀성 가정 안 함',
+      '전문가 모션 검수 0건 · 해부학적 정밀성 가정 안 함 (해시·연결은 원장 무결성 확인용)',
     );
 
     // 4. Cleared YouTube exercise (ex-warmup-01)
@@ -133,9 +133,9 @@ describe('movementVisualSourceAuditExtended — 98-exercise extended audit summa
     );
     expect(strip).toHaveAttribute('data-has-cleared-youtube-audit', 'true');
     expect(strip).toHaveTextContent(
-      '레거시 미검증 링크 제거 후 공공·공식 대체 출처 대조 완료',
+      '레거시 미검증 링크 제거 후 공공·공식 대체 출처 대조 기록 (전문가 검증 전)',
     );
-    expect(strip).toHaveTextContent('검증 기준일: 2026-11-08');
+    expect(strip).toHaveTextContent('대조 기준일: 2026-11-08');
     expect(strip).toHaveTextContent(
       clearedComparison.extendedAuditSummary.factualRecordSha256.slice(0, 12),
     );

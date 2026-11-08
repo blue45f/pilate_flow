@@ -1149,32 +1149,203 @@ interface YouTubeClipperModalProps {
 const REVIEW_TEXT = '미검토 자료 · 원본 영상에서 자세와 기구 설정을 확인하세요.';
 const SAMPLE_CHAPTERS = '00:00 호흡과 준비\n03:00 첫 번째 동작\n06:00 두 번째 동작';
 
+interface ClipperWorkingDraft {
+  mode: 'batch' | 'single';
+  step: 1 | 2 | 3;
+  youtubeUrl: string;
+  channelName: string;
+  title: string;
+  nameEn: string;
+  chaptersText: string;
+  startTimeText: string;
+  selectedEquipment: string[];
+  blockCategory: ClassBlockCategory;
+  chapterBlocks: Record<number, ClassBlockCategory>;
+  level: DifficultyLevel;
+  bodyPosition: BodyPosition;
+  selectedProps: PropType[];
+  duration: number;
+  unilateral: boolean;
+  springs: string;
+  breathPattern: string;
+  cueText: string;
+}
+
+const CLIPPER_DRAFT_STORAGE_KEY = 'pf_youtube_clipper_draft_v1';
+
+function readClipperDraft(): ClipperWorkingDraft | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(CLIPPER_DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<ClipperWorkingDraft>;
+    if (!parsed || typeof parsed !== 'object') return null;
+    return {
+      mode: parsed.mode === 'single' ? 'single' : 'batch',
+      step: parsed.step === 2 || parsed.step === 3 ? parsed.step : 1,
+      youtubeUrl: typeof parsed.youtubeUrl === 'string' ? parsed.youtubeUrl : '',
+      channelName: typeof parsed.channelName === 'string' ? parsed.channelName : '',
+      title: typeof parsed.title === 'string' ? parsed.title : '',
+      nameEn: typeof parsed.nameEn === 'string' ? parsed.nameEn : '',
+      chaptersText: typeof parsed.chaptersText === 'string' ? parsed.chaptersText : '',
+      startTimeText: typeof parsed.startTimeText === 'string' ? parsed.startTimeText : '00:00',
+      selectedEquipment: Array.isArray(parsed.selectedEquipment) ? parsed.selectedEquipment : [],
+      blockCategory: (parsed.blockCategory as ClassBlockCategory) || 'core',
+      chapterBlocks:
+        parsed.chapterBlocks && typeof parsed.chapterBlocks === 'object'
+          ? parsed.chapterBlocks
+          : {},
+      level: (parsed.level as DifficultyLevel) || '1.0',
+      bodyPosition: (parsed.bodyPosition as BodyPosition) || 'supine',
+      selectedProps: Array.isArray(parsed.selectedProps) ? (parsed.selectedProps as PropType[]) : [],
+      duration: typeof parsed.duration === 'number' ? parsed.duration : 3,
+      unilateral: Boolean(parsed.unilateral),
+      springs: typeof parsed.springs === 'string' ? parsed.springs : '',
+      breathPattern: typeof parsed.breathPattern === 'string' ? parsed.breathPattern : '',
+      cueText: typeof parsed.cueText === 'string' ? parsed.cueText : '',
+    };
+  } catch {
+    return null;
+  }
+}
+
 export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, onClose }) => {
   const addCustomExercise = usePilatesStore((state) => state.addCustomExercise);
   const addBatchExercisesFromClips = usePilatesStore((state) => state.addBatchExercisesFromClips);
-  const [mode, setMode] = useState<'batch' | 'single'>('batch');
-  const [youtubeUrl, setYoutubeUrl] = useState('');
-  const [channelName, setChannelName] = useState('');
-  const [title, setTitle] = useState('');
-  const [nameEn, setNameEn] = useState('');
-  const [chaptersText, setChaptersText] = useState('');
-  const [startTimeText, setStartTimeText] = useState('00:00');
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
+  const [initialDraft] = useState(() => readClipperDraft());
+  const [mode, setMode] = useState<'batch' | 'single'>(() => initialDraft?.mode ?? 'batch');
+  const [clipperStep, setClipperStep] = useState<1 | 2 | 3>(() => initialDraft?.step ?? 1);
+  const [youtubeUrl, setYoutubeUrl] = useState(() => initialDraft?.youtubeUrl ?? '');
+  const [channelName, setChannelName] = useState(() => initialDraft?.channelName ?? '');
+  const [title, setTitle] = useState(() => initialDraft?.title ?? '');
+  const [nameEn, setNameEn] = useState(() => initialDraft?.nameEn ?? '');
+  const [chaptersText, setChaptersText] = useState(() => initialDraft?.chaptersText ?? '');
+  const [startTimeText, setStartTimeText] = useState(() => initialDraft?.startTimeText ?? '00:00');
+  const [selectedEquipment, setSelectedEquipment] = useState<string[]>(
+    () => initialDraft?.selectedEquipment ?? [],
+  );
   const apparatus = getEquipmentFamily(selectedEquipment[0] || '') || 'mat';
-  const [blockCategory, setBlockCategory] = useState<ClassBlockCategory>('core');
-  const [chapterBlocks, setChapterBlocks] = useState<Record<number, ClassBlockCategory>>({});
-  const [level, setLevel] = useState<DifficultyLevel>('1.0');
-  const [bodyPosition, setBodyPosition] = useState<BodyPosition>('supine');
-  const [selectedProps, setSelectedProps] = useState<PropType[]>([]);
-  const [duration, setDuration] = useState(3);
-  const [unilateral, setUnilateral] = useState(false);
-  const [springs, setSprings] = useState('');
-  const [breathPattern, setBreathPattern] = useState('');
-  const [cueText, setCueText] = useState('');
+  const [blockCategory, setBlockCategory] = useState<ClassBlockCategory>(
+    () => initialDraft?.blockCategory ?? 'core',
+  );
+  const [chapterBlocks, setChapterBlocks] = useState<Record<number, ClassBlockCategory>>(
+    () => initialDraft?.chapterBlocks ?? {},
+  );
+  const [level, setLevel] = useState<DifficultyLevel>(() => initialDraft?.level ?? '1.0');
+  const [bodyPosition, setBodyPosition] = useState<BodyPosition>(
+    () => initialDraft?.bodyPosition ?? 'supine',
+  );
+  const [selectedProps, setSelectedProps] = useState<PropType[]>(
+    () => initialDraft?.selectedProps ?? [],
+  );
+  const [duration, setDuration] = useState(() => initialDraft?.duration ?? 3);
+  const [unilateral, setUnilateral] = useState(() => initialDraft?.unilateral ?? false);
+  const [springs, setSprings] = useState(() => initialDraft?.springs ?? '');
+  const [breathPattern, setBreathPattern] = useState(() => initialDraft?.breathPattern ?? '');
+  const [cueText, setCueText] = useState(() => initialDraft?.cueText ?? '');
   const [error, setError] = useState('');
   const [saved, setSaved] = useState('');
+  const step1Ref = useRef<HTMLDivElement>(null);
+  const step2Ref = useRef<HTMLDivElement>(null);
+  const step3Ref = useRef<HTMLDetailsElement>(null);
   const parsed = useMemo(() => parseManualChapters(chaptersText), [chaptersText]);
   const validReference = parseYouTubeReference(youtubeUrl);
+
+  useEffect(() => {
+    if (saved) return;
+    const hasInput = Boolean(
+      youtubeUrl.trim() ||
+        channelName.trim() ||
+        title.trim() ||
+        nameEn.trim() ||
+        chaptersText.trim() ||
+        selectedEquipment.length ||
+        selectedProps.length ||
+        springs.trim() ||
+        breathPattern.trim() ||
+        cueText.trim(),
+    );
+    try {
+      if (!hasInput && clipperStep === 1) {
+        window.sessionStorage.removeItem(CLIPPER_DRAFT_STORAGE_KEY);
+        return;
+      }
+      const draft: ClipperWorkingDraft = {
+        mode,
+        step: clipperStep,
+        youtubeUrl,
+        channelName,
+        title,
+        nameEn,
+        chaptersText,
+        startTimeText,
+        selectedEquipment,
+        blockCategory,
+        chapterBlocks,
+        level,
+        bodyPosition,
+        selectedProps,
+        duration,
+        unilateral,
+        springs,
+        breathPattern,
+        cueText,
+      };
+      window.sessionStorage.setItem(CLIPPER_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [
+    saved,
+    mode,
+    clipperStep,
+    youtubeUrl,
+    channelName,
+    title,
+    nameEn,
+    chaptersText,
+    startTimeText,
+    selectedEquipment,
+    blockCategory,
+    chapterBlocks,
+    level,
+    bodyPosition,
+    selectedProps,
+    duration,
+    unilateral,
+    springs,
+    breathPattern,
+    cueText,
+  ]);
+
+  const clearClipperDraft = () => {
+    try {
+      window.sessionStorage.removeItem(CLIPPER_DRAFT_STORAGE_KEY);
+    } catch {
+      // Ignore
+    }
+  };
+
+  const navigateClipperStep = (nextStep: 1 | 2 | 3) => {
+    setClipperStep(nextStep);
+    requestAnimationFrame(() => {
+      if (nextStep === 1) {
+        step1Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      } else if (nextStep === 2) {
+        step2Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        if (step3Ref.current) step3Ref.current.open = true;
+        step3Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+  };
+
+  const clipperNextActionText =
+    !youtubeUrl.trim() || !validReference || !channelName.trim()
+      ? '지금 할 일 (1/3): 공식 YouTube 영상 링크와 채널명, 동작/수업 이름을 먼저 입력하세요.'
+      : !selectedEquipment.length || !selectedProps.length
+        ? '다음 행동 (2/3): 원본 영상에서 직접 확인한 기구와 소도구를 선택하세요.'
+        : '다음 행동 (3/3): 필요한 큐 메모를 확인한 뒤 아래 보관 버튼을 눌러 마무리하세요.';
 
   const makeExercise = (
     name: string,
@@ -1274,6 +1445,7 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
         loadAsSequence,
         title.trim() || '직접 등록한 유튜브 참조 수업',
       );
+      clearClipperDraft();
       if (loadAsSequence) {
         onClose();
         return;
@@ -1285,6 +1457,7 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
       addCustomExercise(
         makeExercise(title.trim(), parseReferenceTime(startTimeText)!, 0, blockCategory),
       );
+      clearClipperDraft();
       setSaved('참조 동작을 라이브러리에 보관했어요. 수업 전에 내용을 검토해 주세요.');
     }
   };
@@ -1326,7 +1499,65 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
           </div>
         ) : (
           <>
-            <div className="clipper-mode-tabs" role="group" aria-label="참조 입력 방식">
+            <nav
+              className="pf-step-guide-bar"
+              aria-label="참조 등록 단계 안내"
+              data-testid="clipper-step-guide"
+            >
+              <ol className="pf-step-guide-list">
+                <li>
+                  <button
+                    type="button"
+                    aria-current={clipperStep === 1 ? 'step' : undefined}
+                    onClick={() => navigateClipperStep(1)}
+                  >
+                    <span>1</span> 영상·시간 입력
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    aria-current={clipperStep === 2 ? 'step' : undefined}
+                    onClick={() => navigateClipperStep(2)}
+                  >
+                    <span>2</span> 기구·분류 선택
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    aria-current={clipperStep === 3 ? 'step' : undefined}
+                    onClick={() => navigateClipperStep(3)}
+                  >
+                    <span>3</span> 큐 메모·보관
+                  </button>
+                </li>
+              </ol>
+              <div className="pf-step-guide-Subrow">
+                <p className="pf-step-guide-focus" data-testid="clipper-next-action">
+                  {clipperNextActionText}
+                </p>
+                <div className="pf-step-guide-nav">
+                  <button
+                    type="button"
+                    className="btn-secondary pf-step-nav-btn"
+                    disabled={clipperStep === 1}
+                    onClick={() => navigateClipperStep(clipperStep === 3 ? 2 : 1)}
+                  >
+                    이전 단계
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary pf-step-nav-btn"
+                    disabled={clipperStep === 3}
+                    onClick={() => navigateClipperStep(clipperStep === 1 ? 2 : 3)}
+                  >
+                    다음 단계
+                  </button>
+                </div>
+              </div>
+            </nav>
+            <div ref={step1Ref} className="clipper-mode-tabs" role="group" aria-label="참조 입력 방식">
               <button
                 type="button"
                 aria-pressed={mode === 'batch'}
@@ -1446,7 +1677,7 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
                 )}
               </div>
             )}
-            <div className="clipper-section-heading">
+            <div ref={step2Ref} className="clipper-section-heading">
               <h3>내가 정하는 계획 정보</h3>
               <p>아래 설정은 영상에서 추출하지 않습니다. 여러 구간에 같은 기본값을 적용합니다.</p>
             </div>
@@ -1555,7 +1786,7 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
               />
               좌우를 나누어 진행 · 입력한 계획 시간에 양쪽 포함
             </label>
-            <details className="clipper-optional">
+            <details ref={step3Ref} className="clipper-optional">
               <summary>직접 작성한 큐와 기구 설정 · 선택</summary>
               <div className="library-form-grid">
                 <label className="form-field">

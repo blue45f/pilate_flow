@@ -158,11 +158,39 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
   const locationFormRef = useRef<HTMLFormElement | null>(null);
   const moveFormRef = useRef<HTMLFormElement | null>(null);
   const closedFormRef = useRef<HTMLFormElement | null>(null);
+  const unsavedClassDraftRef = useRef<InstructorScheduledClass | null>(null);
+  const [classStep, setClassStep] = useState<1 | 2 | 3>(1);
+  const classStep1Ref = useRef<HTMLLabelElement | null>(null);
+  const classStep2Ref = useRef<HTMLLabelElement | null>(null);
+  const classStep3Ref = useRef<HTMLLabelElement | null>(null);
+  const navigateClassStep = (next: 1 | 2 | 3) => {
+    setClassStep(next);
+    const target =
+      next === 1
+        ? classStep1Ref.current
+        : next === 2
+          ? classStep2Ref.current
+          : classStep3Ref.current;
+    if (target && typeof target.scrollIntoView === "function") {
+      target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    const focusable = target?.querySelector<HTMLElement>("input, select, textarea");
+    focusable?.focus({ preventScroll: true });
+  };
   const closeNative = (form: HTMLFormElement | null) => {
     const dialog = form?.closest<HTMLDialogElement>("dialog");
     if (dialog?.open) dialog.close();
   };
-  const closeClass = () => {
+  const closeClass = (clearSavedDraft = false) => {
+    if (clearSavedDraft) {
+      unsavedClassDraftRef.current = null;
+      setClassStep(1);
+    } else if (classDraft && !classDraft.id) {
+      unsavedClassDraftRef.current = {
+        ...classDraft,
+        weekdays: [...classDraft.weekdays],
+      };
+    }
     closeNative(classFormRef.current);
     setClassDraft(null);
   };
@@ -239,6 +267,25 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     savingScheduleRef.current = false;
     setConfirmDelete("");
     setFormError("");
+    const savedDraft = unsavedClassDraftRef.current;
+    if (
+      savedDraft &&
+      !savedDraft.id &&
+      (savedDraft.title.trim() ||
+        savedDraft.participantAlias.trim() ||
+        savedDraft.notes.trim())
+    ) {
+      setClassDraft({
+        ...savedDraft,
+        startDate: date || savedDraft.startDate,
+        locationId:
+          savedDraft.locationId ||
+          (data.locations.length === 1 ? data.locations[0].id : ""),
+        weekdays: [...savedDraft.weekdays],
+      });
+      return;
+    }
+    setClassStep(1);
     setClassDraft(
       newClass(date, data.locations.length === 1 ? data.locations[0].id : ""),
     );
@@ -247,6 +294,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     savingScheduleRef.current = false;
     setConfirmDelete("");
     setFormError("");
+    setClassStep(1);
     setClassDraft({ ...item, weekdays: [...item.weekdays] });
   };
   const restoreChangeFocus = () => {
@@ -315,7 +363,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
       );
       if (saved) {
         setSelectedDate(item.startDate);
-        closeClass();
+        closeClass(true);
       }
     } finally {
       if (saved) {
@@ -1096,12 +1144,66 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             className="schedule-form"
             onSubmit={saveClass}
           >
+            <nav
+              className="pf-step-guide-bar"
+              aria-label="수업 일정 등록 단계"
+              data-testid="schedule-class-step-guide"
+            >
+              <ol className="pf-step-guide-list">
+                {(
+                  [
+                    { step: 1 as const, label: "1 제목·장소" },
+                    { step: 2 as const, label: "2 날짜·시각·반복" },
+                    { step: 3 as const, label: "3 시퀀스·메모" },
+                  ] as const
+                ).map((item) => (
+                  <li key={item.step}>
+                    <button
+                      type="button"
+                      aria-current={classStep === item.step ? "step" : undefined}
+                      className={`pf-step-guide-chip ${classStep === item.step ? "is-active" : ""}`}
+                      onClick={() => navigateClassStep(item.step)}
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
+              </ol>
+              <div className="pf-step-guide-subrow">
+                <span className="pf-step-guide-focus" role="status" aria-live="polite">
+                  {classStep === 1 && "지금 할 일: 수업 제목과 진행할 장소를 선택하세요."}
+                  {classStep === 2 && "지금 할 일: 시작 날짜와 수업 시각, 반복 주기를 정하세요."}
+                  {classStep === 3 && "지금 할 일: 연결할 시퀀스나 메모를 적고 일정을 저장하세요."}
+                </span>
+                <div className="pf-step-guide-nav">
+                  <button
+                    type="button"
+                    className="pf-step-nav-btn"
+                    disabled={classStep === 1}
+                    onClick={() => navigateClassStep(classStep === 3 ? 2 : 1)}
+                  >
+                    이전 단계
+                  </button>
+                  <button
+                    type="button"
+                    className="pf-step-nav-btn"
+                    disabled={classStep === 3}
+                    onClick={() => navigateClassStep(classStep === 1 ? 2 : 3)}
+                  >
+                    다음 단계
+                  </button>
+                </div>
+              </div>
+            </nav>
             {formError && (
               <p className="schedule-warning" role="alert">
                 {formError}
               </p>
             )}
-            <label>
+            <label
+              ref={classStep1Ref}
+              onFocusCapture={() => setClassStep(1)}
+            >
               수업 제목
               <input
                 required
@@ -1112,7 +1214,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 }
               />
             </label>
-            <label>
+            <label onFocusCapture={() => setClassStep(1)}>
               반·회원 별칭
               <input
                 maxLength={100}
@@ -1125,7 +1227,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 }
               />
             </label>
-            <label>
+            <label onFocusCapture={() => setClassStep(1)}>
               수업 장소
               <select
                 required
@@ -1147,7 +1249,10 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 장소 관리에서 장소를 먼저 등록해 주세요.
               </p>
             )}
-            <label>
+            <label
+              ref={classStep2Ref}
+              onFocusCapture={() => setClassStep(2)}
+            >
               시작 날짜
               <input
                 type="date"
@@ -1161,7 +1266,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             {renderTimeFields(classDraft, (patch) =>
               setClassDraft({ ...classDraft, ...patch }),
             )}
-            <label>
+            <label onFocusCapture={() => setClassStep(2)}>
               반복
               <select
                 value={classDraft.recurrence}
@@ -1225,7 +1330,10 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 </label>
               </>
             )}
-            <label>
+            <label
+              ref={classStep3Ref}
+              onFocusCapture={() => setClassStep(3)}
+            >
               연결 시퀀스
               <select
                 value={classDraft.linkSavedSequenceId ?? ""}

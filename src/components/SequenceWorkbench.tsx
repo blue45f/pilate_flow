@@ -333,7 +333,23 @@ export function SequenceWorkbench({
     onPlanningModeChange?.(mode);
   };
   const [conditionsOpen, setConditionsOpen] = useState(false);
+  const [conditionStep, setConditionStep] = useState<1 | 2 | 3>(1);
   const conditionsContentRef = useRef<HTMLDivElement>(null);
+  const conditionStep1Ref = useRef<HTMLFieldSetElement>(null);
+  const conditionStep2Ref = useRef<HTMLFieldSetElement>(null);
+  const conditionStep3Ref = useRef<HTMLDivElement>(null);
+  const navigateConditionStep = (nextStep: 1 | 2 | 3) => {
+    setConditionStep(nextStep);
+    requestAnimationFrame(() => {
+      if (nextStep === 1) {
+        conditionStep1Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      } else if (nextStep === 2) {
+        conditionStep2Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        conditionStep3Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+  };
   const closeConditions = () => {
     const dialog = conditionsContentRef.current?.closest('dialog');
     if (dialog?.open) dialog.close();
@@ -2073,12 +2089,74 @@ export function SequenceWorkbench({
         maxWidth="760px"
       >
         <div ref={conditionsContentRef} className="v2-conditions-content">
+          <nav
+            className="pf-step-guide-bar"
+            aria-label="수업 조건 설정 단계"
+            data-testid="conditions-step-guide"
+          >
+            <ol className="pf-step-guide-list">
+              {(
+                [
+                  { step: 1 as const, label: '1 시간·목표' },
+                  { step: 2 as const, label: '2 사용할 기구' },
+                  { step: 3 as const, label: '3 난이도·소도구' },
+                ] as const
+              ).map((item) => (
+                <li key={item.step}>
+                  <button
+                    type="button"
+                    aria-current={conditionStep === item.step ? 'step' : undefined}
+                    className={`pf-step-guide-chip ${conditionStep === item.step ? 'is-active' : ''}`}
+                    onClick={() => navigateConditionStep(item.step)}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <div className="pf-step-guide-subrow">
+              <span className="pf-step-guide-focus" role="status" aria-live="polite">
+                {conditionStep === 1 &&
+                  '지금 할 일: 수업 시간(30/50/60분)과 오늘의 목표를 선택하세요.'}
+                {conditionStep === 2 &&
+                  '지금 할 일: 이번 수업에 사용할 기구를 1개 이상 선택하세요.'}
+                {conditionStep === 3 &&
+                  '지금 할 일: 최대 난이도와 반 별칭·소도구 조건을 확인한 뒤 초안을 구성하세요.'}
+              </span>
+              <div className="pf-step-guide-nav">
+                <button
+                  type="button"
+                  className="pf-step-nav-btn"
+                  disabled={conditionStep === 1}
+                  onClick={() =>
+                    navigateConditionStep(conditionStep === 3 ? 2 : 1)
+                  }
+                >
+                  이전 단계
+                </button>
+                <button
+                  type="button"
+                  className="pf-step-nav-btn"
+                  disabled={conditionStep === 3}
+                  onClick={() =>
+                    navigateConditionStep(conditionStep === 1 ? 2 : 3)
+                  }
+                >
+                  다음 단계
+                </button>
+              </div>
+            </div>
+          </nav>
           <section className="panel class-brief" aria-label="수업 조건">
             <div className="section-heading">
               <h2>수업 조건</h2>
               <SlidersHorizontal size={19} strokeWidth={1.5} />
             </div>
-            <fieldset className="brief-field">
+            <fieldset
+              ref={conditionStep1Ref}
+              className={`brief-field ${conditionStep === 1 ? 'is-step-focused' : ''}`}
+              onFocusCapture={() => setConditionStep(1)}
+            >
               <legend>
                 <Clock3 size={16} />
                 수업 시간
@@ -2141,7 +2219,10 @@ export function SequenceWorkbench({
                 }}
               />
             </fieldset>
-            <fieldset className="brief-field">
+            <fieldset
+              className={`brief-field ${conditionStep === 1 ? 'is-step-focused' : ''}`}
+              onFocusCapture={() => setConditionStep(1)}
+            >
               <legend>오늘의 목표</legend>
               <div className="focus-options">
                 {focusOptions.map((option) => (
@@ -2157,7 +2238,11 @@ export function SequenceWorkbench({
                 ))}
               </div>
             </fieldset>
-            <fieldset className="brief-field">
+            <fieldset
+              ref={conditionStep2Ref}
+              className={`brief-field ${conditionStep === 2 ? 'is-step-focused' : ''}`}
+              onFocusCapture={() => setConditionStep(2)}
+            >
               <legend>이번 수업에 사용할 기구</legend>
               <p className="muted">
                 여러 기구를 함께 선택할 수 있습니다. 선택한 각 기구의 승인 동작을 포함합니다.
@@ -2210,7 +2295,11 @@ export function SequenceWorkbench({
                 <p className="muted">수업에 사용할 기구를 하나 이상 선택해 주세요.</p>
               )}
             </fieldset>
-            <div className="brief-pair">
+            <div
+              ref={conditionStep3Ref}
+              className={`brief-pair ${conditionStep === 3 ? 'is-step-focused' : ''}`}
+              onFocusCapture={() => setConditionStep(3)}
+            >
               <label className="form-field">
                 <span>최대 난이도</span>
                 <select

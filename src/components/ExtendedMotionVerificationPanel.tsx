@@ -68,7 +68,7 @@ export function ExtendedMotionVerificationPanel({
   return (
     <section
       data-testid="extended-motion-verification-panel"
-      aria-label={`${exercise.nameKo} 확장 모션 도해 및 출처 전수 검증 대장`}
+      aria-label={`${exercise.nameKo} 확장 모션 도해 및 출처 대조 원장`}
       style={{
         marginTop: '14px',
         padding: '16px',
@@ -76,6 +76,8 @@ export function ExtendedMotionVerificationPanel({
         border: '1px solid #cbd5e1',
         background: '#f8fafc',
         color: '#0f172a',
+        minWidth: 0,
+        maxWidth: '100%',
       }}
     >
       <div
@@ -90,7 +92,7 @@ export function ExtendedMotionVerificationPanel({
       >
         <div>
           <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>
-            출처·근거 전수 검증 대장 &amp; 후보 모션 검증
+            출처·근거 대조 원장 &amp; 후보 모션 초안 기록
           </strong>
           <div style={{ fontSize: '0.78rem', color: '#475569', marginTop: '2px' }}>
             {auditBundle.verificationBoundaryNoticeKo} · 기준일 {auditBundle.checkedAt}
@@ -181,7 +183,9 @@ export function ExtendedMotionVerificationPanel({
                   onClick={() => selectPhaseIndex(idx)}
                   onKeyDown={(e) => handleTabKeyDown(e, idx)}
                   style={{
-                    padding: '6px 12px',
+                    minHeight: '44px',
+                    minWidth: '44px',
+                    padding: '8px 12px',
                     borderRadius: '8px',
                     border: isSelected ? '1.5px solid #0f766e' : '1px solid #cbd5e1',
                     background: isSelected ? '#ccfbf1' : '#f8fafc',
@@ -203,6 +207,7 @@ export function ExtendedMotionVerificationPanel({
               alignItems: 'center',
               gap: '10px',
               marginBottom: '10px',
+              flexWrap: 'wrap',
             }}
           >
             <label
@@ -220,7 +225,7 @@ export function ExtendedMotionVerificationPanel({
               value={progressPercent}
               aria-label="연속 동작 진행률 조절"
               onChange={(e) => setProgressPercent(Number(e.target.value))}
-              style={{ flex: 1 }}
+              style={{ flex: 1, minHeight: '44px', minWidth: '140px' }}
             />
           </div>
 
@@ -403,7 +408,7 @@ export function ExtendedMotionVerificationPanel({
         </div>
       )}
 
-      {/* 출처·근거 전수 검증 대장 요약 (Rendered for ALL exercises) */}
+      {/* 출처·근거 대조 원장 요약 (Rendered for ALL exercises) */}
       <div
         data-testid="extended-source-audit-summary"
         style={{
@@ -412,10 +417,12 @@ export function ExtendedMotionVerificationPanel({
           background: '#ffffff',
           border: '1px solid #e2e8f0',
           fontSize: '0.82rem',
+          minWidth: 0,
+          maxWidth: '100%',
         }}
       >
         <div style={{ fontWeight: 700, marginBottom: '8px', color: '#0f172a' }}>
-          출처·근거 전수 검증 대장 요약 ({exercise.id})
+          출처·근거 대조 원장 요약 ({exercise.id})
         </div>
 
         {auditBundle.verifiedReferenceAuditRecord && (
@@ -427,20 +434,32 @@ export function ExtendedMotionVerificationPanel({
               background: '#f0fdf4',
               border: '1px solid #bbf7d0',
               marginBottom: '8px',
+              minWidth: 0,
+              maxWidth: '100%',
             }}
           >
-            <div>
-              <strong>검증 레퍼런스 대장 ID:</strong>{' '}
+            <div style={{ overflowWrap: 'anywhere' }}>
+              <strong>출처 레퍼런스 대장 ID:</strong>{' '}
               <code>{auditBundle.verifiedReferenceAuditRecord.referenceId}</code> (
               {auditBundle.verifiedReferenceAuditRecord.originalVerificationStatus} →{' '}
-              <code>{auditBundle.verifiedReferenceAuditRecord.auditConclusionStatus}</code>)
+              <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
+                {auditBundle.verifiedReferenceAuditRecord.auditConclusionStatus}
+              </code>
+              )
             </div>
-            <div style={{ marginTop: '3px' }}>
+            <div style={{ marginTop: '4px' }}>
               <strong>원문/출처:</strong> {auditBundle.verifiedReferenceAuditRecord.publisher} ·{' '}
               <a
                 href={auditBundle.verifiedReferenceAuditRecord.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  minHeight: '44px',
+                  padding: '6px 0',
+                  overflowWrap: 'anywhere',
+                }}
               >
                 {auditBundle.verifiedReferenceAuditRecord.titleKo} (
                 {auditBundle.verifiedReferenceAuditRecord.originalTitle})
@@ -451,7 +470,10 @@ export function ExtendedMotionVerificationPanel({
               {auditBundle.verifiedReferenceAuditRecord.biomechanicalAlignmentNoteKo}
             </div>
             <div style={{ marginTop: '2px', fontSize: '0.75rem', color: '#475569' }}>
-              레코드 SHA-256: <code>{auditBundle.verifiedReferenceAuditRecord.factualRecordSha256}</code>
+              레코드 SHA-256:{' '}
+              <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
+                {auditBundle.verifiedReferenceAuditRecord.factualRecordSha256}
+              </code>
             </div>
           </div>
         )}
@@ -465,18 +487,34 @@ export function ExtendedMotionVerificationPanel({
               background: '#fffbeb',
               border: '1px solid #fde68a',
               marginBottom: '8px',
+              minWidth: 0,
+              maxWidth: '100%',
             }}
           >
             <div>
-              <strong>오연결 YouTube 제거 및 대체 출처 검증 기록 ({auditBundle.clearedYoutubeReplacementAudit.exerciseId}):</strong>
+              <strong>
+                오연결 YouTube 제거 및 대체 출처 대조 기록 (
+                {auditBundle.clearedYoutubeReplacementAudit.exerciseId}):
+              </strong>
             </div>
             <div style={{ marginTop: '3px', color: '#92400e' }}>
               {auditBundle.clearedYoutubeReplacementAudit.clearedReasonKo}
             </div>
             <ul style={{ margin: '6px 0 4px 18px', padding: 0 }}>
               {auditBundle.clearedYoutubeReplacementAudit.replacementReferences.map((ref) => (
-                <li key={ref.referenceId}>
-                  <a href={ref.url} target="_blank" rel="noopener noreferrer">
+                <li key={ref.referenceId} style={{ marginBottom: '4px' }}>
+                  <a
+                    href={ref.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      minHeight: '44px',
+                      padding: '6px 0',
+                      overflowWrap: 'anywhere',
+                    }}
+                  >
                     [{ref.referenceId}] {ref.publisher} — {ref.title}
                   </a>{' '}
                   ({ref.alignmentNoteKo})
@@ -484,7 +522,10 @@ export function ExtendedMotionVerificationPanel({
               ))}
             </ul>
             <div style={{ fontSize: '0.75rem', color: '#475569' }}>
-              대체 감사 SHA-256: <code>{auditBundle.clearedYoutubeReplacementAudit.factualRecordSha256}</code>
+              대체 감사 SHA-256:{' '}
+              <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
+                {auditBundle.clearedYoutubeReplacementAudit.factualRecordSha256}
+              </code>
             </div>
           </div>
         )}
@@ -498,14 +539,21 @@ export function ExtendedMotionVerificationPanel({
               background: '#eff6ff',
               border: '1px solid #bfdbfe',
               marginBottom: '8px',
+              minWidth: 0,
+              maxWidth: '100%',
             }}
           >
             <div>
-              <strong>연속 모션 도해 원문 바인딩 ({auditBundle.previouslyUnboundMotionModel.modelId}):</strong>{' '}
+              <strong>
+                연속 모션 도해 원문 바인딩 ({auditBundle.previouslyUnboundMotionModel.modelId}):
+              </strong>{' '}
               {auditBundle.previouslyUnboundMotionModel.titleKo}
             </div>
             <div style={{ marginTop: '2px', fontSize: '0.75rem', color: '#1e3a8a' }}>
-              바인딩 SHA-256: <code>{auditBundle.previouslyUnboundMotionModel.factualRecordSha256}</code>
+              바인딩 SHA-256:{' '}
+              <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
+                {auditBundle.previouslyUnboundMotionModel.factualRecordSha256}
+              </code>
             </div>
           </div>
         )}
@@ -518,11 +566,20 @@ export function ExtendedMotionVerificationPanel({
             borderTop: '1px dashed #cbd5e1',
             fontSize: '0.76rem',
             color: '#475569',
+            overflowWrap: 'anywhere',
           }}
         >
-          전문의·외부 임상 승인 0건 · 해부학적 정밀성 가정 안 함 · SHA-256 무결성 확인:{' '}
-          <strong>{auditBundle.sha256IntegrityVerified ? '검증됨' : '미검증'}</strong> (
-          <code>{auditBundle.primaryFactualRecordSha256}</code>)
+          전문의·외부 임상 승인 0건 · 해부학적 정밀성 가정 안 함 · 원장 레코드 SHA-256 해시 일치:{' '}
+          <strong>
+            {auditBundle.sha256IntegrityVerified
+              ? '일치 (내용 정확성·전문가 검증 아님)'
+              : '불일치'}
+          </strong>{' '}
+          (
+          <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
+            {auditBundle.primaryFactualRecordSha256}
+          </code>
+          )
         </div>
       </div>
     </section>

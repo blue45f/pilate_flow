@@ -307,6 +307,241 @@ body:has(.plan-view) {
     padding: 6px 10px;
     font-size: 0.78rem;
     word-break: keep-all;
-    white-space: nowrap;
+    white-space: normal;
   }
 }
+
+/* ==========================================================================
+   Step-by-Step Guided Flow Bar (One clear action per step)
+   ========================================================================== */
+.pf-step-guide-bar {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid #d4ddd3;
+  border-radius: 12px;
+  background: #f5f7f3;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pf-step-guide-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 420px) {
+  .pf-step-guide-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pf-step-guide-list > li {
+  min-width: 0;
+}
+
+.pf-step-guide-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid #ced7cd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #3a463f;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  word-break: keep-all;
+  cursor: pointer;
+}
+
+.pf-step-guide-chip.is-active,
+.pf-step-guide-chip[aria-current='step'] {
+  border-color: #1b4332;
+  background: #1b4332;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.pf-step-guide-subrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pf-step-guide-focus {
+  flex: 1 1 200px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #1b4332;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.pf-step-guide-nav {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-step-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 72px;
+  padding: 6px 12px;
+  border: 1px solid #c6d0c5;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1c2420;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pf-step-nav-btn:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.is-step-focused {
+  border-color: rgba(27, 67, 50, 0.42) !important;
+  box-shadow: 0 0 0 2px rgba(27, 67, 50, 0.1);
+  border-radius: 12px;
+}
+
+/* Compact step pills inside MovementIdeaSheet */
+.pf-idea-step-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pf-idea-step-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #d4ddd3;
+  background: #f5f7f3;
+  color: #4f5d55;
+  font-size: 0.75rem;
+  font-weight: 600;
+  word-break: keep-all;
+}
+
+.pf-idea-step-pill.is-active,
+.pf-idea-step-pill.is-ready {
+  border-color: rgba(27, 67, 50, 0.35);
+  background: #e6efe9;
+  color: #1b4332;
+  font-weight: 700;
+}
+
+.pf-idea-step-arrow {
+  color: #7c8981;
+  font-size: 0.75rem;
+}
+
+/* ==========================================================================
+   Mobile Touch Target (>= 44x44px) & Input Clipping Fixes
+   ========================================================================== */
+
+/* Ensure all interactive <summary> headers have >= 44px touch target height */
+#root details > summary,
+dialog details > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-block: 8px;
+  box-sizing: border-box;
+}
+
+/* Ensure focus tags in ExerciseAtlasView and chips in SequenceWorkbench meet 44x44px */
+#root .movement-focus-tag,
+#root .focus-options .chip,
+dialog .focus-options .chip {
+  min-height: 44px;
+  min-width: 44px;
+  padding-inline: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* Ensure custom duration number input in SequenceWorkbench conditions modal meets 44x44px */
+#root .custom-duration input[aria-label='직접 지정 수업 시간'],
+dialog .custom-duration input[aria-label='직접 지정 수업 시간'] {
+  min-width: 52px;
+  min-height: 44px;
+  padding: 4px 6px;
+  box-sizing: border-box;
+}
+
+/* Ensure public reference and safety external links have >= 44px touch target height */
+#root .verified-reference-card a,
+#root .library-public-references a,
+#root .exercise-evidence-panel a,
+dialog .exercise-evidence-panel a,
+dialog .safety-notes a,
+dialog .settings-section a,
+#root .settings-section a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding-block: 6px;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+
+/* Prevent input clipping inside YouTubePreviewModal / YouTubeClipModal on mobile */
+#root .local-instructor-review input,
+#root .local-instructor-review select,
+#root .local-instructor-review textarea,
+dialog .local-instructor-review input,
+dialog .local-instructor-review select,
+dialog .local-instructor-review textarea,
+dialog .yt-clip-modal input,
+dialog .yt-clip-modal select,
+dialog .yt-clip-modal textarea,
+dialog .yt-preview-modal input,
+dialog .yt-preview-modal select,
+dialog .yt-preview-modal textarea {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  #root .local-instructor-review .library-form-grid,
+  dialog .local-instructor-review .library-form-grid,
+  dialog .yt-clip-modal .library-form-grid,
+  dialog .yt-preview-modal .library-form-grid,
+  dialog .form-grid,
+  dialog .yt-review-grid,
+  dialog .yt-timestamp-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
