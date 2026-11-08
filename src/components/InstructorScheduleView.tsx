@@ -40,6 +40,7 @@ import { LightDismissDialog } from "./LightDismissDialog";
 import { DatedSequencePlanningDialog } from "./DatedSequencePlanningDialog";
 import { getDatedPlanWarnings } from "../utils/datedSequencePlanning";
 import "../styles/schedule.css";
+import { ScheduleChangeScopePanel, type ScheduleChangeScope } from "./ScheduleChangeScopePanel";
 
 type MoveDraft = {
   classId: string;
@@ -116,6 +117,20 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     mode?: "day" | "week" | "month";
     occurrence?: Pick<InstructorScheduleOccurrence, "classId" | "originalDate">;
   } | null>(null);
+  const [changeTarget, setChangeTarget] = useState<{
+    row: InstructorScheduleOccurrence;
+    classFingerprint: string;
+    selectionId: number;
+  } | null>(null);
+  const changeHeadingRef = useRef<HTMLHeadingElement>(null);
+  const changeTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const changeSelectionRef = useRef(0);
+  const currentChangeClass = changeTarget ? data.classes.find((item) => item.id === changeTarget.row.classId) : undefined;
+  const currentChangeRow = changeTarget ? expandInstructorSchedule(data, changeTarget.row.date, changeTarget.row.date).find((item) => item.id === changeTarget.row.id) : undefined;
+  const changeTargetStale = !!changeTarget && (
+    JSON.stringify(currentChangeClass) !== changeTarget.classFingerprint ||
+    JSON.stringify(currentChangeRow) !== JSON.stringify(changeTarget.row)
+  );
   const weekStripRef = useRef<HTMLDivElement>(null);
   const pendingStripFocus = useRef(false);
   useEffect(() => {
@@ -233,6 +248,47 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     setConfirmDelete("");
     setFormError("");
     setClassDraft({ ...item, weekdays: [...item.weekdays] });
+  };
+  const restoreChangeFocus = () => {
+    if (changeTriggerRef.current?.isConnected) changeTriggerRef.current.focus();
+    else selectedDayHeadingRef.current?.focus();
+  };
+  const closeChangeScope = () => {
+    setChangeTarget(null);
+    requestAnimationFrame(restoreChangeFocus);
+  };
+  const openChangeScope = (row: InstructorScheduleOccurrence, base: InstructorScheduledClass, trigger: HTMLButtonElement) => {
+    changeTriggerRef.current = trigger;
+    setChangeTarget({ row: structuredClone(row), classFingerprint: JSON.stringify(base), selectionId: ++changeSelectionRef.current });
+    requestAnimationFrame(() => {
+      changeHeadingRef.current?.focus({ preventScroll: true });
+      const panel = changeHeadingRef.current?.closest("aside");
+      panel?.scrollIntoView?.({
+        block: panel.getBoundingClientRect().height > window.innerHeight - 104 ? "start" : "nearest",
+        behavior: "instant",
+      });
+    });
+  };
+  const continueChangeScope = (scope: ScheduleChangeScope) => {
+    if (!changeTarget || changeTargetStale || !currentChangeClass || !currentChangeRow) return;
+    const target = changeTarget;
+    setChangeTarget(null);
+    requestAnimationFrame(() => {
+      restoreChangeFocus();
+      const latest = usePilatesStore.getState().instructorSchedule;
+      const base = latest.classes.find((item) => item.id === target.row.classId);
+      const row = expandInstructorSchedule(latest, target.row.date, target.row.date).find((item) => item.id === target.row.id);
+      if (!base || !row || JSON.stringify(base) !== target.classFingerprint || JSON.stringify(row) !== JSON.stringify(target.row)) {
+        setMessage("일정이 바뀌었습니다. 변경하려는 회차를 다시 선택해 주세요.");
+        return;
+      }
+      if (scope === "series") editClass(base);
+      else {
+        savingScheduleRef.current = false;
+        setFormError("");
+        setMoveDraft({ classId: row.classId, originalDate: row.originalDate, date: row.date, startTime: row.startTime, endTime: row.endTime, locationId: row.locationId, reason: "" });
+      }
+    });
   };
   const saveClass = (event: React.FormEvent) => {
     event.preventDefault();
@@ -645,6 +701,8 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           </button>
         </div>
       )}
+      <div className="schedule-agenda-workspace" data-has-change-scope={!!changeTarget}>
+        {changeTarget && <ScheduleChangeScopePanel key={changeTarget.selectionId} occurrence={changeTarget.row} headingRef={changeHeadingRef} stale={changeTargetStale} onCancel={closeChangeScope} onContinue={continueChangeScope} />}
       <div className={`schedule-days schedule-days-${mode}`}>
         {dates.map((date) => (
           <section
@@ -877,7 +935,13 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                           <button
                             type="button"
                             className="btn-secondary"
-                            onClick={() => {
+                            aria-controls={base?.recurrence === "weekly" ? "schedule-change-scope" : undefined}
+                            aria-expanded={base?.recurrence === "weekly" ? changeTarget?.row.id === row.id : undefined}
+                            onClick={(event) => {
+                              if (base?.recurrence === "weekly") {
+                                openChangeScope(row, base, event.currentTarget);
+                                return;
+                              }
                               savingScheduleRef.current = false;
                               setFormError("");
                               setMoveDraft({
@@ -891,7 +955,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                               });
                             }}
                           >
-                            이번 수업 변경
+                            {base?.recurrence === "weekly" ? "회차 변경" : "이번 수업 변경"}
                           </button>
                         </>
                       )}
@@ -904,7 +968,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                           원래 일정 복원
                         </button>
                       )}
-                      {base && (
+                      {base && !(base.recurrence === "weekly" && (row.status === "scheduled" || row.status === "closed")) && (
                         <button
                           type="button"
                           className="text-button"
@@ -921,6 +985,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
               })}
           </section>
         ))}
+      </div>
       </div>
       <aside className="schedule-planning-entry" aria-label="수업 준비 도구">
         <div className="schedule-planning-copy">

@@ -206,8 +206,11 @@ describe('actual local schedule forms with a rest-inclusive plan', { timeout: 60
     expect(lesson(today, weeklyTitle).getByText('취소')).toBeInTheDocument();
     expect(lesson('2026-11-04', weeklyTitle).getByText('예정')).toBeInTheDocument();
     fireEvent.click(lesson(today, weeklyTitle).getByRole('button', { name: '원래 일정 복원' }));
-    fireEvent.click(lesson(today, weeklyTitle).getByRole('button', { name: '이번 수업 변경' }));
-    const move = within(screen.getByRole('dialog', { name: '회차 변경' }));
+    fireEvent.click(lesson(today, weeklyTitle).getByRole('button', { name: '회차 변경' }));
+    const scope = within(screen.getByRole('complementary', { name: '회차 변경' }));
+    expect(scope.getByRole('radio', { name: /이번 회차만/ })).toBeChecked();
+    fireEvent.click(scope.getByRole('button', { name: '다음' }));
+    const move = within(await screen.findByRole('dialog', { name: '회차 변경' }));
     fireEvent.change(move.getByLabelText('변경 날짜'), { target: { value: '2026-11-03' } });
     fireEvent.change(move.getByLabelText('시작 시각'), { target: { value: '12:00' } });
     fireEvent.change(move.getByLabelText('종료 시각'), { target: { value: '13:00' } });
