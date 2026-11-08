@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Check, Clock3, Plus, ShieldCheck } from 'lucide-react';
 import {
   PfButton,
@@ -41,6 +41,32 @@ interface LogSessionModalProps {
   context?: TeachingLogContext;
 }
 
+interface SessionLogDraft {
+  reflection?: string;
+  rating?: 1 | 2 | 3 | 4 | 5;
+  intensity?: 'relaxed' | 'moderate' | 'intense';
+  minutes?: string;
+  seconds?: string;
+  taughtDate?: string;
+  groupId?: string;
+  selectedStepIds?: string[];
+}
+
+const getDraftStorageKey = (sequenceId: string) => `pf_log_session_draft_v1:${sequenceId}`;
+
+const readSessionLogDraft = (sequenceId: string): SessionLogDraft | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(getDraftStorageKey(sequenceId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed as SessionLogDraft;
+  } catch {
+    return null;
+  }
+};
+
 const localDate = () => {
   const date = new Date();
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -74,6 +100,9 @@ const SessionLogForm: React.FC<
     setActiveTab,
   } = usePilatesStore();
   const saved = savedSequences.find((sequence) => sequence.id === sequenceId);
+  const [initialDraft] = useState(() => readSessionLogDraft(sequenceId));
+  const [draftRestored] = useState(() => initialDraft !== null);
+  const [hasEditedDraft, setHasEditedDraft] = useState(false);
   // Capture the reviewed plan and exercise definitions once; edits elsewhere cannot change this record.
   const [snapshot] = useState(() =>
     (
@@ -97,34 +126,80 @@ const SessionLogForm: React.FC<
   const [sourceKind] = useState<'saved-sequence' | 'active-draft'>(() =>
     saved ? 'saved-sequence' : 'active-draft',
   );
-  const [selectedSteps, setSelectedSteps] = useState(
-    () => new Set(context?.taughtStepIds ?? snapshot.map((step) => step.stepId)),
-  );
+  const [selectedSteps, setSelectedSteps] = useState(() => {
+    if (context?.taughtStepIds !== undefined) {
+      return new Set(context.taughtStepIds);
+    }
+    if (Array.isArray(initialDraft?.selectedStepIds)) {
+      const validIds = new Set(snapshot.map((step) => step.stepId));
+      const restored = initialDraft.selectedStepIds.filter(
+        (id): id is string => typeof id === 'string' && validIds.has(id),
+      );
+      if (snapshot.some((step) => restored.includes(step.stepId) && !isRestStep(step))) {
+        return new Set(restored);
+      }
+    }
+    return new Set(snapshot.map((step) => step.stepId));
+  });
   const [title] = useState(
     () =>
       context?.sequenceTitle ??
       (sequenceId === activeSequenceId ? activeTitle : saved?.title) ??
       activeTitle,
   );
-  const [groupId, setGroupId] = useState(() =>
-    classGroups.some((group) => group.id === activeTargetGroupId)
+  const [groupId, setGroupId] = useState(() => {
+    if (
+      typeof initialDraft?.groupId === 'string' &&
+      classGroups.some((group) => group.id === initialDraft.groupId)
+    ) {
+      return initialDraft.groupId;
+    }
+    return classGroups.some((group) => group.id === activeTargetGroupId)
       ? activeTargetGroupId
-      : (classGroups[0]?.id ?? ''),
+      : (classGroups[0]?.id ?? '');
+  });
+  const [taughtDate, setTaughtDate] = useState(() => {
+    const today = localDate();
+    if (
+      typeof initialDraft?.taughtDate === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(initialDraft.taughtDate) &&
+      initialDraft.taughtDate <= today
+    ) {
+      return initialDraft.taughtDate;
+    }
+    return today;
+  });
+  const [rating, setRating] = useState<1 | 2 | 3 | 4 | 5>(() =>
+    initialDraft?.rating === 1 ||
+    initialDraft?.rating === 2 ||
+    initialDraft?.rating === 3 ||
+    initialDraft?.rating === 4 ||
+    initialDraft?.rating === 5
+      ? initialDraft.rating
+      : 3,
   );
-  const [taughtDate, setTaughtDate] = useState(localDate);
-  const [rating, setRating] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const [intensity, setIntensity] = useState<'relaxed' | 'moderate' | 'intense'>('moderate');
-  const [reflection, setReflection] = useState('');
-  const [minutes, setMinutes] = useState(
-    context?.actualDurationSec === undefined
-      ? ''
-      : String(Math.floor(context.actualDurationSec / 60)),
+  const [intensity, setIntensity] = useState<'relaxed' | 'moderate' | 'intense'>(() =>
+    initialDraft?.intensity === 'relaxed' ||
+    initialDraft?.intensity === 'moderate' ||
+    initialDraft?.intensity === 'intense'
+      ? initialDraft.intensity
+      : 'moderate',
   );
-  const [seconds, setSeconds] = useState(
-    context?.actualDurationSec === undefined
-      ? ''
-      : String(Math.round(context.actualDurationSec % 60)),
+  const [reflection, setReflection] = useState(() =>
+    typeof initialDraft?.reflection === 'string' ? initialDraft.reflection : '',
   );
+  const [minutes, setMinutes] = useState(() => {
+    if (context?.actualDurationSec !== undefined) {
+      return String(Math.floor(context.actualDurationSec / 60));
+    }
+    return typeof initialDraft?.minutes === 'string' ? initialDraft.minutes : '';
+  });
+  const [seconds, setSeconds] = useState(() => {
+    if (context?.actualDurationSec !== undefined) {
+      return String(Math.round(context.actualDurationSec % 60));
+    }
+    return typeof initialDraft?.seconds === 'string' ? initialDraft.seconds : '';
+  });
   const [error, setError] = useState('');
   const [showGroup, setShowGroup] = useState(classGroups.length === 0);
   const [newGroupName, setNewGroupName] = useState('');
@@ -137,20 +212,67 @@ const SessionLogForm: React.FC<
     (step) => selectedSteps.has(step.stepId) && !isRestStep(step),
   ).length;
 
+  useEffect(() => {
+    if (!hasEditedDraft || submitted) return;
+    try {
+      const draft: SessionLogDraft = {
+        reflection,
+        rating,
+        intensity,
+        minutes,
+        seconds,
+        taughtDate,
+        groupId,
+        selectedStepIds: Array.from(selectedSteps),
+      };
+      window.sessionStorage.setItem(getDraftStorageKey(sequenceId), JSON.stringify(draft));
+    } catch {
+      // Ignore sessionStorage errors in restricted environments.
+    }
+  }, [
+    hasEditedDraft,
+    submitted,
+    sequenceId,
+    reflection,
+    rating,
+    intensity,
+    minutes,
+    seconds,
+    taughtDate,
+    groupId,
+    selectedSteps,
+  ]);
+
   const createGroup = () => {
-    if (!newGroupName.trim()) {
+    const trimmed = newGroupName.trim();
+    if (!trimmed) {
       setError('수업 그룹 별칭을 입력해 주세요.');
       return;
     }
+    const normalizedNewName = trimmed.toLowerCase().replace(/\s+/g, ' ');
+    const existing = classGroups.find(
+      (group) => group.name.trim().toLowerCase().replace(/\s+/g, ' ') === normalizedNewName,
+    );
+    if (existing) {
+      setHasEditedDraft(true);
+      setGroupId(existing.id);
+      setNewGroupName('');
+      setShowGroup(false);
+      setError('');
+      return;
+    }
     addClassGroup({
-      name: newGroupName.trim(),
+      name: trimmed,
       type: 'group',
       defaultLevel: '1.5',
       scheduleLabel: '',
       notes: '',
     });
     const added = usePilatesStore.getState().classGroups.at(-1);
-    if (added) setGroupId(added.id);
+    if (added) {
+      setHasEditedDraft(true);
+      setGroupId(added.id);
+    }
     setNewGroupName('');
     setShowGroup(false);
     setError('');
@@ -319,6 +441,11 @@ const SessionLogForm: React.FC<
         usePilatesStore.setState,
       );
     }
+    try {
+      window.sessionStorage.removeItem(getDraftStorageKey(sequenceId));
+    } catch {
+      // Ignore sessionStorage errors in restricted environments.
+    }
     setActiveTab('history');
     onClose();
   };
@@ -368,6 +495,11 @@ const SessionLogForm: React.FC<
               {persistenceError && (
                 <p className="teaching-storage-warning">브라우저 저장소 경고: {persistenceError}</p>
               )}
+              {draftRestored && (
+                <p className="muted" role="status" data-testid="log-session-draft-restored">
+                  이전에 작성하던 수업 기록 초안을 복원했습니다.
+                </p>
+              )}
             </div>
           </div>
           <div className="teaching-form-grid teaching-form-two">
@@ -375,7 +507,10 @@ const SessionLogForm: React.FC<
               <PfSelect
                 required
                 value={groupId}
-                onChange={(event) => setGroupId(event.target.value)}
+                onChange={(event) => {
+                  setHasEditedDraft(true);
+                  setGroupId(event.target.value);
+                }}
               >
                 <option value="" disabled>
                   그룹을 선택해 주세요
@@ -393,7 +528,10 @@ const SessionLogForm: React.FC<
                 required
                 max={localDate()}
                 value={taughtDate}
-                onChange={(event) => setTaughtDate(event.target.value)}
+                onChange={(event) => {
+                  setHasEditedDraft(true);
+                  setTaughtDate(event.target.value);
+                }}
               />
             </PfField>
           </div>
@@ -414,6 +552,12 @@ const SessionLogForm: React.FC<
                   placeholder="예: 저녁 A반, 개인 01"
                   value={newGroupName}
                   onChange={(event) => setNewGroupName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      createGroup();
+                    }
+                  }}
                 />
               </PfField>
               <PfButton variant="secondary" onClick={createGroup}>
@@ -433,7 +577,10 @@ const SessionLogForm: React.FC<
                   step="1"
                   placeholder="미기록"
                   value={minutes}
-                  onChange={(event) => setMinutes(event.target.value)}
+                  onChange={(event) => {
+                    setHasEditedDraft(true);
+                    setMinutes(event.target.value);
+                  }}
                 />
               </PfField>
               <PfField label="초">
@@ -445,7 +592,10 @@ const SessionLogForm: React.FC<
                   step="1"
                   placeholder="00"
                   value={seconds}
-                  onChange={(event) => setSeconds(event.target.value)}
+                  onChange={(event) => {
+                    setHasEditedDraft(true);
+                    setSeconds(event.target.value);
+                  }}
                 />
               </PfField>
             </div>
@@ -479,14 +629,15 @@ const SessionLogForm: React.FC<
                   <input
                     type="checkbox"
                     checked={selectedSteps.has(step.stepId)}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      setHasEditedDraft(true);
                       setSelectedSteps((value) => {
                         const next = new Set(value);
                         if (event.target.checked) next.add(step.stepId);
                         else next.delete(step.stepId);
                         return next;
-                      })
-                    }
+                      });
+                    }}
                   />
                   <span>
                     {isRestStep(step)
@@ -511,7 +662,10 @@ const SessionLogForm: React.FC<
             <PfField label="강사가 느낀 강도">
               <PfSelect
                 value={intensity}
-                onChange={(event) => setIntensity(event.target.value as typeof intensity)}
+                onChange={(event) => {
+                  setHasEditedDraft(true);
+                  setIntensity(event.target.value as typeof intensity);
+                }}
               >
                 <option value="relaxed">가볍게</option>
                 <option value="moderate">보통</option>
@@ -521,7 +675,10 @@ const SessionLogForm: React.FC<
             <PfField label="강사의 수업 평가">
               <PfSelect
                 value={rating}
-                onChange={(event) => setRating(Number(event.target.value) as typeof rating)}
+                onChange={(event) => {
+                  setHasEditedDraft(true);
+                  setRating(Number(event.target.value) as typeof rating);
+                }}
               >
                 {([1, 2, 3, 4, 5] as const).map((value) => (
                   <option key={value} value={value}>
@@ -541,7 +698,10 @@ const SessionLogForm: React.FC<
               maxLength={3000}
               placeholder="잘 이어진 전환, 다음에 바꿔볼 동작 등을 남겨 주세요."
               value={reflection}
-              onChange={(event) => setReflection(event.target.value)}
+              onChange={(event) => {
+                setHasEditedDraft(true);
+                setReflection(event.target.value);
+              }}
             />
           </PfField>
         </div>
