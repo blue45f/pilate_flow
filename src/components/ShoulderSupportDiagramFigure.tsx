@@ -456,6 +456,39 @@ export function ShoulderSupportTriptychDiagram({
         })}
       </div>
 
+      {/* Support Line, Joint Axis, Contact Point & Transition Pose Legend */}
+      <div
+        data-testid="shoulder-support-legend"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '8px',
+          padding: '10px 12px',
+          borderRadius: '10px',
+          background: '#f5f1e8',
+          border: '1px solid #dfd8ca',
+          fontSize: '0.75rem',
+          color: '#2c3d37',
+        }}
+      >
+        <div>
+          <strong style={{ color: '#1f5c4d' }}>● 손목 수직 지지선</strong>
+          <div>wrist-vertical-support · 손바닥-손목-견관절 수직 반력 축</div>
+        </div>
+        <div>
+          <strong style={{ color: '#9a4220' }}>● 견갑 전인·밀착 지지선</strong>
+          <div>scapula-thoracic-support · 전거근 흉곽 밀착 및 익상 방지</div>
+        </div>
+        <div>
+          <strong style={{ color: '#475e53' }}>● 골반·체간 플랭크 지지선</strong>
+          <div>shoulder-pelvis-ankle-plank-line · 요추 처짐·골반 회전 제로</div>
+        </div>
+        <div>
+          <strong style={{ color: '#244d44' }}>● 전환 자세 변위 요약</strong>
+          <div>{asset.poseDeltaSummary.keyJointChangeKo}</div>
+        </div>
+      </div>
+
       <footer
         style={{
           fontSize: '0.75rem',
@@ -464,10 +497,38 @@ export function ShoulderSupportTriptychDiagram({
           borderRadius: '10px',
           background: '#f8f5ed',
           border: '1px solid #e5dec9',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px',
         }}
       >
-        <p style={{ margin: '0 0 4px 0' }}>{correction.reviewedScopeKo}</p>
+        <p style={{ margin: 0 }}>{correction.reviewedScopeKo}</p>
         <p style={{ margin: 0 }}>{correction.limitationKo}</p>
+        <div
+          data-testid="shoulder-support-sources"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '8px',
+            marginTop: '4px',
+          }}
+        >
+          {correction.sources.map((src) => (
+            <a
+              key={src.url + src.title}
+              href={src.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: '#1f5c4d',
+                textDecoration: 'underline',
+                fontWeight: 600,
+              }}
+            >
+              {src.title}
+            </a>
+          ))}
+        </div>
       </footer>
     </section>
   );
@@ -484,4 +545,5 @@ export function ShoulderSupportIntegrationDemo(): React.JSX.Element {
     </div>
   );
 }
+
 
