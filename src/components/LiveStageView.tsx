@@ -33,6 +33,7 @@ import {
 } from '../utils/sequenceEngine';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
+import { isMovementIdeaExercise } from '../utils/movementIdeaDraft';
 import { LightDismissDialog } from './LightDismissDialog';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/teaching.css';
@@ -276,26 +277,33 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     setShowAllCues(false);
   };
   const addMinute = () => {
-    const now = Date.now();
-    const sampled = sampleClock(clock, now, durations, autoAdvance);
-    const currentStep = steps[sampled.index];
+    const currentStep = steps[clock.index];
     if (!currentStep) return;
     const nextDurationMin = Math.min(120, currentStep.durationMin + 1);
     const addedMs = Math.max(
       0,
       Math.round((nextDurationMin - currentStep.durationMin) * 60) * 1000,
     );
+    setClock((value) => {
+      const currentSampled = sampleClock(value, Date.now(), durations, autoAdvance);
+      const sampledStep = steps[currentSampled.index];
+      if (!sampledStep) return value;
+      const sampledNextMin = Math.min(120, sampledStep.durationMin + 1);
+      const sampledAddedMs = Math.max(
+        0,
+        Math.round((sampledNextMin - sampledStep.durationMin) * 60) * 1000,
+      );
+      if (sampledAddedMs <= 0) {
+        return currentSampled;
+      }
+      return { ...currentSampled, remainingMs: currentSampled.remainingMs + sampledAddedMs };
+    });
     if (addedMs <= 0) {
-      setClock(sampled);
       return;
     }
-    setClock((value) => {
-      const currentSampled = sampleClock(value, now, durations, autoAdvance);
-      return { ...currentSampled, remainingMs: currentSampled.remainingMs + addedMs };
-    });
     setSteps((value) =>
       value.map((step, index) =>
-        index === sampled.index ? { ...step, durationMin: nextDurationMin } : step,
+        index === clock.index ? { ...step, durationMin: nextDurationMin } : step,
       ),
     );
   };
@@ -359,7 +367,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     stepKey: current?.stepId ?? '',
     title: currentIsRest ? '휴식' : (exercise?.nameKo ?? ''),
     breath:
-      !currentIsRest && exercise && isExerciseAutoEligible(exercise) ? exercise.breathPattern : '',
+      !currentIsRest &&
+      exercise &&
+      (isExerciseAutoEligible(exercise) || isMovementIdeaExercise(exercise))
+        ? exercise.breathPattern ||
+          (isMovementIdeaExercise(exercise) ? (exercise.cues?.[0] ?? '') : '')
+        : '',
     phase,
     remainingSec: Math.max(0, clock.remainingMs / 1000),
     nextTitle: next && isRestStep(next) ? '휴식' : (nextExercise?.nameKo ?? ''),
@@ -373,6 +386,161 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       !exitOpen &&
       !reviewOpen,
   });
+  const [voiceCommandEnabled, setVoiceCommandEnabled] = useState(false);
+  const [lastVoiceCommandStatus, setLastVoiceCommandStatus] = useState<string | null>(null);
+  const speechRecognitionCtor =
+    typeof window !== 'undefined'
+      ? (((window as unknown as Record<string, unknown>).SpeechRecognition ??
+          (window as unknown as Record<string, unknown>).webkitSpeechRecognition) as
+          | (new () => {
+              lang: string;
+              continuous: boolean;
+              interimResults: boolean;
+              onresult:
+                | ((event: { results?: ArrayLike<ArrayLike<{ transcript?: string }>> }) => void)
+                | null;
+              onerror: ((event: { error?: string }) => void) | null;
+              onend: (() => void) | null;
+              start: () => void;
+              stop: () => void;
+              abort?: () => void;
+            })
+          | null)
+      : null;
+  const voiceCommandActionRef = useRef<(transcript: string) => void>(() => undefined);
+  useEffect(() => {
+    voiceCommandActionRef.current = (rawTranscript: string) => {
+      const normalized = rawTranscript.replace(/\s+/g, ' ').trim();
+      if (!normalized) return;
+      if (/일시정지|정지|멈춤|스톱/.test(normalized)) {
+        if (clock.running) {
+          toggleRunning();
+        }
+        setLastVoiceCommandStatus(`음성 명령 실행: 일시정지 (“${normalized}”)`);
+        return;
+      }
+      if (/수업\s*시작|시작|재생|계속/.test(normalized)) {
+        if (!clock.running) {
+          toggleRunning();
+        }
+        setLastVoiceCommandStatus(`음성 명령 실행: 타이머 시작 (“${normalized}”)`);
+        return;
+      }
+      if (/다음\s*동작|다음|넘기기/.test(normalized)) {
+        if (clock.index === steps.length - 1) {
+          pauseForReview();
+        } else {
+          selectStep(clock.index + 1);
+        }
+        setLastVoiceCommandStatus(`음성 명령 실행: 다음 동작 (“${normalized}”)`);
+        return;
+      }
+      if (/이전\s*동작|이전/.test(normalized)) {
+        selectStep(clock.index - 1);
+        setLastVoiceCommandStatus(`음성 명령 실행: 이전 동작 (“${normalized}”)`);
+        return;
+      }
+      if (/1분\s*추가|\+1분|시간\s*추가/.test(normalized)) {
+        addMinute();
+        setLastVoiceCommandStatus(`음성 명령 실행: 1분 추가 (“${normalized}”)`);
+        return;
+      }
+      if (/큐시트/.test(normalized)) {
+        setShowCueSheet((v) => !v);
+        setLastVoiceCommandStatus(`음성 명령 실행: 큐시트 전환 (“${normalized}”)`);
+        return;
+      }
+      setLastVoiceCommandStatus(
+        `인식된 음성: “${normalized}” (시작·일시정지·다음·이전·1분 추가·큐시트 지원)`,
+      );
+    };
+  });
+  const toggleVoiceCommand = () => {
+    if (voiceCommandEnabled) {
+      setVoiceCommandEnabled(false);
+      setLastVoiceCommandStatus('핸즈프리 음성 명령을 껐습니다.');
+      return;
+    }
+    if (typeof speechRecognitionCtor !== 'function') {
+      setVoiceCommandEnabled(false);
+      setLastVoiceCommandStatus(
+        '이 브라우저는 음성 명령 인식(SpeechRecognition)을 지원하지 않습니다. 화면 터치 또는 키보드(Space/화살표)를 사용해 주세요.',
+      );
+      return;
+    }
+    setVoiceCommandEnabled(true);
+    setLastVoiceCommandStatus(
+      '핸즈프리 음성 명령 대기 중 · “시작”, “일시정지”, “다음”, “이전”, “1분 추가”, “큐시트”라고 말씀해 보세요.',
+    );
+  };
+  useEffect(() => {
+    if (!voiceCommandEnabled || typeof speechRecognitionCtor !== 'function') return;
+    let active = true;
+    let instance: InstanceType<typeof speechRecognitionCtor> | null = null;
+    const stopInstance = () => {
+      if (!instance) return;
+      try {
+        instance.onresult = null;
+        instance.onerror = null;
+        instance.onend = null;
+        instance.stop();
+      } catch {
+        try {
+          instance.abort?.();
+        } catch {
+          // Ignore cleanup errors.
+        }
+      }
+      instance = null;
+    };
+    try {
+      instance = new speechRecognitionCtor();
+      instance.lang = 'ko-KR';
+      instance.continuous = true;
+      instance.interimResults = false;
+      instance.onresult = (event) => {
+        if (!active || !event?.results) return;
+        const len = event.results.length;
+        if (len <= 0) return;
+        const lastResult = event.results[len - 1];
+        const transcript = lastResult?.[0]?.transcript ?? '';
+        if (transcript) {
+          voiceCommandActionRef.current(transcript);
+        }
+      };
+      instance.onerror = () => {
+        if (!active) return;
+        setVoiceCommandEnabled(false);
+        setLastVoiceCommandStatus(
+          '음성 명령 인식을 중단했습니다. 마이크 권한을 확인하거나 화면 터치를 사용해 주세요.',
+        );
+      };
+      instance.start();
+    } catch {
+      queueMicrotask(() => {
+        if (!active) return;
+        setVoiceCommandEnabled(false);
+        setLastVoiceCommandStatus(
+          '음성 명령 인식을 시작하지 못했습니다. 마이크 권한을 확인하거나 화면 터치를 사용해 주세요.',
+        );
+      });
+      return;
+    }
+    const handleVisibility = () => {
+      if (document.hidden || document.visibilityState === 'hidden') {
+        active = false;
+        stopInstance();
+        setVoiceCommandEnabled(false);
+        setLastVoiceCommandStatus('화면이 숨겨져 핸즈프리 음성 명령을 자동으로 중지했습니다.');
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      active = false;
+      document.removeEventListener('visibilitychange', handleVisibility);
+      stopInstance();
+    };
+  }, [voiceCommandEnabled, speechRecognitionCtor]);
   useImperativeHandle(navigationRef, () => ({
     requestExit(destination) {
       const hasSessionData =
@@ -877,6 +1045,26 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     ? '음성 켜짐 · 일시정지·화면 이탈·탭 숨김 시 소리를 멈춥니다.'
                     : '음성 꺼짐 · 수업마다 직접 켜 주세요.')}
             </p>
+            <div className="teaching-voice-command-box">
+              <div className="button-row">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  data-testid="live-voice-command-toggle"
+                  aria-pressed={voiceCommandEnabled}
+                  onClick={toggleVoiceCommand}
+                >
+                  {voiceCommandEnabled
+                    ? '음성 명령으로 타이머 제어 끄기 (핸즈프리)'
+                    : '음성 명령으로 타이머 제어 (핸즈프리)'}
+                </button>
+              </div>
+              {lastVoiceCommandStatus && (
+                <p className="muted" data-testid="live-voice-command-status">
+                  {lastVoiceCommandStatus}
+                </p>
+              )}
+            </div>
           </section>
           {exercise && !currentIsRest ? (
             <details className="teaching-cue-section teaching-stage-details">

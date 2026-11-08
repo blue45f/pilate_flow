@@ -258,6 +258,10 @@ export function InstructorStudyDialog({
                   variant="study-guide-panel"
                   completedTaskIds={study.completedTutorialTaskIds}
                   onTaskToggle={(taskId, completed) => onTutorialTaskChange(taskId, completed)}
+                  onStepAction={() => {
+                    onOpenWorkbench?.();
+                    onClose();
+                  }}
                   onReturnToWorkbench={onOpenWorkbench}
                 />
               )}
