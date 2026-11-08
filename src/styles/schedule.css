@@ -403,3 +403,268 @@
     margin-left: auto;
   }
 }
+
+/* Schedule workspace: date selection first, planning tools after the agenda. */
+.instructor-schedule .schedule-page-header {
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.instructor-schedule .schedule-page-header p {
+  margin: 6px 0;
+}
+.schedule-storage-note {
+  color: var(--pf-color-text-muted, #526358);
+  font-size: 12px;
+}
+.schedule-storage-note > span {
+  display: inline-block;
+  border: 1px solid var(--pf-color-border-default, #d5ddd0);
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-right: 7px;
+  font-weight: 600;
+  background: var(--pf-color-bg-surface, #fffef9);
+}
+.instructor-schedule .schedule-toolbar {
+  border-radius: 16px 16px 0 0;
+  border-bottom: 0;
+  gap: 16px;
+  padding: 16px 20px;
+}
+.schedule-week-selector {
+  padding: 18px 20px 20px;
+  border: 1px solid var(--line, #dce0d7);
+  border-top: 0;
+  border-radius: 0 0 16px 16px;
+  background: var(--paper, #fdfcf8);
+}
+.schedule-week-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 1px solid var(--pf-color-border-subtle, #e3e8dd);
+  padding-top: 16px;
+  margin-bottom: 14px;
+}
+.schedule-week-caption > strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+}
+.schedule-week-caption > span {
+  color: var(--pf-color-text-muted, #526358);
+  font-size: 12px;
+}
+.schedule-week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(44px, 1fr));
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px;
+  margin: -4px;
+  scrollbar-width: thin;
+}
+.instructor-schedule .schedule-week-strip > button {
+  min-width: 44px;
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 9px 4px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--pf-color-text-primary, #1e3129);
+  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+  font: inherit;
+  cursor: pointer;
+}
+.instructor-schedule .schedule-week-strip > button:hover {
+  border-color: var(--pf-color-border-strong, #aab9a3);
+  background: var(--pf-color-action-secondary-hover, #eaefe4);
+}
+.instructor-schedule .schedule-week-strip > button[aria-current='date'] {
+  border-color: var(--pf-color-action-primary, #173d34);
+}
+.instructor-schedule .schedule-week-strip > button[aria-pressed='true'] {
+  color: var(--pf-color-text-on-primary, #fffef9);
+  background: var(--pf-color-action-primary, #173d34);
+  border-color: var(--pf-color-action-primary, #173d34);
+}
+.instructor-schedule .schedule-week-strip > button:focus-visible {
+  outline: 2px solid var(--pf-color-focus-ring, #b16f48);
+  outline-offset: 2px;
+}
+.schedule-week-strip strong {
+  font-size: 22px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.schedule-weekday,
+.schedule-week-count {
+  font-size: 12px;
+  line-height: 1.35;
+}
+.schedule-week-count {
+  min-height: 17px;
+}
+.instructor-schedule .schedule-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 22px 0 14px;
+  font-size: 14px;
+}
+.schedule-summary-period {
+  padding: 3px 8px;
+  margin-right: 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--pf-color-bg-surface-muted, #e4eadf);
+}
+.instructor-schedule .schedule-day > header {
+  border-bottom: 1px solid var(--pf-color-border-subtle, #e3e8dd);
+  padding-bottom: 12px;
+}
+.instructor-schedule .schedule-day-actions > .icon-button {
+  border: 1px solid var(--pf-color-border-default, #d5ddd0);
+  border-radius: 10px;
+  color: inherit;
+  background: var(--pf-color-bg-surface, #fffef9);
+  cursor: pointer;
+}
+.instructor-schedule .schedule-class {
+  padding: 18px;
+  border-left-width: 3px;
+}
+.instructor-schedule .schedule-class-time {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.instructor-schedule .schedule-class h3 {
+  font-size: 19px;
+  line-height: 1.5;
+  margin: 10px 0 7px;
+}
+.schedule-duration {
+  border-left: 1px solid var(--pf-color-border-default, #d5ddd0);
+  margin-left: 5px;
+  padding-left: 10px;
+  color: var(--pf-color-text-muted, #526358);
+  white-space: nowrap;
+}
+.instructor-schedule .schedule-card-actions {
+  padding-top: 12px;
+  border-top: 1px solid var(--pf-color-border-subtle, #e3e8dd);
+}
+.instructor-schedule .schedule-day-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 12px;
+  gap: 8px;
+}
+.schedule-day-empty p {
+  color: var(--pf-color-text-primary, #1e3129);
+  font-weight: 600;
+  margin: 4px 0 0;
+}
+.schedule-day-empty > span {
+  font-size: 13px;
+  line-height: 1.65;
+}
+.schedule-day-empty > button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  margin-top: 4px;
+}
+.instructor-schedule .schedule-planning-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  border: 1px solid var(--pf-color-border-default, #d5ddd0);
+  border-radius: 16px;
+  padding: 20px;
+  margin: 20px 0 0;
+  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+}
+.schedule-planning-copy,
+.schedule-planning-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.schedule-planning-copy > svg {
+  flex-shrink: 0;
+}
+.schedule-planning-copy strong {
+  font-size: 14px;
+}
+.schedule-planning-copy p {
+  margin: 4px 0 0;
+  color: var(--pf-color-text-muted, #526358);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.schedule-planning-actions {
+  flex-wrap: wrap;
+}
+.schedule-planning-actions > button {
+  min-height: 44px;
+}
+@media (max-width: 720px) {
+  .instructor-schedule .schedule-toolbar,
+  .schedule-week-selector {
+    padding: 12px;
+  }
+  .schedule-week-strip {
+    gap: 5px;
+  }
+  .instructor-schedule .schedule-class {
+    padding: 14px;
+  }
+  .instructor-schedule .schedule-class h3 {
+    font-size: 18px;
+  }
+  .schedule-planning-actions {
+    width: 100%;
+  }
+  .schedule-planning-actions > button {
+    flex: 1 1 140px;
+  }
+  .instructor-schedule .schedule-planning-entry {
+    padding: 16px;
+  }
+}
+
+.schedule-week-scroll-hint { display: none; }
+@media (max-width: 420px) {
+  .schedule-week-scroll-hint { display: inline; }
+  .instructor-schedule .schedule-week-strip > button { min-height: 76px; }
+}
+
+/* Empty days stay compact in the week overview. The header's add button remains available. */
+.schedule-days-week .schedule-day-empty {
+  padding: 10px 4px 16px;
+}
+.schedule-days-week .schedule-day-empty > svg,
+.schedule-days-week .schedule-day-empty > span,
+.schedule-days-week .schedule-day-empty > button {
+  display: none;
+}
+.schedule-days-week .schedule-day-empty p {
+  font-weight: 400;
+  color: var(--pf-color-text-muted, #526358);
+}

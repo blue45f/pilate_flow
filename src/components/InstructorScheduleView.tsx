@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -31,6 +32,7 @@ import {
   localScheduleDate,
   scheduleDateObject,
   scheduleDateRange,
+  scheduleMinutes,
   scheduleWeekStart,
   SCHEDULE_WEEKDAYS,
 } from "../utils/instructorSchedule";
@@ -114,6 +116,21 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     mode?: "day" | "week" | "month";
     occurrence?: Pick<InstructorScheduleOccurrence, "classId" | "originalDate">;
   } | null>(null);
+  const weekStripRef = useRef<HTMLDivElement>(null);
+  const pendingStripFocus = useRef(false);
+  useEffect(() => {
+    const strip = weekStripRef.current;
+    const selected = strip?.querySelector<HTMLButtonElement>('[aria-pressed="true"]');
+    if (!strip || !selected) return;
+    if (pendingStripFocus.current) {
+      pendingStripFocus.current = false;
+      selected.focus({ preventScroll: true });
+    }
+    const bounds = strip.getBoundingClientRect();
+    const target = selected.getBoundingClientRect();
+    if (target.right > bounds.right) strip.scrollLeft += target.right - bounds.right;
+    else if (target.left < bounds.left) strip.scrollLeft -= bounds.left - target.left;
+  }, [selectedDate]);
   const selectedDayHeadingRef = useRef<HTMLHeadingElement>(null);
   const pendingDayFocus = useRef(false);
   useEffect(() => {
@@ -158,6 +175,29 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
   const previousDate = addScheduleDays(selectedDate, mode === "day" ? -1 : -7);
   const nextDate = addScheduleDays(selectedDate, mode === "day" ? 1 : 7);
   const dates = useMemo(() => scheduleDateRange(start, end), [start, end]);
+  const stripStart = scheduleWeekStart(selectedDate);
+  const stripEnd = addScheduleDays(stripStart, 6) > "2199-12-31"
+    ? "2199-12-31"
+    : addScheduleDays(stripStart, 6);
+  const stripDates = useMemo(() => scheduleDateRange(stripStart, stripEnd), [stripStart, stripEnd]);
+  const stripRows = useMemo(() => expandInstructorSchedule(data, stripStart, stripEnd), [data, stripStart, stripEnd]);
+  const selectStripDate = (date: string) => {
+    selectDate(date);
+    setMode("day");
+  };
+  const handleStripKey = (event: React.KeyboardEvent<HTMLButtonElement>, date: string) => {
+    const target = event.key === "ArrowRight" ? addScheduleDays(date, 1)
+      : event.key === "ArrowLeft" ? addScheduleDays(date, -1)
+      : event.key === "Home" ? stripStart
+      : event.key === "End" ? stripEnd
+      : null;
+    if (!target) return;
+    event.preventDefault();
+    if (isScheduleDate(target) && target !== selectedDate) {
+      pendingStripFocus.current = true;
+      selectStripDate(target);
+    }
+  };
   const rows = useMemo(
     () => expandInstructorSchedule(data, start, end),
     [data, start, end],
@@ -348,9 +388,10 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           <h1 id="workspace-main-heading" tabIndex={-1}>
             강사 일정
           </h1>
-          <p className="muted">
-            장소와 반 이름은 별칭으로 입력해도 됩니다. 이 기기에서 관리하는
-            일정이며 외부 캘린더와 연결하지 않습니다.
+          <p className="muted">날짜별 수업과 장소를 한눈에 확인하고, 다음 수업을 준비하세요.</p>
+          <p className="schedule-storage-note">
+            <span>이 기기에 저장</span> 장소와 반 이름은 별칭으로 입력해도 됩니다.
+            외부 캘린더와 연결하지 않습니다.
           </p>
         </div>
         <div className="schedule-actions">
@@ -388,27 +429,6 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           </button>
         </div>
       </header>
-      <div className="schedule-planning-entry">
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={() => setPlanningTarget({ date: selectedDate })}
-        >
-          주·월 시퀀스 계획
-        </button>
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={() =>
-            setPlanningTarget({ date: selectedDate, mode: "month" })
-          }
-        >
-          월간 준비 보기
-        </button>
-        <span className="muted">
-          회차별 계획 사본과 준비 표시를 별도로 관리합니다.
-        </span>
-      </div>
       {message && (
         <p className="status schedule-feedback" role="status">
           {message}
@@ -487,7 +507,35 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           </button>
         </div>
       </div>
+      <div className="schedule-week-selector">
+        <div className="schedule-week-caption">
+          <strong><CalendarDays size={18} aria-hidden="true" /> {Number(selectedDate.slice(0, 4))}년 {Number(selectedDate.slice(5, 7))}월</strong>
+          <span>날짜를 선택해 수업을 확인하세요<span className="schedule-week-scroll-hint"> · 좌우로 넘겨보기</span></span>
+        </div>
+        <div className="schedule-week-strip" role="group" aria-label="한 주 날짜 선택" ref={weekStripRef}>
+          {stripDates.map((date) => {
+            const count = stripRows.filter((row) => row.date === date && row.status === "scheduled").length;
+            return (
+              <button
+                type="button"
+                key={date}
+                aria-label={`${formatScheduleDate(date)} 예정 ${count}회`}
+                aria-pressed={date === selectedDate}
+                aria-current={date === today ? "date" : undefined}
+                tabIndex={date === selectedDate ? 0 : -1}
+                onClick={() => selectStripDate(date)}
+                onKeyDown={(event) => handleStripKey(event, date)}
+              >
+                <span className="schedule-weekday" aria-hidden="true">{SCHEDULE_WEEKDAYS[scheduleDateObject(date).getDay()]}</span>
+                <strong aria-hidden="true">{Number(date.slice(8, 10))}</strong>
+                <span className="schedule-week-count" aria-hidden="true">{count ? `${count}회` : "—"}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <p className="schedule-summary" aria-live="polite" aria-atomic="true">
+        <span className="schedule-summary-period">{mode === "day" ? "선택한 날" : "선택한 주"}</span>
         {formatScheduleDate(start)}
         {end !== start ? ` – ${formatScheduleDate(end)}` : ""} · 예정{" "}
         {rows.filter((row) => row.status === "scheduled").length}회
@@ -579,7 +627,16 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                   ),
               )}
             {!rows.some((row) => row.date === date) && (
-              <p className="schedule-day-empty">등록한 수업이 없습니다.</p>
+              <div className="schedule-day-empty">
+                <CalendarDays size={25} aria-hidden="true" />
+                <p>등록한 수업이 없습니다.</p>
+                <span>{data.locations.length ? "새 수업을 추가해 이 날짜의 일정을 채워보세요." : "장소를 등록한 다음 수업을 추가할 수 있어요."}</span>
+                {!!data.locations.length && (
+                  <button type="button" className="text-button" onClick={() => openClass(date)}>
+                    <Plus size={15} aria-hidden="true" /> 이 날짜에 수업 추가
+                  </button>
+                )}
+              </div>
             )}
             {rows
               .filter((row) => row.date === date)
@@ -640,10 +697,11 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                     </div>
                     <h3>{row.title}</h3>
                     <p className="schedule-class-meta">
-                      <MapPin size={14} /> {locationName(row.locationId)}
+                      <MapPin size={14} aria-hidden="true" /> {locationName(row.locationId)}
                       {row.participantAlias && (
                         <span> · {row.participantAlias}</span>
                       )}
+                      <span className="schedule-duration">{scheduleMinutes(row.endTime) - scheduleMinutes(row.startTime)}분</span>
                     </p>
                     {row.movedFrom && (
                       <p className="muted">
@@ -781,6 +839,30 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           </section>
         ))}
       </div>
+      <aside className="schedule-planning-entry" aria-label="수업 준비 도구">
+        <div className="schedule-planning-copy">
+          <CalendarDays size={20} aria-hidden="true" />
+          <div><strong>일정 다음은, 수업 준비</strong><p>회차별 계획 사본과 준비 표시를 별도로 관리합니다.</p></div>
+        </div>
+        <div className="schedule-planning-actions">
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() => setPlanningTarget({ date: selectedDate })}
+        >
+          주·월 시퀀스 계획
+        </button>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() =>
+            setPlanningTarget({ date: selectedDate, mode: "month" })
+          }
+        >
+          월간 준비 보기
+        </button>
+        </div>
+      </aside>
       {!!data.classes.length && (
         <details className="schedule-register">
           <summary>

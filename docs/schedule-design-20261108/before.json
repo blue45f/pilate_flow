@@ -1,0 +1,30 @@
+[
+  {
+    "width": 320,
+    "overflow": 0,
+    "cards": 2,
+    "errors": [],
+    "interactionChecks": false
+  },
+  {
+    "width": 390,
+    "overflow": 0,
+    "cards": 2,
+    "errors": [],
+    "interactionChecks": false
+  },
+  {
+    "width": 768,
+    "overflow": 0,
+    "cards": 2,
+    "errors": [],
+    "interactionChecks": false
+  },
+  {
+    "width": 1440,
+    "overflow": 0,
+    "cards": 2,
+    "errors": [],
+    "interactionChecks": false
+  }
+]
