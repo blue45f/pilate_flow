@@ -271,4 +271,29 @@ describe('read-only exercise evidence panel', () => {
     expect(screen.queryByRole('region')).not.toBeInTheDocument();
     expect(screen.queryByText('근거와 검토 상태')).not.toBeInTheDocument();
   });
+
+  it('renders 3-phase biomechanical review and extended SHA-256 verification for Track C and Track D catalog exercises', () => {
+    const matExtended = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-rib-breath')!;
+    const apparatusExtended = INITIAL_EXERCISES.find(
+      (item) => item.id === 'original-reformer-supine-breath',
+    )!;
+    const { rerender } = render(<ExerciseEvidencePanel exercise={matExtended} />);
+    const matPanel = expand(matExtended);
+    expect(matPanel.getByTestId('motion-evidence-review-section')).toHaveTextContent(
+      'Track C 매트 확장 동작',
+    );
+    expect(matPanel.getByTestId('exercise-evidence-extended-sha256')).toHaveTextContent(
+      /[0-9a-f]{64}/,
+    );
+
+    rerender(<ExerciseEvidencePanel exercise={apparatusExtended} />);
+    const appPanel = within(panelFor(apparatusExtended));
+    expect(appPanel.getByTestId('motion-evidence-review-section')).toHaveTextContent(
+      'Track D 기구 확장 동작',
+    );
+    expect(appPanel.getByTestId('exercise-evidence-extended-sha256')).toHaveTextContent(
+      /[0-9a-f]{64}/,
+    );
+  });
 });
+

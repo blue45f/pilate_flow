@@ -1,7 +1,8 @@
 import { useId } from 'react';
 import { ChevronDown, ExternalLink, FileCheck2 } from 'lucide-react';
+import { resolveExtendedMotionSourceAudit } from '../data/extendedMotionVerificationCatalog';
 import { MotionCoverageEvidenceDlItems } from '../features/motionCoverage/integrationExamples';
-import { ALL_MOTION_EVIDENCE_REVIEW_RECORDS } from '../features/motionEvidenceReview';
+import { resolveMotionEvidenceReviewRecord } from '../features/motionEvidenceReview';
 import { normalizeReferenceUrlPolicy } from '../features/referenceLinkPolicyCandidate';
 import type { PilatesExercise, SequenceStep } from '../types/pilates';
 import { getExerciseEvidence, safeEvidenceHttpUrl } from '../utils/exerciseEvidence';
@@ -24,9 +25,8 @@ export function ExerciseEvidencePanel({ exercise, step }: ExerciseEvidencePanelP
   const evidence = getExerciseEvidence(exercise);
   const { planning, source, motion } = evidence;
   const inputLink = source.kind === 'unverified-link';
-  const biomechReview = ALL_MOTION_EVIDENCE_REVIEW_RECORDS.find(
-    (r) => r.exerciseId === exercise.id,
-  );
+  const biomechReview = resolveMotionEvidenceReviewRecord(exercise.id);
+  const extendedAudit = resolveExtendedMotionSourceAudit(exercise);
 
   return (
     <section className="exercise-evidence-panel" aria-label={`${exercise.nameKo} 근거와 검토 상태`}>
@@ -239,7 +239,11 @@ export function ExerciseEvidencePanel({ exercise, step }: ExerciseEvidencePanelP
                     <dd>
                       {biomechReview.track === 'track-a-mat'
                         ? 'Track A 매트 핵심 동작'
-                        : 'Track B 기구 핵심 동작'}{' '}
+                        : biomechReview.track === 'track-b-apparatus'
+                          ? 'Track B 기구 핵심 동작'
+                          : biomechReview.track === 'track-c-extended-mat'
+                            ? 'Track C 매트 확장 동작'
+                            : 'Track D 기구 확장 동작'}{' '}
                       (#{biomechReview.rankInTrack}) · 3단계 구간(시작·중간·끝) · 5대 역학 항목 · 전문가 검수 대기 (expert-audit-pending)
                     </dd>
                   </div>
@@ -274,6 +278,13 @@ export function ExerciseEvidencePanel({ exercise, step }: ExerciseEvidencePanelP
                           ),
                         )}
                       </ul>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>확장 출처·모션 원장 검증 해시</dt>
+                    <dd data-testid="exercise-evidence-extended-sha256">
+                      <code>{extendedAudit.primaryFactualRecordSha256 ?? '카탈로그 표준 대조'}</code> · 확인일{' '}
+                      {extendedAudit.checkedAt} · 전문의·외부 임상 승인 0건
                     </dd>
                   </div>
                 </dl>

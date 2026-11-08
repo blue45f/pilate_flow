@@ -1,0 +1,383 @@
+{
+  "schemaVersion": "1.0.0",
+  "trackId": "I9-breathing-pelvic-centering",
+  "checkedAt": "2026-11-08",
+  "ledgerUpdatedAt": "2026-11-08",
+  "scopeNoteKo": "Track I9 호흡(3D 횡격막·늑골 외측/후측 확장)·센터링·골반 시계/임프린트 록킹 도해 3종 및 연결된 카탈로그 10개 동작의 공개 임상·교육 출처 대조 원장입니다. 의학적 진단·처방·치료 효과를 보증하지 않으며, 모든 2D 좌표·각도·근육 오버레이는 전문 검수 전 교육용 개략도(source-compared-draft)입니다.",
+  "truthfulness": {
+    "anatomicalAccuracyAssumed": false,
+    "professionalReviewCount": 0,
+    "sourceFrameMappings": 0,
+    "exactAssetReady": false,
+    "medicalDiagnosisProhibited": true,
+    "therapeuticEffectGuaranteeProhibited": true,
+    "nonMedicalDisclosureKo": "본 2D 호흡·센터링·골반 시계 도해와 운동학 지표는 필라테스 수업 계획 및 정렬 큐 이해를 돕기 위한 시각 참고 자료이며, 의학적 진단·처방·치료 효과를 보증하지 않습니다. 2D 좌표·가동범위·근육 표현은 전문 검증 전이며 개인에게 안전한 범위를 뜻하지 않습니다.",
+    "sourceUsePolicy": "Movement biomechanics facts and alignment cues only; no copying or frame-by-frame tracing of copyrighted media."
+  },
+  "publicSources": [
+    {
+      "id": "cuh-nhs-pilates-principles",
+      "title": "Cambridge University Hospitals NHS Foundation Trust · Pilates exercises and principles (Breathing & Centering)",
+      "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+      "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
+      "checkedAt": "2026-11-08",
+      "licenseScope": "UK NHS public patient education leaflet (alignment & breathing principles only)",
+      "verifiedFactsKo": [
+        "필라테스 흉식·횡격막 호흡 시 어깨와 목의 과긴장을 배제하고 하부 흉곽의 외측·후측 3차원 확장을 유도",
+        "날숨에 골반저근과 복횡근을 부드럽게 연결하며 골반 중립(Neutral Pelvis) 또는 미세 임프린트 안정화 유지"
+      ]
+    },
+    {
+      "id": "ouh-nhs-pilates-leaflet",
+      "title": "Oxford University Hospitals NHS Foundation Trust · Pilates Exercises Physiotherapy Leaflet (Pelvic Tilt & Neutral Spine)",
+      "publisher": "Oxford University Hospitals NHS Foundation Trust",
+      "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+      "checkedAt": "2026-11-08",
+      "licenseScope": "UK NHS public physiotherapy guidance (pelvic tilt, neutral spine & ribcage control facts only)",
+      "verifiedFactsKo": [
+        "앙와위 무릎 굴곡(Hook-lying) 자세에서 골반을 앞·뒤(12시-6시)로 작게 기울인 뒤 중간 지점인 중립 골반을 탐색",
+        "상지 오버헤드 이동이나 호흡 중 하부 늑골 들림(Rib flare)과 요추 과신전을 방지"
+      ]
+    },
+    {
+      "id": "merrithew-stott-five-basic-principles",
+      "title": "Merrithew / STOTT PILATES · Five Basic Principles: Breathing, Pelvic Placement & Rib Cage Placement",
+      "publisher": "Merrithew / STOTT PILATES",
+      "url": "https://www.merrithew.com/blog/post/2017-09-12/five-basic-principles-breathing",
+      "checkedAt": "2026-11-08",
+      "licenseScope": "Publicly accessible instructor education articles (kinematic cues only)",
+      "verifiedFactsKo": [
+        "들숨에 하부 늑골이 양옆과 등 뒤로 확장되고 날숨에 갈비뼈가 골반 쪽으로 부드럽게 닫히며 복벽과 연결됨",
+        "골반 배치(Pelvic Placement)에서 중립(ASIS와 치골 결합 수평)과 임프린트(요추 굴곡 미세 감소 및 후방 경사) 간 미세 분절 제어"
+      ]
+    }
+  ],
+  "entries": {
+    "breathing-supine-diaphragmatic": {
+      "movementId": "breathing-supine-diaphragmatic",
+      "diagramId": "breathing-supine-diaphragmatic",
+      "archetypeId": "breathing-supine-diaphragmatic-isolated",
+      "catalogExerciseIds": [
+        "original-reformer-supine-breath",
+        "original-mat-rib-breath",
+        "original-cadillac-table-breath",
+        "ex-warmup-01"
+      ],
+      "mappedExerciseIds": [
+        "breathing-supine-diaphragmatic",
+        "original-reformer-supine-breath",
+        "original-mat-rib-breath",
+        "original-cadillac-table-breath",
+        "ex-warmup-01"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "breathing-supine-diaphragmatic",
+        "posture": "supine-hook-lying-or-carriage-support",
+        "sacralAnchorY": 144,
+        "ribcageExpansionPlane": "3d-lateral-posterior-diaphragmatic",
+        "collarboneAlignment": "wide-and-clavicular-elevation-inhibited",
+        "pelvisState": "neutral-sacral-anchor-maintained",
+        "lumbarHyperextensionDeg": 0,
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "f9284c6c1ca41ffbe653670ca972d8b60d763f28ffb0bcb12f9c723c2810c1d1",
+      "reviewedScopeKo": "CUH NHS·OUH NHS 물리치료 가이드 및 STOTT PILATES 호흡 원칙을 대조하여 앙와위(매트·리포머 캐리지·캐딜락 테이블) 천골 앵커(y=144) 고정, 쇄골 수평 확장(어깨 거상 억제), 들숨 시 하부 흉곽의 3차원 외측·후측 횡격막 확장과 날숨 시 복횡근·늑골 하강 연결을 검증했어요.",
+      "correctionKo": "호흡 관찰 동작에서 불필요하게 큰 오버헤드 팔 스윕이나 허리 들뜸으로 왜곡되던 문제를 교정하여, 천골 지지점(y=144) 고정 아래 순수 3D 흉곽 외측·후측 호흡 변위와 미니볼 내전근-골반저근 연결 큐를 명시했어요.",
+      "limitationKo": "2D 시상면 도해 특성상 양측 늑골의 좌우 외측 확장은 벡터 화살표와 흉곽 반경 오버레이로 개략 표현되며, 전문 임상 검수 전 참고 자료예요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Lateral-posterior ribcage breathing & centering",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · Supine neutral pelvis & deep abdominal breathing",
+          "publisher": "Oxford University Hospitals NHS Foundation Trust",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "Merrithew STOTT PILATES · Five Basic Principles: Breathing (3D Ribcage Excursion)",
+          "publisher": "Merrithew / STOTT PILATES",
+          "url": "https://www.merrithew.com/blog/post/2017-09-12/five-basic-principles-breathing",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    },
+    "breathing-seated-standing-expansion": {
+      "movementId": "breathing-seated-standing-expansion",
+      "diagramId": "breathing-seated-standing-expansion",
+      "archetypeId": "breathing-seated-standing-expansion-isolated",
+      "catalogExerciseIds": [
+        "original-chair-seated-breath",
+        "original-barrel-standing-breath"
+      ],
+      "mappedExerciseIds": [
+        "breathing-seated-standing-expansion",
+        "original-chair-seated-breath",
+        "original-barrel-standing-breath"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "breathing-seated-standing-expansion",
+        "posture": "upright-seated-wunda-chair-or-standing-ladder-barrel",
+        "groundingAnchor": "bilateral-sit-bones-and-foot-tripod",
+        "spinalAlignment": "vertical-axial-elongation-plumb-line",
+        "ribcageExpansionPlane": "lateral-costovertebral-expansion",
+        "calfRaiseOrRowLeakage": false,
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "435f2a7c7d9c233b61ef8a42dd8e9b03aba68c3354b5affab5ff4a4531c86cda",
+      "reviewedScopeKo": "CUH NHS·NHS Inform 및 STOTT PILATES 기립/착석 정렬 원칙을 대조하여 운다 체어 좌골 수직 착석 및 래더 바렐 앞 양발 3점 지지(Foot Tripod) 상태에서 축성 신장(Axial Elongation)과 측면 흉곽 호흡 확장을 검증했어요.",
+      "correctionKo": "착석 호흡에서 시트 관통·발 부유·로잉 팔 당김이 섞이거나 기립 호흡에서 까치발(Calf Raise)이 섞이던 결함을 제거하고, 좌골/발바닥 완전 접지 위 수직 추선 유지와 순수 흉곽 호흡 확장을 분리했어요.",
+      "limitationKo": "2D 좌표와 기구(운다 체어 시트·래더 바렐 가로대) 비례는 시각적 이해를 위한 개략 도식이며 실제 기구 치수나 해부학적 실측이 아니에요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Upright posture, axial length & ribcage breathing",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "Merrithew STOTT PILATES · Five Basic Principles: Rib Cage & Scapular Placement in Upright Postures",
+          "publisher": "Merrithew / STOTT PILATES",
+          "url": "https://www.merrithew.com/blog/post/2017-09-12/five-basic-principles-breathing",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "NHS Inform · Keeping Active & Posture Alignment Principles",
+          "publisher": "NHS Scotland / NHS Inform",
+          "url": "https://www.nhsinform.scot/healthy-living/keeping-active/avy-workouts/",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    },
+    "pelvic-clock-and-imprint-rock": {
+      "movementId": "pelvic-clock-and-imprint-rock",
+      "diagramId": "pelvic-clock-and-imprint-rock",
+      "archetypeId": "pelvic-clock-and-imprint-rock-isolated",
+      "catalogExerciseIds": [
+        "original-mat-pelvic-clock",
+        "original-cadillac-pelvic-rock",
+        "original-chair-seated-pelvic-rock",
+        "ex-warmup-03"
+      ],
+      "mappedExerciseIds": [
+        "pelvic-clock-and-imprint-rock",
+        "original-mat-pelvic-clock",
+        "original-cadillac-pelvic-rock",
+        "original-chair-seated-pelvic-rock",
+        "ex-warmup-03"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "pelvic-clock-and-imprint-rock",
+        "posture": "supine-mat-cadillac-foam-roller-or-chair-seated-pelvic-tilt",
+        "pelvicTiltRangeDeg": [
+          8,
+          12
+        ],
+        "clockDirections": "12-to-6-sagittal-and-3-to-9-coronal-micro-articulation",
+        "ribcagePelvisDissociation": true,
+        "lumbarHyperextensionDeg": 0,
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "d0be2e2db877b365b8a49018b5b7f7d8fbf3986f6b017940d94c75e50dec43c7",
+      "reviewedScopeKo": "OUH NHS·CUH NHS 골반 경사(Pelvic Tilt) 가이드와 BASI/STOTT 골반 시계(Pelvic Clock) 원리를 대조하여 12시(후방 경사·임프린트)↔6시(중립/미세 전방 탐색) ±8°~12° 미세 관절 분절과 흉곽-골반 분리 제어(요추 과신전 0°)를 검증했어요.",
+      "correctionKo": "골반 시계/골반 록 동작에서 거대한 오버헤드 팔 서클이나 시티드 로잉 팔 당김이 주 움직임처럼 보이던 결함을 분리하고, 천골·좌골 구름 축 중심의 ±8°~12° 미세 골반 경사와 흉곽 닫힘(Ribcage closure) 고정을 구현했어요.",
+      "limitationKo": "2D 도해의 골반 회전 각도(±8°~12°)와 폼롤러·매트 접촉면 표현은 교육용 개략 수치이며, 요통 환자의 안전 가동범위를 보증하지 않아요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · Pelvic tilt (12-to-6 clock) & neutral spine",
+          "publisher": "Oxford University Hospitals NHS Foundation Trust",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Pelvic placement & ribcage-pelvis dissociation",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "BASI Pilates · 10 Essential Pilates Exercises for Beginners (Pelvic Curl / Pelvic Clock Prep)",
+          "publisher": "BASI Pilates",
+          "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    }
+  },
+  "movementReviews": {
+    "breathing-supine-diaphragmatic": {
+      "movementId": "breathing-supine-diaphragmatic",
+      "diagramId": "breathing-supine-diaphragmatic",
+      "archetypeId": "breathing-supine-diaphragmatic-isolated",
+      "catalogExerciseIds": [
+        "original-reformer-supine-breath",
+        "original-mat-rib-breath",
+        "original-cadillac-table-breath",
+        "ex-warmup-01"
+      ],
+      "mappedExerciseIds": [
+        "breathing-supine-diaphragmatic",
+        "original-reformer-supine-breath",
+        "original-mat-rib-breath",
+        "original-cadillac-table-breath",
+        "ex-warmup-01"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "breathing-supine-diaphragmatic",
+        "posture": "supine-hook-lying-or-carriage-support",
+        "sacralAnchorY": 144,
+        "ribcageExpansionPlane": "3d-lateral-posterior-diaphragmatic",
+        "collarboneAlignment": "wide-and-clavicular-elevation-inhibited",
+        "pelvisState": "neutral-sacral-anchor-maintained",
+        "lumbarHyperextensionDeg": 0,
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "f9284c6c1ca41ffbe653670ca972d8b60d763f28ffb0bcb12f9c723c2810c1d1",
+      "reviewedScopeKo": "CUH NHS·OUH NHS 물리치료 가이드 및 STOTT PILATES 호흡 원칙을 대조하여 앙와위(매트·리포머 캐리지·캐딜락 테이블) 천골 앵커(y=144) 고정, 쇄골 수평 확장(어깨 거상 억제), 들숨 시 하부 흉곽의 3차원 외측·후측 횡격막 확장과 날숨 시 복횡근·늑골 하강 연결을 검증했어요.",
+      "correctionKo": "호흡 관찰 동작에서 불필요하게 큰 오버헤드 팔 스윕이나 허리 들뜸으로 왜곡되던 문제를 교정하여, 천골 지지점(y=144) 고정 아래 순수 3D 흉곽 외측·후측 호흡 변위와 미니볼 내전근-골반저근 연결 큐를 명시했어요.",
+      "limitationKo": "2D 시상면 도해 특성상 양측 늑골의 좌우 외측 확장은 벡터 화살표와 흉곽 반경 오버레이로 개략 표현되며, 전문 임상 검수 전 참고 자료예요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Lateral-posterior ribcage breathing & centering",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · Supine neutral pelvis & deep abdominal breathing",
+          "publisher": "Oxford University Hospitals NHS Foundation Trust",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "Merrithew STOTT PILATES · Five Basic Principles: Breathing (3D Ribcage Excursion)",
+          "publisher": "Merrithew / STOTT PILATES",
+          "url": "https://www.merrithew.com/blog/post/2017-09-12/five-basic-principles-breathing",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    },
+    "breathing-seated-standing-expansion": {
+      "movementId": "breathing-seated-standing-expansion",
+      "diagramId": "breathing-seated-standing-expansion",
+      "archetypeId": "breathing-seated-standing-expansion-isolated",
+      "catalogExerciseIds": [
+        "original-chair-seated-breath",
+        "original-barrel-standing-breath"
+      ],
+      "mappedExerciseIds": [
+        "breathing-seated-standing-expansion",
+        "original-chair-seated-breath",
+        "original-barrel-standing-breath"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "breathing-seated-standing-expansion",
+        "posture": "upright-seated-wunda-chair-or-standing-ladder-barrel",
+        "groundingAnchor": "bilateral-sit-bones-and-foot-tripod",
+        "spinalAlignment": "vertical-axial-elongation-plumb-line",
+        "ribcageExpansionPlane": "lateral-costovertebral-expansion",
+        "calfRaiseOrRowLeakage": false,
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "435f2a7c7d9c233b61ef8a42dd8e9b03aba68c3354b5affab5ff4a4531c86cda",
+      "reviewedScopeKo": "CUH NHS·NHS Inform 및 STOTT PILATES 기립/착석 정렬 원칙을 대조하여 운다 체어 좌골 수직 착석 및 래더 바렐 앞 양발 3점 지지(Foot Tripod) 상태에서 축성 신장(Axial Elongation)과 측면 흉곽 호흡 확장을 검증했어요.",
+      "correctionKo": "착석 호흡에서 시트 관통·발 부유·로잉 팔 당김이 섞이거나 기립 호흡에서 까치발(Calf Raise)이 섞이던 결함을 제거하고, 좌골/발바닥 완전 접지 위 수직 추선 유지와 순수 흉곽 호흡 확장을 분리했어요.",
+      "limitationKo": "2D 좌표와 기구(운다 체어 시트·래더 바렐 가로대) 비례는 시각적 이해를 위한 개략 도식이며 실제 기구 치수나 해부학적 실측이 아니에요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Upright posture, axial length & ribcage breathing",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "Merrithew STOTT PILATES · Five Basic Principles: Rib Cage & Scapular Placement in Upright Postures",
+          "publisher": "Merrithew / STOTT PILATES",
+          "url": "https://www.merrithew.com/blog/post/2017-09-12/five-basic-principles-breathing",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "NHS Inform · Keeping Active & Posture Alignment Principles",
+          "publisher": "NHS Scotland / NHS Inform",
+          "url": "https://www.nhsinform.scot/healthy-living/keeping-active/avy-workouts/",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    },
+    "pelvic-clock-and-imprint-rock": {
+      "movementId": "pelvic-clock-and-imprint-rock",
+      "diagramId": "pelvic-clock-and-imprint-rock",
+      "archetypeId": "pelvic-clock-and-imprint-rock-isolated",
+      "catalogExerciseIds": [
+        "original-mat-pelvic-clock",
+        "original-cadillac-pelvic-rock",
+        "original-chair-seated-pelvic-rock",
+        "ex-warmup-03"
+      ],
+      "mappedExerciseIds": [
+        "pelvic-clock-and-imprint-rock",
+        "original-mat-pelvic-clock",
+        "original-cadillac-pelvic-rock",
+        "original-chair-seated-pelvic-rock",
+        "ex-warmup-03"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "pelvic-clock-and-imprint-rock",
+        "posture": "supine-mat-cadillac-foam-roller-or-chair-seated-pelvic-tilt",
+        "pelvicTiltRangeDeg": [
+          8,
+          12
+        ],
+        "clockDirections": "12-to-6-sagittal-and-3-to-9-coronal-micro-articulation",
+        "ribcagePelvisDissociation": true,
+        "lumbarHyperextensionDeg": 0,
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "d0be2e2db877b365b8a49018b5b7f7d8fbf3986f6b017940d94c75e50dec43c7",
+      "reviewedScopeKo": "OUH NHS·CUH NHS 골반 경사(Pelvic Tilt) 가이드와 BASI/STOTT 골반 시계(Pelvic Clock) 원리를 대조하여 12시(후방 경사·임프린트)↔6시(중립/미세 전방 탐색) ±8°~12° 미세 관절 분절과 흉곽-골반 분리 제어(요추 과신전 0°)를 검증했어요.",
+      "correctionKo": "골반 시계/골반 록 동작에서 거대한 오버헤드 팔 서클이나 시티드 로잉 팔 당김이 주 움직임처럼 보이던 결함을 분리하고, 천골·좌골 구름 축 중심의 ±8°~12° 미세 골반 경사와 흉곽 닫힘(Ribcage closure) 고정을 구현했어요.",
+      "limitationKo": "2D 도해의 골반 회전 각도(±8°~12°)와 폼롤러·매트 접촉면 표현은 교육용 개략 수치이며, 요통 환자의 안전 가동범위를 보증하지 않아요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · Pelvic tilt (12-to-6 clock) & neutral spine",
+          "publisher": "Oxford University Hospitals NHS Foundation Trust",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Pelvic placement & ribcage-pelvis dissociation",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "BASI Pilates · 10 Essential Pilates Exercises for Beginners (Pelvic Curl / Pelvic Clock Prep)",
+          "publisher": "BASI Pilates",
+          "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    }
+  }
+}

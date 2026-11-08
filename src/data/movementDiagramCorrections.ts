@@ -1,11 +1,15 @@
+import { getBreathingPelvicDiagramCorrections } from './breathingPelvicDiagramData';
 import { getCoreI7RegistryPatch } from './coreAbdominalDiagrams';
 import { getExtensionDiagramCorrections } from './extensionMovementData';
+import { getFootworkLowerDiagramCorrections } from './footworkLowerDiagramData';
 import { getHipLegDiagramCorrections } from './hip-leg-diagram-data';
+import { getLateralAndApparatusDiagramCorrections } from './lateralAndApparatusDiagramData';
 import { getMovementVisualAsset } from './movementVisualRigCatalog';
 import { getPelvisHipDiagramCorrections } from './pelvisHipDiagramData';
 import { getRotationI7IntegrationBundle } from './rotationDiagramData';
 import { getShoulderSupportRegistryIntegrationPayload } from './shoulderSupportDiagrams';
 import { getSpineMovementDiagramCorrections } from './spineArticulationDiagramData';
+import { getUpperBodyArmDiagramCorrections } from './upperBodyArmDiagramData';
 
 /** Reviewed source statements, not a professional or frame-by-frame approval. */
 export interface MovementDiagramCorrection {
@@ -49,6 +53,10 @@ const shoulderPayload = getShoulderSupportRegistryIntegrationPayload();
 const rotationBundle = getRotationI7IntegrationBundle();
 
 const RAW_DIAGRAM_CORRECTIONS: Record<string, MovementDiagramCorrection> = {
+  ...getBreathingPelvicDiagramCorrections(),
+  ...getFootworkLowerDiagramCorrections(),
+  ...getUpperBodyArmDiagramCorrections(),
+  ...getLateralAndApparatusDiagramCorrections(),
   ...BASE_SIDE_LYING_CORRECTIONS,
   ...getSpineMovementDiagramCorrections(),
   ...getPelvisHipDiagramCorrections(),

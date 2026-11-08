@@ -5,9 +5,16 @@ import type {
   SpinalPlane,
 } from '../../types/pilates';
 
-export type EvidenceReviewTrackId = 'track-a-mat' | 'track-b-apparatus';
+export type EvidenceReviewTrackId =
+  | 'track-a-mat'
+  | 'track-b-apparatus'
+  | 'track-c-extended-mat'
+  | 'track-d-extended-apparatus';
+
+export type EvidenceTrackId = EvidenceReviewTrackId;
 
 export type EvidenceSourceAccessStatus =
+  | 'verified-direct-fetch'
   | 'verified-in-repo-source-ledger'
   | 'verified-via-public-search-snippet'
   | 'blocked-by-sandbox-proxy-unverified';
@@ -56,6 +63,41 @@ export interface EvidenceDiscrepancyAudit {
   readonly diagramTeamRecommendationsKo: readonly string[];
 }
 
+export interface EvidenceExerciseSummary {
+  readonly id: string;
+  readonly nameKo: string;
+  readonly nameEn: string;
+  readonly apparatus: ApparatusType;
+  readonly bodyPosition: BodyPosition;
+  readonly spinalPlanes: readonly SpinalPlane[];
+}
+
+export interface EvidenceMuscleAnalysis {
+  readonly primaryMusclesKo: readonly string[];
+  readonly synergistMusclesKo: readonly string[];
+  readonly stabilizerMusclesKo: readonly string[];
+  readonly lengthenedStructuresKo: readonly string[];
+  readonly evidenceBasisKo: string;
+}
+
+export interface EvidenceCompensationItem {
+  readonly compensationKo: string;
+  readonly biomechanicalCauseKo: string;
+  readonly cueCorrectionKo: string;
+}
+
+export interface EvidenceContraindicationItem {
+  readonly conditionOrCautionKo: string;
+  readonly modificationKo: string;
+}
+
+export interface EvidenceDiscrepancyCheckItem {
+  readonly aspect: string;
+  readonly catalogOrDraftStateKo: string;
+  readonly evidenceStandardKo: string;
+  readonly conservativeResolutionKo: string;
+}
+
 export interface EvidenceTruthfulnessFlags {
   readonly canonicalMotionReady: boolean;
   readonly manualReady: boolean;
@@ -70,20 +112,27 @@ export interface EvidenceTruthfulnessFlags {
 export interface MotionEvidenceReviewRecord {
   readonly exerciseId: string;
   readonly track: EvidenceReviewTrackId;
-  readonly rankInTrack: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+  readonly rankInTrack: number;
   readonly nameKo: string;
   readonly nameEn: string;
   readonly apparatus: ApparatusType;
   readonly bodyPosition: BodyPosition;
   readonly spinalPlanes: readonly SpinalPlane[];
+  readonly exercise?: EvidenceExerciseSummary;
   readonly sources: readonly EvidenceSourceCitation[];
   readonly phases: {
     readonly start: PhaseEvidenceSpec;
     readonly middle: PhaseEvidenceSpec;
     readonly end: PhaseEvidenceSpec;
   };
+  readonly muscles?: EvidenceMuscleAnalysis;
+  readonly commonCompensations?: readonly EvidenceCompensationItem[];
+  readonly contraindicationsAndModifications?: readonly EvidenceContraindicationItem[];
+  readonly discrepancyChecks?: readonly EvidenceDiscrepancyCheckItem[];
   readonly discrepancyAudit: EvidenceDiscrepancyAudit;
   readonly truthfulnessFlags: EvidenceTruthfulnessFlags;
+  readonly honestLimitationSummaryKo?: string;
+  readonly reviewedAtIso?: string;
 }
 
 export type MotionEvidenceValidationIssueCode =
@@ -132,4 +181,15 @@ export interface MotionEvidenceSuiteValidationReport {
   readonly resultsByExerciseId: Readonly<
     Record<string, MotionEvidenceRecordValidationResult>
   >;
+}
+
+export interface FullCatalogMotionEvidenceSuiteValidationReport
+  extends MotionEvidenceSuiteValidationReport {
+  readonly trackCCount: number;
+  readonly trackDCount: number;
+  readonly matRecordCount: number;
+  readonly apparatusRecordCount: number;
+  readonly catalogCoverageCount: number;
+  readonly missingCatalogExerciseIds: readonly string[];
+  readonly verifiedDirectSourceCoverageCount: number;
 }

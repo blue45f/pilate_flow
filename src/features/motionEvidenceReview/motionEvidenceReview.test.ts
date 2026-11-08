@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { INITIAL_EXERCISES } from '../../data/pilatesCatalog';
 import {
   ALL_MOTION_EVIDENCE_REVIEW_RECORDS,
+  FULL_CATALOG_MOTION_EVIDENCE_REVIEW_RECORDS,
   TRACK_A_MAT_EVIDENCE_RECORDS,
   TRACK_B_APPARATUS_EVIDENCE_RECORDS,
+  TRACK_C_EXTENDED_MAT_EVIDENCE_RECORDS,
+  TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS,
+  resolveMotionEvidenceReviewRecord,
+  validateFullCatalogMotionEvidenceSuite,
   validateMotionEvidenceRecord,
   validateMotionEvidenceSuite,
 } from './index';
@@ -217,5 +223,93 @@ describe('motionEvidenceReview — 3-Track Evidence & Validator Suite', () => {
     const codes = result.issues.map((i) => i.code);
     expect(codes).toContain('unsupported-numeric-angle-or-medical-claim');
     expect(codes).toContain('false-ready-or-verified-claim');
+  });
+
+  it('validates all Track C extended Mat records and Track D extended Apparatus records with rich biomechanical fields and zero issues', () => {
+    const catalogById = new Map(INITIAL_EXERCISES.map((ex) => [ex.id, ex]));
+
+    expect(
+      TRACK_A_MAT_EVIDENCE_RECORDS.length +
+        TRACK_C_EXTENDED_MAT_EVIDENCE_RECORDS.length,
+    ).toBe(INITIAL_EXERCISES.filter((ex) => ex.apparatus === 'mat').length);
+
+    expect(
+      TRACK_B_APPARATUS_EVIDENCE_RECORDS.length +
+        TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS.length,
+    ).toBe(INITIAL_EXERCISES.filter((ex) => ex.apparatus !== 'mat').length);
+
+    for (const [idx, record] of TRACK_C_EXTENDED_MAT_EVIDENCE_RECORDS.entries()) {
+      expect(record.track).toBe('track-c-extended-mat');
+      expect(record.rankInTrack).toBe(idx + 1);
+      expect(record.apparatus).toBe('mat');
+      const catalogEx = catalogById.get(record.exerciseId);
+      expect(catalogEx).toBeDefined();
+      expect(record.nameKo).toBe(catalogEx!.nameKo);
+      expect(record.nameEn).toBe(catalogEx!.nameEn);
+      expect(record.bodyPosition).toBe(catalogEx!.bodyPosition);
+      expect(record.spinalPlanes).toEqual(catalogEx!.spinalPlanes);
+      expect(record.sources.length).toBeGreaterThanOrEqual(2);
+      expect(record.muscles?.primaryMusclesKo.length).toBeGreaterThan(0);
+      expect(record.commonCompensations?.length).toBeGreaterThanOrEqual(2);
+      expect(
+        record.contraindicationsAndModifications?.length,
+      ).toBeGreaterThanOrEqual(1);
+      expect(record.discrepancyChecks?.length).toBeGreaterThanOrEqual(2);
+      expect(record.reviewedAtIso).toBe('2026-11-08');
+
+      const res = validateMotionEvidenceRecord(record);
+      expect(res.valid).toBe(true);
+      expect(res.issues).toEqual([]);
+      expect(res.hasVerifiedDirectSource).toBe(true);
+    }
+
+    for (const [idx, record] of TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS.entries()) {
+      expect(record.track).toBe('track-d-extended-apparatus');
+      expect(record.rankInTrack).toBe(idx + 1);
+      expect(record.apparatus).not.toBe('mat');
+      const catalogEx = catalogById.get(record.exerciseId);
+      expect(catalogEx).toBeDefined();
+      expect(record.nameKo).toBe(catalogEx!.nameKo);
+      expect(record.nameEn).toBe(catalogEx!.nameEn);
+      expect(record.bodyPosition).toBe(catalogEx!.bodyPosition);
+      expect(record.spinalPlanes).toEqual(catalogEx!.spinalPlanes);
+      expect(record.sources.length).toBeGreaterThanOrEqual(2);
+      expect(record.muscles?.primaryMusclesKo.length).toBeGreaterThan(0);
+      expect(record.commonCompensations?.length).toBeGreaterThanOrEqual(2);
+      expect(
+        record.contraindicationsAndModifications?.length,
+      ).toBeGreaterThanOrEqual(1);
+      expect(record.discrepancyChecks?.length).toBeGreaterThanOrEqual(2);
+      expect(record.reviewedAtIso).toBe('2026-11-08');
+
+      const res = validateMotionEvidenceRecord(record);
+      expect(res.valid).toBe(true);
+      expect(res.issues).toEqual([]);
+      expect(res.hasVerifiedDirectSource).toBe(true);
+    }
+  });
+
+  it('validates all 98 catalog exercises in FULL_CATALOG_MOTION_EVIDENCE_REVIEW_RECORDS via validateFullCatalogMotionEvidenceSuite and resolves each via resolveMotionEvidenceReviewRecord', () => {
+    expect(FULL_CATALOG_MOTION_EVIDENCE_REVIEW_RECORDS).toHaveLength(98);
+
+    const fullReport = validateFullCatalogMotionEvidenceSuite();
+    expect(fullReport.valid).toBe(true);
+    expect(fullReport.totalRecords).toBe(98);
+    expect(fullReport.catalogCoverageCount).toBe(98);
+    expect(fullReport.missingCatalogExerciseIds).toEqual([]);
+    expect(fullReport.zeroTrackIdOverlap).toBe(true);
+    expect(fullReport.verifiedDirectSourceCoverageCount).toBe(98);
+    expect(fullReport.issueCount).toBe(0);
+    expect(fullReport.issues).toEqual([]);
+
+    for (const exercise of INITIAL_EXERCISES) {
+      const resolved = resolveMotionEvidenceReviewRecord(exercise.id);
+      expect(resolved).toBeDefined();
+      expect(resolved?.exerciseId).toBe(exercise.id);
+      expect(resolved?.apparatus).toBe(exercise.apparatus);
+      expect(resolved?.bodyPosition).toBe(exercise.bodyPosition);
+    }
+
+    expect(resolveMotionEvidenceReviewRecord('unknown-id-404')).toBeUndefined();
   });
 });
