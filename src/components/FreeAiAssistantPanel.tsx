@@ -35,6 +35,43 @@ import type {
   LayerMode,
 } from '../types/pilates';
 import '../styles/free-ai-assistant.css';
+import './FreeAiAssistantPanel.css';
+
+export const FREE_AI_DRAFT_STORAGE_KEY = 'pf_free_ai_draft_v1';
+
+interface FreeAiDraftSnapshot {
+  activeTab: FreeAiTaskKind;
+  draftMinutes: number;
+  draftTheme: string;
+  draftAreas: StrengthenArea[];
+  draftLevel: DifficultyLevel;
+  draftApparatus: ApparatusType | 'mixed';
+  selectedTemplateId: string;
+  newPresetName: string;
+  rawIdeaText: string;
+  baseExerciseName: string;
+  ideaApparatus: ApparatusType;
+  ideaCategory: ClassBlockCategory;
+  ideaArea: StrengthenArea;
+  ideaLevel: DifficultyLevel;
+  composeMinutes: number;
+  composeLevel: DifficultyLevel;
+  composeApparatus: ApparatusType | 'mixed';
+  composeTheme: string;
+  composeAreas: StrengthenArea[];
+}
+
+function readFreeAiDraft(): Partial<FreeAiDraftSnapshot> | null {
+  try {
+    const raw = sessionStorage.getItem(FREE_AI_DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<FreeAiDraftSnapshot>;
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 export interface FreeAiAssistantPanelProps extends FreeAiStudioContextContract {
   client?: FreeAiClient;
@@ -113,37 +150,92 @@ export function FreeAiAssistantPanel({
   onSaveConditionTemplate,
   uiContract,
   client = defaultFreeAiClient,
-  initialTab = 'class-draft',
+  initialTab,
 }: FreeAiAssistantPanelProps) {
-  const [activeTab, setActiveTab] = useState<FreeAiTaskKind>(initialTab);
+  const [savedDraft] = useState<Partial<FreeAiDraftSnapshot> | null>(() => readFreeAiDraft());
+  const [activeTab, setActiveTab] = useState<FreeAiTaskKind>(() => {
+    if (initialTab) return initialTab;
+    const savedTab = savedDraft?.activeTab;
+    if (
+      savedTab === 'class-draft' ||
+      savedTab === 'movement-idea' ||
+      savedTab === 'sequence-compose'
+    ) {
+      return savedTab;
+    }
+    return 'class-draft';
+  });
   const [quotaStatus, setQuotaStatus] = useState<FreeAiQuotaStatus>(
     () => client.getQuotaStatus() ?? createDefaultFreeAiStatus(),
   );
   const [isLoading, setIsLoading] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [appliedToPlan, setAppliedToPlan] = useState(false);
 
   // Tab 1: Class Draft state
-  const [draftMinutes, setDraftMinutes] = useState<number>(activeTargetMinutes || 50);
-  const [draftTheme, setDraftTheme] = useState<string>('호흡·골반 정렬 중심 리포머 플로우');
-  const [draftAreas, setDraftAreas] = useState<StrengthenArea[]>(['core']);
-  const [draftLevel, setDraftLevel] = useState<DifficultyLevel>(activeLevel || '1.5');
-  const [draftApparatus, setDraftApparatus] = useState<ApparatusType | 'mixed'>(
-    activeApparatus || 'reformer',
+  const [draftMinutes, setDraftMinutes] = useState<number>(() =>
+    typeof savedDraft?.draftMinutes === 'number' && savedDraft.draftMinutes >= 10
+      ? savedDraft.draftMinutes
+      : activeTargetMinutes || 50,
   );
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
-  const [newPresetName, setNewPresetName] = useState<string>('');
+  const [draftTheme, setDraftTheme] = useState<string>(() =>
+    typeof savedDraft?.draftTheme === 'string'
+      ? savedDraft.draftTheme
+      : '호흡·골반 정렬 중심 리포머 플로우',
+  );
+  const [draftAreas, setDraftAreas] = useState<StrengthenArea[]>(() =>
+    Array.isArray(savedDraft?.draftAreas) && savedDraft.draftAreas.length > 0
+      ? savedDraft.draftAreas
+      : ['core'],
+  );
+  const [draftLevel, setDraftLevel] = useState<DifficultyLevel>(() =>
+    savedDraft?.draftLevel === '1.0' ||
+    savedDraft?.draftLevel === '1.5' ||
+    savedDraft?.draftLevel === '2.0'
+      ? savedDraft.draftLevel
+      : activeLevel || '1.5',
+  );
+  const [draftApparatus, setDraftApparatus] = useState<ApparatusType | 'mixed'>(() =>
+    typeof savedDraft?.draftApparatus === 'string'
+      ? savedDraft.draftApparatus
+      : activeApparatus || 'reformer',
+  );
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(() =>
+    typeof savedDraft?.selectedTemplateId === 'string' ? savedDraft.selectedTemplateId : '',
+  );
+  const [newPresetName, setNewPresetName] = useState<string>(() =>
+    typeof savedDraft?.newPresetName === 'string' ? savedDraft.newPresetName : '',
+  );
   const [classDraftResult, setClassDraftResult] = useState<EditableClassDraftResult | null>(null);
 
   // Tab 2: Movement Idea state
-  const [rawIdeaText, setRawIdeaText] = useState<string>('');
-  const [baseExerciseName, setBaseExerciseName] = useState<string>('');
-  const [ideaApparatus, setIdeaApparatus] = useState<ApparatusType>(
-    activeApparatus === 'mixed' ? 'reformer' : activeApparatus,
+  const [rawIdeaText, setRawIdeaText] = useState<string>(() =>
+    typeof savedDraft?.rawIdeaText === 'string' ? savedDraft.rawIdeaText : '',
   );
-  const [ideaCategory, setIdeaCategory] = useState<ClassBlockCategory>('core');
-  const [ideaArea, setIdeaArea] = useState<StrengthenArea>('core');
-  const [ideaLevel, setIdeaLevel] = useState<DifficultyLevel>(activeLevel || '1.5');
+  const [baseExerciseName, setBaseExerciseName] = useState<string>(() =>
+    typeof savedDraft?.baseExerciseName === 'string' ? savedDraft.baseExerciseName : '',
+  );
+  const [ideaApparatus, setIdeaApparatus] = useState<ApparatusType>(() =>
+    typeof savedDraft?.ideaApparatus === 'string'
+      ? savedDraft.ideaApparatus
+      : activeApparatus === 'mixed'
+        ? 'reformer'
+        : activeApparatus,
+  );
+  const [ideaCategory, setIdeaCategory] = useState<ClassBlockCategory>(() =>
+    typeof savedDraft?.ideaCategory === 'string' ? savedDraft.ideaCategory : 'core',
+  );
+  const [ideaArea, setIdeaArea] = useState<StrengthenArea>(() =>
+    typeof savedDraft?.ideaArea === 'string' ? savedDraft.ideaArea : 'core',
+  );
+  const [ideaLevel, setIdeaLevel] = useState<DifficultyLevel>(() =>
+    savedDraft?.ideaLevel === '1.0' ||
+    savedDraft?.ideaLevel === '1.5' ||
+    savedDraft?.ideaLevel === '2.0'
+      ? savedDraft.ideaLevel
+      : activeLevel || '1.5',
+  );
   const [movementIdeaResult, setMovementIdeaResult] = useState<EditableMovementIdeaResult | null>(
     null,
   );
@@ -160,13 +252,33 @@ export function FreeAiAssistantPanel({
   );
   const unreviewedBlockCount = reusableBlocks.length - reviewedBlocks.length;
 
-  const [composeMinutes, setComposeMinutes] = useState<number>(activeTargetMinutes || 50);
-  const [composeLevel, setComposeLevel] = useState<DifficultyLevel>(activeLevel || '1.5');
-  const [composeApparatus, setComposeApparatus] = useState<ApparatusType | 'mixed'>(
-    activeApparatus || 'reformer',
+  const [composeMinutes, setComposeMinutes] = useState<number>(() =>
+    typeof savedDraft?.composeMinutes === 'number' && savedDraft.composeMinutes >= 10
+      ? savedDraft.composeMinutes
+      : activeTargetMinutes || 50,
   );
-  const [composeTheme, setComposeTheme] = useState<string>('검토 완료 동작·블록 시퀀스');
-  const [composeAreas, setComposeAreas] = useState<StrengthenArea[]>(['core', 'glute-lower']);
+  const [composeLevel, setComposeLevel] = useState<DifficultyLevel>(() =>
+    savedDraft?.composeLevel === '1.0' ||
+    savedDraft?.composeLevel === '1.5' ||
+    savedDraft?.composeLevel === '2.0'
+      ? savedDraft.composeLevel
+      : activeLevel || '1.5',
+  );
+  const [composeApparatus, setComposeApparatus] = useState<ApparatusType | 'mixed'>(() =>
+    typeof savedDraft?.composeApparatus === 'string'
+      ? savedDraft.composeApparatus
+      : activeApparatus || 'reformer',
+  );
+  const [composeTheme, setComposeTheme] = useState<string>(() =>
+    typeof savedDraft?.composeTheme === 'string'
+      ? savedDraft.composeTheme
+      : '검토 완료 동작·블록 시퀀스',
+  );
+  const [composeAreas, setComposeAreas] = useState<StrengthenArea[]>(() =>
+    Array.isArray(savedDraft?.composeAreas) && savedDraft.composeAreas.length > 0
+      ? savedDraft.composeAreas
+      : ['core', 'glute-lower'],
+  );
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>(() =>
     reviewedExercises.slice(0, 4).map((ex) => ex.id),
   );
@@ -174,6 +286,55 @@ export function FreeAiAssistantPanel({
     reviewedBlocks.slice(0, 2).map((b) => b.id),
   );
   const [composeResult, setComposeResult] = useState<EditableSequenceComposeResult | null>(null);
+
+  useEffect(() => {
+    const snapshot: FreeAiDraftSnapshot = {
+      activeTab,
+      draftMinutes,
+      draftTheme,
+      draftAreas,
+      draftLevel,
+      draftApparatus,
+      selectedTemplateId,
+      newPresetName,
+      rawIdeaText,
+      baseExerciseName,
+      ideaApparatus,
+      ideaCategory,
+      ideaArea,
+      ideaLevel,
+      composeMinutes,
+      composeLevel,
+      composeApparatus,
+      composeTheme,
+      composeAreas,
+    };
+    try {
+      sessionStorage.setItem(FREE_AI_DRAFT_STORAGE_KEY, JSON.stringify(snapshot));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [
+    activeTab,
+    draftMinutes,
+    draftTheme,
+    draftAreas,
+    draftLevel,
+    draftApparatus,
+    selectedTemplateId,
+    newPresetName,
+    rawIdeaText,
+    baseExerciseName,
+    ideaApparatus,
+    ideaCategory,
+    ideaArea,
+    ideaLevel,
+    composeMinutes,
+    composeLevel,
+    composeApparatus,
+    composeTheme,
+    composeAreas,
+  ]);
 
   useEffect(() => {
     let active = true;
@@ -250,6 +411,7 @@ export function FreeAiAssistantPanel({
   const runClassDraft = async (preferLocalOnly: boolean) => {
     setErrorBanner(null);
     setActionFeedback(null);
+    setAppliedToPlan(false);
     if (!preferLocalOnly && draftHealthInspection.hasSensitiveData) {
       setErrorBanner(draftHealthInspection.warningMessageKo);
       return;
@@ -293,6 +455,7 @@ export function FreeAiAssistantPanel({
   const runMovementIdea = async (preferLocalOnly: boolean) => {
     setErrorBanner(null);
     setActionFeedback(null);
+    setAppliedToPlan(false);
     if (rawIdeaText.trim().length < 2) {
       setErrorBanner('새 동작 아이디어를 2자 이상 입력해 주세요.');
       return;
@@ -338,6 +501,7 @@ export function FreeAiAssistantPanel({
   const runSequenceCompose = async (preferLocalOnly: boolean) => {
     setErrorBanner(null);
     setActionFeedback(null);
+    setAppliedToPlan(false);
     if (!preferLocalOnly && composeHealthInspection.hasSensitiveData) {
       setErrorBanner(composeHealthInspection.warningMessageKo);
       return;
@@ -547,6 +711,10 @@ export function FreeAiAssistantPanel({
     : errorBanner
       ? 'AI 응답 확인 필요'
       : 'AI 초안';
+  const hasCurrentTabResult =
+    (activeTab === 'class-draft' && Boolean(classDraftResult)) ||
+    (activeTab === 'movement-idea' && Boolean(movementIdeaResult)) ||
+    (activeTab === 'sequence-compose' && Boolean(composeResult));
 
   return (
     <section className="free-ai-panel" aria-label="수업·동작 초안">
@@ -565,6 +733,43 @@ export function FreeAiAssistantPanel({
           )}
         </div>
       </header>
+
+      <ol
+        className="free-ai-step-guide"
+        data-testid="ai-assistant-step-guide"
+        aria-label="초안 작성 단계 안내"
+      >
+        <li
+          className={`free-ai-step-guide-item ${!hasCurrentTabResult ? 'is-active' : 'is-complete'}`}
+          aria-current={!hasCurrentTabResult ? 'step' : undefined}
+        >
+          1 수업 조건·요청 입력
+        </li>
+        <li className="free-ai-step-guide-arrow" aria-hidden="true">
+          →
+        </li>
+        <li
+          className={`free-ai-step-guide-item ${
+            hasCurrentTabResult && !appliedToPlan
+              ? 'is-active'
+              : appliedToPlan
+                ? 'is-complete'
+                : ''
+          }`}
+          aria-current={hasCurrentTabResult && !appliedToPlan ? 'step' : undefined}
+        >
+          2 추천 초안 검토
+        </li>
+        <li className="free-ai-step-guide-arrow" aria-hidden="true">
+          →
+        </li>
+        <li
+          className={`free-ai-step-guide-item ${appliedToPlan ? 'is-active' : ''}`}
+          aria-current={appliedToPlan ? 'step' : undefined}
+        >
+          3 수업안에 반영
+        </li>
+      </ol>
 
       {quotaStatus.exhausted ? (
         <div
@@ -621,6 +826,7 @@ export function FreeAiAssistantPanel({
           onClick={() => {
             setActiveTab('class-draft');
             setErrorBanner(null);
+            setAppliedToPlan(false);
           }}
         >
           1. 수업 초안 만들기
@@ -633,6 +839,7 @@ export function FreeAiAssistantPanel({
           onClick={() => {
             setActiveTab('movement-idea');
             setErrorBanner(null);
+            setAppliedToPlan(false);
           }}
         >
           2. 새 동작 아이디어·변형
@@ -645,12 +852,22 @@ export function FreeAiAssistantPanel({
           onClick={() => {
             setActiveTab('sequence-compose');
             setErrorBanner(null);
+            setAppliedToPlan(false);
           }}
         >
           3. 검토 동작·블록 시퀀스 구성
         </button>
       </div>
 
+      {isLoading && (
+        <div
+          className="free-ai-status-banner is-loading"
+          data-testid="free-ai-loading-banner"
+          aria-live="polite"
+        >
+          초안을 준비하고 있습니다. 잠시만 기다려 주세요…
+        </div>
+      )}
       {errorBanner && (
         <div className="free-ai-status-banner is-exhausted" role="alert">
           {errorBanner}
@@ -870,6 +1087,7 @@ export function FreeAiAssistantPanel({
                       apparatus: classDraftResult.apparatus,
                       steps: editableStepsToSequenceSteps(classDraftResult.steps),
                     });
+                    setAppliedToPlan(true);
                     setActionFeedback('편집한 수업 초안을 현재 워크벤치에 반영했습니다.');
                   }}
                 >
@@ -1173,6 +1391,7 @@ export function FreeAiAssistantPanel({
                       rawIdeaText,
                     );
                     onSaveUnreviewedMovementIdea?.(exercise, ideaContract);
+                    setAppliedToPlan(true);
                     setActionFeedback(
                       `미검토 창작 동작 '${exercise.nameKo}'을(를) 보관함에 저장했습니다. (강사 검토 전까지 자동 추천·실시간 수업에서 제외됩니다)`,
                     );
@@ -1414,6 +1633,7 @@ export function FreeAiAssistantPanel({
                       apparatus: composeResult.apparatus,
                       steps: editableStepsToSequenceSteps(composeResult.steps),
                     });
+                    setAppliedToPlan(true);
                     setActionFeedback('구성한 시퀀스를 현재 워크벤치에 반영했습니다.');
                   }}
                 >

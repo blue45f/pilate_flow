@@ -222,8 +222,9 @@
   margin-right: auto;
 }
 .ml-pattern-pages button {
-  min-height: 32px;
-  padding: 4px 10px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 6px 12px;
   color: #456249;
   border: 1px solid #d9dfcf;
   border-radius: 7px;
@@ -302,6 +303,7 @@
 }
 .ml-preview-exercise-actions button {
   min-height: 44px;
+  min-width: 44px;
   font-size: 12px;
   display: inline-flex;
   align-items: center;
@@ -325,6 +327,7 @@
   display: grid;
   place-items: center;
   min-height: 44px;
+  min-width: 44px;
   width: 44px;
   border: 1px solid #dfe2d5;
   border-radius: 50%;
@@ -350,8 +353,9 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-height: 32px;
-  padding: 4px 10px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid #c8d4be;
   background: #eef3e8;
@@ -360,6 +364,8 @@
   font-size: 11px;
   line-height: 1.4;
   cursor: pointer;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .library-active-filter-chip:hover {
   background: #e2ebd9;
@@ -471,14 +477,16 @@
 .movement-focus-tag {
   display: inline-flex;
   align-items: center;
-  min-height: 26px;
-  padding: 2px 8px;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid #d6decb;
   background: #f4f6ee;
   color: #3f5843;
   font: inherit;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.4;
   cursor: pointer;
   word-break: keep-all;
@@ -565,6 +573,7 @@
   align-items: center;
   gap: 6px;
   min-height: 44px;
+  min-width: 44px;
   text-align: left;
   width: 100%;
   border: 1px solid transparent;
@@ -603,7 +612,8 @@
 }
 .motion-library .movement-card-footer .btn-ghost,
 .motion-library .movement-add {
-  min-height: 42px;
+  min-height: 44px;
+  min-width: 44px;
 }
 .ml-review-details {
   border-top: 1px solid #dedfd2;
@@ -884,6 +894,130 @@
     gap: 3px;
   }
 }
+
+/* 3-Step Guided Discovery Flow strip */
+.atlas-flow-step-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid #d5ddd0;
+  border-radius: 12px;
+  background: #f6f8f1;
+}
+.atlas-flow-step-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  flex: 1 1 540px;
+  min-width: 0;
+}
+.atlas-flow-step {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 9px;
+  border: 1px solid #dfe5d8;
+  background: #fffdf8;
+  color: #566654;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.atlas-flow-step.is-current {
+  border-color: #2f5b46;
+  background: #e7f0e6;
+  color: #173f35;
+  box-shadow: inset 0 0 0 1px #2f5b4633;
+}
+.atlas-flow-step.is-done {
+  border-color: #bfd0ba;
+  background: #eff4eb;
+  color: #274a38;
+}
+.atlas-flow-step-label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.atlas-flow-step-meta {
+  font-size: 11px;
+  color: #536451;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.atlas-flow-reset-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 760px) {
+  .atlas-flow-step-bar {
+    padding: 9px 11px;
+    gap: 8px;
+  }
+  .atlas-flow-step-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .atlas-flow-step {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 6px 9px;
+  }
+  .atlas-flow-reset-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .motion-library .movement-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .motion-library .library-apparatus-tabs {
+    padding: 6px 10px 8px;
+    gap: 6px;
+  }
+  .motion-library .library-apparatus-tabs > button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 10px;
+  }
+  .motion-library .movement-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .motion-library .movement-card-footer > button,
+  .motion-library .movement-add {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .motion-library *,
   .motion-library *::before,

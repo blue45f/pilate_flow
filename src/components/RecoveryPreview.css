@@ -1,0 +1,96 @@
+/* Mobile UX, clean wrapping for comparison items/timestamps/titles/empty/error states, and >= 44px buttons on 320px for RecoveryPreview */
+
+.recovery-preview,
+.recovery-preview-layout,
+.recovery-preview-details {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.recovery-preview button,
+.recovery-preview-layout button,
+.recovery-preview-actions button,
+.recovery-count-details summary {
+  min-height: 44px;
+  min-width: 44px;
+  box-sizing: border-box;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.recovery-choose-help,
+.recovery-preview-heading,
+.recovery-preview-heading h4,
+.recovery-preview-heading span,
+.recovery-source-kind,
+.recovery-summary-counts,
+.recovery-summary-counts span,
+.recovery-empty-state,
+.recovery-format-error,
+.recovery-format-error p,
+.recovery-preservation h5,
+.recovery-preservation p,
+.recovery-notice,
+.recovery-scope-note,
+.recovery-blocked-message,
+.recovery-status-message,
+.recovery-count-scroll caption,
+.recovery-count-scroll th,
+.recovery-count-scroll td {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.recovery-count-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+
+@media (max-width: 390px) {
+  .recovery-preview-layout .recovery-preview-details {
+    padding: 12px;
+  }
+
+  .recovery-preview-layout > [data-recovery-choose] {
+    width: 100%;
+    justify-self: stretch;
+    justify-content: center;
+  }
+
+  .recovery-preview-layout .recovery-summary-counts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .recovery-preview-layout .recovery-summary-counts span {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .recovery-preview-layout .recovery-preview-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .recovery-preview-layout .recovery-preview-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .recovery-preview-layout .recovery-count-scroll table {
+    min-width: 380px;
+    font-size: 12px;
+  }
+
+  .recovery-preview-layout .recovery-count-scroll th:first-child {
+    min-width: 84px;
+  }
+}

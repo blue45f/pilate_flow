@@ -43,7 +43,7 @@ const InstructorStudyDialog = lazy(() =>
   })),
 );
 const PilatesSettingsPage = lazy(() =>
-  import('./features/settingsPageCandidate').then((module) => ({
+  import('./components/PilatesSettingsPage').then((module) => ({
     default: module.PilatesSettingsPage,
   })),
 );

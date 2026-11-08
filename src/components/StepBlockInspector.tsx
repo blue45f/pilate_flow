@@ -73,6 +73,50 @@ export interface StepInspectorDraftCache {
   draft: ReturnType<typeof draftFrom>;
 }
 
+export const STEP_INSPECTOR_DRAFT_STORAGE_KEY = 'pf_step_inspector_draft_v1';
+
+function readSessionInspectorDraft(
+  stepId: string,
+  exerciseId: string,
+): StepInspectorDraftCache | null {
+  try {
+    const raw =
+      typeof window !== 'undefined'
+        ? window.sessionStorage.getItem(STEP_INSPECTOR_DRAFT_STORAGE_KEY)
+        : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StepInspectorDraftCache;
+    if (parsed && parsed.stepId === stepId && parsed.exerciseId === exerciseId && parsed.draft) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionInspectorDraft(cache: StepInspectorDraftCache | null): void {
+  try {
+    if (typeof window === 'undefined') return;
+    if (cache) {
+      window.sessionStorage[STEP_INSPECTOR_DRAFT_STORAGE_KEY] = JSON.stringify(cache);
+    } else {
+      delete window.sessionStorage[STEP_INSPECTOR_DRAFT_STORAGE_KEY];
+    }
+  } catch {
+    // ignore storage errors
+  }
+}
+
+usePilatesStore.subscribe((state, prev) => {
+  if (
+    state.activeSequenceId !== prev.activeSequenceId ||
+    state.activeSteps[0]?.stepId !== prev.activeSteps[0]?.stepId
+  ) {
+    writeSessionInspectorDraft(null);
+  }
+});
+
 /** Class-only settings. A note's review does not certify its motion or session settings. */
 export function StepBlockInspector({
   index,
@@ -87,8 +131,11 @@ export function StepBlockInspector({
   const store = usePilatesStore();
   const exercise = store.exercises.find((item) => item.id === step.exerciseId);
   const cached = () => {
-    const value = loadDraft?.();
-    return value?.stepId === step.stepId && value.exerciseId === step.exerciseId ? value : null;
+    const fromProp = loadDraft?.();
+    if (fromProp?.stepId === step.stepId && fromProp.exerciseId === step.exerciseId) {
+      return fromProp;
+    }
+    return loadDraft === undefined ? readSessionInspectorDraft(step.stepId, step.exerciseId) : null;
   };
   const [base, setBase] = useState(() => cloneStep(cached()?.base ?? step));
   const [draft, setDraft] = useState(() => {
@@ -98,7 +145,13 @@ export function StepBlockInspector({
   const [message, setMessage] = useState('');
   const [showVisualGuide, setShowVisualGuide] = useState(false);
   useEffect(() => {
-    onDraftChange?.({ stepId: step.stepId, exerciseId: step.exerciseId, base, draft });
+    const snapshot = { stepId: step.stepId, exerciseId: step.exerciseId, base, draft };
+    onDraftChange?.(snapshot);
+    if (JSON.stringify(draft) !== JSON.stringify(draftFrom(base))) {
+      writeSessionInspectorDraft(snapshot);
+    } else {
+      writeSessionInspectorDraft(null);
+    }
   }, [onDraftChange, step.stepId, step.exerciseId, base, draft]);
   const current = store.activeSteps[index];
   const stale =
@@ -156,21 +209,72 @@ export function StepBlockInspector({
         Object.assign(patch, { [key]: values[key] });
     }
     if (!Object.keys(patch).length) {
+      writeSessionInspectorDraft(null);
       onClose();
       return;
     }
     const result = store.setStepBlockOptions(index, patch, base);
-    if (result.success) onClose();
-    else setMessage(result.message);
+    if (result.success) {
+      writeSessionInspectorDraft(null);
+      onClose();
+    } else setMessage(result.message);
   };
 
   return (
-    <section className="step-block-inspector" aria-label={`${index + 1}번 동작 블록 편집`}>
-      <header className="step-inspector-top">
-        <span>동작 블록 · {String(index + 1).padStart(2, '0')}</span>
-        <h2>{exercise?.nameKo ?? '동작 자료 확인 필요'}</h2>
-        <p>{equipment || '기구 확인 필요'}</p>
-        <div className="step-inspector-badges">
+    <section
+      className="step-block-inspector"
+      aria-label={`${index + 1}번 동작 블록 편집`}
+      style={{ wordBreak: 'keep-all', minWidth: 0 }}
+    >
+      <header
+        className="step-inspector-top"
+        data-testid="step-inspector-top-summary"
+        style={{ wordBreak: 'keep-all' }}
+      >
+        <div
+          className="step-inspector-top-kicker"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: '6px',
+            marginBottom: '6px',
+          }}
+        >
+          <span
+            className="pf-idea-step-pill is-active"
+            data-testid="step-inspector-current-label"
+          >
+            현재 편집 중인 블록
+          </span>
+          <span
+            className="pf-idea-step-pill"
+            data-testid="step-inspector-quick-badge"
+          >
+            동작 블록 · {String(index + 1).padStart(2, '0')}
+          </span>
+          <span
+            className="pf-idea-step-pill"
+            data-testid="step-inspector-step-order-badge"
+          >
+            {index + 1}/{Math.max(store.activeSteps.length, index + 1)}단계
+          </span>
+          {dirty && (
+            <span
+              className="pf-idea-step-pill is-ready"
+              data-testid="step-inspector-dirty-badge"
+            >
+              작성 중 메모·설정 보관됨
+            </span>
+          )}
+        </div>
+        <h2 style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
+          {exercise?.nameKo ?? '동작 자료 확인 필요'}
+        </h2>
+        <p style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
+          {equipment || '기구 확인 필요'}
+        </p>
+        <div className="step-inspector-badges" style={{ wordBreak: 'keep-all' }}>
           <span>
             {bindingStatus === 'matched'
               ? '초안 연결 · 전문가 미검토'
@@ -188,7 +292,7 @@ export function StepBlockInspector({
           {step.locked && <span>잠금</span>}
         </div>
       </header>
-      <div className="step-inspector-summary">
+      <div className="step-inspector-summary" style={{ wordBreak: 'keep-all' }}>
         <span>선택 동작 총시간</span>
         <strong>{formatSecondsToMMSS(timing.totalSec)}</strong>
         <p>
@@ -220,7 +324,13 @@ export function StepBlockInspector({
             수업 안에서 맡는 역할입니다. 모션의 준비·움직임·마무리 단계와는 별개이며 순서와 시간은
             유지됩니다.
           </p>
-          <div className="step-inspector-time-fields">
+          <div
+            className="step-inspector-time-fields"
+            style={{
+              gridTemplateColumns: 'repeat(auto-fit, minmax(112px, 1fr))',
+              gap: '10px',
+            }}
+          >
             <label className="form-field">
               <span>블록 총시간 · 분</span>
               <input
@@ -290,7 +400,13 @@ export function StepBlockInspector({
               횟수·세트·총시간은 자동으로 바뀌지 않습니다.
             </p>
           </div>
-          <div className="step-inspector-count-fields">
+          <div
+            className="step-inspector-count-fields"
+            style={{
+              gridTemplateColumns: 'repeat(auto-fit, minmax(118px, 1fr))',
+              gap: '10px',
+            }}
+          >
             <label className="form-field">
               <span>강사가 정한 횟수</span>
               <input
@@ -458,8 +574,17 @@ export function StepBlockInspector({
           </details>
         )}
         {exercise && <ExerciseEvidencePanel exercise={exercise} step={step} />}
-        <div className="step-inspector-footer">
-          <button type="button" className="text-button" disabled={disabled} onClick={onReplace}>
+        <div
+          className="step-inspector-footer"
+          style={{ flexWrap: 'wrap', gap: '8px', wordBreak: 'keep-all' }}
+        >
+          <button
+            type="button"
+            className="text-button"
+            disabled={disabled}
+            onClick={onReplace}
+            style={{ minHeight: '44px', wordBreak: 'keep-all' }}
+          >
             <RefreshCw size={16} /> 동작 교체
           </button>
           <button
@@ -467,19 +592,29 @@ export function StepBlockInspector({
             className="btn-secondary"
             data-testid="step-inspector-reset-draft"
             disabled={!dirty || disabled}
+            style={{ minHeight: '44px', wordBreak: 'keep-all' }}
             onClick={() => {
+              writeSessionInspectorDraft(null);
               setDraft(draftFrom(base));
               setMessage('수정한 입력값을 적용 전 상태로 되돌렸습니다.');
             }}
           >
             입력 되돌리기
           </button>
-          <button className="btn-primary" type="submit" disabled={disabled}>
+          <button
+            className="btn-primary"
+            type="submit"
+            disabled={disabled}
+            style={{ flex: '1 1 132px', minHeight: '48px', wordBreak: 'keep-all' }}
+          >
             변경 적용
           </button>
         </div>
       </form>
-      <div className="step-inspector-inline-actions">
+      <div
+        className="step-inspector-inline-actions"
+        style={{ flexWrap: 'wrap', gap: '8px', wordBreak: 'keep-all' }}
+      >
         <button type="button" className="btn-secondary" onClick={() => store.toggleStepLock(index)}>
           {step.locked ? <UnlockKeyhole size={16} /> : <LockKeyhole size={16} />}
           {step.locked ? '블록 잠금 해제' : '블록 잠금'}

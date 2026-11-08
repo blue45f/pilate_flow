@@ -41,6 +41,7 @@ import { LightDismissDialog } from "./LightDismissDialog";
 import { DatedSequencePlanningDialog } from "./DatedSequencePlanningDialog";
 import { getDatedPlanWarnings } from "../utils/datedSequencePlanning";
 import "../styles/schedule.css";
+import "./InstructorScheduleView.css";
 import { ScheduleChangeScopePanel, type ScheduleChangeScope } from "./ScheduleChangeScopePanel";
 
 type MoveDraft = {
@@ -160,6 +161,13 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
   const moveFormRef = useRef<HTMLFormElement | null>(null);
   const closedFormRef = useRef<HTMLFormElement | null>(null);
   const unsavedClassDraftRef = useRef<InstructorScheduledClass | null>(null);
+  const unsavedLocationDraftRef = useRef<InstructorLocation | null>(null);
+  const unsavedClosedDraftRef = useRef<{
+    date: string;
+    locationId: string;
+    reason: string;
+  } | null>(null);
+  const closedDraftDirtyRef = useRef(false);
   const [classStep, setClassStep] = useState<1 | 2 | 3>(1);
   const classStep1Ref = useRef<HTMLLabelElement | null>(null);
   const classStep2Ref = useRef<HTMLLabelElement | null>(null);
@@ -195,7 +203,44 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     closeNative(classFormRef.current);
     setClassDraft(null);
   };
-  const closeLocations = () => {
+  const openLocations = () => {
+    setFormError("");
+    setConfirmDelete("");
+    const savedLocation = unsavedLocationDraftRef.current;
+    if (
+      savedLocation &&
+      !savedLocation.id &&
+      (savedLocation.alias.trim() ||
+        savedLocation.notes.trim() ||
+        savedLocation.equipmentIds.length > 0 ||
+        savedLocation.propIds.length > 0)
+    ) {
+      setLocationDraft({
+        ...savedLocation,
+        equipmentIds: [...savedLocation.equipmentIds],
+        propIds: [...savedLocation.propIds],
+      });
+    } else {
+      setLocationDraft(newLocation());
+    }
+    setLocationsOpen(true);
+  };
+  const closeLocations = (clearSavedDraft = false) => {
+    if (clearSavedDraft) {
+      unsavedLocationDraftRef.current = null;
+    } else if (
+      !locationDraft.id &&
+      (locationDraft.alias.trim() ||
+        locationDraft.notes.trim() ||
+        locationDraft.equipmentIds.length > 0 ||
+        locationDraft.propIds.length > 0)
+    ) {
+      unsavedLocationDraftRef.current = {
+        ...locationDraft,
+        equipmentIds: [...locationDraft.equipmentIds],
+        propIds: [...locationDraft.propIds],
+      };
+    }
     closeNative(locationFormRef.current);
     setLocationsOpen(false);
   };
@@ -203,7 +248,38 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     closeNative(moveFormRef.current);
     setMoveDraft(null);
   };
-  const closeClosed = () => {
+  const openClosed = (defaultDate = selectedDate) => {
+    savingScheduleRef.current = false;
+    setFormError("");
+    const savedClosed = unsavedClosedDraftRef.current;
+    if (savedClosed) {
+      setClosedDraft({
+        date: savedClosed.date || defaultDate,
+        locationId: savedClosed.locationId,
+        reason: savedClosed.reason,
+      });
+      return;
+    }
+    closedDraftDirtyRef.current = false;
+    setClosedDraft({
+      date: defaultDate,
+      locationId: "",
+      reason: "",
+    });
+  };
+  const closeClosed = (clearSavedDraft = false) => {
+    if (clearSavedDraft) {
+      unsavedClosedDraftRef.current = null;
+      closedDraftDirtyRef.current = false;
+    } else if (
+      closedDraft &&
+      (closedDraftDirtyRef.current ||
+        closedDraft.reason.trim() !== "" ||
+        closedDraft.locationId !== "" ||
+        closedDraft.date !== selectedDate)
+    ) {
+      unsavedClosedDraftRef.current = { ...closedDraft };
+    }
     closeNative(closedFormRef.current);
     setClosedDraft(null);
   };
@@ -412,8 +488,10 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
         },
         "장소와 준비물을 저장했습니다.",
       )
-    )
+    ) {
+      unsavedLocationDraftRef.current = null;
       setLocationDraft(newLocation());
+    }
   };
   const cancelOccurrence = (row: InstructorScheduleOccurrence) => {
     const exception: InstructorScheduleException = {
@@ -498,7 +576,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
       );
       if (saved) {
         setSelectedDate(closedDraft.date);
-        closeClosed();
+        closeClosed(true);
       }
     } finally {
       if (saved) {
@@ -565,26 +643,14 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => {
-              setFormError("");
-              setLocationsOpen(true);
-              setLocationDraft(newLocation());
-            }}
+            onClick={() => openLocations()}
           >
             장소 관리
           </button>
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => {
-              savingScheduleRef.current = false;
-              setFormError("");
-              setClosedDraft({
-                date: selectedDate,
-                locationId: "",
-                reason: "",
-              });
-            }}
+            onClick={() => openClosed()}
           >
             휴무 등록
           </button>
@@ -1728,18 +1794,20 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 type="date"
                 required
                 value={closedDraft.date}
-                onChange={(e) =>
-                  setClosedDraft({ ...closedDraft, date: e.target.value })
-                }
+                onChange={(e) => {
+                  closedDraftDirtyRef.current = true;
+                  setClosedDraft({ ...closedDraft, date: e.target.value });
+                }}
               />
             </label>
             <label>
               휴무 장소
               <select
                 value={closedDraft.locationId}
-                onChange={(e) =>
-                  setClosedDraft({ ...closedDraft, locationId: e.target.value })
-                }
+                onChange={(e) => {
+                  closedDraftDirtyRef.current = true;
+                  setClosedDraft({ ...closedDraft, locationId: e.target.value });
+                }}
               >
                 <option value="">모든 장소</option>
                 {data.locations.map((item) => (
@@ -1754,9 +1822,10 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
               <textarea
                 maxLength={2000}
                 value={closedDraft.reason}
-                onChange={(e) =>
-                  setClosedDraft({ ...closedDraft, reason: e.target.value })
-                }
+                onChange={(e) => {
+                  closedDraftDirtyRef.current = true;
+                  setClosedDraft({ ...closedDraft, reason: e.target.value });
+                }}
               />
             </label>
             <p className="muted">

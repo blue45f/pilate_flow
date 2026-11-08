@@ -1,0 +1,245 @@
+/* Mobile information density, touch targets (>=44px), Korean word-break, and keyboard focus clarity
+   for InstructorScheduleView across 320px / 360px / 390px viewports. */
+
+.instructor-schedule,
+.instructor-schedule *,
+.instructor-schedule *::before,
+.instructor-schedule *::after {
+  box-sizing: border-box;
+}
+
+.instructor-schedule {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.instructor-schedule :is(h1, h2, h3, p, span, strong, summary, label, legend, dt, dd) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* Ensure all interactive controls in schedule view and schedule modals meet >=44x44px touch targets */
+.instructor-schedule :is(button, .btn-primary, .btn-secondary, .text-button, .icon-button),
+.schedule-form :is(button, .btn-primary, .btn-secondary, .text-button),
+.schedule-location-list :is(button, .btn-secondary, .text-button) {
+  min-height: 44px;
+  min-width: 44px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.instructor-schedule .schedule-register summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 4px;
+}
+
+/* Clear, non-overlapping keyboard focus outlines */
+.instructor-schedule :is(button, input, select, textarea, summary, [tabindex="-1"]):focus-visible,
+.schedule-form :is(button, input, select, textarea):focus-visible,
+.schedule-location-list button:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring, #22796d);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Comfortable spacing for header, toolbars, and action strips */
+.instructor-schedule .schedule-actions,
+.instructor-schedule .schedule-card-actions,
+.schedule-location-list,
+.schedule-form .schedule-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.instructor-schedule .schedule-view-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.instructor-schedule .schedule-view-toggle > button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 14px;
+}
+
+/* Schedule occurrence cards: comfortable vertical rhythm and clear hierarchy */
+.instructor-schedule .schedule-class {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  margin-top: 12px;
+  min-width: 0;
+  max-width: 100%;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.instructor-schedule .schedule-class h3 {
+  margin: 2px 0 0;
+  line-height: 1.45;
+}
+
+.instructor-schedule .schedule-class p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.instructor-schedule .schedule-card-actions {
+  margin-top: 6px;
+  padding-top: 12px;
+  gap: 8px;
+}
+
+.instructor-schedule .schedule-card-actions > button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+}
+
+/* Empty states, closures, feedback, and warnings: non-overlapping and legible on narrow viewports */
+.instructor-schedule .schedule-empty,
+.instructor-schedule .schedule-day-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.instructor-schedule .schedule-warning,
+.instructor-schedule .schedule-feedback,
+.instructor-schedule .schedule-closure,
+.schedule-form .schedule-warning {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  min-width: 0;
+  max-width: 100%;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* Location & Holiday modals: comfortable spacing and touch targets */
+.schedule-location-list {
+  margin: 12px 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line, #dce0d7);
+}
+
+.schedule-form {
+  gap: 16px;
+}
+
+.schedule-form .equipment-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 136px), 1fr));
+  gap: 10px;
+}
+
+.schedule-form .schedule-choices {
+  gap: 10px 14px;
+}
+
+.schedule-form .schedule-choices label {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 6px 10px;
+  border: 1px solid var(--line, #dce0d7);
+  border-radius: 10px;
+  background: var(--paper, #fdfcf8);
+}
+
+/* Mobile viewports: 320px / 360px / 390px */
+@media (max-width: 420px) {
+  .instructor-schedule {
+    padding: 12px;
+  }
+
+  .instructor-schedule .schedule-page-header {
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .instructor-schedule .schedule-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 132px), 1fr));
+    gap: 8px;
+  }
+
+  .instructor-schedule .schedule-actions > button,
+  .schedule-form .schedule-actions > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .instructor-schedule .schedule-toolbar {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .instructor-schedule .schedule-view-toggle {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .instructor-schedule .schedule-week-selector {
+    padding: 12px;
+  }
+
+  .instructor-schedule .schedule-week-strip {
+    grid-template-columns: repeat(7, minmax(44px, 1fr));
+    gap: 6px;
+    padding: 4px 2px;
+  }
+
+  .instructor-schedule .schedule-week-strip > button {
+    min-width: 44px;
+    min-height: 76px;
+    padding: 8px 4px;
+  }
+
+  .instructor-schedule .schedule-day {
+    padding: 12px;
+  }
+
+  .instructor-schedule .schedule-class {
+    padding: 14px;
+    gap: 8px;
+  }
+
+  .instructor-schedule .schedule-card-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 128px), 1fr));
+    gap: 8px;
+  }
+
+  .instructor-schedule .schedule-card-actions > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .schedule-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+}

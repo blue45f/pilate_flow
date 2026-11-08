@@ -82,6 +82,8 @@ interface ExerciseAtlasViewProps {
   onOpenMotionDrafts?: (draftId?: MotionDraftId) => void;
 }
 
+export const ATLAS_DISCOVERY_RECOVERY_KEY = 'pf_atlas_discovery_recovery_v1';
+
 const INITIAL_FILTERS = {
   search: '',
   equipment: [] as string[],
@@ -95,6 +97,79 @@ const INITIAL_FILTERS = {
   props: [] as PropType[],
   hideRecent: false,
 };
+
+const hasActiveDiscoveryState = (filters: typeof INITIAL_FILTERS) =>
+  Boolean(filters.search.trim()) ||
+  filters.equipment.length > 0 ||
+  filters.props.length > 0 ||
+  filters.block !== 'all' ||
+  filters.position !== 'all' ||
+  filters.level !== 'all' ||
+  filters.duration !== 'all' ||
+  filters.favorite !== 'all' ||
+  filters.review !== 'all' ||
+  filters.motionDraft !== 'all' ||
+  filters.hideRecent;
+
+const readRecoveredFilters = (): typeof INITIAL_FILTERS => {
+  if (typeof window === 'undefined') return { ...INITIAL_FILTERS };
+  try {
+    const raw = window.sessionStorage.getItem(ATLAS_DISCOVERY_RECOVERY_KEY);
+    if (!raw) return { ...INITIAL_FILTERS };
+    const parsed = JSON.parse(raw) as Partial<typeof INITIAL_FILTERS> & {
+      focus?: string;
+      pattern?: string;
+    };
+    if (!parsed || typeof parsed !== 'object') return { ...INITIAL_FILTERS };
+    return {
+      search:
+        typeof parsed.search === 'string'
+          ? parsed.search
+          : typeof parsed.focus === 'string'
+            ? parsed.focus
+            : INITIAL_FILTERS.search,
+      equipment: Array.isArray(parsed.equipment)
+        ? parsed.equipment.filter((item): item is string => typeof item === 'string')
+        : INITIAL_FILTERS.equipment,
+      block: typeof parsed.block === 'string' ? parsed.block : INITIAL_FILTERS.block,
+      position: typeof parsed.position === 'string' ? parsed.position : INITIAL_FILTERS.position,
+      level: typeof parsed.level === 'string' ? parsed.level : INITIAL_FILTERS.level,
+      duration: typeof parsed.duration === 'string' ? parsed.duration : INITIAL_FILTERS.duration,
+      favorite: typeof parsed.favorite === 'string' ? parsed.favorite : INITIAL_FILTERS.favorite,
+      review: typeof parsed.review === 'string' ? parsed.review : INITIAL_FILTERS.review,
+      motionDraft:
+        typeof parsed.motionDraft === 'string'
+          ? parsed.motionDraft
+          : typeof parsed.pattern === 'string'
+            ? parsed.pattern
+            : INITIAL_FILTERS.motionDraft,
+      props: Array.isArray(parsed.props)
+        ? (parsed.props.filter((item): item is PropType => typeof item === 'string') as PropType[])
+        : INITIAL_FILTERS.props,
+      hideRecent:
+        typeof parsed.hideRecent === 'boolean' ? parsed.hideRecent : INITIAL_FILTERS.hideRecent,
+    };
+  } catch {
+    return { ...INITIAL_FILTERS };
+  }
+};
+
+const INITIAL_STORE_STATE = usePilatesStore.getState();
+usePilatesStore.subscribe((state, prevState) => {
+  if (
+    typeof window !== 'undefined' &&
+    (state === INITIAL_STORE_STATE ||
+      (state.exercises === INITIAL_STORE_STATE.exercises &&
+        prevState.exercises !== INITIAL_STORE_STATE.exercises))
+  ) {
+    try {
+      window.sessionStorage.removeItem(ATLAS_DISCOVERY_RECOVERY_KEY);
+    } catch {
+      // Ignore storage access errors
+    }
+  }
+});
+
 const LEVEL_NAMES = { '1.0': '기초', '1.5': '중급', '2.0': '심화' };
 const PATTERN_STUDIES = [
   ...MOTION_PATTERN_REFERENCES.filter((reference) => reference.family === 'authoring-batch'),
@@ -721,6 +796,15 @@ const VerifiedReferencesSection: React.FC<{
         <div className="verified-reference-empty" role="status" aria-live="polite">
           <Search size={22} aria-hidden="true" />
           <p>조건에 맞는 공개 참고 자료가 없어요.</p>
+          {(search.trim() || filterCount > 0) && (
+            <p className="library-empty-context">
+              {search.trim() ? `‘${search.trim()}’ 검색어` : ''}
+              {search.trim() && filterCount > Number(Boolean(search.trim())) ? ' · ' : ''}
+              {filterCount > Number(Boolean(search.trim()))
+                ? `필터 ${filterCount - Number(Boolean(search.trim()))}개 적용 중`
+                : ''}
+            </p>
+          )}
           <div className="verified-reference-empty-actions">
             {search.trim() && (
               <button type="button" className="btn-secondary" onClick={() => setSearch('')}>
@@ -773,7 +857,19 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const [collection, setCollection] = useState<'notes' | 'references' | 'courses'>('notes');
   const [sourceToPlan, setSourceToPlan] = useState<VerifiedPublicReference | null>(null);
   const [ownNoteOpen, setOwnNoteOpen] = useState(false);
-  const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [filters, setFilters] = useState<typeof INITIAL_FILTERS>(() => readRecoveredFilters());
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (!hasActiveDiscoveryState(filters)) {
+        window.sessionStorage.removeItem(ATLAS_DISCOVERY_RECOVERY_KEY);
+      } else {
+        window.sessionStorage.setItem(ATLAS_DISCOVERY_RECOVERY_KEY, JSON.stringify(filters));
+      }
+    } catch {
+      // Ignore storage quota or security errors
+    }
+  }, [filters]);
   const [notesVisible, setNotesVisible] = useState({
     signature: '',
     limit: 12,
@@ -811,6 +907,13 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const previewTrigger = useRef<HTMLButtonElement | null>(null);
   const focusSearch = () => requestAnimationFrame(() => searchInput.current?.focus());
   const resetFilters = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        window.sessionStorage.removeItem(ATLAS_DISCOVERY_RECOVERY_KEY);
+      } catch {
+        // Ignore storage errors
+      }
+    }
     setFilters({ ...INITIAL_FILTERS });
     focusSearch();
   };
@@ -1073,6 +1176,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     }, 2600);
   };
 
+  const hasSearchOrFilters = Boolean(filters.search.trim()) || activeFilterCount > 0;
+  const activeFlowStep: 1 | 2 | 3 = inspectedExercise ? 3 : hasSearchOrFilters ? 2 : 1;
+
   return (
     <div className="movement-library motion-library" data-filters-expanded={showFilters}>
       <header className="library-heading">
@@ -1195,6 +1301,71 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         </div>
       ) : (
         <div id="library-notes-panel" role="tabpanel" aria-labelledby="library-notes-tab">
+          <div
+            className="atlas-flow-step-bar"
+            data-testid="atlas-flow-step-bar"
+            data-active-step={String(activeFlowStep)}
+            aria-label="라이브러리 탐색 단계 안내"
+          >
+            <ol className="atlas-flow-step-list">
+              <li
+                className={`atlas-flow-step ${activeFlowStep === 1 ? 'is-current' : 'is-done'}`}
+                data-step="1"
+                data-state={activeFlowStep === 1 ? 'current' : 'done'}
+                aria-current={activeFlowStep === 1 ? 'step' : undefined}
+              >
+                <span className="atlas-flow-step-label">1 기구·검색어로 좁히기</span>
+                <span className="atlas-flow-step-meta">
+                  {hasSearchOrFilters
+                    ? `조건 ${activeFilterChips.length}개 적용`
+                    : '기구·부위·키워드 선택'}
+                </span>
+              </li>
+              <li
+                className={`atlas-flow-step ${
+                  activeFlowStep === 2
+                    ? 'is-current'
+                    : activeFlowStep > 2
+                      ? 'is-done'
+                      : 'is-upcoming'
+                }`}
+                data-step="2"
+                data-state={
+                  activeFlowStep === 2 ? 'current' : activeFlowStep > 2 ? 'done' : 'upcoming'
+                }
+                aria-current={activeFlowStep === 2 ? 'step' : undefined}
+              >
+                <span className="atlas-flow-step-label">2 동작 카드 선택</span>
+                <span className="atlas-flow-step-meta">
+                  {inspectedExercise
+                    ? `${inspectedExercise.nameKo} 선택됨`
+                    : `후보 ${filtered.length}개 중 선택`}
+                </span>
+              </li>
+              <li
+                className={`atlas-flow-step ${activeFlowStep === 3 ? 'is-current' : 'is-upcoming'}`}
+                data-step="3"
+                data-state={activeFlowStep === 3 ? 'current' : 'upcoming'}
+                aria-current={activeFlowStep === 3 ? 'step' : undefined}
+              >
+                <span className="atlas-flow-step-label">3 세부 안내 확인·수업안 추가</span>
+                <span className="atlas-flow-step-meta">
+                  {inspectedExercise
+                    ? '안내창에서 주의점·시간 확인'
+                    : '선택 후 세부 안내 확인'}
+                </span>
+              </li>
+            </ol>
+            {hasSearchOrFilters && filtered.length > 0 && (
+              <button
+                type="button"
+                className="btn-secondary atlas-flow-reset-button"
+                onClick={resetFilters}
+              >
+                검색·필터 초기화 <X size={13} aria-hidden="true" />
+              </button>
+            )}
+          </div>
           <section className="library-tools panel" aria-label="동작 검색과 필터">
             <div className="library-search-row">
               <label className="library-search">
@@ -1734,11 +1905,21 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 <div className="library-empty panel" role="status" aria-live="polite">
                   <Search size={29} aria-hidden="true" />
                   <h2>조건에 맞는 동작이 없어요.</h2>
-                  {(filters.search.trim() || activeFilterCount > 0) && (
-                    <p className="library-empty-context">
+                  {(filters.search.trim() ||
+                    activeFilterCount > 0 ||
+                    exerciseBrowseScope === 'owned') && (
+                    <p className="library-empty-context" data-testid="atlas-empty-filter-summary">
                       {filters.search.trim() ? `‘${filters.search.trim()}’ 검색어` : ''}
                       {filters.search.trim() && activeFilterCount > 0 ? ' · ' : ''}
-                      {activeFilterCount > 0 ? `필터 ${activeFilterCount}개 적용 중` : ''}
+                      {activeFilterCount > 0
+                        ? `필터 ${activeFilterCount}개 적용 중 (${activeFilterChips
+                            .filter((chip) => chip.key !== 'search')
+                            .map((chip) => chip.label)
+                            .join(', ')})`
+                        : ''}
+                      {exerciseBrowseScope === 'owned'
+                        ? `${filters.search.trim() || activeFilterCount > 0 ? ' · ' : ''}내 보유 장비 범위`
+                        : ''}
                     </p>
                   )}
                   <p className="muted">
@@ -1752,6 +1933,11 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                     {filters.search.trim() && (
                       <PfButton variant="secondary" onClick={clearSearch}>
                         검색어 지우기
+                      </PfButton>
+                    )}
+                    {hasSearchOrFilters && (
+                      <PfButton variant="secondary" onClick={resetFilters}>
+                        검색·필터 초기화
                       </PfButton>
                     )}
                     <PfButton

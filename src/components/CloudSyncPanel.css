@@ -1,0 +1,145 @@
+/* Mobile touch targets (>=44px), spacing, and clean wrapping for CloudSyncPanel, PwaInstallPanel, and PilatesSettingsPage on 320px/360px/390px. */
+
+.firebase-account-panel,
+.firebase-account-panel *,
+.pwa-install-panel,
+.pwa-install-panel *,
+.pf-settings-page,
+.pf-settings-page * {
+  box-sizing: border-box;
+}
+
+.firebase-account-panel,
+.pwa-install-panel,
+.pf-settings-page {
+  min-width: 0;
+  max-width: 100%;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* Status banners: >= 44px touch/reading height and clean wrapping */
+.firebase-account-panel :is(.firebase-account-boundary, .firebase-account-status, .firebase-account-error),
+.pwa-install-panel :is([role='status'], .pwa-install-status),
+.pf-settings-page :is(.pf-settings-status, .pf-settings-alert, .pf-settings-guard-box) {
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.firebase-account-panel .firebase-account-status,
+.pwa-install-panel [role='status'] {
+  border: 1px solid #d8dfd4;
+  background: #f5f7f2;
+  color: #233f37;
+  margin-block: 10px;
+}
+
+/* Buttons, links, summaries, and file labels: >= 44x44px touch targets */
+.firebase-account-panel :is(button, a, .btn-secondary, .firebase-google-button, .firebase-account-switch, .firebase-account-logout, .firebase-account-retry, .firebase-account-link),
+.pwa-install-panel :is(button, summary, .pwa-install-action),
+.pf-settings-page :is(button, a, summary, label.pf-settings-file-label, input[type='file'], .pf-step-guide-chip, .pf-step-nav-btn, .pf-settings-page__nav-chip, .pf-settings-page__btn) {
+  min-height: 44px;
+  min-width: 44px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.pwa-install-panel summary {
+  display: flex;
+  align-items: center;
+  padding: 8px 4px;
+}
+
+.pwa-install-panel .pwa-install-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+}
+
+/* Long emails, filenames, and URLs wrap cleanly on 320px */
+.firebase-account-details,
+.firebase-account-details strong,
+.firebase-account-details span,
+.firebase-account-email,
+.firebase-account-link,
+.pf-settings-kv-item dd,
+.pf-settings-file-name {
+  min-width: 0;
+  max-width: 100%;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.firebase-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.firebase-account-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 14px;
+}
+
+/* Backup export & import action spacing and file input label */
+.pf-settings-page .pf-settings-actions,
+.pf-settings-backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.pf-settings-file-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--pf-sp-border, #d6ddd1);
+  border-radius: 12px;
+  background: var(--pf-sp-card, #fffefa);
+  color: var(--pf-sp-forest, #213c34);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pf-settings-task-steps {
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 420px) {
+  .firebase-account-identity {
+    gap: 10px;
+  }
+
+  .firebase-account-panel :is(.firebase-google-button, .firebase-account-switch, .firebase-account-logout, .firebase-account-retry, .firebase-account-link),
+  .pwa-install-panel .pwa-install-action,
+  .pf-settings-page .pf-settings-actions > :is(button, label.pf-settings-file-label) {
+    width: 100%;
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+}

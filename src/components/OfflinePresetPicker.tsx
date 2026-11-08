@@ -19,6 +19,9 @@ import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesStudioState } from '../store/usePilatesStore';
 import { PresetSuggestionCandidatePreview } from '../features/presetSuggestionCandidate';
 import '../styles/offline-presets.css';
+import './OfflinePresetPicker.css';
+
+export const PRESET_PICKER_DRAFT_STORAGE_KEY = 'pf_preset_picker_draft_v1';
 
 type Kind = 'class' | 'block' | 'reusable' | 'suggested';
 interface Selection {
@@ -27,22 +30,125 @@ interface Selection {
   expected: PilatesStudioState;
 }
 
+interface PresetPickerDraftSnapshot {
+  kind: Kind;
+  apparatus: string;
+  theme: string;
+  minutes: string;
+  selectedPreset: { kind: 'class' | 'block' | 'reusable'; id: string } | null;
+  mode: 'append' | 'replace';
+}
+
+function readPresetPickerDraft(): PresetPickerDraftSnapshot | null {
+  try {
+    const raw = sessionStorage.getItem(PRESET_PICKER_DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<PresetPickerDraftSnapshot>;
+    if (!parsed || typeof parsed !== 'object') return null;
+    const validKind: Kind =
+      parsed.kind === 'class' ||
+      parsed.kind === 'block' ||
+      parsed.kind === 'reusable' ||
+      parsed.kind === 'suggested'
+        ? parsed.kind
+        : 'class';
+    const validMode: 'append' | 'replace' = parsed.mode === 'replace' ? 'replace' : 'append';
+    const selectedPreset =
+      parsed.selectedPreset &&
+      typeof parsed.selectedPreset === 'object' &&
+      (parsed.selectedPreset.kind === 'class' ||
+        parsed.selectedPreset.kind === 'block' ||
+        parsed.selectedPreset.kind === 'reusable') &&
+      typeof parsed.selectedPreset.id === 'string' &&
+      parsed.selectedPreset.id.length > 0
+        ? { kind: parsed.selectedPreset.kind, id: parsed.selectedPreset.id }
+        : null;
+    return {
+      kind: validKind,
+      apparatus: typeof parsed.apparatus === 'string' ? parsed.apparatus : 'all',
+      theme: typeof parsed.theme === 'string' ? parsed.theme : 'all',
+      minutes: typeof parsed.minutes === 'string' ? parsed.minutes : 'all',
+      selectedPreset,
+      mode: validMode,
+    };
+  } catch {
+    return null;
+  }
+}
+
+usePilatesStore.subscribe((nextState, prevState) => {
+  if (
+    prevState !== nextState &&
+    nextState.undoStack.length === 0 &&
+    nextState.activeSteps.length === 0 &&
+    (prevState.undoStack.length > 0 ||
+      prevState.activeSteps.length > 0 ||
+      prevState.activeTitle !== nextState.activeTitle ||
+      prevState.activeSequenceId !== nextState.activeSequenceId)
+  ) {
+    try {
+      sessionStorage.removeItem(PRESET_PICKER_DRAFT_STORAGE_KEY);
+    } catch {
+      // Ignore storage errors
+    }
+  }
+});
+
 /** Templates are copied only after a deliberate click. Browsing never changes a plan. */
 export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string) => void }) {
   const state = usePilatesStore();
-  const [kind, setKind] = useState<Kind>('class');
-  const [apparatus, setApparatus] = useState('all');
-  const [theme, setTheme] = useState('all');
-  const [minutes, setMinutes] = useState('all');
+  const [initialDraft] = useState<PresetPickerDraftSnapshot | null>(() => readPresetPickerDraft());
+  const [kind, setKind] = useState<Kind>(() => initialDraft?.kind ?? 'class');
+  const [apparatus, setApparatus] = useState(() => initialDraft?.apparatus ?? 'all');
+  const [theme, setTheme] = useState(() => initialDraft?.theme ?? 'all');
+  const [minutes, setMinutes] = useState(() => initialDraft?.minutes ?? 'all');
   const [limit, setLimit] = useState(6);
-  const [selection, setSelection] = useState<Selection | null>(null);
+  const [selection, setSelection] = useState<Selection | null>(() => {
+    const saved = initialDraft?.selectedPreset;
+    if (!saved) return null;
+    const current = usePilatesStore.getState();
+    const exists =
+      saved.kind === 'class'
+        ? OFFLINE_CLASS_PRESETS.some((item) => item.id === saved.id)
+        : saved.kind === 'block'
+          ? OFFLINE_BLOCK_PRESETS.some((item) => item.id === saved.id)
+          : getSavedReusableBlocks().some((item) => item.id === saved.id);
+    if (!exists) return null;
+    return { kind: saved.kind, id: saved.id, expected: current };
+  });
   const previewRef = useRef<HTMLElement>(null);
   useEffect(() => {
     previewRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' });
   }, [selection]);
-  const [mode, setMode] = useState<'append' | 'replace'>('append');
+  const [mode, setMode] = useState<'append' | 'replace'>(() => {
+    const saved = initialDraft?.selectedPreset;
+    const current = usePilatesStore.getState();
+    if (saved) {
+      if (saved.kind === 'class' && current.activeSteps.length === 0) return 'replace';
+      if (saved.kind !== 'class') return 'append';
+      return initialDraft?.mode ?? 'append';
+    }
+    return initialDraft?.mode ?? 'append';
+  });
   const [confirmed, setConfirmed] = useState(false);
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    const snapshot: PresetPickerDraftSnapshot = {
+      kind,
+      apparatus,
+      theme,
+      minutes,
+      selectedPreset: selection ? { kind: selection.kind, id: selection.id } : null,
+      mode,
+    };
+    try {
+      sessionStorage.setItem(PRESET_PICKER_DRAFT_STORAGE_KEY, JSON.stringify(snapshot));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [kind, apparatus, theme, minutes, selection, mode]);
+
   const savedReusableBlocks = getSavedReusableBlocks();
   const options = kind === 'class' ? OFFLINE_CLASS_PRESETS : OFFLINE_BLOCK_PRESETS;
   const matches =
@@ -163,8 +269,30 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
     : selectedReusable
       ? [selectedReusable.apparatus]
       : [];
+  const hasSelectedPreview = Boolean((selected || selectedReusable) && selection);
   return (
     <section className="offline-presets" aria-label="오프라인 수업·연계 블록 프리셋">
+      <ol
+        className="offline-presets-step-guide"
+        data-testid="preset-picker-step-guide"
+        aria-label="프리셋 불러오기 단계 안내"
+      >
+        <li
+          className={`offline-presets-step-item ${!hasSelectedPreview ? 'is-active' : 'is-complete'}`}
+          aria-current={!hasSelectedPreview ? 'step' : undefined}
+        >
+          1 프리셋 조건·목록에서 선택
+        </li>
+        <li className="offline-presets-step-arrow" aria-hidden="true">
+          →
+        </li>
+        <li
+          className={`offline-presets-step-item ${hasSelectedPreview ? 'is-active' : ''}`}
+          aria-current={hasSelectedPreview ? 'step' : undefined}
+        >
+          2 구성 확인 후 수업안에 불러오기
+        </li>
+      </ol>
       <p className="muted">
         AI 없이 골라 복사하세요. 원본과 저장한 수업·이력은 그대로 두고, 동작·순서·시간을 자유롭게
         바꿀 수 있어요.

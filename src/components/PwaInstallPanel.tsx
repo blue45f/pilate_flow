@@ -1,6 +1,7 @@
 import { Download, Share } from 'lucide-react';
 import { requestPwaInstall, usePwa } from '../lib/pwa';
 import '../styles/pwa-install.css';
+import './CloudSyncPanel.css';
 
 export function PwaInstallPanel() {
   const pwa = usePwa();
@@ -28,7 +29,7 @@ export function PwaInstallPanel() {
       <h3 id="pwa-install-heading">홈 화면에 앱 설치</h3>
       <p>Flow Atelier를 홈 화면이나 앱 목록에서 바로 여세요. 앱스토어 다운로드 없이 설치합니다.</p>
       {pwa.standalone || pwa.installed ? (
-        <p role="status" aria-live="polite">
+        <p role="status" aria-live="polite" className="pwa-install-status">
           {primaryStatusMessage}
         </p>
       ) : (
@@ -43,7 +44,7 @@ export function PwaInstallPanel() {
             </button>
           )}
           {installStatusMessage && (
-            <p role="status" aria-live="polite">
+            <p role="status" aria-live="polite" className="pwa-install-status">
               {primaryStatusMessage}
             </p>
           )}
@@ -85,7 +86,7 @@ export function PwaInstallPanel() {
           <p>기본 화면을 기기에 준비하고 있어요. 처음에는 인터넷 연결을 유지해 주세요.</p>
         )}
         {updateReadyMessage && !installStatusMessage && (
-          <p role="status" aria-live="polite">
+          <p role="status" aria-live="polite" className="pwa-install-status">
             {updateReadyMessage}
           </p>
         )}

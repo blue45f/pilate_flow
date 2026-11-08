@@ -1,0 +1,127 @@
+/* Mobile UX, step guide, Korean text wrapping, and >= 44x44px touch targets for OfflinePresetPicker */
+
+.offline-presets {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.offline-presets-step-guide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0;
+  padding: 10px 12px;
+  list-style: none;
+  border-radius: 12px;
+  background: #f2f6f0;
+  border: 1px solid var(--line, #d3ddcf);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.offline-presets-step-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #d3ddcf;
+  color: #4a5a4d;
+  font-weight: 500;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.offline-presets-step-item.is-active {
+  background: var(--forest, #214e40);
+  border-color: var(--forest, #214e40);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.offline-presets-step-item.is-complete {
+  background: #e3ede6;
+  border-color: #9ec0ae;
+  color: #1c4437;
+  font-weight: 600;
+}
+
+.offline-presets-step-arrow {
+  color: #5b6d5e;
+  font-weight: 600;
+  user-select: none;
+}
+
+.offline-presets button,
+.offline-presets select,
+.offline-presets summary,
+.offline-preset-card {
+  min-height: 44px;
+  min-width: 44px;
+  box-sizing: border-box;
+}
+
+.offline-presets p,
+.offline-presets-tabs button,
+.offline-preset-card,
+.offline-preset-card strong,
+.offline-preset-card span,
+.offline-preset-preview h3,
+.offline-preset-preview li,
+.offline-preset-preview li strong,
+.offline-preset-preview li span,
+.offline-preset-preview li small,
+.offline-preset-confirm {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.offline-preset-card strong {
+  line-height: 1.45;
+}
+
+@media (max-width: 390px) {
+  .offline-presets-tabs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .offline-presets-tabs button {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .offline-presets-filters {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .offline-presets-list {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .offline-preset-card {
+    padding: 12px;
+  }
+
+  .offline-preset-preview {
+    padding: 12px;
+  }
+
+  .offline-preset-preview > button.btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+}

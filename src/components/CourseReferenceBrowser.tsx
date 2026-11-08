@@ -457,6 +457,11 @@ export function CourseReferenceBrowser() {
       {filtered.length === 0 && (
         <div className="course-empty">
           <h3>이 조건의 수업 자료가 없습니다</h3>
+          {activeFilters.length > 0 && (
+            <p className="course-empty-context" data-testid="course-empty-filter-summary">
+              적용 조건: {activeFilters.map((item) => item.label).join(' · ')}
+            </p>
+          )}
           <p>
             {filters.ownedOnly
               ? '전체 필수 장비가 확인된 링크가 없어 보유 장비 조건으로 표시할 수 없습니다.'

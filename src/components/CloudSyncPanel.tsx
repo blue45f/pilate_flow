@@ -8,6 +8,7 @@ import {
   useFirebaseSession,
 } from '../lib/firebaseSession';
 import '../styles/firebase-account.css';
+import './CloudSyncPanel.css';
 
 function GoogleMark() {
   return (
@@ -85,28 +86,32 @@ export function CloudSyncPanel() {
           </span>
           <div className="firebase-account-details">
             <strong>{session.user.displayName || 'Google 계정'}</strong>
-            {session.user.email && <span>{session.user.email}</span>}
+            {session.user.email && (
+              <span className="firebase-account-email">{session.user.email}</span>
+            )}
             <span className="firebase-account-connected">
               <CircleCheck size={14} aria-hidden="true" /> Google 로그인됨 · 클라우드 백업 미연결
             </span>
           </div>
-          <button
-            type="button"
-            className="btn-secondary"
-            disabled={busy}
-            onClick={() => void signInWithGoogle()}
-          >
-            다른 Google 계정으로 전환
-          </button>
-          <button
-            type="button"
-            className="btn-secondary firebase-account-logout"
-            disabled={busy}
-            onClick={() => void signOutOfFirebase()}
-          >
-            <LogOut size={16} aria-hidden="true" />
-            {session.operation === 'signing-out' ? '로그아웃 중…' : '로그아웃'}
-          </button>
+          <div className="firebase-account-actions">
+            <button
+              type="button"
+              className="btn-secondary firebase-account-switch"
+              disabled={busy}
+              onClick={() => void signInWithGoogle()}
+            >
+              다른 Google 계정으로 전환
+            </button>
+            <button
+              type="button"
+              className="btn-secondary firebase-account-logout"
+              disabled={busy}
+              onClick={() => void signOutOfFirebase()}
+            >
+              <LogOut size={16} aria-hidden="true" />
+              {session.operation === 'signing-out' ? '로그아웃 중…' : '로그아웃'}
+            </button>
+          </div>
         </div>
       )}
 

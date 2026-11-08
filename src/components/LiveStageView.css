@@ -1,0 +1,226 @@
+/* Mobile clarity, zero header/utility overlap, >= 44x44px touch targets, and Korean text wrapping for LiveStageView */
+
+.teaching-stage,
+#root .vnext-shell .teaching-stage {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: clip;
+}
+
+.teaching-stage-header,
+#root .vnext-shell .teaching-stage-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 16px;
+  position: static;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.teaching-stage-header > div:first-child,
+#root .vnext-shell .teaching-stage-header > div:first-child {
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.teaching-stage-utility,
+#root .vnext-shell .teaching-stage-utility {
+  position: static !important;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* >= 44x44px touch targets on all stage controls */
+.teaching-back,
+.teaching-stage-utility button,
+.teaching-stage-utility .icon-btn,
+.teaching-stage-utility .btn-secondary,
+.teaching-play-controls button,
+.teaching-step-control,
+.teaching-play,
+.teaching-timer-options button,
+.teaching-timer-options .btn-ghost,
+.teaching-timer-options .teaching-switch,
+.teaching-voice-section button,
+.teaching-voice-command-box button,
+.teaching-log-link,
+.teaching-stage-outline li button,
+.teaching-empty button,
+#root .vnext-shell .teaching-back,
+#root .vnext-shell .teaching-stage-utility button,
+#root .vnext-shell .teaching-play-controls button {
+  min-height: 44px;
+  min-width: 44px;
+  box-sizing: border-box;
+}
+
+.teaching-back,
+#root .vnext-shell .teaching-back {
+  padding: 6px 10px 6px 0;
+}
+
+/* Step progress indicator banner */
+.teaching-step-progress-banner,
+#root .vnext-shell .teaching-step-progress-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background: #edf5f0;
+  border: 1px solid #c9ddd1;
+  color: #164b3e;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.teaching-high-contrast .teaching-step-progress-banner,
+#root .vnext-shell .teaching-high-contrast .teaching-step-progress-banner {
+  background: #1d392c;
+  border-color: #6e866e;
+  color: #f1ffdf;
+}
+
+.teaching-step-progress-count {
+  font-weight: 700;
+}
+
+.teaching-step-progress-next {
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* Korean movement names, cues, and notes clean wrapping */
+.teaching-stage-header h1,
+.teaching-current-name,
+.teaching-current-en,
+.teaching-practice-summary,
+.teaching-breath,
+.teaching-cue-section li,
+.teaching-layer,
+.teaching-layer span,
+.teaching-instructor-note,
+.teaching-next-panel h2,
+.teaching-next-setup strong,
+.teaching-next-cue,
+.teaching-stage-outline li strong,
+.teaching-safety,
+.teaching-rest-note p,
+.teaching-empty h1,
+.teaching-empty p,
+#root .vnext-shell .teaching-stage-header h1,
+#root .vnext-shell .teaching-current-name,
+#root .vnext-shell .teaching-next-panel h2,
+#root .vnext-shell .teaching-stage-outline li strong {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .teaching-stage-header,
+  #root .vnext-shell .teaching-stage-header {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding-right: 0;
+  }
+
+  .teaching-stage-utility,
+  #root .vnext-shell .teaching-stage-utility {
+    position: static !important;
+    justify-content: flex-start;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .teaching-stage-utility .btn-secondary,
+  #root .vnext-shell .teaching-stage-utility .btn-secondary {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 390px) {
+  .teaching-current-panel,
+  #root .vnext-shell .teaching-current-panel {
+    padding: 14px 12px;
+  }
+
+  .teaching-current-meta,
+  #root .vnext-shell .teaching-current-meta {
+    margin: -14px -12px 12px;
+    padding: 10px 12px;
+    gap: 6px;
+  }
+
+  .teaching-current-name,
+  #root .vnext-shell .teaching-current-name {
+    font-size: clamp(20px, 6vw, 24px);
+    line-height: 1.38;
+  }
+
+  .teaching-timer-digits,
+  #root .vnext-shell .teaching-timer-digits {
+    font-size: clamp(54px, 19vw, 84px);
+    letter-spacing: -2px;
+  }
+
+  .teaching-play-controls,
+  #root .vnext-shell .teaching-play-controls {
+    grid-template-columns: minmax(68px, 0.95fr) minmax(110px, 1.5fr) minmax(68px, 0.95fr);
+    gap: 6px;
+  }
+
+  .teaching-play-controls button,
+  #root .vnext-shell .teaching-play-controls button {
+    min-height: 48px;
+    min-width: 44px;
+    padding-inline: 6px !important;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  .teaching-timer-options,
+  #root .vnext-shell .teaching-timer-options {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .teaching-timer-options .btn-ghost,
+  #root .vnext-shell .teaching-timer-options .btn-ghost {
+    justify-content: flex-start;
+  }
+
+  .teaching-setup-panel dl > div,
+  #root .vnext-shell .teaching-setup-panel dl > div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .teaching-setup-panel dd,
+  #root .vnext-shell .teaching-setup-panel dd {
+    text-align: left;
+  }
+}

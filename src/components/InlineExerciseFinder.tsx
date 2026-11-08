@@ -48,8 +48,46 @@ interface FinderFilters {
   duration: DurationFilter;
   motionOnly: boolean;
 }
-const emptyFilters = (): FinderFilters => ({
-  query: '',
+export const INLINE_FINDER_QUERY_STORAGE_KEY = 'pf_inline_finder_query_v1';
+
+function readSavedFinderQuery(): string {
+  try {
+    const raw =
+      typeof window !== 'undefined'
+        ? window.sessionStorage.getItem(INLINE_FINDER_QUERY_STORAGE_KEY)
+        : null;
+    return raw && raw.trim() ? raw : '';
+  } catch {
+    return '';
+  }
+}
+
+function writeSavedFinderQuery(query: string): void {
+  try {
+    if (typeof window === 'undefined') return;
+    if (query.trim()) {
+      window.sessionStorage[INLINE_FINDER_QUERY_STORAGE_KEY] = query;
+    } else {
+      delete window.sessionStorage[INLINE_FINDER_QUERY_STORAGE_KEY];
+    }
+  } catch {
+    // ignore storage quota or sandbox errors
+  }
+}
+
+usePilatesStore.subscribe((state, prev) => {
+  if (
+    state.activeSequenceId !== prev.activeSequenceId ||
+    state.exercises !== prev.exercises ||
+    state.savedSequences !== prev.savedSequences ||
+    (state.draftCriteria === null && prev.draftCriteria !== null)
+  ) {
+    writeSavedFinderQuery('');
+  }
+});
+
+const emptyFilters = (initialQuery = ''): FinderFilters => ({
+  query: initialQuery,
   equipment: [],
   bodyTag: '',
   duration: 'all',
@@ -84,7 +122,9 @@ export function InlineExerciseFinder({
   const activeSteps = usePilatesStore((state) => state.activeSteps);
   const appendExerciseToSequence = usePilatesStore((state) => state.appendExerciseToSequence);
   const setActiveTab = usePilatesStore((state) => state.setActiveTab);
-  const [filters, setFilters] = useState(emptyFilters);
+  const [filters, setFilters] = useState<FinderFilters>(() =>
+    emptyFilters(readSavedFinderQuery()),
+  );
   const [tab, setTab] = useState<FilterTab>('equipment');
   const [page, setPage] = useState({ signature: '', count: 6 });
   const signature = JSON.stringify({ filters, exerciseBrowseScope, ownedEquipment, ownedProps });
@@ -108,11 +148,15 @@ export function InlineExerciseFinder({
     if (preview) previewRef.current?.focus();
   }, [preview]);
   const update = <K extends keyof FinderFilters>(key: K, value: FinderFilters[K]) => {
+    if (key === 'query' && typeof value === 'string') {
+      writeSavedFinderQuery(value);
+    }
     setFilters((previous) => ({ ...previous, [key]: value }));
     setPage({ signature: '', count: 6 });
   };
   const reset = () => {
-    setFilters(emptyFilters());
+    writeSavedFinderQuery('');
+    setFilters(emptyFilters(''));
     setPage({ signature: '', count: 6 });
     setFeedback(null);
   };
@@ -554,14 +598,24 @@ export function InlineExerciseFinder({
                   )}
                   {firstReference && <span className="ief-motion-caption">패턴 참고 · 미검수</span>}
                 </button>
-                <div className="ief-card-body">
+                <div
+                  className="ief-card-body"
+                  style={{ minWidth: 0, wordBreak: 'keep-all', overflowWrap: 'break-word' }}
+                >
                   <h3>
-                    <button type="button" onClick={() => onOpenExercise(exercise)}>
+                    <button
+                      type="button"
+                      onClick={() => onOpenExercise(exercise)}
+                      style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}
+                    >
                       {exercise.nameKo}
                     </button>
                   </h3>
-                  <p>
+                  <p style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
                     {equipmentLabel} · {exercise.defaultDurationMin}분
+                    {exercise.targetMuscles.length > 0 && (
+                      <span> · {exercise.targetMuscles.slice(0, 2).join('·')}</span>
+                    )}
                   </p>
                   {references.length > 0 && (
                     <div
@@ -573,19 +627,25 @@ export function InlineExerciseFinder({
                           type="button"
                           key={reference.variantId}
                           aria-label={`${reference.title} 초안 보기`}
+                          style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}
                           onClick={(event) => {
                             previewTriggerRef.current = event.currentTarget;
                             setPreviewExerciseId(exercise.id);
                             setPreview(reference);
                           }}
                         >
-                          <span>{reference.title}</span>
+                          <span style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
+                            {reference.title}
+                          </span>
                           <ArrowUpRight size={14} aria-hidden="true" />
                         </button>
                       ))}
                     </div>
                   )}
-                  <div className="ief-card-actions">
+                  <div
+                    className="ief-card-actions"
+                    style={{ flexWrap: 'wrap', gap: '6px', wordBreak: 'keep-all' }}
+                  >
                     <PfAiStatusBadge
                       kind={
                         isIdea
@@ -597,6 +657,7 @@ export function InlineExerciseFinder({
                             : 'review-pending'
                       }
                       className={approved ? 'is-reviewed' : 'is-pending'}
+                      style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}
                     >
                       {isIdea
                         ? ideaMeta?.triedByInstructor
@@ -629,7 +690,7 @@ export function InlineExerciseFinder({
           })}
         </div>
       ) : (
-        <div className="ief-empty">
+        <div className="ief-empty" style={{ wordBreak: 'keep-all' }}>
           <Search size={24} aria-hidden="true" />
           <h3>조건에 맞는 동작이 없어요</h3>
           <p>
@@ -638,11 +699,20 @@ export function InlineExerciseFinder({
               : '검색어와 기구·태그·시간을 조정해 보세요.'}
           </p>
           {exerciseBrowseScope === 'owned' && (
-            <button type="button" onClick={() => setExerciseBrowseScope('all')}>
+            <button
+              type="button"
+              onClick={() => setExerciseBrowseScope('all')}
+              style={{ minHeight: '44px', wordBreak: 'keep-all', marginRight: '6px' }}
+            >
               보유 장비 조건만 해제
             </button>
           )}
-          <button type="button" onClick={reset}>
+          <button
+            type="button"
+            data-testid="ief-empty-reset-btn"
+            onClick={reset}
+            style={{ minHeight: '44px', wordBreak: 'keep-all' }}
+          >
             검색·필터 초기화
           </button>
         </div>

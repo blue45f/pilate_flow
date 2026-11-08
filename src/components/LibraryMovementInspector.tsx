@@ -43,9 +43,14 @@ export function LibraryMovementInspector({
       }}
     >
       <div className="library-inspector-header">
-        <h2 id="library-inspector-heading" ref={headingRef} tabIndex={-1}>
-          선택한 동작 정보
-        </h2>
+        <div className="library-inspector-title-group">
+          <span className="library-inspector-step-badge" data-testid="inspector-flow-step-badge">
+            {exercise ? '3 세부 안내 확인·수업안 추가' : '2 동작 카드 선택 대기'}
+          </span>
+          <h2 id="library-inspector-heading" ref={headingRef} tabIndex={-1}>
+            선택한 동작 정보
+          </h2>
+        </div>
         {exercise && (
           <button type="button" onClick={onClose} aria-label="선택한 동작 정보 닫기">
             <X size={18} aria-hidden="true" />

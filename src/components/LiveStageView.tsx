@@ -39,6 +39,7 @@ import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/teaching.css';
 import '../styles/class-voice.css';
 import '../styles/live-stage-design.css';
+import './LiveStageView.css';
 import { useClassVoiceGuidance } from '../hooks/useClassVoiceGuidance';
 
 export interface LiveStageNavigationHandle {
@@ -804,6 +805,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     Math.max(0, (1 - clock.remainingMs / durations[clock.index]) * 100),
   );
   const block = CANONICAL_BLOCKS.find((value) => value.category === current.blockCategory);
+  const nextTaskLabel = next
+    ? isRestStep(next)
+      ? '중간 휴식 진행'
+      : `${nextExercise?.nameKo ?? '다음 동작'} 준비`
+    : '마무리 후 종료 · 기록';
 
   return (
     <div
@@ -873,6 +879,19 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           </button>
         </div>
       </header>
+      <div
+        className="teaching-step-progress-banner"
+        data-testid="live-stage-step-progress"
+        aria-label="현재 동작 진행 및 다음 할 일"
+      >
+        <strong className="teaching-step-progress-count">
+          현재 동작 {clock.index + 1} / 전체 {steps.length}
+        </strong>
+        <span className="teaching-meta-dot" aria-hidden="true">
+          ·
+        </span>
+        <span className="teaching-step-progress-next">다음 할 일: {nextTaskLabel}</span>
+      </div>
       {showCueSheet && (
         <section className="panel teaching-cue-sheet-panel" aria-label="수업 진행 큐시트">
           <ClassCueSheetPreview

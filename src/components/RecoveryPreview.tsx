@@ -18,6 +18,7 @@ import {
 import type { BackupRestoreRollbackPoint } from '../utils/teachingHistorySnapshot';
 import '../styles/recovery-preview.css';
 import '../styles/recovery-preview-layout.css';
+import './RecoveryPreview.css';
 
 function focusRecoveryControl(control: HTMLElement | null | undefined) {
   if (!control) return;
@@ -196,7 +197,9 @@ export function RecoveryPreview() {
                 <span>기본 예시 복원 {inspection.summary.restoredExamples}개</span>
               </div>
               {!inspection.summary.changed && (
-                <p>추가하거나 바꿀 자료가 없습니다. 현재 자료를 그대로 유지합니다.</p>
+                <p className="recovery-empty-state">
+                  추가하거나 바꿀 자료가 없습니다. 현재 자료를 그대로 유지합니다.
+                </p>
               )}
               <details className="recovery-count-details">
                 <summary>자료 유형별 개수 자세히 보기</summary>

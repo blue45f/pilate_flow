@@ -1,0 +1,153 @@
+/* Mobile UX, 3-step guide, error/loading/empty states, Korean text wrapping, and >= 44px buttons for FreeAiAssistantPanel */
+
+.free-ai-panel {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: clip;
+}
+
+.free-ai-step-guide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0;
+  padding: 10px 12px;
+  list-style: none;
+  border-radius: 12px;
+  background: #f0f4ee;
+  border: 1px solid #cdd9ce;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.free-ai-step-guide-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #d5cfc2;
+  color: #3d4b3f;
+  font-weight: 500;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.free-ai-step-guide-item.is-active {
+  background: #28422c;
+  border-color: #28422c;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.free-ai-step-guide-item.is-complete {
+  background: #e1ece3;
+  border-color: #9bb8a0;
+  color: #1f3923;
+  font-weight: 600;
+}
+
+.free-ai-step-guide-arrow {
+  color: #5a695c;
+  font-weight: 600;
+  user-select: none;
+}
+
+/* >= 44px touch targets on all interactive buttons, tabs, chips, inputs, and summaries */
+.free-ai-panel button,
+.free-ai-tab-btn,
+.free-ai-chip,
+.free-ai-btn-primary,
+.free-ai-btn-secondary,
+.free-ai-field input,
+.free-ai-field select,
+.free-ai-status-banner summary {
+  min-height: 44px;
+  min-width: 44px;
+  box-sizing: border-box;
+}
+
+.free-ai-status-banner summary {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.free-ai-status-banner.is-loading {
+  background: #eef5f9;
+  border-color: #b7d2e4;
+  color: #1f445c;
+}
+
+/* Long text, error/loading/empty states clean wrapping */
+.free-ai-title,
+.free-ai-subtitle,
+.free-ai-badge,
+.free-ai-status-banner,
+.free-ai-status-banner strong,
+.free-ai-status-banner span,
+.free-ai-status-banner p,
+.free-ai-disclaimer,
+.free-ai-tab-btn,
+.free-ai-chip,
+.free-ai-btn-primary,
+.free-ai-btn-secondary,
+.free-ai-field label,
+.free-ai-field-label,
+.free-ai-step-row,
+.free-ai-step-row strong,
+.free-ai-step-row small {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.free-ai-chip {
+  text-align: left;
+  line-height: 1.35;
+}
+
+@media (max-width: 480px) {
+  .free-ai-panel {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .free-ai-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .free-ai-result-card {
+    padding: 0.75rem;
+  }
+
+  .free-ai-actions {
+    width: 100%;
+  }
+
+  .free-ai-actions > .free-ai-btn-primary,
+  .free-ai-actions > .free-ai-btn-secondary {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .free-ai-step-row .free-ai-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .free-ai-step-row .free-ai-actions > .free-ai-btn-secondary {
+    flex: 1 1 auto;
+    width: auto;
+  }
+}

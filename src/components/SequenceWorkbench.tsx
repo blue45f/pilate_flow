@@ -171,6 +171,108 @@ function WorkbenchMovementMark({ exercise }: { exercise: PilatesExercise }) {
   );
 }
 
+export const WORKBENCH_PREP_RECOVERY_KEY = 'pf_workbench_prep_recovery_v1';
+
+export interface WorkbenchPrepRecoveryState {
+  sequenceId: string | null;
+  activeStep: 'finder' | 'arrange';
+  workflowStep: 'select' | 'arrange';
+  finderOpen: boolean;
+  conditionsOpen: boolean;
+  conditionStep: 1 | 2 | 3;
+  previewStep: string | null;
+  inspectorStepId: string | null;
+  inspectorDraft?: StepInspectorDraftCache | null;
+}
+
+function readWorkbenchPrepRecovery(
+  currentSequenceId: string | null,
+  activeSteps: SequenceStep[],
+): Partial<WorkbenchPrepRecoveryState> | null {
+  try {
+    const raw =
+      typeof window !== 'undefined'
+        ? window.sessionStorage.getItem(WORKBENCH_PREP_RECOVERY_KEY)
+        : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<WorkbenchPrepRecoveryState> & {
+      step?: string;
+    };
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (
+      parsed.sequenceId !== undefined &&
+      parsed.sequenceId !== null &&
+      currentSequenceId !== null &&
+      parsed.sequenceId !== currentSequenceId
+    ) {
+      return null;
+    }
+    const rawStep = parsed.activeStep ?? parsed.workflowStep ?? parsed.step;
+    const workflowStep: 'select' | 'arrange' | undefined =
+      rawStep === 'arrange'
+        ? 'arrange'
+        : rawStep === 'finder' || rawStep === 'select'
+          ? 'select'
+          : undefined;
+    const rawInspectorStep = parsed.inspectorStepId ?? parsed.previewStep ?? null;
+    const validInspectorStep =
+      typeof rawInspectorStep === 'string' &&
+      activeSteps.some((st) => st.stepId === rawInspectorStep && !isRestStep(st))
+        ? rawInspectorStep
+        : null;
+    const conditionStep =
+      parsed.conditionStep === 1 || parsed.conditionStep === 2 || parsed.conditionStep === 3
+        ? parsed.conditionStep
+        : 1;
+    return {
+      sequenceId: parsed.sequenceId ?? currentSequenceId,
+      activeStep: workflowStep === 'arrange' ? 'arrange' : 'finder',
+      workflowStep:
+        validInspectorStep !== null
+          ? 'arrange'
+          : (workflowStep ?? (activeSteps.length ? 'arrange' : 'select')),
+      finderOpen: Boolean(parsed.finderOpen),
+      conditionsOpen: Boolean(parsed.conditionsOpen),
+      conditionStep,
+      previewStep: validInspectorStep,
+      inspectorStepId: validInspectorStep,
+      inspectorDraft: parsed.inspectorDraft ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeWorkbenchPrepRecovery(state: WorkbenchPrepRecoveryState): void {
+  try {
+    if (typeof window === 'undefined') return;
+    window.sessionStorage[WORKBENCH_PREP_RECOVERY_KEY] = JSON.stringify(state);
+  } catch {
+    // ignore storage quota or sandbox errors
+  }
+}
+
+function clearWorkbenchPrepRecovery(): void {
+  try {
+    if (typeof window === 'undefined') return;
+    delete window.sessionStorage[WORKBENCH_PREP_RECOVERY_KEY];
+  } catch {
+    // ignore storage errors
+  }
+}
+
+usePilatesStore.subscribe((state, prev) => {
+  if (
+    state.activeSequenceId !== prev.activeSequenceId ||
+    state.savedSequences !== prev.savedSequences ||
+    (state.activeSteps.length !== prev.activeSteps.length &&
+      state.undoStack.length === 0 &&
+      prev.undoStack.length === 0)
+  ) {
+    clearWorkbenchPrepRecovery();
+  }
+});
+
 export function SequenceWorkbench({
   onOpenYouTubePreview,
   onOpenIdeaSheet,
@@ -182,6 +284,11 @@ export function SequenceWorkbench({
   sourceDetailOpen = false,
 }: Props) {
   const s = usePilatesStore();
+  const initialRecovery = useMemo(
+    () => readWorkbenchPrepRecovery(s.activeSequenceId, s.activeSteps),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
   const [presetsOpen, setPresetsOpen] = useState(false);
   const [showWelcomeTutorial, setShowWelcomeTutorial] = useState(false);
   const [localIdeaSheet, setLocalIdeaSheet] = useState<{
@@ -254,22 +361,29 @@ export function SequenceWorkbench({
   const [regenerateSection, setRegenerateSection] = useState<
     'all' | 'warmup' | 'main' | 'cooldown'
   >('all');
-  const [previewStep, setPreviewStep] = useState<string | null>(null);
+  const [previewStep, setPreviewStep] = useState<string | null>(
+    () => initialRecovery?.previewStep ?? null,
+  );
   const [planPreviewOpen, setPlanPreviewOpen] = useState(false);
-  const [finderOpen, setFinderOpen] = useState(false);
-  const [finderHasOpened, setFinderHasOpened] = useState(false);
-  const [workflowStep, setWorkflowStep] = useState<'select' | 'arrange'>(() =>
-    s.activeSteps.length ? 'arrange' : 'select',
+  const [finderOpen, setFinderOpen] = useState(() => initialRecovery?.finderOpen ?? false);
+  const [finderHasOpened, setFinderHasOpened] = useState(
+    () => initialRecovery?.finderOpen ?? false,
+  );
+  const [workflowStep, setWorkflowStep] = useState<'select' | 'arrange'>(
+    () => initialRecovery?.workflowStep ?? (s.activeSteps.length ? 'arrange' : 'select'),
   );
   const finderContentRef = useRef<HTMLDivElement>(null);
   const finderOpener = useRef<HTMLElement | null>(null);
   const [insightsOpen, setInsightsOpen] = useState(false);
   const [aiCopilotOpen, setAiCopilotOpen] = useState(false);
   const [flowTelemetryOpen, setFlowTelemetryOpen] = useState(false);
+  const [freeAiOpen, setFreeAiOpen] = useState(false);
   const [wideEditor, setWideEditor] = useState(() => window.innerWidth >= 1200);
   const inspectorContentRef = useRef<HTMLDivElement>(null);
   const inspectorOpener = useRef<HTMLElement | null>(null);
-  const inspectorDraftCache = useRef<StepInspectorDraftCache | null>(null);
+  const inspectorDraftCache = useRef<StepInspectorDraftCache | null>(
+    initialRecovery?.inspectorDraft ?? null,
+  );
   const sourceDetailOpenRef = useRef(sourceDetailOpen);
   useLayoutEffect(() => {
     if (sourceDetailOpen) sourceDetailOpenRef.current = true;
@@ -333,8 +447,41 @@ export function SequenceWorkbench({
     if (controlledPlanningMode === undefined) setLocalPlanningMode(mode);
     onPlanningModeChange?.(mode);
   };
-  const [conditionsOpen, setConditionsOpen] = useState(false);
-  const [conditionStep, setConditionStep] = useState<1 | 2 | 3>(1);
+  const [conditionsOpen, setConditionsOpen] = useState(
+    () => initialRecovery?.conditionsOpen ?? false,
+  );
+  const [conditionStep, setConditionStep] = useState<1 | 2 | 3>(
+    () => initialRecovery?.conditionStep ?? 1,
+  );
+  const syncRecoveryState = useCallback(
+    (draftOverride?: StepInspectorDraftCache | null) => {
+      const activeStep: 'finder' | 'arrange' =
+        finderOpen || workflowStep === 'select' ? 'finder' : 'arrange';
+      writeWorkbenchPrepRecovery({
+        sequenceId: s.activeSequenceId,
+        activeStep,
+        workflowStep,
+        finderOpen,
+        conditionsOpen,
+        conditionStep,
+        previewStep,
+        inspectorStepId: previewStep,
+        inspectorDraft:
+          draftOverride !== undefined ? draftOverride : inspectorDraftCache.current,
+      });
+    },
+    [
+      s.activeSequenceId,
+      finderOpen,
+      workflowStep,
+      conditionsOpen,
+      conditionStep,
+      previewStep,
+    ],
+  );
+  useEffect(() => {
+    syncRecoveryState();
+  }, [syncRecoveryState]);
   const conditionsContentRef = useRef<HTMLDivElement>(null);
   const conditionStep1Ref = useRef<HTMLFieldSetElement>(null);
   const conditionStep2Ref = useRef<HTMLFieldSetElement>(null);
@@ -1499,8 +1646,10 @@ export function SequenceWorkbench({
                               onClick={(event) => openInspector(step, event.currentTarget)}
                               aria-expanded={expanded}
                             >
-                              <strong>{ex.nameKo}</strong>
-                              <span>
+                              <strong style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
+                                {ex.nameKo}
+                              </strong>
+                              <span style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
                                 {equipmentLabel(getExerciseEquipment(ex).requiredEquipment)}
                                 {(step.repetitions !== undefined || step.sets !== undefined) && (
                                   <>
@@ -1860,34 +2009,40 @@ export function SequenceWorkbench({
               )}
             </details>
           )}
-          <details className="workbench-automation-tools workbench-free-ai-details">
+          <details
+            className="workbench-automation-tools workbench-free-ai-details"
+            open={freeAiOpen}
+            onToggle={(event) => setFreeAiOpen(event.currentTarget.open)}
+          >
             <summary>AI 수업 도우미 (선택)</summary>
             <p className="pf-text-sm sr-only">무료 한도 보호 · 소진 시 로컬 전환</p>
-            <Suspense fallback={<p className="pf-text-sm">AI 도우미를 불러오는 중...</p>}>
-              <LazyFreeAiAssistantPanel
-                exercises={s.exercises}
-                conditionTemplates={s.conditionTemplates}
-                activeTargetMinutes={s.activeTargetMinutes}
-                activeApparatus={s.activeApparatus}
-                activeLevel={s.activeLevel}
-                onApplyDraftSequence={(payload) => {
-                  usePilatesStore.setState({
-                    activeTitle: payload.title,
-                    activeSubtitle: payload.subtitle,
-                    activeTargetMinutes: payload.targetMinutes,
-                    activeLevel: payload.level,
-                    activeApparatus: payload.apparatus,
-                    activeSteps: payload.steps,
-                    generationError: null,
-                    saveFeedback: `‘${payload.title}’ 초안을 현재 수업 시퀀스에 반영했습니다.`,
-                  });
-                  setWorkflowStep('arrange');
-                }}
-                onSaveUnreviewedMovementIdea={(exercise) => {
-                  s.addCustomExercise(exercise);
-                }}
-              />
-            </Suspense>
+            {freeAiOpen && (
+              <Suspense fallback={<p className="pf-text-sm">AI 도우미를 불러오는 중...</p>}>
+                <LazyFreeAiAssistantPanel
+                  exercises={s.exercises}
+                  conditionTemplates={s.conditionTemplates}
+                  activeTargetMinutes={s.activeTargetMinutes}
+                  activeApparatus={s.activeApparatus}
+                  activeLevel={s.activeLevel}
+                  onApplyDraftSequence={(payload) => {
+                    usePilatesStore.setState({
+                      activeTitle: payload.title,
+                      activeSubtitle: payload.subtitle,
+                      activeTargetMinutes: payload.targetMinutes,
+                      activeLevel: payload.level,
+                      activeApparatus: payload.apparatus,
+                      activeSteps: payload.steps,
+                      generationError: null,
+                      saveFeedback: `‘${payload.title}’ 초안을 현재 수업 시퀀스에 반영했습니다.`,
+                    });
+                    setWorkflowStep('arrange');
+                  }}
+                  onSaveUnreviewedMovementIdea={(exercise) => {
+                    s.addCustomExercise(exercise);
+                  }}
+                />
+              </Suspense>
+            )}
           </details>
           <div className="workbench-footnotes">
             <PfButton variant="text" onClick={onOpenClipper}>
@@ -1920,6 +2075,7 @@ export function SequenceWorkbench({
                 loadDraft={() => inspectorDraftCache.current}
                 onDraftChange={(value) => {
                   inspectorDraftCache.current = value;
+                  syncRecoveryState(value);
                 }}
                 onClose={closeInspector}
                 onOpenExercise={onOpenYouTubePreview}
@@ -1933,6 +2089,63 @@ export function SequenceWorkbench({
           </aside>
         )}
       </div>
+      <nav
+        className="pf-step-guide-bar workbench-mobile-step-bar"
+        aria-label="수업 준비 단계 이동"
+        data-testid="workbench-mobile-step-bar"
+        style={{ wordBreak: 'keep-all' }}
+      >
+        <div className="pf-step-guide-subrow" style={{ wordBreak: 'keep-all' }}>
+          <span
+            className="pf-step-guide-focus"
+            data-testid="workbench-current-step-guide"
+            style={{ wordBreak: 'keep-all' }}
+          >
+            {!s.activeSteps.length || finderOpen || workflowStep === 'select'
+              ? '현재 1단계: 동작 고르기 · 수업에 넣을 동작을 고른 뒤 다음 단계에서 순서를 확인하세요.'
+              : '현재 2단계: 수업 구성 확인 · 블록 순서와 시간을 점검하고 저장하거나 미리보기를 여세요.'}
+          </span>
+          <div className="pf-step-guide-nav" style={{ wordBreak: 'keep-all' }}>
+            <button
+              type="button"
+              className="pf-step-nav-btn"
+              data-testid="workbench-step-prev"
+              style={{ minHeight: '44px', wordBreak: 'keep-all' }}
+              aria-current={
+                !planPreviewOpen &&
+                (finderOpen || workflowStep === 'select' || !s.activeSteps.length)
+                  ? 'step'
+                  : undefined
+              }
+              onClick={() => {
+                closeInspector();
+                setPlanPreviewOpen(false);
+                setWorkflowStep('select');
+              }}
+            >
+              이전 단계: 동작 고르기
+            </button>
+            <button
+              type="button"
+              className="pf-step-nav-btn"
+              data-testid="workbench-step-next"
+              style={{ minHeight: '44px', wordBreak: 'keep-all' }}
+              disabled={!s.activeSteps.length}
+              aria-current={
+                !planPreviewOpen &&
+                !finderOpen &&
+                workflowStep === 'arrange' &&
+                s.activeSteps.length > 0
+                  ? 'step'
+                  : undefined
+              }
+              onClick={arrangeSequence}
+            >
+              다음 단계: 수업 구성 확인
+            </button>
+          </div>
+        </div>
+      </nav>
       <NextClassBanner collapseEmpty />
       <details className="workbench-navigation-details">
         <summary>수업 준비 순서</summary>
@@ -1999,6 +2212,7 @@ export function SequenceWorkbench({
               loadDraft={() => inspectorDraftCache.current}
               onDraftChange={(value) => {
                 inspectorDraftCache.current = value;
+                syncRecoveryState(value);
               }}
               onClose={closeInspector}
               onOpenExercise={onOpenYouTubePreview}
