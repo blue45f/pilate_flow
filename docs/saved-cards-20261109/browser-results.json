@@ -1,0 +1,66 @@
+[
+  {
+    "w": 320,
+    "h": 760,
+    "closedHeight": 149.09375,
+    "expandedHeight": 554.359375,
+    "overflow": 0,
+    "errors": [],
+    "checks": "keyboard/toggle/Escape, print3close/focus, export, deletion/cancel/focus, logcancel, copy/sort/delete, search, reload preservation"
+  },
+  {
+    "w": 390,
+    "h": 844,
+    "closedHeight": 149.09375,
+    "expandedHeight": 554.359375,
+    "overflow": 0,
+    "errors": [],
+    "checks": "keyboard/toggle/Escape, print3close/focus, export, deletion/cancel/focus, logcancel, copy/sort/delete, search, reload preservation"
+  },
+  {
+    "w": 768,
+    "h": 1024,
+    "closedHeight": 147.53125,
+    "expandedHeight": 552.796875,
+    "overflow": 0,
+    "errors": [],
+    "checks": "keyboard/toggle/Escape, print3close/focus, export, deletion/cancel/focus, logcancel, copy/sort/delete, search, reload preservation"
+  },
+  {
+    "w": 1024,
+    "h": 768,
+    "closedHeight": 147.53125,
+    "expandedHeight": 552.796875,
+    "overflow": 0,
+    "errors": [],
+    "checks": "keyboard/toggle/Escape, print3close/focus, export, deletion/cancel/focus, logcancel, copy/sort/delete, search, reload preservation"
+  },
+  {
+    "w": 1440,
+    "h": 900,
+    "closedHeight": 147.53125,
+    "expandedHeight": 552.796875,
+    "overflow": 0,
+    "errors": [],
+    "checks": "keyboard/toggle/Escape, print3close/focus, export, deletion/cancel/focus, logcancel, copy/sort/delete, search, reload preservation"
+  },
+  {
+    "w": 1024,
+    "h": 500,
+    "closedHeight": 147.53125,
+    "expandedHeight": 552.796875,
+    "overflow": 0,
+    "errors": [],
+    "checks": "keyboard/toggle/Escape, print3close/focus, export, deletion/cancel/focus, logcancel, copy/sort/delete, search, reload preservation"
+  },
+  {
+    "w": 320,
+    "h": 760,
+    "text": 200,
+    "closedHeight": 219.1875,
+    "expandedHeight": 659.484375,
+    "overflow": 0,
+    "errors": [],
+    "checks": "keyboard/toggle/Escape, print3close/focus, export, deletion/cancel/focus, logcancel, copy/sort/delete, search, reload preservation"
+  }
+]
