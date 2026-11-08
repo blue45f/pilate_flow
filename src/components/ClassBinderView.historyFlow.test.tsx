@@ -639,4 +639,42 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     expect(card.querySelector('h2')?.compareDocumentPosition(card.querySelector('.teaching-reflection')!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
+  it('rejects duplicate group names with normalized matching and focuses the group name input', () => {
+    render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
+
+    const groupCountBefore = usePilatesStore.getState().classGroups.length;
+    fireEvent.click(screen.getByRole('button', { name: /수업 그룹 추가/ }));
+
+    const input = screen.getByLabelText(/그룹 별칭/);
+    fireEvent.change(input, { target: { value: '  기록   없는 새벽반 ' } });
+    fireEvent.click(screen.getByRole('button', { name: '그룹 추가' }));
+
+    expect(screen.getByText('이미 같은 이름의 수업 그룹이 있습니다.')).toBeInTheDocument();
+    expect(document.activeElement).toBe(input);
+    expect(usePilatesStore.getState().classGroups).toHaveLength(groupCountBefore);
+  });
+
+  it('guards rapid double-clicks on sequence duplication and restores focus to the print trigger button when the print modal closes', () => {
+    render(<ClassBinderView view="saved" onOpenLogModal={vi.fn()} />);
+
+    const countBefore = usePilatesStore.getState().savedSequences.length;
+    const duplicateButtons = screen.getAllByRole('button', { name: /복제/ });
+    fireEvent.click(duplicateButtons[0]);
+    fireEvent.click(duplicateButtons[0]);
+    expect(usePilatesStore.getState().savedSequences).toHaveLength(countBefore + 1);
+
+    const printButtons = screen.getAllByRole('button', { name: /인쇄/ });
+    const firstPrintBtn = printButtons[0];
+    firstPrintBtn.focus();
+    fireEvent.click(firstPrintBtn);
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('수업 계획 인쇄')).toBeInTheDocument();
+
+    const closeBtn = within(dialog).getAllByRole('button', { name: '닫기' }).at(-1)!;
+    fireEvent.click(closeBtn);
+    expect(document.activeElement).toBe(firstPrintBtn);
+  });
+
 });
+

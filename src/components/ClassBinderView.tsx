@@ -141,6 +141,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const allDatesChipRef = useRef<HTMLButtonElement | null>(null);
   const dateMoreToggleRef = useRef<HTMLButtonElement | null>(null);
   const reopenedTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const printTriggerRef = useRef<HTMLButtonElement | null>(null);
   const groupErrorId = useId();
 
   const exercisesMap = useMemo(() => new Map(exercises.map((ex) => [ex.id, ex])), [exercises]);
@@ -279,14 +280,34 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
     downloadTxt(`${viewItem.sequenceTitle.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-history'}-${getTeachingHistoryDateSource(viewItem).slice(0, 10)}.txt`, formatTeachingHistorySnapshotText(viewItem), '수업 완료 이력 스냅샷 텍스트를 내보냈습니다.');
   const createGroup = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!groupName.trim()) {
+    const normalizedName = normalizeSearchToken(groupName);
+    if (!normalizedName) {
       setGroupFormError('수업 그룹 별칭을 입력해 주세요.');
+      groupNameInputRef.current?.focus();
+      return;
+    }
+    if (classGroups.some((g) => normalizeSearchToken(g.name) === normalizedName)) {
+      setGroupFormError('이미 같은 이름의 수업 그룹이 있습니다.');
       groupNameInputRef.current?.focus();
       return;
     }
     setGroupFormError('');
     addClassGroup({ name: groupName.trim(), type: 'group', defaultLevel: groupLevel, scheduleLabel: groupSchedule.trim(), notes: '' });
     setGroupName(''); setGroupSchedule(''); setShowGroupForm(false); setMessage('수업 그룹을 추가했습니다.');
+  };
+  const duplicatingRef = useRef(false);
+  const duplicateSequence = (sequenceId: string) => {
+    if (duplicatingRef.current) return;
+    duplicatingRef.current = true;
+    try {
+      if (duplicateSavedSequence(sequenceId)) {
+        setMessage('복사본을 저장했습니다. 원본의 기록은 그대로 유지됩니다.');
+      }
+    } finally {
+      window.setTimeout(() => {
+        duplicatingRef.current = false;
+      }, 0);
+    }
   };
   const copyingRef = useRef(false);
   const copyHistory = (logId: string) => {
@@ -325,6 +346,17 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
     const nextButton = buttons[nextIndex];
     nextButton?.focus();
     if (activateOnNavigate) nextButton?.click();
+  };
+
+  const closePrintModal = () => {
+    const trigger = printTriggerRef.current;
+    setPrintSequence(null);
+    if (trigger?.isConnected) {
+      trigger.focus();
+      window.setTimeout(() => {
+        if (trigger.isConnected) trigger.focus();
+      }, 0);
+    }
   };
 
   const closeReopenedModal = () => {
@@ -425,8 +457,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                       <PfButton variant="secondary" onClick={() => { loadSequenceIntoWorkbench(sequence.id); setActiveTab('stage'); }}><Play size={16} /> 수업 시작</PfButton>
                     </div>
                     <div className="teaching-card-tools">
-                      <PfButton variant="ghost" onClick={() => { if (duplicateSavedSequence(sequence.id)) setMessage('복사본을 저장했습니다. 원본의 기록은 그대로 유지됩니다.'); }}><Copy size={15} /> 복제</PfButton>
-                      <PfButton variant="ghost" onClick={() => setPrintSequence(sequence)}><Printer size={15} /> 인쇄</PfButton>
+                      <PfButton variant="ghost" onClick={() => duplicateSequence(sequence.id)}><Copy size={15} /> 복제</PfButton>
+                      <PfButton variant="ghost" onClick={(e) => { printTriggerRef.current = e.currentTarget; setPrintSequence(sequence); }}><Printer size={15} /> 인쇄</PfButton>
                       <PfButton variant="ghost" onClick={() => exportText(sequence)}><ArrowDownToLine size={15} /> 텍스트</PfButton>
                       <PfButton variant="icon" className="teaching-delete" aria-label={`${sequence.title} 삭제`} onClick={() => setPendingDelete(sequence.id)}><Trash2 size={16} /></PfButton>
                     </div>
@@ -722,7 +754,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
         </>
       )}
       <p className="teaching-local-note">자료는 이 브라우저에 저장됩니다. 다른 기기에서 사용하려면 설정에서 JSON 백업을 내보내세요.</p>
-      <LightDismissDialog open={Boolean(printSequence)} onClose={() => setPrintSequence(null)} title="수업 계획 인쇄" subtitle="동작의 양쪽 수행·설명·전환과 별도 휴식을 포함한 전체 수업 시간입니다.">
+      <LightDismissDialog open={Boolean(printSequence)} onClose={closePrintModal} title="수업 계획 인쇄" subtitle="동작의 양쪽 수행·설명·전환과 별도 휴식을 포함한 전체 수업 시간입니다.">
         <div className="teaching-print-sheet">
           <p>강사 검토용 계획 · 스프링과 세팅은 실제 기구에서 확인해 주세요.</p>
           <pre>{printSequence ? sheetFor(printSequence) : ''}</pre>
@@ -734,7 +766,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
           )}
         </div>
         <div className="teaching-form-actions">
-          <PfButton variant="secondary" onClick={() => setPrintSequence(null)}>닫기</PfButton>
+          <PfButton variant="secondary" onClick={closePrintModal}>닫기</PfButton>
           <PfButton variant="primary" onClick={() => window.print()}><Printer size={16} /> 인쇄하기</PfButton>
         </div>
       </LightDismissDialog>

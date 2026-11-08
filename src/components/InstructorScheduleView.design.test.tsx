@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { InstructorScheduleView } from './InstructorScheduleView';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -68,4 +68,63 @@ describe('schedule date strip and agenda hierarchy', () => {
     expect(selected).toHaveFocus();
     expect(screen.getByRole('group', { name: '한 주 날짜 선택' })).toBeVisible();
   });
+
+  it('rejects duplicate location aliases when adding a new location', () => {
+    render(<InstructorScheduleView today="2026-11-04" />);
+    const initialLocationsCount = usePilatesStore.getState().instructorSchedule.locations.length;
+    const existingAlias = usePilatesStore.getState().instructorSchedule.locations[0].alias;
+
+    fireEvent.click(screen.getByRole('button', { name: '장소 관리' }));
+    const dialog = screen.getByRole('dialog');
+    const aliasInput = within(dialog).getByLabelText('장소 별칭');
+    fireEvent.change(aliasInput, { target: { value: `  ${existingAlias.toUpperCase()}  ` } });
+    fireEvent.click(within(dialog).getByRole('button', { name: '장소 저장' }));
+
+    expect(
+      within(dialog).getByRole('alert'),
+    ).toHaveTextContent('이미 등록된 장소 별칭입니다. 기존 장소를 선택해 수정해 주세요.');
+    expect(usePilatesStore.getState().instructorSchedule.locations).toHaveLength(initialLocationsCount);
+  });
+
+  it('supports keyboard ArrowRight/ArrowLeft/Home/End navigation on the schedule view toggle group', () => {
+    render(<InstructorScheduleView today="2026-11-04" />);
+    const viewToggle = screen.getByRole('group', { name: '일정 보기' });
+    const dayBtn = within(viewToggle).getByRole('button', { name: '일간 보기' });
+    const weekBtn = within(viewToggle).getByRole('button', { name: '주간 보기' });
+
+    expect(dayBtn).toHaveAttribute('aria-pressed', 'true');
+    dayBtn.focus();
+
+    fireEvent.keyDown(dayBtn, { key: 'ArrowRight' });
+    expect(weekBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(weekBtn).toHaveFocus();
+
+    fireEvent.keyDown(weekBtn, { key: 'ArrowLeft' });
+    expect(dayBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(dayBtn).toHaveFocus();
+
+    fireEvent.keyDown(dayBtn, { key: 'End' });
+    expect(weekBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(weekBtn).toHaveFocus();
+
+    fireEvent.keyDown(weekBtn, { key: 'Home' });
+    expect(dayBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(dayBtn).toHaveFocus();
+  });
+
+  it('guards rapid double-submits in saveClosed so duplicate exceptions are not appended in the same tick', () => {
+    render(<InstructorScheduleView today="2026-11-04" />);
+    const initialExceptionsCount = usePilatesStore.getState().instructorSchedule.exceptions.length;
+
+    fireEvent.click(screen.getByRole('button', { name: '휴무 등록' }));
+    const dialog = screen.getByRole('dialog');
+    const form = dialog.querySelector('form')!;
+    act(() => {
+      fireEvent.submit(form);
+      fireEvent.submit(form);
+    });
+
+    expect(usePilatesStore.getState().instructorSchedule.exceptions).toHaveLength(initialExceptionsCount + 1);
+  });
 });
+
