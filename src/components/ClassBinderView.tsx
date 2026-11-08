@@ -581,6 +581,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
               <PfButton variant="secondary" onClick={resetHistoryFilters}>선택 해제</PfButton>
             </div>
           )}
+          <p className="muted" role="status" aria-label="수업 기록 검색 결과" aria-live="polite" aria-atomic="true">
+            <strong>내 수업 {actualLogs.length}개</strong>
+            {logs.length > actualLogs.length && <span> · 예시 {logs.length - actualLogs.length}개 (분석 제외)</span>}
+          </p>
           <div className="teaching-history-layout">
             <section className="teaching-history-feed" aria-label="수업 기록 목록">
               {(logs.length === 0 || (!hasActiveHistoryFilter && actualLogs.length === 0)) && (

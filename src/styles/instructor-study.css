@@ -278,3 +278,107 @@
   width: 100%;
   min-height: 44px;
 }
+
+/* Study-only finder: keep the current note and the route back to it clear. */
+.instructor-study-dialog .study-browser {
+  padding: 14px;
+  border: 1px solid var(--pf-color-border-default, #d5ddd0);
+  border-radius: 14px;
+  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+}
+.instructor-study-dialog .study-browser-heading h3 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.instructor-study-dialog .study-browser-heading p {
+  margin: 4px 0 2px;
+  color: var(--pf-color-text-muted, #526358);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.instructor-study-dialog .study-search-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.instructor-study-dialog .study-search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.instructor-study-dialog .study-search-row > button {
+  flex: 0 0 44px;
+  min-width: 44px;
+  min-height: 44px;
+}
+.instructor-study-dialog .study-results-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+}
+.instructor-study-dialog .study-results-row p {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.instructor-study-dialog .study-results-row button {
+  min-height: 44px;
+  padding-inline: 4px;
+  font-size: 0.75rem;
+}
+.instructor-study-dialog .study-exercise-list {
+  scrollbar-gutter: stable;
+  padding: 3px;
+  scroll-padding-block: 3px;
+}
+.instructor-study-dialog .study-exercise-list button {
+  background: var(--pf-color-bg-surface-elevated, #ffffff);
+  border-color: var(--pf-color-border-default, #d5ddd0);
+}
+.instructor-study-dialog .study-exercise-list button[aria-pressed='true'] {
+  border-color: var(--pf-color-text-brand, #173d34);
+  background: var(--pf-color-bg-surface-muted, #e4eadf);
+}
+.instructor-study-dialog .study-exercise-list button:focus-visible,
+.instructor-study-dialog .study-detail h3:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring, #b16f48);
+  outline-offset: 2px;
+}
+.instructor-study-dialog .study-return-browser {
+  justify-self: start;
+  min-height: 44px;
+  padding-inline: 0;
+}
+.instructor-study-dialog .study-detail h3 {
+  scroll-margin-block-start: 76px;
+}
+.instructor-study-dialog .study-detail header > div {
+  min-width: 0;
+}
+.instructor-study-dialog .study-detail header p {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 680px) {
+  .instructor-study-dialog .study-layout {
+    gap: 18px;
+  }
+  .instructor-study-dialog .study-browser {
+    padding: 12px;
+  }
+  .instructor-study-dialog .study-exercise-list {
+    max-height: 168px;
+  }
+  .instructor-study-dialog .study-detail {
+    padding-top: 4px;
+    border-top: 1px solid var(--pf-color-border-default, #d5ddd0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .instructor-study-dialog .study-exercise-list,
+  .instructor-study-dialog .study-detail {
+    scroll-behavior: auto;
+  }
+}
