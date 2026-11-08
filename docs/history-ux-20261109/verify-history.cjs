@@ -22,6 +22,7 @@ const origin = new URL(base).origin;
       const errors = [];
       page.on('pageerror', e => errors.push(e.message));
       await page.goto(base);
+      await page.getByRole('button',{name:/^(기록|수업 기록)$/}).first().waitFor();
       await page.evaluate(async () => {
         const { usePilatesStore } = await import('/src/store/usePilatesStore.ts');
         const { revisionSource, revisionExercise } = await import('/src/test/datedRevisionFixtures.ts');
@@ -34,7 +35,7 @@ const origin = new URL(base).origin;
         window.__historyReviewStore = usePilatesStore;
         window.__historyReviewSignature = () => JSON.stringify(Object.fromEntries(['activeTab', 'activeSequenceId', 'activeTitle', 'activeSubtitle', 'activeSteps', 'activeTargetMinutes', 'activeTargetGroupId', 'draftCriteria', 'lastCriteria', 'historyLogs', 'savedSequences', 'exercises', 'classGroups', 'undoStack'].map(k => [k, usePilatesStore.getState()[k]])));
       });
-      await page.getByRole('heading', { name: /수업 기록/, level: 1 }).waitFor();
+      await page.getByRole('heading', { name: /수업 기록/, level: 1 }).waitFor().catch(async e=>{fs.writeFileSync(`${__dirname}/failure-${label}.json`,JSON.stringify({errors,text:await page.locator('body').innerText(),state:await page.evaluate(()=>window.__historyReviewStore?.getState().activeTab)},null,2));await page.screenshot({path:`${__dirname}/failure-${label}.png`});throw e;});
       if(spec.text)await page.evaluate(()=>{
         // Double actual computed text sizes, including fixed-pixel history styles.
         const sizes=[...document.querySelectorAll('body *')].map(e=>[e,parseFloat(getComputedStyle(e).fontSize)]);

@@ -42,3 +42,17 @@
 저장 카드의 기존 7조건도 최신 기록 화면 코드에서 재통과했다. 전체 ESLint는 오류 0개·기존 MotionAuthoringBatchFigure fast-refresh 경고 1개, TypeScript/build/PWA 47개, secret 검사 7테스트 및 tracked scan, motion-study ledger 22항목 검사도 통과했다.
 
 배포 설정 읽기 확인: GitHub Pages는 legacy `gh-pages:/`만 사용하며 main 워크플로는 secret-check다. 확인 시 gh-pages `837f6fd`는 별도 외부 작업으로 main `24e0801` 빌드를 배포한 상태였다. 이 변경 작업에서는 main 통합 이외의 배포·gh-pages 쓰기를 실행하지 않았다.
+
+## 기구·필터 변경과 결합 검증
+
+기구/검색 범위 후보 `d555ff0`와 기록 후보를 `d705906`으로 충돌 없이 결합했다. 이 소스로 기록 8조건·저장 7조건·기록/타이머 연결 4폭을 모두 재통과했다. Vite가 오래된 HMR 타임스탬프 모듈과 QA의 직접 import를 서로 다른 store로 로드하던 검증 환경 문제는 이 작업 소유의 개발 서버만 재시작하여 해결했다. 실제 앱 내비가 준비된 뒤 합성 상태를 주입하도록 runner도 보완했다.
+
+결합 전체 첫 검사: 260파일·2,746테스트 통과, PWA 보존 감사 1건 실패. 오래된 fixture에 신규 `exerciseBrowseScope`가 빠져 기본값이 추가되는 차이였다. `94925ec`는 비기본 `all`을 fixture에 명시하고 hydration/재접속 후 보존을 추가 검증한다. 기존 바이트·키·전체 해시 비교는 유지한다. 이를 병합한 `cd30346`의 마지막 전체 검사에서 261파일·2,747테스트가 모두 통과했다.
+
+## 최종 상태
+
+- 검증 완료 소스: `cd30346f37e53cc85fca96ea8b5543356f86769a`. 기구/필터 후보와 데이터 보존 감사 보완을 포함한다.
+- 전체 261파일·2,747테스트 통과. 실제 Chrome 기록 8조건·저장 7조건·기록/타이머 연결 4폭 통과.
+- TypeScript/build/PWA 47개, 전체 lint 오류 0개(기존 fast-refresh 경고 1개), secret/ledger 검사 통과.
+- 이 문서 작성 시 원격 main은 `24e0801`이며 새 기록 후보는 아직 로컬이다. 원격 통합 결과는 확인 후 별도로 기록한다.
+- 실제 iOS/Safari 및 Android 기기의 검증, 전체 9종 시안 완료 판정, 운동 자료의 전문 검증, 운영 배포는 이 결과에 포함하지 않는다.
