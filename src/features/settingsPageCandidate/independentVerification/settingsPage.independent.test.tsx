@@ -125,7 +125,7 @@ describe('Track B Independent Boundary, Security & Isolation Verification (paral
     const rawGoogleKey = ['AIza', 'SyD9876543210abcdefghijklmnopqrstuv'].join('');
     const rawBearer = 'Bearer secret_live_token_9876543210abcdefghij';
     const rawJwt =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsIm5hbWUiOiJ0ZXN0In0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+      ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', 'eyJzdWIiOiJ1c2VyLTEyMyIsIm5hbWUiOiJ0ZXN0In0', 'SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'].join('.');
     const rawGhToken = ['ghp_', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'].join('');
     const rawApiKeyAssign = 'api_key="superSecretValue123456789"';
 

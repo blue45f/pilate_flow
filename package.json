@@ -19,7 +19,8 @@
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "deploy": "pnpm build && firebase deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth",
-    "check:pwa": "node scripts/check-pwa-build.mjs"
+    "check:pwa": "node scripts/check-pwa-build.mjs",
+    "check:secrets": "node --test scripts/check-secrets.node-test.mjs && node scripts/check-secrets.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",

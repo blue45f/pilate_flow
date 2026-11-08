@@ -4,8 +4,10 @@ Public source handoff prepared at the user’s explicit request. Read [GEMINI_HA
 
 This snapshot keeps application/backend source, original authored motion schematics, decorative generated artwork, tests, dependency lock, a minimal frozen compatibility schema and the pending navigation archive. It omits deployment/raw browser/research artifacts and prior full Git history. The available full history remains in a verified cloud-local bundle. GitHub destination supplied by the user: https://github.com/blue45f/pilate_flow . Full raw historical evidence remains excluded from this public snapshot.
 
-Node >=22.12 and pnpm11.4: `pnpm install --frozen-lockfile`, `pnpm test`, `pnpm lint`, `pnpm check:motion-study`, `pnpm build`, `pnpm dev`. Server runtime requires its documented provider setup; no credentials are included. No dependency install/build was repeated for this urgent export.
+Node >=22.12 and pnpm11.4: `pnpm install --frozen-lockfile`, `pnpm check:secrets`, `pnpm test`, `pnpm lint`, `pnpm check:motion-study`, `pnpm build`, `pnpm dev`. Server runtime requires its documented provider setup; no credentials are included. No dependency install/build was repeated for this urgent export.
 
 Catalog98;22related unreviewed pattern variants/21intendedIDs; exact canonical assets0/98 and professional review0. These are authoring schematics, not validated teaching demonstrations. Keep original rights/source/review status, paused playback, reduced-motion alternatives and anatomical side labels. Decorative studio/ring/reformer artwork was generated for this project, not factual equipment or exercise photography. No third-party source footage/frames/tracing/mocap is included. No blanket third-party copyright license or reuse grant is implied.
 
 Deployment and paid usage remain on hold. Never publish real user records, credentials, local env contents or raw historical deployment artifacts.
+
+Security response and remaining provider decisions: [secret scanning response](docs/security/secret-scanning-response.md).
