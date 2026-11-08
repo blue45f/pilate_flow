@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "1.0.0",
+  "trackId": "I11-upper-body-strap-row-arm-arc",
+  "checkedAt": "2026-11-08",
+  "anatomicalAccuracyAssumed": false,
+  "professionalReviewCount": 0,
+  "sourceFrameMappings": 0,
+  "truthfulness": {
+    "anatomicalAccuracyAssumed": false,
+    "professionalReviewCount": 0,
+    "sourceFrameMappings": 0,
+    "exactAssetReady": false,
+    "medicalDiagnosisProhibited": true,
+    "therapeuticEffectGuaranteeProhibited": true,
+    "nonMedicalDisclosureKo": "본 상지 스트랩·로잉·암 아크 2D 도해와 운동학 지표는 필라테스 시퀀스 이해를 돕기 위한 교육·시각 참고 자료이며, 의학적 진단·처방·치료 효과를 보증하지 않습니다. 2D 좌표·가동범위·근육 표현은 전문 검증 전(0건)이며 개인에게 안전한 범위를 뜻하지 않습니다.",
+    "sourceUsePolicy": "Movement biomechanics facts and alignment cues only; no copying or frame-by-frame tracing of copyrighted media."
+  },
+  "entries": [
+    {
+      "id": "supine-and-standing-strap-press",
+      "diagramId": "supine-and-standing-strap-press",
+      "archetypeId": "supine-strap-arm-press",
+      "mappedExerciseIds": [
+        "original-reformer-supine-arm-press",
+        "original-cadillac-arm-spring-press",
+        "original-barrel-supported-arm-reach",
+        "ex-upper-01",
+        "ex-kr-reformer-03"
+      ],
+      "checkedAt": "2026-11-08",
+      "anatomicalAccuracyAssumed": false,
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "reviewedScopeKo": "Balanced Body 리포머 수파인 암워크, 캐딜락 암 스프링 프레스, 바렐 지지 암 리치 및 닐링 스트랩 트라이셉스 가이드의 상완골 90° 굴곡→골반선(Hip line) 하방 원호 프레스·전면 흉곽 닫힘(Rib Knit)·견갑골 하강 안정 원칙을 대조했어요.",
+      "correctionKo": "상지 하방 프레스 구간에서 갈비뼈가 들뜨거나 어깨가 귀 쪽으로 솟던 공용 모식도를 보정해, 견갑 하강·상하방 회전 제어 벡터와 상완골 90°→0° 원호 궤적을 분리했어요.",
+      "limitationKo": "2D 관절 좌표·스프링 저항 벡터·상완골 각도·근육 표현은 전문 검증 전(0건)이에요. 어깨 충돌 증후군이나 회전근개 통증이 있으면 가동 범위를 줄여야 해요.",
+      "sources": [
+        {
+          "title": "Balanced Body · All About Reformer Pilates (Supine Arms & Strap Control)",
+          "url": "https://www.pilates.com/all-about-reformer-pilates"
+        },
+        {
+          "title": "Merrithew STOTT PILATES · Five Basic Principles: Scapular Movement and Stabilization",
+          "url": "https://www.merrithew.com/blog/post/2017-09-26/five-basic-principles-scapular-movement-and-stabilization"
+        },
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Ribcage & shoulder girdle stability",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/"
+        }
+      ],
+      "factualRecord": {
+        "alignmentInvariantsKo": [
+          "수파인/스탠딩/바렐 지지면에서 전면 흉곽 닫힘(Rib Knit)과 요추-골반 중립 유지",
+          "상완골 90° 굴곡에서 골반선(Hip line)까지 원호 가동 중 견갑골 하강 및 하부 승모근·광배근 연결 유지"
+        ],
+        "diagramId": "supine-and-standing-strap-press",
+        "mappedExerciseIds": [
+          "original-reformer-supine-arm-press",
+          "original-cadillac-arm-spring-press",
+          "original-barrel-supported-arm-reach",
+          "ex-upper-01",
+          "ex-kr-reformer-03"
+        ],
+        "phaseCuesKo": {
+          "end": "들숨에 스프링/스트랩 장력을 편심성으로 제어하며 상완골 90° 준비 정렬로 복귀",
+          "middle": "날숨에 늑골 들뜸 없이 손끝을 골반 옆·하방으로 길게 눌러 광배근·삼두근 수축 정점 도달",
+          "start": "어깨 너비 스트랩/암 스프링 파지, 쇄골 확장 및 견갑골 평평한 안정 세팅"
+        },
+        "verifiedBiomechanicsFactsKo": [
+          "Balanced Body Supine Arms 및 캐딜락 암 스프링 원리: 양손 루프 파지 후 흉곽 고정 아래 통제된 상지 원호(Arc) 및 프레스 수행",
+          "상지 하방 프레스 시 상부 승모근 과긴장과 흉추 과신전(Rib flare)을 억제하고 견갑-흉곽 안정성 우선"
+        ]
+      },
+      "factualRecordSha256": "3d765e68f2490ed00a25aaf98ec1f0d04faae61bad7f9d50ac005753b882a83e"
+    },
+    {
+      "id": "seated-row-and-band-retraction",
+      "diagramId": "seated-row-and-band-retraction",
+      "archetypeId": "seated-row-arm-arc",
+      "mappedExerciseIds": [
+        "original-reformer-seated-row",
+        "original-mat-band-row",
+        "ex-upper-02",
+        "ex-global-reformer-03"
+      ],
+      "checkedAt": "2026-11-08",
+      "anatomicalAccuracyAssumed": false,
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "reviewedScopeKo": "리포머 박스 시티드 로잉(Serve a Tray / Shave / Hug a Tree) 및 매트 밴드 시티드 로우의 좌골결절 수직 스택, 견갑골 후인(Retraction)+하강(Depression) 협응, 전면 늑골 닫힘 원칙을 공개 교육 본문과 대조했어요.",
+      "correctionKo": "당기는 정점에서 상부 승모근이 거상되거나 등 하부가 과신전되던 문제를 교정해, 좌골 수직 기둥 고정과 수평 팔꿈치 리트랙션·견갑 내전 벡터를 명확히 표시했어요.",
+      "limitationKo": "2D 좌표·밴드/스트랩 장력·견갑 후인 거리·근육 활성은 전문 검증 전(0건)이며 개인별 안전 범위를 보증하지 않아요.",
+      "sources": [
+        {
+          "title": "Merrithew STOTT PILATES · Five Basic Principles: Scapular Retraction & Depression",
+          "url": "https://www.merrithew.com/blog/post/2017-09-26/five-basic-principles-scapular-movement-and-stabilization"
+        },
+        {
+          "title": "Balanced Body · Guide to the Pilates Reformer · Seated Arm Work & Rowing",
+          "url": "https://www.pilates.com/ultimate-guide-to-the-pilates-reformer/"
+        },
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · Upright seated posture & scapular control",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf"
+        }
+      ],
+      "factualRecord": {
+        "alignmentInvariantsKo": [
+          "좌골결절(Sit-bones) 수직 기둥 정렬과 정수리 축성 신장(Axial Elongation) 유지",
+          "견갑골 후인(Retraction) 및 하강(Depression) 협응으로 상부 승모근 거상 및 전면 갈비뼈 돌출 차단"
+        ],
+        "diagramId": "seated-row-and-band-retraction",
+        "mappedExerciseIds": [
+          "original-reformer-seated-row",
+          "original-mat-band-row",
+          "ex-upper-02",
+          "ex-global-reformer-03"
+        ],
+        "phaseCuesKo": {
+          "end": "견갑대 폭을 유지하며 밴드/스트랩 저항을 따라 팔을 전방 시작 위치로 감속 복귀",
+          "middle": "날숨에 쇄골을 넓히며 팔꿈치를 몸통 뒤·옆으로 당겨 능형근·중하부 승모근 수축 정점 유지",
+          "start": "양쪽 좌골 균등 지지 위에 척추를 곧게 세우고 밴드/스트랩을 어깨 높이 전방으로 준비"
+        },
+        "verifiedBiomechanicsFactsKo": [
+          "리포머 박스 시티드 로잉(Serve a Tray / Hug a Tree) 및 매트 탄력밴드 로우: 골반 뒤로 무너지지 않는 좌골 수직 지지",
+          "당기는 구간에서 허리 과신전으로 보상하지 않고 날개뼈 사이 중·하부 등 근육으로 견갑 후인 제어"
+        ]
+      },
+      "factualRecordSha256": "ac03fa728fce4a663a88425cd7f4c606a9ffce4e18fa07637bfe65f7a6276760"
+    },
+    {
+      "id": "kneeling-chest-expansion-and-chair-arm-arc",
+      "diagramId": "kneeling-chest-expansion-and-chair-arm-arc",
+      "archetypeId": "kneeling-chest-expansion-triceps",
+      "mappedExerciseIds": [
+        "original-chair-seated-arm-arc",
+        "original-mat-seated-arm-reach",
+        "original-chair-seated-back-reach",
+        "ex-upper-03"
+      ],
+      "checkedAt": "2026-11-08",
+      "anatomicalAccuracyAssumed": false,
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "reviewedScopeKo": "닐링 체스트 익스팬션, 체어·매트 시티드 암 아크 및 체어 시티드 백 리치/캐딜락 스탠딩 암 스프링의 관상면 후방 견관절 신전, 경추·흉추 중립, 고관절-무릎/좌골 수직 스택 원칙을 대조했어요.",
+      "correctionKo": "팔을 몸통 뒤로 뻗거나 위로 아크를 그릴 때 턱이 앞으로 빠지고 요추가 꺾이던 문제를 수정해, 정수리-흉곽-골반 수직 플럼라인과 관상면 후방 상완골 신전 아크를 분리했어요.",
+      "limitationKo": "2D 관절 좌표·견관절 신전 각도·스프링 장력·근육 표현은 전문 검증 전(0건)이에요. 전면 어깨 불편감이 있으면 팔을 몸통 옆선까지만 이동해야 해요.",
+      "sources": [
+        {
+          "title": "Pilatesology / Contrology Reference · Chest Expansion & Arm Spring Mechanics",
+          "url": "https://www.pilates.com/all-about-reformer-pilates"
+        },
+        {
+          "title": "Merrithew STOTT PILATES · Scapular Stabilization in Shoulder Extension & Arm Arcs",
+          "url": "https://www.merrithew.com/blog/post/2017-09-26/five-basic-principles-scapular-movement-and-stabilization"
+        },
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Neutral cervical & thoracic alignment",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/"
+        }
+      ],
+      "factualRecord": {
+        "alignmentInvariantsKo": [
+          "닐링(무릎-고관절-어깨 수직선) 또는 체어/매트 좌골 수직 지지축에서 골반 전방 이동 및 요추 꺾임 방지",
+          "양팔이 몸통 관상면(Coronal plane) 뒤로 신전될 때 경추 중립 및 전면 복벽 브레이싱 유지"
+        ],
+        "diagramId": "kneeling-chest-expansion-and-chair-arm-arc",
+        "mappedExerciseIds": [
+          "original-chair-seated-arm-arc",
+          "original-mat-seated-arm-reach",
+          "original-chair-seated-back-reach",
+          "ex-upper-03"
+        ],
+        "phaseCuesKo": {
+          "end": "상체 흔들림 없이 스프링/중력 저항을 제어하며 양팔을 정렬 위치로 회수",
+          "middle": "쇄골과 가슴 전면을 활짝 열고 상완골을 골반 뒤쪽(또는 아크 정점)으로 뻗어 광배근·삼두근·상부 흉추 확장",
+          "start": "무릎 서기 또는 시트 착석 자세에서 고관절-몸통 수직 스택을 세우고 스트랩/페달/암 리치 준비"
+        },
+        "verifiedBiomechanicsFactsKo": [
+          "Chest Expansion 및 시티드 암 아크/체스트 리치: 견관절 신전 및 상지 아크 동안 몸통이 앞뒤로 흔들리지 않는 코어 고정",
+          "어깨 전면이 말리지 않도록 견갑골 하강·후인 상태에서 상완골 신전 및 흉곽 확장 수행"
+        ]
+      },
+      "factualRecordSha256": "81f51ca6f0da8da48918937367461776a7d1cd0f5bb9262fa70129a09a7253e5"
+    }
+  ]
+}
