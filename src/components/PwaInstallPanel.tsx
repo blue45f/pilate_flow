@@ -31,12 +31,12 @@ export function PwaInstallPanel() {
           {pwa.installStatus === 'accepted' && (
             <p role="status">설치를 요청했어요. 기기의 설치가 끝나면 앱 목록에서 열어 주세요.</p>
           )}
-          {pwa.installStatus === 'dismissed' && (
+          {!pwa.canInstall && pwa.installStatus === 'dismissed' && (
             <p role="status">
               설치를 취소했어요. 계속 웹에서 사용하거나 브라우저 메뉴에서 다시 설치할 수 있어요.
             </p>
           )}
-          {pwa.installStatus === 'error' && (
+          {!pwa.canInstall && pwa.installStatus === 'error' && (
             <p role="status">
               설치 창을 열지 못했어요. 아래 브라우저 메뉴 방법으로 다시 시도해 주세요.
             </p>
