@@ -93,7 +93,7 @@ export function SequencePlanPreview({
   canStartClass = false,
   startReadiness,
 }: SequencePlanPreviewProps) {
-  const [snapshot] = useState(() => {
+  const [snapshot, setSnapshot] = useState(() => {
     const state = usePilatesStore.getState();
     return JSON.parse(
       JSON.stringify({
@@ -306,7 +306,10 @@ export function SequencePlanPreview({
               <dd style={{ margin: 0 }}>{formatSecondsToMMSS(durations.restSec)}</dd>
             </div>
           </dl>
-          <ClassPlanSummary {...snapshot} />
+          <ClassPlanSummary
+            {...snapshot}
+            onSelectStepId={(_stepId, stepIndex) => selectStep(stepIndex)}
+          />
           <details
             className="class-plan-summary class-cue-sheet-summary"
             open={showCueSheet}
@@ -316,6 +319,7 @@ export function SequencePlanPreview({
             {showCueSheet && (
               <ClassCueSheetPreview
                 sourceInput={snapshot}
+                projectionOptions={{ exercises }}
                 initialStepIndex={index}
               />
             )}
@@ -530,6 +534,24 @@ export function SequencePlanPreview({
                 목표보다 {formatSecondsToMMSS(Math.abs(model.deltaSec))}{' '}
                 {model.deltaSec > 0 ? '길어요' : '짧아요'}. 현재 계획 시간으로 미리보기·수업 진행이
                 가능합니다.
+                {snapshot.steps.length > 0 && (
+                  <>
+                    {' '}
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() => {
+                        const nextTargetMinutes = Math.max(5, Math.round(durations.totalSec / 60));
+                        usePilatesStore
+                          .getState()
+                          .setActiveSequenceMeta({ targetMinutes: nextTargetMinutes });
+                        setSnapshot((prev) => ({ ...prev, targetMinutes: nextTargetMinutes }));
+                      }}
+                    >
+                      현재 계획 시간으로 목표 맞추기
+                    </button>
+                  </>
+                )}
               </p>
             )}
             <details className="simulation-readiness">

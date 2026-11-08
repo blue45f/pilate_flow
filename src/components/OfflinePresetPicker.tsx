@@ -214,10 +214,20 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
       {kind === 'suggested' ? (
         <PresetSuggestionCandidatePreview
           request={{
-            apparatus: apparatus === 'all' ? 'reformer' : apparatus,
+            apparatus: apparatus === 'all' ? state.activeApparatus : apparatus,
+            ownedApparatus: state.ownedApparatus,
+            availableEquipment: state.ownedEquipment,
             theme: theme === 'all' ? undefined : theme,
-            targetMinutes: minutes === 'all' ? 50 : Number(minutes),
-            catalogExercises: state.exercises,
+            focusPreset: state.draftCriteria?.focusPreset,
+            targetMinutes: minutes === 'all' ? state.activeTargetMinutes : Number(minutes),
+            restMinutes: state.draftCriteria?.restMinutes ?? 0,
+            level: state.activeLevel,
+            preferredProps: state.ownedProps,
+            defaultLayer: state.draftCriteria?.defaultLayer,
+            excludeDaysWindow: state.draftCriteria?.excludeDaysWindow,
+            targetGroupId: state.activeTargetGroupId,
+            historyLogs: state.historyLogs,
+            exercises: state.exercises,
           }}
           onInstantiateEditableDraft={(draft) => {
             const current = usePilatesStore.getState();
