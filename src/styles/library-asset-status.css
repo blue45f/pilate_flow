@@ -1,0 +1,87 @@
+/* Keep safety context visible; only the detailed asset counts are progressive. */
+#root .vnext-shell .motion-library .library-asset-status {
+  min-width: 0;
+  border: 1px solid var(--studio-line, #d6dfd9);
+  border-radius: 10px;
+  background: var(--studio-subtle, #eef3f0);
+}
+
+.motion-library .library-asset-status > summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  min-height: 44px;
+  padding: 8px 12px;
+  color: var(--lib-ink, #173f35);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  list-style: none;
+  cursor: pointer;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.motion-library .library-asset-status > summary::-webkit-details-marker {
+  display: none;
+}
+
+.motion-library .library-asset-status > summary > :first-child {
+  font-weight: 650;
+}
+
+.motion-library .library-asset-status-warning {
+  color: #76532e;
+}
+
+.motion-library .library-asset-status > summary > svg {
+  flex: 0 0 16px;
+  margin-left: auto;
+}
+
+.motion-library .library-asset-status[open] > summary > svg {
+  transform: rotate(180deg);
+}
+
+.motion-library .library-asset-status > summary:focus-visible {
+  outline: 3px solid var(--studio-accent, #a76a42);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+#root .vnext-shell .motion-library .library-asset-status .ml-inventory {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 20px;
+  margin: 0;
+  padding: 12px;
+  border: 0;
+  border-top: 1px solid var(--studio-line, #d6dfd9);
+  border-radius: 0 0 10px 10px;
+}
+
+#root .vnext-shell .motion-library .library-asset-status .ml-inventory p {
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.motion-library .library-asset-status-note {
+  margin: 6px 0 14px;
+  color: var(--lib-muted, #657064);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  #root .vnext-shell .motion-library .library-asset-status .ml-inventory {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+}

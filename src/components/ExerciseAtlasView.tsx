@@ -67,6 +67,7 @@ import '../styles/design-tokens.css';
 import '../styles/library.css';
 import '../styles/library-learning.css';
 import '../styles/motion-library.css';
+import '../styles/library-asset-status.css';
 import { COURSE_REFERENCES } from '../data/courseReferences';
 
 interface ExerciseAtlasViewProps {
@@ -985,7 +986,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       const favLabel =
         filters.favorite === 'saved'
           ? '저장됨'
-          : FAVORITE_TAG_META[filters.favorite as FavoriteTag]?.label ?? filters.favorite;
+          : (FAVORITE_TAG_META[filters.favorite as FavoriteTag]?.label ?? filters.favorite);
       chips.push({
         key: 'favorite',
         label: `즐겨찾기: ${favLabel}`,
@@ -1072,21 +1073,28 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         </div>
       </header>
 
-      <div className="ml-inventory" aria-label="모션 자산 현황">
-        <p>
-          <strong>{MOTION_PATTERN_REFERENCES.length}</strong>
-          <span>직접 제작한 도해 초안</span>
-        </p>
-        <p>
-          <strong>0</strong>
-          <span>정확히 일치하는 모션</span>
-        </p>
-        <p>
-          <strong>0</strong>
-          <span>전문가 검토 완료</span>
-        </p>
-        <span className="ml-inventory-note">관련 패턴 참고용 · 전문가 미검토</span>
-      </div>
+      <details className="library-asset-status">
+        <summary>
+          <span>도해 초안 {MOTION_PATTERN_REFERENCES.length}개</span>
+          <span className="library-asset-status-warning">전문가 미검토</span>
+          <ChevronDown size={16} aria-hidden="true" />
+        </summary>
+        <div className="ml-inventory" aria-label="모션 자산 현황">
+          <p>
+            <strong>{MOTION_PATTERN_REFERENCES.length}</strong>
+            <span>직접 제작한 도해 초안</span>
+          </p>
+          <p>
+            <strong>0</strong>
+            <span>정확히 일치하는 모션</span>
+          </p>
+          <p>
+            <strong>0</strong>
+            <span>전문가 검토 완료</span>
+          </p>
+        </div>
+      </details>
+      <p className="library-asset-status-note">관련 패턴 참고용 · 검증된 운동 시범이 아닙니다.</p>
       <div
         className="library-collection-tabs"
         role="tablist"
@@ -1175,11 +1183,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   placeholder="한글·영문 이름, 부위·기구·소도구로 검색"
                 />
                 {filters.search && (
-                  <PfButton
-                    variant="icon"
-                    onClick={clearSearch}
-                    aria-label="검색어 지우기"
-                  >
+                  <PfButton variant="icon" onClick={clearSearch} aria-label="검색어 지우기">
                     <X size={15} />
                   </PfButton>
                 )}
@@ -1773,7 +1777,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                 key={`${pattern.family}-${pattern.variantId}`}
                                 className={isPatternSelected ? 'is-selected' : undefined}
                                 aria-pressed={isPatternSelected}
-                                onClick={(event) => openPatternPreview(pattern, event.currentTarget)}
+                                onClick={(event) =>
+                                  openPatternPreview(pattern, event.currentTarget)
+                                }
                               >
                                 <Play size={13} /> {pattern.title} 보기
                               </button>
