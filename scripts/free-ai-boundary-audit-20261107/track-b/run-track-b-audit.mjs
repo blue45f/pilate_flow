@@ -125,7 +125,8 @@ function runStaticBundleAndSourceScan() {
 }
 
 function runVitestSuite() {
-  const result = spawnSync('pnpm', ['vitest', 'run', TEST_REL_PATH], {
+  // An audit must not trigger pnpm's automatic dependency installation/purge.
+  const result = spawnSync(process.execPath, [path.join(REPO_ROOT, 'node_modules/vitest/vitest.mjs'), 'run', TEST_REL_PATH], {
     cwd: REPO_ROOT,
     encoding: 'utf8',
     stdio: 'pipe',
