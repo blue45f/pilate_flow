@@ -80,3 +80,12 @@
   line-height: 1.25;
 }
 
+/* Keep the pointer action clear without adding another row of controls. */
+#root .sequence-order-controls .sequence-drag-handle:not(:disabled) {
+  border-style: dashed;
+}
+#root .composition-keyboard-hint {
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}

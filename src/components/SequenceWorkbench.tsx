@@ -662,12 +662,12 @@ export function SequenceWorkbench({
   const recentSavedSequences = useMemo(
     () =>
       [...s.savedSequences].sort((a, b) =>
-        (b.updatedAt || b.createdAt || "").localeCompare(a.updatedAt || a.createdAt || ""),
+        (b.updatedAt || b.createdAt || '').localeCompare(a.updatedAt || a.createdAt || ''),
       ),
     [s.savedSequences],
   );
   const recentHistoryLogs = useMemo(
-    () => [...s.historyLogs].sort((a, b) => (b.taughtAt || "").localeCompare(a.taughtAt || "")),
+    () => [...s.historyLogs].sort((a, b) => (b.taughtAt || '').localeCompare(a.taughtAt || '')),
     [s.historyLogs],
   );
   const startNewClass = () => {
@@ -691,28 +691,28 @@ export function SequenceWorkbench({
     usePilatesStore.setState({
       undoStack: [...current.undoStack.slice(-19), previousSnapshot],
       activeSequenceId: `draft-new-${Date.now()}`,
-      activeTitle: "새 수업 시퀀스",
-      activeSubtitle: "동작을 골라 나만의 흐름으로 구성하세요",
+      activeTitle: '새 수업 시퀀스',
+      activeSubtitle: '동작을 골라 나만의 흐름으로 구성하세요',
       activeSteps: [],
       generationError: null,
       saveFeedback:
-        "새 수업 준비 화면으로 전환했습니다. 되돌리기로 이전 수업안을 복원할 수 있습니다.",
+        '새 수업 준비 화면으로 전환했습니다. 되돌리기로 이전 수업안을 복원할 수 있습니다.',
     });
     closeInspector();
     setRecentSwitcherOpen(false);
-    setWorkflowStep("select");
-    setNotice("새 수업 준비 화면으로 전환했습니다. 되돌리기로 이전 수업안을 복원할 수 있습니다.");
+    setWorkflowStep('select');
+    setNotice('새 수업 준비 화면으로 전환했습니다. 되돌리기로 이전 수업안을 복원할 수 있습니다.');
   };
   const continueRecentSequence = (sequenceId: string, title: string) => {
     s.loadSequenceIntoWorkbench(sequenceId);
     setRecentSwitcherOpen(false);
-    setWorkflowStep("arrange");
+    setWorkflowStep('arrange');
     setNotice(`‘${title}’ 수업을 불러왔습니다.`);
   };
   const continueRecentHistory = (logId: string, title: string) => {
     s.loadHistoryIntoWorkbench(logId);
     setRecentSwitcherOpen(false);
-    setWorkflowStep("arrange");
+    setWorkflowStep('arrange');
     setNotice(`최근 기록 ‘${title}’ 수업을 이어서 구성합니다.`);
   };
   const ideasSectionNode = ideaExercises.length > 0 && (
@@ -756,16 +756,16 @@ export function SequenceWorkbench({
                 <div className="pf-workbench-idea-card__body">
                   <div
                     style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: "6px",
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '6px',
                     }}
                   >
                     <strong>{ideaEx.nameKo}</strong>
                     <PfAiStatusBadge
-                      kind={draft?.triedByInstructor ? "tried-memo" : "creative-memo"}
+                      kind={draft?.triedByInstructor ? 'tried-memo' : 'creative-memo'}
                     />
                   </div>
                   <p>{draft?.ideaLine || ideaEx.cues[0]}</p>
@@ -785,11 +785,11 @@ export function SequenceWorkbench({
                     onClick={() => {
                       const result = addMovementIdeaToCurrentClass(ideaEx.id);
                       setNotice(result.message);
-                      if (result.ok) setWorkflowStep("arrange");
+                      if (result.ok) setWorkflowStep('arrange');
                     }}
                     aria-label={`${ideaEx.nameKo} 수업에 넣기`}
                   >
-                    {inSequence ? "수업에 한 번 더 넣기" : "수업에 넣기"}
+                    {inSequence ? '수업에 한 번 더 넣기' : '수업에 넣기'}
                   </PfButton>
                 </div>
               </PfMovementCard>
@@ -833,10 +833,11 @@ export function SequenceWorkbench({
                   type="button"
                   className="workbench-welcome-summary"
                   onClick={() => setConditionsOpen(true)}
-                  aria-label={`수업 조건 열기 · ${criteria.targetMinutes}분 · ${equipmentLabel(selectedEquipment) || "기구 선택 필요"}`}
+                  aria-label={`수업 조건 열기 · ${criteria.targetMinutes}분 · ${equipmentLabel(selectedEquipment) || '기구 선택 필요'}`}
                 >
                   <Clock3 size={16} aria-hidden="true" />
-                  {criteria.targetMinutes}분 · {equipmentLabel(selectedEquipment) || "기구 선택 필요"}
+                  {criteria.targetMinutes}분 ·{' '}
+                  {equipmentLabel(selectedEquipment) || '기구 선택 필요'}
                   <ChevronDown size={15} aria-hidden="true" />
                 </button>
               </div>
@@ -881,8 +882,8 @@ export function SequenceWorkbench({
                   <FirstClassTutorialCandidate
                     variant="inline-card"
                     onStepAction={(stepId) => {
-                      if (stepId === "new-movement") openIdeaSheet(null);
-                      else if (stepId === "block-composition") openExerciseFinder();
+                      if (stepId === 'new-movement') openIdeaSheet(null);
+                      else if (stepId === 'block-composition') openExerciseFinder();
                     }}
                     onDismiss={() => setShowWelcomeTutorial(false)}
                   />
@@ -895,7 +896,7 @@ export function SequenceWorkbench({
               <div className="workbench-recent-continue__title">
                 <span className="workbench-recent-kicker">RECENT FLOW</span>
                 <h2>
-                  최근 수업 이어가기{" "}
+                  최근 수업 이어가기{' '}
                   <PfBadge tone="sage">
                     {recentSavedSequences.length || recentHistoryLogs.length}
                   </PfBadge>
@@ -904,7 +905,7 @@ export function SequenceWorkbench({
               <button
                 type="button"
                 className="ghost-btn workbench-recent-view-all"
-                onClick={() => s.setActiveTab("binder")}
+                onClick={() => s.setActiveTab('binder')}
               >
                 저장한 수업 전체 보기 <ArrowRight size={14} aria-hidden="true" />
               </button>
@@ -913,15 +914,16 @@ export function SequenceWorkbench({
               <div className="workbench-recent-continue__list">
                 {recentSavedSequences.slice(0, 2).map((seq) => {
                   const moveCount = seq.steps.filter((st) => !isRestStep(st)).length;
-                  const seqTitle = seq.title || (seq as { name?: string }).name || "저장된 수업 시퀀스";
+                  const seqTitle =
+                    seq.title || (seq as { name?: string }).name || '저장된 수업 시퀀스';
                   const gearText =
-                    seq.apparatus === "mixed" ? "복합 기구" : equipmentLabel([seq.apparatus]);
+                    seq.apparatus === 'mixed' ? '복합 기구' : equipmentLabel([seq.apparatus]);
                   return (
                     <div key={seq.id} className="workbench-recent-card">
                       <div className="workbench-recent-card__info">
                         <strong>{seqTitle}</strong>
                         <span>
-                          {moveCount}개 동작 · {seq.targetMinutes}분 · {gearText || "기구 미지정"}
+                          {moveCount}개 동작 · {seq.targetMinutes}분 · {gearText || '기구 미지정'}
                         </span>
                       </div>
                       <PfButton
@@ -957,7 +959,10 @@ export function SequenceWorkbench({
               </div>
             ) : (
               <div className="workbench-recent-empty">
-                <p>저장한 최근 수업이 아직 없습니다. 위에서 새 수업을 만들거나 프리셋으로 시작해 보세요.</p>
+                <p>
+                  저장한 최근 수업이 아직 없습니다. 위에서 새 수업을 만들거나 프리셋으로 시작해
+                  보세요.
+                </p>
               </div>
             )}
           </section>
@@ -994,15 +999,16 @@ export function SequenceWorkbench({
                 <div className="workbench-recent-continue__list">
                   {recentSavedSequences.slice(0, 3).map((seq) => {
                     const moveCount = seq.steps.filter((st) => !isRestStep(st)).length;
-                  const seqTitle = seq.title || (seq as { name?: string }).name || "저장된 수업 시퀀스";
+                    const seqTitle =
+                      seq.title || (seq as { name?: string }).name || '저장된 수업 시퀀스';
                     const gearText =
-                      seq.apparatus === "mixed" ? "복합 기구" : equipmentLabel([seq.apparatus]);
+                      seq.apparatus === 'mixed' ? '복합 기구' : equipmentLabel([seq.apparatus]);
                     return (
                       <div key={seq.id} className="workbench-recent-card">
                         <div className="workbench-recent-card__info">
                           <strong>{seqTitle}</strong>
                           <span>
-                            {moveCount}개 동작 · {seq.targetMinutes}분 · {gearText || "기구 미지정"}
+                            {moveCount}개 동작 · {seq.targetMinutes}분 · {gearText || '기구 미지정'}
                           </span>
                         </div>
                         <PfButton
@@ -1044,7 +1050,7 @@ export function SequenceWorkbench({
                 className="ghost-btn workbench-recent-view-all"
                 onClick={() => {
                   setRecentSwitcherOpen(false);
-                  s.setActiveTab("binder");
+                  s.setActiveTab('binder');
                 }}
               >
                 저장한 수업 전체 보기 <ArrowRight size={14} aria-hidden="true" />
@@ -1284,7 +1290,8 @@ export function SequenceWorkbench({
                 </details>
                 <details className="workbench-block-combo-details">
                   <summary>
-                    블록 조합{savedReusableBlocks.length > 0 ? ` · ${savedReusableBlocks.length}` : ''}
+                    블록 조합
+                    {savedReusableBlocks.length > 0 ? ` · ${savedReusableBlocks.length}` : ''}
                   </summary>
                   <div className="workbench-block-combo-panel">
                     <div className="workbench-block-combo-create">
@@ -1299,22 +1306,19 @@ export function SequenceWorkbench({
                         />
                       </label>
                       <div className="workbench-block-combo-actions">
-                        <PfButton
-                          variant="secondary"
-                          onClick={handleCombineCurrentStepsToBlock}
-                        >
+                        <PfButton variant="secondary" onClick={handleCombineCurrentStepsToBlock}>
                           현재 동작 묶어 블록 저장
                         </PfButton>
-                        <PfButton
-                          variant="text"
-                          onClick={() => setPresetsOpen(true)}
-                        >
+                        <PfButton variant="text" onClick={() => setPresetsOpen(true)}>
                           <Copy size={14} aria-hidden="true" /> 프리셋·동작 묶음 열기
                         </PfButton>
                       </div>
                     </div>
                     {savedReusableBlocks.length > 0 && (
-                      <div className="workbench-block-combo-list" aria-label="내 저장된 재사용 블록">
+                      <div
+                        className="workbench-block-combo-list"
+                        aria-label="내 저장된 재사용 블록"
+                      >
                         {savedReusableBlocks.map((block) => {
                           const summary = getReusableBlockTimingSummary(block);
                           return (
@@ -1346,8 +1350,7 @@ export function SequenceWorkbench({
                     동작 더 담기
                   </PfButton>
                   <PfButton variant="text" onClick={() => openIdeaSheet(null)}>
-                    <Sparkles size={15} aria-hidden="true" />
-                    한 줄 동작 메모
+                    <Sparkles size={15} aria-hidden="true" />한 줄 동작 메모
                   </PfButton>
                   <PfButton
                     variant="text"
@@ -1369,7 +1372,12 @@ export function SequenceWorkbench({
             </>
           )}
           {s.activeSteps.length > 0 && (
-            <p className="composition-order-hint">끌어서 순서 변경 · 위·아래 버튼도 가능</p>
+            <p className="composition-order-hint">
+              ‘끌기’ 손잡이로 순서 변경 · 위·아래 버튼도 가능
+              <span className="composition-keyboard-hint">
+                키보드: 방향키 한 칸 · Home/End 처음·끝 · Esc 드래그 취소
+              </span>
+            </p>
           )}
           <div className="flow-sections">
             {sectionRuns.map(({ section, entries }, runIndex) => {
@@ -1770,12 +1778,12 @@ export function SequenceWorkbench({
                 <span>도해 초안 둘러보기 (선택)</span>
               </summary>
               <MotionPatternGallery
-                onViewAll={() => s.setActiveTab("atlas")}
+                onViewAll={() => s.setActiveTab('atlas')}
                 onOpenExercise={onOpenYouTubePreview}
                 onInsertExercise={(exercise) => {
                   s.appendExerciseToSequence(exercise.id, exercise.blockCategory);
                   if (usePilatesStore.getState().activeSteps.length) {
-                    setWorkflowStep("arrange");
+                    setWorkflowStep('arrange');
                   }
                 }}
               />
