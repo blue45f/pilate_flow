@@ -798,6 +798,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                         {step.repetitions !== undefined && step.sets !== undefined && <span>반복·세트: {step.repetitions}회 × {step.sets}세트</span>}
                         {step.ideaLineSnapshot && <span>당시 창작 아이디어: {step.ideaLineSnapshot}</span>}
                         {step.cues[0] && <span>당시 핵심 큐: {step.cues[0]}</span>}
+                        {step.precautions && (
+                          <p className="binder-history-step-note" data-testid="history-snapshot-step-precautions">
+                            당시 주의·느낌 메모: {step.precautions}
+                          </p>
+                        )}
                         {step.instructorNote && <span>당시 메모: {step.instructorNote}</span>}
                       </div>
                     ) : step.instructorNote && <div className="teaching-history-snapshot-details"><span>당시 휴식 메모: {step.instructorNote}</span></div>}

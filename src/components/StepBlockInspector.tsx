@@ -197,13 +197,6 @@ export function StepBlockInspector({
         </small>
       </div>
       <form className="step-inspector-form" onSubmit={apply} noValidate>
-        <StepMotionStudyPicker
-          exerciseId={step.exerciseId}
-          value={draft.motionStudy}
-          disabled={disabled}
-          playbackActive={playbackActive}
-          onChange={(motionStudy) => setDraft({ ...draft, motionStudy })}
-        />
         <fieldset disabled={disabled}>
           <legend>이번 수업의 계획</legend>
           <label className="form-field">
@@ -364,7 +357,7 @@ export function StepBlockInspector({
               })
             }
           />
-          <details>
+          <details open>
             <summary>이번 수업의 기구 세팅·티칭 메모</summary>
             {exercise && isExerciseAutoEligible(exercise) && (
               <p className="muted">
@@ -395,6 +388,13 @@ export function StepBlockInspector({
             </p>
           </details>
         </fieldset>
+        <StepMotionStudyPicker
+          exerciseId={step.exerciseId}
+          value={draft.motionStudy}
+          disabled={disabled}
+          playbackActive={playbackActive}
+          onChange={(motionStudy) => setDraft({ ...draft, motionStudy })}
+        />
         <div className="step-inspector-rest-note">
           <Clock3 size={17} />
           <span>

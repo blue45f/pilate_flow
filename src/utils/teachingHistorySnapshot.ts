@@ -7,11 +7,14 @@ import {
 import type {
   ClassBlockSnapshot,
   ClassSequenceSnapshot,
+  DraftModificationLog,
+  DraftPhotoReference,
   HierarchyPilatesExercise,
   HumanMovementDraft,
   MovementSnapshot,
   ReusableBlock,
   SequenceSourceProvenance,
+  SubjectiveFeelLog,
 } from '../types/hierarchy';
 import type {
   ApparatusType,
@@ -349,19 +352,23 @@ export function createTeachingExerciseSnapshot(
       ? { ideaLineSnapshot: hierEx.ideaLineSnapshot }
       : {}),
     ...(Array.isArray(hierEx.feelLogsSnapshot)
-      ? { feelLogsSnapshot: hierEx.feelLogsSnapshot.map((item) => structuredClone(item)) }
-      : {}),
-    ...(Array.isArray(hierEx.modificationLogsSnapshot)
       ? {
-          modificationLogsSnapshot: hierEx.modificationLogsSnapshot.map((item) =>
+          feelLogsSnapshot: (hierEx.feelLogsSnapshot as SubjectiveFeelLog[]).map((item) =>
             structuredClone(item),
           ),
         }
       : {}),
+    ...(Array.isArray(hierEx.modificationLogsSnapshot)
+      ? {
+          modificationLogsSnapshot: (
+            hierEx.modificationLogsSnapshot as DraftModificationLog[]
+          ).map((item) => structuredClone(item)),
+        }
+      : {}),
     ...(Array.isArray(hierEx.photoReferencesSnapshot)
       ? {
-          photoReferencesSnapshot: hierEx.photoReferencesSnapshot.map((item) =>
-            structuredClone(item),
+          photoReferencesSnapshot: (hierEx.photoReferencesSnapshot as DraftPhotoReference[]).map(
+            (item) => structuredClone(item),
           ),
         }
       : {}),
@@ -2949,6 +2956,7 @@ export function formatTeachingHistorySnapshotText(view: ResolvedTeachingHistoryV
         ? `    - 당시 레이어 가이드: ${step.selectedLayerDescription}`
         : null,
       step.cues[0] ? `    - 당시 핵심 큐잉: ${step.cues[0]}` : null,
+      step.precautions ? `    - 당시 주의·느낌 메모: ${step.precautions}` : null,
       step.instructorNote ? `    - 당시 강사 메모: ${step.instructorNote}` : null,
     ]
       .filter(Boolean)
