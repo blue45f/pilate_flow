@@ -1,0 +1,291 @@
+.posture-anatomy-guide {
+  --posture-paper: #f7f5ef;
+  --posture-ink: #284b45;
+  min-width: 0;
+  margin-block: 16px;
+  padding: clamp(12px, 2vw, 22px);
+  color: #263b36;
+  background: var(--posture-paper);
+  border: 1px solid #d8dfd8;
+  border-radius: 18px;
+  overflow-wrap: anywhere;
+}
+.posture-anatomy-guide *,
+.posture-anatomy-guide *::before,
+.posture-anatomy-guide *::after {
+  box-sizing: border-box;
+}
+.posture-guide-heading > span {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: #52675e;
+  font-weight: 750;
+}
+.posture-anatomy-guide .posture-guide-heading h3 {
+  margin: 5px 0;
+  font-size: 17px;
+  color: #263b36;
+}
+.posture-guide-heading p {
+  margin: 0 0 14px;
+  color: #52675e;
+  font-size: 12px;
+}
+.posture-guide-layout {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.7fr) minmax(0, 1.3fr);
+  gap: 14px;
+}
+.posture-guide-position {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+  padding: 10px;
+  background: #eeeee4;
+  border-radius: 12px;
+}
+.body-position-figure {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  color: var(--posture-ink, #284b45);
+}
+.posture-guide-position > strong {
+  font-size: 14px;
+}
+.posture-guide-position > span {
+  display: block;
+  margin-block: 5px;
+  font-size: 12px;
+}
+.posture-guide-position > small {
+  font-size: 11px;
+  color: #59675d;
+  line-height: 1.6;
+}
+.posture-guide-planes {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #d3d7cd;
+}
+.posture-guide-planes > div {
+  flex: 1 1 65px;
+  max-width: 110px;
+}
+.posture-guide-planes svg {
+  display: block;
+  width: 38px;
+  height: 38px;
+  margin: auto;
+  color: #4c655b;
+}
+.posture-guide-planes strong,
+.posture-guide-planes small {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.posture-guide-planes small {
+  color: #59675d;
+  font-size: 10px;
+  margin-top: 3px;
+}
+.posture-guide-anatomy {
+  min-width: 0;
+}
+.posture-anatomy-map {
+  display: block;
+  width: 100%;
+  max-width: 310px;
+  height: auto;
+  margin-inline: auto;
+}
+.posture-map-body {
+  fill: #e4e8df;
+  stroke: #7d8b7d;
+}
+.posture-map-view {
+  fill: #40584f;
+  font-size: 10px;
+  font-weight: 700;
+}
+.posture-map-spine {
+  stroke: #7d8b7d;
+  stroke-width: 2;
+}
+.posture-map-highlight {
+  fill: #b66c46;
+  fill-opacity: 0.68;
+  stroke: #8b492c;
+  stroke-width: 0.6;
+}
+.posture-map-leader {
+  fill: none;
+  stroke: #284b45;
+  stroke-width: 1;
+}
+.posture-map-number-bg {
+  fill: #284b45;
+  stroke: var(--posture-paper);
+  stroke-width: 1;
+}
+.posture-map-number {
+  fill: white;
+  font-size: 9px;
+  font-weight: 700;
+}
+.posture-anatomy-guide .posture-guide-legend {
+  list-style: none;
+  display: grid;
+  gap: 7px;
+  margin: 4px 0 0;
+  padding: 0;
+}
+.posture-guide-legend li {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.posture-legend-number {
+  flex: 0 0 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: white;
+  background: #284b45;
+  font-size: 11px;
+  font-weight: 700;
+}
+.posture-guide-legend li > div {
+  min-width: 0;
+}
+.posture-guide-legend strong,
+.posture-guide-legend li div > span {
+  display: block;
+}
+.posture-guide-legend li div > span {
+  color: #52675e;
+}
+.posture-guide-empty,
+.posture-guide-unmapped {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.posture-guide-unmapped strong,
+.posture-guide-unmapped > span {
+  display: block;
+}
+.posture-guide-unmapped > span {
+  color: #59675d;
+  font-size: 11px;
+}
+.posture-anatomy-guide .posture-guide-boundary {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #d8dfd8;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #53645b;
+}
+.posture-guide-notes {
+  margin-top: 8px;
+  min-width: 0;
+}
+.posture-anatomy-guide .posture-guide-notes summary {
+  min-height: 44px;
+  padding: 11px 0;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: #284b45;
+}
+.posture-guide-notes summary:focus-visible,
+.posture-guide-notes a:focus-visible {
+  outline: 3px solid #467466;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+.posture-guide-notes > div {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.posture-guide-notes ul {
+  padding-left: 18px;
+}
+.posture-guide-notes li {
+  margin-bottom: 7px;
+}
+.posture-guide-notes nav {
+  display: grid;
+  gap: 4px;
+}
+.posture-guide-notes a {
+  padding-block: 10px;
+  color: #284b45;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.posture-anatomy-guide.is-compact .posture-guide-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+.posture-anatomy-guide.is-compact .posture-guide-position {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  column-gap: 10px;
+  text-align: left;
+}
+.posture-anatomy-guide.is-compact .body-position-figure {
+  grid-row: span 3;
+}
+.posture-anatomy-guide.is-compact .posture-guide-planes {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+}
+@media (max-width: 520px) {
+  .posture-guide-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .posture-guide-position .body-position-figure {
+    max-width: 180px;
+  }
+  .posture-guide-planes {
+    margin-top: 8px;
+  }
+}
+@media (forced-colors: active) {
+  .posture-map-highlight {
+    fill: Highlight;
+    stroke: CanvasText;
+  }
+  .posture-map-number-bg {
+    fill: CanvasText;
+  }
+  .posture-map-number {
+    fill: Canvas;
+  }
+  .posture-legend-number {
+    color: Canvas;
+    background: CanvasText;
+    border: 1px solid CanvasText;
+  }
+}
+
+.posture-guide-legend .posture-legend-role {
+  display: block;
+  color: #435f53;
+  font-size: 11px;
+  line-height: 1.6;
+  margin-top: 3px;
+}
