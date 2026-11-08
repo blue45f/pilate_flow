@@ -22,9 +22,9 @@
 
   <!-- Header -->
   <g font-family="Pretendard, -apple-system, BlinkMacSystemFont, sans-serif">
-    <text x="28" y="34" font-size="15" font-weight="700" fill="#244d44">TRACK I3 · 싱글 레그 서클 (Single Leg Circle) 3단계 고관절 분리(Hip Dissociation) &amp; 골반 앵커 도해</text>
-    <text x="1092" y="34" text-anchor="end" font-size="11" font-weight="600" fill="#875641">ORIGINAL FREE-LICENSE KINEMATIC SVG · anatomicalAccuracyAssumed: false</text>
-    <text x="28" y="54" font-size="11.5" fill="#5e6761">불변 조건: 241 샘플 강체 분절 길이 보존(drift &lt; 1e-6) · 앙와위 천골 수평 고정(pelvisDriftMm = 0) · 반대쪽 지지 다리 뒤꿈치 매트(y=144) 고정</text>
+    <text x="28" y="34" font-size="13.5" font-weight="700" fill="#244d44">TRACK I3 · 싱글 레그 서클 (Single Leg Circle) 3단계 고관절 분리(Hip Dissociation) &amp; 골반 앵커 도해</text>
+    <text x="1092" y="34" text-anchor="end" font-size="10" font-weight="600" fill="#875641">ORIGINAL FREE-LICENSE KINEMATIC SVG · anatomicalAccuracyAssumed: false</text>
+    <text x="28" y="54" font-size="11" fill="#5e6761">불변 조건: 241 샘플 강체 분절 길이 보존(drift &lt; 1e-6) · 앙와위 천골 수평 고정(pelvisDriftMm = 0) · 반대쪽 지지 다리 뒤꿈치 매트(y=144) 고정</text>
   </g>
 
   <!-- ==================== PANEL 1: START (x: 24..368) ==================== -->
