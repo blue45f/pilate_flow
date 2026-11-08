@@ -451,8 +451,14 @@ describe('Dynamic Workflow Full Completion (Tracks 1–4 E2E Integration)', () =
     });
 
     it('renders lazy disclosures for MovementVisualGuideCard and RotationPhaseTriptych in MovementDiagramReference', () => {
-      const rotationExercise = INITIAL_EXERCISES.find((ex) => ex.id === 'ex-cooldown-01')!;
-      expect(rotationExercise).toBeDefined();
+      const baseExercise = INITIAL_EXERCISES.find((ex) => ex.id === 'ex-cooldown-01')!;
+      expect(baseExercise).toBeDefined();
+      const rotationExercise: PilatesExercise = {
+        ...baseExercise,
+        id: 'original-mat-spine-twist',
+        apparatus: 'mat',
+        bodyPosition: 'seated',
+      };
 
       const { container } = render(<MovementDiagramReference exercise={rotationExercise} />);
 

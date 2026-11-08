@@ -4,6 +4,7 @@ import { toMovementPhaseDiagramProps } from '../features/motionCoverage/adapters
 import {
   isRotationDiagramExercise,
   resolveRotationDiagramCandidate,
+  toRotationMovementPhaseDiagramProps,
 } from '../features/rotationDiagramCandidate';
 import { resolveSpineArticulationDiagramByExerciseId } from '../data/spineArticulationDiagramData';
 import {
@@ -81,6 +82,11 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
   const [showUpperBodyArmDiagram, setShowUpperBodyArmDiagram] = useState(false);
   const [showLateralApparatusDiagram, setShowLateralApparatusDiagram] = useState(false);
   const [showExtendedVerification, setShowExtendedVerification] = useState(false);
+  const isRotation = isRotationDiagramExercise(exercise.id);
+  const rotCandidate = useMemo(
+    () => (isRotation ? resolveRotationDiagramCandidate(exercise.id) : null),
+    [exercise.id, isRotation],
+  );
   const props = useMemo(
     () =>
       toMovementPhaseDiagramProps(exercise, 'start', {
@@ -91,8 +97,22 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
         showDirection: false,
         showGhostStartPose: false,
         label: `${exercise.nameKo} · 직접 작성한 참고 자세 그림 · 해부학 미검증`,
-      }),
-    [exercise],
+      }) ??
+      (isRotation &&
+      rotCandidate &&
+      exercise.apparatus === rotCandidate.asset.apparatus &&
+      exercise.bodyPosition === rotCandidate.asset.bodyPosition
+        ? toRotationMovementPhaseDiagramProps(exercise, 'start', {
+            activeSide: 'right',
+            mirrored: false,
+            showMuscles: false,
+            showAlignment: false,
+            showDirection: false,
+            showGhostStartPose: false,
+            label: `${exercise.nameKo} · 직접 작성한 참고 자세 그림 · 해부학 미검증`,
+          })
+        : null),
+    [exercise, isRotation, rotCandidate],
   );
   const spineSpec = useMemo(
     () => resolveSpineArticulationDiagramByExerciseId(exercise.id),
@@ -119,11 +139,6 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
   const shoulderSpec = useMemo(
     () => resolveShoulderSupportDiagramForExercise(shoulderTargetId),
     [shoulderTargetId],
-  );
-  const isRotation = isRotationDiagramExercise(exercise.id);
-  const rotCandidate = useMemo(
-    () => (isRotation ? resolveRotationDiagramCandidate(exercise.id) : null),
-    [exercise.id, isRotation],
   );
   const breathingPelvicSpec = useMemo(
     () => resolveBreathingPelvicDiagram(exercise.id),
