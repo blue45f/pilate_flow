@@ -109,6 +109,21 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     expect(within(mobileNav).getByRole('button', { name: '기록' })).toBeVisible();
   });
 
+  it('provides one save action pair and four optional sections without a duplicate action card', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: '새 동작 메모' }));
+    const dialog = screen.getByRole('dialog', { name: '새 동작 메모' });
+    expect(within(dialog).getAllByRole('button', { name: '초안 저장' })).toHaveLength(1);
+    expect(within(dialog).getAllByRole('button', { name: '저장하고 수업에 넣기' })).toHaveLength(1);
+    expect(dialog.querySelector('.pf-idea-primary-actions')).toBeNull();
+    expect(dialog.querySelectorAll('.pf-idea-progressive-section')).toHaveLength(4);
+    expect(dialog.querySelectorAll('.pf-idea-progressive-section[open]')).toHaveLength(0);
+    expect(within(dialog).getByText('개인 아이디어 메모 · 안전성 검증 아님')).toBeVisible();
+    fireEvent.click(within(dialog).getByRole('button', { name: '초안 저장' }));
+    expect(within(dialog).getByLabelText('한 줄 아이디어')).toHaveAttribute('aria-invalid', 'true');
+    expect(within(dialog).getByRole('alert')).toBeVisible();
+  });
+
   it('completes the full mobile journey: 1-line idea save -> reopen -> add feeling/adjustments/sketch -> edit -> add to class without requiring anatomy or block hierarchy', () => {
     render(<App />);
 
@@ -128,7 +143,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     fireEvent.change(ideaInput, {
       target: { value: '풋바를 밀며 한 팔씩 천장으로 길게 뻗어 흉추 회전 느끼기' },
     });
-    fireEvent.click(within(dialog).getByRole('button', { name: '초안 바로 저장' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '초안 저장' }));
 
     expect(within(dialog).getByRole('status')).toHaveTextContent(/한 줄 초안을 저장했습니다/);
 
@@ -172,7 +187,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     fireEvent.click(within(reopenedDialog).getByRole('button', { name: '예시 자세 스케치 넣기' }));
 
     // Save the updated notes
-    fireEvent.click(within(reopenedDialog).getByRole('button', { name: '수정 저장' }));
+    fireEvent.click(within(reopenedDialog).getByRole('button', { name: '수정 내용 저장' }));
     expect(within(reopenedDialog).getByRole('status')).toHaveTextContent(
       /수정 내용을 저장했습니다/,
     );
@@ -232,7 +247,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
       .mockImplementationOnce(() => {
         throw new Error('simulated storage write failure');
       });
-    fireEvent.click(within(dialog).getByRole('button', { name: '초안 바로 저장' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '초안 저장' }));
     expect(within(dialog).getByRole('alert')).toHaveTextContent(
       /저장에 실패했습니다\. 작성 중인 내용은 이 화면에 그대로 보관되어 있습니다/,
     );
@@ -283,7 +298,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     fireEvent.change(within(dialog).getByLabelText('한 줄 아이디어'), {
       target: { value: 'v1 원본 아이디어: 롱박스 위에서 한 다리 뻗으며 골반 안정화' },
     });
-    fireEvent.click(within(dialog).getByRole('button', { name: '초안 바로 저장' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '초안 저장' }));
 
     const originalEx = usePilatesStore.getState().exercises.find(isMovementIdeaExercise)!;
     expect(readMovementIdeaDraft(originalEx)?.revision).toBe(1);
@@ -298,7 +313,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     fireEvent.change(within(dialog).getByLabelText('심화 변형 메모'), {
       target: { value: '정점에서 3초 홀드 후 호흡 2회 유지' },
     });
-    fireEvent.click(within(dialog).getByRole('button', { name: '수정 저장' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '수정 내용 저장' }));
 
     const afterUpdateMeta = readMovementIdeaDraft(
       usePilatesStore.getState().exercises.find((item) => item.id === originalEx.id)!,
@@ -343,7 +358,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     fireEvent.change(within(dialog).getByLabelText('한 줄 아이디어'), {
       target: { value: '파생 변형 전용 아이디어: 핸드스트랩을 잡고 보조 지지' },
     });
-    fireEvent.click(within(dialog).getByRole('button', { name: '수정 저장' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '수정 내용 저장' }));
 
     const untouchedOriginal = usePilatesStore
       .getState()

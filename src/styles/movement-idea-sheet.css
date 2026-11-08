@@ -1,0 +1,135 @@
+/* Local visual treatment of the one-line idea sheet; no shared dialog overrides. */
+#root .vnext-shell .atelier-modal-dialog.light-dismiss-dialog.pf-idea-sheet-dialog {
+  width: min(640px, calc(100vw - 48px));
+  max-width: 640px !important;
+  max-height: calc(100dvh - 48px);
+  border-radius: 20px;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .atelier-modal-header {
+  padding: 24px 24px 18px;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .atelier-modal-title {
+  font-size: 24px;
+  line-height: 1.35;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .atelier-modal-subtitle {
+  font-size: 15px;
+  line-height: 1.5;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .atelier-modal-body {
+  padding: 20px 24px 0;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-step-card {
+  padding: 0 0 6px;
+  border: 0;
+  background: transparent;
+  gap: 8px;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-step-header:empty {
+  display: none;
+}
+#root .vnext-shell .pf-idea-sheet-dialog textarea {
+  font-size: 16px;
+  line-height: 1.5;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-note-guidance {
+  color: var(--pf-color-text-secondary, #52676d);
+  font-size: 13px;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-note-guidance > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-note-guidance > summary::after {
+  content: '+';
+  margin-left: auto;
+  padding-left: 12px;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-note-guidance[open] > summary::after {
+  content: '−';
+}
+#root .vnext-shell .pf-idea-sheet-dialog summary:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring, #3b9f93);
+  outline-offset: -3px;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-progressive-summary {
+  padding: 10px 12px;
+  min-height: 48px;
+  font-size: 14px;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-progressive-summary > span:first-child {
+  flex: 1 1 180px;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-progressive-summary::after {
+  content: '⌄';
+  flex: 0 0 auto;
+}
+#root .vnext-shell .pf-idea-sheet-dialog details[open] > .pf-idea-progressive-summary::after {
+  content: '⌃';
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-footer-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: #fff;
+  margin-top: 8px;
+  padding: 12px 0 max(16px, env(safe-area-inset-bottom));
+  gap: 8px;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-footer-primary,
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-footer-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-footer-bar button {
+  min-height: 44px;
+}
+#root .vnext-shell .pf-idea-sheet-dialog .pf-idea-saved-list {
+  padding-bottom: 20px;
+}
+@media (max-width: 600px) {
+  #root .vnext-shell .atelier-modal-dialog.light-dismiss-dialog.pf-idea-sheet-dialog {
+    width: 100%;
+    height: calc(100dvh - var(--hosted-obstruction-inset, 0px));
+    max-height: calc(100dvh - var(--hosted-obstruction-inset, 0px));
+    margin: 0;
+    top: 0;
+    bottom: var(--hosted-obstruction-inset, 0px);
+    border-radius: 0;
+    border: 0;
+  }
+  #root .vnext-shell .pf-idea-sheet-dialog .atelier-modal-header {
+    padding: max(20px, env(safe-area-inset-top)) 16px 16px;
+  }
+  #root .vnext-shell .pf-idea-sheet-dialog .atelier-modal-body {
+    padding: 16px 16px 0;
+  }
+  #root .vnext-shell .pf-idea-sheet-dialog .pf-idea-footer-bar {
+    justify-content: stretch;
+  }
+  #root .vnext-shell .pf-idea-sheet-dialog .pf-idea-footer-primary {
+    width: 100%;
+  }
+  #root .vnext-shell .pf-idea-sheet-dialog .pf-idea-footer-primary button {
+    flex: 1 1 100%;
+  }
+  #root .vnext-shell .pf-idea-sheet-dialog .pf-idea-footer-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+@media (max-height: 550px) {
+  /* Do not let a pinned multirow action bar obscure fields above the keyboard. */
+  #root .vnext-shell .pf-idea-sheet-dialog .pf-idea-footer-bar {
+    position: static;
+  }
+}
