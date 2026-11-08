@@ -243,6 +243,34 @@ export function ExtensionMovementDiagram({
         >
           {renderSupportSurfaceOverlay(activePose)}
 
+          <g
+            data-layer="extension-thoracic-lumbar-corridor"
+            data-lumbar-protected={String(alignmentReport.noLumbarHingeCompression)}
+          >
+            <polyline
+              points={`${activePose.joints.hip.x},${activePose.joints.hip.y} ${activePose.joints.pelvis.x},${activePose.joints.pelvis.y} ${activePose.joints.lumbar.x},${activePose.joints.lumbar.y}`}
+              fill="none"
+              stroke={
+                alignmentReport.noLumbarHingeCompression
+                  ? 'rgba(37, 99, 75, 0.28)'
+                  : 'rgba(185, 28, 28, 0.34)'
+              }
+              strokeWidth={9}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              data-extension-lumbar-corridor="true"
+            />
+            <polyline
+              points={`${activePose.joints.lumbar.x},${activePose.joints.lumbar.y} ${activePose.joints.thoracic.x},${activePose.joints.thoracic.y} ${activePose.joints.neck.x},${activePose.joints.neck.y} ${activePose.joints.head.x},${activePose.joints.head.y}`}
+              fill="none"
+              stroke="rgba(28, 93, 75, 0.22)"
+              strokeWidth={6}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              data-extension-thoracic-arc="true"
+            />
+          </g>
+
           <g data-layer="extension-joint-axes">
             {activePose.jointAxes.map((axis) => (
               <circle
@@ -320,6 +348,35 @@ export function ExtensionMovementDiagram({
 
         {showDisclosures && (
           <div data-testid="extension-disclosures" style={{ marginTop: '6px' }}>
+            <div
+              data-testid="extension-diagram-legend"
+              aria-label="신전 2D 도해 범례"
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '8px 14px',
+                padding: '6px 10px',
+                marginBottom: '6px',
+                borderRadius: '8px',
+                background: '#f2eee4',
+                border: '1px solid #dfd8ca',
+                fontSize: '0.78rem',
+              }}
+            >
+              <strong>범례 (Legend):</strong>
+              <span data-legend-item="thoracic-lumbar-corridor">
+                ■ 녹색 코리도: 요추 과신전 방지 보호존 & 상·중부 흉추 신전 호
+              </span>
+              <span data-legend-item="joint-axis">
+                ◌ 점선 원: 관절축 (흉추 신전축·골반 안정축·대각선 고관절/견관절축)
+              </span>
+              <span data-legend-item="contact-point">
+                ● 접촉점 (#2b6a58 고정 앵커 / #c86d44 활주·부양 사지)
+              </span>
+              <span data-legend-item="direction-vector">
+                → 화살표: 신전·축 신장 및 편심성 제어 복귀 방향
+              </span>
+            </div>
             <p data-testid="extension-medical-notice">
               {EXTENSION_MEDICAL_AND_REVIEW_POLICY.noticeKo}{' '}
               {EXTENSION_MEDICAL_AND_REVIEW_POLICY.limitationKo}

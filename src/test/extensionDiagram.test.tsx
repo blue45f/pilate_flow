@@ -213,6 +213,9 @@ describe('Track I5: Extension 2D Diagrams (Swan & Swimming Family)', () => {
         expect(
           container.querySelector('[data-extension-support-surface]'),
         ).not.toBeNull();
+        expect(
+          container.querySelector('[data-layer="extension-thoracic-lumbar-corridor"]'),
+        ).not.toBeNull();
 
         if (phaseId !== 'start') {
           expect(
@@ -242,6 +245,7 @@ describe('Track I5: Extension 2D Diagrams (Swan & Swimming Family)', () => {
     );
 
     expect(screen.getByTestId('extension-policy-notice')).toBeTruthy();
+    expect(screen.getByTestId('extension-diagram-legend')).toBeTruthy();
     const counterBtn = screen.getByTestId('toggle-counter-example');
     fireEvent.click(counterBtn);
     expect(

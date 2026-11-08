@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { ArrowDown, ArrowUp, Coffee, LockKeyhole, Trash2, UnlockKeyhole } from 'lucide-react';
 import type { SequenceStep } from '../types/pilates';
 import { formatSecondsToMMSS } from '../utils/sequenceEngine';
@@ -25,6 +25,7 @@ export function RestStepCard({
 }: RestStepCardProps) {
   const [edit, setEdit] = useState<{ value: string; source: number } | null>(null);
   const [error, setError] = useState('');
+  const errorId = useId();
   const value = edit?.source === step.durationMin ? edit.value : String(step.durationMin);
   const number = index + 1;
   return (
@@ -58,6 +59,8 @@ export function RestStepCard({
           <span>휴식 시간 · 분</span>
           <input
             aria-label={`${number}번 휴식 시간 · 분`}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
             type="number"
             min={0.5}
             max={120}
@@ -109,7 +112,7 @@ export function RestStepCard({
       </div>
       {step.locked && <p className="rest-step-lock-note">잠근 휴식의 시간과 위치를 유지합니다.</p>}
       {error && (
-        <p className="rest-field-error" role="status">
+        <p id={errorId} className="rest-field-error" role="status">
           {error}
         </p>
       )}

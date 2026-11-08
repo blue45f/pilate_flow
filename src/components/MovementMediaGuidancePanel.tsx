@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { PilatesExercise } from '../types/pilates';
 import {
   KOREAN_VOICE_SPEED_OPTIONS,
@@ -116,6 +116,7 @@ function MovementMediaGuidanceInner({
 
   const controllerRef = useRef<KoreanVoiceController | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const scriptPanelId = useId();
 
   const selectedMatchId =
     scopedSelection.exerciseId === exercise.id
@@ -660,6 +661,7 @@ function MovementMediaGuidanceInner({
               className="mmg-btn mmg-btn-ghost"
               data-testid="toggle-voice-script-btn"
               aria-expanded={showScriptText}
+              aria-controls={scriptPanelId}
               onClick={() => setShowScriptText((prev) => !prev)}
             >
               {showScriptText
@@ -673,7 +675,7 @@ function MovementMediaGuidanceInner({
             <select
               className="mmg-speed-select"
               data-testid="voice-speed-select"
-              aria-label="한국어 음성 설명 속도"
+              aria-label="낭독 속도 · 한국어 음성 설명"
               value={voiceState.speed}
               onChange={(event) => handleSpeedChange(event.target.value)}
             >
@@ -718,7 +720,7 @@ function MovementMediaGuidanceInner({
         </p>
 
         {showScriptText && (
-          <div className="mmg-script-panel" data-testid="voice-script-text">
+          <div id={scriptPanelId} className="mmg-script-panel" data-testid="voice-script-text">
             <ol className="mmg-segment-list">
               {visibleSegments.map((segment) => {
                 const isActiveSegment =
@@ -739,6 +741,7 @@ function MovementMediaGuidanceInner({
                         type="button"
                         className="mmg-btn mmg-btn-secondary mmg-btn-sm"
                         data-testid={`speak-segment-btn-${segment.index}`}
+                        aria-label={`${segment.index + 1}. ${segment.labelKo} 구간 듣기`}
                         onClick={() =>
                           controllerRef.current?.speakSegment(segment.index)
                         }

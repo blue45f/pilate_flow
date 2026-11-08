@@ -24,8 +24,10 @@ interface SequenceSegmentRehearsalProps {
   renderProjection?: (cursor: SequenceSegmentCursorProjection | null) => ReactNode;
 }
 
-const durationLabel = (seconds: number) =>
-  `${formatSecondsToMMSS(seconds)}${seconds % 1 === 0.5 ? '.5' : ''}`;
+const durationLabel = (seconds: number) => {
+  const roundedTenths = Math.round(Math.max(0, seconds) * 10) / 10;
+  return `${formatSecondsToMMSS(roundedTenths)}${Math.abs((roundedTenths % 1) - 0.5) < 1e-6 ? '.5' : ''}`;
+};
 
 /** A bounded planning timeline only. It never changes a lesson, counts, motion or history. */
 export function SequenceSegmentRehearsal({
@@ -81,12 +83,21 @@ export function SequenceSegmentRehearsal({
   // Check the finite end before wrapping: boundaries belong to the next cycle/phase, [start,end).
   const cycleIndex =
     spanSec > 0 ? Math.min(repeatCount - 1, Math.floor(rehearsal.elapsedSec / spanSec)) : 0;
-  const elapsedInCycle = rehearsal.elapsedSec - cycleIndex * spanSec;
-  const sourceTime = startSec + elapsedInCycle;
+  const rawElapsedInCycle = Math.max(0, rehearsal.elapsedSec - cycleIndex * spanSec);
+  const elapsedInCycle =
+    !complete && spanSec > 0 ? Math.min(rawElapsedInCycle, spanSec) : rawElapsedInCycle;
+  const rawSourceTime = startSec + elapsedInCycle;
+  const sourceTime =
+    !complete && rawSourceTime >= endSec && endSec > startSec
+      ? endSec - Number.EPSILON * Math.max(1, Math.abs(endSec))
+      : rawSourceTime;
   const currentPhase = complete
     ? undefined
-    : phases.find((item) => item.startSec <= sourceTime && sourceTime < item.endSec);
-  const remainingInPhase = currentPhase ? Math.min(endSec, currentPhase.endSec) - sourceTime : 0;
+    : (phases.find((item) => item.startSec <= sourceTime && sourceTime < item.endSec) ??
+      phases[phases.length - 1]);
+  const remainingInPhase = currentPhase
+    ? Math.max(0, Math.min(endSec, currentPhase.endSec) - sourceTime)
+    : 0;
 
   return (
     <section

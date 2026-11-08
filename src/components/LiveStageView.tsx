@@ -276,11 +276,26 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     setShowAllCues(false);
   };
   const addMinute = () => {
-    const sampled = sampleClock(clock, Date.now(), durations, autoAdvance);
-    setClock({ ...sampled, remainingMs: sampled.remainingMs + 60000 });
+    const now = Date.now();
+    const sampled = sampleClock(clock, now, durations, autoAdvance);
+    const currentStep = steps[sampled.index];
+    if (!currentStep) return;
+    const nextDurationMin = Math.min(120, currentStep.durationMin + 1);
+    const addedMs = Math.max(
+      0,
+      Math.round((nextDurationMin - currentStep.durationMin) * 60) * 1000,
+    );
+    if (addedMs <= 0) {
+      setClock(sampled);
+      return;
+    }
+    setClock((value) => {
+      const currentSampled = sampleClock(value, now, durations, autoAdvance);
+      return { ...currentSampled, remainingMs: currentSampled.remainingMs + addedMs };
+    });
     setSteps((value) =>
       value.map((step, index) =>
-        index === sampled.index ? { ...step, durationMin: step.durationMin + 1 } : step,
+        index === sampled.index ? { ...step, durationMin: nextDurationMin } : step,
       ),
     );
   };
@@ -320,21 +335,25 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const timing = current ? getStepTiming(current, exercise) : null;
   const sideLabels = current ? getStepSideLabels(current, exercise) : [];
   const stepElapsedSec = Math.max(0, (durations[clock.index] - clock.remainingMs) / 1000);
+  const movementPhase =
+    timing?.sides === 2
+      ? stepElapsedSec - timing.explanationSec < timing.perSideSec
+        ? `수행 · ${sideLabels[0]}`
+        : `수행 · ${sideLabels[1]}`
+      : current?.sideMode
+        ? `수행 · ${sideLabels[0]}`
+        : '수행';
   const phase =
     !current || !timing
       ? ''
       : currentIsRest
         ? '휴식'
-        : stepElapsedSec < timing.explanationSec
+        : stepElapsedSec < timing.explanationSec ||
+            (timing.movementSec === 0 && timing.transitionSec === 0)
           ? '설명 · 세팅'
-          : stepElapsedSec < timing.explanationSec + timing.movementSec
-            ? timing.sides === 2
-              ? stepElapsedSec - timing.explanationSec < timing.perSideSec
-                ? `수행 · ${sideLabels[0]}`
-                : `수행 · ${sideLabels[1]}`
-              : current.sideMode
-                ? `수행 · ${sideLabels[0]}`
-                : '수행'
+          : stepElapsedSec < timing.explanationSec + timing.movementSec ||
+              timing.transitionSec === 0
+            ? movementPhase
             : '다음 동작 전환';
   const classVoice = useClassVoiceGuidance({
     stepKey: current?.stepId ?? '',
@@ -691,7 +710,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             <div
               className="teaching-timer-digits"
               role="timer"
-              aria-label={`${currentIsRest ? '현재 휴식' : '현재 동작'} 남은 시간 ${Math.ceil(clock.remainingMs / 1000)}초`}
+              aria-live="off"
+              aria-label={`${currentIsRest ? '현재 휴식' : '현재 동작'} 남은 시간`}
             >
               {formatSecondsToMMSS(Math.ceil(clock.remainingMs / 1000))}
             </div>
@@ -785,8 +805,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 type="checkbox"
                 checked={autoAdvance}
                 onChange={(event) => {
-                  setClock((value) => sampleClock(value, Date.now(), durations, autoAdvance));
-                  setAutoAdvance(event.target.checked);
+                  const nextAutoAdvance = event.target.checked;
+                  setClock((value) => sampleClock(value, Date.now(), durations, nextAutoAdvance));
+                  setAutoAdvance(nextAutoAdvance);
                 }}
               />
               <span>시간 종료 시 다음 동작</span>
@@ -904,14 +925,14 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               <>
                 <h2>휴식</h2>
                 <p className="muted">
-                  전체 {formatSecondsToMMSS(next.durationMin * 60)} · 전체 수업 시간에 포함
+                  전체 {formatSecondsToMMSS(getStepTiming(next).totalSec)} · 전체 수업 시간에 포함
                 </p>
               </>
             ) : next && nextExercise ? (
               <>
                 <h2>{nextExercise.nameKo}</h2>
                 <p className="muted">
-                  전체 {formatSecondsToMMSS(next.durationMin * 60)} ·{' '}
+                  전체 {formatSecondsToMMSS(getStepTiming(next, nextExercise).totalSec)} ·{' '}
                   {POSITION_LABELS[nextExercise.bodyPosition].ko}
                 </p>
                 {(next.repetitions !== undefined || next.sets !== undefined || next.sideMode) && (
@@ -1002,7 +1023,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                         ? '휴식'
                         : (exerciseMap.get(step.exerciseId)?.nameKo ?? '삭제된 동작')}
                     </strong>
-                    <small>{formatSecondsToMMSS(step.durationMin * 60)}</small>
+                    <small>
+                      {formatSecondsToMMSS(
+                        getStepTiming(step, exerciseMap.get(step.exerciseId)).totalSec,
+                      )}
+                    </small>
                   </button>
                 </li>
               ))}

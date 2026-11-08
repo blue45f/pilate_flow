@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
   ShoulderSupportDiagramFigure,
+  ShoulderSupportIntegrationDemo,
   ShoulderSupportTriptychDiagram,
 } from '../components/ShoulderSupportDiagramFigure';
 import {
@@ -19,6 +20,7 @@ import {
   projectShoulderSupportPoint,
   SHOULDER_SUPPORT_LINE_IDS,
   SHOULDER_SUPPORT_MOVEMENT_IDS,
+  SHOULDER_SUPPORT_PHASES,
   solveTwoLinkIK,
 } from '../models/shoulderSupportDrafts';
 
@@ -60,11 +62,29 @@ describe('Track I6 — Shoulder Support 2D Diagrams (Push Up & Leg Pull Front)',
       const startPose = getShoulderSupportDraftPose(movementId, 'start');
       const middlePose = getShoulderSupportDraftPose(movementId, 'middle');
       const endPose = getShoulderSupportDraftPose(movementId, 'end');
+      const continuousPoses = SHOULDER_SUPPORT_PHASES.map((phase) =>
+        getShoulderSupportDraftPose(movementId, phase.id),
+      );
       const samplePoses = [0, 0.15, 0.3, 0.5, 0.7, 0.85, 1].map((p) =>
         getShoulderSupportDraftPose(movementId, p),
       );
 
-      for (const pose of [startPose, middlePose, endPose, ...samplePoses]) {
+      // Hold invariance during setup [0, 0.15] and finish [0.85, 1.0]
+      const p0 = getShoulderSupportDraftPose(movementId, 0);
+      const p10 = getShoulderSupportDraftPose(movementId, 0.1);
+      const p90 = getShoulderSupportDraftPose(movementId, 0.9);
+      const p100 = getShoulderSupportDraftPose(movementId, 1);
+      expect(p0.worldJoints.shoulder.y).toBeCloseTo(p10.worldJoints.shoulder.y, 9);
+      expect(p90.worldJoints.shoulder.y).toBeCloseTo(p100.worldJoints.shoulder.y, 9);
+      expect(p0.worldJoints.ankle.y).toBeCloseTo(p100.worldJoints.ankle.y, 9);
+
+      for (const pose of [
+        startPose,
+        middlePose,
+        endPose,
+        ...continuousPoses,
+        ...samplePoses,
+      ]) {
         expect(pose.armIK.reachable).toBe(true);
         expect(pose.metrics.segmentLengthsM.upperArm).toBeCloseTo(
           startPose.metrics.segmentLengthsM.upperArm,
@@ -213,7 +233,7 @@ describe('Track I6 — Shoulder Support 2D Diagrams (Push Up & Leg Pull Front)',
     }
   });
 
-  it('renders ShoulderSupportDiagramFigure and ShoulderSupportTriptychDiagram cleanly', () => {
+  it('renders ShoulderSupportDiagramFigure, ShoulderSupportTriptychDiagram, legend, source links, and ShoulderSupportIntegrationDemo cleanly', () => {
     const { container } = render(
       <div>
         <ShoulderSupportDiagramFigure
@@ -238,10 +258,30 @@ describe('Track I6 — Shoulder Support 2D Diagrams (Push Up & Leg Pull Front)',
       expect(lineNode?.getAttribute('data-within-tolerance')).toBe('true');
     }
 
+    const legend = container.querySelector('[data-testid="shoulder-support-legend"]');
+    expect(legend).not.toBeNull();
+    expect(legend?.textContent).toContain('손목 수직 지지선');
+    expect(legend?.textContent).toContain('견갑 전인·밀착 지지선');
+    expect(legend?.textContent).toContain('골반·체간 플랭크 지지선');
+    for (const lineId of SHOULDER_SUPPORT_LINE_IDS) {
+      expect(legend?.textContent).toContain(lineId);
+    }
+
+    const sourcesBlock = container.querySelector('[data-testid="shoulder-support-sources"]');
+    expect(sourcesBlock).not.toBeNull();
+    const sourceLinks = sourcesBlock?.querySelectorAll('a[href^="https://"]') ?? [];
+    expect(sourceLinks.length).toBeGreaterThanOrEqual(3);
+
     const startBtn = screen.getByRole('button', {
       name: /시작 자세.*프런트 서포트 수직 지지/,
     });
     fireEvent.click(startBtn);
     expect(startBtn.getAttribute('aria-pressed')).toBe('true');
+
+    const demo = render(<ShoulderSupportIntegrationDemo />);
+    const demoTriptychs = demo.container.querySelectorAll(
+      '[data-testid="shoulder-support-triptych-diagram"]',
+    );
+    expect(demoTriptychs.length).toBe(2);
   });
 });

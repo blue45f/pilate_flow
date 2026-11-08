@@ -248,7 +248,11 @@ function PatternPlayback({
           ) : (
             <Play size={17} aria-hidden="true" />
           )}
-          {state.playing ? '일시정지' : '한 주기 재생'}
+          {state.playing
+            ? '일시정지'
+            : repeatCount > 1
+              ? `${repeatCount}회 반복 재생`
+              : '한 주기 재생'}
         </button>
         <button
           type="button"
