@@ -1,3 +1,4 @@
+import { compareTeachingHistoryDates, getTeachingHistoryDateSource } from '../utils/teachingHistoryDate';
 import React, { useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowDownToLine, ArrowRight, BookOpen, CalendarDays, Clock3, Copy,
@@ -45,8 +46,8 @@ const minutesLabel = (seconds: number) => Number((seconds / 60).toFixed(2));
 const parseHistoryDate = (date: string): Date | null => {
   const trimmed = date.trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    const [year, month, day] = trimmed.split('-').map(Number);
-    return new Date(year, month - 1, day, 0, 0, 0, 0);
+    const parsed = new Date(trimmed + 'T00:00:00.000Z');
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
   const parsed = Date.parse(trimmed);
   return Number.isNaN(parsed) ? null : new Date(parsed);
@@ -54,7 +55,7 @@ const parseHistoryDate = (date: string): Date | null => {
 
 const formatDate = (date: string) => {
   const dt = parseHistoryDate(date);
-  return !dt ? '날짜 미상' : dt.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+  return !dt ? '날짜 미상' : dt.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', ...(/^\d{4}-\d{2}-\d{2}$/.test(date.trim()) ? { timeZone: 'UTC' } : {}) });
 };
 
 const getHistoryDateKey = (date: string) => {
@@ -98,7 +99,7 @@ const formatHistoryTimeOfDay = (date: string, log?: ClassHistoryLog) => {
 
 const formatDateWithWeekday = (date: string) => {
   const dt = parseHistoryDate(date);
-  return !dt ? '날짜 미상' : dt.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' });
+  return !dt ? '날짜 미상' : dt.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short', ...(/^\d{4}-\d{2}-\d{2}$/.test(date.trim()) ? { timeZone: 'UTC' } : {}) });
 };
 
 const normalizeSearchToken = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -170,10 +171,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
           const compactQuery = normalizeCompactSearch(historyQuery);
           const resolved = resolvedHistoryMap.get(log.id);
           const stepNames = resolved?.steps.map((s) => `${s.nameKo} ${s.nameEn} ${s.blockNameKo} ${s.sourceBlockTitle ?? ''} ${s.ideaLineSnapshot ?? ''}`).join(' ') ?? '';
-          const searchable = normalizeSearchToken(`${log.sequenceTitle} ${log.groupName} ${log.instructorReflection} ${getHistoryDateKey(log.taughtAt)} ${log.taughtAt.trim().slice(0, 10)} ${formatDate(log.taughtAt)} ${stepNames}`);
+          const searchable = normalizeSearchToken(`${log.sequenceTitle} ${log.groupName} ${log.instructorReflection} ${getHistoryDateKey(getTeachingHistoryDateSource(log))} ${getTeachingHistoryDateSource(log).trim().slice(0, 10)} ${formatDate(getTeachingHistoryDateSource(log))} ${stepNames}`);
           return searchable.includes(trimmed) || (Boolean(compactQuery) && normalizeCompactSearch(searchable).includes(compactQuery));
         })
-        .sort((a, b) => Date.parse(b.taughtAt) - Date.parse(a.taughtAt)),
+        .sort(compareTeachingHistoryDates),
     [historyLogs, selectedGroup, historyQuery, resolvedHistoryMap],
   );
 
@@ -192,10 +193,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const dateFilterOptions = useMemo(() => {
     const map = new Map<string, { dateKey: string; label: string; count: number; sampleLogTaughtAt: string }>();
     for (const log of groupAndQueryLogs) {
-      const dateKey = getHistoryDateKey(log.taughtAt);
+      const dateKey = getHistoryDateKey(getTeachingHistoryDateSource(log));
       const existing = map.get(dateKey);
       if (existing) existing.count += 1;
-      else map.set(dateKey, { dateKey, label: formatDate(log.taughtAt), count: 1, sampleLogTaughtAt: log.taughtAt });
+      else map.set(dateKey, { dateKey, label: formatDate(getTeachingHistoryDateSource(log)), count: 1, sampleLogTaughtAt: getTeachingHistoryDateSource(log) });
     }
     return [...map.values()].sort((a, b) => b.dateKey.localeCompare(a.dateKey));
   }, [groupAndQueryLogs]);
@@ -219,7 +220,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const hasCollapsibleDateChips = showAllDateChips ? dateFilterOptions.length > INITIAL_VISIBLE_DATE_CHIPS : hiddenDateChipCount > 0;
 
   const logs = useMemo(
-    () => (effectiveSelectedDate === 'all' ? groupAndQueryLogs : groupAndQueryLogs.filter((log) => getHistoryDateKey(log.taughtAt) === effectiveSelectedDate)),
+    () => (effectiveSelectedDate === 'all' ? groupAndQueryLogs : groupAndQueryLogs.filter((log) => getHistoryDateKey(getTeachingHistoryDateSource(log)) === effectiveSelectedDate)),
     [groupAndQueryLogs, effectiveSelectedDate],
   );
   const visibleLogs = useMemo(() => logs.slice(0, visibleHistoryCount), [logs, visibleHistoryCount]);
@@ -228,10 +229,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const groupedLogsByDate = useMemo(() => {
     const groups: Array<{ dateKey: string; dateLabel: string; weekdayLabel: string; items: ClassHistoryLog[] }> = [];
     for (const log of visibleLogs) {
-      const dateKey = getHistoryDateKey(log.taughtAt);
+      const dateKey = getHistoryDateKey(getTeachingHistoryDateSource(log));
       const last = groups[groups.length - 1];
       if (last && last.dateKey === dateKey) last.items.push(log);
-      else groups.push({ dateKey, dateLabel: formatDate(log.taughtAt), weekdayLabel: formatDateWithWeekday(log.taughtAt), items: [log] });
+      else groups.push({ dateKey, dateLabel: formatDate(getTeachingHistoryDateSource(log)), weekdayLabel: formatDateWithWeekday(getTeachingHistoryDateSource(log)), items: [log] });
     }
     return groups;
   }, [visibleLogs]);
@@ -275,7 +276,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const exportText = (sequence: SavedSequence) =>
     downloadTxt(`${sequence.title.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-sequence'}.txt`, `강사 검토용 계획 · 동작 시간은 양쪽 수행·설명·전환을 포함하며 휴식은 별도 항목으로 전체 시간에 포함합니다.\n스프링은 원문 참고값이며 실제 기구에서 확인해 주세요.\n\n${sheetFor(sequence)}`, '텍스트 파일을 내보냈습니다.');
   const exportHistorySnapshotText = (viewItem: ResolvedTeachingHistoryView) =>
-    downloadTxt(`${viewItem.sequenceTitle.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-history'}-${viewItem.taughtAt.slice(0, 10)}.txt`, formatTeachingHistorySnapshotText(viewItem), '수업 완료 이력 스냅샷 텍스트를 내보냈습니다.');
+    downloadTxt(`${viewItem.sequenceTitle.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-history'}-${getTeachingHistoryDateSource(viewItem).slice(0, 10)}.txt`, formatTeachingHistorySnapshotText(viewItem), '수업 완료 이력 스냅샷 텍스트를 내보냈습니다.');
   const createGroup = (event: React.FormEvent) => {
     event.preventDefault();
     if (!groupName.trim()) {
@@ -383,6 +384,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
           ) : (
             <div className="teaching-saved-grid">
               {sequences.map((sequence, index) => {
+                const lastTaughtLog = historyLogs.find(log => log.sequenceId === sequence.id && log.taughtAt === sequence.lastTaughtAt);
+                const lastTaughtDate = lastTaughtLog ? getTeachingHistoryDateSource(lastTaughtLog) : sequence.lastTaughtAt;
                 const durations = getSequenceDurations(sequence.steps);
                 const exerciseCount = movementCount(sequence.steps);
                 const restCount = sequence.steps.length - exerciseCount;
@@ -416,7 +419,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                       })}
                       {sequence.steps.length > 4 && <PfBlockPill as="li" className="muted">외 {sequence.steps.length - 4}개 항목</PfBlockPill>}
                     </ol>
-                    <p className="teaching-card-date">{sequence.lastTaughtAt ? `최근 수업 ${formatDate(sequence.lastTaughtAt)}` : `수정 ${formatDate(sequence.updatedAt)}`}</p>
+                    <p className="teaching-card-date">{lastTaughtDate ? `최근 수업 ${formatDate(lastTaughtDate)}` : `수정 ${formatDate(sequence.updatedAt)}`}</p>
                     <div className="teaching-card-main-actions">
                       <PfButton variant="primary" onClick={() => loadSequenceIntoWorkbench(sequence.id)}><BookOpen size={16} /> 불러오기</PfButton>
                       <PfButton variant="secondary" onClick={() => { loadSequenceIntoWorkbench(sequence.id); setActiveTab('stage'); }}><Play size={16} /> 수업 시작</PfButton>
@@ -610,7 +613,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                       <PfCard as="article" key={log.id} variant={isSample ? 'sample' : 'default'} className="teaching-history-card">
                         <div className="teaching-card-top">
                           <div className="teaching-history-datetime">
-                            <CalendarDays size={14} aria-hidden="true" /><time dateTime={resolved.taughtAt}>{formatDate(resolved.taughtAt)}</time>
+                            <CalendarDays size={14} aria-hidden="true" /><time dateTime={getTeachingHistoryDateSource(resolved)}>{formatDate(getTeachingHistoryDateSource(resolved))}</time>
                             {timeOfDay && <span className="teaching-history-time-of-day">{timeOfDay}</span>}
                             <span className="teaching-history-time-pill">
                               <Clock3 size={12} aria-hidden="true" />{log.actualDurationSec !== undefined ? `${Math.max(1, Math.round(log.actualDurationSec / 60))}분 진행` : `계획 ${plannedMinutes}분`}
@@ -682,7 +685,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                     const shared = [...draftIds].filter((id) => historyMovementIds(log).includes(id)).length;
                     return (
                       <div className="teaching-overlap-row" key={log.id}>
-                        <div><strong>{log.groupName}</strong><span>{formatDate(log.taughtAt)} · {log.sequenceTitle}</span></div>
+                        <div><strong>{log.groupName}</strong><span>{formatDate(getTeachingHistoryDateSource(log))} · {log.sequenceTitle}</span></div>
                         <b>{shared}<small> / {draftIds.size}개</small></b>
                       </div>
                     );
@@ -721,7 +724,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
       </LightDismissDialog>
       <LightDismissDialog
         open={Boolean(reopenedView)} onClose={closeReopenedModal} title="진행 완료 수업 이력 상세"
-        subtitle={reopenedView ? `${reopenedView.sequenceTitle} · ${formatDate(reopenedView.taughtAt)}` : ''} maxWidth="760px"
+        subtitle={reopenedView ? `${reopenedView.sequenceTitle} · ${formatDate(getTeachingHistoryDateSource(reopenedView))}` : ''} maxWidth="760px"
       >
         {reopenedView && (
           <div className="teaching-history-detail-modal">
@@ -733,7 +736,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                 {reopenedView.hasCatalogDrift && <span className="teaching-drift-badge" data-snapshot-preserved="true">원본 동작·블록 수정 후에도 당시 이력 스냅샷 그대로 보존됨</span>}
               </div>
               <dl className="teaching-history-detail-grid">
-                <div><dt>진행 일시</dt><dd>{formatDate(reopenedView.taughtAt)} ({getHistoryDateKey(reopenedView.taughtAt)})</dd></div>
+                <div><dt>진행 일시</dt><dd>{formatDate(getTeachingHistoryDateSource(reopenedView))} ({getHistoryDateKey(getTeachingHistoryDateSource(reopenedView))})</dd></div>
                 <div><dt>대상 반 · 레벨</dt><dd>{reopenedView.groupName} · {reopenedView.apparatus === 'mixed' ? '여러 기구' : APPARATUS_LABELS[reopenedView.apparatus].ko} · Lv. {reopenedView.level}</dd></div>
                 <div>
                   <dt>당시 계획 시간 스냅샷</dt>

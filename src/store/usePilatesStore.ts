@@ -1,3 +1,4 @@
+import { compareTeachingHistoryDates, getTeachingHistoryDateSource } from '../utils/teachingHistoryDate';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { createRecoveryStorageGuard, RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import { inspectBackupRecovery } from '../utils/backupRecoveryInspection';
@@ -1987,7 +1988,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
             activeSequenceId: newId('seq-history'),
             activeTitle: `${log.sequenceTitle} (기록에서 복사)`,
             activeSubtitle: log.stepsSnapshot
-              ? `${log.taughtAt.slice(0, 10)} 수업 구성 사본`
+              ? `${getTeachingHistoryDateSource(log).slice(0, 10)} 수업 구성 사본`
               : '동작별 시간 미기록 · 현재 기본값으로 복원',
             activeApparatus: criteria.apparatus,
             activeLevel: criteria.level,
@@ -2287,7 +2288,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
             parsed: criteriaSchema.safeParse(log.criteriaSnapshot),
           }))
           .filter((candidate) => candidate.parsed.success)
-          .sort((a, b) => Date.parse(b.log.taughtAt) - Date.parse(a.log.taughtAt));
+          .sort((a, b) => compareTeachingHistoryDates(a.log, b.log));
         const latest = candidates[0];
         if (!latest || !latest.parsed.success) {
           const message = `${group.name} 대상의 재사용할 수업 조건 기록이 없습니다. 이 대상의 조건을 직접 설정해 주세요.`;
@@ -2316,7 +2317,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
           set({ generationError: message });
           return { success: false, message };
         }
-        const message = `${group.name}의 ${latest.log.taughtAt.slice(0, 10)} 수업 조건을 불러왔습니다. 현재 시퀀스는 유지했습니다.`;
+        const message = `${group.name}의 ${getTeachingHistoryDateSource(latest.log).slice(0, 10)} 수업 조건을 불러왔습니다. 현재 시퀀스는 유지했습니다.`;
         set({
           draftCriteria: criteria,
           activeTargetGroupId: groupId,

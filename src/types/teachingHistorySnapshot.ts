@@ -164,6 +164,8 @@ export interface TeachingProgramSnapshot {
   taughtAt: string;
   /** The date was entered without an observed class start time; preserve the ISO anchor. */
   dateOnly?: boolean;
+  /** Exact calendar date selected without a start time; optional for older records. */
+  taughtDate?: string;
   capturedAt: string;
   completionFingerprint: string;
   timing: TeachingProgramTimingSnapshot;
@@ -288,6 +290,8 @@ export interface ResolvedTeachingHistoryView {
   groupName: string;
   taughtAt: string;
   dateOnly?: boolean;
+  /** Exact calendar date selected without a start time; optional for older records. */
+  taughtDate?: string;
   apparatus: ApparatusType | 'mixed';
   level: DifficultyLevel;
   rating: 1 | 2 | 3 | 4 | 5;

@@ -243,6 +243,7 @@ const SessionLogForm: React.FC<
     // This form captures a calendar date, not an observed start time.
     // Keep the existing ISO/fingerprint contract and annotate only this new snapshot.
     programSnapshot.dateOnly = true;
+    programSnapshot.taughtDate = taughtDate;
     const payload = {
       ...parsed.data,
       actualDurationSec,

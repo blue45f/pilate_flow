@@ -1,3 +1,4 @@
+import { getDateOnlyCalendarDate, getTeachingHistoryDateSource } from './teachingHistoryDate';
 import {
   APPARATUS_LABELS,
   CANONICAL_BLOCKS,
@@ -1355,6 +1356,8 @@ export function resolveTeachingHistoryView(
     snapshot?.sourceProvenance ??
     p1SequenceSnapshot?.sourceProvenance;
 
+  const taughtDate = getDateOnlyCalendarDate(log) ?? getDateOnlyCalendarDate(log.programSnapshot);
+
   return {
     logId: log.id,
     recordKind: 'completed-history',
@@ -1366,7 +1369,8 @@ export function resolveTeachingHistoryView(
     groupId: log.groupId,
     groupName: log.groupName,
     taughtAt: log.taughtAt,
-    ...(snapshot?.dateOnly === true ? { dateOnly: true } : {}),
+    ...(snapshot?.dateOnly === true || taughtDate !== undefined ? { dateOnly: true } : {}),
+    ...(taughtDate !== undefined ? { taughtDate } : {}),
     apparatus: log.apparatus,
     level: log.level,
     rating: log.rating,
@@ -1960,7 +1964,7 @@ export function cloneTeachingHistoryToNextClassDraft(
     const cloned = cloneClassSnapshotToDraft(p1Snapshot, currentExercises, {
       sourceKind: 'history-snapshot',
       sourceId: log.id,
-      sourceTaughtAt: log.taughtAt.slice(0, 10),
+      sourceTaughtAt: getTeachingHistoryDateSource(log).slice(0, 10),
       now: options?.now,
     });
     return {
@@ -2013,9 +2017,9 @@ export function cloneTeachingHistoryToNextClassDraft(
       kind: 'history-snapshot',
       sourceId: rawLog.id,
       sourceTitle: rawLog.sequenceTitle,
-      sourceTaughtAt: rawLog.taughtAt.slice(0, 10),
+      sourceTaughtAt: getTeachingHistoryDateSource(rawLog).slice(0, 10),
       clonedAt: now,
-      summaryKo: `${rawLog.sequenceTitle} (${rawLog.taughtAt.slice(0, 10)}) 완료 기록에서 복사`,
+      summaryKo: `${rawLog.sequenceTitle} (${getTeachingHistoryDateSource(rawLog).slice(0, 10)}) 완료 기록에서 복사`,
     },
   };
 }
@@ -2853,7 +2857,7 @@ export function rollbackLatestBackupRestore<
 }
 
 export function formatTeachingHistorySnapshotText(view: ResolvedTeachingHistoryView): string {
-  const dateText = view.taughtAt.slice(0, 10);
+  const dateText = getTeachingHistoryDateSource(view).slice(0, 10);
   const intensityLabel =
     view.intensity === 'relaxed'
       ? '여유롭게'

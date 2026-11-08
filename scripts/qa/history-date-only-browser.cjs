@@ -165,7 +165,7 @@ async function main() {
   }
 }
 
-module.exports = { normalizePreviewUrl, buildScenarios, runSequentially, readRevision };
+module.exports = { normalizePreviewUrl, buildScenarios, runSequentially, readRevision, mountDateOnlyHarness, saveDateOnlyRecord };
 
 if (require.main === module) {
   main().catch(error => {

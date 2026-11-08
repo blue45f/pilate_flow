@@ -1,3 +1,4 @@
+import { compareTeachingHistoryDates, getTeachingHistoryDateSource } from '../utils/teachingHistoryDate';
 import { useRef, useState } from 'react';
 import { ArrowRight, CalendarDays, History, PencilLine, Users } from 'lucide-react';
 import { INITIAL_HISTORY_LOGS } from '../data/pilatesCatalog';
@@ -29,6 +30,7 @@ const displayDate = (value: string) =>
   new Date(value).toLocaleDateString('ko-KR', {
     month: 'long',
     day: 'numeric',
+    ...(/^\d{4}-\d{2}-\d{2}$/.test(value) ? { timeZone: 'UTC' } : {}),
   });
 
 export function GroupPrepPanel({ groupId }: { groupId?: string }) {
@@ -49,7 +51,7 @@ export function GroupPrepPanel({ groupId }: { groupId?: string }) {
         !sampleIds.has(log.id) &&
         Number.isFinite(Date.parse(log.taughtAt)),
     )
-    .sort((a, b) => Date.parse(b.taughtAt) - Date.parse(a.taughtAt));
+    .sort(compareTeachingHistoryDates);
   const recent = logs[0];
   if (!group) return null;
 
@@ -108,7 +110,7 @@ export function GroupPrepPanel({ groupId }: { groupId?: string }) {
       <div className="group-prep-memory">
         <span className="group-prep-memory-label">
           <History size={14} aria-hidden="true" />
-          {recent ? `${displayDate(recent.taughtAt)} 수업에서 남긴 기억` : '다음 수업을 위한 기억'}
+          {recent ? `${displayDate(getTeachingHistoryDateSource(recent))} 수업에서 남긴 기억` : '다음 수업을 위한 기억'}
         </span>
         <p>
           {recent
