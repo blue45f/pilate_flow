@@ -134,6 +134,7 @@ const navigate = (name: RegExp) =>
 const openHandoff = async () => {
   navigate(/동작 라이브러리/);
   fireEvent.click(await screen.findByRole('tab', { name: '공개 자료 30' }));
+  fireEvent.click(screen.getByRole('button', { name: '전체 장비 보기' }));
   fireEvent.change(screen.getByRole('searchbox', { name: '공개 참고 자료 검색' }), {
     target: { value: reference.title },
   });

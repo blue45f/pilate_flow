@@ -149,6 +149,7 @@ export interface PilatesStudioState extends SequenceSnapshot {
   ownedApparatus: ApparatusType[];
   ownedEquipment: string[];
   ownedProps: PropType[];
+  exerciseBrowseScope: 'owned' | 'all';
   mobilePreviewMode: boolean;
   exercises: PilatesExercise[];
   savedSequences: SavedSequence[];
@@ -215,6 +216,7 @@ export interface PilatesStudioState extends SequenceSnapshot {
   ) => { success: boolean; message: string };
   setThemeMode: (mode: 'system' | 'light' | 'dark') => void;
   setReformerBrand: (brand: ReformerBrand) => void;
+  setExerciseBrowseScope: (scope: 'owned' | 'all') => void;
   toggleOwnedApparatus: (apparatus: ApparatusType) => void;
   toggleOwnedEquipment: (equipmentId: string) => void;
   toggleOwnedProp: (prop: PropType) => void;
@@ -793,6 +795,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
       ownedApparatus: ['reformer', 'cadillac', 'chair', 'barrel', 'mat'],
       ownedEquipment: [...DEFAULT_OWNED_EQUIPMENT],
       ownedProps: [],
+      exerciseBrowseScope: 'owned',
       mobilePreviewMode: false,
       exercises: INITIAL_EXERCISES,
       savedSequences: sampleSequences(),
@@ -1083,6 +1086,9 @@ export const usePilatesStore = create<PilatesStudioState>()(
       },
       setThemeMode: (themeMode) => set({ themeMode }),
       setReformerBrand: (reformerBrand) => set({ reformerBrand }),
+      setExerciseBrowseScope: (scope) => {
+        if (scope === 'owned' || scope === 'all') set({ exerciseBrowseScope: scope });
+      },
       toggleOwnedApparatus: (apparatus) =>
         set((state) => {
           const exists = state.ownedApparatus.includes(apparatus);
@@ -2486,6 +2492,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
         ownedApparatus: state.ownedApparatus,
         ownedEquipment: state.ownedEquipment,
         ownedProps: state.ownedProps,
+        exerciseBrowseScope: state.exerciseBrowseScope,
         mobilePreviewMode: state.mobilePreviewMode,
         ...snapshot(state),
       }),
@@ -2494,6 +2501,8 @@ export const usePilatesStore = create<PilatesStudioState>()(
         const raw = persisted as Record<string, unknown>;
         const settings = settingsSchema.safeParse(raw);
         const next = { ...current, ...(settings.success ? settings.data : {}) };
+        // Old or malformed preferences default to the user's current inventory.
+        next.exerciseBrowseScope = raw.exerciseBrowseScope === 'all' ? 'all' : 'owned';
         const equipment = z.array(equipmentSchema).safeParse(raw.ownedEquipment);
         const oldApparatus = z.array(apparatusSchema).safeParse(raw.ownedApparatus);
         if (equipment.success) next.ownedEquipment = [...new Set(equipment.data)];
