@@ -1105,7 +1105,7 @@ export function MovementVisualGuideCard({
                 label: '유사 동작과 차이 비교',
               },
             ] as const
-          ).map((tab) => {
+          ).map((tab, index, tabs) => {
             const isActive = viewMode === tab.id;
             return (
               <button
@@ -1113,8 +1113,31 @@ export function MovementVisualGuideCard({
                 type="button"
                 role="tab"
                 aria-selected={isActive}
+                tabIndex={isActive ? 0 : -1}
                 data-testid={`view-mode-tab-${tab.id}`}
                 onClick={() => setViewMode(tab.id)}
+                onKeyDown={(event) => {
+                  let nextIndex: number | null = null;
+                  if (event.key === 'ArrowRight') {
+                    nextIndex = (index + 1) % tabs.length;
+                  } else if (event.key === 'ArrowLeft') {
+                    nextIndex = (index - 1 + tabs.length) % tabs.length;
+                  } else if (event.key === 'Home') {
+                    nextIndex = 0;
+                  } else if (event.key === 'End') {
+                    nextIndex = tabs.length - 1;
+                  }
+                  if (nextIndex !== null) {
+                    event.preventDefault();
+                    const nextTab = tabs[nextIndex];
+                    setViewMode(nextTab.id);
+                    const tabButtons =
+                      event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+                        '[role="tab"]',
+                      );
+                    tabButtons?.[nextIndex]?.focus();
+                  }
+                }}
                 style={{
                   ...TOUCH_BUTTON_BASE_STYLE,
                   justifyContent: 'center',
