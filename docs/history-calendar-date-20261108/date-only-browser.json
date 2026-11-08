@@ -1,0 +1,152 @@
+{
+  "base": "ca0fef4309e5d2b416d14254579cd6ede669d1cb",
+  "head": "228b18153fb84ceab389a7d205a974a672c7fcdd",
+  "runnerSha256": "db5edcd3791ebd67916daf0ad8c9bc3031c2169a7fb9a8b816503dd40adc67d5",
+  "scope": "isolated real Chrome component integration; synthetic local data only",
+  "results": [
+    {
+      "timezoneId": "Asia/Seoul",
+      "width": 320,
+      "timeInputs": 0,
+      "record": {
+        "taughtAt": "2026-11-05T03:00:00.000Z",
+        "dateOnly": null,
+        "timestamps": null,
+        "snapshotDateOnly": true
+      },
+      "badges": [],
+      "legacy": [
+        "12:00",
+        "00:00"
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "timezoneId": "Asia/Seoul",
+      "width": 390,
+      "timeInputs": 0,
+      "record": {
+        "taughtAt": "2026-11-05T03:00:00.000Z",
+        "dateOnly": null,
+        "timestamps": null,
+        "snapshotDateOnly": true
+      },
+      "badges": [],
+      "legacy": [
+        "12:00",
+        "00:00"
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "timezoneId": "Asia/Seoul",
+      "width": 768,
+      "timeInputs": 0,
+      "record": {
+        "taughtAt": "2026-11-05T03:00:00.000Z",
+        "dateOnly": null,
+        "timestamps": null,
+        "snapshotDateOnly": true
+      },
+      "badges": [],
+      "legacy": [
+        "12:00",
+        "00:00"
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "timezoneId": "Asia/Seoul",
+      "width": 1440,
+      "timeInputs": 0,
+      "record": {
+        "taughtAt": "2026-11-05T03:00:00.000Z",
+        "dateOnly": null,
+        "timestamps": null,
+        "snapshotDateOnly": true
+      },
+      "badges": [],
+      "legacy": [
+        "12:00",
+        "00:00"
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "timezoneId": "UTC",
+      "width": 320,
+      "timeInputs": 0,
+      "record": {
+        "taughtAt": "2026-11-05T12:00:00.000Z",
+        "dateOnly": null,
+        "timestamps": null,
+        "snapshotDateOnly": true
+      },
+      "badges": [],
+      "legacy": [
+        "12:00",
+        "00:00"
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "timezoneId": "UTC",
+      "width": 390,
+      "timeInputs": 0,
+      "record": {
+        "taughtAt": "2026-11-05T12:00:00.000Z",
+        "dateOnly": null,
+        "timestamps": null,
+        "snapshotDateOnly": true
+      },
+      "badges": [],
+      "legacy": [
+        "12:00",
+        "00:00"
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "timezoneId": "UTC",
+      "width": 768,
+      "timeInputs": 0,
+      "record": {
+        "taughtAt": "2026-11-05T12:00:00.000Z",
+        "dateOnly": null,
+        "timestamps": null,
+        "snapshotDateOnly": true
+      },
+      "badges": [],
+      "legacy": [
+        "12:00",
+        "00:00"
+      ],
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "timezoneId": "UTC",
+      "width": 1440,
+      "timeInputs": 0,
+      "record": {
+        "taughtAt": "2026-11-05T12:00:00.000Z",
+        "dateOnly": null,
+        "timestamps": null,
+        "snapshotDateOnly": true
+      },
+      "badges": [],
+      "legacy": [
+        "12:00",
+        "00:00"
+      ],
+      "overflow": false,
+      "errors": []
+    }
+  ]
+}

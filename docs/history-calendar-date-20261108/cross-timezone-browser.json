@@ -1,0 +1,111 @@
+{
+  "revision": "228b18153fb84ceab389a7d205a974a672c7fcdd",
+  "runnerSha256": "48d2d5250589401818b6322c6b74a91cb88a4173dab090a085e57527c27f5a3b",
+  "scope": "isolated real Chrome components with synthetic local records, cross-timezone display and TXT download; no account or production writes",
+  "results": [
+    {
+      "createdIn": "Asia/Seoul",
+      "viewedIn": "America/Los_Angeles",
+      "width": 320,
+      "calendarDate": "2026-11-05",
+      "originalISO": "2026-11-05T03:00:00.000Z",
+      "immutableRecordHash": "9e671a5069221fcd0ccad43b8060498c3caa5bbc4b87d4206d0b8403cecef464",
+      "filename": "합성 날짜전용 검증-2026-11-05.txt",
+      "overflow": false,
+      "pageErrors": [],
+      "snapshotUnchanged": true,
+      "downloadDateVerified": true
+    },
+    {
+      "createdIn": "Asia/Seoul",
+      "viewedIn": "America/Los_Angeles",
+      "width": 390,
+      "calendarDate": "2026-11-05",
+      "originalISO": "2026-11-05T03:00:00.000Z",
+      "immutableRecordHash": "1366b49619f5bf2e2766474e3975ea8e9a3a1f7675f44e653d76e393e5188542",
+      "filename": "합성 날짜전용 검증-2026-11-05.txt",
+      "overflow": false,
+      "pageErrors": [],
+      "snapshotUnchanged": true,
+      "downloadDateVerified": true
+    },
+    {
+      "createdIn": "Asia/Seoul",
+      "viewedIn": "America/Los_Angeles",
+      "width": 768,
+      "calendarDate": "2026-11-05",
+      "originalISO": "2026-11-05T03:00:00.000Z",
+      "immutableRecordHash": "8b83a92f69333f7a457679995522dd90b03825c5cd54d08068e629daf090c075",
+      "filename": "합성 날짜전용 검증-2026-11-05.txt",
+      "overflow": false,
+      "pageErrors": [],
+      "snapshotUnchanged": true,
+      "downloadDateVerified": true
+    },
+    {
+      "createdIn": "Asia/Seoul",
+      "viewedIn": "America/Los_Angeles",
+      "width": 1440,
+      "calendarDate": "2026-11-05",
+      "originalISO": "2026-11-05T03:00:00.000Z",
+      "immutableRecordHash": "efcb9fa79525ad231be2b4598bbabab360a05426fe61ae3717d6e8cd8c1c7d9e",
+      "filename": "합성 날짜전용 검증-2026-11-05.txt",
+      "overflow": false,
+      "pageErrors": [],
+      "snapshotUnchanged": true,
+      "downloadDateVerified": true
+    },
+    {
+      "createdIn": "Pacific/Kiritimati",
+      "viewedIn": "UTC",
+      "width": 320,
+      "calendarDate": "2026-11-05",
+      "originalISO": "2026-11-04T22:00:00.000Z",
+      "immutableRecordHash": "a961405b5fbe1464986b1be8a26fa11d7435364a13a339c84afa62ce54b7c1b8",
+      "filename": "합성 날짜전용 검증-2026-11-05.txt",
+      "overflow": false,
+      "pageErrors": [],
+      "snapshotUnchanged": true,
+      "downloadDateVerified": true
+    },
+    {
+      "createdIn": "Pacific/Kiritimati",
+      "viewedIn": "UTC",
+      "width": 390,
+      "calendarDate": "2026-11-05",
+      "originalISO": "2026-11-04T22:00:00.000Z",
+      "immutableRecordHash": "c3670a6febefe407b49e14fd10c1da49840029487cfb12c2b06b0dc6aca44faf",
+      "filename": "합성 날짜전용 검증-2026-11-05.txt",
+      "overflow": false,
+      "pageErrors": [],
+      "snapshotUnchanged": true,
+      "downloadDateVerified": true
+    },
+    {
+      "createdIn": "Pacific/Kiritimati",
+      "viewedIn": "UTC",
+      "width": 768,
+      "calendarDate": "2026-11-05",
+      "originalISO": "2026-11-04T22:00:00.000Z",
+      "immutableRecordHash": "e2425106f666396b43fcbe608860dee62ed9d9b55c6674c21d1c737b69932e6c",
+      "filename": "합성 날짜전용 검증-2026-11-05.txt",
+      "overflow": false,
+      "pageErrors": [],
+      "snapshotUnchanged": true,
+      "downloadDateVerified": true
+    },
+    {
+      "createdIn": "Pacific/Kiritimati",
+      "viewedIn": "UTC",
+      "width": 1440,
+      "calendarDate": "2026-11-05",
+      "originalISO": "2026-11-04T22:00:00.000Z",
+      "immutableRecordHash": "5e9a5c0299dccbfb4808d5a65297ad126828bf6e39ec298ac65bf878118d6cba",
+      "filename": "합성 날짜전용 검증-2026-11-05.txt",
+      "overflow": false,
+      "pageErrors": [],
+      "snapshotUnchanged": true,
+      "downloadDateVerified": true
+    }
+  ]
+}

@@ -24,3 +24,16 @@ A synthetic record created for 2026-11-05 in Asia/Seoul had taughtAt=2026-11-05T
 - Independent read-only review found no remaining blocker after recent-criteria ordering was aligned.
 
 The final clean-candidate aggregate run and browser evidence are recorded below after completion. The Linux-only classCueSheetChromium PDF test is excluded on this Mac because its required /usr/bin Chromium and Poppler programs are unavailable; it is not represented as passed. Production deployment is not part of this change.
+
+## Final clean-candidate results
+
+Implementation commit: 228b18153fb84ceab389a7d205a974a672c7fcdd.
+
+- Aggregate: 223 files, 2,455 tests passed in 215.33 seconds with TZ=Asia/Seoul and the explicitly noted Linux-only PDF exclusion. No tests were weakened or skipped to hide a failure.
+- Frontend and backend TypeScript, full ESLint, production Vite build, and PWA validation re-ran on this clean commit and passed. One pre-existing React Fast Refresh warning and the existing large-chunk build advisory remain. PWA validation checked 43 real static files.
+- Both committed browser runners re-ran on this exact commit: 8 cross-timezone scenarios plus 8 date-only/explicit-time preservation scenarios passed. Representative 390px and 1440px screenshots were visually inspected. See the two JSON reports and PNGs beside this file.
+- Build index.html SHA256: d149c97274eeddb18d41058273309c67b779e1499bd9d7b4ed99442f5a5ea8bb. Build sw.js SHA256: 8d23f76429165daddafd4d0684e7eaadc0bb994b591d4743b9fa43c376b25298.
+- Remote main before publication remained a3afb9c. Repository hooks were empty, no main Actions runs existed, and no tracked Actions workflow was present. The only listed dynamic Pages workflow had recent runs on gh-pages. The Pages settings read returned 404, so its configuration was not inferred from that response. Firebase deployment remains a manual package command and was not executed.
+- Production was read-only checked: HTTP 200; HTML SHA256 3ba4eece1de3b9b48e5c1d4b837bbd955840096d3eedb45fab15760bb4b9d788 and bundle assets/index-BePAi8Bf.js remained unchanged. These checks do not claim that the new code is deployed.
+
+This evidence commit changes only documentation and screenshots. No production deployment, real-account restore, physical-device validation, or new Gemini task is part of this work.
