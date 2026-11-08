@@ -767,6 +767,55 @@ function renderPoseDeltaGhostLayer(
   );
 }
 
+function interpolateAlongPolyline(
+  pts: readonly Point2D[],
+  fraction: number,
+): Point2D {
+  if (pts.length === 0) return { x: 0, y: 0 };
+  if (pts.length === 1) return pts[0];
+  const clamped = Math.max(0.15, Math.min(0.85, fraction));
+  const segLengths: number[] = [];
+  let totalLen = 0;
+  for (let i = 0; i < pts.length - 1; i += 1) {
+    const len = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+    segLengths.push(len);
+    totalLen += len;
+  }
+  if (totalLen <= 0.001) return pts[0];
+  const targetDist = totalLen * clamped;
+  let accum = 0;
+  for (let i = 0; i < segLengths.length; i += 1) {
+    const segLen = segLengths[i];
+    if (accum + segLen >= targetDist || i === segLengths.length - 1) {
+      const localT = segLen > 0.001 ? (targetDist - accum) / segLen : 0.5;
+      return {
+        x: Math.round((pts[i].x + (pts[i + 1].x - pts[i].x) * localT) * 10) / 10,
+        y: Math.round((pts[i].y + (pts[i + 1].y - pts[i].y) * localT) * 10) / 10,
+      };
+    }
+    accum += segLen;
+  }
+  return pts[Math.floor(pts.length / 2)];
+}
+
+function offsetPolylineNormal(
+  pts: readonly Point2D[],
+  offsetPx: number,
+): Point2D[] {
+  if (pts.length < 2 || Math.abs(offsetPx) < 0.01) return [...pts];
+  const first = pts[0];
+  const last = pts[pts.length - 1];
+  const dx = last.x - first.x;
+  const dy = last.y - first.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len;
+  const ny = dx / len;
+  return pts.map((pt) => ({
+    x: Math.round((pt.x + nx * offsetPx) * 10) / 10,
+    y: Math.round((pt.y + ny * offsetPx) * 10) / 10,
+  }));
+}
+
 function renderPrimaryMusclesLayer(
   asset: CatalogMovementVisualAsset,
   phaseSpec: PhasePoseSpec,
@@ -779,18 +828,31 @@ function renderPrimaryMusclesLayer(
   const musclesToRender =
     activeMuscles.length > 0 ? activeMuscles : asset.primaryMuscles;
 
+  const signatureCounts = new Map<string, number>();
+
   return (
     <g data-layer="primary-muscles">
       {musclesToRender.map((muscle) => {
         const palette = getMusclePalette(muscle.role);
-        const pts = muscle.anchorJoints
+        const rawPts = muscle.anchorJoints
           .map((jKey) => phaseSpec.joints[jKey])
           .filter((pt): pt is Point2D => Boolean(pt))
           .map((pt) => mpt(pt, mirrored));
 
-        if (pts.length === 0) return null;
+        if (rawPts.length === 0) return null;
+
+        const sig = muscle.anchorJoints.join('-');
+        const occurrenceIdx = signatureCounts.get(sig) ?? 0;
+        signatureCounts.set(sig, occurrenceIdx + 1);
+
+        const normalShiftPx =
+          occurrenceIdx === 0 ? 0 : occurrenceIdx % 2 === 1 ? 3.5 : -3.5;
+        const midFraction =
+          occurrenceIdx === 0 ? 0.5 : occurrenceIdx % 2 === 1 ? 0.36 : 0.64;
+
+        const pts = offsetPolylineNormal(rawPts, normalShiftPx);
         const pathD = buildSmoothCurvePath(pts);
-        const midPt = pts[Math.floor(pts.length / 2)];
+        const midPt = interpolateAlongPolyline(pts, midFraction);
 
         return (
           <g
@@ -845,28 +907,57 @@ function renderKinematicFigureLayer(
     mpt(joints[k] ?? joints.pelvis, mirrored);
 
   // Far / contralateral limb coordinates (use authored far* joints or subtle depth offset)
-  const farHipPt = joints.farHip
+  const authoredFarHipPt = joints.farHip
     ? mpt(joints.farHip, mirrored)
     : { x: j('hip').x - 3, y: j('hip').y - 3 };
-  const farKneePt = joints.farKnee
+  const authoredFarKneePt = joints.farKnee
     ? mpt(joints.farKnee, mirrored)
     : { x: j('knee').x - 4, y: j('knee').y - 4 };
-  const farAnklePt = joints.farAnkle
+  const authoredFarAnklePt = joints.farAnkle
     ? mpt(joints.farAnkle, mirrored)
     : { x: j('ankle').x - 4, y: j('ankle').y - 3 };
-  const farToePt = joints.farToe
+  const authoredFarToePt = joints.farToe
     ? mpt(joints.farToe, mirrored)
     : { x: j('toe').x - 4, y: j('toe').y - 3 };
 
-  const farShoulderPt = joints.farShoulder
+  const authoredFarShoulderPt = joints.farShoulder
     ? mpt(joints.farShoulder, mirrored)
     : { x: j('shoulder').x - 3, y: j('shoulder').y - 3 };
-  const farElbowPt = joints.farElbow
+  const authoredFarElbowPt = joints.farElbow
     ? mpt(joints.farElbow, mirrored)
     : { x: j('elbow').x - 4, y: j('elbow').y - 3 };
-  const farWristPt = joints.farWrist
+  const authoredFarWristPt = joints.farWrist
     ? mpt(joints.farWrist, mirrored)
     : { x: j('wrist').x - 4, y: j('wrist').y - 3 };
+
+  const isSwappedSide = activeSide === 'left';
+  const farHipPt = isSwappedSide ? j('hip') : authoredFarHipPt;
+  const farKneePt = isSwappedSide ? j('knee') : authoredFarKneePt;
+  const farAnklePt = isSwappedSide ? j('ankle') : authoredFarAnklePt;
+  const farToePt = isSwappedSide ? j('toe') : authoredFarToePt;
+  const farShoulderPt = isSwappedSide ? j('shoulder') : authoredFarShoulderPt;
+  const farElbowPt = isSwappedSide ? j('elbow') : authoredFarElbowPt;
+  const farWristPt = isSwappedSide ? j('wrist') : authoredFarWristPt;
+
+  const nearHipPt = isSwappedSide ? authoredFarHipPt : j('hip');
+  const nearKneePt = isSwappedSide ? authoredFarKneePt : j('knee');
+  const nearAnklePt = isSwappedSide ? authoredFarAnklePt : j('ankle');
+  const nearToePt = isSwappedSide ? authoredFarToePt : j('toe');
+  const nearHeelPt = isSwappedSide
+    ? {
+        x: Math.round((nearAnklePt.x + (j('heel').x - j('ankle').x)) * 10) / 10,
+        y: Math.round((nearAnklePt.y + (j('heel').y - j('ankle').y)) * 10) / 10,
+      }
+    : j('heel');
+  const nearShoulderPt = isSwappedSide ? authoredFarShoulderPt : j('shoulder');
+  const nearElbowPt = isSwappedSide ? authoredFarElbowPt : j('elbow');
+  const nearWristPt = isSwappedSide ? authoredFarWristPt : j('wrist');
+  const nearHandPt = isSwappedSide
+    ? {
+        x: Math.round((nearWristPt.x + (j('hand').x - j('wrist').x)) * 10) / 10,
+        y: Math.round((nearWristPt.y + (j('hand').y - j('wrist').y)) * 10) / 10,
+      }
+    : j('hand');
 
   const spinePts = [
     j('pelvis'),
@@ -875,18 +966,51 @@ function renderKinematicFigureLayer(
     j('neck'),
     j('head'),
   ];
-  const nearLegPts = [j('hip'), j('knee'), j('ankle')];
-  const nearFootPts = [j('ankle'), j('heel'), j('toe'), j('ankle')];
-  const nearArmPts = [j('shoulder'), j('elbow'), j('wrist'), j('hand')];
+  const nearLegPts = [nearHipPt, nearKneePt, nearAnklePt];
+  const nearFootPts = [nearAnklePt, nearHeelPt, nearToePt, nearAnklePt];
+  const nearArmPts = [nearShoulderPt, nearElbowPt, nearWristPt, nearHandPt];
 
   const headPt = j('head');
   const neckPt = j('neck');
   const headDx = headPt.x - neckPt.x;
   const headDy = headPt.y - neckPt.y;
   const headLen = Math.hypot(headDx, headDy) || 1;
+  const ux = headDx / headLen;
+  const uy = headDy / headLen;
+  const n1 = { x: -uy, y: ux };
+  const n2 = { x: uy, y: -ux };
+  const antHint =
+    Math.abs(headDy) >= Math.abs(headDx)
+      ? {
+          x:
+            j('toe').x - j('heel').x ||
+            j('hand').x - j('shoulder').x ||
+            (mirrored ? -1 : 1),
+          y: 0,
+        }
+      : j('wrist').y > j('shoulder').y + 8 || j('toe').y > j('heel').y + 2
+        ? { x: 0, y: 1 }
+        : { x: 0, y: -1 };
+  const chosenNormal =
+    n1.x * antHint.x + n1.y * antHint.y >= n2.x * antHint.x + n2.y * antHint.y
+      ? n1
+      : n2;
   const gazeTip: Point2D = {
-    x: Math.round((headPt.x + (headDx / headLen) * 11) * 10) / 10,
-    y: Math.round((headPt.y + (headDy / headLen) * 11) * 10) / 10,
+    x: Math.round((headPt.x + chosenNormal.x * 11) * 10) / 10,
+    y: Math.round((headPt.y + chosenNormal.y * 11) * 10) / 10,
+  };
+
+  const activeJointCoords: Record<
+    'shoulder' | 'elbow' | 'wrist' | 'hand' | 'hip' | 'knee' | 'ankle',
+    Point2D
+  > = {
+    shoulder: nearShoulderPt,
+    elbow: nearElbowPt,
+    wrist: nearWristPt,
+    hand: nearHandPt,
+    hip: nearHipPt,
+    knee: nearKneePt,
+    ankle: nearAnklePt,
   };
 
   return (
@@ -917,7 +1041,7 @@ function renderKinematicFigureLayer(
       {showShoulderConnection && (
         <path
           data-segment="schematic-shoulder-connection"
-          d={buildPolylinePath([j('neck'), j('shoulder'), j('thoracic')])}
+          d={buildPolylinePath([j('neck'), nearShoulderPt, j('thoracic')])}
           stroke="#1c3f36"
           strokeWidth={2.4}
           fill="none"
@@ -955,8 +1079,9 @@ function renderKinematicFigureLayer(
             />
           );
         })}
-        {/* Head & Gaze vector */}
+        {/* Head & Anterior Gaze vector */}
         <line
+          data-segment="head-gaze"
           x1={headPt.x}
           y1={headPt.y}
           x2={gazeTip.x}
@@ -1012,7 +1137,7 @@ function renderKinematicFigureLayer(
         {(
           ['shoulder', 'elbow', 'wrist', 'hand', 'hip', 'knee', 'ankle'] as const
         ).map((jointKey) => {
-          const pt = j(jointKey);
+          const pt = activeJointCoords[jointKey];
           const isMajor =
             jointKey === 'shoulder' ||
             jointKey === 'hip' ||
@@ -1035,14 +1160,37 @@ function renderKinematicFigureLayer(
   );
 }
 
+function buildAngleArcSvgPath(
+  from: Point2D,
+  to: Point2D,
+  targetAngleDeg = 90,
+): string {
+  const midX = (from.x + to.x) / 2;
+  const midY = (from.y + to.y) / 2;
+  const r = 9;
+  const baseAngle = Math.atan2(to.y - from.y, to.x - from.x);
+  const clampedDeg = Math.max(30, Math.min(180, targetAngleDeg));
+  const halfSpanRad = ((clampedDeg * Math.PI) / 180) * 0.5;
+  const startAngle = baseAngle - halfSpanRad;
+  const endAngle = baseAngle + halfSpanRad;
+  const sx = Math.round((midX + Math.cos(startAngle) * r) * 10) / 10;
+  const sy = Math.round((midY + Math.sin(startAngle) * r) * 10) / 10;
+  const ex = Math.round((midX + Math.cos(endAngle) * r) * 10) / 10;
+  const ey = Math.round((midY + Math.sin(endAngle) * r) * 10) / 10;
+  const r1x = Math.round((midX + Math.cos(startAngle) * 3.5) * 10) / 10;
+  const r1y = Math.round((midY + Math.sin(startAngle) * 3.5) * 10) / 10;
+  const r2x = Math.round((midX + Math.cos(endAngle) * 3.5) * 10) / 10;
+  const r2y = Math.round((midY + Math.sin(endAngle) * 3.5) * 10) / 10;
+  const largeArc = clampedDeg > 180 ? 1 : 0;
+  return `M ${r1x} ${r1y} L ${sx} ${sy} A ${r} ${r} 0 ${largeArc} 1 ${ex} ${ey} L ${r2x} ${r2y}`;
+}
+
 function renderAlignmentGuideItem(
   guide: JointAlignmentGuide,
   mirrored: boolean,
 ): React.JSX.Element {
   const from = mpt(guide.from, mirrored);
   const to = mpt(guide.to, mirrored);
-  const midX = Math.round(((from.x + to.x) / 2) * 10) / 10;
-  const midY = Math.round(((from.y + to.y) / 2) * 10) / 10;
 
   return (
     <g
@@ -1079,13 +1227,12 @@ function renderAlignmentGuideItem(
       <circle cx={from.x} cy={from.y} r={2.2} fill="#173d34" />
       <circle cx={to.x} cy={to.y} r={2.2} fill="#173d34" />
       {guide.kind === 'angle-arc' ? (
-        <circle
-          cx={midX}
-          cy={midY}
-          r={9}
+        <path
+          data-angle-arc={guide.targetAngleDeg ?? 90}
+          d={buildAngleArcSvgPath(from, to, guide.targetAngleDeg ?? 90)}
           fill="none"
           stroke="#173d34"
-          strokeWidth={1.2}
+          strokeWidth={1.3}
           strokeDasharray="3 2"
         />
       ) : null}

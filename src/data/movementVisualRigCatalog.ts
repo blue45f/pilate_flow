@@ -216,7 +216,7 @@ const MUSCLE_GROUP_CATALOG: Record<MuscleGroupId, MuscleMetaEntry> = {
     id: 'core-transversus',
     labelKo: '심부 코어 (복횡근·다열근·골반저근)',
     labelEn: 'Deep Core & Transversus Abdominis',
-    keywords: ['복횡근', '횡격막', '골반저근', '다열근', '호흡', '몸통', '골반', '코어 밸런스', '골반 안정화근'],
+    keywords: ['복횡근', '횡격막', '골반저근', '다열근', '호흡', '몸통', '골반', '코어 밸런스', '골반 안정화근', '심부경추굴곡근'],
     anchorJoints: ['thoracic', 'lumbar', 'pelvis'],
     defaultReasonKo: {
       primary: '흉식 호흡과 복강 내압 조절로 요추-골반 중립을 능동적으로 제어합니다.',
@@ -265,7 +265,7 @@ const MUSCLE_GROUP_CATALOG: Record<MuscleGroupId, MuscleMetaEntry> = {
     labelKo: '대퇴사두근 (슬관절 신전·지지)',
     labelEn: 'Quadriceps Femoris',
     keywords: ['대퇴사두근', '하체', '무릎'],
-    anchorJoints: ['hip', 'knee', 'ankle'],
+    anchorJoints: ['hip', 'knee'],
     defaultReasonKo: {
       primary: '풋바·페달 프레스 및 런지 구간에서 무릎 신전과 편심성 감속을 담당합니다.',
       stabilizer: '슬개골 트래킹을 일정하게 유지하고 무릎 과신전(Locking)을 방지합니다.',
@@ -301,7 +301,7 @@ const MUSCLE_GROUP_CATALOG: Record<MuscleGroupId, MuscleMetaEntry> = {
     labelKo: '종아리·발목 안정근 (비복근·가자미근)',
     labelEn: 'Calves & Ankle Stabilizers',
     keywords: ['비복근/가자미근', '종아리', '발목'],
-    anchorJoints: ['knee', 'ankle', 'heel', 'toe'],
+    anchorJoints: ['knee', 'ankle', 'heel'],
     defaultReasonKo: {
       primary: '족저굴곡(Plantarflexion)과 발볼 지지력을 통해 발목-종아리 펌핑을 수행합니다.',
       stabilizer: '풋바·페달·바닥 접촉면에서 발아치와 거골하관절 정렬을 유지합니다.',
@@ -324,7 +324,7 @@ const MUSCLE_GROUP_CATALOG: Record<MuscleGroupId, MuscleMetaEntry> = {
     id: 'thoracic-extensors',
     labelKo: '척추기립근·흉추 신전근 (후면 척추)',
     labelEn: 'Thoracic & Spinal Extensors',
-    keywords: ['척추기립근', '척추분절근', '척추기립근 이완', '등', '흉곽', '흉추 가동성', '심부경추굴곡근', '후두하근'],
+    keywords: ['척추기립근', '척추분절근', '척추기립근 이완', '등', '흉곽', '흉추 가동성', '후두하근'],
     anchorJoints: ['head', 'neck', 'thoracic', 'lumbar'],
     defaultReasonKo: {
       primary: '경추-흉추 순차 신전과 축성 신장(Axial Elongation)으로 굽은 등을 펴줍니다.',
@@ -337,7 +337,7 @@ const MUSCLE_GROUP_CATALOG: Record<MuscleGroupId, MuscleMetaEntry> = {
     labelKo: '삼각근·상완이두/삼두근 (상지 주동)',
     labelEn: 'Deltoids, Biceps & Triceps',
     keywords: ['전면/측면 삼각근', '후면삼각근', '전면삼각근', '삼각근', '상완이두근', '상완삼두근', '삼두근', '팔', '어깨', '상체'],
-    anchorJoints: ['shoulder', 'elbow', 'wrist', 'hand'],
+    anchorJoints: ['shoulder', 'elbow'],
     defaultReasonKo: {
       primary: '어깨 굴곡·신전·외전 및 팔꿈치 신전을 통해 상지 스트랩/스프링 궤적을 제어합니다.',
       stabilizer: '손목-팔꿈치-어깨 관절 축을 정렬하여 회전근개 부담을 줄입니다.',
@@ -349,7 +349,7 @@ const MUSCLE_GROUP_CATALOG: Record<MuscleGroupId, MuscleMetaEntry> = {
     labelKo: '장요근·고관절 굴곡근 (전면 고관절)',
     labelEn: 'Iliopsoas & Hip Flexors',
     keywords: ['장요근', '장요근 스트레칭', '장요근 이완', '고관절 굴곡근', '고관절'],
-    anchorJoints: ['lumbar', 'pelvis', 'hip', 'knee'],
+    anchorJoints: ['lumbar', 'pelvis', 'hip'],
     defaultReasonKo: {
       primary: '테이블탑 니 폴드·레그 스트레치·시저스 시 대퇴골을 고관절 소켓 안에서 정교하게 굴곡합니다.',
       stabilizer: '시티드 롤백 및 체어 풋워크에서 요추와 골반의 연결 각도를 세밀하게 잡아줍니다.',
@@ -367,6 +367,15 @@ const ROLE_LABELS_KO: Record<
   lengthening: '신장·이완 부위',
 };
 
+function matchesMuscleKeyword(normalizedTarget: string, kw: string): boolean {
+  if (kw === '둔근') {
+    if (normalizedTarget.includes('중둔근') || normalizedTarget.includes('소둔근')) {
+      return normalizedTarget.includes('대둔근');
+    }
+  }
+  return normalizedTarget.includes(kw) || kw.includes(normalizedTarget);
+}
+
 function buildMuscleHighlights(
   exercise: PilatesExercise,
   defaults: {
@@ -380,9 +389,7 @@ function buildMuscleHighlights(
   for (const target of exercise.targetMuscles) {
     const normalized = target.trim();
     for (const meta of Object.values(MUSCLE_GROUP_CATALOG)) {
-      if (
-        meta.keywords.some((kw) => normalized.includes(kw) || kw.includes(normalized))
-      ) {
+      if (meta.keywords.some((kw) => matchesMuscleKeyword(normalized, kw))) {
         const list = matchedByGroup.get(meta.id) ?? [];
         if (!list.includes(normalized)) list.push(normalized);
         matchedByGroup.set(meta.id, list);
@@ -412,21 +419,37 @@ function buildMuscleHighlights(
     });
   }
 
+  const usedGroupIds = new Set<MuscleGroupId>(orderedRoles.map((r) => r.groupId));
+  const stabilizerFallbacks: readonly MuscleGroupId[] = [
+    'core-transversus',
+    'rectus-obliques',
+    'glute-med',
+    'latissimus-serratus',
+  ];
+  const stabilizerGroupId: MuscleGroupId = !usedGroupIds.has(defaults.stabilizer)
+    ? defaults.stabilizer
+    : (stabilizerFallbacks.find((id) => !usedGroupIds.has(id)) ?? 'core-transversus');
+  usedGroupIds.add(stabilizerGroupId);
+
+  const lengtheningFallbacks: readonly MuscleGroupId[] = [
+    'thoracic-extensors',
+    'hip-flexor-iliopsoas',
+    'hamstrings',
+    'latissimus-serratus',
+  ];
+  const lengtheningGroupId: MuscleGroupId = !usedGroupIds.has(defaults.lengthening)
+    ? defaults.lengthening
+    : (lengtheningFallbacks.find((id) => !usedGroupIds.has(id)) ?? 'thoracic-extensors');
+  usedGroupIds.add(lengtheningGroupId);
+
   orderedRoles.push(
     {
-      groupId:
-        defaults.stabilizer === primaryGroupId
-          ? 'core-transversus'
-          : defaults.stabilizer,
+      groupId: stabilizerGroupId,
       role: 'stabilizer',
       phases: ['start', 'middle', 'end'],
     },
     {
-      groupId:
-        defaults.lengthening === primaryGroupId ||
-        defaults.lengthening === defaults.stabilizer
-          ? 'thoracic-extensors'
-          : defaults.lengthening,
+      groupId: lengtheningGroupId,
       role: 'lengthening',
       phases: ['middle', 'end'],
     },
@@ -435,19 +458,31 @@ function buildMuscleHighlights(
   const unassignedCatalogMuscles = exercise.targetMuscles.filter(
     (m) => !orderedRoles.some((r) => (matchedByGroup.get(r.groupId) ?? []).includes(m)),
   );
+  const unassignedLengthening = unassignedCatalogMuscles.filter(
+    (m) => m.includes('이완') || m.includes('스트레칭') || m.includes('가동성'),
+  );
+  const unassignedContraction = unassignedCatalogMuscles.filter(
+    (m) => !unassignedLengthening.includes(m),
+  );
 
   return Object.freeze(
     orderedRoles.map((item, idx) => {
       const meta = MUSCLE_GROUP_CATALOG[item.groupId];
-      const directMatches = matchedByGroup.get(item.groupId) ?? [];
+      const directMatches = (matchedByGroup.get(item.groupId) ?? []).filter((m) =>
+        item.role === 'lengthening'
+          ? true
+          : !(m.includes('이완') || m.includes('스트레칭')),
+      );
       const catalogMatches =
-        idx === 0 && directMatches.length === 0 && exercise.targetMuscles.length > 0
-          ? [exercise.targetMuscles[0]]
-          : idx === 0 && unassignedCatalogMuscles.length > 0
-            ? Array.from(new Set([...directMatches, ...unassignedCatalogMuscles]))
-            : directMatches.length > 0
-              ? directMatches
-              : [meta.labelKo.split(' ')[0]];
+        item.role === 'lengthening' && unassignedLengthening.length > 0
+          ? Array.from(new Set([...directMatches, ...unassignedLengthening]))
+          : idx === 0 && directMatches.length === 0 && unassignedContraction.length > 0
+            ? [unassignedContraction[0]]
+            : idx === 0 && directMatches.length === 0 && exercise.targetMuscles.length > 0
+              ? [exercise.targetMuscles[0]]
+              : directMatches.length > 0
+                ? directMatches
+                : [meta.labelKo.split(' ')[0]];
 
       return Object.freeze({
         muscleGroupId: meta.id,
@@ -794,7 +829,7 @@ const ARCHETYPE_BLUEPRINTS_PART_A: readonly ArchetypeRigBlueprint[] = [
           id: 'vec-bridge-lift',
           labelKo: '골반 수직 리프트 & 무릎 사선 리치',
           kind: 'spine-articulation',
-          points: [pt(184, 144), pt(184, 96), pt(234, 82)],
+          points: [pt(184, 144), pt(184, 96)],
           phaseScope: 'start-to-middle',
         },
       ],
@@ -803,7 +838,7 @@ const ARCHETYPE_BLUEPRINTS_PART_A: readonly ArchetypeRigBlueprint[] = [
           id: 'vec-bridge-articulate-down',
           labelKo: '윗등→천골 순차 분절 하강',
           kind: 'return-control',
-          points: [pt(124, 122), pt(154, 138), pt(184, 144)],
+          points: [pt(184, 96), pt(184, 144)],
           phaseScope: 'middle-to-end',
         },
       ],
@@ -1248,7 +1283,7 @@ const ARCHETYPE_BLUEPRINTS_PART_A: readonly ArchetypeRigBlueprint[] = [
           id: 'vec-chest-curl-up',
           labelKo: '상체 컬업 & 팔 전방 리치',
           kind: 'spine-articulation',
-          points: [pt(52, 138), pt(84, 92), pt(196, 94)],
+          points: [pt(52, 138), pt(68, 110), pt(84, 92)],
           phaseScope: 'start-to-middle',
         },
       ],
@@ -2147,7 +2182,7 @@ const ARCHETYPE_BLUEPRINTS_PART_A: readonly ArchetypeRigBlueprint[] = [
           kind: 'angle-arc',
           from: pt(132, 70),
           to: pt(216, 52),
-          targetAngleDeg: 110,
+          targetAngleDeg: 102,
           cautionKo: '팔 무게와 스프링 장력에 몸통이 뒤로 젖혀지지 않게 합니다.',
         },
       ],
@@ -2586,7 +2621,7 @@ const ARCHETYPE_BLUEPRINTS_PART_B: readonly ArchetypeRigBlueprint[] = [
           kind: 'angle-arc',
           from: pt(138, 66),
           to: pt(184, 82),
-          targetAngleDeg: 135,
+          targetAngleDeg: 146,
           cautionKo: '고개만 과하게 숙이지 않고 배꼽을 척추 쪽으로 당깁니다.',
         },
       ],
@@ -2617,7 +2652,7 @@ const ARCHETYPE_BLUEPRINTS_PART_B: readonly ArchetypeRigBlueprint[] = [
           id: 'vec-revabs-knee-pull',
           labelKo: '무릎·캐리지 전방 당김(42px) & 요추 굴곡',
           kind: 'carriage-travel',
-          points: [pt(224, 144), pt(182, 144), pt(164, 68)],
+          points: [pt(224, 144), pt(182, 144)],
           phaseScope: 'start-to-middle',
         },
       ],
@@ -3078,7 +3113,7 @@ const ARCHETYPE_BLUEPRINTS_PART_B: readonly ArchetypeRigBlueprint[] = [
           id: 'vec-clam-knee-open',
           labelKo: '상측 무릎 외회전 오픈 & 오픈 북 회전',
           kind: 'limb-excursion',
-          points: [pt(224, 152), pt(222, 104), pt(38, 62)],
+          points: [pt(224, 152), pt(222, 104)],
           phaseScope: 'start-to-middle',
         },
       ],
@@ -3193,7 +3228,7 @@ const ARCHETYPE_BLUEPRINTS_PART_C: readonly ArchetypeRigBlueprint[] = [
           kind: 'neutral-zone',
           from: pt(114, 80),
           to: pt(208, 82),
-          targetAngleDeg: 180,
+          targetAngleDeg: 90,
           cautionKo: '고개가 바닥으로 떨어지지 않게 시선은 손 앞쪽 매트를 봅니다.',
         },
       ],
@@ -3360,7 +3395,7 @@ const ARCHETYPE_BLUEPRINTS_PART_C: readonly ArchetypeRigBlueprint[] = [
           kind: 'angle-arc',
           from: pt(96, 144),
           to: pt(182, 58),
-          targetAngleDeg: 68,
+          targetAngleDeg: 45,
           cautionKo: '무릎만 굽히거나 어깨가 손목 앞으로 과하게 쏟아지지 않게 합니다.',
         },
       ],
@@ -3538,7 +3573,7 @@ const ARCHETYPE_BLUEPRINTS_PART_C: readonly ArchetypeRigBlueprint[] = [
           id: 'vec-swan-chest-extension',
           labelKo: '흉추 신전 리프트 & 스트랩 후방 당김',
           kind: 'spine-articulation',
-          points: [pt(54, 136), pt(64, 78), pt(184, 126)],
+          points: [pt(54, 136), pt(58, 104), pt(64, 78)],
           phaseScope: 'start-to-middle',
         },
       ],
@@ -3685,7 +3720,7 @@ const ARCHETYPE_BLUEPRINTS_PART_C: readonly ArchetypeRigBlueprint[] = [
           id: 'vec-calf-raise-up',
           labelKo: '뒤꿈치 수직 상승(14px) & 상지 리치',
           kind: 'limb-excursion',
-          points: [pt(142, 176), pt(146, 162), pt(236, 52)],
+          points: [pt(142, 176), pt(146, 162)],
           phaseScope: 'start-to-middle',
         },
       ],
@@ -3751,7 +3786,7 @@ const ARCHETYPE_BLUEPRINTS_PART_C: readonly ArchetypeRigBlueprint[] = [
       lumbar: { x: 144, y: 106 },
       pelvis: { x: 154, y: 120 },
       hip: { x: 160, y: 122 },
-      knee: { x: 228, y: 134 },
+      knee: { x: 220, y: 138 },
       ankle: { x: 278, y: 148 },
       heel: { x: 282, y: 142 },
       toe: { x: 276, y: 158 },
@@ -3860,10 +3895,10 @@ const ARCHETYPE_BLUEPRINTS_PART_C: readonly ArchetypeRigBlueprint[] = [
       ],
     },
     poseDeltaSummary: {
-      startToMiddleKo: '지지측 무릎·발목(farKnee x:124, farAnkle x:124)은 부동 고정된 채 가동 다리 무릎(x:184→228)과 발목(x:214→278)이 후방으로 64px 뻗어집니다.',
+      startToMiddleKo: '지지측 무릎·발목(farKnee x:124, farAnkle x:124)은 부동 고정된 채 가동 다리 무릎(x:184→220)과 발목(x:214→278)이 후방으로 64px 뻗어집니다.',
       middleToEndKo: '지지 둔근 버팀 속에서 가동 다리(ankle x:278→222)가 제어 복귀합니다.',
       invariantAnchorsKo: '지지측 발목(farAnkle), 발끝(farToe), 지지 무릎(farKnee)이 흔들리지 않고 고정됩니다.',
-      keyJointChangeKo: '가동 하지 고관절·슬관절 신전 활주(ankle Δ66px, knee Δ45px)',
+      keyJointChangeKo: '가동 하지 고관절·슬관절 신전 활주(ankle Δ66px, knee Δ37px)',
     },
   },
   {
@@ -3963,7 +3998,7 @@ const ARCHETYPE_BLUEPRINTS_PART_C: readonly ArchetypeRigBlueprint[] = [
           kind: 'angle-arc',
           from: pt(152, 118),
           to: pt(204, 124),
-          targetAngleDeg: 140,
+          targetAngleDeg: 82,
           cautionKo: '햄스트링이 당기면 무릎을 살짝 굽혀 요추 이완을 우선합니다.',
         },
       ],
@@ -4212,16 +4247,7 @@ function resolveSeparatedApparatusContactBlueprint(
   if (exercise.id === 'original-reformer-strap-frog') {
     const base = ARCHETYPE_BY_ID.get('supine-feet-in-straps')!;
     const endJoints = makeJointMap({
-      head: { x: 46, y: 120 },
-      neck: { x: 64, y: 124 },
-      shoulder: { x: 84, y: 126 },
-      elbow: { x: 108, y: 132 },
-      wrist: { x: 136, y: 134 },
-      hand: { x: 146, y: 134 },
-      thoracic: { x: 112, y: 128 },
-      lumbar: { x: 136, y: 128 },
-      pelvis: { x: 158, y: 128 },
-      hip: { x: 162, y: 126 },
+      ...base.startJoints,
       knee: { x: 185, y: 90 },
       ankle: { x: 217, y: 74 },
       heel: { x: 213, y: 80 },
@@ -4243,6 +4269,20 @@ function resolveSeparatedApparatusContactBlueprint(
         base.phaseSummariesKo[1],
         '스프링이 다리를 급격히 당기지 않도록 고관절·무릎을 천천히 접으며 시작 프로그(Frog) 굴곡 홈 포지션으로 제어 복귀합니다.',
       ],
+      alignments: {
+        ...base.alignments,
+        end: [
+          {
+            id: 'align-straps-frog-return',
+            labelKo: '프로그 굴곡 복귀 시 천골 바닥 유지선',
+            cueKo: '무릎을 접어 돌아올 때 꼬리뼈가 매트에서 들리지 않도록 천골 무게를 지킵니다.',
+            kind: 'neutral-zone',
+            from: pt(158, 124),
+            to: pt(217, 74),
+            cautionKo: '복귀 구간에서 골반이 말려 올라가면 고관절 굴곡 가동성이 허리 굴곡으로 대체됩니다.',
+          },
+        ],
+      },
       directionVectors: {
         ...base.directionVectors,
         end: [
@@ -4250,7 +4290,7 @@ function resolveSeparatedApparatusContactBlueprint(
             id: 'vec-straps-frog-return',
             labelKo: '프로그 굴곡 홈 포지션 제어 복귀',
             kind: 'return-control',
-            points: [pt(268, 114), pt(217, 74)],
+            points: [pt(284, 80), pt(217, 74)],
             phaseScope: 'middle-to-end',
           },
         ],
@@ -4258,7 +4298,7 @@ function resolveSeparatedApparatusContactBlueprint(
       poseDeltaSummary: {
         ...base.poseDeltaSummary,
         middleToEndKo:
-          '고관절과 무릎을 제어하며 접어 발목(268,114→217,74)과 무릎(218,98→185,90)이 시작 프로그 굴곡 홈 포지션으로 복귀합니다. (해부학적 실측 아님)',
+          '고관절과 무릎을 제어하며 접어 발목(284,80→217,74)과 무릎(232,102→185,90)이 시작 프로그 굴곡 홈 포지션으로 복귀합니다. (해부학적 실측 아님)',
       },
     };
   }
@@ -4324,8 +4364,8 @@ function resolveSeparatedApparatusContactBlueprint(
           defaultSurfaceKo: '리포머 우측 풋바 상단 손목 수직 지지점 (262,126)',
         },
         {
-          joint: 'ankle',
-          defaultSurfaceKo: '리포머 좌측 슬라이딩 캐리지 발볼·발목 지지점',
+          joint: 'hand',
+          defaultSurfaceKo: '리포머 우측 풋바 상단 손바닥 파지 고정점 (268,126)',
         },
       ],
       startJoints,
@@ -4484,8 +4524,8 @@ function resolveSeparatedApparatusContactBlueprint(
           defaultSurfaceKo: '체어 패디드 시트 상단 손목 수직 지지점 (132,106)',
         },
         {
-          joint: 'ankle',
-          defaultSurfaceKo: '체어 우측 하단 페달 팁 발볼·발목 지지점',
+          joint: 'hand',
+          defaultSurfaceKo: '체어 패디드 시트 상단 손바닥 지지 고정점 (124,106)',
         },
       ],
       startJoints,
@@ -4523,7 +4563,7 @@ function resolveSeparatedApparatusContactBlueprint(
             kind: 'angle-arc',
             from: pt(132, 106),
             to: pt(176, 48),
-            targetAngleDeg: 62,
+            targetAngleDeg: 53,
             cautionKo: '다리 반동이 아닌 복부 굴곡 힘으로 페달을 부양합니다.',
           },
         ],
@@ -4664,6 +4704,71 @@ function resolveSeparatedApparatusContactBlueprint(
       endJoints,
       carriageOffsets: [0, 0, 0],
       pedalAngles: [0, 0, 0],
+      alignments: {
+        start: [
+          {
+            id: 'align-barrel-standing-support-plumb',
+            labelKo: '바닥 지지 다리 골반-발목 수직 정렬선',
+            cueKo: '래더 가로대(88,76)를 잡고 지지 다리 발목(138,172) 위에 골반(142,126)을 수직으로 세웁니다.',
+            kind: 'plumb-line',
+            from: pt(138, 126),
+            to: pt(138, 174),
+            cautionKo: '지지 다리 골반이 옆으로 빠지지 않게 중둔근 지지를 유지합니다.',
+          },
+        ],
+        middle: [
+          {
+            id: 'align-barrel-standing-hip-ext-axis',
+            labelKo: '요추 중립 유지 고관절 후방 신전선',
+            cueKo: '복부를 지지한 채 작동 다리 발목(222,148)을 뒤로 길게 뻗어 둔근을 수축합니다.',
+            kind: 'axis-line',
+            from: pt(142, 126),
+            to: pt(222, 148),
+            targetAngleDeg: 15,
+            cautionKo: '다리를 높게 들기 위해 허리가 과신전되지 않도록 합니다.',
+          },
+        ],
+        end: [
+          {
+            id: 'align-barrel-standing-return-zone',
+            labelKo: '지지 다리 중심 제어 복귀 정렬선',
+            cueKo: '상체 흔들림 없이 작동 다리(174,168)를 지지 다리 옆으로 복귀합니다.',
+            kind: 'neutral-zone',
+            from: pt(138, 40),
+            to: pt(138, 172),
+            cautionKo: '복귀 순간까지 사다리 가로대 손 지지와 골반 수평을 유지합니다.',
+          },
+        ],
+      },
+      directionVectors: {
+        start: [
+          {
+            id: 'vec-barrel-standing-axial-setup',
+            labelKo: '사다리 지지 및 척추 수직 신장 세팅',
+            kind: 'axial-lengthening',
+            points: [pt(142, 126), pt(138, 40)],
+            phaseScope: 'start',
+          },
+        ],
+        middle: [
+          {
+            id: 'vec-barrel-standing-hip-ext',
+            labelKo: '작동 다리 고관절 후방 신전 (170,168→222,148)',
+            kind: 'limb-excursion',
+            points: [pt(170, 168), pt(222, 148)],
+            phaseScope: 'start-to-middle',
+          },
+        ],
+        end: [
+          {
+            id: 'vec-barrel-standing-hip-return',
+            labelKo: '작동 다리 시작 위치 제어 복귀 (222,148→174,168)',
+            kind: 'return-control',
+            points: [pt(222, 148), pt(174, 168)],
+            phaseScope: 'middle-to-end',
+          },
+        ],
+      },
       poseDeltaSummary: {
         startToMiddleKo:
           '배럴 돔(x:18..70)과 겹치지 않는 바닥(x:138)에 지지 다리를 두고 손(88,76)으로 사다리 가로대(x:76..96)를 잡은 채 작동 다리를 뒤로 뻗습니다.',
@@ -4706,6 +4811,38 @@ interface SemanticOverrideSpec {
 
 function buildSemanticOverrideBlueprint(spec: SemanticOverrideSpec): ArchetypeRigBlueprint {
   const base = ARCHETYPE_BY_ID.get(spec.baseArchetypeId)!;
+  const primaryAnchorJoint = spec.fixedAnchorJoints[0]?.joint ?? 'pelvis';
+  const secondaryAnchorJoint = spec.fixedAnchorJoints[1]?.joint ?? 'ankle';
+
+  const makePhaseAlignments = (
+    phaseKey: 'start' | 'middle' | 'end',
+    joints: RigJointMap,
+    cueKo: string,
+  ): readonly JointAlignmentGuide[] => {
+    const anchorPt = joints[primaryAnchorJoint] ?? joints.pelvis;
+    const secondaryPt = joints[secondaryAnchorJoint] ?? joints.ankle;
+    return [
+      {
+        id: `align-${spec.archetypeId}-${phaseKey}-spine`,
+        labelKo: `${spec.archetypeTitleKo.split(' · ')[0]} 척추·골반 정렬축`,
+        cueKo,
+        kind: phaseKey === 'middle' ? 'axis-line' : 'neutral-zone',
+        from: joints.head,
+        to: joints.pelvis,
+        cautionKo: '지지 앵커가 흔들리거나 허리 과신전으로 보상하지 않도록 유지합니다.',
+      },
+      {
+        id: `align-${spec.archetypeId}-${phaseKey}-anchor`,
+        labelKo: '고정 지지점 연결 기준선',
+        cueKo: spec.invariantAnchorsKo,
+        kind: 'anchor-lock',
+        from: anchorPt,
+        to: secondaryPt,
+        cautionKo: '동작 중 고정 지지점이 지지면에서 들리지 않도록 유지합니다.',
+      },
+    ];
+  };
+
   return {
     ...base,
     archetypeId: spec.archetypeId,
@@ -4725,8 +4862,21 @@ function buildSemanticOverrideBlueprint(spec: SemanticOverrideSpec): ArchetypeRi
         spec.middleToEndKo,
       ],
     muscles: spec.muscles ?? base.muscles,
+    alignments: {
+      start: makePhaseAlignments('start', spec.startJoints, spec.invariantAnchorsKo),
+      middle: makePhaseAlignments('middle', spec.middleJoints, spec.startToMiddleKo),
+      end: makePhaseAlignments('end', spec.endJoints, spec.middleToEndKo),
+    },
     directionVectors: {
-      start: base.directionVectors.start,
+      start: [
+        {
+          id: `vec-${spec.archetypeId}-start`,
+          labelKo: '시작 지지 및 축 신장 정렬 유지',
+          kind: 'axial-lengthening',
+          points: [spec.startJoints.pelvis, spec.startJoints.head],
+          phaseScope: 'start',
+        },
+      ],
       middle: [
         {
           id: `vec-${spec.archetypeId}-mid`,
@@ -5228,7 +5378,8 @@ function resolveSeparatedSemanticMismatchBlueprint(
     });
     const endJoints = makeJointMap({
       ...startJoints,
-      head: { x: 136, y: 24 }, thoracic: { x: 136, y: 71 }, hand: { x: 166, y: 94 },
+      head: { x: 136, y: 24 }, neck: { x: 136, y: 38 }, shoulder: { x: 136, y: 54 },
+      thoracic: { x: 136, y: 71 }, hand: { x: 166, y: 94 },
     });
     return buildSemanticOverrideBlueprint({
       archetypeId: "chair-seated-back-reach-isolated",
@@ -5248,7 +5399,7 @@ function resolveSeparatedSemanticMismatchBlueprint(
       keyJointChangeKo: "후방 로잉 당김과 분리된 상부 흉추·흉골 전상방 신전 리치(thoracic Δ11.7px · 2D 개략도)",
       middleVectorLabelKo: "흉골·상부 흉추 전상방 신전 리치",
       middleVectorKind: "spine-articulation",
-      middleVectorPoints: [pt(132, 74), pt(142, 68), pt(142, 20)],
+      middleVectorPoints: [pt(132, 74), pt(142, 68)],
       endVectorLabelKo: "상부 흉추 중립 정렬 복귀",
       endVectorPoints: [pt(142, 68), pt(136, 71)],
     });
@@ -5281,7 +5432,9 @@ function resolveSeparatedSemanticMismatchBlueprint(
     });
     const endJoints = makeJointMap({
       ...startJoints,
-      head: { x: standX + 1, y: 22 }, pelvis: { x: standX + 1, y: 112 },
+      head: { x: standX + 1, y: 22 }, neck: { x: standX + 1, y: 40 }, shoulder: { x: standX + 1, y: 58 },
+      thoracic: { x: standX + 1, y: 80 }, lumbar: { x: standX + 1, y: 98 }, pelvis: { x: standX + 1, y: 112 },
+      hip: { x: standX + 1, y: 114 }, knee: { x: standX + 3, y: 142 },
       ankle: { x: standX + 4, y: 165 }, heel: { x: standX - 2, y: 169 },
     });
     return buildSemanticOverrideBlueprint({
@@ -5432,7 +5585,7 @@ function resolveSeparatedSemanticMismatchBlueprint(
       keyJointChangeKo: "오버헤드 암 서클(129.3px)을 제거한 순수 골반 시계·요추 전후방 틸트(lumbar/pelvis Δ8.9px · 2D 개략도)",
       middleVectorLabelKo: "골반 후방 틸트 & 요추 임프린트",
       middleVectorKind: "spine-articulation",
-      middleVectorPoints: [pt(174, 136), pt(170, 128), pt(146, 140)],
+      middleVectorPoints: [pt(146, 132), pt(146, 140)],
       endVectorLabelKo: "중립 천골 골반 시계 복귀",
       endVectorPoints: [pt(146, 140), pt(146, 127)],
     });
@@ -5458,7 +5611,7 @@ function resolveSeparatedSemanticMismatchBlueprint(
     });
     const endJoints = makeJointMap({
       ...startJoints,
-      head: { x: 148, y: 26 }, shoulder: { x: 144, y: 56 }, thoracic: { x: 142, y: 74 },
+      head: { x: 148, y: 26 }, neck: { x: 146, y: 40 }, shoulder: { x: 144, y: 56 }, thoracic: { x: 142, y: 74 },
       lumbar: { x: 142, y: 90 }, pelvis: { x: 142, y: 106 }, hip: { x: 148, y: 106 },
     });
     return buildSemanticOverrideBlueprint({
@@ -5479,7 +5632,7 @@ function resolveSeparatedSemanticMismatchBlueprint(
       keyJointChangeKo: "단측 후방 스쿠터 킥(65.5px)을 제거한 양발 접지 시트 투 스탠드 기립(pelvis Δ42.4px · 2D 개략도)",
       middleVectorLabelKo: "시트 착석 → 양발 지지 수직 기립",
       middleVectorKind: "axial-lengthening",
-      middleVectorPoints: [pt(136, 108), pt(178, 102), pt(178, 16)],
+      middleVectorPoints: [pt(136, 108), pt(178, 102)],
       endVectorLabelKo: "시트 좌면 방향 편심성 착석 복귀",
       endVectorPoints: [pt(178, 102), pt(142, 106)],
     });
@@ -5505,8 +5658,9 @@ function resolveSeparatedSemanticMismatchBlueprint(
     });
     const endJoints = makeJointMap({
       ...startJoints,
-      head: { x: 170, y: 28 }, pelvis: { x: 170, y: 106 },
-      knee: { x: 152, y: 124 }, ankle: { x: 140, y: 138 }, heel: { x: 144, y: 142 }, toe: { x: 132, y: 142 },
+      head: { x: 170, y: 28 }, neck: { x: 170, y: 42 }, shoulder: { x: 170, y: 58 },
+      thoracic: { x: 170, y: 76 }, lumbar: { x: 170, y: 92 }, pelvis: { x: 170, y: 106 },
+      hip: { x: 164, y: 108 }, knee: { x: 152, y: 124 }, ankle: { x: 140, y: 138 }, heel: { x: 144, y: 142 }, toe: { x: 132, y: 142 },
     });
     return buildSemanticOverrideBlueprint({
       archetypeId: "reformer-standing-side-splits-isolated",
@@ -5514,7 +5668,7 @@ function resolveSeparatedSemanticMismatchBlueprint(
       baseArchetypeId: "standing-scooter-lunge-splits",
       fixedAnchorJoints: [
         { joint: "farAnkle", defaultSurfaceKo: "우측 고정 플랫폼 발바닥 11자 지지점 (214,138)" },
-        { joint: "ankle", defaultSurfaceKo: "좌측 슬라이딩 캐리지 발바닥 수평 지지점 (y:138)" },
+        { joint: "farKnee", defaultSurfaceKo: "우측 고정 플랫폼 지지 다리 무릎 축 (198,124)" },
       ],
       movingJoints: ["ankle", "knee", "hip", "pelvis", "thoracic", "head", "hand"],
       startJoints, middleJoints, endJoints,
@@ -5549,7 +5703,7 @@ function resolveSeparatedSemanticMismatchBlueprint(
     });
     const endJoints = makeJointMap({
       ...startJoints,
-      head: { x: 148, y: 34 }, shoulder: { x: 146, y: 66 }, thoracic: { x: 146, y: 84 },
+      head: { x: 148, y: 34 }, neck: { x: 146, y: 48 }, shoulder: { x: 146, y: 66 }, thoracic: { x: 146, y: 84 },
       wrist: { x: 196, y: 82 }, hand: { x: 206, y: 84 },
     });
     return buildSemanticOverrideBlueprint({
@@ -6042,10 +6196,27 @@ function adaptTrackAssetForCatalogExercise(
   trackAsset: CatalogMovementVisualAsset,
 ): CatalogMovementVisualAsset {
   const roles = new Set(trackAsset.primaryMuscles.map((m) => m.role));
-  const validMuscles =
+  const rawMuscles =
     trackAsset.primaryMuscles.length >= 3 && roles.has('primary') && roles.has('stabilizer')
       ? trackAsset.primaryMuscles
       : baseAsset.primaryMuscles;
+  const seenMuscleIds = new Set<MuscleGroupId>();
+  const validMuscles = Object.freeze(
+    rawMuscles
+      .filter((m) => {
+        if (seenMuscleIds.has(m.muscleGroupId)) return false;
+        seenMuscleIds.add(m.muscleGroupId);
+        return true;
+      })
+      .map((m) =>
+        Object.freeze({
+          ...m,
+          anchorJoints: Object.freeze([
+            ...(MUSCLE_GROUP_CATALOG[m.muscleGroupId]?.anchorJoints ?? m.anchorJoints),
+          ]),
+        }),
+      ),
+  );
 
   return Object.freeze({
     exerciseId: exercise.id,
@@ -6131,6 +6302,7 @@ export function calculatePhaseJointDelta(asset: CatalogMovementVisualAsset): {
     from: Point2D;
     to: Point2D;
   }[] = [];
+  const stationaryJoints: (keyof RigJointMap)[] = [];
 
   let maxDeltaPx = 0;
 
@@ -6142,6 +6314,7 @@ export function calculatePhaseJointDelta(asset: CatalogMovementVisualAsset): {
     const dy = toPt.y - fromPt.y;
     const dist = Math.round(Math.hypot(dx, dy) * 10) / 10;
     if (dist > 0) {
+      anchoredSet.delete(key);
       movedJoints.push({
         joint: key,
         deltaPx: dist,
@@ -6151,12 +6324,35 @@ export function calculatePhaseJointDelta(asset: CatalogMovementVisualAsset): {
       if (dist > maxDeltaPx) {
         maxDeltaPx = dist;
       }
-    } else if (!anchoredSet.has(key)) {
+    } else {
+      stationaryJoints.push(key);
+    }
+  }
+
+  if (anchoredSet.size === 0) {
+    for (const key of stationaryJoints) {
       anchoredSet.add(key);
     }
   }
 
   movedJoints.sort((a, b) => b.deltaPx - a.deltaPx);
+
+  if (anchoredSet.size === 0 && movedJoints.length > 1) {
+    const declaredAnchors = new Set<keyof RigJointMap>(
+      asset.phases.start.fixedAnchors.map((a) => a.joint),
+    );
+    let bestIdx = movedJoints.length - 1;
+    for (let i = movedJoints.length - 1; i >= 0; i -= 1) {
+      if (declaredAnchors.has(movedJoints[i]!.joint)) {
+        bestIdx = i;
+        break;
+      }
+    }
+    const [fallbackAnchor] = movedJoints.splice(bestIdx, 1);
+    if (fallbackAnchor) {
+      anchoredSet.add(fallbackAnchor.joint);
+    }
+  }
 
   return {
     movedJoints,
@@ -6164,3 +6360,4 @@ export function calculatePhaseJointDelta(asset: CatalogMovementVisualAsset): {
     anchoredJoints: Array.from(anchoredSet),
   };
 }
+

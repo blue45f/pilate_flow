@@ -80,15 +80,15 @@ const PHASE_SHORT_LABELS_KO: Record<VisualPhaseId, string> = {
 };
 
 const JOINT_LABELS_KO: Record<keyof RigJointMap, string> = {
-  head: '머리(후두부)',
+  head: '머리(두부)',
   neck: '경추(목)',
   shoulder: '어깨(견관절)',
   elbow: '팔꿈치(주관절)',
   wrist: '손목(요골수근)',
-  hand: '손끝(핸드)',
+  hand: '손(수부)',
   thoracic: '흉추(등 상부)',
   lumbar: '요추(허리)',
-  pelvis: '골반(천골)',
+  pelvis: '골반(천골·좌골·치골)',
   hip: '고관절',
   knee: '무릎(슬관절)',
   ankle: '발목(거퇴관절)',
@@ -160,10 +160,10 @@ const MUSCLE_ROLE_STYLES: Record<
     badgeBg: '#DCECE2',
   },
   lengthening: {
-    bg: '#F3F4F9',
-    border: '#B8C2DC',
-    text: '#28385E',
-    badgeBg: '#E2E7F4',
+    bg: '#FDF8EE',
+    border: '#DEC28E',
+    text: '#6B4010',
+    badgeBg: '#F6E7C8',
   },
 };
 

@@ -869,6 +869,7 @@ export function compareCatalogMovements(
   right: PilatesExercise,
 ): MovementDifferenceComparison {
   const curated = findCuratedNote(left.id, right.id);
+  const directCuratedNote = curated && !curated.reversed ? curated.note : null;
   const leftApp = APPARATUS_LABELS[left.apparatus]?.ko ?? left.apparatus;
   const rightApp = APPARATUS_LABELS[right.apparatus]?.ko ?? right.apparatus;
   const leftPos = POSITION_LABELS[left.bodyPosition]?.ko ?? left.bodyPosition;
@@ -877,25 +878,25 @@ export function compareCatalogMovements(
   const rightPlanes = formatSpinalPlanesKo(right.spinalPlanes);
 
   const startDiff =
-    curated?.note.startDiffOverrideKo ??
+    directCuratedNote?.startDiffOverrideKo ??
     (left.bodyPosition === right.bodyPosition
       ? `두 동작 모두 ${leftPos}에서 시작하지만, [${left.nameKo}]는 ${leftApp}(${left.springs}) 세팅이고 [${right.nameKo}]는 ${rightApp}(${right.springs}) 지지 조건에서 출발합니다.`
       : `[${left.nameKo}]는 ${leftPos} 지지면에서 출발하는 반면, [${right.nameKo}]는 ${rightPos} 지지면에서 중력 방향을 다르게 받고 시작합니다.`);
 
   const peakDiff =
-    curated?.note.peakDiffOverrideKo ??
+    directCuratedNote?.peakDiffOverrideKo ??
     `최대 구간에서 [${left.nameKo}]는 ${leftPlanes} 방향(${left.layers.standard})에 집중하고, [${right.nameKo}]는 ${rightPlanes} 방향(${right.layers.standard})으로 가동 정점을 만듭니다.`;
 
   const returnDiff =
-    curated?.note.returnDiffOverrideKo ??
+    directCuratedNote?.returnDiffOverrideKo ??
     `복귀 구간에서 [${left.nameKo}]는 ${left.springs} 저항을 제어하며 돌아오고, [${right.nameKo}]는 ${right.springs} 조건에서 몸통 중심을 유지하며 원위치로 돌아옵니다.`;
 
   const alignmentDiff =
-    curated?.note.alignmentDiffOverrideKo ??
+    directCuratedNote?.alignmentDiffOverrideKo ??
     `관절 정렬 핵심에서 [${left.nameKo}]는 "${left.precautions}"를 우선 통제하고, [${right.nameKo}]는 "${right.precautions}"를 핵심 정렬 경계로 삼습니다.`;
 
   const directionDiff =
-    curated?.note.directionDiffOverrideKo ??
+    directCuratedNote?.directionDiffOverrideKo ??
     `운동 면과 대칭성에서 [${left.nameKo}]는 ${leftPlanes}(${left.isUnilateral ? '편측' : '양측'}) 궤적이고, [${right.nameKo}]는 ${rightPlanes}(${right.isUnilateral ? '편측' : '양측'}) 궤적입니다.`;
 
   const leftOnlyMuscles = left.targetMuscles.filter((m) => !right.targetMuscles.includes(m));
@@ -904,7 +905,13 @@ export function compareCatalogMovements(
 
   const muscleDiff =
     sharedMuscles.length > 0
-      ? `공통 타겟(${sharedMuscles.join(', ')}) 외에 [${left.nameKo}]는 [${leftOnlyMuscles.join(', ') || left.targetMuscles.join(', ')}], [${right.nameKo}]는 [${rightOnlyMuscles.join(', ') || right.targetMuscles.join(', ')}] 협응 비중이 높습니다.`
+      ? leftOnlyMuscles.length === 0 && rightOnlyMuscles.length === 0
+        ? `두 동작 모두 [${sharedMuscles.join(', ')}]을(를) 공통 주 타겟으로 사용하며, 기구 지지와 가동 범위에 따라 수축·이완 협응 비중이 달라집니다.`
+        : leftOnlyMuscles.length === 0
+          ? `공통 타겟(${sharedMuscles.join(', ')})을 기반으로 [${left.nameKo}]는 해당 코어·주동근 제어에 집중하고, [${right.nameKo}]는 추가로 [${rightOnlyMuscles.join(', ')}] 협응이 결합됩니다.`
+          : rightOnlyMuscles.length === 0
+            ? `공통 타겟(${sharedMuscles.join(', ')})을 기반으로 [${left.nameKo}]는 추가로 [${leftOnlyMuscles.join(', ')}] 협응이 결합되고, [${right.nameKo}]는 공통 주동근 제어에 집중합니다.`
+            : `공통 타겟(${sharedMuscles.join(', ')}) 외에 [${left.nameKo}]는 [${leftOnlyMuscles.join(', ')}], [${right.nameKo}]는 [${rightOnlyMuscles.join(', ')}] 협응 비중이 높습니다.`
       : `[${left.nameKo}]는 [${left.targetMuscles.join(', ')}] 중심이고, [${right.nameKo}]는 [${right.targetMuscles.join(', ')}] 중심으로 주동근 타겟이 명확히 분리됩니다.`;
 
   const apparatusDiff =
@@ -973,17 +980,16 @@ export function compareCatalogMovements(
 
   return Object.freeze({
     pairId: `${left.id}__vs__${right.id}`,
-    titleKo:
-      curated && !curated.reversed
-        ? curated.note.titleKo
-        : `${left.nameKo} vs ${right.nameKo}`,
-    reasonForComparisonKo: curated?.note.reasonForComparisonKo ?? defaultReason,
+    titleKo: directCuratedNote
+      ? directCuratedNote.titleKo
+      : `${left.nameKo} vs ${right.nameKo}`,
+    reasonForComparisonKo: directCuratedNote?.reasonForComparisonKo ?? defaultReason,
     leftExerciseId: left.id,
     rightExerciseId: right.id,
     leftNameKo: left.nameKo,
     rightNameKo: right.nameKo,
     dimensions,
-    teachingDistinctionTipKo: curated?.note.teachingDistinctionTipKo ?? defaultTip,
+    teachingDistinctionTipKo: directCuratedNote?.teachingDistinctionTipKo ?? defaultTip,
   });
 }
 
