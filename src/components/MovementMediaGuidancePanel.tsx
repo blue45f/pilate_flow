@@ -20,6 +20,8 @@ import {
   inspectMobileAndBrowserTtsSupport,
   movementMediaSessionCoordinator,
 } from '../utils/koreanVoiceNarration';
+import { ReferenceLinkPolicyPreview } from '../features/referenceLinkPolicyCandidate';
+import '../features/referenceLinkPolicyCandidate/referenceLinkPolicy.css';
 import '../styles/movement-media-guidance.css';
 
 export interface MovementMediaGuidancePanelProps {
@@ -110,6 +112,7 @@ function MovementMediaGuidanceInner({
   const [showScriptText, setShowScriptText] = useState(
     () => !inspectMobileAndBrowserTtsSupport().canAttemptSpeech,
   );
+  const [showLinkPolicy, setShowLinkPolicy] = useState(false);
   const [voiceState, setVoiceState] = useState<KoreanVoiceControllerState>(() =>
     buildInitialVoiceControllerState(exercise.id),
   );
@@ -512,6 +515,21 @@ function MovementMediaGuidanceInner({
               원본 보기 ({activeMatch.source.publisher})
             </a>
           </div>
+
+          <details
+            className="mmg-link-policy-disclosure"
+            onToggle={(event) => setShowLinkPolicy(event.currentTarget.open)}
+          >
+            <summary className="mmg-link-policy-summary">
+              외부 참고 링크 보안·자동재생 차단 정책 점검
+            </summary>
+            {showLinkPolicy && (
+              <ReferenceLinkPolicyPreview
+                exercise={exercise}
+                iframeMode="production-nocookie"
+              />
+            )}
+          </details>
         </div>
       </div>
 

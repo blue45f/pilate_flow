@@ -9,8 +9,11 @@ import {
 import type { MotionPrototypeReference } from '../data/motionReferences';
 import { clampMotionProgress, getMotionPhase, getMotionPose } from '../utils/motionReferenceModel';
 import type { AnatomicalSide, MotionPoint, MotionPrototypeId } from '../utils/motionReferenceModel';
-import { getMotionPatternReferences } from '../data/motionPatternReferences';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
+import {
+  resolvePatternReferencesForRenderer,
+  resolveRenderableMotionDescriptor,
+} from '../features/motionCoverage';
 import { MotionPatternPreview } from './MotionPatternPreview';
 import '../styles/motion-reference.css';
 
@@ -548,7 +551,8 @@ export function MotionReferencePlayer({
   if (kind === 'rest') return null;
   if (mode === 'prototype-lab' && !exerciseId?.trim()) return <PrototypeLab active={active} />;
   const reference = exerciseId ? getExerciseMotionReference(exerciseId) : null;
-  const patterns = exerciseId ? getMotionPatternReferences(exerciseId) : [];
+  const descriptor = resolveRenderableMotionDescriptor(exerciseId);
+  const patterns = exerciseId ? resolvePatternReferencesForRenderer(exerciseId) : [];
   const name = exerciseName || reference?.exerciseName || '이 동작';
   if (patterns.length)
     return (
@@ -565,6 +569,11 @@ export function MotionReferencePlayer({
       className={`motion-reference motion-reference-pending ${className}`}
       aria-label="동작 모션 제작 상태"
       data-motion-status="not_authored"
+      data-motion-coverage-mode={descriptor.mode}
+      data-readiness-state={descriptor.readinessState}
+      data-three-phase-schematic={descriptor.resolution.threePhase2d.supported ? 'true' : 'false'}
+      data-true-3d="false"
+      data-manual-ready="false"
     >
       <span className="motion-reference-badge">모션 제작 대기</span>
       <h3>아직 연결된 도해가 없어요</h3>

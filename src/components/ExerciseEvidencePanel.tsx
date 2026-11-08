@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { ChevronDown, ExternalLink, FileCheck2 } from 'lucide-react';
 import { MotionCoverageEvidenceDlItems } from '../features/motionCoverage/integrationExamples';
+import { ALL_MOTION_EVIDENCE_REVIEW_RECORDS } from '../features/motionEvidenceReview';
 import { normalizeReferenceUrlPolicy } from '../features/referenceLinkPolicyCandidate';
 import type { PilatesExercise, SequenceStep } from '../types/pilates';
 import { getExerciseEvidence, safeEvidenceHttpUrl } from '../utils/exerciseEvidence';
@@ -23,6 +24,9 @@ export function ExerciseEvidencePanel({ exercise, step }: ExerciseEvidencePanelP
   const evidence = getExerciseEvidence(exercise);
   const { planning, source, motion } = evidence;
   const inputLink = source.kind === 'unverified-link';
+  const biomechReview = ALL_MOTION_EVIDENCE_REVIEW_RECORDS.find(
+    (r) => r.exerciseId === exercise.id,
+  );
 
   return (
     <section className="exercise-evidence-panel" aria-label={`${exercise.nameKo} 근거와 검토 상태`}>
@@ -165,12 +169,16 @@ export function ExerciseEvidencePanel({ exercise, step }: ExerciseEvidencePanelP
             {evidence.links.length > 0 && (
               <div className="eep-links">
                 {evidence.links.map((link) => {
-                  const policy = normalizeReferenceUrlPolicy(link.href);
+                  const policy = normalizeReferenceUrlPolicy(link.href, {
+                    embedPolicy: 'external-link-only',
+                    forbidTimeSeekTransplant: link.kind === 'source',
+                  });
+                  if (!policy.ok || !policy.canonicalExternalUrl) return null;
                   return (
                     <a
-                      key={`${link.kind}-${link.href}`}
-                      href={link.href}
-                      data-url-policy={policy.ok ? policy.provider : 'external-http'}
+                      key={`${link.kind}-${policy.canonicalExternalUrl}`}
+                      href={policy.canonicalExternalUrl}
+                      data-url-policy={policy.provider}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -220,6 +228,57 @@ export function ExerciseEvidencePanel({ exercise, step }: ExerciseEvidencePanelP
               적합성을 확인한 것이 아닙니다.
             </p>
             <p className="eep-muted">{motion.description}</p>
+            {biomechReview && (
+              <div
+                className="exercise-evidence-biomech"
+                data-testid="motion-evidence-review-section"
+              >
+                <dl>
+                  <div>
+                    <dt>생체역학·해부학 근거 조사 트랙</dt>
+                    <dd>
+                      {biomechReview.track === 'track-a-mat'
+                        ? 'Track A 매트 핵심 동작'
+                        : 'Track B 기구 핵심 동작'}{' '}
+                      (#{biomechReview.rankInTrack}) · 3단계 구간(시작·중간·끝) · 5대 역학 항목 · 전문가 검수 대기 (expert-audit-pending)
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>시작 자세 및 관절 방향 (Start)</dt>
+                    <dd>
+                      {biomechReview.phases.start.postureAndTransitionKo} (
+                      {biomechReview.phases.start.jointDirectionsKo.join(' / ')})
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>중간 정점 및 기구·지지점 (Middle)</dt>
+                    <dd>
+                      {biomechReview.phases.middle.postureAndTransitionKo} · 지지점:{' '}
+                      {biomechReview.phases.middle.supportPointsKo.join(', ')}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>끝·복귀 및 호흡 (End)</dt>
+                    <dd>
+                      {biomechReview.phases.end.postureAndTransitionKo} · 호흡:{' '}
+                      {biomechReview.phases.end.breathingKo}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>도해 대조 권고 및 주의점</dt>
+                    <dd>
+                      <ul>
+                        {biomechReview.discrepancyAudit.diagramTeamRecommendationsKo.map(
+                          (rec, idx) => (
+                            <li key={idx}>{rec}</li>
+                          ),
+                        )}
+                      </ul>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            )}
           </section>
           {evidence.candidateResearch.length > 0 && (
             <section aria-labelledby={`${id}-research`}>

@@ -21,8 +21,11 @@ import {
 } from '../utils/movementIdeaDraft';
 import { PfAiStatusBadge, PfMovementCard } from '../design-system';
 import { isRestStep } from '../utils/sequenceEngine';
-import { getMotionPatternReferences } from '../data/motionPatternReferences';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
+import {
+  resolvePatternReferencesForRenderer,
+  resolveRenderableMotionDescriptor,
+} from '../features/motionCoverage';
 import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';
 import '../styles/design-tokens.css';
 import '../styles/inline-exercise-finder.css';
@@ -121,7 +124,7 @@ export function InlineExerciseFinder({
       .map(compactSearchText);
     return exercises.filter((exercise) => {
       const equipment = getExerciseEquipment(exercise);
-      const motionReferences = getMotionPatternReferences(exercise.id);
+      const motionReferences = resolvePatternReferencesForRenderer(exercise);
       if (filters.motionOnly && !motionReferences.length) return false;
       if (
         filters.equipment.length &&
@@ -493,7 +496,8 @@ export function InlineExerciseFinder({
             const stale = getExerciseReviewState(exercise) === 'stale';
             const isIdea = isMovementIdeaExercise(exercise);
             const ideaMeta = isIdea ? readMovementIdeaDraft(exercise) : null;
-            const references = getMotionPatternReferences(exercise.id);
+            const references = resolvePatternReferencesForRenderer(exercise);
+            const motionDescriptor = resolveRenderableMotionDescriptor(exercise);
             const firstReference = references[0];
             const alreadyAdded = activeSteps.some(
               (step) => !isRestStep(step) && step.exerciseId === exercise.id,
@@ -520,7 +524,11 @@ export function InlineExerciseFinder({
                   {firstReference ? (
                     <MotionPatternThumbnail reference={firstReference} />
                   ) : (
-                    <span className="ief-motion-empty">
+                    <span
+                      className="ief-motion-empty"
+                      data-motion-mode={motionDescriptor.mode}
+                      data-readiness-state={motionDescriptor.readinessState}
+                    >
                       <span aria-hidden="true">—</span>모션 도해 준비 중
                     </span>
                   )}
