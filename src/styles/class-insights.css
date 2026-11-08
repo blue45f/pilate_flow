@@ -298,9 +298,9 @@
 }
 
 .class-insights-tabs button[aria-selected='true'] {
-  background: var(--pf-color-action-ghost-hover, #d4eee4);
-  color: var(--pf-color-text-primary, #203c35);
-  border-color: transparent;
+  background: var(--pf-color-bg-surface, #fff);
+  color: var(--pf-color-text-brand, #007565);
+  border-color: var(--pf-color-border-default, #dce5e1);
 }
 
 .class-insights-summary {
