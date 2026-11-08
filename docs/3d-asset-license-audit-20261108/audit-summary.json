@@ -1,0 +1,19 @@
+{
+  "auditId": "3d-asset-license-audit-20261108",
+  "taskCode": "P2/추가14",
+  "overallStatus": "PASS",
+  "headCommit": "d0d76e6a86b8ec0204bcc869b6fd82847bdb601e",
+  "durationMs": 218,
+  "existingAppFilesReadOnly": true,
+  "assetsReplacedOrUploaded": 0,
+  "nodeTestsPassed": 5,
+  "nodeTestsTotal": 5,
+  "motionStudyLedgerCheckPassed": true,
+  "top5Priorities": [
+    "P1: Atelier 래스터 텍스처 3종(atelier-studio.webp, atelier-ring-still-life.png, atelier-reformer-still-life.png) 출처·재배포 라이선스 미확인(미확인 보고, 자산 교체/업로드 미수행)",
+    "P2: 절차적 3D/2D 모델 5종(supine-single-leg-reach-v1, bridge-pattern, heel-slide 미확인 + supported-heel-raise, side-lying-clam src/models 단독 LICENSE.txt 누락)",
+    "P3: MIT 라이선스 3D 모델군(supine-chest-lift 단독 chest-lift-LICENSE.txt 누락 및 프로덕션 dist/ 번들·UI 내 MIT 저작권/허가 고지 미포함)",
+    "P4: 4개 모델(supported-heel-raise, side-lying-clam, side-lying-straight-leg-lift, side-lying-open-book)의 sources 배열 내 sourceId·factualRecordSha256 누락으로 인한 unbound-reference 판정",
+    "P5: 재배포 매니페스트 및 원장 불일치(PUBLIC_EXPORT_MANIFEST.json 내 movement-guides/icons 누락, motionReviewSourceManifest.json 5개 변형 누락, motionAuthoringBatchIntegrity.json 외부 manifestSource 부재)"
+  ]
+}
