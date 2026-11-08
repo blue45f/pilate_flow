@@ -42,3 +42,11 @@ No deployment command was run. The repository workflow is a tracked-file secret 
 With upstream main `38ac8db` merged into candidate `8a2906b`, the entire unfiltered Vitest suite ran: 257 files, 2,715 tests; 256 files / 2,714 tests passed. The only failure is the existing `dynamicWorkflowFullCompletion.test.tsx:478` expectation that `ex-cooldown-01` has a rotation disclosure. The schedule worker independently reproduced that mismatch on the unchanged baseline and on upstream main. Neither that assertion nor the diagram mapping was changed. The real Chromium/PDF suite passed without exclusions.
 
 The existing visible-flow runner now opens a saved card's optional More disclosure when necessary, so its actual record/timer entry works both before and after the independent saved-card simplification. All flow assertions remain.
+
+### Final combined candidate
+
+Source commit `2247ce0aaf00fa04a32d142b14d3efaf358372f5` includes the latest schedule main `6c6b371`. The entire unfiltered suite was repeated on this final product tree: **258 files / 2,724 tests; 257 files / 2,723 tests passed**, with only the same pre-existing rotation-disclosure expectation failure described above. Duration: 321.24 seconds. No tests were skipped or assertions weakened.
+
+On this final source, TypeScript, full ESLint (zero errors and the same one warning), production build/PWA (47 static files), motion-ledger checks and secret checks passed again. Both complete class-log browser runners passed all four widths again, including validation, group creation, blank/zero/measured duration, repeated submit, draft/record persistence, Escape and focus return. A separate read-only browser pass against the saved-card candidate also passed all four widths through its visible More button; that candidate's integration is owned separately.
+
+The only final footer adjustment replaced a `:has()` selector with a sibling selector, avoiding an unnecessary browser-support dependency. An independent reviewer found no material defects in the three source/test files and reran all eight presentation tests successfully.
