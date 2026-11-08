@@ -6056,7 +6056,7 @@ function adaptTrackAssetForCatalogExercise(
     blockCategory: exercise.blockCategory,
     spinalPlanes: Object.freeze([...exercise.spinalPlanes]),
     isUnilateral: exercise.isUnilateral,
-    archetypeId: trackAsset.archetypeId,
+    archetypeId: baseAsset.archetypeId,
     archetypeTitleKo: trackAsset.archetypeTitleKo || baseAsset.archetypeTitleKo,
     staticGuideSvgPath: `/images/movement-guides/${exercise.apparatus}-phase-alignment-guide.svg`,
     productionMethod: 'free-authored-kinematic-svg-v1',
@@ -6085,20 +6085,25 @@ export const MOVEMENT_VISUAL_ASSETS: readonly CatalogMovementVisualAsset[] = Obj
   INITIAL_EXERCISES.map((exercise) => buildMovementVisualAssetForExercise(exercise)),
 );
 
-export const MOVEMENT_VISUAL_ASSET_MAP: ReadonlyMap<string, CatalogMovementVisualAsset> = new Map([
-  ...Object.entries(TRACK_I7_VISUAL_ASSET_OVERRIDES),
-  ...MOVEMENT_VISUAL_ASSETS.map(
+export const MOVEMENT_VISUAL_ASSET_MAP: ReadonlyMap<string, CatalogMovementVisualAsset> = new Map(
+  MOVEMENT_VISUAL_ASSETS.map(
     (asset): [string, CatalogMovementVisualAsset] => [asset.exerciseId, asset],
   ),
-]);
+);
 
 export function getMovementVisualAsset(
   exerciseOrId: string | PilatesExercise,
 ): CatalogMovementVisualAsset | null {
   if (typeof exerciseOrId === 'string') {
-    return MOVEMENT_VISUAL_ASSET_MAP.get(exerciseOrId) ?? null;
+    return (
+      MOVEMENT_VISUAL_ASSET_MAP.get(exerciseOrId) ??
+      TRACK_I7_VISUAL_ASSET_OVERRIDES[exerciseOrId] ??
+      null
+    );
   }
-  const existing = MOVEMENT_VISUAL_ASSET_MAP.get(exerciseOrId.id);
+  const existing =
+    MOVEMENT_VISUAL_ASSET_MAP.get(exerciseOrId.id) ??
+    TRACK_I7_VISUAL_ASSET_OVERRIDES[exerciseOrId.id];
   if (existing) return existing;
   return buildMovementVisualAssetForExercise(exerciseOrId);
 }

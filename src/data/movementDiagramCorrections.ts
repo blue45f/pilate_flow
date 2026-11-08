@@ -1,6 +1,7 @@
 import { getCoreI7RegistryPatch } from './coreAbdominalDiagrams';
 import { getExtensionDiagramCorrections } from './extensionMovementData';
 import { getHipLegDiagramCorrections } from './hip-leg-diagram-data';
+import { getMovementVisualAsset } from './movementVisualRigCatalog';
 import { getPelvisHipDiagramCorrections } from './pelvisHipDiagramData';
 import { getRotationI7IntegrationBundle } from './rotationDiagramData';
 import { getShoulderSupportRegistryIntegrationPayload } from './shoulderSupportDiagrams';
@@ -47,7 +48,7 @@ const corePatch = getCoreI7RegistryPatch();
 const shoulderPayload = getShoulderSupportRegistryIntegrationPayload();
 const rotationBundle = getRotationI7IntegrationBundle();
 
-export const MOVEMENT_DIAGRAM_CORRECTIONS: Readonly<Record<string, MovementDiagramCorrection>> = Object.freeze({
+const RAW_DIAGRAM_CORRECTIONS: Record<string, MovementDiagramCorrection> = {
   ...BASE_SIDE_LYING_CORRECTIONS,
   ...getSpineMovementDiagramCorrections(),
   ...getPelvisHipDiagramCorrections(),
@@ -56,5 +57,23 @@ export const MOVEMENT_DIAGRAM_CORRECTIONS: Readonly<Record<string, MovementDiagr
   ...shoulderPayload.corrections,
   ...rotationBundle.diagramCorrections,
   ...corePatch.corrections,
-});
+};
+
+export const MOVEMENT_DIAGRAM_CORRECTIONS: Readonly<Record<string, MovementDiagramCorrection>> = Object.freeze(
+  Object.fromEntries(
+    Object.entries(RAW_DIAGRAM_CORRECTIONS).map(([id, correction]) => {
+      const asset = getMovementVisualAsset(id);
+      if (asset && asset.archetypeId !== correction.archetypeId) {
+        return [
+          id,
+          Object.freeze({
+            ...correction,
+            archetypeId: asset.archetypeId,
+          }),
+        ];
+      }
+      return [id, correction];
+    }),
+  ),
+);
 

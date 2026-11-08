@@ -18,10 +18,35 @@ if (typeof globalThis.window === 'undefined') {
   (globalThis as Record<string, unknown>).window = globalThis;
 }
 
-const CHROMIUM_BINARY = '/usr/bin/chromium';
-const PDFINFO_BINARY = '/usr/bin/pdfinfo';
-const PDFTOTEXT_BINARY = '/usr/bin/pdftotext';
-const PDFTOPPM_BINARY = '/usr/bin/pdftoppm';
+function resolveBinary(candidates: readonly string[]): string {
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return candidates[0]!;
+}
+
+const CHROMIUM_BINARY = resolveBinary([
+  '/usr/bin/chromium',
+  '/usr/bin/chromium-browser',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+]);
+const PDFINFO_BINARY = resolveBinary([
+  '/usr/bin/pdfinfo',
+  '/opt/homebrew/bin/pdfinfo',
+  '/usr/local/bin/pdfinfo',
+]);
+const PDFTOTEXT_BINARY = resolveBinary([
+  '/usr/bin/pdftotext',
+  '/opt/homebrew/bin/pdftotext',
+  '/usr/local/bin/pdftotext',
+]);
+const PDFTOPPM_BINARY = resolveBinary([
+  '/usr/bin/pdftoppm',
+  '/opt/homebrew/bin/pdftoppm',
+  '/usr/local/bin/pdftoppm',
+]);
 
 function assertLocalPopplerAndChromiumBinaries(): void {
   for (const bin of [CHROMIUM_BINARY, PDFINFO_BINARY, PDFTOTEXT_BINARY, PDFTOPPM_BINARY]) {
