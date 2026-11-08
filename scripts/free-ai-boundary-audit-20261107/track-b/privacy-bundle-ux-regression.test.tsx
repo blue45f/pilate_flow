@@ -2,9 +2,12 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFreeAiRoutes, createFreeAiService } from '../../../backend/freeAiService';
-import { FreeAiAssistantPanel } from '../../../src/components/FreeAiAssistantPanel';
+import {
+  FREE_AI_DRAFT_STORAGE_KEY,
+  FreeAiAssistantPanel,
+} from '../../../src/components/FreeAiAssistantPanel';
 import {
   assertNoBrowserKeyExposure,
   createDefaultFreeAiStatus,
@@ -32,6 +35,12 @@ import {
 
 const REPO_ROOT = process.cwd();
 const DIST_DIR = path.join(REPO_ROOT, 'dist');
+
+beforeEach(() => {
+  // Each audit starts a fresh draft; DOM cleanup does not clear session recovery.
+  // Preserve recovery within each test and avoid touching unrelated storage.
+  sessionStorage.removeItem(FREE_AI_DRAFT_STORAGE_KEY);
+});
 
 /**
  * Runtime-constructed synthetic secret fixtures so static git-tracked scanners
