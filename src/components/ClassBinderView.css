@@ -61,13 +61,13 @@
 }
 #root .teaching-collection--history .teaching-history-feed { gap: 32px; }
 #root .teaching-collection--history .teaching-history-date-header {
-  display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 0; background: transparent; border: 0;
+  display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 12px; background: #eaf1ef; border: 0; border-radius: 10px;
   font-size: 16px; line-height: 1.5;
 }
 #root .teaching-collection--history .teaching-history-date-count { font-size: 14px; background: transparent; }
 #root .teaching-collection--history .teaching-history-card {
-  display: flex; flex-direction: column; align-items: stretch; gap: 16px;
-  padding: 24px; border-radius: 16px; min-width: 0; max-width: 100%; overflow: visible;
+  display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+  padding: 18px; border-radius: 16px; min-width: 0; max-width: 100%; overflow: visible;
   box-shadow: 0 3px 16px rgb(35 66 61 / 3%);
 }
 #root .teaching-collection--history .teaching-card-top {
@@ -83,11 +83,14 @@
   white-space: normal; overflow-wrap: anywhere;
 }
 #root .teaching-collection--history .teaching-history-card h2 {
-  font-size: 20px; line-height: 1.5; margin: 0; white-space: normal; overflow-wrap: anywhere;
+  font-size: 18px; line-height: 1.5; margin: 0; white-space: normal; overflow-wrap: anywhere;
 }
 #root .teaching-collection--history .teaching-reflection {
   font-size: 16px; line-height: 1.7; margin: 0; padding: 0 0 0 12px;
   white-space: pre-wrap; overflow-wrap: anywhere; color: #43554f;
+}
+#root .teaching-collection--history .teaching-history-card .teaching-reflection {
+  font-size: 14px; line-height: 1.6; padding-left: 10px;
 }
 #root .teaching-collection--history .teaching-history-details { min-width: 0; }
 #root .teaching-collection--history .teaching-history-details summary {
@@ -104,13 +107,16 @@
 #root .teaching-collection--history .teaching-rest-summary { margin: 0 0 12px; }
 #root .teaching-collection--history .teaching-history-bottom {
   display: flex; flex-direction: column; align-items: stretch; gap: 12px;
-  margin: 0; padding-top: 16px; border-top: 1px solid #e2e9e4;
+  margin: 0; padding-top: 10px; border-top: 1px solid #e2e9e4;
 }
 #root .teaching-collection--history .teaching-history-bottom > .muted {
   display: block; flex: none; font-size: 14px; line-height: 1.6; white-space: normal; overflow-wrap: anywhere;
 }
 #root .teaching-collection--history .teaching-history-actions {
-  display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 8px;
+}
+#root .teaching-collection--history .teaching-history-actions button {
+  min-width: 0; width: 100%; height: auto; order: 0; word-break: keep-all; overflow-wrap: anywhere;
 }
 #root .teaching-collection--history :is(button,.pf-button) {
   min-height: 44px; font-size: 14px; line-height: 1.5; white-space: normal;
@@ -124,10 +130,12 @@
 @container history-collection (max-width: 520px) {
   #root .teaching-collection--history .teaching-page-header { gap: 12px; }
   #root .teaching-collection--history .teaching-page-header h1 { font-size: 26px; }
-  #root .teaching-collection--history .teaching-history-card { padding: 18px; gap: 12px; }
-  #root .teaching-collection--history .teaching-history-actions { display: grid; grid-template-columns: minmax(0,1fr); }
-  #root .teaching-collection--history .teaching-history-actions button { width: 100%; }
-  #root .teaching-collection--history .teaching-history-actions button:first-child { order: 2; }
+  #root .teaching-collection--history .teaching-history-card { padding: 16px; gap: 10px; }
+}
+
+/* Keep DOM, visual and keyboard order identical. Narrow cards need full-width labels. */
+@container history-collection (max-width: 340px) {
+  #root .teaching-collection--history .teaching-history-actions { grid-template-columns: minmax(0,1fr); }
 }
 
 #root .teaching-collection--history .teaching-page-header > button { grid-column: 2; grid-row: 1; }
@@ -144,7 +152,7 @@
 
 /* The shared body minimum otherwise doubles to 640px at 200% zoom. */
 body:has(.teaching-collection--history) { min-width: 0; }
-@container history-collection (max-width: 260px) {
+@container history-collection (max-width: 340px) {
   #root .teaching-collection--history .teaching-page-header { grid-template-columns: minmax(0,1fr); }
   #root .teaching-collection--history .teaching-page-header > button { grid-column: 1; grid-row: 3; }
 }

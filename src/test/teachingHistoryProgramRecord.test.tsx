@@ -341,8 +341,8 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
     expect(screen.getByRole('heading', { name: '목요 리포머 정규 시퀀스' })).toBeInTheDocument();
     fireEvent.change(searchInput, { target: { value: '' } });
 
-    // 5. Reopen the completed history snapshot ("이력 다시 열기")
-    fireEvent.click(historyCard.getByRole('button', { name: '이력 다시 열기' }));
+    // 5. Reopen the completed history snapshot ("당시 시퀀스 보기")
+    fireEvent.click(historyCard.getByRole('button', { name: '당시 시퀀스 보기' }));
     const reopenDialog = within(screen.getByRole('dialog', { name: '진행 완료 수업 이력 상세' }));
     expect(reopenDialog.getByText(/진행 완료 이력 스냅샷/)).toBeInTheDocument();
     expect(reopenDialog.getByText(/블록 스냅샷: 당시 리포머 도입 블록 \(v1\)/)).toBeInTheDocument();
@@ -610,7 +610,7 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
       within(historyCard).getByText('원본 수정 후에도 당시 스냅샷 유지됨'),
     ).toBeInTheDocument();
 
-    fireEvent.click(within(historyCard).getByRole('button', { name: '이력 다시 열기' }));
+    fireEvent.click(within(historyCard).getByRole('button', { name: '당시 시퀀스 보기' }));
     const reopenDialog = within(
       screen.getByRole('dialog', { name: '진행 완료 수업 이력 상세' }),
     );
@@ -764,7 +764,7 @@ describe('completed teaching program history snapshot, immutability, reopen/copy
 
     render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
 
-    const copyBtn = screen.getByRole('button', { name: '이 수업 다시 계획' });
+    const copyBtn = screen.getByRole('button', { name: '복사해 새 수업 만들기' });
     fireEvent.click(copyBtn);
     fireEvent.click(copyBtn);
 

@@ -204,7 +204,7 @@ describe('saved classes and histories containing real rest steps', () => {
       .getByRole('heading', { name: '현재 초안과 최근 수업' })
       .closest('section')!;
     expect(repeat).toHaveTextContent('2 / 2개');
-    fireEvent.click(card.getByRole('button', { name: '이 수업 다시 계획' }));
+    fireEvent.click(card.getByRole('button', { name: '복사해 새 수업 만들기' }));
     expect(usePilatesStore.getState().activeSteps).toEqual(log.stepsSnapshot);
     expect(usePilatesStore.getState().activeTargetMinutes).toBe(60);
     expect(usePilatesStore.getState().draftCriteria?.restMinutes).toBe(10);
@@ -224,7 +224,7 @@ describe('saved classes and histories containing real rest steps', () => {
     );
     expect(card.getByText('1개 동작')).toBeInTheDocument();
     expect(card.getByText('휴식 1개')).toBeInTheDocument();
-    expect(card.getByRole('button', { name: '이 수업 다시 계획' })).toBeDisabled();
+    expect(card.getByRole('button', { name: '복사해 새 수업 만들기' })).toBeDisabled();
     expect(card.getByText('휴식 05:00')).toBeInTheDocument();
     expect(card.getByText('삭제된 동작')).toBeInTheDocument();
   });

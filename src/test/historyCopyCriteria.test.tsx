@@ -218,7 +218,7 @@ describe('history copies create matching independent current conditions', () => 
     const before = usePilatesStore.getState();
     const frozenLog = structuredClone(before.historyLogs[0]);
     render(<Journey />);
-    fireEvent.click(screen.getByRole('button', { name: '이 수업 다시 계획' }));
+    fireEvent.click(screen.getByRole('button', { name: '복사해 새 수업 만들기' }));
     const after = usePilatesStore.getState();
     expect(after.activeSteps).toEqual(frozenLog.stepsSnapshot);
     expect(after.activeSteps).not.toBe(frozenLog.stepsSnapshot);
@@ -356,7 +356,7 @@ describe('history copies create matching independent current conditions', () => 
     const before = usePilatesStore.getState();
     render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '이 수업 다시 계획' }));
+    fireEvent.click(screen.getByRole('button', { name: '복사해 새 수업 만들기' }));
     const after = usePilatesStore.getState();
     expect(screen.getByRole('alert')).toHaveTextContent(/휴식 합계.*지원/);
     expect(screen.getByRole('alert')).not.toHaveTextContent('다른 작업에서 남은 이전 오류');
