@@ -37,6 +37,7 @@ import { LightDismissDialog } from './LightDismissDialog';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/teaching.css';
 import '../styles/class-voice.css';
+import '../styles/live-stage-design.css';
 import { useClassVoiceGuidance } from '../hooks/useClassVoiceGuidance';
 
 export interface LiveStageNavigationHandle {
@@ -143,6 +144,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const [exitOpen, setExitOpen] = useState(false);
   const [showAllCues, setShowAllCues] = useState(false);
   const [showCueSheet, setShowCueSheet] = useState(false);
+  const [outlineInitiallyOpen] = useState(() => window.innerWidth > 1000);
   const wakeRef = useRef<WakeLockSentinel | null>(null);
   const mounted = useRef(true);
   const runningIntent = useRef(false);
@@ -558,10 +560,6 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       ref={boardRef}
       className={`teaching-stage ${highContrast ? 'teaching-high-contrast' : ''}`}
     >
-      <p className="teaching-safety">
-        실제 수행 전 몸 상태와 기구 설정을 확인하세요. 검토 기록은 자격 인증이나 개인별 운동 적합성
-        보장이 아닙니다.
-      </p>
       <header className="teaching-stage-header">
         <div>
           <button type="button" className="teaching-back" onClick={pauseForExit}>
@@ -577,14 +575,18 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             <strong>{formatSecondsToMMSS(clock.elapsedMs / 1000)}</strong>{' '}
             <span>일시정지 시간 제외</span>
           </p>
-          <p className="muted">
-            계획 운동 {formatSecondsToMMSS(plannedTiming.exerciseSec)} · 휴식{' '}
-            {formatSecondsToMMSS(plannedTiming.restSec)} · 휴식은 전체 수업 시간에 포함됩니다.
-          </p>
-          <p className="muted">
-            타이머 운동 {formatSecondsToMMSS(Math.max(0, clock.elapsedMs / 1000 - trackedRestSec))}{' '}
-            · 휴식 {formatSecondsToMMSS(trackedRestSec)}
-          </p>
+          <details className="teaching-time-details">
+            <summary>운동·휴식 시간 상세</summary>
+            <p className="muted">
+              계획 운동 {formatSecondsToMMSS(plannedTiming.exerciseSec)} · 휴식{' '}
+              {formatSecondsToMMSS(plannedTiming.restSec)} · 휴식은 전체 수업 시간에 포함됩니다.
+            </p>
+            <p className="muted">
+              타이머 운동{' '}
+              {formatSecondsToMMSS(Math.max(0, clock.elapsedMs / 1000 - trackedRestSec))} · 휴식{' '}
+              {formatSecondsToMMSS(trackedRestSec)}
+            </p>
+          </details>
         </div>
         <div className="teaching-stage-utility">
           <button
@@ -790,14 +792,17 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               <span>시간 종료 시 다음 동작</span>
             </label>
           </div>
-          <section className="teaching-cue-section" aria-label="수업 음성 안내 설정">
+          <p className="teaching-safety">
+            실제 수행 전 몸 상태와 기구 설정을 확인하세요. 검토 기록은 자격 인증이나 개인별 운동
+            적합성 보장이 아닙니다.
+          </p>
+          <section
+            className="teaching-cue-section teaching-voice-section"
+            aria-label="수업 음성 안내 설정"
+          >
             <h3>
               <Volume2 size={18} /> 기기 음성 안내
             </h3>
-            <p className="muted">
-              이 수업에서 켠 뒤 타이머를 시작하면 검토한 동작·호흡 메모와 계획 시간을 읽습니다. 무료
-              기기 한국어 음성만 사용하며, 호흡 속도나 새 운동 지침을 만들지 않습니다.
-            </p>
             <div className="button-row">
               <button
                 type="button"
@@ -817,25 +822,32 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 음성 즉시 중지
               </button>
             </div>
-            <fieldset className="teaching-voice-options" disabled={!classVoice.available}>
-              <legend>읽어 줄 내용</legend>
-              {(
-                [
-                  ['movement', '동작·구간 안내'],
-                  ['breath', '검토한 호흡 메모'],
-                  ['time', '남은 시간·종료 안내'],
-                ] as const
-              ).map(([key, label]) => (
-                <label className="teaching-switch" key={key}>
-                  <input
-                    type="checkbox"
-                    checked={classVoice.preferences[key]}
-                    onChange={(event) => classVoice.changePreference(key, event.target.checked)}
-                  />
-                  <span>{label}</span>
-                </label>
-              ))}
-            </fieldset>
+            <details className="teaching-voice-details">
+              <summary>음성 안내 내용과 설정</summary>
+              <p className="muted">
+                이 수업에서 켠 뒤 타이머를 시작하면 검토한 동작·호흡 메모와 계획 시간을 읽습니다.
+                무료 기기 한국어 음성만 사용하며, 호흡 속도나 새 운동 지침을 만들지 않습니다.
+              </p>
+              <fieldset className="teaching-voice-options" disabled={!classVoice.available}>
+                <legend>읽어 줄 내용</legend>
+                {(
+                  [
+                    ['movement', '동작·구간 안내'],
+                    ['breath', '검토한 호흡 메모'],
+                    ['time', '남은 시간·종료 안내'],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label className="teaching-switch" key={key}>
+                    <input
+                      type="checkbox"
+                      checked={classVoice.preferences[key]}
+                      onChange={(event) => classVoice.changePreference(key, event.target.checked)}
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </fieldset>
+            </details>
             <p className="muted" role="status">
               {classVoice.error ||
                 (!classVoice.available
@@ -846,7 +858,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             </p>
           </section>
           {exercise && !currentIsRest ? (
-            <section className="teaching-cue-section">
+            <details className="teaching-cue-section teaching-stage-details">
+              <summary>티칭 큐와 메모</summary>
               <h3>
                 <Volume2 size={18} />
                 지금 전할 큐
@@ -876,7 +889,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   <strong>내 메모</strong> {current.instructorNote}
                 </p>
               )}
-            </section>
+            </details>
           ) : (
             <section className="teaching-rest-note">
               <p>휴식 중에는 동작 큐나 기구 설정을 표시하지 않습니다.</p>
@@ -929,8 +942,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             )}
           </section>
           {exercise && !currentIsRest && (
-            <section className="panel teaching-setup-panel">
-              <h2 className="section-heading">현재 세팅</h2>
+            <details className="panel teaching-setup-panel teaching-stage-details">
+              <summary>현재 세팅 · 주의사항</summary>
               <dl>
                 <div>
                   <dt>스프링 원문</dt>
@@ -964,36 +977,39 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   확인하세요.
                 </span>
               </p>
-            </section>
+            </details>
           )}
+          <details
+            className="panel teaching-stage-outline teaching-stage-details"
+            open={outlineInitiallyOpen}
+          >
+            <summary>오늘의 흐름</summary>
+            <div className="teaching-outline-heading">
+              <span className="muted">선택하면 해당 동작의 타이머가 다시 시작됩니다.</span>
+            </div>
+            <ol>
+              {steps.map((step, index) => (
+                <li key={step.stepId}>
+                  <button
+                    type="button"
+                    className={index === clock.index ? 'current' : ''}
+                    aria-current={index === clock.index ? 'step' : undefined}
+                    onClick={() => selectStep(index)}
+                  >
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <strong>
+                      {isRestStep(step)
+                        ? '휴식'
+                        : (exerciseMap.get(step.exerciseId)?.nameKo ?? '삭제된 동작')}
+                    </strong>
+                    <small>{formatSecondsToMMSS(step.durationMin * 60)}</small>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </details>
         </aside>
       </div>
-      <section className="panel teaching-stage-outline">
-        <div className="teaching-outline-heading">
-          <h2 className="section-heading">오늘의 흐름</h2>
-          <span className="muted">선택하면 해당 동작의 타이머가 다시 시작됩니다.</span>
-        </div>
-        <ol>
-          {steps.map((step, index) => (
-            <li key={step.stepId}>
-              <button
-                type="button"
-                className={index === clock.index ? 'current' : ''}
-                aria-current={index === clock.index ? 'step' : undefined}
-                onClick={() => selectStep(index)}
-              >
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <strong>
-                  {isRestStep(step)
-                    ? '휴식'
-                    : (exerciseMap.get(step.exerciseId)?.nameKo ?? '삭제된 동작')}
-                </strong>
-                <small>{formatSecondsToMMSS(step.durationMin * 60)}</small>
-              </button>
-            </li>
-          ))}
-        </ol>
-      </section>
       <div className="teaching-stage-footer">
         <label className="teaching-switch">
           <input
