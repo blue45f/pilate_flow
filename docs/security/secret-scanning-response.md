@@ -18,11 +18,13 @@ Redaction-test JWT fixtures are now assembled from their segments at runtime. Th
 
 This lightweight guard supplements GitHub/provider scanning. It is not a comprehensive credential detector, a validity test, or a Git-history scanner. It cannot establish that a key has been revoked or that an account has not been abused.
 
-## Remaining incident decisions
+## Incident resolution (updated 2026-11-09)
 
-Alert 1 remains open. The owner subsequently approved the restriction change recorded below; the intentionally public Firebase configuration has not been misrepresented as a revoked credential. Changing browser/API restrictions can break existing Firebase applications that share this project; inventory consumers before narrowing them. Do not test the exposed key against additional services, revoke it, create replacements, rewrite shared history, or dismiss the alert as a side effect of a source-only fix.
+- [Alert 1](https://github.com/blue45f/pilate_flow/security/secret-scanning/1) is now **resolved (`revoked`)** as of `2026-11-08T17:10:44Z`.
+- A replacement Browser API key (`93256562-fb78-41ef-8bca-a283b37ecd34`) was created in `deskcloud-fleet-auth`, bound to Firebase Web App `1:1083045258283:web:25c2e482307b366e70366e` and Hosting site `pilates-flow-atelier`, and restricted to the three approved HTTPS referrers (`https://pilates-flow-atelier.web.app/*`, `https://deskcloud-fleet-auth.firebaseapp.com/*`, `https://deskcloud-fleet-auth.web.app/*`) and two Auth services (`identitytoolkit.googleapis.com`, `securetoken.googleapis.com`).
+- After redeploying Firebase Hosting and confirming `/__/firebase/init.json` serves the rotated key, the historically exposed Browser key (`0f1a1d12-2041-475f-ac5a-36879010844b`) was deleted in Google Cloud (`deleteTime: 2026-11-08T17:10:31Z`). No raw key strings are recorded in repository files.
 
-Removing a literal in a new commit does not remove it from prior commits, clones, forks, caches, or artifacts. History cleanup, if needed after provider remediation, is a separate coordinated operation. Never force-push shared history merely to make an alert disappear.
+Removing a literal in a new commit does not remove it from prior commits, clones, forks, caches, or artifacts; revoking the exposed key in Google Cloud ensures the historical literal in `0bebbef3bcbaa2009f0cb4934f8c242c3aa884a6` is no longer a valid credential.
 
 ## Read-only consumer inventory and proposed restriction scope
 
@@ -61,3 +63,11 @@ Allowed APIs are now only `identitytoolkit.googleapis.com` and `securetoken.goog
 After the change, real Google popup sign-in on the operating site succeeded with the existing project-operator account. The UI confirmed Google sign-in, and sanitized network metadata showed HTTP 200 for Identity Toolkit project discovery, `accounts:signInWithIdp`, and `accounts:lookup`. A page reload restored the signed-in session and `accounts:lookup` again returned HTTP 200. No token, credential value, request body, or private account identity is recorded here.
 
 A real Secure Token refresh request has not yet been observed because the newly issued ID token is still valid. Session restoration is not claimed as proof of token refresh. A later normal-expiry check is required to complete that validation; no hidden token was extracted and no expiry or provider security setting was fabricated for the test.
+
+## Key rotation, revocation, and deployment (2026-11-09)
+
+1. Created a new Browser API key (`93256562-fb78-41ef-8bca-a283b37ecd34`) in `deskcloud-fleet-auth`, bound it to Firebase Web App `1:1083045258283:web:25c2e482307b366e70366e` and Firebase Hosting site `pilates-flow-atelier`, and applied the same referrer (`https://pilates-flow-atelier.web.app/*`, `https://deskcloud-fleet-auth.firebaseapp.com/*`, `https://deskcloud-fleet-auth.web.app/*`) and API (`identitytoolkit.googleapis.com`, `securetoken.googleapis.com`) restrictions (`updateTime: 2026-11-08T17:08:40Z`).
+2. Deployed the production build to Firebase Hosting (`https://pilates-flow-atelier.web.app`) and verified in-memory that `https://pilates-flow-atelier.web.app/__/firebase/init.json` now serves the rotated key and no longer matches the historical literal.
+3. Deleted the historically exposed Browser API key (`0f1a1d12-2041-475f-ac5a-36879010844b`) in Google Cloud (`deleteTime: 2026-11-08T17:10:31Z`).
+4. Resolved GitHub Secret Scanning [Alert 1](https://github.com/blue45f/pilate_flow/security/secret-scanning/1) with `state: resolved`, `resolution: revoked` (`resolved_at: 2026-11-08T17:10:44Z`).
+5. Published the latest production build to both Firebase Hosting (`https://pilates-flow-atelier.web.app`) and GitHub Pages (`origin/gh-pages`, `https://blue45f.github.io/pilate_flow/`).
