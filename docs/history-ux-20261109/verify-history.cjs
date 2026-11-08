@@ -35,7 +35,11 @@ const origin = new URL(base).origin;
         window.__historyReviewSignature = () => JSON.stringify(Object.fromEntries(['activeTab', 'activeSequenceId', 'activeTitle', 'activeSubtitle', 'activeSteps', 'activeTargetMinutes', 'activeTargetGroupId', 'draftCriteria', 'lastCriteria', 'historyLogs', 'savedSequences', 'exercises', 'classGroups', 'undoStack'].map(k => [k, usePilatesStore.getState()[k]])));
       });
       await page.getByRole('heading', { name: /수업 기록/, level: 1 }).waitFor();
-      if(spec.text)await page.addStyleTag({content:'html{font-size:200%!important}'});
+      if(spec.text)await page.evaluate(()=>{
+        // Double actual computed text sizes, including fixed-pixel history styles.
+        const sizes=[...document.querySelectorAll('body *')].map(e=>[e,parseFloat(getComputedStyle(e).fontSize)]);
+        for(const [e,size] of sizes)if(Number.isFinite(size))e.style.setProperty('font-size',`${size*2}px`,'important');
+      });
       if(spec.long)await page.evaluate(()=>{const s=window.__historyReviewStore; s.setState({historyLogs:s.getState().historyLogs.map((log,i)=>i?log:{...log,sequenceTitle:'긴수업제목'.repeat(15),groupName:'긴수업그룹'.repeat(12),instructorReflection:'긴 기록 메모와 줄바꿈을 유지합니다.\n'.repeat(8)})});});
       await page.screenshot({ path: `${__dirname}/after-${label}-full.png`, fullPage: true, scale: 'css' });
       await page.screenshot({ path: `${__dirname}/after-${label}-viewport.png`, fullPage: false, scale: 'css' });
@@ -56,6 +60,7 @@ const origin = new URL(base).origin;
       const copy=first.getByRole('button',{name:'복사해 새 수업 만들기',exact:true});
       await view.focus(); await page.keyboard.press('Tab');
       assert.equal(await copy.evaluate(e=>e===document.activeElement),true);
+      if(spec.text)assert.equal(await first.getByRole('heading',{level:2}).evaluate(e=>parseFloat(getComputedStyle(e).fontSize)),36);
       const before = await page.evaluate(() => window.__historyReviewSignature());
       const opener = page.getByRole('button', { name: /이력 다시 열기|당시 시퀀스 보기/ }).first();
       await opener.focus(); await page.keyboard.press('Enter');

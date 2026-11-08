@@ -1,0 +1,732 @@
+[
+  {
+    "spec": {
+      "width": 320,
+      "height": 760
+    },
+    "geometry": {
+      "overflow": 0,
+      "viewportHeight": 760,
+      "heading": {
+        "text": "수업 기록\n2\n\n지난 수업을 다음 계획으로 이어가세요.\n\n수업 그룹 추가",
+        "x": 16,
+        "y": 79,
+        "w": 288,
+        "h": 152.1875,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "firstCard": {
+        "text": "매트 기본 수업\n2026년 11월 5일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 16,
+        "y": 546.578125,
+        "w": 288,
+        "h": 359.171875,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "secondCard": {
+        "text": "소그룹 수업\n2026년 11월 3일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n원본 수정 후에도 당시 스냅샷 유지됨\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 16,
+        "y": 998.75,
+        "w": 288,
+        "h": 399.5625,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "actions": [
+        {
+          "text": "당시 시퀀스 보기",
+          "x": 33,
+          "y": 737.75,
+          "w": 254,
+          "h": 44,
+          "order": "0",
+          "background": "rgb(23, 103, 92)",
+          "color": "rgb(255, 254, 249)"
+        },
+        {
+          "text": "복사해 새 수업 만들기",
+          "x": 33,
+          "y": 789.75,
+          "w": 254,
+          "h": 44,
+          "order": "0",
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(24, 44, 48)"
+        }
+      ],
+      "dateHeader": {
+        "text": "2026년 11월 5일 (목)\n수업 기록 1건",
+        "x": 16,
+        "y": 485.578125,
+        "w": 288,
+        "h": 45,
+        "order": "0",
+        "background": "rgb(234, 241, 239)",
+        "color": "rgb(44, 67, 51)"
+      },
+      "aside": {
+        "text": "반복을 살펴보세요\n현재 초안과 최근 수업\n\n선택한 그룹의 실제 기록 최근 3회와 같은 동작 수입니다.\n\n합성 검증 수업\n2026년 11월 5일 · 매트 기본 수업\n1 / 1개\n합성 검증 수업\n2026년 11월 3일 · 소그룹 수업\n1 / 1개\n최근 5회에 포함된 동작\n합성 QA mat core alpha\n2회\n\n반복 여부는 참고 정보입니다. 회원과 수업 목표에 따라 강사가 판단해 주세요.",
+        "x": 16,
+        "y": 1426.3125,
+        "w": 288,
+        "h": 557.078125,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      }
+    },
+    "copiedWithoutMutatingOriginals": true,
+    "missingCopyDisabledViewAvailable": true,
+    "viewUnchanged": true,
+    "closedUnchanged": true,
+    "repeatedUnchanged": true,
+    "escapeFocus": true,
+    "buttonFocus": true,
+    "pageErrors": [],
+    "blockedOrigins": []
+  },
+  {
+    "spec": {
+      "width": 390,
+      "height": 844
+    },
+    "geometry": {
+      "overflow": 0,
+      "viewportHeight": 844,
+      "heading": {
+        "text": "수업 기록\n2\n\n지난 수업을 다음 계획으로 이어가세요.\n\n수업 그룹 추가",
+        "x": 16,
+        "y": 79,
+        "w": 358,
+        "h": 98.390625,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "firstCard": {
+        "text": "매트 기본 수업\n2026년 11월 5일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 16,
+        "y": 492.78125,
+        "w": 358,
+        "h": 304.78125,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "secondCard": {
+        "text": "소그룹 수업\n2026년 11월 3일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n원본 수정 후에도 당시 스냅샷 유지됨\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 16,
+        "y": 890.5625,
+        "w": 358,
+        "h": 345.171875,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "actions": [
+        {
+          "text": "당시 시퀀스 보기",
+          "x": 33,
+          "y": 661.5625,
+          "w": 158,
+          "h": 64,
+          "order": "0",
+          "background": "rgb(23, 103, 92)",
+          "color": "rgb(255, 254, 249)"
+        },
+        {
+          "text": "복사해 새 수업 만들기",
+          "x": 199,
+          "y": 661.5625,
+          "w": 158,
+          "h": 64,
+          "order": "0",
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(24, 44, 48)"
+        }
+      ],
+      "dateHeader": {
+        "text": "2026년 11월 5일 (목)\n수업 기록 1건",
+        "x": 16,
+        "y": 431.78125,
+        "w": 358,
+        "h": 45,
+        "order": "0",
+        "background": "rgb(234, 241, 239)",
+        "color": "rgb(44, 67, 51)"
+      },
+      "aside": {
+        "text": "반복을 살펴보세요\n현재 초안과 최근 수업\n\n선택한 그룹의 실제 기록 최근 3회와 같은 동작 수입니다.\n\n합성 검증 수업\n2026년 11월 5일 · 매트 기본 수업\n1 / 1개\n합성 검증 수업\n2026년 11월 3일 · 소그룹 수업\n1 / 1개\n최근 5회에 포함된 동작\n합성 QA mat core alpha\n2회\n\n반복 여부는 참고 정보입니다. 회원과 수업 목표에 따라 강사가 판단해 주세요.",
+        "x": 16,
+        "y": 1263.734375,
+        "w": 358,
+        "h": 532.390625,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      }
+    },
+    "copiedWithoutMutatingOriginals": true,
+    "missingCopyDisabledViewAvailable": true,
+    "viewUnchanged": true,
+    "closedUnchanged": true,
+    "repeatedUnchanged": true,
+    "escapeFocus": true,
+    "buttonFocus": true,
+    "pageErrors": [],
+    "blockedOrigins": []
+  },
+  {
+    "spec": {
+      "width": 768,
+      "height": 1024
+    },
+    "geometry": {
+      "overflow": 0,
+      "viewportHeight": 1024,
+      "heading": {
+        "text": "수업 기록\n2\n\n지난 수업을 다음 계획으로 이어가세요.\n\n수업 그룹 추가",
+        "x": 20,
+        "y": 81.390625,
+        "w": 728,
+        "h": 74.78125,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "firstCard": {
+        "text": "매트 기본 수업\n2026년 11월 5일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 20,
+        "y": 442.5625,
+        "w": 728,
+        "h": 288.78125,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "secondCard": {
+        "text": "소그룹 수업\n2026년 11월 3일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n원본 수정 후에도 당시 스냅샷 유지됨\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 20,
+        "y": 824.34375,
+        "w": 728,
+        "h": 329.171875,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "actions": [
+        {
+          "text": "당시 시퀀스 보기",
+          "x": 39,
+          "y": 613.34375,
+          "w": 341,
+          "h": 44,
+          "order": "0",
+          "background": "rgb(23, 103, 92)",
+          "color": "rgb(255, 254, 249)"
+        },
+        {
+          "text": "복사해 새 수업 만들기",
+          "x": 388,
+          "y": 613.34375,
+          "w": 341,
+          "h": 44,
+          "order": "0",
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(24, 44, 48)"
+        }
+      ],
+      "dateHeader": {
+        "text": "2026년 11월 5일 (목)\n수업 기록 1건",
+        "x": 20,
+        "y": 381.5625,
+        "w": 728,
+        "h": 45,
+        "order": "0",
+        "background": "rgb(234, 241, 239)",
+        "color": "rgb(44, 67, 51)"
+      },
+      "aside": {
+        "text": "반복을 살펴보세요\n현재 초안과 최근 수업\n\n선택한 그룹의 실제 기록 최근 3회와 같은 동작 수입니다.\n\n합성 검증 수업\n2026년 11월 5일 · 매트 기본 수업\n1 / 1개\n합성 검증 수업\n2026년 11월 3일 · 소그룹 수업\n1 / 1개\n최근 5회에 포함된 동작\n합성 QA mat core alpha\n2회\n\n반복 여부는 참고 정보입니다. 회원과 수업 목표에 따라 강사가 판단해 주세요.",
+        "x": 20,
+        "y": 1181.515625,
+        "w": 728,
+        "h": 291.9375,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      }
+    },
+    "copiedWithoutMutatingOriginals": true,
+    "missingCopyDisabledViewAvailable": true,
+    "viewUnchanged": true,
+    "closedUnchanged": true,
+    "repeatedUnchanged": true,
+    "escapeFocus": true,
+    "buttonFocus": true,
+    "pageErrors": [],
+    "blockedOrigins": []
+  },
+  {
+    "spec": {
+      "width": 1024,
+      "height": 768
+    },
+    "geometry": {
+      "overflow": 0,
+      "viewportHeight": 768,
+      "heading": {
+        "text": "수업 기록\n2\n\n지난 수업을 다음 계획으로 이어가세요.\n\n수업 그룹 추가",
+        "x": 240,
+        "y": 81.390625,
+        "w": 764,
+        "h": 74.78125,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "firstCard": {
+        "text": "매트 기본 수업\n2026년 11월 5일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 240,
+        "y": 442.5625,
+        "w": 764,
+        "h": 288.78125,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "secondCard": {
+        "text": "소그룹 수업\n2026년 11월 3일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n원본 수정 후에도 당시 스냅샷 유지됨\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 240,
+        "y": 824.34375,
+        "w": 764,
+        "h": 329.171875,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "actions": [
+        {
+          "text": "당시 시퀀스 보기",
+          "x": 259,
+          "y": 613.34375,
+          "w": 359,
+          "h": 44,
+          "order": "0",
+          "background": "rgb(23, 103, 92)",
+          "color": "rgb(255, 254, 249)"
+        },
+        {
+          "text": "복사해 새 수업 만들기",
+          "x": 626,
+          "y": 613.34375,
+          "w": 359,
+          "h": 44,
+          "order": "0",
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(24, 44, 48)"
+        }
+      ],
+      "dateHeader": {
+        "text": "2026년 11월 5일 (목)\n수업 기록 1건",
+        "x": 240,
+        "y": 381.5625,
+        "w": 764,
+        "h": 45,
+        "order": "0",
+        "background": "rgb(234, 241, 239)",
+        "color": "rgb(44, 67, 51)"
+      },
+      "aside": {
+        "text": "반복을 살펴보세요\n현재 초안과 최근 수업\n\n선택한 그룹의 실제 기록 최근 3회와 같은 동작 수입니다.\n\n합성 검증 수업\n2026년 11월 5일 · 매트 기본 수업\n1 / 1개\n합성 검증 수업\n2026년 11월 3일 · 소그룹 수업\n1 / 1개\n최근 5회에 포함된 동작\n합성 QA mat core alpha\n2회\n\n반복 여부는 참고 정보입니다. 회원과 수업 목표에 따라 강사가 판단해 주세요.",
+        "x": 240,
+        "y": 1181.515625,
+        "w": 764,
+        "h": 508.703125,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      }
+    },
+    "copiedWithoutMutatingOriginals": true,
+    "missingCopyDisabledViewAvailable": true,
+    "viewUnchanged": true,
+    "closedUnchanged": true,
+    "repeatedUnchanged": true,
+    "escapeFocus": true,
+    "buttonFocus": true,
+    "pageErrors": [],
+    "blockedOrigins": []
+  },
+  {
+    "spec": {
+      "width": 1440,
+      "height": 900
+    },
+    "geometry": {
+      "overflow": 0,
+      "viewportHeight": 900,
+      "heading": {
+        "text": "수업 기록\n2\n\n지난 수업을 다음 계획으로 이어가세요.\n\n수업 그룹 추가",
+        "x": 236,
+        "y": 88,
+        "w": 1176,
+        "h": 74.78125,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "firstCard": {
+        "text": "매트 기본 수업\n2026년 11월 5일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 236,
+        "y": 449.171875,
+        "w": 868,
+        "h": 288.78125,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "secondCard": {
+        "text": "소그룹 수업\n2026년 11월 3일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n원본 수정 후에도 당시 스냅샷 유지됨\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 236,
+        "y": 830.953125,
+        "w": 868,
+        "h": 329.171875,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "actions": [
+        {
+          "text": "당시 시퀀스 보기",
+          "x": 255,
+          "y": 619.953125,
+          "w": 411,
+          "h": 44,
+          "order": "0",
+          "background": "rgb(23, 103, 92)",
+          "color": "rgb(255, 254, 249)"
+        },
+        {
+          "text": "복사해 새 수업 만들기",
+          "x": 674,
+          "y": 619.953125,
+          "w": 411,
+          "h": 44,
+          "order": "0",
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(24, 44, 48)"
+        }
+      ],
+      "dateHeader": {
+        "text": "2026년 11월 5일 (목)\n수업 기록 1건",
+        "x": 236,
+        "y": 388.171875,
+        "w": 868,
+        "h": 45,
+        "order": "0",
+        "background": "rgb(234, 241, 239)",
+        "color": "rgb(44, 67, 51)"
+      },
+      "aside": {
+        "text": "반복을 살펴보세요\n현재 초안과 최근 수업\n\n선택한 그룹의 실제 기록 최근 3회와 같은 동작 수입니다.\n\n합성 검증 수업\n2026년 11월 5일 · 매트 기본 수업\n1 / 1개\n합성 검증 수업\n2026년 11월 3일 · 소그룹 수업\n1 / 1개\n최근 5회에 포함된 동작\n합성 QA mat core alpha\n2회\n\n반복 여부는 참고 정보입니다. 회원과 수업 목표에 따라 강사가 판단해 주세요.",
+        "x": 1132,
+        "y": 388.171875,
+        "w": 280,
+        "h": 558.078125,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      }
+    },
+    "copiedWithoutMutatingOriginals": true,
+    "missingCopyDisabledViewAvailable": true,
+    "viewUnchanged": true,
+    "closedUnchanged": true,
+    "repeatedUnchanged": true,
+    "escapeFocus": true,
+    "buttonFocus": true,
+    "pageErrors": [],
+    "blockedOrigins": []
+  },
+  {
+    "spec": {
+      "width": 1024,
+      "height": 500
+    },
+    "geometry": {
+      "overflow": 0,
+      "viewportHeight": 500,
+      "heading": {
+        "text": "수업 기록\n2\n\n지난 수업을 다음 계획으로 이어가세요.\n\n수업 그룹 추가",
+        "x": 240,
+        "y": 81.390625,
+        "w": 764,
+        "h": 74.78125,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "firstCard": {
+        "text": "매트 기본 수업\n2026년 11월 5일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 240,
+        "y": 442.5625,
+        "w": 764,
+        "h": 288.78125,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "secondCard": {
+        "text": "소그룹 수업\n2026년 11월 3일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n원본 수정 후에도 당시 스냅샷 유지됨\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 240,
+        "y": 824.34375,
+        "w": 764,
+        "h": 329.171875,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "actions": [
+        {
+          "text": "당시 시퀀스 보기",
+          "x": 259,
+          "y": 613.34375,
+          "w": 359,
+          "h": 44,
+          "order": "0",
+          "background": "rgb(23, 103, 92)",
+          "color": "rgb(255, 254, 249)"
+        },
+        {
+          "text": "복사해 새 수업 만들기",
+          "x": 626,
+          "y": 613.34375,
+          "w": 359,
+          "h": 44,
+          "order": "0",
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(24, 44, 48)"
+        }
+      ],
+      "dateHeader": {
+        "text": "2026년 11월 5일 (목)\n수업 기록 1건",
+        "x": 240,
+        "y": 381.5625,
+        "w": 764,
+        "h": 45,
+        "order": "0",
+        "background": "rgb(234, 241, 239)",
+        "color": "rgb(44, 67, 51)"
+      },
+      "aside": {
+        "text": "반복을 살펴보세요\n현재 초안과 최근 수업\n\n선택한 그룹의 실제 기록 최근 3회와 같은 동작 수입니다.\n\n합성 검증 수업\n2026년 11월 5일 · 매트 기본 수업\n1 / 1개\n합성 검증 수업\n2026년 11월 3일 · 소그룹 수업\n1 / 1개\n최근 5회에 포함된 동작\n합성 QA mat core alpha\n2회\n\n반복 여부는 참고 정보입니다. 회원과 수업 목표에 따라 강사가 판단해 주세요.",
+        "x": 240,
+        "y": 1181.515625,
+        "w": 764,
+        "h": 508.703125,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      }
+    },
+    "copiedWithoutMutatingOriginals": true,
+    "missingCopyDisabledViewAvailable": true,
+    "viewUnchanged": true,
+    "closedUnchanged": true,
+    "repeatedUnchanged": true,
+    "escapeFocus": true,
+    "buttonFocus": true,
+    "pageErrors": [],
+    "blockedOrigins": []
+  },
+  {
+    "spec": {
+      "width": 320,
+      "height": 760,
+      "text": 200
+    },
+    "geometry": {
+      "overflow": 0,
+      "viewportHeight": 760,
+      "heading": {
+        "text": "수업 기록\n2\n\n지난 수업을 다음 계획으로 이어가세요.\n\n수업 그룹 추가",
+        "x": 16,
+        "y": 138.6875,
+        "w": 288,
+        "h": 273.1875,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "firstCard": {
+        "text": "매트 기본 수업\n2026년 11월 5일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 16,
+        "y": 970.859375,
+        "w": 288,
+        "h": 720.1875,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "secondCard": {
+        "text": "소그룹 수업\n2026년 11월 3일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n원본 수정 후에도 당시 스냅샷 유지됨\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 16,
+        "y": 1852.046875,
+        "w": 288,
+        "h": 827.78125,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "actions": [
+        {
+          "text": "당시 시퀀스 보기",
+          "x": 33,
+          "y": 1378.046875,
+          "w": 254,
+          "h": 64,
+          "order": "0",
+          "background": "rgb(23, 103, 92)",
+          "color": "rgb(255, 254, 249)"
+        },
+        {
+          "text": "복사해 새 수업 만들기",
+          "x": 33,
+          "y": 1450.046875,
+          "w": 254,
+          "h": 106,
+          "order": "0",
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(24, 44, 48)"
+        }
+      ],
+      "dateHeader": {
+        "text": "2026년 11월 5일 (목)\n수업 기록 1건",
+        "x": 16,
+        "y": 841.859375,
+        "w": 288,
+        "h": 113,
+        "order": "0",
+        "background": "rgb(234, 241, 239)",
+        "color": "rgb(44, 67, 51)"
+      },
+      "aside": {
+        "text": "반복을 살펴보세요\n현재 초안과 최근 수업\n\n선택한 그룹의 실제 기록 최근 3회와 같은 동작 수입니다.\n\n합성 검증 수업\n2026년 11월 5일 · 매트 기본 수업\n1 / 1개\n합성 검증 수업\n2026년 11월 3일 · 소그룹 수업\n1 / 1개\n최근 5회에 포함된 동작\n합성 QA mat core alpha\n2회\n\n반복 여부는 참고 정보입니다. 회원과 수업 목표에 따라 강사가 판단해 주세요.",
+        "x": 16,
+        "y": 2707.828125,
+        "w": 288,
+        "h": 1217.609375,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      }
+    },
+    "copiedWithoutMutatingOriginals": true,
+    "missingCopyDisabledViewAvailable": true,
+    "viewUnchanged": true,
+    "closedUnchanged": true,
+    "repeatedUnchanged": true,
+    "escapeFocus": true,
+    "buttonFocus": true,
+    "pageErrors": [],
+    "blockedOrigins": []
+  },
+  {
+    "spec": {
+      "width": 320,
+      "height": 760,
+      "long": true
+    },
+    "geometry": {
+      "overflow": 0,
+      "viewportHeight": 760,
+      "heading": {
+        "text": "수업 기록\n2\n\n지난 수업을 다음 계획으로 이어가세요.\n\n수업 그룹 추가",
+        "x": 16,
+        "y": 79,
+        "w": 288,
+        "h": 152.1875,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "firstCard": {
+        "text": "긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목\n2026년 11월 5일\n50분 진행\n긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹\n\n긴 기록 메모와 줄바꿈을 유지합니다.\n긴 기록 메모와 줄바꿈을 유지합니다.\n긴 기록 메모와 줄바꿈을 유지합니다.\n긴 기록 메모와 줄바꿈을 유지합니다.\n긴 기록 메모와 줄바꿈을 유지합니다.\n긴 기록 메모와 줄바꿈을 유지합니다.\n긴 기록 메모와 줄바꿈을 유지합니다.\n긴 기록 메모와 줄바꿈을 유지합니다.\n\n\n원본 수정 후에도 당시 스냅샷 유지됨\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 16,
+        "y": 546.578125,
+        "w": 288,
+        "h": 781.296875,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "secondCard": {
+        "text": "소그룹 수업\n2026년 11월 3일\n50분 진행\n합성 검증 수업\n\n합성 검증용 기록\n\n원본 수정 후에도 당시 스냅샷 유지됨\n복사 시 당시 저장한 동작·휴식·시간을 사용합니다.\n당시 시퀀스 보기\n복사해 새 수업 만들기\n수업 구성 · 1개 동작 보기",
+        "x": 16,
+        "y": 1420.875,
+        "w": 288,
+        "h": 399.5625,
+        "order": "0",
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(24, 44, 48)"
+      },
+      "actions": [
+        {
+          "text": "당시 시퀀스 보기",
+          "x": 33,
+          "y": 1159.875,
+          "w": 254,
+          "h": 44,
+          "order": "0",
+          "background": "rgb(23, 103, 92)",
+          "color": "rgb(255, 254, 249)"
+        },
+        {
+          "text": "복사해 새 수업 만들기",
+          "x": 33,
+          "y": 1211.875,
+          "w": 254,
+          "h": 44,
+          "order": "0",
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(24, 44, 48)"
+        }
+      ],
+      "dateHeader": {
+        "text": "2026년 11월 5일 (목)\n수업 기록 1건",
+        "x": 16,
+        "y": 485.578125,
+        "w": 288,
+        "h": 45,
+        "order": "0",
+        "background": "rgb(234, 241, 239)",
+        "color": "rgb(44, 67, 51)"
+      },
+      "aside": {
+        "text": "반복을 살펴보세요\n현재 초안과 최근 수업\n\n선택한 그룹의 실제 기록 최근 3회와 같은 동작 수입니다.\n\n긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹긴수업그룹\n2026년 11월 5일 · 긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목긴수업제목\n1 / 1개\n합성 검증 수업\n2026년 11월 3일 · 소그룹 수업\n1 / 1개\n최근 5회에 포함된 동작\n합성 QA mat core alpha\n2회\n\n반복 여부는 참고 정보입니다. 회원과 수업 목표에 따라 강사가 판단해 주세요.",
+        "x": 16,
+        "y": 1848.4375,
+        "w": 288,
+        "h": 685.015625,
+        "order": "0",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 44, 48)"
+      }
+    },
+    "copiedWithoutMutatingOriginals": true,
+    "missingCopyDisabledViewAvailable": true,
+    "viewUnchanged": true,
+    "closedUnchanged": true,
+    "repeatedUnchanged": true,
+    "escapeFocus": true,
+    "buttonFocus": true,
+    "pageErrors": [],
+    "blockedOrigins": []
+  }
+]
