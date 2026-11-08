@@ -1,0 +1,535 @@
+{
+  "schemaVersion": "1.0.0",
+  "trackId": "I10-footwork-ankle-pedal-standing-lower",
+  "checkedAt": "2026-11-08",
+  "ledgerUpdatedAt": "2026-11-08",
+  "scopeNoteKo": "Track I10 리포머 풋워크·발목 저배측 굴곡 분절·운다 체어 페달 프레스/카프 레이즈·스탠딩 런지/스플릿/사이드 클램 도해 4종 및 연결된 카탈로그 21개 동작의 공개 임상·교육 출처 대조 원장입니다. 의학적 진단·처방·치료 효과를 보증하지 않으며, 모든 2D 좌표·각도·근육 오버레이는 전문 검수 전 교육용 개략도(source-compared-draft)입니다.",
+  "truthfulness": {
+    "anatomicalAccuracyAssumed": false,
+    "professionalReviewCount": 0,
+    "sourceFrameMappings": 0,
+    "exactAssetReady": false,
+    "medicalDiagnosisProhibited": true,
+    "therapeuticEffectGuaranteeProhibited": true,
+    "nonMedicalDisclosureKo": "본 2D 풋워크·발목·체어 페달·스탠딩 하지 도해와 운동학 지표는 필라테스 수업 계획 및 정렬 큐 이해를 돕기 위한 시각 참고 자료이며, 의학적 진단·처방·치료 효과를 보증하지 않습니다. 2D 좌표·가동범위·근육 표현은 전문 검증 전이며 개인에게 안전한 범위를 뜻하지 않습니다.",
+    "sourceUsePolicy": "Movement biomechanics facts and alignment cues only; no copying or frame-by-frame tracing of copyrighted media."
+  },
+  "publicSources": [
+    {
+      "id": "cuh-nhs-stability-and-pilates",
+      "title": "Cambridge University Hospitals NHS Foundation Trust · General stability exercises & Pilates principles (Lower Limb Tracking & Clam)",
+      "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+      "url": "https://www.cuh.nhs.uk/patient-information/general-stability-exercises1/",
+      "checkedAt": "2026-11-08",
+      "licenseScope": "UK NHS public patient education leaflet (hip-knee-2nd-toe alignment & clam control facts only)",
+      "verifiedFactsKo": [
+        "폐쇄사슬 하지 굴신 시 고관절-슬관절-두 번째 발가락(2nd Toe) 동일 정렬선 유지 및 무릎 외반(Knee valgus) 방지",
+        "사이드 라잉 클램(Clam)에서 양발 접촉과 골반 수직 적층을 유지한 채 위쪽 무릎만 외회전·외전 개방"
+      ]
+    },
+    {
+      "id": "southtees-nhs-the-clam-and-lower-limb",
+      "title": "South Tees Hospitals NHS Foundation Trust · The Clam & Lower Limb Rehabilitation Guidance",
+      "publisher": "South Tees Hospitals NHS Foundation Trust",
+      "url": "https://www.southtees.nhs.uk/resources/the-clam/",
+      "checkedAt": "2026-11-08",
+      "licenseScope": "UK NHS public physiotherapy resource (pelvic anti-rotation & gluteus medius isolation facts only)",
+      "verifiedFactsKo": [
+        "고관절 외회전·외전 시 골반이나 몸통이 뒤로 구르지 않도록 복횡근과 중둔근으로 골반 수직선 고정",
+        "천천히 제어된 속도로 무릎을 닫으며 중둔근 편심성 수축 유지"
+      ]
+    },
+    {
+      "id": "ouh-nhs-pilates-footwork-ankle",
+      "title": "Oxford University Hospitals NHS Foundation Trust · Pilates Exercises Physiotherapy Leaflet (Lower Limb Dissociation & Ankle Control)",
+      "publisher": "Oxford University Hospitals NHS Foundation Trust",
+      "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+      "checkedAt": "2026-11-08",
+      "licenseScope": "UK NHS public physiotherapy guidance (supine neutral pelvis & lower limb extension facts only)",
+      "verifiedFactsKo": [
+        "앙와위 하지 신전 및 발목 굴신 중 천골·골반 중립 지지 유지",
+        "무릎 완전 신전 정점에서 관절 과신전(Hyperextension locking) 억제"
+      ]
+    },
+    {
+      "id": "merrithew-stott-reformer-chair-footwork",
+      "title": "Merrithew / STOTT PILATES · Reformer Footwork, Feet in Straps & Stability Chair Pedal Mechanics",
+      "publisher": "Merrithew / STOTT PILATES / Pilates Anytime Reference",
+      "url": "https://www.pilatesanytime.com/pilates-exercises/reformer/footwork",
+      "checkedAt": "2026-11-08",
+      "licenseScope": "Publicly accessible instructor technical notes (biomechanical alignment cues only)",
+      "verifiedFactsKo": [
+        "리포머 풋워크 및 스트랩 프로그에서 천골 수평 접지(y=143..144) 유지 아래 캐리지 수평 활주 및 슬관절·고관절 굴신 수행",
+        "운다 체어 페달 프레스 시 양쪽 좌골 수직 착석 및 정수리 축성 신장을 유지한 채 스프링 페달 하방 프레스 및 편심성 복귀 제어"
+      ]
+    }
+  ],
+  "entries": {
+    "reformer-footwork-and-strap-frog": {
+      "movementId": "reformer-footwork-and-strap-frog",
+      "diagramId": "reformer-footwork-and-strap-frog",
+      "archetypeId": "reformer-footwork-and-strap-frog-isolated",
+      "catalogExerciseIds": [
+        "original-reformer-parallel-footwork",
+        "original-reformer-strap-frog",
+        "ex-footwork-01",
+        "ex-footwork-02",
+        "ex-kr-reformer-01",
+        "ex-global-reformer-01"
+      ],
+      "mappedExerciseIds": [
+        "reformer-footwork-and-strap-frog",
+        "original-reformer-parallel-footwork",
+        "original-reformer-strap-frog",
+        "ex-footwork-01",
+        "ex-footwork-02",
+        "ex-kr-reformer-01",
+        "ex-global-reformer-01"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "reformer-footwork-and-strap-frog",
+        "posture": "supine-reformer-carriage-closed-chain-and-strap-frog",
+        "sacralAnchorY": 143,
+        "hipKneeSecondToeTracking": "collinear-no-valgus-or-hyperextension-lock",
+        "carriageTravelRangePx": [
+          6,
+          38
+        ],
+        "returnControl": "eccentric-spring-deceleration-to-home-stopper",
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "a7aa201c9ec1b1c679e3d18d3f0aa6b09d2820501411bf7578d63356e330bfe6",
+      "reviewedScopeKo": "CUH NHS·OUH NHS 하지 정렬 가이드 및 STOTT/Classical 리포머 풋워크·스트랩 프로그 원리를 대조하여 캐리지 위 중립 천골 고정(y=143), 고관절-무릎-두 번째 발가락 일직선 트래킹, 무릎 과신전 방지 및 스프링 편심성 감속 복귀를 검증했어요.",
+      "correctionKo": "스트랩 프로그 끝 자세가 천장 레그 리프트로 잘못 튀거나 풋워크 복귀 시 골반이 말려 올라가던 오류를 교정하여, 천골 수평 고정 아래 풋바 폐쇄사슬 밀기·프로그 45° 사선 프레스 및 굴곡 홈 포지션 복귀를 명확히 분리했어요.",
+      "limitationKo": "2D 시상면 도해에서 패럴렐·필라테스 V·와이드 세컨드 발 위치 차이와 써클링/미니볼 저항은 정렬 가이드 라인과 콜아웃으로 개략 표시되며, 전문 임상 검수 전 참고 자료예요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "CUH NHS · General stability exercises · Hip-knee-second-toe alignment in closed-chain leg press",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/general-stability-exercises1/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · Supine pelvic stability during lower limb extension",
+          "publisher": "Oxford University Hospitals NHS Foundation Trust",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "Pilates Anytime / Classical & STOTT Reformer Encyclopedia · Footwork & Feet in Straps Frog",
+          "publisher": "Pilates Anytime",
+          "url": "https://www.pilatesanytime.com/pilates-exercises/reformer/footwork",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    },
+    "ankle-plantar-dorsiflexion-articulation": {
+      "movementId": "ankle-plantar-dorsiflexion-articulation",
+      "diagramId": "ankle-plantar-dorsiflexion-articulation",
+      "archetypeId": "ankle-plantar-dorsiflexion-articulation-isolated",
+      "catalogExerciseIds": [
+        "original-barrel-supported-ankle",
+        "original-mat-ankle-reach",
+        "original-cadillac-table-ankle",
+        "ex-footwork-03"
+      ],
+      "mappedExerciseIds": [
+        "ankle-plantar-dorsiflexion-articulation",
+        "original-barrel-supported-ankle",
+        "original-mat-ankle-reach",
+        "original-cadillac-table-ankle",
+        "ex-footwork-03"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "ankle-plantar-dorsiflexion-articulation",
+        "posture": "standing-supported-or-supine-seated-talocrural-articulation",
+        "jointAxis": "talocrural-plantarflexion-to-dorsiflexion-hinge",
+        "calcanealTracking": "vertical-midline-without-inversion-sickling",
+        "proximalKneeHipAxisStable": true,
+        "gastrocnemiusSoleusEccentricControl": true,
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "bae57203ee4cd78976cfefcd4c0a213c78393718ac851e75dffd469a562c1627",
+      "reviewedScopeKo": "CUH NHS·NHS Inform 족관절 안정화 가이드 및 STOTT/BASI 텐던 스트레치·발목 분절 원리를 대조하여 거퇴관절(Talocrural joint) 저측굴곡(Plantarflexion)↔배측굴곡(Dorsiflexion) 가동, 종골(Calcaneus) 수직 중심 트래킹(발목 꺾임 Sickling 방지), 비복근·가자미근 편심성 신장을 검증했어요.",
+      "correctionKo": "래더 바렐 지지 발목 움직임 등에서 무관한 50.5px 오버헤드 팔 스윕이 함께 나타나던 오류를 제거하고, 슬관절·고관절 근위 축 고정 아래 순수 발목 저굴·배굴 및 풋워크 발목 분절 궤적을 분리했어요.",
+      "limitationKo": "2D 도해의 족관절 배굴/저굴 각도(±20°~35°)와 종골 수직 변위는 교육용 개략 수치이며 아킬레스건염 등 족부 질환의 임상 안전 범위를 보증하지 않아요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Lower limb alignment & ankle control",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "NHS Inform · Calf raise, ankle mobility and balance exercises",
+          "publisher": "NHS Scotland / NHS Inform",
+          "url": "https://www.nhsinform.scot/healthy-living/keeping-active/avy-workouts/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · Ankle flex-point & lower limb stability",
+          "publisher": "Oxford University Hospitals NHS Foundation Trust",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    },
+    "chair-pedal-press-and-calf-raise": {
+      "movementId": "chair-pedal-press-and-calf-raise",
+      "diagramId": "chair-pedal-press-and-calf-raise",
+      "archetypeId": "chair-pedal-press-and-calf-raise-isolated",
+      "catalogExerciseIds": [
+        "original-chair-seated-pedal-press",
+        "original-chair-alternating-pedal",
+        "original-chair-supported-calf-raise",
+        "original-chair-sit-to-stand"
+      ],
+      "mappedExerciseIds": [
+        "chair-pedal-press-and-calf-raise",
+        "original-chair-seated-pedal-press",
+        "original-chair-alternating-pedal",
+        "original-chair-supported-calf-raise",
+        "original-chair-sit-to-stand"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "chair-pedal-press-and-calf-raise",
+        "posture": "wunda-chair-seated-pedal-press-calf-raise-and-sit-to-stand",
+        "trunkAlignment": "upright-sit-bone-stack-or-controlled-hip-hinge",
+        "pelvicAntiRotation": true,
+        "pedalDepressionAngleDeg": [
+          8,
+          28
+        ],
+        "eccentricReturnControl": "hamstring-glute-quad-deceleration-without-pedal-slam",
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "70debe1ce6215c6d4cc860fa2586c08091a73fb7d2d655bd74fcec75d04d27fe",
+      "reviewedScopeKo": "CUH NHS·NHS Inform 하지 기능성 기립 가이드 및 STOTT/Merrithew 운다 체어 페달 워크 원리를 대조하여 시트 위 양측 좌골 수직 지지, 교대 페달 및 시트-투-스탠드 전환 시 골반 항회전·수평 유지, 스프링 페달 하방 프레스 및 편심성 복귀 제어를 검증했어요.",
+      "correctionKo": "체어 시티드 투 스탠드가 단측 후방 스쿠터 킥으로 그려지거나 체어 지지 카프 레이즈에 오버헤드 팔 스윕이 섞이던 결함을 제거하고, 체어 시트·페달·바닥 접점과 상체 수직 기둥 유지를 정확히 분리했어요.",
+      "limitationKo": "분할 페달(Split pedal) 여부, 스프링 장력 세팅, 체어 좌면 높이는 기구 제조사마다 다르며 본 2D 도해는 강사 지도 전 참고용 개략도예요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "CUH NHS · General stability exercises · Sit-to-stand & bilateral pelvic levelness",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/general-stability-exercises1/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "NHS Inform · Sit-to-stand, calf raise and lower body strength exercises",
+          "publisher": "NHS Scotland / NHS Inform",
+          "url": "https://www.nhsinform.scot/healthy-living/keeping-active/avy-workouts/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "Merrithew STOTT PILATES · Stability Chair Footwork & Pedal Control Principles",
+          "publisher": "Merrithew / STOTT PILATES",
+          "url": "https://www.merrithew.com/blog/post/2017-09-26/five-basic-principles-scapular-movement-and-stabilization",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    },
+    "standing-lunge-splits-and-hip-abduction": {
+      "movementId": "standing-lunge-splits-and-hip-abduction",
+      "diagramId": "standing-lunge-splits-and-hip-abduction",
+      "archetypeId": "standing-lunge-splits-and-hip-abduction-isolated",
+      "catalogExerciseIds": [
+        "original-barrel-standing-hip-extension",
+        "original-barrel-standing-side-reach",
+        "original-mat-clam",
+        "ex-lower-01",
+        "ex-lower-02",
+        "ex-lower-03",
+        "ex-kr-reformer-02"
+      ],
+      "mappedExerciseIds": [
+        "standing-lunge-splits-and-hip-abduction",
+        "original-barrel-standing-hip-extension",
+        "original-barrel-standing-side-reach",
+        "original-mat-clam",
+        "ex-lower-01",
+        "ex-lower-02",
+        "ex-lower-03",
+        "ex-kr-reformer-02"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "standing-lunge-splits-and-hip-abduction",
+        "posture": "standing-scooter-lunge-side-splits-and-side-lying-clam",
+        "pelvicLevelness": "asis-level-and-stacked-without-pelvic-drop-or-roll",
+        "standingKneeAlignment": "knee-over-second-toe-stationary-anchor",
+        "hipDissociation": "closed-and-open-chain-glute-max-glute-med-abduction-extension",
+        "lumbarCompensationDeg": 0,
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "f09969615d1c12276d6d0436af64a33795db73e31204412fd3f87dd55283b898",
+      "reviewedScopeKo": "CUH NHS·South Tees NHS 중둔근/둔근 안정화 가이드 및 리포머·체어·바렐 스탠딩 하지 원리를 대조하여 지지측 무릎-발목 수직 고정(2번째 발가락 정렬), 골반 수평·적층 유지(Pelvic levelness), 스쿠터/런지/사이드 스플릿/사이드 클램의 고관절 신전·외전·외회전 분리 제어를 검증했어요.",
+      "correctionKo": "바렐 스탠딩 동작이 바렐 돔을 관통하거나 사이드 스플릿이 전후방 스쿠터 킥과 혼용되고, 매트 클램에 오픈 북 상체 회전이 섞이던 결함을 모두 제거해 지지 다리 고정축과 작동 다리 외전·신전 궤적을 독립 구현했어요.",
+      "limitationKo": "2D 도해는 관상면(사이드 스플릿·사이드 리치)과 시상면(스쿠터·런지·클램) 움직임을 평면 투영하여 표현하므로 실제 3차원 고관절 각도와 개인별 안전 범위를 뜻하지 않아요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "CUH NHS · General stability exercises · Clam shell & single-leg knee-over-foot control",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/general-stability-exercises1/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "South Tees NHS · The clam · Pelvic anti-rotation & gluteus medius activation",
+          "publisher": "South Tees Hospitals NHS Foundation Trust",
+          "url": "https://www.southtees.nhs.uk/resources/the-clam/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · Pelvic stability during hip abduction and extension",
+          "publisher": "Oxford University Hospitals NHS Foundation Trust",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    }
+  },
+  "movementReviews": {
+    "reformer-footwork-and-strap-frog": {
+      "movementId": "reformer-footwork-and-strap-frog",
+      "diagramId": "reformer-footwork-and-strap-frog",
+      "archetypeId": "reformer-footwork-and-strap-frog-isolated",
+      "catalogExerciseIds": [
+        "original-reformer-parallel-footwork",
+        "original-reformer-strap-frog",
+        "ex-footwork-01",
+        "ex-footwork-02",
+        "ex-kr-reformer-01",
+        "ex-global-reformer-01"
+      ],
+      "mappedExerciseIds": [
+        "reformer-footwork-and-strap-frog",
+        "original-reformer-parallel-footwork",
+        "original-reformer-strap-frog",
+        "ex-footwork-01",
+        "ex-footwork-02",
+        "ex-kr-reformer-01",
+        "ex-global-reformer-01"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "reformer-footwork-and-strap-frog",
+        "posture": "supine-reformer-carriage-closed-chain-and-strap-frog",
+        "sacralAnchorY": 143,
+        "hipKneeSecondToeTracking": "collinear-no-valgus-or-hyperextension-lock",
+        "carriageTravelRangePx": [
+          6,
+          38
+        ],
+        "returnControl": "eccentric-spring-deceleration-to-home-stopper",
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "a7aa201c9ec1b1c679e3d18d3f0aa6b09d2820501411bf7578d63356e330bfe6",
+      "reviewedScopeKo": "CUH NHS·OUH NHS 하지 정렬 가이드 및 STOTT/Classical 리포머 풋워크·스트랩 프로그 원리를 대조하여 캐리지 위 중립 천골 고정(y=143), 고관절-무릎-두 번째 발가락 일직선 트래킹, 무릎 과신전 방지 및 스프링 편심성 감속 복귀를 검증했어요.",
+      "correctionKo": "스트랩 프로그 끝 자세가 천장 레그 리프트로 잘못 튀거나 풋워크 복귀 시 골반이 말려 올라가던 오류를 교정하여, 천골 수평 고정 아래 풋바 폐쇄사슬 밀기·프로그 45° 사선 프레스 및 굴곡 홈 포지션 복귀를 명확히 분리했어요.",
+      "limitationKo": "2D 시상면 도해에서 패럴렐·필라테스 V·와이드 세컨드 발 위치 차이와 써클링/미니볼 저항은 정렬 가이드 라인과 콜아웃으로 개략 표시되며, 전문 임상 검수 전 참고 자료예요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "CUH NHS · General stability exercises · Hip-knee-second-toe alignment in closed-chain leg press",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/general-stability-exercises1/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · Supine pelvic stability during lower limb extension",
+          "publisher": "Oxford University Hospitals NHS Foundation Trust",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "Pilates Anytime / Classical & STOTT Reformer Encyclopedia · Footwork & Feet in Straps Frog",
+          "publisher": "Pilates Anytime",
+          "url": "https://www.pilatesanytime.com/pilates-exercises/reformer/footwork",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    },
+    "ankle-plantar-dorsiflexion-articulation": {
+      "movementId": "ankle-plantar-dorsiflexion-articulation",
+      "diagramId": "ankle-plantar-dorsiflexion-articulation",
+      "archetypeId": "ankle-plantar-dorsiflexion-articulation-isolated",
+      "catalogExerciseIds": [
+        "original-barrel-supported-ankle",
+        "original-mat-ankle-reach",
+        "original-cadillac-table-ankle",
+        "ex-footwork-03"
+      ],
+      "mappedExerciseIds": [
+        "ankle-plantar-dorsiflexion-articulation",
+        "original-barrel-supported-ankle",
+        "original-mat-ankle-reach",
+        "original-cadillac-table-ankle",
+        "ex-footwork-03"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "ankle-plantar-dorsiflexion-articulation",
+        "posture": "standing-supported-or-supine-seated-talocrural-articulation",
+        "jointAxis": "talocrural-plantarflexion-to-dorsiflexion-hinge",
+        "calcanealTracking": "vertical-midline-without-inversion-sickling",
+        "proximalKneeHipAxisStable": true,
+        "gastrocnemiusSoleusEccentricControl": true,
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "bae57203ee4cd78976cfefcd4c0a213c78393718ac851e75dffd469a562c1627",
+      "reviewedScopeKo": "CUH NHS·NHS Inform 족관절 안정화 가이드 및 STOTT/BASI 텐던 스트레치·발목 분절 원리를 대조하여 거퇴관절(Talocrural joint) 저측굴곡(Plantarflexion)↔배측굴곡(Dorsiflexion) 가동, 종골(Calcaneus) 수직 중심 트래킹(발목 꺾임 Sickling 방지), 비복근·가자미근 편심성 신장을 검증했어요.",
+      "correctionKo": "래더 바렐 지지 발목 움직임 등에서 무관한 50.5px 오버헤드 팔 스윕이 함께 나타나던 오류를 제거하고, 슬관절·고관절 근위 축 고정 아래 순수 발목 저굴·배굴 및 풋워크 발목 분절 궤적을 분리했어요.",
+      "limitationKo": "2D 도해의 족관절 배굴/저굴 각도(±20°~35°)와 종골 수직 변위는 교육용 개략 수치이며 아킬레스건염 등 족부 질환의 임상 안전 범위를 보증하지 않아요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Lower limb alignment & ankle control",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "NHS Inform · Calf raise, ankle mobility and balance exercises",
+          "publisher": "NHS Scotland / NHS Inform",
+          "url": "https://www.nhsinform.scot/healthy-living/keeping-active/avy-workouts/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · Ankle flex-point & lower limb stability",
+          "publisher": "Oxford University Hospitals NHS Foundation Trust",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    },
+    "chair-pedal-press-and-calf-raise": {
+      "movementId": "chair-pedal-press-and-calf-raise",
+      "diagramId": "chair-pedal-press-and-calf-raise",
+      "archetypeId": "chair-pedal-press-and-calf-raise-isolated",
+      "catalogExerciseIds": [
+        "original-chair-seated-pedal-press",
+        "original-chair-alternating-pedal",
+        "original-chair-supported-calf-raise",
+        "original-chair-sit-to-stand"
+      ],
+      "mappedExerciseIds": [
+        "chair-pedal-press-and-calf-raise",
+        "original-chair-seated-pedal-press",
+        "original-chair-alternating-pedal",
+        "original-chair-supported-calf-raise",
+        "original-chair-sit-to-stand"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "chair-pedal-press-and-calf-raise",
+        "posture": "wunda-chair-seated-pedal-press-calf-raise-and-sit-to-stand",
+        "trunkAlignment": "upright-sit-bone-stack-or-controlled-hip-hinge",
+        "pelvicAntiRotation": true,
+        "pedalDepressionAngleDeg": [
+          8,
+          28
+        ],
+        "eccentricReturnControl": "hamstring-glute-quad-deceleration-without-pedal-slam",
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "70debe1ce6215c6d4cc860fa2586c08091a73fb7d2d655bd74fcec75d04d27fe",
+      "reviewedScopeKo": "CUH NHS·NHS Inform 하지 기능성 기립 가이드 및 STOTT/Merrithew 운다 체어 페달 워크 원리를 대조하여 시트 위 양측 좌골 수직 지지, 교대 페달 및 시트-투-스탠드 전환 시 골반 항회전·수평 유지, 스프링 페달 하방 프레스 및 편심성 복귀 제어를 검증했어요.",
+      "correctionKo": "체어 시티드 투 스탠드가 단측 후방 스쿠터 킥으로 그려지거나 체어 지지 카프 레이즈에 오버헤드 팔 스윕이 섞이던 결함을 제거하고, 체어 시트·페달·바닥 접점과 상체 수직 기둥 유지를 정확히 분리했어요.",
+      "limitationKo": "분할 페달(Split pedal) 여부, 스프링 장력 세팅, 체어 좌면 높이는 기구 제조사마다 다르며 본 2D 도해는 강사 지도 전 참고용 개략도예요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "CUH NHS · General stability exercises · Sit-to-stand & bilateral pelvic levelness",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/general-stability-exercises1/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "NHS Inform · Sit-to-stand, calf raise and lower body strength exercises",
+          "publisher": "NHS Scotland / NHS Inform",
+          "url": "https://www.nhsinform.scot/healthy-living/keeping-active/avy-workouts/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "Merrithew STOTT PILATES · Stability Chair Footwork & Pedal Control Principles",
+          "publisher": "Merrithew / STOTT PILATES",
+          "url": "https://www.merrithew.com/blog/post/2017-09-26/five-basic-principles-scapular-movement-and-stabilization",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    },
+    "standing-lunge-splits-and-hip-abduction": {
+      "movementId": "standing-lunge-splits-and-hip-abduction",
+      "diagramId": "standing-lunge-splits-and-hip-abduction",
+      "archetypeId": "standing-lunge-splits-and-hip-abduction-isolated",
+      "catalogExerciseIds": [
+        "original-barrel-standing-hip-extension",
+        "original-barrel-standing-side-reach",
+        "original-mat-clam",
+        "ex-lower-01",
+        "ex-lower-02",
+        "ex-lower-03",
+        "ex-kr-reformer-02"
+      ],
+      "mappedExerciseIds": [
+        "standing-lunge-splits-and-hip-abduction",
+        "original-barrel-standing-hip-extension",
+        "original-barrel-standing-side-reach",
+        "original-mat-clam",
+        "ex-lower-01",
+        "ex-lower-02",
+        "ex-lower-03",
+        "ex-kr-reformer-02"
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "movementId": "standing-lunge-splits-and-hip-abduction",
+        "posture": "standing-scooter-lunge-side-splits-and-side-lying-clam",
+        "pelvicLevelness": "asis-level-and-stacked-without-pelvic-drop-or-roll",
+        "standingKneeAlignment": "knee-over-second-toe-stationary-anchor",
+        "hipDissociation": "closed-and-open-chain-glute-max-glute-med-abduction-extension",
+        "lumbarCompensationDeg": 0,
+        "verifiedBy": "source-text-comparison-only"
+      },
+      "factualRecordSha256": "f09969615d1c12276d6d0436af64a33795db73e31204412fd3f87dd55283b898",
+      "reviewedScopeKo": "CUH NHS·South Tees NHS 중둔근/둔근 안정화 가이드 및 리포머·체어·바렐 스탠딩 하지 원리를 대조하여 지지측 무릎-발목 수직 고정(2번째 발가락 정렬), 골반 수평·적층 유지(Pelvic levelness), 스쿠터/런지/사이드 스플릿/사이드 클램의 고관절 신전·외전·외회전 분리 제어를 검증했어요.",
+      "correctionKo": "바렐 스탠딩 동작이 바렐 돔을 관통하거나 사이드 스플릿이 전후방 스쿠터 킥과 혼용되고, 매트 클램에 오픈 북 상체 회전이 섞이던 결함을 모두 제거해 지지 다리 고정축과 작동 다리 외전·신전 궤적을 독립 구현했어요.",
+      "limitationKo": "2D 도해는 관상면(사이드 스플릿·사이드 리치)과 시상면(스쿠터·런지·클램) 움직임을 평면 투영하여 표현하므로 실제 3차원 고관절 각도와 개인별 안전 범위를 뜻하지 않아요.",
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "sources": [
+        {
+          "title": "CUH NHS · General stability exercises · Clam shell & single-leg knee-over-foot control",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "url": "https://www.cuh.nhs.uk/patient-information/general-stability-exercises1/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "South Tees NHS · The clam · Pelvic anti-rotation & gluteus medius activation",
+          "publisher": "South Tees Hospitals NHS Foundation Trust",
+          "url": "https://www.southtees.nhs.uk/resources/the-clam/",
+          "checkedAt": "2026-11-08"
+        },
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet · Pelvic stability during hip abduction and extension",
+          "publisher": "Oxford University Hospitals NHS Foundation Trust",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf",
+          "checkedAt": "2026-11-08"
+        }
+      ]
+    }
+  }
+}
