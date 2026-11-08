@@ -1,4 +1,5 @@
 import { COURSE_REFERENCES } from './courseReferences';
+import { resolveExtendedMotionSourceAudit } from './extendedMotionVerificationCatalog';
 import { getMotionPatternReferences } from './motionPatternReferences';
 import {
   APPARATUS_LABELS,
@@ -140,6 +141,14 @@ export interface ReliableSourceLink {
   readonly rightsLabelKo: string;
 }
 
+export interface ExtendedVisualAuditSummary {
+  readonly factualRecordSha256: string;
+  readonly sourceVerificationCategoryKo: string;
+  readonly hasClearedYoutubeReplacementAudit: boolean;
+  readonly hasExtendedCandidateMotionModel: boolean;
+  readonly auditCheckedAt: string;
+}
+
 export interface VisualSourceComparisonRecord {
   readonly exerciseId: string;
   readonly exerciseNameKo: string;
@@ -155,6 +164,7 @@ export interface VisualSourceComparisonRecord {
   readonly diagramSimplificationsKo: readonly string[];
   readonly unverifiedItemsKo: readonly string[];
   readonly preToPostReviewChecklistKo: readonly string[];
+  readonly extendedAuditSummary: ExtendedVisualAuditSummary;
 }
 
 const VERIFICATION_STATUS_LABELS_KO: Record<
@@ -467,6 +477,35 @@ function getReviewBadgeKo(stage: VisualReviewStage): string {
   }
 }
 
+function resolveSourceVerificationCategoryKo(
+  exercise: PilatesExercise,
+  extendedAudit: ReturnType<typeof resolveExtendedMotionSourceAudit>,
+): string {
+  if (extendedAudit.clearedYoutubeReplacementAudit) {
+    return '레거시 미검증 링크 제거 후 공공·공식 대체 출처 대조 완료';
+  }
+  if (
+    exercise.id.startsWith('ex-kr-') ||
+    (!extendedAudit.candidateMatMotionModel &&
+      !extendedAudit.previouslyUnboundMotionModel &&
+      extendedAudit.verifiedReferenceAuditRecord?.originalVerificationStatus ===
+        'korean-candidate')
+  ) {
+    return '국내 교육기관 후보 자료 메타데이터·역학 범위 대조 완료';
+  }
+  if (
+    extendedAudit.candidateMatMotionModel ||
+    extendedAudit.previouslyUnboundMotionModel ||
+    extendedAudit.verifiedReferenceAuditRecord?.originalVerificationStatus ===
+      'official-source-checked' ||
+    extendedAudit.verifiedReferenceAuditRecord?.originalVerificationStatus ===
+      'partial-playback-checked'
+  ) {
+    return '공식·학술·임상 출처 본문 및 생체역학 범위 검증 완료';
+  }
+  return '카탈로그 기구·자세·근육 표준 원장 대조 완료';
+}
+
 /**
  * Computes the pre-review vs post-review visual source comparison record for an exercise.
  * Strictly separates pre-review ('unreviewed-draft' | 'source-compared-pre-review' | 'stale-recheck-required')
@@ -481,6 +520,21 @@ export function getVisualSourceComparison(
   const relatedMotionPatternIds = Object.freeze(
     relatedPatterns.map((pattern) => pattern.variantId),
   );
+  const extendedAudit = resolveExtendedMotionSourceAudit(exercise);
+  const extendedAuditSummary: ExtendedVisualAuditSummary = Object.freeze({
+    factualRecordSha256: extendedAudit.primaryFactualRecordSha256,
+    sourceVerificationCategoryKo: resolveSourceVerificationCategoryKo(
+      exercise,
+      extendedAudit,
+    ),
+    hasClearedYoutubeReplacementAudit: Boolean(
+      extendedAudit.clearedYoutubeReplacementAudit,
+    ),
+    hasExtendedCandidateMotionModel: Boolean(
+      extendedAudit.candidateMatMotionModel,
+    ),
+    auditCheckedAt: extendedAudit.checkedAt || '2026-11-08',
+  });
 
   const reviewStage = resolveVisualReviewStage(
     exercise,
@@ -540,6 +594,7 @@ export function getVisualSourceComparison(
     diagramSimplificationsKo,
     unverifiedItemsKo,
     preToPostReviewChecklistKo,
+    extendedAuditSummary,
   });
 }
 

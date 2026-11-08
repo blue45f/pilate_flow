@@ -1023,6 +1023,55 @@ export function MovementVisualGuideCard({
             {sourceAudit.professionalMotionReviewCount}건
           </span>
         </div>
+
+        {/* Extended Source Verification Metadata Strip */}
+        <div
+          data-testid="visual-guide-extended-audit-strip"
+          data-factual-record-sha256={
+            sourceAudit.extendedAuditSummary.factualRecordSha256
+          }
+          data-has-cleared-youtube-audit={String(
+            sourceAudit.extendedAuditSummary.hasClearedYoutubeReplacementAudit,
+          )}
+          data-has-candidate-motion-model={String(
+            sourceAudit.extendedAuditSummary.hasExtendedCandidateMotionModel,
+          )}
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '8px',
+            padding: '6px 10px',
+            borderRadius: 'var(--pf-radius-sm, 8px)',
+            backgroundColor: 'var(--pf-color-bg-surface-subtle, #F3F5EE)',
+            border: '1px solid var(--pf-color-border-default, #D5DDD0)',
+            fontSize: 'var(--pf-text-2xs, 0.6875rem)',
+            color: 'var(--pf-color-text-secondary, #3D4F45)',
+          }}
+        >
+          <span>
+            <strong>
+              {sourceAudit.extendedAuditSummary.sourceVerificationCategoryKo}
+            </strong>{' '}
+            · 검증 기준일: {sourceAudit.extendedAuditSummary.auditCheckedAt} ·
+            전문가 모션 검수 0건 · 해부학적 정밀성 가정 안 함
+          </span>
+          <code
+            data-testid="visual-guide-extended-audit-sha256"
+            style={{
+              fontFamily: 'monospace',
+              fontSize: 'var(--pf-text-2xs, 0.6875rem)',
+              padding: '2px 6px',
+              borderRadius: 'var(--pf-radius-xs, 6px)',
+              backgroundColor: 'var(--pf-color-bg-surface-muted, #E4EADF)',
+              color: 'var(--pf-color-text-primary, #1E3129)',
+            }}
+          >
+            SHA-256:{' '}
+            {sourceAudit.extendedAuditSummary.factualRecordSha256.slice(0, 12)}…
+          </code>
+        </div>
       </header>
 
       {/* Quarantine Alert Banner when integrity fails */}
