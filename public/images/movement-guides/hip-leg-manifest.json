@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "trackId": "I3",
+  "domain": "hip-leg-2d-kinematic-diagrams",
+  "checkedAt": "2026-11-06",
+  "productionMethod": "free-authored-kinematic-svg-v1",
+  "rightsStatus": "original-app-authored-free-license",
+  "licenseFile": "/images/movement-guides/LICENSE.txt",
+  "anatomicalAccuracyAssumed": false,
+  "professionalReviewCount": 0,
+  "sourceFrameMappings": 0,
+  "motionCaptureUsed": false,
+  "clinicalDiagnosisOrTreatmentGuaranteed": false,
+  "assets": [
+    {
+      "movementId": "hip-leg-single-leg-circle",
+      "canonicalExerciseId": "original-mat-single-leg-circle",
+      "legacyExerciseId": "ex-hip-01",
+      "archetypeId": "leg-circle",
+      "fileName": "hip-leg-single-leg-circle-guide.svg",
+      "publicPath": "/images/movement-guides/hip-leg-single-leg-circle-guide.svg",
+      "apparatus": "mat",
+      "bodyPosition": "supine",
+      "viewBox": "0 0 1120 560",
+      "width": 1120,
+      "height": 560,
+      "sha256": "b7467d591db17d8d5bbac3707de5efbb866f204d5da3a2e53b137bd8f817e9e2",
+      "bytes": 14149,
+      "anatomicalAccuracyAssumed": false,
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "phasesDepicted": [
+        "start",
+        "middle",
+        "end"
+      ],
+      "features": [
+        "pelvis-anchor",
+        "leg-trajectory-arc",
+        "rigid-segment-fk",
+        "bilateral-stroke-distinction"
+      ],
+      "reviewDisclaimerKo": "싱글 레그 서클(Single Leg Circle) 3단계(시작·원 궤적 공전·정점 복귀) 개념 도해이며, 해부학적 실측이나 의학적 진단·처방을 보증하지 않는 교육용 참고 자료입니다 (anatomicalAccuracyAssumed: false, professionalReviewCount: 0, sourceFrameMappings: 0)."
+    },
+    {
+      "movementId": "hip-leg-side-kick",
+      "canonicalExerciseId": "original-mat-side-kick",
+      "legacyExerciseId": "ex-hip-02",
+      "archetypeId": "side-lying-leg-lift",
+      "fileName": "hip-leg-side-kick-guide.svg",
+      "publicPath": "/images/movement-guides/hip-leg-side-kick-guide.svg",
+      "apparatus": "mat",
+      "bodyPosition": "side-lying",
+      "viewBox": "0 0 1120 560",
+      "width": 1120,
+      "height": 560,
+      "sha256": "efd4c988837412dd2af503a9fc11c75d53659b3ed95bf7387da7cd8664ea154e",
+      "bytes": 14272,
+      "anatomicalAccuracyAssumed": false,
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "phasesDepicted": [
+        "start",
+        "middle",
+        "end"
+      ],
+      "features": [
+        "pelvis-anchor",
+        "leg-trajectory-arc",
+        "rigid-segment-fk",
+        "bilateral-stroke-distinction"
+      ],
+      "reviewDisclaimerKo": "사이드 킥(Side Kick Front & Back) 3단계(시작·전방 배굴 킥·후방 저굴 리치) 개념 도해이며, 해부학적 실측이나 의학적 진단·처방을 보증하지 않는 교육용 참고 자료입니다 (anatomicalAccuracyAssumed: false, professionalReviewCount: 0, sourceFrameMappings: 0)."
+    }
+  ]
+}

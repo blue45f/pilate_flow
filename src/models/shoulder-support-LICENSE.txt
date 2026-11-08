@@ -1,0 +1,35 @@
+SPDX-License-Identifier: MIT
+
+Copyright (c) 2026 Pilates Flow Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated 2D kinematic schematic files (the "Software"),
+to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+NON-MEDICAL & NON-DIAGNOSTIC BOUNDARY NOTICE
+--------------------------------------------
+- All 2D shoulder-support coordinates, two-link inverse kinematics (IK),
+  support alignment lines (wrist-vertical-support, scapula-thoracic-support,
+  shoulder-pelvis-ankle-plank-line), joint axes, contact points, and SVG paths
+  in this track are original clean-room mathematical schematics authored for
+  educational and class-planning visualization only.
+- No external images, video frames, motion-capture streams, or proprietary
+  illustrations were copied, traced, or reproduced.
+- Truthfulness invariants:
+  * anatomicalAccuracyAssumed: false
+  * professionalReviewCount: 0
+  * sourceFrameMappings: 0
+  * exactAssetReady: false
+  * safetyAssessment: 'unassessed'
+- These diagrams do not constitute medical advice, clinical diagnosis,
+  biomechanical certification, or an individually safe exercise prescription.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.

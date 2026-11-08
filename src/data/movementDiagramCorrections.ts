@@ -1,3 +1,11 @@
+import { getCoreI7RegistryPatch } from './coreAbdominalDiagrams';
+import { getExtensionDiagramCorrections } from './extensionMovementData';
+import { getHipLegDiagramCorrections } from './hip-leg-diagram-data';
+import { getPelvisHipDiagramCorrections } from './pelvisHipDiagramData';
+import { getRotationI7IntegrationBundle } from './rotationDiagramData';
+import { getShoulderSupportRegistryIntegrationPayload } from './shoulderSupportDiagrams';
+import { getSpineMovementDiagramCorrections } from './spineArticulationDiagramData';
+
 /** Reviewed source statements, not a professional or frame-by-frame approval. */
 export interface MovementDiagramCorrection {
   readonly archetypeId: string;
@@ -10,7 +18,7 @@ export interface MovementDiagramCorrection {
   readonly sources: readonly { readonly title: string; readonly url: string }[];
 }
 
-export const MOVEMENT_DIAGRAM_CORRECTIONS: Readonly<Record<string, MovementDiagramCorrection>> = Object.freeze({
+const BASE_SIDE_LYING_CORRECTIONS: Readonly<Record<string, MovementDiagramCorrection>> = Object.freeze({
   'original-mat-clam': {
     archetypeId: 'mat-clam-isolated', checkedAt: '2026-11-06',
     reviewedScopeKo: 'NHS 두 기관의 클램 본문과 위 무릎 열기·발 위치 유지·몸통 회전 방지·복귀를 직접 대조했어요.',
@@ -34,3 +42,19 @@ export const MOVEMENT_DIAGRAM_CORRECTIONS: Readonly<Record<string, MovementDiagr
     ],
   },
 });
+
+const corePatch = getCoreI7RegistryPatch();
+const shoulderPayload = getShoulderSupportRegistryIntegrationPayload();
+const rotationBundle = getRotationI7IntegrationBundle();
+
+export const MOVEMENT_DIAGRAM_CORRECTIONS: Readonly<Record<string, MovementDiagramCorrection>> = Object.freeze({
+  ...BASE_SIDE_LYING_CORRECTIONS,
+  ...getSpineMovementDiagramCorrections(),
+  ...getPelvisHipDiagramCorrections(),
+  ...getHipLegDiagramCorrections(),
+  ...getExtensionDiagramCorrections(),
+  ...shoulderPayload.corrections,
+  ...rotationBundle.diagramCorrections,
+  ...corePatch.corrections,
+});
+

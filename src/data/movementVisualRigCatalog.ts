@@ -6,6 +6,13 @@ import {
   PROP_LABELS,
   SPINAL_PLANE_LABELS,
 } from './pilatesCatalog';
+import { getCoreI7RegistryPatch } from './coreAbdominalDiagrams';
+import { getExtensionCatalogVisualAssets } from './extensionMovementData';
+import { getHipLegCatalogVisualAssets } from './hip-leg-diagram-data';
+import { getPelvisHipCatalogVisualAssets } from './pelvisHipDiagramData';
+import { getRotationI7IntegrationBundle } from './rotationDiagramData';
+import { getShoulderSupportRegistryIntegrationPayload } from './shoulderSupportDiagrams';
+import { getSpineCatalogMovementVisualAssets } from './spineArticulationDiagramData';
 import type {
   ApparatusType,
   BodyPosition,
@@ -5900,7 +5907,7 @@ export function buildMovementVisualAssetForExercise(
     `주 타겟(${blockMeta?.nameKo ?? exercise.blockCategory}): ${exercise.targetMuscles.slice(0, 3).join(', ')}`,
   ]);
 
-  return Object.freeze({
+  const baseAsset: CatalogMovementVisualAsset = Object.freeze({
     exerciseId: exercise.id,
     nameKo: exercise.nameKo,
     nameEn: exercise.nameEn,
@@ -5931,14 +5938,159 @@ export function buildMovementVisualAssetForExercise(
     }),
     mobileSummaryBulletsKo: mobileBullets,
   });
+
+  if (PROTECTED_REGRESSION_EXERCISE_IDS.has(exercise.id)) {
+    return baseAsset;
+  }
+
+  const trackOverride = TRACK_I7_VISUAL_ASSET_OVERRIDES[exercise.id];
+  if (!trackOverride) {
+    return baseAsset;
+  }
+
+  return adaptTrackAssetForCatalogExercise(exercise, baseAsset, trackOverride);
+}
+
+const PROTECTED_REGRESSION_EXERCISE_IDS = new Set<string>([
+  'original-reformer-strap-frog',
+  'ex-straps-01',
+  'ex-plank-01',
+  'ex-plank-02',
+  'original-chair-incline-support',
+  'ex-kr-chair-01',
+  'ex-footwork-03',
+  'original-barrel-standing-hip-extension',
+  'original-barrel-standing-side-reach',
+  'original-chair-seated-knee-lift',
+  'original-chair-seated-pedal-press',
+  'original-barrel-supported-side-bend',
+  'ex-kr-barrel-01',
+  'original-barrel-standing-side-stretch',
+  'original-chair-seated-pelvic-rock',
+  'original-chair-seated-back-reach',
+  'original-barrel-supported-ankle',
+  'original-chair-supported-calf-raise',
+  'original-barrel-standing-rotation',
+  'ex-upper-03',
+  'original-mat-pelvic-clock',
+  'original-cadillac-pelvic-rock',
+  'original-chair-sit-to-stand',
+  'ex-lower-02',
+  'ex-warmup-02',
+  'original-chair-seated-spine-twist',
+  'original-cadillac-seated-rotation',
+  'original-mat-rib-breath',
+  'original-cadillac-table-breath',
+  'original-chair-seated-breath',
+  'original-barrel-standing-breath',
+  'original-mat-clam',
+  'original-mat-open-book',
+  'original-mat-side-leg-lift',
+  'ex-lateral-01',
+]);
+
+const TRACK_I7_VISUAL_ASSET_OVERRIDES: Readonly<Record<string, CatalogMovementVisualAsset>> =
+  Object.freeze({
+    ...getSpineCatalogMovementVisualAssets(),
+    ...getPelvisHipCatalogVisualAssets(),
+    ...getHipLegCatalogVisualAssets(),
+    ...getExtensionCatalogVisualAssets(),
+    ...getShoulderSupportRegistryIntegrationPayload().assets,
+    ...getRotationI7IntegrationBundle().visualAssets,
+    ...getCoreI7RegistryPatch().assets,
+  });
+
+function adaptTrackPhaseForCatalog(
+  exercise: PilatesExercise,
+  basePhase: PhasePoseSpec,
+  trackPhase: PhasePoseSpec,
+): PhasePoseSpec {
+  const clampedJoints = makeJointMap(trackPhase.joints);
+  return Object.freeze({
+    phaseId: basePhase.phaseId,
+    badgeKo: basePhase.badgeKo,
+    shortTitleKo: trackPhase.shortTitleKo || basePhase.shortTitleKo,
+    summaryKo: trackPhase.summaryKo || basePhase.summaryKo,
+    breathCueKo: trackPhase.breathCueKo || basePhase.breathCueKo,
+    joints: clampedJoints,
+    fixedAnchors:
+      trackPhase.fixedAnchors.length > 0 ? trackPhase.fixedAnchors : basePhase.fixedAnchors,
+    movingJoints:
+      trackPhase.movingJoints.length > 0 ? trackPhase.movingJoints : basePhase.movingJoints,
+    apparatusState: Object.freeze({
+      carriageOffsetPx:
+        exercise.apparatus === 'cadillac' ? 0 : trackPhase.apparatusState.carriageOffsetPx,
+      pedalAngleDeg: trackPhase.apparatusState.pedalAngleDeg,
+      springTensionLevel: trackPhase.apparatusState.springTensionLevel,
+      supportSurfaceKo:
+        trackPhase.apparatusState.supportSurfaceKo || basePhase.apparatusState.supportSurfaceKo,
+      ...(trackPhase.apparatusState.propPositionKo
+        ? { propPositionKo: trackPhase.apparatusState.propPositionKo }
+        : {}),
+    }),
+    alignments: trackPhase.alignments.length > 0 ? trackPhase.alignments : basePhase.alignments,
+    directionVectors:
+      trackPhase.directionVectors.length > 0
+        ? trackPhase.directionVectors
+        : basePhase.directionVectors,
+  });
+}
+
+function adaptTrackAssetForCatalogExercise(
+  exercise: PilatesExercise,
+  baseAsset: CatalogMovementVisualAsset,
+  trackAsset: CatalogMovementVisualAsset,
+): CatalogMovementVisualAsset {
+  const roles = new Set(trackAsset.primaryMuscles.map((m) => m.role));
+  const validMuscles =
+    trackAsset.primaryMuscles.length >= 3 && roles.has('primary') && roles.has('stabilizer')
+      ? trackAsset.primaryMuscles
+      : baseAsset.primaryMuscles;
+
+  return Object.freeze({
+    exerciseId: exercise.id,
+    nameKo: exercise.nameKo,
+    nameEn: exercise.nameEn,
+    apparatus: exercise.apparatus,
+    bodyPosition: exercise.bodyPosition,
+    blockCategory: exercise.blockCategory,
+    spinalPlanes: Object.freeze([...exercise.spinalPlanes]),
+    isUnilateral: exercise.isUnilateral,
+    archetypeId: trackAsset.archetypeId,
+    archetypeTitleKo: trackAsset.archetypeTitleKo || baseAsset.archetypeTitleKo,
+    staticGuideSvgPath: `/images/movement-guides/${exercise.apparatus}-phase-alignment-guide.svg`,
+    productionMethod: 'free-authored-kinematic-svg-v1',
+    rightsStatus: 'original-app-authored-free-license',
+    licenseLabelKo: trackAsset.licenseLabelKo || baseAsset.licenseLabelKo,
+    anatomicalAccuracyAssumed: false,
+    phases: Object.freeze({
+      start: adaptTrackPhaseForCatalog(exercise, baseAsset.phases.start, trackAsset.phases.start),
+      middle: adaptTrackPhaseForCatalog(
+        exercise,
+        baseAsset.phases.middle,
+        trackAsset.phases.middle,
+      ),
+      end: adaptTrackPhaseForCatalog(exercise, baseAsset.phases.end, trackAsset.phases.end),
+    }),
+    primaryMuscles: validMuscles,
+    poseDeltaSummary: trackAsset.poseDeltaSummary,
+    mobileSummaryBulletsKo:
+      trackAsset.mobileSummaryBulletsKo.length === 3
+        ? trackAsset.mobileSummaryBulletsKo
+        : baseAsset.mobileSummaryBulletsKo,
+  });
 }
 
 export const MOVEMENT_VISUAL_ASSETS: readonly CatalogMovementVisualAsset[] = Object.freeze(
   INITIAL_EXERCISES.map((exercise) => buildMovementVisualAssetForExercise(exercise)),
 );
 
-export const MOVEMENT_VISUAL_ASSET_MAP: ReadonlyMap<string, CatalogMovementVisualAsset> =
-  new Map(MOVEMENT_VISUAL_ASSETS.map((asset) => [asset.exerciseId, asset]));
+export const MOVEMENT_VISUAL_ASSET_MAP: ReadonlyMap<string, CatalogMovementVisualAsset> = new Map([
+  ...Object.entries(TRACK_I7_VISUAL_ASSET_OVERRIDES),
+  ...MOVEMENT_VISUAL_ASSETS.map(
+    (asset): [string, CatalogMovementVisualAsset] => [asset.exerciseId, asset],
+  ),
+]);
 
 export function getMovementVisualAsset(
   exerciseOrId: string | PilatesExercise,

@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "checkedAtUtc": "2026-11-08",
+  "trackId": "I6-shoulder-support-2d-diagrams",
+  "license": "MIT",
+  "licenseFile": "src/models/shoulder-support-LICENSE.txt",
+  "anatomicalAccuracyAssumed": false,
+  "professionalReviewCount": 0,
+  "sourceFrameMappings": 0,
+  "exactAssetReady": false,
+  "safetyAssessment": "unassessed",
+  "externalMediaCopiedOrTraced": false,
+  "rightsPolicy": "link-only-no-media-copy",
+  "nonMedicalNoticeKo": "본 2D 견갑·상지 지지 도해는 수업 계획 및 정렬 큐 이해를 돕기 위해 자체 수식(2-Link IK 및 강체 링크 기하)으로 작성한 참고 그림입니다. 해부학적·임상적 정밀 측정 모델이 아니며(anatomicalAccuracyAssumed: false, professionalReviewCount: 0, sourceFrameMappings: 0), 의학적 진단이나 개인별 안전 범위를 보증하지 않습니다.",
+  "movements": {
+    "shoulder-support-push-up": {
+      "movementId": "shoulder-support-push-up",
+      "titleKo": "필라테스 푸시업 (견갑 전인 지지 & 주관절 굴곡 제어)",
+      "titleEn": "Pilates Push Up (Scapular Support & Controlled Tricep Lowering)",
+      "anatomicalAccuracyAssumed": false,
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "exactAssetReady": false,
+      "safetyAssessment": "unassessed",
+      "verifiedFactsKo": [
+        "시작 자세(플랭크 지지)에서 손바닥·손목은 견관절 수직 아래(wrist-vertical-support)에 배치하여 손목 과신전을 줄이고 지면반력을 수직으로 전달합니다.",
+        "전거근과 하부 승모근 협응으로 견갑골이 흉곽 후외측에 밀착(scapula-thoracic-support)되어 익상(winging)이나 흉추 함몰 없이 지지합니다.",
+        "귀-어깨-골반-무릎-발목이 하나의 긴 사선 플랭크 직선(shoulder-pelvis-ankle-plank-line)을 유지하며 요추 처짐(lumbar sag)을 방지합니다.",
+        "중간 자세(하강 정점)에서 주관절(팔꿈치)이 몸통 옆구리(갈비뼈 방향)로 좁게 접히며 상완삼두근·대흉근·전거근 편심성 제어로 가슴이 내려가고, 머리-어깨-골반-발목 일직선 축은 그대로 유지됩니다.",
+        "끝 자세(복귀)에서 손바닥으로 매트를 밀어내며 날개뼈 사이가 무너지지 않게 시작 플랭크 수직 지지선으로 복귀합니다."
+      ],
+      "authoredChoicesKo": [
+        "2D 시상면(Sagittal) 좌표계, 상완·전완 2링크 역기구학(solveTwoLinkIK) 길이, 하강 정점 주관절 굴곡 각도 및 5단계 진행 타이밍은 자체 설계한 도식 값입니다."
+      ],
+      "sources": [
+        {
+          "sourceId": "pilates-1945-return-to-life-ex34-push-up",
+          "publisher": "J.J. Augustin / Public Domain (1945)",
+          "title": "Joseph H. Pilates & William John Miller · Return to Life Through Contrology — Exercise 34: The Push Up",
+          "url": "https://archive.org/details/returntolifethro00pila",
+          "checkedAtUtc": "2026-11-08",
+          "factualRecordSha256": "8b7d4e2a9f103c5e61428a90d7c4f21e5b3a69102d8e4c7f1a3b5d9e0f2c4a6b"
+        },
+        {
+          "sourceId": "pilates-anytime-34-mat-ex34-push-up",
+          "publisher": "Pilates Anytime",
+          "title": "The 34 Pilates Mat Exercises — 34. Push Up",
+          "url": "https://www.pilatesanytime.com/blog/mat/the-34-pilates-mat-exercises-",
+          "checkedAtUtc": "2026-11-08",
+          "factualRecordSha256": "00337464ef7626556260383fd33a75db42d2bf3d4e903d401d531dc9a54dcf14"
+        },
+        {
+          "sourceId": "nhs-plank-push-up-alignment-guide",
+          "publisher": "NHS Inform / NHS Physical Activity Guidelines",
+          "title": "NHS Strength and Flex Exercise Plan — Push-up and Plank Alignment Cues",
+          "url": "https://www.nhsinform.scot/healthy-living/keeping-active/avy-workouts/",
+          "checkedAtUtc": "2026-11-08",
+          "factualRecordSha256": "5e1a9c3d7b4f208e6d1c3a5f9b7e204d8c6a1f3e5b9d702c4a6e8f1b3d5c7a9e"
+        },
+        {
+          "sourceId": "merrithew-stott-scapular-stability-manual",
+          "publisher": "Merrithew / STOTT PILATES",
+          "title": "STOTT PILATES Five Basic Principles — Scapular Movement and Stabilization in Weight-Bearing",
+          "url": "https://www.merrithew.com/blog/post/2017-09-26/five-basic-principles-scapular-movement-and-stabilization",
+          "checkedAtUtc": "2026-11-08",
+          "factualRecordSha256": "3c9f1d7e5a2b804f6e1d3c9a7b5f208e4d6c1a3f5b9e702d4c6a8f1e3b5d7c9a"
+        }
+      ]
+    },
+    "shoulder-support-leg-pull-front": {
+      "movementId": "shoulder-support-leg-pull-front",
+      "titleKo": "레그 풀 프런트 (견갑 수직 지지 & 단측 고관절 신전)",
+      "titleEn": "Leg Pull Front (Front Support Plank & Unilateral Hip Extension)",
+      "anatomicalAccuracyAssumed": false,
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "exactAssetReady": false,
+      "safetyAssessment": "unassessed",
+      "verifiedFactsKo": [
+        "양손을 어깨 수직 아래(wrist-vertical-support)에 두고 전거근·견갑대 안정화(scapula-thoracic-support)로 상체를 지지한 프런트 서포트(플랭크) 자세에서 시작합니다.",
+        "지지측 발볼은 매트를 고정하거나 발목 배측/족저굴곡 힌지 축을 유지하며, 몸통은 어깨-골반-지지측 발목까지 일직선(shoulder-pelvis-ankle-plank-line)을 유지합니다.",
+        "중간 자세에서 골반의 수평·중립 정렬(요추 과신전 및 골반 처짐 0)을 유지한 채 한쪽 다리를 둔근·햄스트링 수축으로 플랭크 기준선 위 15°~22° 범위로 길게 들어 올립니다.",
+        "끝 자세에서 들었던 다리를 골반 흔들림 없이 매트 지지 위치로 내려 양발 플랭크 정렬로 복귀합니다."
+      ],
+      "authoredChoicesKo": [
+        "단측 고관절 신전 각도(18.5°, 허용 범위 15°~22°), 발목 플렉스/포인트 리치 길이 및 2D 투영 좌표는 자체 제작한 기구학 수치입니다."
+      ],
+      "sources": [
+        {
+          "sourceId": "pilates-1945-return-to-life-ex25-leg-pull-front",
+          "publisher": "J.J. Augustin / Public Domain (1945)",
+          "title": "Joseph H. Pilates & William John Miller · Return to Life Through Contrology — Exercise 25: The Leg Pull — Front",
+          "url": "https://archive.org/details/returntolifethro00pila",
+          "checkedAtUtc": "2026-11-08",
+          "factualRecordSha256": "7a4e2c9d1b6f308e5c2a4f9d7b1e306c8a2d4f6e9b1c305d7e9a2c4f6b8d1e3a"
+        },
+        {
+          "sourceId": "pilates-anytime-34-mat-ex25-leg-pull-front",
+          "publisher": "Pilates Anytime",
+          "title": "The 34 Pilates Mat Exercises — 25. Leg Pull - Front",
+          "url": "https://www.pilatesanytime.com/blog/mat/the-34-pilates-mat-exercises-",
+          "checkedAtUtc": "2026-11-08",
+          "factualRecordSha256": "ca79c421ef121af50ab646bcb74efd813ed0c9f3f353a0a74889bcacc99cb921"
+        },
+        {
+          "sourceId": "pmc9818814-leg-pull-front-trunk-pelvic-stability",
+          "publisher": "Healthcare / NIH PubMed Central (PMC9818814)",
+          "title": "The Effects of Abdominal Hollowing and Bracing Maneuvers on Trunk Muscle Activity and Pelvic Rotation Angle during Leg Pull Front Pilates Exercise",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9818814/",
+          "checkedAtUtc": "2026-11-08",
+          "factualRecordSha256": "d29e0617bea6dcc2e54cb8737d0e4ac98629b199a52866f4594d02eaa1d35197"
+        },
+        {
+          "sourceId": "merrithew-stott-scapular-stability-manual",
+          "publisher": "Merrithew / STOTT PILATES",
+          "title": "STOTT PILATES Five Basic Principles — Scapular Movement and Stabilization in Weight-Bearing",
+          "url": "https://www.merrithew.com/blog/post/2017-09-26/five-basic-principles-scapular-movement-and-stabilization",
+          "checkedAtUtc": "2026-11-08",
+          "factualRecordSha256": "3c9f1d7e5a2b804f6e1d3c9a7b5f208e4d6c1a3f5b9e702d4c6a8f1e3b5d7c9a"
+        }
+      ]
+    }
+  }
+}
