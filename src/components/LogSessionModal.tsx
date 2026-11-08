@@ -25,6 +25,7 @@ import {
 import { LightDismissDialog } from './LightDismissDialog';
 import '../styles/design-tokens.css';
 import '../styles/teaching.css';
+import './LogSessionModal.css';
 
 export interface TeachingLogContext {
   actualDurationSec?: number;
@@ -330,228 +331,239 @@ const SessionLogForm: React.FC<
       title="수업 기록 남기기"
       subtitle={title}
       maxWidth="640px"
+      className="class-log-modal"
     >
       <form className="teaching-log-form" onSubmit={submit}>
-        <div className="teaching-log-summary">
-          <Clock3 size={20} />
-          <div>
-            <div className="teaching-log-badge-row">
-              <span className="teaching-record-kind-badge is-history">
-                <ShieldCheck size={13} />
-                진행 완료 이력 스냅샷
-              </span>
-              <span className="teaching-record-source-badge">
-                {sourceKind === 'saved-sequence' ? '원본: 저장한 시퀀스 계획' : '원본: 현재 수업 초안'}
-              </span>
+        <div className="class-log-content">
+          <div className="teaching-log-summary">
+            <Clock3 size={20} />
+            <div>
+              <strong>
+                계획 {Number(planned.toFixed(2))}분 · {exerciseCount}개 동작
+              </strong>
+              <p className="muted">계획 시간과 실제 진행 시간은 별도로 보관됩니다.</p>
+              <details className="class-log-provenance">
+                <summary>완료 이력 보관 방식</summary>
+                <div className="teaching-log-badge-row">
+                  <span className="teaching-record-kind-badge is-history">
+                    <ShieldCheck size={13} /> 진행 완료 이력 스냅샷
+                  </span>
+                  <span className="teaching-record-source-badge">
+                    {sourceKind === 'saved-sequence'
+                      ? '원본: 저장한 시퀀스 계획'
+                      : '원본: 현재 수업 초안'}
+                  </span>
+                </div>
+                <p className="muted">
+                  당시 동작·블록·순서·시간이 스냅샷으로 보존되어 나중에 원본 동작이나 블록을
+                  수정해도 이 완료 이력은 바뀌지 않습니다.
+                </p>
+              </details>
+              {plannedTiming.restSec > 0 && (
+                <p className="muted">
+                  운동 {formatSecondsToMMSS(plannedTiming.exerciseSec)} · 휴식{' '}
+                  {formatSecondsToMMSS(plannedTiming.restSec)} · 휴식은 전체 시간에 포함
+                </p>
+              )}
+              {persistenceError && (
+                <p className="teaching-storage-warning">브라우저 저장소 경고: {persistenceError}</p>
+              )}
             </div>
-            <strong>
-              계획 {Number(planned.toFixed(2))}분 · {exerciseCount}개 동작
-            </strong>
-            <p className="muted">
-              계획 시간과 실제 진행 시간은 별도로 보관되며, 당시 동작·블록·순서·시간이 스냅샷으로 보존되어 나중에 원본 동작이나 블록을 수정해도 이 완료 이력은 바뀌지 않습니다.
-            </p>
-            {plannedTiming.restSec > 0 && (
-              <p className="muted">
-                운동 {formatSecondsToMMSS(plannedTiming.exerciseSec)} · 휴식{' '}
-                {formatSecondsToMMSS(plannedTiming.restSec)} · 휴식은 전체 시간에 포함
-              </p>
-            )}
-            {persistenceError && (
-              <p className="teaching-storage-warning">
-                브라우저 저장소 경고: {persistenceError}
-              </p>
-            )}
           </div>
-        </div>
-        <div className="teaching-form-grid teaching-form-two">
-          <PfField label="수업 그룹 *">
-            <PfSelect
-              required
-              value={groupId}
-              onChange={(event) => setGroupId(event.target.value)}
-            >
-              <option value="" disabled>
-                그룹을 선택해 주세요
-              </option>
-              {classGroups.map((group) => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
+          <div className="teaching-form-grid teaching-form-two">
+            <PfField label="수업 그룹 *">
+              <PfSelect
+                required
+                value={groupId}
+                onChange={(event) => setGroupId(event.target.value)}
+              >
+                <option value="" disabled>
+                  그룹을 선택해 주세요
                 </option>
+                {classGroups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </PfSelect>
+            </PfField>
+            <PfField label="수업 일자 *">
+              <PfInput
+                type="date"
+                required
+                max={localDate()}
+                value={taughtDate}
+                onChange={(event) => setTaughtDate(event.target.value)}
+              />
+            </PfField>
+          </div>
+          <button
+            type="button"
+            className="teaching-log-link"
+            aria-expanded={showGroup}
+            onClick={() => setShowGroup((value) => !value)}
+          >
+            <Plus size={15} />
+            수업 그룹 추가
+          </button>
+          {showGroup && (
+            <div className="teaching-inline-group">
+              <PfField label="그룹 별칭 · 실명은 필요 없어요">
+                <PfInput
+                  maxLength={60}
+                  placeholder="예: 저녁 A반, 개인 01"
+                  value={newGroupName}
+                  onChange={(event) => setNewGroupName(event.target.value)}
+                />
+              </PfField>
+              <PfButton variant="secondary" onClick={createGroup}>
+                추가
+              </PfButton>
+            </div>
+          )}
+          <fieldset className="teaching-duration-field">
+            <legend>실제 진행 시간 (선택)</legend>
+            <div>
+              <PfField label="분">
+                <PfInput
+                  inputMode="numeric"
+                  type="number"
+                  min="0"
+                  max="1440"
+                  step="1"
+                  placeholder="미기록"
+                  value={minutes}
+                  onChange={(event) => setMinutes(event.target.value)}
+                />
+              </PfField>
+              <PfField label="초">
+                <PfInput
+                  inputMode="numeric"
+                  type="number"
+                  min="0"
+                  max="59"
+                  step="1"
+                  placeholder="00"
+                  value={seconds}
+                  onChange={(event) => setSeconds(event.target.value)}
+                />
+              </PfField>
+            </div>
+            <p className="muted">
+              {context?.actualDurationSec === undefined
+                ? '실제로 진행한 시간을 알고 있다면 입력해 주세요. 비워 두면 미기록으로 남습니다.'
+                : '일시정지를 제외한 타이머 시간입니다. 실제 수업에 맞게 수정해 주세요.'}
+            </p>
+            {context?.actualRestDurationSec !== undefined && (
+              <p className="muted">
+                타이머에서 진행된 휴식 {formatSecondsToMMSS(context.actualRestDurationSec)} ·
+                일시정지 제외
+              </p>
+            )}
+          </fieldset>
+          <details
+            className="teaching-log-steps"
+            open={context?.taughtStepIds !== undefined ? true : undefined}
+          >
+            <summary>
+              실제로 진행한 동작 확인 · {selectedExerciseCount} / {exerciseCount}개
+            </summary>
+            <p className="muted">
+              {context?.taughtStepIds !== undefined
+                ? '진행한 동작만 선택해 주세요. 타이머를 사용한 동작을 먼저 선택해 두었습니다.'
+                : '계획에 있는 동작이 선택되어 있어요. 실제로 진행한 동작만 남겨 주세요.'}
+            </p>
+            <div>
+              {snapshot.map((step) => (
+                <label key={step.stepId}>
+                  <input
+                    type="checkbox"
+                    checked={selectedSteps.has(step.stepId)}
+                    onChange={(event) =>
+                      setSelectedSteps((value) => {
+                        const next = new Set(value);
+                        if (event.target.checked) next.add(step.stepId);
+                        else next.delete(step.stepId);
+                        return next;
+                      })
+                    }
+                  />
+                  <span>
+                    {isRestStep(step)
+                      ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}`
+                      : step.blockInstanceId
+                        ? (step.exerciseSnapshot?.nameKo ??
+                          exercisesAtOpen.find((exercise) => exercise.id === step.exerciseId)
+                            ?.nameKo ??
+                          exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
+                          '삭제된 동작')
+                        : (exercisesAtOpen.find((exercise) => exercise.id === step.exerciseId)
+                            ?.nameKo ??
+                          step.exerciseSnapshot?.nameKo ??
+                          exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
+                          '삭제된 동작')}
+                  </span>
+                </label>
               ))}
-            </PfSelect>
-          </PfField>
-          <PfField label="수업 일자 *">
-            <PfInput
-              type="date"
-              required
-              max={localDate()}
-              value={taughtDate}
-              onChange={(event) => setTaughtDate(event.target.value)}
+            </div>
+          </details>
+          <div className="teaching-form-grid teaching-form-two">
+            <PfField label="강사가 느낀 강도">
+              <PfSelect
+                value={intensity}
+                onChange={(event) => setIntensity(event.target.value as typeof intensity)}
+              >
+                <option value="relaxed">가볍게</option>
+                <option value="moderate">보통</option>
+                <option value="intense">높게</option>
+              </PfSelect>
+            </PfField>
+            <PfField label="강사의 수업 평가">
+              <PfSelect
+                value={rating}
+                onChange={(event) => setRating(Number(event.target.value) as typeof rating)}
+              >
+                {([1, 2, 3, 4, 5] as const).map((value) => (
+                  <option key={value} value={value}>
+                    {value} / 5
+                  </option>
+                ))}
+              </PfSelect>
+            </PfField>
+          </div>
+          <PfField
+            label="다음 수업을 위한 메모 (선택)"
+            hint="학생 실명이나 건강 정보는 적지 않아도 돼요."
+          >
+            <PfTextarea
+              aria-label="다음 수업을 위한 메모 (선택)"
+              rows={3}
+              maxLength={3000}
+              placeholder="잘 이어진 전환, 다음에 바꿔볼 동작 등을 남겨 주세요."
+              value={reflection}
+              onChange={(event) => setReflection(event.target.value)}
             />
           </PfField>
         </div>
-        <button
-          type="button"
-          className="teaching-log-link"
-          aria-expanded={showGroup}
-          onClick={() => setShowGroup((value) => !value)}
-        >
-          <Plus size={15} />
-          수업 그룹 추가
-        </button>
-        {showGroup && (
-          <div className="teaching-inline-group">
-            <PfField label="그룹 별칭 · 실명은 필요 없어요">
-              <PfInput
-                maxLength={60}
-                placeholder="예: 저녁 A반, 개인 01"
-                value={newGroupName}
-                onChange={(event) => setNewGroupName(event.target.value)}
-              />
-            </PfField>
-            <PfButton variant="secondary" onClick={createGroup}>
-              추가
+        <footer className="class-log-footer">
+          {error && <PfFormError>{error}</PfFormError>}
+          <div className="teaching-form-actions">
+            <PfButton variant="secondary" onClick={onClose}>
+              취소
+            </PfButton>
+            <PfButton
+              type="submit"
+              variant="primary"
+              disabled={submitted || classGroups.length === 0}
+            >
+              <Check size={17} />
+              수업 기록 저장
             </PfButton>
           </div>
-        )}
-        <fieldset className="teaching-duration-field">
-          <legend>실제 진행 시간 (선택)</legend>
-          <div>
-            <PfField label="분">
-              <PfInput
-                inputMode="numeric"
-                type="number"
-                min="0"
-                max="1440"
-                step="1"
-                placeholder="미기록"
-                value={minutes}
-                onChange={(event) => setMinutes(event.target.value)}
-              />
-            </PfField>
-            <PfField label="초">
-              <PfInput
-                inputMode="numeric"
-                type="number"
-                min="0"
-                max="59"
-                step="1"
-                placeholder="00"
-                value={seconds}
-                onChange={(event) => setSeconds(event.target.value)}
-              />
-            </PfField>
-          </div>
-          <p className="muted">
-            {context?.actualDurationSec === undefined
-              ? '실제로 진행한 시간을 알고 있다면 입력해 주세요. 비워 두면 미기록으로 남습니다.'
-              : '일시정지를 제외한 타이머 시간입니다. 실제 수업에 맞게 수정해 주세요.'}
+          <p className="teaching-log-footnote muted">
+            이 브라우저에 저장됩니다. 기록이 실제 수업과 맞는지 확인해 주세요.
           </p>
-          {context?.actualRestDurationSec !== undefined && (
-            <p className="muted">
-              타이머에서 진행된 휴식 {formatSecondsToMMSS(context.actualRestDurationSec)} · 일시정지
-              제외
-            </p>
-          )}
-        </fieldset>
-        <details
-          className="teaching-log-steps"
-          open={context?.taughtStepIds !== undefined ? true : undefined}
-        >
-          <summary>
-            실제로 진행한 동작 확인 · {selectedExerciseCount} / {exerciseCount}개
-          </summary>
-          <p className="muted">
-            {context?.taughtStepIds !== undefined
-              ? '진행한 동작만 선택해 주세요. 타이머를 사용한 동작을 먼저 선택해 두었습니다.'
-              : '계획에 있는 동작이 선택되어 있어요. 실제로 진행한 동작만 남겨 주세요.'}
-          </p>
-          <div>
-            {snapshot.map((step) => (
-              <label key={step.stepId}>
-                <input
-                  type="checkbox"
-                  checked={selectedSteps.has(step.stepId)}
-                  onChange={(event) =>
-                    setSelectedSteps((value) => {
-                      const next = new Set(value);
-                      if (event.target.checked) next.add(step.stepId);
-                      else next.delete(step.stepId);
-                      return next;
-                    })
-                  }
-                />
-                <span>
-                  {isRestStep(step)
-                    ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}`
-                    : step.blockInstanceId
-                      ? (step.exerciseSnapshot?.nameKo ??
-                        exercisesAtOpen.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
-                        exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
-                        '삭제된 동작')
-                      : (exercisesAtOpen.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
-                        step.exerciseSnapshot?.nameKo ??
-                        exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
-                        '삭제된 동작')}
-                </span>
-              </label>
-            ))}
-          </div>
-        </details>
-        <div className="teaching-form-grid teaching-form-two">
-          <PfField label="강사가 느낀 강도">
-            <PfSelect
-              value={intensity}
-              onChange={(event) => setIntensity(event.target.value as typeof intensity)}
-            >
-              <option value="relaxed">가볍게</option>
-              <option value="moderate">보통</option>
-              <option value="intense">높게</option>
-            </PfSelect>
-          </PfField>
-          <PfField label="강사의 수업 평가">
-            <PfSelect
-              value={rating}
-              onChange={(event) => setRating(Number(event.target.value) as typeof rating)}
-            >
-              {([1, 2, 3, 4, 5] as const).map((value) => (
-                <option key={value} value={value}>
-                  {value} / 5
-                </option>
-              ))}
-            </PfSelect>
-          </PfField>
-        </div>
-        <PfField
-          label="다음 수업을 위한 메모 (선택)"
-          hint="학생 실명이나 건강 정보는 적지 않아도 돼요."
-        >
-          <PfTextarea
-            aria-label="다음 수업을 위한 메모 (선택)"
-            rows={3}
-            maxLength={3000}
-            placeholder="잘 이어진 전환, 다음에 바꿔볼 동작 등을 남겨 주세요."
-            value={reflection}
-            onChange={(event) => setReflection(event.target.value)}
-          />
-        </PfField>
-        {error && <PfFormError>{error}</PfFormError>}
-        <div className="teaching-form-actions">
-          <PfButton variant="secondary" onClick={onClose}>
-            취소
-          </PfButton>
-          <PfButton
-            type="submit"
-            variant="primary"
-            disabled={submitted || classGroups.length === 0}
-          >
-            <Check size={17} />
-            수업 기록 저장
-          </PfButton>
-        </div>
-        <p className="teaching-log-footnote muted">
-          이 브라우저에 저장됩니다. 기록이 실제 수업과 맞는지 확인해 주세요.
-        </p>
+        </footer>
       </form>
     </LightDismissDialog>
   );
