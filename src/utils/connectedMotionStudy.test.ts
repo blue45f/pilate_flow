@@ -282,7 +282,10 @@ describe('connected study projection of one parent clock', () => {
       }),
     ).toMatchObject({ kind: 'empty', stepIndex: null, static: true });
     const { step, exercise } = fixture();
-    const steps = [step, { ...step, stepId: 'second', sideMode: 'right' as const }];
+    const steps = [
+      step,
+      { ...step, stepId: 'second', sideMode: 'right' as const, explanationSec: 0 },
+    ];
     const model = buildSequenceSimulation(steps, [exercise], 2);
     const state = resolveConnectedMotionStudy({
       model,
@@ -292,6 +295,16 @@ describe('connected study projection of one parent clock', () => {
     });
     expect(state).toMatchObject({ kind: 'study', side: 'right', static: true });
     expect(state.progress).toBe(entry.phases.find((phase) => phase.id === 'setup')!.sample);
+    const completedEarlierStep = resolveConnectedMotionStudy({
+      model,
+      steps,
+      selectedIndex: 0,
+      position: seekSequenceSimulation(model, 120),
+    });
+    expect(completedEarlierStep).toMatchObject({ kind: 'study', side: 'left', static: true });
+    expect(completedEarlierStep.progress).toBe(
+      entry.phases.find((phase) => phase.id === 'setup')!.sample,
+    );
   });
 });
 

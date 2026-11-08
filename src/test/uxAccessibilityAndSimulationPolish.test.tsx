@@ -1,18 +1,25 @@
 import { useState } from 'react';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { PfTabs } from '../design-system';
 import { LightDismissDialog } from '../components/LightDismissDialog';
+import { LiveStageView } from '../components/LiveStageView';
 import { buildSequenceSimulation } from '../utils/sequenceSimulation';
 import { stepSchema } from '../schemas/cloudBackupSchema';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { exerciseRevision } from '../utils/exerciseReview';
+import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesExercise, SequenceStep } from '../types/pilates';
+
+const initialStoreState = usePilatesStore.getState();
 
 afterEach(() => {
   cleanup();
+  usePilatesStore.setState(initialStoreState, true);
+  vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 function parseHexToLinearRgb(hex: string): [number, number, number] {
@@ -338,5 +345,64 @@ describe('UX accessibility and simulation polish regressions', () => {
     expect(document.getElementById(budgetErrorId!)).toHaveTextContent(
       '휴식은 0분 이상, 전체 수업 시간보다 짧게 입력해 주세요.',
     );
+  });
+
+  it('caps LiveStageView +1분 추가 at stepSchema 120-min limit, preserves movement phase at completion when transitionSec is 0, and rounds IEEE-754 step durations consistently', () => {
+    vi.useFakeTimers();
+    const baseExercise = structuredClone(INITIAL_EXERCISES[0]) as PilatesExercise;
+    const steps: SequenceStep[] = [
+      {
+        stepId: 'stage-zero-transition',
+        order: 1,
+        blockCategory: baseExercise.blockCategory,
+        exerciseId: baseExercise.id,
+        durationMin: 120,
+        selectedLayer: 'standard',
+        explanationSec: 10,
+        transitionSec: 0,
+      },
+      {
+        stepId: 'stage-float-250s',
+        order: 2,
+        blockCategory: baseExercise.blockCategory,
+        exerciseId: baseExercise.id,
+        durationMin: 250 / 60,
+        selectedLayer: 'standard',
+        explanationSec: 10,
+        transitionSec: 10,
+      },
+    ];
+
+    usePilatesStore.setState({
+      ...initialStoreState,
+      activeSequenceId: 'seq-sim-polish',
+      activeTitle: '시뮬레이션 경계 검증',
+      activeSteps: steps,
+      activeTargetMinutes: 124,
+      exercises: [baseExercise],
+    });
+
+    render(<LiveStageView onOpenLogModal={vi.fn()} />);
+
+    // 1. Clicking +1분 추가 at durationMin=120 must not exceed stepSchema max(120) or unmount the timer UI
+    fireEvent.click(screen.getByRole('button', { name: '현재 동작 1분 추가' }));
+    expect(
+      screen.queryByRole('heading', { name: '수업 항목 정보를 확인해 주세요' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('timer')).toHaveTextContent('120:00');
+
+    // 2. Next-panel and outline must display 04:10 (not 04:09 from Math.floor((250/60)*60))
+    expect(screen.getByText(/전체 04:10/)).toBeInTheDocument();
+    expect(screen.getByText('04:10')).toBeInTheDocument();
+
+    // 3. When transitionSec === 0 and the step finishes (remainingMs === 0), phase stays on movement instead of '다음 동작 전환'
+    fireEvent.click(screen.getByRole('button', { name: '수업 시작' }));
+    act(() => {
+      vi.advanceTimersByTime(120 * 60 * 1000 + 500);
+    });
+    expect(screen.getByRole('timer')).toHaveTextContent('00:00');
+    const statusBadge = document.querySelector('.teaching-timer-status');
+    expect(statusBadge).toHaveTextContent('항목 시간 완료');
+    expect(statusBadge).not.toHaveTextContent('다음 동작 전환');
   });
 });
