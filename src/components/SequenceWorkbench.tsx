@@ -1,3 +1,4 @@
+import { EquipmentChoice } from './EquipmentChoice';
 import { buildSequenceSimulation } from '../utils/sequenceSimulation';
 import {
   Suspense,
@@ -2162,25 +2163,22 @@ export function SequenceWorkbench({
               <p className="muted">
                 여러 기구를 함께 선택할 수 있습니다. 선택한 각 기구의 승인 동작을 포함합니다.
               </p>
-              <div className="inventory-options">
+              <div className="equipment-choice-grid">
                 {EQUIPMENT_OPTIONS.map((equipment) => (
-                  <label key={equipment.id}>
-                    <input
-                      type="checkbox"
-                      checked={selectedEquipment.includes(equipment.id)}
-                      disabled={!s.ownedEquipment.includes(equipment.id)}
-                      onChange={() => {
-                        const next = selectedEquipment.includes(equipment.id)
-                          ? selectedEquipment.filter((id) => id !== equipment.id)
-                          : [...selectedEquipment, equipment.id];
-                        setCriteria({ ...criteria, availableEquipment: next });
-                      }}
-                    />
-                    <span>
-                      {equipment.labelKo}
-                      {!s.ownedEquipment.includes(equipment.id) ? ' · 미보유' : ''}
-                    </span>
-                  </label>
+                  <EquipmentChoice
+                    key={equipment.id}
+                    equipmentId={equipment.id}
+                    label={equipment.labelKo}
+                    unavailable={!s.ownedEquipment.includes(equipment.id)}
+                    checked={selectedEquipment.includes(equipment.id)}
+                    disabled={!s.ownedEquipment.includes(equipment.id)}
+                    onChange={() => {
+                      const next = selectedEquipment.includes(equipment.id)
+                        ? selectedEquipment.filter((id) => id !== equipment.id)
+                        : [...selectedEquipment, equipment.id];
+                      setCriteria({ ...criteria, availableEquipment: next });
+                    }}
+                  />
                 ))}
               </div>
               <button className="text-button" type="button" onClick={openInventory}>

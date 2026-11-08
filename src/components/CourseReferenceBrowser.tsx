@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight, BookOpen, Search, SlidersHorizontal, X } from 'lucide-react';
+import { usePilatesStore } from '../store/usePilatesStore';
 import { COURSE_REFERENCES as courses } from '../data/courseReferences';
 import {
   courseBodyLabel,
@@ -33,9 +34,16 @@ const toggle = (items: string[], value: string) =>
   items.includes(value) ? items.filter((item) => item !== value) : [...items, value];
 
 export function CourseReferenceBrowser() {
-  const [filters, setFilters] = useState<CourseFilters>({
-    ...INITIAL_COURSE_FILTERS,
-  });
+  const exerciseBrowseScope = usePilatesStore((state) => state.exerciseBrowseScope);
+  const setExerciseBrowseScope = usePilatesStore((state) => state.setExerciseBrowseScope);
+  const [localFilters, setFilters] = useState<CourseFilters>({ ...INITIAL_COURSE_FILTERS });
+  const filters = useMemo(
+    () => ({
+      ...localFilters,
+      ownedOnly: exerciseBrowseScope === 'owned',
+    }),
+    [localFilters, exerciseBrowseScope],
+  );
   const [showFilters, setShowFilters] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
   const nextHeading = useRef<string | null>(null);
@@ -48,8 +56,10 @@ export function CourseReferenceBrowser() {
   const signature = JSON.stringify(filters);
   const count = visible.signature === signature ? visible.count : 6;
   const filtered = useMemo(() => filterCourseReferences(courses, filters), [filters]);
-  const update = <K extends keyof CourseFilters>(key: K, value: CourseFilters[K]) =>
-    setFilters((previous) => ({ ...previous, [key]: value }));
+  const update = <K extends keyof CourseFilters>(key: K, value: CourseFilters[K]) => {
+    if (key === 'ownedOnly') setExerciseBrowseScope(value ? 'owned' : 'all');
+    else setFilters((previous) => ({ ...previous, [key]: value }));
+  };
 
   const activeFilters: { key: string; label: string; remove: () => void }[] = [
     ...(filters.search.trim()
