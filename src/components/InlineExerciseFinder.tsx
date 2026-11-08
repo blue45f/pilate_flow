@@ -9,7 +9,9 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react';
-import { EQUIPMENT_OPTIONS, getExerciseEquipment } from '../data/equipmentCatalog';
+import { EQUIPMENT_OPTIONS, PROP_OPTIONS, getExerciseEquipment } from '../data/equipmentCatalog';
+import { matchesLibraryEquipment } from '../data/libraryEquipmentFilters';
+import { EquipmentDiscoveryScope } from './EquipmentDiscoveryScope';
 import type { EquipmentId } from '../data/equipmentCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesExercise } from '../types/pilates';
@@ -75,12 +77,18 @@ export function InlineExerciseFinder({
   active = true,
 }: InlineExerciseFinderProps) {
   const exercises = usePilatesStore((state) => state.exercises);
+  const ownedEquipment = usePilatesStore((state) => state.ownedEquipment);
+  const ownedProps = usePilatesStore((state) => state.ownedProps);
+  const exerciseBrowseScope = usePilatesStore((state) => state.exerciseBrowseScope);
+  const setExerciseBrowseScope = usePilatesStore((state) => state.setExerciseBrowseScope);
   const activeSteps = usePilatesStore((state) => state.activeSteps);
   const appendExerciseToSequence = usePilatesStore((state) => state.appendExerciseToSequence);
   const setActiveTab = usePilatesStore((state) => state.setActiveTab);
   const [filters, setFilters] = useState(emptyFilters);
   const [tab, setTab] = useState<FilterTab>('equipment');
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [page, setPage] = useState({ signature: '', count: 6 });
+  const signature = JSON.stringify({ filters, exerciseBrowseScope, ownedEquipment, ownedProps });
+  const visibleCount = page.signature === signature ? page.count : 6;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [preview, setPreview] = useState<MotionPatternReference | null>(null);
   const [previewExerciseId, setPreviewExerciseId] = useState<string | null>(null);
@@ -101,11 +109,11 @@ export function InlineExerciseFinder({
   }, [preview]);
   const update = <K extends keyof FinderFilters>(key: K, value: FinderFilters[K]) => {
     setFilters((previous) => ({ ...previous, [key]: value }));
-    setVisibleCount(6);
+    setPage({ signature: '', count: 6 });
   };
   const reset = () => {
     setFilters(emptyFilters());
-    setVisibleCount(6);
+    setPage({ signature: '', count: 6 });
     setFeedback(null);
   };
   const bodyTags = useMemo(
@@ -127,8 +135,13 @@ export function InlineExerciseFinder({
       const motionReferences = resolvePatternReferencesForRenderer(exercise);
       if (filters.motionOnly && !motionReferences.length) return false;
       if (
-        filters.equipment.length &&
-        !filters.equipment.some((selected) => equipment.requiredEquipment.includes(selected))
+        !matchesLibraryEquipment(equipment, {
+          equipment: filters.equipment,
+          props: [],
+          ownedOnly: exerciseBrowseScope === 'owned',
+          ownedEquipment,
+          ownedProps,
+        })
       )
         return false;
       if (filters.bodyTag && !exercise.targetMuscles.includes(filters.bodyTag)) return false;
@@ -143,6 +156,12 @@ export function InlineExerciseFinder({
         exercise.nameKo,
         exercise.nameEn,
         ...exercise.targetMuscles,
+        ...equipment.requiredEquipment.map(
+          (id) => EQUIPMENT_OPTIONS.find((item) => item.id === id)?.labelKo ?? id,
+        ),
+        ...equipment.requiredProps.map(
+          (id) => PROP_OPTIONS.find((item) => item.id === id)?.labelKo ?? id,
+        ),
         ...motionReferences.flatMap((reference) => [
           reference.title,
           reference.variant,
@@ -151,7 +170,7 @@ export function InlineExerciseFinder({
       ].map(compactSearchText);
       return terms.every((term) => fields.some((field) => field.includes(term)));
     });
-  }, [exercises, filters]);
+  }, [exercises, filters, exerciseBrowseScope, ownedEquipment, ownedProps]);
   const activeFilterCount =
     filters.equipment.length +
     Number(Boolean(filters.bodyTag)) +
@@ -201,6 +220,7 @@ export function InlineExerciseFinder({
         </div>
         <span>{exercises.length}개 노트</span>
       </div>
+      <EquipmentDiscoveryScope />
       {classEquipment.length > 0 && (
         <section className="ief-class-context" aria-label="이번 수업 기구">
           <p>
@@ -227,7 +247,7 @@ export function InlineExerciseFinder({
               aria-pressed={filters.equipment.length === 0}
               onClick={() => update('equipment', [])}
             >
-              전체 기구 보기
+              수업 기구 조건 해제
             </button>
           </div>
         </section>
@@ -612,7 +632,16 @@ export function InlineExerciseFinder({
         <div className="ief-empty">
           <Search size={24} aria-hidden="true" />
           <h3>조건에 맞는 동작이 없어요</h3>
-          <p>검색어와 기구·태그·시간을 조정해 보세요.</p>
+          <p>
+            {exerciseBrowseScope === 'owned'
+              ? '내 보유 장비 범위에서 결과가 없습니다. 설정의 기구·소도구 또는 검색 조건을 확인해 주세요.'
+              : '검색어와 기구·태그·시간을 조정해 보세요.'}
+          </p>
+          {exerciseBrowseScope === 'owned' && (
+            <button type="button" onClick={() => setExerciseBrowseScope('all')}>
+              보유 장비 조건만 해제
+            </button>
+          )}
           <button type="button" onClick={reset}>
             검색·필터 초기화
           </button>
@@ -624,7 +653,7 @@ export function InlineExerciseFinder({
           type="button"
           onClick={() => {
             nextPageFocusRef.current = visibleCount;
-            setVisibleCount((count) => count + 6);
+            setPage({ signature, count: visibleCount + 6 });
           }}
         >
           동작 더 보기{' '}

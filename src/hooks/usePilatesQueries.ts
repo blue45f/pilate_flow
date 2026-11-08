@@ -1,3 +1,5 @@
+import { getExerciseEquipment } from '../data/equipmentCatalog';
+import { matchesLibraryEquipment } from '../data/libraryEquipmentFilters';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -35,10 +37,7 @@ export function useSequenceAnalyticsQuery() {
   const activeTargetGroupId = usePilatesStore((s) => s.activeTargetGroupId);
   const activeTargetMinutes = usePilatesStore((s) => s.activeTargetMinutes);
 
-  const exercisesMap = useMemo(
-    () => new Map(exercises.map((ex) => [ex.id, ex])),
-    [exercises],
-  );
+  const exercisesMap = useMemo(() => new Map(exercises.map((ex) => [ex.id, ex])), [exercises]);
 
   return useQuery({
     queryKey: [
@@ -73,7 +72,8 @@ export function useFilteredAtlasQuery(filters: AtlasFilterState) {
   const exercises = usePilatesStore((s) => s.exercises);
   const historyLogs = usePilatesStore((s) => s.historyLogs);
   const activeTargetGroupId = usePilatesStore((s) => s.activeTargetGroupId);
-  const ownedApparatus = usePilatesStore((s) => s.ownedApparatus);
+  const ownedEquipment = usePilatesStore((s) => s.ownedEquipment);
+  const ownedProps = usePilatesStore((s) => s.ownedProps);
 
   return useQuery({
     queryKey: [
@@ -82,7 +82,8 @@ export function useFilteredAtlasQuery(filters: AtlasFilterState) {
       exercises,
       historyLogs,
       activeTargetGroupId,
-      ownedApparatus,
+      ownedEquipment,
+      ownedProps,
     ],
     queryFn: () => {
       const recentSet = getRecentlyTaughtExerciseIds(historyLogs, 10, activeTargetGroupId);
@@ -90,7 +91,15 @@ export function useFilteredAtlasQuery(filters: AtlasFilterState) {
 
       return exercises
         .filter((ex) => {
-          if (filters.onlyOwnedEquipment && !ownedApparatus.includes(ex.apparatus)) {
+          if (
+            !matchesLibraryEquipment(getExerciseEquipment(ex), {
+              equipment: [],
+              props: [],
+              ownedOnly: filters.onlyOwnedEquipment,
+              ownedEquipment,
+              ownedProps,
+            })
+          ) {
             return false;
           }
           if (filters.apparatus !== 'all' && ex.apparatus !== filters.apparatus) {
@@ -98,8 +107,7 @@ export function useFilteredAtlasQuery(filters: AtlasFilterState) {
           }
           if (filters.region !== 'all') {
             const exRegion =
-              ex.youtube.region ??
-              (/[가-힣]/.test(ex.youtube.channelName) ? 'kr' : 'global');
+              ex.youtube.region ?? (/[가-힣]/.test(ex.youtube.channelName) ? 'kr' : 'global');
             if (exRegion !== filters.region) return false;
           }
           if (filters.durationFilter !== 'all') {

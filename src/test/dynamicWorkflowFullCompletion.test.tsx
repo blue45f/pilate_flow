@@ -309,7 +309,7 @@ describe('Dynamic Workflow Full Completion (Tracks 1–4 E2E Integration)', () =
 
       render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
 
-      const reopenBtn = screen.getByRole('button', { name: /이력 다시 열기/ });
+      const reopenBtn = screen.getByRole('button', { name: /당시 시퀀스 보기/ });
       fireEvent.click(reopenBtn);
 
       const precautionNode = screen.getByTestId('history-snapshot-step-precautions');

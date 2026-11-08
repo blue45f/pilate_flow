@@ -142,7 +142,7 @@ describe('History Page Long-Term Accumulated Scale (100 / 1000) Post-Patch Verif
     ).toBeInTheDocument();
 
     const callsBeforeModal = resolveSpy.mock.calls.length;
-    fireEvent.click(within(driftCard).getByRole('button', { name: /이력 다시 열기/ }));
+    fireEvent.click(within(driftCard).getByRole('button', { name: /당시 시퀀스 보기/ }));
     const dialog = screen.getByRole('dialog');
     expect(resolveSpy).toHaveBeenCalledTimes(callsBeforeModal);
     expect(
@@ -249,9 +249,9 @@ describe('History Page Long-Term Accumulated Scale (100 / 1000) Post-Patch Verif
       const legacyCard = feed.querySelector('article.teaching-history-card') as HTMLElement;
       expect(legacyCard).toBeTruthy();
       expect(
-        within(legacyCard).getByText('삭제된 동작이 있어 불러올 수 없습니다.'),
+        within(legacyCard).getByText('삭제된 동작이 있어 복사할 수 없습니다. 당시 기록은 확인할 수 있습니다.'),
       ).toBeInTheDocument();
-      const reuseBtn = within(legacyCard).getByRole('button', { name: /이 수업 다시 계획/ });
+      const reuseBtn = within(legacyCard).getByRole('button', { name: /복사해 새 수업 만들기/ });
       expect(reuseBtn).toBeDisabled();
 
       // Still only the initial 1,000 snapshot parses occurred across all 1,000-scale interactions!

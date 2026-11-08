@@ -170,6 +170,10 @@ const assert = require('node:assert/strict');
       await copy.getByRole('button', { name: '매트 기본 수업 (복사) 삭제', exact: true }).click();
       await copy.getByRole('button', { name: '삭제 확인', exact: true }).click();
       await copy.waitFor({ state: 'hidden' });
+      await page.waitForFunction(
+        (e) => e === document.activeElement,
+        await first.getByRole('button', { name: '불러오기', exact: true }).elementHandle(),
+      );
       assert.equal(
         await first
           .getByRole('button', { name: '불러오기', exact: true })

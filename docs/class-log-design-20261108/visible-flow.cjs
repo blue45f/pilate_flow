@@ -159,7 +159,7 @@ fs.mkdirSync(out, { recursive: true });
         return { logs: s.historyLogs, plans: s.savedSequences };
       });
       assert.deepEqual(JSON.parse(JSON.stringify(reread)), JSON.parse(JSON.stringify(stored)));
-      await p.getByRole('button', { name: '이력 다시 열기', exact: true }).click();
+      await p.getByRole('button', { name: /^(당시 시퀀스 보기|이력 다시 열기)$/ }).click();
       const history = p
         .getByRole('dialog')
         .filter({ has: p.getByText('실제 보이는 버튼으로 진입한 합성 기록', { exact: false }) });
