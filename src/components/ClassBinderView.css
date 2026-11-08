@@ -131,3 +131,20 @@
 }
 
 #root .teaching-collection--history .teaching-page-header > button { grid-column: 2; grid-row: 1; }
+
+#root .teaching-collection--history .teaching-history-filters > summary {
+  min-height: 44px; padding: 12px 2px; font-size: 14px; line-height: 1.5;
+  cursor: pointer; color: #35594e;
+}
+#root .teaching-collection--history .teaching-history-filters[open] > summary { margin-bottom: 8px; }
+#root .teaching-collection--history .teaching-history-filter-status {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  font-size: 14px; line-height: 1.5; overflow-wrap: anywhere;
+}
+
+/* The shared body minimum otherwise doubles to 640px at 200% zoom. */
+body:has(.teaching-collection--history) { min-width: 0; }
+@container history-collection (max-width: 260px) {
+  #root .teaching-collection--history .teaching-page-header { grid-template-columns: minmax(0,1fr); }
+  #root .teaching-collection--history .teaching-page-header > button { grid-column: 1; grid-row: 3; }
+}

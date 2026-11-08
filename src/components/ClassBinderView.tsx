@@ -347,7 +347,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
             {view === 'saved' ? '저장한 시퀀스' : '수업 기록'}
             <PfBadge tone="sage" className="teaching-count">{view === 'saved' ? savedSequences.length : totalActualLogsCount}</PfBadge>
           </h1>
-          <p className="muted">{view === 'saved' ? '마음에 드는 흐름을 보관하고, 오늘의 수업으로 이어가세요.' : '직접 남긴 수업과 메모를 모아 봅니다. 반 이름은 별칭으로 충분해요.'}</p>
+          <p className="muted">{view === 'saved' ? '마음에 드는 흐름을 보관하고, 오늘의 수업으로 이어가세요.' : '지난 수업을 다음 계획으로 이어가세요.'}</p>
         </div>
         <PfButton
           variant={view === 'saved' ? 'primary' : 'secondary'} aria-expanded={view === 'history' ? showGroupForm : undefined}
@@ -491,6 +491,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
             />
             <span className="muted">최근 진행 순 · 당시 동작·블록·순서·시간 스냅샷 보존</span>
           </div>
+          <details className="teaching-history-filters">
+            <summary>날짜·그룹 필터{selectedGroup !== 'all' || effectiveSelectedDate !== 'all' ? ' · 선택 중' : ''}</summary>
           <div
             className={`pf-tabs pf-tabs--pills teaching-group-filters ${showAllGroupChips ? 'is-expanded' : 'is-collapsed'}`}
             role="group" aria-label="수업 그룹 필터"
@@ -570,6 +572,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                   전체 날짜 보기
                 </button>
               )}
+            </div>
+          )}
+          </details>
+          {(selectedGroup !== 'all' || effectiveSelectedDate !== 'all') && (
+            <div className="teaching-history-filter-status">
+              <span>{selectedGroup === 'all' ? '전체 그룹' : classGroups.find((group) => group.id === selectedGroup)?.name} · {effectiveSelectedDate === 'all' ? '전체 날짜' : dateFilterOptions.find((date) => date.dateKey === effectiveSelectedDate)?.label}</span>
+              <PfButton variant="secondary" onClick={resetHistoryFilters}>선택 해제</PfButton>
             </div>
           )}
           <div className="teaching-history-layout">
