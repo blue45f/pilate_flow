@@ -54,6 +54,7 @@ export interface SyntheticPersistedStudioState {
   ownedApparatus: ApparatusType[];
   ownedEquipment: string[];
   ownedProps: PropType[];
+  exerciseBrowseScope: 'owned' | 'all';
   mobilePreviewMode: boolean;
   activeSequenceId: string;
   activeTitle: string;
@@ -856,6 +857,8 @@ export function buildSyntheticStudioState(): SyntheticPersistedStudioState {
     ownedApparatus,
     ownedEquipment,
     ownedProps,
+    // Include every current persisted preference; use a non-default scope to prove preservation.
+    exerciseBrowseScope: 'all',
     mobilePreviewMode: false,
     activeSequenceId: 'seq-track-a-active-50m',
     activeTitle: '리포머 중급(Lv 1.5) 50분 코어 & 고관절 정렬 마스터',
