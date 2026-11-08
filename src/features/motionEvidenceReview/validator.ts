@@ -4,13 +4,38 @@ import { INITIAL_EXERCISES } from '../../data/pilatesCatalog';
 import type { PilatesExercise } from '../../types/pilates';
 import { TRACK_A_MAT_EVIDENCE_RECORDS } from './trackAMatEvidence';
 import { TRACK_B_APPARATUS_EVIDENCE_RECORDS } from './trackBApparatusEvidence';
+import { TRACK_C_EXTENDED_MAT_EVIDENCE_RECORDS } from './trackCExtendedMatEvidence';
+import { TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS } from './trackDExtendedApparatusEvidence';
 import type {
+  FullCatalogMotionEvidenceSuiteValidationReport,
   MotionEvidenceRecordValidationResult,
   MotionEvidenceReviewRecord,
   MotionEvidenceSuiteValidationReport,
   MotionEvidenceValidationIssue,
   PhaseEvidenceSpec,
 } from './types';
+
+export const FULL_CATALOG_MOTION_EVIDENCE_REVIEW_RECORDS: readonly MotionEvidenceReviewRecord[] =
+  [
+    ...TRACK_A_MAT_EVIDENCE_RECORDS,
+    ...TRACK_B_APPARATUS_EVIDENCE_RECORDS,
+    ...TRACK_C_EXTENDED_MAT_EVIDENCE_RECORDS,
+    ...TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS,
+  ];
+
+const FULL_CATALOG_RECORD_BY_ID: ReadonlyMap<string, MotionEvidenceReviewRecord> =
+  new Map(
+    FULL_CATALOG_MOTION_EVIDENCE_REVIEW_RECORDS.map((record) => [
+      record.exerciseId,
+      record,
+    ]),
+  );
+
+export function resolveMotionEvidenceReviewRecord(
+  exerciseId: string,
+): MotionEvidenceReviewRecord | undefined {
+  return FULL_CATALOG_RECORD_BY_ID.get(exerciseId.trim());
+}
 
 const CATALOG_EXERCISE_BY_ID: ReadonlyMap<string, PilatesExercise> = new Map(
   INITIAL_EXERCISES.map((exercise) => [exercise.id, exercise]),
@@ -20,7 +45,7 @@ const UNVERIFIED_NUMERIC_ANGLE_REGEX =
   /(?:\b\d+(?:\.\d+)?\s*(?:°|도\s*각도|deg(?:rees)?)\b)/i;
 
 const UNVERIFIED_EMG_CLAIM_REGEX =
-  /(?:(?:EMG|근활성도)\s*\d+(?:\.\d+)?\s*%|\b\d+(?:\.\d+)?\s*%\s*(?:근활성|근육\s*활성화))/i;
+  /(?:(?:EMG|근활성도)\s*\d+(?:\.\d+)?\s*%|\b\d+(?:\.\d+)?\s*%\s*(?:근활성|근육\s*활성화|MVIC)|%\s*MVIC|\b\d+(?:\.\d+)?\s*mV\b)/i;
 
 const MEDICAL_SAFETY_GUARANTEE_REGEX =
   /(?:부상\s*방지\s*보장|통증\s*완치|의학적\s*안전\s*보장|절대\s*안전|100%\s*안전|전문가\s*검증\s*완료)/i;
@@ -52,6 +77,16 @@ function collectPhaseTexts(phase: PhaseEvidenceSpec): readonly string[] {
   ];
 }
 
+function isMatTrack(track: MotionEvidenceReviewRecord['track']): boolean {
+  return track === 'track-a-mat' || track === 'track-c-extended-mat';
+}
+
+function isApparatusTrack(track: MotionEvidenceReviewRecord['track']): boolean {
+  return (
+    track === 'track-b-apparatus' || track === 'track-d-extended-apparatus'
+  );
+}
+
 export function validateMotionEvidenceRecord(
   record: MotionEvidenceReviewRecord,
 ): MotionEvidenceRecordValidationResult {
@@ -69,51 +104,43 @@ export function validateMotionEvidenceRecord(
     });
   }
 
-  if (record.track === 'track-a-mat' && record.apparatus !== 'mat') {
+  if (isMatTrack(record.track) && record.apparatus !== 'mat') {
     issues.push({
       code: 'track-category-mismatch',
       exerciseId: record.exerciseId,
       track: record.track,
       fieldPath: 'apparatus',
-      messageKo: `Track A(매트 트랙)에는 apparatus: "mat" 동작만 허용되나 "${record.apparatus}"가 지정되었습니다.`,
+      messageKo: `매트 트랙(${record.track})에는 apparatus: "mat" 동작만 허용되나 "${record.apparatus}"가 지정되었습니다.`,
     });
   }
 
-  if (record.track === 'track-b-apparatus' && record.apparatus === 'mat') {
+  if (isApparatusTrack(record.track) && record.apparatus === 'mat') {
     issues.push({
       code: 'track-category-mismatch',
       exerciseId: record.exerciseId,
       track: record.track,
       fieldPath: 'apparatus',
-      messageKo:
-        'Track B(기구 트랙)에는 매트(mat) 동작을 포함할 수 없으며 리포머·캐딜락·체어·바렐 동작만 허용됩니다.',
+      messageKo: `기구 트랙(${record.track})에는 매트(mat) 동작을 포함할 수 없으며 리포머·캐딜락·체어·바렐 동작만 허용됩니다.`,
     });
   }
 
   if (catalogExercise) {
-    if (
-      record.track === 'track-a-mat' &&
-      catalogExercise.apparatus !== 'mat'
-    ) {
+    if (isMatTrack(record.track) && catalogExercise.apparatus !== 'mat') {
       issues.push({
         code: 'track-category-mismatch',
         exerciseId: record.exerciseId,
         track: record.track,
         fieldPath: 'exerciseId',
-        messageKo: `카탈로그 상 기구 동작("${catalogExercise.apparatus}")이 Track A(매트 트랙)에 배치되었습니다.`,
+        messageKo: `카탈로그 상 기구 동작("${catalogExercise.apparatus}")이 매트 트랙(${record.track})에 배치되었습니다.`,
       });
     }
-    if (
-      record.track === 'track-b-apparatus' &&
-      catalogExercise.apparatus === 'mat'
-    ) {
+    if (isApparatusTrack(record.track) && catalogExercise.apparatus === 'mat') {
       issues.push({
         code: 'track-category-mismatch',
         exerciseId: record.exerciseId,
         track: record.track,
         fieldPath: 'exerciseId',
-        messageKo:
-          '카탈로그 상 매트("mat") 동작이 Track B(기구 트랙)에 배치되었습니다.',
+        messageKo: `카탈로그 상 매트("mat") 동작이 기구 트랙(${record.track})에 배치되었습니다.`,
       });
     }
 
@@ -256,6 +283,31 @@ export function validateMotionEvidenceRecord(
           track: record.track,
           fieldPath: `phases.${phaseKey}`,
           messageKo: `"${phaseKey}" 단계 설명에 근거 없는 수치 각도(°/deg), 근활성도(%), 또는 의학적 안전 보장 문구가 포함되어 있습니다: "${text}".`,
+        });
+      }
+    }
+  }
+
+  if (record.muscles) {
+    const muscleTexts = [
+      ...record.muscles.primaryMusclesKo,
+      ...record.muscles.synergistMusclesKo,
+      ...record.muscles.stabilizerMusclesKo,
+      ...record.muscles.lengthenedStructuresKo,
+      record.muscles.evidenceBasisKo,
+    ];
+    for (const text of muscleTexts) {
+      if (
+        UNVERIFIED_NUMERIC_ANGLE_REGEX.test(text) ||
+        UNVERIFIED_EMG_CLAIM_REGEX.test(text) ||
+        MEDICAL_SAFETY_GUARANTEE_REGEX.test(text)
+      ) {
+        issues.push({
+          code: 'unsupported-numeric-angle-or-medical-claim',
+          exerciseId: record.exerciseId,
+          track: record.track,
+          fieldPath: 'muscles',
+          messageKo: `근육 근거 설명에 근거 없는 수치 각도, 근활성도(% MVIC/mV), 또는 의학적 안전 보장 문구가 포함되어 있습니다: "${text}".`,
         });
       }
     }
@@ -413,6 +465,7 @@ export function validateMotionEvidenceRecord(
 
   const hasVerifiedDirectSource = record.sources.some(
     (s) =>
+      s.accessStatus === 'verified-direct-fetch' ||
       s.accessStatus === 'verified-in-repo-source-ledger' ||
       s.accessStatus === 'verified-via-public-search-snippet',
   );
@@ -514,6 +567,121 @@ export function validateMotionEvidenceSuite(
     zeroTrackIdOverlap,
     fullyVerifiedSourceExerciseCount,
     partiallyOrProxyRestrictedExerciseCount,
+    issueCount: suiteIssues.length,
+    issues: suiteIssues,
+    resultsByExerciseId,
+  };
+}
+
+export function validateFullCatalogMotionEvidenceSuite(
+  allRecords: readonly MotionEvidenceReviewRecord[] = FULL_CATALOG_MOTION_EVIDENCE_REVIEW_RECORDS,
+): FullCatalogMotionEvidenceSuiteValidationReport {
+  const suiteIssues: MotionEvidenceValidationIssue[] = [];
+  const resultsByExerciseId: Record<
+    string,
+    MotionEvidenceRecordValidationResult
+  > = {};
+
+  const seenByTrack: Record<string, Set<string>> = {
+    'track-a-mat': new Set<string>(),
+    'track-b-apparatus': new Set<string>(),
+    'track-c-extended-mat': new Set<string>(),
+    'track-d-extended-apparatus': new Set<string>(),
+  };
+  const globalSeenTrackByExerciseId = new Map<
+    string,
+    MotionEvidenceReviewRecord['track']
+  >();
+
+  let zeroTrackIdOverlap = true;
+  let trackACount = 0;
+  let trackBCount = 0;
+  let trackCCount = 0;
+  let trackDCount = 0;
+  let matRecordCount = 0;
+  let apparatusRecordCount = 0;
+
+  for (const record of allRecords) {
+    if (record.track === 'track-a-mat') trackACount += 1;
+    else if (record.track === 'track-b-apparatus') trackBCount += 1;
+    else if (record.track === 'track-c-extended-mat') trackCCount += 1;
+    else if (record.track === 'track-d-extended-apparatus') trackDCount += 1;
+
+    if (record.apparatus === 'mat') matRecordCount += 1;
+    else apparatusRecordCount += 1;
+
+    const trackSet = seenByTrack[record.track];
+    if (trackSet?.has(record.exerciseId)) {
+      suiteIssues.push({
+        code: 'duplicate-exercise-id',
+        exerciseId: record.exerciseId,
+        track: record.track,
+        fieldPath: 'exerciseId',
+        messageKo: `${record.track} 내부에 중복된 동작 ID가 존재합니다: "${record.exerciseId}".`,
+      });
+    }
+    trackSet?.add(record.exerciseId);
+
+    const priorTrack = globalSeenTrackByExerciseId.get(record.exerciseId);
+    if (priorTrack && priorTrack !== record.track) {
+      zeroTrackIdOverlap = false;
+      suiteIssues.push({
+        code: 'track-id-overlap',
+        exerciseId: record.exerciseId,
+        track: record.track,
+        fieldPath: 'exerciseId',
+        messageKo: `${priorTrack}와 ${record.track} 사이에 중복된 동작 ID("${record.exerciseId}")가 존재합니다.`,
+      });
+    } else if (!priorTrack) {
+      globalSeenTrackByExerciseId.set(record.exerciseId, record.track);
+    }
+  }
+
+  let fullyVerifiedSourceExerciseCount = 0;
+  let partiallyOrProxyRestrictedExerciseCount = 0;
+  let verifiedDirectSourceCoverageCount = 0;
+
+  for (const record of allRecords) {
+    const recordResult = validateMotionEvidenceRecord(record);
+    resultsByExerciseId[record.exerciseId] = recordResult;
+    suiteIssues.push(...recordResult.issues);
+
+    if (recordResult.hasVerifiedDirectSource) {
+      verifiedDirectSourceCoverageCount += 1;
+    }
+
+    const allSourcesInRepoLedger =
+      record.sources.length > 0 &&
+      record.sources.every(
+        (s) => s.accessStatus === 'verified-in-repo-source-ledger',
+      );
+    if (allSourcesInRepoLedger) {
+      fullyVerifiedSourceExerciseCount += 1;
+    } else {
+      partiallyOrProxyRestrictedExerciseCount += 1;
+    }
+  }
+
+  const missingCatalogExerciseIds = INITIAL_EXERCISES.filter(
+    (ex) => !globalSeenTrackByExerciseId.has(ex.id),
+  ).map((ex) => ex.id);
+
+  return {
+    valid: suiteIssues.length === 0 && missingCatalogExerciseIds.length === 0,
+    totalRecords: allRecords.length,
+    trackACount,
+    trackBCount,
+    trackCCount,
+    trackDCount,
+    matRecordCount,
+    apparatusRecordCount,
+    catalogCoverageCount:
+      INITIAL_EXERCISES.length - missingCatalogExerciseIds.length,
+    missingCatalogExerciseIds,
+    zeroTrackIdOverlap,
+    fullyVerifiedSourceExerciseCount,
+    partiallyOrProxyRestrictedExerciseCount,
+    verifiedDirectSourceCoverageCount,
     issueCount: suiteIssues.length,
     issues: suiteIssues,
     resultsByExerciseId,

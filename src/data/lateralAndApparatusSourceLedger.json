@@ -1,0 +1,254 @@
+{
+  "schemaVersion": "1.0.0",
+  "trackId": "I12-lateral-rotation-tabletop-plank",
+  "checkedAt": "2026-11-08",
+  "anatomicalAccuracyAssumed": false,
+  "professionalReviewCount": 0,
+  "sourceFrameMappings": 0,
+  "truthfulness": {
+    "anatomicalAccuracyAssumed": false,
+    "professionalReviewCount": 0,
+    "sourceFrameMappings": 0,
+    "exactAssetReady": false,
+    "medicalDiagnosisProhibited": true,
+    "therapeuticEffectGuaranteeProhibited": true,
+    "nonMedicalDisclosureKo": "본 측굴·기구 회전·테이블탑 니폴드·네발기기/기구 플랭크 2D 도해와 운동학 지표는 필라테스 시퀀스 이해를 돕기 위한 교육·시각 참고 자료이며, 의학적 진단·처방·치료 효과를 보증하지 않습니다. 2D 좌표·가동범위·근육 표현은 전문 검증 전(0건)이며 개인에게 안전한 범위를 뜻하지 않습니다.",
+    "sourceUsePolicy": "Movement biomechanics facts and alignment cues only; no copying or frame-by-frame tracing of copyrighted media."
+  },
+  "entries": [
+    {
+      "id": "lateral-mermaid-and-barrel-side-bend",
+      "diagramId": "lateral-mermaid-and-barrel-side-bend",
+      "archetypeId": "lateral-mermaid-side-bend",
+      "mappedExerciseIds": [
+        "original-barrel-supported-side-bend",
+        "original-barrel-standing-side-stretch",
+        "original-cadillac-seated-side-reach",
+        "original-chair-seated-mermaid",
+        "original-mat-mermaid",
+        "ex-cooldown-01",
+        "ex-kr-barrel-01"
+      ],
+      "checkedAt": "2026-11-08",
+      "anatomicalAccuracyAssumed": false,
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "reviewedScopeKo": "매트·리포머·체어·캐딜락 시티드 머메이드 및 래더 바렐 사이드 벤드/사이드 스트레치의 관상면(Frontal plane) C-커브 측굴, 반대측 좌골·발 앵커 고정, 양측 늑골 길이 확보 원칙을 대조했어요.",
+      "correctionKo": "측굴 시 반대쪽 엉덩이나 발이 함께 들리며 몸통이 통째로 기울어지던 오류를 수정해, 골반·래더 앵커 잠금(Anchor Lock)과 상·하측 옆구리 양방향 리치 벡터를 분리했어요.",
+      "limitationKo": "2D 관절 좌표·측굴 곡률·기구 패드/래더 접촉 위치·근육 표현은 전문 검증 전(0건)이에요. 요추 디스크나 늑간 통증이 있으면 측굴 각도를 줄여야 해요.",
+      "sources": [
+        {
+          "title": "Merrithew · Beat Client Boredom: 3 Barrels to Refresh Workouts (Ladder Barrel Side Bend)",
+          "url": "https://www.merrithew.com/blog/post/2018-02-20/beat-client-boredom-3-barrels-to-refresh-workouts"
+        },
+        {
+          "title": "BASI Pilates · 10 Essential Pilates Exercises & Lateral Flexion Cues",
+          "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/"
+        },
+        {
+          "title": "CUH NHS · Pilates exercises and principles · Pelvic grounding in lateral flexion",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/"
+        }
+      ],
+      "factualRecord": {
+        "alignmentInvariantsKo": [
+          "관상면(Frontal plane) 순수 측굴 시 몸통이 앞뒤로 비틀리지 않도록 양측 어깨·골반 정면 정렬 유지",
+          "반대측 좌골(Mermaid) 또는 래더/바닥 지지발 앵커를 무겁게 눌러 양쪽 옆구리(특히 아래쪽 늑골) 동시 신장"
+        ],
+        "diagramId": "lateral-mermaid-and-barrel-side-bend",
+        "mappedExerciseIds": [
+          "original-barrel-supported-side-bend",
+          "original-barrel-standing-side-stretch",
+          "original-cadillac-seated-side-reach",
+          "original-chair-seated-mermaid",
+          "original-mat-mermaid",
+          "ex-cooldown-01",
+          "ex-kr-barrel-01"
+        ],
+        "phaseCuesKo": {
+          "end": "날숨에 복사근과 골반 기저부 힘으로 아래 척추부터 한 마디씩 수직 축으로 복귀",
+          "middle": "반대쪽 좌골/발 앵커를 고정한 채 정수리와 위쪽 팔을 대각선 멀리 뻗어 C-커브 측굴 정점 형성",
+          "start": "Z-싯(머메이드)·박스/체어 착석 또는 바렐 측면 지지 자세에서 좌골·골반 수평 및 척추 수직 신장 세팅"
+        },
+        "verifiedBiomechanicsFactsKo": [
+          "매트·리포머·체어·캐딜락 머메이드 및 래더 바렐 사이드 벤드: 골반/하체 지지점 고정 아래 흉곽 측면 확장과 복사근 편심·동심 제어",
+          "지지하는 어깨에 기대어 주저앉지 않도록 전거근·하부 승모근으로 견갑 안정성 유지"
+        ]
+      },
+      "factualRecordSha256": "27fa7f64f950c6d57a35ee103eea6ebfd36276fa8d8bc56ae58e4af5a9773527"
+    },
+    {
+      "id": "apparatus-and-side-lying-thoracic-rotation",
+      "diagramId": "apparatus-and-side-lying-thoracic-rotation",
+      "archetypeId": "mat-open-book-isolated",
+      "mappedExerciseIds": [
+        "original-barrel-standing-rotation",
+        "original-chair-seated-spine-twist",
+        "original-cadillac-seated-rotation",
+        "original-mat-open-book"
+      ],
+      "checkedAt": "2026-11-08",
+      "anatomicalAccuracyAssumed": false,
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "reviewedScopeKo": "바렐 스탠딩 몸통 회전, 체어·캐딜락 시티드 스파인 트위스트, 매트 사이드라잉 오픈 북(Open Book)의 골반·무릎/양발 고정 및 상부 흉곽 축성 회전(Axial Thoracic Rotation) 원칙을 대조했어요.",
+      "correctionKo": "사이드 오픈 북에서 클램(무릎 벌림)이 섞이거나 기구 스파인 트위스트에서 골반이 함께 돌아가던 문제를 제거하고, 골반·무릎 고정 앵커와 순수 흉추 회전 아크를 분리했어요.",
+      "limitationKo": "원본 영상 프레임·2D 회전 투영 각도·머리 지지·해부학적 정확성은 전문 검증 전(0건)이에요. 팔을 바닥까지 억지로 누르지 않고 통증 없는 흉곽 회전 범위만 사용해야 해요.",
+      "sources": [
+        {
+          "title": "Physitrack · Thoracic rotations in side-lying (Open book) - version 3",
+          "url": "https://na.physitrack.com/home-exercise-video/thoracic-rotations-in-side-lying-%2528open-book%2529---version-3"
+        },
+        {
+          "title": "HQPT / MedBridge · Open Book Thoracic Rotation Guide (PDF p.2)",
+          "url": "https://hqpt.com/wp-content/uploads/2022/04/Yard-work-cool-down.pdf#page=2"
+        },
+        {
+          "title": "Pilatesology Encyclopedia · The Spine Twist (Axial Elongation & Pelvic Grounding)",
+          "url": "https://pilatesology.com/pilatesology-encyclopedia-the-spine-twist/"
+        }
+      ],
+      "factualRecord": {
+        "alignmentInvariantsKo": [
+          "좌골 수직 지지(체어·캐딜락) 또는 양발 기립(바렐)·양무릎 포개기(사이드 오픈 북)로 골반 회전 0° 고정",
+          "요추 비틀림 대신 배꼽 위 흉추(Thoracic spine)와 늑골만 수평 축을 따라 나선형으로 회전"
+        ],
+        "diagramId": "apparatus-and-side-lying-thoracic-rotation",
+        "mappedExerciseIds": [
+          "original-barrel-standing-rotation",
+          "original-chair-seated-spine-twist",
+          "original-cadillac-seated-rotation",
+          "original-mat-open-book"
+        ],
+        "phaseCuesKo": {
+          "end": "골반 앵커를 유지한 채 복사근 제어로 흉곽을 시작 정면/측면 정렬로 복귀",
+          "middle": "날숨에 정수리가 천장으로 자라나듯 축성 신장하며 흉곽과 상지를 회전(오픈 북은 위쪽 팔과 가슴을 반대편으로 오픈)",
+          "start": "지지면(시트·래더·옆으로 누운 매트)에서 골반과 두 무릎/발을 흔들림 없이 정렬하고 양팔 준비"
+        },
+        "verifiedBiomechanicsFactsKo": [
+          "Physitrack/HQPT Side-Lying Open Book 및 기구 스파인 트위스트: 포갠 무릎과 골반을 고정한 상태에서 흉추 가동성과 전면 흉근 신장 유도",
+          "팔만 뒤로 넘기지 않고 흉골·갈비뼈 회전 범위를 따라 시선과 어깨가 함께 이동"
+        ]
+      },
+      "factualRecordSha256": "2f2f7d02bb791a8146cc3c5bb75ecad82a01fb150341756ef6d18986db2f12f7"
+    },
+    {
+      "id": "supine-tabletop-knee-fold-and-reverse-curl",
+      "diagramId": "supine-tabletop-knee-fold-and-reverse-curl",
+      "archetypeId": "supine-knee-fold",
+      "mappedExerciseIds": [
+        "original-mat-heel-slide",
+        "original-cadillac-table-knee-fold",
+        "original-chair-seated-knee-lift",
+        "original-mat-knee-fold",
+        "ex-core-04",
+        "ex-kr-reformer-04"
+      ],
+      "checkedAt": "2026-11-08",
+      "anatomicalAccuracyAssumed": false,
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "reviewedScopeKo": "매트·캐딜락 니 폴드(Knee Fold), 힐 슬라이드(Heel Slide), 체어 시티드 니 리프트, 리포머 닐링 리버스 앱스 및 상하체 협응 시퀀스의 요추-골반 중립 유지와 고관절 분리 제어 원칙을 대조했어요.",
+      "correctionKo": "한쪽 다리를 들거나 밀어낼 때 허리가 매트에서 들뜨거나 골반이 함께 기울어지던 문제를 보정해, 요추·천골/좌골 수평 잠금선과 대퇴골 독립 궤적을 분리했어요.",
+      "limitationKo": "2D 관절 좌표·고관절 굴곡 각도·캐리지 이동 거리·근육 표현은 전문 검증 전(0건)이에요. 고관절 집힘(Pinching)이나 허리 불편 시 무릎 각도와 범위를 줄여야 해요.",
+      "sources": [
+        {
+          "title": "North Bristol NHS Trust · Post-operative Exercises DIEP Reconstruction (Heel Slide & Pelvic Stability)",
+          "url": "https://www.nbt.nhs.uk/our-services/a-z-services/breast-reconstruction/post-operative-exercises-diep-reconstruction"
+        },
+        {
+          "title": "OUH NHS · Pilates Exercises Physiotherapy Leaflet (Knee Fold & 90/90 Tabletop Control)",
+          "url": "https://www.ouh.nhs.uk/media/022n23fb/107625exercises.pdf"
+        },
+        {
+          "title": "CUH NHS · Pilates exercises and principles (Lumbo-pelvic neutral & centering)",
+          "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/"
+        }
+      ],
+      "factualRecord": {
+        "alignmentInvariantsKo": [
+          "수파인/시티드/닐링 지지에서 ASIS 좌우 수평과 요추-골반 중립(또는 리버스 컬 하복부 스쿱) 유지",
+          "대퇴골 굴곡·슬라이드 중 허리 들림(Arching)이나 골반 좌우 기우뚱(Pelvic rocking) 완벽 억제"
+        ],
+        "diagramId": "supine-tabletop-knee-fold-and-reverse-curl",
+        "mappedExerciseIds": [
+          "original-mat-heel-slide",
+          "original-cadillac-table-knee-fold",
+          "original-chair-seated-knee-lift",
+          "original-mat-knee-fold",
+          "ex-core-04",
+          "ex-kr-reformer-04"
+        ],
+        "phaseCuesKo": {
+          "end": "복횡근 브레이싱을 유지하며 발/무릎/캐리지를 흔들림 없이 시작 정렬로 복귀",
+          "middle": "날숨에 심부 코어 선행 수축으로 고관절만 분리해 무릎 리프트(90° 테이블탑)·힐 슬라이드 또는 닐링 리버스 컬 수행",
+          "start": "후두부·흉곽·천골(또는 좌골/전완) 3점 지지와 복횡근 코르셋 세팅"
+        },
+        "verifiedBiomechanicsFactsKo": [
+          "NHS DIEP Heel Slide & OUH/CUH Knee Fold 원칙: 골반과 반대 다리를 고정한 상태에서 대퇴골 굴곡·신전 분리 제어",
+          "리포머 닐링 리버스 앱스 및 상하체 협응: 고관절 굴곡근 단독 과사용을 막고 하복부(복횡근·복직근) 주도로 캐리지/하지 제어"
+        ]
+      },
+      "factualRecordSha256": "27d31f615c7d52e99bb42eee03523839793b92d7b186d2fb3b8d79023179ba57"
+    },
+    {
+      "id": "quadruped-and-apparatus-plank-pike",
+      "diagramId": "quadruped-and-apparatus-plank-pike",
+      "archetypeId": "quadruped-reach-slide",
+      "mappedExerciseIds": [
+        "original-cadillac-quadruped-slide",
+        "original-chair-incline-support",
+        "original-mat-quadruped-reach",
+        "ex-plank-01",
+        "ex-plank-02",
+        "ex-kr-chair-01"
+      ],
+      "checkedAt": "2026-11-08",
+      "anatomicalAccuracyAssumed": false,
+      "professionalReviewCount": 0,
+      "sourceFrameMappings": 0,
+      "reviewedScopeKo": "매트·캐딜락 네발기기 팔·다리 리치(Bird Dog / Quadruped Slide), 리포머 롱 스트레치(Long Stretch), 운다 체어 인클라인 서포트 및 페달 파이크 풀업(Pull-Up Pike)의 전거근 견갑 전인 지지와 항신전 코어 제어를 대조했어요.",
+      "correctionKo": "사지 리치나 기구 플랭크·파이크 중 날개뼈가 익상(Winging)되거나 허리가 바닥으로 처지던 결함을 교정해, 손목-어깨 닫힌 사슬 지지축과 골반-척추 항신전/파이크 스쿱 벡터를 분리했어요.",
+      "limitationKo": "2D 관절 좌표·캐리지/페달 변위·파이크 고관절 각도·근육 표현은 전문 검증 전(0건)이에요. 손목 통증이나 요추 불안정이 있으면 전완 지지나 무릎 접지 변형을 우선해야 해요.",
+      "sources": [
+        {
+          "title": "Body Harmonics · Postural control series: quadruped arm leg reach",
+          "url": "https://www.bodyharmonics.com/arm-leg-reach/"
+        },
+        {
+          "title": "Complete Pilates · Quadruped Exercise – Step By Step Guide",
+          "url": "https://complete-pilates.co.uk/quadruped/"
+        },
+        {
+          "title": "Merrithew STOTT PILATES · Scapular Movement and Stabilization in Weight-Bearing",
+          "url": "https://www.merrithew.com/blog/post/2017-09-26/five-basic-principles-scapular-movement-and-stabilization"
+        }
+      ],
+      "factualRecord": {
+        "alignmentInvariantsKo": [
+          "손목-어깨 수직 지지축과 전거근 전인(Protraction)으로 날개뼈 익상(Winging) 및 상부 승모근 과긴장 방지",
+          "네발기기 교차 리치 및 리포머 롱 스트레치·체어 파이크 구간에서 요추 과신전(Lumbar sag) 차단"
+        ],
+        "diagramId": "quadruped-and-apparatus-plank-pike",
+        "mappedExerciseIds": [
+          "original-cadillac-quadruped-slide",
+          "original-chair-incline-support",
+          "original-mat-quadruped-reach",
+          "ex-plank-01",
+          "ex-plank-02",
+          "ex-kr-chair-01"
+        ],
+        "phaseCuesKo": {
+          "end": "견갑 지지력과 복부 긴장을 놓지 않고 사지/캐리지/페달을 시작 지지 자세로 감속 복귀",
+          "middle": "날숨에 몸통 수평(버드독 반대 팔·다리 수평 신장, 리포머 플랭크 글라이드) 또는 하복부 스쿱 기반 체어 페달 파이크 정점 유지",
+          "start": "어깨 아래 손목, 골반 아래 무릎(네발기기) 또는 풋바/체어 시트 손 지지 플랭크 직선 정렬 세팅"
+        },
+        "verifiedBiomechanicsFactsKo": [
+          "Body Harmonics / Complete Pilates Quadruped Arm-Leg Reach: 골반 좌우 회전 없이 바닥 슬라이드 후 몸통 높이까지 수평 리치",
+          "리포머 Long Stretch 및 Wunda Chair Pull-Up(Pike): 견갑대 닫힌 사슬(Closed-chain) 지지 위에서 복부 굴곡·항신전 코어 제어"
+        ]
+      },
+      "factualRecordSha256": "3f7a4347424b4b25bc88c6f30e21fbc9ad3eccbbc831a14889fceaccaec65aba"
+    }
+  ]
+}

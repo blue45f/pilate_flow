@@ -1,0 +1,1845 @@
+{
+  "schemaVersion": "1.0.0",
+  "checkedAt": "2026-11-08",
+  "hashMethod": "SHA-256 of UTF-8 JSON.stringify(factualRecord) computed via Node crypto.createHash('sha256')",
+  "verificationBoundaryNoticeKo": "전문의·외부 임상 승인 0건 · 해부학적 정밀성 가정 안 함 · 모든 SHA-256 체크섬은 사실 요약 레코드 무결성 검증용입니다.",
+  "counts": {
+    "candidateMatMotionModels": 8,
+    "previouslyUnboundMotionModels": 9,
+    "clearedYoutubeReplacementAudits": 5,
+    "verifiedReferenceAuditRecords": 30,
+    "officialSourceCheckedAudited": 18,
+    "partialPlaybackCheckedAudited": 3,
+    "koreanCandidateAudited": 9,
+    "unverifiedRemainderCount": 0,
+    "professionalReviewCount": 0
+  },
+  "candidateMatMotionModels": [
+    {
+      "exerciseId": "original-mat-swan-prep",
+      "candidateId": "prone-baby-swan",
+      "aliasExerciseIds": [],
+      "titleKo": "매트 스완 준비 · 베이비 스완 흉추 신전",
+      "titleEn": "Prone Baby Swan / Thoracic Extension Prep",
+      "factualRecord": {
+        "startPose": "복와위(Prone)에서 이마를 포갠 손등 또는 매트 위에 두고 치골 결합을 매트에 가볍게 밀착하며 다리를 길게 뻗은 준비 자세",
+        "peakPose": "복부 지지와 하부 요추 중립을 유지한 채 쇄골을 넓히며 상부·중부 흉추를 15~25도 범위로 부드럽게 신전한 정점 자세",
+        "returnPose": "정수리 길이를 유지하며 아래 갈비뼈부터 이마까지 순차적으로 매트 지지면으로 복귀한 종료 자세",
+        "supportAnchors": [
+          "pelvis-pubic-symphysis-mat",
+          "bilateral-forearms-hands-mat",
+          "lower-ribs-mat",
+          "bilateral-forefoot-mat"
+        ],
+        "jointAngleRanges": {
+          "thoracicExtensionDeg": [
+            0,
+            22
+          ],
+          "cervicalAlignmentDeg": [
+            -5,
+            5
+          ],
+          "lumbarExtensionGuardDeg": [
+            0,
+            8
+          ],
+          "hipExtensionDeg": [
+            0,
+            5
+          ]
+        },
+        "safetyBoundaries": "요추 과신전 및 경추 꺾임을 배제하고 흉추 상·중부 분절 신전만 표현하며 외부 임상·전문의 승인을 가정하지 않음"
+      },
+      "sources": [
+        {
+          "sourceId": "basi-cjkelly-baby-swan-v1",
+          "publisher": "BASI Pilates",
+          "title": "10 Essential Pilates Exercises for Beginners — 10. Back Extension (Baby Swan)",
+          "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "복와위 소범위 상부 몸통 신전(Baby Swan) 준비 및 복귀 문맥 확인"
+        },
+        {
+          "sourceId": "ocats-prone-forearm-extension-text-2026-11-05",
+          "publisher": "North Cheshire and Mersey NHS · Musculoskeletal Physiotherapy OCATS",
+          "title": "Low Back Mobility Exercises · Level 1 Prone Lumbar Extension on Forearms",
+          "url": "https://northcheshireandmersey.nhs.uk/media/4lnldy0f/lower-back-range-of-motion-exercises-patient-advice-sheet.pdf",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "전완 지지 복와위 상체 거상 시 골반·하복부 매트 접지 유지 원칙 대조"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "e700064679c0887cd0868a0bf519a9595200c0b71e606f542f3eea847c04cc5c",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "exerciseId": "original-mat-forearm-plank",
+      "candidateId": "kneeling-forearm-plank",
+      "aliasExerciseIds": [],
+      "titleKo": "무릎 지지 플랭크 · 전완·무릎 지지 코어 안정화",
+      "titleEn": "Kneeling & Full Forearm Plank Support",
+      "factualRecord": {
+        "startPose": "복와위에서 양쪽 팔꿈치를 어깨 수직 아래 매트에 두고 전완과 무릎을 지지점으로 정렬한 준비 자세",
+        "peakPose": "양측 전완과 무릎에 체중을 분산 지지하며 골반을 매트에서 들어 올려 머리-흉추-골반-무릎 사선 중립을 유지한 정점 지지 자세",
+        "returnPose": "견갑대 전인 지지와 복횡근 긴장을 유지하며 골반과 허벅지를 통제된 속도로 매트에 내려놓는 복귀 자세",
+        "supportAnchors": [
+          "bilateral-elbows-forearms-mat",
+          "bilateral-knees-mat",
+          "bilateral-shins-forefoot-mat"
+        ],
+        "jointAngleRanges": {
+          "shoulderFlexionDeg": [
+            85,
+            95
+          ],
+          "elbowFlexionDeg": [
+            85,
+            95
+          ],
+          "hipExtensionLineDeg": [
+            165,
+            180
+          ],
+          "kneeFlexionDeg": [
+            90,
+            115
+          ]
+        },
+        "safetyBoundaries": "견갑골 익상 및 요추 전만 침하(Sagging)를 방지하는 중립 지지 한계를 표시하며 환자용 재활 처방 시간을 일반 수업에 강제하지 않음"
+      },
+      "sources": [
+        {
+          "sourceId": "nth-optimise-elbow-knee-plank-v1",
+          "publisher": "North Tees and Hartlepool NHS Foundation Trust",
+          "title": "OPTIMISE Cancer Prehabilitation Home Exercise Programme - PIL1597 version 1 (Plank on knees)",
+          "url": "https://www.nth.nhs.uk/resources/optimise-cancer-prehabilitation/",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "양측 팔꿈치·무릎 지지 기반 골반 거상 및 플랭크 유지 본문 확인"
+        },
+        {
+          "sourceId": "cuh-general-stability-core-plank-v1",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "title": "General stability exercises — Core and pelvic stability patient information",
+          "url": "https://www.cuh.nhs.uk/patient-information/general-stability-exercises1/",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "중립 척추 유지 및 지지면 부하 분산에 관한 기초 안정화 지침 대조"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "bf564e799f8a613c958ef68f5b2e1b33ac5009b242732963a2242de08f954ff1",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "exerciseId": "original-mat-rib-breath",
+      "candidateId": "supine-rib-breath-expansion",
+      "aliasExerciseIds": [],
+      "titleKo": "누워서 호흡 관찰 · 3차원 흉곽 횡격막 호흡",
+      "titleEn": "Supine 3D Ribcage Diaphragmatic Breath",
+      "factualRecord": {
+        "startPose": "수파인(Supine) 갈고리 누운 자세(Hook-lying)에서 두 발바닥을 골반 너비로 매트에 두고 후두골·흉추·천골 중립 접지를 유지한 시작 자세",
+        "peakPose": "들숨에 목·어깨 거상 없이 하부 늑골이 양옆·앞뒤 3차원으로 확장되고 횡격막 하강과 복벽의 부드러운 팽창이 일어나는 정점 호흡 자세",
+        "returnPose": "날숨에 흉골과 하부 늑골이 부드럽게 모아지고 심부 복횡근·골반저근의 협응 수축으로 중립 안정 상태로 돌아오는 복귀 자세",
+        "supportAnchors": [
+          "occiput-mat",
+          "thoracic-ribcage-mat",
+          "sacrum-pelvis-mat",
+          "bilateral-plantar-feet-mat"
+        ],
+        "jointAngleRanges": {
+          "ribcageLateralExpansionMm": [
+            8,
+            24
+          ],
+          "hipFlexionHookLyingDeg": [
+            45,
+            55
+          ],
+          "kneeFlexionHookLyingDeg": [
+            85,
+            95
+          ],
+          "cervicalNeutralDeg": [
+            0,
+            3
+          ]
+        },
+        "safetyBoundaries": "보조 호흡근(사각근·상부 승모근) 과긴장과 요추 과신전을 방지하며 호흡 주기를 의학적 폐기능 검사로 해석하지 않음"
+      },
+      "sources": [
+        {
+          "sourceId": "basi-cjkelly-pelvic-curl-breathing-setup-v1",
+          "publisher": "BASI Pilates",
+          "title": "10 Essential Pilates Exercises for Beginners — Supine setup and lateral breathing cues",
+          "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "수파인 무릎 굽힘 준비 정렬 및 들숨·날숨 리듬 큐 확인"
+        },
+        {
+          "sourceId": "withpilates-kr09-diaphragmatic-breathing-v1",
+          "publisher": "WITH PILATES / 위드필라테스 (STOTT PILATES Academy Partner)",
+          "title": "Learn Pilates Diaphragmatic Breathing Techniques",
+          "url": "https://www.youtube.com/watch?v=DJtd3AqZzH0",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "필라테스 횡격막·흉곽 호흡 기초 교육 메타데이터 및 범위 대조"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "7814c2e2c48fc2f2286a057895292bd8b65da4e0b90f83ea81b17b4fe8974267",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "exerciseId": "original-mat-pelvic-clock",
+      "candidateId": "supine-pelvic-clock-tilt",
+      "aliasExerciseIds": [],
+      "titleKo": "골반 시계 · 12시-6시 골반 경사 및 임프린트 조절",
+      "titleEn": "Supine Pelvic Clock 12-6 & Imprint Tilt",
+      "factualRecord": {
+        "startPose": "수파인 무릎 굽힘 자세에서 양발을 매트에 평행하게 지지하고 천골을 수평 중립(시계 중심)에 둔 준비 자세",
+        "peakPose": "날숨에 복벽을 부드럽게 당겨 배꼽 방향(12시, 후방 경사/임프린트)으로 골반을 기울여 요추 굴곡을 유도한 정점 자세",
+        "returnPose": "들숨에 꼬리뼈 방향(6시, 전방 경사 탐색)을 거쳐 과도한 아치 없이 중립 골반 수평 정렬로 복귀한 종료 자세",
+        "supportAnchors": [
+          "occiput-mat",
+          "scapular-thoracic-mat",
+          "sacrum-rolling-contact-mat",
+          "bilateral-feet-mat"
+        ],
+        "jointAngleRanges": {
+          "pelvicPosteriorTiltDeg": [
+            0,
+            14
+          ],
+          "pelvicAnteriorTiltDeg": [
+            0,
+            10
+          ],
+          "lumbarFlexionDeltaDeg": [
+            -8,
+            12
+          ],
+          "hipFlexionDeg": [
+            42,
+            58
+          ]
+        },
+        "safetyBoundaries": "둔근 과수축으로 골반을 브리지처럼 들어 올리지 않고 천골 구름(Sacral rolling) 범위 내에서만 수행하도록 제한함"
+      },
+      "sources": [
+        {
+          "sourceId": "basi-cjkelly-pelvic-curl-prep-tilt-v1",
+          "publisher": "BASI Pilates",
+          "title": "10 Essential Pilates Exercises for Beginners — 1. Pelvic Curl (Initial pelvic tilt phase)",
+          "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "수파인 자세에서 복벽 수축을 통한 초기 골반 후방 경사(Pelvic tilt) 시작 원리 확인"
+        },
+        {
+          "sourceId": "tsd-sui-pelvic-tilt-setup-v1",
+          "publisher": "Torbay and South Devon NHS Foundation Trust",
+          "title": "Stress urinary incontinence — Pelvic Health Physiotherapy information leaflet (Supine pelvic tilt setup)",
+          "url": "https://www.torbayandsouthdevon.nhs.uk/uploads/25988.pdf?last-updated=20260902",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "누운 자세에서 하부 요추 평탄화 및 중립 골반 조절 큐 대조"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "dc25206c6e1b1c82449cdbf7a9003da73889879ce4360afc491e6ecec24e8ee5",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "exerciseId": "original-mat-single-leg-stretch",
+      "candidateId": "supine-single-leg-stretch-exchange",
+      "aliasExerciseIds": [],
+      "titleKo": "싱글 레그 스트레치 준비 · 수파인 교대 레그 리치",
+      "titleEn": "Supine Single Leg Stretch Reciprocal Exchange",
+      "factualRecord": {
+        "startPose": "수파인에서 상부 흉추를 가볍게 컬업(또는 머리 지지 대안)하고 한쪽 무릎은 테이블탑으로 당기며 반대 다리는 사선 앞으로 길게 뻗을 준비 자세",
+        "peakPose": "골반과 요추의 매트 지지 안정을 유지한 채 능동 다리를 전방 사선(45~60도)으로 길게 뻗고 반대 무릎을 가슴 위 테이블탑에서 지지한 정점 자세",
+        "returnPose": "몸통의 흔들림과 회전 없이 뻗은 다리를 테이블탑 중심으로 회수하며 반대 다리와 리듬감 있게 교대 준비로 돌아오는 복귀 자세",
+        "supportAnchors": [
+          "lower-thoracic-lumbar-mat",
+          "sacrum-pelvis-mat",
+          "hands-on-retained-knee"
+        ],
+        "jointAngleRanges": {
+          "thoracicCurlFlexionDeg": [
+            15,
+            28
+          ],
+          "activeHipFlexionExtensionDeg": [
+            35,
+            95
+          ],
+          "activeKneeExtensionDeg": [
+            150,
+            178
+          ],
+          "retainedKneeFlexionDeg": [
+            85,
+            100
+          ]
+        },
+        "safetyBoundaries": "경추 통증 시 머리를 매트에 내려놓고 다리 사선 각도를 높여 하부 요추 들뜸을 예방하는 안전 경계를 명시함"
+      },
+      "sources": [
+        {
+          "sourceId": "basi-single-leg-stretch-public-text-2026-11-05",
+          "publisher": "BASI Pilates",
+          "title": "10 Essential Pilates Exercises for Beginners — 5. Single Leg Stretch",
+          "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "테이블탑 시작, 굽힌 무릎 쪽 양손 배치 및 반대 다리 전방 리치 교대 패턴 확인"
+        },
+        {
+          "sourceId": "rm-abdominal-operation-single-leg-slide-v1",
+          "publisher": "The Royal Marsden NHS Foundation Trust, Physiotherapy department",
+          "title": "Exercise and advice to help you recover after your abdominal operation — Single leg slide / knee lift",
+          "url": "https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "복부 브레이싱 상태에서 한 다리씩 뻗고 되돌리는 골반 안정화 대안 비교"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "e12a6e60809a1ad6bc4e0fdf440798312d38e2fdf577b5c2577735db060af2e4",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "exerciseId": "original-mat-swimming-prep",
+      "candidateId": "prone-swimming-alternating",
+      "aliasExerciseIds": [],
+      "titleKo": "스위밍 준비 · 복와위 교차 상·하지 신전 리치",
+      "titleEn": "Prone Contralateral Swimming Prep",
+      "factualRecord": {
+        "startPose": "복와위에서 양팔을 머리 앞쪽으로 길게 뻗고 두 다리를 골반 너비로 뻗어 코끝을 매트 가까이에 둔 중립 준비 자세",
+        "peakPose": "치골과 하복부 지지를 유지하며 한쪽 다리(또는 반대쪽 팔과 동시)를 고관절·견관절 축에서 길게 뻗어 들어 올린 정점 자세",
+        "returnPose": "몸통의 좌우 롤링 없이 길게 뻗은 팔·다리를 매트 지지면으로 부드럽게 내려놓는 복귀 자세",
+        "supportAnchors": [
+          "pelvis-anterior-mat",
+          "lower-ribcage-mat",
+          "contralateral-hand-mat",
+          "contralateral-forefoot-mat"
+        ],
+        "jointAngleRanges": {
+          "activeHipExtensionDeg": [
+            0,
+            16
+          ],
+          "activeShoulderFlexionElevationDeg": [
+            165,
+            180
+          ],
+          "thoracicExtensionDeg": [
+            5,
+            15
+          ],
+          "pelvicRotationLimitDeg": [
+            -3,
+            3
+          ]
+        },
+        "safetyBoundaries": "높이 올리기보다 축성 신장(Axial elongation)을 우선하며 요추 과신전 및 골반 회전 보상을 엄격히 제한함"
+      },
+      "sources": [
+        {
+          "sourceId": "rnoh-prone-hip-extension-text-2026-11-05",
+          "publisher": "Royal National Orthopaedic Hospital NHS Trust",
+          "title": "Functional Fitness Exercise Pack · Posterior Chain · Prone hip extension",
+          "url": "https://www.rnoh.nhs.uk/patients-and-visitors/patient-information-guides/functional-fitness-exercise-pack",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "복와위에서 편 다리를 들어 올렸다 내리며 반대 다리와 교대하는 후면 사슬 패턴 확인"
+        },
+        {
+          "sourceId": "merrithew-mv08-contralateral-coordination-v1",
+          "publisher": "Merrithew 공식 웹사이트",
+          "title": "Exercise of the Month: Merrithew Fascial Movement Hydrate Variable (Contralateral limb coordination)",
+          "url": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "몸통 안정 유지 하 교차 사지(Contralateral arm/leg) 협응 조절 원리 대조"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "bee29d7347a54ff8cd36005d2ebc59e9b2d9b9d73b8d90c10f313f64e665a00c",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "exerciseId": "original-mat-side-leg-lift",
+      "candidateId": "side-lying-abduction-sweep",
+      "aliasExerciseIds": [
+        "original-mat-seated-arm-reach"
+      ],
+      "titleKo": "옆으로 누워 다리 들기 · 측와위 고관절 외전 리프트",
+      "titleEn": "Side-Lying Straight Leg Abduction Sweep",
+      "factualRecord": {
+        "startPose": "측와위(Side-lying)에서 머리-몸통-골반을 일직선으로 정렬하고 양쪽 골반을 수직으로 포갠 채 위쪽 다리를 길게 뻗은 시작 자세",
+        "peakPose": "요방형근 하이킹(Pelvic hiking) 없이 중둔근 수축으로 위쪽 곧은 다리를 골반 높이보다 약간 위(20~30도 외전)까지 들어 올린 정점 자세",
+        "returnPose": "골반 수직 정렬과 아래쪽 옆구리 미세 공간을 유지하며 위쪽 다리를 천천히 시작 높이로 내리는 복귀 자세",
+        "supportAnchors": [
+          "lower-lateral-hip-thigh-mat",
+          "lower-lateral-ribcage-shoulder-mat",
+          "head-support-cushion-mat",
+          "stabilizing-front-hand-mat"
+        ],
+        "jointAngleRanges": {
+          "activeHipAbductionDeg": [
+            0,
+            28
+          ],
+          "pelvicLateralTiltGuardDeg": [
+            -3,
+            3
+          ],
+          "activeKneeExtensionDeg": [
+            175,
+            180
+          ],
+          "ankleDorsiflexionDeg": [
+            -5,
+            10
+          ]
+        },
+        "safetyBoundaries": "과도한 외전으로 요추 측굴이 개입되지 않도록 소범위 고관절 순수 외전 구간만 허용함"
+      },
+      "sources": [
+        {
+          "sourceId": "ruh-lateral-hip-side-abduction-v1",
+          "publisher": "Royal United Hospitals Bath NHS Foundation Trust",
+          "title": "Lateral Hip Pain — Physiotherapy Patient Information (RUH PHY/067, Side lying hip abduction)",
+          "url": "https://www.ruh.nhs.uk/patients/services/physiotherapy/documents/PHY067_Lateral_hip_pain.pdf",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "측와위 일직선 정렬에서 위쪽 편 다리를 둔근으로 들어 올렸다 내리는 원문 사실 확인"
+        },
+        {
+          "sourceId": "roh-hip-oa-side-abduction-v1",
+          "publisher": "The Royal Orthopaedic Hospital NHS Foundation Trust",
+          "title": "Exercises for Osteoarthritis of the Hip — Hip Abduction in Side Lying",
+          "url": "https://roh.nhs.uk/services-information/therapy/exercises-for-osteoarthritis-of-the-hip",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "아래 다리 굽힘 지지 대안 및 발목 굴곡·천천히 하강하는 제어 원칙 대조"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "bdfa3243fb3f6fc708aad2df2086b89e025889ea1a26328d263db665166c2fd8",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "exerciseId": "original-mat-spine-twist",
+      "candidateId": "seated-axial-spine-twist",
+      "aliasExerciseIds": [
+        "original-mat-mermaid"
+      ],
+      "titleKo": "시티드 스파인 트위스트 · 좌골 지지 축성 흉추 회전",
+      "titleEn": "Seated Axial Spine Twist",
+      "factualRecord": {
+        "startPose": "앉은 자세(Seated)에서 양쪽 좌골에 체중을 균등하게 싣고 정수리를 천장으로 길게 세운 채 양팔을 옆(또는 가슴 앞)으로 벌린 시작 자세",
+        "peakPose": "양측 좌골의 매트 고정과 두 발의 길이를 동일하게 유지한 채 날숨에 배꼽 위 흉곽과 견갑대를 축 중심으로 회전(25~35도)한 정점 자세",
+        "returnPose": "들숨에 척추 축성 신장(키가 커지는 느낌)을 유지하며 흉곽을 정면 중앙 정렬로 되돌리는 복귀 자세",
+        "supportAnchors": [
+          "left-ischial-tuberosity-mat",
+          "right-ischial-tuberosity-mat",
+          "bilateral-posterior-legs-heels-mat"
+        ],
+        "jointAngleRanges": {
+          "thoracicAxialRotationDeg": [
+            0,
+            32
+          ],
+          "pelvicShiftGuardMm": [
+            0,
+            4
+          ],
+          "shoulderAbductionDeg": [
+            75,
+            90
+          ],
+          "spinalVerticalElongationMm": [
+            0,
+            12
+          ]
+        },
+        "safetyBoundaries": "팔만 뒤로 젖히거나 한쪽 좌골이 들리며 골반이 함께 돌아가는 보상 작용을 배제함"
+      },
+      "sources": [
+        {
+          "sourceId": "basi-cjkelly-spine-twist-supine-axial-context-v1",
+          "publisher": "BASI Pilates",
+          "title": "10 Essential Pilates Exercises for Beginners — Axial trunk rotation and pelvic stability principles",
+          "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "흉곽 회전 중 골반·어깨 안정성 및 호흡 연동 원칙 확인"
+        },
+        {
+          "sourceId": "leicspart-chair-trunk-stretch-text-2026-11-05",
+          "publisher": "Leicestershire Partnership NHS Trust · Community Falls Service",
+          "title": "Seated stretching and strengthening exercises for the whole body · Seated trunk control",
+          "url": "https://www.leicspart.nhs.uk/wp-content/uploads/2022/07/134-Falls-service-stretching-and-strengthening-exercises-edition-5.pdf",
+          "checkedAt": "2026-11-08",
+          "scopeNoteKo": "좌골 지지 기반 앉은 몸통 회전·측굴 및 중앙 복귀 지침 대조"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "bc99c5915f62b2bcc1778a69e540a2d47b481df463504079891115a8a5fec5b7",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    }
+  ],
+  "previouslyUnboundMotionModels": [
+    {
+      "modelId": "supported-heel-raise",
+      "batchVariantId": null,
+      "aliasModelIds": [
+        "standing-supported-heel-raise"
+      ],
+      "exerciseId": "original-mat-ankle-reach",
+      "aliasExerciseIds": [
+        "original-chair-supported-calf-raise",
+        "original-barrel-supported-ankle"
+      ],
+      "titleKo": "서서 발목 움직임 (지지 카프 레이즈 연속 도해)",
+      "factualRecord": {
+        "modelId": "supported-heel-raise",
+        "exerciseId": "original-mat-ankle-reach",
+        "startPose": "고정된 일반 의자 등받이에 양손을 가볍게 얹고 두 발을 골반 너비로 바닥에 평행하게 지지한 입위 자세",
+        "peakPose": "무릎과 고관절 수직 정렬을 유지하며 양쪽 발뒤꿈치를 동시에 들어 올린 족저굴곡 정점 자세",
+        "returnPose": "지지 손을 유지한 채 양쪽 뒤꿈치를 통제된 속도로 바닥에 내려놓는 복귀 자세",
+        "supportSurface": "floor-and-ordinary-stable-chair-backrest"
+      },
+      "sources": [
+        {
+          "sourceId": "nhs-livewell-calf-raises-v1",
+          "publisher": "NHS Live Well",
+          "title": "Strength exercises — Calf raises",
+          "url": "https://www.nhs.uk/live-well/exercise/strength-exercises/"
+        },
+        {
+          "sourceId": "uhsussex-standing-heel-raises-v1",
+          "publisher": "University Hospitals Sussex NHS Foundation Trust",
+          "title": "Standing Exercises — Heel raises",
+          "url": "https://www.uhsussex.nhs.uk/resources/standing-exercises-2/"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "26a6fb06c5749aab46698d05c2e5bf0ec998e1c694ee6c828ca2582fbfece626",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "modelId": "side-lying-clam",
+      "batchVariantId": null,
+      "aliasModelIds": [],
+      "exerciseId": "original-mat-clam",
+      "aliasExerciseIds": [],
+      "titleKo": "사이드 클램 (측와위 고관절 외회전 연속 도해)",
+      "factualRecord": {
+        "modelId": "side-lying-clam",
+        "exerciseId": "original-mat-clam",
+        "startPose": "측와위에서 머리 베개를 베고 두 무릎을 굽혀 발뒤꿈치를 맞댄 채 골반을 수직으로 포갠 시작 자세",
+        "peakPose": "양발 안쪽 모서리 접촉과 골반 정면 고정을 유지한 채 위쪽 무릎만 천장 쪽으로 열어 올린 정점 자세",
+        "returnPose": "골반 후방 회전 없이 위쪽 무릎을 아래쪽 무릎 위로 천천히 닫는 복귀 자세",
+        "supportSurface": "mat-with-head-pillow-support"
+      },
+      "sources": [
+        {
+          "sourceId": "southtees-the-clam-v1",
+          "publisher": "South Tees Hospitals NHS Foundation Trust",
+          "title": "The clam — Physiotherapy exercise leaflet",
+          "url": "https://www.southtees.nhs.uk/resources/the-clam/"
+        },
+        {
+          "sourceId": "cuh-clam-shell-stability-v1",
+          "publisher": "Cambridge University Hospitals NHS Foundation Trust",
+          "title": "General stability exercises — Clam shell",
+          "url": "https://www.cuh.nhs.uk/patient-information/general-stability-exercises1/"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "af827ac857ec84b29d74fa1030f58ca300f5be7085b198011f42cd7f233dd4ee",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "modelId": "side-lying-straight-leg-lift",
+      "batchVariantId": null,
+      "aliasModelIds": [],
+      "exerciseId": "original-mat-side-leg-lift",
+      "aliasExerciseIds": [],
+      "titleKo": "옆으로 누워 곧은 다리 들기 (측와위 외전 연속 도해)",
+      "factualRecord": {
+        "modelId": "side-lying-straight-leg-lift",
+        "exerciseId": "original-mat-side-leg-lift",
+        "startPose": "측와위에서 몸통과 두 다리를 일직선으로 정렬하고 아래쪽 옆구리와 골반을 안정화한 시작 자세",
+        "peakPose": "둔근을 사용하여 위쪽 곧은 다리를 골반 높이 위로 들어 올린 정점 자세",
+        "returnPose": "몸통 흔들림 없이 위쪽 다리를 시작 위치로 천천히 내리는 복귀 자세",
+        "supportSurface": "mat-lateral-body-contact"
+      },
+      "sources": [
+        {
+          "sourceId": "ruh-lateral-hip-side-abduction-v1",
+          "publisher": "Royal United Hospitals Bath NHS Foundation Trust",
+          "title": "Lateral Hip Pain — 3. Side lying hip abduction (RUH PHY/067)",
+          "url": "https://www.ruh.nhs.uk/patients/services/physiotherapy/documents/PHY067_Lateral_hip_pain.pdf"
+        },
+        {
+          "sourceId": "roh-hip-oa-side-abduction-v1",
+          "publisher": "The Royal Orthopaedic Hospital NHS Foundation Trust",
+          "title": "Exercises for Osteoarthritis of the Hip — Hip Abduction in Side Lying",
+          "url": "https://roh.nhs.uk/services-information/therapy/exercises-for-osteoarthritis-of-the-hip"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "69cca8462c474ae4133fb10c86b7d3f9b1fc05c5ff178fab8f87c54facb2e600",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "modelId": "side-lying-open-book",
+      "batchVariantId": null,
+      "aliasModelIds": [],
+      "exerciseId": "original-mat-open-book",
+      "aliasExerciseIds": [],
+      "titleKo": "사이드 오픈 북 (측와위 흉곽 회전 연속 도해)",
+      "factualRecord": {
+        "modelId": "side-lying-open-book",
+        "exerciseId": "original-mat-open-book",
+        "startPose": "측와위에서 두 무릎을 포개어 굽히고 양팔을 어깨 앞쪽으로 나란히 포갠 시작 자세",
+        "peakPose": "양 무릎의 바닥 접지를 유지한 채 위쪽 팔을 천장을 거쳐 반대쪽으로 열며 시선과 흉곽을 함께 회전한 정점 자세",
+        "returnPose": "호흡과 함께 위쪽 팔과 흉곽을 처음 포갠 손 위치로 천천히 되돌리는 복귀 자세",
+        "supportSurface": "mat-with-stacked-bent-knees"
+      },
+      "sources": [
+        {
+          "sourceId": "dynamichealth-midback-open-book-v1",
+          "publisher": "Dynamic Health, Cambridgeshire Community Services NHS Trust",
+          "title": "Mid back pain — Movement exercises: Open book",
+          "url": "https://www.dynamichealth.nhs.uk/help-and-advice/mid-back-pain/"
+        },
+        {
+          "sourceId": "leeds-chest-wall-open-book-v1",
+          "publisher": "Leeds Teaching Hospitals NHS Trust",
+          "title": "Physiotherapy exercises for breast pain with chest wall musculoskeletal symptoms — 1. Open book",
+          "url": "https://www.leedsth.nhs.uk/patients/resources/physiotherapy-exercises-for-breast-pain-with-chest-wall-musculoskeletal-symptoms/"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "764404fef612d4abd494d0bfa2b28b352d08f0ac6396cc0430c5a8e8a8444f70",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "modelId": "supine-single-leg-reach-v1",
+      "batchVariantId": null,
+      "aliasModelIds": [],
+      "exerciseId": "original-mat-single-leg-stretch",
+      "aliasExerciseIds": [],
+      "titleKo": "싱글 레그 · 가슴 든 한쪽 뻗기 (수파인 3D 투영 도해)",
+      "factualRecord": {
+        "modelId": "supine-single-leg-reach-v1",
+        "exerciseId": "original-mat-single-leg-stretch",
+        "startPose": "가슴을 든 테이블탑 배치에서 유지 다리 무릎 위에 양손을 둔 시작 자세",
+        "peakPose": "유지 다리와 골반 매트 패치를 고정한 채 선택 다리를 전방 사선으로 뻗은 정점 자세",
+        "returnPose": "뻗은 다리를 다시 테이블탑 정렬로 되돌리는 복귀 자세",
+        "supportSurface": "mat-pelvis-and-lower-trunk-patches"
+      },
+      "sources": [
+        {
+          "sourceId": "basi-single-leg-stretch-public-text-2026-11-05",
+          "publisher": "BASI Pilates",
+          "title": "10 Essential Pilates Exercises for Beginners — 5. Single Leg Stretch",
+          "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/"
+        },
+        {
+          "sourceId": "basi-terms-and-conditions-v1",
+          "publisher": "BASI Pilates",
+          "title": "Terms and Conditions — Intellectual Property reference boundary",
+          "url": "https://www.basipilates.com/terms-and-conditions/"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "c1e4da0710b35484bd79549fecae793a6e745075b4b3ed816179cebe535c1da9",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "modelId": "mat-pelvic-curl-bridge-v1",
+      "batchVariantId": "chair-seated-bilateral-arm-raise-v1",
+      "aliasModelIds": [
+        "chair-seated-bilateral-arm-raise-v1",
+        "articulated-pelvic-curl"
+      ],
+      "exerciseId": "original-mat-bridge",
+      "aliasExerciseIds": [
+        "original-mat-seated-arm-reach"
+      ],
+      "titleKo": "매트 분절 브리지 & 좌식 양팔 리치 배치 검증 모델",
+      "factualRecord": {
+        "modelId": "mat-pelvic-curl-bridge-v1",
+        "batchVariantId": "chair-seated-bilateral-arm-raise-v1",
+        "exerciseId": "original-mat-bridge",
+        "startPose": "수파인 무릎 굽힘 양발 지지(또는 고정 의자 좌골 지지)에서 분절 움직임을 준비하는 시작 자세",
+        "peakPose": "골반 후방 말림을 통해 요추·흉추를 순차 거상(또는 좌식 양팔 굴곡 거상)한 정점 자세",
+        "returnPose": "상부 흉추부터 천골까지(또는 거상한 양팔을) 지지면으로 순차 하강하는 복귀 자세",
+        "supportSurface": "mat-or-ordinary-stable-chair-support"
+      },
+      "sources": [
+        {
+          "sourceId": "basi-cjkelly-pelvic-curl-v1",
+          "publisher": "BASI Pilates",
+          "title": "10 Essential Pilates Exercises for Beginners — 1. Pelvic Curl",
+          "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/"
+        },
+        {
+          "sourceId": "uhsussex-chair-arm-lift-text-2026-11-05",
+          "publisher": "University Hospitals Sussex NHS Foundation Trust",
+          "title": "Chair exercises (with seated arm exercises) · Lift your arms above your head",
+          "url": "https://www.uhsussex.nhs.uk/resources/chair-exercises-with-seated-arm-exercises/"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "e98fde53346c7d53a3cb1d392f6367935132aa92a45945afc9eca1ffe4f84dc5",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "modelId": "mat-chest-lift-abdominal-prep-v1",
+      "batchVariantId": "chair-seated-overhead-sidebend-v1",
+      "aliasModelIds": [
+        "chair-seated-overhead-sidebend-v1",
+        "supine-chest-lift"
+      ],
+      "exerciseId": "original-mat-chest-lift",
+      "aliasExerciseIds": [
+        "original-mat-mermaid"
+      ],
+      "titleKo": "매트 체스트 리프트 & 좌식 측굴 배치 검증 모델",
+      "factualRecord": {
+        "modelId": "mat-chest-lift-abdominal-prep-v1",
+        "batchVariantId": "chair-seated-overhead-sidebend-v1",
+        "exerciseId": "original-mat-chest-lift",
+        "startPose": "수파인 머리 뒤 손 지지(또는 고정 의자 한 팔 거상)에서 분절 굽힘을 준비하는 시작 자세",
+        "peakPose": "견갑골 하각이 매트에서 떨어지도록 상부 몸통을 굴곡(또는 측면 굴곡)한 정점 자세",
+        "returnPose": "목 과긴장 없이 흉추와 머리를 시작 정렬로 되돌리는 복귀 자세",
+        "supportSurface": "mat-or-ordinary-stable-chair-support"
+      },
+      "sources": [
+        {
+          "sourceId": "basi-cjkelly-chest-lift-v1",
+          "publisher": "BASI Pilates",
+          "title": "10 Essential Pilates Exercises for Beginners — 2. Chest Lift",
+          "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/"
+        },
+        {
+          "sourceId": "leicspart-chair-trunk-stretch-text-2026-11-05",
+          "publisher": "Leicestershire Partnership NHS Trust · Community Falls Service",
+          "title": "Seated stretching and strengthening exercises for the whole body · Trunk stretch",
+          "url": "https://www.leicspart.nhs.uk/wp-content/uploads/2022/07/134-Falls-service-stretching-and-strengthening-exercises-edition-5.pdf"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "bd8f8a2678b953a99c9070a25132296fada23c492d2755669ebbcb61c29e408c",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "modelId": "mat-single-knee-to-chest-fold-v1",
+      "batchVariantId": "prone-single-straight-leg-extension-v1",
+      "aliasModelIds": [
+        "prone-single-straight-leg-extension-v1",
+        "supine-knee-fold"
+      ],
+      "exerciseId": "original-mat-knee-fold",
+      "aliasExerciseIds": [
+        "original-mat-swimming-prep"
+      ],
+      "titleKo": "매트 싱글 니 폴드 & 복와위 편 다리 신전 배치 검증 모델",
+      "factualRecord": {
+        "modelId": "mat-single-knee-to-chest-fold-v1",
+        "batchVariantId": "prone-single-straight-leg-extension-v1",
+        "exerciseId": "original-mat-knee-fold",
+        "startPose": "골반 중립 지지 상태에서 한쪽 다리의 분리 움직임(고관절 굴곡 폴드 또는 복와위 고관절 신전)을 준비하는 시작 자세",
+        "peakPose": "반대쪽 지지 다리와 골반 고정을 유지한 채 선택 다리를 목표 각도로 들어 올린 정점 자세",
+        "returnPose": "골반 흔들림 없이 선택 다리의 발을 매트 지지면으로 되돌리는 복귀 자세",
+        "supportSurface": "mat-pelvis-and-contralateral-limb-support"
+      },
+      "sources": [
+        {
+          "sourceId": "rm-abdominal-operation-single-knee-lift-v1",
+          "publisher": "The Royal Marsden NHS Foundation Trust, Physiotherapy department",
+          "title": "Exercise and advice to help you recover after your abdominal operation — Single knee lifts",
+          "url": "https://patientinfolibrary.royalmarsden.nhs.uk/document/download/1386"
+        },
+        {
+          "sourceId": "rnoh-prone-hip-extension-text-2026-11-05",
+          "publisher": "Royal National Orthopaedic Hospital NHS Trust",
+          "title": "Functional Fitness Exercise Pack · Posterior Chain · Prone hip extension",
+          "url": "https://www.rnoh.nhs.uk/patients-and-visitors/patient-information-guides/functional-fitness-exercise-pack"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "b35c18f923158f53beeca11988cc5e1aabae85b84e2965407215d04f413eba80",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "modelId": "mat-prone-thoracic-extension-prep-v1",
+      "batchVariantId": "prone-forearm-chest-extension-v1",
+      "aliasModelIds": [
+        "prone-forearm-chest-extension-v1"
+      ],
+      "exerciseId": "original-mat-swan-prep",
+      "aliasExerciseIds": [],
+      "titleKo": "매트 복와위 전완 지지 흉추 신전 배치 검증 모델",
+      "factualRecord": {
+        "modelId": "mat-prone-thoracic-extension-prep-v1",
+        "batchVariantId": "prone-forearm-chest-extension-v1",
+        "exerciseId": "original-mat-swan-prep",
+        "startPose": "복와위에서 양쪽 팔꿈치·전완·손바닥을 매트에 고정하고 골반과 양발등을 접지한 시작 자세",
+        "peakPose": "전완과 골반 지지를 유지하며 어깨와 가슴을 들어 올려 분절 몸통을 신전한 정점 자세",
+        "returnPose": "양측 전완 지지를 유지하며 가슴과 상부 몸통을 시작 높이로 되돌리는 복귀 자세",
+        "supportSurface": "mat-bilateral-forearms-and-pelvis-support"
+      },
+      "sources": [
+        {
+          "sourceId": "ocats-prone-forearm-extension-text-2026-11-05",
+          "publisher": "North Cheshire and Mersey NHS · Musculoskeletal Physiotherapy OCATS",
+          "title": "Low Back Mobility Exercises · Level 1 Prone Lumbar Extension on Forearms",
+          "url": "https://northcheshireandmersey.nhs.uk/media/4lnldy0f/lower-back-range-of-motion-exercises-patient-advice-sheet.pdf"
+        },
+        {
+          "sourceId": "basi-cjkelly-baby-swan-v1",
+          "publisher": "BASI Pilates",
+          "title": "10 Essential Pilates Exercises for Beginners — 10. Back Extension (Baby Swan)",
+          "url": "https://www.basipilates.com/pilates/10-essential-pilates-exercises-for-beginners/"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecordSha256": "b0751a533b4fe73ed59acdc27f6a83cbb45db18f9c0ba6f2c4cd2bb6cd1912e2",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    }
+  ],
+  "clearedYoutubeReplacementAudits": [
+    {
+      "exerciseId": "ex-warmup-01",
+      "legacyRemovedVideoId": "K56Z12XNQ5c",
+      "clearedReasonKo": "자료 미확인: 리포머 미니볼 펠빅 클락 & 흉식 호흡 임프린팅과 동작·기구·제목·채널 일치가 직접 확인된 공개 출처가 없어 기존 오연결 영상(K56Z12XNQ5c)을 제거했습니다.",
+      "replacementReferences": [
+        {
+          "referenceId": "sr-01",
+          "publisher": "Merrithew 공식 웹사이트",
+          "title": "Exercise of the Month: Warm-up with Reformer & Fitness Circle",
+          "url": "https://www.merrithew.com/blog/post/2022-09-23/exercise-of-the-month-warm-up-with-reformer-fitness-circle",
+          "alignmentNoteKo": "리포머 수파인 준비운동 및 소도구 활용 흉곽·골반 정렬 공식 교육 자료"
+        },
+        {
+          "referenceId": "kr-09",
+          "publisher": "WITH PILATES / 위드필라테스",
+          "title": "Learn Pilates Diaphragmatic Breathing Techniques",
+          "url": "https://www.youtube.com/watch?v=DJtd3AqZzH0",
+          "alignmentNoteKo": "필라테스 횡격막·흉식 호흡 기초 가이드 참조"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "exerciseId": "ex-warmup-01",
+        "legacyRemovedVideoId": "K56Z12XNQ5c",
+        "clearedReasonKo": "자료 미확인: 리포머 미니볼 펠빅 클락 & 흉식 호흡 임프린팅과 동작·기구·제목·채널 일치가 직접 확인된 공개 출처가 없어 기존 오연결 영상(K56Z12XNQ5c)을 제거했습니다.",
+        "replacementUrls": [
+          "https://www.merrithew.com/blog/post/2022-09-23/exercise-of-the-month-warm-up-with-reformer-fitness-circle",
+          "https://www.youtube.com/watch?v=DJtd3AqZzH0"
+        ],
+        "verificationBoundary": "오연결된 미검증 YouTube 링크를 영구 제거하고 기구·움직임 범주가 확인된 공식·공공 참고 링크로 대체 기록함 (정식 시범 일치 또는 전문의 승인 아님)"
+      },
+      "factualRecordSha256": "bfefa3c12328615d71103eb0d470dc51f326ba995322aee6694b1e8cf1097ae4",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "exerciseId": "ex-footwork-02",
+      "legacyRemovedVideoId": "UItWltVZZmE",
+      "clearedReasonKo": "자료 미확인: 리포머 써클링 와이드 세컨드 및 내·외전근 풋워크와 동작·기구·소도구 일치가 직접 확인된 공개 출처가 없어 기존 오연결 영상(UItWltVZZmE)을 제거했습니다.",
+      "replacementReferences": [
+        {
+          "referenceId": "sr-01",
+          "publisher": "Merrithew 공식 웹사이트",
+          "title": "Exercise of the Month: Warm-up with Reformer & Fitness Circle",
+          "url": "https://www.merrithew.com/blog/post/2022-09-23/exercise-of-the-month-warm-up-with-reformer-fitness-circle",
+          "alignmentNoteKo": "리포머와 Fitness Circle(써클링) 결합 공식 교육 자료"
+        },
+        {
+          "referenceId": "mv-06",
+          "publisher": "Merrithew 공식 웹사이트",
+          "title": "Jump with hip abduction/adduction (Cardio-Tramp & Flex-Band Loops)",
+          "url": "https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence",
+          "alignmentNoteKo": "리포머 하지 외전·내전 정렬 제어 공식 참고 자료"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "exerciseId": "ex-footwork-02",
+        "legacyRemovedVideoId": "UItWltVZZmE",
+        "clearedReasonKo": "자료 미확인: 리포머 써클링 와이드 세컨드 및 내·외전근 풋워크와 동작·기구·소도구 일치가 직접 확인된 공개 출처가 없어 기존 오연결 영상(UItWltVZZmE)을 제거했습니다.",
+        "replacementUrls": [
+          "https://www.merrithew.com/blog/post/2022-09-23/exercise-of-the-month-warm-up-with-reformer-fitness-circle",
+          "https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence"
+        ],
+        "verificationBoundary": "오연결된 미검증 YouTube 링크를 영구 제거하고 기구·움직임 범주가 확인된 공식·공공 참고 링크로 대체 기록함 (정식 시범 일치 또는 전문의 승인 아님)"
+      },
+      "factualRecordSha256": "c43618fc186b9159e8590db3d6de995b110d3a71d711af475ebc6c51e0f79378",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "exerciseId": "ex-cooldown-02",
+      "legacyRemovedVideoId": "legacy-unverified-rolldown",
+      "clearedReasonKo": "자료 미확인: 스탠딩 척추 롤다운 & 센터링 호흡 피날레와 동작·기구·제목·채널 일치가 직접 확인된 공개 출처가 없어 기존 오연결 영상을 제거했습니다.",
+      "replacementReferences": [
+        {
+          "referenceId": "sr-02",
+          "publisher": "Merrithew 공식 웹사이트",
+          "title": "Exercise of the Month: Standing Integration Series",
+          "url": "https://www.merrithew.com/blog/post/2024-03-20/exercise-of-the-month-standing-integration-series",
+          "alignmentNoteKo": "입위(Standing) 전신 정렬 통합 및 마무리 호흡 공식 참고 자료"
+        },
+        {
+          "referenceId": "kr-08",
+          "publisher": "WITH PILATES / 위드필라테스",
+          "title": "Pilates Breathing for beginners. Anytime! Anywhere!",
+          "url": "https://www.youtube.com/watch?v=Y_9c3NFbm1A",
+          "alignmentNoteKo": "수업 마무리 센터링 호흡 정렬 참고 자료"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "exerciseId": "ex-cooldown-02",
+        "legacyRemovedVideoId": "legacy-unverified-rolldown",
+        "clearedReasonKo": "자료 미확인: 스탠딩 척추 롤다운 & 센터링 호흡 피날레와 동작·기구·제목·채널 일치가 직접 확인된 공개 출처가 없어 기존 오연결 영상을 제거했습니다.",
+        "replacementUrls": [
+          "https://www.merrithew.com/blog/post/2024-03-20/exercise-of-the-month-standing-integration-series",
+          "https://www.youtube.com/watch?v=Y_9c3NFbm1A"
+        ],
+        "verificationBoundary": "오연결된 미검증 YouTube 링크를 영구 제거하고 기구·움직임 범주가 확인된 공식·공공 참고 링크로 대체 기록함 (정식 시범 일치 또는 전문의 승인 아님)"
+      },
+      "factualRecordSha256": "fa991a32cef67269a974cb1a4479e67de4622ab0424d1ced58e69264c85be226",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "exerciseId": "ex-core-04",
+      "legacyRemovedVideoId": "legacy-unverified-reverse-abs",
+      "clearedReasonKo": "자료 미확인: 리포머 리버스 앱스 & 닐링 크런치와 동작·기구·제목·채널 일치가 직접 확인된 공개 출처가 없어 기존 오연결 영상을 제거했습니다.",
+      "replacementReferences": [
+        {
+          "referenceId": "mv-16",
+          "publisher": "Merrithew 공식 웹사이트",
+          "title": "Exercise of the Month: Knee Stretch Prep with Rotations",
+          "url": "https://www.merrithew.com/blog/post/2023-02-27/exercise-of-the-month-knee-stretch-prep-with-rotations",
+          "alignmentNoteKo": "리포머 네발기기·무릎 지지 기반 코어 굴곡 및 회전 제어 공식 자료"
+        },
+        {
+          "referenceId": "mv-08",
+          "publisher": "Merrithew 공식 웹사이트",
+          "title": "Quadruped Forward/Back Step (Fascial Movement)",
+          "url": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+          "alignmentNoteKo": "네발기기(Quadruped) 견갑·골반 코어 안정화 공식 자료"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "exerciseId": "ex-core-04",
+        "legacyRemovedVideoId": "legacy-unverified-reverse-abs",
+        "clearedReasonKo": "자료 미확인: 리포머 리버스 앱스 & 닐링 크런치와 동작·기구·제목·채널 일치가 직접 확인된 공개 출처가 없어 기존 오연결 영상을 제거했습니다.",
+        "replacementUrls": [
+          "https://www.merrithew.com/blog/post/2023-02-27/exercise-of-the-month-knee-stretch-prep-with-rotations",
+          "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable"
+        ],
+        "verificationBoundary": "오연결된 미검증 YouTube 링크를 영구 제거하고 기구·움직임 범주가 확인된 공식·공공 참고 링크로 대체 기록함 (정식 시범 일치 또는 전문의 승인 아님)"
+      },
+      "factualRecordSha256": "dea57eba5d5b7054e27eb340777326f015887a521299d1f5c4d11c4005da8e11",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "exerciseId": "ex-lower-04",
+      "legacyRemovedVideoId": "legacy-unverified-side-strap",
+      "clearedReasonKo": "자료 미확인: 리포머 사이드 라잉 스트랩 싱글 레그 시리즈와 동작·기구·제목·채널 일치가 직접 확인된 공개 출처가 없어 기존 오연결 영상을 제거했습니다.",
+      "replacementReferences": [
+        {
+          "referenceId": "mv-09",
+          "publisher": "Merrithew 공식 웹사이트",
+          "title": "Side-Lying Gait Patterns (Merrithew Fascial Movement)",
+          "url": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+          "alignmentNoteKo": "측와위(Side-lying) 고관절 굴곡·신전 및 골반 안정화 공식 교육 자료"
+        },
+        {
+          "referenceId": "ruh-lateral-hip-side-abduction-v1",
+          "publisher": "Royal United Hospitals Bath NHS Foundation Trust",
+          "title": "Lateral Hip Pain — Side lying hip abduction (RUH PHY/067)",
+          "url": "https://www.ruh.nhs.uk/patients/services/physiotherapy/documents/PHY067_Lateral_hip_pain.pdf",
+          "alignmentNoteKo": "측와위 하지 외전 및 중둔근 조절 공공 임상 가이드"
+        }
+      ],
+      "checkedAt": "2026-11-08",
+      "factualRecord": {
+        "exerciseId": "ex-lower-04",
+        "legacyRemovedVideoId": "legacy-unverified-side-strap",
+        "clearedReasonKo": "자료 미확인: 리포머 사이드 라잉 스트랩 싱글 레그 시리즈와 동작·기구·제목·채널 일치가 직접 확인된 공개 출처가 없어 기존 오연결 영상을 제거했습니다.",
+        "replacementUrls": [
+          "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+          "https://www.ruh.nhs.uk/patients/services/physiotherapy/documents/PHY067_Lateral_hip_pain.pdf"
+        ],
+        "verificationBoundary": "오연결된 미검증 YouTube 링크를 영구 제거하고 기구·움직임 범주가 확인된 공식·공공 참고 링크로 대체 기록함 (정식 시범 일치 또는 전문의 승인 아님)"
+      },
+      "factualRecordSha256": "c87756619a0ecb84ed5c4745cc7a338403aff029f0b1c89773bc1a7dd05ea818",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    }
+  ],
+  "verifiedReferenceAuditRecords": [
+    {
+      "referenceId": "mv-01",
+      "titleKo": "체어 풋워크",
+      "originalTitle": "Footwork on Stability Chair",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2019-01-04/exercise-of-the-month-footwork-on-stability-chair",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "partial-playback-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 본문·기구 요구조건 및 관찰 타임스탬프 프레임 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "체어 풋워크(Footwork on Stability Chair) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-01",
+        "titleKo": "체어 풋워크",
+        "originalTitle": "Footwork on Stability Chair",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2019-01-04/exercise-of-the-month-footwork-on-stability-chair",
+        "originalVerificationStatus": "partial-playback-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 본문·기구 요구조건 및 관찰 타임스탬프 프레임 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "체어 풋워크(Footwork on Stability Chair) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "6aa1ac13cedc2d9644f7121c794b8cf7f8ccff847e81c5f0361b6c5ad10bee93",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-02",
+      "titleKo": "미니볼 사이드 린",
+      "originalTitle": "Side Lean",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2020-06-23/stott-pilates-matwork-with-the-mini-stability-ball",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "partial-playback-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 본문·기구 요구조건 및 관찰 타임스탬프 프레임 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "미니볼 사이드 린(Side Lean) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-02",
+        "titleKo": "미니볼 사이드 린",
+        "originalTitle": "Side Lean",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2020-06-23/stott-pilates-matwork-with-the-mini-stability-ball",
+        "originalVerificationStatus": "partial-playback-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 본문·기구 요구조건 및 관찰 타임스탬프 프레임 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "미니볼 사이드 린(Side Lean) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "6535f12c4ae1d29601c4bec7d6fbd719009791afcd92e92fe90dd40b4dc924b8",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-03",
+      "titleKo": "미니볼 힙 익스텐션",
+      "originalTitle": "Hip Extension",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2020-06-23/stott-pilates-matwork-with-the-mini-stability-ball",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "partial-playback-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 본문·기구 요구조건 및 관찰 타임스탬프 프레임 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "미니볼 힙 익스텐션(Hip Extension) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-03",
+        "titleKo": "미니볼 힙 익스텐션",
+        "originalTitle": "Hip Extension",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2020-06-23/stott-pilates-matwork-with-the-mini-stability-ball",
+        "originalVerificationStatus": "partial-playback-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 본문·기구 요구조건 및 관찰 타임스탬프 프레임 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "미니볼 힙 익스텐션(Hip Extension) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "3e1a674907e95954010703ea716e4d6e507e1ec9d548a4b035889085c1c85716",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-04",
+      "titleKo": "래더바렐 스완 다이브",
+      "originalTitle": "Ladder Barrel Swan Dive",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2018-10-22/exercise-of-the-month-ladder-barrel-swan-dive",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "래더바렐 스완 다이브(Ladder Barrel Swan Dive) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-04",
+        "titleKo": "래더바렐 스완 다이브",
+        "originalTitle": "Ladder Barrel Swan Dive",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2018-10-22/exercise-of-the-month-ladder-barrel-swan-dive",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "래더바렐 스완 다이브(Ladder Barrel Swan Dive) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "e3bae62fc78570b2d5f12ef2ee8ea8c4fbd6eee1d6152a20fb84819e70cab9cf",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-05",
+      "titleKo": "밴드 사이드 벤드",
+      "originalTitle": "Side Bend with Flex-Band",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2025-01-27/exercise-of-the-month-side-bend-with-the-flex-band",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "밴드 사이드 벤드(Side Bend with Flex-Band) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-05",
+        "titleKo": "밴드 사이드 벤드",
+        "originalTitle": "Side Bend with Flex-Band",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2025-01-27/exercise-of-the-month-side-bend-with-the-flex-band",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "밴드 사이드 벤드(Side Bend with Flex-Band) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "dd4b1345871611f85026f7f2a17c88186d7cdf0508e6101c1f943093412ef655",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "sr-01",
+      "titleKo": "리포머 링 준비운동 시리즈",
+      "originalTitle": "Reformer and Fitness Circle warm-up",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2022-09-23/exercise-of-the-month-warm-up-with-reformer-fitness-circle",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "리포머 링 준비운동 시리즈(Reformer and Fitness Circle warm-up) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "sr-01",
+        "titleKo": "리포머 링 준비운동 시리즈",
+        "originalTitle": "Reformer and Fitness Circle warm-up",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2022-09-23/exercise-of-the-month-warm-up-with-reformer-fitness-circle",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "리포머 링 준비운동 시리즈(Reformer and Fitness Circle warm-up) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "a92f91164b94d76add462905a9abcbc4cbe4e868eb4280738e9b6c5d110f9ddd",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-06",
+      "titleKo": "루프밴드 리포머 점프 변형",
+      "originalTitle": "Jump with hip abduction/adduction",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "루프밴드 리포머 점프 변형(Jump with hip abduction/adduction) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-06",
+        "titleKo": "루프밴드 리포머 점프 변형",
+        "originalTitle": "Jump with hip abduction/adduction",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "루프밴드 리포머 점프 변형(Jump with hip abduction/adduction) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "fd8a4e238e92048812c33f076de42b2880173d72c7f513e0cc190e7d22ecbb5d",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-07",
+      "titleKo": "루프밴드 랫 풀다운",
+      "originalTitle": "Lateral pull-down with Flex-Band Loops",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "루프밴드 랫 풀다운(Lateral pull-down with Flex-Band Loops) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-07",
+        "titleKo": "루프밴드 랫 풀다운",
+        "originalTitle": "Lateral pull-down with Flex-Band Loops",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2019-07-15/exercise-of-the-month-cardio-tramp-and-flex-band-loops-sequence",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "루프밴드 랫 풀다운(Lateral pull-down with Flex-Band Loops) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "f0a50566c1a8d32d895f7553b46bb349ec1a2610bbcd5ef89547b7d8bb075e93",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-08",
+      "titleKo": "미니볼 네발기기 전후 스텝",
+      "originalTitle": "Quadruped Forward/Back Step",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "미니볼 네발기기 전후 스텝(Quadruped Forward/Back Step) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-08",
+        "titleKo": "미니볼 네발기기 전후 스텝",
+        "originalTitle": "Quadruped Forward/Back Step",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "미니볼 네발기기 전후 스텝(Quadruped Forward/Back Step) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "ae6f097658d22abbc496f3da4058be047a2b39b563cfe029da89fe97c4a30a19",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-09",
+      "titleKo": "미니볼 옆누운 보행 패턴",
+      "originalTitle": "Side-Lying Gait Patterns",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "미니볼 옆누운 보행 패턴(Side-Lying Gait Patterns) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-09",
+        "titleKo": "미니볼 옆누운 보행 패턴",
+        "originalTitle": "Side-Lying Gait Patterns",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2019-12-11/exercise-of-the-month-merrithew-fascial-movement-hydrate-variable",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "미니볼 옆누운 보행 패턴(Side-Lying Gait Patterns) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "307ab2d322687395c70ecdf2a09208d07fcbcdc817fff3b64553147d964d1119",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-10",
+      "titleKo": "닐링 사이드킥",
+      "originalTitle": "Sidekick Kneeling",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2024-01-22/exercise-of-the-month-sidekick-kneeling",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "닐링 사이드킥(Sidekick Kneeling) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-10",
+        "titleKo": "닐링 사이드킥",
+        "originalTitle": "Sidekick Kneeling",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2024-01-22/exercise-of-the-month-sidekick-kneeling",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "닐링 사이드킥(Sidekick Kneeling) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "c22b9a7f6a1f81174e2e40cea7b09f7eded07781d10703223cf8069cb49d9173",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-11",
+      "titleKo": "캐딜락 타이 스트레치 힌지",
+      "originalTitle": "Thigh Stretch Hinge",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2023-09-07/exercise-of-the-month-thigh-stretch-on-the-cadillac",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "캐딜락 타이 스트레치 힌지(Thigh Stretch Hinge) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-11",
+        "titleKo": "캐딜락 타이 스트레치 힌지",
+        "originalTitle": "Thigh Stretch Hinge",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2023-09-07/exercise-of-the-month-thigh-stretch-on-the-cadillac",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "캐딜락 타이 스트레치 힌지(Thigh Stretch Hinge) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "6495f5c0cf667995a8885ed58af55351674894ec5a9bd1f9f98fa75ec758119b",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-12",
+      "titleKo": "캐딜락 타이 스트레치 신전 변형",
+      "originalTitle": "Thigh Stretch Hinge with Extension",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2023-09-07/exercise-of-the-month-thigh-stretch-on-the-cadillac",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "캐딜락 타이 스트레치 신전 변형(Thigh Stretch Hinge with Extension) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-12",
+        "titleKo": "캐딜락 타이 스트레치 신전 변형",
+        "originalTitle": "Thigh Stretch Hinge with Extension",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2023-09-07/exercise-of-the-month-thigh-stretch-on-the-cadillac",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "캐딜락 타이 스트레치 신전 변형(Thigh Stretch Hinge with Extension) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "97cdc17d3e7435aa6a120bd68719c50c05e805317178444478bbe00d1837718f",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-13",
+      "titleKo": "리포머 타이 스트레치",
+      "originalTitle": "Thigh Stretch on Reformer",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2023-07-06/exercise-of-the-month-thigh-stretch-on-the-reformer",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "리포머 타이 스트레치(Thigh Stretch on Reformer) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-13",
+        "titleKo": "리포머 타이 스트레치",
+        "originalTitle": "Thigh Stretch on Reformer",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2023-07-06/exercise-of-the-month-thigh-stretch-on-the-reformer",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "리포머 타이 스트레치(Thigh Stretch on Reformer) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "a0b3109376ab6433b5318afce87b560dc9684f4f419dc2654cdb1eb02fa45d33",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-14",
+      "titleKo": "매트 스완 다이브",
+      "originalTitle": "Swan Dive on Mat",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2023-08-13/exercise-of-the-month-swan-dive",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "매트 스완 다이브(Swan Dive on Mat) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-14",
+        "titleKo": "매트 스완 다이브",
+        "originalTitle": "Swan Dive on Mat",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2023-08-13/exercise-of-the-month-swan-dive",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "매트 스완 다이브(Swan Dive on Mat) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "c3aaedba7b799643878510839ad2124f2d373021bc75060d2611680569aa8697",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-15",
+      "titleKo": "리포머 스완 다이브 변형",
+      "originalTitle": "Modified Swan Dive on Reformer",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2023-08-13/exercise-of-the-month-swan-dive",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "리포머 스완 다이브 변형(Modified Swan Dive on Reformer) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-15",
+        "titleKo": "리포머 스완 다이브 변형",
+        "originalTitle": "Modified Swan Dive on Reformer",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2023-08-13/exercise-of-the-month-swan-dive",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "리포머 스완 다이브 변형(Modified Swan Dive on Reformer) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "d9e87fd3d6fa028cbbdb3019c7ee867f517226260fa03eeae6e147a10231d51e",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-16",
+      "titleKo": "회전 니 스트레치 프렙",
+      "originalTitle": "Knee Stretch Prep with Rotations",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2023-02-27/exercise-of-the-month-knee-stretch-prep-with-rotations",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "회전 니 스트레치 프렙(Knee Stretch Prep with Rotations) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-16",
+        "titleKo": "회전 니 스트레치 프렙",
+        "originalTitle": "Knee Stretch Prep with Rotations",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2023-02-27/exercise-of-the-month-knee-stretch-prep-with-rotations",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "회전 니 스트레치 프렙(Knee Stretch Prep with Rotations) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "cd18ca5cfb6d922468dd26d00224216904f4f1883f74484fcc3d7ad8a23f9298",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-17",
+      "titleKo": "리포머 백 스플릿",
+      "originalTitle": "Back Splits",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2024-08-28/exercise-of-the-month-back-splits",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "리포머 백 스플릿(Back Splits) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-17",
+        "titleKo": "리포머 백 스플릿",
+        "originalTitle": "Back Splits",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2024-08-28/exercise-of-the-month-back-splits",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "리포머 백 스플릿(Back Splits) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "6df7e2b0701a87b4eaf815f34cd2e9094a3dc82713b3a7c705ae64b451ff9368",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "sr-02",
+      "titleKo": "스탠딩 밴드 통합 시리즈",
+      "originalTitle": "Standing Integration Series",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2024-03-20/exercise-of-the-month-standing-integration-series",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "스탠딩 밴드 통합 시리즈(Standing Integration Series) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "sr-02",
+        "titleKo": "스탠딩 밴드 통합 시리즈",
+        "originalTitle": "Standing Integration Series",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2024-03-20/exercise-of-the-month-standing-integration-series",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "스탠딩 밴드 통합 시리즈(Standing Integration Series) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "83a9aa59c54d20d48040b629499cb7b5fa3fd466e5d54798fc430c477ef2479e",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "sr-03",
+      "titleKo": "폼롤러 활용 시리즈",
+      "originalTitle": "Foam Roller exercise ideas",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/28-days-of-mindfulness/day-20",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "폼롤러 활용 시리즈(Foam Roller exercise ideas) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "sr-03",
+        "titleKo": "폼롤러 활용 시리즈",
+        "originalTitle": "Foam Roller exercise ideas",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/28-days-of-mindfulness/day-20",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "폼롤러 활용 시리즈(Foam Roller exercise ideas) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "2d878268cc8b844de6e9526c2123132c0f905e40b095533bcd00f3f29b45f582",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "mv-18",
+      "titleKo": "짐볼 롤오버",
+      "originalTitle": "Roll Over with Stability Ball",
+      "publisher": "Merrithew 공식 웹사이트",
+      "url": "https://www.merrithew.com/blog/post/2025-06-26/exercise-of-the-month-roll-over-using-the-stability-ball",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "official-source-checked",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "짐볼 롤오버(Roll Over with Stability Ball) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "mv-18",
+        "titleKo": "짐볼 롤오버",
+        "originalTitle": "Roll Over with Stability Ball",
+        "publisher": "Merrithew 공식 웹사이트",
+        "url": "https://www.merrithew.com/blog/post/2025-06-26/exercise-of-the-month-roll-over-using-the-stability-ball",
+        "originalVerificationStatus": "official-source-checked",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "공식 발행처(Merrithew 공식 웹사이트) 웹 본문·강사 자격 소개·기구/소도구 분류 및 주의사항 메타데이터 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "짐볼 롤오버(Roll Over with Stability Ball) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "da57ff367f3f8618b372884d07ab294372bd2da10c6c98403d5132a4d7e499ab",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "kr-01",
+      "titleKo": "헌드레드",
+      "originalTitle": "필라테스 대표자세 헌드레드(Pilates Hundred) 동작 TIP",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "url": "https://www.youtube.com/watch?v=Bkgcbd1nabU",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "korean-candidate",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "헌드레드(필라테스 대표자세 헌드레드(Pilates Hundred) 동작 TIP) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "kr-01",
+        "titleKo": "헌드레드",
+        "originalTitle": "필라테스 대표자세 헌드레드(Pilates Hundred) 동작 TIP",
+        "publisher": "WITH PILATES / 위드필라테스",
+        "url": "https://www.youtube.com/watch?v=Bkgcbd1nabU",
+        "originalVerificationStatus": "korean-candidate",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "헌드레드(필라테스 대표자세 헌드레드(Pilates Hundred) 동작 TIP) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "2d9e5693345eb6253e32c741fc99a362eb2953e72564585e71b4b6402893e352",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "kr-02",
+      "titleKo": "캣 스트레칭",
+      "originalTitle": "Pilates Cat Stretching Exercise",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "url": "https://www.youtube.com/watch?v=Z0gTRuo7uvY",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "korean-candidate",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "캣 스트레칭(Pilates Cat Stretching Exercise) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "kr-02",
+        "titleKo": "캣 스트레칭",
+        "originalTitle": "Pilates Cat Stretching Exercise",
+        "publisher": "WITH PILATES / 위드필라테스",
+        "url": "https://www.youtube.com/watch?v=Z0gTRuo7uvY",
+        "originalVerificationStatus": "korean-candidate",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "캣 스트레칭(Pilates Cat Stretching Exercise) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "879ecd4568d752df07192def9a1c8fec9cbf3424777873d0fea8a6dd10bf34fe",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "kr-03",
+      "titleKo": "밴드 롤업",
+      "originalTitle": "Pilates Roll Up stretch flex-band Exercise",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "url": "https://www.youtube.com/watch?v=CYSX6eaoA2w",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "korean-candidate",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "밴드 롤업(Pilates Roll Up stretch flex-band Exercise) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "kr-03",
+        "titleKo": "밴드 롤업",
+        "originalTitle": "Pilates Roll Up stretch flex-band Exercise",
+        "publisher": "WITH PILATES / 위드필라테스",
+        "url": "https://www.youtube.com/watch?v=CYSX6eaoA2w",
+        "originalVerificationStatus": "korean-candidate",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "밴드 롤업(Pilates Roll Up stretch flex-band Exercise) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "77bbf043356acfb013c70dfd7eb082883b172db577a0c4d8cc9a95a017cfdd8f",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "kr-04",
+      "titleKo": "싱글 레그 익스텐션",
+      "originalTitle": "Pilates Single Leg Extension Workout",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "url": "https://www.youtube.com/watch?v=NNarvotdxiY",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "korean-candidate",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "싱글 레그 익스텐션(Pilates Single Leg Extension Workout) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "kr-04",
+        "titleKo": "싱글 레그 익스텐션",
+        "originalTitle": "Pilates Single Leg Extension Workout",
+        "publisher": "WITH PILATES / 위드필라테스",
+        "url": "https://www.youtube.com/watch?v=NNarvotdxiY",
+        "originalVerificationStatus": "korean-candidate",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "싱글 레그 익스텐션(Pilates Single Leg Extension Workout) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "2b52ef01a474942b9daf5e39657e9660ac3b5f1464611c53a502f360b20c3ee1",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "kr-05",
+      "titleKo": "숄더 브릿지",
+      "originalTitle": "Pilates Shoulder Bridge Workout",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "url": "https://www.youtube.com/watch?v=8xlVtNo1R8U",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "korean-candidate",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "숄더 브릿지(Pilates Shoulder Bridge Workout) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "kr-05",
+        "titleKo": "숄더 브릿지",
+        "originalTitle": "Pilates Shoulder Bridge Workout",
+        "publisher": "WITH PILATES / 위드필라테스",
+        "url": "https://www.youtube.com/watch?v=8xlVtNo1R8U",
+        "originalVerificationStatus": "korean-candidate",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "숄더 브릿지(Pilates Shoulder Bridge Workout) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "4a7664d4640a4ea6bd1cd965fbc301cd8ffc970dbaecd663704e4b223a9dd138",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "kr-06",
+      "titleKo": "폼롤러 롤오버",
+      "originalTitle": "[ENG CC] Pilates Roll Over with Foam Roller",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "url": "https://www.youtube.com/watch?v=g8YsXEVRAZg",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "korean-candidate",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "폼롤러 롤오버([ENG CC] Pilates Roll Over with Foam Roller) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "kr-06",
+        "titleKo": "폼롤러 롤오버",
+        "originalTitle": "[ENG CC] Pilates Roll Over with Foam Roller",
+        "publisher": "WITH PILATES / 위드필라테스",
+        "url": "https://www.youtube.com/watch?v=g8YsXEVRAZg",
+        "originalVerificationStatus": "korean-candidate",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "폼롤러 롤오버([ENG CC] Pilates Roll Over with Foam Roller) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "1ee58d5437302a3b3c539124b05705e57d2b85a52c1511eaf0f683423f64da2f",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "kr-07",
+      "titleKo": "롤오버",
+      "originalTitle": "Pilates Roll Over Workout",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "url": "https://www.youtube.com/watch?v=sftEAepTdUA",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "korean-candidate",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "롤오버(Pilates Roll Over Workout) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "kr-07",
+        "titleKo": "롤오버",
+        "originalTitle": "Pilates Roll Over Workout",
+        "publisher": "WITH PILATES / 위드필라테스",
+        "url": "https://www.youtube.com/watch?v=sftEAepTdUA",
+        "originalVerificationStatus": "korean-candidate",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "롤오버(Pilates Roll Over Workout) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "d416cc18956fd12fd0a840e9b0648d6edcf866c0b478d6d937e1337d23692a94",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "kr-08",
+      "titleKo": "필라테스 기초 호흡",
+      "originalTitle": "Pilates Breathing for beginners. Anytime! Anywhere!",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "url": "https://www.youtube.com/watch?v=Y_9c3NFbm1A",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "korean-candidate",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "필라테스 기초 호흡(Pilates Breathing for beginners. Anytime! Anywhere!) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "kr-08",
+        "titleKo": "필라테스 기초 호흡",
+        "originalTitle": "Pilates Breathing for beginners. Anytime! Anywhere!",
+        "publisher": "WITH PILATES / 위드필라테스",
+        "url": "https://www.youtube.com/watch?v=Y_9c3NFbm1A",
+        "originalVerificationStatus": "korean-candidate",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "필라테스 기초 호흡(Pilates Breathing for beginners. Anytime! Anywhere!) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "c7c73324fe76cb8610ef8d1d2e46ece27f3a8164b8b77f585e89fc6f63ce8a8f",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    },
+    {
+      "referenceId": "kr-09",
+      "titleKo": "횡격막 호흡",
+      "originalTitle": "Learn Pilates Diaphragmatic Breathing Techniques",
+      "publisher": "WITH PILATES / 위드필라테스",
+      "url": "https://www.youtube.com/watch?v=DJtd3AqZzH0",
+      "checkedAt": "2026-11-08",
+      "originalVerificationStatus": "korean-candidate",
+      "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+      "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+      "biomechanicalAlignmentNoteKo": "횡격막 호흡(Learn Pilates Diaphragmatic Breathing Techniques) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+      "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님",
+      "factualRecord": {
+        "referenceId": "kr-09",
+        "titleKo": "횡격막 호흡",
+        "originalTitle": "Learn Pilates Diaphragmatic Breathing Techniques",
+        "publisher": "WITH PILATES / 위드필라테스",
+        "url": "https://www.youtube.com/watch?v=DJtd3AqZzH0",
+        "originalVerificationStatus": "korean-candidate",
+        "auditConclusionStatus": "source-metadata-and-biomechanical-scope-verified",
+        "reviewedScopeKo": "국내 자격 교육기관(WITH PILATES / 위드필라테스) 공개 메타데이터·강사 자격 소개 링크·운동 분류 범위 전수 대조 완료",
+        "biomechanicalAlignmentNoteKo": "횡격막 호흡(Learn Pilates Diaphragmatic Breathing Techniques) 항목의 기구·소도구 요구사항 및 목표 부위 분류를 카탈로그 안전 경계와 대조 검증함",
+        "limitationKo": "출판사·기관 메타데이터 및 생체역학적 적용 범위 대조 기록이며, 외부 전문의 임상 승인(0건)이나 해부학적 정밀 시범 보증이 아님"
+      },
+      "factualRecordSha256": "0d3feaf4273fd0b580588e5f46ccf090c4895c05156c1f5499710f178ef52109",
+      "professionalReviewCount": 0,
+      "anatomicalAccuracyAssumed": false
+    }
+  ]
+}

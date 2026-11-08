@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { resolvePreviouslyUnboundMotionModelAudit } from '../data/extendedMotionVerificationCatalog';
 import type { MotionDraftDefinition } from '../data/motionDrafts';
 import {
   encodeMotionReviewPacket,
@@ -15,6 +16,10 @@ type ReviewPane = 'facts' | 'stages' | 'rights';
 /** Read-only review context. No checklist completion, review mutation or playback clock. */
 export function MotionDraftReviewWorksheet({ draft }: MotionDraftReviewWorksheetProps) {
   const data = useMemo(() => getMotionDraftReviewWorksheet(draft), [draft]);
+  const supplementaryUnboundAudit = useMemo(
+    () => resolvePreviouslyUnboundMotionModelAudit(draft.id),
+    [draft.id],
+  );
   const [pane, setPane] = useState<ReviewPane>('facts');
   const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
   const downloadUrl = useRef<string | null>(null);
@@ -178,6 +183,28 @@ export function MotionDraftReviewWorksheet({ draft }: MotionDraftReviewWorksheet
                 </li>
               ))}
             </ul>
+            {supplementaryUnboundAudit && (
+              <div data-testid="extended-unbound-model-audit" className="mrw-supplementary-audit">
+                <h4>확장 출처 대장 보완 검증 기록 (별도 원장)</h4>
+                <p className="mrw-note">{supplementaryUnboundAudit.reviewedScopeKo}</p>
+                <p className="mrw-note">
+                  보완 대장 확인일: {supplementaryUnboundAudit.checkedAt} · 사실 요약 해시(SHA-256):{' '}
+                  <code>{supplementaryUnboundAudit.factualRecordSha256}</code>
+                </p>
+                <ul className="mrw-sources">
+                  {supplementaryUnboundAudit.sources.map((src) => (
+                    <li key={src.sourceId}>
+                      <a href={src.url} target="_blank" rel="noopener noreferrer">
+                        {src.publisher} · {src.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mrw-note">
+                  보조 출처 사실 대조 원장이며 MOTION_DRAFTS 원본을 변경하지 않습니다 (전문가 모션 검토 0건 · 임상 승인 아님).
+                </p>
+              </div>
+            )}
           </div>
           <div hidden={pane !== 'stages'}>
             <h4>단계 정의 · 도해 표시용</h4>
