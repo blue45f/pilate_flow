@@ -1,0 +1,90 @@
+[
+  {
+    "width": 320,
+    "zoom": 1,
+    "overflow": 0,
+    "cardTop": 472.984375,
+    "actionTop": 747.9375,
+    "buttons": [
+      44,
+      44
+    ]
+  },
+  {
+    "width": 320,
+    "zoom": 2,
+    "overflow": 0,
+    "cardTop": 1460.46875,
+    "actionTop": 2587.59375,
+    "buttons": [
+      170,
+      212
+    ]
+  },
+  {
+    "width": 390,
+    "zoom": 1,
+    "overflow": 0,
+    "cardTop": 461.390625,
+    "actionTop": 679.15625,
+    "buttons": [
+      44,
+      44
+    ]
+  },
+  {
+    "width": 390,
+    "zoom": 2,
+    "overflow": 0,
+    "cardTop": 1229.875,
+    "actionTop": 2063.421875,
+    "buttons": [
+      128,
+      128
+    ]
+  },
+  {
+    "width": 768,
+    "zoom": 1,
+    "overflow": 0,
+    "cardTop": 411.171875,
+    "actionTop": 698.9375,
+    "buttons": [
+      44,
+      44
+    ]
+  },
+  {
+    "width": 768,
+    "zoom": 2,
+    "overflow": 0,
+    "cardTop": 887.59375,
+    "actionTop": 1323.171875,
+    "buttons": [
+      88,
+      88
+    ]
+  },
+  {
+    "width": 1440,
+    "zoom": 1,
+    "overflow": 0,
+    "cardTop": 417.78125,
+    "actionTop": 653.546875,
+    "buttons": [
+      44,
+      44
+    ]
+  },
+  {
+    "width": 1440,
+    "zoom": 2,
+    "overflow": 0,
+    "cardTop": 842.796875,
+    "actionTop": 1278.375,
+    "buttons": [
+      88,
+      88
+    ]
+  }
+]

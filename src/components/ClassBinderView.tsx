@@ -347,7 +347,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
             {view === 'saved' ? '저장한 시퀀스' : '수업 기록'}
             <PfBadge tone="sage" className="teaching-count">{view === 'saved' ? savedSequences.length : totalActualLogsCount}</PfBadge>
           </h1>
-          <p className="muted">{view === 'saved' ? '마음에 드는 흐름을 보관하고, 오늘의 수업으로 이어가세요.' : '직접 남긴 수업과 메모를 모아 봅니다. 반 이름은 별칭으로 충분해요.'}</p>
+          <p className="muted">{view === 'saved' ? '마음에 드는 흐름을 보관하고, 오늘의 수업으로 이어가세요.' : '지난 수업을 다음 계획으로 이어가세요.'}</p>
         </div>
         <PfButton
           variant={view === 'saved' ? 'primary' : 'secondary'} aria-expanded={view === 'history' ? showGroupForm : undefined}
@@ -491,6 +491,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
             />
             <span className="muted">최근 진행 순 · 당시 동작·블록·순서·시간 스냅샷 보존</span>
           </div>
+          <details className="teaching-history-filters">
+            <summary>날짜·그룹 필터{selectedGroup !== 'all' || effectiveSelectedDate !== 'all' ? ' · 선택 중' : ''}</summary>
           <div
             className={`pf-tabs pf-tabs--pills teaching-group-filters ${showAllGroupChips ? 'is-expanded' : 'is-collapsed'}`}
             role="group" aria-label="수업 그룹 필터"
@@ -572,6 +574,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
               )}
             </div>
           )}
+          </details>
+          {(selectedGroup !== 'all' || effectiveSelectedDate !== 'all') && (
+            <div className="teaching-history-filter-status">
+              <span>{selectedGroup === 'all' ? '전체 그룹' : classGroups.find((group) => group.id === selectedGroup)?.name} · {effectiveSelectedDate === 'all' ? '전체 날짜' : dateFilterOptions.find((date) => date.dateKey === effectiveSelectedDate)?.label}</span>
+              <PfButton variant="secondary" onClick={resetHistoryFilters}>선택 해제</PfButton>
+            </div>
+          )}
           <div className="teaching-history-layout">
             <section className="teaching-history-feed" aria-label="수업 기록 목록">
               {(logs.length === 0 || (!hasActiveHistoryFilter && actualLogs.length === 0)) && (
@@ -613,7 +622,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                       <PfCard as="article" key={log.id} variant={isSample ? 'sample' : 'default'} className="teaching-history-card">
                         <div className="teaching-card-top">
                           <div className="teaching-history-datetime">
-                            <CalendarDays size={14} aria-hidden="true" /><time dateTime={getTeachingHistoryDateSource(resolved)}>{formatDate(getTeachingHistoryDateSource(resolved))}</time>
+                            <time className="teaching-history-card-date" dateTime={getTeachingHistoryDateSource(resolved)}>{formatDate(getTeachingHistoryDateSource(resolved))}</time>
                             {timeOfDay && <span className="teaching-history-time-of-day">{timeOfDay}</span>}
                             <span className="teaching-history-time-pill">
                               <Clock3 size={12} aria-hidden="true" />{log.actualDurationSec !== undefined ? `${Math.max(1, Math.round(log.actualDurationSec / 60))}분 진행` : `계획 ${plannedMinutes}분`}
@@ -621,7 +630,23 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                           </div>
                           <span className="teaching-history-group"><Users size={14} aria-hidden="true" />{resolved.groupName}</span>
                         </div>
+                        {isSample && <PfAiStatusBadge kind="sample-data" className="teaching-sample-label" />}
                         <h2>{resolved.sequenceTitle}</h2>
+                        <p className="teaching-reflection">{log.instructorReflection || '남긴 메모가 없습니다.'}</p>
+                          {resolved.hasCatalogDrift && <span className="teaching-drift-badge" data-snapshot-preserved="true">원본 수정 후에도 당시 스냅샷 유지됨</span>}
+                        <div className="teaching-history-bottom">
+                          <span className="muted">
+                            {missingExercise ? '삭제된 동작이 있어 불러올 수 없습니다.'
+                              : hasStepTimings ? (resolved.restCount > 0 ? '당시 저장한 동작·휴식·시간으로 불러옵니다.' : '당시 저장한 동작·시간으로 불러옵니다.')
+                              : '구성 참고 · 시간은 현재 기본값으로 복원'}
+                          </span>
+                          <div className="teaching-history-actions">
+                            <PfButton variant="secondary" onClick={(e) => { reopenedTriggerRef.current = e.currentTarget; setReopenedHistoryId(log.id); }}><Eye size={15} />이력 다시 열기</PfButton>
+                            <PfButton variant="primary" disabled={missingExercise} onClick={() => copyHistory(log.id)}><Copy size={15} />이 수업 다시 계획</PfButton>
+                          </div>
+                        </div>
+                        <details className="teaching-history-details">
+                          <summary>수업 구성 · {resolved.movementCount}개 동작 보기</summary>
                         <div className="teaching-card-stats">
                           <span>{resolved.movementCount}개 동작</span>{resolved.restCount > 0 && <span>휴식 {resolved.restCount}개</span>}
                           <span>{log.actualDurationSec !== undefined ? `타이머/입력 시간 ${Math.floor(log.actualDurationSec / 60)}분 ${Math.round(log.actualDurationSec % 60)}초` : '실제 진행 시간 미기록'}</span>
@@ -637,10 +662,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                           <span className="teaching-record-source-badge">{resolved.sourceKind === 'saved-sequence' ? '저장 시퀀스 기반' : '수업 초안 기반'}</span>
                           {resolved.hasPreservedSnapshot && <span className="teaching-snapshot-badge">당시 동작·블록·시간 스냅샷 보존</span>}
                           {resolved.blockSnapshots.length > 0 && <span className="teaching-snapshot-badge">재사용 블록 {resolved.blockSnapshots.length}개 스냅샷</span>}
-                          {resolved.hasCatalogDrift && <span className="teaching-drift-badge" data-snapshot-preserved="true">원본 수정 후에도 당시 스냅샷 유지됨</span>}
                         </div>
-                        {isSample && <PfAiStatusBadge kind="sample-data" className="teaching-sample-label" />}
-                        <p className="teaching-reflection">{log.instructorReflection || '남긴 메모가 없습니다.'}</p>
                         <div className="teaching-history-exercises">
                           {resolved.steps.map((step) => (
                             <PfBlockPill
@@ -652,17 +674,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                             </PfBlockPill>
                           ))}
                         </div>
-                        <div className="teaching-history-bottom">
-                          <span className="muted">
-                            {missingExercise ? '삭제된 동작이 있어 불러올 수 없습니다.'
-                              : hasStepTimings ? (resolved.restCount > 0 ? '당시 저장한 동작·휴식·시간으로 불러옵니다.' : '당시 저장한 동작·시간으로 불러옵니다.')
-                              : '구성 참고 · 시간은 현재 기본값으로 복원'}
-                          </span>
-                          <div className="teaching-history-actions">
-                            <PfButton variant="secondary" onClick={(e) => { reopenedTriggerRef.current = e.currentTarget; setReopenedHistoryId(log.id); }}><Eye size={15} />이력 다시 열기</PfButton>
-                            <PfButton variant="primary" disabled={missingExercise} onClick={() => copyHistory(log.id)}><Copy size={15} />이 수업 다시 계획</PfButton>
-                          </div>
-                        </div>
+                        </details>
                       </PfCard>
                     );
                   })}

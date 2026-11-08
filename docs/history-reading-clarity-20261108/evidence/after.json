@@ -1,0 +1,38 @@
+[
+  {
+    "width": 320,
+    "overflow": 0,
+    "cardTop": 472.984375,
+    "titleSize": "20px",
+    "titleLine": "30px",
+    "actionsTop": 728.5625,
+    "bodySize": "16px"
+  },
+  {
+    "width": 390,
+    "overflow": 0,
+    "cardTop": 461.390625,
+    "titleSize": "20px",
+    "titleLine": "30px",
+    "actionsTop": 716.96875,
+    "bodySize": "16px"
+  },
+  {
+    "width": 768,
+    "overflow": 0,
+    "cardTop": 411.171875,
+    "titleSize": "20px",
+    "titleLine": "30px",
+    "actionsTop": 619.75,
+    "bodySize": "16px"
+  },
+  {
+    "width": 1440,
+    "overflow": 0,
+    "cardTop": 417.78125,
+    "titleSize": "20px",
+    "titleLine": "30px",
+    "actionsTop": 626.359375,
+    "bodySize": "16px"
+  }
+]
