@@ -68,6 +68,8 @@ import '../styles/library.css';
 import '../styles/library-learning.css';
 import '../styles/motion-library.css';
 import '../styles/library-asset-status.css';
+import '../styles/library-concept-layout.css';
+import { LibraryMovementInspector } from './LibraryMovementInspector';
 import { COURSE_REFERENCES } from '../data/courseReferences';
 
 interface ExerciseAtlasViewProps {
@@ -773,6 +775,27 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const [brokenPhotoIds, setBrokenPhotoIds] = useState<Record<string, boolean>>({});
   const [previewReference, setPreviewReference] = useState<MotionPatternReference | null>(null);
   const [patternPage, setPatternPage] = useState(0);
+  const [inspectedExerciseId, setInspectedExerciseId] = useState<string | null>(null);
+  const inspectedExercise =
+    exercises.find((exercise) => exercise.id === inspectedExerciseId) ?? null;
+  const inspectorHeading = useRef<HTMLHeadingElement>(null);
+  const inspectorTrigger = useRef<HTMLButtonElement | null>(null);
+  const inspectExercise = (exercise: PilatesExercise, trigger: HTMLButtonElement) => {
+    inspectorTrigger.current = trigger;
+    setInspectedExerciseId(exercise.id);
+    requestAnimationFrame(() => {
+      inspectorHeading.current?.focus({ preventScroll: true });
+      inspectorHeading.current?.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
+    });
+  };
+  const closeInspector = () => {
+    setInspectedExerciseId(null);
+    requestAnimationFrame(() => {
+      const trigger = inspectorTrigger.current;
+      if (trigger?.isConnected) trigger.focus();
+      else searchInput.current?.focus();
+    });
+  };
   const previewHeading = useRef<HTMLHeadingElement>(null);
   const cardGridRef = useRef<HTMLDivElement>(null);
   const searchInput = useRef<HTMLInputElement>(null);
@@ -1053,10 +1076,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         <div>
           <span className="eyebrow">MOVEMENT LIBRARY</span>
           <h1 id="workspace-main-heading" tabIndex={-1}>
-            움직임을 고르고,
-            <br className="library-mobile-break" /> 수업의 흐름으로.
+            동작 라이브러리
           </h1>
-          <p className="muted">동작 노트와 원본 도해 초안을 살펴보세요.</p>
+          <p className="muted">수업에 활용할 동작을 탐색하고, 수업안에 추가하세요.</p>
         </div>
         <div className="library-heading-actions">
           {onOpenIdeaSheet && (
@@ -1408,6 +1430,359 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             )}
           </section>
 
+          <div className="library-notes-workspace" data-has-inspector={Boolean(inspectedExercise)}>
+            <LibraryMovementInspector
+              exercise={inspectedExercise}
+              headingRef={inspectorHeading}
+              isInResults={Boolean(
+                inspectedExercise && filtered.some((item) => item.id === inspectedExercise.id),
+              )}
+              onClose={closeInspector}
+              onOpenDetails={(exercise) =>
+                isMovementIdeaExercise(exercise) && onOpenIdeaSheet
+                  ? onOpenIdeaSheet(exercise)
+                  : onOpenYouTubePreview(exercise)
+              }
+              onAdd={addExercise}
+              addedId={addedId}
+            />
+            <div className="library-notes-results">
+              <div className="library-results-bar">
+                <p role="status" aria-live="polite">
+                  <strong>{filtered.length}</strong>개의 동작{' '}
+                  <span className="muted">· 작은 선택이 좋은 수업을 만듭니다</span>
+                </p>
+                {(activeFilterCount > 0 || filters.search) && (
+                  <PfButton variant="ghost" onClick={resetFilters}>
+                    필터 초기화 <X size={13} />
+                  </PfButton>
+                )}
+              </div>
+              <p className="ml-review-note">
+                동작을 바로 추가하고 순서를 바꾸세요. 검토 기록은 선택 사항입니다.
+              </p>
+              {filtered.length > 0 ? (
+                <div className="movement-card-grid" ref={cardGridRef}>
+                  {filtered.slice(0, notesVisibleCount).map((exercise) => {
+                    const provenance = getMovementProvenance(exercise);
+                    const reviewState = getExerciseReviewState(exercise);
+                    const approved = isExerciseAutoEligible(exercise);
+                    const isIdea = isMovementIdeaExercise(exercise);
+                    const ideaMeta = isIdea ? readMovementIdeaDraft(exercise) : null;
+                    const patterns = getMotionPatternReferences(exercise.id);
+                    const isFavorite = exercise.favoriteTag !== 'none';
+                    const inSequence = activeSteps.some(
+                      (step) => !isRestStep(step) && step.exerciseId === exercise.id,
+                    );
+                    const equipmentMeta = getExerciseEquipment(exercise);
+                    const hasValidIdeaPhoto = Boolean(
+                      ideaMeta?.photoDataUrl && !brokenPhotoIds[exercise.id],
+                    );
+                    const lastTaught = getExerciseLastTaughtInfo(
+                      exercise.id,
+                      historyLogs,
+                      activeTargetGroupId,
+                    );
+                    return (
+                      <PfMovementCard
+                        variant={isIdea ? 'idea' : 'catalog'}
+                        selected={inSequence}
+                        className={`movement-card movement-${exercise.apparatus} ${
+                          inSequence ? 'is-in-sequence' : ''
+                        } ${inspectedExerciseId === exercise.id ? 'is-inspected' : ''}`.trim()}
+                        key={exercise.id}
+                      >
+                        <div className="movement-card-art">
+                          <button
+                            type="button"
+                            className="movement-art-trigger"
+                            aria-label={
+                              patterns[0]
+                                ? `${exercise.nameKo} 관련 패턴 도해 보기`
+                                : `${exercise.nameKo} 상세 보기`
+                            }
+                            onClick={(event) =>
+                              patterns[0]
+                                ? openPatternPreview(patterns[0], event.currentTarget)
+                                : onOpenYouTubePreview(exercise)
+                            }
+                            aria-describedby={`motion-caption-${exercise.id}`}
+                          >
+                            {patterns[0] ? (
+                              <MotionPatternThumbnail reference={patterns[0]} />
+                            ) : hasValidIdeaPhoto && ideaMeta?.photoDataUrl ? (
+                              <img
+                                src={ideaMeta.photoDataUrl}
+                                alt=""
+                                aria-hidden="true"
+                                className="movement-idea-photo"
+                                loading="lazy"
+                                onError={() =>
+                                  setBrokenPhotoIds((previous) => ({
+                                    ...previous,
+                                    [exercise.id]: true,
+                                  }))
+                                }
+                              />
+                            ) : (
+                              <div
+                                className={`ml-unmapped-art ml-unmapped-art--${exercise.apparatus}`}
+                                aria-hidden="true"
+                              >
+                                <span className="ml-unmapped-meta">
+                                  {APPARATUS_LABELS[exercise.apparatus].ko} ·{' '}
+                                  {POSITION_LABELS[exercise.bodyPosition].ko}
+                                </span>
+                                <span>움직임을 기록할 자리</span>
+                                <i />
+                                <span className="ml-unmapped-focus">
+                                  {exercise.targetMuscles.slice(0, 2).join(' · ') || '호흡 · 정렬'}
+                                </span>
+                                <span>MOTION STUDY PENDING</span>
+                              </div>
+                            )}
+                            <span className="art-caption" id={`motion-caption-${exercise.id}`}>
+                              {patterns[0]
+                                ? `${patterns[0].title} · 관련 패턴 초안`
+                                : '정확한 모션 애셋 제작 대기'}
+                            </span>
+                          </button>
+                          <span className="movement-equipment-label">
+                            {patterns[0]
+                              ? patterns[0].equipment[0]
+                              : APPARATUS_LABELS[exercise.apparatus].short}
+                          </span>
+                          <button
+                            type="button"
+                            className={`movement-heart ${isFavorite ? 'is-saved' : ''}`}
+                            onClick={() =>
+                              setExerciseFavoriteTag(exercise.id, isFavorite ? 'none' : 'signature')
+                            }
+                            aria-label={`${exercise.nameKo} 즐겨찾기 ${isFavorite ? '해제' : '추가'}`}
+                            aria-pressed={isFavorite}
+                            title={`즐겨찾기: ${FAVORITE_TAG_META[exercise.favoriteTag].label}`}
+                          >
+                            <Heart size={17} fill={isFavorite ? 'currentColor' : 'none'} />
+                          </button>
+                        </div>
+                        <div className="movement-card-content">
+                          <div className="movement-card-tags">
+                            {inSequence && (
+                              <PfBadge tone="sage" className="movement-selected-badge">
+                                <Check size={11} aria-hidden="true" /> 수업안 포함
+                              </PfBadge>
+                            )}
+                            <PfBadge tone="neutral">
+                              {LEVEL_NAMES[exercise.level]} · Lv {exercise.level}
+                            </PfBadge>
+                            <PfBadge tone="neutral" className="movement-position-badge">
+                              {POSITION_LABELS[exercise.bodyPosition].ko}
+                            </PfBadge>
+                            <PfBadge tone="neutral">
+                              <Clock3 size={12} />
+                              {exercise.defaultDurationMin}분
+                              {exercise.isUnilateral ? ' · 양쪽 포함' : ''}
+                            </PfBadge>
+                            {equipmentMeta.requiredProps.slice(0, 2).map((propId) => (
+                              <PfBadge key={propId} tone="neutral" className="movement-prop-badge">
+                                {propLabel(propId)}
+                              </PfBadge>
+                            ))}
+                          </div>
+                          <h2>
+                            <button
+                              type="button"
+                              onClick={(event) => inspectExercise(exercise, event.currentTarget)}
+                              aria-controls="library-movement-inspector"
+                              aria-expanded={inspectedExerciseId === exercise.id}
+                            >
+                              {exercise.nameKo}
+                            </button>
+                          </h2>
+                          <p className="movement-english">{exercise.nameEn}</p>
+                          <PfAiStatusBadge
+                            kind={
+                              isIdea
+                                ? ideaMeta?.triedByInstructor
+                                  ? 'tried-memo'
+                                  : 'creative-memo'
+                                : approved
+                                  ? 'instructor-reviewed'
+                                  : 'review-pending'
+                            }
+                            className={`movement-review-status review-${reviewState}`}
+                          >
+                            {isIdea
+                              ? ideaMeta?.triedByInstructor
+                                ? '직접 해봄 · 주관적 메모'
+                                : '내 창작 메모 · 전문가 검증 아님'
+                              : approved
+                                ? '내 강사 검토 · 자격 인증 미확인'
+                                : reviewState === 'stale'
+                                  ? '동작 정보 변경 · 다시 검토 필요'
+                                  : '미검토 자료 · 검토 기록은 선택'}
+                          </PfAiStatusBadge>
+                          <p className="movement-target">
+                            {isIdea
+                              ? ideaMeta?.subjectiveFeeling
+                                ? `느낌 메모: ${ideaMeta.subjectiveFeeling}`
+                                : ideaMeta?.ideaLine || exercise.cues[0]
+                              : exercise.targetMuscles.slice(0, 3).join(' · ') ||
+                                exercise.cues[0] ||
+                                '체간 안정 · 호흡 연결'}
+                          </p>
+                          {exercise.targetMuscles.length > 0 && (
+                            <div className="movement-card-focus-tags" aria-label="타겟 부위 태그">
+                              {exercise.targetMuscles.slice(0, 3).map((muscle) => {
+                                const isTagSelected =
+                                  filters.search.trim().toLocaleLowerCase() ===
+                                  muscle.trim().toLocaleLowerCase();
+                                return (
+                                  <button
+                                    type="button"
+                                    key={muscle}
+                                    className={`movement-focus-tag ${
+                                      isTagSelected ? 'is-selected' : ''
+                                    }`.trim()}
+                                    aria-pressed={isTagSelected}
+                                    aria-label={`${muscle} 태그로 검색`}
+                                    onClick={() => update('search', isTagSelected ? '' : muscle)}
+                                  >
+                                    #{muscle}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                          <div className="movement-provenance">
+                            <span className={`source-dot source-${provenance.kind}`} />
+                            {exercise.sourceReference
+                              ? `원출처 보존 · ${exercise.sourceReference.publisher}`
+                              : provenance.shortLabel}
+                            {!equipmentMeta.requirementsKnown && (
+                              <span className="movement-requirements-unknown">
+                                요구 조건 미확인
+                              </span>
+                            )}
+                            {recent.has(exercise.id) && (
+                              <span className="movement-recent">최근 {lastTaught.count}회</span>
+                            )}
+                          </div>
+                          {patterns.length > 0 ? (
+                            <div className="ml-card-patterns">
+                              <p>
+                                관련 패턴 도해 {patterns.length}종 <span>· 전문가 미검토</span>
+                              </p>
+                              {patterns.map((pattern) => {
+                                const isPatternSelected =
+                                  previewReference?.family === pattern.family &&
+                                  previewReference?.variantId === pattern.variantId;
+                                return (
+                                  <button
+                                    type="button"
+                                    key={`${pattern.family}-${pattern.variantId}`}
+                                    className={isPatternSelected ? 'is-selected' : undefined}
+                                    aria-pressed={isPatternSelected}
+                                    onClick={(event) =>
+                                      openPatternPreview(pattern, event.currentTarget)
+                                    }
+                                  >
+                                    <Play size={13} /> {pattern.title} 보기
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <p className="ml-card-pending">
+                              관련 도해는 아직 없어요. 동작 노트에서 내용을 확인하세요.
+                            </p>
+                          )}
+                          <div className="movement-card-footer">
+                            <PfButton
+                              variant="ghost"
+                              onClick={() =>
+                                isIdea && onOpenIdeaSheet
+                                  ? onOpenIdeaSheet(exercise)
+                                  : onOpenYouTubePreview(exercise)
+                              }
+                            >
+                              {isIdea ? '다시 열기 · 느낌/수정' : '자세히 보기'}{' '}
+                              <ArrowUpRight size={14} />
+                            </PfButton>
+                            <button
+                              type="button"
+                              className={`movement-add ${addedId === exercise.id ? 'just-added' : ''}`}
+                              onClick={() => addExercise(exercise)}
+                              aria-label={`${exercise.nameKo} 수업안에 추가`}
+                            >
+                              {addedId === exercise.id ? <Check size={16} /> : <Plus size={16} />}
+                              <span>{addedId === exercise.id ? '추가됨' : '수업에 추가'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </PfMovementCard>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="library-empty panel" role="status" aria-live="polite">
+                  <Search size={29} aria-hidden="true" />
+                  <h2>조건에 맞는 동작이 없어요.</h2>
+                  {(filters.search.trim() || activeFilterCount > 0) && (
+                    <p className="library-empty-context">
+                      {filters.search.trim() ? `‘${filters.search.trim()}’ 검색어` : ''}
+                      {filters.search.trim() && activeFilterCount > 0 ? ' · ' : ''}
+                      {activeFilterCount > 0 ? `필터 ${activeFilterCount}개 적용 중` : ''}
+                    </p>
+                  )}
+                  <p className="muted">
+                    검색어를 줄이거나 필터를 조정해 보세요.
+                    <br />
+                    직접 찾은 유튜브 레퍼런스도 추가할 수 있어요.
+                  </p>
+                  <div className="library-empty-actions">
+                    {filters.search.trim() && (
+                      <PfButton variant="secondary" onClick={clearSearch}>
+                        검색어 지우기
+                      </PfButton>
+                    )}
+                    <PfButton variant="primary" onClick={resetFilters}>
+                      전체 동작 보기
+                    </PfButton>
+                    <PfButton variant="secondary" onClick={onOpenClipper}>
+                      <Youtube size={16} /> 참조 추가
+                    </PfButton>
+                  </div>
+                </div>
+              )}
+              {filtered.length > notesVisibleCount && (
+                <div className="library-load-more">
+                  <p>
+                    {Math.min(notesVisibleCount, filtered.length)} / {filtered.length}개 동작 노트
+                  </p>
+                  <PfButton
+                    variant="secondary"
+                    onClick={() => {
+                      const firstNewIndex = notesVisibleCount;
+                      setNotesVisible({
+                        signature: notesSignature,
+                        limit: notesVisibleCount + 12,
+                      });
+                      requestAnimationFrame(() => {
+                        const cards =
+                          cardGridRef.current?.querySelectorAll<HTMLElement>('.movement-card');
+                        const nextCardButton =
+                          cards?.[firstNewIndex]?.querySelector<HTMLElement>('h2 button');
+                        nextCardButton?.focus();
+                      });
+                    }}
+                  >
+                    동작 노트 더 보기 <Plus size={14} />
+                  </PfButton>
+                </div>
+              )}
+            </div>
+          </div>
           {!filters.search && activeFilterCount === 0 && (
             <section className="ml-pattern-discovery" aria-label="모션으로 살펴보기">
               <div className="ml-section-heading">
@@ -1548,333 +1923,6 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             </section>
           )}
 
-          <div className="library-results-bar">
-            <p role="status" aria-live="polite">
-              <strong>{filtered.length}</strong>개의 동작{' '}
-              <span className="muted">· 작은 선택이 좋은 수업을 만듭니다</span>
-            </p>
-            {(activeFilterCount > 0 || filters.search) && (
-              <PfButton variant="ghost" onClick={resetFilters}>
-                필터 초기화 <X size={13} />
-              </PfButton>
-            )}
-          </div>
-          <p className="ml-review-note">
-            동작을 바로 추가하고 순서를 바꾸세요. 검토 기록은 선택 사항입니다.
-          </p>
-          {filtered.length > 0 ? (
-            <div className="movement-card-grid" ref={cardGridRef}>
-              {filtered.slice(0, notesVisibleCount).map((exercise) => {
-                const provenance = getMovementProvenance(exercise);
-                const reviewState = getExerciseReviewState(exercise);
-                const approved = isExerciseAutoEligible(exercise);
-                const isIdea = isMovementIdeaExercise(exercise);
-                const ideaMeta = isIdea ? readMovementIdeaDraft(exercise) : null;
-                const patterns = getMotionPatternReferences(exercise.id);
-                const isFavorite = exercise.favoriteTag !== 'none';
-                const inSequence = activeSteps.some(
-                  (step) => !isRestStep(step) && step.exerciseId === exercise.id,
-                );
-                const equipmentMeta = getExerciseEquipment(exercise);
-                const hasValidIdeaPhoto = Boolean(
-                  ideaMeta?.photoDataUrl && !brokenPhotoIds[exercise.id],
-                );
-                const lastTaught = getExerciseLastTaughtInfo(
-                  exercise.id,
-                  historyLogs,
-                  activeTargetGroupId,
-                );
-                return (
-                  <PfMovementCard
-                    variant={isIdea ? 'idea' : 'catalog'}
-                    selected={inSequence}
-                    className={`movement-card movement-${exercise.apparatus} ${
-                      inSequence ? 'is-in-sequence' : ''
-                    }`.trim()}
-                    key={exercise.id}
-                  >
-                    <div className="movement-card-art">
-                      <button
-                        type="button"
-                        className="movement-art-trigger"
-                        aria-label={
-                          patterns[0]
-                            ? `${exercise.nameKo} 관련 패턴 도해 보기`
-                            : `${exercise.nameKo} 상세 보기`
-                        }
-                        onClick={(event) =>
-                          patterns[0]
-                            ? openPatternPreview(patterns[0], event.currentTarget)
-                            : onOpenYouTubePreview(exercise)
-                        }
-                        aria-describedby={`motion-caption-${exercise.id}`}
-                      >
-                        {patterns[0] ? (
-                          <MotionPatternThumbnail reference={patterns[0]} />
-                        ) : hasValidIdeaPhoto && ideaMeta?.photoDataUrl ? (
-                          <img
-                            src={ideaMeta.photoDataUrl}
-                            alt=""
-                            aria-hidden="true"
-                            className="movement-idea-photo"
-                            loading="lazy"
-                            onError={() =>
-                              setBrokenPhotoIds((previous) => ({
-                                ...previous,
-                                [exercise.id]: true,
-                              }))
-                            }
-                          />
-                        ) : (
-                          <div
-                            className={`ml-unmapped-art ml-unmapped-art--${exercise.apparatus}`}
-                            aria-hidden="true"
-                          >
-                            <span className="ml-unmapped-meta">
-                              {APPARATUS_LABELS[exercise.apparatus].ko} ·{' '}
-                              {POSITION_LABELS[exercise.bodyPosition].ko}
-                            </span>
-                            <span>움직임을 기록할 자리</span>
-                            <i />
-                            <span className="ml-unmapped-focus">
-                              {exercise.targetMuscles.slice(0, 2).join(' · ') || '호흡 · 정렬'}
-                            </span>
-                            <span>MOTION STUDY PENDING</span>
-                          </div>
-                        )}
-                        <span className="art-caption" id={`motion-caption-${exercise.id}`}>
-                          {patterns[0]
-                            ? `${patterns[0].title} · 관련 패턴 초안`
-                            : '정확한 모션 애셋 제작 대기'}
-                        </span>
-                      </button>
-                      <span className="movement-equipment-label">
-                        {patterns[0]
-                          ? patterns[0].equipment[0]
-                          : APPARATUS_LABELS[exercise.apparatus].short}
-                      </span>
-                      <button
-                        type="button"
-                        className={`movement-heart ${isFavorite ? 'is-saved' : ''}`}
-                        onClick={() =>
-                          setExerciseFavoriteTag(exercise.id, isFavorite ? 'none' : 'signature')
-                        }
-                        aria-label={`${exercise.nameKo} 즐겨찾기 ${isFavorite ? '해제' : '추가'}`}
-                        aria-pressed={isFavorite}
-                        title={`즐겨찾기: ${FAVORITE_TAG_META[exercise.favoriteTag].label}`}
-                      >
-                        <Heart size={17} fill={isFavorite ? 'currentColor' : 'none'} />
-                      </button>
-                    </div>
-                    <div className="movement-card-content">
-                      <div className="movement-card-tags">
-                        {inSequence && (
-                          <PfBadge tone="sage" className="movement-selected-badge">
-                            <Check size={11} aria-hidden="true" /> 수업안 포함
-                          </PfBadge>
-                        )}
-                        <PfBadge tone="neutral">
-                          {LEVEL_NAMES[exercise.level]} · Lv {exercise.level}
-                        </PfBadge>
-                        <PfBadge tone="neutral" className="movement-position-badge">
-                          {POSITION_LABELS[exercise.bodyPosition].ko}
-                        </PfBadge>
-                        <PfBadge tone="neutral">
-                          <Clock3 size={12} />
-                          {exercise.defaultDurationMin}분
-                          {exercise.isUnilateral ? ' · 양쪽 포함' : ''}
-                        </PfBadge>
-                        {equipmentMeta.requiredProps.slice(0, 2).map((propId) => (
-                          <PfBadge key={propId} tone="neutral" className="movement-prop-badge">
-                            {propLabel(propId)}
-                          </PfBadge>
-                        ))}
-                      </div>
-                      <h2>
-                        <button type="button" onClick={() => onOpenYouTubePreview(exercise)}>
-                          {exercise.nameKo}
-                        </button>
-                      </h2>
-                      <p className="movement-english">{exercise.nameEn}</p>
-                      <PfAiStatusBadge
-                        kind={
-                          isIdea
-                            ? ideaMeta?.triedByInstructor
-                              ? 'tried-memo'
-                              : 'creative-memo'
-                            : approved
-                              ? 'instructor-reviewed'
-                              : 'review-pending'
-                        }
-                        className={`movement-review-status review-${reviewState}`}
-                      >
-                        {isIdea
-                          ? ideaMeta?.triedByInstructor
-                            ? '직접 해봄 · 주관적 메모'
-                            : '내 창작 메모 · 전문가 검증 아님'
-                          : approved
-                            ? '내 강사 검토 · 자격 인증 미확인'
-                            : reviewState === 'stale'
-                              ? '동작 정보 변경 · 다시 검토 필요'
-                              : '미검토 자료 · 검토 기록은 선택'}
-                      </PfAiStatusBadge>
-                      <p className="movement-target">
-                        {isIdea
-                          ? ideaMeta?.subjectiveFeeling
-                            ? `느낌 메모: ${ideaMeta.subjectiveFeeling}`
-                            : ideaMeta?.ideaLine || exercise.cues[0]
-                          : exercise.targetMuscles.slice(0, 3).join(' · ') ||
-                            exercise.cues[0] ||
-                            '체간 안정 · 호흡 연결'}
-                      </p>
-                      {exercise.targetMuscles.length > 0 && (
-                        <div className="movement-card-focus-tags" aria-label="타겟 부위 태그">
-                          {exercise.targetMuscles.slice(0, 3).map((muscle) => {
-                            const isTagSelected =
-                              filters.search.trim().toLocaleLowerCase() ===
-                              muscle.trim().toLocaleLowerCase();
-                            return (
-                              <button
-                                type="button"
-                                key={muscle}
-                                className={`movement-focus-tag ${
-                                  isTagSelected ? 'is-selected' : ''
-                                }`.trim()}
-                                aria-pressed={isTagSelected}
-                                aria-label={`${muscle} 태그로 검색`}
-                                onClick={() => update('search', isTagSelected ? '' : muscle)}
-                              >
-                                #{muscle}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                      <div className="movement-provenance">
-                        <span className={`source-dot source-${provenance.kind}`} />
-                        {exercise.sourceReference
-                          ? `원출처 보존 · ${exercise.sourceReference.publisher}`
-                          : provenance.shortLabel}
-                        {!equipmentMeta.requirementsKnown && (
-                          <span className="movement-requirements-unknown">요구 조건 미확인</span>
-                        )}
-                        {recent.has(exercise.id) && (
-                          <span className="movement-recent">최근 {lastTaught.count}회</span>
-                        )}
-                      </div>
-                      {patterns.length > 0 ? (
-                        <div className="ml-card-patterns">
-                          <p>
-                            관련 패턴 도해 {patterns.length}종 <span>· 전문가 미검토</span>
-                          </p>
-                          {patterns.map((pattern) => {
-                            const isPatternSelected =
-                              previewReference?.family === pattern.family &&
-                              previewReference?.variantId === pattern.variantId;
-                            return (
-                              <button
-                                type="button"
-                                key={`${pattern.family}-${pattern.variantId}`}
-                                className={isPatternSelected ? 'is-selected' : undefined}
-                                aria-pressed={isPatternSelected}
-                                onClick={(event) =>
-                                  openPatternPreview(pattern, event.currentTarget)
-                                }
-                              >
-                                <Play size={13} /> {pattern.title} 보기
-                              </button>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <p className="ml-card-pending">
-                          관련 도해는 아직 없어요. 동작 노트에서 내용을 확인하세요.
-                        </p>
-                      )}
-                      <div className="movement-card-footer">
-                        <PfButton
-                          variant="ghost"
-                          onClick={() =>
-                            isIdea && onOpenIdeaSheet
-                              ? onOpenIdeaSheet(exercise)
-                              : onOpenYouTubePreview(exercise)
-                          }
-                        >
-                          {isIdea ? '다시 열기 · 느낌/수정' : '자세히 보기'}{' '}
-                          <ArrowUpRight size={14} />
-                        </PfButton>
-                        <button
-                          type="button"
-                          className={`movement-add ${addedId === exercise.id ? 'just-added' : ''}`}
-                          onClick={() => addExercise(exercise)}
-                          aria-label={`${exercise.nameKo} 수업안에 추가`}
-                        >
-                          {addedId === exercise.id ? <Check size={16} /> : <Plus size={16} />}
-                          <span>{addedId === exercise.id ? '추가됨' : '수업에 추가'}</span>
-                        </button>
-                      </div>
-                    </div>
-                  </PfMovementCard>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="library-empty panel" role="status" aria-live="polite">
-              <Search size={29} aria-hidden="true" />
-              <h2>조건에 맞는 동작이 없어요.</h2>
-              {(filters.search.trim() || activeFilterCount > 0) && (
-                <p className="library-empty-context">
-                  {filters.search.trim() ? `‘${filters.search.trim()}’ 검색어` : ''}
-                  {filters.search.trim() && activeFilterCount > 0 ? ' · ' : ''}
-                  {activeFilterCount > 0 ? `필터 ${activeFilterCount}개 적용 중` : ''}
-                </p>
-              )}
-              <p className="muted">
-                검색어를 줄이거나 필터를 조정해 보세요.
-                <br />
-                직접 찾은 유튜브 레퍼런스도 추가할 수 있어요.
-              </p>
-              <div className="library-empty-actions">
-                {filters.search.trim() && (
-                  <PfButton variant="secondary" onClick={clearSearch}>
-                    검색어 지우기
-                  </PfButton>
-                )}
-                <PfButton variant="primary" onClick={resetFilters}>
-                  전체 동작 보기
-                </PfButton>
-                <PfButton variant="secondary" onClick={onOpenClipper}>
-                  <Youtube size={16} /> 참조 추가
-                </PfButton>
-              </div>
-            </div>
-          )}
-          {filtered.length > notesVisibleCount && (
-            <div className="library-load-more">
-              <p>
-                {Math.min(notesVisibleCount, filtered.length)} / {filtered.length}개 동작 노트
-              </p>
-              <PfButton
-                variant="secondary"
-                onClick={() => {
-                  const firstNewIndex = notesVisibleCount;
-                  setNotesVisible({
-                    signature: notesSignature,
-                    limit: notesVisibleCount + 12,
-                  });
-                  requestAnimationFrame(() => {
-                    const cards =
-                      cardGridRef.current?.querySelectorAll<HTMLElement>('.movement-card');
-                    const nextCardButton =
-                      cards?.[firstNewIndex]?.querySelector<HTMLElement>('h2 button');
-                    nextCardButton?.focus();
-                  });
-                }}
-              >
-                동작 노트 더 보기 <Plus size={14} />
-              </PfButton>
-            </div>
-          )}
           <details className="library-public-references">
             <summary>
               <span>

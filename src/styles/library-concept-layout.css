@@ -1,0 +1,222 @@
+/* User-supplied PC/tablet/mobile library concept: search, results, then optional studies. */
+#root .vnext-shell .motion-library .library-notes-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+
+.library-notes-results {
+  min-width: 0;
+}
+
+#root .vnext-shell .motion-library .library-notes-results .movement-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+#root .vnext-shell .motion-library .movement-card.is-inspected {
+  border-color: #297568;
+  box-shadow: 0 0 0 2px #29756830;
+}
+
+.library-movement-inspector {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  border: 1px solid var(--studio-line, #d6dfd9);
+  border-radius: 12px;
+  background: var(--studio-surface, #fff);
+}
+
+.library-movement-inspector[data-empty='true'] {
+  display: none;
+}
+
+.library-inspector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--studio-line, #d6dfd9);
+}
+
+.library-inspector-header h2 {
+  min-width: 0;
+  margin: 0;
+  scroll-margin-top: 16px;
+  color: var(--studio-ink, #183e36);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.library-inspector-header button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.library-inspector-content,
+.library-inspector-empty {
+  padding: 16px;
+}
+
+.library-inspector-content h3 {
+  margin: 0 0 6px;
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+.library-inspector-english,
+.library-inspector-empty,
+.library-inspector-content p {
+  margin: 0 0 12px;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+
+.library-inspector-content dl {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+  font-size: 0.8125rem;
+}
+
+.library-inspector-content dl > div {
+  display: grid;
+  grid-template-columns: 5em minmax(0, 1fr);
+  gap: 12px;
+}
+
+.library-inspector-content dt {
+  color: var(--studio-muted, #596a63);
+}
+
+.library-inspector-content dd {
+  min-width: 0;
+  margin: 0;
+  text-align: right;
+}
+
+.library-inspector-review,
+.library-inspector-precautions {
+  border-top: 1px solid var(--studio-line, #d6dfd9);
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.library-inspector-content h4 {
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.library-inspector-safety {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: #76532e;
+}
+
+.library-inspector-safety svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.library-inspector-filter-note {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--studio-subtle, #eef3f0);
+}
+
+.library-inspector-actions {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.library-inspector-actions button {
+  justify-content: center;
+  min-height: 44px;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.library-movement-inspector :is(button, h2):focus-visible {
+  outline: 3px solid #a76a42;
+  outline-offset: 3px;
+}
+
+@media (min-width: 1100px) {
+  #root .vnext-shell .motion-library .library-notes-workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  }
+
+  .library-movement-inspector,
+  .library-movement-inspector[data-empty='true'] {
+    display: block;
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: 84px;
+    max-height: calc(100dvh - 180px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .library-notes-results {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  #root .vnext-shell .motion-library .library-notes-results .movement-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #root .vnext-shell .motion-library .library-notes-results .movement-card {
+    display: grid;
+    grid-template-columns: minmax(120px, 25%) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  #root .vnext-shell .motion-library .library-notes-results .movement-card-art {
+    height: 160px;
+    border-radius: 12px;
+    margin: 12px 0 12px 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  #root .vnext-shell .motion-library[data-filters-expanded='false'] .library-apparatus-tabs {
+    display: none;
+  }
+
+  #root .vnext-shell .motion-library .library-notes-results .movement-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #root .vnext-shell .motion-library .library-notes-results .movement-card-art {
+    height: 132px;
+  }
+
+  #root .vnext-shell .motion-library .library-notes-results .movement-card-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  #root .vnext-shell .motion-library .library-notes-results .movement-card-footer .movement-add {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+}

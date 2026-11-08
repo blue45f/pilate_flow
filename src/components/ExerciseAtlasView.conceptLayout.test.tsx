@@ -1,0 +1,78 @@
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ExerciseAtlasView } from './ExerciseAtlasView';
+import { usePilatesStore } from '../store/usePilatesStore';
+import { ORIGINAL_MOVEMENTS } from '../data/originalMovements';
+
+const original = usePilatesStore.getState();
+const movement = ORIGINAL_MOVEMENTS.find((item) => item.apparatus === 'mat')!;
+
+beforeEach(() => {
+  usePilatesStore.setState(
+    {
+      ...original,
+      exercises: ORIGINAL_MOVEMENTS,
+      activeSteps: [],
+      historyLogs: [],
+      activeTab: 'atlas',
+    },
+    true,
+  );
+});
+afterEach(() => {
+  cleanup();
+  usePilatesStore.setState(original, true);
+});
+
+describe('library supplied concept layout', () => {
+  it('puts search and movement results before optional motion discovery without removing it', () => {
+    const { container } = render(
+      <ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />,
+    );
+    const search = screen.getByRole('region', { name: '동작 검색과 필터' });
+    const results = container.querySelector('.library-notes-workspace')!;
+    const gallery = screen.getByRole('region', { name: '모션으로 살펴보기' });
+    expect(search.compareDocumentPosition(results) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      results.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByRole('button', { name: '다음 도해' })).toBeEnabled();
+    expect(screen.getByText('관련 패턴 참고용 · 검증된 운동 시범이 아닙니다.')).toBeVisible();
+  });
+
+  it('selects existing movement information, preserves review state and hands off to full details', async () => {
+    const openDetails = vi.fn();
+    const before = usePilatesStore.getState();
+    render(<ExerciseAtlasView onOpenYouTubePreview={openDetails} onOpenClipper={vi.fn()} />);
+    const trigger = screen.getByRole('button', { name: movement.nameKo });
+    fireEvent.click(trigger);
+    const inspector = screen.getByRole('complementary', { name: '선택한 동작 정보' });
+    await waitFor(() =>
+      expect(within(inspector).getByRole('heading', { name: '선택한 동작 정보' })).toHaveFocus(),
+    );
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(within(inspector).getByRole('heading', { name: movement.nameKo })).toBeInTheDocument();
+    expect(inspector).toHaveTextContent('미검토 자료 · 수업 전 확인');
+    expect(inspector).toHaveTextContent(movement.precautions);
+    fireEvent.click(within(inspector).getByRole('button', { name: '전체 정보·개인 검토 열기' }));
+    expect(openDetails).toHaveBeenCalledWith(movement);
+    expect(usePilatesStore.getState().exercises).toBe(before.exercises);
+    expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
+    fireEvent.click(within(inspector).getByRole('button', { name: '선택한 동작 정보 닫기' }));
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('keeps selected information across filtering and safely restores focus if its card disappears', async () => {
+    render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: movement.nameKo }));
+    const search = screen.getByRole('searchbox', { name: '동작 검색' });
+    fireEvent.change(search, { target: { value: 'no-matching-movement-xyz' } });
+    const inspector = screen.getByRole('complementary', { name: '선택한 동작 정보' });
+    expect(inspector).toHaveTextContent('현재 검색 결과에 없는 동작');
+    expect(inspector).toHaveTextContent(movement.nameKo);
+    fireEvent.click(within(inspector).getByRole('button', { name: '선택한 동작 정보 닫기' }));
+    await waitFor(() => expect(search).toHaveFocus());
+    expect(search).toHaveValue('no-matching-movement-xyz');
+  });
+});
