@@ -270,4 +270,41 @@ describe('live-stage device voice guidance', () => {
     expect(latest().voice).toBe(local);
     expect(usePilatesStore.getState().exercises).toEqual(pending);
   });
+  it('supports Space and ArrowLeft/ArrowRight keyboard controls on stage body while ignoring focused interactive elements', () => {
+    render(<LiveStageView onOpenLogModal={vi.fn()} />);
+    expect(screen.getByRole('button', { name: '수업 시작' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: exercises[0].nameKo })).toBeInTheDocument();
+
+    // When focus is on an interactive button, window keydown shortcuts should be ignored
+    const voiceToggleButton = screen.getByRole('button', { name: '음성 안내 켜기' });
+    voiceToggleButton.focus();
+    fireEvent.keyDown(voiceToggleButton, { key: ' ', code: 'Space' });
+    expect(screen.getByRole('button', { name: '수업 시작' })).toBeInTheDocument();
+    fireEvent.keyDown(voiceToggleButton, { key: 'ArrowRight', code: 'ArrowRight' });
+    expect(screen.getByRole('heading', { level: 2, name: exercises[0].nameKo })).toBeInTheDocument();
+
+    // When focus is on a checkbox input, window keydown shortcuts should also be ignored
+    const autoAdvanceCheckbox = screen.getByLabelText('시간 종료 시 다음 동작');
+    autoAdvanceCheckbox.focus();
+    fireEvent.keyDown(autoAdvanceCheckbox, { key: ' ', code: 'Space' });
+    expect(screen.getByRole('button', { name: '수업 시작' })).toBeInTheDocument();
+
+    // Blur back to document.body and use Space to start/pause and ArrowRight/ArrowLeft to navigate steps
+    autoAdvanceCheckbox.blur();
+    fireEvent.keyDown(window, { key: ' ', code: 'Space' });
+    expect(screen.getByRole('button', { name: '일시정지' })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: ' ', code: 'Space' });
+    expect(screen.getByRole('button', { name: '수업 시작' })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'ArrowRight', code: 'ArrowRight' });
+    expect(screen.getByRole('heading', { level: 2, name: exercises[1].nameKo })).toBeInTheDocument();
+
+    // Pressing ArrowRight on the last step does not overflow
+    fireEvent.keyDown(window, { key: 'ArrowRight', code: 'ArrowRight' });
+    expect(screen.getByRole('heading', { level: 2, name: exercises[1].nameKo })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft', code: 'ArrowLeft' });
+    expect(screen.getByRole('heading', { level: 2, name: exercises[0].nameKo })).toBeInTheDocument();
+  });
 });

@@ -455,6 +455,69 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       );
     };
   });
+  const keyboardActionRef = useRef<(event: KeyboardEvent) => void>(() => undefined);
+  useEffect(() => {
+    keyboardActionRef.current = (event: KeyboardEvent) => {
+      if (
+        exitOpen ||
+        reviewOpen ||
+        unavailable.length > 0 ||
+        invalidStepData ||
+        steps.length === 0 ||
+        !current ||
+        !timing ||
+        (!exercise && !currentIsRest) ||
+        movementKeys.length === 0
+      ) {
+        return;
+      }
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+      const isInteractive = (node: EventTarget | Element | null) =>
+        node instanceof Element &&
+        Boolean(
+          node.closest(
+            'input, textarea, select, button, summary, a, dialog, [contenteditable="true"], [contenteditable=""]',
+          ),
+        );
+      if (isInteractive(event.target) || isInteractive(document.activeElement)) return;
+      if (event.code === 'Space' || event.key === ' ') {
+        event.preventDefault();
+        toggleRunning();
+        return;
+      }
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        if (clock.index < steps.length - 1) {
+          selectStep(clock.index + 1);
+        }
+        return;
+      }
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        if (clock.index > 0) {
+          selectStep(clock.index - 1);
+        }
+      }
+    };
+  });
+  useEffect(() => {
+    if (
+      exitOpen ||
+      reviewOpen ||
+      unavailable.length > 0 ||
+      invalidStepData ||
+      steps.length === 0
+    ) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      keyboardActionRef.current(event);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [exitOpen, reviewOpen, unavailable.length, invalidStepData, steps.length]);
   const toggleVoiceCommand = () => {
     if (voiceCommandEnabled) {
       setVoiceCommandEnabled(false);
