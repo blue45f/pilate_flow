@@ -1,12 +1,19 @@
 export type {
   EpistemicCategory,
   EpistemicStatement,
+  EvidenceCompensationItem,
+  EvidenceContraindicationItem,
   EvidenceDiscrepancyAudit,
+  EvidenceDiscrepancyCheckItem,
+  EvidenceExerciseSummary,
+  EvidenceMuscleAnalysis,
   EvidenceReviewTrackId,
   EvidenceSourceAccessStatus,
   EvidenceSourceCategory,
   EvidenceSourceCitation,
+  EvidenceTrackId,
   EvidenceTruthfulnessFlags,
+  FullCatalogMotionEvidenceSuiteValidationReport,
   MotionEvidenceRecordValidationResult,
   MotionEvidenceReviewRecord,
   MotionEvidenceSuiteValidationReport,
@@ -22,7 +29,14 @@ export {
 
 export { TRACK_B_APPARATUS_EVIDENCE_RECORDS } from './trackBApparatusEvidence';
 
+export { TRACK_C_EXTENDED_MAT_EVIDENCE_RECORDS } from './trackCExtendedMatEvidence';
+
+export { TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS } from './trackDExtendedApparatusEvidence';
+
 export {
+  FULL_CATALOG_MOTION_EVIDENCE_REVIEW_RECORDS,
+  resolveMotionEvidenceReviewRecord,
+  validateFullCatalogMotionEvidenceSuite,
   validateMotionEvidenceRecord,
   validateMotionEvidenceSuite,
 } from './validator';
