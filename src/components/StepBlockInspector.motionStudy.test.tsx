@@ -397,4 +397,46 @@ describe('inspector class role and explicit motion-study draft', () => {
       expect(usePilatesStore.getState().activeSteps[0]).toEqual(rebound);
     },
   );
+
+  it('lazily mounts MovementVisualGuideCard on disclosure toggle and resets dirty draft without mutating store', async () => {
+    const before = usePilatesStore.getState();
+    render(<Harness />);
+
+    const resetBtn = screen.getByTestId('step-inspector-reset-draft');
+    expect(resetBtn).toBeDisabled();
+    expect(resetBtn).toHaveTextContent('입력 되돌리기');
+
+    const disclosure = screen.getByTestId('step-inspector-visual-guide');
+    expect(
+      within(disclosure).getByText('시작·중간·끝 관절 정렬 도해 및 유사 동작 차이 비교'),
+    ).toBeInTheDocument();
+    expect(within(disclosure).queryByRole('region')).not.toBeInTheDocument();
+
+    fireEvent.click(
+      within(disclosure).getByText('시작·중간·끝 관절 정렬 도해 및 유사 동작 차이 비교'),
+    );
+    await waitFor(() => {
+      expect(disclosure).toHaveAttribute('open');
+      expect( disclosure.querySelectorAll('*').length).toBeGreaterThan(1);
+    });
+
+    change('수업에서의 역할', 'cooldown');
+    change('강사가 정한 횟수', '14');
+    selectCurrentStudy();
+    expect(resetBtn).not.toBeDisabled();
+
+    fireEvent.click(resetBtn);
+    expect(resetBtn).toBeDisabled();
+    expect(screen.getByLabelText('수업에서의 역할')).toHaveValue('');
+    expect(screen.getByLabelText('강사가 정한 횟수')).toHaveValue(base.repetitions);
+    expect(
+      within(picker()).getByRole('radio', { name: `${reference.title} 수업 모션으로 선택` }),
+    ).not.toBeChecked();
+    expect(
+      screen.getByText('수정한 입력값을 적용 전 상태로 되돌렸습니다.'),
+    ).toHaveAttribute('role', 'status');
+    expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
+    expect(usePilatesStore.getState().undoStack).toHaveLength(0);
+  });
 });
+

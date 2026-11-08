@@ -20,8 +20,15 @@ import { ExerciseEvidencePanel } from './ExerciseEvidencePanel';
 import { FirstClassTutorialCandidate } from '../features/firstClassTutorialCandidate';
 import { LightDismissDialog } from './LightDismissDialog';
 import { MotionReferencePlayer } from './MotionReferencePlayer';
+import { MovementVisualGuideCard } from './MovementVisualGuideCard';
 import '../styles/design-tokens.css';
 import '../styles/instructor-study.css';
+
+const REHEARSAL_LAYER_ITEMS = [
+  ['easy', '쉽게'],
+  ['standard', '기본'],
+  ['hard', '심화'],
+] as const;
 
 const INSTRUCTOR_TUTORIAL_TASKS = [
   {
@@ -137,6 +144,7 @@ export function InstructorStudyDialog({
   const [limit, setLimit] = useState({ signature: '', count: 6 });
   const [tutorialIndex, setTutorialIndex] = useState(0);
   const [showVisualTutorial, setShowVisualTutorial] = useState(false);
+  const [visualGuideOpenId, setVisualGuideOpenId] = useState<string | null>(null);
   const filtered = useMemo(
     () =>
       exercises.filter(
@@ -149,6 +157,7 @@ export function InstructorStudyDialog({
   const selected = filtered.find((exercise) => exercise.id === selectedId) ?? filtered[0];
   const layer =
     layerChoice?.exerciseId === selected?.id ? (layerChoice?.value ?? 'standard') : 'standard';
+  const isVisualGuideOpen = selected ? visualGuideOpenId === selected.id : false;
   const reviewed = selected && getExerciseReviewState(selected) === 'approved';
   const signature = JSON.stringify([search, bookmarksOnly]);
   const count = limit.signature === signature ? limit.count : 6;
@@ -407,6 +416,25 @@ export function InstructorStudyDialog({
                   exerciseId={selected.id}
                   exerciseName={selected.nameKo}
                 />
+                <details
+                  key={`visual-guide-disclosure-${selected.id}`}
+                  className="study-visual-guide-disclosure"
+                  data-testid="study-visual-guide-disclosure"
+                  open={isVisualGuideOpen}
+                  onToggle={(event) =>
+                    setVisualGuideOpenId(event.currentTarget.open ? selected.id : null)
+                  }
+                >
+                  <summary>시작·중간·끝 자세 변화 및 유사 동작 7차원 비교 보기</summary>
+                  {isVisualGuideOpen && (
+                    <MovementVisualGuideCard
+                      key={`visual-guide-${selected.id}`}
+                      exercise={selected}
+                      availablePeers={exercises}
+                      initialPhase="start"
+                    />
+                  )}
+                </details>
                 <ExerciseEvidencePanel exercise={selected} />
                 {reviewed ? (
                   <PfCard
@@ -439,18 +467,35 @@ export function InstructorStudyDialog({
                           ))}
                         </ul>
                         <div className="study-modes" role="group" aria-label="단계별 변형">
-                          {(
-                            [
-                              ['easy', '쉽게'],
-                              ['standard', '기본'],
-                              ['hard', '심화'],
-                            ] as const
-                          ).map(([id, label]) => (
+                          {REHEARSAL_LAYER_ITEMS.map(([id, label], index) => (
                             <button
                               type="button"
                               key={id}
                               aria-pressed={layer === id}
                               onClick={() => setLayerChoice({ exerciseId: selected.id, value: id })}
+                              onKeyDown={(event) => {
+                                let nextIndex: number | null = null;
+                                if (event.key === 'ArrowRight') {
+                                  nextIndex = (index + 1) % REHEARSAL_LAYER_ITEMS.length;
+                                } else if (event.key === 'ArrowLeft') {
+                                  nextIndex =
+                                    (index - 1 + REHEARSAL_LAYER_ITEMS.length) %
+                                    REHEARSAL_LAYER_ITEMS.length;
+                                } else if (event.key === 'Home') {
+                                  nextIndex = 0;
+                                } else if (event.key === 'End') {
+                                  nextIndex = REHEARSAL_LAYER_ITEMS.length - 1;
+                                }
+                                if (nextIndex === null) return;
+                                event.preventDefault();
+                                const nextLayer = REHEARSAL_LAYER_ITEMS[nextIndex][0];
+                                setLayerChoice({ exerciseId: selected.id, value: nextLayer });
+                                const buttons =
+                                  event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+                                    'button',
+                                  );
+                                buttons?.[nextIndex]?.focus();
+                              }}
                             >
                               {label}
                             </button>

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { exerciseRevision } from '../utils/exerciseReview';
@@ -113,3 +113,72 @@ it('opens the existing workbench only on explicit request without completing tut
   expect(onTutorialTaskChange).not.toHaveBeenCalled();
   expect(onOpenReview).not.toHaveBeenCalled();
 });
+
+it('lazily mounts MovementVisualGuideCard in study mode and supports ArrowLeft/ArrowRight/Home/End on rehearsal layers', async () => {
+  const approved = structuredClone(INITIAL_EXERCISES[0]);
+  approved.review = {
+    status: 'approved',
+    reviewerAlias: '강사 별칭',
+    reviewedAt: '2026-11-04T12:00:00.000Z',
+    revision: exerciseRevision(approved),
+    scope: 'planning-metadata',
+    credentialVerified: false,
+  };
+  render(
+    <InstructorStudyDialog
+      exercises={[approved, INITIAL_EXERCISES[1]]}
+      study={{
+        bookmarkedExerciseIds: [],
+        rehearsalCueHidden: false,
+        completedTutorialTaskIds: [],
+      }}
+      onToggleBookmark={vi.fn()}
+      onCueHiddenChange={vi.fn()}
+      onTutorialTaskChange={vi.fn()}
+      onOpenReview={vi.fn()}
+      onClose={vi.fn()}
+    />,
+  );
+
+  const disclosure = screen.getByTestId('study-visual-guide-disclosure');
+  const summary = within(disclosure).getByText(
+    '시작·중간·끝 자세 변화 및 유사 동작 7차원 비교 보기',
+  );
+  expect(summary).toBeInTheDocument();
+  expect(disclosure.children).toHaveLength(1);
+
+  fireEvent.click(summary);
+  await waitFor(() => {
+    expect(disclosure).toHaveAttribute('open');
+    expect(disclosure.children.length).toBeGreaterThan(1);
+  });
+
+  const layerGroup = screen.getByRole('group', { name: '단계별 변형' });
+  const easyBtn = within(layerGroup).getByRole('button', { name: '쉽게' });
+  const standardBtn = within(layerGroup).getByRole('button', { name: '기본' });
+  const hardBtn = within(layerGroup).getByRole('button', { name: '심화' });
+
+  expect(standardBtn).toHaveAttribute('aria-pressed', 'true');
+  standardBtn.focus();
+
+  fireEvent.keyDown(standardBtn, { key: 'ArrowRight' });
+  expect(hardBtn).toHaveAttribute('aria-pressed', 'true');
+  expect(hardBtn).toHaveFocus();
+
+  fireEvent.keyDown(hardBtn, { key: 'ArrowRight' });
+  expect(easyBtn).toHaveAttribute('aria-pressed', 'true');
+  expect(easyBtn).toHaveFocus();
+
+  fireEvent.keyDown(easyBtn, { key: 'ArrowLeft' });
+  expect(hardBtn).toHaveAttribute('aria-pressed', 'true');
+  expect(hardBtn).toHaveFocus();
+
+  fireEvent.keyDown(hardBtn, { key: 'Home' });
+  expect(easyBtn).toHaveAttribute('aria-pressed', 'true');
+  expect(easyBtn).toHaveFocus();
+
+  fireEvent.keyDown(easyBtn, { key: 'End' });
+  expect(hardBtn).toHaveAttribute('aria-pressed', 'true');
+  expect(hardBtn).toHaveFocus();
+});
+
