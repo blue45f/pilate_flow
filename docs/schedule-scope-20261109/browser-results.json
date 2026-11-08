@@ -1,0 +1,136 @@
+[
+  {
+    "w": 320,
+    "h": 760,
+    "overflow": 0,
+    "panel": {
+      "x": 28,
+      "y": 54.0625,
+      "w": 264,
+      "h": 617.90625
+    },
+    "agenda": {
+      "x": 28,
+      "y": 691.96875,
+      "w": 264,
+      "h": 596.375
+    },
+    "errors": [],
+    "checks": "scope, radio arrows, cancel/X/Escape/focus, occurrence/series save, exception preservation, week, stale, reload"
+  },
+  {
+    "w": 390,
+    "h": 844,
+    "overflow": 0,
+    "panel": {
+      "x": 32,
+      "y": 102.4375,
+      "w": 326,
+      "h": 574.71875
+    },
+    "agenda": {
+      "x": 32,
+      "y": 697.15625,
+      "w": 326,
+      "h": 596.375
+    },
+    "errors": [],
+    "checks": "scope, radio arrows, cancel/X/Escape/focus, occurrence/series save, exception preservation, week, stale, reload"
+  },
+  {
+    "w": 768,
+    "h": 1024,
+    "overflow": 0,
+    "panel": {
+      "x": 43.03125,
+      "y": 397.296875,
+      "w": 681.9375,
+      "h": 538.71875
+    },
+    "agenda": {
+      "x": 43.03125,
+      "y": 956.015625,
+      "w": 681.9375,
+      "h": 517.375
+    },
+    "errors": [],
+    "checks": "scope, radio arrows, cancel/X/Escape/focus, occurrence/series save, exception preservation, week, stale, reload"
+  },
+  {
+    "w": 1024,
+    "h": 768,
+    "overflow": 0,
+    "panel": {
+      "x": 653.28125,
+      "y": 96.984375,
+      "w": 320,
+      "h": 583.5
+    },
+    "agenda": {
+      "x": 270.71875,
+      "y": 96.984375,
+      "w": 362.5625,
+      "h": 570.375
+    },
+    "errors": [],
+    "checks": "scope, radio arrows, cancel/X/Escape/focus, occurrence/series save, exception preservation, week, stale, reload"
+  },
+  {
+    "w": 1440,
+    "h": 900,
+    "overflow": 0,
+    "panel": {
+      "x": 1056,
+      "y": 228.484375,
+      "w": 320,
+      "h": 583.5
+    },
+    "agenda": {
+      "x": 272,
+      "y": 228.484375,
+      "w": 764,
+      "h": 517.375
+    },
+    "errors": [],
+    "checks": "scope, radio arrows, cancel/X/Escape/focus, occurrence/series save, exception preservation, week, stale, reload"
+  },
+  {
+    "w": 1024,
+    "h": 500,
+    "overflow": 0,
+    "panel": {
+      "x": 653.28125,
+      "y": 84,
+      "w": 320,
+      "h": 320
+    },
+    "agenda": {
+      "x": 270.71875,
+      "y": -26.015625,
+      "w": 362.5625,
+      "h": 570.375
+    },
+    "errors": [],
+    "checks": "scope, radio arrows, cancel/X/Escape/focus, occurrence/series save, exception preservation, week, stale, reload"
+  },
+  {
+    "w": 320,
+    "h": 760,
+    "text": 200,
+    "overflow": 0,
+    "panel": {
+      "x": 28,
+      "y": 16.34375,
+      "w": 264,
+      "h": 1379.09375
+    },
+    "agenda": {
+      "x": 28,
+      "y": 1415.4375,
+      "w": 264,
+      "h": 818.171875
+    },
+    "errors": [],
+    "checks": "scope, radio arrows, cancel/X/Escape/focus, occurrence/series save, exception preservation, week, stale, reload"
+  }
+]

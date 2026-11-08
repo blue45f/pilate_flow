@@ -1,0 +1,147 @@
+.schedule-agenda-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.schedule-agenda-workspace > .schedule-days {
+  min-width: 0;
+}
+
+.schedule-change-scope {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #cbdcd4;
+  border-radius: 12px;
+  background: #fff;
+  color: #183d35;
+  overflow-wrap: anywhere;
+  scroll-margin-block: 16px 88px;
+}
+
+.schedule-change-scope > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.schedule-change-scope h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  scroll-margin-top: 24px;
+}
+.schedule-change-scope > header button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.schedule-change-subject {
+  margin: 14px 0 20px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.schedule-change-subject > * {
+  display: block;
+}
+.schedule-change-subject > span {
+  color: #556c63;
+}
+.schedule-change-scope fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.schedule-change-scope legend {
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.schedule-change-scope label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 14px;
+  min-height: 44px;
+  border: 1px solid #d5e0da;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.schedule-change-scope label.is-selected {
+  border-color: #247968;
+  background: #eff8f3;
+}
+.schedule-change-scope input {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: #167367;
+}
+.schedule-change-scope label > span {
+  min-width: 0;
+}
+.schedule-change-scope label strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 1rem;
+}
+.schedule-change-scope label span span {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.schedule-change-note {
+  margin: 16px 0;
+  font-size: 0.8125rem;
+  color: #556c63;
+  line-height: 1.6;
+}
+.schedule-change-scope footer {
+  display: grid;
+  gap: 8px;
+}
+.schedule-change-scope footer button {
+  width: 100%;
+  min-height: 44px;
+  justify-content: center;
+}
+.schedule-change-scope :is(button, input, h2):focus-visible {
+  outline: 3px solid #a76a42;
+  outline-offset: 3px;
+}
+
+@media (min-width: 900px) {
+  .schedule-agenda-workspace[data-has-change-scope='true'] {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  }
+  .schedule-agenda-workspace > .schedule-days {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .schedule-change-scope {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: 84px;
+    max-height: calc(100dvh - 180px);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .schedule-change-scope {
+    padding: 16px;
+  }
+}
