@@ -564,17 +564,16 @@ describe('Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: fal
       expect(screen.getByRole('button', { name: /이 기기에 설치/ })).toBeInTheDocument();
     });
 
-    it('[Finding B-F4 Remediated] renders a single unified <p role="status"> region when installStatus !== "idle" and offlineStatus === "update-ready"', async () => {
+    it('[Finding B-F4 Remediated] prevents spurious update-ready <p role="status"> during first-time waiting install when installStatus !== "idle"', async () => {
       const profile = getFixture('android-chrome', 'android-15-chrome-mobile');
-      const env = applyMockBrowserProfile(profile, { registrationState: 'waiting' });
-      env.registration.active = { state: 'activated' };
+      applyMockBrowserProfile(profile, { registrationState: 'waiting' });
       const { startPwa, getPwaState, PwaInstallPanel } = await loadFreshPwaSuite();
 
       await act(async () => {
         startPwa({ registerServiceWorker: true });
       });
 
-      expect(getPwaState().offlineStatus).toBe('update-ready');
+      expect(getPwaState().offlineStatus).toBe('preparing');
 
       render(<PwaInstallPanel />);
 
@@ -589,7 +588,6 @@ describe('Track B — PWA Install Flow Mock Audit Suite (realSafariExecuted: fal
       const statusElements = screen.getAllByRole('status');
       expect(statusElements).toHaveLength(1);
       expect(statusElements[0]).toHaveTextContent('설치를 취소했어요.');
-      expect(statusElements[0]).toHaveTextContent('새 버전이 준비됐어요.');
     });
   });
 });
