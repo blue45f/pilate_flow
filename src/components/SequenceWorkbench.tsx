@@ -791,7 +791,7 @@ export function SequenceWorkbench({
                     }}
                     aria-label={`${ideaEx.nameKo} 수업에 넣기`}
                   >
-                    {inSequence ? '수업에 한 번 더 넣기' : '수업에 넣기'}
+                    {inSequence ? '수업에 담김 (메모 동기화)' : '수업에 넣기'}
                   </PfButton>
                 </div>
               </PfMovementCard>
@@ -886,6 +886,13 @@ export function SequenceWorkbench({
                     onStepAction={(stepId) => {
                       if (stepId === 'new-movement') openIdeaSheet(null);
                       else if (stepId === 'block-composition') openExerciseFinder();
+                      else if (stepId === 'save-class' || (stepId as string) === 'start-teaching') {
+                        if (s.activeSteps.length > 0) {
+                          setPlanPreviewOpen(true);
+                        } else {
+                          document.getElementById('workbench-sequence-panel')?.focus();
+                        }
+                      }
                     }}
                     onDismiss={() => setShowWelcomeTutorial(false)}
                   />
@@ -1120,7 +1127,12 @@ export function SequenceWorkbench({
         </p>
       )}
       <div className="plan-layout v2-plan-layout">
-        <section className="sequence-column" aria-label="오늘의 시퀀스">
+        <section
+          id="workbench-sequence-panel"
+          className="sequence-column"
+          aria-label="오늘의 시퀀스"
+          tabIndex={-1}
+        >
           {s.activeSteps.length > 0 && (
             <>
               <div className="sequence-heading">

@@ -100,6 +100,11 @@ const DesignSystemInspector = lazy(() =>
     default: module.DesignSystemInspector,
   })),
 );
+const LazyMotionCoveragePreviewHarness = lazy(() =>
+  import('./features/motionCoverage/MotionCoveragePreviewHarness').then((module) => ({
+    default: module.MotionCoveragePreviewHarness,
+  })),
+);
 
 const navigation = [
   { id: 'workbench', label: '수업', detail: '오늘의 수업', icon: CalendarDays },
@@ -162,6 +167,11 @@ export function App() {
     if (!(import.meta.env.DEV || import.meta.env.MODE === 'test')) return false;
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('pf_ds_inspect') === '1';
+  });
+  const [mcPreviewOpen, setMcPreviewOpen] = useState(() => {
+    if (!(import.meta.env.DEV || import.meta.env.MODE === 'test')) return false;
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('pf_mc_preview') === '1';
   });
   const [menuOpen, setMenuOpen] = useState(false);
   const [workspaceFocusRequest, setWorkspaceFocusRequest] = useState(0);
@@ -800,6 +810,17 @@ export function App() {
               >
                 디자인 시스템 검수 열기
               </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                data-testid="open-motion-coverage-preview-btn"
+                onClick={() => {
+                  setSettingsOpen(false);
+                  setMcPreviewOpen(true);
+                }}
+              >
+                모션 도해 검수 프리뷰 열기
+              </button>
             </div>
           </section>
         )}
@@ -817,6 +838,18 @@ export function App() {
             onClose={() => setDesignSystemOpen(false)}
           />
         </Suspense>
+      )}
+      {mcPreviewOpen && (
+        <LightDismissDialog
+          open={mcPreviewOpen}
+          onClose={() => setMcPreviewOpen(false)}
+          title="모션 도해 지원 수준 로컬 검수 프리뷰"
+          maxWidth="960px"
+        >
+          <Suspense fallback={null}>
+            <LazyMotionCoveragePreviewHarness initialExerciseOrId="ex-warmup-01" />
+          </Suspense>
+        </LightDismissDialog>
       )}
     </div>
   );
