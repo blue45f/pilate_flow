@@ -955,8 +955,8 @@ describe('Track B Audit — 3. Provider Error UX Regression (provider 오류 UX 
   });
 });
 
-describe('Track B Audit — 4. Exact Reproduction of Discovered Track B Defects (DEFECT-B1, DEFECT-B2, DEFECT-B3)', () => {
-  it('DEFECT-B1: FreeAiAssistantPanel and freeAiClient.requestSequenceCompose fail to inspect reviewedBlocks / reviewedCatalog for PHI/PII or BYOK secrets and transmit unselected reviewedBlocks with sensitive instructorNote to transport.postAssist', async () => {
+describe('Track B Audit — 4. Regression Prevention for Previously Reproduced Track B Defects (DEFECT-B1, DEFECT-B2, DEFECT-B3)', () => {
+  it('DEFECT-B1: FreeAiAssistantPanel and freeAiClient.requestSequenceCompose minimize selected payloads and never transmit unselected sensitive blocks', async () => {
     const { openAiKey } = buildSyntheticKeys();
     const postAssistSpy = vi.fn().mockImplementation(async (req: FreeAiServerRequest) => ({
       status: createDefaultFreeAiStatus({
@@ -997,7 +997,13 @@ describe('Track B Audit — 4. Exact Reproduction of Discovered Track B Defects 
 
     // An UNSELECTED reviewed block containing sensitive PHI/PII and a synthetic API key in instructorNote
     const blocksWithUnselectedSensitiveNote: P1ReusableBlockContract[] = [
-      ...SAMPLE_BLOCKS,
+      ...SAMPLE_BLOCKS.map((block) => ({
+        ...block,
+        steps: block.steps?.map((step) => ({
+          ...step,
+          instructorNote: `김민지 회원 허리 통증 ${openAiKey}`,
+        })),
+      })),
       {
         id: 'blk-unselected-sensitive-99',
         title: '오전 그룹 블록',
@@ -1034,8 +1040,6 @@ describe('Track B Audit — 4. Exact Reproduction of Discovered Track B Defects 
       { preferLocalOnly: false },
     );
 
-    // REPRODUCED DEFECT-B1:
-    // 1. Client-side guardByokAndEnv(input) and guardSensitiveHealthForExternalAi(input) did NOT block the request!
     expect(postAssistSpy).toHaveBeenCalledTimes(1);
     const outgoingServerRequest = postAssistSpy.mock.calls[0][0] as FreeAiServerRequest;
     expect(outgoingServerRequest.task).toBe('sequence-compose');
@@ -1043,22 +1047,19 @@ describe('Track B Audit — 4. Exact Reproduction of Discovered Track B Defects 
       throw new Error('Expected sequence-compose request');
     }
 
-    // 2. Unselected block 'blk-unselected-sensitive-99' was still included in outgoingServerRequest.reviewedBlocks!
     const transmittedBlockIds = (outgoingServerRequest.reviewedBlocks ?? []).map((b) => b.id);
-    expect(transmittedBlockIds).toContain('blk-unselected-sensitive-99');
+    expect(transmittedBlockIds).not.toContain('blk-unselected-sensitive-99');
+    expect(outgoingServerRequest.reviewedCatalog.map((item) => item.id)).toEqual(['ex-warmup-1']);
+    expect(JSON.stringify(outgoingServerRequest)).not.toContain('instructorNote');
 
-    // 3. The sensitive PHI/PII and synthetic secret in step.instructorNote were transmitted in the payload!
     const serializedRequest = JSON.stringify(outgoingServerRequest);
-    expect(serializedRequest).toContain('허리 디스크 수술 후 주의 010-1234-5678');
-    expect(serializedRequest).toContain(openAiKey);
+    expect(serializedRequest).not.toContain('허리 디스크 수술 후 주의 010-1234-5678');
+    expect(serializedRequest).not.toContain(openAiKey);
 
-    // 4. Server-side schema validation (freeAiServerRequestSchema) rejects this exact outgoing payload!
     const serverValidation = freeAiServerRequestSchema.safeParse(outgoingServerRequest);
-    expect(serverValidation.success).toBe(false);
+    expect(serverValidation.success).toBe(true);
 
     // 5. Reproduce in FreeAiAssistantPanel UI (Tab 3: sequence-compose):
-    // composeHealthInspection only inspects composeTheme, so the primary external AI button remains enabled
-    // and clicking it sends the sensitive unselected block through transport.postAssist!
     render(
       <FreeAiAssistantPanel
         exercises={SAMPLE_EXERCISES}
@@ -1084,10 +1085,10 @@ describe('Track B Audit — 4. Exact Reproduction of Discovered Track B Defects 
     });
   });
 
-  it('DEFECT-B2: stripForbiddenKeyFields fails to strip forbidden keys inside arrays, and inspectSensitiveHealthText misses realistic Korean member names, postpartum weeks, and general pain terms', () => {
+  it('DEFECT-B2: stripForbiddenKeyFields strips nested arrays, and inspectSensitiveHealthText blocks realistic Korean member names, postpartum weeks, and general pain terms', () => {
     const { googleKey, openRouterKey } = buildSyntheticKeys();
 
-    // Part A: stripForbiddenKeyFields skips array elements (!Array.isArray(value))
+    // Part A: stripForbiddenKeyFields recursively strips array elements
     const recordWithArraySecrets = {
       task: 'sequence-compose',
       apiKey: googleKey,
@@ -1101,27 +1102,25 @@ describe('Track B Audit — 4. Exact Reproduction of Discovered Track B Defects 
     };
 
     const stripped = stripForbiddenKeyFields(recordWithArraySecrets);
-    // Top-level apiKey is stripped, but array element secrets remain intact!
     expect('apiKey' in stripped).toBe(false);
-    expect(stripped.steps[0]).toHaveProperty('apiKey', googleKey);
-    expect(stripped.steps[0]).toHaveProperty('VITE_OPENROUTER_API_KEY', openRouterKey);
-    expect(detectByokOrSecretExposure(stripped).safe).toBe(false);
+    expect(stripped.steps[0]).not.toHaveProperty('apiKey');
+    expect(stripped.steps[0]).not.toHaveProperty('VITE_OPENROUTER_API_KEY');
+    expect(detectByokOrSecretExposure(stripped).safe).toBe(true);
 
-    // Part B: inspectSensitiveHealthText misses realistic member names, postpartum weeks, and general pain terms
+    // Part B: inspectSensitiveHealthText blocks realistic names, postpartum weeks and pain
     const realisticPostpartumAndName = '김민지 회원(34세) 출산 8주차 복직근 이개 및 허리 통증 완화';
     const realisticJointPainAndName = '박서연님 무릎 통증·어깨 충돌증후군 주의';
 
     const inspection1 = inspectSensitiveHealthText(realisticPostpartumAndName);
     const inspection2 = inspectSensitiveHealthText(realisticJointPainAndName);
 
-    // REPRODUCED DEFECT-B2: both return hasSensitiveData: false and leave text unredacted
-    expect(inspection1.hasSensitiveData).toBe(false);
-    expect(inspection1.sanitizedText).toBe(realisticPostpartumAndName);
-    expect(inspection2.hasSensitiveData).toBe(false);
-    expect(inspection2.sanitizedText).toBe(realisticJointPainAndName);
+    expect(inspection1.hasSensitiveData).toBe(true);
+    expect(inspection1.sanitizedText).not.toBe(realisticPostpartumAndName);
+    expect(inspection2.hasSensitiveData).toBe(true);
+    expect(inspection2.sanitizedText).not.toBe(realisticJointPainAndName);
   });
 
-  it('DEFECT-B3: Provider Error UX Regression — contradictory Ready banner on 502 error, stale actionFeedback across tab switches, and non-fallback on invalid_paid_model_blocked', async () => {
+  it('DEFECT-B3: provider failures stay visible without false readiness, tab feedback is cleared, and paid-model blocking falls back locally', async () => {
     const readyStatus: FreeAiQuotaStatus = createDefaultFreeAiStatus({
       provider: 'gemini-free',
       model: 'gemini-3.5-flash-lite',
@@ -1181,14 +1180,10 @@ describe('Track B Audit — 4. Exact Reproduction of Discovered Track B Defects 
     });
 
     fireEvent.click(screen.getByRole('tab', { name: '2. 새 동작 아이디어·변형' }));
-    // REPRODUCED DEFECT-B3 (Part 2): Tab click clears errorBanner but does NOT clear actionFeedback,
-    // so Tab 1's "수업 초안을 만들었습니다" feedback remains visible on Tab 2!
     expect(
-      screen.getByText('수업 초안을 만들었습니다. 수업에 맞게 편집해 주세요.'),
-    ).toBeInTheDocument();
+      screen.queryByText('수업 초안을 만들었습니다. 수업에 맞게 편집해 주세요.'),
+    ).not.toBeInTheDocument();
 
-    // 3. REPRODUCED DEFECT-B3 (Part 3): When server returns reason: 'invalid_paid_model_blocked' (enabled: false),
-    // freeAiClient throws request_failed instead of falling back to the local rule engine
     const paidBlockedStatus: FreeAiQuotaStatus = createDefaultFreeAiStatus({
       provider: 'gemini-free',
       model: null,
@@ -1223,8 +1218,8 @@ describe('Track B Audit — 4. Exact Reproduction of Discovered Track B Defects 
         SAMPLE_EXERCISES,
         SAMPLE_TEMPLATES,
       ),
-    ).rejects.toMatchObject({
-      code: 'request_failed',
+    ).resolves.toMatchObject({
+      usedLocalFallback: true,
     });
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   applyUserEditsToClassDraft,
   applyUserEditsToMovementIdea,
@@ -171,6 +171,8 @@ export function FreeAiAssistantPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  // Invalidate tab-scoped feedback when navigation interrupts an async request.
+  const tabRevision = useRef(0);
   const [appliedToPlan, setAppliedToPlan] = useState(false);
 
   // Tab 1: Class Draft state
@@ -409,6 +411,7 @@ export function FreeAiAssistantPanel({
   };
 
   const runClassDraft = async (preferLocalOnly: boolean) => {
+    const requestTabRevision = tabRevision.current;
     setErrorBanner(null);
     setActionFeedback(null);
     setAppliedToPlan(false);
@@ -430,6 +433,7 @@ export function FreeAiAssistantPanel({
         preferLocalOnly,
       });
       setQuotaStatus(response.status);
+      if (requestTabRevision !== tabRevision.current) return;
       setClassDraftResult(response.result);
       setActionFeedback(
         response.usedLocalFallback
@@ -440,6 +444,7 @@ export function FreeAiAssistantPanel({
       );
     } catch (error) {
       setQuotaStatus(client.getQuotaStatus());
+      if (requestTabRevision !== tabRevision.current) return;
       if (error instanceof FreeAiClientError) {
         setErrorBanner(error.message);
       } else {
@@ -453,6 +458,7 @@ export function FreeAiAssistantPanel({
   };
 
   const runMovementIdea = async (preferLocalOnly: boolean) => {
+    const requestTabRevision = tabRevision.current;
     setErrorBanner(null);
     setActionFeedback(null);
     setAppliedToPlan(false);
@@ -476,6 +482,7 @@ export function FreeAiAssistantPanel({
       };
       const response = await client.requestMovementIdea(input, { preferLocalOnly });
       setQuotaStatus(response.status);
+      if (requestTabRevision !== tabRevision.current) return;
       setMovementIdeaResult(response.result);
       setActionFeedback(
         response.usedLocalFallback
@@ -486,6 +493,7 @@ export function FreeAiAssistantPanel({
       );
     } catch (error) {
       setQuotaStatus(client.getQuotaStatus());
+      if (requestTabRevision !== tabRevision.current) return;
       if (error instanceof FreeAiClientError) {
         setErrorBanner(error.message);
       } else {
@@ -499,6 +507,7 @@ export function FreeAiAssistantPanel({
   };
 
   const runSequenceCompose = async (preferLocalOnly: boolean) => {
+    const requestTabRevision = tabRevision.current;
     setErrorBanner(null);
     setActionFeedback(null);
     setAppliedToPlan(false);
@@ -523,6 +532,7 @@ export function FreeAiAssistantPanel({
         { preferLocalOnly },
       );
       setQuotaStatus(response.status);
+      if (requestTabRevision !== tabRevision.current) return;
       setComposeResult(response.result);
       setActionFeedback(
         response.usedLocalFallback
@@ -533,6 +543,7 @@ export function FreeAiAssistantPanel({
       );
     } catch (error) {
       setQuotaStatus(client.getQuotaStatus());
+      if (requestTabRevision !== tabRevision.current) return;
       if (error instanceof FreeAiClientError) {
         setErrorBanner(error.message);
       } else {
@@ -824,8 +835,10 @@ export function FreeAiAssistantPanel({
           className="free-ai-tab-btn"
           aria-selected={activeTab === 'class-draft'}
           onClick={() => {
+            tabRevision.current += 1;
             setActiveTab('class-draft');
             setErrorBanner(null);
+            setActionFeedback(null);
             setAppliedToPlan(false);
           }}
         >
@@ -837,8 +850,10 @@ export function FreeAiAssistantPanel({
           className="free-ai-tab-btn"
           aria-selected={activeTab === 'movement-idea'}
           onClick={() => {
+            tabRevision.current += 1;
             setActiveTab('movement-idea');
             setErrorBanner(null);
+            setActionFeedback(null);
             setAppliedToPlan(false);
           }}
         >
@@ -850,8 +865,10 @@ export function FreeAiAssistantPanel({
           className="free-ai-tab-btn"
           aria-selected={activeTab === 'sequence-compose'}
           onClick={() => {
+            tabRevision.current += 1;
             setActiveTab('sequence-compose');
             setErrorBanner(null);
+            setActionFeedback(null);
             setAppliedToPlan(false);
           }}
         >

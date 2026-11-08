@@ -168,30 +168,30 @@ const summary = {
     passed: vitestRun.passed,
     exitCode: vitestRun.exitCode,
   },
-  reproducedDefects: [
+  regressionGuards: [
     {
       id: 'DEFECT-B1',
       severity: 'HIGH',
       title:
-        'Client guard bypass & prompt over-sharing on reviewedBlocks / reviewedCatalog in freeAiClient.ts and FreeAiAssistantPanel.tsx',
+        'Selected payload minimization and complete pre-transport privacy guard',
       files: ['src/lib/freeAiClient.ts', 'src/components/FreeAiAssistantPanel.tsx'],
-      reproducedInTest: true,
+      verification: vitestRun.passed ? 'regression guards passed' : 'not verified',
     },
     {
       id: 'DEFECT-B2',
       severity: 'MEDIUM',
       title:
-        'stripForbiddenKeyFields skips array elements and inspectSensitiveHealthText misses realistic Korean member names, postpartum weeks, and general pain terms',
+        'Nested array secret stripping and shared Korean sensitive-text detection',
       files: ['src/schemas/freeAiAssistantSchema.ts', 'src/utils/freeAiAssistantEngine.ts'],
-      reproducedInTest: true,
+      verification: vitestRun.passed ? 'regression guards passed' : 'not verified',
     },
     {
       id: 'DEFECT-B3',
       severity: 'MEDIUM',
       title:
-        'Contradictory Ready status badge/banner during 502/503 provider failure, stale actionFeedback across tab switches, and non-fallback on invalid_paid_model_blocked',
+        'Provider failure status, isolated tab feedback and paid-model local fallback',
       files: ['src/components/FreeAiAssistantPanel.tsx', 'src/lib/freeAiClient.ts'],
-      reproducedInTest: true,
+      verification: vitestRun.passed ? 'regression guards passed' : 'not verified',
     },
   ],
   overallAuditPassed: staticScan.passed && vitestRun.passed,
