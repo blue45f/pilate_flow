@@ -18,6 +18,7 @@ export interface SpineArticulationDiagramSvgProps {
   showDirection?: boolean;
   showVertebraLabels?: boolean;
   showGhostStartPose?: boolean;
+  showJointAxes?: boolean;
   compact?: boolean;
   className?: string;
   label?: string;
@@ -33,6 +34,7 @@ export interface SpineArticulationTriptychSvgProps {
   showDirection?: boolean;
   showVertebraLabels?: boolean;
   showGhostStartPose?: boolean;
+  showJointAxes?: boolean;
   className?: string;
 }
 
@@ -91,6 +93,7 @@ export function SpineArticulationDiagramSvg({
   showDirection = true,
   showVertebraLabels = true,
   showGhostStartPose = true,
+  showJointAxes = true,
   compact = false,
   className,
   label,
@@ -124,6 +127,35 @@ export function SpineArticulationDiagramSvg({
   const anklePt = p(j.ankle);
   const heelPt = p(j.heel);
   const toePt = p(j.toe);
+
+  const farShoulderPt = j.farShoulder ? p(j.farShoulder) : { x: shoulderPt.x - 3, y: shoulderPt.y - 3 };
+  const farElbowPt = j.farElbow ? p(j.farElbow) : { x: elbowPt.x - 4, y: elbowPt.y - 3 };
+  const farWristPt = j.farWrist ? p(j.farWrist) : { x: wristPt.x - 4, y: wristPt.y - 3 };
+  const farHipPt = j.farHip ? p(j.farHip) : { x: hipPt.x - 3, y: hipPt.y - 3 };
+  const farKneePt = j.farKnee ? p(j.farKnee) : { x: kneePt.x - 4, y: kneePt.y - 3 };
+  const farAnklePt = j.farAnkle ? p(j.farAnkle) : { x: anklePt.x - 4, y: anklePt.y - 3 };
+  const farToePt = j.farToe ? p(j.farToe) : { x: toePt.x - 4, y: toePt.y - 3 };
+
+  const jointAxes = [
+    {
+      id: 'cervical',
+      labelKo: '경추 분절축(C7)',
+      pt: p(phaseSpec.spineChain.c7),
+      r: 7.5,
+    },
+    {
+      id: 'lumbar',
+      labelKo: '요추 스쿱축(L3)',
+      pt: p(phaseSpec.spineChain.l3),
+      r: 8.5,
+    },
+    {
+      id: 'pelvis',
+      labelKo: '골반·고관절 중심축',
+      pt: pelvisPt,
+      r: 9,
+    },
+  ] as const;
 
   const wallX =
     spec.wallPlumbLineX !== null ? mirrorX(spec.wallPlumbLineX, mirrored) : null;
@@ -233,11 +265,14 @@ export function SpineArticulationDiagramSvg({
           {!compact && (
             <text
               x={wallX + (mirrored ? -6 : 6)}
-              y={24}
+              y={42}
               textAnchor={mirrored ? 'end' : 'start'}
-              fontSize={8.5}
+              fontSize={8}
               fontWeight={600}
               fill="#24594c"
+              stroke="#f7faf8"
+              strokeWidth={2.5}
+              paintOrder="stroke"
             >
               가상 수직벽 (x={spec.wallPlumbLineX})
             </text>
@@ -295,6 +330,32 @@ export function SpineArticulationDiagramSvg({
             </g>
           );
         })}
+
+      {/* Bilateral far-side limbs (dashed background leg & arm) */}
+      <g
+        data-layer="bilateral-far-limbs"
+        data-testid="spine-bilateral-far-limbs"
+        opacity={0.52}
+      >
+        <path
+          d={`M ${farHipPt.x} ${farHipPt.y} L ${farKneePt.x} ${farKneePt.y} L ${farAnklePt.x} ${farAnklePt.y} L ${farToePt.x} ${farToePt.y}`}
+          fill="none"
+          stroke="#6b887b"
+          strokeWidth={2.6}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray="3.5 2.5"
+        />
+        <path
+          d={`M ${farShoulderPt.x} ${farShoulderPt.y} L ${farElbowPt.x} ${farElbowPt.y} L ${farWristPt.x} ${farWristPt.y}`}
+          fill="none"
+          stroke="#6b887b"
+          strokeWidth={2.2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray="3.5 2.5"
+        />
+      </g>
 
       {/* Lower body limb segments (Hip -> Knee -> Ankle -> Heel -> Toe) */}
       <g data-layer="lower-body-chain">
@@ -411,6 +472,9 @@ export function SpineArticulationDiagramSvg({
                   fontSize={7.5}
                   fontWeight={700}
                   fill="#5a2f18"
+                  stroke="#f7faf8"
+                  strokeWidth={2}
+                  paintOrder="stroke"
                 >
                   {sp.segmentLabel}
                 </text>
@@ -419,6 +483,36 @@ export function SpineArticulationDiagramSvg({
           );
         })}
       </g>
+
+      {/* Rotational Joint Axes (Cervical C7, Lumbar L3 Scoop, Pelvis Pivot) */}
+      {showJointAxes && (
+        <g data-layer="joint-axes" data-testid="spine-joint-axes">
+          {jointAxes.map((axis) => (
+            <g
+              key={axis.id}
+              data-testid={`spine-joint-axis-${axis.id}`}
+              data-axis-id={axis.id}
+              data-axis-label={axis.labelKo}
+            >
+              <circle
+                cx={axis.pt.x}
+                cy={axis.pt.y}
+                r={axis.r}
+                fill="rgba(109, 40, 217, 0.06)"
+                stroke="#6d28d9"
+                strokeWidth={1.1}
+                strokeDasharray="2.2 1.8"
+              />
+              <circle
+                cx={axis.pt.x}
+                cy={axis.pt.y}
+                r={1.7}
+                fill="#6d28d9"
+              />
+            </g>
+          ))}
+        </g>
+      )}
 
       {/* Fixed Anchor Locks (Heel / Hip / Pelvis) */}
       <g data-layer="fixed-anchors">
@@ -456,6 +550,7 @@ export function SpineArticulationDiagramSvg({
           const pts = vec.points.map((pt) => p(pt));
           const pathD = buildSmoothCurvePath(pts);
           const lastPt = pts[pts.length - 1];
+          const minY = Math.min(...pts.map((pt) => pt.y));
           return (
             <g
               key={vec.id}
@@ -473,11 +568,14 @@ export function SpineArticulationDiagramSvg({
               {!compact && lastPt && (
                 <text
                   x={lastPt.x}
-                  y={Math.max(16, lastPt.y - 8)}
+                  y={Math.max(38, minY - 11)}
                   textAnchor="middle"
                   fontSize={8}
                   fontWeight={600}
                   fill="#9e4923"
+                  stroke="#f7faf8"
+                  strokeWidth={2.8}
+                  paintOrder="stroke"
                 >
                   {vec.labelKo}
                 </text>
@@ -522,6 +620,7 @@ export function SpineArticulationTriptychSvg({
   showDirection = true,
   showVertebraLabels = false,
   showGhostStartPose = true,
+  showJointAxes = true,
   className,
 }: SpineArticulationTriptychSvgProps): React.JSX.Element {
   const spec = resolveSpec(propSpec, movementId);
@@ -559,6 +658,7 @@ export function SpineArticulationTriptychSvg({
                 showDirection={showDirection}
                 showVertebraLabels={showVertebraLabels}
                 showGhostStartPose={showGhostStartPose}
+                showJointAxes={showJointAxes}
                 compact
               />
             </div>
@@ -586,12 +686,20 @@ export function SpineArticulationLegend(): React.JSX.Element {
         매트/가상 수직벽 접지·고정 앵커
       </span>
       <span className="spine-legend-item">
+        <span className="spine-legend-dot is-axis" aria-hidden="true" />
+        관절축 (경추 C7 · 요추 L3 · 골반 회전 중심)
+      </span>
+      <span className="spine-legend-item">
         <span className="spine-legend-line is-vector" aria-hidden="true" />
         분절 박리(Peel) · 양방향 대조(Opposition) 궤적
       </span>
       <span className="spine-legend-item">
         <span className="spine-legend-line is-wall" aria-hidden="true" />
         매트 수평면(y=144) · 가상 수직벽(x=58)
+      </span>
+      <span className="spine-legend-item">
+        <span className="spine-legend-line is-bilateral" aria-hidden="true" />
+        근위 사지(실선) · 원위 사지(점선)
       </span>
     </div>
   );

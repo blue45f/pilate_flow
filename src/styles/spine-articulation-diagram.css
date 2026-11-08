@@ -279,6 +279,11 @@
   border: 2px solid #1d5c4b;
 }
 
+.spine-legend-dot.is-axis {
+  background: rgba(109, 40, 217, 0.14);
+  border: 1.5px dashed #6d28d9;
+}
+
 .spine-legend-line {
   width: 18px;
   height: 0;
@@ -291,6 +296,10 @@
 
 .spine-legend-line.is-wall {
   border-top: 2px dashed #24594c;
+}
+
+.spine-legend-line.is-bilateral {
+  border-top: 2px dashed #6b887b;
 }
 
 .spine-triptych-section {

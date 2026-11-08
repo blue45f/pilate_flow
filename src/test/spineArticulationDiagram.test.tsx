@@ -289,6 +289,11 @@ describe('Track I1 — Spine Articulation 2D Diagrams (Roll Up, Roll Down, Spine
           />,
         );
         expect(screen.getByTestId(`spine-svg-${archetypeId}-${phase}`)).toBeInTheDocument();
+        expect(screen.getByTestId('spine-joint-axes')).toBeInTheDocument();
+        expect(screen.getByTestId('spine-joint-axis-cervical')).toBeInTheDocument();
+        expect(screen.getByTestId('spine-joint-axis-lumbar')).toBeInTheDocument();
+        expect(screen.getByTestId('spine-joint-axis-pelvis')).toBeInTheDocument();
+        expect(screen.getByTestId('spine-bilateral-far-limbs')).toBeInTheDocument();
         unmount();
       }
     }
@@ -300,7 +305,9 @@ describe('Track I1 — Spine Articulation 2D Diagrams (Roll Up, Roll Down, Spine
     unmountTriptych();
 
     const { unmount: unmountLegend } = render(<SpineArticulationLegend />);
-    expect(screen.getByTestId('spine-articulation-legend')).toBeInTheDocument();
+    const legend = screen.getByTestId('spine-articulation-legend');
+    expect(legend).toBeInTheDocument();
+    expect(legend.querySelectorAll('.spine-legend-item')).toHaveLength(6);
     unmountLegend();
 
     render(<SpineI7IntegrationExample exerciseId="original-mat-spine-stretch-forward" />);
