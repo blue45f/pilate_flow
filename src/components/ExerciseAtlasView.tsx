@@ -1,3 +1,4 @@
+import { EquipmentChoice } from './EquipmentChoice';
 import type { MotionDraftId } from '../models/types';
 import {
   MOTION_PATTERN_REFERENCES,
@@ -183,33 +184,31 @@ const OwnedEquipmentEditor: React.FC = () => {
         <p>‘내 보유 장비만’은 아래 기구와 소도구로 요구 조건을 모두 충족하는 자료를 보여줍니다.</p>
         <fieldset>
           <legend>내 기구</legend>
-          <div className="library-multi-chips">
+          <div className="equipment-choice-grid">
             {EQUIPMENT_OPTIONS.map((item) => (
-              <button
-                type="button"
+              <EquipmentChoice
                 key={item.id}
-                aria-pressed={ownedEquipment.includes(item.id)}
-                className={ownedEquipment.includes(item.id) ? 'selected' : ''}
-                onClick={() => toggleOwnedEquipment(item.id)}
-              >
-                {item.labelKo}
-              </button>
+                equipmentId={item.id}
+                label={item.labelKo}
+                checked={ownedEquipment.includes(item.id)}
+                onChange={() => toggleOwnedEquipment(item.id)}
+                control="button"
+              />
             ))}
           </div>
         </fieldset>
         <fieldset>
           <legend>내 소도구</legend>
-          <div className="library-multi-chips">
+          <div className="equipment-choice-grid">
             {PROP_OPTIONS.filter((item) => item.id !== 'none').map((item) => (
-              <button
-                type="button"
+              <EquipmentChoice
                 key={item.id}
-                aria-pressed={ownedProps.includes(item.id)}
-                className={ownedProps.includes(item.id) ? 'selected' : ''}
-                onClick={() => toggleOwnedProp(item.id)}
-              >
-                {item.labelKo}
-              </button>
+                equipmentId={item.id as Exclude<typeof item.id, 'none'>}
+                label={item.labelKo}
+                checked={ownedProps.includes(item.id)}
+                onChange={() => toggleOwnedProp(item.id)}
+                control="button"
+              />
             ))}
           </div>
         </fieldset>
