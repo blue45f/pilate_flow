@@ -75,6 +75,8 @@
   border: 1px solid var(--pf-color-border-default, #e7ded1);
   border-radius: 0.75rem;
   margin-top: 1rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .class-insights-summary p,
@@ -102,6 +104,12 @@
   flex-wrap: wrap;
   gap: 0.25rem 0.75rem;
   font-size: 0.875rem;
+}
+
+.class-insights-bar-label span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .class-insights-bar-label strong {
@@ -482,7 +490,8 @@
   border-radius: 8px;
 }
 
-.class-insights-tag-list span {
+.class-insights-tag-list span,
+.class-insights-tag-list li span {
   padding: 0.125rem 0.625rem;
   border-radius: 7px;
   background: #e0f2eb;
@@ -490,6 +499,7 @@
   font-size: 0.875rem;
   font-weight: 600;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .class-insights-tag-metrics-content {

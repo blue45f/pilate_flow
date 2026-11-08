@@ -26,6 +26,7 @@ export function LibraryMovementInspector({
   addedId,
 }: LibraryMovementInspectorProps) {
   const reviewState = exercise ? getExerciseReviewState(exercise) : null;
+  const isAdded = Boolean(exercise && addedId === exercise.id);
 
   return (
     <aside
@@ -33,6 +34,12 @@ export function LibraryMovementInspector({
       className="library-movement-inspector"
       data-empty={!exercise}
       aria-labelledby="library-inspector-heading"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && exercise) {
+          event.preventDefault();
+          onClose();
+        }
+      }}
     >
       <div className="library-inspector-header">
         <h2 id="library-inspector-heading" ref={headingRef} tabIndex={-1}>
@@ -101,10 +108,18 @@ export function LibraryMovementInspector({
             <button type="button" className="btn-secondary" onClick={() => onOpenDetails(exercise)}>
               전체 정보·개인 검토 열기 <ArrowUpRight size={16} aria-hidden="true" />
             </button>
-            <button type="button" className="btn-primary" onClick={() => onAdd(exercise)}>
-              {addedId === exercise.id ? <Check size={16} /> : <Plus size={16} />}
+            <button
+              type="button"
+              className="btn-primary"
+              data-added={isAdded ? 'true' : 'false'}
+              onClick={() => onAdd(exercise)}
+            >
+              {isAdded ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
               선택한 동작 수업안에 추가
             </button>
+            <span className="sr-only" role="status" aria-live="polite">
+              {isAdded ? `${exercise.nameKo} 동작을 수업안에 추가했습니다.` : ''}
+            </span>
           </div>
         </div>
       ) : (

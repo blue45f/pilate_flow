@@ -687,23 +687,40 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                   role="group"
                   aria-label="자주 쓰는 느낌 빠른 입력"
                 >
-                  {QUICK_FEELING_CHIPS.map((chip) => (
-                    <button
-                      key={chip}
-                      type="button"
-                      className="pf-idea-chip"
-                      onClick={() => {
-                        const next = subjectiveFeeling.trim()
-                          ? `${subjectiveFeeling.trim()} · ${chip}`
-                          : chip;
-                        setSubjectiveFeeling(next);
-                        setTriedByInstructor(true);
-                        syncBuffer({ subjectiveFeeling: next, triedByInstructor: true });
-                      }}
-                    >
-                      + {chip}
-                    </button>
-                  ))}
+                  {QUICK_FEELING_CHIPS.map((chip) => {
+                    const isChipIncluded = subjectiveFeeling.includes(chip);
+                    return (
+                      <button
+                        key={chip}
+                        type="button"
+                        className="pf-idea-chip"
+                        aria-pressed={isChipIncluded}
+                        onClick={() => {
+                          if (isChipIncluded) {
+                            const filtered = subjectiveFeeling
+                              .split(' · ')
+                              .map((part) => part.trim())
+                              .filter((part) => part && part !== chip);
+                            const next = filtered.join(' · ');
+                            setSubjectiveFeeling(next);
+                            syncBuffer({
+                              subjectiveFeeling: next,
+                              triedByInstructor: Boolean(next.trim() || triedByInstructor),
+                            });
+                            return;
+                          }
+                          const next = subjectiveFeeling.trim()
+                            ? `${subjectiveFeeling.trim()} · ${chip}`
+                            : chip;
+                          setSubjectiveFeeling(next);
+                          setTriedByInstructor(true);
+                          syncBuffer({ subjectiveFeeling: next, triedByInstructor: true });
+                        }}
+                      >
+                        + {chip}
+                      </button>
+                    );
+                  })}
                 </div>
                 <PfTextarea
                   id={feelingInputId}

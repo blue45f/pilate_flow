@@ -75,4 +75,36 @@ describe('library supplied concept layout', () => {
     await waitFor(() => expect(search).toHaveFocus());
     expect(search).toHaveValue('no-matching-movement-xyz');
   });
+
+  it('dismisses the inspector on Escape key, restores focus to the card trigger, and announces added state', async () => {
+    const longPrecautions = '주의메모'.repeat(50);
+    usePilatesStore.setState(
+      {
+        ...usePilatesStore.getState(),
+        exercises: ORIGINAL_MOVEMENTS.map((item) =>
+          item.id === movement.id ? { ...item, precautions: longPrecautions } : item,
+        ),
+      },
+      true,
+    );
+    render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+    const trigger = screen.getByRole('button', { name: movement.nameKo });
+    fireEvent.click(trigger);
+
+    const inspector = screen.getByRole('complementary', { name: '선택한 동작 정보' });
+    await waitFor(() =>
+      expect(within(inspector).getByRole('heading', { name: '선택한 동작 정보' })).toHaveFocus(),
+    );
+    expect(within(inspector).getByText(longPrecautions)).toBeInTheDocument();
+
+    const addBtn = within(inspector).getByRole('button', { name: /선택한 동작 수업안에 추가/ });
+    expect(addBtn).toHaveAttribute('data-added', 'false');
+    fireEvent.click(addBtn);
+    expect(addBtn).toHaveAttribute('data-added', 'true');
+    expect(within(inspector).getByText(`${movement.nameKo} 동작을 수업안에 추가했습니다.`)).toBeInTheDocument();
+
+    fireEvent.keyDown(inspector, { key: 'Escape' });
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  });
 });

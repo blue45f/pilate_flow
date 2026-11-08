@@ -43,6 +43,7 @@ function LabeledBar({
   tone?: 'movement' | 'explanation' | 'transition' | 'rest';
 }) {
   const percent = denominator > 0 ? (seconds / denominator) * 100 : 0;
+  const clampedPercent = Math.max(0, Math.min(100, percent));
   return (
     <div className={`class-insights-bar-row${compact ? ' class-insights-bar-row--timing' : ''}`}>
       <div className="class-insights-bar-label">
@@ -51,8 +52,16 @@ function LabeledBar({
           {timeLabel(seconds)} · {percent.toFixed(1)}%
         </strong>
       </div>
-      <div className="class-insights-bar-track" aria-hidden="true" data-tone={tone}>
-        <span style={{ width: `${Math.max(0, Math.min(100, percent))}%` }} />
+      <div
+        className="class-insights-bar-track"
+        role="progressbar"
+        aria-label={`${label} 비율`}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(clampedPercent)}
+        data-tone={tone}
+      >
+        <span style={{ width: `${clampedPercent}%` }} />
       </div>
     </div>
   );
