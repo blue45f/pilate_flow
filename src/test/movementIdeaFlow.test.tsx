@@ -3,13 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
+import { exerciseSchema } from '../schemas/cloudBackupSchema';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { createEmptyInstructorSchedule } from '../types/instructorSchedule';
 import {
+  addMovementIdeaToCurrentClass,
   captureCurrentClassHierarchySnapshot,
   clearIdeaWorkingBuffer,
+  getMovementIdeaMeta,
   getMovementIdeaMetaMap,
   getSavedReusableBlocks,
+  inferApparatusFromIdeaLine,
+  inferBodyPositionFromIdeaLine,
   isMovementIdeaExercise,
   moveIdeaReusableBlockItem,
   readIdeaWorkingBuffer,
@@ -17,6 +22,7 @@ import {
   resetMovementIdeaStateForTests,
   saveMovementIdeaToStore,
   saveMovementIdeaWorkingBuffer,
+  syncMovementIdeaAccountScope,
 } from '../utils/movementIdeaDraft';
 
 const ACTIVE_OWNER_KEY = `${RECOVERY_STORAGE_KEY}:active-owner`;
@@ -537,5 +543,146 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
       '알파 강사 전용 느낌 기록',
     );
     expect(getMovementIdeaMetaMap()[savedBeta.exercise!.id]).toBeUndefined();
+  });
+
+  it('infers apparatus from sub-equipment keywords and bodyPosition from posture keywords', () => {
+    usePilatesStore.setState({
+      activeApparatus: 'mat',
+      ownedEquipment: ['mat'],
+      draftCriteria: null,
+    });
+
+    expect(inferApparatusFromIdeaLine('롱박스 위에서 스완 확장')).toBe('reformer');
+    expect(inferApparatusFromIdeaLine('숏박스 라운드 백 복부 연결')).toBe('reformer');
+    expect(inferApparatusFromIdeaLine('점프보드 카디오 착지 컨트롤')).toBe('reformer');
+    expect(inferApparatusFromIdeaLine('푸시스루 바를 밀며 흉추 신전')).toBe('cadillac');
+    expect(inferApparatusFromIdeaLine('트래피즈 레그스프링 서클')).toBe('cadillac');
+    expect(inferApparatusFromIdeaLine('스플릿페달 교차 프레스')).toBe('chair');
+    expect(inferApparatusFromIdeaLine('스완 바렐 위에서 흉곽 열기')).toBe('barrel');
+
+    expect(inferBodyPositionFromIdeaLine('엎드려 스완 호흡 유지')).toBe('prone');
+    expect(inferBodyPositionFromIdeaLine('앉아서 머메이드 측굴 연결')).toBe('seated');
+    expect(inferBodyPositionFromIdeaLine('무릎 꿇고 싸이 스트레치')).toBe('kneeling');
+    expect(inferBodyPositionFromIdeaLine('옆으로 누워 클램 고관절 외회전')).toBe('side-lying');
+    expect(inferBodyPositionFromIdeaLine('서서 런지 정렬 체크')).toBe('standing');
+    expect(inferBodyPositionFromIdeaLine('네발 자세에서 버드독 코어 안정화')).toBe('quadruped');
+    expect(inferBodyPositionFromIdeaLine('누워서 브릿지 분절')).toBe('supine');
+
+    const saved = saveMovementIdeaToStore({
+      ideaLine: '롱박스 위에서 엎드려 스완 신전 감각 찾기',
+    });
+    expect(saved.ok).toBe(true);
+    expect(saved.exercise?.apparatus).toBe('reformer');
+    expect(saved.exercise?.bodyPosition).toBe('prone');
+  });
+
+  it('syncs activeSteps when editing an idea already in class and clicking 수정 내용 저장, and scrolls to reflection section on draft save', () => {
+    const scrollSpy = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      writable: true,
+      value: scrollSpy,
+    });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: '새 동작 메모' }));
+    const dialog = screen.getByRole('dialog', { name: /새 동작 메모/ });
+
+    fireEvent.change(within(dialog).getByLabelText('한 줄 아이디어'), {
+      target: { value: '풋바 밀며 골반 중립 유지하기' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: '초안 저장' }));
+    expect(scrollSpy).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' });
+
+    const created = usePilatesStore.getState().exercises.find(isMovementIdeaExercise)!;
+    act(() => {
+      addMovementIdeaToCurrentClass(created.id);
+    });
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
+    expect(usePilatesStore.getState().activeSteps[0]?.durationMin).toBe(3);
+
+    // Edit feeling, adjustment, and duration then click "수정 내용 저장" (without clicking "수정 후 수업에 반영")
+    fireEvent.change(within(dialog).getByLabelText('직접 해본 느낌'), {
+      target: { value: '내전근 연결이 먼저 느껴짐' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('수정할 점'), {
+      target: { value: '발뒤꿈치 간격을 주먹 하나로 유지' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('예상 시간 (분)'), {
+      target: { value: '5' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('반복 횟수'), {
+      target: { value: '10' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('세트 수'), {
+      target: { value: '3' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('좌우 수행 방식'), {
+      target: { value: 'left-then-right' },
+    });
+
+    fireEvent.click(within(dialog).getByRole('button', { name: '수정 내용 저장' }));
+
+    const syncedStep = usePilatesStore.getState().activeSteps[0]!;
+    expect(syncedStep.durationMin).toBe(5);
+    expect(syncedStep.repetitions).toBe(10);
+    expect(syncedStep.sets).toBe(3);
+    expect(syncedStep.sideMode).toBe('left-then-right');
+    expect(syncedStep.instructorNote).toContain('[느낌] 내전근 연결이 먼저 느껴짐');
+    expect(syncedStep.instructorNote).toContain('[수정] 발뒤꿈치 간격을 주먹 하나로 유지');
+    expect(syncedStep.humanDraftRevision).toBeGreaterThanOrEqual(2);
+    expect(syncedStep.exerciseSnapshot?.defaultDurationMin).toBe(5);
+  });
+
+  it('populates backup snapshot metadata on PilatesExercise, passes cloudBackupSchema, and recovers metadata when localStorage metaMap is empty', () => {
+    const saved = saveMovementIdeaToStore({
+      ideaLine: '트래피즈에서 롤다운 바 잡고 척추 분절하기',
+      workingTitle: '롤다운 분절 변형',
+      subjectiveFeeling: '복부 수축이 먼저 들어와야 허리가 편함',
+      adjustmentNote: '호흡을 길게 내쉬며 분절 속도 늦추기',
+      photoDataUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    });
+    expect(saved.ok).toBe(true);
+    const exercise = saved.exercise!;
+    expect(exercise.ideaLineSnapshot).toBe('트래피즈에서 롤다운 바 잡고 척추 분절하기');
+    expect(exercise.variantLabelKo).toBe('롤다운 분절 변형');
+    expect(exercise.feelLogsSnapshot).toHaveLength(1);
+    expect(exercise.modificationLogsSnapshot).toHaveLength(1);
+    expect(exercise.photoReferencesSnapshot).toHaveLength(1);
+
+    // Must pass cloudBackupSchema exerciseSchema validation
+    const parsed = exerciseSchema.safeParse(exercise);
+    expect(parsed.success).toBe(true);
+
+    // Simulate restoring backup on a new device where metaMap and humanDraftMap in localStorage are empty
+    resetMovementIdeaStateForTests();
+    const recoveredMeta = getMovementIdeaMeta(exercise);
+    expect(recoveredMeta.ideaLine).toBe('트래피즈에서 롤다운 바 잡고 척추 분절하기');
+    expect(recoveredMeta.workingTitle).toBe('롤다운 분절 변형');
+    expect(recoveredMeta.subjectiveFeeling).toBe('복부 수축이 먼저 들어와야 허리가 편함');
+    expect(recoveredMeta.adjustmentNote).toBe('호흡을 길게 내쉬며 분절 속도 늦추기');
+    expect(recoveredMeta.photoDataUrl).toContain('data:image/png;base64,');
+  });
+
+  it('migrates anonymous idea keys on sign-in and clears in-memory buffer on sign-out via syncMovementIdeaAccountScope', () => {
+    localStorage.removeItem(ACTIVE_OWNER_KEY);
+    saveMovementIdeaWorkingBuffer({ ideaLine: '익명 작성 중 버퍼' });
+    const anonSaved = saveMovementIdeaToStore({
+      ideaLine: '익명 상태에서 저장한 첫 아이디어',
+    });
+    expect(anonSaved.ok).toBe(true);
+
+    // Transition from anonymous to 'instructor-1'
+    localStorage.setItem(ACTIVE_OWNER_KEY, 'instructor-1');
+    syncMovementIdeaAccountScope('__anonymous__', 'instructor-1');
+    expect(getMovementIdeaMetaMap('instructor-1')[anonSaved.exercise!.id]?.ideaLine).toBe(
+      '익명 상태에서 저장한 첫 아이디어',
+    );
+
+    // Save buffer under 'instructor-1', then sign out to '__anonymous__'
+    saveMovementIdeaWorkingBuffer({ ideaLine: '강사 1의 미저장 버퍼' });
+    localStorage.removeItem(ACTIVE_OWNER_KEY);
+    syncMovementIdeaAccountScope('instructor-1', '__anonymous__');
+    expect(readIdeaWorkingBuffer().ideaLine).toBe('');
   });
 });

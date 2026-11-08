@@ -209,6 +209,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
   const feelingInputId = useId();
   const adjustmentInputId = useId();
   const ideaInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const reflectionDetailsRef = useRef<HTMLDetailsElement | null>(null);
   const submitLockRef = useRef(false);
 
   const activeEditingExercise = editingId
@@ -359,6 +360,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
           : `‘${result.exercise.nameKo}’ 한 줄 초안을 저장했습니다! 직접 해본 뒤 느낀 점·수정점을 언제든 덧붙여 보세요.`,
       );
       setReflectionOpen(true);
+      reflectionDetailsRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
     } finally {
       submitLockRef.current = false;
     }
@@ -639,6 +641,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
           </PfCard>
 
           <details
+            ref={reflectionDetailsRef}
             className="pf-idea-progressive-section"
             open={reflectionOpen}
             onToggle={(event) => setReflectionOpen(event.currentTarget.open)}

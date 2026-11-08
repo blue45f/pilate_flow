@@ -3,13 +3,18 @@ import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type {
   ClassSequenceSnapshot,
+  DraftModificationLog,
+  DraftPhotoReference,
   DraftRevisionEntry,
   HierarchyPilatesExercise,
   HumanMovementDraft,
+  MovementSafetyAndEfficacyBoundary,
   ReusableBlock,
+  SubjectiveFeelLog,
 } from '../types/hierarchy';
 import type {
   ApparatusType,
+  BodyPosition,
   DifficultyLevel,
   LayerMode,
   PilatesExercise,
@@ -39,6 +44,18 @@ import {
   restoreHumanDraftRevision,
   updateHumanDraftVariants,
 } from './humanMovementCreation';
+
+export interface IdeaPilatesExercise extends HierarchyPilatesExercise {
+  sourceOrigin?: 'catalog' | 'human-created';
+  parentDraftId?: string;
+  parentDraftRevision?: number;
+  variantLabelKo?: string;
+  ideaLineSnapshot?: string;
+  feelLogsSnapshot?: SubjectiveFeelLog[];
+  modificationLogsSnapshot?: DraftModificationLog[];
+  photoReferencesSnapshot?: Array<DraftPhotoReference & { dataUrl?: string; label?: string }>;
+  safetyBoundarySnapshot?: MovementSafetyAndEfficacyBoundary;
+}
 
 export interface MovementIdeaMeta {
   exerciseId: string;
@@ -116,20 +133,30 @@ export interface SaveMovementIdeaInput {
 const IDEA_META_STORAGE_KEY = 'pilates-flow-movement-idea-meta-v1';
 const IDEA_BUFFER_STORAGE_KEY = 'pilates-flow-movement-idea-buffer-v1';
 const IDEA_REUSABLE_BLOCKS_STORAGE_KEY = 'pilates-flow-movement-idea-reusable-blocks-v1';
+const LEGACY_HUMAN_DRAFT_STORAGE_KEY = 'pilates-flow-human-movement-drafts-v1';
 const ACTIVE_OWNER_KEY = `${RECOVERY_STORAGE_KEY}:active-owner`;
+
+function normalizeScopeOwner(owner: string | null | undefined): string {
+  const trimmed = owner?.trim() ?? '';
+  if (!trimmed || trimmed === '__anonymous__' || trimmed === 'device') {
+    return 'device';
+  }
+  return trimmed;
+}
 
 function getActiveOwnerScope(): string {
   try {
     if (typeof window === 'undefined' || !window.localStorage) return 'device';
     const owner = window.localStorage.getItem(ACTIVE_OWNER_KEY)?.trim();
-    return owner || 'device';
+    return normalizeScopeOwner(owner);
   } catch {
     return 'device';
   }
 }
 
 function getScopedStorageKey(baseKey: string, scope = getActiveOwnerScope()): string {
-  return scope === 'device' ? baseKey : `${baseKey}:user:${encodeURIComponent(scope)}`;
+  const normalized = normalizeScopeOwner(scope);
+  return normalized === 'device' ? baseKey : `${baseKey}:user:${encodeURIComponent(normalized)}`;
 }
 
 const EMPTY_BUFFER: MovementIdeaWorkingBuffer = {
@@ -161,6 +188,80 @@ let inMemoryReusableBlocksByScope: Record<string, ReusableBlock[]> = {};
 let inMemoryBufferByScope: Record<string, MovementIdeaWorkingBuffer> = {};
 let activeSaveLock = false;
 
+export function syncMovementIdeaAccountScope(
+  previousOwner: string | null | undefined,
+  nextOwner: string | null | undefined,
+): void {
+  const prevNormalized = normalizeScopeOwner(previousOwner);
+  const nextNormalized = normalizeScopeOwner(nextOwner);
+  const prevRaw = previousOwner?.trim() || '__anonymous__';
+  const nextRaw = nextOwner?.trim() || '__anonymous__';
+
+  if (nextNormalized === 'device' || nextRaw === '__anonymous__') {
+    delete inMemoryBufferByScope[prevNormalized];
+    delete inMemoryBufferByScope[prevRaw];
+    return;
+  }
+
+  if (prevNormalized === 'device' && nextNormalized !== 'device') {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const baseKeys = [
+          IDEA_META_STORAGE_KEY,
+          DEFAULT_HUMAN_DRAFT_STORAGE_KEY,
+          LEGACY_HUMAN_DRAFT_STORAGE_KEY,
+          IDEA_REUSABLE_BLOCKS_STORAGE_KEY,
+        ];
+        for (const baseKey of baseKeys) {
+          const anonScopedKey = getScopedStorageKey(baseKey, 'device');
+          const nextScopedKey = getScopedStorageKey(baseKey, nextNormalized);
+          const anonColonKey = `${baseKey}:__anonymous__`;
+          const nextColonKey = `${baseKey}:${nextNormalized}`;
+
+          const anonVal =
+            window.localStorage.getItem(anonColonKey) ??
+            window.localStorage.getItem(anonScopedKey);
+          if (anonVal !== null) {
+            if (window.localStorage.getItem(nextScopedKey) === null) {
+              window.localStorage.setItem(nextScopedKey, anonVal);
+            }
+            if (
+              window.localStorage.getItem(anonColonKey) !== null &&
+              window.localStorage.getItem(nextColonKey) === null
+            ) {
+              window.localStorage.setItem(nextColonKey, anonVal);
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignore storage migration errors when restricted.
+    }
+
+    if (
+      inMemoryMetaByScope.device &&
+      Object.keys(inMemoryMetaByScope.device).length > 0 &&
+      !inMemoryMetaByScope[nextNormalized]
+    ) {
+      inMemoryMetaByScope[nextNormalized] = { ...inMemoryMetaByScope.device };
+    }
+    if (
+      inMemoryHumanDraftByScope.device &&
+      Object.keys(inMemoryHumanDraftByScope.device).length > 0 &&
+      !inMemoryHumanDraftByScope[nextNormalized]
+    ) {
+      inMemoryHumanDraftByScope[nextNormalized] = { ...inMemoryHumanDraftByScope.device };
+    }
+    if (
+      inMemoryReusableBlocksByScope.device &&
+      inMemoryReusableBlocksByScope.device.length > 0 &&
+      !inMemoryReusableBlocksByScope[nextNormalized]
+    ) {
+      inMemoryReusableBlocksByScope[nextNormalized] = [...inMemoryReusableBlocksByScope.device];
+    }
+  }
+}
+
 function isNewerVersionedEntry(
   candidate: { revision?: number; updatedAt?: string },
   baseline: { revision?: number; updatedAt?: string } | undefined,
@@ -187,8 +288,9 @@ function getSafeOwnEntry<T>(record: Record<string, T> | null | undefined, key: s
 }
 
 function getScopedHumanDraftMap(scope = getActiveOwnerScope()): Record<string, HumanMovementDraft> {
-  const current = inMemoryHumanDraftByScope[scope] ?? {};
-  const scopedKey = getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, scope);
+  const normalizedScope = normalizeScopeOwner(scope);
+  const current = inMemoryHumanDraftByScope[normalizedScope] ?? {};
+  const scopedKey = getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, normalizedScope);
   const stored = readStorageJson<{
     humanMovementDrafts?: HumanMovementDraft[];
   } | null>(scopedKey, null);
@@ -202,18 +304,32 @@ function getScopedHumanDraftMap(scope = getActiveOwnerScope()): Record<string, H
       }
     }
   }
-  inMemoryHumanDraftByScope[scope] = merged;
-  return inMemoryHumanDraftByScope[scope];
+  inMemoryHumanDraftByScope[normalizedScope] = merged;
+  return inMemoryHumanDraftByScope[normalizedScope];
 }
 
-function inferApparatusFromIdeaLine(ideaLine: string): ApparatusType | undefined {
+export function inferApparatusFromIdeaLine(ideaLine: string): ApparatusType | undefined {
   const normalized = ideaLine.trim().toLowerCase();
   if (!normalized) return undefined;
   const keywordRules: ReadonlyArray<{ pattern: RegExp; apparatus: ApparatusType }> = [
-    { pattern: /리포머|reformer/i, apparatus: 'reformer' },
-    { pattern: /체어|chair|운다체어|콤보체어/i, apparatus: 'chair' },
-    { pattern: /캐딜락|cadillac|타워|tower|스프링보드|springboard/i, apparatus: 'cadillac' },
-    { pattern: /바렐|barrel|래더바렐|스파인코렉터|아크바렐/i, apparatus: 'barrel' },
+    {
+      pattern:
+        /리포머|reformer|롱\s*박스|숏\s*박스|풋\s*바|스트랩|캐리지|점프\s*보드|long\s*box|short\s*box|foot\s*bar/i,
+      apparatus: 'reformer',
+    },
+    {
+      pattern: /체어|chair|운다\s*체어|콤보\s*체어|페달|스플릿\s*페달|pedal/i,
+      apparatus: 'chair',
+    },
+    {
+      pattern:
+        /캐딜락|cadillac|타워|tower|스프링\s*보드|spring\s*board|푸시\s*스루|푸쉬\s*스루|롤\s*다운\s*바|트래피즈|레그\s*스프링|암\s*스프링|push\s*through|roll\s*down\s*bar|trapeze/i,
+      apparatus: 'cadillac',
+    },
+    {
+      pattern: /바렐|barrel|래더\s*바렐|스파인\s*코렉터|아크\s*바렐|스완\s*바렐/i,
+      apparatus: 'barrel',
+    },
     { pattern: /매트|mat/i, apparatus: 'mat' },
   ];
   for (const rule of keywordRules) {
@@ -222,6 +338,35 @@ function inferApparatusFromIdeaLine(ideaLine: string): ApparatusType | undefined
     }
   }
   return undefined;
+}
+
+export function inferBodyPositionFromIdeaLine(ideaLine: string): BodyPosition | null {
+  const normalized = ideaLine.trim().toLowerCase();
+  if (!normalized) return null;
+  const positionRules: ReadonlyArray<{ pattern: RegExp; position: BodyPosition }> = [
+    { pattern: /엎드려|복와위|prone|스완|swan|수영|swimming/i, position: 'prone' },
+    {
+      pattern: /앉아|앉은|시팅|좌위|sitting|seated|머메이드|mermaid|스파인\s*트위스트|쏘우|saw/i,
+      position: 'seated',
+    },
+    { pattern: /무릎\s*꿇|무릎꿇|닐링|kneeling|싸이\s*스트레치/i, position: 'kneeling' },
+    {
+      pattern: /옆으로\s*누|측와위|사이드\s*라잉|사이드\s*킥|side[-\s]*lying|클램|clam/i,
+      position: 'side-lying',
+    },
+    { pattern: /서서|선\s*자세|스탠딩|입위|standing|런지|lunge|스쿼트|squat/i, position: 'standing' },
+    {
+      pattern: /네발|네\s*발|쿼드러페드|quadruped|버드독|캣|cat\s*stretch/i,
+      position: 'quadruped',
+    },
+    { pattern: /누워|누운|앙와위|supine|브릿지|bridge|헌드레드|hundred/i, position: 'supine' },
+  ];
+  for (const rule of positionRules) {
+    if (rule.pattern.test(normalized)) {
+      return rule.position;
+    }
+  }
+  return null;
 }
 
 function readStorageJson<T>(key: string, fallback: T): T {
@@ -260,9 +405,10 @@ function isSupportedLocalPhotoUri(uri: string): boolean {
 }
 
 function persistHumanDraftMap(scope = getActiveOwnerScope()): void {
-  const draftMap = getScopedHumanDraftMap(scope);
-  const blocks = inMemoryReusableBlocksByScope[scope] ?? [];
-  writeStorageJson(getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, scope), {
+  const normalizedScope = normalizeScopeOwner(scope);
+  const draftMap = getScopedHumanDraftMap(normalizedScope);
+  const blocks = inMemoryReusableBlocksByScope[normalizedScope] ?? [];
+  writeStorageJson(getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, normalizedScope), {
     format: 'pilates-flow-human-creation-v1',
     version: 1,
     exportedAt: new Date().toISOString(),
@@ -279,9 +425,10 @@ export function isMovementIdeaExercise(exercise: PilatesExercise | undefined | n
 export function getMovementIdeaMetaMap(
   scope = getActiveOwnerScope(),
 ): Record<string, MovementIdeaMeta> {
-  const scopedKey = getScopedStorageKey(IDEA_META_STORAGE_KEY, scope);
+  const normalizedScope = normalizeScopeOwner(scope);
+  const scopedKey = getScopedStorageKey(IDEA_META_STORAGE_KEY, normalizedScope);
   const stored = readStorageJson<Record<string, MovementIdeaMeta>>(scopedKey, {});
-  const current = inMemoryMetaByScope[scope] ?? {};
+  const current = inMemoryMetaByScope[normalizedScope] ?? {};
   const merged: Record<string, MovementIdeaMeta> = { ...current };
   if (stored && typeof stored === 'object' && !Array.isArray(stored)) {
     for (const [id, entry] of Object.entries(stored)) {
@@ -296,7 +443,7 @@ export function getMovementIdeaMetaMap(
       }
     }
   }
-  inMemoryMetaByScope[scope] = merged;
+  inMemoryMetaByScope[normalizedScope] = merged;
   return merged;
 }
 
@@ -338,18 +485,52 @@ export function getMovementIdeaMeta(exercise: PilatesExercise): MovementIdeaMeta
     : rawPrecautions === defaultPrecaution
       ? ''
       : rawPrecautions;
-  const ideaLine = draft?.ideaLine || exercise.cues?.[0] || exercise.nameKo;
+
+  const snapshotEx = exercise as IdeaPilatesExercise;
+  const rawFeelSnap = snapshotEx.feelLogsSnapshot;
+  const lastFeelEntry =
+    Array.isArray(rawFeelSnap) && rawFeelSnap.length > 0 ? rawFeelSnap.at(-1) : undefined;
+  const snapshotFeeling =
+    typeof lastFeelEntry === 'string'
+      ? lastFeelEntry
+      : lastFeelEntry && typeof lastFeelEntry === 'object' && 'feelNoteKo' in lastFeelEntry
+        ? (lastFeelEntry.feelNoteKo ?? '')
+        : '';
+
+  const rawModSnap = snapshotEx.modificationLogsSnapshot;
+  const lastModEntry =
+    Array.isArray(rawModSnap) && rawModSnap.length > 0 ? rawModSnap.at(-1) : undefined;
+  const snapshotAdjustment =
+    typeof lastModEntry === 'string'
+      ? lastModEntry
+      : lastModEntry && typeof lastModEntry === 'object' && 'modificationPointKo' in lastModEntry
+        ? (lastModEntry.modificationPointKo ?? '')
+        : '';
+
+  const rawPhotoSnap = snapshotEx.photoReferencesSnapshot;
+  const lastPhotoEntry =
+    Array.isArray(rawPhotoSnap) && rawPhotoSnap.length > 0 ? rawPhotoSnap.at(-1) : undefined;
+  const snapshotPhoto =
+    lastPhotoEntry && typeof lastPhotoEntry === 'object'
+      ? ('localRefUri' in lastPhotoEntry && lastPhotoEntry.localRefUri) ||
+        ('dataUrl' in lastPhotoEntry && lastPhotoEntry.dataUrl) ||
+        ''
+      : '';
+
+  const ideaLine =
+    draft?.ideaLine || snapshotEx.ideaLineSnapshot || exercise.cues?.[0] || exercise.nameKo;
   const adjustmentNote =
     draft?.modificationLogs.at(-1)?.modificationPointKo ||
+    snapshotAdjustment ||
     exercise.layers?.standard ||
     '';
   const subjectiveFeeling =
-    draft?.feelLogs.at(-1)?.feelNoteKo || fallbackFeeling;
-  const photoDataUrl = draft?.photoReferences.at(-1)?.localRefUri || '';
+    draft?.feelLogs.at(-1)?.feelNoteKo || snapshotFeeling || fallbackFeeling;
+  const photoDataUrl = draft?.photoReferences.at(-1)?.localRefUri || snapshotPhoto || '';
   return {
     exerciseId: exercise.id,
     ideaLine,
-    workingTitle: draft?.workingNameKo ?? exercise.nameKo,
+    workingTitle: draft?.workingNameKo ?? snapshotEx.variantLabelKo ?? exercise.nameKo,
     subjectiveFeeling,
     adjustmentNote,
     photoDataUrl,
@@ -359,14 +540,14 @@ export function getMovementIdeaMeta(exercise: PilatesExercise): MovementIdeaMeta
     easyVariation: draft?.layers?.easy ?? exercise.layers?.easy ?? '',
     standardVariation: draft?.layers?.standard ?? exercise.layers?.standard ?? '',
     hardVariation: draft?.layers?.hard ?? exercise.layers?.hard ?? '',
-    variantLabelKo: draft?.variantLabelKo,
-    parentDraftId: draft?.parentDraftId,
-    parentDraftRevision: draft?.parentDraftRevision,
-    revision: draft?.revision ?? 1,
+    variantLabelKo: draft?.variantLabelKo ?? snapshotEx.variantLabelKo,
+    parentDraftId: draft?.parentDraftId ?? snapshotEx.parentDraftId,
+    parentDraftRevision: draft?.parentDraftRevision ?? snapshotEx.parentDraftRevision,
+    revision: draft?.revision ?? snapshotEx.humanDraftRevision ?? 1,
     revisionHistory: draft?.revisionHistory ?? [],
     repetitions:
-      draft?.defaultRepetitions ?? (exercise as HierarchyPilatesExercise).defaultRepetitions,
-    sets: draft?.defaultSets ?? (exercise as HierarchyPilatesExercise).defaultSets,
+      draft?.defaultRepetitions ?? snapshotEx.defaultRepetitions,
+    sets: draft?.defaultSets ?? snapshotEx.defaultSets,
     sideMode: draft?.sideMode,
     sectionRole: draft?.sectionRole,
   };
@@ -400,10 +581,11 @@ export function saveMovementIdeaWorkingBuffer(
 }
 
 export function clearMovementIdeaWorkingBuffer(scope = getActiveOwnerScope()): void {
-  inMemoryBufferByScope[scope] = { ...EMPTY_BUFFER };
+  const normalizedScope = normalizeScopeOwner(scope);
+  inMemoryBufferByScope[normalizedScope] = { ...EMPTY_BUFFER };
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.removeItem(getScopedStorageKey(IDEA_BUFFER_STORAGE_KEY, scope));
+      window.localStorage.removeItem(getScopedStorageKey(IDEA_BUFFER_STORAGE_KEY, normalizedScope));
     }
   } catch {
     // Ignore storage removal errors.
@@ -430,7 +612,8 @@ export function resetMovementIdeaStateForTests(): void {
           (key.startsWith(IDEA_META_STORAGE_KEY) ||
             key.startsWith(IDEA_BUFFER_STORAGE_KEY) ||
             key.startsWith(IDEA_REUSABLE_BLOCKS_STORAGE_KEY) ||
-            key.startsWith(DEFAULT_HUMAN_DRAFT_STORAGE_KEY))
+            key.startsWith(DEFAULT_HUMAN_DRAFT_STORAGE_KEY) ||
+            key.startsWith(LEGACY_HUMAN_DRAFT_STORAGE_KEY))
         ) {
           keysToRemove.push(key);
         }
@@ -682,7 +865,7 @@ function syncHumanDraftOnSave(
 export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
   success: boolean;
   ok: boolean;
-  exercise?: PilatesExercise;
+  exercise?: IdeaPilatesExercise;
   meta?: MovementIdeaMeta;
   draft?: HumanMovementDraft;
   error?: string;
@@ -853,7 +1036,7 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
       ? `강사 주관적 느낌 메모 (전문가 검증·효과 보장 아님): ${subjectiveFeeling}`
       : existing?.precautions || '강사 직접 창작 초안 · 수업 전 개인별 상태를 직접 확인하세요.';
 
-    const baseExercise: HierarchyPilatesExercise = {
+    const baseExercise: IdeaPilatesExercise = {
       id: exerciseId,
       nameKo,
       nameEn: existing?.nameEn ?? '내 창작 동작 메모',
@@ -867,7 +1050,8 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
             ? 'cooldown'
             : (existing?.blockCategory ?? 'core'),
       spinalPlanes: existing?.spinalPlanes ?? [],
-      bodyPosition: existing?.bodyPosition ?? 'supine',
+      bodyPosition:
+        inferBodyPositionFromIdeaLine(trimmedIdea) ?? existing?.bodyPosition ?? 'supine',
       level,
       defaultDurationMin: durationMin,
       defaultRepetitions: repetitions,
@@ -896,31 +1080,30 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
       favoriteTag: existing?.favoriteTag ?? 'none',
       isCustom: true,
       createdAt: existing?.createdAt ?? now,
+      sourceOrigin: 'human-created',
       humanDraftId: humanDraft.id,
       humanDraftRevision: humanDraft.revision,
+      ...(humanDraft.parentDraftId ? { parentDraftId: humanDraft.parentDraftId } : {}),
+      ...(humanDraft.parentDraftRevision !== undefined
+        ? { parentDraftRevision: humanDraft.parentDraftRevision }
+        : {}),
+      ...(variantLabelKo || (input.workingTitle ?? '').trim()
+        ? { variantLabelKo: variantLabelKo || (input.workingTitle ?? '').trim() }
+        : {}),
+      ideaLineSnapshot: trimmedIdea,
+      feelLogsSnapshot: humanDraft.feelLogs.map((log) => structuredClone(log)),
+      modificationLogsSnapshot: humanDraft.modificationLogs.map((log) => structuredClone(log)),
+      photoReferencesSnapshot: humanDraft.photoReferences.map((ref) => ({
+        ...structuredClone(ref),
+        dataUrl: ref.localRefUri,
+        label: ref.captionKo || (input.workingTitle ?? '').trim() || undefined,
+      })),
+      safetyBoundarySnapshot: structuredClone(humanDraft.safetyBoundary),
     };
 
     // Authoring and trying a movement do not constitute an instructor review.
     // Preserve a previous record as-is; material edits naturally make it stale.
     if (existing?.review) baseExercise.review = existing.review;
-
-    try {
-      if (existing) {
-        usePilatesStore.setState((store) => ({
-          exercises: store.exercises.map((item) =>
-            item.id === baseExercise.id ? baseExercise : item,
-          ),
-        }));
-      } else {
-        usePilatesStore.getState().addCustomExercise(baseExercise);
-      }
-    } catch {
-      return {
-        success: false,
-        ok: false,
-        error: '저장에 실패했습니다. 작성 중인 내용은 이 화면에 그대로 보관되어 있습니다.',
-      };
-    }
 
     const meta: MovementIdeaMeta = {
       exerciseId: baseExercise.id,
@@ -947,6 +1130,62 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
       transitionSec,
       sectionRole,
     };
+
+    const stepNoteParts = [
+      ...(meta.subjectiveFeeling ? [`[느낌] ${meta.subjectiveFeeling}`] : []),
+      ...(meta.adjustmentNote ? [`[수정] ${meta.adjustmentNote}`] : []),
+      ...(meta.variantLabelKo ? [`[변형] ${meta.variantLabelKo}`] : []),
+    ];
+    const combinedInstructorNote = stepNoteParts.join(' · ');
+    const timing = calculateIdeaStepTimeBreakdown({
+      durationMin: baseExercise.defaultDurationMin || 3,
+      explanationSec: meta.explanationSec,
+      transitionSec: meta.transitionSec,
+    });
+    const embeddedSnapshot = createHumanDraftMovementSnapshot(humanDraft, {
+      apparatus: baseExercise.apparatus,
+      durationMin: timing.durationMin,
+      repetitions: meta.repetitions,
+      sets: meta.sets,
+      sideMode: meta.sideMode,
+    });
+
+    try {
+      if (existing) {
+        usePilatesStore.setState((store) => ({
+          exercises: store.exercises.map((item) =>
+            item.id === baseExercise.id ? baseExercise : item,
+          ),
+          activeSteps: store.activeSteps.some((step) => step.exerciseId === baseExercise.id)
+            ? store.activeSteps.map((step) =>
+                step.exerciseId === baseExercise.id
+                  ? {
+                      ...step,
+                      durationMin: timing.durationMin,
+                      explanationSec: timing.explanationSec,
+                      transitionSec: timing.transitionSec,
+                      ...(meta.repetitions !== undefined ? { repetitions: meta.repetitions } : {}),
+                      ...(meta.sets !== undefined ? { sets: meta.sets } : {}),
+                      ...(meta.sideMode ? { sideMode: meta.sideMode } : {}),
+                      ...(combinedInstructorNote ? { instructorNote: combinedInstructorNote } : {}),
+                      exerciseSnapshot: embeddedSnapshot,
+                      humanDraftId: baseExercise.humanDraftId,
+                      humanDraftRevision: baseExercise.humanDraftRevision,
+                    }
+                  : step,
+              )
+            : store.activeSteps,
+        }));
+      } else {
+        usePilatesStore.getState().addCustomExercise(baseExercise);
+      }
+    } catch {
+      return {
+        success: false,
+        ok: false,
+        error: '저장에 실패했습니다. 작성 중인 내용은 이 화면에 그대로 보관되어 있습니다.',
+      };
+    }
 
     const nextMap = {
       ...getMovementIdeaMetaMap(scope),
