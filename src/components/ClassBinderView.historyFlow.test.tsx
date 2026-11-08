@@ -658,6 +658,7 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     render(<ClassBinderView view="saved" onOpenLogModal={vi.fn()} />);
 
     const countBefore = usePilatesStore.getState().savedSequences.length;
+    fireEvent.click(screen.getAllByRole('button', { name: /더보기$/ })[0]);
     const duplicateButtons = screen.getAllByRole('button', { name: /복제/ });
     fireEvent.click(duplicateButtons[0]);
     fireEvent.click(duplicateButtons[0]);

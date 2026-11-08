@@ -42,6 +42,8 @@ const historyMovementIds = (log: ClassHistoryLog) =>
   log.stepsSnapshot ? log.stepsSnapshot.filter((step) => !isRestStep(step)).map((step) => step.exerciseId) : log.exerciseIds.filter(Boolean);
 const movementCount = (steps: SequenceStep[]) => steps.filter((step) => !isRestStep(step)).length;
 const minutesLabel = (seconds: number) => Number((seconds / 60).toFixed(2));
+// Fixed-width UTF-16 encoding accepts every recoverable ID, including lone surrogates.
+const savedCardDomKey = (id: string) => id.split('').map((unit) => unit.charCodeAt(0).toString(16).padStart(4, '0')).join('');
 
 const parseHistoryDate = (date: string): Date | null => {
   const trimmed = date.trim();
@@ -132,6 +134,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const [message, setMessage] = useState('');
   const [historyCopyError, setHistoryCopyError] = useState('');
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [expandedSavedIds, setExpandedSavedIds] = useState<Set<string>>(() => new Set());
   const [printSequence, setPrintSequence] = useState<SavedSequence | null>(null);
   const [showBinderCueSheet, setShowBinderCueSheet] = useState(false);
   const [reopenedHistoryId, setReopenedHistoryId] = useState<string | null>(null);
@@ -143,6 +146,16 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const reopenedTriggerRef = useRef<HTMLButtonElement | null>(null);
   const printTriggerRef = useRef<HTMLButtonElement | null>(null);
   const groupErrorId = useId();
+  const savedMorePrefix = useId();
+  const toggleSavedDetails = (id: string) => {
+    setPendingDelete(null);
+    setExpandedSavedIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const exercisesMap = useMemo(() => new Map(exercises.map((ex) => [ex.id, ex])), [exercises]);
   const rawReusableBlocks = getSavedReusableBlocks();
@@ -421,57 +434,87 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                 const durations = getSequenceDurations(sequence.steps);
                 const exerciseCount = movementCount(sequence.steps);
                 const restCount = sequence.steps.length - exerciseCount;
+                const domKey = savedCardDomKey(sequence.id);
+                const moreId = `${savedMorePrefix}-panel-${domKey}`;
+                const toggleId = `${savedMorePrefix}-toggle-${domKey}`;
+                const detailsExpanded = expandedSavedIds.has(sequence.id);
                 return (
                   <PfCard as="article" variant="interactive" className="teaching-sequence-card" key={sequence.id}>
-                    <div className="teaching-card-top">
-                      <span className="teaching-card-label">
-                        {String(index + 1).padStart(2, '0')} · {sequence.apparatus === 'mixed' ? '여러 기구' : APPARATUS_LABELS[sequence.apparatus].ko}
-                        {sampleSequenceIds.has(sequence.id) && ' · 예시'}
-                      </span>
-                      <PfBadge tone="sage" shape="rect" className="teaching-level">Lv {sequence.level}</PfBadge>
-                    </div>
                     <h2>{sequence.title}</h2>
                     <p className="muted teaching-sequence-subtitle">{sequence.subtitle || '내가 만든 수업 흐름'}</p>
+                    {sampleSequenceIds.has(sequence.id) && <span className="teaching-saved-sample-label">예시 계획</span>}
                     {sequence.recoveredDraftOrigin && <p className="muted" data-recovered-draft="true">이전 편집 초안에서 복구한 자료 · 수업 전 조건을 확인해 주세요.</p>}
-                    <div className="teaching-card-stats">
-                      <span><Clock3 size={15} />{minutesLabel(durations.totalSec)}분</span>
-                      <span>{exerciseCount}개 동작</span>
-                      {restCount > 0 && <span>휴식 {restCount}개</span>}
-                      <span>기록 {historyLogs.filter((l) => l.sequenceId === sequence.id && !sampleHistoryIds.has(l.id)).length}회</span>
+                    <div className="teaching-card-main-actions teaching-saved-primary-actions">
+                      <PfButton variant="primary" data-open-saved="true" onClick={() => loadSequenceIntoWorkbench(sequence.id)}><BookOpen size={16} /> 불러오기</PfButton>
+                      <PfButton variant="secondary" id={toggleId} aria-expanded={detailsExpanded} aria-controls={moreId} aria-label={`${sequence.title} ${detailsExpanded ? '접기' : '더보기'}`} onClick={() => toggleSavedDetails(sequence.id)}>{detailsExpanded ? '접기' : '더보기'}</PfButton>
                     </div>
-                    {restCount > 0 && <p className="teaching-rest-summary" aria-label="저장 수업 시간 구성">동작·설명·전환 {formatSecondsToMMSS(durations.exerciseSec)} · 휴식 {formatSecondsToMMSS(durations.restSec)}</p>}
-                    <ol className="teaching-flow-preview">
-                      {sequence.steps.slice(0, 4).map((step) => {
-                        const ex = exercisesMap.get(step.exerciseId);
-                        return (
-                          <PfBlockPill as="li" key={step.stepId} kind={isRestStep(step) ? 'rest' : ex && isMovementIdeaExercise(ex) ? 'memo' : 'movement'}>
-                            {isRestStep(step) ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}` : (ex?.nameKo ?? '삭제된 동작')}
-                          </PfBlockPill>
-                        );
-                      })}
-                      {sequence.steps.length > 4 && <PfBlockPill as="li" className="muted">외 {sequence.steps.length - 4}개 항목</PfBlockPill>}
-                    </ol>
-                    <p className="teaching-card-date">{lastTaughtDate ? `최근 수업 ${formatDate(lastTaughtDate)}` : `수정 ${formatDate(sequence.updatedAt)}`}</p>
-                    <div className="teaching-card-main-actions">
-                      <PfButton variant="primary" onClick={() => loadSequenceIntoWorkbench(sequence.id)}><BookOpen size={16} /> 불러오기</PfButton>
-                      <PfButton variant="secondary" onClick={() => { loadSequenceIntoWorkbench(sequence.id); setActiveTab('stage'); }}><Play size={16} /> 수업 시작</PfButton>
-                    </div>
-                    <div className="teaching-card-tools">
-                      <PfButton variant="ghost" onClick={() => duplicateSequence(sequence.id)}><Copy size={15} /> 복제</PfButton>
-                      <PfButton variant="ghost" onClick={(e) => { printTriggerRef.current = e.currentTarget; setPrintSequence(sequence); }}><Printer size={15} /> 인쇄</PfButton>
-                      <PfButton variant="ghost" onClick={() => exportText(sequence)}><ArrowDownToLine size={15} /> 텍스트</PfButton>
-                      <PfButton variant="icon" className="teaching-delete" aria-label={`${sequence.title} 삭제`} onClick={() => setPendingDelete(sequence.id)}><Trash2 size={16} /></PfButton>
-                    </div>
-                    <button type="button" className="teaching-log-link" onClick={() => onOpenLogModal(sequence.id, { stepsSnapshot: sequence.steps, sequenceTitle: sequence.title })}>
-                      <CalendarDays size={15} /> 이미 진행한 수업 기록하기
-                    </button>
-                    {pendingDelete === sequence.id && (
-                      <div className="teaching-delete-confirm" role="region" aria-label="시퀀스 삭제 확인">
-                        <p>이 시퀀스를 삭제할까요? 남긴 수업 기록은 유지됩니다.</p>
-                        <PfButton variant="secondary" onClick={() => setPendingDelete(null)}>취소</PfButton>
-                        <PfButton variant="danger" onClick={() => { deleteSavedSequence(sequence.id); setPendingDelete(null); setMessage('시퀀스를 삭제했습니다.'); }}>삭제 확인</PfButton>
+                    <div id={moreId} className="teaching-saved-more" role="region" aria-label={`${sequence.title} 추가 정보와 도구`} hidden={!detailsExpanded} onKeyDown={(event) => {
+                      if (event.key !== 'Escape') return;
+                      event.preventDefault();
+                      event.stopPropagation();
+                      toggleSavedDetails(sequence.id);
+                      document.getElementById(toggleId)?.focus();
+                    }}>
+                      <div className="teaching-card-top">
+                        <span className="teaching-card-label">
+                          {String(index + 1).padStart(2, '0')} · {sequence.apparatus === 'mixed' ? '여러 기구' : APPARATUS_LABELS[sequence.apparatus].ko}
+                          {sampleSequenceIds.has(sequence.id) && ' · 예시'}
+                        </span>
+                        <PfBadge tone="sage" shape="rect" className="teaching-level">Lv {sequence.level}</PfBadge>
                       </div>
-                    )}
+                      <div className="teaching-card-stats">
+                        <span><Clock3 size={15} />{minutesLabel(durations.totalSec)}분</span>
+                        <span>{exerciseCount}개 동작</span>
+                        {restCount > 0 && <span>휴식 {restCount}개</span>}
+                        <span>기록 {historyLogs.filter((l) => l.sequenceId === sequence.id && !sampleHistoryIds.has(l.id)).length}회</span>
+                      </div>
+                      {restCount > 0 && <p className="teaching-rest-summary" aria-label="저장 수업 시간 구성">동작·설명·전환 {formatSecondsToMMSS(durations.exerciseSec)} · 휴식 {formatSecondsToMMSS(durations.restSec)}</p>}
+                      <ol className="teaching-flow-preview">
+                        {sequence.steps.slice(0, 4).map((step) => {
+                          const ex = exercisesMap.get(step.exerciseId);
+                          return (
+                            <PfBlockPill as="li" key={step.stepId} kind={isRestStep(step) ? 'rest' : ex && isMovementIdeaExercise(ex) ? 'memo' : 'movement'}>
+                              {isRestStep(step) ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}` : (ex?.nameKo ?? '삭제된 동작')}
+                            </PfBlockPill>
+                          );
+                        })}
+                        {sequence.steps.length > 4 && <PfBlockPill as="li" className="muted">외 {sequence.steps.length - 4}개 항목</PfBlockPill>}
+                      </ol>
+                      <p className="teaching-card-date">{lastTaughtDate ? `최근 수업 ${formatDate(lastTaughtDate)}` : `수정 ${formatDate(sequence.updatedAt)}`}</p>
+                      <div className="teaching-card-main-actions teaching-saved-stage-action">
+                        <PfButton variant="secondary" onClick={() => { loadSequenceIntoWorkbench(sequence.id); setActiveTab('stage'); }}><Play size={16} /> 수업 시작</PfButton>
+                      </div>
+                      <div className="teaching-card-tools">
+                        <PfButton variant="ghost" onClick={() => duplicateSequence(sequence.id)}><Copy size={15} /> 복제</PfButton>
+                        <PfButton variant="ghost" onClick={(e) => { printTriggerRef.current = e.currentTarget; setPrintSequence(sequence); }}><Printer size={15} /> 인쇄</PfButton>
+                        <PfButton variant="ghost" onClick={() => exportText(sequence)}><ArrowDownToLine size={15} /> 텍스트</PfButton>
+                        <PfButton variant="icon" className="teaching-delete" aria-label={`${sequence.title} 삭제`} onClick={() => setPendingDelete(sequence.id)}><Trash2 size={16} /></PfButton>
+                      </div>
+                      <button type="button" className="teaching-log-link" onClick={() => onOpenLogModal(sequence.id, { stepsSnapshot: sequence.steps, sequenceTitle: sequence.title })}>
+                        <CalendarDays size={15} /> 이미 진행한 수업 기록하기
+                      </button>
+                      {pendingDelete === sequence.id && (
+                        <div className="teaching-delete-confirm" role="region" aria-label="시퀀스 삭제 확인">
+                          <p>이 시퀀스를 삭제할까요? 남긴 수업 기록은 유지됩니다.</p>
+                          <PfButton variant="secondary" onClick={(event) => {
+                            const trigger = event.currentTarget.closest('.teaching-saved-more')?.querySelector<HTMLButtonElement>('.teaching-delete');
+                            setPendingDelete(null);
+                            trigger?.focus();
+                          }}>취소</PfButton>
+                          <PfButton variant="danger" onClick={(event) => {
+                            const card = event.currentTarget.closest('article');
+                            const next = card?.nextElementSibling?.querySelector<HTMLButtonElement>('[data-open-saved]')
+                              ?? card?.previousElementSibling?.querySelector<HTMLButtonElement>('[data-open-saved]')
+                              ?? card?.closest('.teaching-collection')?.querySelector<HTMLInputElement>('input');
+                            const trigger = card?.querySelector<HTMLButtonElement>('.teaching-delete');
+                            deleteSavedSequence(sequence.id);
+                            setPendingDelete(null);
+                            setMessage('시퀀스를 삭제했습니다.');
+                            requestAnimationFrame(() => (trigger?.isConnected ? trigger : next)?.focus());
+                          }}>삭제 확인</PfButton>
+                        </div>
+                      )}
+                    </div>
                   </PfCard>
                 );
               })}

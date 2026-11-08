@@ -147,6 +147,7 @@ describe('saved classes and histories containing real rest steps', () => {
     const card = within(
       screen.getByRole('heading', { name: '휴식 포함 저장 테스트' }).closest('article')!,
     );
+    fireEvent.click(card.getByRole('button', { name: /더보기$/ }));
     expect(card.getByText('2개 동작')).toBeInTheDocument();
     expect(card.getByText('휴식 2개')).toBeInTheDocument();
     expect(card.getByText('60분')).toBeInTheDocument();
