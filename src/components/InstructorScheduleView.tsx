@@ -219,7 +219,9 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
       { ...data, exceptions: data.exceptions.filter((item) => item.id !== id) },
       "원래 일정을 복원했습니다.",
     );
+  const savingScheduleRef = useRef(false);
   const openClass = (date = selectedDate) => {
+    savingScheduleRef.current = false;
     setConfirmDelete("");
     setFormError("");
     setClassDraft(
@@ -227,22 +229,25 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     );
   };
   const editClass = (item: InstructorScheduledClass) => {
+    savingScheduleRef.current = false;
     setConfirmDelete("");
     setFormError("");
     setClassDraft({ ...item, weekdays: [...item.weekdays] });
   };
   const saveClass = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!classDraft) return;
-    const item = {
-      ...classDraft,
-      id: classDraft.id || crypto.randomUUID(),
-      ...(classDraft.recurrence === "once"
-        ? { weekdays: [], untilDate: undefined }
-        : {}),
-    };
-    if (
-      commit(
+    if (!classDraft || savingScheduleRef.current) return;
+    savingScheduleRef.current = true;
+    let saved = false;
+    try {
+      const item = {
+        ...classDraft,
+        id: classDraft.id || crypto.randomUUID(),
+        ...(classDraft.recurrence === "once"
+          ? { weekdays: [], untilDate: undefined }
+          : {}),
+      };
+      saved = commit(
         {
           ...data,
           classes: [
@@ -251,14 +256,42 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           ],
         },
         "수업 일정을 저장했습니다.",
-      )
-    ) {
-      setSelectedDate(item.startDate);
-      closeClass();
+      );
+      if (saved) {
+        setSelectedDate(item.startDate);
+        closeClass();
+      }
+    } finally {
+      if (saved) {
+        window.setTimeout(() => {
+          savingScheduleRef.current = false;
+        }, 0);
+      } else {
+        savingScheduleRef.current = false;
+      }
     }
   };
   const saveLocation = (event: React.FormEvent) => {
     event.preventDefault();
+    const normalizedAlias = locationDraft.alias
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
+    if (
+      !locationDraft.id &&
+      normalizedAlias &&
+      data.locations.some(
+        (loc) =>
+          loc.alias.trim().toLowerCase().replace(/\s+/g, " ") ===
+          normalizedAlias,
+      )
+    ) {
+      const duplicateError =
+        "이미 등록된 장소 별칭입니다. 기존 장소를 선택해 수정해 주세요.";
+      setFormError(duplicateError);
+      setMessage(duplicateError);
+      return;
+    }
     const item = {
       ...locationDraft,
       id: locationDraft.id || crypto.randomUUID(),
@@ -303,14 +336,16 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
   };
   const saveMove = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!moveDraft) return;
-    const exception: InstructorScheduleException = {
-      ...moveDraft,
-      id: crypto.randomUUID(),
-      kind: "reschedule",
-    };
-    if (
-      commit(
+    if (!moveDraft || savingScheduleRef.current) return;
+    savingScheduleRef.current = true;
+    let saved = false;
+    try {
+      const exception: InstructorScheduleException = {
+        ...moveDraft,
+        id: crypto.randomUUID(),
+        kind: "reschedule",
+      };
+      saved = commit(
         {
           ...data,
           exceptions: [
@@ -324,30 +359,50 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           ],
         },
         "이번 회차의 날짜·시각·장소를 변경했습니다.",
-      )
-    ) {
-      setSelectedDate(moveDraft.date);
-      closeMove();
+      );
+      if (saved) {
+        setSelectedDate(moveDraft.date);
+        closeMove();
+      }
+    } finally {
+      if (saved) {
+        window.setTimeout(() => {
+          savingScheduleRef.current = false;
+        }, 0);
+      } else {
+        savingScheduleRef.current = false;
+      }
     }
   };
   const saveClosed = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!closedDraft) return;
-    const exception: InstructorScheduleException = {
-      id: crypto.randomUUID(),
-      kind: "closed",
-      date: closedDraft.date,
-      reason: closedDraft.reason,
-      ...(closedDraft.locationId ? { locationId: closedDraft.locationId } : {}),
-    };
-    if (
-      commit(
+    if (!closedDraft || savingScheduleRef.current) return;
+    savingScheduleRef.current = true;
+    let saved = false;
+    try {
+      const exception: InstructorScheduleException = {
+        id: crypto.randomUUID(),
+        kind: "closed",
+        date: closedDraft.date,
+        reason: closedDraft.reason,
+        ...(closedDraft.locationId ? { locationId: closedDraft.locationId } : {}),
+      };
+      saved = commit(
         { ...data, exceptions: [...data.exceptions, exception] },
         "휴무를 등록했습니다. 해당 회차는 시간 충돌 계산에서 제외됩니다.",
-      )
-    ) {
-      setSelectedDate(closedDraft.date);
-      closeClosed();
+      );
+      if (saved) {
+        setSelectedDate(closedDraft.date);
+        closeClosed();
+      }
+    } finally {
+      if (saved) {
+        window.setTimeout(() => {
+          savingScheduleRef.current = false;
+        }, 0);
+      } else {
+        savingScheduleRef.current = false;
+      }
     }
   };
   const renderTimeFields = (
@@ -417,6 +472,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             type="button"
             className="btn-secondary"
             onClick={() => {
+              savingScheduleRef.current = false;
               setFormError("");
               setClosedDraft({
                 date: selectedDate,
@@ -444,6 +500,32 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           className="schedule-view-toggle"
           role="group"
           aria-label="일정 보기"
+          onKeyDown={(event) => {
+            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
+              return;
+            event.preventDefault();
+            const buttons = Array.from(
+              event.currentTarget.querySelectorAll<HTMLButtonElement>("button"),
+            );
+            if (buttons.length === 0) return;
+            const activeIndex = buttons.indexOf(
+              (buttons.includes(event.target as HTMLButtonElement)
+                ? event.target
+                : document.activeElement) as HTMLButtonElement,
+            );
+            const currentIndex =
+              activeIndex !== -1 ? activeIndex : mode === "day" ? 0 : 1;
+            const nextIndex =
+              event.key === "Home"
+                ? 0
+                : event.key === "End"
+                  ? buttons.length - 1
+                  : event.key === "ArrowRight"
+                    ? (currentIndex + 1) % buttons.length
+                    : (currentIndex - 1 + buttons.length) % buttons.length;
+            setMode(nextIndex === 0 ? "day" : "week");
+            buttons[nextIndex]?.focus();
+          }}
         >
           <button
             type="button"
@@ -796,6 +878,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                             type="button"
                             className="btn-secondary"
                             onClick={() => {
+                              savingScheduleRef.current = false;
                               setFormError("");
                               setMoveDraft({
                                 classId: row.classId,
