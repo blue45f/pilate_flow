@@ -91,6 +91,10 @@ const base = process.env.BASE_URL || 'http://127.0.0.1:5247';
         .getByRole('checkbox', { name: '루프 밴드', exact: true })
         .scrollIntoViewIfNeeded();
       await page.screenshot({ path: out + '/settings-props-' + width + '.png' });
+      await inventory
+        .getByRole('checkbox', { name: '토닝볼', exact: true })
+        .scrollIntoViewIfNeeded();
+      await page.screenshot({ path: out + '/settings-lower-props-' + width + '.png' });
       await checkLayout(inventory);
       const selectedProps = (await state()).ownedProps;
       assert.ok(selectedProps.includes('fitness-ball') && selectedProps.includes('loop-band'));

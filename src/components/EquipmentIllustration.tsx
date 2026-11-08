@@ -171,7 +171,7 @@ const drawings: Record<EquipmentGuideId, ReactNode> = {
       <ellipse cx="48" cy="62" rx="36" ry="12" fill="var(--equipment-fill-light)" />
       <path d="M17 59c0-47 62-47 62 0-12 13-50 13-62 0Z" fill="var(--equipment-fill)" />
       <path
-        d="M29 58c-1-21 10-35 19-35m19 35c1-21-10-35-19-35m-30 2c14 7 44 7 60 0"
+        d="M29 58c-1-21 10-35 19-35m19 35c1-21-10-35-19-35M23 43c13 7 37 7 50 0"
         fill="none"
         opacity=".5"
       />

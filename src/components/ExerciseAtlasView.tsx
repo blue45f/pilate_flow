@@ -181,7 +181,7 @@ const OwnedEquipmentEditor: React.FC = () => {
         </span>
       </summary>
       <div>
-        <p>‘내 보유 장비만’은 아래 기구와 소도구로 요구 조건을 모두 충족하는 자료를 보여줍니다.</p>
+        <p>‘내 보유 장비’ 범위는 아래 기구와 소도구로 요구 조건을 모두 충족하는 자료를 보여줍니다.</p>
         <fieldset>
           <legend>내 기구</legend>
           <div className="equipment-choice-grid">
