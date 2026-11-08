@@ -10,6 +10,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { once } from 'node:events';
 import { createServer, type ViteDevServer } from 'vite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -147,7 +148,7 @@ function inspectGeneratedPdf(
   }
   const pageCount = Number(pagesMatch[1]);
 
-  const fullText = execFileSync(PDFTOTEXT_BINARY, [pdfPath, '-'], {
+  const fullText = execFileSync(PDFTOTEXT_BINARY, ['-layout', pdfPath, '-'], {
     encoding: 'utf8',
   });
 
@@ -155,7 +156,7 @@ function inspectGeneratedPdf(
   for (let p = 1; p <= pageCount; p++) {
     const pageText = execFileSync(
       PDFTOTEXT_BINARY,
-      ['-f', String(p), '-l', String(p), pdfPath, '-'],
+      ['-layout', '-f', String(p), '-l', String(p), pdfPath, '-'],
       { encoding: 'utf8' },
     );
     pageTexts.push(pageText);
@@ -183,7 +184,20 @@ function inspectGeneratedPdf(
   };
 }
 
-function countOccurrences(haystack: string, needle: string): number {
+// Physical PDF line wrapping is not content. Preserve every non-whitespace
+// character, especially literal line-end hyphens that default pdftotext removes.
+function normalizePdfText(text: string): string {
+  return text.replace(/\s/gu, '');
+}
+
+function expectPdfTextToContain(actual: string | undefined, expected: string): void {
+  expect(actual).toBeDefined();
+  expect(normalizePdfText(actual ?? '')).toContain(normalizePdfText(expected));
+}
+
+function countPdfTextOccurrences(haystack: string, needle: string): number {
+  haystack = normalizePdfText(haystack);
+  needle = normalizePdfText(needle);
   if (!needle) {
     return 0;
   }
@@ -199,6 +213,18 @@ function countOccurrences(haystack: string, needle: string): number {
   }
   return count;
 }
+
+describe('PDF text content matching', () => {
+  it('ignores physical line wrapping while preserving literal punctuation and characters', () => {
+    const expected = '[장문큐-끝-06]';
+    expectPdfTextToContain('[장문큐-\n끝-06]', expected);
+    expectPdfTextToContain('[장문큐-\f끝-06]', expected);
+    expect(countPdfTextOccurrences('[장문큐-\n끝-06]', expected)).toBe(1);
+    expect(countPdfTextOccurrences('[장문큐끝-06]', expected)).toBe(0);
+    expect(countPdfTextOccurrences('[장문큐-끝-0]', expected)).toBe(0);
+    expect(countPdfTextOccurrences('[장문큐-\n끝-06] [장문큐-끝-06]', expected)).toBe(2);
+  });
+});
 
 class CdpSession {
   private ws: WebSocket;
@@ -377,8 +403,6 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
       CHROMIUM_BINARY,
       [
         '--headless=new',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
         '--disable-gpu',
         '--disable-dev-shm-usage',
         `--user-data-dir=${userDataDir}`,
@@ -448,8 +472,10 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
 
   afterAll(async () => {
     cdp?.close();
-    if (chromeProcess && !chromeProcess.killed) {
+    if (chromeProcess && chromeProcess.exitCode === null && chromeProcess.signalCode === null) {
+      const exited = once(chromeProcess, 'exit');
       chromeProcess.kill('SIGKILL');
+      await exited;
     }
     if (viteServer) {
       await viteServer.close();
@@ -1137,6 +1163,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
         paperWidth: number,
         paperHeight: number,
       ): Promise<PdfInspectionResult> => {
+        await session.evaluate('document.fonts.ready.then(() => true)');
         const pdfResult = await session.send<{ data: string }>('Page.printToPDF', {
           printBackground: true,
           preferCSSPageSize: false,
@@ -1172,6 +1199,11 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
           initialViewMode: 'compact',
         })`,
       );
+      const expectedLongCues = await session.evaluate<string[]>(`Array.from(
+        document.querySelectorAll('.cue-sheet-item .cue-sheet-cue-text'),
+        (element) => element.textContent ?? '',
+      )`);
+      expect(expectedLongCues.length).toBeGreaterThan(0);
       for (const paper of paperSizes) {
         const res = await printPdfForCurrentDom(
           `long-korean-cues-${paper.name}`,
@@ -1190,7 +1222,10 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
           '무큐잉 자유 스트레칭 동작',
           '사이드 킥 시리즈',
         ]) {
-          expect(res.fullText).toContain(marker);
+          expectPdfTextToContain(res.fullText, marker);
+        }
+        for (const cue of expectedLongCues) {
+          expectPdfTextToContain(res.fullText, cue);
         }
         // Items #03, #05, #06 appear only in the progression list -> exactly 1 occurrence each
         for (const nonDeckMarker of [
@@ -1201,7 +1236,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
           '[장문큐-시작-06]',
           '[장문큐-끝-06]',
         ]) {
-          expect(countOccurrences(res.fullText, nonDeckMarker)).toBe(1);
+          expect(countPdfTextOccurrences(res.fullText, nonDeckMarker)).toBe(1);
         }
       }
 
@@ -1237,6 +1272,7 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
                 durationMin: 15,
                 cues: [
                   '초장문 단일 동작 연속 큐잉 시작 안내 문구입니다.',
+                  '[literal-\\nhyphen-marker]',
                   ...longCueLines,
                 ],
               },
@@ -1251,13 +1287,15 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
           paper.paperWidth,
           paper.paperHeight,
         );
+        expectPdfTextToContain(res.fullText, '[literal-hyphen-marker]');
+        expect(countPdfTextOccurrences(res.fullText, '[literal-hyphen-marker]')).toBe(1);
         for (let i = 1; i <= 35; i++) {
           const marker = `[장문단락-${String(i).padStart(2, '0')}]`;
-          expect(countOccurrences(res.fullText, marker)).toBe(1);
+          expect(countPdfTextOccurrences(res.fullText, marker)).toBe(1);
         }
         // Prove the single 35-line item starts on page 1 and continues onto the final progression pages
-        expect(res.pageTexts[0]).toContain('[장문단락-01]');
-        expect(res.pageTexts.slice(-2).join('\n')).toContain('[장문단락-35]');
+        expectPdfTextToContain(res.pageTexts[0], '[장문단락-01]');
+        expectPdfTextToContain(res.pageTexts.slice(-2).join('\n'), '[장문단락-35]');
       }
 
       // Case B: nested-repeats-unilateral-unspecified-time (expanded view)
@@ -1277,17 +1315,17 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
           paper.paperWidth,
           paper.paperHeight,
         );
-        expect(res.fullText).toContain('진행표 상한 적용 및 생략 안내');
+        expectPdfTextToContain(res.fullText, '진행표 상한 적용 및 생략 안내');
         for (let rowIdx = 1; rowIdx <= nestedExpandedCount; rowIdx++) {
           const rowMarker = `펼침 #${String(rowIdx).padStart(2, '0')} (`;
           expect(
-            countOccurrences(res.fullText, rowMarker),
+            countPdfTextOccurrences(res.fullText, rowMarker),
             `nested rowIdx=${rowIdx}/${nestedExpandedCount} paper=${paper.name}`,
           ).toBe(1);
         }
-        expect(res.pageTexts[0]).toContain('중첩 블록 반복 · 좌우 편측 · 시간 미정 보존 시퀀스');
-        expect(res.pageTexts.slice(0, 2).join('\n')).toContain('펼침 #01 (');
-        expect(res.pageTexts.slice(-2).join('\n')).toContain(
+        expectPdfTextToContain(res.pageTexts[0], '중첩 블록 반복 · 좌우 편측 · 시간 미정 보존 시퀀스');
+        expectPdfTextToContain(res.pageTexts.slice(0, 2).join('\n'), '펼침 #01 (');
+        expectPdfTextToContain(res.pageTexts.slice(-2).join('\n'),
           `펼침 #${String(nestedExpandedCount).padStart(2, '0')} (`,
         );
       }
@@ -1308,21 +1346,23 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
           paper.paperHeight,
         );
         expect(res.pageCount).toBeGreaterThanOrEqual(8);
-        expect(res.fullText).toContain('진행표 상한 적용 및 생략 안내');
-        expect(res.fullText).toContain('생략된 입력 항목: 10개');
+        expectPdfTextToContain(res.fullText, '진행표 상한 적용 및 생략 안내');
+        expectPdfTextToContain(res.fullText, '생략된 입력 항목: 10개');
         for (let num = 1; num <= 150; num++) {
           const itemTitle = `대규모 내구성 검증 동작 #${String(num).padStart(3, '0')}`;
           const itemCue = `${num}번 동작 호흡과 척추 중립 정렬을 유지하며 일정한 템포로 수행합니다.`;
-          expect(res.fullText).toContain(itemTitle);
-          expect(res.fullText).toContain(itemCue);
+          expectPdfTextToContain(res.fullText, itemTitle);
+          expectPdfTextToContain(res.fullText, itemCue);
           // Items 3..150 are not in the 2-card focus deck, so their zero-padded title appears exactly once
           if (num >= 3) {
-            expect(countOccurrences(res.fullText, itemTitle)).toBe(1);
+            expect(countPdfTextOccurrences(res.fullText, itemTitle)).toBe(1);
           }
         }
-        expect(res.fullText).not.toContain('대규모 내구성 검증 동작 #151');
-        expect(res.pageTexts[0]).toContain('대규모 내구성 검증 동작 #001');
-        expect(res.pageTexts.slice(-2).join('\n')).toContain('대규모 내구성 검증 동작 #150');
+        expect(normalizePdfText(res.fullText)).not.toContain(
+          normalizePdfText('대규모 내구성 검증 동작 #151'),
+        );
+        expectPdfTextToContain(res.pageTexts[0], '대규모 내구성 검증 동작 #001');
+        expectPdfTextToContain(res.pageTexts.slice(-2).join('\n'), '대규모 내구성 검증 동작 #150');
       }
 
       // Case C2: hundred-items-bounded in expanded view (240 rows 펼침 #01..펼침 #240 + truncation banner + omitted footer)
@@ -1341,19 +1381,21 @@ describe('ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media
           paper.paperHeight,
         );
         expect(res.pageCount).toBeGreaterThanOrEqual(10);
-        expect(res.fullText).toContain('진행표 상한 적용 및 생략 안내');
-        expect(res.fullText).toContain(
+        expectPdfTextToContain(res.fullText, '진행표 상한 적용 및 생략 안내');
+        expectPdfTextToContain(res.fullText,
           '펼침 행 상한(240행) 초과로 210개 펼침 행이 생략되었습니다. (임의 숨김 없음)',
         );
         for (let rowNum = 1; rowNum <= 240; rowNum++) {
           const rowLabel = `펼침 #${String(rowNum).padStart(2, '0')} (`;
-          expect(countOccurrences(res.fullText, rowLabel)).toBe(1);
+          expect(countPdfTextOccurrences(res.fullText, rowLabel)).toBe(1);
         }
-        expect(res.fullText).not.toContain('펼침 #241');
-        expect(res.pageTexts[0]).toContain('대규모 내구성 검증 동작 #001');
-        expect(res.pageTexts.slice(0, 2).join('\n')).toContain('펼침 #01 (');
-        expect(res.pageTexts.slice(-2).join('\n')).toContain('펼침 #240 (');
-        expect(res.pageTexts.slice(-2).join('\n')).toContain('펼침 행 상한(240행) 초과로');
+        expect(normalizePdfText(res.fullText)).not.toContain(
+          normalizePdfText('펼침 #241'),
+        );
+        expectPdfTextToContain(res.pageTexts[0], '대규모 내구성 검증 동작 #001');
+        expectPdfTextToContain(res.pageTexts.slice(0, 2).join('\n'), '펼침 #01 (');
+        expectPdfTextToContain(res.pageTexts.slice(-2).join('\n'), '펼침 #240 (');
+        expectPdfTextToContain(res.pageTexts.slice(-2).join('\n'), '펼침 행 상한(240행) 초과로');
       }
     },
     60000,

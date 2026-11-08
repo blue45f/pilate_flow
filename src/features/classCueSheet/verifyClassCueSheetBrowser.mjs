@@ -9,6 +9,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { once } from 'node:events';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
@@ -187,8 +188,6 @@ async function runBrowserProbe() {
       CHROMIUM_BINARY,
       [
         '--headless=new',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
         '--disable-gpu',
         '--disable-dev-shm-usage',
         `--user-data-dir=${userDataDir}`,
@@ -587,6 +586,7 @@ async function runBrowserProbe() {
       { name: 'a4', paperWidth: 8.27, paperHeight: 11.69 },
       { name: 'letter', paperWidth: 8.5, paperHeight: 11.0 },
     ]) {
+      await cdp.evaluate('document.fonts.ready.then(() => true)');
       const pdfRes = await cdp.send('Page.printToPDF', {
         printBackground: true,
         preferCSSPageSize: false,
@@ -603,7 +603,7 @@ async function runBrowserProbe() {
       const infoOut = execFileSync(PDFINFO_BINARY, [pdfPath], { encoding: 'utf8' });
       const pagesMatch = infoOut.match(/^Pages:\s+(\d+)/m);
       const pageCount = Number(pagesMatch?.[1] ?? '0');
-      const fullText = execFileSync(PDFTOTEXT_BINARY, [pdfPath, '-'], {
+      const fullText = execFileSync(PDFTOTEXT_BINARY, ['-layout', pdfPath, '-'], {
         encoding: 'utf8',
       });
 
@@ -622,7 +622,7 @@ async function runBrowserProbe() {
         '[장문큐-끝-06]',
       ]) {
         assertCondition(
-          fullText.includes(marker),
+          fullText.replace(/\s/gu, '').includes(marker.replace(/\s/gu, '')),
           `[${paper.name}] Missing marker ${marker} in printed PDF when full list was collapsed on screen`,
         );
       }
@@ -651,8 +651,10 @@ async function runBrowserProbe() {
     if (cdp) {
       cdp.close();
     }
-    if (chromeProcess && !chromeProcess.killed) {
+    if (chromeProcess && chromeProcess.exitCode === null && chromeProcess.signalCode === null) {
+      const exited = once(chromeProcess, 'exit');
       chromeProcess.kill('SIGKILL');
+      await exited;
     }
     if (viteServer) {
       await viteServer.close();
