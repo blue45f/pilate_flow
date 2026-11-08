@@ -1,7 +1,13 @@
 import { useMemo, useState } from 'react';
 import type { PilatesExercise } from '../types/pilates';
 import { toMovementPhaseDiagramProps } from '../features/motionCoverage/adapters';
+import {
+  isRotationDiagramExercise,
+  resolveRotationDiagramCandidate,
+} from '../features/rotationDiagramCandidate';
 import { MovementPhaseDiagramSvg } from './MovementPhaseDiagramSvg';
+import { MovementVisualGuideCard } from './MovementVisualGuideCard';
+import { RotationPhaseTriptych } from './RotationDraftFigure';
 import { MOVEMENT_DIAGRAM_CORRECTIONS } from '../data/movementDiagramCorrections';
 import '../styles/movement-diagram-reference.css';
 
@@ -24,6 +30,8 @@ function DiagramDisclosure({ exercise }: { exercise: PilatesExercise }) {
 }
 
 function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
+  const [showVisualGuide, setShowVisualGuide] = useState(false);
+  const [showRotationTriptych, setShowRotationTriptych] = useState(false);
   const props = useMemo(
     () =>
       toMovementPhaseDiagramProps(exercise, 'start', {
@@ -36,6 +44,11 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
         label: `${exercise.nameKo} · 직접 작성한 참고 자세 그림 · 해부학 미검증`,
       }),
     [exercise],
+  );
+  const isRotation = isRotationDiagramExercise(exercise.id);
+  const rotCandidate = useMemo(
+    () => (isRotation ? resolveRotationDiagramCandidate(exercise.id) : null),
+    [exercise.id, isRotation],
   );
   const correction = MOVEMENT_DIAGRAM_CORRECTIONS[exercise.id];
   const matchedCorrection = correction?.archetypeId === props?.asset.archetypeId ? correction : null;
@@ -72,6 +85,28 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
             해부학적 정확성과 운동 안전성은 검증되지 않았어요. 실제 운동 시범이나 3D 모델이 아닌
             참고 자료예요.
           </p>
+          <details
+            className="movement-diagram-visual-guide-disclosure"
+            onToggle={(event) => setShowVisualGuide(event.currentTarget.open)}
+          >
+            <summary className="movement-diagram-correction-summary">
+              3단계 연속 도해 및 유사 동작 비교 보기
+            </summary>
+            {showVisualGuide && <MovementVisualGuideCard exercise={exercise} />}
+          </details>
+          {isRotation && (
+            <details
+              className="movement-diagram-rotation-disclosure"
+              onToggle={(event) => setShowRotationTriptych(event.currentTarget.open)}
+            >
+              <summary className="movement-diagram-correction-summary">
+                흉추 회전·골반 고정 3단계 상세 도해 보기
+              </summary>
+              {showRotationTriptych && rotCandidate && (
+                <RotationPhaseTriptych movementId={rotCandidate.movementId} activePhase="middle" />
+              )}
+            </details>
+          )}
         </>
       )}
     </section>

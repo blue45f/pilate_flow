@@ -246,6 +246,9 @@ const ExerciseYouTubeGalleryContent: React.FC<ExerciseYouTubeGalleryProps> = ({
           <div className="eyg-grid">
             {filtered.map((video) => {
               const isPlaying = activeVideo?.videoId === video.videoId;
+              const watchPolicy = normalizeReferenceUrlPolicy(video.watchUrl, {
+                startSec: video.startSec,
+              });
               return (
                 <article
                   key={video.videoId}
@@ -282,7 +285,7 @@ const ExerciseYouTubeGalleryContent: React.FC<ExerciseYouTubeGalleryProps> = ({
                         <Play size={12} /> {isPlaying ? '플레이어 닫기' : '영상 불러오기'}
                       </button>
                       <a
-                        href={video.watchUrl}
+                        href={watchPolicy.canonicalExternalUrl ?? video.watchUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="eyg-inline-ext"
