@@ -1,0 +1,110 @@
+[
+  {
+    "width": 320,
+    "height": 760,
+    "scale": 1,
+    "metrics": {
+      "width": 318,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    "errors": [],
+    "keyboardTabs": true,
+    "mintSelection": true,
+    "disclosure": true,
+    "escapeAndCloseFocus": true,
+    "backdropFocus": true,
+    "reopenReset": true,
+    "readOnly": true
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "scale": 1,
+    "metrics": {
+      "width": 388,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    "errors": [],
+    "keyboardTabs": true,
+    "mintSelection": true,
+    "disclosure": true,
+    "escapeAndCloseFocus": true,
+    "backdropFocus": true,
+    "reopenReset": true,
+    "readOnly": true
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "scale": 1,
+    "metrics": {
+      "width": 518,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    "errors": [],
+    "keyboardTabs": true,
+    "mintSelection": true,
+    "disclosure": true,
+    "escapeAndCloseFocus": true,
+    "backdropFocus": true,
+    "reopenReset": true,
+    "readOnly": true
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "scale": 1,
+    "metrics": {
+      "width": 518,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    "errors": [],
+    "keyboardTabs": true,
+    "mintSelection": true,
+    "disclosure": true,
+    "escapeAndCloseFocus": true,
+    "backdropFocus": true,
+    "reopenReset": true,
+    "readOnly": true
+  },
+  {
+    "width": 390,
+    "height": 500,
+    "scale": 1,
+    "metrics": {
+      "width": 388,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    "errors": [],
+    "keyboardTabs": true,
+    "mintSelection": true,
+    "disclosure": true,
+    "escapeAndCloseFocus": true,
+    "backdropFocus": true,
+    "reopenReset": true,
+    "readOnly": true
+  },
+  {
+    "width": 320,
+    "height": 760,
+    "scale": 2,
+    "metrics": {
+      "width": 318,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    "errors": [],
+    "keyboardTabs": true,
+    "mintSelection": true,
+    "disclosure": true,
+    "escapeAndCloseFocus": true,
+    "backdropFocus": true,
+    "reopenReset": true,
+    "readOnly": true
+  }
+]

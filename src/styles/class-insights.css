@@ -295,7 +295,7 @@
   padding: 3px;
   border: 1px solid var(--pf-color-border-default, #dce5e1);
   border-radius: 8px;
-  background: var(--pf-color-bg-surface-subtle, #f2f6f4);
+  background: var(--pf-color-bg-surface, #fff);
 }
 
 .class-insights-tabs button {
@@ -305,10 +305,11 @@
   font-weight: 600;
 }
 
+/* Keep the selected segment mint, as in the supplied three-device concept. */
 .class-insights-tabs button[aria-selected='true'] {
-  background: var(--pf-color-bg-surface, #fff);
-  color: var(--pf-color-text-brand, #007565);
-  border-color: var(--pf-color-border-default, #dce5e1);
+  background: #d5eee5;
+  color: #185e50;
+  border-color: #d5eee5;
 }
 
 .class-insights-summary {
