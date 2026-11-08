@@ -117,6 +117,29 @@ describe('read-only class insights dialog', () => {
     expect(composition).toHaveFocus();
   });
 
+  it('shows the supplied concept tag list before optional exact timing without hiding the safety caveat', () => {
+    render(<ClassInsightsDialog {...props()} />);
+    const tags = screen.getByRole('list', { name: '부위 태그 목록' });
+    expect(within(tags).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(tags).getByText('코어')).toBeVisible();
+    expect(within(tags).getByText('둔근')).toBeVisible();
+    expect(screen.getByText(/실제 근육 부하가 아닙니다/)).toBeVisible();
+    const toggle = screen.getByText('태그별 계획 시간 보기');
+    const details = toggle.closest('details')!;
+    expect(tags.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(details).not.toHaveAttribute('open');
+    expect(within(details).getByText('코어 · 1개 동작')).not.toBeVisible();
+    fireEvent.click(toggle);
+    expect(within(details).getByText('코어 · 1개 동작')).toBeVisible();
+    expect(within(details).getAllByText('1분 30초 · 100.0%')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('tab', { name: '좌우' }));
+    fireEvent.click(screen.getByRole('tab', { name: '구성' }));
+    expect(details).toHaveAttribute('open');
+    fireEvent.click(toggle);
+    expect(details).not.toHaveAttribute('open');
+    expect(screen.getByText(/실제 근육 부하가 아닙니다/)).toBeVisible();
+  });
+
   it('limits tag bars to six then twelve while preserving the complete HTML table', () => {
     const tags = Array.from(
       { length: 15 },

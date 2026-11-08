@@ -34,11 +34,13 @@ function LabeledBar({
   seconds,
   denominator,
   compact = false,
+  tone,
 }: {
   label: string;
   seconds: number;
   denominator: number;
   compact?: boolean;
+  tone?: 'movement' | 'explanation' | 'transition' | 'rest';
 }) {
   const percent = denominator > 0 ? (seconds / denominator) * 100 : 0;
   return (
@@ -49,7 +51,7 @@ function LabeledBar({
           {timeLabel(seconds)} · {percent.toFixed(1)}%
         </strong>
       </div>
-      <div className="class-insights-bar-track" aria-hidden="true">
+      <div className="class-insights-bar-track" aria-hidden="true" data-tone={tone}>
         <span style={{ width: `${Math.max(0, Math.min(100, percent))}%` }} />
       </div>
     </div>
@@ -75,10 +77,10 @@ export function ClassInsightsDialog({
     [snapshot, includeExamples],
   );
   const timingRows = [
-    { label: '동작', seconds: plan.movementSec },
-    { label: '설명', seconds: plan.explanationSec },
-    { label: '전환', seconds: plan.transitionSec },
-    { label: '휴식', seconds: plan.restSec },
+    { label: '동작', seconds: plan.movementSec, tone: 'movement' as const },
+    { label: '설명', seconds: plan.explanationSec, tone: 'explanation' as const },
+    { label: '전환', seconds: plan.transitionSec, tone: 'transition' as const },
+    { label: '휴식', seconds: plan.restSec, tone: 'rest' as const },
   ];
   const sideRows = [
     { label: '명시한 왼쪽', seconds: plan.sides.leftSec },
@@ -152,6 +154,7 @@ export function ClassInsightsDialog({
               seconds={row.seconds}
               denominator={plan.totalSec}
               compact
+              tone={row.tone}
             />
           ))}
           <p className="class-insights-note class-insights-timing-note">
@@ -182,26 +185,25 @@ export function ClassInsightsDialog({
             </table>
           </details>
 
-          <h3 className="class-insights-tag-heading">부위 태그의 계획 범위</h3>
+          <h3 id={`${id}-tags-heading`} className="class-insights-tag-heading">
+            부위 태그의 계획 범위
+          </h3>
           <p className="class-insights-note">
             동작 메타데이터의 태그 범위이며 실제 근육 부하가 아닙니다. 한 동작에 여러 태그가 겹칠 수
             있어 비율 합계는 100%를 넘을 수 있습니다.
           </p>
-          <p className="class-insights-note">
-            막대의 기준: 전체 동작 시간 {timeLabel(plan.movementSec)}. 같은 동작의 중복 태그는 한
-            번만 셉니다.
-          </p>
           {!plan.bodyTags.length && (
             <p className="class-insights-empty">표시할 부위 태그가 없습니다.</p>
           )}
-          {visibleTags.map((tag) => (
-            <LabeledBar
-              key={tag.label}
-              label={`${tag.label} · ${tag.stepCount}개 동작`}
-              seconds={tag.movementSec}
-              denominator={plan.movementSec}
-            />
-          ))}
+          {visibleTags.length > 0 && (
+            <ul className="class-insights-tag-list" aria-label="부위 태그 목록">
+              {visibleTags.map((tag) => (
+                <li key={tag.label}>
+                  <span>{tag.label}</span>
+                </li>
+              ))}
+            </ul>
+          )}
           {plan.bodyTags.length > 6 && (
             <button
               type="button"
@@ -214,9 +216,28 @@ export function ClassInsightsDialog({
           )}
           {showMoreTags && plan.bodyTags.length > 12 && (
             <p className="class-insights-note">
-              막대는 상위 12개입니다. 나머지 {plan.bodyTags.length - 12}개는 아래 전체 표에서 확인할
-              수 있습니다.
+              목록과 막대는 상위 12개입니다. 나머지 {plan.bodyTags.length - 12}개는 아래 전체 표에서
+              확인할 수 있습니다.
             </p>
+          )}
+          {visibleTags.length > 0 && (
+            <details className="class-insights-data class-insights-tag-metrics">
+              <summary>태그별 계획 시간 보기</summary>
+              <div className="class-insights-tag-metrics-content">
+                <p className="class-insights-note">
+                  막대의 기준: 전체 동작 시간 {timeLabel(plan.movementSec)}. 같은 동작의 중복 태그는
+                  한 번만 셉니다.
+                </p>
+                {visibleTags.map((tag) => (
+                  <LabeledBar
+                    key={tag.label}
+                    label={`${tag.label} · ${tag.stepCount}개 동작`}
+                    seconds={tag.movementSec}
+                    denominator={plan.movementSec}
+                  />
+                ))}
+              </div>
+            </details>
           )}
           <div className="class-insights-missing">
             <p>
