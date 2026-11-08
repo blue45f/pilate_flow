@@ -1,625 +1,133 @@
-/* Dedicated styles for ClassBinderView history progressive disclosure & 100%/200% zoom readability */
-
-#root .vnext-shell .teaching-collection.teaching-collection--history,
-#root .teaching-collection.teaching-collection--history,
-.teaching-collection.teaching-collection--history {
+/* History only: override global atelier card density without changing saved classes.
+   Dates anchor each group; details retain all timing, source and movement information. */
+#root .vnext-shell .teaching-collection.teaching-collection--history {
   container-type: inline-size;
   container-name: history-collection;
-  padding-top: 0;
-  margin-top: -32px;
-  max-width: 100%;
-  min-width: 0;
-  overflow-x: hidden;
-  box-sizing: border-box;
-}
-
-#root .teaching-collection--history > *,
-.teaching-collection--history > * {
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-#root .vnext-shell .teaching-collection--history .teaching-page-header,
-#root .teaching-collection--history .teaching-page-header,
-.teaching-collection--history .teaching-page-header {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  margin-bottom: 1px;
-  min-height: 44px;
-  max-width: 100%;
-  min-width: 0;
-}
-
-#root .teaching-collection--history .teaching-page-header > div,
-.teaching-collection--history .teaching-page-header > div {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 6px;
-  overflow: hidden;
-}
-
-#root .teaching-collection--history .teaching-page-header .eyebrow,
-.teaching-collection--history .teaching-page-header .eyebrow {
-  display: none;
-}
-
-#root .teaching-collection--history .teaching-page-header h1,
-.teaching-collection--history .teaching-page-header h1 {
-  font-size: 16px;
-  line-height: 1.15;
-  margin: 0;
-  gap: 5px;
-  white-space: nowrap;
-  flex: 0 0 auto;
-}
-
-#root .teaching-collection--history .teaching-page-header .teaching-count,
-.teaching-collection--history .teaching-page-header .teaching-count {
-  font-size: 12px;
-  padding: 1px 6px;
-}
-
-#root .teaching-collection--history .teaching-page-header p,
-.teaching-collection--history .teaching-page-header p {
-  font-size: 12px;
-  line-height: 1.15;
-  margin: 0;
-  flex: 1 1 auto;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-#root .teaching-collection--history .teaching-page-header > button,
-.teaching-collection--history .teaching-page-header > button {
   margin-top: 0;
-  min-height: 44px;
-  min-width: 44px;
-  padding: 4px 8px;
-  font-size: 12px;
-  line-height: 1.15;
-  flex: 0 0 auto;
-  white-space: nowrap;
-}
-
-#root .vnext-shell .teaching-collection--history .teaching-separation-banner,
-#root .teaching-collection--history .teaching-separation-banner,
-.teaching-collection--history .teaching-separation-banner {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: space-between;
-  overflow: hidden;
-  padding: 1px 6px;
-  margin-bottom: 1px;
-  gap: 6px;
-  border-radius: 5px;
-  font-size: 12px;
-  line-height: 1.15;
-  max-width: 100%;
-  min-width: 0;
-}
-
-#root .teaching-collection--history .teaching-separation-banner .teaching-record-kind-badge,
-.teaching-collection--history .teaching-separation-banner .teaching-record-kind-badge {
-  flex: 0 0 auto;
-  padding: 1px 5px;
-  font-size: 12px;
-  gap: 4px;
-  white-space: nowrap;
-}
-
-#root .teaching-collection--history .teaching-separation-banner .teaching-contract-status,
-.teaching-collection--history .teaching-separation-banner .teaching-contract-status {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-size: 12px;
-  line-height: 1.15;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-#root .teaching-collection--history .teaching-collection-toolbar,
-.teaching-collection--history .teaching-collection-toolbar {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  margin-bottom: 1px;
-  max-width: 100%;
-  min-width: 0;
-}
-
-#root .teaching-collection--history .teaching-search,
-.teaching-collection--history .teaching-search {
-  min-height: 44px;
-  height: 44px;
-  padding: 0 8px;
-  flex: 1 1 180px;
+  padding-top: 0;
   min-width: 0;
   max-width: 100%;
 }
-
-#root .teaching-collection--history .teaching-search input,
-.teaching-collection--history .teaching-search input {
-  font-size: 12px;
-  min-width: 0;
+#root .teaching-collection--history :where(*) { box-sizing: border-box; }
+#root .teaching-collection--history > * { min-width: 0; max-width: 100%; }
+#root .teaching-collection--history .teaching-page-header {
+  display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 12px; margin-bottom: 16px; align-items: center;
 }
-
-#root .teaching-collection--history .teaching-collection-toolbar > .muted,
-.teaching-collection--history .teaching-collection-toolbar > .muted {
-  flex: 0 1 auto;
-  min-width: 0;
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.15;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+#root .teaching-collection--history .teaching-page-header > div { display: contents; }
+#root .teaching-collection--history .teaching-page-header .eyebrow { display: none; }
+#root .teaching-collection--history .teaching-page-header h1 {
+  font-size: 28px; line-height: 1.3; margin: 0 0 8px; letter-spacing: -.03em;
 }
-
-/* Group filter progressive disclosure bar */
-#root .teaching-collection--history .teaching-group-filters,
-.teaching-collection--history .teaching-group-filters {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  margin-bottom: 1px;
-  max-width: 100%;
-  min-width: 0;
+#root .teaching-collection--history .teaching-page-header p {
+  grid-column: 1 / -1; grid-row: 2; font-size: 14px; line-height: 1.6; margin: 0; white-space: normal;
 }
-
-#root .teaching-collection--history .teaching-group-filters.is-collapsed,
-.teaching-collection--history .teaching-group-filters.is-collapsed {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
+#root .teaching-collection--history .teaching-count { font-size: 14px; }
+#root .teaching-collection--history .teaching-separation-banner {
+  display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 12px 16px;
+  margin-bottom: 16px; border-radius: 12px; overflow: visible;
 }
-
-#root .teaching-collection--history .teaching-group-filters.is-collapsed::-webkit-scrollbar,
-.teaching-collection--history .teaching-group-filters.is-collapsed::-webkit-scrollbar {
-  display: none;
+#root .teaching-collection--history :is(.teaching-contract-status,.teaching-record-kind-badge) {
+  font-size: 14px; line-height: 1.5; white-space: normal; overflow-wrap: anywhere;
 }
-
-#root .teaching-collection--history .teaching-group-filters.is-collapsed .teaching-group-chip-list,
-.teaching-collection--history .teaching-group-filters.is-collapsed .teaching-group-chip-list {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 4px;
-  flex: 0 0 auto;
+#root .teaching-collection--history .teaching-collection-toolbar { margin-bottom: 12px; gap: 12px; }
+#root .teaching-collection--history .teaching-search { min-width: 0; min-height: 48px; flex: 1; }
+#root .teaching-collection--history .teaching-search input { font-size: 16px; min-width: 0; }
+#root .teaching-collection--history .teaching-collection-toolbar > .muted { display: none; }
+#root .teaching-collection--history :is(.teaching-group-filters,.teaching-date-nav) {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  min-width: 0; padding: 0; margin-bottom: 12px; border: 0; background: transparent;
 }
-
-#root .teaching-collection--history .teaching-group-filters.is-expanded,
-.teaching-collection--history .teaching-group-filters.is-expanded {
-  flex-wrap: wrap;
-  padding: 4px 6px;
-  border-radius: 8px;
-  background: #f6f8f2;
-  border: 1px solid #dce4d5;
+#root .teaching-collection--history :is(.teaching-group-chip-list,.teaching-date-chip-list) {
+  display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; max-width: 100%;
 }
-
-#root .teaching-collection--history .teaching-group-filters.is-expanded .teaching-group-chip-list,
-.teaching-collection--history .teaching-group-filters.is-expanded .teaching-group-chip-list {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-  flex: 1 1 100%;
-  max-height: 156px;
-  overflow-y: auto;
+#root .teaching-collection--history :is(.teaching-group-filters,.teaching-date-nav).is-collapsed {
+  flex-wrap: nowrap; overflow-x: auto; padding: 2px 2px 8px;
 }
-
-#root .teaching-collection--history .teaching-group-filters .teaching-filter,
-.teaching-collection--history .teaching-group-filters .teaching-filter {
-  flex: 0 0 auto;
-  width: auto;
-  max-width: 180px;
-  min-height: 44px;
-  min-width: 44px;
-  padding: 4px 10px;
-  font-size: 12px;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+#root .teaching-collection--history .is-collapsed :is(.teaching-group-chip-list,.teaching-date-chip-list) {
+  flex-wrap: nowrap; flex: 0 0 auto; max-width: none;
 }
-
-#root .teaching-collection--history .teaching-group-filters.is-expanded .teaching-filter,
-.teaching-collection--history .teaching-group-filters.is-expanded .teaching-filter {
-  max-width: 100%;
-  white-space: normal;
-  text-align: left;
+#root .teaching-collection--history :is(.teaching-filter,.teaching-date-chip,.teaching-date-reset,.teaching-date-nav-label) {
+  flex-shrink: 0; font-size: 14px; line-height: 1.5; min-height: 44px; padding: 10px 14px;
+  max-width: 100%; white-space: normal; overflow-wrap: anywhere;
 }
-
-/* Date filter progressive disclosure bar */
-#root .teaching-collection--history .teaching-date-nav,
-.teaching-collection--history .teaching-date-nav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 4px;
-  margin-bottom: 2px;
-  border-radius: 8px;
-  border: 0;
-  max-width: 100%;
-  min-width: 0;
+#root .teaching-collection--history .is-collapsed :is(.teaching-filter,.teaching-date-chip,.teaching-date-reset) { white-space: nowrap; }
+#root .teaching-collection--history .teaching-date-nav-label { display: none; }
+#root .teaching-collection--history .teaching-date-chip-count { font-size: 14px; }
+#root .teaching-collection--history .teaching-history-layout {
+  display: grid; grid-template-columns: minmax(0,1fr) 280px; gap: 28px; margin-top: 12px;
 }
-
-#root .teaching-collection--history .teaching-date-nav.is-collapsed,
-.teaching-collection--history .teaching-date-nav.is-collapsed {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
+#root .teaching-collection--history :is(.teaching-history-feed,.teaching-history-date-group) {
+  display: grid; min-width: 0; gap: 16px;
 }
-
-#root .teaching-collection--history .teaching-date-nav.is-collapsed::-webkit-scrollbar,
-.teaching-collection--history .teaching-date-nav.is-collapsed::-webkit-scrollbar {
-  display: none;
+#root .teaching-collection--history .teaching-history-feed { gap: 32px; }
+#root .teaching-collection--history .teaching-history-date-header {
+  display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 0; background: transparent; border: 0;
+  font-size: 16px; line-height: 1.5;
 }
-
-#root .teaching-collection--history .teaching-date-nav-label,
-.teaching-collection--history .teaching-date-nav-label {
-  flex: 0 0 auto;
-  min-height: 28px;
-  font-size: 12px;
-  white-space: nowrap;
+#root .teaching-collection--history .teaching-history-date-count { font-size: 14px; background: transparent; }
+#root .teaching-collection--history .teaching-history-card {
+  display: flex; flex-direction: column; align-items: stretch; gap: 16px;
+  padding: 24px; border-radius: 16px; min-width: 0; max-width: 100%; overflow: visible;
+  box-shadow: 0 3px 16px rgb(35 66 61 / 3%);
 }
-
-#root .teaching-collection--history .teaching-date-nav.is-collapsed .teaching-date-chip-list,
-.teaching-collection--history .teaching-date-nav.is-collapsed .teaching-date-chip-list {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 4px;
-  flex: 0 0 auto;
-  width: auto;
+#root .teaching-collection--history .teaching-card-top {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 0;
 }
-
-#root .teaching-collection--history .teaching-date-nav.is-expanded,
-.teaching-collection--history .teaching-date-nav.is-expanded {
-  flex-wrap: wrap;
-  padding: 4px 8px;
-  border: 1px solid #dce4d5;
+#root .teaching-collection--history .teaching-history-datetime { display: flex; flex-wrap: wrap; gap: 8px; }
+#root .teaching-collection--history .teaching-history-card-date {
+  position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
 }
-
-#root .teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-nav-label,
-.teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-nav-label {
-  order: 1;
-  margin-right: auto;
+#root .teaching-collection--history :is(.teaching-history-time-of-day,.teaching-history-time-pill,.teaching-history-group) {
+  font-size: 14px; line-height: 1.5; padding: 2px 8px; max-width: 100%;
+  white-space: normal; overflow-wrap: anywhere;
 }
-
-#root .teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-more-toggle,
-#root .teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-reset,
-.teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-more-toggle,
-.teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-reset {
-  order: 2;
+#root .teaching-collection--history .teaching-history-card h2 {
+  font-size: 20px; line-height: 1.5; margin: 0; white-space: normal; overflow-wrap: anywhere;
 }
-
-#root .teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-chip-list,
-.teaching-collection--history .teaching-date-nav.is-expanded .teaching-date-chip-list {
-  order: 3;
-  flex: 1 1 100%;
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(144px, 1fr));
-  gap: 4px;
-  max-height: 176px;
-  overflow-y: auto;
-  padding-right: 2px;
+#root .teaching-collection--history .teaching-reflection {
+  font-size: 16px; line-height: 1.7; margin: 0; padding: 0 0 0 12px;
+  white-space: pre-wrap; overflow-wrap: anywhere; color: #43554f;
 }
-
-#root .teaching-collection--history .teaching-date-chip,
-.teaching-collection--history .teaching-date-chip {
-  flex: 0 0 auto;
-  min-height: 44px;
-  min-width: 44px;
-  padding: 4px 8px;
-  font-size: 12px;
-  line-height: 1.15;
-  white-space: nowrap;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
+#root .teaching-collection--history .teaching-history-details { min-width: 0; }
+#root .teaching-collection--history .teaching-history-details summary {
+  font-size: 14px; line-height: 1.5; min-height: 44px; padding: 12px 0;
+  cursor: pointer; color: #35594e;
 }
-
-#root .teaching-collection--history .teaching-date-chip-count,
-.teaching-collection--history .teaching-date-chip-count {
-  font-size: 12px;
+#root .teaching-collection--history .teaching-history-details[open] summary { margin-bottom: 12px; }
+#root .teaching-collection--history :is(.teaching-card-stats,.teaching-history-badges,.teaching-history-exercises) {
+  display: flex; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 12px; white-space: normal;
 }
-
-#root .teaching-collection--history .teaching-date-more-toggle,
-#root .teaching-collection--history .teaching-date-reset,
-#root .teaching-collection--history .teaching-group-more-toggle,
-#root .teaching-collection--history .teaching-group-reset,
-.teaching-collection--history .teaching-date-more-toggle,
-.teaching-collection--history .teaching-date-reset,
-.teaching-collection--history .teaching-group-more-toggle,
-.teaching-collection--history .teaching-group-reset {
-  flex: 0 0 auto;
-  min-height: 44px;
-  min-width: 44px;
-  padding: 4px 6px;
-  font-size: 12px;
-  line-height: 1.15;
-  white-space: nowrap;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+#root .teaching-collection--history :is(.teaching-card-stats,.teaching-rest-summary,.teaching-history-badges > span,.teaching-history-exercises .pf-block-pill,.teaching-drift-badge) {
+  font-size: 14px; line-height: 1.6; white-space: normal; overflow-wrap: anywhere; max-width: 100%;
 }
-
-/* Container-responsive history feed & compact 2-column card layout */
-@container history-collection (max-width: 860px) {
-  #root .teaching-collection--history .teaching-history-layout,
-  .teaching-collection--history .teaching-history-layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-  }
-
-  #root .teaching-collection--history .teaching-collection-toolbar > .muted,
-  .teaching-collection--history .teaching-collection-toolbar > .muted {
-    display: none;
-  }
+#root .teaching-collection--history .teaching-rest-summary { margin: 0 0 12px; }
+#root .teaching-collection--history .teaching-history-bottom {
+  display: flex; flex-direction: column; align-items: stretch; gap: 12px;
+  margin: 0; padding-top: 16px; border-top: 1px solid #e2e9e4;
 }
-
-#root .teaching-collection--history .teaching-history-layout,
-.teaching-collection--history .teaching-history-layout {
-  max-width: 100%;
-  min-width: 0;
+#root .teaching-collection--history .teaching-history-bottom > .muted {
+  display: block; flex: none; font-size: 14px; line-height: 1.6; white-space: normal; overflow-wrap: anywhere;
 }
-
-#root .teaching-collection--history .teaching-history-feed,
-.teaching-collection--history .teaching-history-feed {
-  gap: 4px;
-  max-width: 100%;
-  min-width: 0;
+#root .teaching-collection--history .teaching-history-actions {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end;
 }
-
-#root .teaching-collection--history .teaching-history-date-group,
-.teaching-collection--history .teaching-history-date-group {
-  gap: 2px;
-  max-width: 100%;
-  min-width: 0;
+#root .teaching-collection--history :is(button,.pf-button) {
+  min-height: 44px; font-size: 14px; line-height: 1.5; white-space: normal;
 }
-
-#root .teaching-collection--history .teaching-history-date-header,
-.teaching-collection--history .teaching-history-date-header {
-  padding: 1px 6px;
-  border-radius: 5px;
-  font-size: 12px;
-  line-height: 1.15;
+#root .teaching-collection--history :is(button,summary,input):focus-visible {
+  outline: 3px solid #22796d; outline-offset: 3px;
 }
-
-#root .teaching-collection--history .teaching-history-date-count,
-.teaching-collection--history .teaching-history-date-count {
-  font-size: 12px;
-  padding: 1px 6px;
+@container history-collection (max-width: 900px) {
+  #root .teaching-collection--history .teaching-history-layout { grid-template-columns: minmax(0,1fr); }
 }
-
-#root .teaching-collection--history .teaching-history-card,
-.teaching-collection--history .teaching-history-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 1px 6px;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 8px;
-  max-width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-#root .teaching-collection--history .teaching-history-card .teaching-card-top,
-.teaching-collection--history .teaching-history-card .teaching-card-top {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-  margin-bottom: 0;
-  overflow: hidden;
-  min-width: 0;
-}
-
-#root .teaching-collection--history .teaching-history-datetime,
-.teaching-collection--history .teaching-history-datetime {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  line-height: 1.15;
-  min-width: 0;
-  white-space: nowrap;
-}
-
-#root .teaching-collection--history .teaching-history-time-of-day,
-#root .teaching-collection--history .teaching-history-time-pill,
-.teaching-collection--history .teaching-history-time-of-day,
-.teaching-collection--history .teaching-history-time-pill {
-  padding: 0 4px;
-  font-size: 12px;
-  line-height: 1.15;
-}
-
-#root .teaching-collection--history .teaching-history-group,
-.teaching-collection--history .teaching-history-group {
-  padding: 0 5px;
-  font-size: 12px;
-  line-height: 1.15;
-  max-width: 130px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-#root .teaching-collection--history .teaching-history-card h2,
-.teaching-collection--history .teaching-history-card h2 {
-  grid-column: 1 / -1;
-  font-size: 14px;
-  line-height: 1.15;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-#root .teaching-collection--history .teaching-history-card .teaching-card-stats,
-.teaching-collection--history .teaching-history-card .teaching-card-stats {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow: hidden;
-  gap: 5px;
-  font-size: 12px;
-  line-height: 1.15;
-  margin: 0;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-#root .teaching-collection--history .teaching-history-card .teaching-rest-summary,
-.teaching-collection--history .teaching-history-card .teaching-rest-summary {
-  padding: 0 4px;
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.15;
-  border-radius: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-
-#root .teaching-collection--history .teaching-history-badges,
-.teaching-collection--history .teaching-history-badges {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow: hidden;
-  gap: 4px;
-  margin: 0;
-  min-width: 0;
-}
-
-#root .teaching-collection--history .teaching-history-badges > span,
-.teaching-collection--history .teaching-history-badges > span {
-  padding: 0 5px;
-  font-size: 12px;
-  line-height: 1.15;
-  white-space: nowrap;
-}
-
-#root .teaching-collection--history .teaching-reflection,
-.teaching-collection--history .teaching-reflection {
-  margin: 0;
-  padding: 0 0 0 5px;
-  font-size: 12px;
-  line-height: 1.15;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-
-#root .teaching-collection--history .teaching-history-exercises,
-.teaching-collection--history .teaching-history-exercises {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  gap: 4px;
-  margin: 0;
-  scrollbar-width: none;
-  min-width: 0;
-}
-
-#root .teaching-collection--history .teaching-history-exercises::-webkit-scrollbar,
-.teaching-collection--history .teaching-history-exercises::-webkit-scrollbar {
-  display: none;
-}
-
-#root .teaching-collection--history .teaching-history-exercises .pf-block-pill,
-.teaching-collection--history .teaching-history-exercises .pf-block-pill {
-  flex: 0 0 auto;
-  padding: 0 5px;
-  font-size: 12px;
-  line-height: 1.15;
-  max-width: 160px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-#root .teaching-collection--history .teaching-history-bottom,
-.teaching-collection--history .teaching-history-bottom {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 1px;
-  padding-top: 1px;
-  gap: 6px;
-  min-width: 0;
-}
-
-#root .teaching-collection--history .teaching-history-bottom > .muted,
-.teaching-collection--history .teaching-history-bottom > .muted {
-  font-size: 12px;
-  line-height: 1.15;
-  flex: 1 1 0;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 @container history-collection (max-width: 520px) {
-  #root .teaching-collection--history .teaching-page-header p,
-  .teaching-collection--history .teaching-page-header p,
-  #root .teaching-collection--history .teaching-history-bottom > .muted,
-  .teaching-collection--history .teaching-history-bottom > .muted {
-    display: none;
-  }
-
-  #root .teaching-collection--history .teaching-history-actions,
-  .teaching-collection--history .teaching-history-actions {
-    width: 100%;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 4px;
-  }
+  #root .teaching-collection--history .teaching-page-header { gap: 12px; }
+  #root .teaching-collection--history .teaching-page-header h1 { font-size: 26px; }
+  #root .teaching-collection--history .teaching-history-card { padding: 18px; gap: 12px; }
+  #root .teaching-collection--history .teaching-history-actions { display: grid; grid-template-columns: minmax(0,1fr); }
+  #root .teaching-collection--history .teaching-history-actions button { width: 100%; }
+  #root .teaching-collection--history .teaching-history-actions button:first-child { order: 2; }
 }
 
-#root .teaching-collection--history .teaching-history-actions button,
-.teaching-collection--history .teaching-history-actions button {
-  min-height: 44px;
-  min-width: 44px;
-  padding: 4px 8px;
-  font-size: 12px;
-  line-height: 1.15;
-  white-space: nowrap;
-}
+#root .teaching-collection--history .teaching-page-header > button { grid-column: 2; grid-row: 1; }
