@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "recordKind": "rotation-mat-original-factual-records",
   "checkedAtUtc": "2026-11-08",
   "anatomicalAccuracyAssumed": false,
@@ -19,55 +19,77 @@
     "anatomicalAccuracyAssumed": false,
     "professionalReviewCount": 0,
     "sourceFrameMappings": 0,
-    "notice": "Original clean-room mathematical 3D-to-2D axial rotation projection. External public references are cited for high-level movement structure only; no images, frames, or text were copied or traced."
+    "notice": "Original authored schematic geometry only. Publisher page text was read and paraphrased for high-level cues; linked videos and source images were not used, copied or traced. No license or public-domain claim is made for external content."
   },
   "sources": [
     {
-      "sourceId": "pilates-1945-return-to-life-rotation-v1",
-      "title": "Return to Life Through Contrology (Exercises #11 The Saw, #14 The Spine Twist, #16 The Criss-Cross)",
-      "publisher": "J.J. Augustin / Joseph H. Pilates & William J. Miller (1945 US Public Domain)",
-      "url": "https://archive.org/details/returntolifethro00pila",
-      "publishedDate": "1945-01-01",
+      "sourceId": "pilatesology-saw-public-text-v1",
+      "title": "Pilatesology Encyclopedia: The Saw",
+      "publisher": "Pilatesology",
+      "url": "https://pilatesology.com/pilatesology-encyclopedia-the-saw/",
+      "publishedDate": null,
       "checkedAtUtc": "2026-11-08",
       "verification": "public-text-checked",
-      "locator": "Exercise #11 The Saw, Exercise #14 The Spine Twist, Exercise #16 The Criss-Cross",
-      "factualRecordSha256": "8c5d91f44e70a3b9711e5d6b7c823a1940f2e1d5c6b7a809123456789abcdef0",
+      "locator": "Mat; Tips",
+      "supportsMovementIds": [
+        "rotation-mat-saw"
+      ],
       "facts": [
-        "The Saw (#11): Long sitting with legs spread wide apart in a V-sit and arms extended laterally at shoulder height; axial torso twist precedes forward diagonal reach so the little finger slices past the opposite little toe while both buttocks stay anchored on the mat.",
-        "The Spine Twist (#14): Upright long sitting with legs straight and pressed together, ankles dorsiflexed, arms out to the sides in a T-shape; pure vertical-axis rotation of the ribcage and head together without pelvis shift or independent arm swing.",
-        "The Criss-Cross (#16): Supine curl with hands behind the head and elbows wide; oblique upper-trunk rotation brings the armpit/ribcage toward the opposite bent tabletop knee while the other leg extends at a diagonal and the pelvis remains level on the mat."
+        "Keep the opposite hip on the mat during the reach.",
+        "Initiate the twist from the waist; reach the fingers toward the opposite little toe.",
+        "Maintain abdominal support in the forward curved position."
       ]
     },
     {
-      "sourceId": "nhs-seated-thoracic-rotation-guidance-v1",
-      "title": "NHS Physiotherapy — Seated Thoracic Rotation & Mid-Back Mobility Guidance",
-      "publisher": "Cambridge University Hospitals NHS Foundation Trust / Dynamic Health NHS",
-      "url": "https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/",
-      "publishedDate": "2024-01-01",
+      "sourceId": "pilatesology-spine-twist-public-text-v1",
+      "title": "Pilatesology Encyclopedia: The Spine Twist",
+      "publisher": "Pilatesology",
+      "url": "https://pilatesology.com/pilatesology-encyclopedia-the-spine-twist/",
+      "publishedDate": null,
       "checkedAtUtc": "2026-11-08",
       "verification": "public-text-checked",
-      "locator": "Pilates principles: centring, ribcage alignment, and seated thoracic rotation",
-      "factualRecordSha256": "4b9e2d8a1c3f6075e8a92d41b7c3f801a2e4d6c8b0f1a3e5d7c9b1a2f4e6d8c0",
+      "locator": "Mat; Tips",
+      "supportsMovementIds": [
+        "rotation-mat-spine-twist"
+      ],
       "facts": [
-        "Seated spinal rotation requires equal weight distribution across both ischial tuberosities (sit-bones) so rotation occurs in the thoracic spine rather than through pelvic shifting.",
-        "Axial elongation (growing tall through the crown of the head) precedes rotation to avoid compressive lumbar shear.",
-        "Head and gaze follow the line of the breastbone (sternum) to prevent cervical over-rotation."
+        "Sit upright rather than dropping behind the hips.",
+        "Keep the feet flexed and together.",
+        "Maintain a lifted spine during the twist."
       ]
     },
     {
-      "sourceId": "merrithew-stott-rotation-biomechanics-v1",
-      "title": "Merrithew / STOTT PILATES — Biomechanics of Spinal Rotation (Spine Twist, Saw & Obliques)",
-      "publisher": "Merrithew Corporation",
-      "url": "https://www.merrithew.com/blog/post/2018-05-15/exercise-of-the-month-spine-twist",
-      "publishedDate": "2018-05-15",
+      "sourceId": "pilatesology-criss-cross-public-text-v1",
+      "title": "Pilatesology Encyclopedia: Criss-Cross",
+      "publisher": "Pilatesology",
+      "url": "https://pilatesology.com/pilatesology-encyclopedia-criss-cross/",
+      "publishedDate": null,
       "checkedAtUtc": "2026-11-08",
       "verification": "public-text-checked",
-      "locator": "Biomechanical focus: Scapular stabilization in coronal plane during Spine Twist, opposite sit-bone anchor in Saw, and anterior oblique sling in Criss-Cross",
-      "factualRecordSha256": "9f1a3c5e7b0d2f4a6c8e0b2d4f6a8c0e2b4d6f8a0c2e4b6d8f0a2c4e6b8d0f2a",
+      "locator": "Mat; Tips",
+      "supportsMovementIds": [
+        "rotation-mat-criss-cross"
+      ],
       "facts": [
-        "In Spine Twist, arms remain fixed in the scapular/coronal plane of the ribcage so apparent horizontal arm foreshortening reflects genuine thoracic rotation rather than glenohumeral horizontal adduction.",
-        "In Saw, the rear arm internally rotates and extends backward in opposition to the front hand reaching past the opposite fifth toe, followed by sequential spinal restacking while still rotated before returning to center.",
-        "In Criss-Cross, the elbows remain wide in peripheral vision while the internal/external oblique sling rotates the ribcage toward the opposite knee without rocking the sacrum."
+        "Lift and twist the torso instead of moving the shoulders alone.",
+        "Keep the torso controlled rather than rocking during the leg change.",
+        "Maintain consistent leg length and height through the change."
+      ]
+    },
+    {
+      "sourceId": "basi-classical-mat-order-public-text-v1",
+      "title": "The Classical Pilates Mat Exercises Listed",
+      "publisher": "BASI Pilates",
+      "url": "https://www.basipilates.com/fitness/the-classical-pilates-mat-exercises-listed/",
+      "publishedDate": "2017-03-29",
+      "checkedAtUtc": "2026-11-08",
+      "verification": "public-text-checked",
+      "locator": "The 34 exercises listed in Return to Life order",
+      "supportsMovementIds": [],
+      "facts": [
+        "The list places Saw at 11 and Spine Twist at 19.",
+        "Items 14 and 16 are Double Leg Kick and Scissors, respectively.",
+        "Criss-Cross does not appear in this original 34-exercise list. This list is used for numbering only, not pose geometry."
       ]
     }
   ],
@@ -79,38 +101,37 @@
       "catalogIds": [
         "rotation-mat-saw",
         "original-mat-saw",
-        "ex-rotation-02",
-        "ex-cooldown-01",
-        "ex-warmup-02"
+        "ex-rotation-02"
       ],
-      "biomechanicalDistinctions": {
-        "rotationAxis": "Vertical axial rotation first (crown-to-sacrum), then oblique sagittal-transverse hinge flexion toward opposite foot",
-        "pelvisAnchor": "Wide V-sit bilateral sit-bone lock; opposite sit-bone remains 100% grounded (pelvisShiftMm === 0)",
-        "gazeVector": "Tracks sternum during twist, then angles diagonally down toward the back hip / inner knee during saw reach",
-        "ribcageAndScapula": "Front pinky finger slices past outside of opposite little toe; rear arm internally rotates (thumb down) and reaches backward in opposition",
-        "transitionPose": "Spine restacks vertically while maintaining axial rotation before untwisting to center T-arm setup"
-      }
+      "sourceIds": [
+        "pilatesology-saw-public-text-v1"
+      ],
+      "sourceSupportedCues": {
+        "rotationAxis": "Turn the torso, then reach diagonally toward the opposite foot.",
+        "pelvisAnchor": "Keep the opposite hip supported on the mat; reduce the reach if it lifts.",
+        "transitionPose": "Return with control; the illustrated phase timings are authored."
+      },
+      "illustrationLimits": "Joint angles, fixed anchors, gaze, apparent depth, phase timing and muscle overlays are authored simplifications, not individual anatomical targets or clinical measurements."
     },
     "rotation-mat-spine-twist": {
       "movementId": "rotation-mat-spine-twist",
-      "nameKo": "스파인 트위스트 (The Spine Twist · 장좌 수직 축 순수 흉추 회전)",
-      "nameEn": "The Spine Twist (Long-Sitting Pure Vertical-Axis Thoracic Rotation)",
+      "nameKo": "스파인 트위스트 (The Spine Twist · 장좌 수직 축 몸통 회전)",
+      "nameEn": "The Spine Twist (Long-Sitting Upright Seated Rotation)",
       "catalogIds": [
         "rotation-mat-spine-twist",
         "seated-rotation",
         "original-mat-spine-twist",
-        "ex-rotation-01",
-        "ex-core-02",
-        "original-chair-seated-spine-twist",
-        "original-cadillac-seated-rotation"
+        "ex-rotation-01"
       ],
-      "biomechanicalDistinctions": {
-        "rotationAxis": "Pure vertical plumb axis from vertex (crown) through thoracic cylinder to midpoint between sit-bones (0 deg sagittal lean)",
-        "pelvisAnchor": "Legs pressed together in long sitting with dorsiflexed ankles; zero heel shift (heelAlignmentDeltaMm === 0, pelvisShiftMm === 0)",
-        "gazeVector": "Horizontal gaze coupled strictly to sternum normal vector (no independent neck cranking)",
-        "ribcageAndScapula": "180 deg T-arms locked in coronal plane of ribcage; 2D shoulder span foreshortens by cos(yawDeg) as ribcage rotates",
-        "transitionPose": "Axial elongation (growing taller) while unwinding lower-to-upper ribs back to center"
-      }
+      "sourceIds": [
+        "pilatesology-spine-twist-public-text-v1"
+      ],
+      "sourceSupportedCues": {
+        "rotationAxis": "Twist while maintaining an upright, lifted seated torso.",
+        "pelvisAnchor": "Keep feet together and flexed; avoid dropping behind the hips.",
+        "transitionPose": "Return to center with control; the illustrated sequencing is authored."
+      },
+      "illustrationLimits": "Joint angles, fixed anchors, gaze, apparent depth, phase timing and muscle overlays are authored simplifications, not individual anatomical targets or clinical measurements."
     },
     "rotation-mat-criss-cross": {
       "movementId": "rotation-mat-criss-cross",
@@ -119,17 +140,30 @@
       "catalogIds": [
         "rotation-mat-criss-cross",
         "original-mat-criss-cross",
-        "ex-rotation-03",
-        "ex-core-03",
-        "ex-kr-reformer-04"
+        "ex-rotation-03"
       ],
-      "biomechanicalDistinctions": {
-        "rotationAxis": "Compound thoracic flexion + oblique axial rotation above T7-T12 while lumbar spine and sacrum remain imprinted",
-        "pelvisAnchor": "Level sacrum and bilateral ASIS horizontal anchor on mat (pelvisShiftMm === 0) despite alternating 45 deg leg extension",
-        "gazeVector": "Oblique gaze past the outside of the bent tabletop knee / toward the grounded back elbow",
-        "ribcageAndScapula": "Hands behind occiput with elbows kept wide (168 deg); anterior ribcage/armpit rotates toward opposite 90 deg tabletop knee while opposite scapula lifts clear of mat",
-        "transitionPose": "Pass through center maintaining upper thoracic curl height (scapular inferior angles off mat) while switching legs"
-      }
+      "sourceIds": [
+        "pilatesology-criss-cross-public-text-v1"
+      ],
+      "sourceSupportedCues": {
+        "rotationAxis": "Lift and rotate the torso rather than moving shoulders alone.",
+        "pelvisAnchor": "Control rocking while changing legs.",
+        "transitionPose": "Change legs without losing torso control; exact angles are not prescribed by this source."
+      },
+      "illustrationLimits": "Joint angles, fixed anchors, gaze, apparent depth, phase timing and muscle overlays are authored simplifications, not individual anatomical targets or clinical measurements."
     }
+  },
+  "verificationScope": "Public publisher text supports high-level movement cues only. Numeric joint coordinates, angles, gaze coupling, timing, muscle activity and exact video frames are not source-measured.",
+  "excludedCatalogAliases": {
+    "ex-core-02": "Different apparatus, posture or multi-movement series; no exact mat rotation diagram match established.",
+    "original-chair-seated-spine-twist": "Different apparatus, posture or multi-movement series; no exact mat rotation diagram match established.",
+    "original-cadillac-seated-rotation": "Different apparatus, posture or multi-movement series; no exact mat rotation diagram match established.",
+    "ex-cooldown-01": "Different apparatus, posture or multi-movement series; no exact mat rotation diagram match established.",
+    "ex-warmup-02": "Different apparatus, posture or multi-movement series; no exact mat rotation diagram match established.",
+    "ex-core-03": "Different apparatus, posture or multi-movement series; no exact mat rotation diagram match established.",
+    "ex-kr-reformer-04": "Different apparatus, posture or multi-movement series; no exact mat rotation diagram match established.",
+    "original-barrel-standing-rotation": "Different apparatus, posture or multi-movement series; no exact mat rotation diagram match established.",
+    "original-mat-open-book": "Different apparatus, posture or multi-movement series; no exact mat rotation diagram match established.",
+    "seated-roll-back-spine-twist": "Different apparatus, posture or multi-movement series; no exact mat rotation diagram match established."
   }
 }

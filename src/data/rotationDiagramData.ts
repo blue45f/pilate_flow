@@ -42,7 +42,7 @@ export interface RotationPatternReference {
   readonly assetStatus: 'authored-unreviewed-draft';
   readonly autoRecommendationEligible: false;
   readonly assetVersion: typeof ROTATION_MODEL_VERSION;
-  readonly assetSha256: string;
+  readonly assetSha256: null; // No geometry checksum has been generated.
   readonly phases: (typeof ROTATION_PHASES)[RotationMovementId];
   readonly sources: typeof rotationSourceFacts.sources;
 }
@@ -56,7 +56,6 @@ export const ROTATION_CATALOG_EXERCISE_BINDINGS: Readonly<Record<string, Rotatio
 
     // Direct mat & rotation catalog/archetype IDs
     'seated-rotation': 'rotation-mat-spine-twist',
-    'seated-roll-back-spine-twist': 'rotation-mat-spine-twist',
     'original-mat-spine-twist': 'rotation-mat-spine-twist',
     'ex-rotation-01': 'rotation-mat-spine-twist',
     'original-mat-saw': 'rotation-mat-saw',
@@ -64,14 +63,6 @@ export const ROTATION_CATALOG_EXERCISE_BINDINGS: Readonly<Record<string, Rotatio
     'original-mat-criss-cross': 'rotation-mat-criss-cross',
     'ex-rotation-03': 'rotation-mat-criss-cross',
 
-    // Existing catalog exercises mapped in Track I8
-    'ex-core-02': 'rotation-mat-spine-twist',
-    'original-chair-seated-spine-twist': 'rotation-mat-spine-twist',
-    'original-cadillac-seated-rotation': 'rotation-mat-spine-twist',
-    'ex-cooldown-01': 'rotation-mat-saw',
-    'ex-warmup-02': 'rotation-mat-saw',
-    'ex-core-03': 'rotation-mat-criss-cross',
-    'ex-kr-reformer-04': 'rotation-mat-criss-cross',
   });
 
 interface RotationBlueprintMeta {
@@ -98,27 +89,27 @@ const ROTATION_BLUEPRINTS: Readonly<Record<RotationMovementId, RotationBlueprint
     'rotation-mat-saw': {
       movementId: 'rotation-mat-saw',
       archetypeId: 'rotation-mat-saw-isolated',
-      archetypeTitleKo: '매트 쏘 (The Saw) · V-싯 좌골 앵커 고정 & 흉추 축회전 후 대각 쏘 리치',
+      archetypeTitleKo: '매트 쏘 (The Saw) · 앉은 몸통 회전과 대각 리치',
       nameKo: '매트 쏘 (The Saw)',
-      nameEn: 'The Saw (Wide V-Sit Thoracic Rotation & Diagonal Reach)',
+      nameEn: 'The Saw (Seated Rotation and Diagonal Reach)',
       apparatus: 'mat',
       bodyPosition: 'seated',
       blockCategory: 'cooldown',
       spinalPlanes: ['rotation', 'flexion'],
       phaseTitlesKo: [
-        'V-싯 장좌 · 양측 좌골 수직 고정 및 T-암 세팅',
-        '흉추 축회전 선행 · 반대쪽 좌골 고정 & 새끼발가락 바깥 대각 쏘 리치',
-        '회전 유지 척추 수직 재적층(Restack) 후 정면 복귀',
+        '다리를 벌려 앉아 준비',
+        '몸통 회전 후 반대 발 쪽으로 리치',
+        '몸통을 세우며 제어 복귀',
       ],
       phaseSummariesKo: [
-        '두 다리를 매트 너비 이상 V자로 벌려 앉고 발목을 당긴 채 양쪽 좌골에 체중을 50:50으로 고정하며 양팔을 어깨 높이 T자로 펼칩니다.',
-        '정수리를 먼저 위로 길게 세워 흉곽을 축회전한 뒤, 반대쪽 좌골이 매트에서 1mm도 들리지 않게(pelvisShiftMm=0) 누르며 앞손 새끼손가락으로 반대 새끼발가락 바깥을 슬라이스하고 뒷팔은 내회전하여 뒤로 길게 뻗습니다.',
-        '회전된 방향을 유지한 채 꼬리뼈 위에 요추·흉추를 수직으로 먼저 재적층(Restack)한 뒤 정면 T-암 자세로 돌아옵니다.',
+        '다리를 편안한 너비로 벌려 앉고 양팔을 옆으로 펼칩니다.',
+        '몸통을 돌린 뒤 반대 발 쪽으로 손을 뻗습니다. 반대쪽 엉덩이가 들리면 범위를 줄입니다.',
+        '몸통을 서서히 세우고 정면으로 돌아옵니다. 통증 없는 범위에서 움직입니다.',
       ],
       breathCuesKo: [
-        '들숨: 정수리를 천장으로 길게 끌어올리며 양측 좌골 지지 확인 후 흉추 회전',
-        '날숨: 반대쪽 좌골을 매트에 무겁게 꽂으며 새끼발가락 바깥으로 깊게 내쉬며 리치',
-        '들숨/날숨: 회전 상태에서 척추를 수직으로 세운 뒤 정면으로 복귀',
+        '편안하게 들이쉬며 준비',
+        '숨을 참지 않고 내쉬며 회전과 리치',
+        '자연스럽게 호흡하며 복귀',
       ],
       primaryMuscles: Object.freeze([
         Object.freeze({
@@ -156,63 +147,49 @@ const ROTATION_BLUEPRINTS: Readonly<Record<RotationMovementId, RotationBlueprint
         }),
       ]),
       poseDeltaSummary: Object.freeze({
-        startToMiddleKo:
-          '양쪽 좌골(pelvisShiftMm=0)을 매트에 고정한 채 흉곽이 42° 축회전(2D 어깨 폭 52px→40.1px 단축)하며 앞손이 반대 새끼발가락 바깥으로 뻗고 뒷팔은 내회전 후방 신전합니다.',
-        middleToEndKo:
-          '회전 축을 유지한 채 척추를 먼저 수직으로 세운(Restack) 후 정면 T-암 정렬로 복귀합니다.',
-        invariantAnchorsKo:
-          'V-싯 양측 좌골(pelvis: 122,146)과 양 뒤꿈치 지지점은 전 구간 0mm 변위로 고정됩니다.',
-        keyJointChangeKo:
-          '반대 좌골 100% 고정 하에 흉곽 축회전(yaw 42°) + 대각 굴곡(pitch 34°) 및 양방향 상지 오포지션 리치',
+        startToMiddleKo: '몸통 회전 뒤 앞손이 반대 발 쪽으로 이동합니다.',
+        middleToEndKo: '몸통을 다시 세우고 정면으로 돌아옵니다.',
+        invariantAnchorsKo: '도해에서는 골반과 발 지지점을 고정해 경로를 단순화했습니다.',
+        keyJointChangeKo: '회전과 대각 리치를 함께 보여주는 매트 동작입니다.',
       }),
       mobileSummaryBulletsKo: Object.freeze([
-        '고정 앵커: V-싯 반대쪽 좌골 100% 매트 밀착 (pelvisShiftMm = 0mm)',
-        '핵심 궤적: 정수리 축회전 선행 → 앞손 새끼발가락 바깥 슬라이스 & 뒷팔 내회전 신전',
-        '복귀 원칙: 회전 유지 상태에서 척추 수직 재적층(Restack) 후 정면 복귀',
+        '반대쪽 엉덩이 지지를 유지할 수 있는 범위',
+        '팔만 움직이지 않고 몸통에서 회전',
+        '좌표와 각도는 개인의 목표값이 아닌 그림용 설정',
       ] as const),
       correction: {
-        reviewedScopeKo:
-          'Joseph Pilates(1945) #11 The Saw 및 STOTT PILATES 회전 원칙에 따라 V-싯 좌골 고정, 축회전 선행 후 대각 굴곡, 뒷팔 내회전 신전, 회전 유지 재적층 복귀를 대조했어요.',
-        correctionKo:
-          '단순 측굴(Mermaid)이나 골반이 함께 들리는 전방 숙임과 분리하여 반대쪽 좌골 고정(0mm) 및 흉곽 2D 단축 투영을 반영했어요.',
-        limitationKo:
-          '2D 투영 좌표와 회전 각도(42°/34°)는 교육용 수식 모델이며 임상·해부학적 실측이나 개인별 안전 가동범위를 보증하지 않아요.',
+        reviewedScopeKo: 'Pilatesology The Saw의 Mat·Tips 본문에서 반대쪽 엉덩이 지지, 몸통 회전, 반대 발 쪽 리치 설명을 2026-11-08에 대조했어요.',
+        correctionKo: '매트 쏘의 참고 도해만 연결하고 리포머 머메이드와 캐딜락 캣의 잘못된 연결을 제거했어요.',
+        limitationKo: '공개 설명의 큰 동작 특징만 대조했어요. 좌표·각도·근육 활성·시선·호흡 시점은 실측 검증이 아니며, 개인의 안전 범위를 보증하지 않아요. 통증이 있으면 중단하세요.',
         sources: [
-          {
-            title: 'Joseph H. Pilates (1945) · Return to Life Through Contrology · #11 The Saw',
-            url: 'https://archive.org/details/returntolifethro00pila',
-          },
-          {
-            title: 'CUH NHS · Pilates exercises and principles (Seated rotation & centring)',
-            url: 'https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/',
-          },
+          { title: 'Pilatesology Encyclopedia: The Saw', url: 'https://pilatesology.com/pilatesology-encyclopedia-the-saw/' },
         ],
       },
     },
     'rotation-mat-spine-twist': {
       movementId: 'rotation-mat-spine-twist',
       archetypeId: 'rotation-mat-spine-twist-isolated',
-      archetypeTitleKo: '매트 스파인 트위스트 (Spine Twist) · 장좌 수직 축 순수 흉추 회전 & 관상면 T-암 고정',
+      archetypeTitleKo: '매트 스파인 트위스트 (Spine Twist) · 세워 앉은 몸통 회전',
       nameKo: '매트 스파인 트위스트 (The Spine Twist)',
-      nameEn: 'The Spine Twist (Long-Sitting Pure Vertical-Axis Thoracic Rotation)',
+      nameEn: 'The Spine Twist (Upright Seated Rotation)',
       apparatus: 'mat',
       bodyPosition: 'seated',
       blockCategory: 'upper-body',
       spinalPlanes: ['rotation', 'neutral'],
       phaseTitlesKo: [
-        '두 다리 밀착 장좌 · 발목 배측굴곡 및 좌골 수직 기둥 세팅',
-        '정수리-천골 수직 축 순수 흉추 회전 · 관상면 T-암 고정 및 흉골 연동 시선',
-        '정수리 축성 신장(Axial Elongation) 유지하며 하부 늑골부터 정면 복귀',
+        '다리를 모아 앉아 준비',
+        '키를 세운 채 몸통 회전',
+        '중앙으로 제어 복귀',
       ],
       phaseSummariesKo: [
-        '두 다리를 펴고 빈틈없이 모은 장좌(Long Sitting)에서 발목을 당겨 양 뒤꿈치 길이를 일치시키고, 양쪽 좌골 위에 척추를 수직으로 세워 T-암을 펼칩니다.',
-        '골반과 양 뒤꿈치가 1mm도 밀리지 않게(heelAlignmentDeltaMm=0, pelvisShiftMm=0) 고정하고, 팔만 어깨에서 따로 스윙하지 않은 채 흉곽과 머리가 정수리-천골 수직 축을 중심으로 함께 회전합니다.',
-        '키가 더 커지는 정수리 축성 신장을 유지하며 아래 갈비뼈부터 차례대로 정면 중심선으로 되돌아옵니다.',
+        '두 다리를 펴고 발을 모아 당긴 채 편안하게 앉습니다. 몸통이 엉덩이 뒤로 넘어가지 않도록 합니다.',
+        '몸통을 길게 세운 채 회전합니다. 팔이나 목만 따로 돌려 범위를 늘리지 않습니다.',
+        '몸통 높이를 유지하며 천천히 중앙으로 돌아옵니다.',
       ],
       breathCuesKo: [
-        '들숨: 정수리를 천장으로 길게 뻗어 척추 마디 공간을 확보',
-        '날숨: 모든 공기를 짜내듯 배꼽을 당기며 흉곽을 수직 축 둘레로 회전',
-        '들숨/날숨: 정수리 높이를 잃지 않고 부드럽게 중앙 정면으로 복귀',
+        '편안하게 들이쉬며 준비',
+        '숨을 참지 않고 내쉬며 회전',
+        '자연스럽게 호흡하며 복귀',
       ],
       primaryMuscles: Object.freeze([
         Object.freeze({
@@ -250,63 +227,49 @@ const ROTATION_BLUEPRINTS: Readonly<Record<RotationMovementId, RotationBlueprint
         }),
       ]),
       poseDeltaSummary: Object.freeze({
-        startToMiddleKo:
-          '정수리(x:128)부터 좌골(x:128)까지 수직 축을 유지한 채 흉곽이 45° 순수 회전하여 양 어깨 2D 폭이 52px에서 38.2px로 투영 단축(Foreshortening)됩니다.',
-        middleToEndKo:
-          '정수리 수직 신장(+3mm)을 유지하며 양 뒤꿈치 어긋남 없이(0mm) 하부 늑골부터 정면으로 복귀합니다.',
-        invariantAnchorsKo:
-          '양측 좌골(pelvis: 128,146)과 모아 둔 양 발뒤꿈치(heel x:238)가 전 구간 0mm 변위로 고정됩니다.',
-        keyJointChangeKo:
-          '후방 C-커브 롤백 및 팔 단독 스윙을 배제한 수직 축 순수 흉추 회전(yaw 45°, 어깨 폭 단축비 0.73)',
+        startToMiddleKo: '상체를 세운 상태에서 회전하는 모습을 보여줍니다.',
+        middleToEndKo: '몸통을 중앙으로 되돌립니다.',
+        invariantAnchorsKo: '도해의 골반·발 지지점 고정은 그림을 위한 단순화입니다.',
+        keyJointChangeKo: '팔만 흔들거나 뒤로 눕는 동작과 구별합니다.',
       }),
       mobileSummaryBulletsKo: Object.freeze([
-        '고정 앵커: 양측 좌골 50:50 + 양 발뒤꿈치 일치 (heelAlignmentDeltaMm = 0mm)',
-        '핵심 궤적: 정수리-천골 수직 축 순수 흉곽 회전 (관상면 180° T-암 & 흉골 연동 시선)',
-        '복귀 원칙: 정수리 수직 신장 유지하며 하부 흉곽부터 중앙 복귀',
+        '발을 모으고 몸통을 세운 매트 앉은 자세',
+        '뒤로 넘어가지 않으며 몸통 회전',
+        '회전 각도는 개인의 목표값이 아닌 그림용 설정',
       ] as const),
       correction: {
-        reviewedScopeKo:
-          'Joseph Pilates(1945) #14 The Spine Twist 및 Merrithew STOTT PILATES 스파인 트위스트 원칙에 따라 장좌 수직 축, 양 뒤꿈치 일치, 관상면 T-암 고정, 흉골 연동 시선을 대조했어요.',
-        correctionKo:
-          '기존에 섞여 있던 후방 C-커브 롤백(head 56px 후방 이동)과 어깨 관절 단독 팔 스윙을 제거하고 수직 축 순수 흉곽 회전 투영으로 분리했어요.',
-        limitationKo:
-          '2D 투영 좌표와 회전 각도(45°)는 교육용 수식 모델이며 임상·해부학적 실측이나 개인별 안전 가동범위를 보증하지 않아요.',
+        reviewedScopeKo: 'Pilatesology The Spine Twist의 Mat·Tips 본문에서 곧게 앉기, 발 모으기·발목 당기기, 회전 중 몸통 높이 유지 설명을 2026-11-08에 대조했어요.',
+        correctionKo: '매트 장좌 회전과 의자·캐딜락·배럴의 지지 조건을 구별하고 후자의 자동 연결을 제거했어요.',
+        limitationKo: '공개 설명의 큰 동작 특징만 대조했어요. 좌표·각도·근육 활성·시선·호흡 시점은 실측 검증이 아니며, 개인의 안전 범위를 보증하지 않아요. 통증이 있으면 중단하세요.',
         sources: [
-          {
-            title: 'Joseph H. Pilates (1945) · Return to Life Through Contrology · #14 The Spine Twist',
-            url: 'https://archive.org/details/returntolifethro00pila',
-          },
-          {
-            title: 'Merrithew / STOTT PILATES · Exercise of the Month: Spine Twist',
-            url: 'https://www.merrithew.com/blog/post/2018-05-15/exercise-of-the-month-spine-twist',
-          },
+          { title: 'Pilatesology Encyclopedia: The Spine Twist', url: 'https://pilatesology.com/pilatesology-encyclopedia-the-spine-twist/' },
         ],
       },
     },
     'rotation-mat-criss-cross': {
       movementId: 'rotation-mat-criss-cross',
       archetypeId: 'rotation-mat-criss-cross-isolated',
-      archetypeTitleKo: '매트 크리스크로스 (Criss-Cross) · 수파인 상부 흉추 굴곡 + 사선 복사근 회전 & 팔꿈치 광폭 유지',
+      archetypeTitleKo: '매트 크리스크로스 (Criss-Cross) · 누운 몸통 회전과 다리 교대',
       nameKo: '매트 크리스크로스 (The Criss-Cross)',
-      nameEn: 'The Criss-Cross (Supine Thoracic Curl Oblique Rib-to-Knee Rotation)',
+      nameEn: 'The Criss-Cross (Supine Curl with Rotation and Leg Change)',
       apparatus: 'mat',
       bodyPosition: 'supine',
       blockCategory: 'core',
       spinalPlanes: ['rotation', 'flexion'],
       phaseTitlesKo: [
-        '수파인 상부 흉추 컬업 · 후두부 손 지지 및 양 팔꿈치 광폭(172°) 오픈',
-        '천골 수평 고정 · 겨드랑이(전면 늑골)→반대 90° 무릎 사선 회전 & 반대 다리 45° 신전',
-        '견갑골 하각 컬업 높이 유지하며 중앙 교차 전환',
+        '누운 자세에서 상체를 들어 준비',
+        '몸통을 회전하며 다리 교대',
+        '중앙을 지나 제어 전환',
       ],
       phaseSummariesKo: [
-        '누운 자세에서 두 손을 뒤통수(후두부)에 포개고 양 팔꿈치를 시야 끝까지 넓게(172°) 편 채 상부 흉추를 컬업하고 천골을 매트에 수평으로 고정합니다.',
-        '팔꿈치만 좁혀 당기지 않고 양 팔꿈치 광폭(168°)을 유지한 채, 한쪽 겨드랑이(전면 늑골)를 반대쪽 90° 테이블탑 무릎을 향해 회전하며 다른 다리는 45° 사선으로 길게 뻗습니다.',
-        '좌우 교대 시 머리와 어깨가 바닥으로 떨어지지 않게 상부 흉추 컬업 높이를 유지한 채 중앙을 통과합니다.',
+        '누운 자세에서 머리를 손으로 받치고 목을 당기지 않은 채 상체를 들어 준비합니다.',
+        '한쪽 무릎을 향해 몸통을 돌리고 반대 다리를 뻗습니다. 팔꿈치만 당기지 않고 몸통이 흔들리면 범위를 줄입니다.',
+        '몸통을 제어하면서 중앙을 지나 다리를 바꿉니다. 다리 높이는 편안하게 조절합니다.',
       ],
       breathCuesKo: [
-        '들숨: 상부 흉추 컬업 높이와 천골 수평 임프린트를 유지하며 준비',
-        '날숨: 복벽을 매트로 납작하게 당기며 겨드랑이를 반대 무릎 쪽으로 깊게 회전',
-        '들숨: 날개뼈 하각이 매트에서 떨어진 높이를 유지하며 중앙 교차 전환',
+        '편안하게 호흡하며 준비',
+        '숨을 참지 않고 회전',
+        '자연스럽게 호흡하며 다리 교대',
       ],
       primaryMuscles: Object.freeze([
         Object.freeze({
@@ -329,51 +292,26 @@ const ROTATION_BLUEPRINTS: Readonly<Record<RotationMovementId, RotationBlueprint
           roleLabelKo: '안정화근 (코어·정렬 유지)',
           activePhases: Object.freeze(['start', 'middle', 'end'] as const),
           anchorJoints: Object.freeze(['thoracic', 'lumbar', 'pelvis'] as const),
-          reasonKo: '45° 다리 교차 신전 중 골반이 좌우로 흔들리거나 요추가 뜨지 않게 천골을 고정합니다.',
-        }),
-        Object.freeze({
-          muscleGroupId: 'hip-flexor-iliopsoas',
-          labelKo: '장요근·고관절 굴곡근 (전면 고관절)',
-          labelEn: 'Iliopsoas & Hip Flexors',
-          catalogMuscleMatches: Object.freeze(['고관절 굴곡근', '장요근']),
-          role: 'lengthening',
-          roleLabelKo: '신장·이완 부위',
-          activePhases: Object.freeze(['middle', 'end'] as const),
-          anchorJoints: Object.freeze(['lumbar', 'pelvis', 'hip', 'knee'] as const),
-          reasonKo: '45° 사선으로 뻗어내는 다리의 전면 고관절이 길게 신장되고 반대쪽 무릎은 90° 테이블탑을 유지합니다.',
+          reasonKo: '다리 교대 중 몸통 제어를 나타내는 개략적 표시이며 개별 근육 활성은 측정하지 않았습니다.',
         }),
       ]),
       poseDeltaSummary: Object.freeze({
-        startToMiddleKo:
-          '천골(pelvis: 176,148, pelvisShiftMm=0)을 수평 고정하고 양 팔꿈치 광폭(168°)을 유지한 채 흉곽이 40° 사선 회전(어깨 폭 48px→37.1px 단축)하며 반대 다리를 45°로 뻗습니다.',
-        middleToEndKo:
-          '상부 흉추 컬업 높이(curlHeight 70mm)를 떨어뜨리지 않고 중앙을 통과하여 교차 전환을 준비합니다.',
-        invariantAnchorsKo:
-          '매트에 수평 임프린트된 천골(pelvis: 176,148)과 요추 하부는 전 구간 0mm 변위로 고정됩니다.',
-        keyJointChangeKo:
-          '시상면 싱글 레그 스트레치와 분리된 상부 흉추 사선 회전(yaw 40°) + 팔꿈치 광폭(168°) 유지 + 90°/45° 하지 교차',
+        startToMiddleKo: '상체를 들어 몸통을 회전하며 한쪽 다리를 뻗습니다.',
+        middleToEndKo: '중앙을 지나 다음 교대를 준비합니다.',
+        invariantAnchorsKo: '도해에서 고정한 골반은 흔들림 제어를 보여주는 단순화입니다.',
+        keyJointChangeKo: '팔꿈치 당김보다 몸통 회전과 다리 교대를 구별해 봅니다.',
       }),
       mobileSummaryBulletsKo: Object.freeze([
-        '고정 앵커: 천골·양측 골반 수평 매트 임프린트 고정 (pelvisShiftMm = 0mm)',
-        '핵심 궤적: 양 팔꿈치 광폭(168°) 유지 · 겨드랑이(전면 늑골)→반대 90° 무릎 사선 회전',
-        '복귀 원칙: 날개뼈 하각이 떨어진 컬업 높이를 유지한 채 중앙 교차 전환',
+        '몸통이 흔들리지 않는 범위에서 다리 교대',
+        '어깨만 당기지 않고 몸통에서 회전',
+        '그림의 다리·팔꿈치 각도를 맞추려고 무리하지 않기',
       ] as const),
       correction: {
-        reviewedScopeKo:
-          'Joseph Pilates(1945) #16 The Criss-Cross 본문과 대조하여 후두부 손 지지, 양 팔꿈치 광폭 유지, 겨드랑이→반대 무릎 사선 회전, 45° 다리 신전, 골반 수평 고정을 반영했어요.',
-        correctionKo:
-          '시상면 헌드레드/레그스트레치 도해와 분리하여 상부 흉추 사선 회전축, 양 어깨 2D 투영 단축, 팔꿈치 당김 방지(168° 광폭)를 구현했어요.',
-        limitationKo:
-          '2D 투영 좌표와 회전·다리 각도(40°/45°)는 교육용 수식 모델이며 임상·해부학적 실측이나 개인별 안전 가동범위를 보증하지 않아요.',
+        reviewedScopeKo: 'Pilatesology Criss-Cross의 Mat·Tips 본문에서 몸통 들어 회전하기, 다리 교대 중 흔들림 제어 설명을 2026-11-08에 대조했어요. 고전 34동작의 16번으로 표기한 오류도 정정했어요.',
+        correctionKo: '매트 크리스크로스와 리포머 코디네이션·복부 5종 시리즈 전체를 같은 도해로 연결하지 않도록 했어요.',
+        limitationKo: '공개 설명의 큰 동작 특징만 대조했어요. 좌표·각도·근육 활성·시선·호흡 시점은 실측 검증이 아니며, 개인의 안전 범위를 보증하지 않아요. 통증이 있으면 중단하세요.',
         sources: [
-          {
-            title: 'Joseph H. Pilates (1945) · Return to Life Through Contrology · #16 The Criss-Cross',
-            url: 'https://archive.org/details/returntolifethro00pila',
-          },
-          {
-            title: 'CUH NHS · Pilates exercises and principles (Core centring & pelvic stability)',
-            url: 'https://www.cuh.nhs.uk/patient-information/pilates-exercises-and-principles/',
-          },
+          { title: 'Pilatesology Encyclopedia: Criss-Cross', url: 'https://pilatesology.com/pilatesology-encyclopedia-criss-cross/' },
         ],
       },
     },
@@ -402,17 +340,17 @@ function buildPhasePoseSpec(
       kind: 'axis-line',
       from: indicators.rotationAxis.from,
       to: indicators.rotationAxis.to,
-      targetAngleDeg: indicators.rotationAxis.yawDeg,
+      // Authored yaw is telemetry, not a prescribed anatomical target.
       cautionKo: indicators.pelvisAnchor.labelKo,
     }),
     Object.freeze({
       id: `${meta.movementId}-${phaseId}-pelvis-anchor`,
       labelKo: indicators.pelvisAnchor.labelKo,
-      cueKo: '회전 중에도 양측 좌골·천골 지지점이 밀리거나 들리지 않도록 고정합니다.',
+      cueKo: '지지점을 유지할 수 있는 편안한 범위에서 움직입니다.',
       kind: 'anchor-lock',
       from: indicators.pelvisAnchor.leftAnchor,
       to: indicators.pelvisAnchor.rightAnchor,
-      cautionKo: '골반이 따라 돌아가면 요추 전단 스트레스가 증가하므로 범위를 줄입니다.',
+      cautionKo: '통증이나 불편함이 생기면 중단하고, 몸통이 흔들리면 범위를 줄입니다.',
     }),
   ]);
 
@@ -454,16 +392,15 @@ function buildPhasePoseSpec(
         surfaceKo: indicators.pelvisAnchor.labelKo,
         point: joints2D.pelvis,
       }),
-      Object.freeze({
-        joint: 'heel' as const,
-        surfaceKo:
-          meta.movementId === 'rotation-mat-spine-twist'
-            ? '장좌 양 발뒤꿈치 일치 앵커 (heelAlignmentDeltaMm = 0mm)'
-            : meta.movementId === 'rotation-mat-saw'
-              ? 'V-싯 양 발뒤꿈치 매트 지지점'
-              : '수파인 하지 테이블탑/45° 교차 기준점',
-        point: joints2D.heel,
-      }),
+      ...(meta.movementId === 'rotation-mat-criss-cross'
+        ? []
+        : [Object.freeze({
+            joint: 'heel' as const,
+            surfaceKo: meta.movementId === 'rotation-mat-spine-twist'
+              ? '장좌 발 지지점 (도해용 단순화)'
+              : 'V-싯 양 발뒤꿈치 매트 지지점',
+            point: joints2D.heel,
+          })]),
     ]),
     movingJoints: Object.freeze([
       'thoracic',
@@ -475,6 +412,7 @@ function buildPhasePoseSpec(
       'farWrist',
       'hand',
       'head',
+      ...(meta.movementId === 'rotation-mat-criss-cross' ? ['hip', 'knee', 'ankle', 'heel', 'toe'] as const : []),
     ] as const),
     apparatusState: Object.freeze({
       carriageOffsetPx: 0,
@@ -483,7 +421,7 @@ function buildPhasePoseSpec(
       supportSurfaceKo:
         meta.bodyPosition === 'seated'
           ? '매트 시티드 (양측 좌골 수직 앵커 고정)'
-          : '매트 수파인 (천골·양측 골반 수평 임프린트 고정)',
+          : '매트 누운 자세 (골반 지지)',
     }),
     alignments,
     directionVectors,
@@ -556,7 +494,7 @@ export const ROTATION_DIAGRAM_CORRECTIONS: Readonly<Record<string, MovementDiagr
         const meta = ROTATION_BLUEPRINTS[movementId];
         const entry: MovementDiagramCorrection = Object.freeze({
           archetypeId: meta.archetypeId,
-          checkedAt: '2026-11-06',
+          checkedAt: rotationSourceFacts.checkedAtUtc,
           reviewedScopeKo: meta.correction.reviewedScopeKo,
           correctionKo: meta.correction.correctionKo,
           limitationKo: meta.correction.limitationKo,
@@ -595,7 +533,7 @@ export const ROTATION_PATTERN_REFERENCES: readonly RotationPatternReference[] = 
       assetStatus: 'authored-unreviewed-draft' as const,
       autoRecommendationEligible: false as const,
       assetVersion: ROTATION_MODEL_VERSION,
-      assetSha256: rotationSourceFacts.sources[0].factualRecordSha256,
+      assetSha256: null,
       phases: ROTATION_PHASES[movementId],
       sources: rotationSourceFacts.sources,
     });

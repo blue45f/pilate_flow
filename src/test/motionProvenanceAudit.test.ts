@@ -350,13 +350,12 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
     expect(BATCH_VARIANTS).toHaveLength(4);
     expect(SUPINE_REACH_DEFINITION.id).toBe('supine-single-leg-reach-v1');
 
-    // Track I8 Rotation: ROTATION_PATTERN_REFERENCES reuses factualRecordSha256 as assetSha256
+    // Track I8: a source-record checksum is not a geometry checksum.
     for (const rotRef of ROTATION_PATTERN_REFERENCES) {
-      expect(rotRef.assetSha256).toBe(rotationSourceFacts.sources[0].factualRecordSha256);
+      expect(rotRef.assetSha256).toBeNull();
     }
-    expect(rotationSourceFacts.sources[0].factualRecordSha256.endsWith('123456789abcdef0')).toBe(
-      true,
-    );
+    expect(rotationSourceFacts.sources.every((source) => !('factualRecordSha256' in source))).toBe(true);
+    expect(rotationSourceFacts.sources.every((source) => source.verification === 'public-text-checked')).toBe(true);
 
     // Track I6 Shoulder Support: 2 static guide SVGs exist on disk outside MANIFEST.json (which has 5 apparatus guides)
     const rootDir = process.cwd();

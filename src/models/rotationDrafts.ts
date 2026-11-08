@@ -30,17 +30,9 @@ export type RotationCatalogAliasId =
   | 'original-mat-saw'
   | 'ex-rotation-02'
   | 'original-mat-criss-cross'
-  | 'ex-rotation-03'
-  | 'ex-core-02'
-  | 'original-chair-seated-spine-twist'
-  | 'original-cadillac-seated-rotation'
-  | 'ex-cooldown-01'
-  | 'ex-warmup-02'
-  | 'ex-core-03'
-  | 'ex-kr-reformer-04'
-  | 'original-barrel-standing-rotation';
+  | 'ex-rotation-03';
 
-export const ROTATION_MODEL_VERSION = 'rotation-axial-projection-v1' as const;
+export const ROTATION_MODEL_VERSION = 'rotation-axial-projection-v2' as const;
 
 export interface RotationDraftPhase extends DraftPhase {
   readonly id: PhaseId;
@@ -75,8 +67,8 @@ export const ROTATION_PHASES: Readonly<Record<RotationMovementId, readonly Rotat
       }),
       Object.freeze({
         id: 'turn',
-        label: '반대쪽 좌골 100% 고정 · 새끼발가락 바깥 대각 쏘 리치 정점',
-        labelKo: '반대쪽 좌골 100% 고정 · 새끼발가락 바깥 대각 쏘 리치 정점',
+        label: '반대쪽 엉덩이 지지 · 반대 발 방향 대각 리치',
+        labelKo: '반대쪽 엉덩이 지지 · 반대 발 방향 대각 리치',
         start: 0.42,
         end: 0.6,
         sample: 0.5,
@@ -169,8 +161,8 @@ export const ROTATION_PHASES: Readonly<Record<RotationMovementId, readonly Rotat
       }),
       Object.freeze({
         id: 'move',
-        label: '천골 수평 고정 · 겨드랑이(전면 늑골)를 반대 90° 무릎으로 사선 회전',
-        labelKo: '천골 수평 고정 · 겨드랑이(전면 늑골)를 반대 90° 무릎으로 사선 회전',
+        label: '골반 지지 · 몸통을 반대 무릎 쪽으로 회전',
+        labelKo: '골반 지지 · 몸통을 반대 무릎 쪽으로 회전',
         start: 0.15,
         end: 0.42,
         sample: 0.28,
@@ -179,8 +171,8 @@ export const ROTATION_PHASES: Readonly<Record<RotationMovementId, readonly Rotat
       }),
       Object.freeze({
         id: 'turn',
-        label: '팔꿈치 광폭(168°) 유지 · 복사근 슬링 정점 및 반대 다리 45° 신전',
-        labelKo: '팔꿈치 광폭(168°) 유지 · 복사근 슬링 정점 및 반대 다리 45° 신전',
+        label: '팔꿈치를 당기지 않고 몸통 회전 · 반대 다리 뻗기',
+        labelKo: '팔꿈치를 당기지 않고 몸통 회전 · 반대 다리 뻗기',
         start: 0.42,
         end: 0.6,
         sample: 0.5,
@@ -335,25 +327,15 @@ const ALIAS_TO_ROTATION_ID: Readonly<Record<string, RotationMovementId>> = Objec
   'rotation-mat-saw': 'rotation-mat-saw',
   'original-mat-saw': 'rotation-mat-saw',
   'ex-rotation-02': 'rotation-mat-saw',
-  'ex-cooldown-01': 'rotation-mat-saw',
-  'ex-warmup-02': 'rotation-mat-saw',
 
   'rotation-mat-spine-twist': 'rotation-mat-spine-twist',
   'seated-rotation': 'rotation-mat-spine-twist',
-  'seated-roll-back-spine-twist': 'rotation-mat-spine-twist',
   'original-mat-spine-twist': 'rotation-mat-spine-twist',
   'ex-rotation-01': 'rotation-mat-spine-twist',
-  'ex-core-02': 'rotation-mat-spine-twist',
-  'original-chair-seated-spine-twist': 'rotation-mat-spine-twist',
-  'original-cadillac-seated-rotation': 'rotation-mat-spine-twist',
-  'original-barrel-standing-rotation': 'rotation-mat-spine-twist',
-  'original-mat-open-book': 'rotation-mat-spine-twist',
 
   'rotation-mat-criss-cross': 'rotation-mat-criss-cross',
   'original-mat-criss-cross': 'rotation-mat-criss-cross',
   'ex-rotation-03': 'rotation-mat-criss-cross',
-  'ex-core-03': 'rotation-mat-criss-cross',
-  'ex-kr-reformer-04': 'rotation-mat-criss-cross',
 });
 
 export function resolveRotationMovementId(
@@ -1038,10 +1020,10 @@ export function getRotationDraftPose(
       yawDeg: built.yawDeg,
       labelKo:
         movementId === 'rotation-mat-spine-twist'
-          ? `정수리-천골 수직 축회전 (${built.yawDeg}°)`
+          ? '몸통을 세운 회전 (그림용 축)'
           : movementId === 'rotation-mat-saw'
-            ? `축회전(${built.yawDeg}°) 후 대각 굴곡(${built.flexionPitchDeg}°) 힌지`
-            : `상부 흉추 컬업 + 사선 축회전 (${built.yawDeg}°)`,
+            ? '회전 후 대각 리치 (그림용 축)'
+            : '상체 들기와 몸통 회전 (그림용 축)',
     }),
     pelvisAnchor: Object.freeze({
       kind:
@@ -1056,10 +1038,10 @@ export function getRotationDraftPose(
       pelvisShiftMm: 0,
       labelKo:
         movementId === 'rotation-mat-spine-twist'
-          ? '양측 좌골 50:50 + 양 발뒤꿈치 정렬 고정 (0mm)'
+          ? '앉은 자세와 발 지지 유지 (그림용 고정점)'
           : movementId === 'rotation-mat-saw'
-            ? 'V-싯 반대쪽 좌골 100% 매트 앵커 고정 (0mm)'
-            : '천골·양측 ASIS 수평 매트 임프린트 고정 (0mm)',
+            ? '반대쪽 엉덩이 지지 (그림용 고정점)'
+            : '골반 지지와 흔들림 제어 (그림용 고정점)',
     }),
     gazeVector: Object.freeze({
       from: toPoint2D(screen.gazeOrigin),
@@ -1067,10 +1049,10 @@ export function getRotationDraftPose(
       coupledToSternum: true,
       labelKo:
         movementId === 'rotation-mat-spine-twist'
-          ? '흉골 법선 연동 수평 시선 (독립 경추 과회전 금지)'
+          ? '시선은 몸통 회전에 맞춘 그림용 예시'
           : movementId === 'rotation-mat-saw'
-            ? '뒷손·내측 무릎 방향 대각 하방 시선'
-            : '반대쪽 90° 테이블탑 무릎 바깥 사선 시선',
+            ? '대각 시선은 그림용 예시이며 정확한 방향을 검증하지 않음'
+            : '무릎 쪽 시선은 그림용 예시',
     }),
     ribcageScapula: Object.freeze({
       nearShoulder: toPoint2D(screen.rightShoulder),
@@ -1080,10 +1062,10 @@ export function getRotationDraftPose(
       restShoulderSpan,
       labelKo:
         movementId === 'rotation-mat-spine-twist'
-          ? `관상면 180° T-암 유지 · 흉곽 회전 단축 (${shoulderSpan2D}px / ${restShoulderSpan}px)`
+          ? '팔을 옆으로 편 몸통 회전의 2D 투영'
           : movementId === 'rotation-mat-saw'
-            ? `앞손 새끼발가락 바깥 슬라이스 · 뒷팔 내회전 신전 (${shoulderSpan2D}px)`
-            : `양 팔꿈치 광폭(${built.elbowSpanDeg}°) · 겨드랑이→반대 무릎 슬링`,
+            ? '앞손은 반대 발 쪽, 뒷팔은 반대 방향으로 뻗는 예시'
+            : '팔꿈치만 당기지 않고 몸통을 무릎 쪽으로 회전',
     }),
     transitionPose: Object.freeze({
       trajectoryPoints: Object.freeze([

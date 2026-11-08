@@ -29,12 +29,13 @@ import {
   getRotationDiscretePose,
   getRotationDraftPose,
   getRotationKinematicTelemetry,
+  resolveRotationMovementId,
   projectRotationPoint,
   ROTATION_MOVEMENT_IDS,
 } from '../models/rotationDrafts';
 
 describe('Track I8 Pilates Rotation 2D Diagrams (Saw, Spine Twist, Criss-Cross)', () => {
-  it('enforces truthfulness disclosures and verified public source provenance', () => {
+  it('enforces truthfulness disclosures and bounded public text source comparisons', () => {
     expect(rotationSourceFacts.anatomicalAccuracyAssumed).toBe(false);
     expect(rotationSourceFacts.professionalReviewCount).toBe(0);
     expect(rotationSourceFacts.sourceFrameMappings).toBe(0);
@@ -102,7 +103,7 @@ describe('Track I8 Pilates Rotation 2D Diagrams (Saw, Spine Twist, Criss-Cross)'
     }
   });
 
-  it('distinguishes Saw, Spine Twist, and Criss-Cross kinematics accurately', () => {
+  it('distinguishes Saw, Spine Twist, and Criss-Cross authored schematic kinematics', () => {
     const sawMid = getRotationDiscretePose('rotation-mat-saw', 'middle');
     const sawEnd = getRotationDiscretePose('rotation-mat-saw', 'end');
     expect(sawMid.telemetry.yawDeg).toBeGreaterThan(35);
@@ -153,6 +154,39 @@ describe('Track I8 Pilates Rotation 2D Diagrams (Saw, Spine Twist, Criss-Cross)'
     expect(endButton.getAttribute('aria-pressed')).toBe('true');
   });
 
+  it('does not attach a mat rotation diagram to different equipment, postures or a whole series', () => {
+    const excludedIds = ["ex-core-02", "original-chair-seated-spine-twist", "original-cadillac-seated-rotation", "ex-cooldown-01", "ex-warmup-02", "ex-core-03", "ex-kr-reformer-04", "original-barrel-standing-rotation", "original-mat-open-book", "seated-roll-back-spine-twist"];
+    for (const id of [...excludedIds, 'unknown-exercise']) {
+      expect(resolveRotationMovementId(id)).toBeNull();
+      expect(isRotationDiagramExercise(id)).toBe(false);
+      expect(getRotationVisualAssetByCatalogExerciseId(id)).toBeNull();
+      expect(getRotationDiagramCorrection(id)).toBeNull();
+      expect(resolveRotationDiagramCandidate(id)).toBeNull();
+      expect(toRotationMovementPhaseDiagramProps(id)).toBeNull();
+      expect(toRotationMovementTriptychProps(id)).toBeNull();
+    }
+  });
+
+  it('keeps raised Criss-Cross feet out of fixed contact anchors and avoids numeric angle prescriptions', () => {
+    for (const phase of ['start', 'middle', 'end'] as const) {
+      const pose = getRotationVisualAsset('rotation-mat-criss-cross').phases[phase];
+      expect(pose.fixedAnchors.map((anchor) => anchor.joint)).toEqual(['pelvis']);
+      expect(pose.movingJoints).toContain('heel');
+      expect(pose.alignments.every((guide) => guide.targetAngleDeg === undefined)).toBe(true);
+    }
+  });
+
+  it('keeps actual source comparison dates and does not present a source-record hash as an asset hash', () => {
+    for (const reference of ROTATION_PATTERN_REFERENCES) expect(reference.assetSha256).toBeNull();
+    for (const id of ROTATION_MOVEMENT_IDS) {
+      const correction = getRotationDiagramCorrection(id)!;
+      expect(correction.checkedAt).toBe(rotationSourceFacts.checkedAtUtc);
+      expect(correction.sources[0].url).toContain('pilatesology.com/pilatesology-encyclopedia-');
+      expect(correction.reviewedScopeKo).not.toMatch(/#14|#16|1945.*Criss/);
+    }
+    expect(rotationSourceFacts.sources.every((source) => !('factualRecordSha256' in source))).toBe(true);
+  });
+
   it('exports ROTATION_VISUAL_ASSETS, ROTATION_DIAGRAM_CORRECTIONS, and getRotationI7IntegrationBundle compatible with shared contracts', () => {
     const requiredIds = [
       'rotation-mat-saw',
@@ -165,13 +199,6 @@ describe('Track I8 Pilates Rotation 2D Diagrams (Saw, Spine Twist, Criss-Cross)'
       'ex-rotation-02',
       'original-mat-criss-cross',
       'ex-rotation-03',
-      'ex-core-02',
-      'original-chair-seated-spine-twist',
-      'original-cadillac-seated-rotation',
-      'ex-cooldown-01',
-      'ex-warmup-02',
-      'ex-core-03',
-      'ex-kr-reformer-04',
     ];
 
     const bundle = getRotationI7IntegrationBundle();

@@ -73,8 +73,8 @@ const TRACK_STANDALONE_AND_CATALOG_IDS = [
   'rotation-mat-criss-cross',
   'original-mat-spine-twist',
   'ex-rotation-01',
-  'ex-cooldown-01',
-  'ex-kr-reformer-04',
+  'original-mat-saw',
+  'original-mat-criss-cross',
 ] as const;
 
 describe('Track I7 Shared Diagram Registry & Cross-Track Integration (I1–I8)', () => {
@@ -118,7 +118,7 @@ describe('Track I7 Shared Diagram Registry & Cross-Track Integration (I1–I8)',
       expect(correction, `Missing correction for ${id}`).toBeDefined();
       expect(correction.professionalReviewCount).toBe(0);
       expect(correction.sourceFrameMappings).toBe(0);
-      expect(correction.checkedAt).toBe('2026-11-06');
+      expect(correction.checkedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(correction.reviewedScopeKo.trim().length).toBeGreaterThan(10);
       expect(correction.correctionKo.trim().length).toBeGreaterThan(10);
       expect(correction.limitationKo.trim().length).toBeGreaterThan(10);
@@ -127,7 +127,21 @@ describe('Track I7 Shared Diagram Registry & Cross-Track Integration (I1–I8)',
     }
   });
 
-  it('renders MovementDiagramReference source-comparison disclosures across all 7 integrated tracks', () => {
+  it('does not offer standalone mat rotation details for equipment variants or a whole series', () => {
+    const mismatchedIds = ['ex-core-02', 'ex-core-03', 'ex-cooldown-01', 'ex-warmup-02', 'ex-kr-reformer-04', 'original-mat-open-book', 'original-chair-seated-spine-twist', 'original-cadillac-seated-rotation', 'original-barrel-standing-rotation'];
+    for (const exerciseId of mismatchedIds) {
+      const exercise = INITIAL_EXERCISES.find((item) => item.id === exerciseId)!;
+      expect(exercise, `Missing catalog exercise ${exerciseId}`).toBeDefined();
+      const { unmount } = render(<MovementDiagramReference exercise={exercise} />);
+      const details = screen.getByText('참고 자세 그림').closest('details')!;
+      details.open = true;
+      fireEvent(details, new Event('toggle'));
+      expect(screen.queryByText('흉추 회전·골반 고정 3단계 상세 도해 보기')).not.toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it('renders source-comparison disclosures for matching catalog representatives', () => {
     const representativeCatalogIds = [
       'original-mat-chest-lift', // I1 Spine
       'original-mat-bridge', // I2 Pelvis/Hip
@@ -135,7 +149,6 @@ describe('Track I7 Shared Diagram Registry & Cross-Track Integration (I1–I8)',
       'ex-core-01', // I4 Core
       'original-mat-swan-prep', // I5 Extension
       'original-mat-forearm-plank', // I6 Shoulder Support
-      'ex-cooldown-01', // I8 Rotation
     ] as const;
 
     for (const exerciseId of representativeCatalogIds) {

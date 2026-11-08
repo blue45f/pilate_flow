@@ -10,7 +10,7 @@ import { getSpineMovementDiagramCorrections } from './spineArticulationDiagramDa
 /** Reviewed source statements, not a professional or frame-by-frame approval. */
 export interface MovementDiagramCorrection {
   readonly archetypeId: string;
-  readonly checkedAt: '2026-11-06';
+  readonly checkedAt: string; // ISO calendar date of the actual source comparison.
   readonly reviewedScopeKo: string;
   readonly correctionKo: string;
   readonly limitationKo: string;
