@@ -1,3 +1,4 @@
+import { EquipmentChoice } from './EquipmentChoice';
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
@@ -1498,56 +1499,47 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           </label>
           <fieldset className="schedule-fieldset">
             <legend>장소 기구</legend>
-            <div className="schedule-choices">
+            <div className="equipment-choice-grid">
               {EQUIPMENT_OPTIONS.map((item) => (
-                <label key={item.id}>
-                  <input
-                    type="checkbox"
-                    checked={locationDraft.equipmentIds.includes(item.id)}
-                    onChange={() =>
-                      setLocationDraft({
-                        ...locationDraft,
-                        equipmentIds: locationDraft.equipmentIds.includes(
-                          item.id,
-                        )
-                          ? locationDraft.equipmentIds.filter(
-                              (id) => id !== item.id,
-                            )
-                          : [...locationDraft.equipmentIds, item.id],
-                      })
-                    }
-                  />
-                  {item.labelKo}
-                </label>
+                <EquipmentChoice
+                  key={item.id}
+                  equipmentId={item.id}
+                  label={item.labelKo}
+                  checked={locationDraft.equipmentIds.includes(item.id)}
+                  onChange={() =>
+                    setLocationDraft({
+                      ...locationDraft,
+                      equipmentIds: locationDraft.equipmentIds.includes(item.id)
+                        ? locationDraft.equipmentIds.filter((id) => id !== item.id)
+                        : [...locationDraft.equipmentIds, item.id],
+                    })
+                  }
+                />
               ))}
             </div>
           </fieldset>
           <fieldset className="schedule-fieldset">
             <legend>장소 소도구</legend>
-            <div className="schedule-choices">
+            <div className="equipment-choice-grid">
               {PROP_OPTIONS.filter((item) => item.id !== "none").map((item) => (
-                <label key={item.id}>
-                  <input
-                    type="checkbox"
-                    checked={locationDraft.propIds.includes(
-                      item.id as Exclude<typeof item.id, "none">,
-                    )}
-                    onChange={() =>
-                      setLocationDraft({
-                        ...locationDraft,
-                        propIds: locationDraft.propIds.includes(
-                          item.id as Exclude<typeof item.id, "none">,
-                        )
-                          ? locationDraft.propIds.filter((id) => id !== item.id)
-                          : [
-                              ...locationDraft.propIds,
-                              item.id as Exclude<typeof item.id, "none">,
-                            ],
-                      })
-                    }
-                  />
-                  {item.labelKo}
-                </label>
+                <EquipmentChoice
+                  key={item.id}
+                  equipmentId={item.id as Exclude<typeof item.id, "none">}
+                  label={item.labelKo}
+                  checked={locationDraft.propIds.includes(
+                    item.id as Exclude<typeof item.id, "none">,
+                  )}
+                  onChange={() =>
+                    setLocationDraft({
+                      ...locationDraft,
+                      propIds: locationDraft.propIds.includes(
+                        item.id as Exclude<typeof item.id, "none">,
+                      )
+                        ? locationDraft.propIds.filter((id) => id !== item.id)
+                        : [...locationDraft.propIds, item.id as Exclude<typeof item.id, "none">],
+                    })
+                  }
+                />
               ))}
             </div>
           </fieldset>

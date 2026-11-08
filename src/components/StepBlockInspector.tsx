@@ -1,3 +1,4 @@
+import { PostureAnatomyGuide } from './PostureAnatomyGuide';
 import { useEffect, useState } from 'react';
 import {
   ArrowDown,
@@ -199,6 +200,7 @@ export function StepBlockInspector({
           양측 수행·티칭·전환을 한 번만 합산합니다. 별도 휴식 블록은 아래에서 구분합니다.
         </small>
       </div>
+      {exercise && <PostureAnatomyGuide exercise={exercise} compact />}
       <form className="step-inspector-form" onSubmit={apply} noValidate>
         <fieldset disabled={disabled}>
           <legend>이번 수업의 계획</legend>

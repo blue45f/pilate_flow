@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import { ClassBinderView } from './ClassBinderView';
 import { usePilatesStore } from '../store/usePilatesStore';
 import {
@@ -197,7 +198,7 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     expect(within(feed).getByText('저녁 코어 & 고관절 정렬 플로우')).toBeInTheDocument();
   });
 
-  it('places date/time & class name above snapshot badges and provides primary reuse action into workbench', () => {
+  it('places the class name before metadata and snapshot badges and prioritizes read-only viewing before explicit copying into workbench', () => {
     render(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
 
     const feed = screen.getByRole('region', { name: '수업 기록 목록' });
@@ -214,12 +215,27 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
       true,
     );
 
-    const reuseBtn = within(firstCard).getByRole('button', { name: /이 수업 다시 계획/ });
-    expect(reuseBtn.className).toContain('pf-btn--primary');
+    const reuseBtn = within(firstCard).getByRole('button', { name: /복사해 새 수업 만들기/ });
+    const viewBtn = within(firstCard).getByRole('button', { name: '당시 시퀀스 보기' });
+    expect(viewBtn).toHaveClass('pf-btn--primary');
+    expect(reuseBtn).toHaveClass('pf-btn--secondary');
+    expect(Boolean(viewBtn.compareDocumentPosition(reuseBtn) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    const beforeView = usePilatesStore.getState();
+    const storedBefore = localStorage.getItem(RECOVERY_STORAGE_KEY);
+    expect(storedBefore).not.toBeNull();
+    fireEvent.click(viewBtn);
+    const detail = screen.getByRole('dialog', { name: '진행 완료 수업 이력 상세' });
+    expect(usePilatesStore.getState()).toBe(beforeView);
+    fireEvent.click(within(detail).getAllByRole('button', { name: '닫기' }).at(-1)!);
+    expect(document.activeElement).toBe(viewBtn);
+    expect(usePilatesStore.getState()).toBe(beforeView);
+    expect(localStorage.getItem(RECOVERY_STORAGE_KEY)).toBe(storedBefore);
 
     fireEvent.click(reuseBtn);
     expect(usePilatesStore.getState().activeTab).toBe('workbench');
     expect(usePilatesStore.getState().activeSteps).toHaveLength(2);
+    expect(usePilatesStore.getState().historyLogs).toBe(beforeView.historyLogs);
+    expect(usePilatesStore.getState().savedSequences).toBe(beforeView.savedSequences);
   });
 
   it('aligns date keys with local display across pre/post-midnight timestamps, preserves valid 12:00 noon and 00:00 midnight ISO times, and only hides time badges on unambiguous date-only records without mutating stored values', () => {
@@ -398,7 +414,7 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     expect(resolveSpy).toHaveBeenCalledTimes(1);
 
     const feed = screen.getByRole('region', { name: '수업 기록 목록' });
-    fireEvent.click(within(feed).getByRole('button', { name: /이력 다시 열기/ }));
+    fireEvent.click(within(feed).getByRole('button', { name: /당시 시퀀스 보기/ }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(resolveSpy).toHaveBeenCalledTimes(1);
 
@@ -423,7 +439,7 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     rerender(<ClassBinderView view="history" onOpenLogModal={vi.fn()} />);
     expect(resolveSpy).toHaveBeenCalledTimes(3);
 
-    fireEvent.click(within(feed).getByRole('button', { name: /이력 다시 열기/ }));
+    fireEvent.click(within(feed).getByRole('button', { name: /당시 시퀀스 보기/ }));
     const dialogAfterBlockEdit = screen.getByRole('dialog');
     expect(within(dialogAfterBlockEdit).getByText('원본 블록 수정됨 · 당시 블록 유지')).toBeInTheDocument();
     fireEvent.click(within(dialogAfterBlockEdit).getAllByRole('button', { name: '닫기' }).at(-1)!);
@@ -504,7 +520,7 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
       dateNav.querySelectorAll<HTMLButtonElement>('button.teaching-date-chip')[0],
     );
 
-    const reopenBtn = within(feed).getAllByRole('button', { name: /이력 다시 열기/ })[0];
+    const reopenBtn = within(feed).getAllByRole('button', { name: /당시 시퀀스 보기/ })[0];
     reopenBtn.focus();
     fireEvent.click(reopenBtn);
     const dialog = screen.getByRole('dialog');
@@ -512,7 +528,7 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     expect(document.activeElement).toBe(reopenBtn);
   });
 
-  it('scopes compact header/filter spacing to history view and preserves first-card date, title, primary reuse action, and active selections across 320px/390px viewports', () => {
+  it('scopes compact header/filter spacing to history view and preserves first-card title, date, explicit copy action, and active selections across 320px/390px viewports', () => {
     const [ex1] = usePilatesStore.getState().exercises;
     const logs6 = Array.from({ length: 6 }, (_, i) => {
       const day = String(28 - i).padStart(2, '0');
@@ -541,12 +557,12 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     const firstCard = within(feed).getAllByRole('article')[0];
     const timeEl = firstCard.querySelector('time');
     const titleEl = firstCard.querySelector('h2');
-    const primaryReuseBtn = within(firstCard).getByRole('button', { name: /이 수업 다시 계획/ });
+    const copyBtn = within(firstCard).getByRole('button', { name: /복사해 새 수업 만들기/ });
 
     expect(timeEl).toBeTruthy();
     expect(titleEl).toHaveTextContent('Round4 모바일 첫카드 수업 #1');
-    expect(Boolean(timeEl!.compareDocumentPosition(titleEl!) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
-    expect(Boolean(titleEl!.compareDocumentPosition(primaryReuseBtn) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    expect(Boolean(titleEl!.compareDocumentPosition(timeEl!) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    expect(Boolean(titleEl!.compareDocumentPosition(copyBtn) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: /월·수 저녁반/ }));
     const dateNav = screen.getByRole('group', { name: '날짜별 기록 탐색' });
@@ -558,7 +574,7 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     expect(within(feed).getAllByRole('article')).toHaveLength(1);
     expect(within(feed).getByText('Round4 모바일 첫카드 수업 #6')).toBeInTheDocument();
 
-    fireEvent.click(within(feed).getByRole('button', { name: /이 수업 다시 계획/ }));
+    fireEvent.click(within(feed).getByRole('button', { name: /복사해 새 수업 만들기/ }));
     expect(usePilatesStore.getState().activeTab).toBe('workbench');
 
     rerender(<ClassBinderView view="saved" onOpenLogModal={onOpenLogModal} />);
@@ -635,7 +651,7 @@ describe('ClassBinderView history date exploration, hierarchy & reuse workflow',
     expect(details?.querySelector('.teaching-card-stats')).not.toBeNull();
     expect(details?.querySelector('.teaching-history-exercises')).not.toBeNull();
     expect(details?.contains(card.querySelector('.teaching-reflection'))).toBe(false);
-    expect(details?.contains(within(card as HTMLElement).getByRole('button', { name: '이 수업 다시 계획' }))).toBe(false);
+    expect(details?.contains(within(card as HTMLElement).getByRole('button', { name: '복사해 새 수업 만들기' }))).toBe(false);
     expect(card.querySelector('h2')?.compareDocumentPosition(card.querySelector('.teaching-reflection')!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 

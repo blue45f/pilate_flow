@@ -699,6 +699,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                     const plannedMinutes = Math.max(1, Math.round(resolved.timing.plannedTotalSec / 60));
                     return (
                       <PfCard as="article" key={log.id} variant={isSample ? 'sample' : 'default'} className="teaching-history-card">
+                        <h2>{resolved.sequenceTitle}</h2>
                         <div className="teaching-card-top">
                           <div className="teaching-history-datetime">
                             <time className="teaching-history-card-date" dateTime={getTeachingHistoryDateSource(resolved)}>{formatDate(getTeachingHistoryDateSource(resolved))}</time>
@@ -710,18 +711,17 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                           <span className="teaching-history-group"><Users size={14} aria-hidden="true" />{resolved.groupName}</span>
                         </div>
                         {isSample && <PfAiStatusBadge kind="sample-data" className="teaching-sample-label" />}
-                        <h2>{resolved.sequenceTitle}</h2>
                         <p className="teaching-reflection">{log.instructorReflection || '남긴 메모가 없습니다.'}</p>
                           {resolved.hasCatalogDrift && <span className="teaching-drift-badge" data-snapshot-preserved="true">원본 수정 후에도 당시 스냅샷 유지됨</span>}
                         <div className="teaching-history-bottom">
                           <span className="muted">
-                            {missingExercise ? '삭제된 동작이 있어 불러올 수 없습니다.'
-                              : hasStepTimings ? (resolved.restCount > 0 ? '당시 저장한 동작·휴식·시간으로 불러옵니다.' : '당시 저장한 동작·시간으로 불러옵니다.')
-                              : '구성 참고 · 시간은 현재 기본값으로 복원'}
+                            {missingExercise ? '삭제된 동작이 있어 복사할 수 없습니다. 당시 기록은 확인할 수 있습니다.'
+                              : hasStepTimings ? (resolved.restCount > 0 ? '복사 시 당시 저장한 동작·휴식·시간을 사용합니다.' : '복사 시 당시 저장한 동작·시간을 사용합니다.')
+                              : '복사 시 구성 참고 · 시간은 현재 기본값으로 복원'}
                           </span>
                           <div className="teaching-history-actions">
-                            <PfButton variant="secondary" onClick={(e) => { reopenedTriggerRef.current = e.currentTarget; setReopenedHistoryId(log.id); }}><Eye size={15} />이력 다시 열기</PfButton>
-                            <PfButton variant="primary" disabled={missingExercise} onClick={() => copyHistory(log.id)}><Copy size={15} />이 수업 다시 계획</PfButton>
+                            <PfButton variant="primary" onClick={(e) => { reopenedTriggerRef.current = e.currentTarget; setReopenedHistoryId(log.id); }}><Eye size={15} />당시 시퀀스 보기</PfButton>
+                            <PfButton variant="secondary" disabled={missingExercise} onClick={() => copyHistory(log.id)}><Copy size={15} />복사해 새 수업 만들기</PfButton>
                           </div>
                         </div>
                         <details className="teaching-history-details">

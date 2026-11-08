@@ -175,7 +175,7 @@ it('keeps calendar-date grouping, search, detail and export independent of the I
   expect(groups()).toEqual(['2026-11-04']);
   expect(view.container.querySelectorAll('.teaching-history-card')).toHaveLength(1);
   expect(view.container.querySelector('time')?.getAttribute('datetime')).toBe('2026-11-04');
-  fireEvent.click(screen.getByRole('button', { name: '이력 다시 열기' }));
+  fireEvent.click(screen.getByRole('button', { name: '당시 시퀀스 보기' }));
   expect(screen.getByRole('dialog', { name: '진행 완료 수업 이력 상세' }).textContent).toContain('(2026-11-04)');
   expect(usePilatesStore.getState().historyLogs).toEqual(logs);
 });

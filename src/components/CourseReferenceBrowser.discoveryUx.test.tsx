@@ -1,9 +1,12 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { usePilatesStore } from '../store/usePilatesStore';
 import { CourseReferenceBrowser } from './CourseReferenceBrowser';
 import { COURSE_REFERENCES } from '../data/courseReferences';
 
-afterEach(cleanup);
+const originalScope = usePilatesStore.getState().exerciseBrowseScope;
+beforeEach(() => usePilatesStore.getState().setExerciseBrowseScope('all'));
+afterEach(() => { cleanup(); usePilatesStore.getState().setExerciseBrowseScope(originalScope); });
 
 describe('course reference discovery and keyboard recovery', () => {
   it('offers title-language choices without presenting them as verified spoken language', () => {

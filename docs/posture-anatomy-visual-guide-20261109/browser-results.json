@@ -1,0 +1,50 @@
+[
+  {
+    "width": 320,
+    "panelNoOverflow": true,
+    "allSevenPostures": true,
+    "documentNoOverflow": true,
+    "keyboardDisclosure": true,
+    "fullDetail": true,
+    "escapeClose": true,
+    "focusRestored": true,
+    "planAndHistoryUnchanged": true,
+    "pageErrors": []
+  },
+  {
+    "width": 390,
+    "panelNoOverflow": true,
+    "allSevenPostures": true,
+    "documentNoOverflow": true,
+    "keyboardDisclosure": true,
+    "fullDetail": true,
+    "escapeClose": true,
+    "focusRestored": true,
+    "planAndHistoryUnchanged": true,
+    "pageErrors": []
+  },
+  {
+    "width": 768,
+    "panelNoOverflow": true,
+    "allSevenPostures": true,
+    "documentNoOverflow": true,
+    "keyboardDisclosure": true,
+    "fullDetail": true,
+    "escapeClose": true,
+    "focusRestored": true,
+    "planAndHistoryUnchanged": true,
+    "pageErrors": []
+  },
+  {
+    "width": 1440,
+    "panelNoOverflow": true,
+    "allSevenPostures": true,
+    "documentNoOverflow": true,
+    "keyboardDisclosure": true,
+    "fullDetail": true,
+    "escapeClose": true,
+    "focusRestored": true,
+    "planAndHistoryUnchanged": true,
+    "pageErrors": []
+  }
+]

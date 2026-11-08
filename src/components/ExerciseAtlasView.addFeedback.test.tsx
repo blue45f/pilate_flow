@@ -40,6 +40,7 @@ beforeEach(() => {
       ownedEquipment: ['mat', 'chair'],
       ownedApparatus: ['mat', 'chair'],
       ownedProps: [],
+      exerciseBrowseScope: 'all',
       generationError: null,
     },
     true,
@@ -187,4 +188,3 @@ describe('Atlas reports actual append outcome', () => {
     expect(unmappedArt?.querySelector('.ml-unmapped-focus')).not.toBeNull();
   });
 });
-

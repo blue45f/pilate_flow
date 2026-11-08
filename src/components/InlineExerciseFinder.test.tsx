@@ -32,6 +32,8 @@ beforeEach(() => {
       activeTargetMinutes: 50,
       ownedEquipment: ['mat'],
       ownedProps: [],
+      // These legacy cases explicitly exercise unrestricted catalog browsing.
+      exerciseBrowseScope: 'all',
       draftCriteria: criteria,
       lastCriteria: null,
       generationError: null,

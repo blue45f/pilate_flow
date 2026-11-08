@@ -1,3 +1,4 @@
+import { PostureAnatomyGuide } from './PostureAnatomyGuide';
 import type { RefObject } from 'react';
 import { ArrowUpRight, Check, Info, Plus, X } from 'lucide-react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
@@ -60,6 +61,7 @@ export function LibraryMovementInspector({
               현재 검색 결과에 없는 동작입니다. 선택한 정보는 유지했어요.
             </p>
           )}
+          <PostureAnatomyGuide exercise={exercise} compact />
           <dl>
             <div>
               <dt>기구</dt>

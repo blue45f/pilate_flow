@@ -369,13 +369,13 @@ describe('Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save 
         'true',
       );
 
-      // Clear activeSteps first so we can verify that '이 수업 다시 계획' restores the class into workbench
+      // Clear activeSteps first so we can verify that '복사해 새 수업 만들기' restores the class into workbench
       act(() => {
         usePilatesStore.setState({ activeSteps: [], activeTitle: '비어있는 초안' });
       });
 
       const targetCard = matchingCards[0]!;
-      const reuseBtn = within(targetCard).getByRole('button', { name: /이 수업 다시 계획/ });
+      const reuseBtn = within(targetCard).getByRole('button', { name: /복사해 새 수업 만들기/ });
       fireEvent.click(reuseBtn);
 
       await waitFor(

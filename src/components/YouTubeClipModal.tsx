@@ -1,3 +1,4 @@
+import { PostureAnatomyGuide } from './PostureAnatomyGuide';
 import { MovementDiagramReference } from './MovementDiagramReference';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -993,6 +994,7 @@ const MovementDetails: React.FC<{
             : '미검토 자료입니다. 수업안에 바로 추가할 수 있으며, 실제 수행 전 기구와 몸 상태를 확인하세요. 안전성·효과를 보장하지 않습니다.'}
         </p>
       </div>
+      <PostureAnatomyGuide exercise={exercise} />
       {approved ? (
         <ExercisePlanningNotes exercise={exercise} pending={false} />
       ) : (
