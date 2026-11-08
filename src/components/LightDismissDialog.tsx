@@ -34,38 +34,76 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
   children,
 }) => {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const closingRef = useRef(false);
   const titleId = useId();
   const subtitleId = useId();
+  const restoreOpenerFocus = useCallback((dialogElement?: HTMLDialogElement | null) => {
+    const dialog = dialogElement ?? dialogRef.current;
+    const active = document.activeElement;
+    if (
+      (active === null ||
+        active === document.body ||
+        (dialog !== null && dialog.contains(active))) &&
+      openerRef.current?.isConnected
+    ) {
+      openerRef.current.focus();
+    }
+  }, []);
+  const finalizeClose = useCallback(() => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    restoreOpenerFocus();
+    onClose();
+  }, [onClose, restoreOpenerFocus]);
   const requestClose = useCallback(
     (reason: DialogCloseRequest['reason']) => {
       const dialog = dialogRef.current;
       if (!dialog?.open) return;
       const close = () => {
         if (dialog.open) dialog.close();
+        finalizeClose();
       };
       if (onBeforeClose?.({ reason, close }) === false) return;
       close();
     },
-    [onBeforeClose],
+    [onBeforeClose, finalizeClose],
   );
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
 
-    if (open && !dialog.open) {
-      dialog.showModal();
-    } else if (!open && dialog.open) {
+    if (open) {
+      closingRef.current = false;
+      if (
+        document.activeElement instanceof HTMLElement &&
+        document.activeElement !== document.body &&
+        !dialog.contains(document.activeElement)
+      ) {
+        openerRef.current = document.activeElement;
+      }
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+      return () => {
+        restoreOpenerFocus(dialog);
+      };
+    }
+
+    if (dialog.open) {
       dialog.close();
     }
-  }, [open]);
+    restoreOpenerFocus(dialog);
+    return undefined;
+  }, [open, restoreOpenerFocus]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
 
     const handleNativeClose = () => {
-      onClose();
+      finalizeClose();
     };
 
     const handleNativeCancel = (event: Event) => {
@@ -126,7 +164,7 @@ export const LightDismissDialog: React.FC<LightDismissDialogProps> = ({
       dialog.removeEventListener('click', handleBackdropClick);
       dialog.removeEventListener('keydown', handleKeyboard);
     };
-  }, [onClose, onBeforeClose, requestClose]);
+  }, [finalizeClose, onBeforeClose, requestClose]);
 
   return (
     <dialog

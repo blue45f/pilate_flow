@@ -718,3 +718,12 @@
     width: 100%;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .movement-media-guidance-panel *,
+  .movement-media-guidance-panel *::before,
+  .movement-media-guidance-panel *::after {
+    transition: none !important;
+    transform: none !important;
+  }
+}

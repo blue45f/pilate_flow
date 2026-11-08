@@ -277,12 +277,17 @@ export function buildSequenceSimulation(
     }
   }
   const targetSource = targetMinutes === undefined ? 'plan-total' : 'provided';
-  const requestedSec =
+  const rawRequestedSec =
     targetMinutes === undefined
       ? totals.totalSec
       : typeof targetMinutes === 'number'
         ? targetMinutes * 60
         : NaN;
+  const requestedSec =
+    Number.isFinite(rawRequestedSec) &&
+    Math.abs(rawRequestedSec - Math.round(rawRequestedSec)) < 1e-6
+      ? Math.round(rawRequestedSec)
+      : rawRequestedSec;
   const targetSec =
     Number.isFinite(requestedSec) &&
     (targetMinutes === undefined || (typeof targetMinutes === 'number' && requestedSec > 0))

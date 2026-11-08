@@ -428,3 +428,12 @@
 .mpp-asset-record code {
   font-size: 9px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-pattern-preview *,
+  .motion-pattern-preview *::before,
+  .motion-pattern-preview *::after,
+  .motion-pattern-thumbnail > svg {
+    transition: none !important;
+  }
+}

@@ -388,3 +388,13 @@
   font-size: 0.74rem;
   color: #63756b;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-copilot-panel *,
+  .ai-copilot-panel *::before,
+  .ai-copilot-panel *::after,
+  .ai-theme-card {
+    transition: none !important;
+    transform: none !important;
+  }
+}
