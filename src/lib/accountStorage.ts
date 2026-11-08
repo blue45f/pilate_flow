@@ -1,6 +1,7 @@
 import { RECOVERY_STORAGE_KEY } from './recoveryStorageGuard';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesStudioState } from '../store/usePilatesStore';
+import { syncMovementIdeaAccountScope } from '../utils/movementIdeaDraft';
 
 export const ACCOUNT_STORAGE_PREFIX = `${RECOVERY_STORAGE_KEY}:account:`;
 export const GUEST_STORAGE_KEY = `${RECOVERY_STORAGE_KEY}:guest`;
@@ -93,6 +94,9 @@ usePilatesStore.subscribe((state) => {
   if (switching) return;
   try {
     localStorage.setItem(ownerKey(tabOwner), serialize(state));
+    const liveOwnerRaw = readOwner();
+    const liveOwner = liveOwnerRaw === '__anonymous__' ? null : liveOwnerRaw;
+    if (liveOwner !== tabOwner) return;
     if (tabOwner === null) localStorage.removeItem(ACTIVE_OWNER_KEY);
     else localStorage.setItem(ACTIVE_OWNER_KEY, tabOwner);
   } catch {
@@ -119,6 +123,7 @@ export function syncAccountWorkspace(nextUserId: string | null): void {
     if (nextOwner !== null && !accounts.includes(nextOwner)) {
       localStorage.setItem(KNOWN_ACCOUNTS_KEY, JSON.stringify([...accounts, nextOwner]));
     }
+    syncMovementIdeaAccountScope(tabOwner ?? '__anonymous__', nextOwner ?? '__anonymous__');
     return;
   }
 
@@ -164,11 +169,29 @@ export function syncAccountWorkspace(nextUserId: string | null): void {
 
   switching = true;
   try {
+    const previousOwner = tabOwner;
     tabOwner = nextOwner;
+    syncMovementIdeaAccountScope(previousOwner ?? '__anonymous__', nextOwner ?? '__anonymous__');
     // One validated commit, no asynchronous rehydrate window. Store persistence refreshes
     // its recovery fingerprint so JSON recovery keeps its existing stale-tab protection.
     usePilatesStore.setState(nextState, true);
   } finally {
     switching = false;
   }
+}
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('storage', (event: StorageEvent) => {
+    if (switching) return;
+    if (event.key !== ACTIVE_OWNER_KEY) return;
+    const rawOwner = event.newValue?.trim() || null;
+    const nextOwner = rawOwner === '__anonymous__' ? null : rawOwner;
+    if (nextOwner !== tabOwner) {
+      try {
+        syncAccountWorkspace(nextOwner);
+      } catch {
+        // Keep current workspace if storage transition fails.
+      }
+    }
+  });
 }
