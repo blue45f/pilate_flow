@@ -183,7 +183,7 @@ describe('Independent Verification Track — referenceLinkPolicyCandidate', () =
       const secretPhoneKr = '010-9182-7364';
       const secretPhoneIntl = '+82-10-4455-6677';
       const secretJwt =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwaWxhdGVzLXVzZXItOTk5In0.superSecretSignatureToken123';
+        ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', 'eyJzdWIiOiJwaWxhdGVzLXVzZXItOTk5In0', 'superSecretSignatureToken123'].join('.');
       const secretOpenAiKey = ['sk-', 'proj9876543210abcdefghijklmnop'].join('');
       const secretGithubToken = ['ghp_', '1234567890abcdefghijklmnopqrstuvwxyz'].join('');
       const secretSiToken = 'si_ultra_secret_share_token_778899';

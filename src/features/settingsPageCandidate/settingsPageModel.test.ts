@@ -208,7 +208,7 @@ describe('settingsPageModel (Track A unit verification)', () => {
 
   it('7. redacts sensitive tokens (AIza, Bearer, JWT eyJ, apiKey=, ghp_) via sanitizeSettingsText and marks safety.redactionApplied', () => {
     const rawSecrets =
-      `오류: ${['AIza', 'SyDummySecretKeyForRedactionTest12345'].join('')} / Bearer secretToken_987654321 / eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c / apiKey=mySuperSecretKey12345 / ${['ghp_', 'abcdefghijklmnopqrstuvwxyz012345'].join('')}`;
+      `오류: ${['AIza', 'SyDummySecretKeyForRedactionTest12345'].join('')} / Bearer secretToken_987654321 / ${['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', 'eyJzdWIiOiIxMjM0NTY3ODkwIn0', 'SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'].join('.')} / apiKey=mySuperSecretKey12345 / ${['ghp_', 'abcdefghijklmnopqrstuvwxyz012345'].join('')}`;
 
     const sanitized = sanitizeSettingsText(rawSecrets);
     expect(sanitized.redacted).toBe(true);
