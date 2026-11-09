@@ -14,11 +14,8 @@ export type ExtendedMotionEvidenceModuleMap = {
     mat: TrackCExtendedMatEvidenceModule;
 };
 
-export interface ExerciseVisualRigEntry {
-    exerciseId?: string;
-    id?: string;
-    [key: string]: unknown;
-}
+export type ExerciseVisualRigEntry =
+    import('../data/movementVisualRigCatalog').CatalogMovementVisualAsset;
 
 let rigCatalogPromise: Promise<MovementVisualRigCatalogModule> | null = null;
 let apparatusEvidencePromise: Promise<TrackDExtendedApparatusEvidenceModule> | null = null;
@@ -43,71 +40,7 @@ function resolveRigFromCatalogModule(
         return null;
     }
 
-    const modRecord = catalogModule as unknown as Record<string, unknown>;
-    const helperCandidates = [
-        'getExerciseVisualRigById',
-        'getMovementVisualRigById',
-        'findMovementVisualRigById',
-        'getVisualRigById',
-    ];
-
-    for (const fnName of helperCandidates) {
-        const candidateFn = modRecord[fnName];
-        if (typeof candidateFn === 'function') {
-            const result = (
-                candidateFn as (id: string) => ExerciseVisualRigEntry | undefined | null
-            )(normalizedId);
-            if (result) {
-                return result;
-            }
-        }
-    }
-
-    const collectionCandidates = [
-        modRecord.MOVEMENT_VISUAL_RIG_CATALOG,
-        modRecord.movementVisualRigCatalog,
-        modRecord.EXERCISE_VISUAL_RIG_CATALOG,
-        modRecord.exerciseVisualRigCatalog,
-        modRecord.default,
-    ];
-
-    for (const collection of collectionCandidates) {
-        if (!collection) continue;
-
-        if (collection instanceof Map) {
-            if (collection.has(normalizedId)) {
-                return (collection.get(normalizedId) as ExerciseVisualRigEntry) ?? null;
-            }
-            continue;
-        }
-
-        if (Array.isArray(collection)) {
-            const matched = collection.find(
-                (item): item is ExerciseVisualRigEntry =>
-                    typeof item === 'object' &&
-                    item !== null &&
-                    ((item as ExerciseVisualRigEntry).exerciseId === normalizedId ||
-                        (item as ExerciseVisualRigEntry).id === normalizedId),
-            );
-            if (matched) {
-                return matched;
-            }
-            continue;
-        }
-
-        if (typeof collection === 'object') {
-            const record = collection as Record<string, unknown>;
-            if (
-                normalizedId in record &&
-                typeof record[normalizedId] === 'object' &&
-                record[normalizedId] !== null
-            ) {
-                return record[normalizedId] as ExerciseVisualRigEntry;
-            }
-        }
-    }
-
-    return null;
+    return catalogModule.getMovementVisualAsset(normalizedId);
 }
 
 export async function loadExerciseVisualRigById(

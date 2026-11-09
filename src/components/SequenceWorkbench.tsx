@@ -2064,7 +2064,7 @@ export function SequenceWorkbench({
                     );
                   })()}
                   <CurriculumProgressionPanel
-                    groupId={criteria.targetGroupId}
+                    groupId={criteria.targetGroupId ?? 'all'}
                     groupName={s.classGroups.find((g) => g.id === criteria.targetGroupId)?.name ?? '전체 반'}
                     baseLevel={criteria.level}
                     historyLogs={s.historyLogs}

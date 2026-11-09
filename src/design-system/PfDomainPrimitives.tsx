@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react';
 
 export type PfAiStatusKind =
   | 'ai-draft'
+  | 'auto-draft'
   | 'creative-memo'
   | 'tried-memo'
   | 'instructor-reviewed'
@@ -16,6 +17,7 @@ export interface PfAiStatusBadgeProps extends React.HTMLAttributes<HTMLSpanEleme
 
 const DEFAULT_AI_STATUS_LABELS: Record<PfAiStatusKind, string> = {
   'ai-draft': '조건 맞춤 초안',
+  'auto-draft': '자동 생성 초안 · 수업 전 확인',
   'creative-memo': '내 창작 메모 · 전문가 검증 아님',
   'tried-memo': '직접 해봄 · 주관적 메모',
   'instructor-reviewed': '내 강사 검토 · 자격 인증 미확인',
