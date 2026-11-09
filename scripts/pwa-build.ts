@@ -90,6 +90,12 @@ const CACHE = PREFIX + ${JSON.stringify(version)};
 const ASSETS = ${JSON.stringify(assets)};
 const SHELL_EXTRAS = ${JSON.stringify(extras)};
 const PRECACHE = [...ASSETS, ...SHELL_EXTRAS];
+const IS_LIVE_ORIGIN =
+  typeof self !== 'undefined' &&
+  self.location &&
+  /(?:web\\.app|firebaseapp\\.com|github\\.io|localhost|127\\.0\\.0\\.1)$/.test(
+    self.location.hostname || '',
+  );
 let activated = false;
 const toDocumentResponse = (cached) =>
   cached && cached.redirected
@@ -116,7 +122,16 @@ const hasWaitingUpdate = async () => {
   return Array.isArray(keys) && keys.some((key) => key.startsWith(PREFIX) && key !== CACHE);
 };
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)));
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(PRECACHE))
+      .then(() => {
+        if (IS_LIVE_ORIGIN && typeof self.skipWaiting === 'function') {
+          return self.skipWaiting();
+        }
+      }),
+  );
   // No skipWaiting: an open lesson must keep its existing version.
 });
 self.addEventListener('activate', (event) => {
@@ -130,8 +145,11 @@ self.addEventListener('activate', (event) => {
             .map((key) => caches.delete(key)),
         ),
       )
-      .then(() => {
+      .then(async () => {
         activated = true;
+        if (IS_LIVE_ORIGIN && self.clients && typeof self.clients.claim === 'function') {
+          await self.clients.claim();
+        }
       }),
   );
   // No clients.claim or forced reload. Existing tabs keep their state.
