@@ -5,6 +5,7 @@ import type {
   ReformerBrand,
   SequenceStep,
 } from '../../types/pilates';
+import { simulateClassEnergyCurve } from '../../utils/classPacingSimulator';
 import { generateInstructorVoiceScript } from '../../utils/instructorVoiceScriptGenerator';
 import {
   applyRecommendedLayersToSteps,
@@ -42,6 +43,10 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
     () => buildMemberConditionLayerAdvice(steps, exercisesById, criteria),
     [steps, exercisesById, criteria],
   );
+  const pacingCurve = useMemo(
+    () => simulateClassEnergyCurve(steps, exercisesById),
+    [steps, exercisesById],
+  );
   const voiceScript = useMemo(
     () =>
       generateInstructorVoiceScript(sequenceTitle, steps, exercisesById, {
@@ -55,7 +60,7 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
     <section
       className="pf-card"
       data-testid="studio-flow-optimizer-panel"
-      aria-label="동선 최적화·맞춤 레이어·티칭 대본 도구"
+      aria-label="동선 최적화·맞춤 레이어·에너지 곡선·티칭 대본 도구"
       style={{
         padding: '12px 16px',
         display: 'grid',
@@ -73,12 +78,15 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
           gap: '8px',
         }}
       >
-        <div style={{ display: 'grid', gap: '2px' }}>
+        <div style={{ display: 'grid', gap: '3px' }}>
           <strong style={{ fontSize: '13px', color: '#173d34' }}>
-            스튜디오 동선 최적화 · 관찰 맞춤 레이어 · 타임코드 티칭 대본
+            스튜디오 동선 최적화 · 관찰 맞춤 레이어 · RPE 에너지 곡선 · 타임코드 티칭 대본
           </strong>
           <span className="muted" style={{ fontSize: '12px' }}>
             {transitionAnalysis.summaryKo} · {layerAdvice.summaryKo}
+          </span>
+          <span style={{ fontSize: '11.5px', color: '#2b5447' }}>
+            {pacingCurve.pacingVerdictKo}
           </span>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
