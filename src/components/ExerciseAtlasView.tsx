@@ -67,6 +67,7 @@ import {
   CatalogMotionThumbnail,
 } from './CatalogMotionInteractivePlayer';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
+import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
 import { EquipmentDiscoveryScope } from './EquipmentDiscoveryScope';
 import { CourseReferenceBrowser } from './CourseReferenceBrowser';
 import { SourceNoteDialog } from './SourceNoteDialog';
@@ -1388,6 +1389,12 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               </div>
             )}
           </section>
+
+          <ApparatusVisualGuideRibbon
+            activeApparatusId={filters.equipment[0] ?? 'reformer'}
+            mode="atlas"
+            onSelectApparatus={(id) => update('equipment', [id])}
+          />
 
           <div className="library-notes-workspace" data-has-inspector={Boolean(inspectedExercise)}>
             <LibraryMovementInspector

@@ -37,6 +37,7 @@ import { isMovementIdeaExercise } from '../utils/movementIdeaDraft';
 import { LightDismissDialog } from './LightDismissDialog';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
+import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/teaching.css';
 import '../styles/class-voice.css';
@@ -1340,6 +1341,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 </span>
               </p>
             </details>
+          )}
+          {exercise && !currentIsRest && (
+            <ApparatusVisualGuideRibbon
+              activeApparatusId={exercise.apparatus}
+              mode="stage"
+            />
           )}
         </section>
         <aside className="teaching-stage-aside">

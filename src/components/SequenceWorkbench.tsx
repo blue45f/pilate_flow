@@ -101,6 +101,7 @@ import {
   toP5ReusableBlockContract,
 } from '../utils/classBlockPresetValidator';
 import { Apparatus3dRigPreviewCard } from './Apparatus3dRigPreviewCard';
+import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
 import { CurriculumProgressionPanel } from './workbench/CurriculumProgressionPanel';
 import { DurationCalibrationBanner } from './workbench/DurationCalibrationBanner';
 import { StudioFlowOptimizerPanel } from './workbench/StudioFlowOptimizerPanel';
@@ -1275,6 +1276,18 @@ export function SequenceWorkbench({
           </PfButton>
         </div>
       </div>
+      <ApparatusVisualGuideRibbon
+        activeApparatusId={selectedEquipment[0] ?? s.activeApparatus}
+        mode="workbench"
+        onApplyClassConcept={(titleKo, subtitleKo, family) => {
+          s.setActiveSequenceMeta({
+            title: titleKo,
+            subtitle: subtitleKo,
+            apparatus: family,
+          });
+          setNotice(`‘${titleKo}’ 기구 컨셉을 현재 수업에 반영했습니다.`);
+        }}
+      />
       {planningMode === 'auto' && locked > 0 && (
         <p id="v2-new-draft-scope" className="v2-generation-scope">
           시퀀스 만들기는 전체를 새 초안으로 바꿉니다. 잠근 {locked}개 항목을 유지하려면 아래
