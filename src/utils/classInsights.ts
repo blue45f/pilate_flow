@@ -16,6 +16,13 @@ export interface BodyTagCoverage {
   shareOfMovement: number;
 }
 
+export interface SpinalPlaneCoverage {
+  plane: 'flexion' | 'extension' | 'lateral' | 'rotation';
+  labelKo: string;
+  movementSec: number;
+  stepCount: number;
+}
+
 export interface PlanInsights {
   totalSec: number;
   movementSec: number;
@@ -25,6 +32,7 @@ export interface PlanInsights {
   exerciseStepCount: number;
   restStepCount: number;
   bodyTags: BodyTagCoverage[];
+  spinalPlanes: SpinalPlaneCoverage[];
   missingExercise: { movementSec: number; stepCount: number };
   untagged: { movementSec: number; stepCount: number };
   sides: SideBudget;
@@ -40,6 +48,16 @@ const emptySides = (): SideBudget => ({
   unspecifiedSec: 0,
 });
 
+const SPINAL_PLANE_LABELS: ReadonlyArray<{
+  plane: SpinalPlaneCoverage['plane'];
+  labelKo: string;
+}> = [
+  { plane: 'flexion', labelKo: '굴곡 (Flexion)' },
+  { plane: 'extension', labelKo: '신전 (Extension)' },
+  { plane: 'lateral', labelKo: '측굴 (Lateral)' },
+  { plane: 'rotation', labelKo: '회전 (Rotation)' },
+];
+
 /** Declared planning metadata and time budgets, never measured muscle or physical load. */
 export function buildPlanInsights(
   steps: readonly SequenceStep[],
@@ -47,6 +65,10 @@ export function buildPlanInsights(
 ): PlanInsights {
   const exerciseMap = new Map(exercises.map((exercise) => [exercise.id, exercise]));
   const coverage = new Map<string, Omit<BodyTagCoverage, 'shareOfMovement'>>();
+  const planeTotals = new Map<
+    SpinalPlaneCoverage['plane'],
+    { movementSec: number; stepCount: number }
+  >(SPINAL_PLANE_LABELS.map((item) => [item.plane, { movementSec: 0, stepCount: 0 }]));
   const result: PlanInsights = {
     totalSec: 0,
     movementSec: 0,
@@ -56,6 +78,7 @@ export function buildPlanInsights(
     exerciseStepCount: 0,
     restStepCount: 0,
     bodyTags: [],
+    spinalPlanes: [],
     missingExercise: { movementSec: 0, stepCount: 0 },
     untagged: { movementSec: 0, stepCount: 0 },
     sides: emptySides(),
@@ -75,6 +98,14 @@ export function buildPlanInsights(
     result.movementSec += timing.movementSec;
     result.explanationSec += timing.explanationSec;
     result.transitionSec += timing.transitionSec;
+    const planes = new Set(exercise?.spinalPlanes ?? []);
+    for (const plane of planes) {
+      const currentPlane = planeTotals.get(plane);
+      if (currentPlane) {
+        currentPlane.movementSec += timing.movementSec;
+        currentPlane.stepCount += 1;
+      }
+    }
     const tags = [
       ...new Set(exercise?.targetMuscles.map((tag) => tag.trim()).filter(Boolean) ?? []),
     ];
@@ -126,6 +157,15 @@ export function buildPlanInsights(
       shareOfMovement: result.movementSec > 0 ? tag.movementSec / result.movementSec : 0,
     }))
     .sort((a, b) => b.movementSec - a.movementSec || a.label.localeCompare(b.label, 'ko'));
+  result.spinalPlanes = SPINAL_PLANE_LABELS.map(({ plane, labelKo }) => {
+    const entry = planeTotals.get(plane) ?? { movementSec: 0, stepCount: 0 };
+    return {
+      plane,
+      labelKo,
+      movementSec: entry.movementSec,
+      stepCount: entry.stepCount,
+    };
+  });
   return result;
 }
 

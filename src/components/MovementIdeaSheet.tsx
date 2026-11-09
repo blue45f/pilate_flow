@@ -53,6 +53,7 @@ import {
 } from '../utils/movementIdeaDraft';
 import { BLANK_DRAFT_STARTER_OPTIONS } from '../data/classBlockPresets';
 import { startFromBlankDraftOption } from '../utils/classBlockPresetValidator';
+import { useHydratedLocalPhoto, useStudioRealtimeSync } from '../hooks/useStudioRealtimeSync';
 
 const MOVEMENT_IDEA_STARTERS = BLANK_DRAFT_STARTER_OPTIONS.filter(
   (option) =>
@@ -191,6 +192,10 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
   );
   const [reusableBlockTitle, setReusableBlockTitle] = useState<string>('');
   const [reusableBlocks, setReusableBlocks] = useState(() => getSavedReusableBlocks());
+  const hydratedPhotoUrl = useHydratedLocalPhoto(editingId, photoDataUrl);
+  useStudioRealtimeSync(() => {
+    setReusableBlocks([...getSavedReusableBlocks()]);
+  });
 
   const [reflectionOpen, setReflectionOpen] = useState<boolean>(
     Boolean(
@@ -877,9 +882,9 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                     </PfButton>
                   )}
                 </div>
-                {photoDataUrl && (
+                {(hydratedPhotoUrl || photoDataUrl) && (
                   <div className="pf-idea-photo-preview">
-                    <img src={photoDataUrl} alt="내 동작 참고 스케치 미리보기" />
+                    <img src={hydratedPhotoUrl || photoDataUrl} alt="내 동작 참고 스케치 미리보기" />
                   </div>
                 )}
               </div>

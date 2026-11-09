@@ -452,8 +452,26 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         setLastVoiceCommandStatus(`음성 명령 실행: 큐시트 전환 (“${normalized}”)`);
         return;
       }
+      if (/본운동\s*구간|본운동으로/.test(normalized)) {
+        const mainIdx = steps.findIndex(
+          (st) => !isRestStep(st) && st.blockCategory !== 'warmup' && st.blockCategory !== 'cooldown',
+        );
+        if (mainIdx >= 0) {
+          selectStep(mainIdx);
+          setLastVoiceCommandStatus(`음성 명령 실행: 본운동 구간 이동 (“${normalized}”)`);
+          return;
+        }
+      }
+      if (/마무리\s*구간|쿨다운|마무리로/.test(normalized)) {
+        const coolIdx = steps.findIndex((st) => !isRestStep(st) && st.blockCategory === 'cooldown');
+        if (coolIdx >= 0) {
+          selectStep(coolIdx);
+          setLastVoiceCommandStatus(`음성 명령 실행: 마무리 구간 이동 (“${normalized}”)`);
+          return;
+        }
+      }
       setLastVoiceCommandStatus(
-        `인식된 음성: “${normalized}” (시작·일시정지·다음·이전·1분 추가·큐시트 지원)`,
+        `인식된 음성: “${normalized}” (시작·일시정지·다음·이전·1분 추가·큐시트·본운동·마무리 지원)`,
       );
     };
   });
@@ -892,6 +910,50 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           ·
         </span>
         <span className="teaching-step-progress-next">다음 할 일: {nextTaskLabel}</span>
+        {steps.length > 1 && (
+          <div className="teaching-phase-jump-bar" role="group" aria-label="구간 빠른 이동">
+            {(
+              [
+                {
+                  key: 'warmup',
+                  label: '준비',
+                  index: steps.findIndex((st) => !isRestStep(st) && st.blockCategory === 'warmup'),
+                },
+                {
+                  key: 'main',
+                  label: '본운동',
+                  index: steps.findIndex(
+                    (st) =>
+                      !isRestStep(st) &&
+                      st.blockCategory !== 'warmup' &&
+                      st.blockCategory !== 'cooldown',
+                  ),
+                },
+                {
+                  key: 'cooldown',
+                  label: '마무리',
+                  index: steps.findIndex(
+                    (st) => !isRestStep(st) && st.blockCategory === 'cooldown',
+                  ),
+                },
+              ] as const
+            )
+              .filter((phaseItem) => phaseItem.index >= 0)
+              .map((phaseItem) => (
+                <button
+                  key={phaseItem.key}
+                  type="button"
+                  className={`teaching-phase-jump-chip ${
+                    clock.index === phaseItem.index ? 'is-active' : ''
+                  }`}
+                  onClick={() => selectStep(phaseItem.index)}
+                  aria-label={`${phaseItem.label} 구간 첫 동작(${phaseItem.index + 1}번)으로 이동`}
+                >
+                  {phaseItem.label} ({phaseItem.index + 1}번)
+                </button>
+              ))}
+          </div>
+        )}
       </div>
       {showCueSheet && (
         <section className="panel teaching-cue-sheet-panel" aria-label="수업 진행 큐시트">

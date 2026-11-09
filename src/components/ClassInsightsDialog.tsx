@@ -194,6 +194,25 @@ export function ClassInsightsDialog({
             </table>
           </details>
 
+          {plan.spinalPlanes.some((plane) => plane.stepCount > 0) && (
+            <details className="class-insights-data class-insights-spinal-planes">
+              <summary>척추 움직임 평면 구성 보기 (굴곡 · 신전 · 측굴 · 회전)</summary>
+              <div className="class-insights-tag-metrics-content">
+                <p className="class-insights-note">
+                  동작 메타데이터에 지정된 척추 움직임 평면별 계획 시간입니다.
+                </p>
+                {plan.spinalPlanes.map((plane) => (
+                  <LabeledBar
+                    key={plane.plane}
+                    label={`${plane.labelKo} · ${plane.stepCount}개 동작`}
+                    seconds={plane.movementSec}
+                    denominator={plan.movementSec}
+                  />
+                ))}
+              </div>
+            </details>
+          )}
+
           <h3 id={`${id}-tags-heading`} className="class-insights-tag-heading">
             부위 태그의 계획 범위
           </h3>

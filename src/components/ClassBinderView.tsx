@@ -15,6 +15,7 @@ import { getRecoveryStorageStatus, usePilatesStore } from '../store/usePilatesSt
 import type { ClassHistoryLog, DifficultyLevel, SavedSequence, SequenceStep } from '../types/pilates';
 import type { ClassHistoryLogWithSnapshot, ResolvedTeachingHistoryView } from '../types/teachingHistorySnapshot';
 import { getSavedHumanMovementDrafts, getSavedReusableBlocks, isMovementIdeaExercise } from '../utils/movementIdeaDraft';
+import { formatSequenceAsMarkdownCueSheet } from '../utils/portableSequenceExport';
 import { formatSecondsToMMSS, formatSequenceAsStudioSheet, getSequenceDurations, isRestStep } from '../utils/sequenceEngine';
 import {
   copyHistoryLogIntoWorkbenchSafely, formatTeachingHistorySnapshotText, resolveTeachingHistoryView,
@@ -289,6 +290,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   };
   const exportText = (sequence: SavedSequence) =>
     downloadTxt(`${sequence.title.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-sequence'}.txt`, `강사 검토용 계획 · 동작 시간은 양쪽 수행·설명·전환을 포함하며 휴식은 별도 항목으로 전체 시간에 포함합니다.\n스프링은 원문 참고값이며 실제 기구에서 확인해 주세요.\n\n${sheetFor(sequence)}`, '텍스트 파일을 내보냈습니다.');
+  const exportMarkdown = (sequence: SavedSequence) =>
+    downloadTxt(`${sequence.title.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-sequence'}.md`, formatSequenceAsMarkdownCueSheet(sequence, exercisesMap), '마크다운 큐시트(.md)를 내보냈습니다.');
   const exportHistorySnapshotText = (viewItem: ResolvedTeachingHistoryView) =>
     downloadTxt(`${viewItem.sequenceTitle.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-history'}-${getTeachingHistoryDateSource(viewItem).slice(0, 10)}.txt`, formatTeachingHistorySnapshotText(viewItem), '수업 완료 이력 스냅샷 텍스트를 내보냈습니다.');
   const createGroup = (event: React.FormEvent) => {
@@ -488,6 +491,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                         <PfButton variant="ghost" onClick={() => duplicateSequence(sequence.id)}><Copy size={15} /> 복제</PfButton>
                         <PfButton variant="ghost" onClick={(e) => { printTriggerRef.current = e.currentTarget; setPrintSequence(sequence); }}><Printer size={15} /> 인쇄</PfButton>
                         <PfButton variant="ghost" onClick={() => exportText(sequence)}><ArrowDownToLine size={15} /> 텍스트</PfButton>
+                        <PfButton variant="ghost" onClick={() => exportMarkdown(sequence)}><FileText size={15} /> 마크다운</PfButton>
                         <PfButton variant="icon" className="teaching-delete" aria-label={`${sequence.title} 삭제`} onClick={() => setPendingDelete(sequence.id)}><Trash2 size={16} /></PfButton>
                       </div>
                       <button type="button" className="teaching-log-link" onClick={() => onOpenLogModal(sequence.id, { stepsSnapshot: sequence.steps, sequenceTitle: sequence.title })}>

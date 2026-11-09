@@ -100,6 +100,8 @@ import {
   startFromBlankDraftOption,
   toP5ReusableBlockContract,
 } from '../utils/classBlockPresetValidator';
+import { Apparatus3dRigPreviewCard } from './Apparatus3dRigPreviewCard';
+import { CurriculumProgressionPanel } from './workbench/CurriculumProgressionPanel';
 import { WorkbenchBlankStarters } from './workbench/WorkbenchBlankStarters';
 import { WorkbenchHierarchySummary } from './workbench/WorkbenchHierarchySummary';
 import '../styles/design-tokens.css';
@@ -2012,22 +2014,43 @@ export function SequenceWorkbench({
               open={flowTelemetryOpen}
               onToggle={(event) => setFlowTelemetryOpen(event.currentTarget.open)}
             >
-              <summary>기구 세팅 전환·척추 움직임 밸런스 점검 (선택)</summary>
+              <summary>기구 세팅 전환·척추 움직임 밸런스·3D 뷰포트 점검 (선택)</summary>
               {flowTelemetryOpen && (
-                <SequenceFlowTelemetryStrip
-                  steps={s.activeSteps}
-                  exercisesById={exerciseMap}
-                  onApplyTransitionBuffers={(nextSteps) => {
-                    usePilatesStore.setState({
-                      activeSteps: nextSteps,
-                      saveFeedback:
-                        '기구·체위 전환 구간에 권장 여유 시간(Transition Buffer)을 반영했어요.',
-                    });
-                  }}
-                  onSelectStep={(stepId) => {
-                    setPreviewStep(stepId);
-                  }}
-                />
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  <SequenceFlowTelemetryStrip
+                    steps={s.activeSteps}
+                    exercisesById={exerciseMap}
+                    onApplyTransitionBuffers={(nextSteps) => {
+                      usePilatesStore.setState({
+                        activeSteps: nextSteps,
+                        saveFeedback:
+                          '기구·체위 전환 구간에 권장 여유 시간(Transition Buffer)을 반영했어요.',
+                      });
+                    }}
+                    onSelectStep={(stepId) => {
+                      setPreviewStep(stepId);
+                    }}
+                  />
+                  {(() => {
+                    const focusStep = selectedStep ?? s.activeSteps.find((st) => !isRestStep(st));
+                    const focusEx = focusStep ? exerciseMap.get(focusStep.exerciseId) : undefined;
+                    return (
+                      <Apparatus3dRigPreviewCard
+                        apparatus={focusEx?.apparatus ?? (s.activeApparatus === 'mixed' ? 'reformer' : s.activeApparatus)}
+                        bodyPosition={focusEx?.bodyPosition ?? 'supine'}
+                        springsLabel={focusStep?.customSpringOverride || focusEx?.springs}
+                        exerciseTitleKo={focusEx?.nameKo}
+                      />
+                    );
+                  })()}
+                  <CurriculumProgressionPanel
+                    groupId={criteria.targetGroupId}
+                    groupName={s.classGroups.find((g) => g.id === criteria.targetGroupId)?.name ?? '전체 반'}
+                    baseLevel={criteria.level}
+                    historyLogs={s.historyLogs}
+                    exercises={s.exercises}
+                  />
+                </div>
               )}
             </details>
           )}
