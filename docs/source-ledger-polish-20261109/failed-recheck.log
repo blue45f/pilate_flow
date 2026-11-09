@@ -1,0 +1,12 @@
+
+ RUN  v3.2.7 /private/tmp/pilates-source-ledger-polish
+
+ ✓ docs/home-first-use-round4-20261107/homeFirstUseRound4.audit.test.tsx (4 tests) 616ms
+   ✓ Round 4 독립 감사: 필라테스 첫사용자(초보 강사) 동선 (빈상태 → 새수업 → 동작2개추가 → 저장 → 다음방문 이어하기) > 설명문 없이 빈상태 → 새수업 → 동작2개추가 → 저장 → 다음방문 이어하기를 최소 6클릭(모달 함정 포함 시 7클릭)으로 완주하고 상태를 보존한다  487ms
+ ✓ scripts/free-ai-boundary-audit-20261107/track-b/privacy-bundle-ux-regression.test.tsx (13 tests) 592ms
+
+ Test Files  2 passed (2)
+      Tests  17 passed (17)
+   Start at  16:05:58
+   Duration  4.64s (transform 1.57s, setup 59ms, collect 2.76s, tests 1.21s, environment 323ms, prepare 67ms)
+

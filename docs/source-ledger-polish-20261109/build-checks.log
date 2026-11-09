@@ -1,0 +1,81 @@
+
+/private/tmp/pilates-source-ledger-polish/src/components/DatedSequencePlanningDialog.tsx
+  378:6  warning  React Hook useMemo has missing dependencies: 'assignments', 'props.initialOccurrence', and 'savedSequences'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/private/tmp/pilates-source-ledger-polish/src/components/MotionAuthoringBatchFigure.tsx
+  241:20  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+✖ 2 problems (0 errors, 2 warnings)
+
+LINT_EXIT=0
+src/utils/aiSequenceSafetyVerifier.ts(67,42): error TS2345: Argument of type 'readonly SequenceStep[]' is not assignable to parameter of type 'SequenceStep[]'.
+  The type 'readonly SequenceStep[]' is 'readonly' and cannot be assigned to the mutable type 'SequenceStep[]'.
+src/utils/instructorVoiceScriptGenerator.ts(69,9): error TS7053: Element implicitly has an 'any' type because expression of type 'ReformerBrand | "balanced"' can't be used to index type 'Record<ReformerBrand, string>'.
+  Property 'balanced' does not exist on type 'Record<ReformerBrand, string>'.
+src/utils/memberConditionLayerAdvisor.ts(60,7): error TS2367: This comparison appears to be unintentional because the types 'ClassBlockCategory' and '"abdominal"' have no overlap.
+TYPES_EXIT=1
+vite v6.4.5 building for production...
+transforming...
+✓ 2070 modules transformed.
+Circular chunk: pilates-presets-courses -> pilates-catalog-data -> pilates-presets-courses. Please adjust the manual chunk logic for these chunks.
+Circular chunk: pilates-catalog-data -> pilates-visual-rig-data -> pilates-catalog-data. Please adjust the manual chunk logic for these chunks.
+Circular chunk: pilates-visual-rig-data -> pilates-diagram-data -> pilates-visual-rig-data. Please adjust the manual chunk logic for these chunks.
+Circular chunk: pilates-catalog-data -> pilates-visual-rig-data -> pilates-diagram-data -> pilates-catalog-data. Please adjust the manual chunk logic for these chunks.
+Circular chunk: pilates-presets-courses -> pilates-catalog-data -> pilates-visual-rig-data -> pilates-diagram-data -> pilates-presets-courses. Please adjust the manual chunk logic for these chunks.
+rendering chunks...
+computing gzip size...
+dist/index.html                                    2.27 kB │ gzip:   0.89 kB
+dist/sw.js                                         7.28 kB
+dist/assets/review-queue-DAqDtFg1.csv              7.29 kB
+dist/assets/CloudSyncPanel-C61ONMnL.css            2.39 kB │ gzip:   0.79 kB
+dist/assets/LogSessionModal-BWs5TN5V.css           5.14 kB │ gzip:   1.36 kB
+dist/assets/RecoveryPreview-Cnlhdggv.css           5.98 kB │ gzip:   1.36 kB
+dist/assets/OfflinePresetPicker-NJsH7PbB.css       6.20 kB │ gzip:   1.60 kB
+dist/assets/FreeAiAssistantPanel-DacJmj1t.css      6.50 kB │ gzip:   1.70 kB
+dist/assets/PilatesSettingsPage-BRmgyWZ5.css       6.51 kB │ gzip:   1.61 kB
+dist/assets/InstructorStudyDialog-BJz7NP4G.css     7.85 kB │ gzip:   1.76 kB
+dist/assets/ClassBinderView-DQ_9qvOP.css           9.33 kB │ gzip:   1.78 kB
+dist/assets/LiveStageView-w9pHr_0C.css            12.75 kB │ gzip:   2.62 kB
+dist/assets/MotionDraftLabDialog-C_m8YmRP.css     16.07 kB │ gzip:   3.55 kB
+dist/assets/pilates-diagram-data-ClAMYCW_.css     20.36 kB │ gzip:   4.78 kB
+dist/assets/YouTubeClipModal-pkZa_Gq5.css         27.80 kB │ gzip:   4.89 kB
+dist/assets/InstructorScheduleView-CYYw7AHw.css   28.13 kB │ gzip:   5.16 kB
+dist/assets/teaching-D3DjC89B.css                 34.05 kB │ gzip:   6.53 kB
+dist/assets/ExerciseAtlasView-CqXvQAHz.css        40.26 kB │ gzip:   7.63 kB
+dist/assets/library-4CGJpWza.css                  54.71 kB │ gzip:   9.84 kB
+dist/assets/index-D2zTOSlf.css                   305.86 kB │ gzip:  52.00 kB
+dist/assets/CloudSyncPanel-DCdbjlH0.js             4.74 kB │ gzip:   2.02 kB
+dist/assets/RecoveryPreview--6GDvVvS.js            8.60 kB │ gzip:   3.32 kB
+dist/assets/InstructorStudyDialog-C_FfYztj.js     11.43 kB │ gzip:   4.72 kB
+dist/assets/LogSessionModal-6dAmaV03.js           17.02 kB │ gzip:   6.28 kB
+dist/assets/PfTabs-6Nsbr0qz.js                    25.04 kB │ gzip:   8.86 kB
+dist/assets/vendor-lucide-DldclkUR.js             31.93 kB │ gzip:   6.64 kB
+dist/assets/LiveStageView-DwzTcsFR.js             35.27 kB │ gzip:  11.14 kB
+dist/assets/ClassBinderView-CR4NRB7M.js           38.40 kB │ gzip:  12.43 kB
+dist/assets/youtube-catalog-_AZBqa6F.js           52.43 kB │ gzip:  14.55 kB
+dist/assets/DesignSystemInspector-tAXz2p2d.js     55.70 kB │ gzip:  20.80 kB
+dist/assets/PilatesSettingsPage-DbHRcN3I.js       61.21 kB │ gzip:  17.50 kB
+dist/assets/MotionDraftLabDialog-DaCu421y.js      67.19 kB │ gzip:  20.32 kB
+dist/assets/FreeAiAssistantPanel-Dw7TVgwR.js      67.71 kB │ gzip:  19.88 kB
+dist/assets/InstructorScheduleView-DAFX8tdQ.js    67.97 kB │ gzip:  18.94 kB
+dist/assets/OfflinePresetPicker-BJmu2xCL.js       82.87 kB │ gzip:  25.32 kB
+dist/assets/ExerciseAtlasView-mXdXq0YE.js         83.01 kB │ gzip:  22.88 kB
+dist/assets/YouTubeClipModal-C7OH1v5I.js         129.96 kB │ gzip:  38.01 kB
+dist/assets/vendor-firebase-BIlTEimM.js          154.92 kB │ gzip:  31.61 kB
+dist/assets/pilates-motion-ledgers-B5SnOnKG.js   203.38 kB │ gzip:   9.72 kB
+dist/assets/vendor-react-iWlWctZi.js             223.63 kB │ gzip:  69.42 kB
+dist/assets/pilates-visual-rig-data-DxXjl8bl.js  323.63 kB │ gzip:  70.64 kB
+dist/assets/pilates-presets-courses-mwMoIFRD.js  333.03 kB │ gzip:  66.20 kB
+dist/assets/pilates-motion-data-CD-IcmPL.js      345.89 kB │ gzip: 103.67 kB
+dist/assets/pilates-catalog-data-DGwv3IkT.js     386.75 kB │ gzip:  96.21 kB
+dist/assets/index-BZgk9Kep.js                    779.59 kB │ gzip: 234.45 kB
+dist/assets/pilates-diagram-data-BGNcGPUz.js     836.74 kB │ gzip: 211.89 kB
+dist/assets/pilates-motion-evidence-BYcsJ1Gy.js  972.85 kB │ gzip: 121.00 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 3.06s
+PWA build verified: 49 real static files, manifest and PNG icons.
+BUILD_PWA_EXIT=0
