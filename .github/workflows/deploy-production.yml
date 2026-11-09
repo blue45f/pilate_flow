@@ -1,41 +1,27 @@
-name: Dynamic Multi-Cloud & Local Artifact Production Deployment
+name: Production Deployment (Firebase Hosting · pilates-flow-atelier)
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      deploy_target:
-        description: "배포 대상 환경 선택 (all | github-pages | firebase | cloudflare | vercel | netlify)"
-        required: false
-        default: "all"
-        type: choice
-        options:
-          - all
-          - github-pages
-          - firebase
-          - cloudflare
-          - vercel
-          - netlify
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: "production-deploy-${{ github.ref }}"
   cancel-in-progress: true
 
 jobs:
-  verify-and-build:
-    name: Quality Gate & Universal PWA Bundle
+  verify-and-deploy:
+    name: Verify Quality Gate, Build PWA & Deploy to Firebase Hosting
     runs-on: ubuntu-latest
-    outputs:
-      target: ${{ inputs.deploy_target || 'all' }}
+    env:
+      FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
     steps:
-      - name: Checkout repository (main)
+      - name: Checkout main branch
         uses: actions/checkout@v4
 
       - name: Setup pnpm
@@ -53,64 +39,20 @@ jobs:
       - name: Run secrets & motion-study guard
         run: pnpm check:secrets && pnpm check:motion-study
 
-      - name: Run Wave 3-7 advancement & multi-cloud verification suites
-        run: pnpm vitest run src/test/wave3AdvancementVerification.test.ts src/test/wave4FollowthroughVerification.test.ts src/test/wave5AdvancementVerification.test.ts src/test/wave6AdvancementVerification.test.ts src/test/wave7MultiCloudDeployVerification.test.ts src/utils/wave3DeploymentRegression.test.ts src/utils/wave5DeploymentRegression.test.ts
+      - name: Run verification & deployment regression suites
+        run: pnpm vitest run src/test/wave3AdvancementVerification.test.ts src/test/wave4FollowthroughVerification.test.ts src/test/wave5AdvancementVerification.test.ts src/test/wave6AdvancementVerification.test.ts src/test/wave7MultiCloudDeployVerification.test.ts src/test/wave8SkillsAdvancementVerification.test.ts src/utils/wave3DeploymentRegression.test.ts src/utils/wave5DeploymentRegression.test.ts
 
-      - name: Build production PWA bundle & verify multi-cloud configs
-        run: pnpm build && node scripts/deploy-universal.mjs --check-env
+      - name: Build production PWA bundle & verify production config
+        run: pnpm build && pnpm deploy:check
 
-      - name: Upload portable static bundle (for local/Docker/custom cloud)
+      - name: Upload verified production dist artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pilates-flow-production-dist
+          name: pilates-flow-atelier-dist
           path: ./dist
           retention-days: 14
 
-      - name: Configure GitHub Pages
-        id: pages_config
-        continue-on-error: true
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist
-
-  deploy-github-pages:
-    name: Deploy -> GitHub Pages
-    needs: verify-and-build
-    if: ${{ always() && needs.verify-and-build.result == 'success' && (needs.verify-and-build.outputs.target == 'all' || needs.verify-and-build.outputs.target == 'github-pages') }}
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-  deploy-firebase-hosting:
-    name: Deploy -> Firebase Hosting (pilates-flow-atelier)
-    needs: verify-and-build
-    if: ${{ always() && needs.verify-and-build.result == 'success' && (needs.verify-and-build.outputs.target == 'all' || needs.verify-and-build.outputs.target == 'firebase') }}
-    runs-on: ubuntu-latest
-    env:
-      FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-      FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-    steps:
-      - name: Checkout repository config
-        uses: actions/checkout@v4
-
-      - name: Download verified production dist
-        uses: actions/download-artifact@v4
-        with:
-          name: pilates-flow-production-dist
-          path: ./dist
-
-      - name: Deploy to Firebase Hosting (when credentials configured)
+      - name: Deploy to Firebase Hosting (pilates-flow-atelier)
         run: |
           if [ -n "$FIREBASE_TOKEN" ]; then
             npx --yes firebase-tools deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth --token "$FIREBASE_TOKEN"
@@ -120,62 +62,5 @@ jobs:
             npx --yes firebase-tools deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth
             rm -f /tmp/gcp-sa.json
           else
-            echo "::notice::FIREBASE_TOKEN or FIREBASE_SERVICE_ACCOUNT secret not set in GitHub Actions; use local 'pnpm deploy:parallel' or add secret for CI auto-deploy."
-          fi
-
-  deploy-cloudflare-pages:
-    name: Deploy -> Cloudflare Pages
-    needs: verify-and-build
-    if: ${{ always() && needs.verify-and-build.result == 'success' && (needs.verify-and-build.outputs.target == 'all' || needs.verify-and-build.outputs.target == 'cloudflare') }}
-    runs-on: ubuntu-latest
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-    steps:
-      - name: Download verified production dist
-        uses: actions/download-artifact@v4
-        with:
-          name: pilates-flow-production-dist
-          path: ./dist
-
-      - name: Deploy to Cloudflare Pages (when credentials configured)
-        run: |
-          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            npx --yes wrangler pages deploy ./dist --project-name=pilates-flow-atelier
-          else
-            echo "::notice::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID not configured; skipping Cloudflare Pages deploy."
-          fi
-
-  deploy-vercel-and-netlify:
-    name: Deploy -> Vercel & Netlify Edge
-    needs: verify-and-build
-    if: ${{ always() && needs.verify-and-build.result == 'success' && (needs.verify-and-build.outputs.target == 'all' || needs.verify-and-build.outputs.target == 'vercel' || needs.verify-and-build.outputs.target == 'netlify') }}
-    runs-on: ubuntu-latest
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-    steps:
-      - name: Checkout repository config
-        uses: actions/checkout@v4
-
-      - name: Download verified production dist
-        uses: actions/download-artifact@v4
-        with:
-          name: pilates-flow-production-dist
-          path: ./dist
-
-      - name: Deploy to Vercel / Netlify (when credentials configured)
-        run: |
-          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
-            npx --yes vercel deploy --prod --yes --token "$VERCEL_TOKEN"
-          else
-            echo "::notice::VERCEL_TOKEN not configured; skipping Vercel deploy."
-          fi
-          if [ -n "$NETLIFY_AUTH_TOKEN" ] && [ -n "$NETLIFY_SITE_ID" ]; then
-            npx --yes netlify-cli deploy --prod --dir=./dist --auth "$NETLIFY_AUTH_TOKEN" --site "$NETLIFY_SITE_ID"
-          else
-            echo "::notice::NETLIFY_AUTH_TOKEN not configured; skipping Netlify deploy."
+            echo "::notice::CI automatic deploy uses FIREBASE_TOKEN or FIREBASE_SERVICE_ACCOUNT secret. From a local machine, run 'pnpm deploy' or 'pnpm deploy:parallel'."
           fi

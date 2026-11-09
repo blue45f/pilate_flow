@@ -20,8 +20,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "deploy": "pnpm build && firebase deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth",
     "deploy:check": "node scripts/deploy-universal.mjs --check-env",
-    "deploy:universal": "node scripts/deploy-universal.mjs --target=auto",
-    "deploy:parallel": "node scripts/deploy-universal.mjs --target=firebase,github --parallel",
+    "deploy:parallel": "node scripts/deploy-universal.mjs --parallel",
     "check:pwa": "node scripts/check-pwa-build.mjs",
     "check:secrets": "node --test scripts/check-secrets.node-test.mjs && node scripts/check-secrets.mjs",
     "verify:all": "pnpm check:secrets && pnpm check:motion-study && pnpm test && pnpm lint && pnpm build"
