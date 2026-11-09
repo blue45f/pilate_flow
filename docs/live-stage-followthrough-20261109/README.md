@@ -25,7 +25,7 @@
 - 다음 상세 기본 접힘·내용 보존·Enter/Space, 현재 세팅 위치, 음성/핸즈프리 기본 꺼짐, timer aria-live off, 시작·일시정지·1분 추가·이전/다음·마지막 동작, 고대비, 종료 취소·기록 없이 복귀, 원본 계획/저장 시퀀스/동작/기록 불변을 확인했다.
 - 스크린샷은 실제 화면의 합성 QA 데이터다. 실물 기기·Safari·실제 음성 청취 검증은 아니다.
 
-관련 7파일·76테스트, TypeScript 및 전체 lint 검사 통과. 기존 fast-refresh warning 1개는 남아 있다. 전체 회귀·빌드 및 main 반영 결과는 완료 후 기록한다.
+관련 7파일·76테스트, TypeScript 및 전체 lint 검사 통과. 기존 warning 2개(DatedSequencePlanningDialog의 memo 의존성, MotionAuthoringBatchFigure의 fast-refresh)는 남아 있다. 전체 회귀·빌드 및 main 반영 결과는 완료 후 기록한다.
 
 ## 경계
 
