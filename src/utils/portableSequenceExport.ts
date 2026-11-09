@@ -92,7 +92,6 @@ export function formatSequenceAsMarkdownCueSheet(
  */
 export function formatSequenceAsPortableJson(
   sequence: SavedSequence,
-  _exercisesById?: ReadonlyMap<string, PilatesExercise>,
 ): string {
   const durations = getSequenceDurations(sequence.steps);
   const pkg: PortableSequencePackageV1 = {

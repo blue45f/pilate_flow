@@ -293,7 +293,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const exportMarkdown = (sequence: SavedSequence) =>
     downloadTxt(`${sequence.title.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-sequence'}.md`, formatSequenceAsMarkdownCueSheet(sequence, exercisesMap), '마크다운 큐시트(.md)를 내보냈습니다.');
   const exportJson = (sequence: SavedSequence) =>
-    downloadTxt(`${sequence.title.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-sequence'}.json`, formatSequenceAsPortableJson(sequence, exercisesMap), '휴대용 JSON 패키지(.json)를 내보냈습니다.');
+    downloadTxt(`${sequence.title.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-sequence'}.json`, formatSequenceAsPortableJson(sequence), '휴대용 JSON 패키지(.json)를 내보냈습니다.');
   const exportHistorySnapshotText = (viewItem: ResolvedTeachingHistoryView) =>
     downloadTxt(`${viewItem.sequenceTitle.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-history'}-${getTeachingHistoryDateSource(viewItem).slice(0, 10)}.txt`, formatTeachingHistorySnapshotText(viewItem), '수업 완료 이력 스냅샷 텍스트를 내보냈습니다.');
   const createGroup = (event: React.FormEvent) => {
