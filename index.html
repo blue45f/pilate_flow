@@ -16,6 +16,31 @@
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Flow Atelier · 필라테스 수업 플래너</title>
+    <script>
+      // Self-healing boot watchdog: if a stale cached Service Worker ever serves an incompatible
+      // bundle that leaves #root empty after 2.5s, promote any waiting worker (or unregister) once.
+      window.addEventListener('DOMContentLoaded', function () {
+        setTimeout(function () {
+          var root = document.getElementById('root');
+          if (root && root.childNodes.length === 0 && 'serviceWorker' in navigator) {
+            if (sessionStorage.getItem('pf_sw_recovered_v1')) return;
+            sessionStorage.setItem('pf_sw_recovered_v1', '1');
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              Promise.all(
+                regs.map(function (reg) {
+                  if (reg.waiting) {
+                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                  }
+                  return reg.unregister();
+                })
+              ).finally(function () {
+                window.location.reload();
+              });
+            });
+          }
+        }, 2500);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

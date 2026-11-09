@@ -26,6 +26,30 @@ function buildFile(root, relative) {
   return real;
 }
 
+export function assertNoCircularJsChunks(assetDirectory) {
+  const jsFiles = readdirSync(assetDirectory).filter((file) => file.endsWith('.js'));
+  const graph = new Map();
+  for (const file of jsFiles) {
+    const code = readFileSync(path.join(assetDirectory, file), 'utf8');
+    const imports = [...code.matchAll(/from\s*["']\.\/([^"']+\.js)["']/g)].map((m) => m[1]);
+    graph.set(file, imports);
+  }
+  const cycles = [];
+  for (const [fileA, importsA] of graph.entries()) {
+    for (const fileB of importsA) {
+      const importsB = graph.get(fileB) ?? [];
+      if (importsB.includes(fileA) && fileA < fileB) {
+        cycles.push(`${fileA} <-> ${fileB}`);
+      }
+    }
+  }
+  assert.equal(
+    cycles.length,
+    0,
+    `Circular JS chunk dependency detected (causes runtime TDZ blank screen): ${cycles.join(', ')}`,
+  );
+}
+
 /** Inspect only a build directory in this checkout, including after symlink resolution. */
 export function verifyPwaBuild(outputDirectory = 'dist') {
   const candidate = path.resolve(projectRoot, outputDirectory);
@@ -56,6 +80,7 @@ export function verifyPwaBuild(outputDirectory = 'dist') {
     if (/\.(js|css)$/.test(file))
       assert.ok(assets.includes(`/assets/${file}`), `Uncached build module: ${file}`);
   }
+  assertNoCircularJsChunks(assetDirectory);
   const manifest = JSON.parse(readFileSync(buildFile(root, 'site.webmanifest'), 'utf8'));
   assert.equal(manifest.id, '/');
   assert.equal(manifest.scope, '/');
@@ -93,5 +118,5 @@ if (isCliEntryPoint()) {
   );
   // The production build always emits dist. Never turn a CLI argument into a filesystem path.
   const count = verifyPwaBuild();
-  console.log(`PWA build verified: ${count} real static files, manifest and PNG icons.`);
+  console.log(`PWA build verified: ${count} real static files, manifest, PNG icons, and 0 circular JS chunks.`);
 }
