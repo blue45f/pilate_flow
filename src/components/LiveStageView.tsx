@@ -993,6 +993,39 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               </p>
             )}
           </div>
+          {(phase === '다음 동작 전환' || (clock.running && clock.remainingMs <= 15000)) &&
+            next &&
+            nextExercise &&
+            !isRestStep(next) && (
+              <div
+                className="teaching-transition-setup-banner"
+                role="status"
+                aria-label="다음 동작 기구 세팅 안내"
+              >
+                <div className="teaching-transition-setup-header">
+                  <span className="teaching-transition-setup-badge">NEXT SETUP</span>
+                  <strong className="teaching-transition-setup-title">
+                    다음: {nextExercise.nameKo}
+                  </strong>
+                </div>
+                <div className="teaching-transition-setup-chips">
+                  <span className="teaching-transition-chip is-apparatus">
+                    기구 · {APPARATUS_LABELS[nextExercise.apparatus].ko}
+                  </span>
+                  <span className="teaching-transition-chip is-spring">
+                    스프링 · {next.customSpringOverride || nextExercise.springs || '기구 세팅 확인'}
+                  </span>
+                  {nextExercise.box !== 'none' && (
+                    <span className="teaching-transition-chip is-box">
+                      박스 · {BOX_LABELS[nextExercise.box]}
+                    </span>
+                  )}
+                  <span className="teaching-transition-chip is-footbar">
+                    풋바/헤드 · {nextExercise.footbar} / {nextExercise.headrest}
+                  </span>
+                </div>
+              </div>
+            )}
           <div
             className="teaching-timer-progress"
             role="progressbar"

@@ -51,6 +51,14 @@ import {
   saveMovementIdeaDraft,
   saveMovementIdeaWorkingBuffer,
 } from '../utils/movementIdeaDraft';
+import { BLANK_DRAFT_STARTER_OPTIONS } from '../data/classBlockPresets';
+import { startFromBlankDraftOption } from '../utils/classBlockPresetValidator';
+
+const MOVEMENT_IDEA_STARTERS = BLANK_DRAFT_STARTER_OPTIONS.filter(
+  (option) =>
+    option.starterKind === 'blank-movement-idea' ||
+    option.starterKind === 'blank-custom-movement-showcase',
+);
 
 export interface MovementIdeaSheetProps {
   open: boolean;
@@ -567,6 +575,32 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
     requestAnimationFrame(() => ideaInputRef.current?.focus());
   };
 
+  const handleApplyBlankStarter = (starterId: string) => {
+    const starter = MOVEMENT_IDEA_STARTERS.find((item) => item.id === starterId);
+    if (!starter) return;
+    const bundle = startFromBlankDraftOption(
+      starter,
+      {
+        ideaLine: ideaLine.trim() || undefined,
+        workingNameKo: workingTitle.trim() || undefined,
+        apparatus: apparatus || starter.defaultApparatus,
+        level: level || starter.defaultLevel,
+        durationMinutes: Number(durationMin) || starter.defaultDurationMinutes,
+      },
+      exercises,
+    );
+    saveMovementIdeaWorkingBuffer(bundle.movementIdeaBuffer);
+    setEditingId(null);
+    setIdeaLine(bundle.movementIdeaBuffer.ideaLine);
+    setWorkingTitle(bundle.movementIdeaBuffer.workingTitle);
+    setApparatus(bundle.movementIdeaBuffer.apparatus);
+    setDurationMin(bundle.movementIdeaBuffer.durationMin);
+    setLevel(bundle.movementIdeaBuffer.level);
+    setError('');
+    setStatusMessage(`‘${starter.titleKo}’ 초안 예시로 시작합니다. 자유롭게 고쳐 적으세요.`);
+    requestAnimationFrame(() => ideaInputRef.current?.focus());
+  };
+
   const isAlreadyInClass = Boolean(
     editingId && activeSteps.some((step) => step.exerciseId === editingId),
   );
@@ -625,6 +659,23 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
               {editingId && (
                 <PfBadge tone="success">저장된 초안 편집 중 (v{currentRevision})</PfBadge>
               )}
+            </div>
+            <div
+              className="pf-idea-starter-chips"
+              role="group"
+              aria-label="빈 초안 빠른 시작"
+            >
+              {MOVEMENT_IDEA_STARTERS.map((starter) => (
+                <button
+                  key={starter.id}
+                  type="button"
+                  className="pf-idea-starter-chip"
+                  onClick={() => handleApplyBlankStarter(starter.id)}
+                  title={starter.descriptionKo}
+                >
+                  <span>{starter.titleKo}</span>
+                </button>
+              ))}
             </div>
             <PfField label="떠오른 동작 아이디어 한 줄" htmlFor={ideaInputId} required>
               <PfTextarea

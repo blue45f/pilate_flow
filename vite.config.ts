@@ -50,6 +50,29 @@ export default defineConfig({
           ) {
             return 'pilates-motion-ledgers';
           }
+          if (id.includes('/src/features/motionEvidenceReview/')) {
+            return 'pilates-motion-evidence';
+          }
+          if (
+            id.includes('movementVisualRigCatalog') ||
+            id.includes('extendedMotion')
+          ) {
+            return 'pilates-visual-rig-data';
+          }
+          if (
+            id.includes('DiagramData') ||
+            id.includes('Diagrams') ||
+            id.includes('Diagram') ||
+            id.includes('extensionMovementData')
+          ) {
+            return 'pilates-diagram-data';
+          }
+          if (
+            id.includes('classBlockPresets') ||
+            id.includes('courseCollectionSource')
+          ) {
+            return 'pilates-presets-courses';
+          }
           if (id.includes('/src/data/motion') || id.includes('supineReach')) {
             return 'pilates-motion-data';
           }

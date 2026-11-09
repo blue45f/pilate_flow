@@ -92,6 +92,14 @@ import { FirstClassTutorialCandidate } from '../features/firstClassTutorialCandi
 import { ClassInsightsDialog } from './ClassInsightsDialog';
 import { AiSequenceCoPilotPanel } from './AiSequenceCoPilotPanel';
 import { SequenceFlowTelemetryStrip } from './SequenceFlowTelemetryStrip';
+import {
+  BLANK_DRAFT_STARTER_OPTIONS,
+  OFFLINE_BLOCK_PRESETS,
+} from '../data/classBlockPresets';
+import {
+  startFromBlankDraftOption,
+  toP5ReusableBlockContract,
+} from '../utils/classBlockPresetValidator';
 import '../styles/design-tokens.css';
 import '../styles/workbench-usability.css';
 import '../styles/workbench-vnext.css';
@@ -714,6 +722,49 @@ export function SequenceWorkbench({
   const [blockTitleInput, setBlockTitleInput] = useState('');
   const [, setBlockLibraryTick] = useState(0);
   const savedReusableBlocks = getSavedReusableBlocks();
+  const p5ReusableBlocks = useMemo(
+    () => [
+      ...OFFLINE_BLOCK_PRESETS.map((preset) => toP5ReusableBlockContract(preset)),
+      ...savedReusableBlocks.map((block) => toP5ReusableBlockContract(block)),
+    ],
+    [savedReusableBlocks],
+  );
+  const handleStartBlankDraft = (starterId: string) => {
+    const starter = BLANK_DRAFT_STARTER_OPTIONS.find((item) => item.id === starterId);
+    if (!starter) return;
+    if (
+      starter.starterKind === 'blank-movement-idea' ||
+      starter.starterKind === 'blank-custom-movement-showcase'
+    ) {
+      openIdeaSheet(null);
+      return;
+    }
+    const bundle = startFromBlankDraftOption(
+      starter,
+      {
+        apparatus: s.activeApparatus,
+        level: s.activeLevel,
+        durationMinutes: s.activeTargetMinutes,
+      },
+      s.exercises,
+    );
+    if (bundle.sequenceDraft) {
+      s.setActiveSequenceMeta({
+        title: bundle.sequenceDraft.title,
+        subtitle: bundle.sequenceDraft.subtitle,
+        apparatus: bundle.sequenceDraft.apparatus,
+        level: bundle.sequenceDraft.level,
+        targetMinutes: bundle.sequenceDraft.targetMinutes,
+      });
+      usePilatesStore.setState({
+        activeSteps: bundle.sequenceDraft.steps.map((step) =>
+          step.selectedLayer ? step : { ...step, selectedLayer: 'standard' },
+        ),
+      });
+      setWorkflowStep('arrange');
+      setNotice(`‘${starter.titleKo}’ 초안 틀을 열었습니다.`);
+    }
+  };
   const handleCombineCurrentStepsToBlock = () => {
     const nonRestSteps = s.activeSteps.filter((step) => !isRestStep(step));
     if (!nonRestSteps.length) {
@@ -747,8 +798,9 @@ export function SequenceWorkbench({
     setBlockLibraryTick((n) => n + 1);
     setNotice(lastResultMessage);
   };
-  const handleInsertReusableBlock = (blockId: string) => {
+  const handleInsertReusableBlock = (blockId: string, deltaMin = 0) => {
     const beforeState = usePilatesStore.getState();
+    const prevLen = beforeState.activeSteps.length;
     const snapshot = {
       activeSequenceId: beforeState.activeSequenceId,
       activeTitle: beforeState.activeTitle,
@@ -764,15 +816,26 @@ export function SequenceWorkbench({
     const res = insertIdeaReusableBlockToCurrentClass(blockId);
     if (res.ok) {
       const current = usePilatesStore.getState();
+      const insertedCount = Math.max(1, current.activeSteps.length - prevLen);
+      const perStepDelta = deltaMin / insertedCount;
       usePilatesStore.setState({
         undoStack: [...beforeState.undoStack.slice(-19), snapshot],
-        activeSteps: current.activeSteps.map((step) =>
-          step.selectedLayer ? step : { ...step, selectedLayer: 'standard' },
-        ),
+        activeSteps: current.activeSteps.map((step, idx) => {
+          const baseStep = step.selectedLayer ? step : { ...step, selectedLayer: 'standard' as const };
+          if (deltaMin === 0 || idx < prevLen || isRestStep(baseStep)) return baseStep;
+          return {
+            ...baseStep,
+            durationMin: Number(Math.max(1, Math.min(20, baseStep.durationMin + perStepDelta)).toFixed(2)),
+          };
+        }),
       });
       setWorkflowStep('arrange');
     }
-    setNotice(res.message);
+    setNotice(
+      deltaMin === 0
+        ? res.message
+        : `${res.message} (${deltaMin > 0 ? `+${deltaMin}` : deltaMin}분 조정 적용)`,
+    );
   };
   const handleSave = () => {
     const current = usePilatesStore.getState();
@@ -1034,6 +1097,23 @@ export function SequenceWorkbench({
                 >
                   <Copy size={16} aria-hidden="true" /> 프리셋·동작 묶음에서 고르기
                 </button>
+              </div>
+              <div
+                className="workbench-blank-starters"
+                role="group"
+                aria-label="빈 초안 빠른 시작"
+              >
+                {BLANK_DRAFT_STARTER_OPTIONS.slice(0, 4).map((starter) => (
+                  <button
+                    key={starter.id}
+                    type="button"
+                    className="workbench-blank-starter-chip"
+                    onClick={() => handleStartBlankDraft(starter.id)}
+                    title={starter.descriptionKo}
+                  >
+                    <span>{starter.titleKo}</span>
+                  </button>
+                ))}
               </div>
               <p className="workbench-reviewed-count">
                 추가하고, 순서를 바꾸고, 저장하세요. 검토는 선택입니다.
@@ -1499,6 +1579,7 @@ export function SequenceWorkbench({
                       >
                         {savedReusableBlocks.map((block) => {
                           const summary = getReusableBlockTimingSummary(block);
+                          const canReduceMin = summary.totalDurationMin > 2;
                           return (
                             <div key={block.id} className="workbench-block-combo-item">
                               <div>
@@ -1507,14 +1588,44 @@ export function SequenceWorkbench({
                                   {block.items.length}개 동작 · 총 {summary.totalDurationMin}분 (v
                                   {block.version})
                                 </span>
+                                <span
+                                  className="workbench-block-combo-subbreakdown"
+                                  aria-label="블록 세부 시간 요약"
+                                >
+                                  동작 {summary.movementSec}초 · 설명 {summary.explanationSec}초 · 전환{' '}
+                                  {summary.transitionSec}초
+                                </span>
                               </div>
-                              <PfButton
-                                variant="secondary"
-                                onClick={() => handleInsertReusableBlock(block.id)}
-                                aria-label={`${block.title} 수업에 블록 넣기`}
+                              <div
+                                className="workbench-block-combo-scale-actions"
+                                role="group"
+                                aria-label={`${block.title} 시간 조정 삽입`}
                               >
-                                수업에 블록 넣기
-                              </PfButton>
+                                <button
+                                  type="button"
+                                  className="workbench-combo-scale-btn"
+                                  disabled={!canReduceMin}
+                                  onClick={() => handleInsertReusableBlock(block.id, -1)}
+                                  aria-label={`${block.title} 1분 줄여 넣기`}
+                                >
+                                  -1분
+                                </button>
+                                <PfButton
+                                  variant="secondary"
+                                  onClick={() => handleInsertReusableBlock(block.id, 0)}
+                                  aria-label={`${block.title} 수업에 블록 넣기`}
+                                >
+                                  수업에 블록 넣기
+                                </PfButton>
+                                <button
+                                  type="button"
+                                  className="workbench-combo-scale-btn"
+                                  onClick={() => handleInsertReusableBlock(block.id, 1)}
+                                  aria-label={`${block.title} 1분 늘려 넣기`}
+                                >
+                                  +1분
+                                </button>
+                              </div>
                             </div>
                           );
                         })}
@@ -2085,6 +2196,7 @@ export function SequenceWorkbench({
               <Suspense fallback={<p className="pf-text-sm">AI 도우미를 불러오는 중...</p>}>
                 <LazyFreeAiAssistantPanel
                   exercises={s.exercises}
+                  reusableBlocks={p5ReusableBlocks}
                   conditionTemplates={s.conditionTemplates}
                   activeTargetMinutes={s.activeTargetMinutes}
                   activeApparatus={s.activeApparatus}

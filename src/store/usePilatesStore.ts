@@ -1,4 +1,5 @@
 import { compareTeachingHistoryDates, getTeachingHistoryDateSource } from '../utils/teachingHistoryDate';
+import { reconstructStepsSnapshotFromHistoryLog } from '../utils/teachingHistorySnapshot';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { createRecoveryStorageGuard, RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import {
@@ -1944,8 +1945,14 @@ export const usePilatesStore = create<PilatesStudioState>()(
         const log = state.historyLogs.find((item) => item.id === logId);
         if (!log) return;
         const exerciseMap = new Map(state.exercises.map((exercise) => [exercise.id, exercise]));
-        const exerciseIds = log.stepsSnapshot
-          ? log.stepsSnapshot.filter((step) => !isRestStep(step)).map((step) => step.exerciseId)
+        const reconstructedSteps =
+          log.stepsSnapshot && log.stepsSnapshot.length > 0
+            ? log.stepsSnapshot
+            : reconstructStepsSnapshotFromHistoryLog(log);
+        const resolvedStepsSnapshot =
+          reconstructedSteps.length > 0 ? reconstructedSteps : log.stepsSnapshot;
+        const exerciseIds = resolvedStepsSnapshot
+          ? resolvedStepsSnapshot.filter((step) => !isRestStep(step)).map((step) => step.exerciseId)
           : log.exerciseIds;
         if (exerciseIds.some((id) => !exerciseMap.has(id))) {
           set({
@@ -1955,7 +1962,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
           return;
         }
         const steps: SequenceStep[] =
-          log.stepsSnapshot ??
+          resolvedStepsSnapshot ??
           log.exerciseIds.map((exerciseId, index) => {
             const exercise = exerciseMap.get(exerciseId)!;
             return {
@@ -1998,7 +2005,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
             lastCriteria: cloneCriteria(criteria),
             activeSequenceId: newId('seq-history'),
             activeTitle: `${log.sequenceTitle} (기록에서 복사)`,
-            activeSubtitle: log.stepsSnapshot
+            activeSubtitle: resolvedStepsSnapshot
               ? `${getTeachingHistoryDateSource(log).slice(0, 10)} 수업 구성 사본`
               : '동작별 시간 미기록 · 현재 기본값으로 복원',
             activeApparatus: criteria.apparatus,

@@ -630,3 +630,87 @@
   font-size: 0.72rem;
   color: #5f6f61;
 }
+
+/* Blank Draft Starters & Reusable Block Combo Sub-Breakdown / Scaling UX */
+#root .vnext-workbench .workbench-blank-starters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  align-items: center;
+}
+
+#root .vnext-workbench .workbench-blank-starter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid #ced4c5;
+  background: #fffdf8;
+  color: var(--wb-forest, #173d34);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  word-break: keep-all;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    transform 120ms ease;
+}
+
+#root .vnext-workbench .workbench-blank-starter-chip:hover {
+  background: #e8eee3;
+  border-color: var(--wb-forest, #173d34);
+  transform: translateY(-1px);
+}
+
+#root .vnext-workbench .workbench-block-combo-subbreakdown {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 3px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f1eee5;
+  color: #4d6253;
+  font-size: 0.74rem;
+  font-weight: 600;
+  word-break: keep-all;
+}
+
+#root .vnext-workbench .workbench-block-combo-scale-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#root .vnext-workbench .workbench-combo-scale-btn {
+  min-height: 36px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid #ced4c5;
+  background: #fffdf8;
+  color: var(--wb-forest, #173d34);
+  font-size: 0.78rem;
+  font-weight: 650;
+  word-break: keep-all;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+#root .vnext-workbench .workbench-combo-scale-btn:hover:not(:disabled) {
+  background: #e8eee3;
+  border-color: var(--wb-forest, #173d34);
+}
+
+#root .vnext-workbench .workbench-combo-scale-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

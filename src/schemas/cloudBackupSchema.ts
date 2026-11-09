@@ -1,5 +1,6 @@
 import { createDatedPlanningSchema } from './datedSequencePlanningSchema';
 import { z } from 'zod';
+import { humanMovementDraftSchema, reusableBlockSchema } from './hierarchySchema';
 import { stepTimeEstimateSchema } from './stepTimeEstimate';
 import { createGroupPlanningPreferencesSchema } from './instructorPlanningSchema';
 import { instructorStudyStateSchema } from './instructorStudySchema';
@@ -646,6 +647,8 @@ export const cloudBackupDataSchema = z.object({
   savedSequences: z.array(sequenceSchema).max(10000),
   classGroups: z.array(groupSchema).max(10000),
   historyLogs: z.array(historySchema).max(20000),
+  humanMovementDrafts: z.array(humanMovementDraftSchema).max(5000).optional(),
+  reusableBlocks: z.array(reusableBlockSchema).max(2000).optional(),
   activeDraft: sequenceSchema.optional(),
   draftCriteria: criteriaSchema.nullable().optional(),
   conditionTemplates: z.array(templateSchema).max(1000).optional(),

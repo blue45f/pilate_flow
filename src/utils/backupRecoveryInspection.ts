@@ -30,6 +30,7 @@ import type {
 import type { InstructorScheduleData } from '../types/instructorSchedule';
 import type { InstructorStudyState } from '../types/instructorStudy';
 import type { DatedSequencePlanningData } from '../types/datedSequencePlanning';
+import type { HumanMovementDraft, ReusableBlock } from '../types/hierarchy';
 import { createEmptyDatedSequencePlanning } from '../types/datedSequencePlanning';
 import { mergeDatedSequencePlanning } from './datedSequencePlanning';
 import { mergeInstructorStudyState } from './instructorStudy';
@@ -44,6 +45,8 @@ export interface RecoveryCurrentState {
   savedSequences: SavedSequence[];
   classGroups: ClassGroupProfile[];
   historyLogs: ClassHistoryLog[];
+  humanMovementDrafts?: HumanMovementDraft[];
+  reusableBlocks?: ReusableBlock[];
   conditionTemplates: ConditionTemplate[];
   instructorSchedule: InstructorScheduleData;
   instructorStudyState?: InstructorStudyState;
@@ -67,6 +70,8 @@ export type RecoveryNextState = Pick<
   | 'savedSequences'
   | 'classGroups'
   | 'historyLogs'
+  | 'humanMovementDrafts'
+  | 'reusableBlocks'
   | 'conditionTemplates'
   | 'instructorSchedule'
   | 'instructorStudyState'
@@ -567,6 +572,8 @@ function parseInput(raw: string) {
     checked.classGroups,
     checked.historyLogs,
     checked.conditionTemplates ?? [],
+    checked.humanMovementDrafts ?? [],
+    checked.reusableBlocks ?? [],
   ];
   for (const records of recordSets)
     if (new Set(records.map((record) => record.id)).size !== records.length)
@@ -712,7 +719,11 @@ export function inspectBackupRecovery(
       data.exercises,
       INITIAL_EXERCISES,
     );
-    const known = new Set(exercises.records.map((record) => record.id));
+    const known = new Set([
+      ...exercises.records.map((record) => record.id),
+      ...(current.humanMovementDrafts ?? []).map((draft) => draft.id),
+      ...(data.humanMovementDrafts ?? []).map((draft) => draft.id),
+    ]);
     const importedSequences = [
       ...data.savedSequences,
       ...(data.activeDraft ? [data.activeDraft] : []),
@@ -832,11 +843,31 @@ export function inspectBackupRecovery(
         ),
       ]),
     ];
+    const humanDrafts =
+      current.humanMovementDrafts !== undefined || data.humanMovementDrafts !== undefined
+        ? mergeRecords(
+            'humanMovementDrafts',
+            '새 동작 창작 초안',
+            current.humanMovementDrafts ?? [],
+            data.humanMovementDrafts ?? [],
+          )
+        : undefined;
+    const reusableBlocks =
+      current.reusableBlocks !== undefined || data.reusableBlocks !== undefined
+        ? mergeRecords(
+            'reusableBlocks',
+            '재사용 블록 템플릿',
+            current.reusableBlocks ?? [],
+            data.reusableBlocks ?? [],
+          )
+        : undefined;
     const next: RecoveryNextState = {
       exercises: exercises.records,
       savedSequences: sequences.records,
       classGroups: preserveCurrentGroupPlanningPreferences(current.classGroups, groups.records),
       historyLogs: history.records,
+      ...(humanDrafts !== undefined ? { humanMovementDrafts: humanDrafts.records } : {}),
+      ...(reusableBlocks !== undefined ? { reusableBlocks: reusableBlocks.records } : {}),
       conditionTemplates: templates.records,
       instructorSchedule: schedule,
       instructorStudyState: study.state,
@@ -857,6 +888,8 @@ export function inspectBackupRecovery(
       groups.row,
       history.row,
       templates.row,
+      ...(data.humanMovementDrafts !== undefined && humanDrafts ? [humanDrafts.row] : []),
+      ...(data.reusableBlocks !== undefined && reusableBlocks ? [reusableBlocks.row] : []),
       ...scheduleRows,
     ];
     if (data.instructorStudyState !== undefined)
@@ -1028,6 +1061,12 @@ export function inspectBackupRecovery(
       savedSequences: current.savedSequences,
       classGroups: current.classGroups,
       historyLogs: current.historyLogs,
+      ...(humanDrafts !== undefined
+        ? { humanMovementDrafts: current.humanMovementDrafts ?? [] }
+        : {}),
+      ...(reusableBlocks !== undefined
+        ? { reusableBlocks: current.reusableBlocks ?? [] }
+        : {}),
       conditionTemplates: current.conditionTemplates,
       instructorSchedule: current.instructorSchedule,
       instructorStudyState: current.instructorStudyState,
