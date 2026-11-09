@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, ExternalLink, Sparkles, Wrench } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, HeartHandshake, Sparkles, Wrench } from 'lucide-react';
 import {
   APPARATUS_VISUAL_GUIDE_CATALOG,
   PROP_QUICK_GUIDES,
+  SPECIAL_POPULATION_CARE_PRESETS,
   buildApparatusIdeaExpandedDraft,
   getApparatusVisualGuide,
   type ApparatusVisualGuideEntry,
+  type SpecialPopulationCarePreset,
 } from '../data/apparatusVisualGuideCatalog';
+import { usePilatesStore } from '../store/usePilatesStore';
+import type { SequenceStep } from '../types/pilates';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import '../styles/apparatus-visual-guide.css';
 
@@ -407,9 +411,12 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
     getApparatusVisualGuide(activeApparatusId).id,
   );
   const [expanded, setExpanded] = useState<boolean>(mode === 'atlas');
-  const [activeTab, setActiveTab] = useState<'anatomy' | 'springs' | 'ideas'>('anatomy');
+  const [activeTab, setActiveTab] = useState<'anatomy' | 'springs' | 'ideas' | 'special'>(
+    'anatomy',
+  );
   const [activePin, setActivePin] = useState<1 | 2 | 3 | 4>(1);
   const [showAllIdeaScripts, setShowAllIdeaScripts] = useState<boolean>(true);
+  const [appliedSpecialStatus, setAppliedSpecialStatus] = useState<string>('');
 
   const effectiveGuide =
     activeApparatusId && activeApparatusId !== 'all' && activeApparatusId !== 'mixed'
@@ -424,6 +431,47 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
     setSelectedGuideId(guideId);
     setActivePin(1);
     onSelectApparatus?.(guideId);
+  };
+
+  const handleApplySpecialPopulationPreset = (preset: SpecialPopulationCarePreset) => {
+    const currentState = usePilatesStore.getState();
+    const builtSteps: SequenceStep[] = preset.steps.map((item, idx) => ({
+      kind: 'exercise',
+      stepId: `special-${preset.id}-${idx + 1}`,
+      order: idx + 1,
+      blockCategory: item.blockCategory,
+      classSection: item.classSection,
+      exerciseId: item.exerciseId,
+      durationMin: item.durationMin,
+      explanationSec: 20,
+      transitionSec: idx === 0 ? 0 : 15,
+      repetitions: 8,
+      sets: 2,
+      sideMode: item.sideMode ?? 'together',
+      selectedLayer: 'standard',
+      customSpringOverride: item.springsNoteKo,
+      instructorNote: `${item.labelKo} · ${item.cueNoteKo}`,
+    }));
+
+    const result = currentState.applyPresetDraft(
+      {
+        steps: builtSteps,
+        title: preset.titleKo,
+        subtitle: preset.subtitleKo,
+        targetMinutes: preset.targetMinutes,
+      },
+      'replace',
+      currentState,
+    );
+
+    if (result.success) {
+      setAppliedSpecialStatus(
+        `‘${preset.titleKo}’ (${preset.steps.length}개 맞춤 스텝 · 50분) 시퀀스를 현재 수업안에 적용했습니다.`,
+      );
+      onApplyClassConcept?.(preset.titleKo, preset.subtitleKo, preset.primaryApparatus);
+    } else {
+      setAppliedSpecialStatus(result.message);
+    }
   };
 
   return (
@@ -553,6 +601,16 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
               onClick={() => setActiveTab('ideas')}
             >
               <Sparkles size={14} aria-hidden="true" /> 3. @generate-fresh-ideas 5대 수업 리믹스
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'special'}
+              className="pf-apparatus-guide-tab"
+              data-testid="apparatus-guide-special-tab"
+              onClick={() => setActiveTab('special')}
+            >
+              <HeartHandshake size={14} aria-hidden="true" /> 4. 회원 케이스별 맞춤 프리셋 (산전산후·측만·시니어)
             </button>
           </div>
 
@@ -747,6 +805,101 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
                     </article>
                   );
                 })}
+              </div>
+            </>
+          )}
+
+          {activeTab === 'special' && (
+            <>
+              {appliedSpecialStatus && (
+                <p
+                  className="pf-apparatus-blueprint-caption"
+                  role="status"
+                  aria-live="polite"
+                  data-testid="special-preset-applied-status"
+                  style={{ margin: 0, background: '#e5f2ec', color: '#164438', fontWeight: 700 }}
+                >
+                  {appliedSpecialStatus}
+                </p>
+              )}
+              <div
+                className="pf-apparatus-ideas-grid"
+                data-testid="special-population-presets-grid"
+                aria-label="특수 회원 케이스별 50분 맞춤 시퀀스 프리셋"
+              >
+                {SPECIAL_POPULATION_CARE_PRESETS.map((preset) => (
+                  <article
+                    key={preset.id}
+                    className="pf-apparatus-idea-card"
+                    data-testid={`special-preset-${preset.id}`}
+                  >
+                    <div className="pf-apparatus-idea-card__top">
+                      <div className="pf-apparatus-idea-card__badge-row">
+                        <span className="pf-apparatus-idea-badge">{preset.badgeKo}</span>
+                        <a
+                          href={preset.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="pf-apparatus-idea-source"
+                        >
+                          {preset.sourceLabelKo}{' '}
+                          <ExternalLink
+                            size={11}
+                            aria-hidden="true"
+                            style={{ verticalAlign: 'middle' }}
+                          />
+                        </a>
+                      </div>
+                      <h3 className="pf-apparatus-idea-headline">{preset.titleKo}</h3>
+                      <p className="pf-apparatus-idea-pitch">{preset.summaryKo}</p>
+
+                      <div className="pf-apparatus-idea-script-box">
+                        <div className="pf-apparatus-idea-script-item">
+                          <strong>🔧 기구 세팅 & 바이오메카닉스 3원칙</strong>
+                          <ul className="pf-apparatus-idea-checklist">
+                            {preset.setupRulesKo.map((rule) => (
+                              <li key={rule}>{rule}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="pf-apparatus-idea-script-item">
+                          <strong>⚠️ 필수 금기 및 안전 수칙 (Red Flags)</strong>
+                          <p>{preset.contraindicationsKo}</p>
+                        </div>
+                        <div className="pf-apparatus-idea-script-item">
+                          <strong>🎙️ 수업 오프닝 30초 멘트</strong>
+                          <p>{preset.openingScriptKo}</p>
+                        </div>
+                        <div className="pf-apparatus-idea-script-item">
+                          <strong>📋 50분 6스텝 시퀀스 타임라인 구성</strong>
+                          <ol className="pf-apparatus-idea-checklist">
+                            {preset.steps.map((st) => (
+                              <li key={`${preset.id}-${st.exerciseId}`}>
+                                <span>
+                                  <b>{st.labelKo}</b> ({st.durationMin}분 · {st.springsNoteKo}) —{' '}
+                                  {st.cueNoteKo}
+                                </span>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pf-apparatus-idea-card__footer">
+                      <span className="pf-apparatus-idea-theme">
+                        총 {preset.targetMinutes}분 · {preset.steps.length}개 스텝 완비
+                      </span>
+                      <button
+                        type="button"
+                        className="pf-apparatus-idea-apply-btn"
+                        data-testid={`apply-special-preset-${preset.id}`}
+                        onClick={() => handleApplySpecialPopulationPreset(preset)}
+                      >
+                        50분 전용 시퀀스 수업안에 바로 담기
+                      </button>
+                    </div>
+                  </article>
+                ))}
               </div>
             </>
           )}

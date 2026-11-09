@@ -962,6 +962,309 @@ export function buildApparatusIdeaExpandedDraft(
   }
 }
 
+export interface SpecialPopulationStepSpec {
+  readonly exerciseId: string;
+  readonly labelKo: string;
+  readonly apparatusBadgeKo: string;
+  readonly durationMin: number;
+  readonly springsNoteKo: string;
+  readonly cueNoteKo: string;
+  readonly blockCategory:
+    | 'warmup'
+    | 'footwork'
+    | 'core'
+    | 'upper-body'
+    | 'lower-body'
+    | 'feet-in-straps'
+    | 'extension'
+    | 'cooldown';
+  readonly classSection: 'preparation' | 'main' | 'cooldown';
+  readonly sideMode?: 'together' | 'left-then-right';
+}
+
+export interface SpecialPopulationCarePreset {
+  readonly id: 'prenatal-postnatal' | 'scoliosis-asymmetry' | 'senior-joint-safe';
+  readonly badgeKo: string;
+  readonly titleKo: string;
+  readonly subtitleKo: string;
+  readonly targetMinutes: 50;
+  readonly primaryApparatus: ApparatusType;
+  readonly summaryKo: string;
+  readonly setupRulesKo: readonly [string, string, string];
+  readonly contraindicationsKo: string;
+  readonly openingScriptKo: string;
+  readonly memberNoticeKo: string;
+  readonly sourceLabelKo: string;
+  readonly sourceUrl: string;
+  readonly steps: readonly SpecialPopulationStepSpec[];
+}
+
+export const SPECIAL_POPULATION_CARE_PRESETS: readonly SpecialPopulationCarePreset[] = [
+  {
+    id: 'prenatal-postnatal',
+    badgeKo: '🤰 임산부 산전·산후 & 복직근이개 케어',
+    titleKo: '산전·산후 50분 골반저근·흉곽 호흡 & 부종 완화 시퀀스',
+    subtitleKo: '웨지 30° 경사 지지 · 와이드 V-스탠스 · 복직근이개(Diastasis Recti) 보호 루틴',
+    targetMinutes: 50,
+    primaryApparatus: 'reformer',
+    summaryKo:
+      '임신 중기(16주+) 이후 대정맥 압박 및 복직근이개를 예방하기 위해 앙와위 평평한 자세와 상복부 크런치(컬업)를 배제하고, 웨지 지지·시티드·사이드라잉 중심으로 구성한 50분 전용 시퀀스입니다.',
+    setupRulesKo: [
+      '① 앙와위 웨지(Spine Supine Wedge) / 헤드레스트 상승: 상체 약 30° 경사를 유지하고 연속 누운 자세는 3~5분 이내로 전환',
+      '② 풋바 와이드 V-스탠스 & 기어바 1단 후퇴: 고관절 외회전으로 복부 공간을 확보하고 치골결합(Pubic Symphysis) 압박 예방',
+      '③ 복직근이개 보호 호흡: 크런치·롤업 대신 날숨에 골반저근과 복횡근으로 아기를 감싸 안는 ‘Hug the Baby’ 코르셋 수축 적용',
+    ],
+    contraindicationsKo:
+      '임신 16주 이후 평평한 앙와위 장시간 유지 금지 · 상복부 굴곡(Curl-up/Roll-up/Teaser) 및 복강 내압 상승(발살바 호흡) 금지 · 릴랙신 호르몬에 의한 내전근 과신장 주의',
+    openingScriptKo:
+      '“회원님, 오늘 50분 수업은 복부 압박이나 허리 부담 없이 호흡으로 골반저근과 심부 복횡근을 부드럽게 깨우는 산전·산후 케어 플로우입니다. 웨지로 상체 각도를 높이고 고관절 공간을 여유 있게 열어두었으니, 날숨마다 아랫배를 등 쪽으로 포근히 감싸 안는 감각에 집중해 볼게요.”',
+    memberNoticeKo:
+      '[산전·산후 50분 맞춤 케어 클래스] 복직근이개와 골반 불안을 예방하는 웨지 서포트 호흡·와이드 풋워크·중둔근 안정화·하체 부종 순환 50분 시퀀스입니다.',
+    sourceLabelKo: VERIFIED_LITERATURE_BY_APPARATUS.reformer.citation,
+    sourceUrl: VERIFIED_LITERATURE_BY_APPARATUS.reformer.url,
+    steps: [
+      {
+        exerciseId: 'original-reformer-supine-breath',
+        labelKo: '웨지 지지 흉곽 호흡 & Hug the Baby 복횡근 인지',
+        apparatusBadgeKo: '리포머 · 웨지 30°',
+        durationMin: 6,
+        springsNoteKo: '2 Red',
+        cueNoteKo: '웨지 위에서 측면 흉곽 들숨과 골반저근-복횡근 날숨 수축 연결',
+        blockCategory: 'warmup',
+        classSection: 'preparation',
+      },
+      {
+        exerciseId: 'ex-footwork-01',
+        labelKo: '와이드 V-스탠스 풋워크 & 발목 펌핑 순환',
+        apparatusBadgeKo: '리포머 · 기어바 1단 후퇴',
+        durationMin: 10,
+        springsNoteKo: '2 Red + 1 Blue',
+        cueNoteKo: '고관절 외회전으로 복부 공간 확보 후 뒤꿈치·발목 펌핑으로 하지 정맥 환류 촉진',
+        blockCategory: 'footwork',
+        classSection: 'main',
+      },
+      {
+        exerciseId: 'original-reformer-seated-row',
+        labelKo: '박스 시티드 로잉 & 라운드숄더 흉추 오픈',
+        apparatusBadgeKo: '리포머 · 박스 시티드',
+        durationMin: 10,
+        springsNoteKo: '1 Red 또는 1 Blue',
+        cueNoteKo: '수유·임신으로 말리기 쉬운 전면 가슴을 열고 하부승모근·능형근 강화',
+        blockCategory: 'upper-body',
+        classSection: 'main',
+      },
+      {
+        exerciseId: 'ex-lower-04',
+        labelKo: '사이드 라잉 레그 스트랩 & 천장관절 중둔근 안정화',
+        apparatusBadgeKo: '리포머 · 측와위',
+        durationMin: 10,
+        springsNoteKo: '1 Red',
+        cueNoteKo: '머리·복부 패드 지지 하에 골반 수직 정렬을 지키며 중둔근 강화',
+        blockCategory: 'lower-body',
+        classSection: 'main',
+        sideMode: 'left-then-right',
+      },
+      {
+        exerciseId: 'ex-straps-01',
+        labelKo: '웨지 지지 핏인스트랩 프로그 & 고관절 이완',
+        apparatusBadgeKo: '리포머 · 웨지 서포트',
+        durationMin: 8,
+        springsNoteKo: '1 Red + 1 Blue',
+        cueNoteKo: '내전근 과신장 없이 통제 가능한 작은 서클 반경으로 골반 순환 유도',
+        blockCategory: 'feet-in-straps',
+        classSection: 'main',
+      },
+      {
+        exerciseId: 'ex-cooldown-01',
+        labelKo: '시티드 머메이드 흉곽 측면 확장 릴리즈',
+        apparatusBadgeKo: '리포머 · 시티드',
+        durationMin: 6,
+        springsNoteKo: '1 Blue',
+        cueNoteKo: '강한 비틀기 대신 옆구리 늑간근 공간을 넓히는 측면 호흡으로 마무리',
+        blockCategory: 'cooldown',
+        classSection: 'cooldown',
+        sideMode: 'left-then-right',
+      },
+    ],
+  },
+  {
+    id: 'scoliosis-asymmetry',
+    badgeKo: '📐 척추측만 · 골반·어깨 비대칭 3D 교정',
+    titleKo: '척추측만·비대칭 50분 축성 신장(Elongation) & 좌우 밸런스 시퀀스',
+    subtitleKo: '양측 스프링 대칭 캘리브레이션 · 오목측(Concave) 호흡 확장 · 볼록측(Convex) 지지',
+    targetMinutes: 50,
+    primaryApparatus: 'cadillac',
+    summaryKo:
+      '캐딜락 롤다운바·독립 레그 스프링과 리포머·래더 바렐을 결합해 좌우 근력 편차를 정밀 진단하고, 축성 신장(Axial Elongation)과 오목측 호흡 확장을 유도하는 50분 3차원 교정 시퀀스입니다.',
+    setupRulesKo: [
+      '① 스프링·스트랩 100% 대칭 캘리브레이션: 캐딜락 양측 스프링과 리포머 더블 루프 길이를 시작 전 동일하게 세팅',
+      '② 오목측(Concave) 들숨 확장 + 볼록측(Convex) 날숨 지지: 좁아진 늑곽 쪽으로 숨을 불어넣고 돌출된 쪽 복사근은 중심축으로 수축',
+      '③ 축성 신장(Axial Elongation) 최우선: 척추를 과하게 꺾거나 비틀기 전에 정수리와 좌골을 위아래로 길게 뽑아 올리기',
+    ],
+    contraindicationsKo:
+      '축성 신장 없는 끝범위 척추 측굴·과신전·강한 회전 부하 주의 · 양측 스프링 비대칭 상태에서 무거운 저항 수행 금지',
+    openingScriptKo:
+      '“회원님, 오늘 50분 수업은 내 몸의 좌우 대칭 거울인 캐딜락과 바렐·리포머를 활용해 골반과 흉곽의 중심축을 똑바로 세우는 3차원 밸런스 시간입니다. 좁아진 옆구리에는 호흡으로 공간을 열어주고, 약해진 쪽 둔근과 복사근에는 정교한 스프링 지지력을 채워 넣어 볼게요.”',
+    memberNoticeKo:
+      '[척추측만·좌우 비대칭 50분 3D 밸런스 클래스] 양측 독립 스프링 피드백과 비대칭 흉곽 호흡(오목측 확장·볼록측 지지)으로 골반·어깨 수평을 리셋하는 50분 세션입니다.',
+    sourceLabelKo: VERIFIED_LITERATURE_BY_APPARATUS.cadillac.citation,
+    sourceUrl: VERIFIED_LITERATURE_BY_APPARATUS.cadillac.url,
+    steps: [
+      {
+        exerciseId: 'ex-warmup-02',
+        labelKo: '캐딜락 롤다운바 양측 스프링 대칭 체크 & 분절',
+        apparatusBadgeKo: '캐딜락 · 2 Yellow',
+        durationMin: 8,
+        springsNoteKo: '2 Yellow (상단 대칭)',
+        cueNoteKo: '롤다운바의 수평 기울기를 보며 좌우 광배근·복근 당김 속도를 1:1로 일치',
+        blockCategory: 'warmup',
+        classSection: 'preparation',
+      },
+      {
+        exerciseId: 'original-cadillac-seated-rotation',
+        labelKo: '시티드 축성 신장 & 오목측 흉곽 호흡 로테이션',
+        apparatusBadgeKo: '캐딜락 · 시티드',
+        durationMin: 8,
+        springsNoteKo: '2 Yellow',
+        cueNoteKo: '양쪽 좌골 무게를 50:50으로 고정한 채 정수리를 천장으로 길게 뽑으며 회전',
+        blockCategory: 'upper-body',
+        classSection: 'main',
+        sideMode: 'left-then-right',
+      },
+      {
+        exerciseId: 'ex-straps-02',
+        labelKo: '독립 레그 스프링 좌우 대칭 프로그 & 천골 고정',
+        apparatusBadgeKo: '캐딜락 · 2 Long Purple',
+        durationMin: 10,
+        springsNoteKo: '2 Long Purple',
+        cueNoteKo:
+          '양다리가 따로 노는 독립 스프링에서 두 발뒤꿈치가 정중앙선(Midline)에서 만나도록 제어',
+        blockCategory: 'feet-in-straps',
+        classSection: 'main',
+      },
+      {
+        exerciseId: 'ex-upper-01',
+        labelKo: '리포머 닐링 체스트 익스팬션 & 견갑 수평 정렬',
+        apparatusBadgeKo: '리포머 · 1 Red',
+        durationMin: 8,
+        springsNoteKo: '1 Red',
+        cueNoteKo: '양쪽 스트랩 장력을 대칭으로 당기며 높아진 쪽 어깨의 상부승모근 하강 유도',
+        blockCategory: 'upper-body',
+        classSection: 'main',
+        sideMode: 'left-then-right',
+      },
+      {
+        exerciseId: 'original-barrel-supported-side-bend',
+        labelKo: '래더 바렐 측면 일롱게이션 & 복사근 등척성 홀드',
+        apparatusBadgeKo: '래더 바렐 · 측와위',
+        durationMin: 9,
+        springsNoteKo: '바렐 아크 지지',
+        cueNoteKo: '오목측은 길게 늘려 호흡을 채우고 볼록측은 수평 등척성 홀드 시간을 1세트 추가',
+        blockCategory: 'extension',
+        classSection: 'main',
+        sideMode: 'left-then-right',
+      },
+      {
+        exerciseId: 'ex-cooldown-01',
+        labelKo: '리포머 머메이드 비대칭 늑간근 호흡 이완',
+        apparatusBadgeKo: '리포머 · 1 Blue',
+        durationMin: 7,
+        springsNoteKo: '1 Blue',
+        cueNoteKo: '좁아진 갈비뼈 사이가 부채처럼 열리도록 깊은 측면 호흡으로 마무리',
+        blockCategory: 'cooldown',
+        classSection: 'cooldown',
+        sideMode: 'left-then-right',
+      },
+    ],
+  },
+  {
+    id: 'senior-joint-safe',
+    badgeKo: '🌿 시니어 · 골다공증 척추 보호 & 낙상 예방',
+    titleKo: '시니어 50분 중립 척추(Neutral Spine) & 고관절·발목 밸런스 시퀀스',
+    subtitleKo: '척추 과굴곡(Loaded Flexion) 배제 · 체어 안전 핸들 지지 · 하지 고유수용성 강화',
+    targetMinutes: 50,
+    primaryApparatus: 'chair',
+    summaryKo:
+      '골밀도 저하(골다공증·골감소증) 및 슬관절·고관절 퇴행성 변화가 있는 시니어 회원을 위해 체중 부하 척추 굴곡(롤업·컬업)을 완전히 배제하고, 안전 핸들 지지 하체 근력과 중립 척추 신전 중심으로 설계한 50분 시퀀스입니다.',
+    setupRulesKo: [
+      '① 골다공증 금기(Loaded Spinal Flexion) 완전 배제: 롤업·롤오버·크리스크로스 대신 중립 척추(Neutral Spine)와 부드러운 흉추 신전만 수행',
+      '② 체어 양측 하이 핸들(Dual High Handles) & 높은 베드 활용: 바닥에 눕고 일어나는 횟수를 줄이고 스탠딩 시 양손 핸들을 항상 파지',
+      '③ 고관절-슬관절-제2족지 정렬 & 발목 고유수용성: 계단 보행과 낙상 예방에 직결되는 중둔근·종아리·발바닥 삼각 지지력 집중 강화',
+    ],
+    contraindicationsKo:
+      '골다공증·척추압박골절 병력 시 체중이 실린 척추 굴곡(Roll-up/Roll-over/Loaded C-curve) 및 강한 회전 결합 굴곡 절대 금지 · 눈 감고 한발 서기 등 낙상 위험 동작 주의',
+    openingScriptKo:
+      '“어르신·회원님, 오늘 50분 수업은 허리를 무리하게 구부리거나 손목·무릎을 누르는 동작 없이, 척추를 반듯하게 세운 상태에서 다리 근력과 균형 감각을 탄탄하게 채우는 관절 보호 클래스입니다. 안전 핸들을 편하게 잡으시고 제 호흡 카운트에 맞춰 천천히 따라오세요.”',
+    memberNoticeKo:
+      '[시니어·관절 보호 50분 밸런스 클래스] 척추 압박 없는 중립 정렬(Osteoporosis-Safe)과 안전 핸들 지지 하체·둔근·발목 균형 강화로 일상 보행을 가볍게 만드는 50분 수업입니다.',
+    sourceLabelKo: VERIFIED_LITERATURE_BY_APPARATUS.chair.citation,
+    sourceUrl: VERIFIED_LITERATURE_BY_APPARATUS.chair.url,
+    steps: [
+      {
+        exerciseId: 'original-chair-seated-breath',
+        labelKo: '운다 체어 시티드 수직 중립 호흡 & 좌골 지지',
+        apparatusBadgeKo: '체어 · 시티드',
+        durationMin: 6,
+        springsNoteKo: '시트 고정 지지',
+        cueNoteKo: '바닥까지 내려가지 않고 체어 시트에 편히 앉아 정수리-좌골 수직 축 세우기',
+        blockCategory: 'warmup',
+        classSection: 'preparation',
+      },
+      {
+        exerciseId: 'original-chair-seated-pedal-press',
+        labelKo: '시티드 더블 페달 프레스 & 무릎-발끝 정렬',
+        apparatusBadgeKo: '체어 · 2 Heavy',
+        durationMin: 9,
+        springsNoteKo: '2 Heavy (중단)',
+        cueNoteKo: '허리를 둥글게 말지 않고 중립 척추를 유지한 채 허벅지·둔근 힘으로 페달 컨트롤',
+        blockCategory: 'footwork',
+        classSection: 'main',
+      },
+      {
+        exerciseId: 'original-chair-sit-to-stand',
+        labelKo: '안전 핸들 지지 시트-투-스탠드 기능적 하체 리프트',
+        apparatusBadgeKo: '체어 · 양측 핸들 장착',
+        durationMin: 9,
+        springsNoteKo: '양측 핸들 고정',
+        cueNoteKo: '의자에서 일어날 때 무릎이 모이지 않도록 발바닥 전체로 바닥을 밀어 수직 기립',
+        blockCategory: 'lower-body',
+        classSection: 'main',
+      },
+      {
+        exerciseId: 'original-chair-supported-calf-raise',
+        labelKo: '양손 핸들 지지 카프 레이즈 & 발목 낙상 예방 밸런스',
+        apparatusBadgeKo: '체어 · 핸들 지지 스탠딩',
+        durationMin: 8,
+        springsNoteKo: '양손 핸들 지지',
+        cueNoteKo: '엄지발가락 뿌리와 두 번째 발가락 축으로 뒤꿈치를 천천히 들어 올리고 3초 하강',
+        blockCategory: 'lower-body',
+        classSection: 'main',
+      },
+      {
+        exerciseId: 'ex-footwork-01',
+        labelKo: '리포머 헤드레스트 업 닫힌 사슬 풋워크 정렬',
+        apparatusBadgeKo: '리포머 · 헤드레스트 업',
+        durationMin: 10,
+        springsNoteKo: '2 Red + 1 Blue',
+        cueNoteKo: '어지럼증 예방을 위해 헤드레스트를 높이고 관절 충격 없이 대퇴사두근·둔근 강화',
+        blockCategory: 'footwork',
+        classSection: 'main',
+      },
+      {
+        exerciseId: 'original-chair-seated-mermaid',
+        labelKo: '시티드 중립 측면 리치 & 흉곽 확장 마무리',
+        apparatusBadgeKo: '체어 · 1 Heavy',
+        durationMin: 8,
+        springsNoteKo: '1 Heavy',
+        cueNoteKo: '척추를 앞으로 구부리지 않고 옆구리를 천장 쪽으로 길게 늘리며 호흡 정리',
+        blockCategory: 'cooldown',
+        classSection: 'cooldown',
+        sideMode: 'left-then-right',
+      },
+    ],
+  },
+];
+
 export function getApparatusVisualGuide(
   equipmentOrApparatusId: string | undefined | null,
 ): ApparatusVisualGuideEntry {

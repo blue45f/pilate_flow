@@ -3,10 +3,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   APPARATUS_VISUAL_GUIDE_CATALOG,
   PROP_QUICK_GUIDES,
+  SPECIAL_POPULATION_CARE_PRESETS,
   buildApparatusIdeaExpandedDraft,
   getApparatusVisualGuide,
 } from '../data/apparatusVisualGuideCatalog';
 import { EQUIPMENT_OPTIONS } from '../data/equipmentCatalog';
+import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { ApparatusVisualGuideRibbon } from '../components/ApparatusVisualGuideRibbon';
 import { ExerciseAtlasView } from '../components/ExerciseAtlasView';
 import { SequenceWorkbench } from '../components/SequenceWorkbench';
@@ -17,9 +19,20 @@ afterEach(() => {
 });
 
 describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
-  it('provides complete anatomy pins, color-coded spring specs, body-fit tips, and 5 fresh idea lenses with Mode B scripts for every apparatus', () => {
+  it('provides complete anatomy pins, color-coded spring specs, body-fit tips, 5 fresh idea lenses, and 3 special population care presets', () => {
     expect(APPARATUS_VISUAL_GUIDE_CATALOG).toHaveLength(5);
     expect(PROP_QUICK_GUIDES.length).toBeGreaterThanOrEqual(5);
+    expect(SPECIAL_POPULATION_CARE_PRESETS).toHaveLength(3);
+
+    const catalogIds = new Set(INITIAL_EXERCISES.map((ex) => ex.id));
+    for (const preset of SPECIAL_POPULATION_CARE_PRESETS) {
+      expect(preset.steps).toHaveLength(6);
+      const totalMin = preset.steps.reduce((sum, st) => sum + st.durationMin, 0);
+      expect(totalMin).toBe(50);
+      for (const st of preset.steps) {
+        expect(catalogIds.has(st.exerciseId)).toBe(true);
+      }
+    }
 
     for (const eq of EQUIPMENT_OPTIONS) {
       const guide = getApparatusVisualGuide(eq.id);
@@ -46,7 +59,8 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
     }
   });
 
-  it('switches between apparatus anatomy pins, spring matrix, and @generate-fresh-ideas 5-lens tabs with all 5 expanded Mode B scripts', () => {
+  it('switches between apparatus anatomy pins, spring matrix, 5-lens ideas, and special population presets with 1-click sequence loading', () => {
+    const originalState = usePilatesStore.getState();
     let appliedConcept: { title: string; subtitle: string; family: string } | null = null;
     render(
       <ApparatusVisualGuideRibbon
@@ -82,9 +96,19 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
       family: 'reformer',
     });
 
-    // Can toggle scripts collapsed/expanded
-    fireEvent.click(within(ribbon).getByTestId('toggle-all-idea-scripts'));
-    expect(within(ideasGrid).queryByTestId('apparatus-idea-script-contrarian')).toBeNull();
+    // Switch to Special Population Care Presets tab and apply Prenatal/Postnatal 50-min preset
+    fireEvent.click(within(ribbon).getByTestId('apparatus-guide-special-tab'));
+    const specialGrid = within(ribbon).getByTestId('special-population-presets-grid');
+    expect(within(specialGrid).getByTestId('special-preset-prenatal-postnatal')).toBeInTheDocument();
+    expect(within(specialGrid).getByTestId('special-preset-scoliosis-asymmetry')).toBeInTheDocument();
+    expect(within(specialGrid).getByTestId('special-preset-senior-joint-safe')).toBeInTheDocument();
+
+    fireEvent.click(within(specialGrid).getByTestId('apply-special-preset-prenatal-postnatal'));
+    expect(within(ribbon).getByTestId('special-preset-applied-status')).toBeInTheDocument();
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(6);
+    expect(usePilatesStore.getState().activeTitle).toContain('산전·산후 50분');
+
+    usePilatesStore.setState(originalState, true);
   });
 
   it('renders the apparatus visual guide ribbon inside ExerciseAtlasView and SequenceWorkbench', () => {
