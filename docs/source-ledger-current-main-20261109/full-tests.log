@@ -1,0 +1,422 @@
+
+ RUN  v3.2.7 /private/tmp/pilates-ledger-current-main-20261109
+
+ ✓ src/features/classCueSheet/classCueSheetChromium.test.ts (3 tests) 22360ms
+   ✓ ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media print PDF verification > renders all 7 synthetic fixtures at 320px, 390px, 768px, and 1440px (at 100% and 200% text scale) with zero horizontal overflow, >=44px touch targets, novice collapsed defaults, and retains focus + selection across live class edits in real Chromium  6690ms
+   ✓ ClassCueSheetPreview real Chromium 320px / 390px and multi-page @media print PDF verification > verifies @media print multi-page pagination, real PDF content preservation, and per-page PGM raster ink across A4 and US Letter in real Chromium  14012ms
+ ✓ src/test/integratedJourneyRound2.test.tsx (4 tests) 12115ms
+   ✓ Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save -> Live/Voice -> History Reuse) > executes the full end-to-end journey seamlessly at 320px viewport  4432ms
+   ✓ Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save -> Live/Voice -> History Reuse) > executes the full end-to-end journey seamlessly at 390px viewport  2559ms
+   ✓ Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save -> Live/Voice -> History Reuse) > executes the full end-to-end journey seamlessly at 768px viewport  2500ms
+   ✓ Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save -> Live/Voice -> History Reuse) > executes the full end-to-end journey seamlessly at 1440px viewport  2624ms
+ ✓ src/test/pilatesFlow.test.tsx (22 tests) 8510ms
+   ✓ planning, reference, teaching and backup user journeys > starts blank and composes a reformer 50-minute beginner plan without changing pending records  301ms
+   ✓ planning, reference, teaching and backup user journeys > uses distinct compatible movements for [ 'chair', 'reformer' ] at 60 minutes without changing review records  410ms
+   ✓ planning, reference, teaching and backup user journeys > edits and explicitly self-attests one synthetic record without reviewing any production item  1234ms
+   ✓ planning, reference, teaching and backup user journeys > navigates the four workspaces and creates exact 50, 60 and custom minute plans  1577ms
+   ✓ planning, reference, teaching and backup user journeys > preserves locked notes and time through fitting and regeneration, and can replace and undo an unlocked item  1445ms
+   ✓ planning, reference, teaching and backup user journeys > rejects invalid imports and registers a reference with manually entered source metadata  673ms
+   ✓ planning, reference, teaching and backup user journeys > saves, enters teaching paused, adds session time and records a reviewed history snapshot  1352ms
+   ✓ planning, reference, teaching and backup user journeys > restores JSON through settings while preserving the draft, existing data and the v3 local storage key  758ms
+ ✓ src/test/teacherWorkflow.test.tsx (6 tests) 6336ms
+   ✓ teacher preparation and pending source-note handoff > reuses the latest actual same-group conditions in the form and preserves the locked draft and all history  358ms
+   ✓ teacher preparation and pending source-note handoff > requires explicit planning inputs and cancel leaves all local records unchanged  597ms
+   ✓ teacher preparation and pending source-note handoff > creates a separate pending note with exact durable provenance and restores it through the actual JSON form without changing the draft  1100ms
+   ✓ teacher preparation and pending source-note handoff > allows pending source notes in local composition and teaching without granting review  816ms
+   ✓ teacher preparation and pending source-note handoff > registers a no-video synthetic movement, explicitly reviews it, composes an exact class and preserves its taught history through JSON recovery  3063ms
+   ✓ teacher preparation and pending source-note handoff > preserves origin and stale review evidence while allowing teaching  401ms
+ ✓ src/test/classSimulationJourney.test.tsx (17 tests) 4062ms
+   ✓ actual full-class rehearsal and read-only evidence journeys > opens an exact 17-minute class paused with every time budget counted once  326ms
+   ✓ actual full-class rehearsal and read-only evidence journeys > pauses on speed, seek, manual navigation, visibility and page lifecycle, and closes without carrying a running timer into reopening  494ms
+ ✓ src/components/SequenceWorkbench.detailHandoff.test.tsx (6 tests) 3673ms
+   ✓ source-detail handoff from the 'mobile sheet' > returns to the same dirty block and applies note, duration, role and motion once against the original base  1041ms
+   ✓ source-detail handoff from the 'mobile sheet' > keeps the original draft base and rejects Apply when the class block changes during source lookup  568ms
+   ✓ source-detail handoff from the 'desktop panel' > returns to the same dirty block and applies note, duration, role and motion once against the original base  506ms
+   ✓ source-detail handoff from the 'desktop panel' > keeps the original draft base and rejects Apply when the class block changes during source lookup  544ms
+   ✓ keeps source details above the resized editor and ignores a queued suspension close after returning  444ms
+   ✓ pauses a manually played desktop reference during source lookup and stays paused on return without losing class inputs  569ms
+stderr | src/test/movementIdeaFlow.test.tsx > 1-line movement idea creation, progressive try-out notes, and class integration > supports progressive variant & version management: Easy/Hard variation notes, revision history rollback, and variant forking without altering original draft
+An update to MovementIdeaSheet inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | src/test/movementIdeaFlow.test.tsx > 1-line movement idea creation, progressive try-out notes, and class integration > supports progressive 4-tier hierarchy (동작 -> 재사용 블록 -> 시퀀스 -> 수업), sub-timing summation, order/reps/L-R, block copy isolation, and past class snapshot immutability
+An update to MovementIdeaSheet inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | src/test/movementIdeaFlow.test.tsx > 1-line movement idea creation, progressive try-out notes, and class integration > syncs activeSteps when editing an idea already in class and clicking 수정 내용 저장, and scrolls to reflection section on draft save
+An update to MovementIdeaSheet inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ src/test/movementIdeaFlow.test.tsx (12 tests) 2681ms
+   ✓ 1-line movement idea creation, progressive try-out notes, and class integration > completes the full mobile journey: 1-line idea save -> reopen -> add feeling/adjustments/sketch -> edit -> add to class without requiring anatomy or block hierarchy  439ms
+   ✓ 1-line movement idea creation, progressive try-out notes, and class integration > preserves unsaved draft text across Escape/back close, cancel, simulated save error, and prevents duplicate creation on rapid repeated clicks  329ms
+   ✓ 1-line movement idea creation, progressive try-out notes, and class integration > supports progressive variant & version management: Easy/Hard variation notes, revision history rollback, and variant forking without altering original draft  468ms
+   ✓ 1-line movement idea creation, progressive try-out notes, and class integration > supports progressive 4-tier hierarchy (동작 -> 재사용 블록 -> 시퀀스 -> 수업), sub-timing summation, order/reps/L-R, block copy isolation, and past class snapshot immutability  477ms
+   ✓ 1-line movement idea creation, progressive try-out notes, and class integration > syncs activeSteps when editing an idea already in class and clicking 수정 내용 저장, and scrolls to reflection section on draft save  430ms
+ ✓ src/test/stageGlobalNavigation.test.tsx (9 tests) 2418ms
+   ✓ actual app navigation preserves an unrecorded teaching session > leaves a ready never-started unchanged session without an unnecessary confirmation  414ms
+   ✓ actual app navigation preserves an unrecorded teaching session > keeps the paused session when a navigation-triggered record form is cancelled  582ms
+ ✓ src/models/supineDrafts.test.ts (10 tests) 2287ms
+   ✓ original supine schematic mechanics > keeps fixed segments, supports, contacts and finite points in 1,002 'adult-supine-heel-slide' / 'left' poses  571ms
+   ✓ original supine schematic mechanics > keeps fixed segments, supports, contacts and finite points in 1,002 'adult-supine-heel-slide' / 'right' poses  555ms
+   ✓ original supine schematic mechanics > keeps fixed segments, supports, contacts and finite points in 1,002 'supine-knee-fold' / 'left' poses  574ms
+   ✓ original supine schematic mechanics > keeps fixed segments, supports, contacts and finite points in 1,002 'supine-knee-fold' / 'right' poses  575ms
+ ✓ src/test/workbenchUsability.test.tsx (6 tests) 1987ms
+   ✓ clear next action without changing class-readiness gates > gives the real zero-approved empty draft one movement-selection action and keeps optional calendar/rest context collapsed  357ms
+   ✓ clear next action without changing class-readiness gates > preserves App-owned direct mode through contextual mobile selection and normal library navigation  988ms
+   ✓ clear next action without changing class-readiness gates > keeps nonempty defaults and supports a controlled mode without changing locked blocks, timing or review state  356ms
+ ✓ docs/history-scale-audit-20261107/historyScaleUsability.audit.test.tsx (2 tests) 2063ms
+   ✓ History Page Long-Term Accumulated Scale (100 / 1000) Post-Patch Verification > verifies 100 accumulated records post-patch: 30-card initial window + load-more to 100, 12-chip date nav + expand, KST/UTC midnight alignment, 12:00/00:00 valid ISO time preservation, and zero redundant modal re-parses  1410ms
+   ✓ History Page Long-Term Accumulated Scale (100 / 1000) Post-Patch Verification > scales to 1,000 accumulated records post-patch: caps initial DOM cards to 30 and date chips to 12 while keeping 1,000 full aggregation, recovers stale selectedDate on empty search, and guards unrecoverable deleted exercises  652ms
+ ✓ src/test/workspaceNavigationFocus.test.tsx (4 tests) 1618ms
+   ✓ workspace heading focus follows committed lazy navigation > focuses first-loaded Schedule after a pending Stage record navigation, without replaying or editing the class  904ms
+   ✓ keeps the active-class exit guard when returning from the beginner guide  491ms
+ ✓ src/test/v2Workbench.test.tsx (8 tests) 1724ms
+   ✓ v2 shared class editor > keeps optional controls collapsed and reveals them without changing the draft  333ms
+   ✓ v2 shared class editor > keeps the editor visible while mode and condition views preserve steps, locks, title and notes  358ms
+ ✓ src/components/SequenceWorkbench.vnext.test.tsx (12 tests) 1647ms
+ ✓ src/components/DeferredPanelBoundary.test.tsx (3 tests) 1522ms
+   ✓ optional account-panel failure containment > keeps the actual App, inventory, full export and JSON recovery usable after the cloud lazy import rejects  1462ms
+ ✓ src/test/MotionStoryboardBuilder.test.tsx (11 tests) 1545ms
+   ✓ explicit local storyboard authoring > animates actual per-cycle figure geometry, cuts to rest and distinct drafts, then finishes without looping  324ms
+ ✓ src/components/ClassBinderView.historyFlow.test.tsx (13 tests) 1461ms
+   ✓ ClassBinderView history date exploration, hierarchy & reuse workflow > caps initial date chips to 3 recent dates with expand/collapse across viewports, recovers selectedDate when search filters it out, and paginates cards in batches of 30 while preserving full aggregation  403ms
+ ✓ src/test/atlasMotionDiscovery.test.tsx (4 tests) 1447ms
+   ✓ authored motion discovery stays separate from teaching eligibility > exposes every one of the 22 authored variants with original static geometry and opens the existing batch directly  992ms
+ ✓ src/test/MotionDraftLabDialog.test.tsx (12 tests) 1687ms
+ ✓ src/components/ExerciseAtlasView.focusRecovery.test.tsx (3 tests) 1473ms
+   ✓ atlas focus recovery without replacing current discovery UI > returns focus to the exact diagram trigger on close without changing exercise data  456ms
+   ✓ atlas focus recovery without replacing current discovery UI > falls back to search if filtering removes the original preview trigger  306ms
+   ✓ atlas focus recovery without replacing current discovery UI > restores search focus after each clear, chip removal, reset and empty-result recovery  711ms
+ ✓ src/components/MotionPatternPreview.test.tsx (20 tests) 1253ms
+ ✓ src/components/SequencePlanPreview.segmentMotion.test.tsx (12 tests) 1301ms
+   ✓ saved reference projected from the selected segment clock > manually projects a pending item at its absolute class offset through both sides and whole-item repeats without writes  313ms
+ ✓ src/components/SequenceSegmentRehearsal.test.tsx (28 tests) 1370ms
+ ✓ src/components/SequenceOrderCard.r5.test.tsx (4 tests) 1302ms
+   ✓ Round 5 (R5-01 ~ R5-04) cross-input and stress regression suite > R5-01: clears crossed section header translate and unblocks subsequent drag when screen rotation (resize) cancels an active drag  457ms
+   ✓ Round 5 (R5-01 ~ R5-04) cross-input and stress regression suite > R5-03: cancels an active touch drag on window Escape even when focus is not on the handle and supports rect/offsetWidth zoom ratio fallback  415ms
+ ✓ src/components/SourceNoteDialog.inputRecovery.test.tsx (8 tests) 1299ms
+   ✓ new planning note input recovery > keeps typed name, cue, and invalid duration through Cancel and X until an explicit same-dialog decision  381ms
+ ✓ src/features/classCueSheet/ClassCueSheetPreview.test.tsx (18 tests) 1081ms
+   ✓ ClassCueSheetPreview > switches to expanded view and displays explicit truncation banner and omitted footer on 100+ item / high-repetition inputs  352ms
+ ✓ src/components/SequenceOrderCard.test.tsx (25 tests) 1150ms
+   ✓ 80-step mixed sequence touch drag, cross-section headers, zoom200, and announcements > shifts crossed section headers during upward touch drag across a rest card in an 80-step sequence and announces committed target position  302ms
+ ✓ src/components/YouTubeClipModal.addOutcome.test.tsx (5 tests) 1199ms
+   ✓ movement addition reports the actual result without losing the current context > keeps the real App detail open after a gear mismatch without changing the lesson  834ms
+ ✓ src/components/YouTubeClipModal.unsavedReview.test.tsx (7 tests) 1139ms
+ ✓ src/models/tensionDrafts.test.ts (14 tests) 1211ms
+ ✓ src/components/InstructorScheduleView.test.tsx (5 tests) 1065ms
+   ✓ instructor schedule workflow > closes native dialogs while their form is still mounted on save, footer close, and X  354ms
+ ✓ src/components/ExerciseAtlasView.addFeedback.test.tsx (5 tests) 1109ms
+   ✓ Atlas reports actual append outcome > replaces a recent success with an honest duplicate error, preserving steps and cancelling the old dismissal timer  372ms
+ ✓ src/components/LiveStageView.voice.test.tsx (13 tests) 1062ms
+ ✓ src/test/scheduleIntegration.test.tsx (3 tests) 1042ms
+   ✓ actual local schedule forms with a rest-inclusive plan > creates an exact local weekly schedule, changes only one occurrence, and preserves the locked draft/history through JSON recovery  569ms
+ ✓ src/components/YouTubeClipModal.dismissal.test.tsx (7 tests) 1021ms
+ ✓ src/components/StepBlockInspector.motionStudy.test.tsx (15 tests) 1055ms
+ ✓ src/components/SequenceWorkbench.finderLifecycle.test.tsx (5 tests) 1022ms
+   ✓ contextual finder mount lifecycle > mounts on demand at 390px and preserves the same finder across closing and resizing  409ms
+ ✓ src/test/diagramTracksIntegration.test.tsx (7 tests) 1009ms
+   ✓ Track I7 Shared Diagram Registry & Cross-Track Integration (I1–I8) > resolves all Track I1–I6 and I8 movement IDs via getMovementVisualAsset and renders valid phase/triptych SVGs  605ms
+ ✓ src/components/ExerciseAtlasView.conceptLayout.test.tsx (4 tests) 935ms
+ ✓ scripts/free-ai-boundary-audit-20261107/track-a/quota-fallback-survival.test.tsx (14 tests) 920ms
+ ✓ src/models/apparatusDrafts.test.ts (13 tests) 892ms
+ ✓ src/components/InstructorScheduleView.scope.test.tsx (9 tests) 929ms
+ ✓ src/components/StepBlockInspector.test.tsx (13 tests) 948ms
+ ✓ src/test/diagramApparatusContactRegression.test.tsx (10 tests) 944ms
+   ✓ Round 4 semantic differentiation regression (SM-01..SM-08 + ambiguous-evidence non-modification) > resolves Round 5 pure breath-observation semantic, contact, spring, and muscle-fallback defects across 4 exercises x 3 phases x mirrored  879ms
+ ✓ src/components/YouTubeClipModal.usability.test.tsx (4 tests) 862ms
+   ✓ local review guidance without weakening explicit review > shows the missing memo before submission, opens its existing field, and still requires explicit confirmation  379ms
+ ✓ src/components/ClassBinderView.savedDisclosure.test.tsx (8 tests) 861ms
+ ✓ src/test/restTeachingJourney.test.tsx (6 tests) 842ms
+   ✓ rest teaching and actual history journeys > pauses measured rest, skips only its unspent time and records a session-only extension without changing the plan  340ms
+ ✓ src/components/DatedSequencePlanningDialog.test.tsx (20 tests) 794ms
+ ✓ src/components/ExerciseAtlasView.mobileFlow.test.tsx (3 tests) 787ms
+   ✓ Wave1-2 Library 3-step guided discovery, sessionStorage recovery, and empty-result reset > persists and recovers search query and focus/pattern filters via sessionStorage (pf_atlas_discovery_recovery_v1) and clears with 1-click 검색·필터 초기화  356ms
+ ✓ src/components/InlineExerciseFinder.test.tsx (9 tests) 755ms
+ ✓ src/test/menuBreakpoint.test.tsx (3 tests) 738ms
+   ✓ mobile navigation becoming desktop navigation > removes modal navigation and unlocks the workspace at desktop width, with useful focus  420ms
+ ✓ src/components/EquipmentDiscoveryScope.test.tsx (9 tests) 725ms
+   ✓ equipment discovery scope synchronization > immediately applies settings changes to both mounted search surfaces without changing the class  311ms
+ ✓ src/test/mixedEquipmentForm.test.tsx (3 tests) 726ms
+   ✓ exact mixed-equipment planning form > passes exactly the checked apparatus to mixed generation without adding another owned apparatus  307ms
+ ✓ src/test/teachingHistoryProgramRecord.test.tsx (8 tests) 677ms
+ ✓ src/test/restWorkbench.test.tsx (2 tests) 685ms
+   ✓ rest intervals in the class workbench > shows rest separately and edits, inserts, removes, moves and locks it without movement cues  423ms
+ ✓ src/test/historyCopyCriteria.test.tsx (6 tests) 695ms
+   ✓ history copies create matching independent current conditions > uses the real History button and shows21/6 current conditions while original50/5 and saved plans remain frozen  338ms
+ ✓ src/components/SequenceWorkbench.flowRecovery.test.tsx (5 tests) 657ms
+ ✓ src/test/partialRegenerationMetadata.test.tsx (3 tests) 634ms
+   ✓ partial regeneration commits validated class metadata > uses actual Workbench mixed-gear/max-level controls and preserves metadata in save/export and Undo  609ms
+ ✓ src/test/teachingRecordPersistence.test.tsx (7 tests) 624ms
+ ✓ src/components/YouTubePreviewModal.wave2Ux.test.tsx (4 tests) 657ms
+ ✓ src/test/teaching.test.tsx (10 tests) 654ms
+ ✓ src/features/motionCoverage/playbackAndHarness.test.tsx (7 tests) 639ms
+ ✓ src/features/motionCoverage/previewHarnessBoundaries.test.tsx (4 tests) 632ms
+   ✓ MotionCoveragePreviewHarness modular boundaries (selectors, lifecycle, stage view) > 2. StrictMode mount -> unmount -> remount (3 consecutive cycles) leaks zero RAF handles, zero orphan listeners, and zero spurious cleanup notifications  334ms
+ ✓ src/test/dynamicWorkflowFullCompletion.test.tsx (13 tests) 643ms
+ ✓ src/components/InstructorStudyDialog.discoveryUx.test.tsx (9 tests) 629ms
+ ✓ src/components/LogSessionModal.dateOnly.test.tsx (9 tests) 627ms
+ ✓ src/components/InstructorScheduleView.dated.test.tsx (6 tests) 635ms
+ ✓ src/components/YouTubeClipModal.motion.test.tsx (5 tests) 629ms
+ ✓ docs/home-first-use-round4-20261107/homeFirstUseRound4.audit.test.tsx (4 tests) 652ms
+   ✓ Round 4 독립 감사: 필라테스 첫사용자(초보 강사) 동선 (빈상태 → 새수업 → 동작2개추가 → 저장 → 다음방문 이어하기) > 설명문 없이 빈상태 → 새수업 → 동작2개추가 → 저장 → 다음방문 이어하기를 최소 6클릭(모달 함정 포함 시 7클릭)으로 완주하고 상태를 보존한다  512ms
+ ✓ src/features/settingsPageCandidate/independentVerification/settingsPage.independent.test.tsx (12 tests) 655ms
+   ✓ Track B Independent Boundary, Security & Isolation Verification (parallel-page-settings-20261107) > 6. mutates 0 keys in localStorage, sessionStorage, and usePilatesStore across all presets and interactive controls  376ms
+ ✓ src/test/instructorStudyLoadRecovery.test.tsx (1 test) 598ms
+   ✓ keeps the real App and local class data intact when the optional study import rejects  597ms
+ ✓ scripts/free-ai-boundary-audit-20261107/track-b/privacy-bundle-ux-regression.test.tsx (13 tests) 720ms
+ ✓ docs/home-first-use-round5-20261107/homeFirstUseRound5.audit.test.tsx (3 tests) 588ms
+ ✓ src/components/InstructorScheduleView.design.test.tsx (9 tests) 618ms
+ ✓ src/components/SequencePlanPreview.modeContinuity.test.tsx (4 tests) 575ms
+ ✓ src/components/InstructorScheduleView.calendar.test.tsx (4 tests) 576ms
+ ✓ src/components/SourceNoteDialog.test.tsx (5 tests) 520ms
+ ✓ src/test/designSystem.test.tsx (12 tests) 540ms
+ ✓ src/components/CourseReferenceBrowser.discoveryUx.test.tsx (5 tests) 513ms
+ ✓ src/components/SequencePlanPreview.connected.test.tsx (4 tests) 465ms
+ ✓ src/components/InstructorScheduleView.mobileDensity.test.tsx (3 tests) 462ms
+ ✓ src/components/ClassInsightsDialog.test.tsx (13 tests) 411ms
+ ✓ scripts/pwa-audit-20261107/track-b/track-b-install-flow-mock.test.tsx (28 tests) 408ms
+ ✓ src/features/motionCoverage/integrationSafety.test.tsx (7 tests) 412ms
+ ✓ src/components/SourceNoteDialog.layout.test.tsx (4 tests) 420ms
+ ✓ src/test/MotionDraftSegmentRehearsal.test.tsx (6 tests) 399ms
+ ✓ src/components/SequenceWorkbench.home.test.tsx (4 tests) 386ms
+ ✓ src/test/movementVisualGuide.test.tsx (8 tests) 382ms
+ ✓ src/components/SequencePlanPreview.relatedMotion.test.tsx (3 tests) 379ms
+ ✓ src/lib/accountStorage.test.ts (10 tests) 369ms
+ ✓ src/features/classCueSheet/classCueSheetLifecycle.test.tsx (6 tests) 365ms
+ ✓ src/components/ExerciseAtlasView.assetStatus.test.tsx (2 tests) 347ms
+ ✓ src/test/pwaInstallPanel.test.tsx (24 tests) 347ms
+ ✓ src/components/TensionDraftFigure.test.tsx (4 tests) 344ms
+ ✓ src/components/SequencePlanPreview.test.tsx (7 tests) 348ms
+ ✓ src/components/SequenceWorkbench.classSection.test.tsx (4 tests) 332ms
+ ✓ src/components/InstructorScheduleView.navigation.test.tsx (3 tests) 328ms
+ ✓ src/test/offlinePresetApplication.test.ts (42 tests) 333ms
+ ✓ src/test/uxAccessibilityAndSimulationPolish.test.tsx (6 tests) 305ms
+ ✓ src/components/FreeAiAssistantPanel.test.tsx (4 tests) 327ms
+ ✓ src/components/IndependentModals.mobileUx.test.tsx (7 tests) 340ms
+ ✓ src/components/WorkbenchFlowClarity.test.tsx (4 tests) 324ms
+ ✓ src/components/MotionReferencePlayer.test.tsx (10 tests) 315ms
+ ✓ src/components/AiSequenceCoPilotPanel.safety.test.tsx (5 tests) 299ms
+ ✓ src/components/MovementMediaGuidancePanel.test.tsx (7 tests) 305ms
+ ✓ src/features/presetSuggestionCandidate/presetSuggestionEngine.test.ts (11 tests) 290ms
+ ✓ src/components/InstructorStudyDialog.test.tsx (6 tests) 293ms
+ ✓ scripts/pwa-audit-20261107/track-a/track-a-sw-cache-data-preservation.test.ts (7 tests) 272ms
+ ✓ src/test/modelPort.test.ts (6 tests) 291ms
+ ✓ src/data/exerciseYouTubeCatalog.test.tsx (13 tests) 278ms
+ ✓ src/features/classCueSheet/classCueSheetUsability.test.tsx (7 tests) 274ms
+ ✓ src/test/backupCompatibilityRollback.test.ts (13 tests) 268ms
+stderr | src/components/LogSessionModal.design.test.tsx > discloses provenance without hiding the plan/actual note or storage warning
+An update to SessionLogForm inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ src/components/LogSessionModal.design.test.tsx (8 tests) 253ms
+ ✓ src/features/settingsPageCandidate/settingsRealEntryRound4.test.tsx (11 tests) 242ms
+ ✓ src/features/settingsPageCandidate/PilatesSettingsPage.mock.test.tsx (12 tests) 246ms
+ ✓ src/components/MovementVisualGuideCard.wave2Ux.test.tsx (4 tests) 241ms
+ ✓ src/test/restBinder.test.tsx (3 tests) 226ms
+ ✓ src/components/EquipmentChoice.test.tsx (6 tests) 225ms
+ ✓ src/components/ApparatusDraftFigure.test.tsx (4 tests) 217ms
+ ✓ src/features/presetSuggestionCandidate/PresetSuggestionCandidatePreview.test.tsx (10 tests) 213ms
+ ✓ src/components/ClassBinderView.storageStatus.test.tsx (18 tests) 210ms
+ ✓ src/test/extensionDiagram.test.tsx (5 tests) 212ms
+ ✓ src/components/SequencePlanPreview.navigation.test.tsx (3 tests) 204ms
+ ✓ src/components/CourseReferenceBrowser.test.tsx (4 tests) 196ms
+ ✓ src/components/ExerciseEvidencePanel.test.tsx (8 tests) 193ms
+ ✓ src/components/SupineDraftFigure.test.tsx (4 tests) 190ms
+ ✓ src/components/FreeAiAssistantPanel.privacyFeedback.test.tsx (4 tests) 189ms
+ ✓ src/components/ConnectedMotionStudy.test.tsx (10 tests) 180ms
+ ✓ src/components/MotionAuthoringBatch.test.tsx (5 tests) 180ms
+ ✓ src/test/menuLoadingFocus.test.tsx (1 test) 179ms
+ ✓ src/features/classPlanReview/ClassPlanReviewPreview.test.tsx (7 tests) 176ms
+ ✓ src/models/supineReach.test.ts (10 tests) 181ms
+ ✓ src/components/MovementDiagramReference.wave2Ux.test.tsx (3 tests) 188ms
+ ✓ src/components/ClassBinderView.historyFilters.test.tsx (2 tests) 181ms
+ ✓ src/components/RecoveryPreview.storage.test.tsx (6 tests) 162ms
+ ✓ src/features/settingsPageCandidate/settingsHonestControlsRound5.test.tsx (5 tests) 167ms
+ ✓ src/features/presetSuggestionCandidate/presetSuggestion.boundaries.test.ts (27 tests) 165ms
+ ✓ src/features/motionCoverage/motionCoverage.test.tsx (8 tests) 179ms
+ ✓ src/components/StepPracticeEditor.test.tsx (8 tests) 161ms
+ ✓ src/components/OfflinePresetPicker.test.tsx (4 tests) 170ms
+ ✓ src/components/DatedSequencePlanningDialog.wave2Ux.test.tsx (3 tests) 174ms
+ ✓ src/test/sequenceConstraints.test.ts (39 tests) 163ms
+ ✓ src/components/RecoveryPreview.test.tsx (5 tests) 149ms
+ ✓ src/test/quadrupedDrafts.test.ts (11 tests) 167ms
+ ✓ src/test/motionStudyPhases.test.ts (46 tests) 161ms
+ ✓ src/test/backupInputBoundaries.test.ts (25 tests) 154ms
+ ✓ src/components/MotionPatternPreview.phaseContext.test.tsx (5 tests) 144ms
+ ✓ src/test/groupPlanningUI.test.tsx (3 tests) 154ms
+ ✓ src/test/pelvisHipDiagram.test.tsx (9 tests) 155ms
+ ✓ src/test/extendedMotionVerification.test.tsx (5 tests) 138ms
+ ✓ src/features/referenceLinkPolicyCandidate/independentVerification/referenceLinkPolicy.independent.test.tsx (9 tests) 135ms
+ ✓ src/features/firstClassTutorialCandidate/firstClassTutorialCandidate.boundaries.test.tsx (9 tests) 117ms
+ ✓ src/test/tracksI9I10Diagrams.test.tsx (8 tests) 128ms
+ ✓ src/test/spineArticulationDiagram.test.tsx (7 tests) 129ms
+ ✓ src/test/MotionDraftReviewWorksheet.test.tsx (4 tests) 131ms
+ ✓ src/components/NextClassBanner.test.tsx (6 tests) 115ms
+ ✓ src/components/MovementDiagramReference.test.tsx (5 tests) 118ms
+ ✓ src/utils/teachingHistorySnapshot.test.ts (7 tests) 120ms
+ ✓ src/test/motionAuthoringBatch.geometry.test.ts (12 tests) 123ms
+ ✓ src/components/RecoveryPreview.layout.test.tsx (3 tests) 111ms
+ ✓ src/test/standingSupportDrafts.test.ts (12 tests) 117ms
+ ✓ src/schemas/freeAiAssistantSchema.test.ts (6 tests) 187ms
+ ✓ src/test/targetGroupWorkflow.test.ts (18 tests) 117ms
+ ✓ src/utils/movementMediaMatcher.test.ts (5 tests) 122ms
+ ✓ src/test/movementVisualSourceAuditExtended.test.tsx (2 tests) 128ms
+ ✓ src/test/workbenchAndRigUxPolish.test.tsx (3 tests) 117ms
+ ✓ src/features/referenceLinkPolicyCandidate/ReferenceLinkPolicyPreview.test.tsx (4 tests) 111ms
+ ✓ src/test/groupPrepPanel.test.tsx (2 tests) 100ms
+ ✓ src/components/SupineReachFigure.test.tsx (4 tests) 108ms
+ ✓ src/test/ChestLiftFigure.test.tsx (4 tests) 109ms
+ ✓ src/test/tracksI11I12Diagrams.test.tsx (4 tests) 115ms
+ ✓ src/test/hip-leg-diagram.test.tsx (5 tests) 100ms
+ ✓ src/test/sequenceMotionBinding.test.ts (12 tests) 99ms
+ ✓ src/test/CoreAbdominalDiagramFigure.test.tsx (7 tests) 102ms
+ ✓ src/components/PostureAnatomyGuide.test.tsx (14 tests) 98ms
+ ✓ src/test/classBlockPresets.test.ts (17 tests) 96ms
+ ✓ src/test/lateralDrafts.test.ts (10 tests) 94ms
+ ✓ src/components/CloudSyncPanel.googleAuth.test.tsx (10 tests) 92ms
+ ✓ src/test/shoulderSupportDiagrams.test.tsx (6 tests) 92ms
+ ✓ src/test/rotationDiagram.test.tsx (9 tests) 94ms
+ ✓ src/test/instructorScheduleStore.test.ts (9 tests) 92ms
+ ✓ src/lib/firebaseSession.test.ts (31 tests) 86ms
+ ✓ src/test/anatomyAccuracyAuditP1_14.test.tsx (5 tests) 79ms
+ ✓ src/test/extendedMotionLedgerUx.test.tsx (2 tests) 78ms
+ ✓ src/test/authoringWithoutReview.test.ts (12 tests) 77ms
+ ✓ src/components/InstructorStudyBoundary.test.tsx (4 tests) 72ms
+ ✓ src/components/LightDismissDialog.beforeClose.test.tsx (6 tests) 68ms
+ ✓ src/components/CloudSyncPanel.cleanup.test.tsx (3 tests) 67ms
+ ✓ src/test/mixedEquipment.test.ts (23 tests) 67ms
+ ✓ src/components/PwaInstallPanel.test.tsx (8 tests) 67ms
+ ✓ src/test/restSequence.test.ts (23 tests) 67ms
+ ✓ src/features/classPlanReview/classPlanReview.boundaries.test.tsx (14 tests) 64ms
+ ✓ src/test/pelvicCurl.test.ts (15 tests) 65ms
+ ✓ backend/backupValidationContract.test.ts (19 tests) 64ms
+ ✓ src/test/chestLift.test.ts (8 tests) 64ms
+ ✓ src/utils/backupCompatibilityIndependentReview.test.ts (16 tests) 63ms
+ ✓ src/test/stepBlockOptions.test.ts (8 tests) 62ms
+ ✓ src/utils/backupRecoveryInspection.test.ts (21 tests) 62ms
+ ✓ src/lib/freeAiClient.test.ts (18 tests) 62ms
+ ✓ src/test/pwaServiceWorker.test.ts (39 tests) 38ms
+ ✓ src/test/stepPracticeOptions.test.ts (14 tests) 57ms
+ ✓ src/test/equipmentConstraints.test.ts (20 tests) 59ms
+ ✓ src/components/ClassPlanSummary.test.tsx (1 test) 56ms
+ ✓ src/components/RecoveryPreview.reviewPacket.test.tsx (1 test) 56ms
+ ✓ src/test/sequenceFlowAnalytics.test.tsx (4 tests) 57ms
+ ✓ src/features/classCueSheet/classCueSheetProjection.test.ts (15 tests) 57ms
+ ✓ src/test/seatedBandRow.test.ts (13 tests) 54ms
+ ✓ src/test/motionProvenanceAudit.test.ts (4 tests) 47ms
+ ✓ src/utils/datedSequenceRevision.test.ts (13 tests) 48ms
+ ✓ src/features/motionEvidenceReview/motionEvidenceReview.test.ts (12 tests) 49ms
+ ✓ src/features/referenceLinkPolicyCandidate/urlPolicyEngine.test.ts (8 tests) 46ms
+ ✓ src/services/geminiSequenceAi.test.ts (4 tests) 47ms
+ ✓ src/test/motionAndSourceLedgerCompleteness.test.ts (4 tests) 61ms
+ ✓ src/test/datedSequenceRevisionStore.test.ts (7 tests) 44ms
+ ✓ src/test/instructorProfileStudyCore.test.ts (15 tests) 38ms
+ ✓ src/utils/sequenceDrag.test.ts (29 tests) 42ms
+ ✓ src/test/persistenceFeedback.test.ts (3 tests) 41ms
+ ✓ src/utils/compareCodeUnits.test.ts (5 tests) 39ms
+ ✓ src/features/classPlanReview/classPlanReviewAnalyzer.test.ts (15 tests) 36ms
+ ✓ src/utils/freeAiAssistantEngine.test.ts (11 tests) 36ms
+ ✓ src/test/motionPatternPhaseContext.test.ts (48 tests) 34ms
+ ✓ src/test/datedSequencePlanningStore.test.ts (7 tests) 33ms
+ ✓ src/utils/datedSequencePlanning.test.ts (32 tests) 39ms
+ ✓ src/hooks/useSequenceRehearsal.test.tsx (19 tests) 32ms
+ ✓ src/test/recoveryMultiTab.test.ts (12 tests) 27ms
+ ✓ src/test/backupRecoveryStore.test.ts (6 tests) 26ms
+ ✓ backend/backupService.test.ts (19 tests) 25ms
+ ✓ src/test/hierarchyModel.test.ts (13 tests) 23ms
+ ✓ src/utils/sourceNote.test.ts (59 tests) 23ms
+ ✓ src/test/useMotionStoryboardPlayback.test.tsx (9 tests) 21ms
+ ✓ src/utils/motionReferenceModel.test.ts (13 tests) 21ms
+ ✓ src/utils/sequenceSimulation.test.ts (40 tests) 22ms
+ ✓ src/test/stepTimingOptions.test.ts (8 tests) 22ms
+ ✓ backend/freeAiService.test.ts (18 tests) 21ms
+ ✓ src/utils/exerciseEvidence.test.ts (28 tests) 19ms
+ ✓ src/test/motionV6Sources.test.tsx (5 tests) 20ms
+ ✓ src/lib/pwa.test.ts (14 tests) 18ms
+ ✓ src/test/motionReviewWorksheet.test.ts (8 tests) 18ms
+ ✓ src/utils/connectedMotionStudy.test.ts (18 tests) 18ms
+ ✓ src/utils/schedulePlanningCalendar.test.ts (9 tests) 16ms
+ ✓ src/test/stepBlockLayerOptions.test.ts (5 tests) 17ms
+ ✓ src/utils/exerciseReview.test.ts (55 tests) 16ms
+ ✓ src/design-system/PfAiStatusBadge.autoDraft.test.tsx (2 tests) 15ms
+ ✓ src/hooks/useStudioRealtimeSync.test.tsx (3 tests) 15ms
+ ✓ src/data/verifiedReferences.test.ts (8 tests) 14ms
+ ✓ src/test/sequenceValidation.test.ts (12 tests) 14ms
+ ✓ src/test/humanMovementCreation.test.ts (10 tests) 14ms
+ ✓ src/utils/instructorSchedule.test.ts (9 tests) 13ms
+ ✓ src/utils/classInsights.test.ts (20 tests) 13ms
+ ✓ src/test/motionDraftExpansion.test.ts (15 tests) 13ms
+ ✓ src/test/motionDraftSources.test.ts (4 tests) 12ms
+ ✓ src/test/wave3AdvancementVerification.test.ts (5 tests) 12ms
+ ✓ src/utils/wave3DeploymentRegression.test.ts (2 tests) 10ms
+ ✓ src/utils/teachingHistoryDate.test.ts (25 tests) 11ms
+ ✓ src/features/settingsPageCandidate/settingsPageModel.test.ts (12 tests) 10ms
+ ✓ src/test/coursePublisherAmendments.test.ts (4 tests) 10ms
+ ✓ src/lib/cloudSync.test.ts (5 tests) 9ms
+ ✓ src/schemas/movementMediaGuidanceSchema.test.ts (15 tests) 9ms
+ ✓ src/test/motionDraftRehearsal.test.ts (43 tests) 9ms
+ ✓ src/test/motionStoryboard.test.ts (41 tests) 8ms
+ ✓ src/utils/koreanVoiceNarration.test.ts (19 tests) 7ms
+ ✓ src/schemas/freeAiPrivacyB2.test.ts (16 tests) 8ms
+ ✓ src/utils/courseReferences.test.ts (4 tests) 6ms
+ ✓ src/test/motionCandidateResearch.test.ts (9 tests) 5ms
+ ✓ src/features/firstClassTutorialCandidate/firstClassTutorialModel.test.ts (11 tests) 5ms
+ ✓ src/schemas/pilatesSchema.test.ts (5 tests) 5ms
+ ✓ src/utils/stepTimeEstimate.test.ts (12 tests) 4ms
+ ✓ src/test/motionV5Sources.test.ts (4 tests) 4ms
+ ✓ src/lib/localAppDeploy.test.ts (8 tests) 4ms
+ ✓ src/utils/wave5DeploymentRegression.test.ts (7 tests) 3ms
+ ✓ src/lib/recoveryStorageGuard.test.ts (15 tests) 4ms
+ ✓ src/test/motionV3Sources.test.ts (3 tests) 4ms
+ ✓ src/models/ClassVoiceController.test.ts (12 tests) 4ms
+ ✓ src/test/motionDraftIndex.test.ts (2 tests) 3ms
+ ✓ src/test/wave8SkillsAdvancementVerification.test.ts (3 tests) 3ms
+ ✓ src/test/wave5AdvancementVerification.test.ts (3 tests) 3ms
+ ✓ src/test/wave4FollowthroughVerification.test.ts (4 tests) 3ms
+ ✓ src/data/libraryEquipmentFilters.test.ts (11 tests) 3ms
+ ✓ src/test/sideLyingDiagramSeparation.test.ts (3 tests) 3ms
+ ✓ src/test/wave6AdvancementVerification.test.ts (3 tests) 2ms
+ ✓ src/test/controller.test.ts (4 tests) 3ms
+ ✓ backend/principalAssertion.test.ts (3 tests) 2ms
+ ✓ src/test/discoverySearch.test.ts (3 tests) 3ms
+ ✓ src/test/wave7MultiCloudDeployVerification.test.ts (2 tests) 2ms
+ ✓ src/utils/deploymentSnapshotAudit.test.ts (3 tests) 2ms
+
+ Test Files  285 passed (285)
+      Tests  2860 passed (2860)
+   Start at  17:24:10
+   Duration  311.55s (transform 4.28s, setup 7.01s, collect 64.53s, tests 157.32s, environment 46.31s, prepare 8.87s)

@@ -1,0 +1,95 @@
+
+=== typecheck (exit 0
+) ===
+
+=== lint (exit 0
+) ===
+
+=== build (exit 0
+) ===
+vite v6.4.5 building for production...
+transforming...
+✓ 2070 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                           2.53 kB │ gzip:   1.20 kB
+dist/assets/review-queue-DAqDtFg1.csv                     7.29 kB
+dist/sw.js                                                7.44 kB
+dist/assets/CloudSyncPanel-C61ONMnL.css                   2.39 kB │ gzip:   0.79 kB
+dist/assets/LogSessionModal-BWs5TN5V.css                  5.14 kB │ gzip:   1.36 kB
+dist/assets/RecoveryPreview-Cnlhdggv.css                  5.98 kB │ gzip:   1.36 kB
+dist/assets/OfflinePresetPicker-NJsH7PbB.css              6.20 kB │ gzip:   1.60 kB
+dist/assets/PilatesSettingsPage-BRmgyWZ5.css              6.51 kB │ gzip:   1.61 kB
+dist/assets/FreeAiAssistantPanel-CtNYObrM.css             6.60 kB │ gzip:   1.73 kB
+dist/assets/InstructorStudyDialog-BJz7NP4G.css            7.85 kB │ gzip:   1.76 kB
+dist/assets/ClassBinderView-CTc2RkSt.css                  9.51 kB │ gzip:   1.82 kB
+dist/assets/LiveStageView-261t4aTA.css                   12.75 kB │ gzip:   2.61 kB
+dist/assets/MotionDraftLabDialog-C_m8YmRP.css            16.07 kB │ gzip:   3.55 kB
+dist/assets/InstructorScheduleView-CYYw7AHw.css          28.13 kB │ gzip:   5.16 kB
+dist/assets/teaching-D3DjC89B.css                        34.05 kB │ gzip:   6.53 kB
+dist/assets/YouTubeClipModal-DC6GSgwI.css                39.60 kB │ gzip:   7.00 kB
+dist/assets/ExerciseAtlasView-BqJMN9_5.css               40.44 kB │ gzip:   7.64 kB
+dist/assets/library-4CGJpWza.css                         54.71 kB │ gzip:   9.84 kB
+dist/assets/index-CBt0Cjez.css                          320.87 kB │ gzip:  54.83 kB
+dist/assets/CloudSyncPanel-D1bUVyqv.js                    4.39 kB │ gzip:   1.88 kB
+dist/assets/RecoveryPreview-BoUdhGcy.js                   8.25 kB │ gzip:   3.17 kB
+dist/assets/InstructorStudyDialog-DmRvFTwB.js            11.07 kB │ gzip:   4.57 kB
+dist/assets/LogSessionModal-CLL4Gc_3.js                  16.68 kB │ gzip:   6.13 kB
+dist/assets/PfTabs-C8fKwHIU.js                           25.04 kB │ gzip:   8.86 kB
+dist/assets/vendor-lucide-I1jJc0Qv.js                    31.93 kB │ gzip:   6.63 kB
+dist/assets/MotionCoveragePreviewHarness-C1JAWd2Y.js     33.74 kB │ gzip:   9.94 kB
+dist/assets/LiveStageView-fzwjNAQM.js                    34.92 kB │ gzip:  10.99 kB
+dist/assets/ClassBinderView-CEZKBp_f.js                  38.06 kB │ gzip:  12.31 kB
+dist/assets/DesignSystemInspector-DCt5o9kO.js            55.35 kB │ gzip:  20.66 kB
+dist/assets/PilatesSettingsPage-epCH7KuA.js              60.86 kB │ gzip:  17.35 kB
+dist/assets/FreeAiAssistantPanel-Z6mbVX3W.js             67.36 kB │ gzip:  19.74 kB
+dist/assets/InstructorScheduleView-B91GBUKj.js           67.63 kB │ gzip:  18.81 kB
+dist/assets/OfflinePresetPicker-BSCn6lau.js              82.53 kB │ gzip:  25.19 kB
+dist/assets/ExerciseAtlasView-DAuluBg2.js                82.72 kB │ gzip:  22.82 kB
+dist/assets/vendor-firebase-BIlTEimM.js                 154.92 kB │ gzip:  31.61 kB
+dist/assets/MotionDraftLabDialog-DvwP5Gkg.js            157.34 kB │ gzip:  26.62 kB
+dist/assets/vendor-react-Buvp7Wui.js                    223.63 kB │ gzip:  69.42 kB
+dist/assets/YouTubeClipModal-ycdmCK6l.js                521.85 kB │ gzip: 140.63 kB
+dist/assets/index-CbjTYDVY.js                         3,727.01 kB │ gzip: 818.18 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 3.20s
+
+=== pwa (exit 0
+) ===
+PWA build verified: 41 real static files, manifest, PNG icons, and 0 circular JS chunks.
+
+=== secrets (exit 0
+) ===
+Tracked-file secret check passed (source, tests, docs, and config included).
+
+=== motion (exit 0
+) ===
+{"mode":"check","entries":22,"bytes":164222,"sha256":"0ff99f03655d6fae11a70713330185a894fd8e8cc2130dcfaea46b17f3415759"}
+
+=== node-tests (exit 0
+) ===
+✔ identifies provider-shaped values with metadata only (1.337541ms)
+✔ allows placeholders and runtime Firebase config references (0.109417ms)
+✔ scans tracked tests, docs, and hidden config without exclusions (121.797667ms)
+✔ handles staged files, deleted paths, binary files, and symlinks safely (131.368916ms)
+✔ CLI fails without printing values, including values in file names (135.280584ms)
+✔ CLI succeeds for a clean tracked tree (129.4485ms)
+✔ CLI fails closed with a safe diagnostic outside a repository (56.32525ms)
+✔ checked ledger fingerprints 22 unique source identities and their actual relative source graph (280.598833ms)
+✔ isolated new authoring preserves every old saved source fingerprint (0.786042ms)
+✔ changing the new model invalidates only the new identity, never old saved selections (222.252458ms)
+✔ check is deterministic and detects changed source bytes without overwriting the ledger (787.737542ms)
+✔ new relative model dependencies enter the graph; generated-ledger cycles fail closed (178.31225ms)
+✔ invalid phase bounds and source/output symlinks cannot produce a misleading ledger (309.818459ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2272.919084
