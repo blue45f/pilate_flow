@@ -216,6 +216,21 @@ const SessionLogForm: React.FC<
   const submittingRef = useRef(false);
   const planned = snapshot.reduce((sum, step) => sum + step.durationMin, 0);
   const plannedTiming = getSequenceDurations(snapshot);
+  const parsedMinutesInput = Number.parseInt(String(minutes), 10);
+  const parsedSecondsInput = Number.parseInt(String(seconds), 10);
+  const hasUserEnteredDuration =
+    (String(minutes).trim() !== '' && !Number.isNaN(parsedMinutesInput)) ||
+    (String(seconds).trim() !== '' && !Number.isNaN(parsedSecondsInput));
+  const currentActualSec = hasUserEnteredDuration
+    ? (Number.isNaN(parsedMinutesInput) ? 0 : Math.max(0, parsedMinutesInput)) * 60 +
+      (Number.isNaN(parsedSecondsInput) ? 0 : Math.max(0, parsedSecondsInput))
+    : typeof context?.actualDurationSec === 'number' && context.actualDurationSec > 0
+      ? Math.round(context.actualDurationSec)
+      : null;
+  const durationDeltaSec =
+    plannedTiming.totalSec > 0 && currentActualSec !== null && currentActualSec > 0
+      ? currentActualSec - plannedTiming.totalSec
+      : null;
   const exerciseCount = snapshot.filter((step) => !isRestStep(step)).length;
   const selectedExerciseCount = snapshot.filter(
     (step) => selectedSteps.has(step.stepId) && !isRestStep(step),
@@ -674,6 +689,38 @@ const SessionLogForm: React.FC<
                 />
               </PfField>
             </div>
+            {durationDeltaSec !== null && currentActualSec !== null && (
+              <div
+                className={`log-planned-vs-actual-banner ${
+                  durationDeltaSec === 0
+                    ? 'is-exact'
+                    : durationDeltaSec > 0
+                      ? 'is-over'
+                      : 'is-under'
+                }`}
+                role="status"
+                aria-label="계획 대 실제 소요 시간 비교"
+              >
+                <span className="log-planned-vs-actual-metrics">
+                  계획 <strong>{formatSecondsToMMSS(plannedTiming.totalSec)}</strong> · 실제{' '}
+                  <strong>{formatSecondsToMMSS(currentActualSec)}</strong>
+                </span>
+                <span className="log-planned-vs-actual-delta" data-testid="log-duration-delta">
+                  {durationDeltaSec === 0
+                    ? '계획과 일치'
+                    : `${durationDeltaSec > 0 ? '+' : '-'}${
+                        Math.floor(Math.abs(durationDeltaSec) / 60) > 0
+                          ? `${Math.floor(Math.abs(durationDeltaSec) / 60)}분 `
+                          : ''
+                      }${
+                        Math.abs(durationDeltaSec) % 60 > 0 ||
+                        Math.floor(Math.abs(durationDeltaSec) / 60) === 0
+                          ? `${Math.abs(durationDeltaSec) % 60}초 `
+                          : ''
+                      }${durationDeltaSec > 0 ? '초과' : '단축'}`}
+                </span>
+              </div>
+            )}
             <p className="muted">
               {context?.actualDurationSec === undefined
                 ? '실제로 진행한 시간을 알고 있다면 입력해 주세요. 비워 두면 미기록으로 남습니다.'

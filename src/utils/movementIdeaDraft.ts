@@ -44,6 +44,7 @@ import {
   restoreHumanDraftRevision,
   updateHumanDraftVariants,
 } from './humanMovementCreation';
+import { broadcastStudioSyncEvent, saveLocalPhotoAsset } from './localMediaStorage';
 
 export interface IdeaPilatesExercise extends HierarchyPilatesExercise {
   sourceOrigin?: 'catalog' | 'human-created';
@@ -1194,6 +1195,15 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
     inMemoryMetaByScope[scope] = nextMap;
     writeStorageJson(getScopedStorageKey(IDEA_META_STORAGE_KEY, scope), nextMap);
     clearMovementIdeaWorkingBuffer(scope);
+    if (photoDataUrl && photoDataUrl.startsWith('data:image/')) {
+      void saveLocalPhotoAsset(baseExercise.id, photoDataUrl);
+    }
+    broadcastStudioSyncEvent({
+      kind: 'human-draft-updated',
+      entityId: baseExercise.id,
+      revision: humanDraft.revision,
+      updatedAt: now,
+    });
 
     return {
       success: true,
@@ -1646,6 +1656,12 @@ export function saveIdeaToReusableBlock(input: {
     inMemoryReusableBlocksByScope[scope] = nextBlocks;
     writeStorageJson(getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope), nextBlocks);
     persistHumanDraftMap(scope);
+    broadcastStudioSyncEvent({
+      kind: 'reusable-block-updated',
+      entityId: targetBlock.id,
+      revision: targetBlock.version,
+      updatedAt: targetBlock.updatedAt,
+    });
 
     const timingSummary = getReusableBlockTimingSummary(targetBlock);
     return {
