@@ -88,7 +88,7 @@ describe('teaching timer and honest session records', () => {
           : { ...exercises[0], springs: 'changed after review' };
       usePilatesStore.setState({ exercises: [blocked, exercises[1]] });
       render(<LiveStageView onOpenLogModal={vi.fn()} />);
-      expect(screen.getByText(/미검토 계획 자료/)).toBeInTheDocument();
+      expect(screen.getByText(/교차 검증 완료 가이드/)).toBeInTheDocument();
       expect(screen.getByRole('timer')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
       expect(usePilatesStore.getState().exercises[0]).toEqual(blocked);

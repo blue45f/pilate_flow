@@ -21,6 +21,9 @@ import { FirstClassTutorialCandidate } from '../features/firstClassTutorialCandi
 import { LightDismissDialog } from './LightDismissDialog';
 import { MotionReferencePlayer } from './MotionReferencePlayer';
 import { MovementVisualGuideCard } from './MovementVisualGuideCard';
+import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
+import { ApparatusIconBadge } from './ApparatusStudioArtwork';
+import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import '../styles/design-tokens.css';
 import '../styles/instructor-study.css';
 
@@ -344,6 +347,7 @@ export function InstructorStudyDialog({
                       focusAfterRender(() => detailHeadingRef.current, 'start');
                     }}
                   >
+                    <ExerciseThumbnailBadge exercise={exercise} size="xs" decorative />
                     <span>{exercise.nameKo}</span>
                     {study.bookmarkedExerciseIds.includes(exercise.id) && (
                       <Bookmark size={14} aria-label="북마크" />
@@ -390,9 +394,17 @@ export function InstructorStudyDialog({
                 <header>
                   <div>
                     <span className="eyebrow">MOVEMENT STUDY</span>
-                    <h3 ref={detailHeadingRef} tabIndex={-1}>
-                      {selected.nameKo}
-                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <ApparatusIconBadge
+                        apparatus={selected.apparatus}
+                        bodyPosition={selected.bodyPosition}
+                        size="xs"
+                        decorative
+                      />
+                      <h3 ref={detailHeadingRef} tabIndex={-1}>
+                        {selected.nameKo}
+                      </h3>
+                    </div>
                     <p className="muted">{selected.nameEn}</p>
                   </div>
                   <PfButton
@@ -405,6 +417,8 @@ export function InstructorStudyDialog({
                     {study.bookmarkedExerciseIds.includes(selected.id) ? '북마크됨' : '북마크'}
                   </PfButton>
                 </header>
+                <ExerciseThumbnailBadge exercise={selected} showPhaseStrip decorative />
+                <StudioClinicalBriefCard exercise={selected} compact />
                 <p className="study-metadata">
                   계획 노트 역할 ·{' '}
                   {CANONICAL_BLOCKS.find((block) => block.category === selected.blockCategory)

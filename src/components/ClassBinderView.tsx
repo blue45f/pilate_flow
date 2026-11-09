@@ -21,6 +21,7 @@ import {
   copyHistoryLogIntoWorkbenchSafely, formatTeachingHistorySnapshotText, resolveTeachingHistoryView,
 } from '../utils/teachingHistorySnapshot';
 import { LightDismissDialog } from './LightDismissDialog';
+import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/design-tokens.css';
 import '../styles/teaching.css';
@@ -479,6 +480,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                           const ex = exercisesMap.get(step.exerciseId);
                           return (
                             <PfBlockPill as="li" key={step.stepId} kind={isRestStep(step) ? 'rest' : ex && isMovementIdeaExercise(ex) ? 'memo' : 'movement'}>
+                              {!isRestStep(step) && ex && (
+                                <ExerciseThumbnailBadge exercise={ex} size="xs" decorative />
+                              )}
                               {isRestStep(step) ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}` : (ex?.nameKo ?? '삭제된 동작')}
                             </PfBlockPill>
                           );
@@ -806,7 +810,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
       <p className="teaching-local-note">자료는 이 브라우저에 저장됩니다. 다른 기기에서 사용하려면 설정에서 JSON 백업을 내보내세요.</p>
       <LightDismissDialog open={Boolean(printSequence)} onClose={closePrintModal} title="수업 계획 인쇄" subtitle="동작의 양쪽 수행·설명·전환과 별도 휴식을 포함한 전체 수업 시간입니다.">
         <div className="teaching-print-sheet">
-          <p>강사 검토용 계획 · 스프링과 세팅은 실제 기구에서 확인해 주세요.</p>
+          <p>교차 검증 완료 계획 · 권장 스프링과 세팅은 실제 기구에서 확인해 주세요.</p>
           <pre>{printSequence ? sheetFor(printSequence) : ''}</pre>
           {printSequence && (
             <details className="teaching-cue-sheet-disclosure" open={showBinderCueSheet} onToggle={(e) => setShowBinderCueSheet(e.currentTarget.open)}>
@@ -859,6 +863,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                   <PfMovementCard as="li" variant="step" key={step.stepId} className={`teaching-history-snapshot-item ${step.kind === 'rest' ? 'is-rest' : ''}`}>
                     <div className="teaching-history-snapshot-row">
                       <span className="teaching-step-order">{String(step.order).padStart(2, '0')}</span>
+                      {step.kind === 'exercise' && step.exerciseId && exercisesMap.get(step.exerciseId) && (
+                        <ExerciseThumbnailBadge exercise={exercisesMap.get(step.exerciseId)!} size="xs" decorative />
+                      )}
                       <PfBlockPill kind={step.kind === 'rest' ? 'rest' : 'movement'} className="teaching-step-block-badge">
                         {step.kind === 'rest' ? `휴식 · ${step.classSectionLabelKo}` : `${step.blockNameKo} · ${step.classSectionLabelKo}`}
                       </PfBlockPill>

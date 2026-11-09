@@ -288,10 +288,10 @@ describe('progressive material guidance', () => {
     usePilatesStore.setState({ activeSteps: [{ ...readyStep, exerciseId: pending.id }] });
     const before = usePilatesStore.getState();
     renderWorkbench();
-    expect(screen.getByText('검토 전 자료')).toBeVisible();
+    expect(screen.getByText('교차 검증 가이드')).toBeVisible();
     const summary = screen.getByText('자료 안내', { selector: 'summary' });
     expect(summary.closest('details')).not.toHaveAttribute('open');
-    const note = screen.getByText(/미검토 자료 1개 · 검토 기록은 선택 사항입니다/);
+    const note = screen.getByText(/교차 검증 가이드 1개 · 검토 기록은 선택 사항입니다/);
     expect(note).not.toBeVisible();
     fireEvent.click(summary);
     expect(note).toBeVisible();

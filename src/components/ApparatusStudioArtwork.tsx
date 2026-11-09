@@ -3,12 +3,25 @@ import type { ApparatusType, BodyPosition } from '../types/pilates';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 
 export interface ApparatusIconBadgeProps {
-  apparatus: ApparatusType;
+  apparatus: ApparatusType | 'all' | string;
   bodyPosition?: BodyPosition;
   size?: 'xs' | 'sm' | 'md';
   showLabel?: boolean;
   decorative?: boolean;
   className?: string;
+}
+
+function normalizeApparatusType(apparatus: string): ApparatusType {
+  if (apparatus === 'reformer' || apparatus === 'mat' || apparatus === 'cadillac' || apparatus === 'chair' || apparatus === 'barrel') {
+    return apparatus;
+  }
+  if (apparatus === 'ladder-barrel' || apparatus === 'spine-corrector') {
+    return 'barrel';
+  }
+  if (apparatus === 'tower') {
+    return 'cadillac';
+  }
+  return 'reformer';
 }
 
 const APPARATUS_PALETTE: Record<
@@ -53,12 +66,13 @@ const APPARATUS_PALETTE: Record<
 };
 
 export function ApparatusIllustrationSvg({
-  apparatus,
+  apparatus: rawApparatus,
   compact = false,
 }: {
-  apparatus: ApparatusType;
+  apparatus: ApparatusType | string;
   compact?: boolean;
 }): React.JSX.Element {
+  const apparatus = normalizeApparatusType(rawApparatus);
   const palette = APPARATUS_PALETTE[apparatus] ?? APPARATUS_PALETTE.mat;
   return (
     <svg
@@ -238,7 +252,8 @@ export function ApparatusIconBadge({
   decorative = true,
   className = '',
 }: ApparatusIconBadgeProps): React.JSX.Element {
-  const appLabel = APPARATUS_LABELS[apparatus]?.ko ?? apparatus;
+  const normalized = normalizeApparatusType(apparatus);
+  const appLabel = APPARATUS_LABELS[normalized]?.ko ?? apparatus;
   const posLabel = bodyPosition ? (POSITION_LABELS[bodyPosition]?.ko ?? bodyPosition) : null;
 
   return (

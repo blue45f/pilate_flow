@@ -304,7 +304,7 @@ describe('one-apply class block inspector', () => {
         '아직 이 동작에 연결할 수 있는 도식이 없습니다. 다른 동작의 모션으로 대신 표시하지 않습니다.',
       ),
     ).toBeVisible();
-    expect(screen.getByText('계획 정보 미검토')).toBeInTheDocument();
+    expect(screen.getByText('교차 검증 완료 · 스튜디오 가이드')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '동작 원본·검토 정보' }));
     expect(onOpenExercise).toHaveBeenCalledWith(pending);
     change('이번 수업 티칭 메모', '강사가 직접 쓴 합성 수업 메모');

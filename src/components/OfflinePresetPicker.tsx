@@ -18,6 +18,7 @@ import { formatSecondsToMMSS, getStepTiming } from '../utils/sequenceEngine';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesStudioState } from '../store/usePilatesStore';
 import { PresetSuggestionCandidatePreview } from '../features/presetSuggestionCandidate';
+import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import '../styles/offline-presets.css';
 import './OfflinePresetPicker.css';
 
@@ -505,7 +506,8 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                 const ex = names.get(step.exerciseId);
                 const timing = getStepTiming(step, ex);
                 return (
-                  <li key={step.stepId}>
+                  <li key={step.stepId} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    {ex && <ExerciseThumbnailBadge exercise={ex} size="xs" decorative />}
                     <strong>{ex?.nameKo ?? '현재 목록에 없는 동작'}</strong>
                     <span>
                       {formatSecondsToMMSS(timing.totalSec)} · 수행{' '}

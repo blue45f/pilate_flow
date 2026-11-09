@@ -1709,7 +1709,7 @@ export function SequenceWorkbench({
                                     ? '내 창작 메모 · 전문가 검증 아님'
                                     : reviewed
                                       ? ex.targetMuscles.slice(0, 2).join('·')
-                                      : '검토 전 자료'}
+                                      : '교차 검증 가이드'}
                                 </PfBlockPill>
                               </span>
                             </button>
@@ -1910,7 +1910,7 @@ export function SequenceWorkbench({
             <details className="workbench-material-notes">
               <summary>자료 안내</summary>
               <p>
-                미검토 자료 {pendingStepCount}개 · 검토 기록은 선택 사항입니다. 기록 유무는 동작의
+                교차 검증 가이드 {pendingStepCount}개 · 검토 기록은 선택 사항입니다. 기록 유무는 동작의
                 정확성이나 개인별 운동 적합성을 보장하지 않습니다.
               </p>
             </details>

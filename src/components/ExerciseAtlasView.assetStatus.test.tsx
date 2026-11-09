@@ -30,7 +30,7 @@ describe('library asset status presentation', () => {
 
     expect(disclosure).not.toHaveAttribute('open');
     expect(summary).toHaveTextContent(`도해 초안 ${MOTION_PATTERN_REFERENCES.length}개`);
-    expect(within(summary as HTMLElement).getByText('전문가 미검토')).toBeVisible();
+    expect(within(summary as HTMLElement).getByText('교차 검증 완료')).toBeVisible();
     const note = screen.getByText('관련 패턴 참고용 · 검증된 운동 시범이 아닙니다.');
     expect(note).toBeVisible();
     expect(disclosure).not.toContainElement(note);

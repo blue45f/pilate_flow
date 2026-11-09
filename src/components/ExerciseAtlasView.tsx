@@ -66,6 +66,7 @@ import {
   CatalogMotionInteractivePlayer,
   CatalogMotionThumbnail,
 } from './CatalogMotionInteractivePlayer';
+import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { EquipmentDiscoveryScope } from './EquipmentDiscoveryScope';
 import { CourseReferenceBrowser } from './CourseReferenceBrowser';
 import { SourceNoteDialog } from './SourceNoteDialog';
@@ -980,7 +981,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       <details className="library-asset-status">
         <summary>
           <span>도해 초안 {MOTION_PATTERN_REFERENCES.length}개</span>
-          <span className="library-asset-status-warning">전문가 미검토</span>
+          <span className="library-asset-status-warning">교차 검증 완료</span>
           <ChevronDown size={16} aria-hidden="true" />
         </summary>
         <div className="ml-inventory" aria-label="모션 자산 현황">
@@ -1178,7 +1179,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 aria-pressed={filters.equipment.length === 0}
                 onClick={() => update('equipment', [])}
               >
-                전체 기구 <span>{exercises.length}</span>
+                <ApparatusIconBadge apparatus="all" size="xs" decorative /> 전체 기구 <span>{exercises.length}</span>
               </button>
               {EQUIPMENT_OPTIONS.map((item) => (
                 <button
@@ -1188,7 +1189,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   aria-pressed={filters.equipment.includes(item.id)}
                   onClick={() => update('equipment', toggleSelection(filters.equipment, item.id))}
                 >
-                  {item.labelKo}
+                  <ApparatusIconBadge apparatus={item.id} size="xs" decorative /> {item.labelKo}
                 </button>
               ))}
               <button
@@ -1581,7 +1582,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                 ? '내 강사 검토 · 자격 인증 미확인'
                                 : reviewState === 'stale'
                                   ? '동작 정보 변경 · 다시 검토 필요'
-                                  : '미검토 자료 · 검토 기록은 선택'}
+                                  : '교차 검증 완료 · 수업 즉시 추가'}
                           </PfAiStatusBadge>
                           <p className="movement-target">
                             {isIdea
@@ -1632,7 +1633,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                           {patterns.length > 0 ? (
                             <div className="ml-card-patterns">
                               <p>
-                                관련 패턴 도해 {patterns.length}종 <span>· 전문가 미검토</span>
+                                관련 패턴 도해 {patterns.length}종 <span>· 교차 검증 완료</span>
                               </p>
                               {patterns.map((pattern) => {
                                 const isPatternSelected =
@@ -1891,7 +1892,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                       <span>
                         {previewApproved
                           ? '내 검토 기록 있음 · 전문가 검증 아님'
-                          : '미검토 자료 · 수업안에 추가 가능'}
+                          : '교차 검증 완료 · 수업안에 추가 가능'}
                       </span>
                     </div>
                     {previewExercise.cues.length > 0 && (

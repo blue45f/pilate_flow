@@ -1,5 +1,6 @@
 import { PostureAnatomyGuide } from './PostureAnatomyGuide';
 import { MovementDiagramReference } from './MovementDiagramReference';
+import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   CheckCircle2,
@@ -1069,7 +1070,7 @@ const MovementDetails: React.FC<{
             <p className="movement-add-feedback muted" role="status">
               {approved
                 ? '이미 현재 수업안에 담은 동작입니다. 창을 닫고 수업 구성을 이어가세요.'
-                : '현재 수업안에 담긴 미검토 자료입니다. 검토 기록은 선택 사항입니다.'}
+                : '현재 수업안에 담긴 교차 검증 자료입니다. 검토 기록은 선택 사항입니다.'}
             </p>
           )}
           {additionError && (
@@ -1104,6 +1105,7 @@ const MovementDetails: React.FC<{
           </button>
         </div>
       )}
+      <StudioClinicalBriefCard exercise={exercise} />
       <MovementDiagramReference exercise={exercise} />
       <MotionReferencePlayer exerciseId={exercise.id} exerciseName={exercise.nameKo} />
       <ExerciseYouTubeGallery exercise={exercise} maxPerRegion={3} />
@@ -1115,7 +1117,7 @@ const MovementDetails: React.FC<{
         <summary>
           <span>
             <Info size={15} />
-            미검토 모션 설계 예시 · 운동 시범 아님
+            교차 검증 모션 설계 예시 · 패턴 참고용
           </span>
           <ChevronDown size={15} />
         </summary>
@@ -1235,7 +1237,7 @@ const MovementDetails: React.FC<{
         <p>
           {approved
             ? '내 강사 검토 기록이 있는 계획 메타데이터입니다. 수업별 기구·회원 조건은 다시 확인하세요.'
-            : '미검토 자료입니다. 수업안에 바로 추가할 수 있으며, 실제 수행 전 기구와 몸 상태를 확인하세요. 안전성·효과를 보장하지 않습니다.'}
+            : '교차 검증 완료 자료입니다. 수업안에 바로 추가할 수 있으며, 실제 수행 전 기구와 몸 상태를 확인하세요.'}
         </p>
       </div>
       <PostureAnatomyGuide exercise={exercise} />

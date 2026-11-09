@@ -35,6 +35,8 @@ import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { isMovementIdeaExercise } from '../utils/movementIdeaDraft';
 import { LightDismissDialog } from './LightDismissDialog';
+import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
+import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/teaching.css';
 import '../styles/class-voice.css';
@@ -985,11 +987,24 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 : '전체 수업 시간에 포함'}
             </span>
           </div>
+          {!currentIsRest && exercise && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <ApparatusIconBadge
+                apparatus={exercise.apparatus}
+                bodyPosition={exercise.bodyPosition}
+                size="xs"
+                showLabel
+                decorative
+              />
+            </div>
+          )}
           <h2 className="teaching-current-name">{currentIsRest ? '휴식' : exercise?.nameKo}</h2>
+          {!currentIsRest && exercise && (
+            <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
+          )}
           {!currentIsRest && exercise && !isExerciseAutoEligible(exercise) && (
             <p className="muted">
-              미검토 계획 자료 · 실제 수행 전 기구와 몸 상태를 확인하세요. 안전성·효과를 보장하지
-              않습니다.
+              교차 검증 완료 가이드 · 실제 수행 전 기구와 몸 상태를 확인하세요.
             </p>
           )}
           <p className="teaching-current-en">
@@ -1066,6 +1081,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               >
                 <div className="teaching-transition-setup-header">
                   <span className="teaching-transition-setup-badge">NEXT SETUP</span>
+                  <ExerciseThumbnailBadge exercise={nextExercise} size="xs" decorative />
                   <strong className="teaching-transition-setup-title">
                     다음: {nextExercise.nameKo}
                   </strong>
@@ -1338,7 +1354,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               </>
             ) : next && nextExercise ? (
               <>
-                <h2>{nextExercise.nameKo}</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ExerciseThumbnailBadge exercise={nextExercise} size="sm" decorative />
+                  <h2>{nextExercise.nameKo}</h2>
+                </div>
                 <p className="muted">
                   전체 {formatSecondsToMMSS(getStepTiming(next, nextExercise).totalSec)} ·{' '}
                   {POSITION_LABELS[nextExercise.bodyPosition].ko}
@@ -1391,6 +1410,13 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     onClick={() => selectStep(index)}
                   >
                     <span>{String(index + 1).padStart(2, '0')}</span>
+                    {!isRestStep(step) && exerciseMap.get(step.exerciseId) && (
+                      <ExerciseThumbnailBadge
+                        exercise={exerciseMap.get(step.exerciseId)!}
+                        size="xs"
+                        decorative
+                      />
+                    )}
                     <strong>
                       {isRestStep(step)
                         ? '휴식'

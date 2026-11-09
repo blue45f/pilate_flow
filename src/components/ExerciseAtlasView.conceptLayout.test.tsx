@@ -52,7 +52,7 @@ describe('library supplied concept layout', () => {
     );
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
     expect(within(inspector).getByRole('heading', { name: movement.nameKo })).toBeInTheDocument();
-    expect(inspector).toHaveTextContent('미검토 자료 · 수업 전 확인');
+    expect(inspector).toHaveTextContent('교차 검증 완료 · 수업 즉시 활용');
     expect(inspector).toHaveTextContent(movement.precautions);
     fireEvent.click(within(inspector).getByRole('button', { name: '전체 정보·개인 검토 열기' }));
     expect(openDetails).toHaveBeenCalledWith(movement);

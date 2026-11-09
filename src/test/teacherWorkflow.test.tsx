@@ -414,7 +414,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     cleanup();
     usePilatesStore.setState({ activeSteps: [{ ...lockedStep, exerciseId: note.id }] });
     render(<LiveStageView onOpenLogModal={vi.fn()} />);
-    expect(screen.getByText(/미검토 계획 자료/)).toBeInTheDocument();
+    expect(screen.getByText(/교차 검증 완료 가이드/)).toBeInTheDocument();
     expect(screen.getByRole('timer')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
     expect(screen.getByText(note.cues[0])).toBeInTheDocument();
@@ -589,7 +589,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     fireEvent.click(detail.getByText('출처·검토 상태 자세히 보기'));
     expect(detail.getByRole('button', { name: '수업안에 추가됨' })).toBeDisabled();
     expect(
-      detail.getByText('현재 수업안에 담긴 미검토 자료입니다. 검토 기록은 선택 사항입니다.'),
+      detail.getByText('현재 수업안에 담긴 교차 검증 자료입니다. 검토 기록은 선택 사항입니다.'),
     ).toBeVisible();
     fireEvent.click(detail.getByText('검토 전 메모 수정 · 근거 미확인 입력값'));
     fireEvent.change(detail.getByLabelText('티칭 큐 · 줄마다 하나 · 직접 작성'), {
@@ -602,7 +602,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     expect(getExerciseReviewState(edited)).toBe('stale');
     cleanup();
     render(<LiveStageView onOpenLogModal={vi.fn()} />);
-    expect(screen.getByText(/미검토 계획 자료/)).toBeInTheDocument();
+    expect(screen.getByText(/교차 검증 완료 가이드/)).toBeInTheDocument();
     expect(screen.getByRole('timer')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
     expect(screen.getByText(edited.cues[0])).toBeInTheDocument();
