@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 import type { ApparatusType, BodyPosition } from '../types/pilates';
 import {
+  PHASE_CARRIAGE_RATIOS,
   type RigCameraPreset,
+  type RigMotionPhase,
   buildApparatus3dRigScene,
 } from '../utils/apparatus3dRigProjection';
 
@@ -20,6 +22,12 @@ const CAMERA_PRESETS: ReadonlyArray<{ id: RigCameraPreset; labelKo: string }> = 
   { id: 'transverse', labelKo: '수평면(Top)' },
 ];
 
+const MOTION_PHASES: ReadonlyArray<{ id: RigMotionPhase; labelKo: string }> = [
+  { id: 'setup', labelKo: '1 시작(Setup)' },
+  { id: 'peak', labelKo: '2 정점(Peak)' },
+  { id: 'return', labelKo: '3 복귀(Return)' },
+];
+
 export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps> = ({
   apparatus,
   bodyPosition,
@@ -27,7 +35,22 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
   exerciseTitleKo,
 }) => {
   const [cameraPreset, setCameraPreset] = useState<RigCameraPreset>('isometric');
-  const [carriageOffset, setCarriageOffset] = useState<number>(0.3);
+  const [phase, setPhase] = useState<RigMotionPhase>('setup');
+  const [carriageOffset, setCarriageOffset] = useState<number>(PHASE_CARRIAGE_RATIOS.setup);
+  const [autoPlay, setAutoPlay] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!autoPlay) return;
+    const order: RigMotionPhase[] = ['setup', 'peak', 'return'];
+    const timer = window.setInterval(() => {
+      setPhase((prev) => {
+        const next = order[(order.indexOf(prev) + 1) % order.length]!;
+        setCarriageOffset(PHASE_CARRIAGE_RATIOS[next]);
+        return next;
+      });
+    }, 1100);
+    return () => window.clearInterval(timer);
+  }, [autoPlay]);
 
   const scene = useMemo(
     () =>
@@ -35,14 +58,24 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
         apparatus,
         bodyPosition,
         cameraPreset,
+        phase,
         carriageOffsetRatio: carriageOffset,
         springsLabel,
       }),
-    [apparatus, bodyPosition, cameraPreset, carriageOffset, springsLabel],
+    [apparatus, bodyPosition, cameraPreset, phase, carriageOffset, springsLabel],
   );
 
   const framePolygon = scene.frameVertices2D.map((pt) => `${pt.u},${pt.v}`).join(' ');
   const carriagePolygon = scene.carriageRect2D.map((pt) => `${pt.u},${pt.v}`).join(' ');
+  const skeletonPolyline = [
+    scene.jointChain2D.head,
+    scene.jointChain2D.shoulder,
+    scene.jointChain2D.pelvis,
+    scene.jointChain2D.knee,
+    scene.jointChain2D.ankle,
+  ]
+    .map((pt) => `${pt.u},${pt.v}`)
+    .join(' ');
 
   return (
     <section
@@ -62,7 +95,7 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
       >
         <div>
           <strong style={{ fontSize: '14px', color: '#173d34' }}>
-            3D 기구·스프링·무게중심(CoM) 투영 뷰포트
+            3D 기구·관절 체인·무게중심(CoM) 투영 뷰포트
             {exerciseTitleKo ? ` · ${exerciseTitleKo}` : ''}
           </strong>
           <p className="muted" style={{ fontSize: '12px', margin: '2px 0 0' }}>
@@ -70,7 +103,11 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
             {scene.springVector2D.tensionLabel}
           </p>
         </div>
-        <div role="group" aria-label="3D 카메라 시점 전환" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+        <div
+          role="group"
+          aria-label="3D 카메라 시점 전환"
+          style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}
+        >
           {CAMERA_PRESETS.map((preset) => (
             <button
               key={preset.id}
@@ -89,6 +126,43 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
             </button>
           ))}
         </div>
+      </div>
+
+      <div
+        role="group"
+        aria-label="3페이즈 키프레임 전환"
+        style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}
+      >
+        {MOTION_PHASES.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className="btn-secondary"
+            aria-pressed={phase === item.id}
+            onClick={() => {
+              setAutoPlay(false);
+              setPhase(item.id);
+              setCarriageOffset(PHASE_CARRIAGE_RATIOS[item.id]);
+            }}
+            style={{
+              minHeight: '28px',
+              padding: '2px 10px',
+              fontSize: '12px',
+              fontWeight: phase === item.id ? 700 : 500,
+            }}
+          >
+            {item.labelKo}
+          </button>
+        ))}
+        <button
+          type="button"
+          className="btn-secondary"
+          aria-pressed={autoPlay}
+          onClick={() => setAutoPlay((v) => !v)}
+          style={{ marginLeft: 'auto', minHeight: '28px', padding: '2px 10px', fontSize: '12px' }}
+        >
+          {autoPlay ? '3페이즈 자동 재생 중지' : '3페이즈 연속 재생'}
+        </button>
       </div>
 
       <svg
@@ -140,11 +214,28 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
           strokeDasharray="4 2"
           markerEnd="url(#spring-arrow-head)"
         />
+        {/* 5-Joint Kinematic Chain (Head -> Shoulder -> Pelvis -> Knee -> Ankle) */}
+        <polyline
+          points={skeletonPolyline}
+          fill="none"
+          stroke="#0f5132"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle
+          cx={scene.jointChain2D.head.u}
+          cy={scene.jointChain2D.head.v}
+          r="5"
+          fill="#ffffff"
+          stroke="#0f5132"
+          strokeWidth="2"
+        />
         {/* Practitioner Center of Mass (CoM) */}
         <circle
           cx={scene.centerOfMass2D.u}
           cy={scene.centerOfMass2D.v}
-          r="7"
+          r="6.5"
           fill="#173d34"
           stroke="#ffffff"
           strokeWidth="2"
@@ -176,7 +267,10 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
           max="1"
           step="0.05"
           value={carriageOffset}
-          onChange={(e) => setCarriageOffset(Number(e.target.value))}
+          onChange={(e) => {
+            setAutoPlay(false);
+            setCarriageOffset(Number(e.target.value));
+          }}
           aria-label="캐리지 가동 범위 위치 조절"
           style={{ flex: 1 }}
         />

@@ -8,6 +8,18 @@ const LAYER_KO: Record<'easy' | 'standard' | 'hard', string> = {
   hard: '도전',
 };
 
+export interface PortableSequencePackageV1 {
+  schemaVersion: 'pilates-flow-sequence-package-v1';
+  exportedAt: string;
+  sequence: SavedSequence;
+  summary: {
+    totalDurationSec: number;
+    exerciseDurationSec: number;
+    restDurationSec: number;
+    stepCount: number;
+  };
+}
+
 /**
  * Formats a `SavedSequence` as a structured Markdown Studio Cue Sheet (`.md`)
  * suitable for tablet/Obsidian/Notion archiving or studio handout printing.
@@ -73,4 +85,43 @@ export function formatSequenceAsMarkdownCueSheet(
   );
 
   return lines.join('\n');
+}
+
+/**
+ * Exports a single `SavedSequence` as a portable JSON package (`pilates-flow-sequence-package-v1`).
+ */
+export function formatSequenceAsPortableJson(sequence: SavedSequence): string {
+  const durations = getSequenceDurations(sequence.steps);
+  const pkg: PortableSequencePackageV1 = {
+    schemaVersion: 'pilates-flow-sequence-package-v1',
+    exportedAt: new Date().toISOString(),
+    sequence,
+    summary: {
+      totalDurationSec: durations.totalSec,
+      exerciseDurationSec: durations.exerciseSec,
+      restDurationSec: durations.restSec,
+      stepCount: sequence.steps.length,
+    },
+  };
+  return JSON.stringify(pkg, null, 2);
+}
+
+/**
+ * Parses and validates a portable sequence JSON string.
+ */
+export function parsePortableSequenceJson(rawJson: string): SavedSequence | null {
+  try {
+    const parsed = JSON.parse(rawJson) as Partial<PortableSequencePackageV1>;
+    if (
+      parsed?.schemaVersion !== 'pilates-flow-sequence-package-v1' ||
+      !parsed.sequence ||
+      typeof parsed.sequence.title !== 'string' ||
+      !Array.isArray(parsed.sequence.steps)
+    ) {
+      return null;
+    }
+    return parsed.sequence;
+  } catch {
+    return null;
+  }
 }
