@@ -615,3 +615,66 @@ describe('freeAiClient', () => {
     expect(composeRes.result.excludedUnreviewedIds).toContain('p1-items-unreviewed-block');
   });
 });
+
+describe('Track B outbound privacy and paid-model boundary', () => {
+  const conditions = {
+    durationMinutes: 50 as const,
+    theme: '코어 안정화',
+    strengthenAreas: ['core' as const],
+    level: '1.5' as const,
+    apparatus: 'reformer' as const,
+  };
+
+  it.each(['김민지 회원 허리 통증', ['sk', '-', 'x'.repeat(24)].join('')])(
+    'blocks selected catalog text at transport boundary: %s',
+    async (nameKo) => {
+      const postAssist = vi.fn();
+      const client = createFreeAiClient({ transport: { getStatus: async () => makeReadyStatus(), postAssist } });
+      const exercise = makeApprovedExercise({ ...approvedCatalog[0], nameKo, level: '1.5' });
+      await expect(client.requestClassDraft(conditions, [exercise])).rejects.toMatchObject({
+        code: nameKo.startsWith('sk-') ? 'byok_forbidden' : 'sensitive_health_blocked',
+      });
+      await expect(client.requestSequenceCompose({
+        targetMinutes: 50, level: '1.5', apparatus: 'reformer', strengthenAreas: ['core'], selectedExerciseIds: [exercise.id],
+      }, [exercise])).rejects.toMatchObject({
+        code: nameKo.startsWith('sk-') ? 'byok_forbidden' : 'sensitive_health_blocked',
+      });
+      expect(postAssist).not.toHaveBeenCalled();
+      const local = await client.requestClassDraft(conditions, [exercise], [], { preferLocalOnly: true });
+      expect(local.usedLocalFallback).toBe(true);
+      expect(postAssist).not.toHaveBeenCalled();
+    },
+  );
+
+  it('blocks sensitive selected block titles while keeping notes local', async () => {
+    const postAssist = vi.fn();
+    const client = createFreeAiClient({ transport: { getStatus: async () => makeReadyStatus(), postAssist } });
+    await expect(client.requestSequenceCompose({
+      targetMinutes: 50, level: '1.5', apparatus: 'reformer', strengthenAreas: ['core'], selectedExerciseIds: [], selectedBlockIds: ['private'],
+    }, approvedCatalog, [{
+      id: 'private', title: '김민지 회원 수업', apparatus: 'reformer', level: '1.5', category: 'core', durationMin: 5, isReviewed: true,
+      steps: [{ exerciseId: approvedCatalog[0].id, durationMin: 5, blockCategory: 'core', selectedLayer: 'standard' }],
+    }])).rejects.toMatchObject({ code: 'sensitive_health_blocked' });
+    expect(postAssist).not.toHaveBeenCalled();
+  });
+
+  it('uses local engine without any transport after paid model status is known', async () => {
+    const blocked = makeReadyStatus({ enabled: false, reason: 'invalid_paid_model_blocked' });
+    const postAssist = vi.fn();
+    const client = createFreeAiClient({ transport: { getStatus: async () => blocked, postAssist } });
+    await client.refreshQuotaStatus();
+    const result = await client.requestClassDraft(conditions, approvedCatalog);
+    expect(result.usedLocalFallback).toBe(true);
+    expect(result.result.source).toBe('local-rule-engine');
+    expect(postAssist).not.toHaveBeenCalled();
+  });
+
+  it('uses local engine after paid-model blocked response and does not retry provider', async () => {
+    const blocked = makeReadyStatus({ enabled: false, reason: 'invalid_paid_model_blocked' });
+    const postAssist = vi.fn().mockResolvedValue({ status: blocked });
+    const client = createFreeAiClient({ transport: { getStatus: async () => blocked, postAssist } });
+    expect((await client.requestClassDraft(conditions, approvedCatalog)).usedLocalFallback).toBe(true);
+    expect((await client.requestClassDraft(conditions, approvedCatalog)).usedLocalFallback).toBe(true);
+    expect(postAssist).toHaveBeenCalledTimes(1);
+  });
+});

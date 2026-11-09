@@ -139,7 +139,10 @@ export function createDefaultFreeAiStatus(
   };
 }
 
-function buildFallbackRenewalInfo(nowMs: number, provider: FreeAiQuotaStatus['provider']): FreeAiRenewalInfo {
+function buildFallbackRenewalInfo(
+  nowMs: number,
+  provider: FreeAiQuotaStatus['provider'],
+): FreeAiRenewalInfo {
   const nextUtcMidnight = new Date(nowMs);
   nextUtcMidnight.setUTCHours(24, 0, 0, 0);
   const resetAtMs = nextUtcMidnight.getTime();
@@ -237,8 +240,7 @@ function extractErrorDetails(cause: unknown): {
     };
   }
 
-  const errObj =
-    cause && typeof cause === 'object' ? (cause as Record<string, unknown>) : {};
+  const errObj = cause && typeof cause === 'object' ? (cause as Record<string, unknown>) : {};
   const responseObj =
     errObj.response && typeof errObj.response === 'object'
       ? (errObj.response as Record<string, unknown>)
@@ -303,9 +305,7 @@ function extractErrorDetails(cause: unknown): {
       : undefined;
 
   const renewal =
-    (bodyObj.renewal as FreeAiRenewalInfo | null | undefined) ??
-    parsedStatus?.renewal ??
-    undefined;
+    (bodyObj.renewal as FreeAiRenewalInfo | null | undefined) ?? parsedStatus?.renewal ?? undefined;
 
   return {
     code,
@@ -371,11 +371,8 @@ function toReviewedBlockCandidates(
     .slice(0, 30)
     .map((block) => {
       const blockSteps =
-        block.steps ??
-        (block as { items?: readonly P1ReusableBlockStepContract[] }).items ??
-        [];
-      const fallbackCategory =
-        block.category ?? blockSteps[0]?.blockCategory ?? 'core';
+        block.steps ?? (block as { items?: readonly P1ReusableBlockStepContract[] }).items ?? [];
+      const fallbackCategory = block.category ?? blockSteps[0]?.blockCategory ?? 'core';
       const defaultLayer =
         block.level === '1.0' ? 'easy' : block.level === '2.0' ? 'hard' : 'standard';
 
@@ -399,9 +396,7 @@ function toReviewedBlockCandidates(
               Math.max(0.5, step.durationMin ?? ex?.defaultDurationMin ?? 4),
             ),
             selectedLayer: step.selectedLayer ?? defaultLayer,
-            ...(step.instructorNote
-              ? { instructorNote: step.instructorNote.slice(0, 500) }
-              : {}),
+            // Instructor notes remain local, even on explicitly selected blocks.
           };
         });
 
@@ -500,8 +495,7 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
     if (inspection.hasSensitiveData) {
       throw new FreeAiClientError(
         'sensitive_health_blocked',
-        inspection.warningMessageKo ??
-          '민감 건강·개인정보는 무료 외부 AI로 전송할 수 없습니다.',
+        inspection.warningMessageKo ?? '민감 건강·개인정보는 무료 외부 AI로 전송할 수 없습니다.',
         syncStatusCounters(),
         null,
       );
@@ -610,6 +604,9 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
     }
 
     const serverRequest = params.buildServerRequest();
+    // Inspect the complete minimized payload at the last boundary before transport.
+    guardByokAndEnv(serverRequest);
+    guardSensitiveHealthForExternalAi(serverRequest);
     activeRequests += 1;
     syncStatusCounters();
 
@@ -626,7 +623,8 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
         response.status &&
         !response.status.enabled &&
         (response.status.reason === 'unconfigured' ||
-          response.status.reason === 'billing_guard_unconfirmed')
+          response.status.reason === 'billing_guard_unconfirmed' ||
+          response.status.reason === 'invalid_paid_model_blocked')
       ) {
         serverKnownUnconfigured = true;
         currentStatus = createDefaultFreeAiStatus({
@@ -645,13 +643,9 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
         };
       }
 
-      if (
-        response.status?.exhausted ||
-        response.status?.reason === 'free_quota_exhausted'
-      ) {
+      if (response.status?.exhausted || response.status?.reason === 'free_quota_exhausted') {
         const renewal =
-          response.status.renewal ??
-          buildFallbackRenewalInfo(now(), response.status.provider);
+          response.status.renewal ?? buildFallbackRenewalInfo(now(), response.status.provider);
         currentStatus = {
           ...currentStatus,
           ...response.status,
@@ -694,8 +688,10 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
         details.isLocalSdkUnavailable ||
         details.code === 'unconfigured' ||
         details.code === 'billing_guard_unconfirmed' ||
+        details.code === 'invalid_paid_model_blocked' ||
         details.status?.reason === 'unconfigured' ||
-        details.status?.reason === 'billing_guard_unconfirmed'
+        details.status?.reason === 'billing_guard_unconfirmed' ||
+        details.status?.reason === 'invalid_paid_model_blocked'
       ) {
         serverKnownUnconfigured = true;
         currentStatus = createDefaultFreeAiStatus({
@@ -726,8 +722,7 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
       if (details.code === 'sensitive_health_blocked') {
         throw new FreeAiClientError(
           'sensitive_health_blocked',
-          details.message ??
-            '민감 건강·개인정보는 무료 외부 AI로 전송할 수 없습니다.',
+          details.message ?? '민감 건강·개인정보는 무료 외부 AI로 전송할 수 없습니다.',
           syncStatusCounters(),
           null,
         );
@@ -770,12 +765,7 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
           statusMessageKo: message,
         };
 
-        throw new FreeAiClientError(
-          'free_quota_exhausted',
-          message,
-          syncStatusCounters(),
-          renewal,
-        );
+        throw new FreeAiClientError('free_quota_exhausted', message, syncStatusCounters(), renewal);
       }
 
       throw new FreeAiClientError(
@@ -813,7 +803,8 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
         if (
           !status.enabled &&
           (status.reason === 'unconfigured' ||
-            status.reason === 'billing_guard_unconfirmed')
+            status.reason === 'billing_guard_unconfirmed' ||
+            status.reason === 'invalid_paid_model_blocked')
         ) {
           serverKnownUnconfigured = true;
           currentStatus = createDefaultFreeAiStatus({
@@ -837,7 +828,8 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
         if (
           details.isLocalSdkUnavailable ||
           details.code === 'unconfigured' ||
-          details.code === 'billing_guard_unconfirmed'
+          details.code === 'billing_guard_unconfirmed' ||
+          details.code === 'invalid_paid_model_blocked'
         ) {
           serverKnownUnconfigured = true;
           currentStatus = createDefaultFreeAiStatus({
@@ -873,21 +865,26 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
         guardSensitiveHealthForExternalAi(input);
       }
 
-      const reviewedCatalog = toReviewedExerciseCandidates(exercises);
+      const reviewedCatalog = toReviewedExerciseCandidates(
+        exercises.filter(
+          (exercise) =>
+            (input.apparatus === 'mixed' || exercise.apparatus === input.apparatus) &&
+            Number(exercise.level) <= Number(input.level),
+        ),
+      );
 
       return executeExternalOrFallback<EditableClassDraftResult>({
         task: 'class-draft',
         cachePayload: {
           conditions: input,
-          reviewedIds: reviewedCatalog.map((item) => item.id),
+          reviewedCatalog,
         },
         buildServerRequest: () => ({
           task: 'class-draft',
           conditions: input,
           reviewedCatalog,
         }),
-        runLocalFallback: () =>
-          buildLocalClassDraft(input, exercises, conditionTemplates),
+        runLocalFallback: () => buildLocalClassDraft(input, exercises, conditionTemplates),
         preferLocalOnly: requestOptions?.preferLocalOnly,
       });
     },
@@ -932,15 +929,22 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
         guardSensitiveHealthForExternalAi(input);
       }
 
-      const reviewedCatalog = toReviewedExerciseCandidates(exercises);
-      const reviewedBlocks = toReviewedBlockCandidates(reusableBlocks, exercises);
+      const selectedExerciseIds = new Set(input.selectedExerciseIds);
+      const selectedBlockIds = new Set(input.selectedBlockIds ?? []);
+      const reviewedCatalog = toReviewedExerciseCandidates(
+        exercises.filter((exercise) => selectedExerciseIds.has(exercise.id)),
+      );
+      const reviewedBlocks = toReviewedBlockCandidates(
+        reusableBlocks.filter((block) => selectedBlockIds.has(block.id)),
+        exercises,
+      );
 
       const response = await executeExternalOrFallback<EditableSequenceComposeResult>({
         task: 'sequence-compose',
         cachePayload: {
           compose: input,
-          reviewedIds: reviewedCatalog.map((item) => item.id),
-          reviewedBlockIds: reviewedBlocks.map((item) => item.id),
+          reviewedCatalog,
+          reviewedBlocks,
         },
         buildServerRequest: () => ({
           task: 'sequence-compose',
@@ -948,21 +952,14 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
           reviewedCatalog,
           ...(reviewedBlocks.length > 0 ? { reviewedBlocks } : {}),
         }),
-        runLocalFallback: () =>
-          composeSequenceFromReviewedItems(input, exercises, reusableBlocks),
+        runLocalFallback: () => composeSequenceFromReviewedItems(input, exercises, reusableBlocks),
         preferLocalOnly: requestOptions?.preferLocalOnly,
       });
 
       if (!response.usedLocalFallback) {
         // Ensure client-side unreviewed exclusion invariants are strictly enforced on external results too
-        const localAudit = composeSequenceFromReviewedItems(
-          input,
-          exercises,
-          reusableBlocks,
-        );
-        const allowedExerciseIds = new Set(
-          localAudit.steps.map((s) => s.exerciseId),
-        );
+        const localAudit = composeSequenceFromReviewedItems(input, exercises, reusableBlocks);
+        const allowedExerciseIds = new Set(localAudit.steps.map((s) => s.exerciseId));
         const filteredSteps = response.result.steps
           .filter((step) => allowedExerciseIds.has(step.exerciseId))
           .map((step, idx) => ({

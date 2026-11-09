@@ -1,3 +1,5 @@
+> Track B B1/B2/B3의 아래 재현 상태는 과거 기록입니다. 현재 수정 및 검증 범위는 [2026-11-09 후속 보고](FOLLOWUP-20261109.md)를 확인하세요.
+
 # Track B Audit Report — Prompt Data Minimization, Client Bundle Zero-Secret & Provider Error UX Regression
 
 - **Workflow**: Gemini 4 Argon High · Dynamic 2-Track Parallel Audit (`2026-11-07`)

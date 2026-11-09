@@ -123,7 +123,7 @@ const unifiedSummary = {
     trackB: {
       script: trackBRun.script,
       passed: trackBRun.passed,
-      reproducedDefects: ['DEFECT-B1', 'DEFECT-B2', 'DEFECT-B3'],
+      regressionGuards: ['DEFECT-B1', 'DEFECT-B2', 'DEFECT-B3'],
     },
   },
   combinedVitest,
@@ -145,7 +145,7 @@ console.table([
   {
     Check: 'Track B (Prompt Minimization / Bundle Zero-Secret / Error UX)',
     Status: trackBRun.passed ? 'PASS (13/13)' : 'FAIL',
-    DefectsReproduced: 'DEFECT-B1, DEFECT-B2, DEFECT-B3',
+    DefectsReproduced: 'B1/B2/B3 now checked as prevention guards; see follow-up report',
   },
   {
     Check: 'Combined Vitest + Git-Tracked Secret Guard (freeAiAssistantSchema)',
