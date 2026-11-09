@@ -598,20 +598,13 @@ export function InlineExerciseFinder({
                   )}
                   {firstReference && <span className="ief-motion-caption">패턴 참고 · 미검수</span>}
                 </button>
-                <div
-                  className="ief-card-body"
-                  style={{ minWidth: 0, wordBreak: 'keep-all', overflowWrap: 'break-word' }}
-                >
+                <div className="ief-card-body">
                   <h3>
-                    <button
-                      type="button"
-                      onClick={() => onOpenExercise(exercise)}
-                      style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}
-                    >
+                    <button type="button" onClick={() => onOpenExercise(exercise)}>
                       {exercise.nameKo}
                     </button>
                   </h3>
-                  <p style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
+                  <p>
                     {equipmentLabel} · {exercise.defaultDurationMin}분
                     {exercise.targetMuscles.length > 0 && (
                       <span> · {exercise.targetMuscles.slice(0, 2).join('·')}</span>
@@ -627,25 +620,19 @@ export function InlineExerciseFinder({
                           type="button"
                           key={reference.variantId}
                           aria-label={`${reference.title} 초안 보기`}
-                          style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}
                           onClick={(event) => {
                             previewTriggerRef.current = event.currentTarget;
                             setPreviewExerciseId(exercise.id);
                             setPreview(reference);
                           }}
                         >
-                          <span style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
-                            {reference.title}
-                          </span>
+                          <span>{reference.title}</span>
                           <ArrowUpRight size={14} aria-hidden="true" />
                         </button>
                       ))}
                     </div>
                   )}
-                  <div
-                    className="ief-card-actions"
-                    style={{ flexWrap: 'wrap', gap: '6px', wordBreak: 'keep-all' }}
-                  >
+                  <div className="ief-card-actions">
                     <PfAiStatusBadge
                       kind={
                         isIdea
@@ -657,7 +644,6 @@ export function InlineExerciseFinder({
                             : 'review-pending'
                       }
                       className={approved ? 'is-reviewed' : 'is-pending'}
-                      style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}
                     >
                       {isIdea
                         ? ideaMeta?.triedByInstructor
@@ -690,7 +676,7 @@ export function InlineExerciseFinder({
           })}
         </div>
       ) : (
-        <div className="ief-empty" style={{ wordBreak: 'keep-all' }}>
+        <div className="ief-empty">
           <Search size={24} aria-hidden="true" />
           <h3>조건에 맞는 동작이 없어요</h3>
           <p>
@@ -701,18 +687,13 @@ export function InlineExerciseFinder({
           {exerciseBrowseScope === 'owned' && (
             <button
               type="button"
+              className="ief-empty-owned-btn"
               onClick={() => setExerciseBrowseScope('all')}
-              style={{ minHeight: '44px', wordBreak: 'keep-all', marginRight: '6px' }}
             >
               보유 장비 조건만 해제
             </button>
           )}
-          <button
-            type="button"
-            data-testid="ief-empty-reset-btn"
-            onClick={reset}
-            style={{ minHeight: '44px', wordBreak: 'keep-all' }}
-          >
+          <button type="button" data-testid="ief-empty-reset-btn" onClick={reset}>
             검색·필터 초기화
           </button>
         </div>

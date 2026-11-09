@@ -1522,6 +1522,71 @@ export function SequenceWorkbench({
                     )}
                   </div>
                 </details>
+                {s.activeSteps.length > 0 &&
+                  (() => {
+                    const reusableBlockCount = new Set(
+                      s.activeSteps
+                        .map((step) => step.blockInstanceId ?? step.sourceBlockId)
+                        .filter((id): id is string => Boolean(id)),
+                    ).size;
+                    const layerCounts = s.activeSteps.reduce(
+                      (acc, step) => {
+                        if (isRestStep(step)) return acc;
+                        const layer = step.selectedLayer ?? 'standard';
+                        if (layer === 'easy') acc.easy += 1;
+                        else if (layer === 'hard') acc.hard += 1;
+                        else acc.standard += 1;
+                        return acc;
+                      },
+                      { easy: 0, standard: 0, hard: 0 },
+                    );
+                    return (
+                      <details className="workbench-hierarchy-details">
+                        <summary>
+                          4계층 구조 요약 (구간 {sectionRuns.length} · 동작 {exerciseStepCount})
+                        </summary>
+                        <div
+                          className="workbench-hierarchy-grid"
+                          role="list"
+                          aria-label="4계층 구조 요약"
+                        >
+                          <div className="workbench-hierarchy-item" role="listitem">
+                            <span className="workbench-hierarchy-label">1. 구간 (Section)</span>
+                            <strong className="workbench-hierarchy-value">
+                              {sectionRuns.length}개 구간
+                            </strong>
+                            <span className="workbench-hierarchy-meta">
+                              준비 · 본운동 · 마무리 · 휴식
+                            </span>
+                          </div>
+                          <div className="workbench-hierarchy-item" role="listitem">
+                            <span className="workbench-hierarchy-label">2. 블록 (Block)</span>
+                            <strong className="workbench-hierarchy-value">
+                              {reusableBlockCount}개 연결
+                            </strong>
+                            <span className="workbench-hierarchy-meta">재사용 블록 인스턴스</span>
+                          </div>
+                          <div className="workbench-hierarchy-item" role="listitem">
+                            <span className="workbench-hierarchy-label">3. 레이어 (Layer)</span>
+                            <strong className="workbench-hierarchy-value">
+                              가볍게 {layerCounts.easy} · 기본 {layerCounts.standard} · 도전{' '}
+                              {layerCounts.hard}
+                            </strong>
+                            <span className="workbench-hierarchy-meta">난이도 변형 분포</span>
+                          </div>
+                          <div className="workbench-hierarchy-item" role="listitem">
+                            <span className="workbench-hierarchy-label">4. 동작 (Movement)</span>
+                            <strong className="workbench-hierarchy-value">
+                              {exerciseStepCount}개 동작
+                            </strong>
+                            <span className="workbench-hierarchy-meta">
+                              전체 {s.activeSteps.length}개 항목 중 수행 동작
+                            </span>
+                          </div>
+                        </div>
+                      </details>
+                    );
+                  })()}
                 <div className="sequence-tools">
                   <PfButton variant="text" onClick={openExerciseFinder}>
                     <Plus size={16} aria-hidden="true" />

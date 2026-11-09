@@ -581,3 +581,28 @@
     font-size: 12px;
   }
 }
+
+/* Consolidated Korean word-break and action layout classes */
+.ief-card-body,
+.ief-card h3 > button,
+.ief-card-body > p,
+.ief-draft-actions > button,
+.ief-draft-actions > button > span,
+.ief-card-actions,
+.ief-card-actions > span,
+.ief-empty,
+.ief-empty > button {
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.ief-card-actions {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ief-empty-owned-btn {
+  min-height: 44px;
+  margin-right: 6px;
+}

@@ -1446,6 +1446,15 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                     <X size={12} aria-hidden="true" />
                   </button>
                 ))}
+                {activeFilterChips.length >= 2 && (
+                  <button
+                    type="button"
+                    className="library-active-filter-clear-all"
+                    onClick={resetFilters}
+                  >
+                    전체 해제
+                  </button>
+                )}
               </div>
             )}
             {showFilters && (

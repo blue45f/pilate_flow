@@ -1064,6 +1064,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               <span>시간 종료 시 다음 동작</span>
             </label>
           </div>
+          <p className="teaching-keyboard-shortcut-hint" aria-label="키보드 단축키 안내">
+            <kbd>Space</kbd> 시작·일시정지 <span>·</span> <kbd>←</kbd>
+            <kbd>→</kbd> 이전·다음 동작
+          </p>
           <p className="teaching-safety">
             실제 수행 전 몸 상태와 기구 설정을 확인하세요. 검토 기록은 자격 인증이나 개인별 운동
             적합성 보장이 아닙니다.

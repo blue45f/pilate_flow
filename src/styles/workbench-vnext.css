@@ -563,3 +563,70 @@
     scroll-behavior: auto;
   }
 }
+
+/* 4-Layer Hierarchy Summary & Condition Chips Polish */
+#root .vnext-workbench .v2-condition-chips > button,
+#root .vnext-workbench .sequence-inline-tools details > summary {
+  word-break: keep-all;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+#root .vnext-workbench .workbench-hierarchy-details {
+  border: 1px solid var(--wb-line, #dcded3);
+  border-radius: 12px;
+  background: #faf8f2;
+  padding: 8px 12px;
+  word-break: keep-all;
+}
+
+#root .vnext-workbench .workbench-hierarchy-details > summary {
+  cursor: pointer;
+  min-height: 36px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--wb-forest, #173d34);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+#root .vnext-workbench .workbench-hierarchy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--wb-line, #dcded3);
+}
+
+#root .vnext-workbench .workbench-hierarchy-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fffdf8;
+  border: 1px solid #e4e3d7;
+}
+
+#root .vnext-workbench .workbench-hierarchy-label {
+  font-size: 0.75rem;
+  color: #586c5c;
+  font-weight: 600;
+}
+
+#root .vnext-workbench .workbench-hierarchy-value {
+  font-size: 0.875rem;
+  color: var(--wb-forest, #173d34);
+  font-weight: 700;
+}
+
+#root .vnext-workbench .workbench-hierarchy-meta {
+  font-size: 0.72rem;
+  color: #5f6f61;
+}

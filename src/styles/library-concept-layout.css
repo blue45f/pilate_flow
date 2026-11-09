@@ -231,3 +231,53 @@
     min-height: 44px;
   }
 }
+
+/* Active filter chips & clear-all chip polish */
+.library-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.library-active-filter-chip,
+.library-active-filter-clear-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  word-break: keep-all;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.library-active-filter-clear-all {
+  border: 1px solid #8a6d56;
+  background: #faf3ec;
+  color: #6d472b;
+}
+
+.library-active-filter-clear-all:hover {
+  background: #f2e5d8;
+}
+
+.library-active-filter-chip:focus-visible,
+.library-active-filter-clear-all:focus-visible {
+  outline: 2px solid #183e36;
+  outline-offset: 2px;
+}
+
+#root .vnext-shell .motion-library .movement-card {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}

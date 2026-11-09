@@ -34,6 +34,7 @@ import type {
   DifficultyLevel,
   LayerMode,
 } from '../types/pilates';
+import { PfAiStatusBadge } from '../design-system';
 import '../styles/free-ai-assistant.css';
 import './FreeAiAssistantPanel.css';
 
@@ -729,7 +730,12 @@ export function FreeAiAssistantPanel({
               children: recommendationModeLabel,
             })
           ) : (
-            <span className="free-ai-badge">{recommendationModeLabel}</span>
+            <PfAiStatusBadge
+              kind={externalAiDisabledOrExhausted ? 'auto-draft' : 'ai-draft'}
+              className="free-ai-badge"
+            >
+              {recommendationModeLabel}
+            </PfAiStatusBadge>
           )}
         </div>
       </header>
@@ -1023,6 +1029,9 @@ export function FreeAiAssistantPanel({
 
           {classDraftResult && (
             <div className="free-ai-result-card" aria-label="생성된 수업 초안 편집">
+              <div className="free-ai-badges">
+                <PfAiStatusBadge kind="auto-draft" />
+              </div>
               <div className="free-ai-form-grid">
                 <div className="free-ai-field">
                   <label htmlFor="edit-draft-title">초안 제목 편집</label>
@@ -1222,9 +1231,9 @@ export function FreeAiAssistantPanel({
           {movementIdeaResult && (
             <div className="free-ai-result-card" aria-label="정리된 새 동작 아이디어 및 변형 편집">
               <div className="free-ai-badges">
-                <span className="free-ai-badge is-warning">
+                <PfAiStatusBadge kind="creative-memo" className="free-ai-badge is-warning">
                   미검토 창작 동작 · 안전 및 운동 효과 보장 안 함
-                </span>
+                </PfAiStatusBadge>
               </div>
               <div className="free-ai-form-grid">
                 <div className="free-ai-field">
@@ -1574,6 +1583,9 @@ export function FreeAiAssistantPanel({
 
           {composeResult && (
             <div className="free-ai-result-card" aria-label="구성된 시퀀스 편집">
+              <div className="free-ai-badges">
+                <PfAiStatusBadge kind="auto-draft" />
+              </div>
               <div className="free-ai-form-grid">
                 <div className="free-ai-field">
                   <label htmlFor="edit-compose-title">시퀀스 제목 편집</label>

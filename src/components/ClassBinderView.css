@@ -201,3 +201,17 @@ body:has(.teaching-collection--history) { min-width: 0; }
 .teaching-saved-more .teaching-card-tools {
   flex-wrap: wrap;
 }
+.teaching-collection--saved .teaching-sequence-card {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.teaching-collection--saved .teaching-sequence-card:hover,
+.teaching-collection--saved .teaching-sequence-card:focus-within {
+  border-color: #8aa498;
+  box-shadow: 0 4px 16px rgb(24 62 54 / 7%);
+}
+.teaching-history-detail-modal .teaching-history-snapshot-item {
+  border-radius: 12px;
+  transition: border-color 150ms ease;
+}
