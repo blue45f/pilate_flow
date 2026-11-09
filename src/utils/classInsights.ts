@@ -100,6 +100,8 @@ export function buildPlanInsights(
     result.transitionSec += timing.transitionSec;
     const planes = new Set(exercise?.spinalPlanes ?? []);
     for (const plane of planes) {
+      // Neutral alignment is not one of the four movement planes.
+      if (plane === 'neutral') continue;
       const currentPlane = planeTotals.get(plane);
       if (currentPlane) {
         currentPlane.movementSec += timing.movementSec;

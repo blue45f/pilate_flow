@@ -6,7 +6,7 @@ import {
 } from '../data/motionPatternReferences';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
 import { matchesDiscoverySearch } from '../utils/discoverySearch';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowUpRight,
   Check,
@@ -58,7 +58,6 @@ import type {
 import {
   formatSecondsToMMSS,
   getExerciseLastTaughtInfo,
-  getRecentlyTaughtExerciseIds,
   isRestStep,
 } from '../utils/sequenceEngine';
 import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';

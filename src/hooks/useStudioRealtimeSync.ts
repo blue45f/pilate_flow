@@ -38,38 +38,28 @@ export function useHydratedLocalPhoto(
   exerciseId: string | null | undefined,
   photoDataUrl: string,
 ): string {
-  const [resolvedUrl, setResolvedUrl] = useState<string>(photoDataUrl);
+  const inlineUrl = photoDataUrl && !photoDataUrl.startsWith(LOCAL_PHOTO_URI_PREFIX)
+    ? photoDataUrl
+    : '';
+  const lookupTarget = inlineUrl ? '' : photoDataUrl || exerciseId || '';
+  const [resolved, setResolved] = useState<{ target: string; url: string } | null>(null);
 
   useEffect(() => {
+    if (!lookupTarget) return;
     let active = true;
-    if (photoDataUrl && !photoDataUrl.startsWith(LOCAL_PHOTO_URI_PREFIX)) {
-      setResolvedUrl(photoDataUrl);
-      return () => {
-        active = false;
-      };
-    }
-
-    const lookupTarget = photoDataUrl || exerciseId || '';
-    if (!lookupTarget) {
-      setResolvedUrl('');
-      return () => {
-        active = false;
-      };
-    }
-
-    void loadLocalPhotoAsset(lookupTarget).then((loaded) => {
-      if (!active) return;
-      if (loaded) {
-        setResolvedUrl(loaded);
-      } else if (!photoDataUrl.startsWith(LOCAL_PHOTO_URI_PREFIX)) {
-        setResolvedUrl(photoDataUrl);
-      }
-    });
-
+    void loadLocalPhotoAsset(lookupTarget).then(
+      (loaded) => {
+        if (active) setResolved({ target: lookupTarget, url: loaded ?? '' });
+      },
+      () => {
+        if (active) setResolved({ target: lookupTarget, url: '' });
+      },
+    );
     return () => {
       active = false;
     };
-  }, [exerciseId, photoDataUrl]);
+  }, [lookupTarget]);
 
-  return resolvedUrl;
+  // Derive immediate URLs; never show a previous exercise's asynchronously loaded image.
+  return inlineUrl || (lookupTarget && resolved?.target === lookupTarget ? resolved.url : '');
 }
