@@ -90,7 +90,10 @@ export function formatSequenceAsMarkdownCueSheet(
 /**
  * Exports a single `SavedSequence` as a portable JSON package (`pilates-flow-sequence-package-v1`).
  */
-export function formatSequenceAsPortableJson(sequence: SavedSequence): string {
+export function formatSequenceAsPortableJson(
+  sequence: SavedSequence,
+  _exercisesById?: ReadonlyMap<string, PilatesExercise>,
+): string {
   const durations = getSequenceDurations(sequence.steps);
   const pkg: PortableSequencePackageV1 = {
     schemaVersion: 'pilates-flow-sequence-package-v1',
@@ -124,4 +127,23 @@ export function parsePortableSequenceJson(rawJson: string): SavedSequence | null
   } catch {
     return null;
   }
+}
+
+/**
+ * Normalizes an imported portable JSON sequence into a fresh `SavedSequence`
+ * with a non-colliding ID and updated timestamp for safe binder insertion.
+ */
+export function importPortableSequenceToSavedSequence(
+  rawJson: string,
+  nowIso: string = new Date().toISOString(),
+): SavedSequence | null {
+  const base = parsePortableSequenceJson(rawJson);
+  if (!base) return null;
+  return {
+    ...base,
+    id: `seq-imported-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    title: base.title.trim() || '가져온 수업 시퀀스',
+    createdAt: base.createdAt || nowIso,
+    updatedAt: nowIso,
+  };
 }

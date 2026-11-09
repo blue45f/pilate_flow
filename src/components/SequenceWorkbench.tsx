@@ -103,9 +103,9 @@ import {
 import { Apparatus3dRigPreviewCard } from './Apparatus3dRigPreviewCard';
 import { CurriculumProgressionPanel } from './workbench/CurriculumProgressionPanel';
 import { DurationCalibrationBanner } from './workbench/DurationCalibrationBanner';
+import { StudioReadinessAuditCard } from './workbench/StudioReadinessAuditCard';
 import { WorkbenchBlankStarters } from './workbench/WorkbenchBlankStarters';
 import { WorkbenchHierarchySummary } from './workbench/WorkbenchHierarchySummary';
-import { auditSequenceStudioReadiness } from '../utils/studioReadinessAudit';
 import '../styles/design-tokens.css';
 import '../styles/workbench-usability.css';
 import '../styles/workbench-vnext.css';
@@ -2019,13 +2019,12 @@ export function SequenceWorkbench({
               <summary>기구 세팅 전환·척추 움직임 밸런스·3D 뷰포트 점검 (선택)</summary>
               {flowTelemetryOpen && (
                 <div style={{ display: 'grid', gap: '12px' }}>
-                  <div
-                    className="pf-card"
-                    data-testid="studio-readiness-audit-badge"
-                    style={{ padding: '10px 14px', fontSize: '12px', color: '#173d34', background: '#f5f8f6' }}
-                  >
-                    <strong>{auditSequenceStudioReadiness(s.activeSteps, exerciseMap).summaryLabelKo}</strong>
-                  </div>
+                  <StudioReadinessAuditCard
+                    steps={s.activeSteps}
+                    exercisesById={exerciseMap}
+                    level={criteria.level}
+                    reformerBrand={s.reformerBrand}
+                  />
                   <SequenceFlowTelemetryStrip
                     steps={s.activeSteps}
                     exercisesById={exerciseMap}
