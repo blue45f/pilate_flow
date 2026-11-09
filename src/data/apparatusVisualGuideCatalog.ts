@@ -878,6 +878,90 @@ export const PROP_QUICK_GUIDES: readonly PropQuickGuide[] = [
   },
 ];
 
+export interface ApparatusIdeaExpandedDraft {
+  readonly lensNumber: 1 | 2 | 3 | 4 | 5;
+  readonly openingScriptKo: string;
+  readonly memberNoticeKo: string;
+  readonly coachingChecklistKo: readonly [string, string, string];
+}
+
+export function buildApparatusIdeaExpandedDraft(
+  guide: ApparatusVisualGuideEntry,
+  idea: ApparatusFreshIdeaLens,
+): ApparatusIdeaExpandedDraft {
+  const lensOrderMap: Record<ApparatusFreshIdeaLens['lensId'], 1 | 2 | 3 | 4 | 5> = {
+    contrarian: 1,
+    story: 2,
+    evidence: 3,
+    playbook: 4,
+    missed: 5,
+  };
+  const lensNumber = lensOrderMap[idea.lensId];
+  const primaryPart = guide.anatomyParts[0];
+  const secondaryPart = guide.anatomyParts[1];
+  const primarySpring = guide.springSpecs[0];
+  const lightSpring = guide.springSpecs[guide.springSpecs.length - 1];
+  const fitTip = guide.bodyFitTips[0];
+
+  switch (idea.lensId) {
+    case 'contrarian':
+      return {
+        lensNumber,
+        openingScriptKo: `“회원님들, 오늘 ${guide.nameKo} 수업에서는 평소 우리가 당연하게 생각하던 습관을 완전히 뒤집어볼 거예요. ‘${idea.headlineKo}’ 오늘 50분 동안은 힘으로 밀어내는 대신, ${lightSpring.colorNameKo} 세팅에서 내 심부 코어가 ${primaryPart.nameKo}와 ${secondaryPart.nameKo}의 움직임을 얼마나 정교하게 통제하는지 직접 느껴보실 겁니다.”`,
+        memberNoticeKo: `[${idea.suggestedTitleKo}] ${idea.pitchKo} 오늘 수업은 (${idea.suggestedSubtitleKo})를 중심으로 관절 부담은 줄이고 심부 안정근 깨우기에 집중합니다.`,
+        coachingChecklistKo: [
+          `초기 세팅: ${primaryPart.nameKo} 위치를 회원 체형(${fitTip.badgeKo})에 맞춰 먼저 정렬`,
+          `저항 역발상: ${lightSpring.colorNameKo}(${lightSpring.tensionLabelKo})에서 반동 없이 3초간 중심 유지 큐잉`,
+          `보상 차단: 어깨 으쓱임이나 요추 과신전이 나타나면 즉시 가동 범위를 70%로 축소`,
+        ],
+      };
+    case 'story':
+      return {
+        lensNumber,
+        openingScriptKo: `“수업 전에 많은 회원님들이 가장 자주 하시는 말씀이 있어요. 바로 ‘${idea.headlineKo}’인데요. 오늘 수업에서는 왜 그동안 목표 부위 대신 목이나 허리가 먼저 피로했는지, ${secondaryPart.nameKo}의 돌아오는 구간(원심성 컨트롤) 하나로 몸의 느낌이 어떻게 달라지는지 첫 10분 만에 체감하실 수 있게 안내해 드릴게요.”`,
+        memberNoticeKo: `[${idea.suggestedTitleKo}] 평소 동작 중 목·어깨·허리 긴장이 고민이셨나요? ${idea.pitchKo} 오늘 수업에서 내 몸이 편안해지는 진짜 정렬 포인트를 찾아보세요.`,
+        coachingChecklistKo: [
+          `공감 체크: 수업 시작 전 ${fitTip.badgeKo} 해당 여부와 오늘 불편한 관절 부위를 10초간 확인`,
+          `감각 전환: 밀어낼 때보다 돌아오는 마지막 2cm 구간에서 3초 카운트 원심성 브레이크 적용`,
+          `피드백 질문: 첫 세트 직후 ‘어깨/허리 대신 아랫배와 목표 근육에 텐션이 들어오나요?’ 확인`,
+        ],
+      };
+    case 'evidence':
+      return {
+        lensNumber,
+        openingScriptKo: `“오늘 ${guide.nameKo} 시퀀스는 단순한 스트레칭이나 근력 운동이 아니라, 생체역학·임상 근거(${idea.sourceLabelKo})를 바탕으로 설계된 ‘${idea.suggestedTitleKo}’ 시간입니다. ${guide.resistancePrincipleKo} 이 원리를 활용해서 관절은 보호하고 심부 근육의 동시 수축을 끌어올려 볼게요.”`,
+        memberNoticeKo: `[${idea.suggestedTitleKo}] ${idea.pitchKo} 검증된 바이오메카닉스 원리(${idea.suggestedSubtitleKo})를 기반으로 안전하고 밀도 높은 50분 수업을 진행합니다.`,
+        coachingChecklistKo: [
+          `정렬 기준점: ${primaryPart.nameKo} 지지 시 고관절-슬관절-제2족지(또는 견갑-흉곽) 중립 축 일치`,
+          `호흡 연동: 들숨에 측면 흉곽을 넓히고 날숨 시작 0.5초 전에 복횡근·골반저근 선행 수축 유도`,
+          `부하 처방: ${primarySpring.colorNameKo}에서 ${lightSpring.colorNameKo} 순으로 신경근 제어 난이도 점진 상향`,
+        ],
+      };
+    case 'playbook':
+      return {
+        lensNumber,
+        openingScriptKo: `“오늘은 동작과 동작 사이에 흐름이 끊기지 않는 3단계 실전 플레이북으로 진행합니다. ‘${idea.headlineKo}’ 공식에 맞춰 웜업부터 피크 코어, 전신 통합까지 물 흐르듯 연결할 테니, 제 호흡 카운트와 ${primaryPart.nameKo}·${secondaryPart.nameKo} 전환 큐잉에만 집중해 따라와 주세요!”`,
+        memberNoticeKo: `[${idea.suggestedTitleKo}] ${idea.pitchKo} 군더더기 없는 3단계 전환 플로우(${idea.suggestedSubtitleKo})로 50분 내내 코어 온도를 유지합니다.`,
+        coachingChecklistKo: [
+          `1단계 도입: ${primarySpring.colorNameKo} 기반 기초 정렬 확인 및 호흡-척추 예열 (${primarySpring.usageKo})`,
+          `2단계 전개: 5초 이내 스프링·지렛대 전환으로 흐름 끊김 없이 코어·사지 협응 본운동 진입`,
+          `3단계 통합: ${lightSpring.colorNameKo}에서 가장 긴 지렛대·밸런스 동작 수행 후 척추 감압 마무리`,
+        ],
+      };
+    case 'missed':
+      return {
+        lensNumber,
+        openingScriptKo: `“필라테스에서 1cm의 차이가 결과를 완전히 바꿉니다. 오늘 수업의 핵심 키워드는 ‘${idea.headlineKo}’입니다. 동작 횟수를 급하게 채우기보다, ${guide.anatomyParts[2].nameKo}와 ${guide.anatomyParts[3].nameKo}의 좌우 대칭과 정점 1초 홀드에 집중해서 평소 놓치던 깊은 속근육까지 정확히 깨워보겠습니다.”`,
+        memberNoticeKo: `[${idea.suggestedTitleKo}] ${idea.pitchKo} 작은 디테일(${idea.suggestedSubtitleKo}) 하나로 운동 밀도가 2배 깊어지는 정교한 세션을 경험해 보세요.`,
+        coachingChecklistKo: [
+          `사전 캘리브레이션: ${guide.anatomyParts[2].nameKo} 및 ${guide.anatomyParts[3].nameKo}의 좌우 길이·높이 대칭 점검`,
+          `정점 아이소메트릭: 가동 범위 끝(End-Range)과 복귀 직전 1cm 지점에서 1초 정지(Hold) 큐잉`,
+          `트랜지션 규율: 동작이 끝난 뒤 털썩 힘을 풀지 않고 다음 동작 시작 자세까지 텐션 유지`,
+        ],
+      };
+  }
+}
+
 export function getApparatusVisualGuide(
   equipmentOrApparatusId: string | undefined | null,
 ): ApparatusVisualGuideEntry {

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   APPARATUS_VISUAL_GUIDE_CATALOG,
   PROP_QUICK_GUIDES,
+  buildApparatusIdeaExpandedDraft,
   getApparatusVisualGuide,
 } from '../data/apparatusVisualGuideCatalog';
 import { EQUIPMENT_OPTIONS } from '../data/equipmentCatalog';
@@ -16,7 +17,7 @@ afterEach(() => {
 });
 
 describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
-  it('provides complete anatomy pins, color-coded spring specs, body-fit tips, and 5 fresh idea lenses for every apparatus', () => {
+  it('provides complete anatomy pins, color-coded spring specs, body-fit tips, and 5 fresh idea lenses with Mode B scripts for every apparatus', () => {
     expect(APPARATUS_VISUAL_GUIDE_CATALOG).toHaveLength(5);
     expect(PROP_QUICK_GUIDES.length).toBeGreaterThanOrEqual(5);
 
@@ -36,10 +37,16 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
         'playbook',
         'missed',
       ]);
+      for (const idea of guide.freshIdeas) {
+        const draft = buildApparatusIdeaExpandedDraft(guide, idea);
+        expect(draft.openingScriptKo.length).toBeGreaterThan(20);
+        expect(draft.memberNoticeKo.length).toBeGreaterThan(20);
+        expect(draft.coachingChecklistKo).toHaveLength(3);
+      }
     }
   });
 
-  it('switches between apparatus anatomy pins, spring matrix, and @generate-fresh-ideas 5-lens tabs', () => {
+  it('switches between apparatus anatomy pins, spring matrix, and @generate-fresh-ideas 5-lens tabs with all 5 expanded Mode B scripts', () => {
     let appliedConcept: { title: string; subtitle: string; family: string } | null = null;
     render(
       <ApparatusVisualGuideRibbon
@@ -63,11 +70,10 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
     // Switch to @generate-fresh-ideas 5-lens tab
     fireEvent.click(within(ribbon).getByTestId('apparatus-guide-ideas-tab'));
     const ideasGrid = within(ribbon).getByTestId('apparatus-fresh-ideas-grid');
-    expect(within(ideasGrid).getByTestId('apparatus-idea-contrarian')).toBeInTheDocument();
-    expect(within(ideasGrid).getByTestId('apparatus-idea-story')).toBeInTheDocument();
-    expect(within(ideasGrid).getByTestId('apparatus-idea-evidence')).toBeInTheDocument();
-    expect(within(ideasGrid).getByTestId('apparatus-idea-playbook')).toBeInTheDocument();
-    expect(within(ideasGrid).getByTestId('apparatus-idea-missed')).toBeInTheDocument();
+    for (const lensId of ['contrarian', 'story', 'evidence', 'playbook', 'missed']) {
+      expect(within(ideasGrid).getByTestId(`apparatus-idea-${lensId}`)).toBeInTheDocument();
+      expect(within(ideasGrid).getByTestId(`apparatus-idea-script-${lensId}`)).toBeInTheDocument();
+    }
 
     fireEvent.click(within(ideasGrid).getByTestId('apply-apparatus-idea-contrarian'));
     expect(appliedConcept).toEqual({
@@ -75,6 +81,10 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
       subtitle: '1 Blue·1 Yellow 저장력에서 흔들림 없이 캐리지 멈추기',
       family: 'reformer',
     });
+
+    // Can toggle scripts collapsed/expanded
+    fireEvent.click(within(ribbon).getByTestId('toggle-all-idea-scripts'));
+    expect(within(ideasGrid).queryByTestId('apparatus-idea-script-contrarian')).toBeNull();
   });
 
   it('renders the apparatus visual guide ribbon inside ExerciseAtlasView and SequenceWorkbench', () => {

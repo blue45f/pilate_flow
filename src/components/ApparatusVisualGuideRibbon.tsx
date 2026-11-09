@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, ExternalLink, Sparkles, Wrench } from 'lucide-r
 import {
   APPARATUS_VISUAL_GUIDE_CATALOG,
   PROP_QUICK_GUIDES,
+  buildApparatusIdeaExpandedDraft,
   getApparatusVisualGuide,
   type ApparatusVisualGuideEntry,
 } from '../data/apparatusVisualGuideCatalog';
@@ -408,6 +409,7 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
   const [expanded, setExpanded] = useState<boolean>(mode === 'atlas');
   const [activeTab, setActiveTab] = useState<'anatomy' | 'springs' | 'ideas'>('anatomy');
   const [activePin, setActivePin] = useState<1 | 2 | 3 | 4>(1);
+  const [showAllIdeaScripts, setShowAllIdeaScripts] = useState<boolean>(true);
 
   const effectiveGuide =
     activeApparatusId && activeApparatusId !== 'all' && activeApparatusId !== 'mixed'
@@ -643,61 +645,110 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
           )}
 
           {activeTab === 'ideas' && (
-            <div
-              className="pf-apparatus-ideas-grid"
-              data-testid="apparatus-fresh-ideas-grid"
-              aria-label={`${effectiveGuide.nameKo} 5대 크리에이티브 수업 아이디어`}
-            >
-              {effectiveGuide.freshIdeas.map((idea) => (
-                <article
-                  key={idea.lensId}
-                  className="pf-apparatus-idea-card"
-                  data-testid={`apparatus-idea-${idea.lensId}`}
+            <>
+              <div className="pf-apparatus-ideas-toolbar">
+                <p className="pf-apparatus-blueprint-caption" style={{ margin: 0 }}>
+                  <strong>5대 리믹스 전체 실전 대본 (Mode B 1~5 통합 확장):</strong>{' '}
+                  역발상·공감스토리·임상근거·플레이북·디테일 5가지 관점의 수업 오프닝 멘트, 회원
+                  공지문, 실전 큐잉 3원칙을 바로 활용하세요.
+                </p>
+                <button
+                  type="button"
+                  className="pf-apparatus-idea-apply-btn"
+                  data-testid="toggle-all-idea-scripts"
+                  aria-pressed={showAllIdeaScripts}
+                  onClick={() => setShowAllIdeaScripts((prev) => !prev)}
                 >
-                  <div className="pf-apparatus-idea-card__top">
-                    <div className="pf-apparatus-idea-card__badge-row">
-                      <span className="pf-apparatus-idea-badge">{idea.badgeKo}</span>
-                      <a
-                        href={idea.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="pf-apparatus-idea-source"
-                      >
-                        {idea.sourceLabelKo}{' '}
-                        <ExternalLink
-                          size={11}
-                          aria-hidden="true"
-                          style={{ verticalAlign: 'middle' }}
-                        />
-                      </a>
-                    </div>
-                    <h3 className="pf-apparatus-idea-headline">{idea.headlineKo}</h3>
-                    <p className="pf-apparatus-idea-pitch">{idea.pitchKo}</p>
-                  </div>
-                  <div className="pf-apparatus-idea-card__footer">
-                    <span className="pf-apparatus-idea-theme">
-                      추천 테마: {idea.suggestedTitleKo}
-                    </span>
-                    {onApplyClassConcept && (
-                      <button
-                        type="button"
-                        className="pf-apparatus-idea-apply-btn"
-                        data-testid={`apply-apparatus-idea-${idea.lensId}`}
-                        onClick={() =>
-                          onApplyClassConcept(
-                            idea.suggestedTitleKo,
-                            idea.suggestedSubtitleKo,
-                            effectiveGuide.family,
-                          )
-                        }
-                      >
-                        이 테마로 수업 제목 적용
-                      </button>
-                    )}
-                  </div>
-                </article>
-              ))}
-            </div>
+                  {showAllIdeaScripts
+                    ? '1~5번 상세 대본(오프닝·안내문·큐잉) 접기'
+                    : '1~5번 전체 상세 대본 모두 펼치기'}
+                </button>
+              </div>
+              <div
+                className="pf-apparatus-ideas-grid"
+                data-testid="apparatus-fresh-ideas-grid"
+                aria-label={`${effectiveGuide.nameKo} 5대 크리에이티브 수업 아이디어`}
+              >
+                {effectiveGuide.freshIdeas.map((idea) => {
+                  const expandedDraft = buildApparatusIdeaExpandedDraft(effectiveGuide, idea);
+                  return (
+                    <article
+                      key={idea.lensId}
+                      className="pf-apparatus-idea-card"
+                      data-testid={`apparatus-idea-${idea.lensId}`}
+                    >
+                      <div className="pf-apparatus-idea-card__top">
+                        <div className="pf-apparatus-idea-card__badge-row">
+                          <span className="pf-apparatus-idea-badge">
+                            {expandedDraft.lensNumber}. {idea.badgeKo}
+                          </span>
+                          <a
+                            href={idea.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="pf-apparatus-idea-source"
+                          >
+                            {idea.sourceLabelKo}{' '}
+                            <ExternalLink
+                              size={11}
+                              aria-hidden="true"
+                              style={{ verticalAlign: 'middle' }}
+                            />
+                          </a>
+                        </div>
+                        <h3 className="pf-apparatus-idea-headline">{idea.headlineKo}</h3>
+                        <p className="pf-apparatus-idea-pitch">{idea.pitchKo}</p>
+
+                        {showAllIdeaScripts && (
+                          <div
+                            className="pf-apparatus-idea-script-box"
+                            data-testid={`apparatus-idea-script-${idea.lensId}`}
+                          >
+                            <div className="pf-apparatus-idea-script-item">
+                              <strong>🎙️ 수업 오프닝 30초 멘트</strong>
+                              <p>{expandedDraft.openingScriptKo}</p>
+                            </div>
+                            <div className="pf-apparatus-idea-script-item">
+                              <strong>📩 회원 공지 · 클래스 안내문</strong>
+                              <p>{expandedDraft.memberNoticeKo}</p>
+                            </div>
+                            <div className="pf-apparatus-idea-script-item">
+                              <strong>✅ 실전 티칭 큐잉 3원칙</strong>
+                              <ul className="pf-apparatus-idea-checklist">
+                                {expandedDraft.coachingChecklistKo.map((step) => (
+                                  <li key={step}>{step}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="pf-apparatus-idea-card__footer">
+                        <span className="pf-apparatus-idea-theme">
+                          추천 테마: {idea.suggestedTitleKo}
+                        </span>
+                        {onApplyClassConcept && (
+                          <button
+                            type="button"
+                            className="pf-apparatus-idea-apply-btn"
+                            data-testid={`apply-apparatus-idea-${idea.lensId}`}
+                            onClick={() =>
+                              onApplyClassConcept(
+                                idea.suggestedTitleKo,
+                                idea.suggestedSubtitleKo,
+                                effectiveGuide.family,
+                              )
+                            }
+                          >
+                            이 테마로 수업 제목 적용
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       )}

@@ -528,3 +528,46 @@
   background: #1f5c4d;
   color: #ffffff;
 }
+
+.pf-apparatus-ideas-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pf-apparatus-idea-script-box {
+  margin-top: 6px;
+  padding: 9px 10px;
+  background: #f8f5ee;
+  border: 1px solid #e1d8c8;
+  border-radius: 10px;
+  display: grid;
+  gap: 7px;
+}
+
+.pf-apparatus-idea-script-item {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #2f433a;
+  word-break: keep-all;
+}
+
+.pf-apparatus-idea-script-item strong {
+  display: block;
+  font-size: 11px;
+  color: #1f5c4d;
+  margin-bottom: 2px;
+}
+
+.pf-apparatus-idea-script-item p {
+  margin: 0;
+}
+
+.pf-apparatus-idea-checklist {
+  margin: 2px 0 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 2px;
+}
