@@ -103,6 +103,7 @@ import {
 import { Apparatus3dRigPreviewCard } from './Apparatus3dRigPreviewCard';
 import { CurriculumProgressionPanel } from './workbench/CurriculumProgressionPanel';
 import { DurationCalibrationBanner } from './workbench/DurationCalibrationBanner';
+import { StudioFlowOptimizerPanel } from './workbench/StudioFlowOptimizerPanel';
 import { StudioReadinessAuditCard } from './workbench/StudioReadinessAuditCard';
 import { WorkbenchBlankStarters } from './workbench/WorkbenchBlankStarters';
 import { WorkbenchHierarchySummary } from './workbench/WorkbenchHierarchySummary';
@@ -2024,6 +2025,20 @@ export function SequenceWorkbench({
                     exercisesById={exerciseMap}
                     level={criteria.level}
                     reformerBrand={s.reformerBrand}
+                  />
+                  <StudioFlowOptimizerPanel
+                    sequenceTitle={s.activeTitle}
+                    steps={s.activeSteps}
+                    exercisesById={exerciseMap}
+                    criteria={criteria}
+                    reformerBrand={s.reformerBrand}
+                    onApplySteps={(nextSteps, noticeMessage) => {
+                      usePilatesStore.setState({
+                        activeSteps: nextSteps,
+                        saveFeedback: noticeMessage,
+                      });
+                      setNotice(noticeMessage);
+                    }}
                   />
                   <SequenceFlowTelemetryStrip
                     steps={s.activeSteps}

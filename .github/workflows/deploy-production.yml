@@ -43,8 +43,8 @@ jobs:
       - name: Run secrets & motion-study guard
         run: pnpm check:secrets && pnpm check:motion-study
 
-      - name: Run Wave 3-5 advancement verification tests
-        run: pnpm vitest run src/test/wave3AdvancementVerification.test.ts src/test/wave4FollowthroughVerification.test.ts src/test/wave5AdvancementVerification.test.ts
+      - name: Run Wave 3-6 advancement verification tests
+        run: pnpm vitest run src/test/wave3AdvancementVerification.test.ts src/test/wave4FollowthroughVerification.test.ts src/test/wave5AdvancementVerification.test.ts src/test/wave6AdvancementVerification.test.ts src/utils/wave3DeploymentRegression.test.ts src/utils/wave5DeploymentRegression.test.ts
 
       - name: Build production PWA bundle
         run: pnpm build
