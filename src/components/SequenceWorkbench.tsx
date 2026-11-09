@@ -2042,7 +2042,7 @@ export function SequenceWorkbench({
                   <DurationCalibrationBanner
                     historyLogs={s.historyLogs}
                     activeSteps={s.activeSteps}
-                    groupId={criteria.targetGroupId}
+                    groupId={criteria.targetGroupId ?? 'all'}
                     onApplyCalibratedSteps={(nextSteps, noticeMessage) => {
                       usePilatesStore.setState({
                         activeSteps: nextSteps,

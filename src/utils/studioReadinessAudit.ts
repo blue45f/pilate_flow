@@ -59,7 +59,7 @@ export function auditSequenceStudioReadiness(
     prevApparatus = ex.apparatus;
 
     for (const plane of ex.spinalPlanes ?? []) {
-      coveredSet.add(plane);
+      if (plane !== 'neutral') coveredSet.add(plane);
     }
 
     const timing = getStepTiming(step, ex);

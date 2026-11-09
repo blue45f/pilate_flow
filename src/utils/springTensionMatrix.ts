@@ -58,30 +58,30 @@ export function convertSpringTensionAcrossBrands(rawSprings?: string): BrandSpri
   const equivalentsByBrand: Record<ReformerBrand, string> =
     tier === 'light'
       ? {
-          balanced: '파랑 1 (또는 노랑 2)',
+          'balanced-body': '파랑 1 (또는 노랑 2)',
           stott: '파랑 1 (0.5 Red)',
           classical: '약 스프링 1 (1 Light)',
-          custom: raw || '경량 스프링 1',
+          intopilates: '파랑 1 (또는 노랑 2)',
         }
       : tier === 'medium'
         ? {
-            balanced: '빨강 1 · 파랑 1',
+            'balanced-body': '빨강 1 · 파랑 1',
             stott: '빨강 1 · 파랑 1 (1.5 Red)',
             classical: '표준 스프링 2 (2 Springs)',
-            custom: raw || '표준 스프링 1.5',
+            intopilates: '빨강 1 · 파랑 1',
           }
         : tier === 'heavy'
           ? {
-              balanced: '빨강 2 · 파랑 1',
+              'balanced-body': '빨강 2 · 파랑 1',
               stott: '빨강 2 · 파랑 1 (2.5 Red)',
               classical: '표준 스프링 3 (3 Springs)',
-              custom: raw || '고중량 스프링 2.5',
+              intopilates: '빨강 2 · 파랑 1',
             }
           : {
-              balanced: '빨강 3 · 파랑 1',
+              'balanced-body': '빨강 3 · 파랑 1',
               stott: '빨강 3 · 파랑 1 (3.5 Red)',
               classical: '전체 스프링 4 (4 Springs)',
-              custom: raw || '최대 스프링 3.5',
+              intopilates: '빨강 3 · 파랑 1',
             };
 
   return {
