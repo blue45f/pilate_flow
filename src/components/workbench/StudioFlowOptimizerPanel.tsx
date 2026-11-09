@@ -5,7 +5,9 @@ import type {
   ReformerBrand,
   SequenceStep,
 } from '../../types/pilates';
+import { verifySequenceAiSafetyAndFidelity } from '../../utils/aiSequenceSafetyVerifier';
 import { simulateClassEnergyCurve } from '../../utils/classPacingSimulator';
+import { generateFreshClassAngles } from '../../utils/freshClassAnglesGenerator';
 import { generateInstructorVoiceScript } from '../../utils/instructorVoiceScriptGenerator';
 import {
   applyRecommendedLayersToSteps,
@@ -34,6 +36,7 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
   onApplySteps,
 }) => {
   const [showScript, setShowScript] = useState(false);
+  const [showFreshAngles, setShowFreshAngles] = useState(false);
 
   const transitionAnalysis = useMemo(
     () => analyzeSequenceTransitionCost(steps, exercisesById),
@@ -46,6 +49,14 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
   const pacingCurve = useMemo(
     () => simulateClassEnergyCurve(steps, exercisesById),
     [steps, exercisesById],
+  );
+  const safetyReport = useMemo(
+    () => verifySequenceAiSafetyAndFidelity(steps, exercisesById),
+    [steps, exercisesById],
+  );
+  const freshAngles = useMemo(
+    () => generateFreshClassAngles(steps, exercisesById, criteria),
+    [steps, exercisesById, criteria],
   );
   const voiceScript = useMemo(
     () =>
@@ -60,7 +71,7 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
     <section
       className="pf-card"
       data-testid="studio-flow-optimizer-panel"
-      aria-label="동선 최적화·맞춤 레이어·에너지 곡선·티칭 대본 도구"
+      aria-label="동선 최적화·맞춤 레이어·에너지 곡선·Verify AI·5대 수업 각도 도구"
       style={{
         padding: '12px 16px',
         display: 'grid',
@@ -80,13 +91,13 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
       >
         <div style={{ display: 'grid', gap: '3px' }}>
           <strong style={{ fontSize: '13px', color: '#173d34' }}>
-            스튜디오 동선 최적화 · 관찰 맞춤 레이어 · RPE 에너지 곡선 · 타임코드 티칭 대본
+            스튜디오 동선 최적화 · 관찰 맞춤 레이어 · RPE 에너지 곡선 · Verify AI · 5대 테마 각도
           </strong>
           <span className="muted" style={{ fontSize: '12px' }}>
             {transitionAnalysis.summaryKo} · {layerAdvice.summaryKo}
           </span>
           <span style={{ fontSize: '11.5px', color: '#2b5447' }}>
-            {pacingCurve.pacingVerdictKo}
+            {pacingCurve.pacingVerdictKo} · <strong>{safetyReport.summaryBadgeKo}</strong>
           </span>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -126,6 +137,15 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
             type="button"
             className="btn-secondary"
             style={{ minHeight: '32px', fontSize: '12px' }}
+            aria-expanded={showFreshAngles}
+            onClick={() => setShowFreshAngles((prev) => !prev)}
+          >
+            {showFreshAngles ? '5대 테마 각도 접기' : '5대 수업 컨셉 리믹스 (5 Angles)'}
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ minHeight: '32px', fontSize: '12px' }}
             aria-expanded={showScript}
             onClick={() => setShowScript((prev) => !prev)}
           >
@@ -133,6 +153,38 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
           </button>
         </div>
       </div>
+      {showFreshAngles && (
+        <div
+          data-testid="fresh-class-angles-list"
+          style={{
+            display: 'grid',
+            gap: '6px',
+            padding: '10px 12px',
+            borderRadius: '8px',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+          }}
+        >
+          {freshAngles.map((angle) => (
+            <div
+              key={angle.id}
+              style={{
+                display: 'grid',
+                gap: '2px',
+                paddingBottom: '6px',
+                borderBottom: '1px solid #f1f5f9',
+                fontSize: '12px',
+              }}
+            >
+              <strong>
+                [{angle.badgeKo}] {angle.angleTitleKo}
+              </strong>
+              <span className="muted">부제 제안: {angle.suggestedSubtitleKo}</span>
+              <span style={{ color: '#173d34' }}>큐 훅: {angle.teachingHookKo}</span>
+            </div>
+          ))}
+        </div>
+      )}
       {showScript && (
         <pre
           data-testid="instructor-voice-script-preview"

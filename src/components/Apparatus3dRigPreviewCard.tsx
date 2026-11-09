@@ -7,6 +7,7 @@ import {
   type RigMotionPhase,
   buildApparatus3dRigScene,
 } from '../utils/apparatus3dRigProjection';
+import { generateBlenderApparatusSceneScript } from '../utils/blenderSceneScriptExporter';
 
 export interface Apparatus3dRigPreviewCardProps {
   readonly apparatus: ApparatusType;
@@ -38,6 +39,7 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
   const [phase, setPhase] = useState<RigMotionPhase>('setup');
   const [carriageOffset, setCarriageOffset] = useState<number>(PHASE_CARRIAGE_RATIOS.setup);
   const [autoPlay, setAutoPlay] = useState<boolean>(false);
+  const [showBlenderScript, setShowBlenderScript] = useState<boolean>(false);
 
   useEffect(() => {
     if (!autoPlay) return;
@@ -63,6 +65,18 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
         springsLabel,
       }),
     [apparatus, bodyPosition, cameraPreset, phase, carriageOffset, springsLabel],
+  );
+
+  const blenderScript = useMemo(
+    () =>
+      generateBlenderApparatusSceneScript({
+        exerciseTitleKo: exerciseTitleKo ?? 'Pilates_Movement',
+        apparatus,
+        bodyPosition,
+        springsLabel,
+        activePhase: phase,
+      }),
+    [exerciseTitleKo, apparatus, bodyPosition, springsLabel, phase],
   );
 
   const framePolygon = scene.frameVertices2D.map((pt) => `${pt.u},${pt.v}`).join(' ');
@@ -163,6 +177,15 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
         >
           {autoPlay ? '3페이즈 자동 재생 중지' : '3페이즈 연속 재생'}
         </button>
+        <button
+          type="button"
+          className="btn-secondary"
+          aria-expanded={showBlenderScript}
+          onClick={() => setShowBlenderScript((v) => !v)}
+          style={{ minHeight: '28px', padding: '2px 10px', fontSize: '12px' }}
+        >
+          {showBlenderScript ? 'Blender 스크립트 닫기' : 'Blender 3D 스크립트(.py)'}
+        </button>
       </div>
 
       <svg
@@ -250,6 +273,26 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
           CoM ({POSITION_LABELS[bodyPosition].ko})
         </text>
       </svg>
+
+      {showBlenderScript && (
+        <pre
+          data-testid="blender-scene-script-preview"
+          style={{
+            margin: 0,
+            padding: '10px 12px',
+            borderRadius: '8px',
+            background: '#1e293b',
+            color: '#f8fafc',
+            fontSize: '11px',
+            lineHeight: 1.5,
+            maxHeight: '180px',
+            overflowY: 'auto',
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {blenderScript}
+        </pre>
+      )}
 
       <label
         style={{
