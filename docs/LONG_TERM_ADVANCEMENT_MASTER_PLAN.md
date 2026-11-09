@@ -1,6 +1,6 @@
-# Pilates Flow Atelier — 36시간 장기 고도화 마스터 플랜 (Epics 1~15 · Full Architecture & Parallel Deployment Roadmap)
+# Pilates Flow Atelier — 36시간 장기 고도화 마스터 플랜 (Epics 1~15 · `main` 단일 브랜치 통합 아키텍처)
 
-본 문서는 `pilates-flow` (`Flow Atelier`)의 전체 아키텍처(`src/` 327K+ LOC, `backend/`, `src/models/`, `src/features/`, `src/test/`)를 대상으로 수립·실행한 **36시간(15대 Epic · Wave 1~4) 규모의 장기 기술 고도화 설계 및 병렬 운영 배포 마스터 플랜**입니다.
+본 문서는 `pilates-flow` (`Flow Atelier`)의 전체 아키텍처(`src/` 327K+ LOC, `backend/`, `src/models/`, `src/features/`, `src/test/`)를 대상으로 수립·실행한 **36시간(15대 Epic · Wave 1~4) 규모의 장기 기술 고도화 설계 및 `main` 단일 브랜치 운영 배포 마스터 플랜**입니다.
 
 ## 1. 36시간 장기 고도화 로드맵 총괄표 (15 Epics · 36 Hours)
 
@@ -15,12 +15,12 @@
 | **Epic 7**<br>(14.5h ~ 17.0h) | **멀티탭 실시간 스튜디오 동기화 훅 및 IndexedDB 이미지 하이드레이션** | `src/hooks/useStudioRealtimeSync.ts`, `src/components/MovementIdeaSheet.tsx` | 다른 탭에서 저장된 창작 초안·재사용 블록 실시간 반영 및 IndexedDB 사진 자동 복원 훅 연동 (`8cc9be1`) |
 | **Epic 8**<br>(17.0h ~ 19.5h) | **수업 인사이트(`ClassInsightsDialog`) 척추 4대 움직임 평면 및 기구 분포 분석** | `src/utils/classInsights.ts`, `src/components/ClassInsightsDialog.tsx` | 굴곡·신전·측굴·회전(`spinalPlanes`) 및 기구별 시간 비중 집계·시각화 (`8cc9be1`) |
 | **Epic 9**<br>(19.5h ~ 22.0h) | **핸즈프리 라이브 스테이지 v2 구간 점프 바 및 음성 구간 이동** | `src/components/LiveStageView.tsx`, `src/styles/live-stage-design.css` | 준비·본운동·마무리 구간 원클릭 점프 바(`.teaching-phase-jump-bar`) 및 음성 구간 이동 명령 확장 (`8cc9be1`) |
-| **Epic 10**<br>(22.0h ~ 24.0h) | **3D 기구 투영, 4주 커리큘럼 진행률, 휴대용 마크다운 내보내기 및 CI/CD** | `src/utils/apparatus3dRigProjection.ts`, `src/utils/curriculumProgressionEngine.ts`, `.github/workflows/deploy-production.yml` | 아이소메트릭 3D 기구 뷰어, 4주 커리큘럼 추천, 마크다운 큐시트 내보내기, 병렬 배포 워크플로 완료 (`8cc9be1`) |
-| **Epic 11**<br>(24.0h ~ 26.5h) | **계획 대 실제 시간(`Planned vs. Actual`) 자동 보정 피드백 루프** | `src/utils/durationCalibrationEngine.ts`, `src/components/workbench/DurationCalibrationBanner.tsx`, `src/components/SequenceWorkbench.tsx` | 반별 최근 수업 실제 소요 시간 편차(초과·단축)를 분석해 현재 시퀀스 동작 시간에 원클릭 보정 적용 |
-| **Epic 12**<br>(26.5h ~ 29.5h) | **3D 기구 뷰포트 5관절 골격(`5-Joint Kinematic Chain`) 및 3페이즈 키프레임 애니메이터** | `src/utils/apparatus3dRigProjection.ts`, `src/components/Apparatus3dRigPreviewCard.tsx` | 시작(`Setup`)·정점(`Peak`)·복귀(`Return`) 3페이즈 연속 재생 및 머리·어깨·골반·무릎·발목 5관절 골격 체인 투영 |
-| **Epic 13**<br>(29.5h ~ 32.0h) | **휴대용 JSON 시퀀스 패키지(`pilates-flow-portable-sequence-v1`) 내보내기 및 파서** | `src/utils/portableSequenceExport.ts`, `src/components/ClassBinderView.tsx` | 기기 간 수업안 교환을 위한 스키마 검증형 JSON 패키지 내보내기·역직렬화 파서(`parsePortableSequenceJson`) |
-| **Epic 14**<br>(32.0h ~ 34.5h) | **스튜디오 운영 준비도 4축 감사 엔진(`Studio Operational Readiness Auditor`)** | `src/utils/studioReadinessAudit.ts`, `src/components/SequenceWorkbench.tsx` | 기구 전환 횟수·척추 4평면 다양성·좌우 대칭 시간 균형·스프링 세팅 누락 여부를 100점 만점으로 종합 진단 |
-| **Epic 15**<br>(34.5h ~ 36.0h) | **Wave 4 후속 고도화 통합 검증 스위트 및 병렬 운영 재배포** | `src/test/wave4FollowthroughVerification.test.ts` | Epics 11~14 핵심 불변식 자동 검증 테스트 구축 및 `origin/main` + `origin/gh-pages` 동기화 배포 |
+| **Epic 10**<br>(22.0h ~ 24.0h) | **3D 기구 투영, 4주 커리큘럼 진행률, 휴대용 마크다운 내보내기 및 `main` 단일 브랜치 CI/CD** | `src/utils/apparatus3dRigProjection.ts`, `src/utils/curriculumProgressionEngine.ts`, `.github/workflows/deploy-production.yml` | 아이소메트릭 3D 기구 뷰어, 4주 커리큘럼 추천, 마크다운 큐시트 내보내기, `main` 단일 브랜치 기반 GitHub Actions 아티팩트 배포 완료 (`8cc9be1`) |
+| **Epic 11**<br>(24.0h ~ 26.5h) | **계획 대 실제 시간(`Planned vs. Actual`) 자동 보정 피드백 루프** | `src/utils/durationCalibrationEngine.ts`, `src/components/workbench/DurationCalibrationBanner.tsx`, `src/components/SequenceWorkbench.tsx` | 반별 최근 수업 실제 소요 시간 편차(초과·단축)를 분석해 현재 시퀀스 동작 시간에 원클릭 보정 적용 (`c4fcc96`) |
+| **Epic 12**<br>(26.5h ~ 29.5h) | **3D 기구 뷰포트 5관절 골격(`5-Joint Kinematic Chain`) 및 3페이즈 키프레임 애니메이터** | `src/utils/apparatus3dRigProjection.ts`, `src/components/Apparatus3dRigPreviewCard.tsx` | 시작(`Setup`)·정점(`Peak`)·복귀(`Return`) 3페이즈 연속 재생 및 머리·어깨·골반·무릎·발목 5관절 골격 체인 투영 (`c4fcc96`) |
+| **Epic 13**<br>(29.5h ~ 32.0h) | **휴대용 JSON 시퀀스 패키지(`pilates-flow-portable-sequence-v1`) 내보내기 및 파서** | `src/utils/portableSequenceExport.ts`, `src/components/ClassBinderView.tsx` | 기기 간 수업안 교환을 위한 스키마 검증형 JSON 패키지 내보내기·역직렬화 파서(`parsePortableSequenceJson`) (`c4fcc96`) |
+| **Epic 14**<br>(32.0h ~ 34.5h) | **스튜디오 운영 준비도 4축 감사 엔진(`Studio Operational Readiness Auditor`)** | `src/utils/studioReadinessAudit.ts`, `src/components/SequenceWorkbench.tsx` | 기구 전환 횟수·척추 4평면 다양성·좌우 대칭 시간 균형·스프링 세팅 누락 여부를 100점 만점으로 종합 진단 (`c4fcc96`) |
+| **Epic 15**<br>(34.5h ~ 36.0h) | **Wave 4 통합 검증 스위트 및 `main` 단일 브랜치 완전 일원화** | `src/test/wave4FollowthroughVerification.test.ts`, `.github/workflows/deploy-production.yml` | Epics 11~14 핵심 불변식 자동 검증 테스트 구축 및 별도 `gh-pages` 브랜치 없이 `origin/main` 단일 브랜치로 코드·배포 완전 통합 |
 
 ## 2. Wave 3 (Epics 6 ~ 10) 상세 설계 요약
 
@@ -28,7 +28,7 @@
 - **Epic 7**: `src/hooks/useStudioRealtimeSync.ts`에서 `subscribeStudioSyncEvents`를 구독해 멀티탭 변경 사항을 실시간 반영하고 `useHydratedLocalPhoto`로 IndexedDB 이미지를 지연 복원.
 - **Epic 8**: `src/utils/classInsights.ts`의 `buildPlanInsights`에 `spinalPlanes`(`flexion`, `extension`, `lateral`, `rotation`)와 `apparatusBreakdown`을 추가.
 - **Epic 9**: `src/components/LiveStageView.tsx`에 `.teaching-phase-jump-bar`와 `"준비 구간"`, `"본운동"`, `"마무리"` 음성 이동 명령을 추가.
-- **Epic 10**: `src/utils/apparatus3dRigProjection.ts`, `src/utils/curriculumProgressionEngine.ts`, `src/utils/portableSequenceExport.ts`, `.github/workflows/deploy-production.yml` 구축.
+- **Epic 10**: `src/utils/apparatus3dRigProjection.ts`, `src/utils/curriculumProgressionEngine.ts`, `src/utils/portableSequenceExport.ts`, `.github/workflows/deploy-production.yml` 구축 (별도 `gh-pages` 브랜치를 사용하지 않고 `main` 브랜치에서 `actions/upload-pages-artifact@v3` + `actions/deploy-pages@v4`로 직접 배포).
 
 ## 3. Wave 4 (Epics 11 ~ 15) 후속 고도화 상세 설계
 
@@ -46,5 +46,5 @@
 ### Epic 14: 스튜디오 운영 준비도 4축 감사 엔진
 - `src/utils/studioReadinessAudit.ts`의 `auditSequenceStudioReadiness`가 기구 전환 횟수, 척추 4평면 커버리지, 좌우 수행 시간 대칭성(30초 이내), 스프링 세팅 기재 여부를 종합 평가해 0~100점 점수와 요약 배지를 제공합니다.
 
-### Epic 15: Wave 4 통합 검증 스위트 (`wave4FollowthroughVerification.test.ts`)
-- `src/test/wave4FollowthroughVerification.test.ts`에서 시간 보정 엔진, 3D 5관절 골격 및 3페이즈 투영, 휴대용 JSON 왕복 파서, 스튜디오 운영 준비도 4축 감사를 자동 검증합니다.
+### Epic 15: Wave 4 통합 검증 스위트 및 `main` 단일 브랜치 일원화
+- `src/test/wave4FollowthroughVerification.test.ts`에서 시간 보정 엔진, 3D 5관절 골격 및 3페이즈 투영, 휴대용 JSON 왕복 파서, 스튜디오 운영 준비도 4축 감사를 자동 검증하며, 로컬 및 원격(`origin`)의 모든 코드와 배포 파이프라인을 `main` 단일 브랜치로 일원화했습니다.
