@@ -4,10 +4,12 @@ import {
   APPARATUS_VISUAL_GUIDE_CATALOG,
   PROP_QUICK_GUIDES,
   SPECIAL_POPULATION_CARE_PRESETS,
+  TARGETED_PAIN_CARE_BLOCKS,
   buildApparatusIdeaExpandedDraft,
   getApparatusVisualGuide,
   type ApparatusVisualGuideEntry,
   type SpecialPopulationCarePreset,
+  type TargetedPainCareBlock,
 } from '../data/apparatusVisualGuideCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { SequenceStep } from '../types/pilates';
@@ -437,7 +439,7 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
     const currentState = usePilatesStore.getState();
     const builtSteps: SequenceStep[] = preset.steps.map((item, idx) => ({
       kind: 'exercise',
-      stepId: `special-${preset.id}-${idx + 1}`,
+      stepId: `special-${preset.id}-${idx + 1}-${Date.now()}`,
       order: idx + 1,
       blockCategory: item.blockCategory,
       classSection: item.classSection,
@@ -469,6 +471,53 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
         `‘${preset.titleKo}’ (${preset.steps.length}개 맞춤 스텝 · 50분) 시퀀스를 현재 수업안에 적용했습니다.`,
       );
       onApplyClassConcept?.(preset.titleKo, preset.subtitleKo, preset.primaryApparatus);
+    } else {
+      setAppliedSpecialStatus(result.message);
+    }
+  };
+
+  const handleApplyTargetedPainBlock = (
+    block: TargetedPainCareBlock,
+    applyMode: 'append' | 'replace',
+  ) => {
+    const currentState = usePilatesStore.getState();
+    const effectiveMode =
+      applyMode === 'append' && currentState.activeSteps.length === 0 ? 'replace' : applyMode;
+    const builtSteps: SequenceStep[] = block.steps.map((item, idx) => ({
+      kind: 'exercise',
+      stepId: `painblock-${block.id}-${idx + 1}-${Date.now()}`,
+      order: idx + 1,
+      blockCategory: item.blockCategory,
+      classSection: item.classSection,
+      exerciseId: item.exerciseId,
+      durationMin: item.durationMin,
+      explanationSec: 20,
+      transitionSec: idx === 0 ? 0 : 15,
+      repetitions: 8,
+      sets: 2,
+      sideMode: item.sideMode ?? 'together',
+      selectedLayer: 'standard',
+      customSpringOverride: item.springsNoteKo,
+      instructorNote: `${item.labelKo} · ${item.cueNoteKo}`,
+    }));
+
+    const result = currentState.applyPresetDraft(
+      {
+        steps: builtSteps,
+        title: block.titleKo,
+        subtitle: block.subtitleKo,
+        targetMinutes: block.durationMinutes,
+      },
+      effectiveMode,
+      currentState,
+    );
+
+    if (result.success) {
+      setAppliedSpecialStatus(
+        effectiveMode === 'append'
+          ? `‘${block.titleKo}’ (15분 · 3개 스텝) 블록을 현재 수업 시퀀스 뒤에 이어붙였습니다.`
+          : `‘${block.titleKo}’ (15분 · 3개 스텝) 집중 케어 블록으로 새 수업안을 열었습니다.`,
+      );
     } else {
       setAppliedSpecialStatus(result.message);
     }
@@ -610,7 +659,7 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
               data-testid="apparatus-guide-special-tab"
               onClick={() => setActiveTab('special')}
             >
-              <HeartHandshake size={14} aria-hidden="true" /> 4. 회원 케이스별 맞춤 프리셋 (산전산후·측만·시니어)
+              <HeartHandshake size={14} aria-hidden="true" /> 4. 회원 케이스·통증 부위별 맞춤 프리셋
             </button>
           </div>
 
@@ -822,6 +871,10 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
                   {appliedSpecialStatus}
                 </p>
               )}
+              <p className="pf-apparatus-blueprint-caption" style={{ margin: 0 }}>
+                <strong>트랙 A · 특수 회원 50분 풀 시퀀스 프리셋 3종 (산전·산후 · 척추측만 · 시니어):</strong>{' '}
+                기구 세팅 3원칙, 금기 수칙(Red Flags), 6스텝 50분 시퀀스를 원클릭으로 불러옵니다.
+              </p>
               <div
                 className="pf-apparatus-ideas-grid"
                 data-testid="special-population-presets-grid"
@@ -897,6 +950,96 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
                       >
                         50분 전용 시퀀스 수업안에 바로 담기
                       </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <p className="pf-apparatus-blueprint-caption" style={{ margin: 0 }}>
+                <strong>트랙 B · 부위별 통증·기능 15분 집중 케어 블록 3종 (어깨 회전근개 · 고관절 스내핑힙 · 족저근막/발목):</strong>{' '}
+                현재 수업 뒤에 15분 모듈로 이어붙이거나 15분 단독 시퀀스로 바로 열 수 있습니다.
+              </p>
+              <div
+                className="pf-apparatus-ideas-grid"
+                data-testid="targeted-pain-blocks-grid"
+                aria-label="부위별 통증 및 기능 15분 집중 케어 블록"
+              >
+                {TARGETED_PAIN_CARE_BLOCKS.map((block) => (
+                  <article
+                    key={block.id}
+                    className="pf-apparatus-idea-card"
+                    data-testid={`pain-block-${block.id}`}
+                  >
+                    <div className="pf-apparatus-idea-card__top">
+                      <div className="pf-apparatus-idea-card__badge-row">
+                        <span className="pf-apparatus-idea-badge">{block.badgeKo}</span>
+                        <a
+                          href={block.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="pf-apparatus-idea-source"
+                        >
+                          {block.sourceLabelKo}{' '}
+                          <ExternalLink
+                            size={11}
+                            aria-hidden="true"
+                            style={{ verticalAlign: 'middle' }}
+                          />
+                        </a>
+                      </div>
+                      <h3 className="pf-apparatus-idea-headline">{block.titleKo}</h3>
+                      <p className="pf-apparatus-idea-pitch">{block.summaryKo}</p>
+
+                      <div className="pf-apparatus-idea-script-box">
+                        <div className="pf-apparatus-idea-script-item">
+                          <strong>🔧 부위별 세팅 & 큐잉 3원칙</strong>
+                          <ul className="pf-apparatus-idea-checklist">
+                            {block.setupRulesKo.map((rule) => (
+                              <li key={rule}>{rule}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="pf-apparatus-idea-script-item">
+                          <strong>⚠️ 주의 및 금기 수칙</strong>
+                          <p>{block.contraindicationsKo}</p>
+                        </div>
+                        <div className="pf-apparatus-idea-script-item">
+                          <strong>📋 15분 3스텝 집중 블록 구성</strong>
+                          <ol className="pf-apparatus-idea-checklist">
+                            {block.steps.map((st) => (
+                              <li key={`${block.id}-${st.exerciseId}`}>
+                                <span>
+                                  <b>{st.labelKo}</b> ({st.durationMin}분 · {st.springsNoteKo}) —{' '}
+                                  {st.cueNoteKo}
+                                </span>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pf-apparatus-idea-card__footer">
+                      <span className="pf-apparatus-idea-theme">
+                        총 {block.durationMinutes}분 · 3개 스텝 모듈
+                      </span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        <button
+                          type="button"
+                          className="pf-apparatus-idea-apply-btn"
+                          data-testid={`append-pain-block-${block.id}`}
+                          onClick={() => handleApplyTargetedPainBlock(block, 'append')}
+                        >
+                          현재 수업 뒤에 15분 추가
+                        </button>
+                        <button
+                          type="button"
+                          className="pf-apparatus-idea-apply-btn"
+                          data-testid={`replace-pain-block-${block.id}`}
+                          onClick={() => handleApplyTargetedPainBlock(block, 'replace')}
+                        >
+                          15분 단독 시퀀스로 열기
+                        </button>
+                      </div>
                     </div>
                   </article>
                 ))}

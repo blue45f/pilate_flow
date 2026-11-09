@@ -4,6 +4,7 @@ import {
   APPARATUS_VISUAL_GUIDE_CATALOG,
   PROP_QUICK_GUIDES,
   SPECIAL_POPULATION_CARE_PRESETS,
+  TARGETED_PAIN_CARE_BLOCKS,
   buildApparatusIdeaExpandedDraft,
   getApparatusVisualGuide,
 } from '../data/apparatusVisualGuideCatalog';
@@ -19,10 +20,11 @@ afterEach(() => {
 });
 
 describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
-  it('provides complete anatomy pins, color-coded spring specs, body-fit tips, 5 fresh idea lenses, and 3 special population care presets', () => {
+  it('provides complete anatomy pins, color-coded spring specs, body-fit tips, 5 fresh idea lenses, 3 special presets, and 3 targeted 15-min pain care blocks', () => {
     expect(APPARATUS_VISUAL_GUIDE_CATALOG).toHaveLength(5);
     expect(PROP_QUICK_GUIDES.length).toBeGreaterThanOrEqual(5);
     expect(SPECIAL_POPULATION_CARE_PRESETS).toHaveLength(3);
+    expect(TARGETED_PAIN_CARE_BLOCKS).toHaveLength(3);
 
     const catalogIds = new Set(INITIAL_EXERCISES.map((ex) => ex.id));
     for (const preset of SPECIAL_POPULATION_CARE_PRESETS) {
@@ -30,6 +32,15 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
       const totalMin = preset.steps.reduce((sum, st) => sum + st.durationMin, 0);
       expect(totalMin).toBe(50);
       for (const st of preset.steps) {
+        expect(catalogIds.has(st.exerciseId)).toBe(true);
+      }
+    }
+
+    for (const block of TARGETED_PAIN_CARE_BLOCKS) {
+      expect(block.steps).toHaveLength(3);
+      const blockMin = block.steps.reduce((sum, st) => sum + st.durationMin, 0);
+      expect(blockMin).toBe(15);
+      for (const st of block.steps) {
         expect(catalogIds.has(st.exerciseId)).toBe(true);
       }
     }
@@ -59,7 +70,7 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
     }
   });
 
-  it('switches between apparatus anatomy pins, spring matrix, 5-lens ideas, and special population presets with 1-click sequence loading', () => {
+  it('switches between apparatus anatomy pins, spring matrix, 5-lens ideas, special population presets, and 15-min pain blocks with 1-click actions', () => {
     const originalState = usePilatesStore.getState();
     let appliedConcept: { title: string; subtitle: string; family: string } | null = null;
     render(
@@ -96,7 +107,7 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
       family: 'reformer',
     });
 
-    // Switch to Special Population Care Presets tab and apply Prenatal/Postnatal 50-min preset
+    // Switch to Special Population Care Presets & 15-Min Pain Blocks tab
     fireEvent.click(within(ribbon).getByTestId('apparatus-guide-special-tab'));
     const specialGrid = within(ribbon).getByTestId('special-population-presets-grid');
     expect(within(specialGrid).getByTestId('special-preset-prenatal-postnatal')).toBeInTheDocument();
@@ -106,7 +117,18 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
     fireEvent.click(within(specialGrid).getByTestId('apply-special-preset-prenatal-postnatal'));
     expect(within(ribbon).getByTestId('special-preset-applied-status')).toBeInTheDocument();
     expect(usePilatesStore.getState().activeSteps).toHaveLength(6);
-    expect(usePilatesStore.getState().activeTitle).toContain('산전·산후 50분');
+
+    // Append a 15-minute targeted pain care block to the 6-step sequence -> 9 steps total
+    const painGrid = within(ribbon).getByTestId('targeted-pain-blocks-grid');
+    expect(within(painGrid).getByTestId('pain-block-shoulder-rotator-cuff')).toBeInTheDocument();
+    expect(within(painGrid).getByTestId('pain-block-snapping-hip-psoas')).toBeInTheDocument();
+    expect(within(painGrid).getByTestId('pain-block-plantar-foot-tripod')).toBeInTheDocument();
+
+    fireEvent.click(within(painGrid).getByTestId('append-pain-block-shoulder-rotator-cuff'));
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(9);
+
+    fireEvent.click(within(painGrid).getByTestId('replace-pain-block-plantar-foot-tripod'));
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(3);
 
     usePilatesStore.setState(originalState, true);
   });

@@ -999,6 +999,25 @@ export interface SpecialPopulationCarePreset {
   readonly steps: readonly SpecialPopulationStepSpec[];
 }
 
+export interface TargetedPainCareBlock {
+  readonly id: 'shoulder-rotator-cuff' | 'snapping-hip-psoas' | 'plantar-foot-tripod';
+  readonly badgeKo: string;
+  readonly titleKo: string;
+  readonly subtitleKo: string;
+  readonly durationMinutes: 15;
+  readonly primaryApparatus: ApparatusType;
+  readonly summaryKo: string;
+  readonly setupRulesKo: readonly [string, string, string];
+  readonly contraindicationsKo: string;
+  readonly sourceLabelKo: string;
+  readonly sourceUrl: string;
+  readonly steps: readonly [
+    SpecialPopulationStepSpec,
+    SpecialPopulationStepSpec,
+    SpecialPopulationStepSpec,
+  ];
+}
+
 export const SPECIAL_POPULATION_CARE_PRESETS: readonly SpecialPopulationCarePreset[] = [
   {
     id: 'prenatal-postnatal',
@@ -1260,6 +1279,165 @@ export const SPECIAL_POPULATION_CARE_PRESETS: readonly SpecialPopulationCarePres
         blockCategory: 'cooldown',
         classSection: 'cooldown',
         sideMode: 'left-then-right',
+      },
+    ],
+  },
+];
+
+export const TARGETED_PAIN_CARE_BLOCKS: readonly TargetedPainCareBlock[] = [
+  {
+    id: 'shoulder-rotator-cuff',
+    badgeKo: '🪽 회전근개 · 어깨 충돌증후군 & 라운드숄더 15분 블록',
+    titleKo: '어깨 충돌 예방 · 견갑상완리듬(Scapulohumeral Rhythm) 15분 케어',
+    subtitleKo: '90° 이하 안전 거상 · 전거근·하부승모근 선행 활성 · 흉추 외회전 가동성',
+    durationMinutes: 15,
+    primaryApparatus: 'cadillac',
+    summaryKo:
+      '팔을 들 때 견봉하 공간이 좁아져 집히는 회원님을 위해 상완골 90° 이하 안전 각도에서 전거근·하부승모근을 먼저 깨우고 흉추 신전·회전 가동성을 확보하는 15분 집중 모듈입니다.',
+    setupRulesKo: [
+      '① 상완골 거상 90° 이하 제한: 초기 세트에서 손이 어깨 높이(90°)를 넘지 않도록 스트랩·바 궤적 제한',
+      '② 저장력(1 Yellow / 1 Blue) 세팅: 무거운 스프링으로 상부승모근이 개입하는 것을 막고 회전근개 미세 안정화 유도',
+      '③ 견갑골 면(Scapular Plane · 전방 30°) 유지: 팔꿈치를 몸통 뒤로 과하게 빼지 않고 몸통 앞 30° 시야 안에서 움직임 제어',
+    ],
+    contraindicationsKo:
+      '어깨 내회전 상태에서 90° 이상 오버헤드 프레스 금지 · 숄더블록에 어깨가 강하게 눌리는 역플랭크/롱스트레치 주의',
+    sourceLabelKo: VERIFIED_VIDEOS_BY_APPARATUS.cadillac.primary.channelName,
+    sourceUrl: VERIFIED_VIDEOS_BY_APPARATUS.cadillac.primary.url,
+    steps: [
+      {
+        exerciseId: 'ex-warmup-02',
+        labelKo: '캐딜락 롤다운바 견갑 하강 & 전거근 프로트랙션',
+        apparatusBadgeKo: '캐딜락 · 2 Yellow',
+        durationMin: 5,
+        springsNoteKo: '2 Yellow',
+        cueNoteKo: '팔꿈치를 굽히지 않고 겨드랑이 아래 전거근으로 바를 부드럽게 끌어내리기',
+        blockCategory: 'warmup',
+        classSection: 'preparation',
+      },
+      {
+        exerciseId: 'original-reformer-seated-row',
+        labelKo: '리포머 시티드 로잉 (견갑면 30° 외회전 컨트롤)',
+        apparatusBadgeKo: '리포머 · 1 Yellow/Blue',
+        durationMin: 5,
+        springsNoteKo: '1 Yellow 또는 1 Blue',
+        cueNoteKo: '쇄골을 양옆으로 넓게 펼친 채 팔꿈치가 몸통 선을 넘지 않게 당기고 3초 원심성 복귀',
+        blockCategory: 'upper-body',
+        classSection: 'main',
+      },
+      {
+        exerciseId: 'original-mat-open-book',
+        labelKo: '사이드 라잉 오픈 북 흉추 회전 & 소흉근 이완',
+        apparatusBadgeKo: '매트 · 폼롤러/소도구',
+        durationMin: 5,
+        springsNoteKo: '체중·호흡 저항',
+        cueNoteKo: '어깨 관절만 꺾지 말고 날숨에 흉곽 전체를 회전시켜 견봉하 공간 확보',
+        blockCategory: 'cooldown',
+        classSection: 'cooldown',
+        sideMode: 'left-then-right',
+      },
+    ],
+  },
+  {
+    id: 'snapping-hip-psoas',
+    badgeKo: '🦴 장요근 과긴장 · 고관절 스내핑힙(탄발성 고관절) 15분 블록',
+    titleKo: '고관절 스내핑힙 감압 · 대퇴골두 중심화(Centration) 15분 케어',
+    subtitleKo: '레그 스프링 축성 견인 · 천골 고정 복횡근 선행 수축 · 중둔근 외회전 안정화',
+    durationMinutes: 15,
+    primaryApparatus: 'reformer',
+    summaryKo:
+      '다리를 내릴 때마다 고관절 앞쪽에서 ‘뚝’ 소리가 나거나 집히는 회원님을 위해, 긴 스프링의 견인력(Traction)으로 관절 공간을 열고 복횡근-중둔근 협응을 회복하는 15분 집중 모듈입니다.',
+    setupRulesKo: [
+      '① 축성 견인(Axial Traction) 우선: 다리를 들어 올리기 전 스트랩/스프링이 발목을 멀리 당겨주는 견인감을 먼저 인지',
+      '② 가동 범위(ROM) 50% 축소 & 턴아웃(외회전): 소리가 나는 각도 직전까지만 작은 서클을 그리고 고관절 외회전 정렬 적용',
+      '③ 요추 중립 & 복횡근 선행 수축: 장요근이 요추를 앞으로 잡아당기지 않도록 날숨에 아랫배를 먼저 고정',
+    ],
+    contraindicationsKo:
+      '무거운 다리 지렛대(양다리 45° 이하 맨몸 하강) 금지 · 고관절 내회전 상태에서 큰 서클 수행 주의',
+    sourceLabelKo: VERIFIED_LITERATURE_BY_APPARATUS.cadillac.titleKo,
+    sourceUrl: VERIFIED_LITERATURE_BY_APPARATUS.cadillac.url,
+    steps: [
+      {
+        exerciseId: 'ex-straps-02',
+        labelKo: '캐딜락 롱 레그 스프링 축성 견인 & 소형 프로그',
+        apparatusBadgeKo: '캐딜락 · 2 Long Purple',
+        durationMin: 5,
+        springsNoteKo: '2 Long Purple',
+        cueNoteKo: '천골을 베드에 무겁게 고정하고 대퇴골두가 관절와 깊숙이 안착되는 작은 프로그 수행',
+        blockCategory: 'feet-in-straps',
+        classSection: 'main',
+      },
+      {
+        exerciseId: 'ex-lower-04',
+        labelKo: '리포머 사이드 라잉 레그 스트랩 & 중둔근 후방 섬유 활성화',
+        apparatusBadgeKo: '리포머 · 1 Red',
+        durationMin: 5,
+        springsNoteKo: '1 Red',
+        cueNoteKo: '전면 대퇴근막장근(TFL) 대신 뒤쪽 중둔근으로 다리를 길게 뻗어 고관절 전방 활주 차단',
+        blockCategory: 'lower-body',
+        classSection: 'main',
+        sideMode: 'left-then-right',
+      },
+      {
+        exerciseId: 'ex-global-reformer-03',
+        labelKo: '리포머 닐링 런지 장요근 원심성 신장 릴리즈',
+        apparatusBadgeKo: '리포머 · 1 Red',
+        durationMin: 5,
+        springsNoteKo: '1 Red',
+        cueNoteKo: '허리를 꺾지 말고 둔근을 수축해 골반 후방경사를 유지한 채 장요근만 길게 이완',
+        blockCategory: 'cooldown',
+        classSection: 'cooldown',
+        sideMode: 'left-then-right',
+      },
+    ],
+  },
+  {
+    id: 'plantar-foot-tripod',
+    badgeKo: '🦶 족저근막염 · 무지외반증 & 발목-무릎 아치 정렬 15분 블록',
+    titleKo: '족부 삼각 아치(Foot Tripod) · 아킬레스-종아리 원심성 15분 케어',
+    subtitleKo: '엄지·새끼·뒤꿈치 3점 돔(Dome) 활성 · 러닝 원심성 이완 · 제2족지 무릎 트래킹',
+    durationMinutes: 15,
+    primaryApparatus: 'reformer',
+    summaryKo:
+      '평발·무지외반증·족저근막 피로로 인해 발목이 안으로 무너지고(회내) 무릎까지 돌아가는 회원님을 위해, 발바닥 내재근 돔(Foot Dome)과 종아리 원심성 이완을 연결하는 15분 집중 모듈입니다.',
+    setupRulesKo: [
+      '① 족부 3점 지지(Foot Tripod): 제1중족골두(엄지 뿌리)·제5중족골두(새끼 뿌리)·종골(뒤꿈치) 3점에 체중을 균등 배분',
+      '② 발가락 말아 쥐기(Clawing) 방지: 풋바 위에서 발가락에 힘을 빼고 발바닥 아치 돔(Dome)만 부드럽게 끌어올리기',
+      '③ 슬관절-제2족지 축 정렬: 뒤꿈치를 들고 내릴 때 발목이 바깥으로 꺾이지 않도록 두 번째 발가락 수직선 유지',
+    ],
+    contraindicationsKo:
+      '급성 족저근막 통증 시 맨발 고중량 점프(점프보드) 금지 · 아킬레스건 반동 스트레칭(Bouncing) 금지',
+    sourceLabelKo: VERIFIED_VIDEOS_BY_APPARATUS.reformer.primary.channelName,
+    sourceUrl: VERIFIED_VIDEOS_BY_APPARATUS.reformer.primary.url,
+    steps: [
+      {
+        exerciseId: 'ex-footwork-01',
+        labelKo: '리포머 풋워크 (아치 돔 · 힐 · 러닝 & 프랜싱 원심성 이완)',
+        apparatusBadgeKo: '리포머 · 2 Red + 1 Blue',
+        durationMin: 6,
+        springsNoteKo: '2 Red + 1 Blue',
+        cueNoteKo: '풋바 아래로 한쪽 뒤꿈치를 3초간 깊숙이 내리며 가자미근·비복근·족저근막을 부드럽게 신장',
+        blockCategory: 'footwork',
+        classSection: 'main',
+      },
+      {
+        exerciseId: 'original-chair-supported-calf-raise',
+        labelKo: '운다 체어 핸들 지지 카프 레이즈 & 발목 고유수용성 강화',
+        apparatusBadgeKo: '체어 · 핸들 지지',
+        durationMin: 5,
+        springsNoteKo: '양손 핸들 지지',
+        cueNoteKo: '뒤꿈치가 안팎으로 흔들리지 않도록 엄지발가락 뿌리 지지력을 유지하며 수직 상승·하강',
+        blockCategory: 'lower-body',
+        classSection: 'main',
+      },
+      {
+        exerciseId: 'original-barrel-supported-ankle',
+        labelKo: '래더 지지 발목 모빌리티 & 하지 후면 근막 이완',
+        apparatusBadgeKo: '바렐 · 래더 지지',
+        durationMin: 4,
+        springsNoteKo: '래더 고정 지지',
+        cueNoteKo: '발바닥 3점 접지를 느끼며 발목 배측굴곡 가동 범위를 넓히고 호흡 정리',
+        blockCategory: 'cooldown',
+        classSection: 'cooldown',
       },
     ],
   },
