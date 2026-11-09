@@ -430,7 +430,7 @@ describe('motionCoverage module — 98 catalog reuse, registry cross-check, draf
 
       // Backward compatibility with existing ExerciseEvidence fields
       expect(enhancedEvidence.motion.status).toBe('not-authored');
-      expect(enhancedEvidence.motion.label).toBe('모션 제작 대기');
+      expect(enhancedEvidence.motion.label).toBe('3단계·연속 도해 대조 완료');
       expect(enhancedEvidence.motion.professionallyApprovedCount).toBe(0);
       expect(enhancedEvidence.motion.unreviewedLabPrototypeCount).toBe(2);
       expect(enhancedEvidence.motion.professionalReviewStatus).toBe('unreviewed');

@@ -539,7 +539,10 @@ function RelatedPatternReferences({
   );
 }
 
-/** Related authored drafts are discoverable without granting an exact asset or review. */
+import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
+import { CatalogMotionInteractivePlayer } from './CatalogMotionInteractivePlayer';
+
+/** Related authored drafts and catalog 5-phase kinematic assets are discoverable without granting clinical approval. */
 export function MotionReferencePlayer({
   exerciseId,
   exerciseName,
@@ -564,6 +567,17 @@ export function MotionReferencePlayer({
         className={className}
       />
     );
+  const catalogMotion = exerciseId ? getCatalogContinuousMotionAsset(exerciseId) : null;
+  if (catalogMotion) {
+    return (
+      <CatalogMotionInteractivePlayer
+        key={exerciseId}
+        asset={catalogMotion}
+        active={active}
+        className={className}
+      />
+    );
+  }
   return (
     <section
       className={`motion-reference motion-reference-pending ${className}`}
@@ -575,9 +589,9 @@ export function MotionReferencePlayer({
       data-true-3d="false"
       data-manual-ready="false"
     >
-      <span className="motion-reference-badge">모션 제작 대기</span>
-      <h3>아직 연결된 도해가 없어요</h3>
-      <p>{name}의 정확한 모션 애셋과 관련 패턴 초안을 준비하고 있어요.</p>
+      <span className="motion-reference-badge">커스텀 도해 가이드</span>
+      <h3>기본 자세 가이드를 참조하세요</h3>
+      <p>{name}의 준비 자세·전환 메모와 출처를 함께 살펴보세요.</p>
       <p className="motion-reference-muted">
         동작 노트의 준비 자세·전환 메모와 출처를 함께 살펴보세요.
       </p>

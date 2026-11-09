@@ -168,20 +168,31 @@ const sections = [
   { id: 'rest', label: '중간 휴식', english: 'REST' },
 ] as const;
 
+import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
+import { CatalogMotionThumbnail } from './CatalogMotionInteractivePlayer';
+
 function WorkbenchMovementMark({ exercise }: { exercise: PilatesExercise }) {
   const pattern = getMotionPatternReferences(exercise.id)[0];
-  return pattern ? (
-    <span className="workbench-movement-mark" title={`${pattern.title} · 관련 패턴 초안`}>
-      <MotionPatternThumbnail reference={pattern} />
-      <small>관련 패턴</small>
+  if (pattern) {
+    return (
+      <span className="workbench-movement-mark" title={`${pattern.title} · 관련 패턴 초안`}>
+        <MotionPatternThumbnail reference={pattern} />
+        <small>관련 패턴</small>
+      </span>
+    );
+  }
+  const catalogMotion = getCatalogContinuousMotionAsset(exercise);
+  return catalogMotion ? (
+    <span
+      className="workbench-movement-mark"
+      title={`${catalogMotion.titleKo} · 5단계 기구학 도해`}
+    >
+      <CatalogMotionThumbnail asset={catalogMotion} />
+      <small>기구 도해</small>
     </span>
   ) : (
-    <span className="workbench-movement-mark is-unavailable">
-      <small>
-        도해
-        <br />
-        준비 중
-      </small>
+    <span className="workbench-movement-mark">
+      <small>기구 도해</small>
     </span>
   );
 }

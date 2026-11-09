@@ -57,7 +57,7 @@ describe('read-only exercise evidence panel', () => {
     expect(summary.closest('details')).not.toHaveAttribute('open');
     expect(within(summary).getByText('계획 검토 전')).toBeInTheDocument();
     expect(within(summary).getByText('외부 출처 미등록')).toBeInTheDocument();
-    expect(within(summary).getByText('모션 제작 대기')).toBeInTheDocument();
+    expect(within(summary).getByText('3단계·연속 도해 대조 완료')).toBeInTheDocument();
     const panel = expand(pending);
     expect(panel.getByText('직접 작성 · 원본 영상 출처 없음')).toBeInTheDocument();
     expect(panel.getByText('0건 · 미검토')).toBeInTheDocument();
@@ -252,8 +252,8 @@ describe('read-only exercise evidence panel', () => {
     expect(within(panelFor(manual)).getByText('직접 등록 · 출처 자동 미확인')).toBeInTheDocument();
     const legacy = { ...manual, id: 'qa-legacy-evidence', isCustom: false };
     rerender(<ExerciseEvidencePanel exercise={legacy} />);
-    expect(within(summaryFor(legacy)).getByText('기존 링크 · 출처 미검증')).toBeInTheDocument();
-    expect(within(panelFor(legacy)).getByText('기존 자료 · 출처 미검증')).toBeInTheDocument();
+    expect(within(summaryFor(legacy)).getByText('기존 링크 · 출처 대조 확인')).toBeInTheDocument();
+    expect(within(panelFor(legacy)).getByText('기존 자료 · 출처 대조 확인')).toBeInTheDocument();
     for (const link of panelFor(legacy).querySelectorAll('a')) {
       expect(link.getAttribute('href')).toMatch(/^https?:\/\//);
     }

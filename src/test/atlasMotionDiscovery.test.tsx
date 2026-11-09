@@ -148,16 +148,16 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     expect(container.querySelectorAll('article.movement-card')).toHaveLength(12);
   });
 
-  it('shows a truthful empty motion slot for an unmapped exercise and a persistent return to the existing class draft', () => {
+  it('renders an authored 5-phase kinematic diagram for an exercise without pattern drafts and returns to the existing class draft', () => {
     const { container } = renderAtlas();
     fireEvent.change(screen.getByRole('searchbox', { name: '동작 검색' }), {
       target: { value: '누워서 호흡 관찰' },
     });
     const cards = container.querySelectorAll('article.movement-card');
     expect(cards).toHaveLength(1);
-    expect(cards[0].querySelector('svg[role="img"]')).toBeNull();
-    expect(cards[0]).toHaveTextContent('정확한 모션 애셋 제작 대기');
-    expect(cards[0]).toHaveTextContent('관련 도해는 아직 없어요');
+    expect(cards[0].querySelector('svg[role="img"]')).not.toBeNull();
+    expect(cards[0]).toHaveTextContent('누워서 호흡 관찰 · 5단계 기구학 도해');
+    expect(cards[0]).toHaveTextContent('기구학 연속·3단계 도해 1종');
     expect(cards[0].querySelector('.movement-art')).toBeNull();
     const selection = container.querySelector('.ml-selection-return')!;
     expect(selection).toHaveTextContent('0개현재 수업안에 담긴 동작');

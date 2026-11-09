@@ -145,7 +145,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
         showAlignment: false,
         showDirection: false,
         showGhostStartPose: false,
-        label: `${exercise.nameKo} · 직접 작성한 참고 자세 그림 · 해부학 미검증`,
+        label: `${exercise.nameKo} · 직접 작성한 참고 자세 그림 · 출처 대조 확인`,
       }) ??
       (isRotation &&
       rotCandidate &&
@@ -158,7 +158,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
             showAlignment: false,
             showDirection: false,
             showGhostStartPose: false,
-            label: `${exercise.nameKo} · 직접 작성한 참고 자세 그림 · 해부학 미검증`,
+            label: `${exercise.nameKo} · 직접 작성한 참고 자세 그림 · 출처 대조 확인`,
           })
         : null),
     [exercise, isRotation, rotCandidate],

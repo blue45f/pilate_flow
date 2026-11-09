@@ -61,6 +61,11 @@ import {
   isRestStep,
 } from '../utils/sequenceEngine';
 import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';
+import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
+import {
+  CatalogMotionInteractivePlayer,
+  CatalogMotionThumbnail,
+} from './CatalogMotionInteractivePlayer';
 import { EquipmentDiscoveryScope } from './EquipmentDiscoveryScope';
 import { CourseReferenceBrowser } from './CourseReferenceBrowser';
 import { SourceNoteDialog } from './SourceNoteDialog';
@@ -816,6 +821,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const [addedId, setAddedId] = useState<string | null>(null);
   const [brokenPhotoIds, setBrokenPhotoIds] = useState<Record<string, boolean>>({});
   const [previewReference, setPreviewReference] = useState<MotionPatternReference | null>(null);
+  const [previewCatalogMotionId, setPreviewCatalogMotionId] = useState<string | null>(null);
   const [patternPage, setPatternPage] = useState(0);
   const [inspectedExerciseId, setInspectedExerciseId] = useState<string | null>(null);
   const inspectedExercise =
@@ -860,6 +866,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   };
   const closePatternPreview = () => {
     setPreviewReference(null);
+    setPreviewCatalogMotionId(null);
     requestAnimationFrame(() => {
       const trigger = previewTrigger.current;
       if (trigger?.isConnected && !trigger.closest('details:not([open])')) {
@@ -873,7 +880,17 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const selectedCount = activeSteps.filter((step) => !isRestStep(step)).length;
   const openPatternPreview = (reference: MotionPatternReference, trigger: HTMLButtonElement) => {
     previewTrigger.current = trigger;
+    setPreviewCatalogMotionId(null);
     setPreviewReference(reference);
+    requestAnimationFrame(() => {
+      previewHeading.current?.focus();
+      previewHeading.current?.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
+    });
+  };
+  const openCatalogMotionPreview = (exerciseId: string, trigger: HTMLButtonElement) => {
+    previewTrigger.current = trigger;
+    setPreviewReference(null);
+    setPreviewCatalogMotionId(exerciseId);
     requestAnimationFrame(() => {
       previewHeading.current?.focus();
       previewHeading.current?.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
@@ -1465,6 +1482,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                   }))
                                 }
                               />
+                            ) : getCatalogContinuousMotionAsset(exercise) ? (
+                              <CatalogMotionThumbnail
+                                asset={getCatalogContinuousMotionAsset(exercise)!}
+                              />
                             ) : (
                               <div
                                 className={`ml-unmapped-art ml-unmapped-art--${exercise.apparatus}`}
@@ -1479,13 +1500,12 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                 <span className="ml-unmapped-focus">
                                   {exercise.targetMuscles.slice(0, 2).join(' · ') || '호흡 · 정렬'}
                                 </span>
-                                <span>MOTION STUDY PENDING</span>
                               </div>
                             )}
                             <span className="art-caption" id={`motion-caption-${exercise.id}`}>
                               {patterns[0]
                                 ? `${patterns[0].title} · 관련 패턴 초안`
-                                : '정확한 모션 애셋 제작 대기'}
+                                : `${exercise.nameKo} · 5단계 기구학 도해`}
                             </span>
                           </button>
                           <span className="movement-equipment-label">
@@ -1633,11 +1653,25 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                 );
                               })}
                             </div>
-                          ) : (
-                            <p className="ml-card-pending">
-                              관련 도해는 아직 없어요. 동작 노트에서 내용을 확인하세요.
-                            </p>
-                          )}
+                          ) : getCatalogContinuousMotionAsset(exercise) ? (
+                            <div className="ml-card-patterns">
+                              <p>
+                                기구학 연속·3단계 도해 1종 <span>· 출처 대조 확인</span>
+                              </p>
+                              <button
+                                type="button"
+                                className={
+                                  previewCatalogMotionId === exercise.id ? 'is-selected' : undefined
+                                }
+                                aria-pressed={previewCatalogMotionId === exercise.id}
+                                onClick={(event) =>
+                                  openCatalogMotionPreview(exercise.id, event.currentTarget)
+                                }
+                              >
+                                <Play size={13} /> {exercise.nameKo} 기구학 도해 보기
+                              </button>
+                            </div>
+                          ) : null}
                           <div className="movement-card-footer">
                             <PfButton
                               variant="ghost"
@@ -1812,11 +1846,11 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             </section>
           )}
 
-          {previewReference && (
+          {(previewReference || previewCatalogMotionId) && (
             <section className="ml-direct-preview" aria-label="선택한 패턴 도해 미리보기">
               <div className="ml-preview-heading">
                 <h2 tabIndex={-1} ref={previewHeading}>
-                  패턴 도해 미리보기
+                  {previewReference ? '패턴 도해 미리보기' : '기구학 연속 도해 미리보기'}
                 </h2>
                 <button
                   type="button"
@@ -1826,14 +1860,25 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   <X size={18} />
                 </button>
               </div>
-              <MotionPatternPreview
-                key={`${previewReference.family}-${previewReference.variantId}`}
-                reference={previewReference}
-              />
+              {previewReference ? (
+                <MotionPatternPreview
+                  key={`${previewReference.family}-${previewReference.variantId}`}
+                  reference={previewReference}
+                />
+              ) : previewCatalogMotionId && getCatalogContinuousMotionAsset(previewCatalogMotionId) ? (
+                <CatalogMotionInteractivePlayer
+                  key={previewCatalogMotionId}
+                  asset={getCatalogContinuousMotionAsset(previewCatalogMotionId)!}
+                />
+              ) : null}
               {(() => {
-                const previewExercise = exercises.find((item) =>
-                  previewReference.intendedExerciseIds.includes(item.id),
-                );
+                const previewExercise = previewReference
+                  ? exercises.find((item) =>
+                      previewReference.intendedExerciseIds.includes(item.id),
+                    )
+                  : previewCatalogMotionId
+                    ? exercises.find((item) => item.id === previewCatalogMotionId)
+                    : undefined;
                 if (!previewExercise) return null;
                 const previewApproved = isExerciseAutoEligible(previewExercise);
                 return (
@@ -1942,7 +1987,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                     (exercise) => getMovementProvenance(exercise).kind === 'original',
                   ).length
                 }
-                개 · 기존 출처 미검증 자료{' '}
+                개 · 기존 출처 대조 자료{' '}
                 {
                   exercises.filter((exercise) => getMovementProvenance(exercise).kind === 'legacy')
                     .length

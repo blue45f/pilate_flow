@@ -26,7 +26,7 @@ describe('instructor personal study, separate from review', () => {
     expect(screen.getByText(/추가하거나 구성하는 데 검토는 필요하지 않습니다/)).toBeInTheDocument();
     expect(screen.queryByText(/미검토 자료는 수업 진행/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '큐 확인하기' })).not.toBeInTheDocument();
-    expect(screen.getAllByText(/모션 제작 대기/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/3단계·연속 도해 대조 완료/).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: '동작 노트에서 직접 검토' }));
     expect(input.onOpenReview).toHaveBeenCalledWith(pending);
   });

@@ -28,7 +28,9 @@ import {
   resolvePatternReferencesForRenderer,
   resolveRenderableMotionDescriptor,
 } from '../features/motionCoverage';
+import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
 import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';
+import { CatalogMotionThumbnail } from './CatalogMotionInteractivePlayer';
 import '../styles/design-tokens.css';
 import '../styles/inline-exercise-finder.css';
 import '../styles/finder-class-context.css';
@@ -587,16 +589,20 @@ export function InlineExerciseFinder({
                 >
                   {firstReference ? (
                     <MotionPatternThumbnail reference={firstReference} />
+                  ) : getCatalogContinuousMotionAsset(exercise) ? (
+                    <CatalogMotionThumbnail asset={getCatalogContinuousMotionAsset(exercise)!} />
                   ) : (
                     <span
                       className="ief-motion-empty"
                       data-motion-mode={motionDescriptor.mode}
                       data-readiness-state={motionDescriptor.readinessState}
                     >
-                      <span aria-hidden="true">—</span>모션 도해 준비 중
+                      <span aria-hidden="true">—</span>기본 자세 도해
                     </span>
                   )}
-                  {firstReference && <span className="ief-motion-caption">패턴 참고 · 미검수</span>}
+                  <span className="ief-motion-caption">
+                    {firstReference ? '패턴 참고 · 미검수' : '기구 도해 · 출처 대조'}
+                  </span>
                 </button>
                 <div className="ief-card-body">
                   <h3>

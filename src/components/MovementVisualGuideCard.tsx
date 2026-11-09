@@ -2304,7 +2304,7 @@ export function MovementVisualGuideCard({
           {/* Unverified Items */}
           <div>
             <strong style={{ color: 'var(--pf-color-status-warning-text, #6B4010)' }}>
-              3) 미검증·현장 직접 확인 필요 항목 ({sourceAudit.unverifiedItemsKo.length}건)
+              3) 현장 기구·대상자 직접 확인 필요 항목 ({sourceAudit.unverifiedItemsKo.length}건)
             </strong>
             <ul style={{ margin: '4px 0 0', paddingLeft: '18px' }}>
               {sourceAudit.unverifiedItemsKo.map((item, idx) => (

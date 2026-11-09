@@ -227,7 +227,7 @@ describe('inline exercise finder', () => {
     expect(screen.queryByRole('region', { name: '선택한 모션 초안' })).not.toBeInTheDocument();
   });
 
-  it('leaves unmapped notes empty and filters to actual draft relationships', () => {
+  it('renders catalog kinematic diagram thumbnails on unmapped notes while filtering to actual draft relationships', () => {
     const mapped = INITIAL_EXERCISES.find(
       (exercise) => getMotionPatternReferences(exercise.id).length,
     )!;
@@ -237,12 +237,12 @@ describe('inline exercise finder', () => {
     usePilatesStore.setState({ exercises: [unmapped, mapped] });
     render(<InlineExerciseFinder onOpenExercise={vi.fn()} />);
     const emptyCard = screen.getByRole('article', { name: `${unmapped.nameKo} 동작 노트` });
-    expect(within(emptyCard).getByText('모션 도해 준비 중')).toBeInTheDocument();
+    expect(within(emptyCard).getByText('기구 도해 · 출처 대조')).toBeInTheDocument();
     expect(
       within(emptyCard)
         .getByRole('button', { name: `${unmapped.nameKo} 상세 보기` })
-        .querySelector('svg, img'),
-    ).toBeNull();
+        .querySelector('svg'),
+    ).not.toBeNull();
     expect(within(emptyCard).queryByRole('button', { name: /초안 보기/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '초안 있는 동작' }));
     expect(screen.getAllByRole('article')).toHaveLength(1);

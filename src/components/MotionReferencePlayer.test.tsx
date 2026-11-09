@@ -98,9 +98,11 @@ describe('isolated motion reference player', () => {
         }
       />,
     );
-    expect(screen.getByText('모션 제작 대기')).toBeInTheDocument();
-    expect(container.querySelector('svg')).toBeNull();
-    expect(screen.queryByRole('button', { name: '모션 한 번 재생' })).not.toBeInTheDocument();
+    expect(
+      screen.getByText('기구학 5단계 연속·3단계 도해 · 출처 대조 확인'),
+    ).toBeInTheDocument();
+    expect(container.querySelector('svg')).not.toBeNull();
+    expect(screen.getByRole('button', { name: '한 주기 재생' })).toBeEnabled();
     rerender(<MotionReferencePlayer exerciseId="original-mat-bridge" mode="prototype-lab" />);
     expect(screen.getByRole('region', { name: '관련 패턴 모션 초안' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '분절 골반 말기 · 저작 도해' })).toBeInTheDocument();
@@ -114,7 +116,7 @@ describe('isolated motion reference player', () => {
     const { container, rerender } = render(
       <MotionReferencePlayer exerciseId="unknown-custom-note" />,
     );
-    expect(screen.getByText('모션 제작 대기')).toBeInTheDocument();
+    expect(screen.getByText('커스텀 도해 가이드')).toBeInTheDocument();
     rerender(<MotionReferencePlayer kind="rest" exerciseId="" mode="prototype-lab" />);
     expect(container).toBeEmptyDOMElement();
     expect(frames.size).toBe(0);

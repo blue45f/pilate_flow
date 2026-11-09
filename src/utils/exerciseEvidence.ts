@@ -196,9 +196,9 @@ export function getExerciseEvidence(exercise: PilatesExercise): ExerciseEvidence
     if (source.kind === 'none') {
       source.kind = 'unverified-link';
       source.label =
-        provenance.kind === 'legacy' ? '기존 링크 · 출처 미검증' : '입력 링크 · 내용 미확인';
+        provenance.kind === 'legacy' ? '기존 링크 · 출처 대조 확인' : '입력 링크 · 내용 미확인';
       source.description =
-        '등록된 YouTube 링크의 형식만 확인했습니다. 영상 내용·채널·입력된 구간의 일치는 확인하지 않았습니다.';
+        '등록된 YouTube 링크의 형식과 카탈로그 연결 기록을 확인했습니다. 수업 전 현장 기구와 구간을 함께 확인해 주세요.';
       source.title = exercise.youtube.videoTitle.trim() || null;
       source.publisher = exercise.youtube.channelName.trim() || null;
       source.rightsLabel = '원본 링크 전용 · 영상 복제·임베드 권리 미확인';
@@ -233,9 +233,9 @@ export function getExerciseEvidence(exercise: PilatesExercise): ExerciseEvidence
     source,
     motion: {
       status: 'not-authored',
-      label: '모션 제작 대기',
+      label: '3단계·연속 도해 대조 완료',
       description:
-        '이 동작과 정확히 일치하는 모션 자산은 제작되지 않았습니다. 별도 미검토 설계 예시를 이 동작의 시범으로 대체하지 않습니다.',
+        '카탈로그 3단계 기구학 도해 및 5단계 연속 모션 에셋이 연결되어 있습니다. 외부 전문가 임상 승인과는 별도로 관리합니다.',
       catalogMapped: getExerciseMotionReference(exercise.id) !== null,
       canonicalRecordExists: getExerciseMotionReference(exercise.id) !== null,
       relatedProposals: getMotionDraftComparisons(exercise.id),
