@@ -225,7 +225,7 @@ body:has(#root .vnext-workbench) {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 40px;
+  min-height: 44px;
   padding: 6px 10px;
   border-radius: 8px;
   background: var(--studio-subtle, #eef1ea);

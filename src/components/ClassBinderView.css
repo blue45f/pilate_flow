@@ -215,3 +215,10 @@ body:has(.teaching-collection--history) { min-width: 0; }
   border-radius: 12px;
   transition: border-color 150ms ease;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .teaching-collection--saved .teaching-sequence-card,
+  .teaching-history-detail-modal .teaching-history-snapshot-item {
+    transition: none !important;
+  }
+}

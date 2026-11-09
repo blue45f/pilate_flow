@@ -476,7 +476,7 @@
 }
 
 .movement-media-guidance-panel .mmg-btn-sm {
-  min-height: 38px;
+  min-height: 44px;
   padding: 0.375rem 0.7rem;
   font-size: 0.75rem;
 }
@@ -566,7 +566,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
+  min-height: 44px;
   padding: 0.35rem 0.75rem;
   border-radius: var(--mmg-radius-pill);
   border: 1px solid var(--mmg-border-default);

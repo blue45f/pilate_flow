@@ -164,3 +164,10 @@
     border-color 150ms ease,
     color 150ms ease;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .free-ai-tab-btn,
+  .free-ai-chip {
+    transition: none !important;
+  }
+}

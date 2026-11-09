@@ -232,7 +232,7 @@ describe('Workbench & 3D Rig UI/UX Design System Polish (320/375/768px & Desktop
     }
   });
 
-  it('enforces >= 44px touch targets, 320/375/768px responsive rules, and preserves hash-locked stylesheets', () => {
+  it('enforces >= 44px touch targets, 320/375/768px responsive rules, prefers-reduced-motion across all transition stylesheets, and clean Fast Refresh exports', () => {
     const workbenchVnextCss = readFileSync(
       resolve(process.cwd(), 'src/styles/workbench-vnext.css'),
       'utf8',
@@ -242,5 +242,30 @@ describe('Workbench & 3D Rig UI/UX Design System Polish (320/375/768px & Desktop
     expect(workbenchVnextCss).toContain('min-height: 44px;');
     expect(workbenchVnextCss).toContain('@media (max-width: 560px)');
     expect(workbenchVnextCss).toContain('@media (prefers-reduced-motion: reduce)');
+
+    for (const relCss of [
+      'src/styles/library-concept-layout.css',
+      'src/styles/movement-idea-sheet.css',
+      'src/components/ClassBinderView.css',
+      'src/components/FreeAiAssistantPanel.css',
+      'src/styles/live-stage-design.css',
+      'src/styles/sequence-composition.css',
+      'src/styles/movement-media-guidance.css',
+      'src/styles/spine-articulation-diagram.css',
+      'src/styles/hip-leg-diagram.css',
+      'src/styles/ai-copilot.css',
+      'src/styles/motion-pattern-preview.css',
+      'src/styles/motion-pattern-gallery.css',
+      'src/styles/cloud.css',
+    ]) {
+      const content = readFileSync(resolve(process.cwd(), relCss), 'utf8');
+      expect(content).toContain('min-height: 44px');
+    }
+
+    const batchFigureSource = readFileSync(
+      resolve(process.cwd(), 'src/components/MotionAuthoringBatchFigure.tsx'),
+      'utf8',
+    );
+    expect(batchFigureSource).not.toContain('export { TITLES as BATCH_FIGURE_TITLES }');
   });
 });

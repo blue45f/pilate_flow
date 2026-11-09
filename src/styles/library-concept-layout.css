@@ -245,8 +245,8 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-height: 36px;
-  padding: 6px 11px;
+  min-height: 44px;
+  padding: 6px 12px;
   border-radius: 999px;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -280,4 +280,12 @@
     box-shadow 160ms ease;
   word-break: keep-all;
   overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-active-filter-chip,
+  .library-active-filter-clear-all,
+  #root .vnext-shell .motion-library .movement-card {
+    transition: none !important;
+  }
 }

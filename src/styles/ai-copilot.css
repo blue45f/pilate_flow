@@ -131,7 +131,7 @@
 
 .ai-copilot-prompt-field input,
 .ai-copilot-window-field select {
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 12px;
   border-radius: 11px;
   border: 1px solid #c9d4c4;
@@ -188,7 +188,7 @@
 .ai-copilot-key-input-row input {
   flex: 1;
   min-width: 210px;
-  min-height: 38px;
+  min-height: 44px;
   padding: 6px 10px;
   border-radius: 9px;
   border: 1px solid #c9d4c4;

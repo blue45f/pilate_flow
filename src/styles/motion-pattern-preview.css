@@ -210,7 +210,7 @@
 .mpp-seek input {
   accent-color: #285f48;
   width: 100%;
-  min-height: 30px;
+  min-height: 44px;
   flex: 1;
   min-width: 0;
 }
@@ -327,7 +327,7 @@
 .mpp-source-details summary {
   font-weight: 700;
   color: #284b3b;
-  min-height: 30px;
+  min-height: 44px;
 }
 .mpp-source-details h4 {
   margin: 13px 0 5px;

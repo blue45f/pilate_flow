@@ -238,4 +238,5 @@ export function MotionAuthoringBatchFigure({
   );
 }
 
-export { TITLES as BATCH_FIGURE_TITLES };
+// Internal titles are kept local to preserve React Fast Refresh single-component export compliance.
+

@@ -150,8 +150,8 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-height: 36px;
-  padding: 5px 11px;
+  min-height: 44px;
+  padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid #ced4c5;
   background: #faf8f2;
@@ -169,4 +169,10 @@
 #root .vnext-shell .pf-idea-sheet-dialog .pf-idea-starter-chip:hover {
   background: #e8eee3;
   border-color: #173d34;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root .vnext-shell .pf-idea-sheet-dialog .pf-idea-starter-chip {
+    transition: none !important;
+  }
 }
