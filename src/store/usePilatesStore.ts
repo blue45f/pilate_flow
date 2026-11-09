@@ -1950,7 +1950,9 @@ export const usePilatesStore = create<PilatesStudioState>()(
             ? log.stepsSnapshot
             : reconstructStepsSnapshotFromHistoryLog(log);
         const resolvedStepsSnapshot =
-          reconstructedSteps.length > 0 ? reconstructedSteps : log.stepsSnapshot;
+          reconstructedSteps && reconstructedSteps.length > 0
+            ? reconstructedSteps
+            : log.stepsSnapshot;
         const exerciseIds = resolvedStepsSnapshot
           ? resolvedStepsSnapshot.filter((step) => !isRestStep(step)).map((step) => step.exerciseId)
           : log.exerciseIds;

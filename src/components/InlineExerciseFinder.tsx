@@ -693,7 +693,7 @@ export function InlineExerciseFinder({
               보유 장비 조건만 해제
             </button>
           )}
-          <button type="button" data-testid="ief-empty-reset-btn" onClick={reset}>
+          <button type="button" data-testid="ief-empty-reset-btn" style={{ minHeight: 44 }} onClick={reset}>
             검색·필터 초기화
           </button>
         </div>

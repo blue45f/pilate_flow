@@ -54,6 +54,8 @@ export function buildFourWeekCurriculumProgression(input: {
       exerciseCounts.set(exId, (exerciseCounts.get(exId) ?? 0) + 1);
       const ex = exerciseMap.get(exId);
       for (const plane of ex?.spinalPlanes ?? []) {
+        // Keep neutral alignment out of movement-plane recommendations.
+        if (plane === 'neutral') continue;
         planeCounts.set(plane, (planeCounts.get(plane) ?? 0) + 1);
       }
     }
