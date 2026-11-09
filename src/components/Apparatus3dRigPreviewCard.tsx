@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
+import { PfButton } from '../design-system';
 import type { ApparatusType, BodyPosition } from '../types/pilates';
 import {
   PHASE_CARRIAGE_RATIOS,
@@ -29,6 +30,13 @@ const MOTION_PHASES: ReadonlyArray<{ id: RigMotionPhase; labelKo: string }> = [
   { id: 'return', labelKo: '3 복귀(Return)' },
 ];
 
+function prefersReducedMotionNow(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps> = ({
   apparatus,
   bodyPosition,
@@ -40,9 +48,29 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
   const [carriageOffset, setCarriageOffset] = useState<number>(PHASE_CARRIAGE_RATIOS.setup);
   const [autoPlay, setAutoPlay] = useState<boolean>(false);
   const [showBlenderScript, setShowBlenderScript] = useState<boolean>(false);
+  const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotionNow);
+  const blenderScriptId = useId();
+  const carriageSliderId = useId();
 
   useEffect(() => {
-    if (!autoPlay) return;
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handleChange = () => {
+      const reduced = mql.matches;
+      setReducedMotion(reduced);
+      if (reduced) {
+        setAutoPlay(false);
+      }
+    };
+    if (typeof mql.addEventListener === 'function') {
+      mql.addEventListener('change', handleChange);
+      return () => mql.removeEventListener('change', handleChange);
+    }
+    return undefined;
+  }, []);
+
+  useEffect(() => {
+    if (!autoPlay || reducedMotion) return;
     const order: RigMotionPhase[] = ['setup', 'peak', 'return'];
     const timer = window.setInterval(() => {
       setPhase((prev) => {
@@ -52,7 +80,7 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
       });
     }, 1100);
     return () => window.clearInterval(timer);
-  }, [autoPlay]);
+  }, [autoPlay, reducedMotion]);
 
   const scene = useMemo(
     () =>
@@ -93,26 +121,17 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
 
   return (
     <section
-      className="pf-card"
+      className="pf-card pf-rig-preview"
       aria-label="3D 기구·스프링·무게중심(CoM) 뷰포트 시뮬레이터"
       data-testid="apparatus-3d-rig-preview"
-      style={{ padding: '14px 16px', display: 'grid', gap: '10px' }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '8px',
-        }}
-      >
-        <div>
-          <strong style={{ fontSize: '14px', color: '#173d34' }}>
+      <div className="pf-rig-preview__header">
+        <div className="pf-rig-preview__copy">
+          <strong className="pf-rig-preview__title">
             3D 기구·관절 체인·무게중심(CoM) 투영 뷰포트
             {exerciseTitleKo ? ` · ${exerciseTitleKo}` : ''}
           </strong>
-          <p className="muted" style={{ fontSize: '12px', margin: '2px 0 0' }}>
+          <p className="pf-rig-preview__meta">
             {APPARATUS_LABELS[apparatus].ko} · {POSITION_LABELS[bodyPosition].ko} ·{' '}
             {scene.springVector2D.tensionLabel}
           </p>
@@ -120,24 +139,18 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
         <div
           role="group"
           aria-label="3D 카메라 시점 전환"
-          style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}
+          className="pf-rig-preview__camera-group"
         >
           {CAMERA_PRESETS.map((preset) => (
-            <button
+            <PfButton
               key={preset.id}
-              type="button"
-              className="btn-secondary"
-              aria-pressed={cameraPreset === preset.id}
+              variant="secondary"
+              className="pf-rig-preview__btn"
+              pressed={cameraPreset === preset.id}
               onClick={() => setCameraPreset(preset.id)}
-              style={{
-                minHeight: '30px',
-                padding: '3px 9px',
-                fontSize: '12px',
-                fontWeight: cameraPreset === preset.id ? 700 : 500,
-              }}
             >
               {preset.labelKo}
-            </button>
+            </PfButton>
           ))}
         </div>
       </div>
@@ -145,60 +158,60 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
       <div
         role="group"
         aria-label="3페이즈 키프레임 전환"
-        style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}
+        className="pf-rig-preview__phase-bar"
       >
-        {MOTION_PHASES.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className="btn-secondary"
-            aria-pressed={phase === item.id}
+        <div className="pf-rig-preview__phase-group">
+          {MOTION_PHASES.map((item) => (
+            <PfButton
+              key={item.id}
+              variant="secondary"
+              className="pf-rig-preview__btn"
+              pressed={phase === item.id}
+              onClick={() => {
+                setAutoPlay(false);
+                setPhase(item.id);
+                setCarriageOffset(PHASE_CARRIAGE_RATIOS[item.id]);
+              }}
+            >
+              {item.labelKo}
+            </PfButton>
+          ))}
+        </div>
+        <div className="pf-rig-preview__utility-group">
+          <PfButton
+            variant="secondary"
+            className="pf-rig-preview__btn"
+            pressed={autoPlay && !reducedMotion}
             onClick={() => {
-              setAutoPlay(false);
-              setPhase(item.id);
-              setCarriageOffset(PHASE_CARRIAGE_RATIOS[item.id]);
-            }}
-            style={{
-              minHeight: '28px',
-              padding: '2px 10px',
-              fontSize: '12px',
-              fontWeight: phase === item.id ? 700 : 500,
+              if (reducedMotion) {
+                const order: RigMotionPhase[] = ['setup', 'peak', 'return'];
+                const next = order[(order.indexOf(phase) + 1) % order.length]!;
+                setPhase(next);
+                setCarriageOffset(PHASE_CARRIAGE_RATIOS[next]);
+                return;
+              }
+              setAutoPlay((v) => !v);
             }}
           >
-            {item.labelKo}
-          </button>
-        ))}
-        <button
-          type="button"
-          className="btn-secondary"
-          aria-pressed={autoPlay}
-          onClick={() => setAutoPlay((v) => !v)}
-          style={{ marginLeft: 'auto', minHeight: '28px', padding: '2px 10px', fontSize: '12px' }}
-        >
-          {autoPlay ? '3페이즈 자동 재생 중지' : '3페이즈 연속 재생'}
-        </button>
-        <button
-          type="button"
-          className="btn-secondary"
-          aria-expanded={showBlenderScript}
-          onClick={() => setShowBlenderScript((v) => !v)}
-          style={{ minHeight: '28px', padding: '2px 10px', fontSize: '12px' }}
-        >
-          {showBlenderScript ? 'Blender 스크립트 닫기' : 'Blender 3D 스크립트(.py)'}
-        </button>
+            {autoPlay && !reducedMotion ? '3페이즈 자동 재생 중지' : '3페이즈 연속 재생'}
+          </PfButton>
+          <PfButton
+            variant="secondary"
+            className="pf-rig-preview__btn"
+            aria-expanded={showBlenderScript}
+            aria-controls={blenderScriptId}
+            onClick={() => setShowBlenderScript((v) => !v)}
+          >
+            {showBlenderScript ? 'Blender 스크립트 닫기' : 'Blender 3D 스크립트(.py)'}
+          </PfButton>
+        </div>
       </div>
 
       <svg
         viewBox="0 0 320 180"
         role="img"
         aria-label={`${APPARATUS_LABELS[apparatus].ko} ${cameraPreset} 투영 도해`}
-        style={{
-          width: '100%',
-          maxHeight: '180px',
-          background: '#f7f9f7',
-          borderRadius: '12px',
-          border: '1px solid #d7e2dc',
-        }}
+        className="pf-rig-preview__svg"
       >
         <defs>
           <marker
@@ -276,35 +289,23 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
 
       {showBlenderScript && (
         <pre
+          id={blenderScriptId}
+          role="region"
+          aria-label="Blender 4.x Python 3D 씬 스크립트"
+          tabIndex={0}
           data-testid="blender-scene-script-preview"
-          style={{
-            margin: 0,
-            padding: '10px 12px',
-            borderRadius: '8px',
-            background: '#1e293b',
-            color: '#f8fafc',
-            fontSize: '11px',
-            lineHeight: 1.5,
-            maxHeight: '180px',
-            overflowY: 'auto',
-            whiteSpace: 'pre-wrap',
-          }}
+          className="pf-rig-preview__script-pre"
         >
           {blenderScript}
         </pre>
       )}
 
-      <label
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          fontSize: '12px',
-          color: '#35594e',
-        }}
-      >
-        <span>캐리지·가동 범위 위치 ({Math.round(carriageOffset * 100)}%)</span>
+      <div className="pf-rig-preview__slider-row">
+        <label htmlFor={carriageSliderId} className="pf-rig-preview__slider-label">
+          캐리지·가동 범위 위치 ({Math.round(carriageOffset * 100)}%)
+        </label>
         <input
+          id={carriageSliderId}
           type="range"
           min="0"
           max="1"
@@ -315,9 +316,9 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
             setCarriageOffset(Number(e.target.value));
           }}
           aria-label="캐리지 가동 범위 위치 조절"
-          style={{ flex: 1 }}
+          className="pf-rig-preview__slider-input"
         />
-      </label>
+      </div>
     </section>
   );
 };

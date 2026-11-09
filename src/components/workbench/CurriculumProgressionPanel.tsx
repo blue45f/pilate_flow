@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { PfBadge } from '../../design-system';
 import type { ClassHistoryLog, DifficultyLevel, PilatesExercise } from '../../types/pilates';
 import { buildFourWeekCurriculumProgression } from '../../utils/curriculumProgressionEngine';
 
@@ -36,47 +37,47 @@ export const CurriculumProgressionPanel: React.FC<CurriculumProgressionPanelProp
   );
 
   return (
-    <div
-      className="pf-card"
+    <section
+      className="pf-card pf-curriculum-progression"
       data-testid="curriculum-progression-panel"
-      style={{ padding: '14px 16px', display: 'grid', gap: '10px' }}
+      aria-label="4주 커리큘럼 프로그레션 설계표"
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
-        <strong style={{ fontSize: '14px', color: '#173d34' }}>
+      <div className="pf-curriculum-progression__header">
+        <strong className="pf-curriculum-progression__title">
           {groupName || '현재 반'} · 4주 커리큘럼 프로그레션 설계표
         </strong>
-        <span className="muted" style={{ fontSize: '12px' }}>
+        <span className="pf-curriculum-progression__meta">
           최근 기록 {report.recentSessionCount}회 반영 · 보완 권장 평면:{' '}
           {report.underusedSpinalPlanes.map((p) => PLANE_KO[p]).join(' · ')}
         </span>
       </div>
-      <div style={{ display: 'grid', gap: '8px' }}>
+      <div
+        className="pf-curriculum-progression__grid"
+        role="list"
+        aria-label="주차별 프로그레션 목표"
+      >
         {report.milestones.map((milestone) => (
           <div
             key={milestone.weekNumber}
-            style={{
-              padding: '10px 12px',
-              borderRadius: '10px',
-              background: '#f6f8f7',
-              border: '1px solid #dce6e1',
-              display: 'grid',
-              gap: '4px',
-            }}
+            role="listitem"
+            className="pf-curriculum-progression__item"
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
-              <strong style={{ fontSize: '13px', color: '#173d34' }}>{milestone.themeKo}</strong>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#14665e' }}>
+            <div className="pf-curriculum-progression__item-head">
+              <strong className="pf-curriculum-progression__item-theme">
+                {milestone.themeKo}
+              </strong>
+              <PfBadge tone="sage">
                 권장 Lv {milestone.recommendedLevel} · 집중 평면:{' '}
                 {milestone.focusSpinalPlanes.map((p) => PLANE_KO[p]).join('·')} · 신규 동작{' '}
                 {Math.round(milestone.noveltyRatioTarget * 100)}%
-              </span>
+              </PfBadge>
             </div>
-            <p className="muted" style={{ fontSize: '12px', margin: 0 }}>
+            <p className="pf-curriculum-progression__item-rationale">
               {milestone.rationaleKo}
             </p>
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 };

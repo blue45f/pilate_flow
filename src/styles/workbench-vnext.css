@@ -585,7 +585,7 @@
 
 #root .vnext-workbench .workbench-hierarchy-details > summary {
   cursor: pointer;
-  min-height: 36px;
+  min-height: 44px;
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--wb-forest, #173d34);
@@ -597,7 +597,7 @@
 
 #root .vnext-workbench .workbench-hierarchy-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
   gap: 8px;
   margin-top: 8px;
   padding-top: 8px;
@@ -643,9 +643,10 @@
 #root .vnext-workbench .workbench-blank-starter-chip {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
-  min-height: 36px;
-  padding: 5px 11px;
+  min-height: 44px;
+  padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid #ced4c5;
   background: #fffdf8;
@@ -690,8 +691,9 @@
 }
 
 #root .vnext-workbench .workbench-combo-scale-btn {
-  min-height: 36px;
-  padding: 5px 10px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 6px 12px;
   border-radius: 8px;
   border: 1px solid #ced4c5;
   background: #fffdf8;
@@ -713,4 +715,320 @@
 #root .vnext-workbench .workbench-combo-scale-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Wave 3–8 Workbench Studio Telemetry, Optimizer, Readiness, Calibration,
+   4-Week Curriculum & 3D Rig Preview Cards (.pf-studio-*, .pf-rig-preview)
+   ========================================================================== */
+
+.pf-studio-readiness-card,
+.pf-studio-optimizer,
+.pf-duration-calibration,
+.pf-curriculum-progression,
+.pf-rig-preview {
+  padding: 14px 16px;
+  display: grid;
+  gap: 10px;
+  background: var(--pf-color-bg-surface, #fffef9);
+  border: 1px solid var(--pf-color-border-default, #d5ddd0);
+  border-radius: var(--pf-radius-md, 12px);
+  color: var(--pf-color-text-primary, #1e3129);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.pf-studio-readiness-card__header,
+.pf-studio-optimizer__header,
+.pf-duration-calibration,
+.pf-curriculum-progression__header,
+.pf-rig-preview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pf-duration-calibration {
+  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+}
+
+.pf-studio-readiness-card__title,
+.pf-studio-optimizer__title,
+.pf-duration-calibration__title,
+.pf-curriculum-progression__title,
+.pf-rig-preview__title {
+  font-size: var(--pf-text-sm, 0.8125rem);
+  font-weight: 700;
+  color: var(--pf-color-text-brand, #173d34);
+  line-height: 1.4;
+}
+
+.pf-studio-readiness-card__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-studio-readiness-card__metric-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--pf-color-border-default, #d5ddd0);
+  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+  color: var(--pf-color-text-secondary, #3d4f45);
+  font-size: var(--pf-text-xs, 0.75rem);
+  line-height: 1.4;
+}
+
+.pf-studio-readiness-card__metric-chip--warning {
+  border-color: var(--pf-color-status-warning-border, #e0c08b);
+  background: var(--pf-color-status-warning-bg, #fdf3e1);
+  color: var(--pf-color-status-warning-text, #6b4010);
+}
+
+.pf-studio-optimizer__copy,
+.pf-duration-calibration__copy,
+.pf-rig-preview__copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.pf-studio-optimizer__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pf-studio-optimizer__meta,
+.pf-duration-calibration__desc,
+.pf-curriculum-progression__meta,
+.pf-rig-preview__meta {
+  margin: 0;
+  font-size: var(--pf-text-xs, 0.75rem);
+  color: var(--pf-color-text-secondary, #3d4f45);
+  line-height: 1.45;
+}
+
+.pf-studio-optimizer__submeta {
+  font-size: var(--pf-text-xs, 0.75rem);
+  font-weight: 600;
+  color: var(--pf-color-text-brand, #173d34);
+  line-height: 1.4;
+}
+
+.pf-studio-optimizer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pf-studio-optimizer__btn,
+.pf-duration-calibration__btn,
+.pf-rig-preview__btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 6px 12px;
+  font-size: var(--pf-text-xs, 0.75rem);
+  word-break: keep-all;
+}
+
+.pf-studio-optimizer__angles-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--pf-color-bg-surface-elevated, #ffffff);
+  border: 1px solid var(--pf-color-border-subtle, #e3e8dd);
+}
+
+.pf-studio-optimizer__angle-card {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--pf-color-border-subtle, #e3e8dd);
+  background: var(--pf-color-bg-surface, #fffef9);
+  font-size: var(--pf-text-xs, 0.75rem);
+  line-height: 1.45;
+}
+
+.pf-studio-optimizer__angle-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pf-studio-optimizer__angle-subtitle {
+  color: var(--pf-color-text-secondary, #3d4f45);
+}
+
+.pf-studio-optimizer__angle-hook {
+  color: var(--pf-color-text-brand, #173d34);
+  font-weight: 600;
+}
+
+.pf-studio-optimizer__script-pre,
+.pf-rig-preview__script-pre {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--pf-color-border-default, #d5ddd0);
+  background: var(--pf-color-bg-surface-elevated, #ffffff);
+  color: var(--pf-color-text-primary, #1e3129);
+  font-family: var(--pf-font-mono, monospace);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.pf-rig-preview__script-pre {
+  background: #182620;
+  color: #f4f7f4;
+  border-color: #2f463c;
+}
+
+.pf-studio-optimizer__script-pre:focus-visible,
+.pf-rig-preview__script-pre:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring, #b16f48);
+  outline-offset: 2px;
+}
+
+.pf-curriculum-progression__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 8px;
+}
+
+.pf-curriculum-progression__item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+  border: 1px solid var(--pf-color-border-subtle, #e3e8dd);
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pf-curriculum-progression__item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pf-curriculum-progression__item-theme {
+  font-size: var(--pf-text-sm, 0.8125rem);
+  color: var(--pf-color-text-brand, #173d34);
+}
+
+.pf-curriculum-progression__item-rationale {
+  margin: 0;
+  font-size: var(--pf-text-xs, 0.75rem);
+  color: var(--pf-color-text-secondary, #3d4f45);
+  line-height: 1.45;
+}
+
+.pf-rig-preview__camera-group,
+.pf-rig-preview__phase-bar,
+.pf-rig-preview__phase-group,
+.pf-rig-preview__utility-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pf-rig-preview__phase-bar {
+  justify-content: space-between;
+}
+
+.pf-rig-preview__svg {
+  width: 100%;
+  max-height: 180px;
+  background: #f7f9f7;
+  border-radius: 12px;
+  border: 1px solid var(--pf-color-border-default, #d5ddd0);
+  display: block;
+}
+
+.pf-rig-preview__slider-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+
+.pf-rig-preview__slider-label {
+  font-size: var(--pf-text-xs, 0.75rem);
+  font-weight: 600;
+  color: var(--pf-color-text-secondary, #3d4f45);
+}
+
+.pf-rig-preview__slider-input {
+  flex: 1 1 160px;
+  min-height: 44px;
+  margin: 0;
+  accent-color: var(--wb-forest, #173d34);
+  cursor: pointer;
+}
+
+.pf-rig-preview__slider-input:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring, #b16f48);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (max-width: 560px) {
+  .pf-studio-optimizer__actions,
+  .pf-rig-preview__camera-group,
+  .pf-rig-preview__phase-group,
+  .pf-rig-preview__utility-group {
+    width: 100%;
+  }
+
+  .pf-studio-optimizer__actions > .pf-btn,
+  .pf-duration-calibration__btn,
+  .pf-rig-preview__utility-group > .pf-btn {
+    flex: 1 1 100%;
+  }
+
+  .pf-rig-preview__camera-group > .pf-btn {
+    flex: 1 1 calc(50% - 6px);
+  }
+
+  .pf-rig-preview__phase-group > .pf-btn {
+    flex: 1 1 calc(33.333% - 6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root .vnext-workbench .workbench-blank-starter-chip,
+  #root .vnext-workbench .workbench-combo-scale-btn,
+  #root .vnext-workbench .v2-condition-chips > button,
+  #root .vnext-workbench .sequence-inline-tools details > summary {
+    transition: none !important;
+    transform: none !important;
+  }
 }

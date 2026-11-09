@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { PfBadge } from '../../design-system';
 import type {
   DifficultyLevel,
   PilatesExercise,
@@ -50,64 +51,33 @@ export const StudioReadinessAuditCard: React.FC<StudioReadinessAuditCardProps> =
 
   return (
     <section
-      className="pf-card"
+      className="pf-card pf-studio-readiness-card"
       data-testid="studio-readiness-audit-badge"
       aria-label="스튜디오 운영 준비도 및 호흡·스프링 진단"
-      style={{
-        padding: '12px 16px',
-        display: 'grid',
-        gap: '8px',
-        background: '#f5f8f6',
-        border: '1px solid #d8e5de',
-      }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '8px',
-        }}
-      >
-        <strong style={{ fontSize: '13px', color: '#173d34' }}>{readiness.summaryLabelKo}</strong>
-        <span
-          style={{
-            fontSize: '11px',
-            padding: '2px 8px',
-            borderRadius: '999px',
-            background: readiness.score >= 85 ? '#dcfce7' : '#fef3c7',
-            color: readiness.score >= 85 ? '#166534' : '#92400e',
-            fontWeight: 600,
-          }}
-        >
+      <div className="pf-studio-readiness-card__header">
+        <strong className="pf-studio-readiness-card__title">{readiness.summaryLabelKo}</strong>
+        <PfBadge tone={readiness.score >= 85 ? 'success' : 'warning'}>
           준비도 {readiness.score}/100
-        </span>
+        </PfBadge>
       </div>
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '10px',
-          fontSize: '12px',
-          color: '#344e46',
-        }}
-      >
-        <span>{breathing.headlineKo}</span>
-        <span>·</span>
-        <span>
+      <div className="pf-studio-readiness-card__metrics" role="list" aria-label="호흡·스프링·척추 평면 요약">
+        <span className="pf-studio-readiness-card__metric-chip" role="listitem">
+          {breathing.headlineKo}
+        </span>
+        <span className="pf-studio-readiness-card__metric-chip" role="listitem">
           대표 스프링 환산({reformerBrand}):{' '}
           <strong>{sampleSpringConversion.equivalentsByBrand[reformerBrand]}</strong> (
           {sampleSpringConversion.tierLabelKo})
         </span>
         {readiness.missingSpinalPlanes.length > 0 && (
-          <>
-            <span>·</span>
-            <span>
-              미포함 척추 평면:{' '}
-              {readiness.missingSpinalPlanes.map((p) => PLANE_LABELS_KO[p]).join(', ')}
-            </span>
-          </>
+          <span
+            className="pf-studio-readiness-card__metric-chip pf-studio-readiness-card__metric-chip--warning"
+            role="listitem"
+          >
+            미포함 척추 평면:{' '}
+            {readiness.missingSpinalPlanes.map((p) => PLANE_LABELS_KO[p]).join(', ')}
+          </span>
         )}
       </div>
     </section>
