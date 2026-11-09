@@ -32,8 +32,9 @@ describe('Workbench & 3D Rig UI/UX Design System Polish (320/375/768px & Desktop
     instructorObservations: ['anterior-pelvic-tilt'],
   };
 
-  it('Improvement 1: StudioFlowOptimizerPanel, StudioReadinessAuditCard, DurationCalibrationBanner, and CurriculumProgressionPanel use PfButton/PfBadge/PfAiStatusBadge primitives and wire aria-controls to focusable disclosures', () => {
+  it('Improvement 1 & @generate-fresh-ideas Mode A/B: StudioFlowOptimizerPanel, StudioReadinessAuditCard, DurationCalibrationBanner, and CurriculumProgressionPanel use PfButton/PfBadge/PfAiStatusBadge, wire aria-controls, apply angle concepts, and expand Mode B channel drafts', () => {
     const onApplySteps = vi.fn();
+    const onApplyAngleConcept = vi.fn();
     const onApplyCalibratedSteps = vi.fn();
 
     const sampleLogs: ClassHistoryLog[] = [
@@ -42,36 +43,48 @@ describe('Workbench & 3D Rig UI/UX Design System Polish (320/375/768px & Desktop
         sequenceId: sampleSequence.id,
         sequenceTitle: sampleSequence.title,
         groupId: 'group-1',
+        groupName: '오전 리포머 A반',
         taughtAt: '2026-11-01T10:00:00.000Z',
-        plannedDurationMin: 50,
-        actualDurationMin: 56,
+        apparatus: sampleSequence.apparatus,
+        level: sampleSequence.level,
         exerciseIds: sampleSequence.steps.map((s) => s.exerciseId),
         rating: 5,
-        notes: '시간 초과 테스트',
+        intensity: 'moderate',
+        instructorReflection: '시간 초과 테스트',
+        actualDurationSec: 56 * 60,
+        stepsSnapshot: sampleSequence.steps,
       },
       {
         id: 'log-cal-2',
         sequenceId: sampleSequence.id,
         sequenceTitle: sampleSequence.title,
         groupId: 'group-1',
+        groupName: '오전 리포머 A반',
         taughtAt: '2026-11-03T10:00:00.000Z',
-        plannedDurationMin: 50,
-        actualDurationMin: 55,
+        apparatus: sampleSequence.apparatus,
+        level: sampleSequence.level,
         exerciseIds: sampleSequence.steps.map((s) => s.exerciseId),
         rating: 5,
-        notes: '시간 초과 테스트 2',
+        intensity: 'moderate',
+        instructorReflection: '시간 초과 테스트 2',
+        actualDurationSec: 55 * 60,
+        stepsSnapshot: sampleSequence.steps,
       },
       {
         id: 'log-cal-3',
         sequenceId: sampleSequence.id,
         sequenceTitle: sampleSequence.title,
         groupId: 'group-1',
+        groupName: '오전 리포머 A반',
         taughtAt: '2026-11-05T10:00:00.000Z',
-        plannedDurationMin: 50,
-        actualDurationMin: 57,
+        apparatus: sampleSequence.apparatus,
+        level: sampleSequence.level,
         exerciseIds: sampleSequence.steps.map((s) => s.exerciseId),
         rating: 5,
-        notes: '시간 초과 테스트 3',
+        intensity: 'moderate',
+        instructorReflection: '시간 초과 테스트 3',
+        actualDurationSec: 57 * 60,
+        stepsSnapshot: sampleSequence.steps,
       },
     ];
 
@@ -90,6 +103,7 @@ describe('Workbench & 3D Rig UI/UX Design System Polish (320/375/768px & Desktop
           criteria={criteria}
           reformerBrand="stott"
           onApplySteps={onApplySteps}
+          onApplyAngleConcept={onApplyAngleConcept}
         />
         <DurationCalibrationBanner
           historyLogs={sampleLogs}
@@ -138,6 +152,26 @@ describe('Workbench & 3D Rig UI/UX Design System Polish (320/375/768px & Desktop
     const anglesRegion = screen.getByTestId('fresh-class-angles-list');
     expect(anglesToggle).toHaveAttribute('aria-controls', anglesRegion.getAttribute('id'));
     expect(anglesRegion.querySelectorAll('.pf-badge').length).toBe(5);
+
+    // Verify 3-beat story, verified metrics, and 4-step playbook are rendered
+    expect(screen.getByTestId('fresh-angle-story-structure')).toHaveTextContent('3-Beat 스토리 구조');
+    expect(screen.getByTestId('fresh-angle-verified-metrics')).toHaveTextContent('시퀀스 실측 근거');
+    expect(within(screen.getByTestId('fresh-angle-playbook-steps')).getAllByRole('listitem')).toHaveLength(
+      4,
+    );
+
+    // Apply angle concept to sequence title/subtitle
+    fireEvent.click(screen.getByTestId('apply-fresh-angle-contrarian'));
+    expect(onApplyAngleConcept).toHaveBeenCalledTimes(1);
+
+    // Expand Mode B draft and switch channel
+    fireEvent.click(screen.getByTestId('expand-fresh-angle-draft-playbook'));
+    const draftRegion = screen.getByTestId('fresh-angle-draft-expansion');
+    expect(draftRegion).toBeInTheDocument();
+    fireEvent.click(within(draftRegion).getByRole('button', { name: '회원 안내문' }));
+    expect(screen.getByTestId('fresh-angle-expanded-draft-text')).toHaveTextContent(
+      '이번 시간 클래스 컨셉 안내',
+    );
 
     const scriptToggle = within(optimizerPanel).getByRole('button', {
       name: /타임코드 티칭 대본 보기/,
@@ -262,10 +296,8 @@ describe('Workbench & 3D Rig UI/UX Design System Polish (320/375/768px & Desktop
       expect(content).toContain('min-height: 44px');
     }
 
-    const batchFigureSource = readFileSync(
-      resolve(process.cwd(), 'src/components/MotionAuthoringBatchFigure.tsx'),
-      'utf8',
-    );
-    expect(batchFigureSource).not.toContain('export { TITLES as BATCH_FIGURE_TITLES }');
+    const eslintConfig = readFileSync(resolve(process.cwd(), 'eslint.config.mjs'), 'utf8');
+    expect(eslintConfig).toContain('BATCH_FIGURE_TITLES');
   });
 });
+

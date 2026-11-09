@@ -57,7 +57,7 @@ export function buildMemberConditionLayerAdvice(
       goals.has('strength') &&
       !hasPelvicObservation &&
       criteria.level === '2.0' &&
-      ex.blockCategory === 'abdominal'
+      (ex.blockCategory === 'core' || ex.blockCategory === 'plank')
     ) {
       recommendedLayer = 'hard';
       reasonKo = '근력 강화 목표 및 중상급(Lv 2.0) 반영 · 코어 도전(Hard) 레이어 권장';

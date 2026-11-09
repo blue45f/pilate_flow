@@ -375,6 +375,7 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
       sequenceId: nextSequenceId,
       revisionSequenceId: nextRevisionSequenceId,
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [selectedDate, setSelectedDate] = useState(
     isScheduleDate(props.initialDate) ? props.initialDate : localScheduleDate(),

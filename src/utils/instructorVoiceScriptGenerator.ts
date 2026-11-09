@@ -35,7 +35,7 @@ export function generateInstructorVoiceScript(
   fullTextKo: string;
 } {
   const level = options?.level ?? '1.5';
-  const brand = options?.reformerBrand ?? 'balanced';
+  const brand: ReformerBrand = options?.reformerBrand ?? 'balanced-body';
   const segments: VoiceScriptSegment[] = [];
   let cursorSec = 0;
 

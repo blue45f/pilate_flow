@@ -64,7 +64,7 @@ export function verifySequenceAiSafetyAndFidelity(
     );
 
   // Gate 4: Duration & Step Time Boundedness
-  const durations = getSequenceDurations(steps);
+  const durations = getSequenceDurations([...steps]);
   const totalMin = durations.totalSec / 60;
   const invalidStepDuration = steps.some(
     (st) => !Number.isFinite(st.durationMin) || st.durationMin <= 0 || st.durationMin > 30,

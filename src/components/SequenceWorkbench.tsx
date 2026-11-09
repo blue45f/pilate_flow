@@ -2039,6 +2039,16 @@ export function SequenceWorkbench({
                       });
                       setNotice(noticeMessage);
                     }}
+                    onApplyAngleConcept={(suggestedTitleKo, suggestedSubtitleKo, noticeMessage) => {
+                      s.setActiveSequenceMeta({
+                        title: suggestedTitleKo,
+                        subtitle: suggestedSubtitleKo,
+                      });
+                      usePilatesStore.setState({
+                        saveFeedback: noticeMessage,
+                      });
+                      setNotice(noticeMessage);
+                    }}
                   />
                   <SequenceFlowTelemetryStrip
                     steps={s.activeSteps}
