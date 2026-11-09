@@ -87,19 +87,13 @@ export function ApparatusIllustrationSvg({
         borderRadius: compact ? '6px' : '10px',
       }}
     >
-      <defs>
-        <linearGradient id={`studio-bg-${apparatus}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor={palette.bg} />
-          <stop offset="100%" stopColor="#FFFDF9" />
-        </linearGradient>
-      </defs>
       <rect
         x="0.5"
         y="0.5"
         width="119"
         height="71"
         rx="8"
-        fill={`url(#studio-bg-${apparatus})`}
+        fill={palette.bg}
         stroke={palette.border}
       />
       {/* Warm oak studio floor line */}

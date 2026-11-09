@@ -22,6 +22,8 @@ import {
 } from '../utils/teachingHistorySnapshot';
 import { LightDismissDialog } from './LightDismissDialog';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
+import { ApparatusIconBadge } from './ApparatusStudioArtwork';
+import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/design-tokens.css';
 import '../styles/teaching.css';
@@ -420,6 +422,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
       </div>
       {message && <PfStatusBanner tone="success">{message}</PfStatusBanner>}
       {view === 'history' && historyCopyError && <PfFormError>{historyCopyError}</PfFormError>}
+      <ApparatusVisualGuideRibbon activeApparatusId="reformer" mode="binder" />
       {view === 'saved' ? (
         <>
           <div className="teaching-collection-toolbar">
@@ -446,7 +449,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                 const detailsExpanded = expandedSavedIds.has(sequence.id);
                 return (
                   <PfCard as="article" variant="interactive" className="teaching-sequence-card" key={sequence.id}>
-                    <h2>{sequence.title}</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <ApparatusIconBadge apparatus={sequence.apparatus} size="xs" decorative />
+                      <h2 style={{ margin: 0 }}>{sequence.title}</h2>
+                    </div>
                     <p className="muted teaching-sequence-subtitle">{sequence.subtitle || '내가 만든 수업 흐름'}</p>
                     {sampleSequenceIds.has(sequence.id) && <span className="teaching-saved-sample-label">예시 계획</span>}
                     {sequence.recoveredDraftOrigin && <p className="muted" data-recovered-draft="true">이전 편집 초안에서 복구한 자료 · 수업 전 조건을 확인해 주세요.</p>}

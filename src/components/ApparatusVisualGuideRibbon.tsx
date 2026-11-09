@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, ExternalLink, HeartHandshake, Sparkles, Wrench } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  CircleDot,
+  ExternalLink,
+  HeartHandshake,
+  Sparkles,
+  Wrench,
+} from 'lucide-react';
 import {
   APPARATUS_VISUAL_GUIDE_CATALOG,
   PROP_QUICK_GUIDES,
@@ -8,6 +16,7 @@ import {
   buildApparatusIdeaExpandedDraft,
   getApparatusVisualGuide,
   type ApparatusVisualGuideEntry,
+  type PropQuickGuide,
   type SpecialPopulationCarePreset,
   type TargetedPainCareBlock,
 } from '../data/apparatusVisualGuideCatalog';
@@ -20,7 +29,7 @@ export interface ApparatusVisualGuideRibbonProps {
   /** Currently active apparatus or equipment ID (e.g. 'reformer', 'mat', 'chair', 'cadillac', 'barrel') */
   readonly activeApparatusId?: string;
   /** Mode determines default collapsed/expanded state and action buttons */
-  readonly mode?: 'atlas' | 'workbench' | 'stage';
+  readonly mode?: 'atlas' | 'workbench' | 'stage' | 'binder';
   /** Optional callback when user selects an apparatus from the guide switcher */
   readonly onSelectApparatus?: (apparatusId: string) => void;
   /** Optional callback in workbench mode to apply a 5-lens class concept title & subtitle */
@@ -29,6 +38,90 @@ export interface ApparatusVisualGuideRibbonProps {
     subtitleKo: string,
     apparatusFamily: ApparatusVisualGuideEntry['family'],
   ) => void;
+}
+
+function PropStudioIllustrationSvg({ prop }: { prop: PropQuickGuide }): React.JSX.Element {
+  return (
+    <svg
+      viewBox="0 0 88 56"
+      role="img"
+      aria-label={`${prop.nameKo} 소도구 도해`}
+      style={{ width: '76px', height: '48px', flexShrink: 0, borderRadius: '8px' }}
+    >
+      <rect x="1" y="1" width="86" height="54" rx="8" fill="#F6F3EB" stroke="#D7CFC2" />
+      {prop.id === 'magic-circle' && (
+        <g>
+          <circle cx="44" cy="28" r="17" fill="none" stroke="#1F5C4D" strokeWidth="3.2" />
+          <rect x="23" y="22" width="5" height="12" rx="2" fill="#87623E" />
+          <rect x="60" y="22" width="5" height="12" rx="2" fill="#87623E" />
+          <path d="M 33 28 L 55 28" stroke="#C84B31" strokeWidth="1.5" strokeDasharray="2 2" />
+        </g>
+      )}
+      {prop.id === 'foam-roller' && (
+        <g>
+          <rect
+            x="14"
+            y="20"
+            width="60"
+            height="16"
+            rx="8"
+            fill="#628B7B"
+            stroke="#1F5C4D"
+            strokeWidth="1.8"
+          />
+          <ellipse cx="20" cy="28" rx="4" ry="8" fill="#E3EFE9" stroke="#1F5C4D" strokeWidth="1.4" />
+        </g>
+      )}
+      {prop.id === 'mini-ball' && (
+        <g>
+          <circle
+            cx="44"
+            cy="28"
+            r="16"
+            fill="#7AA494"
+            stroke="#1F5C4D"
+            strokeWidth="1.8"
+          />
+          <path
+            d="M 34 20 Q 42 15 50 19"
+            fill="none"
+            stroke="#FFFFFF"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </g>
+      )}
+      {prop.id === 'theraband' && (
+        <g>
+          <path
+            d="M 14 34 C 28 14, 60 14, 74 34"
+            fill="none"
+            stroke="#C84B31"
+            strokeWidth="5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 18 38 C 32 22, 56 22, 70 38"
+            fill="none"
+            stroke="#2D6A9F"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </g>
+      )}
+      {prop.id === 'bosu' && (
+        <g>
+          <path
+            d="M 18 38 A 26 20 0 0 1 70 38 Z"
+            fill="#628B7B"
+            stroke="#1F5C4D"
+            strokeWidth="1.8"
+          />
+          <rect x="14" y="38" width="60" height="5" rx="2" fill="#87623E" />
+        </g>
+      )}
+    </svg>
+  );
 }
 
 function ApparatusAnnotatedBlueprintSvg({
@@ -49,19 +142,13 @@ function ApparatusAnnotatedBlueprintSvg({
       aria-label={`${guide.nameKo} 주요 구조 및 부위 명칭 도해`}
       className="pf-apparatus-blueprint-svg"
     >
-      <defs>
-        <linearGradient id={`bp-bg-${family}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#F6F3EB" />
-          <stop offset="100%" stopColor="#FFFDF9" />
-        </linearGradient>
-      </defs>
       <rect
         x="1"
         y="1"
         width="238"
         height="134"
         rx="10"
-        fill={`url(#bp-bg-${family})`}
+        fill="#F6F3EB"
         stroke="#D5CCBE"
       />
       {/* Subtle architectural grid lines */}
@@ -413,9 +500,9 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
     getApparatusVisualGuide(activeApparatusId).id,
   );
   const [expanded, setExpanded] = useState<boolean>(mode === 'atlas');
-  const [activeTab, setActiveTab] = useState<'anatomy' | 'springs' | 'ideas' | 'special'>(
-    'anatomy',
-  );
+  const [activeTab, setActiveTab] = useState<
+    'anatomy' | 'springs' | 'ideas' | 'special' | 'props'
+  >('anatomy');
   const [activePin, setActivePin] = useState<1 | 2 | 3 | 4>(1);
   const [showAllIdeaScripts, setShowAllIdeaScripts] = useState<boolean>(true);
   const [appliedSpecialStatus, setAppliedSpecialStatus] = useState<string>('');
@@ -526,7 +613,7 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
   return (
     <section
       className={`pf-apparatus-guide-ribbon ${
-        mode === 'stage' ? 'pf-apparatus-guide-ribbon--compact' : ''
+        mode === 'stage' || mode === 'binder' ? 'pf-apparatus-guide-ribbon--compact' : ''
       }`.trim()}
       aria-label={`${effectiveGuide.nameKo} 기구 구조·스프링·수업 아이디어 비주얼 가이드`}
       data-testid="apparatus-visual-guide-ribbon"
@@ -537,7 +624,7 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
           <ApparatusIconBadge apparatus={effectiveGuide.family} size="md" decorative />
           <div className="pf-apparatus-guide-ribbon__titles">
             <div className="pf-apparatus-guide-ribbon__kicker-row">
-              <span className="pf-apparatus-guide-ribbon__kicker">기구 비주얼 도감</span>
+              <span className="pf-apparatus-guide-ribbon__kicker">기구 · 소도구 비주얼 도감</span>
               <span className="pf-apparatus-guide-ribbon__role-badge">
                 {effectiveGuide.studioRoleBadgeKo}
               </span>
@@ -660,6 +747,16 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
               onClick={() => setActiveTab('special')}
             >
               <HeartHandshake size={14} aria-hidden="true" /> 4. 회원 케이스·통증 부위별 맞춤 프리셋
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'props'}
+              className="pf-apparatus-guide-tab"
+              data-testid="apparatus-guide-props-tab"
+              onClick={() => setActiveTab('props')}
+            >
+              <CircleDot size={14} aria-hidden="true" /> 5. 5대 소도구(링·롤러·볼·밴드·보수) 도감
             </button>
           </div>
 
@@ -1045,6 +1142,45 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
                 ))}
               </div>
             </>
+          )}
+
+          {activeTab === 'props' && (
+            <div
+              className="pf-apparatus-ideas-grid"
+              data-testid="prop-visual-guides-grid"
+              aria-label="5대 스튜디오 소도구 비주얼 도감 및 큐잉 가이드"
+            >
+              {PROP_QUICK_GUIDES.map((prop) => (
+                <article
+                  key={prop.id}
+                  className="pf-apparatus-idea-card"
+                  data-testid={`prop-guide-${prop.id}`}
+                >
+                  <div className="pf-apparatus-idea-card__top">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <PropStudioIllustrationSvg prop={prop} />
+                      <div>
+                        <span className="pf-apparatus-idea-badge">{prop.nameEn}</span>
+                        <h3 className="pf-apparatus-idea-headline" style={{ marginTop: '4px' }}>
+                          {prop.nameKo}
+                        </h3>
+                      </div>
+                    </div>
+                    <p className="pf-apparatus-idea-pitch">{prop.summaryKo}</p>
+                    <div className="pf-apparatus-idea-script-box">
+                      <div className="pf-apparatus-idea-script-item">
+                        <strong>🤝 최고 궁합 기구 & 구간</strong>
+                        <p>{prop.bestApparatusKo}</p>
+                      </div>
+                      <div className="pf-apparatus-idea-script-item">
+                        <strong>🎙️ 핵심 티칭 큐잉 포인트</strong>
+                        <p>{prop.cueTipKo}</p>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           )}
         </div>
       )}

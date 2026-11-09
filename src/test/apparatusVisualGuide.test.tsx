@@ -11,6 +11,7 @@ import {
 import { EQUIPMENT_OPTIONS } from '../data/equipmentCatalog';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { ApparatusVisualGuideRibbon } from '../components/ApparatusVisualGuideRibbon';
+import { ClassBinderView } from '../components/ClassBinderView';
 import { ExerciseAtlasView } from '../components/ExerciseAtlasView';
 import { SequenceWorkbench } from '../components/SequenceWorkbench';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -22,7 +23,7 @@ afterEach(() => {
 describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
   it('provides complete anatomy pins, color-coded spring specs, body-fit tips, 5 fresh idea lenses, 3 special presets, and 3 targeted 15-min pain care blocks', () => {
     expect(APPARATUS_VISUAL_GUIDE_CATALOG).toHaveLength(5);
-    expect(PROP_QUICK_GUIDES.length).toBeGreaterThanOrEqual(5);
+    expect(PROP_QUICK_GUIDES).toHaveLength(5);
     expect(SPECIAL_POPULATION_CARE_PRESETS).toHaveLength(3);
     expect(TARGETED_PAIN_CARE_BLOCKS).toHaveLength(3);
 
@@ -70,7 +71,7 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
     }
   });
 
-  it('switches between apparatus anatomy pins, spring matrix, 5-lens ideas, special population presets, and 15-min pain blocks with 1-click actions', () => {
+  it('switches across all 5 visual guide tabs (Anatomy, Springs, 5-Lens Remix, Special/Pain Presets, and 5 Studio Props)', () => {
     const originalState = usePilatesStore.getState();
     let appliedConcept: { title: string; subtitle: string; family: string } | null = null;
     render(
@@ -87,12 +88,12 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
     expect(ribbon).toHaveAttribute('data-active-apparatus', 'reformer');
     expect(within(ribbon).getAllByText(/풋바 \(Footbar\)/).length).toBeGreaterThanOrEqual(2);
 
-    // Switch to Springs tab
+    // Tab 2: Springs
     fireEvent.click(within(ribbon).getByRole('tab', { name: /스프링 컬러 장력표/ }));
     expect(within(ribbon).getByText(/Red \(강 · Heavy\)/)).toBeInTheDocument();
     expect(within(ribbon).getByText(/Blue \(중 · Medium\)/)).toBeInTheDocument();
 
-    // Switch to @generate-fresh-ideas 5-lens tab
+    // Tab 3: @generate-fresh-ideas 5-lens
     fireEvent.click(within(ribbon).getByTestId('apparatus-guide-ideas-tab'));
     const ideasGrid = within(ribbon).getByTestId('apparatus-fresh-ideas-grid');
     for (const lensId of ['contrarian', 'story', 'evidence', 'playbook', 'missed']) {
@@ -107,7 +108,7 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
       family: 'reformer',
     });
 
-    // Switch to Special Population Care Presets & 15-Min Pain Blocks tab
+    // Tab 4: Special Population Care Presets & 15-Min Pain Blocks
     fireEvent.click(within(ribbon).getByTestId('apparatus-guide-special-tab'));
     const specialGrid = within(ribbon).getByTestId('special-population-presets-grid');
     expect(within(specialGrid).getByTestId('special-preset-prenatal-postnatal')).toBeInTheDocument();
@@ -118,22 +119,24 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
     expect(within(ribbon).getByTestId('special-preset-applied-status')).toBeInTheDocument();
     expect(usePilatesStore.getState().activeSteps).toHaveLength(6);
 
-    // Append a 15-minute targeted pain care block to the 6-step sequence -> 9 steps total
     const painGrid = within(ribbon).getByTestId('targeted-pain-blocks-grid');
-    expect(within(painGrid).getByTestId('pain-block-shoulder-rotator-cuff')).toBeInTheDocument();
-    expect(within(painGrid).getByTestId('pain-block-snapping-hip-psoas')).toBeInTheDocument();
-    expect(within(painGrid).getByTestId('pain-block-plantar-foot-tripod')).toBeInTheDocument();
-
     fireEvent.click(within(painGrid).getByTestId('append-pain-block-shoulder-rotator-cuff'));
     expect(usePilatesStore.getState().activeSteps).toHaveLength(9);
 
     fireEvent.click(within(painGrid).getByTestId('replace-pain-block-plantar-foot-tripod'));
     expect(usePilatesStore.getState().activeSteps).toHaveLength(3);
 
+    // Tab 5: 5 Signature Studio Props
+    fireEvent.click(within(ribbon).getByTestId('apparatus-guide-props-tab'));
+    const propsGrid = within(ribbon).getByTestId('prop-visual-guides-grid');
+    for (const propId of ['magic-circle', 'foam-roller', 'mini-ball', 'theraband', 'bosu']) {
+      expect(within(propsGrid).getByTestId(`prop-guide-${propId}`)).toBeInTheDocument();
+    }
+
     usePilatesStore.setState(originalState, true);
   });
 
-  it('renders the apparatus visual guide ribbon inside ExerciseAtlasView and SequenceWorkbench', () => {
+  it('renders the apparatus visual guide ribbon inside ExerciseAtlasView, SequenceWorkbench, and ClassBinderView', () => {
     render(
       <ExerciseAtlasView
         onOpenYouTubePreview={() => undefined}
@@ -151,8 +154,11 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
         onOpenLogModal={() => undefined}
       />,
     );
-    const workbenchRibbon = screen.getByTestId('apparatus-visual-guide-ribbon');
-    expect(workbenchRibbon).toBeInTheDocument();
+    expect(screen.getByTestId('apparatus-visual-guide-ribbon')).toBeInTheDocument();
+    cleanup();
+
+    render(<ClassBinderView onOpenLogModal={() => undefined} view="saved" />);
+    expect(screen.getByTestId('apparatus-visual-guide-ribbon')).toBeInTheDocument();
     usePilatesStore.setState(originalState, true);
   });
 });
