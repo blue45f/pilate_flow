@@ -1,4 +1,5 @@
 import React, { useId, useRef, useState } from 'react';
+import '../styles/extended-motion-verification.css';
 import {
   EXTENDED_CANDIDATE_JOINT_KEYS,
   resolveExtendedCandidateMotionModel,
@@ -34,8 +35,7 @@ export function ExtendedMotionVerificationPanel({
   const normalizedProgress = Math.max(0, Math.min(1, progressPercent / 100));
   const pose = candidateModel ? candidateModel.samplePose(normalizedProgress) : null;
 
-  const activePhaseIndex =
-    pose?.phaseId === 'start' ? 0 : pose?.phaseId === 'middle' ? 1 : 2;
+  const activePhaseIndex = pose?.phaseId === 'start' ? 0 : pose?.phaseId === 'middle' ? 1 : 2;
 
   const selectPhaseIndex = (index: number, focusTab = false) => {
     const safeIndex = ((index % PHASE_TABS.length) + PHASE_TABS.length) % PHASE_TABS.length;
@@ -67,6 +67,7 @@ export function ExtendedMotionVerificationPanel({
 
   return (
     <section
+      className="pf-motion-ledger"
       data-testid="extended-motion-verification-panel"
       aria-label={`${exercise.nameKo} 확장 모션 도해 및 출처 대조 원장`}
       style={{
@@ -180,13 +181,14 @@ export function ExtendedMotionVerificationPanel({
           </div>
 
           <div
+            className="pf-motion-ledger__phases"
             role="tablist"
             aria-label="3단계 동작 국면 선택"
             style={{
-              display: 'flex',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
               gap: '6px',
               marginBottom: '10px',
-              flexWrap: 'wrap',
             }}
           >
             {PHASE_TABS.map((tab, idx) => {
@@ -200,6 +202,7 @@ export function ExtendedMotionVerificationPanel({
                   id={`${baseId}-tab-${tab.id}`}
                   type="button"
                   role="tab"
+                  aria-label={tab.labelKo}
                   aria-selected={isSelected}
                   aria-controls={`${baseId}-motion-tabpanel`}
                   tabIndex={isSelected ? 0 : -1}
@@ -208,10 +211,10 @@ export function ExtendedMotionVerificationPanel({
                   style={{
                     minHeight: '44px',
                     minWidth: '44px',
-                    padding: '8px 12px',
+                    padding: '8px 4px',
                     borderRadius: '8px',
                     border: isSelected
-                      ? '1.5px solid var(--pf-color-action-primary, #0f766e)'
+                      ? '1px solid var(--pf-color-action-primary, #0f766e)'
                       : '1px solid var(--pf-color-border-default, #cbd5e1)',
                     background: isSelected
                       ? 'var(--pf-color-bg-surface-muted, #ccfbf1)'
@@ -224,7 +227,9 @@ export function ExtendedMotionVerificationPanel({
                     cursor: 'pointer',
                   }}
                 >
-                  {tab.labelKo}
+                  <span>{idx + 1}단계</span>
+                  <strong>{['시작', '정점', '복귀'][idx]}</strong>
+                  <span>{tab.progressPercent}%</span>
                 </button>
               );
             })}
@@ -443,220 +448,222 @@ export function ExtendedMotionVerificationPanel({
                 color: 'var(--pf-color-text-secondary, #475569)',
               }}
             >
-              <strong>지지 앵커:</strong>{' '}
-              {pose.supportAnchors.map((a) => a.labelKo).join(' · ')}
+              <strong>지지 앵커:</strong> {pose.supportAnchors.map((a) => a.labelKo).join(' · ')}
             </div>
           </div>
         </div>
       )}
 
-      {/* 출처·근거 대조 원장 요약 (Rendered for ALL exercises) */}
-      <div
-        data-testid="extended-source-audit-summary"
-        style={{
-          padding: '12px',
-          borderRadius: '10px',
-          background: 'var(--pf-color-bg-surface, #ffffff)',
-          border: '1px solid var(--pf-color-border-default, #e2e8f0)',
-          color: 'var(--pf-color-text-primary, #0f172a)',
-          fontSize: '0.82rem',
-          minWidth: 0,
-          maxWidth: '100%',
-        }}
-      >
+      <details className="pf-motion-ledger__details">
+        <summary>
+          <span>출처·근거 상세 보기</span>
+          <span className="pf-motion-ledger__details-hint">원문 · 대조 기록 · 해시</span>
+        </summary>
+        {/* 출처·근거 대조 원장 요약 (Rendered for ALL exercises) */}
         <div
+          data-testid="extended-source-audit-summary"
           style={{
-            fontWeight: 700,
-            marginBottom: '8px',
+            padding: '12px',
+            borderRadius: '10px',
+            background: 'var(--pf-color-bg-surface, #ffffff)',
+            border: '1px solid var(--pf-color-border-default, #e2e8f0)',
             color: 'var(--pf-color-text-primary, #0f172a)',
+            fontSize: '0.82rem',
+            minWidth: 0,
+            maxWidth: '100%',
           }}
         >
-          출처·근거 대조 원장 요약 ({exercise.id})
-        </div>
-
-        {auditBundle.verifiedReferenceAuditRecord && (
           <div
-            data-testid="verified-reference-audit-card"
             style={{
-              padding: '8px 10px',
-              borderRadius: '8px',
-              background: 'var(--pf-color-bg-surface-subtle, #f0fdf4)',
-              border: '1px solid var(--pf-color-border-default, #bbf7d0)',
+              fontWeight: 700,
               marginBottom: '8px',
-              minWidth: 0,
-              maxWidth: '100%',
+              color: 'var(--pf-color-text-primary, #0f172a)',
             }}
           >
-            <div style={{ overflowWrap: 'anywhere' }}>
-              <strong>출처 레퍼런스 대장 ID:</strong>{' '}
-              <code>{auditBundle.verifiedReferenceAuditRecord.referenceId}</code> (
-              {auditBundle.verifiedReferenceAuditRecord.originalVerificationStatus} →{' '}
-              <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
-                {auditBundle.verifiedReferenceAuditRecord.auditConclusionStatus}
-              </code>
-              )
-            </div>
-            <div style={{ marginTop: '4px' }}>
-              <strong>원문/출처:</strong> {auditBundle.verifiedReferenceAuditRecord.publisher} ·{' '}
-              <a
-                href={auditBundle.verifiedReferenceAuditRecord.url}
-                target="_blank"
-                rel="noopener noreferrer"
+            출처·근거 대조 원장 요약 ({exercise.id})
+          </div>
+
+          {auditBundle.verifiedReferenceAuditRecord && (
+            <div
+              data-testid="verified-reference-audit-card"
+              style={{
+                padding: '8px 10px',
+                borderRadius: '8px',
+                background: 'var(--pf-color-bg-surface-subtle, #f0fdf4)',
+                border: '1px solid var(--pf-color-border-default, #bbf7d0)',
+                marginBottom: '8px',
+                minWidth: 0,
+                maxWidth: '100%',
+              }}
+            >
+              <div style={{ overflowWrap: 'anywhere' }}>
+                <strong>출처 레퍼런스 대장 ID:</strong>{' '}
+                <code>{auditBundle.verifiedReferenceAuditRecord.referenceId}</code> (
+                {auditBundle.verifiedReferenceAuditRecord.originalVerificationStatus} →{' '}
+                <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
+                  {auditBundle.verifiedReferenceAuditRecord.auditConclusionStatus}
+                </code>
+                )
+              </div>
+              <div style={{ marginTop: '4px' }}>
+                <strong>원문/출처:</strong> {auditBundle.verifiedReferenceAuditRecord.publisher} ·{' '}
+                <a
+                  href={auditBundle.verifiedReferenceAuditRecord.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    minHeight: '44px',
+                    padding: '6px 0',
+                    overflowWrap: 'anywhere',
+                  }}
+                >
+                  {auditBundle.verifiedReferenceAuditRecord.titleKo} (
+                  {auditBundle.verifiedReferenceAuditRecord.originalTitle})
+                </a>
+              </div>
+              <div
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  minHeight: '44px',
-                  padding: '6px 0',
-                  overflowWrap: 'anywhere',
+                  marginTop: '3px',
+                  color: 'var(--pf-color-status-success-text, #166534)',
                 }}
               >
-                {auditBundle.verifiedReferenceAuditRecord.titleKo} (
-                {auditBundle.verifiedReferenceAuditRecord.originalTitle})
-              </a>
+                {auditBundle.verifiedReferenceAuditRecord.reviewedScopeKo} ·{' '}
+                {auditBundle.verifiedReferenceAuditRecord.biomechanicalAlignmentNoteKo}
+              </div>
+              <div
+                style={{
+                  marginTop: '2px',
+                  fontSize: '0.75rem',
+                  color: 'var(--pf-color-text-secondary, #475569)',
+                }}
+              >
+                레코드 SHA-256:{' '}
+                <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
+                  {auditBundle.verifiedReferenceAuditRecord.factualRecordSha256}
+                </code>
+              </div>
             </div>
-            <div
-              style={{
-                marginTop: '3px',
-                color: 'var(--pf-color-status-success-text, #166534)',
-              }}
-            >
-              {auditBundle.verifiedReferenceAuditRecord.reviewedScopeKo} ·{' '}
-              {auditBundle.verifiedReferenceAuditRecord.biomechanicalAlignmentNoteKo}
-            </div>
-            <div
-              style={{
-                marginTop: '2px',
-                fontSize: '0.75rem',
-                color: 'var(--pf-color-text-secondary, #475569)',
-              }}
-            >
-              레코드 SHA-256:{' '}
-              <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
-                {auditBundle.verifiedReferenceAuditRecord.factualRecordSha256}
-              </code>
-            </div>
-          </div>
-        )}
+          )}
 
-        {auditBundle.clearedYoutubeReplacementAudit && (
-          <div
-            data-testid="cleared-youtube-replacement-audit-card"
-            style={{
-              padding: '8px 10px',
-              borderRadius: '8px',
-              background: 'var(--pf-color-bg-surface-subtle, #fffbeb)',
-              border: '1px solid var(--pf-color-border-default, #fde68a)',
-              marginBottom: '8px',
-              minWidth: 0,
-              maxWidth: '100%',
-            }}
-          >
-            <div>
-              <strong>
-                오연결 YouTube 제거 및 대체 출처 대조 기록 (
-                {auditBundle.clearedYoutubeReplacementAudit.exerciseId}):
-              </strong>
-            </div>
+          {auditBundle.clearedYoutubeReplacementAudit && (
             <div
+              data-testid="cleared-youtube-replacement-audit-card"
               style={{
-                marginTop: '3px',
-                color: 'var(--pf-color-status-warning-text, #92400e)',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                background: 'var(--pf-color-bg-surface-subtle, #fffbeb)',
+                border: '1px solid var(--pf-color-border-default, #fde68a)',
+                marginBottom: '8px',
+                minWidth: 0,
+                maxWidth: '100%',
               }}
             >
-              {auditBundle.clearedYoutubeReplacementAudit.clearedReasonKo}
+              <div>
+                <strong>
+                  오연결 YouTube 제거 및 대체 출처 대조 기록 (
+                  {auditBundle.clearedYoutubeReplacementAudit.exerciseId}):
+                </strong>
+              </div>
+              <div
+                style={{
+                  marginTop: '3px',
+                  color: 'var(--pf-color-status-warning-text, #92400e)',
+                }}
+              >
+                {auditBundle.clearedYoutubeReplacementAudit.clearedReasonKo}
+              </div>
+              <ul style={{ margin: '6px 0 4px 18px', padding: 0 }}>
+                {auditBundle.clearedYoutubeReplacementAudit.replacementReferences.map((ref) => (
+                  <li key={ref.referenceId} style={{ marginBottom: '4px' }}>
+                    <a
+                      href={ref.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        minHeight: '44px',
+                        padding: '6px 0',
+                        overflowWrap: 'anywhere',
+                      }}
+                    >
+                      [{ref.referenceId}] {ref.publisher} — {ref.title}
+                    </a>{' '}
+                    ({ref.alignmentNoteKo})
+                  </li>
+                ))}
+              </ul>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--pf-color-text-secondary, #475569)',
+                }}
+              >
+                대체 감사 SHA-256:{' '}
+                <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
+                  {auditBundle.clearedYoutubeReplacementAudit.factualRecordSha256}
+                </code>
+              </div>
             </div>
-            <ul style={{ margin: '6px 0 4px 18px', padding: 0 }}>
-              {auditBundle.clearedYoutubeReplacementAudit.replacementReferences.map((ref) => (
-                <li key={ref.referenceId} style={{ marginBottom: '4px' }}>
-                  <a
-                    href={ref.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      minHeight: '44px',
-                      padding: '6px 0',
-                      overflowWrap: 'anywhere',
-                    }}
-                  >
-                    [{ref.referenceId}] {ref.publisher} — {ref.title}
-                  </a>{' '}
-                  ({ref.alignmentNoteKo})
-                </li>
-              ))}
-            </ul>
-            <div
-              style={{
-                fontSize: '0.75rem',
-                color: 'var(--pf-color-text-secondary, #475569)',
-              }}
-            >
-              대체 감사 SHA-256:{' '}
-              <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
-                {auditBundle.clearedYoutubeReplacementAudit.factualRecordSha256}
-              </code>
-            </div>
-          </div>
-        )}
+          )}
 
-        {auditBundle.previouslyUnboundMotionModel && (
-          <div
-            data-testid="previously-unbound-model-audit-card"
-            style={{
-              padding: '8px 10px',
-              borderRadius: '8px',
-              background: 'var(--pf-color-bg-surface-subtle, #eff6ff)',
-              border: '1px solid var(--pf-color-border-default, #bfdbfe)',
-              marginBottom: '8px',
-              minWidth: 0,
-              maxWidth: '100%',
-            }}
-          >
-            <div>
-              <strong>
-                연속 모션 도해 원문 바인딩 ({auditBundle.previouslyUnboundMotionModel.modelId}):
-              </strong>{' '}
-              {auditBundle.previouslyUnboundMotionModel.titleKo}
-            </div>
+          {auditBundle.previouslyUnboundMotionModel && (
             <div
+              data-testid="previously-unbound-model-audit-card"
               style={{
-                marginTop: '2px',
-                fontSize: '0.75rem',
-                color: 'var(--pf-color-text-secondary, #1e3a8a)',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                background: 'var(--pf-color-bg-surface-subtle, #eff6ff)',
+                border: '1px solid var(--pf-color-border-default, #bfdbfe)',
+                marginBottom: '8px',
+                minWidth: 0,
+                maxWidth: '100%',
               }}
             >
-              바인딩 SHA-256:{' '}
-              <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
-                {auditBundle.previouslyUnboundMotionModel.factualRecordSha256}
-              </code>
+              <div>
+                <strong>
+                  연속 모션 도해 원문 바인딩 ({auditBundle.previouslyUnboundMotionModel.modelId}):
+                </strong>{' '}
+                {auditBundle.previouslyUnboundMotionModel.titleKo}
+              </div>
+              <div
+                style={{
+                  marginTop: '2px',
+                  fontSize: '0.75rem',
+                  color: 'var(--pf-color-text-secondary, #1e3a8a)',
+                }}
+              >
+                바인딩 SHA-256:{' '}
+                <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
+                  {auditBundle.previouslyUnboundMotionModel.factualRecordSha256}
+                </code>
+              </div>
             </div>
-          </div>
-        )}
-
-        <div
-          data-testid="extended-verification-boundary-notice"
-          style={{
-            marginTop: '6px',
-            paddingTop: '6px',
-            borderTop: '1px dashed var(--pf-color-border-default, #cbd5e1)',
-            fontSize: '0.76rem',
-            color: 'var(--pf-color-text-secondary, #475569)',
-            overflowWrap: 'anywhere',
-          }}
-        >
-          전문의·외부 임상 승인 0건 · 해부학적 정밀성 가정 안 함 · 원장 레코드 SHA-256 해시 일치:{' '}
-          <strong>
-            {auditBundle.sha256IntegrityVerified
-              ? '일치 (내용 정확성·전문가 검증 아님)'
-              : '불일치'}
-          </strong>{' '}
-          (
-          <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
-            {auditBundle.primaryFactualRecordSha256}
-          </code>
-          )
+          )}
         </div>
+      </details>
+      <div
+        data-testid="extended-verification-boundary-notice"
+        style={{
+          marginTop: '6px',
+          paddingTop: '6px',
+          borderTop: '1px dashed var(--pf-color-border-default, #cbd5e1)',
+          fontSize: '0.76rem',
+          color: 'var(--pf-color-text-secondary, #475569)',
+          overflowWrap: 'anywhere',
+        }}
+      >
+        전문의·외부 임상 승인 0건 · 해부학적 정밀성 가정 안 함 · 원장 레코드 SHA-256 해시 일치:{' '}
+        <strong>
+          {auditBundle.sha256IntegrityVerified ? '일치 (내용 정확성·전문가 검증 아님)' : '불일치'}
+        </strong>{' '}
+        (
+        <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
+          {auditBundle.primaryFactualRecordSha256}
+        </code>
+        )
       </div>
     </section>
   );

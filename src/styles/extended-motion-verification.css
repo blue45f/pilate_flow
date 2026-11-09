@@ -1,0 +1,57 @@
+/* Scoped source ledger: review boundaries stay visible when evidence is folded. */
+.pf-motion-ledger {
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.pf-motion-ledger__phases button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font: inherit;
+}
+.pf-motion-ledger__phases button > span {
+  font-size: 0.72rem;
+}
+.pf-motion-ledger__phases button > strong {
+  font-size: 0.875rem;
+}
+.pf-motion-ledger input[type='range'] {
+  accent-color: var(--pf-color-action-primary);
+  max-width: 100%;
+}
+.pf-motion-ledger__details {
+  border: 1px solid var(--pf-color-border-default);
+  border-radius: 12px;
+  background: var(--pf-color-bg-surface);
+  margin-bottom: 12px;
+}
+.pf-motion-ledger__details summary {
+  min-height: 44px;
+  padding: 12px;
+  cursor: pointer;
+  color: var(--pf-color-text-brand);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.pf-motion-ledger__details summary::marker {
+  color: var(--pf-color-action-primary);
+}
+.pf-motion-ledger__details-hint {
+  display: block;
+  margin-top: 2px;
+  color: var(--pf-color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.pf-motion-ledger__details[open] summary {
+  border-bottom: 1px solid var(--pf-color-border-subtle);
+}
+.pf-motion-ledger :is(button, input, summary, a):focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring);
+  outline-offset: 3px;
+}
+.pf-motion-ledger a {
+  color: var(--pf-color-action-primary);
+  text-underline-offset: 3px;
+}
