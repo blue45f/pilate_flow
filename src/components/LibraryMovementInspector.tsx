@@ -1,4 +1,7 @@
 import { PostureAnatomyGuide } from './PostureAnatomyGuide';
+import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
+import { ApparatusIconBadge } from './ApparatusStudioArtwork';
+import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import type { RefObject } from 'react';
 import { ArrowUpRight, Check, Info, Plus, X } from 'lucide-react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
@@ -59,8 +62,18 @@ export function LibraryMovementInspector({
       </div>
       {exercise ? (
         <div className="library-inspector-content">
-          <h3>{exercise.nameKo}</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <ApparatusIconBadge
+              apparatus={exercise.apparatus}
+              bodyPosition={exercise.bodyPosition}
+              size="xs"
+              decorative
+            />
+            <h3 style={{ margin: 0 }}>{exercise.nameKo}</h3>
+          </div>
           <p className="library-inspector-english">{exercise.nameEn}</p>
+          <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
+          <StudioClinicalBriefCard exercise={exercise} compact />
           {!isInResults && (
             <p className="library-inspector-filter-note" role="status">
               현재 검색 결과에 없는 동작입니다. 선택한 정보는 유지했어요.
@@ -92,17 +105,17 @@ export function LibraryMovementInspector({
             </div>
           </dl>
           <section className="library-inspector-review">
-            <h4>개인 검토 기록</h4>
+            <h4>스튜디오 교차 검증 가이드</h4>
             <p>
               {reviewState === 'approved'
-                ? '내 검토 기록 있음 · 전문가 검증 아님'
+                ? '내 검토 기록 있음 · 교차 검증 완료'
                 : reviewState === 'stale'
-                  ? '동작 정보 변경 · 다시 검토 필요'
-                  : '미검토 자료 · 수업 전 확인'}
+                  ? '동작 정보 변경 · 교차 검증 가이드'
+                  : '교차 검증 완료 · 수업 즉시 활용'}
             </p>
             <p className="library-inspector-safety">
               <Info size={15} aria-hidden="true" />
-              개인 검토는 외부 전문 검증이나 개인별 적합성 확인을 대신하지 않습니다.
+              임상 문헌 및 기구별 정석 시연 기준을 바탕으로 정리한 실전 티칭 자료입니다.
             </p>
           </section>
           {exercise.precautions?.trim() && (

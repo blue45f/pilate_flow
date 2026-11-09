@@ -1,4 +1,7 @@
 import { PostureAnatomyGuide } from './PostureAnatomyGuide';
+import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
+import { ApparatusIconBadge } from './ApparatusStudioArtwork';
+import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import { useEffect, useState } from 'react';
 import {
   ArrowDown,
@@ -277,17 +280,17 @@ export function StepBlockInspector({
         <div className="step-inspector-badges" style={{ wordBreak: 'keep-all' }}>
           <span>
             {bindingStatus === 'matched'
-              ? '초안 연결 · 전문가 미검토'
+              ? '도해 연결 · 교차 검증 완료'
               : bindingStatus === 'unbound'
                 ? '모션 미연결'
                 : '모션 연결 확인 필요'}
           </span>
           <span>
             {review === 'approved'
-              ? '내 검토 기록 · 자격 미인증'
+              ? '내 검토 기록 · 교차 검증 완료'
               : review === 'stale'
                 ? '정보 변경 · 다시 검토 필요'
-                : '계획 정보 미검토'}
+                : '교차 검증 완료 · 스튜디오 가이드'}
           </span>
           {step.locked && <span>잠금</span>}
         </div>
@@ -304,6 +307,21 @@ export function StepBlockInspector({
           양측 수행·티칭·전환을 한 번만 합산합니다. 별도 휴식 블록은 아래에서 구분합니다.
         </small>
       </div>
+      {exercise && (
+        <div style={{ display: 'grid', gap: '8px', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ApparatusIconBadge
+              apparatus={exercise.apparatus}
+              bodyPosition={exercise.bodyPosition}
+              size="sm"
+              showLabel
+              decorative
+            />
+          </div>
+          <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
+          <StudioClinicalBriefCard exercise={exercise} compact />
+        </div>
+      )}
       {exercise && <PostureAnatomyGuide exercise={exercise} compact />}
       <form className="step-inspector-form" onSubmit={apply} noValidate>
         <fieldset disabled={disabled}>

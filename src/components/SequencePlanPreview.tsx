@@ -34,6 +34,7 @@ import {
   isRestStep,
 } from '../utils/sequenceEngine';
 import { MotionReferencePlayer } from './MotionReferencePlayer';
+import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import { SequenceSegmentRehearsal } from './SequenceSegmentRehearsal';
 import { ConnectedMotionStudy } from './ConnectedMotionStudy';
 import { buildConnectedClassSections } from '../utils/connectedMotionStudy';
@@ -613,6 +614,9 @@ export function SequencePlanPreview({
                 >
                   {selectedRest ? '중간 휴식' : exercise?.nameKo || '동작 정보 없음'}
                 </h3>
+                {!selectedRest && exercise && (
+                  <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
+                )}
                 {viewMode === 'connected' && (
                   <p className="connected-study-section">
                     수업 역할 ·{' '}
@@ -781,12 +785,18 @@ export function SequencePlanPreview({
                           style={{
                             width: '100%',
                             display: 'grid',
-                            gridTemplateColumns: '28px minmax(0, 1fr) auto',
+                            gridTemplateColumns: '28px auto minmax(0, 1fr) auto',
                             gap: '8px',
                             textAlign: 'left',
+                            alignItems: 'center',
                           }}
                         >
                           <span>{String(stepIndex + 1).padStart(2, '0')}</span>
+                          {!rest && item ? (
+                            <ExerciseThumbnailBadge exercise={item} size="xs" decorative />
+                          ) : (
+                            <span aria-hidden="true" />
+                          )}
                           <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
                             <strong style={{ display: 'block' }}>
                               {rest ? '휴식' : item?.nameKo || '동작 정보 없음'}
