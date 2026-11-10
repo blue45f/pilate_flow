@@ -15,17 +15,17 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:deploy": "node --test scripts/check-pwa-build.node-test.mjs scripts/deploy-universal.node-test.mjs",
     "check:motion-study": "node scripts/generate-motion-study-ledger.mjs --check && node --test scripts/generate-motion-study-ledger.node-test.mjs",
+    "check:pwa": "node scripts/check-pwa-build.mjs",
+    "check:secrets": "node --test scripts/check-secrets.node-test.mjs && node scripts/check-secrets.mjs",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "verify:all": "pnpm check:secrets && pnpm check:motion-study && pnpm test:deploy && pnpm test && pnpm lint && pnpm build",
     "deploy": "node scripts/deploy-universal.mjs",
     "deploy:check": "node scripts/deploy-universal.mjs --check-env",
     "deploy:verify": "node scripts/deploy-universal.mjs --verify-live",
-    "deploy:bootstrap": "node scripts/deploy-universal.mjs --bootstrap",
-    "deploy:parallel": "node scripts/deploy-universal.mjs --parallel",
-    "check:pwa": "node scripts/check-pwa-build.mjs",
-    "check:secrets": "node --test scripts/check-secrets.node-test.mjs && node scripts/check-secrets.mjs",
-    "verify:all": "pnpm check:secrets && pnpm check:motion-study && pnpm test && pnpm lint && pnpm build"
+    "deploy:rollback": "node scripts/deploy-universal.mjs --rollback"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",

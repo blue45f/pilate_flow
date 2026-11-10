@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Zero-friction universal deploy launcher for Terminal, WebStorm, CI, and Gemini Agent Sandbox.
-# Automatically locates Node across .deploy-runtime, ~/.local, ~/.nvm, /opt/homebrew, and /usr/local.
+# Thin local deploy launcher for interactive developer terminals.
+# Respects current $HOME boundaries and delegates to scripts/deploy-universal.mjs.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -8,14 +8,12 @@ cd "$ROOT_DIR"
 
 find_node_bin() {
   local candidates=(
-    "$ROOT_DIR/.deploy-runtime/node/bin/node"
     "$HOME/.local/node/bin/node"
     "/opt/homebrew/bin/node"
     "/usr/local/bin/node"
   )
 
-  local real_user="${USER:-hjunkim}"
-  local nvm_dir="/Users/$real_user/.nvm/versions/node"
+  local nvm_dir="$HOME/.nvm/versions/node"
   if [[ -d "$nvm_dir" ]]; then
     while IFS= read -r nvm_node; do
       candidates+=("$nvm_node")
@@ -32,17 +30,9 @@ find_node_bin() {
 }
 
 if NODE_BIN="$(find_node_bin)"; then
-  NODE_DIR="$(dirname "$NODE_BIN")"
-  export PATH="$ROOT_DIR/.deploy-runtime/node_modules/.bin:$NODE_DIR:$PATH"
+  export PATH="$(dirname "$NODE_BIN"):$PATH"
   exec "$NODE_BIN" "$ROOT_DIR/scripts/deploy-universal.mjs" "$@"
 fi
 
-cat >&2 <<'EOF'
-[deploy.sh] Sandboxed shell detected: Node/Firebase binaries in ~/.nvm are outside Connected Folders.
-Run this ONE-TIME command in your macOS/WebStorm terminal to permanently enable 1-click & AI-agent deploys:
-
-  cd /Users/hjunkim/WebstormProjects/pilates-flow && pnpm deploy:bootstrap && pnpm deploy
-
-After running `pnpm deploy:bootstrap` once, `./scripts/deploy.sh` works directly inside sandboxed sessions too!
-EOF
+echo "[deploy.sh] Node.js (>=22.12.0) was not found in current \$HOME or standard system paths." >&2
 exit 126

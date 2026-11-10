@@ -6,6 +6,13 @@ import { fileURLToPath } from 'node:url';
 const modulePath = realpathSync(fileURLToPath(import.meta.url));
 const projectRoot = path.dirname(path.dirname(modulePath));
 
+export const ATELIER_V2_REQUIRED_IMAGES = [
+  'images/atelier-v2/reformer-studio-3d.png',
+  'images/atelier-v2/cadillac-studio-3d.png',
+  'images/atelier-v2/chair-studio-3d.png',
+  'images/atelier-v2/barrel-studio-3d.png',
+];
+
 function assertInside(parent, candidate) {
   const relative = path.relative(parent, candidate);
   assert.ok(
@@ -24,6 +31,15 @@ function buildFile(root, relative) {
   assertInside(root, real);
   assert.ok(statSync(real).isFile(), 'PWA build input must be a regular file');
   return real;
+}
+
+function resolveApprovedBuildRoot(outputDirectory = 'dist') {
+  const candidate = path.resolve(projectRoot, outputDirectory);
+  assertInside(projectRoot, candidate);
+  const root = realpathSync(candidate);
+  assertInside(projectRoot, root);
+  assert.ok(statSync(root).isDirectory(), 'PWA build root must be a directory');
+  return root;
 }
 
 export function assertNoCircularJsChunks(assetDirectory) {
@@ -52,11 +68,7 @@ export function assertNoCircularJsChunks(assetDirectory) {
 
 /** Inspect only a build directory in this checkout, including after symlink resolution. */
 export function verifyPwaBuild(outputDirectory = 'dist') {
-  const candidate = path.resolve(projectRoot, outputDirectory);
-  assertInside(projectRoot, candidate);
-  const root = realpathSync(candidate);
-  assertInside(projectRoot, root);
-  assert.ok(statSync(root).isDirectory(), 'PWA build root must be a directory');
+  const root = resolveApprovedBuildRoot(outputDirectory);
   const source = readFileSync(buildFile(root, 'sw.js'), 'utf8');
   const match = source.match(/const ASSETS = (\[.*\]);/);
   assert.ok(match, 'Service worker must expose its static asset inventory');
@@ -73,6 +85,25 @@ export function verifyPwaBuild(outputDirectory = 'dist') {
       `Precache file empty: ${url}`,
     );
   }
+
+  const shellExtrasMatch = source.match(/const SHELL_EXTRAS = (\[.*\]);/);
+  if (shellExtrasMatch) {
+    const shellExtras = JSON.parse(shellExtrasMatch[1]);
+    assert.ok(Array.isArray(shellExtras), 'SHELL_EXTRAS inventory must be an array');
+    assert.equal(new Set(shellExtras).size, shellExtras.length, 'Duplicate SHELL_EXTRAS entries');
+    for (const url of shellExtras) {
+      assert.ok(!assets.includes(url), `SHELL_EXTRAS overlaps ASSETS: ${url}`);
+      assert.match(
+        url,
+        /^\/(?:site\.webmanifest|favicon\.svg|images\/movement-guides\/[a-z0-9-]+\.svg)$/,
+      );
+      assert.ok(
+        readFileSync(buildFile(root, url.slice(1))).length > 0,
+        `SHELL_EXTRAS file empty: ${url}`,
+      );
+    }
+  }
+
   const assetDirectory = realpathSync(path.join(root, 'assets'));
   assertInside(root, assetDirectory);
   assert.ok(statSync(assetDirectory).isDirectory(), 'PWA assets must be a directory');
@@ -101,6 +132,44 @@ export function verifyPwaBuild(outputDirectory = 'dist') {
   return assets.length;
 }
 
+/** Verify all Atelier V2 3D PNG assets and entry bundle references exist in production dist. */
+export function verifyAtelierV2DistAssets(outputDirectory = 'dist') {
+  const root = resolveApprovedBuildRoot(outputDirectory);
+  for (const relPath of ATELIER_V2_REQUIRED_IMAGES) {
+    const file = buildFile(root, relPath);
+    const bytes = readFileSync(file);
+    assert.ok(bytes.length >= 24, `Atelier V2 PNG truncated: ${relPath}`);
+    assert.equal(
+      bytes.subarray(0, 8).toString('hex'),
+      '89504e470d0a1a0a',
+      `PNG signature expected for ${relPath}`,
+    );
+    assert.ok(
+      bytes.readUInt32BE(16) > 0 && bytes.readUInt32BE(20) > 0,
+      `Invalid PNG dimensions for ${relPath}`,
+    );
+  }
+
+  const indexHtml = readFileSync(buildFile(root, 'index.html'), 'utf8');
+  const entryMatch = indexHtml.match(/(?:\.|)\/assets\/(index-[A-Za-z0-9_-]+\.js)/);
+  assert.ok(entryMatch, 'Production index.html must reference a hashed entry JS bundle');
+  buildFile(root, `assets/${entryMatch[1]}`);
+
+  const assetDirectory = realpathSync(path.join(root, 'assets'));
+  assertInside(root, assetDirectory);
+  const jsChunks = readdirSync(assetDirectory).filter((file) => file.endsWith('.js'));
+  const hasV2Reference = jsChunks.some((file) =>
+    readFileSync(buildFile(root, `assets/${file}`), 'utf8').includes(
+      '/images/atelier-v2/reformer-studio-3d.png',
+    ),
+  );
+  assert.ok(
+    hasV2Reference,
+    `Stale entry bundle detected (${entryMatch[1]} and chunks lack Atelier V2 asset references)`,
+  );
+  return ATELIER_V2_REQUIRED_IMAGES.length;
+}
+
 function isCliEntryPoint() {
   if (!process.argv[1]) return false;
   try {
@@ -118,5 +187,8 @@ if (isCliEntryPoint()) {
   );
   // The production build always emits dist. Never turn a CLI argument into a filesystem path.
   const count = verifyPwaBuild();
-  console.log(`PWA build verified: ${count} real static files, manifest, PNG icons, and 0 circular JS chunks.`);
+  const v2Count = verifyAtelierV2DistAssets();
+  console.log(
+    `PWA build verified: ${count} real static files, ${v2Count} Atelier V2 PNG assets, manifest, PNG icons, and 0 circular JS chunks.`,
+  );
 }

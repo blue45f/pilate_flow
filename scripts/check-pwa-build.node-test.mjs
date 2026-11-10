@@ -5,25 +5,44 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
-import { verifyPwaBuild } from './check-pwa-build.mjs';
+import {
+  ATELIER_V2_REQUIRED_IMAGES,
+  verifyAtelierV2DistAssets,
+  verifyPwaBuild,
+} from './check-pwa-build.mjs';
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 const script = fileURLToPath(new URL('./check-pwa-build.mjs', import.meta.url));
+
+function makePngBytes(width = 192, height = 192) {
+  const png = Buffer.alloc(24);
+  Buffer.from('89504e470d0a1a0a', 'hex').copy(png);
+  png.writeUInt32BE(width, 16);
+  png.writeUInt32BE(height, 20);
+  return png;
+}
 
 function fixture(t, parent = projectRoot) {
   const root = mkdtempSync(path.join(parent, '.pwa-check-test-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(path.join(root, 'assets'));
   mkdirSync(path.join(root, 'icons'));
-  writeFileSync(path.join(root, 'index.html'), '<html>synthetic app</html>');
-  writeFileSync(path.join(root, 'assets/app.js'), 'export const app = true;');
-  const png = Buffer.alloc(24);
-  Buffer.from('89504e470d0a1a0a', 'hex').copy(png);
-  png.writeUInt32BE(192, 16);
-  png.writeUInt32BE(192, 20);
+  mkdirSync(path.join(root, 'images', 'atelier-v2'), { recursive: true });
+  writeFileSync(
+    path.join(root, 'index.html'),
+    '<html><script type="module" src="./assets/index-Test1234.js"></script></html>',
+  );
+  writeFileSync(
+    path.join(root, 'assets/index-Test1234.js'),
+    'export const hero = "/images/atelier-v2/reformer-studio-3d.png";',
+  );
+  const png = makePngBytes(192, 192);
   writeFileSync(path.join(root, 'icons/app-192.png'), png);
   writeFileSync(path.join(root, 'icons/apple-touch-icon.png'), png);
-  const assets = ['/index.html', '/assets/app.js', '/icons/app-192.png'];
+  for (const relImage of ATELIER_V2_REQUIRED_IMAGES) {
+    writeFileSync(path.join(root, relImage), makePngBytes(1024, 1024));
+  }
+  const assets = ['/index.html', '/assets/index-Test1234.js', '/icons/app-192.png'];
   writeFileSync(path.join(root, 'sw.js'), `const ASSETS = ${JSON.stringify(assets)};`);
   const manifest = {
     id: '/',
@@ -40,6 +59,7 @@ test('accepts absolute and checkout-relative build directories', (t) => {
   const { root } = fixture(t);
   assert.equal(verifyPwaBuild(root), 3);
   assert.equal(verifyPwaBuild(path.relative(projectRoot, root)), 3);
+  assert.equal(verifyAtelierV2DistAssets(root), 4);
 });
 
 test('CLI rejects directory overrides from another working directory', (t) => {
@@ -103,7 +123,7 @@ test('rejects a build-root symlink to an outside directory', (t) => {
   assert.throws(() => verifyPwaBuild(link), /approved directory/);
 });
 
-for (const file of ['sw.js', 'site.webmanifest', 'assets/app.js', 'icons/app-192.png']) {
+for (const file of ['sw.js', 'site.webmanifest', 'assets/index-Test1234.js', 'icons/app-192.png']) {
   test(`rejects an escaping symlink for ${file}`, (t) => {
     const inside = fixture(t);
     const outside = fixture(t, os.tmpdir());
@@ -149,6 +169,26 @@ test('preserves the duplicate and missing precache guards', (t) => {
   );
   assert.throws(() => verifyPwaBuild(root), /Duplicate precache/);
   writeFileSync(path.join(root, 'sw.js'), `const ASSETS = ${JSON.stringify(assets)};`);
-  rmSync(path.join(root, 'assets/app.js'));
+  rmSync(path.join(root, 'assets/index-Test1234.js'));
   assert.throws(() => verifyPwaBuild(root), /ENOENT/);
+});
+
+test('validates SHELL_EXTRAS when present and rejects missing Atelier V2 assets or stale bundles', (t) => {
+  const { root, assets } = fixture(t);
+  writeFileSync(path.join(root, 'favicon.svg'), '<svg></svg>');
+  writeFileSync(
+    path.join(root, 'sw.js'),
+    `const ASSETS = ${JSON.stringify(assets)};\nconst SHELL_EXTRAS = ["/site.webmanifest","/favicon.svg"];`,
+  );
+  assert.equal(verifyPwaBuild(root), 3);
+
+  writeFileSync(path.join(root, 'assets/index-Test1234.js'), 'export const oldBuild = true;');
+  assert.throws(() => verifyAtelierV2DistAssets(root), /Stale entry bundle detected/);
+
+  writeFileSync(
+    path.join(root, 'assets/index-Test1234.js'),
+    'export const hero = "/images/atelier-v2/reformer-studio-3d.png";',
+  );
+  rmSync(path.join(root, 'images/atelier-v2/barrel-studio-3d.png'));
+  assert.throws(() => verifyAtelierV2DistAssets(root), /ENOENT/);
 });
