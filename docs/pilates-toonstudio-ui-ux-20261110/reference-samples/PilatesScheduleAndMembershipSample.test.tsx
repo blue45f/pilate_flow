@@ -88,6 +88,60 @@ const SAMPLE_SLOTS: readonly PilatesMemberClassSlot[] = [
   },
 ];
 
+/**
+ * Simulates the HTML5 / W3C UI Events keyboard activation sequence in jsdom:
+ * - Enter on <button>: keydown -> (if not defaultPrevented: native click) -> optional keydown(repeat) -> keyup
+ * - Space (' ') on <button> / <input type="checkbox">: keydown -> optional keydown(repeat) -> keyup -> (if keyup not defaultPrevented: native click)
+ * - Escape: keydown -> optional keydown(repeat) -> keyup
+ * Note: This models the browser event contract deterministically inside jsdom; it is NOT a substitute for a real browser engine.
+ */
+function dispatchBrowserKeySequence(
+  key: 'Enter' | ' ' | 'Escape',
+  options?: { readonly repeatCount?: number },
+): void {
+  const repeatCount = options?.repeatCount ?? 0;
+  const originTarget = (document.activeElement as HTMLElement | null) ?? document.body;
+
+  const kdAllowed = fireEvent.keyDown(originTarget, { key, repeat: false });
+  if (
+    key === 'Enter' &&
+    kdAllowed &&
+    originTarget instanceof HTMLButtonElement &&
+    !originTarget.disabled
+  ) {
+    fireEvent.click(originTarget);
+  }
+
+  for (let i = 0; i < repeatCount; i += 1) {
+    const repeatTarget = (document.activeElement as HTMLElement | null) ?? document.body;
+    const repeatAllowed = fireEvent.keyDown(repeatTarget, { key, repeat: true });
+    if (
+      key === 'Enter' &&
+      repeatAllowed &&
+      repeatTarget instanceof HTMLButtonElement &&
+      !repeatTarget.disabled
+    ) {
+      fireEvent.click(repeatTarget);
+    }
+  }
+
+  const releaseTarget = (document.activeElement as HTMLElement | null) ?? document.body;
+  const kuAllowed = fireEvent.keyUp(releaseTarget, { key });
+  if (key === ' ' && kuAllowed) {
+    if (releaseTarget instanceof HTMLInputElement && releaseTarget.type === 'checkbox' && !releaseTarget.disabled) {
+      fireEvent.click(releaseTarget);
+    } else if (releaseTarget instanceof HTMLButtonElement && !releaseTarget.disabled && kdAllowed) {
+      fireEvent.click(releaseTarget);
+    } else if (
+      releaseTarget instanceof HTMLButtonElement &&
+      !releaseTarget.disabled &&
+      releaseTarget !== originTarget
+    ) {
+      fireEvent.click(releaseTarget);
+    }
+  }
+}
+
 describe('PilatesScheduleAndMembershipSample reference UI regression suite', () => {
   it('opens booking confirmation for available slots and deducts 1 credit upon confirmation', () => {
     render(
@@ -702,5 +756,286 @@ describe('PilatesScheduleAndMembershipSample reference UI regression suite', () 
     expect(document.activeElement).toBe(
       screen.getByRole('button', { name: '19:00 이브닝 바렐 밸런스 대기 2번 취소' }),
     );
+  });
+
+  it('guards full Enter/Space keydown->repeat->keyup->click sequences against involuntary consent toggle, duplicate deduction, or post-confirm reopen', () => {
+    render(
+      <PilatesScheduleAndMembershipSample
+        pass={SAMPLE_PASS}
+        slots={SAMPLE_SLOTS}
+        selectedDate="2026-11-12"
+      />,
+    );
+
+    const passSummary = screen.getByRole('article', { name: '내 수강권 현황' });
+    const bookBtn = screen.getByRole('button', { name: '09:00 모닝 코어 리포머 예약하기' });
+    bookBtn.focus();
+
+    // 1. Open dialog via Space with key-repeat + keyup landing on the newly focused checkbox:
+    //    consent checkbox must NOT auto-toggle on the opening Space key release!
+    dispatchBrowserKeySequence(' ', { repeatCount: 3 });
+
+    const bookDialog = screen.getByRole('dialog', { name: '수강권 차감 및 예약 확정 확인' });
+    const checkbox = within(bookDialog).getByRole('checkbox') as HTMLInputElement;
+    expect(document.activeElement).toBe(checkbox);
+    expect(checkbox.checked).toBe(false);
+    expect(
+      (within(bookDialog).getByRole('button', { name: '1회 차감 동의 및 예약 확정' }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+
+    // 2. Now press Space directly on checkbox -> toggles consent to true via normal keyup click
+    dispatchBrowserKeySequence(' ', { repeatCount: 2 });
+    expect(checkbox.checked).toBe(true);
+
+    // 3. Confirm booking via Enter with key-repeat + keyup landing on restored trigger button:
+    //    must deduct 1 credit once (5 -> 4), close modal, keep focus on trigger, and NOT reopen cancel dialog!
+    const confirmBookBtn = within(bookDialog).getByRole('button', {
+      name: '1회 차감 동의 및 예약 확정',
+    });
+    confirmBookBtn.focus();
+    dispatchBrowserKeySequence('Enter', { repeatCount: 3 });
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(passSummary.textContent).toContain('남은 횟수: 4회 / 10회');
+    expect(passSummary.textContent).toContain('예약 중 홀드: 2회');
+
+    const cancelMorningBtn = screen.getByRole('button', {
+      name: '09:00 모닝 코어 리포머 예약 취소',
+    });
+    expect(document.activeElement).toBe(cancelMorningBtn);
+
+    // 4. Open cancel dialog via Enter sequence, consent via Space sequence, confirm via Space sequence + repeat:
+    //    must refund 1 credit once (4 -> 5) and NOT re-open booking dialog on Space release!
+    dispatchBrowserKeySequence('Enter', { repeatCount: 2 });
+    const cancelDialog = screen.getByRole('dialog', { name: '예약 취소 및 수강권 복구 확인' });
+    expect((within(cancelDialog).getByRole('checkbox') as HTMLInputElement).checked).toBe(false);
+
+    dispatchBrowserKeySequence(' ');
+    const confirmCancelBtn = within(cancelDialog).getByRole('button', { name: '예약 취소 확정' });
+    confirmCancelBtn.focus();
+    dispatchBrowserKeySequence(' ', { repeatCount: 3 });
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(passSummary.textContent).toContain('남은 횟수: 5회 / 10회');
+    expect(passSummary.textContent).toContain('예약 중 홀드: 1회');
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: '09:00 모닝 코어 리포머 예약하기' }),
+    );
+  });
+
+  it('prevents trailing keyup right after Close or Escape dismissal from reopening the modal across open-close-reopen cycles', () => {
+    render(
+      <PilatesScheduleAndMembershipSample
+        pass={SAMPLE_PASS}
+        slots={SAMPLE_SLOTS}
+        selectedDate="2026-11-12"
+      />,
+    );
+
+    const bookTrigger = screen.getByRole('button', { name: '09:00 모닝 코어 리포머 예약하기' });
+    bookTrigger.focus();
+
+    // Cycle 1: Open via Enter -> check consent -> dismiss via Space on Close button (with repeat + keyup on restored trigger)
+    dispatchBrowserKeySequence('Enter');
+    const dialog1 = screen.getByRole('dialog', { name: '수강권 차감 및 예약 확정 확인' });
+    dispatchBrowserKeySequence(' ');
+    expect((within(dialog1).getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
+
+    const closeBtn1 = within(dialog1).getByRole('button', { name: '닫기' });
+    closeBtn1.focus();
+    dispatchBrowserKeySequence(' ', { repeatCount: 2 });
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(bookTrigger);
+
+    // Cycle 2: Re-open directly from restored trigger via Space -> consent reset -> dismiss via Escape (with repeat + keyup)
+    dispatchBrowserKeySequence(' ');
+    const dialog2 = screen.getByRole('dialog', { name: '수강권 차감 및 예약 확정 확인' });
+    const checkbox2 = within(dialog2).getByRole('checkbox') as HTMLInputElement;
+    expect(checkbox2.checked).toBe(false);
+
+    dispatchBrowserKeySequence(' ');
+    expect(checkbox2.checked).toBe(true);
+
+    dispatchBrowserKeySequence('Escape', { repeatCount: 2 });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(bookTrigger);
+
+    // Cycle 3: Re-open via Enter -> dismiss via Enter on Close button (with repeat + keyup) -> focus remains on trigger
+    dispatchBrowserKeySequence('Enter');
+    const dialog3 = screen.getByRole('dialog', { name: '수강권 차감 및 예약 확정 확인' });
+    expect((within(dialog3).getByRole('checkbox') as HTMLInputElement).checked).toBe(false);
+
+    const closeBtn3 = within(dialog3).getByRole('button', { name: '닫기' });
+    closeBtn3.focus();
+    dispatchBrowserKeySequence('Enter', { repeatCount: 2 });
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(bookTrigger);
+  });
+
+  it('blocks background CTA keyboard activation, removes background tab stops, and shields background slots while modal is open', () => {
+    render(
+      <PilatesScheduleAndMembershipSample
+        pass={SAMPLE_PASS}
+        slots={SAMPLE_SLOTS}
+        selectedDate="2026-11-12"
+      />,
+    );
+
+    const bookBtn = screen.getByRole('button', { name: '09:00 모닝 코어 리포머 예약하기' });
+    const cancelBtn = screen.getByRole('button', { name: '11:00 체형교정 캐딜락 예약 취소' });
+    const waitlistBtn = screen.getByRole('button', { name: '19:00 이브닝 바렐 밸런스 대기 신청' });
+    const slotList = screen.getByTestId('pilates-slot-list');
+
+    expect(bookBtn.getAttribute('tabindex')).toBeNull();
+    expect(slotList.style.pointerEvents).toBe('');
+
+    bookBtn.focus();
+    dispatchBrowserKeySequence('Enter');
+
+    const dialog = screen.getByRole('dialog', { name: '수강권 차감 및 예약 확정 확인' });
+    const backdrop = screen.getByTestId('pilates-modal-backdrop');
+    const checkbox = within(dialog).getByRole('checkbox');
+
+    // Background slot list disables pointer-events and all background slot CTAs drop out of tab order
+    expect(backdrop.style.position).toBe('fixed');
+    expect(slotList.style.pointerEvents).toBe('none');
+    expect(bookBtn.getAttribute('tabindex')).toBe('-1');
+    expect(cancelBtn.getAttribute('tabindex')).toBe('-1');
+    expect(waitlistBtn.getAttribute('tabindex')).toBe('-1');
+
+    // If focus is forced onto a background CTA, Enter and Space must NOT switch/activate it and must return focus to dialog
+    waitlistBtn.focus();
+    expect(document.activeElement).toBe(waitlistBtn);
+    dispatchBrowserKeySequence('Enter');
+    expect(screen.getByRole('dialog', { name: '수강권 차감 및 예약 확정 확인' })).toBe(dialog);
+    expect(document.activeElement).toBe(checkbox);
+
+    cancelBtn.focus();
+    dispatchBrowserKeySequence(' ');
+    expect(screen.getByRole('dialog', { name: '수강권 차감 및 예약 확정 확인' })).toBe(dialog);
+    expect(document.activeElement).toBe(checkbox);
+    expect((checkbox as HTMLInputElement).checked).toBe(false);
+
+    // Clicking empty backdrop neither drops focus outside dialog nor triggers background CTAs
+    const mousedownAllowed = fireEvent.mouseDown(backdrop);
+    expect(mousedownAllowed).toBe(false);
+    fireEvent.click(backdrop);
+    expect(document.activeElement).toBe(checkbox);
+
+    // Clicking dialog container whitespace and pressing Tab moves cleanly to first dialog control
+    dialog.focus();
+    expect(document.activeElement).toBe(dialog);
+    fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: false });
+    expect(document.activeElement).toBe(checkbox);
+
+    // Closing modal restores normal background tab stops and pointer-events
+    dispatchBrowserKeySequence('Escape');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(slotList.style.pointerEvents).toBe('');
+    expect(bookBtn.getAttribute('tabindex')).toBeNull();
+    expect(cancelBtn.getAttribute('tabindex')).toBeNull();
+    expect(waitlistBtn.getAttribute('tabindex')).toBeNull();
+    expect(document.activeElement).toBe(bookBtn);
+  });
+
+  it('maintains unique dialog IDs and isolated focus/Escape ownership across two sample instances on the same screen', () => {
+    const passA: MemberPassLedger = {
+      ...SAMPLE_PASS,
+      passId: 'pass_inst_a',
+      participantAlias: '오전회원A',
+      remainingCount: 5,
+    };
+    const passB: MemberPassLedger = {
+      ...SAMPLE_PASS,
+      passId: 'pass_inst_b',
+      participantAlias: '오후회원B',
+      remainingCount: 3,
+    };
+
+    // Mount via two separate render() roots on the same document to verify cross-root ID uniqueness as well
+    const viewA = render(
+      <div data-testid="sample-instance-a">
+        <PilatesScheduleAndMembershipSample
+          pass={passA}
+          slots={SAMPLE_SLOTS}
+          selectedDate="2026-11-12"
+        />
+      </div>,
+    );
+    const viewB = render(
+      <div data-testid="sample-instance-b">
+        <PilatesScheduleAndMembershipSample
+          pass={passB}
+          slots={SAMPLE_SLOTS}
+          selectedDate="2026-11-12"
+        />
+      </div>,
+    );
+
+    const scopeA = within(viewA.getByTestId('sample-instance-a'));
+    const scopeB = within(viewB.getByTestId('sample-instance-b'));
+
+    const bookBtnA = scopeA.getByRole('button', { name: '09:00 모닝 코어 리포머 예약하기' });
+    const bookBtnB = scopeB.getByRole('button', { name: '09:00 모닝 코어 리포머 예약하기' });
+
+    // 1. Open Instance A modal -> Instance B background CTAs also become non-tabbable & pointer-shielded
+    bookBtnA.focus();
+    dispatchBrowserKeySequence('Enter');
+
+    const dialogA = scopeA.getByRole('dialog', { name: '수강권 차감 및 예약 확정 확인' });
+    const checkboxA = within(dialogA).getByRole('checkbox');
+    expect(document.activeElement).toBe(checkboxA);
+    expect(bookBtnB.getAttribute('tabindex')).toBe('-1');
+    expect(scopeB.getByTestId('pilates-slot-list').style.pointerEvents).toBe('none');
+
+    // Keyboard Enter/Space on Instance B button while Instance A modal is open is blocked and returns focus to Instance A modal
+    bookBtnB.focus();
+    dispatchBrowserKeySequence('Enter');
+    expect(scopeB.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(checkboxA);
+
+    // 2. If Instance B dialog is also opened programmatically, both dialogs have unique IDs and Instance B owns top-level focus/Escape
+    fireEvent.click(bookBtnB);
+    const dialogB = scopeB.getByRole('dialog', { name: '수강권 차감 및 예약 확정 확인' });
+    const checkboxB = within(dialogB).getByRole('checkbox');
+    const closeBtnB = within(dialogB).getByRole('button', { name: '닫기' });
+
+    const titleIdA = dialogA.getAttribute('aria-labelledby')!;
+    const titleIdB = dialogB.getAttribute('aria-labelledby')!;
+    const descIdA = dialogA.getAttribute('aria-describedby')!;
+    const descIdB = dialogB.getAttribute('aria-describedby')!;
+
+    expect(titleIdA).not.toBe(titleIdB);
+    expect(descIdA).not.toBe(descIdB);
+    expect(document.querySelectorAll(`[id="${titleIdA}"]`).length).toBe(1);
+    expect(document.querySelectorAll(`[id="${titleIdB}"]`).length).toBe(1);
+    expect(document.querySelectorAll(`[id="${descIdA}"]`).length).toBe(1);
+    expect(document.querySelectorAll(`[id="${descIdB}"]`).length).toBe(1);
+
+    // Tab / Shift+Tab inside Instance B must stay inside Instance B (Instance A must NOT steal focus)
+    expect(document.activeElement).toBe(checkboxB);
+    fireEvent.keyDown(checkboxB, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(closeBtnB);
+    fireEvent.keyDown(closeBtnB, { key: 'Tab', shiftKey: false });
+    expect(document.activeElement).toBe(checkboxB);
+
+    // Escape dismisses ONLY topmost Instance B dialog and restores focus to Instance B's trigger
+    dispatchBrowserKeySequence('Escape');
+    expect(scopeB.queryByRole('dialog')).toBeNull();
+    expect(scopeA.queryByRole('dialog')).toBe(dialogA);
+    expect(document.activeElement).toBe(bookBtnB);
+
+    // Subsequent Tab returns focus into remaining open Instance A dialog, and Escape closes Instance A -> bookBtnA
+    fireEvent.keyDown(bookBtnB, { key: 'Tab', shiftKey: false });
+    expect(document.activeElement).toBe(checkboxA);
+
+    dispatchBrowserKeySequence('Escape');
+    expect(scopeA.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(bookBtnA);
+    expect(bookBtnB.getAttribute('tabindex')).toBeNull();
+    expect(scopeB.getByTestId('pilates-slot-list').style.pointerEvents).toBe('');
   });
 });

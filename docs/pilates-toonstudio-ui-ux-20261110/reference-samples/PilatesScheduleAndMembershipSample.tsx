@@ -1,4 +1,11 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 
 /**
  * [독립 참조 컴포넌트] Pilates-flow 모바일 회원 예약·정원/대기/마감/취소·회원권 오류 방지 샘플
@@ -8,6 +15,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
  *   2) 동기식 최신 상태 스냅샷(liveStateRef)과 모달 시퀀스 토큰(consumedDialogSeqRef)으로 연속 클릭·중복 제출 및 상태 전환 직후 재클릭 시 오작동을 방지합니다.
  *   3) 선택 수업 변경·차단 슬롯 클릭·외부 props(pass/slots/selectedDate/isOffline) 변경 시 오래된 확인 모달과 동의 체크 상태를 즉시 정리합니다.
  *   4) 모달 열림 시 초기 포커스 이동, Tab/Shift+Tab 포커스 이탈 방지, Escape·닫기 동등 처리 및 원래 트리거 포커스 복귀, 키보드 CTA 작동 및 disabled 우회 차단을 지원합니다.
+ *   5) 실제 브라우저의 Enter/Space keydown→keyup→click 순서, 키 반복(repeat), 열기/닫기/확정 직후 키 떼기(keyup), 모달 배경 CTA 포인터·키보드 격리, 동일 화면 복수 샘플 인스턴스의 고유 dialog ID 및 최상위 모달 포커스 소유를 보장합니다.
  */
 
 export type InstructorOccurrenceStatus = 'scheduled' | 'cancelled' | 'closed' | 'moved';
@@ -58,6 +66,235 @@ interface LiveBookingSnapshot {
   readonly policyAgreed: boolean;
   readonly selectedDate: string;
   readonly isOffline: boolean;
+}
+
+interface OpenModalRegistryEntry {
+  readonly instanceKey: object;
+  readonly getDialogEl: () => HTMLDivElement | null;
+  readonly canClose: () => boolean;
+  readonly close: () => void;
+}
+
+interface ModalRegistrySnapshot {
+  readonly instanceNumbers: ReadonlyMap<object, number>;
+  readonly openStack: readonly OpenModalRegistryEntry[];
+}
+
+interface InFlightTransitionKey {
+  readonly key: 'Enter' | ' ' | 'Escape';
+}
+
+let nextMountedInstanceNumber = 0;
+let inFlightTransitionKey: InFlightTransitionKey | null = null;
+let globalKeyListenersAttached = false;
+
+let modalRegistrySnapshot: ModalRegistrySnapshot = {
+  instanceNumbers: new Map<object, number>(),
+  openStack: [],
+};
+const modalRegistrySubscribers = new Set<() => void>();
+
+function emitModalRegistryChange(): void {
+  modalRegistrySubscribers.forEach((listener) => listener());
+}
+
+function subscribeModalRegistry(listener: () => void): () => void {
+  modalRegistrySubscribers.add(listener);
+  return () => {
+    modalRegistrySubscribers.delete(listener);
+  };
+}
+
+function getModalRegistrySnapshot(): ModalRegistrySnapshot {
+  return modalRegistrySnapshot;
+}
+
+function isTransitionKey(key: string): key is 'Enter' | ' ' | 'Escape' {
+  return key === 'Enter' || key === ' ' || key === 'Escape';
+}
+
+function getDialogFocusableElements(dialogEl: HTMLElement): HTMLElement[] {
+  return Array.from(
+    dialogEl.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter(
+    (el) =>
+      !el.hasAttribute('hidden') &&
+      el.getAttribute('aria-hidden') !== 'true' &&
+      el.getAttribute('aria-disabled') !== 'true' &&
+      el.style.display !== 'none' &&
+      el.style.visibility !== 'hidden',
+  );
+}
+
+function handleDocumentKeyDownCapture(event: KeyboardEvent): void {
+  if (
+    event.repeat &&
+    inFlightTransitionKey !== null &&
+    event.key === inFlightTransitionKey.key
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+
+  if (!event.repeat) {
+    inFlightTransitionKey = null;
+  }
+
+  const openStack = modalRegistrySnapshot.openStack;
+  const topModal = openStack[openStack.length - 1];
+  if (!topModal) return;
+
+  if (event.key === 'Escape') {
+    if (event.repeat) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    if (topModal.canClose()) {
+      event.preventDefault();
+      event.stopPropagation();
+      inFlightTransitionKey = { key: 'Escape' };
+      topModal.close();
+    }
+    return;
+  }
+
+  const dialogEl = topModal.getDialogEl();
+  if (!dialogEl) return;
+
+  if (event.key === 'Tab') {
+    const focusable = getDialogFocusableElements(dialogEl);
+    if (focusable.length === 0) {
+      event.preventDefault();
+      dialogEl.focus();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+    const isInside = active instanceof Node && dialogEl.contains(active);
+
+    if (event.shiftKey) {
+      if (!isInside || active === first || active === dialogEl) {
+        event.preventDefault();
+        last.focus();
+      }
+    } else if (!isInside || active === last || active === dialogEl) {
+      event.preventDefault();
+      first.focus();
+    }
+    return;
+  }
+
+  if (
+    (event.key === 'Enter' || event.key === ' ') &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.metaKey
+  ) {
+    const targetNode = event.target instanceof Node ? event.target : document.activeElement;
+    const isTargetInsideModal = targetNode !== null && dialogEl.contains(targetNode);
+    if (!isTargetInsideModal) {
+      event.preventDefault();
+      event.stopPropagation();
+      inFlightTransitionKey = { key: event.key };
+      const focusable = getDialogFocusableElements(dialogEl);
+      (focusable[0] ?? dialogEl).focus();
+    }
+  }
+}
+
+function handleDocumentKeyUpCapture(event: KeyboardEvent): void {
+  if (
+    inFlightTransitionKey !== null &&
+    isTransitionKey(event.key) &&
+    event.key === inFlightTransitionKey.key
+  ) {
+    inFlightTransitionKey = null;
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}
+
+function handleDocumentPointerDownCapture(): void {
+  inFlightTransitionKey = null;
+}
+
+function syncGlobalKeyListeners(): void {
+  if (typeof document === 'undefined') return;
+  const shouldAttach = modalRegistrySnapshot.instanceNumbers.size > 0;
+  if (shouldAttach && !globalKeyListenersAttached) {
+    document.addEventListener('keydown', handleDocumentKeyDownCapture, true);
+    document.addEventListener('keyup', handleDocumentKeyUpCapture, true);
+    document.addEventListener('pointerdown', handleDocumentPointerDownCapture, true);
+    document.addEventListener('mousedown', handleDocumentPointerDownCapture, true);
+    globalKeyListenersAttached = true;
+  } else if (!shouldAttach && globalKeyListenersAttached) {
+    document.removeEventListener('keydown', handleDocumentKeyDownCapture, true);
+    document.removeEventListener('keyup', handleDocumentKeyUpCapture, true);
+    document.removeEventListener('pointerdown', handleDocumentPointerDownCapture, true);
+    document.removeEventListener('mousedown', handleDocumentPointerDownCapture, true);
+    globalKeyListenersAttached = false;
+    inFlightTransitionKey = null;
+  }
+}
+
+function registerSampleInstance(instanceKey: object): void {
+  if (modalRegistrySnapshot.instanceNumbers.has(instanceKey)) return;
+  const nextMap = new Map(modalRegistrySnapshot.instanceNumbers);
+  nextMountedInstanceNumber += 1;
+  nextMap.set(instanceKey, nextMountedInstanceNumber);
+  modalRegistrySnapshot = {
+    ...modalRegistrySnapshot,
+    instanceNumbers: nextMap,
+  };
+  syncGlobalKeyListeners();
+  emitModalRegistryChange();
+}
+
+function unregisterSampleInstance(instanceKey: object): void {
+  const hadInstance = modalRegistrySnapshot.instanceNumbers.has(instanceKey);
+  const nextStack = modalRegistrySnapshot.openStack.filter(
+    (entry) => entry.instanceKey !== instanceKey,
+  );
+  if (!hadInstance && nextStack.length === modalRegistrySnapshot.openStack.length) {
+    return;
+  }
+  const nextMap = new Map(modalRegistrySnapshot.instanceNumbers);
+  nextMap.delete(instanceKey);
+  modalRegistrySnapshot = {
+    instanceNumbers: nextMap,
+    openStack: nextStack,
+  };
+  syncGlobalKeyListeners();
+  emitModalRegistryChange();
+}
+
+function pushOpenModalEntry(entry: OpenModalRegistryEntry): void {
+  const filtered = modalRegistrySnapshot.openStack.filter(
+    (item) => item.instanceKey !== entry.instanceKey,
+  );
+  modalRegistrySnapshot = {
+    ...modalRegistrySnapshot,
+    openStack: [...filtered, entry],
+  };
+  emitModalRegistryChange();
+}
+
+function removeOpenModalEntry(instanceKey: object): void {
+  const nextStack = modalRegistrySnapshot.openStack.filter(
+    (item) => item.instanceKey !== instanceKey,
+  );
+  if (nextStack.length === modalRegistrySnapshot.openStack.length) return;
+  modalRegistrySnapshot = {
+    ...modalRegistrySnapshot,
+    openStack: nextStack,
+  };
+  emitModalRegistryChange();
 }
 
 function deriveMemberSlotStatus(slot: PilatesMemberClassSlot): MemberSlotBookingStatus {
@@ -116,28 +353,12 @@ function isDialogStillValid(
   return true;
 }
 
-function getDialogFocusableElements(dialogEl: HTMLElement): HTMLElement[] {
-  return Array.from(
-    dialogEl.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
-    ),
-  ).filter(
-    (el) =>
-      !el.hasAttribute('hidden') &&
-      el.getAttribute('aria-hidden') !== 'true' &&
-      el.getAttribute('aria-disabled') !== 'true' &&
-      el.style.display !== 'none' &&
-      el.style.visibility !== 'hidden',
-  );
-}
-
 function activateButtonWithKeyboard(
   event: React.KeyboardEvent<HTMLButtonElement>,
   isDisabled: boolean,
   action: () => void,
 ): void {
-  const isActivationKey = event.key === 'Enter' || event.key === ' ';
-  if (!isActivationKey) return;
+  if (event.key !== 'Enter' && event.key !== ' ') return;
 
   if (
     isDisabled ||
@@ -148,11 +369,17 @@ function activateButtonWithKeyboard(
     return;
   }
 
-  if (event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+    return;
+  }
+
+  if (event.repeat) {
+    event.preventDefault();
     return;
   }
 
   event.preventDefault();
+  inFlightTransitionKey = { key: event.key };
   action();
 }
 
@@ -208,8 +435,18 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
   readonly selectedDate: string;
   readonly isOffline?: boolean;
 }> = ({ pass, slots, selectedDate, isOffline = false }) => {
-  const dialogHeadingId = useId();
-  const dialogDescriptionId = useId();
+  const reactHeadingId = useId();
+  const reactDescriptionId = useId();
+  const [instanceKey] = useState<object>(() => ({}));
+
+  const registry = useSyncExternalStore(
+    subscribeModalRegistry,
+    getModalRegistrySnapshot,
+    getModalRegistrySnapshot,
+  );
+  const instanceSeq = registry.instanceNumbers.get(instanceKey) ?? 0;
+  const dialogHeadingId = `${reactHeadingId}-pf-dialog-title-${instanceSeq}`;
+  const dialogDescriptionId = `${reactDescriptionId}-pf-dialog-desc-${instanceSeq}`;
 
   const [trackedProps, setTrackedProps] = useState({
     pass,
@@ -276,6 +513,13 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
     }
   }
 
+  useLayoutEffect(() => {
+    registerSampleInstance(instanceKey);
+    return () => {
+      unregisterSampleInstance(instanceKey);
+    };
+  }, [instanceKey]);
+
   useEffect(() => {
     liveStateRef.current = {
       pass: localPass,
@@ -291,6 +535,47 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
     ? localSlots.find((item) => item.id === pendingDialog.slotId) ?? null
     : null;
   const activeDialogSeq = pendingDialog && activeDialogSlot ? pendingDialog.dialogSeq : null;
+  const hasAnyOpenModal = activeDialogSeq !== null || registry.openStack.length > 0;
+  const modalStackIndex = registry.openStack.findIndex((item) => item.instanceKey === instanceKey);
+  const backdropZIndex = 1000 + (modalStackIndex >= 0 ? modalStackIndex : 0);
+
+  const clearOpenDialogSync = (current: LiveBookingSnapshot, returnFocusSlotId: string | null = null) => {
+    pendingFocusReturnSlotIdRef.current = returnFocusSlotId;
+    liveStateRef.current = {
+      ...current,
+      pendingDialog: null,
+      policyAgreed: false,
+    };
+    setPendingDialog(null);
+    setPolicyAgreed(false);
+  };
+
+  useLayoutEffect(() => {
+    if (activeDialogSeq === null) return undefined;
+
+    pushOpenModalEntry({
+      instanceKey,
+      getDialogEl: () => dialogRef.current,
+      canClose: () => !submittingRef.current && liveStateRef.current.pendingDialog !== null,
+      close: () => {
+        if (submittingRef.current) return;
+        const current = liveStateRef.current;
+        if (!current.pendingDialog) return;
+        pendingFocusReturnSlotIdRef.current = current.pendingDialog.slotId;
+        liveStateRef.current = {
+          ...current,
+          pendingDialog: null,
+          policyAgreed: false,
+        };
+        setPendingDialog(null);
+        setPolicyAgreed(false);
+      },
+    });
+
+    return () => {
+      removeOpenModalEntry(instanceKey);
+    };
+  }, [activeDialogSeq, instanceKey]);
 
   useEffect(() => {
     if (activeDialogSeq !== null) {
@@ -313,73 +598,8 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
     }
   }, [activeDialogSeq]);
 
-  useEffect(() => {
-    if (activeDialogSeq === null) return undefined;
-
-    const handleModalKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        if (submittingRef.current) return;
-        const current = liveStateRef.current;
-        if (!current.pendingDialog) return;
-        event.preventDefault();
-        event.stopPropagation();
-        pendingFocusReturnSlotIdRef.current = current.pendingDialog.slotId;
-        liveStateRef.current = {
-          ...current,
-          pendingDialog: null,
-          policyAgreed: false,
-        };
-        setPendingDialog(null);
-        setPolicyAgreed(false);
-        return;
-      }
-
-      if (event.key !== 'Tab') return;
-      const dialogEl = dialogRef.current;
-      if (!dialogEl) return;
-
-      const focusable = getDialogFocusableElements(dialogEl);
-      if (focusable.length === 0) {
-        event.preventDefault();
-        dialogEl.focus();
-        return;
-      }
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-      const isInside = active instanceof Node && dialogEl.contains(active);
-
-      if (event.shiftKey) {
-        if (!isInside || active === first || active === dialogEl) {
-          event.preventDefault();
-          last.focus();
-        }
-      } else if (!isInside || active === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleModalKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleModalKeyDown);
-    };
-  }, [activeDialogSeq]);
-
   const isExpiredForDate = selectedDate > localPass.expiresAtIso;
   const isExhausted = localPass.remainingCount <= 0;
-
-  const clearOpenDialogSync = (current: LiveBookingSnapshot, returnFocusSlotId: string | null = null) => {
-    pendingFocusReturnSlotIdRef.current = returnFocusSlotId;
-    liveStateRef.current = {
-      ...current,
-      pendingDialog: null,
-      policyAgreed: false,
-    };
-    setPendingDialog(null);
-    setPolicyAgreed(false);
-  };
 
   const handleOpenSlotAction = (slotId: string) => {
     if (submittingRef.current) return;
@@ -769,7 +989,15 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
           선택하신 날짜에는 개설된 수업이 없거나 센터 휴무일입니다. 주간 날짜 선택에서 다른 요일을 확인해 보세요.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div
+          data-testid="pilates-slot-list"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+            pointerEvents: hasAnyOpenModal ? 'none' : undefined,
+          }}
+        >
           {localSlots.map((slot) => {
             const status = deriveMemberSlotStatus(slot);
             const badge = SLOT_BADGE_TOKENS[status];
@@ -849,6 +1077,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
                       }
                     }}
                     type="button"
+                    tabIndex={hasAnyOpenModal ? -1 : undefined}
                     disabled={disabled}
                     aria-disabled={disabled}
                     onClick={() => {
@@ -888,154 +1117,187 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
 
       {pendingDialog && activeDialogSlot && (
         <div
-          ref={dialogRef}
-          key={`${pendingDialog.slotId}:${pendingDialog.intent}:${pendingDialog.dialogSeq}`}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={dialogHeadingId}
-          aria-describedby={dialogDescriptionId}
-          tabIndex={-1}
+          data-testid="pilates-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              event.preventDefault();
+            }
+          }}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              event.stopPropagation();
+            }
+          }}
           style={{
-            marginTop: 16,
-            backgroundColor: 'var(--pf-color-bg-surface, #FFFEF9)',
-            border: '2px solid var(--pf-color-action-primary, #173D34)',
-            borderRadius: 16,
+            position: 'fixed',
+            inset: 0,
+            zIndex: backdropZIndex,
+            backgroundColor: 'rgba(23, 61, 52, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             padding: 16,
+            boxSizing: 'border-box',
           }}
         >
-          <h4 id={dialogHeadingId} style={{ margin: '0 0 8px', fontSize: 17 }}>
-            {pendingDialog.intent === 'BOOK'
-              ? '수강권 차감 및 예약 확정 확인'
-              : pendingDialog.intent === 'WAITLIST'
-                ? '대기 신청 및 보류 차감 확인'
-                : pendingDialog.intent === 'CANCEL_BOOKING'
-                  ? '예약 취소 및 수강권 복구 확인'
-                  : '대기 취소 및 보류 횟수 복구 확인'}
-          </h4>
-          <p
-            id={dialogDescriptionId}
+          <div
+            ref={dialogRef}
+            key={`${pendingDialog.slotId}:${pendingDialog.intent}:${pendingDialog.dialogSeq}`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={dialogHeadingId}
+            aria-describedby={dialogDescriptionId}
+            tabIndex={-1}
             style={{
-              margin: '0 0 12px',
-              fontSize: 13,
-              lineHeight: 1.6,
-              color: 'var(--pf-color-text-secondary, #3D4F45)',
-              fontVariantNumeric: 'tabular-nums',
+              width: '100%',
+              maxWidth: 448,
+              backgroundColor: 'var(--pf-color-bg-surface, #FFFEF9)',
+              border: '2px solid var(--pf-color-action-primary, #173D34)',
+              borderRadius: 16,
+              padding: 16,
+              boxSizing: 'border-box',
+              boxShadow: '0 16px 40px rgba(23, 61, 52, 0.2)',
             }}
           >
-            {pendingDialog.intent === 'BOOK' && (
-              <>
-                [{activeDialogSlot.date} {activeDialogSlot.startTime} {activeDialogSlot.title}] 예약 시 수강권 1회가 차감됩니다 (차감 전{' '}
-                <strong>{localPass.remainingCount}회</strong> → 차감 후{' '}
-                <strong>{Math.max(0, localPass.remainingCount - 1)}회</strong>). 수업 시작 {activeDialogSlot.freeCancelHoursBefore}시간 전 이후 취소 시에는 횟수가 복구되지 않습니다.
-              </>
-            )}
-            {pendingDialog.intent === 'WAITLIST' && (
-              <>
-                [{activeDialogSlot.date} {activeDialogSlot.startTime} {activeDialogSlot.title}] 대기{' '}
-                <strong>{activeDialogSlot.waitlistCount + 1}번</strong>으로 신청하며 수강권 1회가 보류 차감됩니다 (보류 전{' '}
-                <strong>{localPass.remainingCount}회</strong> → 보류 후{' '}
-                <strong>{Math.max(0, localPass.remainingCount - 1)}회</strong>). 미승급 또는 수업 전 대기 취소 시 100% 복구됩니다.
-              </>
-            )}
-            {pendingDialog.intent === 'CANCEL_BOOKING' && (
-              <>
-                [{activeDialogSlot.date} {activeDialogSlot.startTime} {activeDialogSlot.title}] 예약을 취소합니다. 무료 취소 마감({activeDialogSlot.freeCancelHoursBefore}시간 전) 이내 취소 시 수강권 1회가 복구됩니다 (현재{' '}
-                <strong>{localPass.remainingCount}회</strong> → 복구 후{' '}
-                <strong>{Math.min(localPass.totalCount, localPass.remainingCount + 1)}회</strong>).
-              </>
-            )}
-            {pendingDialog.intent === 'CANCEL_WAITLIST' && (
-              <>
-                [{activeDialogSlot.date} {activeDialogSlot.startTime} {activeDialogSlot.title}] 대기 신청을 취소하고 보류된 수강권 1회를 즉시 복구합니다 (현재{' '}
-                <strong>{localPass.remainingCount}회</strong> → 복구 후{' '}
-                <strong>{Math.min(localPass.totalCount, localPass.remainingCount + 1)}회</strong>).
-              </>
-            )}
-          </p>
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              minHeight: 44,
-              fontSize: 13,
-              marginBottom: 12,
-              cursor: 'pointer',
-            }}
-          >
-            <input
-              ref={checkboxRef}
-              type="checkbox"
-              checked={policyAgreed}
-              onChange={(e) => handleTogglePolicyAgreed(e.target.checked)}
-              style={{ width: 18, height: 18 }}
-            />
-            <span>
+            <h4 id={dialogHeadingId} style={{ margin: '0 0 8px', fontSize: 17 }}>
               {pendingDialog.intent === 'BOOK'
-                ? `1회 차감 및 무료 취소 마감 기한(${activeDialogSlot.freeCancelHoursBefore}시간 전)을 확인했습니다.`
+                ? '수강권 차감 및 예약 확정 확인'
                 : pendingDialog.intent === 'WAITLIST'
-                  ? `대기 순번(${activeDialogSlot.waitlistCount + 1}번) 및 자동 승급·복구 기준을 확인했습니다.`
-                  : '취소 및 수강권 복구 안내를 확인했습니다.'}
-            </span>
-          </label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              type="button"
-              disabled={confirmDisabled}
-              aria-disabled={confirmDisabled}
-              onClick={() => {
-                if (confirmDisabled) return;
-                handleConfirmAction();
-              }}
-              onKeyDown={(event) => {
-                activateButtonWithKeyboard(event, confirmDisabled, handleConfirmAction);
-              }}
-              style={{
-                flex: 1,
-                minHeight: 48,
-                borderRadius: 9,
-                border: 'none',
-                backgroundColor: !confirmDisabled
-                  ? 'var(--pf-color-action-primary, #173D34)'
-                  : 'var(--pf-color-bg-surface-subtle, #F3F5EE)',
-                color: !confirmDisabled ? '#FFFFFF' : 'var(--pf-color-text-muted, #526358)',
-                fontWeight: 600,
-                fontSize: 14,
-                cursor: !confirmDisabled ? 'pointer' : 'not-allowed',
-              }}
-            >
-              {pendingDialog.intent === 'BOOK'
-                ? '1회 차감 동의 및 예약 확정'
-                : pendingDialog.intent === 'WAITLIST'
-                  ? '대기 신청 확정'
+                  ? '대기 신청 및 보류 차감 확인'
                   : pendingDialog.intent === 'CANCEL_BOOKING'
-                    ? '예약 취소 확정'
-                    : '대기 취소 확정'}
-            </button>
-            <button
-              type="button"
-              disabled={isSubmitting}
-              aria-disabled={isSubmitting}
-              onClick={() => {
-                if (isSubmitting) return;
-                handleCloseDialog();
-              }}
-              onKeyDown={(event) => {
-                activateButtonWithKeyboard(event, isSubmitting, handleCloseDialog);
-              }}
+                    ? '예약 취소 및 수강권 복구 확인'
+                    : '대기 취소 및 보류 횟수 복구 확인'}
+            </h4>
+            <p
+              id={dialogDescriptionId}
               style={{
-                minHeight: 48,
-                padding: '0 16px',
-                borderRadius: 9,
-                border: '1px solid var(--pf-color-border-default, #D5DDD0)',
-                backgroundColor: 'var(--pf-color-bg-surface, #FFFEF9)',
-                color: 'var(--pf-color-text-primary, #1E3129)',
-                fontWeight: 600,
-                fontSize: 14,
+                margin: '0 0 12px',
+                fontSize: 13,
+                lineHeight: 1.6,
+                color: 'var(--pf-color-text-secondary, #3D4F45)',
+                fontVariantNumeric: 'tabular-nums',
               }}
             >
-              닫기
-            </button>
+              {pendingDialog.intent === 'BOOK' && (
+                <>
+                  [{activeDialogSlot.date} {activeDialogSlot.startTime} {activeDialogSlot.title}] 예약 시 수강권 1회가 차감됩니다 (차감 전{' '}
+                  <strong>{localPass.remainingCount}회</strong> → 차감 후{' '}
+                  <strong>{Math.max(0, localPass.remainingCount - 1)}회</strong>). 수업 시작 {activeDialogSlot.freeCancelHoursBefore}시간 전 이후 취소 시에는 횟수가 복구되지 않습니다.
+                </>
+              )}
+              {pendingDialog.intent === 'WAITLIST' && (
+                <>
+                  [{activeDialogSlot.date} {activeDialogSlot.startTime} {activeDialogSlot.title}] 대기{' '}
+                  <strong>{activeDialogSlot.waitlistCount + 1}번</strong>으로 신청하며 수강권 1회가 보류 차감됩니다 (보류 전{' '}
+                  <strong>{localPass.remainingCount}회</strong> → 보류 후{' '}
+                  <strong>{Math.max(0, localPass.remainingCount - 1)}회</strong>). 미승급 또는 수업 전 대기 취소 시 100% 복구됩니다.
+                </>
+              )}
+              {pendingDialog.intent === 'CANCEL_BOOKING' && (
+                <>
+                  [{activeDialogSlot.date} {activeDialogSlot.startTime} {activeDialogSlot.title}] 예약을 취소합니다. 무료 취소 마감({activeDialogSlot.freeCancelHoursBefore}시간 전) 이내 취소 시 수강권 1회가 복구됩니다 (현재{' '}
+                  <strong>{localPass.remainingCount}회</strong> → 복구 후{' '}
+                  <strong>{Math.min(localPass.totalCount, localPass.remainingCount + 1)}회</strong>).
+                </>
+              )}
+              {pendingDialog.intent === 'CANCEL_WAITLIST' && (
+                <>
+                  [{activeDialogSlot.date} {activeDialogSlot.startTime} {activeDialogSlot.title}] 대기 신청을 취소하고 보류된 수강권 1회를 즉시 복구합니다 (현재{' '}
+                  <strong>{localPass.remainingCount}회</strong> → 복구 후{' '}
+                  <strong>{Math.min(localPass.totalCount, localPass.remainingCount + 1)}회</strong>).
+                </>
+              )}
+            </p>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                minHeight: 44,
+                fontSize: 13,
+                marginBottom: 12,
+                cursor: 'pointer',
+              }}
+            >
+              <input
+                ref={checkboxRef}
+                type="checkbox"
+                checked={policyAgreed}
+                onChange={(e) => handleTogglePolicyAgreed(e.target.checked)}
+                onKeyDown={(event) => {
+                  if (event.repeat && (event.key === ' ' || event.key === 'Enter')) {
+                    event.preventDefault();
+                  }
+                }}
+                style={{ width: 18, height: 18 }}
+              />
+              <span>
+                {pendingDialog.intent === 'BOOK'
+                  ? `1회 차감 및 무료 취소 마감 기한(${activeDialogSlot.freeCancelHoursBefore}시간 전)을 확인했습니다.`
+                  : pendingDialog.intent === 'WAITLIST'
+                    ? `대기 순번(${activeDialogSlot.waitlistCount + 1}번) 및 자동 승급·복구 기준을 확인했습니다.`
+                    : '취소 및 수강권 복구 안내를 확인했습니다.'}
+              </span>
+            </label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                disabled={confirmDisabled}
+                aria-disabled={confirmDisabled}
+                onClick={() => {
+                  if (confirmDisabled) return;
+                  handleConfirmAction();
+                }}
+                onKeyDown={(event) => {
+                  activateButtonWithKeyboard(event, confirmDisabled, handleConfirmAction);
+                }}
+                style={{
+                  flex: 1,
+                  minHeight: 48,
+                  borderRadius: 9,
+                  border: 'none',
+                  backgroundColor: !confirmDisabled
+                    ? 'var(--pf-color-action-primary, #173D34)'
+                    : 'var(--pf-color-bg-surface-subtle, #F3F5EE)',
+                  color: !confirmDisabled ? '#FFFFFF' : 'var(--pf-color-text-muted, #526358)',
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: !confirmDisabled ? 'pointer' : 'not-allowed',
+                }}
+              >
+                {pendingDialog.intent === 'BOOK'
+                  ? '1회 차감 동의 및 예약 확정'
+                  : pendingDialog.intent === 'WAITLIST'
+                    ? '대기 신청 확정'
+                    : pendingDialog.intent === 'CANCEL_BOOKING'
+                      ? '예약 취소 확정'
+                      : '대기 취소 확정'}
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                aria-disabled={isSubmitting}
+                onClick={() => {
+                  if (isSubmitting) return;
+                  handleCloseDialog();
+                }}
+                onKeyDown={(event) => {
+                  activateButtonWithKeyboard(event, isSubmitting, handleCloseDialog);
+                }}
+                style={{
+                  minHeight: 48,
+                  padding: '0 16px',
+                  borderRadius: 9,
+                  border: '1px solid var(--pf-color-border-default, #D5DDD0)',
+                  backgroundColor: 'var(--pf-color-bg-surface, #FFFEF9)',
+                  color: 'var(--pf-color-text-primary, #1E3129)',
+                  fontWeight: 600,
+                  fontSize: 14,
+                }}
+              >
+                닫기
+              </button>
+            </div>
           </div>
         </div>
       )}
