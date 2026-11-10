@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { dirname, join, resolve } from 'node:path';
+import { cwd } from 'node:process';
 import { describe, expect, it } from 'vitest';
 import { INITIAL_EXERCISES, INITIAL_SAVED_SEQUENCES } from '../data/pilatesCatalog';
 import { simulateClassEnergyCurve } from '../utils/classPacingSimulator';
@@ -10,9 +11,27 @@ import {
   verifyCanonicalProductionConfig,
 } from '../utils/deploymentEnvironmentMatrix';
 
+function resolveRepoRoot(): string {
+  let current = resolve(cwd());
+  for (let depth = 0; depth < 8; depth += 1) {
+    if (existsSync(join(current, 'firebase.json')) && existsSync(join(current, 'package.json'))) {
+      return current;
+    }
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return resolve(cwd());
+}
+
+const REPO_ROOT = resolveRepoRoot();
+
+function resolveRepoPath(relativePath: string): string {
+  return resolve(REPO_ROOT, relativePath.replace(/^\/+/, ''));
+}
+
 function readRepoText(relativePath: string): string {
-  const fileUrl = new URL(`../../${relativePath}`, import.meta.url);
-  return readFileSync(fileURLToPath(fileUrl), 'utf8');
+  return readFileSync(resolveRepoPath(relativePath), 'utf8');
 }
 
 describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', () => {
@@ -36,8 +55,8 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
     expect(check.consistentPwaNoCache).toBe(true);
 
     for (const v2Asset of CANONICAL_PRODUCTION_DEPLOY_SPEC.atelierV2AssetPaths) {
-      const publicAssetUrl = new URL(`../../public${v2Asset}`, import.meta.url);
-      expect(existsSync(fileURLToPath(publicAssetUrl))).toBe(true);
+      const cleanAssetPath = v2Asset.replace(/^\/+/, '');
+      expect(existsSync(resolveRepoPath(join('public', cleanAssetPath)))).toBe(true);
     }
   });
 
@@ -48,6 +67,13 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
     expect(
       verifyCanonicalProductionConfig({
         firebaseJson: { hosting: { ...firebaseJson.hosting, site: 'wrong-site' } },
+        firebaserc,
+      }).aligned,
+    ).toBe(false);
+
+    expect(
+      verifyCanonicalProductionConfig({
+        firebaseJson: { hosting: { ...firebaseJson.hosting, public: 'build' } },
         firebaserc,
       }).aligned,
     ).toBe(false);
@@ -76,8 +102,12 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
     };
     const scripts = pkgJson.scripts ?? {};
 
-    // Active CI & canonical entry commands preserved
+    // Active CI, separated Node runner suites & canonical entry commands preserved
+    expect(scripts['test']).toContain('src/booking-core/test/booking-engine.test.mjs');
+    expect(scripts['test']).toContain('src/utils/recurrence/test/pilates-recurrence.test.mjs');
+    expect(scripts['test']).toContain('vitest run');
     expect(scripts['verify:all']).toContain('pnpm test:deploy');
+    expect(scripts['verify:all']).toContain('pnpm test');
     expect(scripts['build']).toBe('tsc -b && vite build && node scripts/check-pwa-build.mjs');
     expect(scripts['deploy']).toBe('node scripts/deploy-universal.mjs');
     expect(scripts['deploy:check']).toBe('node scripts/deploy-universal.mjs --check-env');

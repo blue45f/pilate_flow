@@ -45,6 +45,8 @@
 .teaching-play-controls button,
 .teaching-step-control,
 .teaching-play,
+.teaching-next-action-bar button,
+.teaching-undo-banner button,
 .teaching-timer-options button,
 .teaching-timer-options .btn-ghost,
 .teaching-timer-options .teaching-switch,
@@ -55,7 +57,9 @@
 .teaching-empty button,
 #root .vnext-shell .teaching-back,
 #root .vnext-shell .teaching-stage-utility button,
-#root .vnext-shell .teaching-play-controls button {
+#root .vnext-shell .teaching-play-controls button,
+#root .vnext-shell .teaching-next-action-bar button,
+#root .vnext-shell .teaching-undo-banner button {
   min-height: 44px;
   min-width: 44px;
   box-sizing: border-box;
@@ -64,6 +68,29 @@
 .teaching-back,
 #root .vnext-shell .teaching-back {
   padding: 6px 10px 6px 0;
+}
+
+/* Inline remaining class time pill in header */
+.teaching-remaining-plan-pill,
+#root .vnext-shell .teaching-remaining-plan-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e2f5ed;
+  border: 1px solid #b8ded0;
+  color: #105d4f;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+
+.teaching-high-contrast .teaching-remaining-plan-pill,
+#root .vnext-shell .teaching-high-contrast .teaching-remaining-plan-pill {
+  background: #1d392c;
+  border-color: #facc15;
+  color: #facc15;
 }
 
 /* Step progress indicator banner */
@@ -103,6 +130,151 @@
   min-width: 0;
   word-break: keep-all;
   overflow-wrap: anywhere;
+}
+
+/* Clear visual states for paused / completed timer & resume readiness */
+.teaching-current-panel.is-paused,
+#root .vnext-shell .teaching-current-panel.is-paused {
+  border-color: #d99b38;
+  box-shadow: 0 0 0 1px rgba(217, 155, 56, 0.25);
+}
+
+.teaching-timer-status.paused,
+#root .vnext-shell .teaching-timer-status.paused {
+  background: #fef3c7;
+  color: #7c4a0a;
+  font-weight: 700;
+}
+
+.teaching-timer-status.completed,
+#root .vnext-shell .teaching-timer-status.completed {
+  background: #e0f2fe;
+  color: #0c4a6e;
+  font-weight: 700;
+}
+
+.teaching-play.is-resume-ready,
+#root .vnext-shell .teaching-play.is-resume-ready {
+  box-shadow: 0 0 0 3px rgba(23, 61, 52, 0.16);
+}
+
+.teaching-high-contrast .teaching-current-panel.is-paused,
+#root .vnext-shell .teaching-high-contrast .teaching-current-panel.is-paused {
+  border-color: #facc15;
+  box-shadow: none;
+}
+
+.teaching-high-contrast .teaching-timer-status.paused,
+.teaching-high-contrast .teaching-timer-status.completed,
+#root .vnext-shell .teaching-high-contrast .teaching-timer-status.paused,
+#root .vnext-shell .teaching-high-contrast .teaching-timer-status.completed {
+  background: #0f172a;
+  color: #facc15;
+  border: 1px solid #facc15;
+}
+
+/* Contextual Next-Action Bar & 1-Tap Mistake Recovery Banner */
+.teaching-next-action-bar,
+.teaching-undo-banner,
+#root .vnext-shell .teaching-next-action-bar,
+#root .vnext-shell .teaching-undo-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.teaching-next-action-bar,
+#root .vnext-shell .teaching-next-action-bar {
+  background: #edf7f2;
+  border: 1px solid #a8d5c2;
+  color: #14463a;
+}
+
+.teaching-next-action-bar.is-paused,
+#root .vnext-shell .teaching-next-action-bar.is-paused {
+  background: #fffbeb;
+  border-color: #f0c36d;
+  color: #6b4010;
+}
+
+.teaching-undo-banner,
+#root .vnext-shell .teaching-undo-banner {
+  background: #f5f6f0;
+  border: 1px dashed #9fb1a3;
+  color: #243c32;
+}
+
+.teaching-next-action-text,
+.teaching-undo-text {
+  flex: 1 1 200px;
+  min-width: 0;
+  font-weight: 600;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.teaching-next-action-buttons,
+.teaching-undo-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.teaching-next-action-cta,
+.teaching-undo-btn,
+#root .vnext-shell .teaching-next-action-cta,
+#root .vnext-shell .teaching-undo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 650;
+  word-break: keep-all;
+}
+
+.teaching-undo-dismiss,
+#root .vnext-shell .teaching-undo-dismiss {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.teaching-high-contrast .teaching-next-action-bar,
+.teaching-high-contrast .teaching-next-action-bar.is-paused,
+.teaching-high-contrast .teaching-undo-banner,
+#root .vnext-shell .teaching-high-contrast .teaching-next-action-bar,
+#root .vnext-shell .teaching-high-contrast .teaching-next-action-bar.is-paused,
+#root .vnext-shell .teaching-high-contrast .teaching-undo-banner {
+  background: #0f172a;
+  border: 1.5px solid #facc15;
+  color: #f8fafc;
+}
+
+/* Outline taught step subtle visual cue */
+.teaching-stage-outline li button.is-taught,
+#root .vnext-shell .teaching-stage-outline li button.is-taught {
+  border-color: #adc5b7;
+  background: #f6faf7;
+}
+
+.teaching-high-contrast .teaching-stage-outline li button.is-taught,
+#root .vnext-shell .teaching-high-contrast .teaching-stage-outline li button.is-taught {
+  border-color: #94a3b8;
+  background: #1e293b;
 }
 
 /* Korean movement names, cues, and notes clean wrapping */
@@ -157,6 +329,33 @@
     min-height: 44px;
     padding: 10px 12px;
     font-size: 12px;
+  }
+
+  .teaching-next-action-bar,
+  .teaching-undo-banner,
+  #root .vnext-shell .teaching-next-action-bar,
+  #root .vnext-shell .teaching-undo-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .teaching-next-action-text,
+  .teaching-undo-text {
+    flex: 0 1 auto;
+  }
+
+  .teaching-next-action-buttons,
+  .teaching-undo-actions {
+    width: 100%;
+    display: flex;
+  }
+
+  .teaching-next-action-cta,
+  .teaching-undo-btn,
+  #root .vnext-shell .teaching-next-action-cta,
+  #root .vnext-shell .teaching-undo-btn {
+    flex: 1 1 auto;
   }
 }
 
@@ -222,5 +421,14 @@
   .teaching-setup-panel dd,
   #root .vnext-shell .teaching-setup-panel dd {
     text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teaching-play,
+  .teaching-next-action-bar,
+  .teaching-undo-banner {
+    transition: none !important;
+    animation: none !important;
   }
 }

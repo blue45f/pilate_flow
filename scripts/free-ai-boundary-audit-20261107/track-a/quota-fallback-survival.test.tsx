@@ -1282,20 +1282,36 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
       unmount();
     });
 
-    it('DEFECT-A3: backend/freeAiService.ts increments minuteUsed and dailyUsed BEFORE callUpstreamFreeProvider and never rolls them back on network/401/500/timeout errors', async () => {
+    it('DEFECT-A3 (resolved regression): rolls back reserved quota on 401/network/invalid-JSON failures, consumes on success, enforces concurrent & repeated limits, and forbids paid fallback', async () => {
       const fixedNowMs = Date.parse('2026-11-07T03:00:00.000Z');
       let callCount = 0;
+      let resolveFourthCall!: (res: Response) => void;
 
       const fetchFn = vi.fn<typeof fetch>().mockImplementation(async () => {
         callCount += 1;
         if (callCount === 1) {
-          // 1st attempt: upstream returns HTTP 401 Unauthorized (or network timeout)
+          // 1st attempt: upstream HTTP 401 -> must roll back reserved quota
           return new Response(JSON.stringify({ error: 'Unauthorized' }), {
             status: 401,
           });
         }
-        // 2nd attempt: would succeed if called
-        return makeGeminiUpstreamResponse(VALID_UPSTREAM_CLASS_DRAFT_JSON);
+        if (callCount === 2) {
+          // 2nd attempt: network failure -> must roll back reserved quota
+          throw new TypeError('fetch failed');
+        }
+        if (callCount === 3) {
+          // 3rd attempt: schema-invalid 200 JSON -> must roll back reserved quota
+          return new Response(
+            JSON.stringify({
+              candidates: [{ content: { parts: [{ text: '{"invalid":"payload"}' }] } }],
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } },
+          );
+        }
+        // 4th attempt: stays in-flight until resolved to verify concurrency & reservation limits
+        return new Promise<Response>((resolve) => {
+          resolveFourthCall = resolve;
+        });
       });
 
       const service = createFreeAiService({
@@ -1304,42 +1320,129 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
         now: () => fixedNowMs,
         minuteLimit: 1,
         dailyLimit: 5,
+        maxConcurrentPerUser: 1,
+        maxConcurrentGlobal: 2,
       });
 
       expect(service.getStatus().minuteUsed).toBe(0);
       expect(service.getStatus().dailyUsed).toBe(0);
 
-      // 1st call fails with upstream_error (502) due to upstream HTTP 401
+      // 1) Upstream HTTP 401 fails with 502 upstream_error (zero paid fallback) and rolls back quota to 0
       await expect(
         service.assist('instructor-1', SAMPLE_SERVER_CLASS_DRAFT_REQ),
       ).rejects.toMatchObject({
         code: 'upstream_error',
         status: 502,
+        message: expect.stringContaining('자동 유료 충전이나 대체 호출 없이 중단했으며'),
+      });
+      expect(service.getStatus()).toMatchObject({
+        minuteUsed: 0,
+        dailyUsed: 0,
+        minuteRemaining: 1,
+        dailyRemaining: 5,
+        exhausted: false,
+        reason: 'ready',
+        activeRequests: 0,
       });
 
-      // DEFECT-A3 reproduction: even though the upstream call failed with 401 (0 successful AI responses),
-      // minuteUsed and dailyUsed were incremented to 1 and NOT decremented!
-      const statusAfterFailedAttempt = service.getStatus();
-      expect(statusAfterFailedAttempt.minuteUsed).toBe(1);
-      expect(statusAfterFailedAttempt.dailyUsed).toBe(1);
-      expect(statusAfterFailedAttempt.minuteRemaining).toBe(0);
-      expect(statusAfterFailedAttempt.exhausted).toBe(true);
-      expect(statusAfterFailedAttempt.reason).toBe('free_quota_exhausted');
-
-      // 2nd call immediately fails with free_quota_exhausted (429) without even calling fetchFn!
+      // 2) Network failure also rolls back quota to 0 without paid retry
       await expect(
         service.assist('instructor-1', SAMPLE_SERVER_CLASS_DRAFT_REQ),
       ).rejects.toMatchObject({
+        code: 'upstream_error',
+        status: 502,
+        message: expect.stringContaining('추가 과금 재시도 없이 중단했으며'),
+      });
+      expect(service.getStatus()).toMatchObject({
+        minuteUsed: 0,
+        dailyUsed: 0,
+        exhausted: false,
+        activeRequests: 0,
+      });
+
+      // 3) Malformed / schema-invalid upstream JSON rolls back quota to 0
+      await expect(
+        service.assist('instructor-1', SAMPLE_SERVER_CLASS_DRAFT_REQ),
+      ).rejects.toMatchObject({
+        code: 'invalid_ai_response',
+        status: 502,
+      });
+      expect(service.getStatus()).toMatchObject({
+        minuteUsed: 0,
+        dailyUsed: 0,
+        exhausted: false,
+        activeRequests: 0,
+      });
+      expect(fetchFn).toHaveBeenCalledTimes(3);
+
+      // 4) In-flight 4th call reserves active slot & minuteLimit=1 slot immediately:
+      //    - same user concurrent request -> concurrency_limit_exceeded (429)
+      //    - different user uncached request -> free_quota_exhausted (429)
+      const inFlightPromise = service.assist('instructor-1', SAMPLE_SERVER_CLASS_DRAFT_REQ);
+      expect(service.getStatus().activeRequests).toBe(1);
+      expect(service.getStatus().minuteUsed).toBe(1);
+
+      await expect(
+        service.assist('instructor-1', SAMPLE_SERVER_CLASS_DRAFT_REQ),
+      ).rejects.toMatchObject({
+        code: 'concurrency_limit_exceeded',
+        status: 429,
+      });
+
+      const distinctUncachedReq: FreeAiServerRequest = {
+        ...SAMPLE_SERVER_CLASS_DRAFT_REQ,
+        conditions: {
+          ...SAMPLE_SERVER_CLASS_DRAFT_REQ.conditions,
+          theme: '동시 호출 한도 초과 검증용 별도 주제',
+        },
+      };
+      await expect(service.assist('instructor-2', distinctUncachedReq)).rejects.toMatchObject({
         code: 'free_quota_exhausted',
         status: 429,
       });
-      expect(fetchFn).toHaveBeenCalledTimes(1);
+      expect(fetchFn).toHaveBeenCalledTimes(4);
 
-      // Also verify via createFreeAiRoutes HTTP handler that the 502 response payload embeds status.exhausted === true
+      // 5) Resolve 4th call with valid response -> permanently consumes 1 quota unit
+      resolveFourthCall(makeGeminiUpstreamResponse(VALID_UPSTREAM_CLASS_DRAFT_JSON));
+      const succeededResult = await inFlightPromise;
+      expect(succeededResult.source).toBe('external-free-ai');
+      expect(succeededResult.provider).toBe('gemini-free');
+      expect(succeededResult.guaranteesSafetyOrEffect).toBe(false);
+
+      const statusAfterSuccess = service.getStatus();
+      expect(statusAfterSuccess).toMatchObject({
+        minuteUsed: 1,
+        dailyUsed: 1,
+        minuteRemaining: 0,
+        dailyRemaining: 4,
+        exhausted: true,
+        reason: 'free_quota_exhausted',
+        activeRequests: 0,
+      });
+
+      // Identical request hits cache without extra upstream calls, whereas a new uncached request is blocked by minuteLimit=1
+      const cachedHit = await service.assist('instructor-1', SAMPLE_SERVER_CLASS_DRAFT_REQ);
+      expect(cachedHit.cached).toBe(true);
+
+      await expect(service.assist('instructor-1', distinctUncachedReq)).rejects.toMatchObject({
+        code: 'free_quota_exhausted',
+        status: 429,
+        message: FREE_QUOTA_EXHAUSTED_ERROR_MESSAGE,
+      });
+      expect(fetchFn).toHaveBeenCalledTimes(4);
+      for (const [calledUrl] of fetchFn.mock.calls) {
+        expect(String(calledUrl)).toContain('gemini-3.5-flash-lite:generateContent');
+      }
+
+      // 6) Verify HTTP route handler also embeds rolled-back status (minuteUsed=0, exhausted=false) on 502 failure,
+      //    and blocks paid models with 0 upstream calls
+      const failingRouteFetch = vi
+        .fn<typeof fetch>()
+        .mockRejectedValue(new TypeError('fetch failed'));
       const routes = createFreeAiRoutes(
         createFreeAiService({
           env: SYNTHETIC_GEMINI_ENV,
-          fetchFn: vi.fn<typeof fetch>().mockRejectedValue(new TypeError('fetch failed')),
+          fetchFn: failingRouteFetch,
           now: () => fixedNowMs,
           minuteLimit: 1,
           dailyLimit: 5,
@@ -1352,8 +1455,27 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
       expect(routeRes.statusCode).toBe(502);
       const routeBody = JSON.parse(routeRes.body);
       expect(routeBody.code).toBe('upstream_error');
-      expect(routeBody.status.minuteUsed).toBe(1);
-      expect(routeBody.status.exhausted).toBe(true);
+      expect(routeBody.status.minuteUsed).toBe(0);
+      expect(routeBody.status.dailyUsed).toBe(0);
+      expect(routeBody.status.exhausted).toBe(false);
+      expect(failingRouteFetch).toHaveBeenCalledTimes(1);
+
+      const paidFetchSpy = vi.fn<typeof fetch>();
+      const paidBlockedService = createFreeAiService({
+        env: {
+          ...SYNTHETIC_GEMINI_ENV,
+          GEMINI_FREE_MODEL: 'gemini-2.0-flash',
+        },
+        fetchFn: paidFetchSpy,
+        now: () => fixedNowMs,
+      });
+      await expect(
+        paidBlockedService.assist('instructor-paid-check', SAMPLE_SERVER_CLASS_DRAFT_REQ),
+      ).rejects.toMatchObject({
+        code: 'invalid_paid_model_blocked',
+        status: 503,
+      });
+      expect(paidFetchSpy).not.toHaveBeenCalled();
     });
 
     it('DEFECT-A4: FreeAiAssistantPanel rendered with SequenceWorkbench props (missing onSaveConditionTemplate) shows false positive preset save banner while conditionTemplates is unchanged', async () => {

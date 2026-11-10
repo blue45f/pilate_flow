@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -180,11 +180,49 @@ describe('Atlas reports actual append outcome', () => {
     fireEvent.click(firstTile);
     expect(firstTile).toHaveAttribute('aria-pressed', 'true');
     expect(firstTile).toHaveClass('is-selected');
+    expect(
+      within(screen.getByRole('region', { name: '선택한 패턴 도해 미리보기' })).getByRole(
+        'heading',
+        { name: '패턴 도해 미리보기' },
+      ),
+    ).toBeInTheDocument();
 
-    // Unmapped movement card shows apparatus + posture meta and target focus in .ml-unmapped-art
-    const unmappedArt = matCard.querySelector('.ml-unmapped-art');
-    expect(unmappedArt).not.toBeNull();
-    expect(unmappedArt?.querySelector('.ml-unmapped-meta')).not.toBeNull();
-    expect(unmappedArt?.querySelector('.ml-unmapped-focus')).not.toBeNull();
+    // Unmapped movement card synthesizes a universal kinematic diagram thumbnail and preserves apparatus, posture, target focus, and preview selection
+    const kinematicThumb = matCard.querySelector('.catalog-motion-thumbnail');
+    expect(kinematicThumb).not.toBeNull();
+    expect(kinematicThumb).toHaveAttribute('data-motion-family', 'catalog-kinematic');
+    expect(kinematicThumb).toHaveAttribute('data-exercise-id', mat.id);
+
+    const diagramImg = within(matCard).getByRole('img', {
+      name: `${mat.nameKo} · 기구학 모션 도해 · 정점 단계 도해`,
+    });
+    expect(diagramImg).toHaveAttribute('data-apparatus', 'mat');
+    expect(diagramImg).toHaveAttribute('data-body-position', 'supine');
+    expect(diagramImg).toHaveAttribute('data-anatomical-accuracy-assumed', 'false');
+
+    expect(within(matCard).getByText(`${mat.nameKo} · 5단계 기구학 도해`)).toBeInTheDocument();
+    expect(matCard.querySelector('.movement-equipment-label')).toHaveTextContent('매트');
+    expect(matCard.querySelector('.movement-position-badge')).toHaveTextContent(
+      '수파인 (누운 자세)',
+    );
+    expect(matCard.querySelector('.movement-target')).toHaveTextContent('합성 QA 분류');
+    expect(
+      within(matCard).getByRole('button', { name: '합성 QA 분류 태그로 검색' }),
+    ).toHaveAttribute('aria-pressed', 'false');
+
+    const kinematicPreviewBtn = within(matCard).getByRole('button', {
+      name: `${mat.nameKo} 기구학 도해 보기`,
+    });
+    expect(kinematicPreviewBtn).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(kinematicPreviewBtn);
+    expect(kinematicPreviewBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(firstTile).toHaveAttribute('aria-pressed', 'false');
+    expect(
+      within(screen.getByRole('region', { name: '선택한 패턴 도해 미리보기' })).getByRole(
+        'heading',
+        { name: '기구학 연속 도해 미리보기' },
+      ),
+    ).toBeInTheDocument();
+    expect(matCard).toHaveClass('is-selected', 'is-in-sequence');
   });
 });

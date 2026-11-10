@@ -367,9 +367,13 @@ describe('Wave 1-4 Independent Modals & Stage Mobile UX', () => {
         ).toBeEnabled();
       });
       fireEvent.click(screen.getByRole('button', { name: '무료 AI로 아이디어·변형 정리' }));
-      expect(screen.getByTestId('free-ai-loading-banner')).toHaveTextContent(
-        '초안을 준비하고 있습니다',
+      const loadingBanner = screen.getByTestId('free-ai-loading-banner');
+      expect(loadingBanner).toHaveTextContent(
+        '새 동작 아이디어·변형 초안을 준비하고 있어요…',
       );
+      expect(
+        within(loadingBanner).getByRole('button', { name: '요청 취소' }),
+      ).toBeEnabled();
 
       await act(async () => {
         rejectAssist(new Error('일시적 네트워크 지연'));

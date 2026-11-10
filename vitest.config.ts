@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 
@@ -16,5 +16,10 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    exclude: [
+      ...configDefaults.exclude,
+      'src/booking-core/test/booking-engine.test.mjs',
+      'src/utils/recurrence/test/pilates-recurrence.test.mjs',
+    ],
   },
 });

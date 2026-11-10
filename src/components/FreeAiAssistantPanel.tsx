@@ -1082,7 +1082,15 @@ export function FreeAiAssistantPanel({
           aria-live="polite"
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
         >
-          <span>요청한 내용을 정리하고 있어요…</span>
+          <span>
+            {activeTab === 'class-draft'
+              ? '수업 초안을 준비하고 있어요…'
+              : activeTab === 'movement-idea'
+                ? '새 동작 아이디어·변형 초안을 준비하고 있어요…'
+                : activeTab === 'sequence-compose'
+                  ? '검토 동작 시퀀스 초안을 준비하고 있어요…'
+                  : '조건에 맞는 추천 동작을 찾고 있어요…'}
+          </span>
           <button
             type="button"
             className="free-ai-btn-secondary"

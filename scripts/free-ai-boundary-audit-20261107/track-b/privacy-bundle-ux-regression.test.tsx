@@ -1171,18 +1171,37 @@ describe('Track B Audit — 4. Regression Prevention for Previously Reproduced T
     expect(screen.queryByText(/무료 AI 연결됨|무료 전용 AI 사용 가능/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '무료 AI 초안 만들기' })).toBeEnabled();
 
-    // 2. Generate local draft on Tab 1 (sets actionFeedback), then switch to Tab 2
+    // 2. Generate local draft on Tab 1 (clears 502 alert, renders editable draft & natural actionFeedback),
+    //    then verify switching across tabs clears feedback and returning to Tab 1 never restores stale feedback
+    const completedFeedback =
+      '조건에 맞춰 수업 초안을 만들었어요. 순서와 시간을 자유롭게 다듬어 보세요.';
     fireEvent.click(screen.getByRole('button', { name: '조건으로 초안 만들기' }));
     await waitFor(() => {
-      expect(
-        screen.getByText('수업 초안을 만들었습니다. 수업에 맞게 편집해 주세요.'),
-      ).toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent(completedFeedback);
     });
-
-    fireEvent.click(screen.getByRole('tab', { name: '2. 새 동작 아이디어·변형' }));
     expect(
-      screen.queryByText('수업 초안을 만들었습니다. 수업에 맞게 편집해 주세요.'),
+      screen.queryByText(/외부 무료 AI 서비스가 오류 상태\(502\)를 반환했습니다/),
     ).not.toBeInTheDocument();
+
+    const draftTitleInput = screen.getByLabelText('초안 제목 편집') as HTMLInputElement;
+    expect(draftTitleInput.value.length).toBeGreaterThan(0);
+    expect(
+      screen
+        .getByRole('list', { name: '편집 가능한 시퀀스 단계' })
+        .querySelectorAll('li').length,
+    ).toBeGreaterThan(0);
+
+    for (const tabName of [
+      '2. 새 동작 아이디어·변형',
+      '3. 검토 동작·블록 시퀀스 구성',
+      '4. 동작 탐색 추천',
+      '1. 수업 초안 만들기',
+    ]) {
+      fireEvent.click(screen.getByRole('tab', { name: tabName }));
+      expect(screen.queryByText(completedFeedback)).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    }
+    expect(screen.getByLabelText('초안 제목 편집')).toBeInTheDocument();
 
     const paidBlockedStatus: FreeAiQuotaStatus = createDefaultFreeAiStatus({
       provider: 'gemini-free',
@@ -1194,32 +1213,118 @@ describe('Track B Audit — 4. Regression Prevention for Previously Reproduced T
         'Google Gemini 무료 등급 허용 목록에 없는 유료 모델이 감지되어 외부 AI 호출이 차단되었습니다.',
     });
 
-    const paidBlockedClient = createFreeAiClient({
+    // 3a. Prefetched status flow (matches panel mount -> refreshQuotaStatus()):
+    //     serverKnownUnconfigured is set upfront, so requestClassDraft makes 0 own-server postAssist calls.
+    const prefetchedGetStatus = vi.fn().mockResolvedValue(paidBlockedStatus);
+    const prefetchedPostAssist = vi.fn().mockRejectedValue({
+      status: 503,
+      code: 'invalid_paid_model_blocked',
+      message: paidBlockedStatus.statusMessageKo,
+      quotaStatus: paidBlockedStatus,
+    });
+
+    const prefetchedPaidBlockedClient = createFreeAiClient({
       transport: {
-        getStatus: async () => paidBlockedStatus,
-        postAssist: vi.fn().mockRejectedValue({
-          status: 503,
-          code: 'invalid_paid_model_blocked',
-          message: paidBlockedStatus.statusMessageKo,
-          quotaStatus: paidBlockedStatus,
-        }),
+        getStatus: prefetchedGetStatus,
+        postAssist: prefetchedPostAssist,
       },
     });
 
-    await expect(
-      paidBlockedClient.requestClassDraft(
-        {
-          durationMinutes: 50,
-          theme: '코어 안정화 플로우',
-          strengthenAreas: ['core'],
-          level: '1.5',
-          apparatus: 'reformer',
+    const refreshedBlockedStatus = await prefetchedPaidBlockedClient.refreshQuotaStatus();
+    expect(refreshedBlockedStatus.enabled).toBe(false);
+    expect(prefetchedGetStatus).toHaveBeenCalledTimes(1);
+
+    const prefetchedDraft = await prefetchedPaidBlockedClient.requestClassDraft(
+      {
+        durationMinutes: 50,
+        theme: '사전 상태 조회 후 코어 안정화 플로우',
+        strengthenAreas: ['core'],
+        level: '1.5',
+        apparatus: 'reformer',
+      },
+      SAMPLE_EXERCISES,
+      SAMPLE_TEMPLATES,
+    );
+    expect(prefetchedDraft.usedLocalFallback).toBe(true);
+    expect(prefetchedDraft.result.source).toBe('local-rule-engine');
+    expect(prefetchedDraft.result.provider).toBe('none');
+    expect(prefetchedDraft.result.steps.length).toBeGreaterThan(0);
+    expect(prefetchedPostAssist).not.toHaveBeenCalled();
+
+    // 3b. Cold first-request flow (no prior refreshQuotaStatus()):
+    //     1st call hits own-server /api/studio/ai/assist once (503 invalid_paid_model_blocked, 0 upstream paid calls),
+    //     falls back locally, sets serverKnownUnconfigured=true, and suppresses subsequent uncached postAssist calls.
+    const { googleKey } = buildSyntheticKeys();
+    const upstreamPaidFetchSpy = vi.fn<typeof fetch>();
+    const paidBlockedRoutes = createFreeAiRoutes(
+      createFreeAiService({
+        env: {
+          FREE_AI_PROVIDER: 'gemini-free',
+          GEMINI_API_KEY: googleKey,
+          GEMINI_FREE_TIER_UNPAID_CONFIRMED: 'true',
+          GEMINI_FREE_MODEL: 'gemini-2.0-flash',
         },
-        SAMPLE_EXERCISES,
-        SAMPLE_TEMPLATES,
-      ),
-    ).resolves.toMatchObject({
-      usedLocalFallback: true,
+        fetchFn: upstreamPaidFetchSpy,
+      }),
+    );
+
+    const coldOwnServerPostAssist = vi.fn().mockImplementation(async (req: FreeAiServerRequest) => {
+      const routeRes = await paidBlockedRoutes['POST /api/studio/ai/assist']({
+        user: { userId: 'instructor-b3', scope: 'openid' },
+        body: req,
+      });
+      const parsedBody = JSON.parse(routeRes.body) as Record<string, unknown>;
+      if (routeRes.statusCode >= 400) {
+        throw {
+          status: routeRes.statusCode,
+          data: parsedBody,
+          code: parsedBody.code,
+          message: parsedBody.message,
+        };
+      }
+      throw new Error('Expected paid-model route to reject with 503');
     });
+
+    const coldPaidBlockedClient = createFreeAiClient({
+      transport: {
+        getStatus: async () => paidBlockedStatus,
+        postAssist: coldOwnServerPostAssist,
+      },
+    });
+
+    const firstColdDraft = await coldPaidBlockedClient.requestClassDraft(
+      {
+        durationMinutes: 50,
+        theme: '최초 자기 서버 요청 시 유료 모델 차단 폴백',
+        strengthenAreas: ['core'],
+        level: '1.5',
+        apparatus: 'reformer',
+      },
+      SAMPLE_EXERCISES,
+      SAMPLE_TEMPLATES,
+    );
+    expect(firstColdDraft.usedLocalFallback).toBe(true);
+    expect(firstColdDraft.result.source).toBe('local-rule-engine');
+    expect(firstColdDraft.result.provider).toBe('none');
+    expect(firstColdDraft.result.steps.length).toBeGreaterThan(0);
+    expect(coldOwnServerPostAssist).toHaveBeenCalledTimes(1);
+    expect(upstreamPaidFetchSpy).not.toHaveBeenCalled();
+
+    const secondSuppressedDraft = await coldPaidBlockedClient.requestClassDraft(
+      {
+        durationMinutes: 40,
+        theme: '차단 인지 후 두 번째 비캐시 로컬 초안',
+        strengthenAreas: ['glute-lower'],
+        level: '1.0',
+        apparatus: 'reformer',
+      },
+      SAMPLE_EXERCISES,
+      SAMPLE_TEMPLATES,
+    );
+    expect(secondSuppressedDraft.usedLocalFallback).toBe(true);
+    expect(secondSuppressedDraft.result.source).toBe('local-rule-engine');
+    expect(secondSuppressedDraft.result.steps.length).toBeGreaterThan(0);
+    expect(coldOwnServerPostAssist).toHaveBeenCalledTimes(1);
+    expect(upstreamPaidFetchSpy).not.toHaveBeenCalled();
   });
 });

@@ -136,8 +136,8 @@ const SessionLogForm: React.FC<
     saved ? 'saved-sequence' : 'active-draft',
   );
   const [selectedSteps, setSelectedSteps] = useState(() => {
+    const validIds = new Set(snapshot.map((step) => step.stepId));
     if (Array.isArray(initialDraft?.selectedStepIds)) {
-      const validIds = new Set(snapshot.map((step) => step.stepId));
       const restored = initialDraft.selectedStepIds.filter(
         (id): id is string => typeof id === 'string' && validIds.has(id),
       );
@@ -145,8 +145,12 @@ const SessionLogForm: React.FC<
         return new Set(restored);
       }
     }
-    if (context?.taughtStepIds !== undefined && context.taughtStepIds.length > 0) {
-      return new Set(context.taughtStepIds);
+    if (context?.taughtStepIds !== undefined) {
+      return new Set(
+        context.taughtStepIds.filter(
+          (id): id is string => typeof id === 'string' && validIds.has(id),
+        ),
+      );
     }
     return new Set(snapshot.map((step) => step.stepId));
   });

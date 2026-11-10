@@ -127,6 +127,28 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     expect(sanitized.pass.remainingCount).toBe(7);
     expect(sanitized.pass.totalCount).toBe(20);
     expect(sanitized.slotDecisions).toEqual({});
+
+    window.localStorage.setItem(
+      MEMBER_BOOKING_STORAGE_KEY,
+      JSON.stringify({
+        pass: { remainingCount: 0, totalCount: 0, expiresAtIso: todayIso },
+        slotDecisions: {},
+      }),
+    );
+    const zeroPassSanitized = readPersistedMemberBookingState(todayIso);
+    expect(zeroPassSanitized.pass.remainingCount).toBe(0);
+    expect(zeroPassSanitized.pass.totalCount).toBe(20);
+
+    window.localStorage.setItem(
+      MEMBER_BOOKING_STORAGE_KEY,
+      JSON.stringify({
+        pass: { remainingCount: -3, totalCount: 15, expiresAtIso: todayIso },
+        slotDecisions: {},
+      }),
+    );
+    const negativePassSanitized = readPersistedMemberBookingState(todayIso);
+    expect(negativePassSanitized.pass.remainingCount).toBe(0);
+    expect(negativePassSanitized.pass.totalCount).toBe(15);
     window.localStorage.removeItem(MEMBER_BOOKING_STORAGE_KEY);
 
     render(<MemberBookingView />);
@@ -141,14 +163,48 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     expect(availableChip).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(availableChip);
 
-    // Verify Chair slot renders C1~C6 spots
+    // Verify Chair slot renders C1~C6 spots inside scoped booking dialog, and closing cancels cleanly without deduction
     const chairBookBtn = screen.getByRole('button', {
       name: '체어 하체·코어 집중 플로우 예약하기',
     });
     fireEvent.click(chairBookBtn);
-    const chairMap = await screen.findByTestId('member-spot-map');
-    expect(within(chairMap).getByTestId('spot-btn-C2')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+
+    const chairDialog = await screen.findByRole('dialog', {
+      name: '체어 자리 선택 및 예약 확인',
+    });
+    const chairMap = within(chairDialog).getByTestId('member-spot-map');
+    const spotC2 = within(chairMap).getByTestId('spot-btn-C2');
+    expect(spotC2).toBeInTheDocument();
+    if (!spotC2.hasAttribute('disabled')) {
+      fireEvent.click(spotC2);
+      expect(spotC2).toHaveAttribute('aria-pressed', 'true');
+    }
+
+    const chairDialogHeader = chairDialog.querySelector<HTMLElement>('.atelier-modal-header');
+    const chairDialogActions = chairDialog.querySelector<HTMLElement>('.pf-member-dialog-actions');
+    expect(chairDialogHeader).not.toBeNull();
+    expect(chairDialogActions).not.toBeNull();
+    expect(within(chairDialogHeader!).getByRole('button', { name: '닫기' })).toBeInTheDocument();
+
+    const chairCancelCloseBtn = within(chairDialogActions!).getByRole('button', {
+      name: '닫기',
+    });
+    fireEvent.click(chairCancelCloseBtn);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: '체어 자리 선택 및 예약 확인' }),
+      ).toBeNull();
+      expect(screen.queryByTestId('member-spot-map')).toBeNull();
+    });
+    expect(screen.queryByTestId('member-my-bookings-strip')).toBeNull();
+    expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('7 / 20회');
+    expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('예약 확정: 0건');
+    expect(
+      screen.getByRole('button', { name: '체어 하체·코어 집중 플로우 예약하기' }),
+    ).toBeEnabled();
+    expect(readPersistedMemberBookingState(todayIso).pass.remainingCount).toBe(7);
+    expect(readPersistedMemberBookingState(todayIso).slotDecisions).toEqual({});
 
     // Book first available Reformer slot with custom spot R5
     const bookBtn = screen.getByRole('button', {
@@ -156,19 +212,25 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     });
     fireEvent.click(bookBtn);
 
-    expect(await screen.findByTestId('member-spot-map')).toBeInTheDocument();
-    const spotR5 = screen.getByTestId('spot-btn-R5');
+    const reformerDialog = await screen.findByRole('dialog', {
+      name: '리포머 자리 선택 및 예약 확인',
+    });
+    expect(within(reformerDialog).getByTestId('member-spot-map')).toBeInTheDocument();
+    const spotR5 = within(reformerDialog).getByTestId('spot-btn-R5');
     if (!spotR5.hasAttribute('disabled')) {
       fireEvent.click(spotR5);
       expect(spotR5).toHaveAttribute('aria-pressed', 'true');
     }
 
-    const confirmBookBtn = await screen.findByTestId('confirm-member-booking-btn');
+    const confirmBookBtn = within(reformerDialog).getByTestId('confirm-member-booking-btn');
     expect(confirmBookBtn).toHaveTextContent('차감 동의 후 예약 확정');
     fireEvent.click(confirmBookBtn);
     fireEvent.click(confirmBookBtn);
 
     await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: '리포머 자리 선택 및 예약 확인' }),
+      ).toBeNull();
       expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('6 / 20회');
       expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('예약 확정: 1건');
       expect(screen.getByTestId('member-my-bookings-strip')).toBeInTheDocument();

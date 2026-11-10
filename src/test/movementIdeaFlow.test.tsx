@@ -95,12 +95,37 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     expect(summary.closest('details')).not.toHaveAttribute('open');
     expect(within(notice).getByRole('button', { name: '동작 자료·기록 보기' })).not.toBeVisible();
     fireEvent.click(summary);
-    const guidance = within(notice).getByText(/검토 기록은 선택 사항입니다/);
+    const guidance = within(notice).getByText(
+      /검토 기록은 선택 사항이며, 없어도 수업을 구성할 수 있습니다/,
+    );
     expect(guidance).toBeVisible();
     expect(within(notice).getByRole('button', { name: '동작 자료·기록 보기' })).toBeVisible();
-    expect(guidance).toHaveTextContent(/수업을 구성하는 데 필요하지 않습니다/);
+    expect(guidance).toHaveTextContent(
+      /진행 전 대상자 컨디션과 기구·스프링 장력을 직접 확인하세요/,
+    );
+    expect(guidance).toHaveTextContent(
+      /검토 여부나 AI 제안은 의학적 판단·운동 적합성 보장이 아닙니다/,
+    );
     expect(notice).not.toHaveTextContent(/미승인.*(?:자동추천|자동 추천|수업 금지)|승인.*필수/);
     expect(usePilatesStore.getState()).toBe(before);
+
+    // Verify unreviewed catalog movement can be added to class and enables stage entry without an approval gate
+    const journeyBar = screen.getByTestId('studio-journey-bar');
+    expect(within(journeyBar).getByRole('button', { name: /수업 진행/ })).toBeDisabled();
+
+    const unreviewedExercise = usePilatesStore
+      .getState()
+      .exercises.find((item) => item.id === 'ex-straps-01')!;
+    expect(unreviewedExercise.review).toBeUndefined();
+    act(() => {
+      usePilatesStore.getState().appendExerciseToSequence(unreviewedExercise.id);
+    });
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
+    expect(usePilatesStore.getState().activeSteps[0]?.exerciseId).toBe(unreviewedExercise.id);
+    expect(within(journeyBar).getByRole('button', { name: /수업 진행/ })).toBeEnabled();
+
+    fireEvent.click(within(notice).getByRole('button', { name: '동작 자료·기록 보기' }));
+    expect(usePilatesStore.getState().activeTab).toBe('atlas');
   });
 
   it('exposes movement creation in the topbar and core destinations in mobile navigation', () => {

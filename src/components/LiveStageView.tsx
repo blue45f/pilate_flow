@@ -11,6 +11,7 @@ import {
   Pause,
   Play,
   Plus,
+  RotateCcw,
   Sun,
   Volume2,
 } from 'lucide-react';
@@ -23,6 +24,7 @@ import {
 import { ClassCueSheetPreview } from '../features/classCueSheet/ClassCueSheetPreview';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { ActiveWorkspaceTab } from '../store/usePilatesStore';
+import type { PilatesExercise, SequenceStep } from '../types/pilates';
 import {
   formatSecondsToMMSS,
   getMovementKey,
@@ -67,6 +69,43 @@ interface TeachingClock {
   running: boolean;
   sampledAt: number;
   elapsedByStep: Record<number, number>;
+}
+
+type StageUndoState =
+  | {
+      readonly kind: 'step-jump';
+      readonly fromIndex: number;
+      readonly fromStepNumber: number;
+      readonly fromTitle: string;
+      readonly previousRemainingMs: number;
+      readonly wasRunning: boolean;
+      readonly capturedAtMs: number;
+      readonly targetElapsedBaselineMs: number;
+    }
+  | {
+      readonly kind: 'add-minute';
+      readonly stepIndex: number;
+      readonly stepNumber: number;
+      readonly stepTitle: string;
+      readonly baseDurationMin: number;
+      readonly addedMinutes: number;
+    };
+
+function computeStepDurationsMs(stepList: readonly SequenceStep[]): number[] {
+  return stepList.map((step) => Math.max(1, Math.round(step.durationMin * 60000)));
+}
+
+function resolveInitialStepPhase(
+  step: SequenceStep | undefined,
+  ex: PilatesExercise | undefined,
+): string {
+  if (!step) return '';
+  if (isRestStep(step)) return '휴식';
+  const stepTiming = getStepTiming(step, ex);
+  const stepSides = getStepSideLabels(step, ex);
+  if (stepTiming.explanationSec > 0) return '설명 · 세팅';
+  if (stepTiming.sides === 2 || step.sideMode) return `수행 · ${stepSides[0]}`;
+  return '수행';
 }
 
 // Absolute timestamps keep the timer accurate when a browser delays a frame or tab.
@@ -130,10 +169,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   } = usePilatesStore();
   const [session] = useState(() => ({ id: activeSequenceId, title: activeTitle }));
   const [steps, setSteps] = useState(() => activeSteps.map((step) => ({ ...step })));
-  const durations = useMemo(
-    () => steps.map((step) => Math.max(1, Math.round(step.durationMin * 60000))),
-    [steps],
-  );
+  const durations = useMemo(() => computeStepDurationsMs(steps), [steps]);
   const [clock, setClock] = useState<TeachingClock>(() => ({
     index: 0,
     remainingMs: durations[0] ?? 0,
@@ -150,7 +186,39 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const [exitOpen, setExitOpen] = useState(false);
   const [showAllCues, setShowAllCues] = useState(false);
   const [showCueSheet, setShowCueSheet] = useState(false);
+  const [undoState, setUndoState] = useState<StageUndoState | null>(null);
   const [outlineInitiallyOpen] = useState(() => window.innerWidth > 1000);
+
+  const stepsRef = useRef(steps);
+  const durationsRef = useRef(durations);
+  const clockRef = useRef(clock);
+  const autoAdvanceRef = useRef(autoAdvance);
+  const undoRef = useRef<StageUndoState | null>(undoState);
+
+  useEffect(() => {
+    stepsRef.current = steps;
+    durationsRef.current = durations;
+    clockRef.current = clock;
+    autoAdvanceRef.current = autoAdvance;
+    undoRef.current = undoState;
+  }, [steps, durations, clock, autoAdvance, undoState]);
+
+  const applyClock = (updater: (prev: TeachingClock) => TeachingClock) => {
+    const nextClock = updater(clockRef.current);
+    clockRef.current = nextClock;
+    setClock(nextClock);
+  };
+  const applySteps = (updater: (prev: SequenceStep[]) => SequenceStep[]) => {
+    const nextSteps = updater(stepsRef.current);
+    stepsRef.current = nextSteps;
+    durationsRef.current = computeStepDurationsMs(nextSteps);
+    setSteps(nextSteps);
+  };
+  const applyUndo = (nextUndo: StageUndoState | null) => {
+    undoRef.current = nextUndo;
+    setUndoState(nextUndo);
+  };
+
   const wakeRef = useRef<WakeLockSentinel | null>(null);
   const mounted = useRef(true);
   const runningIntent = useRef(false);
@@ -188,6 +256,13 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     () => new Map(exercises.map((exercise) => [exercise.id, exercise])),
     [exercises],
   );
+  const resolveStepDisplayName = (stepIndex: number): string => {
+    const target = stepsRef.current[stepIndex];
+    if (!target) return `${stepIndex + 1}번 순서`;
+    if (isRestStep(target)) return '휴식';
+    return exerciseMap.get(target.exerciseId)?.nameKo ?? `${stepIndex + 1}번 동작`;
+  };
+
   const current = steps[clock.index];
   const currentIsRest = !!current && isRestStep(current);
   const exercise = current ? exerciseMap.get(current.exerciseId) : undefined;
@@ -196,7 +271,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
 
   useEffect(() => {
     if (!clock.running) return;
-    const tick = () => setClock((value) => sampleClock(value, Date.now(), durations, autoAdvance));
+    const tick = () =>
+      applyClock((value) =>
+        sampleClock(value, Date.now(), durationsRef.current, autoAdvanceRef.current),
+      );
     const interval = window.setInterval(tick, 250);
     document.addEventListener('visibilitychange', tick);
     return () => {
@@ -241,91 +319,284 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       if (mounted.current) setWakeStatus('화면 유지 요청을 사용할 수 없어요');
     }
   };
+
   const toggleRunning = () => {
-    if (clock.running) {
+    const liveClock = clockRef.current;
+    const liveDurations = durationsRef.current;
+    if (liveClock.running) {
+      runningIntent.current = false;
       classVoice.pause();
-      setClock((value) => ({
-        ...sampleClock(value, Date.now(), durations, autoAdvance),
+      applyClock((value) => ({
+        ...sampleClock(value, Date.now(), liveDurations, autoAdvanceRef.current),
         running: false,
       }));
       void wakeRef.current?.release().catch(() => undefined);
     } else {
+      const activeStep = stepsRef.current[liveClock.index];
+      const activeEx = activeStep ? exerciseMap.get(activeStep.exerciseId) : undefined;
+      const startRemainingMs = liveClock.remainingMs || liveDurations[liveClock.index] || 0;
       runningIntent.current = true;
       classVoice.start(
-        (clock.remainingMs || durations[clock.index]) / 1000,
-        clock.remainingMs > 0
-          ? phase
-          : currentIsRest
-            ? '휴식'
-            : timing && timing.explanationSec > 0
-              ? '설명 · 세팅'
-              : timing?.sides === 2 || current?.sideMode
-                ? `수행 · ${sideLabels[0]}`
-                : '수행',
+        startRemainingMs / 1000,
+        liveClock.remainingMs > 0 ? phase : resolveInitialStepPhase(activeStep, activeEx),
       );
-      setClock((value) => ({
+      applyClock((value) => ({
         ...value,
-        remainingMs: value.remainingMs || durations[value.index],
+        remainingMs: value.remainingMs || liveDurations[value.index] || 0,
         running: true,
         sampledAt: Date.now(),
       }));
       void requestScreenLock();
     }
   };
+
   const selectStep = (index: number) => {
-    if (index < 0 || index >= steps.length) return;
-    setClock((value) => ({
-      ...sampleClock(value, Date.now(), durations, autoAdvance),
+    const liveSteps = stepsRef.current;
+    const liveDurations = durationsRef.current;
+    if (index < 0 || index >= liveSteps.length) return;
+
+    applyClock((value) =>
+      sampleClock(value, Date.now(), liveDurations, autoAdvanceRef.current),
+    );
+    const sampled = clockRef.current;
+    const sampledAtMs = sampled.sampledAt;
+
+    if (index !== sampled.index) {
+      const prevUndo = undoRef.current;
+      const isRapidBurstContinuation =
+        prevUndo?.kind === 'step-jump' &&
+        sampledAtMs - prevUndo.capturedAtMs < 1500 &&
+        (sampled.elapsedByStep[sampled.index] ?? 0) - prevUndo.targetElapsedBaselineMs < 1000;
+
+      if (isRapidBurstContinuation && prevUndo.fromIndex === index) {
+        if (
+          prevUndo.previousRemainingMs < liveDurations[index] ||
+          prevUndo.wasRunning !== sampled.running
+        ) {
+          applyUndo({
+            ...prevUndo,
+            capturedAtMs: sampledAtMs,
+            targetElapsedBaselineMs: sampled.elapsedByStep[index] ?? 0,
+          });
+        } else {
+          applyUndo(null);
+        }
+      } else if (isRapidBurstContinuation) {
+        applyUndo({
+          ...prevUndo,
+          capturedAtMs: sampledAtMs,
+          targetElapsedBaselineMs: sampled.elapsedByStep[index] ?? 0,
+        });
+      } else {
+        applyUndo({
+          kind: 'step-jump',
+          fromIndex: sampled.index,
+          fromStepNumber: sampled.index + 1,
+          fromTitle: resolveStepDisplayName(sampled.index),
+          previousRemainingMs: sampled.remainingMs,
+          wasRunning: sampled.running,
+          capturedAtMs: sampledAtMs,
+          targetElapsedBaselineMs: sampled.elapsedByStep[index] ?? 0,
+        });
+      }
+    }
+
+    applyClock((value) => ({
+      ...value,
       index,
-      remainingMs: durations[index],
+      remainingMs: liveDurations[index],
     }));
     setShowAllCues(false);
   };
+
+  const startNextStepImmediately = () => {
+    const liveSteps = stepsRef.current;
+    const liveDurations = durationsRef.current;
+    applyClock((value) =>
+      sampleClock(value, Date.now(), liveDurations, autoAdvanceRef.current),
+    );
+    const sampled = clockRef.current;
+    const nextIndex = sampled.index + 1;
+    if (nextIndex >= liveSteps.length) return;
+
+    applyUndo({
+      kind: 'step-jump',
+      fromIndex: sampled.index,
+      fromStepNumber: sampled.index + 1,
+      fromTitle: resolveStepDisplayName(sampled.index),
+      previousRemainingMs: sampled.remainingMs,
+      wasRunning: sampled.running,
+      capturedAtMs: sampled.sampledAt,
+      targetElapsedBaselineMs: sampled.elapsedByStep[nextIndex] ?? 0,
+    });
+
+    runningIntent.current = true;
+    applyClock((value) => ({
+      ...value,
+      index: nextIndex,
+      remainingMs: liveDurations[nextIndex],
+      running: true,
+    }));
+    setShowAllCues(false);
+    void requestScreenLock();
+  };
+
   const addMinute = () => {
-    const currentStep = steps[clock.index];
+    const prevDurations = durationsRef.current;
+    applyClock((value) =>
+      sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current),
+    );
+    const sampled = clockRef.current;
+    const targetIndex = sampled.index;
+    const currentStep = stepsRef.current[targetIndex];
     if (!currentStep) return;
+
     const nextDurationMin = Math.min(120, currentStep.durationMin + 1);
     const addedMs = Math.max(
       0,
       Math.round((nextDurationMin - currentStep.durationMin) * 60) * 1000,
     );
-    setClock((value) => {
-      const currentSampled = sampleClock(value, Date.now(), durations, autoAdvance);
-      const sampledStep = steps[currentSampled.index];
-      if (!sampledStep) return value;
-      const sampledNextMin = Math.min(120, sampledStep.durationMin + 1);
-      const sampledAddedMs = Math.max(
-        0,
-        Math.round((sampledNextMin - sampledStep.durationMin) * 60) * 1000,
-      );
-      if (sampledAddedMs <= 0) {
-        return currentSampled;
-      }
-      return { ...currentSampled, remainingMs: currentSampled.remainingMs + sampledAddedMs };
-    });
     if (addedMs <= 0) {
       return;
     }
-    setSteps((value) =>
-      value.map((step, index) =>
-        index === clock.index ? { ...step, durationMin: nextDurationMin } : step,
+
+    const prevUndo = undoRef.current;
+    const baseDurationMin =
+      prevUndo?.kind === 'add-minute' && prevUndo.stepIndex === targetIndex
+        ? prevUndo.baseDurationMin
+        : currentStep.durationMin;
+    const addedMinutes =
+      prevUndo?.kind === 'add-minute' && prevUndo.stepIndex === targetIndex
+        ? prevUndo.addedMinutes + 1
+        : 1;
+
+    applySteps((prev) =>
+      prev.map((step, index) =>
+        index === targetIndex ? { ...step, durationMin: nextDurationMin } : step,
       ),
     );
+    applyClock((value) => ({
+      ...value,
+      remainingMs: value.remainingMs + addedMs,
+    }));
+    applyUndo({
+      kind: 'add-minute',
+      stepIndex: targetIndex,
+      stepNumber: targetIndex + 1,
+      stepTitle: resolveStepDisplayName(targetIndex),
+      baseDurationMin,
+      addedMinutes,
+    });
   };
+
+  const undoLastStageAction = () => {
+    const undo = undoRef.current;
+    if (!undo) return;
+    const prevDurations = durationsRef.current;
+    applyClock((value) =>
+      sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current),
+    );
+    const sampled = clockRef.current;
+
+    if (undo.kind === 'step-jump') {
+      if (undo.fromIndex < 0 || undo.fromIndex >= stepsRef.current.length) {
+        applyUndo(null);
+        return;
+      }
+      const maxStepMs = prevDurations[undo.fromIndex] ?? 0;
+      const restoredRemainingMs = Math.min(maxStepMs, Math.max(0, undo.previousRemainingMs));
+      const shouldRun = undo.wasRunning && restoredRemainingMs > 0;
+
+      if (!shouldRun) {
+        runningIntent.current = false;
+        classVoice.pause();
+        void wakeRef.current?.release().catch(() => undefined);
+      } else {
+        runningIntent.current = true;
+        if (sampled.index === undo.fromIndex && !sampled.running) {
+          const restoredStep = stepsRef.current[undo.fromIndex];
+          const restoredEx = restoredStep ? exerciseMap.get(restoredStep.exerciseId) : undefined;
+          classVoice.start(
+            restoredRemainingMs / 1000,
+            resolveInitialStepPhase(restoredStep, restoredEx),
+          );
+        }
+        void requestScreenLock();
+      }
+
+      applyClock((value) => ({
+        ...value,
+        index: undo.fromIndex,
+        remainingMs: restoredRemainingMs,
+        running: shouldRun,
+      }));
+      setShowAllCues(false);
+      applyUndo(null);
+      return;
+    }
+
+    const targetStep = stepsRef.current[undo.stepIndex];
+    if (!targetStep) {
+      applyUndo(null);
+      return;
+    }
+    const revertedDurationMin =
+      undo.addedMinutes <= 1
+        ? undo.baseDurationMin
+        : Math.max(undo.baseDurationMin, Number((targetStep.durationMin - 1).toFixed(4)));
+    const removedMs = Math.max(
+      0,
+      Math.round((targetStep.durationMin - revertedDurationMin) * 60) * 1000,
+    );
+
+    applySteps((prev) =>
+      prev.map((step, index) =>
+        index === undo.stepIndex ? { ...step, durationMin: revertedDurationMin } : step,
+      ),
+    );
+
+    if (sampled.index === undo.stepIndex) {
+      const nextRemainingMs = Math.max(0, sampled.remainingMs - removedMs);
+      const shouldKeepRunning =
+        nextRemainingMs === 0 && !autoAdvanceRef.current ? false : sampled.running;
+      if (sampled.running && !shouldKeepRunning) {
+        runningIntent.current = false;
+        classVoice.pause();
+        void wakeRef.current?.release().catch(() => undefined);
+      }
+      applyClock((value) => ({
+        ...value,
+        remainingMs: nextRemainingMs,
+        running: shouldKeepRunning,
+      }));
+    }
+
+    if (undo.addedMinutes > 1 && revertedDurationMin > undo.baseDurationMin) {
+      applyUndo({
+        ...undo,
+        addedMinutes: undo.addedMinutes - 1,
+      });
+    } else {
+      applyUndo(null);
+    }
+  };
+
   const pauseForReview = () => {
+    runningIntent.current = false;
     classVoice.pause();
     setReviewTarget(null);
-    setClock((value) => ({
-      ...sampleClock(value, Date.now(), durations, autoAdvance),
+    applyClock((value) => ({
+      ...sampleClock(value, Date.now(), durationsRef.current, autoAdvanceRef.current),
       running: false,
     }));
     setReviewOpen(true);
   };
   const pauseForExit = () => {
+    runningIntent.current = false;
     classVoice.pause();
     setExitTarget(null);
-    setClock((value) => ({
-      ...sampleClock(value, Date.now(), durations, autoAdvance),
+    applyClock((value) => ({
+      ...sampleClock(value, Date.now(), durationsRef.current, autoAdvanceRef.current),
       running: false,
     }));
     setExitOpen(true);
@@ -418,32 +689,39 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       const normalized = rawTranscript.replace(/\s+/g, ' ').trim();
       if (!normalized) return;
       if (/일시정지|정지|멈춤|스톱/.test(normalized)) {
-        if (clock.running) {
+        if (clockRef.current.running) {
           toggleRunning();
         }
         setLastVoiceCommandStatus(`음성 명령 실행: 일시정지 (“${normalized}”)`);
         return;
       }
       if (/수업\s*시작|시작|재생|계속/.test(normalized)) {
-        if (!clock.running) {
+        if (!clockRef.current.running) {
           toggleRunning();
         }
         setLastVoiceCommandStatus(`음성 명령 실행: 타이머 시작 (“${normalized}”)`);
         return;
       }
       if (/다음\s*동작|다음|넘기기/.test(normalized)) {
-        if (clock.index === steps.length - 1) {
+        if (clockRef.current.index === stepsRef.current.length - 1) {
           pauseForReview();
         } else {
-          selectStep(clock.index + 1);
+          selectStep(clockRef.current.index + 1);
         }
         setLastVoiceCommandStatus(`음성 명령 실행: 다음 동작 (“${normalized}”)`);
         return;
       }
       if (/이전\s*동작|이전/.test(normalized)) {
-        selectStep(clock.index - 1);
+        selectStep(clockRef.current.index - 1);
         setLastVoiceCommandStatus(`음성 명령 실행: 이전 동작 (“${normalized}”)`);
         return;
+      }
+      if (/되돌리기|원래\s*위치|복구/.test(normalized)) {
+        if (undoRef.current) {
+          undoLastStageAction();
+          setLastVoiceCommandStatus(`음성 명령 실행: 직전 조작 복구 (“${normalized}”)`);
+          return;
+        }
       }
       if (/1분\s*추가|\+1분|시간\s*추가/.test(normalized)) {
         addMinute();
@@ -456,7 +734,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         return;
       }
       if (/본운동\s*구간|본운동으로/.test(normalized)) {
-        const mainIdx = steps.findIndex(
+        const mainIdx = stepsRef.current.findIndex(
           (st) => !isRestStep(st) && st.blockCategory !== 'warmup' && st.blockCategory !== 'cooldown',
         );
         if (mainIdx >= 0) {
@@ -466,7 +744,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         }
       }
       if (/마무리\s*구간|쿨다운|마무리로/.test(normalized)) {
-        const coolIdx = steps.findIndex((st) => !isRestStep(st) && st.blockCategory === 'cooldown');
+        const coolIdx = stepsRef.current.findIndex(
+          (st) => !isRestStep(st) && st.blockCategory === 'cooldown',
+        );
         if (coolIdx >= 0) {
           selectStep(coolIdx);
           setLastVoiceCommandStatus(`음성 명령 실행: 마무리 구간 이동 (“${normalized}”)`);
@@ -474,7 +754,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         }
       }
       setLastVoiceCommandStatus(
-        `인식된 음성: “${normalized}” (시작·일시정지·다음·이전·1분 추가·큐시트·본운동·마무리 지원)`,
+        `인식된 음성: “${normalized}” (시작·일시정지·다음·이전·복구·1분 추가·큐시트·본운동·마무리 지원)`,
       );
     };
   });
@@ -510,16 +790,21 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       }
       if (event.key === 'ArrowRight') {
         event.preventDefault();
-        if (clock.index < steps.length - 1) {
-          selectStep(clock.index + 1);
+        if (clockRef.current.index < stepsRef.current.length - 1) {
+          selectStep(clockRef.current.index + 1);
         }
         return;
       }
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
-        if (clock.index > 0) {
-          selectStep(clock.index - 1);
+        if (clockRef.current.index > 0) {
+          selectStep(clockRef.current.index - 1);
         }
+        return;
+      }
+      if (event.key === 'Backspace' && undoRef.current) {
+        event.preventDefault();
+        undoLastStageAction();
       }
     };
   });
@@ -629,15 +914,21 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   }, [voiceCommandEnabled, speechRecognitionCtor]);
   useImperativeHandle(navigationRef, () => ({
     requestExit(destination) {
+      const liveClock = clockRef.current;
+      const liveSteps = stepsRef.current;
       const hasSessionData =
-        clock.running ||
-        clock.elapsedMs > 0 ||
-        JSON.stringify(steps) !== JSON.stringify(activeSteps);
+        liveClock.running ||
+        liveClock.elapsedMs > 0 ||
+        JSON.stringify(liveSteps) !== JSON.stringify(activeSteps);
       if (!hasSessionData) return false;
+      if (reviewOpen) {
+        closeReview();
+      }
+      runningIntent.current = false;
       classVoice.pause();
       setExitTarget(destination);
-      setClock((value) => ({
-        ...sampleClock(value, Date.now(), durations, autoAdvance),
+      applyClock((value) => ({
+        ...sampleClock(value, Date.now(), durationsRef.current, autoAdvanceRef.current),
         running: false,
       }));
       setExitOpen(true);
@@ -645,6 +936,13 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     },
   }));
   const totalMin = steps.reduce((sum, step) => sum + step.durationMin, 0);
+  const remainingFollowingMs = durations
+    .slice(clock.index + 1)
+    .reduce((sum, stepMs) => sum + stepMs, 0);
+  const remainingTotalPlanSec = Math.max(
+    0,
+    Math.ceil((clock.remainingMs + remainingFollowingMs) / 1000),
+  );
   const plannedTiming = getSequenceDurations(steps);
   const trackedRestSec = steps.reduce(
     (sum, step, index) => sum + (isRestStep(step) ? (clock.elapsedByStep[index] ?? 0) / 1000 : 0),
@@ -658,7 +956,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     actualRestDurationSec: Math.round(trackedRestSec),
     stepsSnapshot: steps.map((step) => ({ ...step })),
     sequenceTitle: session.title,
-    taughtStepIds: elapsedTaughtStepIds.length > 0 ? elapsedTaughtStepIds : undefined,
+    taughtStepIds: elapsedTaughtStepIds,
   };
 
   const exitDialogs = (
@@ -834,6 +1132,17 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       : `${nextExercise?.nameKo ?? '다음 동작'} 준비`
     : '마무리 후 종료 · 기록';
 
+  const currentSpringRaw = (current.customSpringOverride || exercise?.springs || '').trim();
+  const currentBoxRaw =
+    exercise && !currentIsRest && exercise.box !== 'none' ? BOX_LABELS[exercise.box] : '';
+  const currentSetupQuickSummary = [currentSpringRaw, currentBoxRaw].filter(Boolean).join(' · ');
+
+  const isStepCompleted = !clock.running && clock.remainingMs === 0;
+  const isPausedMidStep = !clock.running && clock.elapsedMs > 0 && clock.remainingMs > 0;
+  const isLastStep = clock.index === steps.length - 1;
+  const showNextActionBar =
+    isStepCompleted || isPausedMidStep || (isLastStep && clock.elapsedMs > 0);
+
   return (
     <div
       ref={boardRef}
@@ -853,6 +1162,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             계획 {Number(totalMin.toFixed(2))}분 · 타이머 진행{' '}
             <strong>{formatSecondsToMMSS(clock.elapsedMs / 1000)}</strong>{' '}
             <span>일시정지 시간 제외</span>
+            <span
+              className="teaching-remaining-plan-pill"
+              data-testid="live-stage-remaining-class-time"
+            >
+              남은 수업 {formatSecondsToMMSS(remainingTotalPlanSec)}
+            </span>
           </p>
           <details className="teaching-time-details">
             <summary>운동·휴식 시간 상세</summary>
@@ -974,7 +1289,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       )}
       <div className="teaching-stage-layout">
         <section
-          className={`panel teaching-current-panel ${currentIsRest ? 'is-rest' : ''}`}
+          className={`panel teaching-current-panel ${currentIsRest ? 'is-rest' : ''} ${
+            isPausedMidStep ? 'is-paused' : ''
+          }`.trim()}
           aria-label={currentIsRest ? '현재 휴식' : '현재 동작'}
         >
           <div className="teaching-current-meta">
@@ -983,9 +1300,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               <span className="teaching-meta-dot">·</span>
               {currentIsRest ? '중간 휴식' : (block?.nameKo ?? '수업 동작')}
             </span>
-            <span>
+            <span data-testid="live-stage-current-setup-summary">
               {exercise && !currentIsRest
-                ? `${APPARATUS_LABELS[exercise.apparatus].ko} · ${POSITION_LABELS[exercise.bodyPosition].ko}`
+                ? `${APPARATUS_LABELS[exercise.apparatus].ko} · ${POSITION_LABELS[exercise.bodyPosition].ko}${
+                    currentSetupQuickSummary ? ` · ${currentSetupQuickSummary}` : ''
+                  }`
                 : '전체 수업 시간에 포함'}
             </span>
           </div>
@@ -1025,7 +1344,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             )}
           <div className="teaching-timer-area">
             <span
-              className={`teaching-timer-status ${clock.running ? 'running' : ''}`}
+              className={`teaching-timer-status ${clock.running ? 'running' : ''} ${
+                isPausedMidStep ? 'paused' : ''
+              } ${isStepCompleted ? 'completed' : ''}`.trim()}
               role="status"
             >
               {clock.running
@@ -1122,12 +1443,18 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               className="btn-secondary teaching-step-control"
               aria-label="이전 동작"
               disabled={clock.index === 0}
-              onClick={() => selectStep(clock.index - 1)}
+              onClick={() => selectStep(clockRef.current.index - 1)}
             >
               <ChevronLeft size={22} />
               <span>이전</span>
             </button>
-            <button type="button" className="btn-primary teaching-play" onClick={toggleRunning}>
+            <button
+              type="button"
+              className={`btn-primary teaching-play ${
+                isPausedMidStep ? 'is-resume-ready' : ''
+              }`.trim()}
+              onClick={toggleRunning}
+            >
               {clock.running ? (
                 <>
                   <Pause size={23} />
@@ -1152,13 +1479,108 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               aria-label={currentIsRest ? '휴식 건너뛰기' : '다음 동작'}
               disabled={clock.index === steps.length - 1 && !currentIsRest}
               onClick={() =>
-                clock.index === steps.length - 1 ? pauseForReview() : selectStep(clock.index + 1)
+                clockRef.current.index === stepsRef.current.length - 1
+                  ? pauseForReview()
+                  : selectStep(clockRef.current.index + 1)
               }
             >
               <span>{currentIsRest ? '휴식 건너뛰기' : '다음'}</span>
               <ChevronRight size={22} />
             </button>
           </div>
+          {showNextActionBar && (
+            <div
+              className={`teaching-next-action-bar ${
+                isStepCompleted ? 'is-completed' : isPausedMidStep ? 'is-paused' : 'is-final'
+              }`}
+              data-testid="live-stage-next-action-bar"
+              role="status"
+            >
+              <span className="teaching-next-action-text">
+                {isStepCompleted
+                  ? next
+                    ? `현재 순서 완료 · 다음은 ${
+                        isRestStep(next) ? '중간 휴식' : (nextExercise?.nameKo ?? '다음 동작')
+                      }입니다.`
+                    : '마지막 순서까지 완료했어요 · 진행 내용을 확인하고 기록을 남겨 보세요.'
+                  : isPausedMidStep
+                    ? `잠시 멈춤 · ‘이어서 진행’(Space)을 누르면 남은 ${formatSecondsToMMSS(
+                        Math.ceil(clock.remainingMs / 1000),
+                      )}부터 바로 이어갑니다.`
+                    : '마지막 순서 진행 중 · 마친 뒤 바로 종료 내용을 확인할 수 있어요.'}
+              </span>
+              <div className="teaching-next-action-buttons">
+                {isStepCompleted && next && (
+                  <button
+                    type="button"
+                    className="btn-primary teaching-next-action-cta"
+                    data-testid="live-stage-start-next-btn"
+                    onClick={startNextStepImmediately}
+                  >
+                    <Play size={16} aria-hidden="true" />
+                    <span>다음 순서 바로 시작</span>
+                  </button>
+                )}
+                {isLastStep && (isStepCompleted || clock.elapsedMs > 0) && (
+                  <button
+                    type="button"
+                    className={
+                      isStepCompleted
+                        ? 'btn-primary teaching-next-action-cta'
+                        : 'btn-secondary teaching-next-action-cta'
+                    }
+                    data-testid="live-stage-finish-cta-btn"
+                    onClick={pauseForReview}
+                  >
+                    <Flag size={16} aria-hidden="true" />
+                    <span>수업 마무리 및 기록 확인</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+          {undoState && (
+            <div
+              className="teaching-undo-banner"
+              data-testid="live-stage-undo-banner"
+              role="status"
+            >
+              <span className="teaching-undo-text">
+                {undoState.kind === 'step-jump'
+                  ? `실수로 이동했나요? 직전 ${String(undoState.fromStepNumber).padStart(
+                      2,
+                      '0',
+                    )}번(${undoState.fromTitle} · 남은 ${formatSecondsToMMSS(
+                      Math.ceil(undoState.previousRemainingMs / 1000),
+                    )}) 위치를 보관 중입니다.`
+                  : `${String(undoState.stepNumber).padStart(2, '0')}번(${
+                      undoState.stepTitle
+                    }) 시간을 +${undoState.addedMinutes}분 늘렸어요.`}
+              </span>
+              <div className="teaching-undo-actions">
+                <button
+                  type="button"
+                  className="btn-secondary teaching-undo-btn"
+                  data-testid="live-stage-undo-btn"
+                  onClick={undoLastStageAction}
+                >
+                  <RotateCcw size={15} aria-hidden="true" />
+                  <span>
+                    {undoState.kind === 'step-jump' ? '방금 이동 되돌리기' : '방금 1분 추가 취소'}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost teaching-undo-dismiss"
+                  data-testid="live-stage-undo-dismiss"
+                  aria-label="복구 안내 닫기"
+                  onClick={() => applyUndo(null)}
+                >
+                  유지
+                </button>
+              </div>
+            </div>
+          )}
           <div className="teaching-timer-options">
             <button type="button" className="btn-ghost" onClick={addMinute}>
               <Plus size={16} />
@@ -1170,7 +1592,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 checked={autoAdvance}
                 onChange={(event) => {
                   const nextAutoAdvance = event.target.checked;
-                  setClock((value) => sampleClock(value, Date.now(), durations, nextAutoAdvance));
+                  autoAdvanceRef.current = nextAutoAdvance;
+                  applyClock((value) =>
+                    sampleClock(value, Date.now(), durationsRef.current, nextAutoAdvance),
+                  );
                   setAutoAdvance(nextAutoAdvance);
                 }}
               />
@@ -1180,6 +1605,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           <p className="teaching-keyboard-shortcut-hint" aria-label="키보드 단축키 안내">
             <kbd>Space</kbd> 시작·일시정지 <span>·</span> <kbd>←</kbd>
             <kbd>→</kbd> 이전·다음 동작
+            {undoState && (
+              <>
+                {' '}
+                <span>·</span> <kbd>⌫</kbd> 방금 조작 복구
+              </>
+            )}
           </p>
           <p className="teaching-safety">
             실제 수행 전 몸 상태와 기구 설정을 확인하세요. 검토 기록은 자격 인증이나 개인별 운동
@@ -1409,35 +1840,42 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               <span className="muted">선택하면 해당 동작의 타이머가 다시 시작됩니다.</span>
             </div>
             <ol>
-              {steps.map((step, index) => (
-                <li key={step.stepId}>
-                  <button
-                    type="button"
-                    className={index === clock.index ? 'current' : ''}
-                    aria-current={index === clock.index ? 'step' : undefined}
-                    onClick={() => selectStep(index)}
-                  >
-                    <span>{String(index + 1).padStart(2, '0')}</span>
-                    {!isRestStep(step) && exerciseMap.get(step.exerciseId) && (
-                      <ExerciseThumbnailBadge
-                        exercise={exerciseMap.get(step.exerciseId)!}
-                        size="xs"
-                        decorative
-                      />
-                    )}
-                    <strong>
-                      {isRestStep(step)
-                        ? '휴식'
-                        : (exerciseMap.get(step.exerciseId)?.nameKo ?? '삭제된 동작')}
-                    </strong>
-                    <small>
-                      {formatSecondsToMMSS(
-                        getStepTiming(step, exerciseMap.get(step.exerciseId)).totalSec,
+              {steps.map((step, index) => {
+                const isTaughtStep =
+                  index !== clock.index && (clock.elapsedByStep[index] ?? 0) > 0;
+                return (
+                  <li key={step.stepId}>
+                    <button
+                      type="button"
+                      className={`${index === clock.index ? 'current' : ''} ${
+                        isTaughtStep ? 'is-taught' : ''
+                      }`.trim()}
+                      data-taught={isTaughtStep ? 'true' : undefined}
+                      aria-current={index === clock.index ? 'step' : undefined}
+                      onClick={() => selectStep(index)}
+                    >
+                      <span>{String(index + 1).padStart(2, '0')}</span>
+                      {!isRestStep(step) && exerciseMap.get(step.exerciseId) && (
+                        <ExerciseThumbnailBadge
+                          exercise={exerciseMap.get(step.exerciseId)!}
+                          size="xs"
+                          decorative
+                        />
                       )}
-                    </small>
-                  </button>
-                </li>
-              ))}
+                      <strong>
+                        {isRestStep(step)
+                          ? '휴식'
+                          : (exerciseMap.get(step.exerciseId)?.nameKo ?? '삭제된 동작')}
+                      </strong>
+                      <small>
+                        {formatSecondsToMMSS(
+                          getStepTiming(step, exerciseMap.get(step.exerciseId)).totalSec,
+                        )}
+                      </small>
+                    </button>
+                  </li>
+                );
+              })}
             </ol>
           </details>
         </aside>

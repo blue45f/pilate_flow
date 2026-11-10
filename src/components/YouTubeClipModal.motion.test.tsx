@@ -68,10 +68,14 @@ describe('movement detail motion reference boundary', () => {
     const { rerender, unmount } = render(
       <YouTubePreviewModal exercise={INITIAL_EXERCISES[0]} onClose={vi.fn()} />,
     );
-    const summary = screen.getByText('미검토 모션 설계 예시 · 운동 시범 아님');
+    expect(screen.getByText('직접 그린 기구 도식 · 동작 시범 아님')).toBeVisible();
+    const summary = screen.getByText('교차 검증 모션 설계 예시 · 패턴 참고용');
     const details = summary.closest('details')!;
     expect(details).not.toHaveAttribute('open');
+    expect(player('exercise')).toHaveAttribute('data-exercise-id', INITIAL_EXERCISES[0].id);
     expect(player('prototype-lab')).toHaveAttribute('data-active', 'false');
+    expect(player('prototype-lab')).not.toHaveAttribute('data-exercise-id');
+    expect(player('prototype-lab')).not.toHaveAttribute('data-exercise-name');
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
 
     details.open = true;
@@ -88,10 +92,15 @@ describe('movement detail motion reference boundary', () => {
     fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
     fireEvent.click(screen.getByText('출처·검토 상태 자세히 보기'));
     expect(
-      screen.getByText('미검토 모션 설계 예시 · 운동 시범 아님').closest('details'),
+      screen.getByText('교차 검증 모션 설계 예시 · 패턴 참고용').closest('details'),
     ).not.toHaveAttribute('open');
     expect(player('prototype-lab')).toHaveAttribute('data-active', 'false');
+    expect(player('prototype-lab')).not.toHaveAttribute('data-exercise-id');
     expect(player('exercise')).toHaveAttribute('data-exercise-id', INITIAL_EXERCISES[1].id);
+    expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
+
+    rerender(<YouTubePreviewModal exercise={null} onClose={vi.fn()} />);
+    expect(screen.queryByTestId('motion-reference-hook')).not.toBeInTheDocument();
 
     unmount();
     expect(screen.queryByTestId('motion-reference-hook')).not.toBeInTheDocument();

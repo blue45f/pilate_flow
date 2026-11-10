@@ -13,7 +13,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/check-pwa-build.mjs",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "node --test src/booking-core/test/booking-engine.test.mjs src/utils/recurrence/test/pilates-recurrence.test.mjs && vitest run",
     "test:watch": "vitest",
     "test:deploy": "node --test scripts/check-pwa-build.node-test.mjs scripts/deploy-universal.node-test.mjs",
     "check:motion-study": "node scripts/generate-motion-study-ledger.mjs --check && node --test scripts/generate-motion-study-ledger.node-test.mjs",

@@ -151,9 +151,14 @@ function sanitizeNonNegativeInt(
   fallbackValue: number,
   minValue = 0,
 ): number {
-  const num = Number(value);
-  if (!Number.isFinite(num)) return fallbackValue;
-  return Math.max(minValue, Math.floor(num));
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return fallbackValue;
+  }
+  const floored = Math.floor(value);
+  if (minValue > 0 && floored < minValue) {
+    return fallbackValue;
+  }
+  return Math.max(minValue, floored);
 }
 
 function sanitizeSlotDecisions(

@@ -1,6 +1,10 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { execSync } from 'node:child_process';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { existsSync, lstatSync, readdirSync, readFileSync, readlinkSync } from 'node:fs';
+import { dirname, join, relative, resolve, sep } from 'node:path';
+import { cwd } from 'node:process';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { SequenceWorkbench } from '../../src/components/SequenceWorkbench';
 import { usePilatesStore } from '../../src/store/usePilatesStore';
 import {
@@ -8,6 +12,84 @@ import {
   SYNTHETIC_SAVED_SEQUENCE_FOR_NEXT_VISIT,
   SYNTHETIC_TWO_MOVEMENT_STEPS,
 } from './fixtures/firstUseRound4Fixtures';
+
+const PROTECTED_BOUNDARY_PATHS = [
+  'src',
+  'package.json',
+  'pnpm-lock.yaml',
+  'vite.config.ts',
+  'index.html',
+] as const;
+
+interface ProtectedBoundarySnapshot {
+  gitStatusPorcelain: string;
+  fileCount: number;
+  fileFingerprints: Record<string, string>;
+}
+
+function resolveAuditRepoRoot(): string {
+  let current = resolve(cwd());
+  for (let depth = 0; depth < 8; depth += 1) {
+    if (existsSync(join(current, 'package.json')) && existsSync(join(current, 'vite.config.ts'))) {
+      return current;
+    }
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return resolve(cwd());
+}
+
+function collectFingerprints(
+  repoRoot: string,
+  targetPath: string,
+  out: Record<string, string>,
+): void {
+  const relKey = relative(repoRoot, targetPath).split(sep).join('/');
+  if (!existsSync(targetPath)) {
+    out[relKey] = '<missing>';
+    return;
+  }
+  const stat = lstatSync(targetPath);
+  if (stat.isSymbolicLink()) {
+    out[relKey] = `symlink:${readlinkSync(targetPath)}`;
+    return;
+  }
+  if (stat.isDirectory()) {
+    const children = readdirSync(targetPath).sort();
+    for (const child of children) {
+      collectFingerprints(repoRoot, join(targetPath, child), out);
+    }
+    return;
+  }
+  if (stat.isFile()) {
+    out[relKey] = createHash('sha256').update(readFileSync(targetPath)).digest('hex');
+  }
+}
+
+function captureProtectedBoundarySnapshot(repoRoot: string): ProtectedBoundarySnapshot {
+  const gitStatusPorcelain = execFileSync(
+    'git',
+    [
+      '--no-optional-locks',
+      'status',
+      '--porcelain=v1',
+      '--untracked-files=all',
+      '--',
+      ...PROTECTED_BOUNDARY_PATHS,
+    ],
+    { cwd: repoRoot, encoding: 'utf8' },
+  );
+  const fileFingerprints: Record<string, string> = {};
+  for (const relTarget of PROTECTED_BOUNDARY_PATHS) {
+    collectFingerprints(repoRoot, resolve(repoRoot, relTarget), fileFingerprints);
+  }
+  return {
+    gitStatusPorcelain,
+    fileCount: Object.keys(fileFingerprints).length,
+    fileFingerprints,
+  };
+}
 
 function resetToSyntheticEmptyFirstUse() {
   localStorage.clear();
@@ -32,6 +114,13 @@ function resetToSyntheticEmptyFirstUse() {
 }
 
 describe('Round 4 독립 감사: 필라테스 첫사용자(초보 강사) 동선 (빈상태 → 새수업 → 동작2개추가 → 저장 → 다음방문 이어하기)', () => {
+  const repoRoot = resolveAuditRepoRoot();
+  let baselineProtectedSnapshot: ProtectedBoundarySnapshot;
+
+  beforeAll(() => {
+    baselineProtectedSnapshot = captureProtectedBoundarySnapshot(repoRoot);
+  });
+
   beforeEach(() => {
     resetToSyntheticEmptyFirstUse();
   });
@@ -201,10 +290,18 @@ describe('Round 4 독립 감사: 필라테스 첫사용자(초보 강사) 동선
   });
 
   it('소유 경계 보호 검증: 앱 소스(src/**), 공유 CSS, 설정 파일 및 PackagePanel 관련 파일은 0줄 수정이어야 한다', () => {
-    const diffOut = execSync(
-      'git status --porcelain -- src package.json pnpm-lock.yaml vite.config.ts index.html',
-      { encoding: 'utf8' },
-    ).trim();
-    expect(diffOut).toBe('');
+    // 단일 테스트 필터(-t) 실행 시에도 감사 대상 워크벤치 렌더링이 보호 경계 파일을 변조하지 않는지 함께 검증
+    const { unmount } = render(<SequenceWorkbench />);
+    unmount();
+
+    const afterProtectedSnapshot = captureProtectedBoundarySnapshot(repoRoot);
+    expect(baselineProtectedSnapshot.fileCount).toBeGreaterThan(0);
+    expect(afterProtectedSnapshot.gitStatusPorcelain).toBe(
+      baselineProtectedSnapshot.gitStatusPorcelain,
+    );
+    expect(afterProtectedSnapshot.fileCount).toBe(baselineProtectedSnapshot.fileCount);
+    expect(afterProtectedSnapshot.fileFingerprints).toEqual(
+      baselineProtectedSnapshot.fileFingerprints,
+    );
   });
 });

@@ -112,12 +112,58 @@
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  word-break: keep-all;
 }
 
 .pf-member-chip[aria-pressed='true'] {
   background: var(--pf-color-action-primary, #173d34);
   border-color: var(--pf-color-action-primary, #173d34);
   color: #ffffff;
+}
+
+.pf-member-chip:disabled {
+  opacity: 0.56;
+  cursor: not-allowed;
+}
+
+.pf-member-chip__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  background: rgba(23, 61, 52, 0.09);
+  color: inherit;
+}
+
+.pf-member-chip[aria-pressed='true'] .pf-member-chip__count {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.pf-member-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.pf-member-day-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px;
+  min-height: 62px;
+  border-radius: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .pf-member-slot-list {
@@ -135,6 +181,20 @@
   justify-content: space-between;
   align-items: center;
   gap: 14px;
+}
+
+.pf-member-slot-card.is-my-booked {
+  border-color: rgba(23, 61, 52, 0.42);
+  background: linear-gradient(180deg, #fffef9 0%, #f4f8f4 100%);
+}
+
+.pf-member-slot-art {
+  width: 88px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(201, 166, 107, 0.35);
+  flex-shrink: 0;
 }
 
 .pf-member-slot-main {
@@ -163,9 +223,58 @@
   word-break: keep-all;
 }
 
+.pf-member-open-spots {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-member-open-spots__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--pf-color-text-muted, #526358);
+  margin-right: 2px;
+}
+
+.pf-member-quick-spot-btn {
+  min-height: 44px;
+  padding: 0 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(23, 61, 52, 0.22);
+  background: #f8f5ec;
+  color: var(--pf-color-action-primary, #173d34);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  word-break: keep-all;
+}
+
+.pf-member-quick-spot-btn:hover:not(:disabled) {
+  border-color: var(--pf-color-action-primary, #173d34);
+  background: #efe9da;
+}
+
+.pf-member-quick-spot-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pf-member-slot-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .pf-member-slot-cta {
   min-height: 48px;
-  min-width: 112px;
+  min-width: 116px;
   padding: 0 16px;
   border-radius: 10px;
   font-size: 0.9rem;
@@ -187,6 +296,60 @@
   border-color: var(--pf-color-border-default, #d5ddd0);
   color: var(--pf-color-text-muted, #526358);
   cursor: not-allowed;
+}
+
+.pf-member-my-bookings__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-member-empty-card {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.pf-member-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pf-member-dialog-summary {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+  border: 1px solid var(--pf-color-border-default, #d5ddd0);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.pf-member-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pf-studio-spot-btn.is-current-my-spot:disabled {
+  background: #eef4ef;
+  border-color: rgba(23, 61, 52, 0.34);
+  color: #2b4a3e;
+  opacity: 0.92;
+}
+
+.pf-studio-spot-hint {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: var(--pf-color-text-muted, #526358);
+  text-align: center;
+  word-break: keep-all;
 }
 
 .pf-role-switcher {
@@ -238,11 +401,31 @@
   .pf-member-steps {
     grid-template-columns: 1fr;
   }
+  .pf-member-week-grid {
+    overflow-x: auto;
+    grid-template-columns: repeat(7, minmax(46px, 1fr));
+    padding-bottom: 2px;
+  }
   .pf-member-slot-card {
     flex-direction: column;
     align-items: stretch;
   }
+  .pf-member-slot-art {
+    width: 100%;
+    height: 112px;
+  }
+  .pf-member-slot-actions {
+    width: 100%;
+  }
   .pf-member-slot-cta {
+    width: 100%;
+  }
+  .pf-member-dialog-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .pf-member-dialog-actions .pf-member-chip,
+  .pf-member-dialog-actions .pf-member-slot-cta {
     width: 100%;
   }
 }
@@ -259,6 +442,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pf-member-chip,
+  .pf-member-quick-spot-btn,
   .pf-member-slot-cta,
   .pf-role-switcher__btn {
     transition: none;

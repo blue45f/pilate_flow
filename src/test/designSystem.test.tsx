@@ -483,7 +483,7 @@ describe('Representative screens upgraded with the Design System', () => {
 
     cleanup();
 
-    // 3. SequenceWorkbench renders PfSequenceBlock, PfMovementCard--step, PfBlockPill--memo, PfAiStatusBadge, and .pf-flow-continuation
+    // 3. SequenceWorkbench renders PfSequenceBlock, PfMovementCard--step, PfBlockPill--memo, PfAiStatusBadge, and flow continuation regions/actions
     const { container: workbenchContainer } = render(
       <SequenceWorkbench
         onOpenYouTubePreview={vi.fn()}
@@ -497,10 +497,26 @@ describe('Representative screens upgraded with the Design System', () => {
     expect(workbenchContainer.querySelector('.pf-block-pill--memo')).toHaveTextContent(
       '내 창작 메모 · 전문가 검증 아님',
     );
-    expect(screen.getByRole('region', { name: '핵심 흐름 이어가기' })).toBeInTheDocument();
+
+    const flowSwitchRegion = screen.getByRole('region', { name: '새 수업 및 최근 수업 전환' });
+    expect(within(flowSwitchRegion).getByText('최근 수업 이어가기')).toBeInTheDocument();
+    expect(flowSwitchRegion.querySelector('.pf-badge--sage')).not.toBeNull();
+    expect(screen.getByRole('region', { name: '준비·본운동·마무리 구간 비중' })).toBeInTheDocument();
+
+    const stepGuideNav = screen.getByRole('navigation', { name: '수업 준비 단계 이동' });
+    expect(stepGuideNav).toHaveTextContent('현재 2단계: 수업 구성 확인');
+    expect(
+      within(stepGuideNav).getByRole('button', { name: '다음 단계: 수업 구성 확인' }),
+    ).toHaveAttribute('aria-current', 'step');
+
+    const previewBtn = screen.getByRole('button', { name: '시퀀스 미리보기' });
+    expect(previewBtn).toHaveClass('pf-btn', 'pf-btn--primary');
+    expect(previewBtn).toBeEnabled();
 
     // Save to binder and verify ClassBinderView renders PfBlockPill--memo on saved sequence card
-    fireEvent.click(screen.getByRole('button', { name: '저장' }));
+    const saveBtn = screen.getByRole('button', { name: '저장' });
+    expect(saveBtn).toHaveClass('pf-btn', 'pf-btn--secondary');
+    fireEvent.click(saveBtn);
     cleanup();
 
     const { container: binderContainer } = render(
