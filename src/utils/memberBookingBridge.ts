@@ -21,6 +21,20 @@ export type MemberBookingActionIntent =
   | 'CANCEL_BOOKING'
   | 'CANCEL_WAITLIST';
 
+export interface StudioSpotMeta {
+  readonly spotId: string;
+  readonly zoneKo: string;
+}
+
+export const STUDIO_REFORMER_SPOTS: ReadonlyArray<StudioSpotMeta> = [
+  { spotId: 'R1', zoneKo: '창가 앞열' },
+  { spotId: 'R2', zoneKo: '중앙 앞열' },
+  { spotId: 'R3', zoneKo: '거울 측면' },
+  { spotId: 'R4', zoneKo: '창가 뒷열' },
+  { spotId: 'R5', zoneKo: '중앙 뒷열' },
+  { spotId: 'R6', zoneKo: '거울 정면' },
+];
+
 export interface MemberPassSummary {
   readonly passId: string;
   readonly passTitle: string;
@@ -48,6 +62,7 @@ export interface MemberBookableSlot {
   readonly maxWaitlist: number;
   readonly freeCancelHoursBefore: number;
   readonly myState: 'NONE' | 'BOOKED' | 'WAITLISTED';
+  readonly mySpotId?: string;
   readonly myWaitlistOrder?: number;
 }
 
@@ -57,6 +72,10 @@ export interface PersistedMemberBookingState {
     string,
     {
       readonly state: 'BOOKED' | 'WAITLISTED';
+      readonly spotId?: string;
+      readonly slotTitle?: string;
+      readonly slotDate?: string;
+      readonly slotTime?: string;
       readonly waitlistOrder?: number;
       readonly updatedAt: string;
     }
@@ -64,6 +83,45 @@ export interface PersistedMemberBookingState {
 }
 
 export const MEMBER_BOOKING_STORAGE_KEY = 'pf_member_booking_portal_v1';
+
+export function getApparatusStudio3dImage(apparatus: ApparatusType | 'mixed'): string {
+  switch (apparatus) {
+    case 'cadillac':
+      return '/images/atelier-v2/cadillac-studio-3d.png';
+    case 'chair':
+      return '/images/atelier-v2/chair-studio-3d.png';
+    case 'barrel':
+      return '/images/atelier-v2/barrel-studio-3d.png';
+    case 'mat':
+    case 'reformer':
+    case 'mixed':
+    default:
+      return '/images/atelier-v2/reformer-studio-3d.png';
+  }
+}
+
+export function computeStudioSpotStates(slot: MemberBookableSlot): ReadonlyArray<{
+  readonly spotId: string;
+  readonly zoneKo: string;
+  readonly occupiedByOther: boolean;
+}> {
+  const spots = STUDIO_REFORMER_SPOTS.slice(0, Math.max(1, Math.min(6, slot.maxCapacity)));
+  // Deterministically assign occupied spots based on baseEnrolled so open spots remain consistent
+  const occupiedCount = Math.min(spots.length, Math.max(0, slot.baseEnrolled));
+  const occupiedOrder = [2, 0, 5, 3, 4, 1];
+  const occupiedIndices = new Set(occupiedOrder.slice(0, occupiedCount));
+
+  return spots.map((spot, idx) => ({
+    spotId: spot.spotId,
+    zoneKo: spot.zoneKo,
+    occupiedByOther: occupiedIndices.has(idx),
+  }));
+}
+
+export function pickDefaultOpenSpotId(slot: MemberBookableSlot): string {
+  const states = computeStudioSpotStates(slot);
+  return states.find((s) => !s.occupiedByOther)?.spotId ?? 'R2';
+}
 
 export function createDefaultMemberPass(todayIso: string): MemberPassSummary {
   return {
@@ -220,6 +278,7 @@ function buildFallbackStudioWeekSlots(
       maxWaitlist: 3,
       freeCancelHoursBefore: 12,
       myState: decision?.state ?? 'NONE',
+      mySpotId: decision?.spotId,
       myWaitlistOrder: decision?.waitlistOrder,
     };
   });
@@ -287,6 +346,7 @@ export function buildMemberSlotsForDate(params: {
       maxWaitlist: 3,
       freeCancelHoursBefore: 12,
       myState: decision?.state ?? 'NONE',
+      mySpotId: decision?.spotId,
       myWaitlistOrder: decision?.waitlistOrder,
     };
   });

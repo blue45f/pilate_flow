@@ -9,6 +9,7 @@ import {
   buildApparatus3dRigScene,
 } from '../utils/apparatus3dRigProjection';
 import { generateBlenderApparatusSceneScript } from '../utils/blenderSceneScriptExporter';
+import { getApparatusStudio3dImage } from '../utils/memberBookingBridge';
 
 export interface Apparatus3dRigPreviewCardProps {
   readonly apparatus: ApparatusType;
@@ -47,6 +48,7 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
   const [phase, setPhase] = useState<RigMotionPhase>('setup');
   const [carriageOffset, setCarriageOffset] = useState<number>(PHASE_CARRIAGE_RATIOS.setup);
   const [autoPlay, setAutoPlay] = useState<boolean>(false);
+  const [showStudio3dRender, setShowStudio3dRender] = useState<boolean>(true);
   const [showBlenderScript, setShowBlenderScript] = useState<boolean>(false);
   const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotionNow);
   const blenderScriptId = useId();
@@ -181,6 +183,14 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
           <PfButton
             variant="secondary"
             className="pf-rig-preview__btn"
+            pressed={showStudio3dRender}
+            onClick={() => setShowStudio3dRender((v) => !v)}
+          >
+            {showStudio3dRender ? '3D 스튜디오 렌더 숨기기' : '3D 스튜디오 렌더 보기'}
+          </PfButton>
+          <PfButton
+            variant="secondary"
+            className="pf-rig-preview__btn"
             pressed={autoPlay && !reducedMotion}
             onClick={() => {
               if (reducedMotion) {
@@ -207,6 +217,16 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
         </div>
       </div>
 
+      {showStudio3dRender && (
+        <div className="pf-rig-3d-render-frame" data-testid="blender-studio-3d-render">
+          <img
+            src={getApparatusStudio3dImage(apparatus)}
+            alt={`${APPARATUS_LABELS[apparatus].ko} Blender 3D 스튜디오 렌더링`}
+            loading="lazy"
+          />
+        </div>
+      )}
+
       <svg
         viewBox="0 0 320 180"
         role="img"
@@ -225,21 +245,18 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
             <path d="M0,0 L8,4 L0,8 Z" fill="#d97706" />
           </marker>
         </defs>
-        {/* Apparatus Outer Frame */}
         <polygon
           points={framePolygon}
           fill="rgba(23, 61, 52, 0.06)"
           stroke="#173d34"
           strokeWidth="2"
         />
-        {/* Moving Carriage / Platform */}
         <polygon
           points={carriagePolygon}
           fill="rgba(20, 102, 94, 0.18)"
           stroke="#14665e"
           strokeWidth="2"
         />
-        {/* Spring Resistance Vector */}
         <line
           x1={scene.springVector2D.origin.u}
           y1={scene.springVector2D.origin.v}
@@ -250,7 +267,6 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
           strokeDasharray="4 2"
           markerEnd="url(#spring-arrow-head)"
         />
-        {/* 5-Joint Kinematic Chain (Head -> Shoulder -> Pelvis -> Knee -> Ankle) */}
         <polyline
           points={skeletonPolyline}
           fill="none"
@@ -267,7 +283,6 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
           stroke="#0f5132"
           strokeWidth="2"
         />
-        {/* Practitioner Center of Mass (CoM) */}
         <circle
           cx={scene.centerOfMass2D.u}
           cy={scene.centerOfMass2D.v}

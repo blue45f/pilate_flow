@@ -106,6 +106,8 @@ import { CurriculumProgressionPanel } from './workbench/CurriculumProgressionPan
 import { DurationCalibrationBanner } from './workbench/DurationCalibrationBanner';
 import { StudioFlowOptimizerPanel } from './workbench/StudioFlowOptimizerPanel';
 import { StudioReadinessAuditCard } from './workbench/StudioReadinessAuditCard';
+import { SpringVisualPills } from './SpringVisualPills';
+import { AtelierQuickStartGallery } from './workbench/AtelierQuickStartGallery';
 import { WorkbenchBlankStarters } from './workbench/WorkbenchBlankStarters';
 import { WorkbenchHierarchySummary } from './workbench/WorkbenchHierarchySummary';
 import '../styles/design-tokens.css';
@@ -573,6 +575,59 @@ export function SequenceWorkbench({
     if (previous?.section.id === section.id) previous.entries.push({ step, index });
     else sectionRuns.push({ section, entries: [{ step, index }] });
   });
+  const phaseSecTotals = s.activeSteps.reduce(
+    (acc, step, index) => {
+      const secId = resolvedSectionIds[index] ?? sectionOf(step);
+      const stepSec = getStepTiming(step, exerciseMap.get(step.exerciseId)).totalSec;
+      if (secId === 'warmup') acc.warmupSec += stepSec;
+      else if (secId === 'main') acc.mainSec += stepSec;
+      else if (secId === 'cooldown') acc.cooldownSec += stepSec;
+      return acc;
+    },
+    { warmupSec: 0, mainSec: 0, cooldownSec: 0 },
+  );
+  const phaseExerciseSecTotal = Math.max(
+    phaseSecTotals.warmupSec + phaseSecTotals.mainSec + phaseSecTotals.cooldownSec,
+    1,
+  );
+  const applyQuickStartRecipe = (payload: {
+    readonly title: string;
+    readonly subtitle: string;
+    readonly targetMinutes: number;
+    readonly level: DifficultyLevel;
+    readonly apparatus: AutoGenerateCriteria['apparatus'];
+    readonly steps: SequenceStep[];
+    readonly recipeTitleKo: string;
+  }) => {
+    const current = usePilatesStore.getState();
+    const snapshot = {
+      activeSequenceId: current.activeSequenceId,
+      activeTitle: current.activeTitle,
+      activeSubtitle: current.activeSubtitle,
+      activeApparatus: current.activeApparatus,
+      activeLevel: current.activeLevel,
+      activeTargetMinutes: current.activeTargetMinutes,
+      activeTargetGroupId: current.activeTargetGroupId,
+      activeSteps: structuredClone(current.activeSteps),
+      lastCriteria: current.lastCriteria ? structuredClone(current.lastCriteria) : null,
+      draftCriteria: current.draftCriteria ? structuredClone(current.draftCriteria) : null,
+    };
+    usePilatesStore.setState({
+      undoStack: [...current.undoStack.slice(-19), snapshot],
+      activeTitle: payload.title,
+      activeSubtitle: payload.subtitle,
+      activeTargetMinutes: payload.targetMinutes,
+      activeLevel: payload.level,
+      activeApparatus: payload.apparatus,
+      activeSteps: payload.steps.map((step) =>
+        step.selectedLayer ? step : { ...step, selectedLayer: 'standard' as const },
+      ),
+      generationError: null,
+      saveFeedback: `‘${payload.recipeTitleKo}’ 시퀀스를 바로 열었습니다.`,
+    });
+    setWorkflowStep('arrange');
+    setNotice(`‘${payload.recipeTitleKo}’ 시퀀스를 바로 열었습니다. 원하는 동작만 자유롭게 조정해 보세요.`);
+  };
   const recentLogs = s.historyLogs
     .filter((log) => !criteria.targetGroupId || log.groupId === criteria.targetGroupId)
     .slice(0, 3);
@@ -1067,6 +1122,10 @@ export function SequenceWorkbench({
               </details>
             </div>
           </section>
+          <AtelierQuickStartGallery
+            exercises={s.exercises}
+            onApplyQuickRecipe={applyQuickStartRecipe}
+          />
           <section className="workbench-recent-continue" aria-label="최근 수업 이어가기">
             <div className="workbench-recent-continue__header">
               <div className="workbench-recent-continue__title">
@@ -1400,6 +1459,38 @@ export function SequenceWorkbench({
                   />
                 </div>
               </div>
+              <div
+                className="pf-phase-proportion-bar"
+                role="region"
+                aria-label="준비·본운동·마무리 구간 비중"
+                data-testid="phase-proportion-bar"
+              >
+                <div className="pf-phase-proportion-bar__labels">
+                  <span>준비 {Math.round(phaseSecTotals.warmupSec / 60)}분</span>
+                  <span>본운동 {Math.round(phaseSecTotals.mainSec / 60)}분</span>
+                  <span>마무리 {Math.round(phaseSecTotals.cooldownSec / 60)}분</span>
+                </div>
+                <div className="pf-phase-proportion-bar__track" aria-hidden="true">
+                  <span
+                    className="pf-phase-proportion-bar__seg is-warmup"
+                    style={{
+                      width: `${(phaseSecTotals.warmupSec / phaseExerciseSecTotal) * 100}%`,
+                    }}
+                  />
+                  <span
+                    className="pf-phase-proportion-bar__seg is-main"
+                    style={{
+                      width: `${(phaseSecTotals.mainSec / phaseExerciseSecTotal) * 100}%`,
+                    }}
+                  />
+                  <span
+                    className="pf-phase-proportion-bar__seg is-cooldown"
+                    style={{
+                      width: `${(phaseSecTotals.cooldownSec / phaseExerciseSecTotal) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
               <div className="sequence-inline-tools">
                 <details className="workbench-timing-details">
                   <summary>시간 구성</summary>
@@ -1702,6 +1793,14 @@ export function SequenceWorkbench({
                               </strong>
                               <span style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
                                 {equipmentLabel(getExerciseEquipment(ex).requiredEquipment)}
+                                {(step.customSpringOverride || ex.springs) && (
+                                  <>
+                                    {' '}
+                                    <SpringVisualPills
+                                      springs={step.customSpringOverride || ex.springs}
+                                    />
+                                  </>
+                                )}
                                 {(step.repetitions !== undefined || step.sets !== undefined) && (
                                   <>
                                     {' '}
@@ -2017,6 +2116,15 @@ export function SequenceWorkbench({
                     setWorkflowStep('arrange');
                   }
                 }}
+              />
+            </details>
+          )}
+          {s.activeSteps.length > 0 && (
+            <details className="workbench-automation-tools">
+              <summary>원클릭 추천 클래스 레시피 열기 (선택)</summary>
+              <AtelierQuickStartGallery
+                exercises={s.exercises}
+                onApplyQuickRecipe={applyQuickStartRecipe}
               />
             </details>
           )}

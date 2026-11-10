@@ -39,6 +39,7 @@ import { isRestStep } from './utils/sequenceEngine';
 import { buildSequenceSimulation } from './utils/sequenceSimulation';
 import './styles/controls.css';
 import './styles/member-booking.css';
+import './styles/atelier-luxury-v2.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
 import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 

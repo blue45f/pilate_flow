@@ -1,14 +1,17 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
+import { Apparatus3dRigPreviewCard } from '../components/Apparatus3dRigPreviewCard';
 import { FreeAiAssistantPanel } from '../components/FreeAiAssistantPanel';
 import { MemberBookingView } from '../components/MemberBookingView';
+import { SpringVisualPills, parseSpringVisualChips } from '../components/SpringVisualPills';
 import { StudioJourneyBar } from '../components/StudioJourneyBar';
+import { AtelierQuickStartGallery } from '../components/workbench/AtelierQuickStartGallery';
 import { createFreeAiClient, createDefaultFreeAiStatus } from '../lib/freeAiClient';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { MEMBER_BOOKING_STORAGE_KEY } from '../utils/memberBookingBridge';
 
-describe('UX Redesign (Instructor Journey, Member Booking) & OpenAI Movement Search', () => {
+describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI Movement Search', () => {
   beforeEach(() => {
     window.localStorage.removeItem(MEMBER_BOOKING_STORAGE_KEY);
     window.sessionStorage.clear();
@@ -47,17 +50,30 @@ describe('UX Redesign (Instructor Journey, Member Booking) & OpenAI Movement Sea
     expect(onSelectStep).toHaveBeenCalledWith('history');
   });
 
-  it('supports member pass verification, booking deduction confirmation, waitlist, and cancellation restore', async () => {
+  it('supports member pass verification, R1~R6 spot selection, my-bookings strip, available-only filter, and cancellation restore', async () => {
     render(<MemberBookingView />);
 
     expect(screen.getByTestId('member-booking-view')).toBeInTheDocument();
     expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('7 / 20회');
 
-    // Book first available Reformer slot
+    // Toggle available-only filter chip
+    const availableChip = screen.getByTestId('filter-available-only-chip');
+    fireEvent.click(availableChip);
+    expect(availableChip).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(availableChip);
+
+    // Book first available Reformer slot with custom spot R5
     const bookBtn = screen.getByRole('button', {
       name: '리포머 호흡 & 골반 정렬 예약하기',
     });
     fireEvent.click(bookBtn);
+
+    expect(await screen.findByTestId('member-spot-map')).toBeInTheDocument();
+    const spotR5 = screen.getByTestId('spot-btn-R5');
+    if (!spotR5.hasAttribute('disabled')) {
+      fireEvent.click(spotR5);
+      expect(spotR5).toHaveAttribute('aria-pressed', 'true');
+    }
 
     const confirmBookBtn = await screen.findByTestId('confirm-member-booking-btn');
     expect(confirmBookBtn).toHaveTextContent('차감 동의 후 예약 확정');
@@ -65,6 +81,7 @@ describe('UX Redesign (Instructor Journey, Member Booking) & OpenAI Movement Sea
 
     await waitFor(() => {
       expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('6 / 20회');
+      expect(screen.getByTestId('member-my-bookings-strip')).toBeInTheDocument();
     });
 
     // Cancel the same slot and verify immediate credit restoration
@@ -79,6 +96,45 @@ describe('UX Redesign (Instructor Journey, Member Booking) & OpenAI Movement Sea
     await waitFor(() => {
       expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('7 / 20회');
     });
+  });
+
+  it('parses tactile color-coded spring chips and applies 1-click Atelier QuickStart recipes', () => {
+    const parsed = parseSpringVisualChips('2R 1B');
+    expect(parsed.map((c) => c.labelKo)).toEqual(['빨강×2', '파랑×1']);
+
+    render(<SpringVisualPills springs="1 Red + 1 Yellow" />);
+    expect(screen.getByText('빨강×1')).toBeInTheDocument();
+    expect(screen.getByText('노랑×1')).toBeInTheDocument();
+
+    const exercises = usePilatesStore.getState().exercises;
+    const onApplyRecipe = vi.fn();
+    render(
+      <AtelierQuickStartGallery exercises={exercises} onApplyQuickRecipe={onApplyRecipe} />,
+    );
+
+    const applyBtn = screen.getByTestId('quickstart-apply-reformer-core-50');
+    fireEvent.click(applyBtn);
+
+    expect(onApplyRecipe).toHaveBeenCalledTimes(1);
+    const payload = onApplyRecipe.mock.calls[0]![0];
+    expect(payload.targetMinutes).toBe(50);
+    expect(payload.steps.length).toBeGreaterThan(0);
+  });
+
+  it('renders Blender 3D studio apparatus preview frame in Apparatus3dRigPreviewCard and toggles cleanly', () => {
+    render(
+      <Apparatus3dRigPreviewCard
+        apparatus="reformer"
+        bodyPosition="supine"
+        springsLabel="2R 1B"
+        exerciseTitleKo="헌드레드"
+      />,
+    );
+
+    expect(screen.getByTestId('blender-studio-3d-render')).toBeInTheDocument();
+    const toggleBtn = screen.getByRole('button', { name: '3D 스튜디오 렌더 숨기기' });
+    fireEvent.click(toggleBtn);
+    expect(screen.queryByTestId('blender-studio-3d-render')).toBeNull();
   });
 
   it('provides Tab 4 movement search in FreeAiAssistantPanel via OpenAI server transport and local fallback without exposing password/key inputs', async () => {

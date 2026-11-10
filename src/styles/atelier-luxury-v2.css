@@ -1,0 +1,456 @@
+/* Flow Atelier V2 — Luxury Editorial Palette & Effortless One-Click Usability */
+
+:root {
+  --pf-atelier-cream: #faf7f0;
+  --pf-atelier-ivory: #fffdf8;
+  --pf-atelier-limestone: #f1ebe0;
+  --pf-atelier-champagne: #c9a66b;
+  --pf-atelier-champagne-soft: rgba(201, 166, 107, 0.18);
+  --pf-atelier-sage-deep: #183d33;
+  --pf-atelier-sage-mid: #2b594c;
+  --pf-atelier-sage-tint: #e8f0eb;
+  --pf-atelier-terracotta: #c85a3a;
+  --pf-atelier-shadow-soft: 0 12px 32px rgba(24, 61, 51, 0.06), 0 2px 6px rgba(24, 61, 51, 0.04);
+  --pf-atelier-shadow-hover: 0 18px 38px rgba(24, 61, 51, 0.11), 0 4px 12px rgba(201, 166, 107, 0.12);
+}
+
+.vnext-shell {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(201, 166, 107, 0.11), transparent 38%),
+    radial-gradient(circle at 92% 8%, rgba(79, 118, 104, 0.09), transparent 42%),
+    var(--pf-atelier-cream);
+}
+
+.vnext-shell .topbar {
+  background: rgba(255, 253, 248, 0.86);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(201, 166, 107, 0.24);
+}
+
+/* Luxury Quick-Start Recipe Gallery */
+.pf-quickstart-gallery {
+  margin: 14px 0 20px;
+  padding: 20px 22px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #fffefb 0%, #f6f1e6 100%);
+  border: 1px solid rgba(201, 166, 107, 0.34);
+  box-shadow: var(--pf-atelier-shadow-soft);
+}
+
+.pf-quickstart-gallery__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.pf-quickstart-gallery__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a6834;
+  background: rgba(201, 166, 107, 0.16);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.pf-quickstart-gallery__title {
+  margin: 6px 0 2px;
+  font-size: 1.24rem;
+  color: var(--pf-atelier-sage-deep);
+  word-break: keep-all;
+}
+
+.pf-quickstart-gallery__subtitle {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #4c5d54;
+  word-break: keep-all;
+}
+
+.pf-quickstart-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.pf-quickstart-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--pf-atelier-ivory);
+  border: 1px solid rgba(24, 61, 51, 0.11);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(24, 61, 51, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.pf-quickstart-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--pf-atelier-champagne);
+  box-shadow: var(--pf-atelier-shadow-hover);
+}
+
+.pf-quickstart-card__art {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(180deg, #f3ede2 0%, #e7dfd0 100%);
+  overflow: hidden;
+}
+
+.pf-quickstart-card__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pf-quickstart-card__duration-pill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(24, 61, 51, 0.86);
+  color: #fffdf8;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  backdrop-filter: blur(6px);
+}
+
+.pf-quickstart-card__level-pill {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.92);
+  color: var(--pf-atelier-sage-deep);
+  font-size: 0.73rem;
+  font-weight: 700;
+  border: 1px solid rgba(201, 166, 107, 0.4);
+}
+
+.pf-quickstart-card__body {
+  padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.pf-quickstart-card__body h3 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+  color: var(--pf-atelier-sage-deep);
+  word-break: keep-all;
+}
+
+.pf-quickstart-card__desc {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #4f6158;
+  word-break: keep-all;
+  flex: 1;
+}
+
+.pf-quickstart-card__flow {
+  font-size: 0.76rem;
+  color: #7c6238;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.pf-quickstart-card__cta {
+  min-height: 44px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--pf-atelier-sage-deep);
+  background: linear-gradient(135deg, var(--pf-atelier-sage-deep) 0%, var(--pf-atelier-sage-mid) 100%);
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pf-quickstart-card__cta:hover {
+  background: linear-gradient(135deg, #123028 0%, #21483d 100%);
+}
+
+/* Tactile Color-Coded Spring Pills */
+.pf-spring-pills {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  vertical-align: middle;
+}
+
+.pf-spring-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: #f6f3eb;
+  border: 1px solid rgba(24, 61, 51, 0.14);
+  color: #263930;
+  line-height: 1.35;
+}
+
+.pf-spring-pill__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+}
+
+/* Visual 3-Phase Class Balance Ribbon */
+.pf-phase-proportion-bar {
+  margin: 10px 0 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffef9 0%, #f7f3ea 100%);
+  border: 1px solid rgba(201, 166, 107, 0.3);
+}
+
+.pf-phase-proportion-bar__labels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #35493f;
+  margin-bottom: 8px;
+}
+
+.pf-phase-proportion-bar__track {
+  height: 10px;
+  border-radius: 999px;
+  background: #e8e2d5;
+  overflow: hidden;
+  display: flex;
+  gap: 2px;
+}
+
+.pf-phase-proportion-bar__seg {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.pf-phase-proportion-bar__seg.is-warmup {
+  background: #7ca494;
+}
+
+.pf-phase-proportion-bar__seg.is-main {
+  background: var(--pf-atelier-sage-deep);
+}
+
+.pf-phase-proportion-bar__seg.is-cooldown {
+  background: var(--pf-atelier-champagne);
+}
+
+/* Luxury Wallet Pass Card & Studio Reformer Spot Map (Member V2) */
+.pf-member-wallet-hero {
+  background: linear-gradient(135deg, #173d34 0%, #285649 62%, #3a6859 100%);
+  color: #fffdf8;
+  border-radius: 20px;
+  padding: 20px 22px;
+  border: 1px solid rgba(201, 166, 107, 0.48);
+  box-shadow: 0 14px 32px rgba(23, 61, 52, 0.18);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+}
+
+.pf-member-wallet-hero h2 {
+  margin: 4px 0 8px;
+  font-size: 1.3rem;
+  color: #fffdf8;
+}
+
+.pf-member-wallet-hero .eyebrow {
+  color: #ebd3a4;
+  letter-spacing: 0.08em;
+}
+
+.pf-member-wallet-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 0.88rem;
+  color: rgba(255, 253, 248, 0.9);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-member-wallet-ring {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-member-wallet-ring__label {
+  position: absolute;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.pf-member-wallet-ring__label strong {
+  display: block;
+  font-size: 1.12rem;
+  color: #f3dfb8;
+}
+
+.pf-member-wallet-ring__label small {
+  font-size: 0.7rem;
+  color: rgba(255, 253, 248, 0.8);
+}
+
+.pf-member-my-bookings {
+  background: linear-gradient(135deg, #fffdf8 0%, #f5efe2 100%);
+  border: 1px solid rgba(201, 166, 107, 0.42);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pf-member-my-bookings__item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(24, 61, 51, 0.12);
+}
+
+.pf-studio-spot-map {
+  background: linear-gradient(180deg, #f9f5ec 0%, #efe8da 100%);
+  border: 1px solid rgba(201, 166, 107, 0.45);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.pf-studio-spot-map__zone {
+  text-align: center;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #6d5b3e;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.8);
+  margin-bottom: 10px;
+}
+
+.pf-studio-spot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pf-studio-spot-btn {
+  min-height: 74px;
+  padding: 8px 6px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(24, 61, 51, 0.18);
+  background: #fffdf8;
+  color: var(--pf-atelier-sage-deep);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.pf-studio-spot-btn[aria-pressed='true'] {
+  border-color: #b58338;
+  background: linear-gradient(180deg, #fffaf0 0%, #f6ead2 100%);
+  box-shadow: 0 0 0 2px rgba(201, 166, 107, 0.32);
+}
+
+.pf-studio-spot-btn:disabled {
+  background: #ebe6dc;
+  border-color: #d5cfc2;
+  color: #848a86;
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.pf-studio-spot-btn strong {
+  font-size: 0.92rem;
+}
+
+.pf-studio-spot-btn small {
+  font-size: 0.72rem;
+}
+
+.pf-rig-3d-render-frame {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(201, 166, 107, 0.35);
+  background: #f3ede2;
+  margin-bottom: 10px;
+}
+
+.pf-rig-3d-render-frame img {
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 1023px) {
+  .pf-quickstart-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .pf-quickstart-grid {
+    grid-template-columns: 1fr;
+  }
+  .pf-studio-spot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-quickstart-card,
+  .pf-studio-spot-btn {
+    transition: none;
+  }
+  .pf-quickstart-card:hover {
+    transform: none;
+  }
+}

@@ -68,6 +68,7 @@ import {
 } from './CatalogMotionInteractivePlayer';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
+import { SpringVisualPills } from './SpringVisualPills';
 import { EquipmentDiscoveryScope } from './EquipmentDiscoveryScope';
 import { CourseReferenceBrowser } from './CourseReferenceBrowser';
 import { SourceNoteDialog } from './SourceNoteDialog';
@@ -1557,6 +1558,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                 {propLabel(propId)}
                               </PfBadge>
                             ))}
+                            <SpringVisualPills springs={exercise.springs} />
                           </div>
                           <h2>
                             <button
