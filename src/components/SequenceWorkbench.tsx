@@ -2041,7 +2041,7 @@ export function SequenceWorkbench({
               open={flowTelemetryOpen}
               onToggle={(event) => setFlowTelemetryOpen(event.currentTarget.open)}
             >
-              <summary>기구 세팅 전환·척추 움직임 밸런스·3D 뷰포트 점검 (선택)</summary>
+              <summary>기구 전환·움직임 균형·3D 기구 점검 (선택)</summary>
               {flowTelemetryOpen && (
                 <div style={{ display: 'grid', gap: '12px' }}>
                   <StudioReadinessAuditCard
@@ -2154,6 +2154,13 @@ export function SequenceWorkbench({
                   }}
                   onSaveUnreviewedMovementIdea={(exercise) => {
                     s.addCustomExercise(exercise);
+                  }}
+                  onAddExerciseToSequence={(exerciseId, blockCategory) => {
+                    s.appendExerciseToSequence(exerciseId, blockCategory);
+                    if (usePilatesStore.getState().activeSteps.length) {
+                      setWorkflowStep('arrange');
+                    }
+                    setNotice('추천 동작을 현재 수업 시퀀스에 추가했습니다.');
                   }}
                 />
               </Suspense>

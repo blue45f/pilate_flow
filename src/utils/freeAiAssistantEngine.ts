@@ -19,8 +19,11 @@ import type {
   EditableClassDraftResult,
   EditableDraftStepItem,
   EditableMovementIdeaResult,
+  EditableMovementSearchResult,
   EditableSequenceComposeResult,
   MovementIdeaInput,
+  MovementSearchAssistInput,
+  MovementSearchRecommendationItem,
   P1MovementIdeaContract,
   P1ReusableBlockContract,
   P1ReusableBlockStepContract,
@@ -1412,3 +1415,145 @@ export function movementIdeaToUnreviewedExercise(
 
   return { exercise, ideaContract };
 }
+
+/**
+ * 5. Recommends exercises matching natural-language search conditions (`exercise-search`)
+ * with concrete Korean rationale, cue highlights, and apparatus/spring setup checks.
+ */
+export function buildLocalMovementSearchRecommendations(
+  input: MovementSearchAssistInput,
+  exercises: readonly PilatesExercise[],
+): EditableMovementSearchResult {
+  const maxResults = Math.min(12, Math.max(1, Math.round(input.maxResults ?? 6)));
+  const inspection = inspectSensitiveHealthText(input.queryText || '');
+  const cleanQuery =
+    inspection.sanitizedText
+      .replace(/\[민감정보 제외\]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim() || '코어 정렬 기본 동작';
+
+  const tokens = cleanQuery
+    .toLowerCase()
+    .split(/[\s,·/]+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 2);
+
+  const area = input.strengthenArea;
+  const preferredCategories = new Set<ClassBlockCategory>(
+    area ? STRENGTHEN_AREA_CATEGORIES[area] ?? [] : [],
+  );
+  const preferredMuscles = area ? STRENGTHEN_AREA_MUSCLES[area] ?? [] : [];
+
+  const apparatusMatches = exercises.filter(
+    (ex) => input.apparatus === 'mixed' || ex.apparatus === input.apparatus,
+  );
+  const levelMatches = apparatusMatches.filter(
+    (ex) => Number(ex.level) <= Number(input.level),
+  );
+  const candidatePool =
+    levelMatches.length > 0
+      ? levelMatches
+      : apparatusMatches.length > 0
+        ? apparatusMatches
+        : [...exercises];
+
+  const scored = candidatePool
+    .map((ex) => {
+      let score = isExerciseAutoEligible(ex) ? 20 : 0;
+      const searchable = [
+        ex.nameKo,
+        ex.nameEn,
+        ex.blockCategory,
+        ex.bodyPosition,
+        ex.springs,
+        ex.breathPattern,
+        ...ex.targetMuscles,
+        ...ex.cues,
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      let matchedTokenCount = 0;
+      for (const token of tokens) {
+        if (ex.nameKo.toLowerCase().includes(token) || ex.nameEn.toLowerCase().includes(token)) {
+          score += 28;
+          matchedTokenCount += 1;
+        } else if (searchable.includes(token)) {
+          score += 14;
+          matchedTokenCount += 1;
+        }
+      }
+
+      if (preferredCategories.has(ex.blockCategory)) {
+        score += 18;
+      }
+      if (
+        preferredMuscles.length > 0 &&
+        ex.targetMuscles.some((m) =>
+          preferredMuscles.some((target) => m.includes(target) || target.includes(m)),
+        )
+      ) {
+        score += 14;
+      }
+      if (ex.level === input.level) {
+        score += 10;
+      }
+
+      return { ex, score, matchedTokenCount };
+    })
+    .sort((a, b) => b.score - a.score || a.ex.id.localeCompare(b.ex.id))
+    .slice(0, maxResults);
+
+  const recommendations: MovementSearchRecommendationItem[] = scored.map(
+    ({ ex, matchedTokenCount }) => {
+      const apparatusShort = APPARATUS_LABELS[ex.apparatus]?.short ?? ex.apparatus;
+      const positionKo = POSITION_LABELS[ex.bodyPosition]?.ko ?? ex.bodyPosition;
+      const muscleText = ex.targetMuscles.slice(0, 3).join('·') || '코어 안정화근';
+      const matchReasonKo =
+        matchedTokenCount > 0
+          ? `검색어 '${cleanQuery.slice(0, 28)}'와 연결되는 ${muscleText} 중심 ${apparatusShort} 동작입니다.`
+          : `${apparatusShort} Lv.${ex.level} 조건에서 ${muscleText} 협응을 다루기 좋은 동작입니다.`;
+      const cueHighlightKo = (ex.cues[0] || ex.breathPattern || '호흡과 중립 정렬을 유지하세요.').slice(
+        0,
+        240,
+      );
+      const setupCheckKo = `${positionKo} · 저항 ${ex.springs || 'Bodyweight'} · 권장 ${ex.defaultDurationMin}분 (진행 전 기구 장력·가동 범위 확인)`.slice(
+        0,
+        240,
+      );
+
+      return {
+        exerciseId: ex.id.slice(0, 120),
+        nameKo: ex.nameKo.slice(0, 160),
+        nameEn: ex.nameEn.slice(0, 160),
+        apparatus: ex.apparatus,
+        blockCategory: ex.blockCategory,
+        level: ex.level,
+        defaultDurationMin: Math.min(30, Math.max(0.5, ex.defaultDurationMin)),
+        springs: (ex.springs || 'Bodyweight').slice(0, 160),
+        matchReasonKo: matchReasonKo.slice(0, 300),
+        cueHighlightKo,
+        setupCheckKo,
+      };
+    },
+  );
+
+  const apparatusLabel = formatApparatusTitle(input.apparatus);
+  const querySummaryKo =
+    recommendations.length > 0
+      ? `'${cleanQuery}' 조건(${apparatusLabel} · Lv.${input.level} 이하)에 맞는 동작 ${recommendations.length}개를 추렸습니다.`
+      : `'${cleanQuery}' 조건에 일치하는 동작을 찾지 못했습니다. 기구나 난이도 조건을 넓혀 다시 찾아보세요.`;
+
+  return {
+    kind: 'exercise-search',
+    source: 'local-rule-engine',
+    provider: 'none',
+    model: null,
+    cached: false,
+    querySummaryKo: querySummaryKo.slice(0, 400),
+    recommendations,
+    guaranteesSafetyOrEffect: false,
+    safetyDisclaimer: UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER,
+  };
+}
+

@@ -16,12 +16,13 @@ import type {
 } from './pilates';
 
 /**
- * Supported free-only external AI providers.
+ * Supported server-side AI providers.
+ * - 'openai': Server-side OpenAI Chat Completions API using local server env `OPENAI_API_KEY` only (never exposed to browser/Git/logs/prompts; zero auto-topup).
  * - 'gemini-free': Google Gemini Developer API on an Unpaid Free Tier project only.
  * - 'openrouter-free': OpenRouter models strictly ending in ':free' or 'openrouter/free' with max_price=0 and allow_fallbacks=false.
- * - 'none': External AI disabled; local deterministic engine + manual editing + saved presets remain active.
+ * - 'none': External AI disabled/unconfigured; local deterministic engine + manual editing + saved presets remain active.
  */
-export type FreeAiProviderId = 'gemini-free' | 'openrouter-free' | 'none';
+export type FreeAiProviderId = 'openai' | 'gemini-free' | 'openrouter-free' | 'none';
 
 export type StrengthenArea =
   | 'core'
@@ -30,12 +31,16 @@ export type StrengthenArea =
   | 'mobility-rehab'
   | 'full-body';
 
-export type FreeAiTaskKind = 'class-draft' | 'movement-idea' | 'sequence-compose';
+export type FreeAiTaskKind =
+  | 'class-draft'
+  | 'movement-idea'
+  | 'sequence-compose'
+  | 'exercise-search';
 
 /**
  * Verifiable quota renewal metadata returned whenever quota is checked or exhausted.
+ * - OpenAI & OpenRouter daily limits reset at 00:00 UTC (or upstream x-ratelimit-reset header).
  * - Gemini Free Tier daily quota resets at 00:00 America/Los_Angeles (midnight Pacific Time).
- * - OpenRouter Free Models daily quota resets at 00:00 UTC.
  */
 export interface FreeAiRenewalInfo {
   resetAt: string;
@@ -190,9 +195,11 @@ export interface EditableDraftStepItem {
   sourceBlockId?: string;
 }
 
+export type AiAssistResultSource = 'openai-api' | 'external-free-ai' | 'local-rule-engine';
+
 export interface EditableClassDraftResult {
   kind: 'class-draft';
-  source: 'external-free-ai' | 'local-rule-engine';
+  source: AiAssistResultSource;
   provider: FreeAiProviderId;
   model: string | null;
   cached: boolean;
@@ -223,7 +230,7 @@ export interface MovementIdeaInput {
 
 export interface EditableMovementIdeaResult {
   kind: 'movement-idea';
-  source: 'external-free-ai' | 'local-rule-engine';
+  source: AiAssistResultSource;
   provider: FreeAiProviderId;
   model: string | null;
   cached: boolean;
@@ -260,7 +267,7 @@ export interface SequenceComposeInput {
 
 export interface EditableSequenceComposeResult {
   kind: 'sequence-compose';
-  source: 'external-free-ai' | 'local-rule-engine';
+  source: AiAssistResultSource;
   provider: FreeAiProviderId;
   model: string | null;
   cached: boolean;
@@ -276,10 +283,45 @@ export interface EditableSequenceComposeResult {
   safetyDisclaimer: string;
 }
 
+export interface MovementSearchAssistInput {
+  queryText: string;
+  apparatus: ApparatusType | 'mixed';
+  level: DifficultyLevel;
+  strengthenArea?: StrengthenArea;
+  maxResults?: number;
+}
+
+export interface MovementSearchRecommendationItem {
+  exerciseId: string;
+  nameKo: string;
+  nameEn: string;
+  apparatus: ApparatusType;
+  blockCategory: ClassBlockCategory;
+  level: DifficultyLevel;
+  defaultDurationMin: number;
+  springs: string;
+  matchReasonKo: string;
+  cueHighlightKo: string;
+  setupCheckKo: string;
+}
+
+export interface EditableMovementSearchResult {
+  kind: 'exercise-search';
+  source: AiAssistResultSource;
+  provider: FreeAiProviderId;
+  model: string | null;
+  cached: boolean;
+  querySummaryKo: string;
+  recommendations: MovementSearchRecommendationItem[];
+  guaranteesSafetyOrEffect: false;
+  safetyDisclaimer: string;
+}
+
 export type FreeAiAssistResult =
   | EditableClassDraftResult
   | EditableMovementIdeaResult
-  | EditableSequenceComposeResult;
+  | EditableSequenceComposeResult
+  | EditableMovementSearchResult;
 
 export interface FreeAiStudioContextContract {
   exercises: readonly PilatesExercise[];
@@ -300,6 +342,7 @@ export interface FreeAiStudioContextContract {
     exercise: PilatesExercise,
     ideaContract: P1MovementIdeaContract,
   ) => void;
+  onAddExerciseToSequence?: (exerciseId: string, blockCategory?: ClassBlockCategory) => void;
   onApplyConditionTemplate?: (templateId: string) => void;
   onSaveConditionTemplate?: (name: string, criteria: AutoGenerateCriteria) => void;
   uiContract?: P2CommonUiContract;

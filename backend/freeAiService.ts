@@ -23,12 +23,6 @@ export const UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER =
 
 export const FREE_QUOTA_EXHAUSTED_HEADING = '무료 사용량 소진' as const;
 
-/**
- * Official Google Gemini API Free Tier models (Unpaid project without Cloud Billing, verified Oct/Nov 2026).
- * - Current standard free-tier text models: `gemini-3.8-flash` and `gemini-3.5-flash-lite` (plus active free-tier text models `gemini-3.1-flash-lite`, `gemini-2.5-flash-lite`, `gemini-2.5-flash`).
- * - Shut down on June 1, 2026 (must be rejected): `gemini-2.0-flash`, `gemini-2.0-flash-lite`.
- * - Paid-only models/features (must be rejected): `gemini-4-argon`, `gemini-3.8-pro`, `gemini-3.1-pro-preview`, image models, and Search/Maps grounding.
- */
 export const GEMINI_FREE_TIER_MODELS = [
   'gemini-3.8-flash',
   'gemini-3.5-flash-lite',
@@ -38,6 +32,26 @@ export const GEMINI_FREE_TIER_MODELS = [
 ] as const;
 
 export type GeminiFreeTierModel = (typeof GEMINI_FREE_TIER_MODELS)[number];
+
+export const OPENAI_ALLOWED_MODELS = [
+  'gpt-4o-mini',
+  'gpt-4.1-mini',
+  'gpt-4.1-nano',
+  'gpt-4o',
+] as const;
+
+export const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini' as const;
+export const DEFAULT_OPENAI_TIMEOUT_MS = 15_000;
+export const DEFAULT_OPENAI_MAX_COMPLETION_TOKENS = 1_400;
+
+export function isAllowedOpenAiModel(model: string): boolean {
+  const normalized = model.trim();
+  if (!normalized || normalized.length > 80) return false;
+  return (
+    (OPENAI_ALLOWED_MODELS as readonly string[]).includes(normalized) ||
+    /^gpt-(?:4o|4\.1|5)(?:-[a-z0-9._-]+)?$/i.test(normalized)
+  );
+}
 
 export function isGuaranteedFreeGeminiModel(model: string): model is GeminiFreeTierModel {
   const normalized = model.trim();
@@ -52,12 +66,12 @@ export function isGuaranteedFreeOpenRouterModel(model: string): boolean {
 }
 
 const FORBIDDEN_SECRET_FIELD_PATTERN =
-  /^(?:api[_-]?key|gemini[_-]?api[_-]?key|openrouter[_-]?api[_-]?key|client[_-]?secret|bearer[_-]?token|authorization|x[_-]?api[_-]?key|byok|user[_-]?api[_-]?key|secret[_-]?key)$/i;
+  /^(?:api[_-]?key|openai[_-]?api[_-]?key|openai[_-]?org[_-]?id|openai[_-]?project[_-]?id|gemini[_-]?api[_-]?key|openrouter[_-]?api[_-]?key|client[_-]?secret|bearer[_-]?token|authorization|x[_-]?api[_-]?key|byok|user[_-]?api[_-]?key|secret[_-]?key)$/i;
 
 const FORBIDDEN_SECRET_VALUE_PATTERNS = [
   /\bAIza[0-9A-Za-z_-]{20,}\b/,
   /\bsk-or-v1-[0-9a-fA-F]{16,}\b/,
-  /\bsk-[0-9A-Za-z_-]{20,}\b/,
+  /\bsk-(?:proj-|svcacct-)?[0-9A-Za-z_-]{20,}\b/,
 ];
 
 export interface SecretExposureCheckResult {
@@ -86,7 +100,10 @@ export function detectByokOrSecretExposure(input: unknown): SecretExposureCheckR
     if (typeof value === 'object') {
       for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
         const nextPath = path ? `${path}.${key}` : key;
-        if (FORBIDDEN_SECRET_FIELD_PATTERN.test(key) || /^VITE_.*(?:KEY|TOKEN|SECRET)/i.test(key)) {
+        if (
+          FORBIDDEN_SECRET_FIELD_PATTERN.test(key) ||
+          /^VITE_.*(?:KEY|TOKEN|SECRET|OPENAI)/i.test(key)
+        ) {
           violations.push(
             `${nextPath}: 사용자 API 키(BYOK) 입력 또는 브라우저 키 노출 필드는 허용되지 않습니다.`,
           );
@@ -265,6 +282,22 @@ const reviewedExerciseCandidateSchema = z
   })
   .strict();
 
+const catalogSearchCandidateSchema = z
+  .object({
+    id: textSchema.min(1).max(120),
+    nameKo: textSchema.min(1).max(160),
+    nameEn: textSchema.max(160),
+    apparatus: apparatusSchema,
+    blockCategory: blockCategorySchema,
+    level: levelSchema,
+    defaultDurationMin: z.number().finite().min(0.5).max(30),
+    springs: textSchema.max(160).default(''),
+    bodyPosition: bodyPositionSchema.optional(),
+    targetMuscles: z.array(textSchema.max(80)).max(8).optional(),
+    cues: z.array(textSchema.max(240)).max(4).optional(),
+  })
+  .strict();
+
 const reviewedBlockCandidateSchema = z
   .object({
     id: textSchema.min(1).max(120),
@@ -306,6 +339,16 @@ const sequenceComposeInputSchema = z
   })
   .strict();
 
+const movementSearchInputSchema = z
+  .object({
+    queryText: textSchema.min(2, '찾고 싶은 동작 상황을 2자 이상 입력해 주세요.').max(300),
+    apparatus: z.union([apparatusSchema, z.literal('mixed')]),
+    level: levelSchema,
+    strengthenArea: strengthenAreaSchema.optional(),
+    maxResults: z.number().int().min(1).max(8).optional(),
+  })
+  .strict();
+
 export const freeAiServerRequestSchema = z
   .discriminatedUnion('task', [
     z
@@ -327,6 +370,13 @@ export const freeAiServerRequestSchema = z
         compose: sequenceComposeInputSchema,
         reviewedCatalog: z.array(reviewedExerciseCandidateSchema).max(100),
         reviewedBlocks: z.array(reviewedBlockCandidateSchema).max(30).optional(),
+      })
+      .strict(),
+    z
+      .object({
+        task: z.literal('exercise-search'),
+        search: movementSearchInputSchema,
+        catalogCandidates: z.array(catalogSearchCandidateSchema).max(100),
       })
       .strict(),
   ])
@@ -353,6 +403,9 @@ export const freeAiServerRequestSchema = z
 
 export type FreeAiServerRequest = z.infer<typeof freeAiServerRequestSchema>;
 
+const aiResultSourceSchema = z.enum(['openai-api', 'external-free-ai', 'local-rule-engine']);
+const aiProviderIdSchema = z.enum(['openai', 'gemini-free', 'openrouter-free', 'none']);
+
 const editableDraftStepSchema = z.object({
   stepId: textSchema.min(1).max(120),
   order: z.number().int().nonnegative(),
@@ -370,8 +423,8 @@ const editableDraftStepSchema = z.object({
 
 const editableClassDraftResultSchema = z.object({
   kind: z.literal('class-draft'),
-  source: z.enum(['external-free-ai', 'local-rule-engine']),
-  provider: z.enum(['gemini-free', 'openrouter-free', 'none']),
+  source: aiResultSourceSchema,
+  provider: aiProviderIdSchema,
   model: z.string().nullable(),
   cached: z.boolean(),
   title: textSchema.min(1).max(150),
@@ -395,8 +448,8 @@ const editableClassDraftResultSchema = z.object({
 
 const editableMovementIdeaResultSchema = z.object({
   kind: z.literal('movement-idea'),
-  source: z.enum(['external-free-ai', 'local-rule-engine']),
-  provider: z.enum(['gemini-free', 'openrouter-free', 'none']),
+  source: aiResultSourceSchema,
+  provider: aiProviderIdSchema,
   model: z.string().nullable(),
   cached: z.boolean(),
   nameKo: textSchema.min(2).max(160),
@@ -426,8 +479,8 @@ const editableMovementIdeaResultSchema = z.object({
 
 const editableSequenceComposeResultSchema = z.object({
   kind: z.literal('sequence-compose'),
-  source: z.enum(['external-free-ai', 'local-rule-engine']),
-  provider: z.enum(['gemini-free', 'openrouter-free', 'none']),
+  source: aiResultSourceSchema,
+  provider: aiProviderIdSchema,
   model: z.string().nullable(),
   cached: z.boolean(),
   title: textSchema.min(1).max(150),
@@ -442,10 +495,37 @@ const editableSequenceComposeResultSchema = z.object({
   safetyDisclaimer: textSchema.min(10),
 });
 
+const movementSearchRecommendationItemSchema = z.object({
+  exerciseId: textSchema.min(1).max(120),
+  nameKo: textSchema.min(1).max(160),
+  nameEn: textSchema.max(160),
+  apparatus: apparatusSchema,
+  blockCategory: blockCategorySchema,
+  level: levelSchema,
+  defaultDurationMin: z.number().finite().min(0.5).max(30),
+  springs: textSchema.max(160),
+  matchReasonKo: textSchema.min(2).max(300),
+  cueHighlightKo: textSchema.min(2).max(300),
+  setupCheckKo: textSchema.min(2).max(300),
+});
+
+const editableMovementSearchResultSchema = z.object({
+  kind: z.literal('exercise-search'),
+  source: aiResultSourceSchema,
+  provider: aiProviderIdSchema,
+  model: z.string().nullable(),
+  cached: z.boolean(),
+  querySummaryKo: textSchema.min(2).max(300),
+  recommendations: z.array(movementSearchRecommendationItemSchema).max(8),
+  guaranteesSafetyOrEffect: z.literal(false),
+  safetyDisclaimer: textSchema.min(10),
+});
+
 export const freeAiAssistResultSchema = z.discriminatedUnion('kind', [
   editableClassDraftResultSchema,
   editableMovementIdeaResultSchema,
   editableSequenceComposeResultSchema,
+  editableMovementSearchResultSchema,
 ]);
 
 export const DEFAULT_GEMINI_FREE_MODEL = 'gemini-3.5-flash-lite' as const;
@@ -503,6 +583,8 @@ export interface ResolvedFreeAiConfig {
   provider: FreeAiProviderId;
   model: string | null;
   apiKey: string | null;
+  orgId?: string | null;
+  projectId?: string | null;
   enabled: boolean;
   reason:
     | 'ready'
@@ -513,13 +595,14 @@ export interface ResolvedFreeAiConfig {
 }
 
 /**
- * Resolves free-only external AI configuration strictly from server-side environment variables.
- * Never reads or accepts API keys from client requests.
+ * Resolves server-side AI configuration strictly from server environment variables (`process.env`).
+ * Never reads or accepts API keys from browser/client requests, never performs billing mutations,
+ * and never logs or echoes secret values.
  */
 export function resolveFreeAiConfig(
   env: Record<string, string | undefined> = process.env,
 ): ResolvedFreeAiConfig {
-  const explicitProvider = (env.FREE_AI_PROVIDER ?? '').trim().toLowerCase();
+  const explicitProvider = (env.FREE_AI_PROVIDER ?? env.AI_PROVIDER ?? '').trim().toLowerCase();
   if (explicitProvider === 'none') {
     return {
       provider: 'none',
@@ -528,7 +611,55 @@ export function resolveFreeAiConfig(
       enabled: false,
       reason: 'unconfigured',
       statusMessageKo:
-        '외부 무료 AI가 비활성화되어 있습니다. 로컬 추천 엔진·수동 편집·저장 프리셋을 사용할 수 있습니다.',
+        '서버 AI 보조가 비활성화되어 있습니다. 기기 내 조건 추천·직접 편집·저장 프리셋을 사용할 수 있습니다.',
+    };
+  }
+
+  const openAiKey = (env.OPENAI_API_KEY ?? '').trim();
+  const openAiModel = (env.OPENAI_MODEL ?? '').trim() || DEFAULT_OPENAI_MODEL;
+  const openAiOrgId = (env.OPENAI_ORG_ID ?? '').trim() || null;
+  const openAiProjectId = (env.OPENAI_PROJECT_ID ?? '').trim() || null;
+
+  const preferOpenAi =
+    explicitProvider === 'openai' ||
+    (Boolean(openAiKey) &&
+      explicitProvider !== 'gemini-free' &&
+      explicitProvider !== 'openrouter-free');
+
+  if (preferOpenAi) {
+    if (!openAiKey) {
+      return {
+        provider: 'none',
+        model: null,
+        apiKey: null,
+        enabled: false,
+        reason: 'unconfigured',
+        statusMessageKo:
+          '서버에 OpenAI API 키(OPENAI_API_KEY)가 설정되지 않았습니다. 기기 내 조건 추천·직접 편집·저장 프리셋으로 계속 작업할 수 있습니다.',
+      };
+    }
+
+    if (!isAllowedOpenAiModel(openAiModel)) {
+      return {
+        provider: 'openai',
+        model: null,
+        apiKey: null,
+        enabled: false,
+        reason: 'invalid_paid_model_blocked',
+        statusMessageKo:
+          '허용되지 않은 OpenAI 모델 이름이 감지되어 호출을 중단했습니다. (gpt-4o-mini, gpt-4.1-mini 등 텍스트 보조 모델만 허용)',
+      };
+    }
+
+    return {
+      provider: 'openai',
+      model: openAiModel,
+      apiKey: openAiKey,
+      orgId: openAiOrgId,
+      projectId: openAiProjectId,
+      enabled: true,
+      reason: 'ready',
+      statusMessageKo: `OpenAI 서버 보조(${openAiModel}) 연결됨 · 서버 환경변수 전용 보호 및 사용량 제한 적용`,
     };
   }
 
@@ -553,7 +684,7 @@ export function resolveFreeAiConfig(
         enabled: false,
         reason: 'unconfigured',
         statusMessageKo:
-          '외부 무료 AI 키가 설정되지 않았습니다. 로컬 추천 엔진·수동 편집·저장 프리셋으로 모든 기능을 사용할 수 있습니다.',
+          '서버 AI 키가 설정되지 않았습니다. 기기 내 조건 추천·직접 편집·저장 프리셋으로 모든 기능을 사용할 수 있습니다.',
       };
     }
 
@@ -588,7 +719,7 @@ export function resolveFreeAiConfig(
         enabled: false,
         reason: 'unconfigured',
         statusMessageKo:
-          '외부 무료 AI 키가 설정되지 않았습니다. 로컬 추천 엔진·수동 편집·저장 프리셋으로 모든 기능을 사용할 수 있습니다.',
+          '서버 AI 키가 설정되지 않았습니다. 기기 내 조건 추천·직접 편집·저장 프리셋으로 모든 기능을 사용할 수 있습니다.',
       };
     }
 
@@ -633,7 +764,7 @@ export function resolveFreeAiConfig(
     enabled: false,
     reason: 'unconfigured',
     statusMessageKo:
-      '외부 무료 AI 키가 설정되지 않았습니다. 로컬 추천 엔진·수동 편집·저장 프리셋으로 모든 기능을 사용할 수 있습니다.',
+      '서버에 OpenAI 또는 무료 AI 키가 설정되지 않았습니다. 기기 내 조건 추천·직접 편집·저장 프리셋으로 모든 기능을 사용할 수 있습니다.',
   };
 }
 
@@ -675,10 +806,6 @@ function getLosAngelesParts(ms: number): TimeZoneDateParts {
   };
 }
 
-/**
- * Computes the exact UTC timestamp (ms) for the next midnight (00:00:00.000) in America/Los_Angeles.
- * Handles both PST (UTC-8) and PDT (UTC-7) cleanly.
- */
 export function computeNextGeminiDailyResetMs(nowMs: number = Date.now()): number {
   const current = getLosAngelesParts(nowMs);
   const candidateUtcMs = Date.UTC(current.year, current.month - 1, current.day + 1, 8, 0, 0, 0);
@@ -690,9 +817,6 @@ export function computeNextGeminiDailyResetMs(nowMs: number = Date.now()): numbe
   return candidateUtcMs + hourDiff * 3_600_000 - check.minute * 60_000 - check.second * 1_000;
 }
 
-/**
- * Computes the exact UTC timestamp (ms) for the next midnight (00:00:00.000Z) in UTC.
- */
 export function computeNextOpenRouterDailyResetMs(nowMs: number = Date.now()): number {
   const now = new Date(nowMs);
   return Date.UTC(
@@ -706,15 +830,26 @@ export function computeNextOpenRouterDailyResetMs(nowMs: number = Date.now()): n
   );
 }
 
-/**
- * Computes the end of the current 60-second minute window.
- */
 export function computeMinuteWindowResetMs(nowMs: number = Date.now()): number {
   return Math.floor(nowMs / 60_000) * 60_000 + 60_000;
 }
 
+function parseDurationTokenToSeconds(raw: string): number | null {
+  const trimmed = raw.trim();
+  const durationMatch = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?$/i.exec(trimmed);
+  if (!durationMatch || (!durationMatch[1] && !durationMatch[2] && !durationMatch[3])) {
+    return null;
+  }
+  const hours = durationMatch[1] ? Number(durationMatch[1]) : 0;
+  const mins = durationMatch[2] ? Number(durationMatch[2]) : 0;
+  const secs = durationMatch[3] ? Number(durationMatch[3]) : 0;
+  const total = hours * 3600 + mins * 60 + secs;
+  return total > 0 ? total : null;
+}
+
 /**
- * Parses upstream rate-limit reset headers (`X-RateLimit-Reset` or `Retry-After`) if present.
+ * Parses upstream rate-limit reset headers (`X-RateLimit-Reset`, `X-RateLimit-Reset-Requests`,
+ * `X-RateLimit-Reset-Tokens`, or `Retry-After`) if present.
  */
 export function parseUpstreamResetHeaderMs(
   headers: Headers | Record<string, string | undefined> | undefined,
@@ -733,9 +868,23 @@ export function parseUpstreamResetHeaderMs(
     return foundKey ? (record[foundKey] ?? null) : null;
   };
 
-  const rateLimitReset = getHeader('x-ratelimit-reset')?.trim();
-  if (rateLimitReset) {
-    const numeric = Number(rateLimitReset);
+  for (const headerName of [
+    'x-ratelimit-reset',
+    'x-ratelimit-reset-requests',
+    'x-ratelimit-reset-tokens',
+  ]) {
+    const rawReset = getHeader(headerName)?.trim();
+    if (!rawReset) continue;
+
+    const durationSec = parseDurationTokenToSeconds(rawReset);
+    if (durationSec !== null) {
+      return {
+        resetAtMs: nowMs + Math.ceil(durationSec * 1000),
+        resetWindow: durationSec <= 120 ? 'minute' : 'daily',
+      };
+    }
+
+    const numeric = Number(rawReset);
     if (Number.isFinite(numeric) && numeric > 0) {
       let resetAtMs: number;
       if (numeric > 1e12) {
@@ -753,7 +902,7 @@ export function parseUpstreamResetHeaderMs(
         };
       }
     } else {
-      const parsedDate = Date.parse(rateLimitReset);
+      const parsedDate = Date.parse(rawReset);
       if (Number.isFinite(parsedDate) && parsedDate > nowMs) {
         const deltaSec = (parsedDate - nowMs) / 1000;
         return {
@@ -778,7 +927,7 @@ export function parseUpstreamResetHeaderMs(
     if (Number.isFinite(parsedDate) && parsedDate > nowMs) {
       const deltaSec = (parsedDate - nowMs) / 1000;
       return {
-        resetAtMs: parsedDate,
+        resetAtMs,
         resetWindow: deltaSec <= 120 ? 'minute' : 'daily',
       };
     }
@@ -821,9 +970,13 @@ export function computeQuotaRenewal(options: {
     formattedResetKo =
       provider === 'gemini-free'
         ? `분당 무료 호출 한도(RPM) 갱신 · 약 ${remainingSeconds}초 후 (미국 태평양 시간 기준 프로젝트)`
-        : `분당 무료 호출 한도(RPM) 갱신 · 약 ${remainingSeconds}초 후 (UTC 기준)`;
+        : provider === 'openai'
+          ? `분당 OpenAI 서버 호출 한도(RPM) 갱신 · 약 ${remainingSeconds}초 후 (UTC 기준)`
+          : `분당 무료 호출 한도(RPM) 갱신 · 약 ${remainingSeconds}초 후 (UTC 기준)`;
   } else if (provider === 'gemini-free') {
     formattedResetKo = `미국 태평양 시간 자정(00:00 PT) 기준 일일 무료 한도 갱신 · 약 ${hours}시간 ${minutes}분 후`;
+  } else if (provider === 'openai') {
+    formattedResetKo = `협정 세계시 자정(00:00 UTC) 기준 일일 서버 보조 한도 갱신 · 약 ${hours}시간 ${minutes}분 후`;
   } else {
     formattedResetKo = `협정 세계시 자정(00:00 UTC) 기준 일일 무료 한도 갱신 · 약 ${hours}시간 ${minutes}분 후`;
   }
@@ -831,7 +984,9 @@ export function computeQuotaRenewal(options: {
   const policyNoteKo =
     provider === 'gemini-free'
       ? 'Google AI Studio 무과금 무료 등급(Unpaid Free Tier) 일일 한도(RPD)는 미국 태평양 시간 자정(America/Los_Angeles, 00:00 PT)에 초기화되며 유료 모델로 절대 전환되지 않습니다.'
-      : 'OpenRouter 무료 모델(:free) 일일 한도(RPD)는 00:00 UTC에 초기화되며 max_price=0 및 allow_fallbacks=false 설정으로 유료 전환이 차단됩니다.';
+      : provider === 'openai'
+        ? '서버에 설정된 일일·분당 OpenAI 호출 상한 안에서만 동작하며, 사용자 동의 없는 자동 충전이나 한도 변경은 절대 수행하지 않습니다.'
+        : 'OpenRouter 무료 모델(:free) 일일 한도(RPD)는 00:00 UTC에 초기화되며 max_price=0 및 allow_fallbacks=false 설정으로 유료 전환이 차단됩니다.';
 
   return {
     resetAt: new Date(resetAtMs).toISOString(),
@@ -887,7 +1042,7 @@ function buildPromptForRequest(request: FreeAiServerRequest): string {
   if (request.task === 'class-draft') {
     return JSON.stringify({
       instruction:
-        '필라테스 수업 초안을 JSON 형식으로만 응답하세요. 반드시 reviewedCatalog에 포함된 검증된 동작만 steps에 사용하고, 의학적·치료적 효과나 안전성을 보장하지 마세요.',
+        '필라테스 수업 초안을 자연스럽고 간결한 한국어 JSON 형식으로만 응답하세요. 반드시 reviewedCatalog에 포함된 검증된 동작 ID만 steps에 사용하고, 의학적 진단·치료·교정 사실로 단정하지 마세요.',
       task: 'class-draft',
       conditions: request.conditions,
       reviewedCatalog: request.reviewedCatalog,
@@ -896,14 +1051,23 @@ function buildPromptForRequest(request: FreeAiServerRequest): string {
   if (request.task === 'movement-idea') {
     return JSON.stringify({
       instruction:
-        '필라테스 창작 동작 아이디어를 구조화된 JSON 형식으로만 응답하세요. 미검토 창작 아이디어(unreviewed-creative)로 표시되며 안전성이나 운동·교정 효과를 보장하지 않습니다.',
+        '필라테스 창작 동작 아이디어를 자연스러운 한국어 JSON 형식으로만 응답하세요. 미검토 창작 아이디어(unreviewed-creative)로만 분류하며 의학적 효과나 안전성을 단정하지 마세요.',
       task: 'movement-idea',
       idea: request.idea,
     });
   }
+  if (request.task === 'exercise-search') {
+    return JSON.stringify({
+      instruction:
+        'catalogCandidates 안에 있는 필라테스 동작 중 요청한 수업 상황에 잘 맞는 후보를 골라 JSON 객체(querySummaryKo, recommendations 배열: exerciseId, matchReasonKo, cueHighlightKo, setupCheckKo)로만 응답하세요. 의학적 진단·치료 효능을 단정하지 마세요.',
+      task: 'exercise-search',
+      search: request.search,
+      catalogCandidates: request.catalogCandidates,
+    });
+  }
   return JSON.stringify({
     instruction:
-      '선택된 검증 동작과 블록만 사용하여 필라테스 시퀀스 구성을 JSON 형식으로만 응답하세요. 미검토 창작 동작은 제외하세요.',
+      '선택된 검증 동작과 블록만 사용하여 필라테스 시퀀스 구성을 자연스러운 한국어 JSON 형식으로만 응답하세요. 미검토 창작 동작은 제외하고 의학적 효과를 단정하지 마세요.',
     task: 'sequence-compose',
     compose: request.compose,
     reviewedCatalog: request.reviewedCatalog,
@@ -959,6 +1123,8 @@ function normalizeAndValidateAssistResult(
   config: ResolvedFreeAiConfig,
 ): FreeAiAssistResult {
   const raw = extractRawJsonFromUpstream(upstreamPayload);
+  const resolvedSource =
+    config.provider === 'openai' ? ('openai-api' as const) : ('external-free-ai' as const);
 
   if (request.task === 'class-draft') {
     const catalogIds = new Set(request.reviewedCatalog.map((item) => item.id));
@@ -983,7 +1149,7 @@ function normalizeAndValidateAssistResult(
     const candidate = {
       ...raw,
       kind: 'class-draft' as const,
-      source: 'external-free-ai' as const,
+      source: resolvedSource,
       provider: config.provider,
       model: config.model,
       cached: false,
@@ -1011,7 +1177,7 @@ function normalizeAndValidateAssistResult(
     const candidate = {
       ...raw,
       kind: 'movement-idea' as const,
-      source: 'external-free-ai' as const,
+      source: resolvedSource,
       provider: config.provider,
       model: config.model,
       cached: false,
@@ -1030,6 +1196,62 @@ function normalizeAndValidateAssistResult(
             ? preferredProps
             : ['none'],
       reviewStatus: 'unreviewed-creative' as const,
+      guaranteesSafetyOrEffect: false as const,
+      safetyDisclaimer: UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER,
+    };
+
+    return freeAiAssistResultSchema.parse(candidate);
+  }
+
+  if (request.task === 'exercise-search') {
+    const candidateMap = new Map(
+      request.catalogCandidates.map((item) => [item.id, item]),
+    );
+    const maxItems = request.search.maxResults ?? 5;
+    const rawRecs = Array.isArray(raw.recommendations) ? raw.recommendations : [];
+    const normalizedRecs = rawRecs
+      .filter((rec): rec is Record<string, unknown> => Boolean(rec && typeof rec === 'object'))
+      .filter(
+        (rec) => typeof rec.exerciseId === 'string' && candidateMap.has(rec.exerciseId),
+      )
+      .slice(0, maxItems)
+      .map((rec) => {
+        const base = candidateMap.get(String(rec.exerciseId))!;
+        return {
+          exerciseId: base.id,
+          nameKo: base.nameKo,
+          nameEn: base.nameEn,
+          apparatus: base.apparatus,
+          blockCategory: base.blockCategory,
+          level: base.level,
+          defaultDurationMin: base.defaultDurationMin,
+          springs: base.springs || '기구 세팅 확인',
+          matchReasonKo:
+            typeof rec.matchReasonKo === 'string' && rec.matchReasonKo.trim().length >= 2
+              ? rec.matchReasonKo.trim().slice(0, 300)
+              : `${base.nameKo} 동작은 요청하신 수업 흐름과 기구 조건에 잘 어울립니다.`,
+          cueHighlightKo:
+            typeof rec.cueHighlightKo === 'string' && rec.cueHighlightKo.trim().length >= 2
+              ? rec.cueHighlightKo.trim().slice(0, 300)
+              : base.cues?.[0] ?? '호흡과 척추 중립 정렬을 먼저 확인하세요.',
+          setupCheckKo:
+            typeof rec.setupCheckKo === 'string' && rec.setupCheckKo.trim().length >= 2
+              ? rec.setupCheckKo.trim().slice(0, 300)
+              : `권장 세팅(${base.springs || '기본 세팅'})과 가동 범위를 수업 전 확인하세요.`,
+        };
+      });
+
+    const candidate = {
+      kind: 'exercise-search' as const,
+      source: resolvedSource,
+      provider: config.provider,
+      model: config.model,
+      cached: false,
+      querySummaryKo:
+        typeof raw.querySummaryKo === 'string' && raw.querySummaryKo.trim().length >= 2
+          ? raw.querySummaryKo.trim().slice(0, 300)
+          : `‘${request.search.queryText}’ 조건에 맞는 동작 후보를 정리했습니다.`,
+      recommendations: normalizedRecs,
       guaranteesSafetyOrEffect: false as const,
       safetyDisclaimer: UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER,
     };
@@ -1075,7 +1297,7 @@ function normalizeAndValidateAssistResult(
   const candidate = {
     ...raw,
     kind: 'sequence-compose' as const,
-    source: 'external-free-ai' as const,
+    source: resolvedSource,
     provider: config.provider,
     model: config.model,
     cached: false,
@@ -1104,6 +1326,7 @@ export interface FreeAiServiceOptions {
   maxConcurrentGlobal?: number;
   minuteLimit?: number;
   dailyLimit?: number;
+  timeoutMs?: number;
 }
 
 export interface FreeAiService {
@@ -1129,6 +1352,7 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
     options.maxConcurrentGlobal ?? DEFAULT_MAX_CONCURRENT_GLOBAL;
   const minuteLimit = options.minuteLimit ?? DEFAULT_MINUTE_LIMIT;
   const dailyLimit = options.dailyLimit ?? DEFAULT_DAILY_LIMIT;
+  const timeoutMs = options.timeoutMs ?? DEFAULT_OPENAI_TIMEOUT_MS;
 
   const cache = new Map<string, CacheEntry>();
   const activePerUser = new Map<string, number>();
@@ -1304,6 +1528,55 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
     request: FreeAiServerRequest,
   ): Promise<Response> {
     const promptText = buildPromptForRequest(request);
+
+    if (config.provider === 'openai') {
+      const model = config.model!;
+      if (!isAllowedOpenAiModel(model)) {
+        throw new FreeAiError(
+          'invalid_paid_model_blocked',
+          '허용된 OpenAI 보조 모델이 아닙니다.',
+          503,
+          buildStatus('invalid_paid_model_blocked'),
+        );
+      }
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.apiKey!}`,
+      };
+      if (config.orgId) headers['OpenAI-Organization'] = config.orgId;
+      if (config.projectId) headers['OpenAI-Project'] = config.projectId;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      try {
+        return await fetchFn('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers,
+          signal: controller.signal,
+          body: JSON.stringify({
+            model,
+            temperature: 0.2,
+            max_completion_tokens: DEFAULT_OPENAI_MAX_COMPLETION_TOKENS,
+            response_format: { type: 'json_object' },
+            messages: [
+              {
+                role: 'system',
+                content:
+                  '당신은 한국 필라테스 스튜디오 강사를 돕는 수업 구성·동작 탐색 보조 도우미입니다. 반드시 요청된 JSON 객체만 반환하고, 의학적 진단·치료·교정 사실로 단정하지 마세요. 장황한 번역투 대신 간결하고 자연스러운 현장 한국어를 사용하세요.',
+              },
+              {
+                role: 'user',
+                content: promptText,
+              },
+            ],
+          }),
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
 
     if (config.provider === 'gemini-free') {
       const model = config.model!;
@@ -1498,7 +1771,7 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
           if (cause instanceof FreeAiError) throw cause;
           throw new FreeAiError(
             'upstream_error',
-            '외부 무료 AI 서비스 연결에 실패했습니다. 유료 모델 폴백 없이 중단되었으며 로컬 추천 엔진을 계속 사용할 수 있습니다.',
+            '외부 AI 서비스 연결이 지연되거나 중단되었습니다. 추가 과금 재시도 없이 중단했으며 기기 내 조건 추천을 바로 사용할 수 있습니다.',
             502,
             buildStatus(),
           );
@@ -1532,7 +1805,7 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
         if (!response.ok) {
           throw new FreeAiError(
             'upstream_error',
-            `외부 무료 AI 서비스가 오류 상태(${response.status})를 반환했습니다. 유료 폴백 없이 중단되었으며 로컬 추천 엔진을 계속 사용할 수 있습니다.`,
+            `외부 AI 서비스가 오류 상태(${response.status})를 반환했습니다. 자동 유료 충전이나 대체 호출 없이 중단했으며 기기 내 조건 추천을 사용할 수 있습니다.`,
             502,
             buildStatus(),
           );
@@ -1544,7 +1817,7 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
         } catch {
           throw new FreeAiError(
             'invalid_ai_response',
-            '외부 AI 응답을 JSON으로 해석하지 못했습니다. 로컬 추천 엔진이나 수동 편집을 이용해 주세요.',
+            '외부 AI 응답을 읽지 못했습니다. 기기 내 조건 추천이나 직접 편집을 이용해 주세요.',
             502,
             buildStatus(),
           );
@@ -1560,7 +1833,7 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
         } catch {
           throw new FreeAiError(
             'invalid_ai_response',
-            '외부 AI 응답이 안전 스키마 검증을 통과하지 못했습니다. 로컬 추천 엔진이나 수동 편집을 이용해 주세요.',
+            '외부 AI 응답이 안전·비의료 검증 기준을 통과하지 못했습니다. 기기 내 조건 추천이나 직접 편집을 이용해 주세요.',
             502,
             buildStatus(),
           );
@@ -1679,7 +1952,7 @@ export function createFreeAiRoutes(
             error: 'upstream_error',
             code: 'upstream_error',
             message:
-              '외부 무료 AI 요청을 처리하지 못했습니다. 로컬 추천 엔진이나 수동 편집을 이용해 주세요.',
+              'AI 보조 요청을 처리하지 못했습니다. 기기 내 조건 추천이나 직접 편집을 이용해 주세요.',
             status,
             quotaStatus: status,
             renewal: status.renewal,

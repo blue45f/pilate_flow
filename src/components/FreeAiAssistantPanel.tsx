@@ -20,11 +20,13 @@ import type {
   EditableClassDraftResult,
   EditableDraftStepItem,
   EditableMovementIdeaResult,
+  EditableMovementSearchResult,
   EditableSequenceComposeResult,
   FreeAiQuotaStatus,
   FreeAiStudioContextContract,
   FreeAiTaskKind,
   MovementIdeaInput,
+  MovementSearchAssistInput,
   StrengthenArea,
 } from '../types/freeAiAssistant';
 import type {
@@ -60,6 +62,10 @@ interface FreeAiDraftSnapshot {
   composeApparatus: ApparatusType | 'mixed';
   composeTheme: string;
   composeAreas: StrengthenArea[];
+  searchQuery: string;
+  searchApparatus: ApparatusType | 'mixed';
+  searchLevel: DifficultyLevel;
+  searchArea: StrengthenArea;
 }
 
 function readFreeAiDraft(): Partial<FreeAiDraftSnapshot> | null {
@@ -147,6 +153,7 @@ export function FreeAiAssistantPanel({
   activeLevel = '1.5',
   onApplyDraftSequence,
   onSaveUnreviewedMovementIdea,
+  onAddExerciseToSequence,
   onApplyConditionTemplate,
   onSaveConditionTemplate,
   uiContract,
@@ -160,7 +167,8 @@ export function FreeAiAssistantPanel({
     if (
       savedTab === 'class-draft' ||
       savedTab === 'movement-idea' ||
-      savedTab === 'sequence-compose'
+      savedTab === 'sequence-compose' ||
+      savedTab === 'exercise-search'
     ) {
       return savedTab;
     }
@@ -172,7 +180,6 @@ export function FreeAiAssistantPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
-  // Invalidate tab-scoped feedback when navigation interrupts an async request.
   const tabRevision = useRef(0);
   const [appliedToPlan, setAppliedToPlan] = useState(false);
 
@@ -290,6 +297,29 @@ export function FreeAiAssistantPanel({
   );
   const [composeResult, setComposeResult] = useState<EditableSequenceComposeResult | null>(null);
 
+  // Tab 4: Movement Search Assist state
+  const [searchQuery, setSearchQuery] = useState<string>(() =>
+    typeof savedDraft?.searchQuery === 'string'
+      ? savedDraft.searchQuery
+      : '어깨 과긴장 없이 코어와 골반 중립을 깨우는 동작',
+  );
+  const [searchApparatus, setSearchApparatus] = useState<ApparatusType | 'mixed'>(() =>
+    typeof savedDraft?.searchApparatus === 'string'
+      ? savedDraft.searchApparatus
+      : activeApparatus || 'reformer',
+  );
+  const [searchLevel, setSearchLevel] = useState<DifficultyLevel>(() =>
+    savedDraft?.searchLevel === '1.0' ||
+    savedDraft?.searchLevel === '1.5' ||
+    savedDraft?.searchLevel === '2.0'
+      ? savedDraft.searchLevel
+      : activeLevel || '1.5',
+  );
+  const [searchArea, setSearchArea] = useState<StrengthenArea>(() =>
+    typeof savedDraft?.searchArea === 'string' ? savedDraft.searchArea : 'core',
+  );
+  const [searchResult, setSearchResult] = useState<EditableMovementSearchResult | null>(null);
+
   useEffect(() => {
     const snapshot: FreeAiDraftSnapshot = {
       activeTab,
@@ -311,6 +341,10 @@ export function FreeAiAssistantPanel({
       composeApparatus,
       composeTheme,
       composeAreas,
+      searchQuery,
+      searchApparatus,
+      searchLevel,
+      searchArea,
     };
     try {
       sessionStorage.setItem(FREE_AI_DRAFT_STORAGE_KEY, JSON.stringify(snapshot));
@@ -337,6 +371,10 @@ export function FreeAiAssistantPanel({
     composeApparatus,
     composeTheme,
     composeAreas,
+    searchQuery,
+    searchApparatus,
+    searchLevel,
+    searchArea,
   ]);
 
   useEffect(() => {
@@ -362,6 +400,10 @@ export function FreeAiAssistantPanel({
   const composeHealthInspection = useMemo(
     () => inspectSensitiveHealthText(composeTheme),
     [composeTheme],
+  );
+  const searchHealthInspection = useMemo(
+    () => inspectSensitiveHealthText(searchQuery),
+    [searchQuery],
   );
 
   const toggleArea = (
@@ -440,8 +482,10 @@ export function FreeAiAssistantPanel({
         response.usedLocalFallback
           ? '수업 초안을 만들었습니다. 수업에 맞게 편집해 주세요.'
           : response.result.cached
-            ? '캐시된 무료 AI 수업 초안을 불러왔습니다 (무료 한도 차감 없음).'
-            : '무료 AI로 편집 가능한 수업 초안을 만들었습니다.',
+            ? '이전에 만든 AI 수업 초안을 다시 불러왔습니다 (사용량 차감 없음).'
+            : response.result.provider === 'openai'
+              ? 'OpenAI 서버 보조로 수업 초안을 만들었습니다. 내용을 검토·편집해 주세요.'
+              : 'AI로 편집 가능한 수업 초안을 만들었습니다.',
       );
     } catch (error) {
       setQuotaStatus(client.getQuotaStatus());
@@ -450,7 +494,7 @@ export function FreeAiAssistantPanel({
         setErrorBanner(error.message);
       } else {
         setErrorBanner(
-          error instanceof Error ? error.message : '수업 초안 요청 중 오류가 발생했습니다.',
+          error instanceof Error ? error.message : '수업 초안을 만들지 못했습니다. 조건 추천을 이용해 주세요.',
         );
       }
     } finally {
@@ -489,8 +533,8 @@ export function FreeAiAssistantPanel({
         response.usedLocalFallback
           ? '동작 아이디어와 3단계 변형을 정리했습니다.'
           : response.result.cached
-            ? '캐시된 무료 AI 동작 아이디어·변형 제안을 불러왔습니다.'
-            : '무료 AI로 새 동작 아이디어와 3단계 변형을 정리했습니다.',
+            ? '이전에 정리한 동작 아이디어·변형 초안을 불러왔습니다.'
+            : '새 동작 아이디어와 3단계 변형을 정리했습니다.',
       );
     } catch (error) {
       setQuotaStatus(client.getQuotaStatus());
@@ -499,7 +543,7 @@ export function FreeAiAssistantPanel({
         setErrorBanner(error.message);
       } else {
         setErrorBanner(
-          error instanceof Error ? error.message : '동작 아이디어 정리 중 오류가 발생했습니다.',
+          error instanceof Error ? error.message : '동작 아이디어를 정리하지 못했습니다.',
         );
       }
     } finally {
@@ -539,8 +583,8 @@ export function FreeAiAssistantPanel({
         response.usedLocalFallback
           ? '검토 완료 동작·블록으로 시퀀스를 구성했습니다.'
           : response.result.cached
-            ? '캐시된 무료 AI 시퀀스 구성을 불러왔습니다.'
-            : '무료 AI로 검토 완료 동작·블록 시퀀스를 구성했습니다.',
+            ? '이전에 구성한 시퀀스 초안을 다시 불러왔습니다.'
+            : '검토 완료 동작·블록으로 시퀀스를 구성했습니다.',
       );
     } catch (error) {
       setQuotaStatus(client.getQuotaStatus());
@@ -549,7 +593,57 @@ export function FreeAiAssistantPanel({
         setErrorBanner(error.message);
       } else {
         setErrorBanner(
-          error instanceof Error ? error.message : '시퀀스 구성 중 오류가 발생했습니다.',
+          error instanceof Error ? error.message : '시퀀스를 구성하지 못했습니다.',
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const runMovementSearch = async (preferLocalOnly: boolean) => {
+    const requestTabRevision = tabRevision.current;
+    setErrorBanner(null);
+    setActionFeedback(null);
+    setAppliedToPlan(false);
+    if (searchQuery.trim().length < 2) {
+      setErrorBanner('찾고 싶은 동작 조건을 2자 이상 입력해 주세요.');
+      return;
+    }
+    if (!preferLocalOnly && searchHealthInspection.hasSensitiveData) {
+      setErrorBanner(searchHealthInspection.warningMessageKo);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const input: MovementSearchAssistInput = {
+        queryText: searchQuery,
+        apparatus: searchApparatus,
+        level: searchLevel,
+        strengthenArea: searchArea,
+        maxResults: 6,
+      };
+      const response = await client.requestMovementSearch(input, exercises, {
+        preferLocalOnly,
+      });
+      setQuotaStatus(response.status);
+      if (requestTabRevision !== tabRevision.current) return;
+      setSearchResult(response.result);
+      setActionFeedback(
+        response.usedLocalFallback
+          ? '입력한 조건에 맞는 동작 후보를 추렸습니다.'
+          : response.result.provider === 'openai'
+            ? 'OpenAI 서버 보조로 조건에 맞는 동작과 큐잉 포인트를 추렸습니다.'
+            : '조건에 맞는 동작과 큐잉 포인트를 추렸습니다.',
+      );
+    } catch (error) {
+      setQuotaStatus(client.getQuotaStatus());
+      if (requestTabRevision !== tabRevision.current) return;
+      if (error instanceof FreeAiClientError) {
+        setErrorBanner(error.message);
+      } else {
+        setErrorBanner(
+          error instanceof Error ? error.message : '동작 탐색 추천을 불러오지 못했습니다.',
         );
       }
     } finally {
@@ -726,7 +820,8 @@ export function FreeAiAssistantPanel({
   const hasCurrentTabResult =
     (activeTab === 'class-draft' && Boolean(classDraftResult)) ||
     (activeTab === 'movement-idea' && Boolean(movementIdeaResult)) ||
-    (activeTab === 'sequence-compose' && Boolean(composeResult));
+    (activeTab === 'sequence-compose' && Boolean(composeResult)) ||
+    (activeTab === 'exercise-search' && Boolean(searchResult));
 
   return (
     <section className="free-ai-panel" aria-label="수업·동작 초안">
@@ -741,12 +836,19 @@ export function FreeAiAssistantPanel({
               children: recommendationModeLabel,
             })
           ) : (
-            <PfAiStatusBadge
-              kind={externalAiDisabledOrExhausted ? 'auto-draft' : 'ai-draft'}
-              className="free-ai-badge"
-            >
-              {recommendationModeLabel}
-            </PfAiStatusBadge>
+            <>
+              <PfAiStatusBadge
+                kind={externalAiDisabledOrExhausted ? 'auto-draft' : 'ai-draft'}
+                className="free-ai-badge"
+              >
+                {recommendationModeLabel}
+              </PfAiStatusBadge>
+              {!externalAiDisabledOrExhausted && quotaStatus.provider === 'openai' && (
+                <PfAiStatusBadge kind="ai-draft" className="free-ai-badge">
+                  OpenAI 서버 보조
+                </PfAiStatusBadge>
+              )}
+            </>
           )}
         </div>
       </header>
@@ -822,14 +924,14 @@ export function FreeAiAssistantPanel({
           uiContract.renderNotice({
             tone: 'warning',
             title: '안전·운동 효과 미보장 및 민감 건강정보 전송 금지 안내',
-            description: `${UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER} 또한 회원의 실명, 연락처, 디스크·수술·임신·통증 등 민감 건강정보는 무료 외부 AI로 전송하지 마세요.`,
+            description: `${UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER} 또한 회원의 실명, 연락처, 디스크·수술·임신·통증 등 민감 건강정보는 외부 AI로 전송하지 마세요.`,
             children: UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER,
           })
         ) : (
           <>
             <strong>안전·운동 효과 미보장 및 민감 건강정보 전송 금지 안내:</strong>{' '}
             {UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER} 또한 회원의 실명, 연락처, 디스크·수술·임신·통증
-            등 민감 건강정보는 무료 외부 AI로 전송하지 마세요.
+            등 민감 건강정보는 외부 AI로 전송하지 마세요.
           </>
         )}
       </div>
@@ -880,6 +982,21 @@ export function FreeAiAssistantPanel({
         >
           3. 검토 동작·블록 시퀀스 구성
         </button>
+        <button
+          type="button"
+          role="tab"
+          className="free-ai-tab-btn"
+          aria-selected={activeTab === 'exercise-search'}
+          onClick={() => {
+            tabRevision.current += 1;
+            setActiveTab('exercise-search');
+            setErrorBanner(null);
+            setActionFeedback(null);
+            setAppliedToPlan(false);
+          }}
+        >
+          4. 동작 탐색 추천
+        </button>
       </div>
 
       {isLoading && (
@@ -888,7 +1005,7 @@ export function FreeAiAssistantPanel({
           data-testid="free-ai-loading-banner"
           aria-live="polite"
         >
-          초안을 준비하고 있습니다. 잠시만 기다려 주세요…
+          요청한 내용을 정리하고 있어요…
         </div>
       )}
       {errorBanner && (
@@ -1669,6 +1786,159 @@ export function FreeAiAssistantPanel({
                   워크벤치 수업안에 반영
                 </button>
               </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'exercise-search' && (
+        <div
+          role="tabpanel"
+          aria-label="동작 탐색 추천 패널"
+          className="free-ai-result-card"
+        >
+          <div className="free-ai-field">
+            <label htmlFor="free-ai-search-query">찾고 싶은 동작·움직임 설명</label>
+            <input
+              id="free-ai-search-query"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="예: 어깨 긴장을 낮추면서 코어와 골반 중립을 깨우는 동작"
+            />
+          </div>
+
+          <div className="free-ai-form-grid">
+            <div className="free-ai-field">
+              <label htmlFor="free-ai-search-apparatus">기구 조건</label>
+              <select
+                id="free-ai-search-apparatus"
+                value={searchApparatus}
+                onChange={(e) => setSearchApparatus(e.target.value as ApparatusType | 'mixed')}
+              >
+                {APPARATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="free-ai-field">
+              <label htmlFor="free-ai-search-level">최대 난이도</label>
+              <select
+                id="free-ai-search-level"
+                value={searchLevel}
+                onChange={(e) => setSearchLevel(e.target.value as DifficultyLevel)}
+              >
+                {LEVEL_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="free-ai-field">
+              <label htmlFor="free-ai-search-area">중점 부위</label>
+              <select
+                id="free-ai-search-area"
+                value={searchArea}
+                onChange={(e) => setSearchArea(e.target.value as StrengthenArea)}
+              >
+                {STRENGTHEN_AREA_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {searchHealthInspection.hasSensitiveData && (
+            <div className="free-ai-status-banner is-exhausted" role="alert">
+              {searchHealthInspection.warningMessageKo}
+            </div>
+          )}
+
+          <div className="free-ai-actions">
+            {!externalAiDisabledOrExhausted && (
+              <button
+                type="button"
+                className="free-ai-btn-primary"
+                disabled={
+                  isLoading ||
+                  externalAiDisabledOrExhausted ||
+                  searchHealthInspection.hasSensitiveData
+                }
+                onClick={() => runMovementSearch(false)}
+              >
+                AI로 동작 추천 받기
+              </button>
+            )}
+            <button
+              type="button"
+              className={
+                externalAiDisabledOrExhausted ? 'free-ai-btn-primary' : 'free-ai-btn-secondary'
+              }
+              disabled={isLoading}
+              onClick={() => runMovementSearch(true)}
+            >
+              동작 추천 받기
+            </button>
+          </div>
+
+          {searchResult && (
+            <div
+              className="free-ai-result-card"
+              aria-label="추천 동작 결과"
+              data-testid="movement-search-results"
+            >
+              <p className="free-ai-subtitle" style={{ margin: 0 }}>
+                {searchResult.querySummaryKo}
+              </p>
+
+              {searchResult.recommendations.length > 0 && (
+                <ol className="free-ai-step-list" aria-label="추천 동작 목록">
+                  {searchResult.recommendations.map((rec, idx) => (
+                    <li key={rec.exerciseId} className="free-ai-step-row">
+                      <div>
+                        <strong>
+                          {idx + 1}. {rec.nameKo}
+                        </strong>{' '}
+                        <small>
+                          ({rec.nameEn} · Lv.{rec.level} · {rec.springs})
+                        </small>
+                        <p className="free-ai-subtitle" style={{ margin: '4px 0 2px' }}>
+                          {rec.matchReasonKo}
+                        </p>
+                        <p className="free-ai-subtitle" style={{ margin: '2px 0' }}>
+                          큐잉 포인트: {rec.cueHighlightKo}
+                        </p>
+                        <p className="free-ai-subtitle" style={{ margin: '2px 0 0' }}>
+                          세팅 점검: {rec.setupCheckKo}
+                        </p>
+                      </div>
+                      <div className="free-ai-actions">
+                        <button
+                          type="button"
+                          className="free-ai-btn-primary"
+                          aria-label={`${rec.nameKo} 수업안에 추가`}
+                          onClick={() => {
+                            onAddExerciseToSequence?.(rec.exerciseId, rec.blockCategory);
+                            setAppliedToPlan(true);
+                            setActionFeedback(
+                              `'${rec.nameKo}' 동작을 현재 수업 시퀀스에 추가했습니다.`,
+                            );
+                          }}
+                        >
+                          수업안에 추가
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
+
+              <div className="free-ai-disclaimer">{searchResult.safetyDisclaimer}</div>
             </div>
           )}
         </div>

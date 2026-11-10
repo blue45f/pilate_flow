@@ -1,0 +1,129 @@
+.pf-journey-bar {
+  background: var(--pf-color-bg-surface, #fffef9);
+  border: 1px solid var(--pf-color-border-default, #d5ddd0);
+  border-radius: 14px;
+  padding: 8px 10px;
+  margin-bottom: 14px;
+}
+
+.pf-journey-bar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  align-items: center;
+}
+
+.pf-journey-bar__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pf-journey-bar__btn {
+  flex: 1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--pf-color-text-secondary, #3d4f45);
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.pf-journey-bar__btn:hover:not(:disabled) {
+  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+}
+
+.pf-journey-bar__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pf-journey-bar__btn.is-current {
+  background: var(--pf-color-action-primary, #173d34);
+  color: #ffffff;
+}
+
+.pf-journey-bar__btn.is-done {
+  background: var(--pf-color-ai-draft-bg, #eef2ea);
+  color: var(--pf-color-status-success-text, #254b29);
+}
+
+.pf-journey-bar__num {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: rgba(23, 61, 52, 0.1);
+}
+
+.pf-journey-bar__btn.is-current .pf-journey-bar__num {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.pf-journey-bar__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pf-journey-bar__text strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  word-break: keep-all;
+}
+
+.pf-journey-bar__text small {
+  font-size: 11.5px;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf-journey-bar__arrow {
+  color: var(--pf-color-text-muted, #526358);
+  flex-shrink: 0;
+}
+
+@media (max-width: 860px) {
+  .pf-journey-bar__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pf-journey-bar__arrow {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .pf-journey-bar {
+    padding: 6px;
+  }
+  .pf-journey-bar__btn {
+    padding: 6px 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-journey-bar__btn {
+    transition: none;
+  }
+}

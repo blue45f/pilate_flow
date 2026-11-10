@@ -636,7 +636,9 @@ describe('backend/freeAiService', () => {
 
         const result = await service.assist('instructor-1', request);
         expect(result.kind).toBe(task);
-        if (result.kind === 'movement-idea') throw new Error('Unexpected result kind');
+        if (result.kind === 'movement-idea' || result.kind === 'exercise-search') {
+          throw new Error('Unexpected result kind');
+        }
         expect(result.steps).toEqual([]);
         expect(result.guaranteesSafetyOrEffect).toBe(false);
         if (result.kind === 'sequence-compose') {
@@ -685,4 +687,152 @@ describe('backend/freeAiService', () => {
       expect(JSON.parse(byokRes.body).error).toBe('byok_forbidden');
     });
   });
+
+  describe('6. Server-Side OpenAI Provider & Exercise Search Assist', () => {
+    it('resolves openai provider from server OPENAI_API_KEY with gpt-4o-mini default and blocks disallowed models', () => {
+      const openaiDefault = resolveFreeAiConfig({
+        OPENAI_API_KEY: 'server-only-openai-secret',
+        OPENAI_ORG_ID: 'org-studio-test',
+        OPENAI_PROJECT_ID: 'proj-studio-test',
+      });
+      expect(openaiDefault.provider).toBe('openai');
+      expect(openaiDefault.model).toBe('gpt-4o-mini');
+      expect(openaiDefault.enabled).toBe(true);
+      expect(openaiDefault.reason).toBe('ready');
+      expect(openaiDefault.openAiOrgId).toBe('org-studio-test');
+      expect(openaiDefault.openAiProjectId).toBe('proj-studio-test');
+
+      const disallowedModel = resolveFreeAiConfig({
+        OPENAI_API_KEY: 'server-only-openai-secret',
+        OPENAI_MODEL: 'gpt-4-32k-expensive',
+      });
+      expect(disallowedModel.provider).toBe('openai');
+      expect(disallowedModel.enabled).toBe(false);
+      expect(disallowedModel.reason).toBe('invalid_paid_model_blocked');
+      expect(disallowedModel.apiKey).toBeNull();
+    });
+
+    it('executes exercise-search via OpenAI Chat Completions, filters to catalog IDs, and enforces non-medical disclaimers', async () => {
+      const fetchFn = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+        expect(String(url)).toBe('https://api.openai.com/v1/chat/completions');
+        const headers = init?.headers as Record<string, string>;
+        expect(headers.Authorization).toBe('Bearer server-only-openai-secret');
+        expect(headers['OpenAI-Organization']).toBe('org-studio-test');
+        const parsedBody = JSON.parse(String(init?.body));
+        expect(parsedBody.model).toBe('gpt-4o-mini');
+        expect(parsedBody.response_format).toEqual({ type: 'json_object' });
+        return makeOpenRouterSuccessResponse({
+          querySummaryKo: '골반 중립과 둔근 협응을 돕는 리포머 동작 2개를 추천합니다.',
+          recommendations: [
+            {
+              exerciseId: 'ex-footwork',
+              matchReasonKo: '발바닥 삼점 지지와 하지 정렬 인지에 적합합니다.',
+              cueHighlightKo: '뒤꿈치부터 좌골까지 길게 연결하세요.',
+              setupCheckKo: '리포머 2R 1B · 풋바 미드 세팅 확인',
+            },
+            {
+              exerciseId: 'hallucinated-id-999',
+              matchReasonKo: '카탈로그에 없는 동작은 제외되어야 합니다.',
+              cueHighlightKo: '제외 대상',
+              setupCheckKo: '제외 대상',
+            },
+          ],
+        });
+      });
+
+      const service = createFreeAiService({
+        env: {
+          OPENAI_API_KEY: 'server-only-openai-secret',
+          OPENAI_ORG_ID: 'org-studio-test',
+        },
+        fetchFn,
+      });
+
+      const result = await service.assist('instructor-1', {
+        task: 'exercise-search',
+        search: {
+          queryText: '골반 중립과 하체 정렬 워밍업',
+          apparatus: 'reformer',
+          level: '1.5',
+          strengthenArea: 'glute-lower',
+          maxResults: 4,
+        },
+        catalogCandidates: [
+          {
+            id: 'ex-footwork',
+            nameKo: '풋워크 패럴렐',
+            nameEn: 'Footwork Parallel',
+            apparatus: 'reformer',
+            blockCategory: 'footwork',
+            level: '1.0',
+            defaultDurationMin: 5,
+            springs: '2R 1B',
+            bodyPosition: 'supine',
+            targetMuscles: ['대퇴사두근', '둔근'],
+            cues: ['발바닥 삼점 지지 유지'],
+          },
+        ],
+      });
+
+      expect(result.kind).toBe('exercise-search');
+      expect(result.source).toBe('openai-api');
+      expect(result.provider).toBe('openai');
+      expect(result.guaranteesSafetyOrEffect).toBe(false);
+      expect(result.safetyDisclaimer).toBe(UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER);
+      if (result.kind === 'exercise-search') {
+        expect(result.recommendations).toHaveLength(1);
+        expect(result.recommendations[0].exerciseId).toBe('ex-footwork');
+      }
+    });
+
+    it('parses OpenAI x-ratelimit-reset-requests duration headers on 429 without auto-billing fallback', async () => {
+      const nowMs = Date.parse('2026-11-10T09:00:00.000Z');
+      const fetchFn = vi.fn(async () =>
+        new Response(JSON.stringify({ error: { message: 'Rate limit reached' } }), {
+          status: 429,
+          headers: {
+            'x-ratelimit-reset-requests': '2m30s',
+          },
+        }),
+      );
+
+      const service = createFreeAiService({
+        env: { OPENAI_API_KEY: 'server-only-openai-secret' },
+        fetchFn,
+        now: () => nowMs,
+      });
+
+      await expect(
+        service.assist('instructor-1', SAMPLE_MOVEMENT_IDEA_REQ),
+      ).rejects.toMatchObject({
+        code: 'free_quota_exhausted',
+        status: 429,
+        renewal: expect.objectContaining({
+          resetAt: '2026-11-10T09:02:30.000Z',
+          resetTimezone: 'UTC',
+        }),
+      });
+    });
+
+    it('blocks OpenAI project keys or VITE_OPENAI_API_KEY passed from client payloads', async () => {
+      const fetchFn = vi.fn();
+      const service = createFreeAiService({
+        env: { OPENAI_API_KEY: 'server-only-openai-secret' },
+        fetchFn,
+      });
+
+      const syntheticProjKey = ['sk', '-proj-', 'A'.repeat(28)].join('');
+      await expect(
+        service.assist('instructor-1', {
+          ...SAMPLE_MOVEMENT_IDEA_REQ,
+          openai_api_key: syntheticProjKey,
+        }),
+      ).rejects.toMatchObject({
+        code: 'byok_forbidden',
+        status: 400,
+      });
+      expect(fetchFn).not.toHaveBeenCalled();
+    });
+  });
 });
+

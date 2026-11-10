@@ -12,11 +12,13 @@ import type {
   ClassDraftConditionsInput,
   EditableClassDraftResult,
   EditableMovementIdeaResult,
+  EditableMovementSearchResult,
   EditableSequenceComposeResult,
   FreeAiAssistResult,
   FreeAiQuotaStatus,
   FreeAiRenewalInfo,
   MovementIdeaInput,
+  MovementSearchAssistInput,
   P1ReusableBlockContract,
   P1ReusableBlockStepContract,
   SequenceComposeInput,
@@ -26,6 +28,7 @@ import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import {
   buildLocalClassDraft,
   buildLocalMovementIdea,
+  buildLocalMovementSearchRecommendations,
   composeSequenceFromReviewedItems,
 } from '../utils/freeAiAssistantEngine';
 
@@ -73,7 +76,7 @@ export class FreeAiClientError extends Error {
 }
 
 const BROWSER_EXPOSED_KEY_NAME_REGEX =
-  /^(?:(?:VITE|PUBLIC|NEXT_PUBLIC|REACT_APP)_[A-Z0-9_]*(?:KEY|TOKEN|SECRET|GEMINI|OPENROUTER)[A-Z0-9_]*|GEMINI_API_KEY|OPENROUTER_API_KEY|API_KEY|OPENAI_API_KEY|BEARER_TOKEN|CLIENT_SECRET)$/i;
+  /^(?:(?:VITE|PUBLIC|NEXT_PUBLIC|REACT_APP)_[A-Z0-9_]*(?:KEY|TOKEN|SECRET|GEMINI|OPENROUTER|OPENAI)[A-Z0-9_]*|GEMINI_API_KEY|OPENROUTER_API_KEY|API_KEY|OPENAI_API_KEY|OPENAI_ORG_ID|BEARER_TOKEN|CLIENT_SECRET)$/i;
 
 /**
  * Verifies that no API keys or secrets are exposed in the browser environment record.
@@ -133,7 +136,7 @@ export function createDefaultFreeAiStatus(
     maxConcurrentRequests: 1,
     cacheEntries: 0,
     statusMessageKo:
-      '외부 무료 AI가 설정되지 않아 로컬 규칙 엔진·수동 편집·저장 프리셋 모드로 동작합니다.',
+      '서버 AI 키가 연결되어 있지 않아 기기 내 조건 추천·직접 편집·저장 프리셋 모드로 동작합니다.',
     renewal: null,
     ...overrides,
   };
@@ -160,15 +163,15 @@ function buildFallbackRenewalInfo(
     remainingSeconds,
     formattedResetKo: `갱신 예정: ${tzLabel} (${new Date(resetAtMs).toISOString()})`,
     policyNoteKo:
-      '무료 한도 소진 시 유료 모델로 자동 전환되지 않으며, 갱신 시각 이후 무료 호출이 재개됩니다.',
+      '한도 소진 시 사용자 동의 없는 유료 충전이나 과금 전환은 발생하지 않으며, 갱신 시각 이후 다시 사용할 수 있습니다.',
   };
 }
 
 function formatQuotaExhaustedMessage(renewal: FreeAiRenewalInfo | null): string {
   const renewalPart = renewal?.formattedResetKo
     ? ` ${renewal.formattedResetKo}.`
-    : ' 일일 또는 분당 무료 한도 갱신 시각 이후 다시 시도해 주세요.';
-  return `${FREE_QUOTA_EXHAUSTED_HEADING}: 현재 무료 AI 제공자 한도가 모두 소진되어 외부 AI 호출이 차단되었습니다.${renewalPart} 유료 전환 없이 로컬 추천 엔진·수동 편집·저장 프리셋은 계속 사용할 수 있습니다.`;
+    : ' 일일 또는 분당 호출 한도 갱신 시각 이후 다시 시도해 주세요.';
+  return `${FREE_QUOTA_EXHAUSTED_HEADING}: 현재 AI 호출 한도가 모두 소진되어 외부 AI 호출이 차단되었습니다.${renewalPart} 유료 자동 충전 없이 기기 내 조건 추천·직접 편집·저장 프리셋은 계속 사용할 수 있습니다.`;
 }
 
 function stableJsonKey(value: unknown): string {
@@ -277,8 +280,6 @@ function extractErrorDetails(cause: unknown): {
           ? errObj.statusCode
           : undefined;
 
-  // Only the explicit local-adapter contract is a known configuration absence.
-  // Network/auth/server failures must remain errors, not be relabeled as offline success.
   const isLocalSdkUnavailable =
     code === 'local_api_unavailable' ||
     (code === undefined &&
@@ -329,7 +330,7 @@ function createDefaultAppDeployTransport(): FreeAiTransport {
       const status = parseQuotaStatusPayload(
         data,
         createDefaultFreeAiStatus({
-          provider: 'gemini-free',
+          provider: 'openai',
           enabled: true,
           exhausted: false,
           reason: 'ready',
@@ -358,6 +359,22 @@ function toReviewedExerciseCandidates(exercises: readonly PilatesExercise[]) {
       spinalPlanes: ex.spinalPlanes.slice(0, 5),
       isReviewed: true as const,
     }));
+}
+
+function toCatalogSearchCandidates(exercises: readonly PilatesExercise[]) {
+  return exercises.slice(0, 100).map((ex) => ({
+    id: ex.id.slice(0, 120),
+    nameKo: ex.nameKo.slice(0, 160),
+    nameEn: ex.nameEn.slice(0, 160),
+    apparatus: ex.apparatus,
+    blockCategory: ex.blockCategory,
+    level: ex.level,
+    defaultDurationMin: Math.min(30, Math.max(0.5, ex.defaultDurationMin)),
+    springs: (ex.springs || '').slice(0, 160),
+    bodyPosition: ex.bodyPosition,
+    targetMuscles: ex.targetMuscles.slice(0, 8).map((m) => m.slice(0, 80)),
+    cues: ex.cues.slice(0, 4).map((c) => c.slice(0, 240)),
+  }));
 }
 
 function toReviewedBlockCandidates(
@@ -396,7 +413,6 @@ function toReviewedBlockCandidates(
               Math.max(0.5, step.durationMin ?? ex?.defaultDurationMin ?? 4),
             ),
             selectedLayer: step.selectedLayer ?? defaultLayer,
-            // Instructor notes remain local, even on explicitly selected blocks.
           };
         });
 
@@ -604,7 +620,6 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
     }
 
     const serverRequest = params.buildServerRequest();
-    // Inspect the complete minimized payload at the last boundary before transport.
     guardByokAndEnv(serverRequest);
     guardSensitiveHealthForExternalAi(serverRequest);
     activeRequests += 1;
@@ -654,8 +669,6 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
           renewal,
           statusMessageKo: formatQuotaExhaustedMessage(renewal),
         };
-        // The successful result consumed the final available request. Preserve it;
-        // the exhausted status blocks only subsequent external requests.
       }
 
       const normalizedResult: T = {
@@ -771,7 +784,7 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
       throw new FreeAiClientError(
         'request_failed',
         details.message ??
-          '외부 무료 AI 요청 처리에 실패했습니다. 로컬 추천 엔진이나 수동 편집을 이용해 주세요.',
+          'AI 요청을 처리하지 못했습니다. 기기 내 조건 추천이나 직접 편집을 이용해 주세요.',
         syncStatusCounters(),
         currentStatus.renewal,
       );
@@ -843,7 +856,7 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
         }
         throw new FreeAiClientError(
           'request_failed',
-          details.message ?? '무료 AI 상태 조회에 실패했습니다.',
+          details.message ?? 'AI 상태 조회에 실패했습니다.',
           syncStatusCounters(),
           currentStatus.renewal,
         );
@@ -914,6 +927,44 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
       });
     },
 
+    async requestMovementSearch(
+      input: MovementSearchAssistInput,
+      exercises: readonly PilatesExercise[],
+      requestOptions?: { preferLocalOnly?: boolean },
+    ): Promise<{
+      result: EditableMovementSearchResult;
+      status: FreeAiQuotaStatus;
+      usedLocalFallback: boolean;
+    }> {
+      guardByokAndEnv(input);
+      if (!requestOptions?.preferLocalOnly) {
+        guardSensitiveHealthForExternalAi(input);
+      }
+
+      const catalogCandidates = toCatalogSearchCandidates(
+        exercises.filter(
+          (exercise) =>
+            (input.apparatus === 'mixed' || exercise.apparatus === input.apparatus) &&
+            Number(exercise.level) <= Number(input.level),
+        ),
+      );
+
+      return executeExternalOrFallback<EditableMovementSearchResult>({
+        task: 'exercise-search',
+        cachePayload: {
+          search: input,
+          catalogCandidates,
+        },
+        buildServerRequest: () => ({
+          task: 'exercise-search',
+          search: input,
+          catalogCandidates,
+        }),
+        runLocalFallback: () => buildLocalMovementSearchRecommendations(input, exercises),
+        preferLocalOnly: requestOptions?.preferLocalOnly,
+      });
+    },
+
     async requestSequenceCompose(
       input: SequenceComposeInput,
       exercises: readonly PilatesExercise[],
@@ -957,7 +1008,6 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
       });
 
       if (!response.usedLocalFallback) {
-        // Ensure client-side unreviewed exclusion invariants are strictly enforced on external results too
         const localAudit = composeSequenceFromReviewedItems(input, exercises, reusableBlocks);
         const allowedExerciseIds = new Set(localAudit.steps.map((s) => s.exerciseId));
         const filteredSteps = response.result.steps

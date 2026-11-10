@@ -32,12 +32,6 @@ export const UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER =
 
 export const FREE_QUOTA_EXHAUSTED_HEADING = '무료 사용량 소진' as const;
 
-/**
- * Official Google Gemini API Free Tier models (Unpaid project without Cloud Billing, verified Oct/Nov 2026).
- * - Current standard free-tier text models: `gemini-3.8-flash` and `gemini-3.5-flash-lite` (plus active free-tier text models `gemini-3.1-flash-lite`, `gemini-2.5-flash-lite`, `gemini-2.5-flash`).
- * - Shut down on June 1, 2026 (must be rejected): `gemini-2.0-flash`, `gemini-2.0-flash-lite`.
- * - Paid-only models/features (must be rejected): `gemini-4-argon`, `gemini-3.8-pro`, `gemini-3.1-pro-preview`, image models, and Search/Maps grounding.
- */
 export const GEMINI_FREE_TIER_MODELS = [
   'gemini-3.8-flash',
   'gemini-3.5-flash-lite',
@@ -47,6 +41,24 @@ export const GEMINI_FREE_TIER_MODELS = [
 ] as const;
 
 export type GeminiFreeTierModel = (typeof GEMINI_FREE_TIER_MODELS)[number];
+
+export const OPENAI_ALLOWED_MODELS = [
+  'gpt-4o-mini',
+  'gpt-4.1-mini',
+  'gpt-4.1-nano',
+  'gpt-4o',
+] as const;
+
+export type OpenAiAllowedModel = (typeof OPENAI_ALLOWED_MODELS)[number];
+
+export function isAllowedOpenAiModel(model: string): boolean {
+  const normalized = model.trim();
+  if (!normalized || normalized.length > 80) return false;
+  return (
+    (OPENAI_ALLOWED_MODELS as readonly string[]).includes(normalized) ||
+    /^gpt-(?:4o|4\.1|5)(?:-[a-z0-9._-]+)?$/i.test(normalized)
+  );
+}
 
 /**
  * Checks whether a Gemini model ID is guaranteed to be eligible on an Unpaid Free Tier project.
@@ -72,12 +84,12 @@ export function isGuaranteedFreeOpenRouterModel(model: string): boolean {
  * User BYOK input and browser key exposure are strictly prohibited.
  */
 const FORBIDDEN_SECRET_FIELD_PATTERN =
-  /^(?:api[_-]?key|gemini[_-]?api[_-]?key|openrouter[_-]?api[_-]?key|client[_-]?secret|bearer[_-]?token|authorization|x[_-]?api[_-]?key|byok|user[_-]?api[_-]?key|secret[_-]?key)$/i;
+  /^(?:api[_-]?key|openai[_-]?api[_-]?key|openai[_-]?org[_-]?id|openai[_-]?project[_-]?id|gemini[_-]?api[_-]?key|openrouter[_-]?api[_-]?key|client[_-]?secret|bearer[_-]?token|authorization|x[_-]?api[_-]?key|byok|user[_-]?api[_-]?key|secret[_-]?key)$/i;
 
 const FORBIDDEN_SECRET_VALUE_PATTERNS = [
   /\bAIza[0-9A-Za-z_-]{20,}\b/, // Google API key pattern
   /\bsk-or-v1-[0-9a-fA-F]{16,}\b/, // OpenRouter API key pattern
-  /\bsk-[0-9A-Za-z_-]{20,}\b/, // Generic OpenAI-style key pattern
+  /\bsk-(?:proj-|svcacct-)?[0-9A-Za-z_-]{20,}\b/, // OpenAI / generic sk- key pattern
 ];
 
 export interface SecretExposureCheckResult {
@@ -106,7 +118,10 @@ export function detectByokOrSecretExposure(input: unknown): SecretExposureCheckR
     if (typeof value === 'object') {
       for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
         const nextPath = path ? `${path}.${key}` : key;
-        if (FORBIDDEN_SECRET_FIELD_PATTERN.test(key) || /^VITE_.*(?:KEY|TOKEN|SECRET)/i.test(key)) {
+        if (
+          FORBIDDEN_SECRET_FIELD_PATTERN.test(key) ||
+          /^VITE_.*(?:KEY|TOKEN|SECRET|OPENAI)/i.test(key)
+        ) {
           violations.push(
             `${nextPath}: 사용자 API 키(BYOK) 입력 또는 브라우저 키 노출 필드는 허용되지 않습니다.`,
           );
@@ -134,7 +149,8 @@ export function stripForbiddenKeyFields<T extends Record<string, unknown>>(recor
       Object.entries(value)
         .filter(
           ([key]) =>
-            !FORBIDDEN_SECRET_FIELD_PATTERN.test(key) && !/^VITE_.*(?:KEY|TOKEN|SECRET)/i.test(key),
+            !FORBIDDEN_SECRET_FIELD_PATTERN.test(key) &&
+            !/^VITE_.*(?:KEY|TOKEN|SECRET|OPENAI)/i.test(key),
         )
         .map(([key, child]) => [key, strip(child)]),
     );
@@ -157,7 +173,6 @@ export function inspectPayloadForSensitiveHealth(payload: unknown): SensitiveHea
     }
     if (typeof value === 'object') {
       for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
-        // Explicitly flag forbidden raw health/member note fields if passed
         if (
           /^(?:memberHealthNotes|medicalHistory|patientNotes|diagnosis|instructorReflection|groupNotes)$/i.test(
             key,
@@ -228,6 +243,22 @@ export const reviewedExerciseCandidateSchema = z
   })
   .strict();
 
+export const catalogSearchCandidateSchema = z
+  .object({
+    id: textSchema.min(1).max(120),
+    nameKo: textSchema.min(1).max(160),
+    nameEn: textSchema.max(160),
+    apparatus: apparatusSchema,
+    blockCategory: blockCategorySchema,
+    level: levelSchema,
+    defaultDurationMin: z.number().finite().min(0.5).max(30),
+    springs: textSchema.max(160).default(''),
+    bodyPosition: bodyPositionSchema.optional(),
+    targetMuscles: z.array(textSchema.max(80)).max(8).optional(),
+    cues: z.array(textSchema.max(240)).max(4).optional(),
+  })
+  .strict();
+
 export const reviewedBlockCandidateSchema = z
   .object({
     id: textSchema.min(1).max(120),
@@ -269,6 +300,16 @@ export const sequenceComposeInputSchema = z
   })
   .strict();
 
+export const movementSearchInputSchema = z
+  .object({
+    queryText: textSchema.min(2, '찾고 싶은 동작 상황을 2자 이상 입력해 주세요.').max(300),
+    apparatus: z.union([apparatusSchema, z.literal('mixed')]),
+    level: levelSchema,
+    strengthenArea: strengthenAreaSchema.optional(),
+    maxResults: z.number().int().min(1).max(8).optional(),
+  })
+  .strict();
+
 export const freeAiServerRequestSchema = z
   .discriminatedUnion('task', [
     z
@@ -292,6 +333,13 @@ export const freeAiServerRequestSchema = z
         reviewedBlocks: z.array(reviewedBlockCandidateSchema).max(30).optional(),
       })
       .strict(),
+    z
+      .object({
+        task: z.literal('exercise-search'),
+        search: movementSearchInputSchema,
+        catalogCandidates: z.array(catalogSearchCandidateSchema).max(100),
+      })
+      .strict(),
   ])
   .superRefine((value, ctx) => {
     const secretCheck = detectByokOrSecretExposure(value);
@@ -309,12 +357,15 @@ export const freeAiServerRequestSchema = z
         code: z.ZodIssueCode.custom,
         message:
           healthCheck.warningMessageKo ??
-          '민감 건강·개인정보는 무료 외부 AI로 전송할 수 없습니다.',
+          '민감 건강·개인정보는 외부 AI로 전송할 수 없습니다.',
       });
     }
   });
 
 export type FreeAiServerRequest = z.infer<typeof freeAiServerRequestSchema>;
+
+const aiResultSourceSchema = z.enum(['openai-api', 'external-free-ai', 'local-rule-engine']);
+const aiProviderIdSchema = z.enum(['openai', 'gemini-free', 'openrouter-free', 'none']);
 
 export const editableDraftStepSchema = z.object({
   stepId: textSchema.min(1).max(120),
@@ -333,8 +384,8 @@ export const editableDraftStepSchema = z.object({
 
 export const editableClassDraftResultSchema = z.object({
   kind: z.literal('class-draft'),
-  source: z.enum(['external-free-ai', 'local-rule-engine']),
-  provider: z.enum(['gemini-free', 'openrouter-free', 'none']),
+  source: aiResultSourceSchema,
+  provider: aiProviderIdSchema,
   model: z.string().nullable(),
   cached: z.boolean(),
   title: textSchema.min(1).max(150),
@@ -358,8 +409,8 @@ export const editableClassDraftResultSchema = z.object({
 
 export const editableMovementIdeaResultSchema = z.object({
   kind: z.literal('movement-idea'),
-  source: z.enum(['external-free-ai', 'local-rule-engine']),
-  provider: z.enum(['gemini-free', 'openrouter-free', 'none']),
+  source: aiResultSourceSchema,
+  provider: aiProviderIdSchema,
   model: z.string().nullable(),
   cached: z.boolean(),
   nameKo: textSchema.min(2).max(160),
@@ -389,8 +440,8 @@ export const editableMovementIdeaResultSchema = z.object({
 
 export const editableSequenceComposeResultSchema = z.object({
   kind: z.literal('sequence-compose'),
-  source: z.enum(['external-free-ai', 'local-rule-engine']),
-  provider: z.enum(['gemini-free', 'openrouter-free', 'none']),
+  source: aiResultSourceSchema,
+  provider: aiProviderIdSchema,
   model: z.string().nullable(),
   cached: z.boolean(),
   title: textSchema.min(1).max(150),
@@ -405,8 +456,35 @@ export const editableSequenceComposeResultSchema = z.object({
   safetyDisclaimer: textSchema.min(10),
 });
 
+export const movementSearchRecommendationItemSchema = z.object({
+  exerciseId: textSchema.min(1).max(120),
+  nameKo: textSchema.min(1).max(160),
+  nameEn: textSchema.max(160),
+  apparatus: apparatusSchema,
+  blockCategory: blockCategorySchema,
+  level: levelSchema,
+  defaultDurationMin: z.number().finite().min(0.5).max(30),
+  springs: textSchema.max(160),
+  matchReasonKo: textSchema.min(2).max(300),
+  cueHighlightKo: textSchema.min(2).max(300),
+  setupCheckKo: textSchema.min(2).max(300),
+});
+
+export const editableMovementSearchResultSchema = z.object({
+  kind: z.literal('exercise-search'),
+  source: aiResultSourceSchema,
+  provider: aiProviderIdSchema,
+  model: z.string().nullable(),
+  cached: z.boolean(),
+  querySummaryKo: textSchema.min(2).max(300),
+  recommendations: z.array(movementSearchRecommendationItemSchema).max(8),
+  guaranteesSafetyOrEffect: z.literal(false),
+  safetyDisclaimer: textSchema.min(10),
+});
+
 export const freeAiAssistResultSchema = z.discriminatedUnion('kind', [
   editableClassDraftResultSchema,
   editableMovementIdeaResultSchema,
   editableSequenceComposeResultSchema,
+  editableMovementSearchResultSchema,
 ]);

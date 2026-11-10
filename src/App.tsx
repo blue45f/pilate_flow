@@ -24,6 +24,8 @@ import { MovementIdeaSheet } from './components/MovementIdeaSheet';
 import { InventoryPanel } from './components/InventoryPanel';
 import { DeferredPanelBoundary } from './components/DeferredPanelBoundary';
 import { InstructorStudyBoundary } from './components/InstructorStudyBoundary';
+import { StudioJourneyBar } from './components/StudioJourneyBar';
+import { MemberBookingView } from './components/MemberBookingView';
 import { type ActiveWorkspaceTab, usePilatesStore } from './store/usePilatesStore';
 import type { PilatesExercise, PropType } from './types/pilates';
 import type { MotionDraftId } from './models/types';
@@ -33,7 +35,10 @@ import {
   formatScheduleTime,
   localScheduleDate,
 } from './utils/instructorSchedule';
+import { isRestStep } from './utils/sequenceEngine';
+import { buildSequenceSimulation } from './utils/sequenceSimulation';
 import './styles/controls.css';
+import './styles/member-booking.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
 import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 
@@ -173,8 +178,22 @@ export function App() {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('pf_mc_preview') === '1';
   });
+  const [portalRole, setPortalRole] = useState<'instructor' | 'member'>('instructor');
   const [menuOpen, setMenuOpen] = useState(false);
   const [workspaceFocusRequest, setWorkspaceFocusRequest] = useState(0);
+  const nonRestStepCount = useMemo(
+    () => state.activeSteps.filter((step) => !isRestStep(step)).length,
+    [state.activeSteps],
+  );
+  const canStartLiveStage = useMemo(
+    () =>
+      buildSequenceSimulation(
+        state.activeSteps,
+        state.exercises,
+        state.activeTargetMinutes,
+      ).gate.canRehearse,
+    [state.activeSteps, state.exercises, state.activeTargetMinutes],
+  );
   const [logId, setLogId] = useState<string | null>(null);
   const [logContext, setLogContext] = useState<TeachingLogContext | undefined>();
   const [backupMessage, setBackupMessage] = useState('');
@@ -219,6 +238,7 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [state.activeTab]);
   const commitTabChange = (tab: ActiveWorkspaceTab) => {
+    setPortalRole('instructor');
     state.setActiveTab(tab);
     setMenuOpen(false);
     setWorkspaceFocusRequest((value) => value + 1);
@@ -391,6 +411,17 @@ export function App() {
         >
           <BookOpen size={19} aria-hidden="true" /> 사용법·연습실
         </button>
+        <button
+          type="button"
+          className="sidebar-study-link"
+          onClick={() => {
+            setMenuOpen(false);
+            setPortalRole((prev) => (prev === 'member' ? 'instructor' : 'member'));
+          }}
+        >
+          <CalendarDays size={18} aria-hidden="true" />{' '}
+          {portalRole === 'member' ? '강사 작업실로 전환' : '회원 예약 화면 보기'}
+        </button>
         <button className="pwa-sidebar-button" type="button" onClick={() => setInstallOpen(true)}>
           <ArrowDownToLine size={18} aria-hidden="true" /> 앱 설치
         </button>
@@ -423,16 +454,43 @@ export function App() {
           </div>
           <div className="breadcrumb">
             나의 스튜디오 <span>/</span>{' '}
-            {state.activeTab === 'stage'
-              ? '수업 진행'
-              : navigation.find((item) => item.id === state.activeTab)?.detail}
+            {portalRole === 'member'
+              ? '회원 수업 예약·수강권'
+              : state.activeTab === 'stage'
+                ? '수업 진행'
+                : navigation.find((item) => item.id === state.activeTab)?.detail}
           </div>
           <div className="topbar-actions">
+            {state.activeTab !== 'stage' && (
+              <div
+                className="pf-role-switcher"
+                role="group"
+                aria-label="이용자 화면 전환"
+                data-testid="portal-role-switcher"
+              >
+                <button
+                  type="button"
+                  className="pf-role-switcher__btn"
+                  aria-pressed={portalRole === 'instructor'}
+                  onClick={() => setPortalRole('instructor')}
+                >
+                  강사 작업실
+                </button>
+                <button
+                  type="button"
+                  className="pf-role-switcher__btn"
+                  aria-pressed={portalRole === 'member'}
+                  onClick={() => setPortalRole('member')}
+                >
+                  회원 예약
+                </button>
+              </div>
+            )}
             <span className="local-state">
               <i />
               개인 작업 공간
             </span>
-            {state.activeTab !== 'stage' && (
+            {portalRole === 'instructor' && state.activeTab !== 'stage' && (
               <button
                 type="button"
                 className="app-create-movement"
@@ -461,7 +519,22 @@ export function App() {
               </button>
             </p>
           )}
-          {state.activeTab === 'workbench' && (
+          {portalRole === 'member' ? (
+            <MemberBookingView onSwitchToInstructor={() => setPortalRole('instructor')} />
+          ) : (
+            <>
+              {state.activeTab !== 'stage' && state.activeTab !== 'schedule' && (
+                <StudioJourneyBar
+                  activeTab={state.activeTab}
+                  exerciseCount={state.exercises.length}
+                  stepCount={nonRestStepCount}
+                  targetMinutes={state.activeTargetMinutes}
+                  historyCount={state.historyLogs.length}
+                  canStartStage={canStartLiveStage}
+                  onSelectStep={changeTab}
+                />
+              )}
+              {state.activeTab === 'workbench' && (
             <SequenceWorkbench
               planningMode={planningMode}
               onPlanningModeChange={setPlanningMode}
@@ -532,15 +605,17 @@ export function App() {
               <details>
                 <summary>자료·모션의 검토 상태 안내</summary>
                 <p>
-                  검토 기록은 선택 사항입니다. 자료를 추가하거나 수업을 구성하는 데 필요하지
-                  않습니다. 실제 수행 전 몸 상태와 기구 설정을 확인하세요. 검토 기록은 자격 인증이나
-                  개인별 운동 적합성 보장이 아닙니다.
+                  검토 기록은 선택 사항이며, 없어도 수업을 구성할 수 있습니다. 진행 전 대상자 컨디션과
+                  기구·스프링 장력을 직접 확인하세요. 검토 여부나 AI 제안은 의학적 판단·운동 적합성 보장이
+                  아닙니다.
                 </p>
                 <button className="text-button" onClick={() => changeTab('atlas')}>
                   동작 자료·기록 보기
                 </button>
               </details>
             </aside>
+          )}
+            </>
           )}
         </main>
         <footer className="app-footer">
@@ -736,15 +811,15 @@ export function App() {
           )}
         </section>
         <section className="settings-section">
-          <h3>추천과 동작 자료에 관하여</h3>
+          <h3>추천·AI 보조와 동작 자료 안내</h3>
           <p>
-            현재 추천은 기구·시간·난이도·목표와 수업 이력을 이용한 조건 기반 조합입니다. 외부 AI는
-            연결되어 있지 않습니다. 설명과 그림은 수업 계획을 위한 참고 자료이며, 자세나 운동
-            안전성을 검증한 시범이 아닙니다.
+            기본 추천은 기구·시간·난이도·이력을 바탕으로 이 기기에서 바로 조합됩니다. 서버 측 로컬
+            환경변수(OPENAI_API_KEY)가 설정된 환경에서만 서버 보조 추천이 활성화되며, 키는 브라우저·로그·저장소에
+            노출되지 않고 동의 없는 유료 충전도 발생하지 않습니다.
           </p>
           <p>
-            수업 전 강사가 대상자의 상태, 동작과 스프링을 검토해 주세요. 통증이 있으면 중단하고
-            적절한 전문가에게 확인하세요. YouTube는 원본 링크와 공식 플레이어로만 열립니다.
+            모든 추천·도해·창작 메모는 수업 준비 참고 자료이며 의학적 진단이나 치료·안전성을 보장하지
+            않습니다. 수업 전 강사가 대상자 컨디션과 스프링 장력을 직접 확인하고, 통증 발생 시 즉시 중단하세요.
           </p>
         </section>
         <details className="settings-section safety-notes">

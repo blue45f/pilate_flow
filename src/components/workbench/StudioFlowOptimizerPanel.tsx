@@ -118,13 +118,13 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
     <section
       className="pf-card pf-studio-optimizer"
       data-testid="studio-flow-optimizer-panel"
-      aria-label="동선 최적화·맞춤 레이어·에너지 곡선·Verify AI·5대 수업 각도 도구"
+      aria-label="기구 전환·난이도 정돈 및 수업 테마 도구"
     >
       <div className="pf-studio-optimizer__header">
         <div className="pf-studio-optimizer__copy">
           <div className="pf-studio-optimizer__title-row">
             <strong className="pf-studio-optimizer__title">
-              스튜디오 동선 최적화 · 관찰 맞춤 레이어 · RPE 에너지 곡선 · Verify AI · 5대 테마 각도
+              기구 전환·난이도 정돈 및 수업 테마 제안
             </strong>
             <PfAiStatusBadge
               kind={safetyReport.allPassed ? 'auto-draft' : 'review-pending'}
