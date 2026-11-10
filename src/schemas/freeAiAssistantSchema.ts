@@ -56,7 +56,7 @@ export function isAllowedOpenAiModel(model: string): boolean {
   if (!normalized || normalized.length > 80) return false;
   return (
     (OPENAI_ALLOWED_MODELS as readonly string[]).includes(normalized) ||
-    /^gpt-(?:4o|4\.1|5)(?:-[a-z0-9._-]+)?$/i.test(normalized)
+    /^gpt-(?:4o-mini|4\.1-mini|4\.1-nano|4o)-\d{4}-\d{2}-\d{2}$/i.test(normalized)
   );
 }
 
@@ -357,7 +357,7 @@ export const freeAiServerRequestSchema = z
         code: z.ZodIssueCode.custom,
         message:
           healthCheck.warningMessageKo ??
-          '민감 건강·개인정보는 외부 AI로 전송할 수 없습니다.',
+          '민감 건강·개인정보는 무료 외부 AI로 전송할 수 없습니다.',
       });
     }
   });

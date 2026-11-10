@@ -49,7 +49,7 @@ export function isAllowedOpenAiModel(model: string): boolean {
   if (!normalized || normalized.length > 80) return false;
   return (
     (OPENAI_ALLOWED_MODELS as readonly string[]).includes(normalized) ||
-    /^gpt-(?:4o|4\.1|5)(?:-[a-z0-9._-]+)?$/i.test(normalized)
+    /^gpt-(?:4o-mini|4\.1-mini|4\.1-nano|4o)-\d{4}-\d{2}-\d{2}$/i.test(normalized)
   );
 }
 
@@ -585,6 +585,8 @@ export interface ResolvedFreeAiConfig {
   apiKey: string | null;
   orgId?: string | null;
   projectId?: string | null;
+  openAiOrgId?: string | null;
+  openAiProjectId?: string | null;
   enabled: boolean;
   reason:
     | 'ready'
@@ -657,6 +659,8 @@ export function resolveFreeAiConfig(
       apiKey: openAiKey,
       orgId: openAiOrgId,
       projectId: openAiProjectId,
+      openAiOrgId,
+      openAiProjectId,
       enabled: true,
       reason: 'ready',
       statusMessageKo: `OpenAI 서버 보조(${openAiModel}) 연결됨 · 서버 환경변수 전용 보호 및 사용량 제한 적용`,
@@ -1544,8 +1548,10 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
         'Content-Type': 'application/json',
         Authorization: `Bearer ${config.apiKey!}`,
       };
-      if (config.orgId) headers['OpenAI-Organization'] = config.orgId;
-      if (config.projectId) headers['OpenAI-Project'] = config.projectId;
+      const orgHeader = config.openAiOrgId ?? config.orgId;
+      const projectHeader = config.openAiProjectId ?? config.projectId;
+      if (orgHeader) headers['OpenAI-Organization'] = orgHeader;
+      if (projectHeader) headers['OpenAI-Project'] = projectHeader;
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -1762,12 +1768,26 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
       activePerUser.set(normalizedUserKey, userActiveCount + 1);
       minuteUsed += 1;
       dailyUsed += 1;
+      const reservedMinuteWindow = minuteWindowResetMs;
+      const reservedDailyWindow = dailyWindowResetMs;
+      let quotaRolledBack = false;
+      const rollbackReservedQuota = () => {
+        if (quotaRolledBack) return;
+        quotaRolledBack = true;
+        if (minuteWindowResetMs === reservedMinuteWindow && minuteUsed > 0) {
+          minuteUsed -= 1;
+        }
+        if (dailyWindowResetMs === reservedDailyWindow && dailyUsed > 0) {
+          dailyUsed -= 1;
+        }
+      };
 
       try {
         let response: Response;
         try {
           response = await callUpstreamFreeProvider(config, parsed.data);
         } catch (cause) {
+          rollbackReservedQuota();
           if (cause instanceof FreeAiError) throw cause;
           throw new FreeAiError(
             'upstream_error',
@@ -1803,6 +1823,7 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
         }
 
         if (!response.ok) {
+          rollbackReservedQuota();
           throw new FreeAiError(
             'upstream_error',
             `외부 AI 서비스가 오류 상태(${response.status})를 반환했습니다. 자동 유료 충전이나 대체 호출 없이 중단했으며 기기 내 조건 추천을 사용할 수 있습니다.`,
@@ -1815,6 +1836,7 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
         try {
           payload = await response.json();
         } catch {
+          rollbackReservedQuota();
           throw new FreeAiError(
             'invalid_ai_response',
             '외부 AI 응답을 읽지 못했습니다. 기기 내 조건 추천이나 직접 편집을 이용해 주세요.',
@@ -1831,6 +1853,7 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
             config,
           );
         } catch {
+          rollbackReservedQuota();
           throw new FreeAiError(
             'invalid_ai_response',
             '외부 AI 응답이 안전·비의료 검증 기준을 통과하지 못했습니다. 기기 내 조건 추천이나 직접 편집을 이용해 주세요.',

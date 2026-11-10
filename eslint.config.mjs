@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'node_modules'] },
+  { ignores: ['dist', 'coverage', 'node_modules', '.deploy-runtime', '.firebase'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -21,7 +21,24 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': [
         'warn',
-        { allowConstantExport: true, allowExportNames: ['BATCH_FIGURE_TITLES'] },
+        {
+          allowConstantExport: true,
+          allowExportNames: [
+            'BATCH_FIGURE_TITLES',
+            'ATLAS_DISCOVERY_RECOVERY_KEY',
+            'WORKBENCH_PREP_RECOVERY_KEY',
+            'YT_PREVIEW_EDIT_DRAFT_STORAGE_KEY',
+            'buildIntegrationCallSnapshot',
+            'mountMotionCoveragePreviewHarness',
+            'getUpperBodyArmDiagramCorrections',
+            'resolveUpperBodyArmDiagram',
+            'resolveCoreAbdominalDiagram',
+            'resolveBreathingPelvicDiagram',
+            'getLateralAndApparatusDiagramCorrections',
+            'resolveLateralAndApparatusDiagram',
+            'resolveFootworkLowerDiagram',
+          ],
+        },
       ],
     },
   },

@@ -1300,7 +1300,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   >
                     <option value="all">전체 검토 상태</option>
                     <option value="approved">내 검토 기록 있음 · 자격 인증 미확인</option>
-                    <option value="pending">검토 전 · 사용 금지</option>
+                    <option value="pending">내 검토 전 · 직접 구성 가능 (자동 추천 제외)</option>
                     <option value="stale">정보 변경 · 재검토 필요</option>
                   </select>
                 </label>
@@ -1979,8 +1979,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
           <details className="ml-review-details">
             <summary>검토와 수업 사용 기준</summary>
             <p>
-              동작·설정·시간·큐를 실제로 확인한 강사의 검토 기록이 있는 항목만 자동 편성·수업 진행에
-              사용할 수 있습니다. 현재 내 강사 검토{' '}
+              교차 검증된 기본 동작은 검토 기록 전에도 직접 수업안에 담아 진행할 수 있으며, 자동 추천·AI
+              초안 구성에는 내 강사 검토 기록이 있는 항목만 사용됩니다. 현재 내 강사 검토{' '}
               {exercises.filter(isExerciseAutoEligible).length}개 / {exercises.length}개 · 자격 인증
               미확인.
             </p>

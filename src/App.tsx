@@ -12,6 +12,7 @@ import {
   Menu,
   Settings2,
   Sparkles,
+  Ticket,
   X,
 } from 'lucide-react';
 import type { TeachingLogContext } from './components/LogSessionModal';
@@ -180,6 +181,7 @@ export function App() {
     return new URLSearchParams(window.location.search).get('pf_mc_preview') === '1';
   });
   const [portalRole, setPortalRole] = useState<'instructor' | 'member'>('instructor');
+  const [memberSection, setMemberSection] = useState<'schedule' | 'bookings' | 'wallet'>('schedule');
   const [menuOpen, setMenuOpen] = useState(false);
   const [workspaceFocusRequest, setWorkspaceFocusRequest] = useState(0);
   const nonRestStepCount = useMemo(
@@ -244,6 +246,21 @@ export function App() {
     setMenuOpen(false);
     setWorkspaceFocusRequest((value) => value + 1);
     window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+  const focusMemberSection = (section: 'schedule' | 'bookings' | 'wallet') => {
+    setPortalRole('member');
+    setMemberSection(section);
+    setMenuOpen(false);
+    requestAnimationFrame(() => {
+      const targetId =
+        section === 'wallet'
+          ? 'member-wallet-section'
+          : section === 'bookings'
+            ? 'member-bookings-section'
+            : 'member-schedule-section';
+      const el = document.getElementById(targetId) ?? document.getElementById('workspace-main-heading');
+      el?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    });
   };
   const changeTab = (tab: ActiveWorkspaceTab) => {
     if (
@@ -342,9 +359,13 @@ export function App() {
           href="#"
           onClick={(event) => {
             event.preventDefault();
+            if (portalRole === 'member') {
+              focusMemberSection('schedule');
+              return;
+            }
             changeTab('workbench');
           }}
-          aria-label="Flow Atelier 계획으로"
+          aria-label={portalRole === 'member' ? 'Flow Atelier 회원 예약으로' : 'Flow Atelier 계획으로'}
         >
           <Leaf size={30} strokeWidth={1.3} />
           <span>
@@ -358,60 +379,97 @@ export function App() {
         >
           <X size={20} />
         </button>
-        <p className="sidebar-label">MY STUDIO</p>
-        <nav className="desktop-nav" aria-label="주 메뉴">
-          {navigation.map(({ id, detail, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => changeTab(id)}
-              aria-current={state.activeTab === id ? 'page' : undefined}
-              className={state.activeTab === id ? 'active' : ''}
-            >
-              <Icon size={20} strokeWidth={1.6} />
-              {detail}
-              {id === 'atlas' && <small>{state.exercises.length}</small>}
-            </button>
-          ))}
-        </nav>
-        <section className="v2-sidebar-upcoming" aria-label="다가오는 수업">
-          <h2>다가오는 수업</h2>
-          {upcoming.length ? (
-            upcoming.map((item) => (
+        {portalRole === 'member' ? (
+          <>
+            <p className="sidebar-label">MEMBER PORTAL</p>
+            <nav className="desktop-nav" aria-label="회원 메뉴" data-testid="member-desktop-nav">
               <button
-                key={item.id}
-                className="v2-upcoming-link"
-                onClick={() => changeTab('schedule')}
+                type="button"
+                onClick={() => focusMemberSection('schedule')}
+                aria-current={memberSection === 'schedule' ? 'page' : undefined}
+                className={memberSection === 'schedule' ? 'active' : ''}
               >
-                <strong>{formatScheduleTime(item.startTime)}</strong>
-                <span>
-                  {item.title}
-                  <small>
-                    {state.instructorSchedule.locations.find(
-                      (location) => location.id === item.locationId,
-                    )?.alias || '장소 확인 필요'}{' '}
-                    · {item.date === today ? '오늘' : item.date.slice(5).replace('-', '/')}
-                  </small>
-                </span>
+                <CalendarDays size={20} strokeWidth={1.6} />
+                시간표 · 수업 예약
               </button>
-            ))
-          ) : (
-            <p>등록된 가까운 수업이 없습니다.</p>
-          )}
-          <button className="text-button" onClick={() => changeTab('schedule')}>
-            일정 전체 보기 <CalendarRange size={15} />
-          </button>
-        </section>
-        <button
-          type="button"
-          className="sidebar-study-link"
-          aria-label="강사 연습실과 사용법"
-          onClick={() => {
-            setMenuOpen(false);
-            setStudyOpen({ mode: 'guide' });
-          }}
-        >
-          <BookOpen size={19} aria-hidden="true" /> 사용법·연습실
-        </button>
+              <button
+                type="button"
+                onClick={() => focusMemberSection('bookings')}
+                aria-current={memberSection === 'bookings' ? 'page' : undefined}
+                className={memberSection === 'bookings' ? 'active' : ''}
+              >
+                <Bookmark size={20} strokeWidth={1.6} />
+                내 예약 현황
+              </button>
+              <button
+                type="button"
+                onClick={() => focusMemberSection('wallet')}
+                aria-current={memberSection === 'wallet' ? 'page' : undefined}
+                className={memberSection === 'wallet' ? 'active' : ''}
+              >
+                <Ticket size={20} strokeWidth={1.6} />
+                내 수강권 지갑
+              </button>
+            </nav>
+          </>
+        ) : (
+          <>
+            <p className="sidebar-label">MY STUDIO</p>
+            <nav className="desktop-nav" aria-label="주 메뉴">
+              {navigation.map(({ id, detail, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => changeTab(id)}
+                  aria-current={state.activeTab === id ? 'page' : undefined}
+                  className={state.activeTab === id ? 'active' : ''}
+                >
+                  <Icon size={20} strokeWidth={1.6} />
+                  {detail}
+                  {id === 'atlas' && <small>{state.exercises.length}</small>}
+                </button>
+              ))}
+            </nav>
+            <section className="v2-sidebar-upcoming" aria-label="다가오는 수업">
+              <h2>다가오는 수업</h2>
+              {upcoming.length ? (
+                upcoming.map((item) => (
+                  <button
+                    key={item.id}
+                    className="v2-upcoming-link"
+                    onClick={() => changeTab('schedule')}
+                  >
+                    <strong>{formatScheduleTime(item.startTime)}</strong>
+                    <span>
+                      {item.title}
+                      <small>
+                        {state.instructorSchedule.locations.find(
+                          (location) => location.id === item.locationId,
+                        )?.alias || '장소 확인 필요'}{' '}
+                        · {item.date === today ? '오늘' : item.date.slice(5).replace('-', '/')}
+                      </small>
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <p>등록된 가까운 수업이 없습니다.</p>
+              )}
+              <button className="text-button" onClick={() => changeTab('schedule')}>
+                일정 전체 보기 <CalendarRange size={15} />
+              </button>
+            </section>
+            <button
+              type="button"
+              className="sidebar-study-link"
+              aria-label="강사 연습실과 사용법"
+              onClick={() => {
+                setMenuOpen(false);
+                setStudyOpen({ mode: 'guide' });
+              }}
+            >
+              <BookOpen size={19} aria-hidden="true" /> 사용법·연습실
+            </button>
+          </>
+        )}
         <button
           type="button"
           className="sidebar-study-link"
@@ -521,7 +579,10 @@ export function App() {
             </p>
           )}
           {portalRole === 'member' ? (
-            <MemberBookingView onSwitchToInstructor={() => setPortalRole('instructor')} />
+            <MemberBookingView
+              activeSection={memberSection}
+              onSwitchToInstructor={() => setPortalRole('instructor')}
+            />
           ) : (
             <>
               {state.activeTab !== 'stage' && state.activeTab !== 'schedule' && (
@@ -626,20 +687,57 @@ export function App() {
           <button onClick={() => setSettingsOpen(true)}>저장·복구 안내</button>
         </footer>
       </div>
-      {state.activeTab !== 'stage' && (
-        <nav className="bottom-nav" inert={menuOpen ? true : undefined} aria-label="모바일 주 메뉴">
-          {navigation.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => changeTab(id)}
-              className={state.activeTab === id ? 'active' : ''}
-              aria-current={state.activeTab === id ? 'page' : undefined}
-            >
-              <Icon size={21} strokeWidth={1.7} />
-              <span>{label}</span>
-            </button>
-          ))}
+      {portalRole === 'member' ? (
+        <nav
+          className="bottom-nav is-member-nav"
+          inert={menuOpen ? true : undefined}
+          aria-label="모바일 회원 메뉴"
+          data-testid="member-bottom-nav"
+        >
+          <button
+            type="button"
+            onClick={() => focusMemberSection('schedule')}
+            className={memberSection === 'schedule' ? 'active' : ''}
+            aria-current={memberSection === 'schedule' ? 'page' : undefined}
+          >
+            <CalendarDays size={21} strokeWidth={1.7} />
+            <span>시간표</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => focusMemberSection('bookings')}
+            className={memberSection === 'bookings' ? 'active' : ''}
+            aria-current={memberSection === 'bookings' ? 'page' : undefined}
+          >
+            <Bookmark size={21} strokeWidth={1.7} />
+            <span>내 예약</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => focusMemberSection('wallet')}
+            className={memberSection === 'wallet' ? 'active' : ''}
+            aria-current={memberSection === 'wallet' ? 'page' : undefined}
+          >
+            <Ticket size={21} strokeWidth={1.7} />
+            <span>수강권</span>
+          </button>
         </nav>
+      ) : (
+        state.activeTab !== 'stage' && (
+          <nav className="bottom-nav" inert={menuOpen ? true : undefined} aria-label="모바일 주 메뉴">
+            {navigation.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => changeTab(id)}
+                className={state.activeTab === id ? 'active' : ''}
+                aria-current={state.activeTab === id ? 'page' : undefined}
+              >
+                <Icon size={21} strokeWidth={1.7} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </nav>
+        )
       )}
       <Suspense
         fallback={

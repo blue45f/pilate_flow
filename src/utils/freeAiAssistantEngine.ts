@@ -1424,7 +1424,7 @@ export function buildLocalMovementSearchRecommendations(
   input: MovementSearchAssistInput,
   exercises: readonly PilatesExercise[],
 ): EditableMovementSearchResult {
-  const maxResults = Math.min(12, Math.max(1, Math.round(input.maxResults ?? 6)));
+  const maxResults = Math.min(8, Math.max(1, Math.round(input.maxResults ?? 6)));
   const inspection = inspectSensitiveHealthText(input.queryText || '');
   const cleanQuery =
     inspection.sanitizedText
@@ -1550,7 +1550,7 @@ export function buildLocalMovementSearchRecommendations(
     provider: 'none',
     model: null,
     cached: false,
-    querySummaryKo: querySummaryKo.slice(0, 400),
+    querySummaryKo: querySummaryKo.slice(0, 300),
     recommendations,
     guaranteesSafetyOrEffect: false,
     safetyDisclaimer: UNREVIEWED_CREATIVE_SAFETY_DISCLAIMER,

@@ -480,12 +480,12 @@ export function FreeAiAssistantPanel({
       setClassDraftResult(response.result);
       setActionFeedback(
         response.usedLocalFallback
-          ? '수업 초안을 만들었습니다. 수업에 맞게 편집해 주세요.'
+          ? '조건에 맞춰 수업 초안을 만들었어요. 순서와 시간을 자유롭게 다듬어 보세요.'
           : response.result.cached
-            ? '이전에 만든 AI 수업 초안을 다시 불러왔습니다 (사용량 차감 없음).'
+            ? '이전에 만든 수업 초안을 바로 불러왔어요 (사용량 차감 없음).'
             : response.result.provider === 'openai'
-              ? 'OpenAI 서버 보조로 수업 초안을 만들었습니다. 내용을 검토·편집해 주세요.'
-              : 'AI로 편집 가능한 수업 초안을 만들었습니다.',
+              ? '서버 보조로 수업 초안을 만들었어요. 순서와 시간을 자유롭게 다듬어 보세요.'
+              : '조건에 맞춰 편집 가능한 수업 초안을 만들었어요.',
       );
     } catch (error) {
       setQuotaStatus(client.getQuotaStatus());
@@ -717,8 +717,8 @@ export function FreeAiAssistantPanel({
     if (steps.length === 0) {
       return (
         <p className="free-ai-subtitle">
-          현재 조건에 해당하는 검토 완료(Approved) 동작이 없습니다. 동작 라이브러리에서 검토를
-          완료한 뒤 다시 구성해 주세요.
+          선택한 기구·난이도에 맞는 검토 완료 동작이 아직 없어요. 동작 라이브러리에서 검토를 마친 뒤
+          다시 시도해 주세요.
         </p>
       );
     }

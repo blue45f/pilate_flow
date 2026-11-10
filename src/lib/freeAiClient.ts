@@ -54,7 +54,13 @@ export type FreeAiClientErrorCode =
   | 'free_quota_exhausted'
   | 'concurrency_limit_exceeded'
   | 'unconfigured'
+  | 'request_cancelled'
   | 'request_failed';
+
+export interface FreeAiRequestOptions {
+  readonly preferLocalOnly?: boolean;
+  readonly signal?: AbortSignal;
+}
 
 export class FreeAiClientError extends Error {
   readonly code: FreeAiClientErrorCode;
@@ -551,13 +557,53 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
     syncStatusCounters();
   }
 
+  function createCancelledError(): FreeAiClientError {
+    return new FreeAiClientError(
+      'request_cancelled',
+      'AI 요청이 취소되었습니다.',
+      syncStatusCounters(),
+      currentStatus.renewal,
+    );
+  }
+
+  function raceWithAbortSignal<R>(promise: Promise<R>, signal?: AbortSignal): Promise<R> {
+    if (!signal) return promise;
+    if (signal.aborted) {
+      promise.catch(() => {});
+      return Promise.reject(createCancelledError());
+    }
+    return new Promise<R>((resolve, reject) => {
+      const onAbort = () => {
+        signal.removeEventListener('abort', onAbort);
+        promise.catch(() => {});
+        reject(createCancelledError());
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
+      promise.then(
+        (val) => {
+          signal.removeEventListener('abort', onAbort);
+          resolve(val);
+        },
+        (err) => {
+          signal.removeEventListener('abort', onAbort);
+          reject(err);
+        },
+      );
+    });
+  }
+
   async function executeExternalOrFallback<T extends FreeAiAssistResult>(params: {
     task: FreeAiServerRequest['task'];
     cachePayload: unknown;
     buildServerRequest: () => FreeAiServerRequest;
     runLocalFallback: () => T;
     preferLocalOnly?: boolean;
+    signal?: AbortSignal;
   }): Promise<{ result: T; status: FreeAiQuotaStatus; usedLocalFallback: boolean }> {
+    if (params.signal?.aborted) {
+      throw createCancelledError();
+    }
+
     if (params.preferLocalOnly) {
       const localResult = params.runLocalFallback();
       return {
@@ -626,7 +672,13 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
     syncStatusCounters();
 
     try {
-      const response = await transport.postAssist(serverRequest);
+      const response = await raceWithAbortSignal(
+        transport.postAssist(serverRequest),
+        params.signal,
+      );
+      if (params.signal?.aborted) {
+        throw createCancelledError();
+      }
       if (response.status) {
         currentStatus = {
           ...currentStatus,
@@ -867,7 +919,7 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
       input: ClassDraftConditionsInput,
       exercises: readonly PilatesExercise[],
       conditionTemplates: readonly ConditionTemplate[] = [],
-      requestOptions?: { preferLocalOnly?: boolean },
+      requestOptions?: FreeAiRequestOptions,
     ): Promise<{
       result: EditableClassDraftResult;
       status: FreeAiQuotaStatus;
@@ -899,12 +951,13 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
         }),
         runLocalFallback: () => buildLocalClassDraft(input, exercises, conditionTemplates),
         preferLocalOnly: requestOptions?.preferLocalOnly,
+        signal: requestOptions?.signal,
       });
     },
 
     async requestMovementIdea(
       input: MovementIdeaInput,
-      requestOptions?: { preferLocalOnly?: boolean },
+      requestOptions?: FreeAiRequestOptions,
     ): Promise<{
       result: EditableMovementIdeaResult;
       status: FreeAiQuotaStatus;
@@ -924,13 +977,14 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
         }),
         runLocalFallback: () => buildLocalMovementIdea(input),
         preferLocalOnly: requestOptions?.preferLocalOnly,
+        signal: requestOptions?.signal,
       });
     },
 
     async requestMovementSearch(
       input: MovementSearchAssistInput,
       exercises: readonly PilatesExercise[],
-      requestOptions?: { preferLocalOnly?: boolean },
+      requestOptions?: FreeAiRequestOptions,
     ): Promise<{
       result: EditableMovementSearchResult;
       status: FreeAiQuotaStatus;
@@ -962,6 +1016,7 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
         }),
         runLocalFallback: () => buildLocalMovementSearchRecommendations(input, exercises),
         preferLocalOnly: requestOptions?.preferLocalOnly,
+        signal: requestOptions?.signal,
       });
     },
 
@@ -969,7 +1024,7 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
       input: SequenceComposeInput,
       exercises: readonly PilatesExercise[],
       reusableBlocks: readonly P1ReusableBlockContract[] = [],
-      requestOptions?: { preferLocalOnly?: boolean },
+      requestOptions?: FreeAiRequestOptions,
     ): Promise<{
       result: EditableSequenceComposeResult;
       status: FreeAiQuotaStatus;
@@ -1005,6 +1060,7 @@ export function createFreeAiClient(options: FreeAiClientControllerOptions = {}) 
         }),
         runLocalFallback: () => composeSequenceFromReviewedItems(input, exercises, reusableBlocks),
         preferLocalOnly: requestOptions?.preferLocalOnly,
+        signal: requestOptions?.signal,
       });
 
       if (!response.usedLocalFallback) {

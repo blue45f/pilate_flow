@@ -136,9 +136,6 @@ const SessionLogForm: React.FC<
     saved ? 'saved-sequence' : 'active-draft',
   );
   const [selectedSteps, setSelectedSteps] = useState(() => {
-    if (context?.taughtStepIds !== undefined) {
-      return new Set(context.taughtStepIds);
-    }
     if (Array.isArray(initialDraft?.selectedStepIds)) {
       const validIds = new Set(snapshot.map((step) => step.stepId));
       const restored = initialDraft.selectedStepIds.filter(
@@ -147,6 +144,9 @@ const SessionLogForm: React.FC<
       if (snapshot.some((step) => restored.includes(step.stepId) && !isRestStep(step))) {
         return new Set(restored);
       }
+    }
+    if (context?.taughtStepIds !== undefined && context.taughtStepIds.length > 0) {
+      return new Set(context.taughtStepIds);
     }
     return new Set(snapshot.map((step) => step.stepId));
   });
@@ -198,18 +198,25 @@ const SessionLogForm: React.FC<
     typeof initialDraft?.reflection === 'string' ? initialDraft.reflection : '',
   );
   const [minutes, setMinutes] = useState(() => {
+    if (typeof initialDraft?.minutes === 'string' && initialDraft.minutes !== '') {
+      return initialDraft.minutes;
+    }
     if (context?.actualDurationSec !== undefined) {
       return String(Math.floor(context.actualDurationSec / 60));
     }
     return typeof initialDraft?.minutes === 'string' ? initialDraft.minutes : '';
   });
   const [seconds, setSeconds] = useState(() => {
+    if (typeof initialDraft?.seconds === 'string' && initialDraft.seconds !== '') {
+      return initialDraft.seconds;
+    }
     if (context?.actualDurationSec !== undefined) {
       return String(Math.round(context.actualDurationSec % 60));
     }
     return typeof initialDraft?.seconds === 'string' ? initialDraft.seconds : '';
   });
   const [error, setError] = useState('');
+  const [pendingCloseRequest, setPendingCloseRequest] = useState<(() => void) | null>(null);
   const [showGroup, setShowGroup] = useState(classGroups.length === 0);
   const [newGroupName, setNewGroupName] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -476,6 +483,13 @@ const SessionLogForm: React.FC<
     <LightDismissDialog
       open
       onClose={onClose}
+      onBeforeClose={({ reason, close }) => {
+        if (hasEditedDraft && !submitted && (reason === 'backdrop' || reason === 'native-cancel')) {
+          setPendingCloseRequest(() => close);
+          return false;
+        }
+        return true;
+      }}
       variant="sheet"
       title="수업 기록 남기기"
       subtitle={title}
@@ -839,6 +853,42 @@ const SessionLogForm: React.FC<
           </PfField>
         </div>
         <footer className="class-log-footer">
+          {pendingCloseRequest && (
+            <div
+              role="alert"
+              data-testid="log-session-discard-guard"
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                padding: '10px 12px',
+                marginBottom: '8px',
+                borderRadius: '10px',
+                background: '#f4f1e3',
+                color: '#6b4010',
+                fontSize: '0.86rem',
+              }}
+            >
+              <span>작성 중인 수업 기록 초안은 임시 보관됩니다. 기록 창을 닫을까요?</span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <PfButton variant="secondary" onClick={() => setPendingCloseRequest(null)}>
+                  계속 작성
+                </PfButton>
+                <PfButton
+                  variant="primary"
+                  onClick={() => {
+                    const proceed = pendingCloseRequest;
+                    setPendingCloseRequest(null);
+                    proceed();
+                  }}
+                >
+                  닫기 확인
+                </PfButton>
+              </div>
+            </div>
+          )}
           {error && <PfFormError>{error}</PfFormError>}
           <div className="teaching-form-actions">
             <PfButton variant="secondary" onClick={onClose}>

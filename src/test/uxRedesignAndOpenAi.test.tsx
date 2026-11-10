@@ -4,12 +4,20 @@ import { App } from '../App';
 import { Apparatus3dRigPreviewCard } from '../components/Apparatus3dRigPreviewCard';
 import { FreeAiAssistantPanel } from '../components/FreeAiAssistantPanel';
 import { MemberBookingView } from '../components/MemberBookingView';
-import { SpringVisualPills, parseSpringVisualChips } from '../components/SpringVisualPills';
+import { SpringVisualPills } from '../components/SpringVisualPills';
 import { StudioJourneyBar } from '../components/StudioJourneyBar';
 import { AtelierQuickStartGallery } from '../components/workbench/AtelierQuickStartGallery';
+import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { createFreeAiClient, createDefaultFreeAiStatus } from '../lib/freeAiClient';
 import { usePilatesStore } from '../store/usePilatesStore';
-import { MEMBER_BOOKING_STORAGE_KEY } from '../utils/memberBookingBridge';
+import { ATELIER_QUICK_START_RECIPES } from '../utils/atelierQuickStart';
+import {
+  MEMBER_BOOKING_STORAGE_KEY,
+  type MemberBookableSlot,
+  computeStudioSpotStates,
+  resolveMemberActionIntent,
+} from '../utils/memberBookingBridge';
+import { parseSpringVisualChips } from '../utils/springVisualParser';
 
 describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI Movement Search', () => {
   beforeEach(() => {
@@ -50,11 +58,36 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     expect(onSelectStep).toHaveBeenCalledWith('history');
   });
 
-  it('supports member pass verification, R1~R6 spot selection, my-bookings strip, available-only filter, and cancellation restore', async () => {
+  it('supports member pass verification, R1~R6 spot selection, my-bookings strip, available-only filter, past-date guard, and cancellation restore', async () => {
+    // Verify 4-person class spot bounds and past-date intent guard
+    const smallFullSlot: MemberBookableSlot = {
+      id: 'slot-small-4',
+      classId: 'c4',
+      date: '2026-04-10',
+      startTime: '10:00',
+      endTime: '10:50',
+      title: '4:1 소그룹 리포머',
+      locationAlias: 'A룸',
+      apparatus: 'reformer',
+      equipmentLabels: ['리포머'],
+      occurrenceStatus: 'scheduled',
+      baseEnrolled: 4,
+      maxCapacity: 4,
+      baseWaitlist: 0,
+      maxWaitlist: 2,
+      freeCancelHoursBefore: 12,
+      myState: 'NONE',
+    };
+    const spotStates = computeStudioSpotStates(smallFullSlot);
+    expect(spotStates).toHaveLength(4);
+    expect(spotStates.every((s) => s.occupiedByOther)).toBe(true);
+    expect(resolveMemberActionIntent(smallFullSlot, '2026-04-15')).toBeNull();
+
     render(<MemberBookingView />);
 
     expect(screen.getByTestId('member-booking-view')).toBeInTheDocument();
     expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('7 / 20회');
+    expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('예약 확정: 0건');
 
     // Toggle available-only filter chip
     const availableChip = screen.getByTestId('filter-available-only-chip');
@@ -81,6 +114,7 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
 
     await waitFor(() => {
       expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('6 / 20회');
+      expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('예약 확정: 1건');
       expect(screen.getByTestId('member-my-bookings-strip')).toBeInTheDocument();
     });
 
@@ -95,10 +129,11 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
 
     await waitFor(() => {
       expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('7 / 20회');
+      expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('예약 확정: 0건');
     });
   });
 
-  it('parses tactile color-coded spring chips and applies 1-click Atelier QuickStart recipes', () => {
+  it('parses tactile color-coded spring chips and applies all 4 1-click Atelier QuickStart recipes on INITIAL_EXERCISES', () => {
     const parsed = parseSpringVisualChips('2R 1B');
     expect(parsed.map((c) => c.labelKo)).toEqual(['빨강×2', '파랑×1']);
 
@@ -106,19 +141,24 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     expect(screen.getByText('빨강×1')).toBeInTheDocument();
     expect(screen.getByText('노랑×1')).toBeInTheDocument();
 
-    const exercises = usePilatesStore.getState().exercises;
     const onApplyRecipe = vi.fn();
     render(
-      <AtelierQuickStartGallery exercises={exercises} onApplyQuickRecipe={onApplyRecipe} />,
+      <AtelierQuickStartGallery
+        exercises={INITIAL_EXERCISES}
+        onApplyQuickRecipe={onApplyRecipe}
+      />,
     );
 
-    const applyBtn = screen.getByTestId('quickstart-apply-reformer-core-50');
-    fireEvent.click(applyBtn);
+    for (const recipe of ATELIER_QUICK_START_RECIPES) {
+      onApplyRecipe.mockClear();
+      const applyBtn = screen.getByTestId(`quickstart-apply-${recipe.id}`);
+      fireEvent.click(applyBtn);
 
-    expect(onApplyRecipe).toHaveBeenCalledTimes(1);
-    const payload = onApplyRecipe.mock.calls[0]![0];
-    expect(payload.targetMinutes).toBe(50);
-    expect(payload.steps.length).toBeGreaterThan(0);
+      expect(onApplyRecipe).toHaveBeenCalledTimes(1);
+      const payload = onApplyRecipe.mock.calls[0]![0];
+      expect(payload.targetMinutes).toBe(recipe.durationMinutes);
+      expect(payload.steps.length).toBeGreaterThan(0);
+    }
   });
 
   it('renders Blender 3D studio apparatus preview frame in Apparatus3dRigPreviewCard and toggles cleanly', () => {

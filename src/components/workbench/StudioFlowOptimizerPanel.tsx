@@ -181,7 +181,7 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
             aria-controls={freshAnglesRegionId}
             onClick={() => setShowFreshAngles((prev) => !prev)}
           >
-            {showFreshAngles ? '5대 테마 각도 접기' : '5대 수업 컨셉 리믹스 (5 Angles)'}
+            {showFreshAngles ? '5대 수업 컨셉 접기' : '5대 수업 컨셉 리믹스'}
           </PfButton>
           <PfButton
             variant="secondary"
@@ -230,7 +230,7 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
                     className="pf-studio-optimizer__meta"
                     data-testid="fresh-angle-story-structure"
                   >
-                    <strong>3-Beat 스토리 구조:</strong> 1) 배경: {angle.storyStructure.setupKo} →
+                    <strong>3단계 공감 스토리 구조:</strong> 1) 배경: {angle.storyStructure.setupKo} →
                     2) 전환점: {angle.storyStructure.frictionKo} → 3) 핵심 레슨:{' '}
                     {angle.storyStructure.lessonKo}
                   </div>
@@ -288,7 +288,7 @@ export const StudioFlowOptimizerPanel: React.FC<StudioFlowOptimizerPanelProps> =
                       setSelectedAngleId((prev) => (prev === angle.id ? null : angle.id))
                     }
                   >
-                    {isSelected ? '채널별 초안 닫기' : '채널별 초안 확장 (Mode B)'}
+                    {isSelected ? '채널별 초안 닫기' : '안내문·오프닝 멘트 펼치기'}
                   </PfButton>
                 </div>
               </div>

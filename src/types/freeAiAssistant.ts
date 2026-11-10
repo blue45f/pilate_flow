@@ -342,7 +342,10 @@ export interface FreeAiStudioContextContract {
     exercise: PilatesExercise,
     ideaContract: P1MovementIdeaContract,
   ) => void;
-  onAddExerciseToSequence?: (exerciseId: string, blockCategory?: ClassBlockCategory) => void;
+  onAddExerciseToSequence?: (
+    exerciseId: string,
+    blockCategory?: ClassBlockCategory,
+  ) => void | boolean | { readonly ok: boolean; readonly message?: string };
   onApplyConditionTemplate?: (templateId: string) => void;
   onSaveConditionTemplate?: (name: string, criteria: AutoGenerateCriteria) => void;
   uiContract?: P2CommonUiContract;

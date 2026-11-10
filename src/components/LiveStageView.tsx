@@ -650,14 +650,15 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     (sum, step, index) => sum + (isRestStep(step) ? (clock.elapsedByStep[index] ?? 0) / 1000 : 0),
     0,
   );
+  const elapsedTaughtStepIds = steps
+    .filter((_, index) => (clock.elapsedByStep[index] ?? 0) > 0)
+    .map((step) => step.stepId);
   const logContext: TeachingLogContext = {
     actualDurationSec: Math.round(clock.elapsedMs / 1000),
     actualRestDurationSec: Math.round(trackedRestSec),
     stepsSnapshot: steps.map((step) => ({ ...step })),
     sequenceTitle: session.title,
-    taughtStepIds: steps
-      .filter((_, index) => (clock.elapsedByStep[index] ?? 0) > 0)
-      .map((step) => step.stepId),
+    taughtStepIds: elapsedTaughtStepIds.length > 0 ? elapsedTaughtStepIds : undefined,
   };
 
   const exitDialogs = (

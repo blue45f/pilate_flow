@@ -46,6 +46,12 @@
   word-break: keep-all;
 }
 
+.pf-member-steps li.is-done {
+  background: var(--pf-color-ai-draft-bg, #eef2ea);
+  color: var(--pf-color-status-success-text, #254b29);
+  font-weight: 600;
+}
+
 .pf-member-steps li.is-active {
   background: var(--pf-color-action-primary, #173d34);
   color: #ffffff;
@@ -186,6 +192,7 @@
 .pf-role-switcher {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 4px;
   padding: 3px;
   background: var(--pf-color-bg-surface-subtle, #f3f5ee);
@@ -194,7 +201,7 @@
 }
 
 .pf-role-switcher__btn {
-  min-height: 38px;
+  min-height: 44px;
   padding: 0 12px;
   border-radius: 999px;
   border: none;
@@ -204,6 +211,7 @@
   font-weight: 600;
   cursor: pointer;
   word-break: keep-all;
+  white-space: nowrap;
 }
 
 .pf-role-switcher__btn[aria-pressed='true'] {
@@ -211,11 +219,21 @@
   color: #ffffff;
 }
 
+#root .bottom-nav.is-member-nav {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (min-width: 1024px) {
+  #root .workbench-mobile-step-bar {
+    display: none;
+  }
+}
+
 @media (max-width: 767px) {
   .pf-role-switcher__btn {
     min-height: 44px;
-    padding: 0 10px;
-    font-size: 0.8rem;
+    padding: 0 9px;
+    font-size: 0.78rem;
   }
   .pf-member-steps {
     grid-template-columns: 1fr;
@@ -226,6 +244,16 @@
   }
   .pf-member-slot-cta {
     width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  #root .vnext-shell .topbar {
+    flex-wrap: wrap;
+  }
+  .pf-role-switcher__btn {
+    padding: 0 8px;
+    font-size: 0.75rem;
   }
 }
 

@@ -599,7 +599,37 @@ export function SequenceWorkbench({
     readonly steps: SequenceStep[];
     readonly recipeTitleKo: string;
   }) => {
+    if (!payload.steps.length) {
+      const emptyMsg = `‘${payload.recipeTitleKo}’ 조건에 맞는 동작 자료가 없어 현재 수업안을 유지했습니다.`;
+      usePilatesStore.setState({ generationError: emptyMsg });
+      setNotice(emptyMsg);
+      return;
+    }
     const current = usePilatesStore.getState();
+    const stepExMap = new Map(current.exercises.map((item) => [item.id, item]));
+    const recipeEquipment = [
+      ...new Set(
+        payload.steps.flatMap((step) => {
+          const ex = stepExMap.get(step.exerciseId);
+          return ex ? getExerciseEquipment(ex).requiredEquipment : [];
+        }),
+      ),
+    ];
+    const nextEquipment = recipeEquipment.length
+      ? recipeEquipment
+      : payload.apparatus === 'mixed'
+        ? [...current.ownedEquipment]
+        : [payload.apparatus];
+    const nextDraftCriteria = withExactSelection({
+      ...(current.draftCriteria ?? current.lastCriteria ?? criteria),
+      apparatus: payload.apparatus,
+      availableEquipment: nextEquipment,
+      ownedApparatus: getEquipmentFamilies(nextEquipment),
+      level: payload.level,
+      targetMinutes: payload.targetMinutes,
+      defaultLayer:
+        payload.level === '1.0' ? 'easy' : payload.level === '2.0' ? 'hard' : 'standard',
+    });
     const snapshot = {
       activeSequenceId: current.activeSequenceId,
       activeTitle: current.activeTitle,
@@ -619,6 +649,7 @@ export function SequenceWorkbench({
       activeTargetMinutes: payload.targetMinutes,
       activeLevel: payload.level,
       activeApparatus: payload.apparatus,
+      draftCriteria: nextDraftCriteria,
       activeSteps: payload.steps.map((step) =>
         step.selectedLayer ? step : { ...step, selectedLayer: 'standard' as const },
       ),
@@ -2028,24 +2059,7 @@ export function SequenceWorkbench({
             </details>
           )}
           {s.activeSteps.length > 0 && ideasSectionNode}
-          {s.activeSteps.length > 0 && (
-            <section className="pf-flow-continuation" aria-label="핵심 흐름 이어가기">
-              <div className="pf-flow-continuation__copy">
-                <strong>다음 단계로 바로 이어가기</strong>
-                <p className="sr-only">
-                  새 동작 메모·선택을 마쳤다면 ‘내 수업’에 보관하거나 수업 후 ‘기록’을 남기세요.
-                </p>
-              </div>
-              <div className="pf-flow-continuation__actions">
-                <PfButton variant="secondary" onClick={() => openIdeaSheet(null)}>
-                  <Sparkles size={15} aria-hidden="true" /> 한 줄 동작 메모
-                </PfButton>
-                <PfButton variant="secondary" onClick={() => s.setActiveTab('binder')}>
-                  내 수업 서랍 열기 <ArrowRight size={15} aria-hidden="true" />
-                </PfButton>
-              </div>
-            </section>
-          )}
+
           {!s.activeSteps.length && s.undoStack.length > 0 && (
             <PfButton
               variant="secondary"
@@ -2264,11 +2278,28 @@ export function SequenceWorkbench({
                     s.addCustomExercise(exercise);
                   }}
                   onAddExerciseToSequence={(exerciseId, blockCategory) => {
+                    const beforeLen = usePilatesStore.getState().activeSteps.length;
                     s.appendExerciseToSequence(exerciseId, blockCategory);
-                    if (usePilatesStore.getState().activeSteps.length) {
+                    const after = usePilatesStore.getState();
+                    if (after.activeSteps.length > beforeLen) {
                       setWorkflowStep('arrange');
+                      setNotice('추천 동작을 현재 수업 시퀀스에 추가했습니다.');
+                      return { ok: true };
                     }
-                    setNotice('추천 동작을 현재 수업 시퀀스에 추가했습니다.');
+                    return {
+                      ok: false,
+                      message:
+                        after.generationError ||
+                        '현재 수업 조건(기구·난이도·보유 소도구) 또는 중복 여부를 확인해 주세요.',
+                    };
+                  }}
+                  onApplyConditionTemplate={(templateId) => {
+                    applyTemplate(templateId);
+                  }}
+                  onSaveConditionTemplate={(name, newCriteria) => {
+                    s.setDraftCriteria(withExactSelection(newCriteria));
+                    s.saveConditionTemplate(name);
+                    setNotice(`‘${name}’ 조건을 보관했습니다.`);
                   }}
                 />
               </Suspense>
@@ -2336,6 +2367,17 @@ export function SequenceWorkbench({
               : '현재 2단계: 수업 구성 확인 · 블록 순서와 시간을 점검하고 저장하거나 미리보기를 여세요.'}
           </span>
           <div className="pf-step-guide-nav" style={{ wordBreak: 'keep-all' }}>
+            {s.activeSteps.length > 0 && workflowStep === 'select' && !finderOpen && (
+              <button
+                type="button"
+                className="btn-primary"
+                data-testid="workbench-step-open-finder"
+                style={{ minHeight: '44px', padding: '6px 12px', fontSize: '0.8rem', wordBreak: 'keep-all' }}
+                onClick={openExerciseFinder}
+              >
+                <Plus size={15} aria-hidden="true" /> 동작 선택창 열기
+              </button>
+            )}
             <button
               type="button"
               className="pf-step-nav-btn"
@@ -2350,6 +2392,10 @@ export function SequenceWorkbench({
               onClick={() => {
                 closeInspector();
                 setPlanPreviewOpen(false);
+                if (workflowStep === 'select' && s.activeSteps.length > 0 && !finderOpen) {
+                  openExerciseFinder();
+                  return;
+                }
                 setWorkflowStep('select');
               }}
             >

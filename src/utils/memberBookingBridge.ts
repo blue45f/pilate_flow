@@ -6,7 +6,7 @@ import {
   scheduleDateRange,
   scheduleWeekStart,
 } from './instructorSchedule';
-import { EQUIPMENT_OPTIONS } from '../data/equipmentCatalog';
+import { EQUIPMENT_OPTIONS, getEquipmentFamily } from '../data/equipmentCatalog';
 
 export type MemberSlotBookingStatus =
   | 'AVAILABLE'
@@ -26,14 +26,74 @@ export interface StudioSpotMeta {
   readonly zoneKo: string;
 }
 
-export const STUDIO_REFORMER_SPOTS: ReadonlyArray<StudioSpotMeta> = [
-  { spotId: 'R1', zoneKo: '창가 앞열' },
-  { spotId: 'R2', zoneKo: '중앙 앞열' },
-  { spotId: 'R3', zoneKo: '거울 측면' },
-  { spotId: 'R4', zoneKo: '창가 뒷열' },
-  { spotId: 'R5', zoneKo: '중앙 뒷열' },
-  { spotId: 'R6', zoneKo: '거울 정면' },
-];
+const STUDIO_SPOT_ZONES_KO = [
+  '창가 앞열',
+  '중앙 앞열',
+  '거울 측면',
+  '창가 뒷열',
+  '중앙 뒷열',
+  '거울 정면',
+] as const;
+
+function buildSpotCatalog(prefix: string): ReadonlyArray<StudioSpotMeta> {
+  return STUDIO_SPOT_ZONES_KO.map((zoneKo, idx) => ({
+    spotId: `${prefix}${idx + 1}`,
+    zoneKo,
+  }));
+}
+
+export const STUDIO_REFORMER_SPOTS: ReadonlyArray<StudioSpotMeta> = buildSpotCatalog('R');
+export const STUDIO_CHAIR_SPOTS: ReadonlyArray<StudioSpotMeta> = buildSpotCatalog('C');
+export const STUDIO_CADILLAC_SPOTS: ReadonlyArray<StudioSpotMeta> = buildSpotCatalog('K');
+export const STUDIO_BARREL_SPOTS: ReadonlyArray<StudioSpotMeta> = buildSpotCatalog('B');
+export const STUDIO_MAT_SPOTS: ReadonlyArray<StudioSpotMeta> = buildSpotCatalog('M');
+
+export function getApparatusSpotCatalog(
+  apparatus: ApparatusType | 'mixed',
+): ReadonlyArray<StudioSpotMeta> {
+  switch (apparatus) {
+    case 'chair':
+      return STUDIO_CHAIR_SPOTS;
+    case 'cadillac':
+      return STUDIO_CADILLAC_SPOTS;
+    case 'barrel':
+      return STUDIO_BARREL_SPOTS;
+    case 'mat':
+      return STUDIO_MAT_SPOTS;
+    case 'reformer':
+    case 'mixed':
+    default:
+      return STUDIO_REFORMER_SPOTS;
+  }
+}
+
+export function getApparatusSpotLabelKo(apparatus: ApparatusType | 'mixed'): string {
+  switch (apparatus) {
+    case 'chair':
+      return '체어';
+    case 'cadillac':
+      return '캐딜락';
+    case 'barrel':
+      return '바렐';
+    case 'mat':
+      return '매트';
+    case 'mixed':
+      return '복합 기구';
+    case 'reformer':
+    default:
+      return '리포머';
+  }
+}
+
+export function findSpotMetaById(
+  apparatus: ApparatusType | 'mixed',
+  spotId: string,
+): StudioSpotMeta | undefined {
+  return (
+    getApparatusSpotCatalog(apparatus).find((item) => item.spotId === spotId) ??
+    STUDIO_REFORMER_SPOTS.find((item) => item.spotId === spotId)
+  );
+}
 
 export interface MemberPassSummary {
   readonly passId: string;
@@ -83,6 +143,7 @@ export interface PersistedMemberBookingState {
 }
 
 export const MEMBER_BOOKING_STORAGE_KEY = 'pf_member_booking_portal_v1';
+export const BOOKING_MISTAKE_GRACE_MS = 5 * 60 * 1000;
 
 export function getApparatusStudio3dImage(apparatus: ApparatusType | 'mixed'): string {
   switch (apparatus) {
@@ -93,6 +154,7 @@ export function getApparatusStudio3dImage(apparatus: ApparatusType | 'mixed'): s
     case 'barrel':
       return '/images/atelier-v2/barrel-studio-3d.png';
     case 'mat':
+      return '/images/atelier-ring-still-life.png';
     case 'reformer':
     case 'mixed':
     default:
@@ -105,10 +167,11 @@ export function computeStudioSpotStates(slot: MemberBookableSlot): ReadonlyArray
   readonly zoneKo: string;
   readonly occupiedByOther: boolean;
 }> {
-  const spots = STUDIO_REFORMER_SPOTS.slice(0, Math.max(1, Math.min(6, slot.maxCapacity)));
-  // Deterministically assign occupied spots based on baseEnrolled so open spots remain consistent
+  const catalog = getApparatusSpotCatalog(slot.apparatus);
+  const spots = catalog.slice(0, Math.max(1, Math.min(catalog.length, slot.maxCapacity)));
+  // Filter occupied indices strictly within spots.length so 4-person classes never leak out-of-bounds indices
+  const occupiedOrder = [2, 0, 5, 3, 4, 1].filter((idx) => idx < spots.length);
   const occupiedCount = Math.min(spots.length, Math.max(0, slot.baseEnrolled));
-  const occupiedOrder = [2, 0, 5, 3, 4, 1];
   const occupiedIndices = new Set(occupiedOrder.slice(0, occupiedCount));
 
   return spots.map((spot, idx) => ({
@@ -120,16 +183,41 @@ export function computeStudioSpotStates(slot: MemberBookableSlot): ReadonlyArray
 
 export function pickDefaultOpenSpotId(slot: MemberBookableSlot): string {
   const states = computeStudioSpotStates(slot);
-  return states.find((s) => !s.occupiedByOther)?.spotId ?? 'R2';
+  return states.find((s) => !s.occupiedByOther)?.spotId ?? states[0]?.spotId ?? 'R1';
+}
+
+export function isSlotPastFreeCancelDeadline(
+  slot: Pick<MemberBookableSlot, 'date' | 'startTime' | 'freeCancelHoursBefore'>,
+  decisionUpdatedAt?: string,
+  nowMs: number = Date.now(),
+): boolean {
+  if (decisionUpdatedAt) {
+    const bookedAtMs = Date.parse(decisionUpdatedAt);
+    if (
+      Number.isFinite(bookedAtMs) &&
+      nowMs - bookedAtMs >= 0 &&
+      nowMs - bookedAtMs < BOOKING_MISTAKE_GRACE_MS
+    ) {
+      return false;
+    }
+  }
+  const [year, month, day] = slot.date.split('-').map(Number);
+  const [hour, minute] = slot.startTime.split(':').map(Number);
+  if (!year || !month || !day || Number.isNaN(hour) || Number.isNaN(minute)) {
+    return false;
+  }
+  const slotStartMs = new Date(year, month - 1, day, hour, minute, 0, 0).getTime();
+  if (!Number.isFinite(slotStartMs)) return false;
+  return slotStartMs - nowMs < slot.freeCancelHoursBefore * 3_600_000;
 }
 
 export function createDefaultMemberPass(todayIso: string): MemberPassSummary {
   return {
     passId: 'pass-group-20',
-    passTitle: '4:1 기구 필라테스 20회권',
+    passTitle: '6:1 기구 필라테스 20회권',
     participantAlias: '저녁A-04 (별칭)',
     remainingCount: 7,
-    pendingReservedCount: 1,
+    pendingReservedCount: 0,
     totalCount: 20,
     expiresAtIso: addScheduleDays(todayIso, 55),
   };
@@ -148,18 +236,22 @@ export function readPersistedMemberBookingState(
     if (!raw) return fallback;
     const parsed = JSON.parse(raw) as Partial<PersistedMemberBookingState>;
     if (!parsed || typeof parsed !== 'object' || !parsed.pass) return fallback;
+    const slotDecisions =
+      parsed.slotDecisions && typeof parsed.slotDecisions === 'object'
+        ? parsed.slotDecisions
+        : {};
+    const activeBookedCount = Object.values(slotDecisions).filter(
+      (item) => item?.state === 'BOOKED',
+    ).length;
     return {
       pass: {
         ...fallback.pass,
         ...parsed.pass,
         remainingCount: Math.max(0, Number(parsed.pass.remainingCount ?? 7)),
-        pendingReservedCount: Math.max(0, Number(parsed.pass.pendingReservedCount ?? 1)),
+        pendingReservedCount: activeBookedCount,
         totalCount: Math.max(1, Number(parsed.pass.totalCount ?? 20)),
       },
-      slotDecisions:
-        parsed.slotDecisions && typeof parsed.slotDecisions === 'object'
-          ? parsed.slotDecisions
-          : {},
+      slotDecisions,
     };
   } catch {
     return fallback;
@@ -192,8 +284,12 @@ export function deriveMemberSlotStatus(slot: MemberBookableSlot): MemberSlotBook
 
 export function resolveMemberActionIntent(
   slot: MemberBookableSlot,
+  todayIso?: string,
 ): MemberBookingActionIntent | null {
   if (slot.occurrenceStatus === 'cancelled' || slot.occurrenceStatus === 'closed') {
+    return null;
+  }
+  if (todayIso && slot.date < todayIso) {
     return null;
   }
   if (slot.myState === 'BOOKED') return 'CANCEL_BOOKING';
@@ -236,7 +332,7 @@ function buildFallbackStudioWeekSlots(
       suffix: 'pm-chair',
       startTime: '19:00',
       endTime: '19:50',
-      title: '리포머·체어 코어 집중 플로우',
+      title: '체어 하체·코어 집중 플로우',
       locationAlias: '본점 A룸',
       apparatus: 'chair',
       equipmentLabels: ['체어', '미니볼'],
@@ -303,7 +399,9 @@ export function buildMemberSlotsForDate(params: {
   const weekCounts: Record<string, number> = {};
   for (const d of weekDates) {
     weekCounts[d] = hasInstructorClasses
-      ? expandedWeek.filter((row) => row.date === d && row.status === 'scheduled').length
+      ? expandedWeek.filter(
+          (row) => row.date === d && (row.status === 'scheduled' || row.status === 'moved'),
+        ).length
       : 3;
   }
 
@@ -323,9 +421,10 @@ export function buildMemberSlotsForDate(params: {
     const eqLabels = (location?.equipmentIds ?? [])
       .map((id) => EQUIPMENT_OPTIONS.find((item) => item.id === id)?.labelKo ?? id)
       .slice(0, 3);
+    const firstEqId = location?.equipmentIds[0];
     const apparatus: ApparatusType | 'mixed' =
       linkedSeq?.apparatus ??
-      ((location?.equipmentIds[0] as ApparatusType | undefined) ?? 'reformer');
+      (firstEqId ? (getEquipmentFamily(firstEqId) ?? 'reformer') : 'reformer');
     const decision = decisions[row.id];
     const deterministicEnrolled = (idx * 2 + 2) % 6;
 

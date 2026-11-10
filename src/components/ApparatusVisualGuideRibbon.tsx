@@ -736,7 +736,7 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
               data-testid="apparatus-guide-ideas-tab"
               onClick={() => setActiveTab('ideas')}
             >
-              <Sparkles size={14} aria-hidden="true" /> 3. @generate-fresh-ideas 5대 수업 리믹스
+              <Sparkles size={14} aria-hidden="true" /> 3. 5가지 관점 수업 테마 제안
             </button>
             <button
               type="button"
@@ -852,7 +852,7 @@ export const ApparatusVisualGuideRibbon: React.FC<ApparatusVisualGuideRibbonProp
             <>
               <div className="pf-apparatus-ideas-toolbar">
                 <p className="pf-apparatus-blueprint-caption" style={{ margin: 0 }}>
-                  <strong>5대 리믹스 전체 실전 대본 (Mode B 1~5 통합 확장):</strong>{' '}
+                  <strong>5가지 관점 실전 대본 (오프닝·안내문·큐잉 통합):</strong>{' '}
                   역발상·공감스토리·임상근거·플레이북·디테일 5가지 관점의 수업 오프닝 멘트, 회원
                   공지문, 실전 큐잉 3원칙을 바로 활용하세요.
                 </p>

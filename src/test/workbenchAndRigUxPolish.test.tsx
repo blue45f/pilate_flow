@@ -153,8 +153,8 @@ describe('Workbench & 3D Rig UI/UX Design System Polish (320/375/768px & Desktop
     expect(anglesToggle).toHaveAttribute('aria-controls', anglesRegion.getAttribute('id'));
     expect(anglesRegion.querySelectorAll('.pf-badge').length).toBe(5);
 
-    // Verify 3-beat story, verified metrics, and 4-step playbook are rendered
-    expect(screen.getByTestId('fresh-angle-story-structure')).toHaveTextContent('3-Beat 스토리 구조');
+    // Verify 3-step story, verified metrics, and 4-step playbook are rendered
+    expect(screen.getByTestId('fresh-angle-story-structure')).toHaveTextContent('3단계 공감 스토리 구조');
     expect(screen.getByTestId('fresh-angle-verified-metrics')).toHaveTextContent('시퀀스 실측 근거');
     expect(within(screen.getByTestId('fresh-angle-playbook-steps')).getAllByRole('listitem')).toHaveLength(
       4,
