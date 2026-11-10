@@ -2,28 +2,40 @@
 """
 Pilates Member & Class CSV Import Dry-Run Validator CLI (pilates-csv-import).
 Standard-library-only implementation supporting:
-- UTF-8 and UTF-8-BOM detection & decoding
-- Multi-line quoted fields, escaped quotes, and Korean/English headers
-- Configurable & automatic column mapping
+- UTF-8 and UTF-8-BOM detection & decoding (including double-BOM resilience)
+- Streaming RFC-4180 CSV tokenization with row-level malformed quote recovery,
+  multi-line quoted fields/headers, escaped quotes, NUL/control-char handling,
+  and Korean/English headers
+- Empty & duplicate header detection (exact & normalized collisions)
+- Configurable & automatic column mapping with 1:N, N:1, missing-column, and
+  ambiguous-alias conflict detection
+- Configurable file byte, row count, and per-field character limits with recovery
 - Invalid calendar date & time range validation
-- Duplicate row detection (key-based & exact row duplicates)
-- Empty required value & numeric constraint checks
-- Formula injection (CSV injection) detection & preview sanitization
-- Row-number & physical line-number error reporting
+- Duplicate row detection (CRLF/LF-normalized exact rows & entity keys) with
+  exact data row_number and physical CSV line_number / first_seen_line tracking
+- Formula injection (CSV injection) defense including formulas hidden behind
+  spaces, tabs, newlines, Unicode whitespace, zero-width chars, and control chars
 - Safe dry-run preview JSON generation (strictly zero DB writes)
 """
 
 from __future__ import annotations
 
 import argparse
-import csv
+from dataclasses import dataclass
 import datetime
-import io
 import json
 import pathlib
 import re
 import sys
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple
+import unicodedata
+
+
+DEFAULT_MAX_FILE_BYTES = 10 * 1024 * 1024  # 10 MiB
+DEFAULT_MAX_ROWS = 10_000
+DEFAULT_MAX_FIELD_CHARS = 10_000
+DEFAULT_MAX_PREVIEW_ROWS = 50
+PREVIEW_CELL_TRUNCATE_CHARS = 2_000
 
 
 MEMBER_SCHEMA: Dict[str, Dict[str, Any]] = {
@@ -138,27 +150,100 @@ SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
 }
 
 FORMULA_TRIGGERS = ("=", "+", "-", "@", "\t", "\r")
+FORMULA_OPERATOR_CHARS = ("=", "+", "-", "@")
+ZERO_WIDTH_CHARS = frozenset({"\ufeff", "\u200b", "\u200c", "\u200d", "\u200e", "\u200f", "\u2060", "\u180e"})
 DATE_PATTERN = re.compile(r"^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$")
 TIME_PATTERN = re.compile(r"^(\d{1,2}):(\d{2})(?::(\d{2}))?$")
 PHONE_PATTERN = re.compile(r"^01[016789]-?\d{3,4}-?\d{4}$")
 
 
+class MappingConfigError(ValueError):
+    """Raised when --mapping input has invalid syntax or duplicate keys."""
+
+
+@dataclass
+class CsvFieldIssue:
+    col_index: int
+    code: str
+    line_number: int
+    message: str
+    raw_snippet: str
+    unclosed_eof: bool = False
+
+
+@dataclass
+class ParsedCsvRecord:
+    fields: List[str]
+    start_line: int
+    end_line: int
+    issues: List[CsvFieldIssue]
+    is_blank_line: bool = False
+
+
+def is_stealth_prefix_char(ch: str) -> bool:
+    """
+    Return True for any character that spreadsheet engines or text consumers may
+    ignore/strip before evaluating a leading formula token: ASCII/Unicode spaces,
+    tabs, newlines, C0/DEL/C1 control characters, and Unicode format/zero-width chars.
+    """
+    if ch.isspace() or ch in ZERO_WIDTH_CHARS:
+        return True
+    cat = unicodedata.category(ch)
+    return cat in ("Cc", "Cf", "Zs", "Zl", "Zp")
+
+
+def has_disallowed_control_char(value: str) -> bool:
+    """Return True if value contains non-whitespace C0, DEL, or C1 control characters."""
+    for ch in value:
+        codepoint = ord(ch)
+        if (codepoint < 0x20 and ch not in ("\t", "\n", "\r")) or (0x7F <= codepoint <= 0x9F):
+            return True
+    return False
+
+
+def strip_disallowed_control_chars(value: str) -> str:
+    """Remove non-whitespace C0/DEL/C1 control characters for safe JSON preview output."""
+    return "".join(
+        ch
+        for ch in value
+        if not ((ord(ch) < 0x20 and ch not in ("\t", "\n", "\r")) or (0x7F <= ord(ch) <= 0x9F))
+    )
+
+
+def strip_cell_whitespace(value: str) -> str:
+    """Strip outer whitespace and zero-width format characters from a non-formula cell."""
+    start = 0
+    end = len(value)
+    while start < end and (value[start].isspace() or value[start] in ZERO_WIDTH_CHARS):
+        start += 1
+    while end > start and (value[end - 1].isspace() or value[end - 1] in ZERO_WIDTH_CHARS):
+        end -= 1
+    return value[start:end]
+
+
+def normalize_newlines(value: str) -> str:
+    """Normalize CRLF and standalone CR to LF."""
+    return value.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def normalize_header_token(header: str) -> str:
-    """Normalize a column header token for matching (strip BOM, whitespace, underscores)."""
-    cleaned = header.lstrip("\ufeff").strip()
+    """Normalize a column header token for matching (strip BOM/zero-width, whitespace, punctuation)."""
+    cleaned = strip_cell_whitespace(header.lstrip("\ufeff"))
+    cleaned = "".join(ch for ch in cleaned if ch not in ZERO_WIDTH_CHARS)
     return re.sub(r"[\s_\-()]+", "", cleaned).lower()
 
 
 def detect_encoding_and_decode(raw_bytes: bytes) -> Tuple[str, str]:
     """Detect UTF-8 BOM vs plain UTF-8 and return (encoding_name, decoded_text)."""
     if raw_bytes.startswith(b"\xef\xbb\xbf"):
-        return "UTF-8-BOM", raw_bytes.decode("utf-8-sig")
+        decoded = raw_bytes.decode("utf-8-sig")
+        return "UTF-8-BOM", decoded.lstrip("\ufeff")
     return "UTF-8", raw_bytes.decode("utf-8")
 
 
 def detect_entity_type(headers: List[str]) -> str:
     """Auto-detect whether headers represent 'member' or 'class' CSV."""
-    norm_headers = {normalize_header_token(h) for h in headers if h}
+    norm_headers = {normalize_header_token(h) for h in headers if normalize_header_token(h)}
     member_score = 0
     class_score = 0
     for field_spec in MEMBER_SCHEMA.values():
@@ -170,85 +255,247 @@ def detect_entity_type(headers: List[str]) -> str:
     return "class" if class_score > member_score else "member"
 
 
+def resolve_column_mapping_detailed(
+    headers: List[str],
+    entity_type: str,
+    custom_mapping: Optional[Dict[str, str]] = None,
+    header_line: int = 1,
+) -> Tuple[Dict[str, str], Dict[str, int], List[Tuple[int, str]], List[str], List[Dict[str, Any]]]:
+    """
+    Index-aware column mapping resolver with conflict detection.
+    Detects:
+      - Unknown canonical fields or missing target CSV headers in custom_mapping
+      - Many-to-one conflicts (multiple CSV columns mapped to one canonical field)
+      - One-to-many conflicts (one CSV column mapped to multiple canonical fields)
+      - Ambiguous alias collisions (multiple distinct CSV headers matching aliases of the same field)
+    """
+    schema = SCHEMAS[entity_type]
+    canonical_to_source: Dict[str, str] = {}
+    canonical_to_col_idx: Dict[str, int] = {}
+    col_idx_to_canonical: Dict[int, str] = {}
+    conflicts: List[Dict[str, Any]] = []
+
+    exact_to_indices: Dict[str, List[int]] = {}
+    norm_to_indices: Dict[str, List[int]] = {}
+    for idx, h in enumerate(headers):
+        if not h:
+            continue
+        exact_to_indices.setdefault(h, []).append(idx)
+        nh = normalize_header_token(h)
+        if nh:
+            norm_to_indices.setdefault(nh, []).append(idx)
+
+    def _find_header_col_idx(target_header: str) -> Optional[int]:
+        cleaned = strip_cell_whitespace(target_header.lstrip("\ufeff"))
+        if cleaned in exact_to_indices:
+            return exact_to_indices[cleaned][0]
+        nt = normalize_header_token(cleaned)
+        if nt and nt in norm_to_indices:
+            return norm_to_indices[nt][0]
+        return None
+
+    if custom_mapping:
+        for raw_k, raw_v in custom_mapping.items():
+            k = raw_k.strip()
+            v = raw_v.strip()
+            canonical_field: Optional[str] = None
+            source_spec: Optional[str] = None
+
+            if k in schema and v in schema:
+                v_idx = _find_header_col_idx(v)
+                k_idx = _find_header_col_idx(k)
+                if v_idx is not None:
+                    canonical_field, source_spec = k, v
+                elif k_idx is not None:
+                    canonical_field, source_spec = v, k
+                else:
+                    canonical_field, source_spec = k, v
+            elif k in schema:
+                canonical_field, source_spec = k, v
+            elif v in schema:
+                canonical_field, source_spec = v, k
+            else:
+                conflicts.append(
+                    {
+                        "row_number": 0,
+                        "line_number": header_line,
+                        "field": "__mapping__",
+                        "source_column": k,
+                        "code": "MAPPING_CONFLICT",
+                        "severity": "error",
+                        "message": f"알 수 없는 열 매핑 설정입니다: '{raw_k}' -> '{raw_v}' (유효한 표준 필드가 아님).",
+                        "raw_value": f"{raw_k}={raw_v}",
+                    }
+                )
+                continue
+
+            assert canonical_field is not None and source_spec is not None
+            matched_idx = _find_header_col_idx(source_spec)
+            if matched_idx is None:
+                conflicts.append(
+                    {
+                        "row_number": 0,
+                        "line_number": header_line,
+                        "field": canonical_field,
+                        "source_column": source_spec,
+                        "code": "MAPPING_CONFLICT",
+                        "severity": "error",
+                        "message": f"열 매핑에 지정된 원본 헤더 '{source_spec}'(표준 필드 '{canonical_field}')가 CSV에 존재하지 않습니다.",
+                        "raw_value": source_spec,
+                    }
+                )
+                continue
+
+            if canonical_field in canonical_to_col_idx and canonical_to_col_idx[canonical_field] != matched_idx:
+                prev_header = canonical_to_source[canonical_field]
+                conflicts.append(
+                    {
+                        "row_number": 0,
+                        "line_number": header_line,
+                        "field": canonical_field,
+                        "source_column": headers[matched_idx],
+                        "code": "MAPPING_CONFLICT",
+                        "severity": "error",
+                        "message": (
+                            f"열 매핑 충돌: 표준 필드 '{canonical_field}'에 복수의 원본 열"
+                            f"('{prev_header}', '{headers[matched_idx]}')이 매핑되었습니다."
+                        ),
+                        "raw_value": headers[matched_idx],
+                    }
+                )
+                continue
+
+            if matched_idx in col_idx_to_canonical and col_idx_to_canonical[matched_idx] != canonical_field:
+                prev_canonical = col_idx_to_canonical[matched_idx]
+                conflicts.append(
+                    {
+                        "row_number": 0,
+                        "line_number": header_line,
+                        "field": canonical_field,
+                        "source_column": headers[matched_idx],
+                        "code": "MAPPING_CONFLICT",
+                        "severity": "error",
+                        "message": (
+                            f"열 매핑 충돌: 원본 열 '{headers[matched_idx]}'가 복수의 표준 필드"
+                            f"('{prev_canonical}', '{canonical_field}')에 중복 매핑되었습니다."
+                        ),
+                        "raw_value": headers[matched_idx],
+                    }
+                )
+                continue
+
+            canonical_to_col_idx[canonical_field] = matched_idx
+            canonical_to_source[canonical_field] = headers[matched_idx]
+            col_idx_to_canonical[matched_idx] = canonical_field
+
+    for canonical_field, spec in schema.items():
+        if canonical_field in canonical_to_col_idx:
+            continue
+        norm_aliases = {normalize_header_token(a) for a in spec["aliases"]}
+        candidate_indices: List[int] = []
+        seen_candidate_norms = set()
+        for idx, h in enumerate(headers):
+            if not h or idx in col_idx_to_canonical:
+                continue
+            nh = normalize_header_token(h)
+            if nh in norm_aliases and nh not in seen_candidate_norms:
+                seen_candidate_norms.add(nh)
+                candidate_indices.append(idx)
+
+        if len(candidate_indices) > 1:
+            competing_names = ", ".join(f"'{headers[i]}'" for i in candidate_indices)
+            conflicts.append(
+                {
+                    "row_number": 0,
+                    "line_number": header_line,
+                    "field": canonical_field,
+                    "source_column": headers[candidate_indices[1]],
+                    "code": "MAPPING_CONFLICT",
+                    "severity": "error",
+                    "message": (
+                        f"자동 열 매핑 모호성 충돌: 표준 필드 '{canonical_field}'에 대응하는 별칭 헤더가 "
+                        f"여러 개 존재합니다({competing_names}). --mapping으로 명시 지정하세요."
+                    ),
+                    "raw_value": competing_names,
+                }
+            )
+
+        # Bind using alias priority order if any candidate exists
+        for alias in spec["aliases"]:
+            norm_alias = normalize_header_token(alias)
+            if norm_alias in norm_to_indices:
+                chosen_idx = next(
+                    (i for i in norm_to_indices[norm_alias] if i not in col_idx_to_canonical),
+                    None,
+                )
+                if chosen_idx is not None:
+                    canonical_to_col_idx[canonical_field] = chosen_idx
+                    canonical_to_source[canonical_field] = headers[chosen_idx]
+                    col_idx_to_canonical[chosen_idx] = canonical_field
+                    break
+
+    unmapped_columns = [
+        (idx, h) for idx, h in enumerate(headers) if idx not in col_idx_to_canonical
+    ]
+    missing_required = [
+        field
+        for field, spec in schema.items()
+        if spec["required"] and field not in canonical_to_col_idx
+    ]
+    return canonical_to_source, canonical_to_col_idx, unmapped_columns, missing_required, conflicts
+
+
 def resolve_column_mapping(
     headers: List[str],
     entity_type: str,
     custom_mapping: Optional[Dict[str, str]] = None,
 ) -> Tuple[Dict[str, str], List[str], List[str]]:
     """
-    Map CSV source headers to canonical schema fields.
-    custom_mapping can map either {source_header: canonical_field} or {canonical_field: source_header}.
-    Returns:
-        canonical_to_source: {canonical_field: source_header}
-        unmapped_headers: list of source headers not mapped to any canonical field
-        missing_required_fields: list of required canonical fields not mapped
+    Map CSV source headers to canonical schema fields (public backwards-compatible helper).
     """
-    schema = SCHEMAS[entity_type]
-    canonical_to_source: Dict[str, str] = {}
-    used_headers = set()
-
-    norm_to_actual = {normalize_header_token(h): h for h in headers}
-
-    if custom_mapping:
-        for k, v in custom_mapping.items():
-            if k in schema and v in headers:
-                canonical_to_source[k] = v
-                used_headers.add(v)
-            elif v in schema and k in headers:
-                canonical_to_source[v] = k
-                used_headers.add(k)
-            else:
-                nk, nv = normalize_header_token(k), normalize_header_token(v)
-                if k in schema and nv in norm_to_actual:
-                    actual = norm_to_actual[nv]
-                    canonical_to_source[k] = actual
-                    used_headers.add(actual)
-                elif v in schema and nk in norm_to_actual:
-                    actual = norm_to_actual[nk]
-                    canonical_to_source[v] = actual
-                    used_headers.add(actual)
-
-    for canonical_field, spec in schema.items():
-        if canonical_field in canonical_to_source:
-            continue
-        for alias in spec["aliases"]:
-            norm_alias = normalize_header_token(alias)
-            if norm_alias in norm_to_actual:
-                actual_header = norm_to_actual[norm_alias]
-                if actual_header not in used_headers:
-                    canonical_to_source[canonical_field] = actual_header
-                    used_headers.add(actual_header)
-                    break
-
-    unmapped_headers = [h for h in headers if h not in used_headers]
-    missing_required = [
-        field
-        for field, spec in schema.items()
-        if spec["required"] and field not in canonical_to_source
-    ]
-    return canonical_to_source, unmapped_headers, missing_required
+    canonical_to_source, _, unmapped_columns, missing_required, _ = resolve_column_mapping_detailed(
+        headers, entity_type, custom_mapping
+    )
+    return canonical_to_source, [h for _, h in unmapped_columns], missing_required
 
 
 def is_formula_injection(value: str, field_type: str = "str") -> bool:
     """
     Check if a cell value poses a CSV / spreadsheet formula injection risk.
-    Any value starting with =, +, -, @, tab, or carriage return (either directly
-    or after leading spaces) is treated as a formula injection attempt, except
-    pure negative integers in numeric fields if strictly numeric (though negative
-    numbers are still invalid for non-negative Pilates counts).
+    Detects direct triggers (=, +, -, @, \\t, \\r) as well as formulas hidden behind
+    leading spaces, tabs, newlines, Unicode spaces, zero-width chars, or control chars.
+    Pure negative integers on numeric fields (without control/format prefixes) are
+    handled as numeric range errors rather than formula injections.
     """
     if not value:
         return False
     if value[0] in ("\t", "\r"):
         return True
-    stripped_leading = value.lstrip(" ")
+
+    idx = 0
+    n = len(value)
+    has_stealth_ctrl_or_fmt = False
+    while idx < n and is_stealth_prefix_char(value[idx]):
+        ch = value[idx]
+        if ch not in (" ", "\n", "\r") and (
+            ch in ZERO_WIDTH_CHARS or unicodedata.category(ch) in ("Cc", "Cf")
+        ):
+            has_stealth_ctrl_or_fmt = True
+        idx += 1
+
+    stripped_leading = value[idx:]
     if not stripped_leading:
         return False
+
     first_char = stripped_leading[0]
-    if first_char in ("=", "+", "@", "\t", "\r"):
+    if first_char in ("=", "+", "@"):
         return True
     if first_char == "-":
-        if field_type in ("non_negative_int", "positive_int") and re.match(r"^-\d+$", stripped_leading):
+        if (
+            not has_stealth_ctrl_or_fmt
+            and field_type in ("non_negative_int", "positive_int")
+            and re.match(r"^-\d+$", strip_cell_whitespace(stripped_leading))
+        ):
             return False
         return True
     return False
@@ -257,12 +504,24 @@ def is_formula_injection(value: str, field_type: str = "str") -> bool:
 def sanitize_preview_value(value: str) -> Tuple[str, bool]:
     """
     Sanitize a string for safe preview output so spreadsheet/UI consumers cannot execute formulas.
-    Normalizes CRLF to LF and prefixes dangerous leading characters with a single quote.
+    Normalizes CRLF/CR to LF, strips non-whitespace control chars (e.g. NUL), caps preview length,
+    and prefixes dangerous leading characters (even behind stealth prefixes) with a single quote.
     """
-    normalized = value.replace("\r\n", "\n")
+    normalized = strip_disallowed_control_chars(normalize_newlines(value))
+    if len(normalized) > PREVIEW_CELL_TRUNCATE_CHARS:
+        normalized = normalized[:PREVIEW_CELL_TRUNCATE_CHARS] + "...[truncated]"
     if not normalized:
         return normalized, False
-    if normalized[0] in ("\t", "\r") or normalized.lstrip(" ").startswith(("=", "+", "-", "@", "\t", "\r")):
+
+    idx = 0
+    n = len(normalized)
+    while idx < n and is_stealth_prefix_char(normalized[idx]):
+        idx += 1
+    stripped_leading = normalized[idx:]
+
+    if value[0] in ("\t", "\r") or normalized[0] in ("\t", "\r") or (
+        stripped_leading and stripped_leading[0] in FORMULA_OPERATOR_CHARS
+    ):
         return "'" + normalized, True
     return normalized, False
 
@@ -296,163 +555,537 @@ def parse_and_validate_time(value: str) -> Tuple[Optional[datetime.time], Option
 
 def check_unclosed_quotes(text: str) -> Optional[int]:
     """
-    Detect unclosed double quotes in raw CSV text and return the 1-based line number
-    where the unclosed quote started (or None if balanced).
+    Field-aware unclosed double-quote check returning the 1-based starting line number
+    if a quoted CSV field remains unclosed at EOF, or None if all quoted fields close.
     """
-    in_quotes = False
-    quote_start_line = 1
-    line_num = 1
-    i = 0
+    for record in iter_csv_records(text, max_field_chars=DEFAULT_MAX_FIELD_CHARS):
+        for issue in record.issues:
+            if issue.unclosed_eof:
+                return issue.line_number
+    return None
+
+
+def iter_csv_records(
+    text: str,
+    max_field_chars: int = DEFAULT_MAX_FIELD_CHARS,
+) -> Iterator[ParsedCsvRecord]:
+    """
+    Streaming RFC-4180 CSV tokenizer with:
+    - Exact 1-based physical line_number tracking across LF, CRLF, and CR newlines
+    - Bounded per-field character buffering (prevents OOM on huge fields)
+    - Malformed quote detection (unclosed quotes at EOF, trailing chars after closing quote,
+      and bare unescaped quotes in non-formula unquoted cells) with line-bounded recovery
+    - NUL / control character resilience without C _csv crashes
+    """
     n = len(text)
+    i = 0
+    line_num = 1
+
     while i < n:
-        ch = text[i]
-        if ch == '"':
-            if in_quotes and i + 1 < n and text[i + 1] == '"':
-                i += 2
-                continue
-            in_quotes = not in_quotes
-            if in_quotes:
-                quote_start_line = line_num
-        elif ch == "\n":
+        record_start_line = line_num
+
+        # Handle completely empty physical line
+        if text[i] == "\r":
+            i += 2 if (i + 1 < n and text[i + 1] == "\n") else 1
             line_num += 1
-        i += 1
-    return quote_start_line if in_quotes else None
+            yield ParsedCsvRecord(
+                fields=[],
+                start_line=record_start_line,
+                end_line=record_start_line,
+                issues=[],
+                is_blank_line=True,
+            )
+            continue
+        if text[i] == "\n":
+            i += 1
+            line_num += 1
+            yield ParsedCsvRecord(
+                fields=[],
+                start_line=record_start_line,
+                end_line=record_start_line,
+                issues=[],
+                is_blank_line=True,
+            )
+            continue
+
+        fields: List[str] = []
+        issues: List[CsvFieldIssue] = []
+        col_idx = 0
+        was_quoted_first_cell = text[i] == '"'
+
+        while True:
+            if i >= n or text[i] in ("\r", "\n"):
+                # Trailing empty field after comma (e.g., "a,b,\n")
+                fields.append("")
+                record_end_line = line_num
+                if i < n:
+                    if text[i] == "\r":
+                        i += 2 if (i + 1 < n and text[i + 1] == "\n") else 1
+                    else:
+                        i += 1
+                    line_num += 1
+                break
+
+            if text[i] == '"':
+                quote_start_line = line_num
+                i += 1
+                buf: List[str] = []
+                char_count = 0
+                exceeded_limit = False
+                closed_quote = False
+
+                while i < n:
+                    ch = text[i]
+                    if ch == '"':
+                        if i + 1 < n and text[i + 1] == '"':
+                            char_count += 1
+                            if char_count <= max_field_chars:
+                                buf.append('"')
+                            else:
+                                exceeded_limit = True
+                            i += 2
+                            continue
+                        i += 1
+                        closed_quote = True
+                        break
+                    if ch == "\r":
+                        if i + 1 < n and text[i + 1] == "\n":
+                            char_count += 2
+                            if char_count <= max_field_chars:
+                                buf.append("\r\n")
+                            else:
+                                exceeded_limit = True
+                            i += 2
+                        else:
+                            char_count += 1
+                            if char_count <= max_field_chars:
+                                buf.append("\r")
+                            else:
+                                exceeded_limit = True
+                            i += 1
+                        line_num += 1
+                    elif ch == "\n":
+                        char_count += 1
+                        if char_count <= max_field_chars:
+                            buf.append("\n")
+                        else:
+                            exceeded_limit = True
+                        i += 1
+                        line_num += 1
+                    else:
+                        char_count += 1
+                        if char_count <= max_field_chars:
+                            buf.append(ch)
+                        else:
+                            exceeded_limit = True
+                        i += 1
+
+                cell_base = "".join(buf)
+
+                if not closed_quote:
+                    issues.append(
+                        CsvFieldIssue(
+                            col_index=col_idx,
+                            code="MALFORMED_CSV_QUOTE",
+                            line_number=quote_start_line,
+                            message=f"{quote_start_line}번째 줄에서 시작된 인용부호(\")가 닫히지 않았습니다.",
+                            raw_snippet=cell_base[:120],
+                            unclosed_eof=True,
+                        )
+                    )
+                    if exceeded_limit:
+                        issues.append(
+                            CsvFieldIssue(
+                                col_index=col_idx,
+                                code="FIELD_TOO_LARGE",
+                                line_number=quote_start_line,
+                                message=f"셀 길이가 최대 허용치({max_field_chars}자)를 초과했습니다({char_count}자).",
+                                raw_snippet=cell_base[:120],
+                            )
+                        )
+                    fields.append(cell_base)
+                    record_end_line = line_num
+                    break
+
+                # Closed quote: verify clean delimiter or record end, else recover on current line
+                extra_buf: List[str] = []
+                if i < n and text[i] not in (",", "\r", "\n"):
+                    malformed_line = line_num
+                    while i < n and text[i] not in (",", "\r", "\n"):
+                        char_count += 1
+                        if char_count <= max_field_chars:
+                            extra_buf.append(text[i])
+                        else:
+                            exceeded_limit = True
+                        i += 1
+                    extra_str = "".join(extra_buf)
+                    issues.append(
+                        CsvFieldIssue(
+                            col_index=col_idx,
+                            code="MALFORMED_CSV_QUOTE",
+                            line_number=malformed_line,
+                            message=f"{malformed_line}번째 줄에서 닫는 인용부호(\") 뒤에 허용되지 않은 문자가 이어집니다.",
+                            raw_snippet=(f'"{cell_base[:60]}"{extra_str[:60]}'),
+                        )
+                    )
+                    full_cell = cell_base + extra_str
+                else:
+                    full_cell = cell_base
+
+                if exceeded_limit:
+                    issues.append(
+                        CsvFieldIssue(
+                            col_index=col_idx,
+                            code="FIELD_TOO_LARGE",
+                            line_number=quote_start_line,
+                            message=f"셀 길이가 최대 허용치({max_field_chars}자)를 초과했습니다({char_count}자).",
+                            raw_snippet=full_cell[:120],
+                        )
+                    )
+
+                fields.append(full_cell)
+                if i < n and text[i] == ",":
+                    i += 1
+                    col_idx += 1
+                    continue
+
+                record_end_line = line_num
+                if i < n:
+                    if text[i] == "\r":
+                        i += 2 if (i + 1 < n and text[i + 1] == "\n") else 1
+                    else:
+                        i += 1
+                    line_num += 1
+                break
+
+            # Unquoted field
+            field_start_line = line_num
+            buf = []
+            char_count = 0
+            exceeded_limit = False
+            has_bare_quote = False
+
+            while i < n and text[i] not in (",", "\r", "\n"):
+                ch = text[i]
+                if ch == '"':
+                    has_bare_quote = True
+                char_count += 1
+                if char_count <= max_field_chars:
+                    buf.append(ch)
+                else:
+                    exceeded_limit = True
+                i += 1
+
+            cell_str = "".join(buf)
+            if has_bare_quote and not is_formula_injection(cell_str, "str"):
+                issues.append(
+                    CsvFieldIssue(
+                        col_index=col_idx,
+                        code="MALFORMED_CSV_QUOTE",
+                        line_number=field_start_line,
+                        message=f"{field_start_line}번째 줄 비인용 셀 내부에 이스케이프되지 않은 인용부호(\")가 포함되어 있습니다.",
+                        raw_snippet=cell_str[:120],
+                    )
+                )
+            if exceeded_limit:
+                issues.append(
+                    CsvFieldIssue(
+                        col_index=col_idx,
+                        code="FIELD_TOO_LARGE",
+                        line_number=field_start_line,
+                        message=f"셀 길이가 최대 허용치({max_field_chars}자)를 초과했습니다({char_count}자).",
+                        raw_snippet=cell_str[:120],
+                    )
+                )
+
+            fields.append(cell_str)
+            if i < n and text[i] == ",":
+                i += 1
+                col_idx += 1
+                continue
+
+            record_end_line = line_num
+            if i < n:
+                if text[i] == "\r":
+                    i += 2 if (i + 1 < n and text[i + 1] == "\n") else 1
+                else:
+                    i += 1
+                line_num += 1
+            break
+
+        # Treat a single unquoted whitespace-only token with no commas as a blank line
+        is_ws_only_single = (
+            not was_quoted_first_cell
+            and len(fields) == 1
+            and not issues
+            and strip_cell_whitespace(fields[0]) == ""
+        )
+        yield ParsedCsvRecord(
+            fields=[] if is_ws_only_single else fields,
+            start_line=record_start_line,
+            end_line=record_end_line,
+            issues=issues,
+            is_blank_line=is_ws_only_single,
+        )
+
+
+def _empty_result(
+    entity_type: Optional[str],
+    encoding_detected: str,
+    error_item: Dict[str, Any],
+) -> Dict[str, Any]:
+    code = error_item["code"]
+    return {
+        "dry_run": True,
+        "db_write_performed": False,
+        "entity_type": entity_type or "unknown",
+        "encoding_detected": encoding_detected,
+        "column_mapping": {},
+        "unmapped_columns": [],
+        "missing_required_columns": [],
+        "summary": {
+            "total_rows": 0,
+            "valid_rows": 0,
+            "invalid_rows": 0,
+            "duplicate_rows": 0,
+            "formula_injection_count": 0,
+            "error_counts_by_code": {code: 1},
+            "can_import": False,
+        },
+        "row_errors": [error_item],
+        "preview_rows": [],
+    }
 
 
 def validate_csv_content(
     raw_bytes: bytes,
     entity_type: Optional[str] = None,
     custom_mapping: Optional[Dict[str, str]] = None,
-    max_preview_rows: int = 50,
+    max_preview_rows: int = DEFAULT_MAX_PREVIEW_ROWS,
+    max_rows: int = DEFAULT_MAX_ROWS,
+    max_field_chars: int = DEFAULT_MAX_FIELD_CHARS,
+    max_file_bytes: int = DEFAULT_MAX_FILE_BYTES,
 ) -> Dict[str, Any]:
     """
     Core dry-run CSV validation pipeline. Never writes to any database.
     Returns a structured dictionary suitable for JSON serialization.
     """
-    row_errors: List[Dict[str, Any]] = []
-    preview_rows: List[Dict[str, Any]] = []
+    if max_file_bytes > 0 and len(raw_bytes) > max_file_bytes:
+        return _empty_result(
+            entity_type=entity_type,
+            encoding_detected="UNCHECKED",
+            error_item={
+                "row_number": 0,
+                "line_number": 1,
+                "field": "__file__",
+                "source_column": None,
+                "code": "FILE_TOO_LARGE",
+                "severity": "error",
+                "message": f"CSV 파일 크기({len(raw_bytes)} bytes)가 최대 허용 크기({max_file_bytes} bytes)를 초과했습니다.",
+                "raw_value": None,
+            },
+        )
 
     try:
         encoding_detected, decoded_text = detect_encoding_and_decode(raw_bytes)
     except UnicodeDecodeError as exc:
-        return {
-            "dry_run": True,
-            "db_write_performed": False,
-            "entity_type": entity_type or "unknown",
-            "encoding_detected": "INVALID",
-            "column_mapping": {},
-            "unmapped_columns": [],
-            "missing_required_columns": [],
-            "summary": {
-                "total_rows": 0,
-                "valid_rows": 0,
-                "invalid_rows": 0,
-                "duplicate_rows": 0,
-                "formula_injection_count": 0,
-                "error_counts_by_code": {"ENCODING_ERROR": 1},
-                "can_import": False,
+        return _empty_result(
+            entity_type=entity_type,
+            encoding_detected="INVALID",
+            error_item={
+                "row_number": 0,
+                "line_number": 1,
+                "field": "__file__",
+                "source_column": None,
+                "code": "ENCODING_ERROR",
+                "severity": "error",
+                "message": f"UTF-8 디코딩 실패: {exc}",
+                "raw_value": None,
             },
-            "row_errors": [
-                {
-                    "row_number": 0,
-                    "line_number": 1,
-                    "field": "__file__",
-                    "source_column": None,
-                    "code": "ENCODING_ERROR",
-                    "severity": "error",
-                    "message": f"UTF-8 디코딩 실패: {exc}",
-                    "raw_value": None,
-                }
-            ],
-            "preview_rows": [],
-        }
+        )
 
-    unclosed_line = check_unclosed_quotes(decoded_text)
-    if unclosed_line is not None:
-        return {
-            "dry_run": True,
-            "db_write_performed": False,
-            "entity_type": entity_type or "unknown",
-            "encoding_detected": encoding_detected,
-            "column_mapping": {},
-            "unmapped_columns": [],
-            "missing_required_columns": [],
-            "summary": {
-                "total_rows": 0,
-                "valid_rows": 0,
-                "invalid_rows": 0,
-                "duplicate_rows": 0,
-                "formula_injection_count": 0,
-                "error_counts_by_code": {"MALFORMED_CSV_QUOTE": 1},
-                "can_import": False,
+    effective_max_field = max(1, max_field_chars)
+    effective_max_rows = max(1, max_rows)
+    effective_max_preview = max(0, max_preview_rows)
+
+    record_iter = iter_csv_records(decoded_text, max_field_chars=effective_max_field)
+
+    header_record: Optional[ParsedCsvRecord] = None
+    for rec in record_iter:
+        if not rec.is_blank_line:
+            header_record = rec
+            break
+
+    if header_record is None:
+        return _empty_result(
+            entity_type=entity_type,
+            encoding_detected=encoding_detected,
+            error_item={
+                "row_number": 0,
+                "line_number": 1,
+                "field": "__file__",
+                "source_column": None,
+                "code": "EMPTY_FILE",
+                "severity": "error",
+                "message": "CSV 파일이 비어 있거나 헤더 행이 없습니다.",
+                "raw_value": None,
             },
-            "row_errors": [
-                {
+        )
+
+    # If the header row itself has an unclosed quote reaching EOF, columns cannot be determined
+    for h_issue in header_record.issues:
+        if h_issue.unclosed_eof:
+            return _empty_result(
+                entity_type=entity_type,
+                encoding_detected=encoding_detected,
+                error_item={
                     "row_number": 0,
-                    "line_number": unclosed_line,
+                    "line_number": h_issue.line_number,
                     "field": "__csv__",
                     "source_column": None,
                     "code": "MALFORMED_CSV_QUOTE",
                     "severity": "error",
-                    "message": f"{unclosed_line}번째 줄에서 시작된 인용부호(\")가 닫히지 않았습니다.",
+                    "message": h_issue.message,
                     "raw_value": None,
-                }
-            ],
-            "preview_rows": [],
-        }
+                },
+            )
 
-    stream = io.StringIO(decoded_text, newline="")
-    reader = csv.reader(stream, delimiter=",", quotechar='"', strict=False)
+    row_errors: List[Dict[str, Any]] = []
+    preview_rows: List[Dict[str, Any]] = []
+    formula_injection_count = 0
 
-    try:
-        raw_headers = next(reader)
-    except StopIteration:
-        return {
-            "dry_run": True,
-            "db_write_performed": False,
-            "entity_type": entity_type or "unknown",
-            "encoding_detected": encoding_detected,
-            "column_mapping": {},
-            "unmapped_columns": [],
-            "missing_required_columns": [],
-            "summary": {
-                "total_rows": 0,
-                "valid_rows": 0,
-                "invalid_rows": 0,
-                "duplicate_rows": 0,
-                "formula_injection_count": 0,
-                "error_counts_by_code": {"EMPTY_FILE": 1},
-                "can_import": False,
-            },
-            "row_errors": [
+    header_line = header_record.start_line
+    raw_headers = header_record.fields
+    headers = [strip_cell_whitespace(normalize_newlines(h.lstrip("\ufeff"))) for h in raw_headers]
+
+    # Record any tokenizer issues on header cells
+    for h_issue in header_record.issues:
+        src_col = headers[h_issue.col_index] if h_issue.col_index < len(headers) and headers[h_issue.col_index] else f"col_{h_issue.col_index + 1}"
+        row_errors.append(
+            {
+                "row_number": 0,
+                "line_number": h_issue.line_number,
+                "field": "__header__",
+                "source_column": src_col,
+                "code": h_issue.code,
+                "severity": "error",
+                "message": h_issue.message,
+                "raw_value": sanitize_preview_value(h_issue.raw_snippet)[0],
+            }
+        )
+
+    # Validate empty headers, duplicate headers (exact & normalized), and header formula/control chars
+    seen_exact_headers: Dict[str, int] = {}
+    seen_norm_headers: Dict[str, Tuple[int, str]] = {}
+    for col_idx, raw_h in enumerate(raw_headers):
+        cleaned_h = headers[col_idx]
+        if is_formula_injection(raw_h, "str"):
+            formula_injection_count += 1
+            safe_h, _ = sanitize_preview_value(raw_h)
+            row_errors.append(
                 {
                     "row_number": 0,
-                    "line_number": 1,
-                    "field": "__file__",
-                    "source_column": None,
-                    "code": "EMPTY_FILE",
+                    "line_number": header_line,
+                    "field": "__header__",
+                    "source_column": safe_h,
+                    "code": "FORMULA_INJECTION",
                     "severity": "error",
-                    "message": "CSV 파일이 비어 있거나 헤더 행이 없습니다.",
-                    "raw_value": None,
+                    "message": f"헤더 열({col_idx + 1}번째 열)에서 수식 주입 위험 값 감지: '{safe_h}'",
+                    "raw_value": safe_h,
                 }
-            ],
-            "preview_rows": [],
-        }
+            )
+        elif has_disallowed_control_char(raw_h):
+            safe_h, _ = sanitize_preview_value(raw_h)
+            row_errors.append(
+                {
+                    "row_number": 0,
+                    "line_number": header_line,
+                    "field": "__header__",
+                    "source_column": safe_h or f"col_{col_idx + 1}",
+                    "code": "INVALID_CONTROL_CHAR",
+                    "severity": "error",
+                    "message": f"헤더 열({col_idx + 1}번째 열)에 허용되지 않는 제어문자가 포함되어 있습니다.",
+                    "raw_value": safe_h,
+                }
+            )
 
-    headers = [h.lstrip("\ufeff").strip() for h in raw_headers]
+        if not cleaned_h:
+            row_errors.append(
+                {
+                    "row_number": 0,
+                    "line_number": header_line,
+                    "field": "__header__",
+                    "source_column": f"col_{col_idx + 1}",
+                    "code": "EMPTY_HEADER",
+                    "severity": "error",
+                    "message": f"{col_idx + 1}번째 열의 헤더 이름이 비어 있습니다.",
+                    "raw_value": raw_h,
+                }
+            )
+            continue
+
+        norm_h = normalize_header_token(cleaned_h)
+        if cleaned_h in seen_exact_headers:
+            first_col = seen_exact_headers[cleaned_h] + 1
+            row_errors.append(
+                {
+                    "row_number": 0,
+                    "line_number": header_line,
+                    "field": "__header__",
+                    "source_column": cleaned_h,
+                    "code": "DUPLICATE_HEADER",
+                    "severity": "error",
+                    "message": f"중복 헤더 '{cleaned_h}' 감지 ({first_col}번째 열과 {col_idx + 1}번째 열).",
+                    "raw_value": cleaned_h,
+                }
+            )
+        elif norm_h and norm_h in seen_norm_headers:
+            first_idx, first_name = seen_norm_headers[norm_h]
+            row_errors.append(
+                {
+                    "row_number": 0,
+                    "line_number": header_line,
+                    "field": "__header__",
+                    "source_column": cleaned_h,
+                    "code": "DUPLICATE_HEADER",
+                    "severity": "error",
+                    "message": (
+                        f"정규화 충돌 중복 헤더 '{cleaned_h}' 감지 "
+                        f"({first_idx + 1}번째 열 '{first_name}'와 동일 표준 토큰)."
+                    ),
+                    "raw_value": cleaned_h,
+                }
+            )
+        else:
+            seen_exact_headers[cleaned_h] = col_idx
+            if norm_h:
+                seen_norm_headers[norm_h] = (col_idx, cleaned_h)
+
     resolved_entity = entity_type or detect_entity_type(headers)
     schema = SCHEMAS[resolved_entity]
 
-    canonical_to_source, unmapped_headers, missing_required = resolve_column_mapping(
-        headers, resolved_entity, custom_mapping
+    (
+        canonical_to_source,
+        canonical_to_col_idx,
+        unmapped_col_pairs,
+        missing_required,
+        mapping_conflicts,
+    ) = resolve_column_mapping_detailed(
+        headers=headers,
+        entity_type=resolved_entity,
+        custom_mapping=custom_mapping,
+        header_line=header_line,
     )
-    header_index_map = {h: idx for idx, h in enumerate(headers)}
+    unmapped_headers = [h for _, h in unmapped_col_pairs if h]
+    col_idx_to_canonical = {col_idx: field for field, col_idx in canonical_to_col_idx.items()}
+
+    row_errors.extend(mapping_conflicts)
 
     for missing_field in missing_required:
         row_errors.append(
             {
                 "row_number": 0,
-                "line_number": 1,
+                "line_number": header_line,
                 "field": missing_field,
                 "source_column": None,
                 "code": "MISSING_REQUIRED_COLUMN",
@@ -462,26 +1095,107 @@ def validate_csv_content(
             }
         )
 
-    seen_primary_keys: Dict[str, int] = {}
-    seen_composite_keys: Dict[Tuple[str, ...], int] = {}
-    seen_exact_rows: Dict[Tuple[str, ...], int] = {}
+    header_level_has_errors = len(row_errors) > 0
+
+    seen_primary_keys: Dict[str, Tuple[int, int]] = {}
+    seen_composite_keys: Dict[Tuple[str, ...], Tuple[int, int]] = {}
+    seen_exact_rows: Dict[Tuple[str, ...], Tuple[int, int]] = {}
 
     total_rows = 0
     valid_rows = 0
     invalid_rows = 0
     duplicate_rows = 0
-    formula_injection_count = 0
 
-    prev_line_num = reader.line_num
+    row_idx = 0
+    for record in record_iter:
+        if record.is_blank_line:
+            continue
 
-    for row_idx, raw_row in enumerate(reader, start=1):
-        start_line_num = prev_line_num + 1
-        prev_line_num = reader.line_num
+        row_idx += 1
+        start_line_num = record.start_line
+
+        if row_idx > effective_max_rows:
+            row_errors.append(
+                {
+                    "row_number": row_idx,
+                    "line_number": start_line_num,
+                    "field": "__file__",
+                    "source_column": None,
+                    "code": "MAX_ROWS_EXCEEDED",
+                    "severity": "error",
+                    "message": (
+                        f"최대 허용 데이터 행 수({effective_max_rows}행)를 초과하여 "
+                        f"{start_line_num}번째 줄부터 추가 행 검증을 중단했습니다."
+                    ),
+                    "raw_value": None,
+                }
+            )
+            break
+
+        raw_row = record.fields
         total_rows += 1
         current_row_errors: List[Dict[str, Any]] = []
         row_has_duplicate = False
+        has_unclosed_eof = any(iss.unclosed_eof for iss in record.issues)
 
+        # Record tokenizer-level issues (malformed quotes, oversized fields) first
+        for iss in record.issues:
+            if iss.col_index in col_idx_to_canonical:
+                iss_field = col_idx_to_canonical[iss.col_index]
+                iss_src: Optional[str] = headers[iss.col_index]
+            elif iss.col_index < len(headers) and headers[iss.col_index]:
+                iss_field = headers[iss.col_index]
+                iss_src = headers[iss.col_index]
+            else:
+                iss_field = "__csv__"
+                iss_src = None
+            safe_snip, _ = sanitize_preview_value(iss.raw_snippet)
+            current_row_errors.append(
+                {
+                    "row_number": row_idx,
+                    "line_number": iss.line_number,
+                    "field": iss_field if not iss.unclosed_eof else "__csv__",
+                    "source_column": iss_src if not iss.unclosed_eof else None,
+                    "code": iss.code,
+                    "severity": "error",
+                    "message": iss.message,
+                    "raw_value": None if iss.unclosed_eof else safe_snip,
+                }
+            )
+
+        # If row was truncated by an unclosed quote reaching EOF, avoid cascading column/empty errors
+        if has_unclosed_eof:
+            invalid_rows += 1
+            row_errors.extend(current_row_errors)
+            if len(preview_rows) < effective_max_preview:
+                partial_record: Dict[str, Any] = {}
+                partial_sanitized: List[str] = []
+                for canonical_field in schema:
+                    c_idx = canonical_to_col_idx.get(canonical_field)
+                    cell = raw_row[c_idx] if (c_idx is not None and c_idx < len(raw_row)) else ""
+                    if cell:
+                        s_val, was_s = sanitize_preview_value(cell)
+                        if was_s:
+                            partial_sanitized.append(canonical_field)
+                        partial_record[canonical_field] = s_val
+                    else:
+                        partial_record[canonical_field] = None
+                preview_rows.append(
+                    {
+                        "row_number": row_idx,
+                        "line_number": start_line_num,
+                        "valid": False,
+                        "formula_sanitized": len(partial_sanitized) > 0,
+                        "sanitized_fields": partial_sanitized,
+                        "error_codes": [e["code"] for e in current_row_errors],
+                        "data": partial_record,
+                    }
+                )
+            continue
+
+        # Column count mismatch check
         if len(raw_row) != len(headers):
+            safe_cells_preview = [sanitize_preview_value(c[:200])[0] for c in raw_row[:30]]
             current_row_errors.append(
                 {
                     "row_number": row_idx,
@@ -491,14 +1205,15 @@ def validate_csv_content(
                     "code": "COLUMN_COUNT_MISMATCH",
                     "severity": "error",
                     "message": f"열 개수 불일치: 헤더는 {len(headers)}개이나 데이터 행은 {len(raw_row)}개입니다.",
-                    "raw_value": json.dumps(raw_row, ensure_ascii=False),
+                    "raw_value": json.dumps(safe_cells_preview, ensure_ascii=False),
                 }
             )
 
-        normalized_tuple = tuple(cell.strip() for cell in raw_row)
+        # Exact row duplicate check (normalizing CRLF/CR inside multiline cells)
+        normalized_tuple = tuple(strip_cell_whitespace(normalize_newlines(cell)) for cell in raw_row)
         if any(normalized_tuple):
             if normalized_tuple in seen_exact_rows:
-                first_row = seen_exact_rows[normalized_tuple]
+                first_row, first_line = seen_exact_rows[normalized_tuple]
                 row_has_duplicate = True
                 current_row_errors.append(
                     {
@@ -508,28 +1223,32 @@ def validate_csv_content(
                         "source_column": None,
                         "code": "DUPLICATE_ROW",
                         "severity": "error",
-                        "message": f"중복 행 감지: {first_row}번째 데이터 행과 전체 값이 동일합니다.",
+                        "message": f"중복 행 감지: {first_row}번째 데이터 행({first_line}번째 줄)과 전체 값이 동일합니다.",
                         "raw_value": None,
                         "first_seen_row": first_row,
+                        "first_seen_line": first_line,
                     }
                 )
             else:
-                seen_exact_rows[normalized_tuple] = row_idx
+                seen_exact_rows[normalized_tuple] = (row_idx, start_line_num)
 
         parsed_record: Dict[str, Any] = {}
         sanitized_fields: List[str] = []
         parsed_dates: Dict[str, datetime.date] = {}
         parsed_times: Dict[str, datetime.time] = {}
+        valid_phones: Dict[str, str] = {}
 
+        # Scan all mapped columns
         for canonical_field, spec in schema.items():
+            col_idx = canonical_to_col_idx.get(canonical_field)
             source_col = canonical_to_source.get(canonical_field)
-            if source_col is None:
+            if col_idx is None or source_col is None:
                 parsed_record[canonical_field] = None
                 continue
-            col_idx = header_index_map[source_col]
-            raw_cell = raw_row[col_idx] if col_idx < len(raw_row) else ""
-            trimmed = raw_cell.strip()
 
+            raw_cell = raw_row[col_idx] if col_idx < len(raw_row) else ""
+
+            # Check formula injection first on untrimmed raw_cell (catches stealth whitespace/control prefixes)
             if is_formula_injection(raw_cell, spec["type"]):
                 formula_injection_count += 1
                 sanitized_val, _ = sanitize_preview_value(raw_cell)
@@ -543,12 +1262,32 @@ def validate_csv_content(
                         "source_column": source_col,
                         "code": "FORMULA_INJECTION",
                         "severity": "error",
-                        "message": f"수식 주입(Formula Injection) 위험 값 감지 및 무력화: '{raw_cell}'",
-                        "raw_value": raw_cell,
+                        "message": f"수식 주입(Formula Injection) 위험 값 감지 및 무력화: '{sanitized_val}'",
+                        "raw_value": strip_disallowed_control_chars(raw_cell[:500]),
                     }
                 )
                 continue
 
+            if has_disallowed_control_char(raw_cell):
+                safe_val, _ = sanitize_preview_value(raw_cell)
+                parsed_record[canonical_field] = safe_val
+                current_row_errors.append(
+                    {
+                        "row_number": row_idx,
+                        "line_number": start_line_num,
+                        "field": canonical_field,
+                        "source_column": source_col,
+                        "code": "INVALID_CONTROL_CHAR",
+                        "severity": "error",
+                        "message": f"허용되지 않는 제어문자가 포함되어 있습니다: '{source_col}' ({canonical_field}).",
+                        "raw_value": safe_val,
+                    }
+                )
+                continue
+
+            trimmed = strip_cell_whitespace(raw_cell)
+
+            # Check empty required value
             if not trimmed:
                 if spec["required"]:
                     current_row_errors.append(
@@ -560,16 +1299,18 @@ def validate_csv_content(
                             "code": "EMPTY_REQUIRED_VALUE",
                             "severity": "error",
                             "message": f"필수값 누락: '{source_col}' ({canonical_field}) 값이 비어 있습니다.",
-                            "raw_value": raw_cell,
+                            "raw_value": raw_cell[:200],
                         }
                     )
                 parsed_record[canonical_field] = None
                 continue
 
+            # Type-specific validation
             ftype = spec["type"]
             if ftype == "date":
                 dt, iso_str = parse_and_validate_date(trimmed)
                 if dt is None:
+                    safe_trimmed, _ = sanitize_preview_value(trimmed)
                     current_row_errors.append(
                         {
                             "row_number": row_idx,
@@ -578,17 +1319,18 @@ def validate_csv_content(
                             "source_column": source_col,
                             "code": "INVALID_DATE",
                             "severity": "error",
-                            "message": f"잘못된 날짜 형식 또는 존재하지 않는 달력 날짜입니다: '{trimmed}'",
-                            "raw_value": raw_cell,
+                            "message": f"잘못된 날짜 형식 또는 존재하지 않는 달력 날짜입니다: '{safe_trimmed}'",
+                            "raw_value": raw_cell[:200],
                         }
                     )
-                    parsed_record[canonical_field] = trimmed
+                    parsed_record[canonical_field] = safe_trimmed
                 else:
                     parsed_dates[canonical_field] = dt
                     parsed_record[canonical_field] = iso_str
             elif ftype == "time":
                 tm, tm_str = parse_and_validate_time(trimmed)
                 if tm is None:
+                    safe_trimmed, _ = sanitize_preview_value(trimmed)
                     current_row_errors.append(
                         {
                             "row_number": row_idx,
@@ -597,16 +1339,17 @@ def validate_csv_content(
                             "source_column": source_col,
                             "code": "INVALID_TIME",
                             "severity": "error",
-                            "message": f"잘못된 시간 형식입니다(HH:MM 필요): '{trimmed}'",
-                            "raw_value": raw_cell,
+                            "message": f"잘못된 시간 형식입니다(HH:MM 필요): '{safe_trimmed}'",
+                            "raw_value": raw_cell[:200],
                         }
                     )
-                    parsed_record[canonical_field] = trimmed
+                    parsed_record[canonical_field] = safe_trimmed
                 else:
                     parsed_times[canonical_field] = tm
                     parsed_record[canonical_field] = tm_str
             elif ftype in ("non_negative_int", "positive_int"):
                 if not re.match(r"^-?\d+$", trimmed):
+                    safe_trimmed, _ = sanitize_preview_value(trimmed)
                     current_row_errors.append(
                         {
                             "row_number": row_idx,
@@ -615,11 +1358,11 @@ def validate_csv_content(
                             "source_column": source_col,
                             "code": "INVALID_INTEGER",
                             "severity": "error",
-                            "message": f"정수 형식이 아닙니다: '{trimmed}'",
-                            "raw_value": raw_cell,
+                            "message": f"정수 형식이 아닙니다: '{safe_trimmed}'",
+                            "raw_value": raw_cell[:200],
                         }
                     )
-                    parsed_record[canonical_field] = trimmed
+                    parsed_record[canonical_field] = safe_trimmed
                 else:
                     int_val = int(trimmed)
                     if ftype == "non_negative_int" and int_val < 0:
@@ -632,7 +1375,7 @@ def validate_csv_content(
                                 "code": "NEGATIVE_NUMBER",
                                 "severity": "error",
                                 "message": f"0 이상의 정수여야 합니다: {int_val}",
-                                "raw_value": raw_cell,
+                                "raw_value": raw_cell[:200],
                             }
                         )
                     elif ftype == "positive_int" and int_val <= 0:
@@ -645,12 +1388,13 @@ def validate_csv_content(
                                 "code": "NON_POSITIVE_NUMBER",
                                 "severity": "error",
                                 "message": f"1 이상의 양의 정수여야 합니다: {int_val}",
-                                "raw_value": raw_cell,
+                                "raw_value": raw_cell[:200],
                             }
                         )
                     parsed_record[canonical_field] = int_val
             elif ftype == "phone":
                 if not PHONE_PATTERN.match(trimmed):
+                    safe_trimmed, _ = sanitize_preview_value(trimmed)
                     current_row_errors.append(
                         {
                             "row_number": row_idx,
@@ -659,11 +1403,11 @@ def validate_csv_content(
                             "source_column": source_col,
                             "code": "INVALID_PHONE",
                             "severity": "error",
-                            "message": f"유효하지 않은 휴대폰 번호 형식입니다: '{trimmed}'",
-                            "raw_value": raw_cell,
+                            "message": f"유효하지 않은 휴대폰 번호 형식입니다: '{safe_trimmed}'",
+                            "raw_value": raw_cell[:200],
                         }
                     )
-                    parsed_record[canonical_field] = trimmed
+                    parsed_record[canonical_field] = safe_trimmed
                 else:
                     digits = re.sub(r"\D", "", trimmed)
                     if len(digits) == 11:
@@ -671,30 +1415,82 @@ def validate_csv_content(
                     else:
                         norm_phone = f"{digits[:3]}-{digits[3:6]}-{digits[6:]}"
                     parsed_record[canonical_field] = norm_phone
+                    valid_phones[canonical_field] = norm_phone
             else:
                 sanitized_val, was_sanitized = sanitize_preview_value(trimmed)
                 if was_sanitized:
                     sanitized_fields.append(canonical_field)
                 parsed_record[canonical_field] = sanitized_val
 
-        for unmapped_col in unmapped_headers:
-            col_idx = header_index_map[unmapped_col]
-            raw_cell = raw_row[col_idx] if col_idx < len(raw_row) else ""
+        # Check all unmapped header columns by exact column index (handles duplicate headers safely)
+        for unmapped_idx, unmapped_col in unmapped_col_pairs:
+            raw_cell = raw_row[unmapped_idx] if unmapped_idx < len(raw_row) else ""
+            col_label = unmapped_col or f"col_{unmapped_idx + 1}"
             if is_formula_injection(raw_cell, "str"):
                 formula_injection_count += 1
+                safe_val, _ = sanitize_preview_value(raw_cell)
                 current_row_errors.append(
                     {
                         "row_number": row_idx,
                         "line_number": start_line_num,
-                        "field": unmapped_col,
-                        "source_column": unmapped_col,
+                        "field": col_label,
+                        "source_column": col_label,
                         "code": "FORMULA_INJECTION",
                         "severity": "error",
-                        "message": f"매핑되지 않은 열 '{unmapped_col}'에서 수식 주입 위험 값 감지: '{raw_cell}'",
-                        "raw_value": raw_cell,
+                        "message": f"매핑되지 않은 열 '{col_label}'에서 수식 주입 위험 값 감지: '{safe_val}'",
+                        "raw_value": strip_disallowed_control_chars(raw_cell[:500]),
+                    }
+                )
+            elif has_disallowed_control_char(raw_cell):
+                safe_val, _ = sanitize_preview_value(raw_cell)
+                current_row_errors.append(
+                    {
+                        "row_number": row_idx,
+                        "line_number": start_line_num,
+                        "field": col_label,
+                        "source_column": col_label,
+                        "code": "INVALID_CONTROL_CHAR",
+                        "severity": "error",
+                        "message": f"매핑되지 않은 열 '{col_label}'에 허용되지 않는 제어문자가 포함되어 있습니다.",
+                        "raw_value": safe_val,
                     }
                 )
 
+        # Also inspect overflow columns (when len(raw_row) > len(headers)) for formula injection / control chars
+        for extra_idx in range(len(headers), len(raw_row)):
+            extra_cell = raw_row[extra_idx]
+            extra_label = f"__extra_col_{extra_idx + 1}__"
+            if is_formula_injection(extra_cell, "str"):
+                formula_injection_count += 1
+                safe_val, _ = sanitize_preview_value(extra_cell)
+                current_row_errors.append(
+                    {
+                        "row_number": row_idx,
+                        "line_number": start_line_num,
+                        "field": extra_label,
+                        "source_column": None,
+                        "code": "FORMULA_INJECTION",
+                        "severity": "error",
+                        "message": f"초과 열({extra_idx + 1}번째 열)에서 수식 주입 위험 값 감지: '{safe_val}'",
+                        "raw_value": strip_disallowed_control_chars(extra_cell[:500]),
+                    }
+                )
+            elif has_disallowed_control_char(extra_cell):
+                safe_val, _ = sanitize_preview_value(extra_cell)
+                current_row_errors.append(
+                    {
+                        "row_number": row_idx,
+                        "line_number": start_line_num,
+                        "field": extra_label,
+                        "source_column": None,
+                        "code": "INVALID_CONTROL_CHAR",
+                        "severity": "error",
+                        "message": f"초과 열({extra_idx + 1}번째 열)에 허용되지 않는 제어문자가 포함되어 있습니다.",
+                        "raw_value": safe_val,
+                    }
+                )
+
+        # Cross-field logical validations & entity-specific duplicate key checks
         if resolved_entity == "member":
             reg_dt = parsed_dates.get("registration_date")
             exp_dt = parsed_dates.get("expiry_date")
@@ -715,7 +1511,7 @@ def validate_csv_content(
             member_id_val = parsed_record.get("member_id")
             if member_id_val and isinstance(member_id_val, str) and "member_id" not in sanitized_fields:
                 if member_id_val in seen_primary_keys:
-                    first_row = seen_primary_keys[member_id_val]
+                    first_row, first_line = seen_primary_keys[member_id_val]
                     row_has_duplicate = True
                     current_row_errors.append(
                         {
@@ -728,17 +1524,18 @@ def validate_csv_content(
                             "message": f"중복 회원번호 '{member_id_val}' 감지 ({first_row}번째 행에서 이미 등장).",
                             "raw_value": member_id_val,
                             "first_seen_row": first_row,
+                            "first_seen_line": first_line,
                         }
                     )
                 else:
-                    seen_primary_keys[member_id_val] = row_idx
+                    seen_primary_keys[member_id_val] = (row_idx, start_line_num)
 
             name_val = parsed_record.get("name")
-            phone_val = parsed_record.get("phone")
-            if name_val and phone_val:
+            phone_val = valid_phones.get("phone")
+            if name_val and phone_val and "name" not in sanitized_fields:
                 comp_key = (str(name_val), str(phone_val))
                 if comp_key in seen_composite_keys:
-                    first_row = seen_composite_keys[comp_key]
+                    first_row, first_line = seen_composite_keys[comp_key]
                     if not row_has_duplicate:
                         row_has_duplicate = True
                     current_row_errors.append(
@@ -752,10 +1549,11 @@ def validate_csv_content(
                             "message": f"동일 이름·연락처 조합({name_val} / {phone_val})이 {first_row}번째 행과 중복됩니다.",
                             "raw_value": phone_val,
                             "first_seen_row": first_row,
+                            "first_seen_line": first_line,
                         }
                     )
                 else:
-                    seen_composite_keys[comp_key] = row_idx
+                    seen_composite_keys[comp_key] = (row_idx, start_line_num)
 
         elif resolved_entity == "class":
             start_tm = parsed_times.get("start_time")
@@ -793,7 +1591,7 @@ def validate_csv_content(
             class_id_val = parsed_record.get("class_id")
             if class_id_val and isinstance(class_id_val, str) and "class_id" not in sanitized_fields:
                 if class_id_val in seen_primary_keys:
-                    first_row = seen_primary_keys[class_id_val]
+                    first_row, first_line = seen_primary_keys[class_id_val]
                     row_has_duplicate = True
                     current_row_errors.append(
                         {
@@ -806,18 +1604,26 @@ def validate_csv_content(
                             "message": f"중복 수업코드 '{class_id_val}' 감지 ({first_row}번째 행에서 이미 등장).",
                             "raw_value": class_id_val,
                             "first_seen_row": first_row,
+                            "first_seen_line": first_line,
                         }
                     )
                 else:
-                    seen_primary_keys[class_id_val] = row_idx
+                    seen_primary_keys[class_id_val] = (row_idx, start_line_num)
 
             c_date = parsed_record.get("class_date")
             s_time = parsed_record.get("start_time")
             instr = parsed_record.get("instructor")
-            if c_date and s_time and instr and "class_date" in parsed_dates and "start_time" in parsed_times:
+            if (
+                c_date
+                and s_time
+                and instr
+                and "class_date" in parsed_dates
+                and "start_time" in parsed_times
+                and "instructor" not in sanitized_fields
+            ):
                 sched_key = (str(c_date), str(s_time), str(instr))
                 if sched_key in seen_composite_keys:
-                    first_row = seen_composite_keys[sched_key]
+                    first_row, first_line = seen_composite_keys[sched_key]
                     row_has_duplicate = True
                     current_row_errors.append(
                         {
@@ -830,15 +1636,16 @@ def validate_csv_content(
                             "message": f"동일 강사·수업일자·시작시간({instr} / {c_date} {s_time})이 {first_row}번째 행과 중복됩니다.",
                             "raw_value": instr,
                             "first_seen_row": first_row,
+                            "first_seen_line": first_line,
                         }
                     )
                 else:
-                    seen_composite_keys[sched_key] = row_idx
+                    seen_composite_keys[sched_key] = (row_idx, start_line_num)
 
         if row_has_duplicate:
             duplicate_rows += 1
 
-        is_row_valid = len(current_row_errors) == 0 and len(missing_required) == 0
+        is_row_valid = len(current_row_errors) == 0 and not header_level_has_errors
         if is_row_valid:
             valid_rows += 1
         else:
@@ -846,7 +1653,7 @@ def validate_csv_content(
 
         row_errors.extend(current_row_errors)
 
-        if len(preview_rows) < max_preview_rows:
+        if len(preview_rows) < effective_max_preview:
             preview_rows.append(
                 {
                     "row_number": row_idx,
@@ -888,21 +1695,61 @@ def validate_csv_content(
     }
 
 
+def _parse_json_mapping_no_dup_keys(raw_json: str) -> Dict[str, str]:
+    """Parse a JSON mapping object while rejecting duplicate keys and non-string values."""
+
+    def _no_dup_pairs_hook(pairs: List[Tuple[str, Any]]) -> Dict[str, str]:
+        result: Dict[str, str] = {}
+        for k, v in pairs:
+            if not isinstance(k, str) or not isinstance(v, str):
+                raise MappingConfigError(f"매핑 키와 값은 모두 문자열이어야 합니다: {k!r}: {v!r}")
+            if k in result:
+                raise MappingConfigError(f"매핑 설정에 중복 키 '{k}'가 포함되어 있습니다.")
+            result[k] = v
+        return result
+
+    try:
+        parsed = json.loads(raw_json, object_pairs_hook=_no_dup_pairs_hook)
+    except json.JSONDecodeError as exc:
+        raise MappingConfigError(f"매핑 JSON 구문 오류: {exc}") from exc
+
+    if not isinstance(parsed, dict):
+        raise MappingConfigError("매핑 JSON은 객체({key: value}) 형식이어야 합니다.")
+    return parsed
+
+
 def load_mapping_argument(mapping_arg: Optional[str]) -> Optional[Dict[str, str]]:
     """Parse --mapping either as a path to a JSON file, an inline JSON object, or key=value pairs."""
     if not mapping_arg:
         return None
     candidate_path = pathlib.Path(mapping_arg)
     if candidate_path.is_file():
-        return json.loads(candidate_path.read_text(encoding="utf-8-sig"))
+        try:
+            raw_text = candidate_path.read_text(encoding="utf-8-sig")
+        except UnicodeDecodeError as exc:
+            raise MappingConfigError(f"매핑 파일 UTF-8 디코딩 실패: {exc}") from exc
+        return _parse_json_mapping_no_dup_keys(raw_text)
+
     stripped = mapping_arg.strip()
-    if stripped.startswith("{"):
-        return json.loads(stripped)
+    if not stripped:
+        return None
+    if stripped.startswith("{") or stripped.startswith("["):
+        return _parse_json_mapping_no_dup_keys(stripped)
+
     mapping: Dict[str, str] = {}
     for pair in stripped.split(","):
-        if "=" in pair:
-            k, v = pair.split("=", 1)
-            mapping[k.strip()] = v.strip()
+        token = pair.strip()
+        if not token:
+            continue
+        if "=" not in token:
+            raise MappingConfigError(f"잘못된 매핑 항목 형식입니다('key=value' 필요): '{token}'")
+        k, v = token.split("=", 1)
+        k_clean, v_clean = k.strip(), v.strip()
+        if not k_clean or not v_clean:
+            raise MappingConfigError(f"매핑 키 또는 값이 비어 있습니다: '{token}'")
+        if k_clean in mapping:
+            raise MappingConfigError(f"인라인 매핑에 중복 키 '{k_clean}'가 포함되어 있습니다.")
+        mapping[k_clean] = v_clean
     return mapping
 
 
@@ -931,8 +1778,26 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--max-preview",
         type=int,
-        default=50,
-        help="미리보기 JSON에 포함할 최대 행 수 (기본값: 50)",
+        default=DEFAULT_MAX_PREVIEW_ROWS,
+        help=f"미리보기 JSON에 포함할 최대 행 수 (기본값: {DEFAULT_MAX_PREVIEW_ROWS})",
+    )
+    parser.add_argument(
+        "--max-rows",
+        type=int,
+        default=DEFAULT_MAX_ROWS,
+        help=f"검증할 최대 데이터 행 수 제한 (기본값: {DEFAULT_MAX_ROWS})",
+    )
+    parser.add_argument(
+        "--max-field-chars",
+        type=int,
+        default=DEFAULT_MAX_FIELD_CHARS,
+        help=f"단일 셀 최대 허용 문자 수 제한 (기본값: {DEFAULT_MAX_FIELD_CHARS})",
+    )
+    parser.add_argument(
+        "--max-bytes",
+        type=int,
+        default=DEFAULT_MAX_FILE_BYTES,
+        help=f"CSV 파일 최대 허용 바이트 크기 제한 (기본값: {DEFAULT_MAX_FILE_BYTES})",
     )
     parser.add_argument(
         "--fail-on-error",
@@ -940,6 +1805,16 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="검증 오류가 1건이라도 있으면 종료 코드 1 반환",
     )
     return parser
+
+
+def _write_or_print_json(payload: Dict[str, Any], output_path: Optional[str]) -> None:
+    json_text = json.dumps(payload, ensure_ascii=False, indent=2)
+    if output_path:
+        out_path = pathlib.Path(output_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json_text + "\n", encoding="utf-8")
+    else:
+        print(json_text)
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -956,22 +1831,57 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(json.dumps(error_payload, ensure_ascii=False, indent=2), file=sys.stderr)
         return 2
 
-    custom_mapping = load_mapping_argument(args.mapping)
+    try:
+        custom_mapping = load_mapping_argument(args.mapping)
+    except MappingConfigError as exc:
+        result = _empty_result(
+            entity_type=args.type,
+            encoding_detected="UNCHECKED",
+            error_item={
+                "row_number": 0,
+                "line_number": 1,
+                "field": "__mapping__",
+                "source_column": None,
+                "code": "MAPPING_CONFLICT",
+                "severity": "error",
+                "message": str(exc),
+                "raw_value": args.mapping,
+            },
+        )
+        _write_or_print_json(result, args.output)
+        return 1 if args.fail_on_error else 2
+
+    file_size = csv_path.stat().st_size
+    if args.max_bytes > 0 and file_size > args.max_bytes:
+        result = _empty_result(
+            entity_type=args.type,
+            encoding_detected="UNCHECKED",
+            error_item={
+                "row_number": 0,
+                "line_number": 1,
+                "field": "__file__",
+                "source_column": None,
+                "code": "FILE_TOO_LARGE",
+                "severity": "error",
+                "message": f"CSV 파일 크기({file_size} bytes)가 최대 허용 크기({args.max_bytes} bytes)를 초과했습니다.",
+                "raw_value": None,
+            },
+        )
+        _write_or_print_json(result, args.output)
+        return 1 if args.fail_on_error else 0
+
     raw_bytes = csv_path.read_bytes()
     result = validate_csv_content(
         raw_bytes=raw_bytes,
         entity_type=args.type,
         custom_mapping=custom_mapping,
         max_preview_rows=args.max_preview,
+        max_rows=args.max_rows,
+        max_field_chars=args.max_field_chars,
+        max_file_bytes=args.max_bytes,
     )
 
-    json_text = json.dumps(result, ensure_ascii=False, indent=2)
-    if args.output:
-        out_path = pathlib.Path(args.output)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(json_text + "\n", encoding="utf-8")
-    else:
-        print(json_text)
+    _write_or_print_json(result, args.output)
 
     if args.fail_on_error and not result["summary"]["can_import"]:
         return 1

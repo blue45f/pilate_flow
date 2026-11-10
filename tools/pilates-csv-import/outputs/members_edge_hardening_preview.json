@@ -1,0 +1,225 @@
+{
+  "dry_run": true,
+  "db_write_performed": false,
+  "entity_type": "member",
+  "encoding_detected": "UTF-8-BOM",
+  "column_mapping": {
+    "member_id": "회원\n번호",
+    "name": "이름",
+    "phone": "연락처",
+    "registration_date": "등록일",
+    "membership_type": "회원권종류",
+    "remaining_sessions": "잔여횟수",
+    "notes": "메모"
+  },
+  "unmapped_columns": [],
+  "missing_required_columns": [],
+  "summary": {
+    "total_rows": 5,
+    "valid_rows": 2,
+    "invalid_rows": 3,
+    "duplicate_rows": 1,
+    "formula_injection_count": 2,
+    "error_counts_by_code": {
+      "MALFORMED_CSV_QUOTE": 1,
+      "FORMULA_INJECTION": 2,
+      "DUPLICATE_ROW": 1,
+      "DUPLICATE_KEY": 1,
+      "DUPLICATE_MEMBER_PROFILE": 1,
+      "COLUMN_COUNT_MISMATCH": 1
+    },
+    "can_import": false
+  },
+  "row_errors": [
+    {
+      "row_number": 2,
+      "line_number": 7,
+      "field": "name",
+      "source_column": "이름",
+      "code": "MALFORMED_CSV_QUOTE",
+      "severity": "error",
+      "message": "7번째 줄에서 닫는 인용부호(\") 뒤에 허용되지 않은 문자가 이어집니다.",
+      "raw_value": "\"박깨진\"인용부호"
+    },
+    {
+      "row_number": 2,
+      "line_number": 7,
+      "field": "notes",
+      "source_column": "메모",
+      "code": "FORMULA_INJECTION",
+      "severity": "error",
+      "message": "수식 주입(Formula Injection) 위험 값 감지 및 무력화: ''\n=CMD|' /C calc'!A0'",
+      "raw_value": "\n=CMD|' /C calc'!A0"
+    },
+    {
+      "row_number": 3,
+      "line_number": 9,
+      "field": "__row__",
+      "source_column": null,
+      "code": "DUPLICATE_ROW",
+      "severity": "error",
+      "message": "중복 행 감지: 1번째 데이터 행(4번째 줄)과 전체 값이 동일합니다.",
+      "raw_value": null,
+      "first_seen_row": 1,
+      "first_seen_line": 4
+    },
+    {
+      "row_number": 3,
+      "line_number": 9,
+      "field": "member_id",
+      "source_column": "회원\n번호",
+      "code": "DUPLICATE_KEY",
+      "severity": "error",
+      "message": "중복 회원번호 'M-7001' 감지 (1번째 행에서 이미 등장).",
+      "raw_value": "M-7001",
+      "first_seen_row": 1,
+      "first_seen_line": 4
+    },
+    {
+      "row_number": 3,
+      "line_number": 9,
+      "field": "phone",
+      "source_column": "연락처",
+      "code": "DUPLICATE_MEMBER_PROFILE",
+      "severity": "error",
+      "message": "동일 이름·연락처 조합(김회복 / 010-1234-5678)이 1번째 행과 중복됩니다.",
+      "raw_value": "010-1234-5678",
+      "first_seen_row": 1,
+      "first_seen_line": 4
+    },
+    {
+      "row_number": 4,
+      "line_number": 11,
+      "field": "__row__",
+      "source_column": null,
+      "code": "COLUMN_COUNT_MISMATCH",
+      "severity": "error",
+      "message": "열 개수 불일치: 헤더는 7개이나 데이터 행은 8개입니다.",
+      "raw_value": "[\"M-7004\", \"최안전\", \"010-4444-5555\", \"2026-11-04\", \"듀엣 16회\", \"16\", \"오류 복구 후 정상 검증 행\", \"'=EVIL_EXTRA()\"]"
+    },
+    {
+      "row_number": 4,
+      "line_number": 11,
+      "field": "__extra_col_8__",
+      "source_column": null,
+      "code": "FORMULA_INJECTION",
+      "severity": "error",
+      "message": "초과 열(8번째 열)에서 수식 주입 위험 값 감지: ''=EVIL_EXTRA()'",
+      "raw_value": "=EVIL_EXTRA()"
+    }
+  ],
+  "preview_rows": [
+    {
+      "row_number": 1,
+      "line_number": 4,
+      "valid": true,
+      "formula_sanitized": false,
+      "sanitized_fields": [],
+      "error_codes": [],
+      "data": {
+        "member_id": "M-7001",
+        "name": "김회복",
+        "phone": "010-1234-5678",
+        "birth_date": null,
+        "registration_date": "2026-11-01",
+        "expiry_date": null,
+        "membership_type": "기구 20회",
+        "remaining_sessions": 20,
+        "instructor": null,
+        "notes": "첫째 줄 정상 메모\n둘째 줄 메모"
+      }
+    },
+    {
+      "row_number": 2,
+      "line_number": 7,
+      "valid": false,
+      "formula_sanitized": true,
+      "sanitized_fields": [
+        "notes"
+      ],
+      "error_codes": [
+        "MALFORMED_CSV_QUOTE",
+        "FORMULA_INJECTION"
+      ],
+      "data": {
+        "member_id": "M-7002",
+        "name": "박깨진인용부호",
+        "phone": "010-2222-3333",
+        "birth_date": null,
+        "registration_date": "2026-11-02",
+        "expiry_date": null,
+        "membership_type": "그룹 10회",
+        "remaining_sessions": 10,
+        "instructor": null,
+        "notes": "'\n=CMD|' /C calc'!A0"
+      }
+    },
+    {
+      "row_number": 3,
+      "line_number": 9,
+      "valid": false,
+      "formula_sanitized": false,
+      "sanitized_fields": [],
+      "error_codes": [
+        "DUPLICATE_ROW",
+        "DUPLICATE_KEY",
+        "DUPLICATE_MEMBER_PROFILE"
+      ],
+      "data": {
+        "member_id": "M-7001",
+        "name": "김회복",
+        "phone": "010-1234-5678",
+        "birth_date": null,
+        "registration_date": "2026-11-01",
+        "expiry_date": null,
+        "membership_type": "기구 20회",
+        "remaining_sessions": 20,
+        "instructor": null,
+        "notes": "첫째 줄 정상 메모\n둘째 줄 메모"
+      }
+    },
+    {
+      "row_number": 4,
+      "line_number": 11,
+      "valid": false,
+      "formula_sanitized": false,
+      "sanitized_fields": [],
+      "error_codes": [
+        "COLUMN_COUNT_MISMATCH",
+        "FORMULA_INJECTION"
+      ],
+      "data": {
+        "member_id": "M-7004",
+        "name": "최안전",
+        "phone": "010-4444-5555",
+        "birth_date": null,
+        "registration_date": "2026-11-04",
+        "expiry_date": null,
+        "membership_type": "듀엣 16회",
+        "remaining_sessions": 16,
+        "instructor": null,
+        "notes": "오류 복구 후 정상 검증 행"
+      }
+    },
+    {
+      "row_number": 5,
+      "line_number": 12,
+      "valid": true,
+      "formula_sanitized": false,
+      "sanitized_fields": [],
+      "error_codes": [],
+      "data": {
+        "member_id": "M-7005",
+        "name": "윤최종",
+        "phone": "010-5555-6666",
+        "birth_date": null,
+        "registration_date": "2026-11-05",
+        "expiry_date": null,
+        "membership_type": "개인 10회",
+        "remaining_sessions": 10,
+        "instructor": null,
+        "notes": "완전 정상 행"
+      }
+    }
+  ]
+}

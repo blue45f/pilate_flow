@@ -12,7 +12,7 @@ import pilates_csv_import as pci  # noqa: E402
 
 
 class TestPilatesCsvImport(unittest.TestCase):
-    """30 automated tests covering BOM, quotes/newlines, Korean headers, mapping, dates, duplicates, empty required fields, formula injection, row errors, and CLI dry-run JSON."""
+    """50 automated tests: 30 preserved baseline tests (test_01..test_30) + 20 robustness & safety regression tests (test_31..test_50)."""
 
     def test_01_utf8_bom_detection_and_header_cleaning(self):
         csv_text = "\ufeff회원번호,이름,연락처,등록일,회원권종류,잔여횟수\nM01,김필라,010-1234-5678,2026-11-01,기구 10회,10\n"
@@ -345,6 +345,308 @@ class TestPilatesCsvImport(unittest.TestCase):
     def test_30_cli_missing_file_returns_exit_code_2(self):
         exit_code = pci.main(["/nonexistent/path/to/missing.csv"])
         self.assertEqual(exit_code, 2)
+
+    def test_31_empty_and_whitespace_header_detection(self):
+        csv_text = "회원번호, ,이름,\u200b,연락처,등록일,회원권종류,잔여횟수\nM01,x,김필라,y,010-1234-5678,2026-11-01,기구10회,10\n"
+        res = pci.validate_csv_content(csv_text.encode("utf-8"))
+        self.assertFalse(res["summary"]["can_import"])
+        empty_header_errs = [e for e in res["row_errors"] if e["code"] == "EMPTY_HEADER"]
+        self.assertEqual(len(empty_header_errs), 2)
+        self.assertEqual({e["source_column"] for e in empty_header_errs}, {"col_2", "col_4"})
+        self.assertEqual(res["summary"]["valid_rows"], 0)
+
+    def test_32_exact_and_normalized_duplicate_headers_plus_shadowed_formula_scan(self):
+        csv_text = (
+            "회원번호,회원_번호,이름,연락처,등록일,회원권종류,잔여횟수,비고,비고\n"
+            "M01,=CMD|' /C calc'!A0,김중복헤더,010-1234-5678,2026-11-01,기구10회,10,정상,=1+1\n"
+        )
+        res = pci.validate_csv_content(csv_text.encode("utf-8"))
+        self.assertFalse(res["summary"]["can_import"])
+        dup_header_errs = [e for e in res["row_errors"] if e["code"] == "DUPLICATE_HEADER"]
+        self.assertEqual(len(dup_header_errs), 2)
+        self.assertEqual(res["summary"]["formula_injection_count"], 2)
+
+    def test_33_header_formula_injection_and_control_char_detection(self):
+        csv_text = (
+            "회원번호,이름,연락처,등록일,회원권종류,잔여횟수,=EVIL_HEADER(),깨진\x07헤더\n"
+            "M01,김헤더,010-1234-5678,2026-11-01,기구10회,10,메모1,메모2\n"
+        )
+        res = pci.validate_csv_content(csv_text.encode("utf-8"))
+        self.assertFalse(res["summary"]["can_import"])
+        header_codes = [e["code"] for e in res["row_errors"] if e["row_number"] == 0]
+        self.assertIn("FORMULA_INJECTION", header_codes)
+        self.assertIn("INVALID_CONTROL_CHAR", header_codes)
+        self.assertEqual(res["summary"]["formula_injection_count"], 1)
+
+    def test_34_double_bom_and_multiline_quoted_korean_headers(self):
+        raw_bytes = (
+            b"\xef\xbb\xbf\xef\xbb\xbf"
+            + '"회원\n번호",이름,연락처,등록일,"회원권\r\n종류","잔여\n횟수"\r\n'
+            "M10,김개행헤더,010-1234-5678,2026-11-01,기구 10회,10\r\n".encode("utf-8")
+        )
+        res = pci.validate_csv_content(raw_bytes)
+        self.assertEqual(res["encoding_detected"], "UTF-8-BOM")
+        self.assertTrue(res["summary"]["can_import"])
+        # Header spans physical lines 1..4 (3 embedded newlines + header row newline), so Row 1 starts on line 5
+        self.assertEqual(res["preview_rows"][0]["row_number"], 1)
+        self.assertEqual(res["preview_rows"][0]["line_number"], 5)
+
+    def test_35_column_count_mismatch_extra_columns_with_formula_injection(self):
+        csv_text = (
+            "회원번호,이름,연락처,등록일,회원권종류,잔여횟수\n"
+            "M01,김초과열,010-1234-5678,2026-11-01,기구10회,10,여분일반,\t=EVIL_OVERFLOW()\n"
+        )
+        res = pci.validate_csv_content(csv_text.encode("utf-8"))
+        self.assertFalse(res["summary"]["can_import"])
+        codes = [e["code"] for e in res["row_errors"]]
+        self.assertIn("COLUMN_COUNT_MISMATCH", codes)
+        self.assertIn("FORMULA_INJECTION", codes)
+        self.assertEqual(res["summary"]["formula_injection_count"], 1)
+        overflow_err = next(e for e in res["row_errors"] if e["code"] == "FORMULA_INJECTION")
+        self.assertEqual(overflow_err["field"], "__extra_col_8__")
+
+    def test_36_mapping_conflict_one_source_to_multiple_canonical_fields(self):
+        csv_text = "회원번호,이름,연락처,등록일,회원권종류,잔여횟수\nM01,김충돌,010-1234-5678,2026-11-01,기구10회,10\n"
+        res = pci.validate_csv_content(
+            csv_text.encode("utf-8"),
+            entity_type="member",
+            custom_mapping={"name": "이름", "instructor": "이름"},
+        )
+        self.assertFalse(res["summary"]["can_import"])
+        codes = [e["code"] for e in res["row_errors"]]
+        self.assertIn("MAPPING_CONFLICT", codes)
+
+    def test_37_mapping_conflict_multiple_sources_to_same_canonical_field(self):
+        csv_text = "회원번호,이름,성명,연락처,등록일,회원권종류,잔여횟수\nM01,김하나,김둘,010-1234-5678,2026-11-01,기구10회,10\n"
+        res = pci.validate_csv_content(
+            csv_text.encode("utf-8"),
+            entity_type="member",
+            custom_mapping={"이름": "name", "성명": "name"},
+        )
+        self.assertFalse(res["summary"]["can_import"])
+        conflict_errs = [e for e in res["row_errors"] if e["code"] == "MAPPING_CONFLICT"]
+        self.assertGreaterEqual(len(conflict_errs), 1)
+
+    def test_38_mapping_conflict_unknown_field_and_missing_source_header(self):
+        csv_text = "회원번호,이름,연락처,등록일,회원권종류,잔여횟수\nM01,김매핑,010-1234-5678,2026-11-01,기구10회,10\n"
+        res = pci.validate_csv_content(
+            csv_text.encode("utf-8"),
+            entity_type="member",
+            custom_mapping={"nonexistent_schema_field": "회원번호", "notes": "없는메모열"},
+        )
+        self.assertFalse(res["summary"]["can_import"])
+        conflict_errs = [e for e in res["row_errors"] if e["code"] == "MAPPING_CONFLICT"]
+        self.assertEqual(len(conflict_errs), 2)
+
+    def test_39_ambiguous_auto_mapping_competing_aliases_and_explicit_disambiguation(self):
+        csv_text = "회원번호,이름,회원명,연락처,등록일,회원권종류,잔여횟수\nM01,김본명,김별칭,010-1234-5678,2026-11-01,기구10회,10\n"
+        res_ambiguous = pci.validate_csv_content(csv_text.encode("utf-8"), entity_type="member")
+        self.assertFalse(res_ambiguous["summary"]["can_import"])
+        self.assertIn("MAPPING_CONFLICT", [e["code"] for e in res_ambiguous["row_errors"]])
+
+        res_explicit = pci.validate_csv_content(
+            csv_text.encode("utf-8"),
+            entity_type="member",
+            custom_mapping={"name": "이름"},
+        )
+        self.assertTrue(res_explicit["summary"]["can_import"])
+        self.assertIn("회원명", res_explicit["unmapped_columns"])
+        self.assertEqual(res_explicit["preview_rows"][0]["data"]["name"], "김본명")
+
+    def test_40_cli_duplicate_mapping_keys_and_malformed_mapping_syntax(self):
+        fixture = BASE_DIR / "fixtures" / "members_valid_bom.csv"
+        for bad_mapping in [
+            '{"name": "이름", "name": "성명"}',
+            "name=이름,name=성명",
+            "{broken_json",
+            "invalid_pair_without_equals",
+        ]:
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(BASE_DIR / "src" / "pilates_csv_import.py"),
+                    str(fixture),
+                    "--mapping",
+                    bad_mapping,
+                    "--fail-on-error",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(proc.returncode, 1)
+            payload = json.loads(proc.stdout)
+            self.assertFalse(payload["summary"]["can_import"])
+            self.assertEqual(payload["row_errors"][0]["code"], "MAPPING_CONFLICT")
+
+    def test_41_stealth_formula_injection_newline_unicode_spaces_and_zero_width(self):
+        csv_text = (
+            "회원번호,이름,연락처,등록일,회원권종류,잔여횟수,담당강사,메모\n"
+            'M01,"\n=CMD()",010-1234-5678,2026-11-01,"\u00a0+SUM(1,2)",10,"\u3000-1+1","\u200b@HYPERLINK(""http://x"")"\n'
+        )
+        res = pci.validate_csv_content(csv_text.encode("utf-8"))
+        self.assertFalse(res["summary"]["can_import"])
+        self.assertEqual(res["summary"]["formula_injection_count"], 4)
+        preview = res["preview_rows"][0]
+        self.assertTrue(preview["formula_sanitized"])
+        for f in ("name", "membership_type", "instructor", "notes"):
+            self.assertIn(f, preview["sanitized_fields"])
+            self.assertTrue(preview["data"][f].startswith("'"))
+
+    def test_42_stealth_formula_injection_control_chars_including_numeric_fields(self):
+        csv_text = (
+            "회원번호,이름,연락처,등록일,회원권종류,잔여횟수,담당강사,메모\n"
+            "M01,\x00=1+1,010-1234-5678,2026-11-01,\x0b+1+1,\x0b-5,\x1b@A1,\x7f=EVIL()\n"
+        )
+        res = pci.validate_csv_content(csv_text.encode("utf-8"))
+        self.assertFalse(res["summary"]["can_import"])
+        self.assertEqual(res["summary"]["formula_injection_count"], 5)
+        p_data = res["preview_rows"][0]["data"]
+        self.assertEqual(p_data["name"], "'=1+1")
+        self.assertNotIn("\x00", json.dumps(res, ensure_ascii=False))
+
+    def test_43_disallowed_control_characters_and_nul_bytes_without_crash(self):
+        csv_text = (
+            "회원번호,이름,연락처,등록일,회원권종류,잔여횟수,메모\n"
+            "M01,김\x00널문자,010-1234-5678,2026-11-01,기구10회,10,벨\x07제어문자\n"
+            "M02,이정상,010-2222-3333,2026-11-02,그룹20회,20,정상메모\n"
+        )
+        res = pci.validate_csv_content(csv_text.encode("utf-8"))
+        self.assertEqual(res["summary"]["total_rows"], 2)
+        self.assertEqual(res["summary"]["valid_rows"], 1)
+        self.assertEqual(res["summary"]["invalid_rows"], 1)
+        r1_codes = [e["code"] for e in res["row_errors"] if e["row_number"] == 1]
+        self.assertEqual(r1_codes, ["INVALID_CONTROL_CHAR", "INVALID_CONTROL_CHAR"])
+        self.assertEqual(res["preview_rows"][0]["data"]["name"], "김널문자")
+        self.assertTrue(res["preview_rows"][1]["valid"])
+
+    def test_44_zero_width_only_required_cell_treated_as_empty(self):
+        csv_text = "회원번호,이름,연락처,등록일,회원권종류,잔여횟수\nM01,\u200b\ufeff,010-1234-5678,2026-11-01,기구10회,10\n"
+        res = pci.validate_csv_content(csv_text.encode("utf-8"))
+        self.assertFalse(res["summary"]["can_import"])
+        self.assertEqual(res["row_errors"][0]["code"], "EMPTY_REQUIRED_VALUE")
+        self.assertEqual(res["row_errors"][0]["field"], "name")
+
+    def test_45_malformed_quote_trailing_chars_and_bare_quote_row_recovery(self):
+        csv_text = (
+            "회원번호,이름,연락처,등록일,회원권종류,잔여횟수,메모\n"
+            'M01,"박깨진"외부문자,010-1111-2222,2026-11-01,기구10회,10,메모1\n'
+            'M02,김"맨인용,010-2222-3333,2026-11-02,기구10회,10,메모2\n'
+            "M03,최정상회복,010-3333-4444,2026-11-03,기구20회,20,정상메모\n"
+        )
+        res = pci.validate_csv_content(csv_text.encode("utf-8"))
+        self.assertEqual(res["summary"]["total_rows"], 3)
+        self.assertEqual(res["summary"]["valid_rows"], 1)
+        self.assertEqual(res["summary"]["invalid_rows"], 2)
+        quote_errs = [e for e in res["row_errors"] if e["code"] == "MALFORMED_CSV_QUOTE"]
+        self.assertEqual(len(quote_errs), 2)
+        self.assertEqual(quote_errs[0]["row_number"], 1)
+        self.assertEqual(quote_errs[0]["line_number"], 2)
+        self.assertEqual(quote_errs[1]["row_number"], 2)
+        self.assertEqual(quote_errs[1]["line_number"], 3)
+        self.assertTrue(res["preview_rows"][2]["valid"])
+        self.assertEqual(res["preview_rows"][2]["line_number"], 4)
+
+    def test_46_unclosed_quote_after_valid_rows_preserves_prior_rows_and_exact_line(self):
+        csv_text = (
+            "회원번호,이름,연락처,등록일,회원권종류,잔여횟수,메모\n"
+            "M01,김선행정상,010-1111-2222,2026-11-01,기구10회,10,정상\n"
+            'M02,"이줄바꿈\n정상",010-2222-3333,2026-11-02,기구10회,10,"미종료 인용 시작\n계속 이어짐'
+        )
+        res = pci.validate_csv_content(csv_text.encode("utf-8"))
+        self.assertFalse(res["summary"]["can_import"])
+        self.assertEqual(res["summary"]["valid_rows"], 1)
+        self.assertEqual(res["summary"]["invalid_rows"], 1)
+        self.assertTrue(res["preview_rows"][0]["valid"])
+        self.assertEqual(res["row_errors"][0]["code"], "MALFORMED_CSV_QUOTE")
+        self.assertEqual(res["row_errors"][0]["row_number"], 2)
+        self.assertEqual(res["row_errors"][0]["line_number"], 4)
+
+    def test_47_field_size_limit_exceeded_and_subsequent_row_recovery(self):
+        huge_note = "가" * 350
+        csv_text = (
+            "회원번호,이름,연락처,등록일,회원권종류,잔여횟수,메모\n"
+            f'M01,김대용량,010-1111-2222,2026-11-01,기구10회,10,"{huge_note}"\n'
+            "M02,이후정상,010-2222-3333,2026-11-02,기구20회,20,짧은메모\n"
+        )
+        res = pci.validate_csv_content(csv_text.encode("utf-8"), max_field_chars=100)
+        self.assertFalse(res["summary"]["can_import"])
+        self.assertEqual(res["summary"]["total_rows"], 2)
+        self.assertEqual(res["summary"]["valid_rows"], 1)
+        self.assertEqual(res["row_errors"][0]["code"], "FIELD_TOO_LARGE")
+        self.assertEqual(res["row_errors"][0]["row_number"], 1)
+        self.assertEqual(res["row_errors"][0]["field"], "notes")
+        self.assertLessEqual(len(res["preview_rows"][0]["data"]["notes"]), 100)
+        self.assertTrue(res["preview_rows"][1]["valid"])
+
+    def test_48_max_rows_and_max_file_bytes_limits_enforced_in_api_and_cli(self):
+        rows = ["회원번호,이름,연락처,등록일,회원권종류,잔여횟수"]
+        for idx in range(1, 7):
+            rows.append(f"M{idx:02d},회원{idx},010-1234-560{idx},2026-11-01,기구10회,10")
+        csv_bytes = ("\n".join(rows) + "\n").encode("utf-8")
+
+        res_rows = pci.validate_csv_content(csv_bytes, max_rows=3)
+        self.assertFalse(res_rows["summary"]["can_import"])
+        self.assertEqual(res_rows["summary"]["total_rows"], 3)
+        self.assertEqual(res_rows["row_errors"][-1]["code"], "MAX_ROWS_EXCEEDED")
+        self.assertEqual(res_rows["row_errors"][-1]["row_number"], 4)
+        self.assertEqual(res_rows["row_errors"][-1]["line_number"], 5)
+
+        res_bytes = pci.validate_csv_content(csv_bytes, max_file_bytes=40)
+        self.assertFalse(res_bytes["summary"]["can_import"])
+        self.assertEqual(res_bytes["row_errors"][0]["code"], "FILE_TOO_LARGE")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            p = pathlib.Path(tmpdir) / "oversize.csv"
+            p.write_bytes(csv_bytes)
+            exit_code = pci.main([str(p), "--max-bytes", "30", "--fail-on-error"])
+            self.assertEqual(exit_code, 1)
+
+    def test_49_duplicate_rows_crlf_vs_lf_and_exact_original_line_numbers_across_blank_lines(self):
+        csv_text = (
+            "\r\n"
+            "회원번호,이름,연락처,등록일,회원권종류,잔여횟수,메모\r\n"
+            "\r\n"
+            'M01,김정밀,010-1111-2222,2026-11-01,기구10회,10,"첫줄\r\n둘째줄"\r\n'
+            "   \r\n"
+            'M01,김정밀,010-1111-2222,2026-11-01,기구10회,10,"첫줄\n둘째줄"\n'
+            "M02,이최종,010-3333-4444,2026-11-02,기구10회,10,단일줄\r"
+        )
+        res = pci.validate_csv_content(csv_text.encode("utf-8"))
+        self.assertEqual(res["summary"]["total_rows"], 3)
+        self.assertEqual(res["summary"]["valid_rows"], 2)
+        self.assertEqual(res["summary"]["duplicate_rows"], 1)
+        self.assertEqual(res["preview_rows"][0]["line_number"], 4)
+        self.assertEqual(res["preview_rows"][1]["line_number"], 7)
+        self.assertEqual(res["preview_rows"][2]["line_number"], 9)
+        dup_err = next(e for e in res["row_errors"] if e["code"] == "DUPLICATE_ROW")
+        self.assertEqual(dup_err["row_number"], 2)
+        self.assertEqual(dup_err["line_number"], 7)
+        self.assertEqual(dup_err["first_seen_row"], 1)
+        self.assertEqual(dup_err["first_seen_line"], 4)
+
+    def test_50_deterministic_new_fixtures_end_to_end_validation(self):
+        edge_path = BASE_DIR / "fixtures" / "members_edge_hardening.csv"
+        res_edge = pci.validate_csv_content(edge_path.read_bytes())
+        self.assertEqual(res_edge["encoding_detected"], "UTF-8-BOM")
+        self.assertEqual(res_edge["summary"]["total_rows"], 5)
+        self.assertEqual(res_edge["summary"]["valid_rows"], 2)
+        self.assertEqual(res_edge["summary"]["invalid_rows"], 3)
+        self.assertEqual(res_edge["preview_rows"][0]["line_number"], 4)
+        self.assertEqual(res_edge["preview_rows"][1]["line_number"], 7)
+        self.assertEqual(res_edge["preview_rows"][2]["line_number"], 9)
+        self.assertEqual(res_edge["preview_rows"][3]["line_number"], 11)
+        self.assertEqual(res_edge["preview_rows"][4]["line_number"], 12)
+        self.assertTrue(res_edge["preview_rows"][4]["valid"])
+
+        conflict_path = BASE_DIR / "fixtures" / "headers_and_mapping_conflicts.csv"
+        res_conf = pci.validate_csv_content(conflict_path.read_bytes())
+        self.assertFalse(res_conf["summary"]["can_import"])
+        conf_codes = {e["code"] for e in res_conf["row_errors"]}
+        self.assertIn("DUPLICATE_HEADER", conf_codes)
+        self.assertIn("EMPTY_HEADER", conf_codes)
+        self.assertIn("MAPPING_CONFLICT", conf_codes)
+        self.assertIn("FORMULA_INJECTION", conf_codes)
 
 
 if __name__ == "__main__":

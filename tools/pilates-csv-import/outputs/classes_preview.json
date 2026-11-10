@@ -41,7 +41,7 @@
       "source_column": "수업설명",
       "code": "FORMULA_INJECTION",
       "severity": "error",
-      "message": "수식 주입(Formula Injection) 위험 값 감지 및 무력화: '+IMPORTXML(\"http://example.internal\",\"//a\")'",
+      "message": "수식 주입(Formula Injection) 위험 값 감지 및 무력화: ''+IMPORTXML(\"http://example.internal\",\"//a\")'",
       "raw_value": "+IMPORTXML(\"http://example.internal\",\"//a\")"
     },
     {
@@ -93,7 +93,8 @@
       "severity": "error",
       "message": "동일 강사·수업일자·시작시간(박지훈 / 2026-11-15 10:00)이 1번째 행과 중복됩니다.",
       "raw_value": "박지훈",
-      "first_seen_row": 1
+      "first_seen_row": 1,
+      "first_seen_line": 2
     }
   ],
   "preview_rows": [

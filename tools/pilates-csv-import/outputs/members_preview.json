@@ -73,7 +73,7 @@
       "source_column": "메모",
       "code": "FORMULA_INJECTION",
       "severity": "error",
-      "message": "수식 주입(Formula Injection) 위험 값 감지 및 무력화: '=CMD|' /C calc'!A0'",
+      "message": "수식 주입(Formula Injection) 위험 값 감지 및 무력화: ''=CMD|' /C calc'!A0'",
       "raw_value": "=CMD|' /C calc'!A0"
     },
     {
@@ -83,9 +83,10 @@
       "source_column": null,
       "code": "DUPLICATE_ROW",
       "severity": "error",
-      "message": "중복 행 감지: 1번째 데이터 행과 전체 값이 동일합니다.",
+      "message": "중복 행 감지: 1번째 데이터 행(2번째 줄)과 전체 값이 동일합니다.",
       "raw_value": null,
-      "first_seen_row": 1
+      "first_seen_row": 1,
+      "first_seen_line": 2
     },
     {
       "row_number": 3,
@@ -96,7 +97,8 @@
       "severity": "error",
       "message": "중복 회원번호 'M-2001' 감지 (1번째 행에서 이미 등장).",
       "raw_value": "M-2001",
-      "first_seen_row": 1
+      "first_seen_row": 1,
+      "first_seen_line": 2
     },
     {
       "row_number": 3,
@@ -107,7 +109,8 @@
       "severity": "error",
       "message": "동일 이름·연락처 조합(정하늘 / 010-1111-2222)이 1번째 행과 중복됩니다.",
       "raw_value": "010-1111-2222",
-      "first_seen_row": 1
+      "first_seen_row": 1,
+      "first_seen_line": 2
     },
     {
       "row_number": 4,
@@ -116,7 +119,7 @@
       "source_column": "담당강사",
       "code": "FORMULA_INJECTION",
       "severity": "error",
-      "message": "수식 주입(Formula Injection) 위험 값 감지 및 무력화: '@SUM(1,2)'",
+      "message": "수식 주입(Formula Injection) 위험 값 감지 및 무력화: ''@SUM(1,2)'",
       "raw_value": "@SUM(1,2)"
     },
     {
