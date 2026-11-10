@@ -17,8 +17,10 @@
 | 명령어 | 설명 |
 | :--- | :--- |
 | `pnpm deploy:check` | 현재 환경의 `firebase.json`, `.firebaserc`, `dist/` 빌드 상태 및 Firebase CLI 인증 여부를 즉시 점검합니다. |
-| `pnpm deploy` | `dist/` 프로덕션 번들을 빌드·검증한 뒤 **Firebase Hosting(`pilates-flow-atelier`)**에 배포합니다. |
-| `pnpm deploy:parallel` | `origin/main` Git 푸시와 **Firebase Hosting(`pilates-flow-atelier`)** 운영 배포를 동시에 병렬 실행합니다. |
+| `pnpm deploy` (또는 `./scripts/deploy.sh`) | 시크릿 점검 → `dist/` 프로덕션 번들 빌드·검증 → **Firebase Hosting(`pilates-flow-atelier`) 배포** → **실시간 번들 해시 반영 검증**을 한 번에 실행합니다. |
+| `pnpm deploy:parallel` | `origin/main` Git 푸시와 **Firebase Hosting(`pilates-flow-atelier`)** 운영 배포를 동시에 병렬 실행하고 실시간 반영을 검증합니다. |
+| `pnpm deploy:verify` | 현재 운영 URL(`https://pilates-flow-atelier.web.app`)의 실시간 JS 번들 해시와 V2 3D 에셋 서빙 상태를 즉시 검증합니다. |
+| `pnpm deploy:bootstrap` | 비대화형 셸·작업 모드에서도 Node·Firebase CLI 경로를 바로 찾도록 `.deploy-runtime/` 로컬 런타임을 준비합니다. |
 
 ## 3. GitHub Actions 자동 배포 (`.github/workflows/deploy-production.yml`)
 - `main` 브랜치에 푸시하거나 GitHub **Actions > Production Deployment (Firebase Hosting · pilates-flow-atelier) > Run workflow**를 실행하면 시크릿·모션 원장·단위 테스트·PWA 빌드를 검증한 뒤 `pilates-flow-atelier`로 배포합니다.

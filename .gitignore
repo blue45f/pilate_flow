@@ -11,5 +11,5 @@ qa-artifacts/
 .env.*
 __pycache__/
 .firebase/
+.deploy-runtime/
 firebase-debug.log*
-

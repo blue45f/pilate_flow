@@ -40,7 +40,7 @@ jobs:
         run: pnpm check:secrets && pnpm check:motion-study
 
       - name: Run verification & deployment regression suites
-        run: pnpm vitest run src/test/wave3AdvancementVerification.test.ts src/test/wave4FollowthroughVerification.test.ts src/test/wave5AdvancementVerification.test.ts src/test/wave6AdvancementVerification.test.ts src/test/wave7MultiCloudDeployVerification.test.ts src/test/wave8SkillsAdvancementVerification.test.ts src/utils/wave3DeploymentRegression.test.ts src/utils/wave5DeploymentRegression.test.ts
+        run: pnpm vitest run src/test/uxRedesignAndOpenAi.test.tsx src/test/wave3AdvancementVerification.test.ts src/test/wave4FollowthroughVerification.test.ts src/test/wave5AdvancementVerification.test.ts src/test/wave6AdvancementVerification.test.ts src/test/wave7MultiCloudDeployVerification.test.ts src/test/wave8SkillsAdvancementVerification.test.ts src/utils/wave3DeploymentRegression.test.ts src/utils/wave5DeploymentRegression.test.ts
 
       - name: Build production PWA bundle & verify production config
         run: pnpm build && pnpm deploy:check
@@ -52,15 +52,21 @@ jobs:
           path: ./dist
           retention-days: 14
 
-      - name: Deploy to Firebase Hosting (pilates-flow-atelier)
+      - name: Deploy to Firebase Hosting (pilates-flow-atelier) & Verify Live URL
         run: |
           if [ -n "$FIREBASE_TOKEN" ]; then
             npx --yes firebase-tools deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth --token "$FIREBASE_TOKEN"
+            node scripts/deploy-universal.mjs --verify-live
+            echo "### ✅ Deployed to Firebase Hosting (`https://pilates-flow-atelier.web.app`)" >> "$GITHUB_STEP_SUMMARY"
           elif [ -n "$FIREBASE_SERVICE_ACCOUNT" ]; then
             echo "$FIREBASE_SERVICE_ACCOUNT" > /tmp/gcp-sa.json
             export GOOGLE_APPLICATION_CREDENTIALS="/tmp/gcp-sa.json"
             npx --yes firebase-tools deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth
             rm -f /tmp/gcp-sa.json
+            node scripts/deploy-universal.mjs --verify-live
+            echo "### ✅ Deployed to Firebase Hosting (`https://pilates-flow-atelier.web.app`)" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "::notice::CI automatic deploy uses FIREBASE_TOKEN or FIREBASE_SERVICE_ACCOUNT secret. From a local machine, run 'pnpm deploy' or 'pnpm deploy:parallel'."
+            echo "::warning::FIREBASE_TOKEN / FIREBASE_SERVICE_ACCOUNT secret is not configured in GitHub Secrets. Build succeeded, but live Firebase upload was skipped."
+            echo "### ⚠️ Live Firebase Upload Skipped (Missing GitHub Secret)" >> "$GITHUB_STEP_SUMMARY"
+            echo "Run \`pnpm deploy\` locally or add \`FIREBASE_TOKEN\` to GitHub Actions Secrets." >> "$GITHUB_STEP_SUMMARY"
           fi
