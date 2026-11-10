@@ -5,6 +5,7 @@ export {
   KST_OFFSET_MS,
   MS_PER_MINUTE,
   MS_PER_DAY,
+  MAX_HARD_RANGE_DAYS,
   KST_WEEKDAY_LABELS,
   isValidKstDate,
   isValidStartTime,

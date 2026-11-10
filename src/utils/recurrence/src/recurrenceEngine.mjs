@@ -13,6 +13,32 @@ import {
   resolveKstTimeWindow,
 } from './kstCalendar.mjs';
 
+
+/**
+ * @param {readonly string[]} values
+ * @param {string} label
+ */
+function assertStringIdList(values, label) {
+  if (!Array.isArray(values) || values.length === 0) {
+    throw new RangeError(`${label} must be a non-empty array when provided.`);
+  }
+  for (const item of values) {
+    if (typeof item !== 'string' || !item.trim()) {
+      throw new TypeError(`${label} entries must be non-empty strings.`);
+    }
+  }
+}
+
+/**
+ * @param {unknown} value
+ * @param {string} label
+ */
+function assertOptionalNonEmptyString(value, label) {
+  if (value !== undefined && (typeof value !== 'string' || !value.trim())) {
+    throw new TypeError(`${label} must be a non-empty string when provided.`);
+  }
+}
+
 /**
  * Validates a Pilates recurrence schedule rule definition.
  * Excludes any booking/membership logic by design.
@@ -50,6 +76,38 @@ export function validateRecurrenceRule(rule) {
   }
   if (!isValidEndTime(rule.endTime)) {
     throw new RangeError(`Schedule rule "${rule.id}" has invalid endTime "${String(rule.endTime)}".`);
+  }
+
+  if (rule.excludeDates !== undefined) {
+    if (!Array.isArray(rule.excludeDates)) {
+      throw new TypeError(`Schedule rule "${rule.id}" excludeDates must be an array when provided.`);
+    }
+    const seenExcluded = new Set();
+    for (const dateStr of rule.excludeDates) {
+      if (!isValidKstDate(dateStr)) {
+        throw new RangeError(`Schedule rule "${rule.id}" has invalid excludeDate "${String(dateStr)}".`);
+      }
+      if (seenExcluded.has(dateStr)) {
+        throw new RangeError(`Schedule rule "${rule.id}" has duplicate excludeDate "${dateStr}".`);
+      }
+      seenExcluded.add(dateStr);
+    }
+  }
+
+  if (rule.weekStartsOn !== undefined && rule.weekStartsOn !== 0 && rule.weekStartsOn !== 1) {
+    throw new RangeError(
+      `Schedule rule "${rule.id}" has invalid weekStartsOn "${String(rule.weekStartsOn)}" (expected 0 or 1).`,
+    );
+  }
+
+  if (
+    rule.weekOfMonthMode !== undefined &&
+    rule.weekOfMonthMode !== 'weekday-ordinal' &&
+    rule.weekOfMonthMode !== 'calendar-week'
+  ) {
+    throw new RangeError(
+      `Schedule rule "${rule.id}" has invalid weekOfMonthMode "${String(rule.weekOfMonthMode)}".`,
+    );
   }
 
   const recurrence = rule.recurrence ?? 'weekly';
@@ -101,12 +159,12 @@ export function validateRecurrenceRule(rule) {
 }
 
 /**
- * Checks whether `rule` naturally occurs on `dateStr` (KST) before holidays or exceptions.
  * @param {Record<string, any>} rule
  * @param {string} dateStr
+ * @param {ReadonlySet<string>} [callScopedExcludedSet]
  * @returns {boolean}
  */
-export function ruleMatchesKstDate(rule, dateStr) {
+function matchesRuleOnDate(rule, dateStr, callScopedExcludedSet) {
   if (!isValidKstDate(dateStr)) return false;
   const recurrence = rule.recurrence ?? 'weekly';
   if (recurrence === 'once') {
@@ -116,7 +174,9 @@ export function ruleMatchesKstDate(rule, dateStr) {
   if (dateStr < rule.startDate) return false;
   if (rule.untilDate && dateStr > rule.untilDate) return false;
 
-  if (Array.isArray(rule.excludeDates) && rule.excludeDates.includes(dateStr)) {
+  if (callScopedExcludedSet) {
+    if (callScopedExcludedSet.has(dateStr)) return false;
+  } else if (Array.isArray(rule.excludeDates) && rule.excludeDates.includes(dateStr)) {
     return false;
   }
 
@@ -147,42 +207,81 @@ export function ruleMatchesKstDate(rule, dateStr) {
 }
 
 /**
- * Normalizes holiday definitions into a lookup helper.
+ * Checks whether `rule` naturally occurs on `dateStr` (KST) before holidays or exceptions.
+ * Stateless across calls so in-place mutations to `rule.excludeDates` are always respected.
+ * @param {Record<string, any>} rule
+ * @param {string} dateStr
+ * @returns {boolean}
+ */
+export function ruleMatchesKstDate(rule, dateStr) {
+  return matchesRuleOnDate(rule, dateStr, undefined);
+}
+
+/**
+ * Normalizes holiday definitions into an `O(1)` date-indexed lookup helper.
+ * Deduplicates overlapping holiday entries without emitting duplicate rows, and gives `'closed'`
+ * precedence over `'skip'` when multiple holiday definitions match the same `(date, roomId, instructorId)`.
+ *
  * @param {readonly (string | Record<string, any>)[]} [holidays]
  */
 function buildHolidayMatcher(holidays = []) {
-  const entries = [];
+  if (!Array.isArray(holidays)) {
+    throw new TypeError('holidays must be an array.');
+  }
+
+  /** @type {Map<string, Array<{ date: string, name: string, roomIds?: string[], instructorIds?: string[], mode: 'skip' | 'closed' }>>} */
+  const byDate = new Map();
+
   for (const item of holidays) {
     if (typeof item === 'string') {
       if (!isValidKstDate(item)) {
         throw new RangeError(`Invalid holiday date: "${item}"`);
       }
-      entries.push({
+      if (!byDate.has(item)) byDate.set(item, []);
+      byDate.get(item).push({
         date: item,
         name: '공휴일/휴관일',
         mode: 'skip',
       });
-    } else if (item && typeof item === 'object') {
+    } else if (item && typeof item === 'object' && !Array.isArray(item)) {
       if (!isValidKstDate(item.date)) {
         throw new RangeError(`Invalid holiday date: "${String(item.date)}"`);
       }
-      entries.push({
+      const mode = item.mode ?? 'skip';
+      if (mode !== 'skip' && mode !== 'closed') {
+        throw new RangeError(`Invalid holiday mode "${String(mode)}" for date "${item.date}".`);
+      }
+      if (item.roomIds !== undefined) {
+        assertStringIdList(item.roomIds, `Holiday "${item.date}" roomIds`);
+      }
+      if (item.instructorIds !== undefined) {
+        assertStringIdList(item.instructorIds, `Holiday "${item.date}" instructorIds`);
+      }
+      if (!byDate.has(item.date)) byDate.set(item.date, []);
+      byDate.get(item.date).push({
         date: item.date,
         name: item.name ?? item.reason ?? '공휴일/휴관일',
-        roomIds: Array.isArray(item.roomIds) ? item.roomIds : undefined,
-        instructorIds: Array.isArray(item.instructorIds) ? item.instructorIds : undefined,
-        mode: item.mode ?? 'skip',
+        roomIds: item.roomIds ? [...new Set(item.roomIds)] : undefined,
+        instructorIds: item.instructorIds ? [...new Set(item.instructorIds)] : undefined,
+        mode,
       });
+    } else {
+      throw new TypeError('Each holiday entry must be a YYYY-MM-DD string or holiday object.');
     }
   }
 
   return function matchHoliday(dateStr, roomId, instructorId) {
-    return entries.find((entry) => {
-      if (entry.date !== dateStr) return false;
+    const candidates = byDate.get(dateStr);
+    if (!candidates) return undefined;
+    let firstSkip;
+    for (const entry of candidates) {
       const roomMatch = !entry.roomIds || entry.roomIds.includes(roomId);
       const instructorMatch = !entry.instructorIds || entry.instructorIds.includes(instructorId);
-      return roomMatch && instructorMatch;
-    });
+      if (!roomMatch || !instructorMatch) continue;
+      if (entry.mode === 'closed') return entry;
+      if (!firstSkip) firstSkip = entry;
+    }
+    return firstSkip;
   };
 }
 
@@ -205,11 +304,15 @@ export function classifyTemporalStatus(startEpochMs, endEpochMs, nowEpochMs) {
  * @param {Map<string, Record<string, any>>} ruleMap
  */
 export function validateScheduleExceptions(exceptions = [], ruleMap = new Map()) {
+  if (!Array.isArray(exceptions)) {
+    throw new TypeError('exceptions must be an array.');
+  }
+
   const seenKeys = new Set();
   const seenIds = new Set();
 
   for (const ex of exceptions) {
-    if (!ex || typeof ex !== 'object') {
+    if (!ex || typeof ex !== 'object' || Array.isArray(ex)) {
       throw new TypeError('Schedule exception must be an object.');
     }
     if (typeof ex.id !== 'string' || !ex.id.trim()) {
@@ -220,11 +323,26 @@ export function validateScheduleExceptions(exceptions = [], ruleMap = new Map())
     }
     seenIds.add(ex.id);
 
+    if (
+      ex.roomId !== undefined &&
+      ex.locationId !== undefined &&
+      ex.roomId !== ex.locationId
+    ) {
+      throw new RangeError(
+        `Exception "${ex.id}" specifies conflicting roomId ("${ex.roomId}") and locationId ("${ex.locationId}").`,
+      );
+    }
+
     if (ex.kind === 'closed') {
       if (!isValidKstDate(ex.date)) {
         throw new RangeError(`Closed exception "${ex.id}" has invalid date "${String(ex.date)}".`);
       }
-      const key = `closed:${ex.date}:${ex.roomId ?? ex.locationId ?? '*'}:${ex.instructorId ?? '*'}`;
+      assertOptionalNonEmptyString(ex.roomId, `Closed exception "${ex.id}" roomId`);
+      assertOptionalNonEmptyString(ex.locationId, `Closed exception "${ex.id}" locationId`);
+      assertOptionalNonEmptyString(ex.instructorId, `Closed exception "${ex.id}" instructorId`);
+      const targetRoom = ex.roomId ?? ex.locationId ?? '*';
+      const targetInstructor = ex.instructorId ?? '*';
+      const key = `closed:${ex.date}:${targetRoom}:${targetInstructor}`;
       if (seenKeys.has(key)) {
         throw new RangeError(`Duplicate closed exception for key "${key}".`);
       }
@@ -236,6 +354,7 @@ export function validateScheduleExceptions(exceptions = [], ruleMap = new Map())
       if (!isValidKstDate(ex.date)) {
         throw new RangeError(`Extra exception "${ex.id}" has invalid date "${String(ex.date)}".`);
       }
+      assertOptionalNonEmptyString(ex.title, `Extra exception "${ex.id}" title`);
       if (typeof ex.instructorId !== 'string' || !ex.instructorId.trim()) {
         throw new TypeError(`Extra exception "${ex.id}" requires "instructorId".`);
       }
@@ -271,6 +390,10 @@ export function validateScheduleExceptions(exceptions = [], ruleMap = new Map())
       seenKeys.add(key);
 
       if (ex.kind === 'reschedule' || ex.kind === 'override') {
+        assertOptionalNonEmptyString(ex.title, `Exception "${ex.id}" title`);
+        assertOptionalNonEmptyString(ex.instructorId, `Exception "${ex.id}" instructorId`);
+        assertOptionalNonEmptyString(ex.roomId, `Exception "${ex.id}" roomId`);
+        assertOptionalNonEmptyString(ex.locationId, `Exception "${ex.id}" locationId`);
         const targetDate = ex.date ?? ex.originalDate;
         const targetStartTime = ex.startTime ?? baseRule.startTime;
         const targetEndTime = ex.endTime ?? baseRule.endTime;
@@ -297,6 +420,7 @@ export function validateScheduleExceptions(exceptions = [], ruleMap = new Map())
  *   holidays?: readonly (string | Record<string, any>)[],
  *   rangeStart: string,
  *   rangeEnd: string,
+ *   maxRangeDays?: number,
  *   clock?: { nowEpochMs(): number },
  *   includeInactive?: boolean,
  *   includeHolidayRows?: boolean,
@@ -314,19 +438,30 @@ export function expandPilatesSchedule(input) {
     holidays = [],
     rangeStart,
     rangeEnd,
+    maxRangeDays,
     clock = createDeterministicKstClock(),
     includeInactive = true,
     includeHolidayRows = false,
     includeCrossMidnightSpillover = true,
   } = input;
 
-  const datesInRange = expandKstDateRange(rangeStart, rangeEnd);
+  if (!Array.isArray(classes)) {
+    throw new TypeError('classes must be an array.');
+  }
+
+  const datesInRange = expandKstDateRange(
+    rangeStart,
+    rangeEnd,
+    maxRangeDays !== undefined ? { maxDays: maxRangeDays } : undefined,
+  );
   const rangeStartEpochMs = resolveKstTimeWindow(rangeStart, '00:00', '00:01').startEpochMs;
   const rangeEndEpochMs = resolveKstTimeWindow(rangeEnd, '23:59', '24:00').endEpochMs;
 
-  const scanDates = includeCrossMidnightSpillover
-    ? [addKstDays(rangeStart, -1), ...datesInRange]
-    : datesInRange;
+  const lookbackDate = addKstDays(rangeStart, -1);
+  const scanDates =
+    includeCrossMidnightSpillover && isValidKstDate(lookbackDate)
+      ? [lookbackDate, ...datesInRange]
+      : datesInRange;
 
   const ruleMap = new Map();
   for (const rule of classes) {
@@ -342,12 +477,14 @@ export function expandPilatesSchedule(input) {
   const nowEpochMs = clock.nowEpochMs();
 
   const targetedExceptions = new Map();
-  const closedExceptions = [];
+  /** @type {Map<string, Record<string, any>[]>} */
+  const closedByDate = new Map();
   const extraExceptions = [];
 
   for (const ex of exceptions) {
     if (ex.kind === 'closed') {
-      closedExceptions.push(ex);
+      if (!closedByDate.has(ex.date)) closedByDate.set(ex.date, []);
+      closedByDate.get(ex.date).push(ex);
     } else if (ex.kind === 'extra') {
       extraExceptions.push(ex);
     } else {
@@ -355,14 +492,16 @@ export function expandPilatesSchedule(input) {
     }
   }
 
-  const findClosure = (dateStr, roomId, instructorId) =>
-    closedExceptions.find((item) => {
-      if (item.date !== dateStr) return false;
+  const findClosure = (dateStr, roomId, instructorId) => {
+    const candidates = closedByDate.get(dateStr);
+    if (!candidates) return undefined;
+    return candidates.find((item) => {
       const targetRoom = item.roomId ?? item.locationId;
       const roomOk = !targetRoom || targetRoom === roomId;
       const instructorOk = !item.instructorId || item.instructorId === instructorId;
       return roomOk && instructorOk;
     });
+  };
 
   const createOccurrenceRow = (params) => {
     const window = resolveKstTimeWindow(params.date, params.startTime, params.endTime, {
@@ -406,8 +545,12 @@ export function expandPilatesSchedule(input) {
   const occurrences = [];
 
   for (const rule of classes) {
+    const callScopedExcludedSet =
+      Array.isArray(rule.excludeDates) && rule.excludeDates.length > 0
+        ? new Set(rule.excludeDates)
+        : undefined;
     for (const scanDate of scanDates) {
-      if (!ruleMatchesKstDate(rule, scanDate)) continue;
+      if (!matchesRuleOnDate(rule, scanDate, callScopedExcludedSet)) continue;
       const isLookbackDate = scanDate < rangeStart;
       const occurrenceKey = `${rule.id}@${scanDate}`;
       const exception = targetedExceptions.get(occurrenceKey);
@@ -464,31 +607,6 @@ export function expandPilatesSchedule(input) {
         continue;
       }
 
-      const matchedHoliday = matchHoliday(scanDate, rule.roomId, rule.instructorId);
-      if (matchedHoliday) {
-        if (!isLookbackDate && (includeHolidayRows || matchedHoliday.mode === 'closed') && includeInactive) {
-          occurrences.push(
-            createOccurrenceRow({
-              id: occurrenceKey,
-              classId: rule.id,
-              title: rule.title,
-              instructorId: rule.instructorId,
-              roomId: rule.roomId,
-              originalDate: scanDate,
-              date: scanDate,
-              startTime: rule.startTime,
-              endTime: rule.endTime,
-              allowCrossMidnight: rule.allowCrossMidnight,
-              status: matchedHoliday.mode === 'closed' ? 'closed' : 'holiday',
-              reason: matchedHoliday.name,
-              linkSavedSequenceId: rule.linkSavedSequenceId,
-              notes: rule.notes,
-            }),
-          );
-        }
-        continue;
-      }
-
       const closure = findClosure(scanDate, rule.roomId, rule.instructorId);
       if (closure) {
         if (!isLookbackDate && includeInactive) {
@@ -507,6 +625,31 @@ export function expandPilatesSchedule(input) {
               status: 'closed',
               reason: closure.reason,
               exceptionId: closure.id,
+              linkSavedSequenceId: rule.linkSavedSequenceId,
+              notes: rule.notes,
+            }),
+          );
+        }
+        continue;
+      }
+
+      const matchedHoliday = matchHoliday(scanDate, rule.roomId, rule.instructorId);
+      if (matchedHoliday) {
+        if (!isLookbackDate && (includeHolidayRows || matchedHoliday.mode === 'closed') && includeInactive) {
+          occurrences.push(
+            createOccurrenceRow({
+              id: occurrenceKey,
+              classId: rule.id,
+              title: rule.title,
+              instructorId: rule.instructorId,
+              roomId: rule.roomId,
+              originalDate: scanDate,
+              date: scanDate,
+              startTime: rule.startTime,
+              endTime: rule.endTime,
+              allowCrossMidnight: rule.allowCrossMidnight,
+              status: matchedHoliday.mode === 'closed' ? 'closed' : 'holiday',
+              reason: matchedHoliday.name,
               linkSavedSequenceId: rule.linkSavedSequenceId,
               notes: rule.notes,
             }),
@@ -578,17 +721,17 @@ export function expandPilatesSchedule(input) {
     const inDateWindow = targetDate >= rangeStart && targetDate <= rangeEnd;
     const spillsIntoWindow =
       includeCrossMidnightSpillover &&
-      targetDate === addKstDays(rangeStart, -1) &&
+      targetDate === lookbackDate &&
       candidateRow.endEpochMs > rangeStartEpochMs &&
       candidateRow.startEpochMs < rangeEndEpochMs;
 
     if (!inDateWindow && !spillsIntoWindow) continue;
 
-    const holidayOnTarget = matchHoliday(targetDate, targetRoomId, targetInstructorId);
     const closureOnTarget = findClosure(targetDate, targetRoomId, targetInstructorId);
+    const holidayOnTarget = matchHoliday(targetDate, targetRoomId, targetInstructorId);
 
     if (closureOnTarget) {
-      if (includeInactive) {
+      if (inDateWindow && includeInactive) {
         occurrences.push({
           ...candidateRow,
           status: 'closed',
@@ -596,7 +739,7 @@ export function expandPilatesSchedule(input) {
         });
       }
     } else if (holidayOnTarget) {
-      if (includeInactive && (includeHolidayRows || holidayOnTarget.mode === 'closed')) {
+      if (inDateWindow && includeInactive && (includeHolidayRows || holidayOnTarget.mode === 'closed')) {
         occurrences.push({
           ...candidateRow,
           status: holidayOnTarget.mode === 'closed' ? 'closed' : 'holiday',
@@ -630,18 +773,29 @@ export function expandPilatesSchedule(input) {
     const inDateWindow = ex.date >= rangeStart && ex.date <= rangeEnd;
     const spillsIntoWindow =
       includeCrossMidnightSpillover &&
-      ex.date === addKstDays(rangeStart, -1) &&
-      candidateRow.endEpochMs > rangeStartEpochMs;
+      ex.date === lookbackDate &&
+      candidateRow.endEpochMs > rangeStartEpochMs &&
+      candidateRow.startEpochMs < rangeEndEpochMs;
 
     if (!inDateWindow && !spillsIntoWindow) continue;
 
     const closureOnTarget = findClosure(ex.date, ex.roomId, ex.instructorId);
+    const holidayOnTarget = matchHoliday(ex.date, ex.roomId, ex.instructorId);
+
     if (closureOnTarget) {
-      if (includeInactive) {
+      if (inDateWindow && includeInactive) {
         occurrences.push({
           ...candidateRow,
           status: 'closed',
           reason: closureOnTarget.reason,
+        });
+      }
+    } else if (holidayOnTarget && holidayOnTarget.mode === 'closed') {
+      if (inDateWindow && includeInactive) {
+        occurrences.push({
+          ...candidateRow,
+          status: 'closed',
+          reason: holidayOnTarget.name,
         });
       }
     } else {

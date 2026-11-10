@@ -11,12 +11,15 @@ export const KST_OFFSET_MINUTES = 9 * 60;
 export const KST_OFFSET_MS = KST_OFFSET_MINUTES * 60 * 1000;
 export const MS_PER_MINUTE = 60 * 1000;
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
+export const MAX_HARD_RANGE_DAYS = 3660;
 
 export const KST_WEEKDAY_LABELS = Object.freeze(['일', '월', '화', '수', '목', '금', '토']);
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_START_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const TIME_END_PATTERN = /^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/;
+const ISO_INSTANT_PATTERN =
+  /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|[+-]\d{2}:\d{2})?$/;
 
 /**
  * Validates whether a string is a valid Gregorian YYYY-MM-DD calendar date between 1900-01-01 and 2199-12-31.
@@ -217,6 +220,9 @@ export function getKstWeekday(dateStr) {
  * @returns {string}
  */
 export function getKstWeekStart(dateStr, weekStartsOn = 1) {
+  if (weekStartsOn !== 0 && weekStartsOn !== 1) {
+    throw new RangeError(`Invalid weekStartsOn: "${String(weekStartsOn)}" (expected 0 or 1).`);
+  }
   const weekday = getKstWeekday(dateStr);
   const offset = weekStartsOn === 1 ? (weekday + 6) % 7 : weekday;
   return addKstDays(dateStr, -offset);
@@ -236,11 +242,17 @@ export function getKstWeekOfMonth(dateStr, options = {}) {
     throw new TypeError(`Invalid KST date: "${String(dateStr)}"`);
   }
   const mode = options.mode ?? 'weekday-ordinal';
+  if (mode !== 'weekday-ordinal' && mode !== 'calendar-week') {
+    throw new RangeError(`Invalid weekOfMonth mode: "${String(mode)}"`);
+  }
   const dayOfMonth = Number(dateStr.slice(8, 10));
   if (mode === 'weekday-ordinal') {
     return Math.floor((dayOfMonth - 1) / 7) + 1;
   }
   const weekStartsOn = options.weekStartsOn ?? 1;
+  if (weekStartsOn !== 0 && weekStartsOn !== 1) {
+    throw new RangeError(`Invalid weekStartsOn: "${String(weekStartsOn)}" (expected 0 or 1).`);
+  }
   const firstOfMonth = `${dateStr.slice(0, 7)}-01`;
   const firstWeekday = getKstWeekday(firstOfMonth);
   const leadingOffset = weekStartsOn === 1 ? (firstWeekday + 6) % 7 : firstWeekday;
@@ -271,6 +283,11 @@ export function getElapsedWeeksSinceAnchor(anchorDate, targetDate, weekStartsOn 
  */
 export function expandKstDateRange(startDate, endDate, options = {}) {
   const maxDays = options.maxDays ?? 370;
+  if (!Number.isInteger(maxDays) || maxDays < 1 || maxDays > MAX_HARD_RANGE_DAYS) {
+    throw new RangeError(
+      `Invalid maxDays option: ${String(maxDays)} (expected integer 1..${MAX_HARD_RANGE_DAYS}).`,
+    );
+  }
   if (!isValidKstDate(startDate) || !isValidKstDate(endDate) || endDate < startDate) {
     throw new RangeError(
       `Invalid KST date range: startDate="${String(startDate)}", endDate="${String(endDate)}"`,
@@ -370,6 +387,7 @@ export function resolveKstTimeWindow(baseDate, startTime, endTime, options = {})
 /**
  * Parses an ISO-8601 timestamp or KST `YYYY-MM-DD` / `YYYY-MM-DDTHH:mm` string into UTC epoch milliseconds.
  * If no timezone offset is present, interprets the string in KST (+09:00).
+ * Strictly validates Gregorian calendar dates so invalid dates (e.g. `2026-02-29` or `2026/02/31`) never silently roll over.
  * @param {string | number | Date} input
  * @returns {number}
  */
@@ -387,19 +405,50 @@ export function parseKstInstantToEpochMs(input) {
     throw new TypeError(`Unsupported clock instant input: ${String(input)}`);
   }
   const trimmed = input.trim();
-  if (isValidKstDate(trimmed)) {
+  if (DATE_PATTERN.test(trimmed)) {
+    if (!isValidKstDate(trimmed)) {
+      throw new RangeError(`Invalid KST date: "${trimmed}"`);
+    }
     return kstDateToEpochMs(trimmed, 0);
   }
-  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(trimmed)) {
-    const ms = Date.parse(`${trimmed}+09:00`);
-    if (Number.isNaN(ms)) throw new TypeError(`Invalid KST timestamp: "${trimmed}"`);
-    return ms;
+
+  const match = ISO_INSTANT_PATTERN.exec(trimmed);
+  if (!match) {
+    throw new TypeError(`Invalid ISO/KST timestamp: "${trimmed}"`);
   }
-  const ms = Date.parse(trimmed);
-  if (Number.isNaN(ms)) {
-    throw new TypeError(`Invalid ISO timestamp: "${trimmed}"`);
+
+  const [, datePart, hourStr, minStr, secStr = '0', msStr = '0', tzPart] = match;
+  if (!isValidKstDate(datePart)) {
+    throw new RangeError(`Invalid calendar date in timestamp: "${trimmed}"`);
   }
-  return ms;
+
+  const hours = Number(hourStr);
+  const minutes = Number(minStr);
+  const seconds = Number(secStr);
+  const millis = Number(msStr.padEnd(3, '0'));
+
+  if (hours > 23 || minutes > 59 || seconds > 59) {
+    throw new RangeError(`Invalid clock time in timestamp: "${trimmed}"`);
+  }
+
+  let offsetMinutes = KST_OFFSET_MINUTES;
+  if (tzPart === 'Z') {
+    offsetMinutes = 0;
+  } else if (tzPart) {
+    const sign = tzPart.startsWith('-') ? -1 : 1;
+    const tzHours = Number(tzPart.slice(1, 3));
+    const tzMinutes = Number(tzPart.slice(4, 6));
+    if (tzHours > 23 || tzMinutes > 59) {
+      throw new RangeError(`Invalid timezone offset in timestamp: "${trimmed}"`);
+    }
+    offsetMinutes = sign * (tzHours * 60 + tzMinutes);
+  }
+
+  const [year, month, day] = datePart.split('-').map(Number);
+  return (
+    Date.UTC(year, month - 1, day, hours, minutes, seconds, millis) -
+    offsetMinutes * MS_PER_MINUTE
+  );
 }
 
 /**
@@ -442,6 +491,14 @@ export function createDeterministicKstClock(initialInstant = '2026-11-09T09:00:0
       const hours = delta.hours ?? 0;
       const minutes = delta.minutes ?? 0;
       const seconds = delta.seconds ?? 0;
+      if (
+        !Number.isFinite(days) ||
+        !Number.isFinite(hours) ||
+        !Number.isFinite(minutes) ||
+        !Number.isFinite(seconds)
+      ) {
+        throw new TypeError('Clock advance delta fields must be finite numbers.');
+      }
       const deltaMs =
         days * MS_PER_DAY +
         hours * 60 * MS_PER_MINUTE +

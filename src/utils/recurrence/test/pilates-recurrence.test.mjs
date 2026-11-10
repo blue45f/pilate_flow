@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import test, { describe } from 'node:test';
 
 import {
+  MAX_HARD_RANGE_DAYS,
   addKstDays,
   createDeterministicKstClock,
   detectScheduleConflicts,
@@ -16,10 +17,12 @@ import {
   getKstWeekStart,
   isValidKstDate,
   kstDateToEpochMs,
+  parseKstInstantToEpochMs,
   resolveKstTimeWindow,
   ruleMatchesKstDate,
   summarizeResourceConflicts,
   validateRecurrenceRule,
+  validateScheduleExceptions,
 } from '../src/index.mjs';
 import { createVirtualTimetableFixture } from './fixtures.mjs';
 
@@ -803,5 +806,1043 @@ describe('7. Validation & Error Boundaries', () => {
 
     assert.equal(JSON.stringify(fixture), snapshotBefore);
     assert.deepEqual(run1, run2);
+  });
+});
+
+describe('8. KST Month-End, Leap-Year, Year-End & Cross-Midnight Regressions', () => {
+  test('T28: handles century/4-year leap-year boundaries and expands Feb 28..Mar 1 accurately', () => {
+    assert.equal(isValidKstDate('1900-02-29'), false);
+    assert.equal(isValidKstDate('2000-02-29'), true);
+    assert.equal(isValidKstDate('2024-02-29'), true);
+    assert.equal(isValidKstDate('2026-02-29'), false);
+    assert.equal(isValidKstDate('2028-02-29'), true);
+    assert.equal(isValidKstDate('2100-02-29'), false);
+
+    // 2028-02-28 (Mon), 2028-02-29 (Tue), 2028-03-01 (Wed)
+    const leapRows = expandPilatesSchedule({
+      classes: [
+        {
+          id: 'cls-leap-night',
+          title: '윤년 심야 리포머',
+          instructorId: 'inst-kim',
+          roomId: 'room-reformer-a',
+          startDate: '2028-02-28',
+          untilDate: '2028-03-01',
+          startTime: '23:30',
+          endTime: '00:20',
+          recurrence: 'weekly',
+          weekdays: [1, 2, 3],
+        },
+      ],
+      rangeStart: '2028-02-28',
+      rangeEnd: '2028-03-01',
+    });
+
+    assert.deepEqual(
+      leapRows.map((r) => [r.date, r.endDate, r.weekOfMonthOrdinal]),
+      [
+        ['2028-02-28', '2028-02-29', 4],
+        ['2028-02-29', '2028-03-01', 5],
+        ['2028-03-01', '2028-03-02', 1],
+      ],
+    );
+
+    // Non-leap 2026-02-28 (Sat) -> 2026-03-01 (Sun)
+    const nonLeapWin = resolveKstTimeWindow('2026-02-28', '23:30', '00:20');
+    assert.equal(nonLeapWin.endDate, '2026-03-01');
+    assert.equal(nonLeapWin.endKstIso, '2026-03-01T00:20:00+09:00');
+  });
+
+  test('T29: preserves year-end cross-midnight spillover (2026-12-31 -> 2027-01-01) and bi-weekly cadence across New Year', () => {
+    const classes = [
+      {
+        id: 'cls-nye-late',
+        title: '연말 심야 스트레칭',
+        instructorId: 'inst-kim',
+        roomId: 'room-reformer-a',
+        startDate: '2026-12-01',
+        untilDate: '2027-01-31',
+        startTime: '23:30',
+        endTime: '00:20',
+        recurrence: 'weekly',
+        weekdays: [4], // 2026-12-31 is Thursday
+      },
+      {
+        id: 'cls-biweekly-newyear',
+        title: '연말연시 격주 캐딜락',
+        instructorId: 'inst-park',
+        roomId: 'room-cadillac-b',
+        startDate: '2026-12-28', // Monday of week spanning 2026-12-28..2027-01-03
+        untilDate: '2027-01-20',
+        startTime: '10:00',
+        endTime: '10:50',
+        recurrence: 'weekly',
+        weekdays: [1, 6], // Mon, Sat
+        intervalWeeks: 2,
+      },
+    ];
+
+    // Query starting 2027-01-01: 2026-12-31 23:30->00:20 spills into 2027-01-01 even when 2027-01-01 is a holiday
+    const janRows = expandPilatesSchedule({
+      classes,
+      holidays: ['2027-01-01'],
+      rangeStart: '2027-01-01',
+      rangeEnd: '2027-01-18',
+      includeCrossMidnightSpillover: true,
+    });
+
+    assert.deepEqual(
+      janRows.map((r) => [r.id, r.date, r.endDate]),
+      [
+        ['cls-nye-late@2026-12-31', '2026-12-31', '2027-01-01'],
+        ['cls-biweekly-newyear@2027-01-02', '2027-01-02', '2027-01-02'],
+        ['cls-nye-late@2027-01-07', '2027-01-07', '2027-01-08'],
+        ['cls-biweekly-newyear@2027-01-11', '2027-01-11', '2027-01-11'],
+        ['cls-nye-late@2027-01-14', '2027-01-14', '2027-01-15'],
+        ['cls-biweekly-newyear@2027-01-16', '2027-01-16', '2027-01-16'],
+      ],
+    );
+  });
+
+  test('T30: prevents closed/holiday/cancelled or exact-24:00 lookback sessions on (rangeStart - 1) from leaking into rangeStart', () => {
+    const classes = [
+      {
+        id: 'cls-regular-24end',
+        title: '24시 정각 종료반',
+        instructorId: 'inst-kim',
+        roomId: 'room-reformer-a',
+        startDate: '2026-11-09',
+        untilDate: '2026-11-09',
+        startTime: '23:10',
+        endTime: '24:00', // Ends at 2026-11-10T00:00:00+09:00 -> 0 minutes inside Nov 10
+        recurrence: 'weekly',
+        weekdays: [1],
+      },
+      {
+        id: 'cls-resched-closed-lookback',
+        title: '전날 심야 이동 후 휴무반',
+        instructorId: 'inst-park',
+        roomId: 'room-cadillac-b',
+        startDate: '2026-11-09',
+        untilDate: '2026-11-09',
+        startTime: '10:00',
+        endTime: '10:50',
+        recurrence: 'weekly',
+        weekdays: [1],
+      },
+    ];
+
+    const rows = expandPilatesSchedule({
+      classes,
+      exceptions: [
+        {
+          id: 'ex-move-late-mon',
+          kind: 'override',
+          classId: 'cls-resched-closed-lookback',
+          originalDate: '2026-11-09',
+          date: '2026-11-09',
+          startTime: '23:30',
+          endTime: '00:20',
+          reason: '심야 시간 변경',
+        },
+        {
+          id: 'ex-extra-late-mon',
+          kind: 'extra',
+          date: '2026-11-09',
+          title: '전날 심야 특강',
+          instructorId: 'inst-lee',
+          roomId: 'room-private-c',
+          startTime: '23:40',
+          endTime: '00:30',
+          reason: '심야 특강',
+        },
+        {
+          id: 'ex-close-all-mon',
+          kind: 'closed',
+          date: '2026-11-09',
+          reason: '월요일 전관 정전 휴무',
+        },
+      ],
+      rangeStart: '2026-11-10',
+      rangeEnd: '2026-11-10',
+      includeInactive: true,
+      includeCrossMidnightSpillover: true,
+    });
+
+    assert.deepEqual(rows, []);
+  });
+
+  test('T31: parseKstInstantToEpochMs & deterministic clock reject rolled-over invalid dates and honor explicit UTC/offset timestamps', () => {
+    assert.throws(() => parseKstInstantToEpochMs('2026-02-29'), /Invalid KST date/);
+    assert.throws(() => parseKstInstantToEpochMs('2026-02-29T09:00:00+09:00'), /Invalid calendar date/);
+    assert.throws(() => parseKstInstantToEpochMs('2026-04-31T09:00:00Z'), /Invalid calendar date/);
+    assert.throws(() => parseKstInstantToEpochMs('2026/02/31'), /Invalid ISO\/KST timestamp/);
+    assert.throws(() => parseKstInstantToEpochMs('1899-12-31'), /Invalid KST date/);
+
+    const utcMidnightClock = createDeterministicKstClock('2026-11-09T00:00:00Z');
+    assert.equal(utcMidnightClock.nowKstIso(), '2026-11-09T09:00:00+09:00');
+    assert.throws(() => utcMidnightClock.advance({ minutes: Number.NaN }), /finite/);
+  });
+});
+
+describe('9. Range Endpoint Inclusivity & Non-Duplication / Non-Omission Regressions', () => {
+  test('T32: includes exact boundary occurrences on rangeStart, rangeEnd, startDate===untilDate,open-ended untilDate, and century bounds', () => {
+    const singleDayRange = expandKstDateRange('2026-11-09', '2026-11-09');
+    assert.deepEqual(singleDayRange, ['2026-11-09']);
+
+    const rows = expandPilatesSchedule({
+      classes: [
+        {
+          id: 'cls-ends-on-rangestart',
+          title: '조회 시작일 종료반',
+          instructorId: 'inst-kim',
+          roomId: 'room-reformer-a',
+          startDate: '2026-11-02',
+          untilDate: '2026-11-09', // equals rangeStart
+          startTime: '00:00',
+          endTime: '00:50',
+          recurrence: 'weekly',
+          weekdays: [1],
+        },
+        {
+          id: 'cls-starts-on-rangeend',
+          title: '조회 종료일 시작반',
+          instructorId: 'inst-park',
+          roomId: 'room-cadillac-b',
+          startDate: '2026-11-15', // equals rangeEnd
+          untilDate: '2026-11-30',
+          startTime: '23:10',
+          endTime: '24:00',
+          recurrence: 'weekly',
+          weekdays: [0],
+        },
+        {
+          id: 'cls-open-ended',
+          title: '무기한 수요일 정규반',
+          instructorId: 'inst-lee',
+          roomId: 'room-private-c',
+          startDate: '2026-11-01',
+          // untilDate omitted intentionally
+          startTime: '12:00',
+          endTime: '12:50',
+          recurrence: 'weekly',
+          weekdays: [3],
+        },
+      ],
+      rangeStart: '2026-11-09',
+      rangeEnd: '2026-11-15',
+    });
+
+    assert.deepEqual(
+      rows.map((r) => [r.id, r.date]),
+      [
+        ['cls-ends-on-rangestart@2026-11-09', '2026-11-09'],
+        ['cls-open-ended@2026-11-11', '2026-11-11'],
+        ['cls-starts-on-rangeend@2026-11-15', '2026-11-15'],
+      ],
+    );
+
+    // Extreme century bounds 1900-01-01 and 2199-12-31 must not fail lookback or cross-midnight
+    const minBoundRows = expandPilatesSchedule({
+      classes: [
+        {
+          id: 'cls-1900',
+          title: '1900 첫날 수업',
+          instructorId: 'inst-kim',
+          roomId: 'room-reformer-a',
+          startDate: '1900-01-01',
+          untilDate: '1900-01-01',
+          startTime: '09:00',
+          endTime: '09:50',
+          recurrence: 'weekly',
+          weekdays: [1],
+        },
+      ],
+      rangeStart: '1900-01-01',
+      rangeEnd: '1900-01-01',
+      includeCrossMidnightSpillover: true,
+    });
+    assert.equal(minBoundRows.length, 1);
+
+    const maxBoundRows = expandPilatesSchedule({
+      classes: [
+        {
+          id: 'cls-2199',
+          title: '2199 마지막 심야 수업',
+          instructorId: 'inst-kim',
+          roomId: 'room-reformer-a',
+          startDate: '2199-12-31',
+          untilDate: '2199-12-31',
+          startTime: '23:30',
+          endTime: '00:20',
+          recurrence: 'weekly',
+          weekdays: [2],
+        },
+      ],
+      rangeStart: '2199-12-31',
+      rangeEnd: '2199-12-31',
+    });
+    assert.equal(maxBoundRows.length, 1);
+    assert.equal(maxBoundRows[0].endDate, '2200-01-01');
+  });
+
+  test('T33: partition regression — full-range expansion equals concatenation of disjoint sub-ranges with zero duplicates or omissions', () => {
+    const fixture = createVirtualTimetableFixture();
+    const classes = fixture.classes.map((c) => ({ ...c, untilDate: '2026-12-31' }));
+    const exceptions = [
+      {
+        id: 'ex-1',
+        kind: 'cancel',
+        classId: 'cls-morning-reformer',
+        originalDate: '2026-11-16',
+        reason: '개인 사정 취소',
+      },
+      {
+        id: 'ex-2',
+        kind: 'reschedule',
+        classId: 'cls-biweekly-duet',
+        originalDate: '2026-11-19',
+        date: '2026-12-02',
+        startTime: '15:00',
+        endTime: '15:50',
+        reason: '12월 첫째주 보강 이동',
+      },
+      {
+        id: 'ex-3',
+        kind: 'override',
+        classId: 'cls-morning-reformer',
+        originalDate: '2026-12-07',
+        date: '2026-12-07',
+        startTime: '10:30',
+        endTime: '11:20',
+        instructorId: 'inst-lee',
+        reason: '당일 시간 변경',
+      },
+      {
+        id: 'ex-4',
+        kind: 'extra',
+        date: '2026-12-24',
+        title: '크리스마스 이브 특강',
+        instructorId: 'inst-kim',
+        roomId: 'room-private-c',
+        startTime: '19:00',
+        endTime: '19:50',
+        reason: '연말 이벤트',
+      },
+    ];
+    const holidays = [...fixture.holidays, '2026-12-25'];
+    const clock = createDeterministicKstClock('2026-11-15T12:00:00+09:00');
+
+    const fullRows = expandPilatesSchedule({
+      classes,
+      exceptions,
+      holidays,
+      rangeStart: '2026-11-01',
+      rangeEnd: '2026-12-31',
+      clock,
+      includeCrossMidnightSpillover: false,
+    });
+
+    // Unique ID invariant: zero duplicate occurrence IDs
+    const uniqueIds = new Set(fullRows.map((r) => r.id));
+    assert.equal(uniqueIds.size, fullRows.length);
+
+    // Partition into 4 disjoint windows covering [2026-11-01 .. 2026-12-31]
+    const windows = [
+      ['2026-11-01', '2026-11-15'],
+      ['2026-11-16', '2026-11-30'],
+      ['2026-12-01', '2026-12-15'],
+      ['2026-12-16', '2026-12-31'],
+    ];
+    const partitionedRows = windows.flatMap(([s, e]) =>
+      expandPilatesSchedule({
+        classes,
+        exceptions,
+        holidays,
+        rangeStart: s,
+        rangeEnd: e,
+        clock,
+        includeCrossMidnightSpillover: false,
+      }),
+    );
+
+    assert.deepEqual(partitionedRows, fullRows);
+  });
+
+  test('T34: preserves both regular and rescheduled occurrences when moved onto another regular class date or moved off a holiday', () => {
+    const fixture = createVirtualTimetableFixture();
+    const rows = expandPilatesSchedule({
+      classes: [fixture.classes[0]], // Mon(Nov 2), Wed(Nov 4), Fri(Nov 6) 09:00..09:50
+      holidays: ['2026-11-04'], // Wednesday is a holiday
+      exceptions: [
+        // Move Monday Nov 2 onto Friday Nov 6 (which already has a regular 09:00..09:50 class!)
+        {
+          id: 'ex-mon-to-fri',
+          kind: 'reschedule',
+          classId: 'cls-morning-reformer',
+          originalDate: '2026-11-02',
+          date: '2026-11-06',
+          startTime: '14:00',
+          endTime: '14:50',
+          reason: '금요일 오후 보강',
+        },
+        // Move Wednesday Nov 4 (a holiday!) onto Thursday Nov 5 so it is not omitted
+        {
+          id: 'ex-holiday-makeup',
+          kind: 'reschedule',
+          classId: 'cls-morning-reformer',
+          originalDate: '2026-11-04',
+          date: '2026-11-05',
+          startTime: '09:00',
+          endTime: '09:50',
+          reason: '휴관일 목요일 대체 수업',
+        },
+      ],
+      rangeStart: '2026-11-02',
+      rangeEnd: '2026-11-06',
+      includeInactive: false,
+    });
+
+    assert.deepEqual(
+      rows.map((r) => [r.id, r.date, r.startTime, r.status]),
+      [
+        ['cls-morning-reformer@2026-11-04:rescheduled', '2026-11-05', '09:00', 'scheduled'],
+        ['cls-morning-reformer@2026-11-06', '2026-11-06', '09:00', 'scheduled'],
+        ['cls-morning-reformer@2026-11-02:rescheduled', '2026-11-06', '14:00', 'scheduled'],
+      ],
+    );
+  });
+});
+
+describe('10. Duplicate Exceptions & Holidays Precedence Regressions', () => {
+  test('T35: deduplicates duplicate holidays without emitting duplicate rows and prioritizes mode="closed" over mode="skip"', () => {
+    const fixture = createVirtualTimetableFixture();
+    const rows = expandPilatesSchedule({
+      classes: [fixture.classes[0]],
+      holidays: [
+        '2026-11-04',
+        '2026-11-04', // Exact string duplicate
+        { date: '2026-11-06', name: '일반 휴일', mode: 'skip' },
+        {
+          date: '2026-11-06',
+          name: 'A룸 시설 폐쇄',
+          roomIds: ['room-reformer-a'],
+          mode: 'closed', // Appears AFTER skip, must still take precedence
+        },
+      ],
+      rangeStart: '2026-11-02',
+      rangeEnd: '2026-11-06',
+      includeHolidayRows: true,
+    });
+
+    assert.equal(rows.length, 3);
+    assert.deepEqual(
+      rows.map((r) => [r.date, r.status, r.reason]),
+      [
+        ['2026-11-02', 'scheduled', undefined],
+        ['2026-11-04', 'holiday', '공휴일/휴관일'],
+        ['2026-11-06', 'closed', 'A룸 시설 폐쇄'],
+      ],
+    );
+  });
+
+  test('T36: enforces consistent precedence (targeted exception > closed exception > holiday) across regular, rescheduled, and extra sessions', () => {
+    const fixture = createVirtualTimetableFixture();
+    const rows = expandPilatesSchedule({
+      classes: [fixture.classes[0]], // Nov 2, Nov 4, Nov 6
+      holidays: [
+        { date: '2026-11-02', name: '공휴일 A', mode: 'skip' },
+        { date: '2026-11-04', name: '공휴일 B', mode: 'skip' },
+        { date: '2026-11-06', name: '전관 보수 폐쇄일', mode: 'closed' },
+      ],
+      exceptions: [
+        // Explicit cancel on a skip-holiday must emit 'cancelled'
+        {
+          id: 'ex-cancel-on-holiday',
+          kind: 'cancel',
+          classId: 'cls-morning-reformer',
+          originalDate: '2026-11-02',
+          reason: '명시적 휴강 공지',
+        },
+        // Explicit closed exception on a skip-holiday must emit 'closed' (not disappear as 'skip')
+        {
+          id: 'ex-closed-on-holiday',
+          kind: 'closed',
+          date: '2026-11-04',
+          reason: '명시적 센터 임시휴무',
+        },
+        // Extra session on a mode='closed' holiday is marked closed
+        {
+          id: 'ex-extra-on-closed-holiday',
+          kind: 'extra',
+          date: '2026-11-06',
+          title: '특강 개설 시도',
+          instructorId: 'inst-lee',
+          roomId: 'room-private-c',
+          startTime: '13:00',
+          endTime: '13:50',
+          reason: '특강',
+        },
+      ],
+      rangeStart: '2026-11-02',
+      rangeEnd: '2026-11-06',
+      includeHolidayRows: false,
+      includeInactive: true,
+    });
+
+    assert.deepEqual(
+      rows.map((r) => [r.id, r.status, r.reason]),
+      [
+        ['cls-morning-reformer@2026-11-02', 'cancelled', '명시적 휴강 공지'],
+        ['cls-morning-reformer@2026-11-04', 'closed', '명시적 센터 임시휴무'],
+        ['cls-morning-reformer@2026-11-06', 'closed', '전관 보수 폐쇄일'],
+        ['extra:ex-extra-on-closed-holiday@2026-11-06', 'closed', '전관 보수 폐쇄일'],
+      ],
+    );
+  });
+
+  test('T37: rejects duplicate targeted/closed exceptions, empty-string wildcard spoofing, conflicting roomId/locationId, and invalid holidays/excludeDates', () => {
+    const fixture = createVirtualTimetableFixture();
+    const ruleMap = new Map([[fixture.classes[0].id, fixture.classes[0]]]);
+
+    // Cancel + reschedule on same classId@originalDate
+    assert.throws(
+      () =>
+        validateScheduleExceptions(
+          [
+            {
+              id: 'e1',
+              kind: 'cancel',
+              classId: 'cls-morning-reformer',
+              originalDate: '2026-11-02',
+              reason: '',
+            },
+            {
+              id: 'e2',
+              kind: 'reschedule',
+              classId: 'cls-morning-reformer',
+              originalDate: '2026-11-02',
+              date: '2026-11-03',
+              startTime: '10:00',
+              endTime: '10:50',
+              reason: '',
+            },
+          ],
+          ruleMap,
+        ),
+      /Duplicate exception targeting/,
+    );
+
+    // Duplicate closed exception
+    assert.throws(
+      () =>
+        validateScheduleExceptions(
+          [
+            { id: 'c1', kind: 'closed', date: '2026-11-05', roomId: 'room-a', reason: '' },
+            { id: 'c2', kind: 'closed', date: '2026-11-05', locationId: 'room-a', reason: '' },
+          ],
+          ruleMap,
+        ),
+      /Duplicate closed exception/,
+    );
+
+    // Empty-string roomId/instructorId spoofing
+    assert.throws(
+      () =>
+        validateScheduleExceptions(
+          [{ id: 'c-empty', kind: 'closed', date: '2026-11-05', roomId: '', reason: '' }],
+          ruleMap,
+        ),
+      /non-empty string/,
+    );
+
+    // Conflicting roomId and locationId
+    assert.throws(
+      () =>
+        validateScheduleExceptions(
+          [
+            {
+              id: 'c-mismatch',
+              kind: 'closed',
+              date: '2026-11-05',
+              roomId: 'room-a',
+              locationId: 'room-b',
+              reason: '',
+            },
+          ],
+          ruleMap,
+        ),
+      /conflicting roomId/,
+    );
+
+    // Invalid excludeDate or duplicate excludeDate on rule
+    assert.throws(
+      () => validateRecurrenceRule({ ...fixture.classes[0], excludeDates: ['2026-02-30'] }),
+      /invalid excludeDate/,
+    );
+    assert.throws(
+      () =>
+        validateRecurrenceRule({
+          ...fixture.classes[0],
+          excludeDates: ['2026-11-04', '2026-11-04'],
+        }),
+      /duplicate excludeDate/,
+    );
+
+    // Invalid holiday mode or empty roomIds
+    assert.throws(
+      () =>
+        expandPilatesSchedule({
+          classes: [fixture.classes[0]],
+          holidays: [{ date: '2026-11-04', mode: 'invalid' }],
+          rangeStart: '2026-11-02',
+          rangeEnd: '2026-11-06',
+        }),
+      /Invalid holiday mode/,
+    );
+    assert.throws(
+      () =>
+        expandPilatesSchedule({
+          classes: [fixture.classes[0]],
+          holidays: [{ date: '2026-11-04', roomIds: [] }],
+          rangeStart: '2026-11-02',
+          rangeEnd: '2026-11-06',
+        }),
+      /non-empty array/,
+    );
+  });
+});
+
+describe('11. Instructor & Room Exact Touching Boundaries & Buffer Regressions', () => {
+  test('T38: handles post-midnight (00:10->00:10) and year-end (24:00->00:00) touching boundaries cleanly', () => {
+    const rows = expandPilatesSchedule({
+      classes: [
+        {
+          id: 'nye-cross',
+          title: '연말 심야반',
+          instructorId: 'inst-kim',
+          roomId: 'room-reformer-a',
+          startDate: '2026-12-31',
+          startTime: '23:20',
+          endTime: '00:10', // Ends 2027-01-01 00:10
+          recurrence: 'once',
+          weekdays: [],
+        },
+        {
+          id: 'nyd-after-cross',
+          title: '새해 첫 새벽반',
+          instructorId: 'inst-kim',
+          roomId: 'room-cadillac-b',
+          startDate: '2027-01-01',
+          startTime: '00:10', // Starts 2027-01-01 00:10 (exact touch)
+          endTime: '01:00',
+          recurrence: 'once',
+          weekdays: [],
+        },
+      ],
+      rangeStart: '2027-01-01',
+      rangeEnd: '2027-01-01',
+      includeCrossMidnightSpillover: true,
+    });
+
+    assert.equal(rows.length, 2);
+    assert.deepEqual(detectScheduleConflicts(rows), []);
+
+    const with1MinBuffer = detectScheduleConflicts(rows, { instructorBufferMinutes: 1 });
+    assert.equal(with1MinBuffer.length, 1);
+    assert.equal(with1MinBuffer[0].type, 'instructor');
+    assert.equal(with1MinBuffer[0].kind, 'buffer');
+    assert.equal(with1MinBuffer[0].gapMinutes, 0);
+    assert.equal(with1MinBuffer[0].overlapDate, '2027-01-01');
+    assert.equal(with1MinBuffer[0].overlapStartTime, '00:10');
+    assert.equal(with1MinBuffer[0].overlapEndTime, '00:10');
+  });
+
+  test('T39: enforces exact turnaround buffer threshold (gap === buffer vs buffer - 1) and asymmetric instructor/room buffers', () => {
+    const rows = expandPilatesSchedule({
+      classes: [
+        {
+          id: 'b1',
+          title: '오전 1부',
+          instructorId: 'inst-kim',
+          roomId: 'room-reformer-a',
+          startDate: '2026-11-09',
+          startTime: '09:00',
+          endTime: '09:50',
+          recurrence: 'once',
+          weekdays: [],
+        },
+        {
+          id: 'b2',
+          title: '오전 2부 (10분 간격)',
+          instructorId: 'inst-kim',
+          roomId: 'room-reformer-a',
+          startDate: '2026-11-09',
+          startTime: '10:00', // Exact 10-min gap from 09:50
+          endTime: '10:50',
+          recurrence: 'once',
+          weekdays: [],
+        },
+      ],
+      rangeStart: '2026-11-09',
+      rangeEnd: '2026-11-09',
+    });
+
+    // Exact 10-min gap satisfies a 10-min buffer -> zero conflicts
+    assert.deepEqual(
+      detectScheduleConflicts(rows, {
+        instructorBufferMinutes: 10,
+        roomBufferMinutes: 10,
+      }),
+      [],
+    );
+
+    // Asymmetric buffer: instructor needs 15m (violated), room needs 10m (satisfied) -> type='instructor' only
+    const instOnly = detectScheduleConflicts(rows, {
+      instructorBufferMinutes: 15,
+      roomBufferMinutes: 10,
+    });
+    assert.equal(instOnly.length, 1);
+    assert.equal(instOnly[0].type, 'instructor');
+    assert.equal(instOnly[0].kind, 'buffer');
+    assert.equal(instOnly[0].instructorId, 'inst-kim');
+    assert.equal(instOnly[0].roomId, null);
+    assert.equal(instOnly[0].gapMinutes, 10);
+    assert.equal(instOnly[0].overlapStartTime, '09:50');
+    assert.equal(instOnly[0].overlapEndTime, '10:00');
+
+    // Asymmetric buffer: instructor needs 5m (satisfied), room needs 11m (violated) -> type='room' only
+    const roomOnly = detectScheduleConflicts(rows, {
+      instructorBufferMinutes: 5,
+      roomBufferMinutes: 11,
+    });
+    assert.equal(roomOnly.length, 1);
+    assert.equal(roomOnly[0].type, 'room');
+    assert.equal(roomOnly[0].instructorId, null);
+    assert.equal(roomOnly[0].roomId, 'room-reformer-a');
+  });
+
+  test('T40: detects 1-minute overlap and ignores simultaneous sessions with distinct instructors and distinct rooms', () => {
+    const rows = expandPilatesSchedule({
+      classes: [
+        {
+          id: 's1',
+          title: 'A룸 김강사',
+          instructorId: 'inst-kim',
+          roomId: 'room-reformer-a',
+          startDate: '2026-11-09',
+          startTime: '09:00',
+          endTime: '09:50',
+          recurrence: 'once',
+          weekdays: [],
+        },
+        {
+          id: 's2-independent',
+          title: 'B룸 박강사 (동시간 독립 운영)',
+          instructorId: 'inst-park',
+          roomId: 'room-cadillac-b',
+          startDate: '2026-11-09',
+          startTime: '09:00',
+          endTime: '09:50',
+          recurrence: 'once',
+          weekdays: [],
+        },
+        {
+          id: 's3-1min-overlap',
+          title: 'A룸 이강사 (1분 겹침)',
+          instructorId: 'inst-lee',
+          roomId: 'room-reformer-a',
+          startDate: '2026-11-09',
+          startTime: '09:49',
+          endTime: '10:39',
+          recurrence: 'once',
+          weekdays: [],
+        },
+      ],
+      rangeStart: '2026-11-09',
+      rangeEnd: '2026-11-09',
+    });
+
+    const conflicts = detectScheduleConflicts(rows, {
+      instructorBufferMinutes: 20,
+      roomBufferMinutes: 20,
+    });
+    assert.equal(conflicts.length, 1);
+    assert.equal(conflicts[0].leftClassId, 's1');
+    assert.equal(conflicts[0].rightClassId, 's3-1min-overlap');
+    assert.equal(conflicts[0].type, 'room');
+    assert.equal(conflicts[0].kind, 'overlap');
+    assert.equal(conflicts[0].overlapMinutes, 1);
+    assert.equal(conflicts[0].overlapStartTime, '09:49');
+    assert.equal(conflicts[0].overlapEndTime, '09:50');
+  });
+});
+
+describe('12. Invalid Dates, Empty/Inverted Ranges & Large-Input Termination Guarantees', () => {
+  test('T41: rejects empty/inverted ranges, zero-duration slots, invalid 24:00 start, and NaN/negative buffers or maxDays', () => {
+    assert.throws(() => expandKstDateRange('', ''), /Invalid KST date range/);
+    assert.throws(
+      () =>
+        expandPilatesSchedule({
+          classes: [],
+          rangeStart: '2026-11-10',
+          rangeEnd: '2026-11-09',
+        }),
+      /Invalid KST date range/,
+    );
+    assert.throws(
+      () => expandKstDateRange('2026-11-01', '2026-11-05', { maxDays: 0 }),
+      /Invalid maxDays/,
+    );
+    assert.throws(
+      () => expandKstDateRange('2026-11-01', '2026-11-05', { maxDays: Number.NaN }),
+      /Invalid maxDays/,
+    );
+    assert.throws(
+      () =>
+        expandKstDateRange('2026-11-01', '2026-11-05', { maxDays: MAX_HARD_RANGE_DAYS + 1 }),
+      /Invalid maxDays/,
+    );
+    assert.throws(() => resolveKstTimeWindow('2026-11-09', '09:00', '09:00'), /cannot be identical/);
+    assert.throws(() => resolveKstTimeWindow('2026-11-09', '24:00', '00:50'), /Invalid time format/);
+    assert.throws(
+      () => detectScheduleConflicts([], { instructorBufferMinutes: -1 }),
+      /Buffer minutes/,
+    );
+    assert.throws(
+      () => detectScheduleConflicts([], { roomBufferMinutes: Number.NaN }),
+      /Buffer minutes/,
+    );
+  });
+
+  test('T42: returns an empty array cleanly for empty class lists or ranges with zero matching occurrences', () => {
+    assert.deepEqual(
+      expandPilatesSchedule({
+        classes: [],
+        rangeStart: '2026-11-01',
+        rangeEnd: '2026-11-30',
+      }),
+      [],
+    );
+
+    const fixture = createVirtualTimetableFixture();
+    // Query Sunday 2026-11-08 only for Mon/Wed/Fri class -> empty array
+    assert.deepEqual(
+      expandPilatesSchedule({
+        classes: [fixture.classes[0]],
+        rangeStart: '2026-11-08',
+        rangeEnd: '2026-11-08',
+      }),
+      [],
+    );
+  });
+
+  test('T43: enforces O(1) oversized range rejection and fast deterministic termination on large 365-day / 120-rule studio workloads', () => {
+    assert.throws(
+      () =>
+        expandPilatesSchedule({
+          classes: [],
+          rangeStart: '1900-01-01',
+          rangeEnd: '2199-12-31',
+        }),
+      /exceeds maximum allowed days/,
+    );
+
+    // Build synthetic 120 weekly rules across 12 instructors & 12 rooms over 365 days (~18,000 occurrences)
+    const classes = [];
+    for (let slot = 0; slot < 10; slot += 1) {
+      const startHour = String(7 + slot).padStart(2, '0');
+      for (let r = 0; r < 12; r += 1) {
+        classes.push({
+          id: `bulk-cls-${slot}-${r}`,
+          title: `대규모 테스트반 ${slot}-${r}`,
+          instructorId: `inst-${r}`,
+          roomId: `room-${r}`,
+          startDate: '2026-01-01',
+          untilDate: '2026-12-31',
+          startTime: `${startHour}:00`,
+          endTime: `${startHour}:50`,
+          recurrence: 'weekly',
+          weekdays: [1, 3, 5],
+        });
+      }
+    }
+
+    const holidays = ['2026-01-01', '2026-03-01', '2026-05-05', '2026-08-15', '2026-10-03', '2026-12-25'];
+    const exceptions = [
+      {
+        id: 'bulk-closed-1',
+        kind: 'closed',
+        date: '2026-06-06',
+        reason: '현충일 센터 점검',
+      },
+      {
+        id: 'bulk-overlap-extra',
+        kind: 'extra',
+        date: '2026-07-06', // Monday
+        title: '겹침 탐지 검증 특강',
+        instructorId: 'inst-0',
+        roomId: 'room-0',
+        startTime: '07:20',
+        endTime: '08:10',
+        reason: '강사+룸 동시 충돌 유도',
+      },
+    ];
+
+    const startedAt = performance.now();
+    const rows = expandPilatesSchedule({
+      classes,
+      holidays,
+      exceptions,
+      rangeStart: '2026-01-01',
+      rangeEnd: '2026-12-31',
+      clock: createDeterministicKstClock('2026-06-15T12:00:00+09:00'),
+    });
+    const summary = summarizeResourceConflicts(rows, {
+      instructorBufferMinutes: 5,
+      roomBufferMinutes: 5,
+    });
+    const elapsedMs = performance.now() - startedAt;
+
+    assert.ok(rows.length > 18000, `Expected >18,000 occurrences, got ${rows.length}`);
+    assert.equal(summary.totalConflicts, 2); // Overlaps 07:00..07:50 AND 08:00..08:50 for inst-0 / room-0
+    assert.ok(elapsedMs < 1500, `Expected fast termination (<1500ms), took ${elapsedMs.toFixed(1)}ms`);
+  });
+});
+
+describe('13. Mutable excludeDates Cache-Coherency Regressions', () => {
+  test('T44: ruleMatchesKstDate reflects in-place push, pop, same-length replacement, and truncation without call-history dependence', () => {
+    const excludeDates = ['2026-11-11'];
+    const rule = {
+      id: 'cls-mutable-excludes',
+      title: '변경 가능 제외일 검증반',
+      instructorId: 'inst-kim',
+      roomId: 'room-reformer-a',
+      startDate: '2026-11-09',
+      untilDate: '2026-11-15',
+      startTime: '09:00',
+      endTime: '09:50',
+      recurrence: 'weekly',
+      weekdays: [2, 3], // 2026-11-10 (Tue), 2026-11-11 (Wed)
+      excludeDates,
+    };
+
+    // Initial call
+    assert.equal(ruleMatchesKstDate(rule, '2026-11-10'), true);
+    assert.equal(ruleMatchesKstDate(rule, '2026-11-11'), false);
+
+    // 1. Exact reproducer: in-place push on the same array reference
+    excludeDates.push('2026-11-10');
+    const freshAfterPush = { ...rule, excludeDates: [...excludeDates] };
+    assert.equal(ruleMatchesKstDate(rule, '2026-11-10'), false);
+    assert.equal(
+      ruleMatchesKstDate(rule, '2026-11-10'),
+      ruleMatchesKstDate(freshAfterPush, '2026-11-10'),
+    );
+
+    // 2. In-place deletion (pop)
+    excludeDates.pop();
+    assert.equal(ruleMatchesKstDate(rule, '2026-11-10'), true);
+    assert.equal(ruleMatchesKstDate(rule, '2026-11-11'), false);
+
+    // 3. Same-length element replacement (length stays 1: ['2026-11-11'] -> ['2026-11-10'])
+    excludeDates[0] = '2026-11-10';
+    const freshAfterReplace = { ...rule, excludeDates: [...excludeDates] };
+    assert.equal(excludeDates.length, 1);
+    assert.equal(ruleMatchesKstDate(rule, '2026-11-10'), false);
+    assert.equal(ruleMatchesKstDate(rule, '2026-11-11'), true);
+    assert.equal(
+      ruleMatchesKstDate(rule, '2026-11-10'),
+      ruleMatchesKstDate(freshAfterReplace, '2026-11-10'),
+    );
+    assert.equal(
+      ruleMatchesKstDate(rule, '2026-11-11'),
+      ruleMatchesKstDate(freshAfterReplace, '2026-11-11'),
+    );
+
+    // 4. In-place truncation (length = 0)
+    excludeDates.length = 0;
+    assert.equal(ruleMatchesKstDate(rule, '2026-11-10'), true);
+    assert.equal(ruleMatchesKstDate(rule, '2026-11-11'), true);
+  });
+
+  test('T45: expandPilatesSchedule and validateScheduleExceptions stay independent of call history across in-place excludeDates mutations', () => {
+    const excludeDates = ['2026-11-11'];
+    const rule = {
+      id: 'cls-mutable-expand',
+      title: '확장 캐시 무결성 검증반',
+      instructorId: 'inst-kim',
+      roomId: 'room-reformer-a',
+      startDate: '2026-11-09',
+      untilDate: '2026-11-15',
+      startTime: '10:00',
+      endTime: '10:50',
+      recurrence: 'weekly',
+      weekdays: [2, 3], // Tue Nov 10, Wed Nov 11
+      excludeDates,
+    };
+
+    const runWithSameRef = () =>
+      expandPilatesSchedule({
+        classes: [rule],
+        rangeStart: '2026-11-09',
+        rangeEnd: '2026-11-15',
+      }).map((r) => r.date);
+
+    const runWithFreshClone = () =>
+      expandPilatesSchedule({
+        classes: [{ ...rule, excludeDates: [...excludeDates] }],
+        rangeStart: '2026-11-09',
+        rangeEnd: '2026-11-15',
+      }).map((r) => r.date);
+
+    // Step 1: Initial ['2026-11-11'] -> only '2026-11-10' scheduled
+    assert.deepEqual(runWithSameRef(), ['2026-11-10']);
+    assert.deepEqual(runWithSameRef(), runWithFreshClone());
+
+    // Step 2: Mutate in-place via push -> both excluded
+    excludeDates.push('2026-11-10');
+    assert.deepEqual(runWithSameRef(), []);
+    assert.deepEqual(runWithSameRef(), runWithFreshClone());
+
+    // Step 3: Mutate in-place via splice + same-length replacement -> ['2026-11-10']
+    excludeDates.splice(1, 1); // back to ['2026-11-11']
+    assert.deepEqual(runWithSameRef(), ['2026-11-10']);
+    excludeDates[0] = '2026-11-10'; // same length (1), different date
+    assert.deepEqual(runWithSameRef(), ['2026-11-11']);
+    assert.deepEqual(runWithSameRef(), runWithFreshClone());
+
+    // validateScheduleExceptions must also honor the mutated excludeDates immediately
+    const ruleMap = new Map([[rule.id, rule]]);
+    assert.throws(
+      () =>
+        validateScheduleExceptions(
+          [
+            {
+              id: 'ex-excluded-tue',
+              kind: 'cancel',
+              classId: rule.id,
+              originalDate: '2026-11-10',
+              reason: '제외된 날짜 예외 지정 불가',
+            },
+          ],
+          ruleMap,
+        ),
+      /does not occur/,
+    );
+    assert.doesNotThrow(() =>
+      validateScheduleExceptions(
+        [
+          {
+            id: 'ex-valid-wed',
+            kind: 'cancel',
+            classId: rule.id,
+            originalDate: '2026-11-11',
+            reason: '정상 회차 취소',
+          },
+        ],
+        ruleMap,
+      ),
+    );
   });
 });

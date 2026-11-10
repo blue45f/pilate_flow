@@ -109,7 +109,7 @@ export function createVirtualTimetableFixture() {
     ],
     holidays: VIRTUAL_KST_HOLIDAYS_2026_NOV.map((h) => ({
       ...h,
-      ...(h.roomIds ? { roomIds: [...h.roomIds] } : {}),
+      ...('roomIds' in h && h.roomIds ? { roomIds: [...h.roomIds] } : {}),
     })),
     exceptions: [],
   };

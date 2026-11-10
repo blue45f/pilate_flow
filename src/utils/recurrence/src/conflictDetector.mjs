@@ -1,6 +1,6 @@
 // @ts-check
 
-import { epochMsToKstParts } from './kstCalendar.mjs';
+import { epochMsToKstParts, MS_PER_MINUTE } from './kstCalendar.mjs';
 
 /**
  * Detects time overlaps across expanded Pilates schedule occurrences for instructors and rooms.
@@ -18,32 +18,69 @@ export function detectScheduleConflicts(occurrences, options = {}) {
 
   const instructorBufferMinutes = options.instructorBufferMinutes ?? 0;
   const roomBufferMinutes = options.roomBufferMinutes ?? 0;
-  if (instructorBufferMinutes < 0 || roomBufferMinutes < 0) {
-    throw new RangeError('Buffer minutes must be >= 0.');
+  if (
+    !Number.isFinite(instructorBufferMinutes) ||
+    instructorBufferMinutes < 0 ||
+    !Number.isFinite(roomBufferMinutes) ||
+    roomBufferMinutes < 0
+  ) {
+    throw new RangeError('Buffer minutes must be finite numbers >= 0.');
   }
 
-  const active = occurrences
-    .filter((row) => row && row.status === 'scheduled')
-    .slice()
-    .sort((a, b) => a.startEpochMs - b.startEpochMs || a.id.localeCompare(b.id));
+  const active = [];
+  for (const row of occurrences) {
+    if (!row || row.status !== 'scheduled') continue;
+    if (
+      !Number.isFinite(row.startEpochMs) ||
+      !Number.isFinite(row.endEpochMs) ||
+      row.endEpochMs <= row.startEpochMs
+    ) {
+      throw new RangeError(
+        `Invalid scheduled occurrence interval in "${String(row.id ?? '')}".`,
+      );
+    }
+    active.push(row);
+  }
 
+  active.sort(
+    (a, b) =>
+      a.startEpochMs - b.startEpochMs ||
+      a.endEpochMs - b.endEpochMs ||
+      String(a.id).localeCompare(String(b.id)),
+  );
+
+  const maxBufferMs = Math.max(instructorBufferMinutes, roomBufferMinutes) * MS_PER_MINUTE;
   const conflicts = [];
 
   for (let i = 0; i < active.length; i += 1) {
     const left = active[i];
+    const leftRoom = left.roomId ?? left.locationId ?? null;
+    const sweepHorizonMs = left.endEpochMs + maxBufferMs;
+
     for (let j = i + 1; j < active.length; j += 1) {
       const right = active[j];
 
+      // Sweep-line termination guarantee: active is sorted by startEpochMs ascending.
+      // Once right.startEpochMs >= sweepHorizonMs, neither direct overlap (< left.endEpochMs)
+      // nor turnaround buffer (< left.endEpochMs + maxBufferMs) is possible for j or any j' > j.
+      if (right.startEpochMs >= sweepHorizonMs) {
+        break;
+      }
+
+      const rightRoom = right.roomId ?? right.locationId ?? null;
       const sameInstructor =
         Boolean(left.instructorId) && left.instructorId === right.instructorId;
-      const sameRoom = Boolean(left.roomId) && left.roomId === right.roomId;
+      const sameRoom = Boolean(leftRoom) && leftRoom === rightRoom;
 
       if (!sameInstructor && !sameRoom) continue;
 
       const rawOverlapStart = Math.max(left.startEpochMs, right.startEpochMs);
       const rawOverlapEnd = Math.min(left.endEpochMs, right.endEpochMs);
-      const rawOverlapMinutes = Math.max(0, Math.round((rawOverlapEnd - rawOverlapStart) / 60000));
-      const gapMinutes = Math.round((right.startEpochMs - left.endEpochMs) / 60000);
+      const rawOverlapMinutes = Math.max(
+        0,
+        Math.round((rawOverlapEnd - rawOverlapStart) / MS_PER_MINUTE),
+      );
+      const gapMinutes = Math.round((right.startEpochMs - left.endEpochMs) / MS_PER_MINUTE);
 
       const hasDirectOverlap = rawOverlapStart < rawOverlapEnd;
       const violatesInstructorBuffer =
@@ -75,8 +112,10 @@ export function detectScheduleConflicts(occurrences, options = {}) {
         type = 'room';
       }
 
-      const startParts = epochMsToKstParts(rawOverlapStart);
-      const endParts = epochMsToKstParts(hasDirectOverlap ? rawOverlapEnd : right.startEpochMs);
+      const windowStartMs = hasDirectOverlap ? rawOverlapStart : left.endEpochMs;
+      const windowEndMs = hasDirectOverlap ? rawOverlapEnd : right.startEpochMs;
+      const startParts = epochMsToKstParts(windowStartMs);
+      const endParts = epochMsToKstParts(windowEndMs);
 
       conflicts.push({
         type,
@@ -86,9 +125,9 @@ export function detectScheduleConflicts(occurrences, options = {}) {
         leftClassId: left.classId,
         rightClassId: right.classId,
         instructorId: conflictInstructor ? left.instructorId : null,
-        roomId: conflictRoom ? left.roomId : null,
-        overlapStartEpochMs: rawOverlapStart,
-        overlapEndEpochMs: hasDirectOverlap ? rawOverlapEnd : right.startEpochMs,
+        roomId: conflictRoom ? leftRoom : null,
+        overlapStartEpochMs: windowStartMs,
+        overlapEndEpochMs: windowEndMs,
         overlapStartKstIso: startParts.isoKst,
         overlapEndKstIso: endParts.isoKst,
         overlapDate: startParts.date,
