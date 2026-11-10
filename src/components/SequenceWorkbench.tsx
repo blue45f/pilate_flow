@@ -35,7 +35,9 @@ import {
   getEquipmentFamilies,
   getEquipmentFamily,
   getExerciseEquipment,
+  isEquipmentId,
 } from '../data/equipmentCatalog';
+import { canonicalRecoveryContent } from '../utils/backupRecoveryInspection';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type {
   AutoGenerateCriteria,
@@ -57,6 +59,7 @@ import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { SequenceOrderCard } from './SequenceOrderCard';
 import '../styles/sequence-composition.css';
+import './SequenceWorkbench.usability.css';
 import {
   addMovementIdeaToCurrentClass,
   getReusableBlockTimingSummary,
@@ -303,8 +306,43 @@ export function SequenceWorkbench({
   const unavailableProps = criteria.preferredProps.filter(
     (prop) => prop !== 'none' && !s.ownedProps.includes(prop),
   );
+  const prefersReducedMotion = () =>
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const captureUndoSnapshot = (current: ReturnType<typeof usePilatesStore.getState>) => ({
+    activeSequenceId: current.activeSequenceId,
+    activeTitle: current.activeTitle,
+    activeSubtitle: current.activeSubtitle,
+    activeApparatus: current.activeApparatus,
+    activeLevel: current.activeLevel,
+    activeTargetMinutes: current.activeTargetMinutes,
+    activeTargetGroupId: current.activeTargetGroupId,
+    activeSteps: structuredClone(current.activeSteps),
+    lastCriteria: current.lastCriteria ? structuredClone(current.lastCriteria) : null,
+    draftCriteria: current.draftCriteria ? structuredClone(current.draftCriteria) : null,
+  });
+  const normalizeStepForSave = (step: SequenceStep): SequenceStep =>
+    step.selectedLayer ? step : { ...step, selectedLayer: 'standard' };
+  const serializeSemanticSteps = (steps: readonly SequenceStep[]) =>
+    canonicalRecoveryContent(
+      steps.map((step) =>
+        Object.fromEntries(
+          Object.entries(normalizeStepForSave(step)).filter(([key]) => key !== 'stepId'),
+        ),
+      ),
+    );
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const [replaceSearch, setReplaceSearch] = useState('');
+  const [replaceFromInspector, setReplaceFromInspector] = useState(false);
+  const replaceOpenerRef = useRef<HTMLElement | null>(null);
+  const replaceSearchInputRef = useRef<HTMLInputElement>(null);
+  const replaceSuspendedRef = useRef(false);
+  const conditionsOpenerRef = useRef<HTMLElement | null>(null);
+  const conditionsSuspendedRef = useRef(Boolean(initialRecovery?.conditionsOpen));
+  const lastBlankResetAtRef = useRef(0);
+  const lastSavedCopySignatureRef = useRef<string | null>(null);
+  const lastCalibratedSignatureRef = useRef<string | null>(null);
   const [notice, setNotice] = useState('');
   const [templateName, setTemplateName] = useState('');
   const [regenerateSection, setRegenerateSection] = useState<
@@ -341,6 +379,15 @@ export function SequenceWorkbench({
     // Keep the suspension guard until child passive effects reopen the sheet.
     if (!sourceDetailOpen) sourceDetailOpenRef.current = false;
   }, [sourceDetailOpen]);
+  useEffect(() => {
+    if (replaceIndex === null) {
+      replaceSuspendedRef.current = false;
+      return;
+    }
+    requestAnimationFrame(() => {
+      replaceSearchInputRef.current?.focus();
+    });
+  }, [replaceIndex]);
   const selectedStepIndex = s.activeSteps.findIndex(
     (step) => step.stepId === previewStep && !isRestStep(step),
   );
@@ -356,15 +403,52 @@ export function SequenceWorkbench({
     });
   }, []);
   const handleInspectorNativeClose = useCallback(() => {
-    // Source lookup suspends the sheet; layout changes also emit native close.
+    // Source lookup, replacement modal, or conditions dialog suspends the mobile sheet;
+    // layout changes also emit native close.
     if (
       sourceDetailOpenRef.current ||
+      replaceSuspendedRef.current ||
+      conditionsSuspendedRef.current ||
       window.innerWidth >= 1200 ||
       inspectorContentRef.current?.closest('dialog')?.open
     )
       return;
     closeInspector();
   }, [closeInspector]);
+  const openReplaceForStep = (
+    stepIndex: number,
+    fromInspector: boolean,
+    opener?: HTMLElement | null,
+  ) => {
+    replaceSuspendedRef.current = fromInspector;
+    setReplaceFromInspector(fromInspector);
+    replaceOpenerRef.current =
+      opener ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    setReplaceSearch('');
+    setReplaceIndex(stepIndex);
+  };
+  const cancelReplaceDialog = () => {
+    const wasFromInspector = replaceFromInspector;
+    setReplaceIndex(null);
+    setReplaceSearch('');
+    setReplaceFromInspector(false);
+    requestAnimationFrame(() => {
+      if (wasFromInspector && !wideEditor) {
+        const inspectorTrigger = Array.from(
+          inspectorContentRef.current?.querySelectorAll<HTMLElement>(
+            '.step-inspector-footer button',
+          ) ?? [],
+        ).find((btn) => btn.textContent?.includes('동작 교체'));
+        if (inspectorTrigger) {
+          inspectorTrigger.focus();
+          return;
+        }
+      }
+      if (replaceOpenerRef.current?.isConnected) {
+        replaceOpenerRef.current.focus();
+      }
+    });
+  };
   const openInspector = (step: SequenceStep, opener: HTMLElement) => {
     if (previewStep === step.stepId) {
       closeInspector();
@@ -437,21 +521,93 @@ export function SequenceWorkbench({
   const conditionStep3Ref = useRef<HTMLDivElement>(null);
   const navigateConditionStep = (nextStep: 1 | 2 | 3) => {
     setConditionStep(nextStep);
+    const scrollBehavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
     requestAnimationFrame(() => {
       if (nextStep === 1) {
-        conditionStep1Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        conditionStep1Ref.current?.scrollIntoView?.({ behavior: scrollBehavior, block: 'nearest' });
       } else if (nextStep === 2) {
-        conditionStep2Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        conditionStep2Ref.current?.scrollIntoView?.({ behavior: scrollBehavior, block: 'nearest' });
       } else {
-        conditionStep3Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        conditionStep3Ref.current?.scrollIntoView?.({ behavior: scrollBehavior, block: 'nearest' });
       }
     });
+  };
+  const openConditionsDialog = (opener?: HTMLElement | null) => {
+    conditionsSuspendedRef.current = true;
+    conditionsOpenerRef.current =
+      opener ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    setConditionsOpen(true);
   };
   const closeConditions = () => {
     const dialog = conditionsContentRef.current?.closest('dialog');
     if (dialog?.open) dialog.close();
     setConditionsOpen(false);
+    requestAnimationFrame(() => {
+      if (conditionsOpenerRef.current?.isConnected && !document.querySelector('dialog[open]')) {
+        conditionsOpenerRef.current.focus();
+      }
+    });
   };
+  useEffect(() => {
+    if (!conditionsOpen) conditionsSuspendedRef.current = false;
+  }, [conditionsOpen]);
+  useEffect(() => {
+    return usePilatesStore.subscribe((state, prev) => {
+      if (
+        state.activeSequenceId === prev.activeSequenceId &&
+        state.activeTargetGroupId !== prev.activeTargetGroupId &&
+        state.draftCriteria &&
+        state.draftCriteria.targetGroupId !== state.activeTargetGroupId
+      ) {
+        state.setDraftCriteria({
+          ...state.draftCriteria,
+          targetGroupId: state.activeTargetGroupId,
+        });
+      }
+    });
+  }, []);
+  const performUndoSequence = () => {
+    const canUndo = usePilatesStore.getState().undoStack.length > 0;
+    s.undoSequence();
+    const afterSteps = usePilatesStore.getState().activeSteps;
+    if (canUndo && afterSteps.length > 0) {
+      setWorkflowStep('arrange');
+    }
+    setNotice(
+      canUndo
+        ? `이전 순서로 되돌렸어요. 현재 총 ${afterSteps.length}개 항목입니다.`
+        : '되돌릴 이전 순서 기록이 없습니다.',
+    );
+  };
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (!(event.metaKey || event.ctrlKey) || event.shiftKey || event.altKey) return;
+      if (event.key.toLowerCase() !== 'z') return;
+      if (document.querySelector('dialog[open]')) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT')
+      ) {
+        return;
+      }
+      const storeState = usePilatesStore.getState();
+      if (!storeState.undoStack.length) return;
+      event.preventDefault();
+      storeState.undoSequence();
+      const afterSteps = usePilatesStore.getState().activeSteps;
+      if (afterSteps.length > 0) {
+        setWorkflowStep('arrange');
+      }
+      setNotice(`이전 순서로 되돌렸어요. 현재 총 ${afterSteps.length}개 항목입니다.`);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
   useEffect(() => {
     const dialog = conditionsContentRef.current?.closest('dialog');
     const closeNative = () => {
@@ -551,6 +707,105 @@ export function SequenceWorkbench({
   );
   const canStartClass = readiness.gate.canRehearse;
   const locked = s.activeSteps.filter((step) => step.locked).length;
+  const adjustableExerciseSteps = s.activeSteps.filter(
+    (step) => !step.locked && !isRestStep(step),
+  );
+  const lockedAndRestSec = s.activeSteps
+    .filter((step) => step.locked || isRestStep(step))
+    .reduce((sum, step) => sum + getStepTiming(step).totalSec, 0);
+  const remainingFitSec = Math.round(s.activeTargetMinutes * 60) - lockedAndRestSec;
+  const adjustableMinSecs = adjustableExerciseSteps.map((step) =>
+    Math.ceil(Math.max(60, (step.explanationSec ?? 0) + (step.transitionSec ?? 0) + 30)),
+  );
+  const adjustableMinTotalSec = adjustableMinSecs.reduce((sum, sec) => sum + sec, 0);
+  const maxSingleStepSec = 20 * 60;
+  const canAutoFitDuration =
+    s.activeSteps.length > 0 &&
+    Number.isFinite(s.activeTargetMinutes) &&
+    s.activeTargetMinutes >= 10 &&
+    s.activeTargetMinutes <= 120 &&
+    durations.restSec < Math.round(s.activeTargetMinutes * 60) &&
+    adjustableExerciseSteps.length > 0 &&
+    remainingFitSec >= adjustableMinTotalSec &&
+    adjustableMinSecs.every((sec) => sec <= maxSingleStepSec) &&
+    remainingFitSec <= adjustableExerciseSteps.length * maxSingleStepSec;
+  const needsMoreExercisesForTarget =
+    delta < 0 &&
+    adjustableExerciseSteps.length > 0 &&
+    remainingFitSec > adjustableExerciseSteps.length * maxSingleStepSec;
+  const allExercisesLockedForTarget =
+    delta !== 0 && exerciseStepCount > 0 && adjustableExerciseSteps.length === 0;
+  const normalizedStepsForSave = s.activeSteps.map(normalizeStepForSave);
+  const criteriaSourceForSave = s.draftCriteria ?? s.lastCriteria;
+  const expectedCriteriaSnapshot: AutoGenerateCriteria | null =
+    Number.isFinite(s.activeTargetMinutes) &&
+    s.activeTargetMinutes >= 10 &&
+    s.activeTargetMinutes <= 120
+      ? (() => {
+          const actual = normalizedStepsForSave
+            .flatMap((step) => {
+              const exercise = exerciseMap.get(step.exerciseId);
+              return exercise ? getExerciseEquipment(exercise).requiredEquipment : [];
+            })
+            .filter(isEquipmentId);
+          const actualEquipment = [
+            ...new Set(
+              actual.length ? actual : s.activeApparatus === 'mixed' ? [] : [s.activeApparatus],
+            ),
+          ];
+          const equipment = [
+            ...new Set([
+              ...(criteriaSourceForSave?.availableEquipment ?? []).filter(
+                (id) => isEquipmentId(id) && actualEquipment.includes(id),
+              ),
+              ...actualEquipment,
+            ]),
+          ];
+          const requiredProps = normalizedStepsForSave.flatMap((step) => {
+            const exercise = exerciseMap.get(step.exerciseId);
+            return exercise ? getExerciseEquipment(exercise).requiredProps : [];
+          });
+          return {
+            focusPreset: 'full-body',
+            excludeDaysWindow: 14,
+            defaultLayer: 'standard',
+            ...(criteriaSourceForSave ?? {}),
+            apparatus: s.activeApparatus,
+            level: s.activeLevel,
+            targetMinutes: Math.max(10, Math.min(120, s.activeTargetMinutes)),
+            restMinutes: getSequenceDurations(normalizedStepsForSave).restSec / 60,
+            availableEquipment: equipment,
+            ownedApparatus: getEquipmentFamilies(equipment),
+            preferredProps: [
+              ...new Set([...(criteriaSourceForSave?.preferredProps ?? []), ...requiredProps]),
+            ],
+            targetGroupId: criteriaSourceForSave?.targetGroupId ?? s.activeTargetGroupId,
+          };
+        })()
+      : null;
+  const matchedSavedSequence = s.savedSequences.find((item) => item.id === s.activeSequenceId);
+  const isSavedClean = Boolean(
+    s.activeSteps.length > 0 &&
+      matchedSavedSequence &&
+      matchedSavedSequence.criteriaSnapshot !== undefined &&
+      expectedCriteriaSnapshot !== null &&
+      matchedSavedSequence.title === s.activeTitle &&
+      matchedSavedSequence.subtitle === s.activeSubtitle &&
+      matchedSavedSequence.apparatus === s.activeApparatus &&
+      matchedSavedSequence.level === s.activeLevel &&
+      matchedSavedSequence.targetMinutes === s.activeTargetMinutes &&
+      canonicalRecoveryContent(matchedSavedSequence.steps) ===
+        canonicalRecoveryContent(normalizedStepsForSave) &&
+      canonicalRecoveryContent(matchedSavedSequence.criteriaSnapshot) ===
+        canonicalRecoveryContent(expectedCriteriaSnapshot),
+  );
+  const blockingReadinessReason = readiness.gate.reasons.find(
+    (item) => item.code !== 'target-mismatch' && item.code !== 'duplicate-movement',
+  );
+  const blockingStepIndex =
+    blockingReadinessReason && blockingReadinessReason.stepIndices.length > 0
+      ? blockingReadinessReason.stepIndices[0]!
+      : null;
   const rawSectionIds = s.activeSteps.map((step) => sectionOf(step));
   const phaseOrder: Record<string, number> = { warmup: 0, main: 1, cooldown: 2 };
   const nonRestSectionIds = rawSectionIds.filter((id) => id !== 'rest');
@@ -630,18 +885,22 @@ export function SequenceWorkbench({
       defaultLayer:
         payload.level === '1.0' ? 'easy' : payload.level === '2.0' ? 'hard' : 'standard',
     });
-    const snapshot = {
-      activeSequenceId: current.activeSequenceId,
-      activeTitle: current.activeTitle,
-      activeSubtitle: current.activeSubtitle,
-      activeApparatus: current.activeApparatus,
-      activeLevel: current.activeLevel,
-      activeTargetMinutes: current.activeTargetMinutes,
-      activeTargetGroupId: current.activeTargetGroupId,
-      activeSteps: structuredClone(current.activeSteps),
-      lastCriteria: current.lastCriteria ? structuredClone(current.lastCriteria) : null,
-      draftCriteria: current.draftCriteria ? structuredClone(current.draftCriteria) : null,
-    };
+    const normalizedSteps = payload.steps.map((step) =>
+      step.selectedLayer ? step : { ...step, selectedLayer: 'standard' as const },
+    );
+    if (
+      current.activeTitle === payload.title &&
+      current.activeSubtitle === payload.subtitle &&
+      current.activeTargetMinutes === payload.targetMinutes &&
+      current.activeLevel === payload.level &&
+      current.activeApparatus === payload.apparatus &&
+      serializeSemanticSteps(current.activeSteps) === serializeSemanticSteps(normalizedSteps)
+    ) {
+      setWorkflowStep('arrange');
+      setNotice(`이미 ‘${payload.recipeTitleKo}’ 시퀀스가 열려 있습니다.`);
+      return;
+    }
+    const snapshot = captureUndoSnapshot(current);
     usePilatesStore.setState({
       undoStack: [...current.undoStack.slice(-19), snapshot],
       activeTitle: payload.title,
@@ -650,9 +909,7 @@ export function SequenceWorkbench({
       activeLevel: payload.level,
       activeApparatus: payload.apparatus,
       draftCriteria: nextDraftCriteria,
-      activeSteps: payload.steps.map((step) =>
-        step.selectedLayer ? step : { ...step, selectedLayer: 'standard' as const },
-      ),
+      activeSteps: normalizedSteps,
       generationError: null,
       saveFeedback: `‘${payload.recipeTitleKo}’ 시퀀스를 바로 열었습니다.`,
     });
@@ -759,6 +1016,7 @@ export function SequenceWorkbench({
     if (!starter) return;
     if (
       starter.starterKind === 'blank-movement-idea' ||
+      starter.starterKind === 'blank-reusable-block' ||
       starter.starterKind === 'blank-custom-movement-showcase'
     ) {
       openIdeaSheet(null);
@@ -774,17 +1032,33 @@ export function SequenceWorkbench({
       s.exercises,
     );
     if (bundle.sequenceDraft) {
-      s.setActiveSequenceMeta({
-        title: bundle.sequenceDraft.title,
-        subtitle: bundle.sequenceDraft.subtitle,
-        apparatus: bundle.sequenceDraft.apparatus,
-        level: bundle.sequenceDraft.level,
-        targetMinutes: bundle.sequenceDraft.targetMinutes,
-      });
+      const current = usePilatesStore.getState();
+      const normalizedDraftSteps = bundle.sequenceDraft.steps.map((step) =>
+        step.selectedLayer ? step : { ...step, selectedLayer: 'standard' as const },
+      );
+      if (
+        current.activeTitle === bundle.sequenceDraft.title &&
+        current.activeSubtitle === bundle.sequenceDraft.subtitle &&
+        current.activeApparatus === bundle.sequenceDraft.apparatus &&
+        current.activeLevel === bundle.sequenceDraft.level &&
+        current.activeTargetMinutes === bundle.sequenceDraft.targetMinutes &&
+        serializeSemanticSteps(current.activeSteps) === serializeSemanticSteps(normalizedDraftSteps)
+      ) {
+        setWorkflowStep('arrange');
+        setNotice(`이미 ‘${starter.titleKo}’ 초안 틀이 열려 있습니다.`);
+        return;
+      }
+      const snapshot = captureUndoSnapshot(current);
       usePilatesStore.setState({
-        activeSteps: bundle.sequenceDraft.steps.map((step) =>
-          step.selectedLayer ? step : { ...step, selectedLayer: 'standard' },
-        ),
+        undoStack: [...current.undoStack.slice(-19), snapshot],
+        activeTitle: bundle.sequenceDraft.title,
+        activeSubtitle: bundle.sequenceDraft.subtitle,
+        activeApparatus: bundle.sequenceDraft.apparatus,
+        activeLevel: bundle.sequenceDraft.level,
+        activeTargetMinutes: bundle.sequenceDraft.targetMinutes,
+        activeSteps: normalizedDraftSteps,
+        generationError: null,
+        saveFeedback: `‘${starter.titleKo}’ 초안 틀을 열었습니다.`,
       });
       setWorkflowStep('arrange');
       setNotice(`‘${starter.titleKo}’ 초안 틀을 열었습니다.`);
@@ -862,7 +1136,67 @@ export function SequenceWorkbench({
         : `${res.message} (${deltaMin > 0 ? `+${deltaMin}` : deltaMin}분 조정 적용)`,
     );
   };
+  const applyStepsWithUndo = (
+    nextSteps: SequenceStep[],
+    feedbackMessage: string,
+    options?: {
+      alsoSetNotice?: boolean;
+      meta?: {
+        title: string;
+        subtitle: string;
+        targetMinutes: number;
+        level: DifficultyLevel;
+        apparatus: AutoGenerateCriteria['apparatus'];
+      };
+    },
+  ) => {
+    const current = usePilatesStore.getState();
+    const normalized = nextSteps.map((step) =>
+      step.selectedLayer ? step : { ...step, selectedLayer: 'standard' as const },
+    );
+    const sameMeta =
+      !options?.meta ||
+      (current.activeTitle === options.meta.title &&
+        current.activeSubtitle === options.meta.subtitle &&
+        current.activeTargetMinutes === options.meta.targetMinutes &&
+        current.activeLevel === options.meta.level &&
+        current.activeApparatus === options.meta.apparatus);
+    if (
+      sameMeta &&
+      serializeSemanticSteps(current.activeSteps) === serializeSemanticSteps(normalized)
+    ) {
+      if (options?.alsoSetNotice !== false) {
+        setNotice('이미 같은 구성이 현재 시퀀스에 반영되어 있습니다.');
+      }
+      return;
+    }
+    const snapshot = captureUndoSnapshot(current);
+    usePilatesStore.setState({
+      undoStack: [...current.undoStack.slice(-19), snapshot],
+      ...(options?.meta
+        ? {
+            activeTitle: options.meta.title,
+            activeSubtitle: options.meta.subtitle,
+            activeTargetMinutes: options.meta.targetMinutes,
+            activeLevel: options.meta.level,
+            activeApparatus: options.meta.apparatus,
+          }
+        : {}),
+      activeSteps: normalized,
+      generationError: null,
+      saveFeedback: feedbackMessage,
+    });
+    if (normalized.length > 0) setWorkflowStep('arrange');
+    if (options?.alsoSetNotice !== false) setNotice(feedbackMessage);
+  };
   const handleSave = () => {
+    if (isSavedClean) {
+      usePilatesStore.setState({
+        saveFeedback: '이미 최신 상태로 보관함에 저장되어 있습니다.',
+      });
+      setNotice('이미 최신 상태로 보관함에 저장되어 있습니다.');
+      return;
+    }
     const current = usePilatesStore.getState();
     if (current.activeSteps.some((step) => !step.selectedLayer)) {
       usePilatesStore.setState({
@@ -874,10 +1208,33 @@ export function SequenceWorkbench({
     s.saveCurrentSequenceToBinder();
     setNotice('');
   };
+  const handleSaveCopy = () => {
+    const copySig =
+      expectedCriteriaSnapshot !== null
+        ? canonicalRecoveryContent({
+            title: s.activeTitle,
+            subtitle: s.activeSubtitle,
+            apparatus: s.activeApparatus,
+            level: s.activeLevel,
+            targetMinutes: s.activeTargetMinutes,
+            steps: normalizedStepsForSave,
+            criteriaSnapshot: expectedCriteriaSnapshot,
+          })
+        : null;
+    if (copySig !== null && lastSavedCopySignatureRef.current === copySig) {
+      setNotice('같은 내용의 사본을 방금 저장했어요. 내용을 조정한 뒤 다시 사본을 저장해 보세요.');
+      return;
+    }
+    lastSavedCopySignatureRef.current = copySig;
+    s.saveCurrentSequenceToBinder(true);
+    setNotice('');
+  };
   const startReadiness = !exerciseStepCount
     ? '동작을 추가한 뒤 수업안을 확인하세요.'
     : !canStartClass
-      ? '동작 정보와 항목 시간을 확인해 주세요.'
+      ? blockingReadinessReason
+        ? `동작 정보와 항목 시간을 확인해 주세요. (${blockingStepIndex !== null ? `${blockingStepIndex + 1}번 항목: ` : ''}${blockingReadinessReason.message})`
+        : '동작 정보와 항목 시간을 확인해 주세요.'
       : delta !== 0
         ? `목표와 차이가 있지만 현재 계획 ${formatSecondsToMMSS(total)}으로 진행할 수 있어요.`
         : hasDuplicateMovements
@@ -927,21 +1284,12 @@ export function SequenceWorkbench({
   const startNewClass = () => {
     const current = usePilatesStore.getState();
     if (!current.activeSteps.length) {
+      if (Date.now() - lastBlankResetAtRef.current < 600) return;
       openExerciseFinder();
       return;
     }
-    const previousSnapshot = {
-      activeSequenceId: current.activeSequenceId,
-      activeTitle: current.activeTitle,
-      activeSubtitle: current.activeSubtitle,
-      activeApparatus: current.activeApparatus,
-      activeLevel: current.activeLevel,
-      activeTargetMinutes: current.activeTargetMinutes,
-      activeTargetGroupId: current.activeTargetGroupId,
-      activeSteps: structuredClone(current.activeSteps),
-      lastCriteria: current.lastCriteria ? structuredClone(current.lastCriteria) : null,
-      draftCriteria: current.draftCriteria ? structuredClone(current.draftCriteria) : null,
-    };
+    lastBlankResetAtRef.current = Date.now();
+    const previousSnapshot = captureUndoSnapshot(current);
     usePilatesStore.setState({
       undoStack: [...current.undoStack.slice(-19), previousSnapshot],
       activeSequenceId: `draft-new-${Date.now()}`,
@@ -1336,14 +1684,14 @@ export function SequenceWorkbench({
         <div className="v2-condition-chips" aria-label="이번 수업 조건 요약">
           <button
             type="button"
-            onClick={() => setConditionsOpen(true)}
+            onClick={(event) => openConditionsDialog(event.currentTarget)}
             aria-label={`수업 시간 ${criteria.targetMinutes}분 · 조건 열기`}
           >
             {criteria.targetMinutes}분 <ChevronDown size={14} />
           </button>
           <button
             type="button"
-            onClick={() => setConditionsOpen(true)}
+            onClick={(event) => openConditionsDialog(event.currentTarget)}
             aria-label={`이번 수업 기구: ${equipmentLabel(selectedEquipment) || '선택 필요'} · 조건 열기`}
             title={equipmentLabel(selectedEquipment)}
           >
@@ -1354,14 +1702,18 @@ export function SequenceWorkbench({
           </button>
           <button
             type="button"
-            onClick={() => setConditionsOpen(true)}
+            onClick={(event) => openConditionsDialog(event.currentTarget)}
             aria-label={`수업 목표 ${focusOptions.find((option) => option.value === criteria.focusPreset)?.label ?? '전신 균형'} · 조건 열기`}
           >
             {focusOptions.find((option) => option.value === criteria.focusPreset)?.label ??
               '전신 균형'}{' '}
             <ChevronDown size={14} />
           </button>
-          <PfButton variant="icon" aria-label="수업 조건" onClick={() => setConditionsOpen(true)}>
+          <PfButton
+            variant="icon"
+            aria-label="수업 조건"
+            onClick={(event) => openConditionsDialog(event.currentTarget)}
+          >
             <SlidersHorizontal size={18} />
           </PfButton>
         </div>
@@ -1384,16 +1736,32 @@ export function SequenceWorkbench({
           ‘잠그지 않은 동작 다시 만들기’를 사용하세요.
         </p>
       )}
-      {(s.generationError || (!s.persistenceError && (notice || s.saveFeedback))) && (
-        <p
-          data-plan-feedback
-          className={`status plan-feedback ${s.generationError ? 'error' : ''}`}
-          role={s.generationError ? 'alert' : 'status'}
-          aria-live={s.generationError ? 'assertive' : 'polite'}
-          aria-atomic="true"
-        >
-          {s.generationError || notice || s.saveFeedback}
-        </p>
+      {(s.generationError ||
+        (!s.persistenceError && (notice || s.saveFeedback)) ||
+        (!s.activeSteps.length && s.undoStack.length > 0)) && (
+        <div className="workbench-feedback-row">
+          {(s.generationError || (!s.persistenceError && (notice || s.saveFeedback))) && (
+            <p
+              data-plan-feedback
+              className={`status plan-feedback ${s.generationError ? 'error' : ''}`}
+              role={s.generationError ? 'alert' : 'status'}
+              aria-label={s.generationError ? '수업 구성 오류 안내' : '수업 구성 상태 안내'}
+              aria-live={s.generationError ? 'assertive' : 'polite'}
+              aria-atomic="true"
+            >
+              {s.generationError || notice || s.saveFeedback}
+            </p>
+          )}
+          {!s.activeSteps.length && s.undoStack.length > 0 && (
+            <PfButton
+              variant="secondary"
+              className="workbench-empty-undo-btn"
+              onClick={performUndoSequence}
+            >
+              <RotateCcw size={16} /> 되돌리기
+            </PfButton>
+          )}
+        </div>
       )}
       <div className="plan-layout v2-plan-layout">
         <section
@@ -1414,15 +1782,23 @@ export function SequenceWorkbench({
                     maxLength={150}
                   />
                 </label>
-                <PfButton
-                  variant="secondary"
-                  className="save-flow"
-                  onClick={handleSave}
-                  disabled={!s.activeSteps.length}
-                >
-                  <BookmarkPlus size={17} />
-                  <span>저장</span>
-                </PfButton>
+                <div className="sequence-save-group">
+                  <span
+                    className={`workbench-save-state ${isSavedClean ? 'is-saved' : 'is-dirty'}`}
+                    data-testid="workbench-save-state"
+                  >
+                    {isSavedClean ? '저장됨' : '변경사항 있음'}
+                  </span>
+                  <PfButton
+                    variant="secondary"
+                    className="save-flow"
+                    onClick={handleSave}
+                    disabled={!s.activeSteps.length}
+                  >
+                    <BookmarkPlus size={17} />
+                    <span>저장</span>
+                  </PfButton>
+                </div>
               </div>
               <div className="sequence-context">
                 <span className="eyebrow">TODAY’S FLOW</span>
@@ -1439,7 +1815,7 @@ export function SequenceWorkbench({
               </div>
 
               <div className={`time-summary ${!s.activeSteps.length ? 'is-empty' : ''}`}>
-                <div>
+                <div className="time-summary-row">
                   <span>
                     현재 <strong>{formatSecondsToMMSS(total)}</strong>
                     <span className="time-divider">/</span>목표 {s.activeTargetMinutes}분
@@ -1458,6 +1834,47 @@ export function SequenceWorkbench({
                         .replace('.0', '')}분 ${delta > 0 ? '초과' : '부족'}`
                     )}
                   </span>
+                  {s.activeSteps.length > 0 && delta !== 0 && canAutoFitDuration && (
+                    <button
+                      type="button"
+                      className="workbench-inline-action-chip"
+                      onClick={() => {
+                        s.fitActiveDuration();
+                        setNotice(
+                          '목표 시간에 맞춰 잠그지 않은 항목 시간을 자동 조정했어요. 되돌리기로 복구할 수 있습니다.',
+                        );
+                      }}
+                    >
+                      <Clock3 size={14} aria-hidden="true" /> 목표 시간 자동 맞춤
+                    </button>
+                  )}
+                  {s.activeSteps.length > 0 && delta !== 0 && !canAutoFitDuration && needsMoreExercisesForTarget && (
+                    <button
+                      type="button"
+                      className="workbench-inline-action-chip"
+                      onClick={openExerciseFinder}
+                    >
+                      <Plus size={14} aria-hidden="true" /> 동작 추가해 채우기
+                    </button>
+                  )}
+                  {s.activeSteps.length > 0 && delta !== 0 && !canAutoFitDuration && allExercisesLockedForTarget && (
+                    <button
+                      type="button"
+                      className="workbench-inline-action-chip"
+                      onClick={() => {
+                        const lockBtn =
+                          document.querySelector<HTMLElement>('[aria-label$="잠금 해제"]');
+                        lockBtn?.scrollIntoView?.({
+                          block: 'center',
+                          behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+                        });
+                        lockBtn?.focus();
+                        setNotice('잠근 동작을 일부 해제한 뒤 목표 시간에 맞출 수 있습니다.');
+                      }}
+                    >
+                      <UnlockKeyhole size={14} aria-hidden="true" /> 잠금 확인 후 조정
+                    </button>
+                  )}
                 </div>
                 <div
                   className="duration-track v2-duration-track"
@@ -1703,18 +2120,7 @@ export function SequenceWorkbench({
                   <PfButton variant="text" onClick={() => openIdeaSheet(null)}>
                     <Sparkles size={15} aria-hidden="true" />한 줄 동작 메모
                   </PfButton>
-                  <PfButton
-                    variant="text"
-                    onClick={() => {
-                      const canUndo = usePilatesStore.getState().undoStack.length > 0;
-                      s.undoSequence();
-                      setNotice(
-                        canUndo
-                          ? `이전 순서로 되돌렸어요. 현재 총 ${usePilatesStore.getState().activeSteps.length}개 항목입니다.`
-                          : '되돌릴 이전 순서 기록이 없습니다.',
-                      );
-                    }}
-                  >
+                  <PfButton variant="text" onClick={performUndoSequence}>
                     <RotateCcw size={14} />
                     되돌리기
                   </PfButton>
@@ -1901,10 +2307,9 @@ export function SequenceWorkbench({
                                 variant="icon"
                                 aria-label={`${index + 1}번 동작 교체`}
                                 disabled={step.locked}
-                                onClick={() => {
-                                  setReplaceIndex(index);
-                                  setReplaceSearch('');
-                                }}
+                                onClick={(event) =>
+                                  openReplaceForStep(index, false, event.currentTarget)
+                                }
                               >
                                 <RefreshCw size={17} />
                               </PfButton>
@@ -2004,13 +2409,7 @@ export function SequenceWorkbench({
                 <Clock3 size={16} />
                 {s.activeTargetMinutes}분에 맞추기
               </PfButton>
-              <PfButton
-                variant="text"
-                onClick={() => {
-                  s.saveCurrentSequenceToBinder(true);
-                  setNotice('');
-                }}
-              >
+              <PfButton variant="text" onClick={handleSaveCopy}>
                 <Copy size={16} />
                 사본 저장
               </PfButton>
@@ -2045,9 +2444,47 @@ export function SequenceWorkbench({
             </div>
           )}
           {s.activeSteps.length > 0 && (
-            <p className="workbench-readiness-summary" id="start-class-readiness">
-              {startReadiness}
-            </p>
+            <div className="workbench-readiness-row">
+              <p className="workbench-readiness-summary" id="start-class-readiness">
+                {startReadiness}
+              </p>
+              {!canStartClass && !exerciseStepCount && (
+                <button
+                  type="button"
+                  className="workbench-inline-action-chip"
+                  onClick={openExerciseFinder}
+                >
+                  <Plus size={14} aria-hidden="true" /> 동작 고르기
+                </button>
+              )}
+              {!canStartClass &&
+                exerciseStepCount > 0 &&
+                blockingStepIndex !== null &&
+                s.activeSteps[blockingStepIndex] && (
+                  <button
+                    type="button"
+                    className="workbench-inline-action-chip"
+                    onClick={(event) => {
+                      const targetStep = s.activeSteps[blockingStepIndex]!;
+                      if (!isRestStep(targetStep)) {
+                        openInspector(targetStep, event.currentTarget);
+                      } else {
+                        const card =
+                          document.querySelectorAll<HTMLElement>('.sequence-order-card')[
+                            blockingStepIndex
+                          ];
+                        card?.scrollIntoView?.({
+                          block: 'center',
+                          behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+                        });
+                        card?.focus();
+                      }
+                    }}
+                  >
+                    {blockingStepIndex + 1}번 항목 확인
+                  </button>
+                )}
+            </div>
           )}
           {s.activeSteps.length > 0 && pendingStepCount > 0 && (
             <details className="workbench-material-notes">
@@ -2059,18 +2496,6 @@ export function SequenceWorkbench({
             </details>
           )}
           {s.activeSteps.length > 0 && ideasSectionNode}
-
-          {!s.activeSteps.length && s.undoStack.length > 0 && (
-            <PfButton
-              variant="secondary"
-              onClick={() => {
-                s.undoSequence();
-                setNotice('');
-              }}
-            >
-              <RotateCcw size={16} /> 되돌리기
-            </PfButton>
-          )}
           {!s.activeSteps.length && (
             <details className="workbench-automation-tools">
               <summary>자동 구성·휴식 먼저 넣기</summary>
@@ -2179,11 +2604,7 @@ export function SequenceWorkbench({
                     criteria={criteria}
                     reformerBrand={s.reformerBrand}
                     onApplySteps={(nextSteps, noticeMessage) => {
-                      usePilatesStore.setState({
-                        activeSteps: nextSteps,
-                        saveFeedback: noticeMessage,
-                      });
-                      setNotice(noticeMessage);
+                      applyStepsWithUndo(nextSteps, noticeMessage);
                     }}
                     onApplyAngleConcept={(suggestedTitleKo, suggestedSubtitleKo, noticeMessage) => {
                       s.setActiveSequenceMeta({
@@ -2200,11 +2621,10 @@ export function SequenceWorkbench({
                     steps={s.activeSteps}
                     exercisesById={exerciseMap}
                     onApplyTransitionBuffers={(nextSteps) => {
-                      usePilatesStore.setState({
-                        activeSteps: nextSteps,
-                        saveFeedback:
-                          '기구·체위 전환 구간에 권장 여유 시간(Transition Buffer)을 반영했어요.',
-                      });
+                      applyStepsWithUndo(
+                        nextSteps,
+                        '기구·체위 전환 구간에 권장 여유 시간(Transition Buffer)을 반영했어요.',
+                      );
                     }}
                     onSelectStep={(stepId) => {
                       setPreviewStep(stepId);
@@ -2215,11 +2635,33 @@ export function SequenceWorkbench({
                     activeSteps={s.activeSteps}
                     groupId={criteria.targetGroupId ?? 'all'}
                     onApplyCalibratedSteps={(nextSteps, noticeMessage) => {
-                      usePilatesStore.setState({
-                        activeSteps: nextSteps,
-                        saveFeedback: noticeMessage,
-                      });
-                      setNotice(noticeMessage);
+                      const calibrationGroupId = criteria.targetGroupId ?? 'all';
+                      const buildCalibrationSig = (stepsToCheck: readonly SequenceStep[]) =>
+                        canonicalRecoveryContent({
+                          groupId: calibrationGroupId,
+                          logs: s.historyLogs.map((log) => ({
+                            id: log.id,
+                            groupId: log.groupId,
+                            actualDurationSec: log.actualDurationSec ?? null,
+                            steps: log.stepsSnapshot
+                              ? serializeSemanticSteps(log.stepsSnapshot)
+                              : null,
+                          })),
+                          steps: serializeSemanticSteps(stepsToCheck),
+                        });
+                      const currentSig = buildCalibrationSig(
+                        usePilatesStore.getState().activeSteps,
+                      );
+                      if (lastCalibratedSignatureRef.current === currentSig) {
+                        setNotice(
+                          '이미 현재 시퀀스에 실제 소요 시간 보정이 반영되어 있습니다. 다시 조정하려면 되돌리기 후 적용해 주세요.',
+                        );
+                        return;
+                      }
+                      applyStepsWithUndo(nextSteps, noticeMessage);
+                      lastCalibratedSignatureRef.current = buildCalibrationSig(
+                        usePilatesStore.getState().activeSteps,
+                      );
                     }}
                   />
                   {(() => {
@@ -2262,17 +2704,20 @@ export function SequenceWorkbench({
                   activeApparatus={s.activeApparatus}
                   activeLevel={s.activeLevel}
                   onApplyDraftSequence={(payload) => {
-                    usePilatesStore.setState({
-                      activeTitle: payload.title,
-                      activeSubtitle: payload.subtitle,
-                      activeTargetMinutes: payload.targetMinutes,
-                      activeLevel: payload.level,
-                      activeApparatus: payload.apparatus,
-                      activeSteps: payload.steps,
-                      generationError: null,
-                      saveFeedback: `‘${payload.title}’ 초안을 현재 수업 시퀀스에 반영했습니다.`,
-                    });
-                    setWorkflowStep('arrange');
+                    applyStepsWithUndo(
+                      payload.steps,
+                      `‘${payload.title}’ 초안을 현재 수업 시퀀스에 반영했습니다.`,
+                      {
+                        alsoSetNotice: false,
+                        meta: {
+                          title: payload.title,
+                          subtitle: payload.subtitle,
+                          targetMinutes: payload.targetMinutes,
+                          level: payload.level,
+                          apparatus: payload.apparatus,
+                        },
+                      },
+                    );
                   }}
                   onSaveUnreviewedMovementIdea={(exercise) => {
                     s.addCustomExercise(exercise);
@@ -2340,11 +2785,13 @@ export function SequenceWorkbench({
                 }}
                 onClose={closeInspector}
                 onOpenExercise={onOpenYouTubePreview}
-                onReplace={() => {
-                  closeInspector();
-                  setReplaceIndex(selectedStepIndex);
-                  setReplaceSearch('');
-                }}
+                onReplace={() =>
+                  openReplaceForStep(
+                    selectedStepIndex,
+                    true,
+                    document.activeElement instanceof HTMLElement ? document.activeElement : null,
+                  )
+                }
               />
             </div>
           </aside>
@@ -2472,7 +2919,13 @@ export function SequenceWorkbench({
         </nav>
       </details>
       <LightDismissDialog
-        open={!!selectedStep && !wideEditor && !sourceDetailOpen}
+        open={
+          !!selectedStep &&
+          !wideEditor &&
+          !sourceDetailOpen &&
+          replaceIndex === null &&
+          !conditionsOpen
+        }
         title="동작 블록 편집"
         className="step-inspector-sheet"
         maxWidth="min(100vw, 760px)"
@@ -2484,7 +2937,7 @@ export function SequenceWorkbench({
               key={`${selectedStep.stepId}:${selectedStep.exerciseId}`}
               index={selectedStepIndex}
               step={selectedStep}
-              playbackActive={!sourceDetailOpen}
+              playbackActive={!sourceDetailOpen && replaceIndex === null && !conditionsOpen}
               loadDraft={() => inspectorDraftCache.current}
               onDraftChange={(value) => {
                 inspectorDraftCache.current = value;
@@ -2492,11 +2945,13 @@ export function SequenceWorkbench({
               }}
               onClose={closeInspector}
               onOpenExercise={onOpenYouTubePreview}
-              onReplace={() => {
-                closeInspector();
-                setReplaceIndex(selectedStepIndex);
-                setReplaceSearch('');
-              }}
+              onReplace={() =>
+                openReplaceForStep(
+                  selectedStepIndex,
+                  true,
+                  document.activeElement instanceof HTMLElement ? document.activeElement : null,
+                )
+              }
             />
           )}
         </div>
@@ -3030,12 +3485,13 @@ export function SequenceWorkbench({
       </LightDismissDialog>
       <LightDismissDialog
         open={replaceIndex !== null}
-        onClose={() => setReplaceIndex(null)}
+        onClose={cancelReplaceDialog}
         title="이 동작만 교체"
         subtitle="같은 기구와 현재 난이도 안에서 고릅니다. 이 자리의 전체 시간은 유지됩니다."
         maxWidth="680px"
       >
         <input
+          ref={replaceSearchInputRef}
           className="replacement-search"
           aria-label="교체할 동작 검색"
           placeholder="동작명이나 부위 검색"
@@ -3045,11 +3501,36 @@ export function SequenceWorkbench({
         <div className="replacement-list">
           {candidates.slice(0, 30).map((ex) => (
             <button
+              type="button"
               className="replacement-item"
               key={ex.id}
               onClick={() => {
-                if (replaceIndex !== null) s.replaceStepExercise(replaceIndex, ex.id);
+                if (replaceIndex === null) return;
+                const stepNumber = replaceIndex + 1;
+                const wasFromInspector = replaceFromInspector;
+                const replacedStepId = s.activeSteps[replaceIndex]?.stepId ?? null;
+                s.replaceStepExercise(replaceIndex, ex.id);
+                if (!usePilatesStore.getState().generationError) {
+                  inspectorDraftCache.current = null;
+                  if (wasFromInspector && replacedStepId) {
+                    setPreviewStep(replacedStepId);
+                  }
+                  setNotice(
+                    `${stepNumber}번 동작을 ‘${ex.nameKo}’(으)로 교체했어요. 잘못 바꿨다면 되돌리기로 복구할 수 있습니다.`,
+                  );
+                }
                 setReplaceIndex(null);
+                setReplaceSearch('');
+                setReplaceFromInspector(false);
+                requestAnimationFrame(() => {
+                  if (wasFromInspector && !wideEditor) {
+                    inspectorContentRef.current
+                      ?.querySelector<HTMLElement>('button, input, select, textarea')
+                      ?.focus();
+                  } else if (replaceOpenerRef.current?.isConnected) {
+                    replaceOpenerRef.current.focus();
+                  }
+                });
               }}
             >
               <WorkbenchMovementMark exercise={ex} />
@@ -3069,8 +3550,27 @@ export function SequenceWorkbench({
             <div className="empty-state">
               <h3>조건에 맞는 교체 동작이 없어요</h3>
               <p>검색어를 바꾸거나 동작을 직접 등록해 보세요.</p>
+              {replaceSearch.trim().length > 0 && (
+                <div className="replacement-empty-actions">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      setReplaceSearch('');
+                      replaceSearchInputRef.current?.focus();
+                    }}
+                  >
+                    검색어 지우기
+                  </button>
+                </div>
+              )}
             </div>
           )}
+        </div>
+        <div className="replacement-dialog-footer">
+          <button type="button" className="btn-secondary" onClick={cancelReplaceDialog}>
+            {replaceFromInspector ? '블록 편집으로 돌아가기' : '교체 취소'}
+          </button>
         </div>
       </LightDismissDialog>
       <LightDismissDialog

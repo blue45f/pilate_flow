@@ -1,0 +1,198 @@
+/* Compact inline next-action chips, lossless undo recovery row, save-state clarity,
+   and replacement/inspector round-trip controls for SequenceWorkbench. */
+
+#root .vnext-workbench .workbench-feedback-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 0 0 14px;
+  min-width: 0;
+  word-break: keep-all;
+}
+
+#root .vnext-workbench .workbench-feedback-row > .plan-feedback {
+  flex: 1 1 220px;
+  margin: 0;
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+#root .vnext-workbench .workbench-empty-undo-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 14px;
+  flex-shrink: 0;
+  word-break: keep-all;
+}
+
+#root .vnext-workbench .sequence-save-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+#root .vnext-workbench .workbench-save-state {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  word-break: keep-all;
+  border: 1px solid var(--wb-line, #dcded3);
+  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+  color: var(--pf-color-text-secondary, #4d6253);
+}
+
+#root .vnext-workbench .workbench-save-state.is-saved {
+  border-color: #bfd3c6;
+  background: #e5f1ea;
+  color: var(--wb-forest, #173d34);
+}
+
+#root .vnext-workbench .workbench-save-state.is-dirty {
+  border-color: #dfd3bd;
+  background: #f8f2e6;
+  color: #6b4c1f;
+}
+
+#root .vnext-workbench .time-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+#root .vnext-workbench .time-summary-status-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+#root .vnext-workbench .workbench-inline-action-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--pf-color-border-strong, #b8c5b3);
+  background: var(--pf-color-bg-surface, #fffdf8);
+  color: var(--wb-forest, #173d34);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.3;
+  word-break: keep-all;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+#root .vnext-workbench .workbench-inline-action-chip:hover:not(:disabled) {
+  background: #e9efe4;
+  border-color: var(--wb-forest, #173d34);
+}
+
+#root .vnext-workbench .workbench-readiness-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-top: 12px;
+  min-width: 0;
+}
+
+#root .vnext-workbench .workbench-readiness-row > .workbench-readiness-summary {
+  margin: 0;
+  flex: 1 1 220px;
+  min-width: 0;
+  word-break: keep-all;
+}
+
+/* Replacement dialog touch targets, empty-query reset, and cancel/return footer */
+.replacement-search {
+  min-height: 44px;
+  word-break: keep-all;
+}
+
+.replacement-item {
+  min-height: 52px;
+  min-width: 44px;
+  word-break: keep-all;
+}
+
+.replacement-empty-actions,
+.replacement-dialog-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.replacement-dialog-footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--pf-color-border-subtle, #dce2d6);
+}
+
+.replacement-empty-actions > button,
+.replacement-dialog-footer > button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 14px;
+  word-break: keep-all;
+}
+
+#root .vnext-workbench .workbench-inline-action-chip:focus-visible,
+#root .vnext-workbench .workbench-empty-undo-btn:focus-visible,
+.replacement-search:focus-visible,
+.replacement-item:focus-visible,
+.replacement-empty-actions > button:focus-visible,
+.replacement-dialog-footer > button:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring, #173d34);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  #root .vnext-workbench .workbench-feedback-row > .workbench-empty-undo-btn,
+  #root .vnext-workbench .time-summary-status-group > .workbench-inline-action-chip,
+  #root .vnext-workbench .workbench-readiness-row > .workbench-inline-action-chip,
+  .replacement-dialog-footer > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  #root .vnext-workbench .sequence-save-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root .vnext-workbench .workbench-inline-action-chip,
+  #root .vnext-workbench .workbench-empty-undo-btn,
+  .replacement-item,
+  .replacement-empty-actions > button,
+  .replacement-dialog-footer > button {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}

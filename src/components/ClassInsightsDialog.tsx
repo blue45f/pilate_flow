@@ -1,6 +1,10 @@
-import { useId, useMemo, useState, type KeyboardEvent } from 'react';
+import { useId, useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import type { ClassHistoryLog, PilatesExercise, SequenceStep } from '../types/pilates';
-import { buildHistoryInsights, buildPlanInsights } from '../utils/classInsights';
+import {
+  buildHistoryInsights,
+  buildPlanInsights,
+  type HistoryInsightRow,
+} from '../utils/classInsights';
 import { LightDismissDialog } from './LightDismissDialog';
 import '../styles/class-insights.css';
 
@@ -11,6 +15,9 @@ export interface ClassInsightsDialogProps {
   exercises: readonly PilatesExercise[];
   historyLogs: readonly ClassHistoryLog[];
 }
+
+type SideRowFilter = 'all' | 'unspecified' | 'imbalanced';
+type HistoryRowFilter = 'all' | 'comparable' | 'incomparable';
 
 const TABS = ['구성', '좌우', '기록'] as const;
 const INTENSITY_LABELS = { relaxed: '가볍게', moderate: '보통', intense: '높게' };
@@ -27,6 +34,10 @@ function differenceLabel(seconds: number | null): string {
   if (seconds === null) return '비교 불가';
   if (seconds === 0) return '차이 없음';
   return `${timeLabel(Math.abs(seconds))} ${seconds > 0 ? '더 길게 기록' : '더 짧게 기록'}`;
+}
+
+function isHistoryRowComparable(row: HistoryInsightRow): boolean {
+  return row.totalDeltaSec !== null && row.restDeltaSec !== null;
 }
 
 function LabeledBar({
@@ -79,6 +90,8 @@ export function ClassInsightsDialog({
   const [tab, setTab] = useState<(typeof TABS)[number]>('구성');
   const [showMoreTags, setShowMoreTags] = useState(false);
   const [includeExamples, setIncludeExamples] = useState(false);
+  const [sideFilter, setSideFilter] = useState<SideRowFilter>('all');
+  const [historyFilter, setHistoryFilter] = useState<HistoryRowFilter>('all');
   const id = useId();
   const plan = useMemo(() => buildPlanInsights(snapshot.steps, snapshot.exercises), [snapshot]);
   const history = useMemo(
@@ -99,6 +112,66 @@ export function ClassInsightsDialog({
   ];
   const visibleTags = plan.bodyTags.slice(0, showMoreTags ? 12 : 6);
 
+  const unspecifiedSideRows = useMemo(
+    () => plan.sideRows.filter((row) => row.unspecifiedSec > 0),
+    [plan.sideRows],
+  );
+  const imbalancedSideRows = useMemo(
+    () => plan.sideRows.filter((row) => row.leftSec !== row.rightSec),
+    [plan.sideRows],
+  );
+  const filteredSideRows = useMemo(() => {
+    if (sideFilter === 'unspecified') return unspecifiedSideRows;
+    if (sideFilter === 'imbalanced') return imbalancedSideRows;
+    return plan.sideRows;
+  }, [sideFilter, plan.sideRows, unspecifiedSideRows, imbalancedSideRows]);
+
+  const comparableHistoryRows = useMemo(
+    () => history.rows.filter(isHistoryRowComparable),
+    [history.rows],
+  );
+  const incomparableHistoryRows = useMemo(
+    () => history.rows.filter((row) => !isHistoryRowComparable(row)),
+    [history.rows],
+  );
+  const filteredHistoryRows = useMemo(() => {
+    if (historyFilter === 'comparable') return comparableHistoryRows;
+    if (historyFilter === 'incomparable') return incomparableHistoryRows;
+    return history.rows;
+  }, [historyFilter, history.rows, comparableHistoryRows, incomparableHistoryRows]);
+
+  const sidesJumpSummary =
+    plan.sideRows.length === 0
+      ? {
+          title: '좌우 계획 · 동작 0개',
+          action: '좌우 탭 열기',
+          nextFilter: 'all' as SideRowFilter,
+        }
+      : unspecifiedSideRows.length > 0
+        ? {
+            title: `좌우 미지정 ${unspecifiedSideRows.length}개 동작`,
+            action: '좌우 탭에서 미지정만 보기',
+            nextFilter: 'unspecified' as SideRowFilter,
+          }
+        : imbalancedSideRows.length > 0
+          ? {
+              title: `명시 좌·우 차이 ${imbalancedSideRows.length}개 동작`,
+              action: '좌우 탭에서 차이 동작만 보기',
+              nextFilter: 'imbalanced' as SideRowFilter,
+            }
+          : {
+              title: `좌우 지정 확인 (${plan.sideRows.length}개 동작)`,
+              action: '좌우 탭에서 시간 표 보기',
+              nextFilter: 'all' as SideRowFilter,
+            };
+
+  const historyJumpTitle =
+    history.rows.length === 0
+      ? includeExamples
+        ? '표시할 수업 기록 0건'
+        : `내 수업 기록 0건${history.excludedExamples > 0 ? ` (기본 예시 ${history.excludedExamples}건 제외)` : ''}`
+      : `기록 비교 가능 ${comparableHistoryRows.length}건 · 미기록·비교 불가 ${incomparableHistoryRows.length}건`;
+
   function navigateTabs(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     let next: number;
     if (event.key === 'ArrowRight') next = (index + 1) % TABS.length;
@@ -109,6 +182,28 @@ export function ClassInsightsDialog({
     event.preventDefault();
     setTab(TABS[next]);
     document.getElementById(`${id}-tab-${next}`)?.focus();
+  }
+
+  function jumpToSidesTab() {
+    setSideFilter(sidesJumpSummary.nextFilter);
+    setTab('좌우');
+    document.getElementById(`${id}-tab-1`)?.focus();
+  }
+
+  function jumpToHistoryTab() {
+    setHistoryFilter('all');
+    setTab('기록');
+    document.getElementById(`${id}-tab-2`)?.focus();
+  }
+
+  function handleReturnToEdit(event: MouseEvent<HTMLButtonElement>) {
+    const dialog = event.currentTarget.closest('dialog');
+    if (dialog) {
+      if (dialog.open) dialog.close();
+      dialog.dispatchEvent(new Event('close'));
+      return;
+    }
+    onClose();
   }
 
   return (
@@ -155,6 +250,30 @@ export function ClassInsightsDialog({
               동작 {plan.exerciseStepCount}개 · 휴식 {plan.restStepCount}개
             </p>
           </div>
+
+          <div
+            className="class-insights-quick-jumps"
+            role="group"
+            aria-label="다른 분석 항목 바로 확인"
+          >
+            <button
+              type="button"
+              className="class-insights-jump-card"
+              onClick={jumpToSidesTab}
+            >
+              <strong>{sidesJumpSummary.title}</strong>
+              <span>{sidesJumpSummary.action}</span>
+            </button>
+            <button
+              type="button"
+              className="class-insights-jump-card"
+              onClick={jumpToHistoryTab}
+            >
+              <strong>{historyJumpTitle}</strong>
+              <span>기록 탭에서 구분해 보기</span>
+            </button>
+          </div>
+
           <h3>계획 시간의 구성</h3>
           {timingRows.map((row) => (
             <LabeledBar
@@ -333,6 +452,47 @@ export function ClassInsightsDialog({
               denominator={plan.movementSec}
             />
           ))}
+          {plan.sideRows.length > 0 && (
+            <div
+              className="class-insights-filter-bar"
+              role="group"
+              aria-label="동작별 좌우 보기 필터"
+            >
+              <button
+                type="button"
+                className="class-insights-filter-chip"
+                aria-pressed={sideFilter === 'all'}
+                onClick={() => setSideFilter('all')}
+              >
+                전체 ({plan.sideRows.length})
+              </button>
+              <button
+                type="button"
+                className="class-insights-filter-chip"
+                aria-pressed={sideFilter === 'unspecified'}
+                onClick={() => setSideFilter('unspecified')}
+              >
+                좌우 미지정 ({unspecifiedSideRows.length})
+              </button>
+              <button
+                type="button"
+                className="class-insights-filter-chip"
+                aria-pressed={sideFilter === 'imbalanced'}
+                onClick={() => setSideFilter('imbalanced')}
+              >
+                명시 좌·우 차이 ({imbalancedSideRows.length})
+              </button>
+            </div>
+          )}
+          {plan.sideRows.length > 0 && sideFilter !== 'all' && (
+            <p className="class-insights-note class-insights-filter-status">
+              현재 필터:{' '}
+              {sideFilter === 'unspecified'
+                ? '해부학적 좌우 미지정 동작만 표시 중'
+                : '명시한 왼쪽·오른쪽 계획 시간이 다른 동작만 표시 중'}{' '}
+              ({filteredSideRows.length}/{plan.sideRows.length}개)
+            </p>
+          )}
           <div
             className="class-insights-table-scroll"
             role="region"
@@ -351,7 +511,7 @@ export function ClassInsightsDialog({
                 </tr>
               </thead>
               <tbody>
-                {plan.sideRows.map((row, index) => (
+                {filteredSideRows.map((row, index) => (
                   <tr key={`${row.stepId}-${index}`}>
                     <th scope="row">
                       {row.name}
@@ -369,6 +529,15 @@ export function ClassInsightsDialog({
                 {!plan.sideRows.length && (
                   <tr>
                     <td colSpan={5}>분석할 동작이 없습니다.</td>
+                  </tr>
+                )}
+                {plan.sideRows.length > 0 && !filteredSideRows.length && (
+                  <tr>
+                    <td colSpan={5}>
+                      {sideFilter === 'unspecified'
+                        ? '해부학적 좌우 미지정 동작이 없습니다.'
+                        : '명시한 왼쪽·오른쪽 시간이 다른 동작이 없습니다.'}
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -423,6 +592,47 @@ export function ClassInsightsDialog({
               표시할 내 수업 기록이 없습니다. 실제 기록이 생기면 이곳에서 확인할 수 있습니다.
             </p>
           )}
+          {history.rows.length > 0 && (
+            <div
+              className="class-insights-filter-bar"
+              role="group"
+              aria-label="수업 기록 비교 필터"
+            >
+              <button
+                type="button"
+                className="class-insights-filter-chip"
+                aria-pressed={historyFilter === 'all'}
+                onClick={() => setHistoryFilter('all')}
+              >
+                전체 ({history.rows.length})
+              </button>
+              <button
+                type="button"
+                className="class-insights-filter-chip"
+                aria-pressed={historyFilter === 'comparable'}
+                onClick={() => setHistoryFilter('comparable')}
+              >
+                시간 비교 가능 ({comparableHistoryRows.length})
+              </button>
+              <button
+                type="button"
+                className="class-insights-filter-chip"
+                aria-pressed={historyFilter === 'incomparable'}
+                onClick={() => setHistoryFilter('incomparable')}
+              >
+                미기록·비교 불가 ({incomparableHistoryRows.length})
+              </button>
+            </div>
+          )}
+          {history.rows.length > 0 && historyFilter !== 'all' && (
+            <p className="class-insights-note class-insights-filter-status">
+              현재 필터:{' '}
+              {historyFilter === 'comparable'
+                ? '계획 사본과 실제 총시간·휴식 시간이 모두 기록된 수업만 표시 중 (0분 0초 기록 포함)'
+                : '계획 사본 없음 또는 실제 시간 미기록으로 비교 불가 항목이 있는 수업만 표시 중'}{' '}
+              ({filteredHistoryRows.length}/{history.rows.length}건)
+            </p>
+          )}
           <div
             className="class-insights-table-scroll"
             role="region"
@@ -442,7 +652,7 @@ export function ClassInsightsDialog({
                 </tr>
               </thead>
               <tbody>
-                {history.rows.map((row) => (
+                {filteredHistoryRows.map((row) => (
                   <tr key={row.id}>
                     <th scope="row">
                       {row.sequenceTitle}
@@ -480,10 +690,33 @@ export function ClassInsightsDialog({
                     </td>
                   </tr>
                 ))}
+                {history.rows.length > 0 && !filteredHistoryRows.length && (
+                  <tr>
+                    <td colSpan={6}>
+                      {historyFilter === 'comparable'
+                        ? '계획 사본과 실제 총시간·휴식 시간이 모두 기록된 수업이 없습니다.'
+                        : '미기록 또는 비교 불가 항목이 있는 수업이 없습니다.'}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </section>
+
+        <footer className="class-insights-footer">
+          <p className="class-insights-note class-insights-footer-note">
+            열 때 기준 읽기 전용 요약입니다. 동작·좌우·시간 수정은 닫은 뒤 수업 시퀀스에서
+            이어갑니다.
+          </p>
+          <button
+            type="button"
+            className="class-insights-return-btn"
+            onClick={handleReturnToEdit}
+          >
+            닫고 수업 편집으로 돌아가기
+          </button>
+        </footer>
       </div>
     </LightDismissDialog>
   );

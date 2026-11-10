@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUpRight, BookOpen, Search, SlidersHorizontal, X } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowUpRight, BookOpen, Check, Layers, Search, SlidersHorizontal, X } from 'lucide-react';
 import { usePilatesStore } from '../store/usePilatesStore';
-import { COURSE_REFERENCES as courses } from '../data/courseReferences';
+import { COURSE_REFERENCES as defaultCourses } from '../data/courseReferences';
 import {
   courseBodyLabel,
   courseDifficultyLabel,
@@ -12,30 +12,112 @@ import {
   INITIAL_COURSE_FILTERS,
   hasCompleteCourseMetadata,
   type CourseFilters,
+  type CourseReference,
 } from '../utils/courseReferences';
 import '../styles/course-references.css';
 import '../styles/course-explorer.css';
 
-const completeCount = courses.filter((entry) => hasCompleteCourseMetadata(entry)).length;
-const incompleteCount = courses.length - completeCount;
-const equipmentOptions = [
-  ...new Set(courses.flatMap((entry) => (entry.facts.apparatus ?? []).map(courseEquipmentLabel))),
+const MAX_COURSE_COMPARE = 3;
+
+const DURATION_QUICK_OPTIONS: readonly [CourseFilters['duration'], string][] = [
+  ['all', '전체 길이'],
+  ['under-30', '30분 미만'],
+  ['30-49', '30–49분'],
+  ['50-plus', '50분 이상'],
+  ['unknown', '길이 미확인'],
 ];
-const propOptions = [
-  ...new Set(courses.flatMap((entry) => (entry.facts.props ?? []).map(coursePropLabel))),
-];
-const bodyOptions = [
-  ...new Set(courses.flatMap((entry) => (entry.facts.bodyTags ?? []).map(courseBodyLabel))),
-];
-const difficultyOptions = [
-  ...new Set(courses.flatMap((entry) => (entry.facts.difficulty ? [entry.facts.difficulty] : []))),
-];
+
 const toggle = (items: string[], value: string) =>
   items.includes(value) ? items.filter((item) => item !== value) : [...items, value];
 
-export function CourseReferenceBrowser() {
+const safeCompareLabel = (title: string) =>
+  title.replace(/수업에 추가|추천/g, '').replace(/\s+/g, ' ').trim() || '참고 자료';
+
+function formatDeclaredDurationFact(entry: CourseReference): string {
+  if (entry.duration.publisherTitleDeclaredMinutes !== null) {
+    return `${entry.duration.publisherTitleDeclaredMinutes}분 (제목 표기) · 실제 영상 길이 미확인`;
+  }
+  if (entry.duration.publisherDescriptionDeclaredMinutes !== null) {
+    return `${entry.duration.publisherDescriptionDeclaredMinutes}분 (설명 표기) · 실제 영상 길이 미확인`;
+  }
+  const minutes = declaredCourseMinutes(entry);
+  return minutes === null
+    ? '미확인 · 실제 영상 길이 미확인'
+    : `${minutes}분 · 실제 영상 길이 미확인`;
+}
+
+function formatPublisherBasis(entry: CourseReference): string {
+  if (entry.publisherAmendment) {
+    return `공식 게시자 근거 보완 (${entry.publisherAmendment.checkedAt.slice(0, 10)})`;
+  }
+  if (entry.publisher !== null) {
+    return `공개 검색 메타데이터 (${entry.checkedAt.slice(0, 10)} 기록)`;
+  }
+  return `게시자 미확인 (${entry.checkedAt.slice(0, 10)} 기록)`;
+}
+
+function handleChipGroupKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+  const buttons = Array.from(
+    event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'),
+  );
+  if (buttons.length === 0) return;
+  const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+  if (currentIndex < 0) return;
+  event.preventDefault();
+  const nextIndex =
+    event.key === 'Home'
+      ? 0
+      : event.key === 'End'
+        ? buttons.length - 1
+        : (currentIndex + (event.key === 'ArrowRight' ? 1 : buttons.length - 1)) % buttons.length;
+  buttons[nextIndex]?.focus();
+}
+
+export interface CourseReferenceBrowserProps {
+  entries?: readonly CourseReference[];
+}
+
+export function CourseReferenceBrowser({
+  entries = defaultCourses,
+}: CourseReferenceBrowserProps = {}) {
   const exerciseBrowseScope = usePilatesStore((state) => state.exerciseBrowseScope);
   const setExerciseBrowseScope = usePilatesStore((state) => state.setExerciseBrowseScope);
+
+  const completeCount = useMemo(
+    () => entries.filter((entry) => hasCompleteCourseMetadata(entry)).length,
+    [entries],
+  );
+  const incompleteCount = entries.length - completeCount;
+  const equipmentOptions = useMemo(
+    () => [
+      ...new Set(
+        entries.flatMap((entry) => (entry.facts.apparatus ?? []).map(courseEquipmentLabel)),
+      ),
+    ],
+    [entries],
+  );
+  const propOptions = useMemo(
+    () => [
+      ...new Set(entries.flatMap((entry) => (entry.facts.props ?? []).map(coursePropLabel))),
+    ],
+    [entries],
+  );
+  const bodyOptions = useMemo(
+    () => [
+      ...new Set(entries.flatMap((entry) => (entry.facts.bodyTags ?? []).map(courseBodyLabel))),
+    ],
+    [entries],
+  );
+  const difficultyOptions = useMemo(
+    () => [
+      ...new Set(
+        entries.flatMap((entry) => (entry.facts.difficulty ? [entry.facts.difficulty] : [])),
+      ),
+    ],
+    [entries],
+  );
+
   const [localFilters, setFilters] = useState<CourseFilters>({ ...INITIAL_COURSE_FILTERS });
   const filters = useMemo(
     () => ({
@@ -45,8 +127,21 @@ export function CourseReferenceBrowser() {
     [localFilters, exerciseBrowseScope],
   );
   const [showFilters, setShowFilters] = useState(false);
+  const [compareState, setCompareState] = useState<{
+    ids: string[];
+    expanded: boolean;
+    limitNotice: string | null;
+  }>({
+    ids: [],
+    expanded: false,
+    limitNotice: null,
+  });
+
   const searchInput = useRef<HTMLInputElement>(null);
   const nextHeading = useRef<string | null>(null);
+  const compareExpandBtnRef = useRef<HTMLButtonElement | null>(null);
+  const lastCompareTriggerRef = useRef<HTMLButtonElement | null>(null);
+
   const focusSearch = () => requestAnimationFrame(() => searchInput.current?.focus());
   const resetFilters = () => {
     setFilters({ ...INITIAL_COURSE_FILTERS });
@@ -55,7 +150,89 @@ export function CourseReferenceBrowser() {
   const [visible, setVisible] = useState({ signature: '', count: 6 });
   const signature = JSON.stringify(filters);
   const count = visible.signature === signature ? visible.count : 6;
-  const filtered = useMemo(() => filterCourseReferences(courses, filters), [filters]);
+  const filtered = useMemo(() => filterCourseReferences(entries, filters), [entries, filters]);
+  const filteredIdSet = useMemo(() => new Set(filtered.map((item) => item.id)), [filtered]);
+
+  const comparedEntries = useMemo(
+    () =>
+      compareState.ids
+        .map((id) => entries.find((item) => item.id === id))
+        .filter((item): item is CourseReference => Boolean(item)),
+    [compareState.ids, entries],
+  );
+
+  const toggleCompare = (entryId: string, trigger: HTMLButtonElement) => {
+    lastCompareTriggerRef.current = trigger;
+    setCompareState((previous) => {
+      const validIds = previous.ids.filter((id) => entries.some((item) => item.id === id));
+      if (validIds.includes(entryId)) {
+        const nextIds = validIds.filter((id) => id !== entryId);
+        return {
+          ids: nextIds,
+          expanded: nextIds.length > 0 ? previous.expanded : false,
+          limitNotice: null,
+        };
+      }
+      if (validIds.length >= MAX_COURSE_COMPARE) {
+        return {
+          ids: validIds,
+          expanded: true,
+          limitNotice: `출처 비교는 최대 ${MAX_COURSE_COMPARE}건까지 담을 수 있습니다. 먼저 한 건을 제외해 주세요.`,
+        };
+      }
+      const nextIds = [...validIds, entryId];
+      return {
+        ids: nextIds,
+        expanded: nextIds.length >= 2 ? true : previous.expanded,
+        limitNotice: null,
+      };
+    });
+  };
+
+  const removeCompared = (entryId: string) => {
+    const remainingCount = comparedEntries.filter((item) => item.id !== entryId).length;
+    setCompareState((previous) => {
+      const validIds = previous.ids.filter((id) => entries.some((item) => item.id === id));
+      const nextIds = validIds.filter((id) => id !== entryId);
+      return {
+        ids: nextIds,
+        expanded: nextIds.length > 0 ? previous.expanded : false,
+        limitNotice: null,
+      };
+    });
+    requestAnimationFrame(() => {
+      if (remainingCount > 0 && compareExpandBtnRef.current?.isConnected) {
+        compareExpandBtnRef.current.focus();
+      } else if (lastCompareTriggerRef.current?.isConnected) {
+        lastCompareTriggerRef.current.focus();
+      } else {
+        searchInput.current?.focus();
+      }
+    });
+  };
+
+  const clearCompared = () => {
+    setCompareState({ ids: [], expanded: false, limitNotice: null });
+    requestAnimationFrame(() => {
+      if (lastCompareTriggerRef.current?.isConnected) {
+        lastCompareTriggerRef.current.focus();
+      } else {
+        searchInput.current?.focus();
+      }
+    });
+  };
+
+  const collapseComparePanel = () => {
+    setCompareState((previous) => ({ ...previous, expanded: false, limitNotice: null }));
+    requestAnimationFrame(() => {
+      if (compareExpandBtnRef.current?.isConnected) {
+        compareExpandBtnRef.current.focus();
+      } else {
+        searchInput.current?.focus();
+      }
+    });
+  };
+
   const update = <K extends keyof CourseFilters>(key: K, value: CourseFilters[K]) => {
     if (key === 'ownedOnly') setExerciseBrowseScope(value ? 'owned' : 'all');
     else setFilters((previous) => ({ ...previous, [key]: value }));
@@ -145,7 +322,7 @@ export function CourseReferenceBrowser() {
         <BookOpen size={24} aria-hidden="true" />
       </header>
       <p className="course-browser-intro">
-        원본 링크 {courses.length}건에서 제목·게시자·기구를 찾아보세요. 재생·음성 언어·전체 준비물은
+        원본 링크 {entries.length}건에서 제목·게시자·기구를 찾아보세요. 재생·음성 언어·전체 준비물은
         미확인입니다.
       </p>
       <div className="course-browser-search-row">
@@ -186,7 +363,12 @@ export function CourseReferenceBrowser() {
         </button>
       </div>
       <div className="course-language-row">
-        <div className="course-language-choices" role="group" aria-label="제목·설명 언어 빠른 선택">
+        <div
+          className="course-language-choices"
+          role="group"
+          aria-label="제목·설명 언어 빠른 선택"
+          onKeyDown={handleChipGroupKeyDown}
+        >
           {(
             [
               ['all', '전체 제목'],
@@ -206,23 +388,55 @@ export function CourseReferenceBrowser() {
         </div>
         <span>제목·설명 기준 · 음성 언어 미확인</span>
       </div>
+
+      <div className="course-quick-filter-stack" aria-label="기구 및 선언 길이 빠른 필터">
+        {equipmentOptions.length > 0 && (
+          <div
+            className="course-quick-chips"
+            role="group"
+            aria-label="게시자 표기 기구 빠른 선택"
+            onKeyDown={handleChipGroupKeyDown}
+          >
+            <button
+              type="button"
+              aria-pressed={filters.equipment.length === 0}
+              onClick={() => update('equipment', [])}
+            >
+              전체 기구
+            </button>
+            {equipmentOptions.map((value) => (
+              <button
+                type="button"
+                key={value}
+                aria-pressed={filters.equipment.includes(value)}
+                onClick={() => update('equipment', toggle(filters.equipment, value))}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
+        )}
+        <div
+          className="course-quick-chips course-duration-chips"
+          role="group"
+          aria-label="선언 수업 길이 빠른 선택"
+          onKeyDown={handleChipGroupKeyDown}
+        >
+          {DURATION_QUICK_OPTIONS.map(([value, label]) => (
+            <button
+              type="button"
+              key={value}
+              aria-pressed={filters.duration === value}
+              onClick={() => update('duration', value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {showFilters && (
         <div id="course-filters" className="course-filters">
-          <fieldset>
-            <legend>게시자가 표기한 기구 · 여러 개 선택</legend>
-            <div className="course-chips">
-              {equipmentOptions.map((value) => (
-                <button
-                  type="button"
-                  key={value}
-                  aria-pressed={filters.equipment.includes(value)}
-                  onClick={() => update('equipment', toggle(filters.equipment, value))}
-                >
-                  {value}
-                </button>
-              ))}
-            </div>
-          </fieldset>
           <fieldset>
             <legend>게시자가 표기한 소도구 · 여러 개 선택</legend>
             <div className="course-chips">
@@ -343,7 +557,7 @@ export function CourseReferenceBrowser() {
       )}
       <div className="course-result-row">
         <p role="status" aria-label="수업 영상 검색 결과" aria-live="polite" aria-atomic="true">
-          {filtered.length} / {courses.length}건 · 기본은 게시자·제목을 기록한 {completeCount}건
+          {filtered.length} / {entries.length}건 · 기본은 게시자·제목을 기록한 {completeCount}건
         </p>
         {activeFilters.length > 0 && (
           <button
@@ -356,16 +570,204 @@ export function CourseReferenceBrowser() {
           </button>
         )}
       </div>
+
+      {comparedEntries.length > 0 && (
+        <section
+          className="course-compare-panel"
+          aria-label="선택한 참고 자료 비교"
+          data-testid="course-compare-panel"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape' && compareState.expanded) {
+              event.preventDefault();
+              event.stopPropagation();
+              collapseComparePanel();
+            }
+          }}
+        >
+          <div className="course-compare-header">
+            <div className="course-compare-title-row">
+              <span className="course-compare-badge">
+                <Layers size={14} aria-hidden="true" />
+                출처 비교 {comparedEntries.length}/{MAX_COURSE_COMPARE}건
+              </span>
+              <span className="course-compare-note">
+                검색·필터를 바꿔도 선택한 출처가 유지됩니다.
+              </span>
+            </div>
+            <div className="course-compare-header-actions">
+              <button
+                type="button"
+                ref={compareExpandBtnRef}
+                className="course-compare-expand-btn"
+                aria-expanded={compareState.expanded}
+                aria-controls="course-compare-grid"
+                onClick={() =>
+                  setCompareState((previous) => ({
+                    ...previous,
+                    expanded: !previous.expanded,
+                    limitNotice: null,
+                  }))
+                }
+              >
+                {compareState.expanded
+                  ? '비교표 접기'
+                  : `비교표 펼치기 (${comparedEntries.length})`}
+              </button>
+              <button
+                type="button"
+                className="course-compare-clear-btn"
+                onClick={clearCompared}
+              >
+                비교 비우기 <X size={13} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+
+          <ul className="course-compare-chips" aria-label="비교 중인 참고 자료">
+            {comparedEntries.map((item, idx) => (
+              <li key={item.id} className="course-compare-chip">
+                <span>
+                  {idx + 1}. {item.title}
+                </span>
+                <button
+                  type="button"
+                  aria-label={`${safeCompareLabel(item.title)} 비교에서 제외`}
+                  onClick={() => removeCompared(item.id)}
+                >
+                  <X size={13} aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          {compareState.limitNotice && (
+            <p className="course-compare-limit-note" aria-live="polite">
+              {compareState.limitNotice}
+            </p>
+          )}
+
+          {compareState.expanded && (
+            <div id="course-compare-grid" className="course-compare-grid">
+              {comparedEntries.map((item) => {
+                const inFiltered = filteredIdSet.has(item.id);
+                const apparatusLabels = (item.facts.apparatus ?? []).map(courseEquipmentLabel);
+                const propsSummary =
+                  item.facts.props === null
+                    ? '소도구 표기 미확인'
+                    : item.facts.props.length > 0
+                      ? item.facts.props.map(coursePropLabel).join(', ')
+                      : '소도구 없음(게시자 표기)';
+                return (
+                  <div
+                    key={item.id}
+                    className="course-compare-item"
+                    role="group"
+                    aria-label={`${safeCompareLabel(item.title)} 비교 항목`}
+                    data-testid={`course-compare-item-${item.id}`}
+                  >
+                    <div className="course-compare-item-head">
+                      <div>
+                        <h4>{item.title}</h4>
+                        {!inFiltered && (
+                          <span className="course-compare-outside">현재 조건 밖 · 선택 유지됨</span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        aria-label={`비교표에서 ${safeCompareLabel(item.title)} 닫기`}
+                        onClick={() => removeCompared(item.id)}
+                      >
+                        <X size={15} aria-hidden="true" />
+                      </button>
+                    </div>
+                    <dl className="course-compare-dl">
+                      <div>
+                        <dt>게시자·근거</dt>
+                        <dd>
+                          <strong>{item.publisher ?? '게시자 미확인'}</strong> ·{' '}
+                          {formatPublisherBasis(item)}
+                          {item.publisherAmendment && (
+                            <a
+                              className="course-compare-evidence-link"
+                              href={item.publisherAmendment.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              공식 게시자 연결 근거 · {item.publisherAmendment.sourceTitle}{' '}
+                              <ArrowUpRight size={13} aria-hidden="true" />
+                            </a>
+                          )}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>기구·소도구</dt>
+                        <dd>
+                          {apparatusLabels.length > 0
+                            ? apparatusLabels.join(', ')
+                            : '기구 표기 미확인'}{' '}
+                          · {propsSummary}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>선언 길이</dt>
+                        <dd>{formatDeclaredDurationFact(item)}</dd>
+                      </div>
+                      <div>
+                        <dt>난이도·부위</dt>
+                        <dd>
+                          {item.facts.difficulty
+                            ? courseDifficultyLabel(item.facts.difficulty)
+                            : '난이도 미확인'}{' '}
+                          ·{' '}
+                          {(item.facts.bodyTags ?? []).map(courseBodyLabel).join(', ') ||
+                            '부위 미확인'}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>확인 한계</dt>
+                        <dd>
+                          원본 링크 전용 · 재생·음성 언어·전체 준비물 미확인 ·{' '}
+                          {item.publisherRegion
+                            ? `지역 표기: ${item.publisherRegion}`
+                            : '게시 국가 미확인'}
+                        </dd>
+                      </div>
+                    </dl>
+                    <a
+                      className="btn-secondary course-compare-open"
+                      href={item.canonicalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      YouTube 원본 보기 <ArrowUpRight size={15} aria-hidden="true" />
+                      <span className="sr-only"> · 새 창</span>
+                    </a>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
       <div className="course-reference-grid">
         {filtered.slice(0, count).map((entry) => {
-          const minutes = declaredCourseMinutes(entry);
+          const compareIndex = comparedEntries.findIndex((item) => item.id === entry.id);
+          const isCompared = compareIndex >= 0;
+          const apparatusList = entry.facts.apparatus ?? [];
           return (
-            <article key={entry.id} className="course-reference-card">
+            <article
+              key={entry.id}
+              className={`course-reference-card ${isCompared ? 'is-compared' : ''}`.trim()}
+            >
               <div className="course-card-kicker">
                 <span>{entry.titleLanguage.includes('ko') ? '한국어 제목·설명' : '영어 제목'}</span>
                 <span>
                   {!hasCompleteCourseMetadata(entry) ? '추가 확인 후보' : '출처 목록 기록'}
                 </span>
+                {entry.publisherAmendment && (
+                  <span className="course-kicker-amended">공식 게시자 근거 보완</span>
+                )}
               </div>
               <h3 id={`course-result-${entry.id}`} tabIndex={-1}>
                 <a href={entry.canonicalUrl} target="_blank" rel="noopener noreferrer">
@@ -379,17 +781,25 @@ export function CourseReferenceBrowser() {
                 {entry.titleCompleteness !== 'complete-as-observed' && ' · 일부 제목만 확인'}
               </p>
               <div className="course-card-tags">
-                {(entry.facts.apparatus ?? []).map((item) => (
-                  <span key={item}>{courseEquipmentLabel(item)}</span>
-                ))}
-                {(entry.facts.props ?? []).map((item) => (
-                  <span key={item}>{coursePropLabel(item)}</span>
-                ))}
+                {apparatusList.length > 0 ? (
+                  apparatusList.map((item) => (
+                    <span key={item}>{courseEquipmentLabel(item)}</span>
+                  ))
+                ) : (
+                  <span className="course-tag-muted">기구 표기 미확인</span>
+                )}
+                {entry.facts.props === null ? null : entry.facts.props.length > 0 ? (
+                  entry.facts.props.map((item) => (
+                    <span key={item}>{coursePropLabel(item)}</span>
+                  ))
+                ) : (
+                  <span className="course-tag-muted">소도구 없음(게시자 표기)</span>
+                )}
               </div>
               <dl>
                 <div>
                   <dt>선언된 수업 길이</dt>
-                  <dd>{minutes === null ? '미확인' : `${minutes}분 · 실제 영상 길이 미확인`}</dd>
+                  <dd>{formatDeclaredDurationFact(entry)}</dd>
                 </div>
                 <div>
                   <dt>난이도·부위 표기</dt>
@@ -441,15 +851,31 @@ export function CourseReferenceBrowser() {
                     : '게시 국가 미확인.'}
                 </p>
               </details>
-              <a
-                className="btn-secondary course-open-original"
-                href={entry.canonicalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                YouTube 원본 보기 <ArrowUpRight size={16} aria-hidden="true" />
-                <span className="sr-only"> · 새 창</span>
-              </a>
+              <div className="course-card-actions">
+                <button
+                  type="button"
+                  className={`course-compare-toggle ${isCompared ? 'is-compared' : ''}`.trim()}
+                  aria-pressed={isCompared}
+                  aria-label={`${safeCompareLabel(entry.title)} 출처 비교 담기`}
+                  onClick={(event) => toggleCompare(entry.id, event.currentTarget)}
+                >
+                  {isCompared ? (
+                    <Check size={14} aria-hidden="true" />
+                  ) : (
+                    <Layers size={14} aria-hidden="true" />
+                  )}
+                  <span>{isCompared ? `비교 중 (${compareIndex + 1})` : '출처 비교'}</span>
+                </button>
+                <a
+                  className="btn-secondary course-open-original"
+                  href={entry.canonicalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  YouTube 원본 보기 <ArrowUpRight size={16} aria-hidden="true" />
+                  <span className="sr-only"> · 새 창</span>
+                </a>
+              </div>
             </article>
           );
         })}

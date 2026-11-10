@@ -19,7 +19,11 @@ import {
   getDatedPlanSourceFingerprint,
   resolveDatedPlanOccurrence,
 } from '../utils/datedSequencePlanning';
-import type { previewDatedPlanWeekCopy } from '../utils/datedSequencePlanning';
+import type {
+  DatedWeekCopyProposal,
+  DatedWeekCopySkip,
+  previewDatedPlanWeekCopy,
+} from '../utils/datedSequencePlanning';
 import {
   addScheduleDays,
   expandInstructorSchedule,
@@ -49,9 +53,71 @@ import {
 } from '../utils/schedulePlanningCalendar';
 
 type ActionResult = { success: boolean; message: string };
+type WeekCopyActionResult = ActionResult & {
+  readonly added?: number;
+  readonly skipped?: readonly DatedWeekCopySkip[];
+  readonly conflicts?: number;
+};
 type OccurrenceIdentity = Pick<InstructorScheduleOccurrence, 'classId' | 'originalDate'>;
 type CopyPreview = ReturnType<typeof previewDatedPlanWeekCopy>;
 type ViewMode = 'day' | 'week' | 'month';
+type OccurrenceFilter = 'all' | 'unassigned';
+type CopyOutcomeStatus = 'pending-props' | 'all-copied' | 'partial-copied' | 'zero-copied';
+
+interface VerifiedCopiedItem {
+  key: string;
+  classId: string;
+  originalDate: string;
+  date: string;
+  startTime: string;
+  locationId: string;
+  sequenceTitle: string;
+  createdAt: string;
+}
+
+interface UnconfirmedCopyProposal {
+  key: string;
+  classId: string;
+  originalDate: string;
+  date: string;
+  startTime: string;
+  locationId: string;
+  sequenceTitle: string;
+}
+
+interface EffectiveCopySummary {
+  status: CopyOutcomeStatus;
+  copied: VerifiedCopiedItem[];
+  skipped: DatedWeekCopySkip[];
+  unconfirmed: UnconfirmedCopyProposal[];
+}
+
+interface LastWeekCopyOutcome {
+  source: string;
+  target: string;
+  targetEnd: string;
+  message: string;
+  committedProposals: readonly DatedWeekCopyProposal[];
+  skipped: readonly DatedWeekCopySkip[];
+  reportedAdded: number | null;
+  reportedSkipped?: readonly DatedWeekCopySkip[];
+  preCopyAssignments: NonNullable<DatedSequencePlanningData['assignments']>;
+  preCopyIds: ReadonlySet<string>;
+  preCopyKeys: ReadonlySet<string>;
+}
+
+function parseReportedWeekCopyCount(message: string): number | null {
+  const match = /^(\d+)개\s*다음 주 계획/.exec(message.trim());
+  return match ? Number(match[1]) : null;
+}
+
+interface LastReplaceOutcome {
+  classId: string;
+  originalDate: string;
+  previousTitle: string;
+  requestedTitle: string;
+  wasContextRebound: boolean;
+}
 
 export interface DatedSequencePlanningDialogProps {
   readonly onClose: () => void;
@@ -75,7 +141,7 @@ export interface DatedSequencePlanningDialogProps {
     expectedUpdatedAt?: string,
   ) => ActionResult;
   readonly onPreviewWeekCopy: (sourceStartDate: string, targetStartDate: string) => CopyPreview;
-  readonly onCopyWeek: (sourceStartDate: string, targetStartDate: string) => ActionResult;
+  readonly onCopyWeek: (sourceStartDate: string, targetStartDate: string) => WeekCopyActionResult;
   readonly onLoadDraft: (assignmentId: string, expectedUpdatedAt?: string) => ActionResult;
   readonly onLoadSuccess?: () => void;
   readonly onReplaceSnapshot: (input: {
@@ -101,6 +167,17 @@ const SKIP_LABELS = {
   'target-outside-week': '변경된 회차가 대상 7일 밖에 있음',
   'already-assigned': '기존 계획 있음 · 그대로 유지',
 };
+
+function getScrollBehavior(): ScrollBehavior {
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) {
+    return 'auto';
+  }
+  return 'smooth';
+}
 
 function describePlanSteps(steps: readonly SequenceStep[], exercises: readonly PilatesExercise[]) {
   return steps.map((step) => {
@@ -381,6 +458,7 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
     isScheduleDate(props.initialDate) ? props.initialDate : localScheduleDate(),
   );
   const [mode, setMode] = useState<ViewMode>(props.initialMode ?? 'week');
+  const [occurrenceFilter, setOccurrenceFilter] = useState<OccurrenceFilter>('all');
   const [identity, setIdentity] = useState<OccurrenceIdentity | null>(
     props.initialOccurrence ?? null,
   );
@@ -394,7 +472,17 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
   const [planningStep, setPlanningStep] = useState<1 | 2 | 3>(() =>
     props.initialOccurrence ? 3 : 1,
   );
+  const [lastCopyOutcome, setLastCopyOutcome] = useState<LastWeekCopyOutcome | null>(null);
+  const [lastReplaceOutcome, setLastReplaceOutcome] = useState<LastReplaceOutcome | null>(null);
   const hasUserChangedDraftRef = useRef(false);
+  const pendingDetailFocusRef = useRef(false);
+  const inFlightActionRef = useRef(false);
+  const lastCommittedKeyRef = useRef<string | null>(null);
+  const occurrenceTriggerRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const assignSelectRef = useRef<HTMLSelectElement | null>(null);
+  const editDraftBtnRef = useRef<HTMLButtonElement | null>(null);
+  const revisionDiffBtnRef = useRef<HTMLButtonElement | null>(null);
+  const previewCopyBtnRef = useRef<HTMLButtonElement | null>(null);
   const [revisionPreview, setRevisionPreview] = useState<{
     assignmentId: string;
     sequenceId: string;
@@ -414,6 +502,7 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
   const copyRef = useRef<HTMLDetailsElement>(null);
   const calendarFocusTarget = useRef<string | null>(null);
   const calendarHelpId = useId();
+
   useEffect(() => {
     const date = calendarFocusTarget.current;
     if (mode !== 'month' || !date) return;
@@ -426,6 +515,7 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
       button.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     }
   }, [selectedDate, mode]);
+
   useEffect(() => {
     if (!identity || !hasUserChangedDraftRef.current) return;
     writeDatedPlanningDraft(identity, {
@@ -433,6 +523,16 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
       revisionSequenceId,
     });
   }, [identity, sequenceId, revisionSequenceId]);
+
+  useEffect(() => {
+    if (!pendingDetailFocusRef.current || !identity || !detailRef.current) return;
+    pendingDetailFocusRef.current = false;
+    const target = detailRef.current.querySelector<HTMLElement>(
+      'select:not(:disabled), button.dated-planning-primary-btn:not(:disabled), button:not(.dated-planning-close-detail):not(:disabled), summary',
+    );
+    (target ?? detailRef.current).focus({ preventScroll: true });
+  }, [identity]);
+
   const closing = useRef(false);
   const [copyPreview, setCopyPreview] = useState<{
     result: CopyPreview;
@@ -440,6 +540,7 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
     source: string;
     target: string;
   } | null>(null);
+
   const month = planningCalendarMonth(selectedDate);
   const start =
     mode === 'month'
@@ -475,6 +576,10 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
   const context = useMemo(() => JSON.stringify([schedule, planning]), [schedule, planning]);
   const currentKey = identity ? getDatedPlanKey(identity.classId, identity.originalDate) : null;
   const assignment = currentKey ? byKey.get(currentKey) : undefined;
+  const selectedSequence = useMemo(
+    () => savedSequences.find((item) => item.id === sequenceId),
+    [savedSequences, sequenceId],
+  );
   const revisionCandidate = savedSequences.find((item) => item.id === revisionSequenceId);
   const revisionContext = useMemo(
     () => JSON.stringify([assignment, revisionCandidate, schedule, exercises]),
@@ -490,6 +595,18 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
     ? resolveDatedPlanOccurrence(schedule, identity.classId, identity.originalDate)
     : null;
   const occurrence = resolved?.occurrence;
+  const selectedSequenceWarnings = useMemo(() => {
+    if (!selectedSequence || !occurrence || resolved?.status !== 'scheduled') return [];
+    return getSchedulePlanWarnings(
+      {
+        ...occurrence,
+        linkSavedSequenceId: selectedSequence.id,
+      },
+      schedule,
+      [selectedSequence],
+      exercises,
+    );
+  }, [selectedSequence, occurrence, resolved?.status, schedule, exercises]);
   const contextMatches =
     !!assignment &&
     !!occurrence &&
@@ -516,6 +633,8 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
     [assignments, schedule],
   );
   const sourceStart = scheduleWeekStart(selectedDate);
+  const sourceEndRaw = addScheduleDays(sourceStart, 6);
+  const sourceEnd = sourceEndRaw > '2199-12-31' ? '2199-12-31' : sourceEndRaw;
   const targetStart = addScheduleDays(sourceStart, 7);
   const targetEnd = addScheduleDays(targetStart, 6);
   const copyRangeValid =
@@ -525,7 +644,63 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
     (copyPreview.context !== context ||
       copyPreview.source !== sourceStart ||
       copyPreview.target !== targetStart);
+
+  const sourceWeekRows = useMemo(
+    () =>
+      mode === 'week'
+        ? rows
+        : isScheduleDate(sourceStart) && isScheduleDate(sourceEnd)
+          ? expandInstructorSchedule(schedule, sourceStart, sourceEnd)
+          : [],
+    [mode, rows, schedule, sourceStart, sourceEnd],
+  );
+  const sourceWeekScheduledCount = useMemo(
+    () => sourceWeekRows.filter((row) => row.status === 'scheduled').length,
+    [sourceWeekRows],
+  );
+  const sourceWeekPlannedCount = useMemo(
+    () =>
+      sourceWeekRows.filter(
+        (row) =>
+          row.status === 'scheduled' &&
+          byKey.has(getDatedPlanKey(row.classId, row.originalDate)),
+      ).length,
+    [sourceWeekRows, byKey],
+  );
+  const targetWeekExistingCount = useMemo(() => {
+    if (!copyRangeValid) return 0;
+    const targetRows = expandInstructorSchedule(schedule, targetStart, targetEnd);
+    return targetRows.filter((row) =>
+      byKey.has(getDatedPlanKey(row.classId, row.originalDate)),
+    ).length;
+  }, [copyRangeValid, schedule, targetStart, targetEnd, byKey]);
+
   const shownRows = mode === 'month' ? rows.filter((row) => row.date === selectedDate) : rows;
+  const unassignedScheduledCount = useMemo(
+    () =>
+      shownRows.filter(
+        (row) =>
+          row.status === 'scheduled' &&
+          !byKey.has(getDatedPlanKey(row.classId, row.originalDate)),
+      ).length,
+    [shownRows, byKey],
+  );
+  const showOccurrenceFilter =
+    shownRows.length > 1 &&
+    (occurrenceFilter === 'unassigned' ||
+      (unassignedScheduledCount > 0 && unassignedScheduledCount < shownRows.length));
+  const visibleRows = useMemo(
+    () =>
+      occurrenceFilter === 'unassigned'
+        ? shownRows.filter(
+            (row) =>
+              row.status === 'scheduled' &&
+              !byKey.has(getDatedPlanKey(row.classId, row.originalDate)),
+          )
+        : shownRows,
+    [shownRows, occurrenceFilter, byKey],
+  );
+
   const stepDetails = useMemo(
     () =>
       assignment?.sequenceSnapshot.steps.map((step) => {
@@ -568,6 +743,170 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
   const locationName = (id: string) =>
     schedule.locations.find((item) => item.id === id)?.alias ?? '장소 정보 없음';
 
+  const activeCopyOutcome =
+    !copyPreview &&
+    lastCopyOutcome &&
+    lastCopyOutcome.source === sourceStart &&
+    lastCopyOutcome.target === targetStart
+      ? lastCopyOutcome
+      : null;
+
+  const effectiveCopySummary = useMemo<EffectiveCopySummary>(() => {
+    if (!activeCopyOutcome) {
+      return {
+        status: 'zero-copied',
+        copied: [],
+        skipped: [],
+        unconfirmed: [],
+      };
+    }
+    const didPlanningUpdate = assignments !== activeCopyOutcome.preCopyAssignments;
+    const baseSkippedList = activeCopyOutcome.reportedSkipped ?? activeCopyOutcome.skipped;
+    const seenSkipPairs = new Set<string>();
+    const skippedKeys = new Set<string>();
+    const mergedSkipped: DatedWeekCopySkip[] = [];
+    for (const item of baseSkippedList) {
+      const pair = `${item.key}::${item.code}`;
+      if (seenSkipPairs.has(pair)) continue;
+      seenSkipPairs.add(pair);
+      skippedKeys.add(item.key);
+      mergedSkipped.push(item);
+    }
+
+    if (!didPlanningUpdate && activeCopyOutcome.reportedAdded !== 0) {
+      return {
+        status: 'pending-props',
+        copied: [],
+        skipped: mergedSkipped,
+        unconfirmed: activeCopyOutcome.committedProposals.map((proposal) => ({
+          key: getDatedPlanKey(proposal.classId, proposal.originalDate),
+          classId: proposal.classId,
+          originalDate: proposal.originalDate,
+          date: proposal.occurrenceSnapshot.date,
+          startTime: proposal.occurrenceSnapshot.startTime,
+          locationId: proposal.occurrenceSnapshot.locationId,
+          sequenceTitle: proposal.sequenceSnapshot.title,
+        })),
+      };
+    }
+
+    const candidateCopied: VerifiedCopiedItem[] = [];
+    if (didPlanningUpdate && activeCopyOutcome.reportedAdded !== 0) {
+      for (const proposal of activeCopyOutcome.committedProposals) {
+        const proposalInTargetRange =
+          proposal.occurrenceSnapshot.date >= activeCopyOutcome.target &&
+          proposal.occurrenceSnapshot.date <= activeCopyOutcome.targetEnd;
+        if (!proposalInTargetRange) continue;
+        const key = getDatedPlanKey(proposal.classId, proposal.originalDate);
+        if (activeCopyOutcome.preCopyKeys.has(key) || skippedKeys.has(key)) continue;
+        const actual = byKey.get(key);
+        if (!actual || activeCopyOutcome.preCopyIds.has(actual.id)) continue;
+        const actualMatchesProposal =
+          actual.classId === proposal.classId &&
+          actual.originalDate === proposal.originalDate &&
+          actual.occurrenceSnapshot.date >= activeCopyOutcome.target &&
+          actual.occurrenceSnapshot.date <= activeCopyOutcome.targetEnd &&
+          actual.sourceSequenceId === proposal.sourceSequenceId &&
+          actual.sourceSequenceUpdatedAt === proposal.sourceSequenceUpdatedAt;
+        if (!actualMatchesProposal) continue;
+        candidateCopied.push({
+          key,
+          classId: actual.classId,
+          originalDate: actual.originalDate,
+          date: actual.occurrenceSnapshot.date,
+          startTime: actual.occurrenceSnapshot.startTime,
+          locationId: actual.occurrenceSnapshot.locationId,
+          sequenceTitle: actual.sequenceSnapshot.title,
+          createdAt: actual.createdAt,
+        });
+      }
+    }
+
+    const verifiedCopied =
+      activeCopyOutcome.reportedAdded !== null &&
+      candidateCopied.length > activeCopyOutcome.reportedAdded
+        ? [...candidateCopied]
+            .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+            .slice(0, activeCopyOutcome.reportedAdded)
+        : candidateCopied;
+    const verifiedCopiedKeys = new Set(verifiedCopied.map((item) => item.key));
+    const unconfirmed: UnconfirmedCopyProposal[] = [];
+
+    for (const proposal of activeCopyOutcome.committedProposals) {
+      const key = getDatedPlanKey(proposal.classId, proposal.originalDate);
+      if (verifiedCopiedKeys.has(key) || skippedKeys.has(key)) continue;
+      const targetResolution = resolveDatedPlanOccurrence(
+        schedule,
+        proposal.classId,
+        proposal.originalDate,
+      );
+      if (byKey.has(key)) {
+        skippedKeys.add(key);
+        mergedSkipped.push({ key, code: 'already-assigned' });
+      } else if (!targetResolution.occurrence) {
+        skippedKeys.add(key);
+        mergedSkipped.push({ key, code: 'target-missing' });
+      } else if (targetResolution.status !== 'scheduled') {
+        skippedKeys.add(key);
+        mergedSkipped.push({ key, code: 'target-inactive' });
+      } else if (
+        targetResolution.occurrence.date < activeCopyOutcome.target ||
+        targetResolution.occurrence.date > activeCopyOutcome.targetEnd
+      ) {
+        skippedKeys.add(key);
+        mergedSkipped.push({ key, code: 'target-outside-week' });
+      } else {
+        unconfirmed.push({
+          key,
+          classId: proposal.classId,
+          originalDate: proposal.originalDate,
+          date: proposal.occurrenceSnapshot.date,
+          startTime: proposal.occurrenceSnapshot.startTime,
+          locationId: proposal.occurrenceSnapshot.locationId,
+          sequenceTitle: proposal.sequenceSnapshot.title,
+        });
+      }
+    }
+
+    const status: CopyOutcomeStatus =
+      verifiedCopied.length === 0
+        ? 'zero-copied'
+        : verifiedCopied.length < activeCopyOutcome.committedProposals.length
+          ? 'partial-copied'
+          : 'all-copied';
+
+    return {
+      status,
+      copied: verifiedCopied,
+      skipped: mergedSkipped,
+      unconfirmed,
+    };
+  }, [activeCopyOutcome, assignments, byKey, schedule]);
+
+  const activeReplaceOutcome =
+    identity &&
+    lastReplaceOutcome &&
+    lastReplaceOutcome.classId === identity.classId &&
+    lastReplaceOutcome.originalDate === identity.originalDate
+      ? lastReplaceOutcome
+      : null;
+
+  function runSingleCommit<T extends ActionResult>(commitKey: string, action: () => T): T | null {
+    if (inFlightActionRef.current || lastCommittedKeyRef.current === commitKey) {
+      return null;
+    }
+    inFlightActionRef.current = true;
+    try {
+      const result = action();
+      if (result.success) {
+        lastCommittedKeyRef.current = commitKey;
+      }
+      return result;
+    } finally {
+      inFlightActionRef.current = false;
+    }
+  }
+
   function closeOnce() {
     if (closing.current) return;
     closing.current = true;
@@ -576,16 +915,17 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
 
   function navigatePlanningStep(nextStep: 1 | 2 | 3) {
     setPlanningStep(nextStep);
+    const behavior = getScrollBehavior();
     if (nextStep === 1) {
       if (mode === 'month' && calendarScrollRef.current) {
-        calendarScrollRef.current.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        calendarScrollRef.current.scrollIntoView?.({ behavior, block: 'nearest' });
         const activeDateBtn =
           calendarScrollRef.current.querySelector<HTMLButtonElement>('[aria-pressed="true"]');
         (activeDateBtn ?? calendarScrollRef.current).focus();
         return;
       }
       if (toolbarRef.current) {
-        toolbarRef.current.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+        toolbarRef.current.scrollIntoView?.({ behavior, block: 'nearest' });
         const focusTarget = toolbarRef.current.querySelector<HTMLElement>(
           'input[type="date"], button[aria-pressed="true"], button',
         );
@@ -595,16 +935,16 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
     }
     if (nextStep === 2) {
       if (occurrencesRef.current) {
-        occurrencesRef.current.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
-        const firstOccurrenceBtn = occurrencesRef.current.querySelector<HTMLButtonElement>(
-          'article button:not(:disabled)',
-        );
+        occurrencesRef.current.scrollIntoView?.({ behavior, block: 'nearest' });
+        const firstOccurrenceBtn =
+          occurrencesRef.current.querySelector<HTMLButtonElement>('article button:not(:disabled)') ??
+          occurrencesRef.current.querySelector<HTMLButtonElement>('button:not(:disabled)');
         (firstOccurrenceBtn ?? occurrencesRef.current).focus();
       }
       return;
     }
     if (detailRef.current) {
-      detailRef.current.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      detailRef.current.scrollIntoView?.({ behavior, block: 'nearest' });
       const detailControl = detailRef.current.querySelector<HTMLElement>(
         'select:not(:disabled), button:not(:disabled), summary',
       );
@@ -612,7 +952,7 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
       return;
     }
     if (copyRef.current) {
-      copyRef.current.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      copyRef.current.scrollIntoView?.({ behavior, block: 'nearest' });
       const copySummary = copyRef.current.querySelector<HTMLElement>(
         'summary, button:not(:disabled)',
       );
@@ -629,14 +969,24 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
       return;
     }
     hasUserChangedDraftRef.current = false;
+    lastCommittedKeyRef.current = null;
     setDraftRestored(false);
     setSelectedDate(date);
+    setOccurrenceFilter('all');
     setIdentity(null);
     setSequenceId('');
     setLoadConfirmed(false);
     setRevisionSequenceId('');
     setRevisionPreview(null);
     setPriorVersionIndex(null);
+    setLastReplaceOutcome(null);
+    setFeedback(null);
+  }
+
+  function switchMode(nextMode: ViewMode) {
+    setMode(nextMode);
+    setOccurrenceFilter('all');
+    setFeedback(null);
   }
 
   function navigate(direction: -1 | 1) {
@@ -652,7 +1002,7 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
   }
 
   function openSelectedScheduleDate() {
-    if (!props.onOpenScheduleDate) return;
+    if (!props.onOpenScheduleDate || closing.current) return;
     const dialog = contentRef.current?.closest<HTMLDialogElement>('dialog');
     // Native close restores the opener while it is still mounted. The parent focuses the day after rendering it.
     if (dialog?.open) dialog.close();
@@ -668,6 +1018,8 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
     const restoredSequenceId = !existing ? (restored?.sequenceId ?? '') : '';
     const restoredRevisionSequenceId = existing ? (restored?.revisionSequenceId ?? '') : '';
     hasUserChangedDraftRef.current = false;
+    pendingDetailFocusRef.current = true;
+    lastCommittedKeyRef.current = null;
     setIdentity({ classId: row.classId, originalDate: row.originalDate });
     setSequenceId(restoredSequenceId);
     setLoadConfirmed(false);
@@ -676,7 +1028,37 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
     setPlanningStep(3);
     setRevisionPreview(null);
     setPriorVersionIndex(null);
+    setLastReplaceOutcome(null);
     setFeedback(null);
+  }
+
+  function closeOccurrenceDetail() {
+    const triggerKey = identity ? getDatedPlanKey(identity.classId, identity.originalDate) : null;
+    hasUserChangedDraftRef.current = false;
+    setIdentity(null);
+    setSequenceId('');
+    setLoadConfirmed(false);
+    setRevisionSequenceId('');
+    setRevisionPreview(null);
+    setPriorVersionIndex(null);
+    setLastReplaceOutcome(null);
+    setDraftRestored(false);
+    setPlanningStep(2);
+    if (triggerKey) {
+      const triggerBtn = occurrenceTriggerRefs.current.get(triggerKey);
+      if (triggerBtn?.isConnected) {
+        triggerBtn.focus();
+      }
+    }
+  }
+
+  function cancelSequenceDraftSelection() {
+    hasUserChangedDraftRef.current = false;
+    lastCommittedKeyRef.current = null;
+    setSequenceId('');
+    setDraftRestored(false);
+    clearDatedPlanningDraft(identity);
+    assignSelectRef.current?.focus();
   }
 
   function describeKey(key: string) {
@@ -770,7 +1152,7 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                 type="button"
                 key={value}
                 aria-pressed={mode === value}
-                onClick={() => setMode(value)}
+                onClick={() => switchMode(value)}
               >
                 {{ day: '일간', week: '주간', month: '월간' }[value]}
               </button>
@@ -906,11 +1288,35 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
         >
           <div className="planning-selected-date-heading">
             <h3>{mode === 'month' ? formatScheduleDate(selectedDate) : '선택 기간의 수업'}</h3>
-            {props.onOpenScheduleDate && (
-              <button type="button" onClick={openSelectedScheduleDate}>
-                선택 날짜 일정 열기
-              </button>
-            )}
+            <div className="dated-planning-occurrence-controls">
+              {showOccurrenceFilter && (
+                <div
+                  role="group"
+                  aria-label="회차 계획 필터"
+                  className="dated-planning-filter-pills"
+                >
+                  <button
+                    type="button"
+                    aria-pressed={occurrenceFilter === 'all'}
+                    onClick={() => setOccurrenceFilter('all')}
+                  >
+                    전체 ({shownRows.length})
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={occurrenceFilter === 'unassigned'}
+                    onClick={() => setOccurrenceFilter('unassigned')}
+                  >
+                    미지정 ({unassignedScheduledCount})
+                  </button>
+                </div>
+              )}
+              {props.onOpenScheduleDate && (
+                <button type="button" onClick={openSelectedScheduleDate}>
+                  선택 날짜 일정 열기
+                </button>
+              )}
+            </div>
           </div>
           {mode === 'month' && (
             <p className="planning-selected-summary" aria-label="선택 날짜 준비 요약">
@@ -920,20 +1326,42 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
             </p>
           )}
           {!shownRows.length && (
-            <p className="dated-planning-empty">
-              이 기간에 등록된 수업 회차가 없습니다. 일정 화면에서 수업을 먼저 등록해 주세요.
-            </p>
+            <div className="dated-planning-empty">
+              <p>이 기간에 등록된 수업 회차가 없습니다. 일정 화면에서 수업을 먼저 등록해 주세요.</p>
+              {mode === 'day' && sourceWeekScheduledCount > 0 && (
+                <button type="button" onClick={() => switchMode('week')}>
+                  이번 주 수업 보기 ({sourceWeekScheduledCount}회)
+                </button>
+              )}
+            </div>
           )}
-          {shownRows.map((row) => {
-            const existing = byKey.get(getDatedPlanKey(row.classId, row.originalDate));
+          {shownRows.length > 0 && visibleRows.length === 0 && (
+            <div className="dated-planning-empty">
+              <p>이 기간의 예정 수업은 모두 계획 사본이 연결되어 있습니다.</p>
+              <button type="button" onClick={() => setOccurrenceFilter('all')}>
+                전체 회차 보기
+              </button>
+            </div>
+          )}
+          {visibleRows.map((row) => {
+            const rowKey = getDatedPlanKey(row.classId, row.originalDate);
+            const existing = byKey.get(rowKey);
+            const isSelected =
+              identity?.classId === row.classId && identity?.originalDate === row.originalDate;
             return (
               <article
                 className={`dated-planning-occurrence dated-planning-occurrence-${row.status}`}
+                data-selected={isSelected ? 'true' : undefined}
                 key={row.id}
                 aria-label={`${row.date} ${row.title} ${STATUS_LABELS[row.status]}`}
               >
                 <div>
-                  <h4>{row.title}</h4>
+                  <div className="dated-planning-title-row">
+                    <h4>{row.title}</h4>
+                    {isSelected && (
+                      <span className="dated-planning-selected-badge">선택됨</span>
+                    )}
+                  </div>
                   <p>
                     {formatScheduleDate(row.date)} · {formatScheduleTime(row.startTime)}–
                     {formatScheduleTime(row.endTime)} · {locationName(row.locationId)}
@@ -943,15 +1371,28 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                     {row.movedFrom ? ` · 원래 ${row.originalDate} 회차` : ''}
                     {row.reason ? ` · ${row.reason}` : ''}
                   </p>
-                  <p>
-                    {existing
-                      ? `${existing.state === 'prepared' ? '준비 표시' : '작성 중'} · ${existing.sequenceSnapshot.title}`
-                      : '날짜별 계획 미지정'}
+                  <p className="dated-planning-occurrence-plan-line">
+                    <span
+                      className={`dated-planning-state-pill dated-planning-state-pill-${
+                        existing ? existing.state : 'unassigned'
+                      }`}
+                    >
+                      {existing
+                        ? existing.state === 'prepared'
+                          ? '준비 표시'
+                          : '작성 중'
+                        : '날짜별 계획 미지정'}
+                    </span>
+                    {existing ? ` · ${existing.sequenceSnapshot.title}` : ''}
                   </p>
                 </div>
                 {row.status === 'moved' && row.movedTo ? (
                   <button
                     type="button"
+                    ref={(node) => {
+                      if (node) occurrenceTriggerRefs.current.set(rowKey, node);
+                      else occurrenceTriggerRefs.current.delete(rowKey);
+                    }}
                     onClick={() => {
                       selectDate(row.movedTo!);
                       selectOccurrence(row);
@@ -962,6 +1403,10 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                 ) : (
                   <button
                     type="button"
+                    ref={(node) => {
+                      if (node) occurrenceTriggerRefs.current.set(rowKey, node);
+                      else occurrenceTriggerRefs.current.delete(rowKey);
+                    }}
                     disabled={row.status !== 'scheduled' && !existing}
                     onClick={() => selectOccurrence(row)}
                   >
@@ -984,7 +1429,16 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
             ref={detailRef}
             tabIndex={-1}
           >
-            <h3>{occurrence?.title ?? '원본 수업을 찾을 수 없는 계획'}</h3>
+            <div className="dated-planning-detail-header">
+              <h3>{occurrence?.title ?? '원본 수업을 찾을 수 없는 계획'}</h3>
+              <button
+                type="button"
+                className="dated-planning-close-detail"
+                onClick={closeOccurrenceDetail}
+              >
+                회차 선택 닫기
+              </button>
+            </div>
             <p>
               원래 회차 {identity.originalDate}
               {occurrence
@@ -999,6 +1453,23 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
               >
                 선택 초안 복원됨 · 저장 전 선택한 시퀀스를 불러왔습니다.
               </p>
+            )}
+            {activeReplaceOutcome && (
+              <div
+                className="dated-planning-replace-outcome"
+                data-testid="dated-planning-replace-outcome"
+              >
+                <strong>이 회차 계획 교체됨</strong>
+                <p>
+                  ‘{activeReplaceOutcome.previousTitle}’ → ‘
+                  {assignment?.sequenceSnapshot.title ?? activeReplaceOutcome.requestedTitle}’ ·
+                  이전 계획은 변경 이력에 보존했고 현재 상태는{' '}
+                  {assignment?.state === 'prepared' ? '준비 표시' : '작성 중'}입니다.
+                  {activeReplaceOutcome.wasContextRebound
+                    ? ' 변경된 회차 일정·장소 기준으로 다시 연결했습니다.'
+                    : ''}
+                </p>
+              </div>
             )}
             {resolved?.status !== 'scheduled' && (
               <p className="dated-planning-warning">
@@ -1016,12 +1487,16 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                 onSubmit={(event) => {
                   event.preventDefault();
                   if (!sequenceId) return;
-                  const result = onAssign({
-                    sequenceId,
-                    classId: identity.classId,
-                    originalDate: identity.originalDate,
-                    state: 'draft',
-                  });
+                  const commitKey = `assign:${identity.classId}:${identity.originalDate}:${sequenceId}:${context}`;
+                  const result = runSingleCommit(commitKey, () =>
+                    onAssign({
+                      sequenceId,
+                      classId: identity.classId,
+                      originalDate: identity.originalDate,
+                      state: 'draft',
+                    }),
+                  );
+                  if (!result) return;
                   setFeedback(result);
                   if (result.success) {
                     hasUserChangedDraftRef.current = false;
@@ -1033,11 +1508,14 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                 <label>
                   이 회차에 사용할 저장 시퀀스
                   <select
+                    ref={assignSelectRef}
                     required
+                    disabled={savedSequences.length === 0}
                     value={sequenceId}
                     onChange={(event) => {
                       const nextValue = event.target.value;
                       hasUserChangedDraftRef.current = true;
+                      lastCommittedKeyRef.current = null;
                       setSequenceId(nextValue);
                       setDraftRestored(false);
                       writeDatedPlanningDraft(identity, {
@@ -1049,7 +1527,8 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                     <option value="">저장 시퀀스 선택</option>
                     {savedSequences.map((sequence) => (
                       <option key={sequence.id} value={sequence.id}>
-                        {sequence.title}
+                        {sequence.title} ({sequence.targetMinutes}분 ·{' '}
+                        {apparatusLabel(sequence.apparatus)} · Lv {sequence.level})
                       </option>
                     ))}
                   </select>
@@ -1057,13 +1536,48 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                 {!savedSequences.length && (
                   <p className="dated-planning-note">먼저 작업대에서 시퀀스를 저장해 주세요.</p>
                 )}
+                {selectedSequence && (
+                  <div
+                    className="dated-planning-candidate-summary"
+                    data-testid="dated-planning-candidate-summary"
+                  >
+                    <p>
+                      <strong>{selectedSequence.title}</strong> · 목표{' '}
+                      {selectedSequence.targetMinutes}분 · 난이도 {selectedSequence.level} ·{' '}
+                      {apparatusLabel(selectedSequence.apparatus)} · 단계{' '}
+                      {selectedSequence.steps.length}개
+                    </p>
+                    {selectedSequenceWarnings.length > 0 ? (
+                      selectedSequenceWarnings.map((warning) => (
+                        <p className="dated-planning-warning" key={warning}>
+                          {warning}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="dated-planning-note">
+                        현재 회차 시각·장소 준비물 기준 추가 확인 항목이 없습니다.
+                      </p>
+                    )}
+                  </div>
+                )}
                 <p className="dated-planning-note">
                   선택한 시퀀스의 독립 사본을 작성 중으로 저장합니다. 원본을 나중에 수정해도 이 회차
                   사본은 바뀌지 않습니다.
                 </p>
-                <button type="submit" disabled={!sequenceId}>
-                  이 회차에 계획 사본 저장
-                </button>
+                <div className="dated-planning-form-actions">
+                  <button
+                    type="submit"
+                    className="dated-planning-primary-btn"
+                    disabled={!sequenceId}
+                  >
+                    이 회차에 계획 사본 저장
+                  </button>
+                  {sequenceId && (
+                    <button type="button" onClick={cancelSequenceDraftSelection}>
+                      선택 취소
+                    </button>
+                  )}
+                </div>
               </form>
             )}
 
@@ -1079,15 +1593,14 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                   준비 표시는 개인적인 정리 상태입니다. 전문가 검수·동작 적합성·리허설 가능
                   여부·실제 수업 완료를 뜻하지 않습니다.
                 </p>
-                <p>
-                  저장 당시 회차: {assignment.occurrenceSnapshot.date}{' '}
-                  {assignment.occurrenceSnapshot.startTime}–{assignment.occurrenceSnapshot.endTime}{' '}
-                  · {locationName(assignment.occurrenceSnapshot.locationId)}
-                </p>
-                <p className="dated-planning-note">
-                  독립 초안에는 장소 연결이 유지되지 않습니다. 수업 전 실제 장소의 기구·소도구를
-                  직접 확인하세요.
-                </p>
+                {!contextMatches && (
+                  <p>
+                    저장 당시 회차: {assignment.occurrenceSnapshot.date}{' '}
+                    {assignment.occurrenceSnapshot.startTime}–
+                    {assignment.occurrenceSnapshot.endTime} ·{' '}
+                    {locationName(assignment.occurrenceSnapshot.locationId)}
+                  </p>
+                )}
                 {!savedSequences.some((sequence) => sequence.id === assignment.sourceSequenceId) ? (
                   <p className="dated-planning-note">
                     저장 원본을 찾을 수 없어도 이 회차 계획 사본은 유지됩니다.
@@ -1109,6 +1622,98 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                     {warning}
                   </p>
                 ))}
+                <div className="dated-planning-detail-actions">
+                  <button
+                    type="button"
+                    className={
+                      assignment.state === 'draft' && canUseAssignment
+                        ? 'dated-planning-primary-btn'
+                        : undefined
+                    }
+                    disabled={assignment.state === 'draft' && !canUseAssignment}
+                    onClick={() => {
+                      const nextState = assignment.state === 'prepared' ? 'draft' : 'prepared';
+                      const commitKey = `state:${assignment.id}:${assignment.updatedAt}:${nextState}`;
+                      const result = runSingleCommit(commitKey, () =>
+                        onSetState(assignment.id, nextState, assignment.updatedAt),
+                      );
+                      if (result) setFeedback(result);
+                    }}
+                  >
+                    {assignment.state === 'prepared' ? '작성 중으로 표시' : '준비 표시로 바꾸기'}
+                  </button>
+                  <button
+                    type="button"
+                    ref={editDraftBtnRef}
+                    disabled={!canUseAssignment}
+                    onClick={() => setLoadConfirmed((value) => !value)}
+                    aria-expanded={loadConfirmed}
+                  >
+                    작업 사본으로 편집
+                  </button>
+                </div>
+                {loadConfirmed && canUseAssignment && (
+                  <div
+                    className="dated-planning-confirm"
+                    role="group"
+                    aria-label="작업 사본 열기 확인"
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Escape') return;
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setLoadConfirmed(false);
+                      editDraftBtnRef.current?.focus();
+                    }}
+                  >
+                    <p>
+                      현재 작업대 내용을 새 작업 사본으로 전환합니다. 이전 초안은 실행 취소로 복원할
+                      수 있습니다. 이 회차 사본·저장 원본·다른 회차 계획·실제 수업 기록은 그대로
+                      유지됩니다.
+                    </p>
+                    <p>
+                      독립 초안에는 장소 연결이 유지되지 않습니다. 수업 전 실제 장소의 기구·소도구를
+                      직접 확인하세요.
+                    </p>
+                    {warnings.length > 0 && (
+                      <div aria-label="현재 장소·시간 확인 사항">
+                        {warnings.map((warning) => (
+                          <p className="dated-planning-warning" key={warning}>
+                            {warning}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      className="dated-planning-primary-btn"
+                      onClick={() => {
+                        const commitKey = `load:${assignment.id}:${assignment.updatedAt}`;
+                        const result = runSingleCommit(commitKey, () =>
+                          onLoadDraft(assignment.id, assignment.updatedAt),
+                        );
+                        if (!result) return;
+                        setFeedback(result);
+                        if (result.success) {
+                          const dialog = contentRef.current?.closest<HTMLDialogElement>('dialog');
+                          if (dialog?.open) dialog.close();
+                          closeOnce();
+                          props.onLoadSuccess?.();
+                        }
+                      }}
+                    >
+                      새 작업 사본 열기 확인
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoadConfirmed(false);
+                        editDraftBtnRef.current?.focus();
+                      }}
+                    >
+                      돌아가기
+                    </button>
+                  </div>
+                )}
                 <details>
                   <summary>저장한 계획 단계 {stepDetails.length}개 보기</summary>
                   <ol className="dated-planning-steps">
@@ -1175,75 +1780,6 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                     </details>
                   ))}
                 </details>
-                <div className="dated-planning-detail-actions">
-                  <button
-                    type="button"
-                    disabled={assignment.state === 'draft' && !canUseAssignment}
-                    onClick={() =>
-                      setFeedback(
-                        onSetState(
-                          assignment.id,
-                          assignment.state === 'prepared' ? 'draft' : 'prepared',
-                          assignment.updatedAt,
-                        ),
-                      )
-                    }
-                  >
-                    {assignment.state === 'prepared' ? '작성 중으로 표시' : '준비 표시로 바꾸기'}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!canUseAssignment}
-                    onClick={() => setLoadConfirmed((value) => !value)}
-                    aria-expanded={loadConfirmed}
-                  >
-                    작업 사본으로 편집
-                  </button>
-                </div>
-                {loadConfirmed && canUseAssignment && (
-                  <div
-                    className="dated-planning-confirm"
-                    role="group"
-                    aria-label="작업 사본 열기 확인"
-                  >
-                    <p>
-                      현재 작업대 내용을 새 작업 사본으로 전환합니다. 이전 초안은 실행 취소로 복원할
-                      수 있습니다. 이 회차 사본·저장 원본·다른 회차 계획·실제 수업 기록은 그대로
-                      유지됩니다.
-                    </p>
-                    <p>
-                      독립 초안에는 장소 연결이 유지되지 않습니다. 수업 전 실제 장소의 기구·소도구를
-                      직접 확인하세요.
-                    </p>
-                    {warnings.length > 0 && (
-                      <div aria-label="현재 장소·시간 확인 사항">
-                        {warnings.map((warning) => (
-                          <p className="dated-planning-warning" key={warning}>
-                            {warning}
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const result = onLoadDraft(assignment.id, assignment.updatedAt);
-                        setFeedback(result);
-                        if (result.success) {
-                          const dialog = contentRef.current?.closest<HTMLDialogElement>('dialog');
-                          if (dialog?.open) dialog.close();
-                          closeOnce();
-                          props.onLoadSuccess?.();
-                        }
-                      }}
-                    >
-                      새 작업 사본 열기 확인
-                    </button>
-                    <button type="button" onClick={() => setLoadConfirmed(false)}>
-                      돌아가기
-                    </button>
-                  </div>
-                )}
                 <details className="dated-planning-revision">
                   <summary>이 회차에 저장한 수정본 연결</summary>
                   <p className="dated-planning-note">
@@ -1255,12 +1791,14 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                     이 회차에 연결할 저장 수정본
                     <select
                       value={revisionSequenceId}
-                      disabled={!canReviseAssignment}
+                      disabled={!canReviseAssignment || savedSequences.length === 0}
                       onChange={(event) => {
                         const nextValue = event.target.value;
                         hasUserChangedDraftRef.current = true;
+                        lastCommittedKeyRef.current = null;
                         setRevisionSequenceId(nextValue);
                         setRevisionPreview(null);
+                        setLastReplaceOutcome(null);
                         setDraftRestored(false);
                         writeDatedPlanningDraft(identity, {
                           sequenceId,
@@ -1271,11 +1809,17 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                       <option value="">저장 수정본 선택</option>
                       {savedSequences.map((sequence) => (
                         <option value={sequence.id} key={sequence.id}>
-                          {sequence.title}
+                          {sequence.title} ({sequence.targetMinutes}분 ·{' '}
+                          {apparatusLabel(sequence.apparatus)} · Lv {sequence.level})
                         </option>
                       ))}
                     </select>
                   </label>
+                  {!savedSequences.length && (
+                    <p className="dated-planning-note">
+                      연결할 저장 시퀀스가 없습니다. 작업대에서 수정본을 먼저 저장해 주세요.
+                    </p>
+                  )}
                   {priorVersions.length >= DATED_PLAN_PRIOR_VERSION_LIMIT && (
                     <p className="dated-planning-warning">
                       이전 계획 {DATED_PLAN_PRIOR_VERSION_LIMIT}개 보존 한도에 도달했습니다. 보존한
@@ -1290,10 +1834,13 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                   )}
                   <button
                     type="button"
+                    ref={revisionDiffBtnRef}
                     disabled={!canReviseAssignment || !revisionCandidate}
                     onClick={() => {
                       if (!revisionCandidate || !occurrence) return;
                       setLoadConfirmed(false);
+                      setLastReplaceOutcome(null);
+                      lastCommittedKeyRef.current = null;
                       try {
                         setRevisionPreview({
                           assignmentId: assignment.id,
@@ -1335,6 +1882,13 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                       className="dated-planning-revision-preview"
                       role="group"
                       aria-label="이 회차 계획 수정 미리보기"
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Escape') return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setRevisionPreview(null);
+                        revisionDiffBtnRef.current?.focus();
+                      }}
                     >
                       <h4>이 회차의 변경 내용</h4>
                       <div
@@ -1481,20 +2035,36 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                       )}
                       <button
                         type="button"
+                        className="dated-planning-primary-btn"
                         disabled={revisionStale || !canReviseAssignment}
                         onClick={() => {
-                          const result = props.onReplaceSnapshot({
-                            assignmentId: revisionPreview.assignmentId,
-                            sequenceId: revisionPreview.sequenceId,
-                            expectedUpdatedAt: revisionPreview.expectedUpdatedAt,
-                            expectedOccurrenceSnapshot: revisionPreview.expectedOccurrenceSnapshot,
-                            expectedSourceFingerprint: revisionPreview.expectedSourceFingerprint,
-                          });
+                          const commitKey = `replace:${revisionPreview.assignmentId}:${revisionPreview.expectedUpdatedAt}:${revisionPreview.sequenceId}:${revisionPreview.expectedSourceFingerprint}`;
+                          const previousTitle = assignment.sequenceSnapshot.title;
+                          const requestedTitle = revisionPreview.snapshot.title;
+                          const wasContextRebound = !contextMatches;
+                          const result = runSingleCommit(commitKey, () =>
+                            props.onReplaceSnapshot({
+                              assignmentId: revisionPreview.assignmentId,
+                              sequenceId: revisionPreview.sequenceId,
+                              expectedUpdatedAt: revisionPreview.expectedUpdatedAt,
+                              expectedOccurrenceSnapshot:
+                                revisionPreview.expectedOccurrenceSnapshot,
+                              expectedSourceFingerprint: revisionPreview.expectedSourceFingerprint,
+                            }),
+                          );
+                          if (!result) return;
                           setFeedback(result);
                           if (result.success) {
                             hasUserChangedDraftRef.current = false;
                             setDraftRestored(false);
                             clearDatedPlanningDraft(identity);
+                            setLastReplaceOutcome({
+                              classId: identity.classId,
+                              originalDate: identity.originalDate,
+                              previousTitle,
+                              requestedTitle,
+                              wasContextRebound,
+                            });
                             setRevisionPreview(null);
                             setRevisionSequenceId('');
                             setPriorVersionIndex(null);
@@ -1503,7 +2073,13 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                       >
                         이 회차만 수정본으로 바꾸기 확인
                       </button>
-                      <button type="button" onClick={() => setRevisionPreview(null)}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRevisionPreview(null);
+                          revisionDiffBtnRef.current?.focus();
+                        }}
+                      >
                         수정본 연결 취소
                       </button>
                     </div>
@@ -1534,26 +2110,50 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
           <p>
             {sourceStart}–{addScheduleDays(sourceStart, 6)} → {targetStart}–{targetEnd}
           </p>
+          {copyRangeValid && (
+            <p className="dated-planning-copy-meta">
+              이번 주 연결 계획 {sourceWeekPlannedCount}개
+              {targetWeekExistingCount > 0
+                ? ` · 다음 주 기존 계획 ${targetWeekExistingCount}개 그대로 유지`
+                : ' · 다음 주 연결된 계획 없음'}
+              {sourceWeekPlannedCount === 0
+                ? ' — 이번 주 회차에 계획을 먼저 연결하면 다음 주로 복사할 수 있습니다.'
+                : ''}
+            </p>
+          )}
           <p className="dated-planning-note">
             이어지는 두 7일만 처리합니다. 기존 계획은 덮어쓰지 않고, 대상 회차가 없거나
             취소·휴무이면 제외합니다. 새 사본은 모두 작성 중으로 시작합니다.
           </p>
           <button
             type="button"
+            ref={previewCopyBtnRef}
             disabled={!copyRangeValid}
-            onClick={() =>
+            onClick={() => {
+              lastCommittedKeyRef.current = null;
+              setLastCopyOutcome(null);
               setCopyPreview({
                 result: onPreviewWeekCopy(sourceStart, targetStart),
                 context,
                 source: sourceStart,
                 target: targetStart,
-              })
-            }
+              });
+            }}
           >
             다음 주 복사 미리보기
           </button>
           {copyPreview && (
-            <div className="dated-planning-copy-preview" aria-label="주간 복사 미리보기">
+            <div
+              className="dated-planning-copy-preview"
+              aria-label="주간 복사 미리보기"
+              onKeyDown={(event) => {
+                if (event.key !== 'Escape') return;
+                event.preventDefault();
+                event.stopPropagation();
+                setCopyPreview(null);
+                previewCopyBtnRef.current?.focus();
+              }}
+            >
               <p role={copyPreview.result.success ? 'status' : 'alert'}>
                 {copyPreview.result.message}
               </p>
@@ -1569,36 +2169,198 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                     {copyPreview.result.skipped.length}개 · 기존 계획 충돌{' '}
                     {copyPreview.result.conflicts}개
                   </p>
+                  {copyPreview.result.proposals.length === 0 && (
+                    <p className="dated-planning-note">
+                      새로 복사할 빈 회차가 없습니다. 기존 계획과 취소·휴무 회차는 변경하지 않습니다.
+                    </p>
+                  )}
+                  {copyPreview.result.proposals.length > 0 && (
+                    <div className="dated-planning-copy-group">
+                      <strong>새로 복사할 빈 회차 ({copyPreview.result.proposals.length}개)</strong>
+                      <ul>
+                        {copyPreview.result.proposals.map((proposal) => (
+                          <li key={getDatedPlanKey(proposal.classId, proposal.originalDate)}>
+                            {schedule.classes.find((item) => item.id === proposal.classId)?.title ??
+                              '수업'}{' '}
+                            · 원래 {proposal.originalDate} → 실제 {proposal.occurrenceSnapshot.date}{' '}
+                            {proposal.occurrenceSnapshot.startTime} ·{' '}
+                            {locationName(proposal.occurrenceSnapshot.locationId)} ·{' '}
+                            {proposal.sequenceSnapshot.title}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {copyPreview.result.skipped.length > 0 && (
+                    <div className="dated-planning-copy-group">
+                      <strong>
+                        제외·유지 항목 ({copyPreview.result.skipped.length}개)
+                      </strong>
+                      <ul>
+                        {copyPreview.result.skipped.map((skip) => (
+                          <li key={`${skip.key}-${skip.code}`}>
+                            {describeKey(skip.key)} · {SKIP_LABELS[skip.code]}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <div className="dated-planning-copy-actions">
+                    <button
+                      type="button"
+                      className="dated-planning-primary-btn"
+                      disabled={previewStale || copyPreview.result.proposals.length === 0}
+                      onClick={() => {
+                        if (!copyPreview.result.success) return;
+                        const commitKey = `copy:${copyPreview.source}:${copyPreview.target}:${copyPreview.context}`;
+                        const preCopyAssignments = assignments;
+                        const preCopyIds = new Set(assignments.map((item) => item.id));
+                        const preCopyKeys = new Set(
+                          assignments.map((item) => getDatedPlanKey(item.classId, item.originalDate)),
+                        );
+                        const committedProposals = copyPreview.result.proposals;
+                        const skipped = copyPreview.result.skipped;
+                        const source = copyPreview.source;
+                        const target = copyPreview.target;
+                        const result = runSingleCommit(commitKey, () =>
+                          onCopyWeek(source, target),
+                        );
+                        if (!result) return;
+                        setFeedback(result);
+                        if (result.success) {
+                          const reportedAdded =
+                            typeof result.added === 'number'
+                              ? result.added
+                              : parseReportedWeekCopyCount(result.message);
+                          setLastCopyOutcome({
+                            source,
+                            target,
+                            targetEnd: addScheduleDays(target, 6),
+                            message: result.message,
+                            committedProposals,
+                            skipped,
+                            reportedAdded,
+                            reportedSkipped: result.skipped,
+                            preCopyAssignments,
+                            preCopyIds,
+                            preCopyKeys,
+                          });
+                          setCopyPreview(null);
+                        }
+                      }}
+                    >
+                      표시한 빈 회차에만 복사
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCopyPreview(null);
+                        previewCopyBtnRef.current?.focus();
+                      }}
+                    >
+                      미리보기 닫기
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          {activeCopyOutcome && (
+            <div
+              className="dated-planning-copy-outcome"
+              data-testid="dated-planning-copy-outcome"
+              data-copy-status={effectiveCopySummary.status}
+              aria-label="주간 복사 결과 요약"
+            >
+              <strong>
+                {effectiveCopySummary.status === 'pending-props'
+                  ? `복사 반영 확인 중 · 확인된 새 사본 0개 (요청 후보 ${activeCopyOutcome.committedProposals.length}개) · 건너뜀·유지 ${effectiveCopySummary.skipped.length}개`
+                  : effectiveCopySummary.status === 'zero-copied'
+                    ? `복사 후 추가된 계획 없음 · 확인된 새 사본 0개 · 건너뜀·유지 ${effectiveCopySummary.skipped.length}개${effectiveCopySummary.unconfirmed.length > 0 ? ` · 미반영 후보 ${effectiveCopySummary.unconfirmed.length}개` : ''}`
+                    : effectiveCopySummary.status === 'partial-copied'
+                      ? `일부만 복사됨 · 새 사본 ${effectiveCopySummary.copied.length}개 (요청 후보 ${activeCopyOutcome.committedProposals.length}개 중) · 건너뜀·유지 ${effectiveCopySummary.skipped.length}개${effectiveCopySummary.unconfirmed.length > 0 ? ` · 미반영 후보 ${effectiveCopySummary.unconfirmed.length}개` : ''}`
+                      : `복사 완료 요약 · 새 사본 ${effectiveCopySummary.copied.length}개 · 건너뜀·유지 ${effectiveCopySummary.skipped.length}개`}
+              </strong>
+              <p className="dated-planning-note">
+                {effectiveCopySummary.status === 'pending-props'
+                  ? '계획 목록 갱신 전에는 미리보기 후보를 실제 완료 건수로 확정하지 않습니다.'
+                  : effectiveCopySummary.status === 'zero-copied'
+                    ? effectiveCopySummary.unconfirmed.length > 0
+                      ? `${activeCopyOutcome.message} · 아직 실제 계획 목록에서 복사 후보 반영이 확인되지 않았습니다.`
+                      : `${activeCopyOutcome.message} · 새로 추가된 다음 주 계획은 0개이며 기존 계획은 그대로 유지했습니다.`
+                    : effectiveCopySummary.status === 'partial-copied'
+                      ? `${activeCopyOutcome.message} · 요청 후보 ${activeCopyOutcome.committedProposals.length}개 중 실제 반영이 확인된 ${effectiveCopySummary.copied.length}개만 새 사본으로 표시합니다.`
+                      : activeCopyOutcome.message}
+              </p>
+              {effectiveCopySummary.copied.length > 0 && (
+                <div className="dated-planning-copy-group">
+                  <span>복사된 다음 주 회차</span>
                   <ul>
-                    {copyPreview.result.proposals.map((proposal) => (
-                      <li key={getDatedPlanKey(proposal.classId, proposal.originalDate)}>
-                        {schedule.classes.find((item) => item.id === proposal.classId)?.title ??
-                          '수업'}{' '}
-                        · 원래 {proposal.originalDate} → 실제 {proposal.occurrenceSnapshot.date}{' '}
-                        {proposal.occurrenceSnapshot.startTime} ·{' '}
-                        {locationName(proposal.occurrenceSnapshot.locationId)} ·{' '}
-                        {proposal.sequenceSnapshot.title}
+                    {effectiveCopySummary.copied.map((item) => (
+                      <li key={item.key}>
+                        {schedule.classes.find((cls) => cls.id === item.classId)?.title ?? '수업'} ·{' '}
+                        {item.date} {item.startTime} · {locationName(item.locationId)} ·{' '}
+                        {item.sequenceTitle} (작성 중)
                       </li>
                     ))}
-                    {copyPreview.result.skipped.map((skip) => (
+                  </ul>
+                </div>
+              )}
+              {effectiveCopySummary.unconfirmed.length > 0 && (
+                <div className="dated-planning-copy-group">
+                  <span>
+                    {effectiveCopySummary.status === 'pending-props'
+                      ? '반영 확인 대기 중인 후보'
+                      : '실제 계획 목록 미반영 후보'}
+                  </span>
+                  <ul>
+                    {effectiveCopySummary.unconfirmed.map((item) => (
+                      <li key={item.key}>
+                        {schedule.classes.find((cls) => cls.id === item.classId)?.title ?? '수업'} ·{' '}
+                        {item.date} {item.startTime} · {locationName(item.locationId)} ·{' '}
+                        {item.sequenceTitle}{' '}
+                        {effectiveCopySummary.status === 'pending-props'
+                          ? '(반영 확인 대기)'
+                          : '(실제 추가 미확인)'}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {effectiveCopySummary.skipped.length > 0 && (
+                <div className="dated-planning-copy-group">
+                  <span>건너뛰고 그대로 둔 항목</span>
+                  <ul>
+                    {effectiveCopySummary.skipped.map((skip) => (
                       <li key={`${skip.key}-${skip.code}`}>
                         {describeKey(skip.key)} · {SKIP_LABELS[skip.code]}
                       </li>
                     ))}
                   </ul>
-                  <button
-                    type="button"
-                    disabled={previewStale || copyPreview.result.proposals.length === 0}
-                    onClick={() => {
-                      const result = onCopyWeek(copyPreview.source, copyPreview.target);
-                      setFeedback(result);
-                      if (result.success) setCopyPreview(null);
-                    }}
-                  >
-                    표시한 빈 회차에만 복사
-                  </button>
-                </>
+                </div>
               )}
+              <div className="dated-planning-copy-actions">
+                <button
+                  type="button"
+                  className="dated-planning-primary-btn"
+                  onClick={() => {
+                    const nextWeekDate = activeCopyOutcome.target;
+                    setLastCopyOutcome(null);
+                    selectDate(nextWeekDate);
+                  }}
+                >
+                  다음 주 회차 보기 ({activeCopyOutcome.target})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLastCopyOutcome(null);
+                    previewCopyBtnRef.current?.focus();
+                  }}
+                >
+                  요약 닫기
+                </button>
+              </div>
             </div>
           )}
         </details>
