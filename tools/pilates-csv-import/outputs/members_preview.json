@@ -1,0 +1,231 @@
+{
+  "dry_run": true,
+  "db_write_performed": false,
+  "entity_type": "member",
+  "encoding_detected": "UTF-8-BOM",
+  "column_mapping": {
+    "member_id": "회원번호",
+    "name": "이름",
+    "phone": "연락처",
+    "birth_date": "생년월일",
+    "registration_date": "등록일",
+    "expiry_date": "만료일",
+    "membership_type": "회원권종류",
+    "remaining_sessions": "잔여횟수",
+    "instructor": "담당강사",
+    "notes": "메모"
+  },
+  "unmapped_columns": [],
+  "missing_required_columns": [],
+  "summary": {
+    "total_rows": 4,
+    "valid_rows": 1,
+    "invalid_rows": 3,
+    "duplicate_rows": 1,
+    "formula_injection_count": 2,
+    "error_counts_by_code": {
+      "EMPTY_REQUIRED_VALUE": 1,
+      "INVALID_DATE": 1,
+      "NEGATIVE_NUMBER": 1,
+      "FORMULA_INJECTION": 2,
+      "DUPLICATE_ROW": 1,
+      "DUPLICATE_KEY": 1,
+      "DUPLICATE_MEMBER_PROFILE": 1,
+      "INVALID_DATE_RANGE": 1
+    },
+    "can_import": false
+  },
+  "row_errors": [
+    {
+      "row_number": 2,
+      "line_number": 4,
+      "field": "name",
+      "source_column": "이름",
+      "code": "EMPTY_REQUIRED_VALUE",
+      "severity": "error",
+      "message": "필수값 누락: '이름' (name) 값이 비어 있습니다.",
+      "raw_value": ""
+    },
+    {
+      "row_number": 2,
+      "line_number": 4,
+      "field": "registration_date",
+      "source_column": "등록일",
+      "code": "INVALID_DATE",
+      "severity": "error",
+      "message": "잘못된 날짜 형식 또는 존재하지 않는 달력 날짜입니다: '2026-02-29'",
+      "raw_value": "2026-02-29"
+    },
+    {
+      "row_number": 2,
+      "line_number": 4,
+      "field": "remaining_sessions",
+      "source_column": "잔여횟수",
+      "code": "NEGATIVE_NUMBER",
+      "severity": "error",
+      "message": "0 이상의 정수여야 합니다: -3",
+      "raw_value": "-3"
+    },
+    {
+      "row_number": 2,
+      "line_number": 4,
+      "field": "notes",
+      "source_column": "메모",
+      "code": "FORMULA_INJECTION",
+      "severity": "error",
+      "message": "수식 주입(Formula Injection) 위험 값 감지 및 무력화: '=CMD|' /C calc'!A0'",
+      "raw_value": "=CMD|' /C calc'!A0"
+    },
+    {
+      "row_number": 3,
+      "line_number": 5,
+      "field": "__row__",
+      "source_column": null,
+      "code": "DUPLICATE_ROW",
+      "severity": "error",
+      "message": "중복 행 감지: 1번째 데이터 행과 전체 값이 동일합니다.",
+      "raw_value": null,
+      "first_seen_row": 1
+    },
+    {
+      "row_number": 3,
+      "line_number": 5,
+      "field": "member_id",
+      "source_column": "회원번호",
+      "code": "DUPLICATE_KEY",
+      "severity": "error",
+      "message": "중복 회원번호 'M-2001' 감지 (1번째 행에서 이미 등장).",
+      "raw_value": "M-2001",
+      "first_seen_row": 1
+    },
+    {
+      "row_number": 3,
+      "line_number": 5,
+      "field": "phone",
+      "source_column": "연락처",
+      "code": "DUPLICATE_MEMBER_PROFILE",
+      "severity": "error",
+      "message": "동일 이름·연락처 조합(정하늘 / 010-1111-2222)이 1번째 행과 중복됩니다.",
+      "raw_value": "010-1111-2222",
+      "first_seen_row": 1
+    },
+    {
+      "row_number": 4,
+      "line_number": 7,
+      "field": "instructor",
+      "source_column": "담당강사",
+      "code": "FORMULA_INJECTION",
+      "severity": "error",
+      "message": "수식 주입(Formula Injection) 위험 값 감지 및 무력화: '@SUM(1,2)'",
+      "raw_value": "@SUM(1,2)"
+    },
+    {
+      "row_number": 4,
+      "line_number": 7,
+      "field": "expiry_date",
+      "source_column": "만료일",
+      "code": "INVALID_DATE_RANGE",
+      "severity": "error",
+      "message": "만료일(2026-11-01)이 등록일(2026-11-10)보다 앞설 수 없습니다.",
+      "raw_value": "2026-11-01"
+    }
+  ],
+  "preview_rows": [
+    {
+      "row_number": 1,
+      "line_number": 2,
+      "valid": true,
+      "formula_sanitized": false,
+      "sanitized_fields": [],
+      "error_codes": [],
+      "data": {
+        "member_id": "M-2001",
+        "name": "정하늘",
+        "phone": "010-1111-2222",
+        "birth_date": "1995-03-15",
+        "registration_date": "2026-11-01",
+        "expiry_date": "2027-01-31",
+        "membership_type": "그룹 24회",
+        "remaining_sessions": 24,
+        "instructor": "박지훈",
+        "notes": "정상 회원,\n줄바꿈 메모 포함"
+      }
+    },
+    {
+      "row_number": 2,
+      "line_number": 4,
+      "valid": false,
+      "formula_sanitized": true,
+      "sanitized_fields": [
+        "notes"
+      ],
+      "error_codes": [
+        "EMPTY_REQUIRED_VALUE",
+        "INVALID_DATE",
+        "NEGATIVE_NUMBER",
+        "FORMULA_INJECTION"
+      ],
+      "data": {
+        "member_id": "M-2002",
+        "name": null,
+        "phone": "010-3333-4444",
+        "birth_date": "1992-07-08",
+        "registration_date": "2026-02-29",
+        "expiry_date": "2026-10-01",
+        "membership_type": "개인 10회",
+        "remaining_sessions": -3,
+        "instructor": "최수아",
+        "notes": "'=CMD|' /C calc'!A0"
+      }
+    },
+    {
+      "row_number": 3,
+      "line_number": 5,
+      "valid": false,
+      "formula_sanitized": false,
+      "sanitized_fields": [],
+      "error_codes": [
+        "DUPLICATE_ROW",
+        "DUPLICATE_KEY",
+        "DUPLICATE_MEMBER_PROFILE"
+      ],
+      "data": {
+        "member_id": "M-2001",
+        "name": "정하늘",
+        "phone": "010-1111-2222",
+        "birth_date": "1995-03-15",
+        "registration_date": "2026-11-01",
+        "expiry_date": "2027-01-31",
+        "membership_type": "그룹 24회",
+        "remaining_sessions": 24,
+        "instructor": "박지훈",
+        "notes": "정상 회원,\n줄바꿈 메모 포함"
+      }
+    },
+    {
+      "row_number": 4,
+      "line_number": 7,
+      "valid": false,
+      "formula_sanitized": true,
+      "sanitized_fields": [
+        "instructor"
+      ],
+      "error_codes": [
+        "FORMULA_INJECTION",
+        "INVALID_DATE_RANGE"
+      ],
+      "data": {
+        "member_id": "M-2004",
+        "name": "한소희",
+        "phone": "010-5555-6666",
+        "birth_date": "1998-12-01",
+        "registration_date": "2026-11-10",
+        "expiry_date": "2026-11-01",
+        "membership_type": "듀엣 16회",
+        "remaining_sessions": 16,
+        "instructor": "'@SUM(1,2)",
+        "notes": "만료일 역전 및 강사명 수식주입"
+      }
+    }
+  ]
+}

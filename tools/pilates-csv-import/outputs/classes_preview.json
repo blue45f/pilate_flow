@@ -1,0 +1,171 @@
+{
+  "dry_run": true,
+  "db_write_performed": false,
+  "entity_type": "class",
+  "encoding_detected": "UTF-8-BOM",
+  "column_mapping": {
+    "class_id": "수업코드",
+    "class_name": "수업명",
+    "class_date": "수업일자",
+    "start_time": "시작시간",
+    "end_time": "종료시간",
+    "instructor": "담당강사",
+    "equipment": "기구종류",
+    "capacity": "정원",
+    "booked_count": "예약인원",
+    "description": "수업설명"
+  },
+  "unmapped_columns": [],
+  "missing_required_columns": [],
+  "summary": {
+    "total_rows": 3,
+    "valid_rows": 1,
+    "invalid_rows": 2,
+    "duplicate_rows": 1,
+    "formula_injection_count": 1,
+    "error_counts_by_code": {
+      "FORMULA_INJECTION": 1,
+      "INVALID_TIME_RANGE": 1,
+      "CAPACITY_EXCEEDED": 1,
+      "NON_POSITIVE_NUMBER": 1,
+      "NEGATIVE_NUMBER": 1,
+      "DUPLICATE_CLASS_SCHEDULE": 1
+    },
+    "can_import": false
+  },
+  "row_errors": [
+    {
+      "row_number": 2,
+      "line_number": 4,
+      "field": "description",
+      "source_column": "수업설명",
+      "code": "FORMULA_INJECTION",
+      "severity": "error",
+      "message": "수식 주입(Formula Injection) 위험 값 감지 및 무력화: '+IMPORTXML(\"http://example.internal\",\"//a\")'",
+      "raw_value": "+IMPORTXML(\"http://example.internal\",\"//a\")"
+    },
+    {
+      "row_number": 2,
+      "line_number": 4,
+      "field": "end_time",
+      "source_column": "종료시간",
+      "code": "INVALID_TIME_RANGE",
+      "severity": "error",
+      "message": "종료시간(10:30)은 시작시간(11:00) 이후여야 합니다.",
+      "raw_value": "10:30"
+    },
+    {
+      "row_number": 2,
+      "line_number": 4,
+      "field": "booked_count",
+      "source_column": "예약인원",
+      "code": "CAPACITY_EXCEEDED",
+      "severity": "error",
+      "message": "예약인원(6)이 수업 정원(4)을 초과했습니다.",
+      "raw_value": "6"
+    },
+    {
+      "row_number": 3,
+      "line_number": 5,
+      "field": "capacity",
+      "source_column": "정원",
+      "code": "NON_POSITIVE_NUMBER",
+      "severity": "error",
+      "message": "1 이상의 양의 정수여야 합니다: 0",
+      "raw_value": "0"
+    },
+    {
+      "row_number": 3,
+      "line_number": 5,
+      "field": "booked_count",
+      "source_column": "예약인원",
+      "code": "NEGATIVE_NUMBER",
+      "severity": "error",
+      "message": "0 이상의 정수여야 합니다: -1",
+      "raw_value": "-1"
+    },
+    {
+      "row_number": 3,
+      "line_number": 5,
+      "field": "instructor",
+      "source_column": "담당강사",
+      "code": "DUPLICATE_CLASS_SCHEDULE",
+      "severity": "error",
+      "message": "동일 강사·수업일자·시작시간(박지훈 / 2026-11-15 10:00)이 1번째 행과 중복됩니다.",
+      "raw_value": "박지훈",
+      "first_seen_row": 1
+    }
+  ],
+  "preview_rows": [
+    {
+      "row_number": 1,
+      "line_number": 2,
+      "valid": true,
+      "formula_sanitized": false,
+      "sanitized_fields": [],
+      "error_codes": [],
+      "data": {
+        "class_id": "C-301",
+        "class_name": "리포머 코어 & 밸런스",
+        "class_date": "2026-11-15",
+        "start_time": "10:00",
+        "end_time": "10:50",
+        "instructor": "박지훈",
+        "equipment": "리포머룸 A",
+        "capacity": 6,
+        "booked_count": 4,
+        "description": "초급~중급 대상\n미끄럼방지 양말 필수"
+      }
+    },
+    {
+      "row_number": 2,
+      "line_number": 4,
+      "valid": false,
+      "formula_sanitized": true,
+      "sanitized_fields": [
+        "description"
+      ],
+      "error_codes": [
+        "FORMULA_INJECTION",
+        "INVALID_TIME_RANGE",
+        "CAPACITY_EXCEEDED"
+      ],
+      "data": {
+        "class_id": "C-302",
+        "class_name": "체어 집중 강화",
+        "class_date": "2026-11-15",
+        "start_time": "11:00",
+        "end_time": "10:30",
+        "instructor": "최수아",
+        "equipment": "체어룸 B",
+        "capacity": 4,
+        "booked_count": 6,
+        "description": "'+IMPORTXML(\"http://example.internal\",\"//a\")"
+      }
+    },
+    {
+      "row_number": 3,
+      "line_number": 5,
+      "valid": false,
+      "formula_sanitized": false,
+      "sanitized_fields": [],
+      "error_codes": [
+        "NON_POSITIVE_NUMBER",
+        "NEGATIVE_NUMBER",
+        "DUPLICATE_CLASS_SCHEDULE"
+      ],
+      "data": {
+        "class_id": "C-303",
+        "class_name": "바렐 스트레칭",
+        "class_date": "2026-11-15",
+        "start_time": "10:00",
+        "end_time": "10:50",
+        "instructor": "박지훈",
+        "equipment": "바렐룸 C",
+        "capacity": 0,
+        "booked_count": -1,
+        "description": "강사 스케줄 중복 및 정원 오류"
+      }
+    }
+  ]
+}

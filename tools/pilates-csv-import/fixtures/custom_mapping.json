@@ -1,0 +1,9 @@
+{
+  "member_id": "고객고유코드",
+  "name": "고객성함",
+  "phone": "휴대폰번호",
+  "registration_date": "최초등록일자",
+  "membership_type": "등록상품명",
+  "remaining_sessions": "잔여세션수",
+  "notes": "상담특이사항"
+}
