@@ -5,13 +5,13 @@ Standard-library-only implementation supporting:
 - UTF-8 and UTF-8-BOM detection & decoding (including double-BOM resilience)
 - Streaming RFC-4180 CSV tokenization with row-level malformed quote recovery,
   multi-line quoted fields/headers, escaped quotes, NUL/control-char handling,
-  and Korean/English headers
+  and Korean/English headers (NFC/NFD canonical normalization)
 - Empty & duplicate header detection (exact & normalized collisions)
 - Configurable & automatic column mapping with 1:N, N:1, missing-column, and
   ambiguous-alias conflict detection
 - Configurable file byte, row count, and per-field character limits with recovery
 - Invalid calendar date & time range validation
-- Duplicate row detection (CRLF/LF-normalized exact rows & entity keys) with
+- Duplicate row detection (CRLF/LF & NFC-normalized exact rows & entity keys) with
   exact data row_number and physical CSV line_number / first_seen_line tracking
 - Formula injection (CSV injection) defense including formulas hidden behind
   spaces, tabs, newlines, Unicode whitespace, zero-width chars, and control chars
@@ -35,7 +35,7 @@ DEFAULT_MAX_FILE_BYTES = 10 * 1024 * 1024  # 10 MiB
 DEFAULT_MAX_ROWS = 10_000
 DEFAULT_MAX_FIELD_CHARS = 10_000
 DEFAULT_MAX_PREVIEW_ROWS = 50
-PREVIEW_CELL_TRUNCATE_CHARS = 2_000
+PREVIEW_CELL_TRUNCATE_CHARS = DEFAULT_MAX_FIELD_CHARS
 
 
 MEMBER_SCHEMA: Dict[str, Dict[str, Any]] = {
@@ -211,14 +211,14 @@ def strip_disallowed_control_chars(value: str) -> str:
 
 
 def strip_cell_whitespace(value: str) -> str:
-    """Strip outer whitespace and zero-width format characters from a non-formula cell."""
+    """Strip outer whitespace and zero-width format characters from a non-formula cell and normalize NFC."""
     start = 0
     end = len(value)
     while start < end and (value[start].isspace() or value[start] in ZERO_WIDTH_CHARS):
         start += 1
     while end > start and (value[end - 1].isspace() or value[end - 1] in ZERO_WIDTH_CHARS):
         end -= 1
-    return value[start:end]
+    return unicodedata.normalize("NFC", value[start:end])
 
 
 def normalize_newlines(value: str) -> str:
@@ -227,9 +227,10 @@ def normalize_newlines(value: str) -> str:
 
 
 def normalize_header_token(header: str) -> str:
-    """Normalize a column header token for matching (strip BOM/zero-width, whitespace, punctuation)."""
+    """Normalize a column header token for matching (NFC, strip BOM/zero-width, whitespace, punctuation)."""
     cleaned = strip_cell_whitespace(header.lstrip("\ufeff"))
     cleaned = "".join(ch for ch in cleaned if ch not in ZERO_WIDTH_CHARS)
+    cleaned = unicodedata.normalize("NFC", cleaned)
     return re.sub(r"[\s_\-()]+", "", cleaned).lower()
 
 
@@ -296,8 +297,8 @@ def resolve_column_mapping_detailed(
 
     if custom_mapping:
         for raw_k, raw_v in custom_mapping.items():
-            k = raw_k.strip()
-            v = raw_v.strip()
+            k = unicodedata.normalize("NFC", raw_k.strip())
+            v = unicodedata.normalize("NFC", raw_v.strip())
             canonical_field: Optional[str] = None
             source_spec: Optional[str] = None
 
@@ -459,18 +460,29 @@ def resolve_column_mapping(
     return canonical_to_source, [h for _, h in unmapped_columns], missing_required
 
 
+def _has_leading_tab_or_bare_cr(value: str) -> bool:
+    """Return True if value starts with a tab or a standalone CR (not a normal CRLF line break)."""
+    if not value:
+        return False
+    if value[0] == "\t":
+        return True
+    if value[0] == "\r" and not value.startswith("\r\n"):
+        return True
+    return False
+
+
 def is_formula_injection(value: str, field_type: str = "str") -> bool:
     """
     Check if a cell value poses a CSV / spreadsheet formula injection risk.
-    Detects direct triggers (=, +, -, @, \\t, \\r) as well as formulas hidden behind
-    leading spaces, tabs, newlines, Unicode spaces, zero-width chars, or control chars.
+    Detects direct triggers (=, +, -, @, leading tab / bare CR with non-empty content)
+    as well as formulas hidden behind leading spaces, tabs, CRLF/LF newlines,
+    Unicode spaces, zero-width chars, or control chars.
+    Whitespace-only cells (e.g. '\\t', '\\r\\n') are treated as empty rather than formulas.
     Pure negative integers on numeric fields (without control/format prefixes) are
     handled as numeric range errors rather than formula injections.
     """
     if not value:
         return False
-    if value[0] in ("\t", "\r"):
-        return True
 
     idx = 0
     n = len(value)
@@ -487,6 +499,9 @@ def is_formula_injection(value: str, field_type: str = "str") -> bool:
     if not stripped_leading:
         return False
 
+    if _has_leading_tab_or_bare_cr(value):
+        return True
+
     first_char = stripped_leading[0]
     if first_char in ("=", "+", "@"):
         return True
@@ -501,15 +516,18 @@ def is_formula_injection(value: str, field_type: str = "str") -> bool:
     return False
 
 
-def sanitize_preview_value(value: str) -> Tuple[str, bool]:
+def sanitize_preview_value(
+    value: str,
+    max_chars: int = PREVIEW_CELL_TRUNCATE_CHARS,
+) -> Tuple[str, bool]:
     """
     Sanitize a string for safe preview output so spreadsheet/UI consumers cannot execute formulas.
-    Normalizes CRLF/CR to LF, strips non-whitespace control chars (e.g. NUL), caps preview length,
-    and prefixes dangerous leading characters (even behind stealth prefixes) with a single quote.
+    Normalizes CRLF/CR to LF and Unicode to NFC, strips non-whitespace control chars (e.g. NUL),
+    caps preview length, and prefixes dangerous leading characters with a single quote.
     """
-    normalized = strip_disallowed_control_chars(normalize_newlines(value))
-    if len(normalized) > PREVIEW_CELL_TRUNCATE_CHARS:
-        normalized = normalized[:PREVIEW_CELL_TRUNCATE_CHARS] + "...[truncated]"
+    normalized = unicodedata.normalize("NFC", strip_disallowed_control_chars(normalize_newlines(value)))
+    if max_chars > 0 and len(normalized) > max_chars:
+        normalized = normalized[:max_chars] + "...[truncated]"
     if not normalized:
         return normalized, False
 
@@ -518,9 +536,11 @@ def sanitize_preview_value(value: str) -> Tuple[str, bool]:
     while idx < n and is_stealth_prefix_char(normalized[idx]):
         idx += 1
     stripped_leading = normalized[idx:]
+    if not stripped_leading:
+        return normalized, False
 
-    if value[0] in ("\t", "\r") or normalized[0] in ("\t", "\r") or (
-        stripped_leading and stripped_leading[0] in FORMULA_OPERATOR_CHARS
+    if _has_leading_tab_or_bare_cr(value) or normalized[0] == "\t" or (
+        stripped_leading[0] in FORMULA_OPERATOR_CHARS
     ):
         return "'" + normalized, True
     return normalized, False
@@ -540,7 +560,7 @@ def parse_and_validate_date(value: str) -> Tuple[Optional[datetime.date], Option
 
 
 def parse_and_validate_time(value: str) -> Tuple[Optional[datetime.time], Optional[str]]:
-    """Validate 24-hour time (HH:MM or HH:MM:SS) and return (datetime.time, HH:MM)."""
+    """Validate 24-hour time (HH:MM or HH:MM:SS) and return (datetime.time, normalized_str)."""
     match = TIME_PATTERN.match(value.strip())
     if not match:
         return None, None
@@ -548,6 +568,8 @@ def parse_and_validate_time(value: str) -> Tuple[Optional[datetime.time], Option
     second = int(match.group(3)) if match.group(3) is not None else 0
     try:
         tm = datetime.time(hour, minute, second)
+        if tm.second:
+            return tm, f"{tm.hour:02d}:{tm.minute:02d}:{tm.second:02d}"
         return tm, f"{tm.hour:02d}:{tm.minute:02d}"
     except ValueError:
         return None, None
@@ -572,7 +594,8 @@ def iter_csv_records(
     """
     Streaming RFC-4180 CSV tokenizer with:
     - Exact 1-based physical line_number tracking across LF, CRLF, and CR newlines
-    - Bounded per-field character buffering (prevents OOM on huge fields)
+    - Bounded per-field logical character buffering (prevents OOM on huge fields;
+      escaped quotes \"\" and CRLF \\r\\n inside quotes each count as 1 logical char)
     - Malformed quote detection (unclosed quotes at EOF, trailing chars after closing quote,
       and bare unescaped quotes in non-formula unquoted cells) with line-bounded recovery
     - NUL / control character resilience without C _csv crashes
@@ -650,7 +673,7 @@ def iter_csv_records(
                         break
                     if ch == "\r":
                         if i + 1 < n and text[i + 1] == "\n":
-                            char_count += 2
+                            char_count += 1
                             if char_count <= max_field_chars:
                                 buf.append("\r\n")
                             else:
@@ -907,6 +930,7 @@ def validate_csv_content(
     effective_max_field = max(1, max_field_chars)
     effective_max_rows = max(1, max_rows)
     effective_max_preview = max(0, max_preview_rows)
+    preview_cap = max(PREVIEW_CELL_TRUNCATE_CHARS, effective_max_field)
 
     record_iter = iter_csv_records(decoded_text, max_field_chars=effective_max_field)
 
@@ -960,7 +984,11 @@ def validate_csv_content(
 
     # Record any tokenizer issues on header cells
     for h_issue in header_record.issues:
-        src_col = headers[h_issue.col_index] if h_issue.col_index < len(headers) and headers[h_issue.col_index] else f"col_{h_issue.col_index + 1}"
+        src_col = (
+            headers[h_issue.col_index]
+            if h_issue.col_index < len(headers) and headers[h_issue.col_index]
+            else f"col_{h_issue.col_index + 1}"
+        )
         row_errors.append(
             {
                 "row_number": 0,
@@ -1099,7 +1127,7 @@ def validate_csv_content(
 
     seen_primary_keys: Dict[str, Tuple[int, int]] = {}
     seen_composite_keys: Dict[Tuple[str, ...], Tuple[int, int]] = {}
-    seen_exact_rows: Dict[Tuple[str, ...], Tuple[int, int]] = {}
+    seen_exact_rows: Dict[Tuple[Tuple[bool, str], ...], Tuple[int, int]] = {}
 
     total_rows = 0
     valid_rows = 0
@@ -1174,7 +1202,7 @@ def validate_csv_content(
                     c_idx = canonical_to_col_idx.get(canonical_field)
                     cell = raw_row[c_idx] if (c_idx is not None and c_idx < len(raw_row)) else ""
                     if cell:
-                        s_val, was_s = sanitize_preview_value(cell)
+                        s_val, was_s = sanitize_preview_value(cell, max_chars=preview_cap)
                         if was_s:
                             partial_sanitized.append(canonical_field)
                         partial_record[canonical_field] = s_val
@@ -1209,9 +1237,24 @@ def validate_csv_content(
                 }
             )
 
-        # Exact row duplicate check (normalizing CRLF/CR inside multiline cells)
-        normalized_tuple = tuple(strip_cell_whitespace(normalize_newlines(cell)) for cell in raw_row)
-        if any(normalized_tuple):
+        # Exact row duplicate check (distinguishing formula-injected cells from benign normalized cells)
+        row_dup_signature: List[Tuple[bool, str]] = []
+        has_non_empty_cell = False
+        for c_idx, cell in enumerate(raw_row):
+            c_field = col_idx_to_canonical.get(c_idx)
+            c_type = schema[c_field]["type"] if c_field else "str"
+            if is_formula_injection(cell, c_type):
+                norm_formula = unicodedata.normalize("NFC", normalize_newlines(cell))
+                row_dup_signature.append((True, norm_formula))
+                has_non_empty_cell = True
+            else:
+                norm_plain = strip_cell_whitespace(normalize_newlines(cell))
+                row_dup_signature.append((False, norm_plain))
+                if norm_plain:
+                    has_non_empty_cell = True
+
+        normalized_tuple = tuple(row_dup_signature)
+        if has_non_empty_cell:
             if normalized_tuple in seen_exact_rows:
                 first_row, first_line = seen_exact_rows[normalized_tuple]
                 row_has_duplicate = True
@@ -1251,7 +1294,7 @@ def validate_csv_content(
             # Check formula injection first on untrimmed raw_cell (catches stealth whitespace/control prefixes)
             if is_formula_injection(raw_cell, spec["type"]):
                 formula_injection_count += 1
-                sanitized_val, _ = sanitize_preview_value(raw_cell)
+                sanitized_val, _ = sanitize_preview_value(raw_cell, max_chars=preview_cap)
                 sanitized_fields.append(canonical_field)
                 parsed_record[canonical_field] = sanitized_val
                 current_row_errors.append(
@@ -1269,7 +1312,7 @@ def validate_csv_content(
                 continue
 
             if has_disallowed_control_char(raw_cell):
-                safe_val, _ = sanitize_preview_value(raw_cell)
+                safe_val, _ = sanitize_preview_value(raw_cell, max_chars=preview_cap)
                 parsed_record[canonical_field] = safe_val
                 current_row_errors.append(
                     {
@@ -1310,7 +1353,7 @@ def validate_csv_content(
             if ftype == "date":
                 dt, iso_str = parse_and_validate_date(trimmed)
                 if dt is None:
-                    safe_trimmed, _ = sanitize_preview_value(trimmed)
+                    safe_trimmed, _ = sanitize_preview_value(trimmed, max_chars=preview_cap)
                     current_row_errors.append(
                         {
                             "row_number": row_idx,
@@ -1330,7 +1373,7 @@ def validate_csv_content(
             elif ftype == "time":
                 tm, tm_str = parse_and_validate_time(trimmed)
                 if tm is None:
-                    safe_trimmed, _ = sanitize_preview_value(trimmed)
+                    safe_trimmed, _ = sanitize_preview_value(trimmed, max_chars=preview_cap)
                     current_row_errors.append(
                         {
                             "row_number": row_idx,
@@ -1349,7 +1392,7 @@ def validate_csv_content(
                     parsed_record[canonical_field] = tm_str
             elif ftype in ("non_negative_int", "positive_int"):
                 if not re.match(r"^-?\d+$", trimmed):
-                    safe_trimmed, _ = sanitize_preview_value(trimmed)
+                    safe_trimmed, _ = sanitize_preview_value(trimmed, max_chars=preview_cap)
                     current_row_errors.append(
                         {
                             "row_number": row_idx,
@@ -1394,7 +1437,7 @@ def validate_csv_content(
                     parsed_record[canonical_field] = int_val
             elif ftype == "phone":
                 if not PHONE_PATTERN.match(trimmed):
-                    safe_trimmed, _ = sanitize_preview_value(trimmed)
+                    safe_trimmed, _ = sanitize_preview_value(trimmed, max_chars=preview_cap)
                     current_row_errors.append(
                         {
                             "row_number": row_idx,
@@ -1417,7 +1460,7 @@ def validate_csv_content(
                     parsed_record[canonical_field] = norm_phone
                     valid_phones[canonical_field] = norm_phone
             else:
-                sanitized_val, was_sanitized = sanitize_preview_value(trimmed)
+                sanitized_val, was_sanitized = sanitize_preview_value(trimmed, max_chars=preview_cap)
                 if was_sanitized:
                     sanitized_fields.append(canonical_field)
                 parsed_record[canonical_field] = sanitized_val
@@ -1428,7 +1471,7 @@ def validate_csv_content(
             col_label = unmapped_col or f"col_{unmapped_idx + 1}"
             if is_formula_injection(raw_cell, "str"):
                 formula_injection_count += 1
-                safe_val, _ = sanitize_preview_value(raw_cell)
+                safe_val, _ = sanitize_preview_value(raw_cell, max_chars=preview_cap)
                 current_row_errors.append(
                     {
                         "row_number": row_idx,
@@ -1442,7 +1485,7 @@ def validate_csv_content(
                     }
                 )
             elif has_disallowed_control_char(raw_cell):
-                safe_val, _ = sanitize_preview_value(raw_cell)
+                safe_val, _ = sanitize_preview_value(raw_cell, max_chars=preview_cap)
                 current_row_errors.append(
                     {
                         "row_number": row_idx,
@@ -1462,7 +1505,7 @@ def validate_csv_content(
             extra_label = f"__extra_col_{extra_idx + 1}__"
             if is_formula_injection(extra_cell, "str"):
                 formula_injection_count += 1
-                safe_val, _ = sanitize_preview_value(extra_cell)
+                safe_val, _ = sanitize_preview_value(extra_cell, max_chars=preview_cap)
                 current_row_errors.append(
                     {
                         "row_number": row_idx,
@@ -1476,7 +1519,7 @@ def validate_csv_content(
                     }
                 )
             elif has_disallowed_control_char(extra_cell):
-                safe_val, _ = sanitize_preview_value(extra_cell)
+                safe_val, _ = sanitize_preview_value(extra_cell, max_chars=preview_cap)
                 current_row_errors.append(
                     {
                         "row_number": row_idx,
