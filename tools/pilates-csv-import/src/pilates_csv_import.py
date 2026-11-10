@@ -24,9 +24,11 @@ import argparse
 from dataclasses import dataclass
 import datetime
 import json
+import os
 import pathlib
 import re
 import sys
+import tempfile
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 import unicodedata
 
@@ -1766,11 +1768,23 @@ def load_mapping_argument(mapping_arg: Optional[str]) -> Optional[Dict[str, str]
     if not mapping_arg:
         return None
     candidate_path = pathlib.Path(mapping_arg)
-    if candidate_path.is_file():
+    try:
+        is_existing = candidate_path.exists()
+        is_reg_file = candidate_path.is_file() if is_existing else False
+    except (OSError, ValueError):
+        is_existing = False
+        is_reg_file = False
+
+    if is_existing and not is_reg_file:
+        raise MappingConfigError(f"매핑 경로가 일반 파일이 아닙니다: {mapping_arg}")
+
+    if is_reg_file:
         try:
             raw_text = candidate_path.read_text(encoding="utf-8-sig")
         except UnicodeDecodeError as exc:
             raise MappingConfigError(f"매핑 파일 UTF-8 디코딩 실패: {exc}") from exc
+        except OSError as exc:
+            raise MappingConfigError(f"매핑 파일 읽기 실패: {exc}") from exc
         return _parse_json_mapping_no_dup_keys(raw_text)
 
     stripped = mapping_arg.strip()
@@ -1794,6 +1808,26 @@ def load_mapping_argument(mapping_arg: Optional[str]) -> Optional[Dict[str, str]
             raise MappingConfigError(f"인라인 매핑에 중복 키 '{k_clean}'가 포함되어 있습니다.")
         mapping[k_clean] = v_clean
     return mapping
+
+
+def _positive_int_arg(raw: str) -> int:
+    try:
+        value = int(raw, 10)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"정수 값이 필요합니다: {raw!r}") from exc
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"1 이상의 양의 정수여야 합니다: {value}")
+    return value
+
+
+def _non_negative_int_arg(raw: str) -> int:
+    try:
+        value = int(raw, 10)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"정수 값이 필요합니다: {raw!r}") from exc
+    if value < 0:
+        raise argparse.ArgumentTypeError(f"0 이상의 정수여야 합니다: {value}")
+    return value
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -1820,25 +1854,25 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--max-preview",
-        type=int,
+        type=_non_negative_int_arg,
         default=DEFAULT_MAX_PREVIEW_ROWS,
         help=f"미리보기 JSON에 포함할 최대 행 수 (기본값: {DEFAULT_MAX_PREVIEW_ROWS})",
     )
     parser.add_argument(
         "--max-rows",
-        type=int,
+        type=_positive_int_arg,
         default=DEFAULT_MAX_ROWS,
         help=f"검증할 최대 데이터 행 수 제한 (기본값: {DEFAULT_MAX_ROWS})",
     )
     parser.add_argument(
         "--max-field-chars",
-        type=int,
+        type=_positive_int_arg,
         default=DEFAULT_MAX_FIELD_CHARS,
         help=f"단일 셀 최대 허용 문자 수 제한 (기본값: {DEFAULT_MAX_FIELD_CHARS})",
     )
     parser.add_argument(
         "--max-bytes",
-        type=int,
+        type=_positive_int_arg,
         default=DEFAULT_MAX_FILE_BYTES,
         help=f"CSV 파일 최대 허용 바이트 크기 제한 (기본값: {DEFAULT_MAX_FILE_BYTES})",
     )
@@ -1850,29 +1884,125 @@ def build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _emit_cli_error(message: str) -> None:
+    error_payload = {
+        "dry_run": True,
+        "db_write_performed": False,
+        "error": message,
+    }
+    print(json.dumps(error_payload, ensure_ascii=False, indent=2), file=sys.stderr)
+
+
+def _paths_refer_to_same_file(first_path: pathlib.Path, second_path: pathlib.Path) -> bool:
+    """Return True if two paths point to the same underlying file (inode/samefile or resolved path)."""
+    try:
+        if os.path.samefile(first_path, second_path):
+            return True
+    except (OSError, ValueError):
+        pass
+    try:
+        return first_path.resolve() == second_path.resolve()
+    except (OSError, ValueError):
+        return False
+
+
 def _write_or_print_json(payload: Dict[str, Any], output_path: Optional[str]) -> None:
     json_text = json.dumps(payload, ensure_ascii=False, indent=2)
-    if output_path:
+    if output_path is not None:
+        if not output_path.strip():
+            raise OSError("출력 파일 경로가 비어 있습니다.")
         out_path = pathlib.Path(output_path)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(json_text + "\n", encoding="utf-8")
+        if out_path.is_dir():
+            raise IsADirectoryError(f"출력 경로가 디렉터리입니다: {output_path}")
+        parent_dir = out_path.parent
+        parent_dir.mkdir(parents=True, exist_ok=True)
+        encoded_bytes = (json_text + "\n").encode("utf-8")
+        tmp_path: Optional[pathlib.Path] = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="wb",
+                dir=str(parent_dir),
+                prefix=".pilates_csv_preview_",
+                suffix=".tmp",
+                delete=False,
+            ) as tmp_file:
+                tmp_path = pathlib.Path(tmp_file.name)
+                tmp_file.write(encoded_bytes)
+                tmp_file.flush()
+            os.replace(str(tmp_path), str(out_path))
+            tmp_path = None
+        finally:
+            if tmp_path is not None:
+                try:
+                    tmp_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
     else:
         print(json_text)
+
+
+def _try_emit_result(payload: Dict[str, Any], output_path: Optional[str]) -> bool:
+    try:
+        _write_or_print_json(payload, output_path)
+        return True
+    except (OSError, ValueError) as exc:
+        _emit_cli_error(f"결과 JSON 출력 실패: {exc}")
+        return False
 
 
 def main(argv: Optional[List[str]] = None) -> int:
     parser = build_arg_parser()
     args = parser.parse_args(argv)
 
-    csv_path = pathlib.Path(args.csv_file)
-    if not csv_path.is_file():
-        error_payload = {
-            "dry_run": True,
-            "db_write_performed": False,
-            "error": f"CSV 파일을 찾을 수 없습니다: {args.csv_file}",
-        }
-        print(json.dumps(error_payload, ensure_ascii=False, indent=2), file=sys.stderr)
+    if not args.csv_file or not args.csv_file.strip():
+        _emit_cli_error("CSV 파일 경로가 비어 있습니다.")
         return 2
+
+    csv_path = pathlib.Path(args.csv_file)
+    try:
+        is_dir = csv_path.is_dir()
+        is_file = False if is_dir else csv_path.is_file()
+    except (OSError, ValueError) as exc:
+        _emit_cli_error(f"CSV 파일 경로를 확인할 수 없습니다: {args.csv_file} ({exc})")
+        return 2
+
+    if is_dir:
+        _emit_cli_error(f"입력 경로가 파일이 아닌 디렉터리입니다: {args.csv_file}")
+        return 2
+
+    if not is_file:
+        _emit_cli_error(f"CSV 파일을 찾을 수 없습니다: {args.csv_file}")
+        return 2
+
+    if args.output is not None:
+        if not args.output.strip():
+            _emit_cli_error("출력 파일 경로가 비어 있습니다.")
+            return 2
+        try:
+            out_path = pathlib.Path(args.output)
+            if out_path.is_dir():
+                _emit_cli_error(f"출력 경로가 파일이 아닌 디렉터리입니다: {args.output}")
+                return 2
+        except (OSError, ValueError) as exc:
+            _emit_cli_error(f"유효하지 않은 출력 파일 경로입니다: {args.output} ({exc})")
+            return 2
+
+        if _paths_refer_to_same_file(csv_path, out_path):
+            _emit_cli_error(
+                f"입출력 경로 충돌: 출력 경로('{args.output}')가 원본 입력 CSV('{args.csv_file}')와 같은 파일을 가리킵니다."
+            )
+            return 2
+
+        if args.mapping:
+            try:
+                mapping_candidate = pathlib.Path(args.mapping)
+                if mapping_candidate.is_file() and _paths_refer_to_same_file(mapping_candidate, out_path):
+                    _emit_cli_error(
+                        f"입출력 경로 충돌: 출력 경로('{args.output}')가 매핑 파일('{args.mapping}')과 같은 파일을 가리킵니다."
+                    )
+                    return 2
+            except (OSError, ValueError):
+                pass
 
     try:
         custom_mapping = load_mapping_argument(args.mapping)
@@ -1891,10 +2021,16 @@ def main(argv: Optional[List[str]] = None) -> int:
                 "raw_value": args.mapping,
             },
         )
-        _write_or_print_json(result, args.output)
+        if not _try_emit_result(result, args.output):
+            return 2
         return 1 if args.fail_on_error else 2
 
-    file_size = csv_path.stat().st_size
+    try:
+        file_size = csv_path.stat().st_size
+    except OSError as exc:
+        _emit_cli_error(f"CSV 파일 상태 확인 실패: {args.csv_file} ({exc})")
+        return 2
+
     if args.max_bytes > 0 and file_size > args.max_bytes:
         result = _empty_result(
             entity_type=args.type,
@@ -1910,10 +2046,16 @@ def main(argv: Optional[List[str]] = None) -> int:
                 "raw_value": None,
             },
         )
-        _write_or_print_json(result, args.output)
+        if not _try_emit_result(result, args.output):
+            return 2
         return 1 if args.fail_on_error else 0
 
-    raw_bytes = csv_path.read_bytes()
+    try:
+        raw_bytes = csv_path.read_bytes()
+    except OSError as exc:
+        _emit_cli_error(f"CSV 파일 읽기 실패: {args.csv_file} ({exc})")
+        return 2
+
     result = validate_csv_content(
         raw_bytes=raw_bytes,
         entity_type=args.type,
@@ -1924,7 +2066,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         max_file_bytes=args.max_bytes,
     )
 
-    _write_or_print_json(result, args.output)
+    if not _try_emit_result(result, args.output):
+        return 2
 
     if args.fail_on_error and not result["summary"]["can_import"]:
         return 1

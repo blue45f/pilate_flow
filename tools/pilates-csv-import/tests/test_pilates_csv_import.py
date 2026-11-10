@@ -1,7 +1,9 @@
+import contextlib
 import copy
 import csv
 import io
 import json
+import os
 import pathlib
 import random
 import re
@@ -10,6 +12,7 @@ import sys
 import tempfile
 import unicodedata
 import unittest
+from unittest import mock
 
 BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR / "src"))
@@ -59,7 +62,7 @@ def _serialize_rows_with_line_oracle(
 
 
 class TestPilatesCsvImport(unittest.TestCase):
-    """65 automated tests: 50 preserved tests (test_01..test_50) + 15 deterministic synthetic & boundary regression tests (test_51..test_65)."""
+    """75 automated tests: 65 preserved tests (test_01..test_65) + 10 CLI boundary & I/O safety regression tests (test_66..test_75)."""
 
     def test_01_utf8_bom_detection_and_header_cleaning(self):
         csv_text = "\ufeff회원번호,이름,연락처,등록일,회원권종류,잔여횟수\nM01,김필라,010-1234-5678,2026-11-01,기구 10회,10\n"
@@ -1160,6 +1163,435 @@ class TestPilatesCsvImport(unittest.TestCase):
             # Exceeding max-rows by 1 -> exit 1
             rc_rows_over = pci.main([str(csv_path), "--max-rows", "1", "--fail-on-error"])
             self.assertEqual(rc_rows_over, 1)
+
+    def test_66_cli_same_input_and_output_path_preserves_original_csv(self):
+        cli_script = str(BASE_DIR / "src" / "pilates_csv_import.py")
+        original_bytes = (
+            "\ufeff회원번호,이름,연락처,등록일,회원권종류,잔여횟수\r\n"
+            "M01,김원본보존,010-1234-5678,2026-11-01,기구10회,10\r\n"
+        ).encode("utf-8")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = pathlib.Path(tmpdir)
+            subdir = tmp_root / "nested"
+            subdir.mkdir()
+            csv_path = tmp_root / "members_source.csv"
+            csv_path.write_bytes(original_bytes)
+
+            relative_alias = subdir / ".." / "members_source.csv"
+            for extra_args in (
+                ["--output", str(csv_path)],
+                ["--output", str(relative_alias), "--fail-on-error"],
+                ["--mapping", "{broken_json", "--output", str(csv_path), "--fail-on-error"],
+            ):
+                proc = subprocess.run(
+                    [sys.executable, cli_script, str(csv_path), *extra_args],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(proc.returncode, 2)
+                self.assertEqual(proc.stdout, "")
+                err_payload = json.loads(proc.stderr)
+                self.assertTrue(err_payload["dry_run"])
+                self.assertFalse(err_payload["db_write_performed"])
+                self.assertIn("error", err_payload)
+                self.assertEqual(csv_path.read_bytes(), original_bytes)
+
+    def test_67_cli_symlink_and_hardlink_same_file_collision_preserves_original_files(self):
+        cli_script = str(BASE_DIR / "src" / "pilates_csv_import.py")
+        original_csv = (
+            "회원번호,이름,연락처,등록일,회원권종류,잔여횟수\n"
+            "M02,이링크보존,010-2222-3333,2026-11-02,개인10회,10\n"
+        ).encode("utf-8")
+        original_map = json.dumps({"name": "이름"}, ensure_ascii=False).encode("utf-8")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = pathlib.Path(tmpdir)
+            csv_path = tmp_root / "origin.csv"
+            csv_path.write_bytes(original_csv)
+
+            symlink_out = tmp_root / "symlink_to_origin.json"
+            os.symlink(csv_path, symlink_out)
+
+            hardlink_out = tmp_root / "hardlink_to_origin.json"
+            os.link(csv_path, hardlink_out)
+
+            map_path = tmp_root / "mapping.json"
+            map_path.write_bytes(original_map)
+            map_symlink = tmp_root / "symlink_to_mapping.json"
+            os.symlink(map_path, map_symlink)
+
+            for cmd_args in (
+                [str(csv_path), "--output", str(symlink_out)],
+                [str(symlink_out), "--output", str(csv_path)],
+                [str(csv_path), "--output", str(hardlink_out)],
+                [str(csv_path), "--mapping", str(map_path), "--output", str(map_symlink)],
+            ):
+                proc = subprocess.run(
+                    [sys.executable, cli_script, *cmd_args],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(proc.returncode, 2)
+                self.assertEqual(proc.stdout, "")
+                err_payload = json.loads(proc.stderr)
+                self.assertTrue(err_payload["dry_run"])
+                self.assertFalse(err_payload["db_write_performed"])
+                self.assertEqual(csv_path.read_bytes(), original_csv)
+                self.assertEqual(map_path.read_bytes(), original_map)
+
+    def test_68_cli_nonexistent_input_and_directory_input_contracts(self):
+        cli_script = str(BASE_DIR / "src" / "pilates_csv_import.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = pathlib.Path(tmpdir)
+            missing_csv = tmp_root / "no_such_input.csv"
+            input_dir = tmp_root / "folder_as_input"
+            input_dir.mkdir()
+            out_missing = tmp_root / "out_missing.json"
+            out_dir_case = tmp_root / "out_dir_case.json"
+
+            for bad_input, out_target in ((missing_csv, out_missing), (input_dir, out_dir_case)):
+                proc = subprocess.run(
+                    [sys.executable, cli_script, str(bad_input), "--output", str(out_target), "--fail-on-error"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(proc.returncode, 2)
+                self.assertEqual(proc.stdout, "")
+                err_payload = json.loads(proc.stderr)
+                self.assertTrue(err_payload["dry_run"])
+                self.assertFalse(err_payload["db_write_performed"])
+                self.assertIn("error", err_payload)
+                self.assertFalse(out_target.exists())
+
+    def test_69_cli_invalid_utf8_bytes_subprocess_stdout_output_and_exit_codes(self):
+        cli_script = str(BASE_DIR / "src" / "pilates_csv_import.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = pathlib.Path(tmpdir)
+            raw_samples = [
+                (tmp_root / "utf16_like.csv", b"\xff\xfe\x00\x00broken_utf8"),
+                (tmp_root / "truncated_kr.csv", b"\xef\xbb\xbf\xed\x95"),
+            ]
+            for idx, (bad_csv, raw_data) in enumerate(raw_samples):
+                bad_csv.write_bytes(raw_data)
+
+                proc_default = subprocess.run(
+                    [sys.executable, cli_script, str(bad_csv)],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(proc_default.returncode, 0)
+                self.assertEqual(proc_default.stderr, "")
+                payload = json.loads(proc_default.stdout)
+                self.assertTrue(payload["dry_run"])
+                self.assertFalse(payload["db_write_performed"])
+                self.assertEqual(payload["encoding_detected"], "INVALID")
+                self.assertFalse(payload["summary"]["can_import"])
+                self.assertEqual(payload["row_errors"][0]["code"], "ENCODING_ERROR")
+
+                out_json = tmp_root / f"bad_utf8_out_{idx}.json"
+                proc_strict = subprocess.run(
+                    [sys.executable, cli_script, str(bad_csv), "--output", str(out_json), "--fail-on-error"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(proc_strict.returncode, 1)
+                self.assertEqual(proc_strict.stdout, "")
+                self.assertEqual(proc_strict.stderr, "")
+                saved_payload = json.loads(out_json.read_text(encoding="utf-8"))
+                self.assertEqual(saved_payload["row_errors"][0]["code"], "ENCODING_ERROR")
+                self.assertEqual(bad_csv.read_bytes(), raw_data)
+
+    def test_70_cli_invalid_options_and_numeric_limit_flags_exit_code_2(self):
+        cli_script = str(BASE_DIR / "src" / "pilates_csv_import.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            csv_path = pathlib.Path(tmpdir) / "valid.csv"
+            csv_bytes = (
+                "회원번호,이름,연락처,등록일,회원권종류,잔여횟수\n"
+                "M01,김옵션,010-1234-5678,2026-11-01,기구10회,10\n"
+            ).encode("utf-8")
+            csv_path.write_bytes(csv_bytes)
+
+            invalid_arg_sets = [
+                [],
+                [str(csv_path), "--unknown-option"],
+                [str(csv_path), "--type", "invalid_entity"],
+                [str(csv_path), "--max-rows", "0"],
+                [str(csv_path), "--max-rows", "-2"],
+                [str(csv_path), "--max-rows", "abc"],
+                [str(csv_path), "--max-field-chars", "0"],
+                [str(csv_path), "--max-field-chars", "-1"],
+                [str(csv_path), "--max-bytes", "0"],
+                [str(csv_path), "--max-bytes", "-5"],
+                [str(csv_path), "--max-preview", "-1"],
+            ]
+            for bad_args in invalid_arg_sets:
+                proc = subprocess.run(
+                    [sys.executable, cli_script, *bad_args],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(proc.returncode, 2, msg=f"Expected exit 2 for {bad_args}")
+                self.assertEqual(proc.stdout, "")
+                self.assertNotEqual(proc.stderr.strip(), "")
+                self.assertEqual(csv_path.read_bytes(), csv_bytes)
+
+            # --max-preview 0 is valid (suppresses preview rows while validating all data rows)
+            proc_zero_preview = subprocess.run(
+                [sys.executable, cli_script, str(csv_path), "--max-preview", "0", "--fail-on-error"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(proc_zero_preview.returncode, 0)
+            self.assertEqual(proc_zero_preview.stderr, "")
+            zero_payload = json.loads(proc_zero_preview.stdout)
+            self.assertEqual(zero_payload["summary"]["total_rows"], 1)
+            self.assertEqual(zero_payload["preview_rows"], [])
+
+    def test_71_cli_invalid_mapping_json_files_and_directory_mapping_contracts(self):
+        cli_script = str(BASE_DIR / "src" / "pilates_csv_import.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = pathlib.Path(tmpdir)
+            csv_path = tmp_root / "valid.csv"
+            csv_bytes = (
+                "회원번호,이름,연락처,등록일,회원권종류,잔여횟수\n"
+                "M01,김매핑파일,010-1234-5678,2026-11-01,기구10회,10\n"
+            ).encode("utf-8")
+            csv_path.write_bytes(csv_bytes)
+
+            bad_utf8_map = tmp_root / "bad_utf8.json"
+            bad_utf8_map.write_bytes(b"\xff\xfe{}")
+
+            array_map = tmp_root / "array_map.json"
+            array_map.write_text('["member_id", "회원번호"]', encoding="utf-8")
+
+            non_str_val_map = tmp_root / "non_str_val.json"
+            non_str_val_map.write_text('{"member_id": 123}', encoding="utf-8")
+
+            broken_json_map = tmp_root / "broken.json"
+            broken_json_map.write_text('{"member_id": ', encoding="utf-8")
+
+            dir_with_eq = tmp_root / "mapping_dir=1"
+            dir_with_eq.mkdir()
+
+            for bad_map_arg in (
+                str(bad_utf8_map),
+                str(array_map),
+                str(non_str_val_map),
+                str(broken_json_map),
+                str(dir_with_eq),
+                "[1, 2, 3]",
+                "name=",
+                "=이름",
+            ):
+                proc_no_fail = subprocess.run(
+                    [sys.executable, cli_script, str(csv_path), "--mapping", bad_map_arg],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(proc_no_fail.returncode, 2)
+                self.assertEqual(proc_no_fail.stderr, "")
+                payload_no_fail = json.loads(proc_no_fail.stdout)
+                self.assertTrue(payload_no_fail["dry_run"])
+                self.assertFalse(payload_no_fail["db_write_performed"])
+                self.assertFalse(payload_no_fail["summary"]["can_import"])
+                self.assertEqual(payload_no_fail["row_errors"][0]["code"], "MAPPING_CONFLICT")
+
+                proc_fail = subprocess.run(
+                    [sys.executable, cli_script, str(csv_path), "--mapping", bad_map_arg, "--fail-on-error"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(proc_fail.returncode, 1)
+                self.assertEqual(proc_fail.stderr, "")
+
+    def test_72_cli_output_path_is_directory_empty_or_parent_is_regular_file(self):
+        cli_script = str(BASE_DIR / "src" / "pilates_csv_import.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = pathlib.Path(tmpdir)
+            csv_path = tmp_root / "valid.csv"
+            csv_bytes = (
+                "회원번호,이름,연락처,등록일,회원권종류,잔여횟수\n"
+                "M01,김출력오류,010-1234-5678,2026-11-01,기구10회,10\n"
+            ).encode("utf-8")
+            csv_path.write_bytes(csv_bytes)
+
+            existing_dir = tmp_root / "existing_out_dir"
+            existing_dir.mkdir()
+
+            blocker_file = tmp_root / "regular_blocker_file"
+            blocker_file.write_text("blocker", encoding="utf-8")
+            impossible_child_out = blocker_file / "sub" / "preview.json"
+
+            for bad_out in (str(existing_dir), "", "   ", str(impossible_child_out)):
+                proc = subprocess.run(
+                    [sys.executable, cli_script, str(csv_path), "--output", bad_out],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(proc.returncode, 2)
+                self.assertEqual(proc.stdout, "")
+                self.assertNotIn("Traceback", proc.stderr)
+                err_payload = json.loads(proc.stderr)
+                self.assertTrue(err_payload["dry_run"])
+                self.assertFalse(err_payload["db_write_performed"])
+                self.assertIn("error", err_payload)
+                self.assertEqual(csv_path.read_bytes(), csv_bytes)
+
+    def test_73_cli_atomic_output_write_failure_via_mock_prevents_partial_file(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = pathlib.Path(tmpdir)
+            csv_path = tmp_root / "valid.csv"
+            csv_bytes = (
+                "회원번호,이름,연락처,등록일,회원권종류,잔여횟수\n"
+                "M01,김원자쓰기,010-1234-5678,2026-11-01,기구10회,10\n"
+            ).encode("utf-8")
+            csv_path.write_bytes(csv_bytes)
+
+            # Case A: Pre-existing output file stays completely intact on mid-write OSError, zero .tmp left
+            existing_out = tmp_root / "existing_preview.json"
+            sentinel_bytes = b'{"sentinel": "previous_valid_content"}\n'
+            existing_out.write_bytes(sentinel_bytes)
+
+            real_named_temp = tempfile.NamedTemporaryFile
+
+            class _PartialFailTempFile:
+                def __init__(self, *args, **kwargs):
+                    self._inner = real_named_temp(*args, **kwargs)
+                    self.name = self._inner.name
+
+                def __enter__(self):
+                    self._inner.__enter__()
+                    return self
+
+                def write(self, data: bytes) -> int:
+                    self._inner.write(data[:24])
+                    self._inner.flush()
+                    raise OSError("simulated mid-write disk full")
+
+                def flush(self) -> None:
+                    self._inner.flush()
+
+                def __exit__(self, exc_type, exc_val, exc_tb):
+                    return self._inner.__exit__(exc_type, exc_val, exc_tb)
+
+            out_buf = io.StringIO()
+            err_buf = io.StringIO()
+            with mock.patch("pilates_csv_import.tempfile.NamedTemporaryFile", side_effect=_PartialFailTempFile):
+                with contextlib.redirect_stdout(out_buf), contextlib.redirect_stderr(err_buf):
+                    rc_mid = pci.main([str(csv_path), "--output", str(existing_out)])
+
+            self.assertEqual(rc_mid, 2)
+            self.assertEqual(out_buf.getvalue(), "")
+            err_json_a = json.loads(err_buf.getvalue())
+            self.assertTrue(err_json_a["dry_run"])
+            self.assertFalse(err_json_a["db_write_performed"])
+            self.assertEqual(existing_out.read_bytes(), sentinel_bytes)
+            self.assertEqual(list(tmp_root.glob("*.tmp")), [])
+            self.assertEqual(list(tmp_root.glob(".pilates_csv_preview_*")), [])
+
+            # Case B: New output file is never created if atomic os.replace fails, zero .tmp left
+            fresh_out = tmp_root / "fresh_preview.json"
+            out_buf_b = io.StringIO()
+            err_buf_b = io.StringIO()
+            with mock.patch("pilates_csv_import.os.replace", side_effect=OSError("simulated replace failure")):
+                with contextlib.redirect_stdout(out_buf_b), contextlib.redirect_stderr(err_buf_b):
+                    rc_rep = pci.main([str(csv_path), "--output", str(fresh_out)])
+
+            self.assertEqual(rc_rep, 2)
+            self.assertEqual(out_buf_b.getvalue(), "")
+            err_json_b = json.loads(err_buf_b.getvalue())
+            self.assertTrue(err_json_b["dry_run"])
+            self.assertFalse(fresh_out.exists())
+            self.assertEqual(list(tmp_root.glob(".pilates_csv_preview_*")), [])
+            self.assertEqual(csv_path.read_bytes(), csv_bytes)
+
+    def test_74_cli_input_read_oserror_via_mock_clean_stderr_and_no_output_created(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = pathlib.Path(tmpdir)
+            csv_path = tmp_root / "unreadable_mock.csv"
+            csv_path.write_text(
+                "회원번호,이름,연락처,등록일,회원권종류,잔여횟수\nM01,김읽기실패,010-1234-5678,2026-11-01,기구10회,10\n",
+                encoding="utf-8",
+            )
+            out_path = tmp_root / "should_not_exist.json"
+
+            out_buf = io.StringIO()
+            err_buf = io.StringIO()
+            with mock.patch.object(pathlib.Path, "read_bytes", side_effect=OSError("simulated read error")):
+                with contextlib.redirect_stdout(out_buf), contextlib.redirect_stderr(err_buf):
+                    rc = pci.main([str(csv_path), "--output", str(out_path), "--fail-on-error"])
+
+            self.assertEqual(rc, 2)
+            self.assertEqual(out_buf.getvalue(), "")
+            err_payload = json.loads(err_buf.getvalue())
+            self.assertTrue(err_payload["dry_run"])
+            self.assertFalse(err_payload["db_write_performed"])
+            self.assertIn("error", err_payload)
+            self.assertFalse(out_path.exists())
+
+    def test_75_cli_subprocess_success_stdout_and_atomic_output_schema_preservation(self):
+        cli_script = str(BASE_DIR / "src" / "pilates_csv_import.py")
+        expected_top_keys = {
+            "dry_run",
+            "db_write_performed",
+            "entity_type",
+            "encoding_detected",
+            "column_mapping",
+            "unmapped_columns",
+            "missing_required_columns",
+            "summary",
+            "row_errors",
+            "preview_rows",
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = pathlib.Path(tmpdir)
+            csv_path = tmp_root / "self_contained_valid.csv"
+            csv_bytes = (
+                "\ufeff회원번호,이름,연락처,등록일,회원권종류,잔여횟수,메모\r\n"
+                "M01,김성공검증,010-1234-5678,2026-11-01,기구10회,10,안전한 드라이런\r\n"
+            ).encode("utf-8")
+            csv_path.write_bytes(csv_bytes)
+            out_path = tmp_root / "subdir" / "result_preview.json"
+
+            proc_stdout = subprocess.run(
+                [sys.executable, cli_script, str(csv_path), "--fail-on-error"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(proc_stdout.returncode, 0)
+            self.assertEqual(proc_stdout.stderr, "")
+            stdout_payload = json.loads(proc_stdout.stdout)
+
+            proc_file = subprocess.run(
+                [sys.executable, cli_script, str(csv_path), "--output", str(out_path), "--fail-on-error"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(proc_file.returncode, 0)
+            self.assertEqual(proc_file.stdout, "")
+            self.assertEqual(proc_file.stderr, "")
+            file_payload = json.loads(out_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(set(stdout_payload.keys()), expected_top_keys)
+            self.assertEqual(stdout_payload, file_payload)
+            self.assertTrue(file_payload["dry_run"])
+            self.assertFalse(file_payload["db_write_performed"])
+            self.assertTrue(file_payload["summary"]["can_import"])
+            self.assertEqual(list(out_path.parent.glob(".pilates_csv_preview_*")), [])
+            self.assertEqual(csv_path.read_bytes(), csv_bytes)
 
 
 if __name__ == "__main__":
