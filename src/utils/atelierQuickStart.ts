@@ -43,7 +43,7 @@ export const ATELIER_QUICK_START_RECIPES: ReadonlyArray<QuickStartRecipe> = [
     titleKo: '30분 점심 순환 익스프레스',
     descKo: '기구 전환을 최소화해 짧고 밀도 있게 전신 활력을 깨우는 30분 압축 플로우',
     flowLabelKo: '준비 5분 → 본운동 20분 → 마무리 5분',
-    imageSrc: '/images/atelier-v2/cadillac-studio-3d.png',
+    imageSrc: '/images/atelier-v2/reformer-studio-3d.png',
     durationMinutes: 30,
     level: '1.0',
     apparatus: 'reformer',

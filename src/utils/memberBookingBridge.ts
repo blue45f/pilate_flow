@@ -6,7 +6,7 @@ import {
   scheduleDateRange,
   scheduleWeekStart,
 } from './instructorSchedule';
-import { EQUIPMENT_OPTIONS, getEquipmentFamily } from '../data/equipmentCatalog';
+import { EQUIPMENT_OPTIONS, getEquipmentFamilies } from '../data/equipmentCatalog';
 
 export type MemberSlotBookingStatus =
   | 'AVAILABLE'
@@ -126,24 +126,75 @@ export interface MemberBookableSlot {
   readonly myWaitlistOrder?: number;
 }
 
+export type PersistedMemberSlotDecision = {
+  readonly state: 'BOOKED' | 'WAITLISTED';
+  readonly spotId?: string;
+  readonly slotTitle?: string;
+  readonly slotDate?: string;
+  readonly slotTime?: string;
+  readonly waitlistOrder?: number;
+  readonly updatedAt: string;
+};
+
 export interface PersistedMemberBookingState {
   readonly pass: MemberPassSummary;
-  readonly slotDecisions: Record<
-    string,
-    {
-      readonly state: 'BOOKED' | 'WAITLISTED';
-      readonly spotId?: string;
-      readonly slotTitle?: string;
-      readonly slotDate?: string;
-      readonly slotTime?: string;
-      readonly waitlistOrder?: number;
-      readonly updatedAt: string;
-    }
-  >;
+  readonly slotDecisions: Record<string, PersistedMemberSlotDecision>;
 }
 
 export const MEMBER_BOOKING_STORAGE_KEY = 'pf_member_booking_portal_v1';
 export const BOOKING_MISTAKE_GRACE_MS = 5 * 60 * 1000;
+
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+function sanitizeNonNegativeInt(
+  value: unknown,
+  fallbackValue: number,
+  minValue = 0,
+): number {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return fallbackValue;
+  return Math.max(minValue, Math.floor(num));
+}
+
+function sanitizeSlotDecisions(
+  raw: unknown,
+): Record<string, PersistedMemberSlotDecision> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const clean: Record<string, PersistedMemberSlotDecision> = {};
+  for (const [slotId, entry] of Object.entries(raw as Record<string, unknown>)) {
+    if (!slotId || !entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    const record = entry as Record<string, unknown>;
+    if (record.state !== 'BOOKED' && record.state !== 'WAITLISTED') continue;
+    clean[slotId] = {
+      state: record.state,
+      spotId: typeof record.spotId === 'string' ? record.spotId : undefined,
+      slotTitle: typeof record.slotTitle === 'string' ? record.slotTitle : undefined,
+      slotDate:
+        typeof record.slotDate === 'string' && ISO_DATE_PATTERN.test(record.slotDate)
+          ? record.slotDate
+          : undefined,
+      slotTime: typeof record.slotTime === 'string' ? record.slotTime : undefined,
+      waitlistOrder:
+        typeof record.waitlistOrder === 'number' && Number.isFinite(record.waitlistOrder)
+          ? Math.max(1, Math.floor(record.waitlistOrder))
+          : undefined,
+      updatedAt:
+        typeof record.updatedAt === 'string' && record.updatedAt
+          ? record.updatedAt
+          : new Date(0).toISOString(),
+    };
+  }
+  return clean;
+}
+
+function stableSlotBaseEnrolled(classId: string, dateIso: string): number {
+  const seed = `${classId}:${dateIso}`;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return (hash % 4) + 2;
+}
 
 export function getApparatusStudio3dImage(apparatus: ApparatusType | 'mixed'): string {
   switch (apparatus) {
@@ -169,7 +220,6 @@ export function computeStudioSpotStates(slot: MemberBookableSlot): ReadonlyArray
 }> {
   const catalog = getApparatusSpotCatalog(slot.apparatus);
   const spots = catalog.slice(0, Math.max(1, Math.min(catalog.length, slot.maxCapacity)));
-  // Filter occupied indices strictly within spots.length so 4-person classes never leak out-of-bounds indices
   const occupiedOrder = [2, 0, 5, 3, 4, 1].filter((idx) => idx < spots.length);
   const occupiedCount = Math.min(spots.length, Math.max(0, slot.baseEnrolled));
   const occupiedIndices = new Set(occupiedOrder.slice(0, occupiedCount));
@@ -183,14 +233,19 @@ export function computeStudioSpotStates(slot: MemberBookableSlot): ReadonlyArray
 
 export function pickDefaultOpenSpotId(slot: MemberBookableSlot): string {
   const states = computeStudioSpotStates(slot);
-  return states.find((s) => !s.occupiedByOther)?.spotId ?? states[0]?.spotId ?? 'R1';
+  const fallbackSpot = getApparatusSpotCatalog(slot.apparatus)[0]?.spotId ?? 'R1';
+  return states.find((s) => !s.occupiedByOther)?.spotId ?? states[0]?.spotId ?? fallbackSpot;
 }
 
 export function isSlotPastFreeCancelDeadline(
-  slot: Pick<MemberBookableSlot, 'date' | 'startTime' | 'freeCancelHoursBefore'>,
+  slot: Pick<MemberBookableSlot, 'date' | 'startTime' | 'freeCancelHoursBefore'> &
+    Partial<Pick<MemberBookableSlot, 'occurrenceStatus'>>,
   decisionUpdatedAt?: string,
   nowMs: number = Date.now(),
 ): boolean {
+  if (slot.occurrenceStatus && slot.occurrenceStatus !== 'scheduled') {
+    return false;
+  }
   if (decisionUpdatedAt) {
     const bookedAtMs = Date.parse(decisionUpdatedAt);
     if (
@@ -235,21 +290,42 @@ export function readPersistedMemberBookingState(
     const raw = window.localStorage.getItem(MEMBER_BOOKING_STORAGE_KEY);
     if (!raw) return fallback;
     const parsed = JSON.parse(raw) as Partial<PersistedMemberBookingState>;
-    if (!parsed || typeof parsed !== 'object' || !parsed.pass) return fallback;
-    const slotDecisions =
-      parsed.slotDecisions && typeof parsed.slotDecisions === 'object'
-        ? parsed.slotDecisions
-        : {};
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !parsed.pass) {
+      return fallback;
+    }
+    const rawPass = parsed.pass as Partial<MemberPassSummary>;
+    const totalCount = sanitizeNonNegativeInt(rawPass.totalCount, 20, 1);
+    const remainingCount = Math.min(
+      totalCount,
+      sanitizeNonNegativeInt(rawPass.remainingCount, 7, 0),
+    );
+    const slotDecisions = sanitizeSlotDecisions(parsed.slotDecisions);
     const activeBookedCount = Object.values(slotDecisions).filter(
-      (item) => item?.state === 'BOOKED',
+      (item) => item.state === 'BOOKED',
     ).length;
+    const expiresAtIso =
+      typeof rawPass.expiresAtIso === 'string' && ISO_DATE_PATTERN.test(rawPass.expiresAtIso)
+        ? rawPass.expiresAtIso
+        : fallback.pass.expiresAtIso;
+
     return {
       pass: {
-        ...fallback.pass,
-        ...parsed.pass,
-        remainingCount: Math.max(0, Number(parsed.pass.remainingCount ?? 7)),
+        passId:
+          typeof rawPass.passId === 'string' && rawPass.passId.trim()
+            ? rawPass.passId
+            : fallback.pass.passId,
+        passTitle:
+          typeof rawPass.passTitle === 'string' && rawPass.passTitle.trim()
+            ? rawPass.passTitle
+            : fallback.pass.passTitle,
+        participantAlias:
+          typeof rawPass.participantAlias === 'string' && rawPass.participantAlias.trim()
+            ? rawPass.participantAlias
+            : fallback.pass.participantAlias,
+        remainingCount,
         pendingReservedCount: activeBookedCount,
-        totalCount: Math.max(1, Number(parsed.pass.totalCount ?? 20)),
+        totalCount,
+        expiresAtIso,
       },
       slotDecisions,
     };
@@ -271,7 +347,9 @@ export function writePersistedMemberBookingState(
 
 export function deriveMemberSlotStatus(slot: MemberBookableSlot): MemberSlotBookingStatus {
   if (slot.occurrenceStatus === 'cancelled') return 'CANCELED';
-  if (slot.occurrenceStatus === 'closed') return 'CLOSED';
+  if (slot.occurrenceStatus === 'closed' || slot.occurrenceStatus === 'moved') {
+    return 'CLOSED';
+  }
   const effectiveEnrolled =
     slot.baseEnrolled + (slot.myState === 'BOOKED' ? 1 : 0);
   const effectiveWaitlist =
@@ -286,14 +364,14 @@ export function resolveMemberActionIntent(
   slot: MemberBookableSlot,
   todayIso?: string,
 ): MemberBookingActionIntent | null {
-  if (slot.occurrenceStatus === 'cancelled' || slot.occurrenceStatus === 'closed') {
-    return null;
-  }
   if (todayIso && slot.date < todayIso) {
     return null;
   }
   if (slot.myState === 'BOOKED') return 'CANCEL_BOOKING';
   if (slot.myState === 'WAITLISTED') return 'CANCEL_WAITLIST';
+  if (slot.occurrenceStatus !== 'scheduled') {
+    return null;
+  }
   const status = deriveMemberSlotStatus(slot);
   if (status === 'AVAILABLE' || status === 'ALMOST_FULL') return 'BOOK';
   if (status === 'WAITLIST') return 'WAITLIST';
@@ -399,9 +477,7 @@ export function buildMemberSlotsForDate(params: {
   const weekCounts: Record<string, number> = {};
   for (const d of weekDates) {
     weekCounts[d] = hasInstructorClasses
-      ? expandedWeek.filter(
-          (row) => row.date === d && (row.status === 'scheduled' || row.status === 'moved'),
-        ).length
+      ? expandedWeek.filter((row) => row.date === d && row.status === 'scheduled').length
       : 3;
   }
 
@@ -413,7 +489,7 @@ export function buildMemberSlotsForDate(params: {
   }
 
   const dayRows = expandedWeek.filter((row) => row.date === selectedDate);
-  const slots: MemberBookableSlot[] = dayRows.map((row, idx) => {
+  const slots: MemberBookableSlot[] = dayRows.map((row) => {
     const location = schedule.locations.find((loc) => loc.id === row.locationId);
     const linkedSeq = row.linkSavedSequenceId
       ? savedSequences.find((seq) => seq.id === row.linkSavedSequenceId)
@@ -421,12 +497,12 @@ export function buildMemberSlotsForDate(params: {
     const eqLabels = (location?.equipmentIds ?? [])
       .map((id) => EQUIPMENT_OPTIONS.find((item) => item.id === id)?.labelKo ?? id)
       .slice(0, 3);
-    const firstEqId = location?.equipmentIds[0];
+    const locFamilies = getEquipmentFamilies(location?.equipmentIds ?? []);
     const apparatus: ApparatusType | 'mixed' =
       linkedSeq?.apparatus ??
-      (firstEqId ? (getEquipmentFamily(firstEqId) ?? 'reformer') : 'reformer');
+      (locFamilies.length > 1 ? 'mixed' : (locFamilies[0] ?? 'reformer'));
     const decision = decisions[row.id];
-    const deterministicEnrolled = (idx * 2 + 2) % 6;
+    const deterministicEnrolled = stableSlotBaseEnrolled(row.classId, row.date);
 
     return {
       id: row.id,

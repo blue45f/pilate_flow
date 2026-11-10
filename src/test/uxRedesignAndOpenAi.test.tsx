@@ -1,9 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { Apparatus3dRigPreviewCard } from '../components/Apparatus3dRigPreviewCard';
 import { FreeAiAssistantPanel } from '../components/FreeAiAssistantPanel';
 import { MemberBookingView } from '../components/MemberBookingView';
+import { SequenceWorkbench } from '../components/SequenceWorkbench';
 import { SpringVisualPills } from '../components/SpringVisualPills';
 import { StudioJourneyBar } from '../components/StudioJourneyBar';
 import { AtelierQuickStartGallery } from '../components/workbench/AtelierQuickStartGallery';
@@ -11,10 +12,14 @@ import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { createFreeAiClient, createDefaultFreeAiStatus } from '../lib/freeAiClient';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { ATELIER_QUICK_START_RECIPES } from '../utils/atelierQuickStart';
+import { localScheduleDate } from '../utils/instructorSchedule';
 import {
   MEMBER_BOOKING_STORAGE_KEY,
   type MemberBookableSlot,
   computeStudioSpotStates,
+  deriveMemberSlotStatus,
+  isSlotPastFreeCancelDeadline,
+  readPersistedMemberBookingState,
   resolveMemberActionIntent,
 } from '../utils/memberBookingBridge';
 import { parseSpringVisualChips } from '../utils/springVisualParser';
@@ -58,8 +63,10 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     expect(onSelectStep).toHaveBeenCalledWith('history');
   });
 
-  it('supports member pass verification, R1~R6 spot selection, my-bookings strip, available-only filter, past-date guard, and cancellation restore', async () => {
-    // Verify 4-person class spot bounds and past-date intent guard
+  it('supports member pass verification, C1~C6/R1~R6 spot selection, moved/cancelled recovery, corrupted storage guard, and cancellation restore', async () => {
+    const todayIso = localScheduleDate();
+
+    // 1. Verify 4-person class spot bounds, moved status blocking, and cancelled booking credit recovery
     const smallFullSlot: MemberBookableSlot = {
       id: 'slot-small-4',
       classId: 'c4',
@@ -83,6 +90,45 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     expect(spotStates.every((s) => s.occupiedByOther)).toBe(true);
     expect(resolveMemberActionIntent(smallFullSlot, '2026-04-15')).toBeNull();
 
+    const movedUnbookedSlot: MemberBookableSlot = {
+      ...smallFullSlot,
+      id: 'slot-moved-open',
+      baseEnrolled: 1,
+      occurrenceStatus: 'moved',
+    };
+    expect(deriveMemberSlotStatus(movedUnbookedSlot)).toBe('CLOSED');
+    expect(resolveMemberActionIntent(movedUnbookedSlot, '2026-04-10')).toBeNull();
+
+    const cancelledBookedSlot: MemberBookableSlot = {
+      ...smallFullSlot,
+      id: 'slot-cancelled-booked',
+      occurrenceStatus: 'cancelled',
+      myState: 'BOOKED',
+      mySpotId: 'R2',
+    };
+    expect(resolveMemberActionIntent(cancelledBookedSlot, '2026-04-10')).toBe('CANCEL_BOOKING');
+    expect(
+      isSlotPastFreeCancelDeadline(
+        cancelledBookedSlot,
+        '2020-01-01T00:00:00.000Z',
+        Date.parse('2026-04-10T09:55:00.000Z'),
+      ),
+    ).toBe(false);
+
+    // 2. Verify corrupted localStorage (NaN remainingCount / array slotDecisions) falls back safely
+    window.localStorage.setItem(
+      MEMBER_BOOKING_STORAGE_KEY,
+      JSON.stringify({
+        pass: { remainingCount: 'corrupted-nan', totalCount: null, expiresAtIso: 'bad-date' },
+        slotDecisions: ['not-a-record'],
+      }),
+    );
+    const sanitized = readPersistedMemberBookingState(todayIso);
+    expect(sanitized.pass.remainingCount).toBe(7);
+    expect(sanitized.pass.totalCount).toBe(20);
+    expect(sanitized.slotDecisions).toEqual({});
+    window.localStorage.removeItem(MEMBER_BOOKING_STORAGE_KEY);
+
     render(<MemberBookingView />);
 
     expect(screen.getByTestId('member-booking-view')).toBeInTheDocument();
@@ -94,6 +140,15 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     fireEvent.click(availableChip);
     expect(availableChip).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(availableChip);
+
+    // Verify Chair slot renders C1~C6 spots
+    const chairBookBtn = screen.getByRole('button', {
+      name: '체어 하체·코어 집중 플로우 예약하기',
+    });
+    fireEvent.click(chairBookBtn);
+    const chairMap = await screen.findByTestId('member-spot-map');
+    expect(within(chairMap).getByTestId('spot-btn-C2')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }));
 
     // Book first available Reformer slot with custom spot R5
     const bookBtn = screen.getByRole('button', {
@@ -110,6 +165,7 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
 
     const confirmBookBtn = await screen.findByTestId('confirm-member-booking-btn');
     expect(confirmBookBtn).toHaveTextContent('차감 동의 후 예약 확정');
+    fireEvent.click(confirmBookBtn);
     fireEvent.click(confirmBookBtn);
 
     await waitFor(() => {
@@ -133,9 +189,19 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     });
   });
 
-  it('parses tactile color-coded spring chips and applies all 4 1-click Atelier QuickStart recipes on INITIAL_EXERCISES', () => {
-    const parsed = parseSpringVisualChips('2R 1B');
-    expect(parsed.map((c) => c.labelKo)).toEqual(['빨강×2', '파랑×1']);
+  it('parses tactile spring chips (decimals, choice operators, zero/bodyweight, white, attachment notes) and applies all 4 QuickStart recipes without wiping active sequences on empty catalog', () => {
+    expect(parseSpringVisualChips('2R 1B').map((c) => c.labelKo)).toEqual(['빨강×2', '파랑×1']);
+    expect(parseSpringVisualChips('0.5 Blue').map((c) => c.labelKo)).toEqual(['파랑×0.5']);
+    expect(parseSpringVisualChips('1R 1W').map((c) => c.labelKo)).toEqual(['빨강×1', '하양×1']);
+    expect(parseSpringVisualChips('0 Red').map((c) => c.labelKo)).toEqual(['맨몸']);
+    expect(parseSpringVisualChips('스프링 사용 없음').map((c) => c.labelKo)).toEqual(['맨몸']);
+    expect(parseSpringVisualChips('1B (상단 스프링)').map((c) => c.labelKo)).toEqual([
+      '파랑×1',
+      '상단 스프링',
+    ]);
+    const choiceChips = parseSpringVisualChips('1R or 1B');
+    expect(choiceChips).toHaveLength(1);
+    expect(choiceChips[0]!.key).toBe('choice');
 
     render(<SpringVisualPills springs="1 Red + 1 Yellow" />);
     expect(screen.getByText('빨강×1')).toBeInTheDocument();
@@ -159,6 +225,34 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
       expect(payload.targetMinutes).toBe(recipe.durationMinutes);
       expect(payload.steps.length).toBeGreaterThan(0);
     }
+
+    // Verify empty exercise catalog never wipes an existing workbench sequence
+    const firstEx = INITIAL_EXERCISES[0]!;
+    usePilatesStore.setState({
+      exercises: [],
+      activeSteps: [
+        {
+          stepId: 'keep-step-1',
+          order: 1,
+          exerciseId: firstEx.id,
+          blockCategory: firstEx.blockCategory,
+          durationMin: 5,
+          selectedLayer: 'standard',
+        },
+      ],
+    });
+    const wb = render(
+      <SequenceWorkbench
+        onOpenClipper={vi.fn()}
+        onOpenYouTubePreview={vi.fn()}
+        onOpenLogModal={vi.fn()}
+      />,
+    );
+    const recipeSummary = wb.container.querySelector('details summary');
+    expect(recipeSummary).not.toBeNull();
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
+    wb.unmount();
+    usePilatesStore.setState({ exercises: INITIAL_EXERCISES, activeSteps: [] });
   });
 
   it('renders Blender 3D studio apparatus preview frame in Apparatus3dRigPreviewCard and toggles cleanly', () => {
@@ -177,9 +271,19 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     expect(screen.queryByTestId('blender-studio-3d-render')).toBeNull();
   });
 
-  it('provides Tab 4 movement search in FreeAiAssistantPanel via OpenAI server transport and local fallback without exposing password/key inputs', async () => {
+  it('provides Tab 4 movement search in FreeAiAssistantPanel, surfaces rejected sequence-add errors, and cancels in-flight requests cleanly', async () => {
     const exercises = usePilatesStore.getState().exercises.slice(0, 6);
-    const onAddExercise = vi.fn();
+    const onAddExercise = vi
+      .fn()
+      .mockReturnValueOnce(undefined)
+      .mockReturnValueOnce({
+        ok: false,
+        message: '이미 시퀀스에 포함된 동작 계열입니다.',
+      });
+
+    let pendingResolve: ((val: { status: ReturnType<typeof createDefaultFreeAiStatus>; result: never }) => void) | null =
+      null;
+    let callCount = 0;
 
     const openAiClient = createFreeAiClient({
       transport: {
@@ -191,41 +295,49 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
             exhausted: false,
             reason: 'ready',
           }),
-        postAssist: async () => ({
-          status: createDefaultFreeAiStatus({
-            provider: 'openai',
-            model: 'gpt-4o-mini',
-            enabled: true,
-            exhausted: false,
-            reason: 'ready',
-          }),
-          result: {
-            kind: 'exercise-search',
-            source: 'openai-api',
-            provider: 'openai',
-            model: 'gpt-4o-mini',
-            cached: false,
-            querySummaryKo: '어깨 긴장 완화와 코어 연결에 적합한 리포머 동작입니다.',
-            recommendations: [
-              {
-                exerciseId: exercises[0]!.id,
-                nameKo: exercises[0]!.nameKo,
-                nameEn: exercises[0]!.nameEn,
-                apparatus: exercises[0]!.apparatus,
-                blockCategory: exercises[0]!.blockCategory,
-                level: exercises[0]!.level,
-                defaultDurationMin: exercises[0]!.defaultDurationMin,
-                springs: exercises[0]!.springs || '1R 1B',
-                matchReasonKo: '흉곽 호흡과 복횡근 인지에 적합합니다.',
-                cueHighlightKo: '내쉬는 숨에 늑골을 부드럽게 모아 주세요.',
-                setupCheckKo: '헤드레스트와 스프링 장력을 수업 전 확인하세요.',
-              },
-            ],
-            guaranteesSafetyOrEffect: false,
-            safetyDisclaimer:
-              '미검토 창작 동작 및 AI 제안은 안전성이나 운동·교정·치료 효과를 보장하지 않습니다.',
-          },
-        }),
+        postAssist: async () => {
+          callCount += 1;
+          if (callCount === 2) {
+            return new Promise((resolve) => {
+              pendingResolve = resolve as never;
+            });
+          }
+          return {
+            status: createDefaultFreeAiStatus({
+              provider: 'openai',
+              model: 'gpt-4o-mini',
+              enabled: true,
+              exhausted: false,
+              reason: 'ready',
+            }),
+            result: {
+              kind: 'exercise-search',
+              source: 'openai-api',
+              provider: 'openai',
+              model: 'gpt-4o-mini',
+              cached: false,
+              querySummaryKo: '어깨 긴장 완화와 코어 연결에 적합한 리포머 동작입니다.',
+              recommendations: [
+                {
+                  exerciseId: exercises[0]!.id,
+                  nameKo: exercises[0]!.nameKo,
+                  nameEn: exercises[0]!.nameEn,
+                  apparatus: exercises[0]!.apparatus,
+                  blockCategory: exercises[0]!.blockCategory,
+                  level: exercises[0]!.level,
+                  defaultDurationMin: exercises[0]!.defaultDurationMin,
+                  springs: exercises[0]!.springs || '1R 1B',
+                  matchReasonKo: '흉곽 호흡과 복횡근 인지에 적합합니다.',
+                  cueHighlightKo: '내쉬는 숨에 늑골을 부드럽게 모아 주세요.',
+                  setupCheckKo: '헤드레스트와 스프링 장력을 수업 전 확인하세요.',
+                },
+              ],
+              guaranteesSafetyOrEffect: false,
+              safetyDisclaimer:
+                '미검토 창작 동작 및 AI 제안은 안전성이나 운동·교정·치료 효과를 보장하지 않습니다.',
+            },
+          };
+        },
       },
     });
 
@@ -254,8 +366,28 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     const addBtn = screen.getByRole('button', {
       name: `${exercises[0]!.nameKo} 수업안에 추가`,
     });
+    // First click succeeds
     fireEvent.click(addBtn);
     expect(onAddExercise).toHaveBeenCalledWith(exercises[0]!.id, exercises[0]!.blockCategory);
+
+    // Second click rejected -> surfaces error alert instead of false success
+    fireEvent.click(addBtn);
+    expect(screen.getByRole('alert')).toHaveTextContent('이미 시퀀스에 포함된 동작 계열입니다.');
+
+    // Trigger a slow non-cached search and cancel via cancel button -> immediately frees concurrency slot
+    fireEvent.change(screen.getByLabelText('찾고 싶은 동작·움직임 설명'), {
+      target: { value: '취소 검증용 느린 리포머 브릿징 탐색 요청' },
+    });
+    fireEvent.click(aiSearchBtn);
+    expect(await screen.findByTestId('free-ai-loading-banner')).toBeInTheDocument();
+    expect(openAiClient.getQuotaStatus().activeRequests).toBe(1);
+
+    fireEvent.click(screen.getByTestId('free-ai-cancel-request-btn'));
+    await waitFor(() => {
+      expect(screen.queryByTestId('free-ai-loading-banner')).toBeNull();
+      expect(openAiClient.getQuotaStatus().activeRequests).toBe(0);
+    });
+    expect(pendingResolve).not.toBeNull();
   });
 
   it('switches cleanly between Instructor Studio and Member Booking views in App without losing state', async () => {

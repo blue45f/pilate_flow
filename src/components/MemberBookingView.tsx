@@ -66,9 +66,6 @@ function statusPillMeta(
   status: MemberSlotBookingStatus,
   todayIso: string,
 ): { label: string; tone: 'sage' | 'terracotta' | 'warning' | 'danger' | 'neutral' } {
-  if (slot.occurrenceStatus === 'cancelled') {
-    return { label: '✕ 폐강 안내', tone: 'danger' };
-  }
   if (slot.date < todayIso) {
     const spotPart = slot.myState === 'BOOKED' && slot.mySpotId ? ` · ${slot.mySpotId}번 자리` : '';
     return {
@@ -77,14 +74,32 @@ function statusPillMeta(
     };
   }
   if (slot.myState === 'BOOKED') {
+    if (slot.occurrenceStatus === 'cancelled') {
+      return { label: '✕ 폐강 · 횟수 복원 가능', tone: 'danger' };
+    }
+    if (slot.occurrenceStatus === 'moved') {
+      return { label: '▲ 일정 변경 · 예약 정리 필요', tone: 'warning' };
+    }
+    if (slot.occurrenceStatus === 'closed') {
+      return { label: '■ 마감 변경 · 예약 취소 가능', tone: 'warning' };
+    }
     const spotPart = slot.mySpotId ? ` · ${slot.mySpotId}번 자리` : '';
     return { label: `✓ 내 예약 확정${spotPart}`, tone: 'sage' };
   }
   if (slot.myState === 'WAITLISTED') {
+    if (slot.occurrenceStatus !== 'scheduled') {
+      return { label: '✕ 수업 변경 · 대기 정리', tone: 'warning' };
+    }
     return {
       label: `⏳ 내 대기 ${slot.myWaitlistOrder ?? 1}번`,
       tone: 'terracotta',
     };
+  }
+  if (slot.occurrenceStatus === 'cancelled') {
+    return { label: '✕ 폐강 안내', tone: 'danger' };
+  }
+  if (slot.occurrenceStatus === 'moved') {
+    return { label: '■ 일정 변경됨', tone: 'neutral' };
   }
   switch (status) {
     case 'AVAILABLE':
@@ -105,12 +120,13 @@ function ctaButtonLabel(
   intent: MemberBookingActionIntent | null,
   todayIso: string,
 ): string {
-  if (slot.occurrenceStatus === 'cancelled') return '폐강됨';
   if (slot.date < todayIso) return '종료됨';
-  if (intent === 'BOOK') return '예약하기';
-  if (intent === 'WAITLIST') return '대기 신청';
   if (intent === 'CANCEL_BOOKING') return '예약 취소';
   if (intent === 'CANCEL_WAITLIST') return '대기 취소';
+  if (slot.occurrenceStatus === 'cancelled') return '폐강됨';
+  if (slot.occurrenceStatus === 'moved') return '일정 변경됨';
+  if (intent === 'BOOK') return '예약하기';
+  if (intent === 'WAITLIST') return '대기 신청';
   return '마감됨';
 }
 
@@ -123,6 +139,7 @@ export interface MemberBookingViewProps {
 
 export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
   onSwitchToInstructor,
+  activeSection,
 }) => {
   const schedule = usePilatesStore((s) => s.instructorSchedule);
   const savedSequences = usePilatesStore((s) => s.savedSequences);
@@ -159,6 +176,17 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
   useEffect(() => {
     livePortalRef.current = portalState;
   }, [portalState]);
+
+  useEffect(() => {
+    if (!activeSection) return;
+    const sectionId =
+      activeSection === 'wallet'
+        ? 'member-wallet-section'
+        : activeSection === 'bookings'
+          ? 'member-bookings-section'
+          : 'member-schedule-section';
+    document.getElementById(sectionId)?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  }, [activeSection]);
 
   useEffect(() => {
     const onOnline = () => setIsBrowserOnline(true);
@@ -325,8 +353,29 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       let nextRemaining = currentPortal.pass.remainingCount;
       let message = '';
 
+      const liveSlot =
+        buildMemberSlotsForDate({
+          selectedDate: slot.date,
+          schedule,
+          savedSequences,
+          decisions: currentPortal.slotDecisions,
+        }).slots.find((item) => item.id === slot.id) ?? slot;
+
+      if (resolveMemberActionIntent(liveSlot, todayIso) !== intent) {
+        setErrorAlert(
+          '수업 상태가 변경되었습니다. 최신 예약 가능 상태를 확인한 뒤 다시 시도해 주세요.',
+        );
+        setPendingAction(null);
+        return;
+      }
+
       if (intent === 'BOOK') {
         if (existingDecision?.state === 'BOOKED') {
+          setPendingAction(null);
+          return;
+        }
+        if (liveSlot.date < todayIso || currentPortal.pass.expiresAtIso < liveSlot.date) {
+          setErrorAlert('예약 가능한 수업일 또는 수강권 유효기간 범위를 벗어났습니다.');
           setPendingAction(null);
           return;
         }
@@ -335,7 +384,15 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
           setPendingAction(null);
           return;
         }
-        const spotMeta = findSpotMetaById(slot.apparatus, selectedSpotId);
+        const chosenSpot = computeStudioSpotStates(liveSlot).find(
+          (item) => item.spotId === selectedSpotId,
+        );
+        if (!chosenSpot || chosenSpot.occupiedByOther) {
+          setErrorAlert('선택한 기구 자리가 이미 마감되었습니다. 다른 자리를 선택해 주세요.');
+          setPendingAction(null);
+          return;
+        }
+        const spotMeta = findSpotMetaById(liveSlot.apparatus, selectedSpotId);
         const apparatusNameKo = getApparatusSpotLabelKo(slot.apparatus);
         const spotDesc = spotMeta
           ? `${apparatusNameKo} ${spotMeta.spotId}(${spotMeta.zoneKo})`

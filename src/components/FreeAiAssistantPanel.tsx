@@ -181,6 +181,8 @@ export function FreeAiAssistantPanel({
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
   const tabRevision = useRef(0);
+  const requestSeqRef = useRef(0);
+  const activeAbortRef = useRef<AbortController | null>(null);
   const [appliedToPlan, setAppliedToPlan] = useState(false);
 
   // Tab 1: Class Draft state
@@ -392,6 +394,26 @@ export function FreeAiAssistantPanel({
     };
   }, [client]);
 
+  useEffect(
+    () => () => {
+      activeAbortRef.current?.abort();
+      activeAbortRef.current = null;
+    },
+    [],
+  );
+
+  const cancelActiveRequest = (showFeedback = false) => {
+    tabRevision.current += 1;
+    requestSeqRef.current += 1;
+    activeAbortRef.current?.abort();
+    activeAbortRef.current = null;
+    setIsLoading(false);
+    setQuotaStatus(client.getQuotaStatus());
+    if (showFeedback) {
+      setActionFeedback('진행 중인 요청을 취소했습니다. 조건을 조정한 뒤 바로 다시 시도할 수 있어요.');
+    }
+  };
+
   const draftHealthInspection = useMemo(() => inspectSensitiveHealthText(draftTheme), [draftTheme]);
   const ideaHealthInspection = useMemo(
     () => inspectSensitiveHealthText(`${rawIdeaText} ${baseExerciseName}`),
@@ -453,8 +475,16 @@ export function FreeAiAssistantPanel({
     setActionFeedback(`'${trimmed}' 프리셋을 저장했습니다.`);
   };
 
-  const runClassDraft = async (preferLocalOnly: boolean) => {
+  const beginTrackedRequest = () => {
+    activeAbortRef.current?.abort();
+    const controller = new AbortController();
+    activeAbortRef.current = controller;
+    const reqSeq = ++requestSeqRef.current;
     const requestTabRevision = tabRevision.current;
+    return { controller, reqSeq, requestTabRevision };
+  };
+
+  const runClassDraft = async (preferLocalOnly: boolean) => {
     setErrorBanner(null);
     setActionFeedback(null);
     setAppliedToPlan(false);
@@ -462,6 +492,7 @@ export function FreeAiAssistantPanel({
       setErrorBanner(draftHealthInspection.warningMessageKo);
       return;
     }
+    const { controller, reqSeq, requestTabRevision } = beginTrackedRequest();
     setIsLoading(true);
     try {
       const input: ClassDraftConditionsInput = {
@@ -474,9 +505,10 @@ export function FreeAiAssistantPanel({
       };
       const response = await client.requestClassDraft(input, exercises, conditionTemplates, {
         preferLocalOnly,
+        signal: controller.signal,
       });
       setQuotaStatus(response.status);
-      if (requestTabRevision !== tabRevision.current) return;
+      if (reqSeq !== requestSeqRef.current || requestTabRevision !== tabRevision.current) return;
       setClassDraftResult(response.result);
       setActionFeedback(
         response.usedLocalFallback
@@ -489,7 +521,14 @@ export function FreeAiAssistantPanel({
       );
     } catch (error) {
       setQuotaStatus(client.getQuotaStatus());
-      if (requestTabRevision !== tabRevision.current) return;
+      if (
+        controller.signal.aborted ||
+        (error instanceof FreeAiClientError && error.code === 'request_cancelled') ||
+        reqSeq !== requestSeqRef.current ||
+        requestTabRevision !== tabRevision.current
+      ) {
+        return;
+      }
       if (error instanceof FreeAiClientError) {
         setErrorBanner(error.message);
       } else {
@@ -498,12 +537,14 @@ export function FreeAiAssistantPanel({
         );
       }
     } finally {
-      setIsLoading(false);
+      if (reqSeq === requestSeqRef.current) {
+        activeAbortRef.current = null;
+        setIsLoading(false);
+      }
     }
   };
 
   const runMovementIdea = async (preferLocalOnly: boolean) => {
-    const requestTabRevision = tabRevision.current;
     setErrorBanner(null);
     setActionFeedback(null);
     setAppliedToPlan(false);
@@ -515,6 +556,7 @@ export function FreeAiAssistantPanel({
       setErrorBanner(ideaHealthInspection.warningMessageKo);
       return;
     }
+    const { controller, reqSeq, requestTabRevision } = beginTrackedRequest();
     setIsLoading(true);
     try {
       const input: MovementIdeaInput = {
@@ -525,9 +567,12 @@ export function FreeAiAssistantPanel({
         strengthenArea: ideaArea,
         level: ideaLevel,
       };
-      const response = await client.requestMovementIdea(input, { preferLocalOnly });
+      const response = await client.requestMovementIdea(input, {
+        preferLocalOnly,
+        signal: controller.signal,
+      });
       setQuotaStatus(response.status);
-      if (requestTabRevision !== tabRevision.current) return;
+      if (reqSeq !== requestSeqRef.current || requestTabRevision !== tabRevision.current) return;
       setMovementIdeaResult(response.result);
       setActionFeedback(
         response.usedLocalFallback
@@ -538,7 +583,14 @@ export function FreeAiAssistantPanel({
       );
     } catch (error) {
       setQuotaStatus(client.getQuotaStatus());
-      if (requestTabRevision !== tabRevision.current) return;
+      if (
+        controller.signal.aborted ||
+        (error instanceof FreeAiClientError && error.code === 'request_cancelled') ||
+        reqSeq !== requestSeqRef.current ||
+        requestTabRevision !== tabRevision.current
+      ) {
+        return;
+      }
       if (error instanceof FreeAiClientError) {
         setErrorBanner(error.message);
       } else {
@@ -547,12 +599,14 @@ export function FreeAiAssistantPanel({
         );
       }
     } finally {
-      setIsLoading(false);
+      if (reqSeq === requestSeqRef.current) {
+        activeAbortRef.current = null;
+        setIsLoading(false);
+      }
     }
   };
 
   const runSequenceCompose = async (preferLocalOnly: boolean) => {
-    const requestTabRevision = tabRevision.current;
     setErrorBanner(null);
     setActionFeedback(null);
     setAppliedToPlan(false);
@@ -560,6 +614,7 @@ export function FreeAiAssistantPanel({
       setErrorBanner(composeHealthInspection.warningMessageKo);
       return;
     }
+    const { controller, reqSeq, requestTabRevision } = beginTrackedRequest();
     setIsLoading(true);
     try {
       const response = await client.requestSequenceCompose(
@@ -574,10 +629,10 @@ export function FreeAiAssistantPanel({
         },
         exercises,
         reusableBlocks,
-        { preferLocalOnly },
+        { preferLocalOnly, signal: controller.signal },
       );
       setQuotaStatus(response.status);
-      if (requestTabRevision !== tabRevision.current) return;
+      if (reqSeq !== requestSeqRef.current || requestTabRevision !== tabRevision.current) return;
       setComposeResult(response.result);
       setActionFeedback(
         response.usedLocalFallback
@@ -588,7 +643,14 @@ export function FreeAiAssistantPanel({
       );
     } catch (error) {
       setQuotaStatus(client.getQuotaStatus());
-      if (requestTabRevision !== tabRevision.current) return;
+      if (
+        controller.signal.aborted ||
+        (error instanceof FreeAiClientError && error.code === 'request_cancelled') ||
+        reqSeq !== requestSeqRef.current ||
+        requestTabRevision !== tabRevision.current
+      ) {
+        return;
+      }
       if (error instanceof FreeAiClientError) {
         setErrorBanner(error.message);
       } else {
@@ -597,12 +659,14 @@ export function FreeAiAssistantPanel({
         );
       }
     } finally {
-      setIsLoading(false);
+      if (reqSeq === requestSeqRef.current) {
+        activeAbortRef.current = null;
+        setIsLoading(false);
+      }
     }
   };
 
   const runMovementSearch = async (preferLocalOnly: boolean) => {
-    const requestTabRevision = tabRevision.current;
     setErrorBanner(null);
     setActionFeedback(null);
     setAppliedToPlan(false);
@@ -614,6 +678,7 @@ export function FreeAiAssistantPanel({
       setErrorBanner(searchHealthInspection.warningMessageKo);
       return;
     }
+    const { controller, reqSeq, requestTabRevision } = beginTrackedRequest();
     setIsLoading(true);
     try {
       const input: MovementSearchAssistInput = {
@@ -625,9 +690,10 @@ export function FreeAiAssistantPanel({
       };
       const response = await client.requestMovementSearch(input, exercises, {
         preferLocalOnly,
+        signal: controller.signal,
       });
       setQuotaStatus(response.status);
-      if (requestTabRevision !== tabRevision.current) return;
+      if (reqSeq !== requestSeqRef.current || requestTabRevision !== tabRevision.current) return;
       setSearchResult(response.result);
       setActionFeedback(
         response.usedLocalFallback
@@ -638,7 +704,14 @@ export function FreeAiAssistantPanel({
       );
     } catch (error) {
       setQuotaStatus(client.getQuotaStatus());
-      if (requestTabRevision !== tabRevision.current) return;
+      if (
+        controller.signal.aborted ||
+        (error instanceof FreeAiClientError && error.code === 'request_cancelled') ||
+        reqSeq !== requestSeqRef.current ||
+        requestTabRevision !== tabRevision.current
+      ) {
+        return;
+      }
       if (error instanceof FreeAiClientError) {
         setErrorBanner(error.message);
       } else {
@@ -647,7 +720,10 @@ export function FreeAiAssistantPanel({
         );
       }
     } finally {
-      setIsLoading(false);
+      if (reqSeq === requestSeqRef.current) {
+        activeAbortRef.current = null;
+        setIsLoading(false);
+      }
     }
   };
 
@@ -943,7 +1019,7 @@ export function FreeAiAssistantPanel({
           className="free-ai-tab-btn"
           aria-selected={activeTab === 'class-draft'}
           onClick={() => {
-            tabRevision.current += 1;
+            cancelActiveRequest(false);
             setActiveTab('class-draft');
             setErrorBanner(null);
             setActionFeedback(null);
@@ -958,7 +1034,7 @@ export function FreeAiAssistantPanel({
           className="free-ai-tab-btn"
           aria-selected={activeTab === 'movement-idea'}
           onClick={() => {
-            tabRevision.current += 1;
+            cancelActiveRequest(false);
             setActiveTab('movement-idea');
             setErrorBanner(null);
             setActionFeedback(null);
@@ -973,7 +1049,7 @@ export function FreeAiAssistantPanel({
           className="free-ai-tab-btn"
           aria-selected={activeTab === 'sequence-compose'}
           onClick={() => {
-            tabRevision.current += 1;
+            cancelActiveRequest(false);
             setActiveTab('sequence-compose');
             setErrorBanner(null);
             setActionFeedback(null);
@@ -988,7 +1064,7 @@ export function FreeAiAssistantPanel({
           className="free-ai-tab-btn"
           aria-selected={activeTab === 'exercise-search'}
           onClick={() => {
-            tabRevision.current += 1;
+            cancelActiveRequest(false);
             setActiveTab('exercise-search');
             setErrorBanner(null);
             setActionFeedback(null);
@@ -1004,8 +1080,17 @@ export function FreeAiAssistantPanel({
           className="free-ai-status-banner is-loading"
           data-testid="free-ai-loading-banner"
           aria-live="polite"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
         >
-          요청한 내용을 정리하고 있어요…
+          <span>요청한 내용을 정리하고 있어요…</span>
+          <button
+            type="button"
+            className="free-ai-btn-secondary"
+            data-testid="free-ai-cancel-request-btn"
+            onClick={() => cancelActiveRequest(true)}
+          >
+            요청 취소
+          </button>
         </div>
       )}
       {errorBanner && (
@@ -1923,7 +2008,23 @@ export function FreeAiAssistantPanel({
                           className="free-ai-btn-primary"
                           aria-label={`${rec.nameKo} 수업안에 추가`}
                           onClick={() => {
-                            onAddExerciseToSequence?.(rec.exerciseId, rec.blockCategory);
+                            const outcome = onAddExerciseToSequence?.(
+                              rec.exerciseId,
+                              rec.blockCategory,
+                            );
+                            if (
+                              outcome === false ||
+                              (outcome && typeof outcome === 'object' && !outcome.ok)
+                            ) {
+                              setAppliedToPlan(false);
+                              setActionFeedback(null);
+                              setErrorBanner(
+                                (typeof outcome === 'object' && outcome.message) ||
+                                  `'${rec.nameKo}' 동작을 현재 수업 조건에 추가하지 못했습니다. 기구·난이도·중복 여부를 확인해 주세요.`,
+                              );
+                              return;
+                            }
+                            setErrorBanner(null);
                             setAppliedToPlan(true);
                             setActionFeedback(
                               `'${rec.nameKo}' 동작을 현재 수업 시퀀스에 추가했습니다.`,
