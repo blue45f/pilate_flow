@@ -833,6 +833,80 @@ describe('backend/freeAiService', () => {
       });
       expect(fetchFn).not.toHaveBeenCalled();
     });
+
+    it('strictly blocks expensive or realtime OpenAI model families (gpt-5, gpt-4.1, realtime) while allowing pinned snapshots', () => {
+      for (const blockedModel of [
+        'gpt-5',
+        'gpt-5-pro',
+        'gpt-4.1',
+        'gpt-4o-realtime-preview',
+        'gpt-4o-audio-preview',
+      ]) {
+        const res = resolveFreeAiConfig({
+          OPENAI_API_KEY: 'server-only-openai-secret',
+          OPENAI_MODEL: blockedModel,
+        });
+        expect(res.enabled).toBe(false);
+        expect(res.reason).toBe('invalid_paid_model_blocked');
+        expect(res.apiKey).toBeNull();
+      }
+
+      const pinnedSnapshot = resolveFreeAiConfig({
+        OPENAI_API_KEY: 'server-only-openai-secret',
+        OPENAI_MODEL: 'gpt-4o-mini-2024-07-18',
+      });
+      expect(pinnedSnapshot.enabled).toBe(true);
+      expect(pinnedSnapshot.model).toBe('gpt-4o-mini-2024-07-18');
+    });
+
+    it('rolls back reserved minuteUsed and dailyUsed counters on upstream 5xx or malformed JSON without burning quota', async () => {
+      let attempt = 0;
+      const fetchFn = vi.fn(async () => {
+        attempt += 1;
+        if (attempt === 1) {
+          return new Response('Bad Gateway', { status: 502 });
+        }
+        if (attempt === 2) {
+          return new Response(
+            JSON.stringify({
+              choices: [{ message: { content: 'not-valid-json{{{' } }],
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } },
+          );
+        }
+        return makeOpenRouterSuccessResponse(VALID_IDEA_UPSTREAM_JSON);
+      });
+
+      const service = createFreeAiService({
+        env: { OPENAI_API_KEY: 'server-only-openai-secret' },
+        fetchFn,
+        minuteLimit: 2,
+        dailyLimit: 2,
+      });
+
+      await expect(
+        service.assist('instructor-1', SAMPLE_MOVEMENT_IDEA_REQ),
+      ).rejects.toMatchObject({
+        code: 'upstream_error',
+        status: 502,
+      });
+      expect(service.getStatus().minuteUsed).toBe(0);
+      expect(service.getStatus().dailyUsed).toBe(0);
+
+      await expect(
+        service.assist('instructor-1', SAMPLE_MOVEMENT_IDEA_REQ),
+      ).rejects.toMatchObject({
+        code: 'invalid_ai_response',
+        status: 502,
+      });
+      expect(service.getStatus().minuteUsed).toBe(0);
+      expect(service.getStatus().dailyUsed).toBe(0);
+
+      const okRes = await service.assist('instructor-1', SAMPLE_MOVEMENT_IDEA_REQ);
+      expect(okRes.kind).toBe('movement-idea');
+      expect(service.getStatus().minuteUsed).toBe(1);
+      expect(service.getStatus().dailyUsed).toBe(1);
+    });
   });
 });
 
