@@ -6,7 +6,7 @@ import {
 } from '../data/motionPatternReferences';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
 import { matchesDiscoverySearch } from '../utils/discoverySearch';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowUpRight,
   Check,
@@ -16,6 +16,7 @@ import {
   FileText,
   Heart,
   Info,
+  Layers,
   Plus,
   Play,
   Search,
@@ -37,7 +38,12 @@ import {
   type VerifiedPublicReference,
 } from '../data/verifiedReferences';
 import reviewQueueCsvUrl from '../data/sourceCatalog/review-queue.csv?url';
-import { EQUIPMENT_OPTIONS, PROP_OPTIONS, getExerciseEquipment } from '../data/equipmentCatalog';
+import {
+  EQUIPMENT_OPTIONS,
+  PROP_OPTIONS,
+  getEquipmentFamilies,
+  getExerciseEquipment,
+} from '../data/equipmentCatalog';
 import { matchesLibraryEquipment } from '../data/libraryEquipmentFilters';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
 import {
@@ -48,16 +54,22 @@ import {
 import { PfAiStatusBadge, PfBadge, PfButton, PfMovementCard } from '../design-system';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type {
+  ApparatusType,
+  AutoGenerateCriteria,
   BodyPosition,
   ClassBlockCategory,
   DifficultyLevel,
   FavoriteTag,
   PilatesExercise,
   PropType,
+  SequenceStep,
 } from '../types/pilates';
 import {
+  exerciseMatchesCriteria,
   formatSecondsToMMSS,
   getExerciseLastTaughtInfo,
+  getMovementKey,
+  getSequenceDurations,
   isRestStep,
 } from '../utils/sequenceEngine';
 import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';
@@ -78,6 +90,7 @@ import '../styles/library-learning.css';
 import '../styles/motion-library.css';
 import '../styles/library-asset-status.css';
 import '../styles/library-concept-layout.css';
+import './ExerciseAtlasView.usability.css';
 import { LibraryMovementInspector } from './LibraryMovementInspector';
 import { COURSE_REFERENCES } from '../data/courseReferences';
 import {
@@ -113,6 +126,15 @@ usePilatesStore.subscribe((state, prevState) => {
 });
 
 const LEVEL_NAMES = { '1.0': '기초', '1.5': '중급', '2.0': '심화' };
+const APPARATUS_CRITERIA_LABELS: Record<ApparatusType | 'mixed', string> = {
+  mat: '매트',
+  reformer: '리포머',
+  cadillac: '캐딜락',
+  chair: '체어',
+  barrel: '바렐',
+  mixed: '혼합 기구',
+};
+const MAX_COMPARE_ITEMS = 3;
 const PATTERN_STUDIES = [
   ...MOTION_PATTERN_REFERENCES.filter((reference) => reference.family === 'authoring-batch'),
   ...MOTION_PATTERN_REFERENCES.filter((reference) => reference.family !== 'authoring-batch'),
@@ -130,6 +152,93 @@ const equipmentLabel = (id: string) =>
 const propLabel = (id: PropType) => PROP_OPTIONS.find((item) => item.id === id)?.labelKo || id;
 const toggleSelection = <T extends string>(items: T[], value: T): T[] =>
   items.includes(value) ? items.filter((item) => item !== value) : [...items, value];
+
+interface SequenceMovementEntry {
+  step: SequenceStep;
+  orderNumber: number;
+  exercise: PilatesExercise | null;
+}
+
+type CardSequenceReadiness =
+  | { status: 'in-sequence'; orderNumber: number; label: string }
+  | {
+      status: 'family-conflict';
+      conflictOrderNumber: number;
+      conflictNameKo: string;
+      label: string;
+    }
+  | { status: 'criteria-mismatch'; reason: string; label: string }
+  | { status: 'ready'; label: string };
+
+function evaluateCardSequenceReadiness(
+  exercise: PilatesExercise,
+  sequenceEntries: readonly SequenceMovementEntry[],
+  criteria: AutoGenerateCriteria,
+  ownedEquipment: readonly string[],
+  ownedProps: readonly PropType[],
+): CardSequenceReadiness {
+  const matchedEntry = sequenceEntries.find((entry) => entry.step.exerciseId === exercise.id);
+  if (matchedEntry) {
+    return {
+      status: 'in-sequence',
+      orderNumber: matchedEntry.orderNumber,
+      label: `수업안 포함 · #${matchedEntry.orderNumber}`,
+    };
+  }
+  if (isMovementIdeaExercise(exercise)) {
+    return { status: 'ready', label: '내 창작 메모 · 바로 추가 가능' };
+  }
+  const movementKey = getMovementKey(exercise);
+  const familyConflict = sequenceEntries.find(
+    (entry) =>
+      entry.exercise &&
+      entry.exercise.id !== exercise.id &&
+      getMovementKey(entry.exercise) === movementKey,
+  );
+  if (familyConflict && familyConflict.exercise) {
+    return {
+      status: 'family-conflict',
+      conflictOrderNumber: familyConflict.orderNumber,
+      conflictNameKo: familyConflict.exercise.nameKo,
+      label: `동일 계열 포함됨 · #${familyConflict.orderNumber} ${familyConflict.exercise.nameKo}`,
+    };
+  }
+  const equipmentMeta = getExerciseEquipment(exercise);
+  const missingOwnedEq = equipmentMeta.requiredEquipment.some((id) => !ownedEquipment.includes(id));
+  const missingOwnedProps = equipmentMeta.requiredProps.some((prop) => !ownedProps.includes(prop));
+  if (
+    !exerciseMatchesCriteria(exercise, criteria) ||
+    missingOwnedEq ||
+    missingOwnedProps
+  ) {
+    let reason = '현재 수업 조건 확인';
+    if (!equipmentMeta.requirementsKnown) {
+      reason = '요구 조건 확인 필요';
+    } else if (criteria.apparatus !== 'mixed' && exercise.apparatus !== criteria.apparatus) {
+      reason = `수업 기구 확인 · 현재 ${APPARATUS_CRITERIA_LABELS[criteria.apparatus]}`;
+    } else if (Number(exercise.level) > Number(criteria.level)) {
+      reason = `난이도 확인 · 최대 Lv ${criteria.level}`;
+    } else if (
+      missingOwnedEq ||
+      !equipmentMeta.requiredEquipment.every((id) =>
+        (criteria.availableEquipment ?? []).includes(id),
+      )
+    ) {
+      reason = `사용 기구 확인 · ${equipmentMeta.requiredEquipment.map(equipmentLabel).join('·')}`;
+    } else if (
+      missingOwnedProps ||
+      !exercise.props.every((prop) => prop === 'none' || criteria.preferredProps.includes(prop))
+    ) {
+      reason = `소도구 확인 · ${equipmentMeta.requiredProps.map(propLabel).join('·')}`;
+    }
+    return {
+      status: 'criteria-mismatch',
+      reason,
+      label: reason,
+    };
+  }
+  return { status: 'ready', label: '현재 수업 조건 일치' };
+}
 
 interface RequirementFilterProps {
   equipment: string[];
@@ -791,6 +900,11 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     historyLogs,
     activeTargetGroupId,
     setActiveTargetGroupId,
+    activeApparatus,
+    activeLevel,
+    activeTargetMinutes,
+    lastCriteria,
+    draftCriteria,
     appendExerciseToSequence,
     setExerciseFavoriteTag,
     activeSteps,
@@ -827,10 +941,23 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const [previewCatalogMotionId, setPreviewCatalogMotionId] = useState<string | null>(null);
   const [patternPage, setPatternPage] = useState(0);
   const [inspectedExerciseId, setInspectedExerciseId] = useState<string | null>(null);
+  const [compareState, setCompareState] = useState<{
+    ids: string[];
+    expanded: boolean;
+    limitNotice: string | null;
+  }>({
+    ids: [],
+    expanded: false,
+    limitNotice: null,
+  });
+
   const inspectedExercise =
     exercises.find((exercise) => exercise.id === inspectedExerciseId) ?? null;
   const inspectorHeading = useRef<HTMLHeadingElement>(null);
   const inspectorTrigger = useRef<HTMLButtonElement | null>(null);
+  const compareExpandBtnRef = useRef<HTMLButtonElement | null>(null);
+  const lastCompareTriggerRef = useRef<HTMLButtonElement | null>(null);
+
   const inspectExercise = (exercise: PilatesExercise, trigger: HTMLButtonElement) => {
     inspectorTrigger.current = trigger;
     setInspectedExerciseId(exercise.id);
@@ -880,7 +1007,154 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       }
     });
   };
-  const selectedCount = activeSteps.filter((step) => !isRestStep(step)).length;
+
+  const sequenceMovementSteps = useMemo<SequenceMovementEntry[]>(
+    () =>
+      activeSteps
+        .filter((step) => !isRestStep(step))
+        .map((step, index) => ({
+          step,
+          orderNumber: index + 1,
+          exercise: exercises.find((item) => item.id === step.exerciseId) ?? null,
+        })),
+    [activeSteps, exercises],
+  );
+  const selectedCount = sequenceMovementSteps.length;
+  const sequenceTotalMinutes = useMemo(
+    () => Math.round((getSequenceDurations(activeSteps).totalSec / 60) * 10) / 10,
+    [activeSteps],
+  );
+
+  const effectiveCriteria = useMemo<AutoGenerateCriteria>(() => {
+    const source = lastCriteria ?? draftCriteria;
+    const stepEquipment = [
+      ...new Set(
+        activeSteps.flatMap((step) => {
+          const item = exercises.find((candidate) => candidate.id === step.exerciseId);
+          return item ? getExerciseEquipment(item).requiredEquipment : [];
+        }),
+      ),
+    ];
+    const selected =
+      source?.availableEquipment ??
+      (stepEquipment.length
+        ? stepEquipment
+        : activeApparatus === 'mixed'
+          ? []
+          : [activeApparatus]);
+    return {
+      focusPreset: 'full-body',
+      excludeDaysWindow: 10,
+      defaultLayer: 'standard',
+      ...source,
+      apparatus: activeSteps.length ? activeApparatus : (source?.apparatus ?? activeApparatus),
+      ownedApparatus: getEquipmentFamilies(selected),
+      availableEquipment: selected,
+      preferredProps: (source?.preferredProps ?? ownedProps).filter(
+        (prop) => prop === 'none' || ownedProps.includes(prop),
+      ),
+      level: activeSteps.length ? activeLevel : (source?.level ?? activeLevel),
+      targetGroupId: source?.targetGroupId ?? activeTargetGroupId,
+      targetMinutes: activeSteps.length
+        ? activeTargetMinutes
+        : (source?.targetMinutes ?? activeTargetMinutes),
+      restMinutes: activeSteps.length
+        ? getSequenceDurations(activeSteps).restSec / 60
+        : (source?.restMinutes ?? 0),
+    };
+  }, [
+    activeApparatus,
+    activeLevel,
+    activeSteps,
+    activeTargetGroupId,
+    activeTargetMinutes,
+    draftCriteria,
+    exercises,
+    lastCriteria,
+    ownedProps,
+  ]);
+
+  const comparedExercises = useMemo(
+    () =>
+      compareState.ids
+        .map((id) => exercises.find((item) => item.id === id))
+        .filter((item): item is PilatesExercise => Boolean(item)),
+    [compareState.ids, exercises],
+  );
+  const filteredIdSet = useMemo(() => new Set(filtered.map((item) => item.id)), [filtered]);
+
+  const toggleCompareExercise = (exercise: PilatesExercise, trigger: HTMLButtonElement) => {
+    lastCompareTriggerRef.current = trigger;
+    setCompareState((previous) => {
+      const validIds = previous.ids.filter((id) => exercises.some((item) => item.id === id));
+      if (validIds.includes(exercise.id)) {
+        const nextIds = validIds.filter((id) => id !== exercise.id);
+        return {
+          ids: nextIds,
+          expanded: nextIds.length > 0 ? previous.expanded : false,
+          limitNotice: null,
+        };
+      }
+      if (validIds.length >= MAX_COMPARE_ITEMS) {
+        return {
+          ids: validIds,
+          expanded: true,
+          limitNotice: `비교함에는 최대 ${MAX_COMPARE_ITEMS}개 동작까지 담을 수 있어요. 먼저 후보 하나를 비운 뒤 선택해 주세요.`,
+        };
+      }
+      const nextIds = [...validIds, exercise.id];
+      return {
+        ids: nextIds,
+        expanded: nextIds.length >= 2 ? true : previous.expanded,
+        limitNotice: null,
+      };
+    });
+  };
+
+  const removeComparedExercise = (exerciseId: string) => {
+    const remainingCount = comparedExercises.filter((item) => item.id !== exerciseId).length;
+    setCompareState((previous) => {
+      const validIds = previous.ids.filter((id) => exercises.some((item) => item.id === id));
+      const nextIds = validIds.filter((id) => id !== exerciseId);
+      return {
+        ids: nextIds,
+        expanded: nextIds.length > 0 ? previous.expanded : false,
+        limitNotice: null,
+      };
+    });
+    requestAnimationFrame(() => {
+      if (remainingCount > 0 && compareExpandBtnRef.current?.isConnected) {
+        compareExpandBtnRef.current.focus();
+      } else if (lastCompareTriggerRef.current?.isConnected) {
+        lastCompareTriggerRef.current.focus();
+      } else {
+        searchInput.current?.focus();
+      }
+    });
+  };
+
+  const clearComparedExercises = () => {
+    setCompareState({ ids: [], expanded: false, limitNotice: null });
+    requestAnimationFrame(() => {
+      if (lastCompareTriggerRef.current?.isConnected) {
+        lastCompareTriggerRef.current.focus();
+      } else {
+        searchInput.current?.focus();
+      }
+    });
+  };
+
+  const collapseComparePanel = () => {
+    setCompareState((previous) => ({ ...previous, expanded: false, limitNotice: null }));
+    requestAnimationFrame(() => {
+      if (compareExpandBtnRef.current?.isConnected) {
+        compareExpandBtnRef.current.focus();
+      } else {
+        searchInput.current?.focus();
+      }
+    });
+  };
+
   const openPatternPreview = (reference: MotionPatternReference, trigger: HTMLButtonElement) => {
     previewTrigger.current = trigger;
     setPreviewCatalogMotionId(null);
@@ -1142,10 +1416,12 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             )}
           </div>
           <section className="library-tools panel" aria-label="동작 검색과 필터">
-            <div className="library-search-row">
+            <div className="library-search-row" role="search" aria-label="동작 검색창">
               <label className="library-search">
                 <Search size={19} aria-hidden="true" />
-                <span className="sr-only">동작 검색</span>
+                <span className="sr-only" id="atlas-search-input-label">
+                  동작 검색
+                </span>
                 <input
                   ref={searchInput}
                   type="search"
@@ -1155,7 +1431,12 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   placeholder="한글·영문 이름, 부위·기구·소도구로 검색"
                 />
                 {filters.search && (
-                  <PfButton variant="icon" onClick={clearSearch} aria-label="검색어 지우기">
+                  <PfButton
+                    variant="icon"
+                    onClick={clearSearch}
+                    aria-label="검색어 지우기"
+                    aria-describedby="atlas-search-input-label"
+                  >
                     <X size={15} />
                   </PfButton>
                 )}
@@ -1181,7 +1462,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 aria-pressed={filters.equipment.length === 0}
                 onClick={() => update('equipment', [])}
               >
-                <ApparatusIconBadge apparatus="all" size="xs" decorative /> 전체 기구 <span>{exercises.length}</span>
+                <ApparatusIconBadge apparatus="all" size="xs" decorative /> 전체 기구{' '}
+                <span>{exercises.length}</span>
               </button>
               {EQUIPMENT_OPTIONS.map((item) => (
                 <button
@@ -1402,7 +1684,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               exercise={inspectedExercise}
               headingRef={inspectorHeading}
               isInResults={Boolean(
-                inspectedExercise && filtered.some((item) => item.id === inspectedExercise.id),
+                inspectedExercise && filteredIdSet.has(inspectedExercise.id),
               )}
               onClose={closeInspector}
               onOpenDetails={(exercise) =>
@@ -1425,9 +1707,293 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   </PfButton>
                 )}
               </div>
-              <p className="ml-review-note">
-                동작을 바로 추가하고 순서를 바꾸세요. 검토 기록은 선택 사항입니다.
-              </p>
+              <div className="atlas-results-context-row">
+                <p className="ml-review-note">
+                  동작을 바로 추가하고 순서를 바꾸세요. 검토 기록은 선택 사항입니다.
+                </p>
+                <p
+                  className="atlas-current-class-pill"
+                  data-testid="atlas-current-class-criteria"
+                >
+                  현재 수업 기준:{' '}
+                  <strong>{APPARATUS_CRITERIA_LABELS[effectiveCriteria.apparatus]}</strong> · 최대
+                  Lv {effectiveCriteria.level} · 목표 {effectiveCriteria.targetMinutes}분
+                </p>
+              </div>
+
+              {comparedExercises.length > 0 && (
+                <section
+                  className="atlas-compare-region"
+                  aria-label="선택 동작 비교"
+                  data-testid="atlas-compare-region"
+                  onKeyDown={(event) => {
+                    if (event.key === 'Escape' && compareState.expanded) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      collapseComparePanel();
+                    }
+                  }}
+                >
+                  <div className="atlas-compare-bar">
+                    <div className="atlas-compare-summary">
+                      <span className="atlas-compare-count">
+                        <Layers size={14} aria-hidden="true" />
+                        비교 후보 {comparedExercises.length}/{MAX_COMPARE_ITEMS}개
+                      </span>
+                      <span className="atlas-compare-hint">
+                        {comparedExercises.length < 2
+                          ? '다른 후보를 1~2개 더 담으면 나란히 비교할 수 있어요 (검색·필터 변경 시에도 유지).'
+                          : '검색어·필터를 바꿔도 비교 후보가 유지됩니다. 비교 후 원하는 동작을 바로 추가하세요.'}
+                      </span>
+                    </div>
+                    <div className="atlas-compare-bar-actions">
+                      <button
+                        type="button"
+                        ref={compareExpandBtnRef}
+                        className="atlas-compare-expand-btn"
+                        aria-expanded={compareState.expanded}
+                        aria-controls="atlas-compare-grid"
+                        onClick={() =>
+                          setCompareState((previous) => ({
+                            ...previous,
+                            expanded: !previous.expanded,
+                            limitNotice: null,
+                          }))
+                        }
+                      >
+                        {compareState.expanded
+                          ? '비교표 접기'
+                          : `비교표 펼치기 (${comparedExercises.length})`}
+                      </button>
+                      <button
+                        type="button"
+                        className="atlas-compare-clear-btn"
+                        onClick={clearComparedExercises}
+                      >
+                        비교 비우기 <X size={13} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+                  <ul className="atlas-compare-chips" aria-label="비교 후보 목록">
+                    {comparedExercises.map((item, idx) => (
+                      <li className="atlas-compare-chip" key={item.id}>
+                        <span className="atlas-compare-chip-label">
+                          {idx + 1}. {item.nameKo}
+                        </span>
+                        <button
+                          type="button"
+                          className="atlas-compare-chip-remove"
+                          aria-label={`${item.nameKo} 비교에서 제거`}
+                          onClick={() => removeComparedExercise(item.id)}
+                        >
+                          <X size={13} aria-hidden="true" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  {compareState.limitNotice && (
+                    <p
+                      className="atlas-compare-limit-notice"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {compareState.limitNotice}
+                    </p>
+                  )}
+                  {compareState.expanded && (
+                    <div id="atlas-compare-grid" className="atlas-compare-grid">
+                      {comparedExercises.map((item) => {
+                        const itemPatterns = getMotionPatternReferences(item.id);
+                        const itemKinematic = getCatalogContinuousMotionAsset(item);
+                        const itemReadiness = evaluateCardSequenceReadiness(
+                          item,
+                          sequenceMovementSteps,
+                          effectiveCriteria,
+                          ownedEquipment,
+                          ownedProps,
+                        );
+                        const itemProvenance = getMovementProvenance(item);
+                        const itemApproved = isExerciseAutoEligible(item);
+                        const itemReviewState = getExerciseReviewState(item);
+                        const itemIsIdea = isMovementIdeaExercise(item);
+                        const itemIdeaMeta = itemIsIdea ? readMovementIdeaDraft(item) : null;
+                        const itemInResults = filteredIdSet.has(item.id);
+                        const itemEqMeta = getExerciseEquipment(item);
+                        const itemInSeq = itemReadiness.status === 'in-sequence';
+
+                        return (
+                          <article
+                            key={item.id}
+                            className={`atlas-compare-card ${itemInSeq ? 'is-in-sequence' : ''}`.trim()}
+                            data-testid={`atlas-compare-card-${item.id}`}
+                          >
+                            <div className="atlas-compare-card-top">
+                              <div className="atlas-compare-card-titles">
+                                <h3>{item.nameKo}</h3>
+                                <p>{item.nameEn}</p>
+                                {!itemInResults && (
+                                  <span className="atlas-compare-filter-note">
+                                    현재 필터 밖 · 비교 유지됨
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                className="atlas-compare-chip-remove"
+                                aria-label={`비교표에서 ${item.nameKo} 닫기`}
+                                onClick={() => removeComparedExercise(item.id)}
+                              >
+                                <X size={15} aria-hidden="true" />
+                              </button>
+                            </div>
+
+                            <button
+                              type="button"
+                              className="atlas-compare-art-btn"
+                              aria-label={`비교함에서 ${item.nameKo} 도해 미리보기`}
+                              onClick={(event) => {
+                                if (itemPatterns[0]) {
+                                  openPatternPreview(itemPatterns[0], event.currentTarget);
+                                } else if (itemKinematic) {
+                                  openCatalogMotionPreview(item.id, event.currentTarget);
+                                } else {
+                                  onOpenYouTubePreview(item);
+                                }
+                              }}
+                            >
+                              <span className="atlas-compare-art-stage">
+                                {itemPatterns[0] ? (
+                                  <MotionPatternThumbnail reference={itemPatterns[0]} />
+                                ) : itemKinematic ? (
+                                  <CatalogMotionThumbnail asset={itemKinematic} />
+                                ) : (
+                                  <span>
+                                    {APPARATUS_LABELS[item.apparatus].ko} ·{' '}
+                                    {POSITION_LABELS[item.bodyPosition].ko}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="atlas-compare-art-caption">
+                                <span>
+                                  {itemPatterns[0]
+                                    ? `${itemPatterns[0].title} · 패턴 초안 (검증 시범 아님)`
+                                    : itemKinematic
+                                      ? '5단계 기구학 도해 · 출처 대조'
+                                      : '동작 상세 정보 보기'}
+                                </span>
+                                <Play size={12} aria-hidden="true" />
+                              </span>
+                            </button>
+
+                            <dl className="atlas-compare-specs">
+                              <div>
+                                <dt>기구·스프링</dt>
+                                <dd>
+                                  {APPARATUS_LABELS[item.apparatus].ko}
+                                  {item.springs?.trim() ? ` · ${item.springs}` : ''}
+                                  {itemEqMeta.requiredProps.length > 0
+                                    ? ` · ${itemEqMeta.requiredProps.map(propLabel).join('·')}`
+                                    : ''}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>자세·난이도</dt>
+                                <dd>
+                                  {POSITION_LABELS[item.bodyPosition].ko} ·{' '}
+                                  {LEVEL_NAMES[item.level]} (Lv {item.level})
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>계획 시간</dt>
+                                <dd>
+                                  {item.defaultDurationMin}분
+                                  {item.isUnilateral ? ' · 양쪽 포함' : ''}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>타겟 부위</dt>
+                                <dd>
+                                  {itemIsIdea
+                                    ? itemIdeaMeta?.subjectiveFeeling ||
+                                      itemIdeaMeta?.ideaLine ||
+                                      item.cues[0]
+                                    : item.targetMuscles.slice(0, 3).join(' · ') ||
+                                      item.cues[0] ||
+                                      '체간 안정 · 호흡 연결'}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>주의·안전</dt>
+                                <dd className="atlas-compare-precaution">
+                                  {item.precautions?.trim() ||
+                                    '별도 주의 메모 없음 · 회원별 가동 범위를 직접 확인하세요.'}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>검토·출처</dt>
+                                <dd>
+                                  {itemIsIdea
+                                    ? '내 창작 메모 · 전문가 검증 아님'
+                                    : itemApproved
+                                      ? '내 강사 검토 · 자격 인증 미확인'
+                                      : itemReviewState === 'stale'
+                                        ? '정보 변경 · 재검토 선택 가능'
+                                        : '교차 검증 완료 · 검토 선택 사항'}{' '}
+                                  ({item.sourceReference?.publisher || itemProvenance.shortLabel})
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>수업 적합도</dt>
+                                <dd
+                                  className={
+                                    itemReadiness.status === 'ready' ||
+                                    itemReadiness.status === 'in-sequence'
+                                      ? 'atlas-compare-status-ok'
+                                      : 'atlas-compare-status-warn'
+                                  }
+                                >
+                                  {itemReadiness.label}
+                                </dd>
+                              </div>
+                            </dl>
+
+                            <div className="atlas-compare-actions">
+                              <button
+                                type="button"
+                                className="atlas-compare-inspect-btn"
+                                aria-label={`비교함에서 ${item.nameKo} 세부 안내 열기`}
+                                onClick={(event) => inspectExercise(item, event.currentTarget)}
+                              >
+                                세부 안내
+                              </button>
+                              <button
+                                type="button"
+                                className={`atlas-compare-add-btn ${itemInSeq ? 'is-in-sequence' : ''}`.trim()}
+                                aria-label={`비교함에서 ${item.nameKo} 수업안에 추가`}
+                                onClick={() => addExercise(item)}
+                              >
+                                {addedId === item.id || itemInSeq ? (
+                                  <Check size={14} aria-hidden="true" />
+                                ) : (
+                                  <Plus size={14} aria-hidden="true" />
+                                )}
+                                <span>
+                                  {addedId === item.id
+                                    ? '추가됨'
+                                    : itemReadiness.status === 'in-sequence'
+                                      ? `수업안 #${itemReadiness.orderNumber} 포함`
+                                      : '수업안에 추가'}
+                                </span>
+                              </button>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              )}
+
               {filtered.length > 0 ? (
                 <div className="movement-card-grid" ref={cardGridRef}>
                   {filtered.slice(0, notesVisibleCount).map((exercise) => {
@@ -1438,9 +2004,18 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                     const ideaMeta = isIdea ? readMovementIdeaDraft(exercise) : null;
                     const patterns = getMotionPatternReferences(exercise.id);
                     const isFavorite = exercise.favoriteTag !== 'none';
-                    const inSequence = activeSteps.some(
-                      (step) => !isRestStep(step) && step.exerciseId === exercise.id,
+                    const readiness = evaluateCardSequenceReadiness(
+                      exercise,
+                      sequenceMovementSteps,
+                      effectiveCriteria,
+                      ownedEquipment,
+                      ownedProps,
                     );
+                    const inSequence = readiness.status === 'in-sequence';
+                    const compareIndex = comparedExercises.findIndex(
+                      (candidate) => candidate.id === exercise.id,
+                    );
+                    const isCompared = compareIndex >= 0;
                     const equipmentMeta = getExerciseEquipment(exercise);
                     const hasValidIdeaPhoto = Boolean(
                       ideaMeta?.photoDataUrl && !brokenPhotoIds[exercise.id],
@@ -1454,9 +2029,12 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                       <PfMovementCard
                         variant={isIdea ? 'idea' : 'catalog'}
                         selected={inSequence}
+                        data-readiness={readiness.status}
                         className={`movement-card movement-${exercise.apparatus} ${
                           inSequence ? 'is-in-sequence' : ''
-                        } ${inspectedExerciseId === exercise.id ? 'is-inspected' : ''}`.trim()}
+                        } ${inspectedExerciseId === exercise.id ? 'is-inspected' : ''} ${
+                          isCompared ? 'is-compared' : ''
+                        }`.trim()}
                         key={exercise.id}
                       >
                         <div className="movement-card-art">
@@ -1537,9 +2115,27 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                         </div>
                         <div className="movement-card-content">
                           <div className="movement-card-tags">
-                            {inSequence && (
+                            {readiness.status === 'in-sequence' && (
                               <PfBadge tone="sage" className="movement-selected-badge">
-                                <Check size={11} aria-hidden="true" /> 수업안 포함
+                                <Check size={11} aria-hidden="true" /> {readiness.label}
+                              </PfBadge>
+                            )}
+                            {readiness.status === 'family-conflict' && (
+                              <PfBadge
+                                tone="neutral"
+                                className="atlas-card-conflict-badge"
+                                data-testid={`card-conflict-${exercise.id}`}
+                              >
+                                {readiness.label}
+                              </PfBadge>
+                            )}
+                            {readiness.status === 'criteria-mismatch' && (
+                              <PfBadge
+                                tone="neutral"
+                                className="atlas-card-mismatch-badge"
+                                data-testid={`card-mismatch-${exercise.id}`}
+                              >
+                                {readiness.label}
                               </PfBadge>
                             )}
                             <PfBadge tone="neutral">
@@ -1683,25 +2279,61 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                             </div>
                           ) : null}
                           <div className="movement-card-footer">
-                            <PfButton
-                              variant="ghost"
-                              onClick={() =>
-                                isIdea && onOpenIdeaSheet
-                                  ? onOpenIdeaSheet(exercise)
-                                  : onOpenYouTubePreview(exercise)
-                              }
-                            >
-                              {isIdea ? '다시 열기 · 느낌/수정' : '자세히 보기'}{' '}
-                              <ArrowUpRight size={14} />
-                            </PfButton>
+                            <div className="atlas-card-secondary-actions">
+                              <PfButton
+                                variant="ghost"
+                                onClick={() =>
+                                  isIdea && onOpenIdeaSheet
+                                    ? onOpenIdeaSheet(exercise)
+                                    : onOpenYouTubePreview(exercise)
+                                }
+                              >
+                                {isIdea ? '다시 열기 · 느낌/수정' : '자세히 보기'}{' '}
+                                <ArrowUpRight size={14} />
+                              </PfButton>
+                              <button
+                                type="button"
+                                className={`atlas-compare-toggle ${
+                                  isCompared ? 'is-compared' : ''
+                                }`.trim()}
+                                aria-pressed={isCompared}
+                                aria-label={`${exercise.nameKo} 비교 담기`}
+                                onClick={(event) =>
+                                  toggleCompareExercise(exercise, event.currentTarget)
+                                }
+                              >
+                                {isCompared ? (
+                                  <Check size={14} aria-hidden="true" />
+                                ) : (
+                                  <Layers size={14} aria-hidden="true" />
+                                )}
+                                <span>{isCompared ? `비교 중 (${compareIndex + 1})` : '비교'}</span>
+                              </button>
+                            </div>
                             <button
                               type="button"
-                              className={`movement-add ${addedId === exercise.id ? 'just-added' : ''}`}
+                              className={`movement-add ${
+                                addedId === exercise.id
+                                  ? 'just-added'
+                                  : inSequence
+                                    ? 'is-in-sequence-cta'
+                                    : ''
+                              }`.trim()}
                               onClick={() => addExercise(exercise)}
                               aria-label={`${exercise.nameKo} 수업안에 추가`}
                             >
-                              {addedId === exercise.id ? <Check size={16} /> : <Plus size={16} />}
-                              <span>{addedId === exercise.id ? '추가됨' : '수업에 추가'}</span>
+                              {addedId === exercise.id || inSequence ? (
+                                <Check size={16} />
+                              ) : (
+                                <Plus size={16} />
+                              )}
+                              <span>
+                                {addedId === exercise.id
+                                  ? '추가됨'
+                                  : readiness.status === 'in-sequence'
+                                    ? `수업안 #${readiness.orderNumber} 포함`
+                                    : '수업에 추가'}
+                              </span>
                             </button>
                           </div>
                         </div>
@@ -1712,7 +2344,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               ) : (
                 <div className="library-empty panel" role="status" aria-live="polite">
                   <Search size={29} aria-hidden="true" />
-                  <h2>조건에 맞는 동작이 없어요.</h2>
+                  <h2 id="atlas-empty-heading">조건에 맞는 동작이 없어요.</h2>
                   {(filters.search.trim() ||
                     activeFilterCount > 0 ||
                     exerciseBrowseScope === 'owned') && (
@@ -1737,9 +2369,17 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                     <br />
                     직접 찾은 유튜브 레퍼런스도 추가할 수 있어요.
                   </p>
-                  <div className="library-empty-actions">
+                  <div
+                    className="library-empty-actions"
+                    role="group"
+                    aria-label="빈 검색 결과 복구"
+                  >
                     {filters.search.trim() && (
-                      <PfButton variant="secondary" onClick={clearSearch}>
+                      <PfButton
+                        variant="secondary"
+                        onClick={clearSearch}
+                        aria-describedby="atlas-empty-heading"
+                      >
                         검색어 지우기
                       </PfButton>
                     )}
@@ -2037,6 +2677,34 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         <button type="button" onClick={() => setActiveTab('workbench')}>
           수업 구성으로 돌아가기 <ArrowUpRight size={17} />
         </button>
+        {sequenceMovementSteps.length > 0 && (
+          <div className="atlas-selection-sequence-strip" aria-label="현재 수업안 동작 순서">
+            <span className="atlas-selection-total-time">계획 {sequenceTotalMinutes}분</span>
+            <ul className="atlas-selection-sequence-list">
+              {sequenceMovementSteps.slice(0, 4).map((entry) => {
+                const stepExercise = entry.exercise;
+                if (!stepExercise) return null;
+                return (
+                  <li key={entry.step.stepId}>
+                    <button
+                      type="button"
+                      className="atlas-selection-step-chip"
+                      aria-label={`담긴 동작 ${entry.orderNumber}번 ${stepExercise.nameKo} 정보 보기`}
+                      onClick={(event) => inspectExercise(stepExercise, event.currentTarget)}
+                    >
+                      #{entry.orderNumber} {stepExercise.nameKo}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            {sequenceMovementSteps.length > 4 && (
+              <span className="atlas-selection-more">
+                +{sequenceMovementSteps.length - 4}개 더
+              </span>
+            )}
+          </div>
+        )}
       </div>
       {(sourceToPlan || ownNoteOpen) && (
         <SourceNoteDialog

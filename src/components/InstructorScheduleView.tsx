@@ -40,6 +40,15 @@ import {
 import { LightDismissDialog } from "./LightDismissDialog";
 import { DatedSequencePlanningDialog } from "./DatedSequencePlanningDialog";
 import { getDatedPlanWarnings } from "../utils/datedSequencePlanning";
+import type { DatedSequencePlanAssignment } from "../types/datedSequencePlanning";
+import type {
+  PilatesExercise,
+  SavedSequence,
+  SequenceStep,
+} from "../types/pilates";
+import { isExerciseAuthoringEligible } from "../utils/exerciseAuthoring";
+import { isRestStep } from "../utils/sequenceEngine";
+import { buildSequenceSimulation } from "../utils/sequenceSimulation";
 import "../styles/schedule.css";
 import "./InstructorScheduleView.css";
 import { ScheduleChangeScopePanel, type ScheduleChangeScope } from "./ScheduleChangeScopePanel";
@@ -52,6 +61,188 @@ type MoveDraft = {
   endTime: string;
   locationId: string;
   reason: string;
+};
+type PrepFilterMode = "all" | "needs-prep";
+type OccurrencePrepStatus = "unplanned" | "draft" | "needs-review" | "ready";
+type StageCandidateSequence = {
+  readonly targetMinutes: number;
+  readonly steps: readonly unknown[];
+};
+type OccurrencePrepInfo = {
+  readonly status: OccurrencePrepStatus;
+  readonly label: string;
+  readonly needsPrep: boolean;
+  readonly datedAssignment?: DatedSequencePlanAssignment;
+  readonly datedContextMatches: boolean;
+  readonly linkedSequence?: SavedSequence;
+  readonly warnings: readonly string[];
+  readonly canStartDatedStage: boolean;
+  readonly canStartLinkedStage: boolean;
+};
+
+const prefersReducedMotion = (): boolean =>
+  typeof window !== "undefined" &&
+  typeof window.matchMedia === "function" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const canStartStageFromSequence = (
+  sequence: StageCandidateSequence | undefined,
+  exercises: readonly PilatesExercise[],
+): boolean => {
+  if (!sequence || !Array.isArray(sequence.steps) || sequence.steps.length === 0) {
+    return false;
+  }
+  const steps = sequence.steps as readonly SequenceStep[];
+  const byId = new Map(exercises.map((exercise) => [exercise.id, exercise]));
+  let hasExerciseStep = false;
+  for (const step of steps) {
+    if (!step || typeof step !== "object") return false;
+    if (isRestStep(step)) continue;
+    hasExerciseStep = true;
+    const exercise = byId.get(step.exerciseId);
+    if (!exercise || !isExerciseAuthoringEligible(exercise)) return false;
+  }
+  if (!hasExerciseStep) return false;
+  return buildSequenceSimulation(steps, exercises, sequence.targetMinutes).gate
+    .canRehearse;
+};
+
+const resolveOccurrencePrepInfo = (input: {
+  row: InstructorScheduleOccurrence;
+  schedule: InstructorScheduleData;
+  assignments: readonly DatedSequencePlanAssignment[];
+  savedSequences: SavedSequence[];
+  exercises: PilatesExercise[];
+  hasTimeConflict: boolean;
+}): OccurrencePrepInfo => {
+  const {
+    row,
+    schedule,
+    assignments,
+    savedSequences,
+    exercises,
+    hasTimeConflict,
+  } = input;
+  const datedAssignment = assignments.find(
+    (item) =>
+      item.classId === row.classId && item.originalDate === row.originalDate,
+  );
+  const datedContextMatches =
+    !!datedAssignment &&
+    datedAssignment.occurrenceSnapshot.date === row.date &&
+    datedAssignment.occurrenceSnapshot.startTime === row.startTime &&
+    datedAssignment.occurrenceSnapshot.endTime === row.endTime &&
+    datedAssignment.occurrenceSnapshot.locationId === row.locationId;
+  const linkedSequence = row.linkSavedSequenceId
+    ? savedSequences.find((item) => item.id === row.linkSavedSequenceId)
+    : undefined;
+  const warnings =
+    row.status === "scheduled"
+      ? datedAssignment
+        ? getDatedPlanWarnings({
+            assignment: datedAssignment,
+            schedule,
+            exercises,
+          })
+        : getSchedulePlanWarnings(row, schedule, savedSequences, exercises)
+      : [];
+  const canStartDatedStage =
+    row.status === "scheduled" &&
+    !!datedAssignment &&
+    datedContextMatches &&
+    canStartStageFromSequence(datedAssignment.sequenceSnapshot, exercises);
+  const canStartLinkedStage =
+    row.status === "scheduled" &&
+    !datedAssignment &&
+    !!linkedSequence &&
+    canStartStageFromSequence(linkedSequence, exercises);
+
+  if (datedAssignment) {
+    if (!datedContextMatches || warnings.length > 0 || hasTimeConflict) {
+      return {
+        status: "needs-review",
+        label: "점검 필요",
+        needsPrep: true,
+        datedAssignment,
+        datedContextMatches,
+        linkedSequence,
+        warnings,
+        canStartDatedStage,
+        canStartLinkedStage,
+      };
+    }
+    if (datedAssignment.state === "prepared") {
+      return {
+        status: "ready",
+        label: "준비 완료",
+        needsPrep: false,
+        datedAssignment,
+        datedContextMatches,
+        linkedSequence,
+        warnings,
+        canStartDatedStage,
+        canStartLinkedStage,
+      };
+    }
+    return {
+      status: "draft",
+      label: "사본 준비 전",
+      needsPrep: true,
+      datedAssignment,
+      datedContextMatches,
+      linkedSequence,
+      warnings,
+      canStartDatedStage,
+      canStartLinkedStage,
+    };
+  }
+
+  if (linkedSequence) {
+    if (warnings.length > 0 || hasTimeConflict) {
+      return {
+        status: "needs-review",
+        label: "점검 필요",
+        needsPrep: true,
+        datedContextMatches: false,
+        linkedSequence,
+        warnings,
+        canStartDatedStage,
+        canStartLinkedStage,
+      };
+    }
+    return {
+      status: "ready",
+      label: "준비 완료",
+      needsPrep: false,
+      datedContextMatches: false,
+      linkedSequence,
+      warnings,
+      canStartDatedStage,
+      canStartLinkedStage,
+    };
+  }
+
+  if (row.linkSavedSequenceId || warnings.length > 0 || hasTimeConflict) {
+    return {
+      status: "needs-review",
+      label: "점검 필요",
+      needsPrep: true,
+      datedContextMatches: false,
+      warnings,
+      canStartDatedStage: false,
+      canStartLinkedStage: false,
+    };
+  }
+
+  return {
+    status: "unplanned",
+    label: "시퀀스 미지정",
+    needsPrep: true,
+    datedContextMatches: false,
+    warnings,
+    canStartDatedStage: false,
+    canStartLinkedStage: false,
+  };
 };
 const newLocation = (): InstructorLocation => ({
   id: "",
@@ -181,7 +372,10 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           ? classStep2Ref.current
           : classStep3Ref.current;
     if (target && typeof target.scrollIntoView === "function") {
-      target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      target.scrollIntoView({
+        behavior: prefersReducedMotion() ? "instant" : "smooth",
+        block: "nearest",
+      });
     }
     const focusable = target?.querySelector<HTMLElement>("input, select, textarea");
     focusable?.focus({ preventScroll: true });
@@ -284,13 +478,24 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     setClosedDraft(null);
   };
 
+  const [prepFilter, setPrepFilter] = useState<PrepFilterMode>("all");
+  const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
+  const occurrenceCardRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const setModeWithReset = (nextMode: "day" | "week") => {
+    setMode(nextMode);
+    setPrepFilter("all");
+    setHighlightedRowId(null);
+  };
   const start =
     mode === "week" ? scheduleWeekStart(selectedDate) : selectedDate;
   const rawEnd = mode === "week" ? addScheduleDays(start, 6) : start;
   const end = rawEnd > "2199-12-31" ? "2199-12-31" : rawEnd;
   const selectDate = (date: string) => {
-    if (isScheduleDate(date)) setSelectedDate(date);
-    else setMessage("일정 날짜는 1900년부터 2199년까지 선택해 주세요.");
+    if (isScheduleDate(date)) {
+      setSelectedDate(date);
+      setPrepFilter("all");
+      setHighlightedRowId(null);
+    } else setMessage("일정 날짜는 1900년부터 2199년까지 선택해 주세요.");
   };
   const previousDate = addScheduleDays(selectedDate, mode === "day" ? -1 : -7);
   const nextDate = addScheduleDays(selectedDate, mode === "day" ? 1 : 7);
@@ -301,6 +506,18 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     : addScheduleDays(stripStart, 6);
   const stripDates = useMemo(() => scheduleDateRange(stripStart, stripEnd), [stripStart, stripEnd]);
   const stripRows = useMemo(() => expandInstructorSchedule(data, stripStart, stripEnd), [data, stripStart, stripEnd]);
+  const stripConflicts = useMemo(
+    () => findInstructorScheduleConflicts(stripRows),
+    [stripRows],
+  );
+  const stripConflictRowIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const item of stripConflicts) {
+      ids.add(item.leftId);
+      ids.add(item.rightId);
+    }
+    return ids;
+  }, [stripConflicts]);
   const selectStripDate = (date: string) => {
     selectDate(date);
     setMode("day");
@@ -326,6 +543,81 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     () => findInstructorScheduleConflicts(rows),
     [rows],
   );
+  const conflictRowIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const item of conflicts) {
+      ids.add(item.leftId);
+      ids.add(item.rightId);
+    }
+    return ids;
+  }, [conflicts]);
+  const assignments = useMemo(
+    () => datedSequencePlanning?.assignments ?? [],
+    [datedSequencePlanning],
+  );
+  const prepByRowId = useMemo(() => {
+    const map = new Map<string, OccurrencePrepInfo>();
+    for (const row of rows) {
+      map.set(
+        row.id,
+        resolveOccurrencePrepInfo({
+          row,
+          schedule: data,
+          assignments,
+          savedSequences,
+          exercises,
+          hasTimeConflict: conflictRowIds.has(row.id),
+        }),
+      );
+    }
+    return map;
+  }, [rows, data, assignments, savedSequences, exercises, conflictRowIds]);
+  const stripNeedsPrepByDate = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const row of stripRows) {
+      if (row.status !== "scheduled") continue;
+      const info = resolveOccurrencePrepInfo({
+        row,
+        schedule: data,
+        assignments,
+        savedSequences,
+        exercises,
+        hasTimeConflict: stripConflictRowIds.has(row.id),
+      });
+      if (info.needsPrep) {
+        counts.set(row.date, (counts.get(row.date) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [stripRows, data, assignments, savedSequences, exercises, stripConflictRowIds]);
+  const scheduledRows = useMemo(
+    () => rows.filter((row) => row.status === "scheduled"),
+    [rows],
+  );
+  const needsPrepRows = useMemo(
+    () => scheduledRows.filter((row) => prepByRowId.get(row.id)?.needsPrep),
+    [scheduledRows, prepByRowId],
+  );
+  const readyScheduledCount = scheduledRows.length - needsPrepRows.length;
+  const firstNeedsPrepRow = needsPrepRows[0] ?? null;
+  const jumpToNextPrepOccurrence = () => {
+    if (!firstNeedsPrepRow) return;
+    setHighlightedRowId(firstNeedsPrepRow.id);
+    const card = occurrenceCardRefs.current.get(firstNeedsPrepRow.id);
+    if (!card) return;
+    if (typeof card.scrollIntoView === "function") {
+      card.scrollIntoView({
+        behavior: prefersReducedMotion() ? "instant" : "smooth",
+        block: "nearest",
+      });
+    }
+    const primaryAction = card.querySelector<HTMLButtonElement>(
+      '[data-prep-primary-action="true"]',
+    );
+    (primaryAction ?? card.querySelector<HTMLButtonElement>("button"))?.focus({
+      preventScroll: true,
+    });
+  };
   const locationName = (id: string) =>
     data.locations.find((item) => item.id === id)?.alias ?? "장소 미상";
   const commit = (next: InstructorScheduleData, success: string) => {
@@ -439,7 +731,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
         "수업 일정을 저장했습니다.",
       );
       if (saved) {
-        setSelectedDate(item.startDate);
+        selectDate(item.startDate);
         closeClass(true);
       }
     } finally {
@@ -544,7 +836,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
         "이번 회차의 날짜·시각·장소를 변경했습니다.",
       );
       if (saved) {
-        setSelectedDate(moveDraft.date);
+        selectDate(moveDraft.date);
         closeMove();
       }
     } finally {
@@ -575,7 +867,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
         "휴무를 등록했습니다. 해당 회차는 시간 충돌 계산에서 제외됩니다.",
       );
       if (saved) {
-        setSelectedDate(closedDraft.date);
+        selectDate(closedDraft.date);
         closeClosed(true);
       }
     } finally {
@@ -694,7 +986,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                   : event.key === "ArrowRight"
                     ? (currentIndex + 1) % buttons.length
                     : (currentIndex - 1 + buttons.length) % buttons.length;
-            setMode(nextIndex === 0 ? "day" : "week");
+            setModeWithReset(nextIndex === 0 ? "day" : "week");
             buttons[nextIndex]?.focus();
           }}
         >
@@ -702,7 +994,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             type="button"
             className={mode === "day" ? "btn-primary" : "btn-secondary"}
             aria-pressed={mode === "day"}
-            onClick={() => setMode("day")}
+            onClick={() => setModeWithReset("day")}
           >
             일간 보기
           </button>
@@ -710,7 +1002,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             type="button"
             className={mode === "week" ? "btn-primary" : "btn-secondary"}
             aria-pressed={mode === "week"}
-            onClick={() => setMode("week")}
+            onClick={() => setModeWithReset("week")}
           >
             주간 보기
           </button>
@@ -752,7 +1044,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
             type="button"
             className="btn-secondary"
             onClick={() => {
-              setSelectedDate(today);
+              selectDate(today);
               setMode("day");
             }}
           >
@@ -768,6 +1060,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
         <div className="schedule-week-strip" role="group" aria-label="한 주 날짜 선택" ref={weekStripRef}>
           {stripDates.map((date) => {
             const count = stripRows.filter((row) => row.date === date && row.status === "scheduled").length;
+            const needsPrepOnDate = stripNeedsPrepByDate.get(date) ?? 0;
             return (
               <button
                 type="button"
@@ -776,12 +1069,26 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 aria-pressed={date === selectedDate}
                 aria-current={date === today ? "date" : undefined}
                 tabIndex={date === selectedDate ? 0 : -1}
+                data-prep-day-state={
+                  count === 0
+                    ? "empty"
+                    : needsPrepOnDate > 0
+                      ? "needs-prep"
+                      : "ready"
+                }
                 onClick={() => selectStripDate(date)}
                 onKeyDown={(event) => handleStripKey(event, date)}
               >
                 <span className="schedule-weekday" aria-hidden="true">{SCHEDULE_WEEKDAYS[scheduleDateObject(date).getDay()]}</span>
                 <strong aria-hidden="true">{Number(date.slice(8, 10))}</strong>
-                <span className="schedule-week-count" aria-hidden="true">{count ? `${count}회` : "—"}</span>
+                <span className="schedule-week-count" aria-hidden="true">
+                  {count ? `${count}회` : "—"}
+                  {count > 0 && (
+                    <span
+                      className={`schedule-week-prep-dot schedule-week-prep-dot-${needsPrepOnDate > 0 ? "needs-prep" : "ready"}`}
+                    />
+                  )}
+                </span>
               </button>
             );
           })}
@@ -791,11 +1098,103 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
         <span className="schedule-summary-period">{mode === "day" ? "선택한 날" : "선택한 주"}</span>
         {formatScheduleDate(start)}
         {end !== start ? ` – ${formatScheduleDate(end)}` : ""} · 예정{" "}
-        {rows.filter((row) => row.status === "scheduled").length}회
+        {scheduledRows.length}회
         {conflicts.length > 0 && (
           <strong role="status"> · 시간 겹침 {conflicts.length}건</strong>
         )}
       </p>
+      {scheduledRows.length > 0 && (
+        <div className="schedule-prep-bar" data-testid="schedule-prep-bar">
+          <div className="schedule-prep-counts">
+            <strong>수업 준비 현황</strong>
+            <span>
+              준비 완료 {readyScheduledCount}회 · 준비 필요 {needsPrepRows.length}회
+            </span>
+          </div>
+          <div className="schedule-prep-controls">
+            <div
+              className="schedule-prep-filter"
+              role="group"
+              aria-label="수업 준비 상태 필터"
+              onKeyDown={(event) => {
+                if (
+                  !["ArrowLeft", "ArrowRight", "Home", "End"].includes(
+                    event.key,
+                  )
+                ) {
+                  return;
+                }
+                event.preventDefault();
+                const buttons = Array.from(
+                  event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                    "button",
+                  ),
+                );
+                if (buttons.length === 0) return;
+                const activeIndex = buttons.indexOf(
+                  (buttons.includes(event.target as HTMLButtonElement)
+                    ? event.target
+                    : document.activeElement) as HTMLButtonElement,
+                );
+                const currentIndex =
+                  activeIndex !== -1
+                    ? activeIndex
+                    : prepFilter === "all"
+                      ? 0
+                      : 1;
+                const nextIndex =
+                  event.key === "Home"
+                    ? 0
+                    : event.key === "End"
+                      ? buttons.length - 1
+                      : event.key === "ArrowRight"
+                        ? (currentIndex + 1) % buttons.length
+                        : (currentIndex - 1 + buttons.length) % buttons.length;
+                setPrepFilter(nextIndex === 0 ? "all" : "needs-prep");
+                setHighlightedRowId(null);
+                buttons[nextIndex]?.focus();
+              }}
+            >
+              <button
+                type="button"
+                className={
+                  prepFilter === "all" ? "btn-primary" : "btn-secondary"
+                }
+                aria-pressed={prepFilter === "all"}
+                onClick={() => {
+                  setPrepFilter("all");
+                  setHighlightedRowId(null);
+                }}
+              >
+                전체 예정 ({scheduledRows.length})
+              </button>
+              <button
+                type="button"
+                className={
+                  prepFilter === "needs-prep" ? "btn-primary" : "btn-secondary"
+                }
+                aria-pressed={prepFilter === "needs-prep"}
+                onClick={() => {
+                  setPrepFilter("needs-prep");
+                  setHighlightedRowId(null);
+                }}
+              >
+                준비 필요 ({needsPrepRows.length})
+              </button>
+            </div>
+            {firstNeedsPrepRow && (
+              <button
+                type="button"
+                className="btn-secondary schedule-next-prep-btn"
+                data-testid="schedule-jump-next-prep"
+                onClick={jumpToNextPrepOccurrence}
+              >
+                다음 준비할 수업으로 이동
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {!data.locations.length && (
         <div className="schedule-empty">
           <MapPin size={25} />
@@ -819,7 +1218,46 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
       <div className="schedule-agenda-workspace" data-has-change-scope={!!changeTarget}>
         {changeTarget && <ScheduleChangeScopePanel key={changeTarget.selectionId} occurrence={changeTarget.row} headingRef={changeHeadingRef} stale={changeTargetStale} onCancel={closeChangeScope} onContinue={continueChangeScope} />}
       <div className={`schedule-days schedule-days-${mode}`}>
-        {dates.map((date) => (
+        {dates.map((date) => {
+          const dayRows = rows.filter((row) => row.date === date);
+          const dayScheduledCount = dayRows.filter(
+            (row) => row.status === "scheduled",
+          ).length;
+          const visibleDayRows =
+            prepFilter === "needs-prep"
+              ? dayRows.filter(
+                  (row) =>
+                    row.status === "scheduled" &&
+                    prepByRowId.get(row.id)?.needsPrep,
+                )
+              : dayRows;
+          const nextScheduledStripCandidate =
+            mode === "day" && dayRows.length === 0
+              ? (stripDates.find(
+                  (candidate) =>
+                    candidate > date &&
+                    stripRows.some(
+                      (row) =>
+                        row.date === candidate && row.status === "scheduled",
+                    ),
+                ) ??
+                stripDates.find(
+                  (candidate) =>
+                    candidate !== date &&
+                    stripRows.some(
+                      (row) =>
+                        row.date === candidate && row.status === "scheduled",
+                    ),
+                ))
+              : undefined;
+          const nextScheduledStripCount = nextScheduledStripCandidate
+            ? stripRows.filter(
+                (row) =>
+                  row.date === nextScheduledStripCandidate &&
+                  row.status === "scheduled",
+              ).length
+            : 0;
+          return (
           <section
             className="schedule-day"
             key={date}
@@ -881,11 +1319,26 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                     </div>
                   ),
               )}
-            {!rows.some((row) => row.date === date) && (
+            {!dayRows.length && (
               <div className="schedule-day-empty">
                 <CalendarDays size={25} aria-hidden="true" />
                 <p>등록한 수업이 없습니다.</p>
                 <span>{data.locations.length ? "새 수업을 추가해 이 날짜의 일정을 채워보세요." : "장소를 등록한 다음 수업을 추가할 수 있어요."}</span>
+                {nextScheduledStripCandidate && (
+                  <button
+                    type="button"
+                    className="btn-secondary schedule-empty-jump-btn"
+                    data-testid="schedule-jump-scheduled-day"
+                    onClick={() => {
+                      pendingDayFocus.current = true;
+                      selectStripDate(nextScheduledStripCandidate);
+                    }}
+                  >
+                    이번 주 수업 있는 날 보기 ·{" "}
+                    {formatScheduleDate(nextScheduledStripCandidate)} (
+                    {nextScheduledStripCount}회)
+                  </button>
+                )}
                 {!!data.locations.length && (
                   <button type="button" className="text-button" onClick={() => openClass(date)}>
                     <Plus size={15} aria-hidden="true" /> 이 날짜에 수업 추가
@@ -893,32 +1346,38 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 )}
               </div>
             )}
-            {rows
-              .filter((row) => row.date === date)
-              .map((row) => {
-                const datedAssignment = datedSequencePlanning?.assignments.find(
-                  (item) =>
-                    item.classId === row.classId &&
-                    item.originalDate === row.originalDate,
-                );
+            {dayRows.length > 0 && visibleDayRows.length === 0 && (
+              <div
+                className="schedule-day-filtered-empty"
+                data-testid="schedule-day-filtered-empty"
+              >
+                <p>
+                  {dayScheduledCount > 0
+                    ? `이 날짜의 예정 수업 ${dayScheduledCount}회는 모두 준비 완료 상태입니다.`
+                    : "이 날짜에는 준비가 필요한 예정 수업이 없습니다."}
+                </p>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    setPrepFilter("all");
+                    setHighlightedRowId(null);
+                  }}
+                >
+                  전체 수업 보기
+                </button>
+              </div>
+            )}
+            {visibleDayRows.map((row) => {
+                const prepInfo = prepByRowId.get(row.id);
+                const datedAssignment = prepInfo?.datedAssignment;
+                const datedContextMatches =
+                  prepInfo?.datedContextMatches ?? false;
+                const linkedSequence = prepInfo?.linkedSequence;
+                const warnings = prepInfo?.warnings ?? [];
                 const clash = conflicts.filter(
                   (item) => item.leftId === row.id || item.rightId === row.id,
                 );
-                const warnings =
-                  row.status === "scheduled"
-                    ? datedAssignment
-                      ? getDatedPlanWarnings({
-                          assignment: datedAssignment,
-                          schedule: data,
-                          exercises,
-                        })
-                      : getSchedulePlanWarnings(
-                          row,
-                          data,
-                          savedSequences,
-                          exercises,
-                        )
-                    : [];
                 const exception = data.exceptions.find(
                   (item) =>
                     item.kind !== "closed" &&
@@ -928,9 +1387,26 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 const base = data.classes.find(
                   (item) => item.id === row.classId,
                 );
+                const isHighlighted = highlightedRowId === row.id;
+                const openOccurrencePlanning = () =>
+                  setPlanningTarget({
+                    date: row.date,
+                    occurrence: {
+                      classId: row.classId,
+                      originalDate: row.originalDate,
+                    },
+                  });
                 return (
                   <article
-                    className={`schedule-class schedule-class-${row.status}`}
+                    ref={(node) => {
+                      if (node) occurrenceCardRefs.current.set(row.id, node);
+                      else occurrenceCardRefs.current.delete(row.id);
+                    }}
+                    className={`schedule-class schedule-class-${row.status}${isHighlighted ? " schedule-class-prep-focus" : ""}`}
+                    data-prep-status={
+                      row.status === "scheduled" ? prepInfo?.status : undefined
+                    }
+                    data-prep-highlighted={isHighlighted ? "true" : undefined}
                     key={row.id}
                     aria-label={`${row.title} ${formatScheduleTime(row.startTime)}`}
                   >
@@ -939,16 +1415,25 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                         <Clock3 size={15} /> {formatScheduleTime(row.startTime)}{" "}
                         – {formatScheduleTime(row.endTime)}
                       </span>
-                      <span className="schedule-badge">
-                        {
+                      <div className="schedule-class-badges">
+                        {row.status === "scheduled" && prepInfo && (
+                          <span
+                            className={`schedule-prep-pill schedule-prep-pill-${prepInfo.status}`}
+                          >
+                            {prepInfo.label}
+                          </span>
+                        )}
+                        <span className="schedule-badge">
                           {
-                            scheduled: row.movedFrom ? "변경된 회차" : "예정",
-                            cancelled: "취소",
-                            closed: "휴무",
-                            moved: "이동",
-                          }[row.status]
-                        }
-                      </span>
+                            {
+                              scheduled: row.movedFrom ? "변경된 회차" : "예정",
+                              cancelled: "취소",
+                              closed: "휴무",
+                              moved: "이동",
+                            }[row.status]
+                          }
+                        </span>
+                      </div>
                     </div>
                     <h3>{row.title}</h3>
                     <p className="schedule-class-meta">
@@ -1000,15 +1485,168 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                         <AlertTriangle size={15} /> {warning}
                       </p>
                     ))}
-                    {row.linkSavedSequenceId &&
-                      savedSequences.some(
-                        (item) => item.id === row.linkSavedSequenceId,
-                      ) && (
+                    {row.status === "scheduled" ? (
+                      <div
+                        className="schedule-prep-zone"
+                        data-testid="schedule-prep-zone"
+                      >
+                        {datedAssignment && datedContextMatches ? (
+                          <>
+                            <div className="schedule-prep-actions">
+                              <button
+                                type="button"
+                                className="btn-primary"
+                                data-prep-primary-action="true"
+                                onClick={() => {
+                                  const result = loadDatedSequencePlanAsDraft(
+                                    datedAssignment.id,
+                                    datedAssignment.updatedAt,
+                                  );
+                                  setMessage(result.message);
+                                  if (result.success) {
+                                    setActiveTab("workbench");
+                                  }
+                                }}
+                              >
+                                회차 사본으로 준비
+                              </button>
+                              {prepInfo?.canStartDatedStage && (
+                                <button
+                                  type="button"
+                                  className="btn-secondary"
+                                  onClick={() => {
+                                    const result = loadDatedSequencePlanAsDraft(
+                                      datedAssignment.id,
+                                      datedAssignment.updatedAt,
+                                    );
+                                    setMessage(result.message);
+                                    if (result.success) {
+                                      setActiveTab("stage");
+                                    }
+                                  }}
+                                >
+                                  바로 수업 시작
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={() => {
+                                  const nextState =
+                                    datedAssignment.state === "prepared"
+                                      ? "draft"
+                                      : "prepared";
+                                  const result = setDatedSequencePlanState(
+                                    datedAssignment.id,
+                                    nextState,
+                                    datedAssignment.updatedAt,
+                                  );
+                                  setMessage(result.message);
+                                }}
+                              >
+                                {datedAssignment.state === "prepared"
+                                  ? "준비 표시 해제"
+                                  : "준비 완료 표시"}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={openOccurrencePlanning}
+                              >
+                                날짜별 계획
+                              </button>
+                            </div>
+                            {linkedSequence && (
+                              <button
+                                type="button"
+                                className="text-button schedule-base-plan-link"
+                                onClick={() => {
+                                  loadSequenceIntoWorkbench(linkedSequence.id);
+                                  setActiveTab("workbench");
+                                }}
+                              >
+                                기본 연결 계획 열기
+                              </button>
+                            )}
+                          </>
+                        ) : !datedAssignment && linkedSequence ? (
+                          <div className="schedule-prep-actions">
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              data-prep-primary-action="true"
+                              onClick={() => {
+                                loadSequenceIntoWorkbench(linkedSequence.id);
+                                setActiveTab("workbench");
+                              }}
+                            >
+                              연결 계획 열기
+                            </button>
+                            {prepInfo?.canStartLinkedStage && (
+                              <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={() => {
+                                  loadSequenceIntoWorkbench(linkedSequence.id);
+                                  setActiveTab("stage");
+                                }}
+                              >
+                                바로 수업 시작
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="btn-secondary"
+                              onClick={openOccurrencePlanning}
+                            >
+                              날짜별 계획
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="schedule-next-step-hint">
+                              {datedAssignment && !datedContextMatches
+                                ? "일정이 변경된 회차입니다. 날짜별 계획에서 변경된 시각·장소를 확인해 주세요."
+                                : row.linkSavedSequenceId
+                                  ? "연결된 기본 시퀀스를 찾을 수 없습니다. 날짜별 계획에서 새 시퀀스를 지정해 주세요."
+                                  : savedSequences.length > 0
+                                    ? "아직 연결된 시퀀스가 없습니다. 이 회차에 사용할 계획을 지정해 보세요."
+                                    : "저장된 시퀀스가 없습니다. 시퀀스를 먼저 저장하거나 날짜별 계획을 확인하세요."}
+                            </p>
+                            <div className="schedule-prep-actions">
+                              <button
+                                type="button"
+                                className="btn-primary"
+                                data-prep-primary-action="true"
+                                onClick={openOccurrencePlanning}
+                              >
+                                날짜별 계획
+                              </button>
+                              {datedAssignment && linkedSequence && (
+                                <button
+                                  type="button"
+                                  className="text-button schedule-base-plan-link"
+                                  onClick={() => {
+                                    loadSequenceIntoWorkbench(
+                                      linkedSequence.id,
+                                    );
+                                    setActiveTab("workbench");
+                                  }}
+                                >
+                                  기본 연결 계획 열기
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      linkedSequence && (
                         <button
                           type="button"
                           className="text-button"
                           onClick={() => {
-                            loadSequenceIntoWorkbench(row.linkSavedSequenceId!);
+                            loadSequenceIntoWorkbench(linkedSequence.id);
                             setActiveTab("workbench");
                           }}
                         >
@@ -1016,21 +1654,14 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                             ? "기본 연결 계획 열기"
                             : "연결 계획 열기"}
                         </button>
-                      )}
+                      )
+                    )}
                     <div className="schedule-card-actions">
-                      {(row.status === "scheduled" || datedAssignment) && (
+                      {row.status !== "scheduled" && datedAssignment && (
                         <button
                           type="button"
                           className="btn-secondary"
-                          onClick={() =>
-                            setPlanningTarget({
-                              date: row.date,
-                              occurrence: {
-                                classId: row.classId,
-                                originalDate: row.originalDate,
-                              },
-                            })
-                          }
+                          onClick={openOccurrencePlanning}
                         >
                           날짜별 계획
                         </button>
@@ -1099,7 +1730,8 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 );
               })}
           </section>
-        ))}
+          );
+        })}
       </div>
       </div>
       <aside className="schedule-planning-entry" aria-label="수업 준비 도구">

@@ -1,0 +1,616 @@
+/* ExerciseAtlasView usability improvements:
+ * 1) Persistent 2-3 movement side-by-side comparison tray & panel across search/filters
+ * 2) Clear class-criteria context, card sequence-order/conflict readiness cues, and sequence strip
+ */
+
+.motion-library .atlas-results-context-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: -2px 0 14px;
+}
+
+.motion-library .atlas-results-context-row .ml-review-note {
+  margin: 0;
+}
+
+.motion-library .atlas-current-class-pill {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid #d3ddd0;
+  background: #f3f7ef;
+  color: #244839;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.motion-library .atlas-current-class-pill strong {
+  font-weight: 650;
+  color: #173f35;
+}
+
+/* Card readiness badges & footer hierarchy */
+.motion-library .movement-card.is-compared {
+  border-color: #2c6454;
+  box-shadow:
+    0 0 0 2px rgba(44, 100, 84, 0.16),
+    0 8px 20px rgba(23, 63, 53, 0.06);
+}
+
+.motion-library .atlas-card-conflict-badge,
+.motion-library .atlas-card-mismatch-badge {
+  background: #faf1e8;
+  border-color: #e0c3a8;
+  color: #6e4219;
+  font-weight: 600;
+}
+
+.motion-library .movement-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.motion-library .atlas-card-secondary-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.motion-library .atlas-compare-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #c9d4c2;
+  background: #f6f8f1;
+  color: #25493a;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+  word-break: keep-all;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.motion-library .atlas-compare-toggle:hover {
+  background: #ebf1e5;
+  border-color: #9cb39c;
+}
+
+.motion-library .atlas-compare-toggle.is-compared,
+.motion-library .atlas-compare-toggle[aria-pressed='true'] {
+  background: #1f4d3f;
+  border-color: #1f4d3f;
+  color: #fcfbf5;
+}
+
+.motion-library .movement-add.is-in-sequence-cta {
+  background: #e3eee4;
+  border: 1px solid #4f775e;
+  color: #173f35;
+  font-weight: 650;
+}
+
+.motion-library .movement-add.is-in-sequence-cta:hover {
+  background: #d6e6d8;
+}
+
+/* Inline Comparison Tray & Side-by-Side Panel */
+.motion-library .atlas-compare-region {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid #bfd0c0;
+  background: #f9fbf6;
+  box-shadow: 0 6px 20px rgba(23, 63, 53, 0.06);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.motion-library .atlas-compare-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.motion-library .atlas-compare-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 280px;
+}
+
+.motion-library .atlas-compare-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #173f35;
+  color: #fcfbf5;
+  font-size: 0.75rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.motion-library .atlas-compare-hint {
+  font-size: 0.75rem;
+  color: #4f6152;
+}
+
+.motion-library .atlas-compare-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.motion-library .atlas-compare-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 2px 4px 2px 10px;
+  border-radius: 999px;
+  border: 1px solid #cbd7c6;
+  background: #ffffff;
+  color: #1d4236;
+  font-size: 0.75rem;
+}
+
+.motion-library .atlas-compare-chip-label {
+  font-weight: 600;
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.motion-library .atlas-compare-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #486051;
+  cursor: pointer;
+}
+
+.motion-library .atlas-compare-chip-remove:hover {
+  background: #edf2ea;
+  color: #173f35;
+}
+
+.motion-library .atlas-compare-bar-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.motion-library .atlas-compare-expand-btn,
+.motion-library .atlas-compare-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.motion-library .atlas-compare-expand-btn {
+  border: 1px solid #1f4d3f;
+  background: #1f4d3f;
+  color: #fcfbf5;
+}
+
+.motion-library .atlas-compare-expand-btn:hover {
+  background: #173d32;
+}
+
+.motion-library .atlas-compare-clear-btn {
+  border: 1px solid #cbd5c5;
+  background: #ffffff;
+  color: #385143;
+}
+
+.motion-library .atlas-compare-clear-btn:hover {
+  background: #eff3ec;
+}
+
+.motion-library .atlas-compare-limit-notice {
+  margin: 8px 0 0;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #faf0e4;
+  border: 1px solid #e2c5a8;
+  color: #6b4018;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.motion-library .atlas-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #dce4d6;
+}
+
+.motion-library .atlas-compare-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #d6dfd2;
+  background: #ffffff;
+}
+
+.motion-library .atlas-compare-card.is-in-sequence {
+  border-color: #4f775e;
+  background: #fbfdf9;
+}
+
+.motion-library .atlas-compare-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.motion-library .atlas-compare-card-titles {
+  min-width: 0;
+}
+
+.motion-library .atlas-compare-card-titles h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: #173f35;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.motion-library .atlas-compare-card-titles p {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  color: #5b6a5d;
+  overflow-wrap: anywhere;
+}
+
+.motion-library .atlas-compare-filter-note {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef3ec;
+  color: #355545;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.motion-library .atlas-compare-art-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 118px;
+  padding: 8px 8px 6px;
+  border-radius: 10px;
+  border: 1px solid #dde2d5;
+  background: #f3f4ec;
+  color: #244739;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.motion-library .atlas-compare-art-btn:hover {
+  border-color: #9bb19d;
+  background: #ebefe4;
+}
+
+.motion-library .atlas-compare-art-stage {
+  height: 84px;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.motion-library .atlas-compare-art-stage svg,
+.motion-library .atlas-compare-art-stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.motion-library .atlas-compare-art-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.6875rem;
+  color: #49604d;
+  line-height: 1.35;
+}
+
+.motion-library .atlas-compare-specs {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.motion-library .atlas-compare-specs > div {
+  display: grid;
+  grid-template-columns: 4.8em minmax(0, 1fr);
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed #e6ebe1;
+}
+
+.motion-library .atlas-compare-specs > div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.motion-library .atlas-compare-specs dt {
+  color: #5b6b5e;
+  font-weight: 600;
+}
+
+.motion-library .atlas-compare-specs dd {
+  margin: 0;
+  min-width: 0;
+  color: #1f3930;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.motion-library .atlas-compare-precaution {
+  color: #63401f;
+}
+
+.motion-library .atlas-compare-status-ok {
+  color: #1d5740;
+  font-weight: 650;
+}
+
+.motion-library .atlas-compare-status-warn {
+  color: #744419;
+  font-weight: 650;
+}
+
+.motion-library .atlas-compare-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.motion-library .atlas-compare-inspect-btn,
+.motion-library .atlas-compare-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  word-break: keep-all;
+}
+
+.motion-library .atlas-compare-inspect-btn {
+  border: 1px solid #ccd6c7;
+  background: #f7f9f4;
+  color: #234739;
+}
+
+.motion-library .atlas-compare-inspect-btn:hover {
+  background: #ecf1e7;
+}
+
+.motion-library .atlas-compare-add-btn {
+  border: 1px solid #173f35;
+  background: #173f35;
+  color: #fcfbf5;
+}
+
+.motion-library .atlas-compare-add-btn:hover {
+  background: #235346;
+}
+
+.motion-library .atlas-compare-add-btn.is-in-sequence {
+  border-color: #4f775e;
+  background: #e3eee4;
+  color: #173f35;
+}
+
+/* Sticky Selection Return Sequence Preview Strip */
+.motion-library .ml-selection-return {
+  flex-wrap: wrap;
+}
+
+.motion-library .atlas-selection-sequence-strip {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(230, 235, 220, 0.2);
+  min-width: 0;
+}
+
+.motion-library .atlas-selection-total-time {
+  font-size: 0.75rem;
+  color: #d6e4cf;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.motion-library .atlas-selection-sequence-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.motion-library .atlas-selection-step-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(230, 235, 220, 0.34);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fcfbf4;
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  cursor: pointer;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.motion-library .atlas-selection-step-chip:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.motion-library .atlas-selection-more {
+  font-size: 0.75rem;
+  color: #cfe0c8;
+  padding-inline: 4px;
+}
+
+/* Focus-visible accessibility */
+.motion-library :is(
+    .atlas-compare-toggle,
+    .atlas-compare-chip-remove,
+    .atlas-compare-expand-btn,
+    .atlas-compare-clear-btn,
+    .atlas-compare-art-btn,
+    .atlas-compare-inspect-btn,
+    .atlas-compare-add-btn,
+    .atlas-selection-step-chip
+  ):focus-visible {
+  outline: 3px solid #b16f48;
+  outline-offset: 2px;
+}
+
+/* High contrast theme compatibility */
+.teaching-high-contrast .motion-library .atlas-compare-region,
+[data-pf-theme='high-contrast'] .motion-library .atlas-compare-region {
+  border-color: #173f35;
+  background: #ffffff;
+}
+
+/* Responsive mobile & narrow viewport rules (600px / 390px / 320px) */
+@media (max-width: 600px) {
+  .motion-library .atlas-compare-bar-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .motion-library .atlas-compare-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .motion-library .atlas-compare-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .motion-library .atlas-card-secondary-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  .motion-library .atlas-compare-region {
+    padding: 10px;
+  }
+
+  .motion-library .atlas-compare-specs > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .motion-library .atlas-card-secondary-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-library .atlas-compare-toggle,
+  .motion-library .atlas-compare-expand-btn,
+  .motion-library .atlas-compare-clear-btn,
+  .motion-library .atlas-compare-art-btn,
+  .motion-library .atlas-compare-inspect-btn,
+  .motion-library .atlas-compare-add-btn,
+  .motion-library .atlas-selection-step-chip {
+    transition: none !important;
+  }
+}

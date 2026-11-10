@@ -30,6 +30,9 @@
   font-size: 14px; line-height: 1.5; white-space: normal; overflow-wrap: anywhere;
 }
 #root .teaching-collection--history .teaching-collection-toolbar { margin-bottom: 12px; gap: 12px; }
+#root .teaching-collection--history .teaching-search-row {
+  display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;
+}
 #root .teaching-collection--history .teaching-search { min-width: 0; min-height: 48px; flex: 1; }
 #root .teaching-collection--history .teaching-search input { font-size: 16px; min-width: 0; }
 #root .teaching-collection--history .teaching-collection-toolbar > .muted { display: none; }
@@ -78,9 +81,14 @@
   position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden;
   clip-path: inset(50%); white-space: nowrap;
 }
-#root .teaching-collection--history :is(.teaching-history-time-of-day,.teaching-history-time-pill,.teaching-history-group) {
+#root .teaching-collection--history :is(.teaching-history-time-of-day,.teaching-history-time-pill,.teaching-history-meta-pill,.teaching-history-group) {
   font-size: 14px; line-height: 1.5; padding: 2px 8px; max-width: 100%;
   white-space: normal; overflow-wrap: anywhere;
+}
+#root .teaching-collection--history .teaching-history-meta-pill {
+  background: #eff5f2;
+  color: #35594e;
+  border-radius: 999px;
 }
 #root .teaching-collection--history .teaching-history-card h2 {
   font-size: 18px; line-height: 1.5; margin: 0; white-space: normal; overflow-wrap: anywhere;
@@ -95,7 +103,7 @@
 #root .teaching-collection--history .teaching-history-details { min-width: 0; }
 #root .teaching-collection--history .teaching-history-details summary {
   font-size: 14px; line-height: 1.5; min-height: 44px; padding: 12px 0;
-  cursor: pointer; color: #35594e;
+  cursor: pointer; color: #35594e; word-break: keep-all; overflow-wrap: anywhere;
 }
 #root .teaching-collection--history .teaching-history-details[open] summary { margin-bottom: 12px; }
 #root .teaching-collection--history :is(.teaching-card-stats,.teaching-history-badges,.teaching-history-exercises) {
@@ -146,8 +154,24 @@
 }
 #root .teaching-collection--history .teaching-history-filters[open] > summary { margin-bottom: 8px; }
 #root .teaching-collection--history .teaching-history-filter-status {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
-  font-size: 14px; line-height: 1.5; overflow-wrap: anywhere;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px;
+  padding: 8px 0; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere;
+}
+#root .teaching-collection--history .teaching-history-active-chips {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0;
+}
+#root .teaching-collection--history .teaching-active-filter-chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 12px;
+  border-radius: 999px; border: 1px solid #c6d6cf; background: #f4f8f6; color: #24473e;
+  cursor: pointer; font-size: 13px; line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere;
+}
+#root .teaching-collection--history .teaching-active-filter-chip:hover {
+  background: #e7f0ec; border-color: #8aa498;
+}
+#root .teaching-collection--history .teaching-history-draft-notice {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 14px;
+  padding: 12px 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #d5e2dc;
+  background: #f6faf8; color: #2d4d44; font-size: 14px; line-height: 1.55; word-break: keep-all;
 }
 
 /* The shared body minimum otherwise doubles to 640px at 200% zoom. */
@@ -157,18 +181,118 @@ body:has(.teaching-collection--history) { min-width: 0; }
   #root .teaching-collection--history .teaching-page-header > button { grid-column: 1; grid-row: 3; }
 }
 
-/* Saved sequences: open first, keep the full toolbox in an inline disclosure. */
+/* Shared search clear button across saved & history views */
+.teaching-collection .teaching-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.teaching-collection .teaching-search-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #cddbd5;
+  background: #f6faf8;
+  color: #2c4c43;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.teaching-collection .teaching-search-clear:hover {
+  background: #e9f2ee;
+  border-color: #8aa498;
+}
+.teaching-collection .teaching-search-clear:focus-visible,
+.teaching-collection--saved :is(button, summary, input):focus-visible {
+  outline: 3px solid #22796d;
+  outline-offset: 3px;
+}
+
+/* Saved sequences: open first, scannable compact glance, inline overwrite safety & toolbox disclosure. */
+.teaching-collection--saved .teaching-saved-quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.teaching-collection--saved .teaching-saved-filter-pill {
+  min-height: 44px;
+  padding: 8px 14px;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.teaching-collection--saved .teaching-saved-filter-count {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+.teaching-collection--saved .teaching-saved-filter-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 0 0 14px;
+}
+.teaching-collection--saved .teaching-saved-filter-status > p {
+  margin: 0;
+}
 .teaching-collection--saved .teaching-saved-grid {
   align-items: start;
 }
 .teaching-collection--saved .teaching-sequence-card {
   padding: 16px;
 }
+.teaching-collection--saved .teaching-sequence-card.is-active-plan {
+  border-color: #6b9586;
+}
+.teaching-collection--saved .teaching-saved-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 4px;
+}
+.teaching-collection--saved .teaching-saved-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
 .teaching-collection--saved .teaching-sequence-card h2 {
-  margin: 0 0 6px;
+  margin: 0;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.teaching-collection--saved .teaching-active-plan-badge {
+  flex-shrink: 0;
 }
 .teaching-collection--saved .teaching-sequence-subtitle {
-  margin-bottom: 12px;
+  margin: 0 0 6px;
+}
+.teaching-collection--saved .teaching-saved-glance {
+  margin: 0 0 12px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #3d5950;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .teaching-collection.teaching-collection--saved .teaching-saved-primary-actions {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -179,9 +303,34 @@ body:has(.teaching-collection--history) { min-width: 0; }
   overflow-wrap: anywhere;
 }
 .teaching-saved-sample-label {
+  display: inline-block;
   margin-bottom: 12px;
   font-size: 0.75rem;
   color: #536960;
+}
+.teaching-overwrite-confirm {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #dcc49c;
+  background: #fdf9f1;
+  color: #463820;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.teaching-overwrite-confirm > p {
+  margin: 0 0 10px;
+}
+.teaching-overwrite-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.teaching-overwrite-actions > button {
+  min-height: 44px;
 }
 .teaching-saved-more {
   min-width: 0;
@@ -214,6 +363,27 @@ body:has(.teaching-collection--history) { min-width: 0; }
 .teaching-history-detail-modal .teaching-history-snapshot-item {
   border-radius: 12px;
   transition: border-color 150ms ease;
+}
+
+@media (max-width: 480px) {
+  .teaching-collection--saved .teaching-saved-quick-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .teaching-collection--saved .teaching-saved-filter-pill {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .teaching-overwrite-actions > button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .teaching-collection.teaching-collection--saved .teaching-saved-primary-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

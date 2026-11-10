@@ -2,7 +2,7 @@ import { compareTeachingHistoryDates, getTeachingHistoryDateSource } from '../ut
 import React, { useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowDownToLine, ArrowRight, BookOpen, CalendarDays, Clock3, Copy,
-  Eye, FileText, FolderHeart, History, Play, Plus, Printer, ShieldCheck, Trash2, Users,
+  Eye, FileText, FolderHeart, History, Play, Plus, Printer, ShieldCheck, Trash2, Users, X,
 } from 'lucide-react';
 import { APPARATUS_LABELS, INITIAL_HISTORY_LOGS, INITIAL_SAVED_SEQUENCES } from '../data/pilatesCatalog';
 import { ClassCueSheetPreview } from '../features/classCueSheet/ClassCueSheetPreview';
@@ -12,7 +12,7 @@ import {
 } from '../design-system';
 import { useCloudSession } from '../lib/cloudSync';
 import { getRecoveryStorageStatus, usePilatesStore } from '../store/usePilatesStore';
-import type { ClassHistoryLog, DifficultyLevel, SavedSequence, SequenceStep } from '../types/pilates';
+import type { ApparatusType, ClassHistoryLog, DifficultyLevel, SavedSequence, SequenceStep } from '../types/pilates';
 import type { ClassHistoryLogWithSnapshot, ResolvedTeachingHistoryView } from '../types/teachingHistorySnapshot';
 import { getSavedHumanMovementDrafts, getSavedReusableBlocks, isMovementIdeaExercise } from '../utils/movementIdeaDraft';
 import { formatSequenceAsMarkdownCueSheet, formatSequenceAsPortableJson } from '../utils/portableSequenceExport';
@@ -35,19 +35,57 @@ interface ClassBinderViewProps {
   view?: 'saved' | 'history';
 }
 
+type SavedQuickFilter = 'all' | 'taught' | ApparatusType | 'mixed';
+
 const INITIAL_VISIBLE_DATE_CHIPS = 3;
 const INITIAL_VISIBLE_GROUP_CHIPS = 2;
 const INITIAL_VISIBLE_HISTORY_LOGS = 30;
 const HISTORY_LOGS_PAGE_SIZE = 30;
+const SAVED_APPARATUS_ORDER: ReadonlyArray<ApparatusType | 'mixed'> = [
+  'reformer', 'mat', 'cadillac', 'chair', 'barrel', 'mixed',
+];
 
 const sampleSequenceIds = new Set(INITIAL_SAVED_SEQUENCES.map((sequence) => sequence.id));
 const sampleHistoryIds = new Set(INITIAL_HISTORY_LOGS.map((log) => log.id));
+const getApparatusLabelKo = (apparatus: ApparatusType | 'mixed') =>
+  apparatus === 'mixed' ? '여러 기구' : APPARATUS_LABELS[apparatus].ko;
+const getApparatusSearchTerms = (apparatus: ApparatusType | 'mixed') =>
+  apparatus === 'mixed'
+    ? '여러 기구 복합 mixed'
+    : `${APPARATUS_LABELS[apparatus].ko} ${APPARATUS_LABELS[apparatus].short} ${APPARATUS_LABELS[apparatus].en} ${apparatus}`;
+const isValidSnapshotApparatus = (value: unknown): value is ApparatusType | 'mixed' =>
+  value === 'mixed' || (typeof value === 'string' && Object.prototype.hasOwnProperty.call(APPARATUS_LABELS, value));
+const isValidSnapshotLevel = (value: unknown): value is DifficultyLevel =>
+  value === '1.0' || value === '1.5' || value === '2.0';
+const getHistorySnapshotApparatusAndLevel = (
+  log: ClassHistoryLog | undefined,
+  resolved?: ResolvedTeachingHistoryView | null,
+): { apparatus: ApparatusType | 'mixed'; level: DifficultyLevel } => {
+  const withSnap = log as ClassHistoryLogWithSnapshot | undefined;
+  const seqSnap = withSnap?.sequenceSnapshot ?? withSnap?.programSnapshot?.sequenceSnapshot;
+  return {
+    apparatus: isValidSnapshotApparatus(seqSnap?.apparatus)
+      ? seqSnap.apparatus
+      : (resolved?.apparatus ?? log?.apparatus ?? 'reformer'),
+    level: isValidSnapshotLevel(seqSnap?.level)
+      ? seqSnap.level
+      : (resolved?.level ?? log?.level ?? '1.5'),
+  };
+};
 const historyMovementIds = (log: ClassHistoryLog) =>
   log.stepsSnapshot ? log.stepsSnapshot.filter((step) => !isRestStep(step)).map((step) => step.exerciseId) : log.exerciseIds.filter(Boolean);
 const movementCount = (steps: SequenceStep[]) => steps.filter((step) => !isRestStep(step)).length;
 const minutesLabel = (seconds: number) => Number((seconds / 60).toFixed(2));
 // Fixed-width UTF-16 encoding accepts every recoverable ID, including lone surrogates.
 const savedCardDomKey = (id: string) => id.split('').map((unit) => unit.charCodeAt(0).toString(16).padStart(4, '0')).join('');
+
+const areStepsEquivalentForDraftCheck = (savedSteps: SequenceStep[], currentSteps: SequenceStep[]) => {
+  if (savedSteps.length !== currentSteps.length) return false;
+  return (
+    JSON.stringify(savedSteps.map((step, index) => ({ ...step, order: index + 1 }))) ===
+    JSON.stringify(currentSteps.map((step, index) => ({ ...step, order: index + 1 })))
+  );
+};
 
 const parseHistoryDate = (date: string): Date | null => {
   const trimmed = date.trim();
@@ -116,7 +154,8 @@ const INTENSITY_LABELS: Record<'relaxed' | 'moderate' | 'intense', string> = {
 
 export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal, view = 'saved' }) => {
   const {
-    savedSequences, classGroups, historyLogs, exercises, activeSteps, reformerBrand,
+    savedSequences, classGroups, historyLogs, exercises, activeSteps, activeSequenceId,
+    activeTitle, activeSubtitle, activeApparatus, activeLevel, activeTargetMinutes, reformerBrand,
     conditionTemplates, persistenceError, loadSequenceIntoWorkbench, duplicateSavedSequence,
     deleteSavedSequence, applyConditionTemplate, addClassGroup, setActiveTab,
   } = usePilatesStore();
@@ -124,6 +163,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const cloudUser = useCloudSession((state) => state.user);
   const cloudBackup = useCloudSession((state) => state.backup);
   const [query, setQuery] = useState('');
+  const [savedFilter, setSavedFilter] = useState<SavedQuickFilter>('all');
   const [historyQuery, setHistoryQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedDate, setSelectedDate] = useState('all');
@@ -138,10 +178,16 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const [message, setMessage] = useState('');
   const [historyCopyError, setHistoryCopyError] = useState('');
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [pendingOverwrite, setPendingOverwrite] = useState<{ sequenceId: string; mode: 'workbench' | 'stage' } | null>(null);
   const [expandedSavedIds, setExpandedSavedIds] = useState<Set<string>>(() => new Set());
   const [printSequence, setPrintSequence] = useState<SavedSequence | null>(null);
   const [showBinderCueSheet, setShowBinderCueSheet] = useState(false);
   const [reopenedHistoryId, setReopenedHistoryId] = useState<string | null>(null);
+  const savedSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const historySearchInputRef = useRef<HTMLInputElement | null>(null);
+  const savedFilterNoopToggleRef = useRef<HTMLButtonElement | null>(null);
+  const overwriteTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const overwriteConfirmBtnRef = useRef<HTMLButtonElement | null>(null);
   const groupNameInputRef = useRef<HTMLInputElement | null>(null);
   const allGroupsChipRef = useRef<HTMLButtonElement | null>(null);
   const groupMoreToggleRef = useRef<HTMLButtonElement | null>(null);
@@ -151,8 +197,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const printTriggerRef = useRef<HTMLButtonElement | null>(null);
   const groupErrorId = useId();
   const savedMorePrefix = useId();
+
   const toggleSavedDetails = (id: string) => {
     setPendingDelete(null);
+    setPendingOverwrite(null);
     setExpandedSavedIds((previous) => {
       const next = new Set(previous);
       if (next.has(id)) next.delete(id);
@@ -162,6 +210,74 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   };
 
   const exercisesMap = useMemo(() => new Map(exercises.map((ex) => [ex.id, ex])), [exercises]);
+  const draftMovementCount = useMemo(() => movementCount(activeSteps), [activeSteps]);
+  const hasUnsavedWorkbenchDraft = useMemo(() => {
+    if (activeSteps.length === 0) return false;
+    const saved = savedSequences.find((seq) => seq.id === activeSequenceId);
+    if (!saved) return true;
+    return !(
+      saved.title === activeTitle &&
+      saved.subtitle === activeSubtitle &&
+      saved.apparatus === activeApparatus &&
+      saved.level === activeLevel &&
+      saved.targetMinutes === activeTargetMinutes &&
+      areStepsEquivalentForDraftCheck(saved.steps, activeSteps)
+    );
+  }, [activeSteps, savedSequences, activeSequenceId, activeTitle, activeSubtitle, activeApparatus, activeLevel, activeTargetMinutes]);
+
+  const actualLogsBySequenceId = useMemo(() => {
+    const map = new Map<string, ClassHistoryLog[]>();
+    const sortedActual = historyLogs
+      .filter((log) => !sampleHistoryIds.has(log.id))
+      .sort(compareTeachingHistoryDates);
+    for (const log of sortedActual) {
+      const list = map.get(log.sequenceId);
+      if (list) list.push(log);
+      else map.set(log.sequenceId, [log]);
+    }
+    return map;
+  }, [historyLogs]);
+
+  const savedApparatusOptions = useMemo(() => {
+    const counts = new Map<ApparatusType | 'mixed', number>();
+    for (const seq of savedSequences) {
+      counts.set(seq.apparatus, (counts.get(seq.apparatus) ?? 0) + 1);
+    }
+    return SAVED_APPARATUS_ORDER
+      .filter((apparatus) => (counts.get(apparatus) ?? 0) > 0)
+      .map((apparatus) => ({
+        id: apparatus,
+        label: getApparatusLabelKo(apparatus),
+        count: counts.get(apparatus) ?? 0,
+      }));
+  }, [savedSequences]);
+
+  const taughtSavedCount = useMemo(
+    () =>
+      savedSequences.filter(
+        (seq) => (actualLogsBySequenceId.get(seq.id)?.length ?? 0) > 0 || Boolean(seq.lastTaughtAt),
+      ).length,
+    [savedSequences, actualLogsBySequenceId],
+  );
+
+  const effectiveSavedFilter: SavedQuickFilter = useMemo(() => {
+    if (savedFilter === 'all') return 'all';
+    if (savedFilter === 'taught') return taughtSavedCount > 0 ? 'taught' : 'all';
+    return savedApparatusOptions.some((opt) => opt.id === savedFilter) ? savedFilter : 'all';
+  }, [savedFilter, taughtSavedCount, savedApparatusOptions]);
+
+  const showSavedQuickFilters =
+    savedSequences.length > 0 && (savedApparatusOptions.length > 1 || taughtSavedCount > 0);
+  const trimmedSavedQuery = normalizeSearchToken(query);
+  const compactSavedQuery = normalizeCompactSearch(query);
+  const hasActiveSavedFilter = Boolean(trimmedSavedQuery) || effectiveSavedFilter !== 'all';
+
+  const resetSavedFilters = (focusInput = false) => {
+    setQuery('');
+    setSavedFilter('all');
+    if (focusInput) savedSearchInputRef.current?.focus();
+  };
+
   const rawReusableBlocks = getSavedReusableBlocks();
   const reusableBlocksKey = rawReusableBlocks.length === 0 ? '[]' : JSON.stringify(rawReusableBlocks);
   const reusableBlocks = useMemo(() => (reusableBlocksKey === '[]' ? [] : (JSON.parse(reusableBlocksKey) as typeof rawReusableBlocks)), [reusableBlocksKey]);
@@ -175,9 +291,39 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   }, [historyLogs, exercisesMap, savedSequences, reusableBlocks, humanDrafts]);
 
   const sequences = useMemo(
-    () => [...savedSequences].filter((s) => `${s.title} ${s.subtitle}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
-    [savedSequences, query],
+    () =>
+      [...savedSequences]
+        .filter((s) => {
+          if (effectiveSavedFilter === 'taught') {
+            return (actualLogsBySequenceId.get(s.id)?.length ?? 0) > 0 || Boolean(s.lastTaughtAt);
+          }
+          if (effectiveSavedFilter !== 'all') {
+            return s.apparatus === effectiveSavedFilter;
+          }
+          return true;
+        })
+        .filter((s) => {
+          if (!trimmedSavedQuery) return true;
+          const stepTerms = s.steps
+            .map((step) => {
+              if (isRestStep(step)) return '휴식 rest';
+              const ex = exercisesMap.get(step.exerciseId);
+              return ex ? `${ex.nameKo} ${ex.nameEn}` : '';
+            })
+            .join(' ');
+          const latestGroup = actualLogsBySequenceId.get(s.id)?.[0]?.groupName ?? '';
+          const searchable = normalizeSearchToken(
+            `${s.title} ${s.subtitle} ${getApparatusSearchTerms(s.apparatus)} lv ${s.level} ${s.level} ${s.focusTags.join(' ')} ${stepTerms} ${latestGroup}`,
+          );
+          return (
+            searchable.includes(trimmedSavedQuery) ||
+            (Boolean(compactSavedQuery) && normalizeCompactSearch(searchable).includes(compactSavedQuery))
+          );
+        })
+        .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
+    [savedSequences, effectiveSavedFilter, trimmedSavedQuery, compactSavedQuery, exercisesMap, actualLogsBySequenceId],
   );
+
   const totalActualLogsCount = useMemo(() => historyLogs.filter((log) => !sampleHistoryIds.has(log.id)).length, [historyLogs]);
   const groupAndQueryLogs = useMemo(
     () =>
@@ -188,8 +334,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
           if (!trimmed) return true;
           const compactQuery = normalizeCompactSearch(historyQuery);
           const resolved = resolvedHistoryMap.get(log.id);
+          const snapshotMeta = getHistorySnapshotApparatusAndLevel(log, resolved);
           const stepNames = resolved?.steps.map((s) => `${s.nameKo} ${s.nameEn} ${s.blockNameKo} ${s.sourceBlockTitle ?? ''} ${s.ideaLineSnapshot ?? ''}`).join(' ') ?? '';
-          const searchable = normalizeSearchToken(`${log.sequenceTitle} ${log.groupName} ${log.instructorReflection} ${getHistoryDateKey(getTeachingHistoryDateSource(log))} ${getTeachingHistoryDateSource(log).trim().slice(0, 10)} ${formatDate(getTeachingHistoryDateSource(log))} ${stepNames}`);
+          const searchable = normalizeSearchToken(
+            `${resolved?.sequenceTitle ?? log.sequenceTitle} ${resolved?.groupName ?? log.groupName} ${log.instructorReflection} ${getApparatusSearchTerms(snapshotMeta.apparatus)} lv ${snapshotMeta.level} ${snapshotMeta.level} ${INTENSITY_LABELS[log.intensity]} ${getHistoryDateKey(getTeachingHistoryDateSource(log))} ${getTeachingHistoryDateSource(log).trim().slice(0, 10)} ${formatDate(getTeachingHistoryDateSource(log))} ${stepNames}`,
+          );
           return searchable.includes(trimmed) || (Boolean(compactQuery) && normalizeCompactSearch(searchable).includes(compactQuery));
         })
         .sort(compareTeachingHistoryDates),
@@ -256,9 +405,14 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   }, [visibleLogs]);
 
   const actualLogs = useMemo(() => logs.filter((log) => !sampleHistoryIds.has(log.id)), [logs]);
-  const hasActiveHistoryFilter = Boolean(historyQuery.trim()) || selectedGroup !== 'all' || effectiveSelectedDate !== 'all';
-  const resetHistoryFilters = () => {
-    setHistoryQuery(''); setSelectedGroup('all'); setSelectedDate('all'); setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
+  const trimmedHistoryQuery = normalizeSearchToken(historyQuery);
+  const hasActiveHistoryFilter = Boolean(trimmedHistoryQuery) || selectedGroup !== 'all' || effectiveSelectedDate !== 'all';
+  const resetHistoryFilters = (focusInput = false) => {
+    setHistoryQuery('');
+    setSelectedGroup('all');
+    setSelectedDate('all');
+    setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
+    if (focusInput) historySearchInputRef.current?.focus();
   };
   const recent = useMemo(() => actualLogs.slice(0, 3), [actualLogs]);
   const draftIds = useMemo(() => new Set(activeSteps.filter((step) => !isRestStep(step)).map((step) => step.exerciseId)), [activeSteps]);
@@ -277,8 +431,55 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
     return { snapshotExerciseNames: nextNames, mostUsed: [...nextCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5) };
   }, [actualLogs, resolvedHistoryMap]);
 
+  const reopenedLog = reopenedHistoryId ? historyLogs.find((item) => item.id === reopenedHistoryId) : undefined;
   const reopenedView = reopenedHistoryId ? (resolvedHistoryMap.get(reopenedHistoryId) ?? null) : null;
+  const reopenedSnapshotMeta = reopenedView ? getHistorySnapshotApparatusAndLevel(reopenedLog, reopenedView) : null;
   const storageStatus = getRecoveryStorageStatus();
+
+  const loadingSequenceRef = useRef(false);
+  const executeLoadSavedSequence = (sequenceId: string, mode: 'workbench' | 'stage') => {
+    if (loadingSequenceRef.current) return;
+    loadingSequenceRef.current = true;
+    try {
+      setPendingOverwrite(null);
+      setPendingDelete(null);
+      if (!hasUnsavedWorkbenchDraft && activeSteps.length > 0 && activeSequenceId === sequenceId) {
+        setActiveTab(mode);
+        return;
+      }
+      loadSequenceIntoWorkbench(sequenceId);
+      if (mode === 'stage') setActiveTab('stage');
+    } finally {
+      window.setTimeout(() => {
+        loadingSequenceRef.current = false;
+      }, 0);
+    }
+  };
+
+  const requestOpenSavedSequence = (
+    sequence: SavedSequence,
+    mode: 'workbench' | 'stage',
+    triggerEl?: HTMLButtonElement | null,
+  ) => {
+    if (hasUnsavedWorkbenchDraft) {
+      overwriteTriggerRef.current = triggerEl ?? null;
+      setPendingDelete(null);
+      setPendingOverwrite({ sequenceId: sequence.id, mode });
+      requestAnimationFrame(() => {
+        overwriteConfirmBtnRef.current?.focus();
+      });
+      return;
+    }
+    executeLoadSavedSequence(sequence.id, mode);
+  };
+
+  const cancelPendingOverwrite = () => {
+    const trigger = overwriteTriggerRef.current;
+    setPendingOverwrite(null);
+    if (trigger?.isConnected) {
+      trigger.focus();
+    }
+  };
 
   const sheetFor = (sequence: SavedSequence) => {
     const durations = getSequenceDurations(sequence.steps);
@@ -380,6 +581,16 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
     }
   };
 
+  const continueFromPrintModal = () => {
+    if (!printSequence) return;
+    const target = printSequence;
+    const cardOpenBtn = document.querySelector<HTMLButtonElement>(
+      `[data-saved-sequence-id="${savedCardDomKey(target.id)}"] [data-open-saved="true"]`,
+    );
+    setPrintSequence(null);
+    requestOpenSavedSequence(target, 'workbench', cardOpenBtn ?? printTriggerRef.current);
+  };
+
   const closeReopenedModal = () => {
     const trigger = reopenedTriggerRef.current;
     setReopenedHistoryId(null);
@@ -390,6 +601,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
       }, 0);
     }
   };
+
+  const selectedGroupLabel = selectedGroup === 'all' ? '전체 그룹' : (classGroups.find((group) => group.id === selectedGroup)?.name ?? '선택 그룹');
+  const selectedDateLabel = effectiveSelectedDate === 'all' ? '전체 날짜' : (dateFilterOptions.find((date) => date.dateKey === effectiveSelectedDate)?.label ?? effectiveSelectedDate);
 
   return (
     <div className={`teaching-collection ${view === 'history' ? 'teaching-collection--history' : 'teaching-collection--saved'}`}>
@@ -426,20 +640,129 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
       {view === 'saved' ? (
         <>
           <div className="teaching-collection-toolbar">
-            <PfSearchField label="저장한 시퀀스 검색" wrapperClassName="teaching-search" placeholder="시퀀스 이름으로 찾기" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <div className="teaching-search-row">
+              <PfSearchField
+                ref={savedSearchInputRef}
+                label="저장한 시퀀스 검색"
+                wrapperClassName="teaching-search"
+                placeholder="제목, 기구, 포함 동작, 최근 반 이름으로 찾기"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape' && query.length > 0) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setQuery('');
+                  }
+                }}
+              />
+              {query.length > 0 && (
+                <button
+                  type="button"
+                  className="teaching-search-clear"
+                  aria-label="저장 시퀀스 검색어 지우기"
+                  onClick={() => {
+                    setQuery('');
+                    savedSearchInputRef.current?.focus();
+                  }}
+                >
+                  <X size={15} aria-hidden="true" />
+                  <span>지우기</span>
+                </button>
+              )}
+            </div>
             <span className="muted">최근 수정 순 · 이 브라우저에 저장됨</span>
           </div>
+          {showSavedQuickFilters && (
+            <div
+              className="pf-tabs pf-tabs--pills teaching-saved-quick-filters"
+              role="group"
+              aria-label="저장 시퀀스 빠른 필터"
+              onKeyDown={(e) =>
+                handleRovingKeyDown(
+                  e,
+                  'button.teaching-saved-filter-pill:not(:disabled)',
+                  false,
+                  () => undefined,
+                  savedFilterNoopToggleRef,
+                  true,
+                )
+              }
+            >
+              <button
+                type="button"
+                aria-pressed={effectiveSavedFilter === 'all'}
+                className={`pf-tab teaching-saved-filter-pill ${effectiveSavedFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setSavedFilter('all')}
+              >
+                전체 <span className="teaching-saved-filter-count">{savedSequences.length}</span>
+              </button>
+              {savedApparatusOptions.length > 1 &&
+                savedApparatusOptions.map((opt) => (
+                  <button
+                    type="button"
+                    key={opt.id}
+                    aria-pressed={effectiveSavedFilter === opt.id}
+                    className={`pf-tab teaching-saved-filter-pill ${effectiveSavedFilter === opt.id ? 'active' : ''}`}
+                    onClick={() => setSavedFilter(opt.id)}
+                  >
+                    {opt.label} <span className="teaching-saved-filter-count">{opt.count}</span>
+                  </button>
+                ))}
+              {taughtSavedCount > 0 && (
+                <button
+                  type="button"
+                  aria-pressed={effectiveSavedFilter === 'taught'}
+                  className={`pf-tab teaching-saved-filter-pill ${effectiveSavedFilter === 'taught' ? 'active' : ''}`}
+                  onClick={() => setSavedFilter('taught')}
+                >
+                  최근 수업 있음 <span className="teaching-saved-filter-count">{taughtSavedCount}</span>
+                </button>
+              )}
+            </div>
+          )}
+          {hasActiveSavedFilter && (
+            <div className="teaching-saved-filter-status">
+              <p className="muted" role="status" aria-label="저장 시퀀스 검색 결과" aria-live="polite" aria-atomic="true">
+                <strong>조건에 맞는 시퀀스 {sequences.length}개</strong>
+                <span> / 전체 {savedSequences.length}개</span>
+              </p>
+              <PfButton variant="secondary" onClick={() => resetSavedFilters(true)}>
+                조건 해제
+              </PfButton>
+            </div>
+          )}
           {sequences.length === 0 ? (
             <PfEmptyState
-              icon={<FolderHeart size={28} />} title={query ? '검색한 시퀀스가 없어요' : '첫 수업의 흐름을 저장해 보세요'}
-              description={query ? '다른 이름으로 검색해 주세요.' : '계획에서 시퀀스를 만들고 저장하면 이곳에 모입니다.'}
-              action={<PfButton variant="secondary" onClick={() => (query ? setQuery('') : setActiveTab('workbench'))}>{query ? '검색 지우기' : '수업 계획하기'}<ArrowRight size={16} /></PfButton>}
+              icon={<FolderHeart size={28} />}
+              title={hasActiveSavedFilter ? '검색한 시퀀스가 없어요' : '첫 수업의 흐름을 저장해 보세요'}
+              description={
+                hasActiveSavedFilter
+                  ? '다른 이름·동작·기구로 검색하거나 적용된 조건을 지워 전체 목록을 확인해 보세요.'
+                  : '계획에서 시퀀스를 만들고 저장하면 이곳에 모입니다.'
+              }
+              action={
+                <PfButton
+                  variant="secondary"
+                  onClick={() => (hasActiveSavedFilter ? resetSavedFilters(true) : setActiveTab('workbench'))}
+                >
+                  {hasActiveSavedFilter
+                    ? trimmedSavedQuery && effectiveSavedFilter === 'all'
+                      ? '검색 지우기'
+                      : '필터 초기화'
+                    : '수업 계획하기'}
+                  <ArrowRight size={16} />
+                </PfButton>
+              }
             />
           ) : (
             <div className="teaching-saved-grid">
               {sequences.map((sequence, index) => {
-                const lastTaughtLog = historyLogs.find(log => log.sequenceId === sequence.id && log.taughtAt === sequence.lastTaughtAt);
-                const lastTaughtDate = lastTaughtLog ? getTeachingHistoryDateSource(lastTaughtLog) : sequence.lastTaughtAt;
+                const seqActualLogs = actualLogsBySequenceId.get(sequence.id) ?? [];
+                const latestTaughtLog =
+                  seqActualLogs[0] ??
+                  historyLogs.find((log) => log.sequenceId === sequence.id && log.taughtAt === sequence.lastTaughtAt);
+                const lastTaughtDate = latestTaughtLog ? getTeachingHistoryDateSource(latestTaughtLog) : sequence.lastTaughtAt;
                 const durations = getSequenceDurations(sequence.steps);
                 const exerciseCount = movementCount(sequence.steps);
                 const restCount = sequence.steps.length - exerciseCount;
@@ -447,19 +770,90 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                 const moreId = `${savedMorePrefix}-panel-${domKey}`;
                 const toggleId = `${savedMorePrefix}-toggle-${domKey}`;
                 const detailsExpanded = expandedSavedIds.has(sequence.id);
+                const isLoadedInWorkbench = activeSteps.length > 0 && activeSequenceId === sequence.id;
+                const isOverwriteOpen = pendingOverwrite?.sequenceId === sequence.id;
+                const apparatusLabel = getApparatusLabelKo(sequence.apparatus);
+                const recencySummary = lastTaughtDate
+                  ? `최근 수업 ${formatDate(lastTaughtDate)}${latestTaughtLog?.groupName ? ` · ${latestTaughtLog.groupName}` : ''}${seqActualLogs.length > 0 ? ` (${seqActualLogs.length}회)` : ''}`
+                  : `수정 ${formatDate(sequence.updatedAt)}`;
                 return (
-                  <PfCard as="article" variant="interactive" className="teaching-sequence-card" key={sequence.id}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <ApparatusIconBadge apparatus={sequence.apparatus} size="xs" decorative />
-                      <h2 style={{ margin: 0 }}>{sequence.title}</h2>
+                  <PfCard
+                    as="article"
+                    variant="interactive"
+                    className={`teaching-sequence-card ${isLoadedInWorkbench ? 'is-active-plan' : ''}`}
+                    data-saved-sequence-id={domKey}
+                    key={sequence.id}
+                  >
+                    <div className="teaching-saved-card-header">
+                      <div className="teaching-saved-card-title-row">
+                        <ApparatusIconBadge apparatus={sequence.apparatus} size="xs" decorative />
+                        <h2>{sequence.title}</h2>
+                      </div>
+                      {isLoadedInWorkbench && (
+                        <PfBadge tone={hasUnsavedWorkbenchDraft ? 'warning' : 'sage'} className="teaching-active-plan-badge">
+                          {hasUnsavedWorkbenchDraft ? '현재 초안 수정 중' : '현재 계획 열림'}
+                        </PfBadge>
+                      )}
                     </div>
                     <p className="muted teaching-sequence-subtitle">{sequence.subtitle || '내가 만든 수업 흐름'}</p>
+                    <p className="teaching-saved-glance">
+                      {apparatusLabel} · Lv {sequence.level} · 총 {minutesLabel(durations.totalSec)}분 (동작 {exerciseCount}
+                      {restCount > 0 ? ` · 휴식 ${restCount}` : ''}) · {recencySummary}
+                    </p>
                     {sampleSequenceIds.has(sequence.id) && <span className="teaching-saved-sample-label">예시 계획</span>}
                     {sequence.recoveredDraftOrigin && <p className="muted" data-recovered-draft="true">이전 편집 초안에서 복구한 자료 · 수업 전 조건을 확인해 주세요.</p>}
                     <div className="teaching-card-main-actions teaching-saved-primary-actions">
-                      <PfButton variant="primary" data-open-saved="true" onClick={() => loadSequenceIntoWorkbench(sequence.id)}><BookOpen size={16} /> 불러오기</PfButton>
+                      <PfButton
+                        variant="primary"
+                        data-open-saved="true"
+                        onClick={(e) => requestOpenSavedSequence(sequence, 'workbench', e.currentTarget)}
+                      >
+                        <BookOpen size={16} /> 불러오기
+                      </PfButton>
                       <PfButton variant="secondary" id={toggleId} aria-expanded={detailsExpanded} aria-controls={moreId} aria-label={`${sequence.title} ${detailsExpanded ? '접기' : '더보기'}`} onClick={() => toggleSavedDetails(sequence.id)}>{detailsExpanded ? '접기' : '더보기'}</PfButton>
                     </div>
+                    {isOverwriteOpen && pendingOverwrite && (
+                      <div
+                        className="teaching-overwrite-confirm"
+                        role="region"
+                        aria-label="현재 초안 덮어쓰기 확인"
+                        onKeyDown={(event) => {
+                          if (event.key !== 'Escape') return;
+                          event.preventDefault();
+                          event.stopPropagation();
+                          cancelPendingOverwrite();
+                        }}
+                      >
+                        <p>
+                          현재 작성 중인 초안(‘{activeTitle || '이름 없는 초안'}’, 동작 {draftMovementCount}개)에 저장하지 않은 변경이 있습니다.{' '}
+                          {isLoadedInWorkbench
+                            ? '저장된 시퀀스 상태로 다시 불러올까요?'
+                            : `‘${sequence.title}’ 시퀀스로 덮어쓸까요?`}{' '}
+                          (작업대 ‘되돌리기’로도 복구할 수 있습니다.)
+                        </p>
+                        <div className="teaching-overwrite-actions">
+                          <PfButton
+                            variant="ghost"
+                            onClick={() => {
+                              setPendingOverwrite(null);
+                              setActiveTab('workbench');
+                            }}
+                          >
+                            현재 초안 먼저 보기
+                          </PfButton>
+                          <PfButton variant="secondary" onClick={cancelPendingOverwrite}>
+                            취소
+                          </PfButton>
+                          <PfButton
+                            ref={overwriteConfirmBtnRef}
+                            variant="primary"
+                            onClick={() => executeLoadSavedSequence(sequence.id, pendingOverwrite.mode)}
+                          >
+                            {pendingOverwrite.mode === 'stage' ? '초안 덮어쓰고 수업 시작' : '초안 덮어쓰고 불러오기'}
+                          </PfButton>
+                        </div>
+                      </div>
+                    )}
                     <div id={moreId} className="teaching-saved-more" role="region" aria-label={`${sequence.title} 추가 정보와 도구`} hidden={!detailsExpanded} onKeyDown={(event) => {
                       if (event.key !== 'Escape') return;
                       event.preventDefault();
@@ -469,7 +863,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                     }}>
                       <div className="teaching-card-top">
                         <span className="teaching-card-label">
-                          {String(index + 1).padStart(2, '0')} · {sequence.apparatus === 'mixed' ? '여러 기구' : APPARATUS_LABELS[sequence.apparatus].ko}
+                          {String(index + 1).padStart(2, '0')} · {apparatusLabel}
                           {sampleSequenceIds.has(sequence.id) && ' · 예시'}
                         </span>
                         <PfBadge tone="sage" shape="rect" className="teaching-level">Lv {sequence.level}</PfBadge>
@@ -478,7 +872,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                         <span><Clock3 size={15} />{minutesLabel(durations.totalSec)}분</span>
                         <span>{exerciseCount}개 동작</span>
                         {restCount > 0 && <span>휴식 {restCount}개</span>}
-                        <span>기록 {historyLogs.filter((l) => l.sequenceId === sequence.id && !sampleHistoryIds.has(l.id)).length}회</span>
+                        <span>기록 {seqActualLogs.length}회</span>
                       </div>
                       {restCount > 0 && <p className="teaching-rest-summary" aria-label="저장 수업 시간 구성">동작·설명·전환 {formatSecondsToMMSS(durations.exerciseSec)} · 휴식 {formatSecondsToMMSS(durations.restSec)}</p>}
                       <ol className="teaching-flow-preview">
@@ -495,9 +889,18 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                         })}
                         {sequence.steps.length > 4 && <PfBlockPill as="li" className="muted">외 {sequence.steps.length - 4}개 항목</PfBlockPill>}
                       </ol>
-                      <p className="teaching-card-date">{lastTaughtDate ? `최근 수업 ${formatDate(lastTaughtDate)}` : `수정 ${formatDate(sequence.updatedAt)}`}</p>
+                      <p className="teaching-card-date">
+                        {lastTaughtDate
+                          ? `최근 수업 ${formatDate(lastTaughtDate)}${latestTaughtLog?.groupName ? ` · ${latestTaughtLog.groupName}` : ''}`
+                          : `수정 ${formatDate(sequence.updatedAt)}`}
+                      </p>
                       <div className="teaching-card-main-actions teaching-saved-stage-action">
-                        <PfButton variant="secondary" onClick={() => { loadSequenceIntoWorkbench(sequence.id); setActiveTab('stage'); }}><Play size={16} /> 수업 시작</PfButton>
+                        <PfButton
+                          variant="secondary"
+                          onClick={(e) => requestOpenSavedSequence(sequence, 'stage', e.currentTarget)}
+                        >
+                          <Play size={16} /> 수업 시작
+                        </PfButton>
                       </div>
                       <div className="teaching-card-tools">
                         <PfButton variant="ghost" onClick={() => duplicateSequence(sequence.id)}><Copy size={15} /> 복제</PfButton>
@@ -505,7 +908,17 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                         <PfButton variant="ghost" onClick={() => exportText(sequence)}><ArrowDownToLine size={15} /> 텍스트</PfButton>
                         <PfButton variant="ghost" onClick={() => exportMarkdown(sequence)}><FileText size={15} /> 마크다운</PfButton>
                         <PfButton variant="ghost" onClick={() => exportJson(sequence)}><ArrowDownToLine size={15} /> JSON</PfButton>
-                        <PfButton variant="icon" className="teaching-delete" aria-label={`${sequence.title} 삭제`} onClick={() => setPendingDelete(sequence.id)}><Trash2 size={16} /></PfButton>
+                        <PfButton
+                          variant="icon"
+                          className="teaching-delete"
+                          aria-label={`${sequence.title} 삭제`}
+                          onClick={() => {
+                            setPendingOverwrite(null);
+                            setPendingDelete(sequence.id);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </PfButton>
                       </div>
                       <button type="button" className="teaching-log-link" onClick={() => onOpenLogModal(sequence.id, { stepsSnapshot: sequence.steps, sequenceTitle: sequence.title })}>
                         <CalendarDays size={15} /> 이미 진행한 수업 기록하기
@@ -522,6 +935,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                             const card = event.currentTarget.closest('article');
                             const next = card?.nextElementSibling?.querySelector<HTMLButtonElement>('[data-open-saved]')
                               ?? card?.previousElementSibling?.querySelector<HTMLButtonElement>('[data-open-saved]')
+                              ?? savedSearchInputRef.current
                               ?? card?.closest('.teaching-collection')?.querySelector<HTMLInputElement>('input');
                             const trigger = card?.querySelector<HTMLButtonElement>('.teaching-delete');
                             deleteSavedSequence(sequence.id);
@@ -576,11 +990,39 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
             </form>
           )}
           <div className="teaching-collection-toolbar">
-            <PfSearchField
-              label="수업 기록 검색" wrapperClassName="teaching-search"
-              placeholder="수업 제목, 반 이름, 날짜, 당시 동작·블록으로 찾기" value={historyQuery}
-              onChange={(e) => { setHistoryQuery(e.target.value); setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS); }}
-            />
+            <div className="teaching-search-row">
+              <PfSearchField
+                ref={historySearchInputRef}
+                label="수업 기록 검색"
+                wrapperClassName="teaching-search"
+                placeholder="수업 제목, 반 이름, 기구, 날짜, 당시 동작·블록으로 찾기"
+                value={historyQuery}
+                onChange={(e) => { setHistoryQuery(e.target.value); setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape' && historyQuery.length > 0) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setHistoryQuery('');
+                    setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
+                  }
+                }}
+              />
+              {historyQuery.length > 0 && (
+                <button
+                  type="button"
+                  className="teaching-search-clear"
+                  aria-label="수업 기록 검색어 지우기"
+                  onClick={() => {
+                    setHistoryQuery('');
+                    setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
+                    historySearchInputRef.current?.focus();
+                  }}
+                >
+                  <X size={15} aria-hidden="true" />
+                  <span>지우기</span>
+                </button>
+              )}
+            </div>
             <span className="muted">최근 진행 순 · 당시 동작·블록·순서·시간 스냅샷 보존</span>
           </div>
           <details className="teaching-history-filters">
@@ -667,10 +1109,65 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
             </div>
           )}
           </details>
-          {(selectedGroup !== 'all' || effectiveSelectedDate !== 'all') && (
+          {hasActiveHistoryFilter && (
             <div className="teaching-history-filter-status">
-              <span>{selectedGroup === 'all' ? '전체 그룹' : classGroups.find((group) => group.id === selectedGroup)?.name} · {effectiveSelectedDate === 'all' ? '전체 날짜' : dateFilterOptions.find((date) => date.dateKey === effectiveSelectedDate)?.label}</span>
-              <PfButton variant="secondary" onClick={resetHistoryFilters}>선택 해제</PfButton>
+              <div className="teaching-history-active-chips">
+                {Boolean(trimmedHistoryQuery) && (
+                  <button
+                    type="button"
+                    className="teaching-active-filter-chip"
+                    aria-label={`검색어 필터 해제: ${historyQuery.trim()}`}
+                    onClick={() => {
+                      setHistoryQuery('');
+                      setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
+                      historySearchInputRef.current?.focus();
+                    }}
+                  >
+                    <span>검색: “{historyQuery.trim()}”</span>
+                    <X size={13} aria-hidden="true" />
+                  </button>
+                )}
+                {selectedGroup !== 'all' && (
+                  <button
+                    type="button"
+                    className="teaching-active-filter-chip"
+                    aria-label={`그룹 필터 해제: ${selectedGroupLabel}`}
+                    onClick={() => {
+                      setSelectedGroup('all');
+                      setSelectedDate('all');
+                      setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
+                      historySearchInputRef.current?.focus();
+                    }}
+                  >
+                    <span>그룹: {selectedGroupLabel}</span>
+                    <X size={13} aria-hidden="true" />
+                  </button>
+                )}
+                {effectiveSelectedDate !== 'all' && (
+                  <button
+                    type="button"
+                    className="teaching-active-filter-chip"
+                    aria-label={`날짜 필터 해제: ${selectedDateLabel}`}
+                    onClick={() => {
+                      setSelectedDate('all');
+                      setVisibleHistoryCount(INITIAL_VISIBLE_HISTORY_LOGS);
+                      historySearchInputRef.current?.focus();
+                    }}
+                  >
+                    <span>날짜: {selectedDateLabel}</span>
+                    <X size={13} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+              <PfButton variant="secondary" onClick={() => resetHistoryFilters(true)}>선택 해제</PfButton>
+            </div>
+          )}
+          {hasUnsavedWorkbenchDraft && (
+            <div className="teaching-history-draft-notice" role="region" aria-label="현재 작성 중인 초안 안내">
+              <span>
+                현재 작성 중인 초안(‘{activeTitle || '이름 없는 초안'}’, 동작 {draftMovementCount}개)이 있습니다. 기록을 복사하면 이전 초안은 작업대 ‘되돌리기’에 자동 보관됩니다.
+              </span>
+              <PfButton variant="secondary" onClick={() => setActiveTab('workbench')}>현재 초안 보기</PfButton>
             </div>
           )}
           <p className="muted" role="status" aria-label="수업 기록 검색 결과" aria-live="polite" aria-atomic="true">
@@ -684,7 +1181,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                   icon={<History size={28} />}
                   title={
                     hasActiveHistoryFilter
-                      ? historyQuery.trim() && selectedGroup === 'all' && effectiveSelectedDate === 'all'
+                      ? trimmedHistoryQuery && selectedGroup === 'all' && effectiveSelectedDate === 'all'
                         ? '검색한 수업 완료 기록이 없어요'
                         : effectiveSelectedDate !== 'all' ? '선택한 날짜에 남긴 수업 기록이 없어요' : '선택한 그룹에 남긴 수업 기록이 없어요'
                       : '아직 남긴 수업 기록이 없어요'
@@ -694,8 +1191,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                     : <>수업을 마친 뒤 날짜와 짧은 메모를 남겨 보세요.<br />아래 예시 기록은 내 수업 분석에 포함되지 않아요.</>
                   }
                   action={
-                    <PfButton variant="secondary" onClick={() => (hasActiveHistoryFilter ? resetHistoryFilters() : setActiveTab('workbench'))}>
-                      {hasActiveHistoryFilter ? (historyQuery.trim() && selectedGroup === 'all' && effectiveSelectedDate === 'all' ? '검색 지우기' : '필터 초기화') : '오늘 수업 계획하기'}
+                    <PfButton variant="secondary" onClick={() => (hasActiveHistoryFilter ? resetHistoryFilters(true) : setActiveTab('workbench'))}>
+                      {hasActiveHistoryFilter ? (trimmedHistoryQuery && selectedGroup === 'all' && effectiveSelectedDate === 'all' ? '검색 지우기' : '필터 초기화') : '오늘 수업 계획하기'}
                       <ArrowRight size={16} />
                     </PfButton>
                   }
@@ -709,11 +1206,19 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                   </div>
                   {dateGroup.items.map((log) => {
                     const isSample = sampleHistoryIds.has(log.id);
-                    const resolved = resolvedHistoryMap.get(log.id) ?? resolveTeachingHistoryView(log, exercisesMap, savedSequences, { reusableBlocks, humanDrafts });
+                    const resolved = resolvedHistoryMap.get(log.id)!;
+                    const snapshotMeta = getHistorySnapshotApparatusAndLevel(log, resolved);
                     const hasStepTimings = Boolean(log.stepsSnapshot || resolved.hasPreservedSnapshot);
                     const missingExercise = !resolved.canCopyToNextClass;
                     const timeOfDay = formatHistoryTimeOfDay(resolved.taughtAt, log);
                     const plannedMinutes = Math.max(1, Math.round(resolved.timing.plannedTotalSec / 60));
+                    const validPreviewSteps = resolved.steps.filter((s) => s.kind === 'exercise' && !s.isMissingUnrecoverable);
+                    const previewNames = validPreviewSteps.slice(0, 2).map((s) => s.nameKo);
+                    const extraMovementCount = Math.max(0, validPreviewSteps.length - previewNames.length);
+                    const movementPreviewSuffix =
+                      previewNames.length > 0
+                        ? ` · ${previewNames.join(', ')}${extraMovementCount > 0 ? ` 외 ${extraMovementCount}개` : ''}`
+                        : '';
                     return (
                       <PfCard as="article" key={log.id} variant={isSample ? 'sample' : 'default'} className="teaching-history-card">
                         <h2>{resolved.sequenceTitle}</h2>
@@ -724,12 +1229,15 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                             <span className="teaching-history-time-pill">
                               <Clock3 size={12} aria-hidden="true" />{log.actualDurationSec !== undefined ? `${Math.max(1, Math.round(log.actualDurationSec / 60))}분 진행` : `계획 ${plannedMinutes}분`}
                             </span>
+                            <span className="teaching-history-meta-pill">
+                              {getApparatusLabelKo(snapshotMeta.apparatus)} · Lv {snapshotMeta.level}
+                            </span>
                           </div>
                           <span className="teaching-history-group"><Users size={14} aria-hidden="true" />{resolved.groupName}</span>
                         </div>
                         {isSample && <PfAiStatusBadge kind="sample-data" className="teaching-sample-label" />}
                         <p className="teaching-reflection">{log.instructorReflection || '남긴 메모가 없습니다.'}</p>
-                          {resolved.hasCatalogDrift && <span className="teaching-drift-badge" data-snapshot-preserved="true">원본 수정 후에도 당시 스냅샷 유지됨</span>}
+                        {resolved.hasCatalogDrift && <span className="teaching-drift-badge" data-snapshot-preserved="true">원본 수정 후에도 당시 스냅샷 유지됨</span>}
                         <div className="teaching-history-bottom">
                           <span className="muted">
                             {missingExercise ? '삭제된 동작이 있어 복사할 수 없습니다. 당시 기록은 확인할 수 있습니다.'
@@ -742,7 +1250,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                           </div>
                         </div>
                         <details className="teaching-history-details">
-                          <summary>수업 구성 · {resolved.movementCount}개 동작 보기</summary>
+                          <summary>수업 구성 · {resolved.movementCount}개 동작 보기{movementPreviewSuffix}</summary>
                         <div className="teaching-card-stats">
                           <span>{resolved.movementCount}개 동작</span>{resolved.restCount > 0 && <span>휴식 {resolved.restCount}개</span>}
                           <span>{log.actualDurationSec !== undefined ? `타이머/입력 시간 ${Math.floor(log.actualDurationSec / 60)}분 ${Math.round(log.actualDurationSec % 60)}초` : '실제 진행 시간 미기록'}</span>
@@ -790,10 +1298,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                 <p className="muted">선택한 그룹의 실제 기록 최근 3회와 같은 동작 수입니다.</p>
                 {recent.length === 0 ? <p className="teaching-insight-empty">기록을 남기면 비교가 시작됩니다.</p> : (
                   recent.map((log) => {
+                    const resolvedOverlap = resolvedHistoryMap.get(log.id);
                     const shared = [...draftIds].filter((id) => historyMovementIds(log).includes(id)).length;
                     return (
                       <div className="teaching-overlap-row" key={log.id}>
-                        <div><strong>{log.groupName}</strong><span>{formatDate(getTeachingHistoryDateSource(log))} · {log.sequenceTitle}</span></div>
+                        <div><strong>{resolvedOverlap?.groupName ?? log.groupName}</strong><span>{formatDate(getTeachingHistoryDateSource(log))} · {resolvedOverlap?.sequenceTitle ?? log.sequenceTitle}</span></div>
                         <b>{shared}<small> / {draftIds.size}개</small></b>
                       </div>
                     );
@@ -827,6 +1336,11 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
         </div>
         <div className="teaching-form-actions">
           <PfButton variant="secondary" onClick={closePrintModal}>닫기</PfButton>
+          {printSequence && (
+            <PfButton variant="ghost" onClick={continueFromPrintModal}>
+              <BookOpen size={16} /> 이 계획 불러오기
+            </PfButton>
+          )}
           <PfButton variant="primary" onClick={() => window.print()}><Printer size={16} /> 인쇄하기</PfButton>
         </div>
       </LightDismissDialog>
@@ -845,7 +1359,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
               </div>
               <dl className="teaching-history-detail-grid">
                 <div><dt>진행 일시</dt><dd>{formatDate(getTeachingHistoryDateSource(reopenedView))} ({getHistoryDateKey(getTeachingHistoryDateSource(reopenedView))})</dd></div>
-                <div><dt>대상 반 · 레벨</dt><dd>{reopenedView.groupName} · {reopenedView.apparatus === 'mixed' ? '여러 기구' : APPARATUS_LABELS[reopenedView.apparatus].ko} · Lv. {reopenedView.level}</dd></div>
+                <div><dt>대상 반 · 레벨</dt><dd>{reopenedView.groupName} · {getApparatusLabelKo(reopenedSnapshotMeta?.apparatus ?? reopenedView.apparatus)} · Lv. {reopenedSnapshotMeta?.level ?? reopenedView.level}</dd></div>
                 <div>
                   <dt>당시 계획 시간 스냅샷</dt>
                   <dd>총 {formatSecondsToMMSS(reopenedView.timing.plannedTotalSec)} (동작·설명·전환 {formatSecondsToMMSS(reopenedView.timing.plannedExerciseSec)} · 휴식 {formatSecondsToMMSS(reopenedView.timing.plannedRestSec)})</dd>

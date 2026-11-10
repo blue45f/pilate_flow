@@ -1,5 +1,5 @@
-/* Mobile information density, touch targets (>=44px), Korean word-break, and keyboard focus clarity
-   for InstructorScheduleView across 320px / 360px / 390px viewports. */
+/* Mobile information density, touch targets (>=44px), Korean word-break, keyboard focus clarity,
+   and date -> class preparation flow hierarchy for InstructorScheduleView across 320px / 360px / 390px viewports. */
 
 .instructor-schedule,
 .instructor-schedule *,
@@ -48,6 +48,7 @@
 
 /* Comfortable spacing for header, toolbars, and action strips */
 .instructor-schedule .schedule-actions,
+.instructor-schedule .schedule-prep-actions,
 .instructor-schedule .schedule-card-actions,
 .schedule-location-list,
 .schedule-form .schedule-actions {
@@ -57,19 +58,98 @@
   gap: 10px;
 }
 
-.instructor-schedule .schedule-view-toggle {
+.instructor-schedule .schedule-view-toggle,
+.instructor-schedule .schedule-prep-filter {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.instructor-schedule .schedule-view-toggle > button {
+.instructor-schedule .schedule-view-toggle > button,
+.instructor-schedule .schedule-prep-filter > button {
   min-height: 44px;
   min-width: 44px;
   padding: 8px 14px;
 }
 
-/* Schedule occurrence cards: comfortable vertical rhythm and clear hierarchy */
+/* Week strip subtle readiness indicator */
+.instructor-schedule .schedule-week-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.instructor-schedule .schedule-week-prep-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.instructor-schedule .schedule-week-prep-dot-needs-prep {
+  background: #c16b2f;
+}
+
+.instructor-schedule .schedule-week-prep-dot-ready {
+  background: #2f7a62;
+}
+
+.instructor-schedule .schedule-week-strip > button[aria-pressed='true'] .schedule-week-prep-dot-needs-prep {
+  background: #ffd3a8;
+}
+
+.instructor-schedule .schedule-week-strip > button[aria-pressed='true'] .schedule-week-prep-dot-ready {
+  background: #a9edd3;
+}
+
+/* Compact preparation status, filter, and next-prep jump bar */
+.instructor-schedule .schedule-prep-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  padding: 12px 16px;
+  margin: 0 0 18px;
+  border: 1px solid var(--pf-color-border-default, #d5ddd0);
+  border-radius: 14px;
+  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+}
+
+.instructor-schedule .schedule-prep-counts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.instructor-schedule .schedule-prep-counts strong {
+  color: var(--pf-color-text-primary, #1e3129);
+  font-weight: 700;
+}
+
+.instructor-schedule .schedule-prep-counts span {
+  color: var(--pf-color-text-muted, #526358);
+  font-variant-numeric: tabular-nums;
+}
+
+.instructor-schedule .schedule-prep-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.instructor-schedule .schedule-next-prep-btn {
+  min-height: 44px;
+  padding: 8px 14px;
+  font-weight: 600;
+}
+
+/* Schedule occurrence cards: comfortable vertical rhythm and clear 2-zone hierarchy */
 .instructor-schedule .schedule-class {
   display: flex;
   flex-direction: column;
@@ -80,6 +160,54 @@
   max-width: 100%;
   word-break: keep-all;
   overflow-wrap: anywhere;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.instructor-schedule .schedule-class.schedule-class-prep-focus {
+  border-color: var(--pf-color-action-primary, #173d34);
+  box-shadow: 0 0 0 2px rgba(34, 121, 109, 0.22);
+}
+
+.instructor-schedule .schedule-class-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.instructor-schedule .schedule-prep-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.instructor-schedule .schedule-prep-pill-ready {
+  background: #e2f2eb;
+  color: #174c3c;
+}
+
+.instructor-schedule .schedule-prep-pill-draft {
+  background: #eef2e6;
+  color: #3a4f38;
+}
+
+.instructor-schedule .schedule-prep-pill-unplanned {
+  background: #f5efe6;
+  color: #6b4e24;
+}
+
+.instructor-schedule .schedule-prep-pill-needs-review {
+  background: #fdebd8;
+  color: #7c3f12;
 }
 
 .instructor-schedule .schedule-class h3 {
@@ -92,10 +220,50 @@
   line-height: 1.6;
 }
 
-.instructor-schedule .schedule-card-actions {
-  margin-top: 6px;
-  padding-top: 12px;
+/* Zone 1: Primary class preparation & start actions */
+.instructor-schedule .schedule-prep-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
+  margin-top: 6px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--pf-color-border-subtle, #e3e8dd);
+  background: var(--pf-color-bg-surface-subtle, #f6f8f3);
+}
+
+.instructor-schedule .schedule-next-step-hint {
+  font-size: 0.8125rem;
+  color: var(--pf-color-text-muted, #526358);
+}
+
+.instructor-schedule .schedule-prep-actions {
+  width: 100%;
+  gap: 8px;
+}
+
+.instructor-schedule .schedule-prep-actions > button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 9px 14px;
+  font-size: 0.875rem;
+}
+
+.instructor-schedule .schedule-base-plan-link {
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+}
+
+/* Zone 2: Secondary schedule modification actions */
+.instructor-schedule .schedule-card-actions {
+  margin-top: 4px;
+  padding-top: 10px;
+  gap: 8px;
+}
+
+.instructor-schedule .schedule-card-actions:empty {
+  display: none;
 }
 
 .instructor-schedule .schedule-card-actions > button {
@@ -105,9 +273,10 @@
   font-size: 0.8125rem;
 }
 
-/* Empty states, closures, feedback, and warnings: non-overlapping and legible on narrow viewports */
+/* Empty states, filtered states, closures, feedback, and warnings */
 .instructor-schedule .schedule-empty,
-.instructor-schedule .schedule-day-empty {
+.instructor-schedule .schedule-day-empty,
+.instructor-schedule .schedule-day-filtered-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -117,6 +286,20 @@
   max-width: 100%;
   word-break: keep-all;
   overflow-wrap: anywhere;
+}
+
+.instructor-schedule .schedule-day-filtered-empty {
+  padding: 20px 12px;
+  text-align: center;
+  border: 1px dashed var(--pf-color-border-default, #d5ddd0);
+  border-radius: 12px;
+  color: var(--pf-color-text-muted, #526358);
+  font-size: 0.875rem;
+}
+
+.instructor-schedule .schedule-empty-jump-btn {
+  padding: 8px 14px;
+  font-weight: 600;
 }
 
 .instructor-schedule .schedule-warning,
@@ -166,6 +349,18 @@
   background: var(--paper, #fdfcf8);
 }
 
+/* Respect user motion preferences across interactive buttons and highlighted cards */
+@media (prefers-reduced-motion: reduce) {
+  .instructor-schedule *,
+  .instructor-schedule *::before,
+  .instructor-schedule *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Mobile viewports: 320px / 360px / 390px */
 @media (max-width: 420px) {
   .instructor-schedule {
@@ -195,11 +390,27 @@
     gap: 12px;
   }
 
-  .instructor-schedule .schedule-view-toggle {
+  .instructor-schedule .schedule-view-toggle,
+  .instructor-schedule .schedule-prep-filter {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+  }
+
+  .instructor-schedule .schedule-prep-bar {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .instructor-schedule .schedule-prep-controls {
+    width: 100%;
+  }
+
+  .instructor-schedule .schedule-next-prep-btn,
+  .instructor-schedule .schedule-empty-jump-btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .instructor-schedule .schedule-week-selector {
@@ -227,12 +438,18 @@
     gap: 8px;
   }
 
+  .instructor-schedule .schedule-prep-zone {
+    padding: 10px;
+  }
+
+  .instructor-schedule .schedule-prep-actions,
   .instructor-schedule .schedule-card-actions {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 128px), 1fr));
     gap: 8px;
   }
 
+  .instructor-schedule .schedule-prep-actions > button,
   .instructor-schedule .schedule-card-actions > button {
     width: 100%;
     justify-content: center;

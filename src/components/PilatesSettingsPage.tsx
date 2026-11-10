@@ -74,7 +74,7 @@ export interface PilatesSettingsPageProps {
 export function PilatesSettingsPage({
   snapshot,
   port,
-  initialActiveGroup = 'account',
+  initialActiveGroup = 'install',
   preferReducedMotion: preferReducedMotionProp,
   sessionKey,
   className = '',
@@ -379,7 +379,10 @@ export function PilatesSettingsPage({
     commitOverrides((prev) => prev, nextGroup);
   };
 
-  const scrollAndFocusSection = (groupId: SettingsGroupId, focusHeading = false) => {
+  const scrollAndFocusSection = (
+    groupId: SettingsGroupId,
+    focusMode: 'none' | 'heading' | 'primary-action' = 'none',
+  ) => {
     const target = sectionRefs.current[groupId];
     if (target && typeof target.scrollIntoView === 'function') {
       try {
@@ -388,20 +391,33 @@ export function PilatesSettingsPage({
         // Ignore in JSDOM environments
       }
     }
-    if (focusHeading && target) {
-      const heading = target.querySelector<HTMLElement>('h3');
-      if (heading) {
-        if (!heading.hasAttribute('tabindex')) {
-          heading.setAttribute('tabindex', '-1');
-        }
-        heading.focus({ preventScroll: true });
+    if (!target || focusMode === 'none') return;
+
+    if (focusMode === 'primary-action') {
+      const primaryControl = target.querySelector<HTMLElement>(
+        '[data-settings-primary-action="true"]:not([disabled])',
+      );
+      if (primaryControl) {
+        primaryControl.focus({ preventScroll: true });
+        return;
       }
+    }
+
+    const heading = target.querySelector<HTMLElement>('h3');
+    if (heading) {
+      if (!heading.hasAttribute('tabindex')) {
+        heading.setAttribute('tabindex', '-1');
+      }
+      heading.focus({ preventScroll: true });
     }
   };
 
-  const handleGroupJump = (groupId: SettingsGroupId) => {
+  const handleGroupJump = (
+    groupId: SettingsGroupId,
+    focusMode: 'none' | 'heading' | 'primary-action' = 'none',
+  ) => {
     updateActiveGroup(groupId);
-    scrollAndFocusSection(groupId, false);
+    scrollAndFocusSection(groupId, focusMode);
   };
 
   const navigateTaskStep = (nextStep: SettingsTaskStep, moveFocusToHeading = true) => {
@@ -409,7 +425,7 @@ export function PilatesSettingsPage({
     setTaskStep(nextStep);
     setActiveGroup(stepConfig.groupId);
     commitOverrides((prev) => prev, stepConfig.groupId);
-    scrollAndFocusSection(stepConfig.groupId, moveFocusToHeading);
+    scrollAndFocusSection(stepConfig.groupId, moveFocusToHeading ? 'heading' : 'none');
   };
 
   const handleTaskStepKeyDown = (
@@ -492,8 +508,8 @@ export function PilatesSettingsPage({
           나의 스튜디오 설정
         </h2>
         <p className="pf-settings-page__subtitle">
-          계정 · 한국어 음성 · 앱 설치 · 데이터 관리를 4개 짧은 그룹에서 확인하세요. 인증·보안
-          설정을 임의로 바꾸거나 수업 데이터를 삭제하는 위험 동작은 제공하지 않습니다.
+          기기·음성 준비부터 자료 보관 확인까지 필요한 순서대로 빠르게 점검하세요. 인증·보안 임의
+          변경이나 자료 영구 삭제 동작은 제공하지 않습니다.
         </p>
 
         <nav
@@ -530,6 +546,33 @@ export function PilatesSettingsPage({
               {activeTaskStepItem.summaryKo}
             </span>
             <div className="pf-step-guide-nav">
+              {taskStep === 1 && (
+                <div
+                  className="pf-settings-step1-subnav"
+                  role="group"
+                  aria-label="1단계 세부 영역 전환"
+                  data-testid="settings-step1-subnav"
+                >
+                  <button
+                    type="button"
+                    className="pf-settings-subchip"
+                    data-testid="settings-step1-jump-install"
+                    aria-pressed={activeGroup === 'install'}
+                    onClick={() => handleGroupJump('install', 'heading')}
+                  >
+                    앱 설치·오프라인
+                  </button>
+                  <button
+                    type="button"
+                    className="pf-settings-subchip"
+                    data-testid="settings-step1-jump-voice"
+                    aria-pressed={activeGroup === 'voice'}
+                    onClick={() => handleGroupJump('voice', 'heading')}
+                  >
+                    한국어 음성 안내
+                  </button>
+                </div>
+              )}
               <button
                 type="button"
                 className="pf-step-nav-btn"
@@ -551,7 +594,7 @@ export function PilatesSettingsPage({
         </nav>
 
         <div
-          className="pf-settings-page__nav"
+          className="pf-settings-page__nav pf-settings-page__nav--compact"
           role="toolbar"
           aria-label="설정 그룹 바로가기"
           data-testid="settings-group-nav"
@@ -587,6 +630,7 @@ export function PilatesSettingsPage({
         manualGuideOpen={manualGuideOpen}
         offlineNotesOpen={offlineNotesOpen}
         combinedInstallStatusAnnouncement={combinedInstallStatusAnnouncement}
+        onNavigateToGroup={handleGroupJump}
         registerSectionRef={(groupId, el) => {
           sectionRefs.current[groupId] = el;
           const heading = el?.querySelector('h3');

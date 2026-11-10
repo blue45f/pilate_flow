@@ -1,8 +1,8 @@
-import {
-  type SettingsGroupId,
-  type SettingsGroupSummary,
+import type {
+  SettingsGroupId,
+  SettingsGroupSummary,
 } from './types';
-import { type SettingsGroupSectionsProps } from './PilatesSettingsGroupSections';
+import type { SettingsGroupSectionsProps } from './PilatesSettingsGroupSections';
 
 function getGroupSummary(
   model: SettingsGroupSectionsProps['model'],
@@ -53,12 +53,26 @@ export function PilatesSettingsInstallDataSections({
             <h3 id={`${instanceId}-heading-install`} className="pf-settings-group__title">
               3. {installSummary.titleKo}
             </h3>
-            <span
-              className="pf-settings-group__badge"
-              data-testid="settings-current-value-install"
-            >
-              현재값: {installSummary.currentValueBadgeKo}
-            </span>
+            <div className="pf-settings-group__badges">
+              <span
+                className="pf-settings-group__badge"
+                data-testid="settings-current-value-install"
+              >
+                현재값: {installSummary.currentValueBadgeKo}
+              </span>
+              <span
+                className={`pf-settings-connection-badge ${
+                  model.install.installed || hasInstallPort ? 'is-connected' : 'is-summary-only'
+                }`}
+                data-testid="settings-connection-badge-install"
+              >
+                {model.install.installed
+                  ? '설치됨'
+                  : hasInstallPort
+                    ? '바로 설치 가능'
+                    : '상단 앱 설치 메뉴 이용'}
+              </span>
+            </div>
           </div>
           <p className="pf-settings-group__desc" data-testid="settings-description-install">
             {installSummary.shortDescriptionKo}
@@ -74,26 +88,22 @@ export function PilatesSettingsInstallDataSections({
             <dt>오프라인 기본 화면</dt>
             <dd>{model.install.currentOfflineLabelKo}</dd>
           </div>
-          <div className="pf-settings-kv-item">
-            <dt>오프라인 상태 설명</dt>
-            <dd data-testid="settings-install-offline-summary">
-              {model.install.offlineDetailSummaryKo}
-            </dd>
-          </div>
-          <div className="pf-settings-kv-item">
-            <dt>오프라인·미디어 범위</dt>
-            <dd data-testid="settings-install-offline-scope">
-              {model.install.offlineScopeNoticeKo}
-            </dd>
-          </div>
         </dl>
+
+        {!hasInstallPort && !model.install.installed && (
+          <p className="pf-settings-guard-box" data-testid="settings-install-unconnected-guide">
+            이 요약 영역에서는 바로 설치를 실행하지 않습니다. 메뉴의 ‘앱 설치’ 버튼이나 아래 브라우저
+            메뉴 설치 방법을 이용해 주세요.
+          </p>
+        )}
 
         {model.install.showInstallButton && (
           <div className="pf-settings-actions">
             <button
               type="button"
-              className="pf-settings-page__btn pf-settings-page__btn--primary"
+              className={`pf-settings-page__btn ${hasInstallPort ? 'pf-settings-page__btn--primary' : ''}`}
               data-testid="settings-install-action-btn"
+              data-settings-primary-action="true"
               disabled={!hasInstallPort}
               onClick={() => {
                 if (!hasInstallPort) return;
@@ -107,13 +117,6 @@ export function PilatesSettingsInstallDataSections({
               이 기기에 설치
             </button>
           </div>
-        )}
-
-        {!hasInstallPort && !model.install.installed && (
-          <p className="pf-settings-guard-box" data-testid="settings-install-unconnected-guide">
-            이 요약 영역에서는 바로 설치를 실행하지 않습니다. 메뉴의 ‘앱 설치’ 버튼이나 아래 브라우저
-            메뉴 설치 방법을 이용해 주세요.
-          </p>
         )}
 
         {combinedInstallStatusAnnouncement && (
@@ -134,7 +137,7 @@ export function PilatesSettingsInstallDataSections({
             </p>
           ) : (
             <details
-              className="pf-settings-details"
+              className="pf-settings-details pf-settings-details--compact"
               open={manualGuideOpen}
               onToggle={(event) => {
                 const isOpen = (event.currentTarget as HTMLDetailsElement).open;
@@ -160,7 +163,7 @@ export function PilatesSettingsInstallDataSections({
           ))}
 
         <details
-          className="pf-settings-details"
+          className="pf-settings-details pf-settings-details--compact"
           open={offlineNotesOpen}
           onToggle={(event) => {
             const isOpen = (event.currentTarget as HTMLDetailsElement).open;
@@ -171,10 +174,14 @@ export function PilatesSettingsInstallDataSections({
           }}
           data-testid="settings-install-offline-notes"
         >
-          <summary>오프라인·자료 분리 보관 안내</summary>
+          <summary>오프라인 범위·자료 분리 보관 상세 안내</summary>
           <div className="pf-settings-details__body">
-            <p>{model.install.offlineDetailSummaryKo}</p>
-            <p>{model.install.offlineScopeNoticeKo}</p>
+            <p data-testid="settings-install-offline-summary">
+              {model.install.offlineDetailSummaryKo}
+            </p>
+            <p data-testid="settings-install-offline-scope">
+              {model.install.offlineScopeNoticeKo}
+            </p>
             <p>
               특히 iPhone·iPad는 Safari와 홈 화면 앱의 저장 공간이 분리될 수 있으니, 앱으로 옮기기
               전 아래 데이터 관리에서 전체 JSON 백업을 먼저 보관해 주세요.
@@ -196,9 +203,23 @@ export function PilatesSettingsInstallDataSections({
             <h3 id={`${instanceId}-heading-data`} className="pf-settings-group__title">
               4. {dataSummary.titleKo}
             </h3>
-            <span className="pf-settings-group__badge" data-testid="settings-current-value-data">
-              현재값: {dataSummary.currentValueBadgeKo}
-            </span>
+            <div className="pf-settings-group__badges">
+              <span className="pf-settings-group__badge" data-testid="settings-current-value-data">
+                현재값: {dataSummary.currentValueBadgeKo}
+              </span>
+              <span
+                className={`pf-settings-connection-badge ${
+                  hasExportBackupPort || hasToggleEquipPort ? 'is-connected' : 'is-summary-only'
+                }`}
+                data-testid="settings-connection-badge-data"
+              >
+                {hasExportBackupPort && hasSelectBackupPort
+                  ? '백업·복원 바로 실행'
+                  : hasExportBackupPort || hasToggleEquipPort
+                    ? '백업 내보내기·기구 바로 반영'
+                    : '상태 요약 전용'}
+              </span>
+            </div>
           </div>
           <p className="pf-settings-group__desc" data-testid="settings-description-data">
             {dataSummary.shortDescriptionKo}
@@ -218,10 +239,6 @@ export function PilatesSettingsInstallDataSections({
             <dt>백업·복구 상태</dt>
             <dd>{model.data.currentRecoveryLabelKo}</dd>
           </div>
-          <div className="pf-settings-kv-item">
-            <dt>데이터 보호 정책</dt>
-            <dd>{model.data.nonDestructivePolicyLabelKo}</dd>
-          </div>
         </dl>
 
         {model.data.persistenceErrorKo && (
@@ -236,56 +253,9 @@ export function PilatesSettingsInstallDataSections({
           </p>
         )}
 
-        <div className="pf-settings-guard-box" data-testid="settings-data-no-delete-guard">
-          <strong>데이터 삭제 동작 금지 보호:</strong> 실수로 수업 시퀀스·커스텀 동작·수업 기록이
-          영구 삭제되지 않도록 이 설정 화면에서는 ‘전체 데이터 삭제/초기화’ 기능을 제공하지
-          않습니다. 백업 불러오기는 항상 기존 자료와 병합하며 즉시 되돌리기를 지원합니다.
-        </div>
-
-        <div className="pf-settings-actions">
-          <button
-            type="button"
-            className="pf-settings-page__btn pf-settings-page__btn--primary"
-            data-testid="settings-data-export-btn"
-            disabled={!hasExportBackupPort}
-            onClick={() => {
-              if (!hasExportBackupPort) return;
-              setLocalActionFeedback(
-                '백업 파일 내보내기를 요청했습니다. 안전한 곳에 JSON 파일을 보관해 주세요.',
-              );
-              port?.onExportBackupJson?.();
-            }}
-          >
-            전체 JSON 백업 내보내기
-          </button>
-
-          <button
-            type="button"
-            className="pf-settings-page__btn"
-            data-testid="settings-data-import-btn"
-            disabled={!hasSelectBackupPort}
-            onClick={() => {
-              if (!hasSelectBackupPort) return;
-              setLocalActionFeedback(
-                '백업 JSON 파일을 읽기 전용으로 검사합니다. 적용 전까지 현재 자료는 바뀌지 않습니다.',
-              );
-              port?.onSelectBackupFile?.('flow-atelier-backup.json', 12288);
-            }}
-          >
-            백업 불러오기 (복구 전 확인)
-          </button>
-        </div>
-
-        {!hasSelectBackupPort && (
-          <p className="pf-settings-guard-box" data-testid="settings-data-unconnected-guide">
-            백업 파일 불러오기와 복구 전 확인·되돌리기는 바로 위 ‘백업 불러오기’ 버튼을 이용해
-            주세요. 전체 백업 내보내기와 기구·소도구 선택은 여기서 바로 반영됩니다.
-          </p>
-        )}
-
         {model.data.recoveryStage === 'preview-ready' && model.data.recoveryPreview && (
           <div
-            className="pf-settings-status"
+            className="pf-settings-status pf-settings-confirm-panel"
             role="region"
             aria-label="복구 전 확인 요약"
             data-testid="settings-data-recovery-preview"
@@ -294,7 +264,8 @@ export function PilatesSettingsInstallDataSections({
             <p style={{ margin: '6px 0' }}>
               새로 추가 {model.data.recoveryPreview.newItems}개 · 기존 충돌{' '}
               {model.data.recoveryPreview.conflicts}개 · 기본 예시 복원{' '}
-              {model.data.recoveryPreview.restoredExamples}개 (기존 수정본 유지)
+              {model.data.recoveryPreview.restoredExamples}개 (기존 수정본 유지 · 적용 전까지 현재
+              초안과 저장 자료는 바뀌지 않습니다)
             </p>
             {model.data.recoveryPreview.stale && (
               <p style={{ margin: '4px 0', fontWeight: 600 }}>
@@ -310,8 +281,15 @@ export function PilatesSettingsInstallDataSections({
             <div className="pf-settings-actions">
               <button
                 type="button"
-                className="pf-settings-page__btn pf-settings-page__btn--primary"
+                className={`pf-settings-page__btn ${
+                  hasApplyRestorePort &&
+                  !model.data.recoveryPreview.stale &&
+                  !model.data.recoveryPreview.diskBlocked
+                    ? 'pf-settings-page__btn--primary'
+                    : ''
+                }`}
                 data-testid="settings-data-preview-apply-btn"
+                data-settings-primary-action="true"
                 disabled={
                   !hasApplyRestorePort ||
                   model.data.recoveryPreview.stale ||
@@ -347,15 +325,21 @@ export function PilatesSettingsInstallDataSections({
         )}
 
         {model.data.recoveryStage === 'rollback-available' && model.data.rollbackPoint && (
-          <div className="pf-settings-status" data-testid="settings-data-rollback-bar">
+          <div
+            className="pf-settings-status pf-settings-confirm-panel"
+            data-testid="settings-data-rollback-bar"
+          >
             <strong>
               직전 백업 복원 되돌리기 가능 (+{model.data.rollbackPoint.addedCount}개 항목)
             </strong>
             <div className="pf-settings-actions">
               <button
                 type="button"
-                className="pf-settings-page__btn"
+                className={`pf-settings-page__btn ${
+                  hasRollbackRestorePort ? 'pf-settings-page__btn--primary' : ''
+                }`}
                 data-testid="settings-data-rollback-btn"
+                data-settings-primary-action="true"
                 disabled={!hasRollbackRestorePort}
                 onClick={() => {
                   if (!hasRollbackRestorePort) return;
@@ -378,6 +362,53 @@ export function PilatesSettingsInstallDataSections({
               </button>
             </div>
           </div>
+        )}
+
+        <div className="pf-settings-actions">
+          <button
+            type="button"
+            className={`pf-settings-page__btn ${hasExportBackupPort ? 'pf-settings-page__btn--primary' : ''}`}
+            data-testid="settings-data-export-btn"
+            data-settings-primary-action={
+              model.data.recoveryStage !== 'preview-ready' &&
+              model.data.recoveryStage !== 'rollback-available'
+                ? 'true'
+                : undefined
+            }
+            disabled={!hasExportBackupPort}
+            onClick={() => {
+              if (!hasExportBackupPort) return;
+              setLocalActionFeedback(
+                '백업 파일 내보내기를 요청했습니다. 안전한 곳에 JSON 파일을 보관해 주세요.',
+              );
+              port?.onExportBackupJson?.();
+            }}
+          >
+            전체 JSON 백업 내보내기
+          </button>
+
+          <button
+            type="button"
+            className="pf-settings-page__btn"
+            data-testid="settings-data-import-btn"
+            disabled={!hasSelectBackupPort}
+            onClick={() => {
+              if (!hasSelectBackupPort) return;
+              setLocalActionFeedback(
+                '백업 JSON 파일을 읽기 전용으로 검사합니다. 적용 전까지 현재 자료는 바뀌지 않습니다.',
+              );
+              port?.onSelectBackupFile?.('flow-atelier-backup.json', 12288);
+            }}
+          >
+            백업 불러오기 (복구 전 확인)
+          </button>
+        </div>
+
+        {!hasSelectBackupPort && (
+          <p className="pf-settings-guard-box" data-testid="settings-data-unconnected-guide">
+            백업 파일 불러오기와 복구 전 확인·되돌리기는 바로 위 ‘백업 불러오기’ 버튼을 이용해
+            주세요. 전체 백업 내보내기와 기구·소도구 선택은 여기서 바로 반영됩니다.
+          </p>
         )}
 
         <details
@@ -451,7 +482,15 @@ export function PilatesSettingsInstallDataSections({
           </div>
         </details>
 
-        <details className="pf-settings-details" data-testid="settings-data-safety-notes">
+        <div className="pf-settings-guard-box" data-testid="settings-data-no-delete-guard">
+          <strong>데이터 삭제 동작 금지 보호:</strong> {model.data.nonDestructivePolicyLabelKo} ·
+          실수로 시퀀스·동작·기록이 영구 삭제되지 않도록 전체 초기화 동작은 제공하지 않습니다.
+        </div>
+
+        <details
+          className="pf-settings-details pf-settings-details--compact"
+          data-testid="settings-data-safety-notes"
+        >
           <summary>추천 기준·골반 메모·운동 전 안전 확인 안내</summary>
           <div className="pf-settings-details__body">
             <p style={{ marginTop: 0 }}>
