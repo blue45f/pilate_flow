@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 
 /**
  * [독립 참조 컴포넌트] Pilates-flow 모바일 회원 예약·정원/대기/마감/취소·회원권 오류 방지 샘플
@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
  *   1) 예약(BOOK), 대기 신청(WAITLIST), 예약 취소(CANCEL_BOOKING), 대기 취소(CANCEL_WAITLIST) 확인 모달 및 상태 전이를 명확히 분리했습니다.
  *   2) 동기식 최신 상태 스냅샷(liveStateRef)과 모달 시퀀스 토큰(consumedDialogSeqRef)으로 연속 클릭·중복 제출 및 상태 전환 직후 재클릭 시 오작동을 방지합니다.
  *   3) 선택 수업 변경·차단 슬롯 클릭·외부 props(pass/slots/selectedDate/isOffline) 변경 시 오래된 확인 모달과 동의 체크 상태를 즉시 정리합니다.
+ *   4) 모달 열림 시 초기 포커스 이동, Tab/Shift+Tab 포커스 이탈 방지, Escape·닫기 동등 처리 및 원래 트리거 포커스 복귀, 키보드 CTA 작동 및 disabled 우회 차단을 지원합니다.
  */
 
 export type InstructorOccurrenceStatus = 'scheduled' | 'cancelled' | 'closed' | 'moved';
@@ -115,6 +116,46 @@ function isDialogStillValid(
   return true;
 }
 
+function getDialogFocusableElements(dialogEl: HTMLElement): HTMLElement[] {
+  return Array.from(
+    dialogEl.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter(
+    (el) =>
+      !el.hasAttribute('hidden') &&
+      el.getAttribute('aria-hidden') !== 'true' &&
+      el.getAttribute('aria-disabled') !== 'true' &&
+      el.style.display !== 'none' &&
+      el.style.visibility !== 'hidden',
+  );
+}
+
+function activateButtonWithKeyboard(
+  event: React.KeyboardEvent<HTMLButtonElement>,
+  isDisabled: boolean,
+  action: () => void,
+): void {
+  const isActivationKey = event.key === 'Enter' || event.key === ' ';
+  if (!isActivationKey) return;
+
+  if (
+    isDisabled ||
+    event.currentTarget.disabled ||
+    event.currentTarget.getAttribute('aria-disabled') === 'true'
+  ) {
+    event.preventDefault();
+    return;
+  }
+
+  if (event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+    return;
+  }
+
+  event.preventDefault();
+  action();
+}
+
 const OFFLINE_BLOCKED_ALERT =
   '오프라인 상태에서는 실시간 정원과 수강권 잔여 횟수를 확인할 수 없습니다. 네트워크 연결을 확인한 뒤 다시 시도해 주세요.';
 const ZERO_REMAINING_ALERT =
@@ -167,6 +208,9 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
   readonly selectedDate: string;
   readonly isOffline?: boolean;
 }> = ({ pass, slots, selectedDate, isOffline = false }) => {
+  const dialogHeadingId = useId();
+  const dialogDescriptionId = useId();
+
   const [trackedProps, setTrackedProps] = useState({
     pass,
     slots,
@@ -179,6 +223,12 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
   const [policyAgreed, setPolicyAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ readonly tone: 'status' | 'alert'; readonly text: string } | null>(null);
+
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const checkboxRef = useRef<HTMLInputElement | null>(null);
+  const slotButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const pendingFocusReturnSlotIdRef = useRef<string | null>(null);
+  const lastFocusedDialogSeqRef = useRef<number | null>(null);
 
   const submittingRef = useRef(false);
   const nextDialogSeqRef = useRef(0);
@@ -237,13 +287,91 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
     };
   }, [localPass, localSlots, pendingDialog, policyAgreed, selectedDate, isOffline]);
 
-  const isExpiredForDate = selectedDate > localPass.expiresAtIso;
-  const isExhausted = localPass.remainingCount <= 0;
   const activeDialogSlot = pendingDialog
     ? localSlots.find((item) => item.id === pendingDialog.slotId) ?? null
     : null;
+  const activeDialogSeq = pendingDialog && activeDialogSlot ? pendingDialog.dialogSeq : null;
 
-  const clearOpenDialogSync = (current: LiveBookingSnapshot) => {
+  useEffect(() => {
+    if (activeDialogSeq !== null) {
+      if (lastFocusedDialogSeqRef.current !== activeDialogSeq) {
+        lastFocusedDialogSeqRef.current = activeDialogSeq;
+        const initialTarget = checkboxRef.current ?? dialogRef.current;
+        initialTarget?.focus();
+      }
+      return;
+    }
+
+    lastFocusedDialogSeqRef.current = null;
+    const returnSlotId = pendingFocusReturnSlotIdRef.current;
+    if (returnSlotId !== null) {
+      pendingFocusReturnSlotIdRef.current = null;
+      const triggerButton = slotButtonRefs.current.get(returnSlotId);
+      if (triggerButton && triggerButton.isConnected && !triggerButton.disabled) {
+        triggerButton.focus();
+      }
+    }
+  }, [activeDialogSeq]);
+
+  useEffect(() => {
+    if (activeDialogSeq === null) return undefined;
+
+    const handleModalKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (submittingRef.current) return;
+        const current = liveStateRef.current;
+        if (!current.pendingDialog) return;
+        event.preventDefault();
+        event.stopPropagation();
+        pendingFocusReturnSlotIdRef.current = current.pendingDialog.slotId;
+        liveStateRef.current = {
+          ...current,
+          pendingDialog: null,
+          policyAgreed: false,
+        };
+        setPendingDialog(null);
+        setPolicyAgreed(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+      const dialogEl = dialogRef.current;
+      if (!dialogEl) return;
+
+      const focusable = getDialogFocusableElements(dialogEl);
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialogEl.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      const isInside = active instanceof Node && dialogEl.contains(active);
+
+      if (event.shiftKey) {
+        if (!isInside || active === first || active === dialogEl) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (!isInside || active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleModalKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleModalKeyDown);
+    };
+  }, [activeDialogSeq]);
+
+  const isExpiredForDate = selectedDate > localPass.expiresAtIso;
+  const isExhausted = localPass.remainingCount <= 0;
+
+  const clearOpenDialogSync = (current: LiveBookingSnapshot, returnFocusSlotId: string | null = null) => {
+    pendingFocusReturnSlotIdRef.current = returnFocusSlotId;
     liveStateRef.current = {
       ...current,
       pendingDialog: null,
@@ -258,7 +386,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
     const current = liveStateRef.current;
 
     if (current.isOffline) {
-      clearOpenDialogSync(current);
+      clearOpenDialogSync(current, null);
       setFeedback({
         tone: 'alert',
         text: OFFLINE_BLOCKED_ALERT,
@@ -268,14 +396,14 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
 
     const liveSlot = current.slots.find((item) => item.id === slotId);
     if (!liveSlot) {
-      clearOpenDialogSync(current);
+      clearOpenDialogSync(current, null);
       return;
     }
 
     const liveStatus = deriveMemberSlotStatus(liveSlot);
     const intent = resolveSlotActionIntent(liveSlot, liveStatus);
     if (intent === null) {
-      clearOpenDialogSync(current);
+      clearOpenDialogSync(current, null);
       return;
     }
 
@@ -286,7 +414,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
         current.pass.expiresAtIso,
       );
       if (expiredDate !== null) {
-        clearOpenDialogSync(current);
+        clearOpenDialogSync(current, null);
         setFeedback({
           tone: 'alert',
           text: `선택하신 수업 날짜(${expiredDate})가 수강권 만료일(${current.pass.expiresAtIso}) 이후입니다. 만료일 이전 날짜를 선택해 주세요.`,
@@ -294,7 +422,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
         return;
       }
       if (current.pass.remainingCount <= 0) {
-        clearOpenDialogSync(current);
+        clearOpenDialogSync(current, null);
         setFeedback({
           tone: 'alert',
           text: ZERO_REMAINING_ALERT,
@@ -303,6 +431,16 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
       }
     }
 
+    if (
+      current.pendingDialog &&
+      current.pendingDialog.slotId === liveSlot.id &&
+      current.pendingDialog.intent === intent &&
+      !current.policyAgreed
+    ) {
+      return;
+    }
+
+    pendingFocusReturnSlotIdRef.current = null;
     const nextDialog: PendingDialogState = {
       dialogSeq: ++nextDialogSeqRef.current,
       slotId: liveSlot.id,
@@ -329,7 +467,9 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
 
   const handleCloseDialog = () => {
     if (submittingRef.current) return;
-    clearOpenDialogSync(liveStateRef.current);
+    const current = liveStateRef.current;
+    if (!current.pendingDialog) return;
+    clearOpenDialogSync(current, current.pendingDialog.slotId);
   };
 
   const handleConfirmAction = () => {
@@ -345,7 +485,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
     }
 
     if (current.isOffline) {
-      clearOpenDialogSync(current);
+      clearOpenDialogSync(current, null);
       setFeedback({
         tone: 'alert',
         text: OFFLINE_BLOCKED_ALERT,
@@ -355,7 +495,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
 
     const liveSlot = current.slots.find((item) => item.id === activeDialog.slotId);
     if (!liveSlot) {
-      clearOpenDialogSync(current);
+      clearOpenDialogSync(current, null);
       setFeedback({
         tone: 'alert',
         text: '선택한 수업 정보를 찾을 수 없습니다. 시간표를 다시 확인해 주세요.',
@@ -366,7 +506,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
     const liveStatus = deriveMemberSlotStatus(liveSlot);
     const liveIntent = resolveSlotActionIntent(liveSlot, liveStatus);
     if (liveIntent !== activeDialog.intent) {
-      clearOpenDialogSync(current);
+      clearOpenDialogSync(current, liveSlot.id);
       setFeedback({
         tone: 'alert',
         text: '선택한 수업의 예약 가능 상태가 변경되었습니다. 현재 상태를 다시 확인해 주세요.',
@@ -381,7 +521,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
         current.pass.expiresAtIso,
       );
       if (expiredDate !== null) {
-        clearOpenDialogSync(current);
+        clearOpenDialogSync(current, liveSlot.id);
         setFeedback({
           tone: 'alert',
           text: `선택하신 수업 날짜(${expiredDate})가 수강권 만료일(${current.pass.expiresAtIso}) 이후입니다. 만료일 이전 날짜를 선택해 주세요.`,
@@ -389,7 +529,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
         return;
       }
       if (current.pass.remainingCount <= 0) {
-        clearOpenDialogSync(current);
+        clearOpenDialogSync(current, liveSlot.id);
         setFeedback({
           tone: 'alert',
           text: ZERO_REMAINING_ALERT,
@@ -484,6 +624,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
         nextFeedbackText = `[${liveSlot.title}] 대기 신청을 취소했습니다. 보류 중이던 수강권 1회가 복구되어 남은 횟수는 ${nextRemaining}회입니다.`;
       }
 
+      pendingFocusReturnSlotIdRef.current = liveSlot.id;
       liveStateRef.current = {
         ...current,
         pass: nextPass,
@@ -504,6 +645,8 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
       setIsSubmitting(false);
     }
   };
+
+  const confirmDisabled = !policyAgreed || isSubmitting || isOffline;
 
   return (
     <section
@@ -698,12 +841,25 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
                   </div>
 
                   <button
+                    ref={(node) => {
+                      if (node) {
+                        slotButtonRefs.current.set(slot.id, node);
+                      } else {
+                        slotButtonRefs.current.delete(slot.id);
+                      }
+                    }}
                     type="button"
                     disabled={disabled}
+                    aria-disabled={disabled}
                     onClick={() => {
-                      if (actionIntent) {
+                      if (disabled || !actionIntent) return;
+                      handleOpenSlotAction(slot.id);
+                    }}
+                    onKeyDown={(event) => {
+                      activateButtonWithKeyboard(event, disabled, () => {
+                        if (disabled || !actionIntent) return;
                         handleOpenSlotAction(slot.id);
-                      }
+                      });
                     }}
                     aria-label={`${slot.startTime} ${slot.title} ${buttonLabel}`}
                     style={{
@@ -732,10 +888,13 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
 
       {pendingDialog && activeDialogSlot && (
         <div
+          ref={dialogRef}
           key={`${pendingDialog.slotId}:${pendingDialog.intent}:${pendingDialog.dialogSeq}`}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="pf-booking-confirm-heading"
+          aria-labelledby={dialogHeadingId}
+          aria-describedby={dialogDescriptionId}
+          tabIndex={-1}
           style={{
             marginTop: 16,
             backgroundColor: 'var(--pf-color-bg-surface, #FFFEF9)',
@@ -744,7 +903,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
             padding: 16,
           }}
         >
-          <h4 id="pf-booking-confirm-heading" style={{ margin: '0 0 8px', fontSize: 17 }}>
+          <h4 id={dialogHeadingId} style={{ margin: '0 0 8px', fontSize: 17 }}>
             {pendingDialog.intent === 'BOOK'
               ? '수강권 차감 및 예약 확정 확인'
               : pendingDialog.intent === 'WAITLIST'
@@ -754,6 +913,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
                   : '대기 취소 및 보류 횟수 복구 확인'}
           </h4>
           <p
+            id={dialogDescriptionId}
             style={{
               margin: '0 0 12px',
               fontSize: 13,
@@ -804,6 +964,7 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
             }}
           >
             <input
+              ref={checkboxRef}
               type="checkbox"
               checked={policyAgreed}
               onChange={(e) => handleTogglePolicyAgreed(e.target.checked)}
@@ -820,24 +981,27 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
           <div style={{ display: 'flex', gap: 8 }}>
             <button
               type="button"
-              disabled={!policyAgreed || isSubmitting || isOffline}
-              onClick={handleConfirmAction}
+              disabled={confirmDisabled}
+              aria-disabled={confirmDisabled}
+              onClick={() => {
+                if (confirmDisabled) return;
+                handleConfirmAction();
+              }}
+              onKeyDown={(event) => {
+                activateButtonWithKeyboard(event, confirmDisabled, handleConfirmAction);
+              }}
               style={{
                 flex: 1,
                 minHeight: 48,
                 borderRadius: 9,
                 border: 'none',
-                backgroundColor:
-                  policyAgreed && !isSubmitting && !isOffline
-                    ? 'var(--pf-color-action-primary, #173D34)'
-                    : 'var(--pf-color-bg-surface-subtle, #F3F5EE)',
-                color:
-                  policyAgreed && !isSubmitting && !isOffline
-                    ? '#FFFFFF'
-                    : 'var(--pf-color-text-muted, #526358)',
+                backgroundColor: !confirmDisabled
+                  ? 'var(--pf-color-action-primary, #173D34)'
+                  : 'var(--pf-color-bg-surface-subtle, #F3F5EE)',
+                color: !confirmDisabled ? '#FFFFFF' : 'var(--pf-color-text-muted, #526358)',
                 fontWeight: 600,
                 fontSize: 14,
-                cursor: policyAgreed && !isSubmitting && !isOffline ? 'pointer' : 'not-allowed',
+                cursor: !confirmDisabled ? 'pointer' : 'not-allowed',
               }}
             >
               {pendingDialog.intent === 'BOOK'
@@ -851,7 +1015,14 @@ export const PilatesScheduleAndMembershipSample: React.FC<{
             <button
               type="button"
               disabled={isSubmitting}
-              onClick={handleCloseDialog}
+              aria-disabled={isSubmitting}
+              onClick={() => {
+                if (isSubmitting) return;
+                handleCloseDialog();
+              }}
+              onKeyDown={(event) => {
+                activateButtonWithKeyboard(event, isSubmitting, handleCloseDialog);
+              }}
               style={{
                 minHeight: 48,
                 padding: '0 16px',

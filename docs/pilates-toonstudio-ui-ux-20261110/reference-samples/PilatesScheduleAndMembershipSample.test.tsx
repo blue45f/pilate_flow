@@ -461,4 +461,246 @@ describe('PilatesScheduleAndMembershipSample reference UI regression suite', () 
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getByRole('status').textContent).toContain('인터넷 연결이 끊어져');
   });
+
+  it('exposes modal dialog role, accessible names/descriptions, and moves initial focus inside upon open', () => {
+    render(
+      <PilatesScheduleAndMembershipSample
+        pass={SAMPLE_PASS}
+        slots={SAMPLE_SLOTS}
+        selectedDate="2026-11-12"
+      />,
+    );
+
+    const bookBtn = screen.getByRole('button', { name: '09:00 모닝 코어 리포머 예약하기' });
+    bookBtn.focus();
+    fireEvent.click(bookBtn);
+
+    const bookDialog = screen.getByRole('dialog', { name: '수강권 차감 및 예약 확정 확인' });
+    expect(bookDialog.getAttribute('aria-modal')).toBe('true');
+    const describedById = bookDialog.getAttribute('aria-describedby');
+    expect(describedById).toBeTruthy();
+    expect(document.getElementById(describedById!)?.textContent).toContain('09:00 모닝 코어 리포머');
+    expect(document.activeElement).toBe(within(bookDialog).getByRole('checkbox'));
+
+    // Switching directly to a cancel slot updates dialog accessible name and focuses the new dialog checkbox
+    fireEvent.click(screen.getByRole('button', { name: '11:00 체형교정 캐딜락 예약 취소' }));
+    const cancelDialog = screen.getByRole('dialog', { name: '예약 취소 및 수강권 복구 확인' });
+    expect(document.activeElement).toBe(within(cancelDialog).getByRole('checkbox'));
+  });
+
+  it('traps Tab and Shift+Tab focus within the open modal dialog across unchecked and checked states', () => {
+    render(
+      <PilatesScheduleAndMembershipSample
+        pass={SAMPLE_PASS}
+        slots={SAMPLE_SLOTS}
+        selectedDate="2026-11-12"
+      />,
+    );
+
+    const outsideSlotBtn = screen.getByRole('button', { name: '19:00 이브닝 바렐 밸런스 대기 신청' });
+    fireEvent.click(screen.getByRole('button', { name: '09:00 모닝 코어 리포머 예약하기' }));
+
+    const dialog = screen.getByRole('dialog', { name: '수강권 차감 및 예약 확정 확인' });
+    const checkbox = within(dialog).getByRole('checkbox');
+    const closeBtn = within(dialog).getByRole('button', { name: '닫기' });
+
+    // Unchecked state: enabled controls are [checkbox, closeBtn] (confirm CTA is disabled)
+    expect(document.activeElement).toBe(checkbox);
+
+    // Shift+Tab from first control wraps to last control (closeBtn)
+    const backwardWrap = fireEvent.keyDown(checkbox, { key: 'Tab', shiftKey: true });
+    expect(backwardWrap).toBe(false);
+    expect(document.activeElement).toBe(closeBtn);
+
+    // Tab from last control wraps back to first control (checkbox)
+    const forwardWrap = fireEvent.keyDown(closeBtn, { key: 'Tab', shiftKey: false });
+    expect(forwardWrap).toBe(false);
+    expect(document.activeElement).toBe(checkbox);
+
+    // If focus escapes outside dialog, Tab pulls focus back to first control inside dialog
+    outsideSlotBtn.focus();
+    expect(document.activeElement).toBe(outsideSlotBtn);
+    fireEvent.keyDown(outsideSlotBtn, { key: 'Tab', shiftKey: false });
+    expect(document.activeElement).toBe(checkbox);
+
+    // Checked state: confirm CTA becomes enabled [checkbox, confirmBtn, closeBtn]
+    fireEvent.click(checkbox);
+    const confirmBtn = within(dialog).getByRole('button', { name: '1회 차감 동의 및 예약 확정' });
+    expect((confirmBtn as HTMLButtonElement).disabled).toBe(false);
+
+    closeBtn.focus();
+    fireEvent.keyDown(closeBtn, { key: 'Tab', shiftKey: false });
+    expect(document.activeElement).toBe(checkbox);
+
+    fireEvent.keyDown(checkbox, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(closeBtn);
+  });
+
+  it('treats Escape and Close button equivalently, restores focus to the trigger, and resets stale consent on reopen', () => {
+    render(
+      <PilatesScheduleAndMembershipSample
+        pass={SAMPLE_PASS}
+        slots={SAMPLE_SLOTS}
+        selectedDate="2026-11-12"
+      />,
+    );
+
+    const bookTrigger = screen.getByRole('button', { name: '09:00 모닝 코어 리포머 예약하기' });
+    bookTrigger.focus();
+    fireEvent.click(bookTrigger);
+
+    // Arm consent checkbox, then dismiss via Escape
+    const firstCheckbox = screen.getByRole('checkbox') as HTMLInputElement;
+    fireEvent.click(firstCheckbox);
+    expect(firstCheckbox.checked).toBe(true);
+
+    const escapeAllowed = fireEvent.keyDown(firstCheckbox, { key: 'Escape' });
+    expect(escapeAllowed).toBe(false);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(bookTrigger);
+
+    const passSummary = screen.getByRole('article', { name: '내 수강권 현황' });
+    expect(passSummary.textContent).toContain('남은 횟수: 5회 / 10회');
+    expect(passSummary.textContent).toContain('예약 중 홀드: 1회');
+
+    // Reopen same slot -> no stale checked consent may remain
+    fireEvent.click(bookTrigger);
+    const reopenedCheckbox = screen.getByRole('checkbox') as HTMLInputElement;
+    expect(reopenedCheckbox.checked).toBe(false);
+    expect(
+      (screen.getByRole('button', { name: '1회 차감 동의 및 예약 확정' }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+
+    // Arm consent again, then dismiss via Close button -> equivalent behavior & focus restoration
+    fireEvent.click(reopenedCheckbox);
+    expect(reopenedCheckbox.checked).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(bookTrigger);
+    expect(passSummary.textContent).toContain('남은 횟수: 5회 / 10회');
+
+    // Also verify cancel flow trigger restoration and reopen reset via keyboard Enter on Close button
+    const cancelTrigger = screen.getByRole('button', { name: '11:00 체형교정 캐딜락 예약 취소' });
+    cancelTrigger.focus();
+    fireEvent.click(cancelTrigger);
+    fireEvent.click(screen.getByRole('checkbox'));
+
+    const closeBtn = screen.getByRole('button', { name: '닫기' });
+    closeBtn.focus();
+    fireEvent.keyDown(closeBtn, { key: 'Enter' });
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(cancelTrigger);
+
+    fireEvent.click(cancelTrigger);
+    expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(false);
+  });
+
+  it('activates booking and waitlist CTAs via keyboard while preventing disabled bypass and preserving duplicate-submit defense', () => {
+    const slotsWithClosedAndCanceled: readonly PilatesMemberClassSlot[] = [
+      ...SAMPLE_SLOTS,
+      {
+        ...SAMPLE_SLOTS[0],
+        id: 'slot_closed_full',
+        startTime: '14:00',
+        endTime: '14:50',
+        title: '정원마감 체어',
+        currentEnrolled: 4,
+        maxCapacity: 4,
+        waitlistCount: 2,
+        maxWaitlist: 2,
+        myState: 'NONE',
+      },
+      {
+        ...SAMPLE_SLOTS[0],
+        id: 'slot_canceled_cls',
+        startTime: '16:00',
+        endTime: '16:50',
+        title: '폐강 바렐',
+        occurrenceStatus: 'cancelled',
+        myState: 'NONE',
+      },
+    ];
+
+    render(
+      <PilatesScheduleAndMembershipSample
+        pass={SAMPLE_PASS}
+        slots={slotsWithClosedAndCanceled}
+        selectedDate="2026-11-12"
+      />,
+    );
+
+    // 1. Disabled slot CTAs (CLOSED / CANCELED) cannot be bypassed via Enter, Space, or DOM disabled removal
+    const closedBtn = screen.getByRole('button', { name: '14:00 정원마감 체어 마감됨' }) as HTMLButtonElement;
+    const canceledBtn = screen.getByRole('button', { name: '16:00 폐강 바렐 폐강' }) as HTMLButtonElement;
+    expect(closedBtn.disabled).toBe(true);
+    expect(canceledBtn.disabled).toBe(true);
+
+    fireEvent.keyDown(closedBtn, { key: 'Enter' });
+    fireEvent.keyDown(canceledBtn, { key: ' ' });
+    closedBtn.disabled = false;
+    fireEvent.click(closedBtn);
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    // 2. Enabled booking CTA opens via keyboard Enter
+    const bookBtn = screen.getByRole('button', { name: '09:00 모닝 코어 리포머 예약하기' });
+    bookBtn.focus();
+    fireEvent.keyDown(bookBtn, { key: 'Enter' });
+
+    const bookDialog = screen.getByRole('dialog', { name: '수강권 차감 및 예약 확정 확인' });
+    const confirmBookBtn = within(bookDialog).getByRole('button', {
+      name: '1회 차감 동의 및 예약 확정',
+    }) as HTMLButtonElement;
+
+    // 3. Disabled confirm CTA (before consent) cannot be bypassed via Enter, Space, or DOM disabled tampering
+    expect(confirmBookBtn.disabled).toBe(true);
+    fireEvent.keyDown(confirmBookBtn, { key: 'Enter' });
+    fireEvent.keyDown(confirmBookBtn, { key: ' ' });
+    confirmBookBtn.disabled = false;
+    fireEvent.click(confirmBookBtn);
+    expect(screen.queryByRole('dialog')).toBe(bookDialog);
+
+    const passSummary = screen.getByRole('article', { name: '내 수강권 현황' });
+    expect(passSummary.textContent).toContain('남은 횟수: 5회 / 10회');
+
+    // 4. After checking consent, rapid keyboard Enter + Space + click in one batch deducts only 1 credit and returns focus
+    fireEvent.click(within(bookDialog).getByRole('checkbox'));
+    expect(confirmBookBtn.disabled).toBe(false);
+
+    act(() => {
+      fireEvent.keyDown(confirmBookBtn, { key: 'Enter' });
+      fireEvent.keyDown(confirmBookBtn, { key: ' ' });
+      confirmBookBtn.click();
+    });
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(passSummary.textContent).toContain('남은 횟수: 4회 / 10회');
+    expect(passSummary.textContent).toContain('예약 중 홀드: 2회');
+
+    const updatedMorningBtn = screen.getByRole('button', {
+      name: '09:00 모닝 코어 리포머 예약 취소',
+    });
+    expect(document.activeElement).toBe(updatedMorningBtn);
+
+    // 5. Enabled waitlist CTA opens via keyboard Space and confirms via keyboard Space
+    const waitlistBtn = screen.getByRole('button', { name: '19:00 이브닝 바렐 밸런스 대기 신청' });
+    waitlistBtn.focus();
+    fireEvent.keyDown(waitlistBtn, { key: ' ' });
+
+    const waitlistDialog = screen.getByRole('dialog', { name: '대기 신청 및 보류 차감 확인' });
+    fireEvent.click(within(waitlistDialog).getByRole('checkbox'));
+    const confirmWaitlistBtn = within(waitlistDialog).getByRole('button', {
+      name: '대기 신청 확정',
+    });
+    fireEvent.keyDown(confirmWaitlistBtn, { key: ' ' });
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(passSummary.textContent).toContain('남은 횟수: 3회 / 10회');
+    expect(passSummary.textContent).toContain('예약 중 홀드: 3회');
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: '19:00 이브닝 바렐 밸런스 대기 2번 취소' }),
+    );
+  });
 });
