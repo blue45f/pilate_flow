@@ -1079,6 +1079,7 @@
   #root .vnext-workbench .pf-step2-ai-drawer,
   #root .vnext-workbench .workbench-save-state.is-just-saved,
   #root .vnext-workbench .flow-step.is-just-updated,
+  #root .vnext-workbench .pf-step2-empty-starter,
   .replacement-item,
   .replacement-empty-actions > button,
   .replacement-dialog-footer > button {
@@ -1086,4 +1087,23 @@
     animation: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+#root .vnext-workbench .pf-step2-empty-starter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f3efe8;
+  border: 1px dashed #bfb9ac;
+  color: #1b3129;
+  font-size: 0.88rem;
+}
+
+#root .vnext-workbench .restore-saved-flow {
+  min-height: 44px;
 }

@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flow Atelier — 차기 디자인 3종 후보 선택 & 동일 해상도(1280/390) 대조 보드 (08)</title>
+    <style>
+      :root {
+        --bg: #faf8f4;
+        --surface: #ffffff;
+        --subtle: #f3efe8;
+        --line: #e2ddd3;
+        --ink: #1d201c;
+        --muted: #566055;
+        --sage: #1f4d3f;
+        --sage-soft: #e6efe9;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        letter-spacing: -0.015em;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px 16px;
+        padding: 12px 20px;
+        background: rgba(250, 248, 244, 0.96);
+        border-bottom: 1px solid var(--line);
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      button {
+        min-height: 44px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--ink);
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button[aria-pressed='true'],
+      button.primary {
+        background: var(--sage);
+        border-color: var(--sage);
+        color: #fff;
+      }
+      button:focus-visible {
+        outline: 2px solid var(--sage);
+        outline-offset: 2px;
+      }
+      main {
+        max-width: 1440px;
+        margin: 22px auto 56px;
+        padding: 0 18px;
+      }
+      .candidate-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .candidate-card {
+        background: var(--surface);
+        border: 2px solid var(--line);
+        border-radius: 20px;
+        padding: 20px;
+      }
+      .kicker {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--sage-soft);
+        color: var(--sage);
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .side-by-side {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-items: start;
+      }
+      @media (max-width: 980px) {
+        .side-by-side {
+          grid-template-columns: 1fr;
+        }
+      }
+      .frame-shell {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 14px;
+      }
+      .frame-viewport {
+        width: 100%;
+        height: 680px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--bg);
+        display: block;
+      }
+      body.vp-390 .frame-viewport {
+        max-width: 390px;
+        height: 844px;
+        margin: 0 auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-top: 22px;
+      }
+      th, td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        font-size: 0.86rem;
+      }
+      th {
+        background: var(--subtle);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <strong>Flow Atelier 08 · 차기 디자인 시안 후보(사용자 선택 대기) & 동일 해상도 나란히 대조 보드</strong>
+      </div>
+      <div class="row" role="group" aria-label="동일 화면 크기 대조 전환">
+        <button id="vp1280" aria-pressed="true">데스크톱 1280×800 대조</button>
+        <button id="vp390" aria-pressed="false">모바일 390×844 대조</button>
+      </div>
+    </header>
+    <main>
+      <h2>1. 다음 디자인 고도화 후보 3안 (사용자 직접 선택 전 미적용 · 임의 선택 안 함)</h2>
+      <p style="color: var(--muted); margin-top: 4px">
+        아래 3가지 차기 디자인 후보 중 원하시는 방향 번호(후보 1 / 후보 2 / 후보 3)를 선택해 주시면, 해당 시안과 실제 앱 화면을 동일 해상도로 대조하며 구현합니다.
+      </p>
+      <div class="candidate-grid">
+        <article class="candidate-card">
+          <span class="kicker">후보 1 · 미니멀 단일 포커스 시트</span>
+          <h3>한 화면 1질문 · 상단 진행 바만 남긴 초단순 모드</h3>
+          <p style="color: var(--muted); font-size: 0.9rem">
+            좌측 사이드바를 기본 접힘 처리하고 캔버스 중앙(최대 840px)에 현재 단계 카드 하나만 크게 배치해 첫 사용자의 시선 분산을 최소화합니다.
+          </p>
+          <ul style="font-size: 0.86rem; padding-left: 18px; color: var(--ink)">
+            <li>장점: 설명 없이 첫 수업 완성 속도 최고, 모바일·태블릿 완벽 일체감</li>
+            <li>트레이드오프: 다른 메뉴(보관함·라이브러리) 이동 시 상단 서랍 1탭 필요</li>
+          </ul>
+        </article>
+
+        <article class="candidate-card">
+          <span class="kicker">후보 2 · 듀얼 스튜디오 워크데스크</span>
+          <h3>좌측 슬림 아이콘 레일(68px) + 동작/시퀀스 상시 나란히 편집</h3>
+          <p style="color: var(--muted); font-size: 0.9rem">
+            사이드바 폭을 224px에서 68px 아이콘+짧은 라벨 레일로 줄여 본문 영역을 넓히고, 데스크톱에서는 검색과 시퀀스 카드를 한 화면에 나란히 배치합니다.
+          </p>
+          <ul style="font-size: 0.86rem; padding-left: 18px; color: var(--ink)">
+            <li>장점: 숙련 강사의 다량 동작 편집·순서 비교 속도 극대화</li>
+            <li>트레이드오프: 모바일(390px)에서는 상하 탭 전환으로 자동 접힘</li>
+          </ul>
+        </article>
+
+        <article class="candidate-card">
+          <span class="kicker">후보 3 · 타임블록 보드(준비·본운동·마무리) 중심</span>
+          <h3>시간 비중 막대와 3구간 컬럼을 기본 편집 화면으로 전면 배치</h3>
+          <p style="color: var(--muted); font-size: 0.9rem">
+            단순 세로 리스트 대신 ‘준비(10분) · 본운동(32분) · 마무리(8분)’ 3개 블록 컨테이너 안에 동작 칩을 담고 빈 시간을 시각적으로 채우는 보드형입니다.
+          </p>
+          <ul style="font-size: 0.86rem; padding-left: 18px; color: var(--ink)">
+            <li>장점: 50분 수업 밸런스와 스프링 흐름을 가장 직관적으로 설계</li>
+            <li>트레이드오프: 짧은 20~30분 자유 시퀀스에는 구조가 다소 정형화됨</li>
+          </ul>
+        </article>
+      </div>
+
+      <h2>2. 선택된 기준 시안(`05`) vs 실제 로컬 앱(`http://localhost:5173`) 동일 크기 1:1 나란히 대조 보드</h2>
+      <p style="color: var(--muted); margin-top: 4px">
+        로컬에서 <code>pnpm dev</code> 실행 시 오른쪽 프레임에 실제 앱이 동일 크기(<code>1280px</code> 또는 <code>390px</code>)로 나란히 로드되어 레이아웃·색상·간격·컴포넌트·모션을 직접 대조할 수 있습니다.
+      </p>
+      <div class="side-by-side">
+        <div class="frame-shell">
+          <strong>기준 시안 (`05-pilates-flow-full-pages-ux-mockup.html`)</strong>
+          <iframe class="frame-viewport" src="./05-pilates-flow-full-pages-ux-mockup.html" title="기준 시안 화면"></iframe>
+        </div>
+        <div class="frame-shell">
+          <strong>실제 앱 화면 (`http://localhost:5173` — 동일 해상도)</strong>
+          <iframe class="frame-viewport" src="http://localhost:5173" title="실제 앱 화면"></iframe>
+        </div>
+      </div>
+
+      <table aria-label="시안 대 실제 앱 정합성 점검 체크리스트">
+        <thead>
+          <tr>
+            <th>대조 항목</th>
+            <th>시안 기준값</th>
+            <th>실제 앱 구현 상태</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>캔버스·표면·포인트 색상</strong></td>
+            <td><code>#faf8f4</code> 캔버스 · <code>#ffffff</code> 카드 · <code>#1f4d3f</code> 세이지 · 다크 스테이지 <code>#181b18</code></td>
+            <td><code>atelier-luxury-v2.css</code> 및 <code>03-design-tokens.json</code> 일치 확인</td>
+          </tr>
+          <tr>
+            <td><strong>터치 영역 · 키보드 접근성</strong></td>
+            <td>모든 주요 버튼 최소 <code>44px</code> 높이, <code>:focus-visible</code> 2px 아웃라인, <code>Esc</code> 검색 비우기</td>
+            <td>전 화면 CSS 및 <code>InlineExerciseFinder</code> 반영 완료</td>
+          </tr>
+          <tr>
+            <td><strong>빈 상태 · 저장 복원 · 오류 복구</strong></td>
+            <td>2단계 원탭 초안 채우기, 3단계 저장본 복원, 검색 0건 기구 조건 해제, AI 미검토 초기 상태 복구</td>
+            <td><code>SequenceWorkbench</code> · <code>FreeAiAssistantPanel</code> · <code>InlineExerciseFinder</code> 반영 완료</td>
+          </tr>
+          <tr>
+            <td><strong>수업 진행 스테이지 & 모션 감소</strong></td>
+            <td>상단 <code>LIVE</code> 상태 배지, 2초 <code>핵심 큐</code>, <code>-30초</code>, 다음 순서 <code>↑/↓</code> 재정렬(<code>order 1..N</code> 유지), <code>prefers-reduced-motion</code></td>
+            <td><code>LiveStageView.tsx/.css</code> 스키마 및 정적 폴백 검증 완료</td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
+    <script>
+      const b1280 = document.getElementById('vp1280');
+      const b390 = document.getElementById('vp390');
+      b1280.addEventListener('click', () => {
+        document.body.classList.remove('vp-390');
+        b1280.setAttribute('aria-pressed', 'true');
+        b390.setAttribute('aria-pressed', 'false');
+      });
+      b390.addEventListener('click', () => {
+        document.body.classList.add('vp-390');
+        b390.setAttribute('aria-pressed', 'true');
+        b1280.setAttribute('aria-pressed', 'false');
+      });
+    </script>
+  </body>
+</html>

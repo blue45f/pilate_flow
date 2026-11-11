@@ -490,6 +490,13 @@ export function InlineExerciseFinder({
             placeholder="동작 이름 또는 부위 검색"
             value={filters.query}
             onChange={(event) => update('query', event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape' && filters.query.length > 0) {
+                event.preventDefault();
+                event.stopPropagation();
+                clearQueryOnly();
+              }
+            }}
           />
         </label>
         {filters.query.length > 0 && (
@@ -946,10 +953,22 @@ export function InlineExerciseFinder({
                 검색어만 지우기
               </button>
             )}
+          {filters.equipment.length > 0 && (
+            <button
+              type="button"
+              className="ief-empty-unscope-btn"
+              data-testid="ief-empty-unscope-equipment-btn"
+              style={{ minHeight: 44 }}
+              onClick={() => update('equipment', [])}
+            >
+              수업 기구 조건 해제하고 전체에서 찾기
+            </button>
+          )}
           {exerciseBrowseScope === 'owned' && (
             <button
               type="button"
               className="ief-empty-owned-btn"
+              style={{ minHeight: 44 }}
               onClick={() => setExerciseBrowseScope('all')}
             >
               보유 장비 조건만 해제

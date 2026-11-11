@@ -216,6 +216,17 @@
   color: #1f4d3f;
 }
 
+.free-ai-empty-recovery {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f3efe8;
+  border: 1px dashed #bfb9ac;
+}
+
+.free-ai-empty-recovery .free-ai-actions button {
+  min-height: 44px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .free-ai-tab-btn,
   .free-ai-chip,

@@ -83,6 +83,8 @@ function readFreeAiDraft(): Partial<FreeAiDraftSnapshot> | null {
 export interface FreeAiAssistantPanelProps extends FreeAiStudioContextContract {
   client?: FreeAiClient;
   initialTab?: FreeAiTaskKind;
+  onFillStarterSequence?: () => void;
+  onOpenExerciseFinder?: () => void;
 }
 
 const STRENGTHEN_AREA_OPTIONS: ReadonlyArray<{ value: StrengthenArea; label: string }> = [
@@ -159,6 +161,8 @@ export function FreeAiAssistantPanel({
   uiContract,
   client = defaultFreeAiClient,
   initialTab,
+  onFillStarterSequence,
+  onOpenExerciseFinder,
 }: FreeAiAssistantPanelProps) {
   const [savedDraft] = useState<Partial<FreeAiDraftSnapshot> | null>(() => readFreeAiDraft());
   const [activeTab, setActiveTab] = useState<FreeAiTaskKind>(() => {
@@ -801,10 +805,36 @@ export function FreeAiAssistantPanel({
   ) => {
     if (steps.length === 0) {
       return (
-        <p className="free-ai-subtitle">
-          선택한 기구·난이도에 맞는 검토 완료 동작이 아직 없어요. 동작 라이브러리에서 검토를 마친 뒤
-          다시 시도해 주세요.
-        </p>
+        <div className="free-ai-empty-recovery" data-testid="free-ai-empty-recovery">
+          <p className="free-ai-subtitle">
+            선택한 기구·난이도에 맞는 검토 완료 동작이 아직 없어요. 동작 라이브러리에서 검토를 마친 뒤
+            다시 시도해 주세요.
+          </p>
+          {(onFillStarterSequence || onOpenExerciseFinder) && (
+            <div className="free-ai-actions" style={{ marginTop: '8px' }}>
+              {onFillStarterSequence && (
+                <button
+                  type="button"
+                  className="free-ai-btn-primary"
+                  data-testid="free-ai-fill-starter-btn"
+                  onClick={onFillStarterSequence}
+                >
+                  기본 준비 동작으로 초안 바로 채우기
+                </button>
+              )}
+              {onOpenExerciseFinder && (
+                <button
+                  type="button"
+                  className="free-ai-btn-secondary"
+                  data-testid="free-ai-open-finder-btn"
+                  onClick={onOpenExerciseFinder}
+                >
+                  직접 동작 찾아 담기
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       );
     }
     return (

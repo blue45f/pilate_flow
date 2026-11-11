@@ -2205,8 +2205,38 @@ export function SequenceWorkbench({
                     s.saveConditionTemplate(name);
                     setNotice(`‘${name}’ 조건을 보관했습니다.`);
                   }}
+                  onFillStarterSequence={() => {
+                    setPlanningMode('auto');
+                    generate();
+                  }}
+                  onOpenExerciseFinder={() => setStep2AiOpen(false)}
                 />
               </Suspense>
+            </div>
+          )}
+          {!s.activeSteps.length && (
+            <div
+              className="pf-step2-empty-starter"
+              data-testid="step2-empty-starter-bar"
+              role="region"
+              aria-label="첫 동작 빠른 시작 안내"
+            >
+              <span>
+                아직 담은 동작이 없어요 · 아래에서 ‘+ 담기’를 누르거나 기본 초안을 바로 채워 보세요.
+              </span>
+              {authoringCatalogCount > 0 && (
+                <button
+                  type="button"
+                  className="pf-step-nav-pill-btn"
+                  data-testid="step2-quick-starter-btn"
+                  onClick={() => {
+                    setPlanningMode('auto');
+                    generate();
+                  }}
+                >
+                  <RefreshCw size={15} aria-hidden="true" /> 선택 기구로 기본 초안 채우기
+                </button>
+              )}
             </div>
           )}
           {!finderOpen && (
@@ -2427,7 +2457,7 @@ export function SequenceWorkbench({
                 aria-label="동작 카탈로그 빠른 담기"
               >
                 <div className="pf-option-a-finder-pane__head">
-                  <span className="pf-step-kicker-badge">시안 A · 원스크린 좌우 분할</span>
+                  <span className="pf-step-kicker-badge">검색·순서 나란히 보기</span>
                   <strong>동작 빠른 담기</strong>
                   <p>
                     왼쪽에서 검색·필터로 동작을 누르면 오른쪽 시퀀스에 즉시 담깁니다.
@@ -2472,9 +2502,40 @@ export function SequenceWorkbench({
                       justSavedPulse ? 'is-just-saved' : ''
                     }`.trim()}
                     data-testid="workbench-save-state"
+                    title={
+                      isSavedClean
+                        ? '보관함에 최신 상태로 저장됨'
+                        : '이 기기에 자동 임시 보관 중 · 저장을 누르면 보관함에 반영됩니다'
+                    }
                   >
                     {isSavedClean ? '저장됨' : '변경사항 있음'}
                   </span>
+                  {!isSavedClean && matchedSavedSequence && (
+                    <PfButton
+                      variant="text"
+                      className="restore-saved-flow"
+                      data-testid="workbench-restore-saved-btn"
+                      onClick={() => {
+                        applyStepsWithUndo(
+                          matchedSavedSequence.steps,
+                          `‘${matchedSavedSequence.title}’ 저장된 원본 상태로 복원했습니다.`,
+                          {
+                            alsoSetNotice: true,
+                            meta: {
+                              title: matchedSavedSequence.title,
+                              subtitle: matchedSavedSequence.subtitle,
+                              targetMinutes: matchedSavedSequence.targetMinutes,
+                              level: matchedSavedSequence.level,
+                              apparatus: matchedSavedSequence.apparatus,
+                            },
+                          },
+                        );
+                      }}
+                    >
+                      <RotateCcw size={15} aria-hidden="true" />
+                      <span>저장본 복원</span>
+                    </PfButton>
+                  )}
                   <PfButton
                     variant="secondary"
                     className="save-flow"
@@ -3679,6 +3740,11 @@ export function SequenceWorkbench({
                     s.saveConditionTemplate(name);
                     setNotice(`‘${name}’ 조건을 보관했습니다.`);
                   }}
+                  onFillStarterSequence={() => {
+                    setPlanningMode('auto');
+                    generate();
+                  }}
+                  onOpenExerciseFinder={openExerciseFinder}
                 />
               </Suspense>
             )}
