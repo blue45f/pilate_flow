@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,13 +7,17 @@ import { test } from 'node:test';
 import {
   ATELIER_V2_ASSET_PATHS,
   acquireDeployLock,
+  formatDeployDoctorReport,
   markReleaseVerifiedLive,
+  parseServiceAccountJsonString,
+  prepareAuthExecutionEnv,
   resolveFirebaseAuth,
   restorePreviousVerifiedRelease,
   snapshotVerifiedRelease,
   validateCliArgs,
   verifyLiveDeployment,
 } from './deploy-universal.mjs';
+import { importServiceAccountFile, upsertEnvFileEntries } from './setup-deploy-auth.mjs';
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 
@@ -25,7 +29,11 @@ function makePngBytes(width = 512, height = 512) {
   return buf;
 }
 
-function createDistCheckoutFixture(t, entryName = 'index-NewHash99.js', cssName = 'index-Style99.css') {
+function createDistCheckoutFixture(
+  t,
+  entryName = 'index-NewHash99.js',
+  cssName = 'index-Style99.css',
+) {
   const root = mkdtempSync(path.join(projectRoot, '.deploy-test-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
 
@@ -48,7 +56,12 @@ function createDistCheckoutFixture(t, entryName = 'index-NewHash99.js', cssName 
   for (const v2Path of ATELIER_V2_ASSET_PATHS) {
     writeFileSync(path.join(dist, v2Path.slice(1)), makePngBytes(1024, 1024));
   }
-  const assets = ['/index.html', `/assets/${entryName}`, `/assets/${cssName}`, '/icons/app-192.png'];
+  const assets = [
+    '/index.html',
+    `/assets/${entryName}`,
+    `/assets/${cssName}`,
+    '/icons/app-192.png',
+  ];
   writeFileSync(path.join(dist, 'sw.js'), `const ASSETS = ${JSON.stringify(assets)};`);
   writeFileSync(
     path.join(dist, 'site.webmanifest'),
@@ -93,12 +106,15 @@ function makeMockFetch(routes) {
   };
 }
 
-test('validateCliArgs rejects unknown, removed, or conflicting flags so typos never trigger live deploy', () => {
+test('validateCliArgs rejects unknown, removed, or conflicting flags and accepts --doctor / --wait-cdn', () => {
   assert.throws(() => validateCliArgs(['--parallel']), /Unsupported CLI flag/);
   assert.throws(() => validateCliArgs(['--bootstrap']), /Unsupported CLI flag/);
   assert.throws(() => validateCliArgs(['--dry-run']), /Unsupported CLI flag/);
   assert.throws(() => validateCliArgs(['--check-env', '--rollback']), /Conflicting modes/);
+  assert.throws(() => validateCliArgs(['--doctor', '--check-env']), /Conflicting modes/);
   assert.ok(validateCliArgs(['--check-env']).has('--check-env'));
+  assert.ok(validateCliArgs(['--doctor']).has('--doctor'));
+  assert.ok(validateCliArgs(['--verify-live', '--wait-cdn']).has('--wait-cdn'));
 });
 
 test('verifyLiveDeployment succeeds only when entry hash, JS chunk, SW precache, and all 4 V2 PNGs match', async (t) => {
@@ -130,6 +146,55 @@ test('verifyLiveDeployment succeeds only when entry hash, JS chunk, SW precache,
   assert.equal(summary.verified, true);
   assert.equal(summary.bundleMatchesLocalDist, true);
   assert.equal(summary.v2Studio3dAssetsLive, true);
+  assert.equal(process.exitCode, 0);
+});
+
+test('verifyLiveDeployment retries CDN edge propagation when maxAttempts > 1 and succeeds once edge updates', async (t) => {
+  const { root, entryName, cssName, assets } = createDistCheckoutFixture(
+    t,
+    'index-FreshV3.js',
+    'index-FreshV3.css',
+  );
+  const v2Routes = Object.fromEntries(
+    ATELIER_V2_ASSET_PATHS.map((p) => [p, { headers: { 'content-type': 'image/png' } }]),
+  );
+
+  let indexHits = 0;
+  process.exitCode = 0;
+  const summary = await verifyLiveDeployment({
+    rootDir: root,
+    quiet: true,
+    maxAttempts: 3,
+    retryDelayMs: 5,
+    fetchImpl: async (input) => {
+      const url = new URL(String(input));
+      if (url.pathname === '/index.html') {
+        indexHits += 1;
+        const servedEntry = indexHits < 2 ? 'index-StaleEdge.js' : entryName;
+        return {
+          ok: true,
+          status: 200,
+          headers: {
+            get: (name) => (name.toLowerCase() === 'content-type' ? 'text/html' : null),
+          },
+          text: async () =>
+            `<link rel="stylesheet" href="./assets/${cssName}"><script type="module" src="./assets/${servedEntry}"></script>`,
+        };
+      }
+      return makeMockFetch({
+        '/assets/index-StaleEdge.js': { headers: { 'content-type': 'application/javascript' } },
+        [`/assets/${entryName}`]: { headers: { 'content-type': 'application/javascript' } },
+        '/sw.js': {
+          headers: { 'content-type': 'application/javascript' },
+          body: `const ASSETS = ${JSON.stringify(assets)};`,
+        },
+        ...v2Routes,
+      })(input);
+    },
+  });
+
+  assert.equal(summary.verified, true);
+  assert.equal(summary.attemptsUsed, 2);
   assert.equal(process.exitCode, 0);
 });
 
@@ -168,7 +233,10 @@ test('verifyLiveDeployment fails with exitCode 2 when live bundle hash mismatche
 test('verifyLiveDeployment fails when any of the 4 Atelier V2 PNGs is missing or entry JS returns HTML fallback', async (t) => {
   const { root, entryName, cssName, assets } = createDistCheckoutFixture(t);
   const partialV2Routes = Object.fromEntries(
-    ATELIER_V2_ASSET_PATHS.slice(0, 3).map((p) => [p, { headers: { 'content-type': 'image/png' } }]),
+    ATELIER_V2_ASSET_PATHS.slice(0, 3).map((p) => [
+      p,
+      { headers: { 'content-type': 'image/png' } },
+    ]),
   );
 
   process.exitCode = 0;
@@ -198,7 +266,7 @@ test('verifyLiveDeployment fails when any of the 4 Atelier V2 PNGs is missing or
   process.exitCode = 0;
 });
 
-test('resolveFirebaseAuth never exposes --token on CLI argv and blocks non-interactive ambient auth hijacking', (t) => {
+test('resolveFirebaseAuth supports env, .env.local, .firebase/service-account.json, and Base64 JSON while never exposing --token on CLI argv', (t) => {
   const tmpHome = mkdtempSync(path.join(os.tmpdir(), 'pf-auth-test-'));
   t.after(() => rmSync(tmpHome, { recursive: true, force: true }));
 
@@ -213,6 +281,62 @@ test('resolveFirebaseAuth never exposes --token on CLI argv and blocks non-inter
   assert.deepEqual(tokenAuth.extraArgs, ['--non-interactive']);
   assert.equal(tokenAuth.extraEnv.FIREBASE_TOKEN, 'ci-scoped-token-placeholder');
 
+  // Fallback to .env.local when .env.deploy.local is absent
+  writeFileSync(path.join(tmpHome, '.env.local'), 'FIREBASE_TOKEN=local-env-token-placeholder\n');
+  const envLocalAuth = resolveFirebaseAuth({
+    rootDir: tmpHome,
+    env: {},
+    homeDir: tmpHome,
+    isInteractive: false,
+  });
+  assert.equal(envLocalAuth.ready, true);
+  assert.equal(envLocalAuth.source, 'file:.env.local(FIREBASE_TOKEN)');
+  rmSync(path.join(tmpHome, '.env.local'));
+
+  // Base64-encoded service account JSON + ephemeral temp file cleanup
+  const syntheticSaJson = JSON.stringify({
+    type: 'service_account',
+    project_id: 'deskcloud-fleet-auth',
+    client_email: 'deploy-bot@deskcloud-fleet-auth.iam.gserviceaccount.com',
+    private_key: 'synthetic-test-key-material',
+  });
+  const base64Sa = Buffer.from(syntheticSaJson, 'utf8').toString('base64');
+  assert.equal(parseServiceAccountJsonString(base64Sa)?.project_id, 'deskcloud-fleet-auth');
+
+  writeFileSync(path.join(tmpHome, '.env.deploy.local'), `FIREBASE_SERVICE_ACCOUNT=${base64Sa}\n`);
+  const inlineSaAuth = resolveFirebaseAuth({
+    rootDir: tmpHome,
+    env: {},
+    homeDir: tmpHome,
+    isInteractive: false,
+  });
+  assert.equal(inlineSaAuth.ready, true);
+  assert.equal(inlineSaAuth.source, 'file:.env.deploy.local(FIREBASE_SERVICE_ACCOUNT)');
+  const prepared = prepareAuthExecutionEnv(inlineSaAuth);
+  assert.ok(existsSync(prepared.extraEnv.GOOGLE_APPLICATION_CREDENTIALS));
+  prepared.cleanup();
+  assert.equal(existsSync(prepared.extraEnv.GOOGLE_APPLICATION_CREDENTIALS), false);
+  rmSync(path.join(tmpHome, '.env.deploy.local'));
+
+  // importServiceAccountFile writes .firebase/service-account.json + .env.deploy.local
+  const externalSaPath = path.join(tmpHome, 'downloaded-sa.json');
+  writeFileSync(externalSaPath, syntheticSaJson);
+  upsertEnvFileEntries(path.join(tmpHome, '.env.deploy.local'), { KEEP_OTHER_KEY: 'yes' });
+  const imported = importServiceAccountFile(externalSaPath, tmpHome);
+  assert.equal(imported.projectId, 'deskcloud-fleet-auth');
+  const fileSaAuth = resolveFirebaseAuth({
+    rootDir: tmpHome,
+    env: {},
+    homeDir: tmpHome,
+    isInteractive: false,
+  });
+  assert.equal(fileSaAuth.ready, true);
+  assert.equal(fileSaAuth.source, 'file:.env.deploy.local(GOOGLE_APPLICATION_CREDENTIALS)');
+  assert.match(readFileSync(path.join(tmpHome, '.env.deploy.local'), 'utf8'), /KEEP_OTHER_KEY=yes/);
+  rmSync(path.join(tmpHome, '.env.deploy.local'));
+  rmSync(path.join(tmpHome, '.firebase'), { recursive: true, force: true });
+
+  // Non-interactive ambient auth remains blocked unless explicitly allowed
   const configstoreDir = path.join(tmpHome, '.config', 'configstore');
   mkdirSync(configstoreDir, { recursive: true });
   writeFileSync(path.join(configstoreDir, 'firebase-tools.json'), '{"user":"demo"}');
@@ -235,6 +359,26 @@ test('resolveFirebaseAuth never exposes --token on CLI argv and blocks non-inter
   });
   assert.equal(interactiveAmbient.ready, true);
   assert.equal(interactiveAmbient.extraEnv.HOME, undefined);
+});
+
+test('formatDeployDoctorReport renders clear Korean next-step guidance without leaking secrets', () => {
+  const report = formatDeployDoctorReport({
+    configValid: true,
+    site: 'pilates-flow-atelier',
+    projectId: 'deskcloud-fleet-auth',
+    productionUrl: 'https://pilates-flow-atelier.web.app',
+    onCanonicalBranch: true,
+    branch: 'main',
+    workingTreeClean: true,
+    headCommit: '9860211',
+    distReadyForDeploy: true,
+    distEntryJs: '/assets/index-Test.js',
+    firebaseAuthReady: false,
+    firebaseAuthSource: 'none',
+    recommendedNextCommand: 'pnpm deploy:auth',
+  });
+  assert.match(report, /pnpm deploy:auth/);
+  assert.match(report, /pilates-flow-atelier/);
 });
 
 test('acquireDeployLock blocks concurrent active PIDs and recovers stale dead-PID locks', (t) => {

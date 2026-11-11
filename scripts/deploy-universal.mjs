@@ -8,17 +8,20 @@
  *   - Live URL: https://pilates-flow-atelier.web.app
  *
  * Entry Modes:
- *   node scripts/deploy-universal.mjs --check-env     # Inspect config, git, dist & auth readiness (never prints secrets)
+ *   node scripts/deploy-universal.mjs --doctor        # Human + AI step-by-step Korean readiness & next-action guide
+ *   node scripts/deploy-universal.mjs --check-env     # Inspect config, git, dist & auth readiness JSON (never prints secrets)
  *   node scripts/deploy-universal.mjs --verify-live   # Strictly verify live bundle hash, SW & all 4 Atelier V2 3D assets
  *   node scripts/deploy-universal.mjs                 # Lock, gate, build, snapshot, deploy to Firebase Hosting & verify live
  *   node scripts/deploy-universal.mjs --rollback      # Restore last verified release snapshot & redeploy to Firebase Hosting
  *   node scripts/deploy-universal.mjs --skip-build    # Re-verify existing dist/ integrity, deploy & verify live
  */
 import {
+  chmodSync,
   closeSync,
   cpSync,
   existsSync,
   mkdirSync,
+  mkdtempSync,
   openSync,
   readdirSync,
   readFileSync,
@@ -28,8 +31,8 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { execFileSync, spawn } from 'node:child_process';
-import { homedir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { homedir, tmpdir } from 'node:os';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { verifyAtelierV2DistAssets, verifyPwaBuild } from './check-pwa-build.mjs';
 
@@ -46,9 +49,16 @@ export const ATELIER_V2_ASSET_PATHS = [
   '/images/atelier-v2/chair-studio-3d.png',
   '/images/atelier-v2/barrel-studio-3d.png',
 ];
+export const LOCAL_DEPLOY_ENV_FILES = [
+  '.env.deploy.local',
+  '.env.local',
+  '.env.deployment-reference.local',
+];
 export const ALLOWED_CLI_FLAGS = new Set([
+  '--doctor',
   '--check-env',
   '--verify-live',
+  '--wait-cdn',
   '--rollback',
   '--skip-build',
   '--auto-rollback',
@@ -68,12 +78,13 @@ export function validateCliArgs(rawArgs = process.argv.slice(2)) {
   }
   const parsed = new Set(rawArgs);
   const modeCount =
+    Number(parsed.has('--doctor')) +
     Number(parsed.has('--check-env')) +
     Number(parsed.has('--verify-live')) +
     Number(parsed.has('--rollback'));
   if (modeCount > 1) {
     throw new Error(
-      '[deploy] Conflicting modes: combine only one of --check-env, --verify-live, or --rollback.',
+      '[deploy] Conflicting modes: combine only one of --doctor, --check-env, --verify-live, or --rollback.',
     );
   }
   return parsed;
@@ -105,12 +116,79 @@ export function parseEnvFileSafe(filePath) {
   return map;
 }
 
+/**
+ * Load gitignored local env files in priority order (`.env.deploy.local` > `.env.local` > `.env.deployment-reference.local`).
+ */
+export function loadLocalDeployEnvMap(rootDir = ROOT) {
+  const values = {};
+  const keySources = {};
+  for (const relName of [...LOCAL_DEPLOY_ENV_FILES].reverse()) {
+    const parsed = parseEnvFileSafe(join(rootDir, relName));
+    for (const [key, val] of Object.entries(parsed)) {
+      if (val) {
+        values[key] = val;
+        keySources[key] = relName;
+      }
+    }
+  }
+  return { values, keySources };
+}
+
+/**
+ * Parse raw JSON or Base64-encoded service account JSON safely in memory without logging values.
+ */
+export function parseServiceAccountJsonString(rawInput) {
+  if (!rawInput || typeof rawInput !== 'string') return null;
+  const trimmed = rawInput.trim();
+  if (!trimmed) return null;
+
+  const candidates = [trimmed];
+  if (!trimmed.startsWith('{')) {
+    try {
+      const decoded = Buffer.from(trimmed, 'base64').toString('utf8').trim();
+      if (decoded.startsWith('{')) {
+        candidates.push(decoded);
+      }
+    } catch {
+      // Not valid base64
+    }
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        parsed.type === 'service_account' &&
+        typeof parsed.client_email === 'string' &&
+        typeof parsed.private_key === 'string'
+      ) {
+        return {
+          project_id: parsed.project_id ?? null,
+          normalizedJson: JSON.stringify(parsed),
+        };
+      }
+    } catch {
+      // Ignore malformed candidate
+    }
+  }
+  return null;
+}
+
 export function discoverCandidateBinDirs(rootDir = ROOT, currentHome = homedir()) {
   const dirs = [
     join(rootDir, 'node_modules', '.bin'),
+    join(currentHome, '.volta', 'bin'),
+    join(currentHome, '.asdf', 'shims'),
+    join(currentHome, '.local', 'share', 'mise', 'shims'),
     join(currentHome, '.local', 'node', 'bin'),
+    join(currentHome, 'Library', 'pnpm'),
+    join(currentHome, '.local', 'share', 'pnpm'),
     '/opt/homebrew/bin',
     '/usr/local/bin',
+    '/opt/local/bin',
+    '/private/tmp/node22-standalone/bin',
   ];
 
   const nvmVersionsDir = join(currentHome, '.nvm', 'versions', 'node');
@@ -125,6 +203,24 @@ export function discoverCandidateBinDirs(rootDir = ROOT, currentHome = homedir()
     }
   } catch {
     // Skip when ~/.nvm is outside accessible scope
+  }
+
+  for (const fnmBase of [
+    join(currentHome, '.local', 'share', 'fnm', 'node-versions'),
+    join(currentHome, 'Library', 'Application Support', 'fnm', 'node-versions'),
+  ]) {
+    try {
+      if (existsSync(fnmBase)) {
+        const versions = readdirSync(fnmBase).sort((a, b) =>
+          b.localeCompare(a, undefined, { numeric: true }),
+        );
+        for (const v of versions) {
+          dirs.push(join(fnmBase, v, 'installation', 'bin'));
+        }
+      }
+    } catch {
+      // Skip inaccessible fnm directory
+    }
   }
 
   return dirs.filter((dir) => {
@@ -164,8 +260,15 @@ export function resolveExecutable(binName, env) {
   return null;
 }
 
+function resolveCredentialFilePath(rawPath, rootDir) {
+  if (!rawPath) return '';
+  return isAbsolute(rawPath) ? rawPath : resolve(rootDir, rawPath);
+}
+
 /**
- * Resolve Firebase authentication without escaping sandbox $HOME or exposing tokens on CLI argv.
+ * Resolve Firebase authentication across env vars, `.env.deploy.local` / `.env.local`,
+ * `.firebase/service-account.json`, inline/Base64 JSON, and interactive CLI login
+ * without escaping sandbox $HOME or exposing tokens on CLI argv.
  */
 export function resolveFirebaseAuth({
   rootDir = ROOT,
@@ -174,33 +277,76 @@ export function resolveFirebaseAuth({
   isInteractive = Boolean(process.stdin?.isTTY && process.stdout?.isTTY),
   allowAmbientAuth = false,
 } = {}) {
-  const deployEnv = parseEnvFileSafe(join(rootDir, '.env.deploy.local'));
+  const localEnv = loadLocalDeployEnvMap(rootDir);
 
-  const gacFromEnv =
-    env.GOOGLE_APPLICATION_CREDENTIALS || deployEnv.GOOGLE_APPLICATION_CREDENTIALS || '';
-  if (gacFromEnv && existsSync(gacFromEnv)) {
+  // 1. Explicit GOOGLE_APPLICATION_CREDENTIALS file path (process env -> local env files)
+  const rawGac =
+    env.GOOGLE_APPLICATION_CREDENTIALS || localEnv.values.GOOGLE_APPLICATION_CREDENTIALS || '';
+  if (rawGac) {
+    const resolvedGac = resolveCredentialFilePath(rawGac, rootDir);
+    if (existsSync(resolvedGac)) {
+      const sourceLabel = env.GOOGLE_APPLICATION_CREDENTIALS
+        ? 'env:GOOGLE_APPLICATION_CREDENTIALS'
+        : `file:${localEnv.keySources.GOOGLE_APPLICATION_CREDENTIALS}(GOOGLE_APPLICATION_CREDENTIALS)`;
+      return {
+        ready: true,
+        source: sourceLabel,
+        extraArgs: ['--non-interactive'],
+        extraEnv: { GOOGLE_APPLICATION_CREDENTIALS: resolvedGac },
+      };
+    }
+  }
+
+  // 2. Drop-in gitignored `.firebase/service-account.json`
+  const autoServiceAccountPath = join(rootDir, '.firebase', 'service-account.json');
+  if (existsSync(autoServiceAccountPath)) {
     return {
       ready: true,
-      source: 'file:GOOGLE_APPLICATION_CREDENTIALS',
+      source: 'file:.firebase/service-account.json',
       extraArgs: ['--non-interactive'],
-      extraEnv: { GOOGLE_APPLICATION_CREDENTIALS: gacFromEnv },
+      extraEnv: { GOOGLE_APPLICATION_CREDENTIALS: autoServiceAccountPath },
     };
   }
 
-  const tokenFromEnv = env.FIREBASE_TOKEN || deployEnv.FIREBASE_TOKEN || '';
-  if (tokenFromEnv) {
+  // 3. Inline JSON or Base64 `FIREBASE_SERVICE_ACCOUNT` (process env -> local env files)
+  const rawInlineSa =
+    env.FIREBASE_SERVICE_ACCOUNT || localEnv.values.FIREBASE_SERVICE_ACCOUNT || '';
+  const parsedInlineSa = parseServiceAccountJsonString(rawInlineSa);
+  if (parsedInlineSa) {
+    const sourceLabel = env.FIREBASE_SERVICE_ACCOUNT
+      ? 'env:FIREBASE_SERVICE_ACCOUNT'
+      : `file:${localEnv.keySources.FIREBASE_SERVICE_ACCOUNT}(FIREBASE_SERVICE_ACCOUNT)`;
     return {
       ready: true,
-      source: env.FIREBASE_TOKEN ? 'env:FIREBASE_TOKEN' : 'file:.env.deploy.local(FIREBASE_TOKEN)',
+      source: sourceLabel,
+      extraArgs: ['--non-interactive'],
+      extraEnv: {},
+      inlineServiceAccountJson: parsedInlineSa.normalizedJson,
+    };
+  }
+
+  // 4. `FIREBASE_TOKEN` (process env -> local env files; passed strictly via env, NEVER `--token` argv)
+  const tokenFromEnv = env.FIREBASE_TOKEN || localEnv.values.FIREBASE_TOKEN || '';
+  if (tokenFromEnv) {
+    const sourceLabel = env.FIREBASE_TOKEN
+      ? 'env:FIREBASE_TOKEN'
+      : `file:${localEnv.keySources.FIREBASE_TOKEN}(FIREBASE_TOKEN)`;
+    return {
+      ready: true,
+      source: sourceLabel,
       extraArgs: ['--non-interactive'],
       extraEnv: { FIREBASE_TOKEN: tokenFromEnv },
     };
   }
 
+  // 5. Ambient CLI credentials (`firebase login` or `gcloud auth application-default login`)
   const xdgConfigHome = env.XDG_CONFIG_HOME || join(homeDir, '.config');
   const homeFirebaseToolsJson = join(xdgConfigHome, 'configstore', 'firebase-tools.json');
+  const homeGcloudAdcJson = join(xdgConfigHome, 'gcloud', 'application_default_credentials.json');
   try {
-    if (existsSync(homeFirebaseToolsJson)) {
+    const hasFirebaseCliLogin = existsSync(homeFirebaseToolsJson);
+    const hasGcloudAdc = !hasFirebaseCliLogin && existsSync(homeGcloudAdcJson);
+    if (hasFirebaseCliLogin || hasGcloudAdc) {
       if (!isInteractive && !allowAmbientAuth) {
         return {
           ready: false,
@@ -211,9 +357,11 @@ export function resolveFirebaseAuth({
       }
       return {
         ready: true,
-        source: 'home:configstore/firebase-tools.json',
+        source: hasFirebaseCliLogin
+          ? 'home:configstore/firebase-tools.json'
+          : 'home:gcloud/application_default_credentials.json',
         extraArgs: [],
-        extraEnv: {},
+        extraEnv: hasGcloudAdc ? { GOOGLE_APPLICATION_CREDENTIALS: homeGcloudAdcJson } : {},
       };
     }
   } catch {
@@ -225,6 +373,38 @@ export function resolveFirebaseAuth({
     source: 'none',
     extraArgs: [],
     extraEnv: {},
+  };
+}
+
+/**
+ * Materialize inline service account JSON to an ephemeral 0600 file only for the duration of deploy.
+ */
+export function prepareAuthExecutionEnv(auth) {
+  if (!auth?.inlineServiceAccountJson) {
+    return {
+      extraEnv: { ...(auth?.extraEnv ?? {}) },
+      cleanup: () => {},
+    };
+  }
+  const tempDir = mkdtempSync(join(tmpdir(), 'pf-sa-'));
+  const tempFile = join(tempDir, 'service-account.json');
+  writeFileSync(tempFile, auth.inlineServiceAccountJson, { encoding: 'utf8', mode: 0o600 });
+  try {
+    chmodSync(tempFile, 0o600);
+  } catch {
+    // Best-effort permission lock
+  }
+  let cleaned = false;
+  return {
+    extraEnv: {
+      ...(auth.extraEnv ?? {}),
+      GOOGLE_APPLICATION_CREDENTIALS: tempFile,
+    },
+    cleanup: () => {
+      if (cleaned) return;
+      cleaned = true;
+      rmSync(tempDir, { recursive: true, force: true });
+    },
   };
 }
 
@@ -323,6 +503,22 @@ export function inspectLocalDistIntegrity(rootDir = ROOT) {
   };
 }
 
+export function computeRecommendedNextCommand(status) {
+  if (!status.configValid) {
+    return 'firebase.json 및 .firebaserc 정본 구성을 확인하세요 (pnpm test:deploy).';
+  }
+  if (!status.onCanonicalBranch) {
+    return 'git checkout main';
+  }
+  if (!status.workingTreeClean) {
+    return '변경사항을 커밋한 뒤 배포를 진행하세요 (git status).';
+  }
+  if (status.firebaseAuthReady) {
+    return status.distReadyForDeploy ? 'pnpm deploy --skip-build' : 'pnpm deploy';
+  }
+  return 'pnpm deploy:auth   # (최초 1회: .env.deploy.local 저장 + GitHub Actions 시크릿 등록 후 pnpm deploy 실행)';
+}
+
 export function inspectCanonicalProductionReadiness({
   rootDir = ROOT,
   env = process.env,
@@ -371,7 +567,7 @@ export function inspectCanonicalProductionReadiness({
   const gitState = inspectGitState(rootDir, augmentedEnv);
   const distIntegrity = inspectLocalDistIntegrity(rootDir);
 
-  return {
+  const status = {
     canonicalTarget: 'firebase-hosting',
     site,
     publicDir,
@@ -389,6 +585,7 @@ export function inspectCanonicalProductionReadiness({
       hasNoCacheShellHeaders,
     nodeExecutable: process.execPath,
     distBuilt: distIntegrity.distBuilt,
+    distEntryJs: distIntegrity.entryJs,
     distHasAtelierV2Assets: distIntegrity.distHasAtelierV2Assets,
     distReadyForDeploy: distIntegrity.distReadyForDeploy,
     staleDistReason: distIntegrity.staleDistReason,
@@ -397,7 +594,37 @@ export function inspectCanonicalProductionReadiness({
       firebaseBin ?? (npxBin ? `${npxBin} --yes ${FIREBASE_TOOLS_PACKAGE}` : null),
     firebaseAuthReady: auth.ready,
     firebaseAuthSource: auth.source,
+    supportedLocalAuthPaths: [
+      '.firebase/service-account.json',
+      '.env.deploy.local (GOOGLE_APPLICATION_CREDENTIALS | FIREBASE_SERVICE_ACCOUNT | FIREBASE_TOKEN)',
+      '.env.local (GOOGLE_APPLICATION_CREDENTIALS | FIREBASE_SERVICE_ACCOUNT | FIREBASE_TOKEN)',
+    ],
   };
+
+  return {
+    ...status,
+    recommendedNextCommand: computeRecommendedNextCommand(status),
+  };
+}
+
+export function formatDeployDoctorReport(status) {
+  const lines = [
+    '=== Pilates Flow Atelier 배포 진단 리포트 (--doctor) ===',
+    `1. 정본 호스팅 설정 : ${status.configValid ? '정상 ✅' : '오류 ❌'} (${status.site} / ${status.projectId} -> ${status.productionUrl})`,
+    `2. Git 브랜치 상태  : ${status.onCanonicalBranch ? 'main ✅' : `${status.branch} ⚠️`} | 워킹트리: ${status.workingTreeClean ? '클린 ✅' : '미커밋 변경 있음 ⚠️'} (HEAD: ${status.headCommit ?? 'unknown'})`,
+    `3. 로컬 dist 빌드   : ${status.distReadyForDeploy ? `준비 완료 ✅ (${status.distEntryJs})` : `재빌드 필요 ⚠️ (${status.staleDistReason ?? 'not built'})`}`,
+    `4. 로컬 배포 인증   : ${status.firebaseAuthReady ? `연결됨 ✅ (${status.firebaseAuthSource})` : `미연결 ⚠️ (${status.firebaseAuthSource})`}`,
+    '',
+    `👉 지금 바로 실행할 다음 명령: ${status.recommendedNextCommand}`,
+  ];
+  if (!status.firebaseAuthReady) {
+    lines.push(
+      '   • [방법 A — 로컬+CI 한 번에 영구 등록] 터미널에서 `pnpm deploy:auth` 실행 후 `pnpm deploy`',
+      '   • [방법 B — 서비스 계정 파일] `.firebase/service-account.json` 복사 후 `pnpm deploy`',
+      '   • [방법 C — GitHub Actions 자동 배포] GitHub Secrets에 `FIREBASE_SERVICE_ACCOUNT` 등록 후 `git push origin main`',
+    );
+  }
+  return lines.join('\n');
 }
 
 async function probeAssetHeadOrGet(url, fetchImpl) {
@@ -412,23 +639,18 @@ async function probeAssetHeadOrGet(url, fetchImpl) {
   });
 }
 
-/**
- * Strictly verify live index.html entry hash, JS chunk response, SW precache inventory, and all 4 V2 3D PNGs.
- * Sets process.exitCode = 2 whenever any check fails (including bundleMatchesLocalDist === false).
- */
-export async function verifyLiveDeployment({
-  liveOrigin = LIVE_ORIGIN,
-  rootDir = ROOT,
-  fetchImpl = fetch,
-  requireLocalMatch = true,
-  quiet = false,
-} = {}) {
-  const ts = Date.now();
-  const localIndexPath = join(rootDir, 'dist', 'index.html');
-  const localHtml = existsSync(localIndexPath) ? readFileSync(localIndexPath, 'utf8') : '';
-  const localEntryJs = extractEntryScriptAsset(localHtml);
-  const localEntryCss = extractEntryCssAsset(localHtml);
+function sleepMs(ms) {
+  return new Promise((resolvePromise) => setTimeout(resolvePromise, ms));
+}
 
+async function runSingleLiveVerificationPass({
+  liveOrigin,
+  localEntryJs,
+  localEntryCss,
+  fetchImpl,
+  requireLocalMatch,
+}) {
+  const ts = Date.now();
   const indexRes = await fetchImpl(`${liveOrigin}/index.html?ts=${ts}`, {
     headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
   });
@@ -449,8 +671,7 @@ export async function verifyLiveDeployment({
   if (liveEntryJs) {
     const entryRes = await probeAssetHeadOrGet(`${liveOrigin}${liveEntryJs}?ts=${ts}`, fetchImpl);
     entryScriptContentType = entryRes.headers.get('content-type') || '';
-    entryScriptLive =
-      entryRes.ok && /(?:javascript|ecmascript)/i.test(entryScriptContentType);
+    entryScriptLive = entryRes.ok && /(?:javascript|ecmascript)/i.test(entryScriptContentType);
   }
 
   let serviceWorkerMatchesEntry = false;
@@ -521,8 +742,7 @@ export async function verifyLiveDeployment({
   }
 
   const verified = failureReasons.length === 0;
-
-  const summary = {
+  return {
     verified,
     liveOrigin,
     httpStatus: indexRes.status,
@@ -537,12 +757,59 @@ export async function verifyLiveDeployment({
     v2AssetChecks,
     failureReasons,
   };
+}
+
+/**
+ * Strictly verify live index.html entry hash, JS chunk response, SW precache inventory, and all 4 V2 3D PNGs.
+ * Supports bounded CDN propagation retries (`maxAttempts` > 1) after fresh uploads.
+ * Sets process.exitCode = 2 whenever final verification fails.
+ */
+export async function verifyLiveDeployment({
+  liveOrigin = LIVE_ORIGIN,
+  rootDir = ROOT,
+  fetchImpl = fetch,
+  requireLocalMatch = true,
+  quiet = false,
+  maxAttempts = 1,
+  retryDelayMs = 2500,
+} = {}) {
+  const localIndexPath = join(rootDir, 'dist', 'index.html');
+  const localHtml = existsSync(localIndexPath) ? readFileSync(localIndexPath, 'utf8') : '';
+  const localEntryJs = extractEntryScriptAsset(localHtml);
+  const localEntryCss = extractEntryCssAsset(localHtml);
+
+  const totalAttempts = Math.max(1, Number(maxAttempts) || 1);
+  let summary = null;
+
+  for (let attempt = 1; attempt <= totalAttempts; attempt += 1) {
+    summary = await runSingleLiveVerificationPass({
+      liveOrigin,
+      localEntryJs,
+      localEntryCss,
+      fetchImpl,
+      requireLocalMatch,
+    });
+    if (summary.verified) {
+      summary.attemptsUsed = attempt;
+      process.exitCode = 0;
+      break;
+    }
+    summary.attemptsUsed = attempt;
+    if (attempt < totalAttempts) {
+      if (!quiet) {
+        console.log(
+          `[deploy:verify] CDN 전파 대기 중 (${attempt}/${totalAttempts}): ${summary.failureReasons.join('; ')}`,
+        );
+      }
+      await sleepMs(retryDelayMs);
+    }
+  }
 
   if (!quiet) {
     console.log(JSON.stringify(summary, null, 2));
   }
 
-  if (!verified) {
+  if (!summary.verified) {
     process.exitCode = 2;
   }
   return summary;
@@ -769,8 +1036,10 @@ function printHelp() {
     [
       'Usage: node scripts/deploy-universal.mjs [flag]',
       '  (no flags)          Verify, build dist/, snapshot, deploy to Firebase Hosting & verify live',
-      '  --check-env         Inspect config, git state, dist integrity & auth readiness (read-only)',
+      '  --doctor            Print clear Korean diagnostic checklist & exact next command',
+      '  --check-env         Inspect config, git state, dist integrity & auth readiness JSON (read-only)',
       '  --verify-live       Verify live index.html hash, JS chunk, SW precache & 4 V2 PNGs',
+      '  --wait-cdn          Retry live verification up to 6 times (3s interval) for CDN propagation',
       '  --rollback          Restore last verified snapshot from .firebase/releases/ & redeploy',
       '  --skip-build        Re-verify pre-built dist/ without running tsc/vite, then deploy',
       '  --auto-rollback     Automatically redeploy previous verified snapshot if --verify-live fails',
@@ -785,8 +1054,10 @@ async function runCli() {
     process.exit(0);
   }
 
+  const isDoctor = args.has('--doctor');
   const isCheckOnly = args.has('--check-env');
   const isVerifyLiveOnly = args.has('--verify-live');
+  const waitCdn = args.has('--wait-cdn');
   const skipBuild = args.has('--skip-build');
   const isRollback = args.has('--rollback');
   const autoRollback = args.has('--auto-rollback');
@@ -795,6 +1066,11 @@ async function runCli() {
   const allowLiveDrift = args.has('--allow-live-drift');
 
   const status = inspectCanonicalProductionReadiness({ allowAmbientAuth });
+
+  if (isDoctor) {
+    console.log(formatDeployDoctorReport(status));
+    process.exit(status.configValid ? 0 : 1);
+  }
 
   if (!status.configValid) {
     console.error('[deploy] Invalid canonical production configuration:', status);
@@ -809,6 +1085,8 @@ async function runCli() {
   if (isVerifyLiveOnly) {
     const summary = await verifyLiveDeployment({
       requireLocalMatch: !allowLiveDrift,
+      maxAttempts: waitCdn ? 6 : 1,
+      retryDelayMs: 3000,
     });
     process.exit(summary.verified ? 0 : 2);
   }
@@ -827,6 +1105,7 @@ async function runCli() {
     process.exit(143);
   });
 
+  let cleanupTempAuth = () => {};
   try {
     if (!status.onCanonicalBranch) {
       throw new Error(
@@ -842,10 +1121,17 @@ async function runCli() {
     const auth = resolveFirebaseAuth({ allowAmbientAuth });
     if (!auth.ready) {
       throw new Error(
-        `[deploy] Firebase authentication unavailable (${auth.source}). Configure GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_TOKEN, or run interactively.`,
+        [
+          `[deploy] Firebase 배포 인증이 아직 연결되지 않았습니다 (${auth.source}).`,
+          '👉 터미널에서 `pnpm deploy:auth` 를 1회 실행하면 `.env.deploy.local` 저장과 GitHub Actions 시크릿 등록이 한 번에 완료됩니다.',
+          '   (또는 `.firebase/service-account.json` 에 서비스 계정 키를 복사한 뒤 다시 `pnpm deploy` 를 실행하세요.)',
+        ].join('\n'),
       );
     }
-    const execEnv = buildAugmentedEnv(auth.extraEnv);
+
+    const preparedAuth = prepareAuthExecutionEnv(auth);
+    cleanupTempAuth = preparedAuth.cleanup;
+    const execEnv = buildAugmentedEnv(preparedAuth.extraEnv);
     const { cmd, args: deployArgs } = resolveFirebaseDeployCommand(execEnv, auth);
 
     if (isRollback) {
@@ -854,7 +1140,11 @@ async function runCli() {
         `[deploy:rollback] Restored verified snapshot ${restored.releaseId} (${restored.entryJs}) to dist/.`,
       );
       await runSpawnStep(`Firebase Hosting Rollback (${FIREBASE_SITE})`, cmd, deployArgs, execEnv);
-      const liveSummary = await verifyLiveDeployment({ requireLocalMatch: true });
+      const liveSummary = await verifyLiveDeployment({
+        requireLocalMatch: true,
+        maxAttempts: 6,
+        retryDelayMs: 3000,
+      });
       if (!liveSummary.verified) {
         throw new Error(
           `[deploy:rollback] Post-rollback verification failed: ${liveSummary.failureReasons.join('; ')}`,
@@ -881,8 +1171,12 @@ async function runCli() {
     const releaseSnapshot = snapshotVerifiedRelease(ROOT, { gitCommit: status.headCommit });
     await runSpawnStep(`Firebase Hosting (${FIREBASE_SITE})`, cmd, deployArgs, execEnv);
 
-    console.log('[deploy] Verifying live production response...');
-    const liveSummary = await verifyLiveDeployment({ requireLocalMatch: true });
+    console.log('[deploy] Verifying live production response (with CDN propagation retry)...');
+    const liveSummary = await verifyLiveDeployment({
+      requireLocalMatch: true,
+      maxAttempts: 6,
+      retryDelayMs: 3000,
+    });
     if (!liveSummary.verified) {
       if (autoRollback) {
         console.error(
@@ -898,7 +1192,11 @@ async function runCli() {
           deployArgs,
           execEnv,
         );
-        await verifyLiveDeployment({ requireLocalMatch: true });
+        await verifyLiveDeployment({
+          requireLocalMatch: true,
+          maxAttempts: 6,
+          retryDelayMs: 3000,
+        });
       }
       throw new Error(
         `[deploy] Live verification failed: ${liveSummary.failureReasons.join('; ')}`,
@@ -907,6 +1205,7 @@ async function runCli() {
 
     markReleaseVerifiedLive(ROOT, releaseSnapshot.releaseId);
   } finally {
+    cleanupTempAuth();
     cleanupLock();
   }
 }

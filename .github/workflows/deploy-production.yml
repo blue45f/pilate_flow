@@ -41,7 +41,7 @@ jobs:
         run: pnpm lint
 
       - name: Run verification & deployment regression suites
-        run: pnpm vitest run src/test/uxRedesignAndOpenAi.test.tsx src/test/wave3AdvancementVerification.test.ts src/test/wave4FollowthroughVerification.test.ts src/test/wave5AdvancementVerification.test.ts src/test/wave6AdvancementVerification.test.ts src/test/wave7MultiCloudDeployVerification.test.ts src/test/wave8SkillsAdvancementVerification.test.ts src/utils/wave3DeploymentRegression.test.ts src/utils/wave5DeploymentRegression.test.ts
+        run: pnpm vitest run src/test/stepByStepRedesign.test.tsx backend/freeAiService.test.ts src/test/uxRedesignAndOpenAi.test.tsx src/test/wave3AdvancementVerification.test.ts src/test/wave4FollowthroughVerification.test.ts src/test/wave5AdvancementVerification.test.ts src/test/wave6AdvancementVerification.test.ts src/test/wave7MultiCloudDeployVerification.test.ts src/test/wave8SkillsAdvancementVerification.test.ts src/utils/wave3DeploymentRegression.test.ts src/utils/wave5DeploymentRegression.test.ts
 
       - name: Build production PWA bundle & verify canonical config
         run: pnpm build && pnpm deploy:check
@@ -63,6 +63,9 @@ jobs:
       cancel-in-progress: false
     env:
       FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      FIREBASE_SERVICE_ACCOUNT_PILATES_FLOW_ATELIER: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PILATES_FLOW_ATELIER }}
+      FIREBASE_SERVICE_ACCOUNT_DESKCLOUD_FLEET_AUTH: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DESKCLOUD_FLEET_AUTH }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
       FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
     steps:
       - name: Checkout deployment verification scripts
@@ -95,20 +98,39 @@ jobs:
           }
           trap cleanup EXIT
 
-          if [ -n "${FIREBASE_SERVICE_ACCOUNT:-}" ]; then
+          RESOLVED_SA="${FIREBASE_SERVICE_ACCOUNT:-${FIREBASE_SERVICE_ACCOUNT_PILATES_FLOW_ATELIER:-${FIREBASE_SERVICE_ACCOUNT_DESKCLOUD_FLEET_AUTH:-${GCP_SA_KEY:-}}}}"
+
+          if [ -n "$RESOLVED_SA" ]; then
             GAC_FILE="$(mktemp)"
             chmod 600 "$GAC_FILE"
-            printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$GAC_FILE"
+            RESOLVED_SA="$RESOLVED_SA" GAC_FILE="$GAC_FILE" node --input-type=module -e '
+              import { writeFileSync } from "node:fs";
+              import { parseServiceAccountJsonString } from "./scripts/deploy-universal.mjs";
+              const parsed = parseServiceAccountJsonString(process.env.RESOLVED_SA || "");
+              if (!parsed) {
+                console.error("::error::Configured Firebase service account secret is neither valid JSON nor Base64 service_account JSON.");
+                process.exit(1);
+              }
+              writeFileSync(process.env.GAC_FILE, parsed.normalizedJson, { mode: 0o600 });
+            '
             export GOOGLE_APPLICATION_CREDENTIALS="$GAC_FILE"
             unset FIREBASE_TOKEN
             npx --yes firebase-tools@13.29.1 deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth --non-interactive
           elif [ -n "${FIREBASE_TOKEN:-}" ]; then
             npx --yes firebase-tools@13.29.1 deploy --only hosting:pilates-flow-atelier --project deskcloud-fleet-auth --non-interactive
           else
-            echo "::error::Missing Firebase deployment credentials. Configure FIREBASE_SERVICE_ACCOUNT or FIREBASE_TOKEN in GitHub Actions Secrets."
-            echo "### ❌ Live Firebase Upload Failed (Missing GitHub Secret)" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Missing Firebase deployment credentials. Run 'pnpm deploy:auth' locally or configure FIREBASE_SERVICE_ACCOUNT / FIREBASE_TOKEN in GitHub Actions Secrets."
+            {
+              echo "### ❌ Live Firebase Upload Failed (Missing GitHub Actions Secret)"
+              echo ""
+              echo "로컬 터미널에서 아래 명령 **한 줄**만 실행하면 로컬 \`.env.deploy.local\`과 GitHub Actions 시크릿이 동시에 등록됩니다:"
+              echo "\`\`\`bash"
+              echo "pnpm deploy:auth"
+              echo "\`\`\`"
+              echo "또는 저장소 **Settings → Secrets and variables → Actions**에 \`FIREBASE_SERVICE_ACCOUNT\`(JSON 원문/Base64) 또는 \`FIREBASE_TOKEN\`을 추가해 주세요."
+            } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
 
-          node scripts/deploy-universal.mjs --verify-live
+          node scripts/deploy-universal.mjs --verify-live --wait-cdn
           echo "### ✅ Deployed & Verified on Firebase Hosting (\`https://pilates-flow-atelier.web.app\`)" >> "$GITHUB_STEP_SUMMARY"

@@ -94,9 +94,10 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
     ).toBe(false);
   });
 
-  it('enforces simplified package.json scripts, CI job separation, and canonical DEPLOYMENT.md guide', () => {
+  it('enforces simplified package.json scripts, portable auth setup helpers, CI job separation, and canonical DEPLOYMENT.md guide', () => {
     const workflowYaml = readRepoText('.github/workflows/deploy-production.yml');
     const deploymentDoc = readRepoText('DEPLOYMENT.md');
+    const envExample = readRepoText('.env.deploy.example');
     const pkgJson = JSON.parse(readRepoText('package.json')) as {
       scripts?: Record<string, string>;
     };
@@ -110,15 +111,23 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
     expect(scripts['verify:all']).toContain('pnpm test');
     expect(scripts['build']).toBe('tsc -b && vite build && node scripts/check-pwa-build.mjs');
     expect(scripts['deploy']).toBe('node scripts/deploy-universal.mjs');
+    expect(scripts['deploy:doctor']).toBe('node scripts/deploy-universal.mjs --doctor');
+    expect(scripts['deploy:auth']).toBe('node scripts/setup-deploy-auth.mjs');
+    expect(scripts['deploy:auth:check']).toBe('node scripts/setup-deploy-auth.mjs --status');
     expect(scripts['deploy:check']).toBe('node scripts/deploy-universal.mjs --check-env');
     expect(scripts['deploy:verify']).toBe('node scripts/deploy-universal.mjs --verify-live');
     expect(scripts['deploy:rollback']).toBe('node scripts/deploy-universal.mjs --rollback');
+
+    // Safe local env template exists without raw secrets
+    expect(envExample).toContain('GOOGLE_APPLICATION_CREDENTIALS=');
+    expect(envExample).toContain('FIREBASE_SERVICE_ACCOUNT=');
+    expect(envExample).toContain('FIREBASE_TOKEN=');
 
     // Removed race-prone / sandbox-bypassing scripts
     expect(scripts['deploy:parallel']).toBeUndefined();
     expect(scripts['deploy:bootstrap']).toBeUndefined();
 
-    // Workflow invariants
+    // Workflow invariants + multi-secret support
     expect(workflowYaml).toContain('verify-and-build:');
     expect(workflowYaml).toContain('deploy-hosting:');
     expect(workflowYaml).toContain('needs: verify-and-build');
@@ -126,12 +135,16 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
     expect(workflowYaml).toContain(
       `firebase-tools@${CANONICAL_PRODUCTION_DEPLOY_SPEC.firebaseToolsVersion}`,
     );
+    expect(workflowYaml).toContain('FIREBASE_SERVICE_ACCOUNT_DESKCLOUD_FLEET_AUTH');
+    expect(workflowYaml).toContain('FIREBASE_SERVICE_ACCOUNT_PILATES_FLOW_ATELIER');
     expect(workflowYaml).toContain('trap cleanup EXIT');
     expect(workflowYaml).toContain('exit 1');
     expect(workflowYaml).not.toContain('--token ');
 
-    // Canonical deployment guide documents all 5 lifecycle entry points & guardrails
+    // Canonical deployment guide documents all lifecycle entry points & auth persistence guardrails
     for (const cmd of [
+      'pnpm deploy:doctor',
+      'pnpm deploy:auth',
       'pnpm verify:all',
       'pnpm build',
       'pnpm deploy:check',
