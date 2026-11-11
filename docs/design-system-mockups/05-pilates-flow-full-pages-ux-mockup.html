@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flow Atelier — 전 화면 디자인 시안 및 3종 방향 비교 (05)</title>
+    <style>
+      :root {
+        --bg: #faf8f4;
+        --surface: #ffffff;
+        --subtle: #f3efe8;
+        --line: #e2ddd3;
+        --ink: #1d201c;
+        --muted: #566055;
+        --sage: #1f4d3f;
+        --sage-mid: #355441;
+        --sage-soft: #e6efe9;
+        --gold: #b88a55;
+        --stage-bg: #181b18;
+        --stage-card: #222722;
+        --stage-elev: #2a302a;
+        --stage-ink: #f7f5f0;
+        --stage-mint: #a7c4b2;
+        --motion: 200ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      body.high-contrast {
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --subtle: #eef2f0;
+        --line: #1d201c;
+        --ink: #0b0d0b;
+        --muted: #1f241f;
+        --sage: #0f362a;
+        --stage-bg: #090d16;
+        --stage-card: #111827;
+        --stage-ink: #ffffff;
+        --stage-mint: #facc15;
+      }
+      body.reduced-motion * {
+        transition: none !important;
+        animation: none !important;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
+          'Apple SD Gothic Neo', sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        letter-spacing: -0.015em;
+      }
+      .studio-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px 16px;
+        padding: 12px 20px;
+        background: rgba(250, 248, 244, 0.94);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--line);
+      }
+      .toolbar-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+      }
+      .pill-btn {
+        min-height: 44px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--ink);
+        font-size: 0.86rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all var(--motion);
+      }
+      .pill-btn[aria-pressed='true'],
+      .pill-btn.primary {
+        background: var(--sage);
+        border-color: var(--sage);
+        color: #fff;
+      }
+      .pill-btn:focus-visible {
+        outline: 2px solid var(--sage);
+        outline-offset: 2px;
+      }
+      .viewport-wrap {
+        max-width: 1320px;
+        margin: 22px auto 48px;
+        padding: 0 18px;
+        transition: max-width var(--motion);
+      }
+      body.mobile-390 .viewport-wrap {
+        max-width: 410px;
+      }
+      .app-shell {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 16px 40px rgba(29, 32, 28, 0.07);
+      }
+      body.mobile-390 .app-shell {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        background: var(--surface);
+        border-right: 1px solid var(--line);
+        padding: 20px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      body.mobile-390 .sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        padding: 10px 12px;
+      }
+      .brand {
+        padding: 4px 10px 14px;
+        font-weight: 800;
+        font-size: 1.08rem;
+      }
+      .brand small {
+        display: block;
+        font-size: 0.72rem;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      body.mobile-390 .brand {
+        display: none;
+      }
+      .nav-item {
+        min-height: 44px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        text-align: left;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .nav-item.active {
+        background: var(--sage-soft);
+        color: var(--sage);
+      }
+      .canvas {
+        padding: 24px;
+      }
+      .screen {
+        display: none;
+        animation: fadeSlide var(--motion);
+      }
+      .screen.active {
+        display: block;
+      }
+      @keyframes fadeSlide {
+        from {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .card-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+        gap: 16px;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 20px;
+      }
+      .kicker {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--subtle);
+        color: var(--sage);
+        font-size: 0.76rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      h1, h2, h3 {
+        margin: 0 0 8px;
+      }
+      p.lead {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 0.93rem;
+      }
+      .step-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface);
+        margin-bottom: 10px;
+      }
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      .mini-chip {
+        min-height: 36px;
+        min-width: 44px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--bg);
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .mini-chip.active {
+        background: var(--sage);
+        border-color: var(--sage);
+        color: #fff;
+      }
+      .stage-dark {
+        background: var(--stage-bg);
+        color: var(--stage-ink);
+        border-radius: 20px;
+        padding: 24px;
+      }
+      .stage-card {
+        background: var(--stage-card);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 14px;
+      }
+      .timer-digits {
+        font-size: clamp(3rem, 7vw, 4.6rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin: 8px 0;
+      }
+      .cue-strip {
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: rgba(167, 196, 178, 0.16);
+        border: 1px solid rgba(167, 196, 178, 0.34);
+        margin: 10px 0;
+        font-weight: 600;
+      }
+      .compare-matrix {
+        margin-top: 24px;
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--surface);
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+      }
+      .compare-matrix th,
+      .compare-matrix td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        font-size: 0.88rem;
+      }
+      .compare-matrix th {
+        background: var(--subtle);
+      }
+      /* Concept mode variations */
+      body[data-concept='a'] .workbench-layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 14px;
+      }
+      body.mobile-390[data-concept='a'] .workbench-layout {
+        grid-template-columns: 1fr;
+      }
+      body[data-concept='b'] .concept-a-only,
+      body[data-concept='c'] .concept-a-only {
+        display: none;
+      }
+      body[data-concept='c'] .step-row:not(:first-of-type) {
+        opacity: 0.48;
+      }
+    </style>
+  </head>
+  <body data-concept="b">
+    <header class="studio-toolbar" aria-label="시안 비교 컨트롤">
+      <div class="toolbar-group" role="group" aria-label="시안 방향 선택">
+        <strong>시안 방향:</strong>
+        <button class="pill-btn" data-set-concept="a" aria-pressed="false">
+          시안 A · 좌우 분할 데스크
+        </button>
+        <button class="pill-btn" data-set-concept="b" aria-pressed="true">
+          시안 B · 집중 흐름 + 분할 전환 (선정)
+        </button>
+        <button class="pill-btn" data-set-concept="c" aria-pressed="false">
+          시안 C · 단일 카드 위저드
+        </button>
+      </div>
+      <div class="toolbar-group" role="group" aria-label="화면 크기 및 접근성">
+        <button class="pill-btn" id="toggleMobile" aria-pressed="false">모바일 390px</button>
+        <button class="pill-btn" id="toggleContrast" aria-pressed="false">고대비</button>
+        <button class="pill-btn" id="toggleMotion" aria-pressed="false">모션 감소</button>
+      </div>
+    </header>
+
+    <div class="viewport-wrap">
+      <div class="app-shell">
+        <aside class="sidebar" aria-label="주 내비게이션">
+          <div class="brand">Flow Atelier <small>필라테스 강사 작업실</small></div>
+          <button class="nav-item active" data-screen="home">1. 홈 · 시작하기</button>
+          <button class="nav-item" data-screen="finder">2. 동작 검색·담기</button>
+          <button class="nav-item" data-screen="arrange">3. 순서·시간·AI 검토</button>
+          <button class="nav-item" data-screen="stage">4. 수업 진행 스테이지</button>
+          <button class="nav-item" data-screen="binder">5. 저장한 수업 보관함</button>
+          <button class="nav-item" data-screen="library">6. 동작 라이브러리·일정</button>
+        </aside>
+
+        <main class="canvas">
+          <!-- Screen 1: Home -->
+          <section class="screen active" id="screen-home">
+            <span class="kicker">시작 화면 · 설명서 없이 바로 시작</span>
+            <h2>오늘 어떤 수업을 준비할까요?</h2>
+            <p class="lead">자주 쓰는 두 가지 행동만 앞에 두고, 고급 도구는 맥락에 맞게 접어 두었습니다.</p>
+            <div class="card-grid-2">
+              <div class="card">
+                <span class="kicker">새 수업 만들기</span>
+                <h3>동작을 골라 나만의 흐름으로</h3>
+                <div class="chip-row" style="margin: 12px 0">
+                  <button class="mini-chip">30분</button>
+                  <button class="mini-chip active">50분</button>
+                  <button class="mini-chip">60분</button>
+                  <button class="mini-chip active">리포머</button>
+                  <button class="mini-chip">매트</button>
+                  <button class="mini-chip">체어</button>
+                </div>
+                <div class="chip-row" style="margin-top: 14px">
+                  <button class="pill-btn primary" data-go="finder">동작 담으러 가기 →</button>
+                  <button class="pill-btn" data-go="arrange">AI·조건으로 초안 채우기</button>
+                </div>
+              </div>
+              <div class="card">
+                <span class="kicker">최근 수업 이어가기</span>
+                <h3>저장한 흐름 바로 열기</h3>
+                <div class="step-row" style="margin-top: 12px">
+                  <div>
+                    <strong>오전 리포머 코어 50분</strong>
+                    <div style="font-size: 0.82rem; color: var(--muted)">8개 동작 · 50분 · 리포머</div>
+                  </div>
+                  <div class="chip-row">
+                    <button class="mini-chip" data-go="arrange">이어서 편집</button>
+                    <button class="mini-chip" data-go="arrange">사본 열기</button>
+                    <button class="mini-chip active" data-go="stage">바로 진행</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Screen 2: Finder -->
+          <section class="screen" id="screen-finder">
+            <span class="kicker">2 / 4 단계 · 리포머 자동 적용됨</span>
+            <h2>수업에 넣을 동작만 가볍게 담아 보세요</h2>
+            <p class="lead">선택한 기구 기준으로 바로 좁혀 두었으며, 상단 트레이에서 담은 순서를 즉시 확인합니다.</p>
+            <div class="card" style="background: var(--subtle); margin-bottom: 14px">
+              <strong style="font-size: 0.86rem; color: var(--sage)">담은 순서 (3)</strong>
+              <div class="chip-row" style="margin-top: 8px">
+                <span class="mini-chip">01 풋워크 ×</span>
+                <span class="mini-chip">02 헌드레드 ×</span>
+                <span class="mini-chip">03 롱 스트레치 ×</span>
+              </div>
+            </div>
+            <div class="card-grid-2">
+              <div class="card">
+                <strong>풋워크 (Footwork)</strong>
+                <p class="lead" style="margin: 6px 0 12px">리포머 · 워밍업 · 5분 · 1 Red 1 Blue</p>
+                <button class="pill-btn primary">+ 순서에 담기</button>
+              </div>
+              <div class="card">
+                <strong>피트 인 스트랩 (Feet in Straps)</strong>
+                <p class="lead" style="margin: 6px 0 12px">리포머 · 하체·고관절 · 5분 · 2 Red</p>
+                <button class="pill-btn primary">+ 순서에 담기</button>
+              </div>
+            </div>
+            <div style="margin-top: 16px; display: flex; justify-content: flex-end">
+              <button class="pill-btn primary" data-go="arrange">다음: 순서·시간 다듬기 (3개 · 14:00) →</button>
+            </div>
+          </section>
+
+          <!-- Screen 3: Arrange + AI Review -->
+          <section class="screen" id="screen-arrange">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px">
+              <div>
+                <span class="kicker">3 / 4 단계 · 순서·시간·반복 편집</span>
+                <h2>오전 리포머 코어 50분</h2>
+              </div>
+              <div class="chip-row">
+                <span class="kicker" id="saveBadge" style="margin: 0">저장됨</span>
+                <button class="pill-btn" id="mockSaveBtn">저장</button>
+                <button class="pill-btn primary" data-go="stage">바로 진행</button>
+              </div>
+            </div>
+            <div class="workbench-layout">
+              <div class="card concept-a-only">
+                <strong>동작 빠른 담기 (좌우 분할)</strong>
+                <p class="lead">검색 즉시 오른쪽 시퀀스에 추가됩니다.</p>
+              </div>
+              <div>
+                <div class="step-row">
+                  <div>
+                    <strong>01 풋워크</strong>
+                    <div style="font-size: 0.82rem; color: var(--muted)">리포머 · 1R 1B · 워밍업</div>
+                  </div>
+                  <div class="chip-row">
+                    <button class="mini-chip">-0.5분</button>
+                    <strong>05:00</strong>
+                    <button class="mini-chip">+0.5분</button>
+                    <button class="mini-chip">8회</button>
+                    <button class="mini-chip active">10회</button>
+                    <button class="mini-chip">12회</button>
+                  </div>
+                </div>
+                <div class="step-row">
+                  <div>
+                    <strong>02 헌드레드</strong>
+                    <div style="font-size: 0.82rem; color: var(--muted)">리포머 · 1R 1B · 코어</div>
+                  </div>
+                  <div class="chip-row">
+                    <button class="mini-chip">-0.5분</button>
+                    <strong>04:00</strong>
+                    <button class="mini-chip">+0.5분</button>
+                    <button class="mini-chip">8회</button>
+                    <button class="mini-chip active">10회</button>
+                    <button class="mini-chip">12회</button>
+                  </div>
+                </div>
+                <div class="card" style="margin-top: 14px; background: var(--subtle)">
+                  <span class="kicker">AI 추천 초안 검토·수정 (선택 반영)</span>
+                  <p class="lead" style="margin-bottom: 10px">강사가 포함할 동작과 시간을 직접 조정한 뒤 반영합니다 · 개인 키 우선 · 미설정 시 로컬 추천</p>
+                  <div class="step-row">
+                    <label style="display: flex; align-items: center; gap: 8px; font-weight: 700">
+                      <input type="checkbox" checked /> 롱 박스 스완 (4분 · 상체 신전)
+                    </label>
+                    <div class="chip-row">
+                      <button class="mini-chip">-0.5분</button>
+                      <button class="mini-chip">+0.5분</button>
+                    </div>
+                  </div>
+                  <button class="pill-btn primary">선택한 추천 단계 수업에 적용</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Screen 4: Live Stage -->
+          <section class="screen" id="screen-stage">
+            <div class="stage-dark">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+                <span style="color: var(--stage-mint); font-weight: 700">LIVE STAGE · 02 / 05</span>
+                <span style="font-size: 0.85rem">남은 수업 38:20</span>
+              </div>
+              <div class="stage-card">
+                <div style="font-size: 1.3rem; font-weight: 800">02 헌드레드 (Hundred) · 1 Red 1 Blue</div>
+                <div class="timer-digits" id="mockTimer">03:40</div>
+                <div class="cue-strip">
+                  <strong>핵심 큐</strong> · 내쉬며 하복부를 납작하게 연결 · 목·어깨 긴장 내려놓기
+                </div>
+                <div class="chip-row" style="margin-top: 12px">
+                  <button class="pill-btn">← 이전</button>
+                  <button class="pill-btn primary">일시정지</button>
+                  <button class="pill-btn">다음 →</button>
+                  <button class="pill-btn" id="trim30Btn">-30초</button>
+                  <button class="pill-btn" id="add60Btn">+1분</button>
+                  <button class="pill-btn">되돌리기</button>
+                </div>
+              </div>
+              <div class="stage-card" style="margin-bottom: 0">
+                <strong>다음 순서 · 03 롱 스트레치 (1 Red · 1 Blue)</strong>
+                <div style="margin-top: 10px; font-size: 0.86rem; opacity: 0.9">
+                  오늘의 흐름 빠른 순서 조정: [03 롱 스트레치 ↑ ↓] · [04 피트 인 스트랩 ↑ ↓]
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Screen 5: Binder -->
+          <section class="screen" id="screen-binder">
+            <span class="kicker">저장한 수업 보관함</span>
+            <h2>마음에 드는 흐름을 복제하거나 바로 진행하세요</h2>
+            <p class="lead">자주 쓰는 재사용 행동(이어서 편집 · 사본 열기 · 바로 진행)을 카드 전면에 통일했습니다.</p>
+            <div class="step-row">
+              <div>
+                <strong>리포머 기초 척추 분절 50분</strong>
+                <div style="font-size: 0.82rem; color: var(--muted)">리포머 · 초중급 · 9개 동작 · 최근 진행 2회</div>
+              </div>
+              <div class="chip-row">
+                <button class="pill-btn" data-go="arrange">이어서 편집</button>
+                <button class="pill-btn" data-go="arrange">사본 열기</button>
+                <button class="pill-btn primary" data-go="stage">바로 진행</button>
+              </div>
+            </div>
+            <div class="step-row">
+              <div>
+                <strong>체어 하체 밸런스 집중 50분</strong>
+                <div style="font-size: 0.82rem; color: var(--muted)">체어 · 중급 · 8개 동작</div>
+              </div>
+              <div class="chip-row">
+                <button class="pill-btn" data-go="arrange">이어서 편집</button>
+                <button class="pill-btn" data-go="arrange">사본 열기</button>
+                <button class="pill-btn primary" data-go="stage">바로 진행</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Screen 6: Library & Schedule -->
+          <section class="screen" id="screen-library">
+            <span class="kicker">동작 라이브러리 (98종) · 강사 일정 연동</span>
+            <h2>기구별로 좁히고 현재 수업에 바로 담기</h2>
+            <p class="lead">어느 화면에서 동작을 담아도 현재 수업에 담긴 개수와 ‘순서 다듬기’ 바로가기가 함께 보입니다.</p>
+            <div class="chip-row" style="margin-bottom: 14px">
+              <button class="mini-chip active">전체 98</button>
+              <button class="mini-chip">리포머</button>
+              <button class="mini-chip">매트</button>
+              <button class="mini-chip">체어</button>
+              <button class="mini-chip">캐딜락</button>
+              <button class="mini-chip">바렐</button>
+            </div>
+            <div class="card" style="background: var(--sage-soft); border-color: var(--sage); margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px">
+              <strong style="color: var(--sage)">현재 수업에 3개 동작 담김 (오전 리포머 코어 50분)</strong>
+              <button class="pill-btn primary" data-go="arrange">수업 순서·시간 다듬기 →</button>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <table class="compare-matrix" aria-label="3종 디자인 시안 평가표">
+        <thead>
+          <tr>
+            <th>평가 기준</th>
+            <th>시안 A (좌우 분할 데스크)</th>
+            <th>시안 B (집중 흐름 + 분할 전환 · 선정)</th>
+            <th>시안 C (단일 카드 위저드)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>첫 사용자 이해도</strong></td>
+            <td>보통 (검색·편집·도구가 한 번에 노출됨)</td>
+            <td><strong>매우 높음 (단계당 핵심 행동 1~2개 집중)</strong></td>
+            <td>높음 (단순하지만 전체 시간 파악이 느림)</td>
+          </tr>
+          <tr>
+            <td><strong>정보 밀도·모바일(390px)</strong></td>
+            <td>모바일에서 좌우 패널이 세로로 길어짐</td>
+            <td><strong>여백 유지 + 필요 시 좌우 분할 즉시 전환</strong></td>
+            <td>동작 10개 이상 편집 시 왕복 탭 과다</td>
+          </tr>
+          <tr>
+            <td><strong>접근성·터치·모션 감소</strong></td>
+            <td>좁은 폭에서 버튼 간격 조밀</td>
+            <td><strong>44px 터치 영역 · 키보드 이동 · 정적 폴백 완비</strong></td>
+            <td>양호하나 대화면 활용도 낮음</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+      const navBtns = document.querySelectorAll('[data-screen]');
+      const screens = document.querySelectorAll('.screen');
+      function showScreen(id) {
+        navBtns.forEach((b) => b.classList.toggle('active', b.dataset.screen === id));
+        screens.forEach((s) => s.classList.toggle('active', s.id === 'screen-' + id));
+      }
+      navBtns.forEach((b) => b.addEventListener('click', () => showScreen(b.dataset.screen)));
+      document.querySelectorAll('[data-go]').forEach((b) =>
+        b.addEventListener('click', () => showScreen(b.dataset.go)),
+      );
+      document.querySelectorAll('[data-set-concept]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.body.dataset.concept = btn.dataset.setConcept;
+          document.querySelectorAll('[data-set-concept]').forEach((other) =>
+            other.setAttribute('aria-pressed', String(other === btn)),
+          );
+        });
+      });
+      const toggleBtn = (id, cls) => {
+        const el = document.getElementById(id);
+        el.addEventListener('click', () => {
+          const on = document.body.classList.toggle(cls);
+          el.setAttribute('aria-pressed', String(on));
+        });
+      };
+      toggleBtn('toggleMobile', 'mobile-390');
+      toggleBtn('toggleContrast', 'high-contrast');
+      toggleBtn('toggleMotion', 'reduced-motion');
+      let sec = 220;
+      const renderTimer = () => {
+        const m = String(Math.floor(sec / 60)).padStart(2, '0');
+        const s = String(sec % 60).padStart(2, '0');
+        document.getElementById('mockTimer').textContent = m + ':' + s;
+      };
+      document.getElementById('trim30Btn').addEventListener('click', () => {
+        sec = Math.max(30, sec - 30);
+        renderTimer();
+      });
+      document.getElementById('add60Btn').addEventListener('click', () => {
+        sec += 60;
+        renderTimer();
+      });
+      document.getElementById('mockSaveBtn').addEventListener('click', () => {
+        const badge = document.getElementById('saveBadge');
+        badge.textContent = '방금 저장됨 ✓';
+      });
+    </script>
+  </body>
+</html>

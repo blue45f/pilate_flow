@@ -10,6 +10,7 @@
 | [`02-studio-kinematic-motion-atlas.html`](./02-studio-kinematic-motion-atlas.html) | **고품질 5단계 스튜디오 기구학 모션 아틀라스** — 리포머·매트·캐딜락·체어·바렐 5대 기구 대표 동작의 연속 호(Arc) 보간, 폐쇄사슬 2관절 IK, 척추 순차 분절, 스튜디오 복장 인체 실루엣 및 화이트오크 기구 도해 시연 | `src/components/MovementPhaseDiagramSvg.tsx`, `src/components/KinematicSchematicShowcase.tsx`, `src/data/catalogMotionAssets/index.ts`, `src/components/CatalogMotionInteractivePlayer.tsx` |
 | [`03-design-tokens.json`](./03-design-tokens.json) | **공통 디자인 토큰 & 모션 규격 정본** — 라이트 에디토리얼 셸, 다크 티칭 스테이지, 스프링 컬러 칩, 인체·기구 일러스트 팔레트, 터치 영역(`44px`), UI 전환 모션(`150ms`/`220ms`/`260ms`), C2 연속 보간 명세 | `src/styles/atelier-luxury-v2.css`, `src/components/SequenceWorkbench.usability.css` |
 | [`04-ux-elevation-3-concepts-comparison.html`](./04-ux-elevation-3-concepts-comparison.html) | **핵심 화면 3종 시안 비교 프로토타입** — 시안 A(원스크린 분할 데스크) vs **시안 B(차분한 집중 흐름 + 분할 전환 · 최종 선정)** vs 시안 C(카드 스택 위저드), 데스크톱/모바일(`390px`), 고대비, 모션 감소 실시간 비교 | `src/components/SequenceWorkbench.tsx`, `src/components/InlineExerciseFinder.tsx`, `src/components/LiveStageView.tsx` |
+| [`05-pilates-flow-full-pages-ux-mockup.html`](./05-pilates-flow-full-pages-ux-mockup.html) | **전 화면(6개 페이지) 통합 인터랙티브 디자인 시안** — ① 홈·새 수업 ② 동작 검색·담기 ③ 순서·시간·반복·AI 초안 검토/수정 ④ 수업 진행 다크 스테이지 ⑤ 저장한 수업 보관함 ⑥ 98종 동작 라이브러리·강사 일정 통합 시안 | `src/App.tsx`, `src/components/FreeAiAssistantPanel.tsx`, `src/components/ClassBinderView.tsx`, `src/components/ExerciseAtlasView.tsx` |
 
 ## 2. 핵심 UX 설계 원칙 ("1 페이지 = 1 질문 = 1 명확한 다음 행동")
 
