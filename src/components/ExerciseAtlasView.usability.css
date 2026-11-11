@@ -603,6 +603,20 @@
   }
 }
 
+.motion-library .atlas-active-sequence-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: #e6efe9;
+  border: 1px solid #bfd3c6;
+  color: #1f4d3f;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .motion-library .atlas-compare-toggle,
   .motion-library .atlas-compare-expand-btn,
@@ -610,7 +624,8 @@
   .motion-library .atlas-compare-art-btn,
   .motion-library .atlas-compare-inspect-btn,
   .motion-library .atlas-compare-add-btn,
-  .motion-library .atlas-selection-step-chip {
+  .motion-library .atlas-selection-step-chip,
+  .motion-library .atlas-active-sequence-bar {
     transition: none !important;
   }
 }

@@ -165,9 +165,61 @@
     color 150ms ease;
 }
 
+.free-ai-step-check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.free-ai-step-check {
+  width: 18px;
+  height: 18px;
+  accent-color: #1f4d3f;
+  cursor: pointer;
+}
+
+.free-ai-step-row.is-excluded {
+  opacity: 0.56;
+}
+
+.free-ai-duration-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.free-ai-duration-chip {
+  min-height: 36px;
+  min-width: 44px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid #d5d0c3;
+  background: #faf8f4;
+  color: #1f4d3f;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.free-ai-apply-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.free-ai-selected-summary {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #1f4d3f;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .free-ai-tab-btn,
-  .free-ai-chip {
+  .free-ai-chip,
+  .free-ai-duration-chip {
     transition: none !important;
   }
 }

@@ -982,6 +982,48 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   }
 }
 
+html #root .vnext-shell .pf-sidebar-quick-stage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--pf-atelier-line);
+  background: var(--pf-atelier-cream);
+  color: var(--pf-atelier-ink);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    background-color var(--pf-motion-fast) ease,
+    border-color var(--pf-motion-fast) ease;
+}
+
+html #root .vnext-shell .pf-sidebar-quick-stage.is-ready {
+  background: var(--pf-atelier-sage-tint);
+  border-color: #bfd3c6;
+  color: var(--pf-atelier-sage-deep);
+}
+
+html #root .vnext-shell .pf-sidebar-quick-stage small {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.86;
+}
+
+html #root .vnext-shell .teaching-saved-quick-stage {
+  min-height: 44px;
+  border-color: #bfd3c6;
+  background: var(--pf-atelier-sage-tint);
+  color: var(--pf-atelier-sage-deep);
+  font-weight: 700;
+}
+
 html #root .vnext-shell .pf-step-stage-frame {
   transition:
     border-color var(--pf-motion-normal) var(--pf-ease-studio),
@@ -991,6 +1033,7 @@ html #root .vnext-shell .pf-step-stage-frame {
 @media (prefers-reduced-motion: reduce) {
   .pf-quickstart-card,
   .pf-studio-spot-btn,
+  html #root .vnext-shell .pf-sidebar-quick-stage,
   html #root .vnext-shell .pf-step-stage-frame {
     transition: none !important;
     animation: none !important;

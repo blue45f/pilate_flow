@@ -10,6 +10,7 @@ import {
   Leaf,
   Library,
   Menu,
+  Play,
   Settings2,
   Sparkles,
   Ticket,
@@ -414,7 +415,7 @@ export function App() {
           </>
         ) : (
           <>
-            <p className="sidebar-label">MY STUDIO</p>
+            <p className="sidebar-label">필라테스 작업실</p>
             <nav className="desktop-nav" aria-label="주 메뉴">
               {navigation.map(({ id, detail, icon: Icon }) => (
                 <button
@@ -429,6 +430,19 @@ export function App() {
                 </button>
               ))}
             </nav>
+            <button
+              type="button"
+              className={`pf-sidebar-quick-stage ${
+                state.activeTab === 'stage' ? 'is-active' : ''
+              } ${canStartLiveStage ? 'is-ready' : ''}`.trim()}
+              data-testid="sidebar-quick-stage-btn"
+              aria-current={state.activeTab === 'stage' ? 'page' : undefined}
+              onClick={() => changeTab(canStartLiveStage ? 'stage' : 'workbench')}
+            >
+              <Play size={17} aria-hidden="true" />
+              <span>수업 진행</span>
+              <small>{canStartLiveStage ? `${nonRestStepCount}개 준비됨` : '동작 담기'}</small>
+            </button>
             <section className="v2-sidebar-upcoming" aria-label="다가오는 수업">
               <h2>다가오는 수업</h2>
               {upcoming.length ? (

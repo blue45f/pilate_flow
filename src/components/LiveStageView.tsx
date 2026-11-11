@@ -1311,7 +1311,16 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             <ArrowLeft size={16} />
             계획으로
           </button>
-          <span className="eyebrow">수업 진행</span>
+          <div className="teaching-stage-kicker-row">
+            <span className="eyebrow">수업 진행</span>
+            <span
+              className={`teaching-live-pill ${clock.running ? 'is-live' : ''}`.trim()}
+              data-testid="live-stage-status-pill"
+            >
+              <i aria-hidden="true" />
+              {clock.running ? 'LIVE 진행 중' : isPausedMidStep ? '일시정지' : '진행 대기'}
+            </span>
+          </div>
           <h1 id="workspace-main-heading" tabIndex={-1}>
             {session.title}
           </h1>
@@ -2116,6 +2125,13 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                           ? '휴식'
                           : (exerciseMap.get(step.exerciseId)?.nameKo ?? '삭제된 동작')}
                       </strong>
+                      {isTaughtStep && (
+                        <Check
+                          size={14}
+                          className="teaching-outline-done-icon"
+                          aria-hidden="true"
+                        />
+                      )}
                       <small>
                         {formatSecondsToMMSS(
                           getStepTiming(step, exerciseMap.get(step.exerciseId)).totalSec,

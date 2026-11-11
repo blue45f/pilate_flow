@@ -220,6 +220,15 @@ export function FreeAiAssistantPanel({
     typeof savedDraft?.newPresetName === 'string' ? savedDraft.newPresetName : '',
   );
   const [classDraftResult, setClassDraftResult] = useState<EditableClassDraftResult | null>(null);
+  const [excludedStepIds, setExcludedStepIds] = useState<Set<string>>(() => new Set());
+  const toggleStepIncluded = (stepId: string) => {
+    setExcludedStepIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(stepId)) next.delete(stepId);
+      else next.add(stepId);
+      return next;
+    });
+  };
 
   // Tab 2: Movement Idea state
   const [rawIdeaText, setRawIdeaText] = useState<string>(() =>
@@ -800,12 +809,27 @@ export function FreeAiAssistantPanel({
     }
     return (
       <ol className="free-ai-step-list" aria-label="편집 가능한 시퀀스 단계">
-        {steps.map((step, index) => (
-          <li key={step.stepId} className="free-ai-step-row">
+        {steps.map((step, index) => {
+          const isIncluded = !excludedStepIds.has(step.stepId);
+          return (
+          <li
+            key={step.stepId}
+            className={`free-ai-step-row ${isIncluded ? '' : 'is-excluded'}`.trim()}
+          >
             <div>
-              <strong>
-                {index + 1}. {step.nameKo}
-              </strong>{' '}
+              <label className="free-ai-step-check-label">
+                <input
+                  type="checkbox"
+                  className="free-ai-step-check"
+                  data-testid="free-ai-step-include-checkbox"
+                  checked={isIncluded}
+                  aria-label={`${step.nameKo} 수업 반영 포함`}
+                  onChange={() => toggleStepIncluded(step.stepId)}
+                />
+                <strong>
+                  {index + 1}. {step.nameKo}
+                </strong>
+              </label>{' '}
               <small>({step.blockCategory})</small>
               <div className="free-ai-field" style={{ marginTop: '0.35rem' }}>
                 <label htmlFor={`note-${step.stepId}`} className="free-ai-field-label">
@@ -821,18 +845,46 @@ export function FreeAiAssistantPanel({
             </div>
             <div className="free-ai-field">
               <label htmlFor={`dur-${step.stepId}`}>시간(분)</label>
-              <input
-                id={`dur-${step.stepId}`}
-                type="number"
-                min={0.5}
-                max={60}
-                step={0.5}
-                aria-label={`${step.nameKo} 시간(분)`}
-                value={step.durationMin}
-                onChange={(e) =>
-                  onUpdateStep(step.stepId, { durationMin: Number(e.target.value) || 1 })
-                }
-              />
+              <div className="free-ai-duration-inline">
+                <button
+                  type="button"
+                  className="free-ai-duration-chip"
+                  aria-label={`${step.nameKo} 30초 줄이기`}
+                  disabled={step.durationMin <= 0.5}
+                  onClick={() =>
+                    onUpdateStep(step.stepId, {
+                      durationMin: Math.max(0.5, Number((step.durationMin - 0.5).toFixed(1))),
+                    })
+                  }
+                >
+                  -0.5분
+                </button>
+                <input
+                  id={`dur-${step.stepId}`}
+                  type="number"
+                  min={0.5}
+                  max={60}
+                  step={0.5}
+                  aria-label={`${step.nameKo} 시간(분)`}
+                  value={step.durationMin}
+                  onChange={(e) =>
+                    onUpdateStep(step.stepId, { durationMin: Number(e.target.value) || 1 })
+                  }
+                />
+                <button
+                  type="button"
+                  className="free-ai-duration-chip"
+                  aria-label={`${step.nameKo} 30초 늘리기`}
+                  disabled={step.durationMin >= 60}
+                  onClick={() =>
+                    onUpdateStep(step.stepId, {
+                      durationMin: Math.min(60, Number((step.durationMin + 0.5).toFixed(1))),
+                    })
+                  }
+                >
+                  +0.5분
+                </button>
+              </div>
             </div>
             <div className="free-ai-field">
               <label htmlFor={`layer-${step.stepId}`}>난이도 레이어</label>
@@ -882,7 +934,8 @@ export function FreeAiAssistantPanel({
               </button>
             </div>
           </li>
-        ))}
+          );
+        })}
       </ol>
     );
   };
@@ -1318,27 +1371,44 @@ export function FreeAiAssistantPanel({
 
               <div className="free-ai-disclaimer">{classDraftResult.safetyDisclaimer}</div>
 
-              <div className="free-ai-actions">
-                <button
-                  type="button"
-                  className="free-ai-btn-primary"
-                  disabled={classDraftResult.steps.length === 0}
-                  onClick={() => {
-                    onApplyDraftSequence?.({
-                      title: classDraftResult.title,
-                      subtitle: classDraftResult.subtitle,
-                      targetMinutes: classDraftResult.targetMinutes,
-                      level: classDraftResult.level,
-                      apparatus: classDraftResult.apparatus,
-                      steps: editableStepsToSequenceSteps(classDraftResult.steps),
-                    });
-                    setAppliedToPlan(true);
-                    setActionFeedback('편집한 수업 초안을 현재 워크벤치에 반영했습니다.');
-                  }}
-                >
-                  워크벤치 수업안에 반영
-                </button>
-              </div>
+              {(() => {
+                const selectedDraftSteps = classDraftResult.steps.filter(
+                  (st) => !excludedStepIds.has(st.stepId),
+                );
+                const selectedTotalMin = Number(
+                  selectedDraftSteps.reduce((sum, st) => sum + st.durationMin, 0).toFixed(1),
+                );
+                return (
+                  <div className="free-ai-actions free-ai-apply-bar">
+                    <span
+                      className="free-ai-selected-summary"
+                      data-testid="free-ai-selected-summary"
+                    >
+                      선택 {selectedDraftSteps.length} / {classDraftResult.steps.length}개 단계 · 총{' '}
+                      {selectedTotalMin}분 반영 예정
+                    </span>
+                    <button
+                      type="button"
+                      className="free-ai-btn-primary"
+                      disabled={selectedDraftSteps.length === 0}
+                      onClick={() => {
+                        onApplyDraftSequence?.({
+                          title: classDraftResult.title,
+                          subtitle: classDraftResult.subtitle,
+                          targetMinutes: classDraftResult.targetMinutes,
+                          level: classDraftResult.level,
+                          apparatus: classDraftResult.apparatus,
+                          steps: editableStepsToSequenceSteps(selectedDraftSteps),
+                        });
+                        setAppliedToPlan(true);
+                        setActionFeedback('편집한 수업 초안을 현재 워크벤치에 반영했습니다.');
+                      }}
+                    >
+                      워크벤치 수업안에 반영
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
@@ -1867,27 +1937,44 @@ export function FreeAiAssistantPanel({
 
               <div className="free-ai-disclaimer">{composeResult.safetyDisclaimer}</div>
 
-              <div className="free-ai-actions">
-                <button
-                  type="button"
-                  className="free-ai-btn-primary"
-                  disabled={composeResult.steps.length === 0}
-                  onClick={() => {
-                    onApplyDraftSequence?.({
-                      title: composeResult.title,
-                      subtitle: composeResult.subtitle,
-                      targetMinutes: composeResult.targetMinutes,
-                      level: composeResult.level,
-                      apparatus: composeResult.apparatus,
-                      steps: editableStepsToSequenceSteps(composeResult.steps),
-                    });
-                    setAppliedToPlan(true);
-                    setActionFeedback('구성한 시퀀스를 현재 워크벤치에 반영했습니다.');
-                  }}
-                >
-                  워크벤치 수업안에 반영
-                </button>
-              </div>
+              {(() => {
+                const selectedComposeSteps = composeResult.steps.filter(
+                  (st) => !excludedStepIds.has(st.stepId),
+                );
+                const selectedTotalMin = Number(
+                  selectedComposeSteps.reduce((sum, st) => sum + st.durationMin, 0).toFixed(1),
+                );
+                return (
+                  <div className="free-ai-actions free-ai-apply-bar">
+                    <span
+                      className="free-ai-selected-summary"
+                      data-testid="free-ai-selected-summary"
+                    >
+                      선택 {selectedComposeSteps.length} / {composeResult.steps.length}개 단계 · 총{' '}
+                      {selectedTotalMin}분 반영 예정
+                    </span>
+                    <button
+                      type="button"
+                      className="free-ai-btn-primary"
+                      disabled={selectedComposeSteps.length === 0}
+                      onClick={() => {
+                        onApplyDraftSequence?.({
+                          title: composeResult.title,
+                          subtitle: composeResult.subtitle,
+                          targetMinutes: composeResult.targetMinutes,
+                          level: composeResult.level,
+                          apparatus: composeResult.apparatus,
+                          steps: editableStepsToSequenceSteps(selectedComposeSteps),
+                        });
+                        setAppliedToPlan(true);
+                        setActionFeedback('구성한 시퀀스를 현재 워크벤치에 반영했습니다.');
+                      }}
+                    >
+                      워크벤치 수업안에 반영
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>

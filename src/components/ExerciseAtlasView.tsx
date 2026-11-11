@@ -1233,11 +1233,11 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     <div className="movement-library motion-library" data-filters-expanded={showFilters}>
       <header className="library-heading">
         <div>
-          <span className="eyebrow">MOVEMENT LIBRARY</span>
+          <span className="eyebrow">동작 사전 · {exercises.length}종</span>
           <h1 id="workspace-main-heading" tabIndex={-1}>
             동작 라이브러리
           </h1>
-          <p className="muted">수업에 활용할 동작을 탐색하고, 수업안에 추가하세요.</p>
+          <p className="muted">기구·부위별로 동작을 찾고 현재 수업에 바로 담아 보세요.</p>
         </div>
         <div className="library-heading-actions">
           {onOpenIdeaSheet && (
@@ -1351,6 +1351,21 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         </div>
       ) : (
         <div id="library-notes-panel" role="tabpanel" aria-labelledby="library-notes-tab">
+          {activeSteps.filter((st) => !isRestStep(st)).length > 0 && (
+            <div
+              className="atlas-active-sequence-bar"
+              data-testid="atlas-active-sequence-bar"
+              role="region"
+              aria-label="현재 수업 담김 요약"
+            >
+              <strong>
+                현재 수업에 {activeSteps.filter((st) => !isRestStep(st)).length}개 동작 담김
+              </strong>
+              <PfButton variant="primary" onClick={() => setActiveTab('workbench')}>
+                수업 순서·시간 다듬기
+              </PfButton>
+            </div>
+          )}
           <div
             className="atlas-flow-step-bar"
             data-testid="atlas-flow-step-bar"
