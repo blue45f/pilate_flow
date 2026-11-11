@@ -410,12 +410,14 @@ export function prepareAuthExecutionEnv(auth) {
 
 export function inspectGitState(rootDir = ROOT, env = process.env) {
   try {
-    const branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+    const rawBranch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
       cwd: rootDir,
       env,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
     }).trim();
+    const branch =
+      rawBranch === 'HEAD' && env.GITHUB_REF_NAME ? String(env.GITHUB_REF_NAME).trim() : rawBranch;
     const headCommit = execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
       cwd: rootDir,
       env,
@@ -651,9 +653,32 @@ async function runSingleLiveVerificationPass({
   requireLocalMatch,
 }) {
   const ts = Date.now();
-  const indexRes = await fetchImpl(`${liveOrigin}/index.html?ts=${ts}`, {
-    headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-  });
+  let indexRes;
+  try {
+    indexRes = await fetchImpl(`${liveOrigin}/index.html?ts=${ts}`, {
+      headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      verified: false,
+      networkReachable: false,
+      liveOrigin,
+      httpStatus: null,
+      lastModified: null,
+      liveEntryJs: null,
+      localDistEntryJs: localEntryJs,
+      bundleMatchesLocalDist: false,
+      cssMatchesLocalDist: false,
+      entryScriptLive: false,
+      serviceWorkerMatchesEntry: false,
+      v2Studio3dAssetsLive: false,
+      v2AssetChecks: [],
+      failureReasons: [
+        `outbound HTTP blocked in current shell sandbox (${msg}) — trigger GitHub Actions via @git push to origin/main or run pnpm deploy:verify in a host terminal`,
+      ],
+    };
+  }
   const indexContentType = indexRes.headers.get('content-type') || '';
   const liveHtml = indexRes.ok ? await indexRes.text() : '';
   const liveEntryJs = extractEntryScriptAsset(liveHtml);
