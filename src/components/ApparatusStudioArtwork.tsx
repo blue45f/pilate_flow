@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import type { ApparatusType, BodyPosition } from '../types/pilates';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 
@@ -72,6 +72,8 @@ export function ApparatusIllustrationSvg({
   apparatus: ApparatusType | string;
   compact?: boolean;
 }): React.JSX.Element {
+  const rawUid = useId().replace(/:/g, '');
+  const bgGradId = `pf-app-bg-grad-${rawUid}`;
   const apparatus = normalizeApparatusType(rawApparatus);
   const palette = APPARATUS_PALETTE[apparatus] ?? APPARATUS_PALETTE.mat;
   return (
@@ -87,17 +89,24 @@ export function ApparatusIllustrationSvg({
         borderRadius: compact ? '6px' : '10px',
       }}
     >
+      <defs>
+        <linearGradient id={bgGradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FCFBF7" />
+          <stop offset="100%" stopColor={palette.bg} />
+        </linearGradient>
+      </defs>
       <rect
         x="0.5"
         y="0.5"
         width="119"
         height="71"
         rx="8"
-        fill={palette.bg}
+        fill={`url(#${bgGradId})`}
         stroke={palette.border}
       />
-      {/* Warm oak studio floor line */}
-      <line x1="8" y1="58" x2="112" y2="58" stroke="#D9CEBE" strokeWidth="1.5" />
+      {/* Warm oak studio floor line & soft ambient shadow */}
+      <ellipse cx="60" cy="59" rx="46" ry="2.2" fill="rgba(28, 49, 41, 0.08)" />
+      <line x1="8" y1="58" x2="112" y2="58" stroke="#D5C8B5" strokeWidth="1.5" />
 
       {apparatus === 'mat' && (
         <g>

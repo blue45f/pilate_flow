@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { Check, Eye, Link2, Link2Off, RotateCcw, X } from 'lucide-react';
 import { getMotionPatternReferences } from '../data/motionPatternReferences';
@@ -111,8 +111,10 @@ export function StepMotionStudyPicker({
             ? '동작과의 연결 근거 확인 필요'
             : '연결하지 않음';
 
-  const closePreviewAndRestoreFocus = useCallback(() => {
-    const activePreviewKey = previewed ? getReferenceKey(previewed) : undefined;
+  const activePreviewKey = previewed ? getReferenceKey(previewed) : undefined;
+  const matchedSelectedKey = matchedSelected ? getReferenceKey(matchedSelected) : undefined;
+
+  const closePreviewAndRestoreFocus = () => {
     const savedTrigger = triggerElementRef.current;
     setViewState({
       exerciseId,
@@ -138,12 +140,11 @@ export function StepMotionStudyPicker({
     }
 
     summaryRef.current?.focus();
-  }, [exerciseId, previewed, valueSignature]);
+  };
 
-  const returnToSelectedPreview = useCallback(() => {
-    if (!matchedSelected) return;
-    const selectedKey = getReferenceKey(matchedSelected);
-    triggerElementRef.current = previewButtonRefs.current.get(selectedKey) ?? null;
+  const returnToSelectedPreview = () => {
+    if (!matchedSelectedKey) return;
+    triggerElementRef.current = previewButtonRefs.current.get(matchedSelectedKey) ?? null;
     setViewState({
       exerciseId,
       valueSignature,
@@ -152,9 +153,14 @@ export function StepMotionStudyPicker({
     if (previewCloseBtnRef.current?.isConnected) {
       previewCloseBtnRef.current.focus();
     } else {
-      previewButtonRefs.current.get(selectedKey)?.focus();
+      previewButtonRefs.current.get(matchedSelectedKey)?.focus();
     }
-  }, [exerciseId, matchedSelected, valueSignature]);
+  };
+
+  const closePreviewRef = useRef(closePreviewAndRestoreFocus);
+  useEffect(() => {
+    closePreviewRef.current = closePreviewAndRestoreFocus;
+  });
 
   useEffect(() => {
     if (!expanded || !previewed) return;
@@ -166,7 +172,7 @@ export function StepMotionStudyPicker({
       if (sectionEl.contains(document.activeElement)) {
         event.preventDefault();
         event.stopImmediatePropagation();
-        closePreviewAndRestoreFocus();
+        closePreviewRef.current();
       }
     };
 
@@ -174,7 +180,7 @@ export function StepMotionStudyPicker({
     return () => {
       parentDialog.removeEventListener('cancel', handleDialogCancel, true);
     };
-  }, [closePreviewAndRestoreFocus, expanded, previewed]);
+  }, [expanded, previewed]);
 
   const handleSectionKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key !== 'Escape' || !expanded || !previewed) return;

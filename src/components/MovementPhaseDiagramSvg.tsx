@@ -180,7 +180,8 @@ function renderApparatusSupportLayer(
         data-carriage-offset={apparatusState.carriageOffsetPx}
         data-spring-tension={apparatusState.springTensionLevel}
       >
-        {/* Floor baseline */}
+        {/* Studio floor shadow & baseline */}
+        <ellipse cx={160} cy={179} rx={142} ry={3.5} fill="rgba(34, 52, 45, 0.08)" />
         <line
           x1={12}
           y1={178}
@@ -189,16 +190,24 @@ function renderApparatusSupportLayer(
           stroke="#d6cfc0"
           strokeWidth={1.5}
         />
-        {/* Wooden frame rails */}
+        {/* White-oak frame rails with studio bevel highlight */}
         <rect
           x={18}
           y={154}
           width={284}
           height={11}
-          rx={3}
-          fill="#d7c3a3"
-          stroke="#8a7254"
+          rx={3.5}
+          fill="#dcc7a6"
+          stroke="#866d4f"
           strokeWidth={1.4}
+        />
+        <line
+          x1={21}
+          y1={156.2}
+          x2={299}
+          y2={156.2}
+          stroke="rgba(255, 252, 245, 0.58)"
+          strokeWidth={1}
         />
         {/* Frame legs */}
         <line
@@ -207,7 +216,7 @@ function renderApparatusSupportLayer(
           x2={28}
           y2={178}
           stroke="#756046"
-          strokeWidth={3.5}
+          strokeWidth={3.8}
           strokeLinecap="round"
         />
         <line
@@ -216,44 +225,52 @@ function renderApparatusSupportLayer(
           x2={292}
           y2={178}
           stroke="#756046"
-          strokeWidth={3.5}
+          strokeWidth={3.8}
           strokeLinecap="round"
         />
-        {/* Internal track rail */}
+        {/* Internal brushed steel track rail */}
         <line
           x1={24}
           y1={151}
           x2={294}
           y2={151}
-          stroke="#7a8b84"
-          strokeWidth={2}
+          stroke="#73857e"
+          strokeWidth={2.1}
         />
-        {/* Spring coil */}
+        {/* Tension-calibrated spring coil */}
         <path
           d={renderSpringCoilPath(
             springStart.x,
             springStart.y,
             springEnd.x,
             springEnd.y,
-            6,
-            3.2,
+            7,
+            3.3,
           )}
           fill="none"
           stroke={springColor}
-          strokeWidth={1.6}
+          strokeWidth={1.75}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        {/* Sliding carriage bed */}
+        {/* Sliding upholstered carriage bed with cushion highlight */}
         <rect
           x={cMinX}
-          y={143}
+          y={142.5}
           width={cWidth}
-          height={9}
-          rx={3}
-          fill="#6e8c80"
-          stroke="#2f564b"
+          height={9.5}
+          rx={3.5}
+          fill="#658579"
+          stroke="#294f44"
           strokeWidth={1.5}
+        />
+        <line
+          x1={cMinX + 4}
+          y1={144.6}
+          x2={cMinX + Math.max(8, cWidth - 4)}
+          y2={144.6}
+          stroke="rgba(247, 245, 239, 0.42)"
+          strokeWidth={1}
         />
         {/* Headrest incline */}
         <line
@@ -261,8 +278,8 @@ function renderApparatusSupportLayer(
           y1={139}
           x2={headrestX2}
           y2={143}
-          stroke="#2f564b"
-          strokeWidth={4}
+          stroke="#294f44"
+          strokeWidth={4.2}
           strokeLinecap="round"
         />
         {/* Shoulder rest block */}
@@ -1378,6 +1395,7 @@ export function MovementPhaseDiagramSvg({
   const descId = `mpd-desc-${rawUid}`;
   const arrowExcursionId = `mpd-arrow-excursion-${rawUid}`;
   const arrowControlId = `mpd-arrow-control-${rawUid}`;
+  const bgGradId = `mpd-bg-${rawUid}`;
 
   const phaseSpec = asset.phases[phase];
   const activeMuscleLabels = asset.primaryMuscles
@@ -1427,6 +1445,10 @@ export function MovementPhaseDiagramSvg({
       <desc id={descId}>{accessibleDesc}</desc>
 
       <defs>
+        <linearGradient id={bgGradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#fcfbf7" />
+          <stop offset="100%" stopColor="#f2ede2" />
+        </linearGradient>
         <marker
           id={arrowExcursionId}
           viewBox="0 0 10 10"
@@ -1458,15 +1480,47 @@ export function MovementPhaseDiagramSvg({
         width={VIEWBOX_WIDTH - 1}
         height={VIEWBOX_HEIGHT - 1}
         rx={compact ? 10 : 14}
-        fill="#f7f5ef"
-        stroke="#dfd8ca"
+        fill={`url(#${bgGradId})`}
+        stroke="#ddd5c5"
         strokeWidth={1}
       />
-      <g stroke="#ebe5d8" strokeWidth={0.75} aria-hidden="true">
+      <g stroke="#e9e2d4" strokeWidth={0.75} aria-hidden="true">
         <line x1={16} y1={52} x2={304} y2={52} />
         <line x1={16} y1={100} x2={304} y2={100} />
         <line x1={160} y1={14} x2={160} y2={186} strokeDasharray="3 3" />
       </g>
+      {!compact && (
+        <g aria-hidden="true" data-layer="studio-phase-pill">
+          <rect
+            x={12}
+            y={10}
+            width={44}
+            height={16}
+            rx={8}
+            fill="rgba(255, 253, 248, 0.9)"
+            stroke="#d8d0c0"
+            strokeWidth={0.9}
+          />
+          <circle
+            cx={22}
+            cy={18}
+            r={3}
+            fill="#1f473d"
+          />
+          <circle
+            cx={34}
+            cy={18}
+            r={3}
+            fill={phase === 'middle' || phase === 'end' ? '#1f473d' : '#d8d0c0'}
+          />
+          <circle
+            cx={46}
+            cy={18}
+            r={3}
+            fill={phase === 'end' ? '#1f473d' : '#d8d0c0'}
+          />
+        </g>
+      )}
 
       {/* 1. Apparatus & Support Surface */}
       {renderApparatusSupportLayer(asset, phaseSpec, mirrored)}
