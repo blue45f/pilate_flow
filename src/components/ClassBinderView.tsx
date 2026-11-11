@@ -836,6 +836,14 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                       >
                         <Copy size={15} /> 사본 열기
                       </PfButton>
+                      <PfButton
+                        variant="secondary"
+                        className="teaching-saved-quick-stage"
+                        aria-label={`${sequence.title} 바로 진행`}
+                        onClick={(e) => requestOpenSavedSequence(sequence, 'stage', e.currentTarget)}
+                      >
+                        <Play size={15} aria-hidden="true" /> 바로 진행
+                      </PfButton>
                       <PfButton variant="secondary" id={toggleId} aria-expanded={detailsExpanded} aria-controls={moreId} aria-label={`${sequence.title} ${detailsExpanded ? '접기' : '더보기'}`} onClick={() => toggleSavedDetails(sequence.id)}>{detailsExpanded ? '접기' : '더보기'}</PfButton>
                     </div>
                     {isOverwriteOpen && pendingOverwrite && (

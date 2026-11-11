@@ -1,11 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { App } from './App';
 import './styles/studio.css';
 import './styles/atelier-v2.css';
 import './styles/atelier-vnext.css';
 import './styles/design-tokens.css';
 import './styles/responsive-studio.css';
+import { App } from './App';
+import './styles/atelier-luxury-v2.css';
 import { bootstrapCloudSession } from './lib/cloudSync';
 
 import { registerPwaServiceWorker, startPwa } from './lib/pwa';

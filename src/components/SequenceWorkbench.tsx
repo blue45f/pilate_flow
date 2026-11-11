@@ -2315,6 +2315,16 @@ export function SequenceWorkbench({
                     <BookmarkPlus size={17} />
                     <span>저장</span>
                   </PfButton>
+                  <PfButton
+                    variant="primary"
+                    className="workbench-header-start-flow"
+                    aria-label="시퀀스 바로 진행"
+                    onClick={startClass}
+                    disabled={!canStartClass}
+                  >
+                    <Play size={16} aria-hidden="true" />
+                    <span>바로 진행</span>
+                  </PfButton>
                 </div>
               </div>
               <div className="sequence-context">

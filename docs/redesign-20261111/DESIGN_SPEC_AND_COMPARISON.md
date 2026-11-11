@@ -43,6 +43,11 @@
 3. **시안 C (가로 타임라인 리본형)**: 전체 비중 파악에는 좋으나 모바일에서 가로 스크롤 조작이 번거로움.
 
 ### 시안 및 도해 파일 위치
+- **통합 정본 디자인 시안 패키지 (v2.2 Master Suite)**:
+  - 전체 7개 화면 마스터 인터랙티브 시안: `docs/design-system-mockups/01-flow-atelier-master-mockup.html`
+  - 5대 기구 고품질 스튜디오 기구학 모션 아틀라스: `docs/design-system-mockups/02-studio-kinematic-motion-atlas.html`
+  - 공통 디자인·모션 토큰 정본: `docs/design-system-mockups/03-design-tokens.json`
+  - 1:1 프로덕션 매핑 가이드: `docs/design-system-mockups/README.md`
 - 기존 3종 비교 프로토타입: `docs/redesign-20261111/pilates-flow-redesign-options.html`
 - **확정 단계형(Step-by-Step) 인터랙티브 시안**: `docs/redesign-20261111/pilates-flow-step-flow-prototype.html`
 - 고해상도 기구학 동작 도해 시연: `docs/redesign-20261111/high-precision-motion-diagrams.html`

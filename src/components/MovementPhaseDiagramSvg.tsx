@@ -150,7 +150,6 @@ function buildTaperedChainSilhouettePath(
   ].join(' ');
 }
 
-/** Subdivides a 3-joint limb (hip-knee-ankle or shoulder-elbow-wrist) with muscle-belly control points. */
 function buildAnatomicalLimbProfile(
   proximal: Point2D,
   mid: Point2D,
@@ -174,20 +173,20 @@ function getMusclePalette(role: MuscleHighlightSpec['role']): {
     case 'primary':
       return {
         stroke: '#bf5a41',
-        glow: 'rgba(191, 90, 65, 0.2)',
-        core: 'rgba(191, 90, 65, 0.52)',
+        glow: 'rgba(191, 90, 65, 0.16)',
+        core: 'rgba(191, 90, 65, 0.42)',
       };
     case 'stabilizer':
       return {
         stroke: '#2c6653',
-        glow: 'rgba(44, 102, 83, 0.18)',
-        core: 'rgba(44, 102, 83, 0.44)',
+        glow: 'rgba(44, 102, 83, 0.14)',
+        core: 'rgba(44, 102, 83, 0.36)',
       };
     case 'lengthening':
       return {
         stroke: '#b58435',
-        glow: 'rgba(181, 132, 53, 0.18)',
-        core: 'rgba(181, 132, 53, 0.44)',
+        glow: 'rgba(181, 132, 53, 0.14)',
+        core: 'rgba(181, 132, 53, 0.38)',
       };
   }
 }
@@ -224,7 +223,7 @@ interface StudioGradientIds {
   upholsteryId: string;
   torsoId: string;
   nearLegId: string;
-  nearArmId: string;
+  skinId: string;
 }
 
 function renderApparatusSupportLayer(
@@ -860,20 +859,20 @@ function renderPoseDeltaGhostLayer(
   }
 
   return (
-    <g data-layer="pose-delta-ghost" opacity={compact ? 0.62 : 1}>
+    <g data-layer="pose-delta-ghost" opacity={compact ? 0.34 : 0.65}>
       <g
         data-ghost-pose="start"
         stroke="#7a8c82"
         strokeDasharray="3 3"
         fill="none"
-        opacity={compact ? 0.3 : 0.42}
+        opacity={0.36}
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d={buildSmoothCurvePath(spinePts)} strokeWidth={2} />
-        <path d={buildPolylinePath(armPts)} strokeWidth={1.7} />
-        <path d={buildPolylinePath(legPts)} strokeWidth={1.9} />
-        <circle cx={headPt.x} cy={headPt.y} r={7.5} strokeWidth={1.4} />
+        <path d={buildSmoothCurvePath(spinePts)} strokeWidth={1.8} />
+        <path d={buildPolylinePath(armPts)} strokeWidth={1.5} />
+        <path d={buildPolylinePath(legPts)} strokeWidth={1.7} />
+        <circle cx={headPt.x} cy={headPt.y} r={7.2} strokeWidth={1.2} />
       </g>
       {movedVectors.map(({ joint, fromPt, toPt }) => (
         <g key={`delta-${joint}`} data-pose-delta-vector={joint}>
@@ -883,11 +882,11 @@ function renderPoseDeltaGhostLayer(
             x2={toPt.x}
             y2={toPt.y}
             stroke="#bf5a41"
-            strokeWidth={compact ? 0.95 : 1.15}
-            strokeDasharray="2 2"
-            opacity={compact ? 0.38 : 0.58}
+            strokeWidth={compact ? 0.8 : 1}
+            strokeDasharray="2 2.5"
+            opacity={0.44}
           />
-          <circle cx={fromPt.x} cy={fromPt.y} r={1.8} fill="#7a8c82" opacity={0.55} />
+          <circle cx={fromPt.x} cy={fromPt.y} r={1.4} fill="#7a8c82" opacity={0.48} />
         </g>
       ))}
     </g>
@@ -950,7 +949,7 @@ function renderPrimaryMusclesLayer(
   const signatureCounts = new Map<string, number>();
 
   return (
-    <g data-layer="primary-muscles" opacity={compact ? 0.68 : 1}>
+    <g data-layer="primary-muscles" opacity={compact ? 0.42 : 0.76}>
       {musclesToRender.map((muscle) => {
         const palette = getMusclePalette(muscle.role);
         const rawPts = muscle.anchorJoints
@@ -986,11 +985,11 @@ function renderPrimaryMusclesLayer(
               strokeWidth={
                 compact
                   ? muscle.role === 'primary'
-                    ? 9.5
-                    : 7
+                    ? 8
+                    : 6
                   : muscle.role === 'primary'
-                    ? 13.5
-                    : 10
+                    ? 12
+                    : 9
               }
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -1002,11 +1001,11 @@ function renderPrimaryMusclesLayer(
               strokeWidth={
                 compact
                   ? muscle.role === 'primary'
-                    ? 3.4
-                    : 2.5
+                    ? 2.6
+                    : 2
                   : muscle.role === 'primary'
-                    ? 4.6
-                    : 3.5
+                    ? 3.8
+                    : 2.8
               }
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -1016,11 +1015,11 @@ function renderPrimaryMusclesLayer(
               <circle
                 cx={midPt.x}
                 cy={midPt.y}
-                r={muscle.role === 'primary' ? 3.6 : 2.8}
+                r={muscle.role === 'primary' ? 2.8 : 2.2}
                 fill={palette.stroke}
-                fillOpacity={0.35}
+                fillOpacity={0.3}
                 stroke={palette.stroke}
-                strokeWidth={1.1}
+                strokeWidth={0.95}
               />
             )}
           </g>
@@ -1030,6 +1029,11 @@ function renderPrimaryMusclesLayer(
   );
 }
 
+/**
+ * Editorial Studio Practitioner Renderer:
+ * Cohesive tailored sage-emerald Pilates bodysuit/leggings + warm natural skin tones,
+ * sculpted muscle-belly silhouettes, neat studio hair-bun profile, and subtle internal precision pins.
+ */
 function renderKinematicFigureLayer(
   phaseSpec: PhasePoseSpec,
   activeSide: 'left' | 'right',
@@ -1130,14 +1134,19 @@ function renderKinematicFigureLayer(
         : { x: 0, y: -1 };
   const chosenNormal =
     n1.x * antHint.x + n1.y * antHint.y >= n2.x * antHint.x + n2.y * antHint.y ? n1 : n2;
-  const gazeTip: Point2D = {
-    x: r1(headPt.x + chosenNormal.x * 11),
-    y: r1(headPt.y + chosenNormal.y * 11),
+
+  // Subtle anterior facial contour cue inside head silhouette (replaces external protruding stick)
+  const gazeStart: Point2D = {
+    x: r1(headPt.x + chosenNormal.x * 2.4),
+    y: r1(headPt.y + chosenNormal.y * 2.4),
   };
-  // Studio bun accent on posterior-superior cranium
+  const gazeTip: Point2D = {
+    x: r1(headPt.x + chosenNormal.x * 7.8),
+    y: r1(headPt.y + chosenNormal.y * 7.8),
+  };
   const bunPt: Point2D = {
-    x: r1(headPt.x - chosenNormal.x * 6.8 + ux * 4.4),
-    y: r1(headPt.y - chosenNormal.y * 6.8 + uy * 4.4),
+    x: r1(headPt.x - chosenNormal.x * 6.8 + ux * 4.5),
+    y: r1(headPt.y - chosenNormal.y * 6.8 + uy * 4.5),
   };
 
   const activeJointCoords: Record<
@@ -1153,24 +1162,24 @@ function renderKinematicFigureLayer(
     ankle: nearAnklePt,
   };
 
-  const torsoCapsuleD = buildTaperedChainSilhouettePath(torsoPts, [7.6, 6.5, 5.9, 7.9, 4.1]);
+  const torsoCapsuleD = buildTaperedChainSilhouettePath(torsoPts, [8.2, 7.0, 6.3, 8.4, 4.4]);
   const farLegCapsuleD = buildAnatomicalLimbProfile(
     farHipPt,
     farKneePt,
     farAnklePt,
-    [5.5, 5.8, 4.0, 4.3, 2.6],
+    [5.8, 6.0, 4.2, 4.5, 2.7],
   );
   const farArmCapsuleD = buildAnatomicalLimbProfile(
     farShoulderPt,
     farElbowPt,
     farWristPt,
-    [3.9, 3.8, 2.9, 2.8, 2.1],
+    [4.0, 3.9, 3.0, 2.9, 2.2],
   );
   const nearLegCapsuleD = buildAnatomicalLimbProfile(
     nearHipPt,
     nearKneePt,
     nearAnklePt,
-    [6.6, 6.9, 4.7, 5.1, 3.0],
+    [7.0, 7.3, 5.0, 5.4, 3.1],
   );
   const nearArmCapsuleD = buildTaperedChainSilhouettePath(
     [
@@ -1181,30 +1190,32 @@ function renderKinematicFigureLayer(
       nearWristPt,
       nearHandPt,
     ],
-    [4.8, 4.6, 3.5, 3.4, 2.5, 2.1],
+    [4.9, 4.7, 3.6, 3.5, 2.6, 2.2],
   );
 
   return (
     <g data-layer="kinematic-figure" strokeLinecap="round" strokeLinejoin="round">
-      {/* Contralateral / Far Side Limbs */}
+      {/* Contralateral / Far Side Limbs (soft depth perspective) */}
       <g
         data-anatomical-side={farSide}
         data-limb-depth="far"
         fill="none"
         stroke="#4f6b60"
-        opacity={0.8}
+        opacity={0.78}
       >
-        <path d={farLegCapsuleD} fill="#d4e0d8" fillOpacity={0.68} stroke="none" />
-        <path d={farArmCapsuleD} fill="#dfd6ca" fillOpacity={0.62} stroke="none" />
+        <path d={farLegCapsuleD} fill="#89a396" fillOpacity={0.74} stroke="#5d786b" strokeWidth={0.9} />
+        <path d={farArmCapsuleD} fill="#e2c6ae" fillOpacity={0.78} stroke="#9c7960" strokeWidth={0.85} />
         <path
           d={buildPolylinePath([farHipPt, farKneePt, farAnklePt, farToePt])}
-          strokeWidth={2.1}
-          strokeDasharray="5 4"
+          strokeWidth={1.35}
+          strokeDasharray="4 3.5"
+          strokeOpacity={0.48}
         />
         <path
           d={buildPolylinePath([farShoulderPt, farElbowPt, farWristPt])}
-          strokeWidth={1.85}
-          strokeDasharray="5 4"
+          strokeWidth={1.2}
+          strokeDasharray="4 3.5"
+          strokeOpacity={0.45}
         />
       </g>
 
@@ -1212,107 +1223,107 @@ function renderKinematicFigureLayer(
         <path
           data-segment="schematic-shoulder-connection"
           d={buildPolylinePath([j('neck'), nearShoulderPt, j('thoracic')])}
-          stroke="#1c3f36"
-          strokeWidth={2.4}
+          stroke="#26473b"
+          strokeWidth={2.2}
+          strokeOpacity={0.65}
           fill="none"
         />
       )}
 
-      {/* Sculpted Anatomical Torso Envelope, Articulated Spine & Studio Cranium */}
+      {/* Sculpted Studio Bodysuit Torso, Graceful Neck & Hair-Bun Cranium */}
       <g data-segment="spine-torso" fill="none">
-        <path
-          d={torsoCapsuleD}
-          fill={`url(#${grads.torsoId})`}
-          fillOpacity={0.92}
-          stroke="#2b5244"
-          strokeWidth={1.55}
-        />
-        <path d={buildSmoothCurvePath(spinePts)} stroke="#1a3b32" strokeWidth={2.9} />
-        {(['pelvis', 'lumbar', 'thoracic', 'neck'] as const).map((vKey) => {
-          const pt = j(vKey);
-          return (
-            <circle
-              key={vKey}
-              cx={pt.x}
-              cy={pt.y}
-              r={vKey === 'pelvis' ? 3.9 : 2.5}
-              fill="#fcfaf5"
-              stroke="#1a3b32"
-              strokeWidth={1.45}
-            />
-          );
-        })}
-
         <line
           x1={neckPt.x}
           y1={neckPt.y}
           x2={headPt.x}
           y2={headPt.y}
-          stroke="#cbb79f"
-          strokeWidth={5.2}
+          stroke={`url(#${grads.skinId})`}
+          strokeWidth={5.6}
         />
+        <path
+          d={torsoCapsuleD}
+          fill={`url(#${grads.torsoId})`}
+          stroke="#1f3e32"
+          strokeWidth={1.35}
+        />
+        <path
+          d={buildSmoothCurvePath(spinePts)}
+          stroke="#dce8e1"
+          strokeWidth={1.35}
+          strokeOpacity={0.42}
+        />
+
+        {/* Studio low-bun & warm-skin head silhouette */}
         <circle
           cx={bunPt.x}
           cy={bunPt.y}
-          r={3.5}
-          fill="#2b453c"
-          stroke="#1a3b32"
-          strokeWidth={1.2}
-        />
-        <line
-          data-segment="head-gaze"
-          x1={headPt.x}
-          y1={headPt.y}
-          x2={gazeTip.x}
-          y2={gazeTip.y}
-          stroke="#1a3b32"
-          strokeWidth={1.95}
+          r={3.9}
+          fill="#233830"
+          stroke="#192b24"
+          strokeWidth={1}
         />
         <circle
           cx={headPt.x}
           cy={headPt.y}
           r={8.8}
-          fill="#e9efe9"
-          stroke="#1a3b32"
-          strokeWidth={2.05}
+          fill={`url(#${grads.skinId})`}
+          stroke="#2b453c"
+          strokeWidth={1.55}
+        />
+        <line
+          data-segment="head-gaze"
+          x1={gazeStart.x}
+          y1={gazeStart.y}
+          x2={gazeTip.x}
+          y2={gazeTip.y}
+          stroke="#2b453c"
+          strokeWidth={1.3}
+          strokeOpacity={0.55}
         />
         <circle
-          cx={r1(headPt.x + chosenNormal.x * 3.2)}
-          cy={r1(headPt.y + chosenNormal.y * 3.2)}
-          r={1.3}
-          fill="#1a3b32"
+          cx={r1(headPt.x + chosenNormal.x * 3.8)}
+          cy={r1(headPt.y + chosenNormal.y * 3.8)}
+          r={1.15}
+          fill="#233830"
         />
       </g>
 
-      {/* Near / Active Side Limbs (sculpted anatomical muscle-belly capsules + bone axes) */}
+      {/* Near / Active Side Limbs (sage-emerald studio leggings + natural warm-skin arm & foot) */}
       <g data-anatomical-side={nearSide} data-limb-depth="near" fill="none">
         {/* STRICT INVARIANT: First path in near-limb group represents nearLegPts */}
         <path
           d={nearLegCapsuleD}
           fill={`url(#${grads.nearLegId})`}
-          fillOpacity={0.76}
-          stroke="#23483b"
-          strokeWidth={1.45}
+          stroke="#1d3b30"
+          strokeWidth={1.35}
         />
-        <path d={buildPolylinePath(nearLegPts)} stroke="#1b3e34" strokeWidth={2.65} />
+        <path
+          d={buildPolylinePath(nearLegPts)}
+          stroke="#dce8e1"
+          strokeWidth={1.25}
+          strokeOpacity={0.34}
+        />
         <path
           d={buildPolylinePath(nearFootPts)}
-          fill="#cfa98e"
-          fillOpacity={0.78}
-          stroke="#1b3e34"
-          strokeWidth={1.95}
+          fill={`url(#${grads.skinId})`}
+          stroke="#4c3a2d"
+          strokeWidth={1.35}
         />
 
         <path
           d={nearArmCapsuleD}
-          fill={`url(#${grads.nearArmId})`}
-          fillOpacity={0.86}
-          stroke="#7b432a"
-          strokeWidth={1.35}
+          fill={`url(#${grads.skinId})`}
+          stroke="#6b4b37"
+          strokeWidth={1.25}
         />
-        <path d={buildPolylinePath(nearArmPts)} stroke="#8c472b" strokeWidth={2.3} />
+        <path
+          d={buildPolylinePath(nearArmPts)}
+          stroke="#6b4b37"
+          strokeWidth={1.15}
+          strokeOpacity={0.26}
+        />
 
-        {/* 7 Canonical Articulated Joint Nodes */}
+        {/* 7 Canonical Articulated Joint Micro-Pins (subtle studio precision markers) */}
         {(['shoulder', 'elbow', 'wrist', 'hand', 'hip', 'knee', 'ankle'] as const).map(
           (jointKey) => {
             const pt = activeJointCoords[jointKey];
@@ -1324,17 +1335,19 @@ function renderKinematicFigureLayer(
                 data-joint-node={jointKey}
                 cx={pt.x}
                 cy={pt.y}
-                r={isMajor ? 3.4 : 2.5}
+                r={isMajor ? 2.1 : 1.65}
                 fill="#fcfaf5"
+                fillOpacity={0.58}
                 stroke={
                   jointKey === 'shoulder' ||
                   jointKey === 'elbow' ||
                   jointKey === 'wrist' ||
                   jointKey === 'hand'
-                    ? '#7b432a'
-                    : '#1a3b32'
+                    ? '#6b4b37'
+                    : '#1d3b30'
                 }
-                strokeWidth={1.5}
+                strokeOpacity={0.62}
+                strokeWidth={1.05}
               />
             );
           },
@@ -1381,8 +1394,8 @@ function renderAlignmentGuideItem(
           y1={from.y}
           x2={to.x}
           y2={to.y}
-          stroke="rgba(43, 106, 88, 0.14)"
-          strokeWidth={compact ? 6.5 : 9}
+          stroke="rgba(43, 106, 88, 0.12)"
+          strokeWidth={compact ? 5.5 : 8}
           strokeLinecap="round"
         />
       ) : null}
@@ -1392,7 +1405,7 @@ function renderAlignmentGuideItem(
         x2={to.x}
         y2={to.y}
         stroke={guide.kind === 'anchor-lock' ? '#254b29' : '#1f4d3f'}
-        strokeWidth={compact ? 1.15 : 1.5}
+        strokeWidth={compact ? 0.95 : 1.25}
         strokeDasharray={
           guide.kind === 'plumb-line'
             ? '2 3'
@@ -1401,15 +1414,15 @@ function renderAlignmentGuideItem(
               : '4 2'
         }
       />
-      <circle cx={from.x} cy={from.y} r={compact ? 1.6 : 2.1} fill="#1f4d3f" />
-      <circle cx={to.x} cy={to.y} r={compact ? 1.6 : 2.1} fill="#1f4d3f" />
+      <circle cx={from.x} cy={from.y} r={compact ? 1.4 : 1.8} fill="#1f4d3f" />
+      <circle cx={to.x} cy={to.y} r={compact ? 1.4 : 1.8} fill="#1f4d3f" />
       {guide.kind === 'angle-arc' ? (
         <path
           data-angle-arc={guide.targetAngleDeg ?? 90}
           d={buildAngleArcSvgPath(from, to, guide.targetAngleDeg ?? 90)}
           fill="none"
           stroke="#1f4d3f"
-          strokeWidth={compact ? 1.05 : 1.3}
+          strokeWidth={compact ? 0.95 : 1.15}
           strokeDasharray="3 2"
         />
       ) : null}
@@ -1423,11 +1436,11 @@ function renderJointAlignmentLayer(
   compact: boolean,
 ): React.JSX.Element {
   return (
-    <g data-layer="joint-alignment" opacity={compact ? 0.56 : 1}>
+    <g data-layer="joint-alignment" opacity={compact ? 0.36 : 0.72}>
       {phaseSpec.alignments.map((guide) => renderAlignmentGuideItem(guide, mirrored, compact))}
       {phaseSpec.fixedAnchors.map((anchor) => {
         const pt = mpt(anchor.point, mirrored);
-        const half = compact ? 3.4 : 4.4;
+        const half = compact ? 2.8 : 3.8;
         return (
           <g key={`anchor-${anchor.joint}`} data-fixed-anchor={anchor.joint}>
             <rect
@@ -1435,12 +1448,13 @@ function renderJointAlignmentLayer(
               y={pt.y - half}
               width={half * 2}
               height={half * 2}
-              rx={1.8}
+              rx={1.6}
               fill="#fcfaf5"
+              fillOpacity={0.85}
               stroke="#1a3b32"
-              strokeWidth={compact ? 1.25 : 1.6}
+              strokeWidth={compact ? 1.05 : 1.35}
             />
-            <circle cx={pt.x} cy={pt.y} r={compact ? 1.3 : 1.7} fill="#1a3b32" />
+            <circle cx={pt.x} cy={pt.y} r={compact ? 1.1 : 1.4} fill="#1a3b32" />
           </g>
         );
       })}
@@ -1454,10 +1468,10 @@ function renderJointAlignmentLayer(
             data-moving-joint={jointKey}
             cx={pt.x}
             cy={pt.y}
-            r={compact ? 4.8 : 5.8}
+            r={compact ? 4.2 : 5.2}
             fill="none"
             stroke="#bf5a41"
-            strokeWidth={compact ? 1.05 : 1.3}
+            strokeWidth={compact ? 0.9 : 1.15}
             strokeDasharray="2.5 2"
           />
         );
@@ -1491,15 +1505,15 @@ function renderMovementDirectionLayer(
               d={d}
               fill="none"
               stroke="#fcfaf5"
-              strokeWidth={compact ? 3.8 : 4.5}
+              strokeWidth={compact ? 3.4 : 4.2}
               strokeLinecap="round"
-              opacity={0.88}
+              opacity={0.86}
             />
             <path
               d={d}
               fill="none"
               stroke={color}
-              strokeWidth={compact ? 2.05 : 2.35}
+              strokeWidth={compact ? 1.95 : 2.25}
               strokeLinecap="round"
               strokeDasharray={vec.kind === 'axial-lengthening' ? '4 2.5' : undefined}
               markerEnd={`url(#${markerId})`}
@@ -1507,10 +1521,10 @@ function renderMovementDirectionLayer(
             <circle
               cx={startPt.x}
               cy={startPt.y}
-              r={compact ? 2.1 : 2.5}
+              r={compact ? 1.9 : 2.3}
               fill="#fcfaf5"
               stroke={color}
-              strokeWidth={1.45}
+              strokeWidth={1.35}
             />
           </g>
         );
@@ -1549,7 +1563,7 @@ export function MovementPhaseDiagramSvg({
     upholsteryId: `mpd-upholstery-${rawUid}`,
     torsoId: `mpd-torso-${rawUid}`,
     nearLegId: `mpd-nleg-${rawUid}`,
-    nearArmId: `mpd-narm-${rawUid}`,
+    skinId: `mpd-skin-${rawUid}`,
   };
 
   const phaseSpec = asset.phases[phase];
@@ -1607,23 +1621,23 @@ export function MovementPhaseDiagramSvg({
         </linearGradient>
         <linearGradient id={grads.oakId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#d8b489" />
-          <stop offset="100%" stopColor="#b98f61" />
+          <stop offset="100%" stopColor="#b5895a" />
         </linearGradient>
         <linearGradient id={grads.upholsteryId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#58776a" />
-          <stop offset="100%" stopColor="#3c584d" />
+          <stop offset="100%" stopColor="#3b564b" />
         </linearGradient>
         <linearGradient id={grads.torsoId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#dce9df" />
-          <stop offset="100%" stopColor="#b8d1c2" />
+          <stop offset="0%" stopColor="#496f60" />
+          <stop offset="100%" stopColor="#2f5144" />
         </linearGradient>
         <linearGradient id={grads.nearLegId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#9fbeae" />
-          <stop offset="100%" stopColor="#779c89" />
+          <stop offset="0%" stopColor="#395e4f" />
+          <stop offset="100%" stopColor="#244337" />
         </linearGradient>
-        <linearGradient id={grads.nearArmId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#ecccb4" />
-          <stop offset="100%" stopColor="#d8ae90" />
+        <linearGradient id={grads.skinId} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#f0d7c2" />
+          <stop offset="100%" stopColor="#dfb99d" />
         </linearGradient>
         <marker
           id={arrowExcursionId}
@@ -1649,7 +1663,7 @@ export function MovementPhaseDiagramSvg({
         </marker>
       </defs>
 
-      {/* Studio Background & Precision Calibration Grid */}
+      {/* Studio Background & Subtle Architectural Horizon Grid */}
       <rect
         x={0.5}
         y={0.5}
@@ -1660,7 +1674,12 @@ export function MovementPhaseDiagramSvg({
         stroke="#dcd4c3"
         strokeWidth={1}
       />
-      <g stroke="#e8e1d2" strokeWidth={compact ? 0.55 : 0.7} opacity={compact ? 0.65 : 1} aria-hidden="true">
+      <g
+        stroke="#e8e1d2"
+        strokeWidth={compact ? 0.45 : 0.65}
+        opacity={compact ? 0.48 : 0.85}
+        aria-hidden="true"
+      >
         <line x1={16} y1={52} x2={304} y2={52} />
         <line x1={16} y1={100} x2={304} y2={100} />
         <line x1={160} y1={14} x2={160} y2={186} strokeDasharray="3 3" />
@@ -1673,7 +1692,7 @@ export function MovementPhaseDiagramSvg({
             width={46}
             height={16}
             rx={8}
-            fill="rgba(255, 253, 248, 0.92)"
+            fill="rgba(255, 253, 248, 0.94)"
             stroke="#d5cdbc"
             strokeWidth={0.9}
           />
@@ -1705,7 +1724,7 @@ export function MovementPhaseDiagramSvg({
       {/* 3. Primary Muscle Highlight Layer */}
       {showMuscles ? renderPrimaryMusclesLayer(asset, phaseSpec, phase, mirrored, compact) : null}
 
-      {/* 4. Sculpted Multi-Joint Human Figure Layer */}
+      {/* 4. Sculpted Studio Practitioner Human Figure Layer */}
       {renderKinematicFigureLayer(
         phaseSpec,
         activeSide,

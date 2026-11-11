@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flow Atelier — 전 화면 통합 마스터 디자인 시안 (v2.2)</title>
+  <style>
+    :root {
+      --bg: #faf8f4;
+      --surface: #ffffff;
+      --surface-subtle: #f3efe8;
+      --surface-warm: #ede7dd;
+      --ink: #1d201c;
+      --ink-secondary: #4f564d;
+      --ink-muted: #5c6259;
+      --line: #e2ddd3;
+      --sage-deep: #1f4d3f;
+      --sage: #355441;
+      --sage-soft: #e6efe9;
+      --sage-border: #bfd3c6;
+      --champagne: #b88a55;
+      --terracotta: #b8563f;
+      --terracotta-soft: #faeae5;
+      --blue: #36628a;
+      --blue-soft: #e6eff7;
+      --amber: #9e6d1a;
+      --amber-soft: #fbf3e2;
+      --stage-bg: #181b18;
+      --stage-card: #222722;
+      --stage-elevated: #2a302a;
+      --stage-ink: #f7f5f0;
+      --stage-mint: #a7c4b2;
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --shadow-soft: 0 8px 28px rgba(29, 32, 28, 0.05), 0 1px 4px rgba(29, 32, 28, 0.03);
+      --font: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    }
+    body.high-contrast {
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --surface-subtle: #eef1ee;
+      --ink: #000000;
+      --ink-secondary: #111111;
+      --ink-muted: #1e1e1e;
+      --line: #1d201c;
+      --sage: #0f3d22;
+      --sage-deep: #092916;
+      --stage-bg: #000000;
+      --stage-card: #0f1310;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: #ece8e0;
+      color: var(--ink);
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      word-break: keep-all;
+    }
+    button, input, select { font: inherit; }
+    button {
+      min-height: 44px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 140ms ease, border-color 140ms ease, transform 120ms ease;
+    }
+    body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid var(--sage-deep);
+      outline-offset: 2px;
+    }
+
+    /* Prototype Spec Header */
+    .spec-bar {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: rgba(250, 248, 244, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 22px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .spec-title { display: flex; align-items: center; gap: 10px; }
+    .spec-badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--sage-deep);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+    }
+    .spec-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .seg-bar {
+      display: inline-flex;
+      gap: 3px;
+      padding: 3px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+    }
+    .seg-pill {
+      min-height: 36px;
+      padding: 4px 13px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink-muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .seg-pill[aria-pressed="true"] {
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 2px 6px rgba(29, 32, 28, 0.08);
+    }
+
+    /* Viewport Frame */
+    .stage-wrap {
+      max-width: 1460px;
+      margin: 18px auto 48px;
+      padding: 0 18px;
+      display: flex;
+      justify-content: center;
+    }
+    .app-frame {
+      width: 100%;
+      max-width: 1400px;
+      min-height: 820px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      box-shadow: 0 20px 56px rgba(29, 32, 28, 0.1);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 224px minmax(0, 1fr);
+      transition: max-width 200ms ease;
+    }
+    .app-frame.is-mobile {
+      max-width: 390px;
+      grid-template-columns: 1fr;
+      border: 8px solid #232824;
+      border-radius: 38px;
+    }
+
+    /* Light Editorial Sidebar */
+    .atelier-sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--line);
+      padding: 22px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .app-frame.is-mobile .atelier-sidebar { display: none; }
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 2px 6px 20px;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      background: var(--sage);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(53, 84, 65, 0.22);
+    }
+    .brand-lockup strong { display: block; font-size: 1.12rem; letter-spacing: -0.03em; }
+    .brand-lockup small { display: block; font-size: 0.58rem; letter-spacing: 0.12em; color: #767d72; font-weight: 700; }
+    .nav-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; color: #8a8f85; margin: 4px 8px; }
+    .side-nav-btn {
+      width: 100%;
+      min-height: 46px;
+      padding: 0 12px;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--ink-secondary);
+      font-size: 0.9rem;
+      font-weight: 650;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+    }
+    .side-nav-btn:hover { background: #f5f2eb; color: var(--ink); }
+    .side-nav-btn.active {
+      background: var(--sage-soft);
+      color: var(--sage-deep);
+      border-color: var(--sage-border);
+      font-weight: 750;
+    }
+    .side-count {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--surface-subtle);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .upcoming-box {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid #ebe6dc;
+      display: grid;
+      gap: 8px;
+    }
+    .upcoming-card {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      font-size: 0.8rem;
+    }
+    .upcoming-card strong { color: var(--sage-deep); display: block; }
+
+    /* Workspace Column */
+    .atelier-workspace {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .atelier-topbar {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      min-height: 62px;
+      padding: 10px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .app-frame.is-mobile .atelier-topbar { padding: 10px 14px; }
+    .breadcrumb { font-size: 0.86rem; font-weight: 650; color: var(--ink-muted); }
+    .local-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: var(--sage-soft);
+      border: 1px solid var(--sage-border);
+      color: var(--sage-deep);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .workspace-body {
+      padding: 24px 28px 40px;
+      flex: 1;
+    }
+    .app-frame.is-mobile .workspace-body { padding: 16px 14px 82px; }
+
+    /* Journey Bar & Headings */
+    .journey-ribbon {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      padding: 8px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow-soft);
+    }
+    .app-frame.is-mobile .journey-ribbon { grid-template-columns: repeat(2, 1fr); }
+    .journey-btn {
+      min-height: 46px;
+      padding: 7px 11px;
+      border-radius: 11px;
+      background: transparent;
+      color: var(--ink-muted);
+      text-align: left;
+      font-size: 0.8rem;
+    }
+    .journey-btn strong { display: block; font-size: 0.84rem; color: var(--ink); }
+    .journey-btn.active { background: var(--sage-deep); color: rgba(255,255,255,0.84); }
+    .journey-btn.active strong { color: #fff; }
+
+    /* Cards, Buttons, Pills */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: var(--shadow-soft);
+    }
+    .app-frame.is-mobile .card { padding: 18px 15px; border-radius: 18px; }
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: var(--surface-subtle);
+      color: var(--sage-deep);
+      font-size: 0.74rem;
+      font-weight: 750;
+    }
+    .btn-primary {
+      background: var(--sage);
+      border-color: var(--sage);
+      color: #fff;
+      padding: 10px 18px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .btn-primary:hover { background: var(--sage-deep); }
+    .btn-secondary {
+      background: var(--surface);
+      border-color: var(--line);
+      color: var(--ink);
+      padding: 9px 15px;
+      font-weight: 650;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-secondary:hover { background: #f5f2eb; }
+    .chip {
+      min-height: 40px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .chip.selected { background: var(--sage-deep); border-color: var(--sage-deep); color: #fff; }
+    .spring-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 0.73rem;
+      font-weight: 700;
+    }
+    .spring-red { background: var(--terracotta-soft); color: var(--terracotta); }
+    .spring-blue { background: var(--blue-soft); color: var(--blue); }
+    .spring-yellow { background: var(--amber-soft); color: var(--amber); }
+
+    /* Grids */
+    .two-col { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; }
+    .split-workbench { display: grid; grid-template-columns: 350px minmax(0, 1fr); gap: 18px; align-items: start; }
+    .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .atlas-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .schedule-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+    .app-frame.is-mobile .two-col,
+    .app-frame.is-mobile .split-workbench,
+    .app-frame.is-mobile .three-col,
+    .app-frame.is-mobile .atlas-grid,
+    .app-frame.is-mobile .schedule-grid { grid-template-columns: 1fr; }
+
+    .step-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      margin-bottom: 8px;
+    }
+    .motion-thumb {
+      width: 84px;
+      height: 54px;
+      border-radius: 10px;
+      border: 1px solid #dcd4c3;
+      overflow: hidden;
+      background: linear-gradient(180deg, #fdfcf8 0%, #efe9dc 100%);
+      flex-shrink: 0;
+    }
+
+    /* Dark Live Stage */
+    .dark-stage {
+      background: var(--stage-bg);
+      color: var(--stage-ink);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 18px;
+    }
+    .app-frame.is-mobile .dark-stage { grid-template-columns: 1fr; padding: 16px; }
+    .stage-panel {
+      background: var(--stage-card);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 22px;
+    }
+    .stage-timer {
+      font-size: clamp(3.4rem, 7vw, 5rem);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin: 8px 0;
+    }
+
+    /* Mobile Bottom Nav */
+    .mobile-bottom-nav {
+      display: none;
+    }
+    .app-frame.is-mobile .mobile-bottom-nav {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      padding: 6px 8px;
+      background: rgba(255, 255, 255, 0.96);
+      border-top: 1px solid var(--line);
+      position: sticky;
+      bottom: 0;
+    }
+    .mobile-bottom-nav button {
+      min-height: 48px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: transparent;
+      color: var(--ink-muted);
+    }
+    .mobile-bottom-nav button.active {
+      background: var(--sage-soft);
+      color: var(--sage-deep);
+    }
+
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateX(0px); }
+      50% { transform: translateX(7px); }
+    }
+    .studio-glide { animation: gentleFloat 3.6s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+  <header class="spec-bar" aria-label="마스터 디자인 시안 제어바">
+    <div class="spec-title">
+      <span class="spec-badge">MASTER DESIGN SPEC v2.2</span>
+      <div>
+        <strong style="font-size:0.95rem;">Flow Atelier 통합 마스터 디자인 시안 (실제 앱 1:1 매핑)</strong>
+        <div style="font-size:0.76rem;color:var(--ink-muted);">라이트 에디토리얼 셸 · 4모드 워크벤치 · 98종 스튜디오 기구학 모션 · 다크 라이브 스테이지 · 회원 예약</div>
+      </div>
+    </div>
+    <div class="spec-controls">
+      <div class="seg-bar" role="group" aria-label="화면 선택">
+        <button class="seg-pill" data-scr="home" aria-pressed="true" onclick="setScreen('home')">1. 홈</button>
+        <button class="seg-pill" data-scr="workbench" aria-pressed="false" onclick="setScreen('workbench')">2. 시퀀스 편집</button>
+        <button class="seg-pill" data-scr="atlas" aria-pressed="false" onclick="setScreen('atlas')">3. 동작 도감</button>
+        <button class="seg-pill" data-scr="stage" aria-pressed="false" onclick="setScreen('stage')">4. 수업 진행</button>
+        <button class="seg-pill" data-scr="binder" aria-pressed="false" onclick="setScreen('binder')">5. 보관·기록</button>
+        <button class="seg-pill" data-scr="schedule" aria-pressed="false" onclick="setScreen('schedule')">6. 주간 일정</button>
+        <button class="seg-pill" data-scr="member" aria-pressed="false" onclick="setScreen('member')">7. 회원 예약</button>
+      </div>
+      <div class="seg-bar" role="group" aria-label="뷰포트 전환">
+        <button class="seg-pill" data-vp="desktop" aria-pressed="true" onclick="setVp('desktop')">데스크톱</button>
+        <button class="seg-pill" data-vp="mobile" aria-pressed="false" onclick="setVp('mobile')">모바일 390px</button>
+      </div>
+      <button class="btn-secondary" style="min-height:36px;padding:4px 10px;font-size:0.78rem;" onclick="document.body.classList.toggle('high-contrast')">고대비</button>
+      <button class="btn-secondary" style="min-height:36px;padding:4px 10px;font-size:0.78rem;" onclick="document.body.classList.toggle('reduced-motion')">모션 감소</button>
+    </div>
+  </header>
+
+  <div class="stage-wrap">
+    <div class="app-frame" id="app-frame">
+      <aside class="atelier-sidebar" aria-label="스튜디오 사이드바">
+        <div class="brand-lockup">
+          <div class="brand-icon">FA</div>
+          <div>
+            <strong>Flow Atelier</strong>
+            <small>PILATES CLASS PLANNER</small>
+          </div>
+        </div>
+        <div class="nav-label">MY STUDIO</div>
+        <button class="side-nav-btn active" data-nav="workbench" onclick="setScreen('workbench')"><span>오늘의 수업</span></button>
+        <button class="side-nav-btn" data-nav="atlas" onclick="setScreen('atlas')"><span>동작 라이브러리</span><span class="side-count">98</span></button>
+        <button class="side-nav-btn" data-nav="schedule" onclick="setScreen('schedule')"><span>강사 일정</span></button>
+        <button class="side-nav-btn" data-nav="binder" onclick="setScreen('binder')"><span>저장한 플로우</span></button>
+        <button class="side-nav-btn" data-nav="member" onclick="setScreen('member')"><span>회원 예약 화면</span></button>
+
+        <div class="upcoming-box">
+          <div class="nav-label" style="margin:0;">다가오는 수업</div>
+          <div class="upcoming-card">
+            <strong>10:00 · 리포머 코어 정렬</strong>
+            <span style="color:var(--ink-muted);">본점 A룸 · 오늘</span>
+          </div>
+          <div class="upcoming-card">
+            <strong>19:00 · 체어 하체 밸런스</strong>
+            <span style="color:var(--ink-muted);">본점 B룸 · 오늘</span>
+          </div>
+        </div>
+      </aside>
+
+      <div class="atelier-workspace">
+        <header class="atelier-topbar">
+          <div class="breadcrumb" id="crumb-label">나의 스튜디오 / 오늘의 수업</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="seg-bar">
+              <button class="seg-pill" id="role-inst" aria-pressed="true" onclick="setScreen('workbench')">강사 작업실</button>
+              <button class="seg-pill" id="role-mem" aria-pressed="false" onclick="setScreen('member')">회원 예약</button>
+            </div>
+            <span class="local-pill">● 개인 작업 공간</span>
+          </div>
+        </header>
+
+        <main class="workspace-body" id="workspace-root"></main>
+
+        <nav class="mobile-bottom-nav" aria-label="모바일 하단 탭">
+          <button onclick="setScreen('home')" data-mnav="home" class="active">홈</button>
+          <button onclick="setScreen('workbench')" data-mnav="workbench">수업</button>
+          <button onclick="setScreen('atlas')" data-mnav="atlas">동작</button>
+          <button onclick="setScreen('schedule')" data-mnav="schedule">일정</button>
+          <button onclick="setScreen('binder')" data-mnav="binder">보관</button>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      screen: 'home',
+      vp: 'desktop',
+      wbMode: 'split', // split | list | columns | timeline
+      apparatus: '리포머',
+      targetMin: 50,
+      title: '오전 리포머 코어 & 척추 분절 50분',
+      gapOpen: false,
+      steps: [
+        { sec: '준비', name: '리포머 풋워크 패럴렐', springs: '2R 1B', sType: 'red', min: 8, pose: 'footwork', cue: '골반과 요추 중립을 유지한 채 뒤꿈치로 풋바를 수평으로 밀어냅니다.' },
+        { sec: '준비', name: '펠빅 컬 · 브릿징', springs: '2R', sType: 'red', min: 7, pose: 'bridge', cue: '꼬리뼈부터 척추를 하나씩 분절해 견갑골과 무릎을 사선으로 연결합니다.' },
+        { sec: '본운동', name: '헌드레드', springs: '1R 1B', sType: 'blue', min: 8, pose: 'hundred', cue: '날개뼈 하각까지 상체를 말아 올리고 스트랩 장력을 유지하며 팔을 펌핑합니다.' },
+        { sec: '본운동', name: '롱박스 스완', springs: '1B', sType: 'blue', min: 9, pose: 'swan', cue: '치골을 박스에 밀착하고 흉추 위쪽부터 길게 앞·위로 젖혀 올립니다.' },
+        { sec: '마무리', name: '피트 인 스트랩 서클', springs: '1R 1B', sType: 'red', min: 8, pose: 'straps', cue: '천골이 뜨지 않는 범위에서 고관절 원호를 일정한 길이로 그립니다.' },
+        { sec: '마무리', name: '머메이드 사이드 벤드', springs: '1B', sType: 'yellow', min: 6, pose: 'mermaid', cue: '좌골을 고정한 채 옆구리 갈비뼈 사이를 부채처럼 열어 호흡합니다.' }
+      ]
+    };
+
+    function studioMotionSvg(pose, w = '100%', h = '100%') {
+      const uid = pose + Math.random().toString(36).slice(2, 6);
+      const commonDefs = `
+        <defs>
+          <linearGradient id="bg-${uid}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fdfcf8"/><stop offset="100%" stop-color="#efe9dc"/>
+          </linearGradient>
+          <linearGradient id="oak-${uid}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#d8b489"/><stop offset="100%" stop-color="#b5895a"/>
+          </linearGradient>
+          <linearGradient id="suit-${uid}" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#496f60"/><stop offset="100%" stop-color="#29483c"/>
+          </linearGradient>
+        </defs>
+        <rect x="0.5" y="0.5" width="319" height="199" rx="10" fill="url(#bg-${uid})" stroke="#dcd4c3"/>
+        <ellipse cx="160" cy="179" rx="140" ry="3.5" fill="rgba(28,52,43,0.08)"/>
+        <rect x="20" y="154" width="280" height="11" rx="3.5" fill="url(#oak-${uid})" stroke="#87633b" stroke-width="1.2"/>
+        <line x1="278" y1="155" x2="266" y2="126" stroke="#354b44" stroke-width="3.6" stroke-linecap="round"/>
+        <circle cx="266" cy="126" r="4.2" fill="#223b33" stroke="#fcfaf5" stroke-width="1.2"/>
+      `;
+      let figure = '';
+      if (pose === 'bridge') {
+        figure = `
+          <rect x="44" y="142" width="168" height="9.5" rx="3.5" fill="#48665a" stroke="#24443a" stroke-width="1.3"/>
+          <path d="M 92 136 Q 134 118 176 100" stroke="url(#suit-${uid})" stroke-width="14" stroke-linecap="round" fill="none"/>
+          <path d="M 176 100 L 222 76 L 264 124" stroke="#2f5244" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M 98 136 L 166 140" stroke="#e4bfa4" stroke-width="6.5" stroke-linecap="round"/>
+          <circle cx="68" cy="134" r="4" fill="#243a32"/><circle cx="76" cy="134" r="8.8" fill="#efd5c0" stroke="#2b453c" stroke-width="1.5"/>
+          <path d="M 176 124 Q 176 108 176 92" stroke="#bf5a41" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        `;
+      } else if (pose === 'hundred') {
+        figure = `
+          <g class="studio-glide">
+            <rect x="48" y="142" width="168" height="9.5" rx="3.5" fill="#48665a" stroke="#24443a" stroke-width="1.3"/>
+            <path d="M 96 116 Q 136 138 174 136" stroke="url(#suit-${uid})" stroke-width="14" stroke-linecap="round" fill="none"/>
+            <path d="M 174 136 L 216 92 L 262 64" stroke="#2f5244" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M 104 118 L 178 124" stroke="#e4bfa4" stroke-width="6.5" stroke-linecap="round"/>
+            <line x1="26" y1="104" x2="178" y2="124" stroke="#38658e" stroke-width="1.4" stroke-dasharray="3 2"/>
+            <circle cx="74" cy="108" r="4" fill="#243a32"/><circle cx="82" cy="108" r="8.8" fill="#efd5c0" stroke="#2b453c" stroke-width="1.5"/>
+          </g>
+        `;
+      } else if (pose === 'swan') {
+        figure = `
+          <rect x="52" y="142" width="168" height="9.5" rx="3.5" fill="#48665a" stroke="#24443a" stroke-width="1.3"/>
+          <rect x="108" y="123" width="86" height="19" rx="3.5" fill="#557065" stroke="#2b473e" stroke-width="1.2"/>
+          <path d="M 74 124 L 154 118 Q 194 112 222 86" stroke="url(#suit-${uid})" stroke-width="13" stroke-linecap="round" fill="none"/>
+          <path d="M 212 94 L 244 118 L 266 124" stroke="#e4bfa4" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="225" cy="72" r="4" fill="#243a32"/><circle cx="231" cy="76" r="8.8" fill="#efd5c0" stroke="#2b453c" stroke-width="1.5"/>
+        `;
+      } else {
+        figure = `
+          <g class="studio-glide">
+            <rect x="56" y="142" width="168" height="9.5" rx="3.5" fill="#48665a" stroke="#24443a" stroke-width="1.3"/>
+            <path d="M 98 136 L 178 136" stroke="url(#suit-${uid})" stroke-width="14" stroke-linecap="round"/>
+            <path d="M 178 136 L 222 106 L 264 124" stroke="#2f5244" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M 106 136 L 168 139" stroke="#e4bfa4" stroke-width="6.2" stroke-linecap="round"/>
+            <circle cx="72" cy="134" r="4" fill="#243a32"/><circle cx="80" cy="134" r="8.8" fill="#efd5c0" stroke="#2b453c" stroke-width="1.5"/>
+          </g>
+        `;
+      }
+      return `<svg viewBox="0 0 320 200" width="${w}" height="${h}" role="img" aria-label="스튜디오 기구학 모션 도해">${commonDefs}${figure}</svg>`;
+    }
+
+    function setVp(vp) {
+      state.vp = vp;
+      document.querySelectorAll('[data-vp]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.vp === vp)));
+      document.getElementById('app-frame').classList.toggle('is-mobile', vp === 'mobile');
+    }
+
+    function setScreen(scr) {
+      state.screen = scr;
+      document.querySelectorAll('[data-scr]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.scr === scr)));
+      document.querySelectorAll('[data-nav]').forEach((b) => b.classList.toggle('active', b.dataset.nav === scr || (scr === 'home' && b.dataset.nav === 'workbench')));
+      document.querySelectorAll('[data-mnav]').forEach((b) => b.classList.toggle('active', b.dataset.mnav === scr));
+      document.getElementById('role-inst').setAttribute('aria-pressed', String(scr !== 'member'));
+      document.getElementById('role-mem').setAttribute('aria-pressed', String(scr === 'member'));
+      const names = {
+        home: '수업 준비 · 시작하기',
+        workbench: '오늘의 수업 · 시퀀스 구성',
+        atlas: '동작 라이브러리 · 98종 기구학 도해',
+        stage: '수업 진행 · 라이브 스테이지',
+        binder: '저장한 플로우 · 수업 기록',
+        schedule: '강사 주간 일정',
+        member: '회원 수업 예약 · 수강권 지갑'
+      };
+      document.getElementById('crumb-label').textContent = '나의 스튜디오 / ' + names[scr];
+      render();
+    }
+
+    function render() {
+      const root = document.getElementById('workspace-root');
+      const sumMin = state.steps.reduce((a, b) => a + b.min, 0);
+      const diff = sumMin - state.targetMin;
+
+      const journeyHtml = state.screen !== 'stage' && state.screen !== 'member' ? `
+        <nav class="journey-ribbon" aria-label="강사 4단계 수업 흐름">
+          <button class="journey-btn ${state.screen === 'atlas' ? 'active' : ''}" onclick="setScreen('atlas')"><strong>1. 동작 탐색</strong>98개 기구학 노트</button>
+          <button class="journey-btn ${state.screen === 'home' || state.screen === 'workbench' ? 'active' : ''}" onclick="setScreen('workbench')"><strong>2. 수업 구성</strong>현재 ${sumMin}분 / 목표 ${state.targetMin}분</button>
+          <button class="journey-btn" onclick="setScreen('stage')"><strong>3. 수업 진행</strong>타이머 · 세팅 예고</button>
+          <button class="journey-btn ${state.screen === 'binder' ? 'active' : ''}" onclick="setScreen('binder')"><strong>4. 보관 · 기록</strong>스냅샷 이력 보존</button>
+        </nav>
+      ` : '';
+
+      if (state.screen === 'home') {
+        root.innerHTML = journeyHtml + `
+          <div class="card">
+            <span class="kicker">시작 화면 · 1 페이지 1 핵심 행동</span>
+            <h1 style="margin:8px 0 6px;font-size:1.65rem;">오늘 어떤 수업을 준비할까요?</h1>
+            <p style="margin:0 0 20px;color:var(--ink-muted);">가장 자주 쓰는 50분·리포머 기본값이 세팅되어 있어 바로 동작을 담거나 최근 수업을 이어갈 수 있습니다.</p>
+            <div class="two-col">
+              <section class="card" style="background:#f2f7f4;border-color:var(--sage-deep);display:flex;flex-direction:column;justify-content:space-between;gap:16px;">
+                <div>
+                  <span class="kicker" style="background:#fff;">새 수업 만들기</span>
+                  <h2 style="margin:10px 0 8px;font-size:1.3rem;">동작을 골라 나만의 흐름으로.</h2>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+                    ${[30, 50, 60].map((m) => `<button class="chip ${state.targetMin === m ? 'selected' : ''}" onclick="state.targetMin=${m};render()">${m}분</button>`).join('')}
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    ${['리포머', '매트', '체어', '캐딜락'].map((g) => `<button class="chip ${state.apparatus === g ? 'selected' : ''}" onclick="state.apparatus='${g}';render()">${g}</button>`).join('')}
+                  </div>
+                </div>
+                <button class="btn-primary" style="width:100%;min-height:50px;" onclick="setScreen('workbench')">시퀀스 워크벤치 열기 (${state.apparatus} · ${state.targetMin}분) →</button>
+              </section>
+              <section class="card" style="background:#fcfbf8;display:flex;flex-direction:column;justify-content:space-between;gap:14px;">
+                <div>
+                  <span class="kicker">RECENT FLOW · 빠른 재사용</span>
+                  <h2 style="margin:10px 0 12px;font-size:1.2rem;">최근 수업 이어가기</h2>
+                  <div class="step-row">
+                    <div>
+                      <strong>${state.title}</strong>
+                      <div style="font-size:0.8rem;color:var(--ink-muted);">${state.steps.length}개 동작 · ${sumMin}분 · 리포머</div>
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                      <button class="btn-secondary" onclick="setScreen('workbench')">편집</button>
+                      <button class="btn-primary" onclick="setScreen('stage')">▶ 시작</button>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn-secondary" style="width:100%;" onclick="setScreen('binder')">저장한 수업 전체 보기 →</button>
+              </section>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.screen === 'workbench') {
+        const listRows = state.steps.map((s, idx) => `
+          <div class="step-row">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="side-count">${String(idx + 1).padStart(2, '0')}</span>
+              <div class="motion-thumb">${studioMotionSvg(s.pose)}</div>
+              <div>
+                <strong>${s.name}</strong>
+                <div style="margin-top:3px;display:flex;gap:6px;align-items:center;">
+                  <span class="spring-pill spring-${s.sType}">${s.springs}</span>
+                  <span style="font-size:0.78rem;color:var(--ink-muted);">${s.sec} 구간</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button class="btn-secondary" style="padding:4px 10px;" onclick="state.steps[${idx}].min=Math.max(1,state.steps[${idx}].min-0.5);render()">-0.5분</button>
+              <strong style="min-width:48px;text-align:center;">${s.min}분</strong>
+              <button class="btn-secondary" style="padding:4px 10px;" onclick="state.steps[${idx}].min+=0.5;render()">+0.5분</button>
+            </div>
+          </div>
+        `).join('');
+
+        root.innerHTML = journeyHtml + `
+          <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;">
+            <div>
+              <span class="kicker">3 / 4 단계 · 순서와 시간 다듬기</span>
+              <h1 style="margin:6px 0 0;font-size:1.5rem;">${state.title}</h1>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <div class="seg-bar" role="group" aria-label="워크벤치 보기 모드">
+                <button class="seg-pill" aria-pressed="${state.wbMode === 'split'}" onclick="state.wbMode='split';render()">원스크린 좌우 분할</button>
+                <button class="seg-pill" aria-pressed="${state.wbMode === 'list'}" onclick="state.wbMode='list';render()">단계별 리스트</button>
+                <button class="seg-pill" aria-pressed="${state.wbMode === 'columns'}" onclick="state.wbMode='columns';render()">3구간 보드</button>
+                <button class="seg-pill" aria-pressed="${state.wbMode === 'timeline'}" onclick="state.wbMode='timeline';render()">스프링 타임라인</button>
+              </div>
+              <button class="btn-primary" onclick="setScreen('stage')">▶ 수업 시작</button>
+            </div>
+          </div>
+
+          <div class="card" style="padding:14px 18px;margin-bottom:16px;background:var(--surface-subtle);">
+            <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
+              <span>현재 <strong>${sumMin}분</strong> / 목표 ${state.targetMin}분 · <strong style="color:${diff === 0 ? 'var(--sage-deep)' : 'var(--terracotta)'}">${diff === 0 ? '✓ 목표 시간에 딱 맞아요' : diff < 0 ? Math.abs(diff) + '분 부족' : '+' + diff + '분 초과'}</strong></span>
+              <div style="display:flex;gap:6px;">
+                ${diff < 0 ? `<button class="btn-secondary" style="min-height:36px;padding:4px 12px;font-size:0.8rem;" onclick="state.gapOpen=!state.gapOpen;render()">✨ 빈 시간 채우기 추천</button>` : ''}
+              </div>
+            </div>
+            <div style="height:9px;border-radius:999px;background:#e4ded1;display:flex;gap:2px;overflow:hidden;">
+              <span style="width:28%;background:#7ca494;border-radius:999px;"></span>
+              <span style="width:46%;background:var(--sage);border-radius:999px;"></span>
+              <span style="width:26%;background:var(--champagne);border-radius:999px;"></span>
+            </div>
+          </div>
+
+          ${state.gapOpen ? `
+            <div class="card" style="border:1.5px dashed var(--sage);background:#eef5f0;margin-bottom:16px;padding:16px;">
+              <strong>✨ 부족한 ${Math.max(1, Math.abs(diff))}분 채우기 추천 (기존 순서는 덮어쓰지 않아요)</strong>
+              <p style="margin:6px 0 10px;font-size:0.86rem;color:var(--ink-secondary);">리포머 니 스트레치 (4분 · 1R 1B) 동작을 본운동 끝에 자연스럽게 연결할 수 있습니다.</p>
+              <button class="btn-primary" onclick="state.steps.push({sec:'본운동',name:'리포머 니 스트레치',springs:'1R 1B',sType:'red',min:4,pose:'footwork',cue:'상체 각도를 유지하며 무릎으로 캐리지를 당깁니다.'});state.gapOpen=false;render()">수업표 끝에 추가하기</button>
+            </div>
+          ` : ''}
+
+          ${state.wbMode === 'split' ? `
+            <div class="split-workbench">
+              <aside class="card" style="padding:18px;">
+                <span class="kicker">시안 A · 빠른 동작 담기</span>
+                <h3 style="margin:8px 0;">원탭 카탈로그</h3>
+                <input type="search" placeholder="동작 이름·부위 검색" style="width:100%;min-height:42px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);margin-bottom:10px;" />
+                ${[
+                  { name: '수파인 암 프레스', springs: '1R 1B', sType: 'blue', min: 4, pose: 'hundred' },
+                  { name: '롱 스트레치 플랭크', springs: '1R 1B', sType: 'red', min: 5, pose: 'swan' }
+                ].map((c) => `
+                  <div class="step-row" style="padding:10px;">
+                    <div class="motion-thumb" style="width:68px;height:46px;">${studioMotionSvg(c.pose)}</div>
+                    <div style="flex:1;min-width:0;">
+                      <strong style="font-size:0.86rem;display:block;">${c.name}</strong>
+                      <span class="spring-pill spring-${c.sType}">${c.springs} · ${c.min}분</span>
+                    </div>
+                    <button class="btn-primary" style="padding:6px 10px;font-size:0.8rem;" onclick="state.steps.push({sec:'본운동',name:'${c.name}',springs:'${c.springs}',sType:'${c.sType}',min:${c.min},pose:'${c.pose}',cue:'코어 정렬을 유지합니다.'});render()">+ 담기</button>
+                  </div>
+                `).join('')}
+              </aside>
+              <section class="card" style="padding:18px;">${listRows}</section>
+            </div>
+          ` : state.wbMode === 'columns' ? `
+            <div class="three-col">
+              ${['준비', '본운동', '마무리'].map((sec) => `
+                <div class="card" style="padding:16px;">
+                  <h3 style="margin:0 0 10px;display:flex;justify-content:space-between;"><span>${sec}</span><span style="color:var(--sage);font-size:0.86rem;">${state.steps.filter((x) => x.sec === sec).reduce((a, b) => a + b.min, 0)}분</span></h3>
+                  ${state.steps.filter((x) => x.sec === sec).map((s) => `
+                    <div class="step-row" style="padding:10px;">
+                      <div class="motion-thumb" style="width:64px;height:44px;">${studioMotionSvg(s.pose)}</div>
+                      <div style="flex:1;"><strong style="font-size:0.88rem;display:block;">${s.name}</strong><span class="spring-pill spring-${s.sType}">${s.springs} · ${s.min}분</span></div>
+                    </div>
+                  `).join('')}
+                </div>
+              `).join('')}
+            </div>
+          ` : state.wbMode === 'timeline' ? `
+            <div class="card">
+              <span class="kicker">시안 C · 스프링 장력 타임라인 리본</span>
+              <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 4px;">
+                ${state.steps.map((s, idx) => `
+                  <div style="min-width:${Math.max(140, s.min * 24)}px;padding:12px;border-radius:14px;border:1px solid var(--line);background:${s.sType === 'red' ? 'var(--terracotta-soft)' : s.sType === 'blue' ? 'var(--blue-soft)' : 'var(--amber-soft)'};">
+                    <small style="font-weight:700;opacity:0.75;">0${idx + 1} · ${s.sec} · ${s.min}분</small>
+                    <strong style="display:block;margin:4px 0;">${s.name}</strong>
+                    <span class="spring-pill spring-${s.sType}">${s.springs}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : `<div class="card">${listRows}</div>`}
+        `;
+        return;
+      }
+
+      if (state.screen === 'atlas') {
+        root.innerHTML = journeyHtml + `
+          <div class="card" style="margin-bottom:18px;">
+            <span class="kicker">HIGH-PRECISION STUDIO KINEMATICS · 98 MOVEMENTS UNIFIED</span>
+            <h1 style="margin:8px 0 4px;font-size:1.55rem;">동작 라이브러리 (전 동작 스튜디오 기구학 표준 일원화)</h1>
+            <p style="margin:0 0 16px;color:var(--ink-muted);">상단 대표 쇼케이스부터 98개 전체 동작 카드까지 동일한 스튜디오 복장 인체 실루엣·원호(Arc) 보간·기구 접점 도해로 동작합니다.</p>
+            <div class="atlas-grid">
+              ${state.steps.map((s) => `
+                <article class="card" style="padding:14px;border-radius:18px;background:#fcfbf8;">
+                  <div style="border-radius:12px;overflow:hidden;border:1px solid #dcd4c3;margin-bottom:10px;">
+                    ${studioMotionSvg(s.pose, '100%', '156')}
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <strong>${s.name}</strong>
+                    <span class="spring-pill spring-${s.sType}">${s.springs}</span>
+                  </div>
+                  <p style="margin:0 0 10px;font-size:0.8rem;color:var(--ink-muted);">${s.cue}</p>
+                  <button class="btn-primary" style="width:100%;padding:8px;" onclick="setScreen('workbench')">+ 수업에 추가</button>
+                </article>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.screen === 'stage') {
+        const cur = state.steps[0];
+        const nxt = state.steps[1];
+        root.innerHTML = `
+          <div class="dark-stage" aria-label="다크 스튜디오 라이브 티칭 스테이지">
+            <section class="stage-panel">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <span style="color:var(--stage-mint);font-weight:700;font-size:0.86rem;">01 / 0${state.steps.length} · ${cur.sec} 구간</span>
+                <span class="spring-pill spring-${cur.sType}">${cur.springs} · 리포머</span>
+              </div>
+              <h1 style="margin:8px 0 10px;font-size:2rem;color:#fff;">${cur.name}</h1>
+              <div style="max-width:440px;border-radius:14px;overflow:hidden;margin-bottom:10px;">${studioMotionSvg(cur.pose, '100%', '170')}</div>
+              <div class="stage-timer">04:30</div>
+              <p style="display:inline-block;padding:5px 12px;border-radius:999px;background:rgba(167,196,178,0.16);color:var(--stage-mint);font-size:0.84rem;font-weight:700;margin:0 0 14px;">호흡 리듬 · 날숨에 밀어내고 들숨에 저항하며 복귀</p>
+              <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:8px;margin-bottom:14px;">
+                <button class="btn-secondary" style="background:var(--stage-elevated);color:#fff;border-color:rgba(255,255,255,0.16);">← 이전</button>
+                <button class="btn-primary" style="font-size:1.02rem;">⏸ 일시정지</button>
+                <button class="btn-secondary" style="background:var(--stage-elevated);color:#fff;border-color:rgba(255,255,255,0.16);">다음 →</button>
+              </div>
+              <div style="padding:12px 14px;border-radius:14px;background:var(--stage-elevated);border:1px solid rgba(167,196,178,0.28);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <div><small style="color:var(--stage-mint);font-weight:700;display:block;">다음 순서 준비 요약</small><strong>${nxt.name}</strong></div>
+                <span class="spring-pill spring-${nxt.sType}">스프링 ${nxt.springs}</span>
+              </div>
+            </section>
+            <aside class="stage-panel">
+              <span style="color:var(--stage-mint);font-size:0.78rem;font-weight:700;">NEXT UP · 미리 준비할 세팅</span>
+              <h2 style="margin:8px 0;color:#fff;">다음: ${nxt.name}</h2>
+              <p style="color:rgba(247,245,240,0.82);font-size:0.9rem;">${nxt.cue}</p>
+              <hr style="border:none;border-top:1px solid rgba(255,255,255,0.12);margin:16px 0;" />
+              <strong style="display:block;margin-bottom:8px;font-size:0.85rem;">오늘의 전체 흐름</strong>
+              <div style="display:grid;gap:6px;">
+                ${state.steps.map((s, i) => `
+                  <div style="padding:9px 12px;border-radius:10px;background:${i === 0 ? 'var(--sage)' : 'rgba(255,255,255,0.06)'};display:flex;justify-content:space-between;font-size:0.85rem;">
+                    <span>0${i + 1}. ${s.name}</span><span>${s.min}분</span>
+                  </div>
+                `).join('')}
+              </div>
+            </aside>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.screen === 'binder') {
+        root.innerHTML = journeyHtml + `
+          <div class="card">
+            <span class="kicker">나의 수업 서랍 · 원탭 복제 & 이력 스냅샷 보존</span>
+            <h1 style="margin:8px 0 14px;font-size:1.5rem;">저장한 시퀀스 보관함</h1>
+            <div class="step-row" style="padding:18px;">
+              <div>
+                <strong style="font-size:1.08rem;">${state.title}</strong>
+                <div style="font-size:0.84rem;color:var(--ink-muted);margin-top:4px;">리포머 · Lv 1.5 · ${state.steps.length}개 동작 (${sumMin}분) · 최근 수업 2회</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn-primary" onclick="setScreen('workbench')">불러오기</button>
+                <button class="btn-secondary" onclick="state.title+=' (복사)';setScreen('workbench')">사본 열기</button>
+                <button class="btn-secondary" onclick="setScreen('stage')">▶ 바로 진행</button>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.screen === 'schedule') {
+        root.innerHTML = `
+          <div class="card">
+            <span class="kicker">WEEKLY STUDIO TIMETABLE</span>
+            <h1 style="margin:8px 0 14px;font-size:1.5rem;">강사 주간 일정 보드</h1>
+            <div class="schedule-grid">
+              ${[
+                { day: '월 (11/09)', items: ['10:00 리포머 기초 (본점 A)', '19:00 캐딜락 코어 (본점 B)'] },
+                { day: '화 (11/10)', items: ['11:00 매트 소도구 (분점)', '20:00 체어 하체 (본점 A)'] },
+                { day: '수 (11/11 · 오늘)', items: ['10:00 리포머 코어 정렬', '19:00 체어 하체 밸런스'] },
+                { day: '목 (11/12)', items: ['10:00 바렐 척추 신전'] },
+                { day: '금 (11/13)', items: ['09:30 리포머 전신 순환', '18:30 금요 릴리즈 스트레치'] }
+              ].map((col, idx) => `
+                <div style="padding:12px;border-radius:14px;border:1px solid ${idx === 2 ? 'var(--sage-deep)' : 'var(--line)'};background:${idx === 2 ? '#f2f7f4' : '#fcfbf8'};">
+                  <strong style="display:block;font-size:0.86rem;margin-bottom:8px;color:${idx === 2 ? 'var(--sage-deep)' : 'var(--ink)'};">${col.day}</strong>
+                  ${col.items.map((it) => `<div style="padding:8px 10px;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:0.8rem;margin-bottom:6px;font-weight:600;">${it}</div>`).join('')}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Member Booking & Pass Wallet
+      root.innerHTML = `
+        <div class="two-col">
+          <section style="background:linear-gradient(135deg,#1f4d3f 0%,#355441 64%,#456b54 100%);color:#fffdf8;border-radius:22px;padding:24px;display:flex;justify-content:space-between;align-items:center;gap:16px;">
+            <div>
+              <span style="color:#ebd3a4;font-size:0.74rem;font-weight:700;letter-spacing:0.08em;">ATELIER MEMBERSHIP PASS</span>
+              <h2 style="margin:6px 0 8px;color:#fff;">4:1 기구 필라테스 20회권</h2>
+              <div style="font-size:0.88rem;opacity:0.92;">잔여 <strong>14회</strong> / 20회 · 만료일 2026-12-31 · 수업 12시간 전 무료 취소</div>
+            </div>
+            <div style="width:86px;height:86px;border-radius:50%;border:6px solid #ebd3a4;display:grid;place-items:center;text-align:center;flex-shrink:0;">
+              <div><strong style="display:block;font-size:1.15rem;color:#f3dfb8;">14회</strong><small style="font-size:0.68rem;">남음</small></div>
+            </div>
+          </section>
+          <section class="card">
+            <span class="kicker">REFORMER SPOT SELECTION</span>
+            <h3 style="margin:8px 0 10px;">오늘 19:00 리포머 자리 선택 (본점 A룸)</h3>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+              ${['R-01 예약가능', 'R-02 마감', 'R-03 선택됨', 'R-04 예약가능', 'R-05 마감', 'R-06 예약가능'].map((sp, idx) => `
+                <button class="btn-secondary" ${sp.includes('마감') ? 'disabled' : ''} style="min-height:64px;flex-direction:column;background:${idx === 2 ? 'var(--sage-soft)' : '#fff'};border-color:${idx === 2 ? 'var(--sage-deep)' : 'var(--line)'};opacity:${sp.includes('마감') ? 0.5 : 1};">
+                  <strong>${sp.split(' ')[0]}</strong><small style="font-size:0.72rem;">${sp.split(' ')[1]}</small>
+                </button>
+              `).join('')}
+            </div>
+          </section>
+        </div>
+      `;
+    }
+    render();
+  </script>
+</body>
+</html>

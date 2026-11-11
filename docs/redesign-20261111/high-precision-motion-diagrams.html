@@ -3,20 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pilates Flow — 고품질 관절·기구 키네마틱 모션 도해 쇼케이스</title>
+  <title>Flow Atelier — 리포머 고해상도 스튜디오 기구학 모션 도해 (v2.2)</title>
   <style>
     :root {
-      --bg: #f8f5ee;
-      --card: #ffffff;
-      --ink: #1e211d;
-      --muted: #5f655c;
-      --line: #e2ddd2;
-      --wood: #c59b6d;
-      --wood-dark: #936d43;
-      --sage: #355441;
-      --sage-fill: #cfe0d5;
+      --bg: #faf8f4;
+      --surface: #ffffff;
+      --ink: #1d201c;
+      --muted: #5c6259;
+      --line: #e2ddd3;
+      --sage: #1f4d3f;
+      --sage-soft: #e6efe9;
       --terra: #bf5a41;
-      --blue: #38658e;
+      --font: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
     }
     * { box-sizing: border-box; }
     body {
@@ -24,361 +22,205 @@
       padding: 28px 20px 56px;
       background: var(--bg);
       color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", sans-serif;
+      font-family: var(--font);
+      letter-spacing: -0.015em;
       word-break: keep-all;
     }
-    header, main { max-width: 1180px; margin: 0 auto; }
+    header, main, .notice { max-width: 1220px; margin: 0 auto; }
     header {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
-      align-items: end;
+      align-items: flex-end;
       gap: 16px;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
       padding-bottom: 16px;
       border-bottom: 1px solid var(--line);
     }
-    h1 { margin: 4px 0 6px; font-size: 1.6rem; }
-    .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    button {
-      min-height: 42px;
+    .kicker {
+      display: inline-block;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: var(--sage-soft);
+      color: var(--sage);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+    }
+    h1 { margin: 8px 0 6px; font-size: clamp(1.4rem, 2.2vw, 1.82rem); }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+    button, a.link-btn {
+      min-height: 44px;
       padding: 8px 14px;
-      border-radius: 10px;
+      border-radius: 12px;
       border: 1px solid var(--line);
-      background: var(--card);
+      background: var(--surface);
+      color: var(--ink);
       font: inherit;
-      font-weight: 600;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
       cursor: pointer;
     }
-    button.active { background: var(--sage); color: #fff; border-color: var(--sage); }
+    button.active { background: var(--sage); border-color: var(--sage); color: #fff; }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 18px;
     }
-    @media (max-width: 560px) {
-      .grid { grid-template-columns: 1fr; }
-    }
-    .motion-card {
-      background: var(--card);
+    @media (max-width: 460px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 10px 28px rgba(30, 33, 29, 0.05);
+      padding: 18px;
+      box-shadow: 0 8px 26px rgba(29, 32, 28, 0.05);
     }
-    .card-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      margin-bottom: 10px;
-    }
-    .badge {
-      font-size: 0.75rem;
-      padding: 3px 9px;
+    .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+    .pill {
+      padding: 3px 10px;
       border-radius: 999px;
-      background: #edf3ef;
-      color: var(--sage);
-      font-weight: 700;
-    }
-    .canvas-wrap {
-      background: #fbf9f4;
+      background: #f5f2eb;
       border: 1px solid var(--line);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--sage);
+    }
+    .canvas { border-radius: 14px; overflow: hidden; border: 1px solid #dcd4c3; }
+    .cue { margin-top: 10px; font-size: 0.83rem; color: var(--muted); line-height: 1.45; }
+    .notice {
+      margin-top: 22px;
+      padding: 14px 18px;
       border-radius: 14px;
-      padding: 12px;
-      position: relative;
-    }
-    .phase-strip {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 4px;
-      margin-top: 12px;
-    }
-    .phase-pill {
-      min-height: 34px;
-      padding: 4px;
-      font-size: 0.76rem;
-      border-radius: 8px;
-      text-align: center;
-    }
-    .meta-row {
-      margin-top: 12px;
-      font-size: 0.85rem;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .provenance-note {
-      max-width: 1180px;
-      margin: 22px auto 0;
+      background: #f3efe8;
+      border: 1px solid var(--line);
       font-size: 0.82rem;
       color: var(--muted);
-      background: #f1ede4;
-      padding: 12px 16px;
-      border-radius: 12px;
     }
   </style>
 </head>
 <body>
   <header>
     <div>
-      <span class="badge">HIGH-PRECISION KINEMATIC SCHEMATICS</span>
-      <h1>Pilates Flow 고품질 관절·기구 모션 도해 (5단계 연속 보간)</h1>
-      <p style="margin:0;color:var(--muted);">캐리지 이동량, 스프링 장력 벡터, 척추 분절 곡선, 호흡 타이밍을 정밀하게 표현하며 모션 감소 설정을 지원합니다.</p>
+      <span class="kicker">REFORMER STUDIO KINEMATIC STUDY · v2.2 UNIFIED EDITION</span>
+      <h1>리포머 4대 핵심 동작 — 에디토리얼 스튜디오 모션 도해</h1>
+      <p style="margin:0;color:var(--muted);">98종 전체 모션과 동일한 세이지 에메랄드 스튜디오 복장, 원호(Arc) 분절 보간, 2관절 IK 접점 고정 및 순차 척추 분절 표준입니다.</p>
     </div>
-    <div class="controls">
-      <button type="button" id="play-btn" class="active" onclick="togglePlay()">⏸ 연속 모션 일시정지</button>
-      <button type="button" id="guide-btn" class="active" onclick="toggleGuides()">정렬 가이드선 표시 중</button>
-      <button type="button" id="rm-btn" onclick="toggleReducedMotion()">모션 감소(정지 도해) 전환</button>
+    <div class="toolbar">
+      <button id="toggle-play" class="active" onclick="togglePlay()">⏸ 연속 모션 일시정지</button>
+      <a class="link-btn" href="../design-system-mockups/02-studio-kinematic-motion-atlas.html">5대 기구 전체 모션 아틀라스 열기 →</a>
     </div>
   </header>
 
-  <main class="grid" id="diagram-grid"></main>
+  <main class="grid" id="reformer-grid"></main>
 
-  <p class="provenance-note">
-    안내: 본 도해는 수업 준비와 큐잉 이해를 돕기 위해 자체 제작된 기구학 도식(Authoring Schematics)이며, 제3자 영상 트레이싱을 포함하지 않고 의학적 진단·개인별 안전성을 대체하지 않습니다.
+  <p class="notice">
+    통합 정본 시안 번들: <code>docs/design-system-mockups/01-flow-atelier-master-mockup.html</code> 및 <code>02-studio-kinematic-motion-atlas.html</code> · 실제 프로덕션 렌더러: <code>src/components/MovementPhaseDiagramSvg.tsx</code> + <code>src/data/catalogMotionAssets/index.ts</code>.
   </p>
 
   <script>
     let playing = true;
-    let showGuides = true;
-    let reducedMotion = false;
-    let t = 0; // 0..1 continuous cycle
-    let manualPhase = 2;
-    const phaseNames = ['1 준비', '2 시작', '3 정점(수축/신전)', '4 조절', '5 복귀'];
-
-    const diagrams = [
-      {
-        id: 'footwork',
-        titleKo: '리포머 풋워크',
-        titleEn: 'Reformer Footwork · Parallel Heels',
-        springs: '빨강×2 · 파랑×1',
-        breath: '날숨에 밀어내고 · 들숨에 저항하며 복귀',
-        cue: '골반과 요추 중립을 유지한 채 뒤꿈치로 풋바를 수평으로 밀어냅니다.'
-      },
-      {
-        id: 'pelvic-curl',
-        titleKo: '펠빅 컬 · 브릿징',
-        titleEn: 'Pelvic Curl · Sequential Spinal Articulation',
-        springs: '빨강×2',
-        breath: '날숨에 꼬리뼈부터 분절 상승 · 들숨 유지 · 날숨 하강',
-        cue: '캐리지가 흔들리지 않도록 햄스트링으로 지지하며 척추를 하나씩 말아 올립니다.'
-      },
-      {
-        id: 'hundred',
-        titleKo: '헌드레드',
-        titleEn: 'The Hundred · Thoracic Flexion & Core',
-        springs: '빨강×1 · 파랑×1',
-        breath: '5박자 들숨 · 5박자 날숨 펌핑',
-        cue: '날개뼈 하각까지 상체를 말아 올리고 스트랩 장력을 유지하며 팔을 펌핑합니다.'
-      },
-      {
-        id: 'swan',
-        titleKo: '롱박스 스완',
-        titleEn: 'Long Box Swan · Thoracic Extension',
-        springs: '파랑×1',
-        breath: '들숨에 가슴을 앞·위로 확장 · 날숨에 길게 복귀',
-        cue: '허리가 꺾이지 않도록 치골을 박스에 밀착하고 흉추 위쪽부터 길게 젖혀 올립니다.'
-      }
+    let t = 0.35;
+    const cards = [
+      { id: 'fw', ko: '풋워크 패럴렐 (Footwork Parallel)', springs: '2R 1B', cue: '발뒤꿈치 풋바 접점 고정 + 캐리지 활주 연동 2-Bone IK 무릎·고관절 신전' },
+      { id: 'curl', ko: '펠빅 컬 (Pelvic Curl · Spinal Articulation)', springs: '2R', cue: '골반 후방경사부터 요추·흉추까지 순차 위상차로 분절해 사선 정렬 완성' },
+      { id: 'hundred', ko: '헌드레드 (The Hundred · Pump & Curl)', springs: '1R 1B', cue: '흉추 굴곡 유지 + 정점 구간 스트랩 리듬 펌핑 오버레이' },
+      { id: 'swan', ko: '롱박스 스완 (Long Box Swan)', springs: '1B', cue: '롱박스 치골 지지 위에서 흉추·경추를 매끄러운 원호로 신전' }
     ];
 
-    function renderGrid() {
-      const root = document.getElementById('diagram-grid');
-      root.innerHTML = diagrams.map((d) => `
-        <article class="motion-card" data-id="${d.id}">
-          <div class="card-head">
-            <div>
-              <h2 style="margin:0;font-size:1.2rem;">${d.titleKo}</h2>
-              <small style="color:var(--muted);">${d.titleEn}</small>
-            </div>
-            <span class="badge">${d.springs}</span>
-          </div>
-          <div class="canvas-wrap">
-            <svg id="svg-${d.id}" viewBox="0 0 460 220" width="100%" height="210" role="img" aria-label="${d.titleKo} 5단계 기구학 모션 도해"></svg>
-          </div>
-          <div class="phase-strip" role="group" aria-label="${d.titleKo} 단계 선택">
-            ${phaseNames.map((p, idx) => `
-              <button type="button" class="phase-pill ${manualPhase === idx && (!playing || reducedMotion) ? 'active' : ''}" onclick="selectPhase(${idx})">${p}</button>
-            `).join('')}
-          </div>
-          <div class="meta-row">
-            <span><strong>호흡:</strong> ${d.breath}</span>
-            <span>${d.cue}</span>
-          </div>
-        </article>
-      `).join('');
-      drawAll();
+    function smootherstep(x) {
+      const c = Math.max(0, Math.min(1, x));
+      return c * c * c * (c * (c * 6 - 15) + 10);
     }
 
-    function selectPhase(idx) {
-      playing = false;
-      manualPhase = idx;
-      document.getElementById('play-btn').textContent = '▶ 연속 모션 재생';
-      document.getElementById('play-btn').classList.remove('active');
-      renderGrid();
-    }
+    document.getElementById('reformer-grid').innerHTML = cards.map((c) => `
+      <article class="card">
+        <div class="head">
+          <h2 style="margin:0;font-size:1.08rem;">${c.ko}</h2>
+          <span class="pill">Reformer · ${c.springs}</span>
+        </div>
+        <div class="canvas"><svg id="svg-${c.id}" viewBox="0 0 320 200" width="100%" role="img" aria-label="${c.ko}"></svg></div>
+        <p class="cue">${c.cue}</p>
+      </article>
+    `).join('');
 
-    function togglePlay() {
-      if (reducedMotion) return;
-      playing = !playing;
-      const btn = document.getElementById('play-btn');
-      btn.textContent = playing ? '⏸ 연속 모션 일시정지' : '▶ 연속 모션 재생';
-      btn.classList.toggle('active', playing);
-      renderGrid();
-    }
-
-    function toggleGuides() {
-      showGuides = !showGuides;
-      const btn = document.getElementById('guide-btn');
-      btn.textContent = showGuides ? '정렬 가이드선 표시 중' : '정렬 가이드선 숨김';
-      btn.classList.toggle('active', showGuides);
-      drawAll();
-    }
-
-    function toggleReducedMotion() {
-      reducedMotion = !reducedMotion;
-      if (reducedMotion) playing = false;
-      const btn = document.getElementById('rm-btn');
-      btn.classList.toggle('active', reducedMotion);
-      renderGrid();
-    }
-
-    function frameSvg(carriageX, footbarAngle, showBox, bodyMarkup, guideMarkup) {
-      const springEnd = 360 - carriageX;
+    function baseSvg(id, slide, box) {
+      const cx = 42 - slide;
       return `
-        <!-- Wooden Reformer Frame -->
-        <rect x="28" y="162" width="404" height="14" rx="4" fill="#c59b6d" stroke="#8a6339" stroke-width="1.5"/>
-        <rect x="42" y="176" width="16" height="28" rx="2" fill="#a87e51"/>
-        <rect x="402" y="176" width="16" height="28" rx="2" fill="#a87e51"/>
-        <!-- Riser & Pulley -->
-        <rect x="34" y="114" width="7" height="48" rx="2" fill="#8a6339"/>
-        <circle cx="42" cy="120" r="4" fill="#495048"/>
-        <!-- Footbar -->
-        <line x1="402" y1="164" x2="${402 + Math.sin(footbarAngle) * 22}" y2="${118}" stroke="#3a403a" stroke-width="5" stroke-linecap="round"/>
-        <circle cx="${402 + Math.sin(footbarAngle) * 22}" cy="118" r="4.5" fill="#1e211d"/>
-        <!-- Spring Coil -->
-        <path d="M ${springEnd} 156 Q ${(springEnd + 398) / 2} 162 398 156" fill="none" stroke="#bf5a41" stroke-width="2.6" stroke-dasharray="5 3"/>
-        <!-- Moving Carriage -->
-        <g transform="translate(${-carriageX}, 0)">
-          <rect x="110" y="150" width="248" height="11" rx="4" fill="#4f5850"/>
-          <!-- Headrest & Shoulder blocks -->
-          <path d="M 114 150 L 136 143 L 136 150 Z" fill="#3a423b"/>
-          <rect x="148" y="136" width="8" height="14" rx="2" fill="#3a423b"/>
-          ${showBox ? `<rect x="184" y="118" width="124" height="32" rx="5" fill="#59656c" stroke="#394247" stroke-width="1.5"/>` : ''}
-          ${bodyMarkup}
-        </g>
-        ${showGuides ? guideMarkup : ''}
+        <defs>
+          <linearGradient id="bg-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fdfcf8"/><stop offset="100%" stop-color="#efe9dc"/></linearGradient>
+          <linearGradient id="oak-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d8b489"/><stop offset="100%" stop-color="#b5895a"/></linearGradient>
+          <linearGradient id="up-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#58776a"/><stop offset="100%" stop-color="#3b564b"/></linearGradient>
+          <linearGradient id="suit-${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#496f60"/><stop offset="100%" stop-color="#29483c"/></linearGradient>
+          <linearGradient id="skin-${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f0d7c2"/><stop offset="100%" stop-color="#dfb99d"/></linearGradient>
+        </defs>
+        <rect x="0.5" y="0.5" width="319" height="199" rx="12" fill="url(#bg-${id})" stroke="#dcd4c3"/>
+        <line x1="12" y1="178" x2="308" y2="178" stroke="#d5cec0" stroke-width="1.3"/>
+        <rect x="20" y="154" width="280" height="11" rx="3.5" fill="url(#oak-${id})" stroke="#87633b" stroke-width="1.3"/>
+        <line x1="26" y1="151" x2="294" y2="151" stroke="#788882" stroke-width="2"/>
+        <path d="M ${cx + 168} 151 Q ${(cx + 446) / 2} 155 278 151" fill="none" stroke="#bf5a41" stroke-width="1.8" stroke-dasharray="4 2"/>
+        <rect x="${cx}" y="142" width="168" height="9.5" rx="3.5" fill="url(#up-${id})" stroke="#24443a" stroke-width="1.4"/>
+        ${box ? `<rect x="${cx + 54}" y="123" width="84" height="19" rx="3.5" fill="url(#up-${id})" stroke="#24443a" stroke-width="1.2"/>` : ''}
+        <line x1="280" y1="156" x2="266" y2="126" stroke="#354b44" stroke-width="3.6" stroke-linecap="round"/>
+        <circle cx="266" cy="126" r="4.3" fill="#223b33" stroke="#fcfaf5" stroke-width="1.2"/>
       `;
     }
 
-    function drawAll() {
-      const phaseProgress = (!playing || reducedMotion)
-        ? [0, 0.35, 1, 0.55, 0.1][manualPhase]
-        : 0.5 - 0.5 * Math.cos(t * Math.PI * 2);
+    function render() {
+      const raw = 0.5 - 0.5 * Math.cos(t * Math.PI * 2);
+      const u = smootherstep(raw);
 
-      // 1. Footwork
-      const fwSlide = phaseProgress * 58;
-      const kneeY = 82 + phaseProgress * 36;
-      const kneeX = 316 + phaseProgress * 22;
-      const fwSvg = document.getElementById('svg-footwork');
-      if (fwSvg) {
-        fwSvg.innerHTML = frameSvg(
-          fwSlide,
-          0.32,
-          false,
-          `
-            <circle cx="132" cy="134" r="11" fill="#cfe0d5" stroke="#1e211d" stroke-width="2"/>
-            <path d="M 145 138 L 246 138" stroke="#355441" stroke-width="12" stroke-linecap="round"/>
-            <path d="M 164 136 L 232 144" stroke="#1e211d" stroke-width="4" stroke-linecap="round"/>
-            <path d="M 246 138 L ${kneeX + fwSlide * 0.45} ${kneeY} L ${408 + fwSlide} 120" fill="none" stroke="#355441" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="246" cy="138" r="4" fill="#1e211d"/>
-            <circle cx="${kneeX + fwSlide * 0.45}" cy="${kneeY}" r="4" fill="#1e211d"/>
-          `,
-          `
-            <line x1="110" y1="120" x2="220" y2="120" stroke="#355441" stroke-width="1.3" stroke-dasharray="4 3"/>
-            <text x="165" y="112" text-anchor="middle" font-size="11" fill="#355441">중립 척추 유지</text>
-            <line x1="250" y1="196" x2="${250 - Math.max(18, fwSlide)}" y2="196" stroke="#bf5a41" stroke-width="2"/>
-            <text x="230" y="210" text-anchor="middle" font-size="11" fill="#bf5a41">캐리지 수평 활주 (${Math.round(phaseProgress * 100)}%)</text>
-          `
-        );
-      }
+      const s1 = u * 30;
+      document.getElementById('svg-fw').innerHTML = baseSvg('fw', s1, false) + `
+        <path d="M ${102 - s1} 136 L ${180 - s1} 136" stroke="url(#suit-fw)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M ${180 - s1} 136 L ${224 - s1 * 0.35} ${98 + u * 22} L 264 125" stroke="#2d5043" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M ${110 - s1} 136 L ${170 - s1} 139" stroke="url(#skin-fw)" stroke-width="6.2" stroke-linecap="round"/>
+        <circle cx="${76 - s1}" cy="134" r="3.8" fill="#243a32"/><circle cx="${84 - s1}" cy="134" r="8.8" fill="url(#skin-fw)" stroke="#2b453c" stroke-width="1.5"/>
+      `;
 
-      // 2. Pelvic Curl
-      const lift = phaseProgress * 44;
-      const pcSvg = document.getElementById('svg-pelvic-curl');
-      if (pcSvg) {
-        pcSvg.innerHTML = frameSvg(
-          phaseProgress * 6,
-          0.32,
-          false,
-          `
-            <circle cx="132" cy="134" r="11" fill="#cfe0d5" stroke="#1e211d" stroke-width="2"/>
-            <path d="M 152 138 Q 204 ${138 - lift * 0.65} 256 ${138 - lift}" fill="none" stroke="#355441" stroke-width="12" stroke-linecap="round"/>
-            <path d="M 256 ${138 - lift} L 336 78 L 408 120" fill="none" stroke="#355441" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M 160 140 L 238 145" stroke="#1e211d" stroke-width="4" stroke-linecap="round"/>
-            <circle cx="256" cy="${138 - lift}" r="4.5" fill="#bf5a41"/>
-          `,
-          `
-            <path d="M 156 116 Q 210 ${106 - lift * 0.7} 262 ${114 - lift}" fill="none" stroke="#bf5a41" stroke-width="1.6" stroke-dasharray="4 3"/>
-            <text x="215" y="${88 - lift * 0.45}" text-anchor="middle" font-size="11" fill="#bf5a41">꼬리뼈 → 흉추 순차 분절</text>
-          `
-        );
-      }
+      const pLift = smootherstep(Math.min(1, raw * 1.18)) * 38;
+      const tLift = smootherstep(Math.max(0, (raw - 0.12) / 0.88)) * 22;
+      document.getElementById('svg-curl').innerHTML = baseSvg('curl', u * 4, false) + `
+        <path d="M 98 136 Q 138 ${136 - tLift} 178 ${136 - pLift}" stroke="url(#suit-curl)" stroke-width="14" stroke-linecap="round" fill="none"/>
+        <path d="M 178 ${136 - pLift} L 222 82 L 264 125" stroke="#2d5043" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M 104 137 L 170 140" stroke="url(#skin-curl)" stroke-width="6.2" stroke-linecap="round"/>
+        <circle cx="74" cy="134" r="3.8" fill="#243a32"/><circle cx="82" cy="134" r="8.8" fill="url(#skin-curl)" stroke="#2b453c" stroke-width="1.5"/>
+      `;
 
-      // 3. The Hundred
-      const curl = 18 + phaseProgress * 18;
-      const pump = Math.sin(t * Math.PI * 8) * (playing && !reducedMotion ? 7 : 0);
-      const hdSvg = document.getElementById('svg-hundred');
-      if (hdSvg) {
-        hdSvg.innerHTML = frameSvg(
-          16 + phaseProgress * 10,
-          0.32,
-          false,
-          `
-            <circle cx="${140 + curl * 0.4}" cy="${122 - curl * 0.7}" r="11" fill="#cfe0d5" stroke="#1e211d" stroke-width="2"/>
-            <path d="M ${150 + curl * 0.35} ${130 - curl * 0.45} Q 198 142 246 138" fill="none" stroke="#355441" stroke-width="12" stroke-linecap="round"/>
-            <path d="M 246 138 L 286 86 L 358 ${86 - phaseProgress * 22}" fill="none" stroke="#355441" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M ${166 + curl * 0.25} ${128 - curl * 0.3} L 246 ${126 + pump}" stroke="#1e211d" stroke-width="4.5" stroke-linecap="round"/>
-            <line x1="42" y1="120" x2="246" y2="${126 + pump}" stroke="#38658e" stroke-width="1.6"/>
-          `,
-          `
-            <path d="M 256 112 Q 264 126 256 140" fill="none" stroke="#bf5a41" stroke-width="1.6"/>
-            <text x="295" y="64" text-anchor="middle" font-size="11" fill="#355441">흉추 굴곡 유지 · 스트랩 펌핑</text>
-          `
-        );
-      }
+      const curl = u * 22;
+      const pump = playing ? Math.sin(t * Math.PI * 10) * 4.5 : 0;
+      document.getElementById('svg-hundred').innerHTML = baseSvg('hd', 8 + u * 6, false) + `
+        <path d="M ${96 + curl * 0.3} ${134 - curl} Q 136 138 176 136" stroke="url(#suit-hd)" stroke-width="14" stroke-linecap="round" fill="none"/>
+        <path d="M 176 136 L 216 ${96 - u * 10} L ${248 + u * 18} ${88 - u * 26}" stroke="#2d5043" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M ${104 + curl * 0.25} ${132 - curl * 0.8} L 178 ${124 + pump}" stroke="url(#skin-hd)" stroke-width="6.2" stroke-linecap="round"/>
+        <line x1="26" y1="104" x2="178" y2="${124 + pump}" stroke="#38658e" stroke-width="1.4" stroke-dasharray="3 2"/>
+        <circle cx="${74 + curl * 0.35}" cy="${128 - curl * 1.1}" r="3.8" fill="#243a32"/><circle cx="${82 + curl * 0.35}" cy="${128 - curl * 1.1}" r="8.8" fill="url(#skin-hd)" stroke="#2b453c" stroke-width="1.5"/>
+      `;
 
-      // 4. Long Box Swan
-      const ext = phaseProgress * 34;
-      const swSvg = document.getElementById('svg-swan');
-      if (swSvg) {
-        swSvg.innerHTML = frameSvg(
-          phaseProgress * 22,
-          0.32,
-          true,
-          `
-            <path d="M 134 ${118 + ext * 0.12} L 236 114 Q 282 ${114 - ext * 0.55} 314 ${108 - ext}" fill="none" stroke="#355441" stroke-width="11" stroke-linecap="round"/>
-            <circle cx="${324}" cy="${98 - ext}" r="11" fill="#cfe0d5" stroke="#1e211d" stroke-width="2"/>
-            <path d="M 298 ${112 - ext * 0.7} L 364 118 L ${408 + phaseProgress * 22} 118" fill="none" stroke="#1e211d" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-          `,
-          `
-            <path d="M 252 96 Q 288 ${82 - ext * 0.7} 322 ${72 - ext}" fill="none" stroke="#355441" stroke-width="1.6" stroke-dasharray="4 3"/>
-            <text x="280" y="${62 - ext * 0.6}" text-anchor="middle" font-size="11" fill="#355441">흉추 신전 · 견갑 하강 안정화</text>
-          `
-        );
-      }
+      const ext = u * 32;
+      document.getElementById('svg-swan').innerHTML = baseSvg('sw', u * 14, true) + `
+        <path d="M 74 ${124 + ext * 0.1} L 148 118 Q 188 ${116 - ext * 0.5} 218 ${112 - ext}" stroke="url(#suit-sw)" stroke-width="13.5" stroke-linecap="round" fill="none"/>
+        <path d="M 206 ${114 - ext * 0.75} L 240 119 L 266 125" stroke="url(#skin-sw)" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="222" cy="${98 - ext}" r="3.8" fill="#243a32"/><circle cx="229" cy="${101 - ext}" r="8.8" fill="url(#skin-sw)" stroke="#2b453c" stroke-width="1.5"/>
+      `;
     }
 
+    function togglePlay() {
+      playing = !playing;
+      const b = document.getElementById('toggle-play');
+      b.textContent = playing ? '⏸ 연속 모션 일시정지' : '▶ 연속 모션 재생';
+      b.classList.toggle('active', playing);
+    }
     function loop() {
-      if (playing && !reducedMotion) {
-        t = (t + 0.006) % 1;
-        drawAll();
+      if (playing) {
+        t = (t + 0.0045) % 1;
+        render();
       }
       requestAnimationFrame(loop);
     }
-
-    renderGrid();
+    render();
     requestAnimationFrame(loop);
   </script>
 </body>

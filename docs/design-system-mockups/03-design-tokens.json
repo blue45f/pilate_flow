@@ -1,0 +1,95 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "meta": {
+    "name": "Flow Atelier Studio Design & Kinematic Motion System",
+    "version": "2.2.0",
+    "updatedAt": "2026-11-11",
+    "productionStylesheet": "src/styles/atelier-luxury-v2.css",
+    "motionRenderer": "src/components/MovementPhaseDiagramSvg.tsx",
+    "kinematicEngine": "src/data/catalogMotionAssets/index.ts"
+  },
+  "color": {
+    "studio": {
+      "creamCanvas": "#faf8f4",
+      "ivorySurface": "#ffffff",
+      "limestoneSubtle": "#f3efe8",
+      "warmSand": "#ede7dd",
+      "hairline": "#e2ddd3",
+      "inkPrimary": "#1d201c",
+      "inkSecondary": "#4f564d",
+      "inkMuted": "#5c6259"
+    },
+    "brand": {
+      "sageDeep": "#1f4d3f",
+      "sageMid": "#355441",
+      "sageSoft": "#e6efe9",
+      "sageBorder": "#bfd3c6",
+      "champagneGold": "#b88a55",
+      "terracottaAccent": "#bf5a41"
+    },
+    "spring": {
+      "redBg": "#faeae5",
+      "redFg": "#b8563f",
+      "blueBg": "#e6eff7",
+      "blueFg": "#36628a",
+      "yellowBg": "#fbf3e2",
+      "yellowFg": "#9e6d1a"
+    },
+    "liveStage": {
+      "canvasDark": "#181b18",
+      "cardDark": "#222722",
+      "cardElevated": "#2a302a",
+      "inkIvory": "#f7f5f0",
+      "inkMint": "#a7c4b2",
+      "borderSubtle": "rgba(255, 255, 255, 0.12)"
+    },
+    "kinematicFigure": {
+      "skinLight": "#f0d7c2",
+      "skinShade": "#dfb99d",
+      "attireTorsoTop": "#496f60",
+      "attireTorsoBottom": "#2f5144",
+      "attireLegNearTop": "#395e4f",
+      "attireLegNearBottom": "#244337",
+      "attireFarMuted": "#8aa397",
+      "oakFrameLight": "#d8b489",
+      "oakFrameDark": "#b5895a",
+      "upholsteryTop": "#58776a",
+      "upholsteryBottom": "#3b564b"
+    }
+  },
+  "typography": {
+    "fontFamilySans": "'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif",
+    "scale": {
+      "eyebrow": "0.72rem",
+      "bodySm": "0.82rem",
+      "bodyMd": "0.92rem",
+      "cardTitle": "1.06rem",
+      "sectionTitle": "1.35rem",
+      "pageHeading": "clamp(1.55rem, 2.1vw, 2.05rem)",
+      "stageTimer": "clamp(3.6rem, 8vw, 5.4rem)"
+    }
+  },
+  "layout": {
+    "sidebarWidthDesktop": "224px",
+    "topbarHeight": "62px",
+    "maxContentWidth": "1480px",
+    "minTouchTargetPx": 44,
+    "radii": {
+      "sm": "10px",
+      "md": "14px",
+      "lg": "18px",
+      "xl": "24px",
+      "pill": "999px"
+    }
+  },
+  "motion": {
+    "catalogCount": 98,
+    "diagramViewBox": "0 0 320 200",
+    "continuousPhases": ["setup", "move", "turn", "return", "finish"],
+    "easing": "quintic-smootherstep-c2",
+    "openChainKinematics": "polar-arc-constant-segment-length",
+    "closedChainKinematics": "two-bone-analytical-ik",
+    "spinalArticulation": "sequential-vertebral-wave",
+    "reducedMotionPolicy": "strict-static-still-fallback"
+  }
+}

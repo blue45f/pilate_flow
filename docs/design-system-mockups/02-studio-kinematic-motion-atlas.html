@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flow Atelier — 5대 기구 고품질 스튜디오 기구학 모션 아틀라스 (v2.2)</title>
+  <style>
+    :root {
+      --bg: #faf8f4;
+      --card: #ffffff;
+      --ink: #1d201c;
+      --muted: #5c6259;
+      --line: #e2ddd3;
+      --sage: #355441;
+      --sage-deep: #1f4d3f;
+      --sage-soft: #e6efe9;
+      --terra: #bf5a41;
+      --font: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px 20px 60px;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font);
+      letter-spacing: -0.015em;
+      word-break: keep-all;
+    }
+    header, main, .footer-note { max-width: 1280px; margin: 0 auto; }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      display: inline-block;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: var(--sage-soft);
+      color: var(--sage-deep);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+    }
+    h1 { margin: 8px 0 6px; font-size: clamp(1.45rem, 2.2vw, 1.85rem); }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; }
+    button {
+      min-height: 44px;
+      padding: 8px 15px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      font: inherit;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    button.active { background: var(--sage-deep); border-color: var(--sage-deep); color: #fff; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 18px;
+    }
+    @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+    .motion-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 8px 28px rgba(29, 32, 28, 0.05);
+    }
+    .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+    .spring-chip {
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #f5f2eb;
+      border: 1px solid var(--line);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--sage-deep);
+      white-space: nowrap;
+    }
+    .stage-box {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #dcd4c3;
+      background: #fdfcf8;
+    }
+    .phase-bar {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      margin-top: 10px;
+    }
+    .phase-btn {
+      min-height: 36px;
+      padding: 4px;
+      border-radius: 8px;
+      font-size: 0.74rem;
+    }
+    .meta { margin-top: 10px; font-size: 0.83rem; color: var(--muted); line-height: 1.45; }
+    .footer-note {
+      margin-top: 24px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #f3efe8;
+      border: 1px solid var(--line);
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <span class="eyebrow">UNIFIED STUDIO KINEMATIC MOTION SYSTEM · 5 APPARATUS FAMILIES</span>
+      <h1>Flow Atelier 고품질 스튜디오 기구학 모션 아틀라스 (5단계 연속 원호 보간)</h1>
+      <p style="margin:0;color:var(--muted);">리포머 · 캐딜락 · 운다 체어 · 래더 바렐 · 매트 98종 전체에 적용된 스튜디오 복장 인체 실루엣, 원호(Arc) 분절 보간, 2관절 IK 접점 고정 및 척추 순차 분절 엔진입니다.</p>
+    </div>
+    <div class="controls">
+      <button id="btn-play" class="active" onclick="togglePlay()">⏸ 연속 모션 일시정지</button>
+      <button id="btn-guide" class="active" onclick="toggleGuides()">정렬·방향 벡터 표시 중</button>
+      <button id="btn-rm" onclick="toggleRm()">정지 도해 모드</button>
+    </div>
+  </header>
+
+  <main class="grid" id="atlas-grid"></main>
+
+  <p class="footer-note">
+    제작 기준: 자체 제작 스튜디오 기구학 SVG 도해(`MovementPhaseDiagramSvg.tsx` + `catalogMotionAssets/index.ts`) · 해부학 정확성 자동 가정 없음(`anatomicalAccuracyAssumed: false`) · `prefers-reduced-motion` 정지 폴백 준수.
+  </p>
+
+  <script>
+    let playing = true;
+    let guides = true;
+    let reduced = false;
+    let cycle = 0.5;
+    let manualIdx = 2;
+    const phaseLabels = ['1 준비', '2 가동', '3 정점', '4 복귀', '5 마무리'];
+    const phaseSamples = [0, 0.35, 1, 0.55, 0.08];
+
+    const items = [
+      { id: 'reformer-fw', app: 'Reformer', ko: '리포머 풋워크 패럴렐', en: 'Footwork · Closed-Chain 2-Bone IK', springs: '2R 1B', cue: '뒤꿈치 접점을 풋바에 고정한 채 고관절·무릎 신전으로 캐리지를 수평 활주합니다.' },
+      { id: 'reformer-bridge', app: 'Reformer', ko: '펠빅 컬 · 척추 순차 분절', en: 'Pelvic Curl · Sequential Spinal Wave', springs: '2R', cue: '꼬리뼈→요추→흉추 순차 위상차로 말아 올리고 흉추부터 내려놓습니다.' },
+      { id: 'reformer-hundred', app: 'Reformer', ko: '헌드레드 · 흉추 굴곡 & 펌핑', en: 'The Hundred · Rhythmic Arm Pump', springs: '1R 1B', cue: '견갑 하각 굴곡을 유지하며 정점 구간에서 리듬감 있게 팔을 펌핑합니다.' },
+      { id: 'reformer-swan', app: 'Reformer', ko: '롱박스 스완 · 흉추 신전', en: 'Long Box Swan · Thoracic Arc', springs: '1B', cue: '치골 지지점 위에서 흉추와 경추를 매끄러운 원호로 길게 신전합니다.' },
+      { id: 'chair-press', app: 'Wunda Chair', ko: '체어 시티드 페달 프레스', en: 'Chair Pedal Press · Hinged Lever IK', springs: '1R 1B', cue: '좌골을 시트에 고정하고 발목·페달 힌지 각도를 동기화하여 눌러냅니다.' },
+      { id: 'barrel-side', app: 'Ladder Barrel', ko: '바렐 사이드 벤드', en: 'Barrel Side Bend · Lateral Arc', springs: '자체 저항', cue: '골반 측면을 바렐 돔에 지지하고 발을 래더에 건 채 측굴 원호를 그립니다.' }
+    ];
+
+    function smootherstep(x) {
+      const c = Math.max(0, Math.min(1, x));
+      return c * c * c * (c * (c * 6 - 15) + 10);
+    }
+
+    function buildCardMarkup() {
+      document.getElementById('atlas-grid').innerHTML = items.map((it) => `
+        <article class="motion-card">
+          <div class="card-head">
+            <div>
+              <h2 style="margin:0;font-size:1.12rem;">${it.ko}</h2>
+              <small style="color:var(--muted);">${it.en}</small>
+            </div>
+            <span class="spring-chip">${it.app} · ${it.springs}</span>
+          </div>
+          <div class="stage-box">
+            <svg id="svg-${it.id}" viewBox="0 0 320 200" width="100%" role="img" aria-label="${it.ko} 모션 도해"></svg>
+          </div>
+          <div class="phase-bar">
+            ${phaseLabels.map((lbl, idx) => `<button class="phase-btn ${(!playing || reduced) && manualIdx === idx ? 'active' : ''}" onclick="pickPhase(${idx})">${lbl}</button>`).join('')}
+          </div>
+          <div class="meta">${it.cue}</div>
+        </article>
+      `).join('');
+      drawFrames();
+    }
+
+    function sharedDefs(id) {
+      return `
+        <defs>
+          <linearGradient id="bg-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fdfcf8"/><stop offset="100%" stop-color="#efe9dc"/></linearGradient>
+          <linearGradient id="oak-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d8b489"/><stop offset="100%" stop-color="#b5895a"/></linearGradient>
+          <linearGradient id="up-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#58776a"/><stop offset="100%" stop-color="#3b564b"/></linearGradient>
+          <linearGradient id="suit-${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#496f60"/><stop offset="100%" stop-color="#29483c"/></linearGradient>
+          <linearGradient id="skin-${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f0d7c2"/><stop offset="100%" stop-color="#dfb99d"/></linearGradient>
+        </defs>
+        <rect x="0.5" y="0.5" width="319" height="199" rx="12" fill="url(#bg-${id})" stroke="#dcd4c3"/>
+        <ellipse cx="160" cy="179" rx="140" ry="3.5" fill="rgba(28,52,43,0.08)"/>
+        <line x1="12" y1="178" x2="308" y2="178" stroke="#d5cec0" stroke-width="1.3"/>
+      `;
+    }
+
+    function reformerBase(id, slidePx, hasBox = false) {
+      const cStart = 42 - slidePx;
+      return `
+        <rect x="20" y="154" width="280" height="11" rx="3.5" fill="url(#oak-${id})" stroke="#87633b" stroke-width="1.3"/>
+        <line x1="26" y1="151" x2="294" y2="151" stroke="#788882" stroke-width="2"/>
+        <path d="M ${cStart + 168} 151 Q ${(cStart + 446) / 2} 155 278 151" fill="none" stroke="#bf5a41" stroke-width="1.8" stroke-dasharray="4 2"/>
+        <rect x="${cStart}" y="142" width="168" height="9.5" rx="3.5" fill="url(#up-${id})" stroke="#24443a" stroke-width="1.4"/>
+        ${hasBox ? `<rect x="${cStart + 54}" y="123" width="84" height="19" rx="3.5" fill="url(#up-${id})" stroke="#24443a" stroke-width="1.2"/>` : ''}
+        <line x1="280" y1="156" x2="266" y2="126" stroke="#354b44" stroke-width="3.6" stroke-linecap="round"/>
+        <circle cx="266" cy="126" r="4.3" fill="#223b33" stroke="#fcfaf5" stroke-width="1.2"/>
+      `;
+    }
+
+    function drawFrames() {
+      const rawWave = (!playing || reduced) ? phaseSamples[manualIdx] : 0.5 - 0.5 * Math.cos(cycle * Math.PI * 2);
+      const u = smootherstep(rawWave);
+
+      // 1. Reformer Footwork
+      const fwSlide = u * 30;
+      const hipX = 180 - fwSlide;
+      const kneeX = 224 - fwSlide * 0.35;
+      const kneeY = 98 + u * 22;
+      document.getElementById('svg-reformer-fw').innerHTML = sharedDefs('fw') + reformerBase('fw', fwSlide) + `
+        <path d="M ${102 - fwSlide} 136 L ${hipX} 136" stroke="url(#suit-fw)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M ${hipX} 136 L ${kneeX} ${kneeY} L 264 125" stroke="#2d5043" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M ${110 - fwSlide} 136 L ${170 - fwSlide} 139" stroke="url(#skin-fw)" stroke-width="6.4" stroke-linecap="round"/>
+        <circle cx="${76 - fwSlide}" cy="134" r="3.8" fill="#243a32"/>
+        <circle cx="${84 - fwSlide}" cy="134" r="8.8" fill="url(#skin-fw)" stroke="#2b453c" stroke-width="1.5"/>
+        ${guides ? `<path d="M 210 84 L ${210 - Math.max(16, fwSlide)} 84" stroke="#bf5a41" stroke-width="2.2" stroke-linecap="round"/>` : ''}
+      `;
+
+      // 2. Pelvic Curl (Sequential Spinal Wave)
+      const pelvisLift = smootherstep(Math.min(1, rawWave * 1.18)) * 38;
+      const thorLift = smootherstep(Math.max(0, (rawWave - 0.12) / 0.88)) * 22;
+      document.getElementById('svg-reformer-bridge').innerHTML = sharedDefs('br') + reformerBase('br', u * 4) + `
+        <path d="M 98 136 Q 138 ${136 - thorLift} 178 ${136 - pelvisLift}" stroke="url(#suit-br)" stroke-width="14" stroke-linecap="round" fill="none"/>
+        <path d="M 178 ${136 - pelvisLift} L 222 82 L 264 125" stroke="#2d5043" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M 104 137 L 170 140" stroke="url(#skin-br)" stroke-width="6.2" stroke-linecap="round"/>
+        <circle cx="74" cy="134" r="3.8" fill="#243a32"/><circle cx="82" cy="134" r="8.8" fill="url(#skin-br)" stroke="#2b453c" stroke-width="1.5"/>
+        ${guides ? `<path d="M 178 132 L 178 ${94 - pelvisLift * 0.2}" stroke="#bf5a41" stroke-width="2.1" stroke-dasharray="4 2"/>` : ''}
+      `;
+
+      // 3. Hundred
+      const curl = u * 22;
+      const pump = playing && !reduced ? Math.sin(cycle * Math.PI * 10) * 4.5 : 0;
+      document.getElementById('svg-reformer-hundred').innerHTML = sharedDefs('hd') + reformerBase('hd', 8 + u * 6) + `
+        <path d="M ${96 + curl * 0.3} ${134 - curl} Q 136 138 176 136" stroke="url(#suit-hd)" stroke-width="14" stroke-linecap="round" fill="none"/>
+        <path d="M 176 136 L 216 ${96 - u * 10} L ${248 + u * 18} ${88 - u * 26}" stroke="#2d5043" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M ${104 + curl * 0.25} ${132 - curl * 0.8} L 178 ${124 + pump}" stroke="url(#skin-hd)" stroke-width="6.2" stroke-linecap="round"/>
+        <line x1="26" y1="104" x2="178" y2="${124 + pump}" stroke="#38658e" stroke-width="1.4" stroke-dasharray="3 2"/>
+        <circle cx="${74 + curl * 0.35}" cy="${128 - curl * 1.1}" r="3.8" fill="#243a32"/>
+        <circle cx="${82 + curl * 0.35}" cy="${128 - curl * 1.1}" r="8.8" fill="url(#skin-hd)" stroke="#2b453c" stroke-width="1.5"/>
+      `;
+
+      // 4. Long Box Swan
+      const ext = u * 32;
+      document.getElementById('svg-reformer-swan').innerHTML = sharedDefs('sw') + reformerBase('sw', u * 14, true) + `
+        <path d="M 74 ${124 + ext * 0.1} L 148 118 Q 188 ${116 - ext * 0.5} 218 ${112 - ext}" stroke="url(#suit-sw)" stroke-width="13.5" stroke-linecap="round" fill="none"/>
+        <path d="M 206 ${114 - ext * 0.75} L 240 119 L 266 125" stroke="url(#skin-sw)" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="222" cy="${98 - ext}" r="3.8" fill="#243a32"/>
+        <circle cx="229" cy="${101 - ext}" r="8.8" fill="url(#skin-sw)" stroke="#2b453c" stroke-width="1.5"/>
+      `;
+
+      // 5. Wunda Chair Pedal Press
+      const pedalDeg = 32 - u * 38;
+      const pRad = (pedalDeg * Math.PI) / 180;
+      const tipX = 168 + Math.cos(pRad) * 50;
+      const tipY = 164 - Math.sin(pRad) * 50;
+      document.getElementById('svg-chair-press').innerHTML = sharedDefs('ch') + `
+        <rect x="112" y="114" width="80" height="64" rx="4.5" fill="url(#oak-ch)" stroke="#7e5b36" stroke-width="1.5"/>
+        <rect x="108" y="105.5" width="88" height="9.5" rx="3.2" fill="url(#up-ch)" stroke="#24443a" stroke-width="1.4"/>
+        <line x1="168" y1="164" x2="${tipX}" y2="${tipY}" stroke="#2d4f44" stroke-width="4.4" stroke-linecap="round"/>
+        <circle cx="${tipX}" cy="${tipY}" r="4" fill="#1f3b32" stroke="#fcfaf5" stroke-width="1.2"/>
+        <path d="M 136 106 L 136 66" stroke="url(#suit-ch)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M 138 106 L ${182 + u * 8} ${96 + u * 24} L ${tipX} ${tipY - 3}" stroke="#2d5043" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M 136 72 L 154 96" stroke="url(#skin-ch)" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="129" cy="48" r="3.8" fill="#243a32"/><circle cx="136" cy="50" r="8.8" fill="url(#skin-ch)" stroke="#2b453c" stroke-width="1.5"/>
+      `;
+
+      // 6. Ladder Barrel Side Bend
+      const bendY = 86 - u * 44;
+      document.getElementById('svg-barrel-side').innerHTML = sharedDefs('ba') + `
+        <path d="M 68 174 C 76 102 164 102 174 174 Z" fill="url(#up-ba)" fill-opacity="0.42" stroke="#27493e" stroke-width="2.2"/>
+        <line x1="222" y1="54" x2="222" y2="176" stroke="#9c754a" stroke-width="3"/>
+        <line x1="256" y1="44" x2="256" y2="176" stroke="#7e5b36" stroke-width="3"/>
+        <line x1="222" y1="88" x2="256" y2="82" stroke="#59422a" stroke-width="2.5"/>
+        <line x1="222" y1="132" x2="256" y2="126" stroke="#59422a" stroke-width="2.5"/>
+        <path d="M 126 116 L 182 124 L 228 132" stroke="#2d5043" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M 126 116 Q 102 ${104 - u * 24} 84 ${bendY}" stroke="url(#suit-ba)" stroke-width="13.5" stroke-linecap="round" fill="none"/>
+        <path d="M 92 ${bendY + 8} Q 76 ${bendY - 18} 64 ${bendY - 22}" stroke="url(#skin-ba)" stroke-width="6" stroke-linecap="round" fill="none"/>
+        <circle cx="74" cy="${bendY - 8}" r="3.8" fill="#243a32"/><circle cx="80" cy="${bendY - 6}" r="8.8" fill="url(#skin-ba)" stroke="#2b453c" stroke-width="1.5"/>
+      `;
+    }
+
+    function pickPhase(idx) {
+      playing = false;
+      manualIdx = idx;
+      const b = document.getElementById('btn-play');
+      b.textContent = '▶ 연속 모션 재생';
+      b.classList.remove('active');
+      buildCardMarkup();
+    }
+    function togglePlay() {
+      if (reduced) return;
+      playing = !playing;
+      const b = document.getElementById('btn-play');
+      b.textContent = playing ? '⏸ 연속 모션 일시정지' : '▶ 연속 모션 재생';
+      b.classList.toggle('active', playing);
+      buildCardMarkup();
+    }
+    function toggleGuides() {
+      guides = !guides;
+      const b = document.getElementById('btn-guide');
+      b.textContent = guides ? '정렬·방향 벡터 표시 중' : '정렬·방향 벡터 숨김';
+      b.classList.toggle('active', guides);
+      drawFrames();
+    }
+    function toggleRm() {
+      reduced = !reduced;
+      if (reduced) playing = false;
+      document.getElementById('btn-rm').classList.toggle('active', reduced);
+      buildCardMarkup();
+    }
+    function tick() {
+      if (playing && !reduced) {
+        cycle = (cycle + 0.0045) % 1;
+        drawFrames();
+      }
+      requestAnimationFrame(tick);
+    }
+    buildCardMarkup();
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>
