@@ -170,99 +170,84 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 480px) {
-  #root .vnext-workbench .workbench-feedback-row > .workbench-empty-undo-btn,
-  #root .vnext-workbench .time-summary-status-group > .workbench-inline-action-chip,
-  #root .vnext-workbench .workbench-readiness-row > .workbench-inline-action-chip,
-  .replacement-dialog-footer > button {
-    width: 100%;
-    justify-content: center;
-  }
+/* ==========================================================================
+   Step-by-Step Page-Separated Atelier Flow (Matches pilates-flow-step-flow-prototype.html)
+   ========================================================================== */
 
-  #root .vnext-workbench .sequence-save-group {
-    width: 100%;
-    justify-content: space-between;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #root .vnext-workbench .workbench-inline-action-chip,
-  #root .vnext-workbench .workbench-empty-undo-btn,
-  #root .vnext-workbench .workbench-quick-duration-chip,
-  #root .vnext-workbench .step-quick-duration-btn,
-  .replacement-item,
-  .replacement-empty-actions > button,
-  .replacement-dialog-footer > button {
-    transition: none !important;
-    animation: none !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* Step-by-Step Guided Flow Banner, Step 1 Quick Duration Chips, and Step 3 Inline Steppers */
 #root .vnext-workbench .workbench-step-flow-banner {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-  padding: 12px 16px;
-  margin: 0 0 16px;
-  border-radius: 14px;
-  background: #f6f4ec;
-  border: 1px solid #dfd8ca;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 20px;
   word-break: keep-all;
 }
 
-#root .vnext-workbench .workbench-step-flow-pills {
+#root .vnext-workbench .pf-step-wizard-stepper {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#root .vnext-workbench .pf-step-wizard-tab {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 6px 8px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
+  gap: 8px;
+  min-height: 48px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border: 1px solid #dad5c8;
+  background: #ffffff;
+  color: #56685f;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
 }
 
-#root .vnext-workbench .workbench-step-flow-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 650;
-  color: #54665d;
-  background: #fffdf8;
-  border: 1px solid #dcd7c8;
-  line-height: 1.3;
+#root .vnext-workbench .pf-step-wizard-tab:hover:not(:disabled) {
+  border-color: #1f4d3f;
+  color: #1b3129;
 }
 
-#root .vnext-workbench .workbench-step-flow-pill.is-active {
-  background: #173d34;
-  border-color: #173d34;
+#root .vnext-workbench .pf-step-wizard-tab.is-active,
+#root .vnext-workbench .pf-step-wizard-tab[aria-current='step'] {
+  background: #1f4d3f;
+  border-color: #1f4d3f;
   color: #ffffff;
+  box-shadow: 0 6px 16px rgba(31, 77, 63, 0.16);
 }
 
-#root .vnext-workbench .workbench-step-flow-pill.is-done {
-  background: #e3efe8;
-  border-color: #b7d1c3;
-  color: #173d34;
+#root .vnext-workbench .pf-step-wizard-tab.is-done:not(.is-active) {
+  background: #edf4f0;
+  border-color: #bfd3c6;
+  color: #1f4d3f;
+}
+
+#root .vnext-workbench .pf-step-wizard-tab:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
 }
 
 #root .vnext-workbench .workbench-step-flow-num {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  background: rgba(23, 61, 52, 0.1);
+  font-size: 0.74rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  background: rgba(31, 77, 63, 0.1);
 }
 
-#root .vnext-workbench .workbench-step-flow-pill.is-active .workbench-step-flow-num {
+#root .vnext-workbench .pf-step-wizard-tab.is-active .workbench-step-flow-num,
+#root .vnext-workbench .pf-step-wizard-tab[aria-current='step'] .workbench-step-flow-num {
   background: rgba(255, 255, 255, 0.22);
   color: #ffffff;
 }
@@ -270,46 +255,218 @@
 #root .vnext-workbench .workbench-step-flow-summary {
   margin: 0;
   font-size: 0.84rem;
-  color: #364d44;
+  color: #4b5e55;
   font-weight: 500;
   line-height: 1.45;
-  flex: 1 1 260px;
 }
 
+/* Dedicated Step Stage Frame (White Atelier Card, 24px radius) */
+#root .vnext-workbench .pf-step-stage-frame {
+  background: #ffffff;
+  border: 1px solid #dad5c8;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 12px 32px rgba(27, 49, 41, 0.06);
+  margin: 0 0 22px;
+  word-break: keep-all;
+}
+
+#root .vnext-workbench .pf-step-kicker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #f0ede4;
+  color: #1f4d3f;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+#root .vnext-workbench .pf-step-stage-title {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #1b3129;
+}
+
+#root .vnext-workbench .pf-step-stage-lead {
+  margin: 0 0 22px;
+  font-size: 0.95rem;
+  color: #56685f;
+}
+
+/* Step 0 Choice Grid (2 clean side-by-side cards) */
+#root .vnext-workbench .pf-step-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+#root .vnext-workbench .pf-step-choice-card {
+  border: 1.5px solid #dad5c8;
+  border-radius: 18px;
+  padding: 22px;
+  background: #fcfbf8;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+#root .vnext-workbench .pf-step-choice-card.is-primary {
+  border-color: #1f4d3f;
+  background: #f2f7f4;
+}
+
+#root .vnext-workbench .pf-step-primary-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  border: 1px solid #1f4d3f;
+  background: #1f4d3f;
+  color: #ffffff;
+  font-size: 0.98rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+#root .vnext-workbench .pf-step-primary-cta:hover:not(:disabled) {
+  background: #163a2f;
+}
+
+#root .vnext-workbench .pf-step-secondary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Step 1 Inline Condition Groups */
+#root .vnext-workbench .pf-step1-field-group {
+  margin-bottom: 20px;
+}
+
+#root .vnext-workbench .pf-step1-field-label {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 750;
+  color: #1b3129;
+  margin-bottom: 8px;
+}
+
+#root .vnext-workbench .pf-step1-chip-row,
 #root .vnext-workbench .workbench-quick-duration-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin: 4px 0 14px;
+  margin: 6px 0 12px;
 }
 
 #root .vnext-workbench .workbench-quick-duration-label {
   font-size: 0.82rem;
-  font-weight: 650;
-  color: #42584f;
+  font-weight: 700;
+  color: #364d44;
   margin-right: 2px;
 }
 
-#root .vnext-workbench .workbench-quick-duration-chip {
+#root .vnext-workbench .workbench-quick-duration-chip,
+#root .vnext-workbench .pf-step1-choice-chip {
   min-height: 44px;
-  min-width: 56px;
-  padding: 6px 14px;
+  min-width: 64px;
+  padding: 8px 16px;
   border-radius: 999px;
-  border: 1px solid #cbcfbf;
-  background: #fffdf8;
-  color: #21433a;
-  font-size: 0.85rem;
-  font-weight: 650;
+  border: 1px solid #d0cbbe;
+  background: #ffffff;
+  color: #1b3129;
+  font-size: 0.88rem;
+  font-weight: 700;
   cursor: pointer;
 }
 
-#root .vnext-workbench .workbench-quick-duration-chip.is-selected {
-  background: #173d34;
-  border-color: #173d34;
+#root .vnext-workbench .workbench-quick-duration-chip.is-selected,
+#root .vnext-workbench .pf-step1-choice-chip[aria-pressed='true'] {
+  background: #1f4d3f;
+  border-color: #1f4d3f;
   color: #ffffff;
 }
 
+#root .vnext-workbench .pf-step1-choice-chip:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+/* Bottom Step Navigation CTA Bar */
+#root .vnext-workbench .pf-step-cta-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #e3dfd4;
+}
+
+#root .vnext-workbench .pf-step-cta-bar__right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+#root .vnext-workbench .pf-step-nav-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  min-width: 44px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  border: 1px solid #dad5c8;
+  background: #ffffff;
+  color: #1b3129;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#root .vnext-workbench .pf-step-nav-pill-btn.is-primary {
+  background: #1f4d3f;
+  border-color: #1f4d3f;
+  color: #ffffff;
+}
+
+#root .vnext-workbench .pf-step-nav-pill-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Secondary optional templates shelf below the primary stage card */
+#root .vnext-workbench .pf-step-secondary-shelf {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px dashed #dad5c8;
+}
+
+#root .vnext-workbench .pf-step-secondary-shelf-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #63746b;
+  margin-bottom: 12px;
+}
+
+/* Step 3 Inline -0.5분 / +0.5분 Steppers */
 #root .vnext-workbench .step-quick-duration-stepper {
   display: inline-flex;
   align-items: center;
@@ -342,15 +499,42 @@
   cursor: not-allowed;
 }
 
+#root .vnext-workbench .pf-step-wizard-tab:focus-visible,
+#root .vnext-workbench .pf-step-primary-cta:focus-visible,
+#root .vnext-workbench .pf-step-nav-pill-btn:focus-visible,
+#root .vnext-workbench .pf-step1-choice-chip:focus-visible,
 #root .vnext-workbench .workbench-quick-duration-chip:focus-visible,
 #root .vnext-workbench .step-quick-duration-btn:focus-visible {
   outline: 3px solid var(--pf-color-focus-ring, #173d34);
   outline-offset: 2px;
 }
 
+@media (max-width: 768px) {
+  #root .vnext-workbench .pf-step-wizard-stepper {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #root .vnext-workbench .pf-step-stage-frame {
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
+}
+
 @media (max-width: 480px) {
-  #root .vnext-workbench .workbench-step-flow-banner {
-    padding: 10px 12px;
+  #root .vnext-workbench .workbench-feedback-row > .workbench-empty-undo-btn,
+  #root .vnext-workbench .time-summary-status-group > .workbench-inline-action-chip,
+  #root .vnext-workbench .workbench-readiness-row > .workbench-inline-action-chip,
+  #root .vnext-workbench .pf-step-cta-bar > button,
+  #root .vnext-workbench .pf-step-cta-bar__right,
+  #root .vnext-workbench .pf-step-cta-bar__right > button,
+  .replacement-dialog-footer > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  #root .vnext-workbench .sequence-save-group {
+    width: 100%;
+    justify-content: space-between;
   }
 
   #root .vnext-workbench .step-quick-duration-stepper {
@@ -360,5 +544,23 @@
   #root .vnext-workbench .step-quick-duration-btn {
     min-width: 44px;
     padding: 4px 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root .vnext-workbench .workbench-inline-action-chip,
+  #root .vnext-workbench .workbench-empty-undo-btn,
+  #root .vnext-workbench .pf-step-wizard-tab,
+  #root .vnext-workbench .pf-step-primary-cta,
+  #root .vnext-workbench .pf-step-nav-pill-btn,
+  #root .vnext-workbench .pf-step1-choice-chip,
+  #root .vnext-workbench .workbench-quick-duration-chip,
+  #root .vnext-workbench .step-quick-duration-btn,
+  .replacement-item,
+  .replacement-empty-actions > button,
+  .replacement-dialog-footer > button {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
   }
 }
