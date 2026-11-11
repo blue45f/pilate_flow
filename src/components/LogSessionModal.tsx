@@ -1021,6 +1021,47 @@ const SessionLogForm: React.FC<
               <Info size={14} aria-hidden="true" />
               <span>학생 실명이나 건강 정보는 적지 않아도 돼요.</span>
             </small>
+            <div
+              className="log-quick-note-chips"
+              data-testid="log-quick-note-chips"
+              role="group"
+              aria-label="빠른 수업 메모 선택"
+            >
+              {(
+                [
+                  '호흡·속도 안정적',
+                  '스프링 한 단계 낮춤',
+                  '코어 연결 큐 반응 좋음',
+                  '다음 시간 이어서 복습',
+                ] as const
+              ).map((phrase) => {
+                const included = reflection.includes(phrase);
+                return (
+                  <button
+                    key={phrase}
+                    type="button"
+                    className={`log-quick-note-chip ${included ? 'is-selected' : ''}`.trim()}
+                    aria-pressed={included}
+                    onClick={() => {
+                      setHasEditedDraft(true);
+                      setReflection((prev) => {
+                        if (prev.includes(phrase)) {
+                          return prev
+                            .split('\n')
+                            .map((line) => line.replace(phrase, '').trim())
+                            .filter(Boolean)
+                            .join('\n');
+                        }
+                        return prev.trim() ? `${prev.trim()}\n${phrase}` : phrase;
+                      });
+                    }}
+                  >
+                    {included ? '✓ ' : '+ '}
+                    {phrase}
+                  </button>
+                );
+              })}
+            </div>
             <PfTextarea
               aria-label="다음 수업을 위한 메모 (선택)"
               aria-describedby={reflectionHintId}

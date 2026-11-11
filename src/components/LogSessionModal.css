@@ -365,6 +365,36 @@
   font-weight: 600;
 }
 
+.log-quick-note-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 8px;
+}
+
+.log-quick-note-chip {
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #d5d0c3;
+  background: #faf8f4;
+  color: #1f4d3f;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.log-quick-note-chip.is-selected {
+  background: #1f4d3f;
+  border-color: #1f4d3f;
+  color: #ffffff;
+}
+
+.log-quick-note-chip:focus-visible {
+  outline: 2px solid #1f4d3f;
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .class-log-modal,
   .class-log-modal * {

@@ -41,7 +41,7 @@ jobs:
         run: pnpm lint
 
       - name: Run verification & deployment regression suites
-        run: pnpm vitest run src/test/stepByStepRedesign.test.tsx src/test/uxElevationIteration.test.tsx src/test/unifiedKinematicMotions.test.tsx backend/freeAiService.test.ts src/test/uxRedesignAndOpenAi.test.tsx src/test/wave3AdvancementVerification.test.ts src/test/wave4FollowthroughVerification.test.ts src/test/wave5AdvancementVerification.test.ts src/test/wave6AdvancementVerification.test.ts src/test/wave7MultiCloudDeployVerification.test.ts src/test/wave8SkillsAdvancementVerification.test.ts src/utils/wave3DeploymentRegression.test.ts src/utils/wave5DeploymentRegression.test.ts
+        run: pnpm vitest run src/test/stepByStepRedesign.test.tsx src/test/uxElevationIteration.test.tsx src/test/scheduleUxParallelTrack.test.tsx src/test/previewAndLogParallelTrack.test.tsx src/test/memberAndBinderParallelTrack.test.tsx src/test/visualMotionParallelTrack.test.tsx src/test/unifiedKinematicMotions.test.tsx backend/freeAiService.test.ts src/test/uxRedesignAndOpenAi.test.tsx src/test/wave3AdvancementVerification.test.ts src/test/wave4FollowthroughVerification.test.ts src/test/wave5AdvancementVerification.test.ts src/test/wave6AdvancementVerification.test.ts src/test/wave7MultiCloudDeployVerification.test.ts src/test/wave8SkillsAdvancementVerification.test.ts src/utils/wave3DeploymentRegression.test.ts src/utils/wave5DeploymentRegression.test.ts
 
       - name: Build production PWA bundle & verify canonical config
         run: pnpm build && pnpm deploy:check

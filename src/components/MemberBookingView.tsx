@@ -841,6 +841,30 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         )}
       </header>
 
+      <div
+        className="pf-member-quick-status-strip"
+        data-testid="member-quick-status-strip"
+        role="region"
+        aria-label="회원 예약 빠른 현황"
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: '8px 14px',
+          marginBottom: '12px',
+          padding: '10px 14px',
+          borderRadius: '14px',
+          background: '#e6efe9',
+          border: '1px solid #bfd3c6',
+          color: '#1f4d3f',
+          fontSize: '0.88rem',
+        }}
+      >
+        <strong>남은 수강권 {portalState.pass.remainingCount}회</strong>
+        <span>예약 확정 {portalState.pass.pendingReservedCount}건</span>
+        <span>선택 날짜 {selectedDate}</span>
+      </div>
+
       <ol className="pf-member-steps" aria-label="회원 예약 3단계 안내" data-testid="member-step-guide">
         <li
           className={activeStepIndex === 1 ? 'is-active' : activeStepIndex > 1 ? 'is-done' : ''}
@@ -883,7 +907,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       >
         <div>
           <span className="eyebrow">
-            <Ticket size={14} aria-hidden="true" style={{ verticalAlign: 'middle' }} /> ATELIER PASS WALLET
+            <Ticket size={14} aria-hidden="true" style={{ verticalAlign: 'middle' }} /> 내 수강권 지갑 · ATELIER PASS
           </span>
           <h2>{portalState.pass.passTitle}</h2>
           <div className="pf-member-wallet-metrics" data-testid="member-pass-metrics">

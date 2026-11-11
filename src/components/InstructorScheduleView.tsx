@@ -980,6 +980,29 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           </button>
         </div>
       </header>
+      {(() => {
+        const todayRows = expandInstructorSchedule(data, today, today).filter(
+          (r) => r.status !== "cancelled",
+        );
+        const linkedTodayCount = todayRows.filter((r) =>
+          Boolean(
+            r.linkSavedSequenceId &&
+              savedSequences.some((seq) => seq.id === r.linkSavedSequenceId),
+          ),
+        ).length;
+        return (
+          <div
+            className="schedule-today-glance-strip"
+            data-testid="schedule-today-glance-strip"
+            role="region"
+            aria-label="오늘 수업 준비 요약"
+          >
+            <strong>오늘 예정 수업 {todayRows.length}건</strong>
+            <span>시퀀스 연결 {linkedTodayCount}건</span>
+            <span>선택 날짜 {selectedDate}</span>
+          </div>
+        );
+      })()}
       {message && (
         <p className="status schedule-feedback" role="status">
           {message}
@@ -1630,7 +1653,8 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                             {prepInfo?.canStartLinkedStage && (
                               <button
                                 type="button"
-                                className="btn-secondary"
+                                className="btn-secondary schedule-quick-teach-btn"
+                                data-testid="schedule-quick-teach-btn"
                                 onClick={() => {
                                   loadSequenceIntoWorkbench(linkedSequence.id);
                                   setActiveTab("stage");

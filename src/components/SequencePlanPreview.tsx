@@ -344,6 +344,45 @@ export function SequencePlanPreview({
               <dd style={{ margin: 0 }}>{formatSecondsToMMSS(durations.restSec)}</dd>
             </div>
           </dl>
+          {(() => {
+            const allExercises = usePilatesStore.getState().exercises;
+            const exById = new Map(allExercises.map((e) => [e.id, e]));
+            const moveSteps = snapshot.steps.filter((st) => !isRestStep(st));
+            let springChanges = 0;
+            let prevSpring = '';
+            for (const st of moveSteps) {
+              const sp = (st.customSpringOverride || exById.get(st.exerciseId)?.springs || '').trim();
+              if (sp && prevSpring && sp !== prevSpring) {
+                springChanges += 1;
+              }
+              if (sp) prevSpring = sp;
+            }
+            return (
+              <div
+                className="sequence-preview-spring-strip"
+                data-testid="plan-preview-spring-summary"
+                role="region"
+                aria-label="수업 직전 기구·스프링 준비 요약"
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  gap: '8px 14px',
+                  padding: '10px 14px',
+                  borderRadius: '14px',
+                  background: '#e6efe9',
+                  border: '1px solid #bfd3c6',
+                  color: '#1f4d3f',
+                  fontSize: '0.88rem',
+                }}
+              >
+                <strong>수업 직전 체크</strong>
+                <span>동작 {moveSteps.length}개</span>
+                <span>총 {formatSecondsToMMSS(durations.totalSec)}</span>
+                <span>스프링 전환 {springChanges}회</span>
+              </div>
+            );
+          })()}
           <ClassPlanSummary
             {...snapshot}
             onSelectStepId={(_stepId, stepIndex) => selectStep(stepIndex)}

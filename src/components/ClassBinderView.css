@@ -388,6 +388,16 @@ body:has(.teaching-collection--history) { min-width: 0; }
   }
 }
 
+.teaching-collection--saved .teaching-saved-primary-actions button {
+  min-height: 44px;
+}
+
+.teaching-collection--saved button:focus-visible,
+.teaching-collection--history button:focus-visible {
+  outline: 2px solid #1f4d3f;
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .teaching-collection--saved .teaching-sequence-card,
   .teaching-history-detail-modal .teaching-history-snapshot-item {
