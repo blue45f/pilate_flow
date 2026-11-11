@@ -69,13 +69,14 @@ describe('OfflinePresetPicker usability & apply safety flows', () => {
     fireEvent.change(screen.getByLabelText('프리셋 계획 시간'), { target: { value: '60' } });
     fireEvent.change(searchInput, { target: { value: '존재하지않는합성검색어999' } });
 
-    expect(screen.getByTestId('preset-empty-filter-zero')).toBeInTheDocument();
+    const emptyFilterRegion = screen.getByTestId('preset-empty-filter-zero');
+    expect(emptyFilterRegion).toBeInTheDocument();
     expect(screen.queryByTestId('preset-empty-no-data')).toBeNull();
     expect(screen.getByRole('region', { name: '선택한 프리셋 확인' })).toHaveTextContent(
       firstPreset.title,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '검색어만 지우기' }));
+    fireEvent.click(within(emptyFilterRegion).getByRole('button', { name: '검색어만 지우기' }));
     expect(searchInput).toHaveValue('');
     expect(document.activeElement).toBe(searchInput);
 
@@ -102,7 +103,8 @@ describe('OfflinePresetPicker usability & apply safety flows', () => {
     expect(screen.getByLabelText('프리셋 기구')).toHaveValue('all');
     expect(document.activeElement).toBe(themeChip);
 
-    fireEvent.click(screen.getByRole('button', { name: /조건 초기화/ }));
+    const statusActions = screen.getByRole('group', { name: '목록 빠른 작업' });
+    fireEvent.click(within(statusActions).getByRole('button', { name: '조건 초기화' }));
     expect(screen.getByLabelText('프리셋 주제')).toHaveValue('all');
     expect(screen.getByLabelText('프리셋 계획 시간')).toHaveValue('all');
     expect(document.activeElement).toBe(searchInput);
@@ -149,7 +151,8 @@ describe('OfflinePresetPicker usability & apply safety flows', () => {
       '아직 저장한 내 재사용 블록이 없어요',
     );
     expect(screen.queryByTestId('preset-empty-filter-zero')).toBeNull();
-    expect(screen.queryByRole('button', { name: /조건 초기화/ })).toBeNull();
+    expect(screen.queryByRole('group', { name: '목록 빠른 작업' })).toBeNull();
+    expect(screen.queryByRole('button', { name: '프리셋 조건 초기화' })).toBeNull();
 
     fireEvent.click(suggestedTab);
     expect(screen.getByTestId('preset-tab-scope-caption')).toHaveTextContent(
@@ -177,10 +180,13 @@ describe('OfflinePresetPicker usability & apply safety flows', () => {
     expect(screen.queryByTestId('preset-empty-no-data')).toBeNull();
 
     fireEvent.change(screen.getByLabelText('프리셋 기구'), { target: { value: 'reformer' } });
-    expect(screen.getByTestId('preset-empty-filter-zero')).toBeInTheDocument();
+    const emptyFilterZero = screen.getByTestId('preset-empty-filter-zero');
+    expect(emptyFilterZero).toBeInTheDocument();
     expect(screen.queryByTestId('preset-empty-no-data')).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: '프리셋 조건 초기화' }));
+    fireEvent.click(
+      within(emptyFilterZero).getByRole('button', { name: '프리셋 조건 초기화' }),
+    );
     expect(screen.getByRole('button', { name: /합성 QA 매트 코어 루틴/ })).toBeInTheDocument();
   });
 
@@ -202,7 +208,8 @@ describe('OfflinePresetPicker usability & apply safety flows', () => {
     const preview = screen.getByRole('region', { name: '선택한 프리셋 확인' });
     expect(preview).toHaveTextContent(seventhPreset.title);
 
-    fireEvent.click(screen.getByRole('button', { name: /선택 확인으로 이동/ }));
+    const statusActions = screen.getByRole('group', { name: '목록 빠른 작업' });
+    fireEvent.click(within(statusActions).getByRole('button', { name: '선택 확인으로 이동' }));
     expect(document.activeElement).toBe(within(preview).getByRole('heading', { level: 3 }));
 
     fireEvent.change(screen.getByLabelText('프리셋 제목 또는 요약 검색'), {
@@ -210,14 +217,14 @@ describe('OfflinePresetPicker usability & apply safety flows', () => {
     });
     expect(screen.getByTestId('preset-empty-filter-zero')).toBeInTheDocument();
 
-    fireEvent.click(within(preview).getByRole('button', { name: /목록의 선택 위치로/ }));
+    fireEvent.click(within(preview).getByRole('button', { name: '목록의 선택 위치로' }));
 
     expect(screen.getByLabelText('프리셋 제목 또는 요약 검색')).toHaveValue('');
     const restoredCard = screen.getByRole('button', { name: new RegExp(seventhPreset.title) });
     expect(document.activeElement).toBe(restoredCard);
   });
 
-  it('computes canonical getStepTiming before/after totals including rest steps, guards rapid repeated clicks, and rolls back cleanly on undoSequence', () => {
+  it('distinguishes self-apply from external change, supports re-inspect + second explicit apply + undo rollback without false stale alerts', () => {
     const syntheticWarmup = syntheticPlanningExercise('mat', 'warmup', 'alpha', true);
     const initialSteps: SequenceStep[] = [
       {
@@ -302,14 +309,60 @@ describe('OfflinePresetPicker usability & apply safety flows', () => {
     const preview = screen.getByRole('region', { name: '선택한 프리셋 확인' });
     const applyButton = within(preview).getByRole('button', { name: '현재 수업 뒤에 추가' });
 
+    // 1st explicit apply with rapid repeated clicks: applies once, no false stale alert, disables duplicate post-render click
     fireEvent.click(applyButton);
     fireEvent.click(applyButton);
     fireEvent.click(applyButton);
 
     expect(onApplied).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('alert')).toBeNull();
+    expect(applyButton).toBeDisabled();
+    expect(screen.getByTestId('preset-applied-reinspect')).toBeInTheDocument();
     expect(usePilatesStore.getState().activeSteps).toHaveLength(2 + sequence.steps.length);
     expect(usePilatesStore.getState().undoStack).toHaveLength(1);
+
+    // Clicking disabled apply button after render still prevents duplicate apply
+    fireEvent.click(applyButton);
+    expect(onApplied).toHaveBeenCalledTimes(1);
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(2 + sequence.steps.length);
+
+    // Re-inspecting the same preset against the updated class does NOT auto-apply and enables a 2nd explicit apply
+    fireEvent.click(
+      within(preview).getByRole('button', { name: '현재 수업 기준으로 다시 검토' }),
+    );
+    expect(onApplied).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByTestId('preset-applied-reinspect')).toBeNull();
+    expect(screen.getByTestId('preset-impact-current')).toHaveTextContent(
+      `${2 + sequence.steps.length}항목`,
+    );
+    expect(screen.getByTestId('preset-impact-projected')).toHaveTextContent(
+      `${2 + sequence.steps.length * 2}항목`,
+    );
+    expect(applyButton).toBeEnabled();
+
+    // 2nd explicit apply succeeds cleanly without false stale alert
+    fireEvent.click(applyButton);
+    expect(onApplied).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(applyButton).toBeDisabled();
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(2 + sequence.steps.length * 2);
+    expect(usePilatesStore.getState().undoStack).toHaveLength(2);
+
+    // Subsequent external class/account change after successful apply MUST trigger real stale defense
+    act(() => {
+      usePilatesStore.setState({
+        activeTitle: '외부에서 전환된 오후 수업',
+      });
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent('다시 선택');
+    expect(applyButton).toBeDisabled();
+
+    // Undo rolls back both applies cleanly in reverse order, preserving the original rest step
+    act(() => {
+      usePilatesStore.getState().undoSequence();
+    });
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(2 + sequence.steps.length);
 
     act(() => {
       usePilatesStore.getState().undoSequence();
@@ -319,7 +372,7 @@ describe('OfflinePresetPicker usability & apply safety flows', () => {
     expect(usePilatesStore.getState().activeSteps[1]?.durationMin).toBe(1.5);
   });
 
-  it('invalidates prior replace confirmation on class/account switch and allows re-inspection without auto-applying', () => {
+  it('invalidates prior replace confirmation across both pre-apply and post-apply external class/account switches without auto-applying', () => {
     const syntheticCore = syntheticPlanningExercise('reformer', 'core', 'beta', true);
     usePilatesStore.setState({
       exercises: [...originalState.exercises, syntheticCore],
@@ -357,6 +410,7 @@ describe('OfflinePresetPicker usability & apply safety flows', () => {
     expect(checkbox).toBeChecked();
     expect(replaceButton).toBeEnabled();
 
+    // 1. Pre-apply external class/account switch invalidates confirmation and triggers stale alert
     act(() => {
       usePilatesStore.setState({
         activeTitle: '저녁 개인레슨 B',
@@ -381,12 +435,39 @@ describe('OfflinePresetPicker usability & apply safety flows', () => {
     expect(checkbox).not.toBeChecked();
     expect(replaceButton).toBeDisabled();
 
+    // 2. Explicit confirmation + replace apply: no false stale alert, confirmation invalidated immediately after apply
     fireEvent.click(checkbox);
     expect(replaceButton).toBeEnabled();
     fireEvent.click(replaceButton);
 
     expect(onApplied).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(checkbox).not.toBeChecked();
+    expect(checkbox).toBeDisabled();
+    expect(replaceButton).toBeDisabled();
     expect(usePilatesStore.getState().undoStack).toHaveLength(1);
+
+    // 3. Subsequent external class/account switch after replace apply triggers stale alert and keeps confirmation invalidated
+    act(() => {
+      usePilatesStore.setState({
+        activeTitle: '다른 강사 계정 수업 C',
+        activeSequenceId: 'seq-account-c',
+      });
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent('다시 선택');
+    expect(checkbox).not.toBeChecked();
+    expect(checkbox).toBeDisabled();
+    expect(replaceButton).toBeDisabled();
+
+    // Re-inspecting after post-apply external switch still requires fresh confirmation before replacing
+    fireEvent.click(
+      within(preview).getByRole('button', { name: '현재 수업 기준으로 다시 검토' }),
+    );
+    expect(onApplied).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(checkbox).toBeEnabled();
+    expect(checkbox).not.toBeChecked();
+    expect(replaceButton).toBeDisabled();
 
     act(() => {
       usePilatesStore.getState().undoSequence();

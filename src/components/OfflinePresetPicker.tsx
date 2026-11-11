@@ -32,6 +32,7 @@ interface Selection {
   kind: 'class' | 'block' | 'reusable';
   id: string;
   expected: PilatesStudioState;
+  appliedPostState: PilatesStudioState | null;
 }
 
 interface PresetPickerDraftSnapshot {
@@ -209,7 +210,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
           ? OFFLINE_BLOCK_PRESETS.some((item) => item.id === saved.id)
           : getSavedReusableBlocks().some((item) => item.id === saved.id);
     if (!exists) return null;
-    return { kind: saved.kind, id: saved.id, expected: current };
+    return { kind: saved.kind, id: saved.id, expected: current, appliedPostState: null };
   });
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -420,9 +421,19 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
     }
   }, [selected, selection]);
 
-  const stale = !!selection && selection.expected !== state;
+  // Distinguish this picker's own apply transition from external class/account mutations.
+  const alreadyApplied = Boolean(
+    selection &&
+      selection.appliedPostState !== null &&
+      state === selection.appliedPostState,
+  );
+  const stale = Boolean(selection && state !== selection.expected && !alreadyApplied);
   const confirmed = Boolean(
-    selection && !stale && confirmedForState !== null && confirmedForState === selection.expected,
+    selection &&
+      !stale &&
+      !alreadyApplied &&
+      confirmedForState !== null &&
+      confirmedForState === selection.expected,
   );
 
   const resetSelection = () => {
@@ -453,7 +464,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
     if (kind === 'suggested') return;
     const current = usePilatesStore.getState();
     appliedExpectedRef.current = null;
-    setSelection({ kind, id, expected: current });
+    setSelection({ kind, id, expected: current, appliedPostState: null });
     setMode(kind === 'class' && !current.activeSteps.length ? 'replace' : 'append');
     setConfirmedForState(null);
     setMessage('');
@@ -479,6 +490,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
       kind: selection.kind,
       id: selection.id,
       expected: current,
+      appliedPostState: null,
     });
     if (selection.kind !== 'class') {
       setMode('append');
@@ -539,6 +551,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
       !prepared ||
       !selection ||
       stale ||
+      alreadyApplied ||
       appliedExpectedRef.current === selection.expected ||
       (mode === 'replace' && state.activeSteps.length > 0 && !confirmed)
     )
@@ -550,8 +563,16 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
     }
     const result = current.applyPresetDraft(prepared, mode, selection.expected);
     if (result.success) {
+      const postApplyState = usePilatesStore.getState();
       appliedExpectedRef.current = selection.expected;
       setConfirmedForState(null);
+      setMessage('');
+      setSelection({
+        kind: selection.kind,
+        id: selection.id,
+        expected: selection.expected,
+        appliedPostState: postApplyState,
+      });
       onApplied(result.message);
     } else {
       setConfirmedForState(null);
@@ -883,26 +904,32 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                 ? `${activeCount}개 내 재사용 블록 · 시간은 편집 가능한 계획값입니다.`
                 : `${activeCount}개 프리셋 · 시간은 편집 가능한 계획값입니다.`}
             </p>
-            <div className="offline-presets-status-actions">
-              {hasSelectedPreview && (
-                <button
-                  type="button"
-                  className="offline-presets-jump-btn"
-                  onClick={jumpToSelectedPreview}
-                >
-                  <ArrowDown size={14} aria-hidden="true" /> 선택 확인으로 이동
-                </button>
-              )}
-              {hasAnyActiveFilter && !isNoSourceData && (
-                <button
-                  type="button"
-                  className="offline-presets-reset-btn"
-                  onClick={resetFiltersOnly}
-                >
-                  <RotateCcw size={14} aria-hidden="true" /> 조건 초기화
-                </button>
-              )}
-            </div>
+            {(hasSelectedPreview || (hasAnyActiveFilter && !isNoSourceData)) && (
+              <div
+                className="offline-presets-status-actions"
+                role="group"
+                aria-label="목록 빠른 작업"
+              >
+                {hasSelectedPreview && (
+                  <button
+                    type="button"
+                    className="offline-presets-jump-btn"
+                    onClick={jumpToSelectedPreview}
+                  >
+                    <ArrowDown size={14} aria-hidden="true" /> 선택 확인으로 이동
+                  </button>
+                )}
+                {hasAnyActiveFilter && !isNoSourceData && (
+                  <button
+                    type="button"
+                    className="offline-presets-reset-btn"
+                    onClick={resetFiltersOnly}
+                  >
+                    <RotateCcw size={14} aria-hidden="true" /> 조건 초기화
+                  </button>
+                )}
+              </div>
+            )}
           </div>
           <div className="offline-presets-list" ref={listRef}>
             {kind === 'reusable'
@@ -961,7 +988,11 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                   조건에 맞는 프리셋이 없어요. 기구·주제·시간을 넓혀 보세요. 직접 구성은 언제든
                   가능합니다.
                 </p>
-                <div className="offline-presets-empty-actions">
+                <div
+                  className="offline-presets-empty-actions"
+                  role="group"
+                  aria-label="빈 결과 조건 복구"
+                >
                   {Boolean(query.trim()) && activeConditionChips.length > 0 && (
                     <button
                       type="button"
@@ -1137,7 +1168,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
               <input
                 type="checkbox"
                 checked={confirmed}
-                disabled={stale}
+                disabled={stale || alreadyApplied}
                 onChange={(event) =>
                   setConfirmedForState(event.target.checked ? selection.expected : null)
                 }
@@ -1156,12 +1187,28 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
             disabled={
               !prepared ||
               stale ||
+              alreadyApplied ||
               (mode === 'replace' && state.activeSteps.length > 0 && !confirmed)
             }
             onClick={apply}
           >
             {mode === 'append' ? '현재 수업 뒤에 추가' : '복사해서 편집'}
           </button>
+          {alreadyApplied && (
+            <div className="offline-preset-stale-box" data-testid="preset-applied-reinspect">
+              <p>
+                현재 수업에 반영했습니다. 반영된 수업을 기준으로 다시 비교하거나 한 번 더 적용하려면
+                아래 버튼으로 다시 검토해 주세요.
+              </p>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={reinspectSelection}
+              >
+                현재 수업 기준으로 다시 검토
+              </button>
+            </div>
+          )}
           {stale && (
             <div className="offline-preset-stale-box">
               <p role="alert">
