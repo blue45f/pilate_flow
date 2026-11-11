@@ -71,7 +71,11 @@ describe('Wave1-2 Library 3-step guided discovery, sessionStorage recovery, and 
     expect(within(inspector).getByTestId('inspector-flow-step-badge')).toHaveTextContent(
       '3 세부 안내 확인·수업안 추가',
     );
-    expect(inspector).toHaveTextContent('교차 검증 완료 · 수업 즉시 활용');
+    expect(inspector).toHaveTextContent(
+      '개인 검토 전 · 직접 추가 가능 (자동 추천·AI 초안 제외)',
+    );
+    expect(inspector).toHaveTextContent('기구·구간 공통 참고 · 원문 확인 필요');
+    expect(inspector).not.toHaveTextContent('교차 검증 완료 · 수업 즉시 활용');
 
     // Closing the inspector preserves the search query and returns to Step 2
     fireEvent.click(within(inspector).getByRole('button', { name: '선택한 동작 정보 닫기' }));

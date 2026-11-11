@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { ArrowDown, ArrowUp, RotateCcw, Search, X } from 'lucide-react';
 import {
   OFFLINE_BLOCK_PRESETS,
   OFFLINE_CLASS_PRESETS,
@@ -14,9 +16,10 @@ import {
   getReusableBlockTimingSummary,
   getSavedReusableBlocks,
 } from '../utils/movementIdeaDraft';
-import { formatSecondsToMMSS, getStepTiming } from '../utils/sequenceEngine';
+import { formatSecondsToMMSS, getStepTiming, isRestStep } from '../utils/sequenceEngine';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesStudioState } from '../store/usePilatesStore';
+import type { PilatesExercise, SequenceStep } from '../types/pilates';
 import { PresetSuggestionCandidatePreview } from '../features/presetSuggestionCandidate';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import '../styles/offline-presets.css';
@@ -33,11 +36,92 @@ interface Selection {
 
 interface PresetPickerDraftSnapshot {
   kind: Kind;
+  query: string;
   apparatus: string;
   theme: string;
   minutes: string;
   selectedPreset: { kind: 'class' | 'block' | 'reusable'; id: string } | null;
   mode: 'append' | 'replace';
+}
+
+interface CanonicalStepSummary {
+  totalCount: number;
+  exerciseCount: number;
+  restCount: number;
+  totalSec: number;
+  restSec: number;
+}
+
+function normalizeSearchToken(value: string): string {
+  return value.normalize('NFKC').toLocaleLowerCase().replace(/\s+/gu, '');
+}
+
+function matchesPresetQuery(fields: readonly (string | undefined)[], rawQuery: string): boolean {
+  const trimmed = rawQuery.normalize('NFKC').trim();
+  if (!trimmed) return true;
+  const terms = trimmed.split(/\s+/u).filter(Boolean).map(normalizeSearchToken);
+  const normalizedFields = fields
+    .filter((field): field is string => typeof field === 'string' && field.length > 0)
+    .map(normalizeSearchToken);
+  return terms.every((term) => normalizedFields.some((field) => field.includes(term)));
+}
+
+function apparatusLabelKo(apparatus: string): string {
+  if (apparatus === 'mixed') return '혼합 기구';
+  return APPARATUS_LABELS[apparatus as keyof typeof APPARATUS_LABELS]?.ko ?? apparatus;
+}
+
+function summarizeStepsCanonical(
+  steps: readonly SequenceStep[],
+  exercisesById: ReadonlyMap<string, PilatesExercise>,
+): CanonicalStepSummary {
+  let exerciseCount = 0;
+  let restCount = 0;
+  let totalSec = 0;
+  let restSec = 0;
+  for (const step of steps) {
+    const timing = getStepTiming(step, exercisesById.get(step.exerciseId));
+    totalSec += timing.totalSec;
+    if (isRestStep(step)) {
+      restCount += 1;
+      restSec += timing.totalSec;
+    } else {
+      exerciseCount += 1;
+    }
+  }
+  return {
+    totalCount: steps.length,
+    exerciseCount,
+    restCount,
+    totalSec,
+    restSec,
+  };
+}
+
+function formatMinutesCompact(totalSec: number): string {
+  const minutes = totalSec / 60;
+  const rounded = Number.isInteger(minutes)
+    ? String(minutes)
+    : minutes.toFixed(1).replace(/\.0$/, '');
+  return `${rounded}분`;
+}
+
+function handleChipGroupKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+  const buttons = Array.from(
+    event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'),
+  );
+  if (!buttons.length) return;
+  const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+  if (currentIndex < 0) return;
+  event.preventDefault();
+  const nextIndex =
+    event.key === 'Home'
+      ? 0
+      : event.key === 'End'
+        ? buttons.length - 1
+        : (currentIndex + (event.key === 'ArrowRight' ? 1 : buttons.length - 1)) % buttons.length;
+  buttons[nextIndex]?.focus();
 }
 
 function readPresetPickerDraft(): PresetPickerDraftSnapshot | null {
@@ -66,6 +150,7 @@ function readPresetPickerDraft(): PresetPickerDraftSnapshot | null {
         : null;
     return {
       kind: validKind,
+      query: typeof parsed.query === 'string' ? parsed.query : '',
       apparatus: typeof parsed.apparatus === 'string' ? parsed.apparatus : 'all',
       theme: typeof parsed.theme === 'string' ? parsed.theme : 'all',
       minutes: typeof parsed.minutes === 'string' ? parsed.minutes : 'all',
@@ -95,11 +180,20 @@ usePilatesStore.subscribe((nextState, prevState) => {
   }
 });
 
+const TAB_SCOPE_DESCRIPTIONS: Record<Kind, string> = {
+  class: '수업 전체 프리셋 · 현재 수업 뒤에 이어 붙이거나 새 초안으로 교체할 수 있어요.',
+  block: '연계 동작 묶음 · 준비·본운동·마무리 구간 묶음을 현재 수업 뒤에 추가합니다.',
+  reusable: '내 재사용 블록 · 내가 ‘블록 조합’에서 직접 묶어 저장한 블록을 수업 뒤에 추가합니다.',
+  suggested:
+    '시간·휴식 맞춤 후보 · 고정 프리셋 대신 현재 목표 시간·휴식·보유 장비 조건에 맞춘 초안을 계산합니다.',
+};
+
 /** Templates are copied only after a deliberate click. Browsing never changes a plan. */
 export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string) => void }) {
   const state = usePilatesStore();
   const [initialDraft] = useState<PresetPickerDraftSnapshot | null>(() => readPresetPickerDraft());
   const [kind, setKind] = useState<Kind>(() => initialDraft?.kind ?? 'class');
+  const [query, setQuery] = useState(() => initialDraft?.query ?? '');
   const [apparatus, setApparatus] = useState(() => initialDraft?.apparatus ?? 'all');
   const [theme, setTheme] = useState(() => initialDraft?.theme ?? 'all');
   const [minutes, setMinutes] = useState(() => initialDraft?.minutes ?? 'all');
@@ -117,10 +211,69 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
     if (!exists) return null;
     return { kind: saved.kind, id: saved.id, expected: current };
   });
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const chipBarRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLElement>(null);
+  const previewHeadingRef = useRef<HTMLHeadingElement>(null);
+  const nextRevealedIndexRef = useRef<number | null>(null);
+  const pendingFocusCardIdRef = useRef<string | null>(null);
+  const pendingChipFocusIndexRef = useRef<number | null>(null);
+  const appliedExpectedRef = useRef<PilatesStudioState | null>(null);
+
+  const activeConditionChipCount =
+    (apparatus !== 'all' ? 1 : 0) +
+    (kind !== 'reusable' && theme !== 'all' ? 1 : 0) +
+    (kind === 'class' && minutes !== 'all' ? 1 : 0);
+
   useEffect(() => {
-    previewRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' });
+    if (!selection) return;
+    const reduced =
+      typeof window !== 'undefined' &&
+      Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+    previewRef.current?.scrollIntoView?.({
+      block: 'start',
+      behavior: reduced ? 'auto' : 'instant',
+    });
   }, [selection]);
+
+  useEffect(() => {
+    const index = nextRevealedIndexRef.current;
+    if (index === null) return;
+    nextRevealedIndexRef.current = null;
+    const cards = listRef.current?.querySelectorAll<HTMLButtonElement>('.offline-preset-card');
+    cards?.[index]?.focus({ preventScroll: true });
+  }, [limit]);
+
+  useEffect(() => {
+    const targetId = pendingFocusCardIdRef.current;
+    if (!targetId) return;
+    const cardBtn = listRef.current?.querySelector<HTMLButtonElement>(
+      `[data-preset-card-id="${targetId}"]`,
+    );
+    if (!cardBtn?.isConnected) return;
+    pendingFocusCardIdRef.current = null;
+    cardBtn.focus({ preventScroll: true });
+    const reduced =
+      typeof window !== 'undefined' &&
+      Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+    cardBtn.scrollIntoView?.({ block: 'nearest', behavior: reduced ? 'auto' : 'instant' });
+  }, [kind, query, apparatus, theme, minutes, limit]);
+
+  useEffect(() => {
+    const index = pendingChipFocusIndexRef.current;
+    if (index === null) return;
+    pendingChipFocusIndexRef.current = null;
+    if (activeConditionChipCount <= 0) {
+      searchInputRef.current?.focus();
+      return;
+    }
+    const nextButtons =
+      chipBarRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [];
+    nextButtons[Math.min(index, nextButtons.length - 1)]?.focus();
+  }, [activeConditionChipCount]);
+
   const [mode, setMode] = useState<'append' | 'replace'>(() => {
     const saved = initialDraft?.selectedPreset;
     const current = usePilatesStore.getState();
@@ -131,12 +284,15 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
     }
     return initialDraft?.mode ?? 'append';
   });
-  const [confirmed, setConfirmed] = useState(false);
+
+  // Confirmation is strictly bound to the exact store snapshot inspected by the user.
+  const [confirmedForState, setConfirmedForState] = useState<PilatesStudioState | null>(null);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
     const snapshot: PresetPickerDraftSnapshot = {
       kind,
+      query,
       apparatus,
       theme,
       minutes,
@@ -148,27 +304,59 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
     } catch {
       // Ignore storage errors
     }
-  }, [kind, apparatus, theme, minutes, selection, mode]);
+  }, [kind, query, apparatus, theme, minutes, selection, mode]);
 
   const savedReusableBlocks = getSavedReusableBlocks();
-  const options = kind === 'class' ? OFFLINE_CLASS_PRESETS : OFFLINE_BLOCK_PRESETS;
-  const matches =
-    kind === 'reusable'
-      ? []
-      : options.filter(
-          (item) =>
-            (apparatus === 'all' || item.apparatus === apparatus) &&
-            (theme === 'all' || item.theme === theme) &&
-            (kind === 'block' ||
-              minutes === 'all' ||
-              ('durationMinutes' in item && item.durationMinutes === Number(minutes))),
-        );
-  const reusableMatches =
-    kind === 'reusable'
-      ? savedReusableBlocks.filter(
-          (block) => apparatus === 'all' || block.apparatus === apparatus,
-        )
-      : [];
+  const matches = useMemo(() => {
+    if (kind === 'reusable' || kind === 'suggested') return [];
+    if (kind === 'class') {
+      return OFFLINE_CLASS_PRESETS.filter(
+        (item) =>
+          (apparatus === 'all' || item.apparatus === apparatus) &&
+          (theme === 'all' || item.theme === theme) &&
+          (minutes === 'all' || item.durationMinutes === Number(minutes)) &&
+          matchesPresetQuery(
+            [
+              item.title,
+              item.subtitle,
+              item.userSummaryKo,
+              item.themeLabelKo,
+              apparatusLabelKo(item.apparatus),
+              ...item.focusTags,
+            ],
+            query,
+          ),
+      );
+    }
+    return OFFLINE_BLOCK_PRESETS.filter(
+      (item) =>
+        (apparatus === 'all' || item.apparatus === apparatus) &&
+        (theme === 'all' || item.theme === theme) &&
+        matchesPresetQuery(
+          [
+            item.title,
+            item.description,
+            item.targetAudienceSummaryKo,
+            item.themeLabelKo,
+            apparatusLabelKo(item.apparatus),
+          ],
+          query,
+        ),
+    );
+  }, [kind, apparatus, theme, minutes, query]);
+
+  const reusableMatches = useMemo(() => {
+    if (kind !== 'reusable') return [];
+    return savedReusableBlocks.filter(
+      (block) =>
+        (apparatus === 'all' || block.apparatus === apparatus) &&
+        matchesPresetQuery(
+          [block.title, block.description, apparatusLabelKo(block.apparatus)],
+          query,
+        ),
+    );
+  }, [kind, savedReusableBlocks, apparatus, query]);
+
   const selected =
     selection?.kind === 'class'
       ? OFFLINE_CLASS_PRESETS.find((item) => item.id === selection.id)
@@ -179,6 +367,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
     selection?.kind === 'reusable'
       ? savedReusableBlocks.find((item) => item.id === selection.id)
       : undefined;
+
   const prepared = useMemo(() => {
     if (!selection) return null;
     if (selection.kind === 'reusable') {
@@ -230,40 +419,237 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
       return null;
     }
   }, [selected, selection]);
+
   const stale = !!selection && selection.expected !== state;
+  const confirmed = Boolean(
+    selection && !stale && confirmedForState !== null && confirmedForState === selection.expected,
+  );
+
   const resetSelection = () => {
     setSelection(null);
-    setConfirmed(false);
+    setConfirmedForState(null);
+    appliedExpectedRef.current = null;
+    pendingFocusCardIdRef.current = null;
     setMessage('');
     setLimit(6);
   };
+
+  const clearQueryOnly = () => {
+    setQuery('');
+    setLimit(6);
+    searchInputRef.current?.focus();
+  };
+
+  const resetFiltersOnly = () => {
+    setQuery('');
+    setApparatus('all');
+    setTheme('all');
+    setMinutes('all');
+    setLimit(6);
+    searchInputRef.current?.focus();
+  };
+
   const choose = (id: string) => {
     if (kind === 'suggested') return;
     const current = usePilatesStore.getState();
+    appliedExpectedRef.current = null;
     setSelection({ kind, id, expected: current });
     setMode(kind === 'class' && !current.activeSteps.length ? 'replace' : 'append');
-    setConfirmed(false);
+    setConfirmedForState(null);
     setMessage('');
   };
+
+  const reinspectSelection = () => {
+    if (!selection) return;
+    const current = usePilatesStore.getState();
+    appliedExpectedRef.current = null;
+    setConfirmedForState(null);
+    const stillExists =
+      selection.kind === 'class'
+        ? OFFLINE_CLASS_PRESETS.some((item) => item.id === selection.id)
+        : selection.kind === 'block'
+          ? OFFLINE_BLOCK_PRESETS.some((item) => item.id === selection.id)
+          : getSavedReusableBlocks().some((item) => item.id === selection.id);
+    if (!stillExists) {
+      setSelection(null);
+      setMessage('선택했던 항목이 현재 목록에 없어 선택을 해제했습니다. 다시 골라 주세요.');
+      return;
+    }
+    setSelection({
+      kind: selection.kind,
+      id: selection.id,
+      expected: current,
+    });
+    if (selection.kind !== 'class') {
+      setMode('append');
+    } else if (current.activeSteps.length === 0) {
+      setMode('replace');
+    }
+    setMessage('');
+    previewHeadingRef.current?.focus({ preventScroll: true });
+  };
+
+  const returnToSelectedCard = () => {
+    if (!selection) return;
+    const activeList = kind === 'reusable' ? reusableMatches : matches;
+    let targetIndex = activeList.findIndex((item) => item.id === selection.id);
+    const existingCard = listRef.current?.querySelector<HTMLButtonElement>(
+      `[data-preset-card-id="${selection.id}"]`,
+    );
+    if (existingCard?.isConnected && targetIndex >= 0 && targetIndex < limit) {
+      existingCard.focus({ preventScroll: true });
+      const reduced =
+        typeof window !== 'undefined' &&
+        Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+      existingCard.scrollIntoView?.({ block: 'nearest', behavior: reduced ? 'auto' : 'instant' });
+      return;
+    }
+    pendingFocusCardIdRef.current = selection.id;
+    if (targetIndex < 0) {
+      setQuery('');
+      setApparatus('all');
+      setTheme('all');
+      setMinutes('all');
+      const fullList =
+        selection.kind === 'reusable'
+          ? savedReusableBlocks
+          : selection.kind === 'class'
+            ? OFFLINE_CLASS_PRESETS
+            : OFFLINE_BLOCK_PRESETS;
+      targetIndex = fullList.findIndex((item) => item.id === selection.id);
+    }
+    if (targetIndex >= limit) {
+      setLimit(Math.ceil((targetIndex + 1) / 6) * 6);
+    }
+  };
+
+  const jumpToSelectedPreview = () => {
+    previewHeadingRef.current?.focus({ preventScroll: true });
+    const reduced =
+      typeof window !== 'undefined' &&
+      Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+    previewRef.current?.scrollIntoView?.({
+      block: 'start',
+      behavior: reduced ? 'auto' : 'instant',
+    });
+  };
+
   const apply = () => {
     if (
       !prepared ||
       !selection ||
       stale ||
+      appliedExpectedRef.current === selection.expected ||
       (mode === 'replace' && state.activeSteps.length > 0 && !confirmed)
     )
       return;
-    const result = usePilatesStore.getState().applyPresetDraft(prepared, mode, selection.expected);
-    if (result.success) onApplied(result.message);
-    else setMessage(result.message);
+    const current = usePilatesStore.getState();
+    if (current !== selection.expected) {
+      setConfirmedForState(null);
+      return;
+    }
+    const result = current.applyPresetDraft(prepared, mode, selection.expected);
+    if (result.success) {
+      appliedExpectedRef.current = selection.expected;
+      setConfirmedForState(null);
+      onApplied(result.message);
+    } else {
+      setConfirmedForState(null);
+      setMessage(result.message);
+    }
   };
-  const names = new Map(state.exercises.map((item) => [item.id, item]));
-  const totalSeconds =
-    prepared?.steps.reduce(
-      (sum, step) => sum + getStepTiming(step, names.get(step.exerciseId)).totalSec,
-      0,
-    ) ?? 0;
+
+  const names = useMemo(
+    () => new Map(state.exercises.map((item) => [item.id, item])),
+    [state.exercises],
+  );
+  const currentSummary = useMemo(
+    () => summarizeStepsCanonical(state.activeSteps, names),
+    [state.activeSteps, names],
+  );
+  const incomingSummary = useMemo(
+    () => (prepared ? summarizeStepsCanonical(prepared.steps, names) : null),
+    [prepared, names],
+  );
+  const projectedSummary = useMemo(() => {
+    if (!prepared) return null;
+    const nextSteps = mode === 'append' ? [...state.activeSteps, ...prepared.steps] : prepared.steps;
+    return summarizeStepsCanonical(nextSteps, names);
+  }, [prepared, mode, state.activeSteps, names]);
+
+  const totalSeconds = incomingSummary?.totalSec ?? 0;
+  const projectedTargetMinutes = prepared
+    ? mode === 'append'
+      ? state.activeTargetMinutes
+      : prepared.targetMinutes
+    : state.activeTargetMinutes;
+
   const activeCount = kind === 'reusable' ? reusableMatches.length : matches.length;
+  const totalSourceCount =
+    kind === 'reusable'
+      ? savedReusableBlocks.length
+      : kind === 'class'
+        ? OFFLINE_CLASS_PRESETS.length
+        : OFFLINE_BLOCK_PRESETS.length;
+  const isNoSourceData = totalSourceCount === 0;
+
+  const activeConditionChips: {
+    key: string;
+    label: string;
+    ariaLabel: string;
+    remove: () => void;
+  }[] = [
+    ...(apparatus !== 'all'
+      ? [
+          {
+            key: `apparatus-${apparatus}`,
+            label: `기구: ${apparatusLabelKo(apparatus)}`,
+            ariaLabel: `기구 ${apparatusLabelKo(apparatus)} 조건 해제`,
+            remove: () => {
+              setApparatus('all');
+              setLimit(6);
+            },
+          },
+        ]
+      : []),
+    ...(kind !== 'reusable' && theme !== 'all'
+      ? (() => {
+          const themeLabel =
+            PRESET_THEME_CATALOG.find((item) => item.id === theme)?.labelKo ?? theme;
+          return [
+            {
+              key: `theme-${theme}`,
+              label: `주제: ${themeLabel}`,
+              ariaLabel: `주제 ${themeLabel} 조건 해제`,
+              remove: () => {
+                setTheme('all');
+                setLimit(6);
+              },
+            },
+          ];
+        })()
+      : []),
+    ...(kind === 'class' && minutes !== 'all'
+      ? [
+          {
+            key: `minutes-${minutes}`,
+            label: `시간: ${minutes}분`,
+            ariaLabel: `계획 시간 ${minutes}분 조건 해제`,
+            remove: () => {
+              setMinutes('all');
+              setLimit(6);
+            },
+          },
+        ]
+      : []),
+  ];
+  const hasAnyActiveFilter = Boolean(query.trim() || activeConditionChips.length > 0);
+
+  const handleRemoveConditionChip = (index: number, removeFn: () => void) => {
+    pendingChipFocusIndexRef.current = index;
+    removeFn();
+  };
+
   const previewTitle = selected?.title ?? selectedReusable?.title;
   const previewEquipmentList = selected
     ? selected.requiredEquipment
@@ -271,6 +657,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
       ? [selectedReusable.apparatus]
       : [];
   const hasSelectedPreview = Boolean((selected || selectedReusable) && selection);
+
   return (
     <section className="offline-presets" aria-label="오프라인 수업·연계 블록 프리셋">
       <ol
@@ -298,7 +685,12 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
         AI 없이 골라 복사하세요. 원본과 저장한 수업·이력은 그대로 두고, 동작·순서·시간을 자유롭게
         바꿀 수 있어요.
       </p>
-      <div className="offline-presets-tabs" role="group" aria-label="프리셋 종류">
+      <div
+        className="offline-presets-tabs"
+        role="group"
+        aria-label="프리셋 종류"
+        onKeyDown={handleChipGroupKeyDown}
+      >
         <button
           type="button"
           aria-pressed={kind === 'class'}
@@ -340,6 +732,9 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
           시간·휴식 맞춤 후보
         </button>
       </div>
+      <p className="offline-presets-scope-caption" data-testid="preset-tab-scope-caption">
+        {TAB_SCOPE_DESCRIPTIONS[kind]}
+      </p>
       {kind === 'suggested' ? (
         <PresetSuggestionCandidatePreview
           request={{
@@ -376,6 +771,32 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
         />
       ) : (
         <>
+          <div className="offline-presets-search-row">
+            <label className="offline-presets-search">
+              <Search size={17} aria-hidden="true" />
+              <input
+                ref={searchInputRef}
+                type="search"
+                aria-label="프리셋 제목 또는 요약 검색"
+                placeholder="제목, 주제, 핵심 키워드로 찾기"
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setLimit(6);
+                }}
+              />
+            </label>
+            {query.length > 0 && (
+              <button
+                type="button"
+                className="offline-presets-search-clear"
+                aria-label="프리셋 검색어 지우기"
+                onClick={clearQueryOnly}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            )}
+          </div>
           <div className="offline-presets-filters">
             <label className="form-field">
               <span>프리셋 기구</span>
@@ -383,7 +804,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                 value={apparatus}
                 onChange={(event) => {
                   setApparatus(event.target.value);
-                  resetSelection();
+                  setLimit(6);
                 }}
               >
                 <option value="all">모든 기구</option>
@@ -402,7 +823,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                   value={theme}
                   onChange={(event) => {
                     setTheme(event.target.value);
-                    resetSelection();
+                    setLimit(6);
                   }}
                 >
                   <option value="all">모든 주제</option>
@@ -421,7 +842,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                   value={minutes}
                   onChange={(event) => {
                     setMinutes(event.target.value);
-                    resetSelection();
+                    setLimit(6);
                   }}
                 >
                   <option value="all">모든 시간</option>
@@ -434,8 +855,56 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
               </label>
             )}
           </div>
-          <p role="status">{activeCount}개 프리셋 · 시간은 편집 가능한 계획값입니다.</p>
-          <div className="offline-presets-list">
+          {activeConditionChips.length > 0 && (
+            <div
+              ref={chipBarRef}
+              className="offline-presets-active-chips"
+              role="group"
+              aria-label="적용된 프리셋 조건"
+              onKeyDown={handleChipGroupKeyDown}
+            >
+              {activeConditionChips.map((chip, index) => (
+                <button
+                  key={chip.key}
+                  type="button"
+                  className="offline-presets-chip"
+                  aria-label={chip.ariaLabel}
+                  onClick={() => handleRemoveConditionChip(index, chip.remove)}
+                >
+                  <span>{chip.label}</span>
+                  <X size={14} aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="offline-presets-status-row">
+            <p role="status">
+              {kind === 'reusable'
+                ? `${activeCount}개 내 재사용 블록 · 시간은 편집 가능한 계획값입니다.`
+                : `${activeCount}개 프리셋 · 시간은 편집 가능한 계획값입니다.`}
+            </p>
+            <div className="offline-presets-status-actions">
+              {hasSelectedPreview && (
+                <button
+                  type="button"
+                  className="offline-presets-jump-btn"
+                  onClick={jumpToSelectedPreview}
+                >
+                  <ArrowDown size={14} aria-hidden="true" /> 선택 확인으로 이동
+                </button>
+              )}
+              {hasAnyActiveFilter && !isNoSourceData && (
+                <button
+                  type="button"
+                  className="offline-presets-reset-btn"
+                  onClick={resetFiltersOnly}
+                >
+                  <RotateCcw size={14} aria-hidden="true" /> 조건 초기화
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="offline-presets-list" ref={listRef}>
             {kind === 'reusable'
               ? reusableMatches.slice(0, limit).map((block) => {
                   const summary = getReusableBlockTimingSummary(block);
@@ -444,12 +913,14 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                       type="button"
                       className="offline-preset-card"
                       key={block.id}
+                      data-preset-card-id={block.id}
                       aria-pressed={selection?.id === block.id}
                       onClick={() => choose(block.id)}
                     >
                       <strong>{block.title}</strong>
                       <span>
-                        {summary.totalDurationMin}분 · {block.items.length}개 동작 · v{block.version}
+                        {apparatusLabelKo(block.apparatus)} · {summary.totalDurationMin}분 ·{' '}
+                        {block.items.length}개 동작 · v{block.version}
                       </span>
                     </button>
                   );
@@ -459,24 +930,68 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                     type="button"
                     className="offline-preset-card"
                     key={item.id}
+                    data-preset-card-id={item.id}
                     aria-pressed={selection?.id === item.id}
                     onClick={() => choose(item.id)}
                   >
                     <strong>{item.title}</strong>
+                    <small className="offline-preset-card-summary">
+                      {item.presetKind === 'class-sequence' ? item.userSummaryKo : item.description}
+                    </small>
                     <span>
+                      {apparatusLabelKo(item.apparatus)} ·{' '}
                       {item.presetKind === 'class-sequence' ? item.durationMinutes : item.durationMin}분 ·{' '}
                       {item.presetKind === 'class-sequence' ? item.steps.length : item.items.length}개 동작
                     </span>
                   </button>
                 ))}
           </div>
-          {!activeCount && (
-            <p>
-              조건에 맞는 프리셋이 없어요. 기구·주제·시간을 넓혀 보세요. 직접 구성은 언제든 가능합니다.
-            </p>
-          )}
+          {!activeCount &&
+            (isNoSourceData ? (
+              <div className="offline-presets-empty" data-testid="preset-empty-no-data">
+                <p>
+                  {kind === 'reusable'
+                    ? '아직 저장한 내 재사용 블록이 없어요. 수업 구성의 ‘블록 조합’에서 자주 쓰는 동작 묶음을 저장하면 이곳에서 바로 불러올 수 있습니다.'
+                    : '등록된 오프라인 프리셋 자료가 없습니다.'}
+                </p>
+              </div>
+            ) : (
+              <div className="offline-presets-empty" data-testid="preset-empty-filter-zero">
+                <p>
+                  조건에 맞는 프리셋이 없어요. 기구·주제·시간을 넓혀 보세요. 직접 구성은 언제든
+                  가능합니다.
+                </p>
+                <div className="offline-presets-empty-actions">
+                  {Boolean(query.trim()) && activeConditionChips.length > 0 && (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={clearQueryOnly}
+                    >
+                      검색어만 지우기
+                    </button>
+                  )}
+                  {hasAnyActiveFilter && (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={resetFiltersOnly}
+                    >
+                      프리셋 조건 초기화
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
           {activeCount > limit && (
-            <button type="button" className="btn-secondary" onClick={() => setLimit(limit + 6)}>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => {
+                nextRevealedIndexRef.current = limit;
+                setLimit(limit + 6);
+              }}
+            >
               프리셋 더 보기
             </button>
           )}
@@ -488,13 +1003,79 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
           className="offline-preset-preview"
           aria-label="선택한 프리셋 확인"
         >
-          <h3>{previewTitle}</h3>
+          <div className="offline-preset-preview-top">
+            <h3 ref={previewHeadingRef} tabIndex={-1}>
+              {previewTitle}
+            </h3>
+            <div className="offline-preset-preview-nav">
+              {kind === selection.kind && (
+                <button
+                  type="button"
+                  className="btn-secondary offline-preset-back-btn"
+                  onClick={returnToSelectedCard}
+                >
+                  <ArrowUp size={15} aria-hidden="true" /> 목록의 선택 위치로
+                </button>
+              )}
+              <button
+                type="button"
+                className="offline-preset-clear-selection"
+                onClick={resetSelection}
+              >
+                선택 해제
+              </button>
+            </div>
+          </div>
           <p>
             복사할 계획 {formatSecondsToMMSS(totalSeconds)} · 기구:{' '}
             {previewEquipmentList
               .map((id) => APPARATUS_LABELS[id as keyof typeof APPARATUS_LABELS]?.ko ?? id)
               .join(' · ')}
           </p>
+          {prepared && incomingSummary && projectedSummary && (
+            <div
+              className="offline-preset-impact"
+              role="region"
+              aria-label="현재 수업과 적용 후 예상 비교"
+              data-testid="preset-impact-comparison"
+            >
+              <div className="offline-preset-impact-col">
+                <span className="offline-preset-impact-label">현재 수업</span>
+                <strong data-testid="preset-impact-current">
+                  {currentSummary.totalCount}항목 · {formatMinutesCompact(currentSummary.totalSec)}{' '}
+                  ({formatSecondsToMMSS(currentSummary.totalSec)})
+                </strong>
+                <small>
+                  {currentSummary.restCount > 0
+                    ? `동작 ${currentSummary.exerciseCount} · 휴식 ${currentSummary.restCount} (${formatSecondsToMMSS(currentSummary.restSec)}) · `
+                    : ''}
+                  목표 {state.activeTargetMinutes}분
+                </small>
+              </div>
+              <span className="offline-preset-impact-arrow" aria-hidden="true">
+                →
+              </span>
+              <div className="offline-preset-impact-col is-projected">
+                <span className="offline-preset-impact-label">
+                  {mode === 'append' ? '뒤에 추가 후 예상' : '초안 교체 후 예상'}
+                </span>
+                <strong data-testid="preset-impact-projected">
+                  {projectedSummary.totalCount}항목 ·{' '}
+                  {formatMinutesCompact(projectedSummary.totalSec)} (
+                  {formatSecondsToMMSS(projectedSummary.totalSec)})
+                </strong>
+                <small>
+                  {projectedSummary.restCount > 0
+                    ? `동작 ${projectedSummary.exerciseCount} · 휴식 ${projectedSummary.restCount} (${formatSecondsToMMSS(projectedSummary.restSec)}) · `
+                    : ''}
+                  목표 {projectedTargetMinutes}분
+                  {mode === 'append'
+                    ? ` (+${incomingSummary.totalCount}항목 · +${formatMinutesCompact(incomingSummary.totalSec)})`
+                    : ' (새 초안 교체 · 실행 취소 가능)'}
+                </small>
+              </div>
+            </div>
+          )}
           <p className="muted">
             반복·좌우·설명·전환 시간은 작성자가 정한 가정입니다. 실제 소요 시간이나 운동 효과를
             보장하지 않으며 검토는 선택입니다.
@@ -506,19 +1087,31 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                 const ex = names.get(step.exerciseId);
                 const timing = getStepTiming(step, ex);
                 return (
-                  <li key={step.stepId} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <li
+                    key={step.stepId}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}
+                  >
                     {ex && <ExerciseThumbnailBadge exercise={ex} size="xs" decorative />}
-                    <strong>{ex?.nameKo ?? '현재 목록에 없는 동작'}</strong>
+                    <strong>
+                      {isRestStep(step) ? '휴식' : (ex?.nameKo ?? '현재 목록에 없는 동작')}
+                    </strong>
                     <span>
-                      {formatSecondsToMMSS(timing.totalSec)} · 수행{' '}
-                      {formatSecondsToMMSS(timing.movementSec)} · 설명 {timing.explanationSec}초 ·
-                      전환 {timing.transitionSec}초
+                      {formatSecondsToMMSS(timing.totalSec)}
+                      {!isRestStep(step) && (
+                        <>
+                          {' '}
+                          · 수행 {formatSecondsToMMSS(timing.movementSec)} · 설명{' '}
+                          {timing.explanationSec}초 · 전환 {timing.transitionSec}초
+                        </>
+                      )}
                     </span>
-                    <small>
-                      {step.repetitions ? `${step.repetitions}회` : '횟수 미지정'}
-                      {step.sets ? ` · ${step.sets}세트` : ''} ·{' '}
-                      {timing.sides === 2 ? '양쪽 시간을 포함' : '한쪽 또는 양쪽 함께'}
-                    </small>
+                    {!isRestStep(step) && (
+                      <small>
+                        {step.repetitions ? `${step.repetitions}회` : '횟수 미지정'}
+                        {step.sets ? ` · ${step.sets}세트` : ''} ·{' '}
+                        {timing.sides === 2 ? '양쪽 시간을 포함' : '한쪽 또는 양쪽 함께'}
+                      </small>
+                    )}
                   </li>
                 );
               })}
@@ -531,7 +1124,7 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                 value={mode}
                 onChange={(event) => {
                   setMode(event.target.value as 'append' | 'replace');
-                  setConfirmed(false);
+                  setConfirmedForState(null);
                 }}
               >
                 <option value="append">현재 수업 뒤에 추가</option>
@@ -544,7 +1137,10 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
               <input
                 type="checkbox"
                 checked={confirmed}
-                onChange={(event) => setConfirmed(event.target.checked)}
+                disabled={stale}
+                onChange={(event) =>
+                  setConfirmedForState(event.target.checked ? selection.expected : null)
+                }
               />
               현재 편집 중인 수업을 바꿉니다. 되돌리기로 복원할 수 있어요.
             </label>
@@ -567,7 +1163,19 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
             {mode === 'append' ? '현재 수업 뒤에 추가' : '복사해서 편집'}
           </button>
           {stale && (
-            <p role="alert">수업이나 계정이 바뀌었어요. 위에서 프리셋을 다시 선택해 주세요.</p>
+            <div className="offline-preset-stale-box">
+              <p role="alert">
+                수업이나 계정이 바뀌었어요. 위에서 프리셋을 다시 선택하거나 아래 버튼으로 현재 수업
+                기준으로 다시 검토해 주세요.
+              </p>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={reinspectSelection}
+              >
+                현재 수업 기준으로 다시 검토
+              </button>
+            </div>
           )}
           {!prepared && (
             <p role="alert">

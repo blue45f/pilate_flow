@@ -1,0 +1,412 @@
+/* Honest review-state, provenance, and note-vs-template distinction for LibraryMovementInspector & StudioClinicalBriefCard */
+
+.library-inspector-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  min-width: 0;
+}
+
+.library-inspector-heading-row h3 {
+  margin: 0;
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.library-inspector-fact-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.inspector-fact-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 650;
+  line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  border: 1px solid #c5d0ca;
+  background: #f2f6f4;
+  color: #1f352e;
+}
+
+.inspector-fact-pill.is-review-approved {
+  border-color: #8eb39c;
+  background: #e9f3ed;
+  color: #16442c;
+}
+
+.inspector-fact-pill.is-review-stale {
+  border-color: #d39b58;
+  background: #fdf4e8;
+  color: #6b3600;
+}
+
+.inspector-fact-pill.is-review-pending {
+  border-color: #b7c2bc;
+  background: #f4f6f5;
+  color: #2c3a35;
+}
+
+.inspector-fact-pill.is-auto-eligible {
+  border-color: #93b5a6;
+  background: #edf5f1;
+  color: #184338;
+}
+
+.inspector-fact-pill.is-manual-only {
+  border-color: #cbbba6;
+  background: #faf5ee;
+  color: #4a3723;
+}
+
+.inspector-fact-pill.is-source {
+  border-color: #bec8d2;
+  background: #f2f5f8;
+  color: #243748;
+}
+
+.library-inspector-reference-step {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--studio-line, #d6dfd9);
+}
+
+.library-inspector-reference-links {
+  display: grid;
+  gap: 8px;
+}
+
+.library-inspector-source-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #8ea89c;
+  background: #f2f7f4;
+  color: #163e32;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.library-inspector-source-link:hover {
+  background: #e6f0eb;
+}
+
+.library-inspector-reference-note,
+.library-inspector-no-source {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f5f6f4;
+  border: 1px solid #d4dcd7;
+  color: #2e3b35;
+  font-size: 0.79rem;
+  line-height: 1.55;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.library-inspector-review-headline {
+  margin: 0 0 6px;
+  font-weight: 650;
+  color: #1b2e27;
+}
+
+.library-inspector-review[data-review-state='stale'] .library-inspector-review-headline {
+  color: #6b3600;
+}
+
+.library-inspector-review-detail {
+  margin: 0 0 8px;
+  color: #2f3d37;
+}
+
+.library-movement-inspector .library-inspector-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin: 12px -16px -16px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--studio-line, #d6dfd9);
+  border-radius: 0 0 12px 12px;
+  background: var(--studio-surface, #ffffff);
+}
+
+.library-movement-inspector .library-inspector-actions button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* StudioClinicalBriefCard separated note vs apparatus/block template layout */
+.studio-clinical-brief-card {
+  border-radius: 12px;
+  border: 1px solid #c5d1ca;
+  background: #f8faf8;
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.studio-clinical-brief-card.is-compact {
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+.scb-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 8px;
+  flex-wrap: wrap;
+}
+
+.scb-template-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  color: #4a3519;
+  background: #f6ecde;
+  border: 1px solid #d5bc98;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+
+.scb-scope-tag {
+  color: #3f4a44;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.scb-scope-notice,
+.scb-hidden-note-hint {
+  margin: 0;
+  color: #2f3b35;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.scb-hidden-note-hint {
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #eef2ef;
+  border: 1px dashed #b9c6be;
+}
+
+.scb-note-box,
+.scb-template-box {
+  display: grid;
+  gap: 6px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  min-width: 0;
+}
+
+.scb-note-box {
+  background: #ffffff;
+  border: 1px solid #b9c8c0;
+}
+
+.scb-note-box.is-stale {
+  background: #fff9f2;
+  border-color: #d89b56;
+}
+
+.scb-template-box {
+  background: #f4f1ea;
+  border: 1px solid #d2c6b2;
+}
+
+.scb-box-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+.scb-box-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.77rem;
+  font-weight: 700;
+  color: #1e332b;
+}
+
+.scb-box-status {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #463b2d;
+}
+
+.studio-clinical-brief-card .scb-dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.studio-clinical-brief-card .scb-dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+
+.studio-clinical-brief-card .scb-dl dt {
+  font-weight: 700;
+  color: #263730;
+  font-size: 0.75rem;
+}
+
+.studio-clinical-brief-card .scb-dl dd {
+  margin: 0;
+  text-align: left;
+  color: #2c2823;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.scb-reference-details {
+  margin-top: 2px;
+}
+
+.scb-reference-summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 2px;
+  cursor: pointer;
+  font-weight: 650;
+  color: #1d4a3a;
+  font-size: 0.78rem;
+  user-select: none;
+}
+
+.scb-reference-body {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #cbd5cf;
+  display: grid;
+  gap: 6px;
+}
+
+.scb-reference-disclaimer {
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 7px;
+  background: #fdf5ec;
+  border: 1px solid #dfc09b;
+  color: #5b3106;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.scb-reference-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #c6d2cc;
+  color: #174636;
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.scb-reference-link.is-literature {
+  color: #213d59;
+}
+
+.scb-reference-takeaway,
+.scb-reference-citation {
+  margin: 0;
+  color: #3d3730;
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.library-movement-inspector :is(a, button, summary, h2):focus-visible,
+.studio-clinical-brief-card :is(a, button, summary):focus-visible {
+  outline: 2px solid #183e36;
+  outline-offset: 2px;
+}
+
+@media (max-width: 390px) {
+  .library-inspector-content {
+    padding: 12px;
+  }
+
+  .library-movement-inspector .library-inspector-actions {
+    position: static;
+    margin: 10px 0 0;
+    padding: 10px 0 0;
+    border-radius: 0;
+  }
+
+  .library-inspector-content .library-inspector-spec-list > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .library-inspector-content .library-inspector-spec-list dd {
+    text-align: left;
+  }
+
+  .studio-clinical-brief-card,
+  .studio-clinical-brief-card.is-compact {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 320px) {
+  .library-inspector-header {
+    padding: 8px 10px;
+  }
+
+  .library-inspector-content {
+    padding: 10px;
+  }
+
+  .inspector-fact-pill {
+    width: 100%;
+    border-radius: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-movement-inspector,
+  .library-movement-inspector *,
+  .studio-clinical-brief-card,
+  .studio-clinical-brief-card * {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}

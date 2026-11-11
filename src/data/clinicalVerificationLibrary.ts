@@ -15,10 +15,23 @@ export interface ClinicalLiteratureReference {
   clinicalSummaryKo: string;
 }
 
+export interface ExerciseNoteRecordedFields {
+  springsKo: string | null;
+  breathPatternKo: string | null;
+  hasSpecificSprings: boolean;
+  hasSpecificBreath: boolean;
+}
+
 export interface StudioVerifiedGuidance {
   exerciseId: string;
   verificationBadgeKo: string;
-  verificationTier: 'clinical-literature-and-video' | 'curriculum-and-video';
+  verificationTier:
+    | 'apparatus-block-template'
+    | 'clinical-literature-and-video'
+    | 'curriculum-and-video';
+  scopeNoticeKo: string;
+  referenceLinksNoticeKo: string;
+  exerciseNote: ExerciseNoteRecordedFields;
   springAndSetupStandardKo: string;
   biomechanicalFocusKo: string;
   breathingCadenceKo: string;
@@ -363,6 +376,20 @@ const BLOCK_SETUP_DEFAULTS: Record<
   },
 };
 
+function resolveBlockBreathingTemplate(block: ClassBlockCategory): string {
+  if (block === 'extension') {
+    return '들숨에 척추를 길게 세우며 가슴을 열고, 날숨에 복부 중심을 조이며 분절하여 돌아옵니다.';
+  }
+  if (block === 'core' || block === 'bridging') {
+    return '들숨에 흉곽을 좌우·뒤로 넓혀 준비하고, 날숨에 갈비뼈와 복부 중심을 연결하며 동작을 수행합니다.';
+  }
+  return '들숨에 척추 축성 신장(Axial Elongation)으로 공간과 길이를 만들고, 날숨에 코어 지지와 함께 일정한 속도로 움직입니다.';
+}
+
+/**
+ * Apparatus/block reference template, kept strictly separate from the exercise's
+ * own recorded note fields and personal instructor review status.
+ */
 export function getStudioVerifiedGuidance(exercise: PilatesExercise): StudioVerifiedGuidance {
   const apparatus = exercise.apparatus;
   const block = exercise.blockCategory;
@@ -371,34 +398,37 @@ export function getStudioVerifiedGuidance(exercise: PilatesExercise): StudioVeri
   const videos = VERIFIED_VIDEOS_BY_APPARATUS[apparatus];
   const literature = VERIFIED_LITERATURE_BY_APPARATUS[apparatus];
 
-  const springAndSetupStandardKo =
-    exercise.springs &&
-    exercise.springs !== '강사가 기구별 설정' &&
-    exercise.springs !== '스프링 사용 없음'
-      ? `${exercise.springs} · ${setupDefault.springKo}`
-      : setupDefault.springKo;
+  const rawSprings = exercise.springs.trim();
+  const rawBreath = exercise.breathPattern.trim();
+  const hasSpecificSprings = Boolean(
+    rawSprings && rawSprings !== '강사가 기구별 설정' && rawSprings !== '스프링 사용 없음',
+  );
+  const hasSpecificBreath = Boolean(rawBreath && !rawBreath.includes('강사와 조정'));
 
-  const breathKo =
-    exercise.breathPattern &&
-    !exercise.breathPattern.includes('강사와 조정')
-      ? exercise.breathPattern
-      : block === 'extension'
-        ? '들숨에 척추를 길게 세우며 가슴을 열고, 날숨에 복부 중심을 조이며 분절하여 돌아옵니다.'
-        : block === 'core' || block === 'bridging'
-          ? '들숨에 흉곽을 좌우·뒤로 넓혀 준비하고, 날숨에 갈비뼈와 복부 중심을 연결하며 동작을 수행합니다.'
-          : '들숨에 척추 축성 신장(Axial Elongation)으로 공간과 길이를 만들고, 날숨에 코어 지지와 함께 일정한 속도로 움직입니다.';
+  const templateSpringKo = setupDefault.springKo;
+  const templateBreathKo = resolveBlockBreathingTemplate(block);
 
   return {
     exerciseId: exercise.id,
-    verificationBadgeKo: '교차 검증 완료 · 스튜디오 실전 가이드',
-    verificationTier: 'clinical-literature-and-video',
-    springAndSetupStandardKo,
+    verificationBadgeKo: '기구·구간 공통 참고 · 원문 확인 필요',
+    verificationTier: 'apparatus-block-template',
+    scopeNoticeKo:
+      '기구·구간 분류에 따른 공통 참고 템플릿입니다. 개별 동작의 원문 확인·임상 유효성·개인 검토 완료를 뜻하지 않습니다.',
+    referenceLinksNoticeKo:
+      '아래 유튜브·문헌은 이 동작 전용 검수 자료가 아니라 해당 기구의 일반 원리 참고용 외부 링크입니다. 원문을 직접 확인해 주세요.',
+    exerciseNote: {
+      springsKo: rawSprings || null,
+      breathPatternKo: rawBreath || null,
+      hasSpecificSprings,
+      hasSpecificBreath,
+    },
+    springAndSetupStandardKo: templateSpringKo,
     biomechanicalFocusKo: setupDefault.biomechKo,
-    breathingCadenceKo: breathKo,
+    breathingCadenceKo: templateBreathKo,
     teachingChecklistKo: [
-      `정렬·기구 기준: ${springAndSetupStandardKo}`,
-      `생체역학 핵심: ${setupDefault.biomechKo}`,
-      `호흡·속도 큐잉: ${breathKo}`,
+      `기구·구간 공통 세팅 참고: ${templateSpringKo}`,
+      `기구·구간 정렬 참고: ${setupDefault.biomechKo}`,
+      `구간 공통 호흡 참고: ${templateBreathKo}`,
     ],
     primaryVideo: videos.primary,
     secondaryVideo: videos.secondary,

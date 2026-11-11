@@ -1,6 +1,6 @@
 .offline-presets {
   display: grid;
-  gap: 16px;
+  gap: 14px;
   min-width: 0;
 }
 .offline-presets p {
@@ -21,6 +21,7 @@
   color: inherit;
   padding: 12px;
   text-align: left;
+  cursor: pointer;
 }
 .offline-presets-tabs button[aria-pressed='true'],
 .offline-preset-card[aria-pressed='true'] {
@@ -45,11 +46,19 @@
 }
 .offline-preset-card {
   display: grid;
-  gap: 8px;
+  align-content: start;
+  gap: 6px;
   overflow-wrap: anywhere;
 }
+.offline-preset-card-summary {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #4d5d50;
+}
 .offline-preset-card span {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #214e40;
 }
 .offline-preset-preview {
   display: grid;
@@ -57,11 +66,18 @@
   padding: 16px;
   border: 1px solid var(--line, #d3ddcf);
   border-radius: 16px;
+  background: var(--surface, #fff);
   min-width: 0;
+  scroll-margin-top: 12px;
 }
 .offline-preset-preview h3 {
   margin: 0;
   overflow-wrap: anywhere;
+}
+.offline-preset-preview h3:focus-visible {
+  outline: 3px solid #6c927b;
+  outline-offset: 3px;
+  border-radius: 6px;
 }
 .offline-preset-preview summary {
   cursor: pointer;
@@ -89,6 +105,9 @@
 }
 .offline-preset-confirm input {
   flex: none;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--forest, #214e40);
 }
 .offline-preset-entry {
   display: flex;
@@ -98,8 +117,15 @@
   gap: 8px;
   margin-block: 12px;
 }
-.offline-presets button:focus-visible,
-.offline-presets summary:focus-visible {
+.offline-presets :is(button, select, input, summary):focus-visible {
   outline: 3px solid #6c927b;
   outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .offline-presets,
+  .offline-preset-card,
+  .offline-presets-tabs button {
+    scroll-behavior: auto;
+    transition: none;
+  }
 }

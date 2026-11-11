@@ -5,64 +5,103 @@
   background: #f7f8f0;
   color: #173d34;
   min-width: 0;
+  word-break: keep-all;
 }
+
 .step-motion-study summary {
   min-height: 64px;
+  min-width: 44px;
   padding: 12px 16px;
   cursor: pointer;
 }
+
 .step-motion-study summary > span {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-weight: 650;
 }
+
 .step-motion-study summary small {
   display: block;
   margin-left: 24px;
   font-size: 0.8125rem;
   color: #596a53;
 }
+
 .sms-content {
   padding: 0 16px 16px;
+  min-width: 0;
 }
+
 .sms-content > p {
   font-size: 0.8125rem;
   line-height: 1.7;
   margin: 12px 0;
 }
+
 .sms-notice {
   background: #f5eadc;
   border-radius: 10px;
   padding: 12px;
 }
+
 .sms-options {
   display: grid;
   gap: 10px;
   margin: 16px 0;
 }
-.sms-option {
+
+.sms-option-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   border: 1px solid #d4ddcb;
   background: #fffef8;
   border-radius: 12px;
   padding: 10px;
-  min-height: 80px;
-  cursor: pointer;
   min-width: 0;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    background-color 140ms ease;
 }
-.sms-option:has(input:checked) {
+
+.sms-option-item.is-connected,
+.sms-option-item:has(input:checked) {
   border-color: #365d43;
   box-shadow: inset 0 0 0 1px #365d43;
+  background: #f9fcf7;
 }
+
+.sms-option-item.is-previewing-only {
+  border-color: #b16f48;
+  border-style: dashed;
+  background: #fffcf6;
+}
+
+.sms-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  cursor: pointer;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sms-option.is-disabled {
+  cursor: not-allowed;
+}
+
 .sms-option input {
   flex: 0 0 auto;
   width: 20px;
   height: 20px;
   accent-color: #173d34;
 }
+
 .sms-thumbnail {
   width: 72px;
   height: 64px;
@@ -70,49 +109,261 @@
   border-radius: 8px;
   flex: 0 0 auto;
 }
+
 .sms-thumbnail svg text {
   display: none;
 }
+
 .sms-option-copy {
   display: grid;
   gap: 4px;
   min-width: 0;
   flex: 1;
 }
+
 .sms-option-copy strong {
   font-size: 0.875rem;
-  line-height: 1.5;
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
+
 .sms-option-copy small {
   font-size: 0.75rem;
   color: #596a53;
   overflow-wrap: anywhere;
 }
-.sms-clear {
+
+.sms-option-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.sms-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.sms-badge--connected {
+  background: #e4efe6;
+  color: #173d34;
+}
+
+.sms-badge--previewing {
+  background: #f7e9dc;
+  color: #7c4727;
+}
+
+.sms-option-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.sms-inspect-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #c8d4bf;
+  background: #f3f6ec;
+  color: #173d34;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.sms-inspect-btn:hover {
+  background: #e9efe0;
+  border-color: #9fb494;
+}
+
+.sms-inspect-btn.is-active {
+  background: #173d34;
+  border-color: #173d34;
+  color: #fffef8;
+}
+
+.sms-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
   margin: 0 0 12px;
 }
+
+.sms-preview-panel {
+  margin: 4px 0 12px;
+  border: 1px solid #cbd6c2;
+  border-radius: 14px;
+  background: #fffef9;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.sms-preview-panel.is-browsing-preview {
+  border-color: #c8926d;
+}
+
+.sms-preview-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f2f5eb;
+  border-bottom: 1px solid #dfe6d7;
+}
+
+.sms-preview-panel.is-browsing-preview .sms-preview-bar {
+  background: #fbf1e7;
+  border-bottom-color: #ecd7c5;
+}
+
+.sms-preview-bar-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sms-preview-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.sms-preview-pill.is-connected {
+  background: #ddebe0;
+  color: #173d34;
+}
+
+.sms-preview-pill.is-browsing {
+  background: #f3dfce;
+  color: #7c4727;
+}
+
+.sms-preview-current-link {
+  font-size: 0.75rem;
+  color: #596a53;
+  overflow-wrap: anywhere;
+}
+
+.sms-preview-bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.sms-return-selected,
+.sms-preview-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 11px;
+  font-size: 0.8rem;
+}
+
 .sms-boundary {
   color: #596a53;
 }
+
 .sms-content .motion-pattern-preview {
   padding: 12px;
+  border: 0;
+  border-radius: 0;
 }
+
 .step-motion-study :is(summary, button, input):focus-visible {
   outline: 3px solid #b16f48;
   outline-offset: 3px;
 }
+
+@media (max-width: 480px) {
+  .sms-option-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .sms-option-actions {
+    width: 100%;
+    padding-top: 6px;
+    border-top: 1px solid #ebeee4;
+  }
+
+  .sms-inspect-btn {
+    width: 100%;
+  }
+
+  .sms-preview-bar {
+    align-items: stretch;
+  }
+
+  .sms-preview-bar-actions {
+    width: 100%;
+  }
+
+  .sms-return-selected,
+  .sms-preview-close {
+    flex: 1 1 136px;
+  }
+}
+
 @media (max-width: 359px) {
   .sms-content {
     padding-inline: 10px;
   }
-  .sms-option {
-    gap: 7px;
+
+  .sms-option-item {
     padding: 8px;
   }
+
+  .sms-option {
+    gap: 7px;
+  }
+
   .sms-thumbnail {
     width: 52px;
     height: 54px;
+  }
+
+  .sms-preview-bar {
+    padding: 8px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-motion-study *,
+  .sms-option-item,
+  .sms-inspect-btn {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
   }
 }

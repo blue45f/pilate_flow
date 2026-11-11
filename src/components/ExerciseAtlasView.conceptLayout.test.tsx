@@ -52,7 +52,10 @@ describe('library supplied concept layout', () => {
     );
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
     expect(within(inspector).getByRole('heading', { name: movement.nameKo })).toBeInTheDocument();
-    expect(inspector).toHaveTextContent('교차 검증 완료 · 수업 즉시 활용');
+    expect(inspector).toHaveTextContent(
+      '개인 검토 전 · 직접 추가 가능 (자동 추천·AI 초안 제외)',
+    );
+    expect(inspector).not.toHaveTextContent('교차 검증 완료 · 수업 즉시 활용');
     expect(inspector).toHaveTextContent(movement.precautions);
     fireEvent.click(within(inspector).getByRole('button', { name: '전체 정보·개인 검토 열기' }));
     expect(openDetails).toHaveBeenCalledWith(movement);
