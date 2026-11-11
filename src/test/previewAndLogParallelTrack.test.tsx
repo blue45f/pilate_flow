@@ -10,7 +10,8 @@ describe('Parallel Track 2 — SequencePlanPreview & LogSessionModal UX', () => 
     usePilatesStore.setState({
       activeTitle: '프리뷰·기록 병렬 검증',
       activeSteps: moves.map((ex, idx) => ({
-        stepId: `pv-${idx}`,
+        stepId: `pv-${idx + 1}`,
+        order: idx + 1,
         exerciseId: ex.id,
         blockCategory: ex.blockCategory,
         durationMin: 4,

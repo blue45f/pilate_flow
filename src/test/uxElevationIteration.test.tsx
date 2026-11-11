@@ -1,14 +1,43 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { SequenceWorkbench } from '../components/SequenceWorkbench';
 import { LiveStageView } from '../components/LiveStageView';
 import { FreeAiAssistantPanel } from '../components/FreeAiAssistantPanel';
 import { ExerciseAtlasView } from '../components/ExerciseAtlasView';
+import { createFreeAiClient } from '../lib/freeAiClient';
 import { usePilatesStore } from '../store/usePilatesStore';
-import { exerciseRevision } from '../utils/exerciseReview';
+import type { PilatesExercise } from '../types/pilates';
+import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
+import { exerciseRevision, isExerciseAutoEligible } from '../utils/exerciseReview';
 import { isRestStep } from '../utils/sequenceEngine';
+
+function buildApprovedReformerExercise(
+  base: PilatesExercise,
+  overrides: Partial<PilatesExercise>,
+): PilatesExercise {
+  const draft: PilatesExercise = {
+    ...base,
+    apparatus: 'reformer',
+    requiredEquipment: ['reformer'],
+    props: ['none'],
+    level: '1.5',
+    ...overrides,
+    review: undefined,
+  };
+  return {
+    ...draft,
+    review: {
+      status: 'approved',
+      reviewerAlias: '수석강사',
+      reviewedAt: '2026-11-12T00:00:00.000Z',
+      revision: exerciseRevision(draft),
+      scope: 'planning-metadata',
+      credentialVerified: false,
+    },
+  };
+}
 
 function resetWorkbenchStore() {
   localStorage.clear();
@@ -40,13 +69,14 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
   it('keeps Home focused on 2 primary cards without leaking Step 3 when returning via 시작하기, and supports 1-tap recent 바로 진행', () => {
     const state = usePilatesStore.getState();
     const reformerMoves = state.exercises
-      .filter((ex) => ex.apparatus === 'reformer')
+      .filter((ex) => ex.apparatus === 'reformer' && isExerciseAuthoringEligible(ex))
       .slice(0, 3);
     expect(reformerMoves.length).toBeGreaterThanOrEqual(2);
 
     usePilatesStore.setState({
       activeSteps: reformerMoves.map((ex, idx) => ({
         stepId: `step-home-${idx + 1}`,
+        order: idx + 1,
         exerciseId: ex.id,
         blockCategory: ex.blockCategory,
         durationMin: 4,
@@ -64,6 +94,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
           updatedAt: '2026-11-10T09:00:00.000Z',
           steps: reformerMoves.map((ex, idx) => ({
             stepId: `saved-step-${idx + 1}`,
+            order: idx + 1,
             exerciseId: ex.id,
             blockCategory: ex.blockCategory,
             durationMin: 5,
@@ -121,7 +152,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
 
     const reformerEx = usePilatesStore
       .getState()
-      .exercises.find((ex) => ex.apparatus === 'reformer');
+      .exercises.find((ex) => ex.apparatus === 'reformer' && isExerciseAuthoringEligible(ex));
     expect(reformerEx).toBeDefined();
 
     const addBtn = within(step2).getAllByRole('button', {
@@ -141,36 +172,50 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
     expect(usePilatesStore.getState().activeSteps[0]?.repetitions).toBe(10);
   });
 
-  it('supports instructor step include/exclude checkboxes and ±0.5m quick duration chips in FreeAiAssistantPanel before applying', () => {
+  it('supports instructor step include/exclude checkboxes and ±0.5m quick duration chips in FreeAiAssistantPanel before applying', async () => {
     const appliedSpy = vi.fn();
     const state = usePilatesStore.getState();
-    const reviewedExercises = state.exercises.slice(0, 6).map((ex, idx) => {
-      const base = {
-        ...ex,
-        apparatus: 'reformer' as const,
-        requiredEquipment: ['reformer'] as const,
-        level: '1.5' as const,
-        blockCategory:
-          idx === 0 ? ('warmup' as const) : idx === 5 ? ('cooldown' as const) : ('core' as const),
-      };
-      return {
-        ...base,
-        review: {
-          status: 'approved' as const,
-          reviewerAlias: '수석강사',
-          reviewedAt: '2026-11-12T00:00:00.000Z',
-          revision: exerciseRevision(base),
-          scope: 'planning-metadata' as const,
-          credentialVerified: false,
-        },
-      };
+    const unconfiguredClient = createFreeAiClient({
+      transport: {
+        getStatus: async () => ({
+          provider: 'none',
+          model: null,
+          enabled: false,
+          exhausted: false,
+          reason: 'unconfigured',
+          minuteLimit: 0,
+          minuteUsed: 0,
+          minuteRemaining: 0,
+          dailyLimit: 0,
+          dailyUsed: 0,
+          dailyRemaining: 0,
+          activeRequests: 0,
+          maxConcurrentRequests: 1,
+          cacheEntries: 0,
+          statusMessageKo:
+            '무료 서버/API 구성이 없어 외부 AI는 비활성화되었습니다. 로컬 추천·수동 편집·저장 프리셋을 사용하세요.',
+          renewal: null,
+        }),
+        postAssist: vi.fn().mockRejectedValue(new Error('unconfigured')),
+      },
     });
+
+    const categories = ['warmup', 'footwork', 'core', 'bridging', 'plank', 'cooldown'] as const;
+    const reviewedExercises = state.exercises.slice(0, 6).map((ex, idx) =>
+      buildApprovedReformerExercise(ex, {
+        id: `approved-reformer-${idx + 1}`,
+        nameKo: `검토 완료 리포머 동작 ${idx + 1}`,
+        blockCategory: categories[idx]!,
+      }),
+    );
+    expect(reviewedExercises.every(isExerciseAutoEligible)).toBe(true);
 
     render(
       <FreeAiAssistantPanel
         exercises={reviewedExercises}
         reusableBlocks={[]}
         conditionTemplates={state.conditionTemplates}
+        client={unconfiguredClient}
         activeTargetMinutes={50}
         activeApparatus="reformer"
         activeLevel="1.5"
@@ -178,8 +223,13 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
       />,
     );
 
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '조건으로 초안 만들기' })).toBeEnabled();
+    });
+
     fireEvent.click(screen.getByRole('button', { name: '조건으로 초안 만들기' }));
-    const checkboxes = screen.getAllByTestId('free-ai-step-include-checkbox');
+
+    const checkboxes = await screen.findAllByTestId('free-ai-step-include-checkbox');
     expect(checkboxes.length).toBeGreaterThanOrEqual(2);
 
     const totalGenerated = checkboxes.length;
@@ -195,12 +245,13 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
 
   it('shows active sequence summary bar in ExerciseAtlasView for 1-tap return to workbench', () => {
     const state = usePilatesStore.getState();
-    const firstMove = state.exercises[0]!;
+    const firstMove = state.exercises.find(isExerciseAuthoringEligible)!;
     usePilatesStore.setState({
       activeTab: 'atlas',
       activeSteps: [
         {
           stepId: 'atlas-step-1',
+          order: 1,
           exerciseId: firstMove.id,
           blockCategory: firstMove.blockCategory,
           durationMin: 5,
@@ -226,7 +277,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
   it('renders LIVE status pill, 2-second glanceable cues, trims 30s with undo, and reorders upcoming steps mid-class in LiveStageView', () => {
     const moves = usePilatesStore
       .getState()
-      .exercises.filter((ex) => ex.cues.length > 0)
+      .exercises.filter((ex) => ex.cues.length > 0 && isExerciseAuthoringEligible(ex))
       .slice(0, 3);
     expect(moves.length).toBe(3);
 
@@ -234,6 +285,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
       activeTab: 'stage',
       activeSteps: moves.map((ex, idx) => ({
         stepId: `live-step-${idx + 1}`,
+        order: idx + 1,
         exerciseId: ex.id,
         blockCategory: ex.blockCategory,
         durationMin: 3,
@@ -269,7 +321,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
     );
   });
 
-  it('ships interactive design mockups (04 & 05), studio motion tokens, and strict prefers-reduced-motion fallbacks', () => {
+  it('ships interactive design mockups (04, 05, 06), studio motion tokens, and strict prefers-reduced-motion fallbacks', () => {
     expect(
       existsSync(
         resolve(
@@ -283,6 +335,14 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
         resolve(
           process.cwd(),
           'docs/design-system-mockups/05-pilates-flow-full-pages-ux-mockup.html',
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        resolve(
+          process.cwd(),
+          'docs/design-system-mockups/06-parallel-full-suite-showcase.html',
         ),
       ),
     ).toBe(true);

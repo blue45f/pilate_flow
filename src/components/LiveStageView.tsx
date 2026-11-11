@@ -566,7 +566,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       const [moved] = copy.splice(fromIndex, 1);
       if (!moved) return prev;
       copy.splice(toIndex, 0, moved);
-      return copy;
+      return copy.map((st, idx) => ({ ...st, order: idx + 1 }));
     });
     applyClock((value) => {
       const nextElapsed = { ...value.elapsedByStep };
@@ -676,7 +676,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         const [moved] = copy.splice(undo.toIndex, 1);
         if (!moved) return prev;
         copy.splice(undo.fromIndex, 0, moved);
-        return copy;
+        return copy.map((st, idx) => ({ ...st, order: idx + 1 }));
       });
       applyClock((value) => {
         const nextElapsed = { ...value.elapsedByStep };
