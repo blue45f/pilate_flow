@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flow Atelier — 보조 화면 통합 시안 쇼케이스 (06)</title>
+    <style>
+      :root {
+        --bg: #faf8f4;
+        --surface: #ffffff;
+        --subtle: #f3efe8;
+        --line: #e2ddd3;
+        --ink: #1d201c;
+        --muted: #566055;
+        --sage: #1f4d3f;
+        --sage-soft: #e6efe9;
+        --motion: 180ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      body.high-contrast {
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --subtle: #eef2f0;
+        --line: #111;
+        --ink: #000;
+        --sage: #0b2e23;
+      }
+      body.reduced-motion * {
+        transition: none !important;
+        animation: none !important;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      .bar {
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 20px;
+        background: rgba(250, 248, 244, 0.95);
+        border-bottom: 1px solid var(--line);
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      button {
+        min-height: 44px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--ink);
+        font-weight: 700;
+        cursor: pointer;
+        transition: all var(--motion);
+      }
+      button[aria-pressed='true'],
+      button.primary {
+        background: var(--sage);
+        border-color: var(--sage);
+        color: #fff;
+      }
+      .wrap {
+        max-width: 1200px;
+        margin: 24px auto;
+        padding: 0 18px;
+      }
+      body.mobile .wrap {
+        max-width: 390px;
+      }
+      .panel {
+        display: none;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 22px;
+      }
+      .panel.active {
+        display: block;
+      }
+      .strip {
+        padding: 10px 14px;
+        border-radius: 14px;
+        background: var(--sage-soft);
+        border: 1px solid #bfd3c6;
+        color: var(--sage);
+        font-weight: 700;
+        margin-bottom: 14px;
+      }
+      .card {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        margin-bottom: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="bar">
+      <div class="row" role="tablist" aria-label="보조 화면 선택">
+        <button role="tab" data-tab="schedule" aria-pressed="true">1. 강사 일정</button>
+        <button role="tab" data-tab="preview" aria-pressed="false">2. 4단계 미리보기</button>
+        <button role="tab" data-tab="log" aria-pressed="false">3. 수업 후 기록</button>
+        <button role="tab" data-tab="member" aria-pressed="false">4. 회원 예약·수강권</button>
+        <button role="tab" data-tab="rig3d" aria-pressed="false">5. 3D 기구·모션</button>
+      </div>
+      <div class="row">
+        <button id="btnMobile" aria-pressed="false">모바일 390px</button>
+        <button id="btnContrast" aria-pressed="false">고대비</button>
+        <button id="btnMotion" aria-pressed="false">모션 감소</button>
+      </div>
+    </header>
+    <main class="wrap">
+      <section class="panel active" id="tab-schedule">
+        <div class="strip">오늘 예정 수업 3건 · 시퀀스 연결 2건 · 선택 날짜 2026-11-12</div>
+        <div class="card">
+          <strong>10:00 오전 리포머 코어 A반</strong>
+          <p>스튜디오 본관 · 시퀀스 연결됨 (오전 리포머 코어 50분)</p>
+          <div class="row">
+            <button>연결 계획 열기</button>
+            <button class="primary">바로 수업 시작</button>
+          </div>
+        </div>
+      </section>
+      <section class="panel" id="tab-preview">
+        <div class="strip">수업 직전 체크 · 동작 8개 · 총 50:00 · 스프링 전환 3회</div>
+        <div class="card">
+          <strong>전체 수업 계획 미리보기</strong>
+          <p>풋워크(1R 1B) → 헌드레드(1R 1B) → 롱 스트레치(2R) 전환 지점을 한눈에 점검합니다.</p>
+        </div>
+      </section>
+      <section class="panel" id="tab-log">
+        <h2>수업 직후 원탭 빠른 메모</h2>
+        <div class="row" style="margin-bottom: 12px">
+          <button class="chip">+ 호흡·속도 안정적</button>
+          <button class="chip">+ 스프링 한 단계 낮춤</button>
+          <button class="chip">+ 코어 연결 큐 반응 좋음</button>
+          <button class="chip">+ 다음 시간 이어서 복습</button>
+        </div>
+        <textarea id="memoBox" rows="3" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--line)" placeholder="칩을 누르면 바로 입력됩니다."></textarea>
+      </section>
+      <section class="panel" id="tab-member">
+        <div class="strip">남은 수강권 8회 · 예약 확정 2건 · 선택 날짜 2026-11-12</div>
+        <div class="card">
+          <strong>내 수강권 지갑 · ATELIER PASS</strong>
+          <p>원하는 날짜와 기구 자리를 3단계로 간편하게 선택합니다.</p>
+        </div>
+      </section>
+      <section class="panel" id="tab-rig3d">
+        <div class="strip" id="motionNote">풋바·캐리지·스프링 장력 방향을 시점·단계별로 비교해 보세요.</div>
+        <div class="card">
+          <strong>3D 리포머 기구·스프링·무게중심(CoM) 시뮬레이터</strong>
+          <div class="row" style="margin-top: 10px">
+            <button aria-pressed="true">3D 등각(Iso)</button>
+            <button aria-pressed="false">시상면(Side)</button>
+            <button aria-pressed="false">관상면(Front)</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script>
+      document.querySelectorAll('[data-tab]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-tab]').forEach((b) =>
+            b.setAttribute('aria-pressed', String(b === btn)),
+          );
+          document.querySelectorAll('.panel').forEach((p) =>
+            p.classList.toggle('active', p.id === 'tab-' + btn.dataset.tab),
+          );
+        });
+      });
+      document.querySelectorAll('.chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const box = document.getElementById('memoBox');
+          const txt = chip.textContent.replace(/^[+✓]\s*/, '');
+          box.value = box.value ? box.value + '\n' + txt : txt;
+        });
+      });
+      const bindToggle = (id, cls) => {
+        const el = document.getElementById(id);
+        el.addEventListener('click', () => {
+          const on = document.body.classList.toggle(cls);
+          el.setAttribute('aria-pressed', String(on));
+          if (cls === 'reduced-motion') {
+            document.getElementById('motionNote').textContent = on
+              ? '모션 감소 설정 적용됨 · 자동 재생 없이 정적 단계별로 확인합니다.'
+              : '풋바·캐리지·스프링 장력 방향을 시점·단계별로 비교해 보세요.';
+          }
+        });
+      };
+      bindToggle('btnMobile', 'mobile');
+      bindToggle('btnContrast', 'high-contrast');
+      bindToggle('btnMotion', 'reduced-motion');
+    </script>
+  </body>
+</html>

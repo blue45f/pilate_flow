@@ -137,6 +137,15 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
             {APPARATUS_LABELS[apparatus].ko} · {POSITION_LABELS[bodyPosition].ko} ·{' '}
             {scene.springVector2D.tensionLabel}
           </p>
+          <p
+            className="pf-rig-preview__motion-note"
+            data-testid="rig-3d-motion-safe-note"
+            style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#355441', fontWeight: 600 }}
+          >
+            {reducedMotion
+              ? '모션 감소 설정 적용됨 · 자동 재생 없이 정적 단계별로 확인합니다.'
+              : '풋바·캐리지·스프링 장력 방향을 시점·단계별로 비교해 보세요.'}
+          </p>
         </div>
         <div
           role="group"
