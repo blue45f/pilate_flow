@@ -2,8 +2,8 @@
   "$schema": "https://design-tokens.github.io/community-group/format/",
   "meta": {
     "name": "Flow Atelier Studio Design & Kinematic Motion System",
-    "version": "2.2.0",
-    "updatedAt": "2026-11-11",
+    "version": "2.3.0",
+    "updatedAt": "2026-11-12",
     "productionStylesheet": "src/styles/atelier-luxury-v2.css",
     "motionRenderer": "src/components/MovementPhaseDiagramSvg.tsx",
     "kinematicEngine": "src/data/catalogMotionAssets/index.ts"
@@ -87,6 +87,12 @@
     "diagramViewBox": "0 0 320 200",
     "continuousPhases": ["setup", "move", "turn", "return", "finish"],
     "easing": "quintic-smootherstep-c2",
+    "uiTransitions": {
+      "fastMs": 150,
+      "normalMs": 220,
+      "stageMs": 260,
+      "easeStudio": "cubic-bezier(0.22, 1, 0.36, 1)"
+    },
     "openChainKinematics": "polar-arc-constant-segment-length",
     "closedChainKinematics": "two-bone-analytical-ik",
     "spinalArticulation": "sequential-vertebral-wave",

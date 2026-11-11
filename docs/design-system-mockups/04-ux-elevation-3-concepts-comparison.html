@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pilates Flow — 핵심 화면 UX 고도화 3대 시안 비교 및 선정 (v2.4)</title>
+  <style>
+    :root {
+      --bg: #faf8f4;
+      --surface: #ffffff;
+      --surface-subtle: #f3efe8;
+      --ink: #1d201c;
+      --ink-secondary: #4f564d;
+      --ink-muted: #5c6259;
+      --line: #e2ddd3;
+      --sage-deep: #1f4d3f;
+      --sage: #355441;
+      --sage-soft: #e6efe9;
+      --sage-border: #bfd3c6;
+      --terracotta: #b8563f;
+      --terracotta-soft: #faeae5;
+      --blue: #36628a;
+      --blue-soft: #e6eff7;
+      --amber: #9e6d1a;
+      --amber-soft: #fbf3e2;
+      --stage-bg: #181b18;
+      --stage-card: #222722;
+      --stage-elevated: #2a302a;
+      --stage-ink: #f7f5f0;
+      --stage-mint: #a7c4b2;
+      --ease-studio: cubic-bezier(0.22, 1, 0.36, 1);
+      --dur-fast: 150ms;
+      --dur-normal: 220ms;
+      --font: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    }
+    body.high-contrast {
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --surface-subtle: #edf1ed;
+      --ink: #000000;
+      --ink-secondary: #111111;
+      --ink-muted: #1c1c1c;
+      --line: #1d201c;
+      --sage: #0d3b20;
+      --sage-deep: #072613;
+      --stage-bg: #000000;
+      --stage-card: #0e120f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: #ebe6dc;
+      color: var(--ink);
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      word-break: keep-all;
+    }
+    button, input { font: inherit; }
+    button {
+      min-height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
+      padding: 8px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background var(--dur-fast) var(--ease-studio), border-color var(--dur-fast) var(--ease-studio), transform var(--dur-fast) var(--ease-studio);
+    }
+    button:hover { background: #f5f2eb; }
+    button.primary {
+      background: var(--sage);
+      border-color: var(--sage);
+      color: #ffffff;
+    }
+    button.primary:hover { background: var(--sage-deep); }
+    button:focus-visible { outline: 3px solid var(--sage-deep); outline-offset: 2px; }
+    body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .screen-enter { animation: fadeSlideUp var(--dur-normal) var(--ease-studio); }
+
+    header.top-deck {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(250, 248, 244, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      padding: 12px 22px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .seg {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+    }
+    .seg button {
+      min-height: 38px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink-muted);
+      font-size: 0.82rem;
+      padding: 5px 13px;
+    }
+    .seg button[aria-pressed="true"] {
+      background: var(--sage-deep);
+      color: #ffffff;
+    }
+    .layout {
+      max-width: 1440px;
+      margin: 20px auto 48px;
+      padding: 0 18px;
+      display: grid;
+      gap: 20px;
+    }
+    .matrix-card, .stage-card {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 14px 40px rgba(29, 32, 28, 0.08);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      background: var(--surface);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--surface-subtle); font-weight: 800; }
+    tr.winner td { background: #eef5f0; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      background: var(--sage-soft);
+      color: var(--sage-deep);
+    }
+    .viewport {
+      margin: 0 auto;
+      width: 100%;
+      max-width: 1320px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      overflow: hidden;
+      transition: max-width var(--dur-normal) var(--ease-studio);
+    }
+    .viewport.mobile {
+      max-width: 390px;
+      border: 7px solid #242924;
+      border-radius: 36px;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
+    .grid-split { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; }
+    .viewport.mobile .grid-2, .viewport.mobile .grid-split { grid-template-columns: 1fr; }
+    .box {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .tray {
+      background: #edf5f0;
+      border: 1.5px solid var(--sage-border);
+      border-radius: 16px;
+      padding: 12px 15px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--sage-border);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      margin-bottom: 8px;
+    }
+    .dark-stage {
+      background: var(--stage-bg);
+      color: var(--stage-ink);
+      padding: 20px;
+      border-radius: 20px;
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 16px;
+    }
+    .viewport.mobile .dark-stage { grid-template-columns: 1fr; }
+    .dark-box {
+      background: var(--stage-card);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 18px;
+      padding: 18px;
+    }
+  </style>
+</head>
+<body>
+  <header class="top-deck">
+    <div>
+      <span class="badge">MILESTONE 2 · 3-CONCEPT INTERACTIVE PROTOTYPE</span>
+      <strong style="margin-left:8px;font-size:0.98rem;">Pilates Flow 사용성 고도화 3대 시안 비교 및 선정안 검증</strong>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+      <div class="seg" role="group" aria-label="시안 선택">
+        <button data-concept="A" aria-pressed="false" onclick="setConcept('A')">시안 A · 원스크린 데스크</button>
+        <button data-concept="B" aria-pressed="true" onclick="setConcept('B')">시안 B · 집중형 포커스 플로우 ★선정</button>
+        <button data-concept="C" aria-pressed="false" onclick="setConcept('C')">시안 C · 단일 카드 덱</button>
+      </div>
+      <div class="seg" role="group" aria-label="핵심 화면 전환">
+        <button data-step="home" aria-pressed="true" onclick="setStep('home')">1. 홈 진입</button>
+        <button data-step="pick" aria-pressed="false" onclick="setStep('pick')">2. 동작 담기</button>
+        <button data-step="edit" aria-pressed="false" onclick="setStep('edit')">3. 순서·시간·AI</button>
+        <button data-step="live" aria-pressed="false" onclick="setStep('live')">4. 수업 진행</button>
+      </div>
+      <div class="seg" role="group" aria-label="화면 크기">
+        <button data-vp="desktop" aria-pressed="true" onclick="setVp('desktop')">데스크톱</button>
+        <button data-vp="mobile" aria-pressed="false" onclick="setVp('mobile')">모바일 390px</button>
+      </div>
+      <button onclick="document.body.classList.toggle('high-contrast')">고대비</button>
+      <button onclick="document.body.classList.toggle('reduced-motion')">모션 감소</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="matrix-card" aria-label="3개 시안 정량·정성 비교 평가표">
+      <h2 style="margin:0 0 10px;font-size:1.18rem;">시안 A · B · C 비교 평가 (기준: 사용성 · 정보 밀도 · 접근성 · 확장성)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>비교 항목</th>
+            <th>시안 A · 원스크린 스튜디오 데스크</th>
+            <th>시안 B · 집중형 포커스 플로우 (★ 최종 선정)</th>
+            <th>시안 C · 단일 카드 덱 위저드</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>핵심 구조</strong></td>
+            <td>첫 진입부터 좌측 카탈로그 + 우측 시퀀스 리스트 + 조건 칩을 한 화면에 동시 배치</td>
+            <td>홈(2카드: 새 수업 / 최근 이어하기) → 기구 자동 반영 동작 담기(실시간 트레이) → 순서·시간·횟수 편집(원스크린 전환 지원) → 2초 스캔 다크 스테이지</td>
+            <td>한 화면에 질문·동작 카드 1장씩만 넘기는 풀스크린 모바일 카드 덱</td>
+          </tr>
+          <tr>
+            <td><strong>첫 사용 이해도 (사용성)</strong></td>
+            <td>보통 — 무엇부터 눌러야 할지 시선이 분산됨</td>
+            <td><strong>매우 우수</strong> — 설명서 없이도 ‘새 수업 시작’ 또는 ‘최근 수업 이어하기’ 두 갈래만 보이며 단계마다 행동 1개가 명확함</td>
+            <td>우수 — 첫 진입은 단순하나 전체 시퀀스 맥락 파악이 늦음</td>
+          </tr>
+          <tr>
+            <td><strong>정보 밀도</strong></td>
+            <td>높음 — 모바일·태블릿 세로 화면에서 패널 겹침 발생</td>
+            <td><strong>최적</strong> — 상단 중복 단계 바 제거, 빈 상태 하단 누수 패널 제거, 필요 시점에만 AI·고급 도구를 펼침</td>
+            <td>낮음 — 50분 전체 구성(준비/본운동/마무리 비중)을 한눈에 조망하기 어려움</td>
+          </tr>
+          <tr>
+            <td><strong>접근성 · 현장성</strong></td>
+            <td>데스크톱 마우스 중심 · 터치 타깃 밀집</td>
+            <td><strong>매우 우수</strong> — 전 버튼 44px+, 키보드 이동, 고대비·모션 감소 완비, 수업 중 2초 스캔 큐 + 순서 맞바꾸기·되돌리기 지원</td>
+            <td>터치는 크지만 수업 중 다른 동작으로 즉시 점프·재정렬하기 번거로움</td>
+          </tr>
+          <tr class="winner">
+            <td><strong>확장성 · 선정 결론</strong></td>
+            <td>3단계 편집 화면의 <code>원스크린 좌우 분할</code> 보기 모드로 장점 흡수</td>
+            <td><strong>최종 선정 ★</strong> — 입문 강사의 무설명 직관성과 숙련 강사의 빠른 편집·수업 중 대처력을 모두 충족</td>
+            <td>보조 온보딩 외 주 작업 흐름으로는 부적합</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="stage-card">
+      <div class="viewport" id="vp">
+        <div id="canvas" style="padding:20px;"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const st = {
+      concept: 'B',
+      step: 'home',
+      vp: 'desktop',
+      mins: 50,
+      gear: '리포머',
+      saved: false,
+      aiOpen: false,
+      items: [
+        { name: '리포머 풋워크 패럴렐', springs: '빨강×2 · 파랑×1', min: 8, reps: 10, cue: '뒤꿈치로 풋바를 밀며 골반 중립 유지 · 날숨에 신전' },
+        { name: '펠빅 컬 · 브릿징', springs: '빨강×2', min: 7, reps: 8, cue: '꼬리뼈부터 척추를 하나씩 말아 올리며 햄스트링 지지' },
+        { name: '헌드레드', springs: '빨강×1 · 파랑×1', min: 8, reps: 10, cue: '날개뼈 하각까지 컬업 · 5박 들숨 / 5박 날숨 펌핑' }
+      ]
+    };
+    function setConcept(c) {
+      st.concept = c;
+      document.querySelectorAll('[data-concept]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.concept === c)));
+      draw();
+    }
+    function setStep(s) {
+      st.step = s;
+      document.querySelectorAll('[data-step]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.step === s)));
+      draw();
+    }
+    function setVp(v) {
+      st.vp = v;
+      document.querySelectorAll('[data-vp]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.vp === v)));
+      document.getElementById('vp').classList.toggle('mobile', v === 'mobile');
+    }
+    function draw() {
+      const el = document.getElementById('canvas');
+      const total = st.items.reduce((a, b) => a + b.min, 0);
+      if (st.step === 'live') {
+        const cur = st.items[0];
+        const nxt = st.items[1] || { name: '마무리 스트레치', springs: '파랑×1' };
+        el.innerHTML = `
+          <div class="dark-stage screen-enter">
+            <div class="dark-box">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span style="color:var(--stage-mint);font-weight:800;font-size:0.84rem;">현재 01 / 0${st.items.length} · 준비 구간</span>
+                <span class="badge">${st.gear} · ${cur.springs}</span>
+              </div>
+              <h2 style="margin:4px 0 8px;font-size:1.85rem;color:#fff;">${cur.name}</h2>
+              <div style="font-size:3.8rem;font-weight:800;font-variant-numeric:tabular-nums;color:#fff;line-height:1.05;">04:30</div>
+              <p style="margin:8px 0 12px;padding:8px 12px;border-radius:12px;background:rgba(167,196,178,0.15);color:#f7f5f0;font-size:0.9rem;">
+                <strong style="color:var(--stage-mint);">핵심 큐 ·</strong> ${cur.cue} (${cur.reps}회)
+              </p>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                <button style="background:var(--stage-elevated);color:#fff;border-color:rgba(255,255,255,0.2);">← 이전</button>
+                <button class="primary" style="flex:1;">⏸ 일시정지 (Space)</button>
+                <button style="background:var(--stage-elevated);color:#fff;border-color:rgba(255,255,255,0.2);">다음 →</button>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button style="background:transparent;color:var(--stage-mint);border-color:rgba(167,196,178,0.35);">-30초 조정</button>
+                <button style="background:transparent;color:var(--stage-mint);border-color:rgba(167,196,178,0.35);">+1분 추가</button>
+              </div>
+            </div>
+            <div class="dark-box">
+              <small style="color:var(--stage-mint);font-weight:800;">다음 동작 · 현장 순서 즉시 변경</small>
+              <h3 style="margin:6px 0;color:#fff;">다음: ${nxt.name}</h3>
+              <p style="margin:0 0 14px;font-size:0.86rem;opacity:0.85;">세팅 예고: ${nxt.springs}</p>
+              ${st.items.map((it, idx) => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;background:${idx===0?'var(--sage)':'rgba(255,255,255,0.06)'};margin-bottom:6px;">
+                  <span>0${idx+1}. ${it.name} (${it.min}분)</span>
+                  ${idx > 0 ? `<button style="min-height:34px;padding:3px 8px;font-size:0.75rem;" onclick="const t=st.items[${idx}];st.items[${idx}]=st.items[${idx-1}];st.items[${idx-1}]=t;draw()">↑ 앞순서로</button>` : '<small>진행 중</small>'}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (st.concept === 'A') {
+        el.innerHTML = `
+          <div class="grid-split screen-enter">
+            <aside class="box">
+              <span class="badge">시안 A · 상시 좌측 카탈로그</span>
+              <h3 style="margin:8px 0;">동작 검색 · 필터</h3>
+              <input placeholder="동작명·부위 검색" style="width:100%;min-height:42px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);margin-bottom:10px;" />
+              <div class="row"><span>롱박스 스완 (9분)</span><button class="primary" onclick="st.items.push({name:'롱박스 스완',springs:'파랑×1',min:9,reps:6,cue:'흉추 신전 유지'});draw()">+ 추가</button></div>
+              <div class="row"><span>피트 인 스트랩 (8분)</span><button class="primary" onclick="st.items.push({name:'피트 인 스트랩',springs:'빨강×1·파랑×1',min:8,reps:10,cue:'천골 안정 유지'});draw()">+ 추가</button></div>
+            </aside>
+            <section class="box">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <strong>오늘의 시퀀스 (${total}분 / ${st.mins}분)</strong>
+                <button class="primary" onclick="setStep('live')">▶ 수업 시작</button>
+              </div>
+              ${st.items.map((it, i) => `<div class="row"><span>0${i+1}. <strong>${it.name}</strong> · ${it.springs}</span><span>${it.min}분</span></div>`).join('')}
+            </section>
+          </div>
+        `;
+        return;
+      }
+
+      if (st.concept === 'C') {
+        const cur = st.items[0];
+        el.innerHTML = `
+          <div class="box screen-enter" style="max-width:520px;margin:0 auto;text-align:center;">
+            <span class="badge">시안 C · 단일 카드 덱 위저드 (1 / ${st.items.length})</span>
+            <h2 style="margin:12px 0 6px;">${cur.name}</h2>
+            <p style="color:var(--ink-muted);margin:0 0 16px;">스프링 ${cur.springs} · 권장 ${cur.min}분 · ${cur.reps}회</p>
+            <p style="font-size:0.86rem;background:var(--surface-subtle);padding:12px;border-radius:12px;">한 번에 카드 1장씩만 집중하지만, 전체 50분 비중과 앞뒤 스프링 흐름을 동시에 보기 어렵습니다.</p>
+            <div style="display:flex;justify-content:center;gap:8px;margin-top:14px;">
+              <button>이전 카드</button>
+              <button class="primary" onclick="setStep('live')">다음 카드 →</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Concept B (Selected Winner)
+      if (st.step === 'home') {
+        el.innerHTML = `
+          <div class="screen-enter">
+            <div class="box" style="margin-bottom:14px;">
+              <span class="badge">시안 B 선정안 · 단일 진행 표시 + 핵심 2선택지</span>
+              <h1 style="margin:8px 0 6px;font-size:1.6rem;">오늘 어떤 수업을 준비할까요?</h1>
+              <p style="margin:0 0 18px;color:var(--ink-muted);">자주 쓰는 50분 · 리포머 기본값이 미리 선택되어 있어 바로 동작을 담거나 최근 수업을 이어갈 수 있어요.</p>
+              <div class="grid-2">
+                <div class="box" style="background:#f2f7f4;border-color:var(--sage-deep);">
+                  <span class="badge" style="background:#fff;">새 수업 만들기</span>
+                  <h3 style="margin:10px 0 8px;">기구와 시간만 확인하고 바로 시작</h3>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                    ${[30,50,60].map(m => `<button style="min-height:38px;${st.mins===m?'background:var(--sage-deep);color:#fff;':''}" onclick="st.mins=${m};draw()">${m}분</button>`).join('')}
+                  </div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+                    ${['리포머','매트','체어','캐딜락'].map(g => `<button style="min-height:38px;${st.gear===g?'background:var(--sage-deep);color:#fff;':''}" onclick="st.gear='${g}';draw()">${g}</button>`).join('')}
+                  </div>
+                  <div style="display:grid;gap:8px;">
+                    <button class="primary" onclick="setStep('pick')">동작 담기 시작 (${st.gear} · ${st.mins}분) →</button>
+                    <button onclick="st.aiOpen=true;setStep('edit')">✨ AI·조건으로 50분 초안 먼저 채우기</button>
+                  </div>
+                </div>
+                <div class="box" style="background:#fcfbf8;">
+                  <span class="badge">최근 수업 이어하기</span>
+                  <h3 style="margin:10px 0 8px;">지난 수업을 복제하거나 바로 시작</h3>
+                  <div class="row">
+                    <div>
+                      <strong>오전 리포머 코어 &amp; 분절 50분</strong>
+                      <div style="font-size:0.8rem;color:var(--ink-muted);">${st.items.length}개 동작 · ${total}분 · 리포머</div>
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                      <button onclick="setStep('edit')">사본 열기</button>
+                      <button class="primary" onclick="setStep('live')">▶ 시작</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (st.step === 'pick') {
+        el.innerHTML = `
+          <div class="box screen-enter">
+            <span class="badge">2 / 4 단계 · ${st.gear} 동작 자동 필터 적용됨</span>
+            <h2 style="margin:8px 0 10px;">수업에 넣을 동작을 담아 보세요</h2>
+            <div class="tray" aria-label="담은 동작 실시간 트레이">
+              <div>
+                <strong>담은 동작 ${st.items.length}개 (${total}분 / 목표 ${st.mins}분)</strong>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+                  ${st.items.map((it, idx) => `<span class="pill">0${idx+1} ${it.name} (${it.min}분)</span>`).join('')}
+                </div>
+              </div>
+              <button class="primary" onclick="setStep('edit')">순서·시간 다듬기 (${st.items.length}개) →</button>
+            </div>
+            <div class="row">
+              <div><strong>롱박스 스완</strong> · 파랑×1 · 권장 9분 · 흉추 신전</div>
+              <button class="primary" onclick="st.items.push({name:'롱박스 스완',springs:'파랑×1',min:9,reps:6,cue:'치골 지지 후 흉추 신전'});st.saved=false;draw()">+ 담기</button>
+            </div>
+            <div class="row">
+              <div><strong>피트 인 스트랩 서클</strong> · 빨강×1·파랑×1 · 권장 8분 · 고관절 조절</div>
+              <button class="primary" onclick="st.items.push({name:'피트 인 스트랩 서클',springs:'빨강×1·파랑×1',min:8,reps:8,cue:'천골 고정 후 일정한 원호'});st.saved=false;draw()">+ 담기</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Concept B - Step 3 Edit
+      el.innerHTML = `
+        <div class="box screen-enter">
+          <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;">
+            <div>
+              <span class="badge">3 / 4 단계 · 순서·시간·횟수 편집</span>
+              <h2 style="margin:6px 0 0;">오전 ${st.gear} 코어 &amp; 분절 ${st.mins}분</h2>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span class="pill" style="background:${st.saved?'#e5f1ea':'#f8f2e6'};">${st.saved ? '✓ 저장됨' : '● 변경사항 있음'}</span>
+              <button onclick="st.aiOpen=!st.aiOpen;draw()">✨ AI 보조 · 빈 시간 채우기</button>
+              <button onclick="st.saved=true;draw()">저장</button>
+              <button class="primary" onclick="setStep('live')">▶ 바로 진행</button>
+            </div>
+          </div>
+          ${st.aiOpen ? `
+            <div class="tray" style="border-style:dashed;">
+              <div>
+                <strong>✨ AI 수업 보조 (개인 등록 키 우선 · 서버 전용 보호)</strong>
+                <div style="font-size:0.84rem;color:var(--ink-secondary);">부족한 ${Math.max(0, st.mins - total)}분을 채울 마무리 스트레치 추천 및 5가지 수업 오프닝 컨셉 리믹스를 검토 후 반영할 수 있습니다.</div>
+              </div>
+              <button class="primary" onclick="st.items.push({name:'머메이드 사이드 벤드',springs:'파랑×1',min:6,reps:6,cue:'좌골 고정 후 측면 호흡 확장'});st.aiOpen=false;st.saved=false;draw()">추천 동작 반영</button>
+            </div>
+          ` : ''}
+          ${st.items.map((it, idx) => `
+            <div class="row">
+              <div>
+                <strong>0${idx+1}. ${it.name}</strong>
+                <div style="font-size:0.82rem;color:var(--ink-muted);margin-top:3px;">${it.springs} · 반복 ${it.reps}회</div>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                ${[8,10,12].map(r => `<button style="min-height:36px;padding:4px 9px;font-size:0.76rem;${it.reps===r?'background:var(--sage-soft);border-color:var(--sage-deep);':''}" onclick="st.items[${idx}].reps=${r};st.saved=false;draw()">${r}회</button>`).join('')}
+                <button style="min-height:38px;" onclick="st.items[${idx}].min=Math.max(1,st.items[${idx}].min-0.5);st.saved=false;draw()">-0.5분</button>
+                <strong style="min-width:44px;text-align:center;">${it.min}분</strong>
+                <button style="min-height:38px;" onclick="st.items[${idx}].min+=0.5;st.saved=false;draw()">+0.5분</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+    draw();
+  </script>
+</body>
+</html>

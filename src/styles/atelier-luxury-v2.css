@@ -29,6 +29,10 @@
   --pf-stage-mint: #a7c4b2;
   --pf-atelier-shadow-soft: 0 8px 28px rgba(29, 32, 28, 0.05), 0 1px 4px rgba(29, 32, 28, 0.03);
   --pf-atelier-shadow-hover: 0 14px 34px rgba(29, 32, 28, 0.09), 0 4px 10px rgba(53, 84, 65, 0.08);
+  --pf-motion-fast: 150ms;
+  --pf-motion-normal: 220ms;
+  --pf-motion-stage: 260ms;
+  --pf-ease-studio: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ==========================================================================
@@ -978,10 +982,18 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   }
 }
 
+html #root .vnext-shell .pf-step-stage-frame {
+  transition:
+    border-color var(--pf-motion-normal) var(--pf-ease-studio),
+    box-shadow var(--pf-motion-normal) var(--pf-ease-studio);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pf-quickstart-card,
-  .pf-studio-spot-btn {
-    transition: none;
+  .pf-studio-spot-btn,
+  html #root .vnext-shell .pf-step-stage-frame {
+    transition: none !important;
+    animation: none !important;
   }
   .pf-quickstart-card:hover {
     transform: none;
