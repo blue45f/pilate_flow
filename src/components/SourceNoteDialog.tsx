@@ -1,5 +1,5 @@
-import { useId, useRef, useState } from 'react';
-import { ExternalLink, FileText, Info } from 'lucide-react';
+import { useId, useMemo, useRef, useState } from 'react';
+import { ArrowDownRight, ExternalLink, FileText, Info } from 'lucide-react';
 import { EQUIPMENT_OPTIONS, PROP_OPTIONS } from '../data/equipmentCatalog';
 import { CANONICAL_BLOCKS, POSITION_LABELS } from '../data/pilatesCatalog';
 import type { VerifiedPublicReference } from '../data/verifiedReferences';
@@ -32,6 +32,41 @@ const fieldOrder = [
 ] as const;
 type NoteField = (typeof fieldOrder)[number];
 
+const FIELD_SHORT_LABELS: Record<NoteField, string> = {
+  nameKo: '동작 이름',
+  equipment: '필수 기구',
+  props: '필수 소도구',
+  durationMin: '계획 시간',
+  isUnilateral: '좌우 진행 방식',
+  level: '난이도',
+  blockCategory: '구간 분류',
+  bodyPosition: '시작 자세',
+  cues: '티칭 큐',
+  precautions: '주의·적용 메모',
+};
+
+const BASICS_FIELDS: readonly NoteField[] = ['nameKo', 'equipment', 'props'];
+const SETTINGS_FIELDS: readonly NoteField[] = [
+  'durationMin',
+  'isUnilateral',
+  'level',
+  'blockCategory',
+  'bodyPosition',
+];
+const NOTES_FIELDS: readonly NoteField[] = ['cues', 'precautions'];
+
+const equipmentLabel = (id: string) =>
+  EQUIPMENT_OPTIONS.find((item) => item.id === id)?.labelKo ?? id;
+const propLabel = (id: PropType) => PROP_OPTIONS.find((item) => item.id === id)?.labelKo ?? id;
+
+function formatSourceVideoLength(seconds: number): string {
+  const safe = Math.max(0, Math.round(seconds));
+  const mins = Math.floor(safe / 60);
+  const secs = safe % 60;
+  if (mins === 0) return `${secs}초`;
+  return secs === 0 ? `${mins}분` : `${mins}분 ${secs}초`;
+}
+
 const focusNoteControl = (control: HTMLElement | null | undefined) => {
   control?.focus({ preventScroll: true });
   control?.scrollIntoView?.({ behavior: 'instant', block: 'center' });
@@ -40,8 +75,10 @@ const focusNoteControl = (control: HTMLElement | null | undefined) => {
 /** A source handoff creates a separate, unreviewed note. Source verification never approves it. */
 export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDialogProps) {
   const closing = useRef(false);
+  const saving = useRef(false);
+  const saved = useRef(false);
   const closeOnce = () => {
-    if (closing.current) return;
+    if (closing.current || saved.current) return;
     closing.current = true;
     onClose();
   };
@@ -69,6 +106,7 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
   const decisionTitleId = useId();
   const decisionDescriptionId = useId();
   const precautionsHelpId = useId();
+
   const hasChanges =
     name !== initialName ||
     duration !== '' ||
@@ -80,6 +118,49 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
     sides !== '' ||
     cues !== '' ||
     precautions !== '';
+
+  const normalizedCues = useMemo(
+    () =>
+      cues
+        .split('\n')
+        .map((cue) => cue.trim())
+        .filter(Boolean),
+    [cues],
+  );
+
+  const trimmedDuration = duration.trim();
+  const parsedDuration = trimmedDuration === '' ? undefined : Number(trimmedDuration);
+  const isDurationReady =
+    parsedDuration !== undefined &&
+    Number.isFinite(parsedDuration) &&
+    parsedDuration >= 0.5 &&
+    parsedDuration <= 20;
+  const isNameReady = name.trim().length >= 2 && name.trim().length <= 160;
+  const isCuesReady =
+    normalizedCues.length >= 1 &&
+    normalizedCues.length <= 12 &&
+    normalizedCues.every((line) => line.length <= 500);
+
+  const basicsCompletedCount =
+    Number(isNameReady) + Number(equipment.length > 0) + Number(props.length > 0);
+  const settingsCompletedCount =
+    Number(isDurationReady) +
+    Number(sides !== '') +
+    Number(level !== '') +
+    Number(blockCategory !== '') +
+    Number(bodyPosition !== '');
+  const notesCompletedCount = Number(isCuesReady);
+  const completedRequiredCount =
+    basicsCompletedCount + settingsCompletedCount + notesCompletedCount;
+
+  const remainingErrorFields = useMemo(
+    () => fieldOrder.filter((field) => Boolean(fieldErrors[field])),
+    [fieldErrors],
+  );
+  const basicsErrorCount = BASICS_FIELDS.filter((field) => Boolean(fieldErrors[field])).length;
+  const settingsErrorCount = SETTINGS_FIELDS.filter((field) => Boolean(fieldErrors[field])).length;
+  const notesErrorCount = NOTES_FIELDS.filter((field) => Boolean(fieldErrors[field])).length;
+  const nextRemainingErrorField = remainingErrorFields[0] ?? null;
 
   const focusField = (field: NoteField) => {
     requestAnimationFrame(() =>
@@ -94,8 +175,23 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
     setDismissalRequested(false);
     deferredClose.current = null;
   };
+  const resumeEditing = () => {
+    clearDismissal();
+    requestAnimationFrame(() => {
+      const previous = lastInput.current;
+      const fallback = formRef.current?.querySelector<HTMLElement>(
+        'input[data-note-field="nameKo"]',
+      );
+      focusNoteControl(previous?.isConnected ? previous : fallback);
+    });
+  };
   const beforeClose = (request: DialogCloseRequest) => {
+    if (saved.current) return true;
     if (!hasChanges) return true;
+    if (dismissalRequested && request.reason === 'native-cancel') {
+      resumeEditing();
+      return false;
+    }
     deferredClose.current = request.close;
     setDismissalRequested(true);
     requestAnimationFrame(() => decisionRef.current?.focus());
@@ -128,6 +224,8 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
     ) : null;
 
   const save = () => {
+    if (saving.current || saved.current || closing.current) return;
+    saving.current = true;
     clearDismissal();
     setError('');
     setErrorField(null);
@@ -135,29 +233,34 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
     try {
       const input = {
         nameKo: name,
-        durationMin: duration.trim() ? Number(duration) : undefined,
+        durationMin: parsedDuration,
         equipment,
         props,
         level,
         blockCategory,
         bodyPosition,
         isUnilateral: sides ? sides === 'separate' : undefined,
-        cues: cues
-          .split('\n')
-          .map((cue) => cue.trim())
-          .filter(Boolean),
+        cues: normalizedCues,
         precautions,
       };
       const note = reference
         ? createSourcePlanningNote(reference, input)
         : createOwnPlanningNote(input);
       addCustomExercise(note);
+      saved.current = true;
       onSaved(note);
     } catch (reason) {
+      saving.current = false;
       const issues = (reason as { issues?: { message: string; path: (string | number)[] }[] })
         ?.issues;
+      const durationMessage =
+        parsedDuration === undefined
+          ? '계획 시간이 비어 있어요. 직접 정한 계획 시간을 0.5–20분 사이로 입력해 주세요.'
+          : Number.isFinite(parsedDuration) && parsedDuration <= 0
+            ? '0분 이하로는 저장할 수 없어요. 직접 정한 계획 시간을 0.5–20분 사이로 입력해 주세요.'
+            : '직접 정한 계획 시간을 0.5–20분 사이로 입력해 주세요.';
       const messages: Partial<Record<NoteField, string>> = {
-        durationMin: '직접 정한 계획 시간을 0.5–20분 사이로 입력해 주세요.',
+        durationMin: durationMessage,
         level: '직접 확인한 난이도를 선택해 주세요.',
         blockCategory: '내 계획의 구간 분류를 선택해 주세요.',
         bodyPosition: '직접 확인한 시작 자세를 선택해 주세요.',
@@ -166,7 +269,21 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
       const errors: Partial<Record<NoteField, string>> = {};
       for (const issue of issues ?? []) {
         const field = fieldOrder.find((key) => key === issue.path[0]);
-        if (field && !errors[field]) errors[field] = messages[field] || issue.message;
+        if (!field || errors[field]) continue;
+        if (field === 'nameKo' && name.trim().length > 160) {
+          errors[field] = '계획 동작 이름은 160자 이내로 입력해 주세요.';
+        } else if (field === 'cues') {
+          errors[field] =
+            normalizedCues.length > 12
+              ? '티칭 큐는 최대 12줄까지 입력할 수 있어요. 줄을 합치거나 줄여 주세요.'
+              : issue.path.length > 1
+                ? '각 티칭 큐는 한 줄당 500자 이내로 입력해 주세요.'
+                : issue.message;
+        } else if (field === 'precautions') {
+          errors[field] = '주의·제외·개인별 적용 메모는 3,000자 이내로 입력해 주세요.';
+        } else {
+          errors[field] = messages[field] || issue.message;
+        }
       }
       const firstField = fieldOrder.find((field) => errors[field]);
       setFieldErrors(errors);
@@ -205,6 +322,12 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
           aria-labelledby={decisionTitleId}
           aria-describedby={decisionDescriptionId}
           tabIndex={-1}
+          onKeyDown={(event) => {
+            if (event.key !== 'Escape') return;
+            event.preventDefault();
+            event.stopPropagation();
+            resumeEditing();
+          }}
         >
           <h3 id={decisionTitleId}>입력 내용을 어떻게 할까요?</h3>
           <p id={decisionDescriptionId}>
@@ -212,20 +335,7 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
             이번 입력 내용은 남지 않습니다.
           </p>
           <div className="source-note-dismissal-actions">
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={() => {
-                clearDismissal();
-                requestAnimationFrame(() => {
-                  const previous = lastInput.current;
-                  const fallback = formRef.current?.querySelector<HTMLElement>(
-                    'input[data-note-field="nameKo"]',
-                  );
-                  focusNoteControl(previous?.isConnected ? previous : fallback);
-                });
-              }}
-            >
+            <button type="button" className="btn-primary" onClick={resumeEditing}>
               계속 편집
             </button>
             <button
@@ -257,8 +367,12 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
         }}
         onFocusCapture={(event) => {
           const target = event.target;
-          if (target instanceof HTMLElement && target.matches('input,textarea,select'))
+          if (
+            target instanceof HTMLElement &&
+            (target.matches('input,textarea,select') || target.matches('button[data-note-field]'))
+          ) {
             lastInput.current = target;
+          }
         }}
         onSubmit={(event) => {
           event.preventDefault();
@@ -267,7 +381,9 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
       >
         <div className="source-note-form-status">
           <strong>검토 전 초안 · 전문가 검증 아님</strong>
-          <span>* 표시는 필수 입력</span>
+          <span data-testid="source-note-required-progress">
+            * 필수 입력 {completedRequiredCount}/9 완료
+          </span>
         </div>
         {reference && (
           <section className="source-note-origin" aria-label="보존할 원출처">
@@ -276,6 +392,39 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
             <p>
               {reference.sourceName} · {reference.region === 'kr' ? '국내 후보' : '해외 공식 출처'}
             </p>
+            <dl className="source-note-origin-facts" data-testid="source-note-origin-facts">
+              <div>
+                <dt>출처 기구 표기</dt>
+                <dd>
+                  {reference.requiredEquipment.length > 0
+                    ? reference.requiredEquipment.map(equipmentLabel).join(' · ')
+                    : '미확인'}
+                </dd>
+              </div>
+              <div>
+                <dt>출처 소도구 표기</dt>
+                <dd>
+                  {reference.requiredProps.length > 0
+                    ? reference.requiredProps.map(propLabel).join(' · ')
+                    : '별도 표기 없음'}
+                </dd>
+              </div>
+              <div>
+                <dt>출처 난이도 표기</dt>
+                <dd>{reference.levelLabel || '미표기'}</dd>
+              </div>
+              {reference.videoDurationSeconds !== null && (
+                <div>
+                  <dt>원본 영상 길이</dt>
+                  <dd>{formatSourceVideoLength(reference.videoDurationSeconds)} · 계획 시간 아님</dd>
+                </div>
+              )}
+            </dl>
+            {reference.safetyNote && (
+              <p className="source-note-origin-safety">
+                출처 기록 참고: {reference.safetyNote} (아래 주의 메모에 자동 복사되지 않음)
+              </p>
+            )}
             <a href={reference.url} target="_blank" rel="noopener noreferrer">
               원본 자료 확인 <ExternalLink size={13} />
             </a>
@@ -308,20 +457,69 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
           </p>
         </details>
         <nav className="source-note-section-nav" aria-label="노트 입력 영역 이동">
-          <button type="button" aria-label="동작·장비로 이동" onClick={() => focusField('nameKo')}>
-            동작·장비
+          <button
+            type="button"
+            aria-label="동작·장비로 이동"
+            data-section-error={basicsErrorCount > 0 ? 'true' : undefined}
+            data-section-ready={
+              basicsErrorCount === 0 && basicsCompletedCount === 3 ? 'true' : undefined
+            }
+            onClick={() => focusField('nameKo')}
+          >
+            <span>동작·장비</span>
+            <small aria-hidden="true">
+              {basicsErrorCount > 0 ? `확인 ${basicsErrorCount}` : `${basicsCompletedCount}/3`}
+            </small>
           </button>
           <button
             type="button"
             aria-label="수업 설정으로 이동"
+            data-section-error={settingsErrorCount > 0 ? 'true' : undefined}
+            data-section-ready={
+              settingsErrorCount === 0 && settingsCompletedCount === 5 ? 'true' : undefined
+            }
             onClick={() => focusField('durationMin')}
           >
-            수업 설정
+            <span>수업 설정</span>
+            <small aria-hidden="true">
+              {settingsErrorCount > 0
+                ? `확인 ${settingsErrorCount}`
+                : `${settingsCompletedCount}/5`}
+            </small>
           </button>
-          <button type="button" aria-label="설명·메모로 이동" onClick={() => focusField('cues')}>
-            설명·메모
+          <button
+            type="button"
+            aria-label="설명·메모로 이동"
+            data-section-error={notesErrorCount > 0 ? 'true' : undefined}
+            data-section-ready={
+              notesErrorCount === 0 && notesCompletedCount === 1 ? 'true' : undefined
+            }
+            onClick={() => focusField('cues')}
+          >
+            <span>설명·메모</span>
+            <small aria-hidden="true">
+              {notesErrorCount > 0 ? `확인 ${notesErrorCount}` : `${notesCompletedCount}/1`}
+            </small>
           </button>
         </nav>
+        {nextRemainingErrorField && (
+          <div
+            className="source-note-recovery-bar"
+            data-testid="source-note-remaining-errors"
+          >
+            <span>
+              확인 필요한 항목 {remainingErrorFields.length}개 · 다음:{' '}
+              <strong>{FIELD_SHORT_LABELS[nextRemainingErrorField]}</strong>
+            </span>
+            <button
+              type="button"
+              className="source-note-recovery-jump"
+              onClick={() => focusField(nextRemainingErrorField)}
+            >
+              다음 확인 항목으로 이동 <ArrowDownRight size={14} aria-hidden="true" />
+            </button>
+          </div>
+        )}
         <section className="source-note-section" aria-labelledby={`${errorId}-basics-title`}>
           <header>
             <span aria-hidden="true">1</span>
@@ -351,7 +549,8 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
                   type="button"
                   aria-pressed={equipment.includes(item.id)}
                   className={equipment.includes(item.id) ? 'selected' : ''}
-                  onClick={() => {
+                  onClick={(event) => {
+                    lastInput.current = event.currentTarget;
                     clearDismissal();
                     clearFieldError('equipment');
                     setEquipment((previous) =>
@@ -377,7 +576,8 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
                   type="button"
                   aria-pressed={props.includes(item.id)}
                   className={props.includes(item.id) ? 'selected' : ''}
-                  onClick={() => {
+                  onClick={(event) => {
+                    lastInput.current = event.currentTarget;
                     clearDismissal();
                     clearFieldError('props');
                     setProps((previous) =>
@@ -494,7 +694,15 @@ export function SourceNoteDialog({ reference, onClose, onSaved }: SourceNoteDial
             </div>
           </header>
           <label className="form-field">
-            <span id={`${errorId}-cues-label`}>직접 작성한 티칭 큐 · 줄마다 하나 *</span>
+            <span className="source-note-label-row">
+              <span id={`${errorId}-cues-label`}>직접 작성한 티칭 큐 · 줄마다 하나 *</span>
+              <small
+                className={`source-note-cue-count ${normalizedCues.length > 12 ? 'is-over' : ''}`}
+                data-testid="source-note-cue-count"
+              >
+                {normalizedCues.length}/12줄
+              </small>
+            </span>
             <textarea
               {...fieldAccessibility('cues')}
               value={cues}

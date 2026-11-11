@@ -45,6 +45,52 @@
   overflow-wrap: anywhere;
 }
 
+.source-note-recovery-dialog .source-note-recovery-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border: 1px solid #dfbfb4;
+  border-radius: 10px;
+  background: #fdf6f3;
+  color: #7d3625;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.source-note-recovery-dialog .source-note-recovery-bar strong {
+  font-weight: 600;
+}
+
+.source-note-recovery-dialog .source-note-recovery-jump {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border: 1px solid #c78b79;
+  border-radius: 8px;
+  background: #fff;
+  color: #78301f;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.source-note-recovery-dialog .source-note-recovery-jump:hover {
+  background: #f9ebe6;
+}
+
+.source-note-recovery-dialog .source-note-recovery-jump:focus-visible {
+  outline: 3px solid #a86d46;
+  outline-offset: 2px;
+}
+
 .source-note-recovery-dialog .source-note-form .source-note-field-error {
   display: block;
   margin-top: 6px;
@@ -81,5 +127,21 @@
   .source-note-recovery-dialog .source-note-dismissal-actions > button {
     justify-content: center;
     width: 100%;
+  }
+
+  .source-note-recovery-dialog .source-note-recovery-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .source-note-recovery-dialog .source-note-recovery-jump {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .source-note-recovery-dialog * {
+    scroll-behavior: auto !important;
+    transition: none !important;
   }
 }

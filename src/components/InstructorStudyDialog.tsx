@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
   ArrowLeft,
   Bookmark,
@@ -32,6 +33,14 @@ const REHEARSAL_LAYER_ITEMS = [
   ['standard', '기본'],
   ['hard', '심화'],
 ] as const;
+
+const LAYER_LABELS: Record<LayerMode, string> = {
+  easy: '쉽게',
+  standard: '기본',
+  hard: '심화',
+};
+
+type StudyListScope = 'all' | 'bookmarks' | 'practiced';
 
 const INSTRUCTOR_TUTORIAL_TASKS = [
   {
@@ -112,11 +121,14 @@ export function InstructorStudyDialog({
 }: InstructorStudyDialogProps) {
   const [mode, setMode] = useState<'study' | 'guide'>(initialMode);
   const [search, setSearch] = useState('');
-  const [bookmarksOnly, setBookmarksOnly] = useState(false);
+  const [listScope, setListScope] = useState<StudyListScope>('all');
   const [selectedId, setSelectedId] = useState(initialExerciseId ?? exercises[0]?.id ?? '');
-  const [layerChoice, setLayerChoice] = useState<{ exerciseId: string; value: LayerMode } | null>(
-    null,
+  const [practicedIds, setPracticedIds] = useState<string[]>(() =>
+    initialExerciseId && exercises.some((exercise) => exercise.id === initialExerciseId)
+      ? [initialExerciseId]
+      : [],
   );
+  const [layerByExerciseId, setLayerByExerciseId] = useState<Record<string, LayerMode>>({});
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const detailHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -148,28 +160,79 @@ export function InstructorStudyDialog({
   const [tutorialIndex, setTutorialIndex] = useState(0);
   const [showVisualTutorial, setShowVisualTutorial] = useState(false);
   const [visualGuideOpenId, setVisualGuideOpenId] = useState<string | null>(null);
+
+  const exerciseIdSet = useMemo(
+    () => new Set(exercises.map((exercise) => exercise.id)),
+    [exercises],
+  );
+  const bookmarkCount = useMemo(
+    () => study.bookmarkedExerciseIds.filter((id) => exerciseIdSet.has(id)).length,
+    [study.bookmarkedExerciseIds, exerciseIdSet],
+  );
+  const practicedSet = useMemo(
+    () => new Set(practicedIds.filter((id) => exerciseIdSet.has(id))),
+    [practicedIds, exerciseIdSet],
+  );
+
+  const commitActiveExercise = (exerciseId: string) => {
+    if (!exerciseId) return;
+    setSelectedId(exerciseId);
+    setPracticedIds((previous) =>
+      previous.includes(exerciseId) ? previous : [...previous, exerciseId],
+    );
+  };
+
   const filtered = useMemo(
     () =>
-      exercises.filter(
-        (exercise) =>
-          (!bookmarksOnly || study.bookmarkedExerciseIds.includes(exercise.id)) &&
-          matchesDiscoverySearch([exercise.nameKo, exercise.nameEn], search),
-      ),
-    [exercises, search, bookmarksOnly, study.bookmarkedExerciseIds],
+      exercises.filter((exercise) => {
+        if (listScope === 'bookmarks' && !study.bookmarkedExerciseIds.includes(exercise.id)) {
+          return false;
+        }
+        if (listScope === 'practiced' && !practicedSet.has(exercise.id)) {
+          return false;
+        }
+        return matchesDiscoverySearch([exercise.nameKo, exercise.nameEn], search);
+      }),
+    [exercises, search, listScope, study.bookmarkedExerciseIds, practicedSet],
   );
-  const selected = filtered.find((exercise) => exercise.id === selectedId) ?? filtered[0];
-  const layer =
-    layerChoice?.exerciseId === selected?.id ? (layerChoice?.value ?? 'standard') : 'standard';
+
+  const fallbackSelected =
+    exercises.find((exercise) => exercise.id === selectedId) ?? exercises[0];
+  const selected =
+    filtered.find((exercise) => exercise.id === selectedId) ?? filtered[0] ?? fallbackSelected;
+  const isSelectedOutsideFilter = Boolean(
+    selected && !filtered.some((exercise) => exercise.id === selected.id),
+  );
+  const layer: LayerMode = selected ? (layerByExerciseId[selected.id] ?? 'standard') : 'standard';
   const isVisualGuideOpen = selected ? visualGuideOpenId === selected.id : false;
-  const reviewed = selected && getExerciseReviewState(selected) === 'approved';
-  const signature = JSON.stringify([search, bookmarksOnly]);
+  const reviewed = Boolean(selected && getExerciseReviewState(selected) === 'approved');
+  const hasActiveFilter = Boolean(search.trim() || listScope !== 'all');
+  const signature = JSON.stringify([search, listScope]);
   const count = limit.signature === signature ? limit.count : 6;
+
   const clearFilters = () => {
     setSearch('');
-    setBookmarksOnly(false);
+    setListScope('all');
     focusAfterRender(() => searchRef.current);
   };
+
   const returnToList = () => {
+    if (selected && !filtered.some((exercise) => exercise.id === selected.id)) {
+      const resetSignature = JSON.stringify(['', 'all']);
+      const allIndex = exercises.findIndex((exercise) => exercise.id === selected.id);
+      setSearch('');
+      setListScope('all');
+      if (allIndex >= 6) {
+        setLimit({ signature: resetSignature, count: Math.ceil((allIndex + 1) / 6) * 6 });
+      }
+      focusAfterRender(
+        () =>
+          [...(listRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find(
+            (button) => button.dataset.studyExercise === selected.id,
+          ) ?? searchRef.current,
+      );
+      return;
+    }
     const selectedIndex = filtered.findIndex((exercise) => exercise.id === selected?.id);
     if (selectedIndex >= count)
       setLimit({ signature, count: Math.ceil((selectedIndex + 1) / 6) * 6 });
@@ -180,6 +243,35 @@ export function InstructorStudyDialog({
         ) ?? searchRef.current,
     );
   };
+
+  const handleScopeKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const order: readonly StudyListScope[] = ['all', 'bookmarks', 'practiced'];
+    const buttons = Array.from(
+      event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'),
+    );
+    const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    if (currentIndex < 0) return;
+    let nextIndex: number | null = null;
+    if (event.key === 'ArrowRight') {
+      nextIndex = (currentIndex + 1) % order.length;
+    } else if (event.key === 'ArrowLeft') {
+      nextIndex = (currentIndex - 1 + order.length) % order.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = order.length - 1;
+    }
+    if (nextIndex === null) return;
+    event.preventDefault();
+    setListScope(order[nextIndex]);
+    buttons[nextIndex]?.focus();
+  };
+
+  const selectLayer = (exerciseId: string, nextLayer: LayerMode) => {
+    commitActiveExercise(exerciseId);
+    setLayerByExerciseId((previous) => ({ ...previous, [exerciseId]: nextLayer }));
+  };
+
   const task = INSTRUCTOR_TUTORIAL_TASKS[tutorialIndex];
   const taskComplete = study.completedTutorialTaskIds.includes(task.id);
 
@@ -310,59 +402,99 @@ export function InstructorStudyDialog({
                   </PfButton>
                 )}
               </div>
-              <PfButton
-                variant="secondary"
-                className="study-bookmark-filter"
-                pressed={bookmarksOnly}
-                onClick={() => setBookmarksOnly((value) => !value)}
+              <div
+                className="study-scope-bar"
+                role="group"
+                aria-label="동작 목록 범위"
+                onKeyDown={handleScopeKeyDown}
               >
-                <Bookmark size={15} /> 북마크만{' '}
-                {
-                  study.bookmarkedExerciseIds.filter((id) =>
-                    exercises.some((exercise) => exercise.id === id),
-                  ).length
-                }
-              </PfButton>
+                <PfButton
+                  variant="secondary"
+                  className="study-scope-chip"
+                  pressed={listScope === 'all'}
+                  onClick={() => setListScope('all')}
+                >
+                  전체
+                </PfButton>
+                <PfButton
+                  variant="secondary"
+                  className="study-bookmark-filter study-scope-chip"
+                  pressed={listScope === 'bookmarks'}
+                  onClick={() =>
+                    setListScope((current) => (current === 'bookmarks' ? 'all' : 'bookmarks'))
+                  }
+                >
+                  <Bookmark size={14} aria-hidden="true" /> 북마크만 {bookmarkCount}
+                </PfButton>
+                <PfButton
+                  variant="secondary"
+                  className="study-scope-chip"
+                  pressed={listScope === 'practiced'}
+                  onClick={() =>
+                    setListScope((current) => (current === 'practiced' ? 'all' : 'practiced'))
+                  }
+                >
+                  이번 연습 {practicedSet.size}
+                </PfButton>
+              </div>
               <div className="study-results-row">
                 <p className="muted" role="status" aria-live="polite" aria-atomic="true">
                   {filtered.length}개 동작 노트
-                  {bookmarksOnly && ' · 북마크만'}
+                  {listScope === 'bookmarks' && ' · 북마크만'}
+                  {listScope === 'practiced' && ' · 이번 연습만'}
                 </p>
-                {(search.trim() || bookmarksOnly) && (
+                {hasActiveFilter && (
                   <PfButton variant="text" onClick={clearFilters}>
                     필터 초기화
                   </PfButton>
                 )}
               </div>
               <div className="study-exercise-list" ref={listRef}>
-                {filtered.slice(0, count).map((exercise) => (
-                  <button
-                    type="button"
-                    key={exercise.id}
-                    aria-pressed={selected?.id === exercise.id}
-                    data-study-exercise={exercise.id}
-                    onClick={() => {
-                      setSelectedId(exercise.id);
-                      setLayerChoice({ exerciseId: exercise.id, value: 'standard' });
-                      focusAfterRender(() => detailHeadingRef.current, 'start');
-                    }}
-                  >
-                    <ExerciseThumbnailBadge exercise={exercise} size="xs" decorative />
-                    <span>{exercise.nameKo}</span>
-                    {study.bookmarkedExerciseIds.includes(exercise.id) && (
-                      <Bookmark size={14} aria-label="북마크" />
-                    )}
-                  </button>
-                ))}
+                {filtered.slice(0, count).map((exercise) => {
+                  const isPracticed = practicedSet.has(exercise.id);
+                  const isBookmarked = study.bookmarkedExerciseIds.includes(exercise.id);
+                  return (
+                    <button
+                      type="button"
+                      key={exercise.id}
+                      aria-pressed={selected?.id === exercise.id}
+                      data-study-exercise={exercise.id}
+                      data-practiced={isPracticed ? 'true' : undefined}
+                      onClick={() => {
+                        commitActiveExercise(exercise.id);
+                        focusAfterRender(() => detailHeadingRef.current, 'start');
+                      }}
+                    >
+                      <ExerciseThumbnailBadge exercise={exercise} size="xs" decorative />
+                      <span>{exercise.nameKo}</span>
+                      {(isPracticed || isBookmarked) && (
+                        <span className="study-item-markers">
+                          {isPracticed && (
+                            <span
+                              className="study-practiced-dot"
+                              aria-hidden="true"
+                              title="이번 세션에서 연습함"
+                            />
+                          )}
+                          {isBookmarked && <Bookmark size={14} aria-label="북마크" />}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
               {filtered.length === 0 && (
                 <PfEmptyState
                   headingLevel="h3"
                   className="study-empty-state"
                   title="조건에 맞는 동작이 없습니다."
-                  description="검색어나 북마크 조건을 바꿔 주세요."
+                  description={
+                    listScope === 'practiced'
+                      ? '동작을 선택하거나 큐·변형 단계를 연습하면 여기에 모입니다.'
+                      : '검색어나 북마크 조건을 바꿔 주세요.'
+                  }
                   action={
-                    search.trim() || bookmarksOnly ? (
+                    hasActiveFilter ? (
                       <PfButton variant="secondary" onClick={clearFilters}>
                         전체 동작 보기
                       </PfButton>
@@ -385,15 +517,45 @@ export function InstructorStudyDialog({
                   {Math.min(6, filtered.length - count)}개 더 보기
                 </PfButton>
               )}
+              {!selected && onOpenWorkbench && (
+                <PfButton
+                  variant="secondary"
+                  className="study-workbench-return"
+                  onClick={onOpenWorkbench}
+                >
+                  내 수업 구성으로 가기
+                </PfButton>
+              )}
             </aside>
             {selected ? (
               <section className="study-detail" aria-label="선택한 동작 숙지">
-                <PfButton variant="text" className="study-return-browser" onClick={returnToList}>
-                  <ArrowLeft size={16} aria-hidden="true" /> 동작 목록으로
-                </PfButton>
+                <div className="study-detail-nav">
+                  <PfButton variant="text" className="study-return-browser" onClick={returnToList}>
+                    <ArrowLeft size={16} aria-hidden="true" /> 동작 목록으로
+                  </PfButton>
+                  {onOpenWorkbench && (
+                    <PfButton
+                      variant="secondary"
+                      className="study-workbench-return"
+                      onClick={onOpenWorkbench}
+                    >
+                      내 수업 구성으로 가기
+                    </PfButton>
+                  )}
+                </div>
                 <header>
                   <div>
-                    <span className="eyebrow">MOVEMENT STUDY</span>
+                    <div className="study-eyebrow-row">
+                      <span className="eyebrow">MOVEMENT STUDY</span>
+                      {isSelectedOutsideFilter && (
+                        <span
+                          className="study-outside-filter-badge"
+                          data-testid="study-outside-filter-badge"
+                        >
+                          현재 목록 조건 밖 · 선택 유지됨
+                        </span>
+                      )}
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <ApparatusIconBadge
                         apparatus={selected.apparatus}
@@ -411,7 +573,10 @@ export function InstructorStudyDialog({
                     variant="secondary"
                     className="study-save-bookmark"
                     pressed={study.bookmarkedExerciseIds.includes(selected.id)}
-                    onClick={() => onToggleBookmark(selected.id)}
+                    onClick={() => {
+                      commitActiveExercise(selected.id);
+                      onToggleBookmark(selected.id);
+                    }}
                   >
                     <Bookmark size={17} />
                     {study.bookmarkedExerciseIds.includes(selected.id) ? '북마크됨' : '북마크'}
@@ -435,9 +600,12 @@ export function InstructorStudyDialog({
                   className="study-visual-guide-disclosure"
                   data-testid="study-visual-guide-disclosure"
                   open={isVisualGuideOpen}
-                  onToggle={(event) =>
-                    setVisualGuideOpenId(event.currentTarget.open ? selected.id : null)
-                  }
+                  onToggle={(event) => {
+                    if (event.currentTarget.open) {
+                      commitActiveExercise(selected.id);
+                    }
+                    setVisualGuideOpenId(event.currentTarget.open ? selected.id : null);
+                  }}
                 >
                   <summary>시작·중간·끝 자세 변화 및 유사 동작 7차원 비교 보기</summary>
                   {isVisualGuideOpen && (
@@ -462,14 +630,58 @@ export function InstructorStudyDialog({
                       <PfButton
                         variant="secondary"
                         aria-expanded={!study.rehearsalCueHidden}
-                        onClick={() => onCueHiddenChange(!study.rehearsalCueHidden)}
+                        onClick={() => {
+                          commitActiveExercise(selected.id);
+                          onCueHiddenChange(!study.rehearsalCueHidden);
+                        }}
                       >
                         {study.rehearsalCueHidden ? <Eye size={16} /> : <EyeOff size={16} />}
                         {study.rehearsalCueHidden ? '큐 확인하기' : '큐 숨기기'}
                       </PfButton>
                     </div>
+                    <p className="study-recall-meta">
+                      큐 숨김 상태는 다른 동작을 골라도 이어지며, 변형 단계는 동작별로 기억됩니다.
+                    </p>
+                    <div className="study-modes" role="group" aria-label="단계별 변형">
+                      {REHEARSAL_LAYER_ITEMS.map(([id, label], index) => (
+                        <button
+                          type="button"
+                          key={id}
+                          aria-pressed={layer === id}
+                          onClick={() => selectLayer(selected.id, id)}
+                          onKeyDown={(event) => {
+                            let nextIndex: number | null = null;
+                            if (event.key === 'ArrowRight') {
+                              nextIndex = (index + 1) % REHEARSAL_LAYER_ITEMS.length;
+                            } else if (event.key === 'ArrowLeft') {
+                              nextIndex =
+                                (index - 1 + REHEARSAL_LAYER_ITEMS.length) %
+                                REHEARSAL_LAYER_ITEMS.length;
+                            } else if (event.key === 'Home') {
+                              nextIndex = 0;
+                            } else if (event.key === 'End') {
+                              nextIndex = REHEARSAL_LAYER_ITEMS.length - 1;
+                            }
+                            if (nextIndex === null) return;
+                            event.preventDefault();
+                            const nextLayer = REHEARSAL_LAYER_ITEMS[nextIndex][0];
+                            selectLayer(selected.id, nextLayer);
+                            const buttons =
+                              event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+                                'button',
+                              );
+                            buttons?.[nextIndex]?.focus();
+                          }}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
                     {study.rehearsalCueHidden ? (
-                      <p>호흡·큐·난이도 대안을 먼저 떠올린 뒤 확인해 보세요.</p>
+                      <p className="study-recall-hidden-prompt">
+                        선택한 <strong>{LAYER_LABELS[layer]}</strong> 단계의 호흡·큐·대안을 먼저
+                        떠올린 뒤 확인해 보세요.
+                      </p>
                     ) : (
                       <div className="study-revealed-cues">
                         <p>
@@ -480,41 +692,6 @@ export function InstructorStudyDialog({
                             <li key={`${index}-${cue}`}>{cue}</li>
                           ))}
                         </ul>
-                        <div className="study-modes" role="group" aria-label="단계별 변형">
-                          {REHEARSAL_LAYER_ITEMS.map(([id, label], index) => (
-                            <button
-                              type="button"
-                              key={id}
-                              aria-pressed={layer === id}
-                              onClick={() => setLayerChoice({ exerciseId: selected.id, value: id })}
-                              onKeyDown={(event) => {
-                                let nextIndex: number | null = null;
-                                if (event.key === 'ArrowRight') {
-                                  nextIndex = (index + 1) % REHEARSAL_LAYER_ITEMS.length;
-                                } else if (event.key === 'ArrowLeft') {
-                                  nextIndex =
-                                    (index - 1 + REHEARSAL_LAYER_ITEMS.length) %
-                                    REHEARSAL_LAYER_ITEMS.length;
-                                } else if (event.key === 'Home') {
-                                  nextIndex = 0;
-                                } else if (event.key === 'End') {
-                                  nextIndex = REHEARSAL_LAYER_ITEMS.length - 1;
-                                }
-                                if (nextIndex === null) return;
-                                event.preventDefault();
-                                const nextLayer = REHEARSAL_LAYER_ITEMS[nextIndex][0];
-                                setLayerChoice({ exerciseId: selected.id, value: nextLayer });
-                                const buttons =
-                                  event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
-                                    'button',
-                                  );
-                                buttons?.[nextIndex]?.focus();
-                              }}
-                            >
-                              {label}
-                            </button>
-                          ))}
-                        </div>
                         <p>{selected.layers[layer] || '등록된 단계별 메모가 없습니다.'}</p>
                         {selected.precautions && (
                           <p>
@@ -536,7 +713,13 @@ export function InstructorStudyDialog({
                       이 연습 화면에는 검토 기록이 있는 티칭 메모가 표시됩니다. 동작을 수업에
                       추가하거나 구성하는 데 검토는 필요하지 않습니다.
                     </p>
-                    <PfButton variant="secondary" onClick={() => onOpenReview(selected)}>
+                    <PfButton
+                      variant="secondary"
+                      onClick={() => {
+                        commitActiveExercise(selected.id);
+                        onOpenReview(selected);
+                      }}
+                    >
                       <Check size={16} /> 동작 노트에서 직접 검토
                     </PfButton>
                   </PfCard>

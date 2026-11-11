@@ -19,11 +19,16 @@
   color: var(--pf-color-text-muted, #526358);
   font: inherit;
   font-weight: var(--pf-weight-semibold, 600);
+  word-break: keep-all;
 }
 .study-modes button[aria-pressed='true'] {
   background: var(--pf-color-bg-surface-elevated, #ffffff);
   color: var(--pf-color-text-brand, #173d34);
   box-shadow: var(--pf-shadow-xs, 0 1px 2px rgba(23, 61, 52, 0.05));
+}
+.study-modes button:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring, #b16f48);
+  outline-offset: 2px;
 }
 .study-layout {
   display: grid;
@@ -61,26 +66,45 @@
 .study-search input:focus {
   outline: none;
 }
+.study-scope-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.study-scope-chip,
 .study-bookmark-filter,
 .study-save-bookmark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
   min-height: var(--pf-touch-min, 44px);
-  padding: 0.6rem 0.75rem;
+  padding: 0.55rem 0.65rem;
   border: 1px solid var(--pf-color-border-default, #d5ddd0);
   border-radius: var(--pf-radius-md, 12px);
   background: var(--pf-color-bg-surface, #fffef9);
   color: var(--pf-color-text-primary, #1e3129);
   font: inherit;
   font-size: var(--pf-text-sm, 0.8125rem);
+  word-break: keep-all;
 }
+.study-scope-chip {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.study-scope-chip[aria-pressed='true'],
 .study-bookmark-filter[aria-pressed='true'],
 .study-save-bookmark[aria-pressed='true'] {
   background: var(--pf-color-bg-surface-muted, #e4eadf);
   border-color: var(--pf-color-border-strong, #aab9a3);
   color: var(--pf-color-text-brand, #173d34);
+  font-weight: var(--pf-weight-semibold, 600);
+}
+.study-scope-chip:focus-visible,
+.study-save-bookmark:focus-visible,
+.study-workbench-return:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring, #b16f48);
+  outline-offset: 2px;
 }
 .study-exercise-list {
   display: grid;
@@ -104,6 +128,23 @@
   font-size: var(--pf-text-sm, 0.8125rem);
   line-height: 1.5;
   overflow-wrap: anywhere;
+}
+.study-exercise-list button > span:first-of-type {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.study-item-markers {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 0 0 auto;
+}
+.study-practiced-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--pf-color-text-brand, #173d34);
+  opacity: 0.75;
 }
 .study-exercise-list button:hover {
   background: var(--pf-color-bg-surface-subtle, #f3f5ee);
@@ -129,6 +170,33 @@
   display: grid;
   gap: 0.9rem;
   align-content: start;
+}
+.study-detail-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.study-workbench-return {
+  min-height: var(--pf-touch-min, 44px);
+  word-break: keep-all;
+}
+.study-eyebrow-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+.study-outside-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: var(--pf-weight-medium, 500);
+  background: var(--pf-color-bg-surface-muted, #e4eadf);
+  color: var(--pf-color-text-brand, #173d34);
 }
 .study-detail header {
   display: flex;
@@ -180,9 +248,17 @@
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+.study-recall-meta {
+  font-size: 0.75rem;
+  color: var(--pf-color-text-muted, #526358);
+  margin: 0.45rem 0 0.55rem;
+}
 .study-recall p,
 .study-review-needed p {
   margin: 0.65rem 0;
+}
+.study-recall-hidden-prompt {
+  margin-bottom: 0;
 }
 .study-revealed-cues ul {
   padding-left: 1.25rem;
@@ -247,6 +323,21 @@
 @media (max-width: 400px) {
   .study-exercise-list {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 390px) {
+  .study-scope-bar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .study-scope-bar > button:first-child {
+    grid-column: 1 / -1;
+  }
+  .study-detail-nav {
+    align-items: stretch;
+  }
+  .study-detail-nav .study-workbench-return {
+    width: 100%;
   }
 }
 
@@ -378,7 +469,10 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .instructor-study-dialog .study-exercise-list,
-  .instructor-study-dialog .study-detail {
+  .instructor-study-dialog .study-detail,
+  .instructor-study-dialog .study-scope-chip,
+  .instructor-study-dialog .study-modes button {
     scroll-behavior: auto;
+    transition: none;
   }
 }

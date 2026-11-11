@@ -19,6 +19,11 @@
   font-size: 12px;
   font-weight: 500;
 }
+.source-note-layout-dialog .source-note-form-status span {
+  font-weight: 500;
+  color: #3f5c45;
+  font-variant-numeric: tabular-nums;
+}
 .source-note-layout-dialog .source-note-input-guide {
   border-bottom: 1px solid #e1e6dc;
   padding-bottom: 2px;
@@ -51,26 +56,91 @@
 .source-note-layout-dialog .source-note-origin .eyebrow {
   font-size: 11px;
 }
+.source-note-layout-dialog .source-note-origin-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  margin: 10px 0 8px;
+  padding: 9px 11px;
+  border: 1px solid #dfe6d8;
+  border-radius: 8px;
+  background: #fbfcf8;
+}
+.source-note-layout-dialog .source-note-origin-facts > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 6px;
+  min-width: 0;
+}
+.source-note-layout-dialog .source-note-origin-facts dt {
+  font-size: 11px;
+  color: #63745a;
+}
+.source-note-layout-dialog .source-note-origin-facts dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #2f4f3c;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.source-note-layout-dialog .source-note-origin-safety {
+  margin: 6px 0 4px;
+  color: #775a3c;
+  font-size: 11px;
+  line-height: 1.65;
+}
 .source-note-layout-dialog .source-note-section-nav {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 .source-note-layout-dialog .source-note-section-nav button {
-  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 44px;
   min-height: 44px;
-  padding: 9px 8px;
+  padding: 9px 10px;
   border: 1px solid #ced9c8;
   border-radius: 8px;
   background: #f6f8f2;
   color: #34523e;
   font: inherit;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.4;
   cursor: pointer;
+}
+.source-note-layout-dialog .source-note-section-nav button small {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #e6ede0;
+  color: #3d5c45;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.source-note-layout-dialog .source-note-section-nav button[data-section-ready='true'] small {
+  background: #d8e7cf;
+  color: #264c34;
+}
+.source-note-layout-dialog .source-note-section-nav button[data-section-error='true'] {
+  border-color: #c27b68;
+  background: #fcf4f1;
+  color: #7f3524;
+}
+.source-note-layout-dialog .source-note-section-nav button[data-section-error='true'] small {
+  background: #f2ddd6;
+  color: #8b3320;
 }
 .source-note-layout-dialog .source-note-section-nav button:hover {
   background: #eaf0e3;
+}
+.source-note-layout-dialog .source-note-section-nav button[data-section-error='true']:hover {
+  background: #f8eae5;
 }
 .source-note-layout-dialog .source-note-section {
   display: grid;
@@ -114,6 +184,22 @@
 .source-note-layout-dialog .source-note-section .library-form-grid {
   gap: 16px;
 }
+.source-note-layout-dialog .source-note-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.source-note-layout-dialog .source-note-cue-count {
+  color: #63745a;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.source-note-layout-dialog .source-note-cue-count.is-over {
+  color: #963e2d;
+  font-weight: 600;
+}
 .source-note-layout-dialog .source-note-section :is(input, select, textarea) {
   font-size: 16px;
 }
@@ -122,6 +208,7 @@
 }
 .source-note-layout-dialog .source-note-section .library-multi-chips button {
   min-height: 44px;
+  min-width: 44px;
   padding: 8px 11px;
   font-size: 12px;
 }
@@ -133,6 +220,8 @@
   padding-top: 12px;
 }
 .source-note-layout-dialog .source-note-actions button {
+  min-height: 46px;
+  min-width: 44px;
   white-space: normal;
   line-height: 1.6;
 }
@@ -142,6 +231,9 @@
   outline-offset: 3px;
 }
 @media (max-width: 768px) {
+  .source-note-layout-dialog .source-note-origin-facts {
+    grid-template-columns: 1fr;
+  }
   .source-note-layout-dialog .source-note-section {
     padding: 14px;
     gap: 16px;
@@ -150,19 +242,24 @@
     gap: 6px;
   }
   .source-note-layout-dialog .source-note-section-nav button {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
     font-size: 12px;
-    padding-inline: 5px;
+    padding: 7px 5px;
+    text-align: center;
   }
   .source-note-layout-dialog .source-note-actions {
     display: grid;
-    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
     gap: 8px;
     align-items: stretch;
   }
   .source-note-layout-dialog .source-note-actions > button {
     min-height: 48px;
-    min-width: 0;
-    padding: 9px 8px;
+    min-width: 44px;
+    padding: 9px 10px;
     font-size: 12px;
   }
   .source-note-layout-dialog .source-note-section .library-form-grid {
@@ -175,5 +272,13 @@
   }
   .source-note-layout-dialog .source-note-section .library-multi-chips {
     gap: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .source-note-layout-dialog *,
+  .source-note-layout-dialog *::before,
+  .source-note-layout-dialog *::after {
+    transition: none !important;
+    animation: none !important;
   }
 }

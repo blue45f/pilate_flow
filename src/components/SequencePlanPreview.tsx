@@ -3,6 +3,7 @@ import { ClassCueSheetPreview } from '../features/classCueSheet/ClassCueSheetPre
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
+  ArrowUp,
   BookmarkPlus,
   ChevronLeft,
   ChevronRight,
@@ -169,8 +170,41 @@ export function SequencePlanPreview({
     () => buildConnectedClassSections(snapshot.steps, model),
     [snapshot.steps, model],
   );
+  const [readinessOpen, setReadinessOpen] = useState(() => !model.gate.canRehearse);
+  const blockingStepIndices = useMemo(
+    () =>
+      new Set(
+        model.gate.reasons
+          .filter((reason) => reason.code !== 'target-mismatch' && reason.code !== 'duplicate-movement')
+          .flatMap((reason) => reason.stepIndices),
+      ),
+    [model.gate.reasons],
+  );
+  const firstBlockingStepIndex = useMemo(() => {
+    const indices = [...blockingStepIndices].sort((a, b) => a - b);
+    return indices.length > 0 ? indices[0]! : null;
+  }, [blockingStepIndices]);
+  const sectionShortcuts = useMemo(
+    () =>
+      classSections
+        .map((section) => {
+          const firstStepIndex = snapshot.steps.findIndex(
+            (step) => getSequenceStepClassSection(step, snapshot.steps) === section.role,
+          );
+          return {
+            role: section.role,
+            label: section.label,
+            firstStepIndex,
+          };
+        })
+        .filter((entry) => entry.firstStepIndex >= 0),
+    [classSections, snapshot.steps],
+  );
   const index = manualSelection ?? position.stepIndex ?? Math.max(0, snapshot.steps.length - 1);
   const selected = snapshot.steps[index];
+  const selectedSectionRole = selected
+    ? getSequenceStepClassSection(selected, snapshot.steps)
+    : null;
   const selectedSummary = model.steps[index];
   const selectedSegments = model.segments.filter((segment) => segment.stepIndex === index);
   const focusHeading = (target: 'selected' | 'order') => {
@@ -187,6 +221,9 @@ export function SequencePlanPreview({
     setSegmentRehearsalOpen(false);
     setManualSelection(next);
     rehearsal.seek(model.steps[next]?.startSec ?? 0);
+    focusHeading('selected');
+  };
+  const returnToCurrentItem = () => {
     focusHeading('selected');
   };
   const selectTime = (time: number) => {
@@ -358,6 +395,26 @@ export function SequencePlanPreview({
                   <ListOrdered size={16} /> 전체 순서에서 고르기
                 </button>
               </div>
+              {sectionShortcuts.length > 1 && (
+                <div
+                  className="simulation-section-shortcuts"
+                  role="group"
+                  aria-label="수업 구간 바로 이동"
+                >
+                  {sectionShortcuts.map((shortcut) => (
+                    <button
+                      key={shortcut.role}
+                      type="button"
+                      className="btn-secondary simulation-jump-chip"
+                      aria-current={selectedSectionRole === shortcut.role ? 'true' : undefined}
+                      aria-label={`${shortcut.label} 첫 항목(${shortcut.firstStepIndex + 1}번)으로 이동`}
+                      onClick={() => selectStep(shortcut.firstStepIndex)}
+                    >
+                      {shortcut.label} · {shortcut.firstStepIndex + 1}번~
+                    </button>
+                  ))}
+                </div>
+              )}
             </nav>
           )}
           <div
@@ -555,7 +612,11 @@ export function SequencePlanPreview({
                 )}
               </p>
             )}
-            <details className="simulation-readiness">
+            <details
+              className="simulation-readiness"
+              open={readinessOpen}
+              onToggle={(event) => setReadinessOpen(event.currentTarget.open)}
+            >
               <summary>
                 {model.gate.canRehearse && !snapshotChanged
                   ? '시간표 리허설 가능 · 계획 시간 기준'
@@ -569,11 +630,32 @@ export function SequencePlanPreview({
               {model.gate.reasons.length > 0 && (
                 <ul>
                   {model.gate.reasons.map((reason) => (
-                    <li key={reason.code}>
-                      {reason.message}
-                      {reason.stepIndices.length > 0
-                        ? ` (${reason.stepIndices.map((i) => i + 1).join(', ')}번)`
-                        : ''}
+                    <li key={reason.code} className="simulation-readiness-item">
+                      <span>
+                        {reason.message}
+                        {reason.stepIndices.length > 0
+                          ? ` (${reason.stepIndices.map((i) => i + 1).join(', ')}번)`
+                          : ''}
+                      </span>
+                      {reason.stepIndices.length > 0 && (
+                        <div
+                          className="simulation-readiness-jumps"
+                          role="group"
+                          aria-label="점검 항목 바로 이동"
+                        >
+                          {reason.stepIndices.map((stepIdx) => (
+                            <button
+                              key={stepIdx}
+                              type="button"
+                              className="btn-secondary simulation-jump-chip"
+                              aria-current={stepIdx === index ? 'step' : undefined}
+                              onClick={() => selectStep(stepIdx)}
+                            >
+                              {stepIdx + 1}번 항목 보기
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -766,6 +848,23 @@ export function SequencePlanPreview({
                   </>
                 )}
               </section>
+              {snapshot.steps.length > 1 && (
+                <div className="simulation-order-return-bar">
+                  <span className="simulation-order-return-meta">
+                    전체 {snapshot.steps.length}개 항목
+                    {blockingStepIndices.size > 0
+                      ? ` · 점검 필요 ${blockingStepIndices.size}개`
+                      : ''}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-secondary simulation-return-current-btn"
+                    onClick={returnToCurrentItem}
+                  >
+                    <ArrowUp size={15} aria-hidden="true" /> 현재 항목({index + 1}번)으로 돌아가기
+                  </button>
+                </div>
+              )}
               <section aria-label="전체 수업 순서">
                 <h3 ref={orderHeadingRef} tabIndex={-1} className="simulation-navigation-heading">
                   <ListOrdered size={17} /> 전체 순서
@@ -774,11 +873,12 @@ export function SequencePlanPreview({
                   {snapshot.steps.map((step, stepIndex) => {
                     const rest = isRestStep(step);
                     const item = exercises.get(step.exerciseId);
+                    const hasBlockingIssue = blockingStepIndices.has(stepIndex);
                     return (
                       <li key={step.stepId}>
                         <button
                           type="button"
-                          className="btn-secondary sequence-preview-row simulation-order-row"
+                          className={`btn-secondary sequence-preview-row simulation-order-row${hasBlockingIssue ? ' is-blocking-row' : ''}`}
                           aria-current={stepIndex === index ? 'step' : undefined}
                           aria-label={`${stepIndex + 1}번 ${rest ? '휴식' : item?.nameKo || '동작 정보 없음'} 계획 보기`}
                           onClick={() => selectStep(stepIndex)}
@@ -800,6 +900,9 @@ export function SequencePlanPreview({
                           <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
                             <strong style={{ display: 'block' }}>
                               {rest ? '휴식' : item?.nameKo || '동작 정보 없음'}
+                              {hasBlockingIssue && (
+                                <span className="simulation-row-issue-badge">점검 필요</span>
+                              )}
                             </strong>
                             {viewMode === 'connected' && (
                               <span style={{ display: 'block' }}>
@@ -848,11 +951,25 @@ export function SequencePlanPreview({
         <footer className="sequence-preview-continuation" aria-label="수업안 확인 후 다음 단계">
           {onSave || onStart ? (
             <>
-              <p className="sequence-preview-readiness" role="status">
-                {snapshotChanged
-                  ? '수업안이 바뀌었어요. 편집 화면으로 돌아가 다시 확인해 주세요.'
-                  : startReadiness}
-              </p>
+              <div className="sequence-preview-readiness-row">
+                <p className="sequence-preview-readiness" role="status">
+                  {snapshotChanged
+                    ? '수업안이 바뀌었어요. 편집 화면으로 돌아가 다시 확인해 주세요.'
+                    : startReadiness}
+                </p>
+                {!snapshotChanged &&
+                  !model.gate.canRehearse &&
+                  firstBlockingStepIndex !== null &&
+                  snapshot.steps[firstBlockingStepIndex] !== undefined && (
+                    <button
+                      type="button"
+                      className="btn-secondary simulation-jump-chip"
+                      onClick={() => selectStep(firstBlockingStepIndex)}
+                    >
+                      {firstBlockingStepIndex + 1}번 점검 항목 확인
+                    </button>
+                  )}
+              </div>
               {saveRequested && (persistenceError || saveFeedback) && (
                 <p
                   role={persistenceError ? 'alert' : 'status'}
