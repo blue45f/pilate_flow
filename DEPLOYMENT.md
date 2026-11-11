@@ -38,9 +38,7 @@
 | **빌드** | `pnpm build` | `tsc -b` → `vite build` → `check-pwa-build.mjs` (`pnpm check:pwa`로 단독 재검증 가능) | `PWA build verified` 출력 (`sw.js` 프리캐시, 순환 청크 0건, Atelier V2 PNG 4종 및 번들 참조 확인) |
 | **상태 확인 (로컬 JSON)** | `pnpm deploy:check` | 설정 파일, 현재 Git 브랜치·클린 여부, `dist/` 무결성, 인증 준비 상태 점검 (비밀값 미출력) | JSON 출력에서 `"configValid": true`, `"onCanonicalBranch": true`, `"distReadyForDeploy": true` 확인 |
 | **상태 확인 (운영)** | `pnpm deploy:verify` | 운영 URL의 `index.html` 엔트리 해시, JS 청크 응답, `/sw.js` 프리캐시, V2 PNG 4종 대조 (`--wait-cdn` 지원) | JSON 출력에서 `"verified": true`, `"bundleMatchesLocalDist": true`, `"v2Studio3dAssetsLive": true` (불일치 시 `exit 2`) |
-| **배포 (로컬 표준)** | `pnpm deploy` | `.firebase/deploy.lock` 획득 → 검증·빌드 → `.firebase/releases/` 스냅샷 → Firebase 업로드 → CDN 재시도 포함 `--verify-live` | 호스팅 업로드 완료 및 직후 `--verify-live`에서 `"verified": true` 확인 |
-| **배포 (미추적 파일 허용)** | `pnpm deploy:dirty` | `--allow-dirty` 적용 (미추적 임시 파일이 워킹트리에 있어도 `dist/` 배포 허용) | 호스팅 업로드 완료 |
-| **배포 (라이브 검증 생략)** | `pnpm deploy:skip-verify` | `--skip-live-verify` 적용 (아웃바운드 HTTP 차단 셸에서 업로드만 수행 후 호스트 터미널에서 별도 검증) | 호스팅 업로드 완료 후 호스트에서 `pnpm deploy:verify` 확인 |
+| **배포 (로컬 표준)** | `pnpm deploy` | `.firebase/deploy.lock` 획득 → 검증·빌드 → `.firebase/releases/` 스냅샷 → Firebase 업로드 → CDN 재시도 포함 `--verify-live` (고급 CLI 플래그: `pnpm deploy -- --allow-dirty`, `pnpm deploy -- --skip-live-verify`) | 호스팅 업로드 완료 및 직후 `--verify-live`에서 `"verified": true` 확인 |
 | **롤백** | `pnpm deploy:rollback` | `.firebase/release-history.json`의 직전 `verifiedLive: true` 스냅샷을 `dist/`에 복원·검증 후 재업로드 | 스냅샷 재업로드 완료 및 직후 `--verify-live`에서 `"verified": true` 확인 |
 
 ## 3. 자동 인식되는 Firebase 인증 우선순위 (로컬 · CI 공통)

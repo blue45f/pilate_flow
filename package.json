@@ -23,8 +23,6 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "verify:all": "pnpm check:secrets && pnpm check:motion-study && pnpm test:deploy && pnpm test && pnpm lint && pnpm build",
     "deploy": "node scripts/deploy-universal.mjs",
-    "deploy:dirty": "node scripts/deploy-universal.mjs --allow-dirty",
-    "deploy:skip-verify": "node scripts/deploy-universal.mjs --skip-live-verify",
     "deploy:doctor": "node scripts/deploy-universal.mjs --doctor",
     "deploy:auth": "node scripts/setup-deploy-auth.mjs",
     "deploy:auth:check": "node scripts/setup-deploy-auth.mjs --status",
