@@ -305,7 +305,7 @@ export function CatalogMotionInteractivePlayer({
     >
       <header className="mpp-heading">
         <div>
-          <p className="mpp-eyebrow">STUDIO KINEMATIC 5-PHASE · 기구학 연속 도해</p>
+          <p className="mpp-eyebrow">기구학 5단계 연속·3단계 도해 · 출처 대조 확인</p>
           <h3 id={`${id}-title`}>{asset.titleKo}</h3>
         </div>
         <span className="mpp-status">출처 대조 완료 · 전문가 검수 전</span>

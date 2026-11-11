@@ -147,7 +147,7 @@ export function ExerciseThumbnailBadge({
           style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
         />
       ) : patternRef ? (
-        <MotionPatternThumbnail reference={patternRef} />
+        <MotionPatternThumbnail reference={patternRef} unifiedCatalogAsset={catalogMotion} />
       ) : (
         <CatalogMotionThumbnail asset={catalogMotion} />
       )}

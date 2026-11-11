@@ -7,12 +7,15 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw } from 'lucide-react';
+import type { CatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
+import type { CatalogMovementVisualAsset } from '../data/movementVisualRigCatalog';
 import { DraftPlaybackController } from '../models/DraftPlaybackController';
 import type { DraftPlaybackState, DraftRepeatCount } from '../models/DraftPlaybackController';
 import type { AnatomicalSide, DraftPhase } from '../models/types';
 import { MotionDraftFigure } from './MotionDraftFigure';
 import { MotionAuthoringBatchFigure } from './MotionAuthoringBatchFigure';
+import { MovementPhaseDiagramSvg } from './MovementPhaseDiagramSvg';
 import { SupineReachFigure } from './SupineReachFigure';
 import { MotionPhaseContextPanel } from './MotionPhaseContextPanel';
 import '../styles/motion-pattern-preview.css';
@@ -69,12 +72,14 @@ function PatternFigure({
   }
 }
 
-/** A deterministic still rendered from the selected asset's own authored geometry, with opt-in pointer hover motion preview. */
+/** A deterministic still rendered from the selected asset's own authored geometry, or unified studio kinematic rig when requested on movement cards. */
 export function MotionPatternThumbnail({
   reference,
+  unifiedCatalogAsset = null,
   className = '',
 }: {
   reference: MotionPatternReference;
+  unifiedCatalogAsset?: CatalogContinuousMotionAsset | null;
   className?: string;
 }) {
   const defaultProgress =
@@ -110,7 +115,7 @@ export function MotionPatternThumbnail({
     }
     if (rafRef.current !== null) window.cancelAnimationFrame(rafRef.current);
     startRef.current = null;
-    const cycleMs = 4600;
+    const cycleMs = 4200;
     const step = (now: number) => {
       if (startRef.current === null) startRef.current = now;
       const elapsed = Math.max(0, now - startRef.current);
@@ -121,15 +126,44 @@ export function MotionPatternThumbnail({
   };
 
   const progress = hoverProgress ?? defaultProgress;
+  const sampledUnified =
+    unifiedCatalogAsset && hoverProgress !== null
+      ? unifiedCatalogAsset.samplePose(hoverProgress)
+      : null;
+  const effectiveUnifiedVisual: CatalogMovementVisualAsset | null = unifiedCatalogAsset
+    ? sampledUnified
+      ? {
+          ...unifiedCatalogAsset.visualAsset,
+          phases: {
+            ...unifiedCatalogAsset.visualAsset.phases,
+            [sampledUnified.visualPhaseId]: sampledUnified.interpolatedPhaseSpec,
+          },
+        }
+      : unifiedCatalogAsset.visualAsset
+    : null;
+
   return (
     <div
-      className={`motion-pattern-thumbnail ${hoverProgress !== null ? 'is-hover-playing' : ''} ${className}`.trim()}
+      className={`motion-pattern-thumbnail ${
+        unifiedCatalogAsset ? 'catalog-motion-thumbnail' : ''
+      } ${hoverProgress !== null ? 'is-hover-playing' : ''} ${className}`.trim()}
       data-motion-variant={reference.variantId}
       data-motion-family={reference.family}
+      data-exercise-id={unifiedCatalogAsset?.exerciseId}
       onPointerEnter={startHover}
       onPointerLeave={stopHover}
     >
-      <PatternFigure reference={reference} progress={progress} />
+      {effectiveUnifiedVisual && unifiedCatalogAsset ? (
+        <MovementPhaseDiagramSvg
+          asset={effectiveUnifiedVisual}
+          phase={sampledUnified ? sampledUnified.visualPhaseId : 'middle'}
+          compact
+          showGhostStartPose
+          label={`${unifiedCatalogAsset.titleKo} · 정점 단계 도해`}
+        />
+      ) : (
+        <PatternFigure reference={reference} progress={progress} />
+      )}
     </div>
   );
 }

@@ -179,15 +179,15 @@ import { CatalogMotionThumbnail } from './CatalogMotionInteractivePlayer';
 
 function WorkbenchMovementMark({ exercise }: { exercise: PilatesExercise }) {
   const pattern = getMotionPatternReferences(exercise.id)[0];
+  const catalogMotion = getCatalogContinuousMotionAsset(exercise);
   if (pattern) {
     return (
-      <span className="workbench-movement-mark" title={`${pattern.title} · 관련 패턴 초안`}>
-        <MotionPatternThumbnail reference={pattern} />
-        <small>관련 패턴</small>
+      <span className="workbench-movement-mark" title={`${pattern.title} · 기구학 표준 도해`}>
+        <MotionPatternThumbnail reference={pattern} unifiedCatalogAsset={catalogMotion} />
+        <small>기구 도해</small>
       </span>
     );
   }
-  const catalogMotion = getCatalogContinuousMotionAsset(exercise);
   return catalogMotion ? (
     <span
       className="workbench-movement-mark"

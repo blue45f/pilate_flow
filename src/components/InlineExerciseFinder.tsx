@@ -818,7 +818,10 @@ export function InlineExerciseFinder({
                   onClick={() => openExerciseDetail(exercise)}
                 >
                   {firstReference ? (
-                    <MotionPatternThumbnail reference={firstReference} />
+                    <MotionPatternThumbnail
+                      reference={firstReference}
+                      unifiedCatalogAsset={getCatalogContinuousMotionAsset(exercise)}
+                    />
                   ) : getCatalogContinuousMotionAsset(exercise) ? (
                     <CatalogMotionThumbnail asset={getCatalogContinuousMotionAsset(exercise)!} />
                   ) : (

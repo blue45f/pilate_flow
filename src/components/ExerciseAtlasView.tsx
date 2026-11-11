@@ -1878,7 +1878,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                             >
                               <span className="atlas-compare-art-stage">
                                 {itemPatterns[0] ? (
-                                  <MotionPatternThumbnail reference={itemPatterns[0]} />
+                                  <MotionPatternThumbnail
+                                    reference={itemPatterns[0]}
+                                    unifiedCatalogAsset={itemKinematic}
+                                  />
                                 ) : itemKinematic ? (
                                   <CatalogMotionThumbnail asset={itemKinematic} />
                                 ) : (
@@ -2069,7 +2072,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                             aria-describedby={`motion-caption-${exercise.id}`}
                           >
                             {patterns[0] ? (
-                              <MotionPatternThumbnail reference={patterns[0]} />
+                              <MotionPatternThumbnail
+                                reference={patterns[0]}
+                                unifiedCatalogAsset={getCatalogContinuousMotionAsset(exercise)}
+                              />
                             ) : hasValidIdeaPhoto && ideaMeta?.photoDataUrl ? (
                               <img
                                 src={ideaMeta.photoDataUrl}
