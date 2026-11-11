@@ -907,6 +907,51 @@ describe('backend/freeAiService', () => {
       expect(service.getStatus().minuteUsed).toBe(1);
       expect(service.getStatus().dailyUsed).toBe(1);
     });
+
+    it('prioritizes server-registered user OpenAI keys over server default OPENAI_API_KEY and falls back cleanly when unconfigured', async () => {
+      const envWithBoth = {
+        OPENAI_API_KEY: 'srv-test-default-openai-credential',
+        USER_OPENAI_API_KEY: 'srv-test-user-priority-credential',
+        OPENAI_USER_API_KEYS_JSON: JSON.stringify({
+          'instructor-kim': 'srv-test-instructor-kim-credential',
+        }),
+        OPENAI_MODEL: 'gpt-4o-mini',
+      };
+
+      const kimConfig = resolveFreeAiConfig(envWithBoth, 'instructor-kim');
+      expect(kimConfig.enabled).toBe(true);
+      expect(kimConfig.provider).toBe('openai');
+      expect(kimConfig.keySource).toBe('user-registered');
+      expect(kimConfig.apiKey).toBe('srv-test-instructor-kim-credential');
+
+      const otherUserConfig = resolveFreeAiConfig(envWithBoth, 'instructor-lee');
+      expect(otherUserConfig.keySource).toBe('user-registered');
+      expect(otherUserConfig.apiKey).toBe('srv-test-user-priority-credential');
+
+      const defaultOnly = resolveFreeAiConfig(
+        {
+          OPENAI_API_KEY: 'srv-test-default-openai-credential',
+          OPENAI_MODEL: 'gpt-4o-mini',
+        },
+        'instructor-lee',
+      );
+      expect(defaultOnly.keySource).toBe('server-default');
+
+      const unconfigured = resolveFreeAiConfig({}, 'anonymous-instructor');
+      expect(unconfigured.enabled).toBe(false);
+      expect(unconfigured.keySource).toBe('none');
+      expect(unconfigured.reason).toBe('unconfigured');
+
+      const service = createFreeAiService({ env: envWithBoth });
+      const routes = createFreeAiRoutes(service);
+      const statusRes = await routes['GET /api/studio/ai/status']({
+        user: { userId: 'instructor-kim', scope: 'user' },
+      });
+      expect(statusRes.statusCode).toBe(200);
+      expect(statusRes.body).not.toContain('srv-test-');
+      const parsedStatus = JSON.parse(statusRes.body) as { keySource?: string };
+      expect(parsedStatus.keySource).toBe('user-registered');
+    });
   });
 });
 

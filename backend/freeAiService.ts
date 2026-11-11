@@ -583,6 +583,7 @@ export interface ResolvedFreeAiConfig {
   provider: FreeAiProviderId;
   model: string | null;
   apiKey: string | null;
+  keySource: 'user-registered' | 'server-default' | 'none';
   orgId?: string | null;
   projectId?: string | null;
   openAiOrgId?: string | null;
@@ -596,13 +597,39 @@ export interface ResolvedFreeAiConfig {
   statusMessageKo: string;
 }
 
+function resolveServerRegisteredUserOpenAiKey(
+  env: Record<string, string | undefined>,
+  userId?: string,
+): string {
+  const normalizedUserId = (userId ?? '').trim();
+  const rawMap = (env.OPENAI_USER_API_KEYS_JSON ?? '').trim();
+  if (rawMap && normalizedUserId) {
+    try {
+      const parsed: unknown = JSON.parse(rawMap);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const record = parsed as Record<string, unknown>;
+        const candidate = record[normalizedUserId];
+        if (typeof candidate === 'string' && candidate.trim()) {
+          return candidate.trim();
+        }
+      }
+    } catch {
+      // Ignore malformed server JSON map and fall back safely without logging secrets
+    }
+  }
+  return (env.USER_OPENAI_API_KEY ?? env.INSTRUCTOR_OPENAI_API_KEY ?? '').trim();
+}
+
 /**
  * Resolves server-side AI configuration strictly from server environment variables (`process.env`).
+ * Prioritizes a server-stored user-registered OpenAI key (`OPENAI_USER_API_KEYS_JSON` / `USER_OPENAI_API_KEY`)
+ * over the default server key (`OPENAI_API_KEY`), falling back cleanly when unconfigured.
  * Never reads or accepts API keys from browser/client requests, never performs billing mutations,
  * and never logs or echoes secret values.
  */
 export function resolveFreeAiConfig(
   env: Record<string, string | undefined> = process.env,
+  userId?: string,
 ): ResolvedFreeAiConfig {
   const explicitProvider = (env.FREE_AI_PROVIDER ?? env.AI_PROVIDER ?? '').trim().toLowerCase();
   if (explicitProvider === 'none') {
@@ -610,6 +637,7 @@ export function resolveFreeAiConfig(
       provider: 'none',
       model: null,
       apiKey: null,
+      keySource: 'none',
       enabled: false,
       reason: 'unconfigured',
       statusMessageKo:
@@ -617,7 +645,14 @@ export function resolveFreeAiConfig(
     };
   }
 
-  const openAiKey = (env.OPENAI_API_KEY ?? '').trim();
+  const userOpenAiKey = resolveServerRegisteredUserOpenAiKey(env, userId);
+  const defaultOpenAiKey = (env.OPENAI_API_KEY ?? '').trim();
+  const openAiKey = userOpenAiKey || defaultOpenAiKey;
+  const openAiKeySource: 'user-registered' | 'server-default' | 'none' = userOpenAiKey
+    ? 'user-registered'
+    : defaultOpenAiKey
+      ? 'server-default'
+      : 'none';
   const openAiModel = (env.OPENAI_MODEL ?? '').trim() || DEFAULT_OPENAI_MODEL;
   const openAiOrgId = (env.OPENAI_ORG_ID ?? '').trim() || null;
   const openAiProjectId = (env.OPENAI_PROJECT_ID ?? '').trim() || null;
@@ -634,10 +669,11 @@ export function resolveFreeAiConfig(
         provider: 'none',
         model: null,
         apiKey: null,
+        keySource: 'none',
         enabled: false,
         reason: 'unconfigured',
         statusMessageKo:
-          '서버에 OpenAI API 키(OPENAI_API_KEY)가 설정되지 않았습니다. 기기 내 조건 추천·직접 편집·저장 프리셋으로 계속 작업할 수 있습니다.',
+          '서버에 OpenAI API 키가 설정되지 않았습니다. 기기 내 조건 추천·직접 편집·저장 프리셋으로 계속 작업할 수 있습니다.',
       };
     }
 
@@ -646,6 +682,7 @@ export function resolveFreeAiConfig(
         provider: 'openai',
         model: null,
         apiKey: null,
+        keySource: 'none',
         enabled: false,
         reason: 'invalid_paid_model_blocked',
         statusMessageKo:
@@ -657,13 +694,17 @@ export function resolveFreeAiConfig(
       provider: 'openai',
       model: openAiModel,
       apiKey: openAiKey,
+      keySource: openAiKeySource,
       orgId: openAiOrgId,
       projectId: openAiProjectId,
       openAiOrgId,
       openAiProjectId,
       enabled: true,
       reason: 'ready',
-      statusMessageKo: `OpenAI 서버 보조(${openAiModel}) 연결됨 · 서버 환경변수 전용 보호 및 사용량 제한 적용`,
+      statusMessageKo:
+        openAiKeySource === 'user-registered'
+          ? `사용자 등록 OpenAI 서버 키 우선 연결됨(${openAiModel}) · 서버 전용 보호 적용`
+          : `OpenAI 서버 보조(${openAiModel}) 연결됨 · 서버 환경변수 전용 보호 및 사용량 제한 적용`,
     };
   }
 
@@ -685,6 +726,7 @@ export function resolveFreeAiConfig(
         provider: 'none',
         model: null,
         apiKey: null,
+        keySource: 'none',
         enabled: false,
         reason: 'unconfigured',
         statusMessageKo:
@@ -697,6 +739,7 @@ export function resolveFreeAiConfig(
         provider: 'openrouter-free',
         model: null,
         apiKey: null,
+        keySource: 'none',
         enabled: false,
         reason: 'invalid_paid_model_blocked',
         statusMessageKo:
@@ -708,6 +751,7 @@ export function resolveFreeAiConfig(
       provider: 'openrouter-free',
       model: openRouterModel,
       apiKey: openRouterKey,
+      keySource: 'server-default',
       enabled: true,
       reason: 'ready',
       statusMessageKo: `OpenRouter 무료 모델(${openRouterModel}) 활성화 · max_price=0 및 유료 폴백 차단 적용`,
@@ -720,6 +764,7 @@ export function resolveFreeAiConfig(
         provider: 'none',
         model: null,
         apiKey: null,
+        keySource: 'none',
         enabled: false,
         reason: 'unconfigured',
         statusMessageKo:
@@ -732,6 +777,7 @@ export function resolveFreeAiConfig(
         provider: 'gemini-free',
         model: null,
         apiKey: null,
+        keySource: 'none',
         enabled: false,
         reason: 'invalid_paid_model_blocked',
         statusMessageKo:
@@ -744,6 +790,7 @@ export function resolveFreeAiConfig(
         provider: 'gemini-free',
         model: null,
         apiKey: null,
+        keySource: 'none',
         enabled: false,
         reason: 'billing_guard_unconfirmed',
         statusMessageKo:
@@ -755,6 +802,7 @@ export function resolveFreeAiConfig(
       provider: 'gemini-free',
       model: geminiModel,
       apiKey: geminiKey,
+      keySource: 'server-default',
       enabled: true,
       reason: 'ready',
       statusMessageKo: `Google Gemini 무료 등급(${geminiModel}) 활성화 · 무과금 프로젝트 보호 적용`,
@@ -765,6 +813,7 @@ export function resolveFreeAiConfig(
     provider: 'none',
     model: null,
     apiKey: null,
+    keySource: 'none',
     enabled: false,
     reason: 'unconfigured',
     statusMessageKo:
@@ -931,7 +980,7 @@ export function parseUpstreamResetHeaderMs(
     if (Number.isFinite(parsedDate) && parsedDate > nowMs) {
       const deltaSec = (parsedDate - nowMs) / 1000;
       return {
-        resetAtMs,
+        resetAtMs: parsedDate,
         resetWindow: deltaSec <= 120 ? 'minute' : 'daily',
       };
     }
@@ -1334,7 +1383,7 @@ export interface FreeAiServiceOptions {
 }
 
 export interface FreeAiService {
-  getStatus: () => FreeAiQuotaStatus;
+  getStatus: (userId?: string) => FreeAiQuotaStatus;
   assist: (userId: string, rawInput: unknown) => Promise<FreeAiAssistResult>;
   clearCache: () => void;
 }
@@ -1413,15 +1462,17 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
 
   function buildStatus(
     overrideReason?: FreeAiQuotaStatus['reason'],
+    userId?: string,
   ): FreeAiQuotaStatus {
     const nowMs = now();
-    const config = resolveFreeAiConfig(env);
+    const config = resolveFreeAiConfig(env, userId);
     syncWindows(nowMs, config);
 
     if (!config.enabled) {
       return {
         provider: config.provider,
         model: config.model,
+        keySource: config.keySource,
         enabled: false,
         exhausted: false,
         reason: overrideReason ?? config.reason,
@@ -1496,6 +1547,7 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
     return {
       provider: config.provider,
       model: config.model,
+      keySource: config.keySource,
       enabled: true,
       exhausted,
       reason,
@@ -1665,8 +1717,8 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
   }
 
   return {
-    getStatus(): FreeAiQuotaStatus {
-      return buildStatus();
+    getStatus(userId?: string): FreeAiQuotaStatus {
+      return buildStatus(undefined, userId);
     },
 
     clearCache(): void {
@@ -1674,6 +1726,7 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
     },
 
     async assist(userId: string, rawInput: unknown): Promise<FreeAiAssistResult> {
+      const normalizedUserKey = userId.trim() || 'anonymous-instructor';
       const byokCheck = detectByokOrSecretExposure(rawInput);
       if (!byokCheck.safe) {
         throw new FreeAiError(
@@ -1681,7 +1734,7 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
           byokCheck.violations[0] ??
             '사용자 API 키(BYOK) 입력 또는 브라우저 키 노출은 허용되지 않습니다.',
           400,
-          buildStatus(),
+          buildStatus(undefined, normalizedUserKey),
         );
       }
 
@@ -1692,7 +1745,7 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
           healthCheck.warningMessageKo ??
             '민감 건강·개인정보는 무료 외부 AI로 전송할 수 없습니다.',
           400,
-          buildStatus(),
+          buildStatus(undefined, normalizedUserKey),
         );
       }
 
@@ -1703,12 +1756,12 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
           'invalid_request',
           firstIssue ?? 'AI 보조 요청 형식이 올바르지 않습니다.',
           400,
-          buildStatus(),
+          buildStatus(undefined, normalizedUserKey),
         );
       }
 
       const nowMs = now();
-      const config = resolveFreeAiConfig(env);
+      const config = resolveFreeAiConfig(env, normalizedUserKey);
       syncWindows(nowMs, config);
 
       if (!config.enabled || config.provider === 'none' || !config.model) {
@@ -1718,13 +1771,13 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
           code,
           config.statusMessageKo,
           503,
-          buildStatus(config.reason),
+          buildStatus(config.reason, normalizedUserKey),
         );
       }
 
       const cacheKey = computeFreeAiCacheKey(
         config.provider,
-        config.model,
+        `${config.model}:${config.keySource}:${config.keySource === 'user-registered' ? normalizedUserKey : 'shared'}`,
         parsed.data,
       );
       const cachedEntry = cache.get(cacheKey);
@@ -1734,8 +1787,6 @@ export function createFreeAiService(options: FreeAiServiceOptions = {}): FreeAiS
           cached: true,
         };
       }
-
-      const normalizedUserKey = userId.trim() || 'anonymous-instructor';
       const userActiveCount = activePerUser.get(normalizedUserKey) ?? 0;
       if (
         activeGlobal >= maxConcurrentGlobal ||
@@ -1903,10 +1954,11 @@ export function createFreeAiRoutes(
 ): FreeAiRouteHandlers {
   return {
     'GET /api/studio/ai/status': async (context = {}) => {
+      const userId = context.user?.userId ?? 'anonymous-instructor';
       if (context.query) {
         const queryByok = detectByokOrSecretExposure(context.query);
         if (!queryByok.safe) {
-          const status = service.getStatus();
+          const status = service.getStatus(userId);
           return createNoStoreJsonResponse(
             {
               error: 'byok_forbidden',
@@ -1922,11 +1974,12 @@ export function createFreeAiRoutes(
           );
         }
       }
-      const status = service.getStatus();
+      const status = service.getStatus(userId);
       return createNoStoreJsonResponse(status, 200);
     },
 
     'POST /api/studio/ai/assist': async (context = {}) => {
+      const userId = context.user?.userId ?? 'anonymous-instructor';
       try {
         if (context.query) {
           const queryByok = detectByokOrSecretExposure(context.query);
@@ -1936,14 +1989,13 @@ export function createFreeAiRoutes(
               queryByok.violations[0] ??
                 '사용자 API 키(BYOK) 입력은 허용되지 않습니다.',
               400,
-              service.getStatus(),
+              service.getStatus(userId),
             );
           }
         }
 
-        const userId = context.user?.userId ?? 'anonymous-instructor';
         const result = await service.assist(userId, context.body);
-        const status = service.getStatus();
+        const status = service.getStatus(userId);
 
         return createNoStoreJsonResponse(
           {
@@ -1956,7 +2008,7 @@ export function createFreeAiRoutes(
         );
       } catch (cause) {
         if (cause instanceof FreeAiError) {
-          const status = cause.quotaStatus ?? service.getStatus();
+          const status = cause.quotaStatus ?? service.getStatus(userId);
           return createNoStoreJsonResponse(
             {
               error: cause.code,

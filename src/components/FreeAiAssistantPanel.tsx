@@ -921,7 +921,9 @@ export function FreeAiAssistantPanel({
               </PfAiStatusBadge>
               {!externalAiDisabledOrExhausted && quotaStatus.provider === 'openai' && (
                 <PfAiStatusBadge kind="ai-draft" className="free-ai-badge">
-                  OpenAI 서버 보조
+                  {quotaStatus.keySource === 'user-registered'
+                    ? '사용자 등록 키 우선 연결됨'
+                    : 'OpenAI 서버 보조'}
                 </PfAiStatusBadge>
               )}
             </>
@@ -989,6 +991,13 @@ export function FreeAiAssistantPanel({
             {quotaStatus.renewal ? ` · 갱신: ${quotaStatus.renewal.formattedResetKo}` : ''}
           </p>
         </details>
+      ) : quotaStatus.reason === 'unconfigured' ? (
+        <p
+          className="free-ai-status-banner is-disabled"
+          data-testid="free-ai-unconfigured-note"
+        >
+          서버 AI 키 미설정 · 기기 내 조건 추천과 직접 편집은 그대로 사용할 수 있어요.
+        </p>
       ) : null}
 
       <div

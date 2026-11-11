@@ -54,6 +54,7 @@ export interface FreeAiRenewalInfo {
 export interface FreeAiQuotaStatus {
   provider: FreeAiProviderId;
   model: string | null;
+  keySource?: 'user-registered' | 'server-default' | 'none';
   enabled: boolean;
   exhausted: boolean;
   reason?:

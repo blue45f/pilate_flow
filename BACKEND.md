@@ -60,3 +60,16 @@ On that exact origin, the settings panel lazily loads the official Firebase modu
 Google sign-in identifies the account only. This Hosting deployment does not migrate the existing AppDeploy database, storage, or studio backups. Local studio data stays local, including on logout. Keep JSON export/import available, and retain the existing AppDeploy backend until a separately tested data migration and recovery plan exists. Never describe Firebase Hosting's SPA fallback at `/api/*` as a working backup API.
 
 Provider/domain configuration is managed separately from Hosting deployment. Google must be enabled for the project, and `pilates-flow-atelier.web.app` must remain in its authorized domains. Do not remove other domains or old infrastructure merely because the frontend operates here.
+
+## Server-side AI assistant & user-registered OpenAI key priority
+
+The routes `GET /api/studio/ai/status` and `POST /api/studio/ai/assist` run strictly on the server (`backend/freeAiService.ts`, and in local dev/preview via Vite server middleware in `vite.config.ts`). API keys are never bundled into frontend assets, never accepted from browser requests (BYOK fields and `VITE_*OPENAI*` keys are rejected), and never printed in status payloads or logs.
+
+Server environment variable priority for OpenAI text assistance:
+1. `OPENAI_USER_API_KEYS_JSON` (optional server-only JSON map of `{ "<verifiedUserId>": "<serverStoredKey>" }`)
+2. `USER_OPENAI_API_KEY` (optional server-only instructor/user priority OpenAI key)
+3. `OPENAI_API_KEY` (default server-only OpenAI key)
+4. `OPENAI_MODEL` (optional allowed model name; defaults to `gpt-4o-mini`)
+
+When no server AI key is configured (or on static-only hosting without `/api/studio/ai/*` runtime), the UI displays a calm local-mode status and seamlessly keeps local rule-based recommendations, manual sequence editing, and presets available without auto-confirming any AI output.
+
