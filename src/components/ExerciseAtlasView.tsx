@@ -80,6 +80,7 @@ import {
 } from './CatalogMotionInteractivePlayer';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
+import { KinematicSchematicShowcase } from './KinematicSchematicShowcase';
 import { SpringVisualPills } from './SpringVisualPills';
 import { EquipmentDiscoveryScope } from './EquipmentDiscoveryScope';
 import { CourseReferenceBrowser } from './CourseReferenceBrowser';
@@ -1673,11 +1674,25 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             )}
           </section>
 
-          <ApparatusVisualGuideRibbon
-            activeApparatusId={filters.equipment[0] ?? 'reformer'}
-            mode="atlas"
-            onSelectApparatus={(id) => update('equipment', [id])}
-          />
+          {!filters.search && activeFilterCount === 0 && (
+            <KinematicSchematicShowcase
+              onQuickSearchKeyword={(kw) => {
+                update('search', kw);
+                focusSearch();
+              }}
+            />
+          )}
+          <details className="library-asset-status" style={{ marginBottom: '14px' }}>
+            <summary>
+              <span>기구별 구조·스프링·5렌즈 아이디어 도감 열기 (선택)</span>
+              <ChevronDown size={16} aria-hidden="true" />
+            </summary>
+            <ApparatusVisualGuideRibbon
+              activeApparatusId={filters.equipment[0] ?? 'reformer'}
+              mode="atlas"
+              onSelectApparatus={(id) => update('equipment', [id])}
+            />
+          </details>
 
           <div className="library-notes-workspace" data-has-inspector={Boolean(inspectedExercise)}>
             <LibraryMovementInspector

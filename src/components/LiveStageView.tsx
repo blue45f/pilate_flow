@@ -40,6 +40,7 @@ import { LightDismissDialog } from './LightDismissDialog';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
+import { SpringVisualPills } from './SpringVisualPills';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/teaching.css';
 import '../styles/class-voice.css';
@@ -1309,7 +1310,15 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             </span>
           </div>
           {!currentIsRest && exercise && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '6px',
+              }}
+            >
               <ApparatusIconBadge
                 apparatus={exercise.apparatus}
                 bodyPosition={exercise.bodyPosition}
@@ -1317,6 +1326,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 showLabel
                 decorative
               />
+              {currentSpringRaw && <SpringVisualPills springs={currentSpringRaw} />}
             </div>
           )}
           <h2 className="teaching-current-name">{currentIsRest ? '휴식' : exercise?.nameKo}</h2>
@@ -1382,6 +1392,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 </>
               )}
             </div>
+            {!currentIsRest && exercise?.breathPattern && (
+              <p className="teaching-breath-glance-pill" data-testid="live-stage-breath-callout">
+                호흡 리듬 · {exercise.breathPattern}
+              </p>
+            )}
             {timing.sides === 2 && (
               <p
                 className={`teaching-side-note ${stepElapsedSec >= timing.explanationSec + timing.perSideSec ? 'switch-side' : ''}`}
@@ -1503,6 +1518,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               ) : nextExercise ? (
                 <div className="teaching-inline-next-content">
                   <strong>{nextExercise.nameKo}</strong>
+                  {(next.customSpringOverride || nextExercise.springs) && (
+                    <SpringVisualPills
+                      springs={next.customSpringOverride || nextExercise.springs}
+                    />
+                  )}
                   <span className="teaching-inline-next-meta">
                     {APPARATUS_LABELS[nextExercise.apparatus].ko}
                     {(next.customSpringOverride || nextExercise.springs) &&
@@ -1806,10 +1826,13 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             </details>
           )}
           {exercise && !currentIsRest && (
-            <ApparatusVisualGuideRibbon
-              activeApparatusId={exercise.apparatus}
-              mode="stage"
-            />
+            <details className="panel teaching-stage-details">
+              <summary>기구 스프링·셋업 도해 가이드 열기 (선택)</summary>
+              <ApparatusVisualGuideRibbon
+                activeApparatusId={exercise.apparatus}
+                mode="stage"
+              />
+            </details>
           )}
         </section>
         <aside className="teaching-stage-aside">

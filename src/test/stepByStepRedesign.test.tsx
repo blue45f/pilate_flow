@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SequenceWorkbench } from '../components/SequenceWorkbench';
 import { LiveStageView } from '../components/LiveStageView';
 import { ClassBinderView } from '../components/ClassBinderView';
+import { ExerciseAtlasView } from '../components/ExerciseAtlasView';
 import { FreeAiAssistantPanel } from '../components/FreeAiAssistantPanel';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { createDefaultFreeAiStatus } from '../lib/freeAiClient';
@@ -19,8 +20,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Step-by-step guided flow & usability upgrades', () => {
-  it('renders Step 1 guided banner and quick duration chips on empty draft without mutating store on mount', () => {
+describe('Step-by-step guided flow & design mockup alignment upgrades', () => {
+  it('renders Step 0 clean 2-card choice frame, interactive 5-tab stepper, and quick duration chips without mutating store on mount', () => {
     usePilatesStore.setState({
       activeSteps: [],
       activeTargetMinutes: 50,
@@ -42,9 +43,13 @@ describe('Step-by-step guided flow & usability upgrades', () => {
 
     const stepHeader = screen.getByTestId('workbench-step-flow-header');
     expect(stepHeader).toBeVisible();
-    expect(within(stepHeader).getByText('수업 기본')).toBeVisible();
-    expect(within(stepHeader).getByText('동작 담기')).toBeVisible();
-    expect(within(stepHeader).getByText('순서·시간 확인')).toBeVisible();
+    expect(within(stepHeader).getByRole('button', { name: /시작하기/ })).toBeVisible();
+    expect(within(stepHeader).getByRole('button', { name: /수업 기본/ })).toBeVisible();
+    expect(within(stepHeader).getByRole('button', { name: /동작 담기/ })).toBeVisible();
+    expect(within(stepHeader).getByRole('button', { name: /순서·시간 확인/ })).toBeDisabled();
+    expect(within(stepHeader).getByRole('button', { name: /미리보기·진행/ })).toBeDisabled();
+
+    expect(screen.getByTestId('wizard-home-page')).toBeVisible();
 
     const quickBar = screen.getByTestId('step1-quick-duration-chips');
     const btn30 = within(quickBar).getByRole('button', { name: '30분' });
@@ -56,6 +61,66 @@ describe('Step-by-step guided flow & usability upgrades', () => {
       'aria-pressed',
       'true',
     );
+  });
+
+  it('transitions across isolated pages: 시작하기 -> 1. 수업 기본 -> 2. 동작 담기 (inline catalog) -> 3. 순서·시간 확인', () => {
+    usePilatesStore.setState({
+      activeSteps: [],
+      activeTargetMinutes: 50,
+      ownedEquipment: ['reformer', 'mat', 'chair'],
+      ownedApparatus: ['reformer', 'mat', 'chair'],
+      draftCriteria: null,
+      lastCriteria: null,
+      generationError: null,
+    });
+
+    render(
+      <SequenceWorkbench
+        onOpenYouTubePreview={vi.fn()}
+        onOpenClipper={vi.fn()}
+        onOpenLogModal={vi.fn()}
+      />,
+    );
+
+    // 0 -> 1. 수업 기본 전용 페이지
+    fireEvent.click(screen.getByTestId('wizard-start-step1-btn'));
+    const step1Page = screen.getByTestId('wizard-step1-page');
+    expect(step1Page).toBeVisible();
+    expect(screen.queryByTestId('wizard-home-page')).toBeNull();
+    expect(screen.queryByRole('region', { name: '오늘의 시퀀스' })).toBeNull();
+
+    fireEvent.click(within(step1Page).getByRole('button', { name: '60분' }));
+    expect(usePilatesStore.getState().activeTargetMinutes).toBe(60);
+    fireEvent.click(within(step1Page).getByRole('button', { name: '리포머' }));
+    expect(usePilatesStore.getState().activeApparatus).toBe('reformer');
+
+    // 1 -> 2. 동작 담기 전용 페이지 (인라인 카탈로그)
+    fireEvent.click(screen.getByTestId('wizard-to-step2-btn'));
+    const step2Page = screen.getByTestId('wizard-step2-page');
+    expect(step2Page).toBeVisible();
+    expect(screen.queryByTestId('wizard-step1-page')).toBeNull();
+
+    const toStep3Btn = screen.getByTestId('wizard-to-step3-btn');
+    expect(toStep3Btn).toBeDisabled();
+
+    // Add first eligible Reformer exercise directly inside Step 2 page
+    const reformerEx = usePilatesStore
+      .getState()
+      .exercises.find(
+        (ex) => ex.apparatus === 'reformer' && ex.props.every((p) => p === 'none'),
+      )!;
+    const addBtn = within(step2Page).getByRole('button', {
+      name: new RegExp(`${reformerEx.nameKo}.*(담기|추가)`),
+    });
+    fireEvent.click(addBtn);
+    expect(usePilatesStore.getState().activeSteps.length).toBe(1);
+    expect(screen.getByTestId('wizard-step2-page')).toBeVisible();
+    expect(screen.getByTestId('wizard-to-step3-btn')).toBeEnabled();
+
+    // 2 -> 3. 순서·시간 확인 전용 페이지
+    fireEvent.click(screen.getByTestId('wizard-to-step3-btn'));
+    expect(screen.queryByTestId('wizard-step2-page')).toBeNull();
+    expect(screen.getByRole('region', { name: '오늘의 시퀀스' })).toBeVisible();
   });
 
   it('provides inline -0.5분 / +0.5분 quick duration steppers on Step 3 exercise rows with undo support', () => {
@@ -100,7 +165,7 @@ describe('Step-by-step guided flow & usability upgrades', () => {
     expect(usePilatesStore.getState().activeSteps[0]?.durationMin).toBe(4.5);
   });
 
-  it('shows glanceable inline next-step preview and open cues in LiveStageView without duplicating cue text', () => {
+  it('shows glanceable breath callout, tactile spring pills, and inline next-step preview in LiveStageView', () => {
     const [ex1, ex2] = usePilatesStore.getState().exercises;
     usePilatesStore.setState({
       activeTitle: '라이브 스테이지 검증',
@@ -130,6 +195,8 @@ describe('Step-by-step guided flow & usability upgrades', () => {
 
     render(<LiveStageView onOpenLogModal={vi.fn()} />);
 
+    expect(screen.getByTestId('live-stage-breath-callout')).toBeVisible();
+
     const nextPreview = screen.getByTestId('live-stage-inline-next-preview');
     expect(nextPreview).toBeVisible();
     expect(within(nextPreview).getByText(ex2!.nameKo)).toBeVisible();
@@ -141,6 +208,26 @@ describe('Step-by-step guided flow & usability upgrades', () => {
     expect(cueSection).toHaveAttribute('open');
     const cueList = within(cueSection!).getByRole('list');
     expect(within(cueList).getByText(ex1!.cues[0]!)).toBeVisible();
+  });
+
+  it('renders the 5-phase continuous kinematic Reformer schematic showcase inside ExerciseAtlasView', () => {
+    render(
+      <ExerciseAtlasView
+        onOpenYouTubePreview={vi.fn()}
+        onOpenClipper={vi.fn()}
+      />,
+    );
+
+    const showcase = screen.getByTestId('kinematic-schematic-showcase');
+    expect(showcase).toBeVisible();
+    expect(within(showcase).getByText('리포머 풋워크')).toBeVisible();
+    expect(within(showcase).getByText('펠빅 컬 · 브릿징')).toBeVisible();
+    expect(within(showcase).getByText('헌드레드')).toBeVisible();
+    expect(within(showcase).getByText('롱박스 스완')).toBeVisible();
+
+    const phaseBtns = within(showcase).getAllByRole('button', { name: '3 정점' });
+    fireEvent.click(phaseBtns[0]!);
+    expect(phaseBtns[0]!).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('duplicates and opens a saved sequence in 1 tap from ClassBinderView while keeping original intact', () => {

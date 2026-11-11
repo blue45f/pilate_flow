@@ -1,9 +1,10 @@
 .pf-journey-bar {
-  background: var(--pf-color-bg-surface, #fffef9);
-  border: 1px solid var(--pf-color-border-default, #d5ddd0);
-  border-radius: 14px;
-  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #dad5c8;
+  border-radius: 16px;
+  padding: 6px 8px;
   margin-bottom: 14px;
+  box-shadow: 0 4px 14px rgba(27, 49, 41, 0.04);
 }
 
 .pf-journey-bar__list {
@@ -30,32 +31,35 @@
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid transparent;
   background: transparent;
-  color: var(--pf-color-text-secondary, #3d4f45);
+  color: #56685f;
   text-align: left;
   cursor: pointer;
   min-width: 0;
 }
 
 .pf-journey-bar__btn:hover:not(:disabled) {
-  background: var(--pf-color-bg-surface-subtle, #f3f5ee);
+  background: #f0ede4;
+  color: #1b3129;
 }
 
 .pf-journey-bar__btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .pf-journey-bar__btn.is-current {
-  background: var(--pf-color-action-primary, #173d34);
+  background: #1f4d3f;
+  border-color: #1f4d3f;
   color: #ffffff;
 }
 
 .pf-journey-bar__btn.is-done {
-  background: var(--pf-color-ai-draft-bg, #eef2ea);
-  color: var(--pf-color-status-success-text, #254b29);
+  background: #edf4f0;
+  border-color: #bfd3c6;
+  color: #1f4d3f;
 }
 
 .pf-journey-bar__num {
@@ -66,9 +70,9 @@
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 750;
   flex-shrink: 0;
-  background: rgba(23, 61, 52, 0.1);
+  background: rgba(31, 77, 63, 0.1);
 }
 
 .pf-journey-bar__btn.is-current .pf-journey-bar__num {
@@ -87,7 +91,7 @@
   align-items: center;
   gap: 4px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   word-break: keep-all;
 }
 
@@ -100,7 +104,7 @@
 }
 
 .pf-journey-bar__arrow {
-  color: var(--pf-color-text-muted, #526358);
+  color: #798980;
   flex-shrink: 0;
 }
 

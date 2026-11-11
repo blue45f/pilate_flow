@@ -356,9 +356,30 @@ export function SequenceWorkbench({
   const [finderHasOpened, setFinderHasOpened] = useState(
     () => initialRecovery?.finderOpen ?? false,
   );
-  const [workflowStep, setWorkflowStep] = useState<'select' | 'arrange'>(
+  const [workflowStep, setWorkflowStepState] = useState<'select' | 'arrange'>(
     () => initialRecovery?.workflowStep ?? (s.activeSteps.length ? 'arrange' : 'select'),
   );
+  const [manualWizardPage, setManualWizardPage] = useState<
+    'home' | 'step1' | 'step2' | 'arrange' | null
+  >(null);
+  const setWorkflowStep = useCallback((nextStep: 'select' | 'arrange') => {
+    setWorkflowStepState(nextStep);
+    if (nextStep === 'arrange') {
+      setManualWizardPage((prev) =>
+        prev === 'step1' || prev === 'step2' || prev === 'home' ? 'arrange' : prev,
+      );
+    } else {
+      setManualWizardPage((prev) => (prev === 'arrange' ? null : prev));
+    }
+  }, []);
+  const activeWizardPage: 'home' | 'step1' | 'step2' | 'arrange' =
+    manualWizardPage === 'step1' || manualWizardPage === 'step2'
+      ? manualWizardPage
+      : manualWizardPage === 'home'
+        ? 'home'
+        : s.activeSteps.length > 0
+          ? 'arrange'
+          : 'home';
   const finderContentRef = useRef<HTMLDivElement>(null);
   const finderOpener = useRef<HTMLElement | null>(null);
   const [insightsOpen, setInsightsOpen] = useState(false);
@@ -607,7 +628,7 @@ export function SequenceWorkbench({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [setWorkflowStep]);
   useEffect(() => {
     const dialog = conditionsContentRef.current?.closest('dialog');
     const closeNative = () => {
@@ -1409,7 +1430,13 @@ export function SequenceWorkbench({
         <div>
           <span className="vnext-workbench-eyebrow">STEP-BY-STEP STUDIO FLOW</span>
           <h1 id="workspace-main-heading" tabIndex={-1}>
-            {s.activeSteps.length ? '수업 구성' : '수업 준비, 가볍게.'}
+            {s.activeSteps.length && activeWizardPage === 'arrange'
+              ? '수업 구성'
+              : activeWizardPage === 'step1'
+                ? '1단계 · 수업 기본'
+                : activeWizardPage === 'step2'
+                  ? '2단계 · 동작 담기'
+                  : '수업 준비, 가볍게.'}
           </h1>
         </div>
         <span className="today-label">
@@ -1426,392 +1453,100 @@ export function SequenceWorkbench({
         role="region"
         aria-label="단계별 수업 준비 안내"
       >
-        <ol className="workbench-step-flow-pills">
-          <li
-            className={`workbench-step-flow-pill ${
-              !s.activeSteps.length && !finderOpen ? 'is-active' : s.activeSteps.length > 0 ? 'is-done' : ''
+        <div className="pf-step-wizard-stepper" role="group" aria-label="수업 제작 단계">
+          <button
+            type="button"
+            className={`pf-step-wizard-tab ${
+              activeWizardPage === 'home' && !finderOpen ? 'is-active' : 'is-done'
             }`.trim()}
-            aria-current={!s.activeSteps.length && !finderOpen ? 'step' : undefined}
+            aria-current={activeWizardPage === 'home' && !finderOpen ? 'step' : undefined}
+            onClick={() => setManualWizardPage('home')}
+          >
+            <span>시작하기</span>
+          </button>
+          <button
+            type="button"
+            className={`pf-step-wizard-tab ${
+              activeWizardPage === 'step1' && !finderOpen
+                ? 'is-active'
+                : s.activeSteps.length > 0 || activeWizardPage === 'step2'
+                  ? 'is-done'
+                  : ''
+            }`.trim()}
+            aria-current={activeWizardPage === 'step1' && !finderOpen ? 'step' : undefined}
+            onClick={() => setManualWizardPage('step1')}
           >
             <span className="workbench-step-flow-num">1</span>
             <span>수업 기본</span>
-          </li>
-          <li
-            className={`workbench-step-flow-pill ${
-              finderOpen || (s.activeSteps.length > 0 && workflowStep === 'select')
+          </button>
+          <button
+            type="button"
+            className={`pf-step-wizard-tab ${
+              finderOpen ||
+              activeWizardPage === 'step2' ||
+              (activeWizardPage === 'arrange' && workflowStep === 'select')
                 ? 'is-active'
                 : s.activeSteps.length > 0
                   ? 'is-done'
                   : ''
             }`.trim()}
             aria-current={
-              finderOpen || (s.activeSteps.length > 0 && workflowStep === 'select')
+              finderOpen ||
+              activeWizardPage === 'step2' ||
+              (activeWizardPage === 'arrange' && workflowStep === 'select')
                 ? 'step'
                 : undefined
             }
+            onClick={() => {
+              setManualWizardPage('step2');
+              setWorkflowStepState('select');
+            }}
           >
             <span className="workbench-step-flow-num">2</span>
             <span>동작 담기</span>
-          </li>
-          <li
-            className={`workbench-step-flow-pill ${
-              s.activeSteps.length > 0 && !finderOpen && workflowStep === 'arrange' ? 'is-active' : ''
+          </button>
+          <button
+            type="button"
+            className={`pf-step-wizard-tab ${
+              activeWizardPage === 'arrange' && !finderOpen && workflowStep === 'arrange'
+                ? 'is-active'
+                : ''
             }`.trim()}
+            disabled={!s.activeSteps.length}
             aria-current={
-              s.activeSteps.length > 0 && !finderOpen && workflowStep === 'arrange'
+              activeWizardPage === 'arrange' && !finderOpen && workflowStep === 'arrange'
                 ? 'step'
                 : undefined
             }
+            onClick={() => {
+              setManualWizardPage('arrange');
+              setWorkflowStepState('arrange');
+            }}
           >
             <span className="workbench-step-flow-num">3</span>
             <span>순서·시간 확인</span>
-          </li>
-        </ol>
+          </button>
+          <button
+            type="button"
+            className="pf-step-wizard-tab"
+            disabled={!s.activeSteps.length}
+            aria-current={planPreviewOpen ? 'step' : undefined}
+            onClick={openPlanPreview}
+          >
+            <span className="workbench-step-flow-num">4</span>
+            <span>미리보기·진행</span>
+          </button>
+        </div>
         <p className="workbench-step-flow-summary" data-testid="workbench-step-flow-summary">
-          {!s.activeSteps.length && !finderOpen
-            ? '한 번에 하나씩 준비해요 · 시간·기구만 가볍게 확인하고 동작을 골라 보세요.'
-            : finderOpen || workflowStep === 'select'
-              ? '수업에 넣을 동작을 골라 담으세요 · 담고 나면 다음 화면에서 순서와 시간을 맞춰요.'
-              : '순서와 시간을 다듬는 화면이에요 · 각 동작의 -0.5분/+0.5분 버튼으로 바로 조절하세요.'}
+          {activeWizardPage === 'home' && !finderOpen
+            ? '한 페이지에는 꼭 필요한 한 가지 결정만 남깁니다 · 새 수업을 시작하거나 최근 수업을 이어가세요.'
+            : activeWizardPage === 'step1'
+              ? '1단계 · 수업 시간과 기구 기본값만 가볍게 고른 뒤 동작 담기로 넘어가세요.'
+              : finderOpen || activeWizardPage === 'step2' || workflowStep === 'select'
+                ? '2단계 · 수업에 넣을 동작을 골라 담으세요 · 담고 나면 다음 화면에서 순서와 시간을 맞춰요.'
+                : '3단계 · 순서와 시간을 다듬는 화면이에요 · 각 동작의 -0.5분/+0.5분 버튼으로 바로 조절하세요.'}
         </p>
       </div>
-      {!s.activeSteps.length && (
-        <>
-          <section className="workbench-welcome" aria-label="첫 수업안 준비">
-            <img
-              className="workbench-welcome-image"
-              src="/images/atelier-ring-still-life.png"
-              alt=""
-            />
-            <div className="workbench-welcome-copy">
-              <div className="workbench-welcome-top-row">
-                <span className="workbench-welcome-kicker">새 수업 만들기</span>
-                <button
-                  type="button"
-                  className="workbench-welcome-summary"
-                  onClick={() => setConditionsOpen(true)}
-                  aria-label={`수업 조건 열기 · ${criteria.targetMinutes}분 · ${equipmentLabel(selectedEquipment) || '기구 선택 필요'}`}
-                >
-                  <Clock3 size={16} aria-hidden="true" />
-                  {criteria.targetMinutes}분 ·{' '}
-                  {equipmentLabel(selectedEquipment) || '기구 선택 필요'}
-                  <ChevronDown size={15} aria-hidden="true" />
-                </button>
-              </div>
-              <h2>
-                동작을 골라
-                <br className="welcome-desktop-break" /> 나만의 흐름으로.
-              </h2>
-              <div
-                className="workbench-quick-duration-bar"
-                role="group"
-                aria-label="수업 시간 빠른 선택"
-                data-testid="step1-quick-duration-chips"
-              >
-                <span className="workbench-quick-duration-label">수업 시간</span>
-                {([30, 50, 60] as const).map((mins) => (
-                  <button
-                    key={mins}
-                    type="button"
-                    className={`workbench-quick-duration-chip ${
-                      criteria.targetMinutes === mins ? 'is-selected' : ''
-                    }`.trim()}
-                    aria-pressed={criteria.targetMinutes === mins}
-                    onClick={() => setDuration(mins)}
-                  >
-                    {mins}분
-                  </button>
-                ))}
-              </div>
-              <div className="workbench-welcome-actions">
-                <PfButton
-                  variant="primary"
-                  className="workbench-first-action"
-                  onClick={openExerciseFinder}
-                >
-                  <Plus size={20} aria-hidden="true" />
-                  동작 고르기
-                </PfButton>
-                <PfButton
-                  variant="secondary"
-                  className="workbench-idea-action"
-                  onClick={() => openIdeaSheet(null)}
-                >
-                  <Sparkles size={18} aria-hidden="true" />한 줄 아이디어 메모
-                </PfButton>
-                <button
-                  type="button"
-                  className="btn-secondary workbench-preset-action"
-                  onClick={() => setPresetsOpen(true)}
-                >
-                  <Copy size={16} aria-hidden="true" /> 프리셋·동작 묶음에서 고르기
-                </button>
-              </div>
-              <WorkbenchBlankStarters onSelectStarter={handleStartBlankDraft} />
-              <p className="workbench-reviewed-count">
-                추가하고, 순서를 바꾸고, 저장하세요. 검토는 선택입니다.
-              </p>
-              <details
-                className="workbench-visual-tutorial-disclosure"
-                open={showWelcomeTutorial}
-                onToggle={(event) => setShowWelcomeTutorial(event.currentTarget.open)}
-              >
-                <summary>첫 수업 3단계 시각 도해 가이드 보기</summary>
-                {showWelcomeTutorial && (
-                  <FirstClassTutorialCandidate
-                    variant="inline-card"
-                    onStepAction={(stepId) => {
-                      if (stepId === 'new-movement') openIdeaSheet(null);
-                      else if (stepId === 'block-composition') openExerciseFinder();
-                      else if (stepId === 'save-class' || (stepId as string) === 'start-teaching') {
-                        if (s.activeSteps.length > 0) {
-                          setPlanPreviewOpen(true);
-                        } else {
-                          document.getElementById('workbench-sequence-panel')?.focus();
-                        }
-                      }
-                    }}
-                    onDismiss={() => setShowWelcomeTutorial(false)}
-                  />
-                )}
-              </details>
-            </div>
-          </section>
-          <AtelierQuickStartGallery
-            exercises={s.exercises}
-            onApplyQuickRecipe={applyQuickStartRecipe}
-          />
-          <section className="workbench-recent-continue" aria-label="최근 수업 이어가기">
-            <div className="workbench-recent-continue__header">
-              <div className="workbench-recent-continue__title">
-                <span className="workbench-recent-kicker">RECENT FLOW</span>
-                <h2>
-                  최근 수업 이어가기{' '}
-                  <PfBadge tone="sage">
-                    {recentSavedSequences.length || recentHistoryLogs.length}
-                  </PfBadge>
-                </h2>
-              </div>
-              <button
-                type="button"
-                className="ghost-btn workbench-recent-view-all"
-                onClick={() => s.setActiveTab('binder')}
-              >
-                저장한 수업 전체 보기 <ArrowRight size={14} aria-hidden="true" />
-              </button>
-            </div>
-            {recentSavedSequences.length > 0 ? (
-              <div className="workbench-recent-continue__list">
-                {recentSavedSequences.slice(0, 2).map((seq) => {
-                  const moveCount = seq.steps.filter((st) => !isRestStep(st)).length;
-                  const seqTitle =
-                    seq.title || (seq as { name?: string }).name || '저장된 수업 시퀀스';
-                  const gearText =
-                    seq.apparatus === 'mixed' ? '복합 기구' : equipmentLabel([seq.apparatus]);
-                  return (
-                    <div key={seq.id} className="workbench-recent-card">
-                      <div className="workbench-recent-card__info">
-                        <strong>{seqTitle}</strong>
-                        <span>
-                          {moveCount}개 동작 · {seq.targetMinutes}분 · {gearText || '기구 미지정'}
-                        </span>
-                      </div>
-                      <PfButton
-                        variant="secondary"
-                        className="workbench-recent-card__action"
-                        aria-label={`${seqTitle} 이어서 구성`}
-                        onClick={() => continueRecentSequence(seq.id, seqTitle)}
-                      >
-                        이어서 구성
-                      </PfButton>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : recentHistoryLogs.length > 0 ? (
-              <div className="workbench-recent-continue__list">
-                {recentHistoryLogs.slice(0, 2).map((log) => (
-                  <div key={log.id} className="workbench-recent-card">
-                    <div className="workbench-recent-card__info">
-                      <strong>{log.sequenceTitle}</strong>
-                      <span>{log.exerciseIds.length}개 동작 · 최근 수업 기록</span>
-                    </div>
-                    <PfButton
-                      variant="secondary"
-                      className="workbench-recent-card__action"
-                      aria-label={`${log.sequenceTitle} 기록에서 이어가기`}
-                      onClick={() => continueRecentHistory(log.id, log.sequenceTitle)}
-                    >
-                      기록에서 이어가기
-                    </PfButton>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="workbench-recent-empty">
-                <p>
-                  저장한 최근 수업이 아직 없습니다. 위에서 새 수업을 만들거나 프리셋으로 시작해
-                  보세요.
-                </p>
-              </div>
-            )}
-          </section>
-          {ideasSectionNode}
-        </>
-      )}
-      {s.activeSteps.length > 0 && (
-        <div
-          className="workbench-home-flow-bar"
-          role="region"
-          aria-label="새 수업 및 최근 수업 전환"
-        >
-          <button
-            type="button"
-            className="btn-secondary workbench-flow-btn workbench-new-class-btn"
-            onClick={startNewClass}
-          >
-            <Plus size={15} aria-hidden="true" /> 새 수업 만들기
-          </button>
-          <details
-            className="workbench-recent-switcher"
-            open={recentSwitcherOpen}
-            onToggle={(event) => setRecentSwitcherOpen(event.currentTarget.open)}
-          >
-            <summary className="btn-secondary workbench-flow-btn">
-              <span>최근 수업 이어가기</span>
-              <PfBadge tone="sage">
-                {recentSavedSequences.length || recentHistoryLogs.length}
-              </PfBadge>
-              <ChevronDown size={14} aria-hidden="true" />
-            </summary>
-            <div className="workbench-recent-switcher__panel">
-              {recentSavedSequences.length > 0 ? (
-                <div className="workbench-recent-continue__list">
-                  {recentSavedSequences.slice(0, 3).map((seq) => {
-                    const moveCount = seq.steps.filter((st) => !isRestStep(st)).length;
-                    const seqTitle =
-                      seq.title || (seq as { name?: string }).name || '저장된 수업 시퀀스';
-                    const gearText =
-                      seq.apparatus === 'mixed' ? '복합 기구' : equipmentLabel([seq.apparatus]);
-                    return (
-                      <div key={seq.id} className="workbench-recent-card">
-                        <div className="workbench-recent-card__info">
-                          <strong>{seqTitle}</strong>
-                          <span>
-                            {moveCount}개 동작 · {seq.targetMinutes}분 · {gearText || '기구 미지정'}
-                          </span>
-                        </div>
-                        <PfButton
-                          variant="secondary"
-                          className="workbench-recent-card__action"
-                          aria-label={`${seqTitle} 이어서 구성`}
-                          onClick={() => continueRecentSequence(seq.id, seqTitle)}
-                        >
-                          이어서 구성
-                        </PfButton>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : recentHistoryLogs.length > 0 ? (
-                <div className="workbench-recent-continue__list">
-                  {recentHistoryLogs.slice(0, 2).map((log) => (
-                    <div key={log.id} className="workbench-recent-card">
-                      <div className="workbench-recent-card__info">
-                        <strong>{log.sequenceTitle}</strong>
-                        <span>{log.exerciseIds.length}개 동작 · 최근 수업 기록</span>
-                      </div>
-                      <PfButton
-                        variant="secondary"
-                        className="workbench-recent-card__action"
-                        aria-label={`${log.sequenceTitle} 기록에서 이어가기`}
-                        onClick={() => continueRecentHistory(log.id, log.sequenceTitle)}
-                      >
-                        기록에서 이어가기
-                      </PfButton>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="workbench-recent-empty-text">저장한 최근 수업이 아직 없습니다.</p>
-              )}
-              <button
-                type="button"
-                className="ghost-btn workbench-recent-view-all"
-                onClick={() => {
-                  setRecentSwitcherOpen(false);
-                  s.setActiveTab('binder');
-                }}
-              >
-                저장한 수업 전체 보기 <ArrowRight size={14} aria-hidden="true" />
-              </button>
-            </div>
-          </details>
-          <button
-            type="button"
-            className="btn-secondary workbench-flow-btn"
-            onClick={() => setPresetsOpen(true)}
-          >
-            <Copy size={15} aria-hidden="true" /> 프리셋·동작 묶음에서 고르기
-          </button>
-        </div>
-      )}
-      <div className="v2-plan-toolbar" aria-label="시퀀스 준비">
-        <div className="v2-condition-chips" aria-label="이번 수업 조건 요약">
-          <button
-            type="button"
-            onClick={(event) => openConditionsDialog(event.currentTarget)}
-            aria-label={`수업 시간 ${criteria.targetMinutes}분 · 조건 열기`}
-          >
-            {criteria.targetMinutes}분 <ChevronDown size={14} />
-          </button>
-          <button
-            type="button"
-            onClick={(event) => openConditionsDialog(event.currentTarget)}
-            aria-label={`이번 수업 기구: ${equipmentLabel(selectedEquipment) || '선택 필요'} · 조건 열기`}
-            title={equipmentLabel(selectedEquipment)}
-          >
-            {selectedEquipment.length > 1
-              ? `기구 ${selectedEquipment.length}`
-              : equipmentLabel(selectedEquipment) || '기구 선택'}{' '}
-            <ChevronDown size={14} />
-          </button>
-          <button
-            type="button"
-            onClick={(event) => openConditionsDialog(event.currentTarget)}
-            aria-label={`수업 목표 ${focusOptions.find((option) => option.value === criteria.focusPreset)?.label ?? '전신 균형'} · 조건 열기`}
-          >
-            {focusOptions.find((option) => option.value === criteria.focusPreset)?.label ??
-              '전신 균형'}{' '}
-            <ChevronDown size={14} />
-          </button>
-          <PfButton
-            variant="icon"
-            aria-label="수업 조건"
-            onClick={(event) => openConditionsDialog(event.currentTarget)}
-          >
-            <SlidersHorizontal size={18} />
-          </PfButton>
-        </div>
-      </div>
-      <ApparatusVisualGuideRibbon
-        activeApparatusId={selectedEquipment[0] ?? s.activeApparatus}
-        mode="workbench"
-        onApplyClassConcept={(titleKo, subtitleKo, family) => {
-          s.setActiveSequenceMeta({
-            title: titleKo,
-            subtitle: subtitleKo,
-            apparatus: family,
-          });
-          setNotice(`‘${titleKo}’ 기구 컨셉을 현재 수업에 반영했습니다.`);
-        }}
-      />
-      {planningMode === 'auto' && locked > 0 && (
-        <p id="v2-new-draft-scope" className="v2-generation-scope">
-          시퀀스 만들기는 전체를 새 초안으로 바꿉니다. 잠근 {locked}개 항목을 유지하려면 아래
-          ‘잠그지 않은 동작 다시 만들기’를 사용하세요.
-        </p>
-      )}
       {(s.generationError ||
         (!s.persistenceError && (notice || s.saveFeedback)) ||
         (!s.activeSteps.length && s.undoStack.length > 0)) && (
@@ -1839,13 +1574,650 @@ export function SequenceWorkbench({
           )}
         </div>
       )}
-      <div className="plan-layout v2-plan-layout">
+      {activeWizardPage === 'home' && (
+        <>
+          <div className="pf-step-stage-frame" data-testid="wizard-home-page">
+            <span className="pf-step-kicker-badge">시작 화면 · 복잡한 설정 없음</span>
+            <h2 className="pf-step-stage-title">오늘 어떤 수업을 준비할까요?</h2>
+            <p className="pf-step-stage-lead">
+              자주 쓰는 두 가지 행동만 바로 앞에 두었습니다. 기본값이 준비되어 있어 바로 시작할 수 있어요.
+            </p>
+            <div className="pf-step-choice-grid">
+              <section
+                className="pf-step-choice-card is-primary workbench-welcome"
+                aria-label="첫 수업안 준비"
+              >
+                <div>
+                  <div className="workbench-welcome-top-row">
+                    <span className="workbench-welcome-kicker">새 수업 만들기</span>
+                    <button
+                      type="button"
+                      className="workbench-welcome-summary"
+                      onClick={() => setConditionsOpen(true)}
+                      aria-label={`수업 조건 열기 · ${criteria.targetMinutes}분 · ${equipmentLabel(selectedEquipment) || '기구 선택 필요'}`}
+                    >
+                      <Clock3 size={16} aria-hidden="true" />
+                      {criteria.targetMinutes}분 ·{' '}
+                      {equipmentLabel(selectedEquipment) || '기구 선택 필요'}
+                      <ChevronDown size={15} aria-hidden="true" />
+                    </button>
+                  </div>
+                  <h3 style={{ margin: '8px 0 6px', fontSize: '1.22rem', color: '#1b3129' }}>
+                    동작을 골라 나만의 흐름으로.
+                  </h3>
+                  <div
+                    className="workbench-quick-duration-bar"
+                    role="group"
+                    aria-label="수업 시간 빠른 선택"
+                    data-testid="step1-quick-duration-chips"
+                  >
+                    <span className="workbench-quick-duration-label">수업 시간</span>
+                    {([30, 50, 60] as const).map((mins) => (
+                      <button
+                        key={mins}
+                        type="button"
+                        className={`workbench-quick-duration-chip ${
+                          criteria.targetMinutes === mins ? 'is-selected' : ''
+                        }`.trim()}
+                        aria-pressed={criteria.targetMinutes === mins}
+                        onClick={() => setDuration(mins)}
+                      >
+                        {mins}분
+                      </button>
+                    ))}
+                  </div>
+                  <div
+                    className="pf-step1-chip-row"
+                    role="group"
+                    aria-label="기본 기구 빠른 선택"
+                  >
+                    {EQUIPMENT_OPTIONS.slice(0, 4).map((eq) => {
+                      const isOwned = s.ownedEquipment.includes(eq.id);
+                      const isChecked =
+                        selectedEquipment.length === 1 && selectedEquipment[0] === eq.id;
+                      return (
+                        <button
+                          key={eq.id}
+                          type="button"
+                          className="pf-step1-choice-chip"
+                          disabled={!isOwned}
+                          aria-pressed={isChecked}
+                          onClick={() => {
+                            setCriteria({ ...criteria, availableEquipment: [eq.id] });
+                            if (!s.activeSteps.length) {
+                              s.setActiveSequenceMeta({
+                                apparatus: getEquipmentFamily(eq.id) ?? 'mat',
+                              });
+                            }
+                          }}
+                        >
+                          {eq.labelKo}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button
+                    type="button"
+                    className="pf-step-primary-cta"
+                    data-testid="wizard-start-step1-btn"
+                    onClick={() => setManualWizardPage('step1')}
+                  >
+                    1단계부터 차근차근 만들기 <ArrowRight size={18} aria-hidden="true" />
+                  </button>
+                  <div className="pf-step-secondary-actions workbench-welcome-actions">
+                    <PfButton
+                      variant="secondary"
+                      className="workbench-first-action"
+                      onClick={openExerciseFinder}
+                    >
+                      <Plus size={18} aria-hidden="true" />
+                      동작 고르기
+                    </PfButton>
+                    <PfButton
+                      variant="secondary"
+                      className="workbench-idea-action"
+                      onClick={() => openIdeaSheet(null)}
+                    >
+                      <Sparkles size={16} aria-hidden="true" />한 줄 아이디어 메모
+                    </PfButton>
+                    <button
+                      type="button"
+                      className="btn-secondary workbench-preset-action"
+                      onClick={() => setPresetsOpen(true)}
+                    >
+                      <Copy size={15} aria-hidden="true" /> 프리셋·동작 묶음에서 고르기
+                    </button>
+                  </div>
+                  <p className="workbench-reviewed-count" style={{ margin: 0 }}>
+                    추가하고, 순서를 바꾸고, 저장하세요. 검토는 선택입니다.
+                  </p>
+                </div>
+              </section>
+              <section
+                className="pf-step-choice-card workbench-recent-continue"
+                aria-label="최근 수업 이어가기"
+              >
+                <div>
+                  <div className="workbench-recent-continue__header">
+                    <div className="workbench-recent-continue__title">
+                      <span className="workbench-recent-kicker">RECENT FLOW</span>
+                      <h3 style={{ margin: '4px 0 0', fontSize: '1.15rem' }}>
+                        최근 수업 이어가기{' '}
+                        <PfBadge tone="sage">
+                          {recentSavedSequences.length || recentHistoryLogs.length}
+                        </PfBadge>
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      className="ghost-btn workbench-recent-view-all"
+                      onClick={() => s.setActiveTab('binder')}
+                    >
+                      저장한 수업 전체 보기 <ArrowRight size={14} aria-hidden="true" />
+                    </button>
+                  </div>
+                  {recentSavedSequences.length > 0 ? (
+                    <div className="workbench-recent-continue__list" style={{ marginTop: '12px' }}>
+                      {recentSavedSequences.slice(0, 2).map((seq) => {
+                        const moveCount = seq.steps.filter((st) => !isRestStep(st)).length;
+                        const seqTitle =
+                          seq.title || (seq as { name?: string }).name || '저장된 수업 시퀀스';
+                        const gearText =
+                          seq.apparatus === 'mixed' ? '복합 기구' : equipmentLabel([seq.apparatus]);
+                        return (
+                          <div key={seq.id} className="workbench-recent-card">
+                            <div className="workbench-recent-card__info">
+                              <strong>{seqTitle}</strong>
+                              <span>
+                                {moveCount}개 동작 · {seq.targetMinutes}분 ·{' '}
+                                {gearText || '기구 미지정'}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                              <PfButton
+                                variant="secondary"
+                                className="workbench-recent-card__action"
+                                aria-label={`${seqTitle} 이어서 구성`}
+                                onClick={() => continueRecentSequence(seq.id, seqTitle)}
+                              >
+                                이어서 구성
+                              </PfButton>
+                              <PfButton
+                                variant="primary"
+                                aria-label={`${seqTitle} 사본으로 바로 열기`}
+                                onClick={() => {
+                                  const copyId = s.duplicateSavedSequence(seq.id);
+                                  if (copyId) {
+                                    s.loadSequenceIntoWorkbench(copyId);
+                                    setWorkflowStep('arrange');
+                                    setNotice(`‘${seqTitle}’ 사본을 열어 이어서 편집합니다.`);
+                                  }
+                                }}
+                              >
+                                사본 열기
+                              </PfButton>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : recentHistoryLogs.length > 0 ? (
+                    <div className="workbench-recent-continue__list" style={{ marginTop: '12px' }}>
+                      {recentHistoryLogs.slice(0, 2).map((log) => (
+                        <div key={log.id} className="workbench-recent-card">
+                          <div className="workbench-recent-card__info">
+                            <strong>{log.sequenceTitle}</strong>
+                            <span>{log.exerciseIds.length}개 동작 · 최근 수업 기록</span>
+                          </div>
+                          <PfButton
+                            variant="secondary"
+                            className="workbench-recent-card__action"
+                            aria-label={`${log.sequenceTitle} 기록에서 이어가기`}
+                            onClick={() => continueRecentHistory(log.id, log.sequenceTitle)}
+                          >
+                            기록에서 이어가기
+                          </PfButton>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="workbench-recent-empty" style={{ marginTop: '12px' }}>
+                      <p>
+                        저장한 최근 수업이 아직 없습니다. 왼쪽에서 새 수업을 만들거나 프리셋으로
+                        시작해 보세요.
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {s.activeSteps.length > 0 && (
+                  <button
+                    type="button"
+                    className="pf-step-nav-pill-btn is-primary"
+                    onClick={() => {
+                      setManualWizardPage('arrange');
+                      setWorkflowStepState('arrange');
+                    }}
+                  >
+                    편집 중인 수업({exerciseStepCount}개 동작) 계속 다듬기{' '}
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </button>
+                )}
+              </section>
+            </div>
+          </div>
+          {!s.activeSteps.length && (
+            <div className="pf-step-secondary-shelf">
+              <span className="pf-step-secondary-shelf-label">
+                빠른 템플릿 · 추천 레시피 (선택)
+              </span>
+              <WorkbenchBlankStarters onSelectStarter={handleStartBlankDraft} />
+              <details className="workbench-automation-tools">
+                <summary>원클릭 추천 클래스 레시피 열기 (선택)</summary>
+                <AtelierQuickStartGallery
+                  exercises={s.exercises}
+                  onApplyQuickRecipe={applyQuickStartRecipe}
+                />
+              </details>
+              <details
+                className="workbench-automation-tools workbench-visual-tutorial-disclosure"
+                open={showWelcomeTutorial}
+                onToggle={(event) => setShowWelcomeTutorial(event.currentTarget.open)}
+              >
+                <summary>첫 수업 3단계 시각 도해 가이드 보기</summary>
+                {showWelcomeTutorial && (
+                  <FirstClassTutorialCandidate
+                    variant="inline-card"
+                    onStepAction={(stepId) => {
+                      if (stepId === 'new-movement') openIdeaSheet(null);
+                      else if (stepId === 'block-composition') openExerciseFinder();
+                      else if (stepId === 'save-class' || (stepId as string) === 'start-teaching') {
+                        if (s.activeSteps.length > 0) {
+                          setPlanPreviewOpen(true);
+                        } else {
+                          document.getElementById('workbench-sequence-panel')?.focus();
+                        }
+                      }
+                    }}
+                    onDismiss={() => setShowWelcomeTutorial(false)}
+                  />
+                )}
+              </details>
+              {ideasSectionNode}
+            </div>
+          )}
+        </>
+      )}
+      {activeWizardPage === 'step1' && (
         <section
-          id="workbench-sequence-panel"
-          className="sequence-column"
-          aria-label="오늘의 시퀀스"
-          tabIndex={-1}
+          className="pf-step-stage-frame"
+          data-testid="wizard-step1-page"
+          aria-label="1단계 수업 기본 설정"
         >
+          <span className="pf-step-kicker-badge">1 / 4 단계 · 수업 기본 정하기</span>
+          <h2 className="pf-step-stage-title">어떤 수업을 진행하시나요?</h2>
+          <p className="pf-step-stage-lead">
+            기본값이 미리 선택되어 있어 필요한 항목만 누르고 바로 다음으로 넘어가도 됩니다.
+          </p>
+          <div className="pf-step1-field-group">
+            <span className="pf-step1-field-label">1. 수업 시간</span>
+            <div className="pf-step1-chip-row" role="group" aria-label="1단계 수업 시간">
+              {([30, 50, 60] as const).map((mins) => (
+                <button
+                  key={mins}
+                  type="button"
+                  className="pf-step1-choice-chip"
+                  aria-pressed={criteria.targetMinutes === mins}
+                  onClick={() => setDuration(mins)}
+                >
+                  {mins}분
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="pf-step1-field-group">
+            <span className="pf-step1-field-label">2. 사용 기구</span>
+            <div className="pf-step1-chip-row" role="group" aria-label="1단계 사용 기구">
+              {EQUIPMENT_OPTIONS.map((equipment) => {
+                const isOwned = s.ownedEquipment.includes(equipment.id);
+                const isChecked =
+                  selectedEquipment.length === 1 && selectedEquipment[0] === equipment.id;
+                return (
+                  <button
+                    key={equipment.id}
+                    type="button"
+                    className="pf-step1-choice-chip"
+                    disabled={!isOwned}
+                    aria-pressed={isChecked}
+                    onClick={() => {
+                      setCriteria({ ...criteria, availableEquipment: [equipment.id] });
+                      if (!s.activeSteps.length) {
+                        s.setActiveSequenceMeta({
+                          apparatus: getEquipmentFamily(equipment.id) ?? 'mat',
+                        });
+                      }
+                    }}
+                  >
+                    {equipment.labelKo}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                className="pf-step1-choice-chip"
+                onClick={(event) => openConditionsDialog(event.currentTarget)}
+              >
+                복합 기구·소도구 상세 설정
+              </button>
+            </div>
+          </div>
+          <div className="pf-step1-field-group">
+            <span className="pf-step1-field-label">3. 난이도</span>
+            <div className="pf-step1-chip-row" role="group" aria-label="1단계 난이도">
+              {(
+                [
+                  { value: '1.0' as const, label: '입문·기초' },
+                  { value: '1.5' as const, label: '초중급' },
+                  { value: '2.0' as const, label: '중상급' },
+                ] as const
+              ).map((lv) => (
+                <button
+                  key={lv.value}
+                  type="button"
+                  className="pf-step1-choice-chip"
+                  aria-pressed={criteria.level === lv.value}
+                  onClick={() => {
+                    setCriteria({ ...criteria, level: lv.value });
+                    s.setActiveSequenceMeta({ level: lv.value });
+                  }}
+                >
+                  {lv.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="pf-step1-field-group">
+            <span className="pf-step1-field-label">4. 오늘의 목표</span>
+            <div className="pf-step1-chip-row" role="group" aria-label="1단계 수업 목표">
+              {focusOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className="pf-step1-choice-chip"
+                  aria-pressed={criteria.focusPreset === opt.value}
+                  onClick={() => setCriteria({ ...criteria, focusPreset: opt.value })}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="pf-step-cta-bar">
+            <button
+              type="button"
+              className="pf-step-nav-pill-btn"
+              onClick={() => setManualWizardPage('home')}
+            >
+              ← 처음으로
+            </button>
+            <div className="pf-step-cta-bar__right">
+              <button
+                type="button"
+                className="pf-step-nav-pill-btn"
+                disabled={authoringCatalogCount === 0}
+                onClick={() => {
+                  setPlanningMode('auto');
+                  generate();
+                }}
+              >
+                <RefreshCw size={16} aria-hidden="true" /> 조건으로 자동 구성하기
+              </button>
+              <button
+                type="button"
+                className="pf-step-nav-pill-btn is-primary"
+                data-testid="wizard-to-step2-btn"
+                onClick={() => {
+                  setManualWizardPage('step2');
+                  setWorkflowStepState('select');
+                }}
+              >
+                다음: 동작 담기 <ArrowRight size={17} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+      {activeWizardPage === 'step2' && (
+        <section
+          className="pf-step-stage-frame"
+          data-testid="wizard-step2-page"
+          aria-label="2단계 동작 담기"
+        >
+          <span className="pf-step-kicker-badge">
+            2 / 4 단계 · 동작 담기 ({equipmentLabel(selectedEquipment) || '전체 기구'} ·{' '}
+            {criteria.targetMinutes}분)
+          </span>
+          <h2 className="pf-step-stage-title">수업에 넣을 동작만 가볍게 담아 보세요</h2>
+          <p className="pf-step-stage-lead">
+            순서와 세부 시간은 다음 단계에서 편하게 조절할 수 있습니다 · 현재{' '}
+            <strong>{exerciseStepCount}개 동작</strong> ({formatSecondsToMMSS(total)}) 담김
+          </p>
+          {!finderOpen && (
+            <InlineExerciseFinder
+              active
+              onOpenExercise={onOpenYouTubePreview}
+              classEquipment={EQUIPMENT_OPTIONS.filter((option) =>
+                selectedEquipment.includes(option.id),
+              ).map((option) => option.id)}
+            />
+          )}
+          <div className="pf-step-cta-bar">
+            <button
+              type="button"
+              className="pf-step-nav-pill-btn"
+              onClick={() => setManualWizardPage('step1')}
+            >
+              ← 1. 수업 기본
+            </button>
+            <div className="pf-step-cta-bar__right">
+              <button
+                type="button"
+                className="pf-step-nav-pill-btn"
+                onClick={() => openIdeaSheet(null)}
+              >
+                <Sparkles size={16} aria-hidden="true" /> 한 줄 아이디어 메모
+              </button>
+              <button
+                type="button"
+                className="pf-step-nav-pill-btn is-primary"
+                data-testid="wizard-to-step3-btn"
+                disabled={!s.activeSteps.length}
+                onClick={() => {
+                  setManualWizardPage('arrange');
+                  setWorkflowStepState('arrange');
+                }}
+              >
+                다음: 순서·시간 맞추기 ({exerciseStepCount}개 · {formatSecondsToMMSS(total)}){' '}
+                <ArrowRight size={17} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+      {(activeWizardPage === 'home' || activeWizardPage === 'arrange') && (
+        <>
+          {s.activeSteps.length > 0 && (
+            <div
+              className="workbench-home-flow-bar"
+              role="region"
+              aria-label="새 수업 및 최근 수업 전환"
+            >
+              <button
+                type="button"
+                className="btn-secondary workbench-flow-btn workbench-new-class-btn"
+                onClick={startNewClass}
+              >
+                <Plus size={15} aria-hidden="true" /> 새 수업 만들기
+              </button>
+              <details
+                className="workbench-recent-switcher"
+                open={recentSwitcherOpen}
+                onToggle={(event) => setRecentSwitcherOpen(event.currentTarget.open)}
+              >
+                <summary className="btn-secondary workbench-flow-btn">
+                  <span>최근 수업 이어가기</span>
+                  <PfBadge tone="sage">
+                    {recentSavedSequences.length || recentHistoryLogs.length}
+                  </PfBadge>
+                  <ChevronDown size={14} aria-hidden="true" />
+                </summary>
+                <div className="workbench-recent-switcher__panel">
+                  {recentSavedSequences.length > 0 ? (
+                    <div className="workbench-recent-continue__list">
+                      {recentSavedSequences.slice(0, 3).map((seq) => {
+                        const moveCount = seq.steps.filter((st) => !isRestStep(st)).length;
+                        const seqTitle =
+                          seq.title || (seq as { name?: string }).name || '저장된 수업 시퀀스';
+                        const gearText =
+                          seq.apparatus === 'mixed' ? '복합 기구' : equipmentLabel([seq.apparatus]);
+                        return (
+                          <div key={seq.id} className="workbench-recent-card">
+                            <div className="workbench-recent-card__info">
+                              <strong>{seqTitle}</strong>
+                              <span>
+                                {moveCount}개 동작 · {seq.targetMinutes}분 ·{' '}
+                                {gearText || '기구 미지정'}
+                              </span>
+                            </div>
+                            <PfButton
+                              variant="secondary"
+                              className="workbench-recent-card__action"
+                              aria-label={`${seqTitle} 이어서 구성`}
+                              onClick={() => continueRecentSequence(seq.id, seqTitle)}
+                            >
+                              이어서 구성
+                            </PfButton>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : recentHistoryLogs.length > 0 ? (
+                    <div className="workbench-recent-continue__list">
+                      {recentHistoryLogs.slice(0, 2).map((log) => (
+                        <div key={log.id} className="workbench-recent-card">
+                          <div className="workbench-recent-card__info">
+                            <strong>{log.sequenceTitle}</strong>
+                            <span>{log.exerciseIds.length}개 동작 · 최근 수업 기록</span>
+                          </div>
+                          <PfButton
+                            variant="secondary"
+                            className="workbench-recent-card__action"
+                            aria-label={`${log.sequenceTitle} 기록에서 이어가기`}
+                            onClick={() => continueRecentHistory(log.id, log.sequenceTitle)}
+                          >
+                            기록에서 이어가기
+                          </PfButton>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="workbench-recent-empty-text">
+                      저장한 최근 수업이 아직 없습니다.
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    className="ghost-btn workbench-recent-view-all"
+                    onClick={() => {
+                      setRecentSwitcherOpen(false);
+                      s.setActiveTab('binder');
+                    }}
+                  >
+                    저장한 수업 전체 보기 <ArrowRight size={14} aria-hidden="true" />
+                  </button>
+                </div>
+              </details>
+              <button
+                type="button"
+                className="btn-secondary workbench-flow-btn"
+                onClick={() => setPresetsOpen(true)}
+              >
+                <Copy size={15} aria-hidden="true" /> 프리셋·동작 묶음에서 고르기
+              </button>
+            </div>
+          )}
+          <div className="v2-plan-toolbar" aria-label="시퀀스 준비">
+            <div className="v2-condition-chips" aria-label="이번 수업 조건 요약">
+              <button
+                type="button"
+                onClick={(event) => openConditionsDialog(event.currentTarget)}
+                aria-label={`수업 시간 ${criteria.targetMinutes}분 · 조건 열기`}
+              >
+                {criteria.targetMinutes}분 <ChevronDown size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={(event) => openConditionsDialog(event.currentTarget)}
+                aria-label={`이번 수업 기구: ${equipmentLabel(selectedEquipment) || '선택 필요'} · 조건 열기`}
+                title={equipmentLabel(selectedEquipment)}
+              >
+                {selectedEquipment.length > 1
+                  ? `기구 ${selectedEquipment.length}`
+                  : equipmentLabel(selectedEquipment) || '기구 선택'}{' '}
+                <ChevronDown size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={(event) => openConditionsDialog(event.currentTarget)}
+                aria-label={`수업 목표 ${focusOptions.find((option) => option.value === criteria.focusPreset)?.label ?? '전신 균형'} · 조건 열기`}
+              >
+                {focusOptions.find((option) => option.value === criteria.focusPreset)?.label ??
+                  '전신 균형'}{' '}
+                <ChevronDown size={14} />
+              </button>
+              <PfButton
+                variant="icon"
+                aria-label="수업 조건"
+                onClick={(event) => openConditionsDialog(event.currentTarget)}
+              >
+                <SlidersHorizontal size={18} />
+              </PfButton>
+            </div>
+          </div>
+          <details className="workbench-automation-tools">
+            <summary>기구별 스프링·컨셉 가이드 열기 (선택)</summary>
+            <ApparatusVisualGuideRibbon
+              activeApparatusId={selectedEquipment[0] ?? s.activeApparatus}
+              mode="workbench"
+              onApplyClassConcept={(titleKo, subtitleKo, family) => {
+                s.setActiveSequenceMeta({
+                  title: titleKo,
+                  subtitle: subtitleKo,
+                  apparatus: family,
+                });
+                setNotice(`‘${titleKo}’ 기구 컨셉을 현재 수업에 반영했습니다.`);
+              }}
+            />
+          </details>
+          {planningMode === 'auto' && locked > 0 && (
+            <p id="v2-new-draft-scope" className="v2-generation-scope">
+              시퀀스 만들기는 전체를 새 초안으로 바꿉니다. 잠근 {locked}개 항목을 유지하려면 아래
+              ‘잠그지 않은 동작 다시 만들기’를 사용하세요.
+            </p>
+          )}
+          <div className="plan-layout v2-plan-layout">
+            <section
+              id="workbench-sequence-panel"
+              className={`sequence-column ${
+                s.activeSteps.length > 0 ? 'pf-step-stage-frame' : ''
+              }`.trim()}
+              aria-label="오늘의 시퀀스"
+              tabIndex={-1}
+            >
+              {s.activeSteps.length > 0 && (
+                <span className="pf-step-kicker-badge">3 / 4 단계 · 순서와 시간 다듬기</span>
+              )}
           {s.activeSteps.length > 0 && (
             <>
               <div className="sequence-heading">
@@ -2861,174 +3233,206 @@ export function SequenceWorkbench({
               </Suspense>
             )}
           </details>
-          <div className="workbench-footnotes">
-            <PfButton variant="text" onClick={onOpenClipper}>
-              YouTube 참고 자료 등록
-            </PfButton>
-            <PfButton variant="text" onClick={() => onOpenLogModal(s.activeSequenceId)}>
-              진행한 수업 기록
-            </PfButton>
-          </div>
-        </section>
-        {wideEditor && selectedStep && (
-          <aside className="v2-inline-finder" aria-label="선택 동작 속성">
-            <div className="step-properties-panel">
-              <div className="step-properties-heading">
-                <span>선택 동작 속성</span>
-                <button
-                  type="button"
-                  className="icon-btn"
-                  aria-label="동작 속성 닫기"
-                  onClick={closeInspector}
-                >
-                  <X size={18} />
-                </button>
+              {s.activeSteps.length > 0 && (
+                <div className="pf-step-cta-bar">
+                  <button
+                    type="button"
+                    className="pf-step-nav-pill-btn"
+                    onClick={() => {
+                      setManualWizardPage('step2');
+                      setWorkflowStepState('select');
+                    }}
+                  >
+                    ← 2단계 동작 담기 화면
+                  </button>
+                  <div className="pf-step-cta-bar__right">
+                    <button
+                      type="button"
+                      className="pf-step-nav-pill-btn is-primary"
+                      onClick={openPlanPreview}
+                    >
+                      4단계 미리보기·진행 확인 <ArrowRight size={17} aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className="workbench-footnotes">
+                <PfButton variant="text" onClick={onOpenClipper}>
+                  YouTube 참고 자료 등록
+                </PfButton>
+                <PfButton variant="text" onClick={() => onOpenLogModal(s.activeSequenceId)}>
+                  진행한 수업 기록
+                </PfButton>
               </div>
-              <StepBlockInspector
-                key={`${selectedStep.stepId}:${selectedStep.exerciseId}`}
-                index={selectedStepIndex}
-                step={selectedStep}
-                playbackActive={!sourceDetailOpen}
-                loadDraft={() => inspectorDraftCache.current}
-                onDraftChange={(value) => {
-                  inspectorDraftCache.current = value;
-                  syncRecoveryState(value);
-                }}
-                onClose={closeInspector}
-                onOpenExercise={onOpenYouTubePreview}
-                onReplace={() =>
-                  openReplaceForStep(
-                    selectedStepIndex,
-                    true,
-                    document.activeElement instanceof HTMLElement ? document.activeElement : null,
-                  )
-                }
-              />
-            </div>
-          </aside>
-        )}
-      </div>
-      <nav
-        className="pf-step-guide-bar workbench-mobile-step-bar"
-        aria-label="수업 준비 단계 이동"
-        data-testid="workbench-mobile-step-bar"
-        style={{ wordBreak: 'keep-all' }}
-      >
-        <div className="pf-step-guide-subrow" style={{ wordBreak: 'keep-all' }}>
-          <span
-            className="pf-step-guide-focus"
-            data-testid="workbench-current-step-guide"
+            </section>
+            {wideEditor && selectedStep && (
+              <aside className="v2-inline-finder" aria-label="선택 동작 속성">
+                <div className="step-properties-panel">
+                  <div className="step-properties-heading">
+                    <span>선택 동작 속성</span>
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      aria-label="동작 속성 닫기"
+                      onClick={closeInspector}
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <StepBlockInspector
+                    key={`${selectedStep.stepId}:${selectedStep.exerciseId}`}
+                    index={selectedStepIndex}
+                    step={selectedStep}
+                    playbackActive={!sourceDetailOpen}
+                    loadDraft={() => inspectorDraftCache.current}
+                    onDraftChange={(value) => {
+                      inspectorDraftCache.current = value;
+                      syncRecoveryState(value);
+                    }}
+                    onClose={closeInspector}
+                    onOpenExercise={onOpenYouTubePreview}
+                    onReplace={() =>
+                      openReplaceForStep(
+                        selectedStepIndex,
+                        true,
+                        document.activeElement instanceof HTMLElement
+                          ? document.activeElement
+                          : null,
+                      )
+                    }
+                  />
+                </div>
+              </aside>
+            )}
+          </div>
+          <nav
+            className="pf-step-guide-bar workbench-mobile-step-bar"
+            aria-label="수업 준비 단계 이동"
+            data-testid="workbench-mobile-step-bar"
             style={{ wordBreak: 'keep-all' }}
           >
-            {!s.activeSteps.length || finderOpen || workflowStep === 'select'
-              ? '현재 1단계: 동작 고르기 · 필요한 동작을 고른 뒤 다음 단계에서 순서와 시간을 맞추세요.'
-              : '현재 2단계: 수업 구성 확인 · -0.5분/+0.5분으로 시간을 맞추고 저장·미리보기 하세요.'}
-          </span>
-          <div className="pf-step-guide-nav" style={{ wordBreak: 'keep-all' }}>
-            {s.activeSteps.length > 0 && workflowStep === 'select' && !finderOpen && (
-              <button
-                type="button"
-                className="btn-primary"
-                data-testid="workbench-step-open-finder"
-                style={{ minHeight: '44px', padding: '6px 12px', fontSize: '0.8rem', wordBreak: 'keep-all' }}
-                onClick={openExerciseFinder}
+            <div className="pf-step-guide-subrow" style={{ wordBreak: 'keep-all' }}>
+              <span
+                className="pf-step-guide-focus"
+                data-testid="workbench-current-step-guide"
+                style={{ wordBreak: 'keep-all' }}
               >
-                <Plus size={15} aria-hidden="true" /> 동작 선택창 열기
-              </button>
-            )}
-            <button
-              type="button"
-              className="pf-step-nav-btn"
-              data-testid="workbench-step-prev"
-              style={{ minHeight: '44px', wordBreak: 'keep-all' }}
-              aria-current={
-                !planPreviewOpen &&
-                (finderOpen || workflowStep === 'select' || !s.activeSteps.length)
-                  ? 'step'
-                  : undefined
-              }
-              onClick={() => {
-                closeInspector();
-                setPlanPreviewOpen(false);
-                if (workflowStep === 'select' && s.activeSteps.length > 0 && !finderOpen) {
-                  openExerciseFinder();
-                  return;
-                }
-                setWorkflowStep('select');
-              }}
-            >
-              이전 단계: 동작 고르기
-            </button>
-            <button
-              type="button"
-              className="pf-step-nav-btn"
-              data-testid="workbench-step-next"
-              style={{ minHeight: '44px', wordBreak: 'keep-all' }}
-              disabled={!s.activeSteps.length}
-              aria-current={
-                !planPreviewOpen &&
-                !finderOpen &&
-                workflowStep === 'arrange' &&
-                s.activeSteps.length > 0
-                  ? 'step'
-                  : undefined
-              }
-              onClick={arrangeSequence}
-            >
-              다음 단계: 수업 구성 확인
-            </button>
-          </div>
-        </div>
-      </nav>
-      <NextClassBanner collapseEmpty />
-      <details className="workbench-navigation-details">
-        <summary>수업 준비 순서</summary>
-        <nav className="workbench-flow-navigation" aria-label="수업 준비 순서">
-          <ol className="workbench-preparation-steps">
-            <li>
-              <button
-                type="button"
-                onClick={openExerciseFinder}
-                aria-current={
-                  !planPreviewOpen &&
-                  (finderOpen || workflowStep === 'select' || !s.activeSteps.length)
-                    ? 'step'
-                    : undefined
-                }
-              >
-                <span>1</span> 동작 선택
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                onClick={arrangeSequence}
-                disabled={!s.activeSteps.length}
-                aria-current={
-                  !planPreviewOpen &&
-                  !finderOpen &&
-                  workflowStep === 'arrange' &&
-                  s.activeSteps.length
-                    ? 'step'
-                    : undefined
-                }
-              >
-                <span>2</span> 수업 구성
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                onClick={openPlanPreview}
-                disabled={!s.activeSteps.length}
-                aria-current={planPreviewOpen ? 'step' : undefined}
-              >
-                <span>3</span> 미리보기
-              </button>
-            </li>
-          </ol>
-        </nav>
-      </details>
+                {!s.activeSteps.length || finderOpen || workflowStep === 'select'
+                  ? '현재 1단계: 동작 고르기 · 필요한 동작을 고른 뒤 다음 단계에서 순서와 시간을 맞추세요.'
+                  : '현재 2단계: 수업 구성 확인 · -0.5분/+0.5분으로 시간을 맞추고 저장·미리보기 하세요.'}
+              </span>
+              <div className="pf-step-guide-nav" style={{ wordBreak: 'keep-all' }}>
+                {s.activeSteps.length > 0 && workflowStep === 'select' && !finderOpen && (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    data-testid="workbench-step-open-finder"
+                    style={{
+                      minHeight: '44px',
+                      padding: '6px 12px',
+                      fontSize: '0.8rem',
+                      wordBreak: 'keep-all',
+                    }}
+                    onClick={openExerciseFinder}
+                  >
+                    <Plus size={15} aria-hidden="true" /> 동작 선택창 열기
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="pf-step-nav-btn"
+                  data-testid="workbench-step-prev"
+                  style={{ minHeight: '44px', wordBreak: 'keep-all' }}
+                  aria-current={
+                    !planPreviewOpen &&
+                    (finderOpen || workflowStep === 'select' || !s.activeSteps.length)
+                      ? 'step'
+                      : undefined
+                  }
+                  onClick={() => {
+                    closeInspector();
+                    setPlanPreviewOpen(false);
+                    if (workflowStep === 'select' && s.activeSteps.length > 0 && !finderOpen) {
+                      openExerciseFinder();
+                      return;
+                    }
+                    setWorkflowStep('select');
+                  }}
+                >
+                  이전 단계: 동작 고르기
+                </button>
+                <button
+                  type="button"
+                  className="pf-step-nav-btn"
+                  data-testid="workbench-step-next"
+                  style={{ minHeight: '44px', wordBreak: 'keep-all' }}
+                  disabled={!s.activeSteps.length}
+                  aria-current={
+                    !planPreviewOpen &&
+                    !finderOpen &&
+                    workflowStep === 'arrange' &&
+                    s.activeSteps.length > 0
+                      ? 'step'
+                      : undefined
+                  }
+                  onClick={arrangeSequence}
+                >
+                  다음 단계: 수업 구성 확인
+                </button>
+              </div>
+            </div>
+          </nav>
+          <NextClassBanner collapseEmpty />
+          <details className="workbench-navigation-details">
+            <summary>수업 준비 순서</summary>
+            <nav className="workbench-flow-navigation" aria-label="수업 준비 순서">
+              <ol className="workbench-preparation-steps">
+                <li>
+                  <button
+                    type="button"
+                    onClick={openExerciseFinder}
+                    aria-current={
+                      !planPreviewOpen &&
+                      (finderOpen || workflowStep === 'select' || !s.activeSteps.length)
+                        ? 'step'
+                        : undefined
+                    }
+                  >
+                    <span>1</span> 동작 선택
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={arrangeSequence}
+                    disabled={!s.activeSteps.length}
+                    aria-current={
+                      !planPreviewOpen &&
+                      !finderOpen &&
+                      workflowStep === 'arrange' &&
+                      s.activeSteps.length
+                        ? 'step'
+                        : undefined
+                    }
+                  >
+                    <span>2</span> 수업 구성
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={openPlanPreview}
+                    disabled={!s.activeSteps.length}
+                    aria-current={planPreviewOpen ? 'step' : undefined}
+                  >
+                    <span>3</span> 미리보기
+                  </button>
+                </li>
+              </ol>
+            </nav>
+          </details>
+        </>
+      )}
       <LightDismissDialog
         open={
           !!selectedStep &&
