@@ -3,88 +3,162 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flow Atelier — 5대 기구 고품질 스튜디오 기구학 모션 아틀라스 (v2.2)</title>
+  <title>Flow Atelier — 5대 기구 스튜디오 기구학 도해·모션 시안 (v3.0 · 신체 연결·접점·시작/끝 비교)</title>
   <style>
     :root {
       --bg: #faf8f4;
       --card: #ffffff;
+      --subtle: #f3efe8;
       --ink: #1d201c;
-      --muted: #5c6259;
+      --muted: #566055;
       --line: #e2ddd3;
       --sage: #355441;
       --sage-deep: #1f4d3f;
       --sage-soft: #e6efe9;
-      --terra: #bf5a41;
+      --terra: #b8563f;
+      --terra-soft: #faeae5;
+      --amber: #8a5b14;
+      --amber-soft: #fbf3e2;
       --font: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+    }
+    body.high-contrast {
+      --bg: #ffffff;
+      --card: #ffffff;
+      --subtle: #edf1ee;
+      --ink: #000000;
+      --muted: #181c18;
+      --line: #1d201c;
+      --sage-deep: #08291d;
+      --sage: #0f3d2a;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      padding: 28px 20px 60px;
+      padding: 0 0 64px;
       background: var(--bg);
       color: var(--ink);
       font-family: var(--font);
       letter-spacing: -0.015em;
       word-break: keep-all;
+      overflow-wrap: break-word;
     }
-    header, main, .footer-note { max-width: 1280px; margin: 0 auto; }
-    header {
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(250, 248, 244, 0.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+    .topbar-inner, main, .audit-section {
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+    .topbar-inner {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
-      align-items: flex-end;
-      gap: 16px;
-      margin-bottom: 24px;
-      padding-bottom: 18px;
-      border-bottom: 1px solid var(--line);
+      align-items: center;
+      gap: 12px;
     }
     .eyebrow {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       padding: 4px 11px;
       border-radius: 999px;
       background: var(--sage-soft);
       color: var(--sage-deep);
       font-size: 0.74rem;
       font-weight: 800;
-      letter-spacing: 0.07em;
+      letter-spacing: 0.04em;
     }
-    h1 { margin: 8px 0 6px; font-size: clamp(1.45rem, 2.2vw, 1.85rem); }
-    .controls { display: flex; flex-wrap: wrap; gap: 8px; }
+    h1 { margin: 6px 0 4px; font-size: clamp(1.3rem, 2.2vw, 1.75rem); }
+    .controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     button {
       min-height: 44px;
-      padding: 8px 15px;
+      padding: 8px 14px;
       border-radius: 12px;
       border: 1px solid var(--line);
       background: var(--card);
       font: inherit;
-      font-size: 0.86rem;
+      font-size: 0.84rem;
       font-weight: 700;
       color: var(--ink);
       cursor: pointer;
     }
-    button.active { background: var(--sage-deep); border-color: var(--sage-deep); color: #fff; }
+    button:focus-visible { outline: 3px solid var(--sage-deep); outline-offset: 2px; }
+    button[aria-pressed="true"], button.active {
+      background: var(--sage-deep);
+      border-color: var(--sage-deep);
+      color: #ffffff;
+    }
+    .notice-banner {
+      max-width: 1320px;
+      margin: 18px auto 0;
+      padding: 14px 18px;
+      border-radius: 16px;
+      background: var(--subtle);
+      border: 1px solid var(--line);
+      font-size: 0.85rem;
+      line-height: 1.55;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    main { padding: 18px 20px 0; }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
       gap: 18px;
     }
-    @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+    body.card-size-mode .grid {
+      grid-template-columns: repeat(auto-fit, minmax(236px, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 480px) {
+      main { padding: 14px 12px 0; }
+      .grid { grid-template-columns: 1fr; }
+    }
     .motion-card {
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 20px;
       padding: 18px;
-      box-shadow: 0 8px 28px rgba(29, 32, 28, 0.05);
+      box-shadow: 0 8px 26px rgba(29, 32, 28, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-    .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+    body.card-size-mode .motion-card { padding: 12px; border-radius: 16px; }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .spring-chip {
-      padding: 3px 10px;
+      padding: 4px 10px;
       border-radius: 999px;
       background: #f5f2eb;
       border: 1px solid var(--line);
       font-size: 0.75rem;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--sage-deep);
+      white-space: nowrap;
+    }
+    .review-chip {
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      background: var(--amber-soft);
+      color: var(--amber);
+      border: 1px solid #e7cf9e;
       white-space: nowrap;
     }
     .stage-box {
@@ -93,66 +167,275 @@
       border: 1px solid #dcd4c3;
       background: #fdfcf8;
     }
+    .dual-stage {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    @media (max-width: 400px) {
+      .dual-stage { grid-template-columns: 1fr; }
+    }
+    .dual-cell {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #dcd4c3;
+      background: #fdfcf8;
+    }
+    .dual-caption {
+      padding: 5px 8px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      background: #f4efe4;
+      border-bottom: 1px solid #e3dac8;
+      display: flex;
+      justify-content: space-between;
+    }
     .phase-bar {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 4px;
-      margin-top: 10px;
     }
     .phase-btn {
-      min-height: 36px;
-      padding: 4px;
-      border-radius: 8px;
+      min-height: 40px;
+      padding: 4px 2px;
+      border-radius: 9px;
       font-size: 0.74rem;
     }
-    .meta { margin-top: 10px; font-size: 0.83rem; color: var(--muted); line-height: 1.45; }
-    .footer-note {
-      margin-top: 24px;
-      padding: 14px 18px;
-      border-radius: 14px;
-      background: #f3efe8;
-      border: 1px solid var(--line);
-      font-size: 0.82rem;
+    .meta {
+      font-size: 0.83rem;
       color: var(--muted);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .contact-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.75rem;
+    }
+    .contact-tag {
+      padding: 3px 8px;
+      border-radius: 8px;
+      background: var(--subtle);
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .audit-section {
+      padding: 26px 20px 0;
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+    }
+    table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      word-break: keep-all;
+    }
+    th { background: var(--subtle); font-weight: 800; }
+    @media (max-width: 740px) {
+      .table-wrap { border: 0; background: transparent; }
+      table, thead, tbody, tr, th, td { display: block; min-width: 0; width: 100%; }
+      thead { display: none; }
+      tr {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+      td { border: 0; padding: 4px 0; }
+      td::before {
+        content: attr(data-label) " · ";
+        font-weight: 800;
+        color: var(--sage-deep);
+      }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <span class="eyebrow">UNIFIED STUDIO KINEMATIC MOTION SYSTEM · 5 APPARATUS FAMILIES</span>
-      <h1>Flow Atelier 고품질 스튜디오 기구학 모션 아틀라스 (5단계 연속 원호 보간)</h1>
-      <p style="margin:0;color:var(--muted);">리포머 · 캐딜락 · 운다 체어 · 래더 바렐 · 매트 98종 전체에 적용된 스튜디오 복장 인체 실루엣, 원호(Arc) 분절 보간, 2관절 IK 접점 고정 및 척추 순차 분절 엔진입니다.</p>
-    </div>
-    <div class="controls">
-      <button id="btn-play" class="active" onclick="togglePlay()">⏸ 연속 모션 일시정지</button>
-      <button id="btn-guide" class="active" onclick="toggleGuides()">정렬·방향 벡터 표시 중</button>
-      <button id="btn-rm" onclick="toggleRm()">정지 도해 모드</button>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <span class="eyebrow">KINEMATIC DIAGRAM REVISION v3.0 · 시안 검토용 (앱 선반영 전)</span>
+        <h1>5대 기구 연결형 인체·관절·기구 접촉 도해 &amp; 시작/끝 모션 시안</h1>
+      </div>
+      <div class="controls" role="group" aria-label="도해 보기 모드 및 접근성 검증">
+        <button id="mode-anim" aria-pressed="true" onclick="setViewMode('anim')">▶ 부드러운 연속 모션</button>
+        <button id="mode-dual" aria-pressed="false" onclick="setViewMode('dual')">시작 ↔ 끝 나란히 비교</button>
+        <button id="mode-step" aria-pressed="false" onclick="setViewMode('step')">단계별 정지 점검</button>
+        <button id="btn-card-size" aria-pressed="false" onclick="toggleCardSize()">실제 앱 카드 크기(220px)</button>
+        <button id="btn-guide" aria-pressed="true" onclick="toggleGuides()">접점·방향 기호 표시</button>
+        <button id="btn-contrast" aria-pressed="false" onclick="toggleContrast()">고대비</button>
+        <button id="btn-rm" aria-pressed="false" onclick="toggleRm()">모션 감소(정지 병렬)</button>
+      </div>
     </div>
   </header>
 
-  <main class="grid" id="atlas-grid"></main>
+  <div style="padding: 0 20px;">
+    <div class="notice-banner" role="region" aria-label="도해 검증 범위 및 권리 안내">
+      <div>
+        <strong>수정한 핵심 결함:</strong> ① 수직·수평 경로 <code>objectBoundingBox</code> 그라디언트 소실로 체어 페달 프레스·풋워크 몸통이 투명해지던 현상 해결(<code>userSpaceOnUse</code> + 일체형 상체-골반-경추 실루엣) ② 전 프레임 동일 분절 길이 2관절 IK 고정 ③ 손잡이·시트·풋바·페달·래더 실제 파지/접지 표현 ④ 색에만 의존하지 않는 기호(<code>■ 고정접점</code> · <code>● 가동관절</code> · <code>→ 이동궤적</code>) 및 스크린리더 <code>&lt;title&gt;/&lt;desc&gt;</code> 완비.
+      </div>
+      <div>
+        <strong>검증 경계 구분:</strong> 기하 연결·비율·접근성 렌더링 <strong>검증 완료</strong> · 세부 임상 자세 각도는 <strong>강사 검토 필요</strong>(의학적 정확성 자동 단정 금지 · 자체 제작 0원 로컬 SVG).
+      </div>
+    </div>
+  </div>
 
-  <p class="footer-note">
-    제작 기준: 자체 제작 스튜디오 기구학 SVG 도해(`MovementPhaseDiagramSvg.tsx` + `catalogMotionAssets/index.ts`) · 해부학 정확성 자동 가정 없음(`anatomicalAccuracyAssumed: false`) · `prefers-reduced-motion` 정지 폴백 준수.
-  </p>
+  <main>
+    <div class="grid" id="atlas-grid"></div>
+  </main>
+
+  <section class="audit-section" aria-label="98종 전체 도해 점검 요약">
+    <h2 style="margin: 0 0 10px; font-size: 1.15rem;">전체 운동 도해(시안 + 앱 98종·48원형) 전수 점검 및 재제작 범위</h2>
+    <div class="table-wrap">
+      <table>
+        <colgroup>
+          <col style="width: 19%;" />
+          <col style="width: 31%;" />
+          <col style="width: 32%;" />
+          <col style="width: 18%;" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>점검 대상</th>
+            <th>발견된 자세·신체연결·접촉·비율 문제</th>
+            <th>재제작·보완 설계 내용</th>
+            <th>검증 상태 구분</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="점검 대상"><strong>운다 체어 페달 프레스</strong><br/>(02 시안 &amp; 앱 체어 좌위군)</td>
+            <td data-label="발견 문제">02 시안에서 수직선 <code>objectBoundingBox</code> 버그로 몸통이 사라져 머리·팔·엉덩이가 분리됨. 팔이 허공에 떠 있고 발바닥·스프링 코일 미표현</td>
+            <td data-label="보완 설계">경추~흉곽~허리~골반 일체형 실루엣 + 체어 사이드 핸들(또는 시트 앞단) 손 파지 + 발볼 페달 접지 + 코일 스프링 연동</td>
+            <td data-label="검증 상태">렌더링·연결 검증 완료<br/><span class="review-chip">자세 각도 강사 검토 필요</span></td>
+          </tr>
+          <tr>
+            <td data-label="점검 대상"><strong>리포머 풋워크·브릿지·헌드레드·스완</strong></td>
+            <td data-label="발견 문제">수평 경로 그라디언트 소실 가능성, 목 생략으로 머리가 떠 보임, 풋바와 발뒤꿈치 간격 이격, 스완에서 몸통·다리 구분 모호</td>
+            <td data-label="보완 설계">헤드레스트·숄더블록·풋바 접지 정합, 2관절 IK로 대퇴(46)·하퇴(44) 길이 전 프레임 불변 유지, 상의(세이지 탑)와 레깅스(딥 포레스트) 톤 분리</td>
+            <td data-label="검증 상태">렌더링·연결 검증 완료<br/><span class="review-chip">자세 각도 강사 검토 필요</span></td>
+          </tr>
+          <tr>
+            <td data-label="점검 대상"><strong>래더 바렐 사이드 벤드</strong></td>
+            <td data-label="발견 문제">머리가 팔 파이프 위에 겹쳐 붙고 래더 가로대에 발 걸림이 표현되지 않음</td>
+            <td data-label="보완 설계">골반 측면을 바렐 돔 상단에 밀착하고 위·아래 발을 래더 가로대 사이에 걸며, 경추·어깨·오버헤드 팔 원호를 분리 표현</td>
+            <td data-label="검증 상태">렌더링·연결 검증 완료<br/><span class="review-chip">자세 각도 강사 검토 필요</span></td>
+          </tr>
+          <tr>
+            <td data-label="점검 대상"><strong>캐딜락 롤다운 바 &amp; 매트 클램</strong><br/>(기존 02 누락 2대 기구 추가)</td>
+            <td data-label="발견 문제">02 시안 제목은 5대 기구였으나 캐딜락·매트 대표 도해가 누락됨. 앱 내 일부 원형(36/98종)에서 프레임 간 전완·하퇴 2D 길이 변화(1.36~2.19배) 존재</td>
+            <td data-label="보완 설계">캐딜락 롤다운 바 C-커브 및 매트 사이드 클램 도해 추가, 사용자 시안 승인 후 앱 <code>MovementPhaseDiagramSvg</code> 어깨·고관절 연결부 및 분절 길이 보정 반영 예정</td>
+            <td data-label="검증 상태">시안 반영 완료<br/><span class="review-chip">앱 반영 전 선택 대기</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
   <script>
-    let playing = true;
+    let viewMode = 'anim'; // 'anim' | 'dual' | 'step'
     let guides = true;
     let reduced = false;
-    let cycle = 0.5;
-    let manualIdx = 2;
-    const phaseLabels = ['1 준비', '2 가동', '3 정점', '4 복귀', '5 마무리'];
-    const phaseSamples = [0, 0.35, 1, 0.55, 0.08];
+    let cycle = 0.0;
+    let manualIdx = 0;
+
+    const phaseLabels = ['1 시작', '2 가동', '3 정점', '4 복귀', '5 마무리'];
+    const phaseSamples = [0, 0.42, 1, 0.52, 0.05];
 
     const items = [
-      { id: 'reformer-fw', app: 'Reformer', ko: '리포머 풋워크 패럴렐', en: 'Footwork · Closed-Chain 2-Bone IK', springs: '2R 1B', cue: '뒤꿈치 접점을 풋바에 고정한 채 고관절·무릎 신전으로 캐리지를 수평 활주합니다.' },
-      { id: 'reformer-bridge', app: 'Reformer', ko: '펠빅 컬 · 척추 순차 분절', en: 'Pelvic Curl · Sequential Spinal Wave', springs: '2R', cue: '꼬리뼈→요추→흉추 순차 위상차로 말아 올리고 흉추부터 내려놓습니다.' },
-      { id: 'reformer-hundred', app: 'Reformer', ko: '헌드레드 · 흉추 굴곡 & 펌핑', en: 'The Hundred · Rhythmic Arm Pump', springs: '1R 1B', cue: '견갑 하각 굴곡을 유지하며 정점 구간에서 리듬감 있게 팔을 펌핑합니다.' },
-      { id: 'reformer-swan', app: 'Reformer', ko: '롱박스 스완 · 흉추 신전', en: 'Long Box Swan · Thoracic Arc', springs: '1B', cue: '치골 지지점 위에서 흉추와 경추를 매끄러운 원호로 길게 신전합니다.' },
-      { id: 'chair-press', app: 'Wunda Chair', ko: '체어 시티드 페달 프레스', en: 'Chair Pedal Press · Hinged Lever IK', springs: '1R 1B', cue: '좌골을 시트에 고정하고 발목·페달 힌지 각도를 동기화하여 눌러냅니다.' },
-      { id: 'barrel-side', app: 'Ladder Barrel', ko: '바렐 사이드 벤드', en: 'Barrel Side Bend · Lateral Arc', springs: '자체 저항', cue: '골반 측면을 바렐 돔에 지지하고 발을 래더에 건 채 측굴 원호를 그립니다.' }
+      {
+        id: 'chair-press',
+        app: '운다 체어',
+        ko: '체어 시티드 페달 프레스',
+        en: 'Wunda Chair Seated Pedal Press',
+        springs: '● 1R · ◐ 1B (중강)',
+        contacts: ['■ 좌골 → 패디드 시트 상단', '■ 양손 → 체어 사이드 핸들 파지', '■ 발볼 → 힌지 페달 상면'],
+        cue: '양쪽 좌골을 시트 중앙에 수직으로 세우고 사이드 핸들을 가볍게 잡은 채, 상체 흔들림 없이 발볼로 페달을 눌러 내립니다.',
+        descKo: '운다 체어 시트 위에 곧게 앉아 양손으로 체어 핸들을 잡고 발볼로 페달을 위에서 아래로 밟아 내리는 시작과 정점 자세 도해'
+      },
+      {
+        id: 'reformer-fw',
+        app: '리포머',
+        ko: '리포머 풋워크 패럴렐',
+        en: 'Reformer Footwork Parallel',
+        springs: '●● 2R · ◐ 1B (고강)',
+        contacts: ['■ 후두부·견갑 → 헤드레스트·숄더블록', '■ 천골 → 슬라이딩 캐리지', '■ 뒤꿈치 → 풋바 고정'],
+        cue: '뒤꿈치를 풋바에 고정하고 골반 중립을 유지한 채 무릎·고관절을 펴 캐리지를 수평으로 밀어냅니다.',
+        descKo: '리포머 캐리지에 누워 어깨를 숄더블록에 지지하고 뒤꿈치로 풋바를 밀어 무릎을 펴는 시작과 정점 자세 도해'
+      },
+      {
+        id: 'reformer-bridge',
+        app: '리포머',
+        ko: '펠빅 컬 · 아티큘레이팅 브릿지',
+        en: 'Pelvic Curl & Bridge',
+        springs: '●● 2R (중강)',
+        contacts: ['■ 견갑골 → 캐리지 상면(헤드레스트 낮춤)', '■ 양손 → 캐리지 매트 지지', '■ 뒤꿈치 → 풋바 고정'],
+        cue: '캐리지가 밀리지 않게 햄스트링으로 당기며 꼬리뼈부터 요추·흉추 순서로 분절해 어깨~무릎 사선을 만듭니다.',
+        descKo: '리포머에 누워 풋바에 뒤꿈치를 고정한 채 골반을 들어 올려 어깨부터 무릎까지 사선 브릿지를 만드는 도해'
+      },
+      {
+        id: 'reformer-hundred',
+        app: '리포머',
+        ko: '헌드레드 · 상복부 컬업 & 스트랩 프레스',
+        en: 'The Hundred on Reformer',
+        springs: '● 1R · ◐ 1B (중강)',
+        contacts: ['■ 하부 흉추·천골 → 캐리지 밀착', '■ 양손 → 풀리 핸드 스트랩 파지'],
+        cue: '견갑 하각까지 상체를 말아 올리고 스트랩을 골반 옆으로 길게 당긴 채 다리를 사선으로 뻗어 호흡합니다.',
+        descKo: '리포머 위에서 스트랩을 손에 쥐고 상체를 컬업하며 다리를 테이블탑에서 45도 사선으로 뻗는 헌드레드 도해'
+      },
+      {
+        id: 'reformer-swan',
+        app: '리포머 + 롱박스',
+        ko: '롱박스 스완 · 흉추 신전',
+        en: 'Long Box Swan Extension',
+        springs: '◐ 1B (중저)',
+        contacts: ['■ 치골·복부 → 롱박스 상면 지지', '■ 양손 → 풋바 파지'],
+        cue: '치골을 롱박스에 단단히 붙이고 아랫배를 보호한 채 정수리부터 가슴 앞쪽을 매끄러운 원호로 들어 올립니다.',
+        descKo: '리포머 위 롱박스에 엎드려 양손으로 풋바를 밀며 흉추를 길게 신전하는 스완 도해'
+      },
+      {
+        id: 'barrel-side',
+        app: '래더 바렐',
+        ko: '바렐 사이드 벤드 · 측면 굴곡',
+        en: 'Ladder Barrel Side Bend',
+        springs: '○ 무스프링 (자체 중력)',
+        contacts: ['■ 골반 측면 → 바렐 돔 상단 지지', '■ 위·아래 발 → 래더 가로대 고정'],
+        cue: '골반 측면을 바렐 아치에 기대고 두 발을 사다리 가로대에 건 상태에서 옆구리 힘으로 긴 측굴 호를 그립니다.',
+        descKo: '래더 바렐 아치에 골반 옆면을 대고 사다리 가로대에 발을 건 채 상체를 옆으로 들어 올리는 사이드 벤드 도해'
+      },
+      {
+        id: 'cadillac-cat',
+        app: '캐딜락',
+        ko: '캐딜락 롤다운 바 닐링 캣 스트레치',
+        en: 'Cadillac Kneeling Cat Stretch',
+        springs: '● 2Y 상단 스프링 (경중)',
+        contacts: ['■ 양무릎·정강이 → 캐딜락 베드 고정', '■ 양손 → 롤다운 바 파지'],
+        cue: '무릎 위에 골반을 수직으로 세운 뒤 배꼽을 등 뒤로 당기며 롤다운 바를 아래로 밀어 등 전체를 C-커브로 분절합니다.',
+        descKo: '캐딜락 베드 위에 무릎을 꿇고 앉아 상단 스프링에 연결된 롤다운 바를 양손으로 눌러 척추를 분절하는 도해'
+      },
+      {
+        id: 'mat-clam',
+        app: '스튜디오 매트',
+        ko: '매트 사이드 클램 · 고관절 외회전',
+        en: 'Mat Side-Lying Clam',
+        springs: '○ 무스프링 (매트 기본)',
+        contacts: ['■ 측면 흉곽·골반 → 매트 수직 정렬', '■ 양발 안쪽 → 복사뼈 밀착 고정'],
+        cue: '골반이 뒤로 구르지 않게 수직으로 포갠 채 양발을 붙이고 위쪽 무릎만 조개처럼 열어 중둔근을 수축합니다.',
+        descKo: '매트에 옆으로 누워 머리를 팔로 받치고 발목을 붙인 채 위쪽 무릎만 여닫는 사이드 클램 도해'
+      }
     ];
 
     function smootherstep(x) {
@@ -160,174 +443,587 @@
       return c * c * c * (c * (c * 6 - 15) + 10);
     }
 
-    function buildCardMarkup() {
-      document.getElementById('atlas-grid').innerHTML = items.map((it) => `
-        <article class="motion-card">
-          <div class="card-head">
-            <div>
-              <h2 style="margin:0;font-size:1.12rem;">${it.ko}</h2>
-              <small style="color:var(--muted);">${it.en}</small>
-            </div>
-            <span class="spring-chip">${it.app} · ${it.springs}</span>
-          </div>
-          <div class="stage-box">
-            <svg id="svg-${it.id}" viewBox="0 0 320 200" width="100%" role="img" aria-label="${it.ko} 모션 도해"></svg>
-          </div>
-          <div class="phase-bar">
-            ${phaseLabels.map((lbl, idx) => `<button class="phase-btn ${(!playing || reduced) && manualIdx === idx ? 'active' : ''}" onclick="pickPhase(${idx})">${lbl}</button>`).join('')}
-          </div>
-          <div class="meta">${it.cue}</div>
-        </article>
-      `).join('');
-      drawFrames();
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function r1(v) { return Math.round(v * 10) / 10; }
+
+    // Analytical 2-bone Inverse Kinematics so thigh/shin & upperArm/forearm lengths NEVER distort across frames!
+    function solveIK(root, target, l1, l2, bendSign) {
+      const dx = target.x - root.x;
+      const dy = target.y - root.y;
+      const rawDist = Math.hypot(dx, dy) || 0.001;
+      const maxReach = (l1 + l2) * 0.992;
+      const minReach = Math.abs(l1 - l2) + 2;
+      const d = Math.max(minReach, Math.min(maxReach, rawDist));
+      const ux = dx / rawDist;
+      const uy = dy / rawDist;
+      const clampedTarget = { x: root.x + ux * d, y: root.y + uy * d };
+      const cosA = (l1 * l1 + d * d - l2 * l2) / (2 * l1 * d);
+      const a = Math.acos(Math.max(-1, Math.min(1, cosA)));
+      const baseAng = Math.atan2(uy, ux);
+      const jointAng = baseAng + bendSign * a;
+      const mid = {
+        x: r1(root.x + Math.cos(jointAng) * l1),
+        y: r1(root.y + Math.sin(jointAng) * l1)
+      };
+      return { mid, end: { x: r1(clampedTarget.x), y: r1(clampedTarget.y) } };
     }
 
-    function sharedDefs(id) {
+    function escXml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Smooth tapered capsule polygon along a polyline chain (sweep-flag=0 in SVG Y-down for convex outward round caps!)
+    function taperedChainPath(pts, radii) {
+      const left = [];
+      const right = [];
+      const n = pts.length;
+      for (let i = 0; i < n; i++) {
+        const p0 = pts[Math.max(0, i - 1)];
+        const p1 = pts[i];
+        const p2 = pts[Math.min(n - 1, i + 1)];
+        let tx = p2.x - p0.x;
+        let ty = p2.y - p0.y;
+        const len = Math.hypot(tx, ty) || 1;
+        tx /= len; ty /= len;
+        const nx = -ty, ny = tx;
+        const rad = radii[Math.min(i, radii.length - 1)];
+        left.push({ x: r1(p1.x + nx * rad), y: r1(p1.y + ny * rad) });
+        right.push({ x: r1(p1.x - nx * rad), y: r1(p1.y - ny * rad) });
+      }
+      let d = `M ${left[0].x} ${left[0].y}`;
+      for (let i = 1; i < n; i++) d += ` L ${left[i].x} ${left[i].y}`;
+      const rEnd = radii[n - 1];
+      d += ` A ${rEnd} ${rEnd} 0 0 0 ${right[n - 1].x} ${right[n - 1].y}`;
+      for (let i = n - 2; i >= 0; i--) d += ` L ${right[i].x} ${right[i].y}`;
+      const rStart = radii[0];
+      d += ` A ${rStart} ${rStart} 0 0 0 ${left[0].x} ${left[0].y} Z`;
+      return d;
+    }
+
+    function springCoilPath(x1, y1, x2, y2, coils = 6, amp = 2.8) {
+      const dx = x2 - x1, dy = y2 - y1;
+      const len = Math.hypot(dx, dy);
+      if (len < 6) return `M ${x1} ${y1} L ${x2} ${y2}`;
+      const nx = -dy / len, ny = dx / len;
+      let d = `M ${r1(x1)} ${r1(y1)}`;
+      const steps = coils * 2;
+      for (let i = 1; i < steps; i++) {
+        const t = i / steps;
+        const s = i % 2 === 1 ? 1 : -1;
+        d += ` L ${r1(x1 + dx * t + nx * amp * s)} ${r1(y1 + dy * t + ny * amp * s)}`;
+      }
+      return d + ` L ${r1(x2)} ${r1(y2)}`;
+    }
+
+    // Unified Anatomical Studio Practitioner Renderer: continuous neck -> shoulder/ribcage -> waist -> pelvis -> legs/feet & arms/hands
+    function drawPractitioner(p, uid) {
+      // p: { pelvis, lumbar, thoracic, neck, head, bunDir, hip, knee, ankle, footTip, shoulder, elbow, wrist, handTip, farKnee?, farAnkle? }
+      const neckToHead = taperedChainPath([p.thoracic, p.neck, p.head], [5.2, 4.0, 4.2]);
+      const torsoBody = taperedChainPath(
+        [
+          p.pelvis,
+          { x: lerp(p.pelvis.x, p.lumbar.x, 0.5), y: lerp(p.pelvis.y, p.lumbar.y, 0.5) },
+          p.lumbar,
+          { x: lerp(p.lumbar.x, p.thoracic.x, 0.55), y: lerp(p.lumbar.y, p.thoracic.y, 0.55) },
+          p.thoracic,
+          { x: lerp(p.thoracic.x, p.neck.x, 0.45), y: lerp(p.thoracic.y, p.neck.y, 0.45) }
+        ],
+        [9.4, 8.6, 7.2, 8.8, 9.6, 6.2]
+      );
+      const legBody = taperedChainPath(
+        [
+          p.pelvis,
+          p.hip,
+          { x: lerp(p.hip.x, p.knee.x, 0.45), y: lerp(p.hip.y, p.knee.y, 0.45) },
+          p.knee,
+          { x: lerp(p.knee.x, p.ankle.x, 0.42), y: lerp(p.knee.y, p.ankle.y, 0.42) },
+          p.ankle
+        ],
+        [8.8, 8.2, 7.4, 5.3, 5.2, 3.3]
+      );
+      const footBody = taperedChainPath([p.ankle, p.footTip], [3.5, 2.3]);
+      const armBody = taperedChainPath(
+        [
+          p.shoulder,
+          { x: lerp(p.shoulder.x, p.elbow.x, 0.46), y: lerp(p.shoulder.y, p.elbow.y, 0.46) },
+          p.elbow,
+          { x: lerp(p.elbow.x, p.wrist.x, 0.45), y: lerp(p.elbow.y, p.wrist.y, 0.45) },
+          p.wrist,
+          p.handTip
+        ],
+        [5.0, 4.5, 3.7, 3.4, 2.7, 2.4]
+      );
+
+      let farLegMarkup = '';
+      if (p.farKnee && p.farAnkle) {
+        const farLeg = taperedChainPath([p.pelvis, p.farKnee, p.farAnkle], [7.6, 4.7, 3.0]);
+        farLegMarkup = `<path d="${farLeg}" fill="#6e8c7f" stroke="#355247" stroke-width="1"/>`;
+      }
+
+      const bunX = r1(p.head.x + (p.bunDir?.x ?? -7.5));
+      const bunY = r1(p.head.y + (p.bunDir?.y ?? -3.5));
+      const eyeX = r1(p.head.x - (p.bunDir?.x ?? -7.5) * 0.52);
+      const eyeY = r1(p.head.y - (p.bunDir?.y ?? -3.5) * 0.25);
+
+      return `
+        <g class="practitioner-figure">
+          ${farLegMarkup}
+          <path d="${legBody}" fill="url(#leggings-${uid})" stroke="#1c382e" stroke-width="1.35"/>
+          <path d="${footBody}" fill="url(#skin-${uid})" stroke="#5c4231" stroke-width="1.2"/>
+          <path d="${neckToHead}" fill="url(#skin-${uid})" stroke="#5c4231" stroke-width="1.15"/>
+          <path d="${torsoBody}" fill="url(#top-${uid})" stroke="#1c382e" stroke-width="1.4"/>
+          <circle cx="${bunX}" cy="${bunY}" r="4.2" fill="#23372f" stroke="#162620" stroke-width="1"/>
+          <circle cx="${p.head.x}" cy="${p.head.y}" r="8.8" fill="url(#skin-${uid})" stroke="#2a433a" stroke-width="1.45"/>
+          <circle cx="${eyeX}" cy="${eyeY}" r="1.15" fill="#23372f"/>
+          <path d="${armBody}" fill="url(#skin-${uid})" stroke="#684a36" stroke-width="1.25"/>
+          <circle cx="${p.handTip.x}" cy="${p.handTip.y}" r="2.9" fill="url(#skin-${uid})" stroke="#5c4231" stroke-width="1.15"/>
+        </g>
+      `;
+    }
+
+    function anchorBadge(x, y) {
+      if (!guides) return '';
+      return `<rect x="${r1(x - 3.6)}" y="${r1(y - 3.6)}" width="7.2" height="7.2" rx="1.6" fill="#fffdf8" stroke="#183a2f" stroke-width="1.5"/>`;
+    }
+
+    function motionArrow(x1, y1, x2, y2, uid, label) {
+      if (!guides) return '';
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len, uy = dy / len;
+      const nx = -uy, ny = ux;
+      const tipX = r1(x2), tipY = r1(y2);
+      const baseX = x2 - ux * 7.5, baseY = y2 - uy * 7.5;
+      const p1x = r1(baseX + nx * 4.0), p1y = r1(baseY + ny * 4.0);
+      const p2x = r1(baseX - nx * 4.0), p2y = r1(baseY - ny * 4.0);
+      const lineEndX = r1(x2 - ux * 5.0), lineEndY = r1(y2 - uy * 5.0);
+      const isVertical = Math.abs(dy) > Math.abs(dx);
+      const tx = isVertical ? r1(Math.max(x1, x2) + 8) : r1((x1 + x2) / 2);
+      const ty = isVertical ? r1((y1 + y2) / 2 + 3) : r1(Math.min(y1, y2) - 7);
+      const anchor = isVertical ? 'start' : 'middle';
+      return `
+        <g aria-hidden="true">
+          <line x1="${r1(x1)}" y1="${r1(y1)}" x2="${lineEndX}" y2="${lineEndY}" stroke="#fffdf8" stroke-width="4.2" stroke-linecap="round"/>
+          <line x1="${r1(x1)}" y1="${r1(y1)}" x2="${lineEndX}" y2="${lineEndY}" stroke="#b8563f" stroke-width="2.1" stroke-linecap="round"/>
+          <polygon points="${tipX},${tipY} ${p1x},${p1y} ${p2x},${p2y}" fill="#b8563f" stroke="#fffdf8" stroke-width="0.7"/>
+          ${label ? `<text x="${tx}" y="${ty}" text-anchor="${anchor}" font-size="8.5" font-weight="800" fill="none" stroke="#fdfcf8" stroke-width="2.8" stroke-linejoin="round">${escXml(label)}</text><text x="${tx}" y="${ty}" text-anchor="${anchor}" font-size="8.5" font-weight="800" fill="#8f3924">${escXml(label)}</text>` : ''}
+        </g>
+      `;
+    }
+
+    // All gradients strictly use gradientUnits="userSpaceOnUse" so horizontal/vertical shapes NEVER turn invisible!
+    function sharedDefs(uid, phaseBadgeText) {
       return `
         <defs>
-          <linearGradient id="bg-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fdfcf8"/><stop offset="100%" stop-color="#efe9dc"/></linearGradient>
-          <linearGradient id="oak-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d8b489"/><stop offset="100%" stop-color="#b5895a"/></linearGradient>
-          <linearGradient id="up-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#58776a"/><stop offset="100%" stop-color="#3b564b"/></linearGradient>
-          <linearGradient id="suit-${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#496f60"/><stop offset="100%" stop-color="#29483c"/></linearGradient>
-          <linearGradient id="skin-${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f0d7c2"/><stop offset="100%" stop-color="#dfb99d"/></linearGradient>
+          <linearGradient id="bg-${uid}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="200">
+            <stop offset="0%" stop-color="#fdfcf8"/><stop offset="100%" stop-color="#efe9dc"/>
+          </linearGradient>
+          <linearGradient id="oak-${uid}" gradientUnits="userSpaceOnUse" x1="0" y1="110" x2="0" y2="180">
+            <stop offset="0%" stop-color="#d8b489"/><stop offset="100%" stop-color="#b38656"/>
+          </linearGradient>
+          <linearGradient id="up-${uid}" gradientUnits="userSpaceOnUse" x1="0" y1="100" x2="0" y2="165">
+            <stop offset="0%" stop-color="#58776a"/><stop offset="100%" stop-color="#395348"/>
+          </linearGradient>
+          <linearGradient id="top-${uid}" gradientUnits="userSpaceOnUse" x1="60" y1="40" x2="220" y2="160">
+            <stop offset="0%" stop-color="#4e7767"/><stop offset="100%" stop-color="#2e5244"/>
+          </linearGradient>
+          <linearGradient id="leggings-${uid}" gradientUnits="userSpaceOnUse" x1="100" y1="70" x2="270" y2="175">
+            <stop offset="0%" stop-color="#35584a"/><stop offset="100%" stop-color="#1e392e"/>
+          </linearGradient>
+          <linearGradient id="skin-${uid}" gradientUnits="userSpaceOnUse" x1="50" y1="30" x2="260" y2="170">
+            <stop offset="0%" stop-color="#f2dac6"/><stop offset="100%" stop-color="#dfb799"/>
+          </linearGradient>
+          <marker id="arr-${uid}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#b8563f"/>
+          </marker>
         </defs>
-        <rect x="0.5" y="0.5" width="319" height="199" rx="12" fill="url(#bg-${id})" stroke="#dcd4c3"/>
-        <ellipse cx="160" cy="179" rx="140" ry="3.5" fill="rgba(28,52,43,0.08)"/>
-        <line x1="12" y1="178" x2="308" y2="178" stroke="#d5cec0" stroke-width="1.3"/>
+        <rect x="0.5" y="0.5" width="319" height="199" rx="12" fill="url(#bg-${uid})" stroke="#dcd4c3"/>
+        <ellipse cx="160" cy="181" rx="142" ry="3.5" fill="rgba(28,52,43,0.08)"/>
+        <line x1="12" y1="180" x2="308" y2="180" stroke="#d3cbbd" stroke-width="1.4"/>
+        <g aria-hidden="true">
+          <rect x="10" y="9" width="66" height="18" rx="9" fill="#ffffff" fill-opacity="0.92" stroke="#d5cdbc"/>
+          <text x="43" y="21" text-anchor="middle" font-size="9.5" font-weight="800" fill="#1f4d3f">${phaseBadgeText}</text>
+        </g>
       `;
     }
 
-    function reformerBase(id, slidePx, hasBox = false) {
-      const cStart = 42 - slidePx;
+    function reformerApparatus(uid, slidePx, hasLongBox = false) {
+      const cX = r1(40 - slidePx);
       return `
-        <rect x="20" y="154" width="280" height="11" rx="3.5" fill="url(#oak-${id})" stroke="#87633b" stroke-width="1.3"/>
-        <line x1="26" y1="151" x2="294" y2="151" stroke="#788882" stroke-width="2"/>
-        <path d="M ${cStart + 168} 151 Q ${(cStart + 446) / 2} 155 278 151" fill="none" stroke="#bf5a41" stroke-width="1.8" stroke-dasharray="4 2"/>
-        <rect x="${cStart}" y="142" width="168" height="9.5" rx="3.5" fill="url(#up-${id})" stroke="#24443a" stroke-width="1.4"/>
-        ${hasBox ? `<rect x="${cStart + 54}" y="123" width="84" height="19" rx="3.5" fill="url(#up-${id})" stroke="#24443a" stroke-width="1.2"/>` : ''}
-        <line x1="280" y1="156" x2="266" y2="126" stroke="#354b44" stroke-width="3.6" stroke-linecap="round"/>
-        <circle cx="266" cy="126" r="4.3" fill="#223b33" stroke="#fcfaf5" stroke-width="1.2"/>
+        <rect x="18" y="156" width="284" height="11" rx="3.5" fill="url(#oak-${uid})" stroke="#846038" stroke-width="1.3"/>
+        <rect x="26" y="167" width="8" height="13" rx="1.8" fill="#9c754a"/>
+        <rect x="286" y="167" width="8" height="13" rx="1.8" fill="#9c754a"/>
+        <line x1="24" y1="153" x2="294" y2="153" stroke="#798983" stroke-width="2"/>
+        <path d="${springCoilPath(cX + 166, 152, 276, 152, 7, 2.8)}" fill="none" stroke="#b8563f" stroke-width="1.7"/>
+        <rect x="${cX}" y="143" width="166" height="9.5" rx="3.5" fill="url(#up-${uid})" stroke="#24443a" stroke-width="1.4"/>
+        <line x1="${cX + 6}" y1="140" x2="${cX + 26}" y2="143" stroke="#2d4d42" stroke-width="4" stroke-linecap="round"/>
+        <rect x="${cX + 34}" y="132" width="7.5" height="11.5" rx="2" fill="#355449" stroke="#1f3b32" stroke-width="1.1"/>
+        ${hasLongBox ? `<rect x="${cX + 52}" y="123" width="88" height="20" rx="3.5" fill="url(#up-${uid})" stroke="#24443a" stroke-width="1.3"/>` : ''}
+        <line x1="24" y1="156" x2="24" y2="104" stroke="#6b5235" stroke-width="2.8" stroke-linecap="round"/>
+        <circle cx="24" cy="104" r="3.2" fill="#fcfaf5" stroke="#2f5247" stroke-width="1.3"/>
+        <line x1="280" y1="158" x2="266" y2="126" stroke="#354b44" stroke-width="3.8" stroke-linecap="round"/>
+        <circle cx="266" cy="126" r="4.5" fill="#223b33" stroke="#fcfaf5" stroke-width="1.3"/>
       `;
     }
 
-    function drawFrames() {
-      const rawWave = (!playing || reduced) ? phaseSamples[manualIdx] : 0.5 - 0.5 * Math.cos(cycle * Math.PI * 2);
+    function renderExerciseSvg(item, u, phaseBadgeText, suffix) {
+      const uid = `${item.id}-${suffix}`;
+      const headerA11y = `<title id="t-${uid}">${escXml(item.ko)} (${escXml(phaseBadgeText)})</title><desc id="d-${uid}">${escXml(item.descKo)}. ${escXml(item.contacts.join(', '))}</desc>`;
+      let scene = '';
+
+      if (item.id === 'chair-press') {
+        // Wunda Chair with side cactus handle + hinged split pedal + spring coil
+        const pedalDeg = lerp(30, -8, u);
+        const rad = (pedalDeg * Math.PI) / 180;
+        const hinge = { x: 160, y: 162 };
+        const pedalTip = { x: r1(hinge.x + Math.cos(rad) * 56), y: r1(hinge.y - Math.sin(rad) * 56) };
+        const hip = { x: 132, y: 103 };
+        const ankleTarget = { x: r1(pedalTip.x - 4), y: r1(pedalTip.y - 6) };
+        const legIK = solveIK(hip, ankleTarget, 48, 46, -1);
+        const farLegIK = solveIK({ x: 130, y: 103 }, { x: ankleTarget.x - 5, y: ankleTarget.y - 2 }, 48, 46, -1);
+        const handleGrip = { x: 142, y: 84 };
+        const shoulder = { x: 126, y: 60 };
+        const armIK = solveIK(shoulder, handleGrip, 24, 22, 1);
+
+        scene = `
+          <rect x="104" y="114" width="84" height="66" rx="4.5" fill="url(#oak-${uid})" stroke="#7e5b36" stroke-width="1.5"/>
+          <rect x="112" y="122" width="68" height="50" rx="3" fill="#dfc09a" stroke="#a58158" stroke-width="1"/>
+          <rect x="100" y="105" width="92" height="9.5" rx="3.5" fill="url(#up-${uid})" stroke="#24443a" stroke-width="1.5"/>
+          <line x1="142" y1="114" x2="142" y2="76" stroke="#475b53" stroke-width="3.2" stroke-linecap="round"/>
+          <rect x="137" y="73" width="10" height="5" rx="2.5" fill="#223830"/>
+          <path d="${springCoilPath(126, 168, pedalTip.x - 6, pedalTip.y, 6, 2.8)}" fill="none" stroke="#b8563f" stroke-width="1.7"/>
+          <line x1="${hinge.x}" y1="${hinge.y}" x2="${pedalTip.x}" y2="${pedalTip.y}" stroke="#2b4c41" stroke-width="4.6" stroke-linecap="round"/>
+          <circle cx="${hinge.x}" cy="${hinge.y}" r="3.4" fill="#fcfaf5" stroke="#2b4c41" stroke-width="1.4"/>
+          <circle cx="${pedalTip.x}" cy="${pedalTip.y}" r="4.3" fill="#1f3b32" stroke="#fcfaf5" stroke-width="1.2"/>
+          ${drawPractitioner({
+            pelvis: { x: 126, y: 103 },
+            lumbar: { x: 125, y: 86 },
+            thoracic: { x: 125, y: 66 },
+            neck: { x: 126, y: 50 },
+            head: { x: 127, y: 36 },
+            bunDir: { x: -8.2, y: -2.0 },
+            hip,
+            knee: legIK.mid,
+            ankle: legIK.end,
+            footTip: { x: r1(pedalTip.x + 9), y: r1(pedalTip.y - 3) },
+            farKnee: farLegIK.mid,
+            farAnkle: farLegIK.end,
+            shoulder,
+            elbow: armIK.mid,
+            wrist: { x: r1(handleGrip.x - 2), y: r1(handleGrip.y) },
+            handTip: handleGrip
+          }, uid)}
+          ${anchorBadge(126, 105)}
+          ${anchorBadge(142, 84)}
+          ${anchorBadge(pedalTip.x, pedalTip.y - 2)}
+          ${motionArrow(232, 124, 232, 164, uid, '페달 프레스')}
+        `;
+      } else if (item.id === 'reformer-fw') {
+        const slide = u * 28;
+        const hip = { x: r1(182 - slide), y: 135 };
+        const ankle = { x: 261, y: 123 };
+        const legIK = solveIK(hip, ankle, 47, 46, -1);
+        const farIK = solveIK({ x: hip.x - 2, y: 133 }, { x: 259, y: 121 }, 47, 46, -1);
+        scene = reformerApparatus(uid, slide) + drawPractitioner({
+          pelvis: { x: r1(174 - slide), y: 136 },
+          lumbar: { x: r1(146 - slide), y: 136 },
+          thoracic: { x: r1(114 - slide), y: 136 },
+          neck: { x: r1(92 - slide), y: 135 },
+          head: { x: r1(76 - slide), y: 133 },
+          bunDir: { x: -8, y: 1 },
+          hip,
+          knee: legIK.mid,
+          ankle: legIK.end,
+          footTip: { x: 270, y: 115 },
+          farKnee: farIK.mid,
+          farAnkle: farIK.end,
+          shoulder: { x: r1(106 - slide), y: 135 },
+          elbow: { x: r1(134 - slide), y: 139 },
+          wrist: { x: r1(160 - slide), y: 140 },
+          handTip: { x: r1(168 - slide), y: 140 }
+        }, uid) + anchorBadge(265, 125) + anchorBadge(106 - slide, 136) + motionArrow(198, 78, 156, 78, uid, '캐리지 활주');
+      } else if (item.id === 'reformer-bridge') {
+        const lift = u * 34;
+        const thorLift = Math.max(0, u - 0.1) * 10;
+        const slide = u * 4;
+        const hip = { x: r1(184 - slide), y: r1(135 - lift) };
+        const ankle = { x: 261, y: 123 };
+        const legIK = solveIK(hip, ankle, 47, 46, -1);
+        scene = reformerApparatus(uid, slide) + drawPractitioner({
+          pelvis: { x: r1(176 - slide), y: r1(136 - lift) },
+          lumbar: { x: r1(144 - slide), y: r1(136 - lift * 0.58) },
+          thoracic: { x: r1(112 - slide), y: r1(135 - thorLift) },
+          neck: { x: r1(92 - slide), y: r1(135 - thorLift * 0.35) },
+          head: { x: r1(76 - slide), y: 134 },
+          bunDir: { x: -8, y: 1 },
+          hip,
+          knee: legIK.mid,
+          ankle: legIK.end,
+          footTip: { x: 270, y: 115 },
+          shoulder: { x: r1(106 - slide), y: 136 },
+          elbow: { x: r1(134 - slide), y: 140 },
+          wrist: { x: r1(162 - slide), y: 141 },
+          handTip: { x: r1(170 - slide), y: 141 }
+        }, uid) + anchorBadge(104, 138) + anchorBadge(265, 125) + motionArrow(166, 92, 166, 62, uid, '분절 리프트');
+      } else if (item.id === 'reformer-hundred') {
+        const slide = 6 + u * 12;
+        const curl = u * 24;
+        const hip = { x: r1(178 - slide * 0.4), y: 135 };
+        const ankleTarget = { x: r1(lerp(212, 260, u)), y: r1(lerp(88, 68, u)) };
+        const legIK = solveIK(hip, ankleTarget, 46, 45, -1);
+        const shoulder = { x: r1(104 + curl * 0.35), y: r1(134 - curl * 0.62) };
+        const hand = { x: r1(lerp(154, 188, u)), y: r1(lerp(96, 126, u)) };
+        const armIK = solveIK(shoulder, hand, 28, 26, 1);
+        scene = reformerApparatus(uid, slide) + `
+          <line x1="24" y1="104" x2="${hand.x}" y2="${hand.y}" stroke="#36628a" stroke-width="1.6" stroke-dasharray="4 2"/>
+        ` + drawPractitioner({
+          pelvis: { x: r1(170 - slide * 0.4), y: 136 },
+          lumbar: { x: r1(144 - slide * 0.3), y: 137 },
+          thoracic: { x: r1(118 + curl * 0.18), y: r1(135 - curl * 0.35) },
+          neck: { x: r1(94 + curl * 0.42), y: r1(132 - curl * 0.85) },
+          head: { x: r1(82 + curl * 0.52), y: r1(124 - curl * 1.1) },
+          bunDir: { x: -7, y: -4 },
+          hip,
+          knee: legIK.mid,
+          ankle: legIK.end,
+          footTip: { x: r1(legIK.end.x + 12), y: r1(legIK.end.y - 5) },
+          shoulder,
+          elbow: armIK.mid,
+          wrist: { x: r1(hand.x - 5), y: hand.y },
+          handTip: hand
+        }, uid) + anchorBadge(144, 138) + anchorBadge(hand.x, hand.y) + motionArrow(216, 84, 258, 64, uid, '45° 뻗기');
+      } else if (item.id === 'reformer-swan') {
+        const ext = u * 34;
+        const slide = u * 12;
+        const pelvis = { x: r1(146 - slide * 0.5), y: 117 };
+        const hip = { x: r1(136 - slide * 0.5), y: 118 };
+        const shoulder = { x: r1(198 + ext * 0.15), y: r1(115 - ext * 0.68) };
+        const hand = { x: 265, y: 124 };
+        const armIK = solveIK(shoulder, hand, 36, 34, 1);
+        scene = reformerApparatus(uid, slide, true) + drawPractitioner({
+          pelvis,
+          lumbar: { x: r1(166), y: r1(117 - ext * 0.18) },
+          thoracic: { x: r1(188 + ext * 0.1), y: r1(116 - ext * 0.52) },
+          neck: { x: r1(206 + ext * 0.18), y: r1(112 - ext * 0.85) },
+          head: { x: r1(218 + ext * 0.22), y: r1(104 - ext * 1.08) },
+          bunDir: { x: -7, y: -4 },
+          hip,
+          knee: { x: r1(94 - slide * 0.5), y: 121 },
+          ankle: { x: r1(54 - slide * 0.5), y: 124 },
+          footTip: { x: r1(42 - slide * 0.5), y: 128 },
+          shoulder,
+          elbow: armIK.mid,
+          wrist: { x: r1(hand.x - 4), y: r1(hand.y - 1) },
+          handTip: hand
+        }, uid) + anchorBadge(pelvis.x, 121) + anchorBadge(266, 125) + motionArrow(242, 98, 248, 60, uid, '흉추 신전');
+      } else if (item.id === 'barrel-side') {
+        const lift = u * 38;
+        const pelvis = { x: 126, y: 106 };
+        const shoulder = { x: r1(lerp(78, 98, u)), y: r1(lerp(94, 58, u)) };
+        const head = { x: r1(lerp(56, 86, u)), y: r1(lerp(84, 34, u)) };
+        const hand = { x: r1(lerp(42, 74, u)), y: r1(lerp(60, 18, u)) };
+        const armIK = solveIK(shoulder, hand, 24, 22, -1);
+        scene = `
+          <path d="M 64 180 C 72 104 168 104 176 180 Z" fill="url(#up-${uid})" fill-opacity="0.44" stroke="#27493e" stroke-width="2.2"/>
+          <path d="M 78 180 C 84 120 156 120 162 180 Z" fill="url(#oak-${uid})" fill-opacity="0.55" stroke="#846038" stroke-width="1.2"/>
+          <line x1="60" y1="180" x2="262" y2="180" stroke="#846038" stroke-width="3.2"/>
+          <line x1="226" y1="50" x2="226" y2="180" stroke="#9c754a" stroke-width="3.2"/>
+          <line x1="256" y1="42" x2="256" y2="180" stroke="#7e5b36" stroke-width="3.2"/>
+          <line x1="226" y1="78" x2="256" y2="72" stroke="#59422a" stroke-width="2.6"/>
+          <line x1="226" y1="106" x2="256" y2="100" stroke="#59422a" stroke-width="2.6"/>
+          <line x1="226" y1="134" x2="256" y2="128" stroke="#59422a" stroke-width="2.6"/>
+          <line x1="226" y1="162" x2="256" y2="156" stroke="#59422a" stroke-width="2.6"/>
+        ` + drawPractitioner({
+          pelvis,
+          lumbar: { x: r1(lerp(106, 114, u)), y: r1(lerp(102, 88, u)) },
+          thoracic: { x: r1(lerp(88, 104, u)), y: r1(lerp(97, 68, u)) },
+          neck: { x: r1(lerp(68, 92, u)), y: r1(lerp(90, 48, u)) },
+          head,
+          bunDir: { x: -6, y: 5 },
+          hip: { x: 136, y: 109 },
+          knee: { x: 182, y: 120 },
+          ankle: { x: 228, y: 131 },
+          footTip: { x: 242, y: 127 },
+          farKnee: { x: 184, y: 126 },
+          farAnkle: { x: 238, y: 155 },
+          shoulder,
+          elbow: armIK.mid,
+          wrist: { x: r1(hand.x + 2), y: r1(hand.y + 4) },
+          handTip: hand
+        }, uid) + anchorBadge(126, 110) + anchorBadge(232, 131) + motionArrow(36, 92, 60, 44, uid, '측굴 리프트');
+      } else if (item.id === 'cadillac-cat') {
+        const flex = u;
+        const knee = { x: 134, y: 146 };
+        const pelvis = { x: r1(lerp(132, 126, flex)), y: 112 };
+        const shoulder = { x: r1(lerp(134, 162, flex)), y: r1(lerp(62, 70, flex)) };
+        const hand = { x: r1(lerp(194, 222, flex)), y: r1(lerp(76, 112, flex)) };
+        const armIK = solveIK(shoulder, hand, 32, 30, 1);
+        scene = `
+          <rect x="24" y="148" width="272" height="10" rx="3" fill="url(#up-${uid})" stroke="#24443a" stroke-width="1.4"/>
+          <rect x="24" y="158" width="272" height="8" rx="2" fill="url(#oak-${uid})" stroke="#846038" stroke-width="1.2"/>
+          <rect x="34" y="166" width="7" height="14" fill="#8f6b43"/><rect x="279" y="166" width="7" height="14" fill="#8f6b43"/>
+          <line x1="30" y1="22" x2="30" y2="148" stroke="#5d7069" stroke-width="3.2"/>
+          <line x1="290" y1="22" x2="290" y2="148" stroke="#5d7069" stroke-width="3.2"/>
+          <line x1="28" y1="22" x2="292" y2="22" stroke="#465952" stroke-width="3.6"/>
+          <path d="${springCoilPath(290, 26, hand.x, hand.y, 7, 2.6)}" fill="none" stroke="#8a5b14" stroke-width="1.6"/>
+          <circle cx="${hand.x}" cy="${hand.y}" r="4" fill="#2d4f44" stroke="#fcfaf5" stroke-width="1.2"/>
+        ` + drawPractitioner({
+          pelvis,
+          lumbar: { x: r1(lerp(132, 134, flex)), y: r1(lerp(94, 86, flex)) },
+          thoracic: { x: r1(lerp(133, 148, flex)), y: r1(lerp(74, 66, flex)) },
+          neck: { x: r1(lerp(134, 170, flex)), y: r1(lerp(50, 68, flex)) },
+          head: { x: r1(lerp(135, 182, flex)), y: r1(lerp(36, 80, flex)) },
+          bunDir: { x: -7, y: -4 },
+          hip: { x: pelvis.x + 2, y: 114 },
+          knee,
+          ankle: { x: 96, y: 147 },
+          footTip: { x: 84, y: 148 },
+          shoulder,
+          elbow: armIK.mid,
+          wrist: { x: r1(hand.x - 4), y: r1(hand.y - 2) },
+          handTip: hand
+        }, uid) + anchorBadge(134, 146) + anchorBadge(hand.x, hand.y) + motionArrow(196, 72, 224, 108, uid, 'C-커브 프레스');
+      } else {
+        // Mat Side Clam
+        const open = u * 36;
+        const hip = { x: 184, y: 136 };
+        const ankle = { x: 248, y: 140 };
+        const nearKnee = { x: r1(216 - u * 4), y: r1(145 - open) };
+        scene = `
+          <rect x="20" y="148" width="280" height="8.5" rx="4" fill="url(#up-${uid})" fill-opacity="0.65" stroke="#2c5044" stroke-width="1.5"/>
+        ` + drawPractitioner({
+          pelvis: { x: 176, y: 138 },
+          lumbar: { x: 148, y: 137 },
+          thoracic: { x: 118, y: 136 },
+          neck: { x: 94, y: 135 },
+          head: { x: 78, y: 132 },
+          bunDir: { x: -8, y: 0 },
+          hip,
+          knee: nearKnee,
+          ankle,
+          footTip: { x: 260, y: 142 },
+          farKnee: { x: 216, y: 146 },
+          farAnkle: { x: 248, y: 143 },
+          shoulder: { x: 108, y: 135 },
+          elbow: { x: 130, y: 144 },
+          wrist: { x: 152, y: 145 },
+          handTip: { x: 160, y: 145 }
+        }, uid) + anchorBadge(176, 138) + anchorBadge(248, 141) + motionArrow(216, 144, 212, 106, uid, '외회전 오픈');
+      }
+
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="100%" role="img" aria-labelledby="t-${uid}" aria-describedby="d-${uid}" data-anatomical-accuracy-assumed="false">${headerA11y}${sharedDefs(uid, phaseBadgeText)}${scene}</svg>`;
+    }
+
+    function buildCards() {
+      const grid = document.getElementById('atlas-grid');
+      const effectiveDual = viewMode === 'dual' || reduced;
+
+      grid.innerHTML = items.map((it) => {
+        let stageContent = '';
+        if (effectiveDual) {
+          stageContent = `
+            <div class="dual-stage">
+              <div class="dual-cell">
+                <div class="dual-caption"><span>시작 자세</span><span>준비·정렬</span></div>
+                ${renderExerciseSvg(it, 0, '시작 자세', 'start')}
+              </div>
+              <div class="dual-cell">
+                <div class="dual-caption"><span>정점·끝 자세</span><span>최대 가동</span></div>
+                ${renderExerciseSvg(it, 1, '정점 자세', 'peak')}
+              </div>
+            </div>
+          `;
+        } else {
+          stageContent = `<div class="stage-box" id="box-${it.id}"></div>`;
+        }
+
+        return `
+          <article class="motion-card">
+            <div class="card-head">
+              <div>
+                <h2 style="margin:0;font-size:1.08rem;">${it.ko}</h2>
+                <small style="color:var(--muted);">${it.app} · ${it.en}</small>
+              </div>
+              <div class="badge-row">
+                <span class="spring-chip">${it.springs}</span>
+                <span class="review-chip" title="기하 연결·비율 검증 완료 / 실제 임상 자세 각도는 전문 강사 검토 필요">강사 검토 필요</span>
+              </div>
+            </div>
+            ${stageContent}
+            ${!effectiveDual ? `
+              <div class="phase-bar" role="group" aria-label="${it.ko} 단계 선택">
+                ${phaseLabels.map((lbl, idx) => `<button class="phase-btn ${viewMode === 'step' && manualIdx === idx ? 'active' : ''}" onclick="pickPhase(${idx})">${lbl}</button>`).join('')}
+              </div>
+            ` : ''}
+            <div class="contact-strip" aria-label="기구 접촉 기준">
+              ${it.contacts.map((c) => `<span class="contact-tag">${c}</span>`).join('')}
+            </div>
+            <p class="meta">${it.cue}</p>
+          </article>
+        `;
+      }).join('');
+
+      if (!effectiveDual) {
+        drawAnimatedFrames();
+      }
+    }
+
+    function drawAnimatedFrames() {
+      if (viewMode === 'dual' || reduced) return;
+      const rawWave = viewMode === 'step'
+        ? phaseSamples[manualIdx]
+        : 0.5 - 0.5 * Math.cos(cycle * Math.PI * 2);
       const u = smootherstep(rawWave);
+      const badge = viewMode === 'step'
+        ? phaseLabels[manualIdx]
+        : (u < 0.2 ? '시작 정렬' : u > 0.8 ? '정점 유지' : '연속 전환');
 
-      // 1. Reformer Footwork
-      const fwSlide = u * 30;
-      const hipX = 180 - fwSlide;
-      const kneeX = 224 - fwSlide * 0.35;
-      const kneeY = 98 + u * 22;
-      document.getElementById('svg-reformer-fw').innerHTML = sharedDefs('fw') + reformerBase('fw', fwSlide) + `
-        <path d="M ${102 - fwSlide} 136 L ${hipX} 136" stroke="url(#suit-fw)" stroke-width="14" stroke-linecap="round"/>
-        <path d="M ${hipX} 136 L ${kneeX} ${kneeY} L 264 125" stroke="#2d5043" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <path d="M ${110 - fwSlide} 136 L ${170 - fwSlide} 139" stroke="url(#skin-fw)" stroke-width="6.4" stroke-linecap="round"/>
-        <circle cx="${76 - fwSlide}" cy="134" r="3.8" fill="#243a32"/>
-        <circle cx="${84 - fwSlide}" cy="134" r="8.8" fill="url(#skin-fw)" stroke="#2b453c" stroke-width="1.5"/>
-        ${guides ? `<path d="M 210 84 L ${210 - Math.max(16, fwSlide)} 84" stroke="#bf5a41" stroke-width="2.2" stroke-linecap="round"/>` : ''}
-      `;
-
-      // 2. Pelvic Curl (Sequential Spinal Wave)
-      const pelvisLift = smootherstep(Math.min(1, rawWave * 1.18)) * 38;
-      const thorLift = smootherstep(Math.max(0, (rawWave - 0.12) / 0.88)) * 22;
-      document.getElementById('svg-reformer-bridge').innerHTML = sharedDefs('br') + reformerBase('br', u * 4) + `
-        <path d="M 98 136 Q 138 ${136 - thorLift} 178 ${136 - pelvisLift}" stroke="url(#suit-br)" stroke-width="14" stroke-linecap="round" fill="none"/>
-        <path d="M 178 ${136 - pelvisLift} L 222 82 L 264 125" stroke="#2d5043" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <path d="M 104 137 L 170 140" stroke="url(#skin-br)" stroke-width="6.2" stroke-linecap="round"/>
-        <circle cx="74" cy="134" r="3.8" fill="#243a32"/><circle cx="82" cy="134" r="8.8" fill="url(#skin-br)" stroke="#2b453c" stroke-width="1.5"/>
-        ${guides ? `<path d="M 178 132 L 178 ${94 - pelvisLift * 0.2}" stroke="#bf5a41" stroke-width="2.1" stroke-dasharray="4 2"/>` : ''}
-      `;
-
-      // 3. Hundred
-      const curl = u * 22;
-      const pump = playing && !reduced ? Math.sin(cycle * Math.PI * 10) * 4.5 : 0;
-      document.getElementById('svg-reformer-hundred').innerHTML = sharedDefs('hd') + reformerBase('hd', 8 + u * 6) + `
-        <path d="M ${96 + curl * 0.3} ${134 - curl} Q 136 138 176 136" stroke="url(#suit-hd)" stroke-width="14" stroke-linecap="round" fill="none"/>
-        <path d="M 176 136 L 216 ${96 - u * 10} L ${248 + u * 18} ${88 - u * 26}" stroke="#2d5043" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <path d="M ${104 + curl * 0.25} ${132 - curl * 0.8} L 178 ${124 + pump}" stroke="url(#skin-hd)" stroke-width="6.2" stroke-linecap="round"/>
-        <line x1="26" y1="104" x2="178" y2="${124 + pump}" stroke="#38658e" stroke-width="1.4" stroke-dasharray="3 2"/>
-        <circle cx="${74 + curl * 0.35}" cy="${128 - curl * 1.1}" r="3.8" fill="#243a32"/>
-        <circle cx="${82 + curl * 0.35}" cy="${128 - curl * 1.1}" r="8.8" fill="url(#skin-hd)" stroke="#2b453c" stroke-width="1.5"/>
-      `;
-
-      // 4. Long Box Swan
-      const ext = u * 32;
-      document.getElementById('svg-reformer-swan').innerHTML = sharedDefs('sw') + reformerBase('sw', u * 14, true) + `
-        <path d="M 74 ${124 + ext * 0.1} L 148 118 Q 188 ${116 - ext * 0.5} 218 ${112 - ext}" stroke="url(#suit-sw)" stroke-width="13.5" stroke-linecap="round" fill="none"/>
-        <path d="M 206 ${114 - ext * 0.75} L 240 119 L 266 125" stroke="url(#skin-sw)" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <circle cx="222" cy="${98 - ext}" r="3.8" fill="#243a32"/>
-        <circle cx="229" cy="${101 - ext}" r="8.8" fill="url(#skin-sw)" stroke="#2b453c" stroke-width="1.5"/>
-      `;
-
-      // 5. Wunda Chair Pedal Press
-      const pedalDeg = 32 - u * 38;
-      const pRad = (pedalDeg * Math.PI) / 180;
-      const tipX = 168 + Math.cos(pRad) * 50;
-      const tipY = 164 - Math.sin(pRad) * 50;
-      document.getElementById('svg-chair-press').innerHTML = sharedDefs('ch') + `
-        <rect x="112" y="114" width="80" height="64" rx="4.5" fill="url(#oak-ch)" stroke="#7e5b36" stroke-width="1.5"/>
-        <rect x="108" y="105.5" width="88" height="9.5" rx="3.2" fill="url(#up-ch)" stroke="#24443a" stroke-width="1.4"/>
-        <line x1="168" y1="164" x2="${tipX}" y2="${tipY}" stroke="#2d4f44" stroke-width="4.4" stroke-linecap="round"/>
-        <circle cx="${tipX}" cy="${tipY}" r="4" fill="#1f3b32" stroke="#fcfaf5" stroke-width="1.2"/>
-        <path d="M 136 106 L 136 66" stroke="url(#suit-ch)" stroke-width="14" stroke-linecap="round"/>
-        <path d="M 138 106 L ${182 + u * 8} ${96 + u * 24} L ${tipX} ${tipY - 3}" stroke="#2d5043" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <path d="M 136 72 L 154 96" stroke="url(#skin-ch)" stroke-width="6" stroke-linecap="round"/>
-        <circle cx="129" cy="48" r="3.8" fill="#243a32"/><circle cx="136" cy="50" r="8.8" fill="url(#skin-ch)" stroke="#2b453c" stroke-width="1.5"/>
-      `;
-
-      // 6. Ladder Barrel Side Bend
-      const bendY = 86 - u * 44;
-      document.getElementById('svg-barrel-side').innerHTML = sharedDefs('ba') + `
-        <path d="M 68 174 C 76 102 164 102 174 174 Z" fill="url(#up-ba)" fill-opacity="0.42" stroke="#27493e" stroke-width="2.2"/>
-        <line x1="222" y1="54" x2="222" y2="176" stroke="#9c754a" stroke-width="3"/>
-        <line x1="256" y1="44" x2="256" y2="176" stroke="#7e5b36" stroke-width="3"/>
-        <line x1="222" y1="88" x2="256" y2="82" stroke="#59422a" stroke-width="2.5"/>
-        <line x1="222" y1="132" x2="256" y2="126" stroke="#59422a" stroke-width="2.5"/>
-        <path d="M 126 116 L 182 124 L 228 132" stroke="#2d5043" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <path d="M 126 116 Q 102 ${104 - u * 24} 84 ${bendY}" stroke="url(#suit-ba)" stroke-width="13.5" stroke-linecap="round" fill="none"/>
-        <path d="M 92 ${bendY + 8} Q 76 ${bendY - 18} 64 ${bendY - 22}" stroke="url(#skin-ba)" stroke-width="6" stroke-linecap="round" fill="none"/>
-        <circle cx="74" cy="${bendY - 8}" r="3.8" fill="#243a32"/><circle cx="80" cy="${bendY - 6}" r="8.8" fill="url(#skin-ba)" stroke="#2b453c" stroke-width="1.5"/>
-      `;
+      items.forEach((it) => {
+        const box = document.getElementById(`box-${it.id}`);
+        if (box) box.innerHTML = renderExerciseSvg(it, u, badge, 'live');
+      });
     }
 
+    function setViewMode(m) {
+      viewMode = m;
+      document.getElementById('mode-anim').setAttribute('aria-pressed', String(m === 'anim'));
+      document.getElementById('mode-dual').setAttribute('aria-pressed', String(m === 'dual'));
+      document.getElementById('mode-step').setAttribute('aria-pressed', String(m === 'step'));
+      buildCards();
+    }
     function pickPhase(idx) {
-      playing = false;
       manualIdx = idx;
-      const b = document.getElementById('btn-play');
-      b.textContent = '▶ 연속 모션 재생';
-      b.classList.remove('active');
-      buildCardMarkup();
+      setViewMode('step');
     }
-    function togglePlay() {
-      if (reduced) return;
-      playing = !playing;
-      const b = document.getElementById('btn-play');
-      b.textContent = playing ? '⏸ 연속 모션 일시정지' : '▶ 연속 모션 재생';
-      b.classList.toggle('active', playing);
-      buildCardMarkup();
+    function toggleCardSize() {
+      const on = document.body.classList.toggle('card-size-mode');
+      document.getElementById('btn-card-size').setAttribute('aria-pressed', String(on));
     }
     function toggleGuides() {
       guides = !guides;
-      const b = document.getElementById('btn-guide');
-      b.textContent = guides ? '정렬·방향 벡터 표시 중' : '정렬·방향 벡터 숨김';
-      b.classList.toggle('active', guides);
-      drawFrames();
+      document.getElementById('btn-guide').setAttribute('aria-pressed', String(guides));
+      buildCards();
+    }
+    function toggleContrast() {
+      const on = document.body.classList.toggle('high-contrast');
+      document.getElementById('btn-contrast').setAttribute('aria-pressed', String(on));
     }
     function toggleRm() {
       reduced = !reduced;
-      if (reduced) playing = false;
-      document.getElementById('btn-rm').classList.toggle('active', reduced);
-      buildCardMarkup();
+      document.getElementById('btn-rm').setAttribute('aria-pressed', String(reduced));
+      buildCards();
     }
+
     function tick() {
-      if (playing && !reduced) {
-        cycle = (cycle + 0.0045) % 1;
-        drawFrames();
+      if (viewMode === 'anim' && !reduced) {
+        cycle = (cycle + 0.0042) % 1;
+        drawAnimatedFrames();
       }
       requestAnimationFrame(tick);
     }
-    buildCardMarkup();
+
+    buildCards();
     requestAnimationFrame(tick);
   </script>
 </body>

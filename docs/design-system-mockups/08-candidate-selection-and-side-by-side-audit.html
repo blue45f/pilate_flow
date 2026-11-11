@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Flow Atelier — 차기 디자인 3종 후보 선택 & 동일 해상도(1280/390) 대조 보드 (08)</title>
+    <title>Flow Atelier — 시안 통합 검토·선택 허브 & 동일 해상도(1280/390/360) 나란히 대조 보드 (08)</title>
     <style>
       :root {
         --bg: #faf8f4;
@@ -14,6 +14,8 @@
         --muted: #566055;
         --sage: #1f4d3f;
         --sage-soft: #e6efe9;
+        --amber: #8a5b14;
+        --amber-soft: #fbf3e2;
       }
       * {
         box-sizing: border-box;
@@ -25,6 +27,8 @@
         background: var(--bg);
         color: var(--ink);
         letter-spacing: -0.015em;
+        word-break: keep-all;
+        overflow-wrap: break-word;
       }
       header {
         position: sticky;
@@ -45,24 +49,29 @@
         gap: 8px;
         align-items: center;
       }
-      button {
+      button, a.pill-link {
         min-height: 44px;
         padding: 8px 14px;
         border-radius: 999px;
         border: 1px solid var(--line);
         background: var(--surface);
         color: var(--ink);
-        font-size: 0.85rem;
+        font-size: 0.84rem;
         font-weight: 700;
         cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
       }
       button[aria-pressed='true'],
-      button.primary {
+      button.primary,
+      a.pill-link.primary {
         background: var(--sage);
         border-color: var(--sage);
         color: #fff;
       }
-      button:focus-visible {
+      button:focus-visible, a.pill-link:focus-visible {
         outline: 2px solid var(--sage);
         outline-offset: 2px;
       }
@@ -73,7 +82,7 @@
       }
       .candidate-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
         gap: 16px;
         margin-bottom: 24px;
       }
@@ -81,7 +90,7 @@
         background: var(--surface);
         border: 2px solid var(--line);
         border-radius: 20px;
-        padding: 20px;
+        padding: 18px;
       }
       .kicker {
         display: inline-block;
@@ -92,6 +101,10 @@
         font-size: 0.75rem;
         font-weight: 700;
         margin-bottom: 8px;
+      }
+      .kicker.warn {
+        background: var(--amber-soft);
+        color: var(--amber);
       }
       .side-by-side {
         display: grid;
@@ -112,7 +125,7 @@
       }
       .frame-viewport {
         width: 100%;
-        height: 680px;
+        height: 700px;
         border: 1px solid var(--line);
         border-radius: 14px;
         background: var(--bg);
@@ -123,87 +136,119 @@
         height: 844px;
         margin: 0 auto;
       }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        background: var(--surface);
+      body.vp-360 .frame-viewport {
+        max-width: 360px;
+        height: 780px;
+        margin: 0 auto;
+      }
+      .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
         border: 1px solid var(--line);
         border-radius: 16px;
-        overflow: hidden;
+        background: var(--surface);
         margin-top: 22px;
+      }
+      table {
+        width: 100%;
+        min-width: 720px;
+        border-collapse: collapse;
+        background: var(--surface);
       }
       th, td {
         padding: 12px 14px;
         border-bottom: 1px solid var(--line);
         text-align: left;
+        vertical-align: top;
         font-size: 0.86rem;
+        word-break: keep-all;
+        line-height: 1.5;
       }
       th {
         background: var(--subtle);
+        white-space: nowrap;
+      }
+      th:first-child, td:first-child {
+        min-width: 160px;
+      }
+      @media (max-width: 720px) {
+        .table-wrap { border: 0; background: transparent; }
+        table, thead, tbody, tr, th, td { display: block; min-width: 0; width: 100%; }
+        thead { display: none; }
+        tr {
+          background: var(--surface);
+          border: 1px solid var(--line);
+          border-radius: 14px;
+          padding: 12px;
+          margin-bottom: 10px;
+        }
+        td { border: 0; padding: 4px 0; }
+        td::before {
+          content: attr(data-label) ' · ';
+          font-weight: 800;
+          color: var(--sage);
+        }
       }
     </style>
   </head>
   <body>
     <header>
       <div>
-        <strong>Flow Atelier 08 · 차기 디자인 시안 후보(사용자 선택 대기) & 동일 해상도 나란히 대조 보드</strong>
+        <strong>Flow Atelier 08 · 수정 시안 통합 선택 허브 & 동일 뷰포트(1280/390/360) 나란히 대조 보드</strong>
       </div>
       <div class="row" role="group" aria-label="동일 화면 크기 대조 전환">
-        <button id="vp1280" aria-pressed="true">데스크톱 1280×800 대조</button>
-        <button id="vp390" aria-pressed="false">모바일 390×844 대조</button>
+        <button id="vp1280" aria-pressed="true">데스크톱 1280×800</button>
+        <button id="vp390" aria-pressed="false">모바일 390×844</button>
+        <button id="vp360" aria-pressed="false">좁은 모바일 360×780</button>
       </div>
     </header>
     <main>
-      <h2>1. 다음 디자인 고도화 후보 3안 (사용자 직접 선택 전 미적용 · 임의 선택 안 함)</h2>
+      <div class="row" style="margin-bottom: 16px;">
+        <a class="pill-link primary" href="./05-pilates-flow-full-pages-ux-mockup.html" target="_blank" rel="noopener">05 전 화면 수정 시안 (v3.0) 열기</a>
+        <a class="pill-link primary" href="./02-studio-kinematic-motion-atlas.html" target="_blank" rel="noopener">02 5대 기구 연결 도해·모션 (v3.0) 열기</a>
+        <a class="pill-link primary" href="./09-movement-bundle-and-ai-governance-mockup.html" target="_blank" rel="noopener">09 동작 묶음·Remotion·AI 검토 시안 열기</a>
+      </div>
+
+      <h2>1. 사용자 선택 대기 항목 (선택 전 임의 코드 구현 금지 준수)</h2>
       <p style="color: var(--muted); margin-top: 4px">
-        아래 3가지 차기 디자인 후보 중 원하시는 방향 번호(후보 1 / 후보 2 / 후보 3)를 선택해 주시면, 해당 시안과 실제 앱 화면을 동일 해상도로 대조하며 구현합니다.
+        아래 3가지 결정 축에서 원하시는 번호를 알려 주시면, 선택하신 시안과 실제 로컬 앱 화면을 동일 뷰포트로 나란히 대조하며 `src/`에 구현·검증합니다.
       </p>
       <div class="candidate-grid">
         <article class="candidate-card">
-          <span class="kicker">후보 1 · 미니멀 단일 포커스 시트</span>
-          <h3>한 화면 1질문 · 상단 진행 바만 남긴 초단순 모드</h3>
-          <p style="color: var(--muted); font-size: 0.9rem">
-            좌측 사이드바를 기본 접힘 처리하고 캔버스 중앙(최대 840px)에 현재 단계 카드 하나만 크게 배치해 첫 사용자의 시선 분산을 최소화합니다.
+          <span class="kicker">결정 A · 화면 레이아웃 방향</span>
+          <h3>후보 A1(단일 포커스 · 05 기본) vs A2(듀얼 워크데스크) vs A3(3구간 타임블록)</h3>
+          <p style="color: var(--muted); font-size: 0.88rem">
+            <code>05</code> 시안(v3.0)의 홈 여백과 큰 수업 진행 타이머를 유지하면서 동작 검색·연결 도해·3×2 줄바꿈 모바일 탭을 결합한 구성을 기본 추천합니다.
           </p>
-          <ul style="font-size: 0.86rem; padding-left: 18px; color: var(--ink)">
-            <li>장점: 설명 없이 첫 수업 완성 속도 최고, 모바일·태블릿 완벽 일체감</li>
-            <li>트레이드오프: 다른 메뉴(보관함·라이브러리) 이동 시 상단 서랍 1탭 필요</li>
-          </ul>
         </article>
 
         <article class="candidate-card">
-          <span class="kicker">후보 2 · 듀얼 스튜디오 워크데스크</span>
-          <h3>좌측 슬림 아이콘 레일(68px) + 동작/시퀀스 상시 나란히 편집</h3>
-          <p style="color: var(--muted); font-size: 0.9rem">
-            사이드바 폭을 224px에서 68px 아이콘+짧은 라벨 레일로 줄여 본문 영역을 넓히고, 데스크톱에서는 검색과 시퀀스 카드를 한 화면에 나란히 배치합니다.
+          <span class="kicker">결정 B · 도해 표시 모드</span>
+          <h3>후보 D1(카드 정점 실루엣 + 수업/상세 연속 모션 & 시작↔끝 전환) vs D2(전 화면 정적 시작↔끝 병렬)</h3>
+          <p style="color: var(--muted); font-size: 0.88rem">
+            <code>02</code> 시안(v3.0)에서 체어 페달 프레스·리포머·바렐·캐딜락·매트 전신 연결 및 기구 접점을 확인하시고 기본 모드를 선택해 주세요 (모션 감소 시 자동으로 정적 시작↔끝 전환).
           </p>
-          <ul style="font-size: 0.86rem; padding-left: 18px; color: var(--ink)">
-            <li>장점: 숙련 강사의 다량 동작 편집·순서 비교 속도 극대화</li>
-            <li>트레이드오프: 모바일(390px)에서는 상하 탭 전환으로 자동 접힘</li>
-          </ul>
         </article>
 
         <article class="candidate-card">
-          <span class="kicker">후보 3 · 타임블록 보드(준비·본운동·마무리) 중심</span>
-          <h3>시간 비중 막대와 3구간 컬럼을 기본 편집 화면으로 전면 배치</h3>
-          <p style="color: var(--muted); font-size: 0.9rem">
-            단순 세로 리스트 대신 ‘준비(10분) · 본운동(32분) · 마무리(8분)’ 3개 블록 컨테이너 안에 동작 칩을 담고 빈 시간을 시각적으로 채우는 보드형입니다.
+          <span class="kicker warn">결정 C · 동작 묶음(세트) 수정 반영 정책</span>
+          <h3>후보 M2(독립 복사본 기본 + 원본 v2 선택 알림) vs 후보 M1(100% 독립 복사본 전용)</h3>
+          <p style="color: var(--muted); font-size: 0.88rem">
+            <code>09</code> 시안의 시뮬레이터에서 두 정책을 직접 눌러 비교하실 수 있습니다. 두 후보 모두 기존 저장 수업과 과거 기록을 자동 덮어쓰지 않습니다.
           </p>
-          <ul style="font-size: 0.86rem; padding-left: 18px; color: var(--ink)">
-            <li>장점: 50분 수업 밸런스와 스프링 흐름을 가장 직관적으로 설계</li>
-            <li>트레이드오프: 짧은 20~30분 자유 시퀀스에는 구조가 다소 정형화됨</li>
-          </ul>
         </article>
       </div>
 
-      <h2>2. 선택된 기준 시안(`05`) vs 실제 로컬 앱(`http://localhost:5173`) 동일 크기 1:1 나란히 대조 보드</h2>
-      <p style="color: var(--muted); margin-top: 4px">
-        로컬에서 <code>pnpm dev</code> 실행 시 오른쪽 프레임에 실제 앱이 동일 크기(<code>1280px</code> 또는 <code>390px</code>)로 나란히 로드되어 레이아웃·색상·간격·컴포넌트·모션을 직접 대조할 수 있습니다.
-      </p>
+      <h2>2. 수정 시안 전환 미리보기 vs 실제 로컬 앱(`http://localhost:5173`) 동일 크기 1:1 나란히 대조</h2>
+      <div class="row" style="margin-bottom: 12px;" role="group" aria-label="좌측 대조 시안 파일 전환">
+        <button type="button" data-src="./05-pilates-flow-full-pages-ux-mockup.html" aria-pressed="true">좌측: 05 전 화면 수정 시안</button>
+        <button type="button" data-src="./02-studio-kinematic-motion-atlas.html" aria-pressed="false">좌측: 02 연결 도해·모션 시안</button>
+        <button type="button" data-src="./09-movement-bundle-and-ai-governance-mockup.html" aria-pressed="false">좌측: 09 동작 묶음·비교 시안</button>
+      </div>
       <div class="side-by-side">
         <div class="frame-shell">
-          <strong>기준 시안 (`05-pilates-flow-full-pages-ux-mockup.html`)</strong>
-          <iframe class="frame-viewport" src="./05-pilates-flow-full-pages-ux-mockup.html" title="기준 시안 화면"></iframe>
+          <strong id="leftFrameTitle">선택 검토 시안 (`05-pilates-flow-full-pages-ux-mockup.html`)</strong>
+          <iframe class="frame-viewport" id="leftMockupFrame" src="./05-pilates-flow-full-pages-ux-mockup.html" title="기준 시안 화면"></iframe>
         </div>
         <div class="frame-shell">
           <strong>실제 앱 화면 (`http://localhost:5173` — 동일 해상도)</strong>
@@ -211,50 +256,64 @@
         </div>
       </div>
 
-      <table aria-label="시안 대 실제 앱 정합성 점검 체크리스트">
-        <thead>
-          <tr>
-            <th>대조 항목</th>
-            <th>시안 기준값</th>
-            <th>실제 앱 구현 상태</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>캔버스·표면·포인트 색상</strong></td>
-            <td><code>#faf8f4</code> 캔버스 · <code>#ffffff</code> 카드 · <code>#1f4d3f</code> 세이지 · 다크 스테이지 <code>#181b18</code></td>
-            <td><code>atelier-luxury-v2.css</code> 및 <code>03-design-tokens.json</code> 일치 확인</td>
-          </tr>
-          <tr>
-            <td><strong>터치 영역 · 키보드 접근성</strong></td>
-            <td>모든 주요 버튼 최소 <code>44px</code> 높이, <code>:focus-visible</code> 2px 아웃라인, <code>Esc</code> 검색 비우기</td>
-            <td>전 화면 CSS 및 <code>InlineExerciseFinder</code> 반영 완료</td>
-          </tr>
-          <tr>
-            <td><strong>빈 상태 · 저장 복원 · 오류 복구</strong></td>
-            <td>2단계 원탭 초안 채우기, 3단계 저장본 복원, 검색 0건 기구 조건 해제, AI 미검토 초기 상태 복구</td>
-            <td><code>SequenceWorkbench</code> · <code>FreeAiAssistantPanel</code> · <code>InlineExerciseFinder</code> 반영 완료</td>
-          </tr>
-          <tr>
-            <td><strong>수업 진행 스테이지 & 모션 감소</strong></td>
-            <td>상단 <code>LIVE</code> 상태 배지, 2초 <code>핵심 큐</code>, <code>-30초</code>, 다음 순서 <code>↑/↓</code> 재정렬(<code>order 1..N</code> 유지), <code>prefers-reduced-motion</code></td>
-            <td><code>LiveStageView.tsx/.css</code> 스키마 및 정적 폴백 검증 완료</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-wrap">
+        <table aria-label="피드백 반영 및 구현 대기 항목 구분표">
+          <thead>
+            <tr>
+              <th>검토 항목</th>
+              <th>이번 수정 시안(`02`·`05`·`08`·`09`) 반영 완료</th>
+              <th>사용자 시안 선택 후 실제 앱(`src/`) 반영 예정</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-label="검토 항목"><strong>체어·전 기구 도해 신체 연결 & 수업 진행 도해</strong></td>
+              <td data-label="시안 반영"><code>userSpaceOnUse</code> + 일체형 경추-흉곽-골반-사지 실루엣, 사이드 핸들·페달·풋바·래더 접점, <code>05</code> 수업 진행 스테이지 도해 탑재 완료</td>
+              <td data-label="앱 반영 예정"><code>MovementPhaseDiagramSvg.tsx</code> 골반-고관절 홈 제거, 체어 핸들 추가, 36종 사지 분절 길이 2-bone IK 보정</td>
+            </tr>
+            <tr>
+              <td data-label="검토 항목"><strong>05 홈 여백·큰 타이머 보존 + 동작 검색 + 모바일 탭·표 줄바꿈</strong></td>
+              <td data-label="시안 반영">홈 2카드 여백·라이브 큰 타이머 유지, 실시간 검색·기구 필터, <code>390px</code>/<code>360px</code> 무잘림 3×2 탭, 비교표 <code>keep-all</code> 및 모바일 카드 스택 검증 완료</td>
+              <td data-label="앱 반영 예정">선택하신 레이아웃 후보 기준으로 모바일 탭·테이블 반응형 및 Live Stage 도해 1:1 대조 적용</td>
+            </tr>
+            <tr>
+              <td data-label="검토 항목"><strong>개별 동작 → 동작 묶음 → 전체 수업 단순화</strong></td>
+              <td data-label="시안 반영"><code>09</code> 시안에서 행동 중심 3열 작업실(후보 M1/M2 전환) 제공, 상세 규칙·용어 매핑표는 접힘(<code>&lt;details&gt;</code>) 처리</td>
+              <td data-label="앱 반영 예정">'연계 동작 묶음'+'내 재사용 블록' 단일 탭 통합, 시퀀스 체크 행 묶음 저장, JSON 백업 포함 (기존 저장 데이터 유지)</td>
+            </tr>
+            <tr>
+              <td data-label="검토 항목"><strong>AI 보조 설정 화면 시안 (상태·선택·한도·오류)</strong></td>
+              <td data-label="시안 반영"><code>09</code> 시안 탭 2에 실제 설정 UI(후보 S1/S2) 구현 — 상태 전환(규칙/무료 AI/한도 도달/연결 오류), 확인된 조건 vs 미확인 항목 분리</td>
+              <td data-label="앱 반영 예정">사용자 선택 후 반영 · 계정별 과금/크레딧 미확인 상태 합산 금지 및 비밀키 이동/노출 금지 유지</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </main>
     <script>
-      const b1280 = document.getElementById('vp1280');
-      const b390 = document.getElementById('vp390');
-      b1280.addEventListener('click', () => {
-        document.body.classList.remove('vp-390');
-        b1280.setAttribute('aria-pressed', 'true');
-        b390.setAttribute('aria-pressed', 'false');
+      const vpButtons = [
+        { el: document.getElementById('vp1280'), cls: '' },
+        { el: document.getElementById('vp390'), cls: 'vp-390' },
+        { el: document.getElementById('vp360'), cls: 'vp-360' },
+      ];
+      vpButtons.forEach((item) => {
+        item.el.addEventListener('click', () => {
+          document.body.classList.remove('vp-390', 'vp-360');
+          if (item.cls) document.body.classList.add(item.cls);
+          vpButtons.forEach((b) => b.el.setAttribute('aria-pressed', String(b === item)));
+        });
       });
-      b390.addEventListener('click', () => {
-        document.body.classList.add('vp-390');
-        b390.setAttribute('aria-pressed', 'true');
-        b1280.setAttribute('aria-pressed', 'false');
+
+      const leftFrame = document.getElementById('leftMockupFrame');
+      const leftTitle = document.getElementById('leftFrameTitle');
+      const srcBtns = Array.from(document.querySelectorAll('[data-src]'));
+      srcBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const src = btn.getAttribute('data-src');
+          leftFrame.setAttribute('src', src);
+          leftTitle.textContent = '선택 검토 시안 (`' + src.replace('./', '') + '`)';
+          srcBtns.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        });
       });
     </script>
   </body>

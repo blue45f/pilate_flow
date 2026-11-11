@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pilates Flow — 09. 동작 묶음 3열 시안 & AI 보조 설정 화면 시안 (v2.0)</title>
+  <style>
+    :root {
+      --bg: #f6f3ee;
+      --paper: #ffffff;
+      --paper-soft: #f0ece4;
+      --ink: #191c1a;
+      --ink-muted: #555c57;
+      --line: #dcd6cb;
+      --sage: #254f41;
+      --sage-soft: #e3ede8;
+      --terracotta: #b85c3d;
+      --terracotta-soft: #f7e8e2;
+      --amber: #8b6220;
+      --amber-soft: #f9f1df;
+      --slate: #3d4852;
+      --slate-soft: #eaeff3;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --shadow: 0 8px 24px rgba(25, 28, 26, 0.05);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+      line-height: 1.5;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(246, 243, 238, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .brand {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 14.5px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: var(--sage-soft);
+      color: var(--sage);
+      white-space: nowrap;
+    }
+    .badge.warn { background: var(--amber-soft); color: var(--amber); }
+    .badge.err { background: var(--terracotta-soft); color: var(--terracotta); }
+    .badge.neutral { background: var(--slate-soft); color: var(--slate); }
+
+    .vp-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    button {
+      font: inherit;
+      cursor: pointer;
+    }
+    .vp-btn, .tab-btn, .act-btn {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+    .vp-btn[aria-pressed="true"], .tab-btn[aria-selected="true"], .act-btn.primary {
+      background: var(--sage);
+      border-color: var(--sage);
+      color: #ffffff;
+    }
+    .act-btn.secondary {
+      background: var(--sage-soft);
+      border-color: #bdd3c8;
+      color: var(--sage);
+    }
+    .act-btn.warn {
+      background: var(--amber-soft);
+      border-color: #e4cc9a;
+      color: var(--amber);
+    }
+    .act-btn:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+    button:focus-visible, summary:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2.5px solid var(--sage);
+      outline-offset: 2px;
+    }
+
+    .stage-shell {
+      margin: 14px auto 44px;
+      padding: 0 14px;
+      max-width: 1280px;
+      transition: max-width 0.2s ease;
+    }
+    .stage-shell[data-vp="390"] { max-width: 390px; padding: 0 6px; }
+    .stage-shell[data-vp="360"] { max-width: 360px; padding: 0 4px; }
+
+    /* Navigation Tabs: 3 concise tabs, wraps cleanly at 390/360px */
+    .section-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .tab-btn {
+      border-radius: 12px;
+      padding: 9px 8px;
+      text-align: center;
+      line-height: 1.25;
+      white-space: normal;
+      min-height: 44px;
+    }
+    .stage-shell[data-vp="390"] .section-tabs,
+    .stage-shell[data-vp="360"] .section-tabs {
+      grid-template-columns: 1fr;
+    }
+    @media (max-width: 600px) {
+      .section-tabs { grid-template-columns: 1fr; }
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    /* Compact Top Bar inside Bundle Workspace */
+    .compact-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+    .policy-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .pill-radio {
+      min-height: 38px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1.5px solid var(--line);
+      background: var(--paper-soft);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .pill-radio[aria-checked="true"] {
+      border-color: var(--sage);
+      background: var(--sage-soft);
+      color: var(--sage);
+    }
+
+    /* 3-Column Action-First Bundle Workspace */
+    .sim-layout {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr 1.2fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .stage-shell[data-vp="390"] .sim-layout,
+    .stage-shell[data-vp="360"] .sim-layout {
+      grid-template-columns: 1fr;
+    }
+    @media (max-width: 960px) {
+      .sim-layout { grid-template-columns: 1fr; }
+    }
+
+    .col-box {
+      background: #fbfaf7;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .col-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 7px;
+      font-size: 13.5px;
+    }
+    .item-row {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .item-row.selected {
+      border-color: var(--sage);
+      background: #f3f8f5;
+    }
+    .item-row.bundle-linked {
+      border-left: 3.5px solid var(--sage);
+    }
+    .item-row.bundle-detached {
+      border-left: 3.5px solid var(--terracotta);
+    }
+    .item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .item-sub {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+    }
+    .mini-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .mini-btn {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 4px 9px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .mini-btn.primary {
+      background: var(--sage);
+      border-color: var(--sage);
+      color: #fff;
+    }
+
+    .status-strip {
+      background: #202823;
+      color: #f6f3ee;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    /* Collapsible Details Accordions */
+    details.fold-box {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    details.fold-box summary {
+      padding: 11px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: var(--paper-soft);
+    }
+    details.fold-box summary::-webkit-details-marker { display: none; }
+    details.fold-box summary::after {
+      content: "펼치기 ▾";
+      font-size: 11.5px;
+      color: var(--sage);
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    details.fold-box[open] summary::after {
+      content: "접기 ▴";
+    }
+    .fold-body {
+      padding: 12px 14px;
+      font-size: 12.5px;
+      border-top: 1px solid var(--line);
+    }
+
+    /* AI Settings Screen UI */
+    .settings-shell {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .settings-layout-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 0.95fr;
+      gap: 14px;
+      align-items: start;
+    }
+    .settings-shell[data-ui-variant="S1"] .settings-layout-grid,
+    .stage-shell[data-vp="390"] .settings-layout-grid,
+    .stage-shell[data-vp="360"] .settings-layout-grid {
+      grid-template-columns: 1fr;
+    }
+    @media (max-width: 820px) {
+      .settings-layout-grid { grid-template-columns: 1fr; }
+    }
+
+    .status-banner {
+      border-radius: 14px;
+      padding: 14px;
+      border: 1.5px solid var(--line);
+      background: var(--paper-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .status-banner.ok {
+      background: #eef5f1;
+      border-color: #b7d1c3;
+    }
+    .status-banner.limit {
+      background: #fbf3e4;
+      border-color: #e4c890;
+    }
+    .status-banner.error {
+      background: #faece8;
+      border-color: #e3b5a8;
+    }
+
+    .radio-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .setting-option {
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: var(--paper);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      text-align: left;
+    }
+    .setting-option[aria-checked="true"] {
+      border-color: var(--sage);
+      background: #f3f8f5;
+    }
+    .setting-option.locked {
+      background: #f5f3ef;
+      color: var(--ink-muted);
+      cursor: not-allowed;
+    }
+
+    .fact-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .stage-shell[data-vp="390"] .fact-split,
+    .stage-shell[data-vp="360"] .fact-split {
+      grid-template-columns: 1fr;
+    }
+    @media (max-width: 680px) {
+      .fact-split { grid-template-columns: 1fr; }
+    }
+    .fact-box {
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      font-size: 12px;
+    }
+    .fact-box ul {
+      margin: 6px 0 0;
+      padding-left: 16px;
+    }
+    .fact-box li { margin-bottom: 4px; }
+
+    /* Responsive Tables inside collapsed details */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--paper);
+    }
+    table.cmp-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      font-size: 12.5px;
+    }
+    table.cmp-table th, table.cmp-table td {
+      padding: 9px 11px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      word-break: keep-all;
+    }
+    table.cmp-table th { background: var(--paper-soft); white-space: nowrap; }
+    .stage-shell[data-vp="390"] .table-wrap,
+    .stage-shell[data-vp="360"] .table-wrap {
+      border: none; background: transparent;
+    }
+    .stage-shell[data-vp="390"] table.cmp-table,
+    .stage-shell[data-vp="360"] table.cmp-table,
+    .stage-shell[data-vp="390"] table.cmp-table tbody,
+    .stage-shell[data-vp="360"] table.cmp-table tbody,
+    .stage-shell[data-vp="390"] table.cmp-table tr,
+    .stage-shell[data-vp="360"] table.cmp-table tr,
+    .stage-shell[data-vp="390"] table.cmp-table td,
+    .stage-shell[data-vp="360"] table.cmp-table td {
+      display: block; min-width: 0; width: 100%;
+    }
+    .stage-shell[data-vp="390"] table.cmp-table thead,
+    .stage-shell[data-vp="360"] table.cmp-table thead { display: none; }
+    .stage-shell[data-vp="390"] table.cmp-table tr,
+    .stage-shell[data-vp="360"] table.cmp-table tr {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 8px;
+    }
+    .stage-shell[data-vp="390"] table.cmp-table td,
+    .stage-shell[data-vp="360"] table.cmp-table td {
+      border: none; padding: 3px 0;
+    }
+    .stage-shell[data-vp="390"] table.cmp-table td::before,
+    .stage-shell[data-vp="360"] table.cmp-table td::before {
+      content: attr(data-label) " · ";
+      font-weight: 800; color: var(--sage);
+    }
+    a { color: var(--sage); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="badge">시안 09 · 수정본 (선택 대기)</span>
+      <span>동작 묶음 3열 작업실 & AI 보조 설정 UI 시안</span>
+    </div>
+    <div class="vp-controls" role="group" aria-label="화면 크기 미리보기">
+      <button type="button" class="vp-btn" data-set-vp="1280" aria-pressed="true">1280px</button>
+      <button type="button" class="vp-btn" data-set-vp="390" aria-pressed="false">390px</button>
+      <button type="button" class="vp-btn" data-set-vp="360" aria-pressed="false">360px</button>
+    </div>
+  </header>
+
+  <main class="stage-shell" id="stageShell" data-vp="1280">
+    <nav class="section-tabs" role="tablist" aria-label="시안 09 화면 전환">
+      <button type="button" class="tab-btn" role="tab" aria-selected="true" data-tab="bundle">1. 동작 묶음 (3열 행동 시안)</button>
+      <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="ai-settings">2. AI 보조 설정 화면 시안</button>
+      <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="ref-notes">3. 도해·대안 참고 근거 (접힘)</button>
+    </nav>
+
+    <!-- PANEL 1: Action-First 3-Column Bundle Builder (Minimal Prose, Details Collapsed) -->
+    <section class="panel active" id="panel-bundle" role="tabpanel">
+      <div class="compact-bar">
+        <div class="policy-pills" role="radiogroup" aria-label="원본 묶음 수정 시 기존 수업 표시 방식 선택">
+          <strong style="font-size:12.5px;">묶음 수정 시 방식 선택:</strong>
+          <button type="button" class="pill-radio" role="radio" aria-checked="true" id="policyM2Btn">
+            후보 M2 · 복사본 유지 + 원본 변경 배지 표시
+          </button>
+          <button type="button" class="pill-radio" role="radio" aria-checked="false" id="policyM1Btn">
+            후보 M1 · 복사본 전용 (변경 배지 없음)
+          </button>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="mini-btn" id="undoBtn" disabled>되돌리기</button>
+          <button type="button" class="mini-btn" id="resetSimBtn">초기화</button>
+        </div>
+      </div>
+
+      <div class="status-strip" aria-live="polite">
+        <span id="simStatusText">동작을 담거나, 오른쪽 수업에서 2개 이상 체크해 새 묶음으로 저장해 보세요.</span>
+      </div>
+
+      <div class="sim-layout">
+        <!-- Col 1: Exercises -->
+        <div class="col-box">
+          <div class="col-head">
+            <strong>1. 개별 동작</strong>
+            <span class="badge">기준: 리포머</span>
+          </div>
+          <div id="exerciseList"></div>
+        </div>
+
+        <!-- Col 2: Reusable Bundles -->
+        <div class="col-box">
+          <div class="col-head">
+            <strong>2. 내 동작 묶음</strong>
+            <span class="badge" id="bundleCountBadge">2세트</span>
+          </div>
+          <div id="bundleList"></div>
+        </div>
+
+        <!-- Col 3: Active Class Sequence -->
+        <div class="col-box">
+          <div class="col-head">
+            <strong>3. 현재 수업 (리포머 50분)</strong>
+            <span class="badge warn" id="totalDurationBadge">14분 / 50분</span>
+          </div>
+          <button type="button" class="act-btn primary" id="saveSelectedAsBundleBtn" style="width:100%;">
+            체크한 동작으로 새 묶음 저장
+          </button>
+          <div id="sequenceStepList"></div>
+        </div>
+      </div>
+
+      <!-- Collapsed Detailed Rules & Existing Model Mapping -->
+      <details class="fold-box">
+        <summary>묶음 작동 규칙 요약 (복사본 보호 · 기구 조건 · 백업) 보기</summary>
+        <div class="fold-body">
+          <ul style="margin:0; padding-left:18px;">
+            <li><strong>기존 수업 보호</strong>: 묶음을 수업에 넣으면 복사본으로 들어가므로, 나중에 묶음 원본을 고쳐도 이미 저장된 수업과 수업 기록은 자동 변경되지 않습니다.</li>
+            <li><strong>기구·순서·시간</strong>: 선택한 위치에 묶음 순서대로 들어가며 총 시간이 즉시 합산됩니다. 수업 기구(예: 리포머)와 다른 기구 동작이 포함되면 차단하지 않고 <code>기구 전환 주의</code> 배지만 표시합니다.</li>
+            <li><strong>저장·복구</strong>: 시퀀스 편집 중 바로 묶음을 만들 수 있고, 삭제·시간 변경 즉시 <code>되돌리기</code>가 가능하며 JSON 백업 내보내기에 묶음 목록을 함께 포함합니다.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="fold-box">
+        <summary>현재 앱 내 6개 유사 용어 → 3단계 정리 매핑표 보기</summary>
+        <div class="fold-body">
+          <div class="table-wrap">
+            <table class="cmp-table">
+              <thead>
+                <tr>
+                  <th>현재 코드 모델</th>
+                  <th>현재 화면 표기</th>
+                  <th>정리 후 표기 (기존 저장 데이터 유지)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-label="현재 모델"><code>PilatesExercise</code> / <code>HumanMovementDraft</code></td>
+                  <td data-label="현재 표기">기본 동작 / 동작 아이디어</td>
+                  <td data-label="정리 후"><strong>개별 동작</strong> (<code>기본</code> · <code>내 동작</code> 배지 구분)</td>
+                </tr>
+                <tr>
+                  <td data-label="현재 모델"><code>OfflineBlockPreset</code> + <code>ReusableBlock</code></td>
+                  <td data-label="현재 표기">'연계 동작 묶음' / '내 재사용 블록' 분산</td>
+                  <td data-label="정리 후"><strong>동작 묶음</strong> 단일 탭으로 통합</td>
+                </tr>
+                <tr>
+                  <td data-label="현재 모델"><code>SavedSequence</code> / <code>OFFLINE_CLASS_PRESETS</code></td>
+                  <td data-label="현재 표기">저장 시퀀스 / 수업 전체</td>
+                  <td data-label="정리 후"><strong>전체 수업안</strong></td>
+                </tr>
+                <tr>
+                  <td data-label="현재 모델"><code>ClassBlockCategory</code> · <code>ClassGroupProfile</code> · <code>ConditionTemplate</code></td>
+                  <td data-label="현재 표기">블록 · 수업 그룹 · 조건 템플릿</td>
+                  <td data-label="정리 후">각각 <strong>구간 태그</strong> · <strong>수강 반(회원)</strong> · <strong>빠른 조건값</strong>으로 이름 혼동 제거</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- PANEL 2: User-Facing AI Assistant Settings UI Mockup -->
+    <section class="panel" id="panel-ai-settings" role="tabpanel">
+      <div class="settings-shell" id="aiSettingsShell" data-ui-variant="S2">
+        <!-- Prototype Controls for User Selection & State Testing -->
+        <div class="compact-bar">
+          <div class="policy-pills" role="radiogroup" aria-label="AI 설정 화면 레이아웃 후보 선택">
+            <strong style="font-size:12.5px;">설정 UI 후보:</strong>
+            <button type="button" class="pill-radio" role="radio" aria-checked="true" data-ai-ui="S2">
+              후보 S2 · 모드 선택 + 한도·확인 범위 나란히 보기
+            </button>
+            <button type="button" class="pill-radio" role="radio" aria-checked="false" data-ai-ui="S1">
+              후보 S1 · 단일 컬럼 간결 카드형
+            </button>
+          </div>
+          <div class="policy-pills" role="group" aria-label="상태 시나리오 미리보기">
+            <span style="font-size:12px; color:var(--ink-muted); font-weight:700;">상태 테스트:</span>
+            <button type="button" class="mini-btn primary" data-sim-state="local-ready">기본(규칙)</button>
+            <button type="button" class="mini-btn" data-sim-state="free-ai-ready">무료 AI 연결됨</button>
+            <button type="button" class="mini-btn" data-sim-state="quota-reached">한도 도달</button>
+            <button type="button" class="mini-btn" data-sim-state="server-error">연결 오류</button>
+          </div>
+        </div>
+
+        <!-- Actual Settings Screen Surface -->
+        <div class="card">
+          <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
+            <div>
+              <h2 style="margin:0; font-size:17px;">수업 초안 추천 · AI 보조 설정</h2>
+              <div style="font-size:12.5px; color:var(--ink-muted);">수업 생성 시 사용할 추천 방식과 한도 초과·오류 시 동작을 설정합니다.</div>
+            </div>
+            <span class="badge" id="activeModeHeaderBadge">현재 사용: 기기 내 규칙 초안</span>
+          </div>
+
+          <!-- 1. Current Status & Immediate Error/Quota Action Banner -->
+          <div class="status-banner ok" id="aiStatusBanner" role="status" aria-live="polite"></div>
+
+          <div class="settings-layout-grid">
+            <!-- 2. Mode Selection & Fallback Controls -->
+            <div>
+              <h3 style="margin:0 0 8px; font-size:14px;">1. 추천 생성 방식 선택</h3>
+              <div class="radio-stack" role="radiogroup" aria-label="추천 생성 방식">
+                <button type="button" class="setting-option" role="radio" aria-checked="true" id="optModeLocal">
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; width:100%;">
+                    <strong style="font-size:13.5px;">기기 내 규칙으로 초안 만들기 (기본)</strong>
+                    <span class="badge">외부 호출 없음 · 확인됨</span>
+                  </div>
+                  <div style="font-size:12px; color:var(--ink-muted);">
+                    선택한 기구·시간·난이도 조건표에 맞춰 브라우저 안에서 바로 동작 구성을 추천합니다. 외부 AI 서버 호출이나 API 요금이 발생하지 않습니다.
+                  </div>
+                </button>
+
+                <button type="button" class="setting-option" role="radio" aria-checked="false" id="optModeServerFree">
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; width:100%;">
+                    <strong style="font-size:13.5px;">서버 무료 조건 AI 보조 사용</strong>
+                    <span class="badge warn" id="serverFreeAvailBadge">서버 연결 확인 필요</span>
+                  </div>
+                  <div style="font-size:12px; color:var(--ink-muted);">
+                    로컬 백엔드에 무료 호출 조건(<code>max_price=0</code> 또는 무료 티어 확인 설정)이 연결된 경우에만 동작합니다. 공급자 일일·분당 요청 한도의 영향을 받습니다.
+                  </div>
+                </button>
+
+                <div class="setting-option locked" aria-disabled="true">
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; width:100%;">
+                    <strong style="font-size:13.5px;">유료 API 키 / 외부 구독 크레딧 연동</strong>
+                    <span class="badge neutral">미확인 · 선택 잠금</span>
+                  </div>
+                  <div style="font-size:12px;">
+                    계정별 과금 구조·잔여 크레딧 연동 여부가 확인되지 않아 비활성화되어 있습니다. (ChatGPT·Gemini 월 구독과 API 종량제 크레딧은 별도 체계이며, 보안상 브라우저 키 입력창은 제공하지 않습니다.)
+                  </div>
+                </div>
+              </div>
+
+              <!-- Error & Quota Handling Preferences -->
+              <div style="margin-top:14px; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--paper-soft);">
+                <h3 style="margin:0 0 8px; font-size:13.5px;">2. 한도 도달·연결 오류 시 처리 방식</h3>
+                <label style="display:flex; align-items:flex-start; gap:8px; font-size:12.5px; margin-bottom:8px; cursor:pointer;">
+                  <input type="checkbox" id="chkAutoFallback" checked style="margin-top:3px;" />
+                  <span><strong>무료 AI 한도 초과·응답 실패 시 기기 내 규칙 초안으로 바로 대체</strong> (체크 해제 시 자동 전환하지 않고 안내 배너에서 직접 선택)</span>
+                </label>
+                <label style="display:flex; align-items:flex-start; gap:8px; font-size:12.5px; cursor:pointer;">
+                  <input type="checkbox" checked disabled style="margin-top:3px;" />
+                  <span><strong>편집 중인 수업 순서 보호 (고정)</strong>: 추천 호출이 실패해도 이미 담아 둔 동작과 시간은 지워지지 않으며 체크한 항목만 반영합니다.</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 3. Verified Conditions vs Unverified Items (Strictly Separated) -->
+            <div>
+              <h3 style="margin:0 0 8px; font-size:14px;">3. 무료 조건·한도 확인 범위</h3>
+              <div class="fact-split" style="grid-template-columns: 1fr;">
+                <div class="fact-box" style="background:#eef5f1; border-color:#bfd5c9;">
+                  <strong style="color:var(--sage);">코드·설정으로 확인된 항목</strong>
+                  <ul>
+                    <li><strong>기기 내 규칙 모드</strong>: 외부 네트워크 전송 없이 로컬 코드(<code>freeAiClient.ts</code>)만으로 동작</li>
+                    <li><strong>서버 무료 모델 가드</strong>: 백엔드(<code>freeAiService.ts</code>)에서 <code>:free</code>(<code>max_price=0</code>) 또는 무료 티어 확인 환경변수가 없으면 호출 차단</li>
+                    <li><strong>비밀키 노출 차단</strong>: 클라이언트 번들·브라우저의 비밀키 전달은 <code>byok_forbidden</code>으로 거부</li>
+                  </ul>
+                </div>
+
+                <div class="fact-box" style="background:#fbf3e4; border-color:#e6cd9c;">
+                  <strong style="color:var(--amber);">미확인 항목 (보장·단정 불가)</strong>
+                  <ul>
+                    <li><strong>남은 무료 호출 횟수</strong>: 공급자(OpenRouter·Google)의 일일·분당 한도 및 정책 변경 여부는 실시간 잔여량 API가 없어 사전 확정 불가</li>
+                    <li><strong>외부 구독·IDE 크레딧 호환</strong>: 개인 구독·IDE 크레딧·API 선불 잔액은 정산 체계가 달라 동일 크레딧으로 간주할 수 없음</li>
+                    <li><strong>서버 실행 상태</strong>: 로컬·호스팅 백엔드 미실행 시 서버 AI 모드는 연결 오류가 발생하며 규칙 모드만 사용 가능</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 3: Collapsed Reference Evidence (98-Exercise Audit & Commercial/Remotion) -->
+    <section class="panel" id="panel-ref-notes" role="tabpanel">
+      <details class="fold-box" open>
+        <summary>전체 운동 도해 점검 요약 (검증 완료 vs 강사 검토 필요 구분)</summary>
+        <div class="fold-body">
+          <div class="fact-split">
+            <div class="fact-box" style="background:#eef5f1; border-color:#bfd5c9;">
+              <strong>기하·신체연결·접근성 렌더링 확인됨</strong>
+              <ul>
+                <li>시안 <code>02</code>·<code>01</code> 수직·수평 직선 경로의 <code>objectBoundingBox</code> 투명화 결함을 <code>userSpaceOnUse</code> + 연속 체인 실루엣으로 수정</li>
+                <li>앱 <code>MovementPhaseDiagramSvg.tsx</code>(98종·48원형) 점검: 골반-고관절 홈, 체어 핸드 부유, 36/98종 사지 길이 편차(<code>&gt;1.35배</code>) 목록 특정 완료 (시안 선택 후 반영 대기)</li>
+                <li><code>&lt;title&gt;</code>/<code>&lt;desc&gt;</code> 대체 텍스트, 비색상 기호(<code>■</code>·<code>●</code>·<code>◐</code>), 모션 감소 시 정적 시작↔끝 뷰 제공</li>
+              </ul>
+            </div>
+            <div class="fact-box" style="background:#fbf3e4; border-color:#e6cd9c;">
+              <strong>강사 검토 필요 (임상·의학적 정확성 단정 금지)</strong>
+              <ul>
+                <li>모든 도해는 티칭 보조용 도식(<code>anatomicalAccuracyAssumed: false</code>)이며 의학적 검증 자료가 아닙니다.</li>
+                <li>스완(흉추 신전 각도), 바렐 사이드 벤드(측굴 곡률), 캐딜락 캣 스트레치, 롤오버 계열은 담당 강사의 티칭 기준 검수가 필요합니다.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="fold-box">
+        <summary>유사 상용 서비스 공개 사례 및 Remotion 대안 비교표 펼쳐보기</summary>
+        <div class="fold-body">
+          <p style="margin:0 0 8px;">타사 일러스트·영상 복제 없이 공개 UI 구조와 라이선스 기준만 비교했습니다.</p>
+          <div class="table-wrap" style="margin-bottom:10px;">
+            <table class="cmp-table">
+              <thead>
+                <tr>
+                  <th>구분</th>
+                  <th>공개 사례 / 공식 문서</th>
+                  <th>핵심 시사점</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-label="구분">상용 서비스 사례</td>
+                  <td data-label="사례"><a href="https://www.tummee.com/teacher-yoga-sequences/pilates-yoga" target="_blank" rel="noopener noreferrer">Tummee Pilates</a> · <a href="https://www.muscleandmotion.com/solutions-pilates-instructors/" target="_blank" rel="noopener noreferrer">Muscle and Motion</a> · <a href="https://www.physitrack.com/home-exercise-program-builder" target="_blank" rel="noopener noreferrer">Physitrack Program Builder</a> · <a href="https://theclassplan.com/" target="_blank" rel="noopener noreferrer">The Class Plan</a></td>
+                  <td data-label="시사점">작은 카드에서는 선명한 전신 실루엣+기구 접점 표시가 가독성이 높고, 재사용 루틴 묶음은 수업 삽입 후 개별 수정이 격리되어야 안전함</td>
+                </tr>
+                <tr>
+                  <td data-label="구분">로컬 SVG vs Remotion</td>
+                  <td data-label="사례"><a href="https://www.remotion.dev/docs/license/pricing" target="_blank" rel="noopener noreferrer">Remotion 가격·라이선스</a> · <a href="https://www.remotion.dev/docs/license/faq" target="_blank" rel="noopener noreferrer">License FAQ</a> · <a href="https://www.remotion.dev/docs/terminology/player" target="_blank" rel="noopener noreferrer">Remotion Player</a></td>
+                  <td data-label="시사점">Remotion은 4인 이상 조직에서 웹/앱 <code>&lt;Player&gt;</code> 임베드 시 유료 자동화 라이선스(월 최소 $100) 대상이며 다중 리스트 마운트 부하가 큼. 앱 내 실시간 카드·타이머에는 외부 라이선스 비용이 없고 가벼운(3~4KB) 로컬 SVG가 적합함</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const shell = document.getElementById('stageShell');
+      const vpBtns = Array.from(document.querySelectorAll('[data-set-vp]'));
+      vpBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          shell.setAttribute('data-vp', btn.getAttribute('data-set-vp'));
+          vpBtns.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        });
+      });
+
+      const tabBtns = Array.from(document.querySelectorAll('[data-tab]'));
+      const panels = {
+        bundle: document.getElementById('panel-bundle'),
+        'ai-settings': document.getElementById('panel-ai-settings'),
+        'ref-notes': document.getElementById('panel-ref-notes'),
+      };
+      tabBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-tab');
+          tabBtns.forEach((b) => b.setAttribute('aria-selected', String(b === btn)));
+          Object.entries(panels).forEach(([k, el]) => el.classList.toggle('active', k === target));
+        });
+      });
+
+      // --- Panel 1: Action-First 3-Column Bundle Builder ---
+      const EXERCISES = [
+        { id: 'ex-fw-heels', name: '풋워크 · 힐스', apparatus: '리포머', spring: '● 2R ◐ 1B', min: 3 },
+        { id: 'ex-fw-toes', name: '풋워크 · 토즈', apparatus: '리포머', spring: '● 2R ◐ 1B', min: 3 },
+        { id: 'ex-bridge', name: '펠빅 컬 브리지', apparatus: '리포머', spring: '● 2R', min: 4 },
+        { id: 'ex-hundred', name: '헌드레드', apparatus: '리포머', spring: '● 1R ◐ 1B', min: 4 },
+        { id: 'ex-chair-press', name: '체어 시티드 페달 프레스', apparatus: '체어', spring: '● 1R ◐ 1B', min: 4 },
+      ];
+
+      function initialBundleState() {
+        return {
+          policy: 'M2',
+          bundles: [
+            {
+              id: 'bd-fw',
+              name: '리포머 풋워크 2종',
+              apparatus: '리포머',
+              version: 1,
+              items: [
+                { exId: 'ex-fw-heels', name: '풋워크 · 힐스', apparatus: '리포머', spring: '● 2R ◐ 1B', min: 3 },
+                { exId: 'ex-fw-toes', name: '풋워크 · 토즈', apparatus: '리포머', spring: '● 2R ◐ 1B', min: 3 },
+              ],
+            },
+            {
+              id: 'bd-core',
+              name: '분절 + 코어 세트',
+              apparatus: '리포머',
+              version: 1,
+              items: [
+                { exId: 'ex-bridge', name: '펠빅 컬 브리지', apparatus: '리포머', spring: '● 2R', min: 4 },
+                { exId: 'ex-hundred', name: '헌드레드', apparatus: '리포머', spring: '● 1R ◐ 1B', min: 4 },
+              ],
+            },
+          ],
+          steps: [
+            { uid: 's1', exId: 'ex-fw-heels', name: '풋워크 · 힐스', apparatus: '리포머', spring: '● 2R ◐ 1B', min: 3, checked: false, sourceBundleId: 'bd-fw', sourceBundleName: '리포머 풋워크 2종', sourceVersion: 1, detached: false },
+            { uid: 's2', exId: 'ex-fw-toes', name: '풋워크 · 토즈', apparatus: '리포머', spring: '● 2R ◐ 1B', min: 3, checked: false, sourceBundleId: 'bd-fw', sourceBundleName: '리포머 풋워크 2종', sourceVersion: 1, detached: false },
+            { uid: 's3', exId: 'ex-bridge', name: '펠빅 컬 브리지', apparatus: '리포머', spring: '● 2R', min: 4, checked: true, sourceBundleId: null, sourceBundleName: null, sourceVersion: null, detached: false },
+            { uid: 's4', exId: 'ex-hundred', name: '헌드레드', apparatus: '리포머', spring: '● 1R ◐ 1B', min: 4, checked: true, sourceBundleId: null, sourceBundleName: null, sourceVersion: null, detached: false },
+          ],
+          status: '동작을 담거나, 오른쪽 수업에서 2개 이상 체크해 새 묶음으로 저장해 보세요.',
+        };
+      }
+
+      let bState = initialBundleState();
+      const history = [];
+
+      function saveSnap(msg) {
+        history.push(JSON.parse(JSON.stringify(bState)));
+        if (history.length > 15) history.shift();
+        bState.status = msg;
+      }
+
+      const policyM2Btn = document.getElementById('policyM2Btn');
+      const policyM1Btn = document.getElementById('policyM1Btn');
+      policyM2Btn.addEventListener('click', () => {
+        bState.policy = 'M2';
+        bState.status = '후보 M2: 복사본으로 유지하되 원본 묶음이 수정되면 업데이트 선택 배지를 표시합니다.';
+        renderBundles();
+      });
+      policyM1Btn.addEventListener('click', () => {
+        bState.policy = 'M1';
+        bState.status = '후보 M1: 수업에 넣은 뒤에는 일반 동작과 동일하게 다루며 버전 배지를 띄우지 않습니다.';
+        renderBundles();
+      });
+
+      document.getElementById('undoBtn').addEventListener('click', () => {
+        if (!history.length) return;
+        bState = history.pop();
+        bState.status = '직전 동작을 되돌렸습니다.';
+        renderBundles();
+      });
+      document.getElementById('resetSimBtn').addEventListener('click', () => {
+        history.length = 0;
+        bState = initialBundleState();
+        renderBundles();
+      });
+
+      document.getElementById('saveSelectedAsBundleBtn').addEventListener('click', () => {
+        const picked = bState.steps.filter((s) => s.checked);
+        if (picked.length < 2) {
+          bState.status = '수업 목록에서 묶을 동작을 2개 이상 체크해 주세요.';
+          renderBundles();
+          return;
+        }
+        saveSnap('');
+        const mins = picked.reduce((a, b) => a + b.min, 0);
+        const title = '내 루틴 ' + (bState.bundles.length - 1) + ' (' + picked.length + '동작·' + mins + '분)';
+        bState.bundles.unshift({
+          id: 'bd-custom-' + Date.now(),
+          name: title,
+          apparatus: picked[0].apparatus,
+          version: 1,
+          items: picked.map((p) => ({ exId: p.exId, name: p.name, apparatus: p.apparatus, spring: p.spring, min: p.min })),
+        });
+        bState.steps.forEach((s) => { s.checked = false; });
+        bState.status = '"' + title + '" 저장 완료 — 가운데 묶음 목록에서 바로 재사용할 수 있습니다.';
+        renderBundles();
+      });
+
+      function renderBundles() {
+        policyM2Btn.setAttribute('aria-checked', String(bState.policy === 'M2'));
+        policyM1Btn.setAttribute('aria-checked', String(bState.policy === 'M1'));
+        document.getElementById('undoBtn').disabled = history.length === 0;
+        document.getElementById('simStatusText').textContent = bState.status;
+        document.getElementById('bundleCountBadge').textContent = bState.bundles.length + '세트';
+        const sum = bState.steps.reduce((a, s) => a + s.min, 0);
+        document.getElementById('totalDurationBadge').textContent = sum + '분 / 50분';
+
+        const exList = document.getElementById('exerciseList');
+        exList.innerHTML = '';
+        EXERCISES.forEach((ex) => {
+          const row = document.createElement('div');
+          row.className = 'item-row';
+          row.innerHTML =
+            '<div class="item-top"><span>' + ex.name + '</span><button type="button" class="mini-btn primary">+ 담기</button></div>' +
+            '<div class="item-sub"><span>' + ex.apparatus + '</span> · <span>' + ex.spring + '</span> · <span>' + ex.min + '분</span></div>';
+          row.querySelector('button').addEventListener('click', () => {
+            saveSnap('"' + ex.name + '" 추가됨');
+            bState.steps.push({
+              uid: 's-' + Date.now() + Math.random().toString(16).slice(2, 5),
+              exId: ex.id, name: ex.name, apparatus: ex.apparatus, spring: ex.spring, min: ex.min,
+              checked: false, sourceBundleId: null, sourceBundleName: null, sourceVersion: null, detached: false,
+            });
+            renderBundles();
+          });
+          exList.appendChild(row);
+        });
+
+        const bdList = document.getElementById('bundleList');
+        bdList.innerHTML = '';
+        bState.bundles.forEach((bd) => {
+          const bMin = bd.items.reduce((a, i) => a + i.min, 0);
+          const row = document.createElement('div');
+          row.className = 'item-row';
+          row.innerHTML =
+            '<div class="item-top"><span>' + bd.name + '</span><span class="badge">v' + bd.version + ' · ' + bMin + '분</span></div>' +
+            '<div class="item-sub">' + bd.items.map((i) => i.name).join(' → ') + '</div>' +
+            '<div class="mini-actions">' +
+              '<button type="button" class="mini-btn primary" data-act="insert">+ 수업에 넣기</button>' +
+              '<button type="button" class="mini-btn" data-act="edit">원본 +1분</button>' +
+              '<button type="button" class="mini-btn" data-act="clone">복제</button>' +
+            '</div>';
+          row.querySelector('[data-act="insert"]').addEventListener('click', () => {
+            saveSnap('"' + bd.name + '" 복사본 삽입됨');
+            bd.items.forEach((it) => {
+              bState.steps.push({
+                uid: 's-' + Date.now() + Math.random().toString(16).slice(2, 5),
+                exId: it.exId, name: it.name, apparatus: it.apparatus, spring: it.spring, min: it.min,
+                checked: false, sourceBundleId: bd.id, sourceBundleName: bd.name, sourceVersion: bd.version, detached: false,
+              });
+            });
+            renderBundles();
+          });
+          row.querySelector('[data-act="edit"]').addEventListener('click', () => {
+            saveSnap('원본 "' + bd.name + '" v' + (bd.version + 1) + ' 수정됨 (기존 수업 시간 유지)');
+            bd.version += 1;
+            bd.items[0].min += 1;
+            renderBundles();
+          });
+          row.querySelector('[data-act="clone"]').addEventListener('click', () => {
+            saveSnap('"' + bd.name + '" 복제됨');
+            bState.bundles.push({
+              id: bd.id + '-cp-' + Date.now(),
+              name: bd.name + ' (복사)',
+              apparatus: bd.apparatus,
+              version: 1,
+              items: JSON.parse(JSON.stringify(bd.items)),
+            });
+            renderBundles();
+          });
+          bdList.appendChild(row);
+        });
+
+        const stList = document.getElementById('sequenceStepList');
+        stList.innerHTML = '';
+        bState.steps.forEach((st, idx) => {
+          const src = st.sourceBundleId ? bState.bundles.find((b) => b.id === st.sourceBundleId) : null;
+          const showUpdate = bState.policy === 'M2' && src && !st.detached && src.version > st.sourceVersion;
+          const diffGear = st.apparatus !== '리포머';
+
+          const row = document.createElement('div');
+          row.className = 'item-row' +
+            (st.checked ? ' selected' : '') +
+            (st.sourceBundleId && bState.policy === 'M2' ? (st.detached ? ' bundle-detached' : ' bundle-linked') : '');
+
+          let tag = '';
+          if (st.sourceBundleId && bState.policy === 'M2') {
+            tag = st.detached
+              ? '<span class="badge err">개별 수정됨</span>'
+              : '<span class="badge">' + st.sourceBundleName + ' v' + st.sourceVersion + '</span>';
+          }
+          const gearWarn = diffGear ? '<span class="badge warn">기구 전환: ' + st.apparatus + '</span>' : '';
+          const updateBar = showUpdate
+            ? '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;background:#eef5f1;padding:5px 8px;border-radius:8px;font-size:11.5px;">' +
+                '<span>원본 v' + src.version + ' 변경 있음</span>' +
+                '<button type="button" class="mini-btn primary" data-act="sync">v' + src.version + ' 반영</button>' +
+              '</div>'
+            : '';
+
+          row.innerHTML =
+            '<div class="item-top">' +
+              '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;">' +
+                '<input type="checkbox" ' + (st.checked ? 'checked' : '') + ' />' +
+                '<span>' + (idx + 1) + '. ' + st.name + '</span>' +
+              '</label>' +
+              '<span>' + st.min + '분</span>' +
+            '</div>' +
+            '<div class="item-sub">' + tag + gearWarn + '<span>' + st.apparatus + ' · ' + st.spring + '</span></div>' +
+            updateBar +
+            '<div class="mini-actions">' +
+              '<button type="button" class="mini-btn" data-act="plus">+1분</button>' +
+              '<button type="button" class="mini-btn" data-act="del">삭제</button>' +
+            '</div>';
+
+          row.querySelector('input').addEventListener('change', (e) => {
+            st.checked = e.target.checked;
+            renderBundles();
+          });
+          row.querySelector('[data-act="plus"]').addEventListener('click', () => {
+            saveSnap('"' + st.name + '" 이 수업에서만 +1분 조정됨');
+            st.min += 1;
+            if (st.sourceBundleId) st.detached = true;
+            renderBundles();
+          });
+          row.querySelector('[data-act="del"]').addEventListener('click', () => {
+            saveSnap('"' + st.name + '" 삭제됨 (되돌리기 가능)');
+            bState.steps.splice(idx, 1);
+            renderBundles();
+          });
+          const syncBtn = row.querySelector('[data-act="sync"]');
+          if (syncBtn && src) {
+            syncBtn.addEventListener('click', () => {
+              saveSnap('"' + st.name + '" 시간을 원본 v' + src.version + ' 기준으로 반영함');
+              const m = src.items.find((i) => i.exId === st.exId);
+              if (m) st.min = m.min;
+              st.sourceVersion = src.version;
+              renderBundles();
+            });
+          }
+          stList.appendChild(row);
+        });
+      }
+      renderBundles();
+
+      // --- Panel 2: Interactive AI Settings Screen Mockup ---
+      const aiShell = document.getElementById('aiSettingsShell');
+      const uiVariantBtns = Array.from(document.querySelectorAll('[data-ai-ui]'));
+      uiVariantBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          aiShell.setAttribute('data-ui-variant', btn.getAttribute('data-ai-ui'));
+          uiVariantBtns.forEach((b) => b.setAttribute('aria-checked', String(b === btn)));
+        });
+      });
+
+      const aiState = {
+        sim: 'local-ready', // 'local-ready' | 'free-ai-ready' | 'quota-reached' | 'server-error'
+        selectedMode: 'local', // 'local' | 'server-free'
+        autoFallback: true,
+      };
+
+      const simBtns = Array.from(document.querySelectorAll('[data-sim-state]'));
+      simBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          aiState.sim = btn.getAttribute('data-sim-state');
+          if (aiState.sim === 'free-ai-ready' || aiState.sim === 'quota-reached' || aiState.sim === 'server-error') {
+            aiState.selectedMode = 'server-free';
+          } else {
+            aiState.selectedMode = 'local';
+          }
+          simBtns.forEach((b) => b.classList.toggle('primary', b === btn));
+          renderAiSettings();
+        });
+      });
+
+      document.getElementById('optModeLocal').addEventListener('click', () => {
+        aiState.selectedMode = 'local';
+        aiState.sim = 'local-ready';
+        renderAiSettings();
+      });
+      document.getElementById('optModeServerFree').addEventListener('click', () => {
+        aiState.selectedMode = 'server-free';
+        if (aiState.sim === 'local-ready') aiState.sim = 'free-ai-ready';
+        renderAiSettings();
+      });
+      document.getElementById('chkAutoFallback').addEventListener('change', (e) => {
+        aiState.autoFallback = e.target.checked;
+        renderAiSettings();
+      });
+
+      function renderAiSettings() {
+        const banner = document.getElementById('aiStatusBanner');
+        const headerBadge = document.getElementById('activeModeHeaderBadge');
+        const availBadge = document.getElementById('serverFreeAvailBadge');
+        const optLocal = document.getElementById('optModeLocal');
+        const optFree = document.getElementById('optModeServerFree');
+
+        optLocal.setAttribute('aria-checked', String(aiState.selectedMode === 'local'));
+        optFree.setAttribute('aria-checked', String(aiState.selectedMode === 'server-free'));
+
+        if (aiState.sim === 'local-ready') {
+          banner.className = 'status-banner ok';
+          headerBadge.textContent = '현재 사용: 기기 내 규칙 초안';
+          availBadge.textContent = '선택 시 서버 상태 확인';
+          availBadge.className = 'badge neutral';
+          banner.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">' +
+              '<strong>상태 · 기기 내 규칙 모드 활성 (외부 서버 연결 불필요)</strong>' +
+              '<span class="badge">추가 비용 없음 (코드 확인)</span>' +
+            '</div>' +
+            '<div style="font-size:12.5px;color:var(--ink-muted);">기구·시간·난이도 조건표로 초안을 구성합니다. 네트워크 상태나 외부 호출 한도의 영향을 받지 않습니다.</div>';
+        } else if (aiState.sim === 'free-ai-ready') {
+          banner.className = 'status-banner ok';
+          headerBadge.textContent = '현재 사용: 서버 무료 조건 AI';
+          availBadge.textContent = '무료 조건 확인됨';
+          availBadge.className = 'badge';
+          banner.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">' +
+              '<strong>상태 · 서버 무료 조건 AI 연결됨 (OpenRouter :free / max_price=0 확인)</strong>' +
+              '<span class="badge warn">남은 일일 한도: 공급자 미제공(미확인)</span>' +
+            '</div>' +
+            '<div style="font-size:12.5px;color:var(--ink-muted);">서버에 설정된 무료 조건 모델만 호출합니다. 공급자 요청 한도에 도달하면 ' +
+            (aiState.autoFallback ? '자동으로 기기 내 규칙 초안으로 대체됩니다.' : '자동 전환 없이 안내 배너에서 전환 여부를 묻습니다.') +
+            '</div>';
+        } else if (aiState.sim === 'quota-reached') {
+          banner.className = 'status-banner limit';
+          headerBadge.textContent = aiState.autoFallback ? '한도 도달 → 규칙 초안 대체 중' : '일시 멈춤: 무료 한도 도달';
+          availBadge.textContent = '오늘/분당 한도 도달';
+          availBadge.className = 'badge warn';
+          banner.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">' +
+              '<strong>안내 · 무료 AI 요청 한도에 도달했습니다 (작업 중인 시퀀스는 그대로 유지됨)</strong>' +
+              '<span class="badge warn">429 rate_limit</span>' +
+            '</div>' +
+            '<div style="font-size:12.5px;">' +
+              (aiState.autoFallback
+                ? '설정에 따라 유료 호출로 넘어가지 않고 <strong>기기 내 규칙 초안</strong>으로 대체했습니다. 그대로 초안을 검토하거나 잠시 후 다시 시도할 수 있습니다.'
+                : '유료 모델로 자동 전환하지 않고 멈췄습니다. 아래 버튼으로 기기 내 규칙 초안을 대신 생성할 수 있습니다.') +
+            '</div>' +
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+              '<button type="button" class="mini-btn primary" id="switchLocalNowBtn">기기 내 규칙으로 계속 만들기</button>' +
+              '<button type="button" class="mini-btn" id="retryFreeBtn">무료 AI 연결 다시 확인</button>' +
+            '</div>';
+        } else {
+          banner.className = 'status-banner error';
+          headerBadge.textContent = aiState.autoFallback ? '연결 오류 → 규칙 초안 대체 중' : '연결 오류: 확인 필요';
+          availBadge.textContent = '서버 미응답 / 설정 미확인';
+          availBadge.className = 'badge err';
+          banner.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">' +
+              '<strong>오류 · 무료 AI 서버에 연결할 수 없거나 무료 조건 키가 설정되지 않았습니다</strong>' +
+              '<span class="badge err">연결 실패</span>' +
+            '</div>' +
+            '<div style="font-size:12.5px;">편집 중인 동작 목록은 안전하게 보존됩니다. 서버 없이 바로 기기 내 규칙 모드로 전환해 초안을 만들 수 있습니다.</div>' +
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+              '<button type="button" class="mini-btn primary" id="switchLocalNowBtn">기기 내 규칙 모드로 전환</button>' +
+              '<button type="button" class="mini-btn" id="retryFreeBtn">연결 다시 시도</button>' +
+            '</div>';
+        }
+
+        const swBtn = document.getElementById('switchLocalNowBtn');
+        if (swBtn) {
+          swBtn.addEventListener('click', () => {
+            aiState.selectedMode = 'local';
+            aiState.sim = 'local-ready';
+            renderAiSettings();
+          });
+        }
+        const rtBtn = document.getElementById('retryFreeBtn');
+        if (rtBtn) {
+          rtBtn.addEventListener('click', () => {
+            aiState.sim = 'free-ai-ready';
+            renderAiSettings();
+          });
+        }
+      }
+
+      renderAiSettings();
+    })();
+  </script>
+</body>
+</html>
