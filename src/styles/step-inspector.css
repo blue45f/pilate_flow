@@ -25,7 +25,7 @@
   padding: 4px 8px;
   border-radius: 20px;
   background: #eceee9;
-  color: #596558;
+  color: #465245;
   font-size: 0.8125rem;
 }
 .step-block-motion {
@@ -54,6 +54,64 @@
   font-size: 0.8125rem;
   color: var(--muted);
   line-height: 1.7;
+}
+.step-inspector-draft-timing {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #9fb8a4;
+  border-radius: 10px;
+  background: #eef4ef;
+}
+.step-inspector-draft-timing.is-conflict {
+  border-color: #d89b56;
+  background: #fdf5ec;
+}
+#root .step-inspector-summary .step-inspector-draft-timing-text {
+  margin: 0;
+  color: #1f2a22;
+  font-size: 0.84rem;
+  font-weight: 550;
+  line-height: 1.6;
+}
+#root .step-inspector-summary .step-inspector-draft-timing.is-conflict .step-inspector-draft-timing-text {
+  color: #6b3500;
+  font-weight: 600;
+}
+.step-inspector-draft-timing-conflict {
+  display: grid;
+  gap: 8px;
+}
+.step-inspector-restore-timing-btn {
+  justify-self: start;
+  min-height: 44px;
+}
+.step-inspector-estimate-detached {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #bfc9bd;
+  border-radius: 10px;
+  background: #f3f6f2;
+  color: #1f2a22;
+  font-size: 0.83rem;
+  line-height: 1.6;
+}
+.step-inspector-pending-summary {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #9fb8a4;
+  border-radius: 10px;
+  background: #eef4ef;
+  color: #1f2a22;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+.step-inspector-pending-summary strong {
+  color: #1d4b2c;
+}
+.step-inspector-pending-summary small {
+  color: #2b382e;
+  font-size: 0.79rem;
 }
 .step-inspector-form {
   display: grid;
@@ -150,6 +208,18 @@
 .step-inspector-form .form-field > textarea {
   width: 100%;
   min-width: 0;
+}
+.step-inspector-form .form-field > input[aria-invalid='true'] {
+  border-color: #b43c2f;
+  background: #fff7f6;
+}
+.step-block-inspector button:focus-visible,
+.step-block-inspector input:focus-visible,
+.step-block-inspector select:focus-visible,
+.step-block-inspector textarea:focus-visible,
+.step-block-inspector summary:focus-visible {
+  outline: 2px solid var(--green, #2d5a3c);
+  outline-offset: 2px;
 }
 .step-properties-panel {
   position: sticky;
@@ -387,6 +457,18 @@
   }
 }
 
+@media (max-width: 480px) {
+  .step-inspector-restore-timing-btn {
+    width: 100%;
+  }
+
+  #root .step-inspector-time-fields,
+  #root .step-inspector-count-fields {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
 @media (max-width: 359px) {
   #root .step-inspector-sheet .atelier-modal-header {
     padding-inline: 16px;
@@ -400,6 +482,7 @@
   }
   #root .step-inspector-time-fields,
   #root .step-inspector-count-fields {
+    grid-template-columns: 1fr;
     gap: 10px;
   }
 }
@@ -410,5 +493,14 @@
   }
   #root .step-inspector-sheet .step-inspector-summary {
     margin-block: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-block-inspector,
+  .step-block-inspector * {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
   }
 }

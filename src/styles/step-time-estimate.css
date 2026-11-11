@@ -4,23 +4,61 @@
   border-radius: 12px;
   padding: 12px;
   min-width: 0;
+  word-break: keep-all;
 }
+
 .step-time-estimate summary {
   min-height: 44px;
   align-content: center;
   cursor: pointer;
   font-weight: 650;
 }
+
 .step-time-estimate p {
   font-size: 0.85rem;
   line-height: 1.65;
   overflow-wrap: anywhere;
 }
+
+.step-time-estimate-alignment {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border: 1px solid #bfc9bd;
+  border-radius: 10px;
+  background: #f3f6f2;
+  color: #1f2a22;
+}
+
+.step-time-estimate-alignment.is-mismatch {
+  border-color: #d89b56;
+  background: #fdf5ec;
+  color: #2b2118;
+}
+
+.step-time-estimate-alignment-text,
+.step-time-estimate-mismatch-text {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.step-time-estimate-mismatch-text {
+  color: #6b3500;
+  font-weight: 600;
+}
+
+.step-time-estimate-sync-btn {
+  justify-self: start;
+}
+
 .step-time-estimate-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
+
 .step-time-estimate input,
 .step-time-estimate select,
 .step-time-estimate button {
@@ -28,15 +66,133 @@
   min-width: 0;
   max-width: 100%;
 }
+
+.step-time-estimate input[aria-invalid='true'] {
+  border-color: #b43c2f;
+  background: #fff7f6;
+}
+
 .step-time-estimate label {
   min-width: 0;
 }
-.step-time-estimate summary:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
+
+.step-time-estimate-result {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
 }
+
+.step-time-estimate-preview {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #9fb8a4;
+  border-radius: 10px;
+  background: #eef4ef;
+  color: #1f2a22;
+}
+
+.step-time-estimate-preview-title {
+  font-size: 0.84rem;
+  color: #1d4b2c;
+}
+
+.step-time-estimate-preview-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.step-time-estimate-preview-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed #cad8cc;
+}
+
+.step-time-estimate-preview-list li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.step-time-estimate-preview-list span {
+  color: #3f4b41;
+}
+
+.step-time-estimate-preview-list strong {
+  color: #1b261e;
+  font-weight: 600;
+}
+
+.step-time-estimate-scope-note {
+  margin: 0;
+  color: #2b382e;
+}
+
+.step-time-estimate-feedback {
+  margin-top: 10px;
+}
+
+.step-time-estimate-recovery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.step-time-estimate-apply-btn {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.step-time-estimate-transfer-status {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #eef4ef;
+  color: #1d4b2c;
+  font-weight: 550;
+}
+
+.step-time-estimate summary:focus-visible,
+.step-time-estimate input:focus-visible,
+.step-time-estimate select:focus-visible,
+.step-time-estimate button:focus-visible {
+  outline: 2px solid var(--green, #2d5a3c);
+  outline-offset: 2px;
+}
+
 @media (max-width: 480px) {
+  .step-time-estimate {
+    padding: 10px;
+  }
+
   .step-time-estimate-fields {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .step-time-estimate-sync-btn,
+  .step-time-estimate-recovery button {
+    width: 100%;
+  }
+
+  .step-time-estimate-preview-list li {
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-time-estimate,
+  .step-time-estimate * {
+    transition: none !important;
+    animation: none !important;
   }
 }

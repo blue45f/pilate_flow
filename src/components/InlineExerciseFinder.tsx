@@ -1,9 +1,11 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
   ArrowLeft,
   ArrowUpRight,
   Check,
   ChevronDown,
+  LocateFixed,
   Plus,
   Search,
   SlidersHorizontal,
@@ -111,6 +113,24 @@ function compactSearchText(value: string): string {
   return value.normalize('NFKC').toLocaleLowerCase().replace(/\s+/gu, '');
 }
 
+function handleChipBarKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+  const buttons = Array.from(
+    event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'),
+  );
+  if (!buttons.length) return;
+  const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+  if (currentIndex < 0) return;
+  event.preventDefault();
+  const nextIndex =
+    event.key === 'Home'
+      ? 0
+      : event.key === 'End'
+        ? buttons.length - 1
+        : (currentIndex + (event.key === 'ArrowRight' ? 1 : buttons.length - 1)) % buttons.length;
+  buttons[nextIndex]?.focus();
+}
+
 export function InlineExerciseFinder({
   onOpenExercise,
   classEquipment = [],
@@ -134,9 +154,13 @@ export function InlineExerciseFinder({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [preview, setPreview] = useState<MotionPatternReference | null>(null);
   const [previewExerciseId, setPreviewExerciseId] = useState<string | null>(null);
+  const [lastVisitedId, setLastVisitedId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ success: boolean; message: string } | null>(null);
   const id = useId();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const chipBarRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLElement>(null);
+  const previewCloseBtnRef = useRef<HTMLButtonElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const nextPageFocusRef = useRef<number | null>(null);
   useEffect(() => {
@@ -149,6 +173,7 @@ export function InlineExerciseFinder({
   useEffect(() => {
     if (preview) previewRef.current?.focus();
   }, [preview]);
+
   const update = <K extends keyof FinderFilters>(key: K, value: FinderFilters[K]) => {
     if (key === 'query' && typeof value === 'string') {
       writeSavedFinderQuery(value);
@@ -156,12 +181,19 @@ export function InlineExerciseFinder({
     setFilters((previous) => ({ ...previous, [key]: value }));
     setPage({ signature: '', count: 6 });
   };
+  const clearQueryOnly = () => {
+    update('query', '');
+    requestAnimationFrame(() => {
+      searchInputRef.current?.focus();
+    });
+  };
   const reset = () => {
     writeSavedFinderQuery('');
     setFilters(emptyFilters(''));
     setPage({ signature: '', count: 6 });
     setFeedback(null);
   };
+
   const bodyTags = useMemo(
     () =>
       [...new Set(exercises.flatMap((exercise) => exercise.targetMuscles).filter(Boolean))].sort(
@@ -203,10 +235,10 @@ export function InlineExerciseFinder({
         exercise.nameEn,
         ...exercise.targetMuscles,
         ...equipment.requiredEquipment.map(
-          (id) => EQUIPMENT_OPTIONS.find((item) => item.id === id)?.labelKo ?? id,
+          (eqId) => EQUIPMENT_OPTIONS.find((item) => item.id === eqId)?.labelKo ?? eqId,
         ),
         ...equipment.requiredProps.map(
-          (id) => PROP_OPTIONS.find((item) => item.id === id)?.labelKo ?? id,
+          (propId) => PROP_OPTIONS.find((item) => item.id === propId)?.labelKo ?? propId,
         ),
         ...motionReferences.flatMap((reference) => [
           reference.title,
@@ -217,12 +249,86 @@ export function InlineExerciseFinder({
       return terms.every((term) => fields.some((field) => field.includes(term)));
     });
   }, [exercises, filters, exerciseBrowseScope, ownedEquipment, ownedProps]);
+
   const activeFilterCount =
     filters.equipment.length +
     Number(Boolean(filters.bodyTag)) +
     Number(filters.duration !== 'all');
   const selectedCount = activeSteps.filter((step) => !isRestStep(step)).length;
   const hasFilters = Boolean(filters.query.trim() || activeFilterCount || filters.motionOnly);
+
+  const activeFilterChips: {
+    key: string;
+    label: string;
+    ariaLabel: string;
+    remove: () => void;
+  }[] = [
+    ...filters.equipment.map((eqId) => {
+      const labelKo = EQUIPMENT_OPTIONS.find((item) => item.id === eqId)?.labelKo ?? eqId;
+      return {
+        key: `equipment-${eqId}`,
+        label: labelKo,
+        ariaLabel: `${labelKo} 필터 해제`,
+        remove: () =>
+          update(
+            'equipment',
+            filters.equipment.filter((item) => item !== eqId),
+          ),
+      };
+    }),
+    ...(filters.bodyTag
+      ? [
+          {
+            key: `body-${filters.bodyTag}`,
+            label: `부위: ${filters.bodyTag}`,
+            ariaLabel: `부위 ${filters.bodyTag} 필터 해제`,
+            remove: () => update('bodyTag', ''),
+          },
+        ]
+      : []),
+    ...(filters.duration !== 'all'
+      ? [
+          {
+            key: `duration-${filters.duration}`,
+            label: `시간: ${
+              durationOptions.find((item) => item.id === filters.duration)?.label ??
+              filters.duration
+            }`,
+            ariaLabel: `시간 ${
+              durationOptions.find((item) => item.id === filters.duration)?.label ??
+              filters.duration
+            } 필터 해제`,
+            remove: () => update('duration', 'all'),
+          },
+        ]
+      : []),
+    ...(filters.motionOnly
+      ? [
+          {
+            key: 'motionOnly',
+            label: '초안 있는 동작',
+            ariaLabel: '초안 있는 동작 필터 해제',
+            remove: () => update('motionOnly', false),
+          },
+        ]
+      : []),
+  ];
+
+  const handleRemoveChip = (index: number, removeAction: () => void) => {
+    const remainingCount = activeFilterChips.length - 1;
+    removeAction();
+    requestAnimationFrame(() => {
+      if (remainingCount <= 0) {
+        searchInputRef.current?.focus();
+        return;
+      }
+      const nextButtons =
+        chipBarRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [];
+      const targetIndex = Math.min(index, nextButtons.length - 1);
+      nextButtons[targetIndex]?.focus();
+    });
+  };
+
   const previewExercise = useMemo(() => {
     if (!preview) return undefined;
     return (
@@ -237,10 +343,67 @@ export function InlineExerciseFinder({
   const previewAlreadyAdded = previewExercise
     ? activeSteps.some((step) => !isRestStep(step) && step.exerciseId === previewExercise.id)
     : false;
-  const addExercise = (exercise: PilatesExercise) => {
+
+  const lastVisitedIndex = lastVisitedId
+    ? results.findIndex((item) => item.id === lastVisitedId)
+    : -1;
+  const lastVisitedExercise = lastVisitedIndex >= 0 ? results[lastVisitedIndex] : undefined;
+
+  const jumpToExerciseCard = (exerciseId: string) => {
+    const targetIndex = results.findIndex((item) => item.id === exerciseId);
+    if (targetIndex < 0) return;
+    if (targetIndex >= visibleCount) {
+      setPage({ signature, count: Math.ceil((targetIndex + 1) / 6) * 6 });
+    }
+    requestAnimationFrame(() => {
+      const targetBtn = resultsRef.current?.querySelector<HTMLButtonElement>(
+        `[data-ief-exercise-title="${exerciseId}"]`,
+      );
+      if (!targetBtn?.isConnected) return;
+      targetBtn.focus({ preventScroll: true });
+      targetBtn.scrollIntoView?.({ block: 'nearest', behavior: 'auto' });
+    });
+  };
+
+  const closePreview = () => {
+    const targetExerciseId = previewExercise?.id ?? previewExerciseId;
+    const trigger = previewTriggerRef.current;
+    setPreview(null);
+    setPreviewExerciseId(null);
+    if (trigger?.isConnected) {
+      trigger.focus();
+      return;
+    }
+    if (targetExerciseId && results.some((item) => item.id === targetExerciseId)) {
+      jumpToExerciseCard(targetExerciseId);
+      return;
+    }
+    requestAnimationFrame(() => {
+      searchInputRef.current?.focus();
+    });
+  };
+
+  const openExerciseDetail = (exercise: PilatesExercise) => {
+    setLastVisitedId(exercise.id);
+    onOpenExercise(exercise);
+  };
+
+  const addExercise = (exercise: PilatesExercise, source: 'card' | 'preview' = 'card') => {
+    setLastVisitedId(exercise.id);
     if (isMovementIdeaExercise(exercise)) {
       const result = addMovementIdeaToCurrentClass(exercise.id);
       setFeedback({ success: result.ok, message: result.message });
+      if (result.ok) {
+        requestAnimationFrame(() => {
+          if (source === 'preview') {
+            previewCloseBtnRef.current?.focus();
+            return;
+          }
+          resultsRef.current
+            ?.querySelector<HTMLButtonElement>(`[data-ief-exercise-title="${exercise.id}"]`)
+            ?.focus({ preventScroll: true });
+        });
+      }
       return;
     }
     const before = usePilatesStore.getState().activeSteps.length;
@@ -255,6 +418,17 @@ export function InlineExerciseFinder({
         ? `${exercise.nameKo} 동작을 수업안에 추가했어요.`
         : after.generationError || '현재 수업 조건을 확인한 뒤 다시 추가해 주세요.',
     });
+    if (success) {
+      requestAnimationFrame(() => {
+        if (source === 'preview') {
+          previewCloseBtnRef.current?.focus();
+          return;
+        }
+        resultsRef.current
+          ?.querySelector<HTMLButtonElement>(`[data-ief-exercise-title="${exercise.id}"]`)
+          ?.focus({ preventScroll: true });
+      });
+    }
   };
 
   return (
@@ -298,16 +472,29 @@ export function InlineExerciseFinder({
           </div>
         </section>
       )}
-      <label className="ief-search">
-        <Search size={18} aria-hidden="true" />
-        <input
-          type="search"
-          aria-label="동작 이름 또는 등록된 부위 태그 검색"
-          placeholder="동작 이름 또는 부위 검색"
-          value={filters.query}
-          onChange={(event) => update('query', event.target.value)}
-        />
-      </label>
+      <div className="ief-search-row">
+        <label className="ief-search">
+          <Search size={18} aria-hidden="true" />
+          <input
+            ref={searchInputRef}
+            type="search"
+            aria-label="동작 이름 또는 등록된 부위 태그 검색"
+            placeholder="동작 이름 또는 부위 검색"
+            value={filters.query}
+            onChange={(event) => update('query', event.target.value)}
+          />
+        </label>
+        {filters.query.length > 0 && (
+          <button
+            type="button"
+            className="ief-search-clear"
+            aria-label="검색어 지우기"
+            onClick={clearQueryOnly}
+          >
+            <X size={16} aria-hidden="true" />
+          </button>
+        )}
+      </div>
       <div className="ief-quick-filters">
         <button
           type="button"
@@ -326,6 +513,28 @@ export function InlineExerciseFinder({
           {activeFilterCount ? ` ${activeFilterCount}` : ''}
         </button>
       </div>
+      {activeFilterChips.length > 0 && (
+        <div
+          ref={chipBarRef}
+          className="ief-active-chips"
+          role="group"
+          aria-label="적용된 찾기 조건"
+          onKeyDown={handleChipBarKeyDown}
+        >
+          {activeFilterChips.map((chip, index) => (
+            <button
+              key={chip.key}
+              type="button"
+              className="ief-active-chip"
+              aria-label={chip.ariaLabel}
+              onClick={() => handleRemoveChip(index, chip.remove)}
+            >
+              <span>{chip.label}</span>
+              <X size={13} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      )}
       <div id={`${id}-filters`} className="ief-filter-drawer" hidden={!filtersOpen}>
         <div className="ief-filter-tabs" role="tablist" aria-label="동작 찾기 필터">
           {tabs.map((item) => (
@@ -441,11 +650,26 @@ export function InlineExerciseFinder({
           <strong>{results.length}개</strong> 결과
           {activeFilterCount > 0 && <span> · 필터 {activeFilterCount}</span>}
         </p>
-        {hasFilters && (
-          <button type="button" onClick={reset} aria-label="동작 찾기 검색·필터 초기화">
-            <X size={14} /> 초기화
-          </button>
-        )}
+        <div className="ief-results-actions">
+          {lastVisitedExercise && (
+            <button
+              type="button"
+              className="ief-return-card-btn"
+              aria-label={`방금 본 ${lastVisitedExercise.nameKo} 카드 위치로 이동`}
+              onClick={() => jumpToExerciseCard(lastVisitedExercise.id)}
+            >
+              <LocateFixed size={13} aria-hidden="true" />
+              <span>
+                {lastVisitedIndex >= visibleCount ? '방금 본 위치 펼치기' : '방금 본 위치로'}
+              </span>
+            </button>
+          )}
+          {hasFilters && (
+            <button type="button" onClick={reset} aria-label="동작 찾기 검색·필터 초기화">
+              <X size={14} /> 초기화
+            </button>
+          )}
+        </div>
       </div>
       <p className="ief-review-hint">동작을 골라 수업에 추가하세요.</p>
       {preview && (
@@ -454,17 +678,21 @@ export function InlineExerciseFinder({
           tabIndex={-1}
           className="ief-preview"
           aria-label="선택한 모션 초안"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              event.stopPropagation();
+              closePreview();
+            }
+          }}
         >
           <div className="ief-preview-heading">
             <p>관련 패턴 참고 · 전문가 미검수</p>
             <button
+              ref={previewCloseBtnRef}
               type="button"
               aria-label="모션 초안 닫기"
-              onClick={() => {
-                setPreview(null);
-                setPreviewExerciseId(null);
-                previewTriggerRef.current?.focus();
-              }}
+              onClick={closePreview}
             >
               <X size={18} />
             </button>
@@ -516,7 +744,7 @@ export function InlineExerciseFinder({
                   type="button"
                   className="ief-preview-open-note"
                   aria-label={`${previewExercise.nameKo} 설명·주의점 상세 및 검토 열기`}
-                  onClick={() => onOpenExercise(previewExercise)}
+                  onClick={() => openExerciseDetail(previewExercise)}
                 >
                   노트 상세·검토 열기
                 </button>
@@ -529,7 +757,7 @@ export function InlineExerciseFinder({
                       ? `${previewExercise.nameKo} 초안 창에서 이미 시퀀스에 있음`
                       : `${previewExercise.nameKo} 초안 확인 후 시퀀스 삽입`
                   }
-                  onClick={() => addExercise(previewExercise)}
+                  onClick={() => addExercise(previewExercise, 'preview')}
                 >
                   {previewAlreadyAdded ? (
                     <>
@@ -568,6 +796,7 @@ export function InlineExerciseFinder({
             const alreadyAdded = activeSteps.some(
               (step) => !isRestStep(step) && step.exerciseId === exercise.id,
             );
+            const isLastVisited = lastVisitedId === exercise.id;
             const equipmentLabel = equipment.requirementsKnown
               ? equipment.requiredEquipment
                   .map((key) => EQUIPMENT_OPTIONS.find((item) => item.id === key)?.labelKo)
@@ -578,14 +807,15 @@ export function InlineExerciseFinder({
               <PfMovementCard
                 key={exercise.id}
                 variant={isIdea ? 'idea' : 'catalog'}
-                className="ief-card"
+                className={`ief-card ${isLastVisited ? 'is-last-visited' : ''}`.trim()}
+                data-last-visited={isLastVisited ? 'true' : undefined}
                 aria-label={`${exercise.nameKo} 동작 노트`}
               >
                 <button
                   className={`ief-card-image ief-art-${exercise.apparatus}`}
                   type="button"
                   aria-label={`${exercise.nameKo} 상세 보기`}
-                  onClick={() => onOpenExercise(exercise)}
+                  onClick={() => openExerciseDetail(exercise)}
                 >
                   {firstReference ? (
                     <MotionPatternThumbnail reference={firstReference} />
@@ -606,7 +836,11 @@ export function InlineExerciseFinder({
                 </button>
                 <div className="ief-card-body">
                   <h3>
-                    <button type="button" onClick={() => onOpenExercise(exercise)}>
+                    <button
+                      type="button"
+                      data-ief-exercise-title={exercise.id}
+                      onClick={() => openExerciseDetail(exercise)}
+                    >
                       {exercise.nameKo}
                     </button>
                   </h3>
@@ -628,6 +862,7 @@ export function InlineExerciseFinder({
                           aria-label={`${reference.title} 초안 보기`}
                           onClick={(event) => {
                             previewTriggerRef.current = event.currentTarget;
+                            setLastVisitedId(exercise.id);
                             setPreviewExerciseId(exercise.id);
                             setPreview(reference);
                           }}
@@ -669,7 +904,7 @@ export function InlineExerciseFinder({
                           ? `${exercise.nameKo} 이미 수업안에 있음`
                           : `${exercise.nameKo} 수업안에 추가`
                       }
-                      onClick={() => addExercise(exercise)}
+                      onClick={() => addExercise(exercise, 'card')}
                       title="수업안에 추가 · 검토 상태는 변경되지 않습니다"
                     >
                       {alreadyAdded ? <Check size={18} /> : <Plus size={18} />}
@@ -690,6 +925,16 @@ export function InlineExerciseFinder({
               ? '내 보유 장비 범위에서 결과가 없습니다. 설정의 기구·소도구 또는 검색 조건을 확인해 주세요.'
               : '검색어와 기구·태그·시간을 조정해 보세요.'}
           </p>
+          {Boolean(filters.query.trim()) &&
+            (activeFilterChips.length > 0 || exerciseBrowseScope === 'owned') && (
+              <button
+                type="button"
+                className="ief-empty-query-btn"
+                onClick={clearQueryOnly}
+              >
+                검색어만 지우기
+              </button>
+            )}
           {exerciseBrowseScope === 'owned' && (
             <button
               type="button"
@@ -699,7 +944,12 @@ export function InlineExerciseFinder({
               보유 장비 조건만 해제
             </button>
           )}
-          <button type="button" data-testid="ief-empty-reset-btn" style={{ minHeight: 44 }} onClick={reset}>
+          <button
+            type="button"
+            data-testid="ief-empty-reset-btn"
+            style={{ minHeight: 44 }}
+            onClick={reset}
+          >
             검색·필터 초기화
           </button>
         </div>

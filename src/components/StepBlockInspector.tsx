@@ -19,6 +19,8 @@ import type { ClassSectionRole } from '../types/sequenceMotion';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
 import { formatSecondsToMMSS, getStepTiming, isRestStep } from '../utils/sequenceEngine';
 import { assessSequenceMotionStudyBinding } from '../utils/sequenceMotionBinding';
+import { calculateStepTimeEstimate } from '../utils/stepTimeEstimate';
+import { resolveAppliedSideMode } from '../utils/stepTimeEstimatePresentation';
 import { StepTimeEstimateEditor } from './StepTimeEstimateEditor';
 import { StepMotionStudyPicker } from './StepMotionStudyPicker';
 import { ExerciseEvidencePanel } from './ExerciseEvidencePanel';
@@ -64,16 +66,143 @@ const draftFrom = (step: SequenceStep) => ({
   motionStudy: step.motionStudy ? cloneStep(step).motionStudy! : null,
   timeEstimate: step.timeEstimate ? cloneStep(step).timeEstimate! : null,
 });
+
+type InspectorDraft = ReturnType<typeof draftFrom>;
+
 const LAYER_OPTIONS: { value: LayerMode; label: string }[] = [
   { value: 'easy', label: '쉬운 변형' },
   { value: 'standard', label: '기본 변형' },
   { value: 'hard', label: '어려운 변형' },
 ];
+
+const PENDING_FIELD_LABELS: Record<keyof ReturnType<typeof editableValues>, string> = {
+  classSection: '역할',
+  durationMin: '총시간',
+  explanationSec: '티칭 시간',
+  transitionSec: '전환 시간',
+  selectedLayer: '변형',
+  repetitions: '횟수',
+  sets: '세트',
+  sideMode: '수행할 쪽',
+  timeEstimate: '시간 계산 가정',
+  customSpringOverride: '스프링 설정',
+  instructorNote: '티칭 메모',
+  motionStudy: '수업 모션 연결',
+};
+
+function isEstimateCompatibleWithDraft(draft: InspectorDraft): boolean {
+  const est = draft.timeEstimate;
+  if (!est) return true;
+  const calc = calculateStepTimeEstimate(est);
+  if (!calc.success) return false;
+  const durationTrimmed = draft.duration.trim();
+  if (!durationTrimmed || Math.abs(Number(durationTrimmed) - calc.durationMin) >= 1e-6) {
+    return false;
+  }
+  if (!draft.count.trim() || Number(draft.count) !== est.repetitions) return false;
+  if (!draft.sets.trim() || Number(draft.sets) !== est.sets) return false;
+  const expNum = draft.explanation.trim() ? Number(draft.explanation) : undefined;
+  if (expNum !== est.explanationSec) return false;
+  const transNum = draft.transition.trim() ? Number(draft.transition) : undefined;
+  if (transNum !== est.transitionSec) return false;
+  if (est.sides === 2) {
+    return draft.side === 'left-then-right' || draft.side === 'right-then-left';
+  }
+  return draft.side === 'together' || draft.side === 'left' || draft.side === 'right';
+}
+
+function evaluateEditedDraftTiming(
+  draft: InspectorDraft,
+  baseDraft: InspectorDraft,
+):
+  | { edited: false }
+  | {
+      edited: true;
+      valid: false;
+      reason: string;
+      invalidDuration: boolean;
+      invalidExplanation: boolean;
+      invalidTransition: boolean;
+    }
+  | {
+      edited: true;
+      valid: true;
+      totalSec: number;
+      movementSec: number;
+      explanationSec: number;
+      transitionSec: number;
+    } {
+  if (
+    draft.duration === baseDraft.duration &&
+    draft.explanation === baseDraft.explanation &&
+    draft.transition === baseDraft.transition
+  ) {
+    return { edited: false };
+  }
+  const durationRaw = draft.duration.trim();
+  const durationNum = Number(durationRaw);
+  const invalidDuration =
+    !durationRaw || !Number.isFinite(durationNum) || durationNum < 0.5 || durationNum > 20;
+
+  const explanationRaw = draft.explanation.trim();
+  const explanationNum = explanationRaw === '' ? 0 : Number(explanationRaw);
+  const invalidExplanation =
+    explanationRaw !== '' &&
+    (!Number.isInteger(explanationNum) || explanationNum < 0 || explanationNum > 1200);
+
+  const transitionRaw = draft.transition.trim();
+  const transitionNum = transitionRaw === '' ? 0 : Number(transitionRaw);
+  const invalidTransition =
+    transitionRaw !== '' &&
+    (!Number.isInteger(transitionNum) || transitionNum < 0 || transitionNum > 1200);
+
+  if (invalidDuration) {
+    return {
+      edited: true,
+      valid: false,
+      reason: '블록 총시간은 0.5분(30초) 이상 20분 이하로 입력해 주세요.',
+      invalidDuration: true,
+      invalidExplanation,
+      invalidTransition,
+    };
+  }
+  if (invalidExplanation || invalidTransition) {
+    return {
+      edited: true,
+      valid: false,
+      reason: '티칭·전환 시간은 0초 이상 1200초 이하 정수로 입력해 주세요.',
+      invalidDuration: false,
+      invalidExplanation,
+      invalidTransition,
+    };
+  }
+  const totalSec = Math.round(durationNum * 60);
+  const overheadSec = Math.round(explanationNum) + Math.round(transitionNum);
+  if (overheadSec > totalSec) {
+    return {
+      edited: true,
+      valid: false,
+      reason: `티칭(${explanationNum}초)·전환(${transitionNum}초) 합계(${overheadSec}초)가 블록 총시간(${formatSecondsToMMSS(totalSec)})을 초과합니다.`,
+      invalidDuration: false,
+      invalidExplanation: true,
+      invalidTransition: true,
+    };
+  }
+  return {
+    edited: true,
+    valid: true,
+    totalSec,
+    movementSec: totalSec - overheadSec,
+    explanationSec: explanationNum,
+    transitionSec: transitionNum,
+  };
+}
+
 export interface StepInspectorDraftCache {
   stepId: string;
   exerciseId: string;
   base: SequenceStep;
-  draft: ReturnType<typeof draftFrom>;
+  draft: InspectorDraft;
 }
 
 export const STEP_INSPECTOR_DRAFT_STORAGE_KEY = 'pf_step_inspector_draft_v1';
@@ -121,7 +250,17 @@ usePilatesStore.subscribe((state, prev) => {
 });
 
 /** Class-only settings. A note's review does not certify its motion or session settings. */
-export function StepBlockInspector({
+export function StepBlockInspector(props: Props) {
+  if (isRestStep(props.step)) return null;
+  return (
+    <StepBlockInspectorBody
+      key={`${props.step.stepId}:${props.step.exerciseId}`}
+      {...props}
+    />
+  );
+}
+
+function StepBlockInspectorBody({
   index,
   step,
   onClose,
@@ -146,7 +285,10 @@ export function StepBlockInspector({
     return { ...draftFrom(step), ...saved, layer: saved?.layer ?? step.selectedLayer };
   });
   const [message, setMessage] = useState('');
+  const [estimateDetached, setEstimateDetached] = useState(false);
+  const [calculatorResetKey, setCalculatorResetKey] = useState(0);
   const [showVisualGuide, setShowVisualGuide] = useState(false);
+
   useEffect(() => {
     const snapshot = { stepId: step.stepId, exerciseId: step.exerciseId, base, draft };
     onDraftChange?.(snapshot);
@@ -156,16 +298,18 @@ export function StepBlockInspector({
       writeSessionInspectorDraft(null);
     }
   }, [onDraftChange, step.stepId, step.exerciseId, base, draft]);
+
+  const baseDraft = draftFrom(base);
   const current = store.activeSteps[index];
   const stale =
     !current ||
     current.stepId !== step.stepId ||
     current.exerciseId !== base.exerciseId ||
     JSON.stringify(current) !== JSON.stringify(base);
-  const dirty = JSON.stringify(draft) !== JSON.stringify(draftFrom(base));
+  const dirty = JSON.stringify(draft) !== JSON.stringify(baseDraft);
   const disabled = !!step.locked || !exercise || isRestStep(step);
-  if (isRestStep(step)) return null;
   const timing = getStepTiming(step, exercise);
+  const draftTimingStatus = evaluateEditedDraftTiming(draft, baseDraft);
   const review = exercise ? getExerciseReviewState(exercise) : 'pending';
   const bindingStatus = assessSequenceMotionStudyBinding(step.exerciseId, step.motionStudy);
   const next = store.activeSteps[index + 1];
@@ -176,6 +320,52 @@ export function StepBlockInspector({
         )
         .join(' · ')
     : '';
+
+  const draftCandidateValues = {
+    selectedLayer: draft.layer,
+    durationMin: Number(draft.duration),
+    explanationSec: draft.explanation.trim() ? Number(draft.explanation) : undefined,
+    transitionSec: draft.transition.trim() ? Number(draft.transition) : undefined,
+    repetitions: draft.count.trim() ? Number(draft.count) : undefined,
+    sets: draft.sets.trim() ? Number(draft.sets) : undefined,
+    sideMode: (draft.side || undefined) as StepSideMode | undefined,
+    customSpringOverride: draft.spring.trim() || undefined,
+    instructorNote: draft.note || undefined,
+    classSection: (draft.section || null) as ClassSectionRole | null,
+    motionStudy: draft.motionStudy,
+    timeEstimate: draft.timeEstimate,
+  };
+  const oldEditable = editableValues(base);
+  const pendingChangedLabels: string[] = [];
+  for (const key of Object.keys(PENDING_FIELD_LABELS) as (keyof typeof PENDING_FIELD_LABELS)[]) {
+    if (JSON.stringify(draftCandidateValues[key]) !== JSON.stringify(oldEditable[key])) {
+      pendingChangedLabels.push(PENDING_FIELD_LABELS[key]);
+    }
+  }
+
+  const updateCalculatedTargetField = (partial: Partial<InspectorDraft>) => {
+    const nextDraft = { ...draft, ...partial };
+    if (nextDraft.timeEstimate && !isEstimateCompatibleWithDraft(nextDraft)) {
+      setDraft({ ...nextDraft, timeEstimate: null });
+      setEstimateDetached(true);
+      return;
+    }
+    setDraft(nextDraft);
+  };
+
+  const restoreTimingOnly = () => {
+    const restoredDraft = {
+      ...draft,
+      duration: baseDraft.duration,
+      explanation: baseDraft.explanation,
+      transition: baseDraft.transition,
+    };
+    const shouldDetach =
+      restoredDraft.timeEstimate !== null && !isEstimateCompatibleWithDraft(restoredDraft);
+    setDraft(shouldDetach ? { ...restoredDraft, timeEstimate: null } : restoredDraft);
+    if (shouldDetach) setEstimateDetached(true);
+    setMessage('');
+  };
 
   const apply = (event: React.FormEvent) => {
     event.preventDefault();
@@ -191,25 +381,13 @@ export function StepBlockInspector({
       setMessage('다른 편집으로 이 블록이 바뀌었습니다. 현재 값을 다시 불러온 뒤 확인해 주세요.');
       return;
     }
-    const values = {
-      selectedLayer: draft.layer,
-      durationMin: Number(draft.duration),
-      explanationSec: draft.explanation.trim() ? Number(draft.explanation) : undefined,
-      transitionSec: draft.transition.trim() ? Number(draft.transition) : undefined,
-      repetitions: draft.count.trim() ? Number(draft.count) : undefined,
-      sets: draft.sets.trim() ? Number(draft.sets) : undefined,
-      sideMode: (draft.side || undefined) as StepSideMode | undefined,
-      customSpringOverride: draft.spring.trim() || undefined,
-      instructorNote: draft.note || undefined,
-      classSection: (draft.section || null) as ClassSectionRole | null,
-      motionStudy: draft.motionStudy,
-      timeEstimate: draft.timeEstimate,
-    };
-    const old = editableValues(base);
-    const patch: Partial<typeof values> = {};
-    for (const key of Object.keys(values) as (keyof typeof values)[]) {
-      if (JSON.stringify(values[key]) !== JSON.stringify(old[key]))
-        Object.assign(patch, { [key]: values[key] });
+    const patch: Partial<typeof draftCandidateValues> = {};
+    for (const key of Object.keys(
+      draftCandidateValues,
+    ) as (keyof typeof draftCandidateValues)[]) {
+      if (JSON.stringify(draftCandidateValues[key]) !== JSON.stringify(oldEditable[key])) {
+        Object.assign(patch, { [key]: draftCandidateValues[key] });
+      }
     }
     if (!Object.keys(patch).length) {
       writeSessionInspectorDraft(null);
@@ -218,6 +396,13 @@ export function StepBlockInspector({
     }
     const result = store.setStepBlockOptions(index, patch, base);
     if (result.success) {
+      const updatedStep = usePilatesStore.getState().activeSteps[index];
+      if (updatedStep && updatedStep.stepId === step.stepId) {
+        const nextBase = cloneStep(updatedStep);
+        setBase(nextBase);
+        setDraft(draftFrom(nextBase));
+        setEstimateDetached(false);
+      }
       writeSessionInspectorDraft(null);
       onClose();
     } else setMessage(result.message);
@@ -306,6 +491,34 @@ export function StepBlockInspector({
         <small>
           양측 수행·티칭·전환을 한 번만 합산합니다. 별도 휴식 블록은 아래에서 구분합니다.
         </small>
+        {draftTimingStatus.edited && (
+          <div
+            className={`step-inspector-draft-timing${draftTimingStatus.valid ? '' : ' is-conflict'}`}
+            data-testid="step-inspector-draft-timing"
+          >
+            {draftTimingStatus.valid ? (
+              <p className="step-inspector-draft-timing-text">
+                편집 중 시간 미리보기: 총 {formatSecondsToMMSS(draftTimingStatus.totalSec)} (수행{' '}
+                {formatSecondsToMMSS(draftTimingStatus.movementSec)} · 티칭{' '}
+                {draftTimingStatus.explanationSec}초 · 전환 {draftTimingStatus.transitionSec}초)
+              </p>
+            ) : (
+              <div className="step-inspector-draft-timing-conflict">
+                <p className="step-inspector-draft-timing-text">{draftTimingStatus.reason}</p>
+                {!disabled && (
+                  <button
+                    type="button"
+                    className="btn-secondary step-inspector-restore-timing-btn"
+                    data-testid="step-inspector-restore-timing"
+                    onClick={restoreTimingOnly}
+                  >
+                    시간만 원래 값으로 복구
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       {exercise && (
         <div style={{ display: 'grid', gap: '8px', marginBottom: '8px' }}>
@@ -356,8 +569,17 @@ export function StepBlockInspector({
                 min="0.5"
                 max="20"
                 step="any"
+                aria-invalid={
+                  draftTimingStatus.edited &&
+                  !draftTimingStatus.valid &&
+                  draftTimingStatus.invalidDuration
+                    ? 'true'
+                    : undefined
+                }
                 value={draft.duration}
-                onChange={(event) => setDraft({ ...draft, duration: event.target.value })}
+                onChange={(event) =>
+                  updateCalculatedTargetField({ duration: event.target.value })
+                }
               />
             </label>
             <label className="form-field">
@@ -368,8 +590,17 @@ export function StepBlockInspector({
                 max="1200"
                 step="1"
                 placeholder="0"
+                aria-invalid={
+                  draftTimingStatus.edited &&
+                  !draftTimingStatus.valid &&
+                  draftTimingStatus.invalidExplanation
+                    ? 'true'
+                    : undefined
+                }
                 value={draft.explanation}
-                onChange={(event) => setDraft({ ...draft, explanation: event.target.value })}
+                onChange={(event) =>
+                  updateCalculatedTargetField({ explanation: event.target.value })
+                }
               />
             </label>
             <label className="form-field">
@@ -380,8 +611,17 @@ export function StepBlockInspector({
                 max="1200"
                 step="1"
                 placeholder="0"
+                aria-invalid={
+                  draftTimingStatus.edited &&
+                  !draftTimingStatus.valid &&
+                  draftTimingStatus.invalidTransition
+                    ? 'true'
+                    : undefined
+                }
                 value={draft.transition}
-                onChange={(event) => setDraft({ ...draft, transition: event.target.value })}
+                onChange={(event) =>
+                  updateCalculatedTargetField({ transition: event.target.value })
+                }
               />
             </label>
           </div>
@@ -434,7 +674,7 @@ export function StepBlockInspector({
                 step="1"
                 placeholder="미지정"
                 value={draft.count}
-                onChange={(event) => setDraft({ ...draft, count: event.target.value })}
+                onChange={(event) => updateCalculatedTargetField({ count: event.target.value })}
               />
             </label>
             <label className="form-field">
@@ -446,7 +686,7 @@ export function StepBlockInspector({
                 step="1"
                 placeholder="미지정"
                 value={draft.sets}
-                onChange={(event) => setDraft({ ...draft, sets: event.target.value })}
+                onChange={(event) => updateCalculatedTargetField({ sets: event.target.value })}
               />
             </label>
           </div>
@@ -454,7 +694,7 @@ export function StepBlockInspector({
             <span>수행할 쪽</span>
             <select
               value={draft.side}
-              onChange={(event) => setDraft({ ...draft, side: event.target.value })}
+              onChange={(event) => updateCalculatedTargetField({ side: event.target.value })}
             >
               <option value="">동작 기본</option>
               <option value="together">양쪽 함께</option>
@@ -467,34 +707,42 @@ export function StepBlockInspector({
           <p className="muted">
             좌우는 회원의 몸 기준입니다. 횟수·세트·좌우 설정으로 총시간을 자동 곱하지 않습니다.
           </p>
+          {estimateDetached && !draft.timeEstimate && (
+            <p
+              className="step-inspector-estimate-detached"
+              data-testid="step-inspector-estimate-detached"
+            >
+              상단 시간·횟수·좌우를 직접 수정해 이전 계산 가정 연결을 해제했습니다. 다시 계산해
+              넣으려면 아래 시간 계산을 이용해 주세요.
+            </p>
+          )}
           <StepTimeEstimateEditor
-            key={JSON.stringify(base)}
+            key={`${JSON.stringify(base)}:${calculatorResetKey}`}
             initial={draft.timeEstimate}
-            repetitions={draft.count ? Number(draft.count) : undefined}
-            sets={draft.sets ? Number(draft.sets) : undefined}
+            repetitions={draft.count.trim() ? Number(draft.count) : undefined}
+            sets={draft.sets.trim() ? Number(draft.sets) : undefined}
             sideMode={(draft.side || undefined) as StepSideMode | undefined}
-            explanationSec={draft.explanation ? Number(draft.explanation) : undefined}
-            transitionSec={draft.transition ? Number(draft.transition) : undefined}
+            explanationSec={draft.explanation.trim() ? Number(draft.explanation) : undefined}
+            transitionSec={draft.transition.trim() ? Number(draft.transition) : undefined}
             currentDurationMin={Number(draft.duration)}
-            onUse={(estimate, durationMin) =>
+            isUnilateralExercise={exercise?.isUnilateral}
+            disabled={disabled}
+            onUse={(estimate, durationMin) => {
+              setEstimateDetached(false);
               setDraft({
                 ...draft,
                 timeEstimate: estimate,
                 duration: String(durationMin),
                 count: String(estimate.repetitions),
                 sets: String(estimate.sets),
-                side:
-                  estimate.sides === 2
-                    ? draft.side === 'right-then-left'
-                      ? draft.side
-                      : 'left-then-right'
-                    : draft.side === 'left' || draft.side === 'right'
-                      ? draft.side
-                      : 'together',
+                side: resolveAppliedSideMode(
+                  estimate.sides,
+                  (draft.side || undefined) as StepSideMode | undefined,
+                ),
                 explanation: String(estimate.explanationSec),
                 transition: String(estimate.transitionSec),
-              })
-            }
+              });
+            }}
           />
           <details open>
             <summary>이번 수업의 기구 세팅·티칭 메모</summary>
@@ -552,6 +800,8 @@ export function StepBlockInspector({
               if (current?.stepId === step.stepId) {
                 setBase(cloneStep(current));
                 setDraft(draftFrom(current));
+                setEstimateDetached(false);
+                setCalculatorResetKey((value) => value + 1);
                 setMessage('현재 값을 불러왔습니다.');
               }
             }}
@@ -592,6 +842,16 @@ export function StepBlockInspector({
           </details>
         )}
         {exercise && <ExerciseEvidencePanel exercise={exercise} step={step} />}
+        {dirty && !disabled && pendingChangedLabels.length > 0 && (
+          <div
+            className="step-inspector-pending-summary"
+            data-testid="step-inspector-pending-summary"
+          >
+            <strong>적용 대기 항목 ({pendingChangedLabels.length}개):</strong>{' '}
+            <span>{pendingChangedLabels.join(' · ')}</span>
+            <small>‘변경 적용’을 눌러야 이 동작 블록에 한 번에 저장됩니다.</small>
+          </div>
+        )}
         <div
           className="step-inspector-footer"
           style={{ flexWrap: 'wrap', gap: '8px', wordBreak: 'keep-all' }}
@@ -614,6 +874,8 @@ export function StepBlockInspector({
             onClick={() => {
               writeSessionInspectorDraft(null);
               setDraft(draftFrom(base));
+              setEstimateDetached(false);
+              setCalculatorResetKey((value) => value + 1);
               setMessage('수정한 입력값을 적용 전 상태로 되돌렸습니다.');
             }}
           >

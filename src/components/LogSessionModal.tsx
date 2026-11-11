@@ -43,6 +43,15 @@ interface SessionLogDraft {
   selectedStepIds?: string[];
 }
 
+type LogValidationField =
+  | 'newGroup'
+  | 'group'
+  | 'taughtDate'
+  | 'minutes'
+  | 'seconds'
+  | 'steps'
+  | null;
+
 const getDraftStorageKey = (sequenceId: string) => `pf_log_session_draft_v1:${sequenceId}`;
 
 const readSessionLogDraft = (sequenceId: string): SessionLogDraft | null => {
@@ -62,6 +71,42 @@ const localDate = () => {
   const date = new Date();
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 };
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function resolveInitialSelectedSteps(
+  snapshot: readonly SequenceStep[],
+  initialDraft: SessionLogDraft | null,
+  context?: TeachingLogContext,
+): Set<string> {
+  const validIds = new Set(snapshot.map((step) => step.stepId));
+
+  if (Array.isArray(initialDraft?.selectedStepIds)) {
+    // Distinguish an explicit empty array (all unchecked) from an omitted/unspecified field.
+    if (initialDraft.selectedStepIds.length === 0) {
+      return new Set<string>();
+    }
+    const restored = initialDraft.selectedStepIds.filter(
+      (id): id is string => typeof id === 'string' && validIds.has(id),
+    );
+    if (snapshot.some((step) => restored.includes(step.stepId) && !isRestStep(step))) {
+      return new Set(restored);
+    }
+  }
+
+  if (context?.taughtStepIds !== undefined) {
+    return new Set(
+      context.taughtStepIds.filter(
+        (id): id is string => typeof id === 'string' && validIds.has(id),
+      ),
+    );
+  }
+
+  return new Set(snapshot.map((step) => step.stepId));
+}
 
 export const LogSessionModal: React.FC<LogSessionModalProps> = (props) =>
   props.sequenceId ? (
@@ -100,20 +145,14 @@ const SessionLogForm: React.FC<
   );
   const logStep1Ref = useRef<HTMLDivElement>(null);
   const logStep2Ref = useRef<HTMLDetailsElement>(null);
+  const logStep2SummaryRef = useRef<HTMLElement>(null);
   const logStep3Ref = useRef<HTMLDivElement>(null);
-  const navigateLogStep = (nextStep: 1 | 2 | 3) => {
-    setHasEditedDraft(true);
-    setLogStep(nextStep);
-    requestAnimationFrame(() => {
-      if (nextStep === 1) {
-        logStep1Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
-      } else if (nextStep === 2) {
-        logStep2Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
-      } else {
-        logStep3Ref.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
-      }
-    });
-  };
+  const groupSelectRef = useRef<HTMLSelectElement>(null);
+  const newGroupInputRef = useRef<HTMLInputElement>(null);
+  const taughtDateInputRef = useRef<HTMLInputElement>(null);
+  const minutesInputRef = useRef<HTMLInputElement>(null);
+  const secondsInputRef = useRef<HTMLInputElement>(null);
+
   // Capture the reviewed plan and exercise definitions once; edits elsewhere cannot change this record.
   const [snapshot] = useState(() =>
     (
@@ -135,25 +174,56 @@ const SessionLogForm: React.FC<
   const [sourceKind] = useState<'saved-sequence' | 'active-draft'>(() =>
     saved ? 'saved-sequence' : 'active-draft',
   );
-  const [selectedSteps, setSelectedSteps] = useState(() => {
-    const validIds = new Set(snapshot.map((step) => step.stepId));
-    if (Array.isArray(initialDraft?.selectedStepIds)) {
-      const restored = initialDraft.selectedStepIds.filter(
-        (id): id is string => typeof id === 'string' && validIds.has(id),
-      );
-      if (snapshot.some((step) => restored.includes(step.stepId) && !isRestStep(step))) {
-        return new Set(restored);
-      }
-    }
-    if (context?.taughtStepIds !== undefined) {
-      return new Set(
-        context.taughtStepIds.filter(
-          (id): id is string => typeof id === 'string' && validIds.has(id),
-        ),
-      );
-    }
-    return new Set(snapshot.map((step) => step.stepId));
+  const [selectedSteps, setSelectedSteps] = useState(() =>
+    resolveInitialSelectedSteps(snapshot, initialDraft, context),
+  );
+  const [stepsOpen, setStepsOpen] = useState(() => {
+    const initialSelectedExercises = snapshot.filter(
+      (step) => selectedSteps.has(step.stepId) && !isRestStep(step),
+    ).length;
+    const hasExercises = snapshot.some((step) => !isRestStep(step));
+    return (
+      context?.taughtStepIds !== undefined ||
+      (hasExercises && initialSelectedExercises === 0)
+    );
   });
+
+  const navigateLogStep = (nextStep: 1 | 2 | 3) => {
+    setHasEditedDraft(true);
+    setLogStep(nextStep);
+    if (nextStep === 2) {
+      setStepsOpen(true);
+    }
+    const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
+    requestAnimationFrame(() => {
+      if (nextStep === 1) {
+        logStep1Ref.current?.scrollIntoView?.({ behavior, block: 'nearest' });
+      } else if (nextStep === 2) {
+        logStep2Ref.current?.scrollIntoView?.({ behavior, block: 'nearest' });
+      } else {
+        logStep3Ref.current?.scrollIntoView?.({ behavior, block: 'nearest' });
+      }
+    });
+  };
+
+  const focusValidationTarget = (
+    targetStep: 1 | 2 | 3,
+    resolveElement: () => HTMLElement | null | undefined,
+    openSteps = false,
+  ) => {
+    setLogStep(targetStep);
+    if (openSteps) {
+      setStepsOpen(true);
+    }
+    const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
+    requestAnimationFrame(() => {
+      const element = resolveElement();
+      if (!element || !element.isConnected) return;
+      element.scrollIntoView?.({ behavior, block: 'nearest' });
+      element.focus();
+    });
+  };
+
   const [title] = useState(
     () =>
       context?.sequenceTitle ??
@@ -220,6 +290,7 @@ const SessionLogForm: React.FC<
     return typeof initialDraft?.seconds === 'string' ? initialDraft.seconds : '';
   });
   const [error, setError] = useState('');
+  const [errorField, setErrorField] = useState<LogValidationField>(null);
   const [pendingCloseRequest, setPendingCloseRequest] = useState<(() => void) | null>(null);
   const [showGroup, setShowGroup] = useState(classGroups.length === 0);
   const [newGroupName, setNewGroupName] = useState('');
@@ -246,6 +317,8 @@ const SessionLogForm: React.FC<
   const selectedExerciseCount = snapshot.filter(
     (step) => selectedSteps.has(step.stepId) && !isRestStep(step),
   ).length;
+  const allStepsSelected =
+    snapshot.length > 0 && snapshot.every((step) => selectedSteps.has(step.stepId));
 
   useEffect(() => {
     if (!hasEditedDraft || submitted) return;
@@ -280,10 +353,30 @@ const SessionLogForm: React.FC<
     selectedSteps,
   ]);
 
+  const clearFieldErrorIfMatching = (...fields: LogValidationField[]) => {
+    if (errorField && fields.includes(errorField)) {
+      setErrorField(null);
+      setError('');
+    }
+  };
+
+  const handleSelectAllPlannedSteps = () => {
+    setHasEditedDraft(true);
+    setSelectedSteps(new Set(snapshot.map((step) => step.stepId)));
+    clearFieldErrorIfMatching('steps');
+  };
+
+  const handleClearAllSelectedSteps = () => {
+    setHasEditedDraft(true);
+    setSelectedSteps(new Set());
+  };
+
   const createGroup = () => {
     const trimmed = newGroupName.trim();
     if (!trimmed) {
       setError('수업 그룹 별칭을 입력해 주세요.');
+      setErrorField('newGroup');
+      focusValidationTarget(1, () => newGroupInputRef.current);
       return;
     }
     const normalizedNewName = trimmed.toLowerCase().replace(/\s+/g, ' ');
@@ -296,6 +389,7 @@ const SessionLogForm: React.FC<
       setNewGroupName('');
       setShowGroup(false);
       setError('');
+      setErrorField(null);
       return;
     }
     addClassGroup({
@@ -313,29 +407,33 @@ const SessionLogForm: React.FC<
     setNewGroupName('');
     setShowGroup(false);
     setError('');
+    setErrorField(null);
   };
+
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     if (submitted || submittingRef.current) return;
     setError('');
+    setErrorField(null);
     const date = new Date(`${taughtDate}T12:00:00`);
     if (!taughtDate || Number.isNaN(date.getTime()) || taughtDate > localDate()) {
       setError('오늘 또는 이전 수업 일자를 선택해 주세요.');
+      setErrorField('taughtDate');
+      focusValidationTarget(1, () => taughtDateInputRef.current);
       return;
     }
     let actualDurationSec: number | undefined;
     if (minutes !== '' || seconds !== '') {
       const mins = Number(minutes || 0);
       const secs = Number(seconds || 0);
-      if (
-        !Number.isInteger(mins) ||
-        mins < 0 ||
-        mins > 1440 ||
-        !Number.isInteger(secs) ||
-        secs < 0 ||
-        secs > 59
-      ) {
+      const minsValid = minutes === '' || (Number.isInteger(mins) && mins >= 0 && mins <= 1440);
+      const secsValid = seconds === '' || (Number.isInteger(secs) && secs >= 0 && secs <= 59);
+      if (!minsValid || !secsValid) {
         setError('진행 시간은 0~1440분, 0~59초로 입력해 주세요.');
+        setErrorField(!minsValid ? 'minutes' : 'seconds');
+        focusValidationTarget(1, () =>
+          !minsValid ? minutesInputRef.current : secondsInputRef.current,
+        );
         return;
       }
       actualDurationSec = mins * 60 + secs;
@@ -345,11 +443,22 @@ const SessionLogForm: React.FC<
       (context?.actualRestDurationSec ?? 0) > actualDurationSec
     ) {
       setError('전체 진행 시간은 타이머에 기록된 휴식 시간보다 짧을 수 없습니다.');
+      setErrorField('minutes');
+      focusValidationTarget(1, () => minutesInputRef.current);
       return;
     }
     const taughtSteps = snapshot.filter((step) => selectedSteps.has(step.stepId));
     if (!taughtSteps.some((step) => !isRestStep(step))) {
       setError('실제로 진행한 동작을 하나 이상 선택해 주세요.');
+      setErrorField('steps');
+      focusValidationTarget(
+        2,
+        () =>
+          logStep2Ref.current?.querySelector<HTMLElement>(
+            'input[type="checkbox"][data-step-kind="movement"]',
+          ) ?? logStep2SummaryRef.current,
+        true,
+      );
       return;
     }
     const parsed = LogClassHistorySchema.safeParse({
@@ -362,6 +471,10 @@ const SessionLogForm: React.FC<
     });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? '입력값을 확인해 주세요.');
+      if (!groupId) {
+        setErrorField('group');
+        focusValidationTarget(1, () => groupSelectRef.current);
+      }
       return;
     }
     const beforeState = usePilatesStore.getState();
@@ -609,11 +722,14 @@ const SessionLogForm: React.FC<
             <div className="class-log-group-column">
               <PfField label="수업 그룹 *">
                 <PfSelect
+                  ref={groupSelectRef}
                   required
+                  hasError={errorField === 'group'}
                   value={groupId}
                   onChange={(event) => {
                     setHasEditedDraft(true);
                     setGroupId(event.target.value);
+                    clearFieldErrorIfMatching('group');
                   }}
                 >
                   <option value="" disabled>
@@ -630,7 +746,11 @@ const SessionLogForm: React.FC<
                 type="button"
                 className="teaching-log-link"
                 aria-expanded={showGroup}
-                onClick={() => setShowGroup((value) => !value)}
+                onClick={() => {
+                  const nextOpen = !showGroup;
+                  setShowGroup(nextOpen);
+                  if (!nextOpen) clearFieldErrorIfMatching('newGroup');
+                }}
               >
                 <Plus size={15} />
                 수업 그룹 추가
@@ -639,10 +759,15 @@ const SessionLogForm: React.FC<
                 <div className="teaching-inline-group">
                   <PfField label="그룹 별칭 · 실명은 필요 없어요">
                     <PfInput
+                      ref={newGroupInputRef}
+                      hasError={errorField === 'newGroup'}
                       maxLength={60}
                       placeholder="예: 저녁 A반, 개인 01"
                       value={newGroupName}
-                      onChange={(event) => setNewGroupName(event.target.value)}
+                      onChange={(event) => {
+                        setNewGroupName(event.target.value);
+                        if (event.target.value.trim()) clearFieldErrorIfMatching('newGroup');
+                      }}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter') {
                           event.preventDefault();
@@ -659,13 +784,16 @@ const SessionLogForm: React.FC<
             </div>
             <PfField label="수업 일자 *">
               <PfInput
+                ref={taughtDateInputRef}
                 type="date"
                 required
+                hasError={errorField === 'taughtDate'}
                 max={localDate()}
                 value={taughtDate}
                 onChange={(event) => {
                   setHasEditedDraft(true);
                   setTaughtDate(event.target.value);
+                  clearFieldErrorIfMatching('taughtDate');
                 }}
               />
             </PfField>
@@ -678,31 +806,37 @@ const SessionLogForm: React.FC<
             <div>
               <PfField label="분">
                 <PfInput
+                  ref={minutesInputRef}
                   inputMode="numeric"
                   type="number"
                   min="0"
                   max="1440"
                   step="1"
+                  hasError={errorField === 'minutes'}
                   placeholder="미기록"
                   value={minutes}
                   onChange={(event) => {
                     setHasEditedDraft(true);
                     setMinutes(event.target.value);
+                    clearFieldErrorIfMatching('minutes', 'seconds');
                   }}
                 />
               </PfField>
               <PfField label="초">
                 <PfInput
+                  ref={secondsInputRef}
                   inputMode="numeric"
                   type="number"
                   min="0"
                   max="59"
                   step="1"
+                  hasError={errorField === 'seconds'}
                   placeholder="00"
                   value={seconds}
                   onChange={(event) => {
                     setHasEditedDraft(true);
                     setSeconds(event.target.value);
+                    clearFieldErrorIfMatching('minutes', 'seconds');
                   }}
                 />
               </PfField>
@@ -753,11 +887,17 @@ const SessionLogForm: React.FC<
           </fieldset>
           <details
             ref={logStep2Ref}
-            className={`teaching-log-steps ${logStep === 2 ? 'is-step-focused' : ''}`}
-            open={context?.taughtStepIds !== undefined ? true : undefined}
+            className={`teaching-log-steps ${logStep === 2 ? 'is-step-focused' : ''} ${errorField === 'steps' ? 'has-step-error' : ''}`}
+            open={stepsOpen}
             onFocusCapture={() => setLogStep(2)}
           >
-            <summary>
+            <summary
+              ref={logStep2SummaryRef}
+              onClick={(event) => {
+                event.preventDefault();
+                setStepsOpen((prev) => !prev);
+              }}
+            >
               <span>
                 실제로 진행한 동작 확인 · {selectedExerciseCount} / {exerciseCount}개
               </span>
@@ -768,39 +908,78 @@ const SessionLogForm: React.FC<
                 ? '진행한 동작만 선택해 주세요. 타이머를 사용한 동작을 먼저 선택해 두었습니다.'
                 : '계획에 있는 동작이 선택되어 있어요. 실제로 진행한 동작만 남겨 주세요.'}
             </p>
-            <div>
-              {snapshot.map((step) => (
-                <label key={step.stepId}>
-                  <input
-                    type="checkbox"
-                    checked={selectedSteps.has(step.stepId)}
-                    onChange={(event) => {
-                      setHasEditedDraft(true);
-                      setSelectedSteps((value) => {
-                        const next = new Set(value);
-                        if (event.target.checked) next.add(step.stepId);
-                        else next.delete(step.stepId);
-                        return next;
-                      });
-                    }}
-                  />
-                  <span>
-                    {isRestStep(step)
-                      ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}`
-                      : step.blockInstanceId
-                        ? (step.exerciseSnapshot?.nameKo ??
-                          exercisesAtOpen.find((exercise) => exercise.id === step.exerciseId)
-                            ?.nameKo ??
-                          exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
-                          '삭제된 동작')
-                        : (exercisesAtOpen.find((exercise) => exercise.id === step.exerciseId)
-                            ?.nameKo ??
-                          step.exerciseSnapshot?.nameKo ??
-                          exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
-                          '삭제된 동작')}
-                  </span>
-                </label>
-              ))}
+            {snapshot.length > 0 && (
+              <div
+                className="teaching-log-steps-toolbar"
+                role="group"
+                aria-label="진행 동작 빠른 선택"
+              >
+                <span className="teaching-log-steps-status">
+                  {selectedExerciseCount === 0
+                    ? '선택된 운동 0개 · 진행한 동작을 직접 선택해 주세요.'
+                    : `운동 ${selectedExerciseCount}개 선택됨`}
+                </span>
+                <div className="teaching-log-steps-toolbar-actions">
+                  <button
+                    type="button"
+                    className="btn-secondary teaching-log-steps-quick-btn"
+                    disabled={allStepsSelected}
+                    onClick={handleSelectAllPlannedSteps}
+                  >
+                    계획 항목 전체 선택
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary teaching-log-steps-quick-btn"
+                    disabled={selectedSteps.size === 0}
+                    onClick={handleClearAllSelectedSteps}
+                  >
+                    전체 해제
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="teaching-log-steps-list">
+              {snapshot.map((step) => {
+                const rest = isRestStep(step);
+                return (
+                  <label key={step.stepId}>
+                    <input
+                      type="checkbox"
+                      data-step-kind={rest ? 'rest' : 'movement'}
+                      checked={selectedSteps.has(step.stepId)}
+                      onChange={(event) => {
+                        const checked = event.target.checked;
+                        setHasEditedDraft(true);
+                        setSelectedSteps((value) => {
+                          const next = new Set(value);
+                          if (checked) next.add(step.stepId);
+                          else next.delete(step.stepId);
+                          return next;
+                        });
+                        if (checked && !rest) {
+                          clearFieldErrorIfMatching('steps');
+                        }
+                      }}
+                    />
+                    <span>
+                      {rest
+                        ? `휴식 ${formatSecondsToMMSS(step.durationMin * 60)}`
+                        : step.blockInstanceId
+                          ? (step.exerciseSnapshot?.nameKo ??
+                            exercisesAtOpen.find((exercise) => exercise.id === step.exerciseId)
+                              ?.nameKo ??
+                            exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
+                            '삭제된 동작')
+                          : (exercisesAtOpen.find((exercise) => exercise.id === step.exerciseId)
+                              ?.nameKo ??
+                            step.exerciseSnapshot?.nameKo ??
+                            exercises.find((exercise) => exercise.id === step.exerciseId)?.nameKo ??
+                            '삭제된 동작')}
+                    </span>
+                  </label>
+                );
+              })}
             </div>
           </details>
           <div
@@ -860,23 +1039,11 @@ const SessionLogForm: React.FC<
           {pendingCloseRequest && (
             <div
               role="alert"
+              className="class-log-discard-guard"
               data-testid="log-session-discard-guard"
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '8px',
-                padding: '10px 12px',
-                marginBottom: '8px',
-                borderRadius: '10px',
-                background: '#f4f1e3',
-                color: '#6b4010',
-                fontSize: '0.86rem',
-              }}
             >
               <span>작성 중인 수업 기록 초안은 임시 보관됩니다. 기록 창을 닫을까요?</span>
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div className="class-log-discard-guard-actions">
                 <PfButton variant="secondary" onClick={() => setPendingCloseRequest(null)}>
                   계속 작성
                 </PfButton>
@@ -893,7 +1060,7 @@ const SessionLogForm: React.FC<
               </div>
             </div>
           )}
-          {error && <PfFormError>{error}</PfFormError>}
+          {!pendingCloseRequest && error && <PfFormError>{error}</PfFormError>}
           <div className="teaching-form-actions">
             <PfButton variant="secondary" onClick={onClose}>
               취소

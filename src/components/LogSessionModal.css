@@ -30,6 +30,14 @@
   flex-direction: column;
   gap: 20px;
 }
+.class-log-modal :is(button, summary, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #14665e;
+  outline-offset: 2px;
+}
+.class-log-modal .pf-step-guide-chip,
+.class-log-modal .pf-step-nav-btn {
+  min-height: 44px;
+}
 .class-log-modal .teaching-log-summary {
   display: grid;
   gap: 12px;
@@ -162,6 +170,10 @@
 .class-log-modal .teaching-log-steps {
   background: #f6f8f7;
 }
+.class-log-modal .teaching-log-steps.has-step-error {
+  border-color: #c96f5b;
+  background: #fdf8f6;
+}
 .class-log-modal .teaching-log-steps summary::-webkit-details-marker {
   display: none;
 }
@@ -170,6 +182,35 @@
 }
 .class-log-modal .teaching-log-steps[open] summary > svg {
   transform: rotate(180deg);
+}
+.class-log-modal .teaching-log-steps > .teaching-log-steps-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 0 0 10px;
+  margin: 0 0 8px;
+  border-bottom: 1px solid #e1e8e4;
+}
+.teaching-log-steps-status {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #465b51;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.teaching-log-steps-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.teaching-log-steps-quick-btn {
+  min-height: 44px;
+  padding: 6px 11px;
+  font-size: 12px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .class-log-modal .teaching-log-steps label {
   min-height: 44px;
@@ -198,6 +239,28 @@
   padding: 14px 24px 16px;
   background: #fff;
   border-top: 1px solid #dce6e1;
+}
+.class-log-discard-guard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f4f1e3;
+  color: #6b4010;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+.class-log-discard-guard > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.class-log-discard-guard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 .class-log-modal .class-log-footer .teaching-form-actions {
   position: static;
@@ -244,6 +307,24 @@
   .class-log-modal .teaching-inline-group {
     flex-wrap: wrap;
   }
+  .teaching-log-steps-toolbar-actions,
+  .class-log-discard-guard-actions {
+    width: 100%;
+  }
+  .teaching-log-steps-toolbar-actions > button,
+  .class-log-discard-guard-actions > button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+@media (max-width: 390px) {
+  .class-log-content {
+    padding: 14px 12px;
+    gap: 16px;
+  }
+  .class-log-modal .teaching-duration-field > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 @media (max-height: 600px) {
   .class-log-modal .atelier-modal-header {
@@ -282,4 +363,13 @@
 }
 .log-planned-vs-actual-delta {
   font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .class-log-modal,
+  .class-log-modal * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
