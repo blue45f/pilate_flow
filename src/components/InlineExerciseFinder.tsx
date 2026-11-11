@@ -40,6 +40,7 @@ import '../styles/finder-class-context.css';
 interface InlineExerciseFinderProps {
   onOpenExercise: (exercise: PilatesExercise) => void;
   classEquipment?: readonly EquipmentId[];
+  autoNarrowToClassEquipment?: boolean;
   active?: boolean;
 }
 
@@ -90,9 +91,12 @@ usePilatesStore.subscribe((state, prev) => {
   }
 });
 
-const emptyFilters = (initialQuery = ''): FinderFilters => ({
+const emptyFilters = (
+  initialQuery = '',
+  initialEquipment: EquipmentId[] = [],
+): FinderFilters => ({
   query: initialQuery,
-  equipment: [],
+  equipment: initialEquipment,
   bodyTag: '',
   duration: 'all',
   motionOnly: false,
@@ -134,6 +138,7 @@ function handleChipBarKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
 export function InlineExerciseFinder({
   onOpenExercise,
   classEquipment = [],
+  autoNarrowToClassEquipment = false,
   active = true,
 }: InlineExerciseFinderProps) {
   const exercises = usePilatesStore((state) => state.exercises);
@@ -145,7 +150,10 @@ export function InlineExerciseFinder({
   const appendExerciseToSequence = usePilatesStore((state) => state.appendExerciseToSequence);
   const setActiveTab = usePilatesStore((state) => state.setActiveTab);
   const [filters, setFilters] = useState<FinderFilters>(() =>
-    emptyFilters(readSavedFinderQuery()),
+    emptyFilters(
+      readSavedFinderQuery(),
+      autoNarrowToClassEquipment && classEquipment.length > 0 ? [...classEquipment] : [],
+    ),
   );
   const [tab, setTab] = useState<FilterTab>('equipment');
   const [page, setPage] = useState({ signature: '', count: 6 });
@@ -435,7 +443,7 @@ export function InlineExerciseFinder({
     <aside className="inline-exercise-finder" aria-label="작업대 동작 찾기">
       <div className="ief-heading">
         <div>
-          <p>필요한 동작을 곁에서</p>
+          <p>바로 골라 수업에 담기</p>
           <h2>동작 찾기</h2>
         </div>
         <span>{exercises.length}개 노트</span>

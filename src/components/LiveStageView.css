@@ -545,11 +545,111 @@
   color: #e2e8f0;
 }
 
+/* 2-Second Glanceable Primary Cues Strip & Mid-Class Reorder Controls */
+.teaching-glance-cues-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(167, 196, 178, 0.14);
+  border: 1px solid rgba(167, 196, 178, 0.28);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.teaching-glance-cues-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #1f4d3f;
+  color: #f7f5f0;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.teaching-glance-cue-chip {
+  color: inherit;
+  font-weight: 600;
+  word-break: keep-all;
+}
+
+.teaching-high-contrast .teaching-glance-cues-strip,
+#root .vnext-shell .teaching-high-contrast .teaching-glance-cues-strip {
+  background: #0f172a;
+  border-color: #facc15;
+  color: #f8fafc;
+}
+
+.teaching-high-contrast .teaching-glance-cues-badge {
+  background: #facc15;
+  color: #0f172a;
+}
+
+.teaching-outline-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.teaching-outline-row > button:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.teaching-outline-reorder-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.teaching-outline-reorder-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(167, 196, 178, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  cursor: pointer;
+  transition:
+    transform var(--pf-motion-fast, 150ms) var(--pf-ease-studio, cubic-bezier(0.22, 1, 0.36, 1)),
+    background-color var(--pf-motion-fast, 150ms) ease;
+}
+
+.teaching-outline-reorder-btn:hover:not(:disabled) {
+  background: rgba(167, 196, 178, 0.22);
+}
+
+.teaching-outline-reorder-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.teaching-outline-reorder-btn:focus-visible,
+.teaching-timer-options button:focus-visible {
+  outline: 2px solid #a7c4b2;
+  outline-offset: 2px;
+}
+
+.teaching-timer-options button {
+  min-height: 44px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .teaching-play,
   .teaching-next-action-bar,
   .teaching-undo-banner,
-  .teaching-inline-next-strip {
+  .teaching-inline-next-strip,
+  .teaching-glance-cues-strip,
+  .teaching-outline-reorder-btn {
     transition: none !important;
     animation: none !important;
   }

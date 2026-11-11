@@ -1,13 +1,16 @@
 import { stepSchema } from '../schemas/cloudBackupSchema';
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
+  ArrowDown,
   ArrowLeft,
+  ArrowUp,
   Check,
   ChevronLeft,
   ChevronRight,
   Contrast,
   Expand,
   Flag,
+  Minus,
   Pause,
   Play,
   Plus,
@@ -90,6 +93,20 @@ type StageUndoState =
       readonly stepTitle: string;
       readonly baseDurationMin: number;
       readonly addedMinutes: number;
+    }
+  | {
+      readonly kind: 'trim-half-minute';
+      readonly stepIndex: number;
+      readonly stepNumber: number;
+      readonly stepTitle: string;
+      readonly previousDurationMin: number;
+      readonly previousRemainingMs: number;
+    }
+  | {
+      readonly kind: 'step-reorder';
+      readonly fromIndex: number;
+      readonly toIndex: number;
+      readonly stepTitle: string;
     };
 
 function computeStepDurationsMs(stepList: readonly SequenceStep[]): number[] {
@@ -490,6 +507,85 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     });
   };
 
+  const trimHalfMinute = () => {
+    const prevDurations = durationsRef.current;
+    applyClock((value) =>
+      sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current),
+    );
+    const sampled = clockRef.current;
+    const targetIndex = sampled.index;
+    const currentStep = stepsRef.current[targetIndex];
+    if (!currentStep || currentStep.durationMin <= 0.5 || sampled.remainingMs <= 30000) return;
+
+    const nextDurationMin = Math.max(0.5, Number((currentStep.durationMin - 0.5).toFixed(4)));
+    const trimmedMs = Math.max(
+      0,
+      Math.round((currentStep.durationMin - nextDurationMin) * 60) * 1000,
+    );
+    if (trimmedMs <= 0) return;
+
+    const prevRemainingMs = sampled.remainingMs;
+    applySteps((prev) =>
+      prev.map((step, index) =>
+        index === targetIndex ? { ...step, durationMin: nextDurationMin } : step,
+      ),
+    );
+    applyClock((value) => ({
+      ...value,
+      remainingMs: Math.max(5000, value.remainingMs - trimmedMs),
+    }));
+    applyUndo({
+      kind: 'trim-half-minute',
+      stepIndex: targetIndex,
+      stepNumber: targetIndex + 1,
+      stepTitle: resolveStepDisplayName(targetIndex),
+      previousDurationMin: currentStep.durationMin,
+      previousRemainingMs: prevRemainingMs,
+    });
+  };
+
+  const moveUpcomingStep = (fromIndex: number, direction: 'up' | 'down') => {
+    const prevDurations = durationsRef.current;
+    applyClock((value) =>
+      sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current),
+    );
+    const sampled = clockRef.current;
+    const liveSteps = stepsRef.current;
+    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+    if (
+      fromIndex <= sampled.index ||
+      toIndex <= sampled.index ||
+      toIndex < 0 ||
+      toIndex >= liveSteps.length
+    ) {
+      return;
+    }
+    const stepTitle = resolveStepDisplayName(fromIndex);
+    applySteps((prev) => {
+      const copy = [...prev];
+      const [moved] = copy.splice(fromIndex, 1);
+      if (!moved) return prev;
+      copy.splice(toIndex, 0, moved);
+      return copy;
+    });
+    applyClock((value) => {
+      const nextElapsed = { ...value.elapsedByStep };
+      const a = nextElapsed[fromIndex];
+      const b = nextElapsed[toIndex];
+      if (b === undefined) delete nextElapsed[fromIndex];
+      else nextElapsed[fromIndex] = b;
+      if (a === undefined) delete nextElapsed[toIndex];
+      else nextElapsed[toIndex] = a;
+      return { ...value, elapsedByStep: nextElapsed };
+    });
+    applyUndo({
+      kind: 'step-reorder',
+      fromIndex,
+      toIndex,
+      stepTitle,
+    });
+  };
+
   const undoLastStageAction = () => {
     const undo = undoRef.current;
     if (!undo) return;
@@ -532,6 +628,66 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         running: shouldRun,
       }));
       setShowAllCues(false);
+      applyUndo(null);
+      return;
+    }
+
+    if (undo.kind === 'trim-half-minute') {
+      const targetStep = stepsRef.current[undo.stepIndex];
+      if (!targetStep) {
+        applyUndo(null);
+        return;
+      }
+      const addedBackMs = Math.max(
+        0,
+        Math.round((undo.previousDurationMin - targetStep.durationMin) * 60) * 1000,
+      );
+      applySteps((prev) =>
+        prev.map((step, index) =>
+          index === undo.stepIndex ? { ...step, durationMin: undo.previousDurationMin } : step,
+        ),
+      );
+      if (sampled.index === undo.stepIndex) {
+        applyClock((value) => ({
+          ...value,
+          remainingMs: Math.min(
+            Math.round(undo.previousDurationMin * 60000),
+            value.remainingMs + addedBackMs,
+          ),
+        }));
+      }
+      applyUndo(null);
+      return;
+    }
+
+    if (undo.kind === 'step-reorder') {
+      const liveSteps = stepsRef.current;
+      if (
+        undo.toIndex < 0 ||
+        undo.toIndex >= liveSteps.length ||
+        undo.fromIndex < 0 ||
+        undo.fromIndex >= liveSteps.length
+      ) {
+        applyUndo(null);
+        return;
+      }
+      applySteps((prev) => {
+        const copy = [...prev];
+        const [moved] = copy.splice(undo.toIndex, 1);
+        if (!moved) return prev;
+        copy.splice(undo.fromIndex, 0, moved);
+        return copy;
+      });
+      applyClock((value) => {
+        const nextElapsed = { ...value.elapsedByStep };
+        const a = nextElapsed[undo.toIndex];
+        const b = nextElapsed[undo.fromIndex];
+        if (b === undefined) delete nextElapsed[undo.toIndex];
+        else nextElapsed[undo.toIndex] = b;
+        if (a === undefined) delete nextElapsed[undo.fromIndex];
+        else nextElapsed[undo.fromIndex] = a;
+        return { ...value, elapsedByStep: nextElapsed };
+      });
       applyUndo(null);
       return;
     }
@@ -1397,6 +1553,22 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 호흡 리듬 · {exercise.breathPattern}
               </p>
             )}
+            {!currentIsRest && exercise && exercise.cues.length > 0 && (
+              <div
+                className="teaching-glance-cues-strip"
+                data-testid="live-stage-glance-cues"
+                role="region"
+                aria-label="현재 동작 핵심 티칭 큐"
+              >
+                <span className="teaching-glance-cues-badge">핵심 큐</span>
+                {exercise.cues.slice(0, 2).map((cue, cueIdx) => (
+                  <span key={cueIdx} className="teaching-glance-cue-chip">
+                    {cueIdx > 0 ? '· ' : ''}
+                    {cue}
+                  </span>
+                ))}
+              </div>
+            )}
             {timing.sides === 2 && (
               <p
                 className={`teaching-side-note ${stepElapsedSec >= timing.explanationSec + timing.perSideSec ? 'switch-side' : ''}`}
@@ -1604,9 +1776,15 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     )}번(${undoState.fromTitle} · 남은 ${formatSecondsToMMSS(
                       Math.ceil(undoState.previousRemainingMs / 1000),
                     )}) 위치를 보관 중입니다.`
-                  : `${String(undoState.stepNumber).padStart(2, '0')}번(${
-                      undoState.stepTitle
-                    }) 시간을 +${undoState.addedMinutes}분 늘렸어요.`}
+                  : undoState.kind === 'trim-half-minute'
+                    ? `${String(undoState.stepNumber).padStart(2, '0')}번(${
+                        undoState.stepTitle
+                      }) 시간을 30초 줄였어요.`
+                    : undoState.kind === 'step-reorder'
+                      ? `‘${undoState.stepTitle}’ 순서를 ${undoState.toIndex + 1}번 위치로 조정했어요.`
+                      : `${String(undoState.stepNumber).padStart(2, '0')}번(${
+                          undoState.stepTitle
+                        }) 시간을 +${undoState.addedMinutes}분 늘렸어요.`}
               </span>
               <div className="teaching-undo-actions">
                 <button
@@ -1617,7 +1795,13 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 >
                   <RotateCcw size={15} aria-hidden="true" />
                   <span>
-                    {undoState.kind === 'step-jump' ? '방금 이동 되돌리기' : '방금 1분 추가 취소'}
+                    {undoState.kind === 'step-jump'
+                      ? '방금 이동 되돌리기'
+                      : undoState.kind === 'trim-half-minute'
+                        ? '방금 30초 줄이기 취소'
+                        : undoState.kind === 'step-reorder'
+                          ? '방금 순서 변경 되돌리기'
+                          : '방금 1분 추가 취소'}
                   </span>
                 </button>
                 <button
@@ -1633,6 +1817,16 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             </div>
           )}
           <div className="teaching-timer-options">
+            <button
+              type="button"
+              className="btn-ghost"
+              data-testid="live-stage-trim-30s-btn"
+              disabled={(current?.durationMin ?? 0) <= 0.5 || clock.remainingMs <= 30000}
+              onClick={trimHalfMinute}
+            >
+              <Minus size={16} />
+              {currentIsRest ? '현재 휴식 30초 줄이기' : '현재 동작 30초 줄이기'}
+            </button>
             <button type="button" className="btn-ghost" onClick={addMinute}>
               <Plus size={16} />
               {currentIsRest ? '현재 휴식 1분 추가' : '현재 동작 1분 추가'}
@@ -1897,8 +2091,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               {steps.map((step, index) => {
                 const isTaughtStep =
                   index !== clock.index && (clock.elapsedByStep[index] ?? 0) > 0;
+                const isUpcomingStep = index > clock.index;
                 return (
-                  <li key={step.stepId}>
+                  <li key={step.stepId} className="teaching-outline-row">
                     <button
                       type="button"
                       className={`${index === clock.index ? 'current' : ''} ${
@@ -1927,6 +2122,32 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                         )}
                       </small>
                     </button>
+                    {isUpcomingStep && (
+                      <span
+                        className="teaching-outline-reorder-group"
+                        role="group"
+                        aria-label={`${index + 1}번 다음 순서 위치 조정`}
+                      >
+                        <button
+                          type="button"
+                          className="teaching-outline-reorder-btn"
+                          aria-label={`${index + 1}번 순서 위로 이동`}
+                          disabled={index <= clock.index + 1}
+                          onClick={() => moveUpcomingStep(index, 'up')}
+                        >
+                          <ArrowUp size={14} aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          className="teaching-outline-reorder-btn"
+                          aria-label={`${index + 1}번 순서 아래로 이동`}
+                          disabled={index >= steps.length - 1}
+                          onClick={() => moveUpcomingStep(index, 'down')}
+                        >
+                          <ArrowDown size={14} aria-hidden="true" />
+                        </button>
+                      </span>
+                    )}
                   </li>
                 );
               })}
