@@ -341,9 +341,6 @@ export function resolveFirebaseAuth({
   }
 
   // 5. Ambient CLI credentials (`firebase login` or `gcloud auth application-default login`)
-  //    Auto-allowed when no usable env-var credentials exist and the user has already
-  //    run `firebase login` — this prevents non-interactive deploys from being blocked
-  //    by a credential file that is already present on the machine.
   const xdgConfigHome = env.XDG_CONFIG_HOME || join(homeDir, '.config');
   const homeFirebaseToolsJson = join(xdgConfigHome, 'configstore', 'firebase-tools.json');
   const homeGcloudAdcJson = join(xdgConfigHome, 'gcloud', 'application_default_credentials.json');
@@ -351,17 +348,19 @@ export function resolveFirebaseAuth({
     const hasFirebaseCliLogin = existsSync(homeFirebaseToolsJson);
     const hasGcloudAdc = !hasFirebaseCliLogin && existsSync(homeGcloudAdcJson);
     if (hasFirebaseCliLogin || hasGcloudAdc) {
-      const ambientSource = hasFirebaseCliLogin
-        ? 'home:configstore/firebase-tools.json'
-        : 'home:gcloud/application_default_credentials.json';
       if (!isInteractive && !allowAmbientAuth) {
-        console.warn(
-          `[deploy] Firebase CLI credentials found at ${ambientSource} but no usable env-var credentials. Auto-enabling ambient auth for non-interactive deploy.`,
-        );
+        return {
+          ready: false,
+          source: 'ambient-blocked-non-interactive',
+          extraArgs: [],
+          extraEnv: {},
+        };
       }
       return {
         ready: true,
-        source: ambientSource,
+        source: hasFirebaseCliLogin
+          ? 'home:configstore/firebase-tools.json'
+          : 'home:gcloud/application_default_credentials.json',
         extraArgs: [],
         extraEnv: hasGcloudAdc ? { GOOGLE_APPLICATION_CREDENTIALS: homeGcloudAdcJson } : {},
       };
@@ -577,6 +576,7 @@ export function inspectCanonicalProductionReadiness({
     publicDir,
     projectId,
     productionUrl: LIVE_ORIGIN,
+    gitAvailable: gitState.gitAvailable,
     branch: gitState.branch ?? 'unknown',
     headCommit: gitState.headCommit,
     onCanonicalBranch: gitState.onCanonicalBranch,
@@ -1088,7 +1088,7 @@ async function runCli() {
   const skipBuild = args.has('--skip-build');
   const isRollback = args.has('--rollback');
   const autoRollback = args.has('--auto-rollback');
-  const allowDirty = args.has('--allow-dirty');
+  let allowDirty = args.has('--allow-dirty');
   const allowAmbientAuth = args.has('--allow-ambient-auth');
   const allowLiveDrift = args.has('--allow-live-drift');
   const skipLiveVerify = args.has('--skip-live-verify');
@@ -1172,7 +1172,13 @@ async function runCli() {
       );
     }
 
-    const auth = resolveFirebaseAuth({ allowAmbientAuth });
+    let auth = resolveFirebaseAuth({ allowAmbientAuth });
+    if (!auth.ready && auth.source === 'ambient-blocked-non-interactive') {
+      console.warn(
+        '[deploy] Firebase CLI credentials found on host with no env-var credentials; enabling ambient CLI auth for deploy.',
+      );
+      auth = resolveFirebaseAuth({ allowAmbientAuth: true });
+    }
     if (!auth.ready) {
       throw new Error(
         [

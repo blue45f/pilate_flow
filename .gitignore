@@ -13,4 +13,5 @@ qa-artifacts/
 __pycache__/
 .firebase/
 .deploy-runtime/
+.omo/
 firebase-debug.log*

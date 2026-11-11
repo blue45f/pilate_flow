@@ -181,21 +181,24 @@ function isCliEntryPoint() {
 }
 
 if (isCliEntryPoint()) {
-  const rawArgs = process.argv.slice(2);
-  // Accept an optional positional build directory (default: dist). Ignore unknown
-  // flags (e.g. --no-color forwarded by some package managers) instead of crashing.
-  let outputDirectory = 'dist';
-  for (const arg of rawArgs) {
-    if (arg === 'dist' || arg === 'build') {
-      outputDirectory = 'dist';
-    } else if (!arg.startsWith('--')) {
-      outputDirectory = arg;
-    }
+  const positionalArgs = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
+  let sameCheckoutCwd = false;
+  try {
+    sameCheckoutCwd = realpathSync(process.cwd()) === projectRoot;
+  } catch {
+    sameCheckoutCwd = false;
+  }
+  const validCliTarget =
+    positionalArgs.length === 0 ||
+    (sameCheckoutCwd && positionalArgs.length === 1 && positionalArgs[0] === 'dist');
+  if (!validCliTarget) {
+    console.error('Only this checkout’s dist is supported');
+    process.exit(1);
   }
   // Never turn a CLI argument into a filesystem path outside this checkout.
-  const count = verifyPwaBuild(outputDirectory);
-  const v2Count = verifyAtelierV2DistAssets(outputDirectory);
+  const count = verifyPwaBuild('dist');
+  const v2Count = verifyAtelierV2DistAssets('dist');
   console.log(
-    `PWA build verified: ${count} real static files, ${v2Count} Atelier V2 PNG assets, manifest, PNG icons, and 0 circular JS chunks. (root: ${outputDirectory})`,
+    `PWA build verified: ${count} real static files, ${v2Count} Atelier V2 PNG assets, manifest, PNG icons, and 0 circular JS chunks.`,
   );
 }
