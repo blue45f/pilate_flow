@@ -295,12 +295,14 @@ body:has(.teaching-collection--history) { min-width: 0; }
   overflow-wrap: anywhere;
 }
 .teaching-collection.teaching-collection--saved .teaching-saved-primary-actions {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 0;
 }
 .teaching-collection--saved .teaching-saved-primary-actions > button {
   min-height: 44px;
+  min-width: 44px;
   overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 .teaching-saved-sample-label {
   display: inline-block;

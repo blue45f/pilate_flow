@@ -1488,6 +1488,37 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               <ChevronRight size={22} />
             </button>
           </div>
+          <div
+            className="teaching-inline-next-strip"
+            data-testid="live-stage-inline-next-preview"
+            role="region"
+            aria-label="다음 순서 준비 요약"
+          >
+            <span className="teaching-inline-next-label">다음 순서</span>
+            {next ? (
+              isRestStep(next) ? (
+                <span className="teaching-inline-next-value">
+                  중간 휴식 ({formatSecondsToMMSS(getStepTiming(next).totalSec)})
+                </span>
+              ) : nextExercise ? (
+                <div className="teaching-inline-next-content">
+                  <strong>{nextExercise.nameKo}</strong>
+                  <span className="teaching-inline-next-meta">
+                    {APPARATUS_LABELS[nextExercise.apparatus].ko}
+                    {(next.customSpringOverride || nextExercise.springs) &&
+                      ` · ${next.customSpringOverride || nextExercise.springs}`}
+                    {nextExercise.box !== 'none' && ` · ${BOX_LABELS[nextExercise.box]}`}
+                  </span>
+                </div>
+              ) : (
+                <span className="teaching-inline-next-value">다음 동작 확인</span>
+              )
+            ) : (
+              <span className="teaching-inline-next-value">
+                마지막 순서 · 종료 후 수업 기록 가능
+              </span>
+            )}
+          </div>
           {showNextActionBar && (
             <div
               className={`teaching-next-action-bar ${

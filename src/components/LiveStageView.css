@@ -424,10 +424,78 @@
   }
 }
 
+/* Always-visible glanceable Next Movement & Spring Setup preview right under timer controls */
+.teaching-inline-next-strip,
+#root .vnext-shell .teaching-inline-next-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #f4f7f3;
+  border: 1px solid #d4dfd7;
+  color: #1c3f36;
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.teaching-inline-next-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e1ede6;
+  color: #164b3e;
+  flex-shrink: 0;
+}
+
+.teaching-inline-next-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.teaching-inline-next-meta,
+.teaching-inline-next-value {
+  color: #3f5950;
+  font-weight: 500;
+}
+
+.teaching-high-contrast .teaching-inline-next-strip,
+#root .vnext-shell .teaching-high-contrast .teaching-inline-next-strip {
+  background: #111f2d;
+  border-color: #facc15;
+  color: #f8fafc;
+}
+
+.teaching-high-contrast .teaching-inline-next-label {
+  background: #facc15;
+  color: #0f172a;
+}
+
+.teaching-high-contrast .teaching-inline-next-meta,
+.teaching-high-contrast .teaching-inline-next-value {
+  color: #e2e8f0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .teaching-play,
   .teaching-next-action-bar,
-  .teaching-undo-banner {
+  .teaching-undo-banner,
+  .teaching-inline-next-strip {
     transition: none !important;
     animation: none !important;
   }

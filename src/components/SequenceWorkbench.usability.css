@@ -188,11 +188,177 @@
 @media (prefers-reduced-motion: reduce) {
   #root .vnext-workbench .workbench-inline-action-chip,
   #root .vnext-workbench .workbench-empty-undo-btn,
+  #root .vnext-workbench .workbench-quick-duration-chip,
+  #root .vnext-workbench .step-quick-duration-btn,
   .replacement-item,
   .replacement-empty-actions > button,
   .replacement-dialog-footer > button {
     transition: none !important;
     animation: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Step-by-Step Guided Flow Banner, Step 1 Quick Duration Chips, and Step 3 Inline Steppers */
+#root .vnext-workbench .workbench-step-flow-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 16px;
+  margin: 0 0 16px;
+  border-radius: 14px;
+  background: #f6f4ec;
+  border: 1px solid #dfd8ca;
+  word-break: keep-all;
+}
+
+#root .vnext-workbench .workbench-step-flow-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#root .vnext-workbench .workbench-step-flow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: #54665d;
+  background: #fffdf8;
+  border: 1px solid #dcd7c8;
+  line-height: 1.3;
+}
+
+#root .vnext-workbench .workbench-step-flow-pill.is-active {
+  background: #173d34;
+  border-color: #173d34;
+  color: #ffffff;
+}
+
+#root .vnext-workbench .workbench-step-flow-pill.is-done {
+  background: #e3efe8;
+  border-color: #b7d1c3;
+  color: #173d34;
+}
+
+#root .vnext-workbench .workbench-step-flow-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(23, 61, 52, 0.1);
+}
+
+#root .vnext-workbench .workbench-step-flow-pill.is-active .workbench-step-flow-num {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+#root .vnext-workbench .workbench-step-flow-summary {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #364d44;
+  font-weight: 500;
+  line-height: 1.45;
+  flex: 1 1 260px;
+}
+
+#root .vnext-workbench .workbench-quick-duration-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+
+#root .vnext-workbench .workbench-quick-duration-label {
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #42584f;
+  margin-right: 2px;
+}
+
+#root .vnext-workbench .workbench-quick-duration-chip {
+  min-height: 44px;
+  min-width: 56px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #cbcfbf;
+  background: #fffdf8;
+  color: #21433a;
+  font-size: 0.85rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+#root .vnext-workbench .workbench-quick-duration-chip.is-selected {
+  background: #173d34;
+  border-color: #173d34;
+  color: #ffffff;
+}
+
+#root .vnext-workbench .step-quick-duration-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+#root .vnext-workbench .step-quick-duration-btn {
+  min-height: 44px;
+  min-width: 48px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #cdd6ce;
+  background: #f8faf8;
+  color: #1d443a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#root .vnext-workbench .step-quick-duration-btn:hover:not(:disabled) {
+  background: #e7f1ec;
+  border-color: #173d34;
+}
+
+#root .vnext-workbench .step-quick-duration-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#root .vnext-workbench .workbench-quick-duration-chip:focus-visible,
+#root .vnext-workbench .step-quick-duration-btn:focus-visible {
+  outline: 3px solid var(--pf-color-focus-ring, #173d34);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  #root .vnext-workbench .workbench-step-flow-banner {
+    padding: 10px 12px;
+  }
+
+  #root .vnext-workbench .step-quick-duration-stepper {
+    gap: 3px;
+  }
+
+  #root .vnext-workbench .step-quick-duration-btn {
+    min-width: 44px;
+    padding: 4px 6px;
   }
 }

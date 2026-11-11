@@ -1407,7 +1407,7 @@ export function SequenceWorkbench({
     >
       <div className="page-heading v2-workbench-heading">
         <div>
-          <span className="vnext-workbench-eyebrow">YOUR CLASS, YOUR FLOW</span>
+          <span className="vnext-workbench-eyebrow">STEP-BY-STEP STUDIO FLOW</span>
           <h1 id="workspace-main-heading" tabIndex={-1}>
             {s.activeSteps.length ? '수업 구성' : '수업 준비, 가볍게.'}
           </h1>
@@ -1419,6 +1419,61 @@ export function SequenceWorkbench({
             weekday: 'short',
           }).format(new Date())}
         </span>
+      </div>
+      <div
+        className="workbench-step-flow-banner"
+        data-testid="workbench-step-flow-header"
+        role="region"
+        aria-label="단계별 수업 준비 안내"
+      >
+        <ol className="workbench-step-flow-pills">
+          <li
+            className={`workbench-step-flow-pill ${
+              !s.activeSteps.length && !finderOpen ? 'is-active' : s.activeSteps.length > 0 ? 'is-done' : ''
+            }`.trim()}
+            aria-current={!s.activeSteps.length && !finderOpen ? 'step' : undefined}
+          >
+            <span className="workbench-step-flow-num">1</span>
+            <span>수업 기본</span>
+          </li>
+          <li
+            className={`workbench-step-flow-pill ${
+              finderOpen || (s.activeSteps.length > 0 && workflowStep === 'select')
+                ? 'is-active'
+                : s.activeSteps.length > 0
+                  ? 'is-done'
+                  : ''
+            }`.trim()}
+            aria-current={
+              finderOpen || (s.activeSteps.length > 0 && workflowStep === 'select')
+                ? 'step'
+                : undefined
+            }
+          >
+            <span className="workbench-step-flow-num">2</span>
+            <span>동작 담기</span>
+          </li>
+          <li
+            className={`workbench-step-flow-pill ${
+              s.activeSteps.length > 0 && !finderOpen && workflowStep === 'arrange' ? 'is-active' : ''
+            }`.trim()}
+            aria-current={
+              s.activeSteps.length > 0 && !finderOpen && workflowStep === 'arrange'
+                ? 'step'
+                : undefined
+            }
+          >
+            <span className="workbench-step-flow-num">3</span>
+            <span>순서·시간 확인</span>
+          </li>
+        </ol>
+        <p className="workbench-step-flow-summary" data-testid="workbench-step-flow-summary">
+          {!s.activeSteps.length && !finderOpen
+            ? '한 번에 하나씩 준비해요 · 시간·기구만 가볍게 확인하고 동작을 골라 보세요.'
+            : finderOpen || workflowStep === 'select'
+              ? '수업에 넣을 동작을 골라 담으세요 · 담고 나면 다음 화면에서 순서와 시간을 맞춰요.'
+              : '순서와 시간을 다듬는 화면이에요 · 각 동작의 -0.5분/+0.5분 버튼으로 바로 조절하세요.'}
+        </p>
       </div>
       {!s.activeSteps.length && (
         <>
@@ -1447,6 +1502,27 @@ export function SequenceWorkbench({
                 동작을 골라
                 <br className="welcome-desktop-break" /> 나만의 흐름으로.
               </h2>
+              <div
+                className="workbench-quick-duration-bar"
+                role="group"
+                aria-label="수업 시간 빠른 선택"
+                data-testid="step1-quick-duration-chips"
+              >
+                <span className="workbench-quick-duration-label">수업 시간</span>
+                {([30, 50, 60] as const).map((mins) => (
+                  <button
+                    key={mins}
+                    type="button"
+                    className={`workbench-quick-duration-chip ${
+                      criteria.targetMinutes === mins ? 'is-selected' : ''
+                    }`.trim()}
+                    aria-pressed={criteria.targetMinutes === mins}
+                    onClick={() => setDuration(mins)}
+                  >
+                    {mins}분
+                  </button>
+                ))}
+              </div>
               <div className="workbench-welcome-actions">
                 <PfButton
                   variant="primary"
@@ -2262,16 +2338,51 @@ export function SequenceWorkbench({
                                 </PfBlockPill>
                               </span>
                             </button>
-                            <span className="v3-step-time">
-                              {formatSecondsToMMSS(timing.totalSec)}
-                              {step.locked && (
-                                <LockKeyhole
-                                  className="v3-locked-mark"
-                                  size={13}
-                                  aria-label="잠금"
-                                />
-                              )}
-                            </span>
+                            <div
+                              className="step-quick-duration-stepper"
+                              data-testid="step-quick-duration-stepper"
+                              role="group"
+                              aria-label={`${index + 1}번 동작 시간 빠른 조절`}
+                            >
+                              <button
+                                type="button"
+                                className="step-quick-duration-btn"
+                                aria-label={`${index + 1}번 동작 30초 줄이기`}
+                                disabled={!!step.locked || timing.totalSec <= 60}
+                                onClick={() => {
+                                  s.adjustStepDuration(index, -0.5);
+                                  setNotice(
+                                    `${index + 1}번 동작 시간을 30초 줄였어요. 되돌리기로 복구할 수 있습니다.`,
+                                  );
+                                }}
+                              >
+                                -0.5분
+                              </button>
+                              <span className="v3-step-time">
+                                {formatSecondsToMMSS(timing.totalSec)}
+                                {step.locked && (
+                                  <LockKeyhole
+                                    className="v3-locked-mark"
+                                    size={13}
+                                    aria-label="잠금"
+                                  />
+                                )}
+                              </span>
+                              <button
+                                type="button"
+                                className="step-quick-duration-btn"
+                                aria-label={`${index + 1}번 동작 30초 늘리기`}
+                                disabled={!!step.locked || step.durationMin >= 20}
+                                onClick={() => {
+                                  s.adjustStepDuration(index, 0.5);
+                                  setNotice(
+                                    `${index + 1}번 동작 시간을 30초 늘렸어요. 되돌리기로 복구할 수 있습니다.`,
+                                  );
+                                }}
+                              >
+                                +0.5분
+                              </button>
+                            </div>
                             <PfButton
                               variant="icon"
                               className="v3-step-more"
@@ -2810,8 +2921,8 @@ export function SequenceWorkbench({
             style={{ wordBreak: 'keep-all' }}
           >
             {!s.activeSteps.length || finderOpen || workflowStep === 'select'
-              ? '현재 1단계: 동작 고르기 · 수업에 넣을 동작을 고른 뒤 다음 단계에서 순서를 확인하세요.'
-              : '현재 2단계: 수업 구성 확인 · 블록 순서와 시간을 점검하고 저장하거나 미리보기를 여세요.'}
+              ? '현재 1단계: 동작 고르기 · 필요한 동작을 고른 뒤 다음 단계에서 순서와 시간을 맞추세요.'
+              : '현재 2단계: 수업 구성 확인 · -0.5분/+0.5분으로 시간을 맞추고 저장·미리보기 하세요.'}
           </span>
           <div className="pf-step-guide-nav" style={{ wordBreak: 'keep-all' }}>
             {s.activeSteps.length > 0 && workflowStep === 'select' && !finderOpen && (

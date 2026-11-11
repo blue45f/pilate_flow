@@ -531,6 +531,25 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
       }, 0);
     }
   };
+  const duplicateAndOpenInWorkbench = (
+    sequence: SavedSequence,
+    triggerEl?: HTMLButtonElement | null,
+  ) => {
+    if (duplicatingRef.current) return;
+    const createdId = duplicateSavedSequence(sequence.id);
+    if (!createdId) return;
+    if (hasUnsavedWorkbenchDraft) {
+      overwriteTriggerRef.current = triggerEl ?? null;
+      setPendingDelete(null);
+      setPendingOverwrite({ sequenceId: createdId, mode: 'workbench' });
+      setMessage(`‘${sequence.title}’ 사본을 만들었습니다. 현재 초안 덮어쓰기 여부를 확인해 주세요.`);
+      requestAnimationFrame(() => {
+        overwriteConfirmBtnRef.current?.focus();
+      });
+      return;
+    }
+    executeLoadSavedSequence(createdId, 'workbench');
+  };
   const copyingRef = useRef(false);
   const copyHistory = (logId: string) => {
     if (copyingRef.current) return;
@@ -809,6 +828,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                         onClick={(e) => requestOpenSavedSequence(sequence, 'workbench', e.currentTarget)}
                       >
                         <BookOpen size={16} /> 불러오기
+                      </PfButton>
+                      <PfButton
+                        variant="secondary"
+                        aria-label={`${sequence.title} 사본으로 열기`}
+                        onClick={(e) => duplicateAndOpenInWorkbench(sequence, e.currentTarget)}
+                      >
+                        <Copy size={15} /> 사본 열기
                       </PfButton>
                       <PfButton variant="secondary" id={toggleId} aria-expanded={detailsExpanded} aria-controls={moreId} aria-label={`${sequence.title} ${detailsExpanded ? '접기' : '더보기'}`} onClick={() => toggleSavedDetails(sequence.id)}>{detailsExpanded ? '접기' : '더보기'}</PfButton>
                     </div>
