@@ -1,11 +1,11 @@
 .motion-pattern-preview {
-  color: #173f36;
-  background: #fbf9f2;
-  border: 1px solid #d9dfd1;
+  color: #1a3b32;
+  background: linear-gradient(180deg, #fcfbf7 0%, #f6f3ea 100%);
+  border: 1px solid #d9d3c4;
   border-radius: 22px;
   padding: 22px;
   min-width: 0;
-  box-shadow: 0 9px 26px #193f3507;
+  box-shadow: 0 10px 28px rgba(26, 59, 50, 0.06);
 }
 .mpp-heading {
   display: flex;
@@ -17,57 +17,62 @@
   margin: 0 0 6px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  color: #64745e;
+  letter-spacing: 0.08em;
+  color: #4f6659;
+  text-transform: uppercase;
 }
 .mpp-heading h3 {
   font-size: 21px;
   line-height: 1.35;
   margin: 0;
-  font-family: Georgia, 'Noto Serif KR', serif;
+  font-family: 'Fraunces', Georgia, 'Noto Serif KR', serif;
+  color: #18362e;
 }
 .mpp-status {
   white-space: nowrap;
-  padding: 6px 9px;
-  background: #e9ecdf;
-  border-radius: 20px;
-  font-size: 10px;
+  padding: 6px 10px;
+  background: #e7ede5;
+  color: #1f4d3f;
+  border: 1px solid rgba(31, 77, 63, 0.14);
+  border-radius: 999px;
+  font-size: 10.5px;
   font-weight: 700;
 }
 .mpp-variant {
   font-size: 13px;
   line-height: 1.65;
   margin: 12px 0 5px;
+  color: #2f433b;
 }
 .mpp-equipment {
-  font-size: 11px;
-  color: #677263;
+  font-size: 11.5px;
+  color: #5f6d62;
   margin: 0 0 15px;
 }
 .mpp-figure {
   margin: 0;
-  background: radial-gradient(circle at 50% 42%, #fcfaf4 0%, #efeadd 100%);
-  border: 1px solid #d8dfd2;
-  border-radius: 20px;
+  background: linear-gradient(180deg, #fdfcf8 0%, #efe9dc 100%);
+  border: 1px solid #d8d1c1;
+  border-radius: 18px;
   overflow: hidden;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    0 10px 26px rgba(23, 63, 54, 0.06);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 10px 26px rgba(26, 59, 50, 0.06);
 }
 .mpp-figure > svg {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 300px;
-  min-height: 180px;
+  max-height: 310px;
+  min-height: 184px;
 }
 .mpp-figure figcaption {
   padding: 12px 16px;
-  background: linear-gradient(180deg, #eceee3 0%, #e4e8da 100%);
-  border-top: 1px solid #d8dfd0;
-  font-size: 12px;
+  background: linear-gradient(180deg, #efece2 0%, #e7e3d6 100%);
+  border-top: 1px solid #d9d3c3;
+  font-size: 12.5px;
   font-weight: 700;
-  color: #1c4438;
+  color: #1a3b32;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -75,39 +80,118 @@
   flex-wrap: wrap;
 }
 .mpp-figure figcaption span {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 500;
-  color: #566856;
+  color: #546358;
 }
-/* Editorial botanical refinement for authored SVG schematics (presentation only; geometry unchanged) */
+
+/* ============================================================================
+ * UNIFIED ATELIER STUDIO KINEMATIC PALETTE HARMONIZATION
+ * Harmonizes all 22 authored SVG pattern figures (MotionDraftFigure,
+ * MotionAuthoringBatchFigure, SupineReachFigure) with the 98-exercise
+ * MovementPhaseDiagramSvg palette (#fdfcf8 -> #efe9dc canvas, #cfe0d5 sage
+ * volume, #cca477 white-oak apparatus, #1a3b32 deep forest bone axis,
+ * #bf5a41 terracotta active vectors) WITHOUT touching SHA-256 geometry files!
+ * ============================================================================ */
 .mpp-figure > svg > rect:first-of-type,
 .motion-pattern-thumbnail > svg > rect:first-of-type {
-  fill: #f7f4ec;
+  fill: #f9f6ee !important;
+  stroke: #dcd4c3;
+  stroke-width: 1px;
 }
 .mpp-figure > svg g[stroke-linecap='round'],
-.motion-pattern-thumbnail > svg g[stroke-linecap='round'] {
-  filter: drop-shadow(0 4px 9px rgba(27, 58, 48, 0.08));
+.motion-pattern-thumbnail > svg g[stroke-linecap='round'],
+.mpp-figure > svg g[data-layer='kinematic-figure'],
+.motion-pattern-thumbnail > svg g[data-layer='kinematic-figure'] {
+  filter: drop-shadow(0 3px 7px rgba(26, 59, 50, 0.08));
 }
+
+/* Unify Mat / Support Surfaces across all families */
 .mpp-figure > svg polygon[fill='#dbe4d9'],
 .mpp-figure > svg polygon[fill='#e2e4d9'],
+.mpp-figure > svg polygon[fill='#e6eddf'],
+.mpp-figure > svg polygon[fill='#e7eddf'],
+.mpp-figure > svg polygon[fill='#e4ebe2'],
+.mpp-figure > svg path[fill='#e1e6d9'],
 .motion-pattern-thumbnail > svg polygon[fill='#dbe4d9'],
-.motion-pattern-thumbnail > svg polygon[fill='#e2e4d9'] {
-  fill: #dfeadf;
-  stroke: #9ab3a2;
-  stroke-width: 1.75px;
+.motion-pattern-thumbnail > svg polygon[fill='#e2e4d9'],
+.motion-pattern-thumbnail > svg polygon[fill='#e6eddf'],
+.motion-pattern-thumbnail > svg polygon[fill='#e7eddf'],
+.motion-pattern-thumbnail > svg polygon[fill='#e4ebe2'],
+.motion-pattern-thumbnail > svg path[fill='#e1e6d9'] {
+  fill: #dce7de !important;
+  stroke: #7a9988 !important;
+  stroke-width: 1.6px;
 }
+
+/* Unify White-Oak Wooden Frames & Chairs across all families */
+.mpp-figure > svg polygon[fill='#ba9f7a'],
+.mpp-figure > svg polygon[fill='#bf9f77'],
+.mpp-figure > svg polygon[fill='#e7d3b2'],
+.mpp-figure > svg path[fill='#b99b75'],
+.motion-pattern-thumbnail > svg polygon[fill='#ba9f7a'],
+.motion-pattern-thumbnail > svg polygon[fill='#bf9f77'],
+.motion-pattern-thumbnail > svg polygon[fill='#e7d3b2'],
+.motion-pattern-thumbnail > svg path[fill='#b99b75'] {
+  fill: #cca477 !important;
+  stroke: #87633b !important;
+}
+.mpp-figure > svg polygon[fill='#aa8963'],
+.motion-pattern-thumbnail > svg polygon[fill='#aa8963'] {
+  fill: #b68d5f !important;
+  stroke: #7e5b36 !important;
+}
+
+/* Unify Upholstered Carriage / Seat Pads */
+.mpp-figure > svg polygon[fill='#768e87'],
+.mpp-figure > svg polygon[fill='#6e8c81'],
+.motion-pattern-thumbnail > svg polygon[fill='#768e87'],
+.motion-pattern-thumbnail > svg polygon[fill='#6e8c81'] {
+  fill: #4b685d !important;
+  stroke: #24443a !important;
+}
+
+/* Unify Torso / Trunk Envelope to Atelier Sage-Forest */
 .mpp-figure > svg polygon[fill='#a6bba8'],
 .mpp-figure > svg polygon[fill='#87a18e'],
-.motion-pattern-thumbnail > svg polygon[fill='#a6bba8'],
-.motion-pattern-thumbnail > svg polygon[fill='#87a18e'] {
-  fill: #84a594;
-  stroke: #335c4c;
-}
 .mpp-figure > svg polygon[fill='#779b86'],
-.motion-pattern-thumbnail > svg polygon[fill='#779b86'] {
-  fill: #729683;
-  stroke: #2c5243;
+.mpp-figure > svg path[fill='#cedbc9'],
+.mpp-figure > svg g[data-body-part='segmented-trunk'] path[stroke='#bdd1c2'],
+.motion-pattern-thumbnail > svg polygon[fill='#a6bba8'],
+.motion-pattern-thumbnail > svg polygon[fill='#87a18e'],
+.motion-pattern-thumbnail > svg polygon[fill='#779b86'],
+.motion-pattern-thumbnail > svg path[fill='#cedbc9'],
+.motion-pattern-thumbnail > svg g[data-body-part='segmented-trunk'] path[stroke='#bdd1c2'] {
+  fill: #cfe0d5;
+  stroke: #295043;
 }
+.mpp-figure > svg g[data-body-part='segmented-trunk'] path[stroke='#bdd1c2'],
+.motion-pattern-thumbnail > svg g[data-body-part='segmented-trunk'] path[stroke='#bdd1c2'] {
+  fill: none !important;
+  stroke: #cfe0d5 !important;
+}
+.mpp-figure > svg g[data-body-part='segmented-trunk'] path[stroke='#41685e'],
+.motion-pattern-thumbnail > svg g[data-body-part='segmented-trunk'] path[stroke='#41685e'] {
+  stroke: #1f4d3f !important;
+}
+
+/* Unify Cranium / Head Silhouette */
+.mpp-figure > svg circle[fill='#dfc6aa'],
+.mpp-figure > svg circle[fill='#d4a891'],
+.mpp-figure > svg circle[fill='#efd5b4'],
+.mpp-figure > svg ellipse[fill='#d4ad94'],
+.mpp-figure > svg polygon[fill='#eee1ce'],
+.mpp-figure > svg polygon[fill='#efdfc9'],
+.motion-pattern-thumbnail > svg circle[fill='#dfc6aa'],
+.motion-pattern-thumbnail > svg circle[fill='#d4a891'],
+.motion-pattern-thumbnail > svg circle[fill='#efd5b4'],
+.motion-pattern-thumbnail > svg ellipse[fill='#d4ad94'],
+.motion-pattern-thumbnail > svg polygon[fill='#eee1ce'],
+.motion-pattern-thumbnail > svg polygon[fill='#efdfc9'] {
+  fill: #e7ede8 !important;
+  stroke: #1a3b32 !important;
+}
+
 .mpp-figure > svg [data-limb-role='active'] polyline[stroke='#d49a77'],
 .motion-pattern-thumbnail > svg [data-limb-role='active'] polyline[stroke='#d49a77'] {
   stroke: #d9a482;
@@ -128,7 +212,7 @@
     -apple-system,
     sans-serif;
   paint-order: stroke fill;
-  stroke: rgba(249, 247, 240, 0.94);
+  stroke: rgba(251, 249, 243, 0.95);
   stroke-width: 3.5px;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -144,6 +228,8 @@
   fill: #6d4f3d;
   font-weight: 600;
 }
+
+/* Controls & Timeline */
 .mpp-controls {
   display: flex;
   align-items: center;
@@ -159,22 +245,29 @@
 .mpp-controls button {
   min-height: 44px;
   border-radius: 12px;
-  border: 1px solid #d2d9ca;
+  border: 1px solid #d1cec1;
+  background: #ffffff;
+  color: #1a3b32;
   display: flex;
   gap: 7px;
   align-items: center;
   justify-content: center;
-  padding: 9px 12px;
-  font-size: 12px;
+  padding: 9px 14px;
+  font-size: 12.5px;
   font-weight: 700;
+  transition: background 0.16s ease, border-color 0.16s ease;
 }
 .mpp-controls .mpp-play {
-  background: #174b3f;
-  color: #fff;
-  border-color: #174b3f;
+  background: #1f4d3f;
+  color: #ffffff;
+  border-color: #1f4d3f;
+  box-shadow: 0 3px 10px rgba(31, 77, 63, 0.18);
+}
+.mpp-controls .mpp-play:hover:not(:disabled) {
+  background: #173c31;
 }
 .mpp-controls .mpp-reset {
-  background: transparent;
+  background: #fffdf9;
   width: 44px;
   min-width: 44px;
   padding: 9px;
@@ -187,28 +280,33 @@
   display: flex;
   gap: 6px;
   align-items: center;
-  font-size: 11px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #3f5247;
 }
 .mpp-controls > label:first-of-type {
   margin-left: auto;
 }
 .motion-pattern-preview select {
-  padding: 7px 9px;
-  border: 1px solid #ccd4c4;
-  background: #fffdf8;
-  color: #284c40;
+  padding: 7px 10px;
+  border: 1px solid #cfcabe;
+  background: #ffffff;
+  color: #1d3f35;
   border-radius: 10px;
   font: inherit;
+  font-weight: 600;
   min-height: 44px;
 }
 .mpp-seek {
-  font-size: 11px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #3f5247;
   display: flex;
   gap: 10px;
   align-items: center;
 }
 .mpp-seek input {
-  accent-color: #285f48;
+  accent-color: #1f4d3f;
   width: 100%;
   min-height: 44px;
   flex: 1;
@@ -221,8 +319,8 @@
   gap: 8px;
   margin: 12px 0 8px;
   padding: 6px 8px;
-  background: #f1eee4;
-  border: 1px solid #dfe3d4;
+  background: #f0ede3;
+  border: 1px solid #dbd6c7;
   border-radius: 14px;
 }
 .mpp-phase-stepper button {
@@ -231,20 +329,18 @@
   justify-content: center;
   gap: 4px;
   min-height: 44px;
-  padding: 6px 11px;
+  padding: 6px 12px;
   border-radius: 10px;
-  border: 1px solid #ccd4c4;
-  background: #fffdf8;
-  color: #174b3f;
-  font-size: 11px;
+  border: 1px solid #cfcabe;
+  background: #ffffff;
+  color: #1f4d3f;
+  font-size: 11.5px;
   font-weight: 700;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .mpp-phase-stepper button svg {
   flex-shrink: 0;
-}
-.mpp-phase-stepper button {
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 @media (max-width: 600px) {
   .mpp-phase-stepper {
@@ -265,40 +361,43 @@
   cursor: default;
 }
 .mpp-phase-counter {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
-  color: #284c40;
+  color: #1f4d3f;
   text-align: center;
   overflow-wrap: anywhere;
 }
 .mpp-phases {
   display: flex;
-  gap: 5px;
+  gap: 6px;
   flex-wrap: wrap;
   margin: 8px 0 15px;
 }
 .mpp-phases button {
-  background: transparent;
-  color: #566852;
-  border: 1px solid #d9ddce;
-  border-radius: 9px;
+  background: #ffffff;
+  color: #4f6156;
+  border: 1px solid #d8d3c5;
+  border-radius: 10px;
   min-height: 44px;
   flex: 1;
-  padding: 7px 5px;
-  font-size: 10px;
+  padding: 7px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
 }
 .mpp-phases button[aria-pressed='true'] {
-  background: #dbe3d2;
-  color: #214b3c;
-  border-color: #aebf9d;
+  background: #1f4d3f;
+  color: #ffffff;
+  border-color: #1f4d3f;
+  font-weight: 700;
 }
 .mpp-view-options {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  font-size: 11px;
+  font-size: 11.5px;
   line-height: 1.5;
+  color: #3f5247;
 }
 .mpp-view-options label {
   display: flex;
@@ -310,23 +409,35 @@
   justify-content: space-between;
 }
 .mpp-view-options input {
-  accent-color: #285f48;
+  accent-color: #1f4d3f;
 }
 .mpp-playback-state {
-  font-size: 10px;
-  color: #6d7868;
-  margin: 13px 0;
+  font-size: 10.5px;
+  color: #5f6d62;
+  margin: 12px 0;
+}
+.mpp-still-stage-btn {
+  border-radius: 8px;
+  border: 1px solid #d4cfc1;
+  background: #f8f6ef;
+  color: #1f4d3f;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.mpp-still-stage-btn:hover {
+  background: #e9efe9;
+  border-color: #9ab3a5;
 }
 .mpp-source-details {
-  border-top: 1px solid #dfe3d7;
+  border-top: 1px solid #dfdace;
   padding-top: 13px;
   font-size: 11px;
   line-height: 1.75;
-  color: #596951;
+  color: #546458;
 }
 .mpp-source-details summary {
   font-weight: 700;
-  color: #284b3b;
+  color: #1f4d3f;
   min-height: 44px;
 }
 .mpp-source-details h4 {
@@ -340,11 +451,14 @@
   margin-top: 5px;
 }
 .mpp-source-details a {
-  color: #2e6250;
+  color: #1f5c4d;
   text-underline-offset: 3px;
 }
+
+/* Unified Thumbnail Framing across ALL 98 Catalog Cards & 22 Pattern Cards */
 .motion-pattern-thumbnail {
-  background: radial-gradient(circle at 50% 44%, #fcfaf4 0%, #ede8db 100%);
+  position: relative;
+  background: linear-gradient(180deg, #fdfcf8 0%, #efe9dc 100%);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -352,15 +466,27 @@
   width: 100%;
   height: 100%;
   min-width: 0;
+  border-radius: 10px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
-.motion-pattern-thumbnail > svg {
+.motion-pattern-thumbnail.is-hover-playing {
+  box-shadow: inset 0 0 0 1.5px rgba(31, 77, 63, 0.38);
+}
+.motion-pattern-thumbnail:not(.catalog-motion-thumbnail) > svg {
   width: 100%;
   height: 100%;
   max-height: 220px;
   display: block;
-  transform: scale(1.12) translateY(2%);
+  transform: scale(1.1) translateY(2%);
   transform-origin: 50% 58%;
   transition: transform 0.22s ease;
+}
+.catalog-motion-thumbnail > svg {
+  width: 100%;
+  height: 100%;
+  max-height: 220px;
+  display: block;
+  object-fit: contain;
 }
 .motion-pattern-thumbnail > svg text {
   opacity: 0;
@@ -398,19 +524,19 @@
     padding: 9px 10px;
   }
   .mpp-phases button {
-    font-size: 9px;
+    font-size: 9.5px;
     min-width: 45px;
   }
 }
 .mpp-support {
-  font-size: 10px;
-  color: #62705b;
+  font-size: 11px;
+  color: #4f6156;
   line-height: 1.65;
   margin: 11px 0 4px;
 }
 .mpp-anatomy {
-  font-size: 9px;
-  color: #78856e;
+  font-size: 9.5px;
+  color: #6d7c70;
   line-height: 1.6;
   margin: 0 0 12px;
 }

@@ -1,4 +1,11 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw } from 'lucide-react';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
 import { DraftPlaybackController } from '../models/DraftPlaybackController';
@@ -62,7 +69,7 @@ function PatternFigure({
   }
 }
 
-/** A deterministic still rendered from the selected asset's own authored geometry. */
+/** A deterministic still rendered from the selected asset's own authored geometry, with opt-in pointer hover motion preview. */
 export function MotionPatternThumbnail({
   reference,
   className = '',
@@ -70,12 +77,57 @@ export function MotionPatternThumbnail({
   reference: MotionPatternReference;
   className?: string;
 }) {
-  const progress = reference.definition.phases.find((phase) => phase.id === 'turn')?.sample ?? 0.5;
+  const defaultProgress =
+    reference.definition.phases.find((phase) => phase.id === 'turn')?.sample ?? 0.5;
+  const [hoverProgress, setHoverProgress] = useState<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const startRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, []);
+
+  const stopHover = () => {
+    if (rafRef.current !== null) {
+      window.cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    startRef.current = null;
+    setHoverProgress(null);
+  };
+
+  const startHover = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType && event.pointerType !== 'mouse') return;
+    if (
+      typeof window === 'undefined' ||
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    ) {
+      return;
+    }
+    if (rafRef.current !== null) window.cancelAnimationFrame(rafRef.current);
+    startRef.current = null;
+    const cycleMs = 4600;
+    const step = (now: number) => {
+      if (startRef.current === null) startRef.current = now;
+      const elapsed = Math.max(0, now - startRef.current);
+      setHoverProgress(Number(((elapsed % cycleMs) / cycleMs).toFixed(3)));
+      rafRef.current = window.requestAnimationFrame(step);
+    };
+    rafRef.current = window.requestAnimationFrame(step);
+  };
+
+  const progress = hoverProgress ?? defaultProgress;
   return (
     <div
-      className={`motion-pattern-thumbnail ${className}`}
+      className={`motion-pattern-thumbnail ${hoverProgress !== null ? 'is-hover-playing' : ''} ${className}`.trim()}
       data-motion-variant={reference.variantId}
       data-motion-family={reference.family}
+      onPointerEnter={startHover}
+      onPointerLeave={stopHover}
     >
       <PatternFigure reference={reference} progress={progress} />
     </div>

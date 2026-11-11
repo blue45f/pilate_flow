@@ -9,6 +9,8 @@ import {
   buildMovementVisualAssetForExercise,
   getMovementVisualAsset,
   type CatalogMovementVisualAsset,
+  type JointAlignmentGuide,
+  type MovementDirectionVector,
   type PhasePoseSpec,
   type Point2D,
   type RigJointMap,
@@ -93,6 +95,54 @@ function interpolateJointMap(from: RigJointMap, to: RigJointMap, t: number): Rig
     }
   }
   return next as unknown as RigJointMap;
+}
+
+function interpolateAlignments(
+  fromList: readonly JointAlignmentGuide[],
+  toList: readonly JointAlignmentGuide[],
+  t: number,
+): readonly JointAlignmentGuide[] {
+  const smoothT = smoothstep(t);
+  if (fromList.length !== toList.length) {
+    return smoothT < 0.5 ? fromList : toList;
+  }
+  return fromList.map((guide, idx) => {
+    const target = toList[idx];
+    if (!target || target.kind !== guide.kind) {
+      return smoothT < 0.5 ? guide : target;
+    }
+    return {
+      ...guide,
+      from: lerpPoint(guide.from, target.from, smoothT) ?? guide.from,
+      to: lerpPoint(guide.to, target.to, smoothT) ?? guide.to,
+      targetAngleDeg:
+        guide.targetAngleDeg !== undefined && target.targetAngleDeg !== undefined
+          ? Math.round(lerpNum(guide.targetAngleDeg, target.targetAngleDeg, smoothT))
+          : (smoothT < 0.5 ? guide.targetAngleDeg : target.targetAngleDeg),
+    };
+  });
+}
+
+function interpolateVectors(
+  fromVecs: readonly MovementDirectionVector[],
+  toVecs: readonly MovementDirectionVector[],
+  t: number,
+): readonly MovementDirectionVector[] {
+  const smoothT = smoothstep(t);
+  const activeVecs = smoothT < 0.5 ? fromVecs : toVecs;
+  const peerVecs = smoothT < 0.5 ? toVecs : fromVecs;
+  const blend = smoothT < 0.5 ? smoothT : 1 - smoothT;
+
+  return activeVecs.map((vec, idx) => {
+    const peer = peerVecs[idx];
+    if (!peer || peer.points.length !== vec.points.length || peer.kind !== vec.kind) {
+      return vec;
+    }
+    return {
+      ...vec,
+      points: vec.points.map((pt, pIdx) => lerpPoint(pt, peer.points[pIdx], blend * 0.5) ?? pt),
+    };
+  });
 }
 
 function buildPhasesForExercise(
@@ -197,6 +247,8 @@ function createSamplePoseFn(
     let pedalAngleDeg: number;
     let baseSpec: PhasePoseSpec;
     let visualPhaseId: VisualPhaseId;
+    let alignments: readonly JointAlignmentGuide[];
+    let directionVectors: readonly MovementDirectionVector[];
 
     if (progress <= 0.12) {
       joints = startSpec.joints;
@@ -204,6 +256,8 @@ function createSamplePoseFn(
       pedalAngleDeg = startSpec.apparatusState.pedalAngleDeg;
       baseSpec = startSpec;
       visualPhaseId = 'start';
+      alignments = startSpec.alignments;
+      directionVectors = startSpec.directionVectors;
     } else if (progress < 0.42) {
       const localT = (progress - 0.12) / 0.3;
       joints = interpolateJointMap(startSpec.joints, middleSpec.joints, localT);
@@ -219,12 +273,20 @@ function createSamplePoseFn(
       );
       baseSpec = localT < 0.5 ? startSpec : middleSpec;
       visualPhaseId = localT < 0.5 ? 'start' : 'middle';
+      alignments = interpolateAlignments(startSpec.alignments, middleSpec.alignments, localT);
+      directionVectors = interpolateVectors(
+        startSpec.directionVectors,
+        middleSpec.directionVectors,
+        localT,
+      );
     } else if (progress <= 0.58) {
       joints = middleSpec.joints;
       carriageOffsetPx = middleSpec.apparatusState.carriageOffsetPx;
       pedalAngleDeg = middleSpec.apparatusState.pedalAngleDeg;
       baseSpec = middleSpec;
       visualPhaseId = 'middle';
+      alignments = middleSpec.alignments;
+      directionVectors = middleSpec.directionVectors;
     } else if (progress < 0.88) {
       const localT = (progress - 0.58) / 0.3;
       joints = interpolateJointMap(middleSpec.joints, endSpec.joints, localT);
@@ -240,12 +302,20 @@ function createSamplePoseFn(
       );
       baseSpec = localT < 0.5 ? middleSpec : endSpec;
       visualPhaseId = localT < 0.5 ? 'middle' : 'end';
+      alignments = interpolateAlignments(middleSpec.alignments, endSpec.alignments, localT);
+      directionVectors = interpolateVectors(
+        middleSpec.directionVectors,
+        endSpec.directionVectors,
+        localT,
+      );
     } else {
       joints = endSpec.joints;
       carriageOffsetPx = endSpec.apparatusState.carriageOffsetPx;
       pedalAngleDeg = endSpec.apparatusState.pedalAngleDeg;
       baseSpec = endSpec;
       visualPhaseId = 'end';
+      alignments = endSpec.alignments;
+      directionVectors = endSpec.directionVectors;
     }
 
     const interpolatedPhaseSpec: PhasePoseSpec = {
@@ -254,6 +324,8 @@ function createSamplePoseFn(
       shortTitleKo: phase.labelKo,
       summaryKo: phase.cueKo,
       joints,
+      alignments,
+      directionVectors,
       apparatusState: {
         ...baseSpec.apparatusState,
         carriageOffsetPx,

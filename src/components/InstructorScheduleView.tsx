@@ -52,6 +52,11 @@ import { buildSequenceSimulation } from "../utils/sequenceSimulation";
 import "../styles/schedule.css";
 import "./InstructorScheduleView.css";
 import { ScheduleChangeScopePanel, type ScheduleChangeScope } from "./ScheduleChangeScopePanel";
+import {
+  buildMemberSlotsForDate,
+  deriveMemberSlotStatus,
+  readPersistedMemberBookingState,
+} from "../utils/memberBookingBridge";
 
 type MoveDraft = {
   classId: string;
@@ -594,6 +599,33 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     () => rows.filter((row) => row.status === "scheduled"),
     [rows],
   );
+  const capacityLabelByRowId = useMemo(() => {
+    const map = new Map<string, string>();
+    if (!data.classes.length) return map;
+    const bookingState = readPersistedMemberBookingState(today);
+    for (const d of dates) {
+      const { slots } = buildMemberSlotsForDate({
+        selectedDate: d,
+        schedule: data,
+        savedSequences,
+        decisions: bookingState.slotDecisions,
+      });
+      for (const slot of slots) {
+        const enrolled = slot.baseEnrolled + (slot.myState === "BOOKED" ? 1 : 0);
+        const st = deriveMemberSlotStatus(slot);
+        const stateLabel =
+          st === "ALMOST_FULL"
+            ? "▲ 마감 임박"
+            : st === "WAITLIST"
+              ? "◆ 대기 가능"
+              : st === "CLOSED"
+                ? "■ 정원 마감"
+                : "● 예약 가능";
+        map.set(slot.id, `${stateLabel} ${enrolled}/${slot.maxCapacity}명`);
+      }
+    }
+    return map;
+  }, [dates, data, savedSequences, today]);
   const needsPrepRows = useMemo(
     () => scheduledRows.filter((row) => prepByRowId.get(row.id)?.needsPrep),
     [scheduledRows, prepByRowId],
@@ -1416,6 +1448,19 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                         – {formatScheduleTime(row.endTime)}
                       </span>
                       <div className="schedule-class-badges">
+                        {row.status === "scheduled" && capacityLabelByRowId.has(row.id) && (
+                          <span
+                            className="schedule-prep-pill"
+                            data-testid="schedule-slot-capacity-pill"
+                            style={{
+                              background: '#eef2ea',
+                              color: '#254b29',
+                              border: '1px solid #cdd9d0',
+                            }}
+                          >
+                            {capacityLabelByRowId.get(row.id)}
+                          </span>
+                        )}
                         {row.status === "scheduled" && prepInfo && (
                           <span
                             className={`schedule-prep-pill schedule-prep-pill-${prepInfo.status}`}

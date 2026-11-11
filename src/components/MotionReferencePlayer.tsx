@@ -488,18 +488,23 @@ function PrototypeLab({ active }: { active: boolean }) {
 
 function RelatedPatternReferences({
   references,
+  exerciseId,
   exerciseName,
   active,
   className,
 }: {
   references: readonly MotionPatternReference[];
+  exerciseId?: string;
   exerciseName: string;
   active: boolean;
   className: string;
 }) {
   const [variantId, setVariantId] = useState(references[0].variantId);
+  const [viewerMode, setViewerMode] = useState<'pattern' | 'kinematic'>('pattern');
   const selected =
     references.find((reference) => reference.variantId === variantId) ?? references[0];
+  const catalogKinematic = exerciseId ? getCatalogContinuousMotionAsset(exerciseId) : null;
+
   return (
     <section
       className={`motion-reference-related ${className}`}
@@ -513,28 +518,87 @@ function RelatedPatternReferences({
         </p>
         <span>정확한 모션 애셋 제작 전</span>
       </div>
-      {references.length > 1 && (
-        <label className="motion-reference-clip-select">
-          살펴볼 관련 변형
-          <select
-            aria-label="관련 모션 초안 선택"
-            value={selected.variantId}
-            onChange={(event) =>
-              setVariantId(
-                references.find((reference) => reference.variantId === event.target.value)
-                  ?.variantId ?? references[0].variantId,
-              )
-            }
+      {catalogKinematic && (
+        <div
+          className="motion-unified-mode-switch"
+          role="group"
+          aria-label="모션 도해 방식 전환"
+          style={{
+            display: 'inline-flex',
+            gap: '6px',
+            padding: '4px',
+            marginBottom: '10px',
+            borderRadius: '999px',
+            background: '#ece9df',
+            border: '1px solid #d7d2c4',
+          }}
+        >
+          <button
+            type="button"
+            aria-pressed={viewerMode === 'pattern'}
+            onClick={() => setViewerMode('pattern')}
+            style={{
+              minHeight: '34px',
+              padding: '4px 12px',
+              borderRadius: '999px',
+              border: 'none',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              background: viewerMode === 'pattern' ? '#1f4d3f' : 'transparent',
+              color: viewerMode === 'pattern' ? '#ffffff' : '#3d4f45',
+            }}
           >
-            {references.map((reference) => (
-              <option key={reference.variantId} value={reference.variantId}>
-                {reference.title}
-              </option>
-            ))}
-          </select>
-        </label>
+            패턴 초안 도해 ({references.length})
+          </button>
+          <button
+            type="button"
+            aria-pressed={viewerMode === 'kinematic'}
+            onClick={() => setViewerMode('kinematic')}
+            style={{
+              minHeight: '34px',
+              padding: '4px 12px',
+              borderRadius: '999px',
+              border: 'none',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              background: viewerMode === 'kinematic' ? '#1f4d3f' : 'transparent',
+              color: viewerMode === 'kinematic' ? '#ffffff' : '#3d4f45',
+            }}
+          >
+            5단계 기구학 표준 도해
+          </button>
+        </div>
       )}
-      <MotionPatternPreview reference={selected} active={active} />
+      {viewerMode === 'kinematic' && catalogKinematic ? (
+        <CatalogMotionInteractivePlayer asset={catalogKinematic} active={active} />
+      ) : (
+        <>
+          {references.length > 1 && (
+            <label className="motion-reference-clip-select">
+              살펴볼 관련 변형
+              <select
+                aria-label="관련 모션 초안 선택"
+                value={selected.variantId}
+                onChange={(event) =>
+                  setVariantId(
+                    references.find((reference) => reference.variantId === event.target.value)
+                      ?.variantId ?? references[0].variantId,
+                  )
+                }
+              >
+                {references.map((reference) => (
+                  <option key={reference.variantId} value={reference.variantId}>
+                    {reference.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <MotionPatternPreview reference={selected} active={active} />
+        </>
+      )}
     </section>
   );
 }
@@ -562,6 +626,7 @@ export function MotionReferencePlayer({
       <RelatedPatternReferences
         key={exerciseId}
         references={patterns}
+        exerciseId={exerciseId}
         exerciseName={name}
         active={active}
         className={className}

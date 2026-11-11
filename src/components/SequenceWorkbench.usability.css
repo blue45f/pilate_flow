@@ -171,7 +171,7 @@
 }
 
 /* ==========================================================================
-   Step-by-Step Page-Separated Atelier Flow (Matches pilates-flow-step-flow-prototype.html)
+   Step-by-Step Page-Separated Atelier Flow & 3-Mode Editor (Options A / B / C)
    ========================================================================== */
 
 #root .vnext-workbench .workbench-step-flow-banner {
@@ -450,9 +450,9 @@
   cursor: not-allowed;
 }
 
-/* Secondary optional templates shelf below the primary stage card */
+/* Secondary optional templates shelf below the primary stage card (quiet & calm) */
 #root .vnext-workbench .pf-step-secondary-shelf {
-  margin-top: 8px;
+  margin-top: 10px;
   padding-top: 16px;
   border-top: 1px dashed #dad5c8;
 }
@@ -463,7 +463,348 @@
   font-weight: 700;
   letter-spacing: 0.03em;
   color: #63746b;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+}
+
+#root .vnext-workbench.is-empty .sequence-column:not(.pf-step-stage-frame) {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+#root .vnext-workbench .workbench-automation-tools,
+#root .vnext-workbench .workbench-navigation-details {
+  border-radius: 14px;
+  border-color: #e2ddd2;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+@media (min-width: 769px) {
+  #root .vnext-workbench .workbench-mobile-step-bar {
+    display: none;
+  }
+}
+
+/* Non-destructive Smart Gap-Fill Preview Drawer (from Option A mockup .ai-drawer) */
+#root .vnext-workbench .pf-gap-fill-drawer {
+  margin: 12px 0 16px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1.5px dashed #355441;
+  background: #eef5f0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  word-break: keep-all;
+}
+
+#root .vnext-workbench .pf-gap-fill-drawer__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#root .vnext-workbench .pf-gap-fill-drawer__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+#root .vnext-workbench .pf-gap-fill-card {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #cdd9d0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#root .vnext-workbench .pf-gap-fill-drawer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 4-Mode Sequence View Switcher (Option A Split / Option B List / 3-Phase Columns / Option C Spring Timeline) */
+#root .vnext-workbench .pf-seq-view-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+#root .vnext-workbench .pf-seq-view-switcher {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #f0ede4;
+  border: 1px solid #dad5c8;
+}
+
+#root .vnext-workbench .pf-seq-view-btn {
+  min-height: 40px;
+  min-width: 44px;
+  padding: 6px 14px;
+  border-radius: 9px;
+  border: 0;
+  background: transparent;
+  color: #56685f;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#root .vnext-workbench .pf-seq-view-btn[aria-pressed='true'] {
+  background: #ffffff;
+  color: #1b3129;
+  box-shadow: 0 2px 6px rgba(27, 49, 41, 0.08);
+}
+
+/* Option A: Side-by-Side Quick-Add Catalog + Sequence Editor (pilates-flow-redesign-options.html) */
+#root .vnext-workbench .pf-option-a-finder-pane {
+  background: #ffffff;
+  border: 1px solid #e2ddd3;
+  border-radius: 24px;
+  padding: 20px 18px;
+  box-shadow: 0 10px 28px rgba(29, 32, 28, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+#root .vnext-workbench .pf-option-a-finder-pane__head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ebe6dc;
+}
+
+#root .vnext-workbench .pf-option-a-finder-pane__head strong {
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #1d201c;
+}
+
+#root .vnext-workbench .pf-option-a-finder-pane__head p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #5c6259;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+@media (min-width: 980px) {
+  #root .vnext-workbench .v2-plan-layout.is-option-a-split {
+    display: grid;
+    grid-template-columns: minmax(320px, 370px) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  #root .vnext-workbench.has-inspector .v2-plan-layout.is-option-a-split {
+    grid-template-columns: minmax(290px, 330px) minmax(0, 1fr) minmax(300px, 340px);
+  }
+
+  #root .vnext-workbench .pf-option-a-finder-pane {
+    position: sticky;
+    top: 82px;
+    max-height: calc(100dvh - 106px - var(--hosted-obstruction-inset, 0px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  #root .vnext-workbench .flow-sections.is-columns-view {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+  }
+}
+
+/* Editorial Step Card, Crisp Kinematic Diagram Frame & Quiet Pill Disclosures */
+#root .vnext-workbench .v2-plan-toolbar {
+  margin: 0 0 10px;
+}
+
+#root .vnext-workbench .v2-condition-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+#root .vnext-workbench .v2-condition-chips > button {
+  background: #ffffff;
+  border: 1px solid #e2ddd3;
+  border-radius: 999px;
+  color: #2b332c;
+  font-size: 0.81rem;
+  font-weight: 650;
+  min-height: 38px;
+  padding: 6px 13px;
+  box-shadow: 0 1px 3px rgba(29, 32, 28, 0.03);
+}
+
+#root .vnext-workbench .v2-condition-chips > button:hover {
+  background: #f5f2eb;
+  border-color: #c5bfb2;
+}
+
+#root .vnext-workbench details.workbench-automation-tools:not([open]),
+#root .vnext-workbench details.workbench-navigation-details:not([open]),
+#root .vnext-workbench details.workbench-generation-details:not([open]) {
+  background: #f5f2eb;
+  border: 1px solid #e2ddd3;
+  border-radius: 12px;
+  padding: 0 14px;
+  margin-block: 6px;
+  box-shadow: none;
+}
+
+#root .vnext-workbench details.workbench-automation-tools:not([open]) > summary,
+#root .vnext-workbench details.workbench-navigation-details:not([open]) > summary,
+#root .vnext-workbench details.workbench-generation-details:not([open]) > summary {
+  min-height: 40px;
+  padding-block: 8px;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #4f564d;
+}
+
+#root .vnext-workbench details.workbench-automation-tools[open],
+#root .vnext-workbench details.workbench-navigation-details[open],
+#root .vnext-workbench details.workbench-generation-details[open] {
+  background: #ffffff;
+  border: 1px solid #e2ddd3;
+  border-radius: 18px;
+  padding: 14px 18px;
+  margin-block: 10px;
+  box-shadow: 0 8px 24px rgba(29, 32, 28, 0.05);
+}
+
+#root .vnext-workbench .flow-step {
+  background: #ffffff;
+  border: 1px solid #e2ddd3;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(29, 32, 28, 0.025);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+#root .vnext-workbench .flow-step:hover {
+  border-color: #b7c9be;
+  box-shadow: 0 8px 20px rgba(29, 32, 28, 0.06);
+}
+
+#root .vnext-workbench .step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding-inline: 6px;
+  border-radius: 999px;
+  background: #f3efe8;
+  color: #355441;
+  font-size: 0.76rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+#root .vnext-workbench .step-art {
+  padding: 0;
+  border-radius: 11px;
+  border: 1px solid #dfd8ca;
+  background: #f9f6ee;
+  overflow: hidden;
+  width: 78px;
+  height: 54px;
+  flex-shrink: 0;
+}
+
+#root .vnext-workbench .workbench-movement-mark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: #f9f6ee;
+}
+
+#root .vnext-workbench .workbench-movement-mark > small {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Spring Timeline Ribbon Board (from Option C mockup .ribbon-track) */
+#root .vnext-workbench .pf-spring-ribbon-board {
+  margin: 8px 0 16px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #fcfbf8;
+  border: 1px solid #dad5c8;
+}
+
+#root .vnext-workbench .pf-spring-ribbon-track {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 0 4px;
+}
+
+#root .vnext-workbench .pf-spring-ribbon-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 82px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid #dad5c8;
+  text-align: left;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: #1d201c;
+}
+
+#root .vnext-workbench .pf-spring-ribbon-block.is-red {
+  background: #faeae5;
+  border-color: #e4b6a9;
+}
+
+#root .vnext-workbench .pf-spring-ribbon-block.is-blue {
+  background: #e6eff7;
+  border-color: #b5cde2;
+}
+
+#root .vnext-workbench .pf-spring-ribbon-block.is-yellow {
+  background: #fbf3e2;
+  border-color: #e2cb9c;
+}
+
+#root .vnext-workbench .pf-spring-ribbon-block.is-sage {
+  background: #edf4f0;
+  border-color: #bfd3c6;
 }
 
 /* Step 3 Inline -0.5분 / +0.5분 Steppers */
@@ -504,6 +845,8 @@
 #root .vnext-workbench .pf-step-nav-pill-btn:focus-visible,
 #root .vnext-workbench .pf-step1-choice-chip:focus-visible,
 #root .vnext-workbench .workbench-quick-duration-chip:focus-visible,
+#root .vnext-workbench .pf-seq-view-btn:focus-visible,
+#root .vnext-workbench .pf-spring-ribbon-block:focus-visible,
 #root .vnext-workbench .step-quick-duration-btn:focus-visible {
   outline: 3px solid var(--pf-color-focus-ring, #173d34);
   outline-offset: 2px;
@@ -555,6 +898,7 @@
   #root .vnext-workbench .pf-step-nav-pill-btn,
   #root .vnext-workbench .pf-step1-choice-chip,
   #root .vnext-workbench .workbench-quick-duration-chip,
+  #root .vnext-workbench .pf-seq-view-btn,
   #root .vnext-workbench .step-quick-duration-btn,
   .replacement-item,
   .replacement-empty-actions > button,

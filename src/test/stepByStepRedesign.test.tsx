@@ -163,6 +163,24 @@ describe('Step-by-step guided flow & design mockup alignment upgrades', () => {
 
     usePilatesStore.getState().undoSequence();
     expect(usePilatesStore.getState().activeSteps[0]?.durationMin).toBe(4.5);
+
+    // Verify 4-mode view switcher (Option A Split / List / 3-Column Board / Spring Timeline Ribbon) & Smart Gap-Fill Drawer
+    const viewSwitcher = screen.getByTestId('sequence-view-mode-switcher');
+    fireEvent.click(within(viewSwitcher).getByRole('button', { name: '원스크린 좌우 분할' }));
+    expect(screen.getByTestId('option-a-split-finder')).toBeVisible();
+
+    fireEvent.click(within(viewSwitcher).getByRole('button', { name: '스프링 타임라인' }));
+    expect(screen.queryByTestId('option-a-split-finder')).toBeNull();
+    expect(screen.getByTestId('spring-timeline-ribbon')).toBeVisible();
+
+    fireEvent.click(within(viewSwitcher).getByRole('button', { name: '3구간 보드' }));
+    expect(screen.queryByTestId('spring-timeline-ribbon')).toBeNull();
+
+    const gapToggle = screen.getByTestId('smart-gap-fill-toggle');
+    fireEvent.click(gapToggle);
+    expect(screen.getByTestId('smart-gap-fill-drawer')).toBeVisible();
+    fireEvent.click(screen.getByTestId('smart-gap-fill-apply'));
+    expect(usePilatesStore.getState().activeSteps.length).toBeGreaterThan(1);
   });
 
   it('shows glanceable breath callout, tactile spring pills, and inline next-step preview in LiveStageView', () => {

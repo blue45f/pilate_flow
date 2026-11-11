@@ -1,40 +1,433 @@
-/* Flow Atelier V2 — Luxury Editorial Palette & Effortless One-Click Usability */
+/* Flow Atelier V2 — Light Editorial Studio Shell & 1:1 Prototype Visual Alignment
+   Matches docs/ux-redesign-20261110/desktop-mobile-prototype.html &
+   docs/redesign-20261111/pilates-flow-redesign-options.html */
 
 :root {
-  --pf-atelier-cream: #faf7f0;
-  --pf-atelier-ivory: #fffdf8;
-  --pf-atelier-limestone: #f1ebe0;
-  --pf-atelier-champagne: #c9a66b;
-  --pf-atelier-champagne-soft: rgba(201, 166, 107, 0.18);
-  --pf-atelier-sage-deep: #183d33;
-  --pf-atelier-sage-mid: #2b594c;
-  --pf-atelier-sage-tint: #e8f0eb;
+  --pf-font-sans:
+    'Pretendard Variable',
+    'Pretendard',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Apple SD Gothic Neo',
+    'Noto Sans KR',
+    sans-serif;
+  --pf-atelier-cream: #faf8f4;
+  --pf-atelier-ivory: #ffffff;
+  --pf-atelier-limestone: #f3efe8;
+  --pf-atelier-champagne: #b88a55;
+  --pf-atelier-champagne-soft: rgba(184, 138, 85, 0.16);
+  --pf-atelier-sage-deep: #1f4d3f;
+  --pf-atelier-sage-mid: #355441;
+  --pf-atelier-sage-tint: #e6efe9;
   --pf-atelier-terracotta: #c85a3a;
-  --pf-atelier-shadow-soft: 0 12px 32px rgba(24, 61, 51, 0.06), 0 2px 6px rgba(24, 61, 51, 0.04);
-  --pf-atelier-shadow-hover: 0 18px 38px rgba(24, 61, 51, 0.11), 0 4px 12px rgba(201, 166, 107, 0.12);
+  --pf-atelier-ink: #1d201c;
+  --pf-atelier-muted: #5c6259;
+  --pf-atelier-line: #e2ddd3;
+  --pf-atelier-shadow-soft: 0 8px 28px rgba(29, 32, 28, 0.05), 0 1px 4px rgba(29, 32, 28, 0.03);
+  --pf-atelier-shadow-hover: 0 14px 34px rgba(29, 32, 28, 0.09), 0 4px 10px rgba(53, 84, 65, 0.08);
 }
 
-.vnext-shell {
-  background:
-    radial-gradient(circle at 12% 0%, rgba(201, 166, 107, 0.11), transparent 38%),
-    radial-gradient(circle at 92% 8%, rgba(79, 118, 104, 0.09), transparent 42%),
-    var(--pf-atelier-cream);
+/* ==========================================================================
+   1. Light Editorial Studio Shell (Overrides legacy dark slab in atelier-vnext.css)
+   ========================================================================== */
+
+#root .vnext-shell {
+  font-family: var(--pf-font-sans);
+  background: var(--pf-atelier-cream);
+  color: var(--pf-atelier-ink);
+  letter-spacing: -0.015em;
 }
 
-.vnext-shell .topbar {
-  background: rgba(255, 253, 248, 0.86);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(201, 166, 107, 0.24);
+#root .vnext-shell h1,
+#root .vnext-shell h2,
+#root .vnext-shell h3,
+#root .vnext-shell h4,
+#root .vnext-shell button,
+#root .vnext-shell input,
+#root .vnext-shell select,
+#root .vnext-shell textarea {
+  font-family: var(--pf-font-sans);
 }
 
-/* Luxury Quick-Start Recipe Gallery */
+/* Light Editorial Sidebar (#ffffff surface, #e2ddd3 hair-line, sage active pill) */
+#root .vnext-shell .sidebar {
+  background: #ffffff;
+  color: var(--pf-atelier-ink);
+  border-right: 1px solid var(--pf-atelier-line);
+  padding: 22px 16px 18px;
+  box-shadow: 2px 0 20px rgba(29, 32, 28, 0.025);
+}
+
+#root .vnext-shell .brand {
+  color: var(--pf-atelier-ink);
+  gap: 11px;
+  margin-bottom: 28px;
+  align-items: center;
+  text-decoration: none;
+}
+
+#root .vnext-shell .brand > svg {
+  width: 36px;
+  height: 36px;
+  padding: 7px;
+  border-radius: 11px;
+  background: var(--pf-atelier-sage-mid);
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(53, 84, 65, 0.22);
+}
+
+#root .vnext-shell .brand > span {
+  font-family: var(--pf-font-sans);
+  font-size: 1.18rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--pf-atelier-ink);
+}
+
+#root .vnext-shell .brand small {
+  display: block;
+  font: 700 0.56rem/1.4 var(--pf-font-sans);
+  letter-spacing: 0.12em;
+  color: #767d72;
+  margin-top: 3px;
+}
+
+#root .vnext-shell .sidebar-label {
+  color: #8a8f85;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+
+#root .vnext-shell .desktop-nav {
+  gap: 5px;
+}
+
+#root .vnext-shell .desktop-nav button {
+  color: #4f564d;
+  min-height: 46px;
+  font-size: 0.91rem;
+  font-weight: 650;
+  border-radius: 12px;
+  padding-inline: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+#root .vnext-shell .desktop-nav button:hover:not(.active) {
+  background: #f5f2eb;
+  color: var(--pf-atelier-ink);
+}
+
+#root .vnext-shell .desktop-nav button.active {
+  background: var(--pf-atelier-sage-tint);
+  color: var(--pf-atelier-sage-deep);
+  border-color: #c5d9cd;
+  font-weight: 750;
+}
+
+#root .vnext-shell .desktop-nav small {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f3efe8;
+  color: #42554a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  opacity: 1;
+}
+
+#root .vnext-shell .desktop-nav button.active small {
+  background: #ffffff;
+  color: var(--pf-atelier-sage-deep);
+}
+
+/* Upcoming Classes Card inside Light Sidebar */
+#root .vnext-shell .v2-sidebar-upcoming {
+  border-top: 1px solid #ebe6dc;
+  padding-top: 18px;
+  margin-top: 22px;
+}
+
+#root .vnext-shell .v2-sidebar-upcoming h2 {
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: #6b7268;
+  letter-spacing: 0.02em;
+}
+
+#root .vnext-shell .v2-sidebar-upcoming > p {
+  color: #767d72;
+  font-size: 0.8rem;
+}
+
+#root .vnext-shell .v2-sidebar-upcoming .text-button {
+  color: var(--pf-atelier-sage-mid);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+#root .vnext-shell .v2-upcoming-link {
+  color: var(--pf-atelier-ink);
+  background: #faf8f4;
+  border: 1px solid var(--pf-atelier-line);
+  border-radius: 12px;
+  padding: 10px 11px;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+#root .vnext-shell .v2-upcoming-link:hover {
+  background: #f2f7f4;
+  border-color: #bfd3c6;
+}
+
+#root .vnext-shell .v2-upcoming-link strong {
+  color: var(--pf-atelier-sage-deep);
+  font-weight: 800;
+}
+
+#root .vnext-shell .v2-upcoming-link small {
+  color: #6b7268;
+}
+
+#root .vnext-shell .sidebar-study-link,
+#root .vnext-shell .pwa-sidebar-button {
+  color: #4f564d;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+#root .vnext-shell .sidebar-study-link:hover,
+#root .vnext-shell .pwa-sidebar-button:hover {
+  background: #f5f2eb;
+  color: var(--pf-atelier-ink);
+}
+
+#root .vnext-shell .workspace-button {
+  color: var(--pf-atelier-ink);
+  border-top: 1px solid #ebe6dc;
+  padding-top: 16px;
+}
+
+#root .vnext-shell .workspace-button small {
+  color: #6b7268;
+}
+
+#root .vnext-shell .studio-avatar {
+  background: var(--pf-atelier-sage-mid);
+  color: #ffffff;
+  font-weight: 800;
+  border-radius: 50%;
+}
+
+/* Sticky Frosted Editorial Topbar */
+#root .vnext-shell .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--pf-atelier-line);
+  min-height: 62px;
+  padding-inline: clamp(20px, 2.8vw, 40px);
+}
+
+#root .vnext-shell .breadcrumb {
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: #5c6259;
+}
+
+#root .vnext-shell .pf-role-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 999px;
+  background: #f3efe8;
+  border: 1px solid var(--pf-atelier-line);
+}
+
+#root .vnext-shell .pf-role-switcher__btn {
+  min-height: 34px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: #5c6259;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#root .vnext-shell .pf-role-switcher__btn[aria-pressed='true'] {
+  background: #ffffff;
+  color: var(--pf-atelier-ink);
+  box-shadow: 0 2px 6px rgba(29, 32, 28, 0.08);
+}
+
+#root .vnext-shell .local-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--pf-atelier-sage-tint);
+  border: 1px solid #c5d9cd;
+  color: var(--pf-atelier-sage-deep);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+#root .vnext-shell .local-state i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2b7a57;
+}
+
+#root .vnext-shell .app-create-movement {
+  border-radius: 999px;
+  background: var(--pf-atelier-sage-mid);
+  border: 1px solid var(--pf-atelier-sage-mid);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  min-height: 38px;
+}
+
+#root .vnext-shell .app-create-movement:hover {
+  background: var(--pf-atelier-sage-deep);
+}
+
+/* Main Content & Headings */
+#root .vnext-shell .main-content {
+  max-width: 1480px;
+  width: 100%;
+  margin-inline: auto;
+  padding: 24px clamp(20px, 2.8vw, 40px) calc(36px + var(--hosted-obstruction-inset));
+}
+
+#root .vnext-shell .page-heading {
+  margin-bottom: 18px;
+}
+
+#root .vnext-shell .page-heading h1 {
+  font-family: var(--pf-font-sans);
+  color: var(--pf-atelier-ink);
+  font-size: clamp(1.55rem, 2.1vw, 2.05rem);
+  letter-spacing: -0.035em;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+#root .vnext-shell .vnext-workbench-eyebrow,
+#root .vnext-shell .eyebrow {
+  color: var(--pf-atelier-sage-mid);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+}
+
+#root .vnext-shell .today-label {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid var(--pf-atelier-line);
+  color: #4f564d;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+/* Slim Editorial Studio Journey Ribbon */
+#root .vnext-shell [data-testid='studio-journey-bar'] {
+  background: #ffffff;
+  border: 1px solid var(--pf-atelier-line);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(29, 32, 28, 0.03);
+  margin-bottom: 16px;
+}
+
+/* Unified Buttons & Surfaces across Atlas, Schedule, Binder, History */
+#root .vnext-shell .btn-primary {
+  background: var(--pf-atelier-sage-mid);
+  color: #ffffff;
+  border: 1px solid var(--pf-atelier-sage-mid);
+  border-radius: 12px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(53, 84, 65, 0.16);
+}
+
+#root .vnext-shell .btn-primary:hover:not(:disabled) {
+  background: var(--pf-atelier-sage-deep);
+  border-color: var(--pf-atelier-sage-deep);
+}
+
+#root .vnext-shell .btn-secondary {
+  background: #ffffff;
+  color: var(--pf-atelier-ink);
+  border: 1px solid var(--pf-atelier-line);
+  border-radius: 12px;
+  font-weight: 650;
+}
+
+#root .vnext-shell .btn-secondary:hover:not(:disabled) {
+  background: #f5f2eb;
+  border-color: #c7c1b4;
+}
+
+#root .vnext-shell .panel,
+#root .vnext-shell .movement-card,
+#root .vnext-shell .binder-card,
+#root .vnext-shell .schedule-card {
+  background: #ffffff;
+  border: 1px solid var(--pf-atelier-line);
+  border-radius: 18px;
+  box-shadow: var(--pf-atelier-shadow-soft);
+}
+
+@media (max-width: 1023px) {
+  #root .vnext-shell .sidebar-close {
+    color: var(--pf-atelier-ink);
+  }
+
+  #root .vnext-shell .vnext-wordmark {
+    font-family: var(--pf-font-sans);
+    font-size: 1.12rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--pf-atelier-ink);
+  }
+
+  #root .vnext-shell .bottom-nav {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--pf-atelier-line);
+    box-shadow: 0 8px 28px rgba(29, 32, 28, 0.1);
+  }
+
+  #root .vnext-shell .bottom-nav > button.active {
+    background: var(--pf-atelier-sage-tint);
+    color: var(--pf-atelier-sage-deep);
+    font-weight: 750;
+  }
+}
+
+/* ==========================================================================
+   2. Luxury Quick-Start Recipe Gallery, Spring Pills, Phase Ribbon & Member Wallet
+   ========================================================================== */
+
 .pf-quickstart-gallery {
   margin: 14px 0 20px;
   padding: 20px 22px;
   border-radius: 20px;
-  background: linear-gradient(145deg, #fffefb 0%, #f6f1e6 100%);
-  border: 1px solid rgba(201, 166, 107, 0.34);
+  background: #ffffff;
+  border: 1px solid var(--pf-atelier-line);
   box-shadow: var(--pf-atelier-shadow-soft);
 }
 
@@ -56,22 +449,23 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #8a6834;
-  background: rgba(201, 166, 107, 0.16);
+  background: rgba(184, 138, 85, 0.15);
   padding: 4px 10px;
   border-radius: 999px;
 }
 
 .pf-quickstart-gallery__title {
   margin: 6px 0 2px;
-  font-size: 1.24rem;
-  color: var(--pf-atelier-sage-deep);
+  font-size: 1.22rem;
+  font-weight: 800;
+  color: var(--pf-atelier-ink);
   word-break: keep-all;
 }
 
 .pf-quickstart-gallery__subtitle {
   margin: 0;
   font-size: 0.88rem;
-  color: #4c5d54;
+  color: var(--pf-atelier-muted);
   word-break: keep-all;
 }
 
@@ -84,17 +478,16 @@
 .pf-quickstart-card {
   display: flex;
   flex-direction: column;
-  background: var(--pf-atelier-ivory);
-  border: 1px solid rgba(24, 61, 51, 0.11);
+  background: #faf8f4;
+  border: 1px solid var(--pf-atelier-line);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 14px rgba(24, 61, 51, 0.04);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .pf-quickstart-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--pf-atelier-champagne);
+  transform: translateY(-2px);
+  border-color: var(--pf-atelier-sage-mid);
   box-shadow: var(--pf-atelier-shadow-hover);
 }
 
@@ -118,8 +511,8 @@
   left: 10px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(24, 61, 51, 0.86);
-  color: #fffdf8;
+  background: rgba(31, 77, 63, 0.9);
+  color: #ffffff;
   font-size: 0.75rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -132,11 +525,11 @@
   right: 10px;
   padding: 4px 9px;
   border-radius: 999px;
-  background: rgba(255, 253, 248, 0.92);
+  background: rgba(255, 255, 255, 0.94);
   color: var(--pf-atelier-sage-deep);
   font-size: 0.73rem;
   font-weight: 700;
-  border: 1px solid rgba(201, 166, 107, 0.4);
+  border: 1px solid var(--pf-atelier-line);
 }
 
 .pf-quickstart-card__body {
@@ -150,8 +543,9 @@
 .pf-quickstart-card__body h3 {
   margin: 0;
   font-size: 1rem;
+  font-weight: 750;
   line-height: 1.35;
-  color: var(--pf-atelier-sage-deep);
+  color: var(--pf-atelier-ink);
   word-break: keep-all;
 }
 
@@ -159,7 +553,7 @@
   margin: 0;
   font-size: 0.82rem;
   line-height: 1.45;
-  color: #4f6158;
+  color: var(--pf-atelier-muted);
   word-break: keep-all;
   flex: 1;
 }
@@ -175,8 +569,8 @@
   min-height: 44px;
   width: 100%;
   border-radius: 10px;
-  border: 1px solid var(--pf-atelier-sage-deep);
-  background: linear-gradient(135deg, var(--pf-atelier-sage-deep) 0%, var(--pf-atelier-sage-mid) 100%);
+  border: 1px solid var(--pf-atelier-sage-mid);
+  background: var(--pf-atelier-sage-mid);
   color: #ffffff;
   font-size: 0.88rem;
   font-weight: 700;
@@ -188,7 +582,7 @@
 }
 
 .pf-quickstart-card__cta:hover {
-  background: linear-gradient(135deg, #123028 0%, #21483d 100%);
+  background: var(--pf-atelier-sage-deep);
 }
 
 /* Tactile Color-Coded Spring Pills */
@@ -209,7 +603,7 @@
   font-size: 0.74rem;
   font-weight: 700;
   background: #f6f3eb;
-  border: 1px solid rgba(24, 61, 51, 0.14);
+  border: 1px solid #dfd9cd;
   color: #263930;
   line-height: 1.35;
 }
@@ -227,8 +621,8 @@
   margin: 10px 0 14px;
   padding: 12px 14px;
   border-radius: 14px;
-  background: linear-gradient(180deg, #fffef9 0%, #f7f3ea 100%);
-  border: 1px solid rgba(201, 166, 107, 0.3);
+  background: #faf8f4;
+  border: 1px solid var(--pf-atelier-line);
 }
 
 .pf-phase-proportion-bar__labels {
@@ -237,7 +631,7 @@
   justify-content: space-between;
   gap: 8px;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 650;
   color: #35493f;
   margin-bottom: 8px;
 }
@@ -261,7 +655,7 @@
 }
 
 .pf-phase-proportion-bar__seg.is-main {
-  background: var(--pf-atelier-sage-deep);
+  background: var(--pf-atelier-sage-mid);
 }
 
 .pf-phase-proportion-bar__seg.is-cooldown {
@@ -270,12 +664,12 @@
 
 /* Luxury Wallet Pass Card & Studio Reformer Spot Map (Member V2) */
 .pf-member-wallet-hero {
-  background: linear-gradient(135deg, #173d34 0%, #285649 62%, #3a6859 100%);
+  background: linear-gradient(135deg, #1f4d3f 0%, #355441 64%, #456b54 100%);
   color: #fffdf8;
   border-radius: 20px;
   padding: 20px 22px;
-  border: 1px solid rgba(201, 166, 107, 0.48);
-  box-shadow: 0 14px 32px rgba(23, 61, 52, 0.18);
+  border: 1px solid rgba(184, 138, 85, 0.45);
+  box-shadow: 0 14px 32px rgba(31, 77, 63, 0.16);
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -299,7 +693,7 @@
   flex-wrap: wrap;
   gap: 8px 16px;
   font-size: 0.88rem;
-  color: rgba(255, 253, 248, 0.9);
+  color: rgba(255, 253, 248, 0.92);
   font-variant-numeric: tabular-nums;
 }
 
@@ -327,12 +721,12 @@
 
 .pf-member-wallet-ring__label small {
   font-size: 0.7rem;
-  color: rgba(255, 253, 248, 0.8);
+  color: rgba(255, 253, 248, 0.82);
 }
 
 .pf-member-my-bookings {
-  background: linear-gradient(135deg, #fffdf8 0%, #f5efe2 100%);
-  border: 1px solid rgba(201, 166, 107, 0.42);
+  background: #ffffff;
+  border: 1px solid var(--pf-atelier-line);
   border-radius: 16px;
   padding: 14px 16px;
   display: flex;
@@ -348,13 +742,13 @@
   gap: 8px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #ffffff;
-  border: 1px solid rgba(24, 61, 51, 0.12);
+  background: #faf8f4;
+  border: 1px solid var(--pf-atelier-line);
 }
 
 .pf-studio-spot-map {
-  background: linear-gradient(180deg, #f9f5ec 0%, #efe8da 100%);
-  border: 1px solid rgba(201, 166, 107, 0.45);
+  background: #faf8f4;
+  border: 1px solid var(--pf-atelier-line);
   border-radius: 16px;
   padding: 14px;
 }
@@ -367,7 +761,8 @@
   color: #6d5b3e;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(255, 253, 248, 0.8);
+  background: #ffffff;
+  border: 1px solid var(--pf-atelier-line);
   margin-bottom: 10px;
 }
 
@@ -381,9 +776,9 @@
   min-height: 74px;
   padding: 8px 6px;
   border-radius: 12px;
-  border: 1.5px solid rgba(24, 61, 51, 0.18);
-  background: #fffdf8;
-  color: var(--pf-atelier-sage-deep);
+  border: 1.5px solid var(--pf-atelier-line);
+  background: #ffffff;
+  color: var(--pf-atelier-ink);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -394,17 +789,18 @@
 }
 
 .pf-studio-spot-btn[aria-pressed='true'] {
-  border-color: #b58338;
-  background: linear-gradient(180deg, #fffaf0 0%, #f6ead2 100%);
-  box-shadow: 0 0 0 2px rgba(201, 166, 107, 0.32);
+  border-color: var(--pf-atelier-sage-mid);
+  background: var(--pf-atelier-sage-tint);
+  color: var(--pf-atelier-sage-deep);
+  box-shadow: 0 0 0 2px rgba(53, 84, 65, 0.16);
 }
 
 .pf-studio-spot-btn:disabled {
-  background: #ebe6dc;
-  border-color: #d5cfc2;
-  color: #848a86;
+  background: #f0ede6;
+  border-color: #dedad0;
+  color: #8b9188;
   cursor: not-allowed;
-  opacity: 0.72;
+  opacity: 0.74;
 }
 
 .pf-studio-spot-btn strong {
@@ -418,7 +814,7 @@
 .pf-rig-3d-render-frame {
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(201, 166, 107, 0.35);
+  border: 1px solid var(--pf-atelier-line);
   background: #f3ede2;
   margin-bottom: 10px;
 }

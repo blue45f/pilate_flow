@@ -380,6 +380,10 @@ export function SequenceWorkbench({
         : s.activeSteps.length > 0
           ? 'arrange'
           : 'home';
+  const [sequenceViewMode, setSequenceViewMode] = useState<
+    'split' | 'list' | 'columns' | 'timeline'
+  >('list');
+  const [gapFillOpen, setGapFillOpen] = useState(false);
   const finderContentRef = useRef<HTMLDivElement>(null);
   const finderOpener = useRef<HTMLElement | null>(null);
   const [insightsOpen, setInsightsOpen] = useState(false);
@@ -981,6 +985,45 @@ export function SequenceWorkbench({
           return true;
         })
     : [];
+  const gapFillCandidates: PilatesExercise[] =
+    !s.activeSteps.length || delta >= 0
+      ? []
+      : (() => {
+          const usedKeys = new Set(activeMovementKeys);
+          const effectiveEq = currentStepEquipment.length
+            ? currentStepEquipment
+            : equipmentSelection(s.lastCriteria ?? criteria);
+          const effectiveApparatus =
+            effectiveEq.length === 1
+              ? (getEquipmentFamily(effectiveEq[0]) ?? s.activeApparatus)
+              : effectiveEq.length > 1
+                ? 'mixed'
+                : s.activeApparatus;
+          const picked: PilatesExercise[] = [];
+          for (const ex of s.exercises) {
+            if (picked.length >= 2) break;
+            if (!isExerciseAuthoringEligible(ex)) continue;
+            const key = getMovementKey(ex);
+            if (usedKeys.has(key)) continue;
+            if (
+              !exerciseMatchesCriteria(ex, {
+                ...criteria,
+                apparatus: effectiveApparatus,
+                level: s.activeLevel,
+                ownedApparatus: getEquipmentFamilies(effectiveEq),
+                availableEquipment: effectiveEq,
+                preferredProps: (s.lastCriteria?.preferredProps ?? criteria.preferredProps).filter(
+                  (prop) => prop === 'none' || s.ownedProps.includes(prop),
+                ),
+              })
+            ) {
+              continue;
+            }
+            usedKeys.add(key);
+            picked.push(ex);
+          }
+          return picked;
+        })();
   const setDuration = (minutes: number) => {
     setCriteria((previous) => ({ ...previous, targetMinutes: minutes }));
     setCustomTime(String(minutes));
@@ -2206,7 +2249,33 @@ export function SequenceWorkbench({
               ‘잠그지 않은 동작 다시 만들기’를 사용하세요.
             </p>
           )}
-          <div className="plan-layout v2-plan-layout">
+          <div
+            className={`plan-layout v2-plan-layout ${
+              s.activeSteps.length > 0 && sequenceViewMode === 'split' ? 'is-option-a-split' : ''
+            }`.trim()}
+          >
+            {s.activeSteps.length > 0 && sequenceViewMode === 'split' && (
+              <aside
+                className="pf-option-a-finder-pane"
+                data-testid="option-a-split-finder"
+                aria-label="동작 카탈로그 빠른 담기"
+              >
+                <div className="pf-option-a-finder-pane__head">
+                  <span className="pf-step-kicker-badge">시안 A · 원스크린 좌우 분할</span>
+                  <strong>동작 빠른 담기</strong>
+                  <p>
+                    왼쪽에서 검색·필터로 동작을 누르면 오른쪽 시퀀스에 즉시 담깁니다.
+                  </p>
+                </div>
+                <InlineExerciseFinder
+                  active
+                  onOpenExercise={onOpenYouTubePreview}
+                  classEquipment={EQUIPMENT_OPTIONS.filter((option) =>
+                    selectedEquipment.includes(option.id),
+                  ).map((option) => option.id)}
+                />
+              </aside>
+            )}
             <section
               id="workbench-sequence-panel"
               className={`sequence-column ${
@@ -2294,6 +2363,17 @@ export function SequenceWorkbench({
                       }}
                     >
                       <Clock3 size={14} aria-hidden="true" /> 목표 시간 자동 맞춤
+                    </button>
+                  )}
+                  {s.activeSteps.length > 0 && delta < 0 && gapFillCandidates.length > 0 && (
+                    <button
+                      type="button"
+                      className="workbench-inline-action-chip"
+                      data-testid="smart-gap-fill-toggle"
+                      aria-expanded={gapFillOpen}
+                      onClick={() => setGapFillOpen((v) => !v)}
+                    >
+                      <Sparkles size={14} aria-hidden="true" /> 빈 시간 채우기 추천
                     </button>
                   )}
                   {s.activeSteps.length > 0 && delta !== 0 && !canAutoFitDuration && needsMoreExercisesForTarget && (
@@ -2387,6 +2467,66 @@ export function SequenceWorkbench({
                   />
                 </div>
               </div>
+              {gapFillOpen && s.activeSteps.length > 0 && delta < 0 && gapFillCandidates.length > 0 && (
+                <div
+                  className="pf-gap-fill-drawer"
+                  data-testid="smart-gap-fill-drawer"
+                  role="region"
+                  aria-label="부족한 시간 채우기 추천 미리보기"
+                >
+                  <div className="pf-gap-fill-drawer__head">
+                    <strong>
+                      <Sparkles size={15} aria-hidden="true" /> 부족한{' '}
+                      {Math.max(1, Math.round(Math.abs(delta) / 60))}분 채우기 후보 (기존 수업은
+                      덮어쓰지 않아요)
+                    </strong>
+                    <span style={{ fontSize: '0.78rem', color: '#355441', fontWeight: 600 }}>
+                      검토 후 원하는 구성만 반영
+                    </span>
+                  </div>
+                  <div className="pf-gap-fill-drawer__items">
+                    {gapFillCandidates.map((cand) => (
+                      <div key={cand.id} className="pf-gap-fill-card">
+                        <strong>{cand.nameKo}</strong>
+                        <span style={{ fontSize: '0.8rem', color: '#56685f' }}>
+                          기본 {cand.defaultDurationMin}분 ·{' '}
+                          {cand.targetMuscles.slice(0, 2).join('·') || '체간 정렬'}
+                        </span>
+                        {cand.springs && <SpringVisualPills springs={cand.springs} />}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pf-gap-fill-drawer__actions">
+                    <PfButton
+                      variant="primary"
+                      data-testid="smart-gap-fill-apply"
+                      onClick={() => {
+                        const appendedSteps: SequenceStep[] = gapFillCandidates.map(
+                          (cand, idx) => ({
+                            stepId: `gap-fill-${Date.now()}-${idx}`,
+                            order: s.activeSteps.length + idx + 1,
+                            exerciseId: cand.id,
+                            blockCategory: cand.blockCategory,
+                            durationMin: cand.defaultDurationMin,
+                            selectedLayer: 'standard',
+                            instructorNote: '',
+                          }),
+                        );
+                        setGapFillOpen(false);
+                        applyStepsWithUndo(
+                          [...s.activeSteps, ...appendedSteps],
+                          `추천 동작 ${gapFillCandidates.length}개를 수업표 끝에 추가했어요. 되돌리기로 복구할 수 있습니다.`,
+                        );
+                      }}
+                    >
+                      수업표 끝에 추가하기
+                    </PfButton>
+                    <PfButton variant="secondary" onClick={() => setGapFillOpen(false)}>
+                      닫기
+                    </PfButton>
+                  </div>
+                </div>
+              )}
               <div className="sequence-inline-tools">
                 <details className="workbench-timing-details">
                   <summary>시간 구성</summary>
@@ -2577,14 +2717,97 @@ export function SequenceWorkbench({
             </>
           )}
           {s.activeSteps.length > 0 && (
-            <p className="composition-order-hint">
-              ‘끌기’ 손잡이로 순서 변경 · 위·아래 버튼도 가능
-              <span className="composition-keyboard-hint">
-                키보드: 방향키 한 칸 · Home/End 처음·끝 · Esc 드래그 취소
-              </span>
-            </p>
+            <div className="pf-seq-view-bar">
+              <p className="composition-order-hint" style={{ margin: 0 }}>
+                ‘끌기’ 손잡이로 순서 변경 · 위·아래 버튼도 가능
+                <span className="composition-keyboard-hint">
+                  키보드: 방향키 한 칸 · Home/End 처음·끝 · Esc 드래그 취소
+                </span>
+              </p>
+              <div
+                className="pf-seq-view-switcher"
+                role="group"
+                aria-label="시퀀스 편집 보기 방식"
+                data-testid="sequence-view-mode-switcher"
+              >
+                {(
+                  [
+                    { id: 'split' as const, label: '원스크린 좌우 분할' },
+                    { id: 'list' as const, label: '단계별 리스트' },
+                    { id: 'columns' as const, label: '3구간 보드' },
+                    { id: 'timeline' as const, label: '스프링 타임라인' },
+                  ] as const
+                ).map((modeItem) => (
+                  <button
+                    key={modeItem.id}
+                    type="button"
+                    className="pf-seq-view-btn"
+                    aria-pressed={sequenceViewMode === modeItem.id}
+                    onClick={() => setSequenceViewMode(modeItem.id)}
+                  >
+                    {modeItem.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
-          <div className="flow-sections">
+          {s.activeSteps.length > 0 && sequenceViewMode === 'timeline' && (
+            <div
+              className="pf-spring-ribbon-board"
+              data-testid="spring-timeline-ribbon"
+              role="region"
+              aria-label="타임라인 및 스프링 흐름 보드"
+            >
+              <span className="pf-step-kicker-badge">타임라인 & 스프링 흐름 뷰</span>
+              <p style={{ margin: '0 0 8px', fontSize: '0.84rem', color: '#56685f' }}>
+                가로 블록 너비는 소요 시간에 비례하며, 색상으로 스프링 장력 전환 지점을 한눈에
+                확인합니다.
+              </p>
+              <div className="pf-spring-ribbon-track">
+                {s.activeSteps.map((st, idx) => {
+                  const exItem = !isRestStep(st) ? exerciseMap.get(st.exerciseId) : undefined;
+                  const spRaw = (st.customSpringOverride || exItem?.springs || '').toLowerCase();
+                  const tone =
+                    isRestStep(st) || !spRaw
+                      ? 'is-sage'
+                      : /red|빨|2r|1r/.test(spRaw)
+                        ? 'is-red'
+                        : /blue|파|1b|2b/.test(spRaw)
+                          ? 'is-blue'
+                          : 'is-yellow';
+                  const minVal = Math.max(1, Number(st.durationMin.toFixed(1)));
+                  return (
+                    <button
+                      key={st.stepId}
+                      type="button"
+                      className={`pf-spring-ribbon-block ${tone}`}
+                      style={{ width: `${Math.max(132, Math.round(minVal * 26))}px` }}
+                      onClick={(event) => {
+                        if (!isRestStep(st)) openInspector(st, event.currentTarget);
+                      }}
+                    >
+                      <small style={{ fontSize: '0.74rem', opacity: 0.8 }}>
+                        {String(idx + 1).padStart(2, '0')} · {minVal}분
+                      </small>
+                      <strong style={{ fontSize: '0.88rem', lineHeight: 1.3 }}>
+                        {isRestStep(st) ? '중간 휴식' : (exItem?.nameKo ?? '동작')}
+                      </strong>
+                      {!isRestStep(st) && (st.customSpringOverride || exItem?.springs) && (
+                        <SpringVisualPills
+                          springs={st.customSpringOverride || exItem?.springs}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          <div
+            className={`flow-sections ${
+              sequenceViewMode === 'columns' ? 'is-columns-view' : ''
+            }`.trim()}
+          >
             {sectionRuns.map(({ section, entries }, runIndex) => {
               return (
                 <PfSequenceBlock

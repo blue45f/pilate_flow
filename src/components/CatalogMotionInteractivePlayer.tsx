@@ -13,16 +13,84 @@ export function CatalogMotionThumbnail({
   asset,
   className = '',
 }: CatalogMotionThumbnailProps): React.JSX.Element {
+  const [hoverProgress, setHoverProgress] = useState<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+
+  const stopHoverLoop = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    startTimeRef.current = null;
+    setHoverProgress(null);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, []);
+
+  const handlePointerEnter = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (event.pointerType && event.pointerType !== 'mouse') return;
+      if (
+        typeof window === 'undefined' ||
+        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      ) {
+        return;
+      }
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      startTimeRef.current = null;
+
+      const cycleMs = 4200;
+      const step = (now: number) => {
+        if (startTimeRef.current === null) {
+          startTimeRef.current = now;
+        }
+        const elapsed = Math.max(0, now - startTimeRef.current);
+        const nextP = (elapsed % cycleMs) / cycleMs;
+        setHoverProgress(nextP);
+        rafRef.current = requestAnimationFrame(step);
+      };
+      rafRef.current = requestAnimationFrame(step);
+    },
+    [],
+  );
+
+  const sampledHover = useMemo(
+    () => (hoverProgress !== null ? asset.samplePose(hoverProgress) : null),
+    [asset, hoverProgress],
+  );
+
+  const effectiveAsset: CatalogMovementVisualAsset = useMemo(() => {
+    if (!sampledHover) return asset.visualAsset;
+    return {
+      ...asset.visualAsset,
+      phases: {
+        ...asset.visualAsset.phases,
+        [sampledHover.visualPhaseId]: sampledHover.interpolatedPhaseSpec,
+      },
+    };
+  }, [asset.visualAsset, sampledHover]);
+
   return (
     <div
-      className={`motion-pattern-thumbnail catalog-motion-thumbnail ${className}`.trim()}
+      className={`motion-pattern-thumbnail catalog-motion-thumbnail ${
+        sampledHover ? 'is-hover-playing' : ''
+      } ${className}`.trim()}
       data-motion-variant={asset.variantId}
       data-motion-family="catalog-kinematic"
       data-exercise-id={asset.exerciseId}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={stopHoverLoop}
     >
       <MovementPhaseDiagramSvg
-        asset={asset.visualAsset}
-        phase="middle"
+        asset={effectiveAsset}
+        phase={sampledHover ? sampledHover.visualPhaseId : 'middle'}
         compact
         showGhostStartPose
         label={`${asset.titleKo} · 정점 단계 도해`}
@@ -37,6 +105,8 @@ export interface CatalogMotionInteractivePlayerProps {
   className?: string;
 }
 
+type CatalogRepeatMode = 1 | 2 | 3 | 'loop';
+
 export function CatalogMotionInteractivePlayer({
   asset,
   active = true,
@@ -46,11 +116,25 @@ export function CatalogMotionInteractivePlayer({
   const wrapperRef = useRef<HTMLElement>(null);
   const frameRef = useRef<number | null>(null);
   const lastTimestampRef = useRef<number | null>(null);
-  const clockRef = useRef({ progress: 0, playing: false, speed: 1 });
+  const clockRef = useRef<{
+    progress: number;
+    playing: boolean;
+    speed: number;
+    repeat: CatalogRepeatMode;
+    cycleIndex: number;
+  }>({
+    progress: 0,
+    playing: false,
+    speed: 1,
+    repeat: 1,
+    cycleIndex: 1,
+  });
 
   const [progress, setProgress] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<number>(1);
+  const [repeat, setRepeat] = useState<CatalogRepeatMode>(1);
+  const [cycleIndex, setCycleIndex] = useState<number>(1);
   const [side, setSide] = useState<'left' | 'right'>('right');
   const [mirrored, setMirrored] = useState(false);
   const [staticOnly, setStaticOnly] = useState(false);
@@ -81,6 +165,8 @@ export function CatalogMotionInteractivePlayer({
       const clamped = Math.max(0, Math.min(1, Number(nextValue.toFixed(4))));
       pause();
       clockRef.current.progress = clamped;
+      clockRef.current.cycleIndex = 1;
+      setCycleIndex(1);
       setProgress(clamped);
     },
     [pause],
@@ -129,6 +215,8 @@ export function CatalogMotionInteractivePlayer({
     if (!active || stillMode || document.hidden) return;
     if (clockRef.current.progress >= 1) {
       clockRef.current.progress = 0;
+      clockRef.current.cycleIndex = 1;
+      setCycleIndex(1);
       setProgress(0);
     }
     clockRef.current.playing = true;
@@ -143,15 +231,30 @@ export function CatalogMotionInteractivePlayer({
       }
       if (lastTimestampRef.current !== null) {
         const dt = Math.max(0, now - lastTimestampRef.current);
-        const next = Math.min(
-          1,
-          clockRef.current.progress + (dt / asset.durationMs) * clockRef.current.speed,
-        );
-        clockRef.current.progress = next;
-        setProgress(next);
-        if (next >= 1) {
-          pause();
-          return;
+        const rawNext =
+          clockRef.current.progress + (dt / asset.durationMs) * clockRef.current.speed;
+        const currentRepeat = clockRef.current.repeat;
+
+        if (rawNext >= 1) {
+          if (currentRepeat === 'loop') {
+            const wrapped = rawNext % 1;
+            clockRef.current.progress = wrapped;
+            setProgress(wrapped);
+          } else if (clockRef.current.cycleIndex < currentRepeat) {
+            const wrapped = rawNext % 1;
+            clockRef.current.cycleIndex += 1;
+            clockRef.current.progress = wrapped;
+            setCycleIndex(clockRef.current.cycleIndex);
+            setProgress(wrapped);
+          } else {
+            clockRef.current.progress = 1;
+            setProgress(1);
+            pause();
+            return;
+          }
+        } else {
+          clockRef.current.progress = rawNext;
+          setProgress(rawNext);
         }
       }
       lastTimestampRef.current = now;
@@ -177,6 +280,14 @@ export function CatalogMotionInteractivePlayer({
   const prevPhase = asset.phases[phaseIndex - 1];
   const nextPhase = asset.phases[phaseIndex + 1];
 
+  const playButtonLabel = playing
+    ? '일시정지'
+    : repeat === 'loop'
+      ? '연속 반복 재생'
+      : repeat > 1
+        ? `${repeat}회 반복 재생`
+        : '한 주기 재생';
+
   return (
     <section
       ref={wrapperRef}
@@ -194,7 +305,7 @@ export function CatalogMotionInteractivePlayer({
     >
       <header className="mpp-heading">
         <div>
-          <p className="mpp-eyebrow">기구학 5단계 연속·3단계 도해 · 출처 대조 확인</p>
+          <p className="mpp-eyebrow">STUDIO KINEMATIC 5-PHASE · 기구학 연속 도해</p>
           <h3 id={`${id}-title`}>{asset.titleKo}</h3>
         </div>
         <span className="mpp-status">출처 대조 완료 · 전문가 검수 전</span>
@@ -229,7 +340,7 @@ export function CatalogMotionInteractivePlayer({
           onClick={togglePlay}
         >
           {playing ? <Pause size={17} aria-hidden="true" /> : <Play size={17} aria-hidden="true" />}
-          {playing ? '일시정지' : '한 주기 재생'}
+          {playButtonLabel}
         </button>
         <button
           type="button"
@@ -239,6 +350,28 @@ export function CatalogMotionInteractivePlayer({
         >
           <RotateCcw size={16} aria-hidden="true" />
         </button>
+        <label>
+          반복
+          <select
+            aria-label="관련 패턴 도해 반복"
+            value={String(repeat)}
+            onChange={(event) => {
+              const raw = event.target.value;
+              const nextRepeat: CatalogRepeatMode =
+                raw === 'loop' ? 'loop' : raw === '2' ? 2 : raw === '3' ? 3 : 1;
+              clockRef.current.repeat = nextRepeat;
+              clockRef.current.cycleIndex = 1;
+              setRepeat(nextRepeat);
+              setCycleIndex(1);
+              seek(0);
+            }}
+          >
+            <option value="1">1회</option>
+            <option value="2">2회</option>
+            <option value="3">3회</option>
+            <option value="loop">연속</option>
+          </select>
+        </label>
         <label>
           속도
           <select
@@ -356,9 +489,15 @@ export function CatalogMotionInteractivePlayer({
           : staticOnly
             ? '정지 화면 모드 · 단계나 위치를 선택하세요.'
             : playing
-              ? '도해 한 주기를 재생합니다.'
+              ? repeat === 'loop'
+                ? '도해를 연속 반복 재생합니다.'
+                : repeat > 1
+                  ? `도해 반복 재생 중 (${cycleIndex} / ${repeat}회)`
+                  : '도해 한 주기를 재생합니다.'
               : progress >= 1
-                ? '한 주기 끝 · 일시정지'
+                ? repeat !== 'loop' && repeat > 1
+                  ? `반복 재생 끝 (${repeat}회) · 일시정지`
+                  : '한 주기 끝 · 일시정지'
                 : '일시정지 · 자동 재생 없음'}
       </p>
 
@@ -382,15 +521,17 @@ export function CatalogMotionInteractivePlayer({
         ).map((stage) => (
           <div
             key={stage.phaseId}
+            className="mpp-still-stage-card"
             style={{
               padding: '8px',
-              borderRadius: '8px',
+              borderRadius: '10px',
               border: '1px solid var(--pf-color-border-default, #D5DDD0)',
               backgroundColor: 'var(--pf-color-bg-surface, #FFFEF9)',
             }}
           >
             <button
               type="button"
+              className="mpp-still-stage-btn"
               style={{ minHeight: '44px', width: '100%', marginBottom: '6px' }}
               onClick={() => seek(stage.sample)}
             >
