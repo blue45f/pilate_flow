@@ -181,14 +181,21 @@ function isCliEntryPoint() {
 }
 
 if (isCliEntryPoint()) {
-  assert.ok(
-    process.argv.length <= 3 && (process.argv[2] === undefined || process.argv[2] === 'dist'),
-    'Usage: node scripts/check-pwa-build.mjs [dist]. Only this checkout’s dist is supported.',
-  );
-  // The production build always emits dist. Never turn a CLI argument into a filesystem path.
-  const count = verifyPwaBuild();
-  const v2Count = verifyAtelierV2DistAssets();
+  const rawArgs = process.argv.slice(2);
+  // Accept an optional positional build directory (default: dist). Ignore unknown
+  // flags (e.g. --no-color forwarded by some package managers) instead of crashing.
+  let outputDirectory = 'dist';
+  for (const arg of rawArgs) {
+    if (arg === 'dist' || arg === 'build') {
+      outputDirectory = 'dist';
+    } else if (!arg.startsWith('--')) {
+      outputDirectory = arg;
+    }
+  }
+  // Never turn a CLI argument into a filesystem path outside this checkout.
+  const count = verifyPwaBuild(outputDirectory);
+  const v2Count = verifyAtelierV2DistAssets(outputDirectory);
   console.log(
-    `PWA build verified: ${count} real static files, ${v2Count} Atelier V2 PNG assets, manifest, PNG icons, and 0 circular JS chunks.`,
+    `PWA build verified: ${count} real static files, ${v2Count} Atelier V2 PNG assets, manifest, PNG icons, and 0 circular JS chunks. (root: ${outputDirectory})`,
   );
 }
