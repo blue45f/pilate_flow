@@ -17,6 +17,9 @@ import type {
   SavedSequence,
 } from '../types/pilates';
 import { formatSecondsToMMSS, getStepTiming, isRestStep } from '../utils/sequenceEngine';
+import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
+import { SpringVisualPills } from './SpringVisualPills';
+import { VisualSequenceFilmstrip } from './VisualFlowComponents';
 import '../styles/ai-copilot.css';
 
 interface AiSequenceCoPilotPanelProps {
@@ -314,6 +317,12 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
             </p>
           )}
 
+          <VisualSequenceFilmstrip
+            steps={result.steps}
+            exercises={store.exercises}
+            compact
+          />
+
           <ol className="ai-result-step-list">
             {result.steps.map((step, idx) => {
               if (isRestStep(step)) {
@@ -335,17 +344,26 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
               const timing = getStepTiming(step, ex);
               const rationale = result.rationales.find((r) => r.exerciseId === ex.id);
               const blockMeta = CANONICAL_BLOCKS.find((b) => b.category === ex.blockCategory);
+              const motion3d = resolveStudio3DMotionForExercise(ex);
               return (
                 <li key={step.stepId} className="ai-result-step">
                   <span className="ai-step-Order">{String(idx + 1).padStart(2, '0')}</span>
+                  <img
+                    src={motion3d.peakImg}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    className="pf-workbench-3d-mini-thumb"
+                  />
                   <div className="ai-step-body">
                     <div className="ai-step-topline">
                       <span className="ai-step-block-tag">
                         {blockMeta?.nameKo ?? ex.blockCategory}
                       </span>
                       <span className="ai-step-equip-tag">
-                        {APPARATUS_LABELS[ex.apparatus].ko} · {ex.springs}
+                        {APPARATUS_LABELS[ex.apparatus].ko}
                       </span>
+                      {ex.springs && <SpringVisualPills springs={ex.springs} />}
                       <strong>{ex.nameKo}</strong>
                     </div>
                     <p className="ai-step-reason">
@@ -360,7 +378,7 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
                         className="text-button ai-step-detail-btn"
                         onClick={() => onOpenExerciseDetail(ex)}
                       >
-                        영상·상세
+                        3D·상세
                       </button>
                     )}
                   </div>

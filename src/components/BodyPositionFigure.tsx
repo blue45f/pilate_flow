@@ -74,7 +74,7 @@ export function BodyPositionFigure({
       fill="none"
     >
       <title id={id}>
-        {guide.label}: {guide.orientation}. 자세 방향 예시이며 실제 동작 시범이 아닙니다.
+        {`${guide.label}: ${guide.orientation}. 자세 방향 예시이며 실제 동작 시범이 아닙니다.`}
       </title>
       <path d="M17 95 H163" stroke="currentColor" strokeWidth="2" opacity=".2" />
       <g stroke="currentColor" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round">

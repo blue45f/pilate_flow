@@ -11,6 +11,7 @@ import {
   Library,
   Menu,
   Play,
+  Search,
   Settings2,
   Sparkles,
   Ticket,
@@ -27,11 +28,10 @@ import { MovementIdeaSheet } from './components/MovementIdeaSheet';
 import { InventoryPanel } from './components/InventoryPanel';
 import { DeferredPanelBoundary } from './components/DeferredPanelBoundary';
 import { InstructorStudyBoundary } from './components/InstructorStudyBoundary';
-import { StudioJourneyBar } from './components/StudioJourneyBar';
 import { MemberBookingView } from './components/MemberBookingView';
 import { SequenceQrImportDialog } from './components/SequenceQrShareDialog';
-import { PageIntentBanner } from './components/PageIntentBanner';
 import { MobileSubPageBar } from './components/MobileSubPageBar';
+import { StudioCommandPalette } from './components/StudioCommandPalette';
 import {
   type DecodedSharedSequence,
   PF_SEQUENCE_SHARE_HASH_PREFIX,
@@ -183,6 +183,17 @@ export function App() {
   const [clipperOpen, setClipperOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
   const [designSystemOpen, setDesignSystemOpen] = useState(() => {
     if (!(import.meta.env.DEV || import.meta.env.MODE === 'test')) return false;
     if (typeof window === 'undefined') return false;
@@ -482,64 +493,85 @@ export function App() {
               onClick={() => changeTab(canStartLiveStage ? 'stage' : 'workbench')}
             >
               <Play size={17} aria-hidden="true" />
-              <span>수업 진행</span>
+              <span>라이브 수업 진행</span>
               <small>{canStartLiveStage ? `${nonRestStepCount}개 준비됨` : '동작 담기'}</small>
             </button>
-            <section className="v2-sidebar-upcoming" aria-label="다가오는 수업">
-              <h2>다가오는 수업</h2>
-              {upcoming.length ? (
-                upcoming.map((item) => (
-                  <button
-                    key={item.id}
-                    className="v2-upcoming-link"
-                    onClick={() => changeTab('schedule')}
-                  >
-                    <strong>{formatScheduleTime(item.startTime)}</strong>
-                    <span>
-                      {item.title}
-                      <small>
-                        {state.instructorSchedule.locations.find(
-                          (location) => location.id === item.locationId,
-                        )?.alias || '장소 확인 필요'}{' '}
-                        · {item.date === today ? '오늘' : item.date.slice(5).replace('-', '/')}
-                      </small>
-                    </span>
+            <details className="pf-sidebar-more-drawer">
+              <summary>다가오는 수업 · 보조 도구</summary>
+              <div className="pf-sidebar-more-drawer__body">
+                <section className="v2-sidebar-upcoming" aria-label="다가오는 수업">
+                  <h2>다가오는 수업</h2>
+                  {upcoming.length ? (
+                    upcoming.map((item) => (
+                      <button
+                        key={item.id}
+                        className="v2-upcoming-link"
+                        onClick={() => changeTab('schedule')}
+                      >
+                        <strong>{formatScheduleTime(item.startTime)}</strong>
+                        <span>
+                          {item.title}
+                          <small>
+                            {state.instructorSchedule.locations.find(
+                              (location) => location.id === item.locationId,
+                            )?.alias || '장소 확인 필요'}{' '}
+                            · {item.date === today ? '오늘' : item.date.slice(5).replace('-', '/')}
+                          </small>
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <p>등록된 가까운 수업이 없습니다.</p>
+                  )}
+                  <button className="text-button" onClick={() => changeTab('schedule')}>
+                    일정 전체 보기 <CalendarRange size={15} />
                   </button>
-                ))
-              ) : (
-                <p>등록된 가까운 수업이 없습니다.</p>
-              )}
-              <button className="text-button" onClick={() => changeTab('schedule')}>
-                일정 전체 보기 <CalendarRange size={15} />
-              </button>
-            </section>
+                </section>
+                <button
+                  type="button"
+                  className="sidebar-study-link"
+                  aria-label="강사 연습실과 사용법"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setStudyOpen({ mode: 'guide' });
+                  }}
+                >
+                  <BookOpen size={19} aria-hidden="true" /> 사용법·연습실
+                </button>
+                <button
+                  type="button"
+                  className="sidebar-study-link"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setPortalRole('member');
+                  }}
+                >
+                  <CalendarDays size={18} aria-hidden="true" /> 회원 예약 화면 보기
+                </button>
+                <button className="pwa-sidebar-button" type="button" onClick={() => setInstallOpen(true)}>
+                  <ArrowDownToLine size={18} aria-hidden="true" /> 앱 설치
+                </button>
+              </div>
+            </details>
+          </>
+        )}
+        {portalRole === 'member' && (
+          <>
             <button
               type="button"
               className="sidebar-study-link"
-              aria-label="강사 연습실과 사용법"
               onClick={() => {
                 setMenuOpen(false);
-                setStudyOpen({ mode: 'guide' });
+                setPortalRole('instructor');
               }}
             >
-              <BookOpen size={19} aria-hidden="true" /> 사용법·연습실
+              <CalendarDays size={18} aria-hidden="true" /> 강사 작업실로 전환
+            </button>
+            <button className="pwa-sidebar-button" type="button" onClick={() => setInstallOpen(true)}>
+              <ArrowDownToLine size={18} aria-hidden="true" /> 앱 설치
             </button>
           </>
         )}
-        <button
-          type="button"
-          className="sidebar-study-link"
-          onClick={() => {
-            setMenuOpen(false);
-            setPortalRole((prev) => (prev === 'member' ? 'instructor' : 'member'));
-          }}
-        >
-          <CalendarDays size={18} aria-hidden="true" />{' '}
-          {portalRole === 'member' ? '강사 작업실로 전환' : '회원 예약 화면 보기'}
-        </button>
-        <button className="pwa-sidebar-button" type="button" onClick={() => setInstallOpen(true)}>
-          <ArrowDownToLine size={18} aria-hidden="true" /> 앱 설치
-        </button>
         <button className="workspace-button" onClick={() => setSettingsOpen(true)}>
           <span className="studio-avatar">F</span>
           <span>
@@ -565,6 +597,9 @@ export function App() {
             </button>
             <span className="vnext-wordmark">
               Flow Atelier<small>YOUR TEACHING STUDIO</small>
+            </span>
+            <span className="pf-one-decision-pill" aria-hidden="true">
+              1화면 1결정
             </span>
           </div>
           <div className="breadcrumb">
@@ -605,6 +640,19 @@ export function App() {
               <i />
               개인 작업 공간
             </span>
+            {state.activeTab !== 'stage' && (
+              <button
+                type="button"
+                className="pf-topbar-cmdk-btn"
+                data-testid="topbar-command-palette-btn"
+                aria-label="빠른 이동 및 동작 검색 열기"
+                onClick={() => setCommandPaletteOpen(true)}
+              >
+                <Search size={15} aria-hidden="true" />
+                <span>빠른 검색</span>
+                <kbd aria-hidden="true">⌘K</kbd>
+              </button>
+            )}
             {portalRole === 'instructor' && state.activeTab !== 'stage' && (
               <button
                 type="button"
@@ -641,14 +689,6 @@ export function App() {
             />
           ) : (
             <>
-              {state.activeTab === 'atlas' && (
-                <PageIntentBanner
-                  stepBadge="동작 탐색"
-                  title="수업에 필요한 동작을 찾아보세요"
-                  purpose="기구·부위로 좁혀 보고, 동작을 선택해 원자료와 주의사항을 확인한 뒤 수업안에 담으세요."
-                  singleActionHint="동작 선택 → 세부 안내 확인"
-                />
-              )}
               {(state.activeTab === 'binder' || state.activeTab === 'history') && (
                 <MobileSubPageBar
                   ariaLabel="저장한 수업과 진행 기록"
@@ -658,17 +698,6 @@ export function App() {
                     { id: 'history', label: '수업 기록', badge: state.historyLogs.length },
                   ]}
                   onSelect={changeTab}
-                />
-              )}
-              {state.activeTab !== 'stage' && state.activeTab !== 'schedule' && (
-                <StudioJourneyBar
-                  activeTab={state.activeTab}
-                  exerciseCount={state.exercises.length}
-                  stepCount={nonRestStepCount}
-                  targetMinutes={state.activeTargetMinutes}
-                  historyCount={state.historyLogs.length}
-                  canStartStage={canStartLiveStage}
-                  onSelectStep={changeTab}
                 />
               )}
               {state.activeTab === 'workbench' && (
@@ -1104,6 +1133,24 @@ export function App() {
           </Suspense>
         </LightDismissDialog>
       )}
+      <StudioCommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onNavigateTab={changeTab}
+        onSwitchPortalRole={(role) => {
+          if (role === 'member') focusMemberSection('schedule');
+          else setPortalRole('instructor');
+        }}
+        onInspectExercise3D={(exercise) => {
+          if (isMovementIdeaExercise(exercise)) {
+            setIdeaSheetState({ open: true, exercise });
+            return;
+          }
+          setPreview(exercise);
+        }}
+        onOpenNewIdea={() => setIdeaSheetState({ open: true, exercise: null })}
+        canStartLiveStage={canStartLiveStage}
+      />
       {incomingSharedSequence && (
         <SequenceQrImportDialog
           sharedSequence={incomingSharedSequence}

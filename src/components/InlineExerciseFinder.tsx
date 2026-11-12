@@ -508,7 +508,10 @@ export function InlineExerciseFinder({
         </div>
         <span>{exercises.length}개 노트</span>
       </div>
-      <EquipmentDiscoveryScope />
+      <details className="pf-detail-progressive-drawer" style={{ marginBottom: '8px' }}>
+        <summary><span>보유 장비 범위 필터 설정 ({ownedEquipment.length}종)</span></summary>
+        <EquipmentDiscoveryScope />
+      </details>
       {classEquipment.length > 0 && (
         <section className="ief-class-context" aria-label="이번 수업 기구">
           <p>
@@ -928,7 +931,7 @@ export function InlineExerciseFinder({
                 aria-label={`${exercise.nameKo} 동작 노트`}
               >
                 <button
-                  className={`ief-card-image ief-art-${exercise.apparatus}`}
+                  className={`ief-card-image ief-art-${exercise.apparatus} pf-p03-3d-media`}
                   type="button"
                   aria-label={`${exercise.nameKo} 상세 보기`}
                   onClick={() => openExerciseDetail(exercise)}
@@ -941,7 +944,18 @@ export function InlineExerciseFinder({
                     className="ief-studio3d-thumb"
                     data-testid="ief-card-3d-thumb"
                   />
-                  <span className="ief-motion-caption" aria-hidden="true">
+                  <span className="pf-b05-card-overlay-top" aria-hidden="true">
+                    <span className="pf-b05-pill is-dark">{equipmentLabel || '3D 기구'}</span>
+                    {exercise.springs && (
+                      <span className="pf-b05-pill is-light">{exercise.springs}</span>
+                    )}
+                  </span>
+                  <span className="pf-b05-card-overlay-bottom" aria-hidden="true">
+                    <span className="pf-b05-pill is-coral">
+                      ● {exercise.targetMuscles[0] || '코어·정렬'}
+                    </span>
+                  </span>
+                  <span className="ief-motion-caption sr-only" aria-hidden="true">
                     {firstReference ? '3D 스튜디오 · 패턴 참고' : '3D 스튜디오 · 기구 참조'}
                   </span>
                 </button>

@@ -44,7 +44,7 @@ function AnatomyMap({ regions, label }: { regions: AnatomyRegion[]; label: strin
       aria-labelledby={`${id}-title ${id}-desc`}
       focusable="false"
     >
-      <title id={`${id}-title`}>{label} 부위 지도</title>
+      <title id={`${id}-title`}>{`${label} 부위 지도`}</title>
       <desc id={`${id}-desc`}>
         {regions.length
           ? regions

@@ -7,6 +7,9 @@ import './styles/design-tokens.css';
 import './styles/responsive-studio.css';
 import { App } from './App';
 import './styles/atelier-luxury-v2.css';
+import './styles/mobile-first-atelier-v3.css';
+import './styles/atelier-clean-declutter-v5.css';
+import './styles/mobile-subpages-user-first-v6.css';
 import { bootstrapCloudSession } from './lib/cloudSync';
 
 import { registerPwaServiceWorker, startPwa } from './lib/pwa';

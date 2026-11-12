@@ -1,5 +1,5 @@
 import { EquipmentChoice } from './EquipmentChoice';
-import { VisualSequenceFilmstrip } from './VisualFlowComponents';
+import { VisualApparatusPhotoStrip, VisualSequenceFilmstrip } from './VisualFlowComponents';
 import { buildSequenceSimulation } from '../utils/sequenceSimulation';
 import {
   Suspense,
@@ -83,8 +83,6 @@ import {
 import { getSequenceStepClassSection } from '../utils/sequenceMotionBinding';
 import { LightDismissDialog } from './LightDismissDialog';
 import { MovementIdeaSheet } from './MovementIdeaSheet';
-import { getMotionPatternReferences } from '../data/motionPatternReferences';
-import { MotionPatternThumbnail } from './MotionPatternPreview';
 import { GroupPrepPanel } from './GroupPrepPanel';
 import { RestBudgetControl, RestInsertControl } from './RestPlanningControls';
 import { RestStepCard } from './RestStepCard';
@@ -98,6 +96,8 @@ import { FirstClassTutorialCandidate } from '../features/firstClassTutorialCandi
 import { ClassInsightsDialog } from './ClassInsightsDialog';
 import { AiSequenceCoPilotPanel } from './AiSequenceCoPilotPanel';
 import { SequenceFlowTelemetryStrip } from './SequenceFlowTelemetryStrip';
+import { StudioCircuitPlannerCard } from './StudioCircuitPlannerCard';
+import { buildAdaptiveNextClassDraft } from '../utils/historyAdaptiveBridge';
 import {
   BLANK_DRAFT_STARTER_OPTIONS,
   OFFLINE_BLOCK_PRESETS,
@@ -179,43 +179,41 @@ const sections = [
   { id: 'rest', label: '중간 휴식', english: 'REST' },
 ] as const;
 
-import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
-import { CatalogMotionThumbnail } from './CatalogMotionInteractivePlayer';
+import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
 import {
   getApparatusPrimary3DThumb,
   resolveStudio3DMotionForExercise,
 } from '../utils/studio3dMotionCatalog';
 
-function WorkbenchMovementMark({ exercise }: { exercise: PilatesExercise }) {
-  const pattern = getMotionPatternReferences(exercise.id)[0];
-  const catalogMotion = getCatalogContinuousMotionAsset(exercise);
+function WorkbenchMovementMark({
+  exercise,
+  springsOverride,
+}: {
+  exercise: PilatesExercise;
+  springsOverride?: string;
+}) {
   const studio3d = resolveStudio3DMotionForExercise(exercise);
-  if (pattern) {
-    return (
-      <span className="workbench-movement-mark" title={`${pattern.title} · 기구학 표준 도해`}>
-        <MotionPatternThumbnail reference={pattern} unifiedCatalogAsset={catalogMotion} />
-        <small>기구 도해</small>
-      </span>
-    );
-  }
-  return catalogMotion ? (
+  const effectiveSprings = (springsOverride || exercise.springs || '').trim();
+  const primaryMuscle = exercise.targetMuscles[0] || '코어·정렬';
+  return (
     <span
-      className="workbench-movement-mark"
-      title={`${catalogMotion.titleKo} · 5단계 기구학 도해`}
+      className="workbench-movement-mark pf-b05-card-3d-mark"
+      title={`${studio3d.titleKo} · 3D 스튜디오 모션`}
     >
-      <CatalogMotionThumbnail asset={catalogMotion} />
-      <small>기구 도해</small>
-    </span>
-  ) : (
-    <span className="workbench-movement-mark" title={`${studio3d.titleKo} · 3D 기구 참조`}>
       <img
         src={studio3d.peakImg}
         alt=""
         aria-hidden="true"
-        className="pf-workbench-3d-mini-thumb"
+        className="pf-workbench-3d-mini-thumb pf-b05-card-3d-img"
         loading="lazy"
       />
-      <small>3D 도해</small>
+      <span className="pf-b05-card-overlay-top" aria-hidden="true">
+        <span className="pf-b05-pill is-dark">◐ 궤적+근육</span>
+        {effectiveSprings && <span className="pf-b05-pill is-light">{effectiveSprings}</span>}
+      </span>
+      <span className="pf-b05-card-overlay-bottom" aria-hidden="true">
+        <span className="pf-b05-pill is-coral">● {primaryMuscle}</span>
+      </span>
     </span>
   );
 }
@@ -1698,12 +1696,47 @@ export function SequenceWorkbench({
       )}
       {activeWizardPage === 'home' && (
         <>
-          <div className="pf-step-stage-frame" data-testid="wizard-home-page">
-            <span className="pf-step-kicker-badge">시작 화면 · 복잡한 설정 없음</span>
-            <h2 className="pf-step-stage-title">오늘 어떤 수업을 준비할까요?</h2>
-            <p className="pf-step-stage-lead">
-              자주 쓰는 두 가지 행동만 바로 앞에 두었습니다. 기본값이 준비되어 있어 바로 시작할 수 있어요.
-            </p>
+          <div className="pf-step-stage-frame pf-p01-home-stage" data-testid="wizard-home-page">
+            <div className="pf-p01-signature-hero" data-testid="p01-signature-3d-hero">
+              <div className="pf-p01-signature-hero__media">
+                <img
+                  src={getApparatusPrimary3DThumb(
+                    (selectedEquipment[0] ? getEquipmentFamily(selectedEquipment[0]) : undefined) ??
+                      s.activeApparatus,
+                  )}
+                  alt=""
+                  aria-hidden="true"
+                />
+                <div className="pf-b05-card-overlay-top" aria-hidden="true">
+                  <span className="pf-b05-pill is-dark">오늘의 시그니처</span>
+                  <span className="pf-b05-pill is-light">2R 1B</span>
+                </div>
+                <div className="pf-b05-card-overlay-bottom" aria-hidden="true">
+                  <span className="pf-b05-pill is-coral">● 대퇴사두·코어</span>
+                </div>
+              </div>
+              <div className="pf-p01-signature-hero__body">
+                <div>
+                  <span className="pf-step-kicker-badge">오늘 어떤 수업을 준비할까요?</span>
+                  <h2 className="pf-step-stage-title">
+                    오전 {equipmentLabel(selectedEquipment) || '리포머'} 코어 &amp; 정렬 {criteria.targetMinutes}분
+                  </h2>
+                  <p className="pf-step-stage-lead">
+                    기구·시간만 고르면 3D 동작 카드와 3초 요약으로 바로 수업을 완성합니다.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="pf-step-primary-cta"
+                  onClick={() => {
+                    setPlanningMode('auto');
+                    generate();
+                  }}
+                >
+                  <Sparkles size={17} aria-hidden="true" /> 시그니처 초안 3초 생성하기
+                </button>
+              </div>
+            </div>
             <div className="pf-step-choice-grid">
               <section
                 className="pf-step-choice-card is-primary workbench-welcome"
@@ -1724,8 +1757,8 @@ export function SequenceWorkbench({
                       <ChevronDown size={15} aria-hidden="true" />
                     </button>
                   </div>
-                  <h3 style={{ margin: '8px 0 6px', fontSize: '1.22rem', color: '#1b3129' }}>
-                    동작을 골라 나만의 흐름으로.
+                  <h3 style={{ margin: '8px 0 6px', fontSize: '1.14rem', color: '#173d34' }}>
+                    기구·시간 선택 후 바로 동작 담기
                   </h3>
                   <div
                     className="workbench-quick-duration-bar"
@@ -1748,6 +1781,24 @@ export function SequenceWorkbench({
                       </button>
                     ))}
                   </div>
+                  <VisualApparatusPhotoStrip
+                    activeApparatus={
+                      selectedEquipment.length === 1 && ['reformer', 'cadillac', 'chair', 'barrel', 'mat'].includes(selectedEquipment[0])
+                        ? (selectedEquipment[0] as 'reformer' | 'cadillac' | 'chair' | 'barrel' | 'mat')
+                        : 'all'
+                    }
+                    includeAll={false}
+                    disabledApparatus={(
+                      ['reformer', 'cadillac', 'chair', 'barrel', 'mat'] as const
+                    ).filter((app) => !s.ownedApparatus.includes(app))}
+                    onSelect={(app) => {
+                      if (app === 'all') return;
+                      setCriteria({ ...criteria, availableEquipment: [app] });
+                      if (!s.activeSteps.length) {
+                        s.setActiveSequenceMeta({ apparatus: app });
+                      }
+                    }}
+                  />
                   <div
                     className="pf-step1-chip-row"
                     role="group"
@@ -2527,6 +2578,73 @@ export function SequenceWorkbench({
               }}
             />
           </details>
+          <details
+            className="workbench-automation-tools"
+            data-testid="workbench-circuit-planner-drawer"
+          >
+            <summary>듀엣·그룹 멀티 기구 순환 서킷 설계 열기 (2~4스테이션 자동 편성)</summary>
+            <StudioCircuitPlannerCard
+              onApplied={(msg) => setNotice(msg)}
+            />
+          </details>
+          {s.historyLogs.length > 0 && (() => {
+            const workbenchAdaptive = buildAdaptiveNextClassDraft({
+              logs: s.historyLogs,
+              exercises: s.exercises,
+              ownedEquipment: s.ownedEquipment,
+              targetGroupId: s.activeTargetGroupId || 'all',
+              fallbackTargetMinutes: criteria.targetMinutes || s.activeTargetMinutes || 50,
+            });
+            if (!workbenchAdaptive) return null;
+            return (
+              <details
+                className="workbench-automation-tools"
+                data-testid="workbench-adaptive-history-drawer"
+              >
+                <summary>
+                  지난 수업 피드백 자동 보정 브릿지 열기 · {workbenchAdaptive.signal.headlineKo}
+                </summary>
+                <div className="pf-v70-adaptive-banner is-compact">
+                  <div className="pf-v70-adaptive-main">
+                    <div className="pf-v70-adaptive-badges">
+                      <PfBadge tone="sage">권장 Lv {workbenchAdaptive.signal.recommendedLevel}</PfBadge>
+                      {workbenchAdaptive.signal.cautionLabelsKo.map((lbl) => (
+                        <PfBadge key={lbl} tone="warning">{lbl}</PfBadge>
+                      ))}
+                    </div>
+                    <ul className="pf-v70-adaptive-bullets">
+                      {workbenchAdaptive.signal.rationaleBulletsKo.slice(0, 2).map((line) => (
+                        <li key={line}>{line}</li>
+                      ))}
+                    </ul>
+                    <small className="pf-v70-honest-caption">{workbenchAdaptive.honestDisclaimerKo}</small>
+                  </div>
+                  <div className="pf-v70-adaptive-cta">
+                    <PfButton
+                      variant="primary"
+                      data-testid="workbench-apply-adaptive-btn"
+                      onClick={() => {
+                        const expected = usePilatesStore.getState();
+                        const res = s.applyPresetDraft(
+                          {
+                            steps: workbenchAdaptive.steps,
+                            title: workbenchAdaptive.draftTitle,
+                            subtitle: workbenchAdaptive.draftSubtitle,
+                            targetMinutes: workbenchAdaptive.targetMinutes,
+                          },
+                          'replace',
+                          expected,
+                        );
+                        setNotice(res.message);
+                      }}
+                    >
+                      피드백 보정 초안 적용 <ArrowRight size={15} />
+                    </PfButton>
+                  </div>
+                </div>
+              </details>
+            );
+          })()}
           {planningMode === 'auto' && locked > 0 && (
             <p id="v2-new-draft-scope" className="v2-generation-scope">
               시퀀스 만들기는 전체를 새 초안으로 바꿉니다. 잠근 {locked}개 항목을 유지하려면 아래
@@ -2646,6 +2764,20 @@ export function SequenceWorkbench({
                     <span>바로 진행</span>
                   </PfButton>
                 </div>
+              </div>
+              <div
+                className="pf-b05-balance-summary-pill"
+                data-testid="board05-4module-balance-pill"
+              >
+                <span>
+                  4구간 모듈 밸런스: 준비 {Math.round(phaseSecTotals.warmupSec / 60)}분 · 본운동{' '}
+                  {Math.round(phaseSecTotals.mainSec / 60)}분 · 마무리{' '}
+                  {Math.round(phaseSecTotals.cooldownSec / 60)}분
+                  {restStepCount > 0 ? ` · 휴식 ${Math.round(durations.restSec / 60)}분` : ''}
+                </span>
+                <strong>
+                  총 {formatSecondsToMMSS(total)} / 목표 {s.activeTargetMinutes}분
+                </strong>
               </div>
               <div className="sequence-context">
                 <span className="eyebrow">TODAY’S FLOW</span>
@@ -3323,7 +3455,10 @@ export function SequenceWorkbench({
                               onClick={() => onOpenYouTubePreview(ex)}
                               aria-label={`${ex.nameKo} 자료 보기`}
                             >
-                              <WorkbenchMovementMark exercise={ex} />
+                              <WorkbenchMovementMark
+                                exercise={ex}
+                                springsOverride={step.customSpringOverride}
+                              />
                             </button>
                             <button
                               className="step-title"
@@ -3537,6 +3672,108 @@ export function SequenceWorkbench({
               );
             })}
           </div>
+          )}
+          {isArrangeStage && s.activeSteps.length > 0 && (() => {
+            const fallbackIdx = s.activeSteps.findIndex((st) => !isRestStep(st));
+            const summaryIdx = selectedStepIndex >= 0 ? selectedStepIndex : fallbackIdx;
+            const summaryStep = summaryIdx >= 0 ? s.activeSteps[summaryIdx] : undefined;
+            const summaryEx =
+              summaryStep && !isRestStep(summaryStep)
+                ? exerciseMap.get(summaryStep.exerciseId)
+                : undefined;
+            if (!summaryStep || !summaryEx) return null;
+            const summarySprings = (summaryStep.customSpringOverride || summaryEx.springs || '').trim();
+            return (
+              <section
+                className="pf-b05-3sec-summary-panel"
+                data-testid="board05-3sec-summary-panel"
+                aria-label="선택된 동작 3초 요약 패널"
+              >
+                <div className="pf-b05-3sec-summary-panel__head">
+                  <div>
+                    <span className="pf-studio-kicker-pill">SELECTED MOVEMENT · 3초 요약</span>
+                    <h3>
+                      선택된 동작 3초 요약 패널 — {String(summaryIdx + 1).padStart(2, '0')}{' '}
+                      {summaryEx.nameKo}
+                    </h3>
+                  </div>
+                  <div className="pf-b05-3sec-summary-panel__actions">
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={(event) => openInspector(summaryStep, event.currentTarget)}
+                    >
+                      블록 시간·레이어 편집
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => onOpenYouTubePreview(summaryEx)}
+                    >
+                      3D 모션·원본 상세 열기
+                    </button>
+                  </div>
+                </div>
+                <div className="pf-b05-3sec-summary-panel__grid">
+                  <div className="pf-b05-3sec-summary-panel__left">
+                    <Studio3DMotionHeroCard exercise={summaryEx} compact />
+                  </div>
+                  <div className="pf-b05-3sec-summary-panel__right">
+                    <div className="pf-b05-summary-box">
+                      <span>권장 스프링 · 기구 셋업</span>
+                      <div className="pf-b05-summary-box__val">
+                        {summarySprings ? (
+                          <SpringVisualPills springs={summarySprings} />
+                        ) : (
+                          <strong>맨몸 / 무스프링</strong>
+                        )}
+                        <small>
+                          풋바 {summaryEx.footbar} · 헤드레스트 {summaryEx.headrest}
+                          {summaryEx.box !== 'none' ? ` · ${summaryEx.box}` : ''}
+                        </small>
+                      </div>
+                    </div>
+                    <div className="pf-b05-summary-box">
+                      <span>호흡 &amp; 카운트 템포</span>
+                      <strong>
+                        {summaryEx.breathPattern || '내쉬며 정점 연결 · 마시며 정렬 복귀'} (
+                        {summaryStep.repetitions ?? 10}회 권장)
+                      </strong>
+                    </div>
+                    <div className="pf-b05-summary-box">
+                      <span>핵심 티칭 큐 2줄</span>
+                      <p>
+                        1) {summaryEx.cues[0] || '골반과 흉곽의 중립 정렬을 유지합니다.'}
+                        {summaryEx.cues[1] ? ` / 2) ${summaryEx.cues[1]}` : ''}
+                      </p>
+                    </div>
+                    <div className="pf-b05-summary-box is-caution">
+                      <span>금기 · 주의 보상 패턴</span>
+                      <p>
+                        ⚠{' '}
+                        {summaryEx.precautions ||
+                          '과신전 및 어깨 거상 주의 · 통증 없는 가동 범위 내에서 진행하세요.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            );
+          })()}
+          {isArrangeStage && s.activeSteps.length > 0 && (
+            <div className="pf-p04-mobile-sticky-cta" data-testid="p04-mobile-sticky-live-cta">
+              <button
+                type="button"
+                className="btn-primary pf-p04-live-btn"
+                disabled={!canStartClass}
+                onClick={startClass}
+              >
+                <Play size={17} aria-hidden="true" />
+                <span>
+                  이 시퀀스로 라이브 진행 열기 ({exerciseStepCount}동작 · {formatSecondsToMMSS(total)})
+                </span>
+              </button>
+            </div>
           )}
           {isArrangeStage && s.activeSteps.length > 0 && (
             <div className="regenerate-bar">

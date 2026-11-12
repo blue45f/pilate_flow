@@ -39,6 +39,7 @@ import type {
 import { PfAiStatusBadge } from '../design-system';
 import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import { SpringVisualPills } from './SpringVisualPills';
+import { VisualSequenceFilmstrip } from './VisualFlowComponents';
 import '../styles/free-ai-assistant.css';
 import './FreeAiAssistantPanel.css';
 
@@ -1433,6 +1434,33 @@ export function FreeAiAssistantPanel({
 
       {activeTab === 'class-draft' && (
         <div role="tabpanel" aria-label="수업 초안 만들기 패널" className="free-ai-result-card">
+          <div className="pf-ai-quick-recipes" data-testid="free-ai-quick-recipe-cards" role="group" aria-label="원탭 3D 수업 초안 레시피">
+            {([
+              { id: 'r1', title: '리포머 코어·골반 정렬', min: 50, app: 'reformer' as const, area: 'core' as const, lv: '1.5' as const, img: '/motion-studio3d/footwork-peak.png', sp: '2R 1B' },
+              { id: 'r2', title: '흉추 신전·어깨 열기', min: 50, app: 'cadillac' as const, area: 'posture-upper' as const, lv: '1.5' as const, img: '/motion-studio3d/cadillac-cat-start.png', sp: '2Y' },
+              { id: 'r3', title: '운다 체어 하지 밸런스', min: 50, app: 'chair' as const, area: 'glute-lower' as const, lv: '1.5' as const, img: '/motion-studio3d/chair-goingup-peak.png', sp: '1R 1B' },
+              { id: 'r4', title: '매트 호흡·기초 분절', min: 30, app: 'mat' as const, area: 'mobility-rehab' as const, lv: '1.0' as const, img: '/motion-studio3d/mat-hundred-peak.png', sp: '맨몸' },
+            ]).map((recipe) => (
+              <button
+                key={recipe.id}
+                type="button"
+                className="pf-ai-quick-recipe-card"
+                onClick={() => {
+                  setDraftMinutes(recipe.min);
+                  setDraftTheme(recipe.title);
+                  setDraftApparatus(recipe.app);
+                  setDraftAreas([recipe.area]);
+                  setDraftLevel(recipe.lv);
+                }}
+              >
+                <img src={recipe.img} alt="" aria-hidden="true" loading="lazy" />
+                <div>
+                  <strong>{recipe.title}</strong>
+                  <small>{recipe.min}분 · Lv.{recipe.lv} · {recipe.sp}</small>
+                </div>
+              </button>
+            ))}
+          </div>
           <div className="free-ai-form-grid">
             <div className="free-ai-field">
               <label htmlFor="free-ai-draft-minutes">수업 시간 (분)</label>
@@ -1619,6 +1647,11 @@ export function FreeAiAssistantPanel({
                 />
               </div>
 
+              <VisualSequenceFilmstrip
+                steps={editableStepsToSequenceSteps(classDraftResult.steps)}
+                exercises={exercises}
+                compact
+              />
               {renderStepsEditor(
                 classDraftResult.steps,
                 updateStepInClassDraft,

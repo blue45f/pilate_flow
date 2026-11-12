@@ -1,11 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Flame, Layers, Pause, Play, ShieldAlert, Sparkles, Wind } from 'lucide-react';
+import { Flame, Layers, Orbit, Pause, Play, ShieldAlert, Sparkles, Wind } from 'lucide-react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 import type { PilatesExercise } from '../types/pilates';
 import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import { SpringVisualPills } from './SpringVisualPills';
+import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
 
-export type Studio3DViewMode = 'onion' | 'start' | 'peak' | 'loop';
+export type Studio3DViewMode = 'onion' | 'start' | 'mid' | 'peak' | 'loop' | 'orbit3d';
+
+const LOOP_SEQUENCE = ['start', 'mid', 'peak', 'return'] as const;
+type LoopBeat = (typeof LOOP_SEQUENCE)[number];
 
 function prefersReducedMotionNow(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -26,7 +30,7 @@ export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = ({
   const spec = useMemo(() => resolveStudio3DMotionForExercise(exercise), [exercise]);
   const [reducedMotion, setReducedMotion] = useState<boolean>(prefersReducedMotionNow);
   const [mode, setMode] = useState<Studio3DViewMode>('onion');
-  const [loopTick, setLoopTick] = useState<'start' | 'peak'>('start');
+  const [beatIdx, setBeatIdx] = useState<number>(0);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
@@ -47,14 +51,27 @@ export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = ({
   useEffect(() => {
     if (mode !== 'loop' || reducedMotion) return;
     const id = window.setInterval(() => {
-      setLoopTick((prev) => (prev === 'start' ? 'peak' : 'start'));
-    }, 1250);
+      setBeatIdx((prev) => (prev + 1) % LOOP_SEQUENCE.length);
+    }, 680);
     return () => window.clearInterval(id);
   }, [mode, reducedMotion]);
 
-  const showPeakPrimary =
-    mode === 'onion' || mode === 'peak' || (mode === 'loop' && loopTick === 'peak');
+  const currentLoopBeat: LoopBeat = LOOP_SEQUENCE[beatIdx] ?? 'start';
+  const activePose: 'start' | 'mid' | 'peak' =
+    mode === 'start'
+      ? 'start'
+      : mode === 'mid'
+        ? 'mid'
+        : mode === 'peak' || mode === 'onion' || mode === 'orbit3d'
+          ? 'peak'
+          : currentLoopBeat === 'start'
+            ? 'start'
+            : currentLoopBeat === 'peak'
+              ? 'peak'
+              : 'mid';
+
   const showStartGhost = mode === 'onion';
+  const showMidGhost = mode === 'onion';
   const showHudVectors = mode === 'onion' || mode === 'peak' || mode === 'loop';
 
   const [fx, fy] = spec.trajectoryArc.from;
@@ -65,6 +82,25 @@ export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = ({
   const muscleLabel =
     exercise.targetMuscles.slice(0, 2).join(' · ') || spec.activeMuscleSummaryKo;
   const topCues = exercise.cues.filter((c) => c.trim().length > 0).slice(0, 2);
+
+  const stageStatusLabel =
+    mode === 'start'
+      ? '● 1단계 시작 셋업'
+      : mode === 'mid'
+        ? '◐ 2단계 추진·분절 전환'
+        : mode === 'peak'
+          ? '◆ 3단계 정점 & 주동근'
+          : mode === 'loop'
+            ? `▶ 연속 4박자 (${
+                currentLoopBeat === 'start'
+                  ? '1 시작'
+                  : currentLoopBeat === 'mid'
+                    ? '2 추진'
+                    : currentLoopBeat === 'peak'
+                      ? '3 정점'
+                      : '4 복귀'
+              })`
+            : '◎ 3프레임 궤적 + 정점 근육';
 
   return (
     <section
@@ -97,11 +133,19 @@ export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = ({
           </button>
           <button
             type="button"
+            className={`pf-studio3d-mode-btn ${mode === 'mid' ? 'is-active' : ''}`}
+            aria-pressed={mode === 'mid'}
+            onClick={() => setMode('mid')}
+          >
+            ◐ 추진
+          </button>
+          <button
+            type="button"
             className={`pf-studio3d-mode-btn ${mode === 'onion' ? 'is-active' : ''}`}
             aria-pressed={mode === 'onion'}
             onClick={() => setMode('onion')}
           >
-            ◐ 궤적 겹침
+            ◎ 궤적 겹침
           </button>
           <button
             type="button"
@@ -116,101 +160,215 @@ export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = ({
               type="button"
               className={`pf-studio3d-mode-btn ${mode === 'loop' ? 'is-active' : ''}`}
               aria-pressed={mode === 'loop'}
-              onClick={() => setMode((prev) => (prev === 'loop' ? 'onion' : 'loop'))}
+              onClick={() => {
+                setBeatIdx(0);
+                setMode((prev) => (prev === 'loop' ? 'onion' : 'loop'));
+              }}
             >
-              {mode === 'loop' ? <Pause size={12} aria-hidden="true" /> : <Play size={12} aria-hidden="true" />}
-              <span>{mode === 'loop' ? '정지' : '반복'}</span>
+              {mode === 'loop' ? (
+                <Pause size={12} aria-hidden="true" />
+              ) : (
+                <Play size={12} aria-hidden="true" />
+              )}
+              <span>{mode === 'loop' ? '정지' : '4박자 모션'}</span>
             </button>
           )}
+          <button
+            type="button"
+            className={`pf-studio3d-mode-btn is-orbit3d ${mode === 'orbit3d' ? 'is-active' : ''}`}
+            data-testid="studio-3d-orbit-mode-btn"
+            aria-pressed={mode === 'orbit3d'}
+            onClick={() => setMode((prev) => (prev === 'orbit3d' ? 'onion' : 'orbit3d'))}
+          >
+            <Orbit size={12} aria-hidden="true" />
+            <span>360° 각도</span>
+          </button>
         </div>
       </div>
 
-      <div className="pf-studio3d-stage">
-        <img
-          src={showPeakPrimary ? spec.peakImg : spec.startImg}
-          alt={`${exercise.nameKo} ${showPeakPrimary ? '정점' : '시작'} 3D 스튜디오 가이드`}
-          className="pf-studio3d-stage__base"
-        />
-        {showStartGhost && (
+      {mode === 'orbit3d' ? (
+        <StudioInteractive3DViewport exercise={exercise} compact={compact} />
+      ) : (
+        <div className="pf-studio3d-stage" data-active-pose={activePose}>
           <img
             src={spec.startImg}
-            alt=""
-            aria-hidden="true"
-            className="pf-studio3d-stage__ghost"
+            alt={activePose === 'start' ? `${exercise.nameKo} 시작 3D 스튜디오 가이드` : ''}
+            aria-hidden={activePose === 'start' ? undefined : 'true'}
+            className={`pf-studio3d-stage__layer pf-studio3d-stage__base ${
+              activePose === 'start'
+                ? 'is-primary'
+                : showStartGhost
+                  ? 'is-onion-ghost'
+                  : 'is-hidden-pose'
+            }`}
           />
-        )}
-        {showHudVectors && (
-          <svg
-            viewBox="0 0 100 65.625"
-            preserveAspectRatio="none"
-            className="pf-studio3d-stage__hud"
-            aria-hidden="true"
-          >
-            <defs>
-              <marker
-                id={`pf-3d-arrow-${exercise.id}`}
-                viewBox="0 0 10 10"
-                refX="7"
-                refY="5"
-                markerWidth="5"
-                markerHeight="5"
-                orient="auto"
-              >
-                <path
-                  d="M 1.5 1.5 L 8 5 L 1.5 8.5"
-                  fill="none"
-                  stroke="#C9822B"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </marker>
-            </defs>
-            <path
-              d={`M ${fx} ${fy * 0.65625} Q ${cx} ${cy * 0.65625} ${tx} ${ty * 0.65625}`}
-              fill="none"
-              stroke="#C9822B"
-              strokeWidth="1.15"
-              strokeLinecap="round"
-              markerEnd={`url(#pf-3d-arrow-${exercise.id})`}
-            />
-            <rect
-              x={ax - 1.3}
-              y={ay * 0.65625 - 1.3}
-              width="2.6"
-              height="2.6"
-              rx="0.5"
-              fill="#173D34"
-              stroke="#FFFFFF"
-              strokeWidth="0.55"
-            />
-          </svg>
-        )}
-        <div className="pf-studio3d-stage__chips-top">
-          <span className="pf-studio3d-chip is-dark">
-            {mode === 'start'
-              ? '● 1단계 시작 셋업'
-              : mode === 'peak'
-                ? '◆ 3단계 정점 & 주동근'
-                : mode === 'loop'
-                  ? `▶ 연속 교차 (${loopTick === 'start' ? '시작' : '정점'})`
-                  : '◐ 시작 잔상(28%) + 이동 궤적'}
-          </span>
-          <span className="pf-studio3d-chip is-light">
-            {APPARATUS_LABELS[exercise.apparatus]?.ko ?? exercise.apparatus} ·{' '}
-            {POSITION_LABELS[exercise.bodyPosition]?.ko ?? exercise.bodyPosition}
-          </span>
+          <img
+            src={spec.midImg}
+            alt={activePose === 'mid' ? `${exercise.nameKo} 추진 전환 3D 스튜디오 가이드` : ''}
+            aria-hidden={activePose === 'mid' ? undefined : 'true'}
+            className={`pf-studio3d-stage__layer pf-studio3d-stage__mid ${
+              activePose === 'mid'
+                ? 'is-primary'
+                : showMidGhost
+                  ? 'is-onion-mid-ghost'
+                  : 'is-hidden-pose'
+            }`}
+          />
+          <img
+            src={spec.peakImg}
+            alt={activePose === 'peak' ? `${exercise.nameKo} 정점 3D 스튜디오 가이드` : ''}
+            aria-hidden={activePose === 'peak' ? undefined : 'true'}
+            className={`pf-studio3d-stage__layer pf-studio3d-stage__peak ${
+              activePose === 'peak' ? 'is-primary' : 'is-hidden-pose'
+            }`}
+          />
+          {showHudVectors && (
+            <svg
+              viewBox="0 0 100 65"
+              preserveAspectRatio="none"
+              className="pf-studio3d-stage__hud"
+              aria-hidden="true"
+            >
+              <defs>
+                <marker
+                  id={`pf-3d-arrow-${exercise.id}`}
+                  viewBox="0 0 10 10"
+                  refX="7"
+                  refY="5"
+                  markerWidth="5"
+                  markerHeight="5"
+                  orient="auto"
+                >
+                  <path
+                    d="M 1.5 1.5 L 8 5 L 1.5 8.5"
+                    fill="none"
+                    stroke="#C9822B"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </marker>
+              </defs>
+              <path
+                d={`M ${fx} ${fy * 0.65} Q ${cx} ${cy * 0.65} ${tx} ${ty * 0.65}`}
+                fill="none"
+                stroke="#C9822B"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                className="pf-hud-trajectory-path"
+                markerEnd={`url(#pf-3d-arrow-${exercise.id})`}
+              />
+              <circle
+                cx={tx}
+                cy={ty * 0.65}
+                r="2.0"
+                fill="rgba(217, 107, 79, 0.22)"
+                stroke="#D96B4F"
+                strokeWidth="0.55"
+                className="pf-hud-peak-pulse"
+              />
+              <rect
+                x={ax - 1.25}
+                y={ay * 0.65 - 1.25}
+                width="2.5"
+                height="2.5"
+                rx="0.5"
+                fill="#173D34"
+                stroke="#FFFFFF"
+                strokeWidth="0.55"
+              />
+            </svg>
+          )}
+          <div className="pf-studio3d-stage__chips-top">
+            <span className="pf-studio3d-chip is-dark">{stageStatusLabel}</span>
+            <span className="pf-studio3d-chip is-light">
+              {exercise.springs ? (
+                <SpringVisualPills springs={exercise.springs} />
+              ) : (
+                <>
+                  {APPARATUS_LABELS[exercise.apparatus]?.ko ?? exercise.apparatus} ·{' '}
+                  {POSITION_LABELS[exercise.bodyPosition]?.ko ?? exercise.bodyPosition}
+                </>
+              )}
+            </span>
+          </div>
+          <div className="pf-studio3d-stage__chips-bottom">
+            <span className="pf-studio3d-chip is-muscle">
+              <Flame size={12} aria-hidden="true" /> 활성 타겟: {muscleLabel}
+            </span>
+            <span className="pf-studio3d-chip is-anchor">■ {spec.anchorLabelKo}</span>
+          </div>
         </div>
-        <div className="pf-studio3d-stage__chips-bottom">
-          <span className="pf-studio3d-chip is-muscle">
-            <Flame size={12} aria-hidden="true" /> 활성 타겟: {muscleLabel}
-          </span>
-          <span className="pf-studio3d-chip is-anchor">■ {spec.anchorLabelKo}</span>
-        </div>
-      </div>
+      )}
 
       {!compact && (
         <>
+          <div
+            className="pf-studio3d-frame-strip"
+            data-testid="studio-3d-frame-strip"
+            aria-label="4단계 3D 모션 키프레임 및 360도 각도 스트립"
+          >
+            {[
+              {
+                key: 'start',
+                stepNo: '01',
+                label: '시작 셋업',
+                img: spec.startImg,
+                isActive:
+                  mode === 'start' || (mode === 'loop' && currentLoopBeat === 'start'),
+                onSelect: () => setMode('start'),
+              },
+              {
+                key: 'mid',
+                stepNo: '02',
+                label: '추진 전환',
+                img: spec.midImg,
+                isActive:
+                  mode === 'mid' || (mode === 'loop' && currentLoopBeat === 'mid'),
+                onSelect: () => setMode('mid'),
+              },
+              {
+                key: 'peak',
+                stepNo: '03',
+                label: '정점 수축',
+                img: spec.peakImg,
+                isActive:
+                  mode === 'peak' ||
+                  mode === 'onion' ||
+                  (mode === 'loop' && currentLoopBeat === 'peak'),
+                onSelect: () => setMode('peak'),
+              },
+              {
+                key: 'return',
+                stepNo: '04',
+                label: '원심 복귀',
+                img: spec.midImg,
+                isActive: mode === 'loop' && currentLoopBeat === 'return',
+                onSelect: () => {
+                  if (!reducedMotion) {
+                    setBeatIdx(3);
+                    setMode('loop');
+                  } else {
+                    setMode('mid');
+                  }
+                },
+              },
+            ].map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`pf-studio3d-frame-thumb ${item.isActive ? 'is-active' : ''}`}
+                onClick={item.onSelect}
+              >
+                <span className="pf-studio3d-frame-thumb__art">
+                  <img src={item.img} alt="" aria-hidden="true" loading="lazy" />
+                  <span className="pf-studio3d-frame-thumb__num">{item.stepNo}</span>
+                </span>
+                <span className="pf-studio3d-frame-thumb__label">{item.label}</span>
+              </button>
+            ))}
+          </div>
+
           <div
             className="pf-detail-essential-3-strip"
             data-testid="detail-essential-3-strip"

@@ -51,6 +51,8 @@ import { isRestStep } from "../utils/sequenceEngine";
 import { buildSequenceSimulation } from "../utils/sequenceSimulation";
 import { PfBadge } from "../design-system";
 import { SpringVisualPills } from "./SpringVisualPills";
+import { MobileSubPageBar } from "./MobileSubPageBar";
+import { AiSmartScheduleGeneratorCard } from "./AiSmartScheduleGeneratorCard";
 import "../styles/schedule.css";
 import "./InstructorScheduleView.css";
 import { ScheduleChangeScopePanel, type ScheduleChangeScope } from "./ScheduleChangeScopePanel";
@@ -60,6 +62,8 @@ import {
   readPersistedMemberBookingState,
   resolveClassCardVisualMeta,
 } from "../utils/memberBookingBridge";
+import { formatBrandSpringEquivalent } from "../utils/brandSpringConverter";
+import { analyzeHistoryLogsForNextClass } from "../utils/historyAdaptiveBridge";
 
 type MoveDraft = {
   classId: string;
@@ -283,6 +287,8 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     instructorSchedule: data,
     setInstructorSchedule,
     savedSequences,
+    historyLogs,
+    reformerBrand,
     exercises,
     ownedEquipment,
     ownedProps,
@@ -1008,6 +1014,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
           </div>
         );
       })()}
+      <ScheduleAutoResponsiveSection scheduleCount={data.classes.length} />
       {message && (
         <p className="status schedule-feedback" role="status">
           {message}
@@ -1574,6 +1581,59 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                         </div>
                       </div>
                     </div>
+                    {row.status === "scheduled" && (() => {
+                      const activeSeqForRow =
+                        datedAssignment && datedContextMatches
+                          ? datedAssignment.sequenceSnapshot
+                          : linkedSequence;
+                      const moveCount = activeSeqForRow
+                        ? activeSeqForRow.steps.filter((st) => !isRestStep(st)).length
+                        : 0;
+                      const convertedSpring = visualMeta.springs
+                        ? formatBrandSpringEquivalent(
+                            visualMeta.springs,
+                            reformerBrand,
+                            visualMeta.apparatus === "mixed" ? "reformer" : visualMeta.apparatus,
+                          )
+                        : null;
+                      const matchedHistoryLogs = historyLogs.filter(
+                        (h) =>
+                          (row.title && h.groupName && row.title.includes(h.groupName)) ||
+                          (activeSeqForRow && h.sequenceId === activeSeqForRow.id),
+                      );
+                      const recentSignal =
+                        matchedHistoryLogs.length > 0
+                          ? analyzeHistoryLogsForNextClass(matchedHistoryLogs)
+                          : null;
+                      return (
+                        <div
+                          className="pf-v70-preclass-briefing"
+                          data-testid="schedule-preclass-briefing-strip"
+                        >
+                          <span className="pf-v70-briefing-chip">
+                            수업 전 브리핑 ·{" "}
+                            {activeSeqForRow
+                              ? `${moveCount}개 동작 (${activeSeqForRow.targetMinutes}분)`
+                              : "연결된 시퀀스 미정"}
+                          </span>
+                          {convertedSpring && !convertedSpring.isNonSpringApparatus && (
+                            <span className="pf-v70-briefing-chip is-spring">
+                              첫 세팅 {convertedSpring.brandShortLabelKo}: {convertedSpring.equivalentLabelKo}
+                            </span>
+                          )}
+                          {capacityLabelByRowId.has(row.id) && (
+                            <span className="pf-v70-briefing-chip">
+                              출석·좌석 {capacityLabelByRowId.get(row.id)}
+                            </span>
+                          )}
+                          {recentSignal && recentSignal.cautionLabelsKo.length > 0 && (
+                            <span className="pf-v70-briefing-chip is-caution">
+                              지난 메모: {recentSignal.cautionLabelsKo[0]}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {row.movedFrom && (
                       <p className="muted">
                         원래 {formatScheduleDate(row.movedFrom)} 회차
@@ -2614,3 +2674,35 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     </section>
   );
 };
+
+function ScheduleAutoResponsiveSection({ scheduleCount }: { scheduleCount: number }) {
+  const [mobileTab, setMobileTab] = React.useState<'agenda' | 'ai'>('agenda');
+  React.useEffect(() => {
+    const root = document.querySelector('.instructor-schedule');
+    if (!root) return;
+    root.setAttribute('data-mobile-schedule-tab', mobileTab);
+    return () => root.removeAttribute('data-mobile-schedule-tab');
+  }, [mobileTab]);
+
+  return (
+    <>
+      <div className="pf-auto-mobile-only">
+        <MobileSubPageBar
+          ariaLabel="일정 화면 보기 전환"
+          activeId={mobileTab}
+          options={[
+            { id: 'agenda', label: '주간 일정표', badge: scheduleCount },
+            { id: 'ai', label: '1탭 자동편성' },
+          ]}
+          onSelect={setMobileTab}
+        />
+      </div>
+      <div
+        className="pf-schedule-ai-slot"
+        data-mobile-subpage-hidden={mobileTab !== 'ai' ? 'true' : undefined}
+      >
+        <AiSmartScheduleGeneratorCard />
+      </div>
+    </>
+  );
+}

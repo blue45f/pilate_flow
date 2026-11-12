@@ -30,6 +30,7 @@ export interface Studio3DMotionSpec {
   readonly signatureId: Studio3DSignatureId;
   readonly titleKo: string;
   readonly startImg: string;
+  readonly midImg: string;
   readonly peakImg: string;
   readonly matchScope: 'exact-signature' | 'apparatus-family-reference';
   readonly matchScopeBadgeKo: string;
@@ -53,6 +54,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'reformer-footwork',
     titleKo: '리포머 풋워크 · 캐리지 활주 & 하지 정렬',
     startImg: '/motion-studio3d/footwork-start.png',
+    midImg: '/motion-studio3d/footwork-mid.png',
     peakImg: '/motion-studio3d/footwork-peak.png',
     excursionLabelKo: '캐리지 수평 활주 · 스프링 신장',
     anchorLabelKo: '풋바 발뒤꿈치·전족부 고정 지지',
@@ -64,6 +66,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'reformer-bridge',
     titleKo: '리포머 펠빅 컬 브릿지 · 척추 분절 리프트',
     startImg: '/motion-studio3d/bridge-start.png',
+    midImg: '/motion-studio3d/bridge-mid.png',
     peakImg: '/motion-studio3d/bridge-peak.png',
     excursionLabelKo: '골반 후방경사 → 사선 브릿지 분절',
     anchorLabelKo: '견갑대 지지 & 캐리지 스토퍼 제어',
@@ -75,6 +78,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'reformer-shortspine',
     titleKo: '리포머 숏 스파인 마사지 · 스트랩 롤오버 분절',
     startImg: '/motion-studio3d/shortspine-start.png',
+    midImg: '/motion-studio3d/shortspine-mid.png',
     peakImg: '/motion-studio3d/shortspine-peak.png',
     excursionLabelKo: '45° 스트랩 리치 → 스토퍼 복귀 및 척추 롤오버',
     anchorLabelKo: '평평한 헤드레스트 & 양 견갑대 안정 지지',
@@ -86,6 +90,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'reformer-feetstraps',
     titleKo: '리포머 피트 인 스트랩 프로그 & 서클 · 골반 중립 제어',
     startImg: '/motion-studio3d/reformer-feetstraps-start.png',
+    midImg: '/motion-studio3d/reformer-feetstraps-mid.png',
     peakImg: '/motion-studio3d/reformer-feetstraps-peak.png',
     excursionLabelKo: '테이블탑 프로그 준비 → 45° 사선 스트랩 프레스 & 내전 밀착',
     anchorLabelKo: '천골 수평 캐리지 밀착 (요추 들림 방지) & 견갑 안정',
@@ -97,6 +102,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'reformer-jumpboard',
     titleKo: '리포머 점프보드 카디오 플라이오 · 착지 충격 제어',
     startImg: '/motion-studio3d/reformer-jumpboard-start.png',
+    midImg: '/motion-studio3d/reformer-jumpboard-mid.png',
     peakImg: '/motion-studio3d/reformer-jumpboard-peak.png',
     excursionLabelKo: '점프보드 무릎 굴곡 로딩 → 수평 공중 도약 & 발끝 신전',
     anchorLabelKo: '점프보드 전족부→뒤꿈치 순차 착지 & 복부 코어 브레이싱',
@@ -108,6 +114,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'reformer-longbox-teaser',
     titleKo: '리포머 롱박스 스트랩 티저 · V자 코어 밸런스',
     startImg: '/motion-studio3d/longbox-teaser-start.png',
+    midImg: '/motion-studio3d/longbox-teaser-mid.png',
     peakImg: '/motion-studio3d/longbox-teaser-peak.png',
     excursionLabelKo: '스트랩 당김과 동시 상·하체 V자 티저 리프트',
     anchorLabelKo: '롱박스 상단 좌골 뒤 천골 균형 지지',
@@ -119,6 +126,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'reformer-elephant',
     titleKo: '리포머 일리펀트 & 업스트레치 · 파이크 캐리지 제어',
     startImg: '/motion-studio3d/reformer-elephant-start.png',
+    midImg: '/motion-studio3d/reformer-elephant-mid.png',
     peakImg: '/motion-studio3d/reformer-elephant-peak.png',
     excursionLabelKo: 'C커브 파이크 유지 채 고관절 신전으로 캐리지 후방 활주',
     anchorLabelKo: '풋바 양손 지지(어깨 고정) & 숄더블록 발뒤꿈치 밀착',
@@ -130,6 +138,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'reformer-mermaid',
     titleKo: '리포머 머메이드 측굴 · Z-Sit 늑간·측면 사슬 신장',
     startImg: '/motion-studio3d/reformer-mermaid-start.png',
+    midImg: '/motion-studio3d/reformer-mermaid-mid.png',
     peakImg: '/motion-studio3d/reformer-mermaid-peak.png',
     excursionLabelKo: '풋바 수평 프레스와 동시 반대편 골반 앵커링 C커브 측굴',
     anchorLabelKo: '캐리지 양 좌골 수평 유지 & 지지 손 견갑 하강',
@@ -141,6 +150,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'reformer-scooter-lunge',
     titleKo: '리포머 스탠딩 스쿠터 & 이브스 런지 · 단측 둔근 제어',
     startImg: '/motion-studio3d/reformer-lunge-start.png',
+    midImg: '/motion-studio3d/reformer-lunge-mid.png',
     peakImg: '/motion-studio3d/reformer-lunge-peak.png',
     excursionLabelKo: '앞다리 무릎 정렬 고정 채 뒷다리 캐리지 후방 프레스',
     anchorLabelKo: '바닥 지지발 삼각대 밀착 & 풋바 가벼운 손끝 안정',
@@ -152,6 +162,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'mat-hundred',
     titleKo: '스튜디오 매트 코어 컬업 · 흉추 굴곡 & 호흡',
     startImg: '/motion-studio3d/mat-hundred-start.png',
+    midImg: '/motion-studio3d/mat-hundred-mid.png',
     peakImg: '/motion-studio3d/mat-hundred-peak.png',
     excursionLabelKo: '흉추 컬업 & 하지 45° 뻗기',
     anchorLabelKo: '천골·하부 흉곽 매트 안정 지지',
@@ -163,6 +174,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'mat-twist',
     titleKo: '스튜디오 매트 쏘우 & 스파인 트위스트 · 축성 회전',
     startImg: '/motion-studio3d/mat-twist-start.png',
+    midImg: '/motion-studio3d/mat-twist-mid.png',
     peakImg: '/motion-studio3d/mat-twist-peak.png',
     excursionLabelKo: '수직 축 흉추 회전 → 대각선 전굴 스쿱 리치',
     anchorLabelKo: '양 좌골 매트 대칭 고정 (반대쪽 엉덩이 들림 방지)',
@@ -174,6 +186,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'mat-sidekick-plank',
     titleKo: '스튜디오 매트 사이드 킥 & 사이드 플랭크 · 측면 코어',
     startImg: '/motion-studio3d/mat-sidekick-start.png',
+    midImg: '/motion-studio3d/mat-sidekick-mid.png',
     peakImg: '/motion-studio3d/mat-sidekick-peak.png',
     excursionLabelKo: '측면 전완 지지 → 골반 수직 리프트 및 위쪽 다리 외전',
     anchorLabelKo: '지지 전완·어깨 수직 정렬 & 아래쪽 옆구리 아치 유지',
@@ -185,6 +198,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'chair-pedal-press',
     titleKo: '운다 체어 시티드 페달 프레스 · 수직 정렬',
     startImg: '/motion-studio3d/chair-start.png',
+    midImg: '/motion-studio3d/chair-mid.png',
     peakImg: '/motion-studio3d/chair-peak.png',
     excursionLabelKo: '페달 하강 프레스 & 원심성 복귀',
     anchorLabelKo: '양 좌골 시트 수직 고정 & 축성 신장',
@@ -196,6 +210,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'chair-goingup',
     titleKo: '운다 체어 고잉 업 프론트 · 원레그 수직 스텝업',
     startImg: '/motion-studio3d/chair-goingup-start.png',
+    midImg: '/motion-studio3d/chair-goingup-mid.png',
     peakImg: '/motion-studio3d/chair-goingup-peak.png',
     excursionLabelKo: '런지 준비 → 시트 지지 다리 수직 상승 & 페달 제어',
     anchorLabelKo: '체어 시트 앞다리 발바닥 전체 & 핸들 보조 지지',
@@ -207,6 +222,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'chair-pike',
     titleKo: '운다 체어 풀업 파이크 · 심부 코어 인버티드 리프트',
     startImg: '/motion-studio3d/chair-pike-start.png',
+    midImg: '/motion-studio3d/chair-pike-mid.png',
     peakImg: '/motion-studio3d/chair-pike-peak.png',
     excursionLabelKo: '낮은 페달 지지 → 복부 스쿱으로 골반 수직 파이크 상승',
     anchorLabelKo: '체어 상단 시트 손바닥 수직 푸쉬 & 견갑 전인 안정',
@@ -218,6 +234,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'chair-swan',
     titleKo: '운다 체어 프론 스완 · 페달 원심 제어 & 흉추 신전',
     startImg: '/motion-studio3d/chair-swan-start.png',
+    midImg: '/motion-studio3d/chair-swan-mid.png',
     peakImg: '/motion-studio3d/chair-swan-peak.png',
     excursionLabelKo: '프론 페달 하강 준비 → 페달 상승 저항 제어와 상부 흉추 아치 신전',
     anchorLabelKo: '체어 상단 패드 치골·하부 늑골 지지 & 견갑 하강 고정',
@@ -229,6 +246,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'cadillac-cat-rolldown',
     titleKo: '캐딜락 롤다운 바 캣 · C커브 척추 분절',
     startImg: '/motion-studio3d/cadillac-cat-start.png',
+    midImg: '/motion-studio3d/cadillac-cat-mid.png',
     peakImg: '/motion-studio3d/cadillac-cat-peak.png',
     excursionLabelKo: '롤다운 바 전하방 프레스 & 분절 굴곡',
     anchorLabelKo: '양 무릎 수직 지지 & 견갑 하강',
@@ -240,6 +258,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'cadillac-teaser',
     titleKo: '캐딜락 푸쉬스루 바 티저 · 상단 스프링 V자 리프트',
     startImg: '/motion-studio3d/cadillac-teaser-start.png',
+    midImg: '/motion-studio3d/cadillac-teaser-mid.png',
     peakImg: '/motion-studio3d/cadillac-teaser-peak.png',
     excursionLabelKo: '푸쉬스루 바 상방 리치 & 상·하체 V자 티저 상승',
     anchorLabelKo: '캐딜락 베드 천골 지지 & 견갑 하강 고정',
@@ -251,6 +270,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'cadillac-hanging',
     titleKo: '캐딜락 캐노피 행잉 풀업 · 서스펜션 코어 리프트',
     startImg: '/motion-studio3d/cadillac-hanging-start.png',
+    midImg: '/motion-studio3d/cadillac-hanging-mid.png',
     peakImg: '/motion-studio3d/cadillac-hanging-peak.png',
     excursionLabelKo: '캐노피 행잉 사선 지지 → 견갑 하강 풀업 & 골반 수평 부양',
     anchorLabelKo: '상단 캐노피 바·퍼지 스트랩 양손 그립 고정',
@@ -262,6 +282,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'cadillac-leg-springs',
     titleKo: '캐딜락 레그 스프링 프로그 & 서클 · 독립 양측 고관절 제어',
     startImg: '/motion-studio3d/cadillac-legspring-start.png',
+    midImg: '/motion-studio3d/cadillac-legspring-mid.png',
     peakImg: '/motion-studio3d/cadillac-legspring-peak.png',
     excursionLabelKo: '독립 양측 레그 스프링 대칭 45° 프레스 & 서클 제어',
     anchorLabelKo: '수직 폴 양손 파지로 윗등 고정 & 천골 수평 밀착',
@@ -273,6 +294,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'barrel-sidebend',
     titleKo: '래더 바렐 사이드 벤드 · 측면 사슬 신장',
     startImg: '/motion-studio3d/barrel-sidebend-start.png',
+    midImg: '/motion-studio3d/barrel-sidebend-mid.png',
     peakImg: '/motion-studio3d/barrel-sidebend-peak.png',
     excursionLabelKo: '측면 드레이프 → 사선 축성 리프트',
     anchorLabelKo: '래더 렁 발목 고정 & 골반 측면 지지',
@@ -284,6 +306,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'barrel-swan',
     titleKo: '래더 바렐 풀 스완 · 후면 사슬 아크 신전',
     startImg: '/motion-studio3d/barrel-swan-start.png',
+    midImg: '/motion-studio3d/barrel-swan-mid.png',
     peakImg: '/motion-studio3d/barrel-swan-peak.png',
     excursionLabelKo: '전방 드레이프 준비 → 사선 상승 흉추 신전 아치',
     anchorLabelKo: '바렐 정점 치골·골반 지지 & 사다리 발바닥 고정',
@@ -295,6 +318,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'barrel-horseback',
     titleKo: '래더 바렐 호스백 · 내전근 밀착 & C커브 부양',
     startImg: '/motion-studio3d/barrel-horseback-start.png',
+    midImg: '/motion-studio3d/barrel-horseback-mid.png',
     peakImg: '/motion-studio3d/barrel-horseback-peak.png',
     excursionLabelKo: '바렐 정점 기승 자세 → 허벅지 안쪽 조임과 C커브 골반 호버',
     anchorLabelKo: '바렐 양 측면 허벅지 내전근 밀착 고정',
@@ -306,6 +330,7 @@ export const STUDIO_3D_SIGNATURES: Record<
     signatureId: 'barrel-spinecorrector',
     titleKo: '스파인 코렉터 아크 신전 & 티저 · 흉추 오픈 & 코어',
     startImg: '/motion-studio3d/barrel-spinecorrector-start.png',
+    midImg: '/motion-studio3d/barrel-spinecorrector-mid.png',
     peakImg: '/motion-studio3d/barrel-spinecorrector-peak.png',
     excursionLabelKo: '스텝 웰 시티드 준비 → 아크 정점 흉추 신전 & 45° 하지 뻗기',
     anchorLabelKo: '스파인 코렉터 스텝 천골 안정 지지 & 하부 늑골 연결',
@@ -318,6 +343,14 @@ export const STUDIO_3D_SIGNATURES: Record<
 export const ALL_STUDIO_3D_ASSET_URLS: readonly string[] = Object.values(
   STUDIO_3D_SIGNATURES,
 ).flatMap((spec) => [spec.startImg, spec.peakImg]);
+
+export const ALL_STUDIO_3D_MID_ASSET_URLS: readonly string[] = Object.values(
+  STUDIO_3D_SIGNATURES,
+).map((spec) => spec.midImg);
+
+export const ALL_STUDIO_3D_EXTENDED_ASSET_URLS: readonly string[] = Object.values(
+  STUDIO_3D_SIGNATURES,
+).flatMap((spec) => [spec.startImg, spec.midImg, spec.peakImg]);
 
 export function resolveStudio3DMotionForExercise(
   exercise: Pick<

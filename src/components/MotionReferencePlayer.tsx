@@ -53,9 +53,7 @@ function MotionPoseDrawing({
       aria-labelledby={`${id}-title ${id}-description`}
       data-view-mirrored={mirrored}
     >
-      <title id={`${id}-title`}>
-        {clip.title} 기획 도해 · {caption}
-      </title>
+      <title id={`${id}-title`}>{`${clip.title} 기획 도해 · ${caption}`}</title>
       <desc id={`${id}-description`}>
         전문가 미검수 2D 개념 도해입니다. 실선은 해부학적 왼쪽, 점선은 해부학적 오른쪽입니다.
         {mirrored ? ' 그림만 화면에서 반전했으며 몸의 좌우 이름은 유지합니다.' : ' 화면 반전 없음.'}

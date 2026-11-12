@@ -46,6 +46,15 @@ import { LiveStageKinematicDiagram } from './LiveStageKinematicDiagram';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
 import { SpringVisualPills } from './SpringVisualPills';
+import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
+import { MobileSubPageBar } from './MobileSubPageBar';
+import { VisualBreathPacerRing, VisualSequenceFilmstrip } from './VisualFlowComponents';
+import {
+  LIVE_HANDSFREE_COMMAND_GUIDE,
+  parseLiveRemoteKey,
+  parseLiveVoiceCommand,
+  type ParsedLiveCommand,
+} from '../utils/liveHandsfreeController';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/teaching.css';
 import '../styles/class-voice.css';
@@ -482,7 +491,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     void requestScreenLock();
   };
 
-  const addMinute = () => {
+  const extendStepBySeconds = (deltaSeconds: 15 | 30 | 60) => {
     const prevDurations = durationsRef.current;
     applyClock((value) =>
       sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current),
@@ -492,7 +501,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     const currentStep = stepsRef.current[targetIndex];
     if (!currentStep) return;
 
-    const nextDurationMin = Math.min(120, currentStep.durationMin + 1);
+    const deltaMinutes = deltaSeconds === 60 ? 1 : deltaSeconds / 60;
+    const nextDurationMin = Math.min(120, currentStep.durationMin + deltaMinutes);
     const addedMs = Math.max(
       0,
       Math.round((nextDurationMin - currentStep.durationMin) * 60) * 1000,
@@ -508,8 +518,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         : currentStep.durationMin;
     const addedMinutes =
       prevUndo?.kind === 'add-minute' && prevUndo.stepIndex === targetIndex
-        ? prevUndo.addedMinutes + 1
-        : 1;
+        ? prevUndo.addedMinutes + deltaMinutes
+        : deltaMinutes;
 
     applySteps((prev) =>
       prev.map((step, index) =>
@@ -529,6 +539,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       addedMinutes,
     });
   };
+
+  const addMinute = () => extendStepBySeconds(60);
 
   const trimHalfMinute = () => {
     const prevDurations = durationsRef.current;
@@ -1003,77 +1015,112 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           | null)
       : null;
   const voiceCommandActionRef = useRef<(transcript: string) => void>(() => undefined);
+  const dispatchParsedLiveCommand = (parsed: ParsedLiveCommand): boolean => {
+    const prefix = parsed.source === 'voice' ? '음성 명령 실행' : '리모컨·단축키 실행';
+    const suffix = ` (“${parsed.rawTrigger}”)`;
+    switch (parsed.kind) {
+      case 'pause': {
+        if (clockRef.current.running) {
+          toggleRunning();
+        }
+        setLastVoiceCommandStatus(`${prefix}: 일시정지${suffix}`);
+        return true;
+      }
+      case 'resume': {
+        if (!clockRef.current.running) {
+          toggleRunning();
+        }
+        setLastVoiceCommandStatus(`${prefix}: 타이머 시작${suffix}`);
+        return true;
+      }
+      case 'toggle-play': {
+        toggleRunning();
+        setLastVoiceCommandStatus(`${prefix}: ${parsed.labelKo}${suffix}`);
+        return true;
+      }
+      case 'next-step': {
+        if (clockRef.current.index === stepsRef.current.length - 1) {
+          if (parsed.source === 'voice') {
+            pauseForReview();
+            setLastVoiceCommandStatus(`${prefix}: 마지막 구간 점검${suffix}`);
+            return true;
+          }
+          return false;
+        }
+        selectStep(clockRef.current.index + 1);
+        setLastVoiceCommandStatus(`${prefix}: ${parsed.labelKo}${suffix}`);
+        return true;
+      }
+      case 'prev-step': {
+        if (clockRef.current.index <= 0 && parsed.source === 'remote-key') {
+          return false;
+        }
+        selectStep(Math.max(0, clockRef.current.index - 1));
+        setLastVoiceCommandStatus(`${prefix}: ${parsed.labelKo}${suffix}`);
+        return true;
+      }
+      case 'extend-15s': {
+        extendStepBySeconds(15);
+        setLastVoiceCommandStatus(`${prefix}: 15초 연장${suffix}`);
+        return true;
+      }
+      case 'extend-30s': {
+        extendStepBySeconds(30);
+        setLastVoiceCommandStatus(`${prefix}: 30초 연장${suffix}`);
+        return true;
+      }
+      case 'extend-60s': {
+        addMinute();
+        setLastVoiceCommandStatus(`${prefix}: 1분 추가${suffix}`);
+        return true;
+      }
+      case 'trim-30s': {
+        trimHalfMinute();
+        setLastVoiceCommandStatus(`${prefix}: 30초 단축${suffix}`);
+        return true;
+      }
+      case 'undo': {
+        if (!undoRef.current) return false;
+        undoLastStageAction();
+        setLastVoiceCommandStatus(`${prefix}: 직전 조작 복구${suffix}`);
+        return true;
+      }
+      case 'toggle-cuesheet': {
+        setShowCueSheet((v) => !v);
+        setLastVoiceCommandStatus(`${prefix}: 전체 큐시트 전환${suffix}`);
+        return true;
+      }
+      case 'jump-main': {
+        const mainIdx = stepsRef.current.findIndex(
+          (st) => !isRestStep(st) && st.blockCategory !== 'warmup' && st.blockCategory !== 'cooldown',
+        );
+        if (mainIdx < 0) return false;
+        selectStep(mainIdx);
+        setLastVoiceCommandStatus(`${prefix}: 본운동 구간 이동${suffix}`);
+        return true;
+      }
+      case 'jump-cooldown': {
+        const coolIdx = stepsRef.current.findIndex(
+          (st) => !isRestStep(st) && st.blockCategory === 'cooldown',
+        );
+        if (coolIdx < 0) return false;
+        selectStep(coolIdx);
+        setLastVoiceCommandStatus(`${prefix}: 마무리 구간 이동${suffix}`);
+        return true;
+      }
+    }
+  };
+
   useEffect(() => {
     voiceCommandActionRef.current = (rawTranscript: string) => {
       const normalized = rawTranscript.replace(/\s+/g, ' ').trim();
       if (!normalized) return;
-      if (/일시정지|정지|멈춤|스톱/.test(normalized)) {
-        if (clockRef.current.running) {
-          toggleRunning();
-        }
-        setLastVoiceCommandStatus(`음성 명령 실행: 일시정지 (“${normalized}”)`);
+      const parsed = parseLiveVoiceCommand(normalized);
+      if (parsed && dispatchParsedLiveCommand(parsed)) {
         return;
-      }
-      if (/수업\s*시작|시작|재생|계속/.test(normalized)) {
-        if (!clockRef.current.running) {
-          toggleRunning();
-        }
-        setLastVoiceCommandStatus(`음성 명령 실행: 타이머 시작 (“${normalized}”)`);
-        return;
-      }
-      if (/다음\s*동작|다음|넘기기/.test(normalized)) {
-        if (clockRef.current.index === stepsRef.current.length - 1) {
-          pauseForReview();
-        } else {
-          selectStep(clockRef.current.index + 1);
-        }
-        setLastVoiceCommandStatus(`음성 명령 실행: 다음 동작 (“${normalized}”)`);
-        return;
-      }
-      if (/이전\s*동작|이전/.test(normalized)) {
-        selectStep(clockRef.current.index - 1);
-        setLastVoiceCommandStatus(`음성 명령 실행: 이전 동작 (“${normalized}”)`);
-        return;
-      }
-      if (/되돌리기|원래\s*위치|복구/.test(normalized)) {
-        if (undoRef.current) {
-          undoLastStageAction();
-          setLastVoiceCommandStatus(`음성 명령 실행: 직전 조작 복구 (“${normalized}”)`);
-          return;
-        }
-      }
-      if (/1분\s*추가|\+1분|시간\s*추가/.test(normalized)) {
-        addMinute();
-        setLastVoiceCommandStatus(`음성 명령 실행: 1분 추가 (“${normalized}”)`);
-        return;
-      }
-      if (/큐시트/.test(normalized)) {
-        setShowCueSheet((v) => !v);
-        setLastVoiceCommandStatus(`음성 명령 실행: 큐시트 전환 (“${normalized}”)`);
-        return;
-      }
-      if (/본운동\s*구간|본운동으로/.test(normalized)) {
-        const mainIdx = stepsRef.current.findIndex(
-          (st) => !isRestStep(st) && st.blockCategory !== 'warmup' && st.blockCategory !== 'cooldown',
-        );
-        if (mainIdx >= 0) {
-          selectStep(mainIdx);
-          setLastVoiceCommandStatus(`음성 명령 실행: 본운동 구간 이동 (“${normalized}”)`);
-          return;
-        }
-      }
-      if (/마무리\s*구간|쿨다운|마무리로/.test(normalized)) {
-        const coolIdx = stepsRef.current.findIndex(
-          (st) => !isRestStep(st) && st.blockCategory === 'cooldown',
-        );
-        if (coolIdx >= 0) {
-          selectStep(coolIdx);
-          setLastVoiceCommandStatus(`음성 명령 실행: 마무리 구간 이동 (“${normalized}”)`);
-          return;
-        }
       }
       setLastVoiceCommandStatus(
-        `인식된 음성: “${normalized}” (시작·일시정지·다음·이전·복구·1분 추가·큐시트·본운동·마무리 지원)`,
+        `인식된 음성: “${normalized}” (시작·일시정지·다음·이전·15초/30초/1분 추가·큐시트·본운동·마무리 지원)`,
       );
     };
   });
@@ -1102,29 +1149,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           ),
         );
       if (isInteractive(event.target) || isInteractive(document.activeElement)) return;
-      if (event.code === 'Space' || event.key === ' ') {
-        event.preventDefault();
-        toggleRunning();
-        return;
-      }
-      if (event.key === 'ArrowRight') {
-        event.preventDefault();
-        if (clockRef.current.index < stepsRef.current.length - 1) {
-          selectStep(clockRef.current.index + 1);
-        }
-        return;
-      }
-      if (event.key === 'ArrowLeft') {
-        event.preventDefault();
-        if (clockRef.current.index > 0) {
-          selectStep(clockRef.current.index - 1);
-        }
-        return;
-      }
-      if (event.key === 'Backspace' && undoRef.current) {
-        event.preventDefault();
-        undoLastStageAction();
-      }
+      const parsed = parseLiveRemoteKey({ key: event.key, code: event.code });
+      if (!parsed) return;
+      if (parsed.kind === 'undo' && !undoRef.current) return;
+      event.preventDefault();
+      dispatchParsedLiveCommand(parsed);
     };
   });
   useEffect(() => {
@@ -1615,6 +1644,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           />
         </section>
       )}
+      <LiveStageMobileSubPageToggle stepCount={steps.length} />
       <div className="teaching-stage-layout">
         <section
           className={`panel teaching-current-panel ${currentIsRest ? 'is-rest' : ''} ${
@@ -1622,144 +1652,20 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           }`.trim()}
           aria-label={currentIsRest ? '현재 휴식' : '현재 동작'}
         >
-          <div className="teaching-current-meta">
-            <span>
-              {String(clock.index + 1).padStart(2, '0')} / {String(steps.length).padStart(2, '0')}
-              <span className="teaching-meta-dot">·</span>
-              {currentIsRest ? '중간 휴식' : (block?.nameKo ?? '수업 동작')}
-            </span>
-            <span data-testid="live-stage-current-setup-summary">
-              {exercise && !currentIsRest
-                ? `${APPARATUS_LABELS[exercise.apparatus].ko} · ${POSITION_LABELS[exercise.bodyPosition].ko}${
-                    currentSetupQuickSummary ? ` · ${currentSetupQuickSummary}` : ''
-                  }`
-                : '전체 수업 시간에 포함'}
-            </span>
-          </div>
-          {!currentIsRest && exercise && (
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '6px',
-              }}
-            >
-              <ApparatusIconBadge
-                apparatus={exercise.apparatus}
-                bodyPosition={exercise.bodyPosition}
-                size="xs"
-                showLabel
-                decorative
-              />
-              {currentSpringRaw && <SpringVisualPills springs={currentSpringRaw} />}
-              {currentSpringRaw && (() => {
-                const converted = formatBrandSpringEquivalent(
-                  currentSpringRaw,
-                  reformerBrand,
-                  exercise.apparatus,
-                );
-                if (converted.isNonSpringApparatus) return null;
-                return (
-                  <div
-                    className="pf-live-brand-spring-bar"
-                    data-testid="live-stage-brand-spring-bar"
-                    role="group"
-                    aria-label="기구 브랜드별 스프링 환산"
-                  >
-                    <span
-                      className="pf-brand-spring-pill"
-                      data-testid="live-stage-brand-spring-equiv"
-                    >
-                      {converted.brandShortLabelKo}: {converted.equivalentLabelKo}
-                    </span>
-                    <span className="pf-live-brand-spring-chips">
-                      {BRAND_SPRING_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          className={`pf-live-brand-mini-btn ${
-                            reformerBrand === opt.id ? 'is-active' : ''
-                          }`.trim()}
-                          data-testid={`live-stage-brand-btn-${opt.id}`}
-                          aria-pressed={reformerBrand === opt.id}
-                          aria-label={`라이브 스프링 기준 ${opt.shortLabelKo}`}
-                          onClick={() => setReformerBrand(opt.id)}
-                        >
-                          {opt.shortLabelKo}
-                        </button>
-                      ))}
-                    </span>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-          <h2 className="teaching-current-name">{currentIsRest ? '휴식' : exercise?.nameKo}</h2>
-          {!currentIsRest && exercise && (() => {
-            const studio3d = resolveStudio3DMotionForExercise(exercise);
-            const isPeakPhaseActive = progress >= 35 && progress <= 88;
-            return (
-              <>
-                <div
-                  className="pf-live-3d-companion"
-                  data-testid="live-stage-3d-companion"
-                  aria-label={`${exercise.nameKo} 3D 시작·정점 가이드`}
-                >
-                  <div
-                    className={`pf-live-3d-companion__card ${
-                      !isPeakPhaseActive ? 'is-active-phase' : ''
-                    }`.trim()}
-                  >
-                    <img src={studio3d.startImg} alt="" aria-hidden="true" loading="lazy" />
-                    <span className="pf-live-3d-companion__badge">● 1. 시작 셋업</span>
-                  </div>
-                  <div
-                    className={`pf-live-3d-companion__card ${
-                      isPeakPhaseActive ? 'is-active-phase' : ''
-                    }`.trim()}
-                  >
-                    <img src={studio3d.peakImg} alt="" aria-hidden="true" loading="lazy" />
-                    <span className="pf-live-3d-companion__badge is-peak">◆ 2. 정점 주동근</span>
-                  </div>
-                </div>
-                <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
-                <LiveStageKinematicDiagram
-                  exercise={exercise}
-                  running={clock.running}
-                  stepProgressRatio={progress / 100}
-                  springsLabel={currentSpringRaw || undefined}
-                />
-              </>
-            );
-          })()}
-          {!currentIsRest && exercise && !isExerciseAutoEligible(exercise) && (
-            <p className="muted">
-              교차 검증 완료 가이드 · 실제 수행 전 기구와 몸 상태를 확인하세요.
-            </p>
-          )}
-          <p className="teaching-current-en">
-            {currentIsRest ? 'BREAK · 다음 동작 전 잠시 쉬어갑니다' : exercise?.nameEn}
-          </p>
-          {!currentIsRest &&
-            (current.repetitions !== undefined ||
-              current.sets !== undefined ||
-              current.sideMode) && (
-              <p className="muted teaching-practice-summary">
-                강사 계획{' '}
-                {current.repetitions !== undefined ? `${current.repetitions}회` : '횟수 미지정'}
-                {current.sets !== undefined ? ` × ${current.sets}세트` : ''}
-                {current.sideMode ? ` · ${sideLabels.join(' → ')}` : ''} · 시간은 별도 계획값입니다.
-              </p>
-            )}
-          <div className="teaching-timer-area">
+          <div
+            className={`teaching-timer-area pf-p09-timer-hero ${
+              clock.running && clock.remainingMs > 0 && clock.remainingMs <= 10000
+                ? 'is-final-countdown'
+                : ''
+            }`.trim()}
+          >
             <span
               className={`teaching-timer-status ${clock.running ? 'running' : ''} ${
                 isPausedMidStep ? 'paused' : ''
               } ${isStepCompleted ? 'completed' : ''}`.trim()}
               role="status"
             >
+              ● LIVE · {String(clock.index + 1).padStart(2, '0')}/{String(steps.length).padStart(2, '0')}단계 ·{' '}
               {clock.running
                 ? '진행 중'
                 : clock.remainingMs === 0
@@ -1769,6 +1675,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     : '일시정지'}
               <span> · {phase}</span>
             </span>
+            <h2 className="teaching-current-name pf-p09-hero-title">
+              {currentIsRest ? '휴식' : exercise?.nameKo}
+            </h2>
             <div
               className="teaching-timer-digits"
               role="timer"
@@ -1777,6 +1686,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             >
               {formatSecondsToMMSS(Math.ceil(clock.remainingMs / 1000))}
             </div>
+            <p className="teaching-timer-sub">
+              남은 전체 수업 {formatSecondsToMMSS(remainingTotalPlanSec)}
+              {currentSpringRaw ? ` · ${currentSpringRaw}` : ''}
+              {!currentIsRest && exercise?.breathPattern ? ` · ${exercise.breathPattern}` : ''}
+            </p>
             <div className="teaching-timing-breakdown">
               <span>전체 {formatSecondsToMMSS(timing.totalSec)}</span>
               {!currentIsRest && (
@@ -1794,10 +1708,164 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               )}
             </div>
             {!currentIsRest && exercise?.breathPattern && (
-              <p className="teaching-breath-glance-pill" data-testid="live-stage-breath-callout">
+              <p className="teaching-breath-glance-pill sr-only" data-testid="live-stage-breath-callout">
                 호흡 리듬 · {exercise.breathPattern}
               </p>
             )}
+            <div
+              className="teaching-timer-progress"
+              role="progressbar"
+              aria-label="현재 동작 진행"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progress)}
+            >
+              <span style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+          <div className="teaching-current-meta">
+            <span>
+              {String(clock.index + 1).padStart(2, '0')} / {String(steps.length).padStart(2, '0')}
+              <span className="teaching-meta-dot">·</span>
+              {currentIsRest ? '중간 휴식' : (block?.nameKo ?? '수업 동작')}
+            </span>
+            <span data-testid="live-stage-current-setup-summary">
+              {exercise && !currentIsRest
+                ? `${APPARATUS_LABELS[exercise.apparatus].ko} · ${POSITION_LABELS[exercise.bodyPosition].ko}${
+                    currentSetupQuickSummary ? ` · ${currentSetupQuickSummary}` : ''
+                  }`
+                : '전체 수업 시간에 포함'}
+            </span>
+          </div>
+          {!currentIsRest && exercise && (() => {
+            const studio3d = resolveStudio3DMotionForExercise(exercise);
+            const activePhaseKey =
+              progress < 28 ? 'start' : progress < 64 ? 'mid' : 'peak';
+            return (
+              <>
+                <div
+                  className="pf-live-3d-companion is-three-frames"
+                  data-testid="live-stage-3d-companion"
+                  aria-label={`${exercise.nameKo} 3D 시작·추진·정점 가이드`}
+                >
+                  <div
+                    className={`pf-live-3d-companion__card ${
+                      activePhaseKey === 'start' ? 'is-active-phase' : ''
+                    }`.trim()}
+                  >
+                    <img src={studio3d.startImg} alt="" aria-hidden="true" loading="lazy" />
+                    <span className="pf-live-3d-companion__badge">● 1. 시작 셋업</span>
+                  </div>
+                  <div
+                    className={`pf-live-3d-companion__card ${
+                      activePhaseKey === 'mid' ? 'is-active-phase' : ''
+                    }`.trim()}
+                  >
+                    <img src={studio3d.midImg} alt="" aria-hidden="true" loading="lazy" />
+                    <span className="pf-live-3d-companion__badge is-mid">◐ 2. 추진 전환</span>
+                  </div>
+                  <div
+                    className={`pf-live-3d-companion__card ${
+                      activePhaseKey === 'peak' ? 'is-active-phase' : ''
+                    }`.trim()}
+                  >
+                    <img src={studio3d.peakImg} alt="" aria-hidden="true" loading="lazy" />
+                    <span className="pf-live-3d-companion__badge is-peak">◆ 3. 정점 주동근</span>
+                  </div>
+                </div>
+                <details className="teaching-stage-details pf-live-3d-orbit-drawer">
+                  <summary>🌐 실시간 360° 3D 각도 회전 · X-Ray 뷰포트 열기</summary>
+                  <StudioInteractive3DViewport exercise={exercise} compact />
+                </details>
+                <div className="pf-live-breath-strip">
+                  <VisualBreathPacerRing
+                    running={clock.running}
+                    progressPct={progress}
+                    phaseLabel={phase}
+                    breathLabel={exercise.breathPattern}
+                    size={62}
+                  />
+                </div>
+              </>
+            );
+          })()}
+          {timing.sides === 2 && (
+            <p
+              className={`teaching-side-note ${stepElapsedSec >= timing.explanationSec + timing.perSideSec ? 'switch-side' : ''}`}
+              role="status"
+            >
+              {stepElapsedSec >= timing.explanationSec + timing.perSideSec
+                ? `${sideLabels[1]}을 진행할 차례입니다.`
+                : '양쪽 수행이 전체 시간에 포함되어 있어요.'}
+            </p>
+          )}
+          {timing.sides === 2 &&
+            stepElapsedSec >= timing.explanationSec + timing.perSideSec && (
+              <div
+                className="pf-live-bilateral-alert"
+                data-testid="live-stage-bilateral-switch-alert"
+                role="status"
+              >
+                <span>⇄ 반대쪽 전환 시점 · 지금 {sideLabels[1]} 수행</span>
+                <small>양쪽 균형 수행 확인</small>
+              </div>
+            )}
+          <div className="pf-p09-cue-summary-card">
+            <div className="pf-p09-cue-summary-card__head">
+              <strong>핵심 티칭 큐 &amp; 다음 순서 요약</strong>
+              {!currentIsRest && exercise && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
+                  <ApparatusIconBadge
+                    apparatus={exercise.apparatus}
+                    bodyPosition={exercise.bodyPosition}
+                    size="xs"
+                    showLabel
+                    decorative
+                  />
+                  {currentSpringRaw && <SpringVisualPills springs={currentSpringRaw} />}
+                </div>
+              )}
+            </div>
+            {!currentIsRest && exercise && currentSpringRaw && (() => {
+              const converted = formatBrandSpringEquivalent(
+                currentSpringRaw,
+                reformerBrand,
+                exercise.apparatus,
+              );
+              if (converted.isNonSpringApparatus) return null;
+              return (
+                <div
+                  className="pf-live-brand-spring-bar"
+                  data-testid="live-stage-brand-spring-bar"
+                  role="group"
+                  aria-label="기구 브랜드별 스프링 환산"
+                >
+                  <span
+                    className="pf-brand-spring-pill"
+                    data-testid="live-stage-brand-spring-equiv"
+                  >
+                    {converted.brandShortLabelKo}: {converted.equivalentLabelKo}
+                  </span>
+                  <span className="pf-live-brand-spring-chips">
+                    {BRAND_SPRING_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className={`pf-live-brand-mini-btn ${
+                          reformerBrand === opt.id ? 'is-active' : ''
+                        }`.trim()}
+                        data-testid={`live-stage-brand-btn-${opt.id}`}
+                        aria-pressed={reformerBrand === opt.id}
+                        aria-label={`라이브 스프링 기준 ${opt.shortLabelKo}`}
+                        onClick={() => setReformerBrand(opt.id)}
+                      >
+                        {opt.shortLabelKo}
+                      </button>
+                    ))}
+                  </span>
+                </div>
+              );
+            })()}
             {!currentIsRest && exercise && exercise.cues.length > 0 && (
               <div
                 className="teaching-glance-cues-strip"
@@ -1814,26 +1882,16 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 ))}
               </div>
             )}
-            {timing.sides === 2 && (
-              <p
-                className={`teaching-side-note ${stepElapsedSec >= timing.explanationSec + timing.perSideSec ? 'switch-side' : ''}`}
-                role="status"
-              >
-                {stepElapsedSec >= timing.explanationSec + timing.perSideSec
-                  ? `${sideLabels[1]}을 진행할 차례입니다.`
-                  : '양쪽 수행이 전체 시간에 포함되어 있어요.'}
-              </p>
-            )}
-            {timing.sides === 2 &&
-              stepElapsedSec >= timing.explanationSec + timing.perSideSec && (
-                <div
-                  className="pf-live-bilateral-alert"
-                  data-testid="live-stage-bilateral-switch-alert"
-                  role="status"
-                >
-                  <span>⇄ 반대쪽 전환 시점 · 지금 {sideLabels[1]} 수행</span>
-                  <small>양쪽 균형 수행 확인</small>
-                </div>
+            {!currentIsRest &&
+              (current.repetitions !== undefined ||
+                current.sets !== undefined ||
+                current.sideMode) && (
+                <p className="muted teaching-practice-summary" style={{ margin: 0 }}>
+                  강사 계획{' '}
+                  {current.repetitions !== undefined ? `${current.repetitions}회` : '횟수 미지정'}
+                  {current.sets !== undefined ? ` × ${current.sets}세트` : ''}
+                  {current.sideMode ? ` · ${sideLabels.join(' → ')}` : ''}
+                </p>
               )}
           </div>
           {(phase === '다음 동작 전환' || (clock.running && clock.remainingMs <= 15000)) &&
@@ -1886,16 +1944,17 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 </div>
               );
             })()}
-          <div
-            className="teaching-timer-progress"
-            role="progressbar"
-            aria-label="현재 동작 진행"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(progress)}
-          >
-            <span style={{ width: `${progress}%` }} />
-          </div>
+          {!currentIsRest && exercise && (
+            <details className="teaching-stage-details pf-p09-kinematic-drawer">
+              <summary>2D 기구학 보조 다이어그램 열기 (선택)</summary>
+              <LiveStageKinematicDiagram
+                exercise={exercise}
+                running={clock.running}
+                stepProgressRatio={progress / 100}
+                springsLabel={currentSpringRaw || undefined}
+              />
+            </details>
+          )}
           <div className="teaching-play-controls">
             <button
               type="button"
@@ -2139,6 +2198,22 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               <Minus size={16} />
               {currentIsRest ? '현재 휴식 30초 줄이기' : '현재 동작 30초 줄이기'}
             </button>
+            <button
+              type="button"
+              className="btn-ghost"
+              data-testid="live-stage-extend-15s-btn"
+              onClick={() => extendStepBySeconds(15)}
+            >
+              <Plus size={16} /> +15초
+            </button>
+            <button
+              type="button"
+              className="btn-ghost"
+              data-testid="live-stage-extend-30s-btn"
+              onClick={() => extendStepBySeconds(30)}
+            >
+              <Plus size={16} /> +30초
+            </button>
             <button type="button" className="btn-ghost" onClick={addMinute}>
               <Plus size={16} />
               {currentIsRest ? '현재 휴식 1분 추가' : '현재 동작 1분 추가'}
@@ -2276,10 +2351,19 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   aria-pressed={voiceCommandEnabled}
                   onClick={toggleVoiceCommand}
                 >
+                  <Volume2 size={15} aria-hidden="true" />{' '}
                   {voiceCommandEnabled
-                    ? '음성 명령으로 타이머 제어 끄기 (핸즈프리)'
+                    ? '음성 명령으로 타이머 제어 끄기 (핸즈프리 ON)'
                     : '음성 명령으로 타이머 제어 (핸즈프리)'}
                 </button>
+              </div>
+              <div className="pf-handsfree-remote-strip" data-testid="live-remote-ready-strip">
+                <span className="pf-handsfree-remote-badge">
+                  블루투스 리모컨·풋페달 상시 활성
+                </span>
+                <span className="pf-handsfree-remote-keys">
+                  PageDown/→ 다음 · PageUp/← 이전 · Space 재생 · ] +15초 · + +30초 · C 큐시트
+                </span>
               </div>
               {lastSensoryStatus && (
                 <p className="muted" data-testid="live-sensory-cue-status">
@@ -2287,10 +2371,26 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 </p>
               )}
               {lastVoiceCommandStatus && (
-                <p className="muted" data-testid="live-voice-command-status">
+                <p className="pf-handsfree-live-status" data-testid="live-voice-command-status" role="status">
                   {lastVoiceCommandStatus}
                 </p>
               )}
+              <details
+                className="pf-handsfree-guide-drawer"
+                data-testid="live-handsfree-guide-drawer"
+              >
+                <summary>음성 명령어·블루투스 포인터/풋페달 단축키 표 보기</summary>
+                <div className="pf-handsfree-guide-grid">
+                  {LIVE_HANDSFREE_COMMAND_GUIDE.map((item) => (
+                    <div key={item.effectKo} className="pf-handsfree-guide-item">
+                      <span className="pf-handsfree-guide-cat">{item.categoryKo}</span>
+                      <strong>{item.effectKo}</strong>
+                      <span>음성: {item.voicePhrasesKo}</span>
+                      <span>리모컨/키: {item.remoteKeysKo}</span>
+                    </div>
+                  ))}
+                </div>
+              </details>
             </div>
           </section>
           {exercise && !currentIsRest ? (
@@ -2381,6 +2481,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           )}
         </section>
         <aside className="teaching-stage-aside">
+          <VisualSequenceFilmstrip steps={steps} exercises={exercises} activeStepIndex={clock.index} compact />
           <section className="panel teaching-next-panel">
             <span className="eyebrow">다음 동작</span>
             {next && isRestStep(next) ? (
@@ -2637,3 +2738,27 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     </div>
   );
 };
+
+function LiveStageMobileSubPageToggle({ stepCount }: { stepCount: number }) {
+  const [tab, setTab] = useState<'timer' | 'flow'>('timer');
+  useEffect(() => {
+    const root = document.querySelector('.teaching-stage');
+    if (!root) return;
+    root.setAttribute('data-mobile-stage-tab', tab);
+    return () => root.removeAttribute('data-mobile-stage-tab');
+  }, [tab]);
+
+  return (
+    <div className="pf-auto-mobile-only pf-live-stage-subbar">
+      <MobileSubPageBar
+        ariaLabel="라이브 스테이지 보기 전환"
+        activeId={tab}
+        options={[
+          { id: 'timer', label: '타이머 · 3D 모션' },
+          { id: 'flow', label: '오늘의 흐름', badge: stepCount },
+        ]}
+        onSelect={setTab}
+      />
+    </div>
+  );
+}

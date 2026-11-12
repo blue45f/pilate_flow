@@ -1,12 +1,14 @@
 import { PostureAnatomyGuide } from './PostureAnatomyGuide';
-import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
-import { MovementDetailIntentBanner } from './PageIntentBanner';
+import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
+import { SpringVisualPills } from './SpringVisualPills';
 import type { RefObject } from 'react';
 import { ArrowUpRight, Check, ExternalLink, Info, Plus, X } from 'lucide-react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 import { normalizeReferenceUrlPolicy } from '../features/referenceLinkPolicyCandidate';
+import { usePilatesStore } from '../store/usePilatesStore';
+import { formatBrandSpringEquivalent } from '../utils/brandSpringConverter';
 import { getExerciseEvidence } from '../utils/exerciseEvidence';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
 import type { PilatesExercise } from '../types/pilates';
@@ -33,10 +35,14 @@ export function LibraryMovementInspector({
   onAdd,
   addedId,
 }: LibraryMovementInspectorProps) {
+  const reformerBrand = usePilatesStore((s) => s.reformerBrand);
   const reviewState = exercise ? getExerciseReviewState(exercise) : null;
   const autoEligible = exercise ? isExerciseAutoEligible(exercise) : false;
   const evidence = exercise ? getExerciseEvidence(exercise) : null;
   const isAdded = Boolean(exercise && addedId === exercise.id);
+  const brandSpring = exercise
+    ? formatBrandSpringEquivalent(exercise.springs, reformerBrand, exercise.apparatus)
+    : null;
 
   const safeLinks = evidence
     ? evidence.links.flatMap((link) => {
@@ -142,7 +148,35 @@ export function LibraryMovementInspector({
           </div>
           <p className="library-inspector-english">{exercise.nameEn}</p>
 
-          <MovementDetailIntentBanner exercise={exercise} compact />
+          <Studio3DMotionHeroCard exercise={exercise} compact />
+
+          <div className="pf-inspector-3sec-grid" aria-label="선택 동작 핵심 3요소 요약">
+            <div className="pf-inspector-3sec-item">
+              <span>권장 스프링 · 기구 셋업</span>
+              <div>
+                {exercise.springs ? <SpringVisualPills springs={exercise.springs} /> : <strong>기본 세팅</strong>}
+                {brandSpring && !brandSpring.isNonSpringApparatus && (
+                  <small
+                    className="pf-inspector-brand-spring-note"
+                    data-testid="inspector-brand-spring-equivalent"
+                  >
+                    {brandSpring.brandShortLabelKo}: {brandSpring.equivalentLabelKo}
+                  </small>
+                )}
+                <small>풋바 {exercise.footbar} · 헤드레스트 {exercise.headrest}</small>
+              </div>
+            </div>
+            <div className="pf-inspector-3sec-item">
+              <span>호흡 &amp; 템포</span>
+              <strong>{exercise.breathPattern || '흉곽 호흡 유지'}</strong>
+            </div>
+            {exercise.cues.length > 0 && (
+              <div className="pf-inspector-3sec-item is-wide">
+                <span>핵심 티칭 큐</span>
+                <p>{exercise.cues.slice(0, 2).join(' · ')}</p>
+              </div>
+            )}
+          </div>
 
           <div
             className="library-inspector-fact-strip"
@@ -168,8 +202,6 @@ export function LibraryMovementInspector({
               {sourceBadge}
             </span>
           </div>
-
-          <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
 
           <dl className="library-inspector-spec-list">
             <div>

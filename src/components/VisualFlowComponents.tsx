@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useState } from 'react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
 import { Pause, Play } from 'lucide-react';
 import type { ApparatusType, PilatesExercise, SequenceStep } from '../types/pilates';
 import { isRestStep } from '../utils/sequenceEngine';
@@ -22,27 +22,68 @@ export interface VisualApparatusTileOption {
   readonly disabled?: boolean;
 }
 
+const DEFAULT_APPARATUS_OPTIONS: readonly VisualApparatusTileOption[] = [
+  { id: 'all', labelKo: '전체 기구', apparatus: 'all' },
+  { id: 'reformer', labelKo: '리포머', apparatus: 'reformer' },
+  { id: 'cadillac', labelKo: '캐딜락', apparatus: 'cadillac' },
+  { id: 'chair', labelKo: '운다 체어', apparatus: 'chair' },
+  { id: 'barrel', labelKo: '래더 바렐', apparatus: 'barrel' },
+  { id: 'mat', labelKo: '매트', apparatus: 'mat' },
+];
+
+export type VisualApparatusPhotoStripProps = {
+  readonly ariaLabel?: string;
+  readonly options?: readonly VisualApparatusTileOption[];
+  readonly selectedIds?: readonly string[];
+  readonly activeApparatus?: ApparatusType | 'all';
+  readonly includeAll?: boolean;
+  readonly disabledApparatus?: readonly ApparatusType[];
+  readonly compact?: boolean;
+  readonly onSelect: (id: any) => void;
+  readonly layout?: 'bento' | 'scroll';
+  readonly testId?: string;
+};
+
 /**
  * Interactive 3D studio photo tiles with hover/active spring elevation so users
  * choose apparatus visually at a glance without reading dense text labels.
  */
-export const VisualApparatusPhotoStrip: React.FC<{
-  readonly ariaLabel: string;
-  readonly options: readonly VisualApparatusTileOption[];
-  readonly selectedIds: readonly string[];
-  readonly onSelect: (id: string) => void;
-  readonly layout?: 'bento' | 'scroll';
-  readonly testId?: string;
-}> = ({ ariaLabel, options, selectedIds, onSelect, layout = 'scroll', testId }) => {
+export const VisualApparatusPhotoStrip: React.FC<VisualApparatusPhotoStripProps> = ({
+  ariaLabel = '기구별 3D 스튜디오 빠른 선택',
+  options,
+  selectedIds,
+  activeApparatus,
+  includeAll = true,
+  disabledApparatus = [],
+  compact = false,
+  onSelect,
+  layout,
+  testId = 'visual-apparatus-photo-strip',
+}) => {
+  const resolvedLayout = layout ?? (compact ? 'scroll' : 'bento');
+  const resolvedOptions = useMemo(() => {
+    if (options && options.length > 0) return options;
+    const base = includeAll
+      ? DEFAULT_APPARATUS_OPTIONS
+      : DEFAULT_APPARATUS_OPTIONS.filter((item) => item.apparatus !== 'all');
+    if (!disabledApparatus.length) return base;
+    const disabledSet = new Set<string>(disabledApparatus);
+    return base.map((item) =>
+      disabledSet.has(item.id) ? { ...item, disabled: true } : item,
+    );
+  }, [options, includeAll, disabledApparatus]);
+
+  const resolvedSelectedIds = selectedIds ?? (activeApparatus ? [activeApparatus] : []);
+
   return (
     <div
-      className={`pf-visual-apparatus-strip is-${layout}`}
+      className={`pf-visual-apparatus-strip is-${resolvedLayout}`}
       role="group"
       aria-label={ariaLabel}
       data-testid={testId}
     >
-      {options.map((opt) => {
-        const isSelected = selectedIds.includes(opt.id);
+      {resolvedOptions.map((opt) => {
+        const isSelected = resolvedSelectedIds.includes(opt.id);
         const imgSrc =
           opt.apparatus === 'all'
             ? '/motion-studio3d/footwork-peak.png'
@@ -77,26 +118,35 @@ export const VisualApparatusPhotoStrip: React.FC<{
  */
 export const VisualSequenceFilmstrip: React.FC<{
   readonly steps: readonly SequenceStep[];
-  readonly exercisesById: ReadonlyMap<string, PilatesExercise>;
+  readonly exercisesById?: ReadonlyMap<string, PilatesExercise>;
+  readonly exercises?: readonly PilatesExercise[];
   readonly maxFrames?: number;
   readonly activeStepId?: string | null;
+  readonly activeStepIndex?: number;
   readonly onSelectStep?: (step: SequenceStep, index: number, trigger: HTMLButtonElement) => void;
   readonly compact?: boolean;
   readonly testId?: string;
 }> = ({
   steps,
   exercisesById,
+  exercises,
   maxFrames = 8,
   activeStepId,
+  activeStepIndex,
   onSelectStep,
   compact = false,
   testId = 'visual-sequence-filmstrip',
 }) => {
+  const resolvedMap = useMemo(() => {
+    if (exercisesById) return exercisesById;
+    return new Map((exercises ?? []).map((ex) => [ex.id, ex]));
+  }, [exercisesById, exercises]);
+
   const movementEntries = steps
     .map((step, index) => ({
       step,
       index,
-      exercise: !isRestStep(step) ? exercisesById.get(step.exerciseId) : undefined,
+      exercise: !isRestStep(step) ? resolvedMap.get(step.exerciseId) : undefined,
     }))
     .filter((entry): entry is { step: SequenceStep; index: number; exercise: PilatesExercise } =>
       Boolean(entry.exercise),
@@ -120,7 +170,9 @@ export const VisualSequenceFilmstrip: React.FC<{
       <div className="pf-visual-filmstrip__rail">
         {visibleEntries.map(({ step, index, exercise }) => {
           const studio3d = resolveStudio3DMotionForExercise(exercise);
-          const isActive = activeStepId === step.stepId;
+          const isActive =
+            (activeStepId !== undefined && activeStepId !== null && activeStepId === step.stepId) ||
+            (activeStepIndex !== undefined && activeStepIndex === index);
           const mediaStack = (
             <span className="pf-visual-filmstrip__media" aria-hidden="true">
               <img
@@ -163,7 +215,7 @@ export const VisualSequenceFilmstrip: React.FC<{
           return (
             <div
               key={step.stepId}
-              className="pf-visual-filmstrip__frame is-static"
+              className={`pf-visual-filmstrip__frame is-static ${isActive ? 'is-active' : ''}`.trim()}
               role="img"
               aria-label={`${index + 1}. ${exercise.nameKo} 대표 3D 포즈`}
             >
@@ -303,6 +355,7 @@ export const VisualDual3DPoseStrip: React.FC<{
  * with subtle spring-guided carriage glide micro-motion when selected or hovered.
  */
 export const VisualApparatusSpotGlyph: React.FC<{
+  readonly apparatus?: ApparatusType;
   readonly selected?: boolean;
   readonly occupied?: boolean;
 }> = ({ selected = false, occupied = false }) => (
@@ -322,7 +375,7 @@ export const VisualApparatusSpotGlyph: React.FC<{
       rx="7"
       stroke="currentColor"
       strokeWidth="2"
-      fill={selected ? 'rgba(15, 107, 78, 0.14)' : 'rgba(255,255,255,0.65)'}
+      fill={selected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255,255,255,0.65)'}
     />
     <line
       x1="8"
@@ -340,7 +393,7 @@ export const VisualApparatusSpotGlyph: React.FC<{
       width="24"
       height="25"
       rx="4"
-      fill={selected ? '#0F6B4E' : occupied ? '#CBD5D0' : '#CBEAD9'}
+      fill={selected ? '#A7F3D0' : occupied ? '#CBD5D0' : '#CBEAD9'}
     />
     <line x1="12" y1="45" x2="12" y2="49" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" />
     <line x1="19" y1="45" x2="19" y2="49" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" />
@@ -416,13 +469,16 @@ export const VisualSpineBalanceDiagram: React.FC<{
  */
 export const VisualBreathPacerRing: React.FC<{
   readonly running: boolean;
-  readonly progressPct: number;
-  readonly phaseLabel: string;
-}> = ({ running, progressPct, phaseLabel }) => {
+  readonly progressPct?: number;
+  readonly phaseLabel?: string;
+  readonly breathLabel?: string;
+  readonly size?: number;
+}> = ({ running, progressPct = 50, phaseLabel, breathLabel }) => {
   const radius = 21;
   const circumference = 2 * Math.PI * radius;
-  const clamped = Math.min(100, Math.max(0, progressPct));
+  const clamped = Math.min(100, Math.max(0, Number.isFinite(progressPct) ? progressPct : 50));
   const dashOffset = circumference * (1 - clamped / 100);
+  const resolvedLabel = phaseLabel || breathLabel || '흉곽 호흡 유지';
 
   return (
     <div
@@ -460,7 +516,7 @@ export const VisualBreathPacerRing: React.FC<{
       <span className="pf-breath-pacer-pill__copy">
         <strong>{running ? '호흡 페이서 작동 중' : '호흡 리듬 대기'}</strong>
         <small>
-          {phaseLabel || '흉곽 호흡 유지'} · 진행 {Math.round(clamped)}%
+          {resolvedLabel} · 진행 {Math.round(clamped)}%
         </small>
       </span>
     </div>

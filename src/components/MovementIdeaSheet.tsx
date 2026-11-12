@@ -54,6 +54,7 @@ import {
 import { BLANK_DRAFT_STARTER_OPTIONS } from '../data/classBlockPresets';
 import { startFromBlankDraftOption } from '../utils/classBlockPresetValidator';
 import { useHydratedLocalPhoto, useStudioRealtimeSync } from '../hooks/useStudioRealtimeSync';
+import { getApparatusPrimary3DThumb } from '../utils/studio3dMotionCatalog';
 
 const MOVEMENT_IDEA_STARTERS = BLANK_DRAFT_STARTER_OPTIONS.filter(
   (option) =>
@@ -626,6 +627,43 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
       className="pf-movement-idea-dialog pf-idea-sheet-dialog"
     >
       <div className="pf-idea-sheet" data-testid="movement-idea-sheet">
+        <div className="pf-idea-3d-studio-banner" data-testid="idea-3d-studio-preview">
+          <img
+            src={getApparatusPrimary3DThumb(apparatus || 'reformer')}
+            alt=""
+            aria-hidden="true"
+            className="pf-idea-3d-studio-banner__thumb"
+          />
+          <div className="pf-idea-3d-studio-banner__body">
+            <span className="pf-studio-kicker-pill">3D STUDIO MEMO · 나만의 동작 노트</span>
+            <strong>{workingTitle.trim() || ideaLine.trim() || '기구를 고르고 떠오른 동작 한 줄을 남겨보세요'}</strong>
+            <div className="pf-p05-chip-row" role="group" aria-label="동작 메모 기구 빠른 선택">
+              {(
+                [
+                  { id: 'reformer', label: '리포머' },
+                  { id: 'cadillac', label: '캐딜락' },
+                  { id: 'chair', label: '체어' },
+                  { id: 'barrel', label: '바렐' },
+                  { id: 'mat', label: '매트' },
+                ] as const
+              ).map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`pf-p05-chip ${apparatus === item.id ? 'is-active' : ''}`.trim()}
+                  aria-pressed={apparatus === item.id}
+                  onClick={() => {
+                    const next = apparatus === item.id ? '' : item.id;
+                    setApparatus(next);
+                    syncBuffer({ apparatus: next });
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
         {statusMessage && (
           <PfStatusBanner tone="success" role="status">
             {statusMessage}

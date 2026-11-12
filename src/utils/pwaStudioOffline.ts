@@ -1,6 +1,6 @@
-import { ALL_STUDIO_3D_ASSET_URLS } from './studio3dMotionCatalog';
+import { ALL_STUDIO_3D_ASSET_URLS, ALL_STUDIO_3D_MID_ASSET_URLS } from './studio3dMotionCatalog';
 
-export const STUDIO_OFFLINE_3D_CACHE_NAME = 'flow-atelier-studio3d-v1';
+export const STUDIO_OFFLINE_3D_CACHE_NAME = 'flow-atelier-studio3d-v2';
 
 export interface Studio3dOfflineStatus {
   readonly totalAssets: number;
@@ -76,6 +76,21 @@ export async function prewarmStudio3dOfflineCache(
       // Skip individual failed asset cleanly while offline
     }
     onProgress?.(cachedAssets, totalAssets);
+  }
+
+  // Opportunistically prewarm intermediate mid-phase frames without blocking primary 48-cut completion
+  for (const midUrl of ALL_STUDIO_3D_MID_ASSET_URLS) {
+    try {
+      const existing = await cache.match(midUrl);
+      if (!existing) {
+        const res = await fetcher(midUrl, { cache: 'force-cache' });
+        if (res && res.ok) {
+          await cache.put(midUrl, typeof res.clone === 'function' ? res.clone() : res);
+        }
+      }
+    } catch {
+      // Non-blocking fallback
+    }
   }
 
   return {

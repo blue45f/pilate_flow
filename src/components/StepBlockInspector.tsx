@@ -1,7 +1,8 @@
 import { PostureAnatomyGuide } from './PostureAnatomyGuide';
-import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
-import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
+import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
+import { SpringVisualPills } from './SpringVisualPills';
+import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import { useEffect, useState } from 'react';
 import {
   ArrowDown,
@@ -520,23 +521,103 @@ function StepBlockInspectorBody({
           </div>
         )}
       </div>
-      {exercise && (
-        <div style={{ display: 'grid', gap: '8px', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ApparatusIconBadge
-              apparatus={exercise.apparatus}
-              bodyPosition={exercise.bodyPosition}
-              size="sm"
-              showLabel
-              decorative
-            />
+      {exercise && (() => {
+        const motion3d = resolveStudio3DMotionForExercise(exercise);
+        return (
+          <div className="pf-p05-quick-sheet-top" data-testid="step-inspector-3d-quick-sheet">
+            <div className="pf-p05-hero-row">
+              <img
+                src={motion3d.peakImg}
+                alt=""
+                aria-hidden="true"
+                className="pf-p05-hero-thumb"
+              />
+              <div className="pf-p05-hero-meta">
+                <strong>{String(index + 1).padStart(2, '0')} {exercise.nameKo}</strong>
+                <div className="pf-p05-hero-pills">
+                  {(draft.spring || exercise.springs) ? (
+                    <SpringVisualPills springs={draft.spring || exercise.springs} />
+                  ) : null}
+                  <span>풋바 {exercise.footbar}</span>
+                </div>
+              </div>
+            </div>
+            {!disabled && (
+              <div className="pf-p05-quick-controls">
+                <div className="pf-p05-chip-group" role="group" aria-label="빠른 계획 시간 선택">
+                  <span className="pf-p05-chip-label">계획 시간 (분)</span>
+                  <div className="pf-p05-chip-row">
+                    {[3, 4, 5, 6, 7].map((mins) => {
+                      const active = Math.abs(Number(draft.duration) - mins) < 0.05;
+                      return (
+                        <button
+                          key={mins}
+                          type="button"
+                          className={`pf-p05-chip ${active ? 'is-active' : ''}`}
+                          aria-pressed={active}
+                          onClick={() => updateCalculatedTargetField({ duration: String(mins) })}
+                        >
+                          {mins}분{active ? ' ✓' : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="pf-p05-chip-group" role="group" aria-label="빠른 난이도 레이어 선택">
+                  <span className="pf-p05-chip-label">난이도 레이어 (부담 줄이기 / 표준 / 확장)</span>
+                  <div className="pf-p05-chip-row">
+                    {([
+                      { value: 'easy' as LayerMode, label: '부담 완화' },
+                      { value: 'standard' as LayerMode, label: '표준 진행' },
+                      { value: 'hard' as LayerMode, label: '심화 확장' },
+                    ]).map((opt) => {
+                      const active = draft.layer === opt.value;
+                      const authored = !!exercise.layers[opt.value]?.trim();
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          disabled={!authored}
+                          className={`pf-p05-chip ${active ? 'is-active' : ''}`}
+                          aria-pressed={active}
+                          onClick={() => setDraft({ ...draft, layer: opt.value })}
+                        >
+                          {opt.label}{active ? ' ✓' : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <label className="pf-p05-quick-memo">
+                  <span className="pf-p05-chip-label">현장 큐 한 줄 메모</span>
+                  <input
+                    type="text"
+                    maxLength={500}
+                    value={draft.note}
+                    onChange={(event) => setDraft({ ...draft, note: event.target.value })}
+                    placeholder={exercise.cues[0] || '예: 무릎 정렬 유지 · 내쉬며 캐리지 밀기'}
+                  />
+                </label>
+              </div>
+            )}
+            <details className="pf-detail-progressive-drawer">
+              <summary><span>3D 모션 시작↔정점 &amp; 자세 정렬 도해 펼쳐보기</span></summary>
+              <div style={{ display: 'grid', gap: '8px', paddingTop: '8px' }}>
+                <Studio3DMotionHeroCard exercise={exercise} compact />
+                <StudioClinicalBriefCard exercise={exercise} compact />
+                <PostureAnatomyGuide exercise={exercise} compact />
+              </div>
+            </details>
           </div>
-          <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
-          <StudioClinicalBriefCard exercise={exercise} compact />
-        </div>
-      )}
-      {exercise && <PostureAnatomyGuide exercise={exercise} compact />}
+        );
+      })()}
       <form className="step-inspector-form" onSubmit={apply} noValidate>
+        <details
+          className="pf-p05-advanced-drawer"
+          open={Boolean(draftTimingStatus.edited && !draftTimingStatus.valid)}
+        >
+          <summary>세부 시간 계산 · 횟수 · 스프링 · 모션 연결 고급 설정 펼치기</summary>
+          <div className="pf-p05-advanced-drawer__body">
         <fieldset disabled={disabled}>
           <legend>이번 수업의 계획</legend>
           <label className="form-field">
@@ -792,6 +873,26 @@ function StepBlockInspectorBody({
             <small>휴식은 전체 수업 시간에 한 번만 포함됩니다.</small>
           </span>
         </div>
+        {exercise && (
+          <details
+            className="step-inspector-visual-guide"
+            data-testid="step-inspector-visual-guide"
+            open={showVisualGuide}
+            onToggle={(event) => setShowVisualGuide(event.currentTarget.open)}
+          >
+            <summary>시작·중간·끝 관절 정렬 도해 및 유사 동작 차이 비교</summary>
+            {showVisualGuide && (
+              <MovementVisualGuideCard
+                exercise={exercise}
+                availablePeers={store.exercises}
+                initialPhase="middle"
+              />
+            )}
+          </details>
+        )}
+        {exercise && <ExerciseEvidencePanel exercise={exercise} step={step} />}
+          </div>
+        </details>
         {stale && (
           <button
             type="button"
@@ -824,24 +925,6 @@ function StepBlockInspectorBody({
             {message}
           </p>
         )}
-        {exercise && (
-          <details
-            className="step-inspector-visual-guide"
-            data-testid="step-inspector-visual-guide"
-            open={showVisualGuide}
-            onToggle={(event) => setShowVisualGuide(event.currentTarget.open)}
-          >
-            <summary>시작·중간·끝 관절 정렬 도해 및 유사 동작 차이 비교</summary>
-            {showVisualGuide && (
-              <MovementVisualGuideCard
-                exercise={exercise}
-                availablePeers={store.exercises}
-                initialPhase="middle"
-              />
-            )}
-          </details>
-        )}
-        {exercise && <ExerciseEvidencePanel exercise={exercise} step={step} />}
         {dirty && !disabled && pendingChangedLabels.length > 0 && (
           <div
             className="step-inspector-pending-summary"

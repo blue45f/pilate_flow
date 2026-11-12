@@ -90,11 +90,13 @@ const BROWSER_EXPOSED_KEY_NAME_REGEX =
 export function assertNoBrowserKeyExposure(
   envRecord?: Record<string, unknown>,
 ): SecretExposureCheckResult {
-  const targetEnv: Record<string, unknown> =
-    envRecord ??
-    ((typeof import.meta !== 'undefined' &&
-      (import.meta as unknown as { env?: Record<string, unknown> }).env) ||
-      {});
+  const globalMetaEnv =
+    typeof globalThis !== 'undefined'
+      ? ((globalThis as unknown as { __VITE_IMPORT_META_ENV__?: Record<string, unknown> })
+          .__VITE_IMPORT_META_ENV__ ?? {})
+      : {};
+  const targetEnv: Record<string, unknown> = envRecord ?? globalMetaEnv;
+
 
   const violations: string[] = [];
   for (const [key, value] of Object.entries(targetEnv)) {

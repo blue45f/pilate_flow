@@ -2,7 +2,7 @@ import { PostureAnatomyGuide } from './PostureAnatomyGuide';
 import { MovementDiagramReference } from './MovementDiagramReference';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
-import { MovementDetailIntentBanner } from './PageIntentBanner';
+import { SpringVisualPills } from './SpringVisualPills';
 import { getCrawledRelatedVideosForExercise } from '../data/globalCrawledRepertoirePack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -949,10 +949,9 @@ const MovementDetails: React.FC<{
       `https://www.youtube-nocookie.com/embed/${videoId}?start=${safeStart}${safeEnd ? `&end=${safeEnd}` : ''}&rel=0&autoplay=0`)
     : '';
   return (
-    <div className="movement-detail">
-      <MovementDetailIntentBanner exercise={exercise} />
+    <div className="movement-detail pf-p07-clean-detail" data-preview-step={previewStep}>
       <nav
-        className="pf-step-guide-bar yt-preview-step-guide"
+        className="pf-step-guide-bar yt-preview-step-guide pf-p07-top-tabs"
         aria-label="영상 구간 확인 및 메모 수정 단계 안내"
         data-testid="yt-preview-step-guide"
       >
@@ -1027,11 +1026,13 @@ const MovementDetails: React.FC<{
           </button>
         </div>
       )}
-      <div ref={step1Ref}>
-        <Studio3DMotionHeroCard exercise={exercise} />
-      </div>
+      {previewStep === 1 && (
+        <div ref={step1Ref} data-detail-step1-section>
+          <Studio3DMotionHeroCard exercise={exercise} />
+        </div>
+      )}
       <div
-        className={`movement-detail-media movement-${exercise.apparatus}`}
+        className={`movement-detail-media movement-${exercise.apparatus} pf-p08-yt-dark-card ${loadVideo ? 'is-playing' : 'is-compact-bar'} ${previewStep === 2 ? 'is-step2-hero' : ''}`.trim()}
       >
         {loadVideo && link ? (
           <iframe
@@ -1043,84 +1044,60 @@ const MovementDetails: React.FC<{
           />
         ) : (
           <>
-            <MovementArt apparatus={exercise.apparatus} />
-            <div className="movement-detail-media-caption">
-              <span>직접 그린 기구 도식 · 동작 시범 아님</span>
+            <div className="pf-p08-yt-mini-art" aria-hidden="true">
+              <MovementArt apparatus={exercise.apparatus} />
+            </div>
+            <div className="movement-detail-media-caption pf-p08-yt-caption">
+              <div className="pf-p08-yt-copy">
+                <strong>
+                  ▶ YouTube 참조 구간 플레이어 ({formatSecondsToMMSS(safeStart)}
+                  {safeEnd ? ` ~ ${formatSecondsToMMSS(safeEnd)}` : ' ~'})
+                </strong>
+                <span>직접 그린 기구 도식 · 동작 시범 아님</span>
+              </div>
               {link && (
-                <button type="button" className="btn-primary" onClick={() => setLoadVideo(true)}>
-                  <Play size={16} /> YouTube 영상 불러오기
+                <button type="button" className="btn-primary pf-p08-yt-btn" onClick={() => setLoadVideo(true)}>
+                  <Play size={15} /> YouTube 영상 불러오기
                 </button>
               )}
             </div>
           </>
         )}
       </div>
-      <div className="movement-detail-topline">
-        <span className="library-badge">
-          {getExerciseEquipment(exercise)
-            .requiredEquipment.map(
-              (id) => EQUIPMENT_OPTIONS.find((item) => item.id === id)?.labelKo || id,
-            )
-            .join(' · ') || APPARATUS_LABELS[exercise.apparatus].ko}
-        </span>
-        <span className="library-badge">Lv {exercise.level}</span>
-        <span className="library-badge">
-          <Clock3 size={12} /> 계획 {exercise.defaultDurationMin}분
-          {exercise.isUnilateral ? ' · 양쪽 포함' : ''}
-        </span>
-        <span className={`library-badge provenance-${source.kind}`}>
-          {primarySource ? '공개 자료를 참고한 내 계획 노트 · 원출처 보존' : source.label}
-        </span>
-      </div>
-      {onAddToSequence && (
-        <div className="library-modal-footer">
-          {hasUnsavedReview && (
-            <p id={unsavedDescriptionId} className="movement-add-feedback" role="status">
-              저장하지 않은 수정 내용이 있어요. ‘수정 메모만 저장’ 또는 전체 검토·승인을 마친 뒤
-              추가해 주세요.
-            </p>
-          )}
-          {alreadyInSequence && !hasUnsavedReview && (
-            <p className="movement-add-feedback muted" role="status">
-              {approved
-                ? '이미 현재 수업안에 담은 동작입니다. 창을 닫고 수업 구성을 이어가세요.'
-                : '현재 수업안에 담긴 교차 검증 자료입니다. 검토 기록은 선택 사항입니다.'}
-            </p>
-          )}
-          {additionError && (
-            <p className="movement-add-feedback status error" role="alert">
-              {additionError}
-            </p>
-          )}
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={alreadyInSequence || hasUnsavedReview}
-            aria-describedby={hasUnsavedReview ? unsavedDescriptionId : undefined}
-            onClick={() => {
-              if (alreadyInSequence || hasUnsavedReview) return;
-              setAdditionError('');
-              const result = onAddToSequence(exercise.id);
-              if (result && !result.success) {
-                setAdditionError(
-                  result.message || '동작을 추가하지 못했습니다. 현재 수업 조건을 확인해 주세요.',
-                );
-                return;
-              }
-              onClose();
-            }}
-          >
-            <Plus size={16} />{' '}
-            {hasUnsavedReview
-              ? '수정 내용 저장 후 추가 가능'
-              : alreadyInSequence
-                ? '수업안에 추가됨'
-                : '수업안에 추가'}
-          </button>
+      {previewStep === 2 && (
+        <div ref={step1Ref} data-detail-step1-section className="pf-p08-compact-3d-ref">
+          <Studio3DMotionHeroCard exercise={exercise} compact />
         </div>
       )}
-      <MotionReferencePlayer exerciseId={exercise.id} exerciseName={exercise.nameKo} />
-      <ExerciseYouTubeGallery exercise={exercise} maxPerRegion={3} />
+      <details
+        ref={step2Ref}
+        className="optional-review-details"
+        open={previewStep === 2 || restoredDraft !== null ? true : undefined}
+      >
+        <summary>내 검토 기록 (선택)</summary>
+        <LocalInstructorReview
+          key={`${currentRevision}-${draftResetVersion}`}
+          exercise={exercise}
+          initialRestoredDraft={restoredDraft}
+          reviewerAlias={reviewerAlias}
+          onReviewerAliasChange={setReviewerAlias}
+          editorOpen={previewStep === 2 || reviewEditorOpen}
+          onEditorOpenChange={(open) => {
+            setReviewEditorOpen(open);
+            if (open) {
+              setPreviewStep(2);
+            }
+          }}
+          canAddToSequence={
+            Boolean(onAddToSequence) && !alreadyInSequence && !additionError && !hasUnsavedReview
+          }
+          onDraftStatusChange={onDraftStatusChange}
+          onDraftSaved={() => {
+            setRestoredDraft(null);
+            setDraftRestoredNotice(false);
+          }}
+        />
+      </details>
       {crawledRelatedVideos.length > 0 && (
         <details
           className="pf-detail-progressive-drawer"
@@ -1128,16 +1105,11 @@ const MovementDetails: React.FC<{
         >
           <summary>
             <span>
-              <Play size={14} aria-hidden="true" /> 추가 크롤링 공식 시범 영상 ({
-                crawledRelatedVideos.length
-              }건 · 국내외 참조)
+              추가 공식 시범 영상 ({crawledRelatedVideos.length}건 · 국내외 참조)
             </span>
             <ChevronDown size={14} aria-hidden="true" />
           </summary>
-          <div style={{ display: 'grid', gap: '10px', paddingBottom: '10px' }}>
-            <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
-              클릭 시에만 공식 YouTube 개인정보 보호 임베드(youtube-nocookie.com, 자동재생 없음)로 열립니다.
-            </p>
+          <div style={{ display: 'grid', gap: '8px', paddingTop: '10px' }}>
             {crawledRelatedVideos.map((vid) => (
               <div
                 key={vid.videoId}
@@ -1216,23 +1188,66 @@ const MovementDetails: React.FC<{
           </div>
         </details>
       )}
-      <details className="pf-detail-progressive-drawer" data-testid="detail-clinical-diagram-drawer">
+      <details
+        className="pf-detail-progressive-drawer"
+        data-testid="detail-clinical-diagram-drawer"
+      >
         <summary>
-          <span>기구학 단계 도해 · 스튜디오 브리프 열기 (선택)</span>
+          <span>기구학 2D 보조 도해 · 임상 브리프 보기</span>
           <ChevronDown size={14} aria-hidden="true" />
         </summary>
-        <div style={{ display: 'grid', gap: '12px', paddingBottom: '10px' }}>
+        <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
+          <div className="movement-detail-topline">
+            <span className="library-badge">
+              {getExerciseEquipment(exercise)
+                .requiredEquipment.map(
+                  (id) => EQUIPMENT_OPTIONS.find((item) => item.id === id)?.labelKo || id,
+                )
+                .join(' · ') || APPARATUS_LABELS[exercise.apparatus].ko}
+            </span>
+            {exercise.springs && <SpringVisualPills springs={exercise.springs} />}
+            <span className="library-badge">Lv {exercise.level}</span>
+            <span className="library-badge">
+              <Clock3 size={12} /> 계획 {exercise.defaultDurationMin}분
+              {exercise.isUnilateral ? ' · 양쪽 포함' : ''}
+            </span>
+            <span className={`library-badge provenance-${source.kind}`}>
+              {primarySource ? '공개 자료를 참고한 내 계획 노트 · 원출처 보존' : source.label}
+            </span>
+          </div>
+          <ExerciseYouTubeGallery exercise={exercise} maxPerRegion={3} />
           <StudioClinicalBriefCard exercise={exercise} />
           <MovementDiagramReference exercise={exercise} />
+          {approved ? (
+            <ExercisePlanningNotes exercise={exercise} pending={false} />
+          ) : (
+            <ExercisePlanningNotes exercise={exercise} pending />
+          )}
         </div>
       </details>
-      <details className="pf-detail-progressive-drawer" data-testid="detail-voice-media-drawer">
+      <details
+        className="pf-detail-progressive-drawer"
+        data-testid="detail-posture-anatomy-drawer"
+      >
         <summary>
-          <span>한국어 음성 티칭 가이드 · 링크 정책 열기 (선택)</span>
+          <span>자세 정렬 · 주동근 해부학 가이드 펼쳐보기</span>
           <ChevronDown size={14} aria-hidden="true" />
         </summary>
-        <div style={{ paddingBottom: '10px' }}>
+        <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
+          <PostureAnatomyGuide exercise={exercise} />
+        </div>
+      </details>
+      <details
+        className="pf-detail-progressive-drawer"
+        data-testid="detail-voice-media-drawer"
+      >
+        <summary>
+          <span>음성 티칭 가이드 · 모션 레퍼런스 펼쳐보기</span>
+          <ChevronDown size={14} aria-hidden="true" />
+        </summary>
+        <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
           <MovementMediaGuidancePanel key={exercise.id} exercise={exercise} />
+          <MotionReferencePlayer exerciseId={exercise.id} exerciseName={exercise.nameKo} />
         </div>
       </details>
       <details
@@ -1357,66 +1372,61 @@ const MovementDetails: React.FC<{
           )}
         </section>
       </details>
-      <div className={`movement-use-warning ${approved ? 'reviewed' : ''}`}>
-        <Info size={17} />
-        <p>
+      <p className="pf-p07-honest-footnote">
+        <Info size={14} aria-hidden="true" />
+        <span>
           {approved
-            ? '내 강사 검토 기록이 있는 계획 메타데이터입니다. 수업별 기구·회원 조건은 다시 확인하세요.'
-            : '교차 검증 완료 자료입니다. 수업안에 바로 추가할 수 있으며, 실제 수행 전 기구와 몸 상태를 확인하세요.'}
-        </p>
-      </div>
-      <details className="pf-detail-progressive-drawer" data-testid="detail-posture-anatomy-drawer">
-        <summary>
-          <span>자세 정렬 · 타겟 해부학 부위 가이드 열기 (선택)</span>
-          <ChevronDown size={14} aria-hidden="true" />
-        </summary>
-        <div style={{ paddingBottom: '10px' }}>
-          <PostureAnatomyGuide exercise={exercise} />
+            ? '내 강사 검토 기록이 있는 계획 메타데이터 · 외부 자격 인증과 별개이며 수업 전 기구·회원 상태를 직접 확인하세요.'
+            : '교차 검증 완료 참고 자료 · 수업안에 바로 추가할 수 있으며 수행 전 스프링과 몸 상태를 확인하세요.'}
+        </span>
+      </p>
+      {onAddToSequence && (
+        <div className="library-modal-footer">
+          {hasUnsavedReview && (
+            <p id={unsavedDescriptionId} className="movement-add-feedback" role="status">
+              저장하지 않은 수정 내용이 있어요. ‘수정 메모만 저장’ 또는 전체 검토·승인을 마친 뒤
+              추가해 주세요.
+            </p>
+          )}
+          {alreadyInSequence && !hasUnsavedReview && (
+            <p className="movement-add-feedback muted" role="status">
+              {approved
+                ? '이미 현재 수업안에 담은 동작입니다. 창을 닫고 수업 구성을 이어가세요.'
+                : '현재 수업안에 담긴 교차 검증 자료입니다. 검토 기록은 선택 사항입니다.'}
+            </p>
+          )}
+          {additionError && (
+            <p className="movement-add-feedback status error" role="alert">
+              {additionError}
+            </p>
+          )}
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={alreadyInSequence || hasUnsavedReview}
+            aria-describedby={hasUnsavedReview ? unsavedDescriptionId : undefined}
+            onClick={() => {
+              if (alreadyInSequence || hasUnsavedReview) return;
+              setAdditionError('');
+              const result = onAddToSequence(exercise.id);
+              if (result && !result.success) {
+                setAdditionError(
+                  result.message || '동작을 추가하지 못했습니다. 현재 수업 조건을 확인해 주세요.',
+                );
+                return;
+              }
+              onClose();
+            }}
+          >
+            <Plus size={16} />{' '}
+            {hasUnsavedReview
+              ? '수정 내용 저장 후 추가 가능'
+              : alreadyInSequence
+                ? '수업안에 추가됨'
+                : '수업안에 추가'}
+          </button>
         </div>
-      </details>
-      {approved ? (
-        <ExercisePlanningNotes exercise={exercise} pending={false} />
-      ) : (
-        <details className="pending-instruction-notes">
-          <summary>
-            <span>
-              <FileText size={15} />
-              검토 전 기존 메모 · 근거 미확인
-            </span>
-            <span>강사 검토용</span>
-          </summary>
-          <ExercisePlanningNotes exercise={exercise} pending />
-        </details>
       )}
-      <details
-        ref={step2Ref}
-        className="optional-review-details"
-        open={restoredDraft !== null ? true : undefined}
-      >
-        <summary>내 검토 기록 (선택)</summary>
-        <LocalInstructorReview
-          key={`${currentRevision}-${draftResetVersion}`}
-          exercise={exercise}
-          initialRestoredDraft={restoredDraft}
-          reviewerAlias={reviewerAlias}
-          onReviewerAliasChange={setReviewerAlias}
-          editorOpen={reviewEditorOpen}
-          onEditorOpenChange={(open) => {
-            setReviewEditorOpen(open);
-            if (open) {
-              setPreviewStep(2);
-            }
-          }}
-          canAddToSequence={
-            Boolean(onAddToSequence) && !alreadyInSequence && !additionError && !hasUnsavedReview
-          }
-          onDraftStatusChange={onDraftStatusChange}
-          onDraftSaved={() => {
-            setRestoredDraft(null);
-            setDraftRestoredNotice(false);
-          }}
-        />
-      </details>
     </div>
   );
 };

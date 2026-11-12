@@ -25,10 +25,9 @@ import {
 import { formatSequenceAsMarkdownCueSheet, formatSequenceAsPortableJson } from '../utils/portableSequenceExport';
 import { formatSecondsToMMSS, formatSequenceAsStudioSheet, getSequenceDurations, isRestStep } from '../utils/sequenceEngine';
 import { getApparatusPrimary3DThumb, resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
-import {
-  copyHistoryLogIntoWorkbenchSafely, formatTeachingHistorySnapshotText, resolveTeachingHistoryView,
-} from '../utils/teachingHistorySnapshot';
+import * as teachingHistorySnapshot from '../utils/teachingHistorySnapshot';
 import { LightDismissDialog } from './LightDismissDialog';
+import { MobileSubPageBar } from './MobileSubPageBar';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
@@ -36,6 +35,12 @@ import { OnePageVisual3DCueSheet } from './OnePageVisual3DCueSheet';
 import { SequenceQrShareDialog } from './SequenceQrShareDialog';
 import { SpringVisualPills } from './SpringVisualPills';
 import { TeachingBalanceInsightCard } from './TeachingBalanceInsightCard';
+import { VisualSequenceFilmstrip } from './VisualFlowComponents';
+import { CurriculumProgressionSheet } from './CurriculumProgressionSheet';
+import {
+  buildAdaptiveNextClassDraft,
+  type AdaptiveNextClassPrescription,
+} from '../utils/historyAdaptiveBridge';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/design-tokens.css';
 import '../styles/teaching.css';
@@ -166,16 +171,17 @@ const INTENSITY_LABELS: Record<'relaxed' | 'moderate' | 'intense', string> = {
 
 export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal, view = 'saved' }) => {
   const {
-    savedSequences, classGroups, historyLogs, exercises, activeSteps, activeSequenceId,
+    savedSequences, classGroups, historyLogs, exercises, ownedEquipment, activeSteps, activeSequenceId,
     activeTitle, activeSubtitle, activeApparatus, activeLevel, activeTargetMinutes, reformerBrand,
     conditionTemplates, persistenceError, loadSequenceIntoWorkbench, duplicateSavedSequence,
-    deleteSavedSequence, applyConditionTemplate, addClassGroup, setActiveTab,
+    deleteSavedSequence, applyConditionTemplate, addClassGroup, applyPresetDraft, setActiveTab,
   } = usePilatesStore();
   const cloudPhase = useCloudSession((state) => state.phase);
   const cloudUser = useCloudSession((state) => state.user);
   const cloudBackup = useCloudSession((state) => state.backup);
   const [query, setQuery] = useState('');
   const [savedFilter, setSavedFilter] = useState<SavedQuickFilter>('all');
+  const [p12SavedSection, setP12SavedSection] = useState<'sequences' | 'blocks'>('sequences');
   const [historyQuery, setHistoryQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedDate, setSelectedDate] = useState('all');
@@ -300,7 +306,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const humanDrafts = useMemo(() => (humanDraftsKey === '[]' ? [] : (JSON.parse(humanDraftsKey) as typeof rawHumanDrafts)), [humanDraftsKey]);
   const resolvedHistoryMap = useMemo(() => {
     const map = new Map<string, ResolvedTeachingHistoryView>();
-    for (const log of historyLogs) map.set(log.id, resolveTeachingHistoryView(log, exercisesMap, savedSequences, { reusableBlocks, humanDrafts }));
+    for (const log of historyLogs) map.set(log.id, teachingHistorySnapshot.resolveTeachingHistoryView(log, exercisesMap, savedSequences, { reusableBlocks, humanDrafts }));
     return map;
   }, [historyLogs, exercisesMap, savedSequences, reusableBlocks, humanDrafts]);
 
@@ -513,7 +519,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const exportJson = (sequence: SavedSequence) =>
     downloadTxt(`${sequence.title.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-sequence'}.json`, formatSequenceAsPortableJson(sequence), '휴대용 JSON 패키지(.json)를 내보냈습니다.');
   const exportHistorySnapshotText = (viewItem: ResolvedTeachingHistoryView) =>
-    downloadTxt(`${viewItem.sequenceTitle.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-history'}-${getTeachingHistoryDateSource(viewItem).slice(0, 10)}.txt`, formatTeachingHistorySnapshotText(viewItem), '수업 완료 이력 스냅샷 텍스트를 내보냈습니다.');
+    downloadTxt(`${viewItem.sequenceTitle.replace(/[\\/:*?"<>|]/g, '-') || 'pilates-history'}-${getTeachingHistoryDateSource(viewItem).slice(0, 10)}.txt`, teachingHistorySnapshot.formatTeachingHistorySnapshotText(viewItem), '수업 완료 이력 스냅샷 텍스트를 내보냈습니다.');
   const createGroup = (event: React.FormEvent) => {
     event.preventDefault();
     const normalizedName = normalizeSearchToken(groupName);
@@ -570,12 +576,44 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
     copyingRef.current = true;
     try {
       const stateBeforeLoad = usePilatesStore.getState();
-      copyHistoryLogIntoWorkbenchSafely(logId, usePilatesStore);
+      teachingHistorySnapshot.copyHistoryLogIntoWorkbenchSafely(logId, usePilatesStore);
       const after = usePilatesStore.getState();
       setHistoryCopyError(after === stateBeforeLoad ? '' : (after.generationError ?? ''));
     } finally {
       copyingRef.current = false;
     }
+  };
+
+  const applyAdaptivePrescription = (prescription: AdaptiveNextClassPrescription | null) => {
+    if (!prescription) return;
+    const expected = usePilatesStore.getState();
+    const result = applyPresetDraft(
+      {
+        steps: prescription.steps,
+        title: prescription.draftTitle,
+        subtitle: prescription.draftSubtitle,
+        targetMinutes: prescription.targetMinutes,
+      },
+      'replace',
+      expected,
+    );
+    if (result.success) {
+      setHistoryCopyError('');
+      setMessage(result.message);
+      setActiveTab('workbench');
+    } else {
+      setHistoryCopyError(result.message);
+    }
+  };
+
+  const applySingleLogAdaptive = (log: ClassHistoryLog) => {
+    const singlePrescription = buildAdaptiveNextClassDraft({
+      logs: [log],
+      exercises,
+      ownedEquipment,
+      fallbackTargetMinutes: activeTargetMinutes || 50,
+    });
+    applyAdaptivePrescription(singlePrescription);
   };
 
   const handleRovingKeyDown = (
@@ -669,9 +707,39 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
       </div>
       {message && <PfStatusBanner tone="success">{message}</PfStatusBanner>}
       {view === 'history' && historyCopyError && <PfFormError>{historyCopyError}</PfFormError>}
-      <ApparatusVisualGuideRibbon activeApparatusId="reformer" mode="binder" />
+      <details className="pf-detail-progressive-drawer" style={{ marginBottom: '12px' }}>
+        <summary><span>기구별 스프링·셋업 가이드 펼쳐보기 (선택)</span></summary>
+        <ApparatusVisualGuideRibbon activeApparatusId="reformer" mode="binder" />
+      </details>
       {view === 'saved' ? (
         <>
+          <details
+            className="pf-detail-progressive-drawer"
+            data-testid="binder-4week-curriculum-drawer"
+            style={{ marginBottom: '12px' }}
+          >
+            <summary>
+              <span>4주 점진 클래스 커리큘럼 자동 편성·일괄 보관 열기 (1~4주차)</span>
+            </summary>
+            <CurriculumProgressionSheet
+              onSavedBatch={(msg) => setMessage(msg)}
+              onOpenedWeekInWorkbench={(msg) => setMessage(msg)}
+            />
+          </details>
+          <MobileSubPageBar
+            ariaLabel="저장 시퀀스와 모듈 블록 전환"
+            activeId={p12SavedSection}
+            options={[
+              { id: 'sequences', label: '전체 시퀀스', badge: savedSequences.length },
+              {
+                id: 'blocks',
+                label: '모듈 블록 묶음',
+                badge: reusableBlocks.length + OFFLINE_BLOCK_PRESETS.slice(0, 6).length,
+              },
+            ]}
+            onSelect={setP12SavedSection}
+          />
+          <div data-subpage-hidden={p12SavedSection === 'blocks' ? 'true' : undefined}>
           <div className="teaching-collection-toolbar">
             <div className="teaching-search-row">
               <PfSearchField
@@ -857,6 +925,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                         </div>
                       </div>
                     </div>
+                    <VisualSequenceFilmstrip steps={sequence.steps} exercises={exercises} compact />
                     <p className="muted teaching-sequence-subtitle">{sequence.subtitle || '내가 만든 수업 흐름'}</p>
                     <p className="teaching-saved-glance">
                       {apparatusLabel} · Lv {sequence.level} · 총 {minutesLabel(durations.totalSec)}분 (동작 {exerciseCount}
@@ -1036,10 +1105,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
               })}
             </div>
           )}
+          </div>
           <PfCard
             as="section"
             className="pf-binder-blocks-shelf"
             data-testid="binder-reusable-blocks-shelf"
+            data-subpage-hidden={p12SavedSection === 'sequences' ? 'true' : undefined}
             aria-label="재사용 모듈 블록 보관함"
           >
             <div className="pf-binder-blocks-shelf__head">
@@ -1377,6 +1448,62 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
             <strong>내 수업 {actualLogs.length}개</strong>
             {logs.length > actualLogs.length && <span> · 예시 {logs.length - actualLogs.length}개 (분석 제외)</span>}
           </p>
+          {(() => {
+            const adaptiveSourceLogs = actualLogs.length > 0 ? actualLogs : logs;
+            const adaptiveDraft =
+              adaptiveSourceLogs.length > 0
+                ? buildAdaptiveNextClassDraft({
+                    logs: adaptiveSourceLogs,
+                    exercises,
+                    ownedEquipment,
+                    targetGroupId: selectedGroup,
+                    fallbackTargetMinutes: activeTargetMinutes || 50,
+                  })
+                : null;
+            if (!adaptiveDraft) return null;
+            return (
+              <section
+                className="pf-v70-adaptive-banner"
+                data-testid="binder-adaptive-bridge-card"
+                aria-label="수업 기록 기반 다음 수업 자동 보정 제안"
+              >
+                <div className="pf-v70-adaptive-main">
+                  <div className="pf-v70-adaptive-badges">
+                    <span className="pf-studio-kicker-pill">ADAPTIVE NEXT CLASS · 피드백 자동 보정</span>
+                    <PfBadge tone="sage">권장 Lv {adaptiveDraft.signal.recommendedLevel}</PfBadge>
+                    {adaptiveDraft.signal.cautionLabelsKo.map((lbl) => (
+                      <PfBadge key={lbl} tone="warning">{lbl}</PfBadge>
+                    ))}
+                  </div>
+                  <h3>{adaptiveDraft.signal.headlineKo}</h3>
+                  <ul className="pf-v70-adaptive-bullets">
+                    {adaptiveDraft.signal.rationaleBulletsKo.slice(0, 2).map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                  {adaptiveDraft.substitutions.length > 0 && (
+                    <p className="pf-v70-adaptive-subs">
+                      관절·부하 자동 교체 {adaptiveDraft.substitutions.length}건:{' '}
+                      {adaptiveDraft.substitutions
+                        .slice(0, 2)
+                        .map((sub) => `${sub.fromNameKo} → ${sub.toNameKo}`)
+                        .join(', ')}
+                    </p>
+                  )}
+                  <small className="pf-v70-honest-caption">{adaptiveDraft.honestDisclaimerKo}</small>
+                </div>
+                <div className="pf-v70-adaptive-cta">
+                  <PfButton
+                    variant="primary"
+                    data-testid="binder-apply-adaptive-next-btn"
+                    onClick={() => applyAdaptivePrescription(adaptiveDraft)}
+                  >
+                    피드백 반영 보정 시퀀스 열기 <ArrowRight size={15} />
+                  </PfButton>
+                </div>
+              </section>
+            );
+          })()}
           <div className="teaching-history-layout">
             <section className="teaching-history-feed" aria-label="수업 기록 목록">
               {(logs.length === 0 || (!hasActiveHistoryFilter && actualLogs.length === 0)) && (
@@ -1467,6 +1594,13 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                           <div className="teaching-history-actions">
                             <PfButton variant="primary" onClick={(e) => { reopenedTriggerRef.current = e.currentTarget; setReopenedHistoryId(log.id); }}><Eye size={15} />당시 시퀀스 보기</PfButton>
                             <PfButton variant="secondary" disabled={missingExercise} onClick={() => copyHistory(log.id)}><Copy size={15} />복사해 새 수업 만들기</PfButton>
+                            <PfButton
+                              variant="secondary"
+                              data-testid={`history-adaptive-btn-${log.id}`}
+                              onClick={() => applySingleLogAdaptive(log)}
+                            >
+                              피드백 반영 보정 생성
+                            </PfButton>
                           </div>
                         </div>
                         <details className="teaching-history-details">

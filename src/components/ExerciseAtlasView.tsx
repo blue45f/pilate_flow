@@ -1,4 +1,6 @@
 import { EquipmentChoice } from './EquipmentChoice';
+import { MobileSubPageBar } from './MobileSubPageBar';
+import { VisualApparatusPhotoStrip } from './VisualFlowComponents';
 import type { MotionDraftId } from '../models/types';
 import {
   MOTION_PATTERN_REFERENCES,
@@ -12,6 +14,7 @@ import {
   Check,
   ChevronDown,
   Clock3,
+  Compass,
   ExternalLink,
   FileText,
   Heart,
@@ -74,14 +77,17 @@ import {
 } from '../utils/sequenceEngine';
 import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';
 import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
-import {
-  CatalogMotionInteractivePlayer,
-  CatalogMotionThumbnail,
-} from './CatalogMotionInteractivePlayer';
+import { CatalogMotionInteractivePlayer } from './CatalogMotionInteractivePlayer';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
 import { KinematicSchematicShowcase } from './KinematicSchematicShowcase';
 import { SpringVisualPills } from './SpringVisualPills';
+import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
+import {
+  BRAND_SPRING_OPTIONS,
+  formatBrandSpringEquivalent,
+} from '../utils/brandSpringConverter';
+import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import { EquipmentDiscoveryScope } from './EquipmentDiscoveryScope';
 import { CourseReferenceBrowser } from './CourseReferenceBrowser';
 import { SourceNoteDialog } from './SourceNoteDialog';
@@ -915,6 +921,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     setExerciseFavoriteTag,
     activeSteps,
     setActiveTab,
+    reformerBrand,
+    setReformerBrand,
   } = usePilatesStore();
   const [collection, setCollection] = useState<'notes' | 'repertoire' | 'references' | 'courses'>('notes');
   const [sourceToPlan, setSourceToPlan] = useState<VerifiedPublicReference | null>(null);
@@ -956,6 +964,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     expanded: false,
     limitNotice: null,
   });
+  const [compareOrbitIds, setCompareOrbitIds] = useState<Record<string, boolean>>({});
 
   const inspectedExercise =
     exercises.find((exercise) => exercise.id === inspectedExerciseId) ?? null;
@@ -1453,6 +1462,30 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               </button>
             )}
           </div>
+          <VisualApparatusPhotoStrip
+            activeApparatus={
+              filters.equipment.length === 1 && ['reformer', 'cadillac', 'chair', 'barrel', 'mat'].includes(filters.equipment[0])
+                ? (filters.equipment[0] as 'reformer' | 'cadillac' | 'chair' | 'barrel' | 'mat')
+                : 'all'
+            }
+            onSelect={(app) => update('equipment', app === 'all' ? [] : [app])}
+            compact
+          />
+          {inspectedExercise && (
+            <div className="pf-auto-mobile-only">
+              <MobileSubPageBar
+                ariaLabel="동작 목록과 선택 동작 정보 전환"
+                activeId="inspector"
+                options={[
+                  { id: 'list', label: '동작 목록으로 돌아가기', badge: filtered.length },
+                  { id: 'inspector', label: `선택됨 · ${inspectedExercise.nameKo.slice(0, 10)}` },
+                ]}
+                onSelect={(id) => {
+                  if (id === 'list') closeInspector();
+                }}
+              />
+            </div>
+          )}
           <section className="library-tools panel" aria-label="동작 검색과 필터">
             <div className="library-search-row" role="search" aria-label="동작 검색창">
               <label className="library-search">
@@ -1712,12 +1745,18 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
           </section>
 
           {!filters.search && activeFilterCount === 0 && (
-            <KinematicSchematicShowcase
-              onQuickSearchKeyword={(kw) => {
-                update('search', kw);
-                focusSearch();
-              }}
-            />
+            <details className="library-asset-status" style={{ marginBottom: '10px' }}>
+              <summary>
+                <span>2D 기구학 벡터 도해 쇼케이스 펼쳐보기 (선택)</span>
+                <ChevronDown size={16} aria-hidden="true" />
+              </summary>
+              <KinematicSchematicShowcase
+                onQuickSearchKeyword={(kw) => {
+                  update('search', kw);
+                  focusSearch();
+                }}
+              />
+            </details>
           )}
           <details className="library-asset-status" style={{ marginBottom: '14px' }}>
             <summary>
@@ -1799,6 +1838,26 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                       </span>
                     </div>
                     <div className="atlas-compare-bar-actions">
+                      <div
+                        className="atlas-compare-brand-pills"
+                        role="group"
+                        aria-label="비교함 기구 브랜드 스프링 기준"
+                        data-testid="atlas-compare-brand-switcher"
+                      >
+                        {BRAND_SPRING_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            className={`atlas-compare-brand-chip ${
+                              reformerBrand === opt.id ? 'is-active' : ''
+                            }`.trim()}
+                            aria-pressed={reformerBrand === opt.id}
+                            onClick={() => setReformerBrand(opt.id)}
+                          >
+                            {opt.shortLabelKo}
+                          </button>
+                        ))}
+                      </div>
                       <button
                         type="button"
                         ref={compareExpandBtnRef}
@@ -1872,6 +1931,13 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                         const itemInResults = filteredIdSet.has(item.id);
                         const itemEqMeta = getExerciseEquipment(item);
                         const itemInSeq = itemReadiness.status === 'in-sequence';
+                        const item3D = resolveStudio3DMotionForExercise(item);
+                        const itemBrandSpring = formatBrandSpringEquivalent(
+                          item.springs,
+                          reformerBrand,
+                          item.apparatus,
+                        );
+                        const isOrbitOpen = Boolean(compareOrbitIds[item.id]);
 
                         return (
                           <article
@@ -1899,46 +1965,74 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                               </button>
                             </div>
 
-                            <button
-                              type="button"
-                              className="atlas-compare-art-btn"
-                              aria-label={`비교함에서 ${item.nameKo} 도해 미리보기`}
-                              onClick={(event) => {
-                                if (itemPatterns[0]) {
-                                  openPatternPreview(itemPatterns[0], event.currentTarget);
-                                } else if (itemKinematic) {
-                                  openCatalogMotionPreview(item.id, event.currentTarget);
-                                } else {
-                                  onOpenYouTubePreview(item);
-                                }
-                              }}
+                            <div
+                              className="atlas-compare-3d-strip"
+                              data-testid={`atlas-compare-3d-strip-${item.id}`}
+                              aria-label={`${item.nameKo} 3단계 스튜디오 3D 키프레임`}
                             >
-                              <span className="atlas-compare-art-stage">
-                                {itemPatterns[0] ? (
-                                  <MotionPatternThumbnail
-                                    reference={itemPatterns[0]}
-                                    unifiedCatalogAsset={itemKinematic}
-                                  />
-                                ) : itemKinematic ? (
-                                  <CatalogMotionThumbnail asset={itemKinematic} />
-                                ) : (
-                                  <span>
-                                    {APPARATUS_LABELS[item.apparatus].ko} ·{' '}
-                                    {POSITION_LABELS[item.bodyPosition].ko}
-                                  </span>
-                                )}
-                              </span>
-                              <span className="atlas-compare-art-caption">
+                              {(
+                                [
+                                  { key: 'start', label: '시작', src: item3D.startImg },
+                                  { key: 'mid', label: '추진', src: item3D.midImg },
+                                  { key: 'peak', label: '정점', src: item3D.peakImg },
+                                ] as const
+                              ).map((frame) => (
+                                <figure key={frame.key} className="atlas-compare-3d-frame">
+                                  <img src={frame.src} alt="" aria-hidden="true" loading="lazy" />
+                                  <figcaption>{frame.label}</figcaption>
+                                </figure>
+                              ))}
+                            </div>
+
+                            <div className="atlas-compare-visual-bar">
+                              <button
+                                type="button"
+                                className={`atlas-compare-orbit-btn ${isOrbitOpen ? 'is-active' : ''}`.trim()}
+                                data-testid={`atlas-compare-orbit-toggle-${item.id}`}
+                                aria-pressed={isOrbitOpen}
+                                onClick={() =>
+                                  setCompareOrbitIds((prev) => ({
+                                    ...prev,
+                                    [item.id]: !prev[item.id],
+                                  }))
+                                }
+                              >
+                                <Compass size={13} aria-hidden="true" />
+                                <span>{isOrbitOpen ? '360° 뷰어 닫기' : '360° 각도 비교'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="atlas-compare-art-btn is-compact-link"
+                                aria-label={`비교함에서 ${item.nameKo} 도해 미리보기`}
+                                onClick={(event) => {
+                                  if (itemPatterns[0]) {
+                                    openPatternPreview(itemPatterns[0], event.currentTarget);
+                                  } else if (itemKinematic) {
+                                    openCatalogMotionPreview(item.id, event.currentTarget);
+                                  } else {
+                                    onOpenYouTubePreview(item);
+                                  }
+                                }}
+                              >
                                 <span>
                                   {itemPatterns[0]
-                                    ? `${itemPatterns[0].title} · 패턴 초안 (검증 시범 아님)`
+                                    ? '2D 패턴 초안'
                                     : itemKinematic
-                                      ? '5단계 기구학 도해 · 출처 대조'
-                                      : '동작 상세 정보 보기'}
+                                      ? '5단계 기구학 도해'
+                                      : '전체 상세'}
                                 </span>
-                                <Play size={12} aria-hidden="true" />
-                              </span>
-                            </button>
+                                <Play size={11} aria-hidden="true" />
+                              </button>
+                            </div>
+
+                            {isOrbitOpen && (
+                              <div
+                                className="atlas-compare-orbit-box"
+                                data-testid={`atlas-compare-orbit-box-${item.id}`}
+                              >
+                                <StudioInteractive3DViewport exercise={item} compact />
+                              </div>
+                            )}
 
                             <dl className="atlas-compare-specs">
                               <div>
@@ -1946,6 +2040,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                 <dd>
                                   {APPARATUS_LABELS[item.apparatus].ko}
                                   {item.springs?.trim() ? ` · ${item.springs}` : ''}
+                                  {!itemBrandSpring.isNonSpringApparatus &&
+                                    ` (${itemBrandSpring.brandShortLabelKo}: ${itemBrandSpring.equivalentLabelKo})`}
                                   {itemEqMeta.requiredProps.length > 0
                                     ? ` · ${itemEqMeta.requiredProps.map(propLabel).join('·')}`
                                     : ''}
@@ -2092,72 +2188,59 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                         }`.trim()}
                         key={exercise.id}
                       >
-                        <div className="movement-card-art">
+                        <div className="movement-card-art pf-p06-3d-art">
                           <button
                             type="button"
-                            className="movement-art-trigger"
-                            aria-label={
-                              patterns[0]
-                                ? `${exercise.nameKo} 관련 패턴 도해 보기`
-                                : `${exercise.nameKo} 상세 보기`
-                            }
-                            onClick={(event) =>
-                              patterns[0]
-                                ? openPatternPreview(patterns[0], event.currentTarget)
+                            className="movement-art-trigger pf-p06-3d-trigger"
+                            aria-label={`${exercise.nameKo} 상세 보기`}
+                            onClick={() =>
+                              isIdea && onOpenIdeaSheet
+                                ? onOpenIdeaSheet(exercise)
                                 : onOpenYouTubePreview(exercise)
                             }
                             aria-describedby={`motion-caption-${exercise.id}`}
                           >
-                            {patterns[0] ? (
-                              <MotionPatternThumbnail
-                                reference={patterns[0]}
-                                unifiedCatalogAsset={getCatalogContinuousMotionAsset(exercise)}
-                              />
-                            ) : hasValidIdeaPhoto && ideaMeta?.photoDataUrl ? (
-                              <img
-                                src={ideaMeta.photoDataUrl}
-                                alt=""
-                                aria-hidden="true"
-                                className="movement-idea-photo"
-                                loading="lazy"
-                                onError={() =>
-                                  setBrokenPhotoIds((previous) => ({
-                                    ...previous,
-                                    [exercise.id]: true,
-                                  }))
-                                }
-                              />
-                            ) : getCatalogContinuousMotionAsset(exercise) ? (
-                              <CatalogMotionThumbnail
-                                asset={getCatalogContinuousMotionAsset(exercise)!}
-                              />
-                            ) : (
-                              <div
-                                className={`ml-unmapped-art ml-unmapped-art--${exercise.apparatus}`}
-                                aria-hidden="true"
-                              >
-                                <span className="ml-unmapped-meta">
-                                  {APPARATUS_LABELS[exercise.apparatus].ko} ·{' '}
-                                  {POSITION_LABELS[exercise.bodyPosition].ko}
-                                </span>
-                                <span>움직임을 기록할 자리</span>
-                                <i />
-                                <span className="ml-unmapped-focus">
-                                  {exercise.targetMuscles.slice(0, 2).join(' · ') || '호흡 · 정렬'}
-                                </span>
-                              </div>
-                            )}
-                            <span className="art-caption" id={`motion-caption-${exercise.id}`}>
+                            <img
+                              src={
+                                hasValidIdeaPhoto && ideaMeta?.photoDataUrl
+                                  ? ideaMeta.photoDataUrl
+                                  : resolveStudio3DMotionForExercise(exercise).peakImg
+                              }
+                              alt=""
+                              aria-hidden="true"
+                              className="pf-p06-3d-img"
+                              loading="lazy"
+                              onError={
+                                hasValidIdeaPhoto
+                                  ? () =>
+                                      setBrokenPhotoIds((previous) => ({
+                                        ...previous,
+                                        [exercise.id]: true,
+                                      }))
+                                  : undefined
+                              }
+                            />
+                            <span className="pf-b05-card-overlay-top" aria-hidden="true">
+                              <span className="pf-b05-pill is-dark">
+                                {APPARATUS_LABELS[exercise.apparatus].ko} ·{' '}
+                                {CANONICAL_BLOCKS.find((b) => b.category === exercise.blockCategory)
+                                  ?.nameKo ?? '본운동'}
+                              </span>
+                              {exercise.springs && (
+                                <span className="pf-b05-pill is-light">{exercise.springs}</span>
+                              )}
+                            </span>
+                            <span className="pf-b05-card-overlay-bottom" aria-hidden="true">
+                              <span className="pf-b05-pill is-coral">
+                                ● {exercise.targetMuscles.slice(0, 2).join('·') || '코어·정렬'}
+                              </span>
+                            </span>
+                            <span className="art-caption sr-only" id={`motion-caption-${exercise.id}`}>
                               {patterns[0]
-                                ? `${patterns[0].title} · 관련 패턴 초안`
-                                : `${exercise.nameKo} · 5단계 기구학 도해`}
+                                ? `${patterns[0].title} · 3D 스튜디오 모션`
+                                : `${exercise.nameKo} · 3D 스튜디오 모션`}
                             </span>
                           </button>
-                          <span className="movement-equipment-label">
-                            {patterns[0]
-                              ? patterns[0].equipment[0]
-                              : APPARATUS_LABELS[exercise.apparatus].short}
-                          </span>
                           <button
                             type="button"
                             className={`movement-heart ${isFavorite ? 'is-saved' : ''}`}

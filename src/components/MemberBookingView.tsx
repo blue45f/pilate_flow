@@ -44,6 +44,8 @@ import {
 } from '../utils/memberBookingBridge';
 import { LightDismissDialog } from './LightDismissDialog';
 import { SpringVisualPills } from './SpringVisualPills';
+import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
+import { VisualApparatusSpotGlyph } from './VisualFlowComponents';
 import '../styles/member-booking.css';
 import '../styles/atelier-luxury-v2.css';
 
@@ -863,6 +865,17 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
     () => (pendingAction ? formatFreeCancelDeadlineKo(pendingAction.slot) : null),
     [pendingAction],
   );
+
+  const pendingRepresentativeExercise = useMemo(() => {
+    if (!pendingAction) return null;
+    const targetApparatus =
+      pendingAction.slot.apparatus === 'mixed' ? 'reformer' : pendingAction.slot.apparatus;
+    return (
+      exercises.find((ex) => ex.apparatus === targetApparatus) ??
+      exercises[0] ??
+      null
+    );
+  }, [pendingAction, exercises]);
 
   const resetScheduleFilters = () => {
     setHasInteractedSchedule(true);
@@ -1685,6 +1698,25 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                     )}
                   </div>
                 </div>
+                {pendingRepresentativeExercise && (
+                  <details
+                    className="pf-member-360-drawer"
+                    data-testid="member-spot-360-preview-drawer"
+                  >
+                    <summary>
+                      🌐 수업 대표 기구 동작 360° 3D로 미리보기 · 드래그 회전
+                    </summary>
+                    <div className="pf-member-360-drawer__body">
+                      <StudioInteractive3DViewport
+                        exercise={pendingRepresentativeExercise}
+                        compact
+                      />
+                      <small className="pf-member-360-drawer__note">
+                        기구 움직임 방향 이해를 돕는 참고용 3D 시뮬레이션이며 실제 수업 동작·스프링 강도는 현장 강사가 회원 컨디션에 맞춰 안내합니다.
+                      </small>
+                    </div>
+                  </details>
+                )}
                 <div className="pf-studio-spot-map" data-testid="member-spot-map">
                   <div className="pf-studio-spot-map__zone">
                     <MapPin size={12} aria-hidden="true" style={{ verticalAlign: 'middle' }} /> 스튜디오
@@ -1725,6 +1757,11 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                           onClick={() => selectSpot(spot.spotId)}
                           onKeyDown={(e) => handleSpotKeyDown(e, spotIdx)}
                         >
+                          <VisualApparatusSpotGlyph
+                            apparatus={pendingAction.slot.apparatus === 'mixed' ? 'reformer' : pendingAction.slot.apparatus}
+                            selected={isPicked}
+                            occupied={spot.occupiedByOther}
+                          />
                           <strong>{spot.spotId}</strong>
                           <small>{spot.zoneKo}</small>
                           <small style={{ fontWeight: 700 }}>
