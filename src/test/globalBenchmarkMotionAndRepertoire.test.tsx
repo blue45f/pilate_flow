@@ -10,10 +10,7 @@ import { InlineExerciseFinder } from '../components/InlineExerciseFinder';
 import { LiveStageView } from '../components/LiveStageView';
 import { LogSessionModal } from '../components/LogSessionModal';
 import { OnePageVisual3DCueSheet } from '../components/OnePageVisual3DCueSheet';
-import {
-  SequenceQrImportDialog,
-  SequenceQrShareDialog,
-} from '../components/SequenceQrShareDialog';
+import { SequenceQrImportDialog, SequenceQrShareDialog } from '../components/SequenceQrShareDialog';
 import { Studio3DMotionHeroCard } from '../components/Studio3DMotionHeroCard';
 import { StudioOffline3dReadinessCard } from '../components/StudioOffline3dReadinessCard';
 import {
@@ -79,10 +76,10 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Global Benchmark Mobile-First Redesign, 40-Render Studio 3D Motion System, Offline PWA, Brand Spring Conversion, Local QR Share & Member Focus Bridge', () => {
-  it('verifies all 40 Blender 3D studio renders across 20 movement families, 5 motion exemplar boards, and 10 mobile-first boards exist while preserving 01–09 mockups and 98/141 catalog invariants', () => {
-    expect(Object.keys(STUDIO_3D_SIGNATURES)).toHaveLength(20);
-    expect(ALL_STUDIO_3D_ASSET_URLS).toHaveLength(40);
+describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion System, Offline PWA, Brand Spring Conversion, Local QR Share & Member Focus Bridge', () => {
+  it('verifies all 48 Blender 3D studio renders across 24 movement families, 5 motion exemplar boards, and 10 mobile-first boards exist while preserving 01–09 mockups and 98/141 catalog invariants', () => {
+    expect(Object.keys(STUDIO_3D_SIGNATURES)).toHaveLength(24);
+    expect(ALL_STUDIO_3D_ASSET_URLS).toHaveLength(48);
 
     const studio3dFiles = [
       'footwork-start.png',
@@ -125,6 +122,14 @@ describe('Global Benchmark Mobile-First Redesign, 40-Render Studio 3D Motion Sys
       'barrel-swan-peak.png',
       'barrel-horseback-start.png',
       'barrel-horseback-peak.png',
+      'reformer-feetstraps-start.png',
+      'reformer-feetstraps-peak.png',
+      'reformer-jumpboard-start.png',
+      'reformer-jumpboard-peak.png',
+      'chair-swan-start.png',
+      'chair-swan-peak.png',
+      'barrel-spinecorrector-start.png',
+      'barrel-spinecorrector-peak.png',
     ];
     for (const file of studio3dFiles) {
       expect(existsSync(resolve(process.cwd(), 'public/motion-studio3d', file))).toBe(true);
@@ -195,7 +200,9 @@ describe('Global Benchmark Mobile-First Redesign, 40-Render Studio 3D Motion Sys
     const reformerTendonPike = GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.find((e) =>
       e.id.includes('tendon-stretch'),
     )!;
-    const matSaw = GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.find((e) => e.id.includes('crawled-mat-saw'))!;
+    const matSaw = GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.find((e) =>
+      e.id.includes('crawled-mat-saw'),
+    )!;
 
     const reformerMermaidSample: PilatesExercise = {
       ...INITIAL_EXERCISES[0]!,
@@ -245,19 +252,21 @@ describe('Global Benchmark Mobile-First Redesign, 40-Render Studio 3D Motion Sys
       'reformer-mermaid',
     );
     expect(resolveStudio3DMotionForExercise(reformerLungeSample).signatureId).toBe(
-      'reformer-lunge',
+      'reformer-scooter-lunge',
     );
     expect(resolveStudio3DMotionForExercise(chairGoingUp).signatureId).toBe('chair-goingup');
     expect(resolveStudio3DMotionForExercise(chairPullUpPike).signatureId).toBe('chair-pike');
     expect(resolveStudio3DMotionForExercise(cadillacTeaser).signatureId).toBe('cadillac-teaser');
     expect(resolveStudio3DMotionForExercise(cadillacHanging).signatureId).toBe('cadillac-hanging');
     expect(resolveStudio3DMotionForExercise(cadillacLegSpringSample).signatureId).toBe(
-      'cadillac-legspring',
+      'cadillac-leg-springs',
     );
     expect(resolveStudio3DMotionForExercise(barrelSwan).signatureId).toBe('barrel-swan');
     expect(resolveStudio3DMotionForExercise(barrelRoundBack).signatureId).toBe('barrel-horseback');
     expect(resolveStudio3DMotionForExercise(matSaw).signatureId).toBe('mat-twist');
-    expect(resolveStudio3DMotionForExercise(matSideKickSample).signatureId).toBe('mat-sidekick');
+    expect(resolveStudio3DMotionForExercise(matSideKickSample).signatureId).toBe(
+      'mat-sidekick-plank',
+    );
 
     // Baseline invariants preserved
     expect(INITIAL_EXERCISES).toHaveLength(98);
@@ -265,10 +274,77 @@ describe('Global Benchmark Mobile-First Redesign, 40-Render Studio 3D Motion Sys
     expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(141);
   });
 
+  it('routes new motion families separately from inversions and ladder-barrel poses', () => {
+    const exercise = (
+      nameEn: string,
+      overrides: Partial<PilatesExercise> = {},
+    ): PilatesExercise => ({
+      ...INITIAL_EXERCISES[0]!,
+      id: 'motion-routing-sample',
+      nameKo: '모션 라우팅 표본',
+      nameEn,
+      apparatus: 'reformer',
+      blockCategory: 'feet-in-straps',
+      bodyPosition: 'supine',
+      box: 'none',
+      ...overrides,
+    });
+
+    for (const name of ['Feet in Straps Frog', 'Leg Circles']) {
+      expect(resolveStudio3DMotionForExercise(exercise(name))).toMatchObject({
+        signatureId: 'reformer-feetstraps',
+        matchScope: 'exact-signature',
+      });
+    }
+    expect(resolveStudio3DMotionForExercise(exercise('Short Spine'))).toMatchObject({
+      signatureId: 'reformer-shortspine',
+      matchScope: 'exact-signature',
+    });
+    for (const name of ['Long Spine', 'Overhead', 'Rollover']) {
+      expect(resolveStudio3DMotionForExercise(exercise(name))).toMatchObject({
+        signatureId: 'reformer-shortspine',
+        matchScope: 'apparatus-family-reference',
+      });
+    }
+    expect(
+      resolveStudio3DMotionForExercise(
+        exercise('Jumpboard Footwork', { blockCategory: 'footwork' }),
+      ).signatureId,
+    ).toBe('reformer-jumpboard');
+    expect(
+      resolveStudio3DMotionForExercise(
+        exercise('Chair Swan', {
+          apparatus: 'chair',
+          blockCategory: 'extension',
+          bodyPosition: 'prone',
+        }),
+      ),
+    ).toMatchObject({ signatureId: 'chair-swan', matchScope: 'exact-signature' });
+    expect(
+      resolveStudio3DMotionForExercise(
+        exercise('Prone Arm Work', {
+          apparatus: 'chair',
+          blockCategory: 'upper-body',
+          bodyPosition: 'prone',
+        }),
+      ),
+    ).toMatchObject({ signatureId: 'chair-swan', matchScope: 'apparatus-family-reference' });
+    expect(
+      resolveStudio3DMotionForExercise(
+        exercise('Spine Corrector Round Back', {
+          apparatus: 'barrel',
+          blockCategory: 'core',
+          bodyPosition: 'seated',
+        }),
+      ).signatureId,
+    ).toBe('barrel-spinecorrector');
+  });
+
   it('renders Studio3DMotionHeroCard with Start / Onion-Skin / Peak / Loop modes, honest anatomical disclaimer, and 3-Essential Strip', () => {
     const footworkExercise =
-      INITIAL_EXERCISES.find((ex) => ex.apparatus === 'reformer' && ex.blockCategory === 'footwork') ??
-      INITIAL_EXERCISES[0]!;
+      INITIAL_EXERCISES.find(
+        (ex) => ex.apparatus === 'reformer' && ex.blockCategory === 'footwork',
+      ) ?? INITIAL_EXERCISES[0]!;
 
     render(<Studio3DMotionHeroCard exercise={footworkExercise} />);
 
@@ -293,7 +369,9 @@ describe('Global Benchmark Mobile-First Redesign, 40-Render Studio 3D Motion Sys
     const related = getCrawledRelatedVideosForExercise(reformerEx, 4);
     expect(related.length).toBeGreaterThan(0);
 
-    render(<YouTubePreviewModal exercise={reformerEx} onClose={vi.fn()} onAddToSequence={vi.fn()} />);
+    render(
+      <YouTubePreviewModal exercise={reformerEx} onClose={vi.fn()} onAddToSequence={vi.fn()} />,
+    );
 
     expect(screen.getByTestId('studio-3d-motion-hero-card')).toBeVisible();
     expect(screen.getByTestId('detail-essential-3-strip')).toBeVisible();
@@ -456,9 +534,8 @@ describe('Global Benchmark Mobile-First Redesign, 40-Render Studio 3D Motion Sys
   it('connects unified 5-apparatus 3D mini previews, difficulty badges, and SpringVisualPills across InstructorScheduleView and MemberBookingView without altering accessible CTA/card names', async () => {
     const { InstructorScheduleView } = await import('../components/InstructorScheduleView');
     const { MemberBookingView } = await import('../components/MemberBookingView');
-    const { getApparatusStudio3dImage, resolveClassCardVisualMeta } = await import(
-      '../utils/memberBookingBridge'
-    );
+    const { getApparatusStudio3dImage, resolveClassCardVisualMeta } =
+      await import('../utils/memberBookingBridge');
 
     for (const apparatus of ['reformer', 'chair', 'cadillac', 'barrel', 'mat'] as const) {
       expect(getApparatusStudio3dImage(apparatus)).toMatch(/^\/motion-studio3d\/.+\.png$/);
@@ -576,8 +653,7 @@ describe('Global Benchmark Mobile-First Redesign, 40-Render Studio 3D Motion Sys
     const unlinkedBarrelCard = screen.getByRole('article', {
       name: /저녁 래더 바렐 측굴반/,
     });
-    const barrelThumb =
-      unlinkedBarrelCard.querySelector<HTMLImageElement>('.pf-schedule-3d-thumb');
+    const barrelThumb = unlinkedBarrelCard.querySelector<HTMLImageElement>('.pf-schedule-3d-thumb');
     expect(barrelThumb?.getAttribute('src')).toBe('/motion-studio3d/barrel-swan-peak.png');
     expect(
       within(unlinkedBarrelCard).getByTestId('schedule-card-apparatus-badge'),
@@ -597,9 +673,8 @@ describe('Global Benchmark Mobile-First Redesign, 40-Render Studio 3D Motion Sys
       name: '오전 리포머 심화 분절반 예약하기',
     });
     const memberReformerCard = bookReformerBtn.closest('article')!;
-    const memberReformerImg = memberReformerCard.querySelector<HTMLImageElement>(
-      '.pf-member-slot-art',
-    );
+    const memberReformerImg =
+      memberReformerCard.querySelector<HTMLImageElement>('.pf-member-slot-art');
     expect(memberReformerImg?.getAttribute('src')).toBe('/motion-studio3d/shortspine-peak.png');
     expect(memberReformerCard.textContent).toContain('포커스 · 척추분절');
 
@@ -830,12 +905,12 @@ describe('Global Benchmark Mobile-First Redesign, 40-Render Studio 3D Motion Sys
     expect(screen.getByTestId('clipper-3d-setup-preview')).toHaveTextContent('빨강×2');
     clipRender.unmount();
 
-    // 6. Offline PWA Service Worker /motion-studio3d/*.png rule + StudioOffline3dReadinessCard (20패밀리 40컷)
+    // 6. Offline PWA Service Worker /motion-studio3d/*.png rule + StudioOffline3dReadinessCard (24패밀리 48컷)
     const swSrc = createServiceWorkerSource('v-test', ['assets/app.js']);
     expect(swSrc).toContain("url.pathname.startsWith('/motion-studio3d/')");
     const offlineRender = render(<StudioOffline3dReadinessCard />);
-    expect(screen.getByTestId('studio-offline-3d-readiness-card')).toHaveTextContent('40컷');
-    expect(screen.getByTestId('studio-offline-3d-readiness-card')).toHaveTextContent('20개');
+    expect(screen.getByTestId('studio-offline-3d-readiness-card')).toHaveTextContent('48컷');
+    expect(screen.getByTestId('studio-offline-3d-readiness-card')).toHaveTextContent('24개');
     offlineRender.unmount();
 
     // 7. 1-Page Visual 3D Cue Sheet (2-col print vs 1-col tablet + spring delta callout)

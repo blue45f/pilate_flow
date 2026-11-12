@@ -7,10 +7,7 @@ import {
   prewarmStudio3dOfflineCache,
   type Studio3dOfflineStatus,
 } from '../utils/pwaStudioOffline';
-import {
-  ALL_STUDIO_3D_ASSET_URLS,
-  STUDIO_3D_SIGNATURES,
-} from '../utils/studio3dMotionCatalog';
+import { ALL_STUDIO_3D_ASSET_URLS, STUDIO_3D_SIGNATURES } from '../utils/studio3dMotionCatalog';
 
 export const StudioOffline3dReadinessCard: React.FC = () => {
   const pwa = usePwa();
@@ -94,7 +91,8 @@ export const StudioOffline3dReadinessCard: React.FC = () => {
       </div>
 
       <p className="pf-offline-3d-card__desc">
-        지하 스튜디오나 Wi-Fi가 불안정한 수업실에서도 시퀀스 빌더·라이브 타이머·{totalFamilies}패밀리(
+        지하 스튜디오나 Wi-Fi가 불안정한 수업실에서도 시퀀스 빌더·라이브 타이머·{totalFamilies}개
+        패밀리(
         {totalCuts}컷) 3D 기구 모션을 끊김 없이 열 수 있도록 기기 캐시에 미리 담아 둡니다. (YouTube
         외부 스트리밍과 클라우드 백업만 인터넷 필요)
       </p>

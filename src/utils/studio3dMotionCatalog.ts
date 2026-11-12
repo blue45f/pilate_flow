@@ -4,6 +4,8 @@ export type Studio3DSignatureId =
   | 'reformer-footwork'
   | 'reformer-bridge'
   | 'reformer-shortspine'
+  | 'reformer-feetstraps'
+  | 'reformer-jumpboard'
   | 'reformer-longbox-teaser'
   | 'reformer-elephant'
   | 'reformer-mermaid'
@@ -14,13 +16,15 @@ export type Studio3DSignatureId =
   | 'chair-pedal-press'
   | 'chair-goingup'
   | 'chair-pike'
+  | 'chair-swan'
   | 'cadillac-cat-rolldown'
   | 'cadillac-teaser'
   | 'cadillac-hanging'
   | 'cadillac-leg-springs'
   | 'barrel-sidebend'
   | 'barrel-swan'
-  | 'barrel-horseback';
+  | 'barrel-horseback'
+  | 'barrel-spinecorrector';
 
 export interface Studio3DMotionSpec {
   readonly signatureId: Studio3DSignatureId;
@@ -77,6 +81,28 @@ export const STUDIO_3D_SIGNATURES: Record<
     activeMuscleSummaryKo: '복횡근 스쿱 · 햄스트링 신장 · 척추 분절',
     trajectoryArc: { from: [44, 28], ctrl: [34, 16], to: [26, 22] },
     anchorPoint: [29, 63],
+  },
+  'reformer-feetstraps': {
+    signatureId: 'reformer-feetstraps',
+    titleKo: '리포머 피트 인 스트랩 프로그 & 서클 · 골반 중립 제어',
+    startImg: '/motion-studio3d/reformer-feetstraps-start.png',
+    peakImg: '/motion-studio3d/reformer-feetstraps-peak.png',
+    excursionLabelKo: '테이블탑 프로그 준비 → 45° 사선 스트랩 프레스 & 내전 밀착',
+    anchorLabelKo: '천골 수평 캐리지 밀착 (요추 들림 방지) & 견갑 안정',
+    activeMuscleSummaryKo: '고관절 내전근 · 복횡근 · 대둔근 · 햄스트링',
+    trajectoryArc: { from: [54, 34], ctrl: [64, 36], to: [74, 26] },
+    anchorPoint: [44, 62],
+  },
+  'reformer-jumpboard': {
+    signatureId: 'reformer-jumpboard',
+    titleKo: '리포머 점프보드 카디오 플라이오 · 착지 충격 제어',
+    startImg: '/motion-studio3d/reformer-jumpboard-start.png',
+    peakImg: '/motion-studio3d/reformer-jumpboard-peak.png',
+    excursionLabelKo: '점프보드 무릎 굴곡 로딩 → 수평 공중 도약 & 발끝 신전',
+    anchorLabelKo: '점프보드 전족부→뒤꿈치 순차 착지 & 복부 코어 브레이싱',
+    activeMuscleSummaryKo: '대퇴사두근 · 비복근·가자미근 · 복횡근 충격 흡수',
+    trajectoryArc: { from: [68, 52], ctrl: [56, 42], to: [44, 49] },
+    anchorPoint: [84, 52],
   },
   'reformer-longbox-teaser': {
     signatureId: 'reformer-longbox-teaser',
@@ -188,6 +214,17 @@ export const STUDIO_3D_SIGNATURES: Record<
     trajectoryArc: { from: [60, 74], ctrl: [56, 44], to: [51, 24] },
     anchorPoint: [38, 56],
   },
+  'chair-swan': {
+    signatureId: 'chair-swan',
+    titleKo: '운다 체어 프론 스완 · 페달 원심 제어 & 흉추 신전',
+    startImg: '/motion-studio3d/chair-swan-start.png',
+    peakImg: '/motion-studio3d/chair-swan-peak.png',
+    excursionLabelKo: '프론 페달 하강 준비 → 페달 상승 저항 제어와 상부 흉추 아치 신전',
+    anchorLabelKo: '체어 상단 패드 치골·하부 늑골 지지 & 견갑 하강 고정',
+    activeMuscleSummaryKo: '상부 척추기립근 · 대둔근 · 하부 승모근 · 복횡근 보호',
+    trajectoryArc: { from: [64, 52], ctrl: [62, 34], to: [58, 22] },
+    anchorPoint: [46, 48],
+  },
   'cadillac-cat-rolldown': {
     signatureId: 'cadillac-cat-rolldown',
     titleKo: '캐딜락 롤다운 바 캣 · C커브 척추 분절',
@@ -265,6 +302,17 @@ export const STUDIO_3D_SIGNATURES: Record<
     trajectoryArc: { from: [41, 48], ctrl: [39, 36], to: [41, 28] },
     anchorPoint: [42, 62],
   },
+  'barrel-spinecorrector': {
+    signatureId: 'barrel-spinecorrector',
+    titleKo: '스파인 코렉터 아크 신전 & 티저 · 흉추 오픈 & 코어',
+    startImg: '/motion-studio3d/barrel-spinecorrector-start.png',
+    peakImg: '/motion-studio3d/barrel-spinecorrector-peak.png',
+    excursionLabelKo: '스텝 웰 시티드 준비 → 아크 정점 흉추 신전 & 45° 하지 뻗기',
+    anchorLabelKo: '스파인 코렉터 스텝 천골 안정 지지 & 하부 늑골 연결',
+    activeMuscleSummaryKo: '복직근 · 복횡근 · 흉추 신전근 · 장요근 협응',
+    trajectoryArc: { from: [54, 38], ctrl: [40, 32], to: [28, 48] },
+    anchorPoint: [56, 66],
+  },
 };
 
 export const ALL_STUDIO_3D_ASSET_URLS: readonly string[] = Object.values(
@@ -286,9 +334,10 @@ export function resolveStudio3DMotionForExercise(
         hay,
       );
     if (isElephantOrPlankPike) {
-      const exact = /elephant|up[\s-]*stretch|arabesque|tendon[\s-]*stretch|일리펀트|업\s*스트레치|아라베스크|텐던\s*스트레치/.test(
-        hay,
-      );
+      const exact =
+        /elephant|up[\s-]*stretch|arabesque|tendon[\s-]*stretch|일리펀트|업\s*스트레치|아라베스크|텐던\s*스트레치/.test(
+          hay,
+        );
       return {
         ...STUDIO_3D_SIGNATURES['reformer-elephant'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
@@ -298,18 +347,36 @@ export function resolveStudio3DMotionForExercise(
       };
     }
 
-    const isShortSpineOrStraps =
-      exercise.blockCategory === 'feet-in-straps' ||
-      /short[\s-]*spine|long[\s-]*spine|frog|circle|숏\s*스파인|롱\s*스파인|핏\s*인\s*스트랩|프로그|레그\s*서클/.test(
+    const isShortSpineInversion =
+      /short[\s-]*spine|long[\s-]*spine|rollover|overhead|숏\s*스파인|롱\s*스파인|롤오버|오버헤드/.test(
         hay,
       );
-    if (isShortSpineOrStraps) {
-      const exact = /short[\s-]*spine|숏\s*스파인|rollover/.test(hay);
+    if (isShortSpineInversion) {
+      const exact = /short[\s-]*spine|숏\s*스파인/.test(hay);
       return {
         ...STUDIO_3D_SIGNATURES['reformer-shortspine'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
           ? '3D 동작 궤적 일치 · 숏 스파인 롤오버'
+          : '리포머 척추 분절 계열 3D 참조 · 세부 자세는 큐 확인',
+      };
+    }
+
+    const isFeetInStraps =
+      exercise.blockCategory === 'feet-in-straps' ||
+      /feet[\s-]*in[\s-]*strap|frog|leg[\s-]*circle|peter[\s-]*pan|핏\s*인\s*스트랩|피트\s*인\s*스트랩|프로그|레그\s*서클|스트랩\s*레그/.test(
+        hay,
+      );
+    if (isFeetInStraps) {
+      const exact =
+        /feet[\s-]*in[\s-]*strap|frog|leg[\s-]*circle|핏\s*인\s*스트랩|피트\s*인\s*스트랩|프로그|레그\s*서클/.test(
+          hay,
+        );
+      return {
+        ...STUDIO_3D_SIGNATURES['reformer-feetstraps'],
+        matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
+        matchScopeBadgeKo: exact
+          ? '3D 동작 궤적 일치 · 리포머 피트 인 스트랩'
           : '리포머 스트랩 계열 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -363,12 +430,26 @@ export function resolveStudio3DMotionForExercise(
 
     const isBridge =
       exercise.blockCategory === 'bridging' ||
-      /bridge|bridging|pelvic\s*curl|semi[\s-]*circle|브릿지|골반\s*컬|아티큘레이|세미서클/.test(hay);
+      /bridge|bridging|pelvic\s*curl|semi[\s-]*circle|브릿지|골반\s*컬|아티큘레이|세미서클/.test(
+        hay,
+      );
     if (isBridge) {
       return {
         ...STUDIO_3D_SIGNATURES['reformer-bridge'],
         matchScope: 'exact-signature',
         matchScopeBadgeKo: '3D 동작 궤적 일치 · 브릿징',
+      };
+    }
+
+    const isJumpboard =
+      /jump[\s-]*board|cardio[\s-]*jump|plyo|점프\s*보드|점핑\s*보드|카디오\s*점프|플라이오/.test(
+        hay,
+      );
+    if (isJumpboard) {
+      return {
+        ...STUDIO_3D_SIGNATURES['reformer-jumpboard'],
+        matchScope: 'exact-signature',
+        matchScopeBadgeKo: '3D 동작 궤적 일치 · 리포머 점프보드',
       };
     }
 
@@ -385,7 +466,9 @@ export function resolveStudio3DMotionForExercise(
 
   if (exercise.apparatus === 'chair') {
     const isChairPikeOrPullUp =
-      /pike|pull[\s-]*up|tendon[\s-]*stretch|teaser[\s-]*floor|파이크|풀업|텐던\s*스트레치/.test(hay);
+      /pike|pull[\s-]*up|tendon[\s-]*stretch|teaser[\s-]*floor|파이크|풀업|텐던\s*스트레치/.test(
+        hay,
+      );
     if (isChairPikeOrPullUp) {
       return {
         ...STUDIO_3D_SIGNATURES['chair-pike'],
@@ -407,6 +490,21 @@ export function resolveStudio3DMotionForExercise(
         matchScopeBadgeKo: exact
           ? '3D 동작 궤적 일치 · 체어 고잉업 스텝업'
           : '체어 스탠딩 3D 참조 · 세부 자세는 큐 확인',
+      };
+    }
+
+    const isChairSwanOrProne =
+      exercise.bodyPosition === 'prone' ||
+      exercise.blockCategory === 'extension' ||
+      /swan|cobra|prone|extension|스완|프론|신전|코브라/.test(hay);
+    if (isChairSwanOrProne) {
+      const exact = /swan|스완/.test(hay);
+      return {
+        ...STUDIO_3D_SIGNATURES['chair-swan'],
+        matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
+        matchScopeBadgeKo: exact
+          ? '3D 동작 궤적 일치 · 체어 프론 스완'
+          : '체어 신전 3D 참조 · 세부 자세는 큐 확인',
       };
     }
 
@@ -451,9 +549,7 @@ export function resolveStudio3DMotionForExercise(
 
     const isSupineTeaserOrTower =
       exercise.bodyPosition === 'supine' ||
-      /teaser|monkey|tower|push[\s-]*through|dolphin|magician|티저|몽키|타워|푸쉬스루/.test(
-        hay,
-      );
+      /teaser|monkey|tower|push[\s-]*through|dolphin|magician|티저|몽키|타워|푸쉬스루/.test(hay);
     if (isSupineTeaserOrTower) {
       const exact = /teaser|push[\s-]*through|티저|푸쉬스루/.test(hay);
       return {
@@ -476,6 +572,18 @@ export function resolveStudio3DMotionForExercise(
   }
 
   if (exercise.apparatus === 'barrel') {
+    const isSpineCorrector =
+      /spine[\s-]*corrector|step[\s-]*barrel|pilates[\s-]*arc|스파인\s*코렉터|스텝\s*바렐|필라테스\s*아크/.test(
+        hay,
+      );
+    if (isSpineCorrector) {
+      return {
+        ...STUDIO_3D_SIGNATURES['barrel-spinecorrector'],
+        matchScope: 'exact-signature',
+        matchScopeBadgeKo: '3D 동작 궤적 일치 · 스파인 코렉터 아크',
+      };
+    }
+
     const isHorseback = /horseback|straddle|round[\s-]*back|호스백|홀스백|라운드\s*백/.test(hay);
     if (isHorseback) {
       const exact = /horseback|호스백|홀스백/.test(hay);
@@ -519,9 +627,10 @@ export function resolveStudio3DMotionForExercise(
       hay,
     );
   if (isMatSideKickOrSidePlank) {
-    const exact = /side[\s-]*kick|side[\s-]*plank|side[\s-]*bend|사이드\s*킥|사이드\s*플랭크|사이드\s*밴드/.test(
-      hay,
-    );
+    const exact =
+      /side[\s-]*kick|side[\s-]*plank|side[\s-]*bend|사이드\s*킥|사이드\s*플랭크|사이드\s*밴드/.test(
+        hay,
+      );
     return {
       ...STUDIO_3D_SIGNATURES['mat-sidekick-plank'],
       matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
