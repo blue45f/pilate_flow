@@ -6,9 +6,14 @@ import { createServiceWorkerSource } from '../../scripts/pwa-build';
 import { ClassBinderView } from '../components/ClassBinderView';
 import { ExerciseAtlasView } from '../components/ExerciseAtlasView';
 import { FreeAiAssistantPanel } from '../components/FreeAiAssistantPanel';
+import { InlineExerciseFinder } from '../components/InlineExerciseFinder';
 import { LiveStageView } from '../components/LiveStageView';
 import { LogSessionModal } from '../components/LogSessionModal';
 import { OnePageVisual3DCueSheet } from '../components/OnePageVisual3DCueSheet';
+import {
+  SequenceQrImportDialog,
+  SequenceQrShareDialog,
+} from '../components/SequenceQrShareDialog';
 import { Studio3DMotionHeroCard } from '../components/Studio3DMotionHeroCard';
 import { StudioOffline3dReadinessCard } from '../components/StudioOffline3dReadinessCard';
 import {
@@ -26,7 +31,17 @@ import { INITIAL_EXERCISES, INITIAL_SAVED_SEQUENCES } from '../data/pilatesCatal
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesExercise, SequenceStep } from '../types/pilates';
 import { ATELIER_QUICK_START_RECIPES } from '../utils/atelierQuickStart';
+import {
+  HONEST_BRAND_SPRING_CAUTION_KO,
+  formatBrandSpringEquivalent,
+  normalizeCanonicalSpringKey,
+} from '../utils/brandSpringConverter';
 import { exerciseRevision, isExerciseAutoEligible } from '../utils/exerciseReview';
+import {
+  buildSequenceShareUrl,
+  generateLocalQrCodeSvg,
+  parseSequenceShareFromHashOrToken,
+} from '../utils/localQrSequenceShare';
 import {
   ALL_STUDIO_3D_ASSET_URLS,
   STUDIO_3D_SIGNATURES,
@@ -64,10 +79,10 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion System, Offline PWA, 1-Page Visual Cue Sheet & All-Pages Elevation', () => {
-  it('verifies all 32 Blender 3D studio renders across 16 movement families, 4 motion exemplar boards, and 9 mobile-first boards exist while preserving 01–09 mockups and 98/141 catalog invariants', () => {
-    expect(Object.keys(STUDIO_3D_SIGNATURES)).toHaveLength(16);
-    expect(ALL_STUDIO_3D_ASSET_URLS).toHaveLength(32);
+describe('Global Benchmark Mobile-First Redesign, 40-Render Studio 3D Motion System, Offline PWA, Brand Spring Conversion, Local QR Share & Member Focus Bridge', () => {
+  it('verifies all 40 Blender 3D studio renders across 20 movement families, 5 motion exemplar boards, and 10 mobile-first boards exist while preserving 01–09 mockups and 98/141 catalog invariants', () => {
+    expect(Object.keys(STUDIO_3D_SIGNATURES)).toHaveLength(20);
+    expect(ALL_STUDIO_3D_ASSET_URLS).toHaveLength(40);
 
     const studio3dFiles = [
       'footwork-start.png',
@@ -80,10 +95,16 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
       'longbox-teaser-peak.png',
       'reformer-elephant-start.png',
       'reformer-elephant-peak.png',
+      'reformer-mermaid-start.png',
+      'reformer-mermaid-peak.png',
+      'reformer-lunge-start.png',
+      'reformer-lunge-peak.png',
       'mat-hundred-start.png',
       'mat-hundred-peak.png',
       'mat-twist-start.png',
       'mat-twist-peak.png',
+      'mat-sidekick-start.png',
+      'mat-sidekick-peak.png',
       'chair-start.png',
       'chair-peak.png',
       'chair-goingup-start.png',
@@ -96,6 +117,8 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
       'cadillac-teaser-peak.png',
       'cadillac-hanging-start.png',
       'cadillac-hanging-peak.png',
+      'cadillac-legspring-start.png',
+      'cadillac-legspring-peak.png',
       'barrel-sidebend-start.png',
       'barrel-sidebend-peak.png',
       'barrel-swan-start.png',
@@ -112,6 +135,7 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
       'motion-showcase-02-5-apparatus-studio3d-cards.png',
       'motion-showcase-03-advanced-repertoire-3d-series.png',
       'motion-showcase-04-elite-hanging-pike-horseback-elephant.png',
+      'motion-showcase-05-40cut-mermaid-lunge-legspring-sidekick.png',
     ];
     for (const board of exemplarBoards) {
       expect(
@@ -129,6 +153,7 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
       'board-07-schedule-and-member-3d-cards.png',
       'board-08-full-audit-p01-p04-p10-p12-p13-p14-elevation.png',
       'board-09-offline-pwa-visual-cuesheet-32-renders.png',
+      'board-10-finder-3d-brand-springs-local-qr-member-bridge.png',
     ];
     for (const board of mobileAllPagesBoards) {
       expect(
@@ -142,7 +167,7 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
       ).toBe(true);
     }
 
-    // Verify advanced & elite repertoire exercises resolve to dedicated 3D signatures
+    // Verify all 10 existing + 4 newly added repertoire exercises resolve to dedicated 3D signatures
     const shortSpine = GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.find((e) =>
       e.id.includes('short-spine'),
     )!;
@@ -172,6 +197,43 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
     )!;
     const matSaw = GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.find((e) => e.id.includes('crawled-mat-saw'))!;
 
+    const reformerMermaidSample: PilatesExercise = {
+      ...INITIAL_EXERCISES[0]!,
+      id: 'sig-test-mermaid',
+      nameKo: '리포머 머메이드 측굴',
+      nameEn: 'Reformer Mermaid Stretch',
+      apparatus: 'reformer',
+      bodyPosition: 'seated',
+      spinalPlanes: ['lateral'],
+    };
+    const reformerLungeSample: PilatesExercise = {
+      ...INITIAL_EXERCISES[0]!,
+      id: 'sig-test-lunge',
+      nameKo: '리포머 스쿠터 & 이브스 런지',
+      nameEn: 'Reformer Scooter Eve Lunge',
+      apparatus: 'reformer',
+      bodyPosition: 'standing',
+      blockCategory: 'lower-body',
+    };
+    const cadillacLegSpringSample: PilatesExercise = {
+      ...INITIAL_EXERCISES[0]!,
+      id: 'sig-test-cad-legspring',
+      nameKo: '캐딜락 레그 스프링 써클',
+      nameEn: 'Cadillac Leg Springs Circles',
+      apparatus: 'cadillac',
+      bodyPosition: 'supine',
+      blockCategory: 'lower-body',
+    };
+    const matSideKickSample: PilatesExercise = {
+      ...INITIAL_EXERCISES[0]!,
+      id: 'sig-test-mat-sidekick',
+      nameKo: '매트 사이드 킥 시리즈',
+      nameEn: 'Mat Side Kick Kneeling',
+      apparatus: 'mat',
+      bodyPosition: 'side-lying',
+      spinalPlanes: ['lateral'],
+    };
+
     expect(resolveStudio3DMotionForExercise(shortSpine).signatureId).toBe('reformer-shortspine');
     expect(resolveStudio3DMotionForExercise(longBoxTeaser).signatureId).toBe(
       'reformer-longbox-teaser',
@@ -179,13 +241,23 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
     expect(resolveStudio3DMotionForExercise(reformerTendonPike).signatureId).toBe(
       'reformer-elephant',
     );
+    expect(resolveStudio3DMotionForExercise(reformerMermaidSample).signatureId).toBe(
+      'reformer-mermaid',
+    );
+    expect(resolveStudio3DMotionForExercise(reformerLungeSample).signatureId).toBe(
+      'reformer-lunge',
+    );
     expect(resolveStudio3DMotionForExercise(chairGoingUp).signatureId).toBe('chair-goingup');
     expect(resolveStudio3DMotionForExercise(chairPullUpPike).signatureId).toBe('chair-pike');
     expect(resolveStudio3DMotionForExercise(cadillacTeaser).signatureId).toBe('cadillac-teaser');
     expect(resolveStudio3DMotionForExercise(cadillacHanging).signatureId).toBe('cadillac-hanging');
+    expect(resolveStudio3DMotionForExercise(cadillacLegSpringSample).signatureId).toBe(
+      'cadillac-legspring',
+    );
     expect(resolveStudio3DMotionForExercise(barrelSwan).signatureId).toBe('barrel-swan');
     expect(resolveStudio3DMotionForExercise(barrelRoundBack).signatureId).toBe('barrel-horseback');
     expect(resolveStudio3DMotionForExercise(matSaw).signatureId).toBe('mat-twist');
+    expect(resolveStudio3DMotionForExercise(matSideKickSample).signatureId).toBe('mat-sidekick');
 
     // Baseline invariants preserved
     expect(INITIAL_EXERCISES).toHaveLength(98);
@@ -427,6 +499,7 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
           durationMin: 6,
           selectedLayer: 'standard' as const,
           customSpringOverride: '2R',
+          instructorNote: '비공개 강사 개인 메모 — 회원 화면 노출 금지',
         },
       ],
       createdAt: '2026-11-12T00:00:00.000Z',
@@ -438,7 +511,6 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
       exercises: [...INITIAL_EXERCISES, shortSpineEx],
       savedSequences: [savedSeq],
       instructorSchedule: {
-        version: 1,
         locations: [
           {
             id: 'loc-main-a',
@@ -518,7 +590,8 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-11-12T08:00:00.000Z'));
 
-    render(<MemberBookingView />);
+    const memberRender = render(<MemberBookingView />);
+    expect(memberRender.container.textContent).not.toContain('비공개 강사 개인 메모');
 
     const bookReformerBtn = screen.getByRole('button', {
       name: '오전 리포머 심화 분절반 예약하기',
@@ -528,14 +601,21 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
       '.pf-member-slot-art',
     );
     expect(memberReformerImg?.getAttribute('src')).toBe('/motion-studio3d/shortspine-peak.png');
+    expect(memberReformerCard.textContent).toContain('포커스 · 척추분절');
 
     fireEvent.click(bookReformerBtn);
     const spotBanner = screen.getByTestId('member-spot-dialog-3d-banner');
     expect(spotBanner).toBeVisible();
     expect(spotBanner).toHaveTextContent('리포머 스튜디오 3D 기구·스프링 안내');
+    expect(screen.getByTestId('member-dialog-focus-props-bridge')).toHaveTextContent(
+      '논슬립 토삭스 착용 권장',
+    );
+    expect(screen.getByTestId('member-dialog-focus-props-bridge')).not.toHaveTextContent(
+      '비공개 강사 개인 메모',
+    );
   });
 
-  it('completes full visual parity & pro elevation across P01 Quick-Start 3D, P04 Flow Coach transition optimizer, P10 30s Log 3D banner & chips, P12 Reusable Block Shelf, P13 Free AI 3D steps, P14 Clipper 3D spring presets, Offline PWA 32-Render Prewarmer, and 1-Page Visual 3D Cue Sheet', async () => {
+  it('completes full visual parity & pro elevation across P01 Quick-Start 3D, P04 Flow Coach transition optimizer, P10 30s Log 3D banner & chips, P12 Reusable Block Shelf, P13 Free AI 3D steps, P14 Clipper 3D spring presets, Offline PWA 40-Render Prewarmer, and 1-Page Visual 3D Cue Sheet', async () => {
     // 1. P01: Quick-start recipes all point to /motion-studio3d/*.png with spring & muscle metadata
     expect(ATELIER_QUICK_START_RECIPES).toHaveLength(4);
     for (const recipe of ATELIER_QUICK_START_RECIPES) {
@@ -570,7 +650,7 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
       id: 'flow-main-sit-box',
       apparatus: 'reformer',
       blockCategory: 'upper-body',
-      bodyPosition: 'sitting',
+      bodyPosition: 'seated',
       box: 'short-box',
       springs: '1B',
       spinalPlanes: ['rotation'],
@@ -590,7 +670,7 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
       id: 'flow-cool',
       apparatus: 'reformer',
       blockCategory: 'cooldown',
-      bodyPosition: 'sitting',
+      bodyPosition: 'seated',
       box: 'short-box',
       springs: '1B',
       spinalPlanes: ['lateral'],
@@ -608,7 +688,7 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
         order: 1,
         exerciseId: warmEx.id,
         blockCategory: 'warmup',
-        classSection: 'warmup',
+        classSection: 'preparation',
         durationMin: 4,
         selectedLayer: 'standard',
       },
@@ -750,11 +830,12 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
     expect(screen.getByTestId('clipper-3d-setup-preview')).toHaveTextContent('빨강×2');
     clipRender.unmount();
 
-    // 6. Offline PWA Service Worker /motion-studio3d/*.png rule + StudioOffline3dReadinessCard
+    // 6. Offline PWA Service Worker /motion-studio3d/*.png rule + StudioOffline3dReadinessCard (20패밀리 40컷)
     const swSrc = createServiceWorkerSource('v-test', ['assets/app.js']);
     expect(swSrc).toContain("url.pathname.startsWith('/motion-studio3d/')");
     const offlineRender = render(<StudioOffline3dReadinessCard />);
-    expect(screen.getByTestId('studio-offline-3d-readiness-card')).toBeVisible();
+    expect(screen.getByTestId('studio-offline-3d-readiness-card')).toHaveTextContent('40컷');
+    expect(screen.getByTestId('studio-offline-3d-readiness-card')).toHaveTextContent('20개');
     offlineRender.unmount();
 
     // 7. 1-Page Visual 3D Cue Sheet (2-col print vs 1-col tablet + spring delta callout)
@@ -777,5 +858,167 @@ describe('Global Benchmark Mobile-First Redesign, 32-Render Studio 3D Motion Sys
     fireEvent.click(screen.getByTestId('one-page-visual-cuesheet-print-btn'));
     expect(printSpy).toHaveBeenCalledTimes(1);
     cueRender.unmount();
+  });
+
+  it('delivers all 4 v4 parallel tracks: InlineExerciseFinder 3D & spring filter, manufacturer brand spring conversion, zero-server local SVG QR sequence sharing with undo-safe import, and MemberBookingView focus/props bridge', async () => {
+    // Track 1: InlineExerciseFinder 3D thumbnails, Lv + SpringVisualPills, same-spring quick chip, and spring filter tab
+    const stepEx = INITIAL_EXERCISES.find((e) => e.springs === '2R 1B') ?? INITIAL_EXERCISES[0]!;
+    usePilatesStore.setState({
+      exercises: [...INITIAL_EXERCISES],
+      activeSteps: [
+        {
+          stepId: 'ief-prev-1',
+          order: 1,
+          exerciseId: stepEx.id,
+          blockCategory: stepEx.blockCategory,
+          durationMin: 4,
+          selectedLayer: 'standard',
+          customSpringOverride: '2R 1B',
+        },
+      ],
+    });
+
+    const finderRender = render(<InlineExerciseFinder onOpenExercise={vi.fn()} />);
+    expect(screen.getAllByTestId('ief-card-3d-thumb').length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('ief-card-spring-level-strip').length).toBeGreaterThan(0);
+    expect(finderRender.container.textContent).not.toContain('모션 도해 준비 중');
+    expect(finderRender.container.textContent).not.toContain('관련 도해는 아직 없어요');
+
+    const sameSpringChip = screen.getByTestId('ief-same-spring-chip');
+    expect(sameSpringChip).toHaveTextContent('직전 스프링 유지 (2R 1B)');
+    fireEvent.click(sameSpringChip);
+    expect(sameSpringChip).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: '스프링 2R 1B 필터 해제' })).toBeVisible();
+    finderRender.unmount();
+
+    // Track 2A: Brand spring tension conversion across CueSheet and LiveStageView
+    expect(normalizeCanonicalSpringKey('2R + 1B (헤비)')).toBe('2R 1B');
+    expect(formatBrandSpringEquivalent('2R 1B', 'stott', 'reformer').equivalentLabelKo).toContain(
+      'Red',
+    );
+    expect(
+      formatBrandSpringEquivalent('2R 1B', 'classical', 'reformer').equivalentLabelKo,
+    ).toContain('Springs');
+
+    const cueRender = render(
+      <OnePageVisual3DCueSheet
+        title="브랜드 스프링 환산 큐시트"
+        apparatus="reformer"
+        level="1.5"
+        initialBrand="intopilates"
+        steps={[
+          {
+            stepId: 'bs-1',
+            order: 1,
+            exerciseId: stepEx.id,
+            blockCategory: stepEx.blockCategory,
+            durationMin: 5,
+            selectedLayer: 'standard',
+            customSpringOverride: '2R 1B',
+          },
+        ]}
+        exercises={[stepEx]}
+      />,
+    );
+    const cueSection = screen.getByTestId('one-page-visual-3d-cuesheet');
+    expect(cueSection).toHaveTextContent(HONEST_BRAND_SPRING_CAUTION_KO);
+    fireEvent.click(
+      within(screen.getByTestId('cuesheet-brand-spring-switcher')).getByRole('button', {
+        name: 'STOTT · 메리듀',
+      }),
+    );
+    expect(cueSection).toHaveAttribute('data-reformer-brand', 'stott');
+    expect(screen.getByTestId('visual-1p-brand-spring')).toHaveTextContent('STOTT');
+
+    fireEvent.click(screen.getByTestId('one-page-visual-cuesheet-qr-toggle'));
+    expect(screen.getByTestId('one-page-visual-cuesheet-qr').querySelector('svg')).not.toBeNull();
+    cueRender.unmount();
+
+    // Track 2B: Zero-server local ISO QR SVG generator + #pf_share= round-trip + Undo-safe import
+    const qrRes = generateLocalQrCodeSvg('https://flow-atelier.local/#pf_share=test');
+    expect(qrRes.size).toBe(qrRes.version * 4 + 17);
+    expect(qrRes.modules[0]![0]).toBe(true); // top-left finder outer corner
+    expect(qrRes.modules[3]![3]).toBe(true); // top-left finder center
+    expect(qrRes.svgMarkup).toContain('<svg');
+
+    const shareBuilt = buildSequenceShareUrl({
+      title: 'QR 태블릿 전달 테스트 시퀀스',
+      subtitle: '리포머 전신 흐름',
+      apparatus: 'reformer',
+      level: '1.5',
+      targetMinutes: 50,
+      reformerBrand: 'balanced-body',
+      steps: [
+        {
+          stepId: 'qr-s1',
+          order: 1,
+          exerciseId: stepEx.id,
+          blockCategory: stepEx.blockCategory,
+          durationMin: 6,
+          selectedLayer: 'hard',
+          customSpringOverride: '1R 1B',
+          instructorNote: '비공개 개인 메모',
+        },
+      ],
+      exercises: [stepEx],
+      includeInstructorNotes: false,
+    });
+    const decoded = parseSequenceShareFromHashOrToken(shareBuilt.hashFragment);
+    expect(decoded).not.toBeNull();
+    expect(decoded!.title).toBe('QR 태블릿 전달 테스트 시퀀스');
+    expect(decoded!.reformerBrand).toBe('balanced-body');
+    expect(decoded!.notesIncluded).toBe(false);
+    expect(decoded!.steps[0]!.instructorNote).toBeUndefined();
+
+    const qrDialogRender = render(
+      <SequenceQrShareDialog
+        open
+        onClose={vi.fn()}
+        title="QR 공유 모달 검증"
+        apparatus="reformer"
+        level="1.5"
+        targetMinutes={50}
+        reformerBrand="intopilates"
+        steps={decoded!.steps}
+        exercises={[stepEx]}
+      />,
+    );
+    expect(screen.getByTestId('local-qr-share-svg').querySelector('svg')).not.toBeNull();
+    qrDialogRender.unmount();
+
+    usePilatesStore.setState({
+      activeTitle: '기존 작성 중이던 소중한 초안',
+      activeSteps: [
+        {
+          stepId: 'draft-before-qr',
+          order: 1,
+          exerciseId: INITIAL_EXERCISES[1]!.id,
+          blockCategory: INITIAL_EXERCISES[1]!.blockCategory,
+          durationMin: 4,
+          selectedLayer: 'standard',
+        },
+      ],
+      undoStack: [],
+    });
+    const qrImportRender = render(
+      <SequenceQrImportDialog sharedSequence={decoded} onDismiss={vi.fn()} />,
+    );
+    fireEvent.click(screen.getByTestId('confirm-qr-sequence-import-btn'));
+    const afterImport = usePilatesStore.getState();
+    expect(afterImport.activeTitle).toBe('QR 태블릿 전달 테스트 시퀀스');
+    expect(afterImport.undoStack).toHaveLength(1);
+    expect(afterImport.undoStack[0]!.title).toBe('기존 작성 중이던 소중한 초안');
+    qrImportRender.unmount();
+
+    // Track 4: MemberBookingView focus & studio props filter chips
+    const { MemberBookingView } = await import('../components/MemberBookingView');
+    usePilatesStore.setState({
+      instructorSchedule: { locations: [], classes: [], exceptions: [] },
+    });
+    const memberFocusRender = render(<MemberBookingView />);
+    expect(screen.getByTestId('member-focus-filter-group')).toBeVisible();
+    fireEvent.click(screen.getByTestId('member-focus-chip-lower'));
+    expect(screen.getByText('체어 하체·코어 집중 플로우')).toBeVisible();
+    memberFocusRender.unmount();
   });
 });

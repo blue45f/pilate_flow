@@ -1,6 +1,8 @@
 import { ClassPlanSummary } from './ClassPlanSummary';
 import { ClassCueSheetPreview } from '../features/classCueSheet/ClassCueSheetPreview';
 import { OnePageVisual3DCueSheet } from './OnePageVisual3DCueSheet';
+import { SequenceQrShareDialog } from './SequenceQrShareDialog';
+import { BRAND_SPRING_OPTIONS } from '../utils/brandSpringConverter';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
@@ -13,6 +15,7 @@ import {
   ListOrdered,
   Pause,
   Play,
+  QrCode,
   RotateCcw,
   X,
 } from 'lucide-react';
@@ -118,11 +121,14 @@ export function SequencePlanPreview({
   );
   const [segmentRehearsalOpen, setSegmentRehearsalOpen] = useState(false);
   const [showCueSheet, setShowCueSheet] = useState(false);
+  const [qrShareOpen, setQrShareOpen] = useState(false);
   const segmentEntryRef = useRef<HTMLButtonElement>(null);
   const liveSteps = usePilatesStore((state) => state.activeSteps);
   const liveExercises = usePilatesStore((state) => state.exercises);
   const liveTarget = usePilatesStore((state) => state.activeTargetMinutes);
   const liveTitle = usePilatesStore((state) => state.activeTitle);
+  const reformerBrand = usePilatesStore((state) => state.reformerBrand);
+  const setReformerBrand = usePilatesStore((state) => state.setReformerBrand);
   const saveFeedback = usePilatesStore((state) => state.saveFeedback);
   const persistenceError = usePilatesStore((state) => state.persistenceError);
   const [saveRequested, setSaveRequested] = useState(false);
@@ -381,6 +387,36 @@ export function SequencePlanPreview({
                 <span>동작 {moveSteps.length}개</span>
                 <span>총 {formatSecondsToMMSS(durations.totalSec)}</span>
                 <span>스프링 전환 {springChanges}회</span>
+                <div
+                  className="pf-brand-spring-switcher"
+                  role="group"
+                  aria-label="미리보기 기구 브랜드 환산 기준"
+                  data-testid="plan-preview-brand-switcher"
+                >
+                  {BRAND_SPRING_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className={`log-quick-note-chip ${
+                        reformerBrand === opt.id ? 'is-selected' : ''
+                      }`.trim()}
+                      aria-pressed={reformerBrand === opt.id}
+                      onClick={() => setReformerBrand(opt.id)}
+                    >
+                      {opt.shortLabelKo}
+                    </button>
+                  ))}
+                </div>
+                {snapshot.steps.length > 0 && (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    data-testid="plan-preview-qr-share-btn"
+                    onClick={() => setQrShareOpen(true)}
+                  >
+                    <QrCode size={15} aria-hidden="true" /> QR 공유
+                  </button>
+                )}
               </div>
             );
           })()}
@@ -1070,6 +1106,19 @@ export function SequencePlanPreview({
             </button>
           )}
         </footer>
+        {qrShareOpen && (
+          <SequenceQrShareDialog
+            open={qrShareOpen}
+            onClose={() => setQrShareOpen(false)}
+            title={snapshot.title}
+            apparatus={usePilatesStore.getState().activeApparatus}
+            level={usePilatesStore.getState().activeLevel}
+            targetMinutes={snapshot.targetMinutes}
+            reformerBrand={reformerBrand}
+            steps={snapshot.steps}
+            exercises={snapshot.exercises}
+          />
+        )}
       </div>
     </dialog>
   );

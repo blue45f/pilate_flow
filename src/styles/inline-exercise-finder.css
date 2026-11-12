@@ -109,7 +109,7 @@
 }
 .ief-filter-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-top: 16px;
   border: 1px solid #d8d3c9;
   border-radius: 11px;
@@ -693,4 +693,14 @@
 
 .ief-empty-owned-btn {
   min-height: 44px;
+}
+
+.ief-card-badges {
+  margin: 5px 0 4px;
+}
+
+.ief-studio3d-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }

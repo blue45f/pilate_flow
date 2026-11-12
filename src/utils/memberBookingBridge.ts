@@ -2,6 +2,7 @@ import type {
   ApparatusType,
   DifficultyLevel,
   PilatesExercise,
+  PropType,
   SavedSequence,
   SequenceStep,
 } from '../types/pilates';
@@ -14,7 +15,7 @@ import {
   scheduleWeekStart,
 } from './instructorSchedule';
 import { EQUIPMENT_OPTIONS, getEquipmentFamilies } from '../data/equipmentCatalog';
-import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
+import { CANONICAL_BLOCKS, INITIAL_EXERCISES, PROP_LABELS } from '../data/pilatesCatalog';
 import { GLOBAL_CRAWLED_REPERTOIRE_EXERCISES } from '../data/globalCrawledRepertoirePack';
 import { isRestStep } from './sequenceEngine';
 import {
@@ -163,6 +164,7 @@ export interface SequenceLikeForCardMeta {
   readonly title?: string;
   readonly apparatus?: ApparatusType | 'mixed';
   readonly level?: DifficultyLevel;
+  readonly focusTags?: readonly string[];
   readonly steps?: readonly SequenceStep[];
 }
 
@@ -176,12 +178,56 @@ export interface ClassCardVisualMeta {
   readonly springs: string;
   readonly isSequenceLinked: boolean;
   readonly springSourceLabelKo: '연결 시퀀스' | '기구 기본 세팅';
+  /** Privacy-safe member bridge fields (never exposes instructorNote or clinical data) */
+  readonly focusTagsKo: readonly string[];
+  readonly propBadgesKo: readonly string[];
+  readonly flowPhaseSummaryKo: string;
+  readonly memberPrepTipKo: string;
+}
+
+function mapPropIdToLabelKo(propId: string): string | null {
+  if (!propId || propId === 'none') return null;
+  if (Object.prototype.hasOwnProperty.call(PROP_LABELS, propId)) {
+    const raw = PROP_LABELS[propId as PropType].ko;
+    return raw.replace(/\s*·.*$/, '');
+  }
+  return propId;
+}
+
+function defaultFocusTagsForApparatus(
+  apparatus: ApparatusType | 'mixed',
+  title?: string,
+): string[] {
+  const hay = (title ?? '').toLowerCase();
+  const tags: string[] = [];
+  if (/호흡|정렬|교정/.test(hay)) tags.push('호흡·골반 정렬');
+  if (/코어|복부/.test(hay)) tags.push('심부 코어');
+  if (/하체|힙|둔근|런지/.test(hay)) tags.push('둔근·하지 밸런스');
+  if (/상체|어깨|흉추|스트레치/.test(hay)) tags.push('흉추·견갑 가동성');
+  if (/측굴|바렐|사이드/.test(hay)) tags.push('측면 사슬 신장');
+  if (tags.length > 0) return tags.slice(0, 3);
+
+  switch (apparatus) {
+    case 'chair':
+      return ['하지 밸런스', '코어 제어'];
+    case 'cadillac':
+      return ['척추 분절', '전신 협응'];
+    case 'barrel':
+      return ['측면 사슬', '흉추 신전'];
+    case 'mat':
+      return ['호흡·코어', '척추 정렬'];
+    case 'reformer':
+    case 'mixed':
+    default:
+      return ['전신 밸런스', '코어·하지 정렬'];
+  }
 }
 
 export function resolveClassCardVisualMeta(params: {
   readonly sequence?: SequenceLikeForCardMeta;
   readonly exercises?: readonly PilatesExercise[];
   readonly locationEquipmentIds?: readonly string[];
+  readonly locationPropIds?: readonly string[];
   readonly fallbackApparatus?: ApparatusType | 'mixed';
   readonly title?: string;
   readonly fallbackLevel?: DifficultyLevel | null;
@@ -190,6 +236,7 @@ export function resolveClassCardVisualMeta(params: {
     sequence,
     exercises,
     locationEquipmentIds = [],
+    locationPropIds = [],
     fallbackApparatus,
     title,
     fallbackLevel = null,
@@ -211,10 +258,17 @@ export function resolveClassCardVisualMeta(params: {
 
   let firstExercise: PilatesExercise | undefined;
   let linkedSpring: string | undefined;
+  const collectedMuscles: string[] = [];
+  const collectedProps = new Set<string>();
+  let warmupMin = 0;
+  let mainMin = 0;
+  let cooldownMin = 0;
+  let moveStepCount = 0;
 
   if (sequence?.steps && sequence.steps.length > 0) {
     for (const step of sequence.steps) {
       if (!step || isRestStep(step)) continue;
+      moveStepCount += 1;
       const ex = byId.get(step.exerciseId);
       if (!firstExercise && ex) {
         firstExercise = ex;
@@ -223,7 +277,25 @@ export function resolveClassCardVisualMeta(params: {
       if (!linkedSpring && candidateSpring) {
         linkedSpring = candidateSpring;
       }
-      if (firstExercise && linkedSpring) break;
+      if (ex) {
+        for (const m of ex.targetMuscles.slice(0, 2)) {
+          if (m && !collectedMuscles.includes(m)) collectedMuscles.push(m);
+        }
+        for (const p of ex.props) {
+          const label = mapPropIdToLabelKo(p);
+          if (label) collectedProps.add(label);
+        }
+      }
+      if (step.blockCategory === 'warmup') warmupMin += step.durationMin;
+      else if (step.blockCategory === 'cooldown') cooldownMin += step.durationMin;
+      else mainMin += step.durationMin;
+    }
+  }
+
+  for (const locProp of locationPropIds) {
+    const label = mapPropIdToLabelKo(locProp);
+    if (label && collectedProps.size < 3 && !sequence) {
+      collectedProps.add(label);
     }
   }
 
@@ -257,8 +329,40 @@ export function resolveClassCardVisualMeta(params: {
 
   const resolvedLevel: DifficultyLevel | null =
     sequence?.level ?? inferLevelFromTitle(title) ?? fallbackLevel;
-  const isSequenceLinked = Boolean(sequence);
+  const isSequenceLinked = Boolean(sequence && moveStepCount > 0);
   const springs = linkedSpring || getDefaultApparatusSpringsHint(apparatus);
+
+  // Build privacy-safe focus tags
+  const rawSeqFocus = (sequence?.focusTags ?? [])
+    .map((t) => t.trim())
+    .filter((t) => Boolean(t) && !/시그니처|동선/.test(t));
+  let focusTagsKo: string[] = [...rawSeqFocus, ...collectedMuscles].slice(0, 3);
+  if (focusTagsKo.length === 0 && firstExercise) {
+    const blockMeta = CANONICAL_BLOCKS.find((b) => b.category === firstExercise.blockCategory);
+    if (blockMeta) focusTagsKo = [blockMeta.nameKo];
+  }
+  if (focusTagsKo.length === 0) {
+    focusTagsKo = defaultFocusTagsForApparatus(apparatus, title);
+  }
+
+  const propBadgesKo =
+    collectedProps.size > 0 ? [...collectedProps].slice(0, 3) : ['기구 중심 (소도구 없음)'];
+
+  const flowPhaseSummaryKo = isSequenceLinked
+    ? [
+        warmupMin > 0 ? `예열 ${Math.round(warmupMin)}분` : '',
+        mainMin > 0 ? `본운동 ${Math.round(mainMin)}분` : '',
+        cooldownMin > 0 ? `마무리 ${Math.round(cooldownMin)}분` : '',
+      ]
+        .filter(Boolean)
+        .join(' → ') || `연결 동작 ${moveStepCount}개 구성`
+    : '예열 호흡 → 기구 본운동 → 마무리 이완';
+
+  const propPrepNote =
+    collectedProps.size > 0
+      ? `소도구(${[...collectedProps].slice(0, 2).join('·')}) 스튜디오 비치됨`
+      : '별도 개인 소도구 불필요';
+  const memberPrepTipKo = `논슬립 토삭스 착용 권장 · ${propPrepNote}`;
 
   return {
     apparatus,
@@ -270,6 +374,10 @@ export function resolveClassCardVisualMeta(params: {
     springs,
     isSequenceLinked,
     springSourceLabelKo: linkedSpring ? '연결 시퀀스' : '기구 기본 세팅',
+    focusTagsKo,
+    propBadgesKo,
+    flowPhaseSummaryKo,
+    memberPrepTipKo,
   };
 }
 
@@ -308,6 +416,11 @@ export interface MemberBookableSlot {
   readonly springSourceLabelKo?: '연결 시퀀스' | '기구 기본 세팅';
   readonly studio3dThumbUrl?: string;
   readonly studio3dTitleKo?: string;
+  readonly isSequenceLinked?: boolean;
+  readonly focusTagsKo?: readonly string[];
+  readonly propBadgesKo?: readonly string[];
+  readonly flowPhaseSummaryKo?: string;
+  readonly memberPrepTipKo?: string;
 }
 
 export type PersistedMemberSlotDecision = {
@@ -566,6 +679,10 @@ function buildFallbackStudioWeekSlots(
     locationAlias: string;
     apparatus: ApparatusType;
     equipmentLabels: readonly string[];
+    focusTagsKo: readonly string[];
+    propBadgesKo: readonly string[];
+    flowPhaseSummaryKo: string;
+    memberPrepTipKo: string;
     level: DifficultyLevel;
     springs: string;
     baseEnrolled: number;
@@ -580,6 +697,10 @@ function buildFallbackStudioWeekSlots(
       locationAlias: '본점 A룸',
       apparatus: 'reformer',
       equipmentLabels: ['리포머', '폼롤러'],
+      focusTagsKo: ['호흡·골반 정렬', '복횡근', '척추 분절'],
+      propBadgesKo: ['폼롤러'],
+      flowPhaseSummaryKo: '예열 8분 → 본운동 36분 → 마무리 6분',
+      memberPrepTipKo: '논슬립 토삭스 착용 권장 · 소도구(폼롤러) 스튜디오 비치됨',
       level: '1.0',
       springs: '2R 1B',
       baseEnrolled: 3,
@@ -594,6 +715,10 @@ function buildFallbackStudioWeekSlots(
       locationAlias: '본점 A룸',
       apparatus: 'chair',
       equipmentLabels: ['체어', '미니볼'],
+      focusTagsKo: ['둔근·하지 밸런스', '심부 코어', '중둔근'],
+      propBadgesKo: ['미니볼'],
+      flowPhaseSummaryKo: '예열 6분 → 본운동 38분 → 마무리 6분',
+      memberPrepTipKo: '논슬립 토삭스 착용 권장 · 소도구(미니볼) 스튜디오 비치됨',
       level: '1.5',
       springs: '1R 1Y (페달)',
       baseEnrolled: 5,
@@ -608,6 +733,10 @@ function buildFallbackStudioWeekSlots(
       locationAlias: '본점 B룸',
       apparatus: 'cadillac',
       equipmentLabels: ['캐딜락', '써클링'],
+      focusTagsKo: ['흉추·견갑 가동성', '전신 협응', '햄스트링 이완'],
+      propBadgesKo: ['써클링'],
+      flowPhaseSummaryKo: '예열 6분 → 본운동 36분 → 마무리 8분',
+      memberPrepTipKo: '논슬립 토삭스 착용 권장 · 소도구(써클링) 스튜디오 비치됨',
       level: '1.5',
       springs: '1B (푸쉬스루)',
       baseEnrolled: 6,
@@ -645,6 +774,11 @@ function buildFallbackStudioWeekSlots(
       springSourceLabelKo: '기구 기본 세팅',
       studio3dThumbUrl: thumbUrl,
       studio3dTitleKo: `${getApparatusSpotLabelKo(tpl.apparatus)} 스튜디오 3D 프리뷰`,
+      isSequenceLinked: false,
+      focusTagsKo: tpl.focusTagsKo,
+      propBadgesKo: tpl.propBadgesKo,
+      flowPhaseSummaryKo: tpl.flowPhaseSummaryKo,
+      memberPrepTipKo: tpl.memberPrepTipKo,
     };
   });
 }
@@ -714,6 +848,7 @@ export function buildMemberSlotsForDate(params: {
       sequence: activeSequence,
       exercises,
       locationEquipmentIds: location?.equipmentIds,
+      locationPropIds: location?.propIds,
       title: row.title,
       fallbackLevel: null,
     });
@@ -745,6 +880,11 @@ export function buildMemberSlotsForDate(params: {
       springSourceLabelKo: visualMeta.springSourceLabelKo,
       studio3dThumbUrl: visualMeta.studio3dThumbUrl,
       studio3dTitleKo: visualMeta.studio3dTitleKo,
+      isSequenceLinked: visualMeta.isSequenceLinked,
+      focusTagsKo: visualMeta.focusTagsKo,
+      propBadgesKo: visualMeta.propBadgesKo,
+      flowPhaseSummaryKo: visualMeta.flowPhaseSummaryKo,
+      memberPrepTipKo: visualMeta.memberPrepTipKo,
     };
   });
 

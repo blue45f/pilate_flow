@@ -58,6 +58,38 @@ const APPARATUS_FILTERS: ReadonlyArray<{ value: 'all' | ApparatusType; label: st
   { value: 'mat', label: '매트' },
 ];
 
+type MemberFocusFilter = 'all' | 'core' | 'lower' | 'stretch' | 'props';
+
+const FOCUS_PROP_FILTERS: ReadonlyArray<{ value: MemberFocusFilter; label: string }> = [
+  { value: 'all', label: '전체 포커스' },
+  { value: 'core', label: '코어·골반 정렬' },
+  { value: 'lower', label: '둔근·하지 집중' },
+  { value: 'stretch', label: '흉추·스트레치' },
+  { value: 'props', label: '소도구 활용' },
+];
+
+function slotMatchesFocusFilter(slot: MemberBookableSlot, filter: MemberFocusFilter): boolean {
+  if (filter === 'all') return true;
+  const hay = [
+    slot.title,
+    ...(slot.focusTagsKo ?? []),
+    ...(slot.propBadgesKo ?? []),
+    ...slot.equipmentLabels,
+  ]
+    .join(' ')
+    .toLowerCase();
+  if (filter === 'props') {
+    const hasDedicatedProp = (slot.propBadgesKo ?? []).some(
+      (badge) => !badge.includes('소도구 없음'),
+    );
+    return hasDedicatedProp || /폼롤러|미니볼|써클링|세라밴드|요가블록|아크/.test(hay);
+  }
+  if (filter === 'core') return /코어|복횡근|골반|정렬|복부/.test(hay);
+  if (filter === 'lower') return /둔근|하지|하체|중둔근|대퇴|힙|런지/.test(hay);
+  if (filter === 'stretch') return /흉추|스트레치|신장|이완|가동성|견갑|협응/.test(hay);
+  return true;
+}
+
 type MemberDialogIntent = MemberBookingActionIntent | 'CHANGE_SPOT';
 
 function formatDateBadge(dateIso: string): { weekday: string; monthDay: string } {
@@ -175,6 +207,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
 
   const [selectedDate, setSelectedDate] = useState<string>(todayIso);
   const [apparatusFilter, setApparatusFilter] = useState<'all' | ApparatusType>('all');
+  const [focusFilter, setFocusFilter] = useState<MemberFocusFilter>('all');
   const [availableOnly, setAvailableOnly] = useState<boolean>(false);
   const [hasInteractedSchedule, setHasInteractedSchedule] = useState<boolean>(false);
   const [portalState, setPortalState] = useState<PersistedMemberBookingState>(() =>
@@ -293,13 +326,16 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         if (apparatusFilter !== 'all' && slot.apparatus !== apparatusFilter) {
           return false;
         }
+        if (!slotMatchesFocusFilter(slot, focusFilter)) {
+          return false;
+        }
         if (availableOnly) {
           const st = deriveMemberSlotStatus(slot);
           return slot.myState === 'BOOKED' || st === 'AVAILABLE' || st === 'ALMOST_FULL';
         }
         return true;
       }),
-    [daySlots, apparatusFilter, availableOnly],
+    [daySlots, apparatusFilter, focusFilter, availableOnly],
   );
 
   const nextAvailableDateInWeek = useMemo(
@@ -831,6 +867,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
   const resetScheduleFilters = () => {
     setHasInteractedSchedule(true);
     setApparatusFilter('all');
+    setFocusFilter('all');
     setAvailableOnly(false);
   };
 
@@ -1055,6 +1092,17 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                     <div className="pf-class-badges-strip pf-class-badges-strip--compact">
                       <PfBadge tone="sage">{bookedLevelBadge}</PfBadge>
                       <SpringVisualPills springs={bookedSprings} />
+                      {resolvedSlot.focusTagsKo?.[0] && (
+                        <span className="pf-member-focus-pill">
+                          {resolvedSlot.focusTagsKo[0]}
+                        </span>
+                      )}
+                      {resolvedSlot.propBadgesKo?.[0] &&
+                        !resolvedSlot.propBadgesKo[0].includes('소도구 없음') && (
+                          <span className="pf-member-prop-pill">
+                            소도구 · {resolvedSlot.propBadgesKo[0]}
+                          </span>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -1260,6 +1308,29 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         </button>
       </div>
 
+      <div
+        className="pf-member-focus-filter-row"
+        role="group"
+        aria-label="수업 포커스·소도구 빠른 필터"
+        data-testid="member-focus-filter-group"
+      >
+        {FOCUS_PROP_FILTERS.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            className="pf-member-chip"
+            data-testid={`member-focus-chip-${item.value}`}
+            aria-pressed={focusFilter === item.value}
+            onClick={() => {
+              setHasInteractedSchedule(true);
+              setFocusFilter(item.value);
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       <div className="pf-member-slot-list" aria-label="선택한 날짜의 수업 목록">
         {filteredSlots.length === 0 ? (
           <div
@@ -1271,7 +1342,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               <strong style={{ display: 'block', marginBottom: '4px' }}>
                 {daySlots.length === 0
                   ? '선택한 날짜에는 개설된 수업이 없어요'
-                  : '선택한 기구·예약 가능 필터에 맞는 수업이 없어요'}
+                  : '선택한 기구·포커스·예약 가능 필터에 맞는 수업이 없어요'}
               </strong>
               <p style={{ margin: 0, fontSize: '0.88rem', color: '#4c5d54' }}>
                 {daySlots.length === 0
@@ -1280,7 +1351,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               </p>
             </div>
             <div className="pf-member-empty-actions">
-              {(apparatusFilter !== 'all' || availableOnly) && (
+              {(apparatusFilter !== 'all' || focusFilter !== 'all' || availableOnly) && (
                 <button
                   type="button"
                   className="pf-member-chip"
@@ -1297,6 +1368,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                 onClick={() => {
                   setHasInteractedSchedule(true);
                   setApparatusFilter('all');
+                  setFocusFilter('all');
                   setAvailableOnly(false);
                   setSelectedDate(nextAvailableDateInWeek);
                 }}
@@ -1388,6 +1460,33 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                       <SpringVisualPills springs={slotSprings} />
                     </span>
                   </div>
+                  {(slot.focusTagsKo?.length || slot.propBadgesKo?.length || slot.flowPhaseSummaryKo) && (
+                    <div
+                      className="pf-member-focus-bridge"
+                      data-testid={`member-slot-focus-bridge-${slot.id}`}
+                    >
+                      {slot.focusTagsKo?.slice(0, 3).map((tag) => (
+                        <span key={tag} className="pf-member-focus-pill">
+                          포커스 · {tag}
+                        </span>
+                      ))}
+                      {slot.propBadgesKo?.slice(0, 2).map((propLabel) => (
+                        <span
+                          key={propLabel}
+                          className={`pf-member-prop-pill ${
+                            propLabel.includes('소도구 없음') ? 'is-neutral' : ''
+                          }`.trim()}
+                        >
+                          {propLabel.includes('소도구 없음') ? propLabel : `소도구 · ${propLabel}`}
+                        </span>
+                      ))}
+                      {slot.flowPhaseSummaryKo && (
+                        <span className="pf-member-flow-summary">
+                          {slot.flowPhaseSummaryKo}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <p className="pf-member-slot-meta">
                     기구: {slot.equipmentLabels.join(' · ')} · 정원 {effectiveEnrolled}/
                     {slot.maxCapacity}명 (남은 자리 {Math.max(0, slot.maxCapacity - effectiveEnrolled)}석)
@@ -1546,6 +1645,44 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                         }
                       />
                     </div>
+                    {(pendingAction.slot.focusTagsKo?.length ||
+                      pendingAction.slot.propBadgesKo?.length ||
+                      pendingAction.slot.memberPrepTipKo) && (
+                      <div
+                        className="pf-member-dialog-bridge"
+                        data-testid="member-dialog-focus-props-bridge"
+                      >
+                        <div className="pf-member-focus-bridge">
+                          {pendingAction.slot.focusTagsKo?.slice(0, 3).map((tag) => (
+                            <span key={tag} className="pf-member-focus-pill">
+                              포커스 · {tag}
+                            </span>
+                          ))}
+                          {pendingAction.slot.propBadgesKo?.slice(0, 2).map((propLabel) => (
+                            <span
+                              key={propLabel}
+                              className={`pf-member-prop-pill ${
+                                propLabel.includes('소도구 없음') ? 'is-neutral' : ''
+                              }`.trim()}
+                            >
+                              {propLabel.includes('소도구 없음')
+                                ? propLabel
+                                : `소도구 · ${propLabel}`}
+                            </span>
+                          ))}
+                        </div>
+                        {pendingAction.slot.flowPhaseSummaryKo && (
+                          <small className="pf-member-dialog-bridge__flow">
+                            수업 흐름: {pendingAction.slot.flowPhaseSummaryKo}
+                          </small>
+                        )}
+                        {pendingAction.slot.memberPrepTipKo && (
+                          <small className="pf-member-dialog-bridge__tip">
+                            수업 준비 안내: {pendingAction.slot.memberPrepTipKo}
+                          </small>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="pf-studio-spot-map" data-testid="member-spot-map">

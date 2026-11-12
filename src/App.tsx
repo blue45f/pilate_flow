@@ -29,6 +29,12 @@ import { DeferredPanelBoundary } from './components/DeferredPanelBoundary';
 import { InstructorStudyBoundary } from './components/InstructorStudyBoundary';
 import { StudioJourneyBar } from './components/StudioJourneyBar';
 import { MemberBookingView } from './components/MemberBookingView';
+import { SequenceQrImportDialog } from './components/SequenceQrShareDialog';
+import {
+  type DecodedSharedSequence,
+  PF_SEQUENCE_SHARE_HASH_PREFIX,
+  parseSequenceShareFromHashOrToken,
+} from './utils/localQrSequenceShare';
 import { type ActiveWorkspaceTab, usePilatesStore } from './store/usePilatesStore';
 import type { PilatesExercise, PropType } from './types/pilates';
 import type { MotionDraftId } from './models/types';
@@ -184,6 +190,36 @@ export function App() {
     return new URLSearchParams(window.location.search).get('pf_mc_preview') === '1';
   });
   const [portalRole, setPortalRole] = useState<'instructor' | 'member'>('instructor');
+  const [incomingSharedSequence, setIncomingSharedSequence] =
+    useState<DecodedSharedSequence | null>(() => {
+      if (typeof window === 'undefined') return null;
+      return window.location.hash.includes(PF_SEQUENCE_SHARE_HASH_PREFIX)
+        ? parseSequenceShareFromHashOrToken(window.location.hash)
+        : null;
+    });
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (!window.location.hash.includes(PF_SEQUENCE_SHARE_HASH_PREFIX)) return;
+      const decoded = parseSequenceShareFromHashOrToken(window.location.hash);
+      if (decoded) {
+        setIncomingSharedSequence(decoded);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+  const clearShareHashFromAddressBar = () => {
+    if (
+      typeof window !== 'undefined' &&
+      window.location.hash.includes(PF_SEQUENCE_SHARE_HASH_PREFIX)
+    ) {
+      window.history.replaceState(
+        null,
+        '',
+        `${window.location.pathname}${window.location.search}`,
+      );
+    }
+  };
   const [memberSection, setMemberSection] = useState<'schedule' | 'bookings' | 'wallet'>('schedule');
   const [menuOpen, setMenuOpen] = useState(false);
   const [workspaceFocusRequest, setWorkspaceFocusRequest] = useState(0);
@@ -1044,6 +1080,20 @@ export function App() {
             <LazyMotionCoveragePreviewHarness initialExerciseOrId="ex-warmup-01" />
           </Suspense>
         </LightDismissDialog>
+      )}
+      {incomingSharedSequence && (
+        <SequenceQrImportDialog
+          sharedSequence={incomingSharedSequence}
+          onDismiss={() => {
+            clearShareHashFromAddressBar();
+            setIncomingSharedSequence(null);
+          }}
+          onImported={() => {
+            clearShareHashFromAddressBar();
+            setIncomingSharedSequence(null);
+            setPortalRole('instructor');
+          }}
+        />
       )}
     </div>
   );

@@ -59,6 +59,10 @@ import {
   triggerLiveSensoryCue,
 } from '../utils/liveStageSensoryCueEngine';
 import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
+import {
+  BRAND_SPRING_OPTIONS,
+  formatBrandSpringEquivalent,
+} from '../utils/brandSpringConverter';
 
 export interface LiveStageNavigationHandle {
   /** True means Stage owns the pending exit; keep it mounted until a decision. */
@@ -199,6 +203,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     activeTitle,
     activeSteps,
     activeTargetMinutes,
+    reformerBrand,
+    setReformerBrand,
     exercises,
     setActiveTab,
   } = usePilatesStore();
@@ -1647,6 +1653,46 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 decorative
               />
               {currentSpringRaw && <SpringVisualPills springs={currentSpringRaw} />}
+              {currentSpringRaw && (() => {
+                const converted = formatBrandSpringEquivalent(
+                  currentSpringRaw,
+                  reformerBrand,
+                  exercise.apparatus,
+                );
+                if (converted.isNonSpringApparatus) return null;
+                return (
+                  <div
+                    className="pf-live-brand-spring-bar"
+                    data-testid="live-stage-brand-spring-bar"
+                    role="group"
+                    aria-label="기구 브랜드별 스프링 환산"
+                  >
+                    <span
+                      className="pf-brand-spring-pill"
+                      data-testid="live-stage-brand-spring-equiv"
+                    >
+                      {converted.brandShortLabelKo}: {converted.equivalentLabelKo}
+                    </span>
+                    <span className="pf-live-brand-spring-chips">
+                      {BRAND_SPRING_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          className={`pf-live-brand-mini-btn ${
+                            reformerBrand === opt.id ? 'is-active' : ''
+                          }`.trim()}
+                          data-testid={`live-stage-brand-btn-${opt.id}`}
+                          aria-pressed={reformerBrand === opt.id}
+                          aria-label={`라이브 스프링 기준 ${opt.shortLabelKo}`}
+                          onClick={() => setReformerBrand(opt.id)}
+                        >
+                          {opt.shortLabelKo}
+                        </button>
+                      ))}
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
           )}
           <h2 className="teaching-current-name">{currentIsRest ? '휴식' : exercise?.nameKo}</h2>
@@ -1935,6 +1981,22 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                         springs={next.customSpringOverride || nextExercise.springs}
                       />
                     )}
+                    {(next.customSpringOverride || nextExercise.springs) && (() => {
+                      const nextConv = formatBrandSpringEquivalent(
+                        next.customSpringOverride || nextExercise.springs,
+                        reformerBrand,
+                        nextExercise.apparatus,
+                      );
+                      if (nextConv.isNonSpringApparatus) return null;
+                      return (
+                        <span
+                          className="pf-brand-spring-pill"
+                          data-testid="live-stage-next-brand-spring"
+                        >
+                          {nextConv.brandShortLabelKo}: {nextConv.equivalentLabelKo}
+                        </span>
+                      );
+                    })()}
                     <span className="teaching-inline-next-meta">
                       {APPARATUS_LABELS[nextExercise.apparatus].ko}
                       {(next.customSpringOverride || nextExercise.springs) &&

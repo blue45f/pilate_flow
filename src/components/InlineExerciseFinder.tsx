@@ -9,6 +9,7 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
+  Sparkles,
   X,
 } from 'lucide-react';
 import { EQUIPMENT_OPTIONS, PROP_OPTIONS, getExerciseEquipment } from '../data/equipmentCatalog';
@@ -23,16 +24,14 @@ import {
   isMovementIdeaExercise,
   readMovementIdeaDraft,
 } from '../utils/movementIdeaDraft';
-import { PfAiStatusBadge, PfMovementCard } from '../design-system';
+import { PfAiStatusBadge, PfBadge, PfMovementCard } from '../design-system';
 import { isRestStep } from '../utils/sequenceEngine';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
-import {
-  resolvePatternReferencesForRenderer,
-  resolveRenderableMotionDescriptor,
-} from '../features/motionCoverage';
-import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
-import { MotionPatternPreview, MotionPatternThumbnail } from './MotionPatternPreview';
-import { CatalogMotionThumbnail } from './CatalogMotionInteractivePlayer';
+import { resolvePatternReferencesForRenderer } from '../features/motionCoverage';
+import { MotionPatternPreview } from './MotionPatternPreview';
+import { SpringVisualPills } from './SpringVisualPills';
+import { normalizeCanonicalSpringKey } from '../utils/brandSpringConverter';
+import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import '../styles/design-tokens.css';
 import '../styles/inline-exercise-finder.css';
 import '../styles/finder-class-context.css';
@@ -44,16 +43,39 @@ interface InlineExerciseFinderProps {
   active?: boolean;
 }
 
-type FilterTab = 'equipment' | 'body' | 'duration';
+type FilterTab = 'equipment' | 'spring' | 'body' | 'duration';
 type DurationFilter = 'all' | 'short' | 'medium' | 'long';
 interface FinderFilters {
   query: string;
   equipment: EquipmentId[];
+  springKey: string;
   bodyTag: string;
   duration: DurationFilter;
   motionOnly: boolean;
 }
 export const INLINE_FINDER_QUERY_STORAGE_KEY = 'pf_inline_finder_query_v1';
+
+const SPRING_QUICK_OPTIONS: readonly { key: string; label: string }[] = [
+  { key: '', label: '전체 스프링' },
+  { key: '2R 1B', label: '2R 1B (풋워크)' },
+  { key: '2R', label: '2R (브릿지·하체)' },
+  { key: '1R 1B', label: '1R 1B (코어·스트랩)' },
+  { key: '1R', label: '1R (상체·런지)' },
+  { key: '1B', label: '1B (경량·머메이드)' },
+  { key: 'Bodyweight', label: '맨몸·무스프링' },
+];
+
+function exerciseMatchesSpringFilter(exercise: PilatesExercise, springKey: string): boolean {
+  if (!springKey) return true;
+  const raw = (exercise.springs ?? '').trim();
+  if (!raw) return springKey === 'Bodyweight';
+  if (/\bor\b|또는/i.test(raw)) {
+    return raw
+      .split(/\bor\b|또는/i)
+      .some((part) => normalizeCanonicalSpringKey(part) === springKey);
+  }
+  return normalizeCanonicalSpringKey(raw) === springKey;
+}
 
 function readSavedFinderQuery(): string {
   try {
@@ -97,6 +119,7 @@ const emptyFilters = (
 ): FinderFilters => ({
   query: initialQuery,
   equipment: initialEquipment,
+  springKey: '',
   bodyTag: '',
   duration: 'all',
   motionOnly: false,
@@ -109,6 +132,7 @@ const durationOptions: readonly { id: DurationFilter; label: string }[] = [
 ];
 const tabs: readonly { id: FilterTab; label: string }[] = [
   { id: 'equipment', label: '기구' },
+  { id: 'spring', label: '스프링' },
   { id: 'body', label: '부위' },
   { id: 'duration', label: '시간' },
 ];
@@ -182,6 +206,25 @@ export function InlineExerciseFinder({
     if (preview) previewRef.current?.focus();
   }, [preview]);
 
+  const exercisesById = useMemo(
+    () => new Map(exercises.map((item) => [item.id, item])),
+    [exercises],
+  );
+
+  const lastActiveStepSpring = useMemo(() => {
+    for (let i = activeSteps.length - 1; i >= 0; i -= 1) {
+      const st = activeSteps[i]!;
+      if (isRestStep(st)) continue;
+      const ex = exercisesById.get(st.exerciseId);
+      const raw = (st.customSpringOverride || ex?.springs || '').trim();
+      const key = normalizeCanonicalSpringKey(raw);
+      if (key && key !== 'Bodyweight' && !/\bor\b|또는/i.test(raw)) {
+        return { raw, key };
+      }
+    }
+    return null;
+  }, [activeSteps, exercisesById]);
+
   const update = <K extends keyof FinderFilters>(key: K, value: FinderFilters[K]) => {
     if (key === 'query' && typeof value === 'string') {
       writeSavedFinderQuery(value);
@@ -230,6 +273,9 @@ export function InlineExerciseFinder({
         })
       )
         return false;
+      if (filters.springKey && !exerciseMatchesSpringFilter(exercise, filters.springKey)) {
+        return false;
+      }
       if (filters.bodyTag && !exercise.targetMuscles.includes(filters.bodyTag)) return false;
       if (filters.duration === 'short' && exercise.defaultDurationMin > 3) return false;
       if (
@@ -241,6 +287,7 @@ export function InlineExerciseFinder({
       const fields = [
         exercise.nameKo,
         exercise.nameEn,
+        exercise.springs,
         ...exercise.targetMuscles,
         ...equipment.requiredEquipment.map(
           (eqId) => EQUIPMENT_OPTIONS.find((item) => item.id === eqId)?.labelKo ?? eqId,
@@ -260,6 +307,7 @@ export function InlineExerciseFinder({
 
   const activeFilterCount =
     filters.equipment.length +
+    Number(Boolean(filters.springKey)) +
     Number(Boolean(filters.bodyTag)) +
     Number(filters.duration !== 'all');
   const selectedCount = activeSteps.filter((step) => !isRestStep(step)).length;
@@ -284,6 +332,16 @@ export function InlineExerciseFinder({
           ),
       };
     }),
+    ...(filters.springKey
+      ? [
+          {
+            key: `spring-${filters.springKey}`,
+            label: `스프링: ${filters.springKey === 'Bodyweight' ? '맨몸' : filters.springKey}`,
+            ariaLabel: `스프링 ${filters.springKey} 필터 해제`,
+            remove: () => update('springKey', ''),
+          },
+        ]
+      : []),
     ...(filters.bodyTag
       ? [
           {
@@ -511,6 +569,21 @@ export function InlineExerciseFinder({
         )}
       </div>
       <div className="ief-quick-filters">
+        {lastActiveStepSpring && (
+          <button
+            type="button"
+            data-testid="ief-same-spring-chip"
+            aria-pressed={filters.springKey === lastActiveStepSpring.key}
+            onClick={() =>
+              update(
+                'springKey',
+                filters.springKey === lastActiveStepSpring.key ? '' : lastActiveStepSpring.key,
+              )
+            }
+          >
+            <Sparkles size={14} aria-hidden="true" /> 직전 스프링 유지 ({lastActiveStepSpring.key})
+          </button>
+        )}
         <button
           type="button"
           aria-pressed={filters.motionOnly}
@@ -584,6 +657,7 @@ export function InlineExerciseFinder({
               {item.id === 'equipment' && filters.equipment.length > 0 && (
                 <span>{filters.equipment.length}</span>
               )}
+              {item.id === 'spring' && filters.springKey && <span>1</span>}
             </button>
           ))}
         </div>
@@ -614,6 +688,31 @@ export function InlineExerciseFinder({
             ))}
           </div>
           <p>여러 기구를 고르면 하나라도 일치하는 동작을 찾습니다.</p>
+        </div>
+        <div
+          className="ief-filter-panel"
+          id={`${id}-spring-panel`}
+          role="tabpanel"
+          aria-labelledby={`${id}-spring-tab`}
+          hidden={tab !== 'spring'}
+        >
+          <div
+            className="ief-duration-options"
+            aria-label="찾을 스프링 세팅"
+            data-testid="ief-spring-filter-options"
+          >
+            {SPRING_QUICK_OPTIONS.map((option) => (
+              <button
+                type="button"
+                key={option.key || 'all'}
+                aria-pressed={filters.springKey === option.key}
+                onClick={() => update('springKey', option.key)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <p>스프링 전환 없이 이어갈 동작을 빠르게 좁힙니다. 실제 장력은 기구별로 확인하세요.</p>
         </div>
         <div
           className="ief-filter-panel"
@@ -806,8 +905,8 @@ export function InlineExerciseFinder({
             const isIdea = isMovementIdeaExercise(exercise);
             const ideaMeta = isIdea ? readMovementIdeaDraft(exercise) : null;
             const references = resolvePatternReferencesForRenderer(exercise);
-            const motionDescriptor = resolveRenderableMotionDescriptor(exercise);
             const firstReference = references[0];
+            const studio3d = resolveStudio3DMotionForExercise(exercise);
             const alreadyAdded = activeSteps.some(
               (step) => !isRestStep(step) && step.exerciseId === exercise.id,
             );
@@ -832,24 +931,16 @@ export function InlineExerciseFinder({
                   aria-label={`${exercise.nameKo} 상세 보기`}
                   onClick={() => openExerciseDetail(exercise)}
                 >
-                  {firstReference ? (
-                    <MotionPatternThumbnail
-                      reference={firstReference}
-                      unifiedCatalogAsset={getCatalogContinuousMotionAsset(exercise)}
-                    />
-                  ) : getCatalogContinuousMotionAsset(exercise) ? (
-                    <CatalogMotionThumbnail asset={getCatalogContinuousMotionAsset(exercise)!} />
-                  ) : (
-                    <span
-                      className="ief-motion-empty"
-                      data-motion-mode={motionDescriptor.mode}
-                      data-readiness-state={motionDescriptor.readinessState}
-                    >
-                      <span aria-hidden="true">—</span>기본 자세 도해
-                    </span>
-                  )}
-                  <span className="ief-motion-caption">
-                    {firstReference ? '패턴 참고 · 미검수' : '기구 도해 · 출처 대조'}
+                  <img
+                    src={studio3d.peakImg}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    className="ief-studio3d-thumb"
+                    data-testid="ief-card-3d-thumb"
+                  />
+                  <span className="ief-motion-caption" aria-hidden="true">
+                    {firstReference ? '3D 스튜디오 · 패턴 참고' : '3D 스튜디오 · 기구 참조'}
                   </span>
                 </button>
                 <div className="ief-card-body">
@@ -862,6 +953,23 @@ export function InlineExerciseFinder({
                       {exercise.nameKo}
                     </button>
                   </h3>
+                  <div
+                    className="pf-class-badges-strip ief-card-badges"
+                    data-testid="ief-card-spring-level-strip"
+                  >
+                    <PfBadge
+                      tone={
+                        exercise.level === '2.0'
+                          ? 'warning'
+                          : exercise.level === '1.5'
+                            ? 'brand'
+                            : 'sage'
+                      }
+                    >
+                      Lv {exercise.level}
+                    </PfBadge>
+                    {exercise.springs && <SpringVisualPills springs={exercise.springs} />}
+                  </div>
                   <p>
                     {equipmentLabel} · {exercise.defaultDurationMin}분
                     {exercise.targetMuscles.length > 0 && (
@@ -1001,7 +1109,7 @@ export function InlineExerciseFinder({
         </button>
       )}
       <p className="ief-image-note">
-        초안은 원본 제작 도해이며, 해당 동작의 검증된 시범이 아닙니다.
+        3D 도해와 패턴 초안은 기구 세팅 참고용이며, 수행 전 강사가 직접 확인합니다.
       </p>
       <button className="ief-open-atlas" type="button" onClick={() => setActiveTab('atlas')}>
         동작 라이브러리 전체 보기 <ArrowUpRight size={17} />

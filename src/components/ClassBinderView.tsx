@@ -2,7 +2,7 @@ import { compareTeachingHistoryDates, getTeachingHistoryDateSource } from '../ut
 import React, { useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowDownToLine, ArrowRight, BookOpen, CalendarDays, Clock3, Copy,
-  Eye, FileText, FolderHeart, History, Play, Plus, Printer, ShieldCheck, Trash2, Users, X,
+  Eye, FileText, FolderHeart, History, Play, Plus, Printer, QrCode, ShieldCheck, Trash2, Users, X,
 } from 'lucide-react';
 import { APPARATUS_LABELS, INITIAL_HISTORY_LOGS, INITIAL_SAVED_SEQUENCES } from '../data/pilatesCatalog';
 import { ClassCueSheetPreview } from '../features/classCueSheet/ClassCueSheetPreview';
@@ -33,6 +33,7 @@ import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
 import { OnePageVisual3DCueSheet } from './OnePageVisual3DCueSheet';
+import { SequenceQrShareDialog } from './SequenceQrShareDialog';
 import { SpringVisualPills } from './SpringVisualPills';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/design-tokens.css';
@@ -191,6 +192,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const [pendingOverwrite, setPendingOverwrite] = useState<{ sequenceId: string; mode: 'workbench' | 'stage' } | null>(null);
   const [expandedSavedIds, setExpandedSavedIds] = useState<Set<string>>(() => new Set());
   const [printSequence, setPrintSequence] = useState<SavedSequence | null>(null);
+  const [qrShareSequence, setQrShareSequence] = useState<SavedSequence | null>(null);
   const [showBinderCueSheet, setShowBinderCueSheet] = useState(false);
   const [showBinderVisual3dSheet, setShowBinderVisual3dSheet] = useState(true);
   const [reopenedHistoryId, setReopenedHistoryId] = useState<string | null>(null);
@@ -978,6 +980,14 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                       </div>
                       <div className="teaching-card-tools">
                         <PfButton variant="ghost" onClick={() => duplicateSequence(sequence.id)}><Copy size={15} /> 복제</PfButton>
+                        <PfButton
+                          variant="ghost"
+                          data-testid="binder-saved-qr-share-btn"
+                          aria-label={`${sequence.title} 로컬 QR 공유`}
+                          onClick={() => setQrShareSequence(sequence)}
+                        >
+                          <QrCode size={15} /> QR 공유
+                        </PfButton>
                         <PfButton variant="ghost" onClick={(e) => { printTriggerRef.current = e.currentTarget; setPrintSequence(sequence); }}><Printer size={15} /> 인쇄</PfButton>
                         <PfButton variant="ghost" onClick={() => exportText(sequence)}><ArrowDownToLine size={15} /> 텍스트</PfButton>
                         <PfButton variant="ghost" onClick={() => exportMarkdown(sequence)}><FileText size={15} /> 마크다운</PfButton>
@@ -1574,6 +1584,20 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
           <PfButton variant="primary" onClick={() => window.print()}><Printer size={16} /> 인쇄하기</PfButton>
         </div>
       </LightDismissDialog>
+      {qrShareSequence && (
+        <SequenceQrShareDialog
+          open={Boolean(qrShareSequence)}
+          onClose={() => setQrShareSequence(null)}
+          title={qrShareSequence.title}
+          subtitle={qrShareSequence.subtitle}
+          apparatus={qrShareSequence.apparatus}
+          level={qrShareSequence.level}
+          targetMinutes={qrShareSequence.targetMinutes}
+          reformerBrand={reformerBrand}
+          steps={qrShareSequence.steps}
+          exercises={exercises}
+        />
+      )}
       <LightDismissDialog
         open={Boolean(reopenedView)} onClose={closeReopenedModal} title="진행 완료 수업 이력 상세"
         subtitle={reopenedView ? `${reopenedView.sequenceTitle} · ${formatDate(getTeachingHistoryDateSource(reopenedView))}` : ''} maxWidth="760px"

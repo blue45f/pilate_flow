@@ -1,13 +1,21 @@
 import React, { useMemo, useState } from 'react';
-import { Columns2, Printer, Rows3, Zap } from 'lucide-react';
+import { Columns2, Printer, QrCode, Rows3, Zap } from 'lucide-react';
 import { APPARATUS_LABELS } from '../data/pilatesCatalog';
 import { PfBadge, PfButton } from '../design-system';
+import { usePilatesStore } from '../store/usePilatesStore';
 import type {
   ApparatusType,
   DifficultyLevel,
   PilatesExercise,
+  ReformerBrand,
   SequenceStep,
 } from '../types/pilates';
+import {
+  BRAND_SPRING_OPTIONS,
+  HONEST_BRAND_SPRING_CAUTION_KO,
+  formatBrandSpringEquivalent,
+} from '../utils/brandSpringConverter';
+import { buildSequenceShareUrl, generateLocalQrCodeSvg } from '../utils/localQrSequenceShare';
 import { formatDifficultyBadgeKo } from '../utils/memberBookingBridge';
 import {
   formatSecondsToMMSS,
@@ -28,6 +36,7 @@ export interface OnePageVisual3DCueSheetProps {
   readonly steps: readonly SequenceStep[];
   readonly exercises: readonly PilatesExercise[];
   readonly showPrintButton?: boolean;
+  readonly initialBrand?: ReformerBrand;
 }
 
 const SECTION_LABEL_KO: Record<string, string> = {
@@ -46,16 +55,51 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
   steps,
   exercises,
   showPrintButton = true,
+  initialBrand,
 }) => {
+  const storeBrand = usePilatesStore((s) => s.reformerBrand);
+  const setStoreBrand = usePilatesStore((s) => s.setReformerBrand);
+  const [localBrandOverride, setLocalBrandOverride] = useState<ReformerBrand | null>(
+    initialBrand ?? null,
+  );
+  const activeBrand: ReformerBrand = localBrandOverride ?? storeBrand ?? 'intopilates';
+
   const [layoutDensity, setLayoutDensity] = useState<'two-col-print' | 'single-col-tablet'>(
     'two-col-print',
   );
+  const [showCornerQr, setShowCornerQr] = useState(false);
+
+  const selectBrand = (nextBrand: ReformerBrand) => {
+    setLocalBrandOverride(nextBrand);
+    setStoreBrand(nextBrand);
+  };
 
   const exerciseMap = useMemo(
     () => new Map(exercises.map((item) => [item.id, item])),
     [exercises],
   );
   const durations = useMemo(() => getSequenceDurations([...steps]), [steps]);
+
+  const cornerQrResult = useMemo(() => {
+    if (!showCornerQr || steps.length === 0) return null;
+    try {
+      const targetMin = Math.max(5, Math.round(durations.totalSec / 60) || 50);
+      const built = buildSequenceShareUrl({
+        title,
+        subtitle,
+        apparatus,
+        level,
+        targetMinutes: targetMin,
+        reformerBrand: activeBrand,
+        steps,
+        exercises,
+        includeInstructorNotes: false,
+      });
+      return generateLocalQrCodeSvg(built.shareUrl, { quietZone: 2 });
+    } catch {
+      return null;
+    }
+  }, [showCornerQr, steps, durations.totalSec, title, subtitle, apparatus, level, activeBrand, exercises]);
 
   const enrichedRows = useMemo(() => {
     let prevSpringNorm = '';
@@ -75,6 +119,11 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
       if (hasSpringDelta) springChangeTotal += 1;
       if (!rest && normSpring) prevSpringNorm = normSpring;
 
+      const brandConverted =
+        !rest && springs
+          ? formatBrandSpringEquivalent(springs, activeBrand, ex?.apparatus ?? apparatus)
+          : null;
+
       const motion3d = ex ? resolveStudio3DMotionForExercise(ex) : null;
       const primaryCue = rest
         ? step.instructorNote || '호흡 정리 및 다음 기구 세팅 점검'
@@ -88,10 +137,13 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
         step,
         orderLabel: String(idx + 1).padStart(2, '0'),
         rest,
-        nameKo: rest ? '중간 휴식 · 세팅 전환' : (ex?.nameKo ?? step.exerciseSnapshot?.nameKo ?? '동작 확인'),
+        nameKo: rest
+          ? '중간 휴식 · 세팅 전환'
+          : (ex?.nameKo ?? step.exerciseSnapshot?.nameKo ?? '동작 확인'),
         sectionLabelKo,
         durationLabel: formatSecondsToMMSS(timing.totalSec),
         springs,
+        brandConverted,
         hasSpringDelta,
         thumbSrc: motion3d?.peakImg ?? null,
         primaryCue,
@@ -104,11 +156,13 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
       };
     });
     return { rows, springChangeTotal };
-  }, [steps, exerciseMap]);
+  }, [steps, exerciseMap, activeBrand, apparatus]);
 
   const apparatusKo =
     apparatus === 'mixed' ? '복합 기구' : (APPARATUS_LABELS[apparatus]?.ko ?? apparatus);
   const movementCount = enrichedRows.rows.filter((r) => !r.rest).length;
+  const activeBrandMeta =
+    BRAND_SPRING_OPTIONS.find((item) => item.id === activeBrand) ?? BRAND_SPRING_OPTIONS[0]!;
 
   return (
     <section
@@ -117,6 +171,7 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
       }`}
       data-testid="one-page-visual-3d-cuesheet"
       data-layout-density={layoutDensity}
+      data-reformer-brand={activeBrand}
       aria-label="1페이지 3D 시각 요약 큐시트"
     >
       <header className="pf-visual-1p-cuesheet__header">
@@ -133,36 +188,82 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
             <PfBadge tone={enrichedRows.springChangeTotal > 0 ? 'warning' : 'sage'}>
               스프링 전환 {enrichedRows.springChangeTotal}회
             </PfBadge>
+            <PfBadge tone="neutral">장력 기준: {activeBrandMeta.shortLabelKo}</PfBadge>
+          </div>
+          <div
+            className="pf-brand-spring-switcher cue-sheet-no-print"
+            role="group"
+            aria-label="기구 제조사별 스프링 장력 환산 기준"
+            data-testid="cuesheet-brand-spring-switcher"
+          >
+            <span className="pf-brand-spring-switcher__label">기구 브랜드 환산:</span>
+            {BRAND_SPRING_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`log-quick-note-chip ${activeBrand === opt.id ? 'is-selected' : ''}`.trim()}
+                aria-pressed={activeBrand === opt.id}
+                onClick={() => selectBrand(opt.id)}
+              >
+                {opt.shortLabelKo}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="pf-visual-1p-cuesheet__controls cue-sheet-no-print">
-          <div role="group" aria-label="1페이지 큐시트 배열 밀도" className="pf-visual-1p-density">
-            <button
-              type="button"
-              className={`log-quick-note-chip ${layoutDensity === 'two-col-print' ? 'is-selected' : ''}`.trim()}
-              aria-pressed={layoutDensity === 'two-col-print'}
-              onClick={() => setLayoutDensity('two-col-print')}
-            >
-              <Columns2 size={14} aria-hidden="true" /> A4 1장 2열 압축
-            </button>
-            <button
-              type="button"
-              className={`log-quick-note-chip ${layoutDensity === 'single-col-tablet' ? 'is-selected' : ''}`.trim()}
-              aria-pressed={layoutDensity === 'single-col-tablet'}
-              onClick={() => setLayoutDensity('single-col-tablet')}
-            >
-              <Rows3 size={14} aria-hidden="true" /> 태블릿 1열 크게 보기
-            </button>
+        <div className="pf-visual-1p-cuesheet__right">
+          <div className="pf-visual-1p-cuesheet__controls cue-sheet-no-print">
+            <div role="group" aria-label="1페이지 큐시트 배열 밀도" className="pf-visual-1p-density">
+              <button
+                type="button"
+                className={`log-quick-note-chip ${layoutDensity === 'two-col-print' ? 'is-selected' : ''}`.trim()}
+                aria-pressed={layoutDensity === 'two-col-print'}
+                onClick={() => setLayoutDensity('two-col-print')}
+              >
+                <Columns2 size={14} aria-hidden="true" /> A4 1장 2열 압축
+              </button>
+              <button
+                type="button"
+                className={`log-quick-note-chip ${layoutDensity === 'single-col-tablet' ? 'is-selected' : ''}`.trim()}
+                aria-pressed={layoutDensity === 'single-col-tablet'}
+                onClick={() => setLayoutDensity('single-col-tablet')}
+              >
+                <Rows3 size={14} aria-hidden="true" /> 태블릿 1열 크게 보기
+              </button>
+            </div>
+            {steps.length > 0 && (
+              <button
+                type="button"
+                className={`log-quick-note-chip ${showCornerQr ? 'is-selected' : ''}`.trim()}
+                data-testid="one-page-visual-cuesheet-qr-toggle"
+                aria-pressed={showCornerQr}
+                onClick={() => setShowCornerQr((v) => !v)}
+              >
+                <QrCode size={14} aria-hidden="true" /> 큐시트 QR 표시
+              </button>
+            )}
+            {showPrintButton && (
+              <PfButton
+                variant="primary"
+                data-testid="one-page-visual-cuesheet-print-btn"
+                onClick={() => window.print()}
+              >
+                <Printer size={15} aria-hidden="true" /> 1페이지 큐시트 인쇄
+              </PfButton>
+            )}
           </div>
-          {showPrintButton && (
-            <PfButton
-              variant="primary"
-              data-testid="one-page-visual-cuesheet-print-btn"
-              onClick={() => window.print()}
+          {cornerQrResult && (
+            <div
+              className="pf-visual-1p-qr-corner"
+              data-testid="one-page-visual-cuesheet-qr"
+              aria-label="인쇄용 로컬 시퀀스 스캔 QR"
             >
-              <Printer size={15} aria-hidden="true" /> 1페이지 큐시트 인쇄
-            </PfButton>
+              <div
+                className="pf-visual-1p-qr-corner__svg"
+                dangerouslySetInnerHTML={{ __html: cornerQrResult.svgMarkup }}
+              />
+              <span>태블릿 스캔</span>
+            </div>
           )}
         </div>
       </header>
@@ -202,6 +303,15 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
                 {!row.rest && (
                   <div className="pf-visual-1p-row__meta">
                     {row.springs && <SpringVisualPills springs={row.springs} />}
+                    {row.brandConverted && !row.brandConverted.isNonSpringApparatus && (
+                      <span
+                        className="pf-brand-spring-pill"
+                        data-testid="visual-1p-brand-spring"
+                      >
+                        {row.brandConverted.brandShortLabelKo}:{' '}
+                        {row.brandConverted.equivalentLabelKo}
+                      </span>
+                    )}
                     {row.hasSpringDelta && (
                       <span
                         className="pf-visual-1p-row__delta"
@@ -226,8 +336,7 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
       )}
 
       <footer className="pf-visual-1p-cuesheet__footer">
-        수업 준비 요약 시트 · 3D 썸네일과 권장 스프링은 기구 세팅 참고용이며 대상자 컨디션과 실제
-        장력은 강사가 현장에서 직접 확인합니다.
+        수업 준비 요약 시트 ({activeBrandMeta.fullLabelKo} 기준) · {HONEST_BRAND_SPRING_CAUTION_KO}
       </footer>
     </section>
   );

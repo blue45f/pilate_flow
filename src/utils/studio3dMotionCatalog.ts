@@ -6,14 +6,18 @@ export type Studio3DSignatureId =
   | 'reformer-shortspine'
   | 'reformer-longbox-teaser'
   | 'reformer-elephant'
+  | 'reformer-mermaid'
+  | 'reformer-scooter-lunge'
   | 'mat-hundred'
   | 'mat-twist'
+  | 'mat-sidekick-plank'
   | 'chair-pedal-press'
   | 'chair-goingup'
   | 'chair-pike'
   | 'cadillac-cat-rolldown'
   | 'cadillac-teaser'
   | 'cadillac-hanging'
+  | 'cadillac-leg-springs'
   | 'barrel-sidebend'
   | 'barrel-swan'
   | 'barrel-horseback';
@@ -96,6 +100,28 @@ export const STUDIO_3D_SIGNATURES: Record<
     trajectoryArc: { from: [46, 68], ctrl: [36, 58], to: [26, 68] },
     anchorPoint: [76, 54],
   },
+  'reformer-mermaid': {
+    signatureId: 'reformer-mermaid',
+    titleKo: '리포머 머메이드 측굴 · Z-Sit 늑간·측면 사슬 신장',
+    startImg: '/motion-studio3d/reformer-mermaid-start.png',
+    peakImg: '/motion-studio3d/reformer-mermaid-peak.png',
+    excursionLabelKo: '풋바 수평 프레스와 동시 반대편 골반 앵커링 C커브 측굴',
+    anchorLabelKo: '캐리지 양 좌골 수평 유지 & 지지 손 견갑 하강',
+    activeMuscleSummaryKo: '요방형근 · 외복사근 · 늑간근 · 광배근 신장',
+    trajectoryArc: { from: [42, 30], ctrl: [56, 20], to: [69, 34] },
+    anchorPoint: [44, 64],
+  },
+  'reformer-scooter-lunge': {
+    signatureId: 'reformer-scooter-lunge',
+    titleKo: '리포머 스탠딩 스쿠터 & 이브스 런지 · 단측 둔근 제어',
+    startImg: '/motion-studio3d/reformer-lunge-start.png',
+    peakImg: '/motion-studio3d/reformer-lunge-peak.png',
+    excursionLabelKo: '앞다리 무릎 정렬 고정 채 뒷다리 캐리지 후방 프레스',
+    anchorLabelKo: '바닥 지지발 삼각대 밀착 & 풋바 가벼운 손끝 안정',
+    activeMuscleSummaryKo: '대둔근 · 중둔근 · 대퇴사두근 · 장요근 신장',
+    trajectoryArc: { from: [50, 62], ctrl: [39, 56], to: [28, 62] },
+    anchorPoint: [66, 86],
+  },
   'mat-hundred': {
     signatureId: 'mat-hundred',
     titleKo: '스튜디오 매트 코어 컬업 · 흉추 굴곡 & 호흡',
@@ -117,6 +143,17 @@ export const STUDIO_3D_SIGNATURES: Record<
     activeMuscleSummaryKo: '외복사근 · 내복사근 · 흉추 회전근 · 햄스트링',
     trajectoryArc: { from: [42, 34], ctrl: [54, 32], to: [66, 48] },
     anchorPoint: [42, 74],
+  },
+  'mat-sidekick-plank': {
+    signatureId: 'mat-sidekick-plank',
+    titleKo: '스튜디오 매트 사이드 킥 & 사이드 플랭크 · 측면 코어',
+    startImg: '/motion-studio3d/mat-sidekick-start.png',
+    peakImg: '/motion-studio3d/mat-sidekick-peak.png',
+    excursionLabelKo: '측면 전완 지지 → 골반 수직 리프트 및 위쪽 다리 외전',
+    anchorLabelKo: '지지 전완·어깨 수직 정렬 & 아래쪽 옆구리 아치 유지',
+    activeMuscleSummaryKo: '중둔근 · 소둔근 · 외복사근 · 전거근 측면 사슬',
+    trajectoryArc: { from: [54, 72], ctrl: [58, 50], to: [66, 36] },
+    anchorPoint: [34, 78],
   },
   'chair-pedal-press': {
     signatureId: 'chair-pedal-press',
@@ -184,6 +221,17 @@ export const STUDIO_3D_SIGNATURES: Record<
     trajectoryArc: { from: [40, 56], ctrl: [38, 38], to: [36, 28] },
     anchorPoint: [58, 16],
   },
+  'cadillac-leg-springs': {
+    signatureId: 'cadillac-leg-springs',
+    titleKo: '캐딜락 레그 스프링 프로그 & 서클 · 독립 양측 고관절 제어',
+    startImg: '/motion-studio3d/cadillac-legspring-start.png',
+    peakImg: '/motion-studio3d/cadillac-legspring-peak.png',
+    excursionLabelKo: '독립 양측 레그 스프링 대칭 45° 프레스 & 서클 제어',
+    anchorLabelKo: '수직 폴 양손 파지로 윗등 고정 & 천골 수평 밀착',
+    activeMuscleSummaryKo: '고관절 내전근 · 복횡근 · 대둔근 · 햄스트링',
+    trajectoryArc: { from: [54, 28], ctrl: [62, 34], to: [70, 44] },
+    anchorPoint: [24, 58],
+  },
   'barrel-sidebend': {
     signatureId: 'barrel-sidebend',
     titleKo: '래더 바렐 사이드 벤드 · 측면 사슬 신장',
@@ -234,11 +282,13 @@ export function resolveStudio3DMotionForExercise(
   if (exercise.apparatus === 'reformer') {
     const isElephantOrPlankPike =
       exercise.blockCategory === 'plank' ||
-      /elephant|up[\s-]*stretch|down[\s-]*stretch|arabesque|long[\s-]*stretch|front[\s-]*support|control[\s-]*front|일리펀트|업\s*스트레치|다운\s*스트레치|아라베스크|롱\s*스트레치|플랭크/.test(
+      /elephant|up[\s-]*stretch|down[\s-]*stretch|arabesque|long[\s-]*stretch|front[\s-]*support|control[\s-]*front|tendon[\s-]*stretch|일리펀트|업\s*스트레치|다운\s*스트레치|아라베스크|롱\s*스트레치|플랭크|텐던\s*스트레치/.test(
         hay,
       );
     if (isElephantOrPlankPike) {
-      const exact = /elephant|up[\s-]*stretch|arabesque|일리펀트|업\s*스트레치|아라베스크/.test(hay);
+      const exact = /elephant|up[\s-]*stretch|arabesque|tendon[\s-]*stretch|일리펀트|업\s*스트레치|아라베스크|텐던\s*스트레치/.test(
+        hay,
+      );
       return {
         ...STUDIO_3D_SIGNATURES['reformer-elephant'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
@@ -278,6 +328,36 @@ export function resolveStudio3DMotionForExercise(
         matchScopeBadgeKo: exact
           ? '3D 동작 궤적 일치 · 롱박스 티저'
           : '리포머 박스·스트랩 3D 참조 · 세부 자세는 큐 확인',
+      };
+    }
+
+    const isMermaidOrLateral =
+      /mermaid|z[\s-]*sit|side[\s-]*bend|cleopatra|머메이드|측굴/.test(hay) ||
+      (exercise.blockCategory === 'cooldown' && exercise.bodyPosition === 'seated');
+    if (isMermaidOrLateral) {
+      const exact = /mermaid|side[\s-]*bend|머메이드|측굴/.test(hay);
+      return {
+        ...STUDIO_3D_SIGNATURES['reformer-mermaid'],
+        matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
+        matchScopeBadgeKo: exact
+          ? '3D 동작 궤적 일치 · 리포머 머메이드 측굴'
+          : '리포머 시티드 측굴 3D 참조 · 세부 자세는 큐 확인',
+      };
+    }
+
+    const isScooterOrStandingLunge =
+      exercise.bodyPosition === 'standing' ||
+      /scooter|lunge|side[\s-]*split|skater|russian[\s-]*split|스쿠터|런지|사이드\s*스플릿|스케이터/.test(
+        hay,
+      );
+    if (isScooterOrStandingLunge) {
+      const exact = /scooter|lunge|스쿠터|런지/.test(hay);
+      return {
+        ...STUDIO_3D_SIGNATURES['reformer-scooter-lunge'],
+        matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
+        matchScopeBadgeKo: exact
+          ? '3D 동작 궤적 일치 · 리포머 스쿠터·런지'
+          : '리포머 스탠딩 하체 3D 참조 · 세부 자세는 큐 확인',
       };
     }
 
@@ -353,9 +433,25 @@ export function resolveStudio3DMotionForExercise(
       };
     }
 
+    const isLegSprings =
+      exercise.blockCategory === 'feet-in-straps' ||
+      /leg[\s-]*spring|frog|airplane|walking|bicycle|레그\s*스프링|레그스프링|프로그|에어플레인|시저스/.test(
+        hay,
+      );
+    if (isLegSprings && !/teaser|push[\s-]*through|티저|푸쉬스루/.test(hay)) {
+      const exact = /leg[\s-]*spring|frog|레그\s*스프링|레그스프링|프로그/.test(hay);
+      return {
+        ...STUDIO_3D_SIGNATURES['cadillac-leg-springs'],
+        matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
+        matchScopeBadgeKo: exact
+          ? '3D 동작 궤적 일치 · 캐딜락 레그 스프링'
+          : '캐딜락 레그 스프링 계열 3D 참조 · 세부 자세는 큐 확인',
+      };
+    }
+
     const isSupineTeaserOrTower =
       exercise.bodyPosition === 'supine' ||
-      /teaser|monkey|tower|push[\s-]*through|leg[\s-]*spring|dolphin|magician|티저|몽키|타워|푸쉬스루|레그스프링/.test(
+      /teaser|monkey|tower|push[\s-]*through|dolphin|magician|티저|몽키|타워|푸쉬스루/.test(
         hay,
       );
     if (isSupineTeaserOrTower) {
@@ -414,6 +510,24 @@ export function resolveStudio3DMotionForExercise(
       matchScopeBadgeKo: isExact
         ? '3D 동작 궤적 일치 · 바렐 측굴'
         : '래더 바렐 3D 참조 · 세부 자세는 큐 확인',
+    };
+  }
+
+  const isMatSideKickOrSidePlank =
+    exercise.bodyPosition === 'side-lying' ||
+    /side[\s-]*kick|side[\s-]*plank|side[\s-]*bend|clam|star|kneeling[\s-]*side|사이드\s*킥|사이드\s*플랭크|사이드\s*밴드|클램/.test(
+      hay,
+    );
+  if (isMatSideKickOrSidePlank) {
+    const exact = /side[\s-]*kick|side[\s-]*plank|side[\s-]*bend|사이드\s*킥|사이드\s*플랭크|사이드\s*밴드/.test(
+      hay,
+    );
+    return {
+      ...STUDIO_3D_SIGNATURES['mat-sidekick-plank'],
+      matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
+      matchScopeBadgeKo: exact
+        ? '3D 동작 궤적 일치 · 매트 사이드킥·플랭크'
+        : '스튜디오 매트 측면 사슬 3D 참조 · 세부 자세는 큐 확인',
     };
   }
 

@@ -7,15 +7,20 @@ import {
   prewarmStudio3dOfflineCache,
   type Studio3dOfflineStatus,
 } from '../utils/pwaStudioOffline';
-import { ALL_STUDIO_3D_ASSET_URLS } from '../utils/studio3dMotionCatalog';
+import {
+  ALL_STUDIO_3D_ASSET_URLS,
+  STUDIO_3D_SIGNATURES,
+} from '../utils/studio3dMotionCatalog';
 
 export const StudioOffline3dReadinessCard: React.FC = () => {
   const pwa = usePwa();
+  const totalFamilies = Object.keys(STUDIO_3D_SIGNATURES).length;
+  const totalCuts = ALL_STUDIO_3D_ASSET_URLS.length;
   const [isOnline, setIsOnline] = useState<boolean>(() =>
     typeof navigator !== 'undefined' ? navigator.onLine !== false : true,
   );
   const [cacheState, setCacheState] = useState<Studio3dOfflineStatus>(() => ({
-    totalAssets: ALL_STUDIO_3D_ASSET_URLS.length,
+    totalAssets: totalCuts,
     cachedAssets: 0,
     cacheSupported: typeof window !== 'undefined' && 'caches' in window,
     isComplete: false,
@@ -66,7 +71,7 @@ export const StudioOffline3dReadinessCard: React.FC = () => {
         <div>
           <span className="eyebrow">OFFLINE STUDIO PWA · P16</span>
           <h4 className="pf-offline-3d-card__title">
-            현장 오프라인 &amp; 32컷 3D 모션 미리 보관
+            현장 오프라인 &amp; {totalCuts}컷 3D 모션 미리 보관
           </h4>
         </div>
         <div className="pf-class-badges-strip">
@@ -89,9 +94,9 @@ export const StudioOffline3dReadinessCard: React.FC = () => {
       </div>
 
       <p className="pf-offline-3d-card__desc">
-        지하 스튜디오나 Wi-Fi가 불안정한 수업실에서도 시퀀스 빌더·라이브 타이머·16패밀리(32컷) 3D
-        기구 모션을 끊김 없이 열 수 있도록 기기 캐시에 미리 담아 둡니다. (YouTube 외부 스트리밍과
-        클라우드 백업만 인터넷 필요)
+        지하 스튜디오나 Wi-Fi가 불안정한 수업실에서도 시퀀스 빌더·라이브 타이머·{totalFamilies}패밀리(
+        {totalCuts}컷) 3D 기구 모션을 끊김 없이 열 수 있도록 기기 캐시에 미리 담아 둡니다. (YouTube
+        외부 스트리밍과 클라우드 백업만 인터넷 필요)
       </p>
 
       <div className="pf-offline-3d-card__bar">
@@ -118,8 +123,8 @@ export const StudioOffline3dReadinessCard: React.FC = () => {
             {isWarming
               ? '3D 모션 담는 중…'
               : cacheState.isComplete
-                ? '32컷 다시 확인'
-                : '32컷 3D 모션 오프라인 미리 저장'}
+                ? `${totalCuts}컷 다시 확인`
+                : `${totalCuts}컷 3D 모션 오프라인 미리 저장`}
           </PfButton>
         )}
       </div>
