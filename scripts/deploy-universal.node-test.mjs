@@ -1,5 +1,13 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,6 +22,7 @@ import {
   parseServiceAccountJsonString,
   prepareAuthExecutionEnv,
   resolveFirebaseAuth,
+  restoreManualRollbackRelease,
   restorePreviousVerifiedRelease,
   snapshotVerifiedRelease,
   validateCliArgs,
@@ -496,4 +505,139 @@ test('snapshotVerifiedRelease and restorePreviousVerifiedRelease perform determi
   assert.equal(restored.releaseId, snap1.releaseId);
   const restoredHtml = readFileSync(path.join(dist, 'index.html'), 'utf8');
   assert.match(restoredHtml, /index-GoodV1\.js/);
+});
+
+function stageRollbackFixtureVersion(
+  root,
+  name,
+  { cssName = `${name}.css`, verified = true } = {},
+) {
+  const dist = path.join(root, 'dist');
+  const entryName = `${name}.js`;
+  rmSync(path.join(dist, 'assets'), { recursive: true, force: true });
+  mkdirSync(path.join(dist, 'assets'));
+  writeFileSync(
+    path.join(dist, 'index.html'),
+    `<html><head><link rel="stylesheet" href="./assets/${cssName}"><script type="module" src="./assets/${entryName}"></script></head></html>`,
+  );
+  writeFileSync(
+    path.join(dist, 'assets', entryName),
+    `export const image = "${ATELIER_V2_ASSET_PATHS[0]}";`,
+  );
+  writeFileSync(path.join(dist, 'assets', cssName), 'body { margin: 0; }');
+  writeFileSync(
+    path.join(dist, 'sw.js'),
+    `const ASSETS = ${JSON.stringify(['/index.html', `/assets/${entryName}`, `/assets/${cssName}`, '/icons/app-192.png'])};`,
+  );
+  const snapshot = snapshotVerifiedRelease(root, { gitCommit: name });
+  if (verified) markReleaseVerifiedLive(root, snapshot.releaseId);
+  return snapshot;
+}
+
+function mockLiveRollbackIndex(root, release) {
+  return makeMockFetch({
+    '/': {
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+      body: readFileSync(path.join(root, release.snapshotDir, 'index.html'), 'utf8'),
+    },
+  });
+}
+
+test('manual rollback excludes the actual live release and duplicate live snapshots, independent of local dist', async (t) => {
+  const { root, dist } = createDistCheckoutFixture(t);
+  const previous = stageRollbackFixtureVersion(root, 'index-PreviousGood');
+  const current = stageRollbackFixtureVersion(root, 'index-CurrentGood');
+  const ledgerPath = path.join(root, '.firebase', 'release-history.json');
+  const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8'));
+  const duplicate = { ...current, releaseId: `${current.releaseId}-duplicate`, verifiedLive: true };
+  cpSync(
+    path.join(root, current.snapshotDir),
+    path.join(root, '.firebase', 'releases', duplicate.releaseId),
+    { recursive: true },
+  );
+  ledger.releases.unshift(duplicate);
+  writeFileSync(ledgerPath, JSON.stringify(ledger));
+  stageRollbackFixtureVersion(root, 'index-LocalPending', { verified: false });
+
+  const restored = await restoreManualRollbackRelease(root, {
+    fetchImpl: mockLiveRollbackIndex(root, current),
+  });
+  assert.equal(restored.releaseId, previous.releaseId);
+  assert.match(readFileSync(path.join(dist, 'index.html'), 'utf8'), /index-PreviousGood\.js/);
+});
+
+test('manual rollback from a failed unverified deployment restores the latest verified release', async (t) => {
+  const { root, dist } = createDistCheckoutFixture(t);
+  stageRollbackFixtureVersion(root, 'index-OlderGood');
+  const good = stageRollbackFixtureVersion(root, 'index-LatestGood');
+  const failed = stageRollbackFixtureVersion(root, 'index-FailedNew', { verified: false });
+  const restored = await restoreManualRollbackRelease(root, {
+    fetchImpl: mockLiveRollbackIndex(root, failed),
+  });
+  assert.equal(restored.releaseId, good.releaseId);
+  assert.match(readFileSync(path.join(dist, 'index.html'), 'utf8'), /index-LatestGood\.js/);
+});
+
+test('manual rollback distinguishes CSS-only releases sharing the same JavaScript entry', async (t) => {
+  const { root, dist } = createDistCheckoutFixture(t);
+  const previous = stageRollbackFixtureVersion(root, 'index-SharedJs', {
+    cssName: 'index-PreviousStyle.css',
+  });
+  const current = stageRollbackFixtureVersion(root, 'index-SharedJs', {
+    cssName: 'index-CurrentStyle.css',
+  });
+  const restored = await restoreManualRollbackRelease(root, {
+    fetchImpl: mockLiveRollbackIndex(root, current),
+  });
+  assert.equal(restored.releaseId, previous.releaseId);
+  assert.match(readFileSync(path.join(dist, 'index.html'), 'utf8'), /index-PreviousStyle\.css/);
+});
+
+test('manual rollback fails before changing dist when live identity is unreachable, denied or not an app', async (t) => {
+  const { root, dist } = createDistCheckoutFixture(t);
+  stageRollbackFixtureVersion(root, 'index-PreviousGood');
+  const current = stageRollbackFixtureVersion(root, 'index-CurrentGood');
+  const initialHtml = readFileSync(path.join(dist, 'index.html'), 'utf8');
+  const ledgerPath = path.join(root, '.firebase', 'release-history.json');
+  const initialLedger = readFileSync(ledgerPath, 'utf8');
+  const realMock = mockLiveRollbackIndex(root, current);
+  const failures = [
+    async () => {
+      throw new Error('network unavailable');
+    },
+    makeMockFetch({
+      '/': { status: 401, headers: { 'content-type': 'text/html' }, body: '<html>Sign in</html>' },
+    }),
+    makeMockFetch({
+      '/': { headers: { 'content-type': 'text/html' }, body: '<html>Sign in</html>' },
+    }),
+    makeMockFetch({ '/': { headers: { 'content-type': 'application/json' }, body: '{}' } }),
+  ];
+  for (const fetchImpl of failures) {
+    await assert.rejects(
+      restoreManualRollbackRelease(root, { fetchImpl }),
+      /No snapshot was restored/,
+    );
+    assert.equal(readFileSync(path.join(dist, 'index.html'), 'utf8'), initialHtml);
+    assert.equal(readFileSync(ledgerPath, 'utf8'), initialLedger);
+  }
+  await restoreManualRollbackRelease(root, {
+    fetchImpl: (input, init) => {
+      assert.equal(init.redirect, 'error');
+      assert.equal(init.headers['Cache-Control'], 'no-cache');
+      assert.ok(init.signal instanceof AbortSignal);
+      return realMock(input);
+    },
+  });
+});
+
+test('manual rollback refuses to redeploy the live bundle when no older verified release exists', async (t) => {
+  const { root, dist } = createDistCheckoutFixture(t);
+  const current = stageRollbackFixtureVersion(root, 'index-OnlyGood');
+  const initialHtml = readFileSync(path.join(dist, 'index.html'), 'utf8');
+  await assert.rejects(
+    restoreManualRollbackRelease(root, { fetchImpl: mockLiveRollbackIndex(root, current) }),
+    /No verified local release snapshot/,
+  );
+  assert.equal(readFileSync(path.join(dist, 'index.html'), 'utf8'), initialHtml);
 });

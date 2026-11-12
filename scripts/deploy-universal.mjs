@@ -1006,12 +1006,17 @@ export function markReleaseVerifiedLive(rootDir = ROOT, releaseId) {
 /**
  * Restore the most recent known-good verified release snapshot into dist/ for rollback deployment.
  */
-export function restorePreviousVerifiedRelease(rootDir = ROOT, { excludeReleaseId = null } = {}) {
+export function restorePreviousVerifiedRelease(
+  rootDir = ROOT,
+  { excludeReleaseId = null, excludeReleaseIds = [] } = {},
+) {
   const ledgerPath = join(rootDir, '.firebase', 'release-history.json');
   const ledger = readReleaseLedger(ledgerPath);
+  const excluded = new Set(excludeReleaseIds);
+  if (excludeReleaseId) excluded.add(excludeReleaseId);
   const candidate = ledger.releases.find((item) => {
     if (!item.verifiedLive) return false;
-    if (excludeReleaseId && item.releaseId === excludeReleaseId) return false;
+    if (excluded.has(item.releaseId)) return false;
     const absSnapshot = join(rootDir, '.firebase', 'releases', item.releaseId);
     return existsSync(join(absSnapshot, 'index.html'));
   });
@@ -1034,6 +1039,52 @@ export function restorePreviousVerifiedRelease(rootDir = ROOT, { excludeReleaseI
   verifyPwaBuild(distDir);
   verifyAtelierV2DistAssets(distDir);
   return candidate;
+}
+
+/** Identify production before changing dist; never reselect the bundle currently served live. */
+export async function restoreManualRollbackRelease(
+  rootDir = ROOT,
+  { liveOrigin = LIVE_ORIGIN, fetchImpl = fetch } = {},
+) {
+  let response;
+  try {
+    response = await fetchImpl(`${liveOrigin}/?rollback-check=${Date.now()}`, {
+      headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+      redirect: 'error',
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch {
+    throw new Error(
+      '[deploy:rollback] Cannot identify the live release; production was not reachable. No snapshot was restored.',
+    );
+  }
+  const contentType = response.headers.get('content-type') || '';
+  if (!response.ok || !contentType.toLowerCase().includes('text/html')) {
+    throw new Error(
+      `[deploy:rollback] Cannot identify the live release (HTTP ${response.status}, type=${contentType}). No snapshot was restored.`,
+    );
+  }
+  const liveHtml = await response.text();
+  const liveEntryJs = extractEntryScriptAsset(liveHtml);
+  const liveEntryCss = extractEntryCssAsset(liveHtml);
+  if (!liveEntryJs) {
+    throw new Error(
+      '[deploy:rollback] The live response did not identify an application bundle. No snapshot was restored.',
+    );
+  }
+
+  const ledger = readReleaseLedger(join(rootDir, '.firebase', 'release-history.json'));
+  const excludeReleaseIds = ledger.releases
+    .filter((item) => {
+      const indexPath = join(rootDir, '.firebase', 'releases', item.releaseId, 'index.html');
+      if (!existsSync(indexPath)) return false;
+      const html = readFileSync(indexPath, 'utf8');
+      return (
+        extractEntryScriptAsset(html) === liveEntryJs && extractEntryCssAsset(html) === liveEntryCss
+      );
+    })
+    .map((item) => item.releaseId);
+  return restorePreviousVerifiedRelease(rootDir, { excludeReleaseIds });
 }
 
 function runNodeScript(scriptArgs, env, rootDir = ROOT) {
@@ -1239,7 +1290,7 @@ async function runCli() {
     const { cmd, args: deployArgs } = resolveFirebaseDeployCommand(execEnv, auth);
 
     if (isRollback) {
-      const restored = restorePreviousVerifiedRelease(ROOT);
+      const restored = await restoreManualRollbackRelease(ROOT);
       console.log(
         `[deploy:rollback] Restored verified snapshot ${restored.releaseId} (${restored.entryJs}) to dist/.`,
       );
