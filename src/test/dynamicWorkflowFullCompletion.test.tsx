@@ -571,13 +571,15 @@ describe('Dynamic Workflow Full Completion (Tracks 1–4 E2E Integration)', () =
 
         emitCommand('다음');
         expect(screen.getByTestId('live-voice-command-status')).toHaveTextContent(
-          '음성 명령 실행: 다음 동작 (“다음”)',
+          '음성 명령 실행: 다음 동작 이동 (“다음”)',
         );
+        expect(screen.getByTestId('live-stage-step-progress')).toHaveTextContent('현재 동작 2 / 전체 2');
 
         emitCommand('이전');
         expect(screen.getByTestId('live-voice-command-status')).toHaveTextContent(
-          '음성 명령 실행: 이전 동작 (“이전”)',
+          '음성 명령 실행: 이전 동작 이동 (“이전”)',
         );
+        expect(screen.getByTestId('live-stage-step-progress')).toHaveTextContent('현재 동작 1 / 전체 2');
 
         emitCommand('1분 추가');
         expect(screen.getByTestId('live-voice-command-status')).toHaveTextContent(
@@ -586,7 +588,7 @@ describe('Dynamic Workflow Full Completion (Tracks 1–4 E2E Integration)', () =
 
         emitCommand('큐시트');
         expect(screen.getByTestId('live-voice-command-status')).toHaveTextContent(
-          '음성 명령 실행: 큐시트 전환 (“큐시트”)',
+          '음성 명령 실행: 전체 큐시트 전환 (“큐시트”)',
         );
         expect(screen.getByLabelText('수업 진행 큐시트')).toBeInTheDocument();
       } finally {

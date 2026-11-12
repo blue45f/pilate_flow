@@ -65,7 +65,12 @@ export function pwaBuild(): Plugin {
           }
         }
 
-        const version = hash.update(serviceWorkerSource.toString()).digest('hex').slice(0, 16);
+        // Hash the worker that browsers receive, with a fixed version placeholder.
+        // Function serialization varies between the Vite and test module loaders.
+        const version = hash
+          .update(serviceWorkerSource('', files, shellExtras))
+          .digest('hex')
+          .slice(0, 16);
         this.emitFile({
           type: 'asset',
           fileName: 'sw.js',

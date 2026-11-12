@@ -109,9 +109,13 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     expect(notice).not.toHaveTextContent(/미승인.*(?:자동추천|자동 추천|수업 금지)|승인.*필수/);
     expect(usePilatesStore.getState()).toBe(before);
 
-    // Verify unreviewed catalog movement can be added to class and enables stage entry without an approval gate
-    const journeyBar = screen.getByTestId('studio-journey-bar');
-    expect(within(journeyBar).getByRole('button', { name: /수업 진행/ })).toBeDisabled();
+    // The mobile quick palette returns an empty class to preparation, then permits
+    // teaching an added, unreviewed movement without an approval gate.
+    fireEvent.click(screen.getByRole('button', { name: '빠른 이동 및 동작 검색 열기' }));
+    let palette = screen.getByTestId('studio-command-palette');
+    fireEvent.click(within(palette).getByRole('button', { name: /라이브 스테이지 준비 확인/ }));
+    expect(usePilatesStore.getState().activeTab).toBe('workbench');
+    expect(screen.queryByTestId('studio-command-palette')).not.toBeInTheDocument();
 
     const unreviewedExercise = usePilatesStore
       .getState()
@@ -122,10 +126,18 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     });
     expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
     expect(usePilatesStore.getState().activeSteps[0]?.exerciseId).toBe(unreviewedExercise.id);
-    expect(within(journeyBar).getByRole('button', { name: /수업 진행/ })).toBeEnabled();
-
     fireEvent.click(within(notice).getByRole('button', { name: '동작 자료·기록 보기' }));
     expect(usePilatesStore.getState().activeTab).toBe('atlas');
+
+    fireEvent.click(screen.getByRole('button', { name: '빠른 이동 및 동작 검색 열기' }));
+    palette = screen.getByTestId('studio-command-palette');
+    const startClass = within(palette).getByRole('button', { name: /라이브 수업 바로 시작/ });
+    expect(startClass).toBeEnabled();
+    fireEvent.click(startClass);
+    expect(usePilatesStore.getState().activeTab).toBe('stage');
+    expect(
+      usePilatesStore.getState().exercises.find((item) => item.id === unreviewedExercise.id)?.review,
+    ).toBeUndefined();
   });
 
   it('exposes movement creation in the topbar and core destinations in mobile navigation', () => {

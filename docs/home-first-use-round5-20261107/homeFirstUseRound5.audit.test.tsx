@@ -83,7 +83,7 @@ describe('Round 5 First-Use 6-Step Journey Audit (첫 진입 → 기구 선택 �
     expect(directPickInConditionModal).toBeUndefined();
   });
 
-  it('R5-AUDIT-02: Stage 3 (동작 2개 추가) — reproduces IMP-R5-01 unfiltered equipment mismatch block and IMP-R5-02 duplicate selection bar no-op inside modal', () => {
+  it('R5-AUDIT-02: Stage 3 (동작 2개 추가) — guards class equipment in broad search and preserves both movements when returning through either finder action', () => {
     const { container } = render(<SequenceWorkbench />);
 
     // Select Reformer in conditions, close, and open Finder
@@ -109,7 +109,8 @@ describe('Round 5 First-Use 6-Step Journey Audit (첫 진입 → 기구 선택 �
     const finderDialog = container.querySelector<HTMLDialogElement>('dialog.workbench-finder-dialog')!;
     expect(finderDialog).not.toBeNull();
 
-    // Unapplied IMP-R5-01: Finder opens with unfiltered equipment (shows "수업 기구로 좁히기")
+    // The secondary modal finder offers broad discovery plus an explicit class
+    // equipment filter. Adding an incompatible result must not mutate the class.
     const narrowBtn = Array.from(
       finderDialog.querySelectorAll<HTMLButtonElement>('.ief-class-context button'),
     ).find((b) => b.textContent?.includes('수업 기구로 좁히기'));
@@ -138,8 +139,9 @@ describe('Round 5 First-Use 6-Step Journey Audit (첫 진입 → 기구 선택 �
     fireEvent.click(secondAddBtn);
     expect(usePilatesStore.getState().activeSteps.length).toBe(2);
 
-    // Unapplied IMP-R5-02: Both .ief-selection-bar and .workbench-finder-footer render simultaneously,
-    // and clicking .ief-selection-bar "수업안으로" inside modal is a no-op (does not close modal)
+    const authoredSteps = structuredClone(usePilatesStore.getState().activeSteps);
+    // Both return controls must close the temporary finder and retain the full
+    // class, rather than leaving the instructor inside the modal after a click.
     const innerSelectionBarBtn = finderDialog.querySelector<HTMLButtonElement>(
       '.ief-selection-bar button',
     );
@@ -150,10 +152,24 @@ describe('Round 5 First-Use 6-Step Journey Audit (첫 진입 → 기구 선택 �
     expect(outerFooterReturnBtn).not.toBeNull();
 
     fireEvent.click(innerSelectionBarBtn!);
-    expect(finderDialog.open).toBe(true);
-
-    fireEvent.click(outerFooterReturnBtn!);
     expect(finderDialog.open).toBe(false);
+    expect(usePilatesStore.getState().activeSteps).toEqual(authoredSteps);
+    expect(usePilatesStore.getState().activeTab).toBe('workbench');
+
+    // Reopen through the actual arrangement action to exercise the separate
+    // footer return on a live dialog, rather than clicking a detached control.
+    const reopenFinder = screen.getByRole('button', { name: '동작 더 담기' });
+    expect(reopenFinder).toBeVisible();
+    fireEvent.click(reopenFinder);
+    const reopenedFinder = screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' });
+    const footerReturn = within(reopenedFinder).getByRole('button', {
+      name: /수업 구성으로 돌아가기/,
+    });
+    fireEvent.click(footerReturn);
+
+    expect(reopenedFinder).not.toHaveAttribute('open');
+    expect(usePilatesStore.getState().activeSteps).toEqual(authoredSteps);
+    expect(usePilatesStore.getState().activeTab).toBe('workbench');
   });
 
   it('R5-AUDIT-03: Stage 4 (순서 변경) → Stage 5 (저장) → Stage 6 (재방문 이어하기) — verifies applied 51f1e6a reorder + live announcement, save, and 100% reordered sequence restoration on revisit', () => {

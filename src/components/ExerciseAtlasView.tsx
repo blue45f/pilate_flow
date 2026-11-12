@@ -968,6 +968,13 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
 
   const inspectedExercise =
     exercises.find((exercise) => exercise.id === inspectedExerciseId) ?? null;
+  const previewCatalogMotionAsset = useMemo(
+    () =>
+      getCatalogContinuousMotionAsset(
+        exercises.find((exercise) => exercise.id === previewCatalogMotionId),
+      ),
+    [exercises, previewCatalogMotionId],
+  );
   const inspectorHeading = useRef<HTMLHeadingElement>(null);
   const inspectorTrigger = useRef<HTMLButtonElement | null>(null);
   const compareExpandBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -2656,10 +2663,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                   key={`${previewReference.family}-${previewReference.variantId}`}
                   reference={previewReference}
                 />
-              ) : previewCatalogMotionId && getCatalogContinuousMotionAsset(previewCatalogMotionId) ? (
+              ) : previewCatalogMotionAsset ? (
                 <CatalogMotionInteractivePlayer
                   key={previewCatalogMotionId}
-                  asset={getCatalogContinuousMotionAsset(previewCatalogMotionId)!}
+                  asset={previewCatalogMotionAsset}
                 />
               ) : null}
               {(() => {

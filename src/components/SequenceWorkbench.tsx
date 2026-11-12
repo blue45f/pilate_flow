@@ -733,6 +733,16 @@ export function SequenceWorkbench({
   };
   const durations = getSequenceDurations(s.activeSteps);
   const exerciseMap = new Map(s.exercises.map((ex) => [ex.id, ex]));
+  const summaryIdx =
+    selectedStepIndex >= 0
+      ? selectedStepIndex
+      : s.activeSteps.findIndex((step) => !isRestStep(step));
+  const summaryStep = summaryIdx >= 0 ? s.activeSteps[summaryIdx] : undefined;
+  const summaryEx =
+    summaryStep && !isRestStep(summaryStep)
+      ? exerciseMap.get(summaryStep.exerciseId)
+      : undefined;
+  const summarySprings = (summaryStep?.customSpringOverride || summaryEx?.springs || '').trim();
   const timingBreakdown = s.activeSteps.reduce(
     (sum, step) => {
       const timing = getStepTiming(step, exerciseMap.get(step.exerciseId));
@@ -1147,7 +1157,7 @@ export function SequenceWorkbench({
     const currentIndex = buttons.findIndex((btn) => btn === activeEl);
     if (currentIndex < 0) return;
     event.preventDefault();
-    let nextIndex = currentIndex;
+    let nextIndex: number;
     if (event.key === 'Home') nextIndex = 0;
     else if (event.key === 'End') nextIndex = buttons.length - 1;
     else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
@@ -3898,17 +3908,7 @@ export function SequenceWorkbench({
             })}
           </div>
           )}
-          {isArrangeStage && s.activeSteps.length > 0 && (() => {
-            const fallbackIdx = s.activeSteps.findIndex((st) => !isRestStep(st));
-            const summaryIdx = selectedStepIndex >= 0 ? selectedStepIndex : fallbackIdx;
-            const summaryStep = summaryIdx >= 0 ? s.activeSteps[summaryIdx] : undefined;
-            const summaryEx =
-              summaryStep && !isRestStep(summaryStep)
-                ? exerciseMap.get(summaryStep.exerciseId)
-                : undefined;
-            if (!summaryStep || !summaryEx) return null;
-            const summarySprings = (summaryStep.customSpringOverride || summaryEx.springs || '').trim();
-            return (
+          {isArrangeStage && summaryStep && summaryEx && (
               <section
                 className="pf-b05-3sec-summary-panel"
                 data-testid="board05-3sec-summary-panel"
@@ -3983,8 +3983,7 @@ export function SequenceWorkbench({
                   </div>
                 </div>
               </section>
-            );
-          })()}
+          )}
           {isArrangeStage && s.activeSteps.length > 0 && (
             <div className="pf-p04-mobile-sticky-cta" data-testid="p04-mobile-sticky-live-cta">
               <button

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { CalendarPlus, CheckCircle2, RotateCcw, Sparkles, Wand2 } from 'lucide-react';
 import { getEquipmentFamilies } from '../data/equipmentCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -258,7 +258,7 @@ export const AiSmartScheduleGeneratorCard: React.FC = () => {
     }
   };
 
-  const handleApplyWeeklyPreset = (preset: WeeklyPresetSpec) => {
+  const handleApplyWeeklyPreset = useCallback((preset: WeeklyPresetSpec) => {
     const prevSnapshot: InstructorScheduleData = structuredClone(schedule);
     let nextLocations = [...schedule.locations];
     let targetLocation = nextLocations[0];
@@ -327,7 +327,7 @@ export const AiSmartScheduleGeneratorCard: React.FC = () => {
         `‘${preset.titleKo}’ 주간 수업 ${createdClasses.length}건과 맞춤 시퀀스를 한 번에 편성했어요.`,
       );
     }
-  };
+  }, [schedule, today, savedSequences, recentSequenceIds, setInstructorSchedule]);
 
   const handleUndo = () => {
     if (!undoSnapshot) return;

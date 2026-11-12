@@ -90,10 +90,13 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     expect(cards).toHaveLength(1);
     const card = within(cards[0] as HTMLElement);
     expect(card.getByText('관련 패턴 도해 1종')).toBeInTheDocument();
-    expect(cards[0].querySelector('[data-motion-family="supine-reach"]')).toHaveAttribute(
-      'data-motion-variant',
-      SUPINE_REACH_DEFINITION.id,
+    expect(cards[0].querySelector('img.pf-p06-3d-img')).toHaveAttribute(
+      'src',
+      '/motion-studio3d/mat-hundred-peak.png',
     );
+    expect(
+      card.getByRole('button', { name: `${exercise.nameKo} 상세 보기` }),
+    ).toHaveAccessibleDescription(`${SUPINE_REACH_DEFINITION.title} · 3D 스튜디오 모션`);
     fireEvent.click(card.getByRole('button', { name: `${SUPINE_REACH_DEFINITION.title} 보기` }));
     const preview = screen.getByRole('region', { name: '선택한 패턴 도해 미리보기' });
     expect(preview.querySelector('.motion-pattern-preview')).toHaveAttribute(
@@ -148,17 +151,34 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     expect(container.querySelectorAll('article.movement-card')).toHaveLength(12);
   });
 
-  it('renders an authored 5-phase kinematic diagram for an exercise without pattern drafts and returns to the existing class draft', () => {
+  it('opens the authored 5-phase kinematic diagram from a studio thumbnail without pattern drafts and returns to the existing class draft', () => {
+    const before = usePilatesStore.getState();
     const { container } = renderAtlas();
     fireEvent.change(screen.getByRole('searchbox', { name: '동작 검색' }), {
       target: { value: '누워서 호흡 관찰' },
     });
     const cards = container.querySelectorAll('article.movement-card');
     expect(cards).toHaveLength(1);
-    expect(cards[0].querySelector('svg[role="img"]')).not.toBeNull();
-    expect(cards[0]).toHaveTextContent('누워서 호흡 관찰 · 5단계 기구학 도해');
+    expect(cards[0].querySelector('img.pf-p06-3d-img')).toHaveAttribute(
+      'src',
+      '/motion-studio3d/mat-hundred-peak.png',
+    );
+    expect(
+      within(cards[0] as HTMLElement).getByRole('button', { name: '누워서 호흡 관찰 상세 보기' }),
+    ).toHaveAccessibleDescription('누워서 호흡 관찰 · 3D 스튜디오 모션');
     expect(cards[0]).toHaveTextContent('기구학 연속·3단계 도해 1종');
     expect(cards[0].querySelector('.movement-art')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: '누워서 호흡 관찰 기구학 도해 보기' }));
+    const preview = screen.getByTestId('catalog-motion-interactive-player');
+    expect(preview).toHaveAttribute('data-exercise-id', 'original-mat-rib-breath');
+    expect(preview).toHaveAttribute('data-motion-family', 'catalog-kinematic');
+    expect(preview).toHaveAttribute('data-professional-review', 'unreviewed');
+    expect(preview).toHaveTextContent('단계 1 / 5');
+    expect(preview).toHaveTextContent('일시정지 · 자동 재생 없음');
+    expect(preview.querySelector('svg[role="img"]')).toHaveAttribute('data-apparatus', 'mat');
+    expect(usePilatesStore.getState().exercises).toBe(before.exercises);
+    expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
+    expect(usePilatesStore.getState().instructorStudyState).toBe(before.instructorStudyState);
     const selection = container.querySelector('.ml-selection-return')!;
     expect(selection).toHaveTextContent('0개현재 수업안에 담긴 동작');
     fireEvent.click(screen.getByRole('button', { name: '수업 구성으로 돌아가기' }));

@@ -158,7 +158,7 @@ describe('Atlas reports actual append outcome', () => {
     expect(container.querySelector('.library-empty')).toBeNull();
   });
 
-  it('reflects persistent sequence selection state, pattern tile selection, and enriched unmapped fallback', () => {
+  it('reflects persistent sequence selection state, pattern tile selection, and studio thumbnails with precise kinematic previews', () => {
     const { container } = renderAtlas();
 
     // Add mat movement and verify persistent in-sequence state remains even after toast timer expires
@@ -173,6 +173,7 @@ describe('Atlas reports actual append outcome', () => {
       'data-has-selection',
       'true',
     );
+    const addedState = usePilatesStore.getState();
 
     // Pattern tile reflects aria-pressed and .is-selected when active
     const firstTile = container.querySelector('.ml-pattern-tile') as HTMLButtonElement;
@@ -187,21 +188,15 @@ describe('Atlas reports actual append outcome', () => {
       ),
     ).toBeInTheDocument();
 
-    // Unmapped movement card synthesizes a universal kinematic diagram thumbnail and preserves apparatus, posture, target focus, and preview selection
-    const kinematicThumb = matCard.querySelector('.catalog-motion-thumbnail');
-    expect(kinematicThumb).not.toBeNull();
-    expect(kinematicThumb).toHaveAttribute('data-motion-family', 'catalog-kinematic');
-    expect(kinematicThumb).toHaveAttribute('data-exercise-id', mat.id);
-
-    const diagramImg = within(matCard).getByRole('img', {
-      name: `${mat.nameKo} · 기구학 모션 도해 · 정점 단계 도해`,
-    });
-    expect(diagramImg).toHaveAttribute('data-apparatus', 'mat');
-    expect(diagramImg).toHaveAttribute('data-body-position', 'supine');
-    expect(diagramImg).toHaveAttribute('data-anatomical-accuracy-assumed', 'false');
-
-    expect(within(matCard).getByText(`${mat.nameKo} · 5단계 기구학 도해`)).toBeInTheDocument();
-    expect(matCard.querySelector('.movement-equipment-label')).toHaveTextContent('매트');
+    // The card uses a studio reference image; its dedicated preview retains the movement's own kinematic identity.
+    expect(matCard.querySelector('img.pf-p06-3d-img')).toHaveAttribute(
+      'src',
+      '/motion-studio3d/mat-hundred-peak.png',
+    );
+    expect(
+      within(matCard).getByRole('button', { name: `${mat.nameKo} 상세 보기` }),
+    ).toHaveAccessibleDescription(`${mat.nameKo} · 3D 스튜디오 모션`);
+    expect(matCard.querySelector('.pf-b05-card-overlay-top')).toHaveTextContent('매트');
     expect(matCard.querySelector('.movement-position-badge')).toHaveTextContent(
       '수파인 (누운 자세)',
     );
@@ -223,6 +218,20 @@ describe('Atlas reports actual append outcome', () => {
         { name: '기구학 연속 도해 미리보기' },
       ),
     ).toBeInTheDocument();
+    const player = screen.getByTestId('catalog-motion-interactive-player');
+    expect(player).toHaveAttribute('data-exercise-id', mat.id);
+    expect(player).toHaveAttribute('data-motion-family', 'catalog-kinematic');
+    expect(player).toHaveAttribute('data-professional-review', 'unreviewed');
+    expect(player).toHaveTextContent('단계 1 / 5');
+    expect(player).toHaveTextContent('일시정지 · 자동 재생 없음');
+    const diagramImg = player.querySelector('svg[role="img"]');
+    expect(diagramImg).toHaveAttribute('data-exercise-id', mat.id);
+    expect(diagramImg).toHaveAttribute('data-apparatus', 'mat');
+    expect(diagramImg).toHaveAttribute('data-body-position', 'supine');
+    expect(diagramImg).toHaveAttribute('data-anatomical-accuracy-assumed', 'false');
     expect(matCard).toHaveClass('is-selected', 'is-in-sequence');
+    expect(usePilatesStore.getState().exercises).toBe(addedState.exercises);
+    expect(usePilatesStore.getState().activeSteps).toBe(addedState.activeSteps);
+    expect(usePilatesStore.getState().instructorStudyState).toBe(addedState.instructorStudyState);
   });
 });

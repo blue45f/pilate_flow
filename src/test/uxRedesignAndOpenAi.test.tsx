@@ -192,9 +192,7 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     fireEvent.click(chairCancelCloseBtn);
 
     await waitFor(() => {
-      expect(
-        screen.queryByRole('dialog', { name: '체어 자리 선택 및 예약 확인' }),
-      ).toBeNull();
+      expect(screen.queryByRole('dialog', { name: '체어 자리 선택 및 예약 확인' })).toBeNull();
       expect(screen.queryByTestId('member-spot-map')).toBeNull();
     });
     expect(screen.queryByTestId('member-my-bookings-strip')).toBeNull();
@@ -228,9 +226,7 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     fireEvent.click(confirmBookBtn);
 
     await waitFor(() => {
-      expect(
-        screen.queryByRole('dialog', { name: '리포머 자리 선택 및 예약 확인' }),
-      ).toBeNull();
+      expect(screen.queryByRole('dialog', { name: '리포머 자리 선택 및 예약 확인' })).toBeNull();
       expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('6 / 20회');
       expect(screen.getByTestId('member-pass-metrics')).toHaveTextContent('예약 확정: 1건');
       expect(screen.getByTestId('member-my-bookings-strip')).toBeInTheDocument();
@@ -271,10 +267,7 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
 
     const onApplyRecipe = vi.fn();
     render(
-      <AtelierQuickStartGallery
-        exercises={INITIAL_EXERCISES}
-        onApplyQuickRecipe={onApplyRecipe}
-      />,
+      <AtelierQuickStartGallery exercises={INITIAL_EXERCISES} onApplyQuickRecipe={onApplyRecipe} />,
     );
 
     for (const recipe of ATELIER_QUICK_START_RECIPES) {
@@ -335,16 +328,14 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
 
   it('provides Tab 4 movement search in FreeAiAssistantPanel, surfaces rejected sequence-add errors, and cancels in-flight requests cleanly', async () => {
     const exercises = usePilatesStore.getState().exercises.slice(0, 6);
-    const onAddExercise = vi
-      .fn()
-      .mockReturnValueOnce(undefined)
-      .mockReturnValueOnce({
-        ok: false,
-        message: '이미 시퀀스에 포함된 동작 계열입니다.',
-      });
+    const onAddExercise = vi.fn().mockReturnValueOnce(undefined).mockReturnValueOnce({
+      ok: false,
+      message: '이미 시퀀스에 포함된 동작 계열입니다.',
+    });
 
-    let pendingResolve: ((val: { status: ReturnType<typeof createDefaultFreeAiStatus>; result: never }) => void) | null =
-      null;
+    let pendingResolve:
+      | ((val: { status: ReturnType<typeof createDefaultFreeAiStatus>; result: never }) => void)
+      | null = null;
     let callCount = 0;
 
     const openAiClient = createFreeAiClient({
@@ -453,19 +444,72 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
   });
 
   it('switches cleanly between Instructor Studio and Member Booking views in App without losing state', async () => {
-    render(<App />);
+    const originalState = usePilatesStore.getState();
+    const exercise = INITIAL_EXERCISES[0]!;
+    usePilatesStore.setState({
+      activeTitle: '화면 전환 중 보존할 수업안',
+      activeSteps: [
+        {
+          stepId: 'portal-role-preserved-step',
+          order: 1,
+          exerciseId: exercise.id,
+          blockCategory: exercise.blockCategory,
+          durationMin: 5,
+          selectedLayer: 'standard',
+          locked: true,
+          instructorNote: '회원 화면에서 변경되면 안 되는 강사 메모',
+        },
+      ],
+    });
+    const instructorState = usePilatesStore.getState();
+    const view = render(<App />);
 
-    expect(screen.getByTestId('portal-role-switcher')).toBeInTheDocument();
-    expect(screen.getByTestId('studio-journey-bar')).toBeInTheDocument();
+    try {
+      const roleSwitcher = screen.getByRole('group', { name: '이용자 화면 전환' });
+      const memberBtn = within(roleSwitcher).getByRole('button', { name: '회원 예약' });
+      const backToInstructorBtn = within(roleSwitcher).getByRole('button', { name: '강사 작업실' });
+      expect(backToInstructorBtn).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByTestId('workbench-step-flow-header')).toBeInTheDocument();
+      expect(
+        within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', {
+          name: '오늘의 수업',
+        }),
+      ).toHaveAttribute('aria-current', 'page');
 
-    const memberBtn = screen.getByRole('button', { name: '회원 예약' });
-    fireEvent.click(memberBtn);
+      fireEvent.click(memberBtn);
 
-    expect(await screen.findByTestId('member-booking-view')).toBeInTheDocument();
+      expect(await screen.findByTestId('member-booking-view')).toBeInTheDocument();
+      expect(memberBtn).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByTestId('member-desktop-nav')).toBeInTheDocument();
+      expect(screen.queryByRole('navigation', { name: '주 메뉴' })).not.toBeInTheDocument();
+      expect(screen.queryByTestId('workbench-step-flow-header')).not.toBeInTheDocument();
+      expect(usePilatesStore.getState().activeSteps).toBe(instructorState.activeSteps);
+      expect(usePilatesStore.getState().activeTitle).toBe(instructorState.activeTitle);
+      const memberState = readPersistedMemberBookingState(localScheduleDate());
 
-    const backToInstructorBtn = screen.getByRole('button', { name: '강사 작업실' });
-    fireEvent.click(backToInstructorBtn);
+      fireEvent.click(backToInstructorBtn);
 
-    expect(await screen.findByTestId('studio-journey-bar')).toBeInTheDocument();
+      expect(await screen.findByTestId('workbench-step-flow-header')).toBeInTheDocument();
+      expect(backToInstructorBtn).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.queryByTestId('member-booking-view')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('member-desktop-nav')).not.toBeInTheDocument();
+      expect(
+        within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', {
+          name: '오늘의 수업',
+        }),
+      ).toHaveAttribute('aria-current', 'page');
+      expect(usePilatesStore.getState().activeTab).toBe('workbench');
+      expect(usePilatesStore.getState().activeTitle).toBe(instructorState.activeTitle);
+      expect(usePilatesStore.getState().activeSteps).toBe(instructorState.activeSteps);
+      expect(usePilatesStore.getState().savedSequences).toBe(instructorState.savedSequences);
+      expect(usePilatesStore.getState().historyLogs).toBe(instructorState.historyLogs);
+      expect(usePilatesStore.getState().instructorSchedule).toBe(
+        instructorState.instructorSchedule,
+      );
+      expect(readPersistedMemberBookingState(localScheduleDate())).toEqual(memberState);
+    } finally {
+      view.unmount();
+      usePilatesStore.setState(originalState, true);
+    }
   });
 });

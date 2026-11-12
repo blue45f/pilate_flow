@@ -198,13 +198,12 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
     },
   ];
 
-  const filteredTabs = useMemo(() => {
-    const trimmed = query.trim();
-    if (!trimmed) return quickTabs;
-    return quickTabs.filter((item) =>
-      matchesDiscoverySearch([item.label, item.detail], trimmed),
-    );
-  }, [query, canStartLiveStage, exercises.length, savedSequences.length]);
+  const trimmedQuery = query.trim();
+  const filteredTabs = trimmedQuery
+    ? quickTabs.filter((item) =>
+        matchesDiscoverySearch([item.label, item.detail], trimmedQuery),
+      )
+    : quickTabs;
 
   const handleQuickAddExercise = (exercise: PilatesExercise) => {
     const beforeCount = usePilatesStore.getState().activeSteps.length;

@@ -106,13 +106,40 @@ describe('static-only service worker', () => {
         hash.update(fs.readFileSync(filePath));
       }
     }
-    const version = hash.update(serviceWorkerSource.toString()).digest('hex').slice(0, 16);
+    const version = hash
+      .update(serviceWorkerSource('', files, shellExtras))
+      .digest('hex')
+      .slice(0, 16);
     await Reflect.apply(handler, { emitFile }, [{}, bundle, false]);
     expect(emitFile).toHaveBeenCalledExactlyOnceWith({
       type: 'asset',
       fileName: 'sw.js',
       source: serviceWorkerSource(version, files, shellExtras),
     });
+  });
+
+  it('keeps identical emitted worker versions when loaders serialize the generator differently', async () => {
+    const hook = pwaBuild().generateBundle;
+    const handler = typeof hook === 'function' ? hook : hook?.handler;
+    if (!handler) throw new Error('Expected PWA bundle handler');
+    const bundle = {
+      'index.html': { type: 'asset', source: '<html>loader-independent fixture</html>' },
+      'assets/app.js': { type: 'chunk', code: 'export const ready = true;' },
+    };
+    const emitFile = vi.fn();
+    const serializableGenerator: { toString(): string } = serviceWorkerSource;
+    const serialize = vi.spyOn(serializableGenerator, 'toString');
+    try {
+      serialize.mockReturnValue('function serviceWorkerSource() { /* Vite loader */ }');
+      await Reflect.apply(handler, { emitFile }, [{}, bundle, false]);
+      serialize.mockReturnValue('function serviceWorkerSource() { /* test loader */ }');
+      await Reflect.apply(handler, { emitFile }, [{}, bundle, false]);
+      expect(emitFile).toHaveBeenCalledTimes(2);
+      expect(emitFile.mock.calls[0][0]).toEqual(emitFile.mock.calls[1][0]);
+      expect(serialize).not.toHaveBeenCalled();
+    } finally {
+      serialize.mockRestore();
+    }
   });
 
   it('builds its manifest after Vite prunes empty CSS-only chunks', () => {

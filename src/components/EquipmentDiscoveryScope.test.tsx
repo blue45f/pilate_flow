@@ -121,6 +121,8 @@ describe('equipment discovery scope synchronization', () => {
     usePilatesStore.setState({ ownedEquipment: [], ownedProps: [] });
     render(<InlineExerciseFinder onOpenExercise={vi.fn()} />);
     expect(screen.queryByRole('article')).toBeNull();
+    expect(screen.getByText(/내 보유 장비 범위에서 결과가 없습니다/)).toBeVisible();
+    fireEvent.click(screen.getByText('보유 장비 범위 필터 설정 (0종)'));
     expect(screen.getByText(/매트 동작도 매트를 선택해야/)).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: '보유 장비 조건만 해제' }));
     expect(screen.getAllByRole('article')).toHaveLength(5);

@@ -386,7 +386,11 @@ describe('bounded selected planning timeline', () => {
     (method) => {
       const onClose = vi.fn();
       const { unmount } = render(<SequencePlanPreview onClose={onClose} />);
+      // The preview and its motion card also observe reduced-motion preferences.
+      // Track the segment's subscription independently of those mounted consumers.
+      const previewListeners = new Set(preferenceListeners);
       fireEvent.click(openSegment().getByRole('button', { name: '구간 반복 연습 시작' }));
+      expect(preferenceListeners.size).toBe(previewListeners.size + 1);
       expect(vi.getTimerCount()).toBe(1);
       const dialog = screen.getByRole('dialog') as HTMLDialogElement;
       if (method === 'close-button')
@@ -398,8 +402,12 @@ describe('bounded selected planning timeline', () => {
       if (method === 'cancel') fireEvent(dialog, new Event('cancel', { cancelable: true }));
       if (method === 'unmount') unmount();
       expect(vi.getTimerCount()).toBe(0);
-      expect(preferenceListeners.size).toBe(method === 'unmount' ? 0 : 1);
-      if (method !== 'unmount') expect(onClose).toHaveBeenCalledTimes(1);
+      expect(preferenceListeners).toEqual(method === 'unmount' ? new Set() : previewListeners);
+      if (method !== 'unmount') {
+        expect(onClose).toHaveBeenCalledTimes(1);
+        unmount();
+        expect(preferenceListeners.size).toBe(0);
+      }
     },
   );
 

@@ -64,10 +64,20 @@ function Harness({
   );
 }
 function change(label: string, value: string) {
+  openAdvanced();
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 }
+function openAdvanced() {
+  const summary = screen.getByText(
+    '세부 시간 계산 · 횟수 · 스프링 · 모션 연결 고급 설정 펼치기',
+    { selector: 'summary' },
+  );
+  if (!summary.closest('details')?.open) fireEvent.click(summary);
+}
 function openNotes() {
-  fireEvent.click(screen.getByText('이번 수업의 기구 세팅·티칭 메모', { selector: 'summary' }));
+  openAdvanced();
+  const summary = screen.getByText('이번 수업의 기구 세팅·티칭 메모', { selector: 'summary' });
+  if (!summary.closest('details')?.open) fireEvent.click(summary);
 }
 
 beforeEach(() => {
@@ -374,6 +384,7 @@ describe('one-apply class block inspector', () => {
     usePilatesStore.setState({ exercises: [...INITIAL_EXERCISES, approved] });
     const before = usePilatesStore.getState();
     render(<Harness />);
+    openAdvanced();
     expect(screen.getByText(approved.layers.standard)).toBeVisible();
     change('이번 수업 변형', 'easy');
     expect(screen.getByText(approved.layers.easy)).toBeVisible();

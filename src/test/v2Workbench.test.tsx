@@ -232,6 +232,12 @@ describe('approved V3 block interactions', () => {
     fireEvent.click(screen.getByRole('button', { name: '1번 동작 블록 편집' }));
     const sheet = screen.getByRole('dialog', { name: '동작 블록 편집' });
     expect(within(sheet).getByText('교차 검증 완료 · 스튜디오 가이드')).toBeInTheDocument();
+    const advancedSummary = within(sheet).getByText(
+      '세부 시간 계산 · 횟수 · 스프링 · 모션 연결 고급 설정 펼치기',
+      { selector: 'summary' },
+    );
+    expect(advancedSummary.closest('details')).not.toHaveAttribute('open');
+    fireEvent.click(advancedSummary);
     const motionState = within(sheet).getByRole('region', { name: '수업에 저장할 모션 초안' });
     fireEvent.click(within(motionState).getByText('수업 모션 연결'));
     expect(within(motionState).queryByRole('radio')).not.toBeInTheDocument();

@@ -15,7 +15,7 @@ function isReducedMotionPreferred(): boolean {
 }
 
 export interface VisualApparatusTileOption {
-  readonly id: string;
+  readonly id: ApparatusType | 'all';
   readonly labelKo: string;
   readonly apparatus: ApparatusType | 'all';
   readonly count?: number;
@@ -39,7 +39,7 @@ export type VisualApparatusPhotoStripProps = {
   readonly includeAll?: boolean;
   readonly disabledApparatus?: readonly ApparatusType[];
   readonly compact?: boolean;
-  readonly onSelect: (id: any) => void;
+  readonly onSelect: (id: ApparatusType | 'all') => void;
   readonly layout?: 'bento' | 'scroll';
   readonly testId?: string;
 };

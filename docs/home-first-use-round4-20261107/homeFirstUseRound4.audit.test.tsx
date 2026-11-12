@@ -107,7 +107,20 @@ function resetToSyntheticEmptyFirstUse() {
     historyLogs: [],
     undoStack: [],
     ownedEquipment: ['mat', 'reformer', 'cadillac', 'chair', 'barrel'],
+    ownedApparatus: ['mat', 'reformer', 'cadillac', 'chair', 'barrel'],
     ownedProps: ['none', 'ring', 'foam-roller', 'mini-ball', 'thera-band'],
+    draftCriteria: {
+      apparatus: 'reformer',
+      availableEquipment: ['reformer'],
+      ownedApparatus: ['mat', 'reformer', 'cadillac', 'chair', 'barrel'],
+      preferredProps: ['none'],
+      targetMinutes: 50,
+      level: '1.0',
+      focusPreset: 'full-body',
+      excludeDaysWindow: 14,
+      defaultLayer: 'standard',
+    },
+    lastCriteria: null,
     generationError: null,
     saveFeedback: null,
   });
@@ -129,134 +142,105 @@ describe('Round 4 독립 감사: 필라테스 첫사용자(초보 강사) 동선
     cleanup();
   });
 
-  it('설명문 없이 빈상태 → 새수업 → 동작2개추가 → 저장 → 다음방문 이어하기를 최소 6클릭(모달 함정 포함 시 7클릭)으로 완주하고 상태를 보존한다', () => {
-    const { container } = render(<SequenceWorkbench />);
+  it('현재 빠른 시작으로 동작 2개 추가·저장을 5클릭에 마치고 다음 방문 1클릭 이어하기로 수업을 보존한다', () => {
+    const view = render(<SequenceWorkbench />);
+    let journeyClicks = 0;
+    const clickJourneyAction = (element: HTMLElement) => {
+      fireEvent.click(element);
+      journeyClicks += 1;
+    };
 
-    let optimalClicks = 0;
-    let trappedClicks = 0;
-
-    // 1. 빈상태(Empty State): 주요 CTA 가시성 및 첫화면 접힘 상태 확인
+    // The current primary path goes straight to the finder with the selected
+    // class equipment. The guided first step and modal finder remain secondary.
     const welcomeSection = screen.getByRole('region', { name: '첫 수업안 준비' });
-    const pickMovementCta = within(welcomeSection).getByRole('button', { name: /동작 고르기/ });
-    expect(pickMovementCta).toBeTruthy();
-    // 목업 정렬 이후 첫 화면의 단일 주 CTA는 '1단계부터 차근차근 만들기'이며,
-    // '동작 고르기'는 바로 보이는 보조(secondary) 빠른 동작으로 유지된다.
-    expect(within(welcomeSection).getByTestId('wizard-start-step1-btn').className).toContain(
+    const fastStart = within(welcomeSection).getByTestId('wizard-fast-step2-btn');
+    expect(fastStart).toBeVisible();
+    expect(fastStart).toHaveClass('pf-step-primary-cta');
+    expect(within(welcomeSection).getByTestId('wizard-start-step1-btn')).not.toHaveClass(
       'pf-step-primary-cta',
     );
-    expect(pickMovementCta.className).toContain('pf-btn--secondary');
-
-    // 첫 화면에서 모든 <details>는 기본 닫힘(openDetails === 0)이어야 함
-    const openDetailsOnEmpty = Array.from(container.querySelectorAll('details')).filter(
-      (d) => d.open,
+    expect(within(welcomeSection).getByRole('button', { name: /동작 고르기/ })).toHaveClass(
+      'pf-btn--secondary',
     );
-    expect(openDetailsOnEmpty.length).toBe(0);
-
-    // 빈 최근 수업 안내 확인
-    const recentSection = screen.getByRole('region', { name: '최근 수업 이어가기' });
-    expect(within(recentSection).getByText(/저장한 최근 수업이 아직 없습니다/)).toBeTruthy();
-
-    // [Click 1] 새 수업 동작 고르기 열기
-    fireEvent.click(pickMovementCta);
-    optimalClicks += 1;
-    trappedClicks += 1;
-
-    const finderDialog = container.querySelector(
-      'dialog.workbench-finder-dialog',
-    ) as HTMLDialogElement | null;
-    expect(finderDialog).toBeTruthy();
-    expect(finderDialog?.open).toBe(true);
-
-    // 2. 동작 2개 추가
-    const addButtons = within(finderDialog!).getAllByRole('button', {
-      name: /수업안에 추가$/,
-    });
-    expect(addButtons.length).toBeGreaterThanOrEqual(2);
-
-    // 감사 발견 사항 재현 (IMP-R4-01): InlineExerciseFinder 초기 필터가 수업 기구(classEquipment)가 아닌 전체 기구([])여서
-    // 1번째 카드('캐리지 호흡 & 암 아크', 리포머)와 2번째 카드('누워서 호흡 관찰', 매트)가 섞여 노출됨.
-    // 따라서 초보 강사가 상위 1·2번째 '+ 추가' 버튼을 순서대로 누르면 1개만 담기고 나머지 1개는 기구 불일치 오류로 거부됨!
-    fireEvent.click(addButtons[0]);
-    fireEvent.click(addButtons[1]);
-    expect(usePilatesStore.getState().activeSteps.length).toBe(1);
     expect(
-      within(finderDialog!).getByRole('alert').textContent,
-    ).toContain('현재 선택한 기구·소도구와 최대 난이도 조건에 맞는 동작만 추가할 수 있습니다.');
+      Array.from(view.container.querySelectorAll('details')).filter((item) => item.open),
+    ).toHaveLength(0);
+    const recentSection = screen.getByRole('region', { name: '최근 수업 이어가기' });
+    expect(within(recentSection).getByText(/저장한 최근 수업이 아직 없습니다/)).toBeVisible();
 
-    // '수업 기구로 좁히기' 클릭 후 두 번째 동작을 추가해야 비로소 2개 동작이 모두 담김 (최적 2클릭 대신 +2클릭 추가 발생)
-    const narrowToClassEquipBtn = within(finderDialog!).getByRole('button', {
-      name: '수업 기구로 좁히기',
+    // Click 1 opens the inline finder without a modal or a separate filter step.
+    clickJourneyAction(fastStart);
+    const finderPage = screen.getByTestId('wizard-step2-page');
+    expect(finderPage).toBeVisible();
+    expect(
+      view.container.querySelector('dialog.workbench-finder-dialog')?.hasAttribute('open'),
+    ).not.toBe(true);
+    expect(within(finderPage).getByRole('button', { name: '리포머 필터 해제' })).toBeVisible();
+    expect(within(finderPage).getByTestId('ief-go-arrange-btn')).toBeDisabled();
+
+    // Clicks 2 and 3 add two distinct eligible movements without a rejected add.
+    const addButtons = within(finderPage)
+      .getAllByRole<HTMLButtonElement>('button', { name: /수업안에 추가$/ })
+      .filter((button) => !button.disabled);
+    expect(addButtons.length).toBeGreaterThanOrEqual(2);
+    clickJourneyAction(addButtons[0]);
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
+    clickJourneyAction(addButtons[1]);
+    const authoredSteps = structuredClone(usePilatesStore.getState().activeSteps);
+    expect(authoredSteps).toHaveLength(2);
+    expect(new Set(authoredSteps.map((step) => step.exerciseId)).size).toBe(2);
+    expect(usePilatesStore.getState().generationError).toBeNull();
+    for (const step of authoredSteps) {
+      expect(
+        usePilatesStore.getState().exercises.find((exercise) => exercise.id === step.exerciseId)
+          ?.apparatus,
+      ).toBe('reformer');
+    }
+
+    // Click 4 reaches arrangement directly from the finder's selection bar.
+    clickJourneyAction(within(finderPage).getByTestId('ief-go-arrange-btn'));
+    expect(screen.queryByTestId('wizard-step2-page')).not.toBeInTheDocument();
+    expect(usePilatesStore.getState().activeSteps).toEqual(authoredSteps);
+    expect(screen.getByTestId('board05-3sec-summary-panel')).toBeVisible();
+
+    fireEvent.change(screen.getByLabelText('시퀀스 제목'), {
+      target: { value: SYNTHETIC_CLASS_TITLE },
     });
-    fireEvent.click(narrowToClassEquipBtn);
-    const filteredAddButtons = within(finderDialog!)
-      .getAllByRole('button', { name: /수업안에 추가$/ })
-      .filter((btn) => !(btn as HTMLButtonElement).disabled);
-    fireEvent.click(filteredAddButtons[0]);
+    const saveButton = view.container.querySelector<HTMLButtonElement>('button.save-flow');
+    expect(saveButton).toBeVisible();
+    clickJourneyAction(saveButton!);
+    expect(journeyClicks).toBe(5);
+    expect(usePilatesStore.getState().savedSequences).toHaveLength(1);
+    const savedSnapshot = structuredClone(usePilatesStore.getState().savedSequences[0]);
+    expect(savedSnapshot.title).toBe(SYNTHETIC_CLASS_TITLE);
+    expect(savedSnapshot.steps).toEqual(authoredSteps);
 
-    optimalClicks += 2; // 기구 필터가 기본 적용되었을 때의 이상적 동작 추가 클릭수 (2회)
-    trappedClicks += 4; // 실제 발생한 클릭수: 1번째 추가 + 2번째 추가(실패) + 수업 기구로 좁히기 + 2번째 재추가 (4회)
-
-    expect(usePilatesStore.getState().activeSteps.length).toBe(2);
-
-    // 감사 발견 사항 재현 (IMP-R4-02): 모달 내부 .ief-selection-bar의 '수업안으로' 버튼 클릭 시 모달이 닫히지 않음(+1 헛클릭 유발)
-    const innerSelectionBarBtn = finderDialog!.querySelector(
-      '.ief-selection-bar button',
-    ) as HTMLButtonElement | null;
-    expect(innerSelectionBarBtn).toBeTruthy();
-    fireEvent.click(innerSelectionBarBtn!);
-    trappedClicks += 1;
-    expect(finderDialog?.open).toBe(true); // 모달이 닫히지 않음을 실증
-
-    // [Click 4 optimal / Click 7 trapped] 모달 하단 '수업 구성으로 돌아가기' 클릭 시 모달 닫힘 + 2개 동작 보존
-    const returnToArrangeBtn = within(finderDialog!).getByRole('button', {
-      name: /수업 구성으로 돌아가기/,
-    });
-    fireEvent.click(returnToArrangeBtn);
-    optimalClicks += 1;
-    trappedClicks += 1;
-
-    expect(finderDialog?.open).toBe(false);
-    expect(usePilatesStore.getState().activeSteps.length).toBe(2);
-
-    // 3. 저장 (Save)
-    const titleInput = screen.getByLabelText('시퀀스 제목') as HTMLInputElement;
-    fireEvent.change(titleInput, { target: { value: SYNTHETIC_CLASS_TITLE } });
-
-    const saveBtn = container.querySelector('button.save-flow') as HTMLButtonElement | null;
-    expect(saveBtn).toBeTruthy();
-    // [Click 5 optimal / Click 6 trapped] 저장 클릭
-    fireEvent.click(saveBtn!);
-    optimalClicks += 1;
-    trappedClicks += 1;
-
-    expect(usePilatesStore.getState().savedSequences.length).toBe(1);
-    expect(usePilatesStore.getState().savedSequences[0].title).toBe(SYNTHETIC_CLASS_TITLE);
-    expect(usePilatesStore.getState().savedSequences[0].steps.length).toBe(2);
-
-    // 4. 다음 방문 이어하기 (빈 홈 상태에서 저장된 최근 수업 1클릭 이어하기)
-    const newClassBtn = container.querySelector(
+    // Set up the next empty visit; this setup is outside the authoring/reopen
+    // click budget. A remount must retain the saved class and its full draft.
+    const newClassButton = view.container.querySelector<HTMLButtonElement>(
       'button.workbench-new-class-btn',
-    ) as HTMLButtonElement | null;
-    expect(newClassBtn).toBeTruthy();
-    fireEvent.click(newClassBtn!);
-    expect(usePilatesStore.getState().activeSteps.length).toBe(0);
-
-    // 빈 홈 화면의 '최근 수업 이어가기' 카드에 방금 저장한 수업이 표시됨
-    const recentContinueAfterSave = screen.getByRole('region', { name: '최근 수업 이어가기' });
-    const continueBtn = within(recentContinueAfterSave).getByRole('button', {
+    );
+    expect(newClassButton).toBeVisible();
+    fireEvent.click(newClassButton!);
+    expect(usePilatesStore.getState().activeSteps).toHaveLength(0);
+    view.unmount();
+    render(<SequenceWorkbench />);
+    expect(usePilatesStore.getState().savedSequences[0]).toEqual(savedSnapshot);
+    const recentContinue = screen.getByRole('region', { name: '최근 수업 이어가기' });
+    const continueButton = within(recentContinue).getByRole('button', {
       name: `${SYNTHETIC_CLASS_TITLE} 이어서 구성`,
     });
-    expect(continueBtn).toBeTruthy();
+    expect(continueButton).toBeVisible();
 
-    // [Click 6 optimal / Click 7 trapped] '이어서 구성' 클릭 시 2개 동작과 제목이 100% 복원됨
-    fireEvent.click(continueBtn);
-    optimalClicks += 1;
-    trappedClicks += 1;
-
-    expect(optimalClicks).toBe(6);
-    expect(trappedClicks).toBe(9);
-    expect(usePilatesStore.getState().activeSteps.length).toBe(2);
+    // Click 6 restores the actual authored steps and metadata without editing
+    // the saved original or creating a duplicate class.
+    clickJourneyAction(continueButton);
+    expect(journeyClicks).toBe(6);
+    expect(usePilatesStore.getState().activeSteps).toEqual(authoredSteps);
     expect(usePilatesStore.getState().activeTitle).toBe(SYNTHETIC_CLASS_TITLE);
+    expect(usePilatesStore.getState().activeTargetMinutes).toBe(savedSnapshot.targetMinutes);
+    expect(usePilatesStore.getState().activeApparatus).toBe(savedSnapshot.apparatus);
+    expect(usePilatesStore.getState().savedSequences).toEqual([savedSnapshot]);
   });
 
   it('중복메뉴 정량 감사: 빈 첫 화면에서 수업 조건 열기 버튼이 5개(.workbench-welcome-summary 1개 + .v2-condition-chips 4개) 중복 노출됨을 검증한다 (IMP-R4-02)', () => {

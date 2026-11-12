@@ -328,7 +328,7 @@ describe('Track A — Manifest, Service Worker Cache Lifecycle, Offline Revisit 
       }
     }
     const expectedVersion = hash
-      .update(serviceWorkerSource.toString())
+      .update(serviceWorkerSource('', distAssets, shellExtras))
       .digest('hex')
       .slice(0, 16);
 

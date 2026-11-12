@@ -81,11 +81,11 @@ export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportPr
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || typeof canvas.getContext !== 'function') return;
-    let ctx: CanvasRenderingContext2D | null = null;
+    let ctx: CanvasRenderingContext2D | null;
     try {
       ctx = canvas.getContext('2d');
     } catch {
-      ctx = null;
+      return;
     }
     if (!ctx) return;
 
