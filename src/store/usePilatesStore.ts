@@ -461,7 +461,7 @@ const cloneCriteria = (criteria: AutoGenerateCriteria): AutoGenerateCriteria => 
     : undefined,
   preferredProps: [...criteria.preferredProps],
 });
-function snapshot(state: PilatesStudioState): SequenceSnapshot {
+export function createSequenceSnapshot(state: PilatesStudioState): SequenceSnapshot {
   return {
     activeSequenceId: state.activeSequenceId,
     activeTitle: state.activeTitle,
@@ -480,7 +480,7 @@ function edit(
   next: Partial<PilatesStudioState>,
 ): Partial<PilatesStudioState> {
   return {
-    undoStack: [...state.undoStack.slice(-19), snapshot(state)],
+    undoStack: [...state.undoStack.slice(-19), createSequenceSnapshot(state)],
     generationError: null,
     saveFeedback: null,
     ...next,
@@ -757,7 +757,7 @@ function draftForBackup(state: PilatesStudioState): SavedSequence | undefined {
     canonicalRecoveryContent(saved.steps) === canonicalRecoveryContent(state.activeSteps)
   )
     return undefined;
-  const contents = JSON.stringify(snapshot(state));
+  const contents = JSON.stringify(createSequenceSnapshot(state));
   let hash = 2166136261;
   for (const character of contents) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
   const now = new Date().toISOString();
@@ -2530,7 +2530,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
         ownedProps: state.ownedProps,
         exerciseBrowseScope: state.exerciseBrowseScope,
         mobilePreviewMode: state.mobilePreviewMode,
-        ...snapshot(state),
+        ...createSequenceSnapshot(state),
       }),
       merge: (persisted, current) => {
         if (!persisted || typeof persisted !== 'object') return current;

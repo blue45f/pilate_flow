@@ -2,13 +2,13 @@ import type {
   ApparatusType,
   ClassBlockCategory,
   DifficultyLevel,
-  ExerciseStepSnapshot,
-  LayerType,
+  LayerMode,
   PilatesExercise,
   ReformerBrand,
   SequenceStep,
   StepSideMode,
 } from '../types/pilates';
+import type { MovementSnapshot } from '../types/hierarchy';
 import { isRestStep } from './sequenceEngine';
 
 export const PF_SEQUENCE_SHARE_HASH_PREFIX = '#pf_share=';
@@ -143,7 +143,9 @@ function pickQrVersionForBytePayload(byteLength: number): number {
       return v;
     }
   }
-  throw new Error('QR 공유 데이터 길이가 로컬 코드 용량(약 1,000바이트)을 초과했습니다. 시퀀스 메모 제외 옵션을 켜 주세요.');
+  throw new Error(
+    'QR 공유 데이터 길이가 로컬 코드 용량(약 1,000바이트)을 초과했습니다. 시퀀스 메모 제외 옵션을 켜 주세요.',
+  );
 }
 
 function encodeCodewordsLevelL(utf8Bytes: Uint8Array, version: number): Uint8Array {
@@ -370,11 +372,7 @@ function computePenaltyScore(modules: boolean[][]): number {
   for (let y = 0; y < size - 1; y += 1) {
     for (let x = 0; x < size - 1; x += 1) {
       const c = modules[y]![x]!;
-      if (
-        c === modules[y]![x + 1] &&
-        c === modules[y + 1]![x] &&
-        c === modules[y + 1]![x + 1]
-      ) {
+      if (c === modules[y]![x + 1] && c === modules[y + 1]![x] && c === modules[y + 1]![x + 1]) {
         penalty += 3;
       }
     }
@@ -396,7 +394,11 @@ function computePenaltyScore(modules: boolean[][]): number {
 
 export function generateLocalQrCodeSvg(
   text: string,
-  options?: { readonly quietZone?: number; readonly darkFill?: string; readonly lightFill?: string },
+  options?: {
+    readonly quietZone?: number;
+    readonly darkFill?: string;
+    readonly lightFill?: string;
+  },
 ): LocalQrMatrixResult {
   const quietZone = options?.quietZone ?? 4;
   const darkFill = options?.darkFill ?? '#173d34';
@@ -435,9 +437,7 @@ export function generateLocalQrCodeSvg(
 
   for (let mask = 0; mask < 8; mask += 1) {
     const candidate = base.modules.map((row, y) =>
-      row.map((cell, x) =>
-        base.isFunction[y]![x] ? cell : cell !== maskCondition(mask, x, y),
-      ),
+      row.map((cell, x) => (base.isFunction[y]![x] ? cell : cell !== maskCondition(mask, x, y))),
     );
     writeFormatBits(candidate, mask);
     const score = computePenaltyScore(candidate);
@@ -486,7 +486,7 @@ export interface SharedSequenceStepCompact {
   readonly id: string;
   readonly b: ClassBlockCategory;
   readonly d: number;
-  readonly l?: LayerType;
+  readonly l?: LayerMode;
   readonly sp?: string;
   readonly rp?: number;
   readonly st?: number;
@@ -524,7 +524,14 @@ export interface DecodedSharedSequence {
   readonly steps: SequenceStep[];
 }
 
-const VALID_APPARATUS = new Set<string>(['reformer', 'cadillac', 'chair', 'barrel', 'mat', 'mixed']);
+const VALID_EXERCISE_APPARATUS = new Set<string>([
+  'reformer',
+  'cadillac',
+  'chair',
+  'barrel',
+  'mat',
+]);
+const VALID_APPARATUS = new Set<string>([...VALID_EXERCISE_APPARATUS, 'mixed']);
 const VALID_LEVELS = new Set<string>(['1.0', '1.5', '2.0']);
 const VALID_BRANDS = new Set<string>(['balanced-body', 'stott', 'intopilates', 'classical']);
 const VALID_BLOCKS = new Set<string>([
@@ -565,10 +572,7 @@ function bytesToBase64Url(bytes: Uint8Array): string {
   for (let i = 0; i < bytes.length; i += 1) {
     binary += String.fromCharCode(bytes[i]!);
   }
-  const b64 =
-    typeof btoa === 'function'
-      ? btoa(binary)
-      : Buffer.from(bytes).toString('base64');
+  const b64 = typeof btoa === 'function' ? btoa(binary) : Buffer.from(bytes).toString('base64');
   return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
@@ -629,7 +633,9 @@ export function encodeSequenceShareToken(input: EncodeSequenceShareInput): strin
       ...(step.customSpringOverride?.trim()
         ? { sp: cleanPlainString(step.customSpringOverride, 24) }
         : {}),
-      ...(step.repetitions !== undefined ? { rp: Math.max(1, Math.min(100, Math.round(step.repetitions))) } : {}),
+      ...(step.repetitions !== undefined
+        ? { rp: Math.max(1, Math.min(100, Math.round(step.repetitions))) }
+        : {}),
       ...(step.sets !== undefined ? { st: Math.max(1, Math.min(20, Math.round(step.sets))) } : {}),
       ...(step.sideMode ? { sd: step.sideMode } : {}),
       ...(includeNotes && step.instructorNote?.trim()
@@ -663,7 +669,10 @@ export function encodeSequenceShareToken(input: EncodeSequenceShareInput): strin
     ap: VALID_APPARATUS.has(input.apparatus) ? input.apparatus : 'reformer',
     lv: VALID_LEVELS.has(input.level) ? input.level : '1.5',
     min: Math.max(5, Math.min(120, Math.round(input.targetMinutes || 50))),
-    br: input.reformerBrand && VALID_BRANDS.has(input.reformerBrand) ? input.reformerBrand : 'intopilates',
+    br:
+      input.reformerBrand && VALID_BRANDS.has(input.reformerBrand)
+        ? input.reformerBrand
+        : 'intopilates',
     notesIncluded: includeNotes,
     st: compactSteps,
   };
@@ -742,9 +751,7 @@ export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedShar
           ? Number(Math.max(0.5, Math.min(30, item.d)).toFixed(2))
           : 4;
       const instructorNote =
-        typeof item.nt === 'string' && item.nt.trim()
-          ? cleanPlainString(item.nt, 80)
-          : undefined;
+        typeof item.nt === 'string' && item.nt.trim() ? cleanPlainString(item.nt, 80) : undefined;
 
       if (item.id === 'r') {
         return {
@@ -762,18 +769,16 @@ export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedShar
       const exerciseId = cleanPlainString(item.id, 64, 'ex-warmup-01');
       const selectedLayer = (
         typeof item.l === 'string' && VALID_LAYERS.has(item.l) ? item.l : 'standard'
-      ) as LayerType;
+      ) as LayerMode;
       const sideMode =
         typeof item.sd === 'string' && VALID_SIDES.has(item.sd)
           ? (item.sd as StepSideMode)
           : undefined;
 
-      let exerciseSnapshot: ExerciseStepSnapshot | undefined;
+      let exerciseSnapshot: MovementSnapshot | undefined;
       if (item.sn && typeof item.sn === 'object') {
         const snAp =
-          typeof item.sn.ap === 'string' &&
-          VALID_APPARATUS.has(item.sn.ap) &&
-          item.sn.ap !== 'mixed'
+          typeof item.sn.ap === 'string' && VALID_EXERCISE_APPARATUS.has(item.sn.ap)
             ? (item.sn.ap as ApparatusType)
             : 'reformer';
         const snLv =
@@ -781,6 +786,7 @@ export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedShar
             ? (item.sn.lv as DifficultyLevel)
             : '1.5';
         exerciseSnapshot = {
+          id: exerciseId,
           nameKo: cleanPlainString(item.sn.ko, 48, '공유 동작'),
           nameEn: 'Shared Studio Movement',
           apparatus: snAp,
@@ -788,6 +794,9 @@ export function parseSequenceShareFromHashOrToken(rawInput: string): DecodedShar
           spinalPlanes: ['neutral'],
           bodyPosition: 'supine',
           level: snLv,
+          defaultDurationMin: durationMin,
+          targetMuscles: [],
+          capturedAt: new Date(stamp).toISOString(),
           isUnilateral: Boolean(sideMode && sideMode !== 'together'),
           springs: cleanPlainString(item.sn.sp, 20, '1R 1B'),
           box: 'none',

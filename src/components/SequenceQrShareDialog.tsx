@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Check, Copy, Download, Printer, QrCode, ShieldCheck, Upload } from 'lucide-react';
 import { APPARATUS_LABELS } from '../data/pilatesCatalog';
 import { PfBadge, PfButton } from '../design-system';
-import { usePilatesStore } from '../store/usePilatesStore';
+import { createSequenceSnapshot, usePilatesStore } from '../store/usePilatesStore';
 import type {
   ApparatusType,
   DifficultyLevel,
@@ -76,9 +76,7 @@ export const SequenceQrShareDialog: React.FC<SequenceQrShareDialogProps> = ({
         hashFragment: '',
         qr: null,
         errorMessage:
-          err instanceof Error
-            ? err.message
-            : '시퀀스 분량이 커서 로컬 QR 용량을 초과했습니다.',
+          err instanceof Error ? err.message : '시퀀스 분량이 커서 로컬 QR 용량을 초과했습니다.',
       };
     }
   }, [
@@ -143,8 +141,8 @@ export const SequenceQrShareDialog: React.FC<SequenceQrShareDialogProps> = ({
               dangerouslySetInnerHTML={{ __html: shareBundle.qr.svgMarkup }}
             />
             <small className="muted">
-              ISO/IEC 18004 표준 로컬 생성 (Version {shareBundle.qr.version} ·{' '}
-              {shareBundle.qr.size}×{shareBundle.qr.size} 모듈 · 네트워크 호출 0건)
+              ISO/IEC 18004 표준 로컬 생성 (Version {shareBundle.qr.version} · {shareBundle.qr.size}
+              ×{shareBundle.qr.size} 모듈 · 네트워크 호출 0건)
             </small>
           </div>
         ) : (
@@ -160,9 +158,7 @@ export const SequenceQrShareDialog: React.FC<SequenceQrShareDialogProps> = ({
             checked={includeInstructorNotes}
             onChange={(e) => setIncludeInstructorNotes(e.target.checked)}
           />
-          <span>
-            강사 개인 티칭 메모 포함하기 (기본 해제 · 회원 개인정보는 포함하지 마세요)
-          </span>
+          <span>강사 개인 티칭 메모 포함하기 (기본 해제 · 회원 개인정보는 포함하지 마세요)</span>
         </label>
 
         {shareBundle.ok && (
@@ -180,7 +176,11 @@ export const SequenceQrShareDialog: React.FC<SequenceQrShareDialogProps> = ({
               data-testid="qr-share-copy-btn"
               onClick={() => void handleCopyShareUrl()}
             >
-              {copyStatus ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}{' '}
+              {copyStatus ? (
+                <Check size={15} aria-hidden="true" />
+              ) : (
+                <Copy size={15} aria-hidden="true" />
+              )}{' '}
               링크 복사
             </PfButton>
           </div>
@@ -256,20 +256,7 @@ export const SequenceQrImportDialog: React.FC<SequenceQrImportDialogProps> = ({
 
   const handleConfirmImport = () => {
     const current = usePilatesStore.getState();
-    const nextUndoStack =
-      current.activeSteps.length > 0
-        ? [
-            ...current.undoStack.slice(-19),
-            {
-              title: current.activeTitle,
-              subtitle: current.activeSubtitle,
-              apparatus: current.activeApparatus,
-              level: current.activeLevel,
-              targetMinutes: current.activeTargetMinutes,
-              steps: current.activeSteps.map((st) => ({ ...st })),
-            },
-          ]
-        : current.undoStack;
+    const nextUndoStack = [...current.undoStack.slice(-19), createSequenceSnapshot(current)];
 
     usePilatesStore.setState({
       activeSequenceId: `shared-seq-${Date.now()}`,
@@ -278,8 +265,15 @@ export const SequenceQrImportDialog: React.FC<SequenceQrImportDialogProps> = ({
       activeApparatus: sharedSequence.apparatus,
       activeLevel: sharedSequence.level,
       activeTargetMinutes: sharedSequence.targetMinutes,
+      activeTargetGroupId: '',
+      lastCriteria: null,
+      draftCriteria: null,
+      generationError: null,
       reformerBrand: sharedSequence.reformerBrand,
-      activeSteps: sharedSequence.steps.map((st, idx) => ({ ...st, order: idx + 1 })),
+      activeSteps: sharedSequence.steps.map((st, idx) => ({
+        ...structuredClone(st),
+        order: idx + 1,
+      })),
       undoStack: nextUndoStack,
       activeTab: 'workbench',
       saveFeedback: `‘${sharedSequence.title}’ 공유 시퀀스를 작업대에 불러왔습니다. (이전 초안은 되돌리기에 보관됨)`,
@@ -335,8 +329,8 @@ export const SequenceQrImportDialog: React.FC<SequenceQrImportDialogProps> = ({
         </ol>
 
         <p className="pf-qr-share-modal__privacy">
-          작성 중이던 기존 수업 초안이 있으면 작업대 ‘되돌리기’에 자동 보관된 뒤 불러옵니다.
-          수업 전 기구 상태와 스프링 장력은 현장에서 직접 확인해 주세요.
+          작성 중이던 기존 수업 초안이 있으면 작업대 ‘되돌리기’에 자동 보관된 뒤 불러옵니다. 수업 전
+          기구 상태와 스프링 장력은 현장에서 직접 확인해 주세요.
         </p>
 
         <div className="pf-member-dialog-actions">

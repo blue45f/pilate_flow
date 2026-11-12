@@ -1082,7 +1082,10 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     const afterImport = usePilatesStore.getState();
     expect(afterImport.activeTitle).toBe('QR 태블릿 전달 테스트 시퀀스');
     expect(afterImport.undoStack).toHaveLength(1);
-    expect(afterImport.undoStack[0]!.title).toBe('기존 작성 중이던 소중한 초안');
+    expect(afterImport.undoStack[0]!.activeTitle).toBe('기존 작성 중이던 소중한 초안');
+    act(() => usePilatesStore.getState().undoSequence());
+    expect(usePilatesStore.getState().activeTitle).toBe('기존 작성 중이던 소중한 초안');
+    expect(usePilatesStore.getState().activeSteps[0]!.stepId).toBe('draft-before-qr');
     qrImportRender.unmount();
 
     // Track 4: MemberBookingView focus & studio props filter chips
