@@ -41,6 +41,7 @@ import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { isMovementIdeaExercise } from '../utils/movementIdeaDraft';
 import { LightDismissDialog } from './LightDismissDialog';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
+import { LiveStageKinematicDiagram } from './LiveStageKinematicDiagram';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
 import { SpringVisualPills } from './SpringVisualPills';
@@ -1496,7 +1497,15 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           )}
           <h2 className="teaching-current-name">{currentIsRest ? '휴식' : exercise?.nameKo}</h2>
           {!currentIsRest && exercise && (
-            <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
+            <>
+              <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
+              <LiveStageKinematicDiagram
+                exercise={exercise}
+                running={clock.running}
+                stepProgressRatio={progress / 100}
+                springsLabel={currentSpringRaw || undefined}
+              />
+            </>
           )}
           {!currentIsRest && exercise && !isExerciseAutoEligible(exercise) && (
             <p className="muted">

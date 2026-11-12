@@ -313,7 +313,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
             .join(' ');
           const latestGroup = actualLogsBySequenceId.get(s.id)?.[0]?.groupName ?? '';
           const searchable = normalizeSearchToken(
-            `${s.title} ${s.subtitle} ${getApparatusSearchTerms(s.apparatus)} lv ${s.level} ${s.level} ${s.focusTags.join(' ')} ${stepTerms} ${latestGroup}`,
+            `${s.title} ${s.subtitle} ${getApparatusSearchTerms(s.apparatus)} lv ${s.level} ${s.level} ${s.focusTags?.join(' ')} ${stepTerms} ${latestGroup}`,
           );
           return (
             searchable.includes(trimmedSavedQuery) ||

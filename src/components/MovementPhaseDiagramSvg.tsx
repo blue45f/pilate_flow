@@ -143,9 +143,9 @@ function buildTaperedChainSilhouettePath(
   return [
     `M ${startLeft.x} ${startLeft.y}`,
     forwardCurve,
-    `A ${r1(rEnd)} ${r1(rEnd)} 0 0 1 ${endRight.x} ${endRight.y}`,
+    `A ${r1(rEnd)} ${r1(rEnd)} 0 0 0 ${endRight.x} ${endRight.y}`,
     backwardCurve,
-    `A ${r1(rStart)} ${r1(rStart)} 0 0 1 ${startLeft.x} ${startLeft.y}`,
+    `A ${r1(rStart)} ${r1(rStart)} 0 0 0 ${startLeft.x} ${startLeft.y}`,
     'Z',
   ].join(' ');
 }
@@ -458,7 +458,7 @@ function renderApparatusSupportLayer(
   if (asset.apparatus === 'cadillac') {
     const leftPoleX = mx(26, mirrored);
     const rightPoleX = mx(294, mirrored);
-    const ptbPivot = p(78, 22);
+    const ptbPivot = p(78, 27);
     const barEnd = p(
       96 + Math.round(carriageShift * 0.6),
       64 + Math.round(carriageShift * 0.25),
@@ -527,19 +527,19 @@ function renderApparatusSupportLayer(
           strokeWidth={1.3}
         />
 
-        <line x1={leftPoleX} y1={22} x2={leftPoleX} y2={145} stroke="#63766f" strokeWidth={3.2} />
-        <line x1={rightPoleX} y1={22} x2={rightPoleX} y2={145} stroke="#63766f" strokeWidth={3.2} />
+        <line x1={leftPoleX} y1={27} x2={leftPoleX} y2={145} stroke="#63766f" strokeWidth={3.2} />
+        <line x1={rightPoleX} y1={27} x2={rightPoleX} y2={145} stroke="#63766f" strokeWidth={3.2} />
         <line
           x1={24}
-          y1={22}
+          y1={27}
           x2={296}
-          y2={22}
+          y2={27}
           stroke="#4b5f58"
           strokeWidth={3.6}
           strokeLinecap="round"
         />
-        <circle cx={leftPoleX} cy={22} r={2.8} fill="#dce3df" stroke="#394d46" strokeWidth={1.2} />
-        <circle cx={rightPoleX} cy={22} r={2.8} fill="#dce3df" stroke="#394d46" strokeWidth={1.2} />
+        <circle cx={leftPoleX} cy={27} r={2.8} fill="#dce3df" stroke="#394d46" strokeWidth={1.2} />
+        <circle cx={rightPoleX} cy={27} r={2.8} fill="#dce3df" stroke="#394d46" strokeWidth={1.2} />
 
         <line
           x1={ptbPivot.x}
@@ -641,6 +641,27 @@ function renderApparatusSupportLayer(
           y2={107.8}
           stroke="rgba(250, 250, 245, 0.42)"
           strokeWidth={1}
+        />
+        <line
+          x1={mx(144, mirrored)}
+          y1={106}
+          x2={mx(144, mirrored)}
+          y2={78}
+          stroke="#4b5f58"
+          strokeWidth={2.8}
+          strokeLinecap="round"
+          data-chair-handle="post"
+        />
+        <rect
+          x={mx(144, mirrored) - 6}
+          y={75}
+          width={12}
+          height={5.5}
+          rx={2.6}
+          fill="#26473d"
+          stroke="#fcfaf5"
+          strokeWidth={0.9}
+          data-chair-handle="grip"
         />
 
         <path
@@ -1162,7 +1183,23 @@ function renderKinematicFigureLayer(
     ankle: nearAnklePt,
   };
 
-  const torsoCapsuleD = buildTaperedChainSilhouettePath(torsoPts, [8.2, 7.0, 6.3, 8.4, 4.4]);
+  const torsoCapsuleD = buildTaperedChainSilhouettePath(torsoPts, [8.8, 7.6, 7.0, 9.0, 5.0]);
+  const pelvisGirdleBridgeD = buildTaperedChainSilhouettePath(
+    [farHipPt, j('pelvis'), nearHipPt],
+    [6.2, 8.6, 7.2],
+  );
+  const shoulderYokeBridgeD = buildTaperedChainSilhouettePath(
+    [farShoulderPt, j('neck'), j('thoracic'), nearShoulderPt],
+    [4.3, 5.0, 7.8, 5.1],
+  );
+  const neckCylinderD = buildTaperedChainSilhouettePath(
+    [
+      lerpSubPoint(j('thoracic'), neckPt, 0.58),
+      neckPt,
+      lerpSubPoint(neckPt, headPt, 0.68),
+    ],
+    [5.2, 3.8, 3.4],
+  );
   const farLegCapsuleD = buildAnatomicalLimbProfile(
     farHipPt,
     farKneePt,
@@ -1190,7 +1227,7 @@ function renderKinematicFigureLayer(
       nearWristPt,
       nearHandPt,
     ],
-    [4.9, 4.7, 3.6, 3.5, 2.6, 2.2],
+    [5.2, 4.8, 3.7, 3.5, 2.6, 2.2],
   );
 
   return (
@@ -1230,15 +1267,28 @@ function renderKinematicFigureLayer(
         />
       )}
 
-      {/* Sculpted Studio Bodysuit Torso, Graceful Neck & Hair-Bun Cranium */}
+      {/* Sculpted Connected Studio Bodysuit Torso, Girdle Bridges, Graceful Neck & Hair-Bun Cranium */}
       <g data-segment="spine-torso" fill="none">
-        <line
-          x1={neckPt.x}
-          y1={neckPt.y}
-          x2={headPt.x}
-          y2={headPt.y}
-          stroke={`url(#${grads.skinId})`}
-          strokeWidth={5.6}
+        <path
+          data-segment="neck-bridge"
+          d={neckCylinderD}
+          fill={`url(#${grads.skinId})`}
+          stroke="#5c4333"
+          strokeWidth={1.05}
+        />
+        <path
+          data-segment="pelvis-girdle-bridge"
+          d={pelvisGirdleBridgeD}
+          fill={`url(#${grads.torsoId})`}
+          stroke="#1f3e32"
+          strokeWidth={1.15}
+        />
+        <path
+          data-segment="shoulder-yoke-bridge"
+          d={shoulderYokeBridgeD}
+          fill={`url(#${grads.torsoId})`}
+          stroke="#1f3e32"
+          strokeWidth={1.15}
         />
         <path
           d={torsoCapsuleD}
@@ -1614,28 +1664,28 @@ export function MovementPhaseDiagramSvg({
       <desc id={descId}>{accessibleDesc}</desc>
 
       <defs>
-        <linearGradient id={bgGradId} x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={bgGradId} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="200">
           <stop offset="0%" stopColor="#fdfcf8" />
           <stop offset="65%" stopColor="#f8f5ec" />
           <stop offset="100%" stopColor="#efe9dc" />
         </linearGradient>
-        <linearGradient id={grads.oakId} x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={grads.oakId} gradientUnits="userSpaceOnUse" x1="0" y1="100" x2="0" y2="180">
           <stop offset="0%" stopColor="#d8b489" />
           <stop offset="100%" stopColor="#b5895a" />
         </linearGradient>
-        <linearGradient id={grads.upholsteryId} x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={grads.upholsteryId} gradientUnits="userSpaceOnUse" x1="0" y1="96" x2="0" y2="168">
           <stop offset="0%" stopColor="#58776a" />
           <stop offset="100%" stopColor="#3b564b" />
         </linearGradient>
-        <linearGradient id={grads.torsoId} x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id={grads.torsoId} gradientUnits="userSpaceOnUse" x1="40" y1="24" x2="220" y2="165">
           <stop offset="0%" stopColor="#496f60" />
           <stop offset="100%" stopColor="#2f5144" />
         </linearGradient>
-        <linearGradient id={grads.nearLegId} x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id={grads.nearLegId} gradientUnits="userSpaceOnUse" x1="80" y1="40" x2="280" y2="175">
           <stop offset="0%" stopColor="#395e4f" />
           <stop offset="100%" stopColor="#244337" />
         </linearGradient>
-        <linearGradient id={grads.skinId} x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id={grads.skinId} gradientUnits="userSpaceOnUse" x1="40" y1="18" x2="260" y2="170">
           <stop offset="0%" stopColor="#f0d7c2" />
           <stop offset="100%" stopColor="#dfb99d" />
         </linearGradient>
@@ -1685,25 +1735,41 @@ export function MovementPhaseDiagramSvg({
         <line x1={160} y1={14} x2={160} y2={186} strokeDasharray="3 3" />
       </g>
       {!compact && (
-        <g aria-hidden="true" data-layer="studio-phase-pill">
+        <g aria-hidden="true" data-layer="studio-phase-pill" data-phase-indicator={phase}>
           <rect
             x={12}
-            y={10}
-            width={46}
-            height={16}
-            rx={8}
-            fill="rgba(255, 253, 248, 0.94)"
+            y={6.5}
+            width={48}
+            height={14.5}
+            rx={7.2}
+            fill="rgba(255, 253, 248, 0.96)"
             stroke="#d5cdbc"
             strokeWidth={0.9}
           />
-          <circle cx={22} cy={18} r={3} fill="#1f4d3f" />
           <circle
-            cx={35}
-            cy={18}
-            r={3}
-            fill={phase === 'middle' || phase === 'end' ? '#1f4d3f' : '#d5cdbc'}
+            cx={21.5}
+            cy={13.8}
+            r={2.9}
+            fill="#1f4d3f"
+            stroke="#1f4d3f"
+            strokeWidth={0.9}
           />
-          <circle cx={48} cy={18} r={3} fill={phase === 'end' ? '#1f4d3f' : '#d5cdbc'} />
+          <polygon
+            points="35.2,10.5 38.5,13.8 35.2,17.1 31.9,13.8"
+            fill={phase === 'middle' || phase === 'end' ? '#bf5a41' : '#fcfaf5'}
+            stroke={phase === 'middle' || phase === 'end' ? '#bf5a41' : '#9aa89f'}
+            strokeWidth={0.95}
+          />
+          <rect
+            x={45.6}
+            y={10.8}
+            width={6}
+            height={6}
+            rx={1.3}
+            fill={phase === 'end' ? '#1f4d3f' : '#fcfaf5'}
+            stroke={phase === 'end' ? '#1f4d3f' : '#9aa89f'}
+            strokeWidth={0.95}
+          />
         </g>
       )}
 

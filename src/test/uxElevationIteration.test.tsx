@@ -6,11 +6,22 @@ import { SequenceWorkbench } from '../components/SequenceWorkbench';
 import { LiveStageView } from '../components/LiveStageView';
 import { FreeAiAssistantPanel } from '../components/FreeAiAssistantPanel';
 import { ExerciseAtlasView } from '../components/ExerciseAtlasView';
+import { MovementPhaseDiagramSvg } from '../components/MovementPhaseDiagramSvg';
+import { MOVEMENT_VISUAL_ASSETS, MOVEMENT_VISUAL_ASSET_MAP } from '../data/movementVisualRigCatalog';
 import { createFreeAiClient } from '../lib/freeAiClient';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesExercise } from '../types/pilates';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { exerciseRevision, isExerciseAutoEligible } from '../utils/exerciseReview';
+import {
+  captureCurrentClassHierarchySnapshot,
+  duplicateIdeaReusableBlock,
+  getSavedReusableBlocks,
+  insertIdeaReusableBlockToCurrentClass,
+  moveIdeaReusableBlockItem,
+  saveSequenceStepsAsReusableBlock,
+  syncSequenceBlockInstanceToLatest,
+} from '../utils/movementIdeaDraft';
 import { isRestStep } from '../utils/sequenceEngine';
 
 function buildApprovedReformerExercise(
@@ -55,6 +66,7 @@ function resetWorkbenchStore() {
     activeSteps: [],
     savedSequences: [],
     historyLogs: [],
+    undoStack: [],
     draftCriteria: null,
     generationError: null,
     saveFeedback: '',
@@ -90,6 +102,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
           apparatus: 'reformer',
           level: '1.5',
           targetMinutes: 50,
+          taughtCount: 0,
           createdAt: '2026-11-10T09:00:00.000Z',
           updatedAt: '2026-11-10T09:00:00.000Z',
           steps: reformerMoves.map((ex, idx) => ({
@@ -172,7 +185,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
     expect(usePilatesStore.getState().activeSteps[0]?.repetitions).toBe(10);
   });
 
-  it('supports instructor step include/exclude checkboxes and ±0.5m quick duration chips in FreeAiAssistantPanel before applying', async () => {
+  it('supports instructor step include/exclude checkboxes, ±0.5m quick duration chips, and actionable AI settings card in FreeAiAssistantPanel', async () => {
     const appliedSpy = vi.fn();
     const state = usePilatesStore.getState();
     const unconfiguredClient = createFreeAiClient({
@@ -222,6 +235,17 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
         onApplyDraftSequence={appliedSpy}
       />,
     );
+
+    const settingsCard = screen.getByTestId('free-ai-settings-card');
+    expect(settingsCard).toBeInTheDocument();
+    expect(screen.getByTestId('free-ai-mode-locked-paid')).toBeDisabled();
+    expect(screen.getByTestId('free-ai-verified-vs-unverified')).toHaveTextContent('확인된 조건');
+    expect(screen.getByTestId('free-ai-verified-vs-unverified')).toHaveTextContent('미확인 항목');
+    expect(settingsCard.textContent).not.toContain('영구 0원');
+    expect(settingsCard.textContent).not.toContain('100% 무중단');
+
+    fireEvent.click(screen.getByTestId('free-ai-switch-local-btn'));
+    expect(screen.getByTestId('free-ai-mode-local')).toBeChecked();
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: '조건으로 초안 만들기' })).toBeEnabled();
@@ -274,7 +298,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
     expect(usePilatesStore.getState().activeTab).toBe('workbench');
   });
 
-  it('renders LIVE status pill, 2-second glanceable cues, trims 30s with undo, and reorders upcoming steps mid-class in LiveStageView', () => {
+  it('renders LIVE status pill, connected LiveStageKinematicDiagram, 2-second glanceable cues, trims 30s with undo, and reorders upcoming steps mid-class in LiveStageView', () => {
     const moves = usePilatesStore
       .getState()
       .exercises.filter((ex) => ex.cues.length > 0 && isExerciseAuthoringEligible(ex))
@@ -296,6 +320,9 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
     render(<LiveStageView onOpenLogModal={() => undefined} />);
 
     expect(screen.getByTestId('live-stage-status-pill')).toHaveTextContent('진행 대기');
+    expect(screen.getByTestId('live-stage-kinematic-diagram')).toBeInTheDocument();
+    expect(screen.getByTestId('exercise-thumbnail-phase-strip')).toBeInTheDocument();
+
     const glanceCues = screen.getByTestId('live-stage-glance-cues');
     expect(within(glanceCues).getByText('핵심 큐')).toBeInTheDocument();
 
@@ -321,31 +348,115 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
     );
   });
 
-  it('ships interactive design mockups (04, 05, 06), studio motion tokens, and strict prefers-reduced-motion fallbacks', () => {
-    expect(
-      existsSync(
-        resolve(
-          process.cwd(),
-          'docs/design-system-mockups/04-ux-elevation-3-concepts-comparison.html',
-        ),
-      ),
-    ).toBe(true);
-    expect(
-      existsSync(
-        resolve(
-          process.cwd(),
-          'docs/design-system-mockups/05-pilates-flow-full-pages-ux-mockup.html',
-        ),
-      ),
-    ).toBe(true);
-    expect(
-      existsSync(
-        resolve(
-          process.cwd(),
-          'docs/design-system-mockups/06-parallel-full-suite-showcase.html',
-        ),
-      ),
-    ).toBe(true);
+  it('verifies connected neck/shoulder/pelvis bridges, Chair seat & handle contact, userSpaceOnUse gradients, zero SVG text, and anatomicalAccuracyAssumed: false across 98 exercises', () => {
+    expect(MOVEMENT_VISUAL_ASSETS.length).toBe(98);
+    const chairPedal = MOVEMENT_VISUAL_ASSET_MAP.get('original-chair-seated-pedal-press')!;
+    const chairArmArc = MOVEMENT_VISUAL_ASSET_MAP.get('original-chair-seated-arm-arc')!;
+    const chairMermaid = MOVEMENT_VISUAL_ASSET_MAP.get('original-chair-seated-mermaid')!;
+
+    expect(chairPedal.anatomicalAccuracyAssumed).toBe(false);
+    expect(chairPedal.phases.start.joints.pelvis.y).toBeLessThanOrEqual(114);
+    expect(chairPedal.phases.middle.joints.pelvis.y).toBeLessThanOrEqual(114);
+    expect(chairArmArc.phases.start.joints.pelvis.y).toBeLessThanOrEqual(114);
+    expect(chairMermaid.phases.start.joints.pelvis.y).toBeLessThanOrEqual(114);
+
+    const { container } = render(
+      <MovementPhaseDiagramSvg
+        asset={chairPedal}
+        phase="middle"
+      />,
+    );
+    const svg = container.querySelector('svg')!;
+    expect(svg.querySelectorAll('text').length).toBe(0);
+    expect(svg.querySelector('[data-segment="neck-bridge"]')).not.toBeNull();
+    expect(svg.querySelector('[data-segment="shoulder-yoke-bridge"]')).not.toBeNull();
+    expect(svg.querySelector('[data-segment="pelvis-girdle-bridge"]')).not.toBeNull();
+    expect(svg.querySelector('[data-chair-handle="grip"]')).not.toBeNull();
+    const gradients = Array.from(svg.querySelectorAll('linearGradient'));
+    expect(gradients.length).toBeGreaterThanOrEqual(6);
+    expect(gradients.every((g) => g.getAttribute('gradientUnits') === 'userSpaceOnUse')).toBe(true);
+  });
+
+  it('preserves isolated ReusableBlock copies when template updates to v2, supports opt-in sync + Undo, and round-trips through backup/restore', () => {
+    const state = usePilatesStore.getState();
+    const moves = state.exercises.filter((ex) => ex.apparatus === 'reformer').slice(0, 2);
+    expect(moves.length).toBe(2);
+
+    const saveRes = saveSequenceStepsAsReusableBlock({
+      title: '리포머 코어 묶음',
+      steps: moves.map((ex, idx) => ({
+        stepId: `seed-${idx + 1}`,
+        order: idx + 1,
+        exerciseId: ex.id,
+        blockCategory: ex.blockCategory,
+        durationMin: 4,
+        selectedLayer: 'standard',
+      })),
+    });
+    expect(saveRes.ok).toBe(true);
+    const blockV1 = saveRes.block!;
+    expect(blockV1.version).toBe(1);
+
+    // Insert isolated copy into current sequence and freeze a past class snapshot
+    const ins = insertIdeaReusableBlockToCurrentClass(blockV1.id);
+    expect(ins.ok).toBe(true);
+    const instanceId = ins.blockInstanceId!;
+    const frozenClass = captureCurrentClassHierarchySnapshot('과거 완료 수업');
+    const initialOrderIds = usePilatesStore.getState().activeSteps.map((st) => st.exerciseId);
+    expect(initialOrderIds).toEqual([moves[0]!.id, moves[1]!.id]);
+
+    // Reorder template -> increments to v2 without mutating active sequence or frozen class
+    const moveRes = moveIdeaReusableBlockItem(blockV1.id, 0, 'down');
+    expect(moveRes.ok).toBe(true);
+    expect(moveRes.block?.version).toBe(2);
+    expect(usePilatesStore.getState().activeSteps.map((st) => st.exerciseId)).toEqual([
+      moves[0]!.id,
+      moves[1]!.id,
+    ]);
+    expect(frozenClass.steps.map((st) => st.exerciseId)).toEqual([moves[0]!.id, moves[1]!.id]);
+
+    // Opt-in sync updates ONLY the targeted blockInstanceId and supports 1-click Undo
+    const syncRes = syncSequenceBlockInstanceToLatest(instanceId, blockV1.id);
+    expect(syncRes.ok).toBe(true);
+    expect(usePilatesStore.getState().activeSteps.map((st) => st.exerciseId)).toEqual([
+      moves[1]!.id,
+      moves[0]!.id,
+    ]);
+    expect(usePilatesStore.getState().activeSteps[0]?.sourceBlockVersion).toBe(2);
+
+    usePilatesStore.getState().undoSequence();
+    expect(usePilatesStore.getState().activeSteps.map((st) => st.exerciseId)).toEqual([
+      moves[0]!.id,
+      moves[1]!.id,
+    ]);
+
+    // Duplicate bundle & round-trip through exportBackup / restoreBackup
+    const dupRes = duplicateIdeaReusableBlock(blockV1.id);
+    expect(dupRes.ok).toBe(true);
+    expect(getSavedReusableBlocks().length).toBe(2);
+
+    const backupRaw = usePilatesStore.getState().exportBackup();
+    expect(JSON.parse(backupRaw).data.reusableBlocks).toHaveLength(2);
+
+    localStorage.clear();
+    resetWorkbenchStore();
+    expect(getSavedReusableBlocks().length).toBe(0);
+
+    const restored = usePilatesStore.getState().restoreBackup(backupRaw);
+    expect(restored.success).toBe(true);
+    expect(getSavedReusableBlocks().length).toBe(2);
+  });
+
+  it('ships interactive design mockups (04, 05, 06, 08, 09), studio motion tokens, mobile 360px unclipped nav, and prefers-reduced-motion fallbacks', () => {
+    for (const file of [
+      'docs/design-system-mockups/04-ux-elevation-3-concepts-comparison.html',
+      'docs/design-system-mockups/05-pilates-flow-full-pages-ux-mockup.html',
+      'docs/design-system-mockups/06-parallel-full-suite-showcase.html',
+      'docs/design-system-mockups/08-candidate-selection-and-side-by-side-audit.html',
+      'docs/design-system-mockups/09-diagram-hierarchy-ai-governance-proposal.html',
+    ]) {
+      expect(existsSync(resolve(process.cwd(), file))).toBe(true);
+    }
 
     const atelierCss = readFileSync(
       resolve(process.cwd(), 'src/styles/atelier-luxury-v2.css'),
@@ -361,6 +472,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
     );
     expect(atelierCss).toContain('--pf-motion-fast: 150ms');
     expect(atelierCss).toContain('.pf-sidebar-quick-stage');
+    expect(atelierCss).toContain('grid-template-columns: repeat(5, minmax(0, 1fr))');
     expect(workbenchCss).toContain('@media (prefers-reduced-motion: reduce)');
     expect(stageCss).toContain('@media (prefers-reduced-motion: reduce)');
     expect(

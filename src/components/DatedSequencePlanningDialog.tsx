@@ -223,7 +223,7 @@ function ReadonlyPlanSnapshot({
       </p>
       <p>
         저장 목표 {snapshot.targetMinutes}분 · 난이도 {snapshot.level} ·{' '}
-        {apparatusLabel(snapshot.apparatus)} · 중점 {snapshot.focusTags.join(' · ') || '미지정'}
+        {apparatusLabel(snapshot.apparatus)} · 중점 {snapshot.focusTags?.join(' · ') || '미지정'}
       </p>
       <ol className="dated-planning-steps">
         {rows.map(({ step, name, rest, sides, timing }, index) => (

@@ -29,6 +29,8 @@ import {
   createClassSequenceSnapshot,
   createHumanDraftMovementSnapshot,
   createReusableBlock,
+  createReusableBlockFromSteps,
+  duplicateReusableBlockInLibrary,
   insertReusableBlockIntoSequence,
   moveItemInReusableBlock,
   summarizeReusableBlockTiming,
@@ -45,6 +47,7 @@ import {
   updateHumanDraftVariants,
 } from './humanMovementCreation';
 import { broadcastStudioSyncEvent, saveLocalPhotoAsset } from './localMediaStorage';
+import { registerReusableBlockBackupBridge } from './reusableBlockBackupBridge';
 
 export interface IdeaPilatesExercise extends HierarchyPilatesExercise {
   sourceOrigin?: 'catalog' | 'human-created';
@@ -1976,6 +1979,236 @@ export function addMovementIdeaToCurrentClass(exerciseId: string): {
     message: `‘${checkedExercise.nameKo}’ 동작을 현재 수업에 넣었습니다.`,
   };
 }
+
+export function saveSequenceStepsAsReusableBlock(input: {
+  steps: readonly SequenceStep[];
+  title: string;
+  description?: string;
+  sectionRole?: ClassSectionRole;
+}): {
+  success: boolean;
+  ok: boolean;
+  block?: ReusableBlock;
+  blocks: ReusableBlock[];
+  timingSummary?: ReusableBlockTimingSummary;
+  message: string;
+} {
+  const scope = getActiveOwnerScope();
+  const currentBlocks = getSavedReusableBlocks(scope);
+  const nonRestSteps = input.steps.filter((step) => step.kind !== 'rest' && Boolean(step.exerciseId));
+  if (nonRestSteps.length === 0) {
+    return {
+      success: false,
+      ok: false,
+      blocks: currentBlocks,
+      message: '동작 묶음으로 저장할 동작을 1개 이상 선택해 주세요.',
+    };
+  }
+  const cleanTitle = input.title.trim();
+  if (!cleanTitle) {
+    return {
+      success: false,
+      ok: false,
+      blocks: currentBlocks,
+      message: '동작 묶음 이름을 입력해 주세요.',
+    };
+  }
+
+  try {
+    const draftMap = getScopedHumanDraftMap(scope);
+    const state = usePilatesStore.getState();
+    const block = createReusableBlockFromSteps(
+      {
+        title: cleanTitle,
+        description: input.description,
+        sectionRole: input.sectionRole,
+        steps: nonRestSteps,
+        humanDrafts: Object.values(draftMap),
+      },
+      state.exercises,
+      Object.values(draftMap),
+    );
+    const nextBlocks = addReusableBlockToLibrary(currentBlocks, block);
+    inMemoryReusableBlocksByScope[scope] = nextBlocks;
+    writeStorageJson(getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope), nextBlocks);
+    persistHumanDraftMap(scope);
+    broadcastStudioSyncEvent({
+      kind: 'reusable-block-updated',
+      entityId: block.id,
+      revision: block.version,
+      updatedAt: block.updatedAt,
+    });
+    const timingSummary = getReusableBlockTimingSummary(block);
+    return {
+      success: true,
+      ok: true,
+      block,
+      blocks: nextBlocks,
+      timingSummary,
+      message: `‘${block.title}’ 동작 묶음(${block.items.length}개 동작 · 총 ${timingSummary.totalDurationMin}분 · v1)을 저장했습니다.`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      ok: false,
+      blocks: currentBlocks,
+      message: error instanceof Error ? error.message : '동작 묶음 저장에 실패했습니다.',
+    };
+  }
+}
+
+export function duplicateIdeaReusableBlock(blockId: string): {
+  success: boolean;
+  ok: boolean;
+  block?: ReusableBlock;
+  blocks: ReusableBlock[];
+  timingSummary?: ReusableBlockTimingSummary;
+  message: string;
+} {
+  const scope = getActiveOwnerScope();
+  const currentBlocks = getSavedReusableBlocks(scope);
+  try {
+    const { blocks: nextBlocks, duplicated } = duplicateReusableBlockInLibrary(currentBlocks, blockId);
+    inMemoryReusableBlocksByScope[scope] = nextBlocks;
+    writeStorageJson(getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope), nextBlocks);
+    broadcastStudioSyncEvent({
+      kind: 'reusable-block-updated',
+      entityId: duplicated.id,
+      revision: duplicated.version,
+      updatedAt: duplicated.updatedAt,
+    });
+    const timingSummary = getReusableBlockTimingSummary(duplicated);
+    return {
+      success: true,
+      ok: true,
+      block: duplicated,
+      blocks: nextBlocks,
+      timingSummary,
+      message: `‘${duplicated.title}’ 독립 복사본(v1)을 만들었습니다.`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      ok: false,
+      blocks: currentBlocks,
+      message: error instanceof Error ? error.message : '동작 묶음 복제에 실패했습니다.',
+    };
+  }
+}
+
+export function syncSequenceBlockInstanceToLatest(
+  blockInstanceId: string,
+  blockId: string,
+): {
+  success: boolean;
+  ok: boolean;
+  syncedCount: number;
+  newVersion?: number;
+  message: string;
+} {
+  const block = getSavedReusableBlocks().find((item) => item.id === blockId);
+  if (!block) {
+    return {
+      success: false,
+      ok: false,
+      syncedCount: 0,
+      message: '원본 동작 묶음을 찾을 수 없습니다.',
+    };
+  }
+  const before = usePilatesStore.getState();
+  const matchingIndices = before.activeSteps
+    .map((step, idx) => (step.blockInstanceId === blockInstanceId ? idx : -1))
+    .filter((idx) => idx >= 0);
+
+  if (matchingIndices.length === 0) {
+    return {
+      success: false,
+      ok: false,
+      syncedCount: 0,
+      message: '현재 수업안에서 갱신할 묶음 구간을 찾을 수 없습니다.',
+    };
+  }
+
+  const firstIndex = matchingIndices[0]!;
+  const sectionOverride = before.activeSteps[firstIndex]?.classSection ?? block.sectionRole;
+  const freshInserted = insertReusableBlockIntoSequence([], block, {
+    instanceId: blockInstanceId,
+    sectionRoleOverride: sectionOverride,
+  });
+  const replacementSteps = freshInserted.steps.map((step) =>
+    step.selectedLayer ? step : { ...step, selectedLayer: 'standard' as const },
+  );
+
+  const undoEntry = {
+    activeSequenceId: before.activeSequenceId,
+    activeTitle: before.activeTitle,
+    activeSubtitle: before.activeSubtitle,
+    activeApparatus: before.activeApparatus,
+    activeLevel: before.activeLevel,
+    activeTargetMinutes: before.activeTargetMinutes,
+    activeTargetGroupId: before.activeTargetGroupId,
+    activeSteps: structuredClone(before.activeSteps),
+    lastCriteria: before.lastCriteria ? structuredClone(before.lastCriteria) : null,
+    draftCriteria: before.draftCriteria ? structuredClone(before.draftCriteria) : null,
+  };
+
+  let insertedReplacement = false;
+  const rebuilt: SequenceStep[] = [];
+  for (const step of before.activeSteps) {
+    if (step.blockInstanceId === blockInstanceId) {
+      if (!insertedReplacement) {
+        rebuilt.push(...replacementSteps);
+        insertedReplacement = true;
+      }
+      continue;
+    }
+    rebuilt.push(structuredClone(step));
+  }
+  const renumbered = rebuilt.map((step, idx) => ({
+    ...step,
+    order: idx + 1,
+  }));
+
+  usePilatesStore.setState({
+    undoStack: [...before.undoStack.slice(-19), undoEntry],
+    activeSteps: renumbered,
+    generationError: null,
+    saveFeedback: `‘${block.title}’ 최신 원본(v${block.version})을 이 수업 묶음 구간에 반영했습니다. 되돌리기로 복구할 수 있습니다.`,
+  });
+
+  return {
+    success: true,
+    ok: true,
+    syncedCount: replacementSteps.length,
+    newVersion: block.version,
+    message: `‘${block.title}’ 최신 원본(v${block.version})을 이 수업에만 반영했습니다. 다른 수업과 이전 기록은 변경되지 않습니다.`,
+  };
+}
+
+export function persistRecoveredReusableBlocksAndDrafts(input: {
+  reusableBlocks?: readonly ReusableBlock[];
+  humanMovementDrafts?: readonly HumanMovementDraft[];
+}): void {
+  const scope = getActiveOwnerScope();
+  if (input.reusableBlocks !== undefined) {
+    const clonedBlocks = input.reusableBlocks.map((b) => structuredClone(b));
+    inMemoryReusableBlocksByScope[scope] = clonedBlocks;
+    writeStorageJson(getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope), clonedBlocks);
+  }
+  if (input.humanMovementDrafts !== undefined) {
+    const draftMap = getScopedHumanDraftMap(scope);
+    for (const draft of input.humanMovementDrafts) {
+      draftMap[draft.id] = structuredClone(draft);
+    }
+    persistHumanDraftMap(scope);
+  }
+}
+
+registerReusableBlockBackupBridge({
+  getReusableBlocks: () => getSavedReusableBlocks(),
+  getHumanDrafts: () => getSavedHumanMovementDrafts(),
+  applyRestored: (payload) => persistRecoveredReusableBlocksAndDrafts(payload),
+});
 
 export const readMovementIdeaDraft = getMovementIdeaMeta;
 export const clearIdeaWorkingBuffer = clearMovementIdeaWorkingBuffer;

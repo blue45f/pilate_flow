@@ -6,6 +6,11 @@ import {
   canonicalRecoveryContent,
   inspectBackupRecovery,
 } from '../utils/backupRecoveryInspection';
+import {
+  applyRestoredReusableBlocksAndDrafts,
+  getHumanDraftsForBackup,
+  getReusableBlocksForBackup,
+} from '../utils/reusableBlockBackupBridge';
 import { assessSequenceMotionStudyBinding } from '../utils/sequenceMotionBinding';
 import type { BackupRecoveryOptions } from '../utils/backupRecoveryInspection';
 import { resolveDatedPlanOccurrence, getDatedPlanWarnings } from '../utils/datedSequencePlanning';
@@ -2384,6 +2389,8 @@ export const usePilatesStore = create<PilatesStudioState>()(
       },
       exportBackup: () => {
         const state = get();
+        const extraReusableBlocks = getReusableBlocksForBackup();
+        const extraHumanDrafts = getHumanDraftsForBackup();
         return JSON.stringify(
           {
             format: 'pilates-flow-atelier',
@@ -2394,6 +2401,8 @@ export const usePilatesStore = create<PilatesStudioState>()(
               savedSequences: state.savedSequences,
               classGroups: state.classGroups,
               historyLogs: state.historyLogs,
+              ...(extraHumanDrafts.length > 0 ? { humanMovementDrafts: extraHumanDrafts } : {}),
+              ...(extraReusableBlocks.length > 0 ? { reusableBlocks: extraReusableBlocks } : {}),
               conditionTemplates: state.conditionTemplates,
               instructorSchedule: state.instructorSchedule,
               instructorStudyState: state.instructorStudyState,
@@ -2414,7 +2423,14 @@ export const usePilatesStore = create<PilatesStudioState>()(
         const disk = getRecoveryStorageStatus(options?.expectedStorageFingerprint);
         if (!disk.ok) return { success: false, message: disk.message };
         const before = get();
-        const inspection = inspectBackupRecovery(raw, before, options);
+        const extraReusableBlocks = getReusableBlocksForBackup();
+        const extraHumanDrafts = getHumanDraftsForBackup();
+        const beforeWithBlocks = {
+          ...before,
+          ...(extraHumanDrafts.length > 0 ? { humanMovementDrafts: extraHumanDrafts } : {}),
+          ...(extraReusableBlocks.length > 0 ? { reusableBlocks: extraReusableBlocks } : {}),
+        };
+        const inspection = inspectBackupRecovery(raw, beforeWithBlocks, options);
         // Failure and no-op results stay local to the caller; even a feedback-only set persists.
         if (!inspection.success) return { success: false, message: inspection.message };
         if (!inspection.summary.changed)
@@ -2427,7 +2443,12 @@ export const usePilatesStore = create<PilatesStudioState>()(
         // Recheck after planning, immediately before the only changed commit.
         const finalDisk = getRecoveryStorageStatus(disk.fingerprint);
         if (!finalDisk.ok) return { success: false, message: finalDisk.message };
-        set({ ...inspection.next, saveFeedback: inspection.message, generationError: null });
+        const {
+          reusableBlocks: restoredReusableBlocks,
+          humanMovementDrafts: restoredHumanDrafts,
+          ...nextStoreFields
+        } = inspection.next;
+        set({ ...nextStoreFields, saveFeedback: inspection.message, generationError: null });
         const postDisk = getRecoveryStorageStatus();
         if (!postDisk.ok) {
           const message = lastStorageError ?? postDisk.message;
@@ -2451,6 +2472,12 @@ export const usePilatesStore = create<PilatesStudioState>()(
             recoveryStorageGuard.observedWriteFailure();
           }
           return { success: false, message };
+        }
+        if (restoredReusableBlocks !== undefined || restoredHumanDrafts !== undefined) {
+          applyRestoredReusableBlocksAndDrafts({
+            reusableBlocks: restoredReusableBlocks,
+            humanMovementDrafts: restoredHumanDrafts,
+          });
         }
         return {
           success: true,

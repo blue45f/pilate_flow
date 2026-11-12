@@ -181,6 +181,48 @@ export function FreeAiAssistantPanel({
   const [quotaStatus, setQuotaStatus] = useState<FreeAiQuotaStatus>(
     () => client.getQuotaStatus() ?? createDefaultFreeAiStatus(),
   );
+  const [aiModePreference, setAiModePreference] = useState<'local-only' | 'server-free-assist'>(
+    () => {
+      try {
+        const stored = localStorage.getItem('pf_free_ai_mode_pref_v1');
+        if (stored === 'local-only' || stored === 'server-free-assist') return stored;
+      } catch {
+        // Ignore storage read failure
+      }
+      return 'server-free-assist';
+    },
+  );
+  const [autoFallbackEnabled, setAutoFallbackEnabled] = useState<boolean>(true);
+  const updateAiModePreference = (nextMode: 'local-only' | 'server-free-assist') => {
+    setAiModePreference(nextMode);
+    try {
+      localStorage.setItem('pf_free_ai_mode_pref_v1', nextMode);
+    } catch {
+      // Ignore storage write failure
+    }
+  };
+  const handleRecheckQuotaStatus = async () => {
+    setErrorBanner(null);
+    try {
+      const maybeRefresh = (
+        client as FreeAiClient & { refreshQuotaStatus?: () => Promise<FreeAiQuotaStatus> }
+      ).refreshQuotaStatus;
+      const nextStatus =
+        typeof maybeRefresh === 'function'
+          ? await maybeRefresh.call(client)
+          : (client.getQuotaStatus() ?? createDefaultFreeAiStatus());
+      setQuotaStatus(nextStatus);
+      setActionFeedback(
+        nextStatus.enabled && !nextStatus.exhausted
+          ? `서버 무료 조건 연결 상태를 확인했습니다 (분당 ${nextStatus.minuteRemaining}/${nextStatus.minuteLimit}회 남음).`
+          : '현재 서버 외부 AI가 비활성화되었거나 한도에 도달해 기기 내 규칙 모드로 안전하게 동작합니다.',
+      );
+    } catch {
+      const fallback = client.getQuotaStatus() ?? createDefaultFreeAiStatus();
+      setQuotaStatus(fallback);
+      setActionFeedback('연결 확인 중 응답이 없어 기기 내 규칙 모드를 유지합니다.');
+    }
+  };
   const [isLoading, setIsLoading] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
@@ -970,12 +1012,16 @@ export function FreeAiAssistantPanel({
     );
   };
 
-  const externalAiDisabledOrExhausted = !quotaStatus.enabled || quotaStatus.exhausted;
-  const recommendationModeLabel = externalAiDisabledOrExhausted
-    ? '조건 기반 추천'
-    : errorBanner
-      ? 'AI 응답 확인 필요'
-      : 'AI 초안';
+  const isLocalOnlyPreferred = aiModePreference === 'local-only';
+  const externalAiDisabledOrExhausted =
+    isLocalOnlyPreferred || !quotaStatus.enabled || quotaStatus.exhausted;
+  const recommendationModeLabel = isLocalOnlyPreferred
+    ? '기기 내 규칙 모드'
+    : !quotaStatus.enabled || quotaStatus.exhausted
+      ? '조건 기반 추천'
+      : errorBanner
+        ? 'AI 응답 확인 필요'
+        : 'AI 초안';
   const hasCurrentTabResult =
     (activeTab === 'class-draft' && Boolean(classDraftResult)) ||
     (activeTab === 'movement-idea' && Boolean(movementIdeaResult)) ||
@@ -1013,6 +1059,164 @@ export function FreeAiAssistantPanel({
           )}
         </div>
       </header>
+
+      <section
+        className="free-ai-settings-card"
+        data-testid="free-ai-settings-card"
+        aria-label="초안 추천 및 AI 보조 설정"
+      >
+        <div className="free-ai-settings-top">
+          <div className="free-ai-settings-status">
+            <strong>
+              현재 실행 모드:{' '}
+              {isLocalOnlyPreferred
+                ? '기기 내 규칙 기본 (외부 호출 없음)'
+                : quotaStatus.exhausted
+                  ? '한도 도달 · 기기 내 규칙 자동 전환됨'
+                  : quotaStatus.enabled
+                    ? `서버 무료 조건 AI 보조 (분당 ${quotaStatus.minuteRemaining}/${quotaStatus.minuteLimit} · 오늘 ${quotaStatus.dailyRemaining}/${quotaStatus.dailyLimit})`
+                    : '서버 키 미설정 · 기기 내 규칙 활성'}
+            </strong>
+            <span>
+              {autoFallbackEnabled
+                ? '한도 도달·지연·오류 시 기기 내 규칙 추천으로 자동 이어집니다.'
+                : '수동 전환 상태 · 오류 시 안내 배너를 먼저 표시합니다.'}
+            </span>
+          </div>
+          <div className="free-ai-settings-quick-actions">
+            {!isLocalOnlyPreferred ? (
+              <button
+                type="button"
+                className="free-ai-btn-secondary"
+                data-testid="free-ai-switch-local-btn"
+                onClick={() => {
+                  updateAiModePreference('local-only');
+                  setActionFeedback('기기 내 규칙 모드로 전환했습니다. 외부 호출 없이 동작합니다.');
+                }}
+              >
+                기기 내 규칙 모드로 전환
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="free-ai-btn-secondary"
+                data-testid="free-ai-switch-server-btn"
+                disabled={!quotaStatus.enabled || quotaStatus.exhausted}
+                onClick={() => {
+                  updateAiModePreference('server-free-assist');
+                  setActionFeedback('서버 무료 조건 AI 보조 모드를 선택했습니다.');
+                }}
+              >
+                서버 무료 조건 AI 켜기
+              </button>
+            )}
+            <button
+              type="button"
+              className="free-ai-btn-secondary"
+              data-testid="free-ai-recheck-status-btn"
+              onClick={() => void handleRecheckQuotaStatus()}
+            >
+              연결 다시 확인
+            </button>
+          </div>
+        </div>
+
+        <div
+          className="free-ai-mode-options"
+          role="radiogroup"
+          aria-label="추천 엔진 모드 선택"
+        >
+          <label className={`free-ai-mode-option ${isLocalOnlyPreferred ? 'is-selected' : ''}`}>
+            <input
+              type="radio"
+              name="pf-free-ai-mode"
+              data-testid="free-ai-mode-local"
+              checked={isLocalOnlyPreferred}
+              onChange={() => updateAiModePreference('local-only')}
+            />
+            <div>
+              <strong>기기 내 규칙 기본 (0원 확인됨)</strong>
+              <small>기구·시간·난이도·수업 이력으로 이 브라우저 안에서 즉시 조합</small>
+            </div>
+          </label>
+          <label
+            className={`free-ai-mode-option ${
+              !isLocalOnlyPreferred && quotaStatus.enabled && !quotaStatus.exhausted
+                ? 'is-selected'
+                : ''
+            } ${!quotaStatus.enabled || quotaStatus.exhausted ? 'is-disabled' : ''}`}
+          >
+            <input
+              type="radio"
+              name="pf-free-ai-mode"
+              data-testid="free-ai-mode-server"
+              checked={!isLocalOnlyPreferred && quotaStatus.enabled && !quotaStatus.exhausted}
+              disabled={!quotaStatus.enabled || quotaStatus.exhausted}
+              onChange={() => updateAiModePreference('server-free-assist')}
+            />
+            <div>
+              <strong>서버 무료 조건 AI 보조</strong>
+              <small>
+                {quotaStatus.exhausted
+                  ? '현재 무료 한도 소진됨 · 갱신 전까지 기기 내 규칙으로 대체'
+                  : quotaStatus.enabled
+                    ? `확인된 서버 한도 내 동작 (오늘 ${quotaStatus.dailyRemaining}/${quotaStatus.dailyLimit}회 남음)`
+                    : '서버 무료 키 미연결 상태'}
+              </small>
+            </div>
+          </label>
+          <label className="free-ai-mode-option is-disabled">
+            <input
+              type="radio"
+              name="pf-free-ai-mode"
+              data-testid="free-ai-mode-locked-paid"
+              checked={false}
+              disabled
+              readOnly
+            />
+            <div>
+              <strong>외부 유료 키 · 구독 크레딧 연동 (미확인 잠금)</strong>
+              <small>구독·도구 크레딧과 API 과금 크레딧 동일 가정 금지 · 브라우저 키 입력 차단</small>
+            </div>
+          </label>
+        </div>
+
+        <div className="free-ai-settings-footer">
+          <label className="free-ai-fallback-toggle">
+            <input
+              type="checkbox"
+              data-testid="free-ai-auto-fallback-checkbox"
+              checked={autoFallbackEnabled}
+              onChange={(e) => setAutoFallbackEnabled(e.target.checked)}
+            />
+            <span>한도 도달·응답 지연 시 기기 내 규칙 추천으로 자동 전환</span>
+          </label>
+          <details
+            className="free-ai-governance-details"
+            data-testid="free-ai-verified-vs-unverified"
+          >
+            <summary>확인된 무료·보안 조건과 미확인 항목 보기</summary>
+            <div className="free-ai-governance-grid">
+              <div>
+                <strong>확인된 조건 (코드·서버 가드 검증)</strong>
+                <ul>
+                  <li>기기 내 규칙 추천(local-rule-engine)은 외부 호출 0회·추가 비용 0원으로 동작합니다.</li>
+                  <li>브라우저 비밀키 저장·전송 차단(byok_forbidden) 및 서버 무료 조건 가드(max_price=0)가 적용되어 있습니다.</li>
+                  <li>오류·한도 도달 시 작성 중인 시퀀스와 저장 자료는 손상되지 않습니다.</li>
+                </ul>
+              </div>
+              <div>
+                <strong>미확인 항목 (단정하지 않음)</strong>
+                <ul>
+                  <li>외부 AI 제공사의 실시간 계정 잔여 한도·정책 변경은 서버 실연결 응답 전까지 가정하지 않습니다.</li>
+                  <li>개인 구독·개발도구 크레딧과 종량제 API 크레딧은 동일 크레딧으로 취급하지 않습니다.</li>
+                  <li>추천 결과와 도해의 개인별 의학·임상 적합성은 보장하지 않으며 강사 직접 검토가 필요합니다.</li>
+                </ul>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
 
       <ol
         className="free-ai-step-guide"

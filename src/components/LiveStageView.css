@@ -678,13 +678,170 @@
   flex-shrink: 0;
 }
 
+/* Live Stage Connected Kinematic Diagram & Start↔Peak Reduced-Motion Card */
+.teaching-live-diagram-card {
+  margin: 10px 0 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #faf7f0;
+  border: 1px solid #ded6c6;
+  color: #1f3f37;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.teaching-live-diagram-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.teaching-live-diagram-phase-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e9f2ed;
+  border: 1px solid #bfd6c8;
+  color: #18473b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  word-break: keep-all;
+}
+
+.teaching-live-diagram-mode-btn {
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid #c7d4cb;
+  background: #ffffff;
+  color: #1f3f37;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  word-break: keep-all;
+}
+
+.teaching-live-diagram-mode-btn:disabled {
+  opacity: 0.68;
+  cursor: default;
+}
+
+.teaching-live-diagram-single,
+.teaching-live-diagram-frame {
+  margin: 0;
+  min-width: 0;
+}
+
+.teaching-live-diagram-single svg {
+  max-height: 220px;
+  width: 100%;
+  object-fit: contain;
+}
+
+.teaching-live-diagram-single-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #385249;
+  word-break: keep-all;
+}
+
+.teaching-live-diagram-dual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.teaching-live-diagram-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+  font-size: 0.75rem;
+  color: #355248;
+  word-break: keep-all;
+}
+
+.teaching-live-diagram-caption strong {
+  color: #18473b;
+  font-weight: 700;
+}
+
+.teaching-live-diagram-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #e5decb;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.teaching-live-diagram-anchor {
+  color: #284c40;
+  font-weight: 600;
+}
+
+.teaching-live-diagram-review-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f4eee1;
+  border: 1px solid #ddd2be;
+  color: #65523d;
+  font-weight: 600;
+}
+
+.teaching-high-contrast .teaching-live-diagram-card,
+#root .vnext-shell .teaching-high-contrast .teaching-live-diagram-card {
+  background: #0f172a;
+  border-color: #facc15;
+  color: #f8fafc;
+}
+
+.teaching-high-contrast .teaching-live-diagram-phase-pill,
+.teaching-high-contrast .teaching-live-diagram-review-badge,
+.teaching-high-contrast .teaching-live-diagram-mode-btn {
+  background: #1e293b;
+  border-color: #facc15;
+  color: #facc15;
+}
+
+.teaching-high-contrast .teaching-live-diagram-caption,
+.teaching-high-contrast .teaching-live-diagram-caption strong,
+.teaching-high-contrast .teaching-live-diagram-single-caption,
+.teaching-high-contrast .teaching-live-diagram-anchor {
+  color: #f8fafc;
+}
+
+@media (max-width: 540px) {
+  .teaching-live-diagram-dual-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .teaching-play,
   .teaching-next-action-bar,
   .teaching-undo-banner,
   .teaching-inline-next-strip,
   .teaching-glance-cues-strip,
-  .teaching-outline-reorder-btn {
+  .teaching-outline-reorder-btn,
+  .teaching-live-diagram-mode-btn {
     transition: none !important;
     animation: none !important;
   }

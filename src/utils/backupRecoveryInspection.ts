@@ -198,6 +198,10 @@ export function backupRecoveryStateFingerprint(state: RecoveryCurrentState): str
     savedSequences: state.savedSequences,
     classGroups: state.classGroups,
     historyLogs: state.historyLogs,
+    ...(state.humanMovementDrafts !== undefined
+      ? { humanMovementDrafts: state.humanMovementDrafts }
+      : {}),
+    ...(state.reusableBlocks !== undefined ? { reusableBlocks: state.reusableBlocks } : {}),
     conditionTemplates: state.conditionTemplates,
     instructorSchedule: state.instructorSchedule,
     instructorStudyState: state.instructorStudyState,

@@ -39,6 +39,8 @@ declare module './pilates' {
   interface SavedSequence {
     version?: number;
     sourceProvenance?: SequenceSourceProvenance;
+    focusTags: readonly string[];
+    taughtCount: number;
   }
 
   interface ClassHistoryLog {

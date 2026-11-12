@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { SequenceWorkbench } from '../components/SequenceWorkbench';
 import { InlineExerciseFinder } from '../components/InlineExerciseFinder';
 import { FreeAiAssistantPanel } from '../components/FreeAiAssistantPanel';
@@ -38,7 +38,7 @@ describe('First-Time Instructor Simplification, Empty/Error Recovery & Save/Rest
     render(
       <SequenceWorkbench
         planningMode="manual"
-        setPlanningMode={() => undefined}
+        setPlanningMode={() => "manual"}
         onOpenClipper={() => undefined}
         onOpenYouTubePreview={() => undefined}
         onOpenLogModal={() => undefined}

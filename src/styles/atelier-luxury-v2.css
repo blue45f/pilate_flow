@@ -1030,6 +1030,71 @@ html #root .vnext-shell .pf-step-stage-frame {
     box-shadow var(--pf-motion-normal) var(--pf-ease-studio);
 }
 
+@media (max-width: 640px) {
+  html #root .vnext-shell .offline-presets-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  html #root .vnext-shell .offline-presets-tabs button {
+    min-width: 0;
+    padding: 8px 10px;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+}
+
+@media (max-width: 420px) {
+  html #root .vnext-shell {
+    overflow-x: clip;
+  }
+
+  html #root .vnext-shell .bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+    padding: 4px;
+    left: 6px;
+    right: 6px;
+    box-sizing: border-box;
+  }
+
+  html #root .vnext-shell .bottom-nav.is-member-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  html #root .vnext-shell .bottom-nav > button {
+    min-width: 0;
+    min-height: 46px;
+    padding: 4px 2px;
+    font-size: 0.72rem;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  html #root .vnext-shell .pf-role-switcher__btn {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+}
+
+/* Narrow comparison / recovery table clean Korean word wrapping */
+html #root .vnext-shell table {
+  border-collapse: collapse;
+  max-width: 100%;
+}
+
+html #root .vnext-shell :is(th, td) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pf-quickstart-card,
   .pf-studio-spot-btn,

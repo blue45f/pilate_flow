@@ -178,7 +178,7 @@ export interface SavedSequence {
   subtitle: string;
   apparatus: ApparatusType | 'mixed';
   level: DifficultyLevel;
-  focusTags: string[];
+  focusTags: readonly string[];
   targetMinutes: number;
   steps: SequenceStep[];
   createdAt: string;

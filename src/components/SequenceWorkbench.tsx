@@ -62,12 +62,14 @@ import '../styles/sequence-composition.css';
 import './SequenceWorkbench.usability.css';
 import {
   addMovementIdeaToCurrentClass,
+  duplicateIdeaReusableBlock,
   getReusableBlockTimingSummary,
   getSavedReusableBlocks,
   insertIdeaReusableBlockToCurrentClass,
   isMovementIdeaExercise,
   readMovementIdeaDraft,
-  saveIdeaToReusableBlock,
+  saveSequenceStepsAsReusableBlock,
+  syncSequenceBlockInstanceToLatest,
 } from '../utils/movementIdeaDraft';
 import {
   PfAiStatusBadge,
@@ -1092,8 +1094,26 @@ export function SequenceWorkbench({
     }
   }, [s.activeSteps]);
   const [blockTitleInput, setBlockTitleInput] = useState('');
+  const [selectedBundleStepIds, setSelectedBundleStepIds] = useState<Set<string>>(() => new Set());
   const [, setBlockLibraryTick] = useState(0);
   const savedReusableBlocks = getSavedReusableBlocks();
+  const savedReusableBlockMap = useMemo(
+    () => new Map(savedReusableBlocks.map((b) => [b.id, b])),
+    [savedReusableBlocks],
+  );
+  const selectedBundleSteps = useMemo(
+    () => s.activeSteps.filter((step) => !isRestStep(step) && selectedBundleStepIds.has(step.stepId)),
+    [s.activeSteps, selectedBundleStepIds],
+  );
+  const selectedBundleStepCount = selectedBundleSteps.length;
+  const toggleBundleStepSelection = (stepId: string) => {
+    setSelectedBundleStepIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(stepId)) next.delete(stepId);
+      else next.add(stepId);
+      return next;
+    });
+  };
   const p5ReusableBlocks = useMemo(
     () => [
       ...OFFLINE_BLOCK_PRESETS.map((preset) => toP5ReusableBlockContract(preset)),
@@ -1161,31 +1181,48 @@ export function SequenceWorkbench({
       return;
     }
     const title = blockTitleInput.trim() || `${s.activeTitle || '오늘의 시퀀스'} 블록`;
-    let createdBlockId: string | undefined;
-    let lastResultMessage = '';
-    for (let i = 0; i < nonRestSteps.length; i += 1) {
-      const step = nonRestSteps[i]!;
-      const res = saveIdeaToReusableBlock({
-        exerciseId: step.exerciseId,
-        blockId: createdBlockId,
-        blockTitle: i === 0 ? title : undefined,
-        durationMin: step.durationMin,
-        explanationSec: step.explanationSec,
-        transitionSec: step.transitionSec,
-        repetitions: step.repetitions,
-        sets: step.sets,
-        sideMode: step.sideMode,
-      });
-      if (!res.ok || !res.block) {
-        setNotice(res.message);
-        return;
-      }
-      createdBlockId = res.block.id;
-      lastResultMessage = `‘${res.block.title}’ 블록(${res.block.items.length}개 동작)으로 묶어 저장했습니다.`;
+    const res = saveSequenceStepsAsReusableBlock({
+      steps: nonRestSteps,
+      title,
+    });
+    if (!res.ok) {
+      setNotice(res.message);
+      return;
     }
     setBlockTitleInput('');
     setBlockLibraryTick((n) => n + 1);
-    setNotice(lastResultMessage);
+    setNotice(res.message);
+  };
+  const handleSaveSelectedStepsToBlock = () => {
+    if (selectedBundleSteps.length === 0) {
+      setNotice('묶음으로 저장할 동작을 먼저 선택해 주세요.');
+      return;
+    }
+    const title =
+      blockTitleInput.trim() ||
+      `${s.activeTitle || '오늘의 시퀀스'} 선택 묶음 (${selectedBundleSteps.length}동작)`;
+    const res = saveSequenceStepsAsReusableBlock({
+      steps: selectedBundleSteps,
+      title,
+    });
+    if (!res.ok) {
+      setNotice(res.message);
+      return;
+    }
+    setBlockTitleInput('');
+    setSelectedBundleStepIds(new Set());
+    setBlockLibraryTick((n) => n + 1);
+    setNotice(res.message);
+  };
+  const handleDuplicateReusableBlock = (blockId: string) => {
+    const res = duplicateIdeaReusableBlock(blockId);
+    setBlockLibraryTick((n) => n + 1);
+    setNotice(res.message);
+  };
+  const handleSyncBlockInstanceToLatest = (blockInstanceId: string, blockId: string) => {
+    const res = syncSequenceBlockInstanceToLatest(blockInstanceId, blockId);
+    setBlockLibraryTick((n) => n + 1);
+    setNotice(res.message);
   };
   const handleInsertReusableBlock = (blockId: string, deltaMin = 0) => {
     const beforeState = usePilatesStore.getState();
@@ -2856,7 +2893,11 @@ export function SequenceWorkbench({
                   <div className="workbench-block-combo-panel">
                     <div className="workbench-block-combo-create">
                       <label className="form-field">
-                        <span>현재 시퀀스 동작들을 재사용 블록으로 묶기</span>
+                        <span>
+                          {selectedBundleStepCount > 0
+                            ? `선택한 ${selectedBundleStepCount}개 동작을 재사용 묶음으로 저장`
+                            : '현재 시퀀스 동작들을 재사용 블록으로 묶기'}
+                        </span>
                         <input
                           type="text"
                           value={blockTitleInput}
@@ -2866,13 +2907,30 @@ export function SequenceWorkbench({
                         />
                       </label>
                       <div className="workbench-block-combo-actions">
-                        <PfButton variant="secondary" onClick={handleCombineCurrentStepsToBlock}>
-                          현재 동작 묶어 블록 저장
+                        <PfButton
+                          variant="secondary"
+                          onClick={
+                            selectedBundleStepCount > 0
+                              ? handleSaveSelectedStepsToBlock
+                              : handleCombineCurrentStepsToBlock
+                          }
+                        >
+                          {selectedBundleStepCount > 0
+                            ? `선택 ${selectedBundleStepCount}개 묶음 저장`
+                            : '현재 동작 묶어 블록 저장'}
                         </PfButton>
                         <PfButton variant="text" onClick={() => setPresetsOpen(true)}>
                           <Copy size={14} aria-hidden="true" /> 프리셋·동작 묶음 열기
                         </PfButton>
                       </div>
+                      <details className="workbench-bundle-guide-disclosure">
+                        <summary>묶음 복사·원본 편집·기구 전환 기준 보기</summary>
+                        <p>
+                          동작 묶음을 수업에 넣으면 독립 복사본이 생성되어, 이후 묶음 원본을 수정해도
+                          기존 수업안과 과거 수업 기록은 바뀌지 않습니다. 원본이 새 버전(v2+)으로
+                          업데이트된 경우에만 원하는 수업에서 선택 반영하거나 되돌릴 수 있습니다.
+                        </p>
+                      </details>
                     </div>
                     {savedReusableBlocks.length > 0 && (
                       <div
@@ -2882,13 +2940,17 @@ export function SequenceWorkbench({
                         {savedReusableBlocks.map((block) => {
                           const summary = getReusableBlockTimingSummary(block);
                           const canReduceMin = summary.totalDurationMin > 2;
+                          const apparatusTag =
+                            block.apparatus === 'mixed'
+                              ? '기구 전환 포함'
+                              : `${APPARATUS_LABELS[block.apparatus]?.ko ?? block.apparatus} 단일`;
                           return (
                             <div key={block.id} className="workbench-block-combo-item">
                               <div>
                                 <strong>{block.title}</strong>
                                 <span>
-                                  {block.items.length}개 동작 · 총 {summary.totalDurationMin}분 (v
-                                  {block.version})
+                                  {apparatusTag} · {block.items.length}개 동작 · 총{' '}
+                                  {summary.totalDurationMin}분 (v{block.version})
                                 </span>
                                 <span
                                   className="workbench-block-combo-subbreakdown"
@@ -2926,6 +2988,15 @@ export function SequenceWorkbench({
                                   aria-label={`${block.title} 1분 늘려 넣기`}
                                 >
                                   +1분
+                                </button>
+                                <button
+                                  type="button"
+                                  className="workbench-combo-scale-btn"
+                                  data-testid="duplicate-reusable-block-btn"
+                                  onClick={() => handleDuplicateReusableBlock(block.id)}
+                                  aria-label={`${block.title} 묶음 복제`}
+                                >
+                                  복제
                                 </button>
                               </div>
                             </div>
@@ -3051,6 +3122,36 @@ export function SequenceWorkbench({
               </div>
             </div>
           )}
+          {isArrangeStage && selectedBundleStepCount > 0 && (
+            <div
+              className="pf-step3-bundle-selection-bar"
+              data-testid="step3-bundle-selection-bar"
+              role="region"
+              aria-label="선택 동작 묶음 저장 도구"
+            >
+              <strong>선택한 {selectedBundleStepCount}개 동작</strong>
+              <input
+                type="text"
+                value={blockTitleInput}
+                onChange={(event) => setBlockTitleInput(event.target.value)}
+                placeholder={`${s.activeTitle || '오늘의 시퀀스'} 묶음`}
+                aria-label="선택 동작 묶음 이름"
+              />
+              <PfButton
+                variant="primary"
+                data-testid="save-selected-steps-bundle-btn"
+                onClick={handleSaveSelectedStepsToBlock}
+              >
+                선택 동작 묶음 저장
+              </PfButton>
+              <PfButton
+                variant="text"
+                onClick={() => setSelectedBundleStepIds(new Set())}
+              >
+                선택 해제
+              </PfButton>
+            </div>
+          )}
           {isArrangeStage && s.activeSteps.length > 0 && (
           <div
             className={`flow-sections ${
@@ -3132,9 +3233,22 @@ export function SequenceWorkbench({
                           }`.trim()}
                         >
                           <div className="step-main">
-                            <span className="step-number">
-                              {String(index + 1).padStart(2, '0')}
-                            </span>
+                            <label
+                              className="step-bundle-select-label"
+                              title="동작 묶음 저장용 선택"
+                            >
+                              <input
+                                type="checkbox"
+                                className="step-bundle-select-check"
+                                data-testid="step-bundle-select-checkbox"
+                                checked={selectedBundleStepIds.has(step.stepId)}
+                                aria-label={`${index + 1}번 ${ex.nameKo} 묶음 저장 선택`}
+                                onChange={() => toggleBundleStepSelection(step.stepId)}
+                              />
+                              <span className="step-number">
+                                {String(index + 1).padStart(2, '0')}
+                              </span>
+                            </label>
                             <button
                               className="step-art"
                               onClick={() => onOpenYouTubePreview(ex)}
@@ -3184,6 +3298,44 @@ export function SequenceWorkbench({
                                 </PfBlockPill>
                               </span>
                             </button>
+                            {step.sourceBlockId && step.blockInstanceId && (() => {
+                              const latestBlock = savedReusableBlockMap.get(step.sourceBlockId);
+                              const isFirstInInstance =
+                                s.activeSteps.findIndex(
+                                  (item) => item.blockInstanceId === step.blockInstanceId,
+                                ) === index;
+                              const hasNewerTemplate =
+                                Boolean(latestBlock) &&
+                                !step.blockInstanceDetached &&
+                                (latestBlock?.version ?? 1) > (step.sourceBlockVersion ?? 1);
+                              return (
+                                <div
+                                  className="step-bundle-provenance-row"
+                                  data-testid="step-bundle-provenance"
+                                >
+                                  <span className="step-bundle-provenance-badge">
+                                    묶음 복사본 · {step.sourceBlockTitle || latestBlock?.title || '재사용 묶음'} v
+                                    {step.sourceBlockVersion ?? 1}
+                                    {step.blockInstanceDetached ? ' · 이 수업 맞춤 수정됨' : ''}
+                                  </span>
+                                  {isFirstInInstance && hasNewerTemplate && latestBlock && (
+                                    <button
+                                      type="button"
+                                      className="step-bundle-sync-btn"
+                                      data-testid="sync-bundle-instance-btn"
+                                      onClick={() =>
+                                        handleSyncBlockInstanceToLatest(
+                                          step.blockInstanceId!,
+                                          latestBlock.id,
+                                        )
+                                      }
+                                    >
+                                      원본 v{latestBlock.version} 변경됨 · 이 수업에 반영
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })()}
                             <div
                               className="step-quick-duration-stepper"
                               data-testid="step-quick-duration-stepper"

@@ -1107,3 +1107,107 @@
 #root .vnext-workbench .restore-saved-flow {
   min-height: 44px;
 }
+
+#root .vnext-workbench .step-bundle-select-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  min-height: 36px;
+}
+
+#root .vnext-workbench .step-bundle-select-check {
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  min-height: 17px;
+  margin: 0;
+  accent-color: #17675c;
+  cursor: pointer;
+}
+
+#root .vnext-workbench .pf-step3-bundle-selection-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #eaf4f1;
+  border: 1px solid #9dc6bd;
+}
+
+#root .vnext-workbench .pf-step3-bundle-selection-bar strong {
+  font-size: 0.875rem;
+  color: #134a41;
+  word-break: keep-all;
+}
+
+#root .vnext-workbench .pf-step3-bundle-selection-bar input[type='text'] {
+  flex: 1 1 180px;
+  min-height: 40px;
+  padding: 6px 10px;
+  font-size: 0.875rem;
+}
+
+#root .vnext-workbench .step-bundle-provenance-row {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-top: 4px;
+}
+
+#root .vnext-workbench .step-bundle-provenance-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef4f2;
+  border: 1px solid #c9dcd7;
+  color: #2c4c46;
+  font-size: 0.72rem;
+  font-weight: 600;
+  word-break: keep-all;
+}
+
+#root .vnext-workbench .step-bundle-sync-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #b5843b;
+  background: #fdf6e9;
+  color: #6f4910;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  word-break: keep-all;
+}
+
+#root .vnext-workbench .workbench-bundle-guide-disclosure {
+  margin-top: 8px;
+  border-top: 1px dashed #d6e0e0;
+  padding-top: 4px;
+}
+
+#root .vnext-workbench .workbench-bundle-guide-disclosure > summary {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: #526267;
+  word-break: keep-all;
+}
+
+#root .vnext-workbench .workbench-bundle-guide-disclosure > p {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #4b5d62;
+  word-break: keep-all;
+}
