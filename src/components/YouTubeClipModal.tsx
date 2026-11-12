@@ -688,30 +688,30 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
               />
               좌우를 나누어 진행 · 입력한 계획 시간에 양쪽 포함
             </label>
+            <div
+              className="pf-clipper-spring-chips"
+              data-testid="clipper-spring-preset-chips"
+              role="group"
+              aria-label="자주 쓰는 스프링 설정 빠른 입력"
+            >
+              <span className="pf-class-spring-source">빠른 스프링 입력:</span>
+              {(
+                ['2R 1B', '1R 1B', '1R', '1R 1Y (페달)', '1B (푸쉬스루)', '스프링 사용 없음'] as const
+              ).map((presetSpring) => (
+                <button
+                  key={presetSpring}
+                  type="button"
+                  className={`log-quick-note-chip ${springs === presetSpring ? 'is-selected' : ''}`.trim()}
+                  aria-pressed={springs === presetSpring}
+                  onClick={() => setSprings(springs === presetSpring ? '' : presetSpring)}
+                >
+                  {presetSpring}
+                </button>
+              ))}
+              {springs.trim() && <SpringVisualPills springs={springs} />}
+            </div>
             <details ref={step3Ref} className="clipper-optional">
               <summary>직접 작성한 큐와 기구 설정 · 선택</summary>
-              <div
-                className="pf-clipper-spring-chips"
-                data-testid="clipper-spring-preset-chips"
-                role="group"
-                aria-label="자주 쓰는 스프링 설정 빠른 입력"
-              >
-                <span className="pf-class-spring-source">빠른 스프링 입력:</span>
-                {(
-                  ['2R 1B', '1R 1B', '1R', '1R 1Y (페달)', '1B (푸쉬스루)', '스프링 사용 없음'] as const
-                ).map((presetSpring) => (
-                  <button
-                    key={presetSpring}
-                    type="button"
-                    className={`log-quick-note-chip ${springs === presetSpring ? 'is-selected' : ''}`.trim()}
-                    aria-pressed={springs === presetSpring}
-                    onClick={() => setSprings(springs === presetSpring ? '' : presetSpring)}
-                  >
-                    {presetSpring}
-                  </button>
-                ))}
-                {springs.trim() && <SpringVisualPills springs={springs} />}
-              </div>
               <div className="library-form-grid">
                 <label className="form-field">
                   <span>기구 설정 메모</span>

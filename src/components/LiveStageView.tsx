@@ -1943,8 +1943,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     </span>
                   </div>
                 );
-              })()
-              ) : (
+              })() : (
                 <span className="teaching-inline-next-value">다음 동작 확인</span>
               )
             ) : (
