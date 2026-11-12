@@ -120,8 +120,8 @@ export const LiveStageKinematicDiagram: React.FC<LiveStageKinematicDiagramProps>
         >
           {isDualStaticMode
             ? reducedMotion
-              ? '모션 감소 설정 · 시작↔정점 정지 비교'
-              : '정지 비교 · 시작↔정점 자세'
+              ? '모션 감소 설정 · 시작→정점→끝 복귀 3단계 비교'
+              : '정지 비교 · 시작→정점→끝 복귀 연결'
             : running
               ? `연속 모션 · ${PHASE_BADGE_TEXT[sampled.visualPhaseId]}`
               : PHASE_BADGE_TEXT[sampled.visualPhaseId]}
@@ -134,7 +134,7 @@ export const LiveStageKinematicDiagram: React.FC<LiveStageKinematicDiagramProps>
           disabled={reducedMotion}
           onClick={() => setManualStaticCompare((prev) => !prev)}
         >
-          {isDualStaticMode ? '단일 모션 도해 보기' : '시작↔정점 나란히 보기'}
+          {isDualStaticMode ? '단일 모션 도해 보기' : '시작·정점·끝 나란히 보기'}
         </button>
       </div>
 
@@ -171,6 +171,21 @@ export const LiveStageKinematicDiagram: React.FC<LiveStageKinematicDiagramProps>
               showMuscles
               showGhostStartPose
               label={`${exercise.nameKo} 정점 자세 도해`}
+            />
+          </figure>
+          <figure className="teaching-live-diagram-frame">
+            <figcaption className="teaching-live-diagram-caption">
+              <strong>↺ 3. 끝 복귀 자세 (시작 연결)</strong>
+              <span>{motionAsset.visualAsset.phases.end.shortTitleKo}</span>
+            </figcaption>
+            <MovementPhaseDiagramSvg
+              asset={motionAsset.visualAsset}
+              phase="end"
+              showAlignment
+              showDirection
+              showMuscles
+              showGhostStartPose
+              label={`${exercise.nameKo} 끝 복귀 자세 도해`}
             />
           </figure>
         </div>

@@ -935,6 +935,14 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
             {kind === 'reusable'
               ? reusableMatches.slice(0, limit).map((block) => {
                   const summary = getReusableBlockTimingSummary(block);
+                  const unilateralCount = block.items.filter(
+                    (it) =>
+                      it.sideMode === 'left-then-right' ||
+                      it.sideMode === 'right-then-left' ||
+                      it.sideMode === 'left' ||
+                      it.sideMode === 'right',
+                  ).length;
+                  const repItems = block.items.filter((it) => it.repetitions !== undefined);
                   return (
                     <button
                       type="button"
@@ -947,7 +955,10 @@ export function OfflinePresetPicker({ onApplied }: { onApplied: (message: string
                       <strong>{block.title}</strong>
                       <span>
                         {apparatusLabelKo(block.apparatus)} · {summary.totalDurationMin}분 ·{' '}
-                        {block.items.length}개 동작 · v{block.version}
+                        {block.items.length}개 동작
+                        {unilateralCount > 0 ? ` · 편측 ${unilateralCount}` : ''}
+                        {repItems.length > 0 ? ` · 반복 설정 ${repItems.length}` : ''} · v
+                        {block.version}
                       </span>
                     </button>
                   );

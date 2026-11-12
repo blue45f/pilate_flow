@@ -1850,13 +1850,66 @@ export function insertIdeaReusableBlockToCurrentClass(blockId: string): {
   }
 
   const state = usePilatesStore.getState();
+  const wasEmpty = state.activeSteps.length === 0;
   const inserted = insertReusableBlockIntoSequence(state.activeSteps, block);
-  const blockApparatusList = block.apparatus === 'mixed' ? ['mat', 'reformer'] : [block.apparatus];
+  const blockApparatusList =
+    block.apparatus === 'mixed' ? ['mat', 'reformer'] : [block.apparatus];
   const nextOwnedEquipment = Array.from(new Set([...state.ownedEquipment, ...blockApparatusList]));
+  const nextOwnedApparatus = Array.from(
+    new Set([
+      ...state.ownedApparatus,
+      ...(block.apparatus === 'mixed'
+        ? (['mat', 'reformer'] as const)
+        : ([block.apparatus] as const)),
+    ]),
+  );
+
+  const exerciseById = new Map(state.exercises.map((item) => [item.id, item]));
+  const levelRank: Record<DifficultyLevel, number> = { '1.0': 1, '1.5': 2, '2.0': 3 };
+  let requiredLevel: DifficultyLevel = state.activeLevel;
+  for (const item of block.items) {
+    const exLevel =
+      item.exerciseSnapshot?.level ?? exerciseById.get(item.exerciseId)?.level ?? '1.0';
+    if (levelRank[exLevel] > levelRank[requiredLevel]) {
+      requiredLevel = exLevel;
+    }
+  }
+
+  const nextActiveApparatus: ApparatusType | 'mixed' = wasEmpty
+    ? block.apparatus
+    : state.activeApparatus === block.apparatus
+      ? state.activeApparatus
+      : 'mixed';
+
+  const nextDraftCriteria = state.draftCriteria
+    ? {
+        ...state.draftCriteria,
+        apparatus: nextActiveApparatus,
+        level:
+          levelRank[requiredLevel] > levelRank[state.draftCriteria.level]
+            ? requiredLevel
+            : state.draftCriteria.level,
+        availableEquipment: Array.from(
+          new Set([...(state.draftCriteria.availableEquipment ?? []), ...blockApparatusList]),
+        ),
+        ownedApparatus: Array.from(
+          new Set([
+            ...(state.draftCriteria.ownedApparatus ?? []),
+            ...(block.apparatus === 'mixed'
+              ? (['mat', 'reformer'] as const)
+              : ([block.apparatus] as const)),
+          ]),
+        ),
+      }
+    : null;
 
   usePilatesStore.setState({
     activeSteps: inserted.steps,
+    activeApparatus: nextActiveApparatus,
+    activeLevel: requiredLevel,
     ownedEquipment: nextOwnedEquipment,
+    ownedApparatus: nextOwnedApparatus,
+    ...(nextDraftCriteria ? { draftCriteria: nextDraftCriteria } : {}),
     generationError: null,
     saveFeedback: `‘${block.title}’ 재사용 블록(v${block.version}) 복사본을 현재 수업 시퀀스에 추가했습니다.`,
   });

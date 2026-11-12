@@ -675,7 +675,7 @@ function createSamplePoseFn(
         endSpec.directionVectors,
         localT,
       );
-    } else {
+    } else if (progress <= 0.94) {
       joints = endSpec.joints;
       carriageOffsetPx = endSpec.apparatusState.carriageOffsetPx;
       pedalAngleDeg = endSpec.apparatusState.pedalAngleDeg;
@@ -683,6 +683,36 @@ function createSamplePoseFn(
       visualPhaseId = 'end';
       alignments = endSpec.alignments;
       directionVectors = endSpec.directionVectors;
+    } else {
+      // Smooth C2 cycle closure across (0.94, 1.0]: bridges finish pose back into start pose
+      // so multi-rep / continuous loop playback (1.0 -> 0.0) has zero joint or carriage snap.
+      const closureT = (progress - 0.94) / 0.06;
+      const easedClosure = smootherstep(closureT);
+      joints = interpolateKinematicRigArc(
+        endSpec.joints,
+        startSpec.joints,
+        closureT,
+        visualAsset.archetypeId,
+        'return',
+      );
+      carriageOffsetPx = lerpNum(
+        endSpec.apparatusState.carriageOffsetPx,
+        startSpec.apparatusState.carriageOffsetPx,
+        easedClosure,
+      );
+      pedalAngleDeg = lerpNum(
+        endSpec.apparatusState.pedalAngleDeg,
+        startSpec.apparatusState.pedalAngleDeg,
+        easedClosure,
+      );
+      baseSpec = closureT < 0.5 ? endSpec : startSpec;
+      visualPhaseId = closureT < 0.85 ? 'end' : 'start';
+      alignments = interpolateAlignments(endSpec.alignments, startSpec.alignments, closureT);
+      directionVectors = interpolateVectors(
+        endSpec.directionVectors,
+        startSpec.directionVectors,
+        closureT,
+      );
     }
 
     const interpolatedPhaseSpec: PhasePoseSpec = {

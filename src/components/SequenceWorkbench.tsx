@@ -1119,6 +1119,44 @@ export function SequenceWorkbench({
     [s.activeSteps, selectedBundleStepIds],
   );
   const selectedBundleStepCount = selectedBundleSteps.length;
+  const nonRestBundleStepIds = useMemo(
+    () => s.activeSteps.filter((step) => !isRestStep(step)).map((step) => step.stepId),
+    [s.activeSteps],
+  );
+  const areAllBundleStepsSelected =
+    nonRestBundleStepIds.length > 0 &&
+    nonRestBundleStepIds.every((id) => selectedBundleStepIds.has(id));
+  const toggleSelectAllBundleSteps = () => {
+    if (areAllBundleStepsSelected) {
+      setSelectedBundleStepIds(new Set());
+      setNotice('묶음 선택을 모두 해제했어요.');
+      return;
+    }
+    setSelectedBundleStepIds(new Set(nonRestBundleStepIds));
+    setNotice(`현재 동작 ${nonRestBundleStepIds.length}개를 묶음 저장 대상으로 모두 선택했어요.`);
+  };
+  const handleGroupArrowKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
+      return;
+    }
+    const buttons = Array.from(
+      event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'),
+    );
+    if (buttons.length < 2) return;
+    const activeEl = document.activeElement;
+    const currentIndex = buttons.findIndex((btn) => btn === activeEl);
+    if (currentIndex < 0) return;
+    event.preventDefault();
+    let nextIndex = currentIndex;
+    if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = buttons.length - 1;
+    else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % buttons.length;
+    } else {
+      nextIndex = (currentIndex - 1 + buttons.length) % buttons.length;
+    }
+    buttons[nextIndex]?.focus();
+  };
   const toggleBundleStepSelection = (stepId: string) => {
     setSelectedBundleStepIds((prev) => {
       const next = new Set(prev);
@@ -1573,7 +1611,12 @@ export function SequenceWorkbench({
         role="region"
         aria-label="단계별 수업 준비 안내"
       >
-        <div className="pf-step-wizard-stepper" role="group" aria-label="수업 제작 단계">
+        <div
+          className="pf-step-wizard-stepper"
+          role="group"
+          aria-label="수업 제작 단계"
+          onKeyDown={handleGroupArrowKeyDown}
+        >
           <button
             type="button"
             className={`pf-step-wizard-tab ${
@@ -1831,14 +1874,72 @@ export function SequenceWorkbench({
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <button
-                    type="button"
-                    className="pf-step-primary-cta"
-                    data-testid="wizard-start-step1-btn"
-                    onClick={() => setManualWizardPage('step1')}
-                  >
-                    1단계부터 차근차근 만들기 <ArrowRight size={18} aria-hidden="true" />
-                  </button>
+                  <div className="pf-home-cta-pair">
+                    <button
+                      type="button"
+                      className="pf-step-primary-cta"
+                      data-testid="wizard-fast-step2-btn"
+                      onClick={() => {
+                        const next = withExactSelection({
+                          ...criteria,
+                          targetMinutes: criteria.targetMinutes,
+                        });
+                        s.setDraftCriteria(next);
+                        if (!s.activeSteps.length) {
+                          s.setActiveSequenceMeta({
+                            apparatus: next.apparatus,
+                            targetMinutes: next.targetMinutes,
+                          });
+                        }
+                        setManualWizardPage('step2');
+                        setWorkflowStepState('select');
+                      }}
+                    >
+                      선택 기구로 바로 동작 담기 <ArrowRight size={18} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="pf-step-nav-pill-btn"
+                      data-testid="wizard-start-step1-btn"
+                      onClick={() => setManualWizardPage('step1')}
+                    >
+                      1단계부터 차근차근 만들기
+                    </button>
+                  </div>
+                  {savedReusableBlocks.length > 0 && (
+                    <div
+                      className="pf-quick-reusable-strip"
+                      data-testid="quick-reusable-blocks-strip"
+                      role="group"
+                      aria-label="내 저장 묶음 바로 넣기"
+                      onKeyDown={handleGroupArrowKeyDown}
+                    >
+                      <span className="pf-quick-reusable-strip__label">저장 묶음 1탭 추가</span>
+                      <div className="pf-quick-reusable-strip__pills">
+                        {savedReusableBlocks.slice(0, 4).map((block) => {
+                          const summary = getReusableBlockTimingSummary(block);
+                          return (
+                            <button
+                              key={block.id}
+                              type="button"
+                              className="pf-quick-reusable-pill"
+                              data-testid={`quick-insert-block-${block.id}`}
+                              onClick={() => {
+                                handleInsertReusableBlock(block.id);
+                                setManualWizardPage('arrange');
+                              }}
+                            >
+                              <Plus size={13} aria-hidden="true" />
+                              <span>{block.title}</span>
+                              <small>
+                                {block.items.length}동작 · {summary.totalDurationMin}분
+                              </small>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                   <div className="pf-step-secondary-actions workbench-welcome-actions">
                     <PfButton
                       variant="secondary"
@@ -2380,11 +2481,46 @@ export function SequenceWorkbench({
               )}
             </div>
           )}
+          {savedReusableBlocks.length > 0 && (
+            <div
+              className="pf-quick-reusable-strip"
+              data-testid="step2-reusable-blocks-strip"
+              role="group"
+              aria-label="2단계 저장 묶음 바로 넣기"
+              onKeyDown={handleGroupArrowKeyDown}
+            >
+              <span className="pf-quick-reusable-strip__label">내 저장 묶음 바로 넣기</span>
+              <div className="pf-quick-reusable-strip__pills">
+                {savedReusableBlocks.slice(0, 5).map((block) => {
+                  const summary = getReusableBlockTimingSummary(block);
+                  return (
+                    <button
+                      key={block.id}
+                      type="button"
+                      className="pf-quick-reusable-pill"
+                      data-testid={`step2-insert-block-${block.id}`}
+                      onClick={() => handleInsertReusableBlock(block.id)}
+                    >
+                      <Plus size={13} aria-hidden="true" />
+                      <span>{block.title}</span>
+                      <small>
+                        {block.items.length}동작 · {summary.totalDurationMin}분
+                      </small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {!finderOpen && (
             <InlineExerciseFinder
               active
               autoNarrowToClassEquipment
               onOpenExercise={onOpenYouTubePreview}
+              onArrangeSequence={() => {
+                setManualWizardPage('arrange');
+                setWorkflowStepState('arrange');
+              }}
               classEquipment={EQUIPMENT_OPTIONS.filter((option) =>
                 selectedEquipment.includes(option.id),
               ).map((option) => option.id)}
@@ -2675,6 +2811,10 @@ export function SequenceWorkbench({
                   active
                   autoNarrowToClassEquipment
                   onOpenExercise={onOpenYouTubePreview}
+                  onArrangeSequence={() => {
+                    setManualWizardPage('arrange');
+                    setWorkflowStepState('arrange');
+                  }}
                   classEquipment={EQUIPMENT_OPTIONS.filter((option) =>
                     selectedEquipment.includes(option.id),
                   ).map((option) => option.id)}
@@ -3112,6 +3252,15 @@ export function SequenceWorkbench({
                             ? `선택 ${selectedBundleStepCount}개 묶음 저장`
                             : '현재 동작 묶어 블록 저장'}
                         </PfButton>
+                        {nonRestBundleStepIds.length > 0 && (
+                          <PfButton
+                            variant="text"
+                            data-testid="toggle-select-all-bundle-btn"
+                            onClick={toggleSelectAllBundleSteps}
+                          >
+                            {areAllBundleStepsSelected ? '전체 선택 해제' : '전체 동작 선택'}
+                          </PfButton>
+                        )}
                         <PfButton variant="text" onClick={() => setPresetsOpen(true)}>
                           <Copy size={14} aria-hidden="true" /> 프리셋·동작 묶음 열기
                         </PfButton>
@@ -3241,6 +3390,7 @@ export function SequenceWorkbench({
                 role="group"
                 aria-label="시퀀스 편집 보기 방식"
                 data-testid="sequence-view-mode-switcher"
+                onKeyDown={handleGroupArrowKeyDown}
               >
                 {(
                   [
@@ -3345,6 +3495,14 @@ export function SequenceWorkbench({
               >
                 선택 동작 묶음 저장
               </PfButton>
+              {!areAllBundleStepsSelected && nonRestBundleStepIds.length > 1 && (
+                <PfButton
+                  variant="text"
+                  onClick={toggleSelectAllBundleSteps}
+                >
+                  전체 선택 ({nonRestBundleStepIds.length})
+                </PfButton>
+              )}
               <PfButton
                 variant="text"
                 onClick={() => setSelectedBundleStepIds(new Set())}
@@ -3621,6 +3779,73 @@ export function SequenceWorkbench({
                                 );
                               })}
                             </div>
+                            <div
+                              className="step-quick-side-sets-bar"
+                              data-testid="step-quick-side-sets-bar"
+                              role="group"
+                              aria-label={`${index + 1}번 동작 세트 및 양측·편측 빠른 선택`}
+                            >
+                              {([2, 3] as const).map((setNum) => {
+                                const isSelectedSet = step.sets === setNum;
+                                return (
+                                  <button
+                                    key={`set-${setNum}`}
+                                    type="button"
+                                    className={`step-quick-set-chip ${
+                                      isSelectedSet ? 'is-selected' : ''
+                                    }`.trim()}
+                                    aria-pressed={isSelectedSet}
+                                    aria-label={`${index + 1}번 동작 ${setNum}세트`}
+                                    disabled={!!step.locked}
+                                    onClick={() => {
+                                      const nextSets = isSelectedSet ? undefined : setNum;
+                                      s.setStepPracticeOptions(index, { sets: nextSets });
+                                      setJustUpdatedStepId(step.stepId);
+                                      setNotice(
+                                        nextSets
+                                          ? `${index + 1}번 동작을 ${nextSets}세트로 맞췄어요.`
+                                          : `${index + 1}번 동작 세트 표시를 해제했어요.`,
+                                      );
+                                    }}
+                                  >
+                                    {setNum}세트
+                                  </button>
+                                );
+                              })}
+                              {(
+                                [
+                                  { id: 'left-then-right' as const, label: '좌→우', desc: '좌→우 편측 수행' },
+                                  { id: 'right-then-left' as const, label: '우→좌', desc: '우→좌 편측 수행' },
+                                  { id: 'together' as const, label: '양쪽', desc: '양쪽 동시 수행' },
+                                ] as const
+                              ).map((sideOpt) => {
+                                const isSelectedSide = step.sideMode === sideOpt.id;
+                                return (
+                                  <button
+                                    key={sideOpt.id}
+                                    type="button"
+                                    className={`step-quick-side-chip ${
+                                      isSelectedSide ? 'is-selected' : ''
+                                    }`.trim()}
+                                    aria-pressed={isSelectedSide}
+                                    aria-label={`${index + 1}번 동작 ${sideOpt.desc}`}
+                                    disabled={!!step.locked}
+                                    onClick={() => {
+                                      const nextSide = isSelectedSide ? undefined : sideOpt.id;
+                                      s.setStepPracticeOptions(index, { sideMode: nextSide });
+                                      setJustUpdatedStepId(step.stepId);
+                                      setNotice(
+                                        !nextSide
+                                          ? `${index + 1}번 동작 수행 방향 표시를 해제했어요.`
+                                          : `${index + 1}번 동작을 ${sideOpt.label} 수행으로 맞췄어요.`,
+                                      );
+                                    }}
+                                  >
+                                    {sideOpt.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
                             <PfButton
                               variant="icon"
                               className="v3-step-more"
@@ -3762,6 +3987,16 @@ export function SequenceWorkbench({
           })()}
           {isArrangeStage && s.activeSteps.length > 0 && (
             <div className="pf-p04-mobile-sticky-cta" data-testid="p04-mobile-sticky-live-cta">
+              <button
+                type="button"
+                className="btn-secondary pf-p04-save-btn"
+                data-testid="p04-mobile-sticky-save-btn"
+                aria-label="현재 시퀀스 빠른 저장"
+                onClick={handleSave}
+              >
+                {isSavedClean ? <Check size={16} aria-hidden="true" /> : <BookmarkPlus size={16} aria-hidden="true" />}
+                <span>{isSavedClean ? '저장됨' : '빠른 저장'}</span>
+              </button>
               <button
                 type="button"
                 className="btn-primary pf-p04-live-btn"
@@ -4477,6 +4712,7 @@ export function SequenceWorkbench({
             <InlineExerciseFinder
               active={finderOpen}
               onOpenExercise={onOpenYouTubePreview}
+              onArrangeSequence={arrangeSequence}
               classEquipment={EQUIPMENT_OPTIONS.filter((option) =>
                 selectedEquipment.includes(option.id),
               ).map((option) => option.id)}

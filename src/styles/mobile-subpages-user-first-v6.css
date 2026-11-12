@@ -520,17 +520,47 @@ html #root .vnext-workbench .pf-step-wizard-tab.is-active {
     position: sticky;
     bottom: calc(68px + env(safe-area-inset-bottom, 0px));
     z-index: 9;
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    max-width: 100%;
     padding: 8px 0 4px;
     background: linear-gradient(180deg, rgba(243, 241, 234, 0) 0%, var(--pf-v6-bg) 30%);
   }
 
+  .pf-p04-save-btn {
+    flex: 0 0 auto;
+    min-height: 52px;
+    min-width: 96px;
+    padding: 0 12px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 0.84rem !important;
+    font-weight: 700 !important;
+    border-radius: 16px !important;
+    white-space: nowrap;
+    background: var(--pf-v6-surface) !important;
+    border: 1.5px solid var(--pf-v6-mint-strong) !important;
+    color: var(--pf-v6-emerald) !important;
+    box-shadow: 0 8px 20px rgba(23, 61, 52, 0.12) !important;
+  }
+
   .pf-p04-live-btn {
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
     min-height: 52px;
     justify-content: center;
-    font-size: 0.94rem !important;
+    font-size: 0.9rem !important;
     border-radius: 16px !important;
     box-shadow: 0 10px 24px rgba(23, 61, 52, 0.24) !important;
+  }
+
+  .pf-p04-live-btn > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 

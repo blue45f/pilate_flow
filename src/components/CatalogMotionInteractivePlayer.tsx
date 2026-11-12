@@ -501,6 +501,19 @@ export function CatalogMotionInteractivePlayer({
                 : '일시정지 · 자동 재생 없음'}
       </p>
 
+      <p
+        className="mpp-cycle-continuity"
+        data-testid="catalog-motion-cycle-continuity"
+        style={{
+          margin: '6px 0 4px',
+          fontSize: '0.78rem',
+          color: 'var(--pf-color-text-secondary, #47584d)',
+        }}
+      >
+        ↺ 시작↔끝 주기 연결: 시작 정렬(0%) → 정점 유지(50%) → 끝 복귀(94%) → 다음 반복 시작(100%)
+        연속 보간 연결됨
+      </p>
+
       {/* 3-Phase Quick Still Cards */}
       <div
         className="motion-reference-stills"
@@ -514,9 +527,27 @@ export function CatalogMotionInteractivePlayer({
       >
         {(
           [
-            { phaseId: 'start' as VisualPhaseId, label: '시작 자세', sample: 0.06 },
-            { phaseId: 'middle' as VisualPhaseId, label: '중간 정점 자세', sample: 0.5 },
-            { phaseId: 'end' as VisualPhaseId, label: '끝 복귀 자세', sample: 0.94 },
+            {
+              phaseId: 'start' as VisualPhaseId,
+              label: '시작 자세',
+              badge: '1 시작 정렬',
+              sample: 0.06,
+              ghost: false,
+            },
+            {
+              phaseId: 'middle' as VisualPhaseId,
+              label: '중간 정점 자세',
+              badge: '2 정점 가동',
+              sample: 0.5,
+              ghost: true,
+            },
+            {
+              phaseId: 'end' as VisualPhaseId,
+              label: '끝 복귀 자세',
+              badge: '3 복귀 ↺ 시작 연결',
+              sample: 0.94,
+              ghost: true,
+            },
           ] as const
         ).map((stage) => (
           <div
@@ -532,16 +563,18 @@ export function CatalogMotionInteractivePlayer({
             <button
               type="button"
               className="mpp-still-stage-btn"
+              aria-pressed={Math.abs(progress - stage.sample) < 0.04}
               style={{ minHeight: '44px', width: '100%', marginBottom: '6px' }}
               onClick={() => seek(stage.sample)}
             >
-              {stage.label} 보기
+              {stage.label} 보기 ({stage.badge})
             </button>
             <MovementPhaseDiagramSvg
               asset={asset.visualAsset}
               phase={stage.phaseId}
               activeSide={side}
               mirrored={mirrored}
+              showGhostStartPose={stage.ghost}
               compact
             />
           </div>

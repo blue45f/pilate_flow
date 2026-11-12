@@ -588,6 +588,91 @@ function StepBlockInspectorBody({
                     })}
                   </div>
                 </div>
+                <div
+                  className="pf-p05-chip-group"
+                  role="group"
+                  aria-label="빠른 양측 및 수행 방향 선택"
+                  data-testid="step-inspector-quick-side-group"
+                >
+                  <span className="pf-p05-chip-label">
+                    수행할 쪽 {exercise.isUnilateral ? '· 편측 동작 (좌·우 순서 선택)' : '(선택)'}
+                  </span>
+                  <div className="pf-p05-chip-row">
+                    {(
+                      [
+                        { value: 'left-then-right' as StepSideMode, label: '좌→우' },
+                        { value: 'right-then-left' as StepSideMode, label: '우→좌' },
+                        { value: 'together' as StepSideMode, label: '양쪽 함께' },
+                        { value: 'left' as StepSideMode, label: '왼쪽만' },
+                        { value: 'right' as StepSideMode, label: '오른쪽만' },
+                      ] as const
+                    ).map((opt) => {
+                      const active = draft.side === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          className={`pf-p05-chip ${active ? 'is-active' : ''}`}
+                          aria-pressed={active}
+                          onClick={() =>
+                            updateCalculatedTargetField({
+                              side: active ? '' : opt.value,
+                            })
+                          }
+                        >
+                          {opt.label}
+                          {active ? ' ✓' : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div
+                  className="pf-p05-chip-group"
+                  role="group"
+                  aria-label="빠른 반복 횟수 및 세트 선택"
+                  data-testid="step-inspector-quick-reps-sets-group"
+                >
+                  <span className="pf-p05-chip-label">반복 횟수 · 세트</span>
+                  <div className="pf-p05-chip-row">
+                    {([8, 10, 12, 15] as const).map((rep) => {
+                      const active = Number(draft.count) === rep;
+                      return (
+                        <button
+                          key={`rep-${rep}`}
+                          type="button"
+                          className={`pf-p05-chip ${active ? 'is-active' : ''}`}
+                          aria-pressed={active}
+                          onClick={() =>
+                            updateCalculatedTargetField({
+                              count: active ? '' : String(rep),
+                            })
+                          }
+                        >
+                          {rep}회{active ? ' ✓' : ''}
+                        </button>
+                      );
+                    })}
+                    {([1, 2, 3] as const).map((setNum) => {
+                      const active = Number(draft.sets) === setNum;
+                      return (
+                        <button
+                          key={`set-${setNum}`}
+                          type="button"
+                          className={`pf-p05-chip ${active ? 'is-active' : ''}`}
+                          aria-pressed={active}
+                          onClick={() =>
+                            updateCalculatedTargetField({
+                              sets: active ? '' : String(setNum),
+                            })
+                          }
+                        >
+                          {setNum}세트{active ? ' ✓' : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 <label className="pf-p05-quick-memo">
                   <span className="pf-p05-chip-label">현장 큐 한 줄 메모</span>
                   <input

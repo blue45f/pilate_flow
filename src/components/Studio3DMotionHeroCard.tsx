@@ -6,7 +6,7 @@ import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog
 import { SpringVisualPills } from './SpringVisualPills';
 import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
 
-export type Studio3DViewMode = 'onion' | 'start' | 'mid' | 'peak' | 'loop' | 'orbit3d';
+export type Studio3DViewMode = 'onion' | 'start' | 'mid' | 'peak' | 'return' | 'loop' | 'orbit3d';
 
 const LOOP_SEQUENCE = ['start', 'mid', 'peak', 'return'] as const;
 type LoopBeat = (typeof LOOP_SEQUENCE)[number];
@@ -57,10 +57,12 @@ export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = ({
   }, [mode, reducedMotion]);
 
   const currentLoopBeat: LoopBeat = LOOP_SEQUENCE[beatIdx] ?? 'start';
+  const isEccentricReturn =
+    mode === 'return' || (mode === 'loop' && currentLoopBeat === 'return');
   const activePose: 'start' | 'mid' | 'peak' =
     mode === 'start'
       ? 'start'
-      : mode === 'mid'
+      : mode === 'mid' || mode === 'return'
         ? 'mid'
         : mode === 'peak' || mode === 'onion' || mode === 'orbit3d'
           ? 'peak'
@@ -70,14 +72,19 @@ export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = ({
               ? 'peak'
               : 'mid';
 
-  const showStartGhost = mode === 'onion';
+  const showStartGhost = mode === 'onion' || mode === 'return';
   const showMidGhost = mode === 'onion';
-  const showHudVectors = mode === 'onion' || mode === 'peak' || mode === 'loop';
+  const showHudVectors =
+    mode === 'onion' || mode === 'peak' || mode === 'return' || mode === 'loop';
 
   const [fx, fy] = spec.trajectoryArc.from;
   const [cx, cy] = spec.trajectoryArc.ctrl;
   const [tx, ty] = spec.trajectoryArc.to;
   const [ax, ay] = spec.anchorPoint;
+  const hudStrokeColor = isEccentricReturn ? '#1F5C4D' : '#C9822B';
+  const hudArcPath = isEccentricReturn
+    ? `M ${tx} ${ty * 0.65} Q ${cx} ${cy * 0.65} ${fx} ${fy * 0.65}`
+    : `M ${fx} ${fy * 0.65} Q ${cx} ${cy * 0.65} ${tx} ${ty * 0.65}`;
 
   const muscleLabel =
     exercise.targetMuscles.slice(0, 2).join(' · ') || spec.activeMuscleSummaryKo;
@@ -90,17 +97,19 @@ export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = ({
         ? '◐ 2단계 추진·분절 전환'
         : mode === 'peak'
           ? '◆ 3단계 정점 & 주동근'
-          : mode === 'loop'
-            ? `▶ 연속 4박자 (${
-                currentLoopBeat === 'start'
-                  ? '1 시작'
-                  : currentLoopBeat === 'mid'
-                    ? '2 추진'
-                    : currentLoopBeat === 'peak'
-                      ? '3 정점'
-                      : '4 복귀'
-              })`
-            : '◎ 3프레임 궤적 + 정점 근육';
+          : mode === 'return'
+            ? '↺ 4단계 원심 복귀 → 시작 정렬 연결'
+            : mode === 'loop'
+              ? `▶ 연속 4박자 (${
+                  currentLoopBeat === 'start'
+                    ? '1 시작'
+                    : currentLoopBeat === 'mid'
+                      ? '2 추진'
+                      : currentLoopBeat === 'peak'
+                        ? '3 정점'
+                        : '4 복귀→시작'
+                })`
+              : '◎ 3프레임 궤적 + 정점 근육';
 
   return (
     <section
@@ -242,7 +251,7 @@ export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = ({
                   <path
                     d="M 1.5 1.5 L 8 5 L 1.5 8.5"
                     fill="none"
-                    stroke="#C9822B"
+                    stroke={hudStrokeColor}
                     strokeWidth="2.2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -250,9 +259,10 @@ export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = ({
                 </marker>
               </defs>
               <path
-                d={`M ${fx} ${fy * 0.65} Q ${cx} ${cy * 0.65} ${tx} ${ty * 0.65}`}
+                d={hudArcPath}
+                data-trajectory-direction={isEccentricReturn ? 'return-to-start' : 'start-to-peak'}
                 fill="none"
-                stroke="#C9822B"
+                stroke={hudStrokeColor}
                 strokeWidth="1.2"
                 strokeLinecap="round"
                 className="pf-hud-trajectory-path"
@@ -343,20 +353,14 @@ export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = ({
                 stepNo: '04',
                 label: '원심 복귀',
                 img: spec.midImg,
-                isActive: mode === 'loop' && currentLoopBeat === 'return',
-                onSelect: () => {
-                  if (!reducedMotion) {
-                    setBeatIdx(3);
-                    setMode('loop');
-                  } else {
-                    setMode('mid');
-                  }
-                },
+                isActive: mode === 'return' || (mode === 'loop' && currentLoopBeat === 'return'),
+                onSelect: () => setMode('return'),
               },
             ].map((item) => (
               <button
                 key={item.key}
                 type="button"
+                aria-pressed={item.isActive}
                 className={`pf-studio3d-frame-thumb ${item.isActive ? 'is-active' : ''}`}
                 onClick={item.onSelect}
               >

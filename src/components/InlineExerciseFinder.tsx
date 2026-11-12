@@ -41,16 +41,20 @@ interface InlineExerciseFinderProps {
   classEquipment?: readonly EquipmentId[];
   autoNarrowToClassEquipment?: boolean;
   active?: boolean;
+  onArrangeSequence?: () => void;
 }
 
 type FilterTab = 'equipment' | 'spring' | 'body' | 'duration';
 type DurationFilter = 'all' | 'short' | 'medium' | 'long';
+type SectionFilter = 'all' | 'warmup' | 'main' | 'cooldown';
 interface FinderFilters {
   query: string;
   equipment: EquipmentId[];
   springKey: string;
   bodyTag: string;
   duration: DurationFilter;
+  section: SectionFilter;
+  unilateralOnly: boolean;
   motionOnly: boolean;
 }
 export const INLINE_FINDER_QUERY_STORAGE_KEY = 'pf_inline_finder_query_v1';
@@ -136,8 +140,21 @@ const emptyFilters = (initialQuery = '', initialEquipment: EquipmentId[] = []): 
   springKey: '',
   bodyTag: '',
   duration: 'all',
+  section: 'all',
+  unilateralOnly: false,
   motionOnly: false,
 });
+const SECTION_QUICK_OPTIONS: readonly { id: SectionFilter; label: string }[] = [
+  { id: 'warmup', label: '준비' },
+  { id: 'main', label: '본운동' },
+  { id: 'cooldown', label: '마무리' },
+];
+function matchesFinderSection(exercise: PilatesExercise, section: SectionFilter): boolean {
+  if (section === 'all') return true;
+  if (section === 'warmup') return exercise.blockCategory === 'warmup';
+  if (section === 'cooldown') return exercise.blockCategory === 'cooldown';
+  return exercise.blockCategory !== 'warmup' && exercise.blockCategory !== 'cooldown';
+}
 const durationOptions: readonly { id: DurationFilter; label: string }[] = [
   { id: 'all', label: '전체' },
   { id: 'short', label: '3분 이하' },
@@ -178,6 +195,7 @@ export function InlineExerciseFinder({
   classEquipment = [],
   autoNarrowToClassEquipment = false,
   active = true,
+  onArrangeSequence,
 }: InlineExerciseFinderProps) {
   const exercises = usePilatesStore((state) => state.exercises);
   const ownedEquipment = usePilatesStore((state) => state.ownedEquipment);
@@ -185,14 +203,28 @@ export function InlineExerciseFinder({
   const exerciseBrowseScope = usePilatesStore((state) => state.exerciseBrowseScope);
   const setExerciseBrowseScope = usePilatesStore((state) => state.setExerciseBrowseScope);
   const activeSteps = usePilatesStore((state) => state.activeSteps);
+  const activeClassLevel = usePilatesStore(
+    (state) => state.draftCriteria?.level ?? state.activeLevel,
+  );
   const appendExerciseToSequence = usePilatesStore((state) => state.appendExerciseToSequence);
   const setActiveTab = usePilatesStore((state) => state.setActiveTab);
+  const classEquipmentKey = `${autoNarrowToClassEquipment ? 'auto' : 'manual'}:${classEquipment.join(',')}`;
+  const [prevClassEquipmentKey, setPrevClassEquipmentKey] = useState(classEquipmentKey);
   const [filters, setFilters] = useState<FinderFilters>(() =>
     emptyFilters(
       readSavedFinderQuery(),
       autoNarrowToClassEquipment && classEquipment.length > 0 ? [...classEquipment] : [],
     ),
   );
+  if (prevClassEquipmentKey !== classEquipmentKey) {
+    setPrevClassEquipmentKey(classEquipmentKey);
+    if (autoNarrowToClassEquipment) {
+      setFilters((previous) => ({
+        ...previous,
+        equipment: classEquipment.length > 0 ? [...classEquipment] : [],
+      }));
+    }
+  }
   const [tab, setTab] = useState<FilterTab>('equipment');
   const [page, setPage] = useState({ signature: '', count: 6 });
   const signature = JSON.stringify({ filters, exerciseBrowseScope, ownedEquipment, ownedProps });
@@ -265,6 +297,8 @@ export function InlineExerciseFinder({
       const equipment = getExerciseEquipment(exercise);
       const motionReferences = resolvePatternReferencesForRenderer(exercise);
       if (filters.motionOnly && !motionReferences.length) return false;
+      if (!matchesFinderSection(exercise, filters.section)) return false;
+      if (filters.unilateralOnly && !exercise.isUnilateral) return false;
       if (
         !matchesLibraryEquipment(equipment, {
           equipment: filters.equipment,
@@ -306,12 +340,24 @@ export function InlineExerciseFinder({
       return terms.every((term) => fields.some((field) => field.includes(term)));
     });
   }, [exercises, filters, exerciseBrowseScope, ownedEquipment, ownedProps]);
+  const orderedResults = useMemo(() => {
+    if (!autoNarrowToClassEquipment) return results;
+    const rank = { '1.0': 1, '1.5': 2, '2.0': 3 } as const;
+    const maxRank = rank[activeClassLevel] ?? 3;
+    return [...results].sort((left, right) => {
+      const leftFits = (rank[left.level] ?? 1) <= maxRank ? 0 : 1;
+      const rightFits = (rank[right.level] ?? 1) <= maxRank ? 0 : 1;
+      return leftFits - rightFits;
+    });
+  }, [results, autoNarrowToClassEquipment, activeClassLevel]);
 
   const activeFilterCount =
     filters.equipment.length +
     Number(Boolean(filters.springKey)) +
     Number(Boolean(filters.bodyTag)) +
-    Number(filters.duration !== 'all');
+    Number(filters.duration !== 'all') +
+    Number(filters.section !== 'all') +
+    Number(filters.unilateralOnly);
   const selectedCount = activeSteps.filter((step) => !isRestStep(step)).length;
   const hasFilters = Boolean(filters.query.trim() || activeFilterCount || filters.motionOnly);
 
@@ -334,6 +380,26 @@ export function InlineExerciseFinder({
           ),
       };
     }),
+    ...(filters.section !== 'all'
+      ? [
+          {
+            key: `section-${filters.section}`,
+            label: `구간: ${SECTION_QUICK_OPTIONS.find((opt) => opt.id === filters.section)?.label ?? filters.section}`,
+            ariaLabel: `구간 ${SECTION_QUICK_OPTIONS.find((opt) => opt.id === filters.section)?.label ?? filters.section} 필터 해제`,
+            remove: () => update('section', 'all'),
+          },
+        ]
+      : []),
+    ...(filters.unilateralOnly
+      ? [
+          {
+            key: 'unilateralOnly',
+            label: '편측(좌·우) 동작',
+            ariaLabel: '편측 동작 필터 해제',
+            remove: () => update('unilateralOnly', false),
+          },
+        ]
+      : []),
     ...(filters.springKey
       ? [
           {
@@ -573,7 +639,31 @@ export function InlineExerciseFinder({
           </button>
         )}
       </div>
-      <div className="ief-quick-filters">
+      <div
+        className="ief-quick-filters"
+        role="group"
+        aria-label="빠른 구간·편측·상세 필터"
+        onKeyDown={handleChipBarKeyDown}
+      >
+        {SECTION_QUICK_OPTIONS.map((sec) => (
+          <button
+            key={sec.id}
+            type="button"
+            data-testid={`ief-quick-section-${sec.id}`}
+            aria-pressed={filters.section === sec.id}
+            onClick={() => update('section', filters.section === sec.id ? 'all' : sec.id)}
+          >
+            {sec.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          data-testid="ief-quick-unilateral-chip"
+          aria-pressed={filters.unilateralOnly}
+          onClick={() => update('unilateralOnly', !filters.unilateralOnly)}
+        >
+          편측 동작
+        </button>
         {lastActiveStepSpring && (
           <button
             type="button"
@@ -903,7 +993,7 @@ export function InlineExerciseFinder({
       )}
       {results.length ? (
         <div className="ief-results" ref={resultsRef}>
-          {results.slice(0, visibleCount).map((exercise) => {
+          {orderedResults.slice(0, visibleCount).map((exercise) => {
             const equipment = getExerciseEquipment(exercise);
             const approved = isExerciseAutoEligible(exercise);
             const stale = getExerciseReviewState(exercise) === 'stale';
@@ -1130,8 +1220,17 @@ export function InlineExerciseFinder({
         <span>
           수업안에 <strong>{selectedCount}개</strong> 선택
         </span>
-        <button type="button" onClick={() => setActiveTab('workbench')}>
-          <ArrowLeft size={15} aria-hidden="true" /> 수업안으로
+        <button
+          type="button"
+          data-testid="ief-go-arrange-btn"
+          disabled={Boolean(onArrangeSequence) && selectedCount === 0}
+          onClick={() => {
+            if (onArrangeSequence) onArrangeSequence();
+            else setActiveTab('workbench');
+          }}
+        >
+          <ArrowLeft size={15} aria-hidden="true" />{' '}
+          {onArrangeSequence ? `순서·시간 다듬기 (${selectedCount})` : '수업안으로'}
         </button>
       </div>
     </aside>

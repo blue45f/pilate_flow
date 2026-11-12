@@ -854,11 +854,27 @@
 
 @media (max-width: 768px) {
   #root .vnext-workbench .pf-step-wizard-stepper {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+  }
+
+  #root .vnext-workbench .pf-step-wizard-stepper::-webkit-scrollbar {
+    display: none;
+  }
+
+  #root .vnext-workbench .pf-step-wizard-tab {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 6px 12px;
+    white-space: nowrap;
   }
 
   #root .vnext-workbench .pf-step-stage-frame {
-    padding: 20px 16px;
+    padding: 18px 14px;
     border-radius: 20px;
   }
 }
@@ -958,8 +974,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  min-height: 28px;
+  min-width: 36px;
+  min-height: 36px;
   padding: 0;
   border-radius: 999px;
   border: none;
@@ -1013,7 +1029,123 @@
   color: #ffffff;
 }
 
+#root .vnext-workbench .pf-home-cta-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+}
+
+#root .vnext-workbench .pf-home-cta-pair > .pf-step-primary-cta {
+  flex: 1 1 220px;
+}
+
+#root .vnext-workbench .pf-home-cta-pair > .pf-step-nav-pill-btn {
+  flex: 0 1 auto;
+  min-height: 48px;
+  justify-content: center;
+}
+
+#root .vnext-workbench .pf-quick-reusable-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: #eef4f1;
+  border: 1px solid #c3d9d0;
+}
+
+#root .vnext-workbench .pf-quick-reusable-strip__label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #1c4e41;
+  white-space: nowrap;
+}
+
+#root .vnext-workbench .pf-quick-reusable-strip__pills {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 6px;
+  max-width: 100%;
+}
+
+#root .vnext-workbench .pf-quick-reusable-strip__pills::-webkit-scrollbar {
+  display: none;
+}
+
+#root .vnext-workbench .pf-quick-reusable-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid #9dc6bd;
+  background: #ffffff;
+  color: #163d34;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#root .vnext-workbench .pf-quick-reusable-pill small {
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: #46665c;
+}
+
+#root .vnext-workbench .pf-quick-reusable-pill:hover {
+  background: #e3f0eb;
+  border-color: #17675c;
+}
+
+#root .vnext-workbench .step-quick-side-sets-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+#root .vnext-workbench .step-quick-set-chip,
+#root .vnext-workbench .step-quick-side-chip {
+  min-height: 36px;
+  min-width: 44px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid #d2d8d3;
+  background: #f7f9f7;
+  color: #2f463e;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#root .vnext-workbench .step-quick-set-chip.is-selected {
+  background: #235849;
+  border-color: #235849;
+  color: #ffffff;
+}
+
+#root .vnext-workbench .step-quick-side-chip.is-selected {
+  background: #17495c;
+  border-color: #17495c;
+  color: #ffffff;
+}
+
 #root .vnext-workbench .step-quick-rep-chip:focus-visible,
+#root .vnext-workbench .step-quick-set-chip:focus-visible,
+#root .vnext-workbench .step-quick-side-chip:focus-visible,
+#root .vnext-workbench .pf-quick-reusable-pill:focus-visible,
 #root .vnext-workbench .pf-step2-added-chip__remove:focus-visible {
   outline: 2px solid #1f4d3f;
   outline-offset: 2px;
@@ -1113,7 +1245,8 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  min-height: 36px;
+  min-height: 44px;
+  padding: 4px 6px;
 }
 
 #root .vnext-workbench .step-bundle-select-check {
