@@ -417,7 +417,9 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     expect(screen.getByText(/교차 검증 완료 가이드/)).toBeInTheDocument();
     expect(screen.getByRole('timer')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
-    expect(screen.getByText(note.cues[0])).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: '현재 동작 핵심 티칭 큐' })).getByText(note.cues[0]),
+    ).toBeInTheDocument();
     expect(
       usePilatesStore.getState().exercises.find((item) => item.id === note.id)?.review,
     ).toBeUndefined();
@@ -512,7 +514,9 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     expect(screen.queryByRole('button', { name: '일시정지' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: new RegExp(name) }));
     expect(screen.getByRole('timer')).toHaveTextContent('03:30');
-    expect(screen.getByText(reviewed.cues[0])).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: '현재 동작 핵심 티칭 큐' })).getByText(reviewed.cues[0]),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '수업 시작' }));
     expect(screen.getByRole('button', { name: '일시정지' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '종료 / 기록' }));
@@ -605,7 +609,9 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     expect(screen.getByText(/교차 검증 완료 가이드/)).toBeInTheDocument();
     expect(screen.getByRole('timer')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
-    expect(screen.getByText(edited.cues[0])).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: '현재 동작 핵심 티칭 큐' })).getByText(edited.cues[0]),
+    ).toBeInTheDocument();
     expect(edited.review).toEqual(stale.review);
   });
 });

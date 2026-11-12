@@ -139,7 +139,12 @@ describe('Round 4 독립 감사: 필라테스 첫사용자(초보 강사) 동선
     const welcomeSection = screen.getByRole('region', { name: '첫 수업안 준비' });
     const pickMovementCta = within(welcomeSection).getByRole('button', { name: /동작 고르기/ });
     expect(pickMovementCta).toBeTruthy();
-    expect(pickMovementCta.className).toContain('pf-btn--primary');
+    // 목업 정렬 이후 첫 화면의 단일 주 CTA는 '1단계부터 차근차근 만들기'이며,
+    // '동작 고르기'는 바로 보이는 보조(secondary) 빠른 동작으로 유지된다.
+    expect(within(welcomeSection).getByTestId('wizard-start-step1-btn').className).toContain(
+      'pf-step-primary-cta',
+    );
+    expect(pickMovementCta.className).toContain('pf-btn--secondary');
 
     // 첫 화면에서 모든 <details>는 기본 닫힘(openDetails === 0)이어야 함
     const openDetailsOnEmpty = Array.from(container.querySelectorAll('details')).filter(

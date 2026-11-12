@@ -187,7 +187,6 @@ export const MotionCoverageUnifiedViewer: React.FC<MotionCoverageUnifiedViewerPr
  * `MotionReferencePlayer`, `ExerciseAtlasView`, or `ExerciseEvidencePanel` can query coverage
  * and obtain renderer-ready props while reusing existing 2D catalog assets without duplication.
  */
-// eslint-disable-next-line react-refresh/only-export-components
 export function buildIntegrationCallSnapshot(
   exerciseOrId: string | PilatesExercise,
   options: ResolveMotionCoverageOptions = {},

@@ -471,7 +471,9 @@ export function buildMemberSlotsForDate(params: {
 }): { readonly slots: MemberBookableSlot[]; readonly weekCounts: Record<string, number> } {
   const { selectedDate, schedule, savedSequences, decisions } = params;
   const weekStart = scheduleWeekStart(selectedDate);
-  const weekEnd = addScheduleDays(weekStart, 6);
+  // Clamp to the last supported schedule date so the final week of 2199 never exceeds the valid range.
+  const rawWeekEnd = addScheduleDays(weekStart, 6);
+  const weekEnd = rawWeekEnd > '2199-12-31' ? '2199-12-31' : rawWeekEnd;
   const weekDates = scheduleDateRange(weekStart, weekEnd);
 
   const hasInstructorClasses = schedule.classes.length > 0;

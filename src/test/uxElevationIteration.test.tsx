@@ -106,6 +106,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
           subtitle: '척추 분절과 코어',
           apparatus: 'reformer',
           level: '1.5',
+          focusTags: [],
           targetMinutes: 50,
           taughtCount: 0,
           createdAt: '2026-11-10T09:00:00.000Z',
@@ -125,7 +126,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
     render(
       <SequenceWorkbench
         planningMode="manual"
-        setPlanningMode={() => undefined}
+        onPlanningModeChange={() => undefined}
         onOpenClipper={() => undefined}
         onOpenYouTubePreview={() => undefined}
         onOpenLogModal={() => undefined}
@@ -148,7 +149,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
     render(
       <SequenceWorkbench
         planningMode="manual"
-        setPlanningMode={() => undefined}
+        onPlanningModeChange={() => undefined}
         onOpenClipper={() => undefined}
         onOpenYouTubePreview={() => undefined}
         onOpenLogModal={() => undefined}

@@ -10,7 +10,6 @@ import {
 } from '../data/breathingPelvicDiagramData';
 import type { Point2D, VisualPhaseId } from '../data/movementVisualRigCatalog';
 
-// eslint-disable-next-line react-refresh/only-export-components
 export { resolveBreathingPelvicDiagram };
 
 const PHASE_ORDER: readonly VisualPhaseId[] = ['start', 'middle', 'end'];

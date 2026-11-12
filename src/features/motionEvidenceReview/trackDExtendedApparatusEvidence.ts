@@ -3629,7 +3629,7 @@ export const TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenc
     "discrepancyChecks": [
       {
         "aspect": "2D 도해 아키타입과 실제 기구 세부 동작 간의 표현 범위",
-        "catalogOrDraftStateKo": "현재 이 동작은 2D rig(\"seated-row-arm-arc\" · 시티드 로잉 · 암 리치 & 쉐이브/써브 어 트레이)로 시각화되며 연결된 연속 모션 초안은 [없음]이다.",
+        "catalogOrDraftStateKo": "현재 이 동작은 2D rig(\"chair-seated-arm-arc-isolated\" · 체어 시티드 암 아크 · 시트 상단 좌골 착석 & 오버헤드 암 아크 분리)로 시각화되며 연결된 연속 모션 초안은 [없음]이다.",
         "evidenceStandardKo": "체어 시티드 암 아크의 기구 세팅(스프링: 강사가 기구별 설정, 박스: none, 풋바: none)과 세부 동작 레이어는 단일 2D 스켈레톤만으로 모든 프레임이 치환되지 않는다.",
         "conservativeResolutionKo": "2D 도해는 3단계 핵심 관절 방향과 고정 지지점을 확인하는 개략도로만 활용하고 세부 세팅과 안전 수칙은 본문 큐를 우선한다."
       },
@@ -3641,25 +3641,25 @@ export const TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenc
       }
     ],
     "discrepancyAudit": {
-      "targetVisualAssetId": "seated-row-arm-arc",
+      "targetVisualAssetId": "chair-seated-arm-arc-isolated",
       "targetPatternVariantIds": [],
       "facts": [
         {
           "category": "fact",
           "targetId": "original-chair-seated-arm-arc",
-          "summaryKo": "카탈로그(INITIAL_EXERCISES)는 apparatus: chair, bodyPosition: seated, spinalPlanes: [neutral]로 정의하며 2D rig \"seated-row-arm-arc\"와 연결되어 있다."
+          "summaryKo": "카탈로그(INITIAL_EXERCISES)는 apparatus: chair, bodyPosition: seated, spinalPlanes: [neutral]로 정의하며 2D rig \"chair-seated-arm-arc-isolated\"와 연결되어 있다."
         },
         {
           "category": "fact",
-          "targetId": "seated-row-arm-arc",
-          "summaryKo": "2D rig(seated-row-arm-arc)는 좌골(pelvis)과 다리(heel)는 고정된 채 팔꿈치(x:162→102)와 손(x:206→128)이 몸통 뒤로 당겨지며 견갑이 수축합니다. 및 고정 지지점(좌골(pelvis)과 발뒤꿈치(heel) 하체 기저면이 흔들림 없이 고정됩니다.)을 개략적인 2D 스켈레톤으로 표현한다."
+          "targetId": "chair-seated-arm-arc-isolated",
+          "summaryKo": "2D rig(chair-seated-arm-arc-isolated)는 체어 시트 상단 좌골(pelvis: 132,108)과 바닥 양발 뒤꿈치(heel: 190,176)를 고정한 채 양손(206,70→196,18→204,68)이 갈비뼈 들뜸 없는 범위의 원호로 올라갔다 정면 높이로 제어 복귀하는 과정을 개략적인 2D 스켈레톤으로 표현한다."
         }
       ],
       "inferences": [
         {
           "category": "inference",
-          "targetId": "seated-row-arm-arc",
-          "summaryKo": "단일 2D 평면 투영 도해(seated-row-arm-arc) 특성상 스프링 장력 변화와 입체적 회전·정렬 디테일은 단계별 텍스트 큐와 함께 해석해야 정확하다."
+          "targetId": "chair-seated-arm-arc-isolated",
+          "summaryKo": "단일 2D 평면 투영 도해(chair-seated-arm-arc-isolated) 특성상 스프링 장력 변화와 입체적 회전·정렬 디테일은 단계별 텍스트 큐와 함께 해석해야 정확하다."
         }
       ],
       "unverifiedOrMismatched": [
@@ -3670,11 +3670,11 @@ export const TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenc
         }
       ],
       "diagramTeamRecommendationsKo": [
-        "seated-row-arm-arc 도해에서 체어 시티드 암 아크(original-chair-seated-arm-arc)의 핵심 지지점(좌골(pelvis)과 발뒤꿈치(heel) 하체 기저면이 흔들림 없이 고정됩니다.)과 관절 가동 화살표가 기구 프레임과 시각적으로 명확히 구분되도록 유지할 것."
+        "chair-seated-arm-arc-isolated 도해에서 체어 시티드 암 아크(original-chair-seated-arm-arc)의 핵심 지지점(체어 시트 좌골(pelvis: 132,108)과 바닥 양발 뒤꿈치(heel: 190,176))과 관절 가동 화살표가 기구 프레임과 시각적으로 명확히 구분되도록 유지할 것."
       ]
     },
     "truthfulnessFlags": HONEST_DEFAULT_TRUTHFULNESS_FLAGS,
-    "honestLimitationSummaryKo": "본 레코드는 공개 병원 리플릿 및 기구 필라테스 공식 교육 원리를 바탕으로 작성된 정성적 근거 요약이며, seated-row-arm-arc 도해는 전문가 최종 감수 전 참고 자료입니다.",
+    "honestLimitationSummaryKo": "본 레코드는 공개 병원 리플릿 및 기구 필라테스 공식 교육 원리를 바탕으로 작성된 정성적 근거 요약이며, chair-seated-arm-arc-isolated 도해는 전문가 최종 감수 전 참고 자료입니다.",
     "reviewedAtIso": "2026-11-08"
   },
   {
@@ -6570,7 +6570,7 @@ export const TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenc
     "discrepancyChecks": [
       {
         "aspect": "2D 도해 아키타입과 실제 기구 세부 동작 간의 표현 범위",
-        "catalogOrDraftStateKo": "현재 이 동작은 2D rig(\"lateral-mermaid-side-bend\" · 머메이드 측굴 스트레치 & 바렐/체어 사이드 벤드)로 시각화되며 연결된 연속 모션 초안은 [없음]이다.",
+        "catalogOrDraftStateKo": "현재 이 동작은 2D rig(\"chair-seated-mermaid-isolated\" · 체어 시티드 머메이드 · 시트 상단 좌골 착석 & 페달 지지 측굴 분리)로 시각화되며 연결된 연속 모션 초안은 [없음]이다.",
         "evidenceStandardKo": "체어 시티드 머메이드의 기구 세팅(스프링: 강사가 기구별 설정, 박스: none, 풋바: none)과 세부 동작 레이어는 단일 2D 스켈레톤만으로 모든 프레임이 치환되지 않는다.",
         "conservativeResolutionKo": "2D 도해는 3단계 핵심 관절 방향과 고정 지지점을 확인하는 개략도로만 활용하고 세부 세팅과 안전 수칙은 본문 큐를 우선한다."
       },
@@ -6582,25 +6582,25 @@ export const TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenc
       }
     ],
     "discrepancyAudit": {
-      "targetVisualAssetId": "lateral-mermaid-side-bend",
+      "targetVisualAssetId": "chair-seated-mermaid-isolated",
       "targetPatternVariantIds": [],
       "facts": [
         {
           "category": "fact",
           "targetId": "original-chair-seated-mermaid",
-          "summaryKo": "카탈로그(INITIAL_EXERCISES)는 apparatus: chair, bodyPosition: seated, spinalPlanes: [lateral]로 정의하며 2D rig \"lateral-mermaid-side-bend\"와 연결되어 있다."
+          "summaryKo": "카탈로그(INITIAL_EXERCISES)는 apparatus: chair, bodyPosition: seated, spinalPlanes: [lateral]로 정의하며 2D rig \"chair-seated-mermaid-isolated\"와 연결되어 있다."
         },
         {
           "category": "fact",
-          "targetId": "lateral-mermaid-side-bend",
-          "summaryKo": "2D rig(lateral-mermaid-side-bend)는 골반(pelvis x:148,y:138)은 고정된 채 머리(x:148→198)와 손(x:88→236, y:50→36)이 측면 아크를 그리며 깊게 측굴합니다. 및 고정 지지점(골반(pelvis)과 고관절(hip) 하체 지지 앵커가 바닥/기구 위에 고정됩니다.)을 개략적인 2D 스켈레톤으로 표현한다."
+          "targetId": "chair-seated-mermaid-isolated",
+          "summaryKo": "2D rig(chair-seated-mermaid-isolated)는 체어 시트 상단 좌골(pelvis: 136,108)과 바닥 지지 발(heel: 182,176)을 고정한 채 지지 손(farWrist: 196,108→216,156)으로 페달을 누르며 반대 팔(hand: 82,36→216,22)과 흉곽이 측굴한 뒤 좌골 위 수직 척추로 감속 복귀하는 과정을 개략적인 2D 스켈레톤으로 표현한다."
         }
       ],
       "inferences": [
         {
           "category": "inference",
-          "targetId": "lateral-mermaid-side-bend",
-          "summaryKo": "단일 2D 평면 투영 도해(lateral-mermaid-side-bend) 특성상 스프링 장력 변화와 입체적 회전·정렬 디테일은 단계별 텍스트 큐와 함께 해석해야 정확하다."
+          "targetId": "chair-seated-mermaid-isolated",
+          "summaryKo": "단일 2D 평면 투영 도해(chair-seated-mermaid-isolated) 특성상 스프링 장력 변화와 입체적 회전·정렬 디테일은 단계별 텍스트 큐와 함께 해석해야 정확하다."
         }
       ],
       "unverifiedOrMismatched": [
@@ -6611,11 +6611,11 @@ export const TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS: readonly MotionEvidenc
         }
       ],
       "diagramTeamRecommendationsKo": [
-        "lateral-mermaid-side-bend 도해에서 체어 시티드 머메이드(original-chair-seated-mermaid)의 핵심 지지점(골반(pelvis)과 고관절(hip) 하체 지지 앵커가 바닥/기구 위에 고정됩니다.)과 관절 가동 화살표가 기구 프레임과 시각적으로 명확히 구분되도록 유지할 것."
+        "chair-seated-mermaid-isolated 도해에서 체어 시티드 머메이드(original-chair-seated-mermaid)의 핵심 지지점(체어 시트 좌골(pelvis: 136,108)과 바닥 지지 발(heel: 182,176))과 관절 가동 화살표가 기구 프레임과 시각적으로 명확히 구분되도록 유지할 것."
       ]
     },
     "truthfulnessFlags": HONEST_DEFAULT_TRUTHFULNESS_FLAGS,
-    "honestLimitationSummaryKo": "본 레코드는 공개 병원 리플릿 및 기구 필라테스 공식 교육 원리를 바탕으로 작성된 정성적 근거 요약이며, lateral-mermaid-side-bend 도해는 전문가 최종 감수 전 참고 자료입니다.",
+    "honestLimitationSummaryKo": "본 레코드는 공개 병원 리플릿 및 기구 필라테스 공식 교육 원리를 바탕으로 작성된 정성적 근거 요약이며, chair-seated-mermaid-isolated 도해는 전문가 최종 감수 전 참고 자료입니다.",
     "reviewedAtIso": "2026-11-08"
   },
   {

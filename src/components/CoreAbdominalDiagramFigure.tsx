@@ -15,7 +15,6 @@ import {
 import type { Point2D, VisualPhaseId } from '../data/movementVisualRigCatalog';
 import { MovementPhaseDiagramSvg } from './MovementPhaseDiagramSvg';
 
-// eslint-disable-next-line react-refresh/only-export-components
 export { resolveCoreAbdominalDiagram };
 
 const PHASE_ORDER: readonly VisualPhaseId[] = ['start', 'middle', 'end'];

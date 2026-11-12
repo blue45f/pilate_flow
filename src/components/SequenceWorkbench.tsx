@@ -29,7 +29,7 @@ import {
   Sparkles,
   UnlockKeyhole,
 } from 'lucide-react';
-import { PROP_LABELS } from '../data/pilatesCatalog';
+import { APPARATUS_LABELS, PROP_LABELS } from '../data/pilatesCatalog';
 import {
   EQUIPMENT_OPTIONS,
   getEquipmentFamilies,
@@ -396,6 +396,7 @@ export function SequenceWorkbench({
     const timer = window.setTimeout(() => setJustUpdatedStepId(null), 700);
     return () => window.clearTimeout(timer);
   }, [justUpdatedStepId]);
+  const [freeAiOpen, setFreeAiOpen] = useState(false);
   const openContextualAiAssistant = useCallback(() => {
     setFreeAiOpen(true);
     requestAnimationFrame(() => {
@@ -417,7 +418,6 @@ export function SequenceWorkbench({
   const [insightsOpen, setInsightsOpen] = useState(false);
   const [aiCopilotOpen, setAiCopilotOpen] = useState(false);
   const [flowTelemetryOpen, setFlowTelemetryOpen] = useState(false);
-  const [freeAiOpen, setFreeAiOpen] = useState(false);
   const [wideEditor, setWideEditor] = useState(() => window.innerWidth >= 1200);
   const inspectorContentRef = useRef<HTMLDivElement>(null);
   const inspectorOpener = useRef<HTMLElement | null>(null);

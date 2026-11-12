@@ -117,22 +117,51 @@ export function parseEnvFileSafe(filePath) {
   return map;
 }
 
+const PLACEHOLDER_CREDENTIAL_PATTERNS = [
+  /^<[^>]*>$/, // <your-token>, <redacted>
+  /^\$\{[^}]*\}$/, // ${FIREBASE_TOKEN}
+  /^(?:placeholder|changeme|change[-_]me|replace[-_]?me|your[-_]|set[-_]your|todo\b|tbd\b|redacted\b|dummy\b|example\b)/i,
+  /^x{3,}$/i, // xxx / XXXXXXXX
+];
+
+/**
+ * Detect template/placeholder credential values (e.g. `placeholder-set-your-token-here`)
+ * so they never shadow real lower-priority credentials such as an ambient `firebase login`.
+ * Only leading-template markers are matched, so real tokens that merely contain such words are kept.
+ */
+export function isPlaceholderCredentialValue(value) {
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  return PLACEHOLDER_CREDENTIAL_PATTERNS.some((pattern) => pattern.test(trimmed));
+}
+
 /**
  * Load gitignored local env files in priority order (`.env.deploy.local` > `.env.local` > `.env.deployment-reference.local`).
+ * Placeholder values are skipped (and reported via `placeholderKeys`) so they never shadow real credentials.
  */
 export function loadLocalDeployEnvMap(rootDir = ROOT) {
   const values = {};
   const keySources = {};
+  const placeholderKeys = {};
   for (const relName of [...LOCAL_DEPLOY_ENV_FILES].reverse()) {
     const parsed = parseEnvFileSafe(join(rootDir, relName));
     for (const [key, val] of Object.entries(parsed)) {
-      if (val) {
-        values[key] = val;
-        keySources[key] = relName;
+      if (!val) continue;
+      if (isPlaceholderCredentialValue(val)) {
+        placeholderKeys[key] = relName;
+        continue;
       }
+      values[key] = val;
+      keySources[key] = relName;
     }
   }
-  return { values, keySources };
+  return { values, keySources, placeholderKeys };
+}
+
+function realEnvValue(env, key) {
+  const value = env[key];
+  return value && !isPlaceholderCredentialValue(value) ? value : '';
 }
 
 /**
@@ -279,14 +308,16 @@ export function resolveFirebaseAuth({
   allowAmbientAuth = false,
 } = {}) {
   const localEnv = loadLocalDeployEnvMap(rootDir);
+  const envGac = realEnvValue(env, 'GOOGLE_APPLICATION_CREDENTIALS');
+  const envInlineSa = realEnvValue(env, 'FIREBASE_SERVICE_ACCOUNT');
+  const envToken = realEnvValue(env, 'FIREBASE_TOKEN');
 
   // 1. Explicit GOOGLE_APPLICATION_CREDENTIALS file path (process env -> local env files)
-  const rawGac =
-    env.GOOGLE_APPLICATION_CREDENTIALS || localEnv.values.GOOGLE_APPLICATION_CREDENTIALS || '';
+  const rawGac = envGac || localEnv.values.GOOGLE_APPLICATION_CREDENTIALS || '';
   if (rawGac) {
     const resolvedGac = resolveCredentialFilePath(rawGac, rootDir);
     if (existsSync(resolvedGac)) {
-      const sourceLabel = env.GOOGLE_APPLICATION_CREDENTIALS
+      const sourceLabel = envGac
         ? 'env:GOOGLE_APPLICATION_CREDENTIALS'
         : `file:${localEnv.keySources.GOOGLE_APPLICATION_CREDENTIALS}(GOOGLE_APPLICATION_CREDENTIALS)`;
       return {
@@ -310,11 +341,10 @@ export function resolveFirebaseAuth({
   }
 
   // 3. Inline JSON or Base64 `FIREBASE_SERVICE_ACCOUNT` (process env -> local env files)
-  const rawInlineSa =
-    env.FIREBASE_SERVICE_ACCOUNT || localEnv.values.FIREBASE_SERVICE_ACCOUNT || '';
+  const rawInlineSa = envInlineSa || localEnv.values.FIREBASE_SERVICE_ACCOUNT || '';
   const parsedInlineSa = parseServiceAccountJsonString(rawInlineSa);
   if (parsedInlineSa) {
-    const sourceLabel = env.FIREBASE_SERVICE_ACCOUNT
+    const sourceLabel = envInlineSa
       ? 'env:FIREBASE_SERVICE_ACCOUNT'
       : `file:${localEnv.keySources.FIREBASE_SERVICE_ACCOUNT}(FIREBASE_SERVICE_ACCOUNT)`;
     return {
@@ -327,9 +357,9 @@ export function resolveFirebaseAuth({
   }
 
   // 4. `FIREBASE_TOKEN` (process env -> local env files; passed strictly via env, NEVER `--token` argv)
-  const tokenFromEnv = env.FIREBASE_TOKEN || localEnv.values.FIREBASE_TOKEN || '';
+  const tokenFromEnv = envToken || localEnv.values.FIREBASE_TOKEN || '';
   if (tokenFromEnv) {
-    const sourceLabel = env.FIREBASE_TOKEN
+    const sourceLabel = envToken
       ? 'env:FIREBASE_TOKEN'
       : `file:${localEnv.keySources.FIREBASE_TOKEN}(FIREBASE_TOKEN)`;
     return {
@@ -1119,6 +1149,17 @@ async function runCli() {
     } catch {
       // Git not available or status failed; fall through to explicit --allow-dirty check.
     }
+  }
+
+  const ignoredPlaceholderCredentials = Object.entries(
+    loadLocalDeployEnvMap(ROOT).placeholderKeys,
+  ).filter(([key]) =>
+    ['GOOGLE_APPLICATION_CREDENTIALS', 'FIREBASE_SERVICE_ACCOUNT', 'FIREBASE_TOKEN'].includes(key),
+  );
+  for (const [key, file] of ignoredPlaceholderCredentials) {
+    console.warn(
+      `[deploy] Ignoring placeholder ${key} in ${file}; falling back to the next available credential source.`,
+    );
   }
 
   if (isDoctor) {

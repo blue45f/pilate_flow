@@ -11,7 +11,6 @@ import {
 } from '../data/upperBodyArmDiagramData';
 import type { Point2D, VisualPhaseId } from '../data/movementVisualRigCatalog';
 
-// eslint-disable-next-line react-refresh/only-export-components
 export { getUpperBodyArmDiagramCorrections, resolveUpperBodyArmDiagram };
 
 const PHASE_ORDER: readonly VisualPhaseId[] = ['start', 'middle', 'end'];

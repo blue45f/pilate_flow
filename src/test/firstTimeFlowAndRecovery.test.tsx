@@ -38,7 +38,7 @@ describe('First-Time Instructor Simplification, Empty/Error Recovery & Save/Rest
     render(
       <SequenceWorkbench
         planningMode="manual"
-        setPlanningMode={() => "manual"}
+        onPlanningModeChange={() => undefined}
         onOpenClipper={() => undefined}
         onOpenYouTubePreview={() => undefined}
         onOpenLogModal={() => undefined}

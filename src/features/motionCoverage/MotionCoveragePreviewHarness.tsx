@@ -423,7 +423,6 @@ export const MotionCoveragePreviewHarness: React.FC<MotionCoveragePreviewHarness
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function mountMotionCoveragePreviewHarness(
   container: HTMLElement,
   props: MotionCoveragePreviewHarnessProps = {},

@@ -136,6 +136,7 @@ const SessionLogForm: React.FC<
     setActiveTab,
   } = usePilatesStore();
   const reflectionHintId = useId();
+  const reflectionInputId = useId();
   const saved = savedSequences.find((sequence) => sequence.id === sequenceId);
   const [initialDraft] = useState(() => readSessionLogDraft(sequenceId));
   const [draftRestored] = useState(() => initialDraft !== null);
@@ -1016,7 +1017,14 @@ const SessionLogForm: React.FC<
               </PfSelect>
             </PfField>
           </div>
-          <PfField label="다음 수업을 위한 메모 (선택)" className="class-log-reflection">
+          {/* Rendered as a div so the quick-note chip buttons are not implicitly labelled by
+              (or activated through) the wrapping <label>; the label targets the textarea. */}
+          <PfField
+            label="다음 수업을 위한 메모 (선택)"
+            as="div"
+            htmlFor={reflectionInputId}
+            className="class-log-reflection"
+          >
             <small id={reflectionHintId} className="class-log-privacy-hint muted">
               <Info size={14} aria-hidden="true" />
               <span>학생 실명이나 건강 정보는 적지 않아도 돼요.</span>
@@ -1063,6 +1071,7 @@ const SessionLogForm: React.FC<
               })}
             </div>
             <PfTextarea
+              id={reflectionInputId}
               aria-label="다음 수업을 위한 메모 (선택)"
               aria-describedby={reflectionHintId}
               rows={3}

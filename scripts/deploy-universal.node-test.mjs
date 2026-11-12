@@ -8,6 +8,8 @@ import {
   ATELIER_V2_ASSET_PATHS,
   acquireDeployLock,
   formatDeployDoctorReport,
+  isPlaceholderCredentialValue,
+  loadLocalDeployEnvMap,
   markReleaseVerifiedLive,
   parseServiceAccountJsonString,
   prepareAuthExecutionEnv,
@@ -359,6 +361,81 @@ test('resolveFirebaseAuth supports env, .env.local, .firebase/service-account.js
   });
   assert.equal(interactiveAmbient.ready, true);
   assert.equal(interactiveAmbient.extraEnv.HOME, undefined);
+});
+
+test('isPlaceholderCredentialValue flags template values but keeps real tokens that merely contain such words', () => {
+  for (const placeholder of [
+    'placeholder-set-your-token-here',
+    'PLACEHOLDER',
+    '<your-firebase-token>',
+    '${FIREBASE_TOKEN}',
+    'your-token-here',
+    'changeme',
+    'replace-me',
+    'xxxxxxxx',
+    'redacted',
+  ]) {
+    assert.equal(isPlaceholderCredentialValue(placeholder), true, placeholder);
+  }
+  for (const realLike of [
+    'ci-scoped-token-placeholder',
+    'synthetic-token-with-example-word',
+    'local-env-token-placeholder',
+    '',
+  ]) {
+    assert.equal(isPlaceholderCredentialValue(realLike), false, realLike);
+  }
+  assert.equal(isPlaceholderCredentialValue(undefined), false);
+});
+
+test('resolveFirebaseAuth ignores placeholder credentials so lower-priority real sources (incl. ambient CLI login) win', (t) => {
+  const tmpHome = mkdtempSync(path.join(os.tmpdir(), 'pf-auth-placeholder-test-'));
+  t.after(() => rmSync(tmpHome, { recursive: true, force: true }));
+
+  // Placeholder in .env.deploy.local must not shadow a real token in .env.local
+  writeFileSync(
+    path.join(tmpHome, '.env.deploy.local'),
+    'FIREBASE_TOKEN=placeholder-set-your-token-here\n',
+  );
+  writeFileSync(path.join(tmpHome, '.env.local'), 'FIREBASE_TOKEN=real-local-token\n');
+  const localEnv = loadLocalDeployEnvMap(tmpHome);
+  assert.equal(localEnv.values.FIREBASE_TOKEN, 'real-local-token');
+  assert.equal(localEnv.keySources.FIREBASE_TOKEN, '.env.local');
+  assert.equal(localEnv.placeholderKeys.FIREBASE_TOKEN, '.env.deploy.local');
+  const shadowed = resolveFirebaseAuth({
+    rootDir: tmpHome,
+    env: { FIREBASE_TOKEN: '<your-token>' },
+    homeDir: tmpHome,
+    isInteractive: false,
+  });
+  assert.equal(shadowed.ready, true);
+  assert.equal(shadowed.source, 'file:.env.local(FIREBASE_TOKEN)');
+  assert.equal(shadowed.extraEnv.FIREBASE_TOKEN, 'real-local-token');
+  rmSync(path.join(tmpHome, '.env.local'));
+
+  // Placeholder-only env files fall through to ambient `firebase login` credentials
+  const noRealSource = resolveFirebaseAuth({
+    rootDir: tmpHome,
+    env: {},
+    homeDir: tmpHome,
+    isInteractive: false,
+  });
+  assert.equal(noRealSource.ready, false);
+  assert.equal(noRealSource.source, 'none');
+
+  const configstoreDir = path.join(tmpHome, '.config', 'configstore');
+  mkdirSync(configstoreDir, { recursive: true });
+  writeFileSync(path.join(configstoreDir, 'firebase-tools.json'), '{"user":"demo"}');
+  const ambient = resolveFirebaseAuth({
+    rootDir: tmpHome,
+    env: {},
+    homeDir: tmpHome,
+    isInteractive: false,
+    allowAmbientAuth: true,
+  });
+  assert.equal(ambient.ready, true);
+  assert.equal(ambient.source, 'home:configstore/firebase-tools.json');
+  assert.equal(ambient.extraEnv.FIREBASE_TOKEN, undefined);
 });
 
 test('formatDeployDoctorReport renders clear Korean next-step guidance without leaking secrets', () => {
