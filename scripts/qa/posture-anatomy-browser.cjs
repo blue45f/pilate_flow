@@ -100,6 +100,7 @@ const out = artifactDirectory(process.env.OUT_DIR);
       assert.equal(await panel.locator('details').evaluate((e) => e.open), false);
       await inspector.getByRole('button', { name: '전체 정보·개인 검토 열기' }).click();
       const dialog = page.getByRole('dialog').last();
+      await dialog.getByTestId('detail-posture-anatomy-drawer').locator(':scope > summary').click();
       const detail = dialog.getByRole('region', { name: '자세·부위 한눈에' });
       await detail.scrollIntoViewIfNeeded();
       assert.ok(await detail.evaluate((e) => e.scrollWidth <= e.clientWidth + 1));
