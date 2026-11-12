@@ -1,5 +1,6 @@
 import { ClassPlanSummary } from './ClassPlanSummary';
 import { ClassCueSheetPreview } from '../features/classCueSheet/ClassCueSheetPreview';
+import { OnePageVisual3DCueSheet } from './OnePageVisual3DCueSheet';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
@@ -387,6 +388,19 @@ export function SequencePlanPreview({
             {...snapshot}
             onSelectStepId={(_stepId, stepIndex) => selectStep(stepIndex)}
           />
+          <details
+            className="class-plan-summary class-cue-sheet-summary"
+            data-testid="plan-preview-visual-3d-cuesheet-drawer"
+          >
+            <summary>1페이지 3D 시각 요약 큐시트 · 태블릿/A4 인쇄</summary>
+            <OnePageVisual3DCueSheet
+              title={snapshot.title}
+              apparatus={usePilatesStore.getState().activeApparatus}
+              level={usePilatesStore.getState().activeLevel}
+              steps={snapshot.steps}
+              exercises={snapshot.exercises}
+            />
+          </details>
           <details
             className="class-plan-summary class-cue-sheet-summary"
             open={showCueSheet}

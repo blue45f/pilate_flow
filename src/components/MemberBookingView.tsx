@@ -32,8 +32,10 @@ import {
   computeStudioSpotStates,
   deriveMemberSlotStatus,
   findSpotMetaById,
+  formatDifficultyBadgeKo,
   getApparatusSpotLabelKo,
   getApparatusStudio3dImage,
+  getDefaultApparatusSpringsHint,
   isSlotPastFreeCancelDeadline,
   pickDefaultOpenSpotId,
   readPersistedMemberBookingState,
@@ -41,6 +43,7 @@ import {
   writePersistedMemberBookingState,
 } from '../utils/memberBookingBridge';
 import { LightDismissDialog } from './LightDismissDialog';
+import { SpringVisualPills } from './SpringVisualPills';
 import '../styles/member-booking.css';
 import '../styles/atelier-luxury-v2.css';
 
@@ -166,6 +169,8 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
 }) => {
   const schedule = usePilatesStore((s) => s.instructorSchedule);
   const savedSequences = usePilatesStore((s) => s.savedSequences);
+  const exercises = usePilatesStore((s) => s.exercises);
+  const datedSequencePlanning = usePilatesStore((s) => s.datedSequencePlanning);
   const todayIso = localScheduleDate();
 
   const [selectedDate, setSelectedDate] = useState<string>(todayIso);
@@ -245,8 +250,17 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
         schedule,
         savedSequences,
         decisions: portalState.slotDecisions,
+        exercises,
+        datedAssignments: datedSequencePlanning?.assignments ?? [],
       }),
-    [selectedDate, schedule, savedSequences, portalState.slotDecisions],
+    [
+      selectedDate,
+      schedule,
+      savedSequences,
+      portalState.slotDecisions,
+      exercises,
+      datedSequencePlanning,
+    ],
   );
 
   const apparatusSlotCounts = useMemo(() => {
@@ -341,6 +355,8 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
       schedule,
       savedSequences,
       decisions: decisionsMap,
+      exercises,
+      datedAssignments: datedSequencePlanning?.assignments ?? [],
     }).slots.find((item) => item.id === slotId);
     if (matched) return matched;
 
@@ -538,6 +554,8 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
           schedule,
           savedSequences,
           decisions: currentPortal.slotDecisions,
+          exercises,
+          datedAssignments: datedSequencePlanning?.assignments ?? [],
         }).slots.find((item) => item.id === slot.id) ?? slot;
 
       if (intent === 'CHANGE_SPOT') {
@@ -1004,18 +1022,41 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                 (item) => !item.occupiedByOther && item.spotId !== info.spotId,
               );
 
+            const bookedThumb =
+              resolvedSlot.studio3dThumbUrl ??
+              getApparatusStudio3dImage(resolvedSlot.apparatus);
+            const bookedSprings =
+              resolvedSlot.representativeSprings ??
+              getDefaultApparatusSpringsHint(resolvedSlot.apparatus);
+            const bookedLevelBadge =
+              resolvedSlot.levelBadgeKo ??
+              formatDifficultyBadgeKo(resolvedSlot.level ?? null);
+
             return (
               <div key={slotId} className="pf-member-my-bookings__item">
-                <div>
-                  <strong>{titleText}</strong>
-                  <span style={{ marginLeft: '8px', fontSize: '0.84rem', color: '#4c5d54' }}>
-                    {info.slotDate ? `${info.slotDate} ` : ''}
-                    {info.slotTime ? formatScheduleTime(info.slotTime) : ''}
-                    {info.state === 'BOOKED' && info.spotId
-                      ? ` · ${info.spotId}번 자리${spotMeta ? `(${spotMeta.zoneKo})` : ''}`
-                      : ''}
-                    {info.state === 'WAITLISTED' ? ` · 대기 ${info.waitlistOrder ?? 1}번` : ''}
-                  </span>
+                <div className="pf-member-my-booking-lead">
+                  <img
+                    src={bookedThumb}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    className="pf-member-my-booking-thumb"
+                  />
+                  <div>
+                    <strong>{titleText}</strong>
+                    <span style={{ marginLeft: '8px', fontSize: '0.84rem', color: '#4c5d54' }}>
+                      {info.slotDate ? `${info.slotDate} ` : ''}
+                      {info.slotTime ? formatScheduleTime(info.slotTime) : ''}
+                      {info.state === 'BOOKED' && info.spotId
+                        ? ` · ${info.spotId}번 자리${spotMeta ? `(${spotMeta.zoneKo})` : ''}`
+                        : ''}
+                      {info.state === 'WAITLISTED' ? ` · 대기 ${info.waitlistOrder ?? 1}번` : ''}
+                    </span>
+                    <div className="pf-class-badges-strip pf-class-badges-strip--compact">
+                      <PfBadge tone="sage">{bookedLevelBadge}</PfBadge>
+                      <SpringVisualPills springs={bookedSprings} />
+                    </div>
+                  </div>
                 </div>
                 <div className="pf-member-my-bookings__actions">
                   {info.slotDate && info.slotDate !== selectedDate && (
@@ -1276,7 +1317,21 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               slot.baseWaitlist + (slot.myState === 'WAITLISTED' ? 1 : 0);
             const isCancelAction =
               intent === 'CANCEL_BOOKING' || intent === 'CANCEL_WAITLIST';
-            const studioArtSrc = getApparatusStudio3dImage(slot.apparatus);
+            const studioArtSrc =
+              slot.studio3dThumbUrl ?? getApparatusStudio3dImage(slot.apparatus);
+            const slotLevelBadge =
+              slot.levelBadgeKo ?? formatDifficultyBadgeKo(slot.level ?? null);
+            const slotLevelTone: PfBadgeTone =
+              slot.level === '2.0'
+                ? 'warning'
+                : slot.level === '1.5'
+                  ? 'brand'
+                  : slot.level === '1.0'
+                    ? 'sage'
+                    : 'neutral';
+            const slotSprings =
+              slot.representativeSprings ?? getDefaultApparatusSpringsHint(slot.apparatus);
+            const slotSpringSource = slot.springSourceLabelKo ?? '기구 기본 세팅';
             const freeCancelDeadlineKo = formatFreeCancelDeadlineKo(slot);
             const slotSpotStates =
               intent === 'BOOK' || slot.myState === 'BOOKED'
@@ -1301,6 +1356,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                   aria-hidden="true"
                   loading="lazy"
                   className="pf-member-slot-art"
+                  data-testid={`member-slot-3d-preview-${slot.id}`}
                 />
                 <div className="pf-member-slot-main">
                   <div className="pf-member-slot-time-row">
@@ -1311,6 +1367,27 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                     <PfBadge tone={pill.tone}>{pill.label}</PfBadge>
                   </div>
                   <h3>{slot.title}</h3>
+                  <div
+                    className="pf-class-badges-strip pf-member-slot-badges-row"
+                    data-testid={`member-slot-badges-${slot.id}`}
+                  >
+                    <span className="pf-class-apparatus-pill">
+                      {getApparatusSpotLabelKo(slot.apparatus)} 3D
+                    </span>
+                    <PfBadge
+                      tone={slotLevelTone}
+                      data-testid={`member-slot-level-badge-${slot.id}`}
+                    >
+                      {slotLevelBadge}
+                    </PfBadge>
+                    <span
+                      className="pf-class-spring-wrap"
+                      data-testid={`member-slot-spring-pills-${slot.id}`}
+                    >
+                      <small className="pf-class-spring-source">{slotSpringSource}</small>
+                      <SpringVisualPills springs={slotSprings} />
+                    </span>
+                  </div>
                   <p className="pf-member-slot-meta">
                     기구: {slot.equipmentLabels.join(' · ')} · 정원 {effectiveEnrolled}/
                     {slot.maxCapacity}명 (남은 자리 {Math.max(0, slot.maxCapacity - effectiveEnrolled)}석)
@@ -1432,6 +1509,45 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {(pendingAction.intent === 'BOOK' || pendingAction.intent === 'CHANGE_SPOT') && (
               <>
+                <div
+                  className="pf-spot-dialog-3d-banner"
+                  data-testid="member-spot-dialog-3d-banner"
+                >
+                  <img
+                    src={
+                      pendingAction.slot.studio3dThumbUrl ??
+                      getApparatusStudio3dImage(pendingAction.slot.apparatus)
+                    }
+                    alt=""
+                    aria-hidden="true"
+                    className="pf-spot-dialog-3d-banner__img"
+                  />
+                  <div className="pf-spot-dialog-3d-banner__info">
+                    <strong>{pendingApparatusLabelKo} 스튜디오 3D 기구·스프링 안내</strong>
+                    <div className="pf-class-badges-strip">
+                      <PfBadge
+                        tone={
+                          pendingAction.slot.level === '2.0'
+                            ? 'warning'
+                            : pendingAction.slot.level === '1.5'
+                              ? 'brand'
+                              : pendingAction.slot.level === '1.0'
+                                ? 'sage'
+                                : 'neutral'
+                        }
+                      >
+                        {pendingAction.slot.levelBadgeKo ??
+                          formatDifficultyBadgeKo(pendingAction.slot.level ?? null)}
+                      </PfBadge>
+                      <SpringVisualPills
+                        springs={
+                          pendingAction.slot.representativeSprings ??
+                          getDefaultApparatusSpringsHint(pendingAction.slot.apparatus)
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
                 <div className="pf-studio-spot-map" data-testid="member-spot-map">
                   <div className="pf-studio-spot-map__zone">
                     <MapPin size={12} aria-hidden="true" style={{ verticalAlign: 'middle' }} /> 스튜디오

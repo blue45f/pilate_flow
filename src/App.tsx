@@ -22,6 +22,7 @@ import { SequenceWorkbench } from './components/SequenceWorkbench';
 import type { WorkbenchPlanningMode } from './components/SequenceWorkbench';
 import { LightDismissDialog } from './components/LightDismissDialog';
 import { PwaInstallPanel } from './components/PwaInstallPanel';
+import { StudioOffline3dReadinessCard } from './components/StudioOffline3dReadinessCard';
 import { MovementIdeaSheet } from './components/MovementIdeaSheet';
 import { InventoryPanel } from './components/InventoryPanel';
 import { DeferredPanelBoundary } from './components/DeferredPanelBoundary';
@@ -42,6 +43,7 @@ import { buildSequenceSimulation } from './utils/sequenceSimulation';
 import './styles/controls.css';
 import './styles/member-booking.css';
 import './styles/atelier-luxury-v2.css';
+import './styles/mobile-first-atelier-v3.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
 import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 
@@ -868,6 +870,7 @@ export function App() {
         maxWidth="560px"
       >
         <PwaInstallPanel />
+        <StudioOffline3dReadinessCard />
       </LightDismissDialog>
       <LightDismissDialog
         open={settingsOpen}
@@ -876,6 +879,7 @@ export function App() {
         subtitle="수업 자료를 안전하게 보관하고 다른 기기로 옮기세요."
         maxWidth="640px"
       >
+        {settingsOpen && <StudioOffline3dReadinessCard />}
         {settingsOpen && (
           <DeferredPanelBoundary>
             <Suspense

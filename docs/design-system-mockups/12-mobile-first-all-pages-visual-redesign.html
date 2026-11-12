@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flow Atelier v12 — 글로벌 벤치마킹 기반 모바일 우선(Mobile-First) 전 페이지 &amp; 32컷 3D 모션 시안</title>
+  <style>
+    :root {
+      --bg: #f5f1e9;
+      --surface: #fffef9;
+      --ink: #173d34;
+      --muted: #526358;
+      --line: #d6dfd3;
+      --accent: #173d34;
+      --coral: #d96b4f;
+      --amber: #c9822b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 32px 20px 80px; }
+    .hero {
+      background: linear-gradient(135deg, #173d34 0%, #245245 100%);
+      color: #fff;
+      border-radius: 24px;
+      padding: 32px;
+      margin-bottom: 28px;
+    }
+    .pill {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.16);
+      color: #e9f5ef;
+      margin-bottom: 10px;
+    }
+    h1 { margin: 0 0 10px; font-size: clamp(1.5rem, 2.8vw, 2.2rem); }
+    h2 { margin: 32px 0 12px; font-size: 1.35rem; }
+    .board-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 24px rgba(23, 61, 52, 0.06);
+    }
+    .board-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      display: block;
+    }
+    .bench-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .bench-item {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .bench-item strong { display: block; margin-bottom: 6px; font-size: 1rem; }
+    .bench-item p { margin: 0; font-size: 0.88rem; color: var(--muted); }
+    .notice {
+      font-size: 0.84rem;
+      color: var(--muted);
+      background: #ece8de;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <span class="pill">GLOBAL BENCHMARK + 16-FAMILY 32-RENDER STUDIO 3D + OFFLINE PWA + 1-PAGE CUE SHEET</span>
+      <h1>Flow Atelier v12 — 글로벌 시퀀스 빌더 벤치마킹 &amp; 32컷 3D 모션·오프라인 PWA·1페이지 시각 큐시트 완결</h1>
+      <p style="margin:0;color:#d6e8df;max-width:920px;">
+        전세계 대표 운동·필라테스 프로그램 빌더(Pilates Anytime PRO, FLOW, Tummee, Muscle &amp; Motion, Physitrack, Wibbi, Everfit, TrueCoach, Seconds Pro)를 정밀 비교하여,
+        <strong>1화면 = 1핵심 행동</strong> 모바일 페이지 분리(P01~P16), <strong>16패밀리 32컷 로컬 Blender 3D 스튜디오 모션</strong>, <strong>현장 오프라인 PWA 프리워밍</strong>, <strong>1페이지 3D 시각 요약 큐시트</strong>까지 일관되게 통합했습니다.
+      </p>
+    </header>
+
+    <h2>1. 경쟁 앱 압도 고품질 3D 스튜디오 + 역학 HUD 모션 예시 (4종 · 총 16패밀리 32컷)</h2>
+    <article class="board-card">
+      <h3>모션 예시 01 · 시작(●) → 오니언스킨 궤적 합성(◐) → 정점 타겟 근육 활성(◆)</h3>
+      <img src="./motion-exemplars/motion-showcase-01-kinematic-onion-skin-comparison.png" alt="3D 스튜디오 오니언스킨 및 근육 활성 비교 예시" />
+    </article>
+    <article class="board-card">
+      <h3>모션 예시 02 · 5대 스튜디오 기구(매트·리포머·캐딜락·체어·바렐) 통합 카드 &amp; 모바일 2열 시인성 검증</h3>
+      <img src="./motion-exemplars/motion-showcase-02-5-apparatus-studio3d-cards.png" alt="5대 필라테스 기구 3D 모션 카드 예시" />
+    </article>
+    <article class="board-card">
+      <h3>모션 예시 03 · 심화 6대 레퍼토리(숏스파인·롱박스 티저·체어 고잉업·캐딜락 티저·바렐 스완·매트 쏘우) 3D 시작+정점 주동근 시리즈</h3>
+      <img src="./motion-exemplars/motion-showcase-03-advanced-repertoire-3d-series.png" alt="심화 6대 레퍼토리 3D 모션 시리즈 예시" />
+    </article>
+    <article class="board-card">
+      <h3>모션 예시 04 · 상급 엘리트 시그니처(캐딜락 캐노피 행잉 · 운다 체어 풀업 파이크 · 래더 바렐 호스백 · 리포머 일리펀트) 3D 시작↔정점 확장</h3>
+      <img src="./motion-exemplars/motion-showcase-04-elite-hanging-pike-horseback-elephant.png" alt="상급 엘리트 4대 기구 시그니처 3D 모션 시리즈 예시" />
+    </article>
+
+    <h2>2. 모바일 우선(Mobile-First) 전 페이지 쪼개기 디자인 시안 &amp; 전 화면 고도화 감사 (P01~P16)</h2>
+    <article class="board-card">
+      <h3>Board 01 · 시퀀스 빌더 모바일 4단계 분리 (P01 홈 · P02 기구선택 · P03 동작담기 · P04 타임라인)</h3>
+      <img src="./images-12-mobile-first-all-pages/board-01-mobile-sequence-wizard-p01-p04.png" alt="모바일 시퀀스 빌더 P01-P04" />
+    </article>
+    <article class="board-card">
+      <h3>Board 02 · 동작 상세 화면 완전 단순화 &amp; 5기구 라이브러리 (P05 바텀시트 · P06 아틀라스 · P07 3초 상세 · P08 검토편집)</h3>
+      <img src="./images-12-mobile-first-all-pages/board-02-mobile-atlas-and-clean-detail-p05-p08.png" alt="초간결 상세 화면 및 라이브러리 P05-P08" />
+    </article>
+    <article class="board-card">
+      <h3>Board 03 · 원거리 라이브 수업 HUD · 30초 기록 · 일정 · 모듈 블록 보관함 (P09~P12)</h3>
+      <img src="./images-12-mobile-first-all-pages/board-03-mobile-live-stage-schedule-binder-p09-p12.png" alt="라이브 스테이지 및 보관함 P09-P12" />
+    </article>
+    <article class="board-card">
+      <h3>Board 06 · 모바일 라이브 스테이지(P09) 집중 고도화 — 한 손 ±15초 엄지 도크 · 편측 전환 · 10초 전 스프링 변경 델타 · 무과금 음성/차임/진동</h3>
+      <img src="./images-12-mobile-first-all-pages/board-06-mobile-live-stage-p09-sensory-dock.png" alt="모바일 라이브 스테이지 P09 한 손 도크 및 전환 알림 시안" />
+    </article>
+    <article class="board-card">
+      <h3>Board 04 · 정직한 무료 AI 도우미 · 유튜브 클리퍼 · 회원 기구좌석 예약 · 로컬 백업 (P13~P16)</h3>
+      <img src="./images-12-mobile-first-all-pages/board-04-mobile-ai-clipper-member-settings-p13-p16.png" alt="AI 클리퍼 회원예약 백업 P13-P16" />
+    </article>
+    <article class="board-card">
+      <h3>Board 07 · 강사 일정(P11) ↔ 회원 수업·좌석 예약(P15) 5대 기구 3D 미니 프리뷰 · 스프링 · 난이도 배지 통합 연결</h3>
+      <img src="./images-12-mobile-first-all-pages/board-07-schedule-and-member-3d-cards.png" alt="강사 일정 및 회원 예약 5대 기구 3D 미니 프리뷰 및 스프링 난이도 배지 시안" />
+    </article>
+    <article class="board-card">
+      <h3>Board 08 · 전 페이지(P01~P16) 시각 감사 완결 &amp; 6대 추가 고도화 구현 (P01 3D 퀵레시피 · P04 플로우 코치 · P10 30초 기록 3D · P12 모듈 블록 보관함 · P13/P14 3D 스프링 프리셋)</h3>
+      <img src="./images-12-mobile-first-all-pages/board-08-full-audit-p01-p04-p10-p12-p13-p14-elevation.png" alt="전 페이지 P01-P16 시각 대조 감사 및 6대 잔여 고도화 완료 보드" />
+    </article>
+    <article class="board-card">
+      <h3>Board 09 · 현장 오프라인 PWA 32컷 캐시 프리워밍 + A4·태블릿 1페이지 3D 시각 큐시트 + 상급 엘리트 3D 통합</h3>
+      <img src="./images-12-mobile-first-all-pages/board-09-offline-pwa-visual-cuesheet-32-renders.png" alt="오프라인 PWA 프리워밍 및 1페이지 3D 시각 큐시트 시안" />
+    </article>
+    <article class="board-card">
+      <h3>Board 05 · 중앙 집중형 심플 PC 워크스페이스 &amp; 모바일 1:1 시각 통일성</h3>
+      <img src="./images-12-mobile-first-all-pages/board-05-simple-pc-and-mobile-parity.png" alt="심플 PC 및 모바일 동기화 시안" />
+    </article>
+
+    <h2>3. 글로벌 벤치마킹 핵심 반영 요약</h2>
+    <div class="bench-grid">
+      <div class="bench-item">
+        <strong>Pilates Anytime PRO Flows</strong>
+        <p>웜업·메인·피니셔·쿨다운 모듈형 블록 구성과 스프링·셋업·큐잉 3대 즉시 확인 스트립 채택.</p>
+      </div>
+      <div class="bench-item">
+        <strong>FLOW Yoga vs Tummee</strong>
+        <p>데스크톱 밀집 표(Tummee) 대신 한 손 엄지 조작과 일관된 일러스트 카드로 60fps 모바일 흐름(FLOW) 구현.</p>
+      </div>
+      <div class="bench-item">
+        <strong>Muscle &amp; Motion 3D</strong>
+        <p>단순 선화 대신 3D 기구 활주 + 주동근 코랄 하이라이트 + 오니언스킨 잔상 궤적 HUD 결합.</p>
+      </div>
+      <div class="bench-item">
+        <strong>Physitrack · Wibbi · Everfit · Seconds Pro</strong>
+        <p>세트·횟수·템포 실제 필드화, 블록 복제 후 개인화, 1페이지 시각 인쇄 큐시트, 그리고 편집과 분리된 원거리 고대비 라이브 타이머 적용.</p>
+      </div>
+    </div>
+    <p class="notice">
+      정직한 경계 안내: 모든 3D 스튜디오 모션 이미지(16패밀리 32컷)는 외부 유료 API 없이 로컬 Blender 5.2 + 벡터 HUD로 자체 생성(비용 0원)되었으며, 기구 이동과 자세 궤적 이해를 돕는 수업 준비 가이드로서 임상적 관절 각도 및 개인별 적합성은 강사가 현장에서 직접 확인합니다. 기존 시안(01~09)은 회귀 검증을 위해 그대로 보존되었습니다.
+    </p>
+  </div>
+</body>
+</html>

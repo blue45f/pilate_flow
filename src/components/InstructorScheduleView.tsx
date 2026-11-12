@@ -49,6 +49,8 @@ import type {
 import { isExerciseAuthoringEligible } from "../utils/exerciseAuthoring";
 import { isRestStep } from "../utils/sequenceEngine";
 import { buildSequenceSimulation } from "../utils/sequenceSimulation";
+import { PfBadge } from "../design-system";
+import { SpringVisualPills } from "./SpringVisualPills";
 import "../styles/schedule.css";
 import "./InstructorScheduleView.css";
 import { ScheduleChangeScopePanel, type ScheduleChangeScope } from "./ScheduleChangeScopePanel";
@@ -56,6 +58,7 @@ import {
   buildMemberSlotsForDate,
   deriveMemberSlotStatus,
   readPersistedMemberBookingState,
+  resolveClassCardVisualMeta,
 } from "../utils/memberBookingBridge";
 
 type MoveDraft = {
@@ -609,6 +612,8 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
         schedule: data,
         savedSequences,
         decisions: bookingState.slotDecisions,
+        exercises,
+        datedAssignments: assignments,
       });
       for (const slot of slots) {
         const enrolled = slot.baseEnrolled + (slot.myState === "BOOKED" ? 1 : 0);
@@ -1442,6 +1447,27 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                 const base = data.classes.find(
                   (item) => item.id === row.classId,
                 );
+                const locationObj = data.locations.find(
+                  (item) => item.id === row.locationId,
+                );
+                const visualMeta = resolveClassCardVisualMeta({
+                  sequence:
+                    datedAssignment && datedContextMatches
+                      ? datedAssignment.sequenceSnapshot
+                      : linkedSequence,
+                  exercises,
+                  locationEquipmentIds: locationObj?.equipmentIds,
+                  title: row.title,
+                  fallbackLevel: null,
+                });
+                const levelBadgeTone =
+                  visualMeta.level === "2.0"
+                    ? "warning"
+                    : visualMeta.level === "1.5"
+                      ? "brand"
+                      : visualMeta.level === "1.0"
+                        ? "sage"
+                        : "neutral";
                 const isHighlighted = highlightedRowId === row.id;
                 const openOccurrencePlanning = () =>
                   setPlanningTarget({
@@ -1503,14 +1529,51 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                         </span>
                       </div>
                     </div>
-                    <h3>{row.title}</h3>
-                    <p className="schedule-class-meta">
-                      <MapPin size={14} aria-hidden="true" /> {locationName(row.locationId)}
-                      {row.participantAlias && (
-                        <span> · {row.participantAlias}</span>
-                      )}
-                      <span className="schedule-duration">{scheduleMinutes(row.endTime) - scheduleMinutes(row.startTime)}분</span>
-                    </p>
+                    <div
+                      className="pf-schedule-card-3d-row"
+                      data-testid="schedule-card-3d-preview"
+                    >
+                      <img
+                        src={visualMeta.studio3dThumbUrl}
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        className="pf-schedule-3d-thumb"
+                      />
+                      <div className="pf-schedule-card-3d-body">
+                        <h3>{row.title}</h3>
+                        <p className="schedule-class-meta">
+                          <MapPin size={14} aria-hidden="true" /> {locationName(row.locationId)}
+                          {row.participantAlias && (
+                            <span> · {row.participantAlias}</span>
+                          )}
+                          <span className="schedule-duration">{scheduleMinutes(row.endTime) - scheduleMinutes(row.startTime)}분</span>
+                        </p>
+                        <div className="pf-class-badges-strip">
+                          <span
+                            className="pf-class-apparatus-pill"
+                            data-testid="schedule-card-apparatus-badge"
+                          >
+                            {visualMeta.apparatusLabelKo} 3D
+                          </span>
+                          <PfBadge
+                            tone={levelBadgeTone}
+                            data-testid="schedule-card-level-badge"
+                          >
+                            {visualMeta.levelBadgeKo}
+                          </PfBadge>
+                          <span
+                            className="pf-class-spring-wrap"
+                            data-testid="schedule-card-spring-pills"
+                          >
+                            <small className="pf-class-spring-source">
+                              {visualMeta.springSourceLabelKo}
+                            </small>
+                            <SpringVisualPills springs={visualMeta.springs} />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                     {row.movedFrom && (
                       <p className="muted">
                         원래 {formatScheduleDate(row.movedFrom)} 회차

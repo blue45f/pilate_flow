@@ -28,7 +28,9 @@ import type {
   PropType,
 } from '../types/pilates';
 import { formatSecondsToMMSS } from '../utils/sequenceEngine';
+import { getApparatusPrimary3DThumb } from '../utils/studio3dMotionCatalog';
 import { LightDismissDialog } from './LightDismissDialog';
+import { SpringVisualPills } from './SpringVisualPills';
 import '../styles/library.css';
 import '../styles/review-usability.css';
 import './YouTubeClipModal.css';
@@ -688,6 +690,28 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
             </label>
             <details ref={step3Ref} className="clipper-optional">
               <summary>직접 작성한 큐와 기구 설정 · 선택</summary>
+              <div
+                className="pf-clipper-spring-chips"
+                data-testid="clipper-spring-preset-chips"
+                role="group"
+                aria-label="자주 쓰는 스프링 설정 빠른 입력"
+              >
+                <span className="pf-class-spring-source">빠른 스프링 입력:</span>
+                {(
+                  ['2R 1B', '1R 1B', '1R', '1R 1Y (페달)', '1B (푸쉬스루)', '스프링 사용 없음'] as const
+                ).map((presetSpring) => (
+                  <button
+                    key={presetSpring}
+                    type="button"
+                    className={`log-quick-note-chip ${springs === presetSpring ? 'is-selected' : ''}`.trim()}
+                    aria-pressed={springs === presetSpring}
+                    onClick={() => setSprings(springs === presetSpring ? '' : presetSpring)}
+                  >
+                    {presetSpring}
+                  </button>
+                ))}
+                {springs.trim() && <SpringVisualPills springs={springs} />}
+              </div>
               <div className="library-form-grid">
                 <label className="form-field">
                   <span>기구 설정 메모</span>
@@ -721,6 +745,23 @@ export const YouTubeClipperModal: React.FC<YouTubeClipperModalProps> = ({ open, 
             </details>
             {mode === 'batch' && parsed.chapters.length > 0 && (
               <section className="clipper-chapter-preview" aria-label="등록 전 구간 확인">
+                <div
+                  className="pf-spot-dialog-3d-banner"
+                  data-testid="clipper-3d-setup-preview"
+                  style={{ marginBottom: '10px' }}
+                >
+                  <img
+                    src={getApparatusPrimary3DThumb(apparatus)}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    className="pf-spot-dialog-3d-banner__img"
+                  />
+                  <div className="pf-spot-dialog-3d-banner__info">
+                    <strong>선택 기구 3D 프리뷰 · Lv {level} · 구간당 {duration}분</strong>
+                    {springs.trim() && <SpringVisualPills springs={springs} />}
+                  </div>
+                </div>
                 <div className="clipper-preview-title">
                   <strong>{parsed.chapters.length}개 참조 구간</strong>
                   <span>수업 계획 {Math.round(parsed.chapters.length * duration * 10) / 10}분</span>

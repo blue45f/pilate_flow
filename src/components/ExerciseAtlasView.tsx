@@ -93,6 +93,11 @@ import '../styles/library-asset-status.css';
 import '../styles/library-concept-layout.css';
 import './ExerciseAtlasView.usability.css';
 import { LibraryMovementInspector } from './LibraryMovementInspector';
+import { GlobalRepertoirePackExplorer } from './GlobalRepertoirePackExplorer';
+import {
+  CRAWLED_YOUTUBE_DISCOVERY_POOL,
+  GLOBAL_CRAWLED_REPERTOIRE_EXERCISES,
+} from '../data/globalCrawledRepertoirePack';
 import { COURSE_REFERENCES } from '../data/courseReferences';
 import {
   ATLAS_DISCOVERY_RECOVERY_KEY,
@@ -911,7 +916,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     activeSteps,
     setActiveTab,
   } = usePilatesStore();
-  const [collection, setCollection] = useState<'notes' | 'references' | 'courses'>('notes');
+  const [collection, setCollection] = useState<'notes' | 'repertoire' | 'references' | 'courses'>('notes');
   const [sourceToPlan, setSourceToPlan] = useState<VerifiedPublicReference | null>(null);
   const [ownNoteOpen, setOwnNoteOpen] = useState(false);
   const {
@@ -1284,15 +1289,16 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         onKeyDown={(event) => {
           if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
             event.preventDefault();
-            const collections = ['notes', 'references', 'courses'] as const;
+            const collections = ['notes', 'repertoire', 'references', 'courses'] as const;
             const index = collections.indexOf(collection);
             const next =
               event.key === 'Home'
                 ? collections[0]
                 : event.key === 'End'
-                  ? collections[2]
+                  ? collections[collections.length - 1]
                   : collections[
-                      (index + (event.key === 'ArrowRight' ? 1 : 2)) % collections.length
+                      (index + (event.key === 'ArrowRight' ? 1 : collections.length - 1)) %
+                        collections.length
                     ];
             setCollection(next);
             document.getElementById(`library-${next}-tab`)?.focus();
@@ -1310,6 +1316,18 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
           onClick={() => setCollection('notes')}
         >
           동작 노트 <span>{exercises.length}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="library-repertoire-tab"
+          aria-controls="library-repertoire-panel"
+          aria-selected={collection === 'repertoire'}
+          tabIndex={collection === 'repertoire' ? 0 : -1}
+          className={collection === 'repertoire' ? 'selected' : ''}
+          onClick={() => setCollection('repertoire')}
+        >
+          확장 도감·영상 <span>{GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.length}</span>
         </button>
         <button
           type="button"
@@ -1338,7 +1356,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       </div>
       {collection !== 'notes' && (
         <p className="library-collection-trust">
-          공식 출처 확인 21건 · 국내 후보 9건 · 전문 강사 승인 0건 · 공개 자료는 자동 추천 제외
+          공식 출처 확인 21건 · 국내 후보 9건 · 크롤링 확장 동작 {GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.length}종(영상 {CRAWLED_YOUTUBE_DISCOVERY_POOL.length}편) · 공개·확장 자료는 검토 전 자동 추천 제외
         </p>
       )}
       {collection === 'courses' ? (
@@ -1348,6 +1366,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       ) : collection === 'references' ? (
         <div id="library-references-panel" role="tabpanel" aria-labelledby="library-references-tab">
           <VerifiedReferencesSection onCreateNote={setSourceToPlan} />
+        </div>
+      ) : collection === 'repertoire' ? (
+        <div id="library-repertoire-panel" role="tabpanel" aria-labelledby="library-repertoire-tab">
+          <GlobalRepertoirePackExplorer onOpenExerciseDetail={onOpenYouTubePreview} />
         </div>
       ) : (
         <div id="library-notes-panel" role="tabpanel" aria-labelledby="library-notes-tab">

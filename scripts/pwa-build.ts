@@ -214,7 +214,8 @@ self.addEventListener('fetch', (event) => {
     PRECACHE.includes(url.pathname) ||
     url.pathname.startsWith('/assets/') ||
     url.pathname.startsWith('/icons/') ||
-    (url.pathname.startsWith('/images/movement-guides/') && url.pathname.endsWith('.svg'));
+    (url.pathname.startsWith('/images/movement-guides/') && url.pathname.endsWith('.svg')) ||
+    (url.pathname.startsWith('/motion-studio3d/') && url.pathname.endsWith('.png'));
   if (!isShellAsset) return;
   event.respondWith(
     caches.open(CACHE).then(async (cache) => {

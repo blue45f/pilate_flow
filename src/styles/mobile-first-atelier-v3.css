@@ -1,0 +1,1147 @@
+/* ==========================================================================
+   Flow Atelier v3 — Global Benchmark Mobile-First Simplicity & 3D Motion HUD
+   Benchmarked against: Pilates Anytime PRO, FLOW Yoga, Muscle & Motion,
+   Physitrack, Everfit, and Seconds Pro
+   ========================================================================== */
+
+.pf-studio3d-hero-card {
+  background: linear-gradient(180deg, #fffef9 0%, #f7f4ec 100%);
+  border: 1px solid #d5ddd0;
+  border-radius: 20px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(23, 61, 52, 0.06);
+}
+
+.pf-studio3d-hero-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pf-studio3d-hero-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.pf-studio3d-scope-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e6f0eb;
+  color: #173d34;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.pf-studio3d-honest-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f5f1e4;
+  color: #5d533f;
+  border: 1px solid #e2dac4;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.pf-studio3d-mode-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: #edf1ea;
+  padding: 3px;
+  border-radius: 999px;
+}
+
+.pf-studio3d-mode-btn {
+  min-height: 34px;
+  padding: 5px 11px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #35493f;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.pf-studio3d-mode-btn.is-active {
+  background: #173d34;
+  color: #ffffff;
+}
+
+.pf-studio3d-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1280 / 840;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #efeae0;
+  border: 1px solid #dce3d8;
+}
+
+.pf-studio3d-stage__base,
+.pf-studio3d-stage__ghost,
+.pf-studio3d-stage__hud {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pf-studio3d-stage__ghost {
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.pf-studio3d-stage__hud {
+  pointer-events: none;
+}
+
+.pf-studio3d-stage__chips-top,
+.pf-studio3d-stage__chips-bottom {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.pf-studio3d-stage__chips-top {
+  top: 10px;
+}
+
+.pf-studio3d-stage__chips-bottom {
+  bottom: 10px;
+}
+
+.pf-studio3d-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  backdrop-filter: blur(6px);
+}
+
+.pf-studio3d-chip.is-dark {
+  background: rgba(23, 61, 52, 0.88);
+  color: #ffffff;
+}
+
+.pf-studio3d-chip.is-light {
+  background: rgba(255, 254, 249, 0.92);
+  color: #1e3129;
+  border: 1px solid rgba(213, 221, 208, 0.9);
+}
+
+.pf-studio3d-chip.is-muscle {
+  background: rgba(253, 241, 236, 0.94);
+  color: #9a3412;
+  border: 1px solid #f2b8a2;
+}
+
+.pf-studio3d-chip.is-anchor {
+  background: rgba(30, 49, 41, 0.85);
+  color: #f4f7f5;
+}
+
+/* Pilates Anytime PRO inspired 3-Essential Strip */
+.pf-detail-essential-3-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pf-detail-essential-pill {
+  background: #ffffff;
+  border: 1px solid #dce3d8;
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pf-detail-essential-pill__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.71rem;
+  font-weight: 700;
+  color: #526358;
+}
+
+.pf-detail-essential-pill__val {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pf-detail-essential-pill__val strong {
+  font-size: 0.82rem;
+  color: #173d34;
+  line-height: 1.35;
+}
+
+.pf-detail-essential-pill__val small {
+  font-size: 0.71rem;
+  color: #5b6d62;
+}
+
+.pf-detail-quick-cue-box {
+  background: #ffffff;
+  border: 1px solid #dce3d8;
+  border-radius: 14px;
+  padding: 11px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-detail-quick-cue-box__cues strong {
+  display: block;
+  font-size: 0.78rem;
+  color: #173d34;
+  margin-bottom: 4px;
+}
+
+.pf-detail-quick-cue-box__cues ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.82rem;
+  color: #253930;
+}
+
+.pf-detail-quick-cue-box__caution {
+  margin: 0;
+  padding-top: 7px;
+  border-top: 1px dashed #e2e8df;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: #7c3a19;
+}
+
+/* Progressive disclosure drawers inside Detail screen so Mobile stays ultra-clean */
+.pf-detail-progressive-drawer {
+  background: #f8f6f0;
+  border: 1px solid #dce2d7;
+  border-radius: 14px;
+  padding: 4px 14px;
+  margin-top: 6px;
+}
+
+.pf-detail-progressive-drawer > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #1e3129;
+  list-style: none;
+}
+
+.pf-detail-progressive-drawer > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pf-detail-progressive-drawer[open] > summary {
+  border-bottom: 1px solid #e1e6dd;
+  margin-bottom: 10px;
+}
+
+/* Step 1 Apparatus Visual Preview Strip & Step 3 3D Thumbnails */
+.pf-step1-visual-apparatus-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pf-step1-visual-tile {
+  background: #fffef9;
+  border: 1px solid #d7dfd4;
+  border-radius: 14px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: center;
+  transition: border-color 150ms ease, transform 150ms ease;
+}
+
+.pf-step1-visual-tile.is-selected {
+  border: 2px solid #173d34;
+  background: #eff5f1;
+}
+
+.pf-step1-visual-tile img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 9px;
+}
+
+.pf-step1-visual-tile span {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #173d34;
+}
+
+.pf-workbench-3d-mini-thumb {
+  width: 58px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 9px;
+  border: 1px solid #d5ddd0;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Centered clean PC container + generous Mobile breathing room */
+@media (min-width: 1024px) {
+  .vnext-workbench:not(.has-inspector) {
+    max-width: 1040px;
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .pf-detail-essential-3-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .pf-step1-visual-apparatus-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pf-studio3d-mode-btn {
+    min-height: 38px;
+    padding: 6px 10px;
+  }
+
+  .movement-detail .library-modal-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 6;
+    background: rgba(255, 254, 249, 0.96);
+    backdrop-filter: blur(8px);
+    padding: 10px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid #dce3d8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-studio3d-mode-btn,
+  .pf-step1-visual-tile,
+  .pf-live-thumb-dock__btn,
+  .pf-live-3d-companion__card {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   Live Stage (P09) Elevation — 3D Start↔Peak Companion, Bilateral & Spring
+   Delta Alerts, and Sticky One-Handed Mobile Thumb Dock
+   ========================================================================== */
+
+.pf-live-3d-companion {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 8px 0 10px;
+}
+
+.pf-live-3d-companion__card {
+  position: relative;
+  border-radius: 13px;
+  overflow: hidden;
+  border: 1.5px solid #d5ddd0;
+  background: #efeae0;
+  aspect-ratio: 16 / 10;
+}
+
+.pf-live-3d-companion__card.is-active-phase {
+  border-color: #173d34;
+  box-shadow: 0 0 0 2px rgba(23, 61, 52, 0.16);
+}
+
+.pf-live-3d-companion__card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pf-live-3d-companion__badge {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(23, 61, 52, 0.88);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.pf-live-3d-companion__badge.is-peak {
+  background: rgba(185, 65, 38, 0.92);
+}
+
+.pf-live-bilateral-alert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #fffbeb;
+  border: 2px solid #f59e0b;
+  color: #78350f;
+  font-size: 0.88rem;
+  font-weight: 800;
+  word-break: keep-all;
+}
+
+.teaching-high-contrast .pf-live-bilateral-alert {
+  background: #0f172a;
+  border-color: #facc15;
+  color: #facc15;
+}
+
+.pf-live-spring-delta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  word-break: keep-all;
+}
+
+.pf-live-spring-delta-pill.is-changed {
+  background: #fdf2f0;
+  border: 1.5px solid #e07a5f;
+  color: #9a3412;
+}
+
+.pf-live-spring-delta-pill.is-same {
+  background: #e9f2ed;
+  border: 1px solid #bfd6c8;
+  color: #18473b;
+}
+
+.teaching-high-contrast .pf-live-spring-delta-pill.is-changed,
+.teaching-high-contrast .pf-live-spring-delta-pill.is-same {
+  background: #1e293b;
+  border-color: #facc15;
+  color: #facc15;
+}
+
+.pf-live-thumb-dock {
+  position: sticky;
+  bottom: 0;
+  z-index: 12;
+  margin-top: 14px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  border-radius: 20px;
+  background: rgba(23, 61, 52, 0.96);
+  border: 1px solid rgba(167, 215, 197, 0.35);
+  box-shadow: 0 10px 26px rgba(15, 38, 31, 0.24);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.teaching-high-contrast .pf-live-thumb-dock {
+  background: #0f172a;
+  border: 2px solid #facc15;
+}
+
+.pf-live-thumb-dock__primary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.pf-live-thumb-dock__secondary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.pf-live-thumb-dock__btn {
+  min-height: 48px;
+  min-width: 44px;
+  padding: 8px 10px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(37, 83, 70, 0.92);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  word-break: keep-all;
+}
+
+.pf-live-thumb-dock__btn.is-primary {
+  background: #fffef9;
+  color: #173d34;
+  border-color: #fffef9;
+}
+
+.pf-live-thumb-dock__btn.is-active-toggle {
+  background: #c9822b;
+  border-color: #f3c68f;
+  color: #ffffff;
+}
+
+.pf-live-thumb-dock__btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Instructor Schedule (P11) & Member Booking (P15) — Unified 5-Apparatus 3D
+   Mini Previews, Tactile Spring Visual Pills & Difficulty Badges
+   ========================================================================== */
+
+.pf-schedule-card-3d-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 6px 0 8px;
+}
+
+.pf-schedule-3d-thumb {
+  width: 92px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #cfd8ca;
+  background: #efeae0;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(23, 61, 52, 0.08);
+}
+
+.pf-schedule-card-3d-body {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pf-schedule-card-3d-body h3 {
+  margin: 0;
+}
+
+.pf-class-badges-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-class-badges-strip--compact {
+  margin-top: 5px;
+}
+
+.pf-member-slot-badges-row {
+  margin: 5px 0 6px;
+}
+
+.pf-class-apparatus-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #e8f0ec;
+  border: 1px solid #c6d8ce;
+  color: #173d34;
+  font-size: 0.73rem;
+  font-weight: 700;
+  word-break: keep-all;
+}
+
+.pf-class-spring-wrap {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f8f5ec;
+  border: 1px solid #e2dac4;
+}
+
+.pf-class-spring-source {
+  font-size: 0.69rem;
+  font-weight: 700;
+  color: #5d533f;
+  word-break: keep-all;
+}
+
+.pf-member-my-booking-lead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pf-member-my-booking-thumb {
+  width: 56px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 9px;
+  border: 1px solid #cfd8ca;
+  background: #efeae0;
+  flex-shrink: 0;
+}
+
+.pf-spot-dialog-3d-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffef9 0%, #f5f1e7 100%);
+  border: 1px solid #d5ddd0;
+}
+
+.pf-spot-dialog-3d-banner__img {
+  width: 84px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #cfd8ca;
+  flex-shrink: 0;
+}
+
+.pf-spot-dialog-3d-banner__info {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pf-spot-dialog-3d-banner__info strong {
+  font-size: 0.84rem;
+  color: #173d34;
+  word-break: keep-all;
+}
+
+@media (max-width: 639px) {
+  .pf-schedule-card-3d-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pf-schedule-3d-thumb {
+    width: 100%;
+    height: 112px;
+  }
+
+  .pf-spot-dialog-3d-banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pf-spot-dialog-3d-banner__img {
+    width: 100%;
+    height: 104px;
+  }
+}
+
+/* ==========================================================================
+   Full All-Pages Elevation (P01, P04 Flow Coach, P10, P12 Binder & Blocks,
+   P13 AI Draft 3D, P14 Clipper Spring Chips)
+   ========================================================================== */
+
+.pf-quick-flow-coach {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 8px 0 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f8faf8 0%, #eef4f0 100%);
+  border: 1px solid #c6d8ce;
+}
+
+.pf-quick-flow-coach__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  font-size: 0.8rem;
+  color: #1e3129;
+}
+
+.pf-quick-flow-coach__stat strong {
+  color: #173d34;
+}
+
+.pf-quick-flow-coach__planes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.pf-plane-dot-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.pf-plane-dot-chip.is-covered {
+  background: #173d34;
+  color: #ffffff;
+}
+
+.pf-plane-dot-chip.is-missing {
+  background: #fff8eb;
+  border: 1px dashed #d99b26;
+  color: #8a5607;
+}
+
+.pf-quick-flow-coach__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-quick-flow-coach__btn {
+  min-height: 38px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #b8cec2;
+  background: #fffef9;
+  color: #173d34;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  word-break: keep-all;
+}
+
+.pf-quick-flow-coach__btn.is-optimize {
+  background: #173d34;
+  border-color: #173d34;
+  color: #ffffff;
+}
+
+.pf-quick-flow-coach__ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #254b29;
+}
+
+.pf-binder-card-3d-strip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.pf-binder-card-3d-thumb {
+  width: 96px;
+  height: 66px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #cfd8ca;
+  background: #efeae0;
+  flex-shrink: 0;
+}
+
+.pf-binder-card-3d-meta {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pf-binder-blocks-shelf {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pf-binder-blocks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.pf-binder-block-card {
+  background: #fffef9;
+  border: 1px solid #d5ddd0;
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pf-binder-block-card__img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 11px;
+  border: 1px solid #cfd8ca;
+  background: #efeae0;
+}
+
+.pf-binder-block-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.pf-ai-step-3d-lead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.pf-clipper-spring-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+
+@media (max-width: 639px) {
+  .pf-binder-card-3d-strip {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pf-binder-card-3d-thumb {
+    width: 100%;
+    height: 116px;
+  }
+}
+
+/* ==========================================================================
+   Offline Studio 3D Readiness Card (PWA) & 1-Page Visual 3D Cue Sheet
+   ========================================================================== */
+
+.pf-offline-3d-card {
+  margin: 12px 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fffef9 0%, #f1f6f2 100%);
+  border: 1px solid #c6d8ce;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pf-offline-3d-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pf-offline-3d-card__title {
+  margin: 2px 0 0;
+  font-size: 0.98rem;
+  color: #173d34;
+}
+
+.pf-offline-3d-card__desc {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #42564b;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.pf-offline-3d-card__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #d2dfd6;
+}
+
+.pf-offline-3d-card__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #173d34;
+}
+
+.pf-visual-1p-cuesheet {
+  margin: 10px 0;
+  padding: 16px;
+  border-radius: 18px;
+  background: #fffef9;
+  border: 1px solid #cfd9cd;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pf-visual-1p-cuesheet__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid #dbe4da;
+}
+
+.pf-visual-1p-cuesheet__titles h3 {
+  margin: 2px 0 4px;
+  font-size: 1.08rem;
+  color: #173d34;
+}
+
+.pf-visual-1p-cuesheet__titles p {
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  color: #526358;
+}
+
+.pf-visual-1p-cuesheet__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.pf-visual-1p-density {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pf-visual-1p-cuesheet__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pf-visual-1p-cuesheet.is-single-col .pf-visual-1p-cuesheet__grid {
+  grid-template-columns: 1fr;
+}
+
+.pf-visual-1p-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #f8f6f0;
+  border: 1px solid #dbe3da;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.pf-visual-1p-row.has-spring-delta {
+  border-color: #df8268;
+  background: #fdf8f5;
+}
+
+.pf-visual-1p-row__thumb {
+  width: 64px;
+  height: 46px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #cfd8ca;
+  flex-shrink: 0;
+}
+
+.pf-visual-1p-row__rest-box {
+  width: 64px;
+  height: 46px;
+  border-radius: 8px;
+  background: #e9f0ec;
+  color: #173d34;
+  font-size: 0.74rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pf-visual-1p-row__body {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pf-visual-1p-row__top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pf-visual-1p-row__num {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #173d34;
+}
+
+.pf-visual-1p-row__sec {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #e6efe9;
+  color: #173d34;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.pf-visual-1p-row__name {
+  font-size: 0.85rem;
+  color: #173d34;
+  flex: 1;
+  min-width: 90px;
+}
+
+.pf-visual-1p-row__time {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #264a3e;
+}
+
+.pf-visual-1p-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.pf-visual-1p-row__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #fdebe6;
+  color: #a63a1f;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.pf-visual-1p-row__pill {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #edf1ee;
+  color: #364940;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.pf-visual-1p-row__cue {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #46574e;
+  line-height: 1.35;
+}
+
+.pf-visual-1p-cuesheet__footer {
+  font-size: 0.72rem;
+  color: #5b6d62;
+  padding-top: 6px;
+  border-top: 1px solid #e3e9e2;
+}
+
+@media (max-width: 720px) {
+  .pf-visual-1p-cuesheet__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .pf-visual-1p-cuesheet {
+    margin: 0;
+    padding: 8px;
+    border: 1px solid #b5c3b8;
+    border-radius: 8px;
+    background: #ffffff;
+  }
+
+  .pf-visual-1p-cuesheet__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 5px;
+  }
+
+  .pf-visual-1p-row {
+    padding: 5px 7px;
+    background: #ffffff;
+  }
+
+  .pf-visual-1p-row__thumb,
+  .pf-visual-1p-row__rest-box {
+    width: 50px;
+    height: 36px;
+  }
+}

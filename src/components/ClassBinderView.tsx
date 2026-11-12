@@ -14,9 +14,17 @@ import { useCloudSession } from '../lib/cloudSync';
 import { getRecoveryStorageStatus, usePilatesStore } from '../store/usePilatesStore';
 import type { ApparatusType, ClassHistoryLog, DifficultyLevel, SavedSequence, SequenceStep } from '../types/pilates';
 import type { ClassHistoryLogWithSnapshot, ResolvedTeachingHistoryView } from '../types/teachingHistorySnapshot';
-import { getSavedHumanMovementDrafts, getSavedReusableBlocks, isMovementIdeaExercise } from '../utils/movementIdeaDraft';
+import { OFFLINE_BLOCK_PRESETS } from '../data/classBlockPresets';
+import { formatDifficultyBadgeKo, resolveClassCardVisualMeta } from '../utils/memberBookingBridge';
+import {
+  getSavedHumanMovementDrafts,
+  getSavedReusableBlocks,
+  insertIdeaReusableBlockToCurrentClass,
+  isMovementIdeaExercise,
+} from '../utils/movementIdeaDraft';
 import { formatSequenceAsMarkdownCueSheet, formatSequenceAsPortableJson } from '../utils/portableSequenceExport';
 import { formatSecondsToMMSS, formatSequenceAsStudioSheet, getSequenceDurations, isRestStep } from '../utils/sequenceEngine';
+import { getApparatusPrimary3DThumb, resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import {
   copyHistoryLogIntoWorkbenchSafely, formatTeachingHistorySnapshotText, resolveTeachingHistoryView,
 } from '../utils/teachingHistorySnapshot';
@@ -24,6 +32,8 @@ import { LightDismissDialog } from './LightDismissDialog';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
+import { OnePageVisual3DCueSheet } from './OnePageVisual3DCueSheet';
+import { SpringVisualPills } from './SpringVisualPills';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/design-tokens.css';
 import '../styles/teaching.css';
@@ -182,6 +192,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const [expandedSavedIds, setExpandedSavedIds] = useState<Set<string>>(() => new Set());
   const [printSequence, setPrintSequence] = useState<SavedSequence | null>(null);
   const [showBinderCueSheet, setShowBinderCueSheet] = useState(false);
+  const [showBinderVisual3dSheet, setShowBinderVisual3dSheet] = useState(true);
   const [reopenedHistoryId, setReopenedHistoryId] = useState<string | null>(null);
   const savedSearchInputRef = useRef<HTMLInputElement | null>(null);
   const historySearchInputRef = useRef<HTMLInputElement | null>(null);
@@ -795,6 +806,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                 const recencySummary = lastTaughtDate
                   ? `최근 수업 ${formatDate(lastTaughtDate)}${latestTaughtLog?.groupName ? ` · ${latestTaughtLog.groupName}` : ''}${seqActualLogs.length > 0 ? ` (${seqActualLogs.length}회)` : ''}`
                   : `수정 ${formatDate(sequence.updatedAt)}`;
+                const savedVisualMeta = resolveClassCardVisualMeta({
+                  sequence,
+                  exercises,
+                  title: sequence.title,
+                  fallbackLevel: sequence.level,
+                });
                 return (
                   <PfCard
                     as="article"
@@ -803,16 +820,39 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                     data-saved-sequence-id={domKey}
                     key={sequence.id}
                   >
-                    <div className="teaching-saved-card-header">
-                      <div className="teaching-saved-card-title-row">
-                        <ApparatusIconBadge apparatus={sequence.apparatus} size="xs" decorative />
-                        <h2>{sequence.title}</h2>
+                    <div
+                      className="pf-binder-card-3d-strip"
+                      data-testid="binder-saved-card-3d-preview"
+                    >
+                      <img
+                        src={savedVisualMeta.studio3dThumbUrl}
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        className="pf-binder-card-3d-thumb"
+                      />
+                      <div className="pf-binder-card-3d-meta">
+                        <div className="teaching-saved-card-header">
+                          <div className="teaching-saved-card-title-row">
+                            <ApparatusIconBadge apparatus={sequence.apparatus} size="xs" decorative />
+                            <h2>{sequence.title}</h2>
+                          </div>
+                          {isLoadedInWorkbench && (
+                            <PfBadge tone={hasUnsavedWorkbenchDraft ? 'warning' : 'sage'} className="teaching-active-plan-badge">
+                              {hasUnsavedWorkbenchDraft ? '현재 초안 수정 중' : '현재 계획 열림'}
+                            </PfBadge>
+                          )}
+                        </div>
+                        <div className="pf-class-badges-strip">
+                          <span className="pf-class-apparatus-pill">
+                            {savedVisualMeta.apparatusLabelKo} 3D
+                          </span>
+                          <PfBadge tone={sequence.level === '2.0' ? 'warning' : sequence.level === '1.5' ? 'brand' : 'sage'}>
+                            {savedVisualMeta.levelBadgeKo}
+                          </PfBadge>
+                          <SpringVisualPills springs={savedVisualMeta.springs} />
+                        </div>
                       </div>
-                      {isLoadedInWorkbench && (
-                        <PfBadge tone={hasUnsavedWorkbenchDraft ? 'warning' : 'sage'} className="teaching-active-plan-badge">
-                          {hasUnsavedWorkbenchDraft ? '현재 초안 수정 중' : '현재 계획 열림'}
-                        </PfBadge>
-                      )}
                     </div>
                     <p className="muted teaching-sequence-subtitle">{sequence.subtitle || '내가 만든 수업 흐름'}</p>
                     <p className="teaching-saved-glance">
@@ -985,6 +1025,124 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
               })}
             </div>
           )}
+          <PfCard
+            as="section"
+            className="pf-binder-blocks-shelf"
+            data-testid="binder-reusable-blocks-shelf"
+            aria-label="재사용 모듈 블록 보관함"
+          >
+            <div className="pf-binder-blocks-shelf__head">
+              <div>
+                <span className="eyebrow">MODULAR REUSABLE BLOCKS · P12</span>
+                <h2 className="section-heading">
+                  재사용 모듈 블록 묶음{' '}
+                  <PfBadge tone="sage">{reusableBlocks.length + OFFLINE_BLOCK_PRESETS.slice(0, 6).length}</PfBadge>
+                </h2>
+                <p className="muted">
+                  검증된 웜업·메인·쿨다운 모듈 묶음을 현재 수업안에 독립 복사본으로 1탭 삽입합니다.
+                </p>
+              </div>
+            </div>
+            <div className="pf-binder-blocks-grid">
+              {reusableBlocks.map((block) => {
+                const firstItemEx = block.items[0]?.exerciseId
+                  ? exercisesMap.get(block.items[0].exerciseId)
+                  : undefined;
+                const blockThumb = firstItemEx
+                  ? resolveStudio3DMotionForExercise(firstItemEx).peakImg
+                  : getApparatusPrimary3DThumb(block.apparatus);
+                const blockSprings =
+                  block.items[0]?.customSpringOverride || firstItemEx?.springs || '2R 1B';
+                return (
+                  <div key={block.id} className="pf-binder-block-card" data-testid={`binder-user-block-${block.id}`}>
+                    <img src={blockThumb} alt="" aria-hidden="true" loading="lazy" className="pf-binder-block-card__img" />
+                    <div className="pf-binder-block-card__body">
+                      <div className="pf-class-badges-strip">
+                        <PfBadge tone="brand">내 저장 블록 v{block.version}</PfBadge>
+                        <SpringVisualPills springs={blockSprings} />
+                      </div>
+                      <strong>{block.title}</strong>
+                      <span className="muted">{block.items.length}개 동작 · {getApparatusLabelKo(block.apparatus)}</span>
+                      <PfButton
+                        variant="secondary"
+                        aria-label={`${block.title} 현재 수업안에 블록 넣기`}
+                        onClick={() => {
+                          const res = insertIdeaReusableBlockToCurrentClass(block.id);
+                          setMessage(res.message);
+                          if (res.ok) setActiveTab('workbench');
+                        }}
+                      >
+                        <Plus size={15} /> 현재 수업안에 블록 넣기
+                      </PfButton>
+                    </div>
+                  </div>
+                );
+              })}
+              {OFFLINE_BLOCK_PRESETS.slice(0, 6).map((preset) => {
+                const firstPresetEx = preset.items[0]?.exerciseId
+                  ? exercisesMap.get(preset.items[0].exerciseId)
+                  : undefined;
+                const presetThumb = firstPresetEx
+                  ? resolveStudio3DMotionForExercise(firstPresetEx).peakImg
+                  : getApparatusPrimary3DThumb(preset.apparatus);
+                const presetSprings =
+                  preset.items[0]?.customSpringOverride || firstPresetEx?.springs || '2R 1B';
+                return (
+                  <div key={preset.id} className="pf-binder-block-card" data-testid={`binder-preset-block-${preset.id}`}>
+                    <img src={presetThumb} alt="" aria-hidden="true" loading="lazy" className="pf-binder-block-card__img" />
+                    <div className="pf-binder-block-card__body">
+                      <div className="pf-class-badges-strip">
+                        <span className="pf-class-apparatus-pill">{getApparatusLabelKo(preset.apparatus)} 3D</span>
+                        <PfBadge tone="sage">{formatDifficultyBadgeKo(preset.level)}</PfBadge>
+                        <SpringVisualPills springs={presetSprings} />
+                      </div>
+                      <strong>{preset.title}</strong>
+                      <span className="muted">{preset.items.length}개 동작 · {preset.durationMin}분</span>
+                      <PfButton
+                        variant="secondary"
+                        aria-label={`${preset.title} 현재 수업안에 블록 넣기`}
+                        onClick={() => {
+                          const current = usePilatesStore.getState();
+                          const instanceId = `preset-inst-${Date.now()}`;
+                          const nextOrderStart = current.activeSteps.length;
+                          const appended: SequenceStep[] = preset.items.map((it, idx) => ({
+                            kind: 'exercise',
+                            stepId: `${instanceId}-${idx + 1}`,
+                            order: nextOrderStart + idx + 1,
+                            exerciseId: it.exerciseId,
+                            blockCategory: it.blockCategory,
+                            classSection: preset.sectionRole,
+                            durationMin: it.durationMin,
+                            explanationSec: it.explanationSec,
+                            transitionSec: it.transitionSec,
+                            repetitions: it.repetitions,
+                            sets: it.sets,
+                            sideMode: it.sideMode,
+                            selectedLayer: it.selectedLayer,
+                            customSpringOverride: it.customSpringOverride,
+                            instructorNote: it.instructorNote,
+                            sourceBlockId: preset.id,
+                            sourceBlockTitle: preset.title,
+                            sourceBlockVersion: preset.version,
+                            blockInstanceId: instanceId,
+                            exerciseSnapshot: it.exerciseSnapshot,
+                          }));
+                          usePilatesStore.setState({
+                            activeSteps: [...current.activeSteps, ...appended],
+                            saveFeedback: `‘${preset.title}’ 블록(${appended.length}동작)을 수업안에 추가했습니다.`,
+                          });
+                          setMessage(`‘${preset.title}’ 블록을 현재 수업안에 추가했습니다.`);
+                          setActiveTab('workbench');
+                        }}
+                      >
+                        <Plus size={15} /> 현재 수업안에 블록 넣기
+                      </PfButton>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </PfCard>
           {conditionTemplates.length > 0 && (
             <PfCard as="section" className="teaching-template-panel">
               <div><span className="eyebrow">다시 쓰는 조건</span><h2 className="section-heading">저장한 수업 조건</h2><p className="muted">조건을 불러온 뒤 계획에서 초안을 생성할 수 있어요.</p></div>
@@ -1253,9 +1411,26 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                       previewNames.length > 0
                         ? ` · ${previewNames.join(', ')}${extraMovementCount > 0 ? ` 외 ${extraMovementCount}개` : ''}`
                         : '';
+                    const firstLogExId = validPreviewSteps[0]?.exerciseId;
+                    const firstLogEx = firstLogExId ? exercisesMap.get(firstLogExId) : undefined;
+                    const logThumb = firstLogEx
+                      ? resolveStudio3DMotionForExercise(firstLogEx).peakImg
+                      : getApparatusPrimary3DThumb(snapshotMeta.apparatus);
+                    const logPrimarySprings =
+                      validPreviewSteps[0]?.effectiveSprings || firstLogEx?.springs || '';
                     return (
                       <PfCard as="article" key={log.id} variant={isSample ? 'sample' : 'default'} className="teaching-history-card">
-                        <h2>{resolved.sequenceTitle}</h2>
+                        <div className="pf-binder-card-3d-strip" data-testid="binder-history-card-3d-preview">
+                          <img src={logThumb} alt="" aria-hidden="true" loading="lazy" className="pf-binder-card-3d-thumb" />
+                          <div className="pf-binder-card-3d-meta">
+                            <h2>{resolved.sequenceTitle}</h2>
+                            <div className="pf-class-badges-strip">
+                              <span className="pf-class-apparatus-pill">{getApparatusLabelKo(snapshotMeta.apparatus)} 3D</span>
+                              <PfBadge tone="sage">{formatDifficultyBadgeKo(snapshotMeta.level)}</PfBadge>
+                              {logPrimarySprings && <SpringVisualPills springs={logPrimarySprings} />}
+                            </div>
+                          </div>
+                        </div>
                         <div className="teaching-card-top">
                           <div className="teaching-history-datetime">
                             <time className="teaching-history-card-date" dateTime={getTeachingHistoryDateSource(resolved)}>{formatDate(getTeachingHistoryDateSource(resolved))}</time>
@@ -1362,10 +1537,31 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
           <p>교차 검증 완료 계획 · 권장 스프링과 세팅은 실제 기구에서 확인해 주세요.</p>
           <pre>{printSequence ? sheetFor(printSequence) : ''}</pre>
           {printSequence && (
-            <details className="teaching-cue-sheet-disclosure" open={showBinderCueSheet} onToggle={(e) => setShowBinderCueSheet(e.currentTarget.open)}>
-              <summary>구조형 수업 큐시트 보기</summary>
-              {showBinderCueSheet && <ClassCueSheetPreview sourceInput={printSequence} projectionOptions={{ exercises }} />}
-            </details>
+            <>
+              <details
+                className="teaching-cue-sheet-disclosure"
+                data-testid="binder-print-visual-3d-cuesheet-drawer"
+                open={showBinderVisual3dSheet}
+                onToggle={(e) => setShowBinderVisual3dSheet(e.currentTarget.open)}
+              >
+                <summary>1페이지 3D 시각 요약 큐시트 (태블릿·A4 한 장)</summary>
+                {showBinderVisual3dSheet && (
+                  <OnePageVisual3DCueSheet
+                    title={printSequence.title}
+                    subtitle={printSequence.subtitle}
+                    apparatus={printSequence.apparatus}
+                    level={printSequence.level}
+                    steps={printSequence.steps}
+                    exercises={exercises}
+                    showPrintButton={false}
+                  />
+                )}
+              </details>
+              <details className="teaching-cue-sheet-disclosure" open={showBinderCueSheet} onToggle={(e) => setShowBinderCueSheet(e.currentTarget.open)}>
+                <summary>구조형 수업 큐시트 보기</summary>
+                {showBinderCueSheet && <ClassCueSheetPreview sourceInput={printSequence} projectionOptions={{ exercises }} />}
+              </details>
+            </>
           )}
         </div>
         <div className="teaching-form-actions">

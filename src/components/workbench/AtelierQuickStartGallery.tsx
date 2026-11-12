@@ -7,6 +7,7 @@ import {
   type QuickStartRecipe,
   type QuickStartSequencePayload,
 } from '../../utils/atelierQuickStart';
+import { SpringVisualPills } from '../SpringVisualPills';
 
 export interface AtelierQuickStartGalleryProps {
   readonly exercises: readonly PilatesExercise[];
@@ -57,6 +58,12 @@ export const AtelierQuickStartGallery: React.FC<AtelierQuickStartGalleryProps> =
             </div>
             <div className="pf-quickstart-card__body">
               <h3>{recipe.titleKo}</h3>
+              <div className="pf-class-badges-strip" style={{ margin: '2px 0 6px' }}>
+                <span className="pf-studio3d-chip is-muscle" style={{ fontSize: '0.7rem' }}>
+                  ● {recipe.muscleFocusKo}
+                </span>
+                <SpringVisualPills springs={recipe.springs} />
+              </div>
               <p className="pf-quickstart-card__desc">{recipe.descKo}</p>
               <span className="pf-quickstart-card__flow">{recipe.flowLabelKo}</span>
               <button

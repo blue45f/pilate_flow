@@ -6,9 +6,11 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#f6f5f0",
   "theme_color": "#234c3f",
-  "description": "나의 필라테스 수업 계획과 기록",
+  "categories": ["fitness", "health", "lifestyle", "productivity"],
+  "description": "모바일·태블릿 오프라인 지원 필라테스 시퀀스 빌더, 32컷 3D 기구 모션 가이드 및 라이브 수업 타이머",
   "icons": [
     {
       "src": "/icons/app-192.png",
@@ -27,6 +29,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "오늘의 수업 시퀀스 짜기",
+      "short_name": "수업 계획",
+      "description": "모바일 4단계 시퀀스 빌더 바로 열기",
+      "url": "/?utm_source=pwa-workbench",
+      "icons": [{ "src": "/icons/app-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "5기구 3D 동작 도감",
+      "short_name": "3D 도감",
+      "description": "158종 필라테스 동작과 32컷 3D 모션 확인",
+      "url": "/?utm_source=pwa-atlas",
+      "icons": [{ "src": "/icons/app-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

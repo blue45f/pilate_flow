@@ -1,10 +1,11 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Check, ChevronDown, Clock3, Info, Plus, ShieldCheck } from 'lucide-react';
-import { PfButton, PfField, PfFormError, PfInput, PfSelect, PfTextarea } from '../design-system';
+import { PfBadge, PfButton, PfField, PfFormError, PfInput, PfSelect, PfTextarea } from '../design-system';
 import { LogClassHistorySchema } from '../schemas/pilatesSchema';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { SequenceStep } from '../types/pilates';
 import type { ClassHistoryLogWithSnapshot } from '../types/teachingHistorySnapshot';
+import { resolveClassCardVisualMeta } from '../utils/memberBookingBridge';
 import { getSavedHumanMovementDrafts, getSavedReusableBlocks } from '../utils/movementIdeaDraft';
 import { formatSecondsToMMSS, getSequenceDurations, isRestStep } from '../utils/sequenceEngine';
 import {
@@ -13,6 +14,7 @@ import {
   findDuplicateCompletedHistoryLog,
 } from '../utils/teachingHistorySnapshot';
 import { LightDismissDialog } from './LightDismissDialog';
+import { SpringVisualPills } from './SpringVisualPills';
 import '../styles/design-tokens.css';
 import '../styles/teaching.css';
 import './LogSessionModal.css';
@@ -128,6 +130,8 @@ const SessionLogForm: React.FC<
     activeSubtitle,
     activeSequenceId,
     activeSteps,
+    activeApparatus,
+    activeLevel,
     activeTargetGroupId,
     exercises,
     persistenceError,
@@ -149,7 +153,7 @@ const SessionLogForm: React.FC<
   const logStep2SummaryRef = useRef<HTMLElement>(null);
   const logStep3Ref = useRef<HTMLDivElement>(null);
   const groupSelectRef = useRef<HTMLSelectElement>(null);
-  const newGroupInputRef = useRef<HTMLInputElement>(null);
+  const newGroupInputRef = useRef<HTMLSelectElement | HTMLInputElement>(null);
   const taughtDateInputRef = useRef<HTMLInputElement>(null);
   const minutesInputRef = useRef<HTMLInputElement>(null);
   const secondsInputRef = useRef<HTMLInputElement>(null);
@@ -231,6 +235,17 @@ const SessionLogForm: React.FC<
       (sequenceId === activeSequenceId ? activeTitle : saved?.title) ??
       activeTitle,
   );
+  const logVisualMeta = resolveClassCardVisualMeta({
+    sequence: {
+      title,
+      apparatus: saved?.apparatus ?? activeApparatus,
+      level: saved?.level ?? activeLevel,
+      steps: snapshot,
+    },
+    exercises: exercisesAtOpen,
+    title,
+    fallbackLevel: saved?.level ?? activeLevel,
+  });
   const [groupId, setGroupId] = useState(() => {
     if (
       typeof initialDraft?.groupId === 'string' &&
@@ -605,7 +620,7 @@ const SessionLogForm: React.FC<
         if (hasEditedDraft && !submitted && (reason === 'backdrop' || reason === 'native-cancel')) {
           setPendingCloseRequest(() => close);
           return false;
-        }
+      }
         return true;
       }}
       variant="sheet"
@@ -667,6 +682,29 @@ const SessionLogForm: React.FC<
               </div>
             </div>
           </nav>
+          <div
+            className="pf-spot-dialog-3d-banner"
+            data-testid="log-session-3d-banner"
+            style={{ marginBottom: '10px' }}
+          >
+            <img
+              src={logVisualMeta.studio3dThumbUrl}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              className="pf-spot-dialog-3d-banner__img"
+            />
+            <div className="pf-spot-dialog-3d-banner__info">
+              <strong>{title || '완료한 수업'}</strong>
+              <div className="pf-class-badges-strip">
+                <span className="pf-class-apparatus-pill">
+                  {logVisualMeta.apparatusLabelKo} 3D
+                </span>
+                <PfBadge tone="sage">{logVisualMeta.levelBadgeKo}</PfBadge>
+                <SpringVisualPills springs={logVisualMeta.springs} />
+              </div>
+            </div>
+          </div>
           <div className="teaching-log-summary">
             <div className="class-log-summary-heading">
               <strong className="class-log-plan-badge">
@@ -760,7 +798,7 @@ const SessionLogForm: React.FC<
                 <div className="teaching-inline-group">
                   <PfField label="그룹 별칭 · 실명은 필요 없어요">
                     <PfInput
-                      ref={newGroupInputRef}
+                      ref={newGroupInputRef as React.RefObject<HTMLInputElement>}
                       hasError={errorField === 'newGroup'}
                       maxLength={60}
                       placeholder="예: 저녁 A반, 개인 01"
@@ -988,34 +1026,89 @@ const SessionLogForm: React.FC<
             className={`teaching-form-grid teaching-form-two ${logStep === 3 ? 'is-step-focused' : ''}`}
             onFocusCapture={() => setLogStep(3)}
           >
-            <PfField label="강사가 느낀 강도">
-              <PfSelect
-                value={intensity}
-                onChange={(event) => {
-                  setHasEditedDraft(true);
-                  setIntensity(event.target.value as typeof intensity);
-                }}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <PfField label="강사가 느낀 강도">
+                <PfSelect
+                  value={intensity}
+                  onChange={(event) => {
+                    setHasEditedDraft(true);
+                    setIntensity(event.target.value as typeof intensity);
+                  }}
+                >
+                  <option value="relaxed">가볍게</option>
+                  <option value="moderate">보통</option>
+                  <option value="intense">높게</option>
+                </PfSelect>
+              </PfField>
+              <div
+                className="log-quick-note-chips"
+                data-testid="log-quick-intensity-chips"
+                role="group"
+                aria-label="원탭 강도 체감 선택"
               >
-                <option value="relaxed">가볍게</option>
-                <option value="moderate">보통</option>
-                <option value="intense">높게</option>
-              </PfSelect>
-            </PfField>
-            <PfField label="강사의 수업 평가">
-              <PfSelect
-                value={rating}
-                onChange={(event) => {
-                  setHasEditedDraft(true);
-                  setRating(Number(event.target.value) as typeof rating);
-                }}
-              >
-                {([1, 2, 3, 4, 5] as const).map((value) => (
-                  <option key={value} value={value}>
-                    {value} / 5
-                  </option>
+                {(
+                  [
+                    { value: 'relaxed' as const, label: '여유로움' },
+                    { value: 'moderate' as const, label: '적정 집중' },
+                    { value: 'intense' as const, label: '고강도 챌린지' },
+                  ] as const
+                ).map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    className={`log-quick-note-chip ${intensity === item.value ? 'is-selected' : ''}`.trim()}
+                    aria-pressed={intensity === item.value}
+                    onClick={() => {
+                      setHasEditedDraft(true);
+                      setLogStep(3);
+                      setIntensity(item.value);
+                    }}
+                  >
+                    {intensity === item.value ? `✓ ${item.label}` : item.label}
+                  </button>
                 ))}
-              </PfSelect>
-            </PfField>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <PfField label="강사의 수업 평가">
+                <PfSelect
+                  value={rating}
+                  onChange={(event) => {
+                    setHasEditedDraft(true);
+                    setRating(Number(event.target.value) as typeof rating);
+                  }}
+                >
+                  {([1, 2, 3, 4, 5] as const).map((value) => (
+                    <option key={value} value={value}>
+                      {value} / 5
+                    </option>
+                  ))}
+                </PfSelect>
+              </PfField>
+              <div
+                className="log-quick-note-chips"
+                data-testid="log-quick-rating-chips"
+                role="group"
+                aria-label="원탭 수업 만족도 선택"
+              >
+                {([1, 2, 3, 4, 5] as const).map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    className={`log-quick-note-chip ${rating === val ? 'is-selected' : ''}`.trim()}
+                    aria-pressed={rating === val}
+                    aria-label={`수업 만족도 ${val}점`}
+                    onClick={() => {
+                      setHasEditedDraft(true);
+                      setLogStep(3);
+                      setRating(val);
+                    }}
+                  >
+                    {val}점
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           {/* Rendered as a div so the quick-note chip buttons are not implicitly labelled by
               (or activated through) the wrapping <label>; the label targets the textarea. */}

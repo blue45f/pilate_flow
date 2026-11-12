@@ -113,8 +113,10 @@ import { StudioFlowOptimizerPanel } from './workbench/StudioFlowOptimizerPanel';
 import { StudioReadinessAuditCard } from './workbench/StudioReadinessAuditCard';
 import { SpringVisualPills } from './SpringVisualPills';
 import { AtelierQuickStartGallery } from './workbench/AtelierQuickStartGallery';
+import { SequenceQuickFlowCoachStrip } from './workbench/SequenceQuickFlowCoachStrip';
 import { WorkbenchBlankStarters } from './workbench/WorkbenchBlankStarters';
 import { WorkbenchHierarchySummary } from './workbench/WorkbenchHierarchySummary';
+import { resolveClassCardVisualMeta } from '../utils/memberBookingBridge';
 import '../styles/design-tokens.css';
 import '../styles/workbench-usability.css';
 import '../styles/workbench-vnext.css';
@@ -178,10 +180,15 @@ const sections = [
 
 import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
 import { CatalogMotionThumbnail } from './CatalogMotionInteractivePlayer';
+import {
+  getApparatusPrimary3DThumb,
+  resolveStudio3DMotionForExercise,
+} from '../utils/studio3dMotionCatalog';
 
 function WorkbenchMovementMark({ exercise }: { exercise: PilatesExercise }) {
   const pattern = getMotionPatternReferences(exercise.id)[0];
   const catalogMotion = getCatalogContinuousMotionAsset(exercise);
+  const studio3d = resolveStudio3DMotionForExercise(exercise);
   if (pattern) {
     return (
       <span className="workbench-movement-mark" title={`${pattern.title} · 기구학 표준 도해`}>
@@ -199,8 +206,15 @@ function WorkbenchMovementMark({ exercise }: { exercise: PilatesExercise }) {
       <small>기구 도해</small>
     </span>
   ) : (
-    <span className="workbench-movement-mark">
-      <small>기구 도해</small>
+    <span className="workbench-movement-mark" title={`${studio3d.titleKo} · 3D 기구 참조`}>
+      <img
+        src={studio3d.peakImg}
+        alt=""
+        aria-hidden="true"
+        className="pf-workbench-3d-mini-thumb"
+        loading="lazy"
+      />
+      <small>3D 도해</small>
     </span>
   );
 }
@@ -1841,14 +1855,30 @@ export function SequenceWorkbench({
                           seq.title || (seq as { name?: string }).name || '저장된 수업 시퀀스';
                         const gearText =
                           seq.apparatus === 'mixed' ? '복합 기구' : equipmentLabel([seq.apparatus]);
+                        const recentVisual = resolveClassCardVisualMeta({
+                          sequence: seq,
+                          exercises: s.exercises,
+                          title: seqTitle,
+                          fallbackLevel: seq.level,
+                        });
                         return (
                           <div key={seq.id} className="workbench-recent-card">
-                            <div className="workbench-recent-card__info">
-                              <strong>{seqTitle}</strong>
-                              <span>
-                                {moveCount}개 동작 · {seq.targetMinutes}분 ·{' '}
-                                {gearText || '기구 미지정'}
-                              </span>
+                            <div className="pf-member-my-booking-lead">
+                              <img
+                                src={recentVisual.studio3dThumbUrl}
+                                alt=""
+                                aria-hidden="true"
+                                loading="lazy"
+                                className="pf-workbench-3d-mini-thumb"
+                              />
+                              <div className="workbench-recent-card__info">
+                                <strong>{seqTitle}</strong>
+                                <span>
+                                  {moveCount}개 동작 · {seq.targetMinutes}분 ·{' '}
+                                  {gearText || '기구 미지정'} · {recentVisual.levelBadgeKo}
+                                </span>
+                                <SpringVisualPills springs={recentVisual.springs} />
+                              </div>
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                               <PfButton
@@ -2048,6 +2078,28 @@ export function SequenceWorkbench({
               >
                 복합 기구·소도구 상세 설정
               </button>
+            </div>
+            <div className="pf-step1-visual-apparatus-strip" aria-hidden="true">
+              {(
+                [
+                  { id: 'reformer', label: '리포머' },
+                  { id: 'mat', label: '매트' },
+                  { id: 'cadillac', label: '캐딜락' },
+                  { id: 'chair', label: '체어' },
+                  { id: 'barrel', label: '바렐' },
+                ] as const
+              ).map((tile) => {
+                const active = selectedEquipment.includes(tile.id);
+                return (
+                  <div
+                    key={tile.id}
+                    className={`pf-step1-visual-tile ${active ? 'is-selected' : ''}`.trim()}
+                  >
+                    <img src={getApparatusPrimary3DThumb(tile.id)} alt="" loading="lazy" />
+                    <span>{tile.label} 3D</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
           <div className="pf-step1-field-group">
@@ -2744,6 +2796,14 @@ export function SequenceWorkbench({
                   />
                 </div>
               </div>
+              <SequenceQuickFlowCoachStrip
+                steps={s.activeSteps}
+                exercisesById={exerciseMap}
+                onApplyOptimizedSteps={(nextSteps, msg) => {
+                  applyStepsWithUndo(nextSteps, msg);
+                }}
+                onOpenFinderForMissingPlane={openExerciseFinder}
+              />
               {gapFillOpen && s.activeSteps.length > 0 && delta < 0 && gapFillCandidates.length > 0 && (
                 <div
                   className="pf-gap-fill-drawer"

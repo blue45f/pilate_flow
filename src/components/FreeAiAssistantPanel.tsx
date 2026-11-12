@@ -37,6 +37,8 @@ import type {
   LayerMode,
 } from '../types/pilates';
 import { PfAiStatusBadge } from '../design-system';
+import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
+import { SpringVisualPills } from './SpringVisualPills';
 import '../styles/free-ai-assistant.css';
 import './FreeAiAssistantPanel.css';
 
@@ -883,26 +885,47 @@ export function FreeAiAssistantPanel({
       <ol className="free-ai-step-list" aria-label="편집 가능한 시퀀스 단계">
         {steps.map((step, index) => {
           const isIncluded = !excludedStepIds.has(step.stepId);
+          const matchedEx = exercises.find((item) => item.id === step.exerciseId);
+          const motion3d = matchedEx ? resolveStudio3DMotionForExercise(matchedEx) : null;
           return (
           <li
             key={step.stepId}
             className={`free-ai-step-row ${isIncluded ? '' : 'is-excluded'}`.trim()}
           >
             <div>
-              <label className="free-ai-step-check-label">
-                <input
-                  type="checkbox"
-                  className="free-ai-step-check"
-                  data-testid="free-ai-step-include-checkbox"
-                  checked={isIncluded}
-                  aria-label={`${step.nameKo} 수업 반영 포함`}
-                  onChange={() => toggleStepIncluded(step.stepId)}
-                />
-                <strong>
-                  {index + 1}. {step.nameKo}
-                </strong>
-              </label>{' '}
-              <small>({step.blockCategory})</small>
+              <div className="pf-ai-step-3d-lead">
+                {motion3d && (
+                  <img
+                    src={motion3d.peakImg}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    className="pf-workbench-3d-mini-thumb"
+                    data-testid="free-ai-step-3d-thumb"
+                  />
+                )}
+                <div>
+                  <label className="free-ai-step-check-label">
+                    <input
+                      type="checkbox"
+                      className="free-ai-step-check"
+                      data-testid="free-ai-step-include-checkbox"
+                      checked={isIncluded}
+                      aria-label={`${step.nameKo} 수업 반영 포함`}
+                      onChange={() => toggleStepIncluded(step.stepId)}
+                    />
+                    <strong>
+                      {index + 1}. {step.nameKo}
+                    </strong>
+                  </label>{' '}
+                  <small>({step.blockCategory})</small>
+                  {matchedEx?.springs && (
+                    <div className="pf-class-badges-strip pf-class-badges-strip--compact">
+                      <SpringVisualPills springs={matchedEx.springs} />
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="free-ai-field" style={{ marginTop: '0.35rem' }}>
                 <label htmlFor={`note-${step.stepId}`} className="free-ai-field-label">
                   단계 큐잉·스프링 메모
@@ -2321,15 +2344,45 @@ export function FreeAiAssistantPanel({
 
               {searchResult.recommendations.length > 0 && (
                 <ol className="free-ai-step-list" aria-label="추천 동작 목록">
-                  {searchResult.recommendations.map((rec, idx) => (
+                  {searchResult.recommendations.map((rec, idx) => {
+                    const recEx = exercises.find((item) => item.id === rec.exerciseId);
+                    const rec3d = recEx
+                      ? resolveStudio3DMotionForExercise(recEx)
+                      : resolveStudio3DMotionForExercise({
+                          id: rec.exerciseId,
+                          nameKo: rec.nameKo,
+                          nameEn: rec.nameEn,
+                          apparatus: rec.apparatus,
+                          blockCategory: rec.blockCategory,
+                          bodyPosition: 'supine',
+                          box: 'none',
+                        });
+                    return (
                     <li key={rec.exerciseId} className="free-ai-step-row">
                       <div>
-                        <strong>
-                          {idx + 1}. {rec.nameKo}
-                        </strong>{' '}
-                        <small>
-                          ({rec.nameEn} · Lv.{rec.level} · {rec.springs})
-                        </small>
+                        <div className="pf-ai-step-3d-lead">
+                          <img
+                            src={rec3d.peakImg}
+                            alt=""
+                            aria-hidden="true"
+                            loading="lazy"
+                            className="pf-workbench-3d-mini-thumb"
+                            data-testid="free-ai-rec-3d-thumb"
+                          />
+                          <div>
+                            <strong>
+                              {idx + 1}. {rec.nameKo}
+                            </strong>{' '}
+                            <small>
+                              ({rec.nameEn} · Lv.{rec.level} · {rec.springs})
+                            </small>
+                            {rec.springs && (
+                              <div className="pf-class-badges-strip pf-class-badges-strip--compact">
+                                <SpringVisualPills springs={rec.springs} />
+                              </div>
+                            )}
+                          </div>
+                        </div>
                         <p className="free-ai-subtitle" style={{ margin: '4px 0 2px' }}>
                           {rec.matchReasonKo}
                         </p>
@@ -2373,7 +2426,8 @@ export function FreeAiAssistantPanel({
                         </button>
                       </div>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ol>
               )}
 

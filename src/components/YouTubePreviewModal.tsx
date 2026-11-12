@@ -1,7 +1,9 @@
 import { PostureAnatomyGuide } from './PostureAnatomyGuide';
 import { MovementDiagramReference } from './MovementDiagramReference';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
-import React, { useEffect, useRef, useState } from 'react';
+import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
+import { getCrawledRelatedVideosForExercise } from '../data/globalCrawledRepertoirePack';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckCircle2,
   Clock3,
@@ -864,8 +866,16 @@ const MovementDetails: React.FC<{
   const [draftResetVersion, setDraftResetVersion] = useState(0);
   const [previewStep, setPreviewStep] = useState<1 | 2>(() => (restoredDraft ? 2 : 1));
   const [loadVideo, setLoadVideo] = useState(false);
+  const [activeCrawledVideoId, setActiveCrawledVideoId] = useState<string | null>(null);
+  const crawledRelatedVideos = useMemo(
+    () => getCrawledRelatedVideosForExercise(exercise, 4),
+    [exercise],
+  );
   useEffect(() => {
-    const stopVideo = () => setLoadVideo(false);
+    const stopVideo = () => {
+      setLoadVideo(false);
+      setActiveCrawledVideoId(null);
+    };
     const onVisibility = () => {
       if (document.hidden) stopVideo();
     };
@@ -1015,8 +1025,10 @@ const MovementDetails: React.FC<{
           </button>
         </div>
       )}
+      <div ref={step1Ref}>
+        <Studio3DMotionHeroCard exercise={exercise} />
+      </div>
       <div
-        ref={step1Ref}
         className={`movement-detail-media movement-${exercise.apparatus}`}
       >
         {loadVideo && link ? (
@@ -1105,11 +1117,122 @@ const MovementDetails: React.FC<{
           </button>
         </div>
       )}
-      <StudioClinicalBriefCard exercise={exercise} />
-      <MovementDiagramReference exercise={exercise} />
       <MotionReferencePlayer exerciseId={exercise.id} exerciseName={exercise.nameKo} />
       <ExerciseYouTubeGallery exercise={exercise} maxPerRegion={3} />
-      <MovementMediaGuidancePanel key={exercise.id} exercise={exercise} />
+      {crawledRelatedVideos.length > 0 && (
+        <details
+          className="pf-detail-progressive-drawer"
+          data-testid="crawled-related-videos-drawer"
+        >
+          <summary>
+            <span>
+              <Play size={14} aria-hidden="true" /> 추가 크롤링 공식 시범 영상 ({
+                crawledRelatedVideos.length
+              }건 · 국내외 참조)
+            </span>
+            <ChevronDown size={14} aria-hidden="true" />
+          </summary>
+          <div style={{ display: 'grid', gap: '10px', paddingBottom: '10px' }}>
+            <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
+              클릭 시에만 공식 YouTube 개인정보 보호 임베드(youtube-nocookie.com, 자동재생 없음)로 열립니다.
+            </p>
+            {crawledRelatedVideos.map((vid) => (
+              <div
+                key={vid.videoId}
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid #dce3d8',
+                  borderRadius: '12px',
+                  padding: '10px 12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                  }}
+                >
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '0.84rem', color: '#173d34' }}>
+                      {vid.title}
+                    </strong>
+                    <span style={{ fontSize: '0.75rem', color: '#56685f' }}>
+                      {vid.channelName} · {vid.region === 'kr' ? '국내 채널' : '해외 공식 채널'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() =>
+                        setActiveCrawledVideoId((prev) =>
+                          prev === vid.videoId ? null : vid.videoId,
+                        )
+                      }
+                    >
+                      <Play size={13} aria-hidden="true" />{' '}
+                      {activeCrawledVideoId === vid.videoId ? '영상 접기' : '미리보기 열기'}
+                    </button>
+                    <a
+                      href={vid.watchUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary"
+                    >
+                      <ExternalLink size={13} aria-hidden="true" /> YouTube 원문
+                    </a>
+                  </div>
+                </div>
+                {activeCrawledVideoId === vid.videoId && (
+                  <div
+                    style={{
+                      aspectRatio: '16 / 9',
+                      width: '100%',
+                      borderRadius: '10px',
+                      overflow: 'hidden',
+                      background: '#111',
+                    }}
+                  >
+                    <iframe
+                      src={vid.embedUrl}
+                      title={`${vid.title} 공식 참조 영상`}
+                      allow="encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      style={{ width: '100%', height: '100%', border: 0 }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+      <details className="pf-detail-progressive-drawer" data-testid="detail-clinical-diagram-drawer">
+        <summary>
+          <span>기구학 단계 도해 · 스튜디오 브리프 열기 (선택)</span>
+          <ChevronDown size={14} aria-hidden="true" />
+        </summary>
+        <div style={{ display: 'grid', gap: '12px', paddingBottom: '10px' }}>
+          <StudioClinicalBriefCard exercise={exercise} />
+          <MovementDiagramReference exercise={exercise} />
+        </div>
+      </details>
+      <details className="pf-detail-progressive-drawer" data-testid="detail-voice-media-drawer">
+        <summary>
+          <span>한국어 음성 티칭 가이드 · 링크 정책 열기 (선택)</span>
+          <ChevronDown size={14} aria-hidden="true" />
+        </summary>
+        <div style={{ paddingBottom: '10px' }}>
+          <MovementMediaGuidancePanel key={exercise.id} exercise={exercise} />
+        </div>
+      </details>
       <details
         className="pending-instruction-notes"
         onToggle={(event) => setMotionLabOpen(event.currentTarget.open)}
@@ -1240,7 +1363,15 @@ const MovementDetails: React.FC<{
             : '교차 검증 완료 자료입니다. 수업안에 바로 추가할 수 있으며, 실제 수행 전 기구와 몸 상태를 확인하세요.'}
         </p>
       </div>
-      <PostureAnatomyGuide exercise={exercise} />
+      <details className="pf-detail-progressive-drawer" data-testid="detail-posture-anatomy-drawer">
+        <summary>
+          <span>자세 정렬 · 타겟 해부학 부위 가이드 열기 (선택)</span>
+          <ChevronDown size={14} aria-hidden="true" />
+        </summary>
+        <div style={{ paddingBottom: '10px' }}>
+          <PostureAnatomyGuide exercise={exercise} />
+        </div>
+      </details>
       {approved ? (
         <ExercisePlanningNotes exercise={exercise} pending={false} />
       ) : (

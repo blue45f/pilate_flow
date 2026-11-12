@@ -1,4 +1,11 @@
-import type { ApparatusType, SavedSequence } from '../types/pilates';
+import type {
+  ApparatusType,
+  DifficultyLevel,
+  PilatesExercise,
+  SavedSequence,
+  SequenceStep,
+} from '../types/pilates';
+import type { DatedSequencePlanAssignment } from '../types/datedSequencePlanning';
 import type { InstructorScheduleData } from '../types/instructorSchedule';
 import {
   addScheduleDays,
@@ -7,6 +14,13 @@ import {
   scheduleWeekStart,
 } from './instructorSchedule';
 import { EQUIPMENT_OPTIONS, getEquipmentFamilies } from '../data/equipmentCatalog';
+import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
+import { GLOBAL_CRAWLED_REPERTOIRE_EXERCISES } from '../data/globalCrawledRepertoirePack';
+import { isRestStep } from './sequenceEngine';
+import {
+  getApparatusPrimary3DThumb,
+  resolveStudio3DMotionForExercise,
+} from './studio3dMotionCatalog';
 
 export type MemberSlotBookingStatus =
   | 'AVAILABLE'
@@ -95,6 +109,170 @@ export function findSpotMetaById(
   );
 }
 
+export function formatDifficultyBadgeKo(level: DifficultyLevel | null | undefined): string {
+  switch (level) {
+    case '1.0':
+      return 'Lv 1.0 · 입문·기초';
+    case '1.5':
+      return 'Lv 1.5 · 초중급';
+    case '2.0':
+      return 'Lv 2.0 · 중상급';
+    default:
+      return '난이도 미지정';
+  }
+}
+
+export function getDefaultApparatusSpringsHint(apparatus: ApparatusType | 'mixed'): string {
+  switch (apparatus) {
+    case 'chair':
+      return '1R 1Y (페달)';
+    case 'cadillac':
+      return '1B (푸쉬스루)';
+    case 'barrel':
+      return '래더 고정';
+    case 'mat':
+      return '스프링 사용 없음';
+    case 'reformer':
+    case 'mixed':
+    default:
+      return '2R 1B';
+  }
+}
+
+function inferLevelFromTitle(title: string | undefined): DifficultyLevel | null {
+  const hay = (title ?? '').toLowerCase();
+  if (!hay) return null;
+  if (/2\.0|심화|상급|중상급|advanced/.test(hay)) return '2.0';
+  if (/1\.5|초중급|중급|intermediate/.test(hay)) return '1.5';
+  if (/1\.0|입문|기초|릴리즈|호흡|정렬|beginner|foundation/.test(hay)) return '1.0';
+  return null;
+}
+
+function inferApparatusFromTitle(title: string | undefined): ApparatusType | null {
+  const hay = (title ?? '').toLowerCase();
+  if (!hay) return null;
+  if (/체어|운다|chair|wunda/.test(hay)) return 'chair';
+  if (/캐딜락|타워|푸쉬스루|푸시스루|롤다운\s*바|cadillac|tower/.test(hay)) return 'cadillac';
+  if (/바렐|스파인\s*코렉터|아크|barrel|spine\s*corrector/.test(hay)) return 'barrel';
+  if (/매트|소도구\s*매트|mat/.test(hay)) return 'mat';
+  if (/리포머|reformer/.test(hay)) return 'reformer';
+  return null;
+}
+
+export interface SequenceLikeForCardMeta {
+  readonly title?: string;
+  readonly apparatus?: ApparatusType | 'mixed';
+  readonly level?: DifficultyLevel;
+  readonly steps?: readonly SequenceStep[];
+}
+
+export interface ClassCardVisualMeta {
+  readonly apparatus: ApparatusType | 'mixed';
+  readonly apparatusLabelKo: string;
+  readonly studio3dThumbUrl: string;
+  readonly studio3dTitleKo: string;
+  readonly level: DifficultyLevel | null;
+  readonly levelBadgeKo: string;
+  readonly springs: string;
+  readonly isSequenceLinked: boolean;
+  readonly springSourceLabelKo: '연결 시퀀스' | '기구 기본 세팅';
+}
+
+export function resolveClassCardVisualMeta(params: {
+  readonly sequence?: SequenceLikeForCardMeta;
+  readonly exercises?: readonly PilatesExercise[];
+  readonly locationEquipmentIds?: readonly string[];
+  readonly fallbackApparatus?: ApparatusType | 'mixed';
+  readonly title?: string;
+  readonly fallbackLevel?: DifficultyLevel | null;
+}): ClassCardVisualMeta {
+  const {
+    sequence,
+    exercises,
+    locationEquipmentIds = [],
+    fallbackApparatus,
+    title,
+    fallbackLevel = null,
+  } = params;
+
+  const catalog =
+    exercises && exercises.length > 0
+      ? exercises
+      : [...INITIAL_EXERCISES, ...GLOBAL_CRAWLED_REPERTOIRE_EXERCISES];
+  const byId = new Map<string, PilatesExercise>();
+  for (const ex of catalog) {
+    byId.set(ex.id, ex);
+  }
+  for (const crawled of GLOBAL_CRAWLED_REPERTOIRE_EXERCISES) {
+    if (!byId.has(crawled.id)) {
+      byId.set(crawled.id, crawled);
+    }
+  }
+
+  let firstExercise: PilatesExercise | undefined;
+  let linkedSpring: string | undefined;
+
+  if (sequence?.steps && sequence.steps.length > 0) {
+    for (const step of sequence.steps) {
+      if (!step || isRestStep(step)) continue;
+      const ex = byId.get(step.exerciseId);
+      if (!firstExercise && ex) {
+        firstExercise = ex;
+      }
+      const candidateSpring = step.customSpringOverride?.trim() || ex?.springs?.trim();
+      if (!linkedSpring && candidateSpring) {
+        linkedSpring = candidateSpring;
+      }
+      if (firstExercise && linkedSpring) break;
+    }
+  }
+
+  const locFamilies = getEquipmentFamilies([...locationEquipmentIds]);
+  const titleApparatus = inferApparatusFromTitle(title ?? sequence?.title);
+
+  let apparatus: ApparatusType | 'mixed';
+  if (sequence?.apparatus && sequence.apparatus !== 'mixed') {
+    apparatus = sequence.apparatus;
+  } else if (firstExercise) {
+    apparatus = firstExercise.apparatus;
+  } else if (fallbackApparatus && fallbackApparatus !== 'mixed') {
+    apparatus = fallbackApparatus;
+  } else if (titleApparatus && (locFamilies.length === 0 || locFamilies.includes(titleApparatus))) {
+    apparatus = titleApparatus;
+  } else if (locFamilies.length === 1) {
+    apparatus = locFamilies[0]!;
+  } else if (locFamilies.length > 1) {
+    apparatus = titleApparatus ?? 'mixed';
+  } else {
+    apparatus = titleApparatus ?? fallbackApparatus ?? 'reformer';
+  }
+
+  const motionSpec = firstExercise ? resolveStudio3DMotionForExercise(firstExercise) : null;
+  const studio3dThumbUrl = motionSpec
+    ? motionSpec.peakImg
+    : getApparatusPrimary3DThumb(apparatus);
+  const studio3dTitleKo = motionSpec
+    ? motionSpec.titleKo
+    : `${getApparatusSpotLabelKo(apparatus)} 스튜디오 3D 프리뷰`;
+
+  const resolvedLevel: DifficultyLevel | null =
+    sequence?.level ?? inferLevelFromTitle(title) ?? fallbackLevel;
+  const isSequenceLinked = Boolean(sequence);
+  const springs = linkedSpring || getDefaultApparatusSpringsHint(apparatus);
+
+  return {
+    apparatus,
+    apparatusLabelKo: getApparatusSpotLabelKo(apparatus),
+    studio3dThumbUrl,
+    studio3dTitleKo,
+    level: resolvedLevel,
+    levelBadgeKo: formatDifficultyBadgeKo(resolvedLevel),
+    springs,
+    isSequenceLinked,
+    springSourceLabelKo: linkedSpring ? '연결 시퀀스' : '기구 기본 세팅',
+  };
+}
+
 export interface MemberPassSummary {
   readonly passId: string;
   readonly passTitle: string;
@@ -124,6 +302,12 @@ export interface MemberBookableSlot {
   readonly myState: 'NONE' | 'BOOKED' | 'WAITLISTED';
   readonly mySpotId?: string;
   readonly myWaitlistOrder?: number;
+  readonly level?: DifficultyLevel;
+  readonly levelBadgeKo?: string;
+  readonly representativeSprings?: string;
+  readonly springSourceLabelKo?: '연결 시퀀스' | '기구 기본 세팅';
+  readonly studio3dThumbUrl?: string;
+  readonly studio3dTitleKo?: string;
 }
 
 export type PersistedMemberSlotDecision = {
@@ -202,20 +386,7 @@ function stableSlotBaseEnrolled(classId: string, dateIso: string): number {
 }
 
 export function getApparatusStudio3dImage(apparatus: ApparatusType | 'mixed'): string {
-  switch (apparatus) {
-    case 'cadillac':
-      return '/images/atelier-v2/cadillac-studio-3d.png';
-    case 'chair':
-      return '/images/atelier-v2/chair-studio-3d.png';
-    case 'barrel':
-      return '/images/atelier-v2/barrel-studio-3d.png';
-    case 'mat':
-      return '/images/atelier-ring-still-life.png';
-    case 'reformer':
-    case 'mixed':
-    default:
-      return '/images/atelier-v2/reformer-studio-3d.png';
-  }
+  return getApparatusPrimary3DThumb(apparatus);
 }
 
 export function computeStudioSpotStates(slot: MemberBookableSlot): ReadonlyArray<{
@@ -395,6 +566,8 @@ function buildFallbackStudioWeekSlots(
     locationAlias: string;
     apparatus: ApparatusType;
     equipmentLabels: readonly string[];
+    level: DifficultyLevel;
+    springs: string;
     baseEnrolled: number;
     maxCapacity: number;
     baseWaitlist: number;
@@ -407,6 +580,8 @@ function buildFallbackStudioWeekSlots(
       locationAlias: '본점 A룸',
       apparatus: 'reformer',
       equipmentLabels: ['리포머', '폼롤러'],
+      level: '1.0',
+      springs: '2R 1B',
       baseEnrolled: 3,
       maxCapacity: 6,
       baseWaitlist: 0,
@@ -419,6 +594,8 @@ function buildFallbackStudioWeekSlots(
       locationAlias: '본점 A룸',
       apparatus: 'chair',
       equipmentLabels: ['체어', '미니볼'],
+      level: '1.5',
+      springs: '1R 1Y (페달)',
       baseEnrolled: 5,
       maxCapacity: 6,
       baseWaitlist: 0,
@@ -431,6 +608,8 @@ function buildFallbackStudioWeekSlots(
       locationAlias: '본점 B룸',
       apparatus: 'cadillac',
       equipmentLabels: ['캐딜락', '써클링'],
+      level: '1.5',
+      springs: '1B (푸쉬스루)',
       baseEnrolled: 6,
       maxCapacity: 6,
       baseWaitlist: 1,
@@ -440,6 +619,7 @@ function buildFallbackStudioWeekSlots(
   return templates.map((tpl) => {
     const id = `sample-slot-${selectedDate}-${tpl.suffix}`;
     const decision = decisions[id];
+    const thumbUrl = getApparatusPrimary3DThumb(tpl.apparatus);
     return {
       id,
       classId: tpl.suffix,
@@ -459,6 +639,12 @@ function buildFallbackStudioWeekSlots(
       myState: decision?.state ?? 'NONE',
       mySpotId: decision?.spotId,
       myWaitlistOrder: decision?.waitlistOrder,
+      level: tpl.level,
+      levelBadgeKo: formatDifficultyBadgeKo(tpl.level),
+      representativeSprings: tpl.springs,
+      springSourceLabelKo: '기구 기본 세팅',
+      studio3dThumbUrl: thumbUrl,
+      studio3dTitleKo: `${getApparatusSpotLabelKo(tpl.apparatus)} 스튜디오 3D 프리뷰`,
     };
   });
 }
@@ -468,8 +654,17 @@ export function buildMemberSlotsForDate(params: {
   readonly schedule: InstructorScheduleData;
   readonly savedSequences: readonly SavedSequence[];
   readonly decisions: PersistedMemberBookingState['slotDecisions'];
+  readonly exercises?: readonly PilatesExercise[];
+  readonly datedAssignments?: readonly DatedSequencePlanAssignment[];
 }): { readonly slots: MemberBookableSlot[]; readonly weekCounts: Record<string, number> } {
-  const { selectedDate, schedule, savedSequences, decisions } = params;
+  const {
+    selectedDate,
+    schedule,
+    savedSequences,
+    decisions,
+    exercises,
+    datedAssignments = [],
+  } = params;
   const weekStart = scheduleWeekStart(selectedDate);
   // Clamp to the last supported schedule date so the final week of 2199 never exceeds the valid range.
   const rawWeekEnd = addScheduleDays(weekStart, 6);
@@ -498,16 +693,30 @@ export function buildMemberSlotsForDate(params: {
   const dayRows = expandedWeek.filter((row) => row.date === selectedDate);
   const slots: MemberBookableSlot[] = dayRows.map((row) => {
     const location = schedule.locations.find((loc) => loc.id === row.locationId);
+    const datedMatch = datedAssignments.find(
+      (item) =>
+        item.classId === row.classId &&
+        item.originalDate === row.originalDate &&
+        item.occurrenceSnapshot.date === row.date &&
+        item.occurrenceSnapshot.startTime === row.startTime &&
+        item.occurrenceSnapshot.endTime === row.endTime &&
+        item.occurrenceSnapshot.locationId === row.locationId,
+    );
     const linkedSeq = row.linkSavedSequenceId
       ? savedSequences.find((seq) => seq.id === row.linkSavedSequenceId)
       : undefined;
+    const activeSequence = datedMatch?.sequenceSnapshot ?? linkedSeq;
+
     const eqLabels = (location?.equipmentIds ?? [])
       .map((id) => EQUIPMENT_OPTIONS.find((item) => item.id === id)?.labelKo ?? id)
       .slice(0, 3);
-    const locFamilies = getEquipmentFamilies(location?.equipmentIds ?? []);
-    const apparatus: ApparatusType | 'mixed' =
-      linkedSeq?.apparatus ??
-      (locFamilies.length > 1 ? 'mixed' : (locFamilies[0] ?? 'reformer'));
+    const visualMeta = resolveClassCardVisualMeta({
+      sequence: activeSequence,
+      exercises,
+      locationEquipmentIds: location?.equipmentIds,
+      title: row.title,
+      fallbackLevel: null,
+    });
     const decision = decisions[row.id];
     const deterministicEnrolled = stableSlotBaseEnrolled(row.classId, row.date);
 
@@ -519,8 +728,8 @@ export function buildMemberSlotsForDate(params: {
       endTime: row.endTime,
       title: row.title,
       locationAlias: location?.alias || '스튜디오 룸',
-      apparatus,
-      equipmentLabels: eqLabels.length > 0 ? eqLabels : ['리포머'],
+      apparatus: visualMeta.apparatus,
+      equipmentLabels: eqLabels.length > 0 ? eqLabels : [visualMeta.apparatusLabelKo],
       occurrenceStatus: row.status,
       baseEnrolled: Math.min(5, deterministicEnrolled),
       maxCapacity: 6,
@@ -530,6 +739,12 @@ export function buildMemberSlotsForDate(params: {
       myState: decision?.state ?? 'NONE',
       mySpotId: decision?.spotId,
       myWaitlistOrder: decision?.waitlistOrder,
+      level: visualMeta.level ?? undefined,
+      levelBadgeKo: visualMeta.levelBadgeKo,
+      representativeSprings: visualMeta.springs,
+      springSourceLabelKo: visualMeta.springSourceLabelKo,
+      studio3dThumbUrl: visualMeta.studio3dThumbUrl,
+      studio3dTitleKo: visualMeta.studio3dTitleKo,
     };
   });
 

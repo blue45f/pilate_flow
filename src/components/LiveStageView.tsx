@@ -4,6 +4,7 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  Bell,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -52,6 +53,12 @@ import '../styles/live-stage-design.css';
 import './LiveStageView.css';
 import '../styles/live-stage-summary.css';
 import { useClassVoiceGuidance } from '../hooks/useClassVoiceGuidance';
+import {
+  computeSpringTransitionDelta,
+  silenceLiveSensoryCue,
+  triggerLiveSensoryCue,
+} from '../utils/liveStageSensoryCueEngine';
+import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 
 export interface LiveStageNavigationHandle {
   /** True means Stage owns the pending exit; keep it mounted until a decision. */
@@ -102,6 +109,15 @@ type StageUndoState =
       readonly stepTitle: string;
       readonly previousDurationMin: number;
       readonly previousRemainingMs: number;
+    }
+  | {
+      readonly kind: 'micro-adjust-15s';
+      readonly stepIndex: number;
+      readonly stepNumber: number;
+      readonly stepTitle: string;
+      readonly previousDurationMin: number;
+      readonly previousRemainingMs: number;
+      readonly deltaSec: -15 | 15;
     }
   | {
       readonly kind: 'step-reorder';
@@ -545,6 +561,45 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     });
   };
 
+  const adjustFifteenSeconds = (deltaSec: -15 | 15) => {
+    const prevDurations = durationsRef.current;
+    applyClock((value) =>
+      sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current),
+    );
+    const sampled = clockRef.current;
+    const targetIndex = sampled.index;
+    const currentStep = stepsRef.current[targetIndex];
+    if (!currentStep) return;
+    if (deltaSec < 0 && (currentStep.durationMin <= 0.5 || sampled.remainingMs <= 15000)) {
+      return;
+    }
+    const nextDurationMin = Math.min(
+      120,
+      Math.max(0.5, Number((currentStep.durationMin + deltaSec / 60).toFixed(4))),
+    );
+    const actualDeltaMs = Math.round((nextDurationMin - currentStep.durationMin) * 60000);
+    if (actualDeltaMs === 0) return;
+    const prevRemainingMs = sampled.remainingMs;
+    applySteps((prev) =>
+      prev.map((step, index) =>
+        index === targetIndex ? { ...step, durationMin: nextDurationMin } : step,
+      ),
+    );
+    applyClock((value) => ({
+      ...value,
+      remainingMs: Math.max(5000, value.remainingMs + actualDeltaMs),
+    }));
+    applyUndo({
+      kind: 'micro-adjust-15s',
+      stepIndex: targetIndex,
+      stepNumber: targetIndex + 1,
+      stepTitle: resolveStepDisplayName(targetIndex),
+      previousDurationMin: currentStep.durationMin,
+      previousRemainingMs: prevRemainingMs,
+      deltaSec,
+    });
+  };
+
   const moveUpcomingStep = (fromIndex: number, direction: 'up' | 'down') => {
     const prevDurations = durationsRef.current;
     applyClock((value) =>
@@ -654,6 +709,30 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           remainingMs: Math.min(
             Math.round(undo.previousDurationMin * 60000),
             value.remainingMs + addedBackMs,
+          ),
+        }));
+      }
+      applyUndo(null);
+      return;
+    }
+
+    if (undo.kind === 'micro-adjust-15s') {
+      const targetStep = stepsRef.current[undo.stepIndex];
+      if (!targetStep) {
+        applyUndo(null);
+        return;
+      }
+      applySteps((prev) =>
+        prev.map((step, index) =>
+          index === undo.stepIndex ? { ...step, durationMin: undo.previousDurationMin } : step,
+        ),
+      );
+      if (sampled.index === undo.stepIndex) {
+        applyClock((value) => ({
+          ...value,
+          remainingMs: Math.min(
+            Math.round(undo.previousDurationMin * 60000),
+            Math.max(0, undo.previousRemainingMs),
           ),
         }));
       }
@@ -820,6 +899,81 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       !exitOpen &&
       !reviewOpen,
   });
+  const [sensoryCueEnabled, setSensoryCueEnabled] = useState(false);
+  const [lastSensoryStatus, setLastSensoryStatus] = useState<string | null>(null);
+  const firedSensoryKeysRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    firedSensoryKeysRef.current.clear();
+  }, [current?.stepId]);
+  useEffect(() => {
+    if (!sensoryCueEnabled) return;
+    const stopSensory = () => silenceLiveSensoryCue();
+    const onVisibility = () => {
+      if (document.hidden || document.visibilityState === 'hidden') stopSensory();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', stopSensory);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', stopSensory);
+      stopSensory();
+    };
+  }, [sensoryCueEnabled]);
+  useEffect(() => {
+    if (!sensoryCueEnabled || !current || exitOpen || reviewOpen) return;
+    const stepId = current.stepId;
+    const remSec = Math.ceil(clock.remainingMs / 1000);
+    if (!clock.running) {
+      if (clock.remainingMs === 0 && clock.elapsedMs > 0) {
+        const doneKey = `${stepId}:step-complete`;
+        if (!firedSensoryKeysRef.current.has(doneKey)) {
+          firedSensoryKeysRef.current.add(doneKey);
+          triggerLiveSensoryCue('step-complete');
+          setLastSensoryStatus('전환 알림: 현재 순서 완료 차임·진동');
+        }
+      }
+      return;
+    }
+    if (
+      timing?.sides === 2 &&
+      sideLabels[1] &&
+      phase === `수행 · ${sideLabels[1]}`
+    ) {
+      const sideKey = `${stepId}:side-switch`;
+      if (!firedSensoryKeysRef.current.has(sideKey)) {
+        firedSensoryKeysRef.current.add(sideKey);
+        triggerLiveSensoryCue('side-switch');
+        setLastSensoryStatus(`전환 알림: 반대쪽(${sideLabels[1]}) 교대 차임·진동`);
+      }
+    } else if (phase.startsWith('수행') && (timing?.explanationSec ?? 0) > 0) {
+      const activeKey = `${stepId}:phase-active`;
+      if (!firedSensoryKeysRef.current.has(activeKey)) {
+        firedSensoryKeysRef.current.add(activeKey);
+        triggerLiveSensoryCue('phase-active');
+        setLastSensoryStatus('전환 알림: 본 수행 구간 시작 차임·진동');
+      }
+    }
+    if (remSec > 0 && remSec <= 10) {
+      const warnKey = `${stepId}:countdown-10s`;
+      if (!firedSensoryKeysRef.current.has(warnKey)) {
+        firedSensoryKeysRef.current.add(warnKey);
+        triggerLiveSensoryCue('countdown-10s');
+        setLastSensoryStatus('전환 알림: 종료 10초 전 다음 세팅 예고');
+      }
+    }
+  }, [
+    sensoryCueEnabled,
+    current,
+    clock.running,
+    clock.remainingMs,
+    clock.elapsedMs,
+    phase,
+    timing?.sides,
+    timing?.explanationSec,
+    sideLabels,
+    exitOpen,
+    reviewOpen,
+  ]);
   const [voiceCommandEnabled, setVoiceCommandEnabled] = useState(false);
   const [lastVoiceCommandStatus, setLastVoiceCommandStatus] = useState<string | null>(null);
   const speechRecognitionCtor =
@@ -1496,17 +1650,43 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             </div>
           )}
           <h2 className="teaching-current-name">{currentIsRest ? '휴식' : exercise?.nameKo}</h2>
-          {!currentIsRest && exercise && (
-            <>
-              <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
-              <LiveStageKinematicDiagram
-                exercise={exercise}
-                running={clock.running}
-                stepProgressRatio={progress / 100}
-                springsLabel={currentSpringRaw || undefined}
-              />
-            </>
-          )}
+          {!currentIsRest && exercise && (() => {
+            const studio3d = resolveStudio3DMotionForExercise(exercise);
+            const isPeakPhaseActive = progress >= 35 && progress <= 88;
+            return (
+              <>
+                <div
+                  className="pf-live-3d-companion"
+                  data-testid="live-stage-3d-companion"
+                  aria-label={`${exercise.nameKo} 3D 시작·정점 가이드`}
+                >
+                  <div
+                    className={`pf-live-3d-companion__card ${
+                      !isPeakPhaseActive ? 'is-active-phase' : ''
+                    }`.trim()}
+                  >
+                    <img src={studio3d.startImg} alt="" aria-hidden="true" loading="lazy" />
+                    <span className="pf-live-3d-companion__badge">● 1. 시작 셋업</span>
+                  </div>
+                  <div
+                    className={`pf-live-3d-companion__card ${
+                      isPeakPhaseActive ? 'is-active-phase' : ''
+                    }`.trim()}
+                  >
+                    <img src={studio3d.peakImg} alt="" aria-hidden="true" loading="lazy" />
+                    <span className="pf-live-3d-companion__badge is-peak">◆ 2. 정점 주동근</span>
+                  </div>
+                </div>
+                <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
+                <LiveStageKinematicDiagram
+                  exercise={exercise}
+                  running={clock.running}
+                  stepProgressRatio={progress / 100}
+                  springsLabel={currentSpringRaw || undefined}
+                />
+              </>
+            );
+          })()}
           {!currentIsRest && exercise && !isExerciseAutoEligible(exercise) && (
             <p className="muted">
               교차 검증 완료 가이드 · 실제 수행 전 기구와 몸 상태를 확인하세요.
@@ -1597,41 +1777,68 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   : '양쪽 수행이 전체 시간에 포함되어 있어요.'}
               </p>
             )}
+            {timing.sides === 2 &&
+              stepElapsedSec >= timing.explanationSec + timing.perSideSec && (
+                <div
+                  className="pf-live-bilateral-alert"
+                  data-testid="live-stage-bilateral-switch-alert"
+                  role="status"
+                >
+                  <span>⇄ 반대쪽 전환 시점 · 지금 {sideLabels[1]} 수행</span>
+                  <small>양쪽 균형 수행 확인</small>
+                </div>
+              )}
           </div>
           {(phase === '다음 동작 전환' || (clock.running && clock.remainingMs <= 15000)) &&
             next &&
             nextExercise &&
-            !isRestStep(next) && (
-              <div
-                className="teaching-transition-setup-banner"
-                role="status"
-                aria-label="다음 동작 기구 세팅 안내"
-              >
-                <div className="teaching-transition-setup-header">
-                  <span className="teaching-transition-setup-badge">NEXT SETUP</span>
-                  <ExerciseThumbnailBadge exercise={nextExercise} size="xs" decorative />
-                  <strong className="teaching-transition-setup-title">
-                    다음: {nextExercise.nameKo}
-                  </strong>
-                </div>
-                <div className="teaching-transition-setup-chips">
-                  <span className="teaching-transition-chip is-apparatus">
-                    기구 · {APPARATUS_LABELS[nextExercise.apparatus].ko}
-                  </span>
-                  <span className="teaching-transition-chip is-spring">
-                    스프링 · {next.customSpringOverride || nextExercise.springs || '기구 세팅 확인'}
-                  </span>
-                  {nextExercise.box !== 'none' && (
-                    <span className="teaching-transition-chip is-box">
-                      박스 · {BOX_LABELS[nextExercise.box]}
+            !isRestStep(next) && (() => {
+              const delta = computeSpringTransitionDelta(
+                currentSpringRaw,
+                next.customSpringOverride || nextExercise.springs || '',
+                exercise?.apparatus,
+                nextExercise.apparatus,
+              );
+              return (
+                <div
+                  className="teaching-transition-setup-banner"
+                  role="status"
+                  aria-label="다음 동작 기구 세팅 안내"
+                >
+                  <div className="teaching-transition-setup-header">
+                    <span className="teaching-transition-setup-badge">NEXT SETUP</span>
+                    <ExerciseThumbnailBadge exercise={nextExercise} size="xs" decorative />
+                    <strong className="teaching-transition-setup-title">
+                      다음: {nextExercise.nameKo}
+                    </strong>
+                    <span
+                      className={`pf-live-spring-delta-pill ${
+                        delta.changed ? 'is-changed' : 'is-same'
+                      }`}
+                      data-testid="live-stage-spring-delta-badge"
+                    >
+                      {delta.summaryKo}
                     </span>
-                  )}
-                  <span className="teaching-transition-chip is-footbar">
-                    풋바/헤드 · {nextExercise.footbar} / {nextExercise.headrest}
-                  </span>
+                  </div>
+                  <div className="teaching-transition-setup-chips">
+                    <span className="teaching-transition-chip is-apparatus">
+                      기구 · {APPARATUS_LABELS[nextExercise.apparatus].ko}
+                    </span>
+                    <span className="teaching-transition-chip is-spring">
+                      스프링 · {next.customSpringOverride || nextExercise.springs || '기구 세팅 확인'}
+                    </span>
+                    {nextExercise.box !== 'none' && (
+                      <span className="teaching-transition-chip is-box">
+                        박스 · {BOX_LABELS[nextExercise.box]}
+                      </span>
+                    )}
+                    <span className="teaching-transition-chip is-footbar">
+                      풋바/헤드 · {nextExercise.footbar} / {nextExercise.headrest}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           <div
             className="teaching-timer-progress"
             role="progressbar"
@@ -1705,21 +1912,38 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 <span className="teaching-inline-next-value">
                   중간 휴식 ({formatSecondsToMMSS(getStepTiming(next).totalSec)})
                 </span>
-              ) : nextExercise ? (
-                <div className="teaching-inline-next-content">
-                  <strong>{nextExercise.nameKo}</strong>
-                  {(next.customSpringOverride || nextExercise.springs) && (
-                    <SpringVisualPills
-                      springs={next.customSpringOverride || nextExercise.springs}
-                    />
-                  )}
-                  <span className="teaching-inline-next-meta">
-                    {APPARATUS_LABELS[nextExercise.apparatus].ko}
-                    {(next.customSpringOverride || nextExercise.springs) &&
-                      ` · ${next.customSpringOverride || nextExercise.springs}`}
-                    {nextExercise.box !== 'none' && ` · ${BOX_LABELS[nextExercise.box]}`}
-                  </span>
-                </div>
+              ) : nextExercise ? (() => {
+                const inlineDelta = computeSpringTransitionDelta(
+                  currentSpringRaw,
+                  next.customSpringOverride || nextExercise.springs || '',
+                  exercise?.apparatus,
+                  nextExercise.apparatus,
+                );
+                return (
+                  <div className="teaching-inline-next-content">
+                    <strong>{nextExercise.nameKo}</strong>
+                    <span
+                      className={`pf-live-spring-delta-pill ${
+                        inlineDelta.changed ? 'is-changed' : 'is-same'
+                      }`}
+                      data-testid="live-stage-spring-delta-badge"
+                    >
+                      {inlineDelta.summaryKo}
+                    </span>
+                    {(next.customSpringOverride || nextExercise.springs) && (
+                      <SpringVisualPills
+                        springs={next.customSpringOverride || nextExercise.springs}
+                      />
+                    )}
+                    <span className="teaching-inline-next-meta">
+                      {APPARATUS_LABELS[nextExercise.apparatus].ko}
+                      {(next.customSpringOverride || nextExercise.springs) &&
+                        ` · ${next.customSpringOverride || nextExercise.springs}`}
+                      {nextExercise.box !== 'none' && ` · ${BOX_LABELS[nextExercise.box]}`}
+                    </span>
+                  </div>
+                );
+              })()
               ) : (
                 <span className="teaching-inline-next-value">다음 동작 확인</span>
               )
@@ -1798,11 +2022,17 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     ? `${String(undoState.stepNumber).padStart(2, '0')}번(${
                         undoState.stepTitle
                       }) 시간을 30초 줄였어요.`
-                    : undoState.kind === 'step-reorder'
-                      ? `‘${undoState.stepTitle}’ 순서를 ${undoState.toIndex + 1}번 위치로 조정했어요.`
-                      : `${String(undoState.stepNumber).padStart(2, '0')}번(${
+                    : undoState.kind === 'micro-adjust-15s'
+                      ? `${String(undoState.stepNumber).padStart(2, '0')}번(${
                           undoState.stepTitle
-                        }) 시간을 +${undoState.addedMinutes}분 늘렸어요.`}
+                        }) 시간을 15초 ${
+                          undoState.deltaSec > 0 ? '늘렸어요' : '줄였어요'
+                        }.`
+                      : undoState.kind === 'step-reorder'
+                        ? `‘${undoState.stepTitle}’ 순서를 ${undoState.toIndex + 1}번 위치로 조정했어요.`
+                        : `${String(undoState.stepNumber).padStart(2, '0')}번(${
+                            undoState.stepTitle
+                          }) 시간을 +${undoState.addedMinutes}분 늘렸어요.`}
               </span>
               <div className="teaching-undo-actions">
                 <button
@@ -1817,9 +2047,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                       ? '방금 이동 되돌리기'
                       : undoState.kind === 'trim-half-minute'
                         ? '방금 30초 줄이기 취소'
-                        : undoState.kind === 'step-reorder'
-                          ? '방금 순서 변경 되돌리기'
-                          : '방금 1분 추가 취소'}
+                        : undoState.kind === 'micro-adjust-15s'
+                          ? '방금 15초 조정 취소'
+                          : undoState.kind === 'step-reorder'
+                            ? '방금 순서 변경 되돌리기'
+                            : '방금 1분 추가 취소'}
                   </span>
                 </button>
                 <button
@@ -1944,6 +2176,40 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 <button
                   type="button"
                   className="btn-secondary"
+                  data-testid="live-sensory-cue-toggle"
+                  aria-pressed={sensoryCueEnabled}
+                  onClick={() => {
+                    const nextEnabled = !sensoryCueEnabled;
+                    setSensoryCueEnabled(nextEnabled);
+                    if (!nextEnabled) {
+                      silenceLiveSensoryCue();
+                      setLastSensoryStatus('구간 전환 차임·진동 알림을 껐습니다.');
+                    } else {
+                      setLastSensoryStatus(
+                        '구간 전환·반대쪽 교대·10초 전 세팅 예고 시 로컬 차임과 진동으로 알려드립니다.',
+                      );
+                    }
+                  }}
+                >
+                  <Bell size={15} aria-hidden="true" />{' '}
+                  {sensoryCueEnabled
+                    ? '진동·차임 전환 알림 끄기'
+                    : '진동·차임 전환 알림 켜기'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  data-testid="live-sensory-cue-test-btn"
+                  onClick={() => {
+                    triggerLiveSensoryCue('manual-test');
+                    setLastSensoryStatus('벨·진동 미리듣기를 실행했습니다.');
+                  }}
+                >
+                  벨·진동 미리듣기
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
                   data-testid="live-voice-command-toggle"
                   aria-pressed={voiceCommandEnabled}
                   onClick={toggleVoiceCommand}
@@ -1953,6 +2219,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     : '음성 명령으로 타이머 제어 (핸즈프리)'}
                 </button>
               </div>
+              {lastSensoryStatus && (
+                <p className="muted" data-testid="live-sensory-cue-status">
+                  {lastSensoryStatus}
+                </p>
+              )}
               {lastVoiceCommandStatus && (
                 <p className="muted" data-testid="live-voice-command-status">
                   {lastVoiceCommandStatus}
@@ -2180,6 +2451,109 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           </details>
         </aside>
       </div>
+      <nav
+        className="pf-live-thumb-dock"
+        data-testid="live-stage-thumb-dock"
+        aria-label="모바일 한 손 엄지 조작 도크"
+      >
+        <div className="pf-live-thumb-dock__primary">
+          <button
+            type="button"
+            className="pf-live-thumb-dock__btn"
+            data-testid="live-thumb-minus-15s"
+            aria-label="한 손 도크 15초 줄이기"
+            disabled={(current?.durationMin ?? 0) <= 0.5 || clock.remainingMs <= 15000}
+            onClick={() => adjustFifteenSeconds(-15)}
+          >
+            -15초
+          </button>
+          <button
+            type="button"
+            className="pf-live-thumb-dock__btn is-primary"
+            data-testid="live-thumb-play-toggle"
+            aria-label="한 손 도크 타이머 토글"
+            onClick={toggleRunning}
+          >
+            {clock.running ? (
+              <>
+                <Pause size={16} aria-hidden="true" /> 멈춤
+              </>
+            ) : (
+              <>
+                <Play size={16} aria-hidden="true" /> 진행
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            className="pf-live-thumb-dock__btn"
+            data-testid="live-thumb-plus-15s"
+            aria-label="한 손 도크 15초 늘리기"
+            onClick={() => adjustFifteenSeconds(15)}
+          >
+            +15초
+          </button>
+          <button
+            type="button"
+            className="pf-live-thumb-dock__btn"
+            data-testid="live-thumb-next-step"
+            aria-label="한 손 도크 다음 순서 이동"
+            disabled={clock.index === steps.length - 1 && !currentIsRest}
+            onClick={() =>
+              clockRef.current.index === stepsRef.current.length - 1
+                ? pauseForReview()
+                : selectStep(clockRef.current.index + 1)
+            }
+          >
+            <span>순서 →</span>
+          </button>
+        </div>
+        <div className="pf-live-thumb-dock__secondary">
+          <button
+            type="button"
+            className={`pf-live-thumb-dock__btn ${
+              classVoice.enabled ? 'is-active-toggle' : ''
+            }`.trim()}
+            data-testid="live-thumb-voice-toggle"
+            aria-label="한 손 도크 음성 토글"
+            aria-pressed={classVoice.enabled}
+            disabled={!classVoice.available}
+            onClick={classVoice.toggleEnabled}
+          >
+            <Volume2 size={14} aria-hidden="true" />
+            <span>{classVoice.enabled ? '음성 ON' : '음성 OFF'}</span>
+          </button>
+          <button
+            type="button"
+            className={`pf-live-thumb-dock__btn ${
+              sensoryCueEnabled ? 'is-active-toggle' : ''
+            }`.trim()}
+            data-testid="live-thumb-sensory-toggle"
+            aria-label="한 손 도크 진동·차임 토글"
+            aria-pressed={sensoryCueEnabled}
+            onClick={() => {
+              const nextEnabled = !sensoryCueEnabled;
+              setSensoryCueEnabled(nextEnabled);
+              if (!nextEnabled) silenceLiveSensoryCue();
+            }}
+          >
+            <Bell size={14} aria-hidden="true" />
+            <span>{sensoryCueEnabled ? '벨·진동 ON' : '벨·진동 OFF'}</span>
+          </button>
+          {undoState && (
+            <button
+              type="button"
+              className="pf-live-thumb-dock__btn"
+              data-testid="live-thumb-undo-btn"
+              aria-label="한 손 도크 직전 조작 복구"
+              onClick={undoLastStageAction}
+            >
+              <RotateCcw size={14} aria-hidden="true" />
+              <span>직전 복구</span>
+            </button>
+          )}
+        </div>
+      </nav>
       <div className="teaching-stage-footer">
         <label className="teaching-switch">
           <input
