@@ -190,6 +190,9 @@ let inMemoryMetaByScope: Record<string, Record<string, MovementIdeaMeta>> = {};
 let inMemoryHumanDraftByScope: Record<string, Record<string, HumanMovementDraft>> = {};
 let inMemoryReusableBlocksByScope: Record<string, ReusableBlock[]> = {};
 let inMemoryBufferByScope: Record<string, MovementIdeaWorkingBuffer> = {};
+let persistedMetaScopes = new Set<string>();
+let persistedHumanDraftScopes = new Set<string>();
+let persistedReusableBlocksScopes = new Set<string>();
 let activeSaveLock = false;
 
 export function syncMovementIdeaAccountScope(
@@ -293,13 +296,22 @@ function getSafeOwnEntry<T>(record: Record<string, T> | null | undefined, key: s
 
 function getScopedHumanDraftMap(scope = getActiveOwnerScope()): Record<string, HumanMovementDraft> {
   const normalizedScope = normalizeScopeOwner(scope);
-  const current = inMemoryHumanDraftByScope[normalizedScope] ?? {};
   const scopedKey = getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, normalizedScope);
-  const stored = readStorageJson<{
-    humanMovementDrafts?: HumanMovementDraft[];
-  } | null>(scopedKey, null);
+  const hasRawKey = hasStorageKey(scopedKey);
+  if (persistedHumanDraftScopes.has(normalizedScope) && !hasRawKey) {
+    inMemoryHumanDraftByScope[normalizedScope] = {};
+    persistedHumanDraftScopes.delete(normalizedScope);
+    return inMemoryHumanDraftByScope[normalizedScope];
+  }
+  const current = inMemoryHumanDraftByScope[normalizedScope] ?? {};
+  const stored = hasRawKey
+    ? readStorageJson<{
+        humanMovementDrafts?: HumanMovementDraft[];
+      } | null>(scopedKey, null)
+    : null;
   const merged: Record<string, HumanMovementDraft> = { ...current };
   if (stored && Array.isArray(stored.humanMovementDrafts)) {
+    persistedHumanDraftScopes.add(normalizedScope);
     for (const draft of stored.humanMovementDrafts) {
       if (draft && typeof draft.id === 'string' && !DANGEROUS_OBJECT_KEYS.has(draft.id)) {
         if (isNewerVersionedEntry(draft, getSafeOwnEntry(merged, draft.id))) {
@@ -373,6 +385,15 @@ export function inferBodyPositionFromIdeaLine(ideaLine: string): BodyPosition | 
   return null;
 }
 
+function hasStorageKey(key: string): boolean {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return false;
+    return window.localStorage.getItem(key) !== null;
+  } catch {
+    return false;
+  }
+}
+
 function readStorageJson<T>(key: string, fallback: T): T {
   try {
     if (typeof window === 'undefined' || !window.localStorage) return fallback;
@@ -384,12 +405,14 @@ function readStorageJson<T>(key: string, fallback: T): T {
   }
 }
 
-function writeStorageJson<T>(key: string, value: T): void {
+function writeStorageJson<T>(key: string, value: T): boolean {
   try {
-    if (typeof window === 'undefined' || !window.localStorage) return;
+    if (typeof window === 'undefined' || !window.localStorage) return false;
     window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
   } catch {
     // Keep in-memory state intact even if storage quota or permission is restricted.
+    return false;
   }
 }
 
@@ -408,17 +431,52 @@ function isSupportedLocalPhotoUri(uri: string): boolean {
   );
 }
 
-function persistHumanDraftMap(scope = getActiveOwnerScope()): void {
+function persistHumanDraftMap(scope = getActiveOwnerScope()): boolean {
   const normalizedScope = normalizeScopeOwner(scope);
   const draftMap = getScopedHumanDraftMap(normalizedScope);
   const blocks = inMemoryReusableBlocksByScope[normalizedScope] ?? [];
-  writeStorageJson(getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, normalizedScope), {
-    format: 'pilates-flow-human-creation-v1',
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    humanMovementDrafts: Object.values(draftMap),
-    reusableBlocks: blocks,
-  });
+  const wrote = writeStorageJson(
+    getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, normalizedScope),
+    {
+      format: 'pilates-flow-human-creation-v1',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      humanMovementDrafts: Object.values(draftMap),
+      reusableBlocks: blocks,
+    },
+  );
+  if (wrote) {
+    persistedHumanDraftScopes.add(normalizedScope);
+  } else {
+    persistedHumanDraftScopes.delete(normalizedScope);
+  }
+  return wrote;
+}
+
+function persistScopedIdeaMetaMap(scope: string, nextMap: Record<string, MovementIdeaMeta>): void {
+  const normalizedScope = normalizeScopeOwner(scope);
+  inMemoryMetaByScope[normalizedScope] = nextMap;
+  const wrote = writeStorageJson(getScopedStorageKey(IDEA_META_STORAGE_KEY, normalizedScope), nextMap);
+  if (wrote) {
+    persistedMetaScopes.add(normalizedScope);
+  } else {
+    persistedMetaScopes.delete(normalizedScope);
+  }
+}
+
+function persistScopedReusableBlocks(scope: string, nextBlocks: ReusableBlock[]): void {
+  const normalizedScope = normalizeScopeOwner(scope);
+  inMemoryReusableBlocksByScope[normalizedScope] = nextBlocks;
+  const wroteBlocks = writeStorageJson(
+    getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, normalizedScope),
+    nextBlocks,
+  );
+  const wroteBundle = persistHumanDraftMap(normalizedScope);
+  if (wroteBlocks || wroteBundle) {
+    persistedReusableBlocksScopes.add(normalizedScope);
+  } else {
+    persistedReusableBlocksScopes.delete(normalizedScope);
+  }
 }
 
 export function isMovementIdeaExercise(exercise: PilatesExercise | undefined | null): boolean {
@@ -431,10 +489,17 @@ export function getMovementIdeaMetaMap(
 ): Record<string, MovementIdeaMeta> {
   const normalizedScope = normalizeScopeOwner(scope);
   const scopedKey = getScopedStorageKey(IDEA_META_STORAGE_KEY, normalizedScope);
-  const stored = readStorageJson<Record<string, MovementIdeaMeta>>(scopedKey, {});
+  const hasRawKey = hasStorageKey(scopedKey);
+  if (persistedMetaScopes.has(normalizedScope) && !hasRawKey) {
+    inMemoryMetaByScope[normalizedScope] = {};
+    persistedMetaScopes.delete(normalizedScope);
+    return inMemoryMetaByScope[normalizedScope];
+  }
+  const stored = hasRawKey ? readStorageJson<Record<string, MovementIdeaMeta>>(scopedKey, {}) : {};
   const current = inMemoryMetaByScope[normalizedScope] ?? {};
   const merged: Record<string, MovementIdeaMeta> = { ...current };
-  if (stored && typeof stored === 'object' && !Array.isArray(stored)) {
+  if (hasRawKey && stored && typeof stored === 'object' && !Array.isArray(stored)) {
+    persistedMetaScopes.add(normalizedScope);
     for (const [id, entry] of Object.entries(stored)) {
       if (
         !DANGEROUS_OBJECT_KEYS.has(id) &&
@@ -601,6 +666,9 @@ export function resetMovementIdeaTestCache(): void {
   inMemoryHumanDraftByScope = {};
   inMemoryReusableBlocksByScope = {};
   inMemoryBufferByScope = {};
+  persistedMetaScopes = new Set<string>();
+  persistedHumanDraftScopes = new Set<string>();
+  persistedReusableBlocksScopes = new Set<string>();
   activeSaveLock = false;
 }
 
@@ -1195,8 +1263,7 @@ export function saveMovementIdeaDraft(input: SaveMovementIdeaInput): {
       ...getMovementIdeaMetaMap(scope),
       [baseExercise.id]: meta,
     };
-    inMemoryMetaByScope[scope] = nextMap;
-    writeStorageJson(getScopedStorageKey(IDEA_META_STORAGE_KEY, scope), nextMap);
+    persistScopedIdeaMetaMap(scope, nextMap);
     clearMovementIdeaWorkingBuffer(scope);
     if (photoDataUrl && photoDataUrl.startsWith('data:image/')) {
       void saveLocalPhotoAsset(baseExercise.id, photoDataUrl);
@@ -1327,8 +1394,7 @@ export function restoreMovementIdeaRevision(
       ...getMovementIdeaMetaMap(scope),
       [updatedExercise.id]: nextMeta,
     };
-    inMemoryMetaByScope[scope] = nextMap;
-    writeStorageJson(getScopedStorageKey(IDEA_META_STORAGE_KEY, scope), nextMap);
+    persistScopedIdeaMetaMap(scope, nextMap);
 
     return {
       success: true,
@@ -1482,8 +1548,7 @@ export function forkMovementIdeaVariant(
       ...getMovementIdeaMetaMap(scope),
       [newExerciseId]: newMeta,
     };
-    inMemoryMetaByScope[scope] = nextMap;
-    writeStorageJson(getScopedStorageKey(IDEA_META_STORAGE_KEY, scope), nextMap);
+    persistScopedIdeaMetaMap(scope, nextMap);
 
     return {
       success: true,
@@ -1503,21 +1568,51 @@ export function forkMovementIdeaVariant(
 }
 
 export function getSavedReusableBlocks(scope = getActiveOwnerScope()): ReusableBlock[] {
-  const scopedKey = getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope);
-  const stored = readStorageJson<ReusableBlock[]>(scopedKey, []);
-  const current = inMemoryReusableBlocksByScope[scope] ?? [];
-  if (stored.length > 0 && current.length === 0) {
-    inMemoryReusableBlocksByScope[scope] = stored;
-  } else if (current.length === 0) {
-    const bundleKey = getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, scope);
-    const bundle = readStorageJson<{ reusableBlocks?: ReusableBlock[] } | null>(bundleKey, null);
-    if (bundle && Array.isArray(bundle.reusableBlocks) && bundle.reusableBlocks.length > 0) {
-      inMemoryReusableBlocksByScope[scope] = bundle.reusableBlocks;
-    } else if (!inMemoryReusableBlocksByScope[scope]) {
-      inMemoryReusableBlocksByScope[scope] = [];
+  const normalizedScope = normalizeScopeOwner(scope);
+  const scopedKey = getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, normalizedScope);
+  const bundleKey = getScopedStorageKey(DEFAULT_HUMAN_DRAFT_STORAGE_KEY, normalizedScope);
+
+  const hasRawBlocksKey = hasStorageKey(scopedKey);
+  const hasRawBundleKey = hasStorageKey(bundleKey);
+
+  if (
+    persistedReusableBlocksScopes.has(normalizedScope) &&
+    !hasRawBlocksKey &&
+    !hasRawBundleKey
+  ) {
+    inMemoryReusableBlocksByScope[normalizedScope] = [];
+    persistedReusableBlocksScopes.delete(normalizedScope);
+    return inMemoryReusableBlocksByScope[normalizedScope];
+  }
+
+  if (hasRawBlocksKey) {
+    const stored = readStorageJson<ReusableBlock[] | null>(scopedKey, null);
+    if (Array.isArray(stored)) {
+      if (
+        persistedReusableBlocksScopes.has(normalizedScope) ||
+        (inMemoryReusableBlocksByScope[normalizedScope]?.length ?? 0) === 0
+      ) {
+        inMemoryReusableBlocksByScope[normalizedScope] = stored;
+        persistedReusableBlocksScopes.add(normalizedScope);
+      }
+      return inMemoryReusableBlocksByScope[normalizedScope];
     }
   }
-  return inMemoryReusableBlocksByScope[scope];
+
+  const current = inMemoryReusableBlocksByScope[normalizedScope] ?? [];
+  if (current.length === 0 && hasRawBundleKey) {
+    const bundle = readStorageJson<{ reusableBlocks?: ReusableBlock[] } | null>(bundleKey, null);
+    if (bundle && Array.isArray(bundle.reusableBlocks)) {
+      inMemoryReusableBlocksByScope[normalizedScope] = bundle.reusableBlocks;
+      persistedReusableBlocksScopes.add(normalizedScope);
+      return inMemoryReusableBlocksByScope[normalizedScope];
+    }
+  }
+
+  if (!inMemoryReusableBlocksByScope[normalizedScope]) {
+    inMemoryReusableBlocksByScope[normalizedScope] = [];
+  }
+  return inMemoryReusableBlocksByScope[normalizedScope];
 }
 
 export function getReusableBlockTimingSummary(block: ReusableBlock): ReusableBlockTimingSummary {
@@ -1656,9 +1751,7 @@ export function saveIdeaToReusableBlock(input: {
     }
 
     const nextBlocks = addReusableBlockToLibrary(currentBlocks, targetBlock);
-    inMemoryReusableBlocksByScope[scope] = nextBlocks;
-    writeStorageJson(getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope), nextBlocks);
-    persistHumanDraftMap(scope);
+    persistScopedReusableBlocks(scope, nextBlocks);
     broadcastStudioSyncEvent({
       kind: 'reusable-block-updated',
       entityId: targetBlock.id,
@@ -1714,9 +1807,7 @@ export function moveIdeaReusableBlockItem(
   try {
     const updatedBlock = moveItemInReusableBlock(found, itemIndex, direction);
     const nextBlocks = addReusableBlockToLibrary(currentBlocks, updatedBlock);
-    inMemoryReusableBlocksByScope[scope] = nextBlocks;
-    writeStorageJson(getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope), nextBlocks);
-    persistHumanDraftMap(scope);
+    persistScopedReusableBlocks(scope, nextBlocks);
     const timingSummary = getReusableBlockTimingSummary(updatedBlock);
     return {
       success: true,
@@ -2029,9 +2120,7 @@ export function saveSequenceStepsAsReusableBlock(input: {
       Object.values(draftMap),
     );
     const nextBlocks = addReusableBlockToLibrary(currentBlocks, block);
-    inMemoryReusableBlocksByScope[scope] = nextBlocks;
-    writeStorageJson(getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope), nextBlocks);
-    persistHumanDraftMap(scope);
+    persistScopedReusableBlocks(scope, nextBlocks);
     broadcastStudioSyncEvent({
       kind: 'reusable-block-updated',
       entityId: block.id,
@@ -2069,8 +2158,7 @@ export function duplicateIdeaReusableBlock(blockId: string): {
   const currentBlocks = getSavedReusableBlocks(scope);
   try {
     const { blocks: nextBlocks, duplicated } = duplicateReusableBlockInLibrary(currentBlocks, blockId);
-    inMemoryReusableBlocksByScope[scope] = nextBlocks;
-    writeStorageJson(getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope), nextBlocks);
+    persistScopedReusableBlocks(scope, nextBlocks);
     broadcastStudioSyncEvent({
       kind: 'reusable-block-updated',
       entityId: duplicated.id,
@@ -2189,18 +2277,17 @@ export function persistRecoveredReusableBlocksAndDrafts(input: {
   reusableBlocks?: readonly ReusableBlock[];
   humanMovementDrafts?: readonly HumanMovementDraft[];
 }): void {
-  const scope = getActiveOwnerScope();
-  if (input.reusableBlocks !== undefined) {
-    const clonedBlocks = input.reusableBlocks.map((b) => structuredClone(b));
-    inMemoryReusableBlocksByScope[scope] = clonedBlocks;
-    writeStorageJson(getScopedStorageKey(IDEA_REUSABLE_BLOCKS_STORAGE_KEY, scope), clonedBlocks);
-  }
+  const scope = normalizeScopeOwner(getActiveOwnerScope());
   if (input.humanMovementDrafts !== undefined) {
     const draftMap = getScopedHumanDraftMap(scope);
     for (const draft of input.humanMovementDrafts) {
       draftMap[draft.id] = structuredClone(draft);
     }
     persistHumanDraftMap(scope);
+  }
+  if (input.reusableBlocks !== undefined) {
+    const clonedBlocks = input.reusableBlocks.map((b) => structuredClone(b));
+    persistScopedReusableBlocks(scope, clonedBlocks);
   }
 }
 

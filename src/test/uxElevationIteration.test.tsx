@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { SequenceWorkbench } from '../components/SequenceWorkbench';
 import { LiveStageView } from '../components/LiveStageView';
@@ -19,6 +19,7 @@ import {
   getSavedReusableBlocks,
   insertIdeaReusableBlockToCurrentClass,
   moveIdeaReusableBlockItem,
+  resetMovementIdeaStateForTests,
   saveSequenceStepsAsReusableBlock,
   syncSequenceBlockInstanceToLatest,
 } from '../utils/movementIdeaDraft';
@@ -76,6 +77,10 @@ function resetWorkbenchStore() {
 describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
   beforeEach(() => {
     resetWorkbenchStore();
+  });
+
+  afterEach(() => {
+    resetMovementIdeaStateForTests();
   });
 
   it('keeps Home focused on 2 primary cards without leaking Step 3 when returning via 시작하기, and supports 1-tap recent 바로 진행', () => {
@@ -453,7 +458,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
       'docs/design-system-mockups/05-pilates-flow-full-pages-ux-mockup.html',
       'docs/design-system-mockups/06-parallel-full-suite-showcase.html',
       'docs/design-system-mockups/08-candidate-selection-and-side-by-side-audit.html',
-      'docs/design-system-mockups/09-diagram-hierarchy-ai-governance-proposal.html',
+      'docs/design-system-mockups/09-movement-bundle-and-ai-governance-mockup.html',
     ]) {
       expect(existsSync(resolve(process.cwd(), file))).toBe(true);
     }
