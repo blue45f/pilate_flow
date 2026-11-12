@@ -1,0 +1,1049 @@
+/* ==========================================================================
+   Flow Atelier v6 — Mobile-First Granular Sub-Page Split, Visual-First Luxury UI
+   & Unified Kinematic Motion Design System
+   Crisp Pearl-Mint Studio Palette (#F4F8F6 / #FFFFFF / #DFF3EA / #0F6B4E / #C9822B)
+   ========================================================================== */
+
+:root {
+  --pf-v6-bg: #f4f8f6;
+  --pf-v6-surface: #ffffff;
+  --pf-v6-surface-subtle: #f8fbf9;
+  --pf-v6-track: #edf3f0;
+  --pf-v6-mint: #dff3ea;
+  --pf-v6-mint-strong: #c5ead9;
+  --pf-v6-emerald: #0f6b4e;
+  --pf-v6-emerald-dark: #0b523b;
+  --pf-v6-gold: #c9822b;
+  --pf-v6-ink: #12261f;
+  --pf-v6-muted: #52685f;
+  --pf-v6-border: #dfeae4;
+  --pf-v6-shadow-sm: 0 4px 16px rgba(15, 75, 55, 0.05);
+  --pf-v6-shadow-md: 0 12px 30px rgba(15, 75, 55, 0.09);
+  --pf-v6-radius-xl: 22px;
+  --pf-v6-radius-lg: 18px;
+  --pf-v6-radius-md: 14px;
+  /* Unified Studio Motion Tokens */
+  --pf-motion-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --pf-motion-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --pf-motion-fast: 180ms;
+  --pf-motion-base: 280ms;
+  --pf-motion-crossfade: 460ms;
+  --pf-motion-breath: 4.2s;
+}
+
+/* Unified Keyframes */
+@keyframes pfSubPageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pfTrajectoryDash {
+  0% {
+    stroke-dashoffset: 18;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pfPeakNodePulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.45);
+    opacity: 0.45;
+  }
+}
+
+@keyframes pfBreathHalo {
+  0%,
+  100% {
+    transform: scale(0.88);
+    opacity: 0.24;
+  }
+  50% {
+    transform: scale(1.16);
+    opacity: 0.56;
+  }
+}
+
+@keyframes pfBreathCore {
+  0%,
+  100% {
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.18);
+  }
+}
+
+@keyframes pfCarriageGlide {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes pfSpineBreathArc {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(1.5px);
+  }
+}
+
+/* 1. Serene Pearl-Mint & Crisp White Studio Canvas */
+html body,
+html #root .vnext-shell {
+  background: var(--pf-v6-bg) !important;
+  color: var(--pf-v6-ink);
+}
+
+html #root .vnext-shell .main-content {
+  max-width: 820px;
+  margin-inline: auto;
+  width: 100%;
+  padding-top: 12px;
+}
+
+@media (min-width: 1200px) {
+  html #root .vnext-shell .main-content:has(.has-inspector),
+  html #root .vnext-shell .main-content:has(.is-option-a-split),
+  html #root .vnext-shell .main-content:has([data-has-inspector='true']) {
+    max-width: 1180px;
+  }
+}
+
+/* 2. Sub-Page Visibility & Unified Entrance Choreography */
+[data-subpage-hidden='true'] {
+  display: none !important;
+}
+
+.pf-subpage-panel:not([data-subpage-hidden='true']) {
+  animation: pfSubPageEnter var(--pf-motion-base) var(--pf-motion-spring);
+}
+
+/* Keep source, review, safety and storage notices available on every device. */
+@media (max-width: 767px) {
+  html #root .vnext-shell .topbar .breadcrumb,
+  html #root .vnext-shell .topbar .local-state,
+  html #root .vnext-shell .vnext-wordmark small {
+    display: none;
+  }
+}
+
+/* 4. Segmented Mint Pill Sub-Page Bar with Shared Spring Pill */
+.pf-mobile-subpage-bar {
+  position: sticky;
+  top: 80px;
+  z-index: 8;
+  margin: 0 0 14px;
+  padding: 4px 0;
+  background: linear-gradient(180deg, var(--pf-v6-bg) 80%, rgba(244, 248, 246, 0) 100%);
+}
+
+.LightDismissDialog .pf-mobile-subpage-bar,
+dialog .pf-mobile-subpage-bar {
+  position: sticky;
+  top: 0;
+  background: var(--pf-v6-surface);
+  padding: 6px 0 10px;
+}
+
+.pf-mobile-subpage-track {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--pf-v6-track);
+  border: 1px solid var(--pf-v6-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pf-mobile-subpage-track::-webkit-scrollbar {
+  display: none;
+}
+
+.pf-mobile-subpage-btn {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--pf-v6-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  z-index: 0;
+  transition:
+    color var(--pf-motion-fast) var(--pf-motion-smooth),
+    transform var(--pf-motion-fast) var(--pf-motion-spring);
+}
+
+.pf-mobile-subpage-btn:active {
+  transform: scale(0.97);
+}
+
+.pf-mobile-subpage-bar.is-compact .pf-mobile-subpage-btn {
+  min-height: 40px;
+  font-size: 0.81rem;
+  padding: 6px 10px;
+}
+
+.pf-mobile-subpage-btn__pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--pf-v6-mint);
+  border: 1px solid var(--pf-v6-mint-strong);
+  box-shadow: 0 3px 10px rgba(15, 107, 78, 0.13);
+  z-index: -1;
+}
+
+.pf-mobile-subpage-btn.is-active {
+  color: #0b4f39;
+}
+
+.pf-mobile-subpage-btn__label,
+.pf-mobile-subpage-btn__icon,
+.pf-mobile-subpage-btn__badge {
+  position: relative;
+  z-index: 1;
+}
+
+.pf-mobile-subpage-btn__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: rgba(15, 107, 78, 0.12);
+  color: var(--pf-v6-emerald);
+  transition:
+    background-color var(--pf-motion-fast) var(--pf-motion-smooth),
+    color var(--pf-motion-fast) var(--pf-motion-smooth);
+}
+
+.pf-mobile-subpage-btn.is-active .pf-mobile-subpage-btn__badge {
+  background: var(--pf-v6-emerald);
+  color: #ffffff;
+}
+
+.pf-mobile-subpage-btn:focus-visible {
+  outline: 2px solid var(--pf-v6-emerald);
+  outline-offset: 2px;
+}
+
+/* 5. Visual-First 3D Apparatus Photo Cards (Bento & Scroll Strips) */
+.pf-visual-apparatus-strip {
+  margin: 10px 0 14px;
+}
+
+.pf-visual-apparatus-strip.is-bento {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pf-visual-apparatus-strip.is-bento > .pf-visual-apparatus-card:nth-child(1),
+.pf-visual-apparatus-strip.is-bento > .pf-visual-apparatus-card:nth-child(2) {
+  grid-column: span 3;
+}
+
+.pf-visual-apparatus-strip.is-bento > .pf-visual-apparatus-card:nth-child(n + 3) {
+  grid-column: span 2;
+}
+
+.pf-visual-apparatus-strip.is-scroll {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 639px) {
+  .pf-visual-apparatus-strip.is-scroll {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .pf-visual-apparatus-strip.is-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .pf-visual-apparatus-strip.is-scroll > .pf-visual-apparatus-card {
+    flex: 0 0 90px;
+  }
+}
+
+.pf-visual-apparatus-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 16px;
+  border: 1.5px solid var(--pf-v6-border);
+  background: var(--pf-v6-surface);
+  cursor: pointer;
+  text-align: center;
+  box-shadow: var(--pf-v6-shadow-sm);
+  transition:
+    transform var(--pf-motion-base) var(--pf-motion-spring),
+    border-color var(--pf-motion-fast) var(--pf-motion-smooth),
+    background-color var(--pf-motion-fast) var(--pf-motion-smooth),
+    box-shadow var(--pf-motion-base) var(--pf-motion-spring);
+}
+
+.pf-visual-apparatus-card:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--pf-v6-shadow-md);
+}
+
+.pf-visual-apparatus-card.is-selected {
+  border-color: var(--pf-v6-emerald);
+  background: var(--pf-v6-mint);
+  box-shadow: 0 6px 18px rgba(15, 107, 78, 0.16);
+}
+
+.pf-visual-apparatus-card:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.pf-visual-apparatus-card__media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 11px;
+  overflow: hidden;
+  background: #e9f0ec;
+}
+
+.pf-visual-apparatus-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--pf-motion-crossfade) var(--pf-motion-spring);
+}
+
+.pf-visual-apparatus-card:hover:not(:disabled) .pf-visual-apparatus-card__media img,
+.pf-visual-apparatus-card.is-selected .pf-visual-apparatus-card__media img {
+  transform: scale(1.05);
+}
+
+.pf-visual-apparatus-card__check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--pf-v6-emerald);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-visual-apparatus-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 1px 2px;
+}
+
+.pf-visual-apparatus-card__meta strong {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--pf-v6-ink);
+}
+
+.pf-visual-apparatus-card__meta small {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--pf-v6-emerald);
+  background: rgba(15, 107, 78, 0.1);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+/* 6. Visual 3D Sequence Filmstrip with Start -> Peak Crossfade Peek */
+.pf-visual-filmstrip {
+  margin: 8px 0 12px;
+  padding: 8px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #152b23 0%, #1c382e 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.pf-visual-filmstrip.is-compact {
+  margin: 6px 0 10px;
+  padding: 6px;
+  border-radius: 14px;
+}
+
+.pf-visual-filmstrip__rail {
+  display: flex;
+  align-items: stretch;
+  gap: 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pf-visual-filmstrip__rail::-webkit-scrollbar {
+  display: none;
+}
+
+.pf-visual-filmstrip__frame {
+  position: relative;
+  flex: 0 0 98px;
+  border-radius: 11px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  background: #233c33;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform var(--pf-motion-base) var(--pf-motion-spring),
+    border-color var(--pf-motion-fast) var(--pf-motion-smooth),
+    box-shadow var(--pf-motion-base) var(--pf-motion-spring);
+}
+
+.pf-visual-filmstrip__frame:hover:not(.is-static) {
+  transform: translateY(-2px);
+  border-color: #a7f3d0;
+}
+
+.pf-visual-filmstrip.is-compact .pf-visual-filmstrip__frame {
+  flex: 0 0 76px;
+  aspect-ratio: 16 / 11;
+}
+
+.pf-visual-filmstrip__frame.is-static {
+  cursor: default;
+}
+
+.pf-visual-filmstrip__frame.is-active {
+  border-color: #6ee7b7;
+  box-shadow: 0 0 0 2px rgba(110, 231, 183, 0.42);
+  transform: translateY(-1px);
+}
+
+.pf-visual-filmstrip__media {
+  position: relative;
+  width: 100%;
+  height: 58px;
+  overflow: hidden;
+  display: block;
+}
+
+.pf-visual-filmstrip.is-compact .pf-visual-filmstrip__media {
+  height: 100%;
+}
+
+.pf-visual-filmstrip__media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition:
+    opacity var(--pf-motion-crossfade) var(--pf-motion-smooth),
+    transform var(--pf-motion-crossfade) var(--pf-motion-spring);
+}
+
+.pf-visual-filmstrip__img-start {
+  opacity: 0;
+}
+
+.pf-visual-filmstrip__img-peak {
+  opacity: 1;
+}
+
+.pf-visual-filmstrip__frame:hover .pf-visual-filmstrip__img-start,
+.pf-visual-filmstrip__frame:focus-visible .pf-visual-filmstrip__img-start {
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+.pf-visual-filmstrip__frame:hover .pf-visual-filmstrip__img-peak,
+.pf-visual-filmstrip__frame:focus-visible .pf-visual-filmstrip__img-peak {
+  opacity: 0.22;
+}
+
+.pf-visual-filmstrip__num {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(15, 38, 30, 0.84);
+  color: #a7f3d0;
+  font-size: 0.66rem;
+  font-weight: 800;
+  z-index: 2;
+}
+
+.pf-visual-filmstrip__caption {
+  padding: 4px 6px;
+  font-size: 0.69rem;
+  font-weight: 600;
+  color: #f0fdf4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.pf-visual-filmstrip__more {
+  flex: 0 0 54px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #d1fae5;
+  font-size: 0.73rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 7. Interactive Dual Start <-> Peak 3D Visual Pose Strip & Animated Trajectory HUD */
+.pf-dual-3d-pose-strip {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+
+.pf-dual-3d-pose-strip__cell {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: #ebf2ee;
+  border: 1px solid var(--pf-v6-border);
+}
+
+.pf-dual-3d-pose-strip__cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition:
+    opacity var(--pf-motion-crossfade) var(--pf-motion-smooth),
+    transform var(--pf-motion-crossfade) var(--pf-motion-spring);
+}
+
+.pf-dual-3d-pose-strip__ghost {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  z-index: 1;
+}
+
+.pf-dual-3d-pose-strip__ghost.is-visible {
+  opacity: 1;
+}
+
+.pf-dual-3d-pose-strip__main.is-dimmed {
+  opacity: 0.22;
+}
+
+.pf-dual-3d-pose-strip__vector {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pf-hud-trajectory-path {
+  stroke-dasharray: 5 3.5;
+  animation: pfTrajectoryDash 1.9s linear infinite;
+}
+
+.pf-hud-peak-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pfPeakNodePulse 2.2s ease-in-out infinite;
+}
+
+.pf-dual-3d-pose-strip__cell em {
+  position: absolute;
+  bottom: 5px;
+  left: 6px;
+  z-index: 3;
+  font-style: normal;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(18, 38, 31, 0.8);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.pf-dual-3d-pose-strip__cell.is-peak em {
+  background: rgba(15, 107, 78, 0.92);
+}
+
+.pf-dual-3d-pose-strip__play {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(15, 38, 30, 0.82);
+  color: #ffffff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition:
+    background-color var(--pf-motion-fast) var(--pf-motion-smooth),
+    transform var(--pf-motion-fast) var(--pf-motion-spring);
+}
+
+.pf-dual-3d-pose-strip__play.is-playing {
+  background: var(--pf-v6-emerald);
+}
+
+/* Studio3DMotionHeroCard Layered Crossfade Upgrade */
+.pf-studio3d-stage {
+  position: relative;
+  overflow: hidden;
+}
+
+.pf-studio3d-stage__layer {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition:
+    opacity var(--pf-motion-crossfade) var(--pf-motion-smooth),
+    transform 0.56s var(--pf-motion-spring);
+}
+
+.pf-studio3d-stage__layer.is-start {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.pf-studio3d-stage__layer.is-peak {
+  position: relative;
+  z-index: 0;
+}
+
+.pf-studio3d-stage__layer.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.pf-studio3d-stage__layer.is-onion-ghost {
+  opacity: 0.3;
+  mix-blend-mode: multiply;
+}
+
+.pf-studio3d-stage__layer.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pf-studio3d-stage__hud {
+  z-index: 2;
+}
+
+.pf-studio3d-stage__chips-top,
+.pf-studio3d-stage__chips-bottom {
+  z-index: 3;
+}
+
+/* 8. Live Breath Pacer Halo Ring */
+.pf-breath-pacer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px auto 10px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid var(--pf-v6-mint-strong);
+  box-shadow: var(--pf-v6-shadow-sm);
+  text-align: left;
+}
+
+.pf-breath-pacer-pill__ring-wrap {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-breath-pacer-pill__halo {
+  position: absolute;
+  inset: 4px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, rgba(16, 185, 129, 0) 72%);
+  opacity: 0.2;
+}
+
+.pf-breath-pacer-pill.is-breathing .pf-breath-pacer-pill__halo {
+  animation: pfBreathHalo var(--pf-motion-breath) ease-in-out infinite;
+}
+
+.pf-breath-pacer-pill__core {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.pf-breath-pacer-pill.is-breathing .pf-breath-pacer-pill__core {
+  animation: pfBreathCore var(--pf-motion-breath) ease-in-out infinite;
+}
+
+.pf-breath-pacer-pill__progress {
+  transition: stroke-dashoffset 0.35s var(--pf-motion-smooth);
+}
+
+.pf-breath-pacer-pill__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pf-breath-pacer-pill__copy strong {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #0b4f39;
+}
+
+.pf-breath-pacer-pill__copy small {
+  font-size: 0.72rem;
+  color: var(--pf-v6-muted);
+}
+
+/* 9. Unified Crisp Cards, Interactive Micro-Elevation, Emerald Primary Buttons & Mint Badges */
+html #root .pf-step-stage-frame,
+html #root .panel,
+html #root .pf-card,
+html #root .movement-card,
+html #root .schedule-class,
+html #root .pf-member-slot-card {
+  background: var(--pf-v6-surface) !important;
+  border-color: var(--pf-v6-border) !important;
+  border-radius: var(--pf-v6-radius-xl) !important;
+  box-shadow: var(--pf-v6-shadow-sm) !important;
+  transition:
+    transform var(--pf-motion-base) var(--pf-motion-spring),
+    box-shadow var(--pf-motion-base) var(--pf-motion-spring),
+    border-color var(--pf-motion-fast) var(--pf-motion-smooth);
+}
+
+html #root .movement-card:hover,
+html #root .schedule-class:hover,
+html #root .pf-member-slot-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--pf-v6-shadow-md) !important;
+}
+
+html #root .btn-primary,
+html #root .pf-btn--primary,
+html #root .pf-step-primary-cta,
+html #root .pf-step-nav-pill-btn.is-primary,
+html #root .movement-add,
+html #root .pf-member-slot-cta:not(.is-secondary) {
+  background: var(--pf-v6-emerald) !important;
+  border-color: var(--pf-v6-emerald) !important;
+  color: #ffffff !important;
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+  transition:
+    background-color var(--pf-motion-fast) var(--pf-motion-smooth),
+    transform var(--pf-motion-fast) var(--pf-motion-spring),
+    box-shadow var(--pf-motion-fast) var(--pf-motion-smooth);
+}
+
+html #root .btn-primary:hover,
+html #root .pf-btn--primary:hover,
+html #root .pf-step-primary-cta:hover,
+html #root .movement-add:hover {
+  background: var(--pf-v6-emerald-dark) !important;
+}
+
+/* Schedule Card Left Emerald Accent Bar */
+html #root .schedule-class-scheduled {
+  border-left: 5px solid var(--pf-v6-emerald) !important;
+}
+
+/* Live Stage Serene Mint Header + Crisp High-Legibility Timer Card */
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-current-panel {
+  overflow: hidden;
+  padding-top: 0 !important;
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-current-meta {
+  margin: 0 -20px 12px;
+  padding: 12px 20px;
+  background: var(--pf-v6-mint);
+  color: #0b4f39;
+  font-weight: 700;
+  border-bottom: 1px solid var(--pf-v6-mint-strong);
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timer-area {
+  background: var(--pf-v6-surface-subtle) !important;
+  color: var(--pf-v6-ink) !important;
+  border: 1.5px solid var(--pf-v6-mint-strong) !important;
+  box-shadow: none !important;
+  text-align: center;
+  padding: 18px 16px !important;
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timer-digits {
+  color: #0e1f18 !important;
+  font-size: clamp(3.4rem, 11vw, 4.9rem) !important;
+  font-weight: 800 !important;
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timer-status {
+  background: var(--pf-v6-mint) !important;
+  color: #0b4f39 !important;
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timing-breakdown > span,
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-breath-glance-pill,
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-glance-cues-strip {
+  background: #ffffff !important;
+  border: 1px solid var(--pf-v6-border) !important;
+  color: var(--pf-v6-ink) !important;
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-glance-cue-chip {
+  color: var(--pf-v6-ink) !important;
+}
+
+html #root .pf-live-3d-companion__card {
+  transition:
+    transform var(--pf-motion-base) var(--pf-motion-spring),
+    box-shadow var(--pf-motion-base) var(--pf-motion-spring),
+    border-color var(--pf-motion-fast) var(--pf-motion-smooth);
+}
+
+html #root .pf-live-3d-companion__card.is-active-phase {
+  transform: translateY(-2px) scale(1.015);
+  box-shadow: 0 10px 24px rgba(15, 107, 78, 0.18);
+}
+
+/* Deep Emerald Rounded One-Handed Thumb Dock */
+html #root .teaching-stage:not(.teaching-high-contrast) .pf-live-thumb-dock {
+  background: linear-gradient(145deg, #0f6b4e 0%, #0b4d38 100%) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 12px 28px rgba(11, 77, 56, 0.28) !important;
+}
+
+/* Visual Reformer Spot Tile with Animated SVG Carriage */
+html #root .pf-studio-spot-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  border: 1.5px solid var(--pf-v6-border) !important;
+  color: var(--pf-v6-ink) !important;
+  transition:
+    transform var(--pf-motion-fast) var(--pf-motion-spring),
+    background-color var(--pf-motion-fast) var(--pf-motion-smooth),
+    border-color var(--pf-motion-fast) var(--pf-motion-smooth);
+}
+
+html #root .pf-studio-spot-btn[aria-pressed='true'] {
+  background: var(--pf-v6-mint) !important;
+  border: 2px solid var(--pf-v6-emerald) !important;
+  color: #0b4f39 !important;
+  transform: translateY(-2px);
+}
+
+.pf-spot-carriage-svg {
+  color: #4b6359;
+}
+
+.pf-spot-carriage-svg.is-selected {
+  color: var(--pf-v6-emerald);
+}
+
+.pf-spot-carriage-svg.is-selected .pf-spot-carriage-bed,
+html #root .pf-studio-spot-btn:hover:not(:disabled) .pf-spot-carriage-bed {
+  animation: pfCarriageGlide 2.2s ease-in-out infinite;
+}
+
+.pf-spot-carriage-svg.is-occupied {
+  color: #9ca8a2;
+  opacity: 0.65;
+}
+
+/* Spine Balance Visual Row in TeachingBalanceInsightCard */
+.pf-balance-visual-grid {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.pf-spine-breath-arc {
+  animation: pfSpineBreathArc 3.8s ease-in-out infinite;
+}
+
+@media (max-width: 420px) {
+  .pf-balance-visual-grid {
+    grid-template-columns: 1fr;
+  }
+  .pf-visual-spine-figure {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+/* Bottom Navigation Bar Mint Active Pill */
+html #root .vnext-shell .bottom-nav {
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--pf-v6-border) !important;
+}
+
+html #root .vnext-shell .bottom-nav button.active {
+  background: var(--pf-v6-mint) !important;
+  color: #0b4f39 !important;
+  border-radius: 14px;
+}
+
+/* Class Insights Dialog Mint Segmented Tabs */
+html #root .class-insights-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--pf-v6-track);
+  border: 1px solid var(--pf-v6-border);
+}
+
+html #root .class-insights-tabs button[role='tab'] {
+  flex: 1;
+  min-height: 42px;
+  border-radius: 999px;
+  border: 0;
+  font-weight: 700;
+}
+
+html #root .class-insights-tabs button[role='tab'][aria-selected='true'] {
+  background: var(--pf-v6-mint) !important;
+  color: #0b4f39 !important;
+}
+
+/* Mobile Full-Sheet Polish for Modals */
+@media (max-width: 767px) {
+  html #root .pf-step-choice-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  html #root .pf-idea-footer-bar,
+  html #root .class-log-footer .teaching-form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  html #root .pf-idea-footer-primary {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-subpage-panel:not([data-subpage-hidden='true']),
+  .pf-hud-trajectory-path,
+  .pf-hud-peak-pulse,
+  .pf-breath-pacer-pill.is-breathing .pf-breath-pacer-pill__halo,
+  .pf-breath-pacer-pill.is-breathing .pf-breath-pacer-pill__core,
+  .pf-spot-carriage-svg.is-selected .pf-spot-carriage-bed,
+  html #root .pf-studio-spot-btn:hover:not(:disabled) .pf-spot-carriage-bed,
+  .pf-spine-breath-arc {
+    animation: none !important;
+  }
+
+  .pf-mobile-subpage-btn,
+  .pf-visual-apparatus-card,
+  .pf-visual-apparatus-card__media img,
+  .pf-visual-filmstrip__frame,
+  .pf-visual-filmstrip__media img,
+  .pf-dual-3d-pose-strip__cell img,
+  .pf-studio3d-stage__layer,
+  html #root .movement-card,
+  html #root .schedule-class,
+  html #root .pf-member-slot-card,
+  html #root .pf-studio-spot-btn {
+    transition: none !important;
+  }
+}
+
+.pf-visual-filmstrip__note {
+  margin: 0 0 8px;
+  color: #d1fae5;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+html
+  #root
+  .teaching-stage:not(.teaching-high-contrast)
+  .teaching-timer-area.is-final-countdown
+  .teaching-timer-digits {
+  color: #9c2a16 !important;
+}

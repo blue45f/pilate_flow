@@ -2,6 +2,7 @@ import { PostureAnatomyGuide } from './PostureAnatomyGuide';
 import { MovementDiagramReference } from './MovementDiagramReference';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
+import { MovementDetailIntentBanner } from './PageIntentBanner';
 import { getCrawledRelatedVideosForExercise } from '../data/globalCrawledRepertoirePack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -949,6 +950,7 @@ const MovementDetails: React.FC<{
     : '';
   return (
     <div className="movement-detail">
+      <MovementDetailIntentBanner exercise={exercise} />
       <nav
         className="pf-step-guide-bar yt-preview-step-guide"
         aria-label="영상 구간 확인 및 메모 수정 단계 안내"

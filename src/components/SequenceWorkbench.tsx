@@ -1,4 +1,5 @@
 import { EquipmentChoice } from './EquipmentChoice';
+import { VisualSequenceFilmstrip } from './VisualFlowComponents';
 import { buildSequenceSimulation } from '../utils/sequenceSimulation';
 import {
   Suspense,
@@ -3129,6 +3130,14 @@ export function SequenceWorkbench({
                 ))}
               </div>
             </div>
+          )}
+          {isArrangeStage && s.activeSteps.length > 0 && (
+            <VisualSequenceFilmstrip
+              steps={s.activeSteps}
+              exercisesById={exerciseMap}
+              activeStepId={previewStep}
+              onSelectStep={(step, _index, trigger) => openInspector(step, trigger)}
+            />
           )}
           {isArrangeStage && s.activeSteps.length > 0 && sequenceViewMode === 'timeline' && (
             <div

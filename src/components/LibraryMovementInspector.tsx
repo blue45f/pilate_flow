@@ -2,6 +2,7 @@ import { PostureAnatomyGuide } from './PostureAnatomyGuide';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
+import { MovementDetailIntentBanner } from './PageIntentBanner';
 import type { RefObject } from 'react';
 import { ArrowUpRight, Check, ExternalLink, Info, Plus, X } from 'lucide-react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
@@ -140,6 +141,8 @@ export function LibraryMovementInspector({
             <h3>{exercise.nameKo}</h3>
           </div>
           <p className="library-inspector-english">{exercise.nameEn}</p>
+
+          <MovementDetailIntentBanner exercise={exercise} compact />
 
           <div
             className="library-inspector-fact-strip"

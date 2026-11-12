@@ -30,6 +30,8 @@ import { InstructorStudyBoundary } from './components/InstructorStudyBoundary';
 import { StudioJourneyBar } from './components/StudioJourneyBar';
 import { MemberBookingView } from './components/MemberBookingView';
 import { SequenceQrImportDialog } from './components/SequenceQrShareDialog';
+import { PageIntentBanner } from './components/PageIntentBanner';
+import { MobileSubPageBar } from './components/MobileSubPageBar';
 import {
   type DecodedSharedSequence,
   PF_SEQUENCE_SHARE_HASH_PREFIX,
@@ -50,6 +52,8 @@ import './styles/controls.css';
 import './styles/member-booking.css';
 import './styles/atelier-luxury-v2.css';
 import './styles/mobile-first-atelier-v3.css';
+import './styles/atelier-clean-declutter-v5.css';
+import './styles/mobile-subpages-user-first-v6.css';
 import { createEmptyInstructorStudyState } from './types/instructorStudy';
 import { isMovementIdeaExercise } from './utils/movementIdeaDraft';
 
@@ -637,6 +641,25 @@ export function App() {
             />
           ) : (
             <>
+              {state.activeTab === 'atlas' && (
+                <PageIntentBanner
+                  stepBadge="동작 탐색"
+                  title="수업에 필요한 동작을 찾아보세요"
+                  purpose="기구·부위로 좁혀 보고, 동작을 선택해 원자료와 주의사항을 확인한 뒤 수업안에 담으세요."
+                  singleActionHint="동작 선택 → 세부 안내 확인"
+                />
+              )}
+              {(state.activeTab === 'binder' || state.activeTab === 'history') && (
+                <MobileSubPageBar
+                  ariaLabel="저장한 수업과 진행 기록"
+                  activeId={state.activeTab}
+                  options={[
+                    { id: 'binder', label: '저장한 수업', badge: state.savedSequences.length },
+                    { id: 'history', label: '수업 기록', badge: state.historyLogs.length },
+                  ]}
+                  onSelect={changeTab}
+                />
+              )}
               {state.activeTab !== 'stage' && state.activeTab !== 'schedule' && (
                 <StudioJourneyBar
                   activeTab={state.activeTab}

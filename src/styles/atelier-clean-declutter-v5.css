@@ -1,0 +1,574 @@
+/* ==========================================================================
+   Flow Atelier v5 — Serene Step-by-Step Guided Luxury UI & Anti-Clutter Polish
+   Benchmarked against Apple Fitness+, Nike Training Club, Everfit, Hevy Coach,
+   Tummee, Pilates Anytime & Seconds Pro
+   ========================================================================== */
+
+:root {
+  --pf-v5-canvas: #f5f1e9;
+  --pf-v5-surface: #fffef9;
+  --pf-v5-surface-soft: #f7f4ec;
+  --pf-v5-border: #dce3d8;
+  --pf-v5-border-strong: #c5d2c3;
+  --pf-v5-emerald: #173d34;
+  --pf-v5-emerald-hover: #1f4f43;
+  --pf-v5-emerald-soft: #e9f1ec;
+  --pf-v5-mint: #5eead4;
+  --pf-v5-gold: #fde68a;
+  --pf-v5-ink: #182d25;
+  --pf-v5-muted: #52645b;
+  --pf-v5-shadow-card: 0 8px 26px rgba(23, 61, 52, 0.055);
+  --pf-v5-shadow-hero: 0 14px 34px rgba(23, 61, 52, 0.14);
+}
+
+html body,
+html #root .vnext-shell {
+  background-color: var(--pf-v5-canvas);
+  color: var(--pf-v5-ink);
+}
+
+/* 1. Page & Detail Intent Banners ("유저 입장에서 상세페이지 의도를 알 수 있도록") */
+.pf-page-intent-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 18px;
+  margin: 0 0 16px;
+  border-radius: 18px;
+  border: 1px solid var(--pf-v5-border);
+  background: linear-gradient(135deg, #fffef9 0%, #f1f6f2 100%);
+  box-shadow: var(--pf-v5-shadow-card);
+}
+
+.pf-page-intent-banner.is-emerald {
+  background: linear-gradient(135deg, #173d34 0%, #215145 100%);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f8faf8;
+}
+
+.pf-page-intent-banner__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pf-page-intent-banner__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--pf-v5-emerald-soft);
+  color: var(--pf-v5-emerald);
+}
+
+.pf-page-intent-banner.is-emerald .pf-page-intent-banner__badge {
+  background: rgba(94, 234, 212, 0.16);
+  color: #a7f3d0;
+}
+
+.pf-page-intent-banner__action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: #173d34;
+  color: #fffef9;
+}
+
+.pf-page-intent-banner.is-emerald .pf-page-intent-banner__action-pill {
+  background: rgba(255, 254, 249, 0.14);
+  color: #fffef9;
+}
+
+.pf-page-intent-banner__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pf-page-intent-banner__title {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--pf-v5-ink);
+  word-break: keep-all;
+}
+
+.pf-page-intent-banner.is-emerald .pf-page-intent-banner__title {
+  color: #ffffff;
+}
+
+.pf-page-intent-banner__purpose {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--pf-v5-muted);
+  word-break: keep-all;
+}
+
+.pf-page-intent-banner.is-emerald .pf-page-intent-banner__purpose {
+  color: rgba(248, 250, 248, 0.88);
+}
+
+/* P07 & Inspector Exercise Detail Intent Banner (Matches Concept Board 2 P07) */
+.pf-detail-intent-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 16px 18px;
+  margin: 0 0 14px;
+  border-radius: 18px;
+  background: linear-gradient(140deg, #173d34 0%, #1f4d41 100%);
+  color: #fffef9;
+  box-shadow: var(--pf-v5-shadow-hero);
+}
+
+.pf-detail-intent-banner.is-compact {
+  padding: 13px 15px;
+  border-radius: 15px;
+}
+
+.pf-detail-intent-banner__eyebrow {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #99f6e4;
+}
+
+.pf-detail-intent-banner__headline {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.52;
+  color: #ffffff;
+  word-break: keep-all;
+}
+
+.pf-detail-intent-banner.is-compact .pf-detail-intent-banner__headline {
+  font-size: 0.87rem;
+}
+
+.pf-detail-intent-banner__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pf-detail-intent-banner__pills > span {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255, 254, 249, 0.13);
+  border: 1px solid rgba(255, 254, 249, 0.18);
+  color: #f3faf7;
+}
+
+/* 2. Global Topbar & Competing Stepper Decluttering */
+html #root .vnext-shell .topbar {
+  background: rgba(245, 241, 233, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(220, 227, 216, 0.85);
+}
+
+html #root .vnext-shell [data-testid='studio-journey-bar'] {
+  padding: 6px 10px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  background: rgba(255, 254, 249, 0.72);
+  border: 1px solid rgba(220, 227, 216, 0.75);
+  box-shadow: none;
+}
+
+@media (max-width: 767px) {
+  html #root .vnext-shell .topbar .breadcrumb,
+  html #root .vnext-shell .topbar .local-state {
+    display: none;
+  }
+}
+
+/* 3. SequenceWorkbench (P01~P04) Step-by-Step Hero & Card Calmness */
+.pf-home-3d-hero-showcase {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  margin: 10px 0 12px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f5f1e9 0%, #ebf2ee 100%);
+  border: 1px solid var(--pf-v5-border);
+}
+
+.pf-home-3d-hero-showcase__img {
+  width: 96px;
+  height: 66px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(23, 61, 52, 0.12);
+  background: #f3efe6;
+  flex-shrink: 0;
+}
+
+.pf-home-3d-hero-showcase__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pf-home-3d-hero-showcase__copy strong {
+  font-size: 0.88rem;
+  color: var(--pf-v5-emerald);
+}
+
+.pf-home-3d-hero-showcase__copy span {
+  font-size: 0.78rem;
+  color: var(--pf-v5-muted);
+  line-height: 1.4;
+}
+
+html #root .pf-step-stage-frame {
+  background: var(--pf-v5-surface);
+  border: 1px solid var(--pf-v5-border);
+  border-radius: 22px;
+  box-shadow: var(--pf-v5-shadow-card);
+}
+
+html #root .pf-step-primary-cta,
+html #root .pf-step-nav-pill-btn.is-primary {
+  background: var(--pf-v5-emerald);
+  color: #ffffff;
+  border-radius: 16px;
+  min-height: 50px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(23, 61, 52, 0.18);
+  transition:
+    transform 0.14s ease,
+    background-color 0.14s ease;
+}
+
+html #root .pf-step-primary-cta:hover,
+html #root .pf-step-nav-pill-btn.is-primary:hover {
+  background: var(--pf-v5-emerald-hover);
+}
+
+/* Quiet secondary pill row on Home so primary CTA dominates */
+html #root .pf-step-secondary-actions.workbench-welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+html #root .pf-step-secondary-actions.workbench-welcome-actions > button {
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: var(--pf-v5-surface-soft);
+  border: 1px solid var(--pf-v5-border);
+  color: var(--pf-v5-ink);
+  box-shadow: none;
+}
+
+/* Crisp 3D Movement Mark in Sequence Timeline */
+.workbench-movement-mark {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.pf-workbench-3d-mini-thumb {
+  width: 56px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(23, 61, 52, 0.12);
+  background: #f5f1e9;
+}
+
+/* Clean 2-Line Flow Step Card */
+html #root .flow-step {
+  border-radius: 18px;
+  border: 1px solid var(--pf-v5-border);
+  background: var(--pf-v5-surface);
+  box-shadow: 0 3px 12px rgba(23, 61, 52, 0.04);
+  padding: 12px 14px;
+}
+
+/* Quiet progressive disclosure shelves at bottom of Workbench */
+html #root .workbench-automation-tools {
+  border-radius: 14px;
+  border: 1px solid rgba(220, 227, 216, 0.85);
+  background: rgba(255, 254, 249, 0.78);
+  box-shadow: none;
+}
+
+/* 4. ExerciseAtlasView (P05~P06) Clean Studio 3D Card Header */
+.pf-atlas-card-3d-badge {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 999px;
+  background: rgba(23, 61, 52, 0.86);
+  color: #fffef9;
+  font-size: 0.71rem;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+.pf-atlas-card-3d-badge img {
+  width: 28px;
+  height: 20px;
+  object-fit: cover;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+/* 5. LiveStageView (P09) — Seconds Pro Dark Emerald Timer Hero (Matches Concept Board 3) */
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timer-area {
+  background: linear-gradient(145deg, #173d34 0%, #102c25 100%);
+  color: #ffffff;
+  border-radius: 24px;
+  padding: 20px 22px;
+  margin: 10px 0 14px;
+  border: 1px solid rgba(94, 234, 212, 0.22);
+  box-shadow: var(--pf-v5-shadow-hero);
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timer-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(94, 234, 212, 0.16);
+  color: #99f6e4;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timer-digits {
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(3.25rem, 9vw, 4.8rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.06;
+  margin: 8px 0;
+}
+
+html
+  #root
+  .teaching-stage:not(.teaching-high-contrast)
+  .teaching-timer-area.is-final-countdown
+  .teaching-timer-digits {
+  color: var(--pf-v5-gold);
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timing-breakdown {
+  color: rgba(240, 253, 250, 0.84);
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-timing-breakdown > span {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #ecfdf5;
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-breath-glance-pill {
+  background: rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f0fdfa;
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-glance-cues-strip {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+html #root .teaching-stage:not(.teaching-high-contrast) .teaching-glance-cue-chip {
+  color: #f8fafc;
+}
+
+/* 44px Mobile Touch Targets for Brand Spring & Filter Pills */
+html #root .pf-live-brand-mini-btn {
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  html #root .pf-live-brand-mini-btn,
+  html #root .pf-member-chip {
+    min-height: 44px;
+  }
+}
+
+/* 6. TeachingBalanceInsightCard (P14) — Matches Concept Board 4 */
+.pf-teaching-balance-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 20px;
+  background: var(--pf-v5-surface);
+  border: 1px solid var(--pf-v5-border);
+  box-shadow: var(--pf-v5-shadow-card);
+  margin-bottom: 14px;
+}
+
+.pf-teaching-balance-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pf-teaching-balance-card__window-toggle {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--pf-v5-surface-soft);
+  border: 1px solid var(--pf-v5-border);
+}
+
+.pf-teaching-balance-window-btn {
+  min-height: 34px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--pf-v5-muted);
+  cursor: pointer;
+}
+
+.pf-teaching-balance-window-btn.is-active {
+  background: var(--pf-v5-emerald);
+  color: #ffffff;
+}
+
+.pf-teaching-balance-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pf-teaching-balance-kpi {
+  padding: 10px;
+  border-radius: 13px;
+  background: var(--pf-v5-surface-soft);
+  border: 1px solid rgba(220, 227, 216, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pf-teaching-balance-kpi small {
+  font-size: 0.72rem;
+  color: var(--pf-v5-muted);
+}
+
+.pf-teaching-balance-kpi strong {
+  font-size: 0.95rem;
+  color: var(--pf-v5-emerald);
+}
+
+.pf-teaching-balance-planes {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.pf-teaching-balance-plane-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pf-teaching-balance-plane-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--pf-v5-ink);
+}
+
+.pf-teaching-balance-plane-track {
+  height: 9px;
+  border-radius: 999px;
+  background: #ebe7dc;
+  overflow: hidden;
+}
+
+.pf-teaching-balance-plane-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #173d34 0%, #2f6f5e 100%);
+}
+
+.pf-teaching-balance-gap-tip {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--pf-v5-emerald-soft);
+  border: 1px solid #c3d9cc;
+  font-size: 0.83rem;
+  line-height: 1.48;
+  color: var(--pf-v5-emerald);
+}
+
+/* QR Paste Import Toolbar Button in Saved Binder (P13) */
+.pf-binder-qr-import-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 8px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--pf-v5-emerald);
+  background: var(--pf-v5-surface);
+  color: var(--pf-v5-emerald);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.14s ease,
+    color 0.14s ease;
+}
+
+.pf-binder-qr-import-pill:hover {
+  background: var(--pf-v5-emerald);
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html #root .pf-step-primary-cta,
+  html #root .pf-step-nav-pill-btn.is-primary,
+  .pf-binder-qr-import-pill {
+    transition: none;
+  }
+}
