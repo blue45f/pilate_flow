@@ -328,15 +328,17 @@ export function App() {
     commitTabChange(tab);
   };
   const openLog = (id: string, context?: TeachingLogContext, destination?: ActiveWorkspaceTab) => {
+    const resolvedId =
+      id.trim() || usePilatesStore.getState().activeSequenceId.trim() || 'draft-live-session';
     closingLog.current = false;
     logNavigation.current = destination
       ? {
           target: destination,
-          sequenceId: id,
+          sequenceId: resolvedId,
           previousIds: new Set(usePilatesStore.getState().historyLogs.map((log) => log.id)),
         }
       : null;
-    setLogId(id);
+    setLogId(resolvedId);
     setLogContext(context);
   };
   const closeLog = () => {
@@ -932,12 +934,20 @@ export function App() {
         {clipperOpen && (
           <YouTubeClipperModal open={clipperOpen} onClose={() => setClipperOpen(false)} />
         )}
-        {logId && (
+      </Suspense>
+      {logId && (
+        <Suspense
+          fallback={
+            <p className="modal-loading" role="status">
+              자료를 열고 있어요…
+            </p>
+          }
+        >
           <div ref={logContainerRef}>
             <LogSessionModal sequenceId={logId} context={logContext} onClose={closeLog} />
           </div>
-        )}
-      </Suspense>
+        </Suspense>
+      )}
       {ideaSheetState.open && (
         <MovementIdeaSheet
           key={ideaSheetState.exercise?.id ?? 'new-idea'}

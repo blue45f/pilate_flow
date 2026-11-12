@@ -1745,7 +1745,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
           </section>
 
           {!filters.search && activeFilterCount === 0 && (
-            <details className="library-asset-status" style={{ marginBottom: '10px' }}>
+            <details className="library-asset-status" open style={{ marginBottom: '10px' }}>
               <summary>
                 <span>2D 기구학 벡터 도해 쇼케이스 펼쳐보기 (선택)</span>
                 <ChevronDown size={16} aria-hidden="true" />

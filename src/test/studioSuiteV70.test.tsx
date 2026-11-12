@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { ClassBinderView } from '../components/ClassBinderView';
@@ -30,6 +30,7 @@ const originalState = usePilatesStore.getState();
 describe('Flow Atelier v7.0 Studio Suite & Regression Contracts', () => {
   beforeEach(() => {
     localStorage.clear();
+    window.sessionStorage.clear();
     usePilatesStore.setState(originalState, true);
   });
 
@@ -38,6 +39,7 @@ describe('Flow Atelier v7.0 Studio Suite & Regression Contracts', () => {
     vi.useRealTimers();
     usePilatesStore.setState(originalState, true);
     localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   it('parses Korean/English hands-free voice phrases and Bluetooth remote/pedal keys accurately', () => {
@@ -204,192 +206,256 @@ describe('Flow Atelier v7.0 Studio Suite & Regression Contracts', () => {
     expect(document.body.textContent).toBeTruthy();
   });
 
-  it('completes full core instructor journey (수업 작성 → 저장 → 진행 → 기록) while preserving pre-existing user data and 3D visual elements', async () => {
-    vi.useFakeTimers({
-      toFake: ['Date', 'performance', 'setInterval', 'clearInterval'],
-    });
-    vi.setSystemTime(new Date('2026-11-12T10:00:00.000Z'));
+  it(
+    'completes full core instructor journey (수업 작성 → 저장 → 진행 → 기록) while preserving pre-existing user data and 3D visual elements',
+    async () => {
+      // Pin only Date so real setTimeout and real setInterval stay active for React.lazy Suspense
+      // resolution and Testing Library waitFor/findByRole polling across standard Vitest workers.
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-11-12T10:00:00.000Z'));
 
-    const baseState = usePilatesStore.getState();
-    const eligibleReformer = baseState.exercises.filter(
-      (ex) => ex.apparatus === 'reformer' && ex.id.startsWith('original-'),
-    );
-    const exWarm = eligibleReformer.find((e) => e.blockCategory === 'warmup') ?? eligibleReformer[0];
-    const exMain = eligibleReformer.find((e) => e.blockCategory === 'core') ?? eligibleReformer[1];
-    const exCool = eligibleReformer.find((e) => e.blockCategory === 'cooldown') ?? eligibleReformer[2];
+      const baseState = usePilatesStore.getState();
+      const eligibleReformer = baseState.exercises.filter(
+        (ex) => ex.apparatus === 'reformer' && ex.id.startsWith('original-'),
+      );
+      const exWarm =
+        eligibleReformer.find((e) => e.blockCategory === 'warmup') ?? eligibleReformer[0];
+      const exMain =
+        eligibleReformer.find((e) => e.blockCategory === 'core') ?? eligibleReformer[1];
+      const exCool =
+        eligibleReformer.find((e) => e.blockCategory === 'cooldown') ?? eligibleReformer[2];
 
-    const existingUserSeq: SavedSequence = {
-      id: 'user-existing-seq-preserve-01',
-      title: '보존 검증용 기존 개인레슨 시퀀스',
-      subtitle: '사용자 기존 보관 데이터',
-      apparatus: 'cadillac',
-      level: '1.0',
-      focusTags: ['척추 분절'],
-      targetMinutes: 50,
-      createdAt: '2026-11-01T09:00:00.000Z',
-      updatedAt: '2026-11-01T09:00:00.000Z',
-      taughtCount: 2,
-      steps: [
-        {
-          kind: 'exercise',
-          stepId: 'existing-step-1',
-          order: 1,
-          exerciseId: exWarm.id,
-          blockCategory: exWarm.blockCategory,
-          durationMin: 10,
-          selectedLayer: 'standard',
-        },
-      ],
-    };
+      const existingUserSeq: SavedSequence = {
+        id: 'user-existing-seq-preserve-01',
+        title: '보존 검증용 기존 개인레슨 시퀀스',
+        subtitle: '사용자 기존 보관 데이터',
+        apparatus: 'cadillac',
+        level: '1.0',
+        focusTags: ['척추 분절'],
+        targetMinutes: 50,
+        createdAt: '2026-11-01T09:00:00.000Z',
+        updatedAt: '2026-11-01T09:00:00.000Z',
+        taughtCount: 2,
+        steps: [
+          {
+            kind: 'exercise',
+            stepId: 'existing-step-1',
+            order: 1,
+            exerciseId: exWarm.id,
+            blockCategory: exWarm.blockCategory,
+            durationMin: 10,
+            selectedLayer: 'standard',
+          },
+        ],
+      };
 
-    const existingUserLog: ClassHistoryLog = {
-      id: 'user-existing-log-preserve-01',
-      sequenceId: existingUserSeq.id,
-      sequenceTitle: existingUserSeq.title,
-      groupId: baseState.classGroups[0].id,
-      groupName: baseState.classGroups[0].name,
-      taughtAt: '2026-11-05T09:00:00.000Z',
-      apparatus: 'cadillac',
-      level: '1.0',
-      exerciseIds: [exWarm.id],
-      rating: 5,
-      intensity: 'moderate',
-      instructorReflection: '기존 사용자 수업 기록 보존 확인용 메모',
-      actualDurationSec: 3000,
-    };
+      const existingUserLog: ClassHistoryLog = {
+        id: 'user-existing-log-preserve-01',
+        sequenceId: existingUserSeq.id,
+        sequenceTitle: existingUserSeq.title,
+        groupId: baseState.classGroups[0].id,
+        groupName: baseState.classGroups[0].name,
+        taughtAt: '2026-11-05T09:00:00.000Z',
+        apparatus: 'cadillac',
+        level: '1.0',
+        exerciseIds: [exWarm.id],
+        rating: 5,
+        intensity: 'moderate',
+        instructorReflection: '기존 사용자 수업 기록 보존 확인용 메모',
+        actualDurationSec: 3000,
+      };
 
-    usePilatesStore.setState({
-      activeTab: 'workbench',
-      activeSequenceId: 'e2e-new-class-draft',
-      activeTitle: '목요일 오전 리포머 코어 밸런스',
-      activeSubtitle: '정렬·호흡 집중 30분',
-      activeApparatus: 'reformer',
-      activeLevel: '1.5',
-      activeTargetMinutes: 30,
-      activeTargetGroupId: baseState.classGroups[0].id,
-      activeSteps: [
-        {
-          kind: 'exercise',
-          stepId: 'e2e-step-1',
-          order: 1,
-          exerciseId: exWarm.id,
-          blockCategory: exWarm.blockCategory,
-          durationMin: 10,
-          explanationSec: 20,
-          transitionSec: 15,
-          repetitions: 8,
-          selectedLayer: 'standard',
-        },
-        {
-          kind: 'exercise',
-          stepId: 'e2e-step-2',
-          order: 2,
-          exerciseId: exMain.id,
-          blockCategory: exMain.blockCategory,
-          durationMin: 10,
-          explanationSec: 20,
-          transitionSec: 15,
-          repetitions: 10,
-          selectedLayer: 'standard',
-        },
-      ],
-      savedSequences: [existingUserSeq],
-      historyLogs: [existingUserLog],
-    });
+      usePilatesStore.setState({
+        activeTab: 'workbench',
+        activeSequenceId: 'e2e-new-class-draft',
+        activeTitle: '목요일 오전 리포머 코어 밸런스',
+        activeSubtitle: '정렬·호흡 집중 30분',
+        activeApparatus: 'reformer',
+        activeLevel: '1.5',
+        activeTargetMinutes: 30,
+        activeTargetGroupId: baseState.classGroups[0].id,
+        activeSteps: [
+          {
+            kind: 'exercise',
+            stepId: 'e2e-step-1',
+            order: 1,
+            exerciseId: exWarm.id,
+            blockCategory: exWarm.blockCategory,
+            durationMin: 10,
+            explanationSec: 20,
+            transitionSec: 15,
+            repetitions: 8,
+            selectedLayer: 'standard',
+          },
+          {
+            kind: 'exercise',
+            stepId: 'e2e-step-2',
+            order: 2,
+            exerciseId: exMain.id,
+            blockCategory: exMain.blockCategory,
+            durationMin: 10,
+            explanationSec: 20,
+            transitionSec: 15,
+            repetitions: 10,
+            selectedLayer: 'standard',
+          },
+        ],
+        savedSequences: [existingUserSeq],
+        historyLogs: [existingUserLog],
+      });
 
-    render(<App />);
+      render(<App />);
+      const primaryNav = () => within(screen.getByRole('navigation', { name: '주 메뉴' }));
 
-    // 1. 수업 작성 (Workbench): progressive drawers stay collapsed by default; append 3rd movement; inspect 3D preview
-    expect((screen.getByTestId('workbench-circuit-planner-drawer') as HTMLDetailsElement).open).toBe(false);
-    expect((screen.getByTestId('workbench-adaptive-history-drawer') as HTMLDetailsElement).open).toBe(false);
+      // 1. 수업 작성 (Workbench): progressive drawers stay collapsed by default; append 3rd movement; inspect 3D preview
+      expect(
+        (screen.getByTestId('workbench-circuit-planner-drawer') as HTMLDetailsElement).open,
+      ).toBe(false);
+      expect(
+        (screen.getByTestId('workbench-adaptive-history-drawer') as HTMLDetailsElement).open,
+      ).toBe(false);
 
-    act(() => {
-      usePilatesStore.getState().appendExerciseToSequence(exCool.id, exCool.blockCategory);
-    });
-    expect(usePilatesStore.getState().activeSteps.filter((s) => !isRestStep(s))).toHaveLength(3);
+      act(() => {
+        usePilatesStore.getState().appendExerciseToSequence(exCool.id, exCool.blockCategory);
+      });
+      expect(usePilatesStore.getState().activeSteps.filter((s) => !isRestStep(s))).toHaveLength(3);
 
-    fireEvent.click(screen.getByRole('button', { name: '시퀀스 미리보기' }));
-    const previewDialog = screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
-    expect(within(previewDialog).getByTestId('plan-preview-3d-hero')).toBeInTheDocument();
-    fireEvent.click(within(previewDialog).getByRole('button', { name: '계획 미리보기 닫기' }));
+      fireEvent.click(screen.getByRole('button', { name: '시퀀스 미리보기' }));
+      const previewDialog = await screen.findByRole(
+        'dialog',
+        { name: '전체 수업 계획 미리보기' },
+        { timeout: 10000 },
+      );
+      expect(within(previewDialog).getByTestId('plan-preview-3d-hero')).toBeInTheDocument();
+      fireEvent.click(within(previewDialog).getByRole('button', { name: '계획 미리보기 닫기' }));
 
-    // 2. 수업 저장 (Binder Save): save new sequence & verify both new and pre-existing sequences render with 3D thumbnails
-    let newlySavedId = '';
-    await act(async () => {
-      newlySavedId = usePilatesStore.getState().saveCurrentSequenceToBinder(true);
-      usePilatesStore.getState().setActiveTab('binder');
-    });
-    await act(async () => {
-      await Promise.resolve();
-    });
-    expect(newlySavedId).toBeTruthy();
-    expect(screen.getByRole('heading', { name: '목요일 오전 리포머 코어 밸런스' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '보존 검증용 기존 개인레슨 시퀀스' })).toBeInTheDocument();
-    const savedThumbs = document.querySelectorAll('[data-testid="binder-saved-card-3d-preview"] img');
-    expect(savedThumbs.length).toBeGreaterThanOrEqual(2);
+      // 2. 수업 저장 (Workbench Save -> Binder): save new sequence & verify both new and pre-existing sequences render with 3D thumbnails
+      const saveFlowBtn = screen
+        .getAllByRole('button', { name: /^저장$/ })
+        .find((btn) => btn.classList.contains('save-flow'));
+      if (saveFlowBtn) {
+        fireEvent.click(saveFlowBtn);
+      } else {
+        act(() => {
+          usePilatesStore.getState().saveCurrentSequenceToBinder(true);
+        });
+      }
+      const newlySavedId = usePilatesStore.getState().activeSequenceId;
+      expect(newlySavedId).toBeTruthy();
 
-    // 3. 수업 진행 (Live Stage): start via preview -> run timer -> +15s -> PageDown step navigation -> finish CTA
-    await act(async () => {
-      usePilatesStore.getState().setActiveTab('workbench');
-    });
-    fireEvent.click(screen.getByRole('button', { name: '시퀀스 미리보기' }));
-    const previewDialog2 = screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
-    await act(async () => {
+      fireEvent.click(primaryNav().getByRole('button', { name: '저장한 플로우' }));
+      expect(
+        await screen.findByRole(
+          'heading',
+          { name: '목요일 오전 리포머 코어 밸런스' },
+          { timeout: 10000 },
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: '보존 검증용 기존 개인레슨 시퀀스' }),
+      ).toBeInTheDocument();
+      const savedThumbs = document.querySelectorAll(
+        '[data-testid="binder-saved-card-3d-preview"] img',
+      );
+      expect(savedThumbs.length).toBeGreaterThanOrEqual(2);
+
+      // 3. 수업 진행 및 종료 (Preview -> LiveStageView -> Finish Review): run timer, +15s, PageDown, finish review
+      fireEvent.click(primaryNav().getByRole('button', { name: '오늘의 수업' }));
+      fireEvent.click(
+        await screen.findByRole('button', { name: '시퀀스 미리보기' }, { timeout: 10000 }),
+      );
+      const previewDialog2 = await screen.findByRole(
+        'dialog',
+        { name: '전체 수업 계획 미리보기' },
+        { timeout: 10000 },
+      );
       fireEvent.click(within(previewDialog2).getByRole('button', { name: '수업 시작' }));
-    });
-    await act(async () => {
-      await Promise.resolve();
-    });
 
-    expect(usePilatesStore.getState().activeTab).toBe('stage');
-    expect(screen.getByTestId('live-remote-ready-strip')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '수업 시작' }));
-    act(() => {
-      vi.advanceTimersByTime(10_000);
-    });
-    fireEvent.click(screen.getByTestId('live-stage-extend-15s-btn'));
-    expect(screen.getByRole('timer')).toHaveTextContent('10:05');
+      await waitFor(
+        () => {
+          expect(usePilatesStore.getState().activeTab).toBe('stage');
+        },
+        { timeout: 10000 },
+      );
+      expect(await screen.findByRole('timer', {}, { timeout: 10000 })).toBeInTheDocument();
+      expect(screen.getByTestId('live-remote-ready-strip')).toBeInTheDocument();
 
-    fireEvent.keyDown(window, { key: 'PageDown', code: 'PageDown' });
-    expect(screen.getByRole('heading', { level: 2, name: exMain.nameKo })).toBeInTheDocument();
-    fireEvent.keyDown(window, { key: 'PageDown', code: 'PageDown' });
-    expect(screen.getByRole('heading', { level: 2, name: exCool.nameKo })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: '수업 시작' }));
+      act(() => {
+        vi.setSystemTime(Date.now() + 10_000);
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      fireEvent.click(screen.getByTestId('live-stage-extend-15s-btn'));
+      expect(screen.getByRole('timer')).toHaveTextContent('10:05');
 
-    fireEvent.click(screen.getByTestId('live-stage-finish-cta-btn'));
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /검토하고 기록하기/ }));
-    });
-    await act(async () => {
-      await Promise.resolve();
-    });
+      fireEvent.keyDown(window, { key: 'PageDown', code: 'PageDown' });
+      expect(
+        screen.getByRole('heading', { level: 2, name: exMain.nameKo }),
+      ).toBeInTheDocument();
+      fireEvent.keyDown(window, { key: 'PageDown', code: 'PageDown' });
+      expect(
+        screen.getByRole('heading', { level: 2, name: exCool.nameKo }),
+      ).toBeInTheDocument();
 
-    // 4. 수업 기록 (LogSessionModal -> History): submit reflection & verify snapshot + adaptive bridge + data preservation
-    const logDialog = screen.getByRole('dialog', { name: '수업 기록 남기기' });
-    const memoBox = within(logDialog).getByRole('textbox', { name: '다음 수업을 위한 메모 (선택)' });
-    fireEvent.change(memoBox, {
-      target: { value: '플랭크 구간에서 손목 지지 부담 관찰, 스프링 무거움 피드백 확인' },
-    });
-    await act(async () => {
+      fireEvent.click(screen.getByTestId('live-stage-finish-cta-btn'));
+      const reviewDialog = await screen.findByRole(
+        'dialog',
+        { name: '수업 진행을 마칠까요?' },
+        { timeout: 10000 },
+      );
+      expect(within(reviewDialog).getByText('00:10')).toBeInTheDocument();
+      fireEvent.click(within(reviewDialog).getByRole('button', { name: /검토하고 기록하기/ }));
+
+      // 4. 수업 기록 (Lazy LogSessionModal -> History): await lazy modal, submit reflection & verify snapshot + adaptive bridge + data preservation
+      const logDialog = await screen.findByRole(
+        'dialog',
+        { name: '수업 기록 남기기' },
+        { timeout: 15000 },
+      );
+      expect(within(logDialog).getByTestId('log-session-3d-banner')).toBeInTheDocument();
+      const memoBox = within(logDialog).getByRole('textbox', {
+        name: '다음 수업을 위한 메모 (선택)',
+      });
+      fireEvent.change(memoBox, {
+        target: { value: '플랭크 구간에서 손목 지지 부담 관찰, 스프링 무거움 피드백 확인' },
+      });
       fireEvent.click(within(logDialog).getByRole('button', { name: /수업 기록 저장/ }));
-    });
-    await act(async () => {
-      await Promise.resolve();
-    });
 
-    const afterState = usePilatesStore.getState();
-    expect(afterState.historyLogs).toHaveLength(2);
-    expect(afterState.historyLogs.some((l) => l.id === 'user-existing-log-preserve-01')).toBe(true);
-    expect(afterState.savedSequences.some((s) => s.id === 'user-existing-seq-preserve-01')).toBe(true);
-    expect(afterState.savedSequences.some((s) => s.id === newlySavedId)).toBe(true);
+      await waitFor(
+        () => {
+          expect(usePilatesStore.getState().activeTab).toBe('history');
+        },
+        { timeout: 10000 },
+      );
+      expect(
+        screen.queryByRole('dialog', { name: '수업 기록 남기기' }),
+      ).not.toBeInTheDocument();
 
-    await act(async () => {
-      usePilatesStore.getState().setActiveTab('history');
-    });
-    await act(async () => {
-      await Promise.resolve();
-    });
-    const adaptiveBanner = screen.getByTestId('binder-adaptive-bridge-card');
-    expect(adaptiveBanner).toHaveTextContent('손목 지지 부담 완화');
-    expect(screen.getByText('기존 사용자 수업 기록 보존 확인용 메모')).toBeInTheDocument();
-  });
+      const afterState = usePilatesStore.getState();
+      expect(afterState.historyLogs).toHaveLength(2);
+      expect(afterState.historyLogs[0]).toMatchObject({
+        sequenceId: newlySavedId,
+        sequenceTitle: '목요일 오전 리포머 코어 밸런스',
+        actualDurationSec: 10,
+      });
+      expect(afterState.historyLogs.some((l) => l.id === 'user-existing-log-preserve-01')).toBe(
+        true,
+      );
+      expect(afterState.savedSequences.some((s) => s.id === 'user-existing-seq-preserve-01')).toBe(
+        true,
+      );
+      expect(
+        afterState.savedSequences.find((s) => s.id === newlySavedId)?.taughtCount,
+      ).toBe(1);
+
+      const adaptiveBanner = await screen.findByTestId(
+        'binder-adaptive-bridge-card',
+        {},
+        { timeout: 10000 },
+      );
+      expect(adaptiveBanner).toHaveTextContent('손목 지지 부담 완화');
+      expect(screen.getByText('기존 사용자 수업 기록 보존 확인용 메모')).toBeInTheDocument();
+    },
+    30000,
+  );
 });

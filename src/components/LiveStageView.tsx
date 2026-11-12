@@ -236,6 +236,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const [exitOpen, setExitOpen] = useState(false);
   const [showAllCues, setShowAllCues] = useState(false);
   const [showCueSheet, setShowCueSheet] = useState(false);
+  const [orbitDrawerOpen, setOrbitDrawerOpen] = useState(false);
+  const [kinematicDrawerOpen, setKinematicDrawerOpen] = useState(false);
   const [undoState, setUndoState] = useState<StageUndoState | null>(null);
   const [outlineInitiallyOpen] = useState(() => window.innerWidth > 1000);
 
@@ -1307,6 +1309,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     taughtStepIds: elapsedTaughtStepIds,
   };
 
+  useEffect(() => {
+    if (reviewOpen) {
+      void import('./LogSessionModal');
+    }
+  }, [reviewOpen]);
+
   const exitDialogs = (
     <>
       <LightDismissDialog
@@ -1341,9 +1349,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             className="btn-primary"
             onClick={() => {
               const destination = reviewTarget;
+              const targetSequenceId = session.id || activeSequenceId || 'draft-live-session';
               closeReview();
-              if (destination) onOpenLogModal(session.id, logContext, destination);
-              else onOpenLogModal(session.id, logContext);
+              if (destination) onOpenLogModal(targetSequenceId, logContext, destination);
+              else onOpenLogModal(targetSequenceId, logContext);
             }}
           >
             <Check size={17} /> 검토하고 기록하기
@@ -1773,9 +1782,13 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     <span className="pf-live-3d-companion__badge is-peak">◆ 3. 정점 주동근</span>
                   </div>
                 </div>
-                <details className="teaching-stage-details pf-live-3d-orbit-drawer">
+                <details
+                  className="teaching-stage-details pf-live-3d-orbit-drawer"
+                  open={orbitDrawerOpen}
+                  onToggle={(event) => setOrbitDrawerOpen(event.currentTarget.open)}
+                >
                   <summary>🌐 실시간 360° 3D 각도 회전 · X-Ray 뷰포트 열기</summary>
-                  <StudioInteractive3DViewport exercise={exercise} compact />
+                  {orbitDrawerOpen && <StudioInteractive3DViewport exercise={exercise} compact />}
                 </details>
                 <div className="pf-live-breath-strip">
                   <VisualBreathPacerRing
@@ -1944,15 +1957,25 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 </div>
               );
             })()}
+          {!currentIsRest && exercise && !isExerciseAutoEligible(exercise) && (
+            <p className="muted teaching-review-advisory" style={{ margin: '4px 0 0', fontSize: '0.78rem' }}>
+              교차 검증 완료 가이드 · 내 강사 검토 기록은 선택 사항입니다.
+            </p>
+          )}
           {!currentIsRest && exercise && (
-            <details className="teaching-stage-details pf-p09-kinematic-drawer">
+            <details
+              className="teaching-stage-details pf-p09-kinematic-drawer"
+              open={kinematicDrawerOpen}
+              onToggle={(event) => setKinematicDrawerOpen(event.currentTarget.open)}
+            >
               <summary>2D 기구학 보조 다이어그램 열기 (선택)</summary>
               <LiveStageKinematicDiagram
                 exercise={exercise}
-                running={clock.running}
+                running={clock.running && kinematicDrawerOpen}
                 stepProgressRatio={progress / 100}
                 springsLabel={currentSpringRaw || undefined}
               />
+              <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
             </details>
           )}
           <div className="teaching-play-controls">

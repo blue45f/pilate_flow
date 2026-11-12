@@ -1758,7 +1758,7 @@ export function SequenceWorkbench({
                     </button>
                   </div>
                   <h3 style={{ margin: '8px 0 6px', fontSize: '1.14rem', color: '#173d34' }}>
-                    기구·시간 선택 후 바로 동작 담기
+                    기구·시간 선택 후 동작을 골라 바로 담기
                   </h3>
                   <div
                     className="workbench-quick-duration-bar"
