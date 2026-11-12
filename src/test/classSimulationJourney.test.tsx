@@ -438,11 +438,25 @@ describe('actual full-class rehearsal and read-only evidence journeys', { timeou
     expect(storedState()).toEqual(before);
   });
 
-  it.each(['plan', 'target', 'material', 'review'] as const)(
+  it.each(['plan', 'target', 'apparatus', 'level', 'material', 'review'] as const)(
     'keeps the opened snapshot frozen but stops and disables playback after a live %s change',
     async (kind) => {
       const fixture = seed();
       const { dialog, controls, range } = await openPreview();
+      const visualDrawer = dialog.getByTestId(
+        'plan-preview-visual-3d-cuesheet-drawer',
+      ) as HTMLDetailsElement;
+      visualDrawer.open = true;
+      fireEvent(visualDrawer, new Event('toggle'));
+      expect(dialog.getByTestId('one-page-visual-3d-cuesheet')).toHaveTextContent(
+        fixture.steps[0].instructorNote!,
+      );
+      const cueDrawer = dialog
+        .getByText('수업 진행 큐시트 · 인쇄 보기', { selector: 'summary' })
+        .closest('details')!;
+      cueDrawer.open = true;
+      fireEvent(cueDrawer, new Event('toggle'));
+      expect(dialog.getByTestId('class-cue-sheet-root')).toBeInTheDocument();
       fakeClock();
       fireEvent.click(controls.getByRole('button', { name: '시간표 리허설 시작' }));
       tick(1);
@@ -450,6 +464,8 @@ describe('actual full-class rehearsal and read-only evidence journeys', { timeou
         const state = usePilatesStore.getState();
         if (kind === 'plan') usePilatesStore.setState({ activeSteps: state.activeSteps.slice(1) });
         if (kind === 'target') usePilatesStore.setState({ activeTargetMinutes: 60 });
+        if (kind === 'apparatus') usePilatesStore.setState({ activeApparatus: 'reformer' });
+        if (kind === 'level') usePilatesStore.setState({ activeLevel: '2.0' });
         if (kind === 'material')
           usePilatesStore.setState({
             exercises: state.exercises.map((item) =>
@@ -466,6 +482,9 @@ describe('actual full-class rehearsal and read-only evidence journeys', { timeou
           });
       });
       const afterExternalChange = storedState();
+      expect(dialog.queryByTestId('one-page-visual-3d-cuesheet')).not.toBeInTheDocument();
+      expect(dialog.queryByTestId('class-cue-sheet-root')).not.toBeInTheDocument();
+      expect(within(visualDrawer).getByText(/미리보기를 다시 열어 큐시트를 확인/)).toBeVisible();
       const stoppedAt = Number(range.value);
       expect(controls.getByRole('button', { name: '시간표 리허설 시작' })).toBeDisabled();
       expect(controls.getByText(/원본 계획 또는 검토 정보가 바뀌었습니다/)).toBeInTheDocument();

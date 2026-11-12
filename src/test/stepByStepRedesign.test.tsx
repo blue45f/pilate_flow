@@ -106,9 +106,7 @@ describe('Step-by-step guided flow & design mockup alignment upgrades', () => {
     // Add first eligible Reformer exercise directly inside Step 2 page
     const reformerEx = usePilatesStore
       .getState()
-      .exercises.find(
-        (ex) => ex.apparatus === 'reformer' && ex.props.every((p) => p === 'none'),
-      )!;
+      .exercises.find((ex) => ex.apparatus === 'reformer' && ex.props.every((p) => p === 'none'))!;
     const addBtn = within(step2Page).getByRole('button', {
       name: new RegExp(`${reformerEx.nameKo}.*(담기|추가)`),
     });
@@ -218,7 +216,11 @@ describe('Step-by-step guided flow & design mockup alignment upgrades', () => {
     const nextPreview = screen.getByTestId('live-stage-inline-next-preview');
     expect(nextPreview).toBeVisible();
     expect(within(nextPreview).getByText(ex2!.nameKo)).toBeVisible();
-    expect(within(nextPreview).getByText(/1 Red · 1 Blue/)).toBeVisible();
+    expect(within(nextPreview).getByTestId('live-stage-spring-delta-badge')).toHaveTextContent(
+      '1 Red · 1 Blue',
+    );
+    expect(within(nextPreview).getByTestId('spring-visual-pills')).toHaveTextContent('빨강×1');
+    expect(within(nextPreview).getByTestId('spring-visual-pills')).toHaveTextContent('파랑×1');
 
     const cueSummary = screen.getByText('티칭 큐와 메모', { selector: 'summary' });
     fireEvent.click(cueSummary);
@@ -229,12 +231,7 @@ describe('Step-by-step guided flow & design mockup alignment upgrades', () => {
   });
 
   it('renders the 5-phase continuous kinematic Reformer schematic showcase inside ExerciseAtlasView', () => {
-    render(
-      <ExerciseAtlasView
-        onOpenYouTubePreview={vi.fn()}
-        onOpenClipper={vi.fn()}
-      />,
-    );
+    render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
 
     const showcase = screen.getByTestId('kinematic-schematic-showcase');
     expect(showcase).toBeVisible();

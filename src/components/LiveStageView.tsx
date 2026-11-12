@@ -861,6 +861,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     });
   const timing = current ? getStepTiming(current, exercise) : null;
   const sideLabels = current ? getStepSideLabels(current, exercise) : [];
+  const secondSideLabel = sideLabels[1];
   const stepElapsedSec = Math.max(0, (durations[clock.index] - clock.remainingMs) / 1000);
   const movementPhase =
     timing?.sides === 2
@@ -942,14 +943,14 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     }
     if (
       timing?.sides === 2 &&
-      sideLabels[1] &&
-      phase === `수행 · ${sideLabels[1]}`
+      secondSideLabel &&
+      phase === `수행 · ${secondSideLabel}`
     ) {
       const sideKey = `${stepId}:side-switch`;
       if (!firedSensoryKeysRef.current.has(sideKey)) {
         firedSensoryKeysRef.current.add(sideKey);
         triggerLiveSensoryCue('side-switch');
-        setLastSensoryStatus(`전환 알림: 반대쪽(${sideLabels[1]}) 교대 차임·진동`);
+        setLastSensoryStatus(`전환 알림: 반대쪽(${secondSideLabel}) 교대 차임·진동`);
       }
     } else if (phase.startsWith('수행') && (timing?.explanationSec ?? 0) > 0) {
       const activeKey = `${stepId}:phase-active`;
@@ -976,7 +977,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     phase,
     timing?.sides,
     timing?.explanationSec,
-    sideLabels,
+    secondSideLabel,
     exitOpen,
     reviewOpen,
   ]);

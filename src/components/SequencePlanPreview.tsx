@@ -21,7 +21,12 @@ import {
 } from 'lucide-react';
 import { EQUIPMENT_OPTIONS, getExerciseEquipment, PROP_OPTIONS } from '../data/equipmentCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
-import type { PilatesExercise, SequenceStep } from '../types/pilates';
+import type {
+  ApparatusType,
+  DifficultyLevel,
+  PilatesExercise,
+  SequenceStep,
+} from '../types/pilates';
 import {
   exerciseRevision,
   getExerciseReviewState,
@@ -107,12 +112,16 @@ export function SequencePlanPreview({
         steps: state.activeSteps,
         exercises: state.exercises,
         targetMinutes: state.activeTargetMinutes,
+        apparatus: state.activeApparatus,
+        level: state.activeLevel,
       }),
     ) as {
       title: string;
       steps: SequenceStep[];
       exercises: PilatesExercise[];
       targetMinutes: number;
+      apparatus: ApparatusType | 'mixed';
+      level: DifficultyLevel;
     };
   });
   const [manualSelection, setManualSelection] = useState<number | null>(0);
@@ -121,12 +130,15 @@ export function SequencePlanPreview({
   );
   const [segmentRehearsalOpen, setSegmentRehearsalOpen] = useState(false);
   const [showCueSheet, setShowCueSheet] = useState(false);
+  const [showVisualCueSheet, setShowVisualCueSheet] = useState(false);
   const [qrShareOpen, setQrShareOpen] = useState(false);
   const segmentEntryRef = useRef<HTMLButtonElement>(null);
   const liveSteps = usePilatesStore((state) => state.activeSteps);
   const liveExercises = usePilatesStore((state) => state.exercises);
   const liveTarget = usePilatesStore((state) => state.activeTargetMinutes);
   const liveTitle = usePilatesStore((state) => state.activeTitle);
+  const liveApparatus = usePilatesStore((state) => state.activeApparatus);
+  const liveLevel = usePilatesStore((state) => state.activeLevel);
   const reformerBrand = usePilatesStore((state) => state.reformerBrand);
   const setReformerBrand = usePilatesStore((state) => state.setReformerBrand);
   const saveFeedback = usePilatesStore((state) => state.saveFeedback);
@@ -156,6 +168,8 @@ export function SequencePlanPreview({
     () =>
       liveTitle !== snapshot.title ||
       liveTarget !== snapshot.targetMinutes ||
+      liveApparatus !== snapshot.apparatus ||
+      liveLevel !== snapshot.level ||
       JSON.stringify(liveSteps) !== JSON.stringify(snapshot.steps) ||
       snapshot.steps.some(
         (step) =>
@@ -165,7 +179,33 @@ export function SequencePlanPreview({
             evidenceStamp(exercises.get(step.exerciseId)) !==
               evidenceStamp(liveExercises.find((item) => item.id === step.exerciseId))),
       ),
-    [liveTitle, liveTarget, liveSteps, snapshot, exercises, liveExercises],
+    [
+      liveTitle,
+      liveTarget,
+      liveApparatus,
+      liveLevel,
+      liveSteps,
+      snapshot,
+      exercises,
+      liveExercises,
+    ],
+  );
+  const reviewedTeachingExerciseIds = useMemo(
+    () =>
+      new Set(
+        snapshot.exercises
+          .filter((exercise) => {
+            const current = liveExercises.find((item) => item.id === exercise.id);
+            return (
+              isExerciseAutoEligible(exercise) &&
+              !!current &&
+              isExerciseAutoEligible(current) &&
+              evidenceStamp(exercise) === evidenceStamp(current)
+            );
+          })
+          .map((exercise) => exercise.id),
+      ),
+    [snapshot.exercises, liveExercises],
   );
   const rehearsal = useSequenceRehearsal({
     totalSec: model.totals.totalSec,
@@ -182,7 +222,9 @@ export function SequencePlanPreview({
     () =>
       new Set(
         model.gate.reasons
-          .filter((reason) => reason.code !== 'target-mismatch' && reason.code !== 'duplicate-movement')
+          .filter(
+            (reason) => reason.code !== 'target-mismatch' && reason.code !== 'duplicate-movement',
+          )
           .flatMap((reason) => reason.stepIndices),
       ),
     [model.gate.reasons],
@@ -358,7 +400,11 @@ export function SequencePlanPreview({
             let springChanges = 0;
             let prevSpring = '';
             for (const st of moveSteps) {
-              const sp = (st.customSpringOverride || exById.get(st.exerciseId)?.springs || '').trim();
+              const sp = (
+                st.customSpringOverride ||
+                exById.get(st.exerciseId)?.springs ||
+                ''
+              ).trim();
               if (sp && prevSpring && sp !== prevSpring) {
                 springChanges += 1;
               }
@@ -427,15 +473,26 @@ export function SequencePlanPreview({
           <details
             className="class-plan-summary class-cue-sheet-summary"
             data-testid="plan-preview-visual-3d-cuesheet-drawer"
+            open={showVisualCueSheet}
+            onToggle={(event) => setShowVisualCueSheet(event.currentTarget.open)}
           >
             <summary>1페이지 3D 시각 요약 큐시트 · 태블릿/A4 인쇄</summary>
-            <OnePageVisual3DCueSheet
-              title={snapshot.title}
-              apparatus={usePilatesStore.getState().activeApparatus}
-              level={usePilatesStore.getState().activeLevel}
-              steps={snapshot.steps}
-              exercises={snapshot.exercises}
-            />
+            {snapshotChanged ? (
+              <p className="muted">
+                원본 계획 또는 검토 정보가 바뀌었습니다. 미리보기를 다시 열어 큐시트를 확인하세요.
+              </p>
+            ) : (
+              showVisualCueSheet && (
+                <OnePageVisual3DCueSheet
+                  title={snapshot.title}
+                  apparatus={snapshot.apparatus}
+                  level={snapshot.level}
+                  steps={snapshot.steps}
+                  exercises={snapshot.exercises}
+                  reviewedTeachingExerciseIds={reviewedTeachingExerciseIds}
+                />
+              )
+            )}
           </details>
           <details
             className="class-plan-summary class-cue-sheet-summary"
@@ -443,12 +500,18 @@ export function SequencePlanPreview({
             onToggle={(event) => setShowCueSheet(event.currentTarget.open)}
           >
             <summary>수업 진행 큐시트 · 인쇄 보기</summary>
-            {showCueSheet && (
-              <ClassCueSheetPreview
-                sourceInput={snapshot}
-                projectionOptions={{ exercises }}
-                initialStepIndex={index}
-              />
+            {snapshotChanged ? (
+              <p className="muted">
+                원본 계획 또는 검토 정보가 바뀌었습니다. 미리보기를 다시 열어 큐시트를 확인하세요.
+              </p>
+            ) : (
+              showCueSheet && (
+                <ClassCueSheetPreview
+                  sourceInput={snapshot}
+                  projectionOptions={{ exercises }}
+                  initialStepIndex={index}
+                />
+              )
             )}
           </details>
           {selected && (

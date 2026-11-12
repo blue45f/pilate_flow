@@ -434,6 +434,9 @@ describe('MovementMediaGuidancePanel — reference video/materials & Korean voic
       const dialog = screen.getByRole('dialog', { name: exercise1.nameKo });
       const mediaPanel = within(dialog).getByTestId('movement-media-guidance-panel');
       expect(mediaPanel).toHaveAttribute('data-exercise-id', exercise1.id);
+      expect(within(mediaPanel).getByTestId('external-original-source-link')).not.toBeVisible();
+      const voiceDrawer = within(dialog).getByTestId('detail-voice-media-drawer');
+      fireEvent.click(voiceDrawer.querySelector('summary')!);
       expect(within(mediaPanel).getByTestId('external-original-source-link')).toBeVisible();
       expect(within(mediaPanel).queryByTestId('voice-script-text')).not.toBeInTheDocument();
 

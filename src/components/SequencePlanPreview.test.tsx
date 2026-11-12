@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { SequenceStep } from '../types/pilates';
-import { isExerciseAutoEligible } from '../utils/exerciseReview';
+import { exerciseRevision, isExerciseAutoEligible } from '../utils/exerciseReview';
 import { syntheticPlanningExercise } from '../test/planningFixtures';
 import { SequencePlanPreview } from './SequencePlanPreview';
 
@@ -103,6 +103,36 @@ describe('read-only whole class plan preview', () => {
     expect(after.exercises).toBe(before.exercises);
     expect(after.draftCriteria).toBe(before.draftCriteria);
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
+  });
+
+  it('keeps pending teaching notes out of an explicitly opened visual cue sheet while showing current reviewed notes', () => {
+    const pendingNote = {
+      ...pending,
+      cues: ['검토 전 고유 큐 · 표시 금지'],
+      breathPattern: '검토 전 고유 호흡 · 표시 금지',
+    };
+    const reviewedNote = { ...approved, cues: ['개인 검토 완료 고유 큐'] };
+    reviewedNote.review = {
+      ...approved.review!,
+      revision: exerciseRevision(reviewedNote),
+    };
+    usePilatesStore.setState({ exercises: [pendingNote, reviewedNote] });
+    const before = usePilatesStore.getState();
+    render(<SequencePlanPreview onClose={vi.fn()} />);
+    expect(screen.queryByTestId('one-page-visual-3d-cuesheet')).not.toBeInTheDocument();
+    const drawer = screen.getByTestId(
+      'plan-preview-visual-3d-cuesheet-drawer',
+    ) as HTMLDetailsElement;
+    drawer.open = true;
+    fireEvent(drawer, new Event('toggle'));
+    const sheet = within(screen.getByTestId('one-page-visual-3d-cuesheet'));
+    expect(sheet.queryByText(pendingNote.cues[0])).not.toBeInTheDocument();
+    expect(sheet.queryByText(pendingNote.breathPattern)).not.toBeInTheDocument();
+    expect(sheet.queryByText(steps[0].instructorNote!)).not.toBeInTheDocument();
+    expect(sheet.queryByText(steps[1].instructorNote!)).not.toBeInTheDocument();
+    expect(sheet.getByText(reviewedNote.cues[0])).toBeVisible();
+    expect(sheet.getByRole('button', { name: /1페이지 큐시트 인쇄/ })).toBeEnabled();
+    expect(usePilatesStore.getState()).toBe(before);
   });
 
   it('enables independent motion inspection only while the timeline and segment rehearsal are paused', () => {

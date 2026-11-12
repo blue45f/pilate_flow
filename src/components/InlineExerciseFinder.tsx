@@ -17,7 +17,7 @@ import { matchesLibraryEquipment } from '../data/libraryEquipmentFilters';
 import { EquipmentDiscoveryScope } from './EquipmentDiscoveryScope';
 import type { EquipmentId } from '../data/equipmentCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
-import type { PilatesExercise } from '../types/pilates';
+import type { PilatesExercise, SequenceStep } from '../types/pilates';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
 import {
   addMovementIdeaToCurrentClass,
@@ -64,6 +64,23 @@ const SPRING_QUICK_OPTIONS: readonly { key: string; label: string }[] = [
   { key: '1B', label: '1B (경량·머메이드)' },
   { key: 'Bodyweight', label: '맨몸·무스프링' },
 ];
+
+function findLastActiveStepSpring(
+  steps: readonly SequenceStep[],
+  exercisesById: ReadonlyMap<string, PilatesExercise>,
+) {
+  for (let i = steps.length - 1; i >= 0; i -= 1) {
+    const step = steps[i]!;
+    if (isRestStep(step)) continue;
+    const exercise = exercisesById.get(step.exerciseId);
+    const raw = (step.customSpringOverride || exercise?.springs || '').trim();
+    const key = normalizeCanonicalSpringKey(raw);
+    if (key && key !== 'Bodyweight' && !/\bor\b|또는/i.test(raw)) {
+      return { raw, key };
+    }
+  }
+  return null;
+}
 
 function exerciseMatchesSpringFilter(exercise: PilatesExercise, springKey: string): boolean {
   if (!springKey) return true;
@@ -113,10 +130,7 @@ usePilatesStore.subscribe((state, prev) => {
   }
 });
 
-const emptyFilters = (
-  initialQuery = '',
-  initialEquipment: EquipmentId[] = [],
-): FinderFilters => ({
+const emptyFilters = (initialQuery = '', initialEquipment: EquipmentId[] = []): FinderFilters => ({
   query: initialQuery,
   equipment: initialEquipment,
   springKey: '',
@@ -211,19 +225,7 @@ export function InlineExerciseFinder({
     [exercises],
   );
 
-  const lastActiveStepSpring = useMemo(() => {
-    for (let i = activeSteps.length - 1; i >= 0; i -= 1) {
-      const st = activeSteps[i]!;
-      if (isRestStep(st)) continue;
-      const ex = exercisesById.get(st.exerciseId);
-      const raw = (st.customSpringOverride || ex?.springs || '').trim();
-      const key = normalizeCanonicalSpringKey(raw);
-      if (key && key !== 'Bodyweight' && !/\bor\b|또는/i.test(raw)) {
-        return { raw, key };
-      }
-    }
-    return null;
-  }, [activeSteps, exercisesById]);
+  const lastActiveStepSpring = findLastActiveStepSpring(activeSteps, exercisesById);
 
   const update = <K extends keyof FinderFilters>(key: K, value: FinderFilters[K]) => {
     if (key === 'query' && typeof value === 'string') {
@@ -1053,11 +1055,7 @@ export function InlineExerciseFinder({
           </p>
           {Boolean(filters.query.trim()) &&
             (activeFilterChips.length > 0 || exerciseBrowseScope === 'owned') && (
-              <button
-                type="button"
-                className="ief-empty-query-btn"
-                onClick={clearQueryOnly}
-              >
+              <button type="button" className="ief-empty-query-btn" onClick={clearQueryOnly}>
                 검색어만 지우기
               </button>
             )}

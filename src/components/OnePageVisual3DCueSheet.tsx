@@ -37,6 +37,8 @@ export interface OnePageVisual3DCueSheetProps {
   readonly exercises: readonly PilatesExercise[];
   readonly showPrintButton?: boolean;
   readonly initialBrand?: ReformerBrand;
+  /** When supplied, teaching notes are limited to these currently reviewed exercises. */
+  readonly reviewedTeachingExerciseIds?: ReadonlySet<string>;
 }
 
 const SECTION_LABEL_KO: Record<string, string> = {
@@ -56,6 +58,7 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
   exercises,
   showPrintButton = true,
   initialBrand,
+  reviewedTeachingExerciseIds,
 }) => {
   const storeBrand = usePilatesStore((s) => s.reformerBrand);
   const setStoreBrand = usePilatesStore((s) => s.setReformerBrand);
@@ -74,10 +77,7 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
     setStoreBrand(nextBrand);
   };
 
-  const exerciseMap = useMemo(
-    () => new Map(exercises.map((item) => [item.id, item])),
-    [exercises],
-  );
+  const exerciseMap = useMemo(() => new Map(exercises.map((item) => [item.id, item])), [exercises]);
   const durations = useMemo(() => getSequenceDurations([...steps]), [steps]);
 
   const cornerQrResult = useMemo(() => {
@@ -99,20 +99,29 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
     } catch {
       return null;
     }
-  }, [showCornerQr, steps, durations.totalSec, title, subtitle, apparatus, level, activeBrand, exercises]);
+  }, [
+    showCornerQr,
+    steps,
+    durations.totalSec,
+    title,
+    subtitle,
+    apparatus,
+    level,
+    activeBrand,
+    exercises,
+  ]);
 
   const enrichedRows = useMemo(() => {
     let prevSpringNorm = '';
     let springChangeTotal = 0;
-    const rows = steps.map((step, idx) => {
+    const rows = [];
+    for (const [idx, step] of steps.entries()) {
       const rest = isRestStep(step);
       const ex = !rest ? exerciseMap.get(step.exerciseId) : undefined;
       const timing = getStepTiming(step, ex);
       const sectionRole = rest ? 'rest' : getSequenceStepClassSection(step, [...steps]);
       const sectionLabelKo = SECTION_LABEL_KO[sectionRole] ?? '본운동';
-      const springs = rest
-        ? ''
-        : (step.customSpringOverride || ex?.springs || '').trim();
+      const springs = rest ? '' : (step.customSpringOverride || ex?.springs || '').trim();
       const normSpring = springs.toLowerCase();
       const hasSpringDelta =
         !rest && Boolean(normSpring && prevSpringNorm && normSpring !== prevSpringNorm);
@@ -125,15 +134,20 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
           : null;
 
       const motion3d = ex ? resolveStudio3DMotionForExercise(ex) : null;
-      const primaryCue = rest
-        ? step.instructorNote || '호흡 정리 및 다음 기구 세팅 점검'
-        : step.instructorNote?.trim() || ex?.cues[0] || '정렬과 호흡 리듬을 확인하세요.';
+      const canShowTeachingNotes =
+        reviewedTeachingExerciseIds === undefined ||
+        (!rest && ex !== undefined && reviewedTeachingExerciseIds.has(ex.id));
+      const primaryCue = !canShowTeachingNotes
+        ? rest
+          ? '계획한 휴식 구간'
+          : '개인 검토 전 · 티칭 메모는 표시하지 않습니다.'
+        : rest
+          ? step.instructorNote || '호흡 정리 및 다음 기구 세팅 점검'
+          : step.instructorNote?.trim() || ex?.cues[0] || '정렬과 호흡 리듬을 확인하세요.';
       const sideText =
-        !rest && (ex?.isUnilateral || step.sideMode)
-          ? getStepSideLabels(step, ex).join('→')
-          : null;
+        !rest && (ex?.isUnilateral || step.sideMode) ? getStepSideLabels(step, ex).join('→') : null;
 
-      return {
+      rows.push({
         step,
         orderLabel: String(idx + 1).padStart(2, '0'),
         rest,
@@ -147,16 +161,16 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
         hasSpringDelta,
         thumbSrc: motion3d?.peakImg ?? null,
         primaryCue,
-        breathText: !rest ? ex?.breathPattern : undefined,
+        breathText: !rest && canShowTeachingNotes ? ex?.breathPattern : undefined,
         repsSetsText:
           !rest && step.repetitions !== undefined
             ? `${step.repetitions}회${step.sets !== undefined ? `×${step.sets}세트` : ''}`
             : null,
         sideText,
-      };
-    });
+      });
+    }
     return { rows, springChangeTotal };
-  }, [steps, exerciseMap, activeBrand, apparatus]);
+  }, [steps, exerciseMap, activeBrand, apparatus, reviewedTeachingExerciseIds]);
 
   const apparatusKo =
     apparatus === 'mixed' ? '복합 기구' : (APPARATUS_LABELS[apparatus]?.ko ?? apparatus);
@@ -213,7 +227,11 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
 
         <div className="pf-visual-1p-cuesheet__right">
           <div className="pf-visual-1p-cuesheet__controls cue-sheet-no-print">
-            <div role="group" aria-label="1페이지 큐시트 배열 밀도" className="pf-visual-1p-density">
+            <div
+              role="group"
+              aria-label="1페이지 큐시트 배열 밀도"
+              className="pf-visual-1p-density"
+            >
               <button
                 type="button"
                 className={`log-quick-note-chip ${layoutDensity === 'two-col-print' ? 'is-selected' : ''}`.trim()}
@@ -304,10 +322,7 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
                   <div className="pf-visual-1p-row__meta">
                     {row.springs && <SpringVisualPills springs={row.springs} />}
                     {row.brandConverted && !row.brandConverted.isNonSpringApparatus && (
-                      <span
-                        className="pf-brand-spring-pill"
-                        data-testid="visual-1p-brand-spring"
-                      >
+                      <span className="pf-brand-spring-pill" data-testid="visual-1p-brand-spring">
                         {row.brandConverted.brandShortLabelKo}:{' '}
                         {row.brandConverted.equivalentLabelKo}
                       </span>
@@ -323,9 +338,7 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
                     {row.repsSetsText && (
                       <span className="pf-visual-1p-row__pill">{row.repsSetsText}</span>
                     )}
-                    {row.sideText && (
-                      <span className="pf-visual-1p-row__pill">{row.sideText}</span>
-                    )}
+                    {row.sideText && <span className="pf-visual-1p-row__pill">{row.sideText}</span>}
                   </div>
                 )}
                 <p className="pf-visual-1p-row__cue">{row.primaryCue}</p>

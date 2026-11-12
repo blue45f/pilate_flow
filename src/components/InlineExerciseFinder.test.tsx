@@ -5,6 +5,7 @@ import { getMotionPatternReferences } from '../data/motionPatternReferences';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { AutoGenerateCriteria, PilatesExercise } from '../types/pilates';
 import { exerciseRevision, isExerciseAutoEligible } from '../utils/exerciseReview';
+import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import { syntheticPlanningExercise } from '../test/planningFixtures';
 import { InlineExerciseFinder } from './InlineExerciseFinder';
 
@@ -198,8 +199,12 @@ describe('inline exercise finder', () => {
     render(<InlineExerciseFinder onOpenExercise={vi.fn()} />);
     const card = screen.getByRole('article', { name: `${mapped.nameKo} 동작 노트` });
     expect(card.querySelector('svg')).toBeTruthy();
-    expect(card.querySelector('img')).toBeNull();
-    expect(within(card).getByText('패턴 참고 · 미검수')).toBeInTheDocument();
+    expect(within(card).getByTestId('ief-card-3d-thumb')).toHaveAttribute(
+      'src',
+      resolveStudio3DMotionForExercise(mapped).peakImg,
+    );
+    expect(within(card).getByTestId('ief-card-3d-thumb')).toHaveAttribute('aria-hidden', 'true');
+    expect(within(card).getByText('3D 스튜디오 · 패턴 참고')).toBeInTheDocument();
     references.forEach((reference) => {
       expect(
         within(card).getByRole('button', { name: `${reference.title} 초안 보기` }),
@@ -227,7 +232,7 @@ describe('inline exercise finder', () => {
     expect(screen.queryByRole('region', { name: '선택한 모션 초안' })).not.toBeInTheDocument();
   });
 
-  it('renders catalog kinematic diagram thumbnails on unmapped notes while filtering to actual draft relationships', () => {
+  it('renders apparatus-reference 3D thumbnails on unmapped notes while filtering to actual draft relationships', () => {
     const mapped = INITIAL_EXERCISES.find(
       (exercise) => getMotionPatternReferences(exercise.id).length,
     )!;
@@ -237,12 +242,11 @@ describe('inline exercise finder', () => {
     usePilatesStore.setState({ exercises: [unmapped, mapped] });
     render(<InlineExerciseFinder onOpenExercise={vi.fn()} />);
     const emptyCard = screen.getByRole('article', { name: `${unmapped.nameKo} 동작 노트` });
-    expect(within(emptyCard).getByText('기구 도해 · 출처 대조')).toBeInTheDocument();
-    expect(
-      within(emptyCard)
-        .getByRole('button', { name: `${unmapped.nameKo} 상세 보기` })
-        .querySelector('svg'),
-    ).not.toBeNull();
+    expect(within(emptyCard).getByText('3D 스튜디오 · 기구 참조')).toBeInTheDocument();
+    expect(within(emptyCard).getByTestId('ief-card-3d-thumb')).toHaveAttribute(
+      'src',
+      resolveStudio3DMotionForExercise(unmapped).peakImg,
+    );
     expect(within(emptyCard).queryByRole('button', { name: /초안 보기/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '초안 있는 동작' }));
     expect(screen.getAllByRole('article')).toHaveLength(1);

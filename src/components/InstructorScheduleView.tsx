@@ -630,7 +630,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
       }
     }
     return map;
-  }, [dates, data, savedSequences, today]);
+  }, [dates, data, savedSequences, today, exercises, assignments]);
   const needsPrepRows = useMemo(
     () => scheduledRows.filter((row) => prepByRowId.get(row.id)?.needsPrep),
     [scheduledRows, prepByRowId],
