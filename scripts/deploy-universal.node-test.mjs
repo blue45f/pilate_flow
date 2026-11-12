@@ -130,7 +130,7 @@ test('verifyLiveDeployment succeeds only when entry hash, JS chunk, SW precache,
     rootDir: root,
     quiet: true,
     fetchImpl: makeMockFetch({
-      '/index.html': {
+      '/': {
         headers: { 'content-type': 'text/html; charset=utf-8' },
         body: `<link rel="stylesheet" href="./assets/${cssName}"><script type="module" src="./assets/${entryName}"></script>`,
       },
@@ -170,7 +170,7 @@ test('verifyLiveDeployment retries CDN edge propagation when maxAttempts > 1 and
     retryDelayMs: 5,
     fetchImpl: async (input) => {
       const url = new URL(String(input));
-      if (url.pathname === '/index.html') {
+      if (url.pathname === '/') {
         indexHits += 1;
         const servedEntry = indexHits < 2 ? 'index-StaleEdge.js' : entryName;
         return {
@@ -211,7 +211,7 @@ test('verifyLiveDeployment fails with exitCode 2 when live bundle hash mismatche
     rootDir: root,
     quiet: true,
     fetchImpl: makeMockFetch({
-      '/index.html': {
+      '/': {
         headers: { 'content-type': 'text/html' },
         body: '<link rel="stylesheet" href="./assets/index-Style99.css"><script type="module" src="./assets/index-StaleOld00.js"></script>',
       },
@@ -246,7 +246,7 @@ test('verifyLiveDeployment fails when any of the 4 Atelier V2 PNGs is missing or
     rootDir: root,
     quiet: true,
     fetchImpl: makeMockFetch({
-      '/index.html': {
+      '/': {
         headers: { 'content-type': 'text/html' },
         body: `<link rel="stylesheet" href="./assets/${cssName}"><script type="module" src="./assets/${entryName}"></script>`,
       },

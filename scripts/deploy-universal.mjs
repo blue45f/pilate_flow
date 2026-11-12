@@ -687,7 +687,10 @@ async function runSingleLiveVerificationPass({
   const ts = Date.now();
   let indexRes;
   try {
-    indexRes = await fetchImpl(`${liveOrigin}/index.html?ts=${ts}`, {
+    // Request the site root rather than `/index.html`: with `cleanUrls: true` Firebase Hosting
+    // answers `/index.html?ts=…` with a relative `Location: ?ts=…` 301 that resolves back to
+    // itself, so `fetch` aborts with "redirect count exceeded" and verification never succeeds.
+    indexRes = await fetchImpl(`${liveOrigin}/?ts=${ts}`, {
       headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
     });
   } catch (err) {
