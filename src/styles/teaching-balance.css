@@ -1,0 +1,148 @@
+.pf-balance-insight-card {
+  min-width: 0;
+}
+
+.pf-balance-insight-card__head,
+.pf-balance-plane-row__top,
+.pf-balance-kpi-row,
+.pf-balance-window-tabs,
+.pf-balance-insight-card .pf-class-badges-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pf-balance-insight-card__head,
+.pf-balance-plane-row__top {
+  justify-content: space-between;
+}
+
+.pf-balance-window-btn {
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border, #cedbd3);
+  border-radius: 999px;
+  background: var(--surface, #fff);
+  color: var(--text-secondary, #475e52);
+  font: inherit;
+  cursor: pointer;
+}
+
+.pf-balance-window-btn.is-active {
+  border-color: #226747;
+  background: #edf7f2;
+  color: #174c34;
+}
+
+.pf-balance-window-btn:focus-visible {
+  outline: 3px solid #226747;
+  outline-offset: 3px;
+}
+
+.pf-balance-kpi-row {
+  gap: 0.5rem 1rem;
+  margin-top: 1rem;
+  font-size: 0.8rem;
+}
+
+.pf-balance-kpi-row strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.pf-balance-data-note,
+.pf-balance-disclaimer {
+  margin: 0.75rem 0;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.pf-balance-visual-grid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pf-balance-planes {
+  display: grid;
+  min-width: 0;
+  gap: 0.75rem;
+}
+
+.pf-balance-plane-row__top {
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.pf-balance-low-tag {
+  margin-left: 0.4rem;
+  color: #805223;
+  font-size: 0.7rem;
+  font-style: normal;
+}
+
+.pf-balance-bar-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7eee9;
+}
+
+.pf-balance-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #226747;
+}
+
+.pf-balance-bar-fill.is-low {
+  background: #95612a;
+}
+
+.pf-balance-blocks {
+  margin: 1rem 0;
+}
+
+.pf-balance-subhead {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.pf-balance-insight-card .pf-class-apparatus-pill {
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: #f1f5f2;
+  font-size: 0.75rem;
+}
+
+.pf-balance-coach-box {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border: 1px solid #d8e5dd;
+  border-radius: 14px;
+  background: #f5f9f6;
+  overflow-wrap: anywhere;
+}
+
+.pf-balance-coach-box p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 380px) {
+  .pf-balance-visual-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pf-balance-visual-grid .pf-visual-spine-figure {
+    display: none;
+  }
+}

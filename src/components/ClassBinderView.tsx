@@ -35,6 +35,7 @@ import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
 import { OnePageVisual3DCueSheet } from './OnePageVisual3DCueSheet';
 import { SequenceQrShareDialog } from './SequenceQrShareDialog';
 import { SpringVisualPills } from './SpringVisualPills';
+import { TeachingBalanceInsightCard } from './TeachingBalanceInsightCard';
 import type { TeachingLogContext } from './LogSessionModal';
 import '../styles/design-tokens.css';
 import '../styles/teaching.css';
@@ -1512,6 +1513,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
               )}
             </section>
             <aside className="teaching-memory-aside">
+              <TeachingBalanceInsightCard
+                actualLogs={actualLogs}
+                resolvedHistoryMap={resolvedHistoryMap}
+                exercisesMap={exercisesMap}
+                onJumpToWorkbench={() => setActiveTab('workbench')}
+              />
               <PfCard as="section" className="teaching-memory-card">
                 <span className="eyebrow">반복을 살펴보세요</span><h2 className="section-heading">현재 초안과 최근 수업</h2>
                 <p className="muted">선택한 그룹의 실제 기록 최근 3회와 같은 동작 수입니다.</p>
