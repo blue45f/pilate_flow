@@ -322,7 +322,11 @@ describe('bounded selected planning timeline', () => {
       expect(segment.getByRole('slider')).toHaveAttribute('max', '61');
       seek(30.5);
       expect(segment.getByRole('status')).toHaveTextContent('수행 · 왼쪽');
-      expect(screen.getByText(/원본 계획 또는 검토 정보가 바뀌었습니다/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/원본 계획 또는 검토 정보가 바뀌었습니다/, {
+          selector: '.simulation-review-notice',
+        }),
+      ).toBeVisible();
     },
   );
 
