@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RecoveryPreview } from './RecoveryPreview';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -18,7 +18,7 @@ const currentStep: SequenceStep = {
   locked: true,
   instructorNote: 'PRIVATE_CURRENT_CUE',
 };
-function backup(count = 1) {
+function backup(count = 1, exportedAt = '2026-11-05T01:00:00.000Z') {
   const sequence: SavedSequence = {
     id: 'qa-file-plan',
     title: 'PRIVATE_FILE_TITLE',
@@ -35,7 +35,7 @@ function backup(count = 1) {
   return JSON.stringify({
     format: 'pilates-flow-atelier',
     version: 3,
-    exportedAt: '2026-11-05T01:00:00.000Z',
+    exportedAt,
     data: {
       exercises: [exercise],
       savedSequences: Array.from({ length: count }, (_, index) => ({
@@ -76,17 +76,21 @@ beforeEach(() =>
 );
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   usePilatesStore.setState(original, true);
 });
 
-describe('count-only file recovery preflight', () => {
-  it('does not alter data on file choice, hides raw private content and applies only after the restore click', async () => {
+describe('file identity and count-only recovery preflight', () => {
+  it('does not alter data on file choice, identifies the file while hiding its private content, and applies only after the restore click', async () => {
     render(<RecoveryPreview />);
     const before = usePilatesStore.getState();
     select(backup());
     expect(await screen.findByRole('region', { name: '복구 전 확인' })).toBeInTheDocument();
     expect(screen.getByText(/새로 추가 1개/)).toBeInTheDocument();
-    expect(screen.queryByText(/PRIVATE_/)).not.toBeInTheDocument();
+    expect(screen.getByText('PRIVATE_FILENAME.json')).toBeVisible();
+    expect(
+      screen.queryByText(/PRIVATE_FILE_TITLE|PRIVATE_SUBTITLE|PRIVATE_IMPORTED_CUE/),
+    ).not.toBeInTheDocument();
     expect(usePilatesStore.getState()).toBe(before);
     fireEvent.click(screen.getByRole('button', { name: '이 내용으로 복원 적용' }));
     expect(usePilatesStore.getState().savedSequences).toHaveLength(1);
@@ -96,6 +100,58 @@ describe('count-only file recovery preflight', () => {
     expect(usePilatesStore.getState().undoStack).toBe(before.undoStack);
     expect(screen.queryByRole('region', { name: '복구 전 확인' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '백업 불러오기' })).toHaveFocus();
+  });
+
+  it('shows a plain-text filename and validated export time, and cancelling writes no data', async () => {
+    render(<RecoveryPreview />);
+    const before = usePilatesStore.getState();
+    const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
+    const fileName = `<img src=x onerror=alert(1)>-${'수업-백업-'.repeat(20)}.json`;
+    const exportedAt = '2026-11-06T13:45:00.000Z';
+    select(backup(1, exportedAt), fileName);
+
+    const identity = await screen.findByRole('region', { name: '선택한 백업' });
+    expect(within(identity).getByText(fileName)).toBeVisible();
+    expect(identity.querySelector('img')).toBeNull();
+    expect(within(identity).getByText('백업 생성 시각')).toBeVisible();
+    expect(identity.querySelector('time')).toHaveAttribute('datetime', exportedAt);
+    expect(identity.querySelector('time')).toHaveTextContent('2026');
+    expect(within(identity).getByText(/Pilates Flow 전체 백업 v3/)).toBeVisible();
+    expect(usePilatesStore.getState()).toBe(before);
+    expect(storageWrite).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: '복원 취소' }));
+    expect(screen.queryByRole('region', { name: '선택한 백업' })).not.toBeInTheDocument();
+    expect(usePilatesStore.getState()).toBe(before);
+    expect(storageWrite).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: '백업 불러오기' })).toHaveFocus();
+  });
+
+  it('discloses that legacy files have no recorded export time without inventing one', async () => {
+    render(<RecoveryPreview />);
+    const before = usePilatesStore.getState();
+    select(JSON.stringify(JSON.parse(backup()).data), 'legacy-backup.json');
+
+    const identity = await screen.findByRole('region', { name: '선택한 백업' });
+    expect(within(identity).getByText('legacy-backup.json')).toBeVisible();
+    expect(within(identity).getByText('이전 형식 · 생성 시각 정보 없음')).toBeVisible();
+    expect(identity.querySelector('time')).toBeNull();
+    expect(usePilatesStore.getState()).toBe(before);
+    expect(screen.getByRole('button', { name: '이 내용으로 복원 적용' })).toBeEnabled();
+  });
+
+  it('clears the previous file identity when the next file has an invalid export time', async () => {
+    render(<RecoveryPreview />);
+    const before = usePilatesStore.getState();
+    select(backup(), 'valid-backup.json');
+    await screen.findByRole('region', { name: '선택한 백업' });
+
+    select(backup(1, '2026-02-30T01:00:00.000Z'), 'invalid-backup.json');
+    expect(screen.queryByText('valid-backup.json')).not.toBeInTheDocument();
+    await screen.findByRole('alert');
+    expect(screen.queryByRole('region', { name: '선택한 백업' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '이 내용으로 복원 적용' })).not.toBeInTheDocument();
+    expect(usePilatesStore.getState()).toBe(before);
   });
 
   it('requires reinspection after current records change and preserves the newer working draft', async () => {
@@ -112,6 +168,11 @@ describe('count-only file recovery preflight', () => {
     const newer = usePilatesStore.getState().activeSteps;
     fireEvent.click(screen.getByRole('button', { name: '현재 자료로 다시 검토' }));
     expect(screen.getByRole('button', { name: '이 내용으로 복원 적용' })).toBeEnabled();
+    expect(screen.getByText('PRIVATE_FILENAME.json')).toBeVisible();
+    expect(screen.getByRole('region', { name: '선택한 백업' }).querySelector('time')).toHaveAttribute(
+      'datetime',
+      '2026-11-05T01:00:00.000Z',
+    );
     fireEvent.click(screen.getByRole('button', { name: '이 내용으로 복원 적용' }));
     expect(usePilatesStore.getState().activeSteps).toBe(newer);
     expect(usePilatesStore.getState().savedSequences).toHaveLength(1);
@@ -140,7 +201,7 @@ describe('count-only file recovery preflight', () => {
     expect(screen.getByRole('button', { name: '백업 불러오기' })).toHaveFocus();
   });
 
-  it('ignores a stale file-read result after a second file was selected', async () => {
+  it('keeps filename, export time and inspection together when an older file read finishes later', async () => {
     render(<RecoveryPreview />);
     let resolveFirst!: (value: string) => void;
     const first = new File(['pending'], 'first.json', { type: 'application/json' });
@@ -153,8 +214,12 @@ describe('count-only file recovery preflight', () => {
     fireEvent.change(screen.getByLabelText('백업 JSON 파일 선택'), { target: { files: [first] } });
     select(backup(2), 'second.json');
     await screen.findByText(/새로 추가 2개/);
-    await act(async () => resolveFirst(backup(1)));
+    await act(async () => resolveFirst(backup(1, '2026-11-04T01:00:00.000Z')));
     await waitFor(() => expect(screen.getByText(/새로 추가 2개/)).toBeInTheDocument());
+    const identity = screen.getByRole('region', { name: '선택한 백업' });
+    expect(within(identity).getByText('second.json')).toBeVisible();
+    expect(screen.queryByText('first.json')).not.toBeInTheDocument();
+    expect(identity.querySelector('time')).toHaveAttribute('datetime', '2026-11-05T01:00:00.000Z');
     expect(usePilatesStore.getState().savedSequences).toHaveLength(0);
   });
   it('discloses empty condition backfill before Apply while keeping current blocks/title/group/time', async () => {
@@ -189,7 +254,7 @@ describe('count-only file recovery preflight', () => {
       screen.getByText(/블록이 없는 작업대의 비어 있는 수업 조건·최근 조건을 백업 값으로 채웁니다/),
     ).toBeInTheDocument();
     expect(screen.getByText(/백업 값으로 채웁니다.*\(2개\)/)).toBeInTheDocument();
-    expect(screen.queryByText(/PRIVATE_|posterior-pelvic-tilt/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/PRIVATE_OLD_GROUP|posterior-pelvic-tilt/)).not.toBeInTheDocument();
     expect(usePilatesStore.getState()).toBe(before);
     fireEvent.click(screen.getByRole('button', { name: '이 내용으로 복원 적용' }));
     const after = usePilatesStore.getState();

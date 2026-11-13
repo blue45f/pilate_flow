@@ -274,12 +274,24 @@ describe('read-only recovery inspection and safe legacy conversion', () => {
     const before = canonicalRecoveryContent(state);
     const exported = checked(native(), state);
     expect(exported.summary.sourceKind).toBe('export-v3');
+    expect(exported.summary.exportedAt).toBe(NOW);
+    expect(exported.next).not.toHaveProperty('exportedAt');
     expect(exported.summary.changed).toBe(false);
     expect(exported.summary.newItems).toBe(0);
     expect(exported.message).toContain('추가하거나 바꿀 자료가 없습니다');
     const bare = checked(JSON.stringify(data()), state);
     expect(bare.summary.sourceKind).toBe('bare-data');
+    expect(bare.summary.exportedAt).toBeUndefined();
     expect(bare.summary.notices.some((notice) => notice.code === 'legacy_format')).toBe(true);
+    expect(canonicalRecoveryContent(state)).toBe(before);
+  });
+
+  it.each([0, 3] as const)('does not infer an export time from a legacy v%s backup', (version) => {
+    const state = freeze(current());
+    const before = canonicalRecoveryContent(state);
+    const result = checked(JSON.stringify(legacy(version)), state);
+    expect(result.summary.exportedAt).toBeUndefined();
+    expect(result.next).not.toHaveProperty('exportedAt');
     expect(canonicalRecoveryContent(state)).toBe(before);
   });
 
@@ -313,7 +325,9 @@ describe('read-only recovery inspection and safe legacy conversion', () => {
         success: false,
         code: 'invalid_envelope',
       });
-    expect(checked(native(data(), { exportedAt: '2026-11-05T10:00:00Z' })).success).toBe(true);
+    expect(checked(native(data(), { exportedAt: '2026-11-05T10:00:00Z' })).summary.exportedAt).toBe(
+      '2026-11-05T10:00:00Z',
+    );
   });
 
   it('rejects malformed JSON, meaningless foreign objects and fields that would otherwise be stripped', () => {

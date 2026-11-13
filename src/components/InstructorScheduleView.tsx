@@ -14,7 +14,9 @@ import {
   isEquipmentId,
   PROP_OPTIONS,
 } from "../data/equipmentCatalog";
+import { INITIAL_HISTORY_LOGS } from "../data/pilatesCatalog";
 import { usePilatesStore } from "../store/usePilatesStore";
+import { useWorkspaceBrowseState } from "../hooks/useWorkspaceBrowseState";
 import { isScheduleDate } from "../schemas/instructorScheduleSchema";
 import type {
   InstructorLocation,
@@ -57,9 +59,6 @@ import "../styles/schedule.css";
 import "./InstructorScheduleView.css";
 import { ScheduleChangeScopePanel, type ScheduleChangeScope } from "./ScheduleChangeScopePanel";
 import {
-  buildMemberSlotsForDate,
-  deriveMemberSlotStatus,
-  readPersistedMemberBookingState,
   resolveClassCardVisualMeta,
 } from "../utils/memberBookingBridge";
 import { formatBrandSpringEquivalent } from "../utils/brandSpringConverter";
@@ -75,6 +74,23 @@ type MoveDraft = {
   reason: string;
 };
 type PrepFilterMode = "all" | "needs-prep";
+const sampleHistoryIds = new Set(INITIAL_HISTORY_LOGS.map((log) => log.id));
+type ScheduleBrowseState = {
+  selectedDate: string;
+  mode: "day" | "week";
+  prepFilter: PrepFilterMode;
+};
+const parseScheduleBrowseState = (value: unknown, defaults: ScheduleBrowseState): ScheduleBrowseState => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return defaults;
+  const saved = value as Partial<ScheduleBrowseState>;
+  return {
+    selectedDate: typeof saved.selectedDate === "string" && isScheduleDate(saved.selectedDate)
+      ? saved.selectedDate : defaults.selectedDate,
+    mode: saved.mode === "day" || saved.mode === "week" ? saved.mode : defaults.mode,
+    prepFilter: saved.prepFilter === "all" || saved.prepFilter === "needs-prep"
+      ? saved.prepFilter : defaults.prepFilter,
+  };
+};
 type OccurrencePrepStatus = "unplanned" | "draft" | "needs-review" | "ready";
 type StageCandidateSequence = {
   readonly targetMinutes: number;
@@ -303,8 +319,16 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     loadDatedSequencePlanAsDraft,
     replaceDatedSequencePlanSnapshot,
   } = usePilatesStore();
-  const [selectedDate, setSelectedDate] = useState(today);
-  const [mode, setMode] = useState<"day" | "week">("day");
+  const browseDefaults = useMemo<ScheduleBrowseState>(() => ({
+    selectedDate: today,
+    mode: "day",
+    prepFilter: "all",
+  }), [today]);
+  const [browse, setBrowse] = useWorkspaceBrowseState("schedule", browseDefaults, parseScheduleBrowseState);
+  const { selectedDate, mode, prepFilter } = browse;
+  const setSelectedDate = (date: string) => setBrowse((previous) => ({ ...previous, selectedDate: date }));
+  const setMode = (nextMode: "day" | "week") => setBrowse((previous) => ({ ...previous, mode: nextMode }));
+  const setPrepFilter = (nextFilter: PrepFilterMode) => setBrowse((previous) => ({ ...previous, prepFilter: nextFilter }));
   const [message, setMessage] = useState("");
   const [formError, setFormError] = useState("");
   const [classDraft, setClassDraft] = useState<InstructorScheduledClass | null>(
@@ -492,7 +516,6 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     setClosedDraft(null);
   };
 
-  const [prepFilter, setPrepFilter] = useState<PrepFilterMode>("all");
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
   const occurrenceCardRefs = useRef<Map<string, HTMLElement>>(new Map());
   const setModeWithReset = (nextMode: "day" | "week") => {
@@ -608,35 +631,6 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     () => rows.filter((row) => row.status === "scheduled"),
     [rows],
   );
-  const capacityLabelByRowId = useMemo(() => {
-    const map = new Map<string, string>();
-    if (!data.classes.length) return map;
-    const bookingState = readPersistedMemberBookingState(today);
-    for (const d of dates) {
-      const { slots } = buildMemberSlotsForDate({
-        selectedDate: d,
-        schedule: data,
-        savedSequences,
-        decisions: bookingState.slotDecisions,
-        exercises,
-        datedAssignments: assignments,
-      });
-      for (const slot of slots) {
-        const enrolled = slot.baseEnrolled + (slot.myState === "BOOKED" ? 1 : 0);
-        const st = deriveMemberSlotStatus(slot);
-        const stateLabel =
-          st === "ALMOST_FULL"
-            ? "▲ 마감 임박"
-            : st === "WAITLIST"
-              ? "◆ 대기 가능"
-              : st === "CLOSED"
-                ? "■ 정원 마감"
-                : "● 예약 가능";
-        map.set(slot.id, `${stateLabel} ${enrolled}/${slot.maxCapacity}명`);
-      }
-    }
-    return map;
-  }, [dates, data, savedSequences, today, exercises, assignments]);
   const needsPrepRows = useMemo(
     () => scheduledRows.filter((row) => prepByRowId.get(row.id)?.needsPrep),
     [scheduledRows, prepByRowId],
@@ -1504,19 +1498,6 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                         – {formatScheduleTime(row.endTime)}
                       </span>
                       <div className="schedule-class-badges">
-                        {row.status === "scheduled" && capacityLabelByRowId.has(row.id) && (
-                          <span
-                            className="schedule-prep-pill"
-                            data-testid="schedule-slot-capacity-pill"
-                            style={{
-                              background: '#eef2ea',
-                              color: '#254b29',
-                              border: '1px solid #cdd9d0',
-                            }}
-                          >
-                            {capacityLabelByRowId.get(row.id)}
-                          </span>
-                        )}
                         {row.status === "scheduled" && prepInfo && (
                           <span
                             className={`schedule-prep-pill schedule-prep-pill-${prepInfo.status}`}
@@ -1597,9 +1578,10 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                           )
                         : null;
                       const matchedHistoryLogs = historyLogs.filter(
-                        (h) =>
+                        (h) => !sampleHistoryIds.has(h.id) && (
                           (row.title && h.groupName && row.title.includes(h.groupName)) ||
-                          (activeSeqForRow && h.sequenceId === activeSeqForRow.id),
+                          (activeSeqForRow && h.sequenceId === activeSeqForRow.id)
+                        ),
                       );
                       const recentSignal =
                         matchedHistoryLogs.length > 0
@@ -1619,11 +1601,6 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
                           {convertedSpring && !convertedSpring.isNonSpringApparatus && (
                             <span className="pf-v70-briefing-chip is-spring">
                               첫 세팅 {convertedSpring.brandShortLabelKo}: {convertedSpring.equivalentLabelKo}
-                            </span>
-                          )}
-                          {capacityLabelByRowId.has(row.id) && (
-                            <span className="pf-v70-briefing-chip">
-                              출석·좌석 {capacityLabelByRowId.get(row.id)}
                             </span>
                           )}
                           {recentSignal && recentSignal.cautionLabelsKo.length > 0 && (

@@ -50,6 +50,14 @@ import '../styles/member-booking.css';
 import '../styles/atelier-luxury-v2.css';
 
 const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'] as const;
+const FIRST_SCHEDULE_DATE = '1900-01-01';
+const LAST_SCHEDULE_DATE = '2199-12-31';
+
+function clampScheduleDate(date: string): string {
+  if (date < FIRST_SCHEDULE_DATE) return FIRST_SCHEDULE_DATE;
+  if (date > LAST_SCHEDULE_DATE) return LAST_SCHEDULE_DATE;
+  return date;
+}
 
 const APPARATUS_FILTERS: ReadonlyArray<{ value: 'all' | ApparatusType; label: string }> = [
   { value: 'all', label: '전체 기구' },
@@ -90,6 +98,19 @@ function slotMatchesFocusFilter(slot: MemberBookableSlot, filter: MemberFocusFil
   if (filter === 'lower') return /둔근|하지|하체|중둔근|대퇴|힙|런지/.test(hay);
   if (filter === 'stretch') return /흉추|스트레치|신장|이완|가동성|견갑|협응/.test(hay);
   return true;
+}
+
+function slotMatchesFilters(
+  slot: MemberBookableSlot,
+  apparatus: 'all' | ApparatusType,
+  focus: MemberFocusFilter,
+  availableOnly: boolean,
+): boolean {
+  if (apparatus !== 'all' && slot.apparatus !== apparatus) return false;
+  if (!slotMatchesFocusFilter(slot, focus)) return false;
+  if (!availableOnly) return true;
+  const status = deriveMemberSlotStatus(slot);
+  return slot.myState === 'BOOKED' || status === 'AVAILABLE' || status === 'ALMOST_FULL';
 }
 
 type MemberDialogIntent = MemberBookingActionIntent | 'CHANGE_SPOT';
@@ -274,7 +295,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
 
   const weekStart = useMemo(() => scheduleWeekStart(selectedDate), [selectedDate]);
   const weekDates = useMemo(
-    () => scheduleDateRange(weekStart, addScheduleDays(weekStart, 6)),
+    () => scheduleDateRange(weekStart, clampScheduleDate(addScheduleDays(weekStart, 6))),
     [weekStart],
   );
 
@@ -324,28 +345,53 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
 
   const filteredSlots = useMemo(
     () =>
-      daySlots.filter((slot) => {
-        if (apparatusFilter !== 'all' && slot.apparatus !== apparatusFilter) {
-          return false;
-        }
-        if (!slotMatchesFocusFilter(slot, focusFilter)) {
-          return false;
-        }
-        if (availableOnly) {
-          const st = deriveMemberSlotStatus(slot);
-          return slot.myState === 'BOOKED' || st === 'AVAILABLE' || st === 'ALMOST_FULL';
-        }
-        return true;
-      }),
+      daySlots.filter((slot) =>
+        slotMatchesFilters(slot, apparatusFilter, focusFilter, availableOnly),
+      ),
     [daySlots, apparatusFilter, focusFilter, availableOnly],
   );
 
-  const nextAvailableDateInWeek = useMemo(
-    () =>
-      weekDates.find((d) => d > selectedDate && (weekCounts[d] ?? 0) > 0) ??
-      addScheduleDays(selectedDate, 1),
-    [weekDates, selectedDate, weekCounts],
-  );
+  const nextMatchingClassDate = useMemo(() => {
+    if (filteredSlots.length > 0) return null;
+    const nextDate = addScheduleDays(selectedDate, 1);
+    const firstDate = nextDate < todayIso ? todayIso : nextDate;
+    // This is a bounded discovery shortcut, not a change to booking eligibility.
+    // Only search when the current result list is empty.
+    for (let offset = 0; offset < 28; offset += 1) {
+      const date = addScheduleDays(firstDate, offset);
+      if (date > LAST_SCHEDULE_DATE) break;
+      const { slots } = buildMemberSlotsForDate({
+        selectedDate: date,
+        schedule,
+        savedSequences,
+        decisions: portalState.slotDecisions,
+        exercises,
+        datedAssignments: datedSequencePlanning?.assignments ?? [],
+      });
+      if (
+        slots.some(
+          (slot) =>
+            slot.occurrenceStatus === 'scheduled' &&
+            slotMatchesFilters(slot, apparatusFilter, focusFilter, availableOnly),
+        )
+      ) {
+        return date;
+      }
+    }
+    return null;
+  }, [
+    filteredSlots.length,
+    selectedDate,
+    todayIso,
+    schedule,
+    savedSequences,
+    portalState.slotDecisions,
+    exercises,
+    datedSequencePlanning,
+    apparatusFilter,
+    focusFilter,
+    availableOnly,
+  ]);
 
   const myActiveBookingEntries = useMemo(
     () =>
@@ -897,6 +943,10 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
             회원 수업 예약·수강권
           </h1>
           <p>남은 횟수를 확인하고, 원하는 날짜와 수업별 빈 자리를 골라 바로 예약하세요.</p>
+          <p className="pf-member-demo-notice" data-testid="member-booking-storage-notice">
+            <strong>예약 체험</strong>
+            <span>수강권과 잔여 좌석은 예시이며, 예약·취소는 이 기기에만 기록됩니다.</span>
+          </p>
         </div>
         {onSwitchToInstructor && (
           <button
@@ -1206,7 +1256,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CalendarDays size={18} aria-hidden="true" />
             <strong>
-              {weekDates[0]} ~ {weekDates[6]}
+              {weekDates[0]} ~ {weekDates[weekDates.length - 1]}
             </strong>
           </div>
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -1214,9 +1264,10 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               type="button"
               className="pf-member-chip"
               aria-label="이전 주 보기"
+              disabled={weekDates[0] === FIRST_SCHEDULE_DATE}
               onClick={() => {
                 setHasInteractedSchedule(true);
-                setSelectedDate(addScheduleDays(selectedDate, -7));
+                setSelectedDate(clampScheduleDate(addScheduleDays(selectedDate, -7)));
               }}
             >
               <ChevronLeft size={16} aria-hidden="true" /> 이전 주
@@ -1235,9 +1286,10 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
               type="button"
               className="pf-member-chip"
               aria-label="다음 주 보기"
+              disabled={weekDates[weekDates.length - 1] === LAST_SCHEDULE_DATE}
               onClick={() => {
                 setHasInteractedSchedule(true);
-                setSelectedDate(addScheduleDays(selectedDate, 7));
+                setSelectedDate(clampScheduleDate(addScheduleDays(selectedDate, 7)));
               }}
             >
               다음 주 <ChevronRight size={16} aria-hidden="true" />
@@ -1358,9 +1410,9 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                   : '선택한 기구·포커스·예약 가능 필터에 맞는 수업이 없어요'}
               </strong>
               <p style={{ margin: 0, fontSize: '0.88rem', color: '#4c5d54' }}>
-                {daySlots.length === 0
-                  ? '다른 요일을 선택하거나 다음 수업일로 이동해 열린 시간표를 확인해 보세요.'
-                  : '필터를 초기화하면 오늘 열린 전체 수업을 한눈에 다시 볼 수 있어요.'}
+                {nextMatchingClassDate
+                  ? '현재 필터에 맞는 다음 수업일을 찾았어요. 조건을 유지한 채 이동할 수 있어요.'
+                  : '다음 4주에 현재 조건에 맞는 수업이 없어요. 다른 주를 살펴보거나 필터를 바꿔 보세요.'}
               </p>
             </div>
             <div className="pf-member-empty-actions">
@@ -1374,20 +1426,19 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                   <RotateCcw size={14} aria-hidden="true" /> 필터 초기화
                 </button>
               )}
-              <button
-                type="button"
-                className="pf-member-chip"
-                data-testid="jump-next-class-day-btn"
-                onClick={() => {
-                  setHasInteractedSchedule(true);
-                  setApparatusFilter('all');
-                  setFocusFilter('all');
-                  setAvailableOnly(false);
-                  setSelectedDate(nextAvailableDateInWeek);
-                }}
-              >
-                다음 수업일 보기 ({nextAvailableDateInWeek.slice(5).replace('-', '/')})
-              </button>
+              {nextMatchingClassDate && (
+                <button
+                  type="button"
+                  className="pf-member-chip"
+                  data-testid="jump-next-class-day-btn"
+                  onClick={() => {
+                    setHasInteractedSchedule(true);
+                    setSelectedDate(nextMatchingClassDate);
+                  }}
+                >
+                  다음 수업일 보기 ({nextMatchingClassDate.slice(5).replace('-', '/')})
+                </button>
+              )}
             </div>
           </div>
         ) : (

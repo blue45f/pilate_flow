@@ -17,7 +17,8 @@
    - 프로젝트 루트의 **`.env.deploy.local`**(권한 `0600`, Git 자동 제외)에 인증이 저장되며, `gh` CLI 로그인 상태라면 **GitHub Actions 시크릿(`FIREBASE_SERVICE_ACCOUNT` / `FIREBASE_TOKEN`)까지 자동 등록**됩니다.
 3. **운영 배포 실행 (둘 중 하나만 선택 — 동시 실행 금지)**:
    - **로컬 원커맨드 배포**: `pnpm deploy`
-   - **GitHub Actions 자동 배포**: `git push origin main` 후 `pnpm deploy:verify`로 운영 해시 확인
+   - **GitHub Actions 수동 배포**: Actions의 **Production Checks & Manual Deployment → Run workflow**에서 **main**과 **Firebase 운영 배포 실행**을 선택합니다. 품질 검사·빌드·업로드·운영 해시 검증을 차례로 실행합니다.
+   - `origin/main` 푸시와 PR 병합은 품질 검사·빌드만 실행합니다. 수동 실행도 배포 체크의 기본값은 꺼짐이며, main 이외의 브랜치에서는 업로드하지 않습니다.
 
 ## 1. 단일 운영 배포 규격
 

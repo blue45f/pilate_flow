@@ -42,7 +42,8 @@ pnpm deploy:verify        # 운영 URL(https://pilates-flow-atelier.web.app) 번
 pnpm deploy:rollback      # 직전 검증 완료 스냅샷으로 즉시 롤백
 ```
 
-- `origin/main`에 푸시하면 `.github/workflows/deploy-production.yml`이 자동 실행되어 품질 게이트 통과 후 Firebase Hosting 배포 및 `--verify-live --wait-cdn` 검증을 수행합니다(로컬 `pnpm deploy`와 동시 실행 금지).
+- main 대상 PR과 `origin/main` 푸시·병합 시 `.github/workflows/deploy-production.yml`이 품질 검사와 운영용 빌드 산출물 생성까지만 자동 실행합니다. 운영 사이트는 변경하지 않습니다.
+- Firebase Hosting 배포는 별도로 실행합니다. GitHub Actions에서 **Production Checks & Manual Deployment → Run workflow → main**을 선택하고 **Firebase 운영 배포 실행**을 체크하면, 품질 검사 후 업로드 및 `--verify-live --wait-cdn` 검증을 수행합니다. 체크하지 않은 수동 실행은 검사와 빌드만 수행하며, main 이외의 브랜치는 운영 배포할 수 없습니다. 로컬 `pnpm deploy`와 동시 실행하지 마세요.
 
 ## 3. 환경변수 이름 및 우선순위 (비밀값 기록 금지)
 

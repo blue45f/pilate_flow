@@ -1,5 +1,99 @@
 /* Mobile clarity, zero header/utility overlap, >= 44x44px touch targets, and Step 4 Atelier Stage design for LiveStageView */
 
+.teaching-presentation-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-block: 12px 16px;
+}
+
+.teaching-presentation-switch > span {
+  margin-right: 4px;
+  color: #536051;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.teaching-presentation-switch button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 9px 16px;
+  border: 1px solid #b8c5b3;
+  border-radius: 10px;
+  background: #fffdf8;
+  color: #173d34;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.teaching-presentation-switch button[aria-pressed='true'] {
+  background: #173d34;
+  border-color: #173d34;
+  color: #fffdf8;
+}
+
+.teaching-presentation-switch button:focus-visible,
+.teaching-presentation-details > summary:focus-visible {
+  outline: 3px solid #5e987c;
+  outline-offset: 3px;
+}
+
+.teaching-presentation-details > summary {
+  display: list-item;
+  min-height: 44px;
+  padding-block: 11px;
+  font-size: 0.8rem;
+  font-weight: 650;
+  line-height: 1.5;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.teaching-reference-materials {
+  margin-block: 10px;
+  border-block: 1px solid #d9ded3;
+}
+
+.teaching-brand-settings {
+  margin-block: 4px;
+}
+
+.teaching-secondary-timing > summary {
+  width: fit-content;
+  margin-inline: auto;
+}
+
+.teaching-high-contrast .teaching-presentation-switch > span,
+.teaching-high-contrast .teaching-presentation-details > summary {
+  color: #f8fafc;
+}
+
+.teaching-high-contrast .teaching-presentation-switch button {
+  border-color: #facc15;
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.teaching-high-contrast .teaching-presentation-switch button[aria-pressed='true'] {
+  background: #facc15;
+  color: #0f172a;
+}
+
+@media (max-width: 480px) {
+  .teaching-presentation-switch > span {
+    flex-basis: 100%;
+  }
+
+  .teaching-presentation-switch button {
+    flex: 1 1 0;
+    padding-inline: 8px;
+    font-size: 0.84rem;
+    word-break: keep-all;
+  }
+}
+
 .teaching-stage,
 #root .vnext-shell .teaching-stage {
   min-width: 0;

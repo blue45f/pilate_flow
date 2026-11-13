@@ -1,6 +1,6 @@
 import { getEquipmentFamily } from '../data/equipmentCatalog';
 import { RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
-import { usePilatesStore } from '../store/usePilatesStore';
+import { createSequenceSnapshot, usePilatesStore } from '../store/usePilatesStore';
 import type {
   ClassSequenceSnapshot,
   DraftModificationLog,
@@ -28,6 +28,7 @@ import {
   addReusableBlockToLibrary,
   createClassSequenceSnapshot,
   createHumanDraftMovementSnapshot,
+  createMovementSnapshot,
   createReusableBlock,
   createReusableBlockFromSteps,
   duplicateReusableBlockInLibrary,
@@ -48,6 +49,7 @@ import {
 } from './humanMovementCreation';
 import { broadcastStudioSyncEvent, saveLocalPhotoAsset } from './localMediaStorage';
 import { registerReusableBlockBackupBridge } from './reusableBlockBackupBridge';
+import { resolveSequenceInsertion, type SequenceInsertionPlacement } from './sequenceInsertion';
 
 export interface IdeaPilatesExercise extends HierarchyPilatesExercise {
   sourceOrigin?: 'catalog' | 'human-created';
@@ -1953,14 +1955,21 @@ export function captureCurrentClassHierarchySnapshot(title?: string): ClassSeque
  * without blocking it behind "catalog-only" or mismatched equipment filters, while keeping
  * `credentialVerified: false` so it never claims expert certification or medical/AI guarantee.
  */
-export function addMovementIdeaToCurrentClass(exerciseId: string): {
+export function addMovementIdeaToCurrentClass(
+  exerciseId: string,
+  placement?: SequenceInsertionPlacement,
+): {
   success: boolean;
   ok: boolean;
   alreadyAdded?: boolean;
+  stepId?: string;
   message: string;
 } {
-  const scope = getActiveOwnerScope();
   const state = usePilatesStore.getState();
+  const insertion = placement ? resolveSequenceInsertion(state.activeSteps, placement) : undefined;
+  if (insertion && !insertion.success) {
+    return { success: false, ok: false, message: insertion.message };
+  }
   const found = state.exercises.find((item) => item.id === exerciseId);
   if (!found) {
     return {
@@ -1969,7 +1978,16 @@ export function addMovementIdeaToCurrentClass(exerciseId: string): {
       message: '초안 동작을 찾지 못했습니다. 다시 저장해 주세요.',
     };
   }
+  if (placement && state.activeSteps.some((step) => step.exerciseId === exerciseId)) {
+    return {
+      success: false,
+      ok: false,
+      alreadyAdded: true,
+      message: '이미 수업에 담긴 창작 동작입니다. 기존 동작의 순서를 이동해 주세요.',
+    };
+  }
 
+  const scope = getActiveOwnerScope();
   const meta = getMovementIdeaMeta(found);
   const humanDraft = getScopedHumanDraftMap(scope)[found.id];
   const stepNoteParts = [
@@ -1991,7 +2009,10 @@ export function addMovementIdeaToCurrentClass(exerciseId: string): {
     precautions:
       found.precautions.trim() ||
       '강사 직접 창작 메모 · 객관적 효과 판정이나 전문가 검증이 아닙니다.',
-    humanDraftId: humanDraft?.id ?? found.id,
+    humanDraftId:
+      humanDraft?.id ??
+      (placement ? (found as HierarchyPilatesExercise).humanDraftId : undefined) ??
+      found.id,
     humanDraftRevision: humanDraft?.revision ?? meta.revision ?? 1,
   };
   const checkedExercise: HierarchyPilatesExercise = baseWithPrecautions;
@@ -2005,6 +2026,47 @@ export function addMovementIdeaToCurrentClass(exerciseId: string): {
         sideMode: meta.sideMode,
       })
     : undefined;
+
+  // Positioned insertion is atomic. Rejecting its live anchor or a duplicate above
+  // must not update ownership, metadata, class contents, or browser storage.
+  if (insertion?.success) {
+    const insertedStep: SequenceStep = {
+      stepId: `step-idea-${crypto.randomUUID()}`,
+      order: insertion.index + 1,
+      blockCategory: checkedExercise.blockCategory,
+      exerciseId: checkedExercise.id,
+      durationMin: timing.durationMin,
+      selectedLayer: (state.lastCriteria ?? state.draftCriteria)?.defaultLayer ?? 'standard',
+      explanationSec: timing.explanationSec,
+      transitionSec: timing.transitionSec,
+      ...(meta.repetitions !== undefined ? { repetitions: meta.repetitions } : {}),
+      ...(meta.sets !== undefined ? { sets: meta.sets } : {}),
+      ...(meta.sideMode ? { sideMode: meta.sideMode } : {}),
+      ...(meta.sectionRole ? { classSection: meta.sectionRole } : {}),
+      ...(combinedInstructorNote ? { instructorNote: combinedInstructorNote } : {}),
+      exerciseSnapshot: embeddedSnapshot ?? createMovementSnapshot(checkedExercise),
+      humanDraftId: checkedExercise.humanDraftId,
+      humanDraftRevision: checkedExercise.humanDraftRevision,
+    };
+    const activeSteps = [...state.activeSteps];
+    activeSteps.splice(insertion.index, 0, insertedStep);
+    const requiredEquipment = checkedExercise.requiredEquipment ?? [checkedExercise.apparatus];
+    const message = `${insertion.index + 1}번에 ‘${checkedExercise.nameKo}’ 동작을 추가했습니다. 되돌릴 수 있습니다.`;
+    usePilatesStore.setState({
+      exercises: state.exercises.map((item) =>
+        item.id === checkedExercise.id ? checkedExercise : item,
+      ),
+      ownedEquipment: Array.from(new Set([...state.ownedEquipment, ...requiredEquipment])),
+      ownedApparatus: Array.from(new Set([...state.ownedApparatus, checkedExercise.apparatus])),
+      activeSteps: activeSteps.map((step, index) =>
+        step.locked || step.order === index + 1 ? step : { ...step, order: index + 1 },
+      ),
+      undoStack: [...state.undoStack.slice(-19), createSequenceSnapshot(state)],
+      generationError: null,
+      saveFeedback: message,
+    });
+    return { success: true, ok: true, stepId: insertedStep.stepId, message };
+  }
 
   // Idempotent if already in activeSteps: update the exercise and step note in store and return success
   const alreadyInSteps = state.activeSteps.some((step) => step.exerciseId === exerciseId);

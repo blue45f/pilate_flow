@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { SequenceStep } from '../types/pilates';
 import { createSequenceDrag } from '../utils/sequenceDrag';
@@ -10,12 +10,14 @@ export function SequenceOrderCard({
   index,
   label,
   onNotice,
+  onInsertAfter,
   children,
 }: {
   step: SequenceStep;
   index: number;
   label: string;
   onNotice: (message: string) => void;
+  onInsertAfter?: (opener: HTMLButtonElement) => void;
   children: ReactNode;
 }) {
   const steps = usePilatesStore((state) => state.activeSteps);
@@ -213,7 +215,7 @@ export function SequenceOrderCard({
           : '위아래 방향키로 한 칸 이동. Home과 End로 잠긴 항목 사이의 처음과 끝으로 이동. 드래그 취소는 Escape.'}
       </p>
       <div
-        className="sequence-order-controls"
+        className={`sequence-order-controls${onInsertAfter ? ' has-insert-action' : ''}`}
         role="group"
         aria-label={`${label} 순서 편집`}
         aria-describedby={positionDescriptionId}
@@ -400,6 +402,18 @@ export function SequenceOrderCard({
           <Trash2 size={16} aria-hidden="true" />
           <span>빼기</span>
         </button>
+        {onInsertAfter && (
+          <button
+            type="button"
+            className="sequence-insert-after"
+            aria-label={`${label} 뒤에 동작 추가`}
+            aria-haspopup="dialog"
+            onClick={(event) => onInsertAfter(event.currentTarget)}
+          >
+            <Plus size={16} aria-hidden="true" />
+            <span>이 동작 뒤에 추가</span>
+          </button>
+        )}
       </div>
     </div>
   );

@@ -49,7 +49,7 @@ const TASK_STEP_ITEMS: readonly {
   },
   {
     step: 3,
-    label: '3 클라우드 동기화(선택)',
+    label: '3 계정 연결(선택)',
     groupId: 'account',
     summaryKo:
       '지금 할 일: 필요할 때만 Google 계정을 연결해 브라우저 내 계정별 작업 공간을 구분하세요.',

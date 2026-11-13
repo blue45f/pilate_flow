@@ -56,7 +56,8 @@ describe('progressive backup preflight layout', () => {
     expect(details).toHaveAttribute('open');
     expect(screen.getByRole('table')).toHaveAccessibleName('파일을 적용할 때의 자료 개수');
     expect(usePilatesStore.getState()).toBe(before);
-    expect(screen.queryByText(/PRIVATE_/)).not.toBeInTheDocument();
+    expect(screen.getByText('PRIVATE_FILENAME.json')).toBeVisible();
+    expect(screen.getByRole('region', { name: '선택한 백업' })).toBeVisible();
   });
   it('offers another file after a bounded error without applying or exposing the rejected content', async () => {
     render(<RecoveryPreview />);

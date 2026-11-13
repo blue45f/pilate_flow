@@ -26,6 +26,21 @@
   word-break: keep-all;
 }
 
+.pf-member-header .pf-member-demo-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.pf-member-demo-notice strong {
+  flex: 0 0 auto;
+  color: var(--pf-color-text-primary, #1e3129);
+}
+
 .pf-member-steps {
   list-style: none;
   margin: 0;

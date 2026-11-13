@@ -24,6 +24,13 @@
 .recovery-preview-heading h4,
 .recovery-preview-heading span,
 .recovery-source-kind,
+.recovery-file-summary,
+.recovery-file-summary h5,
+.recovery-file-summary dl,
+.recovery-file-summary dt,
+.recovery-file-summary dd,
+.recovery-file-summary bdi,
+.recovery-file-summary time,
 .recovery-summary-counts,
 .recovery-summary-counts span,
 .recovery-empty-state,
@@ -44,6 +51,44 @@
   max-width: 100%;
 }
 
+.recovery-file-summary {
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 1px solid #dce6e1;
+  border-radius: 10px;
+  background: #f6f9f7;
+}
+
+.recovery-file-summary h5 {
+  margin: 0 0 10px;
+  color: #243f3a;
+  font-size: 14px;
+}
+
+.recovery-file-summary dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.recovery-file-summary dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 96px) minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+}
+
+.recovery-file-summary dt {
+  color: #53676b;
+  font-size: 12px;
+}
+
+.recovery-file-summary dd {
+  margin: 0;
+  color: #243f3a;
+  font-size: 13px;
+}
+
 .recovery-count-scroll {
   width: 100%;
   max-width: 100%;
@@ -53,6 +98,11 @@
 }
 
 @media (max-width: 390px) {
+  .recovery-file-summary dl > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+  }
+
   .recovery-preview-layout .recovery-preview-details {
     padding: 12px;
   }

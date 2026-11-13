@@ -42,6 +42,46 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+.ief-insertion-control {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 10px;
+  margin-bottom: 14px;
+}
+.ief-insertion-control > label {
+  font-weight: 650;
+}
+.ief-insertion-control > select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 8px;
+  border: 1px solid #b8c5b3;
+  border-radius: 10px;
+  background: #fffdf8;
+  color: #294936;
+  font: inherit;
+}
+.ief-insertion-control > select:focus-visible {
+  outline: 3px solid #24694f;
+  outline-offset: 2px;
+}
+.ief-insertion-control > p {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.ief-insertion-help {
+  color: #536051;
+}
+.ief-insertion-error {
+  color: #963e2d;
+}
+.ief-insertion-control > select[aria-invalid='true'] {
+  border-color: #963e2d;
+}
 .ief-search-row {
   display: flex;
   align-items: center;
