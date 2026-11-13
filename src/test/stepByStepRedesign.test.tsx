@@ -230,10 +230,14 @@ describe('Step-by-step guided flow & design mockup alignment upgrades', () => {
     expect(within(cueList).getByText(ex1!.cues[0]!)).toBeVisible();
   });
 
-  it('renders the 5-phase continuous kinematic Reformer schematic showcase inside ExerciseAtlasView', () => {
+  it('opens the optional 5-phase continuous kinematic Reformer schematic showcase inside ExerciseAtlasView', async () => {
     render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
 
-    const showcase = screen.getByTestId('kinematic-schematic-showcase');
+    expect(screen.queryByTestId('kinematic-schematic-showcase')).not.toBeInTheDocument();
+    const summary = screen.getByText('동작 도해', { selector: 'summary span' });
+    expect(summary.closest('details')).not.toHaveAttribute('open');
+    fireEvent.click(summary);
+    const showcase = await screen.findByTestId('kinematic-schematic-showcase');
     expect(showcase).toBeVisible();
     expect(within(showcase).getByText('리포머 풋워크')).toBeVisible();
     expect(within(showcase).getByText('펠빅 컬 · 브릿징')).toBeVisible();

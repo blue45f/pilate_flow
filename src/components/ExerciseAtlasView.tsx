@@ -1,6 +1,5 @@
 import { EquipmentChoice } from './EquipmentChoice';
 import { MobileSubPageBar } from './MobileSubPageBar';
-import { VisualApparatusPhotoStrip } from './VisualFlowComponents';
 import type { MotionDraftId } from '../models/types';
 import {
   MOTION_PATTERN_REFERENCES,
@@ -83,10 +82,7 @@ import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
 import { KinematicSchematicShowcase } from './KinematicSchematicShowcase';
 import { SpringVisualPills } from './SpringVisualPills';
 import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
-import {
-  BRAND_SPRING_OPTIONS,
-  formatBrandSpringEquivalent,
-} from '../utils/brandSpringConverter';
+import { BRAND_SPRING_OPTIONS, formatBrandSpringEquivalent } from '../utils/brandSpringConverter';
 import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import { EquipmentDiscoveryScope } from './EquipmentDiscoveryScope';
 import { CourseReferenceBrowser } from './CourseReferenceBrowser';
@@ -218,11 +214,7 @@ function evaluateCardSequenceReadiness(
   const equipmentMeta = getExerciseEquipment(exercise);
   const missingOwnedEq = equipmentMeta.requiredEquipment.some((id) => !ownedEquipment.includes(id));
   const missingOwnedProps = equipmentMeta.requiredProps.some((prop) => !ownedProps.includes(prop));
-  if (
-    !exerciseMatchesCriteria(exercise, criteria) ||
-    missingOwnedEq ||
-    missingOwnedProps
-  ) {
+  if (!exerciseMatchesCriteria(exercise, criteria) || missingOwnedEq || missingOwnedProps) {
     let reason = '현재 수업 조건 확인';
     if (!equipmentMeta.requirementsKnown) {
       reason = '요구 조건 확인 필요';
@@ -319,7 +311,9 @@ const OwnedEquipmentEditor: React.FC = () => {
         </span>
       </summary>
       <div>
-        <p>‘내 보유 장비’ 범위는 아래 기구와 소도구로 요구 조건을 모두 충족하는 자료를 보여줍니다.</p>
+        <p>
+          ‘내 보유 장비’ 범위는 아래 기구와 소도구로 요구 조건을 모두 충족하는 자료를 보여줍니다.
+        </p>
         <fieldset>
           <legend>내 기구</legend>
           <div className="equipment-choice-grid">
@@ -924,30 +918,27 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     reformerBrand,
     setReformerBrand,
   } = usePilatesStore();
-  const [collection, setCollection] = useState<'notes' | 'repertoire' | 'references' | 'courses'>('notes');
+  const [collection, setCollection] = useState<'notes' | 'repertoire' | 'references' | 'courses'>(
+    'notes',
+  );
   const [sourceToPlan, setSourceToPlan] = useState<VerifiedPublicReference | null>(null);
   const [ownNoteOpen, setOwnNoteOpen] = useState(false);
-  const {
-    filters,
-    setFilters,
-    update,
-    recent,
-    filtered,
-    activeFilterCount,
-    activeFilterChips,
-  } = useAtlasFilterEngine({
-    exercises,
-    historyLogs,
-    activeTargetGroupId,
-    exerciseBrowseScope,
-    ownedEquipment,
-    ownedProps,
-  });
+  const { filters, setFilters, update, recent, filtered, activeFilterCount, activeFilterChips } =
+    useAtlasFilterEngine({
+      exercises,
+      historyLogs,
+      activeTargetGroupId,
+      exerciseBrowseScope,
+      ownedEquipment,
+      ownedProps,
+    });
   const [notesVisible, setNotesVisible] = useState({
     signature: '',
     limit: 12,
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [showMotionExamples, setShowMotionExamples] = useState(false);
+  const [showApparatusGuide, setShowApparatusGuide] = useState(false);
   const [toast, setToast] = useState<{ success: boolean; message: string } | null>(null);
   const [addedId, setAddedId] = useState<string | null>(null);
   const [brokenPhotoIds, setBrokenPhotoIds] = useState<Record<string, boolean>>({});
@@ -1042,8 +1033,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     [activeSteps, exercises],
   );
   const selectedCount = sequenceMovementSteps.length;
-  const sequenceTotalMinutes = useMemo(
-    () => Math.round((getSequenceDurations(activeSteps).totalSec / 60) * 10) / 10,
+  const sequenceTotalSeconds = useMemo(
+    () => getSequenceDurations(activeSteps).totalSec,
     [activeSteps],
   );
 
@@ -1059,11 +1050,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
     ];
     const selected =
       source?.availableEquipment ??
-      (stepEquipment.length
-        ? stepEquipment
-        : activeApparatus === 'mixed'
-          ? []
-          : [activeApparatus]);
+      (stepEquipment.length ? stepEquipment : activeApparatus === 'mixed' ? [] : [activeApparatus]);
     return {
       focusPreset: 'full-body',
       excludeDaysWindow: 10,
@@ -1251,7 +1238,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const activeFlowStep: 1 | 2 | 3 = inspectedExercise ? 3 : hasSearchOrFilters ? 2 : 1;
 
   return (
-    <div className="movement-library motion-library" data-filters-expanded={showFilters}>
+    <div
+      className="movement-library motion-library library-task-focused"
+      data-filters-expanded={showFilters}
+    >
       <header className="library-heading">
         <div>
           <span className="eyebrow">동작 사전 · {exercises.length}종</span>
@@ -1266,7 +1256,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               <Plus size={16} /> 한 줄 동작 메모
             </PfButton>
           )}
-          <PfButton variant="primary" onClick={() => setOwnNoteOpen(true)}>
+          <PfButton variant="secondary" onClick={() => setOwnNoteOpen(true)}>
             <Plus size={17} /> 내 동작 직접 등록
           </PfButton>
           <PfButton variant="secondary" onClick={onOpenClipper}>
@@ -1276,28 +1266,6 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       </header>
 
       <EquipmentDiscoveryScope />
-      <details className="library-asset-status">
-        <summary>
-          <span>도해 초안 {MOTION_PATTERN_REFERENCES.length}개</span>
-          <span className="library-asset-status-warning">교차 검증 완료</span>
-          <ChevronDown size={16} aria-hidden="true" />
-        </summary>
-        <div className="ml-inventory" aria-label="모션 자산 현황">
-          <p>
-            <strong>{MOTION_PATTERN_REFERENCES.length}</strong>
-            <span>직접 제작한 도해 초안</span>
-          </p>
-          <p>
-            <strong>0</strong>
-            <span>정확히 일치하는 모션</span>
-          </p>
-          <p>
-            <strong>0</strong>
-            <span>전문가 검토 완료</span>
-          </p>
-        </div>
-      </details>
-      <p className="library-asset-status-note">관련 패턴 참고용 · 검증된 운동 시범이 아닙니다.</p>
       <div
         className="library-collection-tabs"
         role="tablist"
@@ -1372,7 +1340,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
       </div>
       {collection !== 'notes' && (
         <p className="library-collection-trust">
-          공식 출처 확인 21건 · 국내 후보 9건 · 크롤링 확장 동작 {GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.length}종(영상 {CRAWLED_YOUTUBE_DISCOVERY_POOL.length}편) · 공개·확장 자료는 검토 전 자동 추천 제외
+          공식 출처 확인 21건 · 국내 후보 9건 · 크롤링 확장 동작{' '}
+          {GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.length}종(영상{' '}
+          {CRAWLED_YOUTUBE_DISCOVERY_POOL.length}편) · 공개·확장 자료는 검토 전 자동 추천 제외
         </p>
       )}
       {collection === 'courses' ? (
@@ -1453,9 +1423,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               >
                 <span className="atlas-flow-step-label">3 세부 안내 확인·수업안 추가</span>
                 <span className="atlas-flow-step-meta">
-                  {inspectedExercise
-                    ? '안내창에서 주의점·시간 확인'
-                    : '선택 후 세부 안내 확인'}
+                  {inspectedExercise ? '안내창에서 주의점·시간 확인' : '선택 후 세부 안내 확인'}
                 </span>
               </li>
             </ol>
@@ -1469,15 +1437,6 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               </button>
             )}
           </div>
-          <VisualApparatusPhotoStrip
-            activeApparatus={
-              filters.equipment.length === 1 && ['reformer', 'cadillac', 'chair', 'barrel', 'mat'].includes(filters.equipment[0])
-                ? (filters.equipment[0] as 'reformer' | 'cadillac' | 'chair' | 'barrel' | 'mat')
-                : 'all'
-            }
-            onSelect={(app) => update('equipment', app === 'all' ? [] : [app])}
-            compact
-          />
           {inspectedExercise && (
             <div className="pf-auto-mobile-only">
               <MobileSubPageBar
@@ -1751,53 +1710,27 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             )}
           </section>
 
-          {!filters.search && activeFilterCount === 0 && (
-            <details className="library-asset-status" open style={{ marginBottom: '10px' }}>
-              <summary>
-                <span>2D 기구학 벡터 도해 쇼케이스 펼쳐보기 (선택)</span>
-                <ChevronDown size={16} aria-hidden="true" />
-              </summary>
-              <KinematicSchematicShowcase
-                onQuickSearchKeyword={(kw) => {
-                  update('search', kw);
-                  focusSearch();
-                }}
-              />
-            </details>
-          )}
-          <details className="library-asset-status" style={{ marginBottom: '14px' }}>
-            <summary>
-              <span>기구별 구조·스프링·5렌즈 아이디어 도감 열기 (선택)</span>
-              <ChevronDown size={16} aria-hidden="true" />
-            </summary>
-            <ApparatusVisualGuideRibbon
-              activeApparatusId={filters.equipment[0] ?? 'reformer'}
-              mode="atlas"
-              onSelectApparatus={(id) => update('equipment', [id])}
-            />
-          </details>
-
           <div className="library-notes-workspace" data-has-inspector={Boolean(inspectedExercise)}>
-            <LibraryMovementInspector
-              exercise={inspectedExercise}
-              headingRef={inspectorHeading}
-              isInResults={Boolean(
-                inspectedExercise && filteredIdSet.has(inspectedExercise.id),
-              )}
-              onClose={closeInspector}
-              onOpenDetails={(exercise) =>
-                isMovementIdeaExercise(exercise) && onOpenIdeaSheet
-                  ? onOpenIdeaSheet(exercise)
-                  : onOpenYouTubePreview(exercise)
-              }
-              onAdd={addExercise}
-              addedId={addedId}
-            />
+            {inspectedExercise && (
+              <LibraryMovementInspector
+                exercise={inspectedExercise}
+                headingRef={inspectorHeading}
+                isInResults={Boolean(inspectedExercise && filteredIdSet.has(inspectedExercise.id))}
+                onClose={closeInspector}
+                onOpenDetails={(exercise) =>
+                  isMovementIdeaExercise(exercise) && onOpenIdeaSheet
+                    ? onOpenIdeaSheet(exercise)
+                    : onOpenYouTubePreview(exercise)
+                }
+                onAdd={addExercise}
+                addedId={addedId}
+              />
+            )}
             <div className="library-notes-results">
               <div className="library-results-bar">
                 <p role="status" aria-live="polite">
                   <strong>{filtered.length}</strong>개의 동작{' '}
-                  <span className="muted">· 작은 선택이 좋은 수업을 만듭니다</span>
+                  <span className="muted">· 이름을 선택하면 상세 정보를 볼 수 있어요</span>
                 </p>
                 {(activeFilterCount > 0 || filters.search) && (
                   <PfButton variant="ghost" onClick={resetFilters}>
@@ -1806,13 +1739,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 )}
               </div>
               <div className="atlas-results-context-row">
-                <p className="ml-review-note">
-                  동작을 바로 추가하고 순서를 바꾸세요. 검토 기록은 선택 사항입니다.
-                </p>
-                <p
-                  className="atlas-current-class-pill"
-                  data-testid="atlas-current-class-criteria"
-                >
+                <p className="ml-review-note">개인 검토 상태와 출처는 동작 상세에서 확인하세요.</p>
+                <p className="atlas-current-class-pill" data-testid="atlas-current-class-criteria">
                   현재 수업 기준:{' '}
                   <strong>{APPARATUS_CRITERIA_LABELS[effectiveCriteria.apparatus]}</strong> · 최대
                   Lv {effectiveCriteria.level} · 목표 {effectiveCriteria.targetMinutes}분
@@ -1910,11 +1838,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                     ))}
                   </ul>
                   {compareState.limitNotice && (
-                    <p
-                      className="atlas-compare-limit-notice"
-                      role="status"
-                      aria-live="polite"
-                    >
+                    <p className="atlas-compare-limit-notice" role="status" aria-live="polite">
                       {compareState.limitNotice}
                     </p>
                   )}
@@ -2093,10 +2017,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                   {itemIsIdea
                                     ? '내 창작 메모 · 전문가 검증 아님'
                                     : itemApproved
-                                      ? '내 강사 검토 · 자격 인증 미확인'
+                                      ? '내 개인 검토 완료'
                                       : itemReviewState === 'stale'
-                                        ? '정보 변경 · 재검토 선택 가능'
-                                        : '교차 검증 완료 · 검토 선택 사항'}{' '}
+                                        ? '정보 변경 · 재검토 필요'
+                                        : '개인 검토 전 · 자동 추천 제외'}{' '}
                                   ({item.sourceReference?.publisher || itemProvenance.shortLabel})
                                 </dd>
                               </div>
@@ -2140,7 +2064,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                     ? '추가됨'
                                     : itemReadiness.status === 'in-sequence'
                                       ? `수업안 #${itemReadiness.orderNumber} 포함`
-                                      : '수업안에 추가'}
+                                      : '동작 추가'}
                                 </span>
                               </button>
                             </div>
@@ -2242,7 +2166,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                 ● {exercise.targetMuscles.slice(0, 2).join('·') || '코어·정렬'}
                               </span>
                             </span>
-                            <span className="art-caption sr-only" id={`motion-caption-${exercise.id}`}>
+                            <span
+                              className="art-caption sr-only"
+                              id={`motion-caption-${exercise.id}`}
+                            >
                               {patterns[0]
                                 ? `${patterns[0].title} · 3D 스튜디오 모션`
                                 : `${exercise.nameKo} · 3D 스튜디오 모션`}
@@ -2332,10 +2259,10 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                 ? '직접 해봄 · 주관적 메모'
                                 : '내 창작 메모 · 전문가 검증 아님'
                               : approved
-                                ? '내 강사 검토 · 자격 인증 미확인'
+                                ? '내 개인 검토 완료'
                                 : reviewState === 'stale'
                                   ? '동작 정보 변경 · 다시 검토 필요'
-                                  : '교차 검증 완료 · 수업 즉시 추가'}
+                                  : '개인 검토 전'}
                           </PfAiStatusBadge>
                           <p className="movement-target">
                             {isIdea
@@ -2386,7 +2313,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                           {patterns.length > 0 ? (
                             <div className="ml-card-patterns">
                               <p>
-                                관련 패턴 도해 {patterns.length}종 <span>· 교차 검증 완료</span>
+                                관련 패턴 도해 {patterns.length}종 <span>· 참고용 초안</span>
                               </p>
                               {patterns.map((pattern) => {
                                 const isPatternSelected =
@@ -2480,7 +2407,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                                   ? '추가됨'
                                   : readiness.status === 'in-sequence'
                                     ? `수업안 #${readiness.orderNumber} 포함`
-                                    : '수업에 추가'}
+                                    : '동작 추가'}
                               </span>
                             </button>
                           </div>
@@ -2579,6 +2506,70 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               )}
             </div>
           </div>
+          <section className="library-reference-tools" aria-label="동작 도해와 참고 자료">
+            <details className="library-asset-status">
+              <summary>
+                <span>도해 초안 {MOTION_PATTERN_REFERENCES.length}개</span>
+                <span className="library-asset-status-warning">전문가 검토 전</span>
+                <ChevronDown size={16} aria-hidden="true" />
+              </summary>
+              <div className="ml-inventory" aria-label="모션 자산 현황">
+                <p>
+                  <strong>{MOTION_PATTERN_REFERENCES.length}</strong>
+                  <span>직접 제작한 도해 초안</span>
+                </p>
+                <p>
+                  <strong>0</strong>
+                  <span>정확히 일치하는 모션</span>
+                </p>
+                <p>
+                  <strong>0</strong>
+                  <span>전문가 검토 완료</span>
+                </p>
+              </div>
+            </details>
+            <p className="library-asset-status-note">
+              관련 패턴 참고용 · 검증된 운동 시범이 아닙니다.
+            </p>
+            <details
+              className="library-motion-examples library-asset-status"
+              open={showMotionExamples}
+              onToggle={(event) => setShowMotionExamples(event.currentTarget.open)}
+            >
+              <summary>
+                <span>동작 도해</span>
+                <ChevronDown size={16} aria-hidden="true" />
+              </summary>
+              {showMotionExamples && (
+                <KinematicSchematicShowcase
+                  onQuickSearchKeyword={(keyword) => {
+                    update('search', keyword);
+                    focusSearch();
+                  }}
+                />
+              )}
+            </details>
+            <details
+              className="library-apparatus-reference library-asset-status"
+              open={showApparatusGuide}
+              onToggle={(event) => setShowApparatusGuide(event.currentTarget.open)}
+            >
+              <summary>
+                <span>기구 설정 참고</span>
+                <ChevronDown size={16} aria-hidden="true" />
+              </summary>
+              {showApparatusGuide && (
+                <ApparatusVisualGuideRibbon
+                  activeApparatusId={filters.equipment[0] ?? 'reformer'}
+                  mode="atlas"
+                  onSelectApparatus={(id) => {
+                    update('equipment', [id]);
+                    focusSearch();
+                  }}
+                />
+              )}
+            </details>
+          </section>
           {!filters.search && activeFilterCount === 0 && (
             <section className="ml-pattern-discovery" aria-label="모션으로 살펴보기">
               <div className="ml-section-heading">
@@ -2671,9 +2662,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               ) : null}
               {(() => {
                 const previewExercise = previewReference
-                  ? exercises.find((item) =>
-                      previewReference.intendedExerciseIds.includes(item.id),
-                    )
+                  ? exercises.find((item) => previewReference.intendedExerciseIds.includes(item.id))
                   : previewCatalogMotionId
                     ? exercises.find((item) => item.id === previewCatalogMotionId)
                     : undefined;
@@ -2682,14 +2671,14 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                 return (
                   <section
                     className="ml-preview-exercise-summary"
-                    aria-label="연결 동작 설명·주의점 및 시퀀스 삽입"
+                    aria-label="연결 동작 설명·주의점 및 동작 추가"
                   >
                     <div className="ml-preview-exercise-header">
                       <strong>연결 동작 노트 · {previewExercise.nameKo}</strong>
                       <span>
                         {previewApproved
                           ? '내 검토 기록 있음 · 전문가 검증 아님'
-                          : '교차 검증 완료 · 수업안에 추가 가능'}
+                          : '개인 검토 전 · 직접 추가 가능'}
                       </span>
                     </div>
                     {previewExercise.cues.length > 0 && (
@@ -2721,7 +2710,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
                         className="btn-primary"
                         onClick={() => addExercise(previewExercise)}
                       >
-                        <Plus size={15} aria-hidden="true" /> 시퀀스에 바로 삽입
+                        <Plus size={15} aria-hidden="true" /> 동작 추가
                       </button>
                     </div>
                   </section>
@@ -2767,8 +2756,8 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
           <details className="ml-review-details">
             <summary>검토와 수업 사용 기준</summary>
             <p>
-              교차 검증된 기본 동작은 검토 기록 전에도 직접 수업안에 담아 진행할 수 있으며, 자동 추천·AI
-              초안 구성에는 내 강사 검토 기록이 있는 항목만 사용됩니다. 현재 내 강사 검토{' '}
+              기본 동작은 개인 검토 기록 전에도 직접 수업안에 담을 수 있으며, 자동 추천·AI 초안
+              구성에는 내 강사 검토 기록이 있는 항목만 사용됩니다. 현재 내 강사 검토{' '}
               {exercises.filter(isExerciseAutoEligible).length}개 / {exercises.length}개 · 자격 인증
               미확인.
             </p>
@@ -2827,7 +2816,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         </button>
         {sequenceMovementSteps.length > 0 && (
           <div className="atlas-selection-sequence-strip" aria-label="현재 수업안 동작 순서">
-            <span className="atlas-selection-total-time">계획 {sequenceTotalMinutes}분</span>
+            <span className="atlas-selection-total-time">
+              계획 {formatSecondsToMMSS(sequenceTotalSeconds)}
+            </span>
             <ul className="atlas-selection-sequence-list">
               {sequenceMovementSteps.slice(0, 4).map((entry) => {
                 const stepExercise = entry.exercise;
@@ -2847,9 +2838,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
               })}
             </ul>
             {sequenceMovementSteps.length > 4 && (
-              <span className="atlas-selection-more">
-                +{sequenceMovementSteps.length - 4}개 더
-              </span>
+              <span className="atlas-selection-more">+{sequenceMovementSteps.length - 4}개 더</span>
             )}
           </div>
         )}

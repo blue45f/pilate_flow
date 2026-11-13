@@ -130,17 +130,19 @@ describe('Wave1-1 Home Workbench Flow & Mid-Flow Recovery', () => {
     expect(prevBtn.style.wordBreak).toBe('keep-all');
     expect(nextBtn.style.wordBreak).toBe('keep-all');
 
-    // Initial state with activeSteps is step 2 ('arrange') when sessionStorage is empty
+    // Existing steps open the actual third-stage editor.
     expect(nextBtn).toHaveAttribute('aria-current', 'step');
-    expect(screen.getByTestId('workbench-current-step-guide')).toHaveTextContent(
-      '현재 2단계: 수업 구성 확인',
+    const stages = within(screen.getByRole('group', { name: '수업 제작 단계' }));
+    expect(stages.getByRole('button', { name: '3 순서·시간 확인' })).toHaveAttribute(
+      'aria-current', 'step',
     );
+    expect(screen.getByTestId('workbench-current-step-guide')).toHaveTextContent('3단계');
 
-    // Switch back to step 1 ('select') via previous step button
+    // Previous navigates to the inline second-stage picker, replacing the editor page.
     fireEvent.click(prevBtn);
-    expect(prevBtn).toHaveAttribute('aria-current', 'step');
-    expect(screen.getByTestId('workbench-current-step-guide')).toHaveTextContent(
-      '현재 1단계: 동작 고르기',
+    expect(screen.getByTestId('wizard-step2-page')).toBeVisible();
+    expect(stages.getByRole('button', { name: '2 동작 담기' })).toHaveAttribute(
+      'aria-current', 'step',
     );
 
     const savedSelect = JSON.parse(
@@ -149,9 +151,13 @@ describe('Wave1-1 Home Workbench Flow & Mid-Flow Recovery', () => {
     expect(savedSelect.workflowStep).toBe('select');
     expect(savedSelect.activeStep).toBe('finder');
 
-    // Switch forward to step 2 ('arrange') via next step button
-    fireEvent.click(nextBtn);
-    expect(nextBtn).toHaveAttribute('aria-current', 'step');
+    // Continue through the current picker action to the third-stage editor.
+    fireEvent.click(screen.getByTestId('wizard-to-step3-btn'));
+    expect(screen.queryByTestId('wizard-step2-page')).not.toBeInTheDocument();
+    expect(screen.getByTestId('workbench-step-next')).toHaveAttribute('aria-current', 'step');
+    expect(stages.getByRole('button', { name: '3 순서·시간 확인' })).toHaveAttribute(
+      'aria-current', 'step',
+    );
     const savedArrange = JSON.parse(
       window.sessionStorage.getItem(WORKBENCH_PREP_RECOVERY_KEY) ?? '{}',
     );
@@ -159,7 +165,7 @@ describe('Wave1-1 Home Workbench Flow & Mid-Flow Recovery', () => {
     expect(savedArrange.activeStep).toBe('arrange');
   });
 
-  it('recovers active mobile workbench step and conditions modal state across unmount/remount', () => {
+  it('recovers the conditions dialog and its equipment tab above the editor across unmount/remount', () => {
     const firstRender = render(
       <SequenceWorkbench
         onOpenClipper={vi.fn()}
@@ -168,10 +174,10 @@ describe('Wave1-1 Home Workbench Flow & Mid-Flow Recovery', () => {
       />,
     );
 
-    // Move to step 1 and open conditions dialog at step 2 ('2 사용할 기구')
-    fireEvent.click(screen.getByTestId('workbench-step-prev'));
-    const conditionsButtons = screen.getAllByRole('button', { name: /수업 조건/ });
-    fireEvent.click(conditionsButtons[0]);
+    // Conditions are available from the editor; restore their own equipment substep.
+    const originalSteps = usePilatesStore.getState().activeSteps;
+    fireEvent.click(screen.getByRole('button', { name: '수업 조건' }));
+    expect(screen.getByRole('dialog', { name: '수업 조건' })).toBeVisible();
 
     const equipmentTab = screen.getByRole('button', { name: '2 사용할 기구' });
     fireEvent.click(equipmentTab);
@@ -179,7 +185,7 @@ describe('Wave1-1 Home Workbench Flow & Mid-Flow Recovery', () => {
     const savedRecovery = JSON.parse(
       window.sessionStorage.getItem(WORKBENCH_PREP_RECOVERY_KEY) ?? '{}',
     );
-    expect(savedRecovery.workflowStep).toBe('select');
+    expect(savedRecovery.workflowStep).toBe('arrange');
     expect(savedRecovery.conditionsOpen).toBe(true);
     expect(savedRecovery.conditionStep).toBe(2);
 
@@ -194,11 +200,51 @@ describe('Wave1-1 Home Workbench Flow & Mid-Flow Recovery', () => {
       />,
     );
 
-    expect(screen.getByTestId('workbench-step-prev')).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByRole('dialog', { name: '수업 조건' })).toBeVisible();
+    expect(screen.getByTestId('workbench-step-next')).toHaveAttribute('aria-current', 'step');
+    expect(usePilatesStore.getState().activeSteps).toBe(originalSteps);
     expect(screen.getByRole('button', { name: '2 사용할 기구' })).toHaveAttribute(
       'aria-current',
       'step',
     );
+  });
+
+  it('recovers the open contextual picker and query without changing the existing class', () => {
+    const handlers = {
+      onOpenClipper: vi.fn(),
+      onOpenYouTubePreview: vi.fn(),
+      onOpenLogModal: vi.fn(),
+    };
+    const originalSteps = usePilatesStore.getState().activeSteps;
+    const firstRender = render(<SequenceWorkbench {...handlers} />);
+    const actions = within(screen.getByRole('group', { name: '시퀀스 편집 도구' }));
+    fireEvent.click(actions.getByRole('button', { name: '동작 추가' }));
+    const picker = screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' });
+    fireEvent.change(within(picker).getByRole('searchbox'), {
+      target: { value: coreExercise.nameKo },
+    });
+    const savedRecovery = JSON.parse(
+      window.sessionStorage.getItem(WORKBENCH_PREP_RECOVERY_KEY) ?? '{}',
+    );
+    expect(savedRecovery.workflowStep).toBe('select');
+    expect(savedRecovery.activeStep).toBe('finder');
+    expect(savedRecovery.finderOpen).toBe(true);
+
+    firstRender.unmount();
+    render(<SequenceWorkbench {...handlers} />);
+    const restoredPicker = screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' });
+    expect(restoredPicker).toBeVisible();
+    expect(within(restoredPicker).getByRole('searchbox')).toHaveValue(coreExercise.nameKo);
+    const stages = within(screen.getByRole('group', { name: '수업 제작 단계' }));
+    expect(stages.getByRole('button', { name: '2 동작 담기' })).toHaveAttribute(
+      'aria-current', 'step',
+    );
+    expect(usePilatesStore.getState().activeSteps).toBe(originalSteps);
+    fireEvent.click(within(restoredPicker).getByRole('button', { name: '수업 구성으로 돌아가기' }));
+    expect(stages.getByRole('button', { name: '3 순서·시간 확인' })).toHaveAttribute(
+      'aria-current', 'step',
+    );
+    expect(usePilatesStore.getState().activeSteps).toBe(originalSteps);
   });
 
   it('recovers open step block inspector and in-progress note edits across tab switches and narrow mobile viewports', () => {

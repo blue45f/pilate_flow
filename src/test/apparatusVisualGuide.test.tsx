@@ -136,14 +136,18 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
     usePilatesStore.setState(originalState, true);
   });
 
-  it('renders the apparatus visual guide ribbon inside ExerciseAtlasView, SequenceWorkbench, and ClassBinderView', () => {
+  it('renders the apparatus visual guide ribbon inside ExerciseAtlasView, SequenceWorkbench, and ClassBinderView', async () => {
     render(
       <ExerciseAtlasView
         onOpenYouTubePreview={() => undefined}
         onOpenClipper={() => undefined}
       />,
     );
-    expect(screen.getByTestId('apparatus-visual-guide-ribbon')).toBeInTheDocument();
+    expect(screen.queryByTestId('apparatus-visual-guide-ribbon')).not.toBeInTheDocument();
+    const atlasGuideSummary = screen.getByText('기구 설정 참고', { selector: 'summary span' });
+    expect(atlasGuideSummary.closest('details')).not.toHaveAttribute('open');
+    fireEvent.click(atlasGuideSummary);
+    expect(await screen.findByTestId('apparatus-visual-guide-ribbon')).toBeVisible();
     cleanup();
 
     const originalState = usePilatesStore.getState();

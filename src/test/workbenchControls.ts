@@ -19,6 +19,8 @@ export function closeWorkbenchConditions() {
 
 /** Empty drafts keep automatic setup in an explicit, initially collapsed panel. */
 export function openWorkbenchAutomation() {
+  const outer = screen.queryByText('추가 도구 · 휴식·기구 안내·AI', { selector: 'summary' });
+  if (outer && !outer.closest('details')?.open) fireEvent.click(outer);
   const summary = screen.getByText('자동 구성·휴식 먼저 넣기', { selector: 'summary' });
   const panel = summary.closest('details')!;
   if (!panel.open) fireEvent.click(summary);
@@ -64,6 +66,19 @@ export function openWorkbenchBlockMemo(index: number) {
 
 /** Expand the real disclosure before querying or activating a secondary workbench action. */
 export function getVisibleWorkbenchButton(name: string) {
+  const stageActions: Record<string, RegExp> = {
+    '1 동작 선택': /동작 담기/,
+    '2 수업 구성': /순서·시간 확인/,
+    '3 미리보기': /미리보기·진행/,
+  };
+  if (stageActions[name]) {
+    const stage = within(screen.getByRole('group', { name: '수업 제작 단계' }));
+    const button = stage.getByRole('button', { name: stageActions[name] });
+    expect(button).toBeVisible();
+    return button;
+  }
+  const outer = screen.queryByText('추가 도구 · 휴식·기구 안내·AI', { selector: 'summary' });
+  if (outer && !outer.closest('details')?.open) fireEvent.click(outer);
   const label = /^(직접 편집|자동 구성)$/.test(name)
     ? /^편집 방식/
     : /^[123] /.test(name)

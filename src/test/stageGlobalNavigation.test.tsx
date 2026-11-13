@@ -5,7 +5,7 @@ import { usePilatesStore } from '../store/usePilatesStore';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { syntheticPlanningExercise } from './planningFixtures';
-import type { SequenceStep } from '../types/pilates';
+import type { SavedSequence, SequenceStep } from '../types/pilates';
 
 const original = usePilatesStore.getState();
 const production = structuredClone(INITIAL_EXERCISES);
@@ -41,6 +41,19 @@ const steps: SequenceStep[] = [
     selectedLayer: 'standard',
   },
 ];
+const savedClass: SavedSequence = {
+  id: 'qa-stage-next-class',
+  title: '다음 합성 수업',
+  subtitle: '',
+  apparatus: 'mat',
+  level: '1.0',
+  focusTags: [],
+  targetMinutes: 10,
+  steps: [{ ...steps[2], stepId: 'qa-next-class-step', order: 1, durationMin: 10 }],
+  createdAt: '2026-11-04T08:00:00Z',
+  updatedAt: '2026-11-04T08:00:00Z',
+  taughtCount: 0,
+};
 beforeEach(async () => {
   vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
   vi.setSystemTime(new Date('2026-11-05T08:00:00Z'));
@@ -136,12 +149,33 @@ function jump(seconds: number) {
 }
 async function runningSession() {
   render(<App />);
-  await screen.findByRole('timer');
+  await screen.findByRole('timer', {}, { timeout: 6000 });
   fireEvent.click(screen.getByRole('button', { name: '수업 시작' }));
   jump(20);
   fireEvent.click(screen.getByRole('button', { name: '다음 동작' }));
   jump(7);
   expect(screen.getByRole('timer')).toHaveTextContent('00:53');
+}
+function openPalette() {
+  fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+  return within(screen.getByTestId('studio-command-palette'));
+}
+function requestSavedClass() {
+  fireEvent.click(openPalette().getByRole('button', { name: `${savedClass.title} 불러오기` }));
+  return screen.getByRole('dialog', { name: '수업 화면을 나갈까요?' });
+}
+async function reviewAndOpenLog() {
+  fireEvent.click(
+    within(screen.getByRole('dialog', { name: '수업 화면을 나갈까요?' })).getByRole('button', {
+      name: '종료 내용 검토',
+    }),
+  );
+  fireEvent.click(
+    within(screen.getByRole('dialog', { name: '수업 진행을 마칠까요?' })).getByRole('button', {
+      name: '검토하고 기록하기',
+    }),
+  );
+  return within(await screen.findByRole('dialog', { name: '수업 기록 남기기' }));
 }
 const destinations = [
   {
@@ -172,6 +206,125 @@ const destinations = [
 ] as const;
 
 describe('actual app navigation preserves an unrecorded teaching session', () => {
+  it('defers loading a saved class until the instructor confirms leaving the running session', async () => {
+    usePilatesStore.setState({ savedSequences: [structuredClone(savedClass)] });
+    await runningSession();
+    const before = usePilatesStore.getState();
+    const dialog = requestSavedClass();
+    expect(dialog).toHaveTextContent(`${savedClass.title} 불러오기`);
+    expect(usePilatesStore.getState().activeSequenceId).toBe(sequenceId);
+    expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
+    expect(usePilatesStore.getState().activeTab).toBe('stage');
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+    expect(screen.queryByTestId('studio-command-palette')).not.toBeInTheDocument();
+    jump(90);
+    fireEvent.click(within(dialog).getByRole('button', { name: '수업 화면 유지' }));
+    expect(screen.getByRole('timer')).toHaveTextContent('00:53');
+    expect(usePilatesStore.getState().activeSequenceId).toBe(sequenceId);
+    expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
+
+    const retry = requestSavedClass();
+    fireEvent.click(within(retry).getByRole('button', { name: '기록 없이 나가기' }));
+    expect(usePilatesStore.getState().activeTab).toBe('workbench');
+    expect(usePilatesStore.getState().activeSequenceId).toBe(savedClass.id);
+    expect(usePilatesStore.getState().activeSteps).toEqual(savedClass.steps);
+    expect(usePilatesStore.getState().historyLogs).toHaveLength(0);
+  }, 15000);
+
+  it('records the original session before committing the saved class replacement', async () => {
+    usePilatesStore.setState({ savedSequences: [structuredClone(savedClass)] });
+    await runningSession();
+    requestSavedClass();
+    const fields = await reviewAndOpenLog();
+    expect(usePilatesStore.getState().activeSequenceId).toBe(sequenceId);
+    fireEvent.click(fields.getByRole('button', { name: '수업 기록 저장' }));
+    expect(usePilatesStore.getState().activeSequenceId).toBe(savedClass.id);
+    expect(usePilatesStore.getState().activeTab).toBe('workbench');
+    expect(usePilatesStore.getState().historyLogs).toHaveLength(1);
+    expect(usePilatesStore.getState().historyLogs[0]).toMatchObject({
+      sequenceId,
+      actualDurationSec: 27,
+      actualRestDurationSec: 7,
+      stepsSnapshot: [
+        expect.objectContaining({ stepId: steps[0].stepId }),
+        expect.objectContaining({ stepId: steps[1].stepId }),
+      ],
+    });
+  });
+
+  it.each(['close-button', 'escape', 'record-cancel'] as const)(
+    'forgets a cancelled saved-class action after %s, including a later direct finish',
+    async (cancel) => {
+      usePilatesStore.setState({ savedSequences: [structuredClone(savedClass)] });
+      await runningSession();
+      const dialog = requestSavedClass();
+      if (cancel === 'record-cancel') {
+        const fields = await reviewAndOpenLog();
+        fireEvent.click(fields.getByRole('button', { name: '취소' }));
+      } else if (cancel === 'escape') {
+        fireEvent(dialog, new Event('cancel', { cancelable: true }));
+      } else {
+        fireEvent.click(within(dialog).getByRole('button', { name: '닫기' }));
+      }
+      expect(usePilatesStore.getState().activeTab).toBe('stage');
+      expect(screen.getByRole('timer')).toHaveTextContent('00:53');
+      fireEvent.click(screen.getByRole('button', { name: '종료 / 기록' }));
+      fireEvent.click(
+        within(screen.getByRole('dialog', { name: '수업 진행을 마칠까요?' })).getByRole('button', {
+          name: '기록 없이 계획으로 돌아가기',
+        }),
+      );
+      expect(usePilatesStore.getState().activeTab).toBe('workbench');
+      expect(usePilatesStore.getState().activeSequenceId).toBe(sequenceId);
+      expect(usePilatesStore.getState().activeSteps).toEqual(steps);
+    },
+  );
+
+  it.each(['sidebar', 'palette'] as const)(
+    'guards the %s member-role switch and preserves the clock when cancelled',
+    async (entry) => {
+      await runningSession();
+      const switchMember = () => {
+        if (entry === 'palette') {
+          fireEvent.click(openPalette().getByRole('button', { name: /회원 수업 예약/ }));
+        } else {
+          fireEvent.click(screen.getByRole('button', { name: '회원 예약 화면 보기' }));
+        }
+      };
+      switchMember();
+      const dialog = screen.getByRole('dialog', { name: '수업 화면을 나갈까요?' });
+      expect(dialog).toHaveTextContent('회원 예약');
+      expect(usePilatesStore.getState().activeTab).toBe('stage');
+      expect(screen.queryByTestId('member-desktop-nav')).not.toBeInTheDocument();
+      fireEvent.click(within(dialog).getByRole('button', { name: '수업 화면 유지' }));
+      jump(60);
+      expect(screen.getByRole('timer')).toHaveTextContent('00:53');
+      switchMember();
+      fireEvent.click(
+        within(screen.getByRole('dialog', { name: '수업 화면을 나갈까요?' })).getByRole('button', {
+          name: '기록 없이 나가기',
+        }),
+      );
+      expect(await screen.findByTestId('member-desktop-nav')).toBeInTheDocument();
+      expect(usePilatesStore.getState().activeTab).toBe('workbench');
+      expect(usePilatesStore.getState().activeSequenceId).toBe(sequenceId);
+      expect(usePilatesStore.getState().historyLogs).toHaveLength(0);
+    },
+  );
+
+  it('announces the mobile timer action for ready, running and paused states', async () => {
+    render(<App />);
+    await screen.findByRole('timer');
+    const toggle = screen.getByTestId('live-thumb-play-toggle');
+    expect(toggle).toHaveAccessibleName('한 손 도크 수업 시작');
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAccessibleName('한 손 도크 수업 일시정지');
+    jump(5);
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAccessibleName('한 손 도크 수업 이어서 진행');
+    expect(screen.getByRole('timer')).toHaveTextContent('03:55');
+  });
+
   it('leaves a ready never-started unchanged session without an unnecessary confirmation', async () => {
     render(<App />);
     await screen.findByRole('timer');

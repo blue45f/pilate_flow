@@ -98,7 +98,12 @@ describe('v2 shared class editor', () => {
   it('keeps optional controls collapsed and reveals them without changing the draft', () => {
     const before = usePilatesStore.getState();
     renderWorkbench();
-    const summaries = [/^시간 구성$/, /^편집 방식/, /^조건 불러오기·자동 구성$/, /^수업 준비 순서$/];
+    const summaries = [
+      /^시간 구성 상세$/,
+      /^편집 방식/,
+      /^조건 불러오기·자동 구성$/,
+      /^수업 준비 순서$/,
+    ];
     for (const label of summaries) {
       const summary = screen.getByText(label, { selector: 'summary' });
       expect(summary).toBeVisible();
@@ -106,11 +111,15 @@ describe('v2 shared class editor', () => {
     }
     expect(screen.getByRole('button', { name: '직접 편집' })).not.toBeVisible();
     expect(screen.getByRole('button', { name: '시퀀스 만들기' })).not.toBeVisible();
-    expect(screen.getByRole('button', { name: '3 미리보기' })).not.toBeVisible();
+    expect(
+      within(screen.getByRole('group', { name: '수업 제작 단계' })).getByRole('button', {
+        name: '4 미리보기·진행',
+      }),
+    ).toBeVisible();
     getVisibleWorkbenchButton('직접 편집');
     getVisibleWorkbenchButton('시퀀스 만들기');
     getVisibleWorkbenchButton('3 미리보기');
-    fireEvent.click(screen.getByText('시간 구성', { selector: 'summary' }));
+    fireEvent.click(screen.getByText('시간 구성 상세', { selector: 'summary' }));
     expect(screen.getByLabelText('시간 상세 구성')).toBeVisible();
     expect(usePilatesStore.getState()).toBe(before);
   });
@@ -120,16 +129,10 @@ describe('v2 shared class editor', () => {
     const view = renderWorkbench();
     expect(screen.getByRole('heading', { level: 1, name: '수업 구성' })).toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: '수업 조건' })).not.toBeInTheDocument();
-    expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute('aria-pressed', 'true');
     expect(getVisibleWorkbenchButton('시퀀스 만들기')).toBeInTheDocument();
     fireEvent.click(getVisibleWorkbenchButton('직접 편집'));
-    expect(getVisibleWorkbenchButton('직접 편집')).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    expect(getVisibleWorkbenchButton('직접 편집')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('region', { name: '오늘의 시퀀스' })).toBeVisible();
     expect(view.container.querySelector('[data-mobile-view]')).toBeNull();
     expect(screen.queryByRole('button', { name: '시퀀스 만들기' })).not.toBeInTheDocument();
@@ -146,14 +149,12 @@ describe('v2 shared class editor', () => {
     expect(getVisibleWorkbenchButton('시퀀스 만들기')).toHaveAccessibleDescription(
       /전체를 새 초안/,
     );
-    expect(
-      getVisibleWorkbenchButton('잠그지 않은 동작 다시 만들기'),
-    ).toBeInTheDocument();
+    expect(getVisibleWorkbenchButton('잠그지 않은 동작 다시 만들기')).toBeInTheDocument();
   });
 
   it('uses real movement, teaching, transition and rest seconds exactly once', () => {
     const { container } = renderWorkbench();
-    fireEvent.click(screen.getByText('시간 구성', { selector: 'summary' }));
+    fireEvent.click(screen.getByText('시간 구성 상세', { selector: 'summary' }));
     const breakdown = within(screen.getByLabelText('시간 상세 구성'));
     expect(breakdown.getByText('07:15')).toBeInTheDocument();
     expect(breakdown.getByText('00:30')).toBeInTheDocument();

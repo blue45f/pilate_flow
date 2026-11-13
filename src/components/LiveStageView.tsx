@@ -39,6 +39,7 @@ import {
 } from '../utils/sequenceEngine';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
+import { getExerciseEvidence } from '../utils/exerciseEvidence';
 import { isMovementIdeaExercise } from '../utils/movementIdeaDraft';
 import { LightDismissDialog } from './LightDismissDialog';
 import { ExerciseThumbnailBadge } from './ExerciseThumbnailBadge';
@@ -75,7 +76,7 @@ import {
 
 export interface LiveStageNavigationHandle {
   /** True means Stage owns the pending exit; keep it mounted until a decision. */
-  requestExit: (destination: ActiveWorkspaceTab) => boolean;
+  requestExit: (destination: ActiveWorkspaceTab, label?: string) => boolean;
 }
 interface LiveStageViewProps {
   onOpenLogModal: (
@@ -85,6 +86,7 @@ interface LiveStageViewProps {
   ) => void;
   navigationRef?: React.Ref<LiveStageNavigationHandle>;
   onNavigate?: (destination: ActiveWorkspaceTab) => void;
+  onNavigationCancelled?: () => void;
 }
 
 interface TeachingClock {
@@ -206,6 +208,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   onOpenLogModal,
   navigationRef,
   onNavigate,
+  onNavigationCancelled,
 }) => {
   const {
     activeSequenceId,
@@ -280,16 +283,17 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const reviewContentRef = useRef<HTMLDivElement>(null);
   const [exitTarget, setExitTarget] = useState<ActiveWorkspaceTab | null>(null);
   const [reviewTarget, setReviewTarget] = useState<ActiveWorkspaceTab | null>(null);
+  const [requestedDestinationLabel, setRequestedDestinationLabel] = useState<string | null>(null);
   const navigate = onNavigate ?? setActiveTab;
   const targetLabel = (target: ActiveWorkspaceTab | null) =>
-    ({
+    requestedDestinationLabel ?? {
       workbench: '오늘의 수업',
       history: '수업 기록',
       schedule: '강사 일정',
-      binder: '저장한 플로우',
+      binder: '저장한 수업',
       atlas: '동작 라이브러리',
       stage: '수업 진행',
-    })[target ?? 'workbench'];
+    }[target ?? 'workbench'];
   const closeNative = (content: HTMLElement | null) => {
     const dialog = content?.closest<HTMLDialogElement>('dialog');
     if (dialog?.open) dialog.close();
@@ -318,6 +322,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const current = steps[clock.index];
   const currentIsRest = !!current && isRestStep(current);
   const exercise = current ? exerciseMap.get(current.exerciseId) : undefined;
+  const currentEvidence = useMemo(
+    () => exercise && !currentIsRest ? getExerciseEvidence(exercise) : null,
+    [exercise, currentIsRest],
+  );
   const next = steps[clock.index + 1];
   const nextExercise = next ? exerciseMap.get(next.exerciseId) : undefined;
 
@@ -1263,7 +1271,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     };
   }, [voiceCommandEnabled, speechRecognitionCtor]);
   useImperativeHandle(navigationRef, () => ({
-    requestExit(destination) {
+    requestExit(destination, label) {
       const liveClock = clockRef.current;
       const liveSteps = stepsRef.current;
       const hasSessionData =
@@ -1277,6 +1285,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       runningIntent.current = false;
       classVoice.pause();
       setExitTarget(destination);
+      setRequestedDestinationLabel(label ?? null);
       applyClock((value) => ({
         ...sampleClock(value, Date.now(), durationsRef.current, autoAdvanceRef.current),
         running: false,
@@ -1319,6 +1328,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     <>
       <LightDismissDialog
         open={reviewOpen}
+        onBeforeClose={() => {
+          onNavigationCancelled?.();
+          return true;
+        }}
         onClose={() => {
           if (reviewContentRef.current?.closest('dialog')?.open) return;
           setReviewTarget(null);
@@ -1341,7 +1354,14 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           {reviewTarget && <p>기록을 마친 뒤 이동할 화면: {targetLabel(reviewTarget)}</p>}
         </div>
         <div className="teaching-form-actions">
-          <button type="button" className="btn-secondary" onClick={closeReview}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              onNavigationCancelled?.();
+              closeReview();
+            }}
+          >
             계속 확인하기
           </button>
           <button
@@ -1372,6 +1392,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       </LightDismissDialog>
       <LightDismissDialog
         open={exitOpen}
+        onBeforeClose={() => {
+          onNavigationCancelled?.();
+          return true;
+        }}
         onClose={() => {
           if (exitContentRef.current?.closest('dialog')?.open) return;
           setExitTarget(null);
@@ -1383,7 +1407,14 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
         <p ref={exitContentRef}>기록하지 않고 나가면 이번 타이머 진행 시간은 보관되지 않아요.</p>
         {exitTarget && <p>이동할 화면: {targetLabel(exitTarget)}</p>}
         <div className="teaching-form-actions">
-          <button type="button" className="btn-secondary" onClick={closeExit}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              onNavigationCancelled?.();
+              closeExit();
+            }}
+          >
             수업 화면 유지
           </button>
           <button
@@ -1957,9 +1988,9 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 </div>
               );
             })()}
-          {!currentIsRest && exercise && !isExerciseAutoEligible(exercise) && (
+          {currentEvidence && currentEvidence.planning.status !== 'personal-reviewed' && (
             <p className="muted teaching-review-advisory" style={{ margin: '4px 0 0', fontSize: '0.78rem' }}>
-              교차 검증 완료 가이드 · 내 강사 검토 기록은 선택 사항입니다.
+              {currentEvidence.planning.label} · {currentEvidence.source.label}
             </p>
           )}
           {!currentIsRest && exercise && (
@@ -2657,16 +2688,22 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             type="button"
             className="pf-live-thumb-dock__btn is-primary"
             data-testid="live-thumb-play-toggle"
-            aria-label="한 손 도크 타이머 토글"
+            aria-label={
+              clock.running
+                ? '한 손 도크 수업 일시정지'
+                : clock.elapsedMs > 0
+                  ? '한 손 도크 수업 이어서 진행'
+                  : '한 손 도크 수업 시작'
+            }
             onClick={toggleRunning}
           >
             {clock.running ? (
               <>
-                <Pause size={16} aria-hidden="true" /> 멈춤
+                <Pause size={16} aria-hidden="true" /> 일시정지
               </>
             ) : (
               <>
-                <Play size={16} aria-hidden="true" /> 진행
+                <Play size={16} aria-hidden="true" /> {clock.elapsedMs > 0 ? '이어서 진행' : '수업 시작'}
               </>
             )}
           </button>
@@ -2683,7 +2720,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             type="button"
             className="pf-live-thumb-dock__btn"
             data-testid="live-thumb-next-step"
-            aria-label="한 손 도크 다음 순서 이동"
+            aria-label="한 손 도크 다음 동작"
             disabled={clock.index === steps.length - 1 && !currentIsRest}
             onClick={() =>
               clockRef.current.index === stepsRef.current.length - 1
@@ -2691,7 +2728,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 : selectStep(clockRef.current.index + 1)
             }
           >
-            <span>순서 →</span>
+            <span>다음 동작</span>
           </button>
         </div>
         <div className="pf-live-thumb-dock__secondary">

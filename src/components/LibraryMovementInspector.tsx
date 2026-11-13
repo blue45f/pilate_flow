@@ -3,7 +3,7 @@ import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
 import { SpringVisualPills } from './SpringVisualPills';
-import type { RefObject } from 'react';
+import { useState, type RefObject } from 'react';
 import { ArrowUpRight, Check, ExternalLink, Info, Plus, X } from 'lucide-react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 import { normalizeReferenceUrlPolicy } from '../features/referenceLinkPolicyCandidate';
@@ -25,6 +25,18 @@ export interface LibraryMovementInspectorProps {
 }
 
 const LEVEL_LABELS = { '1.0': '기초', '1.5': '중급', '2.0': '심화' };
+const FOOTBAR_LABELS: Record<PilatesExercise['footbar'], string> = {
+  high: '높게',
+  mid: '중간',
+  low: '낮게',
+  down: '내림',
+  none: '사용 안 함',
+};
+const HEADREST_LABELS: Record<PilatesExercise['headrest'], string> = {
+  up: '올림',
+  flat: '평평하게',
+  down: '내림',
+};
 
 export function LibraryMovementInspector({
   exercise,
@@ -36,6 +48,7 @@ export function LibraryMovementInspector({
   addedId,
 }: LibraryMovementInspectorProps) {
   const reformerBrand = usePilatesStore((s) => s.reformerBrand);
+  const [showReferenceGuide, setShowReferenceGuide] = useState(false);
   const reviewState = exercise ? getExerciseReviewState(exercise) : null;
   const autoEligible = exercise ? isExerciseAutoEligible(exercise) : false;
   const evidence = exercise ? getExerciseEvidence(exercise) : null;
@@ -98,8 +111,8 @@ export function LibraryMovementInspector({
 
   const hasMalformedSourceAttempt = Boolean(
     exercise &&
-      safeLinks.length === 0 &&
-      (evidence?.source.kind === 'invalid-record' || Boolean(exercise.youtube.url.trim())),
+    safeLinks.length === 0 &&
+    (evidence?.source.kind === 'invalid-record' || Boolean(exercise.youtube.url.trim())),
   );
 
   return (
@@ -148,13 +161,15 @@ export function LibraryMovementInspector({
           </div>
           <p className="library-inspector-english">{exercise.nameEn}</p>
 
-          <Studio3DMotionHeroCard exercise={exercise} compact />
-
           <div className="pf-inspector-3sec-grid" aria-label="선택 동작 핵심 3요소 요약">
             <div className="pf-inspector-3sec-item">
-              <span>권장 스프링 · 기구 셋업</span>
+              <span>{exercise.apparatus === 'mat' ? '사용 기구' : '기구 설정'}</span>
               <div>
-                {exercise.springs ? <SpringVisualPills springs={exercise.springs} /> : <strong>기본 세팅</strong>}
+                {exercise.springs ? (
+                  <SpringVisualPills springs={exercise.springs} />
+                ) : (
+                  <strong>{APPARATUS_LABELS[exercise.apparatus].ko}</strong>
+                )}
                 {brandSpring && !brandSpring.isNonSpringApparatus && (
                   <small
                     className="pf-inspector-brand-spring-note"
@@ -163,7 +178,12 @@ export function LibraryMovementInspector({
                     {brandSpring.brandShortLabelKo}: {brandSpring.equivalentLabelKo}
                   </small>
                 )}
-                <small>풋바 {exercise.footbar} · 헤드레스트 {exercise.headrest}</small>
+                {exercise.apparatus === 'reformer' && (
+                  <small>
+                    풋바 {FOOTBAR_LABELS[exercise.footbar]} · 헤드레스트{' '}
+                    {HEADREST_LABELS[exercise.headrest]}
+                  </small>
+                )}
               </div>
             </div>
             <div className="pf-inspector-3sec-item">
@@ -239,8 +259,6 @@ export function LibraryMovementInspector({
             </section>
           )}
 
-          <StudioClinicalBriefCard exercise={exercise} compact showNoteComparison />
-
           <section
             className="library-inspector-reference-step"
             data-testid="inspector-reference-step"
@@ -269,18 +287,13 @@ export function LibraryMovementInspector({
                 </p>
               </div>
             ) : (
-              <p
-                className="library-inspector-no-source"
-                data-testid="inspector-no-external-source"
-              >
+              <p className="library-inspector-no-source" data-testid="inspector-no-external-source">
                 {hasMalformedSourceAttempt
                   ? '등록된 출처·영상 주소 형식을 확인할 수 없어 외부 링크를 열지 않습니다. 전체 정보·개인 검토에서 주소를 확인하세요.'
                   : '연결된 외부 원문 링크 없음 — 미확인 원문이나 개별 동작 대조가 확인된 것처럼 표시하지 않습니다.'}
               </p>
             )}
           </section>
-
-          <PostureAnatomyGuide exercise={exercise} compact />
 
           <section
             className="library-inspector-review"
@@ -310,6 +323,7 @@ export function LibraryMovementInspector({
               type="button"
               className="btn-primary"
               data-added={isAdded ? 'true' : 'false'}
+              aria-label="선택한 동작 수업안에 추가"
               onClick={() => onAdd(exercise)}
             >
               {isAdded ? (
@@ -317,12 +331,27 @@ export function LibraryMovementInspector({
               ) : (
                 <Plus size={16} aria-hidden="true" />
               )}
-              선택한 동작 수업안에 추가
+              {isAdded ? '추가됨' : '동작 추가'}
             </button>
             <span className="sr-only" role="status" aria-live="polite">
               {isAdded ? `${exercise.nameKo} 동작을 수업안에 추가했습니다.` : ''}
             </span>
           </div>
+
+          <details
+            className="library-inspector-reference-details"
+            open={showReferenceGuide}
+            onToggle={(event) => setShowReferenceGuide(event.currentTarget.open)}
+          >
+            <summary>도해·기구 설정 참고</summary>
+            {showReferenceGuide && (
+              <>
+                <Studio3DMotionHeroCard exercise={exercise} compact />
+                <StudioClinicalBriefCard exercise={exercise} compact showNoteComparison />
+                <PostureAnatomyGuide exercise={exercise} compact />
+              </>
+            )}
+          </details>
         </div>
       ) : (
         <p className="library-inspector-empty">

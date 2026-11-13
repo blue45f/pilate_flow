@@ -88,7 +88,13 @@ describe('teaching timer and honest session records', () => {
           : { ...exercises[0], springs: 'changed after review' };
       usePilatesStore.setState({ exercises: [blocked, exercises[1]] });
       render(<LiveStageView onOpenLogModal={vi.fn()} />);
-      expect(screen.getByText(/교차 검증 완료 가이드/)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          reviewState === 'pending'
+            ? '계획 검토 전 · 외부 출처 미등록'
+            : '변경 후 재검토 필요 · 외부 출처 미등록',
+        ),
+      ).toBeInTheDocument();
       expect(screen.getByRole('timer')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
       expect(usePilatesStore.getState().exercises[0]).toEqual(blocked);

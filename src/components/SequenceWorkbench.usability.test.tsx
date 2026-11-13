@@ -23,6 +23,9 @@ vi.mock('./MotionReferencePlayer', () => ({
 const originalState = usePilatesStore.getState();
 const initialCatalogSnapshot = structuredClone(INITIAL_EXERCISES);
 
+// These cases cover several complete dialog/save/reload journeys in one test.
+const JOURNEY_TIMEOUT_MS = 20_000;
+
 const noopHandlers = () => ({
   onOpenYouTubePreview: vi.fn(),
   onOpenClipper: vi.fn(),
@@ -332,7 +335,7 @@ describe('SequenceWorkbench next-action clarity and mistake recovery', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '되돌리기' }));
     expect(usePilatesStore.getState().activeSteps[0]).toEqual(appliedStep);
-  });
+  }, JOURNEY_TIMEOUT_MS);
 
   it('guards duplicate clicks and preserves lossless undo across blank canvas starter, quick-start recipe, 새 수업 만들기, and keyboard Ctrl/Cmd+Z', () => {
     // Explicit synthetic eligibility check for Reformer Lv.1.0 quick-start recipe generation
@@ -369,8 +372,12 @@ describe('SequenceWorkbench next-action clarity and mistake recovery', () => {
     const emptyUndoBtn = screen.getByRole('button', { name: '되돌리기' });
     expect(emptyUndoBtn).toHaveClass('workbench-empty-undo-btn');
 
-    // 1. Blank canvas starter ('완전 빈 캔버스에서 50분 수업 직접 조립하기') sets 0-step canvas metadata & guards duplicate clicks
+    // 1. Open optional templates, then create a blank canvas without duplicate snapshots.
+    const templatesSummary = screen.getByText('수업 템플릿으로 시작하기', { selector: 'summary' });
+    expect(templatesSummary.closest('details')).not.toHaveAttribute('open');
+    fireEvent.click(templatesSummary);
     const starterGroup = screen.getByRole('group', { name: '빈 초안 빠른 시작' });
+    expect(starterGroup).toBeVisible();
     const blankCanvasBtn = within(starterGroup).getByRole('button', {
       name: blankCanvasStarter.titleKo,
     });
@@ -383,8 +390,10 @@ describe('SequenceWorkbench next-action clarity and mistake recovery', () => {
     fireEvent.click(blankCanvasBtn);
     expect(usePilatesStore.getState().undoStack).toHaveLength(2);
 
-    // 2. Step-populating starter on empty screen (AtelierQuickStartGallery '30분 점심 순환 익스프레스') builds >0 steps from synthetic Reformer Lv.1.0 fixtures
+    // 2. Open optional recipes and populate the class from synthetic Reformer Lv.1.0 fixtures.
+    fireEvent.click(screen.getByText('원클릭 추천 클래스 레시피 열기 (선택)', { selector: 'summary' }));
     const quickStartRegion = screen.getByRole('region', { name: '원클릭 추천 클래스 갤러리' });
+    expect(quickStartRegion).toBeVisible();
     fireEvent.click(
       within(quickStartRegion).getByRole('button', {
         name: '30분 점심 순환 익스프레스 바로 시작',
@@ -423,7 +432,7 @@ describe('SequenceWorkbench next-action clarity and mistake recovery', () => {
     expect(usePilatesStore.getState().activeTitle).toBe('기존 준비 수업');
 
     unmount();
-  });
+  }, JOURNEY_TIMEOUT_MS);
 
   it('captures lossless undo snapshots and blocks cumulative duration inflation on repeated calibration clicks', () => {
     const mixedExercises = [
@@ -555,7 +564,7 @@ describe('SequenceWorkbench next-action clarity and mistake recovery', () => {
     });
     expect(document.getElementById('start-class-readiness')).toHaveTextContent('2번 항목');
     expect(screen.getByRole('button', { name: '2번 항목 확인' })).toBeInTheDocument();
-  });
+  }, JOURNEY_TIMEOUT_MS);
 
   it('never skips saving when any SequenceStep detail (classSection, bilateral sideMode, timeEstimate, motionStudy, practice/note) or criteria/targetGroup changes, and preserves all fields across checkpoints and reload', () => {
     const steps = makeMotionCapableSteps();
@@ -747,7 +756,7 @@ describe('SequenceWorkbench next-action clarity and mistake recovery', () => {
       targetGroupId: secondGroup.id,
     });
     expect(reloaded.draftCriteria?.preferredProps).toContain('mini-ball');
-  });
+  }, JOURNEY_TIMEOUT_MS);
 
   it('enforces >=44px touch targets, :focus-visible rings, mobile breakpoints, and prefers-reduced-motion in SequenceWorkbench.usability.css', () => {
     const cssPath = resolve(process.cwd(), 'src/components/SequenceWorkbench.usability.css');

@@ -33,6 +33,7 @@ export interface StudioCommandPaletteProps {
   readonly open: boolean;
   readonly onClose: () => void;
   readonly onNavigateTab: (tab: ActiveWorkspaceTab) => void;
+  readonly onLoadSequence: (sequenceId: string) => void;
   readonly onSwitchPortalRole: (role: 'instructor' | 'member') => void;
   readonly onInspectExercise3D: (exercise: PilatesExercise) => void;
   readonly onOpenNewIdea: () => void;
@@ -43,6 +44,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
   open,
   onClose,
   onNavigateTab,
+  onLoadSequence,
   onSwitchPortalRole,
   onInspectExercise3D,
   onOpenNewIdea,
@@ -54,7 +56,6 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
   const reformerBrand = usePilatesStore((s) => s.reformerBrand);
   const setReformerBrand = usePilatesStore((s) => s.setReformerBrand);
   const appendExerciseToSequence = usePilatesStore((s) => s.appendExerciseToSequence);
-  const loadSequenceIntoWorkbench = usePilatesStore((s) => s.loadSequenceIntoWorkbench);
 
   const [query, setQuery] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -138,8 +139,8 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
     },
     {
       id: 'stage',
-      label: canStartLiveStage ? '라이브 수업 바로 시작' : '라이브 스테이지 준비 확인',
-      detail: canStartLiveStage ? '타이머 · 3프레임 3D · 호흡 링' : '수업 설계 화면으로 이동',
+      label: canStartLiveStage ? '수업 진행하기' : '수업 준비하기',
+      detail: canStartLiveStage ? '타이머와 다음 동작 확인' : '동작을 추가하고 수업 구성',
       icon: <Play size={16} aria-hidden="true" />,
       onSelect: () => {
         onNavigateTab(canStartLiveStage ? 'stage' : 'workbench');
@@ -158,8 +159,8 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
     },
     {
       id: 'binder',
-      label: '저장한 플로우 보관함',
-      detail: `보관 시퀀스 ${savedSequences.length}개`,
+      label: '저장한 수업',
+      detail: `수업안 ${savedSequences.length}개`,
       icon: <Bookmark size={16} aria-hidden="true" />,
       onSelect: () => {
         onNavigateTab('binder');
@@ -223,10 +224,9 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
     }
   };
 
-  const handleLoadSequence = (seqId: string, title: string) => {
-    loadSequenceIntoWorkbench(seqId);
-    onNavigateTab('workbench');
-    setFeedback(`'${title}' 시퀀스를 현재 작업실로 불러왔습니다.`);
+  const handleLoadSequence = (seqId: string) => {
+    // App owns the exit decision; do not replace an active class before it resolves.
+    onLoadSequence(seqId);
     onClose();
   };
 
@@ -243,14 +243,14 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
       <div className="pf-cmdk-palette" data-testid="studio-command-palette">
         <label className="pf-cmdk-search-box">
           <Search size={18} aria-hidden="true" />
-          <span className="sr-only">동작·저장 시퀀스·메뉴 통합 검색</span>
+          <span className="sr-only">동작·저장한 수업·메뉴 통합 검색</span>
           <input
             ref={inputRef}
             type="search"
             data-testid="studio-command-palette-input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="동작 이름(예: 헌드레드, 풋워크, 스완), 부위, 기구, 저장 시퀀스 검색..."
+            placeholder="동작 이름(예: 헌드레드, 풋워크, 스완), 부위, 기구, 저장한 수업 검색..."
           />
           {query && (
             <button
@@ -363,9 +363,9 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
         </section>
 
         {matchedSequences.length > 0 && (
-          <section className="pf-cmdk-section" aria-label="저장한 시퀀스 바로 불러오기">
+          <section className="pf-cmdk-section" aria-label="저장한 수업 불러오기">
             <div className="pf-cmdk-section__head">
-              <span>저장한 플로우 즉시 불러오기</span>
+              <span>저장한 수업 불러오기</span>
               <small>{matchedSequences.length}개</small>
             </div>
             <div className="pf-cmdk-seq-grid">
@@ -375,7 +375,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
                   type="button"
                   className="pf-cmdk-seq-card"
                   aria-label={`${seq.title} 불러오기`}
-                  onClick={() => handleLoadSequence(seq.id, seq.title)}
+                  onClick={() => handleLoadSequence(seq.id)}
                 >
                   <div>
                     <strong>{seq.title}</strong>

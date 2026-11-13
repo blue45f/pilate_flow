@@ -24,6 +24,9 @@ describe('Round 5 First-Use 6-Step Journey Audit (첫 진입 → 기구 선택 �
       savedSequences: [],
       historyLogs: [],
       undoStack: [],
+      draftCriteria: null,
+      lastCriteria: null,
+      exerciseBrowseScope: 'all',
       ownedEquipment: ['mat', 'reformer', 'cadillac', 'chair', 'barrel'],
       ownedProps: ['none', 'ring', 'foam-roller', 'mini-ball', 'thera-band'],
       generationError: null,
@@ -35,22 +38,23 @@ describe('Round 5 First-Use 6-Step Journey Audit (첫 진입 → 기구 선택 �
     cleanup();
   });
 
-  it('R5-AUDIT-01: Stage 1 (첫 진입) & Stage 2 (기구 선택) — verifies applied home progressive disclosure and reproduces IMP-R5-03 duplicate condition triggers & missing direct manual-pick CTA in condition modal', () => {
+  it('R5-AUDIT-01: Stage 1 (첫 진입) & Stage 2 (기구 선택) — keeps extra tools closed and carries equipment selection into the direct movement picker without generating a class', () => {
     const { container } = render(<SequenceWorkbench />);
 
-    // Already applied (ba24c66 / 4256230): 0 open <details> on empty home, primary CTA visible
+    // Empty home keeps optional tools closed and the manual-add action visible.
     const openDetails = Array.from(container.querySelectorAll('details')).filter((d) => d.open);
     expect(openDetails.length).toBe(0);
 
-    const pickMovementBtn = container.querySelector<HTMLButtonElement>('.workbench-first-action');
-    expect(pickMovementBtn).not.toBeNull();
-    expect(pickMovementBtn?.textContent).toContain('동작 고르기');
+    const pickMovementBtn = screen.getByTestId('wizard-fast-step2-btn');
+    expect(pickMovementBtn).toBeVisible();
+    expect(pickMovementBtn).toHaveAccessibleName('동작 추가');
 
-    // Unapplied IMP-R5-03: 5 duplicate triggers open the same 수업 조건 modal on empty home
+    // Additional condition shortcuts remain available inside optional tools.
     const welcomeSummaryBtn = container.querySelector<HTMLButtonElement>('.workbench-welcome-summary');
     const toolbarChipBtns = container.querySelectorAll<HTMLButtonElement>('.v2-condition-chips button');
     expect(welcomeSummaryBtn).not.toBeNull();
     expect(toolbarChipBtns.length).toBe(4);
+    toolbarChipBtns.forEach((button) => expect(button).not.toBeVisible());
 
     // Stage 2: Open 수업 조건 modal and select 리포머 (Reformer) only
     fireEvent.click(welcomeSummaryBtn!);
@@ -75,12 +79,19 @@ describe('Round 5 First-Use 6-Step Journey Audit (첫 진입 → 기구 선택 �
     expect(reformerCheckbox?.checked).toBe(true);
     expect(matCheckbox?.checked).toBe(false);
 
-    // Unapplied IMP-R5-03: Condition modal has auto-generate primary button ("조건 적용하고 만들기") and "닫기",
-    // but no direct "기구·조건 적용 후 동작 고르기" CTA for the manual flow
-    const directPickInConditionModal = Array.from(dialog!.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes('동작 고르기'),
-    );
-    expect(directPickInConditionModal).toBeUndefined();
+    // Closing conditions returns to the visible manual path; choosing equipment
+    // and opening the picker must not generate, save, or record a class.
+    fireEvent.click(dialog!.querySelector<HTMLButtonElement>('.v2-conditions-actions button')!);
+    expect(dialog).not.toHaveAttribute('open');
+    expect(pickMovementBtn).toBeVisible();
+    fireEvent.click(pickMovementBtn);
+    const pickerPage = screen.getByTestId('wizard-step2-page');
+    expect(pickerPage).toBeVisible();
+    expect(within(pickerPage).getByRole('region', { name: '이번 수업 기구' })).toHaveTextContent('리포머');
+    expect(usePilatesStore.getState().draftCriteria?.availableEquipment).toEqual(['reformer']);
+    expect(usePilatesStore.getState().activeSteps).toEqual([]);
+    expect(usePilatesStore.getState().savedSequences).toEqual([]);
+    expect(usePilatesStore.getState().historyLogs).toEqual([]);
   });
 
   it('R5-AUDIT-02: Stage 3 (동작 2개 추가) — guards class equipment in broad search and preserves both movements when returning through either finder action', () => {
@@ -105,43 +116,56 @@ describe('Round 5 First-Use 6-Step Journey Audit (첫 진입 → 기구 선택 �
     if (matCheckbox && matCheckbox.checked) fireEvent.click(matCheckbox);
     fireEvent.click(condDialog.querySelector<HTMLButtonElement>('.v2-conditions-actions button')!);
 
-    fireEvent.click(container.querySelector<HTMLButtonElement>('.workbench-first-action')!);
-    const finderDialog = container.querySelector<HTMLDialogElement>('dialog.workbench-finder-dialog')!;
-    expect(finderDialog).not.toBeNull();
+    fireEvent.click(screen.getByTestId('wizard-fast-step2-btn'));
+    const pickerPage = screen.getByTestId('wizard-step2-page');
+    expect(pickerPage).toBeVisible();
+    const picker = within(pickerPage);
+    const narrowBtn = picker.getByRole('button', { name: '수업 기구로 좁히기' });
+    expect(narrowBtn).toHaveAttribute('aria-pressed', 'true');
 
-    // The secondary modal finder offers broad discovery plus an explicit class
-    // equipment filter. Adding an incompatible result must not mutate the class.
-    const narrowBtn = Array.from(
-      finderDialog.querySelectorAll<HTMLButtonElement>('.ief-class-context button'),
-    ).find((b) => b.textContent?.includes('수업 기구로 좁히기'));
-    expect(narrowBtn).toBeDefined();
-
-    // Clicking first 2 visible "+ 추가" buttons adds 1 (Reformer) and rejects 1 (Mat)
-    const initialAddBtns = Array.from(
-      finderDialog.querySelectorAll<HTMLButtonElement>('.ief-card-actions button:not([disabled])'),
-    );
-    fireEvent.click(initialAddBtns[0]);
-    fireEvent.click(initialAddBtns[1]);
+    // The primary inline picker starts with the selected equipment. Broaden it
+    // explicitly and verify that a mismatched result cannot change the class.
+    fireEvent.click(picker.getByRole('button', { name: '수업 기구 조건 해제' }));
+    const firstReformer = usePilatesStore.getState().exercises.find(
+      (exercise) => exercise.id === SYNTHETIC_ROUND5_INITIAL_STEPS[0].exerciseId,
+    )!;
+    const matMovement = usePilatesStore.getState().exercises.find(
+      (exercise) => exercise.id === 'original-mat-rib-breath',
+    )!;
+    fireEvent.click(picker.getByRole('button', { name: `${firstReformer.nameKo} 수업안에 추가` }));
+    const beforeRejectedAdd = structuredClone(usePilatesStore.getState().activeSteps);
+    fireEvent.click(picker.getByRole('button', { name: `${matMovement.nameKo} 수업안에 추가` }));
 
     expect(usePilatesStore.getState().activeSteps.length).toBe(1);
-    const errorFeedback = finderDialog.querySelector('.ief-feedback.error');
+    expect(usePilatesStore.getState().activeSteps).toEqual(beforeRejectedAdd);
+    const errorFeedback = pickerPage.querySelector('.ief-feedback.error');
     expect(errorFeedback?.textContent).toContain(
       '현재 선택한 기구·소도구와 최대 난이도 조건에 맞는 동작만 추가할 수 있습니다.',
     );
 
-    // Narrow to class equipment ("수업 기구로 좁히기") and add 2nd Reformer movement
-    fireEvent.click(narrowBtn!);
-    const narrowedAddBtns = Array.from(
-      finderDialog.querySelectorAll<HTMLButtonElement>('.ief-card-actions button:not([disabled])'),
-    );
-    const secondAddBtn =
-      narrowedAddBtns.find((b) => !b.textContent?.includes('한 번 더')) ?? narrowedAddBtns[1];
-    fireEvent.click(secondAddBtn);
+    // Narrow to class equipment and add the second Reformer movement.
+    fireEvent.click(narrowBtn);
+    const secondReformer = usePilatesStore.getState().exercises.find(
+      (exercise) => exercise.id === SYNTHETIC_ROUND5_INITIAL_STEPS[1].exerciseId,
+    )!;
+    fireEvent.click(picker.getByRole('button', { name: `${secondReformer.nameKo} 수업안에 추가` }));
     expect(usePilatesStore.getState().activeSteps.length).toBe(2);
 
     const authoredSteps = structuredClone(usePilatesStore.getState().activeSteps);
-    // Both return controls must close the temporary finder and retain the full
-    // class, rather than leaving the instructor inside the modal after a click.
+    fireEvent.click(screen.getByTestId('wizard-to-step3-btn'));
+    expect(screen.getByRole('region', { name: '오늘의 시퀀스' })).toBeVisible();
+    expect(usePilatesStore.getState().activeSteps).toEqual(authoredSteps);
+
+    // Open the temporary picker through the visible editor action. Both return
+    // controls must close it while preserving every authored step field.
+    const openTemporaryFinder = () => {
+      const editorActions = screen.getByRole('group', { name: '시퀀스 편집 도구' });
+      const addButton = within(editorActions).getByRole('button', { name: '동작 추가' });
+      expect(addButton).toBeVisible();
+      fireEvent.click(addButton);
+      return screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' });
+    };
+    const finderDialog = openTemporaryFinder();
     const innerSelectionBarBtn = finderDialog.querySelector<HTMLButtonElement>(
       '.ief-selection-bar button',
     );
@@ -152,16 +176,11 @@ describe('Round 5 First-Use 6-Step Journey Audit (첫 진입 → 기구 선택 �
     expect(outerFooterReturnBtn).not.toBeNull();
 
     fireEvent.click(innerSelectionBarBtn!);
-    expect(finderDialog.open).toBe(false);
+    expect(finderDialog).not.toHaveAttribute('open');
     expect(usePilatesStore.getState().activeSteps).toEqual(authoredSteps);
     expect(usePilatesStore.getState().activeTab).toBe('workbench');
 
-    // Reopen through the actual arrangement action to exercise the separate
-    // footer return on a live dialog, rather than clicking a detached control.
-    const reopenFinder = screen.getByRole('button', { name: '동작 더 담기' });
-    expect(reopenFinder).toBeVisible();
-    fireEvent.click(reopenFinder);
-    const reopenedFinder = screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' });
+    const reopenedFinder = openTemporaryFinder();
     const footerReturn = within(reopenedFinder).getByRole('button', {
       name: /수업 구성으로 돌아가기/,
     });

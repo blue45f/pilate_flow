@@ -12,6 +12,7 @@ import {
 } from '../../scripts/pwa-build';
 
 interface HarnessOptions {
+  origin?: string;
   waiting?: unknown;
   shellExtras?: string[];
 }
@@ -33,7 +34,7 @@ function harness(options: HarnessOptions = {}) {
   };
   const fetch = vi.fn().mockResolvedValue({ body: 'network' });
   const self = {
-    location: { origin: 'https://example.test' },
+    location: new URL(options.origin ?? 'https://example.test'),
     registration: {
       waiting: options.waiting ?? null,
     },
@@ -195,13 +196,33 @@ describe('static-only service worker', () => {
     expect(h.self.clients.claim).not.toHaveBeenCalled();
   });
 
-  it('only calls skipWaiting when an explicit SKIP_WAITING message is received', () => {
-    const h = harness();
-    h.handlers.message?.({ data: { type: 'OTHER' } });
-    expect(h.self.skipWaiting).not.toHaveBeenCalled();
-    h.handlers.message?.({ data: { type: 'SKIP_WAITING' } });
-    expect(h.self.skipWaiting).toHaveBeenCalledTimes(1);
-  });
+  it.each([
+    'https://pilates-flow.web.app',
+    'https://pilates-flow.firebaseapp.com',
+    'https://pilates-flow.github.io',
+    'http://localhost:4173',
+    'http://127.0.0.1:4173',
+  ])(
+    'keeps an open class on its existing worker at %s, including legacy update messages',
+    async (origin) => {
+      const h = harness({ origin });
+      const install = vi.fn();
+      h.handlers.install({ waitUntil: install });
+      await install.mock.calls[0][0];
+      h.handlers.message?.({ data: { type: 'SKIP_WAITING' } });
+      h.handlers.message?.({ data: 'SKIP_WAITING' });
+      expect(h.self.skipWaiting).not.toHaveBeenCalled();
+      expect(h.self.clients.claim).not.toHaveBeenCalled();
+      expect(h.caches.delete).not.toHaveBeenCalled();
+
+      // The browser activates the waiting worker after its old clients close.
+      const activate = vi.fn();
+      h.handlers.activate({ waitUntil: activate });
+      await activate.mock.calls[0][0];
+      expect(h.caches.delete).toHaveBeenCalledExactlyOnceWith('flow-atelier-shell-old');
+      expect(h.self.clients.claim).not.toHaveBeenCalled();
+    },
+  );
 
   it('cleans only obsolete app shell caches, never user or third party caches', async () => {
     const h = harness();

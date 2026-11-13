@@ -325,7 +325,7 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     }
     fireEvent.click(nav().getByRole('button', { name: /동작 라이브러리/ }));
     expect(await screen.findByRole('searchbox', { name: '동작 검색' })).toBeInTheDocument();
-    fireEvent.click(nav().getByRole('button', { name: '저장한 플로우' }));
+    fireEvent.click(nav().getByRole('button', { name: '저장한 수업' }));
     expect(await screen.findByRole('textbox', { name: '저장한 시퀀스 검색' })).toBeInTheDocument();
     fireEvent.click(nav().getByRole('button', { name: '수업 기록' }));
     expect(await screen.findByText('아직 남긴 수업 기록이 없어요')).toBeInTheDocument();

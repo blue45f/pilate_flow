@@ -3,6 +3,7 @@ import { VisualApparatusPhotoStrip, VisualSequenceFilmstrip } from './VisualFlow
 import { buildSequenceSimulation } from '../utils/sequenceSimulation';
 import {
   Suspense,
+  type ReactNode,
   lazy,
   useCallback,
   useEffect,
@@ -98,10 +99,7 @@ import { AiSequenceCoPilotPanel } from './AiSequenceCoPilotPanel';
 import { SequenceFlowTelemetryStrip } from './SequenceFlowTelemetryStrip';
 import { StudioCircuitPlannerCard } from './StudioCircuitPlannerCard';
 import { buildAdaptiveNextClassDraft } from '../utils/historyAdaptiveBridge';
-import {
-  BLANK_DRAFT_STARTER_OPTIONS,
-  OFFLINE_BLOCK_PRESETS,
-} from '../data/classBlockPresets';
+import { BLANK_DRAFT_STARTER_OPTIONS, OFFLINE_BLOCK_PRESETS } from '../data/classBlockPresets';
 import {
   startFromBlankDraftOption,
   toP5ReusableBlockContract,
@@ -184,6 +182,30 @@ import {
   getApparatusPrimary3DThumb,
   resolveStudio3DMotionForExercise,
 } from '../utils/studio3dMotionCatalog';
+
+function WorkbenchWorkspace({
+  children,
+  isHome,
+  open,
+  onOpenChange,
+}: {
+  children: ReactNode;
+  isHome: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  if (!isHome) return <>{children}</>;
+  return (
+    <details
+      className="workbench-home-secondary"
+      open={open}
+      onToggle={(event) => onOpenChange(event.currentTarget.open)}
+    >
+      <summary>추가 도구 · 휴식·기구 안내·AI</summary>
+      {children}
+    </details>
+  );
+}
 
 function WorkbenchMovementMark({
   exercise,
@@ -371,8 +393,8 @@ export function SequenceWorkbench({
   const [finderHasOpened, setFinderHasOpened] = useState(
     () => initialRecovery?.finderOpen ?? false,
   );
-  const [workflowStep, setWorkflowStepState] = useState<'select' | 'arrange'>(
-    () => initialRecovery?.workflowStep ?? (s.activeSteps.length ? 'arrange' : 'select'),
+  const [workflowStep, setWorkflowStepState] = useState<'select' | 'arrange'>(() =>
+    initialRecovery?.finderOpen || !s.activeSteps.length ? 'select' : 'arrange',
   );
   const [manualWizardPage, setManualWizardPage] = useState<
     'home' | 'step1' | 'step2' | 'arrange' | null
@@ -396,6 +418,14 @@ export function SequenceWorkbench({
           ? 'arrange'
           : 'home';
   const isArrangeStage = activeWizardPage === 'arrange';
+  const currentWizardPage = planPreviewOpen ? 'preview' : finderOpen ? 'step2' : activeWizardPage;
+  const isSelecting = currentWizardPage === 'step2';
+  const step2PageRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (activeWizardPage === 'step2' && !finderOpen) {
+      step2PageRef.current?.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
+    }
+  }, [activeWizardPage, finderOpen]);
   const [step2AiOpen, setStep2AiOpen] = useState(false);
   const [justSavedPulse, setJustSavedPulse] = useState(false);
   const [justUpdatedStepId, setJustUpdatedStepId] = useState<string | null>(null);
@@ -410,7 +440,10 @@ export function SequenceWorkbench({
     return () => window.clearTimeout(timer);
   }, [justUpdatedStepId]);
   const [freeAiOpen, setFreeAiOpen] = useState(false);
+  const [homeToolsOpen, setHomeToolsOpen] = useState(false);
+  const [movementReferenceOpen, setMovementReferenceOpen] = useState(false);
   const openContextualAiAssistant = useCallback(() => {
+    setHomeToolsOpen(true);
     setFreeAiOpen(true);
     requestAnimationFrame(() => {
       const reduced =
@@ -555,7 +588,7 @@ export function SequenceWorkbench({
   const syncRecoveryState = useCallback(
     (draftOverride?: StepInspectorDraftCache | null) => {
       const activeStep: 'finder' | 'arrange' =
-        finderOpen || workflowStep === 'select' ? 'finder' : 'arrange';
+        finderOpen || activeWizardPage === 'step2' ? 'finder' : 'arrange';
       writeWorkbenchPrepRecovery({
         sequenceId: s.activeSequenceId,
         activeStep,
@@ -565,14 +598,14 @@ export function SequenceWorkbench({
         conditionStep,
         previewStep,
         inspectorStepId: previewStep,
-        inspectorDraft:
-          draftOverride !== undefined ? draftOverride : inspectorDraftCache.current,
+        inspectorDraft: draftOverride !== undefined ? draftOverride : inspectorDraftCache.current,
       });
     },
     [
       s.activeSequenceId,
       finderOpen,
       workflowStep,
+      activeWizardPage,
       conditionsOpen,
       conditionStep,
       previewStep,
@@ -641,8 +674,8 @@ export function SequenceWorkbench({
     }
     setNotice(
       canUndo
-        ? `이전 순서로 되돌렸어요. 현재 총 ${afterSteps.length}개 항목입니다.`
-        : '되돌릴 이전 순서 기록이 없습니다.',
+        ? `마지막 변경을 되돌렸어요. 현재 ${afterSteps.length}개 항목 · ${formatSecondsToMMSS(getSequenceDurations(afterSteps).totalSec)}입니다.`
+        : '되돌릴 변경 기록이 없습니다.',
     );
   };
   useEffect(() => {
@@ -669,7 +702,9 @@ export function SequenceWorkbench({
       if (afterSteps.length > 0) {
         setWorkflowStep('arrange');
       }
-      setNotice(`이전 순서로 되돌렸어요. 현재 총 ${afterSteps.length}개 항목입니다.`);
+      setNotice(
+        `마지막 변경을 되돌렸어요. 현재 ${afterSteps.length}개 항목 · ${formatSecondsToMMSS(getSequenceDurations(afterSteps).totalSec)}입니다.`,
+      );
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -739,9 +774,7 @@ export function SequenceWorkbench({
       : s.activeSteps.findIndex((step) => !isRestStep(step));
   const summaryStep = summaryIdx >= 0 ? s.activeSteps[summaryIdx] : undefined;
   const summaryEx =
-    summaryStep && !isRestStep(summaryStep)
-      ? exerciseMap.get(summaryStep.exerciseId)
-      : undefined;
+    summaryStep && !isRestStep(summaryStep) ? exerciseMap.get(summaryStep.exerciseId) : undefined;
   const summarySprings = (summaryStep?.customSpringOverride || summaryEx?.springs || '').trim();
   const timingBreakdown = s.activeSteps.reduce(
     (sum, step) => {
@@ -783,9 +816,7 @@ export function SequenceWorkbench({
   );
   const canStartClass = readiness.gate.canRehearse;
   const locked = s.activeSteps.filter((step) => step.locked).length;
-  const adjustableExerciseSteps = s.activeSteps.filter(
-    (step) => !step.locked && !isRestStep(step),
-  );
+  const adjustableExerciseSteps = s.activeSteps.filter((step) => !step.locked && !isRestStep(step));
   const lockedAndRestSec = s.activeSteps
     .filter((step) => step.locked || isRestStep(step))
     .reduce((sum, step) => sum + getStepTiming(step).totalSec, 0);
@@ -990,7 +1021,9 @@ export function SequenceWorkbench({
       saveFeedback: `‘${payload.recipeTitleKo}’ 시퀀스를 바로 열었습니다.`,
     });
     setWorkflowStep('arrange');
-    setNotice(`‘${payload.recipeTitleKo}’ 시퀀스를 바로 열었습니다. 원하는 동작만 자유롭게 조정해 보세요.`);
+    setNotice(
+      `‘${payload.recipeTitleKo}’ 시퀀스를 바로 열었습니다. 원하는 동작만 자유롭게 조정해 보세요.`,
+    );
   };
   const recentLogs = s.historyLogs
     .filter((log) => !criteria.targetGroupId || log.groupId === criteria.targetGroupId)
@@ -1125,7 +1158,8 @@ export function SequenceWorkbench({
     [savedReusableBlocks],
   );
   const selectedBundleSteps = useMemo(
-    () => s.activeSteps.filter((step) => !isRestStep(step) && selectedBundleStepIds.has(step.stepId)),
+    () =>
+      s.activeSteps.filter((step) => !isRestStep(step) && selectedBundleStepIds.has(step.stepId)),
     [s.activeSteps, selectedBundleStepIds],
   );
   const selectedBundleStepCount = selectedBundleSteps.length;
@@ -1308,11 +1342,15 @@ export function SequenceWorkbench({
       usePilatesStore.setState({
         undoStack: [...beforeState.undoStack.slice(-19), snapshot],
         activeSteps: current.activeSteps.map((step, idx) => {
-          const baseStep = step.selectedLayer ? step : { ...step, selectedLayer: 'standard' as const };
+          const baseStep = step.selectedLayer
+            ? step
+            : { ...step, selectedLayer: 'standard' as const };
           if (deltaMin === 0 || idx < prevLen || isRestStep(baseStep)) return baseStep;
           return {
             ...baseStep,
-            durationMin: Number(Math.max(1, Math.min(20, baseStep.durationMin + perStepDelta)).toFixed(2)),
+            durationMin: Number(
+              Math.max(1, Math.min(20, baseStep.durationMin + perStepDelta)).toFixed(2),
+            ),
           };
         }),
       });
@@ -1592,11 +1630,11 @@ export function SequenceWorkbench({
   );
   return (
     <div
-      className={`plan-view v2-workbench v3-workbench v11-workbench vnext-workbench ${s.activeSteps.length ? 'has-sequence' : 'is-empty'} ${wideEditor && selectedStep ? 'has-inspector' : ''}`}
+      className={`plan-view v2-workbench v3-workbench v11-workbench vnext-workbench workbench-task-focused ${s.activeSteps.length ? 'has-sequence' : 'is-empty'} ${wideEditor && selectedStep ? 'has-inspector' : ''}`}
     >
       <div className="page-heading v2-workbench-heading">
         <div>
-          <span className="vnext-workbench-eyebrow">STEP-BY-STEP STUDIO FLOW</span>
+          <span className="vnext-workbench-eyebrow">수업 만들기</span>
           <h1 id="workspace-main-heading" tabIndex={-1}>
             {s.activeSteps.length && activeWizardPage === 'arrange'
               ? '수업 구성'
@@ -1630,9 +1668,9 @@ export function SequenceWorkbench({
           <button
             type="button"
             className={`pf-step-wizard-tab ${
-              activeWizardPage === 'home' && !finderOpen ? 'is-active' : 'is-done'
+              currentWizardPage === 'home' ? 'is-active' : 'is-done'
             }`.trim()}
-            aria-current={activeWizardPage === 'home' && !finderOpen ? 'step' : undefined}
+            aria-current={currentWizardPage === 'home' ? 'step' : undefined}
             onClick={() => setManualWizardPage('home')}
           >
             <span>시작하기</span>
@@ -1640,13 +1678,13 @@ export function SequenceWorkbench({
           <button
             type="button"
             className={`pf-step-wizard-tab ${
-              activeWizardPage === 'step1' && !finderOpen
+              currentWizardPage === 'step1'
                 ? 'is-active'
                 : s.activeSteps.length > 0 || activeWizardPage === 'step2'
                   ? 'is-done'
                   : ''
             }`.trim()}
-            aria-current={activeWizardPage === 'step1' && !finderOpen ? 'step' : undefined}
+            aria-current={currentWizardPage === 'step1' ? 'step' : undefined}
             onClick={() => setManualWizardPage('step1')}
           >
             <span className="workbench-step-flow-num">1</span>
@@ -1655,21 +1693,9 @@ export function SequenceWorkbench({
           <button
             type="button"
             className={`pf-step-wizard-tab ${
-              finderOpen ||
-              activeWizardPage === 'step2' ||
-              (activeWizardPage === 'arrange' && workflowStep === 'select')
-                ? 'is-active'
-                : s.activeSteps.length > 0
-                  ? 'is-done'
-                  : ''
+              isSelecting ? 'is-active' : s.activeSteps.length > 0 ? 'is-done' : ''
             }`.trim()}
-            aria-current={
-              finderOpen ||
-              activeWizardPage === 'step2' ||
-              (activeWizardPage === 'arrange' && workflowStep === 'select')
-                ? 'step'
-                : undefined
-            }
+            aria-current={isSelecting ? 'step' : undefined}
             onClick={() => {
               setManualWizardPage('step2');
               setWorkflowStepState('select');
@@ -1681,16 +1707,10 @@ export function SequenceWorkbench({
           <button
             type="button"
             className={`pf-step-wizard-tab ${
-              activeWizardPage === 'arrange' && !finderOpen && workflowStep === 'arrange'
-                ? 'is-active'
-                : ''
+              currentWizardPage === 'arrange' ? 'is-active' : ''
             }`.trim()}
             disabled={!s.activeSteps.length}
-            aria-current={
-              activeWizardPage === 'arrange' && !finderOpen && workflowStep === 'arrange'
-                ? 'step'
-                : undefined
-            }
+            aria-current={currentWizardPage === 'arrange' ? 'step' : undefined}
             onClick={() => {
               setManualWizardPage('arrange');
               setWorkflowStepState('arrange');
@@ -1701,7 +1721,7 @@ export function SequenceWorkbench({
           </button>
           <button
             type="button"
-            className="pf-step-wizard-tab"
+            className={`pf-step-wizard-tab ${planPreviewOpen ? 'is-active' : ''}`.trim()}
             disabled={!s.activeSteps.length}
             aria-current={planPreviewOpen ? 'step' : undefined}
             onClick={openPlanPreview}
@@ -1711,13 +1731,15 @@ export function SequenceWorkbench({
           </button>
         </div>
         <p className="workbench-step-flow-summary" data-testid="workbench-step-flow-summary">
-          {activeWizardPage === 'home' && !finderOpen
-            ? '한 페이지에는 꼭 필요한 한 가지 결정만 남깁니다 · 새 수업을 시작하거나 최근 수업을 이어가세요.'
-            : activeWizardPage === 'step1'
-              ? '1단계 · 수업 시간과 기구 기본값만 가볍게 고른 뒤 동작 담기로 넘어가세요.'
-              : finderOpen || activeWizardPage === 'step2' || workflowStep === 'select'
-                ? '2단계 · 수업에 넣을 동작을 골라 담으세요 · 담고 나면 다음 화면에서 순서와 시간을 맞춰요.'
-                : '3단계 · 순서와 시간을 다듬는 화면이에요 · 각 동작의 -0.5분/+0.5분 버튼으로 바로 조절하세요.'}
+          {currentWizardPage === 'home'
+            ? '기구와 시간을 정하고 동작을 추가하세요. 저장한 수업도 이어서 편집할 수 있어요.'
+            : currentWizardPage === 'step1'
+              ? '수업 시간과 사용할 기구를 선택하세요.'
+              : isSelecting
+                ? '수업에 넣을 동작을 선택한 뒤 순서와 시간을 확인하세요.'
+                : planPreviewOpen
+                  ? '완성된 수업을 확인하고 진행하세요.'
+                  : '동작을 끌어 순서를 바꾸고, 30초 단위로 시간을 조절하세요.'}
         </p>
       </div>
       {(s.generationError ||
@@ -1750,46 +1772,6 @@ export function SequenceWorkbench({
       {activeWizardPage === 'home' && (
         <>
           <div className="pf-step-stage-frame pf-p01-home-stage" data-testid="wizard-home-page">
-            <div className="pf-p01-signature-hero" data-testid="p01-signature-3d-hero">
-              <div className="pf-p01-signature-hero__media">
-                <img
-                  src={getApparatusPrimary3DThumb(
-                    (selectedEquipment[0] ? getEquipmentFamily(selectedEquipment[0]) : undefined) ??
-                      s.activeApparatus,
-                  )}
-                  alt=""
-                  aria-hidden="true"
-                />
-                <div className="pf-b05-card-overlay-top" aria-hidden="true">
-                  <span className="pf-b05-pill is-dark">오늘의 시그니처</span>
-                  <span className="pf-b05-pill is-light">2R 1B</span>
-                </div>
-                <div className="pf-b05-card-overlay-bottom" aria-hidden="true">
-                  <span className="pf-b05-pill is-coral">● 대퇴사두·코어</span>
-                </div>
-              </div>
-              <div className="pf-p01-signature-hero__body">
-                <div>
-                  <span className="pf-step-kicker-badge">오늘 어떤 수업을 준비할까요?</span>
-                  <h2 className="pf-step-stage-title">
-                    오전 {equipmentLabel(selectedEquipment) || '리포머'} 코어 &amp; 정렬 {criteria.targetMinutes}분
-                  </h2>
-                  <p className="pf-step-stage-lead">
-                    기구·시간만 고르면 3D 동작 카드와 3초 요약으로 바로 수업을 완성합니다.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="pf-step-primary-cta"
-                  onClick={() => {
-                    setPlanningMode('auto');
-                    generate();
-                  }}
-                >
-                  <Sparkles size={17} aria-hidden="true" /> 시그니처 초안 3초 생성하기
-                </button>
-              </div>
-            </div>
             <div className="pf-step-choice-grid">
               <section
                 className="pf-step-choice-card is-primary workbench-welcome"
@@ -1811,7 +1793,7 @@ export function SequenceWorkbench({
                     </button>
                   </div>
                   <h3 style={{ margin: '8px 0 6px', fontSize: '1.14rem', color: '#173d34' }}>
-                    기구·시간 선택 후 동작을 골라 바로 담기
+                    어떤 수업을 준비할까요?
                   </h3>
                   <div
                     className="workbench-quick-duration-bar"
@@ -1835,9 +1817,15 @@ export function SequenceWorkbench({
                     ))}
                   </div>
                   <VisualApparatusPhotoStrip
+                    compact
+                    ariaLabel="수업 기구 선택"
                     activeApparatus={
-                      selectedEquipment.length === 1 && ['reformer', 'cadillac', 'chair', 'barrel', 'mat'].includes(selectedEquipment[0])
-                        ? (selectedEquipment[0] as 'reformer' | 'cadillac' | 'chair' | 'barrel' | 'mat')
+                      selectedEquipment.length === 1 &&
+                      ['reformer', 'cadillac', 'chair', 'barrel', 'mat'].includes(
+                        selectedEquipment[0],
+                      )
+                        ? (selectedEquipment[0] as
+                            'reformer' | 'cadillac' | 'chair' | 'barrel' | 'mat')
                         : 'all'
                     }
                     includeAll={false}
@@ -1852,39 +1840,9 @@ export function SequenceWorkbench({
                       }
                     }}
                   />
-                  <div
-                    className="pf-step1-chip-row"
-                    role="group"
-                    aria-label="기본 기구 빠른 선택"
-                  >
-                    {EQUIPMENT_OPTIONS.slice(0, 4).map((eq) => {
-                      const isOwned = s.ownedEquipment.includes(eq.id);
-                      const isChecked =
-                        selectedEquipment.length === 1 && selectedEquipment[0] === eq.id;
-                      return (
-                        <button
-                          key={eq.id}
-                          type="button"
-                          className="pf-step1-choice-chip"
-                          disabled={!isOwned}
-                          aria-pressed={isChecked}
-                          onClick={() => {
-                            setCriteria({ ...criteria, availableEquipment: [eq.id] });
-                            if (!s.activeSteps.length) {
-                              s.setActiveSequenceMeta({
-                                apparatus: getEquipmentFamily(eq.id) ?? 'mat',
-                              });
-                            }
-                          }}
-                        >
-                          {eq.labelKo}
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div className="pf-home-cta-pair">
+                  <div className="pf-home-cta-pair workbench-home-primary-actions">
                     <button
                       type="button"
                       className="pf-step-primary-cta"
@@ -1905,15 +1863,18 @@ export function SequenceWorkbench({
                         setWorkflowStepState('select');
                       }}
                     >
-                      선택 기구로 바로 동작 담기 <ArrowRight size={18} aria-hidden="true" />
+                      <Plus size={18} aria-hidden="true" /> 동작 추가
                     </button>
                     <button
                       type="button"
                       className="pf-step-nav-pill-btn"
-                      data-testid="wizard-start-step1-btn"
-                      onClick={() => setManualWizardPage('step1')}
+                      disabled={authoringCatalogCount === 0}
+                      onClick={() => {
+                        setPlanningMode('auto');
+                        generate();
+                      }}
                     >
-                      1단계부터 차근차근 만들기
+                      <Sparkles size={16} aria-hidden="true" /> 추천 초안 만들기
                     </button>
                   </div>
                   {savedReusableBlocks.length > 0 && (
@@ -1942,7 +1903,8 @@ export function SequenceWorkbench({
                               <Plus size={13} aria-hidden="true" />
                               <span>{block.title}</span>
                               <small>
-                                {block.items.length}동작 · {summary.totalDurationMin}분
+                                {block.items.length}동작 ·{' '}
+                                {formatSecondsToMMSS(summary.totalDurationMin * 60)}
                               </small>
                             </button>
                           );
@@ -1950,15 +1912,17 @@ export function SequenceWorkbench({
                       </div>
                     </div>
                   )}
+                  <details className="workbench-home-options">
+                    <summary>수업 조건·아이디어·추가 도구</summary>
                   <div className="pf-step-secondary-actions workbench-welcome-actions">
-                    <PfButton
-                      variant="secondary"
-                      className="workbench-first-action"
-                      onClick={openExerciseFinder}
+                      <button
+                        type="button"
+                        className="pf-step-nav-pill-btn"
+                        data-testid="wizard-start-step1-btn"
+                        onClick={() => setManualWizardPage('step1')}
                     >
-                      <Plus size={18} aria-hidden="true" />
-                      동작 고르기
-                    </PfButton>
+                        수업 조건 자세히
+                      </button>
                     <PfButton
                       variant="secondary"
                       className="workbench-idea-action"
@@ -1982,9 +1946,7 @@ export function SequenceWorkbench({
                       <Sparkles size={15} aria-hidden="true" /> AI·조건으로 초안 채우기
                     </button>
                   </div>
-                  <p className="workbench-reviewed-count" style={{ margin: 0 }}>
-                    추가하고, 순서를 바꾸고, 저장하세요. 검토는 선택입니다.
-                  </p>
+                  </details>
                 </div>
               </section>
               <section
@@ -2053,7 +2015,7 @@ export function SequenceWorkbench({
                                 이어서 구성
                               </PfButton>
                               <PfButton
-                                variant="primary"
+                                variant="text"
                                 aria-label={`${seqTitle} 사본으로 바로 열기`}
                                 onClick={() => {
                                   const copyId = s.duplicateSavedSequence(seq.id);
@@ -2082,7 +2044,9 @@ export function SequenceWorkbench({
                                       current.setActiveTab('stage');
                                     } else {
                                       setWorkflowStep('arrange');
-                                      setNotice(`‘${seqTitle}’ 수업안을 확인한 뒤 바로 진행해 주세요.`);
+                                      setNotice(
+                                        `‘${seqTitle}’ 수업안을 확인한 뒤 바로 진행해 주세요.`,
+                                      );
                                     }
                                   }}
                                 >
@@ -2115,10 +2079,7 @@ export function SequenceWorkbench({
                     </div>
                   ) : (
                     <div className="workbench-recent-empty" style={{ marginTop: '12px' }}>
-                      <p>
-                        저장한 최근 수업이 아직 없습니다. 왼쪽에서 새 수업을 만들거나 프리셋으로
-                        시작해 보세요.
-                      </p>
+                      <p>아직 저장한 수업이 없어요. 동작을 추가해 첫 수업을 만들어 보세요.</p>
                     </div>
                   )}
                 </div>
@@ -2138,12 +2099,13 @@ export function SequenceWorkbench({
               </section>
             </div>
           </div>
+          <NextClassBanner collapseEmpty />
           {!s.activeSteps.length && (
             <div className="pf-step-secondary-shelf">
-              <span className="pf-step-secondary-shelf-label">
-                빠른 템플릿 · 추천 레시피 (선택)
-              </span>
+              <details className="workbench-automation-tools">
+                <summary>수업 템플릿으로 시작하기</summary>
               <WorkbenchBlankStarters onSelectStarter={handleStartBlankDraft} />
+              </details>
               <details className="workbench-automation-tools">
                 <summary>원클릭 추천 클래스 레시피 열기 (선택)</summary>
                 <AtelierQuickStartGallery
@@ -2345,6 +2307,7 @@ export function SequenceWorkbench({
         <section
           className="pf-step-stage-frame"
           data-testid="wizard-step2-page"
+          ref={step2PageRef}
           aria-label="2단계 동작 담기"
         >
           <span className="pf-step-kicker-badge">
@@ -2377,9 +2340,7 @@ export function SequenceWorkbench({
               role="region"
               aria-label="현재 담은 동작 순서"
             >
-              <span className="pf-step2-added-tray__label">
-                담은 순서 ({s.activeSteps.length})
-              </span>
+              <span className="pf-step2-added-tray__label">담은 순서 ({s.activeSteps.length})</span>
               <div className="pf-step2-added-tray__chips">
                 {s.activeSteps.map((st, stIndex) => {
                   const stEx = !isRestStep(st) ? exerciseMap.get(st.exerciseId) : undefined;
@@ -2514,7 +2475,8 @@ export function SequenceWorkbench({
                       <Plus size={13} aria-hidden="true" />
                       <span>{block.title}</span>
                       <small>
-                        {block.items.length}동작 · {summary.totalDurationMin}분
+                        {block.items.length}동작 ·{' '}
+                        {formatSecondsToMMSS(summary.totalDurationMin * 60)}
                       </small>
                     </button>
                   );
@@ -2570,7 +2532,11 @@ export function SequenceWorkbench({
         </section>
       )}
       {(activeWizardPage === 'home' || activeWizardPage === 'arrange') && (
-        <>
+        <WorkbenchWorkspace
+          isHome={activeWizardPage === 'home'}
+          open={homeToolsOpen}
+          onOpenChange={setHomeToolsOpen}
+        >
           {isArrangeStage && s.activeSteps.length > 0 && (
             <div
               className="workbench-home-flow-bar"
@@ -2646,9 +2612,7 @@ export function SequenceWorkbench({
                       ))}
                     </div>
                   ) : (
-                    <p className="workbench-recent-empty-text">
-                      저장한 최근 수업이 아직 없습니다.
-                    </p>
+                    <p className="workbench-recent-empty-text">저장한 최근 수업이 아직 없습니다.</p>
                   )}
                   <button
                     type="button"
@@ -2709,94 +2673,6 @@ export function SequenceWorkbench({
               </PfButton>
             </div>
           </div>
-          <details className="workbench-automation-tools">
-            <summary>기구별 스프링·컨셉 가이드 열기 (선택)</summary>
-            <ApparatusVisualGuideRibbon
-              activeApparatusId={selectedEquipment[0] ?? s.activeApparatus}
-              mode="workbench"
-              onApplyClassConcept={(titleKo, subtitleKo, family) => {
-                s.setActiveSequenceMeta({
-                  title: titleKo,
-                  subtitle: subtitleKo,
-                  apparatus: family,
-                });
-                setNotice(`‘${titleKo}’ 기구 컨셉을 현재 수업에 반영했습니다.`);
-              }}
-            />
-          </details>
-          <details
-            className="workbench-automation-tools"
-            data-testid="workbench-circuit-planner-drawer"
-          >
-            <summary>듀엣·그룹 멀티 기구 순환 서킷 설계 열기 (2~4스테이션 자동 편성)</summary>
-            <StudioCircuitPlannerCard
-              onApplied={(msg) => setNotice(msg)}
-            />
-          </details>
-          {s.historyLogs.length > 0 && (() => {
-            const workbenchAdaptive = buildAdaptiveNextClassDraft({
-              logs: s.historyLogs,
-              exercises: s.exercises,
-              ownedEquipment: s.ownedEquipment,
-              targetGroupId: s.activeTargetGroupId || 'all',
-              fallbackTargetMinutes: criteria.targetMinutes || s.activeTargetMinutes || 50,
-            });
-            if (!workbenchAdaptive) return null;
-            return (
-              <details
-                className="workbench-automation-tools"
-                data-testid="workbench-adaptive-history-drawer"
-              >
-                <summary>
-                  지난 수업 피드백 자동 보정 브릿지 열기 · {workbenchAdaptive.signal.headlineKo}
-                </summary>
-                <div className="pf-v70-adaptive-banner is-compact">
-                  <div className="pf-v70-adaptive-main">
-                    <div className="pf-v70-adaptive-badges">
-                      <PfBadge tone="sage">권장 Lv {workbenchAdaptive.signal.recommendedLevel}</PfBadge>
-                      {workbenchAdaptive.signal.cautionLabelsKo.map((lbl) => (
-                        <PfBadge key={lbl} tone="warning">{lbl}</PfBadge>
-                      ))}
-                    </div>
-                    <ul className="pf-v70-adaptive-bullets">
-                      {workbenchAdaptive.signal.rationaleBulletsKo.slice(0, 2).map((line) => (
-                        <li key={line}>{line}</li>
-                      ))}
-                    </ul>
-                    <small className="pf-v70-honest-caption">{workbenchAdaptive.honestDisclaimerKo}</small>
-                  </div>
-                  <div className="pf-v70-adaptive-cta">
-                    <PfButton
-                      variant="primary"
-                      data-testid="workbench-apply-adaptive-btn"
-                      onClick={() => {
-                        const expected = usePilatesStore.getState();
-                        const res = s.applyPresetDraft(
-                          {
-                            steps: workbenchAdaptive.steps,
-                            title: workbenchAdaptive.draftTitle,
-                            subtitle: workbenchAdaptive.draftSubtitle,
-                            targetMinutes: workbenchAdaptive.targetMinutes,
-                          },
-                          'replace',
-                          expected,
-                        );
-                        setNotice(res.message);
-                      }}
-                    >
-                      피드백 보정 초안 적용 <ArrowRight size={15} />
-                    </PfButton>
-                  </div>
-                </div>
-              </details>
-            );
-          })()}
-          {planningMode === 'auto' && locked > 0 && (
-            <p id="v2-new-draft-scope" className="v2-generation-scope">
-              시퀀스 만들기는 전체를 새 초안으로 바꿉니다. 잠근 {locked}개 항목을 유지하려면 아래
-              ‘잠그지 않은 동작 다시 만들기’를 사용하세요.
-            </p>
-          )}
           <div
             className={`plan-layout v2-plan-layout ${
               isArrangeStage && s.activeSteps.length > 0 && sequenceViewMode === 'split'
@@ -2813,9 +2689,7 @@ export function SequenceWorkbench({
                 <div className="pf-option-a-finder-pane__head">
                   <span className="pf-step-kicker-badge">검색·순서 나란히 보기</span>
                   <strong>동작 빠른 담기</strong>
-                  <p>
-                    왼쪽에서 검색·필터로 동작을 누르면 오른쪽 시퀀스에 즉시 담깁니다.
-                  </p>
+                  <p>왼쪽에서 검색·필터로 동작을 누르면 오른쪽 시퀀스에 즉시 담깁니다.</p>
                 </div>
                 <InlineExerciseFinder
                   active
@@ -2904,7 +2778,7 @@ export function SequenceWorkbench({
                     <span>저장</span>
                   </PfButton>
                   <PfButton
-                    variant="primary"
+                    variant="text"
                     className="workbench-header-start-flow"
                     aria-label="시퀀스 바로 진행"
                     onClick={startClass}
@@ -2914,20 +2788,6 @@ export function SequenceWorkbench({
                     <span>바로 진행</span>
                   </PfButton>
                 </div>
-              </div>
-              <div
-                className="pf-b05-balance-summary-pill"
-                data-testid="board05-4module-balance-pill"
-              >
-                <span>
-                  4구간 모듈 밸런스: 준비 {Math.round(phaseSecTotals.warmupSec / 60)}분 · 본운동{' '}
-                  {Math.round(phaseSecTotals.mainSec / 60)}분 · 마무리{' '}
-                  {Math.round(phaseSecTotals.cooldownSec / 60)}분
-                  {restStepCount > 0 ? ` · 휴식 ${Math.round(durations.restSec / 60)}분` : ''}
-                </span>
-                <strong>
-                  총 {formatSecondsToMMSS(total)} / 목표 {s.activeTargetMinutes}분
-                </strong>
               </div>
               <div className="sequence-context">
                 <span className="eyebrow">TODAY’S FLOW</span>
@@ -2947,7 +2807,7 @@ export function SequenceWorkbench({
                 <div className="time-summary-row">
                   <span>
                     현재 <strong>{formatSecondsToMMSS(total)}</strong>
-                    <span className="time-divider">/</span>목표 {s.activeTargetMinutes}분
+                        <span className="time-divider">/</span>목표 {formatSecondsToMMSS(target)}
                   </span>
                   <span className={delta === 0 ? 'time-status exact' : 'time-status'}>
                     {!s.activeSteps.length ? (
@@ -2958,9 +2818,7 @@ export function SequenceWorkbench({
                         시간이 딱 맞아요
                       </>
                     ) : (
-                      `${Math.abs(delta / 60)
-                        .toFixed(1)
-                        .replace('.0', '')}분 ${delta > 0 ? '초과' : '부족'}`
+                          `${formatSecondsToMMSS(Math.abs(delta))} ${delta > 0 ? '초과' : '부족'}`
                     )}
                   </span>
                   {s.activeSteps.length > 0 && delta !== 0 && canAutoFitDuration && (
@@ -2988,7 +2846,10 @@ export function SequenceWorkbench({
                       <Sparkles size={14} aria-hidden="true" /> 빈 시간 채우기 추천
                     </button>
                   )}
-                  {s.activeSteps.length > 0 && delta !== 0 && !canAutoFitDuration && needsMoreExercisesForTarget && (
+                      {s.activeSteps.length > 0 &&
+                        delta !== 0 &&
+                        !canAutoFitDuration &&
+                        needsMoreExercisesForTarget && (
                     <button
                       type="button"
                       className="workbench-inline-action-chip"
@@ -2997,7 +2858,10 @@ export function SequenceWorkbench({
                       <Plus size={14} aria-hidden="true" /> 동작 추가해 채우기
                     </button>
                   )}
-                  {s.activeSteps.length > 0 && delta !== 0 && !canAutoFitDuration && allExercisesLockedForTarget && (
+                      {s.activeSteps.length > 0 &&
+                        delta !== 0 &&
+                        !canAutoFitDuration &&
+                        allExercisesLockedForTarget && (
                     <button
                       type="button"
                       className="workbench-inline-action-chip"
@@ -3017,99 +2881,45 @@ export function SequenceWorkbench({
                   )}
                 </div>
                 <div
-                  className="duration-track v2-duration-track"
-                  aria-hidden="true"
-                  hidden={!s.activeSteps.length}
+                      className={`workbench-target-progress ${delta > 0 ? 'is-over-target' : ''}`.trim()}
+                      role="progressbar"
+                      aria-label="목표 시간 충족"
+                      aria-valuemin={0}
+                      aria-valuemax={target}
+                      aria-valuenow={Math.min(total, target)}
+                      aria-valuetext={`현재 ${formatSecondsToMMSS(total)} / 목표 ${formatSecondsToMMSS(target)}${delta > 0 ? ` · ${formatSecondsToMMSS(delta)} 초과` : ''}`}
                 >
                   <span
-                    className="v2-time-movement"
-                    style={{
-                      width: `${(timingBreakdown.movementSec / Math.max(total, 1)) * 100}%`,
-                    }}
-                  />
-                  <span
-                    className="v2-time-explanation"
-                    style={{
-                      width: `${(timingBreakdown.explanationSec / Math.max(total, 1)) * 100}%`,
-                    }}
-                  />
-                  <span
-                    className="v2-time-transition"
-                    style={{
-                      width: `${(timingBreakdown.transitionSec / Math.max(total, 1)) * 100}%`,
-                    }}
-                  />
-                  <span
-                    className="v2-time-rest"
-                    style={{
-                      width: `${(timingBreakdown.restSec / Math.max(total, 1)) * 100}%`,
-                    }}
+                        style={{ width: `${Math.min(100, (total / Math.max(target, 1)) * 100)}%` }}
                   />
                 </div>
               </div>
+                  {gapFillOpen &&
+                    s.activeSteps.length > 0 &&
+                    delta < 0 &&
+                    gapFillCandidates.length > 0 && (
               <div
-                className="pf-phase-proportion-bar"
+                        className="pf-gap-fill-drawer"
+                        data-testid="smart-gap-fill-drawer"
                 role="region"
-                aria-label="준비·본운동·마무리 구간 비중"
-                data-testid="phase-proportion-bar"
+                        aria-label="부족한 시간 채우기 추천 미리보기"
               >
-                <div className="pf-phase-proportion-bar__labels">
-                  <span>준비 {Math.round(phaseSecTotals.warmupSec / 60)}분</span>
-                  <span>본운동 {Math.round(phaseSecTotals.mainSec / 60)}분</span>
-                  <span>마무리 {Math.round(phaseSecTotals.cooldownSec / 60)}분</span>
-                </div>
-                <div className="pf-phase-proportion-bar__track" aria-hidden="true">
-                  <span
-                    className="pf-phase-proportion-bar__seg is-warmup"
-                    style={{
-                      width: `${(phaseSecTotals.warmupSec / phaseExerciseSecTotal) * 100}%`,
-                    }}
-                  />
-                  <span
-                    className="pf-phase-proportion-bar__seg is-main"
-                    style={{
-                      width: `${(phaseSecTotals.mainSec / phaseExerciseSecTotal) * 100}%`,
-                    }}
-                  />
-                  <span
-                    className="pf-phase-proportion-bar__seg is-cooldown"
-                    style={{
-                      width: `${(phaseSecTotals.cooldownSec / phaseExerciseSecTotal) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
-              <SequenceQuickFlowCoachStrip
-                steps={s.activeSteps}
-                exercisesById={exerciseMap}
-                onApplyOptimizedSteps={(nextSteps, msg) => {
-                  applyStepsWithUndo(nextSteps, msg);
-                }}
-                onOpenFinderForMissingPlane={openExerciseFinder}
-              />
-              {gapFillOpen && s.activeSteps.length > 0 && delta < 0 && gapFillCandidates.length > 0 && (
-                <div
-                  className="pf-gap-fill-drawer"
-                  data-testid="smart-gap-fill-drawer"
-                  role="region"
-                  aria-label="부족한 시간 채우기 추천 미리보기"
-                >
-                  <div className="pf-gap-fill-drawer__head">
-                    <strong>
-                      <Sparkles size={15} aria-hidden="true" /> 부족한{' '}
-                      {Math.max(1, Math.round(Math.abs(delta) / 60))}분 채우기 후보 (기존 수업은
-                      덮어쓰지 않아요)
-                    </strong>
-                    <span style={{ fontSize: '0.78rem', color: '#355441', fontWeight: 600 }}>
-                      검토 후 원하는 구성만 반영
-                    </span>
+                        <div className="pf-gap-fill-drawer__head">
+                          <strong>
+                            <Sparkles size={15} aria-hidden="true" /> 부족한{' '}
+                            {Math.max(1, Math.round(Math.abs(delta) / 60))}분 채우기 후보 (기존
+                            수업은 덮어쓰지 않아요)
+                          </strong>
+                          <span style={{ fontSize: '0.78rem', color: '#355441', fontWeight: 600 }}>
+                            검토 후 원하는 구성만 반영
+                          </span>
                   </div>
                   <div className="pf-gap-fill-drawer__items">
                     {gapFillCandidates.map((cand) => (
                       <div key={cand.id} className="pf-gap-fill-card">
                         <strong>{cand.nameKo}</strong>
                         <span style={{ fontSize: '0.8rem', color: '#56685f' }}>
-                          기본 {cand.defaultDurationMin}분 ·{' '}
+                                기본 {formatSecondsToMMSS(cand.defaultDurationMin * 60)} ·{' '}
                           {cand.targetMuscles.slice(0, 2).join('·') || '체간 정렬'}
                         </span>
                         {cand.springs && <SpringVisualPills springs={cand.springs} />}
@@ -3147,245 +2957,21 @@ export function SequenceWorkbench({
                   </div>
                 </div>
               )}
-              <div className="sequence-inline-tools">
-                <details className="workbench-timing-details">
-                  <summary>시간 구성</summary>
-                  <dl
-                    className="v2-time-breakdown"
-                    aria-label="시간 상세 구성"
-                    hidden={!s.activeSteps.length}
-                  >
-                    <div>
-                      <dt>동작</dt>
-                      <dd>{formatSecondsToMMSS(timingBreakdown.movementSec)}</dd>
-                    </div>
-                    <div>
-                      <dt>티칭</dt>
-                      <dd>{formatSecondsToMMSS(timingBreakdown.explanationSec)}</dd>
-                    </div>
-                    <div>
-                      <dt>전환</dt>
-                      <dd>{formatSecondsToMMSS(timingBreakdown.transitionSec)}</dd>
-                    </div>
-                    <div>
-                      <dt>휴식</dt>
-                      <dd>{formatSecondsToMMSS(timingBreakdown.restSec)}</dd>
-                    </div>
-                  </dl>
-                  <dl className="class-duration-breakdown sr-only" aria-label="수업 시간 구성">
-                    <div>
-                      <dt>전체</dt>
-                      <dd>{formatSecondsToMMSS(durations.totalSec)}</dd>
-                    </div>
-                    <div>
-                      <dt>동작·설명·전환</dt>
-                      <dd>{formatSecondsToMMSS(durations.exerciseSec)}</dd>
-                    </div>
-                    <div>
-                      <dt>휴식</dt>
-                      <dd>{formatSecondsToMMSS(durations.restSec)}</dd>
-                    </div>
-                  </dl>
-                  {s.activeSteps.length > 0 && (
-                    <p>양쪽 수행·설명·전환과 넣은 휴식 시간을 모두 포함합니다.</p>
-                  )}{' '}
-                </details>
-                <details className="workbench-mode-details">
-                  <summary>편집 방식{locked > 0 ? ` · 잠금 ${locked}` : ''}</summary>
-                  <div>
-                    <LockKeyhole size={14} />
-                    <span>{locked}개 잠금</span>
-                    {recentLogs.length > 0 && (
-                      <span className="recent-count">최근 3회와 {repeated}개 겹침</span>
+                </>
                     )}
-                  </div>
-
-                  <div className="sequence-review-detail">
-                    <PfAiStatusBadge
-                      kind={
-                        planningMode === 'auto'
-                          ? 'ai-draft'
-                          : pendingStepCount > 0
-                            ? 'review-pending'
-                            : 'instructor-reviewed'
-                      }
-                    />
-                  </div>
-                  <div className="v2-mode-toggle" role="group" aria-label="시퀀스 편집 방식">
-                    <button
-                      type="button"
-                      aria-pressed={planningMode === 'auto'}
-                      onClick={() => setPlanningMode('auto')}
-                    >
-                      자동 구성
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={planningMode === 'manual'}
-                      onClick={() => setPlanningMode('manual')}
-                    >
-                      직접 편집
-                    </button>
-                  </div>
-                </details>
-                <details className="workbench-block-combo-details">
-                  <summary>
-                    블록 조합
-                    {savedReusableBlocks.length > 0 ? ` · ${savedReusableBlocks.length}` : ''}
-                  </summary>
-                  <div className="workbench-block-combo-panel">
-                    <div className="workbench-block-combo-create">
-                      <label className="form-field">
-                        <span>
-                          {selectedBundleStepCount > 0
-                            ? `선택한 ${selectedBundleStepCount}개 동작을 재사용 묶음으로 저장`
-                            : '현재 시퀀스 동작들을 재사용 블록으로 묶기'}
-                        </span>
-                        <input
-                          type="text"
-                          value={blockTitleInput}
-                          onChange={(event) => setBlockTitleInput(event.target.value)}
-                          placeholder={`${s.activeTitle || '오늘의 시퀀스'} 블록`}
-                          aria-label="새 재사용 블록 이름"
-                        />
-                      </label>
-                      <div className="workbench-block-combo-actions">
-                        <PfButton
-                          variant="secondary"
-                          onClick={
-                            selectedBundleStepCount > 0
-                              ? handleSaveSelectedStepsToBlock
-                              : handleCombineCurrentStepsToBlock
-                          }
-                        >
-                          {selectedBundleStepCount > 0
-                            ? `선택 ${selectedBundleStepCount}개 묶음 저장`
-                            : '현재 동작 묶어 블록 저장'}
-                        </PfButton>
-                        {nonRestBundleStepIds.length > 0 && (
-                          <PfButton
-                            variant="text"
-                            data-testid="toggle-select-all-bundle-btn"
-                            onClick={toggleSelectAllBundleSteps}
-                          >
-                            {areAllBundleStepsSelected ? '전체 선택 해제' : '전체 동작 선택'}
-                          </PfButton>
-                        )}
-                        <PfButton variant="text" onClick={() => setPresetsOpen(true)}>
-                          <Copy size={14} aria-hidden="true" /> 프리셋·동작 묶음 열기
-                        </PfButton>
-                      </div>
-                      <details className="workbench-bundle-guide-disclosure">
-                        <summary>묶음 복사·원본 편집·기구 전환 기준 보기</summary>
-                        <p>
-                          동작 묶음을 수업에 넣으면 독립 복사본이 생성되어, 이후 묶음 원본을 수정해도
-                          기존 수업안과 과거 수업 기록은 바뀌지 않습니다. 원본이 새 버전(v2+)으로
-                          업데이트된 경우에만 원하는 수업에서 선택 반영하거나 되돌릴 수 있습니다.
-                        </p>
-                      </details>
-                    </div>
-                    {savedReusableBlocks.length > 0 && (
-                      <div
-                        className="workbench-block-combo-list"
-                        aria-label="내 저장된 재사용 블록"
-                      >
-                        {savedReusableBlocks.map((block) => {
-                          const summary = getReusableBlockTimingSummary(block);
-                          const canReduceMin = summary.totalDurationMin > 2;
-                          const apparatusTag =
-                            block.apparatus === 'mixed'
-                              ? '기구 전환 포함'
-                              : `${APPARATUS_LABELS[block.apparatus]?.ko ?? block.apparatus} 단일`;
-                          return (
-                            <div key={block.id} className="workbench-block-combo-item">
-                              <div>
-                                <strong>{block.title}</strong>
-                                <span>
-                                  {apparatusTag} · {block.items.length}개 동작 · 총{' '}
-                                  {summary.totalDurationMin}분 (v{block.version})
-                                </span>
-                                <span
-                                  className="workbench-block-combo-subbreakdown"
-                                  aria-label="블록 세부 시간 요약"
-                                >
-                                  동작 {summary.movementSec}초 · 설명 {summary.explanationSec}초 · 전환{' '}
-                                  {summary.transitionSec}초
-                                </span>
-                              </div>
-                              <div
-                                className="workbench-block-combo-scale-actions"
-                                role="group"
-                                aria-label={`${block.title} 시간 조정 삽입`}
-                              >
-                                <button
-                                  type="button"
-                                  className="workbench-combo-scale-btn"
-                                  disabled={!canReduceMin}
-                                  onClick={() => handleInsertReusableBlock(block.id, -1)}
-                                  aria-label={`${block.title} 1분 줄여 넣기`}
-                                >
-                                  -1분
-                                </button>
-                                <PfButton
-                                  variant="secondary"
-                                  onClick={() => handleInsertReusableBlock(block.id, 0)}
-                                  aria-label={`${block.title} 수업에 블록 넣기`}
-                                >
-                                  수업에 블록 넣기
-                                </PfButton>
-                                <button
-                                  type="button"
-                                  className="workbench-combo-scale-btn"
-                                  onClick={() => handleInsertReusableBlock(block.id, 1)}
-                                  aria-label={`${block.title} 1분 늘려 넣기`}
-                                >
-                                  +1분
-                                </button>
-                                <button
-                                  type="button"
-                                  className="workbench-combo-scale-btn"
-                                  data-testid="duplicate-reusable-block-btn"
-                                  onClick={() => handleDuplicateReusableBlock(block.id)}
-                                  aria-label={`${block.title} 묶음 복제`}
-                                >
-                                  복제
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </details>
-                <WorkbenchHierarchySummary
-                  activeSteps={s.activeSteps}
-                  sectionCount={sectionRuns.length}
-                  exerciseStepCount={exerciseStepCount}
-                />
-                <div className="sequence-tools">
-                  <PfButton variant="text" onClick={openExerciseFinder}>
-                    <Plus size={16} aria-hidden="true" />
-                    동작 더 담기
+              {isArrangeStage && s.activeSteps.length > 0 && (
+                <div className="workbench-editor-actions" role="group" aria-label="시퀀스 편집 도구">
+                  <PfButton variant="primary" onClick={openExerciseFinder}>
+                    <Plus size={16} aria-hidden="true" /> 동작 추가
                   </PfButton>
                   <PfButton
                     variant="text"
-                    data-testid="step3-open-ai-assistant-btn"
-                    onClick={openContextualAiAssistant}
+                    onClick={performUndoSequence}
+                    disabled={!s.undoStack.length}
                   >
-                    <Sparkles size={15} aria-hidden="true" />
-                    AI 보조 열기
-                  </PfButton>
-                  <PfButton variant="text" onClick={() => openIdeaSheet(null)}>
-                    <Sparkles size={15} aria-hidden="true" />한 줄 동작 메모
-                  </PfButton>
-                  <PfButton variant="text" onClick={performUndoSequence}>
-                    <RotateCcw size={14} />
-                    되돌리기
+                    <RotateCcw size={15} aria-hidden="true" /> 되돌리기
                   </PfButton>
                 </div>
-              </div>
-            </>
           )}
           {isArrangeStage && s.activeSteps.length > 0 && (
             <div className="pf-seq-view-bar">
@@ -3423,14 +3009,6 @@ export function SequenceWorkbench({
               </div>
             </div>
           )}
-          {isArrangeStage && s.activeSteps.length > 0 && (
-            <VisualSequenceFilmstrip
-              steps={s.activeSteps}
-              exercisesById={exerciseMap}
-              activeStepId={previewStep}
-              onSelectStep={(step, _index, trigger) => openInspector(step, trigger)}
-            />
-          )}
           {isArrangeStage && s.activeSteps.length > 0 && sequenceViewMode === 'timeline' && (
             <div
               className="pf-spring-ribbon-board"
@@ -3446,7 +3024,11 @@ export function SequenceWorkbench({
               <div className="pf-spring-ribbon-track">
                 {s.activeSteps.map((st, idx) => {
                   const exItem = !isRestStep(st) ? exerciseMap.get(st.exerciseId) : undefined;
-                  const spRaw = (st.customSpringOverride || exItem?.springs || '').toLowerCase();
+                      const spRaw = (
+                        st.customSpringOverride ||
+                        exItem?.springs ||
+                        ''
+                      ).toLowerCase();
                   const tone =
                     isRestStep(st) || !spRaw
                       ? 'is-sage'
@@ -3455,19 +3037,21 @@ export function SequenceWorkbench({
                         : /blue|파|1b|2b/.test(spRaw)
                           ? 'is-blue'
                           : 'is-yellow';
-                  const minVal = Math.max(1, Number(st.durationMin.toFixed(1)));
+                      const durationSec = getStepTiming(st, exItem).totalSec;
                   return (
                     <button
                       key={st.stepId}
                       type="button"
                       className={`pf-spring-ribbon-block ${tone}`}
-                      style={{ width: `${Math.max(132, Math.round(minVal * 26))}px` }}
+                          style={{
+                            width: `${Math.max(132, Math.round((durationSec / 60) * 26))}px`,
+                          }}
                       onClick={(event) => {
                         if (!isRestStep(st)) openInspector(st, event.currentTarget);
                       }}
                     >
                       <small style={{ fontSize: '0.74rem', opacity: 0.8 }}>
-                        {String(idx + 1).padStart(2, '0')} · {minVal}분
+                            {String(idx + 1).padStart(2, '0')} · {formatSecondsToMMSS(durationSec)}
                       </small>
                       <strong style={{ fontSize: '0.88rem', lineHeight: 1.3 }}>
                         {isRestStep(st) ? '중간 휴식' : (exItem?.nameKo ?? '동작')}
@@ -3506,17 +3090,11 @@ export function SequenceWorkbench({
                 선택 동작 묶음 저장
               </PfButton>
               {!areAllBundleStepsSelected && nonRestBundleStepIds.length > 1 && (
-                <PfButton
-                  variant="text"
-                  onClick={toggleSelectAllBundleSteps}
-                >
+                    <PfButton variant="text" onClick={toggleSelectAllBundleSteps}>
                   전체 선택 ({nonRestBundleStepIds.length})
                 </PfButton>
               )}
-              <PfButton
-                variant="text"
-                onClick={() => setSelectedBundleStepIds(new Set())}
-              >
+                  <PfButton variant="text" onClick={() => setSelectedBundleStepIds(new Set())}>
                 선택 해제
               </PfButton>
             </div>
@@ -3633,10 +3211,14 @@ export function SequenceWorkbench({
                               onClick={(event) => openInspector(step, event.currentTarget)}
                               aria-expanded={expanded}
                             >
-                              <strong style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
+                                    <strong
+                                      style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}
+                                    >
                                 {ex.nameKo}
                               </strong>
-                              <span style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
+                                    <span
+                                      style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}
+                                    >
                                 {equipmentLabel(getExerciseEquipment(ex).requiredEquipment)}
                                 {(step.customSpringOverride || ex.springs) && (
                                   <>
@@ -3646,7 +3228,8 @@ export function SequenceWorkbench({
                                     />
                                   </>
                                 )}
-                                {(step.repetitions !== undefined || step.sets !== undefined) && (
+                                      {(step.repetitions !== undefined ||
+                                        step.sets !== undefined) && (
                                   <>
                                     {' '}
                                     ·{' '}
@@ -3656,7 +3239,9 @@ export function SequenceWorkbench({
                                     {step.sets !== undefined ? ` × ${step.sets}세트` : ''}
                                   </>
                                 )}
-                                {step.sideMode && <> · {getStepSideLabels(step, ex).join(' → ')}</>}
+                                      {step.sideMode && (
+                                        <> · {getStepSideLabels(step, ex).join(' → ')}</>
+                                      )}
                                 <PfBlockPill
                                   as="span"
                                   kind={isIdea ? 'memo' : 'movement'}
@@ -3666,12 +3251,16 @@ export function SequenceWorkbench({
                                     ? '내 창작 메모 · 전문가 검증 아님'
                                     : reviewed
                                       ? ex.targetMuscles.slice(0, 2).join('·')
-                                      : '교차 검증 가이드'}
+                                            : '내 검토 전'}
                                 </PfBlockPill>
                               </span>
                             </button>
-                            {step.sourceBlockId && step.blockInstanceId && (() => {
-                              const latestBlock = savedReusableBlockMap.get(step.sourceBlockId);
+                                  {step.sourceBlockId &&
+                                    step.blockInstanceId &&
+                                    (() => {
+                                      const latestBlock = savedReusableBlockMap.get(
+                                        step.sourceBlockId,
+                                      );
                               const isFirstInInstance =
                                 s.activeSteps.findIndex(
                                   (item) => item.blockInstanceId === step.blockInstanceId,
@@ -3679,16 +3268,22 @@ export function SequenceWorkbench({
                               const hasNewerTemplate =
                                 Boolean(latestBlock) &&
                                 !step.blockInstanceDetached &&
-                                (latestBlock?.version ?? 1) > (step.sourceBlockVersion ?? 1);
+                                        (latestBlock?.version ?? 1) >
+                                          (step.sourceBlockVersion ?? 1);
                               return (
                                 <div
                                   className="step-bundle-provenance-row"
                                   data-testid="step-bundle-provenance"
                                 >
                                   <span className="step-bundle-provenance-badge">
-                                    묶음 복사본 · {step.sourceBlockTitle || latestBlock?.title || '재사용 묶음'} v
-                                    {step.sourceBlockVersion ?? 1}
-                                    {step.blockInstanceDetached ? ' · 이 수업 맞춤 수정됨' : ''}
+                                            묶음 복사본 ·{' '}
+                                            {step.sourceBlockTitle ||
+                                              latestBlock?.title ||
+                                              '재사용 묶음'}{' '}
+                                            v{step.sourceBlockVersion ?? 1}
+                                            {step.blockInstanceDetached
+                                              ? ' · 이 수업 맞춤 수정됨'
+                                              : ''}
                                   </span>
                                   {isFirstInInstance && hasNewerTemplate && latestBlock && (
                                     <button
@@ -3727,7 +3322,7 @@ export function SequenceWorkbench({
                                   );
                                 }}
                               >
-                                -0.5분
+                                      −30초
                               </button>
                               <span className="v3-step-time">
                                 {formatSecondsToMMSS(timing.totalSec)}
@@ -3752,9 +3347,11 @@ export function SequenceWorkbench({
                                   );
                                 }}
                               >
-                                +0.5분
+                                      +30초
                               </button>
                             </div>
+                                  <details className="workbench-step-options">
+                                    <summary>횟수·좌우</summary>
                             <div
                               className="step-quick-reps-stepper"
                               data-testid="step-quick-reps-stepper"
@@ -3775,7 +3372,9 @@ export function SequenceWorkbench({
                                     disabled={!!step.locked}
                                     onClick={() => {
                                       const nextRep = isSelectedRep ? undefined : rep;
-                                      s.setStepPracticeOptions(index, { repetitions: nextRep });
+                                              s.setStepPracticeOptions(index, {
+                                                repetitions: nextRep,
+                                              });
                                       setJustUpdatedStepId(step.stepId);
                                       setNotice(
                                         nextRep
@@ -3818,108 +3417,576 @@ export function SequenceWorkbench({
                                       );
                                     }}
                                   >
-                                    {setNum}세트
-                                  </button>
-                                );
-                              })}
-                              {(
-                                [
-                                  { id: 'left-then-right' as const, label: '좌→우', desc: '좌→우 편측 수행' },
-                                  { id: 'right-then-left' as const, label: '우→좌', desc: '우→좌 편측 수행' },
-                                  { id: 'together' as const, label: '양쪽', desc: '양쪽 동시 수행' },
-                                ] as const
-                              ).map((sideOpt) => {
-                                const isSelectedSide = step.sideMode === sideOpt.id;
-                                return (
-                                  <button
-                                    key={sideOpt.id}
-                                    type="button"
-                                    className={`step-quick-side-chip ${
-                                      isSelectedSide ? 'is-selected' : ''
-                                    }`.trim()}
-                                    aria-pressed={isSelectedSide}
-                                    aria-label={`${index + 1}번 동작 ${sideOpt.desc}`}
-                                    disabled={!!step.locked}
-                                    onClick={() => {
-                                      const nextSide = isSelectedSide ? undefined : sideOpt.id;
-                                      s.setStepPracticeOptions(index, { sideMode: nextSide });
-                                      setJustUpdatedStepId(step.stepId);
-                                      setNotice(
-                                        !nextSide
-                                          ? `${index + 1}번 동작 수행 방향 표시를 해제했어요.`
-                                          : `${index + 1}번 동작을 ${sideOpt.label} 수행으로 맞췄어요.`,
-                                      );
-                                    }}
+                                            {setNum}세트
+                                          </button>
+                                        );
+                                      })}
+                                      {(
+                                        [
+                                          {
+                                            id: 'left-then-right' as const,
+                                            label: '좌→우',
+                                            desc: '좌→우 편측 수행',
+                                          },
+                                          {
+                                            id: 'right-then-left' as const,
+                                            label: '우→좌',
+                                            desc: '우→좌 편측 수행',
+                                          },
+                                          {
+                                            id: 'together' as const,
+                                            label: '양쪽',
+                                            desc: '양쪽 동시 수행',
+                                          },
+                                        ] as const
+                                      ).map((sideOpt) => {
+                                        const isSelectedSide = step.sideMode === sideOpt.id;
+                                        return (
+                                          <button
+                                            key={sideOpt.id}
+                                            type="button"
+                                            className={`step-quick-side-chip ${
+                                              isSelectedSide ? 'is-selected' : ''
+                                            }`.trim()}
+                                            aria-pressed={isSelectedSide}
+                                            aria-label={`${index + 1}번 동작 ${sideOpt.desc}`}
+                                            disabled={!!step.locked}
+                                            onClick={() => {
+                                              const nextSide = isSelectedSide
+                                                ? undefined
+                                                : sideOpt.id;
+                                              s.setStepPracticeOptions(index, {
+                                                sideMode: nextSide,
+                                              });
+                                              setJustUpdatedStepId(step.stepId);
+                                              setNotice(
+                                                !nextSide
+                                                  ? `${index + 1}번 동작 수행 방향 표시를 해제했어요.`
+                                                  : `${index + 1}번 동작을 ${sideOpt.label} 수행으로 맞췄어요.`,
+                                              );
+                                            }}
+                                          >
+                                            {sideOpt.label}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </details>
+                                  <PfButton
+                                    variant="icon"
+                                    className="v3-step-more"
+                                    aria-label={`${index + 1}번 동작 블록 편집`}
+                                    aria-expanded={expanded}
+                                    onClick={(event) => openInspector(step, event.currentTarget)}
                                   >
-                                    {sideOpt.label}
+                                    <MoreHorizontal size={19} />
+                                  </PfButton>
+                                  <div className="step-actions">
+                                    {isIdea && (
+                                      <PfButton
+                                        variant="icon"
+                                        aria-label={`${ex.nameKo} 느낌·수정 메모 열기`}
+                                        onClick={() => openIdeaSheet(ex)}
+                                      >
+                                        <Sparkles size={17} />
+                                      </PfButton>
+                                    )}
+                                    <PfButton
+                                      variant="icon"
+                                      aria-label={`${index + 1}번 동작 ${step.locked ? '잠금 해제' : '잠금'}`}
+                                      aria-pressed={!!step.locked}
+                                      onClick={() => s.toggleStepLock(index)}
+                                    >
+                                      {step.locked ? (
+                                        <LockKeyhole size={17} />
+                                      ) : (
+                                        <UnlockKeyhole size={17} />
+                                      )}
+                                    </PfButton>
+                                    <PfButton
+                                      variant="icon"
+                                      aria-label={`${index + 1}번 동작 교체`}
+                                      disabled={step.locked}
+                                      onClick={(event) =>
+                                        openReplaceForStep(index, false, event.currentTarget)
+                                      }
+                                    >
+                                      <RefreshCw size={17} />
+                                    </PfButton>
+                                  </div>
+                                </div>
+                              </PfMovementCard>
+                            </SequenceOrderCard>
+                          );
+                        })}
+                      </PfSequenceBlock>
+                    );
+                  })}
+                </div>
+              )}
+              {isArrangeStage && s.activeSteps.length > 0 && (
+                <div className="v3-primary-actions">
+                  <PfButton
+                    variant="secondary"
+                    className="workbench-add-movement"
+                    onClick={openExerciseFinder}
+                  >
+                    <Plus size={18} aria-hidden="true" /> 동작 추가
+                  </PfButton>
+                  <PfButton
+                    variant="icon"
+                    aria-label="수업 구성 살펴보기"
+                    title="수업 구성 살펴보기"
+                    onClick={() => setInsightsOpen(true)}
+                  >
+                    <ChartNoAxesCombined size={21} />
+                  </PfButton>
+                  <PfButton
+                    variant="primary"
+                    className="v3-preview-button"
+                    disabled={!s.activeSteps.length}
+                    onClick={openPlanPreview}
+                  >
+                    <Play size={18} />
+                    시퀀스 미리보기
+                  </PfButton>
+                </div>
+              )}
+              <div className="workbench-secondary-tools">
+                {isArrangeStage && s.activeSteps.length > 0 && (
+                  <>
+                    <div className="sequence-inline-tools">
+                      <details className="workbench-timing-details">
+                        <summary>시간 구성 상세</summary>
+                        <div
+                          className="duration-track v2-duration-track"
+                          aria-hidden="true"
+                          hidden={!s.activeSteps.length}
+                        >
+                          <span
+                            className="v2-time-movement"
+                            style={{
+                              width: `${(timingBreakdown.movementSec / Math.max(total, 1)) * 100}%`,
+                            }}
+                          />
+                          <span
+                            className="v2-time-explanation"
+                            style={{
+                              width: `${(timingBreakdown.explanationSec / Math.max(total, 1)) * 100}%`,
+                            }}
+                          />
+                          <span
+                            className="v2-time-transition"
+                            style={{
+                              width: `${(timingBreakdown.transitionSec / Math.max(total, 1)) * 100}%`,
+                            }}
+                          />
+                          <span
+                            className="v2-time-rest"
+                            style={{
+                              width: `${(timingBreakdown.restSec / Math.max(total, 1)) * 100}%`,
+                            }}
+                          />
+                        </div>
+                        <div
+                          className="pf-phase-proportion-bar"
+                          role="region"
+                          aria-label="준비·본운동·마무리 구간 비중"
+                          data-testid="phase-proportion-bar"
+                        >
+                          <div className="pf-phase-proportion-bar__labels">
+                            <span>준비 {formatSecondsToMMSS(phaseSecTotals.warmupSec)}</span>
+                            <span>본운동 {formatSecondsToMMSS(phaseSecTotals.mainSec)}</span>
+                            <span>마무리 {formatSecondsToMMSS(phaseSecTotals.cooldownSec)}</span>
+                          </div>
+                          <div className="pf-phase-proportion-bar__track" aria-hidden="true">
+                            <span
+                              className="pf-phase-proportion-bar__seg is-warmup"
+                              style={{
+                                width: `${(phaseSecTotals.warmupSec / phaseExerciseSecTotal) * 100}%`,
+                              }}
+                            />
+                            <span
+                              className="pf-phase-proportion-bar__seg is-main"
+                              style={{
+                                width: `${(phaseSecTotals.mainSec / phaseExerciseSecTotal) * 100}%`,
+                              }}
+                            />
+                            <span
+                              className="pf-phase-proportion-bar__seg is-cooldown"
+                              style={{
+                                width: `${(phaseSecTotals.cooldownSec / phaseExerciseSecTotal) * 100}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <dl
+                          className="v2-time-breakdown"
+                          aria-label="시간 상세 구성"
+                          hidden={!s.activeSteps.length}
+                        >
+                          <div>
+                            <dt>동작</dt>
+                            <dd>{formatSecondsToMMSS(timingBreakdown.movementSec)}</dd>
+                          </div>
+                          <div>
+                            <dt>티칭</dt>
+                            <dd>{formatSecondsToMMSS(timingBreakdown.explanationSec)}</dd>
+                          </div>
+                          <div>
+                            <dt>전환</dt>
+                            <dd>{formatSecondsToMMSS(timingBreakdown.transitionSec)}</dd>
+                          </div>
+                          <div>
+                            <dt>휴식</dt>
+                            <dd>{formatSecondsToMMSS(timingBreakdown.restSec)}</dd>
+                          </div>
+                        </dl>
+                        <dl
+                          className="class-duration-breakdown sr-only"
+                          aria-label="수업 시간 구성"
+                        >
+                          <div>
+                            <dt>전체</dt>
+                            <dd>{formatSecondsToMMSS(durations.totalSec)}</dd>
+                          </div>
+                          <div>
+                            <dt>동작·설명·전환</dt>
+                            <dd>{formatSecondsToMMSS(durations.exerciseSec)}</dd>
+                          </div>
+                          <div>
+                            <dt>휴식</dt>
+                            <dd>{formatSecondsToMMSS(durations.restSec)}</dd>
+                          </div>
+                        </dl>
+                        {s.activeSteps.length > 0 && (
+                          <p>양쪽 수행·설명·전환과 넣은 휴식 시간을 모두 포함합니다.</p>
+                        )}{' '}
+                      </details>
+                      <details className="workbench-mode-details">
+                        <summary>편집 방식{locked > 0 ? ` · 잠금 ${locked}` : ''}</summary>
+                        <div>
+                          <LockKeyhole size={14} />
+                          <span>{locked}개 잠금</span>
+                          {recentLogs.length > 0 && (
+                            <span className="recent-count">최근 3회와 {repeated}개 겹침</span>
+                          )}
+                        </div>
+
+                        <div className="sequence-review-detail">
+                          <PfAiStatusBadge
+                            kind={
+                              planningMode === 'auto'
+                                ? 'ai-draft'
+                                : pendingStepCount > 0
+                                  ? 'review-pending'
+                                  : 'instructor-reviewed'
+                            }
+                          />
+                        </div>
+                        <div className="v2-mode-toggle" role="group" aria-label="시퀀스 편집 방식">
+                          <button
+                            type="button"
+                            aria-pressed={planningMode === 'auto'}
+                            onClick={() => setPlanningMode('auto')}
+                          >
+                            자동 구성
+                          </button>
+                          <button
+                            type="button"
+                            aria-pressed={planningMode === 'manual'}
+                            onClick={() => setPlanningMode('manual')}
+                          >
+                            직접 편집
+                          </button>
+                        </div>
+                      </details>
+                      <details className="workbench-block-combo-details">
+                        <summary>
+                          블록 조합
+                          {savedReusableBlocks.length > 0 ? ` · ${savedReusableBlocks.length}` : ''}
+                        </summary>
+                        <div className="workbench-block-combo-panel">
+                          <div className="workbench-block-combo-create">
+                            <label className="form-field">
+                              <span>
+                                {selectedBundleStepCount > 0
+                                  ? `선택한 ${selectedBundleStepCount}개 동작을 재사용 묶음으로 저장`
+                                  : '현재 시퀀스 동작들을 재사용 블록으로 묶기'}
+                              </span>
+                              <input
+                                type="text"
+                                value={blockTitleInput}
+                                onChange={(event) => setBlockTitleInput(event.target.value)}
+                                placeholder={`${s.activeTitle || '오늘의 시퀀스'} 블록`}
+                                aria-label="새 재사용 블록 이름"
+                              />
+                            </label>
+                            <div className="workbench-block-combo-actions">
+                              <PfButton
+                                variant="secondary"
+                                onClick={
+                                  selectedBundleStepCount > 0
+                                    ? handleSaveSelectedStepsToBlock
+                                    : handleCombineCurrentStepsToBlock
+                                }
+                              >
+                                {selectedBundleStepCount > 0
+                                  ? `선택 ${selectedBundleStepCount}개 묶음 저장`
+                                  : '현재 동작 묶어 블록 저장'}
+                              </PfButton>
+                              {nonRestBundleStepIds.length > 0 && (
+                                <PfButton
+                                  variant="text"
+                                  data-testid="toggle-select-all-bundle-btn"
+                                  onClick={toggleSelectAllBundleSteps}
+                                >
+                                  {areAllBundleStepsSelected ? '전체 선택 해제' : '전체 동작 선택'}
+                                </PfButton>
+                              )}
+                              <PfButton variant="text" onClick={() => setPresetsOpen(true)}>
+                                <Copy size={14} aria-hidden="true" /> 프리셋·동작 묶음 열기
+                              </PfButton>
+                            </div>
+                            <details className="workbench-bundle-guide-disclosure">
+                              <summary>묶음 복사·원본 편집·기구 전환 기준 보기</summary>
+                              <p>
+                                동작 묶음을 수업에 넣으면 독립 복사본이 생성되어, 이후 묶음 원본을
+                                수정해도 기존 수업안과 과거 수업 기록은 바뀌지 않습니다. 원본이 새
+                                버전(v2+)으로 업데이트된 경우에만 원하는 수업에서 선택 반영하거나
+                                되돌릴 수 있습니다.
+                              </p>
+                            </details>
+                          </div>
+                          {savedReusableBlocks.length > 0 && (
+                            <div
+                              className="workbench-block-combo-list"
+                              aria-label="내 저장된 재사용 블록"
+                            >
+                              {savedReusableBlocks.map((block) => {
+                                const summary = getReusableBlockTimingSummary(block);
+                                const canReduceMin = summary.totalDurationMin > 2;
+                                const apparatusTag =
+                                  block.apparatus === 'mixed'
+                                    ? '기구 전환 포함'
+                                    : `${APPARATUS_LABELS[block.apparatus]?.ko ?? block.apparatus} 단일`;
+                                return (
+                                  <div key={block.id} className="workbench-block-combo-item">
+                                    <div>
+                                      <strong>{block.title}</strong>
+                                      <span>
+                                        {apparatusTag} · {block.items.length}개 동작 · 총{' '}
+                                        {formatSecondsToMMSS(summary.totalDurationMin * 60)} (v
+                                        {block.version})
+                                      </span>
+                                      <span
+                                        className="workbench-block-combo-subbreakdown"
+                                        aria-label="블록 세부 시간 요약"
+                                      >
+                                        동작 {summary.movementSec}초 · 설명 {summary.explanationSec}
+                                        초 · 전환 {summary.transitionSec}초
+                                      </span>
+                                    </div>
+                                    <div
+                                      className="workbench-block-combo-scale-actions"
+                                      role="group"
+                                      aria-label={`${block.title} 시간 조정 삽입`}
+                                    >
+                                      <button
+                                        type="button"
+                                        className="workbench-combo-scale-btn"
+                                        disabled={!canReduceMin}
+                                        onClick={() => handleInsertReusableBlock(block.id, -1)}
+                                        aria-label={`${block.title} 1분 줄여 넣기`}
+                                      >
+                                        -1분
+                                      </button>
+                                      <PfButton
+                                        variant="secondary"
+                                        onClick={() => handleInsertReusableBlock(block.id, 0)}
+                                        aria-label={`${block.title} 수업에 블록 넣기`}
+                                      >
+                                        수업에 블록 넣기
+                                      </PfButton>
+                                      <button
+                                        type="button"
+                                        className="workbench-combo-scale-btn"
+                                        onClick={() => handleInsertReusableBlock(block.id, 1)}
+                                        aria-label={`${block.title} 1분 늘려 넣기`}
+                                      >
+                                        +1분
                                   </button>
+                                  <button
+                                    type="button"
+                                        className="workbench-combo-scale-btn"
+                                        data-testid="duplicate-reusable-block-btn"
+                                        onClick={() => handleDuplicateReusableBlock(block.id)}
+                                        aria-label={`${block.title} 묶음 복제`}
+                                  >
+                                        복제
+                                  </button>
+                                    </div>
+                                  </div>
                                 );
                               })}
                             </div>
+                          )}
+                        </div>
+                      </details>
+                      <WorkbenchHierarchySummary
+                        activeSteps={s.activeSteps}
+                        sectionCount={sectionRuns.length}
+                        exerciseStepCount={exerciseStepCount}
+                      />
+                      <div className="sequence-tools">
                             <PfButton
-                              variant="icon"
-                              className="v3-step-more"
-                              aria-label={`${index + 1}번 동작 블록 편집`}
-                              aria-expanded={expanded}
-                              onClick={(event) => openInspector(step, event.currentTarget)}
+                          variant="text"
+                          data-testid="step3-open-ai-assistant-btn"
+                          onClick={openContextualAiAssistant}
                             >
-                              <MoreHorizontal size={19} />
+                          <Sparkles size={15} aria-hidden="true" />
+                          AI 보조 열기
                             </PfButton>
-                            <div className="step-actions">
-                              {isIdea && (
-                                <PfButton
-                                  variant="icon"
-                                  aria-label={`${ex.nameKo} 느낌·수정 메모 열기`}
-                                  onClick={() => openIdeaSheet(ex)}
-                                >
-                                  <Sparkles size={17} />
+                        <PfButton variant="text" onClick={() => openIdeaSheet(null)}>
+                          <Sparkles size={15} aria-hidden="true" />한 줄 동작 메모
                                 </PfButton>
+                      </div>
+                    </div>
+                    <details className="workbench-flow-coach-details">
+                      <summary>동작 흐름 점검</summary>
+                      <SequenceQuickFlowCoachStrip
+                        steps={s.activeSteps}
+                        exercisesById={exerciseMap}
+                        onApplyOptimizedSteps={(nextSteps, msg) => {
+                          applyStepsWithUndo(nextSteps, msg);
+                        }}
+                        onOpenFinderForMissingPlane={openExerciseFinder}
+                      />
+                    </details>
+                  </>
                               )}
-                              <PfButton
-                                variant="icon"
-                                aria-label={`${index + 1}번 동작 ${step.locked ? '잠금 해제' : '잠금'}`}
-                                aria-pressed={!!step.locked}
-                                onClick={() => s.toggleStepLock(index)}
-                              >
-                                {step.locked ? (
-                                  <LockKeyhole size={17} />
-                                ) : (
-                                  <UnlockKeyhole size={17} />
+                {isArrangeStage && s.activeSteps.length > 0 && (
+                  <details className="workbench-filmstrip-details">
+                    <summary>동작 이미지로 살펴보기</summary>
+                    <VisualSequenceFilmstrip
+                      steps={s.activeSteps}
+                      exercisesById={exerciseMap}
+                      activeStepId={previewStep}
+                      onSelectStep={(step, _index, trigger) => openInspector(step, trigger)}
+                    />
+                  </details>
                                 )}
-                              </PfButton>
+                <details className="workbench-automation-tools">
+                  <summary>기구별 스프링·수업 주제 안내</summary>
+                  <ApparatusVisualGuideRibbon
+                    activeApparatusId={selectedEquipment[0] ?? s.activeApparatus}
+                    mode="workbench"
+                    onApplyClassConcept={(titleKo, subtitleKo, family) => {
+                      s.setActiveSequenceMeta({
+                        title: titleKo,
+                        subtitle: subtitleKo,
+                        apparatus: family,
+                      });
+                      setNotice(`‘${titleKo}’ 기구 컨셉을 현재 수업에 반영했습니다.`);
+                    }}
+                  />
+                </details>
+                <details
+                  className="workbench-automation-tools"
+                  data-testid="workbench-circuit-planner-drawer"
+                >
+                  <summary>그룹 수업 기구 순환 구성</summary>
+                  <StudioCircuitPlannerCard onApplied={(msg) => setNotice(msg)} />
+                </details>
+                {s.historyLogs.length > 0 &&
+                  (() => {
+                    const workbenchAdaptive = buildAdaptiveNextClassDraft({
+                      logs: s.historyLogs,
+                      exercises: s.exercises,
+                      ownedEquipment: s.ownedEquipment,
+                      targetGroupId: s.activeTargetGroupId || 'all',
+                      fallbackTargetMinutes: criteria.targetMinutes || s.activeTargetMinutes || 50,
+                    });
+                    if (!workbenchAdaptive) return null;
+                    return (
+                      <details
+                        className="workbench-automation-tools"
+                        data-testid="workbench-adaptive-history-drawer"
+                      >
+                        <summary>지난 수업 반영 · {workbenchAdaptive.signal.headlineKo}</summary>
+                        <div className="pf-v70-adaptive-banner is-compact">
+                          <div className="pf-v70-adaptive-main">
+                            <div className="pf-v70-adaptive-badges">
+                              <PfBadge tone="sage">
+                                권장 Lv {workbenchAdaptive.signal.recommendedLevel}
+                              </PfBadge>
+                              {workbenchAdaptive.signal.cautionLabelsKo.map((lbl) => (
+                                <PfBadge key={lbl} tone="warning">
+                                  {lbl}
+                                </PfBadge>
+                              ))}
+                            </div>
+                            <ul className="pf-v70-adaptive-bullets">
+                              {workbenchAdaptive.signal.rationaleBulletsKo
+                                .slice(0, 2)
+                                .map((line) => (
+                                  <li key={line}>{line}</li>
+                                ))}
+                            </ul>
+                            <small className="pf-v70-honest-caption">
+                              {workbenchAdaptive.honestDisclaimerKo}
+                            </small>
+                          </div>
+                          <div className="pf-v70-adaptive-cta">
                               <PfButton
-                                variant="icon"
-                                aria-label={`${index + 1}번 동작 교체`}
-                                disabled={step.locked}
-                                onClick={(event) =>
-                                  openReplaceForStep(index, false, event.currentTarget)
-                                }
+                              variant="primary"
+                              data-testid="workbench-apply-adaptive-btn"
+                              onClick={() => {
+                                const expected = usePilatesStore.getState();
+                                const res = s.applyPresetDraft(
+                                  {
+                                    steps: workbenchAdaptive.steps,
+                                    title: workbenchAdaptive.draftTitle,
+                                    subtitle: workbenchAdaptive.draftSubtitle,
+                                    targetMinutes: workbenchAdaptive.targetMinutes,
+                                  },
+                                  'replace',
+                                  expected,
+                                );
+                                setNotice(res.message);
+                              }}
                               >
-                                <RefreshCw size={17} />
+                              피드백 보정 초안 적용 <ArrowRight size={15} />
                               </PfButton>
                             </div>
                           </div>
-                        </PfMovementCard>
-                      </SequenceOrderCard>
-                    );
-                  })}
-                </PfSequenceBlock>
+                      </details>
               );
-            })}
-          </div>
+                  })()}
+                {planningMode === 'auto' && locked > 0 && (
+                  <p id="v2-new-draft-scope" className="v2-generation-scope">
+                    시퀀스 만들기는 전체를 새 초안으로 바꿉니다. 잠근 {locked}개 항목을 유지하려면
+                    아래 ‘잠그지 않은 동작 다시 만들기’를 사용하세요.
+                  </p>
           )}
           {isArrangeStage && summaryStep && summaryEx && (
+                  <details
+                    className="workbench-movement-reference"
+                    open={movementReferenceOpen}
+                    onToggle={(event) => setMovementReferenceOpen(event.currentTarget.open)}
+                  >
+                    <summary>동작 참고 자료 · {summaryEx.nameKo}</summary>
+                    {movementReferenceOpen && (
               <section
                 className="pf-b05-3sec-summary-panel"
                 data-testid="board05-3sec-summary-panel"
-                aria-label="선택된 동작 3초 요약 패널"
+                        aria-label="선택 동작 참고 자료"
               >
                 <div className="pf-b05-3sec-summary-panel__head">
                   <div>
-                    <span className="pf-studio-kicker-pill">SELECTED MOVEMENT · 3초 요약</span>
+                            <span className="pf-studio-kicker-pill">선택 동작 참고 자료</span>
                     <h3>
-                      선택된 동작 3초 요약 패널 — {String(summaryIdx + 1).padStart(2, '0')}{' '}
-                      {summaryEx.nameKo}
+                              {String(summaryIdx + 1).padStart(2, '0')} {summaryEx.nameKo}
                     </h3>
                   </div>
                   <div className="pf-b05-3sec-summary-panel__actions">
@@ -3928,7 +3995,7 @@ export function SequenceWorkbench({
                       className="btn-secondary"
                       onClick={(event) => openInspector(summaryStep, event.currentTarget)}
                     >
-                      블록 시간·레이어 편집
+                              시간·동작 설정
                     </button>
                     <button
                       type="button"
@@ -3945,24 +4012,26 @@ export function SequenceWorkbench({
                   </div>
                   <div className="pf-b05-3sec-summary-panel__right">
                     <div className="pf-b05-summary-box">
-                      <span>권장 스프링 · 기구 셋업</span>
+                              <span>스프링·기구 설정</span>
                       <div className="pf-b05-summary-box__val">
                         {summarySprings ? (
                           <SpringVisualPills springs={summarySprings} />
                         ) : (
                           <strong>맨몸 / 무스프링</strong>
                         )}
+                                {summaryEx.apparatus === 'reformer' && (
                         <small>
                           풋바 {summaryEx.footbar} · 헤드레스트 {summaryEx.headrest}
                           {summaryEx.box !== 'none' ? ` · ${summaryEx.box}` : ''}
                         </small>
+                                )}
                       </div>
                     </div>
                     <div className="pf-b05-summary-box">
                       <span>호흡 &amp; 카운트 템포</span>
                       <strong>
-                        {summaryEx.breathPattern || '내쉬며 정점 연결 · 마시며 정렬 복귀'} (
-                        {summaryStep.repetitions ?? 10}회 권장)
+                                {summaryEx.breathPattern || '호흡 안내 미등록'}
+                                {summaryStep.repetitions ? ` · ${summaryStep.repetitions}회` : ''}
                       </strong>
                     </div>
                     <div className="pf-b05-summary-box">
@@ -3984,8 +4053,13 @@ export function SequenceWorkbench({
                 </div>
               </section>
           )}
+                  </details>
+                )}
           {isArrangeStage && s.activeSteps.length > 0 && (
-            <div className="pf-p04-mobile-sticky-cta" data-testid="p04-mobile-sticky-live-cta">
+                  <div
+                    className="pf-p04-mobile-sticky-cta"
+                    data-testid="p04-mobile-sticky-live-cta"
+                  >
               <button
                 type="button"
                 className="btn-secondary pf-p04-save-btn"
@@ -3993,7 +4067,11 @@ export function SequenceWorkbench({
                 aria-label="현재 시퀀스 빠른 저장"
                 onClick={handleSave}
               >
-                {isSavedClean ? <Check size={16} aria-hidden="true" /> : <BookmarkPlus size={16} aria-hidden="true" />}
+                      {isSavedClean ? (
+                        <Check size={16} aria-hidden="true" />
+                      ) : (
+                        <BookmarkPlus size={16} aria-hidden="true" />
+                      )}
                 <span>{isSavedClean ? '저장됨' : '빠른 저장'}</span>
               </button>
               <button
@@ -4004,7 +4082,8 @@ export function SequenceWorkbench({
               >
                 <Play size={17} aria-hidden="true" />
                 <span>
-                  이 시퀀스로 라이브 진행 열기 ({exerciseStepCount}동작 · {formatSecondsToMMSS(total)})
+                        이 시퀀스로 라이브 진행 열기 ({exerciseStepCount}동작 ·{' '}
+                        {formatSecondsToMMSS(total)})
                 </span>
               </button>
             </div>
@@ -4049,7 +4128,9 @@ export function SequenceWorkbench({
             <RestInsertControl
               steps={s.activeSteps}
               labelForStep={(step) =>
-                isRestStep(step) ? '휴식' : (exerciseMap.get(step.exerciseId)?.nameKo ?? '동작')
+                      isRestStep(step)
+                        ? '휴식'
+                        : (exerciseMap.get(step.exerciseId)?.nameKo ?? '동작')
               }
               onAdd={(duration, afterIndex) => s.addRestStep(duration, afterIndex)}
             />
@@ -4059,7 +4140,11 @@ export function SequenceWorkbench({
               <summary>조건 불러오기·자동 구성</summary>
               {s.activeSteps.length > 0 && (
                 <div className="v2-toolbar-actions">
-                  <PfButton variant="text" onClick={repeatConditions} disabled={!s.lastCriteria}>
+                        <PfButton
+                          variant="text"
+                          onClick={repeatConditions}
+                          disabled={!s.lastCriteria}
+                        >
                     지난 조건
                   </PfButton>
                   {planningMode === 'auto' ? (
@@ -4098,34 +4183,6 @@ export function SequenceWorkbench({
               <PfButton variant="text" onClick={handleSaveCopy}>
                 <Copy size={16} />
                 사본 저장
-              </PfButton>
-            </div>
-          )}
-          {isArrangeStage && s.activeSteps.length > 0 && (
-            <div className="v3-primary-actions">
-              <PfButton
-                variant="secondary"
-                className="workbench-add-movement"
-                onClick={openExerciseFinder}
-              >
-                <Plus size={18} aria-hidden="true" /> 동작 추가
-              </PfButton>
-              <PfButton
-                variant="icon"
-                aria-label="수업 구성 살펴보기"
-                title="수업 구성 살펴보기"
-                onClick={() => setInsightsOpen(true)}
-              >
-                <ChartNoAxesCombined size={21} />
-              </PfButton>
-              <PfButton
-                variant="primary"
-                className="v3-preview-button"
-                disabled={!s.activeSteps.length}
-                onClick={openPlanPreview}
-              >
-                <Play size={18} />
-                시퀀스 미리보기
               </PfButton>
             </div>
           )}
@@ -4176,8 +4233,8 @@ export function SequenceWorkbench({
             <details className="workbench-material-notes">
               <summary>자료 안내</summary>
               <p>
-                교차 검증 가이드 {pendingStepCount}개 · 검토 기록은 선택 사항입니다. 기록 유무는 동작의
-                정확성이나 개인별 운동 적합성을 보장하지 않습니다.
+                      내 검토 전 동작 {pendingStepCount}개 · 검토 기록은 선택 사항입니다. 기록
+                      유무는 동작의 정확성이나 개인별 운동 적합성을 보장하지 않습니다.
               </p>
             </details>
           )}
@@ -4193,7 +4250,11 @@ export function SequenceWorkbench({
                 <PfButton variant="secondary" onClick={() => setConditionsOpen(true)}>
                   <SlidersHorizontal size={16} /> 조건 살펴보기
                 </PfButton>
-                <PfButton variant="secondary" onClick={repeatConditions} disabled={!s.lastCriteria}>
+                      <PfButton
+                        variant="secondary"
+                        onClick={repeatConditions}
+                        disabled={!s.lastCriteria}
+                      >
                   지난 조건
                 </PfButton>
                 <PfButton
@@ -4215,7 +4276,11 @@ export function SequenceWorkbench({
                   <p id="automatic-review-guidance">
                     자동 구성에 사용할 동작이 없어요. 먼저 동작을 등록해 주세요.
                   </p>
-                  <button type="button" className="btn-secondary" onClick={openExerciseFinder}>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={openExerciseFinder}
+                        >
                     동작 찾기
                   </button>
                 </div>
@@ -4292,7 +4357,11 @@ export function SequenceWorkbench({
                     onApplySteps={(nextSteps, noticeMessage) => {
                       applyStepsWithUndo(nextSteps, noticeMessage);
                     }}
-                    onApplyAngleConcept={(suggestedTitleKo, suggestedSubtitleKo, noticeMessage) => {
+                          onApplyAngleConcept={(
+                            suggestedTitleKo,
+                            suggestedSubtitleKo,
+                            noticeMessage,
+                          ) => {
                       s.setActiveSequenceMeta({
                         title: suggestedTitleKo,
                         subtitle: suggestedSubtitleKo,
@@ -4351,11 +4420,17 @@ export function SequenceWorkbench({
                     }}
                   />
                   {(() => {
-                    const focusStep = selectedStep ?? s.activeSteps.find((st) => !isRestStep(st));
-                    const focusEx = focusStep ? exerciseMap.get(focusStep.exerciseId) : undefined;
+                          const focusStep =
+                            selectedStep ?? s.activeSteps.find((st) => !isRestStep(st));
+                          const focusEx = focusStep
+                            ? exerciseMap.get(focusStep.exerciseId)
+                            : undefined;
                     return (
                       <Apparatus3dRigPreviewCard
-                        apparatus={focusEx?.apparatus ?? (s.activeApparatus === 'mixed' ? 'reformer' : s.activeApparatus)}
+                              apparatus={
+                                focusEx?.apparatus ??
+                                (s.activeApparatus === 'mixed' ? 'reformer' : s.activeApparatus)
+                              }
                         bodyPosition={focusEx?.bodyPosition ?? 'supine'}
                         springsLabel={focusStep?.customSpringOverride || focusEx?.springs}
                         exerciseTitleKo={focusEx?.nameKo}
@@ -4364,7 +4439,10 @@ export function SequenceWorkbench({
                   })()}
                   <CurriculumProgressionPanel
                     groupId={criteria.targetGroupId ?? 'all'}
-                    groupName={s.classGroups.find((g) => g.id === criteria.targetGroupId)?.name ?? '전체 반'}
+                          groupName={
+                            s.classGroups.find((g) => g.id === criteria.targetGroupId)?.name ??
+                            '전체 반'
+                          }
                     baseLevel={criteria.level}
                     historyLogs={s.historyLogs}
                     exercises={s.exercises}
@@ -4441,6 +4519,7 @@ export function SequenceWorkbench({
               </Suspense>
             )}
           </details>
+              </div>
               {isArrangeStage && s.activeSteps.length > 0 && (
                 <div className="pf-step-cta-bar">
                   <button
@@ -4525,12 +4604,12 @@ export function SequenceWorkbench({
                 data-testid="workbench-current-step-guide"
                 style={{ wordBreak: 'keep-all' }}
               >
-                {!s.activeSteps.length || finderOpen || workflowStep === 'select'
-                  ? '현재 1단계: 동작 고르기 · 필요한 동작을 고른 뒤 다음 단계에서 순서와 시간을 맞추세요.'
-                  : '현재 2단계: 수업 구성 확인 · -0.5분/+0.5분으로 시간을 맞추고 저장·미리보기 하세요.'}
+                {!s.activeSteps.length || isSelecting
+                  ? '2단계 · 동작을 고른 뒤 순서와 시간을 확인하세요.'
+                  : '3단계 · 순서와 시간을 확인한 뒤 미리보기로 이동하세요.'}
               </span>
               <div className="pf-step-guide-nav" style={{ wordBreak: 'keep-all' }}>
-                {s.activeSteps.length > 0 && workflowStep === 'select' && !finderOpen && (
+                {s.activeSteps.length > 0 && isSelecting && !finderOpen && (
                   <button
                     type="button"
                     className="btn-primary"
@@ -4552,19 +4631,13 @@ export function SequenceWorkbench({
                   data-testid="workbench-step-prev"
                   style={{ minHeight: '44px', wordBreak: 'keep-all' }}
                   aria-current={
-                    !planPreviewOpen &&
-                    (finderOpen || workflowStep === 'select' || !s.activeSteps.length)
-                      ? 'step'
-                      : undefined
+                    !planPreviewOpen && (isSelecting || !s.activeSteps.length) ? 'step' : undefined
                   }
                   onClick={() => {
                     closeInspector();
                     setPlanPreviewOpen(false);
-                    if (workflowStep === 'select' && s.activeSteps.length > 0 && !finderOpen) {
-                      openExerciseFinder();
-                      return;
-                    }
-                    setWorkflowStep('select');
+                    setManualWizardPage('step2');
+                    setWorkflowStepState('select');
                   }}
                 >
                   이전 단계: 동작 고르기
@@ -4576,10 +4649,7 @@ export function SequenceWorkbench({
                   style={{ minHeight: '44px', wordBreak: 'keep-all' }}
                   disabled={!s.activeSteps.length}
                   aria-current={
-                    !planPreviewOpen &&
-                    !finderOpen &&
-                    workflowStep === 'arrange' &&
-                    s.activeSteps.length > 0
+                    !planPreviewOpen && !finderOpen && isArrangeStage && s.activeSteps.length > 0
                       ? 'step'
                       : undefined
                   }
@@ -4590,7 +4660,7 @@ export function SequenceWorkbench({
               </div>
             </div>
           </nav>
-          <NextClassBanner collapseEmpty />
+          {isArrangeStage && <NextClassBanner collapseEmpty />}
           <details className="workbench-navigation-details">
             <summary>수업 준비 순서</summary>
             <nav className="workbench-flow-navigation" aria-label="수업 준비 순서">
@@ -4600,13 +4670,12 @@ export function SequenceWorkbench({
                     type="button"
                     onClick={openExerciseFinder}
                     aria-current={
-                      !planPreviewOpen &&
-                      (finderOpen || workflowStep === 'select' || !s.activeSteps.length)
+                      !planPreviewOpen && (isSelecting || !s.activeSteps.length)
                         ? 'step'
                         : undefined
                     }
                   >
-                    <span>1</span> 동작 선택
+                    <span>2</span> 동작 선택
                   </button>
                 </li>
                 <li>
@@ -4615,15 +4684,12 @@ export function SequenceWorkbench({
                     onClick={arrangeSequence}
                     disabled={!s.activeSteps.length}
                     aria-current={
-                      !planPreviewOpen &&
-                      !finderOpen &&
-                      workflowStep === 'arrange' &&
-                      s.activeSteps.length
+                      !planPreviewOpen && !finderOpen && isArrangeStage && s.activeSteps.length
                         ? 'step'
                         : undefined
                     }
                   >
-                    <span>2</span> 수업 구성
+                    <span>3</span> 수업 구성
                   </button>
                 </li>
                 <li>
@@ -4633,13 +4699,13 @@ export function SequenceWorkbench({
                     disabled={!s.activeSteps.length}
                     aria-current={planPreviewOpen ? 'step' : undefined}
                   >
-                    <span>3</span> 미리보기
+                    <span>4</span> 미리보기
                   </button>
                 </li>
               </ol>
             </nav>
           </details>
-        </>
+        </WorkbenchWorkspace>
       )}
       <LightDismissDialog
         open={
@@ -4798,9 +4864,7 @@ export function SequenceWorkbench({
                   type="button"
                   className="pf-step-nav-btn"
                   disabled={conditionStep === 1}
-                  onClick={() =>
-                    navigateConditionStep(conditionStep === 3 ? 2 : 1)
-                  }
+                  onClick={() => navigateConditionStep(conditionStep === 3 ? 2 : 1)}
                 >
                   이전 단계
                 </button>
@@ -4808,9 +4872,7 @@ export function SequenceWorkbench({
                   type="button"
                   className="pf-step-nav-btn"
                   disabled={conditionStep === 3}
-                  onClick={() =>
-                    navigateConditionStep(conditionStep === 1 ? 2 : 3)
-                  }
+                  onClick={() => navigateConditionStep(conditionStep === 1 ? 2 : 3)}
                 >
                   다음 단계
                 </button>

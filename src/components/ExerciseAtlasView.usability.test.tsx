@@ -112,8 +112,8 @@ describe('ExerciseAtlasView movement comparison, pre-add readiness cues, and seq
 
     const card1 = screen.getByTestId(`atlas-compare-card-${matWarmup.id}`);
     const card2 = screen.getByTestId(`atlas-compare-card-${matCorePending.id}`);
-    expect(card1).toHaveTextContent('내 강사 검토 · 자격 인증 미확인');
-    expect(card2).toHaveTextContent('교차 검증 완료 · 검토 선택 사항');
+    expect(card1).toHaveTextContent('내 개인 검토 완료');
+    expect(card2).toHaveTextContent('개인 검토 전 · 자동 추천 제외');
     expect(card2).toHaveTextContent(matCorePending.precautions);
 
     // Filter to an unrelated query so both compared exercises leave the filtered grid
@@ -297,7 +297,7 @@ describe('ExerciseAtlasView movement comparison, pre-add readiness cues, and seq
         screen.getByText('관련 패턴 참고용 · 검증된 운동 시범이 아닙니다.'),
       ).toBeInTheDocument();
       expect(
-        screen.getByText('동작을 바로 추가하고 순서를 바꾸세요. 검토 기록은 선택 사항입니다.'),
+        screen.getByText('개인 검토 상태와 출처는 동작 상세에서 확인하세요.'),
       ).toBeInTheDocument();
 
       unmount();
