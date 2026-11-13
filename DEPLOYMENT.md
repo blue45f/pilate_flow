@@ -82,7 +82,7 @@ pnpm deploy
 pnpm deploy:verify --wait-cdn
 ```
 
-전체 품질 게이트인 `pnpm verify:all`에는 운영 빌드가 포함됩니다. 빌드만 별도로 확인할 때는 `pnpm build`를 실행하며 SVG 캐시 정합성, TypeScript, Vite 번들과 PWA 무결성을 검사합니다.
+전체 품질 게이트인 `pnpm verify:all`은 운영 빌드를 만든 후 전체 테스트를 실행해 PWA artifact 검사가 이전 `dist/`를 읽지 않도록 합니다. 빌드만 별도로 확인할 때는 `pnpm build`를 실행하며 SVG 캐시 정합성, TypeScript, Vite 번들과 PWA 무결성을 검사합니다.
 
 `pnpm`을 사용할 수 없는 앱에서는 승인된 배포를 `bash /Users/hjunkim/WebstormProjects/pilates-flow/scripts/deploy.sh`로 실행할 수 있습니다. 인자 없는 `deploy.sh`는 점검만 하는 명령이 아니라 실제 업로드 명령입니다.
 

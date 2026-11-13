@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -31,17 +31,46 @@ it('offers only one static reference without changing the source, store or stora
   expect(JSON.stringify(localStorage)).toBe(storage);
 });
 
-it('does not borrow catalog diagrams for custom IDs or modified catalog apparatus', async () => {
-  for (const exercise of [
-    { ...INITIAL_EXERCISES[0], id: 'my-original-exercise' },
-    { ...INITIAL_EXERCISES[0], apparatus: 'chair' as const },
-  ]) {
-    const { container, unmount } = render(<MovementDiagramReference exercise={exercise} />);
-    await open(container);
-    expect(screen.getByText(/일치하는 도해가 아직 없어요/)).toBeInTheDocument();
-    expect(container.querySelector('svg')).toBeNull();
-    unmount();
-  }
+it('keeps a custom ID on the generic reference fallback without borrowing a catalog diagram', async () => {
+  const exercise = { ...INITIAL_EXERCISES[0], id: 'my-original-exercise' };
+  const { container } = render(<MovementDiagramReference exercise={exercise} />);
+  await open(container);
+  expect(screen.getByText(/일치하는 도해가 아직 없어요/)).toBeInTheDocument();
+  expect(container.querySelector('svg')).toBeNull();
+  expect(screen.queryByTestId('unmodeled-motion-reference')).not.toBeInTheDocument();
+  expect(screen.getByTestId('movement-diagram-fallback-disclosure')).not.toHaveAttribute('open');
+});
+
+it('shows an apparatus-only notice for a modified catalog apparatus without borrowing its authored pose', () => {
+  const exercise = { ...INITIAL_EXERCISES[0], apparatus: 'chair' as const };
+  const { container } = render(<MovementDiagramReference exercise={exercise} />);
+  const details = container.querySelector('details')!;
+  expect(screen.getByText('수정한 동작의 도해 안내')).toBeVisible();
+  details.open = true;
+  fireEvent(details, new Event('toggle'));
+
+  const notice = screen.getByRole('region', { name: `${exercise.nameKo} 전용 도해 안내` });
+  expect(notice).toBeVisible();
+  expect(notice).toHaveAttribute('data-exercise-id', exercise.id);
+  expect(notice).toHaveAttribute('data-match-scope', 'unmodeled-exercise');
+  expect(notice).toHaveAttribute('data-native-motion-available', 'false');
+  expect(within(notice).getByRole('img')).toHaveAccessibleName(
+    `${exercise.nameKo} · 전용 도해 없음 · 운다 체어 기구 안내 이미지`,
+  );
+  expect(within(notice).getByText('기구 안내')).toBeVisible();
+  expect(
+    within(notice).getByText(/기구나 시작 자세가 변경되어 기존 도해를 표시하지 않습니다/),
+  ).toBeVisible();
+  expect(container.querySelectorAll('svg')).toHaveLength(1);
+  expect(notice.querySelector('svg')).toHaveClass('pf-apparatus-illustration-svg');
+  expect(
+    container.querySelector(
+      '[data-layer="kinematic-figure"], [data-joint-node], .movement-phase-diagram-svg, img[src^="/motion-artwork-v2/"]',
+    ),
+  ).toBeNull();
+  expect(screen.queryByRole('region', { name: '참고 자세 정지 그림' })).not.toBeInTheDocument();
+  expect(screen.queryByTestId('movement-diagram-fallback-disclosure')).not.toBeInTheDocument();
+  expect(screen.queryByText('출처 대조 기록')).not.toBeInTheDocument();
 });
 
 it('resets disclosure when the displayed exercise changes', async () => {

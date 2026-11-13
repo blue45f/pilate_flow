@@ -23,7 +23,7 @@
     "check:secrets": "node --test scripts/check-secrets.node-test.mjs && node scripts/check-secrets.mjs",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
-    "verify:all": "pnpm check:secrets && pnpm check:motion-study && pnpm test:deploy && pnpm test && pnpm lint && pnpm build",
+    "verify:all": "pnpm check:secrets && pnpm check:motion-study && pnpm test:deploy && pnpm lint && pnpm build && pnpm test",
     "deploy": "node scripts/deploy-universal.mjs",
     "deploy:doctor": "node scripts/deploy-universal.mjs --doctor",
     "deploy:auth": "node scripts/setup-deploy-auth.mjs",

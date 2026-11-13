@@ -396,3 +396,25 @@ html #root .vnext-shell .teaching-high-contrast .panel {
   background: var(--teaching-paper) !important;
   color: var(--teaching-ink);
 }
+
+#root .vnext-shell .teaching-high-contrast .pf-p09-cue-summary-card {
+  background: var(--teaching-paper);
+  border-color: var(--teaching-line);
+}
+
+#root .vnext-shell .teaching-high-contrast .pf-p09-cue-summary-card__head strong {
+  color: var(--teaching-ink);
+}
+
+#root .vnext-shell .teaching-stage .pf-live-3d-companion__badge.is-mid {
+  background: var(--pf-color-status-warning-bg);
+  color: var(--pf-color-status-warning-text);
+}
+
+#root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .pf-visual-filmstrip__note {
+  color: var(--pf-color-text-on-primary);
+}
+
+html #root .vnext-shell .teaching-high-contrast .eyebrow {
+  color: var(--teaching-muted);
+}

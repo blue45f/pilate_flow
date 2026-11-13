@@ -26,7 +26,7 @@ pnpm install --frozen-lockfile
 # 개발 서버 실행 (Vite)
 pnpm dev
 
-# 전체 품질 게이트 (비밀키 스캔 + 모션 스터디 검증 + 배포 스크립트 단위테스트 + 전체 테스트 + 린트 + 프로덕션 PWA 빌드)
+# 전체 품질 게이트 (비밀키 스캔 + 모션 스터디 검증 + 배포 스크립트 테스트 + 린트 + 새 PWA 빌드 + 전체 테스트)
 pnpm verify:all
 
 # 개별 검증 명령
@@ -35,7 +35,7 @@ pnpm check:motion-study   # 98종 동작 도해·원장 정합성 검사
 pnpm generate:motion-artwork # 공통 모델의 98종 × 3자세 SVG 캐시 생성
 pnpm check:motion-artwork # 실제 렌더 결과와 캐시/manifest 해시 대조
 pnpm test:deploy          # PWA 빌드 및 배포 오케스트레이터 단위 테스트
-pnpm test                 # 예약·반복 엔진(node --test) + Vitest 전체 테스트
+pnpm test                 # 예약·반복 엔진(node --test) + Vitest 전체 테스트 (PWA artifact 검사는 최신 pnpm build 필요)
 pnpm lint                 # ESLint 정적 분석
 pnpm build                # SVG 캐시 확인 + tsc -b + Vite + PWA 검사
 ```
