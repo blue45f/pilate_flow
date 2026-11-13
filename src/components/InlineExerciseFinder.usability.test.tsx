@@ -242,7 +242,7 @@ describe('InlineExerciseFinder individual filter chips, non-destructive 0-result
     expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
     expect(usePilatesStore.getState().activeSteps[0]?.exerciseId).toBe(pendingMatOk.id);
     expect(
-      screen.getByText('합성 미검토 매트 동작 동작을 수업안에 추가했어요.'),
+      screen.getByText('1번에 합성 미검토 매트 동작 동작을 추가했습니다.'),
     ).toBeInTheDocument();
     const afterExercise = usePilatesStore
       .getState()

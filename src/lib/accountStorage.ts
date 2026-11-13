@@ -25,6 +25,11 @@ function readOwner(): string | null {
 let tabOwner = readOwner();
 let switching = false;
 
+/** Identity of this tab's hydrated workspace, even if another tab changes the shared marker. */
+export function getActiveWorkspaceOwner(): string | null {
+  return tabOwner;
+}
+
 function ownerKey(owner: string | null) {
   return owner === null ? GUEST_STORAGE_KEY : accountStorageKey(owner);
 }

@@ -3,16 +3,17 @@ import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
 import { SpringVisualPills } from './SpringVisualPills';
-import { useState, type RefObject } from 'react';
+import { useId, useState, type RefObject } from 'react';
 import { ArrowUpRight, Check, ExternalLink, Info, Plus, X } from 'lucide-react';
-import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
+import { APPARATUS_LABELS, FAVORITE_TAG_META, POSITION_LABELS } from '../data/pilatesCatalog';
 import { normalizeReferenceUrlPolicy } from '../features/referenceLinkPolicyCandidate';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { formatBrandSpringEquivalent } from '../utils/brandSpringConverter';
 import { getExerciseEvidence } from '../utils/exerciseEvidence';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
-import type { PilatesExercise } from '../types/pilates';
+import type { FavoriteTag, PilatesExercise } from '../types/pilates';
 import '../styles/library-inspector-usability.css';
+import '../styles/library-favorite-classification.css';
 
 export interface LibraryMovementInspectorProps {
   exercise: PilatesExercise | null;
@@ -48,6 +49,12 @@ export function LibraryMovementInspector({
   addedId,
 }: LibraryMovementInspectorProps) {
   const reformerBrand = usePilatesStore((s) => s.reformerBrand);
+  const storedFavoriteTag = usePilatesStore((s) =>
+    exercise ? s.exercises.find((item) => item.id === exercise.id)?.favoriteTag : undefined,
+  );
+  const setExerciseFavoriteTag = usePilatesStore((s) => s.setExerciseFavoriteTag);
+  const favoriteControlId = useId();
+  const favoriteTag = storedFavoriteTag ?? exercise?.favoriteTag ?? 'none';
   const [showReferenceGuide, setShowReferenceGuide] = useState(false);
   const reviewState = exercise ? getExerciseReviewState(exercise) : null;
   const autoEligible = exercise ? isExerciseAutoEligible(exercise) : false;
@@ -160,6 +167,36 @@ export function LibraryMovementInspector({
             <h3>{exercise.nameKo}</h3>
           </div>
           <p className="library-inspector-english">{exercise.nameEn}</p>
+
+          <div className="library-inspector-favorite-classification">
+            <label htmlFor={favoriteControlId}>이 동작의 즐겨찾기 분류</label>
+            <select
+              id={favoriteControlId}
+              value={favoriteTag}
+              disabled={storedFavoriteTag === undefined}
+              aria-describedby={`${favoriteControlId}-help`}
+              onChange={(event) => {
+                const tag = event.currentTarget.value;
+                if (storedFavoriteTag !== undefined && Object.hasOwn(FAVORITE_TAG_META, tag)) {
+                  setExerciseFavoriteTag(exercise.id, tag as FavoriteTag);
+                }
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') event.stopPropagation();
+              }}
+            >
+              {Object.entries(FAVORITE_TAG_META).map(([tag, meta]) => (
+                <option key={tag} value={tag}>
+                  {meta.label}
+                </option>
+              ))}
+            </select>
+            <p id={`${favoriteControlId}-help`}>
+              {storedFavoriteTag === undefined
+                ? '라이브러리에 저장된 동작의 즐겨찾기 분류를 바꿀 수 있어요.'
+                : '분류한 동작은 즐겨찾기 필터로 다시 찾을 수 있어요.'}
+            </p>
+          </div>
 
           <div className="pf-inspector-3sec-grid" aria-label="선택 동작 핵심 3요소 요약">
             <div className="pf-inspector-3sec-item">

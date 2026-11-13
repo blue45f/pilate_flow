@@ -232,6 +232,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     elapsedByStep: {},
   }));
   const [autoAdvance, setAutoAdvance] = useState(false);
+  const [presentationMode, setPresentationMode] = useState<'focused' | 'reference'>('focused');
   const [highContrast, setHighContrast] = useState(false);
   const [screenOn, setScreenOn] = useState(true);
   const [wakeStatus, setWakeStatus] = useState('시작 시 화면 유지 요청');
@@ -279,6 +280,20 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const runningIntent = useRef(false);
   const screenEnabled = useRef(true);
   const boardRef = useRef<HTMLDivElement>(null);
+  const applyPresentationMode = (mode: 'focused' | 'reference') => {
+    setPresentationMode(mode);
+    // Native disclosures can be toggled independently. Reapply even the current
+    // preset without replacing any timer, session, or voice controls.
+    boardRef.current
+      ?.querySelectorAll<HTMLDetailsElement>('[data-presentation-disclosure]')
+      .forEach((details) => {
+        details.open = mode === 'reference';
+      });
+    if (mode === 'focused') {
+      setOrbitDrawerOpen(false);
+      setKinematicDrawerOpen(false);
+    }
+  };
   const exitContentRef = useRef<HTMLParagraphElement>(null);
   const reviewContentRef = useRef<HTMLDivElement>(null);
   const [exitTarget, setExitTarget] = useState<ActiveWorkspaceTab | null>(null);
@@ -1535,6 +1550,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     <div
       ref={boardRef}
       className={`teaching-stage ${highContrast ? 'teaching-high-contrast' : ''}`}
+      data-presentation={presentationMode}
     >
       <header className="teaching-stage-header">
         <div>
@@ -1614,6 +1630,23 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           </button>
         </div>
       </header>
+      <div className="teaching-presentation-switch" role="group" aria-label="진행 화면 보기">
+        <span>진행 화면</span>
+        <button
+          type="button"
+          aria-pressed={presentationMode === 'focused'}
+          onClick={() => applyPresentationMode('focused')}
+        >
+          집중 진행
+        </button>
+        <button
+          type="button"
+          aria-pressed={presentationMode === 'reference'}
+          onClick={() => applyPresentationMode('reference')}
+        >
+          자료 함께 보기
+        </button>
+      </div>
       <div
         className="teaching-step-progress-banner"
         data-testid="live-stage-step-progress"
@@ -1731,22 +1764,29 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               {currentSpringRaw ? ` · ${currentSpringRaw}` : ''}
               {!currentIsRest && exercise?.breathPattern ? ` · ${exercise.breathPattern}` : ''}
             </p>
-            <div className="teaching-timing-breakdown">
-              <span>전체 {formatSecondsToMMSS(timing.totalSec)}</span>
-              {!currentIsRest && (
-                <>
-                  <span>설명 {timing.explanationSec}초</span>
-                  <span>수행 {formatSecondsToMMSS(timing.movementSec)}</span>
-                  {timing.sides === 2 && (
-                    <span>
-                      한쪽 {Number.isInteger(timing.perSideSec) ? '' : '약 '}
-                      {formatSideSeconds(timing.perSideSec)}
-                    </span>
-                  )}
-                  <span>전환 {timing.transitionSec}초</span>
-                </>
-              )}
-            </div>
+            <details
+              className="teaching-presentation-details teaching-secondary-timing"
+              data-presentation-disclosure
+              open={presentationMode === 'reference'}
+            >
+              <summary>이 동작 시간 구성</summary>
+              <div className="teaching-timing-breakdown">
+                <span>전체 {formatSecondsToMMSS(timing.totalSec)}</span>
+                {!currentIsRest && (
+                  <>
+                    <span>설명 {timing.explanationSec}초</span>
+                    <span>수행 {formatSecondsToMMSS(timing.movementSec)}</span>
+                    {timing.sides === 2 && (
+                      <span>
+                        한쪽 {Number.isInteger(timing.perSideSec) ? '' : '약 '}
+                        {formatSideSeconds(timing.perSideSec)}
+                      </span>
+                    )}
+                    <span>전환 {timing.transitionSec}초</span>
+                  </>
+                )}
+              </div>
+            </details>
             {!currentIsRest && exercise?.breathPattern && (
               <p className="teaching-breath-glance-pill sr-only" data-testid="live-stage-breath-callout">
                 호흡 리듬 · {exercise.breathPattern}
@@ -1782,7 +1822,12 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             const activePhaseKey =
               progress < 28 ? 'start' : progress < 64 ? 'mid' : 'peak';
             return (
-              <>
+              <details
+                className="teaching-presentation-details teaching-reference-materials"
+                data-presentation-disclosure
+                open={presentationMode === 'reference'}
+              >
+                <summary>동작 참고 자료 · 3D·호흡</summary>
                 <div
                   className="pf-live-3d-companion is-three-frames"
                   data-testid="live-stage-3d-companion"
@@ -1830,7 +1875,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     size={62}
                   />
                 </div>
-              </>
+              </details>
             );
           })()}
           {timing.sides === 2 && (
@@ -1890,23 +1935,30 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   >
                     {converted.brandShortLabelKo}: {converted.equivalentLabelKo}
                   </span>
-                  <span className="pf-live-brand-spring-chips">
-                    {BRAND_SPRING_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        className={`pf-live-brand-mini-btn ${
-                          reformerBrand === opt.id ? 'is-active' : ''
-                        }`.trim()}
-                        data-testid={`live-stage-brand-btn-${opt.id}`}
-                        aria-pressed={reformerBrand === opt.id}
-                        aria-label={`라이브 스프링 기준 ${opt.shortLabelKo}`}
-                        onClick={() => setReformerBrand(opt.id)}
-                      >
-                        {opt.shortLabelKo}
-                      </button>
-                    ))}
-                  </span>
+                  <details
+                    className="teaching-presentation-details teaching-brand-settings"
+                    data-presentation-disclosure
+                    open={presentationMode === 'reference'}
+                  >
+                    <summary>브랜드별 스프링 기준 설정</summary>
+                    <span className="pf-live-brand-spring-chips">
+                      {BRAND_SPRING_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          className={`pf-live-brand-mini-btn ${
+                            reformerBrand === opt.id ? 'is-active' : ''
+                          }`.trim()}
+                          data-testid={`live-stage-brand-btn-${opt.id}`}
+                          aria-pressed={reformerBrand === opt.id}
+                          aria-label={`라이브 스프링 기준 ${opt.shortLabelKo}`}
+                          onClick={() => setReformerBrand(opt.id)}
+                        >
+                          {opt.shortLabelKo}
+                        </button>
+                      ))}
+                    </span>
+                  </details>
                 </div>
               );
             })()}
@@ -2814,7 +2866,7 @@ function LiveStageMobileSubPageToggle({ stepCount }: { stepCount: number }) {
         ariaLabel="라이브 스테이지 보기 전환"
         activeId={tab}
         options={[
-          { id: 'timer', label: '타이머 · 3D 모션' },
+          { id: 'timer', label: '현재 동작·타이머' },
           { id: 'flow', label: '오늘의 흐름', badge: stepCount },
         ]}
         onSelect={setTab}

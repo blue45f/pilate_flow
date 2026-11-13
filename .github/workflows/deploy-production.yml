@@ -1,10 +1,19 @@
-name: Production Deployment (Firebase Hosting · pilates-flow-atelier)
+name: Production Checks & Manual Deployment (Firebase Hosting · pilates-flow-atelier)
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      deploy_to_production:
+        description: 'Firebase 운영 배포 실행 (main 브랜치에서만 가능)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -17,7 +26,7 @@ jobs:
       group: "production-build-${{ github.ref }}"
       cancel-in-progress: true
     steps:
-      - name: Checkout main branch
+      - name: Checkout source
         uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -66,6 +75,27 @@ jobs:
           src/test/stageGlobalNavigation.test.tsx
           src/test/pwaStartupContinuity.test.tsx
           src/test/pwaServiceWorker.test.ts
+          src/test/sequenceInsertionAndReuse.test.ts
+          src/utils/movementIdeaDraft.insertion.test.ts
+          src/components/InlineExerciseFinder.insertion.test.tsx
+          src/components/SequenceWorkbench.insertion.test.tsx
+          src/components/ClassBinderView.reusePreview.test.tsx
+          src/components/LibraryMovementInspector.favorite.test.tsx
+          src/components/MemberBookingView.discovery.test.tsx
+          src/components/MemberBookingView.usability.test.tsx
+          src/components/RecoveryPreview.test.tsx
+          src/components/RecoveryPreview.storage.test.tsx
+          src/components/RecoveryPreview.layout.test.tsx
+          src/utils/backupRecoveryInspection.test.ts
+          src/hooks/useWorkspaceBrowseState.test.tsx
+          src/lib/accountStorage.test.ts
+          src/components/InstructorScheduleView.browseContinuity.test.tsx
+          src/components/ClassBinderView.historyContinuity.test.tsx
+          src/components/LiveStageView.presentation.test.tsx
+          src/components/LiveStageView.usability.test.tsx
+          src/components/LiveStageView.voice.test.tsx
+          src/test/globalBenchmarkMotionAndRepertoire.test.tsx
+          src/features/settingsPageCandidate/settingsPurposeFlowUx.test.tsx
 
       - name: Build production PWA bundle & verify canonical config
         run: pnpm build && pnpm deploy:check
@@ -80,6 +110,7 @@ jobs:
 
   deploy-hosting:
     name: Deploy to Firebase Hosting (pilates-flow-atelier) & Verify Live Hash
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy_to_production == true }}
     needs: verify-and-build
     runs-on: ubuntu-latest
     concurrency:

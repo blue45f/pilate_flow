@@ -20,6 +20,22 @@ import '../styles/recovery-preview.css';
 import '../styles/recovery-preview-layout.css';
 import './RecoveryPreview.css';
 
+interface InspectedRecoveryFile {
+  readonly fileName: string;
+  readonly contents: string;
+  readonly inspection: BackupRecoveryInspection;
+}
+
+const exportDateFormatter = new Intl.DateTimeFormat('ko-KR', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+  timeZoneName: 'short',
+});
+
 function focusRecoveryControl(control: HTMLElement | null | undefined) {
   if (!control) return;
   control.focus({ preventScroll: true });
@@ -40,8 +56,10 @@ export function RecoveryPreview() {
   const request = useRef(0);
   const applyingRef = useRef(false);
   const rollingBackRef = useRef(false);
-  const [raw, setRaw] = useState<string | null>(null);
-  const [inspection, setInspection] = useState<BackupRecoveryInspection | null>(null);
+  // Keep the displayed file identity attached to the contents that passed the read guard.
+  const [candidate, setCandidate] = useState<InspectedRecoveryFile | null>(null);
+  const raw = candidate?.contents ?? null;
+  const inspection = candidate?.inspection ?? null;
   const [reading, setReading] = useState(false);
   const [message, setMessage] = useState('');
   const [storageStatus, setStorageStatus] = useState<RecoveryStorageStatus | null>(null);
@@ -78,11 +96,15 @@ export function RecoveryPreview() {
 
   const diskBlocked = storageStatus !== null && !storageStatus.ok;
 
-  function inspect(contents: string) {
+  function inspect(contents: string, fileName: string) {
     const disk = getRecoveryStorageStatus();
     setStorageStatus(disk);
     setStorageFingerprint(disk.ok ? disk.fingerprint : undefined);
-    setInspection(inspectBackupRecovery(contents, usePilatesStore.getState()));
+    setCandidate({
+      fileName,
+      contents,
+      inspection: inspectBackupRecovery(contents, usePilatesStore.getState()),
+    });
     setMessage('');
   }
   function focusChooser() {
@@ -94,8 +116,7 @@ export function RecoveryPreview() {
   }
   function cancel() {
     request.current++;
-    setRaw(null);
-    setInspection(null);
+    setCandidate(null);
     setReading(false);
     setMessage('');
     setStorageStatus(null);
@@ -128,8 +149,7 @@ export function RecoveryPreview() {
           if (!file) return;
           const identity = ++request.current;
           setReading(true);
-          setRaw(null);
-          setInspection(null);
+          setCandidate(null);
           setMessage('');
           setStorageStatus(null);
           setStorageFingerprint(undefined);
@@ -141,8 +161,7 @@ export function RecoveryPreview() {
           try {
             const contents = await file.text();
             if (identity !== request.current) return;
-            setRaw(contents);
-            inspect(contents);
+            inspect(contents, file.name);
           } catch {
             if (identity === request.current)
               setMessage('파일을 읽을 수 없습니다. 원본 파일을 보관하고 다시 선택해 주세요.');
@@ -188,9 +207,36 @@ export function RecoveryPreview() {
             </div>
           ) : (
             <>
-              <p className="recovery-source-kind">
-                {inspection.summary.sourceLabel} · {Math.ceil(inspection.summary.bytes / 1024)}KB
-              </p>
+              <section className="recovery-file-summary" aria-label="선택한 백업">
+                <h5>선택한 백업</h5>
+                <dl>
+                  <div>
+                    <dt>파일명</dt>
+                    <dd>
+                      <bdi>{candidate?.fileName}</bdi>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>백업 생성 시각</dt>
+                    <dd>
+                      {inspection.summary.exportedAt ? (
+                        <time dateTime={inspection.summary.exportedAt}>
+                          {exportDateFormatter.format(new Date(inspection.summary.exportedAt))}
+                        </time>
+                      ) : (
+                        '이전 형식 · 생성 시각 정보 없음'
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>파일 형식·크기</dt>
+                    <dd>
+                      {inspection.summary.sourceLabel} ·{' '}
+                      {Math.ceil(inspection.summary.bytes / 1024)}KB
+                    </dd>
+                  </div>
+                </dl>
+              </section>
               <div className="recovery-summary-counts" aria-label="복원 변경 요약">
                 <span>새로 추가 {inspection.summary.newItems}개</span>
                 <span>기존 충돌 {inspection.summary.conflicts}개</span>
@@ -276,7 +322,7 @@ export function RecoveryPreview() {
                     type="button"
                     className="btn-secondary"
                     onClick={() => {
-                      if (raw !== null) inspect(raw);
+                      if (candidate) inspect(candidate.contents, candidate.fileName);
                     }}
                   >
                     현재 자료로 다시 검토
@@ -328,8 +374,7 @@ export function RecoveryPreview() {
                             setRollbackPoint(null);
                           }
                         }
-                        setRaw(null);
-                        setInspection(null);
+                        setCandidate(null);
                         focusChooser();
                       }
                     } finally {

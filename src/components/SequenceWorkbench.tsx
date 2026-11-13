@@ -59,6 +59,7 @@ import {
 } from '../utils/sequenceEngine';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
+import { useSequenceInsertionPlacement } from '../hooks/useSequenceInsertionPlacement';
 import { SequenceOrderCard } from './SequenceOrderCard';
 import '../styles/sequence-composition.css';
 import './SequenceWorkbench.usability.css';
@@ -393,6 +394,8 @@ export function SequenceWorkbench({
   const [finderHasOpened, setFinderHasOpened] = useState(
     () => initialRecovery?.finderOpen ?? false,
   );
+  const [finderInsertionPlacement, setFinderInsertionPlacement] =
+    useSequenceInsertionPlacement(s.activeSequenceId);
   const [workflowStep, setWorkflowStepState] = useState<'select' | 'arrange'>(() =>
     initialRecovery?.finderOpen || !s.activeSteps.length ? 'select' : 'arrange',
   );
@@ -730,18 +733,18 @@ export function SequenceWorkbench({
     requestAnimationFrame(() => {
       if (document.querySelector('dialog[open]')) return;
       const heading = document.getElementById('sequence-outline-heading');
-      if (usePilatesStore.getState().activeSteps.length && heading) heading.focus();
-      else if (finderOpener.current?.isConnected) finderOpener.current.focus();
+      if (finderOpener.current?.isConnected) finderOpener.current.focus();
+      else if (usePilatesStore.getState().activeSteps.length && heading) heading.focus();
     });
   };
-  const openExerciseFinder = () => {
+  const openExerciseFinder = useCallback(() => {
     closeInspector();
     setWorkflowStep('select');
     finderOpener.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setFinderHasOpened(true);
     setFinderOpen(true);
-  };
+  }, [closeInspector, setWorkflowStep]);
   useEffect(() => {
     // Focus only on an explicit opening, after the lazy picker has mounted.
     // Resizing or returning from source details must preserve the current control.
@@ -1508,7 +1511,7 @@ export function SequenceWorkbench({
     () => [...s.historyLogs].sort((a, b) => (b.taughtAt || '').localeCompare(a.taughtAt || '')),
     [s.historyLogs],
   );
-  const startNewClass = () => {
+  const startNewClass = useCallback(() => {
     const current = usePilatesStore.getState();
     if (!current.activeSteps.length) {
       if (Date.now() - lastBlankResetAtRef.current < 600) return;
@@ -1531,7 +1534,7 @@ export function SequenceWorkbench({
     setRecentSwitcherOpen(false);
     setWorkflowStep('select');
     setNotice('새 수업 준비 화면으로 전환했습니다. 되돌리기로 이전 수업안을 복원할 수 있습니다.');
-  };
+  }, [closeInspector, openExerciseFinder, setWorkflowStep]);
   const continueRecentSequence = (sequenceId: string, title: string) => {
     s.loadSequenceIntoWorkbench(sequenceId);
     setRecentSwitcherOpen(false);
@@ -3170,6 +3173,11 @@ export function SequenceWorkbench({
                         index={index}
                         label={`${index + 1}번 ${ex.nameKo}`}
                         onNotice={setNotice}
+                        onInsertAfter={(opener) => {
+                          setFinderInsertionPlacement({ kind: 'step', stepId: step.stepId });
+                          openExerciseFinder();
+                          finderOpener.current = opener;
+                        }}
                       >
                         <PfMovementCard
                           variant="step"
@@ -4752,7 +4760,7 @@ export function SequenceWorkbench({
           closeFinder();
         }}
         title="수업에 넣을 동작 고르기"
-        subtitle="상세를 확인하고 추가하면 현재 수업안에 그대로 담깁니다."
+        subtitle="추가 위치를 고르고 동작을 담으면 선택한 순서대로 이어집니다."
         className="workbench-finder-dialog"
         maxWidth="760px"
       >
@@ -4776,6 +4784,8 @@ export function SequenceWorkbench({
           {finderHasOpened && (
             <InlineExerciseFinder
               active={finderOpen}
+              insertionPlacement={finderInsertionPlacement}
+              onInsertionPlacementChange={setFinderInsertionPlacement}
               onOpenExercise={onOpenYouTubePreview}
               onArrangeSequence={arrangeSequence}
               classEquipment={EQUIPMENT_OPTIONS.filter((option) =>

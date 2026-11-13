@@ -1,6 +1,24 @@
 /* Compact inline next-action chips, lossless undo recovery row, save-state clarity,
    and replacement/inspector round-trip controls for SequenceWorkbench. */
 
+#root .workbench-task-focused .sequence-order-controls .sequence-insert-after {
+  grid-column: 1 / -1;
+  color: var(--wb-forest, #173d34);
+  background: var(--pf-color-bg-surface, #fffdf8);
+  font-weight: 650;
+  word-break: keep-all;
+}
+
+@media (min-width: 1024px) {
+  #root .workbench-task-focused:not(.has-inspector) .plan-layout:not(.is-option-a-split) .flow-sections:not(.is-columns-view) .sequence-order-controls.has-insert-action {
+    grid-template-columns: repeat(4, minmax(44px, 1fr)) minmax(140px, 1.5fr);
+  }
+
+  #root .workbench-task-focused:not(.has-inspector) .plan-layout:not(.is-option-a-split) .flow-sections:not(.is-columns-view) .sequence-insert-after {
+    grid-column: auto;
+  }
+}
+
 #root .vnext-workbench .workbench-feedback-row {
   display: flex;
   flex-wrap: wrap;

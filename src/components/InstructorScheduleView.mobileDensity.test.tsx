@@ -118,7 +118,7 @@ describe('PilatesSettingsPage task-selection step summary and section navigation
     const stepGuide = screen.getByTestId('settings-task-step-guide');
     const step1Btn = within(stepGuide).getByRole('button', { name: '1 기기·설치 점검' });
     const step2Btn = within(stepGuide).getByRole('button', { name: '2 데이터 백업·복원' });
-    const step3Btn = within(stepGuide).getByRole('button', { name: '3 클라우드 동기화(선택)' });
+    const step3Btn = within(stepGuide).getByRole('button', { name: '3 계정 연결(선택)' });
 
     // Click Step 1: 기기·설치 점검
     fireEvent.click(step1Btn);
@@ -142,7 +142,7 @@ describe('PilatesSettingsPage task-selection step summary and section navigation
       within(screen.getByTestId('settings-group-data')).getByRole('heading', { level: 3 }),
     ).toHaveFocus();
 
-    // Click Step 3: 클라우드 동기화(선택)
+    // Click Step 3: 계정 연결(선택)
     fireEvent.click(step3Btn);
     expect(step3Btn).toHaveAttribute('aria-current', 'step');
     expect(screen.getByTestId('settings-group-account')).toHaveClass('pf-settings-group--active');

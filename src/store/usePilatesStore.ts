@@ -1,6 +1,8 @@
 import { compareTeachingHistoryDates, getTeachingHistoryDateSource } from '../utils/teachingHistoryDate';
 import { reconstructStepsSnapshotFromHistoryLog } from '../utils/teachingHistorySnapshot';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
+import { resolveSequenceInsertion } from '../utils/sequenceInsertion';
+import type { SequenceInsertionPlacement } from '../utils/sequenceInsertion';
 import { createRecoveryStorageGuard, RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
 import {
   canonicalRecoveryContent,
@@ -281,10 +283,19 @@ export interface PilatesStudioState extends SequenceSnapshot {
     durationMin: number,
   ) => { success: boolean; message: string };
   appendExerciseToSequence: (exerciseId: string, blockCategory?: ClassBlockCategory) => void;
+  insertExerciseIntoSequence: (
+    exerciseId: string,
+    placement: SequenceInsertionPlacement,
+    blockCategory?: ClassBlockCategory,
+  ) => { success: boolean; message: string; stepId?: string };
   optimizeActiveTransitions: () => void;
   swapFreshExercisesForGroup: () => void;
   saveCurrentSequenceToBinder: (asNew?: boolean) => string;
   duplicateSavedSequence: (sequenceId: string) => string | undefined;
+  openSavedSequenceCopy: (
+    sourceId: string,
+    expectedState: PilatesStudioState,
+  ) => { success: boolean; sequenceId?: string; message: string };
   deleteSavedSequence: (sequenceId: string) => void;
   loadHistoryIntoWorkbench: (logId: string) => void;
   addCustomExercise: (exercise: PilatesExercise) => void;
@@ -1761,65 +1772,83 @@ export const usePilatesStore = create<PilatesStudioState>()(
         set(edit(state, { activeSteps }));
         return { success: true, message: '휴식 시간을 변경했습니다.' };
       },
-      appendExerciseToSequence: (exerciseId, blockCategory) =>
-        set((state) => {
-          const exercise = state.exercises.find((item) => item.id === exerciseId);
-          if (!exercise) return state;
-          if (duplicatesAnotherStep(state, exercise))
-            return {
-              generationError:
-                '같은 동작의 중복 구성은 추가할 수 없습니다. 다른 동작을 선택해 주세요.',
-            };
-          const criteria = activeCriteria(state);
-          const equipment = getExerciseEquipment(exercise);
-          if (
-            !exerciseMatchesCriteria(exercise, criteria) ||
-            !equipment.requiredEquipment.every((id) => state.ownedEquipment.includes(id)) ||
-            !equipment.requiredProps.every((prop) => state.ownedProps.includes(prop))
-          )
-            return {
-              generationError:
-                '현재 선택한 기구·소도구와 최대 난이도 조건에 맞는 동작만 추가할 수 있습니다.',
-            };
-          const previous = state.exercises.find(
-            (item) => item.id === state.activeSteps.at(-1)?.exerciseId,
-          );
-          const previousEquipment = previous
-            ? [...getExerciseEquipment(previous).requiredEquipment].sort().join('|')
-            : '';
-          const transitionSec = !state.activeSteps.length
-            ? 0
-            : previousEquipment === [...equipment.requiredEquipment].sort().join('|')
-              ? 15
-              : 45;
-          return edit(state, {
-            activeSteps: [
-              ...state.activeSteps,
-              {
-                stepId: newId('step-add'),
-                order: state.activeSteps.length + 1,
-                blockCategory: blockCategory ?? exercise.blockCategory,
-                exerciseId,
-                durationMin: Math.max(
-                  1,
-                  (20 + transitionSec + 30) / 60,
-                  Math.min(20, exercise.defaultDurationMin),
-                ),
-                selectedLayer: criteria.defaultLayer,
-                explanationSec: 20,
-                transitionSec,
-              },
-            ],
-            ...(!state.activeSteps.length
-              ? {
-                  activeApparatus: criteria.apparatus,
-                  activeLevel: criteria.level,
-                  activeTargetMinutes: criteria.targetMinutes,
-                  activeTargetGroupId: criteria.targetGroupId ?? state.activeTargetGroupId,
-                }
-              : {}),
-          });
-        }),
+      appendExerciseToSequence: (exerciseId, blockCategory) => {
+        const state = get();
+        if (!state.exercises.some((exercise) => exercise.id === exerciseId)) return;
+        const result = state.insertExerciseIntoSequence(exerciseId, { kind: 'end' }, blockCategory);
+        if (!result.success) set({ generationError: result.message });
+      },
+      insertExerciseIntoSequence: (exerciseId, placement, blockCategory) => {
+        const state = get();
+        const resolved = resolveSequenceInsertion(state.activeSteps, placement);
+        if (!resolved.success) return resolved;
+        const exercise = state.exercises.find((item) => item.id === exerciseId);
+        if (!exercise)
+          return { success: false, message: '추가할 동작을 찾을 수 없습니다. 다시 선택해 주세요.' };
+        if (duplicatesAnotherStep(state, exercise))
+          return {
+            success: false,
+            message:
+              '같은 동작의 중복 구성은 추가할 수 없습니다. 다른 동작을 선택해 주세요.',
+          };
+        const criteria = activeCriteria(state);
+        const equipment = getExerciseEquipment(exercise);
+        if (
+          !exerciseMatchesCriteria(exercise, criteria) ||
+          !equipment.requiredEquipment.every((id) => state.ownedEquipment.includes(id)) ||
+          !equipment.requiredProps.every((prop) => state.ownedProps.includes(prop))
+        )
+          return {
+            success: false,
+            message:
+              '현재 선택한 기구·소도구와 최대 난이도 조건에 맞는 동작만 추가할 수 있습니다.',
+          };
+        const previous = state.exercises.find(
+          (item) => item.id === state.activeSteps[resolved.index - 1]?.exerciseId,
+        );
+        const previousEquipment = previous
+          ? [...getExerciseEquipment(previous).requiredEquipment].sort().join('|')
+          : '';
+        const transitionSec = resolved.index === 0
+          ? 0
+          : previousEquipment === [...equipment.requiredEquipment].sort().join('|')
+            ? 15
+            : 45;
+        const insertedStep: SequenceStep = {
+          stepId: newId('step-add'),
+          order: resolved.index + 1,
+          blockCategory: blockCategory ?? exercise.blockCategory,
+          exerciseId,
+          durationMin: Math.max(
+            1,
+            (20 + transitionSec + 30) / 60,
+            Math.min(20, exercise.defaultDurationMin),
+          ),
+          selectedLayer: criteria.defaultLayer,
+          explanationSec: 20,
+          transitionSec,
+        };
+        const activeSteps = [...state.activeSteps];
+        activeSteps.splice(resolved.index, 0, insertedStep);
+        set(edit(state, {
+          activeSteps: activeSteps.map((step, index) =>
+            step.locked ? step : { ...step, order: index + 1 },
+          ),
+          ...(!state.activeSteps.length
+            ? {
+                activeApparatus: criteria.apparatus,
+                activeLevel: criteria.level,
+                activeTargetMinutes: criteria.targetMinutes,
+                activeTargetGroupId: criteria.targetGroupId ?? state.activeTargetGroupId,
+              }
+            : {}),
+        }));
+        return {
+          success: true,
+          stepId: insertedStep.stepId,
+          message: `${resolved.index + 1}번에 ${exercise.nameKo} 동작을 추가했습니다.`,
+        };
+      },
       optimizeActiveTransitions: () => {
         const state = get();
         try {
@@ -1906,6 +1935,46 @@ export const usePilatesStore = create<PilatesStudioState>()(
           saveFeedback: '이 브라우저에 수업을 저장했습니다.',
         });
         return id;
+      },
+      openSavedSequenceCopy: (sourceId, expectedState) => {
+        const state = get();
+        if (state !== expectedState)
+          return {
+            success: false,
+            message: '수업이나 계정이 바뀌었습니다. 미리보기를 다시 열고 확인해 주세요.',
+          };
+        const source = state.savedSequences.find((sequence) => sequence.id === sourceId);
+        if (!source)
+          return { success: false, message: '저장한 수업을 찾을 수 없습니다. 목록에서 다시 선택해 주세요.' };
+
+        const id = newId('seq-copy');
+        const now = new Date().toISOString();
+        const copy: SavedSequence = {
+          ...structuredClone(source),
+          id,
+          title: `${source.title} (복사)`,
+          createdAt: now,
+          updatedAt: now,
+          taughtCount: 0,
+          lastTaughtAt: undefined,
+        };
+        set(edit(state, {
+          savedSequences: [copy, ...state.savedSequences],
+          draftCriteria: cloneCriteria(
+            copy.criteriaSnapshot ??
+              criteriaForSteps(state, copy.steps, copy.apparatus, copy.level, copy.targetMinutes),
+          ),
+          activeSequenceId: copy.id,
+          activeTitle: copy.title,
+          activeSubtitle: copy.subtitle,
+          activeApparatus: copy.apparatus,
+          activeLevel: copy.level,
+          activeTargetMinutes: copy.targetMinutes,
+          activeSteps: cloneSteps(copy.steps).map((step, index) => ({ ...step, order: index + 1 })),
+          activeTab: 'workbench',
+          saveFeedback: '원본을 유지하고 사본을 열었습니다.',
+        }));
+        return { success: true, sequenceId: copy.id, message: '원본을 유지하고 사본을 열었습니다.' };
       },
       duplicateSavedSequence: (sequenceId) => {
         const state = get();

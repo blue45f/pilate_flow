@@ -98,6 +98,8 @@ export interface RecoveryNotice {
 export interface RecoverySummary {
   sourceKind: RecoverySourceKind;
   sourceLabel: string;
+  /** Present only when the native export envelope contains a validated timestamp. */
+  exportedAt?: string;
   bytes: number;
   rows: RecoveryCountRow[];
   newItems: number;
@@ -495,6 +497,7 @@ function parseInput(raw: string) {
   let sourceKind: RecoverySourceKind,
     data: Record<string, unknown>,
     draft: SavedSequence | undefined;
+  let exportedAt: string | undefined;
   if (own(input, 'format') || own(input, 'data')) {
     if (input.format === 'pilates-motion-review-packet')
       throw new InspectionError(
@@ -528,6 +531,7 @@ function parseInput(raw: string) {
       );
     sourceKind = 'export-v3';
     data = envelope.data.data;
+    exportedAt = envelope.data.exportedAt;
   } else if (own(input, 'state') || own(input, 'version')) {
     if (input.version !== 0 && input.version !== 3)
       throw new InspectionError(
@@ -618,7 +622,7 @@ function parseInput(raw: string) {
       '같은 수업 또는 이력 스냅샷 안에 중복된 stepId가 있어 안전하게 복원할 수 없습니다. 어떤 항목도 적용하지 않았습니다.',
     );
   }
-  return { sourceKind, data: checked, draft, bytes };
+  return { sourceKind, data: checked, draft, bytes, exportedAt };
 }
 function mergeRecords<T extends { id: string }>(
   key: string,
@@ -1107,6 +1111,7 @@ export function inspectBackupRecovery(
       summary: {
         sourceKind: parsed.sourceKind,
         sourceLabel,
+        exportedAt: parsed.exportedAt,
         bytes: parsed.bytes,
         rows,
         newItems,

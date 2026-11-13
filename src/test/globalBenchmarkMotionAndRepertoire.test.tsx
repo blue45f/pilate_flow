@@ -502,6 +502,7 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
 
     render(<LiveStageView onOpenLogModal={vi.fn()} />);
 
+    fireEvent.click(screen.getByRole('button', { name: '자료 함께 보기' }));
     expect(screen.getByTestId('live-stage-3d-companion')).toBeVisible();
     expect(screen.getAllByTestId('live-stage-spring-delta-badge')[0]).toHaveTextContent(
       '스프링 변경: 1R 1B → 2R',

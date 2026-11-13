@@ -174,14 +174,14 @@ describe('inline exercise finder', () => {
     render(<InlineExerciseFinder onOpenExercise={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: `${first.nameKo} 수업안에 추가` }));
     expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
-    expect(screen.getByText(`${first.nameKo} 동작을 수업안에 추가했어요.`)).toBeInTheDocument();
+    expect(screen.getByText(`1번에 ${first.nameKo} 동작을 추가했습니다.`)).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: `${first.nameKo} 이미 수업안에 있음` }),
     ).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: `${duplicate.nameKo} 수업안에 추가` }));
     expect(screen.getByRole('alert')).toHaveTextContent('같은 동작의 중복');
     expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
-    expect(screen.queryByText(/동작을 수업안에 추가했어요/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/동작을 추가했습니다/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: `${unavailable.nameKo} 수업안에 추가` }));
     expect(screen.getByRole('alert')).toHaveTextContent('기구·소도구와 최대 난이도');
     expect(usePilatesStore.getState().activeSteps).toHaveLength(1);

@@ -12,6 +12,7 @@ import {
 } from '../design-system';
 import { useCloudSession } from '../lib/cloudSync';
 import { getRecoveryStorageStatus, usePilatesStore } from '../store/usePilatesStore';
+import { useWorkspaceBrowseState } from '../hooks/useWorkspaceBrowseState';
 import type { ApparatusType, ClassHistoryLog, DifficultyLevel, SavedSequence, SequenceStep } from '../types/pilates';
 import type { ClassHistoryLogWithSnapshot, ResolvedTeachingHistoryView } from '../types/teachingHistorySnapshot';
 import { OFFLINE_BLOCK_PRESETS } from '../data/classBlockPresets';
@@ -54,10 +55,39 @@ interface ClassBinderViewProps {
 
 type SavedQuickFilter = 'all' | 'taught' | ApparatusType | 'mixed';
 
+interface SavedSequencePreviewState {
+  sequence: SavedSequence;
+  expectedState: ReturnType<typeof usePilatesStore.getState>;
+  confirmCopy: boolean;
+}
+
 const INITIAL_VISIBLE_DATE_CHIPS = 3;
 const INITIAL_VISIBLE_GROUP_CHIPS = 2;
 const INITIAL_VISIBLE_HISTORY_LOGS = 30;
 const HISTORY_LOGS_PAGE_SIZE = 30;
+interface HistoryBrowseState {
+  query: string;
+  group: string;
+  date: string;
+  visibleCount: number;
+}
+const INITIAL_HISTORY_BROWSE: HistoryBrowseState = {
+  query: '', group: 'all', date: 'all', visibleCount: INITIAL_VISIBLE_HISTORY_LOGS,
+};
+const parseHistoryBrowseState = (value: unknown, defaults: HistoryBrowseState): HistoryBrowseState => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return defaults;
+  const saved = value as Partial<HistoryBrowseState>;
+  return {
+    query: typeof saved.query === 'string' && saved.query.length <= 500 ? saved.query : defaults.query,
+    group: typeof saved.group === 'string' && saved.group.length > 0 && saved.group.length <= 1024
+      ? saved.group : defaults.group,
+    date: typeof saved.date === 'string' && /^(all|unknown|\d{4}-\d{2}-\d{2})$/.test(saved.date)
+      ? saved.date : defaults.date,
+    visibleCount: typeof saved.visibleCount === 'number' && Number.isInteger(saved.visibleCount)
+      ? Math.min(10_000, Math.max(INITIAL_VISIBLE_HISTORY_LOGS, saved.visibleCount))
+      : defaults.visibleCount,
+  };
+};
 const SAVED_APPARATUS_ORDER: ReadonlyArray<ApparatusType | 'mixed'> = [
   'reformer', 'mat', 'cadillac', 'chair', 'barrel', 'mixed',
 ];
@@ -101,6 +131,24 @@ const areStepsEquivalentForDraftCheck = (savedSteps: SequenceStep[], currentStep
   return (
     JSON.stringify(savedSteps.map((step, index) => ({ ...step, order: index + 1 }))) ===
     JSON.stringify(currentSteps.map((step, index) => ({ ...step, order: index + 1 })))
+  );
+};
+
+const hasUnsavedClassDraft = (state: Pick<
+  ReturnType<typeof usePilatesStore.getState>,
+  'activeSteps' | 'savedSequences' | 'activeSequenceId' | 'activeTitle' | 'activeSubtitle' |
+  'activeApparatus' | 'activeLevel' | 'activeTargetMinutes'
+>) => {
+  if (state.activeSteps.length === 0) return false;
+  const saved = state.savedSequences.find((sequence) => sequence.id === state.activeSequenceId);
+  if (!saved) return true;
+  return !(
+    saved.title === state.activeTitle &&
+    saved.subtitle === state.activeSubtitle &&
+    saved.apparatus === state.activeApparatus &&
+    saved.level === state.activeLevel &&
+    saved.targetMinutes === state.activeTargetMinutes &&
+    areStepsEquivalentForDraftCheck(saved.steps, state.activeSteps)
   );
 };
 
@@ -170,24 +218,34 @@ const INTENSITY_LABELS: Record<'relaxed' | 'moderate' | 'intense', string> = {
 };
 
 export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal, view = 'saved' }) => {
+  const storeState = usePilatesStore();
   const {
     savedSequences, classGroups, historyLogs, exercises, ownedEquipment, activeSteps, activeSequenceId,
     activeTitle, activeSubtitle, activeApparatus, activeLevel, activeTargetMinutes, reformerBrand,
     conditionTemplates, persistenceError, loadSequenceIntoWorkbench, duplicateSavedSequence,
     deleteSavedSequence, applyConditionTemplate, addClassGroup, applyPresetDraft, setActiveTab,
-  } = usePilatesStore();
+  } = storeState;
   const cloudPhase = useCloudSession((state) => state.phase);
   const cloudUser = useCloudSession((state) => state.user);
   const cloudBackup = useCloudSession((state) => state.backup);
   const [query, setQuery] = useState('');
   const [savedFilter, setSavedFilter] = useState<SavedQuickFilter>('all');
   const [p12SavedSection, setP12SavedSection] = useState<'sequences' | 'blocks'>('sequences');
-  const [historyQuery, setHistoryQuery] = useState('');
-  const [selectedGroup, setSelectedGroup] = useState('all');
-  const [selectedDate, setSelectedDate] = useState('all');
+  const [historyBrowse, setHistoryBrowse] = useWorkspaceBrowseState('history', INITIAL_HISTORY_BROWSE, parseHistoryBrowseState);
+  const historyQuery = historyBrowse.query;
+  const selectedGroup = historyBrowse.group === 'all' || classGroups.some((group) => group.id === historyBrowse.group)
+    ? historyBrowse.group : 'all';
+  const selectedDate = historyBrowse.date;
+  const visibleHistoryCount = historyBrowse.visibleCount;
+  const setHistoryQuery = (query: string) => setHistoryBrowse((previous) => ({ ...previous, query }));
+  const setSelectedGroup = (group: string) => setHistoryBrowse((previous) => ({ ...previous, group }));
+  const setSelectedDate = (date: string) => setHistoryBrowse((previous) => ({ ...previous, date }));
+  const setVisibleHistoryCount = (count: React.SetStateAction<number>) => setHistoryBrowse((previous) => ({
+    ...previous,
+    visibleCount: typeof count === 'function' ? count(previous.visibleCount) : count,
+  }));
   const [showAllGroupChips, setShowAllGroupChips] = useState(false);
   const [showAllDateChips, setShowAllDateChips] = useState(false);
-  const [visibleHistoryCount, setVisibleHistoryCount] = useState(INITIAL_VISIBLE_HISTORY_LOGS);
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupSchedule, setGroupSchedule] = useState('');
@@ -199,6 +257,8 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const [pendingOverwrite, setPendingOverwrite] = useState<{ sequenceId: string; mode: 'workbench' | 'stage' } | null>(null);
   const [expandedSavedIds, setExpandedSavedIds] = useState<Set<string>>(() => new Set());
   const [printSequence, setPrintSequence] = useState<SavedSequence | null>(null);
+  const [savedPreview, setSavedPreview] = useState<SavedSequencePreviewState | null>(null);
+  const [savedPreviewError, setSavedPreviewError] = useState('');
   const [qrShareSequence, setQrShareSequence] = useState<SavedSequence | null>(null);
   const [showBinderCueSheet, setShowBinderCueSheet] = useState(false);
   const [showBinderVisual3dSheet, setShowBinderVisual3dSheet] = useState(true);
@@ -215,6 +275,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   const dateMoreToggleRef = useRef<HTMLButtonElement | null>(null);
   const reopenedTriggerRef = useRef<HTMLButtonElement | null>(null);
   const printTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const savedPreviewTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const savedPreviewCopyActionRef = useRef<HTMLButtonElement | null>(null);
+  const savedPreviewConfirmRef = useRef<HTMLButtonElement | null>(null);
+  const openingCopyRef = useRef(false);
   const groupErrorId = useId();
   const savedMorePrefix = useId();
 
@@ -231,19 +295,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
 
   const exercisesMap = useMemo(() => new Map(exercises.map((ex) => [ex.id, ex])), [exercises]);
   const draftMovementCount = useMemo(() => movementCount(activeSteps), [activeSteps]);
-  const hasUnsavedWorkbenchDraft = useMemo(() => {
-    if (activeSteps.length === 0) return false;
-    const saved = savedSequences.find((seq) => seq.id === activeSequenceId);
-    if (!saved) return true;
-    return !(
-      saved.title === activeTitle &&
-      saved.subtitle === activeSubtitle &&
-      saved.apparatus === activeApparatus &&
-      saved.level === activeLevel &&
-      saved.targetMinutes === activeTargetMinutes &&
-      areStepsEquivalentForDraftCheck(saved.steps, activeSteps)
-    );
-  }, [activeSteps, savedSequences, activeSequenceId, activeTitle, activeSubtitle, activeApparatus, activeLevel, activeTargetMinutes]);
+  const hasUnsavedWorkbenchDraft = useMemo(() => hasUnsavedClassDraft({
+    activeSteps, savedSequences, activeSequenceId, activeTitle, activeSubtitle,
+    activeApparatus, activeLevel, activeTargetMinutes,
+  }), [activeSteps, savedSequences, activeSequenceId, activeTitle, activeSubtitle, activeApparatus, activeLevel, activeTargetMinutes]);
 
   const actualLogsBySequenceId = useMemo(() => {
     const map = new Map<string, ClassHistoryLog[]>();
@@ -555,20 +610,86 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
     sequence: SavedSequence,
     triggerEl?: HTMLButtonElement | null,
   ) => {
-    if (duplicatingRef.current) return;
-    const createdId = duplicateSavedSequence(sequence.id);
-    if (!createdId) return;
-    if (hasUnsavedWorkbenchDraft) {
-      overwriteTriggerRef.current = triggerEl ?? null;
-      setPendingDelete(null);
-      setPendingOverwrite({ sequenceId: createdId, mode: 'workbench' });
-      setMessage(`‘${sequence.title}’ 사본을 만들었습니다. 현재 초안 덮어쓰기 여부를 확인해 주세요.`);
-      requestAnimationFrame(() => {
-        overwriteConfirmBtnRef.current?.focus();
-      });
+    if (openingCopyRef.current) return;
+    const expectedState = usePilatesStore.getState();
+    if (hasUnsavedClassDraft(expectedState)) {
+      openSavedPreview(sequence, triggerEl, true);
       return;
     }
-    executeLoadSavedSequence(createdId, 'workbench');
+    executeOpenCopy(sequence.id, expectedState);
+  };
+
+  const openSavedPreview = (
+    sequence: SavedSequence,
+    triggerEl?: HTMLButtonElement | null,
+    confirmCopy = false,
+  ) => {
+    if (openingCopyRef.current) return;
+    const expectedState = usePilatesStore.getState();
+    const currentSource = expectedState.savedSequences.find((item) => item.id === sequence.id);
+    if (!currentSource) {
+      setMessage('저장한 수업을 찾을 수 없어요. 목록에서 다시 선택해 주세요.');
+      return;
+    }
+    savedPreviewTriggerRef.current = triggerEl ?? null;
+    setPendingDelete(null);
+    setPendingOverwrite(null);
+    setSavedPreviewError('');
+    setSavedPreview({ sequence: currentSource, expectedState, confirmCopy });
+    if (confirmCopy) {
+      requestAnimationFrame(() => savedPreviewConfirmRef.current?.focus());
+    }
+  };
+
+  const closeSavedPreview = () => {
+    const trigger = savedPreviewTriggerRef.current;
+    setSavedPreview(null);
+    setSavedPreviewError('');
+    requestAnimationFrame(() => {
+      (trigger?.isConnected ? trigger : savedSearchInputRef.current)?.focus();
+    });
+  };
+
+  const executeOpenCopy = (
+    sequenceId: string,
+    expectedState: ReturnType<typeof usePilatesStore.getState>,
+  ) => {
+    if (openingCopyRef.current) return;
+    openingCopyRef.current = true;
+    const result = usePilatesStore.getState().openSavedSequenceCopy(sequenceId, expectedState);
+    if (!result.success) {
+      openingCopyRef.current = false;
+      if (savedPreview) setSavedPreviewError(result.message);
+      else setMessage(result.message);
+      return;
+    }
+    // Navigation unmounts the binder. Keep this request consumed until then.
+    setSavedPreview(null);
+    setSavedPreviewError('');
+    setMessage(result.message);
+  };
+
+  const requestPreviewCopy = () => {
+    if (!savedPreview || openingCopyRef.current) return;
+    if (hasUnsavedWorkbenchDraft && !savedPreview.confirmCopy) {
+      setSavedPreview({ ...savedPreview, confirmCopy: true });
+      requestAnimationFrame(() => savedPreviewConfirmRef.current?.focus());
+      return;
+    }
+    executeOpenCopy(savedPreview.sequence.id, savedPreview.expectedState);
+  };
+
+  const refreshSavedPreview = () => {
+    if (!savedPreview) return;
+    const current = usePilatesStore.getState();
+    const sequence = current.savedSequences.find((item) => item.id === savedPreview.sequence.id);
+    if (!sequence) {
+      setSavedPreviewError('이 수업이 보관함에서 삭제되었어요. 닫고 다른 수업을 선택해 주세요.');
+      return;
+    }
+    setSavedPreviewError('');
+    setSavedPreview({ sequence, expectedState: current, confirmCopy: false });
+    requestAnimationFrame(() => savedPreviewCopyActionRef.current?.focus());
   };
   const copyingRef = useRef(false);
   const copyHistory = (logId: string) => {
@@ -607,6 +728,7 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
   };
 
   const applySingleLogAdaptive = (log: ClassHistoryLog) => {
+    if (sampleHistoryIds.has(log.id)) return;
     const singlePrescription = buildAdaptiveNextClassDraft({
       logs: [log],
       exercises,
@@ -675,6 +797,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
 
   const selectedGroupLabel = selectedGroup === 'all' ? '전체 그룹' : (classGroups.find((group) => group.id === selectedGroup)?.name ?? '선택 그룹');
   const selectedDateLabel = effectiveSelectedDate === 'all' ? '전체 날짜' : (dateFilterOptions.find((date) => date.dateKey === effectiveSelectedDate)?.label ?? effectiveSelectedDate);
+  const savedPreviewIsStale = Boolean(
+    savedPreview && savedPreview.expectedState !== storeState,
+  );
+  const savedPreviewDurations = savedPreview ? getSequenceDurations(savedPreview.sequence.steps) : null;
+  const previewCurrentDraft = savedPreview?.expectedState;
+  const previewCurrentDurations = previewCurrentDraft ? getSequenceDurations(previewCurrentDraft.activeSteps) : null;
 
   return (
     <div className={`teaching-collection ${view === 'history' ? 'teaching-collection--history' : 'teaching-collection--saved'}`}>
@@ -934,6 +1062,14 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                     {sampleSequenceIds.has(sequence.id) && <span className="teaching-saved-sample-label">예시 계획</span>}
                     {sequence.recoveredDraftOrigin && <p className="muted" data-recovered-draft="true">이전 편집 초안에서 복구한 자료 · 수업 전 조건을 확인해 주세요.</p>}
                     <div className="teaching-card-main-actions teaching-saved-primary-actions">
+                      <PfButton
+                        variant="secondary"
+                        className="teaching-saved-preview-action"
+                        aria-label={`${sequence.title} 미리보기`}
+                        onClick={(e) => openSavedPreview(sequence, e.currentTarget)}
+                      >
+                        <Eye size={16} /> 미리보기
+                      </PfButton>
                       <PfButton
                         variant="primary"
                         data-open-saved="true"
@@ -1449,11 +1585,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
             {logs.length > actualLogs.length && <span> · 예시 {logs.length - actualLogs.length}개 (분석 제외)</span>}
           </p>
           {(() => {
-            const adaptiveSourceLogs = actualLogs.length > 0 ? actualLogs : logs;
             const adaptiveDraft =
-              adaptiveSourceLogs.length > 0
+              actualLogs.length > 0
                 ? buildAdaptiveNextClassDraft({
-                    logs: adaptiveSourceLogs,
+                    logs: actualLogs,
                     exercises,
                     ownedEquipment,
                     targetGroupId: selectedGroup,
@@ -1594,13 +1729,15 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
                           <div className="teaching-history-actions">
                             <PfButton variant="primary" onClick={(e) => { reopenedTriggerRef.current = e.currentTarget; setReopenedHistoryId(log.id); }}><Eye size={15} />당시 시퀀스 보기</PfButton>
                             <PfButton variant="secondary" disabled={missingExercise} onClick={() => copyHistory(log.id)}><Copy size={15} />복사해 새 수업 만들기</PfButton>
-                            <PfButton
-                              variant="secondary"
-                              data-testid={`history-adaptive-btn-${log.id}`}
-                              onClick={() => applySingleLogAdaptive(log)}
-                            >
-                              피드백 반영 보정 생성
-                            </PfButton>
+                            {!isSample && (
+                              <PfButton
+                                variant="secondary"
+                                data-testid={`history-adaptive-btn-${log.id}`}
+                                onClick={() => applySingleLogAdaptive(log)}
+                              >
+                                피드백 반영 보정 생성
+                              </PfButton>
+                            )}
                           </div>
                         </div>
                         <details className="teaching-history-details">
@@ -1683,6 +1820,77 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({ onOpenLogModal
         </>
       )}
       <p className="teaching-local-note">자료는 이 브라우저에 저장됩니다. 다른 기기에서 사용하려면 설정에서 JSON 백업을 내보내세요.</p>
+      <LightDismissDialog
+        open={Boolean(savedPreview)}
+        onClose={closeSavedPreview}
+        onBeforeClose={() => true}
+        title="저장 수업 미리보기"
+        subtitle={savedPreview?.sequence.title}
+        className="teaching-saved-preview-dialog"
+        maxWidth="960px"
+      >
+        {savedPreview && savedPreviewDurations && previewCurrentDraft && previewCurrentDurations && (
+          <div className="teaching-saved-preview-content">
+            <section className="teaching-saved-preview-summary" aria-label="불러올 수업 요약">
+              <dl>
+                <div><dt>기구 · 난이도</dt><dd>{getApparatusLabelKo(savedPreview.sequence.apparatus)} · Lv {savedPreview.sequence.level}</dd></div>
+                <div><dt>전체 시간</dt><dd>{formatSecondsToMMSS(savedPreviewDurations.totalSec)} <span>목표 {savedPreview.sequence.targetMinutes}분</span></dd></div>
+                <div><dt>구성</dt><dd>동작 {movementCount(savedPreview.sequence.steps)}개 · 휴식 {savedPreview.sequence.steps.filter(isRestStep).length}개</dd></div>
+              </dl>
+              <p>전체 시간에는 양쪽 수행·설명·전환·휴식이 포함됩니다.</p>
+            </section>
+            <div className="teaching-saved-preview-actions">
+              <p>내용을 확인한 뒤 사본을 저장하고 이어서 구성하세요.</p>
+              {previewCurrentDraft.activeSteps.length > 0 && (
+                <p className="teaching-saved-preview-current" aria-label="현재 작성 중인 수업">
+                  현재 수업 <strong>{previewCurrentDraft.activeTitle || '이름 없는 초안'}</strong>
+                  <span>동작 {movementCount(previewCurrentDraft.activeSteps)}개 · {formatSecondsToMMSS(previewCurrentDurations.totalSec)}</span>
+                </p>
+              )}
+              {(savedPreviewError || savedPreviewIsStale) && (
+                <div className="teaching-saved-preview-stale" role="alert">
+                  <p>{savedPreviewError || '현재 수업이나 보관함이 바뀌었어요. 최신 내용을 다시 확인해 주세요.'}</p>
+                  <PfButton variant="secondary" onClick={refreshSavedPreview}>다시 확인</PfButton>
+                </div>
+              )}
+              {savedPreview.confirmCopy ? (
+                <section className="teaching-overwrite-confirm" aria-label="사본 열기 확인">
+                  <p>
+                    현재 작성 중인 ‘{previewCurrentDraft.activeTitle || '이름 없는 초안'}’에 저장하지 않은 변경이 있어요.
+                    {' '}‘{savedPreview.sequence.title}’의 새 사본으로 이어서 구성할까요?
+                    {' '}현재 초안은 작업대의 되돌리기로 복원할 수 있어요.
+                  </p>
+                  <div className="teaching-overwrite-actions">
+                    <PfButton variant="secondary" onClick={closeSavedPreview}>취소</PfButton>
+                    <PfButton
+                      ref={savedPreviewConfirmRef}
+                      variant="primary"
+                      disabled={savedPreviewIsStale}
+                      onClick={requestPreviewCopy}
+                    >
+                      사본 만들고 열기
+                    </PfButton>
+                  </div>
+                </section>
+              ) : (
+                <div className="teaching-saved-preview-action-row">
+                  <PfButton variant="secondary" onClick={closeSavedPreview}>닫기</PfButton>
+                  <PfButton ref={savedPreviewCopyActionRef} variant="primary" disabled={savedPreviewIsStale} onClick={requestPreviewCopy}>
+                    <Copy size={16} /> 사본으로 열기
+                  </PfButton>
+                </div>
+              )}
+            </div>
+            <ClassCueSheetPreview
+              key={savedPreview.sequence.id}
+              sourceInput={savedPreview.sequence}
+              projectionOptions={{ exercises: savedPreview.expectedState.exercises }}
+              initialFullListOpen
+              showFixtureSwitcher={false}
+            />
+          </div>
+        )}
+      </LightDismissDialog>
       <LightDismissDialog open={Boolean(printSequence)} onClose={closePrintModal} title="수업 계획 인쇄" subtitle="동작의 양쪽 수행·설명·전환과 별도 휴식을 포함한 전체 수업 시간입니다.">
         <div className="teaching-print-sheet">
           <p>교차 검증 완료 계획 · 권장 스프링과 세팅은 실제 기구에서 확인해 주세요.</p>

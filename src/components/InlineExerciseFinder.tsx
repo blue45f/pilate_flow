@@ -17,6 +17,7 @@ import { matchesLibraryEquipment } from '../data/libraryEquipmentFilters';
 import { EquipmentDiscoveryScope } from './EquipmentDiscoveryScope';
 import type { EquipmentId } from '../data/equipmentCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
+import { useSequenceInsertionPlacement } from '../hooks/useSequenceInsertionPlacement';
 import type { PilatesExercise, SequenceStep } from '../types/pilates';
 import { getExerciseReviewState, isExerciseAutoEligible } from '../utils/exerciseReview';
 import {
@@ -26,6 +27,10 @@ import {
 } from '../utils/movementIdeaDraft';
 import { PfAiStatusBadge, PfBadge, PfMovementCard } from '../design-system';
 import { isRestStep } from '../utils/sequenceEngine';
+import {
+  resolveSequenceInsertion,
+  type SequenceInsertionPlacement,
+} from '../utils/sequenceInsertion';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
 import { resolvePatternReferencesForRenderer } from '../features/motionCoverage';
 import { MotionPatternPreview } from './MotionPatternPreview';
@@ -42,6 +47,8 @@ interface InlineExerciseFinderProps {
   autoNarrowToClassEquipment?: boolean;
   active?: boolean;
   onArrangeSequence?: () => void;
+  insertionPlacement?: SequenceInsertionPlacement;
+  onInsertionPlacementChange?: (placement: SequenceInsertionPlacement) => void;
 }
 
 type FilterTab = 'equipment' | 'spring' | 'body' | 'duration';
@@ -196,6 +203,8 @@ export function InlineExerciseFinder({
   autoNarrowToClassEquipment = false,
   active = true,
   onArrangeSequence,
+  insertionPlacement: controlledInsertionPlacement,
+  onInsertionPlacementChange,
 }: InlineExerciseFinderProps) {
   const exercises = usePilatesStore((state) => state.exercises);
   const ownedEquipment = usePilatesStore((state) => state.ownedEquipment);
@@ -203,10 +212,18 @@ export function InlineExerciseFinder({
   const exerciseBrowseScope = usePilatesStore((state) => state.exerciseBrowseScope);
   const setExerciseBrowseScope = usePilatesStore((state) => state.setExerciseBrowseScope);
   const activeSteps = usePilatesStore((state) => state.activeSteps);
+  const activeSequenceId = usePilatesStore((state) => state.activeSequenceId);
   const activeClassLevel = usePilatesStore(
     (state) => state.draftCriteria?.level ?? state.activeLevel,
   );
-  const appendExerciseToSequence = usePilatesStore((state) => state.appendExerciseToSequence);
+  const insertExerciseIntoSequence = usePilatesStore((state) => state.insertExerciseIntoSequence);
+  const [localInsertionPlacement, setLocalInsertionPlacement] =
+    useSequenceInsertionPlacement(activeSequenceId);
+  const insertionPlacement = controlledInsertionPlacement ?? localInsertionPlacement;
+  const setInsertionPlacement = (placement: SequenceInsertionPlacement) => {
+    setLocalInsertionPlacement(placement);
+    onInsertionPlacementChange?.(placement);
+  };
   const setActiveTab = usePilatesStore((state) => state.setActiveTab);
   const classEquipmentKey = `${autoNarrowToClassEquipment ? 'auto' : 'manual'}:${classEquipment.join(',')}`;
   const [prevClassEquipmentKey, setPrevClassEquipmentKey] = useState(classEquipmentKey);
@@ -257,7 +274,37 @@ export function InlineExerciseFinder({
     [exercises],
   );
 
-  const lastActiveStepSpring = findLastActiveStepSpring(activeSteps, exercisesById);
+  const insertionResolution = resolveSequenceInsertion(activeSteps, insertionPlacement);
+  const insertionValue =
+    insertionPlacement.kind === 'step'
+      ? `step:${insertionPlacement.stepId}`
+      : insertionPlacement.kind;
+  const insertionOptions: {
+    value: string;
+    label: string;
+    placement: SequenceInsertionPlacement;
+  }[] = [
+    { value: 'end', label: '맨 뒤', placement: { kind: 'end' } },
+    { value: 'start', label: '맨 앞', placement: { kind: 'start' } },
+    ...activeSteps.map((step, index) => {
+      const name = isRestStep(step)
+        ? '휴식'
+        : (exercisesById.get(step.exerciseId)?.nameKo ?? '동작 정보 없음');
+      return {
+        value: `step:${step.stepId}`,
+        label: `${index + 1}번 ${name} 뒤`,
+        placement: { kind: 'step' as const, stepId: step.stepId },
+      };
+    }),
+  ];
+  const insertionAnchorMissing = !insertionOptions.some(
+    (option) => option.value === insertionValue,
+  );
+  const hasLockedSteps = activeSteps.some((step) => step.locked);
+
+  const lastActiveStepSpring = insertionResolution.success
+    ? findLastActiveStepSpring(activeSteps.slice(0, insertionResolution.index), exercisesById)
+    : null;
 
   const update = <K extends keyof FinderFilters>(key: K, value: FinderFilters[K]) => {
     if (key === 'query' && typeof value === 'string') {
@@ -524,35 +571,12 @@ export function InlineExerciseFinder({
 
   const addExercise = (exercise: PilatesExercise, source: 'card' | 'preview' = 'card') => {
     setLastVisitedId(exercise.id);
-    if (isMovementIdeaExercise(exercise)) {
-      const result = addMovementIdeaToCurrentClass(exercise.id);
-      setFeedback({ success: result.ok, message: result.message });
-      if (result.ok) {
-        requestAnimationFrame(() => {
-          if (source === 'preview') {
-            previewCloseBtnRef.current?.focus();
-            return;
-          }
-          resultsRef.current
-            ?.querySelector<HTMLButtonElement>(`[data-ief-exercise-title="${exercise.id}"]`)
-            ?.focus({ preventScroll: true });
-        });
-      }
-      return;
-    }
-    const before = usePilatesStore.getState().activeSteps.length;
-    appendExerciseToSequence(exercise.id);
-    const after = usePilatesStore.getState();
-    const success =
-      after.activeSteps.length === before + 1 &&
-      after.activeSteps.at(-1)?.exerciseId === exercise.id;
-    setFeedback({
-      success,
-      message: success
-        ? `${exercise.nameKo} 동작을 수업안에 추가했어요.`
-        : after.generationError || '현재 수업 조건을 확인한 뒤 다시 추가해 주세요.',
-    });
-    if (success) {
+    const result = isMovementIdeaExercise(exercise)
+      ? addMovementIdeaToCurrentClass(exercise.id, insertionPlacement)
+      : insertExerciseIntoSequence(exercise.id, insertionPlacement);
+    setFeedback({ success: result.success, message: result.message });
+    if (result.success) {
+      if (result.stepId) setInsertionPlacement({ kind: 'step', stepId: result.stepId });
       requestAnimationFrame(() => {
         if (source === 'preview') {
           previewCloseBtnRef.current?.focus();
@@ -573,6 +597,47 @@ export function InlineExerciseFinder({
           <h2>동작 찾기</h2>
         </div>
         <span>{exercises.length}개 노트</span>
+      </div>
+      <div className="ief-insertion-control">
+        <label htmlFor={`${id}-insertion-position`}>동작 추가 위치</label>
+        <select
+          id={`${id}-insertion-position`}
+          value={insertionValue}
+          aria-invalid={!insertionResolution.success || undefined}
+          aria-describedby={`${id}-insertion-help`}
+          onChange={(event) => {
+            const option = insertionOptions.find((item) => item.value === event.target.value);
+            if (!option) return;
+            setInsertionPlacement(option.placement);
+            setFeedback(null);
+          }}
+        >
+          {insertionAnchorMissing && (
+            <option value={insertionValue} disabled>
+              기준 항목이 삭제됨 · 위치를 다시 선택해 주세요
+            </option>
+          )}
+          {insertionOptions.map((option) => {
+            const available = resolveSequenceInsertion(activeSteps, option.placement).success;
+            return (
+              <option key={option.value} value={option.value} disabled={!available}>
+                {option.label}
+                {available ? '' : ' · 잠금 위치 유지로 선택 불가'}
+              </option>
+            );
+          })}
+        </select>
+        <p
+          id={`${id}-insertion-help`}
+          className={insertionResolution.success ? 'ief-insertion-help' : 'ief-insertion-error'}
+          role={insertionResolution.success ? undefined : 'alert'}
+        >
+          {!insertionResolution.success
+            ? insertionResolution.message
+            : hasLockedSteps
+              ? '잠긴 항목의 위치를 바꾸는 곳에는 추가할 수 없어요. 고른 동작은 선택한 위치부터 차례로 들어갑니다.'
+              : '고른 동작은 선택한 위치부터 차례로 들어갑니다.'}
+        </p>
       </div>
       <details className="pf-detail-progressive-drawer" style={{ marginBottom: '8px' }}>
         <summary><span>보유 장비 범위 필터 설정 ({ownedEquipment.length}종)</span></summary>
@@ -960,7 +1025,7 @@ export function InlineExerciseFinder({
                 <button
                   type="button"
                   className="ief-preview-insert-step"
-                  disabled={previewAlreadyAdded}
+                  disabled={previewAlreadyAdded || !insertionResolution.success}
                   aria-label={
                     previewAlreadyAdded
                       ? `${previewExercise.nameKo} 초안 창에서 이미 시퀀스에 있음`
@@ -1130,7 +1195,7 @@ export function InlineExerciseFinder({
                     </PfAiStatusBadge>
                     <button
                       type="button"
-                      disabled={alreadyAdded}
+                      disabled={alreadyAdded || !insertionResolution.success}
                       aria-label={
                         alreadyAdded
                           ? `${exercise.nameKo} 이미 수업안에 있음`

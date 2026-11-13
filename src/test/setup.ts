@@ -15,6 +15,16 @@ const rafTimeouts = new Set<number>();
 
 // Mock window.scrollTo, navigator.clipboard, and decouple requestAnimationFrame from jsdom's internal setInterval
 beforeEach(() => {
+  // Continuity is tested with remounts inside a test, never inherited from another test.
+  // Keep this independent of app imports so per-file store/account mocks stay isolated.
+  try {
+    for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.sessionStorage.key(index);
+      if (key?.startsWith('pf_workspace_browse_v1:')) window.sessionStorage.removeItem(key);
+    }
+  } catch {
+    // Storage-denial tests can intentionally leave access unavailable until cleanup.
+  }
   window.scrollTo = vi.fn();
   window.requestAnimationFrame = (callback: FrameRequestCallback) => {
     const id = window.setTimeout(() => {
