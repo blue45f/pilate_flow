@@ -113,7 +113,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     // teaching an added, unreviewed movement without an approval gate.
     fireEvent.click(screen.getByRole('button', { name: '빠른 이동 및 동작 검색 열기' }));
     let palette = screen.getByTestId('studio-command-palette');
-    fireEvent.click(within(palette).getByRole('button', { name: /라이브 스테이지 준비 확인/ }));
+    fireEvent.click(within(palette).getByRole('button', { name: /수업 준비하기/ }));
     expect(usePilatesStore.getState().activeTab).toBe('workbench');
     expect(screen.queryByTestId('studio-command-palette')).not.toBeInTheDocument();
 
@@ -131,7 +131,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
 
     fireEvent.click(screen.getByRole('button', { name: '빠른 이동 및 동작 검색 열기' }));
     palette = screen.getByTestId('studio-command-palette');
-    const startClass = within(palette).getByRole('button', { name: /라이브 수업 바로 시작/ });
+    const startClass = within(palette).getByRole('button', { name: /수업 진행하기/ });
     expect(startClass).toBeEnabled();
     fireEvent.click(startClass);
     expect(usePilatesStore.getState().activeTab).toBe('stage');

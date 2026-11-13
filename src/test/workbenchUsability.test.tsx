@@ -1,4 +1,4 @@
-import { getVisibleWorkbenchButton } from './workbenchControls';
+import { getVisibleWorkbenchButton, openWorkbenchAutomation } from './workbenchControls';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
@@ -22,6 +22,8 @@ const resize = (width: number) => {
 const props = { onOpenYouTubePreview: vi.fn(), onOpenClipper: vi.fn(), onOpenLogModal: vi.fn() };
 
 beforeEach(() => {
+  sessionStorage.clear();
+  localStorage.clear();
   resize(390);
   usePilatesStore.setState(
     {
@@ -68,12 +70,12 @@ describe('clear next action without changing class-readiness gates', () => {
     render(<SequenceWorkbench {...props} />);
     expect(screen.queryByRole('button', { name: '직접 편집' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '자동 구성' })).not.toBeInTheDocument();
-    expect(getVisibleWorkbenchButton('1 동작 선택')).toHaveAttribute(
+    expect(screen.getByRole('button', { name: '시작하기' })).toHaveAttribute(
       'aria-current',
       'step',
     );
-    expect(screen.getByRole('heading', { name: /동작을 골라/ })).toBeVisible();
-    expect(screen.getByRole('button', { name: '동작 고르기' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: '어떤 수업을 준비할까요?' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '동작 추가' })).toBeVisible();
     expect(screen.queryByText(/내 검토 기록 0개/)).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: '시퀀스 제목' })).not.toBeInTheDocument();
     expect(screen.queryByText('첫 동작을 추가해 주세요')).not.toBeInTheDocument();
@@ -113,7 +115,7 @@ describe('clear next action without changing class-readiness gates', () => {
     render(<SequenceWorkbench {...props} />);
     const advanced = screen.getByText('자동 구성·휴식 먼저 넣기', { selector: 'summary' });
     expect(advanced.closest('details')).not.toHaveAttribute('open');
-    fireEvent.click(advanced);
+    openWorkbenchAutomation();
     const rest = screen.getByText('휴식 추가', { selector: 'summary span' }).closest('details')!;
     fireEvent.click(within(rest).getByText('휴식 추가', { selector: 'summary span' }));
     fireEvent.change(within(rest).getByLabelText('추가할 휴식 시간 · 분'), {
@@ -174,6 +176,7 @@ describe('clear next action without changing class-readiness gates', () => {
     const banner = screen.getByRole('region', { name: '다음 수업' });
     expect(within(banner).getByRole('heading', { name: '합성 다음 수업' })).toBeVisible();
     expect(banner.closest('details')).toBeNull();
+    fireEvent.click(screen.getByText('추가 도구 · 휴식·기구 안내·AI', { selector: 'summary' }));
     fireEvent.click(screen.getByText('수업 준비 순서', { selector: 'summary' }));
     const preparation = screen.getByRole('navigation', { name: '수업 준비 순서' });
     expect(
@@ -189,7 +192,7 @@ describe('clear next action without changing class-readiness gates', () => {
     expectCatalogBoundaries();
   });
 
-  it('opens and focuses the requested desktop picker without replacing the draft', () => {
+  it('opens and focuses the inline desktop picker while preserving the draft and applying its chosen conditions', () => {
     resize(1440);
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
       callback(0);
@@ -197,11 +200,19 @@ describe('clear next action without changing class-readiness gates', () => {
     });
     const before = usePilatesStore.getState();
     render(<SequenceWorkbench {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
+    fireEvent.click(screen.getByRole('button', { name: '동작 추가' }));
     expect(
       screen.getByRole('searchbox', { name: '동작 이름 또는 등록된 부위 태그 검색' }),
     ).toHaveFocus();
-    expect(usePilatesStore.getState()).toBe(before);
+    const after = usePilatesStore.getState();
+    expect(screen.getByTestId('wizard-step2-page')).toBeVisible();
+    expect(after.activeSteps).toBe(before.activeSteps);
+    expect(after.activeTitle).toBe(before.activeTitle);
+    expect(after.activeTargetMinutes).toBe(before.activeTargetMinutes);
+    expect(after.historyLogs).toBe(before.historyLogs);
+    expect(after.savedSequences).toBe(before.savedSequences);
+    expect(after.draftCriteria?.targetMinutes).toBe(before.activeTargetMinutes);
+    expect(after.draftCriteria?.availableEquipment).toEqual([before.activeApparatus]);
     expectCatalogBoundaries();
   });
 
@@ -210,9 +221,10 @@ describe('clear next action without changing class-readiness gates', () => {
     usePilatesStore.setState({ exercises: [...INITIAL_EXERCISES, synthetic] });
     const before = usePilatesStore.getState();
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
-    const finderDialog = screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' });
-    const finder = within(finderDialog);
+    fireEvent.click(screen.getByRole('button', { name: '동작 추가' }));
+    const pickerPage = screen.getByTestId('wizard-step2-page');
+    expect(pickerPage).toBeVisible();
+    const finder = within(pickerPage);
     const search = finder.getByRole('searchbox', {
       name: '동작 이름 또는 등록된 부위 태그 검색',
     });
@@ -221,23 +233,23 @@ describe('clear next action without changing class-readiness gates', () => {
     fireEvent.click(finder.getByRole('button', { name: `${synthetic.nameKo} 수업안에 추가` }));
     expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
     expect(usePilatesStore.getState().activeTab).toBe('workbench');
-    fireEvent.click(finder.getByRole('button', { name: '수업 구성으로 돌아가기' }));
-    expect(
-      screen.queryByRole('dialog', { name: '수업에 넣을 동작 고르기' }),
-    ).not.toBeInTheDocument();
-    expect(getVisibleWorkbenchButton('직접 편집')).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    expect(getVisibleWorkbenchButton('2 수업 구성')).toHaveAttribute(
-      'aria-current',
-      'step',
-    );
+    fireEvent.click(screen.getByTestId('wizard-to-step3-btn'));
+    expect(screen.queryByTestId('wizard-step2-page')).not.toBeInTheDocument();
+    expect(getVisibleWorkbenchButton('직접 편집')).toHaveAttribute('aria-pressed', 'true');
+    expect(getVisibleWorkbenchButton('2 수업 구성')).toHaveAttribute('aria-current', 'step');
     const after = usePilatesStore.getState();
     expect(after.activeTitle).toBe(before.activeTitle);
     expect(after.activeTargetMinutes).toBe(before.activeTargetMinutes);
-    expect(after.draftCriteria).toBe(before.draftCriteria);
+    expect(after.draftCriteria?.targetMinutes).toBe(before.activeTargetMinutes);
+    expect(after.draftCriteria?.availableEquipment).toEqual([before.activeApparatus]);
     expect(after.exercises).toBe(before.exercises);
+    expect(after.historyLogs).toBe(before.historyLogs);
+    expect(after.savedSequences).toBe(before.savedSequences);
+    expect(after.undoStack.at(-1)).toMatchObject({
+      activeSteps: before.activeSteps,
+      activeTitle: before.activeTitle,
+      activeTargetMinutes: before.activeTargetMinutes,
+    });
     expect(screen.getByRole('button', { name: '시퀀스 미리보기' })).toBeEnabled();
     fireEvent.click(getVisibleWorkbenchButton('3 미리보기'));
     const preview = screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
@@ -256,10 +268,7 @@ describe('clear next action without changing class-readiness gates', () => {
         name: /^(계획|수업)$/,
       }),
     );
-    expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute('aria-pressed', 'true');
     expect(usePilatesStore.getState().activeSteps).toBe(after.activeSteps);
     expectCatalogBoundaries();
   });
@@ -280,13 +289,8 @@ describe('clear next action without changing class-readiness gates', () => {
     const before = usePilatesStore.getState();
     const change = vi.fn();
     const view = render(<SequenceWorkbench {...props} />);
-    expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    expect(
-      getVisibleWorkbenchButton('잠그지 않은 동작 다시 만들기'),
-    ).toBeInTheDocument();
+    expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute('aria-pressed', 'true');
+    expect(getVisibleWorkbenchButton('잠그지 않은 동작 다시 만들기')).toBeInTheDocument();
     fireEvent.click(getVisibleWorkbenchButton('3 미리보기'));
     const preview = screen.getByRole('dialog', { name: '전체 수업 계획 미리보기' });
     expect(within(preview).getByRole('button', { name: '사본 저장' })).toBeInTheDocument();
@@ -297,17 +301,11 @@ describe('clear next action without changing class-readiness gates', () => {
     );
     fireEvent.click(getVisibleWorkbenchButton('자동 구성'));
     expect(change).toHaveBeenCalledWith('auto');
-    expect(getVisibleWorkbenchButton('직접 편집')).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    expect(getVisibleWorkbenchButton('직접 편집')).toHaveAttribute('aria-pressed', 'true');
     view.rerender(
       <SequenceWorkbench {...props} planningMode="auto" onPlanningModeChange={change} />,
     );
-    expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute('aria-pressed', 'true');
     expect(usePilatesStore.getState()).toBe(before);
     expect(usePilatesStore.getState().activeSteps[0]).toBe(step);
     expectCatalogBoundaries();

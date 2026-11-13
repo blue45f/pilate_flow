@@ -49,16 +49,12 @@ describe('Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save 
       const cooldownEx = syntheticPlanningExercise('reformer', 'cooldown');
 
       const baseState = usePilatesStore.getState();
-      const presetExerciseIds = new Set(
-        OFFLINE_BLOCK_PRESETS[0]!.steps.map((s) => s.exerciseId),
-      );
+      const presetExerciseIds = new Set(OFFLINE_BLOCK_PRESETS[0]!.steps.map((s) => s.exerciseId));
       const compactCatalog = [
         warmupEx,
         mainEx,
         cooldownEx,
-        ...baseState.exercises.filter(
-          (ex, idx) => presetExerciseIds.has(ex.id) || idx < 6,
-        ),
+        ...baseState.exercises.filter((ex, idx) => presetExerciseIds.has(ex.id) || idx < 6),
       ];
 
       usePilatesStore.setState({
@@ -107,7 +103,11 @@ describe('Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save 
       fireEvent.click(settingsSummary);
       const settingsDetails = settingsSummary.closest('details');
       if (settingsDetails) settingsDetails.open = true;
-      const settingsPage = await screen.findByTestId('pilates-settings-page', {}, { timeout: 10000 });
+      const settingsPage = await screen.findByTestId(
+        'pilates-settings-page',
+        {},
+        { timeout: 10000 },
+      );
       expect(
         within(settingsPage).getByRole('toolbar', { name: '설정 그룹 바로가기' }),
       ).toBeInTheDocument();
@@ -120,9 +120,7 @@ describe('Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save 
       // =========================================================================
       // Navigate to Atlas ('동작') and search + add warmupEx and mainEx
       const navButtons = screen.getAllByRole('button', { name: /동작/ });
-      const atlasNavBtn = navButtons.find(
-        (btn) => btn.closest('nav') !== null,
-      )!;
+      const atlasNavBtn = navButtons.find((btn) => btn.closest('nav') !== null)!;
       fireEvent.click(atlasNavBtn);
 
       const addWarmupBtn = await screen.findByRole(
@@ -153,12 +151,13 @@ describe('Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save 
         .find((btn) => btn.closest('nav') !== null)!;
       fireEvent.click(workbenchNavBtn);
 
-      // Also add cooldownEx via InlineExerciseFinder ('동작 더 담기')
-      const openFinderBtn = await screen.findByRole(
-        'button',
-        { name: /동작 더 담기/ },
+      // Add cooldownEx through the editor's primary movement action.
+      const editorActions = await screen.findByRole(
+        'group',
+        { name: '시퀀스 편집 도구' },
         { timeout: 10000 },
       );
+      const openFinderBtn = within(editorActions).getByRole('button', { name: '동작 추가' });
       fireEvent.click(openFinderBtn);
       const finderDialog = screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' });
       const finderAddCooldownBtn = within(finderDialog).getByRole('button', {
@@ -311,9 +310,9 @@ describe('Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save 
       }
 
       // Start class timer ('수업 시작') and advance to next step ('다음 동작')
-      const playTimerBtn = screen.getByRole('button', { name: /수업 시작|휴식 시작/ });
+      const playTimerBtn = screen.getByRole('button', { name: /^(수업 시작|휴식 시작)$/ });
       fireEvent.click(playTimerBtn);
-      const nextStepBtn = screen.getByRole('button', { name: /다음 동작|휴식 건너뛰기/ });
+      const nextStepBtn = screen.getByRole('button', { name: /^(다음 동작|휴식 건너뛰기)$/ });
       fireEvent.click(nextStepBtn);
 
       // Finish class -> open review dialog -> open LogSessionModal

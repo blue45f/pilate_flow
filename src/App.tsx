@@ -130,7 +130,7 @@ const navigation = [
   { id: 'workbench', label: '수업', detail: '오늘의 수업', icon: CalendarDays },
   { id: 'atlas', label: '동작', detail: '동작 라이브러리', icon: Library },
   { id: 'schedule', label: '일정', detail: '강사 일정', icon: CalendarRange },
-  { id: 'binder', label: '저장', detail: '저장한 플로우', icon: Bookmark },
+  { id: 'binder', label: '저장', detail: '저장한 수업', icon: Bookmark },
   { id: 'history', label: '기록', detail: '수업 기록', icon: Clock3 },
 ] as const;
 
@@ -187,13 +187,14 @@ export function App() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        if (!commandPaletteOpen && document.querySelector('dialog[open]')) return;
         event.preventDefault();
         setCommandPaletteOpen((prev) => !prev);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [commandPaletteOpen]);
   const [designSystemOpen, setDesignSystemOpen] = useState(() => {
     if (!(import.meta.env.DEV || import.meta.env.MODE === 'test')) return false;
     if (typeof window === 'undefined') return false;
@@ -257,6 +258,10 @@ export function App() {
   const sidebarRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const stageNavigationRef = useRef<LiveStageNavigationHandle | null>(null);
+  const pendingStageTransition = useRef<{
+    target: ActiveWorkspaceTab;
+    commit: () => void;
+  } | null>(null);
   const logContainerRef = useRef<HTMLDivElement>(null);
   const closingLog = useRef(false);
   const logNavigation = useRef<{
@@ -301,7 +306,8 @@ export function App() {
     setWorkspaceFocusRequest((value) => value + 1);
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
-  const focusMemberSection = (section: 'schedule' | 'bookings' | 'wallet') => {
+  const commitMemberSection = (section: 'schedule' | 'bookings' | 'wallet') => {
+    if (usePilatesStore.getState().activeTab === 'stage') state.setActiveTab('workbench');
     setPortalRole('member');
     setMemberSection(section);
     setMenuOpen(false);
@@ -316,16 +322,50 @@ export function App() {
       el?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
     });
   };
-  const changeTab = (tab: ActiveWorkspaceTab) => {
-    if (
-      usePilatesStore.getState().activeTab === 'stage' &&
-      tab !== 'stage' &&
-      stageNavigationRef.current?.requestExit(tab)
-    ) {
-      setMenuOpen(false);
+  const completeStageTransition = (tab: ActiveWorkspaceTab) => {
+    const pending = pendingStageTransition.current;
+    pendingStageTransition.current = null;
+    if (pending?.target === tab) {
+      pending.commit();
       return;
     }
     commitTabChange(tab);
+  };
+  const requestWorkspaceTransition = (
+    target: ActiveWorkspaceTab,
+    commit: () => void,
+    label?: string,
+  ) => {
+    pendingStageTransition.current = null;
+    if (
+      portalRole === 'instructor' &&
+      usePilatesStore.getState().activeTab === 'stage' &&
+      target !== 'stage' &&
+      stageNavigationRef.current?.requestExit(target, label)
+    ) {
+      pendingStageTransition.current = { target, commit };
+      setMenuOpen(false);
+      return;
+    }
+    commit();
+  };
+  const changeTab = (tab: ActiveWorkspaceTab) => {
+    requestWorkspaceTransition(tab, () => commitTabChange(tab));
+  };
+  const focusMemberSection = (section: 'schedule' | 'bookings' | 'wallet') => {
+    requestWorkspaceTransition('workbench', () => commitMemberSection(section), '회원 예약');
+  };
+  const loadSavedSequence = (sequenceId: string) => {
+    const saved = usePilatesStore.getState().savedSequences.find((item) => item.id === sequenceId);
+    if (!saved) return;
+    requestWorkspaceTransition(
+      'workbench',
+      () => {
+        usePilatesStore.getState().loadSequenceIntoWorkbench(sequenceId);
+        commitTabChange('workbench');
+      },
+      `${saved.title} 불러오기`,
+    );
   };
   const openLog = (id: string, context?: TeachingLogContext, destination?: ActiveWorkspaceTab) => {
     const resolvedId =
@@ -359,7 +399,8 @@ export function App() {
     logNavigation.current = null;
     setLogId(null);
     setLogContext(undefined);
-    if (requested && recorded) commitTabChange(requested.target);
+    if (requested && recorded) completeStageTransition(requested.target);
+    else pendingStageTransition.current = null;
   };
   const exportData = () => {
     try {
@@ -495,8 +536,8 @@ export function App() {
               onClick={() => changeTab(canStartLiveStage ? 'stage' : 'workbench')}
             >
               <Play size={17} aria-hidden="true" />
-              <span>라이브 수업 진행</span>
-              <small>{canStartLiveStage ? `${nonRestStepCount}개 준비됨` : '동작 담기'}</small>
+              <span>{canStartLiveStage ? '수업 진행하기' : '수업 준비하기'}</span>
+              <small>{canStartLiveStage ? `동작 ${nonRestStepCount}개` : '동작 추가'}</small>
             </button>
             <details className="pf-sidebar-more-drawer">
               <summary>다가오는 수업 · 보조 도구</summary>
@@ -545,7 +586,7 @@ export function App() {
                   className="sidebar-study-link"
                   onClick={() => {
                     setMenuOpen(false);
-                    setPortalRole('member');
+                    focusMemberSection('schedule');
                   }}
                 >
                   <CalendarDays size={18} aria-hidden="true" /> 회원 예약 화면 보기
@@ -600,9 +641,6 @@ export function App() {
             <span className="vnext-wordmark">
               Flow Atelier<small>YOUR TEACHING STUDIO</small>
             </span>
-            <span className="pf-one-decision-pill" aria-hidden="true">
-              1화면 1결정
-            </span>
           </div>
           <div className="breadcrumb">
             나의 스튜디오 <span>/</span>{' '}
@@ -632,7 +670,7 @@ export function App() {
                   type="button"
                   className="pf-role-switcher__btn"
                   aria-pressed={portalRole === 'member'}
-                  onClick={() => setPortalRole('member')}
+                  onClick={() => focusMemberSection('schedule')}
                 >
                   회원 예약
                 </button>
@@ -759,7 +797,10 @@ export function App() {
             {state.activeTab === 'stage' && (
               <LiveStageView
                 navigationRef={stageNavigationRef}
-                onNavigate={commitTabChange}
+                onNavigate={completeStageTransition}
+                onNavigationCancelled={() => {
+                  pendingStageTransition.current = null;
+                }}
                 onOpenLogModal={openLog}
               />
             )}
@@ -1147,6 +1188,7 @@ export function App() {
         open={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
         onNavigateTab={changeTab}
+        onLoadSequence={loadSavedSequence}
         onSwitchPortalRole={(role) => {
           if (role === 'member') focusMemberSection('schedule');
           else setPortalRole('instructor');

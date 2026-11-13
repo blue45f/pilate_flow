@@ -95,12 +95,6 @@ const CACHE = PREFIX + ${JSON.stringify(version)};
 const ASSETS = ${JSON.stringify(assets)};
 const SHELL_EXTRAS = ${JSON.stringify(extras)};
 const PRECACHE = [...ASSETS, ...SHELL_EXTRAS];
-const IS_LIVE_ORIGIN =
-  typeof self !== 'undefined' &&
-  self.location &&
-  /(?:web\\.app|firebaseapp\\.com|github\\.io|localhost|127\\.0\\.0\\.1)$/.test(
-    self.location.hostname || '',
-  );
 let activated = false;
 const toDocumentResponse = (cached) =>
   cached && cached.redirected
@@ -128,14 +122,7 @@ const hasWaitingUpdate = async () => {
 };
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE)
-      .then((cache) => cache.addAll(PRECACHE))
-      .then(() => {
-        if (IS_LIVE_ORIGIN && typeof self.skipWaiting === 'function') {
-          return self.skipWaiting();
-        }
-      }),
+    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)),
   );
   // No skipWaiting: an open lesson must keep its existing version.
 });
@@ -150,23 +137,14 @@ self.addEventListener('activate', (event) => {
             .map((key) => caches.delete(key)),
         ),
       )
-      .then(async () => {
+      .then(() => {
         activated = true;
-        if (IS_LIVE_ORIGIN && self.clients && typeof self.clients.claim === 'function') {
-          await self.clients.claim();
-        }
       }),
   );
   // No clients.claim or forced reload. Existing tabs keep their state.
 });
-self.addEventListener('message', (event) => {
-  if (
-    event &&
-    (event.data === 'SKIP_WAITING' || (event.data && event.data.type === 'SKIP_WAITING'))
-  ) {
-    self.skipWaiting();
-  }
-});
+// Older app tabs send SKIP_WAITING automatically. Do not honor that legacy
+// message: activation and old-cache cleanup must wait until those tabs close.
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);

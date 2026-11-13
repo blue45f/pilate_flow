@@ -267,7 +267,7 @@ describe('LibraryMovementInspector & StudioClinicalBriefCard honest review, sour
     expect(screen.queryByText(/교차 검증 완료/)).not.toBeInTheDocument();
   });
 
-  it('separates recorded exercise note springs/breathing from apparatus/block templates in LibraryMovementInspector while keeping unreviewed notes hidden in compact class/study mode', () => {
+  it('separates recorded exercise note springs/breathing from apparatus/block templates in LibraryMovementInspector while keeping unreviewed notes hidden in compact class/study mode', async () => {
     const guidance = getStudioVerifiedGuidance(pendingExercise);
     expect(guidance.verificationBadgeKo).toBe('기구·구간 공통 참고 · 원문 확인 필요');
     expect(guidance.exerciseNote.springsKo).toBe(pendingExercise.springs);
@@ -288,7 +288,9 @@ describe('LibraryMovementInspector & StudioClinicalBriefCard honest review, sour
       />,
     );
 
-    const noteBox = screen.getByTestId('brief-exercise-note-box');
+    expect(screen.queryByTestId('brief-exercise-note-box')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('도해·기구 설정 참고', { selector: 'summary' }));
+    const noteBox = await screen.findByTestId('brief-exercise-note-box');
     const templateBox = screen.getByTestId('brief-apparatus-template-box');
 
     expect(noteBox).toHaveTextContent('개인 검토 전 · 원문 확인 필요');

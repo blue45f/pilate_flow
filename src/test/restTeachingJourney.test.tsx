@@ -298,7 +298,8 @@ describe('rest teaching and actual history journeys', { timeout: 60000 }, () => 
       exercises: [...INITIAL_EXERCISES, { ...exercises[0], review: undefined }, exercises[1]],
     });
     const { unmount } = render(<LiveStageView onOpenLogModal={vi.fn()} />);
-    expect(screen.getByText(/교차 검증 완료 가이드/)).toBeInTheDocument();
+    expect(screen.getByText('계획 검토 전 · 외부 출처 미등록')).toBeInTheDocument();
+    expect(screen.queryByText(/교차 검증 완료 가이드/)).not.toBeInTheDocument();
     expect(screen.getByRole('timer')).toBeInTheDocument();
     expect(
       usePilatesStore.getState().exercises.find((item) => item.id === exercises[0].id)?.review,

@@ -342,8 +342,7 @@ html #root .vnext-shell .main-content > * {
 }
 
 /* ==========================================================================
-   3. SequenceWorkbench — P01 Signature Hero, Board 05 PC 3-Col 3D Grid +
-      Inline 3-Second Summary Panel, & Mobile P04 Horizontal Cards + Sticky CTA
+   3. SequenceWorkbench — compact authoring rows and optional reference tools
    ========================================================================== */
 /* Hide noisy stacked legacy bars so Workbench matches Board 01 / Board 05 cleanly */
 html #root .vnext-workbench .workbench-step-flow-summary,
@@ -370,53 +369,6 @@ html #root .vnext-workbench .pf-step-wizard-tab.is-active {
   border-radius: 999px !important;
 }
 
-/* P01 Signature 3D Hero Card (Board 01 P01) */
-.pf-p01-signature-hero {
-  display: grid;
-  grid-template-columns: minmax(260px, 1.05fr) minmax(0, 1.35fr);
-  gap: 18px;
-  padding: 14px;
-  margin-bottom: 16px;
-  border-radius: 20px;
-  background: var(--pf-v6-surface);
-  border: 1px solid var(--pf-v6-border);
-  box-shadow: var(--pf-v6-shadow-sm);
-  align-items: center;
-}
-
-.pf-p01-signature-hero__media {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  border-radius: 16px;
-  overflow: hidden;
-  background: #e9e6dc;
-  border: 1px solid var(--pf-v6-border);
-}
-
-.pf-p01-signature-hero__media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.pf-p01-signature-hero__body {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 14px;
-  min-width: 0;
-}
-
-@media (max-width: 767px) {
-  .pf-p01-signature-hero {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 12px;
-  }
-}
-
 /* Step 3D Thumbnail Mark inside SequenceWorkbench */
 .pf-b05-card-3d-mark {
   position: relative;
@@ -435,62 +387,182 @@ html #root .vnext-workbench .pf-step-wizard-tab.is-active {
   display: block !important;
 }
 
-/* PC Wide (>= 1024px) & Tablet (768–1023px): Board 05 Large 3D Studio Step Cards! */
-@media (min-width: 768px) {
-  html #root .vnext-workbench .flow-sections:not(.is-columns-view) .pf-sequence-block__body,
-  html #root .vnext-workbench .flow-sections:not(.is-columns-view) .pf-sequence-block__list,
-  html #root .vnext-workbench .flow-sections:not(.is-columns-view) > section > div:last-child {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px !important;
-  }
+/* List mode stays one column at every width; the optional board keeps its own layout. */
+html #root .workbench-task-focused .flow-sections:not(.is-columns-view) .pf-sequence-block__body,
+html #root .workbench-task-focused .flow-sections:not(.is-columns-view) .pf-sequence-block__list,
+html #root .workbench-task-focused .flow-sections:not(.is-columns-view) > section > div:last-child {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 10px !important;
+}
+
+html #root .vnext-workbench.workbench-task-focused .flow-step .step-main {
+  display: grid !important;
+  grid-template-columns: 44px 64px minmax(0, 1fr);
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 12px !important;
+  min-width: 0;
+}
+
+html #root .workbench-task-focused .step-main > * {
+  min-width: 0;
+}
+
+html #root .workbench-task-focused .flow-sections.is-columns-view {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+html #root .workbench-task-focused.has-inspector .flow-sections.is-columns-view {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html #root .workbench-task-focused .flow-step :is(.pf-b05-card-overlay-top, .pf-b05-card-overlay-bottom) {
+  display: none;
+}
+
+html #root .workbench-task-focused .flow-step.is-selected {
+  border-color: var(--pf-v6-emerald) !important;
+  background: #f4f9f6 !important;
+}
+
+html #root .workbench-task-focused .step-bundle-select-label {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  gap: 4px;
+}
+
+html #root .vnext-workbench.workbench-task-focused .flow-step .step-art,
+html #root .vnext-workbench.workbench-task-focused .flow-step .pf-b05-card-3d-mark {
+  width: 64px !important;
+  height: 56px !important;
+  border-radius: 10px;
+}
+
+html #root .workbench-task-focused .flow-step .step-art {
+  display: block;
+  grid-column: 2;
+  grid-row: 1;
+  order: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+html #root .workbench-task-focused .flow-step .step-title {
+  grid-column: 3;
+  grid-row: 1;
+  min-height: 44px;
+  text-align: left;
+  padding: 0 !important;
+}
+
+html #root .workbench-task-focused .flow-step .step-title strong {
+  font-size: 0.95rem !important;
+  line-height: 1.45;
+  color: var(--pf-v6-ink) !important;
+}
+
+html #root .vnext-workbench.workbench-task-focused .step-quick-duration-stepper {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px;
+  border: 1px solid var(--pf-v6-border);
+  border-radius: 12px;
+  background: var(--pf-v6-surface-subtle);
+}
+
+html #root .workbench-task-focused .step-quick-duration-stepper .v3-step-time {
+  margin: 0;
+  padding: 0;
+  align-self: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+html #root .workbench-task-focused .workbench-step-options {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  padding-right: 140px;
+}
+
+html #root .workbench-task-focused .workbench-step-options[open] {
+  padding-right: 0;
+}
+
+html #root .workbench-task-focused .workbench-step-options > summary {
+  width: fit-content;
+}
+
+html #root .workbench-task-focused .workbench-step-options[open] > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+html #root .workbench-task-focused .workbench-step-options button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+html #root .vnext-workbench.workbench-task-focused .step-main > .v3-step-more {
+  /* The movement title already opens the same editor at every viewport. */
+  display: none;
+}
+
+html #root .vnext-workbench.workbench-task-focused .flow-step .step-actions {
+  grid-column: 3;
+  grid-row: 3;
+  align-self: start;
+  justify-self: end;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  max-width: 140px;
+  padding: 0;
+  border: 0;
+}
+
+html #root .workbench-task-focused .step-bundle-provenance-row {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
 }
 
 @media (min-width: 1024px) {
-  html #root .vnext-workbench:not(.has-inspector) .plan-layout:not(.is-option-a-split) .flow-sections:not(.is-columns-view) .pf-sequence-block__body,
-  html #root .vnext-workbench:not(.has-inspector) .plan-layout:not(.is-option-a-split) .flow-sections:not(.is-columns-view) .pf-sequence-block__list,
-  html #root .vnext-workbench:not(.has-inspector) .plan-layout:not(.is-option-a-split) .flow-sections:not(.is-columns-view) > section > div:last-child {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  html #root .workbench-task-focused:not(.has-inspector) .plan-layout:not(.is-option-a-split) .flow-sections:not(.is-columns-view) .step-main {
+    grid-template-columns: 44px 64px minmax(0, 1fr) 180px;
   }
 
-  /* Hide redundant filmstrip on PC when 3D card grid is already displayed */
-  html #root .vnext-workbench .pf-visual-filmstrip {
-    display: none;
+  html #root .workbench-task-focused:not(.has-inspector) .plan-layout:not(.is-option-a-split) .flow-sections:not(.is-columns-view) .step-quick-duration-stepper {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  html #root .workbench-task-focused:not(.has-inspector) .plan-layout:not(.is-option-a-split) .flow-sections:not(.is-columns-view) .workbench-step-options {
+    grid-column: 3 / -1;
+    grid-row: 2;
+  }
+
+  html #root .workbench-task-focused:not(.has-inspector) .plan-layout:not(.is-option-a-split) .flow-sections:not(.is-columns-view) .step-actions,
+  html #root .workbench-task-focused:not(.has-inspector) .plan-layout:not(.is-option-a-split) .flow-sections:not(.is-columns-view) .v3-step-more {
+    grid-column: 4;
+    grid-row: 2;
   }
 }
 
 @media (min-width: 768px) {
-  html #root .vnext-workbench .flow-step .step-main {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 10px !important;
-    padding: 12px !important;
-  }
-
-  html #root .vnext-workbench .flow-step .step-art {
-    order: -1;
-    width: 100% !important;
-    height: auto !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-  }
-
-  html #root .vnext-workbench .flow-step .pf-b05-card-3d-mark {
-    aspect-ratio: 16 / 10;
-  }
-
-  html #root .vnext-workbench .flow-step .step-title {
-    text-align: left;
-    padding: 0 !important;
-  }
-
-  html #root .vnext-workbench .flow-step .step-title strong {
-    font-size: 1rem !important;
-    color: var(--pf-v6-ink) !important;
-  }
-
   .pf-p04-mobile-sticky-cta {
     display: none !important;
   }
@@ -2514,28 +2586,6 @@ dialog.light-dismiss-dialog {
        Margin/Padding Harmony, 4-Frame 3D Storyboard, & 360° 3D Engine
    ========================================================================== */
 
-/* Topbar 1화면 1결정 Mobile Pill (Board 01–05) & Quiet PC Topbar */
-.pf-one-decision-pill {
-  display: none;
-}
-
-@media (max-width: 767px) {
-  .pf-one-decision-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 9px;
-    margin-left: 6px;
-    border-radius: 999px;
-    background: var(--pf-v6-mint);
-    border: 1px solid var(--pf-v6-mint-strong);
-    color: var(--pf-v6-emerald-dark);
-    font-size: 0.69rem;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-    white-space: nowrap;
-  }
-}
-
 @media (min-width: 1024px) {
   html #root .vnext-shell .topbar {
     min-height: 54px !important;
@@ -2630,6 +2680,143 @@ html #root .vnext-workbench .sequence-title-label input {
 html #root .vnext-workbench .sequence-title-label input:focus {
   border-color: var(--pf-v6-emerald) !important;
   background: #ffffff !important;
+}
+
+/* Authoring actions share one visual hierarchy across home, list and library. */
+html #root .workbench-task-focused .pf-p01-home-stage .pf-step-choice-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html #root .workbench-task-focused .workbench-welcome {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+html #root .workbench-task-focused .workbench-welcome .pf-visual-apparatus-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+html #root .workbench-task-focused .workbench-welcome .pf-visual-apparatus-card {
+  grid-column: auto;
+  min-width: 0;
+  padding: 6px;
+}
+
+html #root .workbench-task-focused .workbench-welcome .pf-visual-apparatus-card__media {
+  aspect-ratio: 4 / 3;
+  max-height: 100px;
+}
+
+html #root .workbench-task-focused .workbench-home-primary-actions,
+html #root .workbench-task-focused .workbench-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+
+html #root .workbench-task-focused .workbench-home-primary-actions > .pf-step-primary-cta {
+  flex: 1 1 100%;
+  min-height: 48px;
+}
+
+html #root .workbench-task-focused .workbench-editor-actions > button {
+  min-height: 44px;
+}
+
+html #root .workbench-task-focused .workbench-target-progress {
+  height: 8px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: #dce4df;
+  overflow: hidden;
+}
+
+html #root .workbench-task-focused .workbench-target-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--pf-v6-emerald);
+}
+
+html #root .workbench-task-focused .workbench-target-progress.is-over-target > span {
+  background: #a24b31;
+}
+
+html #root .workbench-task-focused .workbench-secondary-tools,
+html #root .library-task-focused .library-reference-tools {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  min-width: 0;
+}
+
+html #root .workbench-task-focused :is(.workbench-home-options, .workbench-home-secondary, .workbench-secondary-tools > details),
+html #root .library-task-focused .library-reference-tools > details,
+html #root .library-inspector-reference-details {
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid var(--pf-v6-border);
+  border-radius: 12px;
+  background: var(--pf-v6-surface);
+}
+
+html #root .workbench-task-focused :is(.workbench-home-options, .workbench-home-secondary, .workbench-secondary-tools > details)[open],
+html #root .library-task-focused .library-reference-tools > details[open],
+html #root .library-inspector-reference-details[open] {
+  padding-bottom: 12px;
+}
+
+html #root .workbench-task-focused :is(.workbench-home-options, .workbench-home-secondary, .workbench-step-options, .workbench-secondary-tools details) > summary,
+html #root .library-task-focused .library-reference-tools > details > summary,
+html #root .library-inspector-reference-details > summary {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 11px 0;
+  color: var(--pf-v6-emerald);
+  font-size: 0.85rem;
+  font-weight: 650;
+  line-height: 22px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+html #root .workbench-task-focused summary:focus-visible,
+html #root .library-task-focused summary:focus-visible,
+html #root .library-inspector-reference-details > summary:focus-visible {
+  outline: 3px solid var(--pf-v6-emerald);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+html #root .library-task-focused .library-apparatus-tabs button,
+html #root .library-task-focused .movement-card-footer button {
+  min-height: 44px;
+}
+
+@media (max-width: 480px) {
+  html #root .workbench-task-focused .workbench-welcome .pf-visual-apparatus-strip {
+    gap: 4px;
+  }
+
+  html #root .workbench-task-focused .workbench-welcome .pf-visual-apparatus-card {
+    padding: 4px;
+  }
+
+  html #root .workbench-task-focused .workbench-welcome .pf-visual-apparatus-card__meta strong {
+    font-size: 0.71rem;
+    white-space: normal;
+    word-break: keep-all;
+  }
+
+  html #root .vnext-workbench.workbench-task-focused .pf-step-stage-frame {
+    padding: 14px 10px !important;
+  }
 }
 
 html #root .vnext-workbench .workbench-home-flow-bar,

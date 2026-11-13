@@ -343,7 +343,7 @@ describe('Flow Atelier v7.0 Studio Suite & Regression Contracts', () => {
       const newlySavedId = usePilatesStore.getState().activeSequenceId;
       expect(newlySavedId).toBeTruthy();
 
-      fireEvent.click(primaryNav().getByRole('button', { name: '저장한 플로우' }));
+      fireEvent.click(primaryNav().getByRole('button', { name: '저장한 수업' }));
       expect(
         await screen.findByRole(
           'heading',

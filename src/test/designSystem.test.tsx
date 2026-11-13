@@ -503,8 +503,16 @@ describe('Representative screens upgraded with the Design System', () => {
     expect(flowSwitchRegion.querySelector('.pf-badge--sage')).not.toBeNull();
     expect(screen.getByRole('region', { name: '준비·본운동·마무리 구간 비중' })).toBeInTheDocument();
 
+    const currentStages = within(screen.getByRole('group', { name: '수업 제작 단계' }));
+    expect(currentStages.getByRole('button', { name: '3 순서·시간 확인' })).toHaveAttribute(
+      'aria-current',
+      'step',
+    );
+    expect(currentStages.getByRole('button', { name: '2 동작 담기' })).not.toHaveAttribute(
+      'aria-current',
+    );
+    expect(screen.getByRole('heading', { level: 1, name: '수업 구성' })).toBeVisible();
     const stepGuideNav = screen.getByRole('navigation', { name: '수업 준비 단계 이동' });
-    expect(stepGuideNav).toHaveTextContent('현재 2단계: 수업 구성 확인');
     expect(
       within(stepGuideNav).getByRole('button', { name: '다음 단계: 수업 구성 확인' }),
     ).toHaveAttribute('aria-current', 'step');
