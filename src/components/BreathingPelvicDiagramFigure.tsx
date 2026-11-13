@@ -479,6 +479,7 @@ export function BreathingPelvicTriptychFigure({
   return (
     <div
       data-testid={`breathing-pelvic-triptych-${diagramId}`}
+      className="movement-studio-phase-grid"
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',

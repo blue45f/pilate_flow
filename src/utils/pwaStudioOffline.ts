@@ -1,6 +1,6 @@
-import { ALL_STUDIO_3D_ASSET_URLS, ALL_STUDIO_3D_MID_ASSET_URLS } from './studio3dMotionCatalog';
+import { ALL_LOSSLESS_MOTION_FRAME_URLS, STUDIO_MOTION_FRAME_CACHE } from './motionFrameAssets';
 
-export const STUDIO_OFFLINE_3D_CACHE_NAME = 'flow-atelier-studio3d-v2';
+export const STUDIO_OFFLINE_3D_CACHE_NAME = STUDIO_MOTION_FRAME_CACHE;
 
 export interface Studio3dOfflineStatus {
   readonly totalAssets: number;
@@ -10,7 +10,7 @@ export interface Studio3dOfflineStatus {
 }
 
 export async function inspectStudio3dOfflineCache(): Promise<Studio3dOfflineStatus> {
-  const totalAssets = ALL_STUDIO_3D_ASSET_URLS.length;
+  const totalAssets = ALL_LOSSLESS_MOTION_FRAME_URLS.length;
   if (typeof window === 'undefined' || !('caches' in window)) {
     return {
       totalAssets,
@@ -23,7 +23,7 @@ export async function inspectStudio3dOfflineCache(): Promise<Studio3dOfflineStat
   try {
     const cache = await window.caches.open(STUDIO_OFFLINE_3D_CACHE_NAME);
     let cachedAssets = 0;
-    for (const url of ALL_STUDIO_3D_ASSET_URLS) {
+    for (const url of ALL_LOSSLESS_MOTION_FRAME_URLS) {
       const hit = await cache.match(url);
       if (hit) cachedAssets += 1;
     }
@@ -47,7 +47,7 @@ export async function prewarmStudio3dOfflineCache(
   onProgress?: (cachedCount: number, totalCount: number) => void,
   fetcher: typeof fetch = typeof fetch === 'function' ? fetch.bind(globalThis) : (async () => new Response()) as typeof fetch,
 ): Promise<Studio3dOfflineStatus> {
-  const totalAssets = ALL_STUDIO_3D_ASSET_URLS.length;
+  const totalAssets = ALL_LOSSLESS_MOTION_FRAME_URLS.length;
   if (typeof window === 'undefined' || !('caches' in window)) {
     return {
       totalAssets,
@@ -57,17 +57,22 @@ export async function prewarmStudio3dOfflineCache(
     };
   }
 
-  const cache = await window.caches.open(STUDIO_OFFLINE_3D_CACHE_NAME);
+  let cache: Cache;
+  try {
+    cache = await window.caches.open(STUDIO_OFFLINE_3D_CACHE_NAME);
+  } catch {
+    return { totalAssets, cachedAssets: 0, cacheSupported: false, isComplete: false };
+  }
   let cachedAssets = 0;
 
-  for (const url of ALL_STUDIO_3D_ASSET_URLS) {
+  for (const url of ALL_LOSSLESS_MOTION_FRAME_URLS) {
     try {
       const existing = await cache.match(url);
       if (existing) {
         cachedAssets += 1;
       } else {
         const res = await fetcher(url, { cache: 'force-cache' });
-        if (res && res.ok) {
+        if (res && res.ok && res.headers?.get('content-type')?.split(';')[0].trim() === 'image/webp') {
           await cache.put(url, typeof res.clone === 'function' ? res.clone() : res);
           cachedAssets += 1;
         }
@@ -78,20 +83,6 @@ export async function prewarmStudio3dOfflineCache(
     onProgress?.(cachedAssets, totalAssets);
   }
 
-  // Opportunistically prewarm intermediate mid-phase frames without blocking primary 48-cut completion
-  for (const midUrl of ALL_STUDIO_3D_MID_ASSET_URLS) {
-    try {
-      const existing = await cache.match(midUrl);
-      if (!existing) {
-        const res = await fetcher(midUrl, { cache: 'force-cache' });
-        if (res && res.ok) {
-          await cache.put(midUrl, typeof res.clone === 'function' ? res.clone() : res);
-        }
-      }
-    } catch {
-      // Non-blocking fallback
-    }
-  }
 
   return {
     totalAssets,

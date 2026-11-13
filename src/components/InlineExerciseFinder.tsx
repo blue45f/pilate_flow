@@ -1,3 +1,4 @@
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
@@ -36,7 +37,6 @@ import { resolvePatternReferencesForRenderer } from '../features/motionCoverage'
 import { MotionPatternPreview } from './MotionPatternPreview';
 import { SpringVisualPills } from './SpringVisualPills';
 import { normalizeCanonicalSpringKey } from '../utils/brandSpringConverter';
-import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import '../styles/design-tokens.css';
 import '../styles/inline-exercise-finder.css';
 import '../styles/finder-class-context.css';
@@ -1066,7 +1066,6 @@ export function InlineExerciseFinder({
             const ideaMeta = isIdea ? readMovementIdeaDraft(exercise) : null;
             const references = resolvePatternReferencesForRenderer(exercise);
             const firstReference = references[0];
-            const studio3d = resolveStudio3DMotionForExercise(exercise);
             const alreadyAdded = activeSteps.some(
               (step) => !isRestStep(step) && step.exerciseId === exercise.id,
             );
@@ -1091,14 +1090,10 @@ export function InlineExerciseFinder({
                   aria-label={`${exercise.nameKo} 상세 보기`}
                   onClick={() => openExerciseDetail(exercise)}
                 >
-                  <img
-                    src={studio3d.peakImg}
-                    alt=""
-                    aria-hidden="true"
-                    loading="lazy"
+                  <ExerciseMotionArtwork
+                    exercise={exercise}
                     className="ief-studio3d-thumb"
-                    data-testid="ief-card-3d-thumb"
-                  />
+                    data-testid="ief-card-3d-thumb" />
                   <span className="pf-b05-card-overlay-top" aria-hidden="true">
                     <span className="pf-b05-pill is-dark">{equipmentLabel || '3D 기구'}</span>
                     {exercise.springs && (

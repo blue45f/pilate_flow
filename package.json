@@ -11,7 +11,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/check-pwa-build.mjs",
+    "build": "node scripts/generate-exercise-artwork.mjs --check && tsc -b && vite build && node scripts/check-pwa-build.mjs",
+    "generate:motion-artwork": "node scripts/generate-exercise-artwork.mjs",
+    "check:motion-artwork": "node scripts/generate-exercise-artwork.mjs --check",
     "preview": "vite preview",
     "test": "node --test src/booking-core/test/booking-engine.test.mjs src/utils/recurrence/test/pilates-recurrence.test.mjs && vitest run",
     "test:watch": "vitest",

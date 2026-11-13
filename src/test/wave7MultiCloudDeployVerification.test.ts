@@ -109,7 +109,13 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
     expect(scripts['test']).toContain('vitest run');
     expect(scripts['verify:all']).toContain('pnpm test:deploy');
     expect(scripts['verify:all']).toContain('pnpm test');
-    expect(scripts['build']).toBe('tsc -b && vite build && node scripts/check-pwa-build.mjs');
+    expect(scripts['build']).toBe(
+      'node scripts/generate-exercise-artwork.mjs --check && tsc -b && vite build && node scripts/check-pwa-build.mjs',
+    );
+    expect(scripts['generate:motion-artwork']).toBe('node scripts/generate-exercise-artwork.mjs');
+    expect(scripts['check:motion-artwork']).toBe(
+      'node scripts/generate-exercise-artwork.mjs --check',
+    );
     expect(scripts['deploy']).toBe('node scripts/deploy-universal.mjs');
     expect(scripts['deploy:doctor']).toBe('node scripts/deploy-universal.mjs --doctor');
     expect(scripts['deploy:auth']).toBe('node scripts/setup-deploy-auth.mjs');

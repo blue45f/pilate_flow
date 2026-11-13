@@ -1,3 +1,4 @@
+import { openScheduleManagementAction } from '../test/scheduleManagementActions';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { InstructorScheduleView } from './InstructorScheduleView';
@@ -19,7 +20,7 @@ afterEach(() => {
 });
 
 function addPlace() {
-  fireEvent.click(screen.getByRole('button', { name: '장소 관리' }));
+  openScheduleManagementAction('장소 관리');
   const dialog = within(screen.getByRole('dialog', { name: '장소 관리' }));
   fireEvent.change(dialog.getByLabelText('장소 별칭'), { target: { value: 'QA 공간 별칭' } });
   fireEvent.click(dialog.getByRole('checkbox', { name: '타워' }));
@@ -57,7 +58,7 @@ describe('instructor schedule workflow', () => {
         name: '닫기',
       })[0],
     );
-    fireEvent.click(screen.getByRole('button', { name: '휴무 등록' }));
+    openScheduleManagementAction('휴무 등록');
     fireEvent.click(
       within(screen.getByRole('dialog', { name: '휴무 등록' })).getByRole('button', {
         name: '휴무 저장',
@@ -118,7 +119,7 @@ describe('instructor schedule workflow', () => {
     fireEvent.click(move.getByRole('button', { name: '회차 변경 저장' }));
     expect(screen.getByRole('article', { name: 'QA 별칭 수업 오후 1:00' })).toBeInTheDocument();
     expect(usePilatesStore.getState().instructorSchedule.classes[0].startDate).toBe('2026-11-04');
-    fireEvent.click(screen.getByRole('button', { name: '휴무 등록' }));
+    openScheduleManagementAction('휴무 등록');
     fireEvent.click(
       within(screen.getByRole('dialog', { name: '휴무 등록' })).getByRole('button', {
         name: '휴무 저장',

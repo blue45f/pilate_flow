@@ -231,7 +231,7 @@ describe('Step-by-step guided flow & design mockup alignment upgrades', () => {
   });
 
   it('opens the optional 5-phase continuous kinematic Reformer schematic showcase inside ExerciseAtlasView', async () => {
-    render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+    render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
 
     expect(screen.queryByTestId('kinematic-schematic-showcase')).not.toBeInTheDocument();
     const summary = screen.getByText('동작 도해', { selector: 'summary span' });

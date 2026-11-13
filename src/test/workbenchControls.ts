@@ -1,6 +1,33 @@
 import { expect } from 'vitest';
 import { fireEvent, screen, within } from '@testing-library/react';
 
+/** Advanced journeys enter the retained tools through the new default studio,
+ * just as an instructor does. This never mocks or swaps the workbench route.
+ */
+export async function openAdvancedWorkbench() {
+  const studio = screen.queryByTestId('sequence-studio');
+  if (!studio) return;
+  const tools = within(studio).getByLabelText('수업 작성 도구 더보기');
+  if (!tools.closest('details')?.open) fireEvent.click(tools);
+  fireEvent.click(within(studio).getByRole('button', { name: '자동 구성 · 고급 편집' }));
+  await screen.findByTestId('workbench-step-flow-header', {}, { timeout: 15000 });
+}
+
+/** Records and secondary destinations are explicitly disclosed in the shell. */
+export function openAppTools() {
+  const summary = screen.getByText('기록 · 도구 더보기', { selector: 'summary' });
+  if (!summary.closest('details')?.open) fireEvent.click(summary);
+  return within(summary.closest('details')!);
+}
+
+/** Source material and authoring tools are secondary to the everyday catalog. */
+export async function openAtlasTools() {
+  if (screen.queryByRole('tablist', { name: '자료 모음' })) return;
+  const tools = await screen.findByRole('button', { name: '자료와 고급 도구' }, { timeout: 15000 });
+  fireEvent.click(tools);
+  await screen.findByRole('tablist', { name: '자료 모음' });
+}
+
 /** Open the actual conditions dialog only when a journey needs to edit its fields. */
 export function openWorkbenchConditions() {
   let dialog = screen.queryByRole('dialog', { name: '수업 조건' });

@@ -544,7 +544,8 @@
 }
 
 /* Focus-visible accessibility */
-.motion-library :is(
+.motion-library
+  :is(
     .atlas-compare-toggle,
     .atlas-compare-chip-remove,
     .atlas-compare-expand-btn,
@@ -628,4 +629,29 @@
   .motion-library .atlas-active-sequence-bar {
     transition: none !important;
   }
+}
+.movement-art-trigger .pf-p06-motion-art {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 8 / 5;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #f8f7f2;
+}
+
+.movement-art-trigger .pf-p06-motion-art > svg {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+
+.atlas-compare-3d-frame .exercise-motion-artwork {
+  display: block;
+  width: 100%;
+  aspect-ratio: 8 / 5;
+}
+
+.atlas-compare-video-reference {
+  grid-column: 1 / -1;
 }

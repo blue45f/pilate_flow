@@ -10,6 +10,7 @@ vi.mock('./MotionReferencePlayer', () => ({ MotionReferencePlayer: () => null })
 
 const initialState = usePilatesStore.getState();
 const canonicalBefore = JSON.stringify(INITIAL_EXERCISES);
+const canonicalIds = new Set(INITIAL_EXERCISES.map((exercise) => exercise.id));
 const aliasLabel = '검토한 강사 별칭';
 const precautionsLabel = '주의·제외·개인별 적용 메모 · 직접 작성';
 const cuesLabel = '티칭 큐 · 줄마다 하나 · 직접 작성';
@@ -51,8 +52,13 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   expect(JSON.stringify(INITIAL_EXERCISES)).toBe(canonicalBefore);
-  expect(INITIAL_EXERCISES).toHaveLength(98);
+  expect(INITIAL_EXERCISES).toHaveLength(158);
   expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
+  const storedBaseline = usePilatesStore.getState().exercises.filter((exercise) =>
+    canonicalIds.has(exercise.id),
+  );
+  expect(JSON.stringify(storedBaseline)).toBe(canonicalBefore);
+  expect(storedBaseline.filter(isExerciseAutoEligible)).toHaveLength(0);
   usePilatesStore.setState(initialState);
   vi.restoreAllMocks();
 });

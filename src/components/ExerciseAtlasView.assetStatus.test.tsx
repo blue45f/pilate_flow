@@ -20,7 +20,7 @@ afterEach(() => {
 });
 
 const renderAtlas = () =>
-  render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+  render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
 
 describe('library asset status presentation', () => {
   it('keeps the unreviewed warning and demonstration limit visible while counts are collapsed', () => {

@@ -1,6 +1,7 @@
 import { compareCodeUnits } from '../../utils/compareCodeUnits';
 import { INITIAL_EXERCISES } from '../../data/pilatesCatalog';
 import { ORIGINAL_MOVEMENTS } from '../../data/originalMovements';
+import { getExpandedMovementVisualBinding } from '../../data/expandedMovementVisualBindings';
 import {
   MOVEMENT_VISUAL_ASSETS,
   MOVEMENT_VISUAL_ASSET_MAP,
@@ -534,7 +535,7 @@ export function evaluateMotionCandidateMatch(
         reason: isCustomPattern ? 'unverified-custom-exercise' : 'unknown-exercise-id',
         detailKo: isCustomPattern
           ? `커스텀/아이디어 동작(${rawId})은 검증된 출처 감사가 없어 모션 레지스트리에 자동 매핑하지 않습니다.`
-          : `정식 98개 카탈로그에 존재하지 않는 미확인 동작 ID(${rawId})입니다.`,
+          : `현재 카탈로그에 존재하지 않는 미확인 동작 ID(${rawId})입니다.`,
       }),
       safetyFlags,
     });
@@ -598,6 +599,26 @@ export function evaluateMotionCandidateMatch(
       isCanonicalReady: false,
       true3dSupported: false,
       rejection: editedCatalogRejection(rawId),
+      safetyFlags,
+    });
+  }
+
+  const sourceOnlyBinding = getExpandedMovementVisualBinding(catalogExercise);
+  if (sourceOnlyBinding && !sourceOnlyBinding.nativeMotionAvailable) {
+    return Object.freeze({
+      matched: false,
+      exerciseId: rawId,
+      candidateId,
+      resolvedMode: 'missing',
+      isDraftProposal: false,
+      isCanonicalReady: false,
+      true3dSupported: false,
+      rejection: Object.freeze({
+        candidateId,
+        candidateKind: 'exercise-input',
+        reason: 'model-not-authored',
+        detailKo: `${sourceOnlyBinding.reasonKo} 필요한 도해: ${sourceOnlyBinding.missingPoseFeatureKo}.`,
+      }),
       safetyFlags,
     });
   }
@@ -900,7 +921,7 @@ function extractRefMismatchNotes(ref: MotionPatternReference): readonly string[]
 /**
  * Resolves the complete, evidence-based motion coverage state (`three-phase-2d`, `continuous-2d`,
  * `projected-3d`, or `missing`) for any exercise ID or PilatesExercise object.
- * Reuses the existing 98 2D poses in `MOVEMENT_VISUAL_ASSETS` directly without creating duplicate assets.
+ * Reuses eligible 2D poses in `MOVEMENT_VISUAL_ASSETS` without treating source-only entries as authored motion.
  */
 export function resolveMotionCoverage(
   exerciseOrId: string | PilatesExercise | null | undefined,
@@ -964,7 +985,7 @@ export function resolveMotionCoverage(
             : {}),
           detailKo: isCustom
             ? `런타임 커스텀/아이디어 동작(${rawId})은 출처 감사(CATALOG_VISUAL_SOURCE_COMPARISONS) 및 검증 근거가 없으므로 해부학·기구학 검증 완료나 3D 지원을 꾸미지 않고 missing으로 유지합니다.`
-            : `정식 98개 카탈로그에 등록되지 않은 unknown ID(${rawId})이므로 missing으로 반환합니다.`,
+            : `현재 카탈로그에 등록되지 않은 unknown ID(${rawId})이므로 missing으로 반환합니다.`,
         }),
       ],
       isCustom
@@ -1023,6 +1044,32 @@ export function resolveMotionCoverage(
       '수정한 노트에는 카탈로그 원본의 도해 검증 기록을 적용하지 않습니다.',
       exerciseOrId,
     );
+  }
+
+  const sourceOnlyBinding = getExpandedMovementVisualBinding(catalogExercise);
+  if (sourceOnlyBinding && !sourceOnlyBinding.nativeMotionAvailable) {
+    const missing = createMissingResolution(
+      rawId,
+      [
+        Object.freeze({
+          candidateId: rawId,
+          candidateKind: 'baseline-2d-archetype',
+          reason: 'model-not-authored',
+          detailKo: `${sourceOnlyBinding.reasonKo} 필요한 도해: ${sourceOnlyBinding.missingPoseFeatureKo}.`,
+        }),
+      ],
+      '제작자 페이지·영상 메타데이터 확인 · 전용 동작 도해 미작성',
+      catalogExercise,
+    );
+    return Object.freeze({
+      ...missing,
+      isCatalogExercise: true,
+      threePhase2d: Object.freeze({
+        ...missing.threePhase2d,
+        // Exact creator links remain available; no fallback pose or motion audit is inherited.
+        sourceComparison: getVisualSourceComparison(catalogExercise),
+      }),
+    });
   }
 
   const rejectedCandidates: RejectedMotionCandidate[] = [];
@@ -1229,7 +1276,7 @@ export function resolveMotionCoverage(
     });
   }
 
-  // 4. Evaluate three-phase-2d support by directly reusing the existing 98 catalog assets
+  // 4. Evaluate three-phase-2d support for eligible catalog assets.
   const reusedCatalogAsset = getReusedCatalogVisualAsset(rawId);
   const sourceComparison = getVisualSourceComparison(catalogExercise);
   const hasReliableSource = sourceComparison.matchedReliableSources.length > 0;
@@ -1375,7 +1422,7 @@ export function isCanonicalMotionReady(
 }
 
 /**
- * Resolves motion coverage for all 98 canonical catalog exercises.
+ * Resolves motion coverage for the current catalog, including source-only entries.
  */
 export function resolveAllCatalogMotionCoverage(
   options: ResolveMotionCoverageOptions = {},

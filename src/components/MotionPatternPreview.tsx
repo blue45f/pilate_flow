@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -18,6 +19,8 @@ import { MotionAuthoringBatchFigure } from './MotionAuthoringBatchFigure';
 import { MovementPhaseDiagramSvg } from './MovementPhaseDiagramSvg';
 import { SupineReachFigure } from './SupineReachFigure';
 import { MotionPhaseContextPanel } from './MotionPhaseContextPanel';
+import { useMotionPlaybackEnvironment } from '../hooks/useMotionPlaybackEnvironment';
+import { STUDIO_MOTION_CYCLE_MS } from '../utils/studioMotionPlayback';
 import '../styles/motion-pattern-preview.css';
 
 interface PatternFigureProps {
@@ -85,8 +88,10 @@ export function MotionPatternThumbnail({
   const defaultProgress =
     reference.definition.phases.find((phase) => phase.id === 'turn')?.sample ?? 0.5;
   const [hoverProgress, setHoverProgress] = useState<number | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
+  const lastPaintRef = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
@@ -96,30 +101,35 @@ export function MotionPatternThumbnail({
     };
   }, []);
 
-  const stopHover = () => {
+  const stopHover = useCallback(() => {
     if (rafRef.current !== null) {
       window.cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
     startRef.current = null;
+    lastPaintRef.current = null;
     setHoverProgress(null);
-  };
+  }, []);
+  const { canAnimate } = useMotionPlaybackEnvironment(wrapperRef, stopHover);
 
   const startHover = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType && event.pointerType !== 'mouse') return;
-    if (
-      typeof window === 'undefined' ||
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    ) {
-      return;
-    }
+    if (!canAnimate || document.hidden) return;
     if (rafRef.current !== null) window.cancelAnimationFrame(rafRef.current);
     startRef.current = null;
-    const cycleMs = 4200;
+    lastPaintRef.current = null;
+    const cycleMs = unifiedCatalogAsset?.durationMs ?? STUDIO_MOTION_CYCLE_MS;
     const step = (now: number) => {
+      if (document.hidden) {
+        stopHover();
+        return;
+      }
       if (startRef.current === null) startRef.current = now;
       const elapsed = Math.max(0, now - startRef.current);
-      setHoverProgress(Number(((elapsed % cycleMs) / cycleMs).toFixed(3)));
+      if (lastPaintRef.current === null || now - lastPaintRef.current >= 1000 / 60 - 0.5) {
+        setHoverProgress((elapsed % cycleMs) / cycleMs);
+        lastPaintRef.current = now;
+      }
       rafRef.current = window.requestAnimationFrame(step);
     };
     rafRef.current = window.requestAnimationFrame(step);
@@ -144,6 +154,7 @@ export function MotionPatternThumbnail({
 
   return (
     <div
+      ref={wrapperRef}
       className={`motion-pattern-thumbnail ${
         unifiedCatalogAsset ? 'catalog-motion-thumbnail' : ''
       } ${hoverProgress !== null ? 'is-hover-playing' : ''} ${className}`.trim()}
@@ -152,6 +163,7 @@ export function MotionPatternThumbnail({
       data-exercise-id={unifiedCatalogAsset?.exerciseId}
       onPointerEnter={startHover}
       onPointerLeave={stopHover}
+      onPointerCancel={stopHover}
     >
       {effectiveUnifiedVisual && unifiedCatalogAsset ? (
         <MovementPhaseDiagramSvg

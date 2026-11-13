@@ -1,3 +1,4 @@
+import { openAppTools } from './workbenchControls';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
@@ -465,14 +466,15 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
     const view = render(<App />);
 
     try {
+      openAppTools();
       const roleSwitcher = screen.getByRole('group', { name: '이용자 화면 전환' });
       const memberBtn = within(roleSwitcher).getByRole('button', { name: '회원 예약' });
       const backToInstructorBtn = within(roleSwitcher).getByRole('button', { name: '강사 작업실' });
       expect(backToInstructorBtn).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.getByTestId('workbench-step-flow-header')).toBeInTheDocument();
+      expect(screen.getByTestId('sequence-studio')).toBeInTheDocument();
       expect(
         within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', {
-          name: '오늘의 수업',
+          name: '수업 만들기',
         }),
       ).toHaveAttribute('aria-current', 'page');
 
@@ -482,20 +484,20 @@ describe('UX Redesign (Instructor Journey, Member Booking, V2 Atelier) & OpenAI 
       expect(memberBtn).toHaveAttribute('aria-pressed', 'true');
       expect(screen.getByTestId('member-desktop-nav')).toBeInTheDocument();
       expect(screen.queryByRole('navigation', { name: '주 메뉴' })).not.toBeInTheDocument();
-      expect(screen.queryByTestId('workbench-step-flow-header')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('sequence-studio')).not.toBeInTheDocument();
       expect(usePilatesStore.getState().activeSteps).toBe(instructorState.activeSteps);
       expect(usePilatesStore.getState().activeTitle).toBe(instructorState.activeTitle);
       const memberState = readPersistedMemberBookingState(localScheduleDate());
 
       fireEvent.click(backToInstructorBtn);
 
-      expect(await screen.findByTestId('workbench-step-flow-header')).toBeInTheDocument();
+      expect(await screen.findByTestId('sequence-studio')).toBeInTheDocument();
       expect(backToInstructorBtn).toHaveAttribute('aria-pressed', 'true');
       expect(screen.queryByTestId('member-booking-view')).not.toBeInTheDocument();
       expect(screen.queryByTestId('member-desktop-nav')).not.toBeInTheDocument();
       expect(
         within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', {
-          name: '오늘의 수업',
+          name: '수업 만들기',
         }),
       ).toHaveAttribute('aria-current', 'page');
       expect(usePilatesStore.getState().activeTab).toBe('workbench');

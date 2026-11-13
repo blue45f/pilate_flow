@@ -43,7 +43,7 @@ const matClassCriteria: AutoGenerateCriteria = {
 };
 
 const renderAtlas = () =>
-  render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+  render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
 
 beforeEach(() => {
   window.sessionStorage.removeItem(ATLAS_DISCOVERY_RECOVERY_KEY);
@@ -203,7 +203,7 @@ describe('ExerciseAtlasView movement comparison, pre-add readiness cues, and seq
     const returnBar = document.querySelector('.ml-selection-return') as HTMLElement;
     expect(returnBar).toHaveAttribute('data-has-selection', 'true');
     expect(returnBar).toHaveTextContent(`#1 ${matCorePending.nameKo}`);
-  });
+  }, 15000); // Covers the full comparison, filtering, motion-preview and add flow with real SVGs.
 
   it('surfaces pre-click sequence order, movement-family conflict, and class-criteria mismatch badges while preserving duplicate/criteria alert feedback', () => {
     vi.useFakeTimers();

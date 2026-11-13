@@ -30,11 +30,14 @@ afterEach(() => {
 });
 
 describe('compact saved sequence disclosure', () => {
-  it('starts with open and more, exposes every existing tool without changing saved data, and collapses with Escape', () => {
+  it('shows open and teach actions, keeps secondary tools closed, and restores focus after Escape', () => {
     render(<ClassBinderView onOpenLogModal={vi.fn()} />);
     const before = structuredClone(usePilatesStore.getState().savedSequences);
     const scope = card();
     expect(scope.getByRole('button', { name: '불러오기' })).toBeVisible();
+    expect(scope.getByRole('button', { name: 'first 계획 수업 시작' })).toBeVisible();
+    expect(screen.getByTestId('binder-library-tools')).not.toHaveAttribute('open');
+    expect(screen.getByTestId('binder-4week-curriculum-drawer')).not.toBeVisible();
     expect(scope.getByRole('button', { name: 'first 계획 더보기' })).toHaveAttribute(
       'aria-expanded',
       'false',
@@ -190,5 +193,30 @@ describe('compact saved sequence disclosure', () => {
     expect(usePilatesStore.getState().activeTab).toBe('stage');
     expect(usePilatesStore.getState().activeSequenceId).toBe('first');
     expect(usePilatesStore.getState().savedSequences).toHaveLength(2);
+  });
+
+  it('keeps the prominent teach action behind the existing unsaved-draft confirmation', () => {
+    usePilatesStore.setState({
+      activeTab: 'binder',
+      activeSequenceId: 'unsaved-draft',
+      activeTitle: '작성 중인 수업',
+      activeSteps: second().steps,
+    });
+    const before = usePilatesStore.getState();
+    render(<ClassBinderView onOpenLogModal={vi.fn()} />);
+    const scope = card();
+    const teach = scope.getByRole('button', { name: 'first 계획 수업 시작' });
+    fireEvent.click(teach);
+    const confirmation = scope.getByRole('region', { name: '현재 초안 덮어쓰기 확인' });
+    expect(confirmation).toHaveTextContent('작성 중인 수업');
+    expect(
+      within(confirmation).getByRole('button', { name: '초안 덮어쓰고 수업 시작' }),
+    ).toBeVisible();
+    expect(usePilatesStore.getState().activeTab).toBe('binder');
+    expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
+    fireEvent.click(within(confirmation).getByRole('button', { name: '취소' }));
+    expect(teach).toHaveFocus();
+    expect(usePilatesStore.getState().activeTitle).toBe('작성 중인 수업');
+    expect(usePilatesStore.getState().savedSequences).toBe(before.savedSequences);
   });
 });

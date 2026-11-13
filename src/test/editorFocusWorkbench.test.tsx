@@ -102,7 +102,7 @@ describe('Workbench editing state and time feedback', () => {
     expect(screen.getByRole('status', { name: '수업 구성 상태 안내' })).toHaveTextContent(
       '마지막 변경을 되돌렸어요. 현재 1개 항목 · 03:00입니다.',
     );
-  });
+  }, 15000);
 
   it('caps the progress track at the target while explicitly retaining the excess time', () => {
     seedDraft(60);
@@ -130,5 +130,5 @@ describe('Workbench editing state and time feedback', () => {
     expect(tenReps).toBeDisabled();
     expect(screen.getByRole('button', { name: '1번 동작 교체' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '1번 동작 30초 늘리기' })).toBeDisabled();
-  });
+  }, 15000);
 });

@@ -17,7 +17,7 @@ import {
   resolveCoreAbdominalDiagram,
   resolveCoreMovementVisualAsset,
 } from '../data/coreAbdominalDiagrams';
-import type { VisualPhaseId } from '../data/movementVisualRigCatalog';
+import { getMovementVisualAsset, type VisualPhaseId } from '../data/movementVisualRigCatalog';
 
 const PHASES: readonly VisualPhaseId[] = ['start', 'middle', 'end'];
 
@@ -116,7 +116,12 @@ describe('Track I4 · Core Abdominal 2D Diagrams (Hundred, Single Leg Stretch, D
 
     // Start tucked ball: hands at shins/ankles, tailbone anchored at y=143
     expect(startJoints.pelvis.y).toBe(143);
-    expect(Math.hypot(startJoints.hand.x - startJoints.ankle.x, startJoints.hand.y - startJoints.ankle.y)).toBeLessThan(10);
+    expect(
+      Math.hypot(
+        startJoints.hand.x - startJoints.ankle.x,
+        startJoints.hand.y - startJoints.ankle.y,
+      ),
+    ).toBeLessThan(10);
 
     // Middle opposition reach: 135° overhead arms + 45° diagonal legs, thoracic curl y=135 & lumbar y=143
     expect(computeShoulderArmElevationDeg(middleJoints)).toBe(135);
@@ -137,7 +142,6 @@ describe('Track I4 · Core Abdominal 2D Diagrams (Hundred, Single Leg Stretch, D
       'original-mat-hundred-prep',
       'core-hundred',
       'original-mat-single-leg-stretch',
-      'ex-core-02',
       'core-single-leg-stretch',
       'ex-core-03',
       'original-mat-double-leg-stretch',
@@ -155,6 +159,24 @@ describe('Track I4 · Core Abdominal 2D Diagrams (Hundred, Single Leg Stretch, D
       expect(resolveCoreAbdominalDiagram(id)).not.toBeNull();
       expect(resolveCoreMovementVisualAsset(id)?.exerciseId).toBe(id);
     }
+
+    // Short-box abdominals are seated on a Reformer and must not resolve to a
+    // supine single-leg stretch or inherit that movement's correction record.
+    expect(patch.assets['ex-core-02']).toBeUndefined();
+    expect(patch.corrections['ex-core-02']).toBeUndefined();
+    expect(patch.byCatalogExerciseId['ex-core-02']).toBeUndefined();
+    expect(resolveCoreAbdominalDiagram('ex-core-02')).toBeNull();
+    expect(resolveCoreMovementVisualAsset('ex-core-02')).toBeNull();
+    const shortBox = getMovementVisualAsset('ex-core-02');
+    expect(shortBox).toMatchObject({
+      apparatus: 'reformer',
+      bodyPosition: 'seated',
+      archetypeId: 'reformer-short-box-supported-roll-back',
+      anatomicalAccuracyAssumed: false,
+    });
+    expect(shortBox!.phases.start.joints).not.toEqual(
+      CORE_ABDOMINAL_DIAGRAM_SPECS['core-single-leg-stretch'].asset.phases.start.joints,
+    );
 
     expect(CORE_ABDOMINAL_SOURCE_LEDGER.truthfulness.anatomicalAccuracyAssumed).toBe(false);
     expect(CORE_ABDOMINAL_SOURCE_LEDGER.truthfulness.professionalReviewCount).toBe(0);

@@ -1,0 +1,204 @@
+/* Shared studio presentation. Authored viewBox and joint coordinates stay fixed. */
+.movement-phase-diagram-svg,
+.movement-triptych-diagram,
+.movement-diagram-reference {
+  --motion-surface: #faf9f5;
+  --motion-soft: #f0f1eb;
+  --motion-border: #d0d9ce;
+  --motion-ink: #244b3d;
+  --motion-muted: #51685c;
+  --motion-accent: #a55039;
+}
+
+.movement-phase-diagram-svg {
+  max-width: 100%;
+  isolation: isolate;
+  overflow: hidden;
+  /* Never tween path data in CSS; the motion sampler owns the actual pose. */
+  transition: none;
+}
+
+.movement-phase-diagram-svg [data-layer] {
+  pointer-events: none;
+}
+
+.movement-phase-diagram-svg[data-detail-level='preview'] {
+  /* Avoid a differently colored card, transparent floor or clipping at thumbnail size. */
+  background: var(--motion-surface);
+}
+
+.movement-triptych-diagram {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  color: var(--motion-ink);
+}
+
+.movement-triptych-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px 16px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.movement-triptych-heading > span {
+  color: var(--motion-muted);
+  font-size: 0.8rem;
+}
+
+.movement-triptych-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 12px;
+}
+
+.movement-studio-phase-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)) !important;
+  min-width: 0;
+}
+
+.movement-studio-phase-grid > * {
+  min-width: 0;
+}
+
+.movement-triptych-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--motion-border);
+  border-radius: 16px;
+  background: var(--motion-surface);
+  box-shadow: 0 2px 8px rgb(36 75 61 / 4%);
+}
+
+.movement-triptych-panel[data-selected='true'] {
+  border-color: var(--motion-ink);
+  box-shadow: inset 0 0 0 1px var(--motion-ink);
+}
+
+.movement-triptych-phase-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 52px;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--motion-soft);
+  color: var(--motion-ink);
+  font: inherit;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+button.movement-triptych-phase-heading {
+  cursor: pointer;
+}
+
+.movement-triptych-phase-heading[aria-pressed='true'] {
+  background: var(--motion-ink);
+  color: #fffdf8;
+}
+
+.movement-triptych-phase-number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  height: 30px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.movement-triptych-phase-label {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.movement-triptych-phase-label > strong {
+  font-size: 0.9rem;
+}
+
+.movement-triptych-phase-label > span {
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.movement-triptych-caption {
+  padding: 0 2px 2px;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  color: var(--motion-muted);
+}
+
+.movement-triptych-caption > strong {
+  color: var(--motion-accent);
+  font-weight: 600;
+}
+
+.movement-triptych-caption > p {
+  margin: 4px 0 0;
+}
+
+.movement-triptych-metadata {
+  color: var(--motion-muted);
+  font-size: 0.8rem;
+}
+
+.movement-triptych-metadata > summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+}
+
+.movement-triptych-metadata > p {
+  margin: 0 0 8px;
+}
+
+.movement-triptych-diagram :is(button, summary):focus-visible {
+  outline: 3px solid var(--motion-ink);
+  outline-offset: 3px;
+}
+
+/* Legacy references share the studio frame, without recoloring their pose annotations. */
+.movement-diagram-reference-content svg[role='img'][viewBox='0 0 320 200'] {
+  width: 100%;
+  height: auto !important;
+  aspect-ratio: 8 / 5;
+  border-radius: 14px !important;
+  background: var(--motion-surface) !important;
+  box-sizing: border-box;
+}
+
+.movement-diagram-reference-content svg[role='img'][viewBox='0 0 320 200']:not(.movement-phase-diagram-svg) {
+  border: 1px solid var(--motion-border) !important;
+}
+
+.movement-diagram-reference-content :is(.spine-primary-canvas, .hip-leg-canvas-card, .rotation-phase-triptych-cell) {
+  border-color: var(--motion-border);
+  background: var(--motion-surface);
+  border-radius: 14px;
+}
+
+.movement-diagram-reference-content :is(.spine-triptych-strip, .hip-leg-triptych-grid, .rotation-phase-triptych-grid) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .movement-triptych-diagram *,
+  .movement-diagram-reference * {
+    scroll-behavior: auto;
+  }
+}

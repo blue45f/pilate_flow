@@ -984,7 +984,6 @@ const SINGLE_LEG_STRETCH_SPEC: CoreAbdominalDiagramSpec = Object.freeze({
   id: 'core-single-leg-stretch',
   mappedExerciseIds: Object.freeze([
     'original-mat-single-leg-stretch',
-    'ex-core-02',
     'core-single-leg-stretch',
   ]),
   primaryCatalogExerciseId: 'original-mat-single-leg-stretch',
@@ -1355,7 +1354,6 @@ const EXERCISE_ID_TO_CORE_DIAGRAM_ID: Readonly<Record<string, CoreAbdominalDiagr
     'original-mat-hundred-prep': 'core-hundred',
     'core-hundred': 'core-hundred',
     'original-mat-single-leg-stretch': 'core-single-leg-stretch',
-    'ex-core-02': 'core-single-leg-stretch',
     'core-single-leg-stretch': 'core-single-leg-stretch',
     'ex-core-03': 'core-double-leg-stretch',
     'original-mat-double-leg-stretch': 'core-double-leg-stretch',

@@ -513,14 +513,9 @@ export function getShoulderSupportRegistryIntegrationPayload(): {
   return {
     assets: {
       ...SHOULDER_SUPPORT_VISUAL_ASSETS,
-      'original-mat-forearm-plank': Object.freeze({
-        ...SHOULDER_SUPPORT_VISUAL_ASSETS['original-mat-plank-prep'],
-        exerciseId: 'original-mat-forearm-plank',
-      }),
     },
     corrections: {
       ...SHOULDER_SUPPORT_DIAGRAM_CORRECTIONS,
-      'original-mat-forearm-plank': SHOULDER_SUPPORT_DIAGRAM_CORRECTIONS['original-mat-plank-prep'],
     },
   };
 }

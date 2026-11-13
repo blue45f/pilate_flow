@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
+import { resolveSpineArticulationDiagramByExerciseId } from '../data/spineArticulationDiagramData';
 import { MovementDiagramReference } from './MovementDiagramReference';
 import { PostureAnatomyGuide } from './PostureAnatomyGuide';
 
@@ -24,8 +25,14 @@ function openReferenceDisclosure(container: HTMLElement) {
 
 describe('Wave 2-2 MovementDiagramReference nested details scroll relief & PostureAnatomyGuide UX', () => {
   it('collapses all expanded nested <details> sections when clicking 열린 참고 섹션 모두 접기 while preserving safety notices and focusing the reference section', () => {
-    const exercise = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-chest-lift')!;
+    // Use the actual seated roll-back spine track; standing roll-down has a separate rig.
+    const exercise = INITIAL_EXERCISES.find(
+      (item) => item.id === 'original-cadillac-seated-roll-back',
+    )!;
     expect(exercise).toBeDefined();
+    expect(resolveSpineArticulationDiagramByExerciseId(exercise.id)?.archetypeId).toBe(
+      'spine-roll-down',
+    );
 
     const { container } = render(<MovementDiagramReference exercise={exercise} />);
     const outerDetails = openReferenceDisclosure(container);
@@ -65,9 +72,7 @@ describe('Wave 2-2 MovementDiagramReference nested details scroll relief & Postu
     expect(collapseAllBtn).toHaveTextContent('열린 참고 섹션 모두 접기');
     expect(collapseAllBtn.style.minHeight).toBe('44px');
     expect(collapseAllBtn.style.wordBreak).toBe('keep-all');
-    expect(
-      screen.getByRole('button', { name: '열린 참고 섹션 모두 접기' }),
-    ).toBe(collapseAllBtn);
+    expect(screen.getByRole('button', { name: '열린 참고 섹션 모두 접기' })).toBe(collapseAllBtn);
 
     fireEvent.click(collapseAllBtn);
 
@@ -90,7 +95,9 @@ describe('Wave 2-2 MovementDiagramReference nested details scroll relief & Postu
       screen.getByText(/직접 작성한 정지 그림 한 장이에요\. 실제 단계별 프레임이 검증되지 않아/),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/기준 그림: 오른쪽 · 화면 반전 없음\. 수업안의 좌우 설정과 연결되지 않아요\./),
+      screen.getByText(
+        /기준 그림: 오른쪽 · 화면 반전 없음\. 수업안의 좌우 설정과 연결되지 않아요\./,
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -126,7 +133,9 @@ describe('Wave 2-2 MovementDiagramReference nested details scroll relief & Postu
     expect(screen.queryByTestId('movement-visual-guide-card')).not.toBeInTheDocument();
     expect(outerDetails.open).toBe(true);
     expect(
-      screen.getByText('이 동작과 일치하는 도해가 아직 없어요. 다른 동작의 그림으로 대신하지 않아요.'),
+      screen.getByText(
+        '이 동작과 일치하는 도해가 아직 없어요. 다른 동작의 그림으로 대신하지 않아요.',
+      ),
     ).toBeInTheDocument();
   });
 

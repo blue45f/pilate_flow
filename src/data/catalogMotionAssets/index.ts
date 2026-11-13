@@ -8,6 +8,7 @@ import {
 import {
   buildMovementVisualAssetForExercise,
   getMovementVisualAsset,
+  hasCatalogMotionIdentityMismatch,
   type CatalogMovementVisualAsset,
   type JointAlignmentGuide,
   type MovementDirectionVector,
@@ -18,6 +19,7 @@ import {
 } from '../movementVisualRigCatalog';
 import { getVisualSourceComparison } from '../movementVisualSourceAudit';
 import type { PilatesExercise } from '../../types/pilates';
+import { normalizeRigJointMap, resolveChairPedalTip } from '../../utils/motionRigGeometry';
 import { CADILLAC_CHAIR_BARREL_MOTION_OVERRIDES } from './cadillacChairBarrelCatalogMotions';
 import { MAT_CATALOG_MOTION_OVERRIDES } from './matCatalogMotions';
 import { REFORMER_CATALOG_MOTION_OVERRIDES } from './reformerCatalogMotions';
@@ -27,6 +29,7 @@ import type {
   CatalogMotionOverrideNote,
   CatalogMotionPhaseId,
   CatalogMotionPhaseSpec,
+  CatalogMotionKeyframe,
 } from './types';
 
 export * from './types';
@@ -39,7 +42,7 @@ const ALL_MOTION_OVERRIDES: Readonly<Record<string, CatalogMotionOverrideNote>> 
 
 function clampProgress(value: number): number {
   if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.min(1, Number(value.toFixed(4))));
+  return Math.max(0, Math.min(1, value));
 }
 
 function clamp01(value: number): number {
@@ -147,7 +150,7 @@ function solveTwoBoneMidJoint(
     return fallback;
   }
 
-  // Determine anatomical bend side (clockwise vs counter-clockwise cross product)
+  // Determine the bend side of the authored 2D projection.
   const crossFrom =
     (fromDistal.x - fromRoot.x) * (fromMid.y - fromRoot.y) -
     (fromDistal.y - fromRoot.y) * (fromMid.x - fromRoot.x);
@@ -155,17 +158,25 @@ function solveTwoBoneMidJoint(
     (toDistal.x - toRoot.x) * (toMid.y - toRoot.y) -
     (toDistal.y - toRoot.y) * (toMid.x - toRoot.x);
   const crossBlend = lerpRaw(crossFrom, crossTo, u);
-  const bendSign = crossBlend >= 0 ? 1 : -1;
+  // Some poses cross projection sides, such as a clam opening toward the viewer.
+  // Switching the IK branch while its height is nonzero teleports the knee or
+  // elbow. Let the projected bend pass continuously through zero instead. In
+  // this case projected segment lengths can shorten; they are not 3D anatomy.
+  const bendScale = crossFrom * crossTo < 0
+    ? lerpRaw(Math.sign(crossFrom), Math.sign(crossTo), u)
+    : crossBlend >= 0 ? 1 : -1;
 
-  const clampedD = Math.max(Math.abs(l1 - l2) + 0.01, Math.min(l1 + l2 - 0.01, d));
+  // Do not force a 0.01-unit bend into a straight authored endpoint: that
+  // becomes a visible knee jump when a hold changes to an interpolated pose.
+  const clampedD = Math.max(1e-9, Math.abs(l1 - l2), Math.min(l1 + l2, d));
   const a = (l1 * l1 - l2 * l2 + clampedD * clampedD) / (2 * clampedD);
   const hSq = Math.max(0, l1 * l1 - a * a);
   const h = Math.sqrt(hSq);
 
   const ux = dx / d;
   const uy = dy / d;
-  const nx = -uy * bendSign;
-  const ny = ux * bendSign;
+  const nx = -uy * bendScale;
+  const ny = ux * bendScale;
 
   return {
     x: rootNow.x + ux * a + nx * h,
@@ -184,8 +195,7 @@ function interpolateTwoSegmentLimb(
   u: number,
 ): { mid: Point2D; distal: Point2D } {
   const distalExcursion = Math.hypot(toDistal.x - fromDistal.x, toDistal.y - fromDistal.y);
-  // Closed-chain contact (e.g. foot on footbar/mat/pedal, hand on footbar/chair/rung):
-  // lock distal contact path and solve true constant-length 2-bone knee/elbow bend.
+  // Keep a stationary distal contact while solving the projected elbow/knee.
   if (distalExcursion < 6) {
     const distal = lerpPointRaw(fromDistal, toDistal, u);
     const mid = solveTwoBoneMidJoint(
@@ -202,7 +212,7 @@ function interpolateTwoSegmentLimb(
     return { mid, distal };
   }
 
-  // Open-chain swing: polar arc interpolation preserves exact segment lengths through full arcs.
+  // Open-chain swing follows an arc with interpolated authored segment lengths.
   const mid = polarSegmentInterpolate(rootNow, fromRoot, fromMid, toRoot, toMid, u);
   const distal = polarSegmentInterpolate(mid, fromMid, fromDistal, toMid, toDistal, u);
   return { mid, distal };
@@ -249,10 +259,10 @@ function computeSpinalLocalT(
 }
 
 /**
- * Biomechanically grounded hierarchical rig interpolation:
+ * Hierarchical interpolation of an authored 2D rig:
  * 1. Sequential spinal wave articulation across pelvis -> lumbar -> thoracic -> neck -> head
- * 2. Closed-chain 2-bone IK for apparatus-anchored limbs (zero footbar/mat/seat slip)
- * 3. Open-chain polar arc kinematics for free-swinging limbs (zero mid-swing foreshortening)
+ * 2. Two-bone IK for stationary distal contacts, with continuous projected bends
+ * 3. Polar arcs for free limbs; this is not a source-traced or anatomical model
  */
 function interpolateKinematicRigArc(
   from: RigJointMap,
@@ -357,6 +367,12 @@ function interpolateKinematicRigArc(
       const farArm = interpolateTwoSegmentLimb(farShRaw, fSh0, fEl0, fWr0, fSh1, fEl1, fWr1, u);
       result.farElbow = { x: r1(farArm.mid.x), y: r1(farArm.mid.y) };
       result.farWrist = { x: r1(farArm.distal.x), y: r1(farArm.distal.y) };
+      if (from.farHand && to.farHand) {
+        const handTravel = Math.hypot(to.farHand.x - from.farHand.x, to.farHand.y - from.farHand.y);
+        result.farHand = handTravel < 6
+          ? lerpPointRaw(from.farHand, to.farHand, u)
+          : polarSegmentInterpolate(farArm.distal, fWr0, from.farHand, fWr1, to.farHand, u);
+      }
     } else {
       result.farElbow = lerpPoint(from.farElbow, to.farElbow, u);
       result.farWrist = lerpPoint(from.farWrist, to.farWrist, u);
@@ -379,6 +395,13 @@ function interpolateKinematicRigArc(
       result.farKnee = { x: r1(farLeg.mid.x), y: r1(farLeg.mid.y) };
       result.farAnkle = { x: r1(farLeg.distal.x), y: r1(farLeg.distal.y) };
 
+      if (from.farHeel && to.farHeel) {
+        const heelTravel = Math.hypot(to.farHeel.x - from.farHeel.x, to.farHeel.y - from.farHeel.y);
+        result.farHeel = heelTravel < 6
+          ? lerpPointRaw(from.farHeel, to.farHeel, u)
+          : polarSegmentInterpolate(farLeg.distal, fAn0, from.farHeel, fAn1, to.farHeel, u);
+      }
+
       if (from.farToe || to.farToe) {
         const fTo0 = from.farToe ?? to.farToe!;
         const fTo1 = to.farToe ?? from.farToe!;
@@ -400,18 +423,19 @@ function interpolateKinematicRigArc(
 }
 
 /**
- * Adds subtle, biomechanically authentic micro-motion during static sub-phases:
- * - Preparatory ribcage breath readiness in `setup` (0 < progress < 0.12; strictly 0 at 0 and 0.12)
- * - Rhythmic arm-pumping oscillation in `turn` for Hundred variants (strictly 0 at 0.42, 0.50, 0.58)
+ * Small illustrative motion during holds. Timing belongs to the preview,
+ * not a measured source video or a prescribed breathing cadence.
  */
 function applySubPhaseMicroMotion(
   joints: RigJointMap,
   progress: number,
   exerciseId: string,
   archetypeId: string,
+  phase: CatalogMotionPhaseSpec,
 ): RigJointMap {
-  if (progress > 0 && progress < 0.12) {
-    const breathEnv = Math.sin((progress / 0.12) * Math.PI);
+  const local = clamp01((progress - phase.start) / (phase.end - phase.start));
+  if (phase.id === 'setup' && local > 0 && local < 1) {
+    const breathEnv = Math.sin(local * Math.PI);
     if (Math.abs(breathEnv) > 0.05) {
       return {
         ...joints,
@@ -423,10 +447,8 @@ function applySubPhaseMicroMotion(
     }
   }
 
-  if (progress > 0.42 && progress < 0.58 && /hundred|core-01/i.test(`${exerciseId} ${archetypeId}`)) {
-    // 2 full pump beats across [0.42, 0.58]; sin(2*pi) === 0 at progress === 0.50!
-    const localPump = (progress - 0.42) / 0.16;
-    const pumpDeltaY = Math.sin(localPump * Math.PI * 4) * 4.2;
+  if (phase.id === 'turn' && local > 0 && local < 1 && /hundred|core-01/i.test(`${exerciseId} ${archetypeId}`)) {
+    const pumpDeltaY = Math.sin(local * Math.PI * 4) * 4.2;
     if (Math.abs(pumpDeltaY) > 0.08) {
       return {
         ...joints,
@@ -488,269 +510,232 @@ function interpolateVectors(
   });
 }
 
+type PhaseDurations = readonly [number, number, number, number, number];
+
+function maximumJointTravel(from: RigJointMap, to: RigJointMap): number {
+  return Math.max(...Object.entries(from).map(([key, a]) => {
+    const b = to[key as keyof RigJointMap];
+    return b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+  }));
+}
+
+function normalizeVisualAsset(asset: CatalogMovementVisualAsset): CatalogMovementVisualAsset {
+  const reference = asset.phases.start.joints;
+  const normalize = (phase: PhasePoseSpec): PhasePoseSpec => ({
+    ...phase,
+    joints: normalizeRigJointMap(phase.joints, reference),
+  });
+  return {
+    ...asset,
+    phases: {
+      start: normalize(asset.phases.start),
+      middle: normalize(asset.phases.middle),
+      end: normalize(asset.phases.end),
+    },
+  };
+}
+
+function previewPhaseDurations(
+  visualAsset: CatalogMovementVisualAsset,
+  override?: CatalogMotionOverrideNote,
+): PhaseDurations {
+  const archetype = visualAsset.archetypeId;
+  const base: PhaseDurations = override?.previewPhaseDurationsMs
+    ?? (/breath/i.test(archetype)
+      ? [1500, 3000, 1500, 3000, 1000]
+      : /bridge|roll|spine|teaser|cat-/i.test(archetype)
+        ? [1000, 3000, 1200, 3000, 1000]
+        : [960, 2400, 1280, 2400, 960]);
+  // Keep a large final pose change visible instead of compressing every reset
+  // into 480 ms. This is a preview readability budget in drawing coordinates,
+  // not a biomechanical speed limit or source-video verification.
+  const returnTravel = maximumJointTravel(visualAsset.phases.end.joints, visualAsset.phases.start.joints);
+  const resetMs = returnTravel > 20 ? Math.ceil(returnTravel / 50) * 1000 : base[4];
+  return [base[0], base[1], base[2], base[3], Math.max(base[4], resetMs)];
+}
+
 function buildPhasesForExercise(
   exercise: PilatesExercise,
   visualAsset: CatalogMovementVisualAsset,
+  durations: PhaseDurations,
+  finishBehavior: CatalogContinuousMotionAsset['finishBehavior'],
   override?: CatalogMotionOverrideNote,
-): readonly [
-  CatalogMotionPhaseSpec,
-  CatalogMotionPhaseSpec,
-  CatalogMotionPhaseSpec,
-  CatalogMotionPhaseSpec,
-  CatalogMotionPhaseSpec,
-] {
+): CatalogContinuousMotionAsset['phases'] {
   const appKo = APPARATUS_LABELS[exercise.apparatus]?.ko ?? exercise.apparatus;
   const posKo = POSITION_LABELS[exercise.bodyPosition]?.ko ?? exercise.bodyPosition;
-  const planesKo = exercise.spinalPlanes
-    .map((p) => SPINAL_PLANE_LABELS[p]?.ko ?? p)
-    .join(' · ');
-
+  const planesKo = exercise.spinalPlanes.map((p) => SPINAL_PLANE_LABELS[p]?.ko ?? p).join(' · ');
   const defaultLabels: Record<CatalogMotionPhaseId, string> = {
     setup: `${appKo} ${posKo} 시작 정렬 세팅`,
     move: `${planesKo} 가동 구간 진행`,
-    turn: `${visualAsset.phases.middle.shortTitleKo} 정점 유지`,
-    return: `원심성 저항 제어 복귀 진행`,
-    finish: `${visualAsset.phases.end.shortTitleKo} 마무리 확인`,
+    turn: `${visualAsset.phases.middle.shortTitleKo} 확인`,
+    return: '다음 자세로 제어하며 연결',
+    finish: '시작 자세에서 마무리 확인',
   };
-
   const labels = override?.phaseLabelsKo ?? defaultLabels;
+  const endIsSetup = maximumJointTravel(visualAsset.phases.end.joints, visualAsset.phases.start.joints) <= 8;
+  const continuesBeyondMiddle = maximumJointTravel(visualAsset.phases.end.joints, visualAsset.phases.start.joints)
+    > maximumJointTravel(visualAsset.phases.middle.joints, visualAsset.phases.start.joints) + 8;
+  const durationMs = durations.reduce((sum, value) => sum + value, 0);
+  const descriptors = [
+    ['setup', labels.setup, visualAsset.phases.start.summaryKo, 'hold'],
+    ['move', labels.move, visualAsset.poseDeltaSummary.startToMiddleKo, 'move'],
+    ['turn', continuesBeyondMiddle ? `${visualAsset.phases.middle.shortTitleKo} · 중간 자세 확인` : labels.turn,
+      visualAsset.phases.middle.summaryKo, 'hold'],
+    ['return', endIsSetup ? labels.return : `${visualAsset.phases.end.shortTitleKo}로 연결`,
+      visualAsset.poseDeltaSummary.middleToEndKo, 'move'],
+    ['finish',
+      finishBehavior === 'alternate-side' ? '반대쪽 연결 · 시작 자세로 마무리'
+        : finishBehavior === 'return-to-setup' ? '마무리 자세 → 다음 반복 준비' : labels.finish,
+      finishBehavior === 'alternate-side' ? '양쪽 동작을 연결한 뒤 시작 자세로 돌아옵니다.'
+        : finishBehavior === 'return-to-setup' ? '마지막 자세를 확인하고 시작 자세로 천천히 돌아옵니다.' : visualAsset.phases.end.summaryKo,
+      finishBehavior === 'hold-return' ? 'hold' : 'move'],
+  ] as const;
+  let elapsed = 0;
+  return Object.freeze(descriptors.map(([id, labelKo, cueKo, displayBehavior], index) => {
+    const start = elapsed / durationMs;
+    elapsed += durations[index];
+    const end = index === 4 ? 1 : elapsed / durationMs;
+    return Object.freeze({ id, labelKo, cueKo, displayBehavior, start, end, sample: (start + end) / 2 });
+  })) as unknown as CatalogContinuousMotionAsset['phases'];
+}
 
-  return Object.freeze([
-    Object.freeze({
-      id: 'setup',
-      labelKo: labels.setup,
-      start: 0,
-      end: 0.12,
-      sample: 0.06,
-      cueKo: visualAsset.phases.start.summaryKo,
-      displayBehavior: 'hold',
-    }),
-    Object.freeze({
-      id: 'move',
-      labelKo: labels.move,
-      start: 0.12,
-      end: 0.42,
-      sample: 0.27,
-      cueKo: visualAsset.poseDeltaSummary.startToMiddleKo,
-      displayBehavior: 'move',
-    }),
-    Object.freeze({
-      id: 'turn',
-      labelKo: labels.turn,
-      start: 0.42,
-      end: 0.58,
-      sample: 0.5,
-      cueKo: visualAsset.phases.middle.summaryKo,
-      displayBehavior: 'hold',
-    }),
-    Object.freeze({
-      id: 'return',
-      labelKo: labels.return,
-      start: 0.58,
-      end: 0.88,
-      sample: 0.73,
-      cueKo: visualAsset.poseDeltaSummary.middleToEndKo,
-      displayBehavior: 'move',
-    }),
-    Object.freeze({
-      id: 'finish',
-      labelKo: labels.finish,
-      start: 0.88,
-      end: 1,
-      sample: 0.94,
-      cueKo: visualAsset.phases.end.summaryKo,
-      displayBehavior: 'hold',
-    }),
-  ] as const);
+/** An authored unilateral leg pose translated to the other hip. The trunk and
+ * supporting side retain their setup coordinates; it is a procedural planning
+ * reference, not a traced source frame.
+ */
+function oppositeKneeFoldPose(asset: CatalogMovementVisualAsset): PhasePoseSpec {
+  const setup = asset.phases.start;
+  const peak = asset.phases.middle;
+  const a = peak.joints;
+  const b = setup.joints;
+  const translate = (point: Point2D, origin: Point2D, target: Point2D): Point2D => ({
+    x: point.x - origin.x + target.x,
+    y: point.y - origin.y + target.y,
+  });
+  const farHip = b.farHip!;
+  return {
+    ...setup,
+    shortTitleKo: '반대쪽 니 폴드 연결 자세',
+    summaryKo: '몸통과 처음 움직인 발을 유지하며 반대쪽 다리를 들었다 내리는 연결 참고 자세입니다.',
+    joints: {
+      ...b,
+      farKnee: translate(a.knee, a.hip, farHip),
+      farAnkle: translate(a.ankle, a.hip, farHip),
+      farHeel: translate(a.heel, a.hip, farHip),
+      farToe: translate(a.toe, a.hip, farHip),
+    },
+    movingJoints: ['farKnee', 'farAnkle', 'farHeel', 'farToe'],
+  };
+}
+
+function buildKeyframes(
+  asset: CatalogMovementVisualAsset,
+  phases: CatalogContinuousMotionAsset['phases'],
+  override?: CatalogMotionOverrideNote,
+): readonly CatalogMotionKeyframe[] {
+  const frame = (id: string, progress: number, visualPhaseId: VisualPhaseId, pose: PhasePoseSpec,
+    labelKo = pose.shortTitleKo, provenance: CatalogMotionKeyframe['provenance'] = 'catalog-pose'): CatalogMotionKeyframe => ({
+    id, progress, visualPhaseId, pose, labelKo, provenance,
+  });
+  const frames: CatalogMotionKeyframe[] = [
+    frame('setup', 0, 'start', asset.phases.start),
+    frame('move-start', phases[0].end, 'start', asset.phases.start),
+    frame('peak-entry', phases[1].end, 'middle', asset.phases.middle),
+    frame('peak-exit', phases[2].end, 'middle', asset.phases.middle),
+    frame('authored-end', phases[3].end, 'end', asset.phases.end),
+  ];
+  const finish = phases[4];
+  const at = (fraction: number) => finish.start + (finish.end - finish.start) * fraction;
+  if (override?.transitionPath === 'through-middle') {
+    frames.push(frame('exchange-middle', at(0.5), 'middle', asset.phases.middle,
+      '교대 연결 중간 자세', 'procedural-transition'));
+  } else if (override?.transitionPath === 'alternate-knee-fold') {
+    const opposite = oppositeKneeFoldPose(asset);
+    frames.push(
+      frame('both-feet-reset', at(0.1), 'start', asset.phases.start, '양발 지지 확인', 'procedural-transition'),
+      frame('opposite-lift', at(0.45), 'middle', opposite, opposite.shortTitleKo, 'procedural-transition'),
+      frame('opposite-hold', at(0.6), 'middle', opposite, opposite.shortTitleKo, 'procedural-transition'),
+    );
+  }
+  frames.push(frame('loop-ready', 1, 'start', asset.phases.start, '시작 자세로 마무리'));
+  return Object.freeze(frames);
+}
+
+function constrainChairStepUp(
+  joints: RigJointMap,
+  pedalAngleDeg: number,
+  from: RigJointMap,
+  to: RigJointMap,
+  easedT: number,
+): RigJointMap {
+  const contact = resolveChairPedalTip(pedalAngleDeg);
+  const previous = joints.farToe!;
+  const delta = { x: contact.x - previous.x, y: contact.y - previous.y };
+  const ankle = { x: joints.farAnkle!.x + delta.x, y: joints.farAnkle!.y + delta.y };
+  const heel = { x: joints.farHeel!.x + delta.x, y: joints.farHeel!.y + delta.y };
+  const knee = solveTwoBoneMidJoint(joints.farHip!, ankle,
+    from.farHip!, from.farKnee!, from.farAnkle!, to.farHip!, to.farKnee!, to.farAnkle!, easedT);
+  return { ...joints, farKnee: knee, farAnkle: ankle, farHeel: heel, farToe: contact };
 }
 
 function createSamplePoseFn(
   visualAsset: CatalogMovementVisualAsset,
-  phases: readonly [
-    CatalogMotionPhaseSpec,
-    CatalogMotionPhaseSpec,
-    CatalogMotionPhaseSpec,
-    CatalogMotionPhaseSpec,
-    CatalogMotionPhaseSpec,
-  ],
+  phases: CatalogContinuousMotionAsset['phases'],
+  keyframes: readonly CatalogMotionKeyframe[],
 ): (progress: number) => CatalogContinuousPoseSnapshot {
   return (rawProgress: number): CatalogContinuousPoseSnapshot => {
     const progress = clampProgress(rawProgress);
-    const phase =
-      phases.find((item, idx) =>
-        idx === phases.length - 1 ? progress <= item.end : progress < item.end,
-      ) ?? phases[phases.length - 1];
-
-    const startSpec = visualAsset.phases.start;
-    const middleSpec = visualAsset.phases.middle;
-    const endSpec = visualAsset.phases.end;
-
-    let joints: RigJointMap;
-    let carriageOffsetPx: number;
-    let pedalAngleDeg: number;
-    let baseSpec: PhasePoseSpec;
-    let visualPhaseId: VisualPhaseId;
-    let alignments: readonly JointAlignmentGuide[];
-    let directionVectors: readonly MovementDirectionVector[];
-
-    if (progress <= 0.12) {
-      joints = applySubPhaseMicroMotion(
-        startSpec.joints,
-        progress,
-        visualAsset.exerciseId,
-        visualAsset.archetypeId,
-      );
-      carriageOffsetPx = startSpec.apparatusState.carriageOffsetPx;
-      pedalAngleDeg = startSpec.apparatusState.pedalAngleDeg;
-      baseSpec = startSpec;
-      visualPhaseId = 'start';
-      alignments = startSpec.alignments;
-      directionVectors = startSpec.directionVectors;
-    } else if (progress < 0.42) {
-      const localT = (progress - 0.12) / 0.3;
-      const easedT = smootherstep(localT);
-      joints = interpolateKinematicRigArc(
-        startSpec.joints,
-        middleSpec.joints,
-        localT,
-        visualAsset.archetypeId,
-        'move',
-      );
-      carriageOffsetPx = lerpNum(
-        startSpec.apparatusState.carriageOffsetPx,
-        middleSpec.apparatusState.carriageOffsetPx,
-        easedT,
-      );
-      pedalAngleDeg = lerpNum(
-        startSpec.apparatusState.pedalAngleDeg,
-        middleSpec.apparatusState.pedalAngleDeg,
-        easedT,
-      );
-      baseSpec = localT < 0.5 ? startSpec : middleSpec;
-      visualPhaseId = localT < 0.5 ? 'start' : 'middle';
-      alignments = interpolateAlignments(startSpec.alignments, middleSpec.alignments, localT);
-      directionVectors = interpolateVectors(
-        startSpec.directionVectors,
-        middleSpec.directionVectors,
-        localT,
-      );
-    } else if (progress <= 0.58) {
-      joints = applySubPhaseMicroMotion(
-        middleSpec.joints,
-        progress,
-        visualAsset.exerciseId,
-        visualAsset.archetypeId,
-      );
-      carriageOffsetPx = middleSpec.apparatusState.carriageOffsetPx;
-      pedalAngleDeg = middleSpec.apparatusState.pedalAngleDeg;
-      baseSpec = middleSpec;
-      visualPhaseId = 'middle';
-      alignments = middleSpec.alignments;
-      directionVectors = middleSpec.directionVectors;
-    } else if (progress < 0.88) {
-      const localT = (progress - 0.58) / 0.3;
-      const easedT = smootherstep(localT);
-      joints = interpolateKinematicRigArc(
-        middleSpec.joints,
-        endSpec.joints,
-        localT,
-        visualAsset.archetypeId,
-        'return',
-      );
-      carriageOffsetPx = lerpNum(
-        middleSpec.apparatusState.carriageOffsetPx,
-        endSpec.apparatusState.carriageOffsetPx,
-        easedT,
-      );
-      pedalAngleDeg = lerpNum(
-        middleSpec.apparatusState.pedalAngleDeg,
-        endSpec.apparatusState.pedalAngleDeg,
-        easedT,
-      );
-      baseSpec = localT < 0.5 ? middleSpec : endSpec;
-      visualPhaseId = localT < 0.5 ? 'middle' : 'end';
-      alignments = interpolateAlignments(middleSpec.alignments, endSpec.alignments, localT);
-      directionVectors = interpolateVectors(
-        middleSpec.directionVectors,
-        endSpec.directionVectors,
-        localT,
-      );
-    } else if (progress <= 0.94) {
-      joints = endSpec.joints;
-      carriageOffsetPx = endSpec.apparatusState.carriageOffsetPx;
-      pedalAngleDeg = endSpec.apparatusState.pedalAngleDeg;
-      baseSpec = endSpec;
-      visualPhaseId = 'end';
-      alignments = endSpec.alignments;
-      directionVectors = endSpec.directionVectors;
-    } else {
-      // Smooth C2 cycle closure across (0.94, 1.0]: bridges finish pose back into start pose
-      // so multi-rep / continuous loop playback (1.0 -> 0.0) has zero joint or carriage snap.
-      const closureT = (progress - 0.94) / 0.06;
-      const easedClosure = smootherstep(closureT);
-      joints = interpolateKinematicRigArc(
-        endSpec.joints,
-        startSpec.joints,
-        closureT,
-        visualAsset.archetypeId,
-        'return',
-      );
-      carriageOffsetPx = lerpNum(
-        endSpec.apparatusState.carriageOffsetPx,
-        startSpec.apparatusState.carriageOffsetPx,
-        easedClosure,
-      );
-      pedalAngleDeg = lerpNum(
-        endSpec.apparatusState.pedalAngleDeg,
-        startSpec.apparatusState.pedalAngleDeg,
-        easedClosure,
-      );
-      baseSpec = closureT < 0.5 ? endSpec : startSpec;
-      visualPhaseId = closureT < 0.85 ? 'end' : 'start';
-      alignments = interpolateAlignments(endSpec.alignments, startSpec.alignments, closureT);
-      directionVectors = interpolateVectors(
-        endSpec.directionVectors,
-        startSpec.directionVectors,
-        closureT,
-      );
+    const phase = phases.find((item, index) => index === phases.length - 1
+      ? progress <= item.end : progress < item.end) ?? phases[phases.length - 1];
+    const targetIndex = keyframes.findIndex((frame, index) => index > 0 && progress <= frame.progress);
+    const to = keyframes[targetIndex < 0 ? keyframes.length - 1 : targetIndex];
+    const from = keyframes[Math.max(0, (targetIndex < 0 ? keyframes.length - 1 : targetIndex) - 1)];
+    const localT = clamp01((progress - from.progress) / Math.max(1e-9, to.progress - from.progress));
+    const easedT = smootherstep(localT);
+    const samePose = from.pose === to.pose;
+    const base = localT < 0.5 ? from : to;
+    let joints = samePose
+      ? applySubPhaseMicroMotion(from.pose.joints, progress, visualAsset.exerciseId, visualAsset.archetypeId, phase)
+      : interpolateKinematicRigArc(from.pose.joints, to.pose.joints, localT, visualAsset.archetypeId,
+          phase.id === 'move' ? 'move' : 'return');
+    const carriageOffsetPx = lerpNum(from.pose.apparatusState.carriageOffsetPx, to.pose.apparatusState.carriageOffsetPx, easedT);
+    const pedalAngleDeg = lerpNum(from.pose.apparatusState.pedalAngleDeg, to.pose.apparatusState.pedalAngleDeg, easedT);
+    if (visualAsset.archetypeId === 'chair-seat-pedal-step-up') {
+      joints = constrainChairStepUp(joints, pedalAngleDeg, from.pose.joints, to.pose.joints, easedT);
     }
-
     const interpolatedPhaseSpec: PhasePoseSpec = {
-      ...baseSpec,
-      badgeKo: baseSpec.badgeKo,
+      ...base.pose,
       shortTitleKo: phase.labelKo,
       summaryKo: phase.cueKo,
       joints,
-      alignments,
-      directionVectors,
-      apparatusState: {
-        ...baseSpec.apparatusState,
-        carriageOffsetPx,
-        pedalAngleDeg,
-      },
+      alignments: interpolateAlignments(from.pose.alignments, to.pose.alignments, localT),
+      directionVectors: interpolateVectors(from.pose.directionVectors, to.pose.directionVectors, localT),
+      apparatusState: { ...base.pose.apparatusState, carriageOffsetPx, pedalAngleDeg },
     };
-
-    return {
-      progress,
-      phase,
-      visualPhaseId,
-      interpolatedPhaseSpec,
-      joints,
-      carriageOffsetPx,
-      pedalAngleDeg,
-    };
+    return { progress, phase, visualPhaseId: base.visualPhaseId, interpolatedPhaseSpec,
+      joints, carriageOffsetPx, pedalAngleDeg };
   };
 }
 
 export function buildCatalogContinuousMotionAsset(
   exercise: PilatesExercise,
-): CatalogContinuousMotionAsset {
-  const visualAsset =
-    getMovementVisualAsset(exercise.id) ?? buildMovementVisualAssetForExercise(exercise);
+): CatalogContinuousMotionAsset | null {
+  const authoredVisualAsset = getMovementVisualAsset(exercise.id);
+  // An edited catalogue ID is not a new authored pose. In particular, a cache
+  // miss must not fall back to the original apparatus or starting position.
+  if (hasCatalogMotionIdentityMismatch(exercise)) return null;
+  const visualAsset = normalizeVisualAsset(
+    authoredVisualAsset ?? buildMovementVisualAssetForExercise(exercise),
+  );
   const sourceAudit = getVisualSourceComparison(exercise);
   const override = ALL_MOTION_OVERRIDES[exercise.id];
-  const phases = buildPhasesForExercise(exercise, visualAsset, override);
-  const samplePose = createSamplePoseFn(visualAsset, phases);
+  const resetTravel = maximumJointTravel(visualAsset.phases.end.joints, visualAsset.phases.start.joints);
+  const finishBehavior: CatalogContinuousMotionAsset['finishBehavior'] = override?.transitionPath
+    ? 'alternate-side' : resetTravel > 0.2 ? 'return-to-setup' : 'hold-return';
+  const durations = previewPhaseDurations(visualAsset, override);
+  const phases = buildPhasesForExercise(exercise, visualAsset, durations, finishBehavior, override);
+  const keyframes = buildKeyframes(visualAsset, phases, override);
+  const samplePose = createSamplePoseFn(visualAsset, phases, keyframes);
 
   const appKo = APPARATUS_LABELS[exercise.apparatus]?.ko ?? exercise.apparatus;
   const posKo = POSITION_LABELS[exercise.bodyPosition]?.ko ?? exercise.bodyPosition;
@@ -766,7 +751,7 @@ export function buildCatalogContinuousMotionAsset(
 
   const apparatusControlNoteKo =
     override?.apparatusControlNoteKo ??
-    `${appKo} 스프링(${exercise.springs}) · 풋바(${exercise.footbar}) · 헤드레스트(${exercise.headrest}) · 박스(${exercise.box}) 표준 세팅 대조 완료`;
+    `${appKo} 계획 세팅: 스프링(${exercise.springs}) · 풋바(${exercise.footbar}) · 헤드레스트(${exercise.headrest}) · 박스(${exercise.box}). 대표 패턴 참고용이며 실제 기구·장력·가동범위는 강사 확인 전입니다.`;
 
   return Object.freeze({
     exerciseId: exercise.id,
@@ -778,8 +763,13 @@ export function buildCatalogContinuousMotionAsset(
     bodyPosition: exercise.bodyPosition,
     blockCategory: exercise.blockCategory,
     sideMode: exercise.isUnilateral ? 'unilateral' : 'bilateral',
-    durationMs: 8000,
+    durationMs: durations.reduce((sum, value) => sum + value, 0),
     phases,
+    keyframes,
+    authoredEndProgress: phases[3].end,
+    endPoseLabelKo: resetTravel <= 8 ? '복귀 자세' : override?.transitionPath ? '교대 연결 자세' : '마무리 자세',
+    finishBehavior,
+    previewTimingOnly: true,
     biomechFocusKo,
     apparatusControlNoteKo,
     visualAsset,
@@ -799,7 +789,10 @@ export function buildCatalogContinuousMotionAsset(
 
 export const CATALOG_CONTINUOUS_MOTION_ASSETS: readonly CatalogContinuousMotionAsset[] =
   Object.freeze(
-    INITIAL_EXERCISES.map((exercise) => buildCatalogContinuousMotionAsset(exercise)),
+    INITIAL_EXERCISES.flatMap((exercise) => {
+      const asset = buildCatalogContinuousMotionAsset(exercise);
+      return asset ? [asset] : [];
+    }),
   );
 
 export const CATALOG_CONTINUOUS_MOTION_ASSET_MAP: ReadonlyMap<

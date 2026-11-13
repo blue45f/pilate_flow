@@ -61,7 +61,7 @@ describe('equipment discovery scope synchronization', () => {
       <>
         <InventoryPanel />
         <InlineExerciseFinder onOpenExercise={vi.fn()} />
-        <ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />
+        <ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />
       </>,
     );
     const before = usePilatesStore.getState();
@@ -92,7 +92,7 @@ describe('equipment discovery scope synchronization', () => {
     const { unmount } = render(
       <>
         <InlineExerciseFinder onOpenExercise={vi.fn()} />
-        <ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />
+        <ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />
       </>,
     );
     const finder = within(screen.getByRole('complementary', { name: '작업대 동작 찾기' }));
@@ -131,7 +131,7 @@ describe('equipment discovery scope synchronization', () => {
   });
 
   it('applies the shared scope to public references and course links without inventing requirements', () => {
-    render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+    render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
     fireEvent.click(screen.getByRole('tab', { name: /공개 자료/ }));
     expect(
       screen.getByRole('checkbox', { name: /내 보유 기구·소도구로 모두 가능한 자료만/ }),
@@ -149,7 +149,7 @@ describe('equipment discovery scope synchronization', () => {
 
   it('recovers empty public reference results with an explicit all-equipment choice', () => {
     usePilatesStore.setState({ ownedEquipment: [] });
-    render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+    render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
     fireEvent.click(screen.getByRole('tab', { name: /공개 자료/ }));
     fireEvent.click(screen.getByRole('button', { name: '전체 참고 자료 보기' }));
     expect(usePilatesStore.getState().exerciseBrowseScope).toBe('all');

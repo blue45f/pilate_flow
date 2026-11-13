@@ -13,6 +13,8 @@ import type {
 import { sourceReferenceSchema } from '../schemas/cloudBackupSchema';
 import type { ExerciseSourceReference, PilatesExercise } from '../types/pilates';
 import { getExerciseReviewState } from './exerciseReview';
+import { getExpandedMovementSource } from '../data/expandedMovements';
+import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
 
 export interface ExerciseEvidenceLink {
   kind: 'source' | 'youtube';
@@ -21,7 +23,13 @@ export interface ExerciseEvidenceLink {
 }
 
 export interface ExerciseEvidenceSource {
-  kind: 'none' | 'unverified-link' | 'invalid-record' | 'snapshot-only' | 'catalog-linked';
+  kind:
+    | 'none'
+    | 'unverified-link'
+    | 'invalid-record'
+    | 'snapshot-only'
+    | 'catalog-linked'
+    | 'creator-metadata';
   status: ReferenceVerificationStatus | 'unknown';
   label: string;
   description: string;
@@ -138,6 +146,9 @@ export function getExerciseEvidence(exercise: PilatesExercise): ExerciseEvidence
   const links: ExerciseEvidenceLink[] = [];
   const source = emptySource();
   const parsedSource = sourceReferenceSchema.safeParse(exercise.sourceReference);
+  const expandedSource = getExpandedMovementSource(exercise);
+  const expandedBinding = getExpandedMovementVisualBinding(exercise);
+  const sourceOnly = expandedBinding?.nativeMotionAvailable === false;
 
   if (parsedSource.success) {
     const snapshot = parsedSource.data;
@@ -188,17 +199,44 @@ export function getExerciseEvidence(exercise: PilatesExercise): ExerciseEvidence
       '유효하지 않은 출처 기록입니다. 원출처 링크나 확인 상태를 신뢰 표시하지 않습니다.';
   }
 
+  if (expandedSource && exercise.sourceReference === undefined) {
+    Object.assign(source, {
+      kind: 'creator-metadata',
+      label: '제작자 원문·영상 제목·채널 확인',
+      description:
+        '제작자 페이지의 영상 연결과 YouTube 공개 제목·채널을 확인한 기록입니다. 전체 재생, 동작 프레임, 강사 자격 및 전문 검수는 확인하지 않았습니다.',
+      title: expandedSource.sourceTitle,
+      publisher: expandedSource.youtubeAuthor,
+      checkedAt: expandedSource.checkedAt,
+      recordedAt: expandedSource.checkedAt,
+      recordedStatusLabel: '제작자 페이지·oEmbed 메타데이터 확인',
+      rightsLabel: '원본 링크 전용 · 영상 복제·임베드 권리 미확인',
+    });
+    links.push({
+      kind: 'source',
+      label: '확인한 제작자 원문 열기',
+      href: expandedSource.sourceUrl,
+    });
+  }
+
   const videoLink = safeEvidenceHttpUrl(getMovementVideoLink(exercise));
   if (videoLink) {
     if (!links.some((link) => link.href === videoLink)) {
-      links.push({ kind: 'youtube', label: '직접 등록한 YouTube 참조 열기', href: videoLink });
+      links.push({
+        kind: 'youtube',
+        label: expandedSource ? '제작자 원본 YouTube 영상 열기' : '직접 등록한 YouTube 참조 열기',
+        href: videoLink,
+      });
     }
     if (source.kind === 'none') {
       source.kind = 'unverified-link';
       source.label =
-        provenance.kind === 'legacy' ? '기존 링크 · 출처 대조 확인' : '입력 링크 · 내용 미확인';
-      source.description =
-        '등록된 YouTube 링크의 형식과 카탈로그 연결 기록을 확인했습니다. 수업 전 현장 기구와 구간을 함께 확인해 주세요.';
+        !sourceOnly && provenance.kind === 'legacy'
+          ? '기존 링크 · 출처 대조 확인'
+          : '입력 링크 · 내용 미확인';
+      source.description = sourceOnly
+        ? '입력한 YouTube 링크 형식만 확인했습니다. 변경된 원출처의 제목·채널·내용은 확인하지 않았습니다.'
+        : '등록된 YouTube 링크의 형식과 카탈로그 연결 기록을 확인했습니다. 수업 전 현장 기구와 구간을 함께 확인해 주세요.';
       source.title = exercise.youtube.videoTitle.trim() || null;
       source.publisher = exercise.youtube.channelName.trim() || null;
       source.rightsLabel = '원본 링크 전용 · 영상 복제·임베드 권리 미확인';
@@ -233,17 +271,22 @@ export function getExerciseEvidence(exercise: PilatesExercise): ExerciseEvidence
     source,
     motion: {
       status: 'not-authored',
-      label: '3단계·연속 도해 대조 완료',
-      description:
-        '카탈로그 3단계 기구학 도해 및 5단계 연속 모션 에셋이 연결되어 있습니다. 외부 전문가 임상 승인과는 별도로 관리합니다.',
+      label: sourceOnly
+        ? expandedSource
+          ? '제작자 영상 연결 · 전용 도해 준비 중'
+          : '전용 동작 도해 미작성'
+        : '3단계·연속 도해 대조 완료',
+      description: sourceOnly
+        ? '이 동작의 전용 모션과 단계별 도해는 아직 작성·검수되지 않았습니다. 제작자 영상의 메타데이터 확인을 모션 프레임의 정확성 검증으로 취급하지 않습니다.'
+        : '카탈로그 3단계 기구학 도해 및 5단계 연속 모션 에셋이 연결되어 있습니다. 외부 전문가 임상 승인과는 별도로 관리합니다.',
       catalogMapped: getExerciseMotionReference(exercise.id) !== null,
       canonicalRecordExists: getExerciseMotionReference(exercise.id) !== null,
-      relatedProposals: getMotionDraftComparisons(exercise.id),
+      relatedProposals: sourceOnly ? [] : getMotionDraftComparisons(exercise.id),
       professionalReviewStatus: 'unreviewed',
       professionallyApprovedCount: MOTION_REFERENCE_COUNTS.expertApprovedMotions,
       unreviewedLabPrototypeCount: MOTION_REFERENCE_COUNTS.labPrototypes,
     },
     links,
-    candidateResearch: getMotionCandidateResearch(exercise.id),
+    candidateResearch: sourceOnly ? [] : getMotionCandidateResearch(exercise.id),
   };
 }

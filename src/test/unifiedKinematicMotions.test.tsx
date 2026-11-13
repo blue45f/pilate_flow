@@ -6,7 +6,8 @@ import {
   getCatalogContinuousMotionAsset,
 } from '../data/catalogMotionAssets';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
-import { SUPINE_REACH_DEFINITION } from '../data/supineReach';
+import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
+import { getExerciseArtworkFrame } from '../utils/exerciseArtworkCache';
 import {
   CatalogMotionInteractivePlayer,
   CatalogMotionThumbnail,
@@ -16,13 +17,23 @@ import { KinematicSchematicShowcase } from '../components/KinematicSchematicShow
 import { MotionReferencePlayer } from '../components/MotionReferencePlayer';
 import { MovementPhaseDiagramSvg } from '../components/MovementPhaseDiagramSvg';
 
-describe('Unified Studio Kinematic Motion System across all 98 movements', () => {
-  it('reconstructs all 98 catalog movements with sculpted anatomical capsules, zero NaN/Infinity, and smooth 5-phase interpolation', () => {
-    expect(CATALOG_CONTINUOUS_MOTION_ASSETS).toHaveLength(98);
+const nativeExercises = INITIAL_EXERCISES.filter(
+  (exercise) => getExpandedMovementVisualBinding(exercise)?.nativeMotionAvailable !== false,
+);
+const sourceOnlyExercises = INITIAL_EXERCISES.filter(
+  (exercise) => getExpandedMovementVisualBinding(exercise)?.nativeMotionAvailable === false,
+);
+
+describe('Unified Studio Kinematic Motion System with native illustrations and source-only additions', () => {
+  it('preserves all 98 native models and their 5-phase interpolation while keeping 60 new source-linked movements free of fallback anatomy', () => {
+    expect(nativeExercises).toHaveLength(98);
+    expect(sourceOnlyExercises).toHaveLength(60);
+    // Internal registry compatibility does not make a fallback pose displayable.
+    expect(CATALOG_CONTINUOUS_MOTION_ASSETS).toHaveLength(INITIAL_EXERCISES.length);
 
     const samplePoints = [0, 0.2, 0.5, 0.75, 1] as const;
 
-    for (const exercise of INITIAL_EXERCISES) {
+    for (const exercise of nativeExercises) {
       const motion = getCatalogContinuousMotionAsset(exercise);
       expect(motion).not.toBeNull();
       expect(motion!.phases).toHaveLength(5);
@@ -40,6 +51,18 @@ describe('Unified Studio Kinematic Motion System across all 98 movements', () =>
       expect(markup).toContain('data-layer="kinematic-figure"');
       expect(markup).toContain('data-segment="spine-torso"');
       expect(markup).not.toMatch(/NaN|Infinity/);
+    }
+
+    for (const exercise of sourceOnlyExercises) {
+      const motion = getCatalogContinuousMotionAsset(exercise)!;
+      const markup = renderToStaticMarkup(
+        <MovementPhaseDiagramSvg asset={motion.visualAsset} phase="middle" />,
+      );
+      expect(markup).toContain('data-native-motion-available="false"');
+      expect(markup).toContain('data-motion-source="creator-video-only"');
+      expect(markup).not.toContain('data-layer="kinematic-figure"');
+      expect(markup).not.toContain('data-segment="spine-torso"');
+      expect(markup).not.toContain('data-phase=');
     }
   });
 
@@ -91,19 +114,38 @@ describe('Unified Studio Kinematic Motion System across all 98 movements', () =>
     expect(hPump.hand.y).not.toBe(hExactPeak.hand.y);
   });
 
-  it('unifies all 98 exercise badges and top KinematicSchematicShowcase under the single MovementPhaseDiagramSvg renderer', () => {
-    for (const ex of INITIAL_EXERCISES) {
+  it('uses exact cached native frames for 98 badges, source-only apparatus art for 60 additions, and the same live SVG renderer in the showcase', () => {
+    for (const ex of nativeExercises) {
+      const frame = getExerciseArtworkFrame(ex, 'middle');
+      expect(frame, ex.id).toBeDefined();
       const badgeMarkup = renderToStaticMarkup(<ExerciseThumbnailBadge exercise={ex} size="md" />);
       expect(badgeMarkup).toContain('movement-phase-diagram-svg');
-      expect(badgeMarkup).toContain('data-layer="kinematic-figure"');
+      expect(badgeMarkup).toContain('data-artwork-renderer="cached-native-svg"');
+      expect(badgeMarkup).toContain(`src="${frame!.src}"`);
+      expect(badgeMarkup).toContain(`data-exercise-id="${ex.id}"`);
+      expect(badgeMarkup).toContain('data-motion-phase="middle"');
+      expect(badgeMarkup).toContain('data-match-scope="catalog-authored-pattern"');
+      expect(badgeMarkup).not.toMatch(/NaN|Infinity/);
     }
 
-    // Preserves data-motion-family and data-motion-variant on pattern-linked cards
+    for (const ex of sourceOnlyExercises) {
+      const badgeMarkup = renderToStaticMarkup(<ExerciseThumbnailBadge exercise={ex} showPhaseStrip />);
+      expect(badgeMarkup).toContain('data-artwork-renderer="apparatus-reference"');
+      expect(badgeMarkup).toContain('data-native-motion-available="false"');
+      expect(badgeMarkup).toContain('data-match-scope="source-video-only"');
+      expect(badgeMarkup).not.toContain('data-layer="kinematic-figure"');
+      expect(badgeMarkup).not.toContain('data-motion-phase=');
+      expect(badgeMarkup).not.toContain('exercise-thumbnail-phase-strip');
+    }
+
+    // A pattern-linked movement uses its own three cached poses, not a family placeholder.
     const singleLegEx = INITIAL_EXERCISES.find((e) => e.id === 'original-mat-single-leg-stretch')!;
-    const singleLegBadge = renderToStaticMarkup(<ExerciseThumbnailBadge exercise={singleLegEx} />);
-    expect(singleLegBadge).toContain('data-motion-family="supine-reach"');
-    expect(singleLegBadge).toContain(`data-motion-variant="${SUPINE_REACH_DEFINITION.id}"`);
-    expect(singleLegBadge).toContain('movement-phase-diagram-svg');
+    const singleLegStrip = renderToStaticMarkup(<ExerciseThumbnailBadge exercise={singleLegEx} showPhaseStrip />);
+    for (const phase of ['start', 'middle', 'end'] as const) {
+      const frame = getExerciseArtworkFrame(singleLegEx, phase)!;
+      expect(singleLegStrip).toContain(`src="${frame.src}"`);
+      expect(singleLegStrip).toContain(`data-motion-phase="${phase}"`);
+    }
 
     const { container, unmount } = render(<KinematicSchematicShowcase />);
     const showcaseSvgs = container.querySelectorAll('svg.movement-phase-diagram-svg');

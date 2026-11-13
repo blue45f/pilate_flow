@@ -139,6 +139,15 @@ export const MotionCoverageUnifiedViewer: React.FC<MotionCoverageUnifiedViewerPr
       >
         <p>{descriptor.badgeLabelKo}</p>
         <small>{descriptor.disclaimerKo}</small>
+        {descriptor.resolution.threePhase2d.sourceComparison?.matchedReliableSources.map(
+          (source) => (
+            <p key={source.url}>
+              <a href={source.url} target="_blank" rel="noreferrer">
+                {source.titleKo}
+              </a>
+            </p>
+          ),
+        )}
       </div>
     );
   }

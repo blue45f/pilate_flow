@@ -407,6 +407,7 @@ export function CoreAbdominalTriptychFigure({
   return (
     <div
       data-testid={`core-triptych-${diagramId}`}
+      className="movement-studio-phase-grid"
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',

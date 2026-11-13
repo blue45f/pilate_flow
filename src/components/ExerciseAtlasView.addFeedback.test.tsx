@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
+import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { syntheticPlanningExercise } from '../test/planningFixtures';
 import type { AutoGenerateCriteria } from '../types/pilates';
@@ -22,8 +23,8 @@ const conditions: AutoGenerateCriteria = {
 };
 const add = (name: string) =>
   fireEvent.click(screen.getByRole('button', { name: `${name} 수업안에 추가` }));
-const renderAtlas = () =>
-  render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+const renderAtlas = (initialView: 'catalog' | 'tools' = 'catalog') =>
+  render(<ExerciseAtlasView initialView={initialView} onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -122,7 +123,7 @@ describe('Atlas reports actual append outcome', () => {
   });
 
   it('surfaces real target muscle tags, active filter chips, Korean prop/level search, and empty-state recovery', () => {
-    const { container } = renderAtlas();
+    const { container } = renderAtlas('tools');
 
     // Unapproved catalog cards display real targetMuscles and clickable focus tags instead of placeholder
     expect(container.textContent).not.toContain('미검수 입력값 · 검토할 계획 자료');
@@ -159,7 +160,7 @@ describe('Atlas reports actual append outcome', () => {
   });
 
   it('reflects persistent sequence selection state, pattern tile selection, and studio thumbnails with precise kinematic previews', () => {
-    const { container } = renderAtlas();
+    const { container } = renderAtlas('tools');
 
     // Add mat movement and verify persistent in-sequence state remains even after toast timer expires
     add(mat.nameKo);
@@ -188,14 +189,21 @@ describe('Atlas reports actual append outcome', () => {
       ),
     ).toBeInTheDocument();
 
-    // The card uses a studio reference image; its dedicated preview retains the movement's own kinematic identity.
-    expect(matCard.querySelector('img.pf-p06-3d-img')).toHaveAttribute(
-      'src',
-      '/motion-studio3d/mat-hundred-peak.png',
+    // Card and dedicated preview use the same movement model; a custom record remains a labelled representative.
+    expect(matCard.querySelector('.exercise-motion-artwork')).toHaveAttribute(
+      'data-exercise-id',
+      mat.id,
     );
+    expect(matCard.querySelector('.exercise-motion-artwork')).toHaveAttribute(
+      'data-match-scope',
+      'representative-pattern',
+    );
+    expect(matCard.querySelector('img[src*="/motion-studio3d/"]')).toBeNull();
     expect(
       within(matCard).getByRole('button', { name: `${mat.nameKo} 상세 보기` }),
-    ).toHaveAccessibleDescription(`${mat.nameKo} · 3D 스튜디오 모션`);
+    ).toHaveAccessibleDescription(
+      `${getCatalogContinuousMotionAsset(mat)!.visualAsset.archetypeTitleKo} · 동작 패턴 도해`,
+    );
     expect(matCard.querySelector('.pf-b05-card-overlay-top')).toHaveTextContent('매트');
     expect(matCard.querySelector('.movement-position-badge')).toHaveTextContent(
       '수파인 (누운 자세)',

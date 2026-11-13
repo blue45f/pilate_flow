@@ -1,8 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
 import type { CatalogMovementVisualAsset, VisualPhaseId } from '../data/movementVisualRigCatalog';
+import { hasCatalogMotionIdentityMismatch } from '../data/movementVisualRigCatalog';
 import type { PilatesExercise } from '../types/pilates';
 import { MovementPhaseDiagramSvg } from './MovementPhaseDiagramSvg';
+import { useMotionPlaybackEnvironment } from '../hooks/useMotionPlaybackEnvironment';
+import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
+import { MotionSourceOnlyNotice } from './MotionSourceOnlyNotice';
+import { UnmodeledMotionNotice } from './UnmodeledMotionNotice';
 
 export interface LiveStageKinematicDiagramProps {
   exercise: PilatesExercise;
@@ -17,57 +22,54 @@ const PHASE_BADGE_TEXT: Record<VisualPhaseId, string> = {
   end: '3. 끝 자세 (제어 복귀)',
 };
 
-export const LiveStageKinematicDiagram: React.FC<LiveStageKinematicDiagramProps> = ({
+export const LiveStageKinematicDiagram: React.FC<LiveStageKinematicDiagramProps> = (props) => {
+  const binding = getExpandedMovementVisualBinding(props.exercise);
+  if (binding?.nativeMotionAvailable === false) {
+    return (
+      <MotionSourceOnlyNotice
+        exerciseId={props.exercise.id}
+        nameKo={props.exercise.nameKo}
+        apparatus={props.exercise.apparatus}
+        reasonKo={binding.reasonKo}
+        sourceUrl={binding.sourceUrl}
+        className="teaching-live-diagram-card"
+      />
+    );
+  }
+  if (hasCatalogMotionIdentityMismatch(props.exercise)) {
+    return <UnmodeledMotionNotice exercise={props.exercise} className="teaching-live-diagram-card" />;
+  }
+  return <LiveStageKinematicDiagramContent {...props} />;
+};
+
+const LiveStageKinematicDiagramContent: React.FC<LiveStageKinematicDiagramProps> = ({
   exercise,
   running,
   stepProgressRatio = 0,
   springsLabel,
 }) => {
   const motionAsset = useMemo(() => getCatalogContinuousMotionAsset(exercise), [exercise]);
-  const [reducedMotion, setReducedMotion] = useState<boolean>(
-    () =>
-      typeof window !== 'undefined' &&
-      Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches),
-  );
+  const wrapperRef = useRef<HTMLElement | null>(null);
+  const { canAnimate, reducedMotion } = useMotionPlaybackEnvironment(wrapperRef);
   const [manualStaticCompare, setManualStaticCompare] = useState(false);
-  const [cycleProgress, setCycleProgress] = useState<number>(0.5);
+  const [cycleFrame, setCycleFrame] = useState({ exerciseId: '', progress: 0 });
+  const clockRef = useRef({ exerciseId: exercise.id, progress: 0 });
   const rafRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
-    const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const onChange = (event: MediaQueryListEvent) => {
-      setReducedMotion(event.matches);
-    };
-    mql.addEventListener?.('change', onChange);
-    return () => mql.removeEventListener?.('change', onChange);
-  }, []);
 
   const isDualStaticMode = reducedMotion || manualStaticCompare;
 
   useEffect(() => {
-    if (!running || isDualStaticMode || !motionAsset) {
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-      startTimeRef.current = null;
-      return undefined;
+    if (!running || isDualStaticMode || !motionAsset || !canAnimate) return undefined;
+    if (clockRef.current.exerciseId !== exercise.id) {
+      clockRef.current = { exerciseId: exercise.id, progress: 0 };
     }
-
-    const cycleMs = 5600;
+    let lastTimestamp: number | null = null;
     const tick = (now: number) => {
-      if (document.hidden) {
-        rafRef.current = null;
-        startTimeRef.current = null;
-        return;
-      }
-      if (startTimeRef.current === null) {
-        startTimeRef.current = now;
-      }
-      const elapsed = Math.max(0, now - startTimeRef.current);
-      setCycleProgress((elapsed % cycleMs) / cycleMs);
+      if (document.hidden) return;
+      const elapsed = lastTimestamp === null ? 0 : Math.min(100, Math.max(0, now - lastTimestamp));
+      lastTimestamp = now;
+      clockRef.current.progress = (clockRef.current.progress + elapsed / motionAsset.durationMs) % 1;
+      setCycleFrame({ exerciseId: exercise.id, progress: clockRef.current.progress });
       rafRef.current = requestAnimationFrame(tick);
     };
 
@@ -77,14 +79,13 @@ export const LiveStageKinematicDiagram: React.FC<LiveStageKinematicDiagramProps>
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
-      startTimeRef.current = null;
     };
-  }, [running, isDualStaticMode, motionAsset]);
+  }, [running, isDualStaticMode, motionAsset, canAnimate, exercise.id]);
 
   if (!motionAsset) return null;
 
-  const effectiveSampleRatio = running
-    ? cycleProgress
+  const effectiveSampleRatio = cycleFrame.exerciseId === exercise.id
+    ? cycleFrame.progress
     : stepProgressRatio > 0.04 && stepProgressRatio < 0.96
       ? stepProgressRatio
       : 0.5;
@@ -105,11 +106,14 @@ export const LiveStageKinematicDiagram: React.FC<LiveStageKinematicDiagramProps>
 
   return (
     <section
+      ref={wrapperRef}
       className="teaching-live-diagram-card"
       data-testid="live-stage-kinematic-diagram"
       data-exercise-id={exercise.id}
       data-apparatus={exercise.apparatus}
       data-reduced-motion-view={String(isDualStaticMode)}
+      data-motion-playing={running && canAnimate && !isDualStaticMode}
+      data-motion-progress={cycleFrame.exerciseId === exercise.id ? cycleFrame.progress : 0}
       data-anatomical-accuracy-assumed="false"
       aria-label={`${exercise.nameKo} 연결형 동작 도해`}
     >
@@ -123,7 +127,7 @@ export const LiveStageKinematicDiagram: React.FC<LiveStageKinematicDiagramProps>
               ? '모션 감소 설정 · 시작→정점→끝 복귀 3단계 비교'
               : '정지 비교 · 시작→정점→끝 복귀 연결'
             : running
-              ? `연속 모션 · ${PHASE_BADGE_TEXT[sampled.visualPhaseId]}`
+              ? `연속 모션 · ${sampled.phase.labelKo}`
               : PHASE_BADGE_TEXT[sampled.visualPhaseId]}
         </span>
         <button
@@ -198,7 +202,7 @@ export const LiveStageKinematicDiagram: React.FC<LiveStageKinematicDiagramProps>
             showDirection
             showMuscles
             showGhostStartPose
-            label={`${exercise.nameKo} · ${PHASE_BADGE_TEXT[sampled.visualPhaseId]}`}
+            label={`${exercise.nameKo} · ${sampled.phase.labelKo}`}
           />
           <figcaption className="teaching-live-diagram-single-caption">
             <span>{sampled.phase.labelKo}</span>

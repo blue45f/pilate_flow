@@ -1,3 +1,4 @@
+import { openScheduleManagementAction } from '../test/scheduleManagementActions';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { InstructorScheduleView } from './InstructorScheduleView';
@@ -26,7 +27,7 @@ describe('InstructorScheduleView mobile density & modal draft recovery', () => {
   it('preserves unsaved location draft (alias, equipment, props, notes) across modal close and re-open until saved', () => {
     render(<InstructorScheduleView today="2026-11-04" />);
 
-    fireEvent.click(screen.getByRole('button', { name: '장소 관리' }));
+    openScheduleManagementAction('장소 관리');
     let dialog = within(screen.getByRole('dialog', { name: '장소 관리' }));
 
     fireEvent.change(dialog.getByLabelText('장소 별칭'), {
@@ -63,7 +64,7 @@ describe('InstructorScheduleView mobile density & modal draft recovery', () => {
     render(<InstructorScheduleView today="2026-11-04" />);
 
     // Register one location first so we can select it in the holiday modal
-    fireEvent.click(screen.getByRole('button', { name: '장소 관리' }));
+    openScheduleManagementAction('장소 관리');
     const locDialog = within(screen.getByRole('dialog', { name: '장소 관리' }));
     fireEvent.change(locDialog.getByLabelText('장소 별칭'), {
       target: { value: '본점 스튜디오' },
@@ -74,7 +75,7 @@ describe('InstructorScheduleView mobile density & modal draft recovery', () => {
     const savedLocId = usePilatesStore.getState().instructorSchedule.locations[0].id;
 
     // Open holiday modal and fill draft
-    fireEvent.click(screen.getByRole('button', { name: '휴무 등록' }));
+    openScheduleManagementAction('휴무 등록');
     let closedDialog = within(screen.getByRole('dialog', { name: '휴무 등록' }));
 
     fireEvent.change(closedDialog.getByLabelText('휴무 날짜'), {
@@ -93,7 +94,7 @@ describe('InstructorScheduleView mobile density & modal draft recovery', () => {
     expect(usePilatesStore.getState().instructorSchedule.exceptions).toHaveLength(0);
 
     // Re-open holiday modal and verify draft recovery
-    fireEvent.click(screen.getByRole('button', { name: '휴무 등록' }));
+    openScheduleManagementAction('휴무 등록');
     closedDialog = within(screen.getByRole('dialog', { name: '휴무 등록' }));
 
     expect(closedDialog.getByLabelText('휴무 날짜')).toHaveValue('2026-11-15');
@@ -104,7 +105,7 @@ describe('InstructorScheduleView mobile density & modal draft recovery', () => {
     fireEvent.click(closedDialog.getByRole('button', { name: '휴무 저장' }));
     expect(usePilatesStore.getState().instructorSchedule.exceptions).toHaveLength(1);
 
-    fireEvent.click(screen.getByRole('button', { name: '휴무 등록' }));
+    openScheduleManagementAction('휴무 등록');
     closedDialog = within(screen.getByRole('dialog', { name: '휴무 등록' }));
     expect(closedDialog.getByLabelText('휴무 메모')).toHaveValue('');
   });

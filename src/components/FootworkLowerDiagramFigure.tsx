@@ -475,6 +475,7 @@ export function FootworkLowerTriptychFigure({
   return (
     <div
       data-testid={`footwork-lower-triptych-${diagramId}`}
+      className="movement-studio-phase-grid"
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',

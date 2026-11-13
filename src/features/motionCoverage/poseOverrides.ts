@@ -20,7 +20,7 @@ export interface ReusedPhaseKinematicsSummary {
 }
 
 /**
- * Reuses the existing 98 `CatalogMovementVisualAsset` objects from `MOVEMENT_VISUAL_ASSETS` /
+ * Reuses internal `CatalogMovementVisualAsset` objects from `MOVEMENT_VISUAL_ASSETS` /
  * `MOVEMENT_VISUAL_ASSET_MAP` in `src/data/movementVisualRigCatalog.ts` directly by reference
  * without creating any duplicate assets or secondary coordinate tables.
  */
@@ -73,7 +73,7 @@ export function inspectReusedPhaseKinematics(
 }
 
 /**
- * Verifies that all 98 prebuilt 2D 3-phase assets in `MOVEMENT_VISUAL_ASSETS` are reused
+ * Verifies that prebuilt 2D 3-phase assets in `MOVEMENT_VISUAL_ASSETS` are reused
  * with zero duplicate allocations.
  */
 export function verifyZeroDuplicateVisualAssets(): {

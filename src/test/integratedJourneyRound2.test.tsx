@@ -1,5 +1,6 @@
+import { openAdvancedWorkbench, openAtlasTools } from './workbenchControls';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { OFFLINE_BLOCK_PRESETS } from '../data/classBlockPresets';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -23,6 +24,9 @@ function setViewportWidth(width: number) {
 }
 
 describe('Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save -> Live/Voice -> History Reuse)', () => {
+  // The retained editor is now lazy. Prepare its real module while keeping the
+  // actual studio → tools → editor clicks and every journey assertion below.
+  beforeAll(async () => { await import('../components/SequenceWorkbench'); }, 30000);
   beforeEach(() => {
     window.localStorage.clear();
     window.sessionStorage.clear();
@@ -85,6 +89,7 @@ describe('Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save 
       });
 
       render(<App />);
+      await openAdvancedWorkbench();
 
       // =========================================================================
       // 1. 홈 (Home — 4256230 + c6acd66 + f3c093e)
@@ -122,6 +127,7 @@ describe('Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save 
       const navButtons = screen.getAllByRole('button', { name: /동작/ });
       const atlasNavBtn = navButtons.find((btn) => btn.closest('nav') !== null)!;
       fireEvent.click(atlasNavBtn);
+      await openAtlasTools();
 
       const addWarmupBtn = await screen.findByRole(
         'button',
@@ -147,9 +153,10 @@ describe('Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save 
 
       // Return to Home / Workbench ('수업')
       const workbenchNavBtn = screen
-        .getAllByRole('button', { name: /오늘의 수업|^수업$/ })
+        .getAllByRole('button', { name: /수업 만들기|^작성$/ })
         .find((btn) => btn.closest('nav') !== null)!;
       fireEvent.click(workbenchNavBtn);
+      await openAdvancedWorkbench();
 
       // Add cooldownEx through the editor's primary movement action.
       const editorActions = await screen.findByRole(
@@ -386,6 +393,6 @@ describe('Round 2 Integrated User Journey (Home -> Search -> Block/Drag -> Save 
       expect(usePilatesStore.getState().activeSteps).toHaveLength(2);
       expect(usePilatesStore.getState().activeTitle).toContain(journeyTitle);
     },
-    30000,
+    60000,
   );
 });

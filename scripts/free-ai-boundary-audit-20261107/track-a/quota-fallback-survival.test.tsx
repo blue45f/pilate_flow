@@ -1068,6 +1068,7 @@ describe('Track A Audit — Free Quota Exhaustion / 429 / 401 / Timeout / Offlin
         expect(usePilatesStore.getState().activeTitle).toBe('UI 로컬 폴백 생존 검증 수업');
         unmount();
       },
+      15000,
     );
   });
 

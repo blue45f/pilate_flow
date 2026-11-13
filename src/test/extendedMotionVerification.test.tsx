@@ -21,6 +21,11 @@ import {
 import { getMotionDraft } from '../data/motionDrafts';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { VERIFIED_REFERENCES } from '../data/verifiedReferences';
+import { EXPANDED_MOVEMENTS } from '../data/expandedMovements';
+
+const historicalExercises = INITIAL_EXERCISES.filter(
+  (exercise) => !exercise.id.startsWith('expanded-'),
+);
 
 function sha256OfFactualRecord(record: unknown): string {
   return createHash('sha256').update(JSON.stringify(record), 'utf8').digest('hex');
@@ -94,7 +99,9 @@ describe('Extended Motion Source Ledger & Verification Catalog', () => {
       'mat-single-knee-to-chest-fold-v1',
       'mat-prone-thoracic-extension-prep-v1',
     ];
-    expect(PREVIOUSLY_UNBOUND_MOTION_MODEL_AUDITS.map((m) => m.modelId)).toEqual(expectedUnboundIds);
+    expect(PREVIOUSLY_UNBOUND_MOTION_MODEL_AUDITS.map((m) => m.modelId)).toEqual(
+      expectedUnboundIds,
+    );
     for (const entry of extendedLedger.previouslyUnboundMotionModels) {
       expect(entry.factualRecordSha256).toMatch(/^[a-f0-9]{64}$/);
       expect(sha256OfFactualRecord(entry.factualRecord)).toBe(entry.factualRecordSha256);
@@ -133,13 +140,33 @@ describe('Extended Motion Source Ledger & Verification Catalog', () => {
       expect(sha256OfFactualRecord(record!.factualRecord)).toBe(record!.factualRecordSha256);
     }
 
-    // Every catalog exercise in INITIAL_EXERCISES resolves a valid source audit bundle
-    for (const exercise of INITIAL_EXERCISES) {
+    // These hashes cover the historical cohort, not newly linked creator metadata.
+    expect(historicalExercises).toHaveLength(98);
+    for (const exercise of historicalExercises) {
       const bundle = resolveExtendedMotionSourceAudit(exercise.id);
       expect(bundle.sha256IntegrityVerified).toBe(true);
       expect(bundle.primaryFactualRecordSha256).toMatch(/^[a-f0-9]{64}$/);
       expect(bundle.anatomicalAccuracyAssumed).toBe(false);
       expect(bundle.professionalReviewCount).toBe(0);
+    }
+  });
+
+  it('keeps expanded creator metadata separate from the historical factual ledger and motion review', () => {
+    for (const exercise of EXPANDED_MOVEMENTS) {
+      const bundle = resolveExtendedMotionSourceAudit(exercise);
+      expect(bundle.exerciseFoundInCatalog).toBe(true);
+      expect(bundle.checkedAt).toBe('2026-11-13');
+      expect(bundle.primaryFactualRecordSha256).toBe('');
+      expect(bundle.sha256IntegrityVerified).toBe(false);
+      expect(bundle.candidateMatMotionModel).toBeNull();
+      expect(bundle.previouslyUnboundMotionModel).toBeNull();
+      expect(bundle.clearedYoutubeReplacementAudit).toBeNull();
+      expect(bundle.verifiedReferenceAuditRecord).toBeNull();
+      expect(bundle.verifiedReferencePublicEntry).toBeNull();
+      expect(bundle.anatomicalAccuracyAssumed).toBe(false);
+      expect(bundle.professionalReviewCount).toBe(0);
+      expect(bundle.verificationBoundaryNoticeKo).toContain('메타데이터 확인');
+      expect(bundle.verificationBoundaryNoticeKo).toContain('검수 미완료');
     }
   });
 

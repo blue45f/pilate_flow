@@ -198,12 +198,18 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/assets/') ||
     url.pathname.startsWith('/icons/') ||
     (url.pathname.startsWith('/images/movement-guides/') && url.pathname.endsWith('.svg')) ||
-    (url.pathname.startsWith('/motion-studio3d/') && url.pathname.endsWith('.png'));
+    (url.pathname.startsWith('/motion-artwork-v2/') && url.pathname.endsWith('.svg')) ||
+    (url.pathname.startsWith('/motion-studio3d/') && (url.pathname.endsWith('.png') || url.pathname.endsWith('.webp')));
   if (!isShellAsset) return;
   event.respondWith(
     caches.open(CACHE).then(async (cache) => {
       const cached = await cache.match(url.pathname);
       if (cached) return cached;
+      if (url.pathname.startsWith('/motion-studio3d/')) {
+        const motionCache = await caches.open('flow-atelier-studio3d-lossless-v3');
+        const prewarmed = await motionCache.match(url.pathname);
+        if (prewarmed) return prewarmed;
+      }
       try {
         const response = await fetch(request);
         if (

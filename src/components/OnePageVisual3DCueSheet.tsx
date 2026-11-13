@@ -25,7 +25,7 @@ import {
   isRestStep,
 } from '../utils/sequenceEngine';
 import { getSequenceStepClassSection } from '../utils/sequenceMotionBinding';
-import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { SpringVisualPills } from './SpringVisualPills';
 
 export interface OnePageVisual3DCueSheetProps {
@@ -133,7 +133,6 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
           ? formatBrandSpringEquivalent(springs, activeBrand, ex?.apparatus ?? apparatus)
           : null;
 
-      const motion3d = ex ? resolveStudio3DMotionForExercise(ex) : null;
       const canShowTeachingNotes =
         reviewedTeachingExerciseIds === undefined ||
         (!rest && ex !== undefined && reviewedTeachingExerciseIds.has(ex.id));
@@ -159,7 +158,7 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
         springs,
         brandConverted,
         hasSpringDelta,
-        thumbSrc: motion3d?.peakImg ?? null,
+        exercise: ex,
         primaryCue,
         breathText: !rest && canShowTeachingNotes ? ex?.breathPattern : undefined,
         repsSetsText:
@@ -298,17 +297,11 @@ export const OnePageVisual3DCueSheet: React.FC<OnePageVisual3DCueSheetProps> = (
               }`.trim()}
               data-testid="visual-1p-cuesheet-row"
             >
-              {row.thumbSrc ? (
-                <img
-                  src={row.thumbSrc}
-                  alt=""
-                  aria-hidden="true"
-                  loading="lazy"
-                  className="pf-visual-1p-row__thumb"
-                />
+              {row.exercise ? (
+                <ExerciseMotionArtwork exercise={row.exercise} className="pf-visual-1p-row__thumb" />
               ) : (
                 <div className="pf-visual-1p-row__rest-box" aria-hidden="true">
-                  휴식
+                  {row.rest ? '휴식' : '동작 확인'}
                 </div>
               )}
               <div className="pf-visual-1p-row__body">

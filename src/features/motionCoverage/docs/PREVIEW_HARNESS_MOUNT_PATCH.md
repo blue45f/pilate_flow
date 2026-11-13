@@ -35,16 +35,16 @@ export function LocalMotionCoverageInspectorModal() {
 }
 ```
 
-### 1.3 프로그래매틱 98종 전수 순회 검증 호출 예시
+### 1.3 현재 카탈로그 전수 순회 검증 호출 예시
 ```ts
 import { runMotionCoverageCatalogSweep } from './features/motionCoverage';
 
 const report = runMotionCoverageCatalogSweep();
-// report.totalCatalogCount === 98
-// report.countsByMode === { 'three-phase-2d': 77, 'continuous-2d': 1, 'projected-3d': 20, missing: 0 }
-// report.reused2dPoseAssetCount === 98
+// report.totalCatalogCount: 현재 카탈로그 항목 수
+// report.countsByMode: 표시 가능한 도해/연속 초안과 전용 도해 미작성(missing)을 구분
+// report.reused2dPoseAssetCount: 실제 표시 가능한 도해만 집계 (내부 fallback 객체 수와 다름)
 // report.newlyCreatedAssetCount === 0
-// report.discreteExercisesNeverPlayedCount === 77
+// report.discreteExercisesNeverPlayedCount === report.countsByMode['three-phase-2d']
 // report.continuousExercisesVerifiedCount === 21
 // report.controllerDestroyedCleanly === true
 ```

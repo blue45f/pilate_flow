@@ -374,7 +374,7 @@ describe('LibraryMovementInspector & StudioClinicalBriefCard honest review, sour
     setViewportWidth(320);
     const onOpenDetails = vi.fn();
     render(
-      <ExerciseAtlasView onOpenYouTubePreview={onOpenDetails} onOpenClipper={vi.fn()} />,
+      <ExerciseAtlasView initialView="tools" onOpenYouTubePreview={onOpenDetails} onOpenClipper={vi.fn()} />,
     );
 
     const pendingCardTrigger = screen.getByRole('button', { name: pendingExercise.nameKo });

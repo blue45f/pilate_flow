@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MOVEMENT_VISUAL_ASSET_MAP } from '../../data/movementVisualRigCatalog';
 import { INITIAL_EXERCISES } from '../../data/pilatesCatalog';
+import { EXPANDED_MOVEMENTS } from '../../data/expandedMovements';
 import { getExerciseEvidence } from '../../utils/exerciseEvidence';
 import {
   DRAFT_REPEAT_COUNTS,
@@ -12,6 +13,8 @@ import {
   mountMotionCoveragePreviewHarness,
   runMotionCoverageCatalogSweep,
 } from './index';
+
+const nativeCatalogCount = INITIAL_EXERCISES.length - EXPANDED_MOVEMENTS.length;
 
 function createInjectableFrameRig(initialClockMs = 1000) {
   const frames = new Map<number, FrameRequestCallback>();
@@ -130,7 +133,7 @@ describe('motionCoverage playbackController (Part A) & MotionCoveragePreviewHarn
     expect(snapshots.length).toBeGreaterThan(0);
   });
 
-  it('2. never auto-interpolates or plays any of the 77 discrete three-phase-2d exercises, supporting discrete step selection only', () => {
+  it('2. keeps discrete diagrams manual and source-only exercises without playback or scheduled frames', () => {
     const rig = createInjectableFrameRig(1000);
     const controller = new MotionCoveragePlaybackController({
       exerciseOrId: 'ex-warmup-01',
@@ -174,10 +177,18 @@ describe('motionCoverage playbackController (Part A) & MotionCoveragePreviewHarn
           snap.descriptor.mode === 'three-phase-2d' &&
             snap.descriptor.asset === MOVEMENT_VISUAL_ASSET_MAP.get(exercise.id),
         ).toBe(true);
+      } else if (exercise.id.startsWith('expanded-')) {
+        expect(snap.mode).toBe('missing');
+        expect(snap.controlKind).toBe('unsupported-missing');
+        expect(controller.play({ explicitUserAction: true })).toBe(false);
+        expect(controller.requestAutoPlay()).toBe(false);
+        expect(controller.getSnapshot().progress).toBeNull();
+        expect(controller.getSnapshot().selectedPhase).toBeNull();
+        expect(rig.frames.size).toBe(0);
       }
     }
 
-    expect(discreteIds).toHaveLength(77);
+    expect(discreteIds).toHaveLength(nativeCatalogCount - 21);
     controller.destroy();
   });
 
@@ -394,7 +405,7 @@ describe('motionCoverage playbackController (Part A) & MotionCoveragePreviewHarn
     expect(fakeWindow.removeEventListener).toHaveBeenCalled();
   });
 
-  it('5. runs the full 98-exercise catalog sweep and verifies representative three-phase-2d, continuous-2d, projected-3d, and missing states in MotionCoveragePreviewHarness', () => {
+  it('5. sweeps the current catalog and verifies native, source-only, and unknown states in MotionCoveragePreviewHarness', () => {
     // Snapshot getExerciseEvidence before running sweep and harness to prove immutability
     const beforeEvidence = INITIAL_EXERCISES.map((ex) => ({
       id: ex.id,
@@ -402,17 +413,17 @@ describe('motionCoverage playbackController (Part A) & MotionCoveragePreviewHarn
     }));
 
     const sweep = runMotionCoverageCatalogSweep();
-    expect(sweep.totalCatalogCount).toBe(98);
+    expect(sweep.totalCatalogCount).toBe(INITIAL_EXERCISES.length);
     expect(sweep.countsByMode).toEqual({
-      'three-phase-2d': 77,
+      'three-phase-2d': nativeCatalogCount - 21,
       'continuous-2d': 1,
       'projected-3d': 20,
-      missing: 0,
+      missing: EXPANDED_MOVEMENTS.length,
     });
-    expect(sweep.reused2dPoseAssetCount).toBe(98);
+    expect(sweep.reused2dPoseAssetCount).toBe(nativeCatalogCount);
     expect(sweep.newlyCreatedAssetCount).toBe(0);
     expect(sweep.unreviewedPatternReferenceCount).toBe(22);
-    expect(sweep.discreteExercisesNeverPlayedCount).toBe(77);
+    expect(sweep.discreteExercisesNeverPlayedCount).toBe(nativeCatalogCount - 21);
     expect(sweep.continuousExercisesVerifiedCount).toBe(21);
     expect(sweep.representativeModesVerified).toEqual({
       'three-phase-2d': true,
@@ -445,6 +456,11 @@ describe('motionCoverage playbackController (Part A) & MotionCoveragePreviewHarn
     expect(harnessRoot.getAttribute('data-canonical-ready')).toBe('false');
     expect(harnessRoot.getAttribute('data-manual-ready')).toBe('false');
     expect(harnessRoot.getAttribute('data-true-3d')).toBe('false');
+    expect(harnessRoot).toHaveAttribute('data-catalog-total', String(INITIAL_EXERCISES.length));
+    expect(harnessRoot).toHaveAttribute('data-reused-2d-asset-count', String(nativeCatalogCount));
+    expect(screen.getByTestId('harness-truth-pill')).toHaveTextContent(
+      `전용 도해 미작성 ${EXPANDED_MOVEMENTS.length}종`,
+    );
     expect(screen.queryByTestId('harness-continuous-controls')).toBeNull();
 
     // Discrete 3-step selection on ex-warmup-01
@@ -519,7 +535,7 @@ describe('motionCoverage playbackController (Part A) & MotionCoveragePreviewHarn
     unmount();
     expect(rig.frames.size).toBe(0);
 
-    // Verify getExerciseEvidence remained 100% unchanged across all 98 exercises
+    // Verify getExerciseEvidence remained unchanged across the full catalog.
     const afterEvidence = INITIAL_EXERCISES.map((ex) => ({
       id: ex.id,
       evidence: getExerciseEvidence(ex),

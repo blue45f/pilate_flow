@@ -10,6 +10,9 @@ import {
 import { MotionReferencePlayer } from '../components/MotionReferencePlayer';
 import { ExerciseAtlasView } from '../components/ExerciseAtlasView';
 import { InlineExerciseFinder } from '../components/InlineExerciseFinder';
+import { EXPANDED_MOVEMENTS, getExpandedMovementSource } from '../data/expandedMovements';
+import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
+import { resolveMotionCoverage } from '../features/motionCoverage';
 
 afterEach(() => {
   cleanup();
@@ -26,12 +29,16 @@ const FORBIDDEN_UNVERIFIED_OR_PENDING_LABELS = [
   '아직 연결된 도해가 없어요',
 ] as const;
 
-describe('zero unverified source exposure and 98/98 authored continuous & 3-phase kinematic motion assets', () => {
-  it('verifies all 98 catalog exercises have authored continuous 5-phase & 3-phase kinematic motion assets and zero unverified/pending labels in provenance or evidence', () => {
-    expect(INITIAL_EXERCISES).toHaveLength(98);
-    expect(CATALOG_CONTINUOUS_MOTION_ASSETS).toHaveLength(98);
+const historicalExercises = INITIAL_EXERCISES.filter(
+  (exercise) => !exercise.id.startsWith('expanded-'),
+);
 
-    for (const exercise of INITIAL_EXERCISES) {
+describe('historical diagram availability and honest source-only presentation for expanded movements', () => {
+  it('preserves the historical diagram assets and evidence while retaining internal registries for the full catalog', () => {
+    expect(INITIAL_EXERCISES).toHaveLength(historicalExercises.length + EXPANDED_MOVEMENTS.length);
+    expect(CATALOG_CONTINUOUS_MOTION_ASSETS).toHaveLength(INITIAL_EXERCISES.length);
+
+    for (const exercise of historicalExercises) {
       const provenance = getMovementProvenance(exercise);
       const evidence = getExerciseEvidence(exercise);
       const motionAsset = getCatalogContinuousMotionAsset(exercise);
@@ -56,7 +63,41 @@ describe('zero unverified source exposure and 98/98 authored continuous & 3-phas
     }
   });
 
-  it('renders interactive SVG motion players for every catalog exercise in MotionReferencePlayer with zero pending placeholders', () => {
+  it('does not treat expanded creator metadata or internal fallback poses as authored motion', () => {
+    for (const exercise of EXPANDED_MOVEMENTS) {
+      const source = getExpandedMovementSource(exercise)!;
+      const binding = getExpandedMovementVisualBinding(exercise)!;
+      const evidence = getExerciseEvidence(exercise);
+      const motionAsset = getCatalogContinuousMotionAsset(exercise)!;
+      const coverage = resolveMotionCoverage(exercise);
+      expect(binding.nativeMotionAvailable).toBe(false);
+      expect(binding.presentation).toBe('creator-video-only');
+      expect(coverage.primaryMode).toBe('missing');
+      expect(coverage.canonicalMotionReady).toBe(false);
+      expect(coverage.threePhase2d.asset).toBeNull();
+      expect(coverage.safetyFlags.canonicalRecordExists).toBe(true);
+      expect(coverage.safetyFlags.canonicalAssetReady).toBe(false);
+      expect(motionAsset.factualRecordSha256).toBe('');
+      expect(motionAsset.auditCheckedAt).toBe('2026-11-13');
+      expect(evidence.motion.status).toBe('not-authored');
+      expect(evidence.motion.catalogMapped).toBe(true);
+      expect(evidence.motion.canonicalRecordExists).toBe(true);
+      expect(evidence.motion.label).toContain('전용 도해 준비 중');
+      expect(evidence.motion.label).not.toContain('대조 완료');
+      expect(evidence.motion.relatedProposals).toEqual([]);
+      expect(evidence.source.kind).toBe('creator-metadata');
+      expect(evidence.source.checkedAt).toBe('2026-11-13');
+      expect(evidence.source.description).toContain('전체 재생');
+      expect(evidence.source.exactIntervalsConfirmed).toBe(false);
+      expect(evidence.source.professionalReviewStatus).toBe('unreviewed');
+      expect(evidence.links.some((link) => link.href === source.sourceUrl)).toBe(true);
+      expect(evidence.links.some((link) => link.href.includes(`watch?v=${source.videoId}`))).toBe(
+        true,
+      );
+    }
+  });
+
+  it('renders interactive SVG players for historical apparatus examples with no obsolete pending placeholders', () => {
     const sampleExercises = [
       INITIAL_EXERCISES.find((ex) => ex.apparatus === 'mat')!,
       INITIAL_EXERCISES.find((ex) => ex.apparatus === 'reformer')!,
@@ -78,9 +119,20 @@ describe('zero unverified source exposure and 98/98 authored continuous & 3-phas
     }
   });
 
+  it('shows creator sources instead of a fabricated native motion player for expanded apparatus examples', () => {
+    for (const apparatus of ['mat', 'reformer', 'cadillac', 'chair', 'barrel'] as const) {
+      const exercise = EXPANDED_MOVEMENTS.find((item) => item.apparatus === apparatus)!;
+      const { container, unmount } = render(<MotionReferencePlayer exerciseId={exercise.id} />);
+      expect(container.querySelector('svg[role="img"]')).toBeNull();
+      expect(screen.queryByRole('button', { name: '한 주기 재생' })).toBeNull();
+      expect(container.textContent).toContain('제작자 영상');
+      unmount();
+    }
+  });
+
   it('renders ExerciseAtlasView and InlineExerciseFinder with SVG thumbnails and zero unverified/pending strings', () => {
     const { container: atlasContainer, unmount: unmountAtlas } = render(
-      <ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />,
+      <ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />,
     );
     const atlasText = atlasContainer.textContent ?? '';
     for (const forbidden of FORBIDDEN_UNVERIFIED_OR_PENDING_LABELS) {

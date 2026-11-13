@@ -236,12 +236,12 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
     const legacyExercises = INITIAL_EXERCISES.filter((ex) => ex.id.startsWith('ex-'));
     expect(ORIGINAL_MOVEMENTS).toHaveLength(60);
     expect(legacyExercises).toHaveLength(38);
-    expect(INITIAL_EXERCISES).toHaveLength(98);
-    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(98);
-    expect(CATALOG_VISUAL_SOURCE_COMPARISONS).toHaveLength(98);
-    expect(Object.keys(EXERCISE_MOTION_REFERENCES)).toHaveLength(98);
+    expect(INITIAL_EXERCISES).toHaveLength(158);
+    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(INITIAL_EXERCISES.length);
+    expect(CATALOG_VISUAL_SOURCE_COMPARISONS).toHaveLength(INITIAL_EXERCISES.length);
+    expect(Object.keys(EXERCISE_MOTION_REFERENCES)).toHaveLength(INITIAL_EXERCISES.length);
     expect(MOTION_REFERENCE_COUNTS).toEqual({
-      catalogExercises: 98,
+      catalogExercises: INITIAL_EXERCISES.length,
       authoredCatalogMotions: 0,
       expertApprovedMotions: 0,
       labPrototypes: 2,
@@ -264,9 +264,9 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
     ).toEqual(['mv-01', 'mv-02', 'mv-03']);
     expect(new Set(VERIFIED_REFERENCES.map((ref) => ref.url)).size).toBe(25);
 
-    expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(141);
+    expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(310);
     expect(VERIFIED_YOUTUBE_VIDEO_POOL.filter((item) => item.region === 'kr')).toHaveLength(76);
-    expect(VERIFIED_YOUTUBE_VIDEO_POOL.filter((item) => item.region === 'global')).toHaveLength(65);
+    expect(VERIFIED_YOUTUBE_VIDEO_POOL.filter((item) => item.region === 'global')).toHaveLength(234);
     expect(COURSE_REFERENCES.length).toBeGreaterThanOrEqual(30);
     expect(PUBLIC_REFERENCES).toHaveLength(3);
     expect(MOTION_CANDIDATE_RESEARCH_V7_ASSOCIATION.canonicalAssetMappingsAdded).toBe(0);
@@ -424,7 +424,7 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
 
     // [Priority 4] Heuristic category/family fallback in selectVerifiedReferencesForExercise & resolveMotionCoverage
     const coverageSweep = runMotionCoverageCatalogSweep();
-    expect(coverageSweep.totalCatalogCount).toBe(98);
+    expect(coverageSweep.totalCatalogCount).toBe(INITIAL_EXERCISES.length);
     expect(coverageSweep.true3dSupportedTrueCount).toBe(0);
     expect(coverageSweep.canonicalMotionReadyTrueCount).toBe(0);
     expect(coverageSweep.manualReadyTrueCount).toBe(0);
@@ -463,7 +463,9 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
     const chestLiftPatternRef = MOTION_PATTERN_REFERENCES.find(
       (ref) => ref.variantId === 'supine-chest-lift',
     )!;
-    expect(getRelatedYouTubeVideosForMotion(chestLiftPatternRef).length).toBeGreaterThan(0);
+    // Roll Up / Hundred tags do not establish a Chest Lift demonstration.
+    // The source-only Physitrack explanation remains available in the media bundle.
+    expect(getRelatedYouTubeVideosForMotion(chestLiftPatternRef)).toEqual([]);
 
     // [Priority 5] Identifier slug vs apparatus mismatch on ex-global-reformer-02
     const globalReformer02 = INITIAL_EXERCISES.find((ex) => ex.id === 'ex-global-reformer-02')!;

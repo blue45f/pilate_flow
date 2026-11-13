@@ -10,6 +10,11 @@ import type { MotionPrototypeReference } from '../data/motionReferences';
 import { clampMotionProgress, getMotionPhase, getMotionPose } from '../utils/motionReferenceModel';
 import type { AnatomicalSide, MotionPoint, MotionPrototypeId } from '../utils/motionReferenceModel';
 import type { MotionPatternReference } from '../data/motionPatternReferences';
+import type { PilatesExercise } from '../types/pilates';
+import { hasCatalogMotionIdentityMismatch } from '../data/movementVisualRigCatalog';
+import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
+import { MotionSourceOnlyNotice } from './MotionSourceOnlyNotice';
+import { UnmodeledMotionNotice } from './UnmodeledMotionNotice';
 import {
   resolvePatternReferencesForRenderer,
   resolveRenderableMotionDescriptor,
@@ -18,6 +23,7 @@ import { MotionPatternPreview } from './MotionPatternPreview';
 import '../styles/motion-reference.css';
 
 export interface MotionReferencePlayerProps {
+  exercise?: PilatesExercise;
   exerciseId?: string;
   exerciseName?: string;
   mode?: 'exercise' | 'prototype-lab';
@@ -486,12 +492,14 @@ function PrototypeLab({ active }: { active: boolean }) {
 
 function RelatedPatternReferences({
   references,
+  exercise,
   exerciseId,
   exerciseName,
   active,
   className,
 }: {
   references: readonly MotionPatternReference[];
+  exercise?: PilatesExercise;
   exerciseId?: string;
   exerciseName: string;
   active: boolean;
@@ -501,7 +509,7 @@ function RelatedPatternReferences({
   const [viewerMode, setViewerMode] = useState<'pattern' | 'kinematic'>('pattern');
   const selected =
     references.find((reference) => reference.variantId === variantId) ?? references[0];
-  const catalogKinematic = exerciseId ? getCatalogContinuousMotionAsset(exerciseId) : null;
+  const catalogKinematic = getCatalogContinuousMotionAsset(exercise ?? exerciseId);
 
   return (
     <section
@@ -606,31 +614,49 @@ import { CatalogMotionInteractivePlayer } from './CatalogMotionInteractivePlayer
 
 /** Related authored drafts and catalog 5-phase kinematic assets are discoverable without granting clinical approval. */
 export function MotionReferencePlayer({
-  exerciseId,
+  exercise,
+  exerciseId: requestedExerciseId,
   exerciseName,
   mode = 'exercise',
   active = true,
   kind = 'exercise',
   className = '',
 }: MotionReferencePlayerProps) {
+  const exerciseId = exercise?.id ?? requestedExerciseId;
   if (kind === 'rest') return null;
   if (mode === 'prototype-lab' && !exerciseId?.trim()) return <PrototypeLab active={active} />;
+  const sourceBinding = exercise ? getExpandedMovementVisualBinding(exercise) : undefined;
+  if (exercise && sourceBinding?.nativeMotionAvailable === false) {
+    return <MotionSourceOnlyNotice
+      exerciseId={exercise.id}
+      nameKo={exercise.nameKo}
+      apparatus={exercise.apparatus}
+      reasonKo={sourceBinding.reasonKo}
+      sourceUrl={sourceBinding.sourceUrl}
+      className={className}
+    />;
+  }
+  if (exercise && hasCatalogMotionIdentityMismatch(exercise)) {
+    return <UnmodeledMotionNotice exercise={exercise} className={className} />;
+  }
+  const exerciseOrId = exercise ?? exerciseId;
   const reference = exerciseId ? getExerciseMotionReference(exerciseId) : null;
-  const descriptor = resolveRenderableMotionDescriptor(exerciseId);
-  const patterns = exerciseId ? resolvePatternReferencesForRenderer(exerciseId) : [];
-  const name = exerciseName || reference?.exerciseName || '이 동작';
+  const descriptor = resolveRenderableMotionDescriptor(exerciseOrId);
+  const patterns = exerciseOrId ? resolvePatternReferencesForRenderer(exerciseOrId) : [];
+  const name = exerciseName || exercise?.nameKo || reference?.exerciseName || '이 동작';
   if (patterns.length)
     return (
       <RelatedPatternReferences
         key={exerciseId}
         references={patterns}
+        exercise={exercise}
         exerciseId={exerciseId}
         exerciseName={name}
         active={active}
         className={className}
       />
     );
-  const catalogMotion = exerciseId ? getCatalogContinuousMotionAsset(exerciseId) : null;
+  const catalogMotion = getCatalogContinuousMotionAsset(exerciseOrId);
   if (catalogMotion) {
     return (
       <CatalogMotionInteractivePlayer

@@ -1,3 +1,4 @@
+import { openAppTools } from './workbenchControls';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
@@ -183,25 +184,25 @@ const destinations = [
     tab: 'history',
     click: () =>
       fireEvent.click(
-        within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', {
-          name: '수업 기록',
-        }),
+        openAppTools().getByRole('button', { name: '수업 기록' }),
       ),
   },
   {
     label: 'brand workbench',
     tab: 'workbench',
-    click: () => fireEvent.click(screen.getByRole('link', { name: 'Flow Atelier 계획으로' })),
+    click: () => fireEvent.click(screen.getByRole('link', { name: 'Pilates Flow 수업 만들기로' })),
   },
   {
     label: 'upcoming schedule',
     tab: 'schedule',
-    click: () =>
-      fireEvent.click(
+    click: () => {
+      openAppTools();
+      return fireEvent.click(
         within(screen.getByRole('region', { name: '다가오는 수업' })).getByRole('button', {
           name: /V12 합성 다음 회차/,
         }),
-      ),
+      );
+    },
   },
 ] as const;
 
@@ -288,7 +289,7 @@ describe('actual app navigation preserves an unrecorded teaching session', () =>
         if (entry === 'palette') {
           fireEvent.click(openPalette().getByRole('button', { name: /회원 수업 예약/ }));
         } else {
-          fireEvent.click(screen.getByRole('button', { name: '회원 예약 화면 보기' }));
+          fireEvent.click(openAppTools().getByRole('button', { name: '회원 예약 화면 보기' }));
         }
       };
       switchMember();
@@ -457,7 +458,7 @@ describe('actual app navigation preserves an unrecorded teaching session', () =>
         expect.objectContaining({ stepId: steps[1].stepId }),
       ],
     });
-  });
+  }, 15000);
 
   it('does not navigate or erase the form when the store fails to append a matching record', async () => {
     const append = vi

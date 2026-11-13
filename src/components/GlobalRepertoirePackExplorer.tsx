@@ -1,6 +1,8 @@
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import React, { useMemo, useState } from 'react';
 import { Check, ExternalLink, Globe, Plus, Search, Sparkles, Tv, X } from 'lucide-react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
+import { getExerciseSourcePageReferences } from '../data/exerciseVideoBindings';
 import {
   CRAWLED_YOUTUBE_DISCOVERY_POOL,
   GLOBAL_CRAWLED_REPERTOIRE_EXERCISES,
@@ -8,7 +10,6 @@ import {
 import { PfBadge, PfButton } from '../design-system';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { ApparatusType, PilatesExercise } from '../types/pilates';
-import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import { SpringVisualPills } from './SpringVisualPills';
 
 export interface GlobalRepertoirePackExplorerProps {
@@ -296,9 +297,11 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
         }}
       >
         {filteredItems.map((item) => {
-          const motionSpec = resolveStudio3DMotionForExercise(item);
           const inLibrary = existingIds.has(item.id);
-          const isEmbedOpen = activeEmbedId === item.id;
+          const hasVideo = /^[A-Za-z0-9_-]{11}$/.test(item.youtube.videoId);
+          const sourcePage = getExerciseSourcePageReferences(item)[0];
+          const referenceUrl = hasVideo ? item.youtube.url : sourcePage?.url;
+          const isEmbedOpen = hasVideo && activeEmbedId === item.id;
           return (
             <article
               key={item.id}
@@ -333,13 +336,9 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
                   />
                 ) : (
                   <>
-                    <img
-                      src={motionSpec.peakImg}
-                      alt=""
-                      aria-hidden="true"
-                      loading="lazy"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
+                    <ExerciseMotionArtwork
+                      exercise={item}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <span
                       style={{
                         position: 'absolute',
@@ -355,7 +354,7 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
                     >
                       {APPARATUS_LABELS[item.apparatus]?.ko} · Lv {item.level}
                     </span>
-                    <button
+                    {hasVideo && <button
                       type="button"
                       onClick={() => setActiveEmbedId(item.id)}
                       aria-label={`${item.nameKo} 연결 영상 미리보기`}
@@ -379,7 +378,7 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
                     >
                       <Tv size={12} aria-hidden="true" />
                       영상 열기 ({item.youtube.region === 'kr' ? '국내' : '해외'})
-                    </button>
+                    </button>}
                   </>
                 )}
               </div>
@@ -414,16 +413,18 @@ export const GlobalRepertoirePackExplorer: React.FC<GlobalRepertoirePackExplorer
                 }}
               >
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  🎬 {item.youtube.channelName} · {item.youtube.videoTitle}
+                  {hasVideo
+                    ? `🎬 ${item.youtube.channelName} · ${item.youtube.videoTitle}`
+                    : sourcePage ? `${sourcePage.publisher} · 동작 설명 원문` : '개별 영상 연결 확인 중'}
                 </span>
-                <a
-                  href={item.youtube.url}
+                {referenceUrl && <a
+                  href={referenceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ flexShrink: 0, color: '#173d34', fontWeight: 700 }}
                 >
-                  원본 <ExternalLink size={11} />
-                </a>
+                  {hasVideo ? '영상 원본' : '설명 원문'} <ExternalLink size={11} />
+                </a>}
               </div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: 'auto' }}>

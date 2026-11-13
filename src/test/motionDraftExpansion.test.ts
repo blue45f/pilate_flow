@@ -15,6 +15,7 @@ import {
 import standing from '../data/motionStandingSourceLedger.json';
 import tension from '../data/motionTensionSourceLedger.json';
 import { ORIGINAL_MOVEMENTS } from '../data/originalMovements';
+import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { getReformerStrapArmPressGeometry } from '../models/reformerStrapArmPress';
 import { MOTION_DRAFT_IDS } from '../models/types';
 
@@ -103,8 +104,8 @@ describe('v4 proposals remain separate from canonical motions and approvals', ()
   });
 
   it('keeps all 98 canonical assets absent after importing expansion metadata', () => {
-    expect(EXERCISE_MOTION_REFERENCES).toHaveLength(98);
-    expect(new Set(EXERCISE_MOTION_REFERENCES.map((item) => item.exerciseId)).size).toBe(98);
+    expect(EXERCISE_MOTION_REFERENCES).toHaveLength(INITIAL_EXERCISES.length);
+    expect(new Set(EXERCISE_MOTION_REFERENCES.map((item) => item.exerciseId)).size).toBe(INITIAL_EXERCISES.length);
     for (const reference of EXERCISE_MOTION_REFERENCES) {
       expect(reference.status).toBe('not_authored');
       expect(reference.asset).toBeNull();
@@ -113,7 +114,7 @@ describe('v4 proposals remain separate from canonical motions and approvals', ()
       expect(reference.expertApproved).toBe(false);
     }
     expect(MOTION_REFERENCE_COUNTS).toMatchObject({
-      catalogExercises: 98,
+      catalogExercises: INITIAL_EXERCISES.length,
       authoredCatalogMotions: 0,
       expertApprovedMotions: 0,
     });

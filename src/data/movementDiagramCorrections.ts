@@ -10,6 +10,7 @@ import { getRotationI7IntegrationBundle } from './rotationDiagramData';
 import { getShoulderSupportRegistryIntegrationPayload } from './shoulderSupportDiagrams';
 import { getSpineMovementDiagramCorrections } from './spineArticulationDiagramData';
 import { getUpperBodyArmDiagramCorrections } from './upperBodyArmDiagramData';
+import { MOTION_IMAGE_QUALITY_CORRECTIONS } from './motionImageQualityCorrections';
 
 /** Reviewed source statements, not a professional or frame-by-frame approval. */
 export interface MovementDiagramCorrection {
@@ -65,6 +66,7 @@ const RAW_DIAGRAM_CORRECTIONS: Record<string, MovementDiagramCorrection> = {
   ...shoulderPayload.corrections,
   ...rotationBundle.diagramCorrections,
   ...corePatch.corrections,
+  ...MOTION_IMAGE_QUALITY_CORRECTIONS,
 };
 
 export const MOVEMENT_DIAGRAM_CORRECTIONS: Readonly<Record<string, MovementDiagramCorrection>> = Object.freeze(

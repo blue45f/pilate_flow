@@ -50,7 +50,7 @@ export interface CatalogPlaybackSweepResult {
 }
 
 /**
- * Programmatic verification harness that iterates over all 98 catalog descriptors plus
+ * Programmatic verification harness that iterates over the current catalog descriptors plus
  * the representative missing target using a single `MotionCoveragePlaybackController` instance,
  * verifying play/pause/seek/step-select/switch and confirming zero leaked frames/listeners.
  */
@@ -89,6 +89,7 @@ export function runMotionCoverageCatalogSweep(
   let true3dSupportedTrueCount = 0;
   let discreteExercisesNeverPlayedCount = 0;
   let continuousExercisesVerifiedCount = 0;
+  let reused2dPoseAssetCount = 0;
   const representativeModesVerified: Record<MotionSupportMode, boolean> = {
     'three-phase-2d': false,
     'continuous-2d': false,
@@ -98,6 +99,9 @@ export function runMotionCoverageCatalogSweep(
 
   for (const exercise of INITIAL_EXERCISES) {
     const snap = controller.switchExercise(exercise.id, options);
+    if (snap.descriptor.resolution.threePhase2d.reusesExistingCatalogAsset) {
+      reused2dPoseAssetCount += 1;
+    }
     countsByMode[snap.mode] += 1;
     canonicalMotionReadyTrueCount += Number(snap.canonicalMotionReady);
     manualReadyTrueCount += Number(snap.manualReady);
@@ -184,7 +188,7 @@ export function runMotionCoverageCatalogSweep(
   return Object.freeze({
     totalCatalogCount: INITIAL_EXERCISES.length,
     countsByMode: Object.freeze(countsByMode),
-    reused2dPoseAssetCount: reuseReport.reusedByIdentityCount,
+    reused2dPoseAssetCount,
     newlyCreatedAssetCount: reuseReport.duplicateAssetCount,
     unreviewedPatternReferenceCount: MOTION_PATTERN_REFERENCES.length,
     discreteExercisesNeverPlayedCount,

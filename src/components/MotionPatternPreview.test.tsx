@@ -1,3 +1,4 @@
+import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -105,7 +106,7 @@ describe('authored pattern discovery boundaries', () => {
       expect(reference.definition.exactAssetReady).toBe(false);
       expect(reference.definition.professionalReviewCount).toBe(0);
     }
-    expect(EXERCISE_MOTION_REFERENCES).toHaveLength(98);
+    expect(EXERCISE_MOTION_REFERENCES).toHaveLength(INITIAL_EXERCISES.length);
     expect(
       EXERCISE_MOTION_REFERENCES.every(
         (item) => item.asset === null && !item.expertApproved && item.prototypeId === null,

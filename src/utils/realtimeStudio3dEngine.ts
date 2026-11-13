@@ -1,4 +1,5 @@
 import type { ApparatusType, PilatesExercise } from '../types/pilates';
+import { MOTION_STUDIO_MATERIALS, MOTION_STUDIO_RGB } from './motionStudioMaterials';
 import {
   resolveStudio3DMotionForExercise,
   type Studio3DSignatureId,
@@ -804,9 +805,9 @@ export function renderRealtimeStudio3DFrame({
     bgGrad.addColorStop(0.58, '#1E352E');
     bgGrad.addColorStop(1, '#13231E');
   } else {
-    bgGrad.addColorStop(0, '#F4F0E8');
-    bgGrad.addColorStop(0.62, '#EAE5DB');
-    bgGrad.addColorStop(1, '#DDD6C9');
+    bgGrad.addColorStop(0, MOTION_STUDIO_MATERIALS.surface);
+    bgGrad.addColorStop(0.62, MOTION_STUDIO_MATERIALS.horizon);
+    bgGrad.addColorStop(1, MOTION_STUDIO_MATERIALS.floor);
   }
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
@@ -854,7 +855,7 @@ export function renderRealtimeStudio3DFrame({
   ctx.save();
   const gridStroke =
     shader === 'studio-pbr'
-      ? 'rgba(23, 61, 52, 0.08)'
+      ? 'rgba(36, 75, 61, 0.045)'
       : shader === 'biomech-xray'
         ? 'rgba(126, 231, 196, 0.13)'
         : 'rgba(110, 231, 183, 0.15)';
@@ -886,9 +887,9 @@ export function renderRealtimeStudio3DFrame({
   const lines: StrokeLine3D[] = [];
 
   const oakRgb: readonly [number, number, number] =
-    shader === 'studio-pbr' ? [206, 169, 122] : [72, 98, 88];
+    shader === 'studio-pbr' ? MOTION_STUDIO_RGB.oak : [72, 98, 88];
   const leatherRgb: readonly [number, number, number] =
-    shader === 'studio-pbr' ? [38, 56, 49] : [30, 52, 45];
+    shader === 'studio-pbr' ? MOTION_STUDIO_RGB.upholstery : [30, 52, 45];
   const appAlpha = shader === 'biomech-xray' ? 0.52 : 1.0;
 
   let springStretchPct = Math.round(smoothstep(phaseT) * 100);
@@ -1056,12 +1057,12 @@ export function renderRealtimeStudio3DFrame({
 
   // Build 3D Athlete Mesh (Spine + Pelvis + Chest + Head + IK Legs + IK Arms + Muscle Highlights)
   const attireRgb: readonly [number, number, number] =
-    shader === 'biomech-xray' ? [66, 178, 148] : [23, 61, 52];
+    shader === 'biomech-xray' ? [66, 178, 148] : MOTION_STUDIO_RGB.cloth;
   const leggingRgb: readonly [number, number, number] =
-    shader === 'biomech-xray' ? [52, 152, 126] : [20, 52, 44];
+    shader === 'biomech-xray' ? [52, 152, 126] : MOTION_STUDIO_RGB.cloth;
   const skinRgb: readonly [number, number, number] =
-    shader === 'biomech-xray' ? [125, 212, 188] : [228, 186, 154];
-  const coralRgb: readonly [number, number, number] = [232, 92, 58];
+    shader === 'biomech-xray' ? [125, 212, 188] : MOTION_STUDIO_RGB.skin;
+  const coralRgb: readonly [number, number, number] = MOTION_STUDIO_RGB.primaryMuscle;
   const bodyAlpha = shader === 'biomech-xray' ? 0.42 : 1.0;
 
   const spPts = [0, 0.25, 0.5, 0.75, 1.0].map((u) => bezier3(rig.pelvis, rig.spineMid, rig.chest, u));
@@ -1096,7 +1097,7 @@ export function renderRealtimeStudio3DFrame({
   );
   quads.push(...makeSphereQuads(headPos, 0.076, 0.086, 0.094, skinRgb, 10, 6, bodyAlpha));
   const bunPos = sub3(headPos, mul3(antN, 0.095));
-  quads.push(...makeSphereQuads(bunPos, 0.042, 0.042, 0.042, [36, 26, 22], 8, 5, bodyAlpha));
+  quads.push(...makeSphereQuads(bunPos, 0.042, 0.042, 0.042, MOTION_STUDIO_RGB.hair, 8, 5, bodyAlpha));
 
   const lHip = sub3(rig.pelvis, mul3(bodyRight, 0.085));
   const rHip = add3(rig.pelvis, mul3(bodyRight, 0.085));

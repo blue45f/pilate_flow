@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useWorkspaceBrowseState, workspaceBrowseStorageKey } from './useWorkspaceBrowseState';
 import {
   APPARATUS_LABELS,
   CANONICAL_BLOCKS,
@@ -21,7 +22,8 @@ import { getExerciseReviewState } from '../utils/exerciseReview';
 import { isMovementIdeaExercise, readMovementIdeaDraft } from '../utils/movementIdeaDraft';
 import { getRecentlyTaughtExerciseIds } from '../utils/sequenceEngine';
 
-export const ATLAS_DISCOVERY_RECOVERY_KEY = 'pf_atlas_discovery_recovery_v1';
+/** Guest key retained for callers that inspect browsing recovery in this tab. */
+export const ATLAS_DISCOVERY_RECOVERY_KEY = workspaceBrowseStorageKey('atlas', null);
 
 export interface AtlasDiscoveryFilters {
   search: string;
@@ -79,47 +81,51 @@ export function hasActiveDiscoveryState(filters: AtlasDiscoveryFilters): boolean
   );
 }
 
-export function readRecoveredAtlasFilters(): AtlasDiscoveryFilters {
-  if (typeof window === 'undefined') return { ...INITIAL_ATLAS_FILTERS };
-  try {
-    const raw = window.sessionStorage.getItem(ATLAS_DISCOVERY_RECOVERY_KEY);
-    if (!raw) return { ...INITIAL_ATLAS_FILTERS };
-    const parsed = JSON.parse(raw) as Partial<AtlasDiscoveryFilters> & {
-      focus?: string;
-      pattern?: string;
-    };
-    if (!parsed || typeof parsed !== 'object') return { ...INITIAL_ATLAS_FILTERS };
-    return {
-      search:
-        typeof parsed.search === 'string'
-          ? parsed.search
-          : typeof parsed.focus === 'string'
-            ? parsed.focus
-            : INITIAL_ATLAS_FILTERS.search,
-      equipment: Array.isArray(parsed.equipment)
-        ? parsed.equipment.filter((item): item is string => typeof item === 'string')
-        : INITIAL_ATLAS_FILTERS.equipment,
-      block: typeof parsed.block === 'string' ? parsed.block : INITIAL_ATLAS_FILTERS.block,
-      position: typeof parsed.position === 'string' ? parsed.position : INITIAL_ATLAS_FILTERS.position,
-      level: typeof parsed.level === 'string' ? parsed.level : INITIAL_ATLAS_FILTERS.level,
-      duration: typeof parsed.duration === 'string' ? parsed.duration : INITIAL_ATLAS_FILTERS.duration,
-      favorite: typeof parsed.favorite === 'string' ? parsed.favorite : INITIAL_ATLAS_FILTERS.favorite,
-      review: typeof parsed.review === 'string' ? parsed.review : INITIAL_ATLAS_FILTERS.review,
-      motionDraft:
-        typeof parsed.motionDraft === 'string'
-          ? parsed.motionDraft
-          : typeof parsed.pattern === 'string'
-            ? parsed.pattern
-            : INITIAL_ATLAS_FILTERS.motionDraft,
-      props: Array.isArray(parsed.props)
-        ? (parsed.props.filter((item): item is PropType => typeof item === 'string') as PropType[])
-        : INITIAL_ATLAS_FILTERS.props,
-      hideRecent:
-        typeof parsed.hideRecent === 'boolean' ? parsed.hideRecent : INITIAL_ATLAS_FILTERS.hideRecent,
-    };
-  } catch {
-    return { ...INITIAL_ATLAS_FILTERS };
-  }
+export function parseAtlasFilters(
+  value: unknown,
+  defaults: AtlasDiscoveryFilters = INITIAL_ATLAS_FILTERS,
+): AtlasDiscoveryFilters {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return defaults;
+  const parsed = value as Record<string, unknown>;
+  const choice = (raw: unknown, allowed: readonly string[], fallback: string) =>
+    typeof raw === 'string' && allowed.includes(raw) ? raw : fallback;
+  const selections = <T extends string>(raw: unknown, allowed: readonly T[]): T[] =>
+    Array.isArray(raw)
+      ? [
+          ...new Set(
+            raw.filter(
+              (item): item is T => typeof item === 'string' && allowed.includes(item as T),
+            ),
+          ),
+        ]
+      : [];
+  return {
+    search: typeof parsed.search === 'string' ? parsed.search.slice(0, 1000) : defaults.search,
+    equipment: selections(
+      parsed.equipment,
+      EQUIPMENT_OPTIONS.map((item) => item.id),
+    ),
+    block: choice(
+      parsed.block,
+      ['all', ...CANONICAL_BLOCKS.map((item) => item.category)],
+      defaults.block,
+    ),
+    position: choice(parsed.position, ['all', ...Object.keys(POSITION_LABELS)], defaults.position),
+    level: choice(parsed.level, ['all', ...Object.keys(LEVEL_NAMES)], defaults.level),
+    duration: choice(parsed.duration, ['all', 'short', 'medium', 'long'], defaults.duration),
+    favorite: choice(
+      parsed.favorite,
+      ['all', 'saved', ...Object.keys(FAVORITE_TAG_META)],
+      defaults.favorite,
+    ),
+    review: choice(parsed.review, ['all', 'pending', 'approved', 'stale'], defaults.review),
+    motionDraft: choice(parsed.motionDraft, ['all', 'proposal', 'none'], defaults.motionDraft),
+    props: selections(
+      parsed.props,
+      PROP_OPTIONS.map((item) => item.id),
+    ),
+    hideRecent: typeof parsed.hideRecent === 'boolean' ? parsed.hideRecent : defaults.hideRecent,
+  };
 }
 
 export interface UseAtlasFilterEngineParams {
@@ -139,30 +145,24 @@ export function useAtlasFilterEngine({
   ownedEquipment,
   ownedProps,
 }: UseAtlasFilterEngineParams) {
-  const [filters, setFilters] = useState<AtlasDiscoveryFilters>(() => readRecoveredAtlasFilters());
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      if (!hasActiveDiscoveryState(filters)) {
-        window.sessionStorage.removeItem(ATLAS_DISCOVERY_RECOVERY_KEY);
-      } else {
-        window.sessionStorage.setItem(ATLAS_DISCOVERY_RECOVERY_KEY, JSON.stringify(filters));
-      }
-    } catch {
-      // Ignore storage quota or security errors
-    }
-  }, [filters]);
+  // The old ownerless key is deliberately not migrated: its author is unknown.
+  const [filters, setFilters] = useWorkspaceBrowseState(
+    'atlas',
+    INITIAL_ATLAS_FILTERS,
+    parseAtlasFilters,
+    hasActiveDiscoveryState,
+  );
 
   const recent = useMemo(
     () => getRecentlyTaughtExerciseIds(historyLogs as ClassHistoryLog[], 10, activeTargetGroupId),
     [historyLogs, activeTargetGroupId],
   );
 
-  const update = <K extends keyof AtlasDiscoveryFilters>(
-    key: K,
-    value: AtlasDiscoveryFilters[K],
-  ) => setFilters((previous) => ({ ...previous, [key]: value }));
+  const update = useCallback(
+    <K extends keyof AtlasDiscoveryFilters>(key: K, value: AtlasDiscoveryFilters[K]) =>
+      setFilters((previous) => ({ ...previous, [key]: value })),
+    [setFilters],
+  );
 
   const filtered = useMemo(() => {
     return exercises.filter((exercise) => {
@@ -339,7 +339,7 @@ export function useAtlasFilterEngine({
       });
     }
     return chips;
-  }, [filters]);
+  }, [filters, update]);
 
   return {
     filters,

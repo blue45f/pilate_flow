@@ -522,6 +522,7 @@ export function UpperBodyArmDiagramFigure({
       {/* 3-Phase Triptych Cards */}
       <div
         data-testid={`upper-body-triptych-${activeDiagramId}`}
+        className="movement-studio-phase-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',

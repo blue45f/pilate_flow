@@ -73,6 +73,8 @@ export const MAT_CATALOG_MOTION_OVERRIDES: Readonly<Record<string, CatalogMotion
     },
     'original-mat-knee-fold': {
       exerciseId: 'original-mat-knee-fold',
+      previewPhaseDurationsMs: [1000, 2400, 1000, 2400, 6000],
+      transitionPath: 'alternate-knee-fold',
       motionSubtitleKo: '수파인 코어 안정화 편측 테이블탑 니 폴드 도해',
       phaseLabelsKo: {
         setup: '수파인 골반 수평 · 심부 코어 선행 세팅',
@@ -99,6 +101,8 @@ export const MAT_CATALOG_MOTION_OVERRIDES: Readonly<Record<string, CatalogMotion
     },
     'original-mat-single-leg-stretch': {
       exerciseId: 'original-mat-single-leg-stretch',
+      previewPhaseDurationsMs: [1000, 2400, 1200, 2400, 3600],
+      transitionPath: 'through-middle',
       motionSubtitleKo: '수파인 컬업 유지 편측 하지 사선 리치 도해',
       phaseLabelsKo: {
         setup: '상체 컬업 · 테이블탑 및 한쪽 무릎 터치 준비',
@@ -182,7 +186,7 @@ export const MAT_CATALOG_MOTION_OVERRIDES: Readonly<Record<string, CatalogMotion
         setup: '어깨 아래 팔꿈치 전완 지지 · 무릎 매트 세팅',
         move: '날숨 · 복부 스쿱으로 골반 거상 및 사선 플랭크 연결',
         turn: '머리-흉추-골반-무릎 일직선 전완 플랭크 유지',
-        return: '들숨 · 견갑 지지 유지하며 골반 매트 하강',
+        return: '팔꿈치·전완·무릎 지지를 유지하며 시작 높이로 회수',
         finish: '전완 지지 준비 배치 복귀',
       },
       biomechFocusKo: '전완으로 매트를 밀어 전거근을 깨우고 요추 처짐 없이 전면 코어를 연결합니다.',

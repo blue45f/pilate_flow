@@ -13,11 +13,13 @@ import { getPelvisHipCatalogVisualAssets } from './pelvisHipDiagramData';
 import { getRotationI7IntegrationBundle } from './rotationDiagramData';
 import { getShoulderSupportRegistryIntegrationPayload } from './shoulderSupportDiagrams';
 import { getSpineCatalogMovementVisualAssets } from './spineArticulationDiagramData';
+import { resolveChairPedalTip } from '../utils/motionRigGeometry';
 import type {
   ApparatusType,
   BodyPosition,
   ClassBlockCategory,
   PilatesExercise,
+  PropType,
   SpinalPlane,
 } from '../types/pilates';
 
@@ -62,9 +64,11 @@ export interface RigJointMap {
   readonly farShoulder?: Point2D;
   readonly farElbow?: Point2D;
   readonly farWrist?: Point2D;
+  readonly farHand?: Point2D;
   readonly farHip?: Point2D;
   readonly farKnee?: Point2D;
   readonly farAnkle?: Point2D;
+  readonly farHeel?: Point2D;
   readonly farToe?: Point2D;
 }
 
@@ -137,6 +141,7 @@ export interface CatalogMovementVisualAsset {
   readonly nameKo: string;
   readonly nameEn: string;
   readonly apparatus: ApparatusType;
+  readonly props?: readonly PropType[];
   readonly bodyPosition: BodyPosition;
   readonly blockCategory: ClassBlockCategory;
   readonly spinalPlanes: readonly SpinalPlane[];
@@ -195,9 +200,11 @@ function makeJointMap(raw: RigJointMap): RigJointMap {
   if (raw.farShoulder) result.farShoulder = pt(raw.farShoulder.x, raw.farShoulder.y);
   if (raw.farElbow) result.farElbow = pt(raw.farElbow.x, raw.farElbow.y);
   if (raw.farWrist) result.farWrist = pt(raw.farWrist.x, raw.farWrist.y);
+  if (raw.farHand) result.farHand = pt(raw.farHand.x, raw.farHand.y);
   if (raw.farHip) result.farHip = pt(raw.farHip.x, raw.farHip.y);
   if (raw.farKnee) result.farKnee = pt(raw.farKnee.x, raw.farKnee.y);
   if (raw.farAnkle) result.farAnkle = pt(raw.farAnkle.x, raw.farAnkle.y);
+  if (raw.farHeel) result.farHeel = pt(raw.farHeel.x, raw.farHeel.y);
   if (raw.farToe) result.farToe = pt(raw.farToe.x, raw.farToe.y);
   return Object.freeze(result as unknown as RigJointMap);
 }
@@ -1768,156 +1775,87 @@ const ARCHETYPE_BLUEPRINTS_PART_A: readonly ArchetypeRigBlueprint[] = [
     },
   },
   {
+    // Source-text correction: OPC /reformer-footwork (reviewed 2026-11-13).
+    // The footbar is fixed; the supported body and carriage translate together.
+    // These are authored illustration coordinates, not measured teaching angles.
     archetypeId: 'reformer-supine-footwork',
-    archetypeTitleKo: '리포머 수파인 풋워크 (패럴렐 · V · 와이드 · 카프)',
+    archetypeTitleKo: '리포머 풋워크 · 고정 풋바와 캐리지 왕복',
     muscles: {
-      primary: 'quadriceps',
-      extraPrimary: 'glute-max',
-      stabilizer: 'core-transversus',
-      lengthening: 'calves',
+      primary: 'quadriceps', extraPrimary: 'glute-max',
+      stabilizer: 'core-transversus', lengthening: 'calves',
     },
     fixedAnchorJoints: [
-      { joint: 'heel', defaultSurfaceKo: '풋바(Footbar) 고정 접촉점' },
-      { joint: 'toe', defaultSurfaceKo: '풋바 발볼·발가락 지지점' },
+      { joint: 'heel', defaultSurfaceKo: '고정 풋바의 뒤꿈치 지지점' },
+      { joint: 'toe', defaultSurfaceKo: '설정한 발목·발끝 모양 유지' },
     ],
-    movingJoints: ['head', 'shoulder', 'thoracic', 'lumbar', 'pelvis', 'hip', 'knee'],
+    movingJoints: ['head', 'neck', 'shoulder', 'elbow', 'wrist', 'hand', 'thoracic', 'lumbar', 'pelvis', 'hip', 'knee', 'farShoulder', 'farElbow', 'farWrist', 'farHip', 'farKnee'],
     startJoints: makeJointMap({
-      head: { x: 86, y: 136 },
-      neck: { x: 102, y: 140 },
-      shoulder: { x: 120, y: 140 },
-      elbow: { x: 150, y: 144 },
-      wrist: { x: 180, y: 146 },
-      hand: { x: 190, y: 146 },
-      thoracic: { x: 148, y: 140 },
-      lumbar: { x: 176, y: 140 },
-      pelvis: { x: 204, y: 142 },
-      hip: { x: 212, y: 140 },
-      knee: { x: 242, y: 94 },
-      ankle: { x: 278, y: 132 },
-      heel: { x: 276, y: 138 },
-      toe: { x: 292, y: 124 },
-      farKnee: { x: 238, y: 90 },
-      farAnkle: { x: 274, y: 130 },
+      head: pt(92, 129), neck: pt(108, 128), shoulder: pt(122, 128),
+      elbow: pt(146, 135), wrist: pt(171, 136), hand: pt(182, 136),
+      thoracic: pt(145, 128), lumbar: pt(171, 127), pelvis: pt(195, 128),
+      hip: pt(203, 128), knee: pt(224, 86), ankle: pt(257, 120),
+      heel: pt(266, 126), toe: pt(278, 113),
+      farShoulder: pt(119, 126), farElbow: pt(143, 133), farWrist: pt(168, 134),
+      farHip: pt(199, 126), farKnee: pt(221, 84), farAnkle: pt(254, 118), farToe: pt(275, 111),
     }),
     middleJoints: makeJointMap({
-      head: { x: 42, y: 136 },
-      neck: { x: 58, y: 140 },
-      shoulder: { x: 76, y: 140 },
-      elbow: { x: 106, y: 144 },
-      wrist: { x: 136, y: 146 },
-      hand: { x: 146, y: 146 },
-      thoracic: { x: 104, y: 140 },
-      lumbar: { x: 132, y: 140 },
-      pelvis: { x: 160, y: 142 },
-      hip: { x: 168, y: 140 },
-      knee: { x: 224, y: 134 },
-      ankle: { x: 278, y: 132 },
-      heel: { x: 276, y: 138 },
-      toe: { x: 292, y: 124 },
-      farKnee: { x: 220, y: 130 },
-      farAnkle: { x: 274, y: 130 },
+      head: pt(54, 129), neck: pt(70, 128), shoulder: pt(84, 128),
+      elbow: pt(108, 135), wrist: pt(133, 136), hand: pt(144, 136),
+      thoracic: pt(107, 128), lumbar: pt(133, 127), pelvis: pt(157, 128),
+      hip: pt(165, 128), knee: pt(211, 114), ankle: pt(257, 120),
+      heel: pt(266, 126), toe: pt(278, 113),
+      farShoulder: pt(81, 126), farElbow: pt(105, 133), farWrist: pt(130, 134),
+      farHip: pt(161, 126), farKnee: pt(207, 112), farAnkle: pt(254, 118), farToe: pt(275, 111),
     }),
     endJoints: makeJointMap({
-      head: { x: 78, y: 136 },
-      neck: { x: 94, y: 140 },
-      shoulder: { x: 112, y: 140 },
-      elbow: { x: 142, y: 144 },
-      wrist: { x: 172, y: 146 },
-      hand: { x: 182, y: 146 },
-      thoracic: { x: 140, y: 140 },
-      lumbar: { x: 168, y: 140 },
-      pelvis: { x: 196, y: 142 },
-      hip: { x: 204, y: 140 },
-      knee: { x: 238, y: 98 },
-      ankle: { x: 278, y: 132 },
-      heel: { x: 276, y: 138 },
-      toe: { x: 292, y: 124 },
-      farKnee: { x: 234, y: 94 },
-      farAnkle: { x: 274, y: 130 },
+      head: pt(92, 129), neck: pt(108, 128), shoulder: pt(122, 128),
+      elbow: pt(146, 135), wrist: pt(171, 136), hand: pt(182, 136),
+      thoracic: pt(145, 128), lumbar: pt(171, 127), pelvis: pt(195, 128),
+      hip: pt(203, 128), knee: pt(224, 86), ankle: pt(257, 120),
+      heel: pt(266, 126), toe: pt(278, 113),
+      farShoulder: pt(119, 126), farElbow: pt(143, 133), farWrist: pt(168, 134),
+      farHip: pt(199, 126), farKnee: pt(221, 84), farAnkle: pt(254, 118), farToe: pt(275, 111),
     }),
-    carriageOffsets: [0, 44, 8],
+    carriageOffsets: [0, 38, 0],
     pedalAngles: [0, 0, 0],
-    phaseTitlesKo: ['홈 포지션 · 고관절-무릎-발목 정렬 세팅', '캐리지 프레스 아웃 · 하지 신전 정점', '마지막 5cm 편심성 브레이크 복귀'],
+    phaseTitlesKo: ['등과 머리를 지지하고 발 위치 준비', '풋바를 지지하며 캐리지 밀기', '무릎을 접으며 시작 자리로 복귀'],
     phaseSummariesKo: [
-      '풋바에 발뒤꿈치/발볼을 대칭으로 올리고 두 번째 발가락-슬개골-ASIS 라인을 일치시킵니다.',
-      '양발의 균등한 압력으로 캐리지를 밀어내어 무릎을 잠그지 않고 허벅지 안쪽과 둔근을 길게 연결합니다.',
-      '스프링 장력에 끌려가지 않도록 허벅지 뒤쪽과 코어로 감속하며 조용히 홈 직전까지 돌아옵니다.',
+      '등과 머리를 캐리지에 두고 뒤꿈치로 풋바를 지지한 기본 왕복 자세입니다. 다른 발 위치의 변형은 별도로 확인합니다.',
+      '발의 지지점을 유지하며 무릎을 펴고, 몸통과 캐리지가 함께 풋바에서 멀어집니다.',
+      '같은 발 위치를 유지하며 무릎을 접고 캐리지와 함께 시작 자리로 돌아옵니다.',
     ],
     breathCuesKo: [
-      '들숨: 중립 골반과 쇄골 수평 정렬 확인',
-      '날숨: 정수리가 반대쪽 벽으로 길어지듯 캐리지 프레스 아웃',
-      '들숨: 스토퍼가 쿵 부딪히지 않게 속근육 브레이크로 복귀',
+      '편안한 호흡으로 발과 등 지지를 확인합니다.',
+      '강사가 정한 호흡에 맞추어 부드럽게 밀어냅니다.',
+      '숨을 참지 않고 복귀 속도를 제어합니다.',
     ],
     alignments: {
-      start: [
-        {
-          id: 'footwork-knee-track',
-          labelKo: '고관절-슬개골-제2족지 정렬 축',
-          cueKo: '무릎이 안쪽(X자)이나 바깥쪽으로 흔들리지 않게 트래킹을 고정합니다.',
-          kind: 'axis-line',
-          from: pt(212, 140),
-          to: pt(278, 132),
-          cautionKo: '좌우 다리 미는 힘이 달라 골반이 회전하지 않도록 주의합니다.',
-        },
-      ],
-      middle: [
-        {
-          id: 'footwork-full-extension',
-          labelKo: '하지 수평 신전 & 캐리지 활주 축',
-          cueKo: '무릎 관절을 과신전(Locking)하지 말고 대퇴사두근·내전근으로 지탱합니다.',
-          kind: 'neutral-zone',
-          from: pt(76, 140),
-          to: pt(278, 132),
-          targetAngleDeg: 178,
-          cautionKo: '캐리지를 밀 때 어깨가 숄더블록에 과하게 눌리지 않게 합니다.',
-        },
-      ],
-      end: [
-        {
-          id: 'footwork-stopper-control',
-          labelKo: '스토퍼 직전 편심성 감속 구간',
-          cueKo: '고관절이 부드럽게 접히며 요추 중립 터널이 그대로 유지됩니다.',
-          kind: 'anchor-lock',
-          from: pt(196, 142),
-          to: pt(276, 138),
-          cautionKo: '복귀 마지막에 골반이 말리거나 캐리지가 쿵 소리를 내지 않게 합니다.',
-        },
-      ],
+      start: [{
+        id: 'footwork-knee-track', labelKo: '고관절·무릎·발 연결',
+        cueKo: '발 위치를 유지하며 무릎의 이동을 살펴봅니다.', kind: 'axis-line',
+        from: pt(203, 128), to: pt(257, 120), cautionKo: '표시는 관절 각도의 처방이나 측정값이 아닙니다.',
+      }],
+      middle: [{
+        id: 'footwork-full-extension', labelKo: '등 지지와 하지 신전',
+        cueKo: '등과 머리는 캐리지와 함께 움직이며 발은 풋바에 남습니다.', kind: 'neutral-zone',
+        from: pt(84, 128), to: pt(257, 120), cautionKo: '무릎을 끝까지 잠그거나 캐리지를 튕기지 않습니다.',
+      }],
+      end: [{
+        id: 'footwork-stopper-control', labelKo: '동일한 발 위치로 복귀',
+        cueKo: '발의 접점을 바꾸지 않고 캐리지의 복귀를 제어합니다.', kind: 'anchor-lock',
+        from: pt(195, 128), to: pt(266, 126), cautionKo: '개인별 이동 범위는 현장에서 확인합니다.',
+      }],
     },
     directionVectors: {
-      start: [
-        {
-          id: 'vec-footbar-anchor',
-          labelKo: '풋바 반발력 세팅',
-          kind: 'spring-resistance',
-          points: [pt(278, 132), pt(242, 94)],
-          phaseScope: 'start',
-        },
-      ],
-      middle: [
-        {
-          id: 'vec-carriage-glide-out',
-          labelKo: '캐리지 수평 활주(44px) & 무릎 신전',
-          kind: 'carriage-travel',
-          points: [pt(204, 142), pt(160, 142)],
-          phaseScope: 'start-to-middle',
-        },
-      ],
-      end: [
-        {
-          id: 'vec-carriage-glide-in',
-          labelKo: '스프링 저항 감속 복귀',
-          kind: 'return-control',
-          points: [pt(160, 142), pt(196, 142)],
-          phaseScope: 'middle-to-end',
-        },
-      ],
+      start: [{ id: 'vec-footbar-anchor', labelKo: '풋바 지지 확인', kind: 'spring-resistance', points: [pt(266, 126), pt(224, 86)], phaseScope: 'start' }],
+      middle: [{ id: 'vec-carriage-glide-out', labelKo: '몸통과 캐리지 함께 이동', kind: 'carriage-travel', points: [pt(195, 128), pt(157, 128)], phaseScope: 'start-to-middle' }],
+      end: [{ id: 'vec-carriage-glide-in', labelKo: '같은 경로로 제어 복귀', kind: 'return-control', points: [pt(157, 128), pt(195, 128)], phaseScope: 'middle-to-end' }],
     },
     poseDeltaSummary: {
-      startToMiddleKo: '발(ankle·heel)은 풋바(x:276~278)에 고정된 채 무릎이 펴지며 몸통과 골반(x:204→160)이 캐리지와 함께 44px 활주합니다.',
-      middleToEndKo: '무릎(knee y:134→98)이 다시 굴곡되며 캐리지가 감속 복귀(pelvis x:160→196)합니다.',
-      invariantAnchorsKo: '풋바 위의 발목(ankle), 뒤꿈치(heel), 발끝(toe) 접촉점이 기준 앵커로 유지됩니다.',
-      keyJointChangeKo: '슬관절 굴곡→신전(knee Δ44px) + 캐리지 전신 수평 활주(pelvis/head Δ44px)',
+      startToMiddleKo: '풋바의 발 접점을 유지하고 몸통과 캐리지가 같은 방향·거리로 이동합니다.',
+      middleToEndKo: '발은 그대로 둔 채 무릎을 접어 처음의 캐리지 위치로 돌아옵니다.',
+      invariantAnchorsKo: '발목·뒤꿈치·발끝의 위치는 고정된 풋바를 기준으로 유지합니다.',
+      keyJointChangeKo: '고정 풋바 지지 · 무릎 신전과 캐리지 동반 이동',
     },
   },
   {
@@ -5034,6 +4972,306 @@ function buildSemanticOverrideBlueprint(spec: SemanticOverrideSpec): ArchetypeRi
 }
 
 /**
+ * Catalog-cue/contact corrections. These are authored teaching diagrams, not
+ * traced video frames or professionally approved anatomical measurements.
+ * Keep these explicit: a title keyword must not replace a different support.
+ */
+function resolveAuditedSupportBlueprint(exercise: PilatesExercise): ArchetypeRigBlueprint | null {
+  const bilateral = (raw: RigJointMap): RigJointMap => makeJointMap({
+    ...raw,
+    farShoulder: raw.farShoulder ?? pt(raw.shoulder.x - 5, raw.shoulder.y - 2),
+    farElbow: raw.farElbow ?? pt(raw.elbow.x - 5, raw.elbow.y - 2),
+    farWrist: raw.farWrist ?? pt(raw.wrist.x - 5, raw.wrist.y - 2),
+    farHand: raw.farHand ?? pt(raw.hand.x - 5, raw.hand.y - 2),
+    farHip: raw.farHip ?? pt(raw.hip.x - 5, raw.hip.y - 2),
+    farKnee: raw.farKnee ?? pt(raw.knee.x - 5, raw.knee.y - 2),
+    farAnkle: raw.farAnkle ?? pt(raw.ankle.x - 5, raw.ankle.y),
+    farHeel: raw.farHeel ?? pt(raw.heel.x - 5, raw.heel.y),
+    farToe: raw.farToe ?? pt(raw.toe.x - 5, raw.toe.y),
+  });
+  const corrected = (spec: {
+    id: string; title: string; base: string; start: RigJointMap; middle: RigJointMap;
+    anchors: readonly { joint: keyof RigJointMap; defaultSurfaceKo: string }[];
+    moving: readonly (keyof RigJointMap)[]; titles: readonly [string, string, string];
+    change: string; invariant: string; focus: keyof RigJointMap;
+    carriage?: readonly [number, number, number]; pedal?: readonly [number, number, number];
+  }): ArchetypeRigBlueprint => {
+    const start = bilateral(spec.start);
+    const middle = bilateral(spec.middle);
+    const focusStart = start[spec.focus] ?? start.head;
+    const focusMiddle = middle[spec.focus] ?? middle.head;
+    return buildSemanticOverrideBlueprint({
+      archetypeId: spec.id, archetypeTitleKo: spec.title, baseArchetypeId: spec.base,
+      fixedAnchorJoints: spec.anchors, movingJoints: spec.moving,
+      startJoints: start, middleJoints: middle, endJoints: start,
+      carriageOffsets: spec.carriage ?? [0, 0, 0], pedalAngles: spec.pedal ?? [0, 0, 0],
+      phaseTitlesKo: spec.titles,
+      startToMiddleKo: spec.change,
+      middleToEndKo: '동일한 지지 관계를 유지하며 시작 자세로 천천히 돌아옵니다. 별도 변형이나 다음 동작으로의 전환은 이 대표 사이클에 포함하지 않습니다.',
+      invariantAnchorsKo: spec.invariant,
+      keyJointChangeKo: `${spec.title} (자체 제작 2D 대표 자세 · 해부학적 실측 아님)`,
+      middleVectorLabelKo: spec.titles[1], middleVectorKind: 'limb-excursion',
+      middleVectorPoints: [focusStart, focusMiddle],
+      endVectorLabelKo: spec.titles[2], endVectorPoints: [focusMiddle, focusStart],
+    });
+  };
+
+  if (exercise.id === 'ex-cooldown-02') {
+    const start = bilateral({
+      head: pt(150, 35), neck: pt(150, 49), shoulder: pt(150, 63),
+      elbow: pt(152, 87), wrist: pt(153, 111), hand: pt(154, 119),
+      thoracic: pt(150, 79), lumbar: pt(151, 95), pelvis: pt(152, 110),
+      hip: pt(156, 111), knee: pt(158, 140), ankle: pt(154, 169),
+      heel: pt(148, 176), toe: pt(170, 176),
+    });
+    const middle = bilateral({
+      ...start, head: pt(201, 122), neck: pt(195, 108), shoulder: pt(186, 98),
+      elbow: pt(193, 123), wrist: pt(197, 148), hand: pt(198, 157),
+      thoracic: pt(174, 82), lumbar: pt(160, 94),
+      farShoulder: pt(181, 96), farElbow: pt(188, 121),
+      farWrist: pt(192, 146), farHand: pt(193, 155),
+    });
+    return corrected({
+      id: 'standing-roll-down-centering', title: '서서 롤다운 · 발바닥 지지와 척추 복귀',
+      base: 'standing-roll-down-centering', start, middle,
+      anchors: ['heel', 'toe', 'farHeel', 'farToe'].map((joint) => ({ joint: joint as keyof RigJointMap, defaultSurfaceKo: '바닥의 양발 지지' })),
+      moving: ['head', 'neck', 'shoulder', 'thoracic', 'lumbar', 'elbow', 'wrist', 'hand', 'farShoulder', 'farElbow', 'farWrist', 'farHand'],
+      titles: ['양발로 선 준비 자세', '발을 유지하며 몸통을 둥글게 내리기', '팔을 내려 둔 선 자세로 복귀'],
+      change: '앉은 롤백과 분리하여 양발을 바닥에 둔 채 머리·흉곽이 앞으로 내려갑니다. 팔은 편안하게 늘어뜨리고 다시 선 준비 자세로 돌아옵니다.',
+      invariant: '양발 뒤꿈치·발볼과 하체 지지를 유지합니다. 매트로 눕는 롤백은 표시하지 않습니다.', focus: 'head',
+    });
+  }
+
+  if (exercise.id === 'original-mat-forearm-plank') {
+    const start = bilateral({
+      head: pt(96, 91), neck: pt(107, 100), shoulder: pt(117, 106),
+      elbow: pt(114, 143), wrist: pt(82, 143), hand: pt(69, 144),
+      thoracic: pt(143, 111), lumbar: pt(168, 119), pelvis: pt(191, 126),
+      hip: pt(197, 128), knee: pt(226, 143), ankle: pt(264, 143),
+      heel: pt(267, 139), toe: pt(281, 145),
+      farElbow: pt(108, 142), farWrist: pt(76, 142), farHand: pt(63, 143),
+      farKnee: pt(220, 142), farAnkle: pt(258, 142), farHeel: pt(261, 138), farToe: pt(275, 144),
+    });
+    const middle = bilateral({ ...start, thoracic: pt(143, 108), lumbar: pt(168, 117), shoulder: pt(117, 104), farShoulder: pt(112, 102) });
+    return corrected({
+      id: 'mat-kneeling-forearm-support', title: '무릎 지지 전완 플랭크 · 전완과 양무릎 지지',
+      base: 'plank-long-stretch-chair-pike', start, middle,
+      anchors: ['elbow', 'wrist', 'knee', 'farElbow', 'farWrist', 'farKnee'].map((joint) => ({ joint: joint as keyof RigJointMap, defaultSurfaceKo: '매트의 전완·무릎 지지면' })),
+      moving: ['shoulder', 'farShoulder', 'thoracic', 'lumbar'],
+      titles: ['전완과 무릎을 매트에 둔 준비', '지지면을 유지하며 짧게 호흡', '같은 지지 자세에서 마무리'],
+      change: '팔꿈치부터 손목까지 전완과 두 무릎이 매트에 남습니다. 작은 흉곽 지지 변화만 표현하며 손 플랭크·푸시업·발끝 지지로 바뀌지 않습니다.',
+      invariant: '전완과 무릎 접촉을 세 자세와 중간 경로에서 유지합니다.', focus: 'thoracic',
+    });
+  }
+
+  if (exercise.id === 'original-chair-incline-support') {
+    const start = bilateral({
+      head: pt(209, 42), neck: pt(210, 53), shoulder: pt(211, 64),
+      elbow: pt(198, 86), wrist: pt(190, 103), hand: pt(184, 106),
+      thoracic: pt(224, 79), lumbar: pt(236, 92), pelvis: pt(244, 101),
+      hip: pt(247, 105), knee: pt(267, 138), ankle: pt(286, 169),
+      heel: pt(293, 174), toe: pt(277, 176),
+      farWrist: pt(184, 102), farHand: pt(178, 105),
+      farHip: pt(242, 103), farKnee: pt(261, 136), farAnkle: pt(280, 169),
+      farHeel: pt(287, 174), farToe: pt(271, 176),
+    });
+    const middle = bilateral({ ...start, shoulder: pt(211, 62), farShoulder: pt(206, 60), thoracic: pt(224, 77), lumbar: pt(236, 90) });
+    return corrected({
+      id: 'chair-fixed-seat-incline-support', title: '체어 고정 좌면 플랭크 준비 · 손은 시트, 발은 바닥',
+      base: 'plank-long-stretch-chair-pike', start, middle,
+      anchors: [
+        { joint: 'hand', defaultSurfaceKo: '고정 좌면 상단 y=106' },
+        { joint: 'farHand', defaultSurfaceKo: '고정 좌면 상단 y=105' },
+        { joint: 'toe', defaultSurfaceKo: '체어 바깥 바닥 지지' },
+        { joint: 'farToe', defaultSurfaceKo: '체어 바깥 바닥 지지' },
+      ],
+      moving: ['shoulder', 'farShoulder', 'thoracic', 'lumbar'],
+      titles: ['고정 좌면에 손을 대고 바닥에 서기', '페달을 쓰지 않고 사선 지지 유지', '같은 고정 지지 자세로 마무리'],
+      change: '발은 체어 밖 바닥에 남고 손은 고정 좌면에 둡니다. 가동 페달을 밟거나 골반을 파이크로 올리는 모델과 분리합니다.',
+      invariant: '고정 좌면 손 지지·바닥 발 지지·정지 페달을 유지합니다.', focus: 'thoracic',
+    });
+  }
+
+  if (exercise.id === 'original-barrel-supported-arm-reach') {
+    const start = bilateral({
+      head: pt(140, 35), neck: pt(140, 48), shoulder: pt(140, 62),
+      elbow: pt(153, 85), wrist: pt(151, 109), hand: pt(148, 118),
+      thoracic: pt(140, 79), lumbar: pt(140, 96), pelvis: pt(140, 112),
+      hip: pt(145, 113), knee: pt(149, 141), ankle: pt(146, 169),
+      heel: pt(140, 176), toe: pt(161, 176),
+      farShoulder: pt(133, 60), farElbow: pt(110, 77), farWrist: pt(86, 85), farHand: pt(84, 85),
+    });
+    const middle = bilateral({ ...start, elbow: pt(163, 60), wrist: pt(188, 62), hand: pt(198, 62) });
+    return corrected({
+      id: 'barrel-one-hand-supported-arm-reach', title: '바렐 지지 암 리치 · 한 손 래더 지지',
+      base: 'standing-ankle-calf-upper-reach', start, middle,
+      anchors: [
+        { joint: 'farHand', defaultSurfaceKo: '고정 래더 가로대 x=84, y=85' },
+        { joint: 'heel', defaultSurfaceKo: '바닥 뒤꿈치 지지' },
+        { joint: 'farHeel', defaultSurfaceKo: '바닥 반대 뒤꿈치 지지' },
+      ],
+      moving: ['elbow', 'wrist', 'hand'],
+      titles: ['한 손으로 래더를 짚고 서기', '지지 손을 둔 채 반대 팔 앞으로 리치', '양발 지지를 유지하며 팔 복귀'],
+      change: '반대쪽 손은 래더 가로대에 고정하고 가까운 팔만 앞으로 뻗습니다. 발뒤꿈치를 드는 카프 레이즈와 분리합니다.',
+      invariant: '고정 손·몸통·양발 지지가 유지됩니다.', focus: 'hand',
+    });
+  }
+
+  if (exercise.id === 'original-reformer-side-lying-press') {
+    const start = bilateral({
+      head: pt(88, 124), neck: pt(103, 126), shoulder: pt(118, 126),
+      elbow: pt(110, 139), wrist: pt(84, 124), hand: pt(86, 120),
+      thoracic: pt(140, 126), lumbar: pt(164, 127), pelvis: pt(184, 127),
+      hip: pt(194, 124), knee: pt(230, 89), ankle: pt(263, 116),
+      heel: pt(266, 126), toe: pt(266, 109),
+      farShoulder: pt(115, 123), farElbow: pt(145, 116), farWrist: pt(158, 134), farHand: pt(151, 138),
+      // The lower leg stays folded on the carriage; it must not float beyond
+      // the carriage end while the upper leg presses the fixed footbar.
+      farHip: pt(188, 132), farKnee: pt(222, 133), farAnkle: pt(194, 136), farHeel: pt(198, 138), farToe: pt(181, 140),
+    });
+    const moving: (keyof RigJointMap)[] = ['head', 'neck', 'shoulder', 'elbow', 'wrist', 'hand', 'thoracic', 'lumbar', 'pelvis', 'hip', 'farShoulder', 'farElbow', 'farWrist', 'farHand', 'farHip', 'farKnee', 'farAnkle', 'farHeel', 'farToe'];
+    const translated = { ...start } as Record<keyof RigJointMap, Point2D>;
+    for (const key of moving) {
+      const point = start[key];
+      if (point) translated[key] = pt(point.x - 20, point.y);
+    }
+    const middle = bilateral({ ...translated, knee: pt(218, 112) });
+    return corrected({
+      id: 'reformer-side-lying-footbar-press', title: '사이드 라잉 레그 프레스 · 풋바 접촉과 캐리지 왕복',
+      base: 'side-lying-leg-press-sweep', start, middle,
+      anchors: [
+        { joint: 'heel', defaultSurfaceKo: '고정 풋바 접점 (266,126)' },
+        { joint: 'toe', defaultSurfaceKo: '풋바를 향한 발바닥 방향' },
+      ], moving: [...moving, 'knee'], carriage: [0, 20, 0],
+      titles: ['옆누운 지지와 풋바 발 접촉', '발은 풋바에 두고 캐리지 밀기', '무릎을 접으며 캐리지 복귀'],
+      change: '머리·몸통·아래쪽 다리는 캐리지와 함께 움직이고 위쪽 발의 풋바 접촉은 유지합니다. 발이 공중으로 벌어지는 외전 그림을 제거합니다.',
+      invariant: '풋바 발 접촉과 옆누운 머리·골반 지지를 유지합니다.', focus: 'pelvis',
+    });
+  }
+
+  if (['ex-upper-01', 'ex-kr-reformer-03', 'ex-global-reformer-03'].includes(exercise.id)) {
+    const start = bilateral({
+      head: pt(148, 30), neck: pt(149, 43), shoulder: pt(150, 57),
+      elbow: pt(171, 80), wrist: pt(186, 104), hand: pt(192, 109),
+      thoracic: pt(152, 73), lumbar: pt(156, 88), pelvis: pt(160, 103),
+      hip: pt(162, 105), knee: pt(164, 137), ankle: pt(124, 137),
+      heel: pt(120, 132), toe: pt(109, 140),
+      farKnee: pt(158, 136), farAnkle: pt(118, 136), farHeel: pt(114, 131), farToe: pt(103, 139),
+    });
+    const middle = bilateral({
+      ...start, elbow: pt(136, 84), wrist: pt(122, 109), hand: pt(116, 114),
+      farElbow: pt(131, 82), farWrist: pt(117, 107), farHand: pt(111, 112),
+    });
+    return corrected({
+      id: 'reformer-kneeling-supported-arm-press', title: '리포머 닐링 팔 프레스 대표 · 캐리지 위 무릎 지지',
+      base: 'kneeling-chest-expansion-triceps', start, middle,
+      anchors: ['knee', 'ankle', 'farKnee', 'farAnkle'].map((joint) => ({ joint: joint as keyof RigJointMap, defaultSurfaceKo: '캐리지 상면 y=142 위 무릎·정강이 지지' })),
+      moving: ['elbow', 'wrist', 'hand', 'farElbow', 'farWrist', 'farHand'],
+      titles: ['캐리지 위 톨 닐링 준비', '무릎 지지를 유지한 팔 프레스 대표', '몸통을 유지하며 팔 복귀'],
+      change: '무릎·정강이·발등을 캐리지 상면에 두고 팔만 앞뒤로 이동합니다. 수업 전체·로잉·트위스트의 모든 변형을 대표하지는 않습니다.',
+      invariant: '무릎과 정강이가 캐리지 아래로 내려가지 않으며 몸통 기둥을 유지합니다.', focus: 'hand',
+    });
+  }
+
+  if (exercise.id === 'ex-core-02') {
+    const start = bilateral({
+      head: pt(140, 35), neck: pt(140, 48), shoulder: pt(140, 63),
+      elbow: pt(158, 83), wrist: pt(144, 89), hand: pt(135, 86),
+      thoracic: pt(140, 80), lumbar: pt(140, 98), pelvis: pt(142, 115),
+      hip: pt(148, 115), knee: pt(196, 117), ankle: pt(244, 135),
+      heel: pt(242, 141), toe: pt(257, 133),
+    });
+    const middle = bilateral({
+      ...start, head: pt(114, 46), neck: pt(120, 58), shoulder: pt(124, 71),
+      elbow: pt(149, 92), wrist: pt(134, 94), hand: pt(125, 91),
+      thoracic: pt(129, 87), lumbar: pt(137, 103),
+      farShoulder: pt(119, 69), farElbow: pt(144, 90), farWrist: pt(129, 92), farHand: pt(120, 89),
+    });
+    return corrected({
+      id: 'reformer-short-box-supported-roll-back', title: '숏박스 라운드백 대표 · 박스 좌골과 발 스트랩 지지',
+      base: 'seated-roll-back-spine-twist', start, middle,
+      anchors: [
+        { joint: 'pelvis', defaultSurfaceKo: '숏박스 상면 y=123의 좌골 지지' },
+        { joint: 'ankle', defaultSurfaceKo: '고정 풋 스트랩 아래 발 지지' },
+        { joint: 'farAnkle', defaultSurfaceKo: '고정 풋 스트랩 아래 반대발 지지' },
+      ],
+      moving: ['head', 'neck', 'shoulder', 'thoracic', 'lumbar', 'elbow', 'wrist', 'hand', 'farShoulder', 'farElbow', 'farWrist', 'farHand'],
+      titles: ['박스 위 좌골과 스트랩 발 지지', '골반 지지를 유지한 작은 라운드백', '박스 위 수직 준비 자세로 복귀'],
+      change: '골반이 박스 뒤의 캐리지에 내려앉지 않도록 박스 상면에 맞춥니다. 발 지지를 유지한 라운드백 준비만 표시하며 플랫백·회전은 별도 변형입니다.',
+      invariant: '박스 위 좌골과 고정 발 스트랩 지지가 세 자세에서 유지됩니다.', focus: 'head',
+    });
+  }
+
+  if (exercise.id === 'ex-lower-03') {
+    const pedalStart = resolveChairPedalTip(28);
+    const pedalMiddle = resolveChairPedalTip(12);
+    const start = bilateral({
+      head: pt(181, 27), neck: pt(185, 39), shoulder: pt(188, 51),
+      elbow: pt(207, 68), wrist: pt(198, 83), hand: pt(190, 84),
+      thoracic: pt(190, 64), lumbar: pt(191, 75), pelvis: pt(192, 86),
+      hip: pt(196, 88), knee: pt(158, 68), ankle: pt(170, 99),
+      heel: pt(176, 105), toe: pt(150, 105),
+      farShoulder: pt(182, 49), farElbow: pt(170, 67), farWrist: pt(181, 81), farHand: pt(187, 84),
+      farHip: pt(202, 87), farKnee: pt(232, 115),
+      farAnkle: pt(pedalStart.x + 8, pedalStart.y - 8),
+      farHeel: pt(pedalStart.x + 12, pedalStart.y - 5), farToe: pt(pedalStart.x, pedalStart.y),
+    });
+    const middle = bilateral({
+      ...start, head: pt(174, 16), neck: pt(178, 28), shoulder: pt(181, 40),
+      elbow: pt(200, 57), wrist: pt(191, 72), hand: pt(183, 73),
+      thoracic: pt(183, 53), lumbar: pt(184, 64), pelvis: pt(185, 75),
+      hip: pt(189, 77), knee: pt(151, 69),
+      farShoulder: pt(175, 38), farElbow: pt(163, 56), farWrist: pt(174, 70), farHand: pt(180, 73),
+      farHip: pt(195, 76), farKnee: pt(224, 105),
+      farAnkle: pt(pedalMiddle.x + 8, pedalMiddle.y - 8),
+      farHeel: pt(pedalMiddle.x + 12, pedalMiddle.y - 5), farToe: pt(pedalMiddle.x, pedalMiddle.y),
+    });
+    return corrected({
+      id: 'chair-seat-pedal-step-up', title: '체어 포워드 스텝업 대표 · 시트 앞발과 페달 뒷발',
+      base: 'standing-scooter-lunge-splits', start, middle, pedal: [28, 12, 28],
+      anchors: [
+        { joint: 'heel', defaultSurfaceKo: '고정 좌면 상단 y=105의 앞발 뒤꿈치' },
+        { joint: 'toe', defaultSurfaceKo: '고정 좌면 상단 y=105의 앞발 발볼' },
+      ],
+      moving: ['head', 'neck', 'shoulder', 'thoracic', 'lumbar', 'pelvis', 'hip', 'knee', 'elbow', 'wrist', 'hand', 'farShoulder', 'farElbow', 'farWrist', 'farHand', 'farHip', 'farKnee', 'farAnkle', 'farHeel', 'farToe'],
+      titles: ['앞발은 시트, 뒷발은 페달에 세팅', '앞발 지지를 유지하며 작은 스텝업', '페달 접촉을 유지하며 제어 하강'],
+      change: '앞발은 좌면 위에 고정하고 반대 발볼은 회전 페달 끝을 따라 움직입니다. 완전한 올라서기나 빠른 마운틴 클라이머는 포함하지 않는 작은 스텝업 대표 자세입니다.',
+      invariant: '앞발의 시트 접촉과 뒷발의 가동 페달 접촉을 구분합니다.', focus: 'pelvis',
+    });
+  }
+
+  if (exercise.id === 'ex-warmup-03') {
+    const start = bilateral({
+      head: pt(58, 124), neck: pt(75, 126), shoulder: pt(94, 126),
+      elbow: pt(113, 102), wrist: pt(126, 76), hand: pt(129, 67),
+      thoracic: pt(124, 126), lumbar: pt(152, 126), pelvis: pt(174, 126),
+      hip: pt(184, 126), knee: pt(220, 93), ankle: pt(252, 140),
+      heel: pt(247, 146), toe: pt(267, 146),
+      farKnee: pt(215, 91), farAnkle: pt(247, 139), farHeel: pt(242, 145), farToe: pt(262, 145),
+    });
+    const middle = bilateral({
+      ...start, elbow: pt(75, 102), wrist: pt(54, 76), hand: pt(45, 70),
+      farElbow: pt(70, 100), farWrist: pt(49, 74), farHand: pt(40, 68),
+    });
+    return corrected({
+      id: 'mat-longitudinal-roller-arm-arc', title: '길이방향 폼롤러 지지 · 팔 아크 대표',
+      base: 'supine-breath-pelvic-clock', start, middle,
+      anchors: [
+        { joint: 'head', defaultSurfaceKo: '길이방향 폼롤러 위 뒤통수 지지' },
+        { joint: 'pelvis', defaultSurfaceKo: '길이방향 폼롤러 위 골반 지지' },
+        { joint: 'heel', defaultSurfaceKo: '매트 위 굽힌 다리 발 지지' },
+        { joint: 'farHeel', defaultSurfaceKo: '매트 위 반대발 지지' },
+      ],
+      moving: ['elbow', 'wrist', 'hand', 'farElbow', 'farWrist', 'farHand'],
+      titles: ['뒤통수부터 골반까지 롤러 지지', '양발을 유지하며 팔 아크', '롤러 지지를 유지하며 팔 복귀'],
+      change: '뒤통수·흉곽·골반을 길이방향 롤러 높이에 맞추고 양발을 매트에 둡니다. 흉추 릴리즈 전체나 원형 팔 경로의 모든 평면을 표시하지 않는 팔 아크 대표입니다.',
+      invariant: '길이방향 롤러의 몸통 지지와 매트의 양발 지지를 분리합니다.', focus: 'hand',
+    });
+  }
+  return null;
+}
+
+/**
  * Round 4 & Round 5 Semantic Audit minimal blueprint differentiation for clear-evidence mismatches
  * (SM-01..SM-09, including Round 5 pure breath-observation 4 exercises).
  * Clinical/anatomical accuracy is NOT assumed (anatomicalAccuracyAssumed: false).
@@ -5041,6 +5279,106 @@ function buildSemanticOverrideBlueprint(spec: SemanticOverrideSpec): ArchetypeRi
 function resolveSeparatedSemanticMismatchBlueprint(
   exercise: PilatesExercise,
 ): ArchetypeRigBlueprint | null {
+  // Source-text comparison: OPC /mat-swimming (2026-11-13). The shared renderer
+  // assigns near arm and near leg to the same anatomical side, so a diagonal
+  // reach must move the near arm with the FAR leg. This is a slow preparation,
+  // not a captured frame sequence of full-speed alternating Swimming.
+  if (exercise.id === 'original-mat-swimming-prep') {
+    const startJoints = makeJointMap({
+      head: pt(75, 130), neck: pt(89, 132), shoulder: pt(102, 133),
+      elbow: pt(70, 138), wrist: pt(40, 142), hand: pt(26, 143),
+      thoracic: pt(126, 134), lumbar: pt(150, 135), pelvis: pt(174, 135),
+      hip: pt(183, 135), knee: pt(221, 139), ankle: pt(263, 140),
+      heel: pt(267, 138), toe: pt(280, 143),
+      farShoulder: pt(99, 130), farElbow: pt(68, 135), farWrist: pt(38, 140),
+      farHip: pt(180, 132), farKnee: pt(219, 137), farAnkle: pt(260, 138), farToe: pt(277, 140),
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      elbow: pt(70, 124), wrist: pt(40, 117), hand: pt(26, 116),
+      farKnee: pt(219, 122), farAnkle: pt(260, 115), farToe: pt(277, 113),
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: 'mat-swimming-contralateral-prep',
+      archetypeTitleKo: '스위밍 준비 · 반대 팔과 다리의 긴 리치',
+      baseArchetypeId: 'prone-swan-pulling-straps-swimming',
+      fixedAnchorJoints: [
+        { joint: 'pelvis', defaultSurfaceKo: '골반 앞면 매트 지지' },
+        { joint: 'lumbar', defaultSurfaceKo: '몸통의 시작 정렬 유지' },
+        { joint: 'farWrist', defaultSurfaceKo: '움직이지 않는 쪽 팔의 긴 지지' },
+        { joint: 'ankle', defaultSurfaceKo: '움직이지 않는 쪽 다리의 긴 지지' },
+      ],
+      movingJoints: ['elbow', 'wrist', 'hand', 'farKnee', 'farAnkle', 'farToe'],
+      startJoints, middleJoints, endJoints: startJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ['엎드려 팔과 다리를 길게 준비', '한쪽 팔과 반대쪽 다리 리치', '길이를 유지하며 준비 자세로 복귀'],
+      phaseSummariesKo: [
+        '팔은 머리 앞쪽으로, 다리는 뒤쪽으로 길게 둔 준비 자세입니다.',
+        '몸통을 유지하고 한쪽 팔과 반대쪽 다리를 멀리 뻗습니다. 팔로 바닥을 밀어 상체를 세우는 동작과 구분합니다.',
+        '움직인 팔과 다리를 길게 내려놓습니다. 반대 대각선은 좌우 전환으로 비교할 수 있습니다.',
+      ],
+      startToMiddleKo: '가까운 팔과 먼 다리가 교차해 움직이고 몸통과 지지측 사지는 같은 자리에 남습니다.',
+      middleToEndKo: '교차한 팔과 다리를 시작 높이로 되돌리며 몸통을 유지합니다.',
+      invariantAnchorsKo: '골반·허리와 지지측 팔·다리의 위치를 유지합니다.',
+      keyJointChangeKo: '팔과 반대 다리의 대각선 리치 · 몸통 고정',
+      middleVectorLabelKo: '머리 앞쪽으로 길게 리치', middleVectorKind: 'limb-excursion',
+      middleVectorPoints: [startJoints.hand, middleJoints.hand],
+      endVectorLabelKo: '교차 사지를 준비 위치로 복귀',
+      endVectorPoints: [middleJoints.hand, startJoints.hand],
+    });
+  }
+
+  // Chest lift is a small upper-trunk curl, not the previously assigned full roll-up.
+  // Source descriptions: Physitrack /pilates-chest-lift and Pilates Anytime tutorial 3046.
+  // Coordinates are authored artwork; they do not encode a prescribed joint angle.
+  if (exercise.id === 'original-mat-chest-lift') {
+    const startJoints = makeJointMap({
+      head: pt(60, 132), neck: pt(76, 136), shoulder: pt(90, 138),
+      elbow: pt(98, 112), wrist: pt(56, 126), hand: pt(50, 128),
+      thoracic: pt(112, 140), lumbar: pt(136, 140), pelvis: pt(160, 142),
+      hip: pt(168, 140), knee: pt(202, 102), ankle: pt(232, 142),
+      heel: pt(238, 148), toe: pt(255, 148),
+      farShoulder: pt(88, 135), farElbow: pt(92, 106), farWrist: pt(52, 122),
+      farHip: pt(164, 137), farKnee: pt(198, 99), farAnkle: pt(228, 140),
+      farToe: pt(251, 146),
+    });
+    const middleJoints = makeJointMap({
+      ...startJoints,
+      head: pt(76, 105), neck: pt(88, 115), shoulder: pt(100, 124),
+      elbow: pt(124, 104), wrist: pt(75, 100), hand: pt(67, 104),
+      thoracic: pt(120, 137),
+      farShoulder: pt(98, 121), farElbow: pt(118, 98), farWrist: pt(71, 96),
+    });
+    return buildSemanticOverrideBlueprint({
+      archetypeId: 'mat-chest-lift-supported-head',
+      archetypeTitleKo: '체스트 리프트 · 머리 지지와 작은 흉곽 컬업',
+      baseArchetypeId: 'supine-chest-lift-curl',
+      fixedAnchorJoints: [
+        { joint: 'pelvis', defaultSurfaceKo: '골반·천골 매트 지지' },
+        { joint: 'lumbar', defaultSurfaceKo: '허리의 시작 정렬 유지' },
+        { joint: 'heel', defaultSurfaceKo: '굽힌 무릎 아래 발바닥 지지' },
+        { joint: 'toe', defaultSurfaceKo: '발 앞쪽 매트 지지' },
+      ],
+      movingJoints: ['head', 'neck', 'shoulder', 'thoracic', 'elbow', 'wrist', 'hand', 'farShoulder', 'farElbow', 'farWrist'],
+      startJoints, middleJoints, endJoints: startJoints,
+      carriageOffsets: [0, 0, 0], pedalAngles: [0, 0, 0],
+      phaseTitlesKo: ['무릎을 굽혀 발 지지 · 머리 받치기', '골반을 두고 머리·가슴을 함께 컬업', '상체를 부드럽게 매트로 복귀'],
+      phaseSummariesKo: [
+        '등을 대고 무릎을 굽힌 자세에서 손으로 머리를 받칩니다.',
+        '발과 골반 위치를 유지하며 머리와 가슴을 함께 작은 범위로 들어 올립니다.',
+        '손의 지지를 유지하면서 상체를 시작 자세로 내려놓습니다.',
+      ],
+      startToMiddleKo: '발과 골반은 같은 자리에 두고 상부 몸통만 작은 곡선으로 올라옵니다.',
+      middleToEndKo: '몸통을 완전히 세우지 않고 머리와 가슴을 시작 지지면으로 돌려놓습니다.',
+      invariantAnchorsKo: '양발과 골반·허리의 시작 위치를 유지합니다.',
+      keyJointChangeKo: '머리·상부 흉곽의 작은 굴곡 · 하체 지지 유지',
+      middleVectorLabelKo: '작은 상부 몸통 컬업', middleVectorKind: 'spine-articulation',
+      middleVectorPoints: [startJoints.head, pt(65, 115), middleJoints.head],
+      endVectorLabelKo: '제어하며 시작으로 복귀',
+      endVectorPoints: [middleJoints.head, startJoints.head],
+    });
+  }
+
   // Round 5-A: Mat Supine Breath Observation (stationary arms/legs on mat y:148 + pure ribcage breath modulation)
   if (exercise.id === "original-mat-rib-breath") {
     const startJoints = makeJointMap({
@@ -5912,6 +6250,8 @@ function resolveSeparatedSemanticMismatchBlueprint(
 }
 
 function resolveArchetypeBlueprint(exercise: PilatesExercise): ArchetypeRigBlueprint {
+  const auditedSupport = resolveAuditedSupportBlueprint(exercise);
+  if (auditedSupport) return auditedSupport;
   const separated = resolveSeparatedSideLyingBlueprint(exercise);
   if (separated) return separated;
   const semanticSeparated = resolveSeparatedSemanticMismatchBlueprint(exercise);
@@ -6021,6 +6361,7 @@ function resolveSpringTensionLevel(
     exercise.apparatus === 'barrel' ||
     exercise.id === 'original-cadillac-table-breath' ||
     exercise.id === 'original-chair-seated-breath' ||
+    exercise.id === 'original-chair-incline-support' ||
     cuesText.includes('스프링을 사용하지 않고') ||
     s.includes('bodyweight') ||
     s.includes('스프링 사용 없음') ||
@@ -6194,6 +6535,7 @@ export function buildMovementVisualAssetForExercise(
     nameKo: exercise.nameKo,
     nameEn: exercise.nameEn,
     apparatus: exercise.apparatus,
+    props: Object.freeze([...exercise.props]),
     bodyPosition: exercise.bodyPosition,
     blockCategory: exercise.blockCategory,
     spinalPlanes: Object.freeze([...exercise.spinalPlanes]),
@@ -6234,6 +6576,23 @@ export function buildMovementVisualAssetForExercise(
 }
 
 const PROTECTED_REGRESSION_EXERCISE_IDS = new Set<string>([
+  'ex-cooldown-02',
+  'original-mat-forearm-plank',
+  'original-barrel-supported-arm-reach',
+  'original-reformer-side-lying-press',
+  'ex-lower-03',
+  'ex-upper-01',
+  'ex-kr-reformer-03',
+  'ex-global-reformer-03',
+  'ex-warmup-03',
+  'original-mat-swimming-prep',
+  'original-reformer-parallel-footwork',
+  'ex-footwork-01',
+  'ex-footwork-02',
+  'ex-kr-reformer-01',
+  'original-mat-chest-lift',
+  // Short-box seated abdominals must not inherit a supine leg-stretch or mat stretch.
+  'ex-core-02',
   'original-reformer-strap-frog',
   'ex-straps-01',
   'ex-plank-01',
@@ -6354,6 +6713,7 @@ function adaptTrackAssetForCatalogExercise(
     nameKo: exercise.nameKo,
     nameEn: exercise.nameEn,
     apparatus: exercise.apparatus,
+    props: Object.freeze([...exercise.props]),
     bodyPosition: exercise.bodyPosition,
     blockCategory: exercise.blockCategory,
     spinalPlanes: Object.freeze([...exercise.spinalPlanes]),
@@ -6393,6 +6753,19 @@ export const MOVEMENT_VISUAL_ASSET_MAP: ReadonlyMap<string, CatalogMovementVisua
   ),
 );
 
+/** A stable catalogue ID does not authorize its old pose after the apparatus or
+ * starting position has changed. Callers should show a neutral reference until
+ * a matching pose is authored instead of invoking the ID-based fallback again.
+ */
+export function hasCatalogMotionIdentityMismatch(
+  exercise: Pick<PilatesExercise, 'id' | 'apparatus' | 'bodyPosition'>,
+): boolean {
+  const existing = MOVEMENT_VISUAL_ASSET_MAP.get(exercise.id) ?? TRACK_I7_VISUAL_ASSET_OVERRIDES[exercise.id];
+  return Boolean(existing && (
+    existing.apparatus !== exercise.apparatus || existing.bodyPosition !== exercise.bodyPosition
+  ));
+}
+
 export function getMovementVisualAsset(
   exerciseOrId: string | PilatesExercise,
 ): CatalogMovementVisualAsset | null {
@@ -6406,7 +6779,7 @@ export function getMovementVisualAsset(
   const existing =
     MOVEMENT_VISUAL_ASSET_MAP.get(exerciseOrId.id) ??
     TRACK_I7_VISUAL_ASSET_OVERRIDES[exerciseOrId.id];
-  if (existing) return existing;
+  if (existing) return hasCatalogMotionIdentityMismatch(exerciseOrId) ? null : existing;
   return buildMovementVisualAssetForExercise(exerciseOrId);
 }
 

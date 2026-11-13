@@ -1,3 +1,4 @@
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { compareCodeUnits } from '../utils/compareCodeUnits';
 import React, { useState } from 'react';
 import { CheckCircle2, Clock3, Play, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
@@ -17,7 +18,6 @@ import type {
   SavedSequence,
 } from '../types/pilates';
 import { formatSecondsToMMSS, getStepTiming, isRestStep } from '../utils/sequenceEngine';
-import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import { SpringVisualPills } from './SpringVisualPills';
 import { VisualSequenceFilmstrip } from './VisualFlowComponents';
 import '../styles/ai-copilot.css';
@@ -344,17 +344,12 @@ export const AiSequenceCoPilotPanel: React.FC<AiSequenceCoPilotPanelProps> = ({
               const timing = getStepTiming(step, ex);
               const rationale = result.rationales.find((r) => r.exerciseId === ex.id);
               const blockMeta = CANONICAL_BLOCKS.find((b) => b.category === ex.blockCategory);
-              const motion3d = resolveStudio3DMotionForExercise(ex);
               return (
                 <li key={step.stepId} className="ai-result-step">
                   <span className="ai-step-Order">{String(idx + 1).padStart(2, '0')}</span>
-                  <img
-                    src={motion3d.peakImg}
-                    alt=""
-                    aria-hidden="true"
-                    loading="lazy"
-                    className="pf-workbench-3d-mini-thumb"
-                  />
+                  <ExerciseMotionArtwork
+                    exercise={ex}
+                    className="pf-workbench-3d-mini-thumb" />
                   <div className="ai-step-body">
                     <div className="ai-step-topline">
                       <span className="ai-step-block-tag">

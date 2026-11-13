@@ -9,6 +9,7 @@ import {
   buildMovementVisualAssetForExercise,
   calculatePhaseJointDelta,
   getMovementVisualAsset,
+  hasCatalogMotionIdentityMismatch,
 } from '../data/movementVisualRigCatalog';
 import type {
   JointAlignmentGuide,
@@ -31,6 +32,9 @@ import {
 import type { VisualProductionMethod } from '../data/movementVisualSourceAudit';
 import { PfAiStatusBadge } from '../design-system/PfDomainPrimitives';
 import type { PilatesExercise } from '../types/pilates';
+import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
+import { MotionSourceOnlyNotice } from './MotionSourceOnlyNotice';
+import { UnmodeledMotionNotice } from './UnmodeledMotionNotice';
 import {
   MovementPhaseDiagramSvg,
   MovementTriptychDiagramSvg,
@@ -97,9 +101,11 @@ const JOINT_LABELS_KO: Record<keyof RigJointMap, string> = {
   farShoulder: '반대측 어깨',
   farElbow: '반대측 팔꿈치',
   farWrist: '반대측 손목',
+  farHand: '반대측 손',
   farHip: '반대측 고관절',
   farKnee: '반대측 무릎',
   farAnkle: '반대측 발목',
+  farHeel: '반대측 발뒤꿈치',
   farToe: '반대측 발끝',
 };
 
@@ -193,7 +199,42 @@ const PANEL_CARD_STYLE: React.CSSProperties = {
   gap: '10px',
 };
 
-export function MovementDifferenceCompareView({
+export function MovementDifferenceCompareView(props: MovementDifferenceCompareViewProps): React.JSX.Element {
+  const unmodeledExercises = [props.leftExercise, props.rightExercise].filter(hasCatalogMotionIdentityMismatch);
+  if (unmodeledExercises.length > 0) {
+    return (
+      <section className={props.className} data-native-motion-available="false" aria-label="수정한 동작의 도해 안내">
+        {unmodeledExercises.map((exercise, index) => (
+          <UnmodeledMotionNotice key={`${exercise.id}-${index}`} exercise={exercise} />
+        ))}
+      </section>
+    );
+  }
+  const sourceOnlyExercises = [props.leftExercise, props.rightExercise].flatMap((exercise) => {
+    const binding = getExpandedMovementVisualBinding(exercise);
+    return binding?.nativeMotionAvailable === false ? [{ exercise, binding }] : [];
+  });
+  if (sourceOnlyExercises.length > 0) {
+    return (
+      <section className={props.className} data-native-motion-available="false" aria-label="제작자 영상으로 동작 비교">
+        {sourceOnlyExercises.map(({ exercise, binding }) => (
+          <MotionSourceOnlyNotice
+            key={exercise.id}
+            exerciseId={exercise.id}
+            nameKo={exercise.nameKo}
+            apparatus={exercise.apparatus}
+            reasonKo={binding.reasonKo}
+            sourceUrl={binding.sourceUrl}
+          />
+        ))}
+        <p>각 동작의 자세와 움직임은 연결된 제작자 영상에서 확인해 주세요.</p>
+      </section>
+    );
+  }
+  return <MovementDifferenceCompareViewContent {...props} />;
+}
+
+function MovementDifferenceCompareViewContent({
   leftExercise,
   rightExercise,
   availablePeers,
@@ -234,7 +275,7 @@ export function MovementDifferenceCompareView({
     ) {
       base.unshift(rightExercise);
     }
-    return base;
+    return base.filter((peer) => !hasCatalogMotionIdentityMismatch(peer) && getExpandedMovementVisualBinding(peer)?.nativeMotionAvailable !== false);
   }, [availablePeers, leftExercise.id, rightExercise]);
 
   const effectiveRightExercise =
@@ -765,7 +806,27 @@ export function MovementDifferenceCompareView({
   );
 }
 
-export function MovementVisualGuideCard({
+export function MovementVisualGuideCard(props: MovementVisualGuideCardProps): React.JSX.Element {
+  const binding = getExpandedMovementVisualBinding(props.exercise);
+  if (binding?.nativeMotionAvailable === false) {
+    return (
+      <MotionSourceOnlyNotice
+        exerciseId={props.exercise.id}
+        nameKo={props.exercise.nameKo}
+        apparatus={props.exercise.apparatus}
+        reasonKo={binding.reasonKo}
+        sourceUrl={binding.sourceUrl}
+        className={props.className}
+      />
+    );
+  }
+  if (hasCatalogMotionIdentityMismatch(props.exercise)) {
+    return <UnmodeledMotionNotice exercise={props.exercise} className={props.className} />;
+  }
+  return <MovementVisualGuideCardContent {...props} />;
+}
+
+function MovementVisualGuideCardContent({
   exercise,
   comparisonPeerExercise,
   availablePeers,
@@ -804,6 +865,7 @@ export function MovementVisualGuideCard({
     () => getVisualSourceComparison(exercise),
     [exercise],
   );
+  const hasFactualRecord = sourceAudit.extendedAuditSummary.factualRecordSha256.trim().length > 0;
 
   const integrity = useMemo(
     () =>
@@ -840,7 +902,7 @@ export function MovementVisualGuideCard({
     ) {
       base.unshift(comparisonPeerExercise);
     }
-    return base;
+    return base.filter((peer) => !hasCatalogMotionIdentityMismatch(peer) && getExpandedMovementVisualBinding(peer)?.nativeMotionAvailable !== false);
   }, [availablePeers, comparisonPeerExercise, exercise.id]);
 
   const effectivePeerExercise = useMemo(() => {
@@ -1082,11 +1144,14 @@ export function MovementVisualGuideCard({
             <strong>
               {sourceAudit.extendedAuditSummary.sourceVerificationCategoryKo}
             </strong>{' '}
-            · 대조 기준일: {sourceAudit.extendedAuditSummary.auditCheckedAt} ·
+            {sourceAudit.extendedAuditSummary.auditCheckedAt
+              ? ` · 대조 기준일: ${sourceAudit.extendedAuditSummary.auditCheckedAt}`
+              : ''} ·
             전문가 모션 검수 0건 · 해부학적 정밀성 가정 안 함 (해시·연결은 원장 무결성 확인용)
           </span>
           <code
             data-testid="visual-guide-extended-audit-sha256"
+            data-record-state={hasFactualRecord ? 'recorded' : 'unrecorded'}
             style={{
               fontFamily: 'monospace',
               fontSize: 'var(--pf-text-2xs, 0.6875rem)',
@@ -1096,8 +1161,9 @@ export function MovementVisualGuideCard({
               color: 'var(--pf-color-text-primary, #1E3129)',
             }}
           >
-            SHA-256:{' '}
-            {sourceAudit.extendedAuditSummary.factualRecordSha256.slice(0, 12)}…
+            {hasFactualRecord
+              ? `SHA-256: ${sourceAudit.extendedAuditSummary.factualRecordSha256.slice(0, 12)}…`
+              : '프레임 대조 기록 없음'}
           </code>
         </div>
       </header>

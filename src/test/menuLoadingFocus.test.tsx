@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePilatesStore } from '../store/usePilatesStore';
 
 // A loading workspace has no destination heading yet; its main landmark remains available.
-vi.mock('../components/SequenceWorkbench', () => ({
-  SequenceWorkbench: () => <p role="status">수업 화면을 불러오는 중</p>,
+vi.mock('../components/SequenceStudioWorkbench', () => ({
+  SequenceStudioWorkbench: () => <p role="status">수업 화면을 불러오는 중</p>,
 }));
 import { App } from '../App';
 

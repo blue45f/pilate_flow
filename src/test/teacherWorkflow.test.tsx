@@ -1,4 +1,4 @@
-import { getVisibleWorkbenchButton } from './workbenchControls';
+import { getVisibleWorkbenchButton, openAdvancedWorkbench, openAtlasTools } from './workbenchControls';
 import {
   act,
   cleanup,
@@ -117,23 +117,24 @@ const preservedDraft = () => {
 };
 const expectProductionUnchanged = () => {
   expect(INITIAL_EXERCISES).toEqual(productionSnapshot);
-  expect(INITIAL_EXERCISES).toHaveLength(98);
+  expect(INITIAL_EXERCISES).toHaveLength(productionSnapshot.length);
   const current = usePilatesStore.getState().exercises;
   expect(
     current.filter((item) => productionSnapshot.some((entry) => entry.id === item.id)),
   ).toEqual(productionSnapshot);
   expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
   expect(VERIFIED_REFERENCES).toEqual(sourcesSnapshot);
-  expect(VERIFIED_REFERENCES).toHaveLength(30);
+  expect(VERIFIED_REFERENCES).toHaveLength(sourcesSnapshot.length);
   expect(VERIFIED_REFERENCES.every((item) => !item.autoRecommendationEligible)).toBe(true);
 };
-const navigate = (name: RegExp) =>
-  fireEvent.click(
-    within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', { name }),
-  );
+const navigate = async (name: RegExp) => {
+  fireEvent.click(within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', { name }));
+  await openAdvancedWorkbench();
+};
 const openHandoff = async () => {
-  navigate(/동작 라이브러리/);
-  fireEvent.click(await screen.findByRole('tab', { name: '공개 자료 30' }));
+  await navigate(/동작 라이브러리/);
+  await openAtlasTools();
+  fireEvent.click(await screen.findByRole('tab', { name: `공개 자료 ${VERIFIED_REFERENCES.length}` }));
   fireEvent.click(screen.getByRole('button', { name: '전체 장비 보기' }));
   fireEvent.change(screen.getByRole('searchbox', { name: '공개 참고 자료 검색' }), {
     target: { value: reference.title },
@@ -229,7 +230,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     vi.restoreAllMocks();
   });
 
-  it('reuses the latest actual same-group conditions in the form and preserves the locked draft and all history', () => {
+  it('reuses the latest actual same-group conditions in the form and preserves the locked draft and all history', async () => {
     const recent: AutoGenerateCriteria = {
       ...criteria,
       apparatus: 'reformer',
@@ -249,6 +250,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     });
     const before = preservedDraft();
     render(<App />);
+    await openAdvancedWorkbench();
     const conditions = openWorkbenchConditions();
     const panel = within(conditions.getByRole('region', { name: '선택한 대상의 다음 수업 준비' }));
     expect(panel.getByText('합성 QA 회고 same-recent')).toBeInTheDocument();
@@ -272,6 +274,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     const before = preservedDraft();
     const exercisesBefore = structuredClone(usePilatesStore.getState().exercises);
     render(<App />);
+    await openAdvancedWorkbench();
     const dialog = await openHandoff();
     expect(dialog.getByLabelText('내가 계획할 동작 이름 *')).toHaveValue(reference.title);
     expect(dialog.getByLabelText('직접 정한 계획 시간 · 분 *')).toHaveValue(null);
@@ -300,6 +303,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
   it('creates a separate pending note with exact durable provenance and restores it through the actual JSON form without changing the draft', async () => {
     const before = preservedDraft();
     render(<App />);
+    await openAdvancedWorkbench();
     const { detail, note } = await savePersonalNote(
       await openHandoff(),
       '합성 QA 공개 자료 계획 노트',
@@ -387,6 +391,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
   it('allows pending source notes in local composition and teaching without granting review', async () => {
     usePilatesStore.setState({ exercises: INITIAL_EXERCISES, activeSteps: [], lastCriteria: null });
     render(<App />);
+    await openAdvancedWorkbench();
     expect(screen.queryByRole('button', { name: /^수업 시작/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '시퀀스 미리보기' })).not.toBeInTheDocument();
     expect(screen.queryByRole('timer')).not.toBeInTheDocument();
@@ -395,7 +400,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
       '합성 QA 검토 전 출처 노트',
     );
     fireEvent.click(detail.getByRole('button', { name: '닫기' }));
-    navigate(/오늘의 수업/);
+    await navigate(/수업 만들기/);
     fireEvent.click(screen.getByText('자동 구성·휴식 먼저 넣기', { selector: 'summary' }));
     const beforeAttempt = usePilatesStore.getState();
     const makeSequence = getVisibleWorkbenchButton('시퀀스 만들기');
@@ -433,12 +438,14 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
       historyLogs: [],
     });
     render(<App />);
+    await openAdvancedWorkbench();
     fireEvent.click(screen.getByText('자동 구성·휴식 먼저 넣기', { selector: 'summary' }));
     fireEvent.click(getVisibleWorkbenchButton('시퀀스 만들기'));
     expect(
       usePilatesStore.getState().activeSteps.reduce((sum, step) => sum + step.durationMin, 0),
     ).toBeCloseTo(50, 8);
-    navigate(/동작 라이브러리/);
+    await navigate(/동작 라이브러리/);
+    await openAtlasTools();
     fireEvent.click(await screen.findByRole('button', { name: '내 동작 직접 등록' }));
     const form = within(await screen.findByRole('dialog', { name: '내 동작 직접 등록' }));
     expect(form.getByLabelText('내가 계획할 동작 이름 *')).toHaveValue('');
@@ -491,7 +498,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
       credentialVerified: false,
     });
     fireEvent.click(detail.getByRole('button', { name: '수업안에 추가' }));
-    navigate(/오늘의 수업/);
+    await navigate(/수업 만들기/);
     const ownIndex = usePilatesStore
       .getState()
       .activeSteps.findIndex((step) => step.exerciseId === pending.id);
@@ -583,7 +590,8 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     expect(getExerciseReviewState(stale)).toBe('stale');
     usePilatesStore.setState({ exercises: [...INITIAL_EXERCISES, stale] });
     render(<App />);
-    navigate(/동작 라이브러리/);
+    await openAdvancedWorkbench();
+    await navigate(/동작 라이브러리/);
     fireEvent.change(await screen.findByRole('searchbox', { name: '동작 검색' }), {
       target: { value: stale.nameKo },
     });

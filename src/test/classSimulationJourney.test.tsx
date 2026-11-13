@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { INITIAL_CLASS_GROUPS, INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { EXERCISE_MOTION_REFERENCES, MOTION_PROTOTYPES } from '../data/motionReferences';
@@ -8,6 +8,13 @@ import { usePilatesStore } from '../store/usePilatesStore';
 import type { AutoGenerateCriteria, PilatesExercise } from '../types/pilates';
 import { exerciseRevision, isExerciseAutoEligible } from '../utils/exerciseReview';
 import { classSimulationFixture } from './classSimulationFixtures';
+import { openAdvancedWorkbench } from './workbenchControls';
+
+// Transform the retained advanced tools before the timed rehearsal assertions.
+// The journey still enters them through the actual studio disclosure.
+beforeAll(async () => {
+  await import('../components/SequenceWorkbench');
+}, 60000);
 
 const original = usePilatesStore.getState();
 const production = structuredClone(INITIAL_EXERCISES);
@@ -104,6 +111,7 @@ function seed(targetMinutes: 17 | 50 | 60 = 50, oddPairedMovement = false) {
 
 async function openPreview() {
   render(<App />);
+  await openAdvancedWorkbench();
   const opener = await screen.findByRole('button', { name: '시퀀스 미리보기' }, { timeout: 10000 });
   opener.focus();
   fireEvent.click(opener);
@@ -166,7 +174,7 @@ describe('actual full-class rehearsal and read-only evidence journeys', { timeou
     ).toEqual(production);
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
     expect(VERIFIED_REFERENCES).toEqual(references);
-    expect(EXERCISE_MOTION_REFERENCES).toHaveLength(98);
+    expect(EXERCISE_MOTION_REFERENCES).toHaveLength(158);
     expect(
       EXERCISE_MOTION_REFERENCES.every(
         (item) => item.status === 'not_authored' && item.asset === null && !item.expertApproved,
@@ -311,6 +319,7 @@ describe('actual full-class rehearsal and read-only evidence journeys', { timeou
       const before = storedState();
       if (kind === 'empty') {
         render(<App />);
+        await openAdvancedWorkbench();
         expect(screen.queryByRole('button', { name: '시퀀스 미리보기' })).not.toBeInTheDocument();
         expect(screen.queryByRole('button', { name: '수업 시작' })).not.toBeInTheDocument();
         expect(

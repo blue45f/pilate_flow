@@ -51,6 +51,7 @@ import { createEmptyInstructorSchedule } from '../types/instructorSchedule';
 import type { InstructorScheduleData } from '../types/instructorSchedule';
 import { instructorScheduleSchema } from '../schemas/instructorScheduleSchema';
 import {
+  APPARATUS_LABELS,
   CURATED_SEQUENCE_PROGRAMS,
   INITIAL_CLASS_GROUPS,
   INITIAL_EXERCISES,
@@ -150,6 +151,11 @@ export interface RestoreBackupResult {
   added?: number;
   unchanged?: boolean;
 }
+export interface SequencePlanningActionResult {
+  success: boolean;
+  message: string;
+  sequenceId?: string;
+}
 export interface PilatesStudioState extends SequenceSnapshot {
   activeTab: ActiveWorkspaceTab;
   themeMode: 'system' | 'light' | 'dark';
@@ -230,6 +236,10 @@ export interface PilatesStudioState extends SequenceSnapshot {
   toggleOwnedProp: (prop: PropType) => void;
   setMobilePreviewMode: (enabled: boolean) => void;
   setActiveTargetGroupId: (groupId: string) => void;
+  /** New document identity and one undo entry; saved source documents stay intact. */
+  startBlankSequence: (criteriaPatch?: Partial<AutoGenerateCriteria>) => SequencePlanningActionResult;
+  /** Apply manual planning conditions atomically without rewriting existing rows. */
+  updateSequencePlanningConditions: (patch: Partial<AutoGenerateCriteria>) => SequencePlanningActionResult;
   setActiveSequenceMeta: (meta: {
     title?: string;
     subtitle?: string;
@@ -631,6 +641,17 @@ function activeCriteria(state: PilatesStudioState): AutoGenerateCriteria {
       : (source?.restMinutes ?? 0),
   };
 }
+
+/** The same applied conditions used by insertion, including the existing
+ * lastCriteria/draft fallback and current-step metadata policy. Reading this
+ * selector never applies an advanced-generator draft or changes the store.
+ */
+export function getActiveSequencePlanningCriteria(
+  state: PilatesStudioState,
+): AutoGenerateCriteria {
+  return cloneCriteria(activeCriteria(state));
+}
+
 function duplicatesAnotherStep(
   state: PilatesStudioState,
   exercise: PilatesExercise,
@@ -695,6 +716,54 @@ function resolveCriteria(
   }
   return criteria;
 }
+
+/** Manual planning starts from the same effective conditions as insertion.
+ * An apparatus-only change selects owned equipment in that family;
+ * mixed selects all owned equipment. Explicit equipment IDs remain exact and
+ * are validated against inventory, never silently granted or substituted.
+ */
+function resolveManualPlanningCriteria(
+  state: PilatesStudioState,
+  patch: Partial<AutoGenerateCriteria>,
+): AutoGenerateCriteria {
+  if (!patch || typeof patch !== 'object' || Array.isArray(patch))
+    throw new Error('적용할 수업 조건을 확인해 주세요.');
+  const definedPatch = Object.fromEntries(
+    Object.entries(patch).filter(([, value]) => value !== undefined),
+  ) as Partial<AutoGenerateCriteria>;
+  const source = getActiveSequencePlanningCriteria(state);
+  const apparatus = definedPatch.apparatus ?? source.apparatus;
+  const needsEquipmentSelection = source.apparatus !== apparatus
+    || source.availableEquipment === undefined
+    || (apparatus !== 'mixed' && !source.availableEquipment.some((id) => getEquipmentFamily(id) === apparatus));
+  const availableEquipment = definedPatch.availableEquipment
+    ?? (definedPatch.ownedApparatus !== undefined
+      ? state.ownedEquipment.filter((id) => {
+          const family = getEquipmentFamily(id);
+          return family !== undefined && definedPatch.ownedApparatus!.includes(family);
+        })
+      : needsEquipmentSelection
+        ? state.ownedEquipment.filter((id) => apparatus === 'mixed' || getEquipmentFamily(id) === apparatus)
+        : source.availableEquipment!);
+  const parsed = criteriaSchema.safeParse({
+    ...cloneCriteria(source),
+    ...definedPatch,
+    apparatus,
+    level: definedPatch.level ?? source.level,
+    targetMinutes: definedPatch.targetMinutes ?? source.targetMinutes,
+    targetGroupId: definedPatch.targetGroupId ?? source.targetGroupId ?? state.activeTargetGroupId,
+    availableEquipment: [...new Set(availableEquipment)],
+    ownedApparatus: getEquipmentFamilies(availableEquipment),
+  });
+  if (!parsed.success)
+    throw new Error('수업 시간 10–120분, 최대 난이도, 기구·소도구와 휴식 시간을 확인해 주세요.');
+  if (!parsed.data.availableEquipment?.length)
+    throw new Error('선택한 수업에 사용할 보유 기구를 하나 이상 선택해 주세요.');
+  if (apparatus !== 'mixed' && !parsed.data.ownedApparatus?.includes(apparatus))
+    throw new Error('수업 기구와 선택한 세부 기구가 맞지 않습니다. 보유 기구 선택을 확인해 주세요.');
+  return resolveCriteria(parsed.data, state);
+}
+
 function criteriaForSteps(
   state: PilatesStudioState,
   steps: SequenceStep[],
@@ -1140,6 +1209,71 @@ export const usePilatesStore = create<PilatesStudioState>()(
         }),
       setMobilePreviewMode: (mobilePreviewMode) => set({ mobilePreviewMode }),
       setActiveTargetGroupId: (activeTargetGroupId) => set({ activeTargetGroupId }),
+      startBlankSequence: (criteriaPatch = {}) => {
+        const state = get();
+        try {
+          const criteria = resolveManualPlanningCriteria(state, criteriaPatch);
+          const sequenceId = newId('draft');
+          const apparatusLabel = criteria.apparatus === 'mixed'
+            ? '혼합 기구' : APPARATUS_LABELS[criteria.apparatus].ko;
+          set(edit(state, {
+            activeSequenceId: sequenceId,
+            activeTitle: '새 수업',
+            activeSubtitle: `${apparatusLabel} ${criteria.targetMinutes}분 · 직접 구성`,
+            activeApparatus: criteria.apparatus,
+            activeLevel: criteria.level,
+            activeTargetMinutes: criteria.targetMinutes,
+            activeTargetGroupId: criteria.targetGroupId ?? state.activeTargetGroupId,
+            activeSteps: [],
+            draftCriteria: cloneCriteria(criteria),
+            lastCriteria: cloneCriteria(criteria),
+            activeTab: 'workbench',
+          }));
+          return { success: true, sequenceId, message: '빈 수업을 열었습니다. 되돌리기로 이전 수업안을 복원할 수 있습니다.' };
+        } catch (error) {
+          const message = errorMessage(error);
+          set({ generationError: message });
+          return { success: false, message };
+        }
+      },
+      updateSequencePlanningConditions: (patch) => {
+        const state = get();
+        try {
+          const criteria = resolveManualPlanningCriteria(state, patch);
+          const restError = restDurationError(state.activeSteps, criteria.targetMinutes);
+          if (restError) throw new Error(restError);
+          const unchanged = state.activeApparatus === criteria.apparatus
+            && state.activeLevel === criteria.level
+            && state.activeTargetMinutes === criteria.targetMinutes
+            && state.activeTargetGroupId === criteria.targetGroupId
+            && canonicalRecoveryContent(state.draftCriteria) === canonicalRecoveryContent(criteria)
+            && canonicalRecoveryContent(state.lastCriteria) === canonicalRecoveryContent(criteria);
+          if (unchanged) return { success: true, message: '수업 조건이 이미 적용되어 있습니다.' };
+          const incompatibleCount = state.activeSteps.filter((step) => {
+            if (isRestStep(step)) return false;
+            const exercise = state.exercises.find((item) => item.id === step.exerciseId);
+            return !exercise || !exerciseMatchesCriteria(exercise, criteria);
+          }).length;
+          set(edit(state, {
+            activeApparatus: criteria.apparatus,
+            activeLevel: criteria.level,
+            activeTargetMinutes: criteria.targetMinutes,
+            activeTargetGroupId: criteria.targetGroupId ?? state.activeTargetGroupId,
+            draftCriteria: cloneCriteria(criteria),
+            lastCriteria: cloneCriteria(criteria),
+          }));
+          return {
+            success: true,
+            message: incompatibleCount
+              ? `수업 조건을 적용했습니다. 기존 동작 ${incompatibleCount}개가 새 조건과 다릅니다. 동작은 유지했으니 구성을 확인해 주세요.`
+              : '수업 조건을 적용했습니다. 기존 동작과 입력 시간은 유지됩니다.',
+          };
+        } catch (error) {
+          const message = errorMessage(error);
+          set({ generationError: message });
+          return { success: false, message };
+        }
+      },
       setDraftCriteria: (criteria) => {
         const parsed = criteriaSchema.safeParse(criteria);
         if (!parsed.success) {

@@ -11,24 +11,27 @@ import {
   getVisualSourceComparison,
 } from '../data/movementVisualSourceAudit';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
+import { EXPANDED_MOVEMENTS, getExpandedMovementSource } from '../data/expandedMovements';
+
+const historicalExercises = INITIAL_EXERCISES.filter(
+  (exercise) => !exercise.id.startsWith('expanded-'),
+);
 
 afterEach(() => {
   cleanup();
 });
 
-describe('movementVisualSourceAuditExtended — 98-exercise extended audit summary & MovementVisualGuideCard metadata strip', () => {
-  it('populates extendedAuditSummary with valid 64-hex factualRecordSha256, anatomicalAccuracyAssumed === false, and professionalMotionReviewCount === 0 for all 98 catalog exercises', () => {
-    expect(INITIAL_EXERCISES).toHaveLength(98);
-    expect(CATALOG_VISUAL_SOURCE_COMPARISONS).toHaveLength(98);
+describe('movementVisualSourceAuditExtended — historical audit and expanded source metadata boundaries', () => {
+  it('preserves the historical cohort hashes and review boundaries without extending that audit to new catalog entries', () => {
+    expect(historicalExercises).toHaveLength(98);
+    expect(INITIAL_EXERCISES).toHaveLength(historicalExercises.length + EXPANDED_MOVEMENTS.length);
+    expect(CATALOG_VISUAL_SOURCE_COMPARISONS).toHaveLength(INITIAL_EXERCISES.length);
 
-    const clearedIds = new Set(
-      CLEARED_YOUTUBE_REPLACEMENT_AUDITS.map((item) => item.exerciseId),
-    );
-    const candidateMatIds = new Set<string>(
-      MAT_CATALOG_IDS_WITHOUT_EXISTING_PROPOSALS,
-    );
+    const clearedIds = new Set(CLEARED_YOUTUBE_REPLACEMENT_AUDITS.map((item) => item.exerciseId));
+    const candidateMatIds = new Set<string>(MAT_CATALOG_IDS_WITHOUT_EXISTING_PROPOSALS);
 
-    for (const record of CATALOG_VISUAL_SOURCE_COMPARISONS) {
+    for (const exercise of historicalExercises) {
+      const record = getVisualSourceComparison(exercise);
       expect(record.anatomicalAccuracyAssumed).toBe(false);
       expect(record.professionalMotionReviewCount).toBe(0);
       expect(record.extendedAuditSummary).toBeDefined();
@@ -45,12 +48,8 @@ describe('movementVisualSourceAuditExtended — 98-exercise extended audit summa
       expect(sourceVerificationCategoryKo.trim().length).toBeGreaterThan(0);
       expect(auditCheckedAt).toBe('2026-11-08');
       const directAudit = resolveExtendedMotionSourceAudit(record.exerciseId);
-      expect(hasClearedYoutubeReplacementAudit).toBe(
-        clearedIds.has(record.exerciseId),
-      );
-      expect(hasExtendedCandidateMotionModel).toBe(
-        Boolean(directAudit.candidateMatMotionModel),
-      );
+      expect(hasClearedYoutubeReplacementAudit).toBe(clearedIds.has(record.exerciseId));
+      expect(hasExtendedCandidateMotionModel).toBe(Boolean(directAudit.candidateMatMotionModel));
       if (candidateMatIds.has(record.exerciseId)) {
         expect(hasExtendedCandidateMotionModel).toBe(true);
       }
@@ -58,19 +57,42 @@ describe('movementVisualSourceAuditExtended — 98-exercise extended audit summa
     }
   });
 
+  it('exposes the checked creator metadata for expanded movements without a historical motion hash or review record', () => {
+    for (const exercise of EXPANDED_MOVEMENTS) {
+      const source = getExpandedMovementSource(exercise)!;
+      const record = getVisualSourceComparison(exercise);
+      const directAudit = resolveExtendedMotionSourceAudit(exercise);
+
+      expect(source).toBeDefined();
+      expect(record.reviewStage).toBe('unreviewed-draft');
+      expect(record.anatomicalAccuracyAssumed).toBe(false);
+      expect(record.professionalMotionReviewCount).toBe(0);
+      expect(record.extendedAuditSummary).toMatchObject({
+        factualRecordSha256: '',
+        hasClearedYoutubeReplacementAudit: false,
+        hasExtendedCandidateMotionModel: false,
+        auditCheckedAt: '2026-11-13',
+      });
+      expect(record.extendedAuditSummary.sourceVerificationCategoryKo).toContain('메타데이터');
+      expect(record.matchedReliableSources.map((item) => item.url)).toEqual([
+        source.sourceUrl,
+        `https://www.youtube.com/watch?v=${source.videoId}`,
+      ]);
+      expect(directAudit.sha256IntegrityVerified).toBe(false);
+      expect(directAudit.primaryFactualRecordSha256).toBe('');
+      expect(directAudit.candidateMatMotionModel).toBeNull();
+      expect(directAudit.previouslyUnboundMotionModel).toBeNull();
+      expect(directAudit.clearedYoutubeReplacementAudit).toBeNull();
+      expect(directAudit.verifiedReferenceAuditRecord).toBeNull();
+      expect(directAudit.verifiedReferencePublicEntry).toBeNull();
+    }
+  });
+
   it('renders data-testid="visual-guide-extended-audit-strip" in MovementVisualGuideCard for Mat, Reformer, Korean candidate (ex-kr-reformer-01), and cleared YouTube (ex-warmup-01) exercises', () => {
-    const matExercise = INITIAL_EXERCISES.find(
-      (ex) => ex.id === 'original-mat-swan-prep',
-    )!;
-    const reformerExercise = INITIAL_EXERCISES.find(
-      (ex) => ex.id === 'ex-footwork-01',
-    )!;
-    const koreanCandidateExercise = INITIAL_EXERCISES.find(
-      (ex) => ex.id === 'ex-kr-reformer-01',
-    )!;
-    const clearedYoutubeExercise = INITIAL_EXERCISES.find(
-      (ex) => ex.id === 'ex-warmup-01',
-    )!;
+    const matExercise = INITIAL_EXERCISES.find((ex) => ex.id === 'original-mat-swan-prep')!;
+    const reformerExercise = INITIAL_EXERCISES.find((ex) => ex.id === 'ex-footwork-01')!;
+    const koreanCandidateExercise = INITIAL_EXERCISES.find((ex) => ex.id === 'ex-kr-reformer-01')!;
+    const clearedYoutubeExercise = INITIAL_EXERCISES.find((ex) => ex.id === 'ex-warmup-01')!;
 
     // 1. Mat exercise (with extended candidate motion model)
     const { rerender } = render(<MovementVisualGuideCard exercise={matExercise} />);

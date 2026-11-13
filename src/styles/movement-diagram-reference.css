@@ -1,14 +1,14 @@
 .movement-diagram-reference {
-  border: 1px solid #dce5e1;
-  border-radius: 14px;
-  background: #fff;
+  border: 1px solid var(--motion-border, #cdd9d0);
+  border-radius: 16px;
+  background: var(--motion-surface, #fffdf8);
   min-width: 0;
 }
 .movement-diagram-reference > summary {
   min-height: 44px;
   padding: 14px 16px;
   cursor: pointer;
-  color: #24594c;
+  color: var(--motion-ink, #214b3f);
   font-weight: 600;
 }
 .movement-diagram-reference-content {
@@ -22,13 +22,104 @@
   border-radius: 10px;
 }
 .movement-diagram-reference-canvas {
-  border-radius: 12px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  border: 1px solid var(--motion-border, #cdd9d0);
+  border-radius: 16px;
   overflow: hidden;
-  background: #f5f8f6;
+  background: var(--motion-surface, #fffdf8);
 }
 .movement-diagram-reference-canvas > svg {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 360px;
+  aspect-ratio: 8 / 5;
+}
+
+.movement-studio-depth-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--motion-border, #cdd9d0);
+  color: var(--motion-muted, #51685c);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.movement-studio-depth-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.movement-studio-depth-legend i {
+  width: 22px;
+  height: 10px;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.movement-studio-depth-near {
+  background: #315f4d;
+  border: 1px solid #183f32;
+}
+
+.movement-studio-depth-far {
+  background: #b1c5b8;
+  border: 1px dashed #627e6d;
+}
+
+.movement-diagram-reference-content > details {
+  margin-top: 12px;
+  padding: 0 12px;
+  border: 1px solid var(--motion-border, #cdd9d0);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.movement-diagram-reference-content > details > summary {
+  min-height: 44px;
+  padding: 10px 0;
+  color: var(--motion-ink, #214b3f);
+  line-height: 1.5;
+  font-size: 0.86rem;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.movement-diagram-reference-content > details[open] {
+  padding-bottom: 12px;
+}
+
+.movement-diagram-display-options fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.movement-diagram-display-options legend {
+  margin-bottom: 2px;
+  color: var(--motion-muted, #51685c);
+  font-size: 0.8rem;
+}
+
+.movement-diagram-display-options label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 8px;
+  color: var(--motion-ink, #214b3f);
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.movement-diagram-display-options input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--motion-ink, #214b3f);
 }

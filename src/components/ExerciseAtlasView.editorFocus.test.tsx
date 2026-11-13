@@ -48,7 +48,7 @@ afterEach(() => {
 });
 
 const renderAtlas = () =>
-  render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+  render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
 
 describe('library focused on finding and adding movements', () => {
   it('starts with one equipment selector and results before optional reference tools', () => {

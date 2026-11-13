@@ -454,6 +454,7 @@ describe('Representative screens upgraded with the Design System', () => {
     // 1. ExerciseAtlasView renders PfMovementCard (variant="idea") + PfAiStatusBadge (tried-memo)
     const { container: atlasContainer } = render(
       <ExerciseAtlasView
+        initialView="tools"
         onOpenYouTubePreview={vi.fn()}
         onOpenIdeaSheet={vi.fn()}
         onOpenClipper={vi.fn()}

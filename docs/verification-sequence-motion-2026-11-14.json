@@ -1,0 +1,178 @@
+{
+  "verifiedAtUtc": "2026-11-13T16:24:26.009523+00:00",
+  "dateAsiaSeoul": "2026-11-14",
+  "baseMainCommit": "f3641ef9293e51cb2358dfd387a04fb13a0a5cc6",
+  "recoveredLocalImplementationCommit": "c2acd861a8f57c523775d5cc7defc78e1d5dd51d",
+  "scope": "Follow-up verification of sequence UX and edited exercise motion identity",
+  "targetedVitest": {
+    "files": 17,
+    "passedCases": 138,
+    "failedCases": 0,
+    "success": true,
+    "results": [
+      {
+        "path": "src/data/exerciseVideoBindings.test.ts",
+        "status": "passed",
+        "cases": 4
+      },
+      {
+        "path": "src/components/EditedCatalogMotionIdentity.test.tsx",
+        "status": "passed",
+        "cases": 10
+      },
+      {
+        "path": "src/components/ExerciseMotionArtwork.test.tsx",
+        "status": "passed",
+        "cases": 9
+      },
+      {
+        "path": "src/components/InstructorStudyDialog.discoveryUx.test.tsx",
+        "status": "passed",
+        "cases": 9
+      },
+      {
+        "path": "src/components/MotionReferencePlayer.test.tsx",
+        "status": "passed",
+        "cases": 10
+      },
+      {
+        "path": "src/components/SequencePlanPreview.relatedMotion.test.tsx",
+        "status": "passed",
+        "cases": 3
+      },
+      {
+        "path": "src/components/SequencePlanPreview.segmentMotion.test.tsx",
+        "status": "passed",
+        "cases": 12
+      },
+      {
+        "path": "src/components/SourceOnlyMotionSurfaces.test.tsx",
+        "status": "passed",
+        "cases": 2
+      },
+      {
+        "path": "src/components/StudioMotionPlayback.lifecycle.test.tsx",
+        "status": "passed",
+        "cases": 14
+      },
+      {
+        "path": "src/components/YouTubeClipModal.motion.test.tsx",
+        "status": "passed",
+        "cases": 5
+      },
+      {
+        "path": "src/test/catalogMotionContinuity.test.ts",
+        "status": "passed",
+        "cases": 6
+      },
+      {
+        "path": "src/test/motionImageQualityCorrections.test.tsx",
+        "status": "passed",
+        "cases": 5
+      },
+      {
+        "path": "src/test/motionRenderingQualityRegression.test.tsx",
+        "status": "passed",
+        "cases": 12
+      },
+      {
+        "path": "src/test/motionSemanticCorrections.test.ts",
+        "status": "passed",
+        "cases": 12
+      },
+      {
+        "path": "src/test/sequencePlanningActions.test.ts",
+        "status": "passed",
+        "cases": 8
+      },
+      {
+        "path": "src/test/sequenceStudioWorkbench.test.tsx",
+        "status": "passed",
+        "cases": 11
+      },
+      {
+        "path": "src/utils/videoSemanticMatching.test.ts",
+        "status": "passed",
+        "cases": 6
+      }
+    ]
+  },
+  "finalChecks": [
+    {
+      "name": "lint",
+      "command": [
+        "pnpm",
+        "lint"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "build",
+      "command": [
+        "pnpm",
+        "build"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "motion-study",
+      "command": [
+        "pnpm",
+        "check:motion-study"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "deploy-scripts",
+      "command": [
+        "pnpm",
+        "test:deploy"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "secrets",
+      "command": [
+        "pnpm",
+        "check:secrets"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "diff",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "nativeArtwork": {
+    "exercises": 98,
+    "frames": 294,
+    "bytes": 3894134,
+    "freshRenderHashMatch": true
+  },
+  "pwa": {
+    "staticFiles": 71,
+    "circularJsChunks": 0
+  },
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 1,
+    "existingWarningFile": "src/components/workbench/SequenceQuickFlowCoachStrip.tsx"
+  },
+  "bundleSizeWarningRemains": true,
+  "repositoryWideSuiteRerun": false,
+  "actualBrowserVisualVerificationCompleted": false,
+  "externalVideoPlaybackVerified": false,
+  "professionalAnatomicalReviewCompleted": false,
+  "productionDeploymentPerformed": false,
+  "notes": [
+    "Targeted final tests ran after all follow-up code edits.",
+    "Prior browser access restrictions were not bypassed.",
+    "Source-only expanded exercises remain source-only; no new exact pose or expert approval is implied.",
+    "GitHub publication is recorded by the branch and commit, not by this local verification report."
+  ]
+}

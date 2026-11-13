@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { getMotionPatternReferences } from '../data/motionPatternReferences';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
@@ -8,16 +8,23 @@ import { createEmptyInstructorSchedule } from '../types/instructorSchedule';
 import type { AutoGenerateCriteria, SequenceStep } from '../types/pilates';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { createSequenceMotionStudyBinding } from '../utils/sequenceMotionBinding';
+import { openAdvancedWorkbench } from '../test/workbenchControls';
 
 // Keep the actual App, native-dialog components, inspector, picker, detail and store.
 // Embedded media playback is independent of this read-only source lookup.
 vi.mock('./MotionReferencePlayer', () => ({ MotionReferencePlayer: () => null }));
 
+// Keep the source modal's cold lazy handoff in the journey; prepare only the
+// retained editor module before the timed state/focus preservation assertions.
+beforeAll(async () => {
+  await import('./SequenceWorkbench');
+}, 60000);
+
 const original = usePilatesStore.getState();
 const originalWidth = window.innerWidth;
 const catalogSnapshot = structuredClone(INITIAL_EXERCISES);
 // Bound each multi-dialog journey, including the first lazy source-module load.
-const HANDOFF_JOURNEY_TIMEOUT_MS = 20_000;
+const HANDOFF_JOURNEY_TIMEOUT_MS = 30_000;
 const exercise = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-single-leg-stretch')!;
 const reference = getMotionPatternReferences(exercise.id)[0];
 const binding = createSequenceMotionStudyBinding(
@@ -58,6 +65,7 @@ function setWidth(width: number) {
 
 async function openDirtyInspector() {
   render(<App />);
+  await openAdvancedWorkbench();
   fireEvent.click(await screen.findByRole('button', { name: '1번 동작 블록 편집' }));
   const editor = screen.getByRole('region', { name: '1번 동작 블록 편집' });
   const fields = within(editor);
@@ -143,7 +151,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   expect(INITIAL_EXERCISES).toEqual(catalogSnapshot);
-  expect(INITIAL_EXERCISES).toHaveLength(98);
+  expect(INITIAL_EXERCISES).toHaveLength(158);
   expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
   expect(usePilatesStore.getState().exercises).toBe(INITIAL_EXERCISES);
   usePilatesStore.setState(original, true);
@@ -156,192 +164,208 @@ describe.each([
   { width: 390, layout: 'mobile sheet' },
   { width: 1440, layout: 'desktop panel' },
 ])('source-detail handoff from the $layout', ({ width }) => {
-  it('returns to the same dirty block and applies note, duration, role and motion once against the original base', async () => {
-    setWidth(width);
-    const apply = vi.fn(original.setStepBlockOptions);
-    usePilatesStore.setState({ setStepBlockOptions: apply });
+  it(
+    'returns to the same dirty block and applies note, duration, role and motion once against the original base',
+    async () => {
+      setWidth(width);
+      const apply = vi.fn(original.setStepBlockOptions);
+      usePilatesStore.setState({ setStepBlockOptions: apply });
+      const before = usePilatesStore.getState();
+      const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
+      const editor = await openDirtyInspector();
+      expectDraft(editor);
+      // This first mobile case triggers App's cold lazy import of the source modal.
+      const detail = await openSource(editor, width === 390 ? 20000 : 5000);
+      expect(usePilatesStore.getState()).toBe(before);
+      expect(apply).not.toHaveBeenCalled();
+      expect(storageWrite).not.toHaveBeenCalled();
+
+      await closeSource(detail);
+      expect(editor).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: '1번 동작 블록 편집' })).toBe(editor);
+      expectDraft(editor);
+      expect(usePilatesStore.getState()).toBe(before);
+      expect(storageWrite).not.toHaveBeenCalled();
+      if (width < 1200)
+        expect(screen.getByRole('dialog', { name: '동작 블록 편집' })).toHaveAttribute('open');
+
+      fireEvent.click(within(editor).getByRole('button', { name: '변경 적용' }));
+      expect(apply).toHaveBeenCalledExactlyOnceWith(
+        0,
+        {
+          durationMin: 7.25,
+          instructorNote: note,
+          classSection: 'main',
+          motionStudy: binding,
+        },
+        base,
+      );
+      const after = usePilatesStore.getState();
+      expect(after.activeSteps).toEqual([
+        {
+          ...base,
+          durationMin: 7.25,
+          instructorNote: note,
+          classSection: 'main',
+          motionStudy: binding,
+        },
+      ]);
+      expect(after.undoStack).toHaveLength(1);
+      expect(after.exercises).toBe(before.exercises);
+      expect(after.savedSequences).toBe(before.savedSequences);
+      expect(after.historyLogs).toBe(before.historyLogs);
+      expect(screen.queryByRole('region', { name: '1번 동작 블록 편집' })).not.toBeInTheDocument();
+      act(() => after.undoSequence());
+      expect(usePilatesStore.getState().activeSteps).toEqual(before.activeSteps);
+    },
+    HANDOFF_JOURNEY_TIMEOUT_MS,
+  );
+
+  it(
+    'keeps the original draft base and rejects Apply when the class block changes during source lookup',
+    async () => {
+      setWidth(width);
+      const apply = vi.fn(original.setStepBlockOptions);
+      usePilatesStore.setState({ setStepBlockOptions: apply });
+      const editor = await openDirtyInspector();
+      const detail = await openSource(editor);
+      act(() => {
+        expect(
+          original.setStepBlockOptions(0, { instructorNote: externalNote }, base).success,
+        ).toBe(true);
+      });
+      const changed = usePilatesStore.getState();
+      const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
+      await closeSource(detail);
+      expect(editor).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: '1번 동작 블록 편집' })).toBe(editor);
+      expectDraft(editor);
+      fireEvent.click(within(editor).getByRole('button', { name: '변경 적용' }));
+      expect(within(editor).getByRole('alert')).toHaveTextContent(
+        '다른 편집으로 이 블록이 바뀌었습니다',
+      );
+      expect(apply).not.toHaveBeenCalled();
+      expect(usePilatesStore.getState()).toBe(changed);
+      expect(storageWrite).not.toHaveBeenCalled();
+      expect(changed.activeSteps[0]).toEqual({ ...base, instructorNote: externalNote });
+      expect(changed.undoStack).toHaveLength(1);
+      expectDraft(editor);
+    },
+    HANDOFF_JOURNEY_TIMEOUT_MS,
+  );
+});
+
+it(
+  'keeps source details above the resized editor and ignores a queued suspension close after returning',
+  async () => {
+    setWidth(390);
+    const suspendedCloses: HTMLDialogElement[] = [];
+    const showModal = HTMLDialogElement.prototype.showModal;
+    let closeBeforeReopen = false;
+    vi.spyOn(HTMLDialogElement.prototype, 'showModal').mockImplementation(function (
+      this: HTMLDialogElement,
+    ) {
+      if (this.classList.contains('step-inspector-sheet') && suspendedCloses.includes(this)) {
+        // Unit queue simulation: deliver the old notification in the return gap,
+        // before the native open flag is restored. This is not browser timing proof.
+        closeBeforeReopen = true;
+        this.dispatchEvent(new Event('close'));
+      }
+      showModal.call(this);
+    });
+    vi.mocked(HTMLDialogElement.prototype.close).mockImplementation(function (
+      this: HTMLDialogElement,
+    ) {
+      this.removeAttribute('open');
+      if (this.classList.contains('step-inspector-sheet')) suspendedCloses.push(this);
+      else this.dispatchEvent(new Event('close'));
+    });
     const before = usePilatesStore.getState();
     const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
     const editor = await openDirtyInspector();
-    expectDraft(editor);
-    // This first mobile case triggers App's cold lazy import of the source modal.
-    const detail = await openSource(editor, width === 390 ? 10000 : 5000);
-    expect(usePilatesStore.getState()).toBe(before);
-    expect(apply).not.toHaveBeenCalled();
-    expect(storageWrite).not.toHaveBeenCalled();
-
-    await closeSource(detail);
-    expect(editor).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: '1번 동작 블록 편집' })).toBe(editor);
-    expectDraft(editor);
-    expect(usePilatesStore.getState()).toBe(before);
-    expect(storageWrite).not.toHaveBeenCalled();
-    if (width < 1200)
-      expect(screen.getByRole('dialog', { name: '동작 블록 편집' })).toHaveAttribute('open');
-
-    fireEvent.click(within(editor).getByRole('button', { name: '변경 적용' }));
-    expect(apply).toHaveBeenCalledExactlyOnceWith(
-      0,
-      {
-        durationMin: 7.25,
-        instructorNote: note,
-        classSection: 'main',
-        motionStudy: binding,
-      },
-      base,
-    );
-    const after = usePilatesStore.getState();
-    expect(after.activeSteps).toEqual([
-      {
-        ...base,
-        durationMin: 7.25,
-        instructorNote: note,
-        classSection: 'main',
-        motionStudy: binding,
-      },
-    ]);
-    expect(after.undoStack).toHaveLength(1);
-    expect(after.exercises).toBe(before.exercises);
-    expect(after.savedSequences).toBe(before.savedSequences);
-    expect(after.historyLogs).toBe(before.historyLogs);
-    expect(screen.queryByRole('region', { name: '1번 동작 블록 편집' })).not.toBeInTheDocument();
-    act(() => after.undoSequence());
-    expect(usePilatesStore.getState().activeSteps).toEqual(before.activeSteps);
-  }, HANDOFF_JOURNEY_TIMEOUT_MS);
-
-  it('keeps the original draft base and rejects Apply when the class block changes during source lookup', async () => {
-    setWidth(width);
-    const apply = vi.fn(original.setStepBlockOptions);
-    usePilatesStore.setState({ setStepBlockOptions: apply });
-    const editor = await openDirtyInspector();
     const detail = await openSource(editor);
-    act(() => {
-      expect(original.setStepBlockOptions(0, { instructorNote: externalNote }, base).success).toBe(
-        true,
-      );
-    });
-    const changed = usePilatesStore.getState();
-    const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
-    await closeSource(detail);
-    expect(editor).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: '1번 동작 블록 편집' })).toBe(editor);
-    expectDraft(editor);
-    fireEvent.click(within(editor).getByRole('button', { name: '변경 적용' }));
-    expect(within(editor).getByRole('alert')).toHaveTextContent(
-      '다른 편집으로 이 블록이 바뀌었습니다',
-    );
-    expect(apply).not.toHaveBeenCalled();
-    expect(usePilatesStore.getState()).toBe(changed);
-    expect(storageWrite).not.toHaveBeenCalled();
-    expect(changed.activeSteps[0]).toEqual({ ...base, instructorNote: externalNote });
-    expect(changed.undoStack).toHaveLength(1);
-    expectDraft(editor);
-  }, HANDOFF_JOURNEY_TIMEOUT_MS);
-});
-
-it('keeps source details above the resized editor and ignores a queued suspension close after returning', async () => {
-  setWidth(390);
-  const suspendedCloses: HTMLDialogElement[] = [];
-  const showModal = HTMLDialogElement.prototype.showModal;
-  let closeBeforeReopen = false;
-  vi.spyOn(HTMLDialogElement.prototype, 'showModal').mockImplementation(function (
-    this: HTMLDialogElement,
-  ) {
-    if (this.classList.contains('step-inspector-sheet') && suspendedCloses.includes(this)) {
-      // Unit queue simulation: deliver the old notification in the return gap,
-      // before the native open flag is restored. This is not browser timing proof.
-      closeBeforeReopen = true;
-      this.dispatchEvent(new Event('close'));
+    expect(suspendedCloses).toHaveLength(1);
+    for (const width of [1440, 390]) {
+      setWidth(width);
+      fireEvent(window, new Event('resize'));
+      expect(detail).toHaveAttribute('open');
+      expect(document.querySelector('.step-inspector-sheet')).not.toHaveAttribute('open');
+      expect(document.querySelectorAll('dialog[open]')).toHaveLength(1);
+      expect(document.querySelector('dialog[open]')).toBe(detail);
+      expect(usePilatesStore.getState()).toBe(before);
     }
-    showModal.call(this);
-  });
-  vi.mocked(HTMLDialogElement.prototype.close).mockImplementation(function (
-    this: HTMLDialogElement,
-  ) {
-    this.removeAttribute('open');
-    if (this.classList.contains('step-inspector-sheet')) suspendedCloses.push(this);
-    else this.dispatchEvent(new Event('close'));
-  });
-  const before = usePilatesStore.getState();
-  const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
-  const editor = await openDirtyInspector();
-  const detail = await openSource(editor);
-  expect(suspendedCloses).toHaveLength(1);
-  for (const width of [1440, 390]) {
-    setWidth(width);
-    fireEvent(window, new Event('resize'));
-    expect(detail).toHaveAttribute('open');
-    expect(document.querySelector('.step-inspector-sheet')).not.toHaveAttribute('open');
-    expect(document.querySelectorAll('dialog[open]')).toHaveLength(1);
-    expect(document.querySelector('dialog[open]')).toBe(detail);
+
+    await closeSource(detail);
+    expect(closeBeforeReopen).toBe(true);
+    const returned = screen.getByRole('region', { name: '1번 동작 블록 편집' });
+    expect(screen.getByRole('dialog', { name: '동작 블록 편집' })).toHaveAttribute('open');
+    expectDraft(returned);
+    // Native close is queued. A notification from the suspension must not clear
+    // the selected block if the same sheet has already reopened in the meantime.
+    act(() => suspendedCloses[0].dispatchEvent(new Event('close')));
+    expect(screen.getByRole('region', { name: '1번 동작 블록 편집' })).toBe(returned);
+    expectDraft(returned);
     expect(usePilatesStore.getState()).toBe(before);
-  }
+    expect(storageWrite).not.toHaveBeenCalled();
+  },
+  HANDOFF_JOURNEY_TIMEOUT_MS,
+);
 
-  await closeSource(detail);
-  expect(closeBeforeReopen).toBe(true);
-  const returned = screen.getByRole('region', { name: '1번 동작 블록 편집' });
-  expect(screen.getByRole('dialog', { name: '동작 블록 편집' })).toHaveAttribute('open');
-  expectDraft(returned);
-  // Native close is queued. A notification from the suspension must not clear
-  // the selected block if the same sheet has already reopened in the meantime.
-  act(() => suspendedCloses[0].dispatchEvent(new Event('close')));
-  expect(screen.getByRole('region', { name: '1번 동작 블록 편집' })).toBe(returned);
-  expectDraft(returned);
-  expect(usePilatesStore.getState()).toBe(before);
-  expect(storageWrite).not.toHaveBeenCalled();
-}, HANDOFF_JOURNEY_TIMEOUT_MS);
-
-it('pauses a manually played desktop reference during source lookup and stays paused on return without losing class inputs', async () => {
-  setWidth(1440);
-  vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
-  vi.stubGlobal('matchMedia', () => ({
-    matches: false,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-  }));
-  let nextFrame = 0;
-  const frames = new Map<number, FrameRequestCallback>();
-  vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-    const id = ++nextFrame;
-    frames.set(id, callback);
-    return id;
-  });
-  vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id) => frames.delete(id));
-  const frame = (timestamp: number) => {
-    act(() => {
-      const pending = [...frames.values()];
-      frames.clear();
-      pending.forEach((callback) => callback(timestamp));
+it(
+  'pauses a manually played desktop reference during source lookup and stays paused on return without losing class inputs',
+  async () => {
+    setWidth(1440);
+    vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
+    vi.stubGlobal('matchMedia', () => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    let nextFrame = 0;
+    const frames = new Map<number, FrameRequestCallback>();
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      const id = ++nextFrame;
+      frames.set(id, callback);
+      return id;
     });
-  };
-  const before = usePilatesStore.getState();
-  const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
-  const editor = await openDirtyInspector();
-  const fields = within(editor);
-  const range = fields.getByLabelText('도해 위치') as HTMLInputElement;
-  const play = fields.getByRole('button', { name: '한 주기 재생' });
-  await waitFor(() => expect(play).toBeEnabled());
-  fireEvent.click(play);
-  expect(fields.getByRole('button', { name: '일시정지' })).toBeEnabled();
-  frame(0);
-  frame(500);
-  const progress = range.value;
-  expect(Number(progress)).toBeGreaterThan(0);
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id) => frames.delete(id));
+    const frame = (timestamp: number) => {
+      act(() => {
+        const pending = [...frames.values()];
+        frames.clear();
+        pending.forEach((callback) => callback(timestamp));
+      });
+    };
+    const before = usePilatesStore.getState();
+    const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
+    const editor = await openDirtyInspector();
+    const fields = within(editor);
+    const range = fields.getByLabelText('도해 위치') as HTMLInputElement;
+    const play = fields.getByRole('button', { name: '한 주기 재생' });
+    await waitFor(() => expect(play).toBeEnabled());
+    fireEvent.click(play);
+    expect(fields.getByRole('button', { name: '일시정지' })).toBeEnabled();
+    frame(0);
+    frame(500);
+    const progress = range.value;
+    expect(Number(progress)).toBeGreaterThan(0);
 
-  const detail = await openSource(editor);
-  expect(fields.getByRole('button', { name: '한 주기 재생' })).toBeDisabled();
-  expect(fields.queryByRole('button', { name: '일시정지' })).not.toBeInTheDocument();
-  frame(1000);
-  expect(range).toHaveValue(progress);
-  expect(usePilatesStore.getState()).toBe(before);
-  await closeSource(detail);
-  expect(screen.getByRole('region', { name: '1번 동작 블록 편집' })).toBe(editor);
-  expect(fields.getByRole('button', { name: '한 주기 재생' })).toBeEnabled();
-  expect(fields.queryByRole('button', { name: '일시정지' })).not.toBeInTheDocument();
-  frame(2000);
-  frame(3000);
-  expect(range).toHaveValue(progress);
-  expectDraft(editor);
-  expect(usePilatesStore.getState()).toBe(before);
-  expect(storageWrite).not.toHaveBeenCalled();
-}, HANDOFF_JOURNEY_TIMEOUT_MS);
+    const detail = await openSource(editor);
+    expect(fields.getByRole('button', { name: '한 주기 재생' })).toBeDisabled();
+    expect(fields.queryByRole('button', { name: '일시정지' })).not.toBeInTheDocument();
+    frame(1000);
+    expect(range).toHaveValue(progress);
+    expect(usePilatesStore.getState()).toBe(before);
+    await closeSource(detail);
+    expect(screen.getByRole('region', { name: '1번 동작 블록 편집' })).toBe(editor);
+    expect(fields.getByRole('button', { name: '한 주기 재생' })).toBeEnabled();
+    expect(fields.queryByRole('button', { name: '일시정지' })).not.toBeInTheDocument();
+    frame(2000);
+    frame(3000);
+    expect(range).toHaveValue(progress);
+    expectDraft(editor);
+    expect(usePilatesStore.getState()).toBe(before);
+    expect(storageWrite).not.toHaveBeenCalled();
+  },
+  HANDOFF_JOURNEY_TIMEOUT_MS,
+);

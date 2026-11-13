@@ -29,7 +29,7 @@ afterEach(() => {
 });
 
 const renderAtlas = () =>
-  render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+  render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
 
 describe('Wave1-2 Library 3-step guided discovery, sessionStorage recovery, and empty-result reset', () => {
   it('updates the 3-step discovery strip dynamically across filter/search, card selection, and inspector close', async () => {

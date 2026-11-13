@@ -19,6 +19,7 @@ import {
 import { CATALOG_VISUAL_SOURCE_COMPARISONS } from '../../data/movementVisualSourceAudit';
 import { ORIGINAL_MOVEMENTS } from '../../data/originalMovements';
 import { INITIAL_EXERCISES } from '../../data/pilatesCatalog';
+import { EXPANDED_MOVEMENTS, getExpandedMovementSource } from '../../data/expandedMovements';
 import { SUPINE_REACH_DEFINITION } from '../../data/supineReach';
 import { getExerciseEvidence } from '../../utils/exerciseEvidence';
 import {
@@ -44,14 +45,34 @@ import {
   verifyZeroDuplicateVisualAssets,
 } from './index';
 
-describe('motionCoverage module — 98 catalog reuse, registry cross-check, draft vs continuous, projected-3d vs true-3d, and non-ready invariants', () => {
-  it('cross-verifies all 98 catalog IDs against existing rig and motion reference registries', () => {
-    expect(INITIAL_EXERCISES).toHaveLength(98);
+const historicalExercises = INITIAL_EXERCISES.filter(
+  (exercise) => !exercise.id.startsWith('expanded-'),
+);
+
+describe('motionCoverage module — current catalog, source-only entries, draft motion, and non-ready invariants', () => {
+  it('cross-verifies pending motion records for the full catalog without granting assets or approval to source-only entries', () => {
+    expect(INITIAL_EXERCISES).toHaveLength(historicalExercises.length + EXPANDED_MOVEMENTS.length);
     expect(ORIGINAL_MOVEMENTS).toHaveLength(60);
-    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(98);
-    expect(MOVEMENT_VISUAL_ASSET_MAP.size).toBe(98);
-    expect(CATALOG_VISUAL_SOURCE_COMPARISONS).toHaveLength(98);
-    expect(EXERCISE_MOTION_REFERENCES).toHaveLength(98);
+    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(INITIAL_EXERCISES.length);
+    expect(MOVEMENT_VISUAL_ASSET_MAP.size).toBe(INITIAL_EXERCISES.length);
+    expect(CATALOG_VISUAL_SOURCE_COMPARISONS).toHaveLength(INITIAL_EXERCISES.length);
+    expect(EXERCISE_MOTION_REFERENCES.map((reference) => reference.exerciseId)).toEqual(
+      INITIAL_EXERCISES.map((exercise) => exercise.id),
+    );
+    for (const exercise of EXPANDED_MOVEMENTS) {
+      expect(
+        EXERCISE_MOTION_REFERENCES.find((reference) => reference.exerciseId === exercise.id),
+      ).toEqual({
+        exerciseId: exercise.id,
+        exerciseName: exercise.nameKo,
+        apparatus: exercise.apparatus,
+        status: 'not_authored',
+        asset: null,
+        prototypeId: null,
+        professionalReviewStatus: 'unreviewed',
+        expertApproved: false,
+      });
+    }
     expect(MOTION_PROTOTYPES).toHaveLength(2);
     expect(MOTION_PATTERN_REFERENCES).toHaveLength(22);
     expect(MOTION_DRAFTS).toHaveLength(17);
@@ -62,15 +83,15 @@ describe('motionCoverage module — 98 catalog reuse, registry cross-check, draf
     expect(MOTION_REFERENCE_COUNTS.expertApprovedMotions).toBe(0);
 
     const allResolutions = resolveAllCatalogMotionCoverage();
-    expect(allResolutions).toHaveLength(98);
+    expect(allResolutions).toHaveLength(INITIAL_EXERCISES.length);
 
     const summary = getMotionCoverageSummary();
-    expect(summary.totalCatalogExercises).toBe(98);
+    expect(summary.totalCatalogExercises).toBe(INITIAL_EXERCISES.length);
     expect(summary.registryCrossCheck).toEqual({
-      catalogExercisesCount: 98,
+      catalogExercisesCount: INITIAL_EXERCISES.length,
       originalMovementsCount: 60,
-      movementVisualAssetsCount: 98,
-      exerciseMotionReferencesCount: 98,
+      movementVisualAssetsCount: INITIAL_EXERCISES.length,
+      exerciseMotionReferencesCount: EXERCISE_MOTION_REFERENCES.length,
       motionPatternReferencesCount: 22,
       motionDraftsCount: 17,
       batchVariantsCount: 4,
@@ -80,16 +101,16 @@ describe('motionCoverage module — 98 catalog reuse, registry cross-check, draf
 
     expect(summary.primaryModeCounts['projected-3d']).toBe(20);
     expect(summary.primaryModeCounts['continuous-2d']).toBe(1);
-    expect(summary.primaryModeCounts['three-phase-2d']).toBe(77);
-    expect(summary.primaryModeCounts.missing).toBe(0);
+    expect(summary.primaryModeCounts['three-phase-2d']).toBe(historicalExercises.length - 21);
+    expect(summary.primaryModeCounts.missing).toBe(EXPANDED_MOVEMENTS.length);
 
     expect(summary.modeSupportCounts.projected3d).toBe(20);
     expect(summary.modeSupportCounts.continuous2d).toBe(1);
-    expect(summary.modeSupportCounts.threePhase2d).toBe(98);
-    expect(summary.modeSupportCounts.threePhase2dCatalogVerified).toBe(98);
-    expect(summary.modeSupportCounts.threePhase2dReusedByIdentity).toBe(98);
+    expect(summary.modeSupportCounts.threePhase2d).toBe(historicalExercises.length);
+    expect(summary.modeSupportCounts.threePhase2dCatalogVerified).toBe(historicalExercises.length);
+    expect(summary.modeSupportCounts.threePhase2dReusedByIdentity).toBe(historicalExercises.length);
     expect(summary.modeSupportCounts.duplicateAssetCount).toBe(0);
-    expect(summary.modeSupportCounts.missing).toBe(0);
+    expect(summary.modeSupportCounts.missing).toBe(EXPANDED_MOVEMENTS.length);
 
     // Non-negotiable global safety invariants
     expect(summary.canonicalReadyCount).toBe(0);
@@ -100,11 +121,11 @@ describe('motionCoverage module — 98 catalog reuse, registry cross-check, draf
     expect(summary.unauthoredResearchCandidateCount).toBe(2);
   });
 
-  it('reuses the existing 98 2D poses directly by reference identity without creating duplicate assets', () => {
+  it('retains internal pose registries by identity and renders only the eligible historical diagrams', () => {
     const dedupAudit = verifyZeroDuplicateVisualAssets();
     expect(dedupAudit).toEqual({
-      totalCatalogAssets: 98,
-      reusedByIdentityCount: 98,
+      totalCatalogAssets: INITIAL_EXERCISES.length,
+      reusedByIdentityCount: INITIAL_EXERCISES.length,
       duplicateAssetCount: 0,
     });
 
@@ -118,6 +139,13 @@ describe('motionCoverage module — 98 catalog reuse, registry cross-check, draf
       expect(canonicalRigAsset).not.toBeNull();
       // Strict === reference identity check: zero duplicate asset objects allocated
       expect(reusedAsset).toBe(canonicalRigAsset);
+      if (exercise.id.startsWith('expanded-')) {
+        expect(adapterAsset).toBeNull();
+        expect(resolution.primaryMode).toBe('missing');
+        expect(resolution.threePhase2d.asset).toBeNull();
+        expect(resolution.threePhase2d.reusesExistingCatalogAsset).toBe(false);
+        continue;
+      }
       expect(adapterAsset).toBe(canonicalRigAsset);
       expect(resolution.threePhase2d.asset).toBe(canonicalRigAsset);
       expect(resolution.threePhase2d.asset).toBe(mapRigAsset);
@@ -136,8 +164,45 @@ describe('motionCoverage module — 98 catalog reuse, registry cross-check, draf
     }
   });
 
+  it('keeps every expanded movement source-only even when a phase or lab rendering mode is requested', () => {
+    for (const exercise of EXPANDED_MOVEMENTS) {
+      const source = getExpandedMovementSource(exercise)!;
+      const resolution = resolveMotionCoverage(exercise, {
+        preferMode: 'three-phase-2d',
+        includeLabPrototypesInContinuous2d: true,
+      });
+      const descriptor = resolveRenderableMotionDescriptor(exercise);
+      expect(resolution.isCatalogExercise).toBe(true);
+      expect(resolution.safetyFlags.canonicalRecordExists).toBe(true);
+      expect(resolution.safetyFlags.canonicalAssetReady).toBe(false);
+      expect(resolution.safetyFlags.expertApproved).toBe(false);
+      expect(resolution.isMissing).toBe(true);
+      expect(resolution.primaryMode).toBe('missing');
+      expect(resolution.supportedModes).toEqual([]);
+      expect(resolution.threePhase2d.asset).toBeNull();
+      expect(resolution.continuous2d.supported).toBe(false);
+      expect(resolution.projected3d.supported).toBe(false);
+      expect(resolution.threePhase2d.sourceComparison?.extendedAuditSummary).toMatchObject({
+        factualRecordSha256: '',
+        auditCheckedAt: '2026-11-13',
+        hasExtendedCandidateMotionModel: false,
+        hasClearedYoutubeReplacementAudit: false,
+      });
+      expect(
+        resolution.threePhase2d.sourceComparison?.matchedReliableSources.map((item) => item.url),
+      ).toContain(source.sourceUrl);
+      expect(descriptor.badgeLabelKo).toContain('제작자 영상');
+      expect(toAllPhaseDiagramProps(exercise)).toBeNull();
+      expect(toMovementTriptychProps(exercise)).toBeNull();
+      expect(resolvePatternReferencesForRenderer(exercise)).toEqual([]);
+      expect(evaluateMotionCandidateMatch(exercise, 'bridge-pattern').rejection?.reason).toBe(
+        'model-not-authored',
+      );
+    }
+  });
+
   it('distinguishes discrete 3-phase 2D vs continuous progress, and draft proposals vs canonical continuous', () => {
-    // 1. All 98 canonical EXERCISE_MOTION_REFERENCES are `not_authored` with `asset: null`
+    // Every current registry entry remains `not_authored` with `asset: null`.
     for (const motionRef of EXERCISE_MOTION_REFERENCES) {
       expect(motionRef.status).toBe('not_authored');
       expect(motionRef.asset).toBeNull();
@@ -374,8 +439,8 @@ describe('motionCoverage module — 98 catalog reuse, registry cross-check, draf
     ).toBe('body-position-mismatch');
   });
 
-  it('never marks non-existent or unauthored motions as ready across all 98 IDs, V7 research candidates, and unknown inputs', () => {
-    // 1. Check all 98 catalog IDs
+  it('never marks non-existent or unauthored motions as ready across the full catalog, research candidates, and unknown inputs', () => {
+    // 1. Check every current catalog ID.
     for (const exercise of INITIAL_EXERCISES) {
       const res = resolveMotionCoverage(exercise.id);
       const desc = resolveRenderableMotionDescriptor(exercise.id);
@@ -430,7 +495,7 @@ describe('motionCoverage module — 98 catalog reuse, registry cross-check, draf
 
       // Backward compatibility with existing ExerciseEvidence fields
       expect(enhancedEvidence.motion.status).toBe('not-authored');
-      expect(enhancedEvidence.motion.label).toBe('3단계·연속 도해 대조 완료');
+      expect(enhancedEvidence.motion.label).toBe(baseEvidence.motion.label);
       expect(enhancedEvidence.motion.professionallyApprovedCount).toBe(0);
       expect(enhancedEvidence.motion.unreviewedLabPrototypeCount).toBe(2);
       expect(enhancedEvidence.motion.professionalReviewStatus).toBe('unreviewed');
@@ -441,8 +506,14 @@ describe('motionCoverage module — 98 catalog reuse, registry cross-check, draf
 
       // Motion coverage overlay invariants
       expect(enhancedEvidence.motion.coverage).toEqual(overlay);
-      expect(overlay.reusesExisting98PoseByIdentity).toBe(true);
-      expect(overlay.discreteThreePhase2dSupported).toBe(true);
+      const isSourceOnly = exercise.id.startsWith('expanded-');
+      expect(overlay.reusesExisting98PoseByIdentity).toBe(!isSourceOnly);
+      expect(overlay.discreteThreePhase2dSupported).toBe(!isSourceOnly);
+      if (isSourceOnly) {
+        expect(overlay.primaryMode).toBe('missing');
+        expect(overlay.supportLevelLabelKo).toContain('제작자 영상');
+        expect(overlay.continuousDraftSupported).toBe(false);
+      }
       expect(overlay.canonicalContinuousReady).toBe(false);
       expect(overlay.manualReady).toBe(false);
       expect(overlay.true3dSupported).toBe(false);

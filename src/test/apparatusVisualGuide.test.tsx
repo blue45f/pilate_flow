@@ -139,6 +139,7 @@ describe('Apparatus Visual Guide Catalog & Interactive Blueprint UI', () => {
   it('renders the apparatus visual guide ribbon inside ExerciseAtlasView, SequenceWorkbench, and ClassBinderView', async () => {
     render(
       <ExerciseAtlasView
+        initialView="tools"
         onOpenYouTubePreview={() => undefined}
         onOpenClipper={() => undefined}
       />,

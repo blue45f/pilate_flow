@@ -31,6 +31,10 @@ export function ExtendedMotionVerificationPanel({
 
   const candidateModel = resolveExtendedCandidateMotionModel(exercise.id);
   const auditBundle = resolveExtendedMotionSourceAudit(exercise);
+  const hasFactualRecord = auditBundle.primaryFactualRecordSha256.trim().length > 0;
+  const integrityState = !hasFactualRecord
+    ? 'unrecorded'
+    : auditBundle.sha256IntegrityVerified ? 'matched' : 'mismatch';
 
   const normalizedProgress = Math.max(0, Math.min(1, progressPercent / 100));
   const pose = candidateModel ? candidateModel.samplePose(normalizedProgress) : null;
@@ -107,11 +111,13 @@ export function ExtendedMotionVerificationPanel({
               marginTop: '2px',
             }}
           >
-            {auditBundle.verificationBoundaryNoticeKo} · 기준일 {auditBundle.checkedAt}
+            {auditBundle.verificationBoundaryNoticeKo}
+            {auditBundle.checkedAt ? ` · 기준일 ${auditBundle.checkedAt}` : ''}
           </div>
         </div>
         <span
           data-testid="extended-factual-sha256-badge"
+          data-integrity-state={integrityState}
           style={{
             fontSize: '0.74rem',
             fontFamily: 'monospace',
@@ -121,7 +127,9 @@ export function ExtendedMotionVerificationPanel({
             color: 'var(--pf-color-text-primary, #1e293b)',
           }}
         >
-          SHA-256: {auditBundle.primaryFactualRecordSha256.slice(0, 16)}…
+          {hasFactualRecord
+            ? `SHA-256: ${auditBundle.primaryFactualRecordSha256.slice(0, 16)}…`
+            : '프레임 대조 기록 없음'}
         </span>
       </div>
 
@@ -646,6 +654,7 @@ export function ExtendedMotionVerificationPanel({
       </details>
       <div
         data-testid="extended-verification-boundary-notice"
+        data-integrity-state={integrityState}
         style={{
           marginTop: '6px',
           paddingTop: '6px',
@@ -655,15 +664,14 @@ export function ExtendedMotionVerificationPanel({
           overflowWrap: 'anywhere',
         }}
       >
-        전문의·외부 임상 승인 0건 · 해부학적 정밀성 가정 안 함 · 원장 레코드 SHA-256 해시 일치:{' '}
-        <strong>
-          {auditBundle.sha256IntegrityVerified ? '일치 (내용 정확성·전문가 검증 아님)' : '불일치'}
-        </strong>{' '}
-        (
-        <code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>
-          {auditBundle.primaryFactualRecordSha256}
-        </code>
-        )
+        전문의·외부 임상 승인 0건 · 해부학적 정밀성 가정 안 함 ·{' '}
+        {hasFactualRecord ? (
+          <>
+            원장 레코드 SHA-256 해시 일치:{' '}
+            <strong>{auditBundle.sha256IntegrityVerified ? '일치 (내용 정확성·전문가 검증 아님)' : '불일치'}</strong>{' '}
+            (<code style={{ overflowWrap: 'anywhere', wordBreak: 'break-all' }}>{auditBundle.primaryFactualRecordSha256}</code>)
+          </>
+        ) : <strong>프레임 대조 기록 없음</strong>}
       </div>
     </section>
   );

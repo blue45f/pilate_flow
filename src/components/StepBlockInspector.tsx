@@ -1,8 +1,8 @@
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { PostureAnatomyGuide } from './PostureAnatomyGuide';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
 import { SpringVisualPills } from './SpringVisualPills';
-import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import { useEffect, useState } from 'react';
 import {
   ArrowDown,
@@ -289,6 +289,7 @@ function StepBlockInspectorBody({
   const [estimateDetached, setEstimateDetached] = useState(false);
   const [calculatorResetKey, setCalculatorResetKey] = useState(0);
   const [showVisualGuide, setShowVisualGuide] = useState(false);
+  const [showMotionReference, setShowMotionReference] = useState(false);
 
   useEffect(() => {
     const snapshot = { stepId: step.stepId, exerciseId: step.exerciseId, base, draft };
@@ -522,16 +523,12 @@ function StepBlockInspectorBody({
         )}
       </div>
       {exercise && (() => {
-        const motion3d = resolveStudio3DMotionForExercise(exercise);
         return (
           <div className="pf-p05-quick-sheet-top" data-testid="step-inspector-3d-quick-sheet">
             <div className="pf-p05-hero-row">
-              <img
-                src={motion3d.peakImg}
-                alt=""
-                aria-hidden="true"
-                className="pf-p05-hero-thumb"
-              />
+              <ExerciseMotionArtwork
+                exercise={exercise}
+                className="pf-p05-hero-thumb" />
               <div className="pf-p05-hero-meta">
                 <strong>{String(index + 1).padStart(2, '0')} {exercise.nameKo}</strong>
                 <div className="pf-p05-hero-pills">
@@ -685,13 +682,24 @@ function StepBlockInspectorBody({
                 </label>
               </div>
             )}
-            <details className="pf-detail-progressive-drawer">
-              <summary><span>3D 모션 시작↔정점 &amp; 자세 정렬 도해 펼쳐보기</span></summary>
-              <div style={{ display: 'grid', gap: '8px', paddingTop: '8px' }}>
-                <Studio3DMotionHeroCard exercise={exercise} compact />
-                <StudioClinicalBriefCard exercise={exercise} compact />
-                <PostureAnatomyGuide exercise={exercise} compact />
-              </div>
+            <details
+              className="pf-detail-progressive-drawer"
+              data-testid="step-inspector-motion-reference"
+              open={showMotionReference}
+              onToggle={(event) => {
+                if (event.target === event.currentTarget) {
+                  setShowMotionReference(event.currentTarget.open);
+                }
+              }}
+            >
+              <summary><span>동작 재생·자세 프레임 펼쳐보기</span></summary>
+              {showMotionReference && (
+                <div style={{ display: 'grid', gap: '8px', paddingTop: '8px' }}>
+                  <Studio3DMotionHeroCard exercise={exercise} compact active={playbackActive} />
+                  <StudioClinicalBriefCard exercise={exercise} compact />
+                  <PostureAnatomyGuide exercise={exercise} compact />
+                </div>
+              )}
             </details>
           </div>
         );

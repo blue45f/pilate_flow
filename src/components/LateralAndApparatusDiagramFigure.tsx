@@ -521,6 +521,7 @@ export function LateralAndApparatusDiagramFigure({
       {/* 3-Phase Triptych Cards */}
       <div
         data-testid={`lateral-apparatus-triptych-${activeDiagramId}`}
+        className="movement-studio-phase-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',

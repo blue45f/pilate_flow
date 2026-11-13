@@ -13,8 +13,8 @@ const controlled = vi.hoisted(() => ({
 vi.mock('./CloudSyncPanel', () => {
   throw controlled.cloudError;
 });
-vi.mock('./SequenceWorkbench', () => ({
-  SequenceWorkbench: () => <div>수업 작업실 유지</div>,
+vi.mock('./SequenceStudioWorkbench', () => ({
+  SequenceStudioWorkbench: () => <div>수업 작업실 유지</div>,
 }));
 
 const message =

@@ -1,3 +1,4 @@
+import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import {
@@ -60,7 +61,7 @@ describe('2D diagram pose-apparatus contact regression (D-01..D-05 + mirrored sy
     expect(reformerPlank.phases.middle.joints.ankle).toEqual({ x: 114, y: 138 });
     expect(reformerPlank.phases.end.joints.ankle).toEqual({ x: 84, y: 138 });
 
-    for (const id of ['ex-plank-02', 'original-chair-incline-support', 'ex-kr-chair-01'] as const) {
+    for (const id of ['ex-plank-02', 'ex-kr-chair-01'] as const) {
       const chairPlank = getMovementVisualAsset(id)!;
       expect(chairPlank.archetypeId).toBe('chair-plank-pike-isolated');
       expect(chairPlank.phases.start.joints.wrist).toEqual({ x: 132, y: 106 });
@@ -69,11 +70,19 @@ describe('2D diagram pose-apparatus contact regression (D-01..D-05 + mirrored sy
       expect(chairPlank.phases.middle.joints.ankle).toEqual({ x: 208, y: 134 });
       expect(chairPlank.phases.end.joints.ankle).toEqual({ x: 216, y: 159 });
     }
+    const fixedSeat = getMovementVisualAsset('original-chair-incline-support')!;
+    expect(fixedSeat.archetypeId).toBe('chair-fixed-seat-incline-support');
+    for (const phase of Object.values(fixedSeat.phases)) {
+      expect(phase.joints.hand.y).toBe(106);
+      expect(phase.joints.toe.y).toBe(176);
+      expect(phase.joints.toe.x).toBeGreaterThan(240);
+      expect(phase.apparatusState.pedalAngleDeg).toBe(0);
+    }
   });
 
-  it('D-03: keeps carriageOffsetPx at 0 across all 18 Cadillac stationary table exercises', () => {
+  it('D-03: keeps carriageOffsetPx at 0 across all Cadillac stationary table exercises', () => {
     const cadillacAssets = MOVEMENT_VISUAL_ASSETS.filter((a) => a.apparatus === 'cadillac');
-    expect(cadillacAssets).toHaveLength(18);
+    expect(cadillacAssets).toHaveLength(INITIAL_EXERCISES.filter((exercise) => exercise.apparatus === 'cadillac').length);
     for (const asset of cadillacAssets) {
       expect(asset.phases.start.apparatusState.carriageOffsetPx).toBe(0);
       expect(asset.phases.middle.apparatusState.carriageOffsetPx).toBe(0);
@@ -382,23 +391,33 @@ describe('Round 4 semantic differentiation regression (SM-01..SM-08 + ambiguous-
       }
     }
 
-    // 5. Full 98-exercise muscle fallback & 294 SVG regression
-    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(98);
-    for (const asset of MOVEMENT_VISUAL_ASSETS) {
-      expect(asset.anatomicalAccuracyAssumed).toBe(false);
-      expect(calculatePhaseJointDelta(asset).maxDeltaPx).toBeGreaterThan(0);
-      for (const phase of ['start', 'middle', 'end'] as const) {
-        const svg = parseSvgFromMarkup(
-          renderToStaticMarkup(<MovementPhaseDiagramSvg asset={asset} phase={phase} />),
-        );
-        expect(svg.querySelectorAll('circle[data-joint-node]').length).toBe(7);
-        if (
-          phase !== 'start' &&
-          asset.exerciseId !== 'original-mat-clam' &&
-          asset.exerciseId !== 'original-mat-open-book'
-        ) {
-          expect(svg.querySelectorAll('[data-pose-delta-vector]').length).toBeGreaterThan(0);
-        }
+  });
+
+  const nativeAssets = MOVEMENT_VISUAL_ASSETS.filter((asset) => !asset.exerciseId.startsWith('expanded-'));
+  it('keeps all current catalog records and 98 native motion rigs in the renderer regression', () => {
+    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(INITIAL_EXERCISES.length);
+    expect(nativeAssets).toHaveLength(98);
+  });
+
+  // Preserve all 294 frame checks, with an independent time budget and failure
+  // label per exercise instead of rendering the entire catalog in one test.
+  it.each(nativeAssets)('renders all three native frames for $exerciseId', (asset) => {
+    expect(asset.anatomicalAccuracyAssumed).toBe(false);
+    expect(calculatePhaseJointDelta(asset).maxDeltaPx).toBeGreaterThan(0);
+    for (const phase of ['start', 'middle', 'end'] as const) {
+      const svg = parseSvgFromMarkup(
+        renderToStaticMarkup(<MovementPhaseDiagramSvg asset={asset} phase={phase} />),
+      );
+      expect(svg.querySelectorAll('circle[data-joint-node]').length).toBe(7);
+      if (
+        phase !== 'start' &&
+        asset.exerciseId !== 'original-mat-clam' &&
+        asset.exerciseId !== 'original-mat-open-book' &&
+        // A fixed-seat support hold intentionally has only a small breathing
+        // change. Do not require a large arrow by turning it back into a pike.
+        asset.exerciseId !== 'original-chair-incline-support'
+      ) {
+        expect(svg.querySelectorAll('[data-pose-delta-vector]').length).toBeGreaterThan(0);
       }
     }
   });

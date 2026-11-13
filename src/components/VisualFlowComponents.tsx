@@ -1,18 +1,11 @@
-import React, { useEffect, useId, useMemo, useState } from 'react';
-import { Pause, Play } from 'lucide-react';
+import { StudioMotionImage } from './StudioMotionImage';
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
+import React, { useMemo, useState } from 'react';
 import type { ApparatusType, PilatesExercise, SequenceStep } from '../types/pilates';
 import { isRestStep } from '../utils/sequenceEngine';
 import {
   getApparatusPrimary3DThumb,
-  resolveStudio3DMotionForExercise,
 } from '../utils/studio3dMotionCatalog';
-
-function isReducedMotionPreferred(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return false;
-  }
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
 
 export interface VisualApparatusTileOption {
   readonly id: ApparatusType | 'all';
@@ -98,7 +91,7 @@ export const VisualApparatusPhotoStrip: React.FC<VisualApparatusPhotoStripProps>
             onClick={() => onSelect(opt.id)}
           >
             <span className="pf-visual-apparatus-card__media" aria-hidden="true">
-              <img src={imgSrc} alt="" loading="lazy" />
+              <StudioMotionImage src={imgSrc} alt="" loading="lazy" />
               {isSelected && <span className="pf-visual-apparatus-card__check">✓</span>}
             </span>
             <span className="pf-visual-apparatus-card__meta">
@@ -113,8 +106,7 @@ export const VisualApparatusPhotoStrip: React.FC<VisualApparatusPhotoStripProps>
 };
 
 /**
- * Visual 3D Filmstrip showing the sequence's movement progression in images (Start -> Peak crossfade)
- * so instructors understand a class flow in 1 second without reading text lists.
+ * Sequence overview using a static frame from each exercise's shared motion model.
  */
 export const VisualSequenceFilmstrip: React.FC<{
   readonly steps: readonly SequenceStep[];
@@ -165,28 +157,16 @@ export const VisualSequenceFilmstrip: React.FC<{
       aria-label="시퀀스 비주얼 흐름 미리보기"
     >
       <p className="pf-visual-filmstrip__note">
-        기구·동작군 대표 3D 포즈 · 개별 동작의 자세와 주의사항은 세부 안내에서 확인하세요.
+        계획용 동작 도해 · 개별 동작의 자세와 주의사항은 세부 안내에서 확인하세요.
       </p>
       <div className="pf-visual-filmstrip__rail">
         {visibleEntries.map(({ step, index, exercise }) => {
-          const studio3d = resolveStudio3DMotionForExercise(exercise);
           const isActive =
             (activeStepId !== undefined && activeStepId !== null && activeStepId === step.stepId) ||
             (activeStepIndex !== undefined && activeStepIndex === index);
           const mediaStack = (
             <span className="pf-visual-filmstrip__media" aria-hidden="true">
-              <img
-                src={studio3d.startImg}
-                alt=""
-                loading="lazy"
-                className="pf-visual-filmstrip__img-start"
-              />
-              <img
-                src={studio3d.peakImg}
-                alt=""
-                loading="lazy"
-                className="pf-visual-filmstrip__img-peak"
-              />
+              <ExerciseMotionArtwork exercise={exercise} className="pf-visual-filmstrip__artwork" />
             </span>
           );
           if (onSelectStep) {
@@ -217,7 +197,7 @@ export const VisualSequenceFilmstrip: React.FC<{
               key={step.stepId}
               className={`pf-visual-filmstrip__frame is-static ${isActive ? 'is-active' : ''}`.trim()}
               role="img"
-              aria-label={`${index + 1}. ${exercise.nameKo} 대표 3D 포즈`}
+              aria-label={`${index + 1}. ${exercise.nameKo} 동작 도해`}
             >
               {mediaStack}
               <span className="pf-visual-filmstrip__num">{String(index + 1).padStart(2, '0')}</span>
@@ -237,113 +217,28 @@ export const VisualSequenceFilmstrip: React.FC<{
   );
 };
 
-/**
- * Interactive Dual Start <-> Peak 3D Pose Strip with live trajectory vector HUD
- * and optional Start->Peak crossfade motion toggle on Atlas & Finder cards.
- */
+/** Two static model phases for quick comparison; no unrelated image interpolation. */
 export const VisualDual3DPoseStrip: React.FC<{
   readonly exercise: PilatesExercise;
   readonly interactive?: boolean;
 }> = ({ exercise, interactive = true }) => {
-  const studio3d = resolveStudio3DMotionForExercise(exercise);
-  const markerId = useId();
-  const [morphing, setMorphing] = useState(false);
-  const [phaseTick, setPhaseTick] = useState<'start' | 'peak'>('peak');
-
-  useEffect(() => {
-    if (!morphing || isReducedMotionPreferred()) return;
-    const timer = window.setInterval(() => {
-      setPhaseTick((prev) => (prev === 'start' ? 'peak' : 'start'));
-    }, 1150);
-    return () => window.clearInterval(timer);
-  }, [morphing]);
-
-  const [fx, fy] = studio3d.trajectoryArc.from;
-  const [cx, cy] = studio3d.trajectoryArc.ctrl;
-  const [tx, ty] = studio3d.trajectoryArc.to;
-
+  const [comparisonPhase, setComparisonPhase] = useState<'middle' | 'end'>('middle');
   return (
-    <div
-      className={`pf-dual-3d-pose-strip ${morphing ? 'is-morphing' : ''}`.trim()}
-      data-testid="visual-dual-3d-pose-strip"
-    >
+    <div className="pf-dual-3d-pose-strip" data-testid="visual-dual-3d-pose-strip">
       <div className="pf-dual-3d-pose-strip__cell" aria-hidden="true">
-        <img src={studio3d.startImg} alt="" loading="lazy" />
-        <em>● 시작</em>
+        <ExerciseMotionArtwork exercise={exercise} phase="start" />
+        <em>시작 자세</em>
       </div>
-      <div className="pf-dual-3d-pose-strip__cell is-peak" aria-hidden="true">
-        <img
-          src={studio3d.startImg}
-          alt=""
-          loading="lazy"
-          className={`pf-dual-3d-pose-strip__ghost ${
-            morphing && phaseTick === 'start' ? 'is-visible' : ''
-          }`.trim()}
-        />
-        <img
-          src={studio3d.peakImg}
-          alt=""
-          loading="lazy"
-          className={`pf-dual-3d-pose-strip__main ${
-            morphing && phaseTick === 'start' ? 'is-dimmed' : ''
-          }`.trim()}
-        />
-        <svg
-          viewBox="0 0 100 65.625"
-          preserveAspectRatio="none"
-          className="pf-dual-3d-pose-strip__vector"
-        >
-          <defs>
-            <marker
-              id={`pf-dual-vec-${markerId}`}
-              viewBox="0 0 10 10"
-              refX="7"
-              refY="5"
-              markerWidth="4.5"
-              markerHeight="4.5"
-              orient="auto"
-            >
-              <path
-                d="M 1.5 1.5 L 8 5 L 1.5 8.5"
-                fill="none"
-                stroke="#F59E0B"
-                strokeWidth="2.3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </marker>
-          </defs>
-          <path
-            d={`M ${fx} ${fy * 0.65625} Q ${cx} ${cy * 0.65625} ${tx} ${ty * 0.65625}`}
-            fill="none"
-            stroke="#F59E0B"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            className="pf-hud-trajectory-path"
-            markerEnd={`url(#pf-dual-vec-${markerId})`}
-          />
-        </svg>
-        <em>
-          {morphing ? (phaseTick === 'start' ? '● 시작 전환' : '◆ 정점 수축') : '◆ 정점·궤적'}
-        </em>
+      <div className="pf-dual-3d-pose-strip__cell" aria-hidden="true">
+        <ExerciseMotionArtwork exercise={exercise} phase={comparisonPhase} />
+        <em>{comparisonPhase === 'middle' ? '정점 자세' : '복귀 자세'}</em>
       </div>
-      {interactive && !isReducedMotionPreferred() && (
-        <button
-          type="button"
-          className={`pf-dual-3d-pose-strip__play ${morphing ? 'is-playing' : ''}`.trim()}
-          aria-pressed={morphing}
-          aria-label={`${exercise.nameKo} 3D 시작·정점 교차 모션 ${morphing ? '정지' : '재생'}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            setMorphing((prev) => !prev);
-          }}
-        >
-          {morphing ? (
-            <Pause size={11} aria-hidden="true" />
-          ) : (
-            <Play size={11} aria-hidden="true" />
-          )}
-          <span>{morphing ? '모션 정지' : '모션 재생'}</span>
+      {interactive && (
+        <button type="button" className="pf-dual-3d-pose-strip__compare" aria-pressed={comparisonPhase === 'end'} onClick={(event) => {
+          event.stopPropagation();
+          setComparisonPhase((previous) => previous === 'middle' ? 'end' : 'middle');
+        }}>
+          {comparisonPhase === 'middle' ? '복귀 자세와 비교' : '정점 자세와 비교'}
         </button>
       )}
     </div>

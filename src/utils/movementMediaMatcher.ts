@@ -7,6 +7,11 @@ import {
   type MotionPatternReference,
 } from '../data/motionPatternReferences';
 import { getMovementProvenance } from '../data/movementProvenance';
+import { getExpandedMovementSource } from '../data/expandedMovements';
+import {
+  getExerciseSourcePageReferences,
+  getExerciseVideoEvidence,
+} from '../data/exerciseVideoBindings';
 import { PUBLIC_REFERENCES } from '../data/publicReferences';
 import {
   VERIFIED_REFERENCES,
@@ -28,7 +33,8 @@ import type {
   PublicMediaProvider,
   PublicMediaPublisherType,
 } from '../types/movementMediaGuidance';
-import type { PilatesExercise } from '../types/pilates';
+import type { ApparatusType, PilatesExercise } from '../types/pilates';
+import { getVideoMatchReasonKo, scoreVideoSemanticMatch } from './videoSemanticMatching';
 
 const MATCH_TIER_LABELS_KO: Readonly<Record<MediaMatchTier, string>> = Object.freeze({
   'exact-source-snapshot': '원본 출처 스냅샷 연결',
@@ -82,7 +88,8 @@ function inferPublisherTypeFromName(
   ) {
     return 'education-foundation';
   }
-  return 'certified-instructor-channel';
+  // A channel name alone cannot establish an instructor's credentials.
+  return 'instructor-curated-reference';
 }
 
 function buildSourceFromVerifiedReference(ref: VerifiedPublicReference): CrediblePublicMediaSource {
@@ -214,7 +221,7 @@ function extractTier2CuratedYouTubeMatches(exercise: PilatesExercise): MovementM
   if (typeof rawUrl !== 'string' || !rawUrl.trim()) return [];
 
   const parsedYt = parseYouTubeReference(rawUrl);
-  if (!parsedYt) return [];
+  if (!parsedYt || parsedYt.videoId !== exercise.youtube.videoId) return [];
 
   const startSec =
     typeof exercise.youtube.startSec === 'number' &&
@@ -237,6 +244,8 @@ function extractTier2CuratedYouTubeMatches(exercise: PilatesExercise): MovementM
   const region: 'kr' | 'global' =
     exercise.youtube.region ?? (/[가-힣]/.test(channelName) ? 'kr' : 'global');
   const provenance = getMovementProvenance(exercise);
+  const expandedSource = getExpandedMovementSource(exercise);
+  const videoEvidence = getExerciseVideoEvidence(exercise);
   const noteText = exercise.youtube.note?.trim() || `${exercise.nameKo} 수업 참고 구간`;
 
   const source: CrediblePublicMediaSource = Object.freeze({
@@ -244,7 +253,10 @@ function extractTier2CuratedYouTubeMatches(exercise: PilatesExercise): MovementM
     titleKo: `${exercise.nameKo} 참고 영상`,
     originalTitle: exercise.youtube.videoTitle?.trim() || exercise.nameEn || exercise.nameKo,
     publisher: channelName,
-    publisherType: inferPublisherTypeFromName(channelName, exercise.isCustom),
+    publisherType:
+      expandedSource || videoEvidence
+        ? 'instructor-curated-reference'
+        : inferPublisherTypeFromName(channelName, exercise.isCustom),
     provider: 'youtube',
     region,
     languageLabelKo:
@@ -257,8 +269,12 @@ function extractTier2CuratedYouTubeMatches(exercise: PilatesExercise): MovementM
     observationPoints: Object.freeze(
       startSec > 0 ? [Object.freeze({ seconds: startSec, note: noteText })] : [],
     ),
-    verificationStatusLabelKo: `${provenance.shortLabel} · ${provenance.label}`,
-    verifiedAt: null,
+    verificationStatusLabelKo: videoEvidence
+      ? `${videoEvidence.metadataStatus === 'creator-page-and-oembed' ? '제작자 원문·YouTube 제목·채널' : '기존 카탈로그 제목·채널'} 대조 · 실제 재생 미검수 · 시작/종료 구간 미검수 · 동일 시범·강사 자격 미검수`
+      : expandedSource
+        ? '제작자 원문·YouTube 제목·채널 확인 · 영상 전체 재생·모션 프레임·강사 자격 미검수'
+        : `${provenance.shortLabel} · ${provenance.label}`,
+    verifiedAt: videoEvidence?.metadataCheckedAt ?? expandedSource?.checkedAt ?? null,
     rightsNoteKo:
       '영상의 저작권은 원 채널 권리자에게 있습니다. 공식 YouTube 개인정보 보호 모드(youtube-nocookie) 수동 재생 및 외부 원본 링크만 제공합니다.',
     safetyDisclaimerKo:
@@ -267,20 +283,27 @@ function extractTier2CuratedYouTubeMatches(exercise: PilatesExercise): MovementM
   });
 
   const intervalLabel =
-    endSec !== null ? `${startSec}초~${endSec}초` : startSec > 0 ? `${startSec}초~` : '전체 구간';
+    endSec !== null
+      ? `${startSec}초~${endSec}초, 입력 구간`
+      : startSec > 0
+        ? `${startSec}초~, 입력 시작점`
+        : '영상 시작부터 · 동작 구간 미확인';
 
   return [
     createMatch(
       exercise.id,
       parsedYt.videoId,
       'curated-youtube-reference',
-      `동작 카드에 등록된 YouTube 참고 구간(${channelName}, ${intervalLabel})입니다.`,
+      `${videoEvidence?.relationshipNoteKo ?? '동작 카드에 등록된 YouTube 참조입니다.'} (${channelName}, ${intervalLabel}) 실제 시범과 구간 일치는 별도 확인이 필요합니다.`,
       source,
     ),
   ];
 }
 
-function splitPublisherAndTitle(label: string, fallbackTitle: string): {
+function splitPublisherAndTitle(
+  label: string,
+  fallbackTitle: string,
+): {
   publisher: string;
   title: string;
 } {
@@ -417,436 +440,84 @@ function extractTier3ClinicalPatternMatches(exercise: PilatesExercise): Movement
   return matches;
 }
 
-interface ScoredVerifiedReference {
-  readonly ref: VerifiedPublicReference;
-  readonly score: number;
-  readonly reasons: readonly string[];
-}
-
-function getExerciseSearchText(exercise: PilatesExercise): string {
-  return [
-    exercise.id,
-    exercise.nameKo,
-    exercise.nameEn,
-    exercise.movementFamily ?? '',
-    ...exercise.targetMuscles,
-    ...exercise.cues,
-  ]
-    .join(' ')
-    .toLowerCase();
-}
-
-function scoreWebsiteVerifiedReference(
-  exercise: PilatesExercise,
-  ref: VerifiedPublicReference,
-  searchText: string,
-): ScoredVerifiedReference {
-  let score = 0;
-  const reasons: string[] = [];
-
-  const normalizedEquipment = ref.requiredEquipment.map((eq) =>
-    eq === 'ladder-barrel' ? 'barrel' : eq,
-  );
-  if (normalizedEquipment.includes(exercise.apparatus)) {
-    score += 35;
-    reasons.push(`기구(${exercise.apparatus}) 일치`);
-  } else if (ref.requiredEquipment.length === 0 && exercise.apparatus === 'mat') {
-    score += 12;
-  }
-
-  const matchingProps = ref.requiredProps.filter(
-    (prop) => prop !== 'none' && exercise.props.includes(prop),
-  );
-  if (matchingProps.length > 0) {
-    score += 45;
-    reasons.push(`소도구(${matchingProps.join(', ')}) 일치`);
-  }
-
-  // Specific movement family / keyword alignments
-  if (
-    ref.id === 'mv-01' &&
-    (exercise.apparatus === 'chair' || exercise.blockCategory === 'footwork')
-  ) {
-    score += exercise.apparatus === 'chair' && exercise.blockCategory === 'footwork' ? 50 : 20;
-    reasons.push('체어·풋워크 정렬 패턴 관련');
-  }
-  if (
-    ref.id === 'mv-02' &&
-    (exercise.spinalPlanes.includes('lateral') ||
-      /side|옆|측굴|머메이드|mermaid|lean/i.test(searchText))
-  ) {
-    score += 30;
-    reasons.push('측굴(Side Lean/Bend) 움직임 관련');
-  }
-  if (
-    ref.id === 'mv-03' &&
-    (exercise.blockCategory === 'bridging' ||
-      /bridge|브릿지|브리지|hip extension|힙 익스텐션|둔근|pelvic/i.test(searchText))
-  ) {
-    score += 38;
-    reasons.push('브릿징·고관절 신전 패턴 관련');
-  }
-  if (
-    ref.id === 'mv-04' &&
-    (exercise.apparatus === 'barrel' ||
-      exercise.blockCategory === 'extension' ||
-      /swan|스완|신전|barrel|바렐/i.test(searchText))
-  ) {
-    score += exercise.apparatus === 'barrel' ? 42 : 28;
-    reasons.push('바렐·척추 신전(Swan) 패턴 관련');
-  }
-  if (
-    ref.id === 'mv-05' &&
-    (exercise.spinalPlanes.includes('lateral') ||
-      exercise.props.includes('theraband') ||
-      exercise.props.includes('long-band') ||
-      /side bend|사이드 벤드|사이드 밴드|측굴|mermaid|머메이드/i.test(searchText))
-  ) {
-    score += 32;
-    reasons.push('밴드·측굴 및 몸통 안정화 관련');
-  }
-  if (
-    ref.id === 'sr-01' &&
-    exercise.apparatus === 'reformer' &&
-    (exercise.blockCategory === 'warmup' ||
-      exercise.blockCategory === 'upper-body' ||
-      exercise.props.includes('magic-circle'))
-  ) {
-    score += 34;
-    reasons.push('리포머 상지·몸통 준비운동 시리즈 관련');
-  }
-  if (
-    ref.id === 'mv-06' &&
-    exercise.apparatus === 'reformer' &&
-    (exercise.blockCategory === 'footwork' || exercise.blockCategory === 'lower-body')
-  ) {
-    score += 24;
-    reasons.push('리포머 하지·외전근 조절 관련');
-  }
-  if (
-    ref.id === 'mv-07' &&
-    (exercise.blockCategory === 'upper-body' ||
-      /arm|row|pull|로잉|상체|광배근|어깨|chest expansion|press/i.test(searchText))
-  ) {
-    score += 34;
-    reasons.push('상지 견인·광배근·어깨 안정화 관련');
-  }
-  if (
-    ref.id === 'mv-08' &&
-    (exercise.bodyPosition === 'quadruped' ||
-      exercise.blockCategory === 'plank' ||
-      /quadruped|네발기기|arm reach|leg slide/i.test(searchText))
-  ) {
-    score += 38;
-    reasons.push('네발기기(Quadruped) 몸통·상하지 협응 관련');
-  }
-  if (
-    ref.id === 'mv-09' &&
-    (exercise.bodyPosition === 'side-lying' ||
-      /side-lying|사이드|옆으로 누운|clam|클램|side kick/i.test(searchText))
-  ) {
-    score += 40;
-    reasons.push('옆으로 누운 자세(Side-Lying) 고관절 패턴 관련');
-  }
-  if (
-    ref.id === 'mv-10' &&
-    (exercise.bodyPosition === 'kneeling' ||
-      exercise.blockCategory === 'lower-body' ||
-      /kneeling|닐링|무릎|sidekick|사이드킥/i.test(searchText))
-  ) {
-    score += 32;
-    reasons.push('무릎 선 자세(Kneeling) 고관절·몸통 제어 관련');
-  }
-  if (
-    ref.id === 'mv-11' &&
-    (exercise.apparatus === 'cadillac' ||
-      (exercise.bodyPosition === 'kneeling' && /thigh|타이|힌지|hinge|cadillac/i.test(searchText)))
-  ) {
-    score += 36;
-    reasons.push('캐딜락 롤다운바·무릎서기 힌지 제어 관련');
-  }
-  if (
-    ref.id === 'mv-12' &&
-    (exercise.apparatus === 'cadillac' || exercise.blockCategory === 'extension')
-  ) {
-    score += 34;
-    reasons.push('캐딜락 흉추 신전·후면 사슬 조절 관련');
-  }
-  if (
-    ref.id === 'mv-13' &&
-    exercise.apparatus === 'reformer' &&
-    (exercise.bodyPosition === 'kneeling' ||
-      exercise.blockCategory === 'cooldown' ||
-      exercise.blockCategory === 'lower-body')
-  ) {
-    score += 34;
-    reasons.push('리포머 무릎서기 대퇴·고관절 스트레치 관련');
-  }
-  if (
-    ref.id === 'mv-14' &&
-    exercise.apparatus === 'mat' &&
-    (exercise.blockCategory === 'extension' || exercise.bodyPosition === 'prone')
-  ) {
-    score += 42;
-    reasons.push('매트 엎드린 자세 척추 신전(Swan) 원형 관련');
-  }
-  if (
-    ref.id === 'mv-15' &&
-    exercise.apparatus === 'reformer' &&
-    (exercise.blockCategory === 'extension' || exercise.bodyPosition === 'prone')
-  ) {
-    score += 44;
-    reasons.push('리포머 척추 신전(Swan) 변형 관련');
-  }
-  if (
-    ref.id === 'mv-16' &&
-    ((exercise.apparatus === 'reformer' &&
-      (exercise.blockCategory === 'plank' ||
-        exercise.blockCategory === 'core' ||
-        exercise.bodyPosition === 'quadruped' ||
-        exercise.bodyPosition === 'kneeling')) ||
-      exercise.spinalPlanes.includes('rotation'))
-  ) {
-    score += 36;
-    reasons.push('리포머 니 스트레치 프렙·몸통 회전 안정성 관련');
-  }
-  if (
-    ref.id === 'mv-17' &&
-    exercise.apparatus === 'reformer' &&
-    (exercise.bodyPosition === 'standing' || exercise.blockCategory === 'lower-body')
-  ) {
-    score += 42;
-    reasons.push('리포머 스탠딩 스플릿·런지·하체 균형 관련');
-  }
-  if (
-    ref.id === 'sr-02' &&
-    (exercise.bodyPosition === 'standing' ||
-      exercise.blockCategory === 'footwork' ||
-      exercise.blockCategory === 'cooldown')
-  ) {
-    score += 30;
-    reasons.push('서서 하는 발목·무릎·전신 균형 통합 시리즈 관련');
-  }
-  if (
-    ref.id === 'sr-03' &&
-    (exercise.props.includes('foam-roller') ||
-      exercise.blockCategory === 'warmup' ||
-      exercise.blockCategory === 'cooldown')
-  ) {
-    score += exercise.props.includes('foam-roller') ? 45 : 22;
-    reasons.push('폼롤러·몸통 안정 및 가동성 시리즈 관련');
-  }
-  if (
-    ref.id === 'mv-18' &&
-    (exercise.blockCategory === 'feet-in-straps' ||
-      exercise.blockCategory === 'core' ||
-      /roll over|롤오버|short spine|숏스파인|straps|스트랩/i.test(searchText))
-  ) {
-    score += 32;
-    reasons.push('수파인 복부·고관절·척추 분절 제어 관련');
-  }
-
-  if (reasons.length === 0) {
-    reasons.push('필라테스 공식 교육기관(Merrithew) 동작 카탈로그 참고');
-  }
-
-  return { ref, score, reasons };
-}
-
-function scoreKoreanYoutubeVerifiedReference(
-  exercise: PilatesExercise,
-  ref: VerifiedPublicReference,
-  searchText: string,
-): ScoredVerifiedReference {
-  let score = 10;
-  const reasons: string[] = [];
-  const nameText = `${exercise.id} ${exercise.nameKo} ${exercise.nameEn}`.toLowerCase();
-
-  const matchingProps = ref.requiredProps.filter(
-    (prop) => prop !== 'none' && exercise.props.includes(prop),
-  );
-  if (matchingProps.length > 0) {
-    score += 45;
-    reasons.push(`소도구(${matchingProps.join(', ')}) 일치`);
-  }
-
-  switch (ref.id) {
-    case 'kr-01': // 헌드레드
-      if (/hundred|헌드레드|chest lift|체스트 리프트|ab series|앱 파이브/i.test(nameText)) {
-        score += 65;
-        reasons.push('동작명(헌드레드·체스트 리프트·복부 시리즈) 직접 관련');
-      } else if (
-        exercise.blockCategory === 'core' ||
-        /hundred|헌드레드|chest lift|체스트 리프트|curl|컬업|복부|ab/i.test(searchText)
-      ) {
-        score += 48;
-        reasons.push('코어·헌드레드·상복부 안정화 패턴 관련');
-      } else if (exercise.bodyPosition === 'supine') {
-        score += 20;
-        reasons.push('누운 자세(Supine) 코어 기본 정렬 참고');
-      }
-      break;
-    case 'kr-02': // 캣 스트레칭
-      if (/cat|캣|고양이|흉추|thoracic/i.test(nameText)) {
-        score += 62;
-        reasons.push('동작명(캣 스트레칭·흉추 분절) 직접 관련');
-      } else if (
-        exercise.bodyPosition === 'quadruped' ||
-        exercise.bodyPosition === 'kneeling' ||
-        exercise.blockCategory === 'extension' ||
-        /cat|캣|고양이|흉추|thoracic|척추|분절|swan|스완/i.test(searchText)
-      ) {
-        score += 46;
-        reasons.push('척추 분절·흉추 가동성(Cat Stretch) 패턴 관련');
-      }
-      break;
-    case 'kr-03': // 밴드 롤업
-      if (/roll-up|roll up|롤업|roll-down|rolldown|롤다운|band|밴드/i.test(nameText)) {
-        score += 62;
-        reasons.push('동작명(롤업·롤다운·밴드) 직접 관련');
-      } else if (
-        exercise.props.includes('theraband') ||
-        exercise.props.includes('long-band') ||
-        exercise.props.includes('loop-band') ||
-        exercise.bodyPosition === 'seated' ||
-        exercise.blockCategory === 'upper-body' ||
-        /roll|롤업|롤다운|롤백|시티드|seated|band|밴드|로잉|row/i.test(searchText)
-      ) {
-        score += 45;
-        reasons.push('탄력밴드·앉은 자세 척추 분절 및 상체 연결 참고');
-      }
-      break;
-    case 'kr-04': // 싱글 레그 익스텐션
-      if (
-        /single-leg|single leg|싱글 레그|knee-fold|니 폴드|heel-slide|힐 슬라이드/i.test(nameText)
-      ) {
-        score += 62;
-        reasons.push('동작명(싱글 레그·하지 조절) 직접 관련');
-      } else if (
-        exercise.blockCategory === 'lower-body' ||
-        exercise.blockCategory === 'footwork' ||
-        exercise.blockCategory === 'plank' ||
-        exercise.bodyPosition === 'side-lying' ||
-        exercise.bodyPosition === 'standing' ||
-        /leg|다리|하체|런지|lunge|스쿠터|scooter|풋워크|footwork|니 폴드|힐 슬라이드|클램|사이드킥/i.test(
-          searchText,
-        )
-      ) {
-        score += 46;
-        reasons.push('하지 정렬·한 다리 뻗기 및 코어 협응 패턴 관련');
-      }
-      break;
-    case 'kr-05': // 숄더 브릿지
-      if (/bridge|브릿지|브리지|pelvic lift|펠빅 리프트/i.test(nameText)) {
-        score += 65;
-        reasons.push('동작명(브릿지·펠빅 리프트) 직접 관련');
-      } else if (
-        exercise.blockCategory === 'bridging' ||
-        /bridge|브릿지|브리지|pelvic|골반|둔근|햄스트링|hip extension/i.test(searchText)
-      ) {
-        score += 52;
-        reasons.push('숄더 브릿지·둔근 및 후면 사슬 분절 패턴 관련');
-      }
-      break;
-    case 'kr-06': // 폼롤러 롤오버
-      if (exercise.props.includes('foam-roller') || /폼롤러|foam roller/i.test(nameText)) {
-        score += 64;
-        reasons.push('폼롤러 활용 척추·코어 제어 패턴 관련');
-      }
-      break;
-    case 'kr-07': // 롤오버
-      if (/roll over|롤오버|short spine|숏스파인|feet in straps|핏인스트랩/i.test(nameText)) {
-        score += 62;
-        reasons.push('동작명(롤오버·숏스파인·핏인스트랩) 직접 관련');
-      } else if (
-        exercise.blockCategory === 'feet-in-straps' ||
-        /롤오버|roll over|숏스파인|short spine|레그 스프링|프로그|frog/i.test(searchText)
-      ) {
-        score += 50;
-        reasons.push('하지 거상·척추 분절 및 코어 제어 패턴 관련');
-      }
-      break;
-    case 'kr-08': // 필라테스 기초 호흡
-      if (/breath|호흡|pelvic-clock|골반 시계|펠빅 클락/i.test(nameText)) {
-        score += 62;
-        reasons.push('동작명(호흡·골반 시계) 직접 관련');
-      } else if (
-        exercise.blockCategory === 'warmup' ||
-        exercise.blockCategory === 'cooldown' ||
-        /breath|호흡|골반 시계|pelvic clock|기초|준비/i.test(searchText)
-      ) {
-        score += 48;
-        reasons.push('필라테스 기초 호흡 및 코어 세팅 원리 관련');
-      }
-      break;
-    case 'kr-09': // 횡격막 호흡
-      if (/rib-breath|흉식|횡격막|diaphragmatic/i.test(nameText)) {
-        score += 64;
-        reasons.push('동작명(흉식·횡격막 호흡) 직접 관련');
-      } else if (
-        exercise.blockCategory === 'warmup' ||
-        exercise.blockCategory === 'cooldown' ||
-        /rib|흉식|횡격막|호흡|이완|마무리|쿨다운/i.test(searchText)
-      ) {
-        score += 47;
-        reasons.push('횡격막·흉곽 호흡 조절 및 몸통 안정화 원리 관련');
-      }
-      break;
-    default:
-      break;
-  }
-
-  if (reasons.length === 0) {
-    reasons.push('국내 공인 교육기관 파트너 채널(WITH PILATES) 동작 후보 참고');
-  }
-
-  return { ref, score, reasons };
+function extractSourcePageMatches(exercise: PilatesExercise): MovementMediaMatch[] {
+  return getExerciseSourcePageReferences(exercise).flatMap((reference, index) => {
+    const safeUrl = validateSafeExternalReferenceUrl(reference.url);
+    if (!safeUrl) return [];
+    const source: CrediblePublicMediaSource = Object.freeze({
+      sourceId: `source-page-${exercise.id}-${index}`,
+      titleKo:
+        reference.relation === 'transition-reference'
+          ? `${exercise.nameKo} · 동작 연결 단계 원문`
+          : `${exercise.nameKo} · 제작자 설명 원문`,
+      originalTitle: reference.title,
+      publisher: reference.publisher,
+      publisherType: 'instructor-curated-reference',
+      provider: 'official-website',
+      region: 'global',
+      languageLabelKo: '영문 원문 본문 확인 · 영상 재생 미검수',
+      url: safeUrl,
+      embedPolicy: 'external-link-only',
+      youtubeVideoId: null,
+      startSec: null,
+      endSec: null,
+      observationPoints: Object.freeze([]),
+      verificationStatusLabelKo:
+        '동작 설명 원문 본문 확인 · 실제 영상 재생·정확한 동작 구간 미검수',
+      verifiedAt: reference.checkedAt,
+      rightsNoteKo:
+        '제작자 원문 링크만 제공합니다. 영상 ID를 추정하거나 외부 자료를 복제하지 않습니다.',
+      safetyDisclaimerKo:
+        '원문의 설명은 계획을 검토하는 참고 자료입니다. 준비 변형·기구 설정과 개인별 적용은 강사가 확인해야 합니다.',
+    });
+    return [
+      createMatch(
+        exercise.id,
+        source.sourceId,
+        'clinical-pattern-source',
+        reference.relation === 'transition-reference'
+          ? '앞 동작의 복귀 자세에서 다음 동작의 준비 자세로 이어지는 연결 설명을 확인할 원문입니다. 영상 구간은 미확인입니다.'
+          : '이름이 대응하는 원문 설명입니다. 앱의 변형과 동일한 영상 시범으로 검수하지 않았습니다.',
+        source,
+      ),
+    ];
+  });
 }
 
 function extractTier4VerifiedCatalogMatches(exercise: PilatesExercise): MovementMediaMatch[] {
-  const searchText = getExerciseSearchText(exercise);
-  const websiteRefs = VERIFIED_REFERENCES.filter((ref) => ref.provider === 'website');
-  const youtubeRefs = VERIFIED_REFERENCES.filter((ref) => ref.provider === 'youtube');
-
-  const scoredWebsites = websiteRefs
-    .map((ref) => scoreWebsiteVerifiedReference(exercise, ref, searchText))
+  const compatible = VERIFIED_REFERENCES.map((ref) => {
+    const apparatus = ref.requiredEquipment
+      .map((equipment) => (equipment === 'ladder-barrel' ? 'barrel' : equipment))
+      .filter((equipment): equipment is ApparatusType =>
+        ['mat', 'reformer', 'cadillac', 'chair', 'barrel'].includes(equipment),
+      );
+    return {
+      ref,
+      score: scoreVideoSemanticMatch(exercise, {
+        title: `${ref.originalTitle} ${ref.title}`,
+        apparatus,
+        props: ref.requiredProps,
+      }),
+    };
+  })
+    .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score || a.ref.id.localeCompare(b.ref.id));
 
-  const scoredYoutubes = youtubeRefs
-    .map((ref) => scoreKoreanYoutubeVerifiedReference(exercise, ref, searchText))
-    .sort((a, b) => b.score - a.score || a.ref.id.localeCompare(b.ref.id));
-
-  const selected: MovementMediaMatch[] = [];
-
-  const topYoutube = scoredYoutubes[0];
-  if (topYoutube) {
-    const source = buildSourceFromVerifiedReference(topYoutube.ref);
-    selected.push(
+  // No quota padding: body area, generic equipment and class block cannot
+  // establish a movement match in this additional recommendation path either.
+  return (['youtube', 'website'] as const).flatMap((provider) => {
+    const selected = compatible.find((entry) => entry.ref.provider === provider);
+    if (!selected) return [];
+    return [
       createMatch(
         exercise.id,
-        topYoutube.ref.id,
+        selected.ref.id,
         'verified-catalog-match',
-        `검증 카탈로그 YouTube 후보(${topYoutube.ref.title}) 매칭 · ${topYoutube.reasons.join(', ')}`,
-        source,
+        `${getVideoMatchReasonKo(exercise)} (${selected.ref.title})`,
+        buildSourceFromVerifiedReference(selected.ref),
       ),
-    );
-  }
-
-  const topWebsite = scoredWebsites[0];
-  if (topWebsite) {
-    const source = buildSourceFromVerifiedReference(topWebsite.ref);
-    selected.push(
-      createMatch(
-        exercise.id,
-        topWebsite.ref.id,
-        'verified-catalog-match',
-        `공식 교육기관 카탈로그(${topWebsite.ref.title}) 매칭 · ${topWebsite.reasons.join(', ')}`,
-        source,
-      ),
-    );
-  }
-
-  return selected;
+    ];
+  });
 }
 
 function extractTier5PublicPortalMatches(exercise: PilatesExercise): MovementMediaMatch[] {
@@ -901,6 +572,7 @@ export function getMatchedPublicSourcesForExercise(
   const candidates: MovementMediaMatch[] = [
     ...extractTier1ExactSnapshotMatches(exercise),
     ...extractTier2CuratedYouTubeMatches(exercise),
+    ...extractSourcePageMatches(exercise),
     ...extractTier3ClinicalPatternMatches(exercise),
     ...extractTier4VerifiedCatalogMatches(exercise),
     ...extractTier5PublicPortalMatches(exercise),

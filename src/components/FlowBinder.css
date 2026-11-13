@@ -1,0 +1,309 @@
+/* Saved classes: find a plan, see its essentials, then open or teach it. */
+#root .flow-binder {
+  --flow-binder-ink: #203f35;
+  --flow-binder-line: #dedfd5;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0;
+  min-width: 0;
+  color: var(--flow-binder-ink);
+}
+#root .flow-binder .teaching-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin: 0 0 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+#root .flow-binder .teaching-page-header h1 {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 6px 0 8px;
+  font: 700 clamp(26px, 3vw, 34px)/1.2 var(--font-ui, ui-sans-serif, system-ui, sans-serif);
+  letter-spacing: -0.04em;
+}
+#root .flow-binder .teaching-page-header p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+#root .flow-binder .teaching-page-header .eyebrow {
+  color: #617568;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+#root .flow-binder .teaching-count {
+  background: #e9eee5;
+  color: #345344;
+  font-size: 14px;
+}
+#root .flow-binder .teaching-page-header > button {
+  flex-shrink: 0;
+}
+#root .flow-binder :is(button, summary) {
+  min-height: 44px;
+}
+#root .flow-binder :is(button, summary, input):focus-visible {
+  outline: 3px solid #3c7662;
+  outline-offset: 3px;
+}
+#root .flow-binder .flow-binder-browser {
+  margin: 18px 0 26px;
+}
+#root .flow-binder .teaching-collection-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0;
+  margin: 0 0 14px;
+}
+#root .flow-binder .teaching-search-row {
+  max-width: 680px;
+}
+#root .flow-binder .teaching-search {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--flow-binder-line);
+  border-radius: 12px;
+  min-height: 48px;
+}
+#root .flow-binder .teaching-search input {
+  min-width: 0;
+  min-height: 46px;
+  font-size: 15px;
+}
+#root .flow-binder .teaching-collection-toolbar > .muted {
+  margin-left: auto;
+  font-size: 12px;
+  white-space: nowrap;
+}
+#root .flow-binder .teaching-saved-quick-filters {
+  gap: 6px;
+  margin-bottom: 24px;
+}
+#root .flow-binder .teaching-saved-filter-pill {
+  border: 1px solid var(--flow-binder-line);
+  border-radius: 999px;
+  background: #fff;
+  color: #4c6155;
+  box-shadow: none;
+}
+#root .flow-binder .teaching-saved-filter-pill.active {
+  border-color: #244f3e;
+  background: #244f3e;
+  color: #fff;
+}
+#root .flow-binder .teaching-saved-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 288px), 1fr));
+  align-items: start;
+  gap: 20px;
+}
+#root .flow-binder .flow-binder-card {
+  display: block;
+  min-width: 0;
+  padding: 0 18px 14px;
+  border: 1px solid var(--flow-binder-line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgb(36 58 43 / 3%);
+  overflow: hidden;
+  transform: none;
+}
+#root .flow-binder .flow-binder-card.is-active-plan {
+  border-color: #6a8d76;
+  box-shadow: 0 0 0 1px #6a8d76;
+}
+#root .flow-binder .flow-binder-card .pf-binder-card-3d-strip {
+  display: block;
+  margin: 0 0 12px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+#root .flow-binder .flow-binder-card .pf-binder-card-3d-thumb {
+  display: block;
+  width: calc(100% + 36px);
+  max-width: none;
+  height: 154px;
+  margin: 0 -18px 18px;
+  padding: 10px 20px;
+  object-fit: contain;
+  background: #f3f3ec;
+  border: 0;
+  border-bottom: 1px solid #e8e9e0;
+  border-radius: 0;
+}
+#root .flow-binder .flow-binder-card .pf-binder-card-3d-meta {
+  min-width: 0;
+  padding: 0;
+}
+#root .flow-binder .flow-binder-card h2 {
+  margin: 0;
+  font: 700 18px/1.45 var(--font-ui, ui-sans-serif, system-ui, sans-serif);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+#root .flow-binder .teaching-saved-card-header {
+  margin-bottom: 10px;
+  gap: 8px;
+}
+#root .flow-binder .teaching-saved-card-title-row > .apparatus-icon-badge {
+  display: none;
+}
+#root .flow-binder .flow-binder-card .pf-class-badges-strip {
+  gap: 6px;
+  min-height: 24px;
+}
+#root .flow-binder .flow-binder-card .pf-class-apparatus-pill {
+  color: #3b5c49;
+  background: #edf1e9;
+  font-size: 12px;
+}
+#root .flow-binder .teaching-sequence-subtitle {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #637169;
+}
+#root .flow-binder .teaching-saved-glance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 16px;
+  margin-bottom: 16px;
+  color: #314c3d;
+  font-size: 14px;
+  line-height: 1.5;
+}
+#root .flow-binder .flow-binder-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+#root .flow-binder .flow-binder-moves {
+  font-weight: 600;
+}
+#root .flow-binder .flow-binder-recency {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: #6c786d;
+}
+#root .flow-binder .teaching-saved-primary-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+#root .flow-binder .teaching-saved-primary-actions button {
+  width: 100%;
+  border-radius: 10px;
+  min-height: 46px;
+  padding: 10px 8px;
+  font-size: 14px;
+}
+#root .flow-binder .flow-binder-secondary-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+  border-top: 1px solid #eceee7;
+  margin-top: 12px;
+  padding-top: 4px;
+}
+#root .flow-binder .flow-binder-secondary-actions button {
+  padding: 8px 5px;
+  font-size: 12px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: #5a6b5d;
+}
+#root .flow-binder .flow-binder-setup {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 0;
+  font-size: 13px;
+}
+#root .flow-binder .flow-binder-utilities {
+  margin: 26px 0 16px;
+  border: 1px solid var(--flow-binder-line);
+  border-radius: 14px;
+  background: #fff;
+}
+#root .flow-binder .flow-binder-utilities > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+}
+#root .flow-binder .flow-binder-utilities > summary > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+#root .flow-binder .flow-binder-utilities > summary small {
+  color: #768074;
+  font-size: 12px;
+}
+#root .flow-binder .flow-binder-utilities-content {
+  padding: 4px 20px 20px;
+}
+#root .flow-binder .flow-binder-utilities-content .teaching-separation-banner {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f4f5ef;
+  font-size: 12px;
+}
+#root .flow-binder .flow-binder-utilities-content .teaching-template-panel {
+  margin: 12px 0 20px;
+}
+@media (max-width: 680px) {
+  #root .flow-binder .teaching-page-header {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  #root .flow-binder .teaching-page-header h1 {
+    font-size: 25px;
+  }
+  #root .flow-binder .teaching-page-header > button {
+    padding: 10px;
+    max-width: 130px;
+  }
+  #root .flow-binder .teaching-page-header p {
+    font-size: 13px;
+  }
+  #root .flow-binder .teaching-collection-toolbar > .muted {
+    display: none;
+  }
+  #root .flow-binder .teaching-saved-grid {
+    gap: 16px;
+  }
+  #root .flow-binder .flow-binder-card .pf-binder-card-3d-thumb {
+    height: 146px;
+  }
+  #root .flow-binder .flow-binder-utilities > summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .flow-binder .flow-binder-card {
+    transition: none;
+  }
+}

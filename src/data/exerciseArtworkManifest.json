@@ -1,0 +1,2461 @@
+{
+  "schemaVersion": 1,
+  "renderer": "MovementPhaseDiagramSvg",
+  "width": 320,
+  "height": 200,
+  "purpose": "same-model-static-thumbnail-cache",
+  "professionalReviewVerified": false,
+  "sourceFrameMappingVerified": false,
+  "entries": {
+    "original-reformer-supine-breath": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-breath-pelvic-clock",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-reformer-supine-breath.start.273cd3fd17dc.svg",
+          "sha256": "273cd3fd17dc4014f479185ea939edf287ee33f2a2435e3eb1aee5ab0efa338e",
+          "bytes": 13756,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-reformer-supine-breath.middle.74529a406845.svg",
+          "sha256": "74529a40684555d00d400263a2d865666f3a0c0be673b240c8d74a0c92e96a9a",
+          "bytes": 13863,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-reformer-supine-breath.end.0941065ba4e1.svg",
+          "sha256": "0941065ba4e1b87f3164355134743f2b702bff2dbd843c7ac8630397986462bc",
+          "bytes": 14009,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-mat-rib-breath": {
+      "apparatus": "mat",
+      "bodyPosition": "supine",
+      "archetypeId": "mat-supine-rib-breath-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-rib-breath.start.72336ce784b9.svg",
+          "sha256": "72336ce784b9d45be40b301716482e49401b45de26f60bfe4a0875d256daec68",
+          "bytes": 12073,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-rib-breath.middle.43e50c804d1d.svg",
+          "sha256": "43e50c804d1db5162a7ca99ef1b2f7a7bb7b0a4845121498a1c242e9c9c88266",
+          "bytes": 12217,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-rib-breath.end.88b55dd57133.svg",
+          "sha256": "88b55dd5713386108436d628c59012ccd94e55bbed6adc6e01458132db7879d0",
+          "bytes": 12328,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-cadillac-table-breath": {
+      "apparatus": "cadillac",
+      "bodyPosition": "supine",
+      "archetypeId": "cadillac-table-breath-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-cadillac-table-breath.start.cb267833dc31.svg",
+          "sha256": "cb267833dc3107917e168e5da9b609bd08ca25b4e7be689958dd246cb056d29c",
+          "bytes": 13108,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-cadillac-table-breath.middle.1d714ab6e05f.svg",
+          "sha256": "1d714ab6e05f290777cfb740ea7a5eea8a75ee3f9b4b9d5ed77b70139daa33fb",
+          "bytes": 13267,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-cadillac-table-breath.end.25f407d6f945.svg",
+          "sha256": "25f407d6f945a6eb05c8199c98f0f728e80af5eb48cabdf5b4bf62b1b528a58d",
+          "bytes": 13397,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-chair-seated-breath": {
+      "apparatus": "chair",
+      "bodyPosition": "seated",
+      "archetypeId": "chair-seated-breath-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-chair-seated-breath.start.0d1a29a0b259.svg",
+          "sha256": "0d1a29a0b25956eee95c467dfd1825917f0d0862fc2846f0761e6f0b33cfbc22",
+          "bytes": 13097,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-chair-seated-breath.middle.2a525814c13f.svg",
+          "sha256": "2a525814c13f4f58fdc2609fe958834f8056af6e5566b79a0306ebb74b92a9e7",
+          "bytes": 13277,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-chair-seated-breath.end.03d37b50c5e5.svg",
+          "sha256": "03d37b50c5e5854bafbdaa904f7835f39e54f6278e1e125acacf4d4c7d6a9623",
+          "bytes": 13400,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-barrel-standing-breath": {
+      "apparatus": "barrel",
+      "bodyPosition": "standing",
+      "archetypeId": "barrel-standing-breath-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-barrel-standing-breath.start.d60349d58490.svg",
+          "sha256": "d60349d58490d4131ecb635592e8a145347c90bb76288e6bf817047863343466",
+          "bytes": 12870,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-barrel-standing-breath.middle.97dae99f8a15.svg",
+          "sha256": "97dae99f8a1548edf2dd7276950643fb17b0c40f650cf796b0a56c5a42fbe2e9",
+          "bytes": 13031,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-barrel-standing-breath.end.5ffed72da59d.svg",
+          "sha256": "5ffed72da59d1ecd2c2ac7cee9551b127664088d6a648f4e484477a8f20c4ee1",
+          "bytes": 13144,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-reformer-parallel-footwork": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "reformer-supine-footwork",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-reformer-parallel-footwork.start.1cb9845bb3c9.svg",
+          "sha256": "1cb9845bb3c91e738af1d7f77ec2a20adf9008d0f486dd05df37e80dbfbb8b23",
+          "bytes": 13846,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-reformer-parallel-footwork.middle.d3dcfe28990b.svg",
+          "sha256": "d3dcfe28990b9d641634ce12527a3ff889ae27ce1ebdb2378333dee21e91d364",
+          "bytes": 13892,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-reformer-parallel-footwork.end.59757343b206.svg",
+          "sha256": "59757343b206b5869dc75f07e9dbfb49047c6a875348e74286820e919d0fc41f",
+          "bytes": 14036,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-mat-pelvic-clock": {
+      "apparatus": "mat",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-pelvic-clock-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-pelvic-clock.start.628fa4afef3a.svg",
+          "sha256": "628fa4afef3a7c51bc11c89f32497b16b0838417da5f4196bd69f0f3d6ed37c8",
+          "bytes": 11972,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-pelvic-clock.middle.4c70667179a3.svg",
+          "sha256": "4c70667179a373c205b81824c6be6398803a449e8b5609004cee08dced5f5760",
+          "bytes": 12152,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-pelvic-clock.end.fe61b8647ce6.svg",
+          "sha256": "fe61b8647ce6948d4bbaad405a343581a8cab3f480425d898029320220b3b476",
+          "bytes": 12218,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-cadillac-pelvic-rock": {
+      "apparatus": "cadillac",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-pelvic-clock-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-cadillac-pelvic-rock.start.8cf22e0257cb.svg",
+          "sha256": "8cf22e0257cbda90d63abd2b32975f41c65f9638fb63d76e4336ff8941e698bb",
+          "bytes": 13312,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-cadillac-pelvic-rock.middle.1b83ac0a9a51.svg",
+          "sha256": "1b83ac0a9a51e7082e25cf8dad65c830ed09bfef5ed3d25e28c84b458f4a280e",
+          "bytes": 13492,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-cadillac-pelvic-rock.end.0ba5563934ae.svg",
+          "sha256": "0ba5563934ae37192bccd6fe680bf6563a4eee28d87a47653ea2afe5fd1257ec",
+          "bytes": 13590,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-chair-seated-pelvic-rock": {
+      "apparatus": "chair",
+      "bodyPosition": "seated",
+      "archetypeId": "chair-seated-pelvic-rock-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-chair-seated-pelvic-rock.start.8f9d4af937b8.svg",
+          "sha256": "8f9d4af937b810414c7ce2c09e7f3bdd57c5619085addbfc6430b44052523371",
+          "bytes": 13030,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-chair-seated-pelvic-rock.middle.ad938a7cf36f.svg",
+          "sha256": "ad938a7cf36fe263dcd619162e403833b6772c163491ffd67c854376c626933d",
+          "bytes": 13284,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-chair-seated-pelvic-rock.end.27c7d28fa177.svg",
+          "sha256": "27c7d28fa177369dcdb16577dd098eedb8d247bfaa95c946890e8081d7a06b15",
+          "bytes": 13364,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-barrel-supported-ankle": {
+      "apparatus": "barrel",
+      "bodyPosition": "standing",
+      "archetypeId": "barrel-supported-ankle-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-barrel-supported-ankle.start.007767d5683d.svg",
+          "sha256": "007767d5683d3d9fb7f940c4d231a0f473af59ba557d41dffc561dc2a0cb82d1",
+          "bytes": 12788,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-barrel-supported-ankle.middle.3e81c371caad.svg",
+          "sha256": "3e81c371caad5997e304783d7148b8988816ddca2140c3f6fa7c6ee7149a0ea8",
+          "bytes": 13002,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-barrel-supported-ankle.end.e0c140fd9e55.svg",
+          "sha256": "e0c140fd9e55a6aadae6b15023d1bca8e83505889c732954ba5af1e75320a7ec",
+          "bytes": 13133,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-reformer-supported-bridge": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-articulated-bridge",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-reformer-supported-bridge.start.90f3aaa0c55c.svg",
+          "sha256": "90f3aaa0c55ca6b7f99e463a19e4c6f7a73f9889216648a9b0d78a041fce9488",
+          "bytes": 13662,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-reformer-supported-bridge.middle.3312bc6ec963.svg",
+          "sha256": "3312bc6ec963d6cbc62943fe4df76c22146af1ffa62bd5dd016fa19c1cc24d44",
+          "bytes": 13857,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-reformer-supported-bridge.end.d303150f8564.svg",
+          "sha256": "d303150f8564243da1287bb4007fb063322cae2533191fca1c2f0de572fbd4ee",
+          "bytes": 13759,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-mat-ankle-reach": {
+      "apparatus": "mat",
+      "bodyPosition": "standing",
+      "archetypeId": "standing-ankle-calf-upper-reach",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-ankle-reach.start.66b88e85e63b.svg",
+          "sha256": "66b88e85e63b61f24bab6211699db77adf8d3f4dea1cbc42dbcd0b0a723adb90",
+          "bytes": 11708,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-ankle-reach.middle.e6c6899c37dd.svg",
+          "sha256": "e6c6899c37ddc7d069a746c9e854aacd3a14ee4579222b89c9565cfb1d790c88",
+          "bytes": 11878,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-ankle-reach.end.e547fa75c7de.svg",
+          "sha256": "e547fa75c7de497164da40ead4b9e68cbb00a239997cc063d3c4c4522dc3eec6",
+          "bytes": 11920,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-cadillac-table-ankle": {
+      "apparatus": "cadillac",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-heel-slide-ankle",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-cadillac-table-ankle.start.2102b4319259.svg",
+          "sha256": "2102b4319259788226940dd71a6c85823871a66ac00384addc7377ce34af3e5c",
+          "bytes": 13303,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-cadillac-table-ankle.middle.e2d39364fcf2.svg",
+          "sha256": "e2d39364fcf231a142a91e6202d84fb902093b2592bfcb2e18760a0278103a78",
+          "bytes": 13431,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-cadillac-table-ankle.end.de62b6fccba6.svg",
+          "sha256": "de62b6fccba67f1fee5650a1d981d13a2b9e0e0b58f728a9403d2865c849d123",
+          "bytes": 13552,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-chair-seated-pedal-press": {
+      "apparatus": "chair",
+      "bodyPosition": "seated",
+      "archetypeId": "chair-seated-pedal-footwork",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-chair-seated-pedal-press.start.89767e35656f.svg",
+          "sha256": "89767e35656f206696398fe80022dc07aa88f2a4aeaaa99cc389e260fb22fc39",
+          "bytes": 13096,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-chair-seated-pedal-press.middle.9ce80f7874ef.svg",
+          "sha256": "9ce80f7874efad21dff1de03c19bf4abe2bd114a46fd6ae47f6e7d70fbd34c05",
+          "bytes": 13249,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-chair-seated-pedal-press.end.62856310d092.svg",
+          "sha256": "62856310d092710db9e9a426d91197aef62551e1f4cedcf7b29f00ffd85553d2",
+          "bytes": 13316,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-barrel-seated-spine-reach": {
+      "apparatus": "barrel",
+      "bodyPosition": "seated",
+      "archetypeId": "seated-roll-back-spine-twist",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-barrel-seated-spine-reach.start.4beb0c6786f5.svg",
+          "sha256": "4beb0c6786f50e9f46116bdbc073e6cac0f630b61817e91c0ca58bf612fc62f9",
+          "bytes": 12726,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-barrel-seated-spine-reach.middle.a7447a8afbaf.svg",
+          "sha256": "a7447a8afbaf6b150d5a86755e14e08524f012ad478fc99f2be02d418e6aac52",
+          "bytes": 12878,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-barrel-seated-spine-reach.end.e169628be488.svg",
+          "sha256": "e169628be488d8696a47d7ac8feae3d165350e46b4c97ab704070c8969fcbe63",
+          "bytes": 12949,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-reformer-supine-arm-press": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-strap-arm-press",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-reformer-supine-arm-press.start.c59e3e931e90.svg",
+          "sha256": "c59e3e931e9066c249cc397db1d691ffc28b83adda0ce82bb24becce6010ce5f",
+          "bytes": 13863,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-reformer-supine-arm-press.middle.a67f4b940409.svg",
+          "sha256": "a67f4b940409730bff45ff92db0b6f188c838909b678c2aa3aa99e64089ebd20",
+          "bytes": 14032,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-reformer-supine-arm-press.end.4163ff59e998.svg",
+          "sha256": "4163ff59e998efe05a0397aee7bc92cb9fcd8263d2714cfa3a3cee3cadc199f7",
+          "bytes": 14172,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-mat-bridge": {
+      "apparatus": "mat",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-articulated-bridge",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-bridge.start.c2fb32a6e5ac.svg",
+          "sha256": "c2fb32a6e5accd19381e3a6bb2330cb75da618807c7b38568497ebd3f1cc3adc",
+          "bytes": 11799,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-bridge.middle.a0d6f151f274.svg",
+          "sha256": "a0d6f151f27496216c48ce8bffab68a5e6a70ffb77076491c47ae56e48dcbeb1",
+          "bytes": 12085,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-bridge.end.931add0d9c71.svg",
+          "sha256": "931add0d9c710f052c7b91a44667c1d1896df6b9dce6f5a836f73040f1bb3bab",
+          "bytes": 11963,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-cadillac-table-bridge": {
+      "apparatus": "cadillac",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-articulated-bridge",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-cadillac-table-bridge.start.5003849c0815.svg",
+          "sha256": "5003849c0815d50afde59c9b6a5eaf34e977a1aca4f4f5d60fe5d9b7698e64fb",
+          "bytes": 13006,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-cadillac-table-bridge.middle.2b9ea83b8b7a.svg",
+          "sha256": "2b9ea83b8b7a60881cdceca1065d380a3ce694a71d94dd4cc2f027593ea34df9",
+          "bytes": 13197,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-cadillac-table-bridge.end.8db1c83f4575.svg",
+          "sha256": "8db1c83f45751c2af80dff29660b2b37d868a59653c70326b09b960c79fd13d0",
+          "bytes": 13084,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-chair-alternating-pedal": {
+      "apparatus": "chair",
+      "bodyPosition": "seated",
+      "archetypeId": "chair-seated-pedal-footwork",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-chair-alternating-pedal.start.be0fed71ffee.svg",
+          "sha256": "be0fed71ffee31e4473dbfe3798386bee929b1e5fa2248fb5bb98f7a21e1199a",
+          "bytes": 13091,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-chair-alternating-pedal.middle.2fe010b17095.svg",
+          "sha256": "2fe010b17095b4776c38fdda8a13d1ee43e6baffe7c7963414fed7602d8dceba",
+          "bytes": 13244,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-chair-alternating-pedal.end.512bdac47014.svg",
+          "sha256": "512bdac470144cc0870bbc8234b960907de297f9b517881742339ff5b97d4b51",
+          "bytes": 13334,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-barrel-supported-arm-reach": {
+      "apparatus": "barrel",
+      "bodyPosition": "standing",
+      "archetypeId": "barrel-one-hand-supported-arm-reach",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-barrel-supported-arm-reach.start.e226a9356ed8.svg",
+          "sha256": "e226a9356ed8d3b44266df59b888e6310fdee4e6eb8a6208860f9dfdff344066",
+          "bytes": 12762,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-barrel-supported-arm-reach.middle.008a291ad7d8.svg",
+          "sha256": "008a291ad7d88b3524bb721c9593652dbc815a7296279c778368f707fe9934c9",
+          "bytes": 12905,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-barrel-supported-arm-reach.end.327558188726.svg",
+          "sha256": "327558188726912de7fb60140332fe31415e593d9e28b89fd00b2a251ed1eb72",
+          "bytes": 13146,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-reformer-seated-row": {
+      "apparatus": "reformer",
+      "bodyPosition": "seated",
+      "archetypeId": "seated-row-arm-arc",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-reformer-seated-row.start.6f488afa0a5c.svg",
+          "sha256": "6f488afa0a5c2fe828d3052555765e6be31157182ec88697d04965d207873d85",
+          "bytes": 14263,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-reformer-seated-row.middle.a219ac10507c.svg",
+          "sha256": "a219ac10507c4d62026b3f8a105197bd9fed860f8f290dc7b6bf1624b836cab8",
+          "bytes": 14424,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-reformer-seated-row.end.5cffd21155ae.svg",
+          "sha256": "5cffd21155ae605f3ef6868b6cb14e82b005a0e522a71b66276874401e4020ad",
+          "bytes": 14530,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-mat-heel-slide": {
+      "apparatus": "mat",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-heel-slide-ankle",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-heel-slide.start.6fe886f7412e.svg",
+          "sha256": "6fe886f7412edde1b70c6a5451bc960ad9778d92720a9889ce04bfef962472e7",
+          "bytes": 11951,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-heel-slide.middle.5281eac1fbe1.svg",
+          "sha256": "5281eac1fbe1a9be30b3a285fc3234c07c72534cf516805c101cb48eac42e841",
+          "bytes": 12155,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-heel-slide.end.d3e2fc3c60fe.svg",
+          "sha256": "d3e2fc3c60fe7ccb20081d8928f059595210b9c5df9f5c33141e4bba6824930b",
+          "bytes": 12152,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-cadillac-table-knee-fold": {
+      "apparatus": "cadillac",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-knee-fold",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-cadillac-table-knee-fold.start.6b135f1b2fd2.svg",
+          "sha256": "6b135f1b2fd2e4c384ce52d3def0c04e1e12b7be82dadfec0c035942a1716e6d",
+          "bytes": 13291,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-cadillac-table-knee-fold.middle.60a1e3533f71.svg",
+          "sha256": "60a1e3533f71e377cf74ea661edb2d2bca7f303aecc3939f6b5dac31985bf217",
+          "bytes": 13386,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-cadillac-table-knee-fold.end.130b73e206bc.svg",
+          "sha256": "130b73e206bcf2ab8194babb5fdc8dac0db63d788305fcc8e8326db40ac03729",
+          "bytes": 13546,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-chair-seated-knee-lift": {
+      "apparatus": "chair",
+      "bodyPosition": "seated",
+      "archetypeId": "chair-seated-knee-lift-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-chair-seated-knee-lift.start.f3649970bd4a.svg",
+          "sha256": "f3649970bd4a05e3703dea04c2a0d3ebc3ed3b51f404b42322248b4b560cf375",
+          "bytes": 13052,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-chair-seated-knee-lift.middle.fedc758c3286.svg",
+          "sha256": "fedc758c3286a763a0eecc20eff80cd2ccf093e91a3d7a10944695931184855e",
+          "bytes": 13271,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-chair-seated-knee-lift.end.6737f8531ac7.svg",
+          "sha256": "6737f8531ac7d64d6c4b1a0534eeb56b833edd85495c2d340ecffb5a225d23bb",
+          "bytes": 13375,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-barrel-standing-rotation": {
+      "apparatus": "barrel",
+      "bodyPosition": "standing",
+      "archetypeId": "barrel-standing-rotation-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-barrel-standing-rotation.start.bae7165cd1ad.svg",
+          "sha256": "bae7165cd1ad8c63d2c7276c4e5877ae8af07e2eb39bb72c8d4ce0d183aba531",
+          "bytes": 12803,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-barrel-standing-rotation.middle.ecbfc7d74404.svg",
+          "sha256": "ecbfc7d744049b3f0006dc98b1e0d9ddcb1f0db201700b78e9dce19c6f5649e4",
+          "bytes": 13058,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-barrel-standing-rotation.end.efcc10464a43.svg",
+          "sha256": "efcc10464a43bc5c98d23ba19b3db4be89a28b9bb26a62de889747bc1e820e41",
+          "bytes": 13133,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-reformer-side-lying-press": {
+      "apparatus": "reformer",
+      "bodyPosition": "side-lying",
+      "archetypeId": "reformer-side-lying-footbar-press",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-reformer-side-lying-press.start.eebcbb15a0ba.svg",
+          "sha256": "eebcbb15a0bae6d418ac3ff270d6103719e50539b57ed5525928645a95cae751",
+          "bytes": 13798,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-reformer-side-lying-press.middle.1c3097d1372d.svg",
+          "sha256": "1c3097d1372dce5da724406935543653bf98914d5a4343f2d87cdaedb889d0c2",
+          "bytes": 14002,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-reformer-side-lying-press.end.0c39ac38d0c7.svg",
+          "sha256": "0c39ac38d0c7102b84481f768b7af4c5fce154674748af5984136d1dbddaa2b5",
+          "bytes": 14129,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-mat-knee-fold": {
+      "apparatus": "mat",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-knee-fold",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-knee-fold.start.34e85cde967c.svg",
+          "sha256": "34e85cde967c59c0e135d5eef200f0c4765a6d20c8b14e34e1d72a04ab5aef91",
+          "bytes": 11948,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-knee-fold.middle.fc6fbf27f37c.svg",
+          "sha256": "fc6fbf27f37cb78d9c2284280778b9c08494ff8864b2ec829f539ffa08b8e2e4",
+          "bytes": 12043,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-knee-fold.end.bdb29766cd92.svg",
+          "sha256": "bdb29766cd9242f9cf6ebff66bbe3aa07c55c780de43b3f5c97231cfc1ef5c2d",
+          "bytes": 12160,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-cadillac-seated-roll-back": {
+      "apparatus": "cadillac",
+      "bodyPosition": "seated",
+      "archetypeId": "seated-roll-back-spine-twist",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-cadillac-seated-roll-back.start.7fccf3ca867d.svg",
+          "sha256": "7fccf3ca867d2f06222195c588adc87d9103b87ec970de83d43b99236d053f6b",
+          "bytes": 12973,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-cadillac-seated-roll-back.middle.5b70276d2edb.svg",
+          "sha256": "5b70276d2edb06ffab4655d8162c89a87c46557d2cd523ad6f29e457f92bea76",
+          "bytes": 13123,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-cadillac-seated-roll-back.end.dc593a9153a1.svg",
+          "sha256": "dc593a9153a14c1a1f1d5c2824264f3476dc09ea10d8dd1ed4c93c554e382b98",
+          "bytes": 13119,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-chair-seated-arm-arc": {
+      "apparatus": "chair",
+      "bodyPosition": "seated",
+      "archetypeId": "chair-seated-arm-arc-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-chair-seated-arm-arc.start.d563457b8bc6.svg",
+          "sha256": "d563457b8bc6ec4933b1a104e367b1743c4c1c1adec546cc23ddecc9473ccc0c",
+          "bytes": 13002,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-chair-seated-arm-arc.middle.1587ce706f82.svg",
+          "sha256": "1587ce706f82106d2acd7f5d21d936b869d45ef8a0e3aec14880ec0d97fff306",
+          "bytes": 13095,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-chair-seated-arm-arc.end.104585d371fd.svg",
+          "sha256": "104585d371fda160cc75b0d06ebd671aedc223dac2f0e45e45d97654843a774f",
+          "bytes": 13308,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-barrel-standing-hip-extension": {
+      "apparatus": "barrel",
+      "bodyPosition": "standing",
+      "archetypeId": "barrel-standing-hip-extension-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-barrel-standing-hip-extension.start.75969fae8791.svg",
+          "sha256": "75969fae87910f89459b22a1bc65388ed187433b15bfc0054a9450c37714919c",
+          "bytes": 12856,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-barrel-standing-hip-extension.middle.c252d04938ae.svg",
+          "sha256": "c252d04938ae73061891b7b08adfbd4b90d419ca6cdd91eeddc5dd8407b82e71",
+          "bytes": 13010,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-barrel-standing-hip-extension.end.5bc900948f4d.svg",
+          "sha256": "5bc900948f4d02022371886512cc6750ed55509c24b71fa7a0c895dc75e44262",
+          "bytes": 13070,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-reformer-box-swan-prep": {
+      "apparatus": "reformer",
+      "bodyPosition": "prone",
+      "archetypeId": "prone-swan-pulling-straps-swimming",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-reformer-box-swan-prep.start.4e458f2cf0bf.svg",
+          "sha256": "4e458f2cf0bf32f1fe0ad1721e0e9e82b7768ad0eac8436d44f4a31b7f8439e6",
+          "bytes": 14132,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-reformer-box-swan-prep.middle.79b2ab8ed1dd.svg",
+          "sha256": "79b2ab8ed1dd8220401b81af4d07d0d4797aaa7d934f18d9954cb5ede251478e",
+          "bytes": 14267,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-reformer-box-swan-prep.end.ee639abf4be6.svg",
+          "sha256": "ee639abf4be6001b46ee42567f5e459cdab99f01261ccba5d31e6426fe693ae9",
+          "bytes": 14207,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-mat-chest-lift": {
+      "apparatus": "mat",
+      "bodyPosition": "supine",
+      "archetypeId": "mat-chest-lift-supported-head",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-chest-lift.start.d6e7b7ee4eee.svg",
+          "sha256": "d6e7b7ee4eee746668f68f7d524a628345b79f115c12e4e127753b43d3fb9f3a",
+          "bytes": 11975,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-chest-lift.middle.44883196f700.svg",
+          "sha256": "44883196f700cedbc2c1cf3e9c777186866f11d1560bf5586195e5380709e37e",
+          "bytes": 12156,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-chest-lift.end.d31468a28dc6.svg",
+          "sha256": "d31468a28dc66d5cfd7be13ccfe7980d3de1af95919e820a58e3ca1eb3acabb5",
+          "bytes": 12187,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-cadillac-arm-spring-press": {
+      "apparatus": "cadillac",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-strap-arm-press",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-cadillac-arm-spring-press.start.92395d2944a9.svg",
+          "sha256": "92395d2944a9133a53da8dd1d6fcee974044f67ee556dea4cd163293dfcc8bc2",
+          "bytes": 13273,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-cadillac-arm-spring-press.middle.362b781e00c3.svg",
+          "sha256": "362b781e00c33953c2aaaab5dc3de141ad01e3df618d0a6a808352195070a81c",
+          "bytes": 13369,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-cadillac-arm-spring-press.end.fcea5ab7a5e0.svg",
+          "sha256": "fcea5ab7a5e0b0114822d9bf3e9da03d8aa6246491cbeb830c072c69226e6216",
+          "bytes": 13581,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-chair-seated-spine-twist": {
+      "apparatus": "chair",
+      "bodyPosition": "seated",
+      "archetypeId": "chair-seated-spine-twist-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-chair-seated-spine-twist.start.986bb79f40f8.svg",
+          "sha256": "986bb79f40f86219e40ad3064b090f494bfc13eacae8e6cf0ccae3ec9d9b86fc",
+          "bytes": 13058,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-chair-seated-spine-twist.middle.fc5bce6ead48.svg",
+          "sha256": "fc5bce6ead48e119b60567456de3456581ac906cd3485e50a437e9a543e3e976",
+          "bytes": 13232,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-chair-seated-spine-twist.end.c8e843177227.svg",
+          "sha256": "c8e8431772272c5208bb16f45b6197c09302efc2c167f93168235c3c2f1312c7",
+          "bytes": 13333,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-barrel-standing-side-reach": {
+      "apparatus": "barrel",
+      "bodyPosition": "standing",
+      "archetypeId": "barrel-standing-side-reach-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-barrel-standing-side-reach.start.4ca5f9939a6e.svg",
+          "sha256": "4ca5f9939a6e4ea06d7ea80b7bcb7136db6f001f6c2bfe2e03e79779a0f182f3",
+          "bytes": 12840,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-barrel-standing-side-reach.middle.43ace81a8625.svg",
+          "sha256": "43ace81a86259d21142abea02bd2c9cfcc59554f0bb801175ce246bc3279b9da",
+          "bytes": 13017,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-barrel-standing-side-reach.end.22595ffe9756.svg",
+          "sha256": "22595ffe9756df43dc3b061592771a4241111d40f7367243761e68ff70c69969",
+          "bytes": 13081,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-reformer-strap-frog": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "reformer-strap-frog-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-reformer-strap-frog.start.0753a7028535.svg",
+          "sha256": "0753a70285358fd3a1811a53d0a8b1de085f7e5633fbc0b580141954b95d0b1f",
+          "bytes": 13914,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-reformer-strap-frog.middle.6a2017e36a55.svg",
+          "sha256": "6a2017e36a554415df3867001a65fca10c6c94529c45c0daaf639358ed58688b",
+          "bytes": 14026,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-reformer-strap-frog.end.c8ac49da73e3.svg",
+          "sha256": "c8ac49da73e3543d2b3f5ec9b72c1abdb1fc27c4b9abb8f695e2d61cecc438c8",
+          "bytes": 14225,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-mat-single-leg-stretch": {
+      "apparatus": "mat",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-leg-stretch-hundred",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-single-leg-stretch.start.22f52175ddaa.svg",
+          "sha256": "22f52175ddaa13d58f80b5442e27cc62892db3522562cc17b88fa587ff1f1a67",
+          "bytes": 12179,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-single-leg-stretch.middle.e498071486cc.svg",
+          "sha256": "e498071486cca20f81713c172064b1872dd866728bdf1aedc569df3706e6446e",
+          "bytes": 12141,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-single-leg-stretch.end.bc3d5dc004a3.svg",
+          "sha256": "bc3d5dc004a36601b2f3ad2c75bd82cd2f068c79df20ac3a602fc80f330479d8",
+          "bytes": 12186,
+          "labelKo": "교대 연결 자세"
+        }
+      }
+    },
+    "original-cadillac-seated-rotation": {
+      "apparatus": "cadillac",
+      "bodyPosition": "seated",
+      "archetypeId": "cadillac-seated-rotation-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.start.d536e7c242f0.svg",
+          "sha256": "d536e7c242f0c8c2bd21fe8b95c3c343aedcb1877022fbea2163635f28de7f3e",
+          "bytes": 13326,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.middle.1e7b2b884ef4.svg",
+          "sha256": "1e7b2b884ef436c43c606af74686efefab6b21f06e42240934932654515f06e9",
+          "bytes": 13495,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-cadillac-seated-rotation.end.e39f2204efe3.svg",
+          "sha256": "e39f2204efe3f78f86ec4af85ef52bb947ef61a780e8795ab21f3593a4fc5152",
+          "bytes": 13610,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-chair-sit-to-stand": {
+      "apparatus": "chair",
+      "bodyPosition": "standing",
+      "archetypeId": "chair-sit-to-stand-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-chair-sit-to-stand.start.0a18807edafa.svg",
+          "sha256": "0a18807edafa370694f6cab5b6c76a24bb53e892caa5c0ff95a15cde37496db6",
+          "bytes": 13016,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-chair-sit-to-stand.middle.0d259c570ae0.svg",
+          "sha256": "0d259c570ae0c39a2531f2f1a7e7e1d1305e55f90f188810f203199884d8807f",
+          "bytes": 13216,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-chair-sit-to-stand.end.a7be437e4fe9.svg",
+          "sha256": "a7be437e4fe98d5420f75ed8cba88701e2567a5595f7c415960475716251e136",
+          "bytes": 13318,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-barrel-supported-swan": {
+      "apparatus": "barrel",
+      "bodyPosition": "prone",
+      "archetypeId": "prone-swan-pulling-straps-swimming",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-barrel-supported-swan.start.9b43b9b34168.svg",
+          "sha256": "9b43b9b34168e2031e8beb37f7fe8ed10adf6d96ab7c9cb93ecdfd07d8d0b715",
+          "bytes": 12807,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-barrel-supported-swan.middle.18e39d3b9219.svg",
+          "sha256": "18e39d3b921919194d0837be8441f6cac37b61bd049bbaa29b6f50b0905f36de",
+          "bytes": 12947,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-barrel-supported-swan.end.5c082b4527f0.svg",
+          "sha256": "5c082b4527f0457e94615c390d6532aaf86db114fbd47a0e04dd13401245eec6",
+          "bytes": 12892,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-mat-seated-arm-reach": {
+      "apparatus": "mat",
+      "bodyPosition": "seated",
+      "archetypeId": "seated-row-arm-arc",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-seated-arm-reach.start.8014ea805c30.svg",
+          "sha256": "8014ea805c30baabb5cd27a536866989c03b1ab145dc5ad606303b0cb6e7c9ef",
+          "bytes": 12031,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-seated-arm-reach.middle.e079f617e123.svg",
+          "sha256": "e079f617e12394a41c2c0c1051d463fc20daac32eea77e70190e55b8ce4036b5",
+          "bytes": 12114,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-seated-arm-reach.end.e96b07601cba.svg",
+          "sha256": "e96b07601cba9302f6860912e52c94caa2fa96c1fff938e8c3bf5b1725641654",
+          "bytes": 12272,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-cadillac-side-leg-reach": {
+      "apparatus": "cadillac",
+      "bodyPosition": "side-lying",
+      "archetypeId": "side-lying-leg-press-sweep",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-cadillac-side-leg-reach.start.9ee4dad2bdd5.svg",
+          "sha256": "9ee4dad2bdd5634d960feb8ca2a0f83592e7d49f911f08b0a9f0cfeac473f16b",
+          "bytes": 13507,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-cadillac-side-leg-reach.middle.9d49af901490.svg",
+          "sha256": "9d49af901490d45a5cef497148d3f59989011be980807abe95a1536c9ba5abb8",
+          "bytes": 13704,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-cadillac-side-leg-reach.end.732cba3f62fa.svg",
+          "sha256": "732cba3f62fad44368fd84882756e8d27a920b9de4d6b690be3cdbac0de1b703",
+          "bytes": 13697,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-chair-supported-calf-raise": {
+      "apparatus": "chair",
+      "bodyPosition": "standing",
+      "archetypeId": "chair-supported-calf-raise-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-chair-supported-calf-raise.start.b008e35970ca.svg",
+          "sha256": "b008e35970cab0a42f7653c60bef90d1c25f334b9a1f34b9210231972ff76f63",
+          "bytes": 12927,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-chair-supported-calf-raise.middle.a425a8074ad2.svg",
+          "sha256": "a425a8074ad292ebd63dca832b70bcd1c0e4c3199d900a815cd184c14081d741",
+          "bytes": 13146,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-chair-supported-calf-raise.end.943f803bcdb0.svg",
+          "sha256": "943f803bcdb09eba80a16918a5ae5b883bba88bd35f9b2269cccf3cae2ea071a",
+          "bytes": 13282,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-barrel-supported-side-bend": {
+      "apparatus": "barrel",
+      "bodyPosition": "side-lying",
+      "archetypeId": "barrel-side-lying-side-bend-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-barrel-supported-side-bend.start.ebbf1cd1fc9c.svg",
+          "sha256": "ebbf1cd1fc9c7f1d100af74d84375f90b53f215fb46cd033b975c05c74d53f08",
+          "bytes": 12878,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-barrel-supported-side-bend.middle.d6a706ea40c9.svg",
+          "sha256": "d6a706ea40c996e4cf276f7655923c7cc302b3b716976fa008526dfffe86e0a4",
+          "bytes": 13034,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-barrel-supported-side-bend.end.94cf61d5cd85.svg",
+          "sha256": "94cf61d5cd85b3c5f3d5774a4353c2b6a300ba77d071c4da5bee5779f88532c5",
+          "bytes": 13090,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-mat-band-row": {
+      "apparatus": "mat",
+      "bodyPosition": "seated",
+      "archetypeId": "seated-row-arm-arc",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-band-row.start.a59095219959.svg",
+          "sha256": "a59095219959e3aadef133b88feb60c2afec5d99b16186daad99f736e29d1ded",
+          "bytes": 12338,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-band-row.middle.80a0611ae59d.svg",
+          "sha256": "80a0611ae59d0f4fae086eb88cb82d8286f0d591cd209b3e909bb5af2e230b4e",
+          "bytes": 12499,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-band-row.end.8b5f8322bc0a.svg",
+          "sha256": "8b5f8322bc0aae60fa4fd099f59a8ccd9967f8f936091ccb7941436256c0dba3",
+          "bytes": 12584,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-cadillac-quadruped-slide": {
+      "apparatus": "cadillac",
+      "bodyPosition": "quadruped",
+      "archetypeId": "quadruped-reach-slide",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-cadillac-quadruped-slide.start.0d0652a53010.svg",
+          "sha256": "0d0652a5301081dcad150db9241f6db450526b00f5ded5f1c1b1f8c5ba90ced4",
+          "bytes": 13343,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-cadillac-quadruped-slide.middle.0a641e21dfb8.svg",
+          "sha256": "0a641e21dfb81cf1ef1d924f52f0db8de2b0935ca35e32f3f327de80778d7166",
+          "bytes": 13330,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-cadillac-quadruped-slide.end.db4ef57efcd3.svg",
+          "sha256": "db4ef57efcd35cd9ef916f16d252de4141d63b5ea8916b7bd24fadeefadcd3cf",
+          "bytes": 13583,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-chair-incline-support": {
+      "apparatus": "chair",
+      "bodyPosition": "standing",
+      "archetypeId": "chair-fixed-seat-incline-support",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-chair-incline-support.start.bd548be73067.svg",
+          "sha256": "bd548be73067cf4c8035df6b95aedebbf6bd79ad4d13c022e0638c4bb2338085",
+          "bytes": 13084,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-chair-incline-support.middle.271d6b39f3f4.svg",
+          "sha256": "271d6b39f3f4124c06a90b4ba9cf8ac5a52f15ffaf8a5eb37c3f35fe718538b2",
+          "bytes": 13315,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-chair-incline-support.end.c88f776e36df.svg",
+          "sha256": "c88f776e36df3212203753a46ef26f5ed474a609806a76fde311393156c8007d",
+          "bytes": 13465,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-barrel-standing-side-stretch": {
+      "apparatus": "barrel",
+      "bodyPosition": "standing",
+      "archetypeId": "barrel-standing-side-stretch-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-barrel-standing-side-stretch.start.62e5855c28af.svg",
+          "sha256": "62e5855c28af4c57b4ba40cbd834a1d7473f5eacbb2c059ddcb1e57e1742a0a3",
+          "bytes": 12843,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-barrel-standing-side-stretch.middle.f6c8506d9245.svg",
+          "sha256": "f6c8506d9245459348e9d8f31583b499f9305fbae2b6d1a08f80eff9bb50bf30",
+          "bytes": 13033,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-barrel-standing-side-stretch.end.1eae45fcc8d0.svg",
+          "sha256": "1eae45fcc8d0bb9c6ce9be8f30f35f29f02be3a8383f0e913dae666960ce4f31",
+          "bytes": 13140,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-mat-side-leg-lift": {
+      "apparatus": "mat",
+      "bodyPosition": "side-lying",
+      "archetypeId": "side-lying-leg-press-sweep",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-side-leg-lift.start.55b05a03cfa5.svg",
+          "sha256": "55b05a03cfa5bca3d22f5c95a26d8840ee1f66583d59d984be9db407f36dc7c7",
+          "bytes": 11992,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-side-leg-lift.middle.fe9987b214f0.svg",
+          "sha256": "fe9987b214f0c1dbcbd7a80d7e711fac91ae7191d6a42802825f376c2b787bb5",
+          "bytes": 12104,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-side-leg-lift.end.2d81338f1ba3.svg",
+          "sha256": "2d81338f1ba3d249ac341750aa8107fb46b2c0206f9023bf9a548c66bbfd1a2e",
+          "bytes": 12154,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-cadillac-prone-back-reach": {
+      "apparatus": "cadillac",
+      "bodyPosition": "prone",
+      "archetypeId": "prone-swan-pulling-straps-swimming",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-cadillac-prone-back-reach.start.1f9f240f65be.svg",
+          "sha256": "1f9f240f65beba2a17f2da60aee58b9dc2935c96deb09790d2557cd0b1703efd",
+          "bytes": 13284,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-cadillac-prone-back-reach.middle.08f7f7c9a02c.svg",
+          "sha256": "08f7f7c9a02cc9056e9394c303bdf85e9d2b50c9a85846bbd7497e6687cf5232",
+          "bytes": 13415,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-cadillac-prone-back-reach.end.0196783a56b4.svg",
+          "sha256": "0196783a56b43f3acb1cca234f1129944ae3c6942b232544b41327a1931ff505",
+          "bytes": 13416,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-chair-seated-back-reach": {
+      "apparatus": "chair",
+      "bodyPosition": "seated",
+      "archetypeId": "chair-seated-back-reach-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-chair-seated-back-reach.start.c7ec76a1f9ce.svg",
+          "sha256": "c7ec76a1f9ce23908d9c0f13acf5061b3de57e0a1c98a2d4f461bab42be04f8b",
+          "bytes": 13037,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-chair-seated-back-reach.middle.e4b16edc9d96.svg",
+          "sha256": "e4b16edc9d96eec29c630e35300c0397d686d7bc245bcebb11ed080980dd7ff4",
+          "bytes": 13249,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-chair-seated-back-reach.end.8569c453aae8.svg",
+          "sha256": "8569c453aae8638a816b83fb0ac1fb6deae9d3986766bc0478d2a7c2093d9a02",
+          "bytes": 13324,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-mat-clam": {
+      "apparatus": "mat",
+      "bodyPosition": "side-lying",
+      "archetypeId": "mat-clam-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-clam.start.4aa89123dc95.svg",
+          "sha256": "4aa89123dc9501a852c8dc7c01e1d60b2a4c7efce03129efa6cffb6a6545d097",
+          "bytes": 12074,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-clam.middle.0823fce7d664.svg",
+          "sha256": "0823fce7d664d356abe5e5f2c34ff4384ce02e361ecd6836a709bbb256a867f2",
+          "bytes": 12223,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-clam.end.9e21f93ddce2.svg",
+          "sha256": "9e21f93ddce2efd9d520cd3c0fb4fc3fb20b41d4becc4fb9c826899dbd546f46",
+          "bytes": 12246,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-cadillac-seated-side-reach": {
+      "apparatus": "cadillac",
+      "bodyPosition": "seated",
+      "archetypeId": "lateral-mermaid-side-bend",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-cadillac-seated-side-reach.start.12adb6d49e88.svg",
+          "sha256": "12adb6d49e88ed3b0663af8bfe42a514d339e1918e9da6463fb42b828ee0044c",
+          "bytes": 13382,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-cadillac-seated-side-reach.middle.61a2c644fdc8.svg",
+          "sha256": "61a2c644fdc8ac0914c5d072b34b319960e22756e29640ec7f49134e4bb8e398",
+          "bytes": 13602,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-cadillac-seated-side-reach.end.59f293df0596.svg",
+          "sha256": "59f293df0596d58010b705deb64daf1f1b65dbf49734759efc396358695dc0fd",
+          "bytes": 13632,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-chair-seated-mermaid": {
+      "apparatus": "chair",
+      "bodyPosition": "seated",
+      "archetypeId": "chair-seated-mermaid-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-chair-seated-mermaid.start.ecbad443be5a.svg",
+          "sha256": "ecbad443be5a73eedc12264ecc25aa9158e8bd47b02162565930f73a9260365e",
+          "bytes": 13068,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-chair-seated-mermaid.middle.4235b4f1aec1.svg",
+          "sha256": "4235b4f1aec13f20321d699f5a69d5ce749d340ae7c559811bab152c09a97026",
+          "bytes": 13263,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-chair-seated-mermaid.end.ec956080ebb2.svg",
+          "sha256": "ec956080ebb2db2e7f36e8934eb0d25182a7d05f5c3c6396a034b42243c67cdf",
+          "bytes": 13335,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-mat-quadruped-reach": {
+      "apparatus": "mat",
+      "bodyPosition": "quadruped",
+      "archetypeId": "quadruped-reach-slide",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-quadruped-reach.start.0523c5aa44f8.svg",
+          "sha256": "0523c5aa44f8954348016bcddae99300a01ab5660fcc79bd9a8a1aa50fbfc4f2",
+          "bytes": 12011,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-quadruped-reach.middle.7742d5d027b8.svg",
+          "sha256": "7742d5d027b81de5e1dc6fe07b5febac231e149ee4899cc9a80dd2d1d31f0a04",
+          "bytes": 12007,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-quadruped-reach.end.6c803f33675e.svg",
+          "sha256": "6c803f33675e36188004f3ce6ec99134669384b5ba3b92ea414299785dffba62",
+          "bytes": 12208,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-mat-forearm-plank": {
+      "apparatus": "mat",
+      "bodyPosition": "kneeling",
+      "archetypeId": "mat-kneeling-forearm-support",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-forearm-plank.start.dcdf7f82a24e.svg",
+          "sha256": "dcdf7f82a24e77568c0fe45a0404dc0f5ef51532277d8ff74e6603d81ce468e3",
+          "bytes": 12008,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-forearm-plank.middle.60578696c209.svg",
+          "sha256": "60578696c2092ad11b6a8e671a1c13c268b293e6e3a156c8a2b20f93ddc83a94",
+          "bytes": 12271,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-forearm-plank.end.8aee23d97940.svg",
+          "sha256": "8aee23d9794052eeb15b3560437c372c8fbbad2e9449a2cfe68dd990de8a6489",
+          "bytes": 12334,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-mat-swan-prep": {
+      "apparatus": "mat",
+      "bodyPosition": "prone",
+      "archetypeId": "prone-swan-pulling-straps-swimming",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-swan-prep.start.c1fdce2b29e7.svg",
+          "sha256": "c1fdce2b29e73ebeec897e63f3530d793f20ce0070e4738f80e1ad033c665703",
+          "bytes": 11939,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-swan-prep.middle.3842c2198029.svg",
+          "sha256": "3842c219802981c11152e88af8d794055bee8b2314d0b2977488cf15d3fb1ae7",
+          "bytes": 12133,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-swan-prep.end.e268066fe6a1.svg",
+          "sha256": "e268066fe6a1a773822404d3d6d173e8d8b9f74a9edb096e3dbce69cfa22d688",
+          "bytes": 12070,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-mat-swimming-prep": {
+      "apparatus": "mat",
+      "bodyPosition": "prone",
+      "archetypeId": "mat-swimming-contralateral-prep",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-swimming-prep.start.877f2353e062.svg",
+          "sha256": "877f2353e06269548a0fee36674abde3d840e64c2858df59ab712466781fecc3",
+          "bytes": 12008,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-swimming-prep.middle.8534fbc35fa7.svg",
+          "sha256": "8534fbc35fa73adc80a2d0801c040d0c5d2e01f62946ea2a545a6a142aea583d",
+          "bytes": 12192,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-swimming-prep.end.c8a9f52ae55d.svg",
+          "sha256": "c8a9f52ae55d39fa15d58ca6906d4093337745fe5a5a7ebba5ea970425340104",
+          "bytes": 12219,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "original-mat-mermaid": {
+      "apparatus": "mat",
+      "bodyPosition": "seated",
+      "archetypeId": "lateral-mermaid-side-bend",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-mermaid.start.93c9386dbbe7.svg",
+          "sha256": "93c9386dbbe7d3148153b1d37029620f73bbce8f0ccff7498acc2ea83a0af144",
+          "bytes": 12040,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-mermaid.middle.08a9ffc6f64b.svg",
+          "sha256": "08a9ffc6f64be436c8f684e5531f43081973cf86b49e30bb08b370ad54936fdf",
+          "bytes": 12252,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-mermaid.end.6836e63ed6ee.svg",
+          "sha256": "6836e63ed6ee6198f513bb4ea147ac703668bd9ae7cbdd90c9e5834d7a30a9a5",
+          "bytes": 12247,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "original-mat-open-book": {
+      "apparatus": "mat",
+      "bodyPosition": "side-lying",
+      "archetypeId": "mat-open-book-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/original-mat-open-book.start.c7157832db35.svg",
+          "sha256": "c7157832db3537a6884233115abbcb2dd176abbeea09833f91bf539688c306fa",
+          "bytes": 12098,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/original-mat-open-book.middle.8d2e029d1509.svg",
+          "sha256": "8d2e029d15093152e193166f369b751522cc83981042bf52aa972d2cbee44fc5",
+          "bytes": 12190,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/original-mat-open-book.end.2eac122c6402.svg",
+          "sha256": "2eac122c6402d6dd2899c42c4660a4d33b0006bd180264b490650486465228d2",
+          "bytes": 12301,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-warmup-01": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-breath-pelvic-clock",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-warmup-01.start.a513a4f29a3a.svg",
+          "sha256": "a513a4f29a3a868f367fa12e168907466202388e2095d7d3ae2901163976c85a",
+          "bytes": 13998,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-warmup-01.middle.1379a6e465b9.svg",
+          "sha256": "1379a6e465b9f4aa6446b0ceb5fbae57979247d3bca85f9e9ac1d73b83c19ca8",
+          "bytes": 14153,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-warmup-01.end.c1912f8d3e44.svg",
+          "sha256": "c1912f8d3e44845f9289c4d57813f6af858cc2d7aad6820051d0b5cee5088511",
+          "bytes": 14162,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-warmup-02": {
+      "apparatus": "cadillac",
+      "bodyPosition": "kneeling",
+      "archetypeId": "cadillac-kneeling-cat-stretch-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-warmup-02.start.02a01a1a9650.svg",
+          "sha256": "02a01a1a9650b66b4ca245e941c8b8ef59fd566909cc00cb0330585d8377159c",
+          "bytes": 13183,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-warmup-02.middle.4820cb7448c2.svg",
+          "sha256": "4820cb7448c247d0e2917267aa64aed4eb7ef56eedf414a389213aa3929d0929",
+          "bytes": 13539,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-warmup-02.end.e3c339309bc3.svg",
+          "sha256": "e3c339309bc3c81775fb1ea593cba6e73d3568f899658e3578c8c072f1c5ef1b",
+          "bytes": 13424,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-warmup-03": {
+      "apparatus": "mat",
+      "bodyPosition": "supine",
+      "archetypeId": "mat-longitudinal-roller-arm-arc",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-warmup-03.start.00ea8131c8bb.svg",
+          "sha256": "00ea8131c8bbfe38ec85d386ba1fdc4f7bb76d7e270d50969066d05e7ae182e0",
+          "bytes": 12246,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-warmup-03.middle.b0872b423d8e.svg",
+          "sha256": "b0872b423d8ee19cc6e2d9a3c3755c3a1f9ee185a472482b78ebee465a9551ed",
+          "bytes": 12484,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-warmup-03.end.5a22085a4f70.svg",
+          "sha256": "5a22085a4f70cbd55c8205c1d21f5ddca5c40f680b18adcb5535f44f0a606ae8",
+          "bytes": 12471,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-footwork-01": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "reformer-supine-footwork",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-footwork-01.start.e060422490c0.svg",
+          "sha256": "e060422490c05631db4b61f054bc11540a86b990b3268314f96e9cb40894a331",
+          "bytes": 14186,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-footwork-01.middle.fdb2021b43e6.svg",
+          "sha256": "fdb2021b43e60dba8fd48beb6fb95899f789fa652afa26552716bd414b7d2671",
+          "bytes": 14271,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-footwork-01.end.265264b1e64e.svg",
+          "sha256": "265264b1e64ec566eb2fc4e26b71da0b6b9088ec6c73f4e24bd964b3a22f391c",
+          "bytes": 14251,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-footwork-02": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "reformer-supine-footwork",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-footwork-02.start.7b0f423de506.svg",
+          "sha256": "7b0f423de5063b13f7fd4cf662377ff296a652f4c6976ddaedc91d319f3fd22b",
+          "bytes": 14258,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-footwork-02.middle.87c1b39cb1ca.svg",
+          "sha256": "87c1b39cb1ca6de839ded42ade0b7e8f64d5df7f875dd2df7699c5ec58fed1a7",
+          "bytes": 14341,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-footwork-02.end.2abfd1da19d0.svg",
+          "sha256": "2abfd1da19d01ca2bae8d7bf55fc23f852234be2253309a22f7f4fcb9f98eb87",
+          "bytes": 14307,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-footwork-03": {
+      "apparatus": "chair",
+      "bodyPosition": "seated",
+      "archetypeId": "chair-seated-pedal-footwork",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-footwork-03.start.9cfb986364e3.svg",
+          "sha256": "9cfb986364e352cb6a4a5266d10c76f86005a40012da50b71471db079241af61",
+          "bytes": 13020,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-footwork-03.middle.637883259600.svg",
+          "sha256": "637883259600926e08470d03abeb3439e5fe6f0a8b993004b4aa35fa8b287b29",
+          "bytes": 13174,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-footwork-03.end.96220e4a2521.svg",
+          "sha256": "96220e4a2521901e98bd5246a2df5308b43156e6b7b741180fb9b6cb100da018",
+          "bytes": 13145,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-bridging-01": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-articulated-bridge",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-bridging-01.start.12b4041b0a47.svg",
+          "sha256": "12b4041b0a470b339ad68ba0023d8bbbe8cc337406feee0e3b3a495048acb364",
+          "bytes": 14085,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-bridging-01.middle.e940fa116cb1.svg",
+          "sha256": "e940fa116cb1a562c34b416fdabc0cc0ae351ce54dbe7970032566395c2b3120",
+          "bytes": 14296,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-bridging-01.end.616d0e8c85ac.svg",
+          "sha256": "616d0e8c85ac7042e113e2216d041dd34da84a4894e572555a086b21f25a39f2",
+          "bytes": 14221,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-bridging-02": {
+      "apparatus": "cadillac",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-articulated-bridge",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-bridging-02.start.b8b5b7dd60a7.svg",
+          "sha256": "b8b5b7dd60a7ebf44632accb3c81ea259386eb0aff1a3b13815551c00128b218",
+          "bytes": 13255,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-bridging-02.middle.94c1227f834d.svg",
+          "sha256": "94c1227f834d09b50fe86402e8592eb1c0ba1f250dc3fe4c11583b9a0ca8d035",
+          "bytes": 13501,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-bridging-02.end.d5c84c4ead1f.svg",
+          "sha256": "d5c84c4ead1f25ca9c1e69bbbb3f276e930ace270f111d52b3d5ee9f48fef634",
+          "bytes": 13405,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-core-01": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-leg-stretch-hundred",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-core-01.start.72df4bd96761.svg",
+          "sha256": "72df4bd96761265ca48cdf456cdfc812553704491db752fe5c2d2214d563bf17",
+          "bytes": 14365,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-core-01.middle.6502e667e302.svg",
+          "sha256": "6502e667e302363c1922abad862627cae7955e630212a8f142b2fd7e95b5d364",
+          "bytes": 14487,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-core-01.end.12abcd3c5b55.svg",
+          "sha256": "12abcd3c5b5544ffc2469b14e621a15afe8263c56a50b0e88d1b1b28e8f1e52a",
+          "bytes": 14410,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-core-02": {
+      "apparatus": "reformer",
+      "bodyPosition": "seated",
+      "archetypeId": "reformer-short-box-supported-roll-back",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-core-02.start.dc09aba97831.svg",
+          "sha256": "dc09aba97831199ccd7fd348fb17cebabcfa8f79b9e0311aacd707eb5d2278d8",
+          "bytes": 14134,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-core-02.middle.f00e76a8ecca.svg",
+          "sha256": "f00e76a8eccad238c9881a24221373407d93d2128a666b653868e92f62a9dde5",
+          "bytes": 14430,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-core-02.end.bf5f53785a12.svg",
+          "sha256": "bf5f53785a12eaf153b0c500ca30bcb6edebcd8c0dd003a05f4c3f7c5fdacf03",
+          "bytes": 14374,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-core-03": {
+      "apparatus": "mat",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-leg-stretch-hundred",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-core-03.start.0590191d8e75.svg",
+          "sha256": "0590191d8e75e316f57b297142bdd58e433c234202e92d217ded34a4f483f811",
+          "bytes": 12672,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-core-03.middle.cfb5e3c00351.svg",
+          "sha256": "cfb5e3c0035120aa9ab4dc573fbef51b0b2703458d6b6407451a3aef51098efa",
+          "bytes": 12655,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-core-03.end.58458d8be900.svg",
+          "sha256": "58458d8be9001c0f4bab6f09d1a2ea485b171189c02d9e072daef0edc823be7d",
+          "bytes": 12699,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-upper-01": {
+      "apparatus": "reformer",
+      "bodyPosition": "kneeling",
+      "archetypeId": "reformer-kneeling-supported-arm-press",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-upper-01.start.c643fe2eba62.svg",
+          "sha256": "c643fe2eba62649b659ba809faad7de2b68859be85f163a4b415456b9ad5a4d4",
+          "bytes": 13879,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-upper-01.middle.d2897357f37a.svg",
+          "sha256": "d2897357f37aa77aca96d494b87842198019ca3a0d42ee02176a6641057b9ded",
+          "bytes": 14167,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-upper-01.end.12d849124b06.svg",
+          "sha256": "12d849124b068971f59e8e57a87ade108d96e4d1ae626f76a1b13fb92f38d1b4",
+          "bytes": 14091,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-upper-02": {
+      "apparatus": "reformer",
+      "bodyPosition": "seated",
+      "archetypeId": "seated-row-arm-arc",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-upper-02.start.3992f0a439e4.svg",
+          "sha256": "3992f0a439e4d55fdf6bf12aeb90c4d7f07a1a8f52ec5f3b7244f60113deb8e7",
+          "bytes": 13925,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-upper-02.middle.506137e5c33f.svg",
+          "sha256": "506137e5c33f4e30febe8183cd364ce65bc6636ffe032bf6b1007a2cf3664b60",
+          "bytes": 14099,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-upper-02.end.9164822a53eb.svg",
+          "sha256": "9164822a53ebd4d1589aa1ae93301eaa17b9191afe1c6fc337e54cf69ba7fb89",
+          "bytes": 14040,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-upper-03": {
+      "apparatus": "cadillac",
+      "bodyPosition": "standing",
+      "archetypeId": "cadillac-standing-punch-press-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-upper-03.start.3f2e681cab67.svg",
+          "sha256": "3f2e681cab67fa5ec5ba18db62ce2dd4531ff1d17d97ba945f04cda3d28ceb65",
+          "bytes": 13310,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-upper-03.middle.16be256edf25.svg",
+          "sha256": "16be256edf25b83506cadf84fd2a7dbb4bebb859f1dec0f0d5f0f2bbfcf28622",
+          "bytes": 13451,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-upper-03.end.5d664eab5667.svg",
+          "sha256": "5d664eab5667701737dbf3908fade690b38e28c68e5417feaaf8740f5acd1cb3",
+          "bytes": 13402,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-lower-01": {
+      "apparatus": "reformer",
+      "bodyPosition": "standing",
+      "archetypeId": "standing-scooter-lunge-splits",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-lower-01.start.7717ba8f613c.svg",
+          "sha256": "7717ba8f613c8dbd51f6d0202921cdebda4eecdbd9c7785fedb38f56f08e2976",
+          "bytes": 13660,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-lower-01.middle.8d690fa57b93.svg",
+          "sha256": "8d690fa57b93c8009a932b781e06f905d2602e6f80bb77d0559de95119f69cac",
+          "bytes": 13822,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-lower-01.end.d496a8447add.svg",
+          "sha256": "d496a8447add6ceb8570b219e3b8f5021fb1dfdfd8382bc09495fe377cb0d40f",
+          "bytes": 13783,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-lower-02": {
+      "apparatus": "reformer",
+      "bodyPosition": "standing",
+      "archetypeId": "reformer-standing-side-splits-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-lower-02.start.48d84518dd04.svg",
+          "sha256": "48d84518dd049ed93f511fc05d18e7d04688a3893515a0f2f923ebf82a74cb71",
+          "bytes": 13993,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-lower-02.middle.7fc19f8d72fb.svg",
+          "sha256": "7fc19f8d72fbbc3e23f63f437bc0a92512fc97c13d8dec295dec152ab5459172",
+          "bytes": 14138,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-lower-02.end.ac6aea9040ed.svg",
+          "sha256": "ac6aea9040eda0141b7885ea528962085249acfd4af47b8548e1245907fa8ad3",
+          "bytes": 14193,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-lower-03": {
+      "apparatus": "chair",
+      "bodyPosition": "standing",
+      "archetypeId": "chair-seat-pedal-step-up",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-lower-03.start.6d70bae5187f.svg",
+          "sha256": "6d70bae5187f8dff6eafefd104220d62b3d5c8f2f9a446d1153e031a48eaa3e1",
+          "bytes": 12945,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-lower-03.middle.0cb9b3eb944b.svg",
+          "sha256": "0cb9b3eb944b2a075fd06f3885c0b9a81280daaf2c0fc96babd1eb94bc26fa3f",
+          "bytes": 13250,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-lower-03.end.c9cb29c615c2.svg",
+          "sha256": "c9cb29c615c264fee83cea85d7c5c80997a755cd5d116682e1a959da422984e9",
+          "bytes": 13164,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-plank-01": {
+      "apparatus": "reformer",
+      "bodyPosition": "quadruped",
+      "archetypeId": "reformer-plank-long-stretch-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-plank-01.start.b7d220563dc8.svg",
+          "sha256": "b7d220563dc82396cbb5846fab21d6242d29762904b75f6c7fc3a6cdccbc79fd",
+          "bytes": 13700,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-plank-01.middle.218b0fca2103.svg",
+          "sha256": "218b0fca2103909e36fc6ea4aa5f9f95e2ff626cfb470cf6e779160bc6eb5742",
+          "bytes": 13901,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-plank-01.end.aef6e71a7ac6.svg",
+          "sha256": "aef6e71a7ac6b674a8232ac8e6f7746d5e35def97c4e18aa2b87e50ccf1fe773",
+          "bytes": 13821,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-plank-02": {
+      "apparatus": "chair",
+      "bodyPosition": "standing",
+      "archetypeId": "chair-plank-pike-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-plank-02.start.d3851126db4a.svg",
+          "sha256": "d3851126db4af780a3cc2d67e4d9ca4aa2ad5912ae6e4cdbb1a1e9bce64f4d74",
+          "bytes": 13085,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-plank-02.middle.2557a6c9e119.svg",
+          "sha256": "2557a6c9e1196f39648bb9dd3660805bd6d1c07fdbb5feaf2c0c63725c19fe5c",
+          "bytes": 13206,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-plank-02.end.824cddea28d2.svg",
+          "sha256": "824cddea28d26bd63e65b8bb6949d303a63f763ae265b116377f59228c707f29",
+          "bytes": 13221,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-extension-01": {
+      "apparatus": "reformer",
+      "bodyPosition": "prone",
+      "archetypeId": "prone-swan-pulling-straps-swimming",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-extension-01.start.1f0625819613.svg",
+          "sha256": "1f062581961332b26c377f8c63dde83286f1120b237aa7a272b8994cc8dbc106",
+          "bytes": 14164,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-extension-01.middle.4fde6375505c.svg",
+          "sha256": "4fde6375505c42425b636caa26f228806fbe844dd18f714a3091e28393fceffd",
+          "bytes": 14348,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-extension-01.end.6a0121908649.svg",
+          "sha256": "6a012190864942f3cadbdc443a6169e6cb10480c0d02635e2c535af274b25c47",
+          "bytes": 14341,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-extension-02": {
+      "apparatus": "barrel",
+      "bodyPosition": "prone",
+      "archetypeId": "prone-swan-pulling-straps-swimming",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-extension-02.start.017f267c3d83.svg",
+          "sha256": "017f267c3d83e84cfb3af11a93f93550a747d83b2a59f8f7d5a078ab7b3692ca",
+          "bytes": 12789,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-extension-02.middle.9160039573d3.svg",
+          "sha256": "9160039573d39d9da0b63501e3e00d34df39a74aeda1883f46dbbd65b786b568",
+          "bytes": 12978,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-extension-02.end.aac61554a341.svg",
+          "sha256": "aac61554a341170d34851b9bff9d3737ff1714423ec03a0cb7ba2b08e02f99da",
+          "bytes": 12931,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-straps-01": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-feet-in-straps",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-straps-01.start.505a9db4e1be.svg",
+          "sha256": "505a9db4e1be4fab695132208a5a7e3551db4881eddd5bcaabcb0c370fa49c1b",
+          "bytes": 13894,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-straps-01.middle.cd6e82e031d1.svg",
+          "sha256": "cd6e82e031d12e889d16f7fd2fd25bfe521816b2aab4b6badbb58e28bc5e6443",
+          "bytes": 14007,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-straps-01.end.72dde18f0e90.svg",
+          "sha256": "72dde18f0e90278b66daa5f072bb32a215868da720f95397cd210fbb53e70171",
+          "bytes": 14047,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-straps-02": {
+      "apparatus": "cadillac",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-feet-in-straps",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-straps-02.start.c56bea4df6d2.svg",
+          "sha256": "c56bea4df6d2344f2410fb55e8bb7dcbed2665995098913984ecb1d5248fb8a4",
+          "bytes": 13688,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-straps-02.middle.629ea732ba5d.svg",
+          "sha256": "629ea732ba5d5e2fc2599eb34055dbce108f70d4e6e2140c0fb6627e4d528f96",
+          "bytes": 13807,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-straps-02.end.5aa191e95418.svg",
+          "sha256": "5aa191e95418c1830954c8e942981184bb11d4739957ea3fdaa9880a9718169e",
+          "bytes": 13767,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-cooldown-01": {
+      "apparatus": "reformer",
+      "bodyPosition": "seated",
+      "archetypeId": "lateral-mermaid-side-bend",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-cooldown-01.start.44fb7d4dbed2.svg",
+          "sha256": "44fb7d4dbed21e3649f898b3a9da30548ceb06517c86fc0548482abcca8621ec",
+          "bytes": 13751,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-cooldown-01.middle.e186bd8493fd.svg",
+          "sha256": "e186bd8493fdd372aba72d7a1573df5c10fcf6adf0fe04f23ee03e8aa0aa5e78",
+          "bytes": 13983,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-cooldown-01.end.2776e0b31b38.svg",
+          "sha256": "2776e0b31b38037de79fd9492ce25a99aa0228441271672c5002c8795ebe4739",
+          "bytes": 13865,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-cooldown-02": {
+      "apparatus": "mat",
+      "bodyPosition": "standing",
+      "archetypeId": "standing-roll-down-centering",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-cooldown-02.start.6ab79d07bcfb.svg",
+          "sha256": "6ab79d07bcfbacedde69fba16fa039d18fdd00b1671013ba62a74e505b1627ba",
+          "bytes": 11624,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-cooldown-02.middle.a4d3a911e3fa.svg",
+          "sha256": "a4d3a911e3fa19e16b8198287618a194c28f9698ad0cf1fd27b94209090bf47d",
+          "bytes": 11998,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-cooldown-02.end.63b5df289e53.svg",
+          "sha256": "63b5df289e5371fdc1e2eecac1cdb434fc0bed4fc750461758934fb3e021da2c",
+          "bytes": 11880,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-core-04": {
+      "apparatus": "reformer",
+      "bodyPosition": "kneeling",
+      "archetypeId": "kneeling-reverse-abs-crunch",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-core-04.start.c802dc5b89ab.svg",
+          "sha256": "c802dc5b89ab1fa40754ed66d83e10911cd4707aaf8506418a7b1c2226ed26ab",
+          "bytes": 13997,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-core-04.middle.488da49becda.svg",
+          "sha256": "488da49becda457df31d5d550d24f92102df32482df7e7e72dd1da9c65572375",
+          "bytes": 14200,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-core-04.end.06a159508dbd.svg",
+          "sha256": "06a159508dbd45c27f5d39a249ed3578c039277d9b2a9b602573606322c8de79",
+          "bytes": 14084,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-lower-04": {
+      "apparatus": "reformer",
+      "bodyPosition": "side-lying",
+      "archetypeId": "side-lying-leg-press-sweep",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-lower-04.start.019a7af22cfd.svg",
+          "sha256": "019a7af22cfd38205b022bd219077db0d1028458db012f7a2223b51eb09bde51",
+          "bytes": 14442,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-lower-04.middle.42eda00dffca.svg",
+          "sha256": "42eda00dffca12424249bdeca5f2ffd8e63760cd67760efbdd2f7c73ce4d09ea",
+          "bytes": 14638,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-lower-04.end.f514c36c99f5.svg",
+          "sha256": "f514c36c99f526223196c3a586ed319d40b3772212e45798326568aa96c097ee",
+          "bytes": 14632,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-kr-reformer-01": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "reformer-supine-footwork",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-kr-reformer-01.start.78a70c66c32e.svg",
+          "sha256": "78a70c66c32e1842778ec8c49694b56fd5c4394281cac208ea34202779d2fd2f",
+          "bytes": 14205,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-kr-reformer-01.middle.26ddd5544af0.svg",
+          "sha256": "26ddd5544af0b3e694d97689bf97830e1c4ebaa6be394c9c253ac003fdfcbf08",
+          "bytes": 14318,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-kr-reformer-01.end.1016c09a897d.svg",
+          "sha256": "1016c09a897de1066c951bdb7a9c4480bad4ffa50c51f54288db498ed87f38a4",
+          "bytes": 14252,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-kr-cadillac-01": {
+      "apparatus": "cadillac",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-chest-lift-curl",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-kr-cadillac-01.start.6bea4de0fb21.svg",
+          "sha256": "6bea4de0fb21dff4969d7cda96451f22fdd84887c0732b900a71c72f7871875c",
+          "bytes": 12972,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-kr-cadillac-01.middle.caae2e614150.svg",
+          "sha256": "caae2e614150fd8f656e68303d677d8e0c14dab51f6a0c2d3d5d5680f34f1465",
+          "bytes": 13031,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-kr-cadillac-01.end.4ff1e4c21d8d.svg",
+          "sha256": "4ff1e4c21d8dfceb331394882dc8d78b484f1382bef798623337624facb28d66",
+          "bytes": 13062,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-kr-reformer-02": {
+      "apparatus": "reformer",
+      "bodyPosition": "standing",
+      "archetypeId": "standing-scooter-lunge-splits",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-kr-reformer-02.start.21358da80a14.svg",
+          "sha256": "21358da80a14a48ad4c510e00afa7ea182c611339e358c03ef0315de6c5ee20a",
+          "bytes": 13698,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-kr-reformer-02.middle.1d5d3fbbbbba.svg",
+          "sha256": "1d5d3fbbbbba5566ffc8159d45a37c23ab3389126b554f97d257042476de0d85",
+          "bytes": 13835,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-kr-reformer-02.end.56d2d730cbf6.svg",
+          "sha256": "56d2d730cbf628a9b1ed047e686c44509580b7ba6e477375ff94ac6746a484bd",
+          "bytes": 13787,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-kr-barrel-01": {
+      "apparatus": "barrel",
+      "bodyPosition": "side-lying",
+      "archetypeId": "barrel-side-lying-side-bend-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-kr-barrel-01.start.6c9b8cafc38b.svg",
+          "sha256": "6c9b8cafc38ba049c801cd267b618cc7cb7716346027379a4e4bb9f54ee9aa2d",
+          "bytes": 13206,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-kr-barrel-01.middle.8ea9c7b0cbff.svg",
+          "sha256": "8ea9c7b0cbffc4481a17456450cf51c8a4431c65c53d74385ad125db49a1ff9b",
+          "bytes": 13393,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-kr-barrel-01.end.de293b4e2888.svg",
+          "sha256": "de293b4e288802a58e7efe1385ede3631f73bf8040550b74af39355c24599f9b",
+          "bytes": 13321,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-kr-reformer-03": {
+      "apparatus": "reformer",
+      "bodyPosition": "kneeling",
+      "archetypeId": "reformer-kneeling-supported-arm-press",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-kr-reformer-03.start.b3f38bdb48d5.svg",
+          "sha256": "b3f38bdb48d5f8e45315002415d6c16fdb10b3f98152e72bdde45ff791c7067b",
+          "bytes": 13858,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-kr-reformer-03.middle.bace7034cc5e.svg",
+          "sha256": "bace7034cc5e0ed35deafc0ad19dcf63c93d0ea39e3003527abf2111eab15cc3",
+          "bytes": 14157,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-kr-reformer-03.end.6583bc3aef8f.svg",
+          "sha256": "6583bc3aef8f2cef99f4db22cfe6a5073ec87e42fb5b822eb3a6dea9f125d83b",
+          "bytes": 14073,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-kr-chair-01": {
+      "apparatus": "chair",
+      "bodyPosition": "quadruped",
+      "archetypeId": "chair-plank-pike-isolated",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-kr-chair-01.start.0529c61be504.svg",
+          "sha256": "0529c61be5048d4f2f2d097f564e6968e71afea75bc446e55b430b0e3a8d6339",
+          "bytes": 13152,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-kr-chair-01.middle.d75827093b09.svg",
+          "sha256": "d75827093b09446f1334eb85814e3cd5fbcba28af216c27ee6d4af650e284046",
+          "bytes": 13232,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-kr-chair-01.end.fe9f71fdb828.svg",
+          "sha256": "fe9f71fdb828fb18c3915abb5b84a349270ddd2dc149ecc01ac102bbfaef7d32",
+          "bytes": 13268,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-kr-reformer-04": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-leg-stretch-hundred",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-kr-reformer-04.start.bc23288b4bad.svg",
+          "sha256": "bc23288b4bad7db32edc6e94684734bb2af003076b621ab194047c50b29659df",
+          "bytes": 13892,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-kr-reformer-04.middle.363e010950ce.svg",
+          "sha256": "363e010950cecc680a102c27bc702a297e5f8b993602358c2cf848d3ef5694c9",
+          "bytes": 14072,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-kr-reformer-04.end.7f2557c94c5b.svg",
+          "sha256": "7f2557c94c5bb0d7994879ce4971929746ca457c87e43f4cab3193fc79e04945",
+          "bytes": 13988,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-kr-cadillac-02": {
+      "apparatus": "cadillac",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-feet-in-straps",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-kr-cadillac-02.start.5b676110b865.svg",
+          "sha256": "5b676110b86534cab27237c3f4e36a4eef3e3254ca63fb0a8f3fd2360e49952f",
+          "bytes": 13717,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-kr-cadillac-02.middle.a06795310b95.svg",
+          "sha256": "a06795310b95193d7244edc6518bf8c0027c708755497cc03b28b0c72f3cd08d",
+          "bytes": 13836,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-kr-cadillac-02.end.ba3abd72a977.svg",
+          "sha256": "ba3abd72a977ddcde9a0a5e662fb48d058d69bbee81ea94ab80972f7333f3f85",
+          "bytes": 13796,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-global-reformer-01": {
+      "apparatus": "reformer",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-articulated-bridge",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-global-reformer-01.start.690951d1d4cf.svg",
+          "sha256": "690951d1d4cf60e4d0a786ff90edbde30f08396a0dcec6e0e92866b3af87a7cc",
+          "bytes": 14131,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-global-reformer-01.middle.b9e137702cd0.svg",
+          "sha256": "b9e137702cd0e290a2f0347263e6d2042693b47c0d2633772b7e462454d9b949",
+          "bytes": 14255,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-global-reformer-01.end.9fbda4bef803.svg",
+          "sha256": "9fbda4bef8033a8ffc9968bd22e92c7e2dfa377b1c3d85cd2887a9c0e2bd1c86",
+          "bytes": 14255,
+          "labelKo": "복귀 자세"
+        }
+      }
+    },
+    "ex-global-reformer-02": {
+      "apparatus": "mat",
+      "bodyPosition": "supine",
+      "archetypeId": "supine-chest-lift-curl",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-global-reformer-02.start.5890a1ffd7df.svg",
+          "sha256": "5890a1ffd7df81f64480aaa1c1b4b17c21960484835efa62ed7cdece398294f3",
+          "bytes": 11960,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-global-reformer-02.middle.47d4fea4cc13.svg",
+          "sha256": "47d4fea4cc136954d41a9c5590846e4f693d340f8178506cad398dd93977db7e",
+          "bytes": 12019,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-global-reformer-02.end.c549077af029.svg",
+          "sha256": "c549077af0290844671f481ea0d796e88497d3d799494f4b2786d328de126c70",
+          "bytes": 12050,
+          "labelKo": "마무리 자세"
+        }
+      }
+    },
+    "ex-global-reformer-03": {
+      "apparatus": "reformer",
+      "bodyPosition": "kneeling",
+      "archetypeId": "reformer-kneeling-supported-arm-press",
+      "phases": {
+        "start": {
+          "src": "/motion-artwork-v2/ex-global-reformer-03.start.e390a67ebd8f.svg",
+          "sha256": "e390a67ebd8fec6b2672e735a2e924cb256d1228f00fe54be23395e32765d8db",
+          "bytes": 13875,
+          "labelKo": "시작 자세"
+        },
+        "middle": {
+          "src": "/motion-artwork-v2/ex-global-reformer-03.middle.883ac9544102.svg",
+          "sha256": "883ac95441022e31e37e4e518cacd4dbc54bd70c097fe4efe477472d6a3d07d1",
+          "bytes": 14164,
+          "labelKo": "정점 자세"
+        },
+        "end": {
+          "src": "/motion-artwork-v2/ex-global-reformer-03.end.7170fcd9ba85.svg",
+          "sha256": "7170fcd9ba85de84fac348e6b7770b0a9a8b25193e7a3fc5863dfae14a51be9c",
+          "bytes": 14087,
+          "labelKo": "복귀 자세"
+        }
+      }
+    }
+  }
+}

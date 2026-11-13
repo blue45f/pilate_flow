@@ -32,6 +32,7 @@ export interface Studio3DMotionSpec {
   readonly startImg: string;
   readonly midImg: string;
   readonly peakImg: string;
+  /** Legacy exact token means a name rule matched; it is not a reviewed motion. */
   readonly matchScope: 'exact-signature' | 'apparatus-family-reference';
   readonly matchScopeBadgeKo: string;
   readonly excursionLabelKo: string;
@@ -375,7 +376,7 @@ export function resolveStudio3DMotionForExercise(
         ...STUDIO_3D_SIGNATURES['reformer-elephant'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
-          ? '3D 동작 궤적 일치 · 리포머 일리펀트·업스트레치'
+          ? '이름 규칙으로 선택한 3D 참고 · 리포머 일리펀트·업스트레치'
           : '리포머 플랭크·파이크 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -390,7 +391,7 @@ export function resolveStudio3DMotionForExercise(
         ...STUDIO_3D_SIGNATURES['reformer-shortspine'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
-          ? '3D 동작 궤적 일치 · 숏 스파인 롤오버'
+          ? '이름 규칙으로 선택한 3D 참고 · 숏 스파인 롤오버'
           : '리포머 척추 분절 계열 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -409,7 +410,7 @@ export function resolveStudio3DMotionForExercise(
         ...STUDIO_3D_SIGNATURES['reformer-feetstraps'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
-          ? '3D 동작 궤적 일치 · 리포머 피트 인 스트랩'
+          ? '이름 규칙으로 선택한 3D 참고 · 리포머 피트 인 스트랩'
           : '리포머 스트랩 계열 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -426,7 +427,7 @@ export function resolveStudio3DMotionForExercise(
         ...STUDIO_3D_SIGNATURES['reformer-longbox-teaser'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
-          ? '3D 동작 궤적 일치 · 롱박스 티저'
+          ? '이름 규칙으로 선택한 3D 참고 · 롱박스 티저'
           : '리포머 박스·스트랩 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -440,7 +441,7 @@ export function resolveStudio3DMotionForExercise(
         ...STUDIO_3D_SIGNATURES['reformer-mermaid'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
-          ? '3D 동작 궤적 일치 · 리포머 머메이드 측굴'
+          ? '이름 규칙으로 선택한 3D 참고 · 리포머 머메이드 측굴'
           : '리포머 시티드 측굴 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -456,7 +457,7 @@ export function resolveStudio3DMotionForExercise(
         ...STUDIO_3D_SIGNATURES['reformer-scooter-lunge'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
-          ? '3D 동작 궤적 일치 · 리포머 스쿠터·런지'
+          ? '이름 규칙으로 선택한 3D 참고 · 리포머 스쿠터·런지'
           : '리포머 스탠딩 하체 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -470,7 +471,7 @@ export function resolveStudio3DMotionForExercise(
       return {
         ...STUDIO_3D_SIGNATURES['reformer-bridge'],
         matchScope: 'exact-signature',
-        matchScopeBadgeKo: '3D 동작 궤적 일치 · 브릿징',
+        matchScopeBadgeKo: '이름 규칙으로 선택한 3D 참고 · 브릿징',
       };
     }
 
@@ -482,7 +483,7 @@ export function resolveStudio3DMotionForExercise(
       return {
         ...STUDIO_3D_SIGNATURES['reformer-jumpboard'],
         matchScope: 'exact-signature',
-        matchScopeBadgeKo: '3D 동작 궤적 일치 · 리포머 점프보드',
+        matchScopeBadgeKo: '이름 규칙으로 선택한 3D 참고 · 리포머 점프보드',
       };
     }
 
@@ -492,7 +493,7 @@ export function resolveStudio3DMotionForExercise(
       ...STUDIO_3D_SIGNATURES['reformer-footwork'],
       matchScope: isFootwork ? 'exact-signature' : 'apparatus-family-reference',
       matchScopeBadgeKo: isFootwork
-        ? '3D 동작 궤적 일치 · 리포머 활주'
+        ? '이름 규칙으로 선택한 3D 참고 · 리포머 활주'
         : '리포머 기구 3D 참조 · 세부 자세는 큐 확인',
     };
   }
@@ -506,7 +507,7 @@ export function resolveStudio3DMotionForExercise(
       return {
         ...STUDIO_3D_SIGNATURES['chair-pike'],
         matchScope: 'exact-signature',
-        matchScopeBadgeKo: '3D 동작 궤적 일치 · 체어 풀업 파이크',
+        matchScopeBadgeKo: '이름 규칙으로 선택한 3D 참고 · 체어 풀업 파이크',
       };
     }
 
@@ -521,7 +522,7 @@ export function resolveStudio3DMotionForExercise(
         ...STUDIO_3D_SIGNATURES['chair-goingup'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
-          ? '3D 동작 궤적 일치 · 체어 고잉업 스텝업'
+          ? '이름 규칙으로 선택한 3D 참고 · 체어 고잉업 스텝업'
           : '체어 스탠딩 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -536,7 +537,7 @@ export function resolveStudio3DMotionForExercise(
         ...STUDIO_3D_SIGNATURES['chair-swan'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
-          ? '3D 동작 궤적 일치 · 체어 프론 스완'
+          ? '이름 규칙으로 선택한 3D 참고 · 체어 프론 스완'
           : '체어 신전 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -546,7 +547,7 @@ export function resolveStudio3DMotionForExercise(
       ...STUDIO_3D_SIGNATURES['chair-pedal-press'],
       matchScope: isExact ? 'exact-signature' : 'apparatus-family-reference',
       matchScopeBadgeKo: isExact
-        ? '3D 동작 궤적 일치 · 체어 페달'
+        ? '이름 규칙으로 선택한 3D 참고 · 체어 페달'
         : '체어 기구 3D 참조 · 세부 자세는 큐 확인',
     };
   }
@@ -560,7 +561,7 @@ export function resolveStudio3DMotionForExercise(
       return {
         ...STUDIO_3D_SIGNATURES['cadillac-hanging'],
         matchScope: 'exact-signature',
-        matchScopeBadgeKo: '3D 동작 궤적 일치 · 캐딜락 캐노피 행잉',
+        matchScopeBadgeKo: '이름 규칙으로 선택한 3D 참고 · 캐딜락 캐노피 행잉',
       };
     }
 
@@ -575,7 +576,7 @@ export function resolveStudio3DMotionForExercise(
         ...STUDIO_3D_SIGNATURES['cadillac-leg-springs'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
-          ? '3D 동작 궤적 일치 · 캐딜락 레그 스프링'
+          ? '이름 규칙으로 선택한 3D 참고 · 캐딜락 레그 스프링'
           : '캐딜락 레그 스프링 계열 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -589,7 +590,7 @@ export function resolveStudio3DMotionForExercise(
         ...STUDIO_3D_SIGNATURES['cadillac-teaser'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
-          ? '3D 동작 궤적 일치 · 캐딜락 푸쉬스루 티저'
+          ? '이름 규칙으로 선택한 3D 참고 · 캐딜락 푸쉬스루 티저'
           : '캐딜락 수파인·바 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -599,7 +600,7 @@ export function resolveStudio3DMotionForExercise(
       ...STUDIO_3D_SIGNATURES['cadillac-cat-rolldown'],
       matchScope: isExact ? 'exact-signature' : 'apparatus-family-reference',
       matchScopeBadgeKo: isExact
-        ? '3D 동작 궤적 일치 · 캐딜락 롤다운 바'
+        ? '이름 규칙으로 선택한 3D 참고 · 캐딜락 롤다운 바'
         : '캐딜락 기구 3D 참조 · 세부 자세는 큐 확인',
     };
   }
@@ -613,7 +614,7 @@ export function resolveStudio3DMotionForExercise(
       return {
         ...STUDIO_3D_SIGNATURES['barrel-spinecorrector'],
         matchScope: 'exact-signature',
-        matchScopeBadgeKo: '3D 동작 궤적 일치 · 스파인 코렉터 아크',
+        matchScopeBadgeKo: '이름 규칙으로 선택한 3D 참고 · 스파인 코렉터 아크',
       };
     }
 
@@ -624,7 +625,7 @@ export function resolveStudio3DMotionForExercise(
         ...STUDIO_3D_SIGNATURES['barrel-horseback'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
-          ? '3D 동작 궤적 일치 · 바렐 호스백 코어 호버'
+          ? '이름 규칙으로 선택한 3D 참고 · 바렐 호스백 코어 호버'
           : '래더 바렐 라운드백·호스백 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -639,7 +640,7 @@ export function resolveStudio3DMotionForExercise(
         ...STUDIO_3D_SIGNATURES['barrel-swan'],
         matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
         matchScopeBadgeKo: exact
-          ? '3D 동작 궤적 일치 · 바렐 풀 스완'
+          ? '이름 규칙으로 선택한 3D 참고 · 바렐 풀 스완'
           : '래더 바렐 신전·트리 3D 참조 · 세부 자세는 큐 확인',
       };
     }
@@ -649,7 +650,7 @@ export function resolveStudio3DMotionForExercise(
       ...STUDIO_3D_SIGNATURES['barrel-sidebend'],
       matchScope: isExact ? 'exact-signature' : 'apparatus-family-reference',
       matchScopeBadgeKo: isExact
-        ? '3D 동작 궤적 일치 · 바렐 측굴'
+        ? '이름 규칙으로 선택한 3D 참고 · 바렐 측굴'
         : '래더 바렐 3D 참조 · 세부 자세는 큐 확인',
     };
   }
@@ -668,7 +669,7 @@ export function resolveStudio3DMotionForExercise(
       ...STUDIO_3D_SIGNATURES['mat-sidekick-plank'],
       matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
       matchScopeBadgeKo: exact
-        ? '3D 동작 궤적 일치 · 매트 사이드킥·플랭크'
+        ? '이름 규칙으로 선택한 3D 참고 · 매트 사이드킥·플랭크'
         : '스튜디오 매트 측면 사슬 3D 참조 · 세부 자세는 큐 확인',
     };
   }
@@ -684,7 +685,7 @@ export function resolveStudio3DMotionForExercise(
       ...STUDIO_3D_SIGNATURES['mat-twist'],
       matchScope: exact ? 'exact-signature' : 'apparatus-family-reference',
       matchScopeBadgeKo: exact
-        ? '3D 동작 궤적 일치 · 매트 쏘우·트위스트'
+        ? '이름 규칙으로 선택한 3D 참고 · 매트 쏘우·트위스트'
         : '스튜디오 매트 시티드 3D 참조 · 세부 자세는 큐 확인',
     };
   }
@@ -694,7 +695,7 @@ export function resolveStudio3DMotionForExercise(
     ...STUDIO_3D_SIGNATURES['mat-hundred'],
     matchScope: isExactMat ? 'exact-signature' : 'apparatus-family-reference',
     matchScopeBadgeKo: isExactMat
-      ? '3D 동작 궤적 일치 · 매트 코어'
+      ? '이름 규칙으로 선택한 3D 참고 · 매트 코어'
       : '스튜디오 매트 3D 참조 · 세부 자세는 큐 확인',
   };
 }

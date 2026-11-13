@@ -324,7 +324,7 @@ describe('one-apply class block inspector', () => {
     expect(after.exercises).toBe(before);
     expect(after.exercises.find((item) => item.id === pending.id)?.review).toBeUndefined();
     expect(after.exercises.filter(isExerciseAutoEligible)).toHaveLength(0);
-    expect(INITIAL_EXERCISES).toHaveLength(98);
+    expect(INITIAL_EXERCISES).toHaveLength(158);
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
     expect(JSON.stringify(VERIFIED_REFERENCES)).toBe(referencesBefore);
   });

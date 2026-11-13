@@ -1,3 +1,4 @@
+import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EXERCISE_MOTION_REFERENCES } from '../data/motionReferences';
@@ -83,7 +84,7 @@ afterEach(() => {
 
 describe('isolated motion reference player', () => {
   it('keeps all 98 exact assets pending while directly exposing explicit related drafts', () => {
-    expect(EXERCISE_MOTION_REFERENCES).toHaveLength(98);
+    expect(EXERCISE_MOTION_REFERENCES).toHaveLength(INITIAL_EXERCISES.length);
     for (const reference of EXERCISE_MOTION_REFERENCES) {
       expect(reference.asset).toBeNull();
       expect(reference.prototypeId).toBeNull();

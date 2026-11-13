@@ -156,25 +156,29 @@ async function main() {
     // =========================================================================
     // 1. DIRECT API INVOCATION CHECKS (Separated from Real DOM/Keyboard Checks)
     // =========================================================================
-    await recordCheck(directApiChecks, 'direct_api_98_catalog_sweep', async () => {
-      const sweep = await page.evaluate(() =>
-        window.__motionCoverageFixture__.runMotionCoverageCatalogSweep(),
-      );
-      if (sweep.totalCatalogCount !== 98) {
-        throw new Error(`Expected 98 catalog items, got ${sweep.totalCatalogCount}`);
+    await recordCheck(directApiChecks, 'direct_api_current_catalog_sweep', async () => {
+      const { sweep, catalogCount, sourceOnlyCatalogCount } = await page.evaluate(() => ({
+        sweep: window.__motionCoverageFixture__.runMotionCoverageCatalogSweep(),
+        catalogCount: window.__motionCoverageFixture__.catalogCount,
+        sourceOnlyCatalogCount: window.__motionCoverageFixture__.sourceOnlyCatalogCount,
+      }));
+      const nativeCount = catalogCount - sourceOnlyCatalogCount;
+      const discreteCount = nativeCount - 21;
+      if (sweep.totalCatalogCount !== catalogCount) {
+        throw new Error(`Expected ${catalogCount} catalog items, got ${sweep.totalCatalogCount}`);
       }
       if (
-        sweep.countsByMode['three-phase-2d'] !== 77 ||
+        sweep.countsByMode['three-phase-2d'] !== discreteCount ||
         sweep.countsByMode['continuous-2d'] !== 1 ||
         sweep.countsByMode['projected-3d'] !== 20 ||
-        sweep.countsByMode.missing !== 0
+        sweep.countsByMode.missing !== sourceOnlyCatalogCount
       ) {
         throw new Error(`Unexpected mode distribution: ${JSON.stringify(sweep.countsByMode)}`);
       }
       if (
-        sweep.reused2dPoseAssetCount !== 98 ||
+        sweep.reused2dPoseAssetCount !== nativeCount ||
         sweep.newlyCreatedAssetCount !== 0 ||
-        sweep.discreteExercisesNeverPlayedCount !== 77 ||
+        sweep.discreteExercisesNeverPlayedCount !== discreteCount ||
         sweep.continuousExercisesVerifiedCount !== 21 ||
         !sweep.controllerDestroyedCleanly
       ) {
