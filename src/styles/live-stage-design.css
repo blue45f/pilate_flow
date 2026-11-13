@@ -360,3 +360,39 @@
   color: #000000;
   border-color: #facc15;
 }
+
+/* The normal stage now uses light panels. Map the legacy dark-stage tokens to
+   that surface so inherited text, secondary controls and pending rows agree.
+   The timer hero and the current outline row keep their explicit inverse ink. */
+html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) {
+  --pf-stage-bg: var(--pf-color-bg-canvas);
+  --pf-stage-card: var(--teaching-paper);
+  --pf-stage-elevated: var(--teaching-sage);
+  --pf-stage-ink: var(--teaching-ink);
+  --pf-stage-mint: var(--pf-color-text-brand);
+}
+
+html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-stage-header h1,
+html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-current-name,
+html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-next-panel h2,
+html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-glance-cues-strip,
+html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-glance-cue-chip {
+  color: var(--teaching-ink);
+}
+
+html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-stage-header .muted,
+html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-stage-footer .muted {
+  color: var(--teaching-muted);
+}
+
+html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .btn-secondary:hover:not(:disabled) {
+  background: var(--pf-color-action-secondary-hover);
+  border-color: var(--teaching-line);
+}
+
+/* Global light-card rules also reach the opt-in dark theme. Its panel surface
+   must follow the same high-contrast tokens as the text and form controls. */
+html #root .vnext-shell .teaching-high-contrast .panel {
+  background: var(--teaching-paper) !important;
+  color: var(--teaching-ink);
+}
