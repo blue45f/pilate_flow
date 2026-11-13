@@ -4,7 +4,9 @@
  *
  * Solves "forgotten auth on new machines / CI / non-interactive tools" without ever printing secrets:
  *   pnpm deploy:auth:check                   # Read-only status of local env files, CLI login & GitHub Secrets
- *   pnpm deploy:auth                         # Interactive `firebase login:ci` -> saves `.env.deploy.local` + syncs GitHub Secret
+ *   pnpm deploy:auth:local                   # Reuse saved auth / existing CLI login locally, without issuing credentials
+ *   pnpm deploy:info                         # Local status only, no GitHub queries
+ *   pnpm deploy:auth                         # Reuse saved auth before considering interactive login
  *   pnpm deploy:auth ./service-account.json  # Copies key to `.firebase/service-account.json` (0600) + updates `.env.deploy.local` + syncs GitHub Secret
  *   pnpm deploy:auth --from-env              # Persists FIREBASE_TOKEN / GOOGLE_APPLICATION_CREDENTIALS from shell env into `.env.deploy.local`
  *   pnpm deploy:auth --sync-github           # Pushes already-saved local `.env.deploy.local` / `.firebase/service-account.json` to GitHub Actions Secrets
@@ -20,21 +22,121 @@ import {
 } from 'node:fs';
 import { execFileSync, spawn } from 'node:child_process';
 import { join, resolve } from 'node:path';
+import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import {
   FIREBASE_PROJECT,
   FIREBASE_SITE,
   FIREBASE_TOOLS_PACKAGE,
+  LIVE_ORIGIN,
   ROOT,
   buildAugmentedEnv,
   inspectCanonicalProductionReadiness,
   loadLocalDeployEnvMap,
+  isPlaceholderCredentialValue,
   parseServiceAccountJsonString,
   resolveExecutable,
+  resolveFirebaseAuth,
 } from './deploy-universal.mjs';
 
 const MODULE_PATH = realpathSync(fileURLToPath(import.meta.url));
 export const GITHUB_REPO_SLUG = 'blue45f/pilate_flow';
+
+export function localDeployMetadata(rootDir = ROOT) {
+  return {
+    DEPLOY_PROJECT_ROOT: rootDir,
+    DEPLOY_ENV_FILE: join(rootDir, '.env.deploy.local'),
+    DEPLOY_LAUNCHER: join(rootDir, 'scripts', 'deploy.sh'),
+    DEPLOY_GUIDE: join(rootDir, 'DEPLOYMENT.md'),
+    FIREBASE_PROJECT_ID: FIREBASE_PROJECT,
+    FIREBASE_HOSTING_SITE: FIREBASE_SITE,
+    FIREBASE_HOSTING_URL: LIVE_ORIGIN,
+    DEPLOY_BRANCH: 'main',
+    DEPLOY_REPOSITORY: `https://github.com/${GITHUB_REPO_SLUG}`,
+    DEPLOY_NODE_BIN: process.execPath,
+    DEPLOY_FIREBASE_TOOLS_PACKAGE: FIREBASE_TOOLS_PACKAGE,
+  };
+}
+
+export function saveLocalDeployConfiguration(entries = {}, rootDir = ROOT) {
+  const envFilePath = join(rootDir, '.env.deploy.local');
+  upsertEnvFileEntries(envFilePath, { ...localDeployMetadata(rootDir), ...entries });
+  return envFilePath;
+}
+
+/** Reuse a CLI session locally; never run login:ci or upload a credential. */
+export function reuseExistingFirebaseLogin(
+  rootDir = ROOT,
+  { homeDir = homedir(), env = process.env } = {},
+) {
+  const configHome = env.XDG_CONFIG_HOME || join(homeDir, '.config');
+  const sourceFile = join(configHome, 'configstore', 'firebase-tools.json');
+  let config;
+  try {
+    config = JSON.parse(readFileSync(sourceFile, 'utf8'));
+  } catch {
+    throw new Error(
+      '[deploy:auth] 재사용할 Firebase CLI 로그인을 찾지 못했습니다. 기존 JSON 파일 또는 --from-env --local-only를 사용하세요.',
+    );
+  }
+  const token = config.tokens?.refresh_token;
+  if (typeof token !== 'string' || !token.trim() || isPlaceholderCredentialValue(token)) {
+    throw new Error('[deploy:auth] 기존 Firebase CLI 로그인에 재사용할 인증 토큰이 없습니다.');
+  }
+  const envFilePath = saveLocalDeployConfiguration({ FIREBASE_TOKEN: token.trim() }, rootDir);
+  return { envFilePath, account: config.user?.email ?? null };
+}
+
+/** Persist shell-only credentials as well as already-saved local credentials. */
+export function reuseLocalDeploymentAuth(rootDir = ROOT, env = process.env) {
+  const homeDir = env.HOME || homedir();
+  // Saving reusable project auth must not treat an interactive ambient login as
+  // already persisted: the next IDE/app may run without a TTY or that cache.
+  const local = resolveFirebaseAuth({
+    rootDir,
+    env: {},
+    homeDir,
+    isInteractive: false,
+    allowAmbientAuth: false,
+  });
+  if (local.ready) {
+    saveLocalDeployConfiguration({}, rootDir);
+    return { source: local.source };
+  }
+  const explicit = resolveFirebaseAuth({
+    rootDir,
+    env,
+    homeDir,
+    isInteractive: false,
+    allowAmbientAuth: false,
+  });
+  if (explicit.ready && explicit.source.startsWith('env:')) {
+    const entries = explicit.extraEnv.GOOGLE_APPLICATION_CREDENTIALS
+      ? { GOOGLE_APPLICATION_CREDENTIALS: explicit.extraEnv.GOOGLE_APPLICATION_CREDENTIALS }
+      : explicit.inlineServiceAccountJson
+        ? { FIREBASE_SERVICE_ACCOUNT: explicit.inlineServiceAccountJson }
+        : { FIREBASE_TOKEN: explicit.extraEnv.FIREBASE_TOKEN };
+    saveLocalDeployConfiguration(entries, rootDir);
+    return { source: explicit.source };
+  }
+  const ambient = resolveFirebaseAuth({
+    rootDir,
+    env,
+    homeDir,
+    allowAmbientAuth: true,
+  });
+  if (ambient.extraEnv.GOOGLE_APPLICATION_CREDENTIALS) {
+    saveLocalDeployConfiguration(
+      {
+        GOOGLE_APPLICATION_CREDENTIALS: ambient.extraEnv.GOOGLE_APPLICATION_CREDENTIALS,
+      },
+      rootDir,
+    );
+    return { source: ambient.source };
+  }
+  const saved = reuseExistingFirebaseLogin(rootDir, { env, homeDir });
+  return { source: 'existing-firebase-cli-login', account: saved.account };
+}
 
 /**
  * Safely upsert key-value pairs into a local `.env` file with 0600 permissions while preserving comments & unrelated keys.
@@ -114,9 +216,12 @@ export function importServiceAccountFile(sourceFilePath, rootDir = ROOT) {
   }
 
   const envLocalPath = join(rootDir, '.env.deploy.local');
-  upsertEnvFileEntries(envLocalPath, {
-    GOOGLE_APPLICATION_CREDENTIALS: targetRel,
-  });
+  saveLocalDeployConfiguration(
+    {
+      GOOGLE_APPLICATION_CREDENTIALS: targetRel,
+    },
+    rootDir,
+  );
 
   return {
     projectId: parsed.project_id ?? null,
@@ -172,6 +277,15 @@ function syncCredentialsToGitHubActions(
   execEnv,
   rootDir = ROOT,
 ) {
+  if (serviceAccountJson) {
+    const parsed = parseServiceAccountJsonString(serviceAccountJson);
+    if (!parsed) {
+      throw new Error(
+        '[deploy:auth] GitHub Actions에는 유효한 service_account JSON만 등록할 수 있습니다. gcloud 사용자 ADC는 로컬 전용 ADC이므로 업로드하지 않습니다. 기존 서비스 계정 JSON 또는 Firebase 토큰을 사용하세요.',
+      );
+    }
+    serviceAccountJson = parsed.normalizedJson;
+  }
   const ghBin = resolveExecutable('gh', execEnv);
   if (!ghBin) {
     console.log(
@@ -243,10 +357,7 @@ function runInteractiveFirebaseLoginCi(execEnv, rootDir = ROOT) {
     child.stdout.on('data', (chunk) => {
       const text = chunk.toString('utf8');
       capturedStdout += text;
-      const masked = text.replace(
-        /\b1\/\/[A-Za-z0-9_-]{20,}\b/g,
-        '1//[SAVED_TO_ENV_DEPLOY_LOCAL]',
-      );
+      const masked = text.replace(/\b1\/\/[A-Za-z0-9_-]{20,}\b/g, '1//[SAVED_TO_ENV_DEPLOY_LOCAL]');
       process.stdout.write(masked);
     });
     child.on('error', rejectPromise);
@@ -258,7 +369,9 @@ function runInteractiveFirebaseLoginCi(execEnv, rootDir = ROOT) {
       const token = extractCiTokenFromOutput(capturedStdout);
       if (!token) {
         rejectPromise(
-          new Error('[deploy:auth] 로그인 출력에서 Firebase CI 토큰(1//...)을 감지하지 못했습니다.'),
+          new Error(
+            '[deploy:auth] 로그인 출력에서 Firebase CI 토큰(1//...)을 감지하지 못했습니다.',
+          ),
         );
         return;
       }
@@ -267,7 +380,7 @@ function runInteractiveFirebaseLoginCi(execEnv, rootDir = ROOT) {
   });
 }
 
-export function printAuthStatus(rootDir = ROOT) {
+export function printAuthStatus(rootDir = ROOT, { localOnly = false } = {}) {
   const execEnv = buildAugmentedEnv({}, rootDir);
   const readiness = inspectCanonicalProductionReadiness({
     rootDir,
@@ -281,7 +394,9 @@ export function printAuthStatus(rootDir = ROOT) {
   });
   const localEnv = loadLocalDeployEnvMap(rootDir);
   const autoSaExists = existsSync(join(rootDir, '.firebase', 'service-account.json'));
-  const ghStatus = inspectGitHubSecretsStatus(execEnv, rootDir);
+  const ghStatus = localOnly
+    ? { skipped: true, configuredSecrets: [] }
+    : inspectGitHubSecretsStatus(execEnv, rootDir);
   const firebaseSecretNames = [
     'FIREBASE_SERVICE_ACCOUNT',
     'FIREBASE_SERVICE_ACCOUNT_PILATES_FLOW_ATELIER',
@@ -305,7 +420,9 @@ export function printAuthStatus(rootDir = ROOT) {
   console.log(
     `• 로컬 env 키 감지 여부: GOOGLE_APPLICATION_CREDENTIALS=${Boolean(localEnv.values.GOOGLE_APPLICATION_CREDENTIALS)}, FIREBASE_SERVICE_ACCOUNT=${Boolean(localEnv.values.FIREBASE_SERVICE_ACCOUNT)}, FIREBASE_TOKEN=${Boolean(localEnv.values.FIREBASE_TOKEN)}`,
   );
-  if (!ghStatus.ghInstalled) {
+  if (ghStatus.skipped) {
+    console.log('• GitHub Actions 시크릿: 조회 생략 (로컬 전용 점검)');
+  } else if (!ghStatus.ghInstalled) {
     console.log('• GitHub Actions 시크릿: 미검증 (`gh` CLI 미설치)');
   } else if (!ghStatus.ghAuthenticated) {
     console.log('• GitHub Actions 시크릿: 미검증 (`gh auth login` 필요)');
@@ -318,10 +435,10 @@ export function printAuthStatus(rootDir = ROOT) {
   if (!nonInteractiveReadiness.firebaseAuthReady) {
     console.log('👉 권장 1회 설정 명령 (터미널에서 실행):');
     console.log(
-      '   pnpm deploy:auth                          # 브라우저 로그인 후 .env.deploy.local + GitHub 시크릿 자동 저장',
+      '   pnpm deploy:auth:local                    # 기존 Firebase CLI 로그인 재사용 · 로컬에만 저장',
     );
     console.log(
-      '   pnpm deploy:auth ./service-account.json   # 서비스 계정 JSON 파일로 영구 등록 (권장)',
+      '   pnpm deploy:auth ./service-account.json --local-only  # 기존 JSON 파일을 로컬에만 등록',
     );
   } else {
     console.log('👉 이제 어떤 터미널이나 AI 에이전트에서도 `pnpm deploy` 한 줄로 즉시 배포됩니다.');
@@ -330,28 +447,77 @@ export function printAuthStatus(rootDir = ROOT) {
 
 async function runAuthCli() {
   const rawArgs = process.argv.slice(2);
+  const supportedFlags = new Set([
+    '--help',
+    '-h',
+    '--status',
+    '--service-account',
+    '--from-env',
+    '--sync-github',
+    '--local-only',
+    '--reuse-login',
+  ]);
+  for (const arg of rawArgs) {
+    if (arg.startsWith('-') && !supportedFlags.has(arg)) {
+      throw new Error('[deploy:auth] 지원하지 않는 옵션입니다. --help로 사용법을 확인하세요.');
+    }
+  }
+  const localOnly = rawArgs.includes('--local-only');
+  if (localOnly && rawArgs.includes('--sync-github')) {
+    throw new Error('[deploy:auth] --local-only와 --sync-github는 함께 사용할 수 없습니다.');
+  }
+  const exclusiveModes = ['--status', '--reuse-login', '--from-env', '--sync-github'];
+  if (exclusiveModes.filter((flag) => rawArgs.includes(flag)).length > 1) {
+    throw new Error(
+      '[deploy:auth] 인증 작업 옵션은 한 번에 하나만 사용하세요. --help로 사용법을 확인하세요.',
+    );
+  }
+  const saFlagIdx = rawArgs.indexOf('--service-account');
+  if (saFlagIdx >= 0 && (!rawArgs[saFlagIdx + 1] || rawArgs[saFlagIdx + 1].startsWith('-'))) {
+    throw new Error('[deploy:auth] --service-account 뒤에 기존 JSON 파일 경로가 필요합니다.');
+  }
+  const positionalArgs = rawArgs.filter((arg) => !arg.startsWith('-'));
+  if (positionalArgs.length > 1 || positionalArgs.some((arg) => !arg.endsWith('.json'))) {
+    throw new Error('[deploy:auth] 기존 서비스 계정 JSON 파일 하나만 지정할 수 있습니다.');
+  }
+  if (positionalArgs.length && exclusiveModes.some((flag) => rawArgs.includes(flag))) {
+    throw new Error('[deploy:auth] JSON 파일 등록과 다른 인증 작업은 따로 실행하세요.');
+  }
   const execEnv = buildAugmentedEnv({}, ROOT);
+  const syncIfRequested = (credentials) =>
+    localOnly ? false : syncCredentialsToGitHubActions(credentials, execEnv, ROOT);
+  const showStatus = () => printAuthStatus(ROOT, { localOnly });
 
   if (rawArgs.includes('--help') || rawArgs.includes('-h')) {
     console.log(
       [
         '사용법: pnpm deploy:auth [옵션 또는 서비스계정.json 경로]',
         '  --status                       로컬 env 및 GitHub Actions 인증 준비 상태 확인',
+        '  --local-only                   GitHub 조회·업로드 없이 로컬에만 저장/점검',
+        '  --reuse-login                  기존 Firebase CLI 로그인 재사용 (새 토큰 발급 없음)',
         '  <path/to/service-account.json> 서비스 계정 JSON을 .firebase/service-account.json 및 .env.deploy.local에 등록',
         '  --from-env                     현재 셸의 FIREBASE_TOKEN / GOOGLE_APPLICATION_CREDENTIALS를 .env.deploy.local에 저장',
         '  --sync-github                  로컬에 저장된 배포 인증을 GitHub Actions 시크릿에도 동기화',
-        '  (인자 없음)                     대화형 `firebase login:ci` 실행 후 .env.deploy.local 및 GitHub 시크릿 자동 저장',
+        '  (인자 없음)                     저장된 인증이 있으면 재사용; 없을 때만 대화형 로그인',
       ].join('\n'),
     );
     return;
   }
 
   if (rawArgs.includes('--status')) {
-    printAuthStatus(ROOT);
+    showStatus();
     return;
   }
 
-  const saFlagIdx = rawArgs.indexOf('--service-account');
+  if (rawArgs.includes('--reuse-login')) {
+    const saved = reuseLocalDeploymentAuth(ROOT, execEnv);
+    console.log(
+      `✅ 기존 인증을 로컬에서 재사용하도록 정리했습니다 (${saved.source}). 새 토큰은 발급하지 않았습니다.`,
+    );
+    showStatus();
+    return;
+  }
+
   const positionalJson = rawArgs.find((arg) => !arg.startsWith('-') && arg.endsWith('.json'));
   const saInputPath =
     saFlagIdx >= 0 && rawArgs[saFlagIdx + 1] ? rawArgs[saFlagIdx + 1] : positionalJson;
@@ -361,8 +527,8 @@ async function runAuthCli() {
     console.log(
       `✅ 서비스 계정 등록 완료: ${imported.targetRel} 및 .env.deploy.local 업데이트됨 (project_id=${imported.projectId ?? 'unknown'})`,
     );
-    syncCredentialsToGitHubActions({ serviceAccountJson: imported.rawJson }, execEnv, ROOT);
-    printAuthStatus(ROOT);
+    syncIfRequested({ serviceAccountJson: imported.rawJson });
+    showStatus();
     return;
   }
 
@@ -370,8 +536,8 @@ async function runAuthCli() {
     const updates = {};
     if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
       const imported = importServiceAccountFile(process.env.GOOGLE_APPLICATION_CREDENTIALS, ROOT);
-      syncCredentialsToGitHubActions({ serviceAccountJson: imported.rawJson }, execEnv, ROOT);
-      printAuthStatus(ROOT);
+      syncIfRequested({ serviceAccountJson: imported.rawJson });
+      showStatus();
       return;
     }
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -389,17 +555,13 @@ async function runAuthCli() {
         '[deploy:auth] 현재 셸 환경변수에 GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_SERVICE_ACCOUNT, FIREBASE_TOKEN 중 아무것도 설정되어 있지 않습니다.',
       );
     }
-    upsertEnvFileEntries(join(ROOT, '.env.deploy.local'), updates);
+    saveLocalDeployConfiguration(updates, ROOT);
     console.log('✅ 현재 셸 환경변수를 .env.deploy.local (0600)에 저장했습니다.');
-    syncCredentialsToGitHubActions(
-      {
-        serviceAccountJson: updates.FIREBASE_SERVICE_ACCOUNT ?? '',
-        firebaseToken: updates.FIREBASE_TOKEN ?? '',
-      },
-      execEnv,
-      ROOT,
-    );
-    printAuthStatus(ROOT);
+    syncIfRequested({
+      serviceAccountJson: updates.FIREBASE_SERVICE_ACCOUNT ?? '',
+      firebaseToken: updates.FIREBASE_TOKEN ?? '',
+    });
+    showStatus();
     return;
   }
 
@@ -438,15 +600,29 @@ async function runAuthCli() {
     );
   }
 
+  const currentAuth = resolveFirebaseAuth({ rootDir: ROOT, env: execEnv, allowAmbientAuth: true });
+  if (currentAuth.ready) {
+    reuseLocalDeploymentAuth(ROOT, execEnv);
+    console.log('✅ 기존 로컬 인증을 재사용합니다. 새 로그인이나 GitHub 변경은 없습니다.');
+    showStatus();
+    return;
+  }
+
+  if (localOnly) {
+    throw new Error(
+      '[deploy:auth] 로컬 인증이 없습니다. pnpm deploy:auth:local 또는 기존 JSON 파일과 --local-only를 사용하세요.',
+    );
+  }
+
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
-    printAuthStatus(ROOT);
+    showStatus();
     throw new Error(
       '[deploy:auth] 비대화형 셸에서는 브라우저 로그인을 띄울 수 없습니다. 일반 터미널에서 `pnpm deploy:auth` 또는 `pnpm deploy:auth ./service-account.json` 을 1회 실행해 주세요.',
     );
   }
 
   const token = await runInteractiveFirebaseLoginCi(execEnv, ROOT);
-  upsertEnvFileEntries(join(ROOT, '.env.deploy.local'), {
+  saveLocalDeployConfiguration({
     FIREBASE_TOKEN: token,
   });
   console.log(

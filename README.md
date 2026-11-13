@@ -43,14 +43,18 @@ pnpm build                # SVG 캐시 확인 + tsc -b + Vite + PWA 검사
 ## 2. 배포 방법 요약 (`DEPLOYMENT.md` 정본 기준)
 
 ```bash
-pnpm deploy:doctor        # 브랜치·빌드·Firebase 인증 상태 1초 진단 및 다음 명령 안내
-pnpm deploy:auth          # 최초 1회 로컬(.env.deploy.local) 및 GitHub Actions 시크릿 등록
+pnpm deploy:info          # 로컬 인증 상태와 배포 대상 확인 (네트워크 조회·변경 없음)
+pnpm deploy:doctor        # 브랜치·빌드·Firebase 인증 소스 및 다음 명령 안내
+pnpm deploy:auth:local    # 기존 Firebase 로그인 재사용 → .env.deploy.local 저장 (새 토큰 발급·GitHub 동기화 없음)
 pnpm deploy:check         # 로컬 설정·브랜치·dist 무결성 JSON 점검
+pnpm firebase:local -- hosting:sites:list  # 로컬 인증을 로드해 기존 프로젝트의 사이트 조회
 pnpm deploy               # 로컬 원커맨드 검증 → 빌드 → Firebase 배포 → 운영 해시 대조
 pnpm deploy:verify        # 운영 URL(https://pilates-flow-atelier.web.app) 번들 해시·PWA·에셋 일치 검증
 pnpm deploy:rollback      # 직전 검증 완료 스냅샷으로 즉시 롤백
 ```
 
+- 다른 앱·IDE·AI 에이전트에서는 작업 폴더나 `pnpm`의 PATH를 맞추지 않고 `bash /Users/hjunkim/WebstormProjects/pilates-flow/scripts/deploy.sh --doctor`로 시작할 수 있습니다. Node 탐색, 프로젝트 이동, 로컬 인증 로드는 스크립트가 처리합니다.
+- 인증이 이미 저장돼 있으면 다시 로그인할 필요가 없습니다. `.env.deploy.local`을 셸에서 `source`하거나 비밀값을 앱별 설정에 복사하지 마세요. 실행 방법과 인증 소스는 [`DEPLOYMENT.md`](DEPLOYMENT.md)를 참고하세요.
 - main 대상 PR과 `origin/main` 푸시·병합 시 `.github/workflows/deploy-production.yml`이 품질 검사와 운영용 빌드 산출물 생성까지만 자동 실행합니다. 운영 사이트는 변경하지 않습니다.
 - Firebase Hosting 배포는 별도로 실행합니다. GitHub Actions에서 **Production Checks & Manual Deployment → Run workflow → main**을 선택하고 **Firebase 운영 배포 실행**을 체크하면, 품질 검사 후 업로드 및 `--verify-live --wait-cdn` 검증을 수행합니다. 체크하지 않은 수동 실행은 검사와 빌드만 수행하며, main 이외의 브랜치는 운영 배포할 수 없습니다. 로컬 `pnpm deploy`와 동시 실행하지 마세요.
 
@@ -68,7 +72,9 @@ pnpm deploy:rollback      # 직전 검증 완료 스냅샷으로 즉시 롤백
 ### Firebase Hosting 배포 인증 환경변수 (`scripts/deploy-universal.mjs` · GitHub Actions Secrets)
 1. `GOOGLE_APPLICATION_CREDENTIALS`: 서비스 계정 JSON 파일 경로 (또는 `.firebase/service-account.json` 드롭인 파일)
 2. `FIREBASE_SERVICE_ACCOUNT` (CI 보조 별칭: `FIREBASE_SERVICE_ACCOUNT_PILATES_FLOW_ATELIER`, `FIREBASE_SERVICE_ACCOUNT_DESKCLOUD_FLEET_AUTH`, `GCP_SA_KEY`): 서비스 계정 JSON 원문 또는 Base64 문자열
-3. `FIREBASE_TOKEN`: `firebase login:ci` 비대화형 배포 토큰
+3. `FIREBASE_TOKEN`: 기존 Firebase CLI 로그인에서 재사용한 토큰 또는 기존 CI 토큰
+
+`.env.deploy.local`에는 인증 외에 프로젝트·사이트·운영 URL·저장소·Node 경로 등의 배포 참고 정보도 정리합니다. 이 정보는 앱 간 실행 안내용이며, 실제 배포 대상은 `firebase.json`, `.firebaserc`, 배포 스크립트의 정본 설정으로 검증합니다. 배포 인증에는 `VITE_` 접두사를 붙이지 않습니다.
 
 ## 4. 카탈로그·도해 자료 및 안전 고지
 

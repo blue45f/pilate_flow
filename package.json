@@ -17,7 +17,7 @@
     "preview": "vite preview",
     "test": "node --test src/booking-core/test/booking-engine.test.mjs src/utils/recurrence/test/pilates-recurrence.test.mjs && vitest run",
     "test:watch": "vitest",
-    "test:deploy": "node --test scripts/check-pwa-build.node-test.mjs scripts/deploy-universal.node-test.mjs",
+    "test:deploy": "node --test scripts/check-pwa-build.node-test.mjs scripts/deploy-universal.node-test.mjs scripts/setup-deploy-auth.node-test.mjs scripts/firebase-local.node-test.mjs",
     "check:motion-study": "node scripts/generate-motion-study-ledger.mjs --check && node --test scripts/generate-motion-study-ledger.node-test.mjs",
     "check:pwa": "node scripts/check-pwa-build.mjs",
     "check:secrets": "node --test scripts/check-secrets.node-test.mjs && node scripts/check-secrets.mjs",
@@ -28,6 +28,9 @@
     "deploy:doctor": "node scripts/deploy-universal.mjs --doctor",
     "deploy:auth": "node scripts/setup-deploy-auth.mjs",
     "deploy:auth:check": "node scripts/setup-deploy-auth.mjs --status",
+    "deploy:auth:local": "node scripts/setup-deploy-auth.mjs --reuse-login --local-only",
+    "deploy:info": "node scripts/setup-deploy-auth.mjs --status --local-only",
+    "firebase:local": "node scripts/firebase-local.mjs",
     "deploy:check": "node scripts/deploy-universal.mjs --check-env",
     "deploy:verify": "node scripts/deploy-universal.mjs --verify-live",
     "deploy:rollback": "node scripts/deploy-universal.mjs --rollback"

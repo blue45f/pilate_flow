@@ -16,8 +16,10 @@
  *   node scripts/deploy-universal.mjs --skip-build    # Re-verify existing dist/ integrity, deploy & verify live
  */
 import {
+  accessSync,
   chmodSync,
   closeSync,
+  constants as fsConstants,
   cpSync,
   existsSync,
   mkdirSync,
@@ -27,6 +29,7 @@ import {
   readFileSync,
   realpathSync,
   rmSync,
+  statSync,
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -103,10 +106,16 @@ export function parseEnvFileSafe(filePath) {
       if (eq <= 0) continue;
       const key = trimmed.slice(0, eq).trim();
       let val = trimmed.slice(eq + 1).trim();
-      if (
-        (val.startsWith('"') && val.endsWith('"')) ||
-        (val.startsWith("'") && val.endsWith("'"))
-      ) {
+      if (val.startsWith('"') && val.endsWith('"')) {
+        try {
+          // setup-deploy-auth writes quoted values with JSON.stringify, including
+          // escaped service-account JSON. Decode only JSON strings, never shell code.
+          val = JSON.parse(val);
+        } catch {
+          // Keep support for ordinary dotenv quotes with non-JSON backslashes.
+          val = val.slice(1, -1);
+        }
+      } else if (val.startsWith("'") && val.endsWith("'")) {
         val = val.slice(1, -1);
       }
       if (key && val) map[key] = val;
@@ -266,7 +275,17 @@ export function buildAugmentedEnv(extraEnv = {}, rootDir = ROOT, baseEnv = proce
   const currentHome = baseEnv.HOME || homedir();
   const candidateDirs = discoverCandidateBinDirs(rootDir, currentHome);
   const currentPath = baseEnv.PATH || '/usr/bin:/bin:/usr/sbin:/sbin';
-  const mergedPath = [...new Set([...candidateDirs, ...currentPath.split(':')])].join(':');
+  // GUI clients often have a minimal PATH. Keep the runtime that is already
+  // executing this script ahead of other installations so /usr/bin/env node
+  // shebangs do not silently switch to an incompatible Homebrew/system Node.
+  const mergedPath = [
+    ...new Set([
+      join(rootDir, 'node_modules', '.bin'),
+      dirname(process.execPath),
+      ...currentPath.split(':').filter(Boolean),
+      ...candidateDirs,
+    ]),
+  ].join(':');
   return {
     ...baseEnv,
     PATH: mergedPath,
@@ -279,8 +298,10 @@ export function resolveExecutable(binName, env) {
   for (const dir of searchDirs) {
     const full = join(dir, binName);
     try {
-      if (existsSync(full)) {
-        execFileSync(full, ['--version'], { env, stdio: 'ignore' });
+      if (statSync(full).isFile()) {
+        // Discovery must not execute tools: even --version can perform update
+        // checks or write user config, which fails inside sandboxed GUI apps.
+        accessSync(full, fsConstants.X_OK);
         return full;
       }
     } catch {
@@ -439,6 +460,37 @@ export function prepareAuthExecutionEnv(auth) {
   };
 }
 
+/** Keep CLI caches local when explicit auth makes the global login cache unnecessary. */
+export function firebaseCliEnvironment(env, selectedAuthEnv = {}, rootDir = ROOT) {
+  const childEnv = { ...env, NO_UPDATE_NOTIFIER: '1' };
+  // Only the resolver's selected credential may reach Firebase. Stale/placeholder
+  // ambient variables must not shadow a valid lower-priority local credential.
+  for (const key of [
+    'FIREBASE_TOKEN',
+    'GOOGLE_APPLICATION_CREDENTIALS',
+    'FIREBASE_SERVICE_ACCOUNT',
+    'FIREBASE_SERVICE_ACCOUNT_PILATES_FLOW_ATELIER',
+    'FIREBASE_SERVICE_ACCOUNT_DESKCLOUD_FLEET_AUTH',
+    'GCP_SA_KEY',
+  ])
+    delete childEnv[key];
+  if (selectedAuthEnv.GOOGLE_APPLICATION_CREDENTIALS) {
+    childEnv.GOOGLE_APPLICATION_CREDENTIALS = selectedAuthEnv.GOOGLE_APPLICATION_CREDENTIALS;
+  } else if (selectedAuthEnv.FIREBASE_TOKEN) {
+    childEnv.FIREBASE_TOKEN = selectedAuthEnv.FIREBASE_TOKEN;
+  }
+  if (
+    !childEnv.XDG_CONFIG_HOME &&
+    (childEnv.GOOGLE_APPLICATION_CREDENTIALS || childEnv.FIREBASE_TOKEN)
+  ) {
+    const configDir = join(rootDir, '.firebase', 'cli-config');
+    mkdirSync(configDir, { recursive: true, mode: 0o700 });
+    chmodSync(configDir, 0o700);
+    childEnv.XDG_CONFIG_HOME = configDir;
+  }
+  return childEnv;
+}
+
 export function inspectGitState(rootDir = ROOT, env = process.env) {
   try {
     const rawBranch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
@@ -549,7 +601,7 @@ export function computeRecommendedNextCommand(status) {
   if (status.firebaseAuthReady) {
     return status.distReadyForDeploy ? 'pnpm deploy --skip-build' : 'pnpm deploy';
   }
-  return 'pnpm deploy:auth   # (최초 1회: .env.deploy.local 저장 + GitHub Actions 시크릿 등록 후 pnpm deploy 실행)';
+  return 'pnpm deploy:auth:local   # 기존 로그인을 재사용하여 .env.deploy.local에만 저장';
 }
 
 export function inspectCanonicalProductionReadiness({
@@ -571,9 +623,7 @@ export function inspectCanonicalProductionReadiness({
   const site = firebaseJson?.hosting?.site ?? null;
   const publicDir = firebaseJson?.hosting?.public ?? null;
   const projectId = firebaserc?.projects?.default ?? null;
-  const headers = Array.isArray(firebaseJson?.hosting?.headers)
-    ? firebaseJson.hosting.headers
-    : [];
+  const headers = Array.isArray(firebaseJson?.hosting?.headers) ? firebaseJson.hosting.headers : [];
   const hasImmutableAssetsHeader = headers.some(
     (h) =>
       h.source === '/assets/**' &&
@@ -653,9 +703,10 @@ export function formatDeployDoctorReport(status) {
   ];
   if (!status.firebaseAuthReady) {
     lines.push(
-      '   • [방법 A — 로컬+CI 한 번에 영구 등록] 터미널에서 `pnpm deploy:auth` 실행 후 `pnpm deploy`',
-      '   • [방법 B — 서비스 계정 파일] `.firebase/service-account.json` 복사 후 `pnpm deploy`',
-      '   • [방법 C — GitHub Actions 수동 배포] GitHub Secrets에 `FIREBASE_SERVICE_ACCOUNT` 등록 후 Actions → Run workflow → main → Firebase 운영 배포 실행을 선택하세요. main 푸시는 검사·빌드만 실행합니다.',
+      '   • [방법 A — 기존 로그인 재사용] `pnpm deploy:auth:local`로 로컬 인증만 저장',
+      '   • [방법 B — 기존 서비스 계정 파일] `pnpm deploy:auth ./service-account.json --local-only`로 등록',
+      '   • [CI 연결 — 별도 작업] 필요할 때 `pnpm deploy:auth --sync-github`로 GitHub Secret 연결',
+      '   • [운영 업로드] Actions → Run workflow → main → Firebase 운영 배포 실행을 선택하세요. main 푸시는 검사·빌드만 실행합니다.',
     );
   }
   return lines.join('\n');
@@ -779,9 +830,7 @@ async function runSingleLiveVerificationPass({
     failureReasons.push('local dist/index.html is missing or lacks an entry bundle hash');
   }
   if (requireLocalMatch && localEntryJs && liveEntryJs && !bundleMatchesLocalDist) {
-    failureReasons.push(
-      `live bundle (${liveEntryJs}) does not match local dist (${localEntryJs})`,
-    );
+    failureReasons.push(`live bundle (${liveEntryJs}) does not match local dist (${localEntryJs})`);
   }
   if (requireLocalMatch && localEntryCss && !cssMatchesLocalDist) {
     failureReasons.push(
@@ -1278,8 +1327,8 @@ async function runCli() {
       throw new Error(
         [
           `[deploy] Firebase 배포 인증이 아직 연결되지 않았습니다 (${auth.source}).`,
-          '👉 터미널에서 `pnpm deploy:auth` 를 1회 실행하면 `.env.deploy.local` 저장과 GitHub Actions 시크릿 등록이 한 번에 완료됩니다.',
-          '   (또는 `.firebase/service-account.json` 에 서비스 계정 키를 복사한 뒤 다시 `pnpm deploy` 를 실행하세요.)',
+          '👉 `pnpm deploy:auth:local`로 기존 Firebase 로그인을 재사용하여 `.env.deploy.local`에만 저장하세요.',
+          '   기존 서비스 계정 파일은 `pnpm deploy:auth ./service-account.json --local-only`로 등록할 수 있습니다.',
         ].join('\n'),
       );
     }
@@ -1287,6 +1336,7 @@ async function runCli() {
     const preparedAuth = prepareAuthExecutionEnv(auth);
     cleanupTempAuth = preparedAuth.cleanup;
     const execEnv = buildAugmentedEnv(preparedAuth.extraEnv);
+    const firebaseEnv = firebaseCliEnvironment(execEnv, preparedAuth.extraEnv);
     const { cmd, args: deployArgs } = resolveFirebaseDeployCommand(execEnv, auth);
 
     if (isRollback) {
@@ -1294,7 +1344,12 @@ async function runCli() {
       console.log(
         `[deploy:rollback] Restored verified snapshot ${restored.releaseId} (${restored.entryJs}) to dist/.`,
       );
-      await runSpawnStep(`Firebase Hosting Rollback (${FIREBASE_SITE})`, cmd, deployArgs, execEnv);
+      await runSpawnStep(
+        `Firebase Hosting Rollback (${FIREBASE_SITE})`,
+        cmd,
+        deployArgs,
+        firebaseEnv,
+      );
       const liveSummary = await verifyLiveDeployment({
         requireLocalMatch: true,
         maxAttempts: 6,
@@ -1314,6 +1369,7 @@ async function runCli() {
       );
       runNodeScript(['scripts/check-secrets.mjs'], execEnv);
       runNodeScript(['scripts/generate-motion-study-ledger.mjs', '--check'], execEnv);
+      runNodeScript(['scripts/generate-exercise-artwork.mjs', '--check'], execEnv);
       runNodeScript(['./node_modules/typescript/bin/tsc', '-b'], execEnv);
       runNodeScript(['./node_modules/vite/bin/vite.js', 'build'], execEnv);
       runNodeScript(['scripts/check-pwa-build.mjs'], execEnv);
@@ -1324,7 +1380,7 @@ async function runCli() {
     }
 
     const releaseSnapshot = snapshotVerifiedRelease(ROOT, { gitCommit: status.headCommit });
-    await runSpawnStep(`Firebase Hosting (${FIREBASE_SITE})`, cmd, deployArgs, execEnv);
+    await runSpawnStep(`Firebase Hosting (${FIREBASE_SITE})`, cmd, deployArgs, firebaseEnv);
 
     if (skipLiveVerify) {
       console.warn(
@@ -1357,7 +1413,7 @@ async function runCli() {
             `Firebase Hosting Auto-Rollback (${FIREBASE_SITE})`,
             cmd,
             deployArgs,
-            execEnv,
+            firebaseEnv,
           );
           await verifyLiveDeployment({
             requireLocalMatch: !allowLiveDrift,

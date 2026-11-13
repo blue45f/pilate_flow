@@ -69,6 +69,10 @@ if NODE_BIN="$(find_node_bin)"; then
     shift
     exec "$NODE_BIN" "$ROOT_DIR/scripts/setup-deploy-auth.mjs" "$@"
   fi
+  if [[ "${1:-}" == "--firebase" ]]; then
+    shift
+    exec "$NODE_BIN" "$ROOT_DIR/scripts/firebase-local.mjs" "$@"
+  fi
   exec "$NODE_BIN" "$ROOT_DIR/scripts/deploy-universal.mjs" "$@"
 fi
 

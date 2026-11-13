@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import {
+  chmodSync,
   cpSync,
   existsSync,
   mkdirSync,
@@ -15,13 +17,17 @@ import { test } from 'node:test';
 import {
   ATELIER_V2_ASSET_PATHS,
   acquireDeployLock,
+  buildAugmentedEnv,
+  computeRecommendedNextCommand,
   formatDeployDoctorReport,
   isPlaceholderCredentialValue,
   loadLocalDeployEnvMap,
   markReleaseVerifiedLive,
   parseServiceAccountJsonString,
+  parseEnvFileSafe,
   prepareAuthExecutionEnv,
   resolveFirebaseAuth,
+  resolveExecutable,
   restoreManualRollbackRelease,
   restorePreviousVerifiedRelease,
   snapshotVerifiedRelease,
@@ -277,6 +283,77 @@ test('verifyLiveDeployment fails when any of the 4 Atelier V2 PNGs is missing or
   process.exitCode = 0;
 });
 
+test('saved quoted credentials round-trip into non-interactive auth without evaluating shell syntax', (t) => {
+  const root = mkdtempSync(path.join(os.tmpdir(), 'pf-auth-roundtrip-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const envFile = path.join(root, '.env.deploy.local');
+  const serviceAccount = JSON.stringify({
+    type: 'service_account',
+    client_email: 'local-test@deskcloud-fleet-auth.iam.gserviceaccount.com',
+    private_key: 'synthetic-key-line-1\nsynthetic-key-line-2\n',
+  });
+  const literalValue = 'literal $(not-a-command) `not-a-command` # note';
+  upsertEnvFileEntries(envFile, {
+    FIREBASE_SERVICE_ACCOUNT: serviceAccount,
+    LITERAL_VALUE: literalValue,
+  });
+
+  const parsed = parseEnvFileSafe(envFile);
+  assert.equal(parsed.FIREBASE_SERVICE_ACCOUNT, serviceAccount);
+  assert.equal(parsed.LITERAL_VALUE, literalValue);
+  const auth = resolveFirebaseAuth({
+    rootDir: root,
+    homeDir: root,
+    env: {},
+    isInteractive: false,
+  });
+  assert.equal(auth.ready, true);
+  assert.equal(auth.source, 'file:.env.deploy.local(FIREBASE_SERVICE_ACCOUNT)');
+  assert.deepEqual(JSON.parse(auth.inlineServiceAccountJson), JSON.parse(serviceAccount));
+
+  writeFileSync(
+    envFile,
+    String.raw`WINDOWS_PATH="C:\work\auth.json"` + '\n' + "SINGLE_QUOTED='keep \\n literal'\n",
+  );
+  const ordinaryQuoted = parseEnvFileSafe(envFile);
+  assert.equal(ordinaryQuoted.WINDOWS_PATH, String.raw`C:\work\auth.json`);
+  assert.equal(ordinaryQuoted.SINGLE_QUOTED, 'keep \\n literal');
+});
+
+test('GUI clients retain the running Node for CLI shebangs and preserve caller PATH before fallbacks', (t) => {
+  const root = mkdtempSync(path.join(os.tmpdir(), 'pf-gui-cli-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const callerBin = path.join(root, 'caller-bin');
+  mkdirSync(callerBin);
+  const incompatibleNode = path.join(callerBin, 'node');
+  writeFileSync(incompatibleNode, '#!/bin/sh\nexit 42\n');
+  chmodSync(incompatibleNode, 0o700);
+  const firebase = path.join(callerBin, 'pf-cli-runtime-probe');
+  const probeMarker = path.join(root, 'cli-was-executed');
+  writeFileSync(
+    firebase,
+    '#!/usr/bin/env node\n' +
+      `require("node:fs").writeFileSync(${JSON.stringify(probeMarker)}, "executed");\n` +
+      'process.stdout.write(process.execPath);\n',
+  );
+  chmodSync(firebase, 0o700);
+
+  const env = buildAugmentedEnv({}, root, { HOME: root, PATH: `${callerBin}:/usr/bin:/bin` });
+  const dirs = env.PATH.split(path.delimiter);
+  assert.equal(dirs[0], path.join(root, 'node_modules', '.bin'));
+  assert.equal(dirs[1], path.dirname(process.execPath));
+  assert.equal(dirs[2], callerBin);
+  assert.equal(resolveExecutable('pf-cli-runtime-probe', env), firebase);
+  assert.equal(existsSync(probeMarker), false, 'binary discovery must not execute CLI probes');
+  assert.equal(execFileSync(firebase, ['--version'], { env, encoding: 'utf8' }), process.execPath);
+  const nonExecutable = path.join(callerBin, 'pf-nonexecutable-probe');
+  writeFileSync(nonExecutable, 'not an executable', { mode: 0o600 });
+  assert.equal(resolveExecutable('pf-nonexecutable-probe', env), null);
+  mkdirSync(path.join(callerBin, 'pf-directory-probe'));
+  assert.equal(resolveExecutable('pf-directory-probe', env), null);
+  assert.equal(env.HOME, root);
+});
+
 test('resolveFirebaseAuth supports env, .env.local, .firebase/service-account.json, and Base64 JSON while never exposing --token on CLI argv', (t) => {
   const tmpHome = mkdtempSync(path.join(os.tmpdir(), 'pf-auth-test-'));
   t.after(() => rmSync(tmpHome, { recursive: true, force: true }));
@@ -447,7 +524,16 @@ test('resolveFirebaseAuth ignores placeholder credentials so lower-priority real
   assert.equal(ambient.extraEnv.FIREBASE_TOKEN, undefined);
 });
 
-test('formatDeployDoctorReport renders clear Korean next-step guidance without leaking secrets', () => {
+test('missing-auth guidance reuses existing credentials locally before a separate CI setup', () => {
+  const recommended = computeRecommendedNextCommand({
+    configValid: true,
+    onCanonicalBranch: true,
+    workingTreeClean: true,
+    firebaseAuthReady: false,
+  });
+  assert.match(recommended, /^pnpm deploy:auth:local\b/);
+  assert.doesNotMatch(recommended, /--sync-github|login:ci/);
+
   const report = formatDeployDoctorReport({
     configValid: true,
     site: 'pilates-flow-atelier',
@@ -461,9 +547,9 @@ test('formatDeployDoctorReport renders clear Korean next-step guidance without l
     distEntryJs: '/assets/index-Test.js',
     firebaseAuthReady: false,
     firebaseAuthSource: 'none',
-    recommendedNextCommand: 'pnpm deploy:auth',
+    recommendedNextCommand: recommended,
   });
-  assert.match(report, /pnpm deploy:auth/);
+  assert.match(report, /pnpm deploy:auth:local/);
   assert.match(report, /pilates-flow-atelier/);
 });
 
