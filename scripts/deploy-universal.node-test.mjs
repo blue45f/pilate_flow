@@ -38,6 +38,40 @@ import { importServiceAccountFile, upsertEnvFileEntries } from './setup-deploy-a
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 
+test('pnpm run deploy forwards read-only flags to the project CLI', () => {
+  const env = buildAugmentedEnv();
+  const pnpm = resolveExecutable('pnpm', env);
+  assert.ok(pnpm, 'The project package manager must be available for the CLI regression');
+  for (const [flag, expected] of [
+    ['--doctor', /Pilates Flow Atelier 배포 진단 리포트 \(--doctor\)/],
+    ['--help', /Usage: pnpm run deploy \[flag\]/],
+  ]) {
+    const output = execFileSync(pnpm, ['run', 'deploy', flag], {
+      cwd: projectRoot,
+      env,
+      encoding: 'utf8',
+      timeout: 20000,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    assert.match(output, expected);
+  }
+});
+
+test('ready-to-deploy guidance explicitly selects the project deploy script', () => {
+  const status = {
+    configValid: true,
+    onCanonicalBranch: true,
+    workingTreeClean: true,
+    firebaseAuthReady: true,
+    distReadyForDeploy: false,
+  };
+  assert.equal(computeRecommendedNextCommand(status), 'pnpm run deploy');
+  assert.equal(
+    computeRecommendedNextCommand({ ...status, distReadyForDeploy: true }),
+    'pnpm run deploy --skip-build',
+  );
+});
+
 function makePngBytes(width = 512, height = 512) {
   const buf = Buffer.alloc(24);
   Buffer.from('89504e470d0a1a0a', 'hex').copy(buf);

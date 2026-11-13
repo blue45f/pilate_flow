@@ -599,7 +599,7 @@ export function computeRecommendedNextCommand(status) {
     return '변경사항을 커밋한 뒤 배포를 진행하세요 (git status).';
   }
   if (status.firebaseAuthReady) {
-    return status.distReadyForDeploy ? 'pnpm deploy --skip-build' : 'pnpm deploy';
+    return status.distReadyForDeploy ? 'pnpm run deploy --skip-build' : 'pnpm run deploy';
   }
   return 'pnpm deploy:auth:local   # 기존 로그인을 재사용하여 .env.deploy.local에만 저장';
 }
@@ -1194,7 +1194,8 @@ function isCliEntryPoint() {
 function printHelp() {
   console.log(
     [
-      'Usage: node scripts/deploy-universal.mjs [flag]',
+      'Usage: pnpm run deploy [flag]',
+      '   or: node scripts/deploy-universal.mjs [flag]',
       '  (no flags)          Verify, build dist/, snapshot, deploy to Firebase Hosting & verify live',
       '  --doctor            Print clear Korean diagnostic checklist & exact next command',
       '  --check-env         Inspect config, git state, dist integrity & auth readiness JSON (read-only)',

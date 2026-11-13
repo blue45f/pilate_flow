@@ -155,7 +155,7 @@ describe('Wave 7 Canonical Production Deployment & Class Pacing Verification', (
       'pnpm build',
       'pnpm deploy:check',
       'pnpm deploy:verify',
-      'pnpm deploy',
+      'pnpm run deploy',
       'pnpm deploy:rollback',
     ]) {
       expect(deploymentDoc).toContain(cmd);

@@ -64,9 +64,11 @@ bash /Users/hjunkim/WebstormProjects/pilates-flow/scripts/deploy.sh --verify-liv
 
 이 키들은 다른 앱이 실행 위치와 대상을 파악하기 위한 참고 정보입니다. 실제 대상의 정본은 `.firebaserc`, `firebase.json`, `scripts/deploy-universal.mjs`이며 참고 정보를 바꿔도 다른 프로젝트로 자동 배포하지 않습니다. 이동한 체크아웃이나 Node 업그레이드 후에는 참고 경로를 갱신하고 `deploy:doctor`로 확인합니다. 템플릿은 `.env.deploy.example`입니다.
 
-`firebase:local`은 프로젝트·사이트·앱 조회용 명령만 허용합니다. 운영 업로드는 검증·스냅샷을 포함하는 `pnpm deploy`를 사용합니다. 명시적 인증을 사용하는 Firebase CLI의 기본 설정 캐시는 `.firebase/cli-config`에 저장해 다른 앱의 전역 설정 쓰기 권한에 의존하지 않습니다. 기존 `XDG_CONFIG_HOME` 지정이나 전역 로그인에만 의존하는 실행은 해당 경로를 유지합니다.
+`firebase:local`은 프로젝트·사이트·앱 조회용 명령만 허용합니다. 운영 업로드는 검증·스냅샷을 포함하는 `pnpm run deploy`를 사용합니다. 명시적 인증을 사용하는 Firebase CLI의 기본 설정 캐시는 `.firebase/cli-config`에 저장해 다른 앱의 전역 설정 쓰기 권한에 의존하지 않습니다. 기존 `XDG_CONFIG_HOME` 지정이나 전역 로그인에만 의존하는 실행은 해당 경로를 유지합니다.
 
 ## 4. 승인된 운영 배포 실행
+
+pnpm 11에서는 프로젝트의 `deploy` 스크립트를 명시적으로 선택하도록 `pnpm run deploy`로 실행합니다. `deploy:doctor`, `deploy:verify` 같은 콜론 명령은 기존 표기를 그대로 사용합니다.
 
 현재 운영 내용과 배포 이력을 먼저 확인해 같은 빌드의 중복 업로드를 피합니다. Git 커밋과 운영 반영 상태는 아래 검증 명령 및 Firebase 출시 이력을 기준으로 확인합니다.
 
@@ -76,7 +78,7 @@ pnpm deploy:check
 pnpm verify:all
 
 # 운영 업로드가 승인된 경우 실행
-pnpm deploy
+pnpm run deploy
 
 # 배포된 dist를 기준으로 운영 확인
 pnpm deploy:verify --wait-cdn
@@ -101,7 +103,7 @@ Git 커밋 SHA와 Vite 파일명 해시는 서로 다릅니다. 테스트만 바
 
 [Firebase 전체 출시 이력](https://console.firebase.google.com/project/deskcloud-fleet-auth/hosting/sites/pilates-flow-atelier/releases)은 서버의 현재 버전·배포자·시각을 보여줍니다. `.firebase/release-history.json`은 로컬 오케스트레이터가 최근 5건을 보관하는 장부이며, 여기에 있는 `releaseId`는 Firebase 서버 버전 ID가 아닙니다. `verifiedLive: true`와 `verifiedAt`은 업로드 후 운영 검증이 완료됐음을 나타냅니다.
 
-네트워크 차단으로 운영 검증을 완료하지 못했다면 `pnpm deploy`의 종료 코드나 빌드 성공만으로 운영 반영 완료를 보고하지 않습니다. 네트워크가 가능한 환경에서 독립 `deploy:verify` 결과까지 확인합니다. 롤백도 실제 업로드이므로 승인된 경우에만 `pnpm deploy:rollback`을 사용합니다.
+네트워크 차단으로 운영 검증을 완료하지 못했다면 `pnpm run deploy`의 종료 코드나 빌드 성공만으로 운영 반영 완료를 보고하지 않습니다. 네트워크가 가능한 환경에서 독립 `deploy:verify` 결과까지 확인합니다. 롤백도 실제 업로드이므로 승인된 경우에만 `pnpm deploy:rollback`을 사용합니다.
 
 ## 6. GitHub Actions 인증은 별도 설정
 

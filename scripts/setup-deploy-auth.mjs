@@ -441,7 +441,7 @@ export function printAuthStatus(rootDir = ROOT, { localOnly = false } = {}) {
       '   pnpm deploy:auth ./service-account.json --local-only  # 기존 JSON 파일을 로컬에만 등록',
     );
   } else {
-    console.log('👉 이제 어떤 터미널이나 AI 에이전트에서도 `pnpm deploy` 한 줄로 즉시 배포됩니다.');
+    console.log('👉 이제 어떤 터미널이나 AI 에이전트에서도 `pnpm run deploy` 한 줄로 즉시 배포됩니다.');
   }
 }
 

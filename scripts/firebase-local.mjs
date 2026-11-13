@@ -28,7 +28,7 @@ export function canonicalFirebaseArgs(rawArgs) {
   ]);
   if (!readCommands.has(args[0])) {
     throw new Error(
-      '[firebase:local] 이 실행기는 Firebase 조회용입니다. 운영 배포는 pnpm deploy를 사용하세요.',
+      '[firebase:local] 이 실행기는 Firebase 조회용입니다. 운영 배포는 pnpm run deploy를 사용하세요.',
     );
   }
   for (let index = 0; index < args.length; index += 1) {
@@ -106,7 +106,7 @@ async function main() {
         '사용법: pnpm firebase:local <Firebase 명령>',
         '조회 예: pnpm firebase:local hosting:sites:list',
         '다른 앱: bash /절대경로/pilates-flow/scripts/deploy.sh --firebase hosting:sites:list',
-        '운영 배포: pnpm deploy (빌드·스냅샷·운영 검증 포함)',
+        '운영 배포: pnpm run deploy (빌드·스냅샷·운영 검증 포함)',
       ].join('\n'),
     );
     return;
