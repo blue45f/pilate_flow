@@ -96,7 +96,7 @@ describe('rest intervals in the class workbench', () => {
     ];
     usePilatesStore.setState({ activeSteps: steps });
     renderWorkbench();
-    fireEvent.click(screen.getByText('시간 구성', { selector: 'summary' }));
+    fireEvent.click(screen.getByText('시간 구성 상세', { selector: 'summary' }));
     const breakdown = screen.getByLabelText('수업 시간 구성');
     expect(breakdown).toHaveTextContent('55:00');
     expect(breakdown).toHaveTextContent('05:00');

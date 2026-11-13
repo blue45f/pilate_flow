@@ -100,9 +100,11 @@ describe('vNext instructor preparation continuity', () => {
   it('labels the next movement action visibly and keeps the existing sequence while picking', () => {
     usePilatesStore.setState({ activeSteps: [readyStep] });
     renderWorkbench();
-    const button = screen.getByRole('button', { name: '동작 추가' });
+    const actions = within(screen.getByRole('group', { name: '시퀀스 편집 도구' }));
+    const button = actions.getByRole('button', { name: '동작 추가' });
     expect(button).toHaveTextContent('동작 추가');
-    expect(button).toHaveClass('workbench-add-movement');
+    expect(button).toBeVisible();
+    expect(button).toHaveClass('pf-btn--primary');
     const before = usePilatesStore.getState().activeSteps;
     fireEvent.click(button);
     expect(screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' })).toBeVisible();
@@ -112,12 +114,12 @@ describe('vNext instructor preparation continuity', () => {
   it.each([
     {
       exercises: [pending],
-      nextAction: '동작 고르기',
+      nextAction: '동작 추가',
       catalogState: 'draft-only',
     },
     {
       exercises: [reviewed, pending],
-      nextAction: '동작 고르기',
+      nextAction: '동작 추가',
       catalogState: 'reviewed',
     },
   ])(
@@ -126,8 +128,10 @@ describe('vNext instructor preparation continuity', () => {
       usePilatesStore.setState({ exercises });
       renderWorkbench();
 
-      expect(screen.getByRole('button', { name: nextAction })).toBeEnabled();
-      expect(getVisibleWorkbenchButton('1 동작 선택')).toHaveAttribute('aria-current', 'step');
+      const primaryAction = screen.getByRole('button', { name: nextAction });
+      expect(primaryAction).toBeEnabled();
+      expect(primaryAction).toHaveClass('pf-step-primary-cta');
+      expect(screen.getByRole('button', { name: '시작하기' })).toHaveAttribute('aria-current', 'step');
       expect(getVisibleWorkbenchButton('2 수업 구성')).toBeDisabled();
       expect(getVisibleWorkbenchButton('3 미리보기')).toBeDisabled();
       expect(screen.queryByRole('button', { name: '저장' })).not.toBeInTheDocument();
@@ -136,14 +140,13 @@ describe('vNext instructor preparation continuity', () => {
     },
   );
 
-  it('adds through the real contextual mobile finder and returns to editing without leaving the plan', () => {
+  it('adds through the inline mobile finder and returns to editing without leaving the plan', () => {
     const before = usePilatesStore.getState();
     renderWorkbench();
-    fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
-    const finderDialog = screen.getByRole('dialog', {
-      name: '수업에 넣을 동작 고르기',
-    });
-    const finder = within(finderDialog);
+    fireEvent.click(screen.getByRole('button', { name: '동작 추가' }));
+    const finderPage = screen.getByTestId('wizard-step2-page');
+    expect(finderPage).toBeVisible();
+    const finder = within(finderPage);
     expect(getVisibleWorkbenchButton('1 동작 선택')).toHaveAttribute('aria-current', 'step');
     expect(usePilatesStore.getState().activeTab).toBe('workbench');
 
@@ -157,16 +160,14 @@ describe('vNext instructor preparation continuity', () => {
         name: `${reviewed.nameKo} 이미 수업안에 있음`,
       }),
     ).toBeDisabled();
-    expect(finderDialog.querySelector('.workbench-finder-footer')).toHaveTextContent('1');
+    expect(finder.getByTestId('step2-added-steps-tray')).toHaveTextContent('담은 순서 (1)');
 
-    fireEvent.click(finder.getByRole('button', { name: '수업 구성으로 돌아가기' }));
-    expect(
-      screen.queryByRole('dialog', { name: '수업에 넣을 동작 고르기' }),
-    ).not.toBeInTheDocument();
+    fireEvent.click(finder.getByTestId('wizard-to-step3-btn'));
+    expect(screen.queryByTestId('wizard-step2-page')).not.toBeInTheDocument();
     expect(getVisibleWorkbenchButton('2 수업 구성')).toHaveAttribute('aria-current', 'step');
     const after = usePilatesStore.getState();
     expect(after.activeTab).toBe('workbench');
-    expect(after.draftCriteria).toBe(before.draftCriteria);
+    expect(after.draftCriteria).toEqual(before.draftCriteria);
     expect(after.ownedEquipment).toBe(before.ownedEquipment);
     expect(after.classGroups).toBe(before.classGroups);
     expect(after.historyLogs).toBe(before.historyLogs);
@@ -177,8 +178,8 @@ describe('vNext instructor preparation continuity', () => {
     const before = usePilatesStore.getState();
     const onOpenReview = vi.fn();
     renderWorkbench(onOpenReview);
-    fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
-    const finder = within(screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' }));
+    fireEvent.click(screen.getByRole('button', { name: '동작 추가' }));
+    const finder = within(screen.getByTestId('wizard-step2-page'));
     const add = finder.getByRole('button', {
       name: `${pending.nameKo} 수업안에 추가`,
     });
@@ -288,10 +289,10 @@ describe('progressive material guidance', () => {
     usePilatesStore.setState({ activeSteps: [{ ...readyStep, exerciseId: pending.id }] });
     const before = usePilatesStore.getState();
     renderWorkbench();
-    expect(screen.getByText('교차 검증 가이드')).toBeVisible();
+    expect(screen.getByText('내 검토 전')).toBeVisible();
     const summary = screen.getByText('자료 안내', { selector: 'summary' });
     expect(summary.closest('details')).not.toHaveAttribute('open');
-    const note = screen.getByText(/교차 검증 가이드 1개 · 검토 기록은 선택 사항입니다/);
+    const note = screen.getByText(/내 검토 전 동작 1개 · 검토 기록은 선택 사항입니다/);
     expect(note).not.toBeVisible();
     fireEvent.click(summary);
     expect(note).toBeVisible();

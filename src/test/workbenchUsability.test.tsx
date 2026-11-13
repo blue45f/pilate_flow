@@ -262,7 +262,13 @@ describe('clear next action without changing class-readiness gates', () => {
         name: '동작',
       }),
     );
-    await screen.findByRole('searchbox', { name: '동작 검색' });
+    expect(usePilatesStore.getState().activeTab).toBe('atlas');
+    // App lazy-loads the library; allow its module to commit before continuing the journey.
+    await within(screen.getByRole('main')).findByRole(
+      'searchbox',
+      { name: '동작 검색' },
+      { timeout: 5000 },
+    );
     fireEvent.click(
       within(screen.getByRole('navigation', { name: '모바일 주 메뉴' })).getByRole('button', {
         name: /^(계획|수업)$/,
@@ -271,7 +277,7 @@ describe('clear next action without changing class-readiness gates', () => {
     expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute('aria-pressed', 'true');
     expect(usePilatesStore.getState().activeSteps).toBe(after.activeSteps);
     expectCatalogBoundaries();
-  });
+  }, 15000);
 
   it('keeps nonempty defaults and supports a controlled mode without changing locked blocks, timing or review state', () => {
     const pending = INITIAL_EXERCISES.find((exercise) => exercise.apparatus === 'mat')!;

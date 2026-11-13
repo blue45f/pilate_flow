@@ -159,14 +159,17 @@ describe('Round 4 독립 감사: 필라테스 첫사용자(초보 강사) 동선
     expect(within(welcomeSection).getByTestId('wizard-start-step1-btn')).not.toHaveClass(
       'pf-step-primary-cta',
     );
-    expect(within(welcomeSection).getByRole('button', { name: /동작 고르기/ })).toHaveClass(
-      'pf-btn--secondary',
+    expect(within(welcomeSection).getAllByRole('button', { name: '동작 추가' })).toEqual([
+      fastStart,
+    ]);
+    expect(within(welcomeSection).getByRole('button', { name: /추천 초안 만들기/ })).not.toHaveClass(
+      'pf-step-primary-cta',
     );
     expect(
       Array.from(view.container.querySelectorAll('details')).filter((item) => item.open),
     ).toHaveLength(0);
     const recentSection = screen.getByRole('region', { name: '최근 수업 이어가기' });
-    expect(within(recentSection).getByText(/저장한 최근 수업이 아직 없습니다/)).toBeVisible();
+    expect(within(recentSection).getByText(/아직 저장한 수업이 없어요/)).toBeVisible();
 
     // Click 1 opens the inline finder without a modal or a separate filter step.
     clickJourneyAction(fastStart);
@@ -201,7 +204,16 @@ describe('Round 4 독립 감사: 필라테스 첫사용자(초보 강사) 동선
     clickJourneyAction(within(finderPage).getByTestId('ief-go-arrange-btn'));
     expect(screen.queryByTestId('wizard-step2-page')).not.toBeInTheDocument();
     expect(usePilatesStore.getState().activeSteps).toEqual(authoredSteps);
-    expect(screen.getByTestId('board05-3sec-summary-panel')).toBeVisible();
+    expect(screen.getByRole('region', { name: '오늘의 시퀀스' })).toBeVisible();
+    expect(
+      within(screen.getByRole('group', { name: '수업 제작 단계' })).getByRole('button', {
+        name: '3 순서·시간 확인',
+      }),
+    ).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByRole('button', { name: '1번 동작 30초 늘리기' })).toBeVisible();
+    expect(
+      screen.getByText(/^동작 참고 자료 ·/, { selector: 'summary' }).closest('details'),
+    ).not.toHaveAttribute('open');
 
     fireEvent.change(screen.getByLabelText('시퀀스 제목'), {
       target: { value: SYNTHETIC_CLASS_TITLE },
@@ -243,15 +255,17 @@ describe('Round 4 독립 감사: 필라테스 첫사용자(초보 강사) 동선
     expect(usePilatesStore.getState().savedSequences).toEqual([savedSnapshot]);
   });
 
-  it('중복메뉴 정량 감사: 빈 첫 화면에서 수업 조건 열기 버튼이 5개(.workbench-welcome-summary 1개 + .v2-condition-chips 4개) 중복 노출됨을 검증한다 (IMP-R4-02)', () => {
+  it('조건 접근 감사: 빈 첫 화면에서는 요약 버튼 1개를 보여주고 추가 조건 버튼 4개는 펼친 뒤 사용할 수 있다 (IMP-R4-02)', () => {
     const { container } = render(<SequenceWorkbench />);
 
     const welcomeSummaryBtn = container.querySelector('button.workbench-welcome-summary');
     const toolbarChipBtns = container.querySelectorAll('.v2-plan-toolbar .v2-condition-chips button');
 
-    expect(welcomeSummaryBtn).toBeTruthy();
+    expect(welcomeSummaryBtn).toBeVisible();
     expect(toolbarChipBtns.length).toBe(4);
-    expect(1 + toolbarChipBtns.length).toBe(5);
+    for (const button of toolbarChipBtns) expect(button).not.toBeVisible();
+    fireEvent.click(screen.getByText('추가 도구 · 휴식·기구 안내·AI', { selector: 'summary' }));
+    for (const button of toolbarChipBtns) expect(button).toBeVisible();
   });
 
   it('뒤로가기 보존 감사: 새 수업 만들기로 비운 뒤 되돌리기(Undo) 실행 시 기존 2개 동작과 제목이 무손실 복원된다', () => {

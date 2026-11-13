@@ -29,11 +29,33 @@ function renderWorkbench() {
   );
 }
 
+function seedExistingClass() {
+  usePilatesStore.setState({
+    activeSequenceId: 'finder-lifecycle-existing-class',
+    activeApparatus: 'mat',
+    activeSteps: [{
+      stepId: 'finder-lifecycle-existing-step',
+      order: 1,
+      exerciseId: pending.id,
+      blockCategory: pending.blockCategory,
+      durationMin: 4,
+      selectedLayer: 'standard',
+    }],
+    undoStack: [],
+  });
+}
+
+function openEditorFinder() {
+  const actions = within(screen.getByRole('group', { name: '시퀀스 편집 도구' }));
+  fireEvent.click(actions.getByRole('button', { name: '동작 추가' }));
+}
+
 function finderCount(container: HTMLElement) {
   return container.querySelectorAll('.inline-exercise-finder').length;
 }
 
 beforeEach(() => {
+  window.sessionStorage.clear();
   resize(390);
   usePilatesStore.setState(
     {
@@ -67,6 +89,7 @@ describe('contextual finder mount lifecycle', () => {
     'mounts on demand at %ipx and preserves the same finder across closing and resizing',
     (width) => {
       resize(width);
+      seedExistingClass();
       const before = usePilatesStore.getState();
       const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
       const storeChange = vi.fn();
@@ -74,7 +97,7 @@ describe('contextual finder mount lifecycle', () => {
       const { container } = renderWorkbench();
       expect(finderCount(container)).toBe(0);
 
-      fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
+      openEditorFinder();
       const dialog = screen.getByRole('dialog', {
         name: '수업에 넣을 동작 고르기',
       });
@@ -100,7 +123,7 @@ describe('contextual finder mount lifecycle', () => {
       expect(firstFinder.isConnected).toBe(true);
       expect(search).toHaveValue(pending.nameKo);
 
-      fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
+      openEditorFinder();
       const reopened = screen.getByRole('dialog', {
         name: '수업에 넣을 동작 고르기',
       });
@@ -154,20 +177,22 @@ describe('contextual finder mount lifecycle', () => {
   });
 
   it('ignores a queued native close after the picker has reopened', () => {
+    seedExistingClass();
     renderWorkbench();
-    fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
+    openEditorFinder();
     const dialog = screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' });
     fireEvent.click(within(dialog).getByRole('button', { name: '수업 구성으로 돌아가기' }));
-    fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
+    openEditorFinder();
     fireEvent(dialog, new Event('close'));
     expect(screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' })).toBe(dialog);
     expect(dialog).toHaveAttribute('open');
   });
   it('closes from the focused search with Escape without clearing the retained query', () => {
     resize(1440);
+    seedExistingClass();
     const before = usePilatesStore.getState();
     renderWorkbench();
-    fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
+    openEditorFinder();
     const dialog = screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' });
     const search = within(dialog).getByRole('searchbox');
     fireEvent.change(search, { target: { value: pending.nameKo } });
@@ -175,7 +200,7 @@ describe('contextual finder mount lifecycle', () => {
     expect(
       screen.queryByRole('dialog', { name: '수업에 넣을 동작 고르기' }),
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '동작 고르기' }));
+    openEditorFinder();
     expect(
       within(screen.getByRole('dialog', { name: '수업에 넣을 동작 고르기' })).getByRole(
         'searchbox',

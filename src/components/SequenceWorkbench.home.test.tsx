@@ -36,10 +36,15 @@ describe('SequenceWorkbench Home first-screen flow & density', () => {
 
     const welcomeRegion = screen.getByRole('region', { name: '첫 수업안 준비' });
     expect(within(welcomeRegion).getByText('새 수업 만들기')).toBeInTheDocument();
-    expect(within(welcomeRegion).getByRole('button', { name: '동작 고르기' })).toBeEnabled();
-    expect(
-      within(welcomeRegion).getByRole('button', { name: /한 줄 아이디어 메모/ }),
-    ).toBeEnabled();
+    expect(within(welcomeRegion).getByRole('button', { name: '동작 추가' })).toBeEnabled();
+    const optionalTools = within(welcomeRegion).getByText('수업 조건·아이디어·추가 도구', {
+      selector: 'summary',
+    });
+    expect(optionalTools.closest('details')).not.toHaveAttribute('open');
+    fireEvent.click(optionalTools);
+    const ideaAction = within(welcomeRegion).getByRole('button', { name: /한 줄 아이디어 메모/ });
+    expect(ideaAction).toBeVisible();
+    expect(ideaAction).toBeEnabled();
 
     const recentRegion = screen.getByRole('region', { name: '최근 수업 이어가기' });
     expect(within(recentRegion).getByText(savedClass.title)).toBeInTheDocument();
@@ -64,7 +69,7 @@ describe('SequenceWorkbench Home first-screen flow & density', () => {
 
     const recentRegion = screen.getByRole('region', { name: '최근 수업 이어가기' });
     expect(
-      within(recentRegion).getByText(/저장한 최근 수업이 아직 없습니다/),
+      within(recentRegion).getByText(/아직 저장한 수업이 없어요/),
     ).toBeInTheDocument();
   });
 

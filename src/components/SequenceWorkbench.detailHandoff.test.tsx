@@ -16,6 +16,8 @@ vi.mock('./MotionReferencePlayer', () => ({ MotionReferencePlayer: () => null })
 const original = usePilatesStore.getState();
 const originalWidth = window.innerWidth;
 const catalogSnapshot = structuredClone(INITIAL_EXERCISES);
+// Bound each multi-dialog journey, including the first lazy source-module load.
+const HANDOFF_JOURNEY_TIMEOUT_MS = 20_000;
 const exercise = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-single-leg-stretch')!;
 const reference = getMotionPatternReferences(exercise.id)[0];
 const binding = createSequenceMotionStudyBinding(
@@ -89,9 +91,9 @@ function expectDraft(editor: HTMLElement) {
   ).toBeChecked();
 }
 
-async function openSource(editor: HTMLElement) {
+async function openSource(editor: HTMLElement, timeout = 5000) {
   fireEvent.click(within(editor).getByRole('button', { name: '동작 원본·검토 정보' }));
-  const detail = await screen.findByRole('dialog', { name: exercise.nameKo }, { timeout: 5000 });
+  const detail = await screen.findByRole('dialog', { name: exercise.nameKo }, { timeout });
   expect(within(detail).getByRole('region', { name: '내 강사 검토' })).toBeInTheDocument();
   return detail;
 }
@@ -162,7 +164,8 @@ describe.each([
     const storageWrite = vi.spyOn(Storage.prototype, 'setItem');
     const editor = await openDirtyInspector();
     expectDraft(editor);
-    const detail = await openSource(editor);
+    // This first mobile case triggers App's cold lazy import of the source modal.
+    const detail = await openSource(editor, width === 390 ? 10000 : 5000);
     expect(usePilatesStore.getState()).toBe(before);
     expect(apply).not.toHaveBeenCalled();
     expect(storageWrite).not.toHaveBeenCalled();
@@ -204,7 +207,7 @@ describe.each([
     expect(screen.queryByRole('region', { name: '1번 동작 블록 편집' })).not.toBeInTheDocument();
     act(() => after.undoSequence());
     expect(usePilatesStore.getState().activeSteps).toEqual(before.activeSteps);
-  });
+  }, HANDOFF_JOURNEY_TIMEOUT_MS);
 
   it('keeps the original draft base and rejects Apply when the class block changes during source lookup', async () => {
     setWidth(width);
@@ -233,7 +236,7 @@ describe.each([
     expect(changed.activeSteps[0]).toEqual({ ...base, instructorNote: externalNote });
     expect(changed.undoStack).toHaveLength(1);
     expectDraft(editor);
-  });
+  }, HANDOFF_JOURNEY_TIMEOUT_MS);
 });
 
 it('keeps source details above the resized editor and ignores a queued suspension close after returning', async () => {
@@ -286,7 +289,7 @@ it('keeps source details above the resized editor and ignores a queued suspensio
   expectDraft(returned);
   expect(usePilatesStore.getState()).toBe(before);
   expect(storageWrite).not.toHaveBeenCalled();
-});
+}, HANDOFF_JOURNEY_TIMEOUT_MS);
 
 it('pauses a manually played desktop reference during source lookup and stays paused on return without losing class inputs', async () => {
   setWidth(1440);
@@ -341,4 +344,4 @@ it('pauses a manually played desktop reference during source lookup and stays pa
   expectDraft(editor);
   expect(usePilatesStore.getState()).toBe(before);
   expect(storageWrite).not.toHaveBeenCalled();
-});
+}, HANDOFF_JOURNEY_TIMEOUT_MS);

@@ -304,7 +304,7 @@ describe("workbench class-role headings", () => {
     const undoBtn = getByRole("button", { name: "되돌리기" });
     fireEvent.click(undoBtn);
     expect(container.querySelector("[data-plan-feedback]")).toHaveTextContent(
-      "이전 순서로 되돌렸어요. 현재 총 3개 항목입니다.",
+      "마지막 변경을 되돌렸어요. 현재 3개 항목 · 10:00입니다.",
     );
     expect(usePilatesStore.getState().activeSteps[0]?.stepId).toBe(
       "role-label-preparation",
