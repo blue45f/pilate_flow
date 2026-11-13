@@ -40,7 +40,7 @@ describe('VisualSequenceFilmstrip selection', () => {
     fireEvent.click(button);
     expect(onSelect).toHaveBeenCalledWith(movement, 1, button);
     expect(screen.getAllByRole('button')).toHaveLength(1);
-    expect(screen.getByText(/기구·동작군 대표 3D 포즈/)).toBeInTheDocument();
+    expect(screen.getByText(/계획용 동작 도해/)).toBeInTheDocument();
   });
 
   it('exposes static movement names and the number beyond the preview limit', () => {
@@ -52,7 +52,7 @@ describe('VisualSequenceFilmstrip selection', () => {
       />,
     );
     expect(
-      screen.getByRole('img', { name: `1. ${exercise.nameKo} 대표 3D 포즈` }),
+      screen.getByRole('img', { name: `1. ${exercise.nameKo} 동작 도해` }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('미리보기 외 동작 1개')).toBeInTheDocument();
   });

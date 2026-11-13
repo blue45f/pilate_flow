@@ -70,6 +70,29 @@ function harness(options: HarnessOptions = {}) {
 }
 
 describe('static-only service worker', () => {
+  it('serves the shared-model SVG thumbnail cache without requesting external media', async () => {
+    const h = harness();
+    const event = h.request('/motion-artwork-v2/original-mat-chest-lift.middle.012345abcdef.svg');
+    expect(event).toHaveBeenCalledTimes(1);
+    expect(await event.mock.calls[0][0]).toBe(h.cached);
+    expect(h.fetch).not.toHaveBeenCalled();
+    expect(h.cache.match).toHaveBeenCalledWith('/motion-artwork-v2/original-mat-chest-lift.middle.012345abcdef.svg');
+    expect(h.request('https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg')).not.toHaveBeenCalled();
+  });
+  it('serves a prewarmed lossless intermediate frame from the dedicated motion cache without network', async () => {
+    const h = harness();
+    const response = new Response('frame', { headers: { 'content-type': 'image/webp' } });
+    const frameCache = { match: vi.fn().mockResolvedValue(response) };
+    h.cache.match.mockResolvedValue(undefined);
+    h.caches.open.mockImplementation(async (name: string) =>
+      name === 'flow-atelier-studio3d-lossless-v3' ? frameCache : h.cache,
+    );
+    const event = h.request('/motion-studio3d/footwork-mid.webp');
+    expect(event).toHaveBeenCalledTimes(1);
+    expect(await event.mock.calls[0][0]).toBe(response);
+    expect(h.fetch).not.toHaveBeenCalled();
+    expect(frameCache.match).toHaveBeenCalledWith('/motion-studio3d/footwork-mid.webp');
+  });
   it('keeps the pre-cache list and version in locale-independent UTF-16 order', async () => {
     const plugin = pwaBuild();
     const hook = plugin.generateBundle;

@@ -8,7 +8,10 @@ import {
   getExerciseReviewState,
   isExerciseAutoEligible,
 } from '../utils/exerciseReview';
-import { YouTubePreviewModal } from './YouTubeClipModal';
+import {
+  YouTubePreviewModal,
+  YT_PREVIEW_EDIT_DRAFT_STORAGE_KEY,
+} from './YouTubeClipModal';
 
 vi.mock('./MotionReferencePlayer', () => ({
   MotionReferencePlayer: () => null,
@@ -34,6 +37,8 @@ const change = (label: string, value: string) =>
   fireEvent.change(region().getByLabelText(label), { target: { value } });
 
 beforeEach(() => {
+  // Each case owns its pending edits, even though the synthetic exercise ID is reused.
+  window.sessionStorage.removeItem(YT_PREVIEW_EDIT_DRAFT_STORAGE_KEY);
   usePilatesStore.setState(
     {
       ...initial,
@@ -48,8 +53,9 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  window.sessionStorage.removeItem(YT_PREVIEW_EDIT_DRAFT_STORAGE_KEY);
   expect(INITIAL_EXERCISES).toEqual(canonical);
-  expect(INITIAL_EXERCISES).toHaveLength(98);
+  expect(INITIAL_EXERCISES).toHaveLength(158);
   expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
   expect(
     usePilatesStore.getState().exercises.filter((e) => canonical.some((c) => c.id === e.id)),

@@ -18,7 +18,7 @@ localhost 임시 Vite 서버와 새 브라우저/격리 context만 사용하며 
 
 ## 검증 범위
 
-- 직접 API: 98개 catalog sweep, 이산/연속 구분, 기존 98개 pose 참조 재사용, 실제 snapshot에서 센 준비/승인 flags, 속도·반복 허용값/거절값.
+- 직접 API: 현재 catalog 전체 sweep, 이산/연속/영상 전용 구분, 표시 가능한 pose 참조 재사용, 실제 snapshot에서 센 준비/승인 flags, 속도·반복 허용값/거절값. 카탈로그 총수와 영상 전용 항목 수는 실제 데이터에서 계산합니다.
 - Chromium DOM: 320px/390px 가로 넘침과 버튼/select/range 44px 크기, 대표 4모드, 속도·반복·변형 전환·seek/play/pause.
 - 실제 키보드: native range와 버튼을 stage 단축키가 가로채지 않음.
 - runtime reduced-motion: 실행 즉시 정지하며 명시적 재생도 우회하지 못함. 수동 정지 단계/seek는 계속 제공.

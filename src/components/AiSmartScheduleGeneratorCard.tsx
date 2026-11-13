@@ -1,3 +1,5 @@
+import { ClassMotionArtwork } from './ClassMotionArtwork';
+import { StudioMotionImage } from './StudioMotionImage';
 import React, { useCallback, useMemo, useState } from 'react';
 import { CalendarPlus, CheckCircle2, RotateCcw, Sparkles, Wand2 } from 'lucide-react';
 import { getEquipmentFamilies } from '../data/equipmentCatalog';
@@ -393,12 +395,8 @@ export const AiSmartScheduleGeneratorCard: React.FC = () => {
           <div className="pf-ai-unlinked-list">
             {unlinkedProposals.map(({ occ, matchedSeq, visual }) => (
               <div key={occ.id} className="pf-ai-unlinked-item">
-                <img
-                  src={visual.studio3dThumbUrl}
-                  alt=""
-                  aria-hidden="true"
-                  className="pf-ai-unlinked-thumb"
-                />
+                <ClassMotionArtwork firstExerciseId={visual.firstExerciseId} exercises={exercises} fallbackSrc={visual.studio3dThumbUrl}
+                  className="pf-ai-unlinked-thumb" />
                 <div className="pf-ai-unlinked-meta">
                   <strong>
                     {formatScheduleDate(occ.date)} {formatScheduleTime(occ.startTime)} · {occ.title}
@@ -419,7 +417,7 @@ export const AiSmartScheduleGeneratorCard: React.FC = () => {
         {WEEKLY_SCHEDULE_PRESETS.map((preset) => (
           <div key={preset.id} className="pf-ai-preset-card">
             <div className="pf-ai-preset-card__media">
-              <img src={preset.thumbUrl} alt="" aria-hidden="true" loading="lazy" />
+              <StudioMotionImage src={preset.thumbUrl} alt="" aria-hidden="true" loading="lazy" />
               <span className="pf-ai-preset-badge">{preset.badgeKo}</span>
               <div className="pf-ai-preset-springs">
                 <SpringVisualPills springs={preset.springs} />

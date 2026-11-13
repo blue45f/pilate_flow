@@ -83,7 +83,7 @@ const TRACK_STANDALONE_AND_CATALOG_IDS = [
 
 describe('Track I7 Shared Diagram Registry & Cross-Track Integration (I1–I8)', () => {
   it('resolves all Track I1–I6 and I8 movement IDs via getMovementVisualAsset and renders valid phase/triptych SVGs', () => {
-    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(98);
+    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(INITIAL_EXERCISES.length);
 
     for (const id of TRACK_STANDALONE_AND_CATALOG_IDS) {
       const asset = getMovementVisualAsset(id);
@@ -100,9 +100,14 @@ describe('Track I7 Shared Diagram Registry & Cross-Track Integration (I1–I8)',
         const doc = new DOMParser().parseFromString(markup, 'text/html');
         const svg = doc.querySelector('svg')!;
         expect(svg).not.toBeNull();
-        expect(svg.querySelectorAll('text')).toHaveLength(0);
+        for (const label of svg.querySelectorAll('text')) {
+          expect(label.closest('[data-prop-placement="setup-reference"]')).not.toBeNull();
+          expect(label.textContent).toBe('도구 참고');
+        }
         expect(svg.querySelectorAll('circle[data-joint-node]')).toHaveLength(7);
-        if (phase !== 'start') {
+        // A kneeling forearm support is a hold with a small breathing change,
+        // not a large push-up. Its support contacts have separate regressions.
+        if (phase !== 'start' && id !== 'original-mat-forearm-plank') {
           expect(
             svg.querySelectorAll('[data-pose-delta-vector]').length,
             `Expected pose-delta-vector on ${id} phase=${phase}`,
@@ -173,10 +178,10 @@ describe('Track I7 Shared Diagram Registry & Cross-Track Integration (I1–I8)',
     }
   });
 
-  it('mounts Track I1–I6 specialized diagram components lazily when their disclosures are opened in MovementDiagramReference', () => {
+  it('mounts matching specialized diagram components lazily when their disclosures are opened', () => {
     const trackDisclosures = [
       {
-        exerciseId: 'original-mat-chest-lift',
+        exerciseId: 'original-cadillac-seated-roll-back',
         disclosureTestId: 'movement-diagram-spine-disclosure',
         mountedTestId: 'spine-articulation-diagram-reference',
       },
@@ -200,11 +205,6 @@ describe('Track I7 Shared Diagram Registry & Cross-Track Integration (I1–I8)',
         disclosureTestId: 'movement-diagram-extension-disclosure',
         mountedTestId: 'extension-movement-triptych',
       },
-      {
-        exerciseId: 'original-mat-forearm-plank',
-        disclosureTestId: 'movement-diagram-shoulder-disclosure',
-        mountedTestId: 'shoulder-support-triptych-diagram',
-      },
     ] as const;
 
     for (const { exerciseId, disclosureTestId, mountedTestId } of trackDisclosures) {
@@ -223,6 +223,21 @@ describe('Track I7 Shared Diagram Registry & Cross-Track Integration (I1–I8)',
       fireEvent(trackDetails, new Event('toggle'));
 
       expect(screen.getByTestId(mountedTestId)).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it('does not offer seated roll-back or hand push-up details for differently supported catalog exercises', () => {
+    for (const [id, disclosure] of [
+      ['ex-cooldown-02', 'movement-diagram-spine-disclosure'],
+      ['original-mat-forearm-plank', 'movement-diagram-shoulder-disclosure'],
+    ] as const) {
+      const exercise = INITIAL_EXERCISES.find((item) => item.id === id)!;
+      const { unmount } = render(<MovementDiagramReference exercise={exercise} />);
+      const details = screen.getByText('참고 자세 그림').closest('details')!;
+      details.open = true;
+      fireEvent(details, new Event('toggle'));
+      expect(screen.queryByTestId(disclosure)).not.toBeInTheDocument();
       unmount();
     }
   });

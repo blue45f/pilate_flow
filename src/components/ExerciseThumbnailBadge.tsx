@@ -1,12 +1,9 @@
 import React, { useMemo } from 'react';
 import { APPARATUS_LABELS, INITIAL_EXERCISES, POSITION_LABELS } from '../data/pilatesCatalog';
-import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
-import { getMotionPatternReferences } from '../data/motionPatternReferences';
+import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
 import type { PilatesExercise } from '../types/pilates';
 import { isMovementIdeaExercise, readMovementIdeaDraft } from '../utils/movementIdeaDraft';
-import { CatalogMotionThumbnail } from './CatalogMotionInteractivePlayer';
-import { MotionPatternThumbnail } from './MotionPatternPreview';
-import { MovementPhaseDiagramSvg } from './MovementPhaseDiagramSvg';
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 
 export interface ExerciseThumbnailBadgeProps {
   exercise?: PilatesExercise | null;
@@ -38,28 +35,19 @@ export function ExerciseThumbnailBadge({
     return INITIAL_EXERCISES.find((item) => item.id === exerciseId) ?? null;
   }, [exercise, exerciseId]);
 
-  const patternRef = useMemo(
-    () => (resolvedExercise ? getMotionPatternReferences(resolvedExercise.id)[0] ?? null : null),
-    [resolvedExercise],
-  );
-
-  const catalogMotion = useMemo(
-    () => (resolvedExercise ? getCatalogContinuousMotionAsset(resolvedExercise) : null),
-    [resolvedExercise],
-  );
-
   const ideaPhotoUrl = useMemo(() => {
     if (!resolvedExercise || !isMovementIdeaExercise(resolvedExercise)) return null;
     return readMovementIdeaDraft(resolvedExercise)?.photoDataUrl ?? null;
   }, [resolvedExercise]);
 
-  if (!resolvedExercise || !catalogMotion) return null;
+  if (!resolvedExercise) return null;
+  const sourceOnly = getExpandedMovementVisualBinding(resolvedExercise)?.nativeMotionAvailable === false;
 
   const dims = SIZE_DIMENSIONS[size];
   const appShort = APPARATUS_LABELS[resolvedExercise.apparatus]?.short ?? resolvedExercise.apparatus;
   const posKo = POSITION_LABELS[resolvedExercise.bodyPosition]?.ko ?? resolvedExercise.bodyPosition;
 
-  if (showPhaseStrip) {
+  if (showPhaseStrip && !sourceOnly) {
     return (
       <div
         className={`pf-exercise-thumbnail-strip ${className}`.trim()}
@@ -106,11 +94,10 @@ export function ExerciseThumbnailBadge({
             >
               {phaseItem.label}
             </span>
-            <MovementPhaseDiagramSvg
-              asset={catalogMotion.visualAsset}
+            <ExerciseMotionArtwork
+              exercise={resolvedExercise}
               phase={phaseItem.id}
-              compact
-              showGhostStartPose={phaseItem.id === 'middle'}
+              decorative={decorative}
             />
           </div>
         ))}
@@ -146,10 +133,8 @@ export function ExerciseThumbnailBadge({
           loading="lazy"
           style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
         />
-      ) : patternRef ? (
-        <MotionPatternThumbnail reference={patternRef} unifiedCatalogAsset={catalogMotion} />
       ) : (
-        <CatalogMotionThumbnail asset={catalogMotion} />
+        <ExerciseMotionArtwork exercise={resolvedExercise} decorative={decorative} />
       )}
       {size !== 'xs' && (
         <span

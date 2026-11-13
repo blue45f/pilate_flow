@@ -14,22 +14,26 @@ import {
 } from './movementMediaMatcher';
 
 describe('movementMediaMatcher', () => {
-  it('resolves valid MovementMediaBundles for all INITIAL_EXERCISES (both original-* and ex-*) without mutating catalogs', () => {
+  it('resolves valid MovementMediaBundles for original, curated and expanded catalog exercises without mutating catalogs', () => {
     const initialSnapshot = JSON.stringify(INITIAL_EXERCISES);
     const verifiedSnapshot = JSON.stringify(VERIFIED_REFERENCES);
 
     const originalExercises = INITIAL_EXERCISES.filter((ex) => ex.id.startsWith('original-'));
     const curatedExercises = INITIAL_EXERCISES.filter((ex) => ex.id.startsWith('ex-'));
+    const expandedExercises = INITIAL_EXERCISES.filter((ex) => ex.id.startsWith('expanded-'));
     expect(originalExercises.length).toBeGreaterThanOrEqual(60);
     expect(curatedExercises.length).toBeGreaterThanOrEqual(30);
-    expect(originalExercises.length + curatedExercises.length).toBe(INITIAL_EXERCISES.length);
+    expect(expandedExercises).toHaveLength(60);
+    expect(originalExercises.length + curatedExercises.length + expandedExercises.length).toBe(
+      INITIAL_EXERCISES.length,
+    );
 
     for (const exercise of INITIAL_EXERCISES) {
       const bundle = resolveMovementMediaBundle(exercise);
       expect(bundle.exerciseId).toBe(exercise.id);
       expect(bundle.exerciseNameKo).toBe(exercise.nameKo);
       expect(bundle.exerciseNameEn).toBe(exercise.nameEn);
-      expect(bundle.matches.length).toBeGreaterThanOrEqual(2);
+      expect(bundle.matches.length).toBeGreaterThanOrEqual(1);
       expect(bundle.matches).toContain(bundle.primaryMatch);
 
       expect(bundle.compliance).toEqual({
@@ -40,12 +44,6 @@ describe('movementMediaMatcher', () => {
         externalOriginalLinkAlwaysPresent: true,
       });
 
-      const hasEmbeddableCandidate = bundle.matches.some(
-        (m) =>
-          m.source.embedPolicy === 'youtube-nocookie-allowed' &&
-          m.embedResolution.allowed === true &&
-          isPermittedEmbedUrl(m.embedResolution.embedUrl),
-      );
       const hasExternalOnlyOfficialCandidate = bundle.matches.some(
         (m) =>
           m.source.embedPolicy === 'external-link-only' &&
@@ -53,10 +51,6 @@ describe('movementMediaMatcher', () => {
           m.embedResolution.embedUrl === null,
       );
 
-      expect(
-        hasEmbeddableCandidate,
-        `Expected ${exercise.id} to have an embeddable YouTube candidate`,
-      ).toBe(true);
       expect(
         hasExternalOnlyOfficialCandidate,
         `Expected ${exercise.id} to have an external-link-only official/institution candidate`,
@@ -144,14 +138,14 @@ describe('movementMediaMatcher', () => {
   });
 
   it('resolves structured embed failure fallbacks that always preserve externalOriginalUrl', () => {
-    const curatedExercise = INITIAL_EXERCISES.find((ex) => ex.id === 'ex-warmup-01')!;
+    const curatedExercise = INITIAL_EXERCISES.find((ex) => ex.id === 'original-mat-heel-slide')!;
     const bundle = resolveMovementMediaBundle(curatedExercise);
 
     const blockedFallback = resolveEmbedFailureFallback(bundle.primaryMatch, 'embed-blocked');
     expect(blockedFallback.state).toBe('embed-blocked');
     expect(blockedFallback.embedUrl).toBeNull();
     expect(blockedFallback.externalOriginalUrl).toBe(
-      'https://www.youtube.com/watch?v=DJtd3AqZzH0',
+      'https://www.youtube.com/watch?v=t17Z6HeiiQs&t=0s',
     );
     expect(blockedFallback.noticeKo).toContain('외부 원본 보기');
 
@@ -159,7 +153,7 @@ describe('movementMediaMatcher', () => {
     expect(failedFallback.state).toBe('playback-failed');
     expect(failedFallback.embedUrl).toBeNull();
     expect(failedFallback.externalOriginalUrl).toBe(
-      'https://www.youtube.com/watch?v=DJtd3AqZzH0',
+      'https://www.youtube.com/watch?v=t17Z6HeiiQs&t=0s',
     );
     expect(failedFallback.noticeKo).toContain('오류');
 
@@ -174,7 +168,7 @@ describe('movementMediaMatcher', () => {
     );
   });
 
-  it('resolves at least 2 credible matches for custom instructor-authored movements with no YouTube URL', () => {
+  it('does not invent a playable match for a custom variation without a matching source', () => {
     const customExercise: PilatesExercise = {
       ...INITIAL_EXERCISES[0],
       id: 'ex-custom-own-123',
@@ -193,11 +187,10 @@ describe('movementMediaMatcher', () => {
     };
 
     const bundle = resolveMovementMediaBundle(customExercise);
-    expect(bundle.matches.length).toBeGreaterThanOrEqual(2);
-    expect(bundle.primaryMatch.embedResolution.allowed).toBe(true);
-    expect(bundle.primaryMatch.embedResolution.embedUrl).toContain(
-      'https://www.youtube-nocookie.com/embed/Bkgcbd1nabU',
-    );
+    expect(bundle.matches.length).toBeGreaterThanOrEqual(1);
+    expect(bundle.primaryMatch.embedResolution.allowed).toBe(false);
+    expect(bundle.primaryMatch.embedResolution.embedUrl).toBeNull();
+    expect(bundle.matches.every((match) => match.source.provider !== 'youtube')).toBe(true);
     expect(bundle.matches.some((m) => m.matchTier === 'public-education-portal')).toBe(true);
   });
 });

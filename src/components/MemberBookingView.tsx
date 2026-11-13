@@ -1,3 +1,4 @@
+import { ClassMotionArtwork } from './ClassMotionArtwork';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeftRight,
@@ -1135,13 +1136,8 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
             return (
               <div key={slotId} className="pf-member-my-bookings__item">
                 <div className="pf-member-my-booking-lead">
-                  <img
-                    src={bookedThumb}
-                    alt=""
-                    aria-hidden="true"
-                    loading="lazy"
-                    className="pf-member-my-booking-thumb"
-                  />
+                  <ClassMotionArtwork firstExerciseId={resolvedSlot.firstExerciseId} exercises={exercises} fallbackSrc={bookedThumb}
+                    className="pf-member-my-booking-thumb" />
                   <div>
                     <strong>{titleText}</strong>
                     <span style={{ marginLeft: '8px', fontSize: '0.84rem', color: '#4c5d54' }}>
@@ -1486,14 +1482,9 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                 className={`pf-member-slot-card ${slot.myState === 'BOOKED' ? 'is-my-booked' : ''}`.trim()}
                 data-testid={`member-slot-${slot.id}`}
               >
-                <img
-                  src={studioArtSrc}
-                  alt=""
-                  aria-hidden="true"
-                  loading="lazy"
+                <ClassMotionArtwork firstExerciseId={slot.firstExerciseId} exercises={exercises} fallbackSrc={studioArtSrc}
                   className="pf-member-slot-art"
-                  data-testid={`member-slot-3d-preview-${slot.id}`}
-                />
+                  data-testid={`member-slot-3d-preview-${slot.id}`} />
                 <div className="pf-member-slot-main">
                   <div className="pf-member-slot-time-row">
                     <strong>
@@ -1676,17 +1667,10 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                   className="pf-spot-dialog-3d-banner"
                   data-testid="member-spot-dialog-3d-banner"
                 >
-                  <img
-                    src={
-                      pendingAction.slot.studio3dThumbUrl ??
-                      getApparatusStudio3dImage(pendingAction.slot.apparatus)
-                    }
-                    alt=""
-                    aria-hidden="true"
-                    className="pf-spot-dialog-3d-banner__img"
-                  />
+                  <ClassMotionArtwork firstExerciseId={pendingAction.slot.firstExerciseId} exercises={exercises} fallbackSrc={pendingAction.slot.studio3dThumbUrl ?? getApparatusStudio3dImage(pendingAction.slot.apparatus)}
+                    className="pf-spot-dialog-3d-banner__img" />
                   <div className="pf-spot-dialog-3d-banner__info">
-                    <strong>{pendingApparatusLabelKo} 스튜디오 3D 기구·스프링 안내</strong>
+                    <strong>{pendingApparatusLabelKo} 기구·스프링 안내</strong>
                     <div className="pf-class-badges-strip">
                       <PfBadge
                         tone={

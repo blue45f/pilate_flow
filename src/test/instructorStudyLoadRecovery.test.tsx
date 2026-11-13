@@ -2,13 +2,14 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { App } from '../App';
+import { openAppTools } from './workbenchControls';
 
 const controlled = vi.hoisted(() => ({ failure: new Error('PRIVATE_STUDY_IMPORT_FAILURE') }));
 vi.mock('../components/InstructorStudyDialog', () => {
   throw controlled.failure;
 });
-vi.mock('../components/SequenceWorkbench', () => ({
-  SequenceWorkbench: () => <p>기존 수업 작업실 유지</p>,
+vi.mock('../components/SequenceStudioWorkbench', () => ({
+  SequenceStudioWorkbench: () => <p>기존 수업 작업실 유지</p>,
 }));
 const original = usePilatesStore.getState();
 beforeEach(() => {
@@ -47,7 +48,7 @@ it('keeps the real App and local class data intact when the optional study impor
   const storageBefore = localStorage.getItem('pilates-flow-atelier-storage-v3');
   render(<App />);
   await screen.findByText('기존 수업 작업실 유지');
-  fireEvent.click(screen.getByRole('button', { name: '강사 연습실과 사용법' }));
+  fireEvent.click(openAppTools().getByRole('button', { name: '강사 연습실과 사용법' }));
   expect(await screen.findByRole('dialog', { name: '강사 연습실을 열지 못했어요' })).toBeVisible();
   expect(screen.getByText('기존 수업 작업실 유지')).toBeInTheDocument();
   for (const key of [
@@ -65,7 +66,7 @@ it('keeps the real App and local class data intact when the optional study impor
   expect(screen.queryByRole('dialog', { name: '강사 연습실을 열지 못했어요' })).toBeNull();
   expect(screen.getByText('기존 수업 작업실 유지')).toBeVisible();
   expect(localStorage.getItem('pilates-flow-atelier-storage-v3')).toBe(storageBefore);
-  fireEvent.click(screen.getByRole('button', { name: '강사 연습실과 사용법' }));
+  fireEvent.click(openAppTools().getByRole('button', { name: '강사 연습실과 사용법' }));
   expect(await screen.findByRole('dialog', { name: '강사 연습실을 열지 못했어요' })).toBeVisible();
   expect(screen.getByText('기존 수업 작업실 유지')).toBeVisible();
   expect(localStorage.getItem('pilates-flow-atelier-storage-v3')).toBe(storageBefore);

@@ -1,3 +1,4 @@
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
@@ -23,7 +24,6 @@ import {
   formatBrandSpringEquivalent,
 } from '../utils/brandSpringConverter';
 import { matchesDiscoverySearch } from '../utils/discoverySearch';
-import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import { isRestStep } from '../utils/sequenceEngine';
 import type { ActiveWorkspaceTab } from '../store/usePilatesStore';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -307,7 +307,6 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
           {matchedExercises.length > 0 ? (
             <ul className="pf-cmdk-exercise-list">
               {matchedExercises.map((ex) => {
-                const motion3d = resolveStudio3DMotionForExercise(ex);
                 const inSeq = activeExerciseIds.has(ex.id) || justAddedId === ex.id;
                 const brandSpring = formatBrandSpringEquivalent(
                   ex.springs,
@@ -316,13 +315,9 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
                 );
                 return (
                   <li key={ex.id} className="pf-cmdk-exercise-row" data-testid={`cmdk-ex-${ex.id}`}>
-                    <img
-                      src={motion3d.peakImg}
-                      alt=""
-                      aria-hidden="true"
-                      className="pf-cmdk-exercise-thumb"
-                      loading="lazy"
-                    />
+                    <ExerciseMotionArtwork
+                      exercise={ex}
+                      className="pf-cmdk-exercise-thumb" />
                     <div className="pf-cmdk-exercise-meta">
                       <strong>{ex.nameKo}</strong>
                       <small>

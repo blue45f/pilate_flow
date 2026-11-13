@@ -27,7 +27,7 @@ afterEach(() => {
 describe('library supplied concept layout', () => {
   it('puts search and movement results before optional motion discovery without removing it', () => {
     const { container } = render(
-      <ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />,
+      <ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />,
     );
     const search = screen.getByRole('region', { name: '동작 검색과 필터' });
     const results = container.querySelector('.library-notes-workspace')!;
@@ -43,7 +43,7 @@ describe('library supplied concept layout', () => {
   it('selects existing movement information, preserves review state and hands off to full details', async () => {
     const openDetails = vi.fn();
     const before = usePilatesStore.getState();
-    render(<ExerciseAtlasView onOpenYouTubePreview={openDetails} onOpenClipper={vi.fn()} />);
+    render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={openDetails} onOpenClipper={vi.fn()} />);
     const trigger = screen.getByRole('button', { name: movement.nameKo });
     fireEvent.click(trigger);
     const inspector = screen.getByRole('complementary', { name: '선택한 동작 정보' });
@@ -67,7 +67,7 @@ describe('library supplied concept layout', () => {
   });
 
   it('keeps selected information across filtering and safely restores focus if its card disappears', async () => {
-    render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+    render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: movement.nameKo }));
     const search = screen.getByRole('searchbox', { name: '동작 검색' });
     fireEvent.change(search, { target: { value: 'no-matching-movement-xyz' } });
@@ -90,7 +90,7 @@ describe('library supplied concept layout', () => {
       },
       true,
     );
-    render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+    render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
     const trigger = screen.getByRole('button', { name: movement.nameKo });
     fireEvent.click(trigger);
 

@@ -106,7 +106,7 @@ export function mergePreviewResolveOptions(
 }
 
 /**
- * Builds the 98-item catalog descriptor table for the current resolution options.
+ * Builds the current catalog descriptor table for the selected resolution options.
  */
 export function buildCatalogDescriptorEntries(
   resolveOptions: ResolveMotionCoverageOptions,

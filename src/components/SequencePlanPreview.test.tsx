@@ -97,7 +97,10 @@ describe('read-only whole class plan preview', () => {
     expect(dialog.getByText(approved.cues[0])).toBeInTheDocument();
     expect(dialog.getByRole('button', { name: '다음 항목' })).toBeDisabled();
     fireEvent.click(rows[0]);
-    expect(dialog.getByRole('status')).toHaveTextContent('현재 항목 1 / 3 · 수동 확인');
+    const currentStatus = within(
+      dialog.getByRole('region', { name: '선택한 계획 항목' }),
+    ).getByText(/^현재 항목 /, { selector: '[role="status"]' });
+    expect(currentStatus).toHaveTextContent('현재 항목 1 / 3 · 수동 확인');
     const after = usePilatesStore.getState();
     expect(after.activeSteps).toBe(before.activeSteps);
     expect(after.exercises).toBe(before.exercises);
@@ -175,7 +178,10 @@ describe('read-only whole class plan preview', () => {
     });
     rerender(<SequencePlanPreview onClose={vi.fn()} />);
     expect(screen.getByLabelText('미리보기 시간 구성')).toHaveTextContent('전체11:00');
-    expect(screen.getByRole('status')).toHaveTextContent('현재 항목 1 / 3');
+    const currentStatus = within(
+      screen.getByRole('region', { name: '선택한 계획 항목' }),
+    ).getByText(/^현재 항목 /, { selector: '[role="status"]' });
+    expect(currentStatus).toHaveTextContent('현재 항목 1 / 3');
     expect(screen.queryByText('변경된 합성 이름')).not.toBeInTheDocument();
     expect(screen.queryByText(/77회/)).not.toBeInTheDocument();
     expect(screen.getAllByText(/강사가 정한 횟수 12회/)).toHaveLength(2);

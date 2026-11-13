@@ -193,8 +193,11 @@ describe('dated occurrence revision store wiring', () => {
 });
 
 describe('schedule dated-plan entry integration', () => {
-  it('preserves compact venue/exception controls and opens one separate planning dialog', () => {
+  it('keeps venue and exception tools in a disclosure and opens one separate planning dialog', () => {
     render(<InstructorScheduleView today="2026-11-04" />);
+    expect(screen.getByRole('button', { name: '장소 관리' })).not.toBeVisible();
+    expect(screen.getByRole('button', { name: '휴무 등록' })).not.toBeVisible();
+    fireEvent.click(screen.getByText('일정 관리', { selector: 'summary' }));
     expect(screen.getByRole('button', { name: '장소 관리' })).toBeVisible();
     expect(screen.getByRole('button', { name: '휴무 등록' })).toBeVisible();
     expect(screen.getByRole('button', { name: '이번 수업 변경' })).toBeVisible();

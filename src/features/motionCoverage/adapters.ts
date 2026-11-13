@@ -11,6 +11,7 @@ import type { MotionPatternReference } from '../../data/motionPatternReferences'
 import type { MotionPrototypeReference } from '../../data/motionReferences';
 import type { PilatesExercise } from '../../types/pilates';
 import { getExerciseEvidence, type ExerciseEvidence } from '../../utils/exerciseEvidence';
+import { getExpandedMovementVisualBinding } from '../../data/expandedMovementVisualBindings';
 import { resolveMotionCoverage } from './resolver';
 import type {
   MotionCoverageResolution,
@@ -374,13 +375,17 @@ export function resolveRenderableMotionDescriptor(
       asset: resolution.threePhase2d.asset,
       triptychProps: fallbackTriptychProps,
       phasePropsByPhase: fallbackPhasePropsByPhase,
-      badgeLabelKo: '2D 3단계 기구학 도해 (기존 98 카탈로그 에셋 재사용 · 출처 대조)',
+      badgeLabelKo: '2D 3단계 기구학 도해 (기존 카탈로그 에셋 재사용 · 출처 대조)',
       disclaimerKo:
         '정식 연속 모션은 미작성(not_authored) 상태이며, 기존 카탈로그의 2D 3단계(시작·중간·끝) 이산 도해 에셋을 중복 생성 없이 재사용합니다.',
       safetyFlags: resolution.safetyFlags,
     });
   }
 
+  const sourceOnlyBinding =
+    resolution.isCatalogExercise && resolution.exercise
+      ? getExpandedMovementVisualBinding(resolution.exercise)
+      : undefined;
   return Object.freeze({
     mode: 'missing',
     exerciseId: resolution.exerciseId,
@@ -389,8 +394,11 @@ export function resolveRenderableMotionDescriptor(
     manualReady: false,
     readinessState: resolution.readinessState,
     true3dSupported: false,
-    badgeLabelKo: '모션 도해 미지원 (근거 데이터 없음)',
+    badgeLabelKo: sourceOnlyBinding
+      ? '제작자 영상 연결 · 전용 동작 도해 준비 중'
+      : '모션 도해 미지원 (근거 데이터 없음)',
     disclaimerKo:
+      sourceOnlyBinding?.reasonKo ??
       '카탈로그 출처 감사 또는 기구·자세·방향 일치 근거가 확인되지 않아 모션 도해를 표시하지 않습니다.',
     safetyFlags: resolution.safetyFlags,
   });
@@ -412,30 +420,40 @@ export function toExerciseEvidenceMotionOverlay(
   ];
   const continuousDraftSupported =
     resolution.projected3d.supported || resolution.continuous2d.supported;
+  const sourceOnlyBinding =
+    resolution.isCatalogExercise && resolution.exercise
+      ? getExpandedMovementVisualBinding(resolution.exercise)
+      : undefined;
 
   let supportLevelLabelKo: string;
   if (resolution.primaryMode === 'projected-3d') {
-    supportLevelLabelKo = `관련 패턴 3D→2D 사선 투영 초안(${resolution.projected3d.variantIds.length}종) · 기존 98 2D 3단계 포즈 재사용 병행`;
+    supportLevelLabelKo = `관련 패턴 3D→2D 사선 투영 초안(${resolution.projected3d.variantIds.length}종) · 기존 2D 3단계 포즈 재사용 병행`;
   } else if (resolution.primaryMode === 'continuous-2d') {
     supportLevelLabelKo = resolution.continuous2d.isPrototypeOnly
-      ? `독립 2D 연속 프로토타입(${resolution.continuous2d.variantId}) 참고 · 기존 98 2D 3단계 포즈 재사용 병행`
-      : `관련 패턴 2D 평면 연속 초안(1종) · 기존 98 2D 3단계 포즈 재사용 병행`;
+      ? `독립 2D 연속 프로토타입(${resolution.continuous2d.variantId}) 참고 · 기존 2D 3단계 포즈 재사용 병행`
+      : `관련 패턴 2D 평면 연속 초안(1종) · 기존 2D 3단계 포즈 재사용 병행`;
   } else if (resolution.primaryMode === 'three-phase-2d') {
     supportLevelLabelKo =
-      '이산 2D 3단계 도해만 존재 (기존 98 카탈로그 포즈 재사용 · 연속 모션 초안 없음)';
+      '이산 2D 3단계 도해만 존재 (기존 카탈로그 포즈 재사용 · 연속 모션 초안 없음)';
+  } else if (sourceOnlyBinding) {
+    supportLevelLabelKo = '제작자 영상 연결 · 전용 동작 도해 미작성';
   } else {
     supportLevelLabelKo = '검증된 모션·도해 근거 없음 (missing · 미등록 또는 커스텀 노트)';
   }
 
   const continuousVsDiscreteLabelKo = continuousDraftSupported
-    ? '연속 보간 초안(authored-unreviewed-draft, 정식 연속 모션 0/98 아님) + 이산 2D 3단계(start·middle·end) 도해 재사용'
+    ? '연속 보간 초안(authored-unreviewed-draft, 정식 승인 전) + 이산 2D 3단계(start·middle·end) 도해 재사용'
     : resolution.threePhase2d.supported
       ? '이산 2D 3단계(start·middle·end) 정적 스냅샷 도해만 존재 · 연속 재생 모션 미작성(not_authored)'
-      : '연속 모션 및 2D 3단계 도해 모두 미작성(missing)';
+      : sourceOnlyBinding
+        ? '전용 모션과 단계별 도해 미작성 · 제작자 영상으로 동작 확인'
+        : '연속 모션 및 2D 3단계 도해 모두 미작성(missing)';
 
   const threeDimensionalTruthLabelKo = resolution.projected3d.supported
     ? '진짜 3D 엔진(WebGL/Three.js·자유 카메라) 아님 · 3D 스틱/튜브 좌표의 2D SVG 사선 정사영(projected-3d)'
-    : '진짜 3D 엔진(WebGL/Three.js) 및 3D 투영 초안 없음 (2D 평면 도해 전용)';
+    : sourceOnlyBinding
+      ? '3D 투영 및 전용 2D 도해 미작성'
+      : '진짜 3D 엔진(WebGL/Three.js) 및 3D 투영 초안 없음 (2D 평면 도해 전용)';
 
   const verificationTruthLabelKo =
     '정식 모션 완료(manual-ready) 0건 · 외부 전문가 모션 검수 0건(unreviewed) · 해부학적 정밀 검증 완료로 간주하지 않음';

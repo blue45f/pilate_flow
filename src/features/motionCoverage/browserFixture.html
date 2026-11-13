@@ -12,6 +12,8 @@
     ></div>
     <script type="module">
       import { createElement } from 'react';
+      import { INITIAL_EXERCISES } from '/src/data/pilatesCatalog.ts';
+      import { getExpandedMovementVisualBinding } from '/src/data/expandedMovementVisualBindings.ts';
       import {
         MotionCoveragePreviewHarness,
         DRAFT_REPEAT_COUNTS,
@@ -48,6 +50,10 @@
         DRAFT_REPEAT_COUNTS,
         MotionCoveragePlaybackController,
         runMotionCoverageCatalogSweep,
+        catalogCount: INITIAL_EXERCISES.length,
+        sourceOnlyCatalogCount: INITIAL_EXERCISES.filter(
+          (exercise) => getExpandedMovementVisualBinding(exercise)?.nativeMotionAvailable === false,
+        ).length,
         updateProps(props = {}) {
           currentProps = { ...currentProps, ...props };
           activeRoot.render(

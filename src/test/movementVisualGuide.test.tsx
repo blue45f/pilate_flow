@@ -36,8 +36,8 @@ afterEach(() => {
 
 describe('Movement visual rig catalog & 98-exercise full coverage', () => {
   it('matches all 98 canonical catalog exercises with finite start/middle/end coordinates, alignment guides, movement vectors, and primary muscles', () => {
-    expect(INITIAL_EXERCISES).toHaveLength(98);
-    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(98);
+    expect(INITIAL_EXERCISES).toHaveLength(158);
+    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(INITIAL_EXERCISES.length);
 
     const seenIds = new Set<string>();
     for (const exercise of INITIAL_EXERCISES) {
@@ -86,7 +86,7 @@ describe('Movement visual rig catalog & 98-exercise full coverage', () => {
       expect(roles.has('stabilizer')).toBe(true);
       expect(asset!.primaryMuscles.length).toBeGreaterThanOrEqual(3);
     }
-    expect(seenIds.size).toBe(98);
+    expect(seenIds.size).toBe(INITIAL_EXERCISES.length);
   });
 
   it('verifies static SVG movement-guide assets and SHA-256 manifest in public/images/movement-guides/', () => {
@@ -164,7 +164,7 @@ describe('Anatomical accuracy non-assumption, source comparison, and pre/post-re
   });
 
   it('distinguishes pre-review, post-review (instructor-reviewed), and stale recheck states across the catalog', () => {
-    expect(CATALOG_VISUAL_SOURCE_COMPARISONS).toHaveLength(98);
+    expect(CATALOG_VISUAL_SOURCE_COMPARISONS).toHaveLength(INITIAL_EXERCISES.length);
 
     const sampleExercise = INITIAL_EXERCISES[0];
     const preReviewAudit = getVisualSourceComparison(sampleExercise);
@@ -248,7 +248,10 @@ describe('MovementPhaseDiagramSvg & MovementVisualGuideCard rendering and mobile
         expect(svg.getAttribute('data-phase')).toBe(phase);
         expect(svg.getAttribute('data-view-mirrored')).toBe(String(mirrored));
         expect(svg.getAttribute('data-anatomical-accuracy-assumed')).toBe('false');
-        expect(svg.querySelectorAll('text')).toHaveLength(0);
+        for (const label of svg.querySelectorAll('text')) {
+          expect(label.closest('[data-prop-placement="setup-reference"]')).not.toBeNull();
+          expect(label.textContent).toBe('도구 참고');
+        }
         expect(svg.querySelector('title')?.textContent?.trim().length).toBeGreaterThan(0);
         expect(svg.querySelector('desc')?.textContent?.trim().length).toBeGreaterThan(0);
 

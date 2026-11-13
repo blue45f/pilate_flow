@@ -592,6 +592,7 @@ export function InstructorStudyDialog({
                 </p>
                 <MotionReferencePlayer
                   key={selected.id}
+                  exercise={selected}
                   exerciseId={selected.id}
                   exerciseName={selected.nameKo}
                 />

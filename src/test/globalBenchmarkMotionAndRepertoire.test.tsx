@@ -269,9 +269,9 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     );
 
     // Baseline invariants preserved
-    expect(INITIAL_EXERCISES).toHaveLength(98);
+    expect(INITIAL_EXERCISES).toHaveLength(158);
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
-    expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(141);
+    expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(310);
   });
 
   it('routes new motion families separately from inversions and ladder-barrel poses', () => {
@@ -340,7 +340,7 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     ).toBe('barrel-spinecorrector');
   });
 
-  it('renders Studio3DMotionHeroCard with Start / Onion-Skin / Peak / Loop modes, honest anatomical disclaimer, and 3-Essential Strip', () => {
+  it('renders a continuous motion study with optional studio stills, explicit comparison, and the essential setup strip', () => {
     const footworkExercise =
       INITIAL_EXERCISES.find(
         (ex) => ex.apparatus === 'reformer' && ex.blockCategory === 'footwork',
@@ -350,22 +350,28 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
 
     const card = screen.getByTestId('studio-3d-motion-hero-card');
     expect(card).toHaveAttribute('data-anatomical-accuracy-assumed', 'false');
-    expect(card).toHaveAttribute('data-motion-mode', 'onion');
+    expect(card).toHaveAttribute('data-motion-mode', 'motion');
     expect(card).toHaveTextContent('임상 각도·개인 적합성은 강사 현장 확인');
+    expect(within(card).getByTestId('studio-motion-study-player')).toBeVisible();
 
-    const modeGroup = within(card).getByRole('group', { name: '3D 모션 단계 보기 방식' });
-    fireEvent.click(within(modeGroup).getByRole('button', { name: /● 시작/ }));
+    const modeGroup = within(card).getByRole('group', { name: '동작 보기 방식' });
+    fireEvent.click(within(modeGroup).getByRole('button', { name: '자세 프레임' }));
     expect(card).toHaveAttribute('data-motion-mode', 'start');
-
-    fireEvent.click(within(modeGroup).getByRole('button', { name: /◆ 정점 근육/ }));
-    expect(card).toHaveAttribute('data-motion-mode', 'peak');
+    fireEvent.click(within(card).getByRole('button', { name: '세 자세 나란히 보기' }));
+    expect(card).toHaveAttribute('data-motion-mode', 'compare');
+    const stills = within(card).getByRole('group', { name: '자세 프레임 단계 보기' });
+    fireEvent.click(within(stills).getByRole('button', { name: /01.*시작 자세/ }));
+    expect(card).toHaveAttribute('data-motion-mode', 'start');
+    fireEvent.click(within(stills).getByRole('button', { name: /03.*복귀 자세/ }));
+    expect(card).toHaveAttribute('data-motion-mode', 'end');
 
     expect(screen.getByTestId('detail-essential-3-strip')).toBeVisible();
   });
 
   it('simplifies YouTubePreviewModal mobile detail screen via progressive-disclosure drawers and click-to-load crawled YouTube references without autoplay', () => {
-    const reformerEx =
-      INITIAL_EXERCISES.find((ex) => ex.apparatus === 'reformer') ?? INITIAL_EXERCISES[0]!;
+    const reformerEx = INITIAL_EXERCISES.find(
+      (ex) => ex.id === 'original-barrel-supported-side-bend',
+    )!;
     const related = getCrawledRelatedVideosForExercise(reformerEx, 4);
     expect(related.length).toBeGreaterThan(0);
 
@@ -398,7 +404,13 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     expect(GLOBAL_CRAWLED_REPERTOIRE_EXERCISES).toHaveLength(60);
     expect(CRAWLED_YOUTUBE_DISCOVERY_POOL.length).toBeGreaterThanOrEqual(50);
 
-    render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+    render(
+      <ExerciseAtlasView
+        initialView="tools"
+        onOpenYouTubePreview={vi.fn()}
+        onOpenClipper={vi.fn()}
+      />,
+    );
 
     const tablist = screen.getByRole('tablist', { name: '자료 모음' });
     const repertoireTab = within(tablist).getByRole('tab', { name: /확장 도감·영상/ });
@@ -410,12 +422,14 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     const addToSeqBtns = within(explorer).getAllByRole('button', { name: /수업에 담기/ });
     fireEvent.click(addToSeqBtns[0]!);
     expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
-    expect(usePilatesStore.getState().exercises).toHaveLength(99);
+    expect(usePilatesStore.getState().exercises).toHaveLength(INITIAL_EXERCISES.length + 1);
 
     const importAllBtn = screen.getByTestId('import-all-crawled-repertoire-btn');
     fireEvent.click(importAllBtn);
-    expect(usePilatesStore.getState().exercises).toHaveLength(158);
-    expect(INITIAL_EXERCISES).toHaveLength(98);
+    expect(usePilatesStore.getState().exercises).toHaveLength(
+      INITIAL_EXERCISES.length + GLOBAL_CRAWLED_REPERTOIRE_EXERCISES.length,
+    );
+    expect(INITIAL_EXERCISES).toHaveLength(158);
   });
 
   it('elevates LiveStageView (P09) with 3D start↔peak companion, spring delta alert, unilateral side-switch haptic/chime alert after opt-in, and one-handed ±15s thumb dock with undo', () => {
@@ -639,8 +653,9 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     const schedRender = render(<InstructorScheduleView today="2026-11-12" />);
 
     const linkedCard = screen.getByRole('article', { name: /오전 리포머 심화 분절반/ });
-    const linkedThumb = linkedCard.querySelector<HTMLImageElement>('.pf-schedule-3d-thumb');
-    expect(linkedThumb?.getAttribute('src')).toBe('/motion-studio3d/shortspine-peak.png');
+    const linkedThumb = linkedCard.querySelector('.pf-schedule-3d-thumb');
+    expect(linkedThumb).toHaveClass('exercise-motion-artwork');
+    expect(linkedThumb).toHaveAttribute('data-exercise-id', shortSpineEx.id);
     expect(within(linkedCard).getByTestId('schedule-card-level-badge')).toHaveTextContent(
       'Lv 2.0 · 중상급',
     );
@@ -658,7 +673,7 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     expect(barrelThumb?.getAttribute('src')).toBe('/motion-studio3d/barrel-swan-peak.png');
     expect(
       within(unlinkedBarrelCard).getByTestId('schedule-card-apparatus-badge'),
-    ).toHaveTextContent('바렐 3D');
+    ).toHaveTextContent('바렐');
     expect(within(unlinkedBarrelCard).getByTestId('schedule-card-level-badge')).toHaveTextContent(
       '난이도 미지정',
     );
@@ -674,15 +689,15 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
       name: '오전 리포머 심화 분절반 예약하기',
     });
     const memberReformerCard = bookReformerBtn.closest('article')!;
-    const memberReformerImg =
-      memberReformerCard.querySelector<HTMLImageElement>('.pf-member-slot-art');
-    expect(memberReformerImg?.getAttribute('src')).toBe('/motion-studio3d/shortspine-peak.png');
+    const memberReformerImg = memberReformerCard.querySelector('.pf-member-slot-art');
+    expect(memberReformerImg).toHaveClass('exercise-motion-artwork');
+    expect(memberReformerImg).toHaveAttribute('data-exercise-id', shortSpineEx.id);
     expect(memberReformerCard.textContent).toContain('포커스 · 척추분절');
 
     fireEvent.click(bookReformerBtn);
     const spotBanner = screen.getByTestId('member-spot-dialog-3d-banner');
     expect(spotBanner).toBeVisible();
-    expect(spotBanner).toHaveTextContent('리포머 스튜디오 3D 기구·스프링 안내');
+    expect(spotBanner).toHaveTextContent('리포머 기구·스프링 안내');
     expect(screen.getByTestId('member-dialog-focus-props-bridge')).toHaveTextContent(
       '논슬립 토삭스 착용 권장',
     );
@@ -910,7 +925,7 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     const swSrc = createServiceWorkerSource('v-test', ['assets/app.js']);
     expect(swSrc).toContain("url.pathname.startsWith('/motion-studio3d/')");
     const offlineRender = render(<StudioOffline3dReadinessCard />);
-    expect(screen.getByTestId('studio-offline-3d-readiness-card')).toHaveTextContent('48컷');
+    expect(screen.getByTestId('studio-offline-3d-readiness-card')).toHaveTextContent('72컷');
     expect(screen.getByTestId('studio-offline-3d-readiness-card')).toHaveTextContent('24개');
     offlineRender.unmount();
 

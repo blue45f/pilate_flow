@@ -26,6 +26,18 @@ export interface CatalogMotionOverrideNote {
   readonly phaseLabelsKo: Readonly<Record<CatalogMotionPhaseId, string>>;
   readonly biomechFocusKo: string;
   readonly apparatusControlNoteKo: string;
+  /** Preview durations, never an exercise prescription or a source-video timecode. */
+  readonly previewPhaseDurationsMs?: readonly [number, number, number, number, number];
+  readonly transitionPath?: 'through-middle' | 'alternate-knee-fold';
+}
+
+export interface CatalogMotionKeyframe {
+  readonly id: string;
+  readonly progress: number;
+  readonly labelKo: string;
+  readonly visualPhaseId: VisualPhaseId;
+  readonly pose: PhasePoseSpec;
+  readonly provenance: 'catalog-pose' | 'procedural-transition';
 }
 
 export interface CatalogContinuousPoseSnapshot {
@@ -48,7 +60,7 @@ export interface CatalogContinuousMotionAsset {
   readonly bodyPosition: BodyPosition;
   readonly blockCategory: ClassBlockCategory;
   readonly sideMode: 'bilateral' | 'unilateral';
-  readonly durationMs: 8000;
+  readonly durationMs: number;
   readonly phases: readonly [
     CatalogMotionPhaseSpec,
     CatalogMotionPhaseSpec,
@@ -56,6 +68,12 @@ export interface CatalogContinuousMotionAsset {
     CatalogMotionPhaseSpec,
     CatalogMotionPhaseSpec,
   ];
+  readonly keyframes: readonly CatalogMotionKeyframe[];
+  /** Seek the authored third pose here; progress 1 is the completed loop setup. */
+  readonly authoredEndProgress: number;
+  readonly endPoseLabelKo: string;
+  readonly finishBehavior: 'hold-return' | 'return-to-setup' | 'alternate-side';
+  readonly previewTimingOnly: true;
   readonly biomechFocusKo: string;
   readonly apparatusControlNoteKo: string;
   readonly visualAsset: CatalogMovementVisualAsset;

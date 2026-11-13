@@ -28,12 +28,7 @@ import {
 import { parseYouTubeReference } from '../schemas/pilatesSchema';
 import { sourceReferenceSchema } from '../schemas/cloudBackupSchema';
 import { usePilatesStore } from '../store/usePilatesStore';
-import type {
-  BodyPosition,
-  ClassBlockCategory,
-  PilatesExercise,
-  PropType,
-} from '../types/pilates';
+import type { BodyPosition, ClassBlockCategory, PilatesExercise, PropType } from '../types/pilates';
 import { formatSecondsToMMSS } from '../utils/sequenceEngine';
 import {
   exerciseRevision,
@@ -1002,10 +997,7 @@ const MovementDetails: React.FC<{
         </div>
       </nav>
       {(draftRestoredNotice || hasUnsavedReview) && (
-        <div
-          className="yt-preview-draft-recovery-banner"
-          data-testid="yt-preview-draft-restored"
-        >
+        <div className="yt-preview-draft-recovery-banner" data-testid="yt-preview-draft-restored">
           <p className="yt-preview-draft-recovery-copy">
             <span className="yt-preview-draft-recovery-badge">
               {draftRestoredNotice ? '수정 초안 복원됨' : '저장 전 수정 초안'}
@@ -1056,7 +1048,11 @@ const MovementDetails: React.FC<{
                 <span>직접 그린 기구 도식 · 동작 시범 아님</span>
               </div>
               {link && (
-                <button type="button" className="btn-primary pf-p08-yt-btn" onClick={() => setLoadVideo(true)}>
+                <button
+                  type="button"
+                  className="btn-primary pf-p08-yt-btn"
+                  onClick={() => setLoadVideo(true)}
+                >
                   <Play size={15} /> YouTube 영상 불러오기
                 </button>
               )}
@@ -1104,15 +1100,14 @@ const MovementDetails: React.FC<{
           data-testid="crawled-related-videos-drawer"
         >
           <summary>
-            <span>
-              추가 공식 시범 영상 ({crawledRelatedVideos.length}건 · 국내외 참조)
-            </span>
+            <span>추가 관련 영상 ({crawledRelatedVideos.length}건 · 제목·출처 기준)</span>
             <ChevronDown size={14} aria-hidden="true" />
           </summary>
           <div style={{ display: 'grid', gap: '8px', paddingTop: '10px' }}>
             {crawledRelatedVideos.map((vid) => (
               <div
                 key={vid.videoId}
+                data-reference-scope={vid.referenceScope}
                 style={{
                   background: '#ffffff',
                   border: '1px solid #dce3d8',
@@ -1137,8 +1132,14 @@ const MovementDetails: React.FC<{
                       {vid.title}
                     </strong>
                     <span style={{ fontSize: '0.75rem', color: '#56685f' }}>
-                      {vid.channelName} · {vid.region === 'kr' ? '국내 채널' : '해외 공식 채널'}
+                      {vid.channelName} · {vid.region === 'kr' ? '국내 채널' : '해외 채널'}
                     </span>
+                    <p
+                      className="muted"
+                      style={{ margin: '6px 0 0', fontSize: '0.75rem', lineHeight: 1.5 }}
+                    >
+                      {vid.matchReasonKo}
+                    </p>
                   </div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     <button
@@ -1225,10 +1226,7 @@ const MovementDetails: React.FC<{
           )}
         </div>
       </details>
-      <details
-        className="pf-detail-progressive-drawer"
-        data-testid="detail-posture-anatomy-drawer"
-      >
+      <details className="pf-detail-progressive-drawer" data-testid="detail-posture-anatomy-drawer">
         <summary>
           <span>자세 정렬 · 주동근 해부학 가이드 펼쳐보기</span>
           <ChevronDown size={14} aria-hidden="true" />
@@ -1237,17 +1235,14 @@ const MovementDetails: React.FC<{
           <PostureAnatomyGuide exercise={exercise} />
         </div>
       </details>
-      <details
-        className="pf-detail-progressive-drawer"
-        data-testid="detail-voice-media-drawer"
-      >
+      <details className="pf-detail-progressive-drawer" data-testid="detail-voice-media-drawer">
         <summary>
           <span>음성 티칭 가이드 · 모션 레퍼런스 펼쳐보기</span>
           <ChevronDown size={14} aria-hidden="true" />
         </summary>
         <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
           <MovementMediaGuidancePanel key={exercise.id} exercise={exercise} />
-          <MotionReferencePlayer exerciseId={exercise.id} exerciseName={exercise.nameKo} />
+          <MotionReferencePlayer exercise={exercise} exerciseId={exercise.id} exerciseName={exercise.nameKo} />
         </div>
       </details>
       <details
@@ -1291,7 +1286,7 @@ const MovementDetails: React.FC<{
                 </div>
                 <div>
                   <dt>자료 구분</dt>
-                  <dd>{primarySource.region === 'kr' ? '국내 후보' : '해외 공식 출처'}</dd>
+                  <dd>{primarySource.region === 'kr' ? '국내 후보' : '해외 출처'}</dd>
                 </div>
                 <div>
                   <dt>보관된 출처 확인 상태</dt>
@@ -1300,7 +1295,7 @@ const MovementDetails: React.FC<{
                       ? '영상 부분 확인 · 동작 구간 미확인'
                       : primarySource.verificationStatus === 'official-source-checked'
                         ? '공식 출처 확인 · 운동 검수와 별개'
-                        : '국내 후보 · 영상 품질 미확인'}
+                        : '출처 후보 · 영상 품질 미확인'}
                   </dd>
                 </div>
                 <div>

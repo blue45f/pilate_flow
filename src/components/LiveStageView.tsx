@@ -47,7 +47,7 @@ import { LiveStageKinematicDiagram } from './LiveStageKinematicDiagram';
 import { ApparatusIconBadge } from './ApparatusStudioArtwork';
 import { ApparatusVisualGuideRibbon } from './ApparatusVisualGuideRibbon';
 import { SpringVisualPills } from './SpringVisualPills';
-import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
+import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
 import { MobileSubPageBar } from './MobileSubPageBar';
 import { VisualBreathPacerRing, VisualSequenceFilmstrip } from './VisualFlowComponents';
 import {
@@ -68,7 +68,7 @@ import {
   silenceLiveSensoryCue,
   triggerLiveSensoryCue,
 } from '../utils/liveStageSensoryCueEngine';
-import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import {
   BRAND_SPRING_OPTIONS,
   formatBrandSpringEquivalent,
@@ -1818,44 +1818,36 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             </span>
           </div>
           {!currentIsRest && exercise && (() => {
-            const studio3d = resolveStudio3DMotionForExercise(exercise);
-            const activePhaseKey =
-              progress < 28 ? 'start' : progress < 64 ? 'mid' : 'peak';
             return (
               <details
                 className="teaching-presentation-details teaching-reference-materials"
                 data-presentation-disclosure
                 open={presentationMode === 'reference'}
               >
-                <summary>동작 참고 자료 · 3D·호흡</summary>
+                <summary>동작 참고 자료 · 자세·호흡</summary>
                 <div
                   className="pf-live-3d-companion is-three-frames"
                   data-testid="live-stage-3d-companion"
-                  aria-label={`${exercise.nameKo} 3D 시작·추진·정점 가이드`}
+                  aria-label={`${exercise.nameKo} 시작·정점·종료 도해`}
+                  data-motion-sync="reference-only"
                 >
                   <div
-                    className={`pf-live-3d-companion__card ${
-                      activePhaseKey === 'start' ? 'is-active-phase' : ''
-                    }`.trim()}
+                    className="pf-live-3d-companion__card"
                   >
-                    <img src={studio3d.startImg} alt="" aria-hidden="true" loading="lazy" />
+                    <ExerciseMotionArtwork exercise={exercise} phase="start" />
                     <span className="pf-live-3d-companion__badge">● 1. 시작 셋업</span>
                   </div>
                   <div
-                    className={`pf-live-3d-companion__card ${
-                      activePhaseKey === 'mid' ? 'is-active-phase' : ''
-                    }`.trim()}
+                    className="pf-live-3d-companion__card"
                   >
-                    <img src={studio3d.midImg} alt="" aria-hidden="true" loading="lazy" />
-                    <span className="pf-live-3d-companion__badge is-mid">◐ 2. 추진 전환</span>
+                    <ExerciseMotionArtwork exercise={exercise} phase="middle" />
+                    <span className="pf-live-3d-companion__badge is-mid">◆ 2. 정점 자세</span>
                   </div>
                   <div
-                    className={`pf-live-3d-companion__card ${
-                      activePhaseKey === 'peak' ? 'is-active-phase' : ''
-                    }`.trim()}
+                    className="pf-live-3d-companion__card"
                   >
-                    <img src={studio3d.peakImg} alt="" aria-hidden="true" loading="lazy" />
-                    <span className="pf-live-3d-companion__badge is-peak">◆ 3. 정점 주동근</span>
+                    <ExerciseMotionArtwork exercise={exercise} phase="end" />
+                    <span className="pf-live-3d-companion__badge is-peak">3. 종료 자세</span>
                   </div>
                 </div>
                 <details
@@ -1863,8 +1855,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   open={orbitDrawerOpen}
                   onToggle={(event) => setOrbitDrawerOpen(event.currentTarget.open)}
                 >
-                  <summary>🌐 실시간 360° 3D 각도 회전 · X-Ray 뷰포트 열기</summary>
-                  {orbitDrawerOpen && <StudioInteractive3DViewport exercise={exercise} compact />}
+                  <summary>동작 확대 · 자세와 중간 구간 살펴보기</summary>
+                  {orbitDrawerOpen && <Studio3DMotionHeroCard exercise={exercise} compact active={orbitDrawerOpen} />}
                 </details>
                 <div className="pf-live-breath-strip">
                   <VisualBreathPacerRing

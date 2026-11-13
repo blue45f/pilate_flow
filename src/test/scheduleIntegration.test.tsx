@@ -1,3 +1,4 @@
+import { openScheduleManagementAction } from './scheduleManagementActions';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { InstructorScheduleView } from '../components/InstructorScheduleView';
@@ -86,7 +87,7 @@ const day = (date: string) =>
 const lesson = (date: string, title: string) =>
   within(day(date).getByRole('article', { name: new RegExp(title) }));
 const createLocation = () => {
-  fireEvent.click(screen.getByRole('button', { name: '장소 관리' }));
+  openScheduleManagementAction('장소 관리');
   const dialog = within(screen.getByRole('dialog', { name: '장소 관리' }));
   fireEvent.change(dialog.getByLabelText('장소 별칭'), { target: { value: locationAlias } });
   fireEvent.click(dialog.getByRole('checkbox', { name: '매트' }));
@@ -260,7 +261,7 @@ describe('actual local schedule forms with a rest-inclusive plan', { timeout: 60
       }),
     );
     expect(screen.queryByText(/시간 겹침/)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '장소 관리' }));
+    openScheduleManagementAction('장소 관리');
     const locations = within(screen.getByRole('dialog', { name: '장소 관리' }));
     fireEvent.click(locations.getByRole('button', { name: locationAlias }));
     expect(locations.getByText(/일정 또는 휴무에 사용 중인 장소/)).toBeInTheDocument();
@@ -285,7 +286,7 @@ describe('actual local schedule forms with a rest-inclusive plan', { timeout: 60
     createLesson('합성 QA 휴무 확인 B', '10:30', '11:30');
     const classes = structuredClone(usePilatesStore.getState().instructorSchedule.classes);
     expect(screen.getByText(/시간 겹침 1건/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '휴무 등록' }));
+    openScheduleManagementAction('휴무 등록');
     const closure = within(screen.getByRole('dialog', { name: '휴무 등록' }));
     expect(closure.getByLabelText('휴무 날짜')).toHaveValue(today);
     expect(closure.getByLabelText('휴무 장소')).toHaveValue('');

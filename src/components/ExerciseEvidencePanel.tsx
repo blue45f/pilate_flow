@@ -2,7 +2,10 @@ import { useId } from 'react';
 import { ChevronDown, ExternalLink, FileCheck2 } from 'lucide-react';
 import { resolveExtendedMotionSourceAudit } from '../data/extendedMotionVerificationCatalog';
 import { MotionCoverageEvidenceDlItems } from '../features/motionCoverage/integrationExamples';
-import { resolveMotionEvidenceReviewRecord } from '../features/motionEvidenceReview';
+import {
+  resolveMotionEvidenceReviewRecord,
+  validateMotionEvidenceRecord,
+} from '../features/motionEvidenceReview';
 import { normalizeReferenceUrlPolicy } from '../features/referenceLinkPolicyCandidate';
 import type { PilatesExercise, SequenceStep } from '../types/pilates';
 import { getExerciseEvidence, safeEvidenceHttpUrl } from '../utils/exerciseEvidence';
@@ -26,6 +29,10 @@ export function ExerciseEvidencePanel({ exercise, step }: ExerciseEvidencePanelP
   const { planning, source, motion } = evidence;
   const inputLink = source.kind === 'unverified-link';
   const biomechReview = resolveMotionEvidenceReviewRecord(exercise.id);
+  const biomechValidation = biomechReview ? validateMotionEvidenceRecord(biomechReview) : null;
+  const biomechReviewIsStale = biomechValidation?.valid === false;
+  const motionLabel = biomechReviewIsStale ? '도해 변경 · 근거 재대조 필요' : motion.label;
+  const EvidenceRecordBody = biomechReviewIsStale ? 'details' : 'div';
   const extendedAudit = resolveExtendedMotionSourceAudit(exercise);
 
   return (
@@ -46,7 +53,7 @@ export function ExerciseEvidencePanel({ exercise, step }: ExerciseEvidencePanelP
               <b>노트 출처</b> {source.label}
             </span>
             <span className="eep-status">
-              <b>모션</b> {motion.label}
+              <b>모션</b> {motionLabel}
             </span>
           </span>
         </summary>
@@ -197,7 +204,7 @@ export function ExerciseEvidencePanel({ exercise, step }: ExerciseEvidencePanelP
             <dl>
               <div>
                 <dt>개별 모션</dt>
-                <dd>{motion.label}</dd>
+                <dd>{motionLabel}</dd>
               </div>
               <div>
                 <dt>전문가 모션 검토</dt>
@@ -232,62 +239,98 @@ export function ExerciseEvidencePanel({ exercise, step }: ExerciseEvidencePanelP
               <div
                 className="exercise-evidence-biomech"
                 data-testid="motion-evidence-review-section"
+                data-current-record-valid={String(biomechValidation?.valid === true)}
               >
-                <dl>
-                  <div>
-                    <dt>생체역학·해부학 근거 조사 트랙</dt>
-                    <dd>
-                      {biomechReview.track === 'track-a-mat'
-                        ? 'Track A 매트 핵심 동작'
-                        : biomechReview.track === 'track-b-apparatus'
-                          ? 'Track B 기구 핵심 동작'
-                          : biomechReview.track === 'track-c-extended-mat'
-                            ? 'Track C 매트 확장 동작'
-                            : 'Track D 기구 확장 동작'}{' '}
-                      (#{biomechReview.rankInTrack}) · 3단계 구간(시작·중간·끝) · 5대 역학 항목 · 전문가 검수 대기 (expert-audit-pending)
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>시작 자세 및 관절 방향 (Start)</dt>
-                    <dd>
-                      {biomechReview.phases.start.postureAndTransitionKo} (
-                      {biomechReview.phases.start.jointDirectionsKo.join(' / ')})
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>중간 정점 및 기구·지지점 (Middle)</dt>
-                    <dd>
-                      {biomechReview.phases.middle.postureAndTransitionKo} · 지지점:{' '}
-                      {biomechReview.phases.middle.supportPointsKo.join(', ')}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>끝·복귀 및 호흡 (End)</dt>
-                    <dd>
-                      {biomechReview.phases.end.postureAndTransitionKo} · 호흡:{' '}
-                      {biomechReview.phases.end.breathingKo}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>도해 대조 권고 및 주의점</dt>
-                    <dd>
-                      <ul>
-                        {biomechReview.discrepancyAudit.diagramTeamRecommendationsKo.map(
-                          (rec, idx) => (
-                            <li key={idx}>{rec}</li>
-                          ),
-                        )}
-                      </ul>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>확장 출처·모션 원장 검증 해시</dt>
-                    <dd data-testid="exercise-evidence-extended-sha256">
-                      <code>{extendedAudit.primaryFactualRecordSha256 ?? '카탈로그 표준 대조'}</code> · 확인일{' '}
-                      {extendedAudit.checkedAt} · 전문의·외부 임상 승인 0건
-                    </dd>
-                  </div>
-                </dl>
+                {biomechReviewIsStale && (
+                  <p className="eep-disclaimer" data-testid="motion-evidence-review-stale">
+                    <strong>과거 조사 기록 · 현재 도해와 불일치</strong> 현재 카탈로그·도해와 연결이
+                    달라 재대조가 필요합니다. 이전 단계 설명은 아래의 과거 기록에서만 확인할 수
+                    있습니다.
+                    {biomechReview.reviewedAtIso && (
+                      <>
+                        {' '}
+                        보존된 조사일:{' '}
+                        <time dateTime={biomechReview.reviewedAtIso}>
+                          {biomechReview.reviewedAtIso}
+                        </time>
+                        .
+                      </>
+                    )}
+                  </p>
+                )}
+                <EvidenceRecordBody
+                  key={biomechReview.exerciseId}
+                  data-testid={
+                    biomechReviewIsStale ? 'motion-evidence-historical-details' : undefined
+                  }
+                >
+                  {biomechReviewIsStale && (
+                    <summary>이전 도해의 조사 내용 펼치기 · 현재 자세 지침 아님</summary>
+                  )}
+                  <dl>
+                    <div>
+                      <dt>생체역학·해부학 근거 조사 트랙</dt>
+                      <dd>
+                        {biomechReview.track === 'track-a-mat'
+                          ? 'Track A 매트 핵심 동작'
+                          : biomechReview.track === 'track-b-apparatus'
+                            ? 'Track B 기구 핵심 동작'
+                            : biomechReview.track === 'track-c-extended-mat'
+                              ? 'Track C 매트 확장 동작'
+                              : 'Track D 기구 확장 동작'}{' '}
+                        (#{biomechReview.rankInTrack}) · 3단계 구간(시작·중간·끝) · 5대 역학 항목 ·
+                        전문가 검수 대기 (expert-audit-pending)
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>시작 자세 및 관절 방향 (Start)</dt>
+                      <dd>
+                        {biomechReview.phases.start.postureAndTransitionKo} (
+                        {biomechReview.phases.start.jointDirectionsKo.join(' / ')})
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>중간 정점 및 기구·지지점 (Middle)</dt>
+                      <dd>
+                        {biomechReview.phases.middle.postureAndTransitionKo} · 지지점:{' '}
+                        {biomechReview.phases.middle.supportPointsKo.join(', ')}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>끝·복귀 및 호흡 (End)</dt>
+                      <dd>
+                        {biomechReview.phases.end.postureAndTransitionKo} · 호흡:{' '}
+                        {biomechReview.phases.end.breathingKo}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>도해 대조 권고 및 주의점</dt>
+                      <dd>
+                        <ul>
+                          {biomechReview.discrepancyAudit.diagramTeamRecommendationsKo.map(
+                            (rec, idx) => (
+                              <li key={idx}>{rec}</li>
+                            ),
+                          )}
+                        </ul>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>
+                        {biomechReviewIsStale
+                          ? '보존된 출처 원장 해시'
+                          : '확장 출처·모션 원장 검증 해시'}
+                      </dt>
+                      <dd data-testid="exercise-evidence-extended-sha256">
+                        <code>
+                          {extendedAudit.primaryFactualRecordSha256 ?? '카탈로그 표준 대조'}
+                        </code>{' '}
+                        · {biomechReviewIsStale ? '당시 확인일' : '확인일'}{' '}
+                        {extendedAudit.checkedAt} · 전문의·외부 임상 승인 0건
+                      </dd>
+                    </div>
+                  </dl>
+                </EvidenceRecordBody>
               </div>
             )}
           </section>

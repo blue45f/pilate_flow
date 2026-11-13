@@ -441,6 +441,7 @@ export function ExtensionMovementTriptych({
       </div>
 
       <div
+        className="movement-studio-phase-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',

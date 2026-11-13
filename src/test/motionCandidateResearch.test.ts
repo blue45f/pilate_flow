@@ -67,7 +67,7 @@ describe('V7 research-only candidate associations', () => {
   });
 
   it('does not register models, proposals, expert reviews or canonical motion assets', () => {
-    expect(INITIAL_EXERCISES).toHaveLength(98);
+    expect(INITIAL_EXERCISES).toHaveLength(158);
     expect(MOTION_DRAFTS).toHaveLength(17);
     for (const id of IDS) {
       const [candidate] = getMotionCandidateResearch(id);

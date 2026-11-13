@@ -1,6 +1,17 @@
 import React, { useId } from 'react';
+import '../styles/movement-studio.css';
+import { MOTION_STUDIO_MATERIALS as MATERIAL } from '../utils/motionStudioMaterials';
+import {
+  normalizeRigJointMap,
+  resolveChairPedalTip,
+  resolveRigFoot,
+  resolveRigHand,
+} from '../utils/motionRigGeometry';
+import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
 import {
   calculatePhaseJointDelta,
+  getMovementVisualAsset,
+  hasCatalogMotionIdentityMismatch,
   type CatalogMovementVisualAsset,
   type JointAlignmentGuide,
   type MovementDirectionVector,
@@ -40,6 +51,16 @@ export interface MovementTriptychDiagramSvgProps {
 
 const VIEWBOX_WIDTH = 320;
 const VIEWBOX_HEIGHT = 200;
+const STUDIO_COLORS = {
+  surface: MATERIAL.surface,
+  horizon: MATERIAL.horizon,
+  floor: MATERIAL.floor,
+  border: MATERIAL.border,
+  guide: MATERIAL.guide,
+  ink: MATERIAL.ink,
+  farInk: MATERIAL.clothFar,
+  skinFarInk: MATERIAL.skinShade,
+} as const;
 
 function r1(val: number): number {
   return Math.round(val * 10) / 10;
@@ -70,9 +91,7 @@ function lerpSubPoint(a: Point2D, b: Point2D, t: number): Point2D {
 
 function buildPolylinePath(points: readonly Point2D[]): string {
   if (points.length === 0) return '';
-  return points
-    .map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`)
-    .join(' ');
+  return points.map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`).join(' ');
 }
 
 function buildSmoothCurvePath(points: readonly Point2D[]): string {
@@ -158,10 +177,48 @@ function buildAnatomicalLimbProfile(
 ): string {
   const upperBelly = lerpSubPoint(proximal, mid, 0.44);
   const lowerBelly = lerpSubPoint(mid, distal, 0.38);
-  return buildTaperedChainSilhouettePath(
-    [proximal, upperBelly, mid, lowerBelly, distal],
-    radii5,
-  );
+  return buildTaperedChainSilhouettePath([proximal, upperBelly, mid, lowerBelly, distal], radii5);
+}
+
+/** A rounded heel, sole and toe, with an ankle opening. The authored contact
+ * points stay unchanged; unlike the old ankle–heel–toe triangle this contour
+ * remains a foot when all three joints are almost collinear.
+ */
+function buildStudioFootPath(ankle: Point2D, heel: Point2D, toe: Point2D, scale: number): string {
+  const length = Math.hypot(toe.x - heel.x, toe.y - heel.y) || 1;
+  const ux = (toe.x - heel.x) / length;
+  const uy = (toe.y - heel.y) / length;
+  const sign = -uy * (ankle.x - heel.x) + ux * (ankle.y - heel.y) >= 0 ? 1 : -1;
+  const nx = -uy * sign;
+  const ny = ux * sign;
+  const offset = (pt: Point2D, along: number, up: number): Point2D => ({
+    x: r1(pt.x + ux * along * scale + nx * up * scale),
+    y: r1(pt.y + uy * along * scale + ny * up * scale),
+  });
+  const aBack = offset(ankle, -2.6, 0);
+  const aFront = offset(ankle, 2.6, 0);
+  const arch = offset(lerpSubPoint(heel, toe, 0.55), 0, 3.1);
+  const toeTop = offset(toe, 0, 1.5);
+  const toeTip = offset(toe, 1.7, 0);
+  const toeSole = offset(toe, 0, -1.3);
+  const heelSole = offset(heel, -0.7, -1.7);
+  const heelBack = offset(heel, -2.1, 0.8);
+  return `M ${aBack.x} ${aBack.y} L ${aFront.x} ${aFront.y} Q ${arch.x} ${arch.y} ${toeTop.x} ${toeTop.y} Q ${toeTip.x} ${toeTip.y} ${toeSole.x} ${toeSole.y} L ${heelSole.x} ${heelSole.y} Q ${heelBack.x} ${heelBack.y} ${aBack.x} ${aBack.y} Z`;
+}
+
+/** Derive contour proportions once from setup, never from the animated phase.
+ * The same person keeps the same head and limb thickness throughout a cycle.
+ */
+function getStudioFigureScale(asset: CatalogMovementVisualAsset): number {
+  // Continuous playback replaces one phase with an interpolated sample. Keep
+  // character proportions tied to the original setup, not that changing sample.
+  const reference = getMovementVisualAsset(asset.exerciseId) ?? asset;
+  const { pelvis, lumbar, thoracic, neck } = reference.phases.start.joints;
+  const trunkLength =
+    Math.hypot(pelvis.x - lumbar.x, pelvis.y - lumbar.y) +
+    Math.hypot(lumbar.x - thoracic.x, lumbar.y - thoracic.y) +
+    Math.hypot(thoracic.x - neck.x, thoracic.y - neck.y);
+  return Math.max(0.94, Math.min(1.2, trunkLength / 82));
 }
 
 function getMusclePalette(role: MuscleHighlightSpec['role']): {
@@ -224,6 +281,10 @@ interface StudioGradientIds {
   torsoId: string;
   nearLegId: string;
   skinId: string;
+  farLegId: string;
+  farSkinId: string;
+  hairId: string;
+  sockId: string;
 }
 
 function renderApparatusSupportLayer(
@@ -233,7 +294,14 @@ function renderApparatusSupportLayer(
   grads: StudioGradientIds,
 ): React.JSX.Element {
   const { apparatusState } = phaseSpec;
-  const carriageShift = Math.round(apparatusState.carriageOffsetPx * 0.35);
+  const isFixedFootbarFootwork =
+    asset.archetypeId === 'reformer-supine-footwork' ||
+    asset.archetypeId === 'reformer-side-lying-footbar-press';
+  // In footwork the body travels away from the fixed bar. Match that translation
+  // exactly; the previous positive 0.35 scale slid the cushion under the body.
+  const carriageShift = isFixedFootbarFootwork
+    ? -apparatusState.carriageOffsetPx
+    : Math.round(apparatusState.carriageOffsetPx * 0.35);
   const springColor =
     apparatusState.springTensionLevel === 'high'
       ? '#bf5a41'
@@ -244,15 +312,15 @@ function renderApparatusSupportLayer(
   const p = (x: number, y: number) => mpt({ x, y }, mirrored);
 
   if (asset.apparatus === 'reformer') {
-    const carriageStart = 38 + carriageShift;
-    const carriageEnd = 216 + carriageShift;
+    const carriageStart = (isFixedFootbarFootwork ? 58 : 38) + carriageShift;
+    const carriageEnd = (isFixedFootbarFootwork ? 226 : 216) + carriageShift;
     const cLeft = mx(carriageStart, mirrored);
     const cRight = mx(carriageEnd, mirrored);
     const cMinX = Math.min(cLeft, cRight);
     const cWidth = Math.max(24, Math.abs(cRight - cLeft));
-    const shoulderX = mx(carriageStart + 36, mirrored);
-    const headrestX1 = mx(carriageStart + 6, mirrored);
-    const headrestX2 = mx(carriageStart + 28, mirrored);
+    const shoulderX = mx(carriageStart + (isFixedFootbarFootwork ? 57 : 36), mirrored);
+    const headrestX1 = mx(carriageStart + (isFixedFootbarFootwork ? 12 : 6), mirrored);
+    const headrestX2 = mx(carriageStart + (isFixedFootbarFootwork ? 44 : 28), mirrored);
     const footbarBase = p(280, 156);
     const footbarTop = p(266, 126);
     const pulleyPostBase = p(24, 156);
@@ -270,12 +338,15 @@ function renderApparatusSupportLayer(
     const boxWidth = Math.abs(mx(boxRightRaw, mirrored) - mx(boxLeftRaw, mirrored));
 
     const usesPulleyStraps =
+      asset.exerciseId === 'ex-lower-04' ||
       /strap|hundred|frog|circle|row|arm-press|supine-arm|backstroke|pulling/i.test(
         `${asset.archetypeId} ${asset.exerciseId}`,
       );
-    const strapUsesFeet = /feet-in-straps|strap-frog|circle|lower-lift/i.test(
-      `${asset.archetypeId} ${asset.exerciseId}`,
-    );
+    const strapUsesFeet =
+      asset.exerciseId === 'ex-lower-04' ||
+      /feet-in-straps|strap-frog|circle|lower-lift/i.test(
+        `${asset.archetypeId} ${asset.exerciseId}`,
+      );
     const strapTarget = strapUsesFeet
       ? p(phaseSpec.joints.ankle.x, phaseSpec.joints.ankle.y)
       : p(phaseSpec.joints.hand.x, phaseSpec.joints.hand.y);
@@ -287,7 +358,7 @@ function renderApparatusSupportLayer(
         data-carriage-offset={apparatusState.carriageOffsetPx}
         data-spring-tension={apparatusState.springTensionLevel}
       >
-        <ellipse cx={160} cy={179} rx={144} ry={3.8} fill="rgba(28, 52, 43, 0.08)" />
+        <ellipse cx={160} cy={179} rx={144} ry={3.8} fill="#1c342b" fillOpacity={0.08} />
         <line x1={12} y1={178} x2={308} y2={178} stroke="#d5cec0" strokeWidth={1.4} />
 
         <rect
@@ -343,6 +414,7 @@ function renderApparatusSupportLayer(
         />
 
         <rect
+          data-reformer-carriage="moving-support"
           x={cMinX}
           y={142}
           width={cWidth}
@@ -423,6 +495,8 @@ function renderApparatusSupportLayer(
         />
         {usesPulleyStraps ? (
           <line
+            data-attachment="reformer-strap"
+            data-attachment-target={strapUsesFeet ? 'ankle' : 'hand'}
             x1={pulleyPostTop.x}
             y1={pulleyPostTop.y}
             x2={strapTarget.x}
@@ -434,6 +508,17 @@ function renderApparatusSupportLayer(
           />
         ) : null}
 
+        {asset.archetypeId === 'reformer-short-box-supported-roll-back' && (
+          <path
+            data-attachment="short-box-foot-restraint"
+            d={`M ${mx(280, mirrored)} 151 L ${mx(phaseSpec.joints.ankle.x + 6, mirrored)} ${my(phaseSpec.joints.ankle.y - 4)} Q ${mx(phaseSpec.joints.ankle.x - 5, mirrored)} ${my(phaseSpec.joints.ankle.y - 7)} ${mx(phaseSpec.joints.ankle.x - 6, mirrored)} ${my(phaseSpec.joints.ankle.y + 3)}`}
+            fill="none"
+            stroke="#436b62"
+            strokeWidth={2.4}
+            strokeLinecap="round"
+          />
+        )}
+
         <line
           x1={footbarBase.x}
           y1={footbarBase.y}
@@ -444,6 +529,7 @@ function renderApparatusSupportLayer(
           strokeLinecap="round"
         />
         <circle
+          data-reformer-footbar-contact="fixed"
           cx={footbarTop.x}
           cy={footbarTop.y}
           r={4.5}
@@ -459,12 +545,13 @@ function renderApparatusSupportLayer(
     const leftPoleX = mx(26, mirrored);
     const rightPoleX = mx(294, mirrored);
     const ptbPivot = p(78, 27);
-    const barEnd = p(
-      96 + Math.round(carriageShift * 0.6),
-      64 + Math.round(carriageShift * 0.25),
-    );
+    const barEnd = p(96 + Math.round(carriageShift * 0.6), 64 + Math.round(carriageShift * 0.25));
     const springAnchor = p(26, 44);
-    const handTarget = p(phaseSpec.joints.hand.x, phaseSpec.joints.hand.y);
+    const springUsesFeet =
+      asset.blockCategory === 'feet-in-straps' ||
+      /feet-in-straps|leg-spring|strap-frog/.test(asset.archetypeId);
+    const springJoint = springUsesFeet ? phaseSpec.joints.ankle : phaseSpec.joints.hand;
+    const springTarget = p(springJoint.x, springJoint.y);
 
     // STRICT INVARIANT: Zero <path> elements inside Cadillac apparatus-support when springTensionLevel === 'none'
     return (
@@ -474,7 +561,7 @@ function renderApparatusSupportLayer(
         data-carriage-offset={apparatusState.carriageOffsetPx}
         data-spring-tension={apparatusState.springTensionLevel}
       >
-        <ellipse cx={160} cy={183} rx={142} ry={3.4} fill="rgba(28, 52, 43, 0.08)" />
+        <ellipse cx={160} cy={183} rx={142} ry={3.4} fill="#1c342b" fillOpacity={0.08} />
         <line x1={12} y1={182} x2={308} y2={182} stroke="#d5cec0" strokeWidth={1.5} />
 
         <rect
@@ -559,20 +646,36 @@ function renderApparatusSupportLayer(
           strokeWidth={1.1}
         />
         {apparatusState.springTensionLevel !== 'none' ? (
-          <path
-            d={renderSpringCoilPath(
-              springAnchor.x,
-              springAnchor.y,
-              handTarget.x,
-              handTarget.y,
-              6,
-              2.6,
+          <g>
+            <path
+              data-attachment="cadillac-spring"
+              data-attachment-target={springUsesFeet ? 'ankle' : 'hand'}
+              d={renderSpringCoilPath(
+                springAnchor.x,
+                springAnchor.y,
+                springTarget.x,
+                springTarget.y,
+                6,
+                2.6,
+              )}
+              fill="none"
+              stroke={springColor}
+              strokeWidth={1.5}
+              opacity={0.82}
+            />
+            {springUsesFeet && (
+              <ellipse
+                data-attachment="foot-loop"
+                cx={springTarget.x}
+                cy={springTarget.y}
+                rx={3.5}
+                ry={5.5}
+                fill="none"
+                stroke="#436b62"
+                strokeWidth={1.8}
+              />
             )}
-            fill="none"
-            stroke={springColor}
-            strokeWidth={1.5}
-            opacity={0.82}
-          />
+          </g>
         ) : null}
       </g>
     );
@@ -584,12 +687,7 @@ function renderApparatusSupportLayer(
     const boxMinX = Math.min(boxLeft, boxRight);
     const boxW = Math.abs(boxRight - boxLeft);
     const hinge = p(168, 164);
-    const angleRad = ((40 - apparatusState.pedalAngleDeg * 1.3) * Math.PI) / 180;
-    const dirSign = mirrored ? -1 : 1;
-    const pedalTip = {
-      x: r1(hinge.x + dirSign * Math.cos(angleRad) * 50),
-      y: r1(hinge.y - Math.sin(angleRad) * 50),
-    };
+    const pedalTip = mpt(resolveChairPedalTip(apparatusState.pedalAngleDeg), mirrored);
     const springBase = p(148, 168);
 
     return (
@@ -599,7 +697,7 @@ function renderApparatusSupportLayer(
         data-pedal-angle={apparatusState.pedalAngleDeg}
         data-spring-tension={apparatusState.springTensionLevel}
       >
-        <ellipse cx={160} cy={179} rx={96} ry={3.4} fill="rgba(28, 52, 43, 0.09)" />
+        <ellipse cx={160} cy={179} rx={96} ry={3.4} fill="#1c342b" fillOpacity={0.09} />
         <line x1={12} y1={178} x2={308} y2={178} stroke="#d5cec0" strokeWidth={1.5} />
 
         <rect
@@ -716,7 +814,7 @@ function renderApparatusSupportLayer(
         data-apparatus-kind="barrel"
         data-spring-tension={apparatusState.springTensionLevel}
       >
-        <ellipse cx={154} cy={179} rx={126} ry={3.5} fill="rgba(28, 52, 43, 0.08)" />
+        <ellipse cx={154} cy={179} rx={126} ry={3.5} fill="#1c342b" fillOpacity={0.08} />
         <line x1={12} y1={178} x2={308} y2={178} stroke="#d5cec0" strokeWidth={1.5} />
 
         <path
@@ -777,11 +875,8 @@ function renderApparatusSupportLayer(
     );
   }
 
-  // Default: Studio Mat
-  const propCenter = p(
-    Math.round((phaseSpec.joints.hand.x + phaseSpec.joints.knee.x) / 2),
-    Math.round((phaseSpec.joints.hand.y + phaseSpec.joints.knee.y) / 2),
-  );
+  // Standing exercises use the floor; a mat must not cut across the lower legs.
+  const standing = asset.bodyPosition === 'standing';
 
   return (
     <g
@@ -789,40 +884,160 @@ function renderApparatusSupportLayer(
       data-apparatus-kind="mat"
       data-prop-active={apparatusState.propPositionKo ? 'true' : 'false'}
     >
-      <ellipse cx={160} cy={157.5} rx={138} ry={3.2} fill="rgba(28, 52, 43, 0.08)" />
+      <ellipse
+        cx={160}
+        cy={asset.bodyPosition === 'standing' ? 177 : 157.5}
+        rx={asset.bodyPosition === 'standing' ? 34 : 138}
+        ry={3.2}
+        fill="#1c342b"
+        fillOpacity={0.08}
+      />
       <line x1={12} y1={176} x2={308} y2={176} stroke="#d5cec0" strokeWidth={1.2} />
-      <rect
-        x={20}
-        y={147.5}
-        width={280}
-        height={8.5}
-        rx={4.2}
-        fill={`url(#${grads.upholsteryId})`}
-        fillOpacity={0.58}
-        stroke="#2c5044"
-        strokeWidth={1.6}
-      />
-      <line
-        x1={28}
-        y1={149.8}
-        x2={292}
-        y2={149.8}
-        stroke="rgba(255, 253, 248, 0.52)"
-        strokeWidth={0.9}
-      />
-      {apparatusState.propPositionKo ? (
-        <circle
-          cx={propCenter.x}
-          cy={propCenter.y}
-          r={11}
-          fill="rgba(191, 90, 65, 0.12)"
-          stroke="#bf5a41"
-          strokeWidth={1.7}
-          strokeDasharray="3 2"
+      {!standing && (
+        <rect
+          x={20}
+          y={147.5}
+          width={280}
+          height={8.5}
+          rx={4.2}
+          fill={`url(#${grads.upholsteryId})`}
+          fillOpacity={0.58}
+          stroke="#2c5044"
+          strokeWidth={1.6}
         />
-      ) : null}
+      )}
+      {!standing && (
+        <line
+          x1={28}
+          y1={149.8}
+          x2={292}
+          y2={149.8}
+          stroke="rgba(255, 253, 248, 0.52)"
+          strokeWidth={0.9}
+        />
+      )}
     </g>
   );
+}
+
+function renderExerciseProps(
+  asset: CatalogMovementVisualAsset,
+  phaseSpec: PhasePoseSpec,
+  mirrored: boolean,
+): React.JSX.Element | null {
+  const props = asset.props ?? [];
+  if (!props.some((prop) => prop !== 'none')) return null;
+  const { joints } = phaseSpec;
+  const point = (p: Point2D) => mpt(p, mirrored);
+  if (props.includes('theraband') && asset.exerciseId === 'original-mat-band-row') {
+    const hand = point(joints.hand);
+    const farHand = point(resolveRigHand(joints, 'far'));
+    const foot = point(joints.toe);
+    const farFoot = point(resolveRigFoot(joints, 'far', asset.phases.start.joints).toe);
+    return (
+      <g data-prop-model="theraband" data-prop-placement="feet-to-hands">
+        <path
+          d={`M ${hand.x} ${hand.y} L ${foot.x} ${foot.y} Q ${mx(joints.toe.x + 8, mirrored)} ${foot.y + 6} ${farFoot.x} ${farFoot.y} L ${farHand.x} ${farHand.y}`}
+          fill="none"
+          stroke="#ad6548"
+          strokeWidth={2.7}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d={`M ${hand.x} ${hand.y} L ${foot.x} ${foot.y}`}
+          fill="none"
+          stroke="#e1b797"
+          strokeWidth={0.8}
+        />
+      </g>
+    );
+  }
+  if (props.includes('foam-roller') && asset.exerciseId === 'ex-warmup-03') {
+    const left = Math.min(joints.head.x - 6, joints.pelvis.x + 12);
+    const right = Math.max(joints.head.x - 6, joints.pelvis.x + 12);
+    const x = Math.min(mx(left, mirrored), mx(right, mirrored));
+    return (
+      <g data-prop-model="foam-roller" data-prop-placement="longitudinal-spine">
+        <rect
+          x={x}
+          y={132}
+          width={right - left}
+          height={15}
+          rx={7.5}
+          fill="#6b8781"
+          stroke="#36564e"
+          strokeWidth={1.2}
+        />
+        <line
+          x1={x + 8}
+          y1={135.5}
+          x2={x + right - left - 8}
+          y2={135.5}
+          stroke="#b6c6b7"
+          strokeWidth={1.2}
+        />
+        <ellipse
+          cx={mx(right - 4, mirrored)}
+          cy={139.5}
+          rx={4}
+          ry={7}
+          fill="#52736a"
+          stroke="#36564e"
+          strokeWidth={1}
+        />
+      </g>
+    );
+  }
+  // Optional props without an authored contact model remain a clearly separate
+  // setup reference; never invent a pressure point on the moving body.
+  if (props.includes('magic-circle')) {
+    return (
+      <g
+        data-prop-model="magic-circle"
+        data-prop-placement="setup-reference"
+        aria-label="매직서클 도구 참고"
+      >
+        <ellipse
+          cx={mx(286, mirrored)}
+          cy={32}
+          rx={13}
+          ry={17}
+          fill="none"
+          stroke="#436b62"
+          strokeWidth={2.8}
+        />
+        <rect x={mx(286, mirrored) - 3} y={13} width={6} height={5} rx={1.7} fill="#a96e4b" />
+        <rect x={mx(286, mirrored) - 3} y={46} width={6} height={5} rx={1.7} fill="#a96e4b" />
+        <text x={mx(286, mirrored)} y={62} textAnchor="middle" fontSize={7} fill="#53675d">
+          도구 참고
+        </text>
+      </g>
+    );
+  }
+  if (props.includes('mini-ball')) {
+    return (
+      <g
+        data-prop-model="mini-ball"
+        data-prop-placement="setup-reference"
+        aria-label="미니볼 도구 참고"
+      >
+        <circle
+          cx={mx(286, mirrored)}
+          cy={30}
+          r={12}
+          fill="#bf775c"
+          stroke="#8e513a"
+          strokeWidth={1.2}
+        />
+        <ellipse cx={mx(283, mirrored)} cy={26} rx={5} ry={3} fill="#efc9ac" opacity={0.6} />
+        <text x={mx(286, mirrored)} y={53} textAnchor="middle" fontSize={7} fill="#53675d">
+          도구 참고
+        </text>
+      </g>
+    );
+  }
+  return null;
 }
 
 function renderPoseDeltaGhostLayer(
@@ -832,8 +1047,7 @@ function renderPoseDeltaGhostLayer(
   compact: boolean,
   fallbackReferenceJoints?: RigJointMap,
 ): React.JSX.Element {
-  const s = (k: keyof RigJointMap): Point2D =>
-    mpt(startJoints[k] ?? startJoints.pelvis, mirrored);
+  const s = (k: keyof RigJointMap): Point2D => mpt(startJoints[k] ?? startJoints.pelvis, mirrored);
   const c = (k: keyof RigJointMap): Point2D =>
     mpt(currentJoints[k] ?? currentJoints.pelvis, mirrored);
 
@@ -984,10 +1198,8 @@ function renderPrimaryMusclesLayer(
         const occurrenceIdx = signatureCounts.get(sig) ?? 0;
         signatureCounts.set(sig, occurrenceIdx + 1);
 
-        const normalShiftPx =
-          occurrenceIdx === 0 ? 0 : occurrenceIdx % 2 === 1 ? 3.5 : -3.5;
-        const midFraction =
-          occurrenceIdx === 0 ? 0.5 : occurrenceIdx % 2 === 1 ? 0.36 : 0.64;
+        const normalShiftPx = occurrenceIdx === 0 ? 0 : occurrenceIdx % 2 === 1 ? 3.5 : -3.5;
+        const midFraction = occurrenceIdx === 0 ? 0.5 : occurrenceIdx % 2 === 1 ? 0.36 : 0.64;
 
         const pts = offsetPolylineNormal(rawPts, normalShiftPx);
         const pathD = buildSmoothCurvePath(pts);
@@ -1004,13 +1216,7 @@ function renderPrimaryMusclesLayer(
               fill="none"
               stroke={palette.glow}
               strokeWidth={
-                compact
-                  ? muscle.role === 'primary'
-                    ? 8
-                    : 6
-                  : muscle.role === 'primary'
-                    ? 12
-                    : 9
+                compact ? (muscle.role === 'primary' ? 8 : 6) : muscle.role === 'primary' ? 12 : 9
               }
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -1061,35 +1267,40 @@ function renderKinematicFigureLayer(
   mirrored: boolean,
   grads: StudioGradientIds,
   showShoulderConnection = false,
+  showStructure = true,
+  figureScale = 1,
+  referenceJoints?: RigJointMap,
 ): React.JSX.Element {
   const { joints } = phaseSpec;
   const nearSide = activeSide;
   const farSide: 'left' | 'right' = activeSide === 'right' ? 'left' : 'right';
 
   const j = (k: keyof RigJointMap): Point2D => mpt(joints[k] ?? joints.pelvis, mirrored);
+  const nearFoot = resolveRigFoot(joints, 'near', referenceJoints);
+  const farFoot = resolveRigFoot(joints, 'far', referenceJoints);
+  const rawFallback = (joint: Point2D, dx: number, dy: number): Point2D =>
+    mpt({ x: joint.x + dx, y: joint.y + dy }, mirrored);
 
   const authoredFarHipPt = joints.farHip
     ? mpt(joints.farHip, mirrored)
-    : { x: r1(j('hip').x - 3), y: r1(j('hip').y - 3) };
+    : rawFallback(joints.hip, -3, -3);
   const authoredFarKneePt = joints.farKnee
     ? mpt(joints.farKnee, mirrored)
-    : { x: r1(j('knee').x - 4), y: r1(j('knee').y - 4) };
-  const authoredFarAnklePt = joints.farAnkle
-    ? mpt(joints.farAnkle, mirrored)
-    : { x: r1(j('ankle').x - 4), y: r1(j('ankle').y - 3) };
-  const authoredFarToePt = joints.farToe
-    ? mpt(joints.farToe, mirrored)
-    : { x: r1(j('toe').x - 4), y: r1(j('toe').y - 3) };
+    : rawFallback(joints.knee, -4, -4);
+  const authoredFarAnklePt = mpt(farFoot.ankle, mirrored);
+  const authoredFarToePt = mpt(farFoot.toe, mirrored);
+  const authoredFarHeelPt = mpt(farFoot.heel, mirrored);
 
   const authoredFarShoulderPt = joints.farShoulder
     ? mpt(joints.farShoulder, mirrored)
-    : { x: r1(j('shoulder').x - 3), y: r1(j('shoulder').y - 3) };
+    : rawFallback(joints.shoulder, -3, -3);
   const authoredFarElbowPt = joints.farElbow
     ? mpt(joints.farElbow, mirrored)
-    : { x: r1(j('elbow').x - 4), y: r1(j('elbow').y - 3) };
+    : rawFallback(joints.elbow, -4, -3);
   const authoredFarWristPt = joints.farWrist
     ? mpt(joints.farWrist, mirrored)
-    : { x: r1(j('wrist').x - 4), y: r1(j('wrist').y - 3) };
+    : rawFallback(joints.wrist, -4, -3);
+  const authoredFarHandPt = mpt(resolveRigHand(joints, 'far'), mirrored);
 
   const isSwappedSide = activeSide === 'left';
   const farHipPt = isSwappedSide ? j('hip') : authoredFarHipPt;
@@ -1104,21 +1315,12 @@ function renderKinematicFigureLayer(
   const nearKneePt = isSwappedSide ? authoredFarKneePt : j('knee');
   const nearAnklePt = isSwappedSide ? authoredFarAnklePt : j('ankle');
   const nearToePt = isSwappedSide ? authoredFarToePt : j('toe');
-  const nearHeelPt = isSwappedSide
-    ? {
-        x: r1(nearAnklePt.x + (j('heel').x - j('ankle').x)),
-        y: r1(nearAnklePt.y + (j('heel').y - j('ankle').y)),
-      }
-    : j('heel');
+  const nearHeelPt = isSwappedSide ? authoredFarHeelPt : mpt(nearFoot.heel, mirrored);
   const nearShoulderPt = isSwappedSide ? authoredFarShoulderPt : j('shoulder');
   const nearElbowPt = isSwappedSide ? authoredFarElbowPt : j('elbow');
   const nearWristPt = isSwappedSide ? authoredFarWristPt : j('wrist');
-  const nearHandPt = isSwappedSide
-    ? {
-        x: r1(nearWristPt.x + (j('hand').x - j('wrist').x)),
-        y: r1(nearWristPt.y + (j('hand').y - j('wrist').y)),
-      }
-    : j('hand');
+  const nearHandPt = isSwappedSide ? authoredFarHandPt : j('hand');
+  const farHandPt = isSwappedSide ? j('hand') : authoredFarHandPt;
 
   const spinePts = [j('pelvis'), j('lumbar'), j('thoracic'), j('neck'), j('head')];
   const torsoPts = [
@@ -1126,10 +1328,11 @@ function renderKinematicFigureLayer(
     lerpSubPoint(j('pelvis'), j('lumbar'), 0.55),
     j('lumbar'),
     j('thoracic'),
+    lerpSubPoint(farShoulderPt, nearShoulderPt, 0.5),
     j('neck'),
   ];
   const nearLegPts = [nearHipPt, nearKneePt, nearAnklePt];
-  const nearFootPts = [nearAnklePt, nearHeelPt, nearToePt, nearAnklePt];
+  const farHeelPt = isSwappedSide ? mpt(nearFoot.heel, mirrored) : authoredFarHeelPt;
   const nearArmPts = [nearShoulderPt, nearElbowPt, nearWristPt, nearHandPt];
 
   const headPt = j('head');
@@ -1141,10 +1344,15 @@ function renderKinematicFigureLayer(
   const uy = headDy / headLen;
   const n1 = { x: -uy, y: ux };
   const n2 = { x: uy, y: -ux };
+  // In upright kneeling the feet point behind the body. The shin, rather than
+  // the toes, indicates the front of the face for both authored and mirrored rigs.
+  const uprightKneeling =
+    Math.abs(j('knee').y - j('ankle').y) < 9 && j('pelvis').y < j('knee').y - 18;
   const antHint =
     Math.abs(headDy) >= Math.abs(headDx)
       ? {
           x:
+            (uprightKneeling ? j('knee').x - j('ankle').x : 0) ||
             j('toe').x - j('heel').x ||
             j('hand').x - j('shoulder').x ||
             (mirrored ? -1 : 1),
@@ -1166,9 +1374,20 @@ function renderKinematicFigureLayer(
     y: r1(headPt.y + chosenNormal.y * 7.8),
   };
   const bunPt: Point2D = {
-    x: r1(headPt.x - chosenNormal.x * 6.8 + ux * 4.5),
-    y: r1(headPt.y - chosenNormal.y * 6.8 + uy * 4.5),
+    x: r1(headPt.x + (-chosenNormal.x * 9 + ux * 6.5) * figureScale),
+    y: r1(headPt.y + (-chosenNormal.y * 9 + uy * 6.5) * figureScale),
   };
+  // The scalp follows the existing head orientation; no head/joint positions change.
+  const headOffset = (up: number, front: number): Point2D => ({
+    x: r1(headPt.x + (ux * up + chosenNormal.x * front) * figureScale),
+    y: r1(headPt.y + (uy * up + chosenNormal.y * front) * figureScale),
+  });
+  const hairTop = headOffset(11.3, 2.6);
+  const hairCrown = headOffset(13, -6);
+  const hairBack = headOffset(1, -9.7);
+  const hairNape = headOffset(-7.7, -5.2);
+  const hairPart = headOffset(3, -1.8);
+  const hairPath = `M ${hairTop.x} ${hairTop.y} Q ${hairCrown.x} ${hairCrown.y} ${hairBack.x} ${hairBack.y} Q ${hairNape.x} ${hairNape.y} ${hairNape.x} ${hairNape.y} Q ${hairPart.x} ${hairPart.y} ${hairTop.x} ${hairTop.y} Z`;
 
   const activeJointCoords: Record<
     'shoulder' | 'elbow' | 'wrist' | 'hand' | 'hip' | 'knee' | 'ankle',
@@ -1183,40 +1402,40 @@ function renderKinematicFigureLayer(
     ankle: nearAnklePt,
   };
 
-  const torsoCapsuleD = buildTaperedChainSilhouettePath(torsoPts, [8.8, 7.6, 7.0, 9.0, 5.0]);
+  const scaled = (radii: readonly number[]) => radii.map((radius) => radius * figureScale);
+  const torsoCapsuleD = buildTaperedChainSilhouettePath(
+    torsoPts,
+    scaled([11.6, 11.8, 8.8, 11.5, 9.2, 4.2]),
+  );
   const pelvisGirdleBridgeD = buildTaperedChainSilhouettePath(
     [farHipPt, j('pelvis'), nearHipPt],
-    [6.2, 8.6, 7.2],
+    scaled([8.2, 11.8, 9]),
   );
   const shoulderYokeBridgeD = buildTaperedChainSilhouettePath(
-    [farShoulderPt, j('neck'), j('thoracic'), nearShoulderPt],
-    [4.3, 5.0, 7.8, 5.1],
+    [farShoulderPt, lerpSubPoint(farShoulderPt, nearShoulderPt, 0.5), nearShoulderPt],
+    scaled([5, 6.4, 5.8]),
   );
   const neckCylinderD = buildTaperedChainSilhouettePath(
-    [
-      lerpSubPoint(j('thoracic'), neckPt, 0.58),
-      neckPt,
-      lerpSubPoint(neckPt, headPt, 0.68),
-    ],
-    [5.2, 3.8, 3.4],
+    [lerpSubPoint(nearShoulderPt, neckPt, 0.35), neckPt, lerpSubPoint(neckPt, headPt, 0.68)],
+    scaled([5.3, 4.2, 4.1]),
   );
   const farLegCapsuleD = buildAnatomicalLimbProfile(
     farHipPt,
     farKneePt,
     farAnklePt,
-    [5.8, 6.0, 4.2, 4.5, 2.7],
+    scaled([7.1, 7.6, 4.7, 5.4, 3.1]) as [number, number, number, number, number],
   );
   const farArmCapsuleD = buildAnatomicalLimbProfile(
     farShoulderPt,
     farElbowPt,
     farWristPt,
-    [4.0, 3.9, 3.0, 2.9, 2.2],
+    scaled([4.9, 4.7, 3.4, 3.5, 2.5]) as [number, number, number, number, number],
   );
   const nearLegCapsuleD = buildAnatomicalLimbProfile(
     nearHipPt,
     nearKneePt,
     nearAnklePt,
-    [7.0, 7.3, 5.0, 5.4, 3.1],
+    scaled([8.2, 8.7, 5.2, 6.1, 3.5]) as [number, number, number, number, number],
   );
   const nearArmCapsuleD = buildTaperedChainSilhouettePath(
     [
@@ -1225,9 +1444,12 @@ function renderKinematicFigureLayer(
       nearElbowPt,
       lerpSubPoint(nearElbowPt, nearWristPt, 0.42),
       nearWristPt,
-      nearHandPt,
     ],
-    [5.2, 4.8, 3.7, 3.5, 2.6, 2.2],
+    scaled([5.8, 5.5, 4.1, 4, 2.8]),
+  );
+  const nearPalmD = buildTaperedChainSilhouettePath(
+    [nearWristPt, lerpSubPoint(nearWristPt, nearHandPt, 0.5), nearHandPt],
+    scaled([2.7, 3.25, 1.65]),
   );
 
   return (
@@ -1237,22 +1459,55 @@ function renderKinematicFigureLayer(
         data-anatomical-side={farSide}
         data-limb-depth="far"
         fill="none"
-        stroke="#4f6b60"
-        opacity={0.78}
+        stroke={STUDIO_COLORS.farInk}
       >
-        <path d={farLegCapsuleD} fill="#89a396" fillOpacity={0.74} stroke="#5d786b" strokeWidth={0.9} />
-        <path d={farArmCapsuleD} fill="#e2c6ae" fillOpacity={0.78} stroke="#9c7960" strokeWidth={0.85} />
         <path
+          d={farLegCapsuleD}
+          fill={`url(#${grads.farLegId})`}
+          stroke={STUDIO_COLORS.farInk}
+          strokeWidth={0.7}
+        />
+        <path
+          d={farArmCapsuleD}
+          fill={`url(#${grads.farSkinId})`}
+          stroke={STUDIO_COLORS.skinFarInk}
+          strokeWidth={0.65}
+        />
+        <path
+          data-segment="foot-contour"
+          data-foot-ankle={`${farAnklePt.x},${farAnklePt.y}`}
+          data-foot-heel={`${farHeelPt.x},${farHeelPt.y}`}
+          data-foot-toe={`${farToePt.x},${farToePt.y}`}
+          d={buildStudioFootPath(farAnklePt, farHeelPt, farToePt, figureScale * 0.9)}
+          fill={`url(#${grads.sockId})`}
+          stroke={STUDIO_COLORS.farInk}
+          strokeWidth={0.7}
+        />
+        <path
+          data-segment="palm-contour"
+          d={buildTaperedChainSilhouettePath(
+            [farWristPt, lerpSubPoint(farWristPt, farHandPt, 0.5), farHandPt],
+            scaled([2.4, 2.8, 1.5]),
+          )}
+          fill={`url(#${grads.farSkinId})`}
+          stroke={STUDIO_COLORS.skinFarInk}
+          strokeWidth={0.6}
+        />
+        <path
+          data-structure-line="far-leg"
+          opacity={showStructure ? 1 : 0}
           d={buildPolylinePath([farHipPt, farKneePt, farAnklePt, farToePt])}
           strokeWidth={1.35}
           strokeDasharray="4 3.5"
-          strokeOpacity={0.48}
+          strokeOpacity={0.7}
         />
         <path
+          data-structure-line="far-arm"
+          opacity={showStructure ? 1 : 0}
           d={buildPolylinePath([farShoulderPt, farElbowPt, farWristPt])}
           strokeWidth={1.2}
           strokeDasharray="4 3.5"
-          strokeOpacity={0.45}
+          strokeOpacity={0.65}
         />
       </g>
 
@@ -1273,52 +1528,63 @@ function renderKinematicFigureLayer(
           data-segment="neck-bridge"
           d={neckCylinderD}
           fill={`url(#${grads.skinId})`}
-          stroke="#5c4333"
-          strokeWidth={1.05}
+          stroke={MATERIAL.skinShade}
+          strokeWidth={0.75}
         />
         <path
           data-segment="pelvis-girdle-bridge"
           d={pelvisGirdleBridgeD}
           fill={`url(#${grads.torsoId})`}
-          stroke="#1f3e32"
-          strokeWidth={1.15}
+          stroke={MATERIAL.clothShade}
+          strokeWidth={0.75}
         />
         <path
           data-segment="shoulder-yoke-bridge"
           d={shoulderYokeBridgeD}
           fill={`url(#${grads.torsoId})`}
-          stroke="#1f3e32"
-          strokeWidth={1.15}
+          stroke={MATERIAL.clothShade}
+          strokeWidth={0.75}
         />
         <path
           d={torsoCapsuleD}
           fill={`url(#${grads.torsoId})`}
-          stroke="#1f3e32"
-          strokeWidth={1.35}
+          stroke={MATERIAL.clothShade}
+          strokeWidth={0.85}
         />
         <path
+          data-structure-line="spine"
+          opacity={showStructure ? 1 : 0}
           d={buildSmoothCurvePath(spinePts)}
-          stroke="#dce8e1"
-          strokeWidth={1.35}
-          strokeOpacity={0.42}
+          stroke="#e6efe6"
+          strokeWidth={1}
+          strokeOpacity={0.3}
         />
 
         {/* Studio low-bun & warm-skin head silhouette */}
         <circle
           cx={bunPt.x}
           cy={bunPt.y}
-          r={3.9}
-          fill="#233830"
-          stroke="#192b24"
-          strokeWidth={1}
+          r={4.2 * figureScale}
+          fill={`url(#${grads.hairId})`}
+          stroke={MATERIAL.hairShade}
+          strokeWidth={0.65}
         />
-        <circle
+        <ellipse
           cx={headPt.x}
           cy={headPt.y}
-          r={8.8}
+          rx={9.6 * figureScale}
+          ry={11.8 * figureScale}
+          transform={`rotate(${r1((Math.atan2(uy, ux) * 180) / Math.PI + 90)} ${headPt.x} ${headPt.y})`}
           fill={`url(#${grads.skinId})`}
-          stroke="#2b453c"
-          strokeWidth={1.55}
+          stroke={MATERIAL.skinShade}
+          strokeWidth={0.85}
+        />
+        <path
+          data-segment="hair-profile"
+          d={hairPath}
+          fill={`url(#${grads.hairId})`}
+          stroke={MATERIAL.hairShade}
+          strokeWidth={0.45}
         />
         <line
           data-segment="head-gaze"
@@ -1326,15 +1592,15 @@ function renderKinematicFigureLayer(
           y1={gazeStart.y}
           x2={gazeTip.x}
           y2={gazeTip.y}
-          stroke="#2b453c"
-          strokeWidth={1.3}
-          strokeOpacity={0.55}
+          stroke={MATERIAL.skinShade}
+          strokeWidth={0.8}
+          strokeOpacity={0.7}
         />
         <circle
           cx={r1(headPt.x + chosenNormal.x * 3.8)}
           cy={r1(headPt.y + chosenNormal.y * 3.8)}
-          r={1.15}
-          fill="#233830"
+          r={0.65}
+          fill={MATERIAL.hair}
         />
       </g>
 
@@ -1344,32 +1610,47 @@ function renderKinematicFigureLayer(
         <path
           d={nearLegCapsuleD}
           fill={`url(#${grads.nearLegId})`}
-          stroke="#1d3b30"
-          strokeWidth={1.35}
+          stroke={MATERIAL.clothShade}
+          strokeWidth={0.9}
         />
         <path
           d={buildPolylinePath(nearLegPts)}
-          stroke="#dce8e1"
-          strokeWidth={1.25}
-          strokeOpacity={0.34}
+          data-structure-line="near-leg"
+          opacity={showStructure ? 1 : 0}
+          stroke="#e6efe6"
+          strokeWidth={1}
+          strokeOpacity={0.24}
         />
         <path
-          d={buildPolylinePath(nearFootPts)}
-          fill={`url(#${grads.skinId})`}
-          stroke="#4c3a2d"
-          strokeWidth={1.35}
+          data-segment="foot-contour"
+          data-foot-ankle={`${nearAnklePt.x},${nearAnklePt.y}`}
+          data-foot-heel={`${nearHeelPt.x},${nearHeelPt.y}`}
+          data-foot-toe={`${nearToePt.x},${nearToePt.y}`}
+          d={buildStudioFootPath(nearAnklePt, nearHeelPt, nearToePt, figureScale)}
+          fill={`url(#${grads.sockId})`}
+          stroke="#93a28e"
+          strokeWidth={0.85}
         />
 
         <path
           d={nearArmCapsuleD}
           fill={`url(#${grads.skinId})`}
-          stroke="#6b4b37"
-          strokeWidth={1.25}
+          stroke={MATERIAL.skinShade}
+          strokeWidth={0.8}
+        />
+        <path
+          data-segment="palm-contour"
+          d={nearPalmD}
+          fill={`url(#${grads.skinId})`}
+          stroke={MATERIAL.skinShade}
+          strokeWidth={0.6}
         />
         <path
           d={buildPolylinePath(nearArmPts)}
-          stroke="#6b4b37"
-          strokeWidth={1.15}
+          data-structure-line="near-arm"
+          opacity={showStructure ? 1 : 0}
+          stroke={MATERIAL.skinShade}
+          strokeWidth={0.85}
           strokeOpacity={0.26}
         />
 
@@ -1377,17 +1658,18 @@ function renderKinematicFigureLayer(
         {(['shoulder', 'elbow', 'wrist', 'hand', 'hip', 'knee', 'ankle'] as const).map(
           (jointKey) => {
             const pt = activeJointCoords[jointKey];
-            const isMajor =
-              jointKey === 'shoulder' || jointKey === 'hip' || jointKey === 'knee';
+            const isMajor = jointKey === 'shoulder' || jointKey === 'hip' || jointKey === 'knee';
             return (
               <circle
                 key={jointKey}
                 data-joint-node={jointKey}
+                opacity={showStructure ? 0.75 : 0}
+                aria-hidden="true"
                 cx={pt.x}
                 cy={pt.y}
                 r={isMajor ? 2.1 : 1.65}
-                fill="#fcfaf5"
-                fillOpacity={0.58}
+                fill={STUDIO_COLORS.surface}
+                fillOpacity={0.82}
                 stroke={
                   jointKey === 'shoulder' ||
                   jointKey === 'elbow' ||
@@ -1457,11 +1739,7 @@ function renderAlignmentGuideItem(
         stroke={guide.kind === 'anchor-lock' ? '#254b29' : '#1f4d3f'}
         strokeWidth={compact ? 0.95 : 1.25}
         strokeDasharray={
-          guide.kind === 'plumb-line'
-            ? '2 3'
-            : guide.kind === 'axis-line'
-              ? '5 3'
-              : '4 2'
+          guide.kind === 'plumb-line' ? '2 3' : guide.kind === 'axis-line' ? '5 3' : '4 2'
         }
       />
       <circle cx={from.x} cy={from.y} r={compact ? 1.4 : 1.8} fill="#1f4d3f" />
@@ -1605,26 +1883,105 @@ export function MovementPhaseDiagramSvg({
   const rawUid = useId().replace(/:/g, '');
   const titleId = `mpd-title-${rawUid}`;
   const descId = `mpd-desc-${rawUid}`;
+  const visualBinding = getExpandedMovementVisualBinding(asset.exerciseId);
+  const sourceOnly = visualBinding?.nativeMotionAvailable === false;
+  const identityMismatch = hasCatalogMotionIdentityMismatch({
+    id: asset.exerciseId, apparatus: asset.apparatus, bodyPosition: asset.bodyPosition,
+  });
+  if (sourceOnly || identityMismatch) {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-labelledby={titleId}
+        aria-describedby={descId}
+        className={`movement-phase-diagram-svg ${className}`.trim()}
+        data-exercise-id={asset.exerciseId}
+        data-native-motion-available="false"
+        data-motion-source={sourceOnly ? 'creator-video-only' : 'unmodeled-exercise'}
+        data-anatomical-accuracy-assumed="false"
+        style={{
+          width: '100%',
+          height: 'auto',
+          display: 'block',
+          aspectRatio: '8 / 5',
+          borderRadius: compact ? '10px' : '14px',
+        }}
+      >
+        <title id={titleId}>{`${asset.nameKo} · ${sourceOnly ? '제작자 영상 참고' : '전용 도해 없음'}`}</title>
+        <desc id={descId}>{sourceOnly ? visualBinding.reasonKo : '기구나 시작 자세가 변경되어 기존 도해를 표시하지 않습니다.'}</desc>
+        <rect
+          width={VIEWBOX_WIDTH}
+          height={VIEWBOX_HEIGHT}
+          rx="14"
+          fill={MATERIAL.surface}
+          stroke={MATERIAL.border}
+        />
+        <circle cx="160" cy="78" r="26" fill={MATERIAL.floor} />
+        {sourceOnly ? <path d="M154 66 L173 78 L154 90 Z" fill={MATERIAL.ink} /> : (
+          <g stroke={MATERIAL.ink} strokeWidth="3" strokeLinecap="round">
+            <path d="M160 77 L160 89" />
+            <circle cx="160" cy="67" r="1" />
+          </g>
+        )}
+        <text
+          x="160"
+          y="126"
+          textAnchor="middle"
+          fill={MATERIAL.ink}
+          fontSize="13"
+          fontFamily="sans-serif"
+          fontWeight="600"
+        >
+          {sourceOnly ? '제작자 영상으로 확인' : '전용 자세 그림 없음'}
+        </text>
+        <text
+          x="160"
+          y="149"
+          textAnchor="middle"
+          fill={MATERIAL.ink}
+          fontSize="10"
+          fontFamily="sans-serif"
+          opacity="0.72"
+        >
+          {sourceOnly ? '동작별 자세 그림 준비 중' : '변경한 기구·자세의 자료를 확인해 주세요'}
+        </text>
+      </svg>
+    );
+  }
   const arrowExcursionId = `mpd-arrow-excursion-${rawUid}`;
   const arrowControlId = `mpd-arrow-control-${rawUid}`;
   const bgGradId = `mpd-bg-${rawUid}`;
+  const studioLightId = `mpd-light-${rawUid}`;
   const grads: StudioGradientIds = {
     oakId: `mpd-oak-${rawUid}`,
     upholsteryId: `mpd-upholstery-${rawUid}`,
     torsoId: `mpd-torso-${rawUid}`,
     nearLegId: `mpd-nleg-${rawUid}`,
     skinId: `mpd-skin-${rawUid}`,
+    farLegId: `mpd-fleg-${rawUid}`,
+    farSkinId: `mpd-fskin-${rawUid}`,
+    hairId: `mpd-hair-${rawUid}`,
+    sockId: `mpd-sock-${rawUid}`,
   };
 
-  const phaseSpec = asset.phases[phase];
+  const authoredPhase = asset.phases[phase];
+  const phaseSpec: PhasePoseSpec = {
+    ...authoredPhase,
+    joints: normalizeRigJointMap(
+      authoredPhase.joints,
+      getMovementVisualAsset(asset.exerciseId)?.phases.start.joints ?? asset.phases.start.joints,
+    ),
+  };
   const activeMuscleLabels = asset.primaryMuscles
     .filter((m) => m.activePhases.includes(phase))
     .map((m) => `${m.labelKo}(${m.roleLabelKo})`)
     .join(', ');
 
   const accessibleTitle =
-    label ??
-    `${asset.nameKo} (${asset.nameEn}) · ${phaseSpec.badgeKo} · ${phaseSpec.shortTitleKo}`;
+    label ?? `${asset.nameKo} (${asset.nameEn}) · ${phaseSpec.badgeKo} · ${phaseSpec.shortTitleKo}`;
 
   const accessibleDesc = [
     phaseSpec.summaryKo,
@@ -1640,6 +1997,8 @@ export function MovementPhaseDiagramSvg({
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
+      preserveAspectRatio="xMidYMid meet"
+      shapeRendering="geometricPrecision"
       role="img"
       aria-labelledby={titleId}
       aria-describedby={descId}
@@ -1653,10 +2012,14 @@ export function MovementPhaseDiagramSvg({
       data-view-mirrored={String(mirrored)}
       data-production-method={asset.productionMethod}
       data-anatomical-accuracy-assumed="false"
+      data-visual-theme="studio"
+      data-material-system="atelier-v2"
+      data-detail-level={compact ? 'preview' : showAlignment ? 'guided' : 'clean'}
       style={{
         width: '100%',
         height: 'auto',
         display: 'block',
+        aspectRatio: '8 / 5',
         borderRadius: compact ? '10px' : '14px',
       }}
     >
@@ -1665,30 +2028,66 @@ export function MovementPhaseDiagramSvg({
 
       <defs>
         <linearGradient id={bgGradId} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="200">
-          <stop offset="0%" stopColor="#fdfcf8" />
-          <stop offset="65%" stopColor="#f8f5ec" />
-          <stop offset="100%" stopColor="#efe9dc" />
+          <stop offset="0%" stopColor={STUDIO_COLORS.surface} />
+          <stop offset="68%" stopColor={STUDIO_COLORS.horizon} />
+          <stop offset="100%" stopColor={STUDIO_COLORS.floor} />
         </linearGradient>
-        <linearGradient id={grads.oakId} gradientUnits="userSpaceOnUse" x1="0" y1="100" x2="0" y2="180">
-          <stop offset="0%" stopColor="#d8b489" />
-          <stop offset="100%" stopColor="#b5895a" />
+        <linearGradient
+          id={grads.oakId}
+          gradientUnits="userSpaceOnUse"
+          x1="0"
+          y1="100"
+          x2="0"
+          y2="180"
+        >
+          <stop offset="0%" stopColor={MATERIAL.oakLight} />
+          <stop offset="48%" stopColor={MATERIAL.oak} />
+          <stop offset="100%" stopColor={MATERIAL.oakShade} />
         </linearGradient>
-        <linearGradient id={grads.upholsteryId} gradientUnits="userSpaceOnUse" x1="0" y1="96" x2="0" y2="168">
-          <stop offset="0%" stopColor="#58776a" />
-          <stop offset="100%" stopColor="#3b564b" />
+        <linearGradient id={grads.upholsteryId} x1="0" y1="0" x2="0.2" y2="1">
+          <stop offset="0%" stopColor={MATERIAL.upholsteryLight} />
+          <stop offset="32%" stopColor={MATERIAL.upholstery} />
+          <stop offset="100%" stopColor={MATERIAL.upholsteryShade} />
         </linearGradient>
-        <linearGradient id={grads.torsoId} gradientUnits="userSpaceOnUse" x1="40" y1="24" x2="220" y2="165">
-          <stop offset="0%" stopColor="#496f60" />
-          <stop offset="100%" stopColor="#2f5144" />
+        <linearGradient id={grads.torsoId} x1="0.05" y1="0" x2="0.9" y2="0.9">
+          <stop offset="0%" stopColor={MATERIAL.clothHighlight} />
+          <stop offset="22%" stopColor={MATERIAL.clothLight} />
+          <stop offset="55%" stopColor={MATERIAL.cloth} />
+          <stop offset="100%" stopColor={MATERIAL.clothShade} />
         </linearGradient>
-        <linearGradient id={grads.nearLegId} gradientUnits="userSpaceOnUse" x1="80" y1="40" x2="280" y2="175">
-          <stop offset="0%" stopColor="#395e4f" />
-          <stop offset="100%" stopColor="#244337" />
+        <linearGradient id={grads.nearLegId} x1="0.08" y1="0" x2="0.85" y2="1">
+          <stop offset="0%" stopColor={MATERIAL.clothHighlight} />
+          <stop offset="24%" stopColor={MATERIAL.clothLight} />
+          <stop offset="58%" stopColor={MATERIAL.cloth} />
+          <stop offset="100%" stopColor={MATERIAL.clothShade} />
         </linearGradient>
-        <linearGradient id={grads.skinId} gradientUnits="userSpaceOnUse" x1="40" y1="18" x2="260" y2="170">
-          <stop offset="0%" stopColor="#f0d7c2" />
-          <stop offset="100%" stopColor="#dfb99d" />
+        <linearGradient id={grads.farLegId} x1="0" y1="0" x2="0.7" y2="1">
+          <stop offset="0%" stopColor={MATERIAL.clothFarLight} />
+          <stop offset="100%" stopColor={MATERIAL.clothFar} />
         </linearGradient>
+        <radialGradient id={grads.skinId} cx="0.3" cy="0.24" r="0.9">
+          <stop offset="0%" stopColor={MATERIAL.skinHighlight} />
+          <stop offset="38%" stopColor={MATERIAL.skinLight} />
+          <stop offset="76%" stopColor={MATERIAL.skin} />
+          <stop offset="100%" stopColor={MATERIAL.skinShade} />
+        </radialGradient>
+        <linearGradient id={grads.farSkinId} x1="0" y1="0" x2="0.7" y2="1">
+          <stop offset="0%" stopColor={MATERIAL.skinLight} />
+          <stop offset="100%" stopColor={MATERIAL.skinFar} />
+        </linearGradient>
+        <radialGradient id={grads.hairId} cx="0.3" cy="0.22" r="0.85">
+          <stop offset="0%" stopColor={MATERIAL.hairLight} />
+          <stop offset="50%" stopColor={MATERIAL.hair} />
+          <stop offset="100%" stopColor={MATERIAL.hairShade} />
+        </radialGradient>
+        <linearGradient id={grads.sockId} x1="0" y1="0" x2="0.5" y2="1">
+          <stop offset="0%" stopColor="#fffef8" />
+          <stop offset="100%" stopColor="#dce3d8" />
+        </linearGradient>
+        <radialGradient id={studioLightId} cx="0.25" cy="0.18" r="0.86">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.76" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </radialGradient>
         <marker
           id={arrowExcursionId}
           viewBox="0 0 10 10"
@@ -1721,13 +2120,22 @@ export function MovementPhaseDiagramSvg({
         height={VIEWBOX_HEIGHT - 1}
         rx={compact ? 10 : 14}
         fill={`url(#${bgGradId})`}
-        stroke="#dcd4c3"
+        stroke={STUDIO_COLORS.border}
         strokeWidth={1}
       />
+      <rect
+        x={1}
+        y={1}
+        width={VIEWBOX_WIDTH - 2}
+        height={VIEWBOX_HEIGHT - 2}
+        rx={compact ? 10 : 14}
+        fill={`url(#${studioLightId})`}
+        aria-hidden="true"
+      />
       <g
-        stroke="#e8e1d2"
+        stroke={STUDIO_COLORS.guide}
         strokeWidth={compact ? 0.45 : 0.65}
-        opacity={compact ? 0.48 : 0.85}
+        opacity={showAlignment ? (compact ? 0.1 : 0.25) : 0}
         aria-hidden="true"
       >
         <line x1={16} y1={52} x2={304} y2={52} />
@@ -1743,17 +2151,10 @@ export function MovementPhaseDiagramSvg({
             height={14.5}
             rx={7.2}
             fill="rgba(255, 253, 248, 0.96)"
-            stroke="#d5cdbc"
+            stroke={STUDIO_COLORS.border}
             strokeWidth={0.9}
           />
-          <circle
-            cx={21.5}
-            cy={13.8}
-            r={2.9}
-            fill="#1f4d3f"
-            stroke="#1f4d3f"
-            strokeWidth={0.9}
-          />
+          <circle cx={21.5} cy={13.8} r={2.9} fill="#1f4d3f" stroke="#1f4d3f" strokeWidth={0.9} />
           <polygon
             points="35.2,10.5 38.5,13.8 35.2,17.1 31.9,13.8"
             fill={phase === 'middle' || phase === 'end' ? '#bf5a41' : '#fcfaf5'}
@@ -1775,6 +2176,7 @@ export function MovementPhaseDiagramSvg({
 
       {/* 1. Apparatus & Support Surface */}
       {renderApparatusSupportLayer(asset, phaseSpec, mirrored, grads)}
+      {renderExerciseProps(asset, phaseSpec, mirrored)}
 
       {/* 2. Pose Delta Ghost Layer */}
       {showGhostStartPose && phase !== 'start'
@@ -1787,17 +2189,20 @@ export function MovementPhaseDiagramSvg({
           )
         : null}
 
-      {/* 3. Primary Muscle Highlight Layer */}
-      {showMuscles ? renderPrimaryMusclesLayer(asset, phaseSpec, phase, mirrored, compact) : null}
-
-      {/* 4. Sculpted Studio Practitioner Human Figure Layer */}
+      {/* 3. Sculpted Studio Practitioner Human Figure Layer */}
       {renderKinematicFigureLayer(
         phaseSpec,
         activeSide,
         mirrored,
         grads,
         asset.archetypeId === 'mat-clam-isolated' || asset.archetypeId === 'mat-open-book-isolated',
+        showAlignment && !compact,
+        getStudioFigureScale(asset),
+        getMovementVisualAsset(asset.exerciseId)?.phases.start.joints ?? asset.phases.start.joints,
       )}
+
+      {/* 4. Translucent muscle overlay stays visible above the opaque clothing. */}
+      {showMuscles ? renderPrimaryMusclesLayer(asset, phaseSpec, phase, mirrored, compact) : null}
 
       {/* 5. Joint Alignment Layer */}
       {showAlignment ? renderJointAlignmentLayer(phaseSpec, mirrored, compact) : null}
@@ -1830,6 +2235,28 @@ export function MovementTriptychDiagramSvg({
   showGhostStartPose = true,
   className = '',
 }: MovementTriptychDiagramSvgProps): React.JSX.Element {
+  const visualBinding = getExpandedMovementVisualBinding(asset.exerciseId);
+  const sourceOnly = visualBinding?.nativeMotionAvailable === false;
+  const identityMismatch = hasCatalogMotionIdentityMismatch({
+    id: asset.exerciseId, apparatus: asset.apparatus, bodyPosition: asset.bodyPosition,
+  });
+  if (sourceOnly || identityMismatch) {
+    return (
+      <section
+        className={`movement-triptych-diagram ${className}`.trim()}
+        data-native-motion-available="false"
+        aria-label={`${asset.nameKo} ${sourceOnly ? '제작자 영상 참고' : '전용 도해 없음'}`}
+      >
+        <MovementPhaseDiagramSvg asset={asset} phase="start" compact />
+        <p>{sourceOnly ? visualBinding.reasonKo : '기구나 시작 자세가 변경되어 기존 도해를 표시하지 않습니다.'}</p>
+        {sourceOnly && visualBinding.sourceUrl ? (
+          <a href={visualBinding.sourceUrl} target="_blank" rel="noreferrer">
+            제작자 동작 설명 열기
+          </a>
+        ) : null}
+      </section>
+    );
+  }
   const deltaInfo = calculatePhaseJointDelta(asset);
 
   return (
@@ -1837,99 +2264,50 @@ export function MovementTriptychDiagramSvg({
       className={`movement-triptych-diagram ${className}`.trim()}
       data-testid="movement-triptych-diagram"
       data-triptych-exercise-id={asset.exerciseId}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px',
-      }}
+      data-visual-theme="studio"
     >
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '8px',
-          padding: '6px 10px',
-          borderRadius: '10px',
-          background: '#f2eee4',
-          border: '1px solid #e2dacb',
-          fontSize: '0.8rem',
-          color: '#254b3f',
-        }}
-      >
-        <span style={{ fontWeight: 700 }}>
-          단계 흐름: 시작 → 중간 → 끝 ({asset.archetypeTitleKo})
-        </span>
-        <span style={{ color: '#6b5b4b', fontSize: '0.76rem' }}>
-          최대 관절 변위 Δ{deltaInfo.maxDeltaPx}px · 가동 관절 {deltaInfo.movedJoints.length}개
-        </span>
+      <div className="movement-triptych-heading">
+        <strong>단계 흐름: 시작 → 중간 → 끝 ({asset.archetypeTitleKo})</strong>
+        <span>같은 구도와 크기로 자세를 비교해 보세요.</span>
       </div>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-          gap: '10px',
-        }}
-      >
+      <div className="movement-triptych-grid">
         {PHASE_ORDER.map((phaseId, idx) => {
           const spec = asset.phases[phaseId];
           const isSelected = selectedPhase === phaseId;
+          const phaseLabel = (
+            <>
+              <span className="movement-triptych-phase-number" aria-hidden="true">
+                {String(idx + 1).padStart(2, '0')}
+              </span>
+              <span className="movement-triptych-phase-label">
+                <strong>{PHASE_SHORT_BADGE[phaseId]}</strong>
+                <span>{spec.shortTitleKo}</span>
+              </span>
+            </>
+          );
           return (
             <div
               key={phaseId}
+              className="movement-triptych-panel"
               data-triptych-panel={phaseId}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '6px',
-                padding: '8px',
-                borderRadius: '12px',
-                background: isSelected ? '#fcfaf5' : '#f5f1e8',
-                border: isSelected ? '2px solid #2b6a58' : '1px solid #dfd8ca',
-                boxShadow: isSelected ? '0 4px 12px rgba(28, 63, 54, 0.08)' : 'none',
-              }}
+              data-selected={isSelected}
             >
-              <button
-                type="button"
-                onClick={() => onSelectPhase?.(phaseId)}
-                aria-pressed={isSelected}
-                data-triptych-phase={phaseId}
-                style={{
-                  minHeight: '44px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '6px',
-                  width: '100%',
-                  padding: '6px 10px',
-                  borderRadius: '8px',
-                  border: isSelected ? '1px solid #2b6a58' : '1px solid #d8d0c0',
-                  background: isSelected ? '#2b6a58' : '#ffffff',
-                  color: isSelected ? '#ffffff' : '#1f3f37',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  textAlign: 'left',
-                  cursor: onSelectPhase ? 'pointer' : 'default',
-                }}
-              >
-                <span>
-                  {idx + 1}. {PHASE_SHORT_BADGE[phaseId]} · {spec.shortTitleKo}
-                </span>
-                <span
-                  style={{
-                    fontSize: '0.72rem',
-                    padding: '2px 6px',
-                    borderRadius: '999px',
-                    background: isSelected ? 'rgba(255, 255, 255, 0.2)' : '#eee8dc',
-                    color: isSelected ? '#ffffff' : '#5a4d3f',
-                    whiteSpace: 'nowrap',
-                  }}
+              {onSelectPhase ? (
+                <button
+                  type="button"
+                  className="movement-triptych-phase-heading"
+                  onClick={() => onSelectPhase(phaseId)}
+                  aria-pressed={isSelected}
+                  data-triptych-phase={phaseId}
                 >
-                  {phaseId.toUpperCase()}
-                </span>
-              </button>
+                  {phaseLabel}
+                </button>
+              ) : (
+                <div className="movement-triptych-phase-heading" data-triptych-phase={phaseId}>
+                  {phaseLabel}
+                </div>
+              )}
 
               <MovementPhaseDiagramSvg
                 asset={asset}
@@ -1943,21 +2321,20 @@ export function MovementTriptychDiagramSvg({
                 compact
               />
 
-              <div
-                style={{
-                  fontSize: '0.76rem',
-                  lineHeight: 1.4,
-                  color: '#3f4f49',
-                  padding: '2px 4px',
-                }}
-              >
-                <div style={{ fontWeight: 600, color: '#8c472b' }}>{spec.breathCueKo}</div>
-                <div style={{ marginTop: '2px' }}>{spec.summaryKo}</div>
+              <div className="movement-triptych-caption">
+                <strong>{spec.breathCueKo}</strong>
+                <p>{spec.summaryKo}</p>
               </div>
             </div>
           );
         })}
       </div>
+      <details className="movement-triptych-metadata">
+        <summary>도해 정보</summary>
+        <p>
+          최대 관절 변위 Δ{deltaInfo.maxDeltaPx}px · 가동 관절 {deltaInfo.movedJoints.length}개
+        </p>
+      </details>
     </div>
   );
 }

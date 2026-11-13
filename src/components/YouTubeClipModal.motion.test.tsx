@@ -27,8 +27,10 @@ vi.mock('./MotionReferencePlayer', () => ({
 }));
 
 const originalExercises = usePilatesStore.getState().exercises;
+const catalogSnapshot = structuredClone(INITIAL_EXERCISES);
 afterEach(() => {
   cleanup();
+  expect(INITIAL_EXERCISES).toEqual(catalogSnapshot);
   vi.restoreAllMocks();
   usePilatesStore.setState({ exercises: originalExercises });
 });
@@ -59,7 +61,7 @@ describe('movement detail motion reference boundary', () => {
       expect(player('prototype-lab')).not.toHaveAttribute('data-exercise-name');
       expect(player('prototype-lab')).toHaveAttribute('data-active', 'false');
     }
-    expect(INITIAL_EXERCISES).toHaveLength(98);
+    expect(INITIAL_EXERCISES).toHaveLength(158);
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
     expect(usePilatesStore.getState().exercises).toBe(originalExercises);
   });

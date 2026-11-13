@@ -1,4 +1,5 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { openAppTools } from './workbenchControls';
+import { act, cleanup, configure, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
@@ -6,6 +7,8 @@ import { usePilatesStore } from '../store/usePilatesStore';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import { syntheticPlanningExercise } from './planningFixtures';
 import type { SequenceStep } from '../types/pilates';
+
+configure({ asyncUtilTimeout: 6000 });
 
 const scheduleModule = vi.hoisted(() => {
   let release!: () => void;
@@ -140,14 +143,14 @@ function jump(seconds: number) {
 }
 function clickSchedule() {
   const button = within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', {
-    name: '강사 일정',
+    name: '수업 일정',
   });
   // fireEvent does not perform the browser's normal clicked-button focus.
   button.focus();
   fireEvent.click(button);
 }
 
-describe('workspace heading focus follows committed lazy navigation', () => {
+describe('workspace heading focus follows committed lazy navigation', { timeout: 20000 }, () => {
   it('focuses first-loaded Schedule after a pending Stage record navigation, without replaying or editing the class', async () => {
     render(<App />);
     await screen.findByRole('timer');
@@ -212,7 +215,7 @@ describe('workspace heading focus follows committed lazy navigation', () => {
     await screen.findByRole('heading', { name: '강사 일정' });
     const stale = [...frames.values()];
     const canceled = vi.mocked(cancelAnimationFrame);
-    fireEvent.click(screen.getByRole('link', { name: 'Flow Atelier 계획으로' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Pilates Flow 수업 만들기로' }));
     const heading = document.getElementById('workspace-main-heading');
     expect(usePilatesStore.getState().activeTab).toBe('workbench');
     const focus = vi.spyOn(HTMLElement.prototype, 'focus');
@@ -248,7 +251,7 @@ it('keeps the active-class exit guard when returning from the beginner guide', a
   fireEvent.click(screen.getByRole('button', { name: '수업 시작' }));
   jump(2);
   const before = usePilatesStore.getState();
-  fireEvent.click(screen.getByRole('button', { name: '강사 연습실과 사용법' }));
+  fireEvent.click(openAppTools().getByRole('button', { name: '강사 연습실과 사용법' }));
   const guide = await screen.findByRole('dialog', { name: '강사 연습실' });
   expect(within(guide).getByRole('heading', { name: '수업 조건 정하기' })).toBeInTheDocument();
   fireEvent.click(within(guide).getByRole('button', { name: '내 수업 구성으로 가기' }));

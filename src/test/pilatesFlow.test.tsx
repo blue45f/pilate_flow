@@ -1,4 +1,4 @@
-import { getVisibleWorkbenchButton } from './workbenchControls';
+import { getVisibleWorkbenchButton, openAdvancedWorkbench, openAppTools, openAtlasTools } from './workbenchControls';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   cleanup,
@@ -164,9 +164,9 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     usePilatesStore.setState(originalStore, true);
     vi.restoreAllMocks();
   });
-  it('starts blank and composes a reformer 50-minute beginner plan without changing pending records', () => {
+  it('starts blank and composes a reformer 50-minute beginner plan without changing pending records', async () => {
     expect(originalStore.activeSteps).toEqual([]);
-    expect(INITIAL_EXERCISES).toHaveLength(98);
+    expect(INITIAL_EXERCISES).toHaveLength(158);
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
     const request: AutoGenerateCriteria = {
       ...criteria,
@@ -184,6 +184,7 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
       lastCriteria: null,
     });
     render(<App />);
+    await openAdvancedWorkbench();
     expect(screen.queryByRole('button', { name: /^수업 시작/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '시퀀스 미리보기' })).not.toBeInTheDocument();
     const beforeAttempt = usePilatesStore.getState();
@@ -216,8 +217,9 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     { selected: ['chair', 'reformer'], minutes: 60 },
   ])(
     'uses distinct compatible movements for $selected at $minutes minutes without changing review records',
-    ({ selected, minutes }) => {
+    async ({ selected, minutes }) => {
       render(<App />);
+    await openAdvancedWorkbench();
       openWorkbenchConditions();
       const names: Record<string, string> = { mat: '매트', reformer: '리포머', chair: '체어' };
       if (!selected.includes('mat'))
@@ -250,6 +252,7 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     const pending = syntheticPlanningExercise('mat', 'warmup', 'alpha', false);
     usePilatesStore.setState({ exercises: [...INITIAL_EXERCISES, pending] });
     render(<App />);
+    await openAdvancedWorkbench();
     fireEvent.click(nav().getByRole('button', { name: /동작 라이브러리/ }));
     fireEvent.change(await screen.findByRole('searchbox', { name: '동작 검색' }), {
       target: { value: pending.nameKo },
@@ -304,6 +307,7 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
   });
   it('navigates the four workspaces and creates exact 50, 60 and custom minute plans', async () => {
     render(<App />);
+    await openAdvancedWorkbench();
     for (const minutes of [50, 60, 37]) {
       openWorkbenchConditions();
       fireEvent.change(screen.getByRole('spinbutton', { name: '직접 지정 수업 시간' }), {
@@ -327,11 +331,12 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     expect(await screen.findByRole('searchbox', { name: '동작 검색' })).toBeInTheDocument();
     fireEvent.click(nav().getByRole('button', { name: '저장한 수업' }));
     expect(await screen.findByRole('textbox', { name: '저장한 시퀀스 검색' })).toBeInTheDocument();
-    fireEvent.click(nav().getByRole('button', { name: '수업 기록' }));
+    fireEvent.click(openAppTools().getByRole('button', { name: '수업 기록' }));
     expect(await screen.findByText('아직 남긴 수업 기록이 없어요')).toBeInTheDocument();
   });
   it('preserves locked notes and time through fitting and regeneration, and can replace and undo an unlocked item', async () => {
     const { container } = render(<App />);
+    await openAdvancedWorkbench();
     generate();
     fireEvent.click(container.querySelector('.step-title')!);
     const beforeNote = structuredClone(usePilatesStore.getState().activeSteps[0]);
@@ -376,7 +381,9 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
   });
   it('rejects invalid imports and registers a reference with manually entered source metadata', async () => {
     render(<App />);
+    await openAdvancedWorkbench();
     fireEvent.click(nav().getByRole('button', { name: /동작 라이브러리/ }));
+    await openAtlasTools();
     fireEvent.click(await screen.findByRole('button', { name: '유튜브 참조 추가' }));
     // This dialog is a separate React.lazy entry. Allow cold module loading under
     // shared-runner CPU contention; all import validation assertions stay unchanged.
@@ -416,6 +423,7 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
   });
   it('saves, enters teaching paused, adds session time and records a reviewed history snapshot', async () => {
     render(<App />);
+    await openAdvancedWorkbench();
     generate();
     fireEvent.change(screen.getByRole('textbox', { name: '시퀀스 제목' }), {
       target: { value: '오전 매트 흐름' },
@@ -455,12 +463,13 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     expect(log.actualDurationSec).toBe(3072);
     expect(log.stepsSnapshot?.[0]?.durationMin).toBe(plan[0]!.durationMin + 1);
     expect(usePilatesStore.getState().activeSteps).toEqual(plan);
-    fireEvent.click(nav().getByRole('button', { name: '수업 기록' }));
+    fireEvent.click(openAppTools().getByRole('button', { name: '수업 기록' }));
     expect(await screen.findByText('전환이 자연스러웠어요')).toBeInTheDocument();
     expect(screen.getByText('타이머/입력 시간 51분 12초')).toBeInTheDocument();
   });
   it('restores JSON through settings while preserving the draft, existing data and the v3 local storage key', async () => {
     render(<App />);
+    await openAdvancedWorkbench();
     generate();
     fireEvent.change(screen.getByRole('textbox', { name: '시퀀스 제목' }), {
       target: { value: '먼저 저장한 수업' },

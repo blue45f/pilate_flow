@@ -842,6 +842,7 @@ export function PelvisHipTriptychSvg({
       data-exercise-id={resolvedAsset.exerciseId}
     >
       <div
+        className="movement-studio-phase-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',

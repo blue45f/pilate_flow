@@ -1,3 +1,4 @@
+import { openAdvancedWorkbench } from './workbenchControls';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
@@ -86,11 +87,14 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('1-line movement idea creation, progressive try-out notes, and class integration', () => {
-  it('explains review as optional without presenting an approval gate for composition or teaching', () => {
-    const before = usePilatesStore.getState();
+describe('1-line movement idea creation, progressive try-out notes, and class integration', { timeout: 15000 }, () => {
+  it('explains review as optional without presenting an approval gate for composition or teaching', async () => {
     render(<App />);
-    const notice = screen.getByLabelText('강사 검토 안내');
+    fireEvent.click(within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', {
+      name: /동작 라이브러리/,
+    }));
+    const notice = await screen.findByLabelText('강사 검토 안내');
+    const before = usePilatesStore.getState();
     const summary = within(notice).getByText('자료·모션의 검토 상태 안내', { selector: 'summary' });
     expect(summary.closest('details')).not.toHaveAttribute('open');
     expect(within(notice).getByRole('button', { name: '동작 자료·기록 보기' })).not.toBeVisible();
@@ -126,7 +130,9 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     });
     expect(usePilatesStore.getState().activeSteps).toHaveLength(1);
     expect(usePilatesStore.getState().activeSteps[0]?.exerciseId).toBe(unreviewedExercise.id);
-    fireEvent.click(within(notice).getByRole('button', { name: '동작 자료·기록 보기' }));
+    fireEvent.click(within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', {
+      name: /동작 라이브러리/,
+    }));
     expect(usePilatesStore.getState().activeTab).toBe('atlas');
 
     fireEvent.click(screen.getByRole('button', { name: '빠른 이동 및 동작 검색 열기' }));
@@ -144,12 +150,14 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     render(<App />);
     const mobileNav = screen.getByRole('navigation', { name: '모바일 주 메뉴' });
     expect(screen.getByRole('button', { name: '새 동작 메모' })).toBeVisible();
-    expect(within(mobileNav).getByRole('button', { name: '수업' })).toHaveAttribute(
+    expect(within(mobileNav).getByRole('button', { name: '작성' })).toHaveAttribute(
       'aria-current',
       'page',
     );
     expect(within(mobileNav).getByRole('button', { name: '저장' })).toBeVisible();
-    expect(within(mobileNav).getByRole('button', { name: '기록' })).toBeVisible();
+    expect(within(mobileNav).getByRole('button', { name: '동작' })).toBeVisible();
+    expect(within(mobileNav).getByRole('button', { name: '일정' })).toBeVisible();
+    expect(within(mobileNav).getAllByRole('button')).toHaveLength(4);
   });
 
   it('provides one save action pair and four optional sections without a duplicate action card', () => {
@@ -167,8 +175,10 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     expect(within(dialog).getByRole('alert')).toBeVisible();
   });
 
-  it('completes the full mobile journey: 1-line idea save -> reopen -> add feeling/adjustments/sketch -> edit -> add to class without requiring anatomy or block hierarchy', () => {
+  it('completes the full mobile journey: 1-line idea save -> reopen -> add feeling/adjustments/sketch -> edit -> add to class without requiring anatomy or block hierarchy', async () => {
     render(<App />);
+
+    await openAdvancedWorkbench();
 
     // 1. Open the movement creator from the topbar
     fireEvent.click(screen.getByRole('button', { name: '새 동작 메모' }));
@@ -203,7 +213,7 @@ describe('1-line movement idea creation, progressive try-out notes, and class in
     fireEvent.click(within(dialog).getByRole('button', { name: /나중에 이어서 쓰기/ }));
     expect(screen.queryByRole('dialog', { name: /새 동작 메모/ })).not.toBeInTheDocument();
 
-    // 3. Reopen the saved draft directly from the workbench first screen
+    // 3. Reopen the saved draft from the retained advanced workbench
     const ideaSection = screen.getByRole('region', { name: '내 새 동작 메모' });
     expect(ideaSection).toHaveTextContent('풋바를 밀며 한 팔씩 천장으로 길게 뻗어');
     fireEvent.click(within(ideaSection).getByRole('button', { name: /다시 열기/ }));

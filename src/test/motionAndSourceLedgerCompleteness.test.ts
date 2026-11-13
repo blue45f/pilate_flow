@@ -32,7 +32,7 @@ import {
 } from '../data/lateralAndApparatusDiagramData';
 import lateralAndApparatusSourceLedger from '../data/lateralAndApparatusSourceLedger.json';
 import { MOVEMENT_DIAGRAM_CORRECTIONS } from '../data/movementDiagramCorrections';
-import { MOVEMENT_VISUAL_ASSETS } from '../data/movementVisualRigCatalog';
+import { getMovementVisualAsset, MOVEMENT_VISUAL_ASSETS } from '../data/movementVisualRigCatalog';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import {
   UPPER_BODY_ARM_CATALOG_EXERCISE_IDS,
@@ -49,7 +49,10 @@ import { TRACK_A_MAT_EVIDENCE_RECORDS } from '../features/motionEvidenceReview/t
 import { TRACK_B_APPARATUS_EVIDENCE_RECORDS } from '../features/motionEvidenceReview/trackBApparatusEvidence';
 import { TRACK_C_EXTENDED_MAT_EVIDENCE_RECORDS } from '../features/motionEvidenceReview/trackCExtendedMatEvidence';
 import { TRACK_D_EXTENDED_APPARATUS_EVIDENCE_RECORDS } from '../features/motionEvidenceReview/trackDExtendedApparatusEvidence';
-import { validateMotionEvidenceRecord } from '../features/motionEvidenceReview/validator';
+import {
+  resolveMotionEvidenceReviewRecord,
+  validateMotionEvidenceRecord,
+} from '../features/motionEvidenceReview/validator';
 
 const SHA256_HEX_RE = /^[a-f0-9]{64}$/;
 
@@ -269,9 +272,9 @@ describe('Motion & Source Ledger Completeness Verification (2026-11-08)', () => 
     }
   });
 
-  it('verifies Tracks I1–I12 2D Kinematic Diagrams and Full 98-Exercise Biomechanical & Source Discrepancy Review (TRACK_A 10 + TRACK_B 10 + TRACK_C 13 + TRACK_D 65 = 98/98)', () => {
-    expect(INITIAL_EXERCISES).toHaveLength(98);
-    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(98);
+  it('preserves historical I1–I12 evidence and exposes changed target bindings without reviewing newly added movements', () => {
+    expect(INITIAL_EXERCISES).toHaveLength(158);
+    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(INITIAL_EXERCISES.length);
 
     // Combine Tracks I1–I8 (MOVEMENT_DIAGRAM_CORRECTIONS) + Tracks I9–I12 diagram corrections
     const combinedDiagramCorrections = {
@@ -287,7 +290,9 @@ describe('Motion & Source Ledger Completeness Verification (2026-11-08)', () => 
     expect(UPPER_BODY_ARM_CATALOG_EXERCISE_IDS).toHaveLength(13);
     expect(LATERAL_AND_APPARATUS_CATALOG_EXERCISE_IDS).toHaveLength(23);
 
-    for (const ex of INITIAL_EXERCISES) {
+    // Historical biomechanical records cover the original 98; source-linked additions
+    // have their own metadata ledger and must not inherit these older reviews.
+    for (const ex of INITIAL_EXERCISES.filter((exercise) => !exercise.id.startsWith('expanded-'))) {
       const correction = combinedDiagramCorrections[ex.id];
       expect(correction, `Missing I1–I12 diagram correction for ${ex.id}`).toBeDefined();
       expect(correction.professionalReviewCount).toBe(0);
@@ -307,7 +312,7 @@ describe('Motion & Source Ledger Completeness Verification (2026-11-08)', () => 
     }
 
     const summary = getMotionCoverageSummary();
-    expect(summary.totalCatalogExercises).toBe(98);
+    expect(summary.totalCatalogExercises).toBe(INITIAL_EXERCISES.length);
     expect(summary.canonicalReadyCount).toBe(0);
     expect(summary.true3dReadyCount).toBe(0);
     expect(summary.expertApprovedCount).toBe(0);
@@ -342,12 +347,81 @@ describe('Motion & Source Ledger Completeness Verification (2026-11-08)', () => 
     expect(allEvidenceRecords).toHaveLength(98);
 
     const coveredExerciseIds = new Set<string>();
+    // Retain the original review targets and explicitly expose their current rig mismatch.
+    const staleEvidenceTargets: Record<string, { historical: string; current: string }> = {
+      'original-mat-chest-lift': {
+        historical: 'supine-chest-lift-curl',
+        current: 'mat-chest-lift-supported-head',
+      },
+      'original-mat-forearm-plank': {
+        historical: 'plank-long-stretch-chair-pike',
+        current: 'mat-kneeling-forearm-support',
+      },
+      'original-mat-swimming-prep': {
+        historical: 'prone-swan-pulling-straps-swimming',
+        current: 'mat-swimming-contralateral-prep',
+      },
+      'ex-warmup-03': {
+        historical: 'supine-breath-pelvic-clock',
+        current: 'mat-longitudinal-roller-arm-arc',
+      },
+      'original-barrel-supported-arm-reach': {
+        historical: 'standing-ankle-calf-upper-reach',
+        current: 'barrel-one-hand-supported-arm-reach',
+      },
+      'original-reformer-side-lying-press': {
+        historical: 'side-lying-leg-press-sweep',
+        current: 'reformer-side-lying-footbar-press',
+      },
+      'original-chair-incline-support': {
+        historical: 'chair-plank-pike-isolated',
+        current: 'chair-fixed-seat-incline-support',
+      },
+      'ex-core-02': {
+        historical: 'seated-roll-back-spine-twist',
+        current: 'reformer-short-box-supported-roll-back',
+      },
+      'ex-upper-01': {
+        historical: 'kneeling-chest-expansion-triceps',
+        current: 'reformer-kneeling-supported-arm-press',
+      },
+      'ex-lower-03': {
+        historical: 'standing-scooter-lunge-splits',
+        current: 'chair-seat-pedal-step-up',
+      },
+      'ex-kr-reformer-03': {
+        historical: 'kneeling-chest-expansion-triceps',
+        current: 'reformer-kneeling-supported-arm-press',
+      },
+      'ex-global-reformer-03': {
+        historical: 'kneeling-chest-expansion-triceps',
+        current: 'reformer-kneeling-supported-arm-press',
+      },
+    };
+    expect(Object.keys(staleEvidenceTargets)).toHaveLength(12);
+    const foundStaleIds: string[] = [];
     for (const record of allEvidenceRecords) {
       expect(coveredExerciseIds.has(record.exerciseId)).toBe(false);
       coveredExerciseIds.add(record.exerciseId);
 
       const validation = validateMotionEvidenceRecord(record);
-      expect(validation.valid, `Invalid evidence record for ${record.exerciseId}`).toBe(true);
+      const staleTarget = staleEvidenceTargets[record.exerciseId];
+      expect(validation.valid, `Current target validation for ${record.exerciseId}`).toBe(
+        !staleTarget,
+      );
+      if (staleTarget) {
+        foundStaleIds.push(record.exerciseId);
+        expect(record.discrepancyAudit.targetVisualAssetId).toBe(staleTarget.historical);
+        expect(getMovementVisualAsset(record.exerciseId)?.archetypeId).toBe(staleTarget.current);
+        expect(validation.issues).toHaveLength(1);
+        expect(validation.issues[0]).toMatchObject({
+          exerciseId: record.exerciseId,
+          code: 'discrepancy-target-id-mismatch',
+          fieldPath: 'discrepancyAudit.targetVisualAssetId',
+        });
+      } else {
+        expect(validation.issues).toEqual([]);
+      }
       expect(record.truthfulnessFlags.canonicalMotionReady).toBe(false);
       expect(record.truthfulnessFlags.manualReady).toBe(false);
       expect(record.truthfulnessFlags.true3dSupported).toBe(false);
@@ -356,8 +430,20 @@ describe('Motion & Source Ledger Completeness Verification (2026-11-08)', () => 
     }
 
     expect(coveredExerciseIds.size).toBe(98);
+    expect(foundStaleIds).toEqual(Object.keys(staleEvidenceTargets));
     for (const ex of INITIAL_EXERCISES) {
-      expect(coveredExerciseIds.has(ex.id)).toBe(true);
+      expect(coveredExerciseIds.has(ex.id)).toBe(!ex.id.startsWith('expanded-'));
+      if (ex.id.startsWith('expanded-')) {
+        expect(resolveMotionEvidenceReviewRecord(ex.id)).toBeUndefined();
+        const sourceOnly = resolveExtendedMotionSourceAudit(ex);
+        expect(sourceOnly.checkedAt).toBe('2026-11-13');
+        expect(sourceOnly.primaryFactualRecordSha256).toBe('');
+        expect(sourceOnly.sha256IntegrityVerified).toBe(false);
+        expect(sourceOnly.verifiedReferenceAuditRecord).toBeNull();
+        expect(sourceOnly.candidateMatMotionModel).toBeNull();
+        expect(resolveMotionCoverage(ex).canonicalMotionReady).toBe(false);
+        expect(resolveMotionCoverage(ex).primaryMode).toBe('missing');
+      }
     }
   });
 });

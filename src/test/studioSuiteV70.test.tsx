@@ -1,3 +1,4 @@
+import { openAdvancedWorkbench } from './workbenchControls';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
@@ -305,6 +306,7 @@ describe('Flow Atelier v7.0 Studio Suite & Regression Contracts', () => {
       });
 
       render(<App />);
+      await openAdvancedWorkbench();
       const primaryNav = () => within(screen.getByRole('navigation', { name: '주 메뉴' }));
 
       // 1. 수업 작성 (Workbench): progressive drawers stay collapsed by default; append 3rd movement; inspect 3D preview
@@ -360,7 +362,8 @@ describe('Flow Atelier v7.0 Studio Suite & Regression Contracts', () => {
       expect(savedThumbs.length).toBeGreaterThanOrEqual(2);
 
       // 3. 수업 진행 및 종료 (Preview -> LiveStageView -> Finish Review): run timer, +15s, PageDown, finish review
-      fireEvent.click(primaryNav().getByRole('button', { name: '오늘의 수업' }));
+      fireEvent.click(primaryNav().getByRole('button', { name: '수업 만들기' }));
+      await openAdvancedWorkbench();
       fireEvent.click(
         await screen.findByRole('button', { name: '시퀀스 미리보기' }, { timeout: 10000 }),
       );

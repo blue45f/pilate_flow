@@ -146,7 +146,7 @@ export const ContinuousDraftFigureSurface: React.FC<ContinuousDraftFigureSurface
 };
 
 /**
- * Reused 98-exercise 2D 3-phase schematic surface (`MovementPhaseDiagramSvg` + `MovementTriptychDiagramSvg`).
+ * Reused eligible 2D 3-phase schematic surface (`MovementPhaseDiagramSvg` + `MovementTriptychDiagramSvg`).
  */
 export const Discrete2dRigSurface: React.FC<Discrete2dRigSurfaceProps> = ({
   descriptor,
@@ -183,7 +183,7 @@ export const Discrete2dRigSurface: React.FC<Discrete2dRigSurfaceProps> = ({
           color: '#2c3e35',
         }}
       >
-        기존 98 카탈로그 2D 3단계 포즈 에셋 재사용 (중복 생성 0건 · 현재 선택 단계: {selectedPhase})
+        기존 카탈로그 2D 3단계 포즈 에셋 재사용 (중복 생성 0건 · 현재 선택 단계: {selectedPhase})
       </p>
       <div
         style={{
@@ -413,7 +413,7 @@ export const PreviewHarnessStageView: React.FC<PreviewHarnessStageViewProps> = (
         </div>
       )}
 
-      {/* Discrete 3-Phase Controls (for the 77 three-phase-2d exercises + parallel 2D phase inspection) */}
+      {/* Discrete 3-Phase Controls and parallel 2D phase inspection */}
       {snapshot.mode !== 'missing' && (
         <div
           data-testid="harness-discrete-phase-controls"
@@ -431,7 +431,7 @@ export const PreviewHarnessStageView: React.FC<PreviewHarnessStageViewProps> = (
         >
           <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>
             {snapshot.mode === 'three-phase-2d'
-              ? '이산 2D 3단계 수동 선택 (연속 모션 자동 보간 없음 · 77종)'
+              ? '이산 2D 3단계 수동 선택 (연속 모션 자동 보간 없음)'
               : '병행 2D 3단계 기준 포즈 빠른 이동'}
           </span>
           <div
@@ -482,7 +482,7 @@ export const PreviewHarnessStageView: React.FC<PreviewHarnessStageViewProps> = (
         <ContinuousDraftFigureSurface snapshot={snapshot} />
       )}
 
-      {/* Reused 98-Exercise 2D 3-Phase Schematic Surface */}
+      {/* Reused eligible 2D 3-Phase Schematic Surface */}
       {activeDescriptor.mode !== 'missing' && (
         <Discrete2dRigSurface
           descriptor={activeDescriptor}
@@ -505,9 +505,18 @@ export const PreviewHarnessStageView: React.FC<PreviewHarnessStageViewProps> = (
           }}
         >
           <p style={{ margin: '0 0 6px', fontWeight: 600 }}>
-            미지원 동작 (missing) · 모션 도해 및 연속 재생 비활성
+            {activeDescriptor.badgeLabelKo} · 모션 도해 및 연속 재생 비활성
           </p>
           <p style={{ margin: '0 0 8px' }}>사유: {activeDescriptor.resolution.evidenceSummaryKo}</p>
+          {activeDescriptor.resolution.threePhase2d.sourceComparison?.matchedReliableSources.map(
+            (source) => (
+              <p key={source.url} style={{ margin: '0 0 8px' }}>
+                <a href={source.url} target="_blank" rel="noreferrer">
+                  {source.titleKo}
+                </a>
+              </p>
+            ),
+          )}
           <ul style={{ margin: 0, paddingLeft: '18px' }}>
             {activeDescriptor.resolution.rejectedCandidates.map((rej) => (
               <li key={`${rej.candidateId}-${rej.reason}`}>

@@ -173,6 +173,8 @@ export interface ClassCardVisualMeta {
   readonly apparatusLabelKo: string;
   readonly studio3dThumbUrl: string;
   readonly studio3dTitleKo: string;
+  /** Derived display identity only; never inferred from an image URL or persisted as a booking field. */
+  readonly firstExerciseId?: string;
   readonly level: DifficultyLevel | null;
   readonly levelBadgeKo: string;
   readonly springs: string;
@@ -369,6 +371,7 @@ export function resolveClassCardVisualMeta(params: {
     apparatusLabelKo: getApparatusSpotLabelKo(apparatus),
     studio3dThumbUrl,
     studio3dTitleKo,
+    ...(firstExercise ? { firstExerciseId: firstExercise.id } : {}),
     level: resolvedLevel,
     levelBadgeKo: formatDifficultyBadgeKo(resolvedLevel),
     springs,
@@ -416,6 +419,7 @@ export interface MemberBookableSlot {
   readonly springSourceLabelKo?: '연결 시퀀스' | '기구 기본 세팅';
   readonly studio3dThumbUrl?: string;
   readonly studio3dTitleKo?: string;
+  readonly firstExerciseId?: string;
   readonly isSequenceLinked?: boolean;
   readonly focusTagsKo?: readonly string[];
   readonly propBadgesKo?: readonly string[];
@@ -880,6 +884,7 @@ export function buildMemberSlotsForDate(params: {
       springSourceLabelKo: visualMeta.springSourceLabelKo,
       studio3dThumbUrl: visualMeta.studio3dThumbUrl,
       studio3dTitleKo: visualMeta.studio3dTitleKo,
+      ...(visualMeta.firstExerciseId ? { firstExerciseId: visualMeta.firstExerciseId } : {}),
       isSequenceLinked: visualMeta.isSequenceLinked,
       focusTagsKo: visualMeta.focusTagsKo,
       propBadgesKo: visualMeta.propBadgesKo,

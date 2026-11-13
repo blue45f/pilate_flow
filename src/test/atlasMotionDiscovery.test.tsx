@@ -5,6 +5,8 @@ import { usePilatesStore } from '../store/usePilatesStore';
 import { ORIGINAL_MOVEMENTS } from '../data/originalMovements';
 import { MOTION_PATTERN_REFERENCES } from '../data/motionPatternReferences';
 import { SUPINE_REACH_DEFINITION } from '../data/supineReach';
+import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
+import { getExerciseArtworkFrame } from '../utils/exerciseArtworkCache';
 
 const original = usePilatesStore.getState();
 beforeEach(() =>
@@ -25,7 +27,7 @@ afterEach(() => {
   usePilatesStore.setState(original, true);
 });
 const renderAtlas = () =>
-  render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+  render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
 
 describe('authored motion discovery stays separate from teaching eligibility', () => {
   it('exposes every one of the 22 authored variants with original static geometry and opens the existing batch directly', () => {
@@ -36,6 +38,9 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     expect(inventory).toHaveTextContent(`${MOTION_PATTERN_REFERENCES.length}직접 제작한 도해 초안`);
     expect(inventory).toHaveTextContent('0정확히 일치하는 모션');
     expect(inventory).toHaveTextContent('0전문가 검토 완료');
+    const discovery = within(screen.getByRole('region', { name: '모션으로 살펴보기' }));
+    const nextPage = discovery.getByRole('button', { name: '다음 도해' });
+    const previousPage = discovery.getByRole('button', { name: '이전 도해' });
     const rail = container.querySelector('.ml-pattern-rail')!;
     const variants = new Set<string>();
     const pageCount = Math.ceil(MOTION_PATTERN_REFERENCES.length / 4);
@@ -46,16 +51,15 @@ describe('authored motion discovery stays separate from teaching eligibility', (
       expect(rail.querySelectorAll('svg[role="img"]')).toHaveLength(
         Math.min(4, MOTION_PATTERN_REFERENCES.length - page * 4),
       );
-      if (page < pageCount - 1) fireEvent.click(screen.getByRole('button', { name: '다음 도해' }));
+      if (page < pageCount - 1) fireEvent.click(nextPage);
     }
     expect([...variants].sort()).toEqual(
       MOTION_PATTERN_REFERENCES.map((reference) => reference.variantId).sort(),
     );
-    expect(screen.getByRole('button', { name: '다음 도해' })).toBeDisabled();
-    for (let page = 0; page < pageCount - 1; page += 1)
-      fireEvent.click(screen.getByRole('button', { name: '이전 도해' }));
+    expect(nextPage).toBeDisabled();
+    for (let page = 0; page < pageCount - 1; page += 1) fireEvent.click(previousPage);
     fireEvent.click(
-      screen.getByRole('button', { name: '일반 의자 · 양팔 앞·위 리치 도해 초안 보기' }),
+      discovery.getByRole('button', { name: '일반 의자 · 양팔 앞·위 리치 도해 초안 보기' }),
     );
     const preview = screen.getByRole('region', { name: '선택한 패턴 도해 미리보기' });
     expect(
@@ -91,13 +95,19 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     expect(cards).toHaveLength(1);
     const card = within(cards[0] as HTMLElement);
     expect(card.getByText('관련 패턴 도해 1종')).toBeInTheDocument();
-    expect(cards[0].querySelector('img.pf-p06-3d-img')).toHaveAttribute(
+    const artwork = cards[0].querySelector('.exercise-motion-artwork.pf-p06-motion-art');
+    expect(artwork).toHaveAttribute('data-exercise-id', exercise.id);
+    expect(artwork).toHaveAttribute('data-motion-phase', 'middle');
+    expect(artwork).toHaveAttribute('data-artwork-renderer', 'cached-native-svg');
+    expect(artwork?.querySelector('img')).toHaveAttribute(
       'src',
-      '/motion-studio3d/mat-hundred-peak.png',
+      getExerciseArtworkFrame(exercise, 'middle')!.src,
     );
     expect(
       card.getByRole('button', { name: `${exercise.nameKo} 상세 보기` }),
-    ).toHaveAccessibleDescription(`${SUPINE_REACH_DEFINITION.title} · 3D 스튜디오 모션`);
+    ).toHaveAccessibleDescription(
+      `${getCatalogContinuousMotionAsset(exercise)!.visualAsset.archetypeTitleKo} · 동작 패턴 도해`,
+    );
     fireEvent.click(card.getByRole('button', { name: `${SUPINE_REACH_DEFINITION.title} 보기` }));
     const preview = screen.getByRole('region', { name: '선택한 패턴 도해 미리보기' });
     expect(preview.querySelector('.motion-pattern-preview')).toHaveAttribute(
@@ -152,21 +162,28 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     expect(container.querySelectorAll('article.movement-card')).toHaveLength(12);
   });
 
-  it('opens the authored 5-phase kinematic diagram from a studio thumbnail without pattern drafts and returns to the existing class draft', () => {
+  it('opens the authored 5-phase kinematic diagram from shared cached artwork without pattern drafts and returns to the existing class draft', () => {
     const before = usePilatesStore.getState();
+    const exercise = ORIGINAL_MOVEMENTS.find((item) => item.id === 'original-mat-rib-breath')!;
     const { container } = renderAtlas();
     fireEvent.change(screen.getByRole('searchbox', { name: '동작 검색' }), {
       target: { value: '누워서 호흡 관찰' },
     });
     const cards = container.querySelectorAll('article.movement-card');
     expect(cards).toHaveLength(1);
-    expect(cards[0].querySelector('img.pf-p06-3d-img')).toHaveAttribute(
+    const artwork = cards[0].querySelector('.exercise-motion-artwork.pf-p06-motion-art');
+    expect(artwork).toHaveAttribute('data-exercise-id', exercise.id);
+    expect(artwork).toHaveAttribute('data-motion-phase', 'middle');
+    expect(artwork).toHaveAttribute('data-artwork-renderer', 'cached-native-svg');
+    expect(artwork?.querySelector('img')).toHaveAttribute(
       'src',
-      '/motion-studio3d/mat-hundred-peak.png',
+      getExerciseArtworkFrame(exercise, 'middle')!.src,
     );
     expect(
       within(cards[0] as HTMLElement).getByRole('button', { name: '누워서 호흡 관찰 상세 보기' }),
-    ).toHaveAccessibleDescription('누워서 호흡 관찰 · 3D 스튜디오 모션');
+    ).toHaveAccessibleDescription(
+      `${getCatalogContinuousMotionAsset(exercise)!.visualAsset.archetypeTitleKo} · 동작 패턴 도해`,
+    );
     expect(cards[0]).toHaveTextContent('기구학 연속·3단계 도해 1종');
     expect(cards[0].querySelector('.movement-art')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: '누워서 호흡 관찰 기구학 도해 보기' }));

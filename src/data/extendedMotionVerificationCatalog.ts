@@ -1,5 +1,6 @@
 import rawLedger from './extendedMotionSourceLedger.json';
 import { INITIAL_EXERCISES } from './pilatesCatalog';
+import { getExpandedMovementSource } from './expandedMovements';
 import {
   VERIFIED_REFERENCES,
   type ReferenceVerificationStatus,
@@ -1327,6 +1328,29 @@ export function resolveExtendedMotionSourceAudit(
   const catalogExercise = isObj
     ? exerciseOrId
     : catalogExerciseById.get(rawId);
+
+  // New creator metadata is not part of the historical 2026-11-08 motion audit.
+  // Never borrow another movement's biomechanical record, timestamp, or digest.
+  if (rawId.startsWith('expanded-')) {
+    const source = getExpandedMovementSource(catalogExercise ?? rawId);
+    return Object.freeze({
+      exerciseId: rawId,
+      exerciseFoundInCatalog: catalogExerciseById.has(rawId),
+      checkedAt: source?.checkedAt ?? '',
+      candidateMatMotionModel: null,
+      previouslyUnboundMotionModel: null,
+      clearedYoutubeReplacementAudit: null,
+      verifiedReferenceAuditRecord: null,
+      verifiedReferencePublicEntry: null,
+      primaryFactualRecordSha256: '',
+      sha256IntegrityVerified: false,
+      anatomicalAccuracyAssumed: false as const,
+      professionalReviewCount: 0 as const,
+      verificationBoundaryNoticeKo: source
+        ? '제작자 페이지·YouTube 제목·채널 메타데이터 확인 · 모션 프레임·해부학·전문 강사 검수 미완료'
+        : '원출처 연결 변경 또는 자료 미확인 · 모션 프레임·전문 강사 검수 미완료',
+    });
+  }
 
   const candidateMatMotionModel = resolveExtendedCandidateMotionModel(rawId);
   const previouslyUnboundMotionModel = resolvePreviouslyUnboundMotionModelAudit(rawId);

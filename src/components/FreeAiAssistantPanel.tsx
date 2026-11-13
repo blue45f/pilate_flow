@@ -1,3 +1,4 @@
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   applyUserEditsToClassDraft,
@@ -37,7 +38,6 @@ import type {
   LayerMode,
 } from '../types/pilates';
 import { PfAiStatusBadge } from '../design-system';
-import { resolveStudio3DMotionForExercise } from '../utils/studio3dMotionCatalog';
 import { SpringVisualPills } from './SpringVisualPills';
 import { VisualSequenceFilmstrip } from './VisualFlowComponents';
 import '../styles/free-ai-assistant.css';
@@ -887,7 +887,7 @@ export function FreeAiAssistantPanel({
         {steps.map((step, index) => {
           const isIncluded = !excludedStepIds.has(step.stepId);
           const matchedEx = exercises.find((item) => item.id === step.exerciseId);
-          const motion3d = matchedEx ? resolveStudio3DMotionForExercise(matchedEx) : null;
+
           return (
           <li
             key={step.stepId}
@@ -895,15 +895,11 @@ export function FreeAiAssistantPanel({
           >
             <div>
               <div className="pf-ai-step-3d-lead">
-                {motion3d && (
-                  <img
-                    src={motion3d.peakImg}
-                    alt=""
-                    aria-hidden="true"
-                    loading="lazy"
+                {matchedEx && (
+                  <ExerciseMotionArtwork
+                    exercise={matchedEx}
                     className="pf-workbench-3d-mini-thumb"
-                    data-testid="free-ai-step-3d-thumb"
-                  />
+                    data-testid="free-ai-step-3d-thumb" />
                 )}
                 <div>
                   <label className="free-ai-step-check-label">
@@ -2379,29 +2375,14 @@ export function FreeAiAssistantPanel({
                 <ol className="free-ai-step-list" aria-label="추천 동작 목록">
                   {searchResult.recommendations.map((rec, idx) => {
                     const recEx = exercises.find((item) => item.id === rec.exerciseId);
-                    const rec3d = recEx
-                      ? resolveStudio3DMotionForExercise(recEx)
-                      : resolveStudio3DMotionForExercise({
-                          id: rec.exerciseId,
-                          nameKo: rec.nameKo,
-                          nameEn: rec.nameEn,
-                          apparatus: rec.apparatus,
-                          blockCategory: rec.blockCategory,
-                          bodyPosition: 'supine',
-                          box: 'none',
-                        });
                     return (
                     <li key={rec.exerciseId} className="free-ai-step-row">
                       <div>
                         <div className="pf-ai-step-3d-lead">
-                          <img
-                            src={rec3d.peakImg}
-                            alt=""
-                            aria-hidden="true"
-                            loading="lazy"
+                          {recEx && (<ExerciseMotionArtwork
+                            exercise={recEx}
                             className="pf-workbench-3d-mini-thumb"
-                            data-testid="free-ai-rec-3d-thumb"
-                          />
+                            data-testid="free-ai-rec-3d-thumb" />)}
                           <div>
                             <strong>
                               {idx + 1}. {rec.nameKo}

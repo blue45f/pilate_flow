@@ -269,14 +269,30 @@ describe('MovementMediaGuidancePanel — reference video/materials & Korean voic
   it('stops previous video and voice immediately when moving to another exercise and never auto-plays on revisit (A -> B -> A)', () => {
     const speechEnv = installMockSpeechSynthesis();
     try {
-      const exerciseA = INITIAL_EXERCISES.find((item) => item.id === 'ex-warmup-01')!;
+      const exerciseA = INITIAL_EXERCISES.find((item) => item.id === 'ex-footwork-01')!;
       const exerciseB = INITIAL_EXERCISES.find((item) => item.id === 'ex-bridging-01')!;
+      const matchA = resolveMovementMediaBundle(exerciseA).primaryMatch;
+      const matchB = resolveMovementMediaBundle(exerciseB).primaryMatch;
+
+      // Lifecycle fixtures have distinct direct references; this is not playback review.
+      expect(matchA.matchTier).toBe('curated-youtube-reference');
+      expect(matchB.matchTier).toBe('curated-youtube-reference');
+      expect(matchA.embedResolution.allowed).toBe(true);
+      expect(matchB.embedResolution.allowed).toBe(true);
+      expect(matchA.source.youtubeVideoId).toBe(exerciseA.youtube.videoId);
+      expect(matchB.source.youtubeVideoId).toBe(exerciseB.youtube.videoId);
+      expect(matchA.source.youtubeVideoId).not.toBe(matchB.source.youtubeVideoId);
 
       const { rerender } = render(<MovementMediaGuidancePanel exercise={exerciseA} />);
 
       // Start both video and Korean voice on Exercise A
       fireEvent.click(screen.getByTestId('manual-load-video-btn'));
-      expect(screen.getByTestId('permitted-youtube-iframe')).toBeVisible();
+      const iframeA = screen.getByTestId('permitted-youtube-iframe');
+      expect(iframeA).toBeVisible();
+      expect(iframeA).toHaveAttribute(
+        'src',
+        expect.stringContaining(`/embed/${matchA.source.youtubeVideoId}`),
+      );
 
       fireEvent.click(screen.getByTestId('voice-play-btn'));
       expect(speechEnv.speakCalls).toHaveLength(1);
@@ -291,7 +307,9 @@ describe('MovementMediaGuidancePanel — reference video/materials & Korean voic
         exerciseB.id,
       );
       expect(screen.getByTestId('media-embed-box')).toHaveAttribute('data-embed-state', 'idle');
+      expect(iframeA).not.toBeInTheDocument();
       expect(screen.queryByTestId('permitted-youtube-iframe')).not.toBeInTheDocument();
+      expect(screen.getByTestId('manual-load-video-btn')).toBeEnabled();
       expect(speechEnv.cancelSpy.mock.calls.length).toBeGreaterThan(cancelCountBeforeSwitch);
       // No new speak call was triggered automatically on Exercise B
       expect(speechEnv.speakCalls).toHaveLength(1);
@@ -304,6 +322,7 @@ describe('MovementMediaGuidancePanel — reference video/materials & Korean voic
       );
       expect(screen.getByTestId('media-embed-box')).toHaveAttribute('data-embed-state', 'idle');
       expect(screen.queryByTestId('permitted-youtube-iframe')).not.toBeInTheDocument();
+      expect(screen.getByTestId('manual-load-video-btn')).toBeEnabled();
       expect(speechEnv.speakCalls).toHaveLength(1);
     } finally {
       speechEnv.restore();

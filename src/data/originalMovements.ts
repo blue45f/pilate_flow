@@ -7,6 +7,7 @@ import type {
   PropType,
   SpinalPlane,
 } from '../types/pilates';
+import { attachExistingVideoReference } from './exerciseVideoBindings';
 
 /**
  * Original planning notes, written for this app. These are not copied from a
@@ -841,7 +842,7 @@ const plans: Record<ApparatusType, MovementPlan[]> = {
 };
 
 function createOriginalMovement(apparatus: ApparatusType, plan: MovementPlan): PilatesExercise {
-  return {
+  return attachExistingVideoReference({
     id: `original-${apparatus}-${plan.slug}`,
     nameKo: plan.ko,
     nameEn: plan.en,
@@ -878,7 +879,7 @@ function createOriginalMovement(apparatus: ApparatusType, plan: MovementPlan): P
     },
     favoriteTag: 'none',
     tempo: 'slow-precise',
-  };
+  });
 }
 
 // Alternate apparatus families so the initial browse view shows the breadth of the library.

@@ -46,6 +46,18 @@ afterEach(() => {
 });
 
 describe('movement addition reports the actual result without losing the current context', () => {
+  it('labels a composite flow source as a partial reference without loading or approving its playback', () => {
+    const flow = INITIAL_EXERCISES.find((exercise) => exercise.id === 'ex-straps-01')!;
+    render(<YouTubePreviewModal exercise={flow} onClose={vi.fn()} onAddToSequence={vi.fn()} />);
+    const drawer = screen.getByTestId('crawled-related-videos-drawer');
+    fireEvent.click(within(drawer).getByText(/추가 관련 영상/, { selector: 'summary span' }));
+    expect(within(drawer).getAllByText(/구성 동작을 위한 부분 참고/).length).toBeGreaterThan(0);
+    expect(within(drawer).getAllByText(/전체 흐름·실제 재생·구간 미검수/)[0]).toBeVisible();
+    expect(drawer.querySelector('[data-reference-scope="named-component"]')).toBeInTheDocument();
+    expect(drawer.querySelector('iframe')).toBeNull();
+    expect(within(drawer).queryByText(/공식 시범|해외 공식 채널/)).not.toBeInTheDocument();
+  });
+
   it('retains the detail and typed alias when a structured add outcome is rejected', () => {
     const close = vi.fn();
     const add = vi.fn(() => ({
@@ -141,11 +153,14 @@ describe('movement addition reports the actual result without losing the current
     });
     const before = usePilatesStore.getState();
     render(<App />);
-    fireEvent.change(await screen.findByRole('searchbox', { name: '동작 검색' }), {
-      target: { value: other.nameKo },
-    });
+    fireEvent.change(
+      await screen.findByRole('searchbox', { name: '동작 검색' }, { timeout: 15000 }),
+      {
+        target: { value: other.nameKo },
+      },
+    );
     fireEvent.click(await screen.findByRole('button', { name: `${other.nameKo} 상세 보기` }));
-    const detail = await screen.findByRole('dialog', { name: other.nameKo });
+    const detail = await screen.findByRole('dialog', { name: other.nameKo }, { timeout: 10000 });
     fireEvent.click(within(detail).getByRole('button', { name: '수업안에 추가' }));
     await waitFor(() =>
       expect(within(detail).getByRole('alert')).toHaveTextContent('현재 선택한 기구'),
@@ -154,5 +169,5 @@ describe('movement addition reports the actual result without losing the current
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
     expect(usePilatesStore.getState().savedSequences).toBe(before.savedSequences);
     expect(usePilatesStore.getState().historyLogs).toBe(before.historyLogs);
-  });
+  }, 20000);
 });

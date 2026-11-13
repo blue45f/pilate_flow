@@ -1,4 +1,5 @@
 import { COURSE_REFERENCES } from './courseReferences';
+import { getExpandedMovementSource } from './expandedMovements';
 import { resolveExtendedMotionSourceAudit } from './extendedMotionVerificationCatalog';
 import { getMotionPatternReferences } from './motionPatternReferences';
 import {
@@ -397,6 +398,28 @@ function selectVerifiedReferencesForExercise(
 }
 
 function buildMatchedReliableSources(exercise: PilatesExercise): readonly ReliableSourceLink[] {
+  if (exercise.id.startsWith('expanded-')) {
+    const source = getExpandedMovementSource(exercise);
+    if (!source) return Object.freeze([]);
+    return Object.freeze([
+      Object.freeze({
+        id: `expanded-creator-${source.sourceSlug}`,
+        titleKo: source.sourceTitle,
+        publisherKo: source.youtubeAuthor,
+        url: source.sourceUrl,
+        verificationStatusLabelKo: `제작자 동작 페이지 확인 (${source.checkedAt}) · 모션 프레임 대조 미완료`,
+        rightsLabelKo: '원문 링크 전용 (link-only)',
+      }),
+      Object.freeze({
+        id: `expanded-youtube-${source.videoId}`,
+        titleKo: source.youtubeTitle,
+        publisherKo: source.youtubeAuthor,
+        url: `https://www.youtube.com/watch?v=${source.videoId}`,
+        verificationStatusLabelKo: `YouTube 제목·채널 메타데이터 확인 (${source.checkedAt}) · 영상 전체 재생·전문 검수 미완료`,
+        rightsLabelKo: '원본 링크·사용자가 선택하는 공식 플레이어 · 다운로드·복제 없음',
+      }),
+    ]);
+  }
   const verifiedLinks = selectVerifiedReferencesForExercise(exercise).map(
     toReliableSourceLinkFromVerified,
   );
@@ -481,6 +504,11 @@ function resolveSourceVerificationCategoryKo(
   exercise: PilatesExercise,
   extendedAudit: ReturnType<typeof resolveExtendedMotionSourceAudit>,
 ): string {
+  if (exercise.id.startsWith('expanded-')) {
+    return getExpandedMovementSource(exercise)
+      ? '제작자 원문·YouTube 메타데이터 확인 · 모션 프레임 대조 미완료'
+      : '원출처 연결 변경 · 메타데이터 재확인 필요';
+  }
   if (extendedAudit.clearedYoutubeReplacementAudit) {
     return '레거시 미검증 링크 제거 후 공공·공식 대체 출처 대조 기록 (전문가 검증 전)';
   }
@@ -533,13 +561,12 @@ export function getVisualSourceComparison(
     hasExtendedCandidateMotionModel: Boolean(
       extendedAudit.candidateMatMotionModel,
     ),
-    auditCheckedAt: extendedAudit.checkedAt || '2026-11-08',
+    auditCheckedAt: extendedAudit.checkedAt,
   });
 
-  const reviewStage = resolveVisualReviewStage(
-    exercise,
-    matchedReliableSources.length > 0,
-  );
+  const reviewStage = exercise.id.startsWith('expanded-')
+    ? 'unreviewed-draft'
+    : resolveVisualReviewStage(exercise, matchedReliableSources.length > 0);
   const isPostReview = isPostReviewStage(reviewStage);
   const reviewBadgeKo = getReviewBadgeKo(reviewStage);
 
@@ -549,7 +576,12 @@ export function getVisualSourceComparison(
   const propsLabel = formatPropsKo(exercise.props);
   const blockLabel = formatBlockLabelKo(exercise.blockCategory);
 
-  const matchedCatalogFactsKo = Object.freeze([
+  const matchedCatalogFactsKo = Object.freeze(exercise.id.startsWith('expanded-') ? [
+    `계획 메타데이터: ${apparatusLabel} · ${blockLabel} · ${positionLabel} (소도구: ${propsLabel})`,
+    `강사 설정 전 계획값: 스프링 [${exercise.springs}] · 풋바 [${exercise.footbar}] · 헤드레스트 [${exercise.headrest}] · 박스 [${exercise.box}]`,
+    `원본 동작 페이지와 영상 제목·채널을 연결했습니다. 도해의 관절 좌표·실제 시범·가동범위 일치는 아직 검수하지 않았습니다.`,
+    `직접 작성한 준비·움직임·복귀 큐: ${exercise.cues.join(' / ')}`,
+  ] : [
     `기구·블록·자세 대조: ${apparatusLabel} · ${blockLabel} · ${positionLabel} (소도구: ${propsLabel})`,
     `기구 세부 세팅 대조: 스프링 [${exercise.springs}] · 풋바 [${exercise.footbar}] · 헤드레스트 [${exercise.headrest}] · 박스 [${exercise.box}]`,
     `척추 면·주요 타겟 근육 대조: ${planesLabel} · 타겟 근육 [${exercise.targetMuscles.join(', ')}] (${exercise.isUnilateral ? '편측 교대 제어' : '양측 대칭 제어'})`,

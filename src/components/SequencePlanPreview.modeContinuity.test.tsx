@@ -144,7 +144,7 @@ afterEach(() => {
     expect(storeChange).not.toHaveBeenCalled();
     expect(storageWrite).not.toHaveBeenCalled();
     expect(INITIAL_EXERCISES).toEqual(catalogSnapshot);
-    expect(INITIAL_EXERCISES).toHaveLength(98);
+    expect(INITIAL_EXERCISES).toHaveLength(158);
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
     expect(getExerciseMotionReference(exercise.id)).toMatchObject({
       asset: null,

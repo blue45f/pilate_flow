@@ -1,6 +1,8 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
+import { resolveExtendedMotionSourceAudit } from '../data/extendedMotionVerificationCatalog';
+import { resolveMotionEvidenceReviewRecord } from '../features/motionEvidenceReview';
 import { VERIFIED_REFERENCES } from '../data/verifiedReferences';
 import type { VerifiedPublicReference } from '../data/verifiedReferences';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -295,5 +297,68 @@ describe('read-only exercise evidence panel', () => {
       /[0-9a-f]{64}/,
     );
   });
-});
 
+  it.each(['original-mat-chest-lift', 'original-mat-swimming-prep'])(
+    'marks %s historical evidence as stale and hides its old phase prose until explicitly opened',
+    (exerciseId) => {
+      const exercise = INITIAL_EXERCISES.find((item) => item.id === exerciseId)!;
+      const record = resolveMotionEvidenceReviewRecord(exerciseId)!;
+      const audit = resolveExtendedMotionSourceAudit(exercise);
+      const before = JSON.stringify(record);
+      render(<ExerciseEvidencePanel exercise={exercise} />);
+
+      expect(
+        within(summaryFor(exercise)).getByText('도해 변경 · 근거 재대조 필요'),
+      ).toBeInTheDocument();
+      const panel = expand(exercise);
+      expect(panel.getByTestId('motion-evidence-review-section')).toHaveAttribute(
+        'data-current-record-valid',
+        'false',
+      );
+      expect(panel.getByTestId('motion-evidence-review-stale')).toBeVisible();
+      const history = panel.getByTestId('motion-evidence-historical-details');
+      expect(history).not.toHaveAttribute('open');
+      const oldStart = within(history).getByText(record.phases.start.postureAndTransitionKo, {
+        exact: false,
+      });
+      expect(oldStart).not.toBeVisible();
+
+      fireEvent.click(
+        within(history).getByText('이전 도해의 조사 내용 펼치기 · 현재 자세 지침 아님'),
+      );
+      expect(history).toHaveAttribute('open');
+      expect(oldStart).toBeVisible();
+      const preservedHash = within(history).getByTestId('exercise-evidence-extended-sha256');
+      expect(preservedHash).toHaveTextContent(audit.primaryFactualRecordSha256);
+      expect(preservedHash).toHaveTextContent('당시 확인일 2026-11-08');
+      expect(history).not.toHaveTextContent('2026-11-13');
+      expect(JSON.stringify(record)).toBe(before);
+    },
+  );
+
+  it('keeps a matching historical record visible and gives source-only additions no historical review', () => {
+    const matching = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-rib-breath')!;
+    const record = resolveMotionEvidenceReviewRecord(matching.id)!;
+    const { rerender } = render(<ExerciseEvidencePanel exercise={matching} />);
+    const panel = expand(matching);
+    expect(panel.getByTestId('motion-evidence-review-section')).toHaveAttribute(
+      'data-current-record-valid',
+      'true',
+    );
+    expect(panel.queryByTestId('motion-evidence-review-stale')).not.toBeInTheDocument();
+    expect(panel.queryByTestId('motion-evidence-historical-details')).not.toBeInTheDocument();
+    expect(
+      panel.getByText(record.phases.start.postureAndTransitionKo, { exact: false }),
+    ).toBeVisible();
+    expect(panel.getByTestId('exercise-evidence-extended-sha256')).toHaveTextContent('2026-11-08');
+
+    const expanded = INITIAL_EXERCISES.find((item) => item.id.startsWith('expanded-'))!;
+    rerender(<ExerciseEvidencePanel exercise={expanded} />);
+    const sourceOnly = within(panelFor(expanded));
+    expect(sourceOnly.queryByTestId('motion-evidence-review-section')).not.toBeInTheDocument();
+    expect(sourceOnly.queryByTestId('exercise-evidence-extended-sha256')).not.toBeInTheDocument();
+    expect(sourceOnly.getAllByText('제작자 영상 연결 · 전용 도해 준비 중').length).toBeGreaterThan(
+      0,
+    );
+  });
+});

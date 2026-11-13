@@ -981,6 +981,7 @@ export function SequencePlanPreview({
                       <>
                         <MotionReferencePlayer
                           key={selected.stepId}
+                          exercise={exercise}
                           exerciseId={selected.exerciseId}
                           exerciseName={exercise?.nameKo || '동작 정보 없음'}
                           active={!rehearsal.playing && !segmentRehearsalOpen}

@@ -174,7 +174,7 @@ describe('inspector class role and explicit motion-study draft', () => {
     expect(after.exercises).toBe(before.exercises);
     expect(after.exercises.filter(isExerciseAutoEligible)).toHaveLength(0);
     expect(after.exercises.find((item) => item.id === exercise.id)?.review).toBeUndefined();
-    expect(INITIAL_EXERCISES).toHaveLength(98);
+    expect(INITIAL_EXERCISES).toHaveLength(158);
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
     expect(onClose).toHaveBeenCalledOnce();
     act(() => usePilatesStore.getState().undoSequence());

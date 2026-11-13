@@ -1,3 +1,5 @@
+import { StudioMotionImage } from './StudioMotionImage';
+import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { EquipmentChoice } from './EquipmentChoice';
 import { VisualApparatusPhotoStrip, VisualSequenceFilmstrip } from './VisualFlowComponents';
 import { buildSequenceSimulation } from '../utils/sequenceSimulation';
@@ -181,7 +183,6 @@ const sections = [
 import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
 import {
   getApparatusPrimary3DThumb,
-  resolveStudio3DMotionForExercise,
 } from '../utils/studio3dMotionCatalog';
 
 function WorkbenchWorkspace({
@@ -215,21 +216,15 @@ function WorkbenchMovementMark({
   exercise: PilatesExercise;
   springsOverride?: string;
 }) {
-  const studio3d = resolveStudio3DMotionForExercise(exercise);
   const effectiveSprings = (springsOverride || exercise.springs || '').trim();
   const primaryMuscle = exercise.targetMuscles[0] || '코어·정렬';
   return (
     <span
       className="workbench-movement-mark pf-b05-card-3d-mark"
-      title={`${studio3d.titleKo} · 3D 스튜디오 모션`}
+      title={`${exercise.nameKo} · 동작 도해`}
     >
-      <img
-        src={studio3d.peakImg}
-        alt=""
-        aria-hidden="true"
-        className="pf-workbench-3d-mini-thumb pf-b05-card-3d-img"
-        loading="lazy"
-      />
+      <ExerciseMotionArtwork exercise={exercise}
+        className="pf-workbench-3d-mini-thumb pf-b05-card-3d-img" />
       <span className="pf-b05-card-overlay-top" aria-hidden="true">
         <span className="pf-b05-pill is-dark">◐ 궤적+근육</span>
         {effectiveSprings && <span className="pf-b05-pill is-light">{effectiveSprings}</span>}
@@ -1983,6 +1978,9 @@ export function SequenceWorkbench({
                           seq.title || (seq as { name?: string }).name || '저장된 수업 시퀀스';
                         const gearText =
                           seq.apparatus === 'mixed' ? '복합 기구' : equipmentLabel([seq.apparatus]);
+                        const recentExercise = seq.steps
+                          .map((step) => isRestStep(step) ? undefined : exerciseMap.get(step.exerciseId))
+                          .find((item) => item !== undefined);
                         const recentVisual = resolveClassCardVisualMeta({
                           sequence: seq,
                           exercises: s.exercises,
@@ -1992,13 +1990,11 @@ export function SequenceWorkbench({
                         return (
                           <div key={seq.id} className="workbench-recent-card">
                             <div className="pf-member-my-booking-lead">
-                              <img
-                                src={recentVisual.studio3dThumbUrl}
-                                alt=""
-                                aria-hidden="true"
-                                loading="lazy"
-                                className="pf-workbench-3d-mini-thumb"
-                              />
+                              {recentExercise ? (
+                                <ExerciseMotionArtwork exercise={recentExercise} className="pf-workbench-3d-mini-thumb" />
+                              ) : (
+                                <StudioMotionImage src={recentVisual.studio3dThumbUrl} alt="" aria-hidden="true" loading="lazy" className="pf-workbench-3d-mini-thumb" />
+                              )}
                               <div className="workbench-recent-card__info">
                                 <strong>{seqTitle}</strong>
                                 <span>

@@ -1,0 +1,418 @@
+/* Shared shell. Keep the real ancestor structure (html > body > #root > .flow-app).
+   ID specificity neutralizes legacy #root .vnext-shell rules; !important is used
+   only for shell properties already marked important by the retained legacy CSS. */
+:root {
+  --flow-canvas: #f5f7f1;
+  --flow-surface: #ffffff;
+  --flow-ink: #213e32;
+  --flow-muted: #5b6b60;
+  --flow-line: #dfe7db;
+  --flow-accent: #275e43;
+}
+html:has(#root .flow-app),
+body:has(#root .flow-app) {
+  background: var(--flow-canvas) !important;
+}
+html #root .flow-app.app-shell {
+  display: grid;
+  grid-template-columns: 214px minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--flow-canvas) !important;
+  color: var(--flow-ink);
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+}
+html #root .flow-app > .sidebar {
+  width: 214px;
+  padding: 31px 17px 20px;
+  background: #fbfcf8 !important;
+  border-right: 1px solid var(--flow-line) !important;
+  box-shadow: none !important;
+}
+html #root .flow-app .brand {
+  gap: 10px;
+  margin: 0 4px 43px;
+  color: #234c35;
+  align-items: center;
+}
+html #root .flow-app .brand > svg {
+  width: 28px;
+  height: 28px;
+}
+html #root .flow-app .brand > span {
+  font-family: inherit;
+  font-weight: 750;
+  font-size: 20px;
+  letter-spacing: -0.7px;
+}
+html #root .flow-app .brand small {
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  color: var(--flow-muted);
+  margin-top: 5px;
+}
+html #root .flow-app .sidebar-label {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--flow-muted);
+  padding: 0 14px;
+  margin-bottom: 9px;
+}
+html #root .flow-app .desktop-nav {
+  gap: 6px;
+}
+html #root .flow-app .desktop-nav > button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 47px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 10px !important;
+  background: transparent;
+  color: #5b6b60 !important;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: none;
+}
+html #root .flow-app .desktop-nav > button.active {
+  background: #e9f0e2 !important;
+  color: #31593d !important;
+  font-weight: 750 !important;
+  border-radius: 10px !important;
+}
+html #root .flow-app .desktop-nav > button::before,
+html #root .flow-app .desktop-nav > button::after {
+  display: none;
+}
+html #root .flow-app .desktop-nav small,
+html #root .flow-app .desktop-nav button.active small {
+  margin-left: auto;
+  background: transparent !important;
+  color: var(--flow-muted) !important;
+  font-size: 12px;
+}
+html #root .flow-app .pf-sidebar-quick-stage,
+html #root .flow-app .pf-sidebar-quick-stage.is-active {
+  min-height: 44px;
+  border: 1px solid #dce6d3 !important;
+  border-radius: 10px !important;
+  color: #45613c !important;
+  background: #f4f8ed !important;
+  font-weight: 650 !important;
+  margin-top: 22px;
+  padding: 12px;
+  box-shadow: none;
+  font-size: 12px;
+}
+html #root .flow-app .pf-sidebar-quick-stage small {
+  display: none;
+}
+html #root .flow-app .pf-sidebar-more-drawer {
+  margin-top: 25px;
+  border: 0;
+  padding: 0 5px;
+}
+html #root .flow-app .pf-sidebar-more-drawer > summary {
+  color: var(--flow-muted);
+  font-size: 12px;
+  padding: 12px 6px;
+  min-height: 44px;
+}
+html #root .flow-app .sidebar-study-link,
+html #root .flow-app .pwa-sidebar-button {
+  min-height: 44px;
+  font-size: 12px;
+  color: var(--flow-muted);
+}
+html #root .flow-app .workspace-button {
+  padding: 12px 5px;
+  gap: 9px;
+  border: 0;
+  border-top: 1px solid #e2eadb;
+  border-radius: 0;
+  background: transparent;
+}
+html #root .flow-app .workspace-button > span:not(.studio-avatar) {
+  font-size: 12px;
+}
+html #root .flow-app .workspace-button small {
+  font-size: 12px;
+  color: var(--flow-muted);
+}
+html #root .flow-app .studio-avatar {
+  background: #e5eddc;
+  color: #5b7950;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+html #root .flow-app > .workspace {
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  background: transparent;
+}
+html #root .flow-app .topbar {
+  min-height: 70px !important;
+  padding: 14px 30px !important;
+  background: var(--flow-canvas) !important;
+  border: 0 !important;
+  box-shadow: none;
+  gap: 12px !important;
+}
+html #root .flow-app .breadcrumb {
+  font-size: 12px;
+  color: var(--flow-muted);
+}
+html #root .flow-app .breadcrumb > span {
+  color: var(--flow-muted);
+}
+/* Teaching keeps its own canvas and high-contrast controls. Only the shared header
+   uses the light shell palette, including the legacy teaching wordmark. */
+html #root .flow-app.is-teaching .breadcrumb,
+html #root .flow-app.is-teaching .vnext-wordmark {
+  color: var(--flow-ink);
+}
+html #root .flow-app .topbar-actions {
+  gap: 8px !important;
+}
+html #root .flow-app .pf-role-switcher {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+}
+html #root .flow-app .pf-role-switcher__btn {
+  background: transparent;
+  color: var(--flow-muted);
+  font-size: 12px !important;
+  min-height: 44px;
+  padding: 8px !important;
+}
+html #root .flow-app .pf-role-switcher__btn[aria-pressed='true'] {
+  background: #eaf1e2;
+  color: #496339;
+  box-shadow: none;
+}
+html #root .flow-app .local-state {
+  display: none;
+}
+html #root .flow-app .pf-topbar-cmdk-btn {
+  background: transparent;
+  border: 1px solid #e0e8d9;
+  border-radius: 9px;
+  color: var(--flow-muted);
+  font-size: 12px;
+  min-height: 44px;
+}
+html #root .flow-app .app-create-movement {
+  background: transparent;
+  color: var(--flow-muted);
+  min-height: 44px;
+  font-size: 12px;
+}
+html #root .flow-app .icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 9px;
+  color: var(--flow-muted);
+}
+html #root .flow-app .main-content {
+  width: 100%;
+  max-width: 1580px;
+  margin: 0 auto;
+  padding: 17px 30px 30px;
+}
+html #root .flow-app .app-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px 30px 24px;
+  font-size: 12px;
+  color: var(--flow-muted);
+  background: transparent;
+  border: 0;
+}
+html #root .flow-app .app-footer button {
+  font-size: 12px;
+  min-height: 44px;
+  background: transparent;
+  border: 0;
+  color: var(--flow-muted);
+}
+html #root .flow-app .page-heading h1 {
+  font-family: inherit;
+  letter-spacing: -0.8px;
+  font-weight: 750;
+}
+html #root .flow-app button:focus-visible,
+html #root .flow-app a:focus-visible,
+html #root .flow-app input:focus-visible,
+html #root .flow-app select:focus-visible,
+html #root .flow-app summary:focus-visible {
+  outline: 3px solid #b68a53;
+  outline-offset: 3px;
+}
+html #root .flow-app .bottom-nav {
+  border-top: 1px solid #dce6d4 !important;
+  background: #fffffff7 !important;
+  box-shadow: 0 -3px 18px #31472708;
+}
+html #root .flow-app .bottom-nav > button {
+  color: var(--flow-muted);
+  min-height: 58px;
+  font-size: 12px;
+  padding: 5px 3px;
+  min-width: 0;
+}
+html #root .flow-app .bottom-nav > button.active {
+  color: #3b6b44 !important;
+  background: #f1f6e9 !important;
+  border-radius: 9px !important;
+  font-weight: 700 !important;
+}
+html #root .flow-app .bottom-nav button::before,
+html #root .flow-app .bottom-nav button::after {
+  display: none;
+}
+html #root .flow-app .mobile-sub-page-bar {
+  border-radius: 10px;
+}
+@media (min-width: 1024px) {
+  html #root .flow-app > .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+}
+@media (max-width: 1100px) and (min-width: 1024px) {
+  html #root .flow-app.app-shell {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+  html #root .flow-app > .sidebar {
+    width: 190px;
+    padding-inline: 12px;
+  }
+  html #root .flow-app .brand > span {
+    font-size: 18px;
+  }
+  html #root .flow-app .main-content {
+    padding-inline: 20px;
+  }
+  html #root .flow-app .topbar {
+    padding-inline: 20px !important;
+  }
+}
+@media (max-width: 1023px) {
+  html #root .flow-app.app-shell {
+    display: block;
+    --flow-bottom-nav-clearance: calc(
+      84px + env(safe-area-inset-bottom, 0px) + var(--hosted-obstruction-inset, 0px)
+    );
+    padding-bottom: var(--flow-bottom-nav-clearance);
+  }
+  html #root .flow-app > .sidebar {
+    width: 260px;
+    position: fixed;
+    z-index: 60;
+    inset: 0 auto 0 0;
+    transform: translateX(-100%);
+    padding-top: 30px;
+  }
+  html #root .flow-app > .sidebar.is-open {
+    transform: translateX(0);
+  }
+  html #root .flow-app .topbar {
+    min-height: 65px !important;
+    padding: 12px 20px !important;
+  }
+  html #root .flow-app .main-content {
+    padding: 16px 20px 24px !important;
+  }
+  html #root .flow-app .mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  html #root .flow-app .vnext-wordmark {
+    font-family: inherit;
+    font-size: 19px;
+    font-weight: 750;
+    letter-spacing: -0.7px;
+    color: #2f5538;
+  }
+  html #root .flow-app .vnext-wordmark small {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--flow-muted);
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+  html #root .flow-app .breadcrumb {
+    display: none;
+  }
+  html #root .flow-app .topbar-actions .pf-role-switcher {
+    display: none;
+  }
+  html #root .flow-app .app-create-movement {
+    display: none;
+  }
+  html #root .flow-app .app-footer {
+    padding: 12px 20px;
+  }
+  html #root .flow-app .bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    position: fixed;
+    inset: auto 8px
+      calc(8px + env(safe-area-inset-bottom, 0px) + var(--hosted-obstruction-inset, 0px));
+    width: auto;
+    height: 68px;
+    min-height: 68px;
+    box-sizing: border-box;
+    padding: 4px 7px !important;
+    gap: 4px;
+  }
+  html #root .flow-app .bottom-nav.is-member-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  html #root .flow-app.is-teaching {
+    padding-bottom: 0;
+  }
+}
+@media (max-width: 600px) {
+  html #root .flow-app .topbar {
+    padding: 10px 12px !important;
+  }
+  html #root .flow-app .main-content {
+    padding: 14px 12px 22px !important;
+  }
+  html #root .flow-app .pf-topbar-cmdk-btn {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+  html #root .flow-app .pf-topbar-cmdk-btn span,
+  html #root .flow-app .pf-topbar-cmdk-btn kbd {
+    display: none;
+  }
+  html #root .flow-app .topbar-actions {
+    gap: 2px !important;
+  }
+  html #root .flow-app .app-footer {
+    padding-inline: 12px;
+  }
+  html #root .flow-app .app-footer > span {
+    max-width: 170px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html #root .flow-app *,
+  html #root .flow-app *::before,
+  html #root .flow-app *::after {
+    scroll-behavior: auto !important;
+  }
+}

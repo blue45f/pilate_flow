@@ -19,8 +19,7 @@ import {
 } from 'lucide-react';
 import type { TeachingLogContext } from './components/LogSessionModal';
 import type { LiveStageNavigationHandle } from './components/LiveStageView';
-import { SequenceWorkbench } from './components/SequenceWorkbench';
-import type { WorkbenchPlanningMode } from './components/SequenceWorkbench';
+import { SequenceStudioWorkbench } from './components/SequenceStudioWorkbench';
 import { LightDismissDialog } from './components/LightDismissDialog';
 import { PwaInstallPanel } from './components/PwaInstallPanel';
 import { StudioOffline3dReadinessCard } from './components/StudioOffline3dReadinessCard';
@@ -127,11 +126,10 @@ const LazyMotionCoveragePreviewHarness = lazy(() =>
 );
 
 const navigation = [
-  { id: 'workbench', label: '수업', detail: '오늘의 수업', icon: CalendarDays },
+  { id: 'workbench', label: '작성', detail: '수업 만들기', icon: CalendarDays },
   { id: 'atlas', label: '동작', detail: '동작 라이브러리', icon: Library },
-  { id: 'schedule', label: '일정', detail: '강사 일정', icon: CalendarRange },
   { id: 'binder', label: '저장', detail: '저장한 수업', icon: Bookmark },
-  { id: 'history', label: '기록', detail: '수업 기록', icon: Clock3 },
+  { id: 'schedule', label: '일정', detail: '수업 일정', icon: CalendarRange },
 ] as const;
 
 /** Runs only when the workspace inside Suspense actually commits, including its first load. */
@@ -172,9 +170,6 @@ export function App() {
   } | null>(null);
   const [motionDraftLabOpen, setMotionDraftLabOpen] = useState(false);
   const [motionDraftInitialId, setMotionDraftInitialId] = useState<MotionDraftId | undefined>();
-  const [planningMode, setPlanningMode] = useState<WorkbenchPlanningMode>(() =>
-    usePilatesStore.getState().activeSteps.length ? 'auto' : 'manual',
-  );
   const [preview, setPreview] = useState<PilatesExercise | null>(null);
   const [ideaSheetState, setIdeaSheetState] = useState<{
     open: boolean;
@@ -229,14 +224,12 @@ export function App() {
       typeof window !== 'undefined' &&
       window.location.hash.includes(PF_SEQUENCE_SHARE_HASH_PREFIX)
     ) {
-      window.history.replaceState(
-        null,
-        '',
-        `${window.location.pathname}${window.location.search}`,
-      );
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
     }
   };
-  const [memberSection, setMemberSection] = useState<'schedule' | 'bookings' | 'wallet'>('schedule');
+  const [memberSection, setMemberSection] = useState<'schedule' | 'bookings' | 'wallet'>(
+    'schedule',
+  );
   const [menuOpen, setMenuOpen] = useState(false);
   const [workspaceFocusRequest, setWorkspaceFocusRequest] = useState(0);
   const nonRestStepCount = useMemo(
@@ -245,11 +238,8 @@ export function App() {
   );
   const canStartLiveStage = useMemo(
     () =>
-      buildSequenceSimulation(
-        state.activeSteps,
-        state.exercises,
-        state.activeTargetMinutes,
-      ).gate.canRehearse,
+      buildSequenceSimulation(state.activeSteps, state.exercises, state.activeTargetMinutes).gate
+        .canRehearse,
     [state.activeSteps, state.exercises, state.activeTargetMinutes],
   );
   const [logId, setLogId] = useState<string | null>(null);
@@ -318,7 +308,8 @@ export function App() {
           : section === 'bookings'
             ? 'member-bookings-section'
             : 'member-schedule-section';
-      const el = document.getElementById(targetId) ?? document.getElementById('workspace-main-heading');
+      const el =
+        document.getElementById(targetId) ?? document.getElementById('workspace-main-heading');
       el?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
     });
   };
@@ -419,7 +410,9 @@ export function App() {
     }
   };
   return (
-    <div className={`app-shell vnext-shell ${state.activeTab === 'stage' ? 'is-teaching' : ''}`}>
+    <div
+      className={`app-shell vnext-shell flow-app ${state.activeTab === 'stage' ? 'is-teaching' : ''}`}
+    >
       <a className="skip-link" href="#main-content">
         본문으로 이동
       </a>
@@ -462,11 +455,13 @@ export function App() {
             }
             changeTab('workbench');
           }}
-          aria-label={portalRole === 'member' ? 'Flow Atelier 회원 예약으로' : 'Flow Atelier 계획으로'}
+          aria-label={
+            portalRole === 'member' ? 'Pilates Flow 회원 예약으로' : 'Pilates Flow 수업 만들기로'
+          }
         >
           <Leaf size={30} strokeWidth={1.3} />
           <span>
-            Flow Atelier<small>PILATES CLASS PLANNER</small>
+            Pilates Flow<small>PLAN. FLOW. TEACH.</small>
           </span>
         </a>
         <button
@@ -495,8 +490,7 @@ export function App() {
                 aria-current={memberSection === 'bookings' ? 'page' : undefined}
                 className={memberSection === 'bookings' ? 'active' : ''}
               >
-                <Bookmark size={20} strokeWidth={1.6} />
-                내 예약 현황
+                <Bookmark size={20} strokeWidth={1.6} />내 예약 현황
               </button>
               <button
                 type="button"
@@ -504,14 +498,13 @@ export function App() {
                 aria-current={memberSection === 'wallet' ? 'page' : undefined}
                 className={memberSection === 'wallet' ? 'active' : ''}
               >
-                <Ticket size={20} strokeWidth={1.6} />
-                내 수강권 지갑
+                <Ticket size={20} strokeWidth={1.6} />내 수강권 지갑
               </button>
             </nav>
           </>
         ) : (
           <>
-            <p className="sidebar-label">필라테스 작업실</p>
+            <p className="sidebar-label">나의 작업실</p>
             <nav className="desktop-nav" aria-label="주 메뉴">
               {navigation.map(({ id, detail, icon: Icon }) => (
                 <button
@@ -540,8 +533,15 @@ export function App() {
               <small>{canStartLiveStage ? `동작 ${nonRestStepCount}개` : '동작 추가'}</small>
             </button>
             <details className="pf-sidebar-more-drawer">
-              <summary>다가오는 수업 · 보조 도구</summary>
+              <summary>기록 · 도구 더보기</summary>
               <div className="pf-sidebar-more-drawer__body">
+                <button
+                  type="button"
+                  className="sidebar-study-link"
+                  onClick={() => changeTab('history')}
+                >
+                  <Clock3 size={18} /> 수업 기록
+                </button>
                 <section className="v2-sidebar-upcoming" aria-label="다가오는 수업">
                   <h2>다가오는 수업</h2>
                   {upcoming.length ? (
@@ -591,7 +591,11 @@ export function App() {
                 >
                   <CalendarDays size={18} aria-hidden="true" /> 회원 예약 화면 보기
                 </button>
-                <button className="pwa-sidebar-button" type="button" onClick={() => setInstallOpen(true)}>
+                <button
+                  className="pwa-sidebar-button"
+                  type="button"
+                  onClick={() => setInstallOpen(true)}
+                >
                   <ArrowDownToLine size={18} aria-hidden="true" /> 앱 설치
                 </button>
               </div>
@@ -610,7 +614,11 @@ export function App() {
             >
               <CalendarDays size={18} aria-hidden="true" /> 강사 작업실로 전환
             </button>
-            <button className="pwa-sidebar-button" type="button" onClick={() => setInstallOpen(true)}>
+            <button
+              className="pwa-sidebar-button"
+              type="button"
+              onClick={() => setInstallOpen(true)}
+            >
               <ArrowDownToLine size={18} aria-hidden="true" /> 앱 설치
             </button>
           </>
@@ -639,7 +647,7 @@ export function App() {
               <Menu size={21} />
             </button>
             <span className="vnext-wordmark">
-              Flow Atelier<small>YOUR TEACHING STUDIO</small>
+              Pilates Flow<small>PLAN. FLOW. TEACH.</small>
             </span>
           </div>
           <div className="breadcrumb">
@@ -648,7 +656,9 @@ export function App() {
               ? '회원 수업 예약·수강권'
               : state.activeTab === 'stage'
                 ? '수업 진행'
-                : navigation.find((item) => item.id === state.activeTab)?.detail}
+                : state.activeTab === 'history'
+                  ? '수업 기록'
+                  : navigation.find((item) => item.id === state.activeTab)?.detail}
           </div>
           <div className="topbar-actions">
             {state.activeTab !== 'stage' && (
@@ -741,95 +751,94 @@ export function App() {
                 />
               )}
               {state.activeTab === 'workbench' && (
-            <SequenceWorkbench
-              planningMode={planningMode}
-              onPlanningModeChange={setPlanningMode}
-              sourceDetailOpen={!!preview || ideaSheetState.open}
-              onOpenYouTubePreview={(exercise) => {
-                if (isMovementIdeaExercise(exercise)) {
-                  setIdeaSheetState({ open: true, exercise });
-                  return;
-                }
-                setPreview(exercise);
-              }}
-              onOpenIdeaSheet={(exercise) =>
-                setIdeaSheetState({ open: true, exercise: exercise ?? null })
-              }
-              onOpenClipper={() => setClipperOpen(true)}
-              onOpenLogModal={openLog}
-              onOpenInventory={() => setSettingsOpen(true)}
-            />
-          )}
-          <Suspense
-            fallback={
-              <p className="status" role="status">
-                작업 공간을 열고 있어요…
-              </p>
-            }
-          >
-            {state.activeTab === 'schedule' && <InstructorScheduleView />}
-            {state.activeTab === 'atlas' && (
-              <ExerciseAtlasView
-                onOpenStudy={(exerciseId) => setStudyOpen({ mode: 'study', exerciseId })}
-                onOpenMotionDrafts={(draftId) => {
-                  setMotionDraftInitialId(draftId);
-                  setMotionDraftLabOpen(true);
-                }}
-                onOpenYouTubePreview={(exercise) => {
-                  if (isMovementIdeaExercise(exercise)) {
-                    setIdeaSheetState({ open: true, exercise });
-                    return;
+                <SequenceStudioWorkbench
+                  onStartClass={() => changeTab('stage')}
+                  sourceDetailOpen={!!preview || ideaSheetState.open}
+                  onOpenYouTubePreview={(exercise) => {
+                    if (isMovementIdeaExercise(exercise)) {
+                      setIdeaSheetState({ open: true, exercise });
+                      return;
+                    }
+                    setPreview(exercise);
+                  }}
+                  onOpenIdeaSheet={(exercise) =>
+                    setIdeaSheetState({ open: true, exercise: exercise ?? null })
                   }
-                  setPreview(exercise);
-                }}
-                onOpenIdeaSheet={(exercise) =>
-                  setIdeaSheetState({ open: true, exercise: exercise ?? null })
+                  onOpenClipper={() => setClipperOpen(true)}
+                  onOpenLogModal={openLog}
+                  onOpenInventory={() => setSettingsOpen(true)}
+                />
+              )}
+              <Suspense
+                fallback={
+                  <p className="status" role="status">
+                    작업 공간을 열고 있어요…
+                  </p>
                 }
-                onOpenClipper={() => setClipperOpen(true)}
-              />
-            )}
-            {(state.activeTab === 'binder' || state.activeTab === 'history') && (
-              <ClassBinderView
-                view={state.activeTab === 'history' ? 'history' : 'saved'}
-                onOpenLogModal={openLog}
-              />
-            )}
-            {state.activeTab === 'stage' && (
-              <LiveStageView
-                navigationRef={stageNavigationRef}
-                onNavigate={completeStageTransition}
-                onNavigationCancelled={() => {
-                  pendingStageTransition.current = null;
-                }}
-                onOpenLogModal={openLog}
-              />
-            )}
-            <WorkspaceHeadingFocus tab={state.activeTab} request={workspaceFocusRequest} />
-          </Suspense>
-          {state.activeTab !== 'schedule' && (
-            <aside
-              className="instructor-review-notice v2-review-notice"
-              aria-label="강사 검토 안내"
-            >
-              <details>
-                <summary>자료·모션의 검토 상태 안내</summary>
-                <p>
-                  검토 기록은 선택 사항이며, 없어도 수업을 구성할 수 있습니다. 진행 전 대상자 컨디션과
-                  기구·스프링 장력을 직접 확인하세요. 검토 여부나 AI 제안은 의학적 판단·운동 적합성 보장이
-                  아닙니다.
-                </p>
-                <button className="text-button" onClick={() => changeTab('atlas')}>
-                  동작 자료·기록 보기
-                </button>
-              </details>
-            </aside>
-          )}
+              >
+                {state.activeTab === 'schedule' && <InstructorScheduleView />}
+                {state.activeTab === 'atlas' && (
+                  <ExerciseAtlasView
+                    onOpenStudy={(exerciseId) => setStudyOpen({ mode: 'study', exerciseId })}
+                    onOpenMotionDrafts={(draftId) => {
+                      setMotionDraftInitialId(draftId);
+                      setMotionDraftLabOpen(true);
+                    }}
+                    onOpenYouTubePreview={(exercise) => {
+                      if (isMovementIdeaExercise(exercise)) {
+                        setIdeaSheetState({ open: true, exercise });
+                        return;
+                      }
+                      setPreview(exercise);
+                    }}
+                    onOpenIdeaSheet={(exercise) =>
+                      setIdeaSheetState({ open: true, exercise: exercise ?? null })
+                    }
+                    onOpenClipper={() => setClipperOpen(true)}
+                  />
+                )}
+                {(state.activeTab === 'binder' || state.activeTab === 'history') && (
+                  <ClassBinderView
+                    view={state.activeTab === 'history' ? 'history' : 'saved'}
+                    onOpenLogModal={openLog}
+                  />
+                )}
+                {state.activeTab === 'stage' && (
+                  <LiveStageView
+                    navigationRef={stageNavigationRef}
+                    onNavigate={completeStageTransition}
+                    onNavigationCancelled={() => {
+                      pendingStageTransition.current = null;
+                    }}
+                    onOpenLogModal={openLog}
+                  />
+                )}
+                <WorkspaceHeadingFocus tab={state.activeTab} request={workspaceFocusRequest} />
+              </Suspense>
+              {state.activeTab === 'atlas' && (
+                <aside
+                  className="instructor-review-notice v2-review-notice"
+                  aria-label="강사 검토 안내"
+                >
+                  <details>
+                    <summary>자료·모션의 검토 상태 안내</summary>
+                    <p>
+                      검토 기록은 선택 사항이며, 없어도 수업을 구성할 수 있습니다. 진행 전 대상자
+                      컨디션과 기구·스프링 장력을 직접 확인하세요. 검토 여부나 AI 제안은 의학적
+                      판단·운동 적합성 보장이 아닙니다.
+                    </p>
+                    <button className="text-button" onClick={() => changeTab('atlas')}>
+                      동작 자료·기록 보기
+                    </button>
+                  </details>
+                </aside>
+              )}
             </>
           )}
         </main>
         <footer className="app-footer">
           <span>
-            FLOW ATELIER <span>·</span> 수업을 준비하는 조용한 작업실
+            PILATES FLOW <span>·</span> 나의 수업, 나의 흐름
           </span>
           <button onClick={() => setSettingsOpen(true)}>저장·복구 안내</button>
         </footer>
@@ -871,7 +880,11 @@ export function App() {
         </nav>
       ) : (
         state.activeTab !== 'stage' && (
-          <nav className="bottom-nav" inert={menuOpen ? true : undefined} aria-label="모바일 주 메뉴">
+          <nav
+            className="bottom-nav"
+            inert={menuOpen ? true : undefined}
+            aria-label="모바일 주 메뉴"
+          >
             {navigation.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -1069,15 +1082,16 @@ export function App() {
         <section className="settings-section">
           <h3>추천·AI 보조와 동작 자료 안내</h3>
           <p>
-            기본 추천은 기구·시간·난이도·이력을 바탕으로 이 기기에서 추가 비용 없이(0원 확인됨) 바로 조합됩니다.
-            서버 무료 조건 AI 보조는 설정된 서버 환경의 확인된 한도 안에서만 동작하며, 한도 도달·연결 오류 시에는
-            기기 내 규칙 추천으로 자동 전환되어 시퀀스 작성이 중단되지 않습니다. 개인 구독·개발도구 크레딧과 외부
-            종량제 API 크레딧은 동일 크레딧으로 가정하지 않으며, 브라우저 비밀키 노출·저장과 동의 없는 유료 과금
-            호출은 차단됩니다.
+            기본 추천은 기구·시간·난이도·이력을 바탕으로 이 기기에서 추가 비용 없이(0원 확인됨) 바로
+            조합됩니다. 서버 무료 조건 AI 보조는 설정된 서버 환경의 확인된 한도 안에서만 동작하며,
+            한도 도달·연결 오류 시에는 기기 내 규칙 추천으로 자동 전환되어 시퀀스 작성이 중단되지
+            않습니다. 개인 구독·개발도구 크레딧과 외부 종량제 API 크레딧은 동일 크레딧으로 가정하지
+            않으며, 브라우저 비밀키 노출·저장과 동의 없는 유료 과금 호출은 차단됩니다.
           </p>
           <p>
-            모든 추천·도해·창작 메모는 수업 준비 참고 자료이며 의학적 진단이나 치료·안전성을 보장하지
-            않습니다. 수업 전 강사가 대상자 컨디션과 스프링 장력을 직접 확인하고, 통증 발생 시 즉시 중단하세요.
+            모든 추천·도해·창작 메모는 수업 준비 참고 자료이며 의학적 진단이나 치료·안전성을
+            보장하지 않습니다. 수업 전 강사가 대상자 컨디션과 스프링 장력을 직접 확인하고, 통증 발생
+            시 즉시 중단하세요.
           </p>
         </section>
         <details className="settings-section safety-notes">

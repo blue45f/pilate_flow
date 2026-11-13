@@ -6,6 +6,14 @@ import type {
   PilatesExercise,
   PropType,
 } from '../types/pilates';
+import { attachExistingVideoReference, getExerciseVideoEvidence } from './exerciseVideoBindings';
+import {
+  getVideoMatchReasonKo,
+  getVideoReferenceScope,
+  safeVideoDiscoveryLimit,
+  scoreVideoSemanticMatch,
+  type VideoReferenceScope,
+} from '../utils/videoSemanticMatching';
 
 export interface CrawledYouTubeDiscoveryItem {
   readonly videoId: string;
@@ -15,9 +23,19 @@ export interface CrawledYouTubeDiscoveryItem {
   readonly apparatus: readonly ApparatusType[];
   readonly blocks: readonly ClassBlockCategory[];
   readonly keywords: readonly string[];
+  readonly bodyPositions?: readonly BodyPosition[];
+  readonly props?: readonly PropType[];
+  readonly metadataStatus?: 'existing-catalog-metadata' | 'creator-page-and-oembed';
+  readonly playbackVerified: false;
+  readonly segmentVerified: false;
   readonly watchUrl: string;
   readonly embedUrl: string;
   readonly thumbnailUrl: string;
+}
+
+export interface CrawledYouTubeRelatedItem extends CrawledYouTubeDiscoveryItem {
+  readonly referenceScope: VideoReferenceScope;
+  readonly matchReasonKo: string;
 }
 
 interface RawSeed {
@@ -59,7 +77,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['복직근', '복횡근', '척추기립근 신장'],
     breath: '들숨에 견갑 하단까지 구르고 날숨에 복부 스쿱으로 복귀',
-    cues: ['양손으로 정강이 앞을 감싸 C커브 공 모양 유지', '경추나 뒤통수로 바닥을 누르지 않고 복부 브레이크 사용'],
+    cues: [
+      '양손으로 정강이 앞을 감싸 C커브 공 모양 유지',
+      '경추나 뒤통수로 바닥을 누르지 않고 복부 브레이크 사용',
+    ],
     precautions: '급성 디스크·골다공증·경추 통증 시 굴르기 제외 (밸런스 홀드로 대체)',
     videoId: 'RdloRK4oruk',
     videoTitle: 'Pilates teaser Modification + rolling like a ball',
@@ -78,10 +99,13 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['복횡근', '복직근', '고관절 굴곡근'],
     breath: '들숨에 팔·다리 사선 신장, 날숨에 서클 그리며 테이블탑 복귀',
-    cues: ['팔·다리가 멀어질 때도 견갑 하각 컬업 높이를 일정하게 유지', '허리가 뜨지 않는 다리 각도 선택'],
+    cues: [
+      '팔·다리가 멀어질 때도 견갑 하각 컬업 높이를 일정하게 유지',
+      '허리가 뜨지 않는 다리 각도 선택',
+    ],
     precautions: '경추 피로 시 한 손으로 후두부 지지 또는 머리 내리고 진행',
-    videoId: 'NGiqd_7O-Tk',
-    videoTitle: 'The Original 34 Classical Pilates Mat Exercises | OPC',
+    videoId: 'SbAzXngP480',
+    videoTitle: 'Double Leg Stretch on the Mat | Online Pilates Classes',
     channelName: 'Online Pilates Classes by Lesley Logan',
     region: 'global',
   },
@@ -97,7 +121,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['척추기립근 신장', '복횡근', '햄스트링'],
     breath: '들숨에 정수리 수직 신장, 날숨에 배꼽을 뒤로 당기며 분절 굴곡',
-    cues: ['보이지 않는 벽에 등을 세운 뒤 위쪽 척추부터 하나씩 말아 내려가기', '어깨 거상 없이 팔은 바닥과 평행 유지'],
+    cues: [
+      '보이지 않는 벽에 등을 세운 뒤 위쪽 척추부터 하나씩 말아 내려가기',
+      '어깨 거상 없이 팔은 바닥과 평행 유지',
+    ],
     precautions: '햄스트링 단축 시 무릎을 살짝 굽히거나 요가블록/시트 패드 위 착석',
     videoId: 'H3D_RnGYYss',
     videoTitle: 'Contrology: The Original 34 Classical Mat Pilates Exercises',
@@ -116,7 +143,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['복횡근', '내복사근', '햄스트링 유연성'],
     breath: '들숨에 뒤로 구르고 날숨에 좌골 뒤 밸런스 정지',
-    cues: ['양 발목 또는 종아리를 잡고 V자 다리 간격 고정', '정점에서 흉골을 부드럽게 들어 균형 유지'],
+    cues: [
+      '양 발목 또는 종아리를 잡고 V자 다리 간격 고정',
+      '정점에서 흉골을 부드럽게 들어 균형 유지',
+    ],
     precautions: '요추 평탄화·꼬리뼈 통증·골다공증 대상자는 구르기 생략 후 티저 프렙으로 대체',
     videoId: '--kCKlcN9C8',
     videoTitle: 'Pilates Enthusiasts : S2E27 : Breaking Down the Open Leg Rocker',
@@ -135,11 +165,14 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['외복사근', '내복사근', '하복부'],
     breath: '들숨에 원 시작, 날숨에 반대쪽 반원 그리며 중심 정지',
-    cues: ['양 어깨와 견갑대를 매트에 단단히 고정', '양 뒤꿈치가 서로 밀리지 않도록 내전근 밀착 유지'],
+    cues: [
+      '양 어깨와 견갑대를 매트에 단단히 고정',
+      '양 뒤꿈치가 서로 밀리지 않도록 내전근 밀착 유지',
+    ],
     precautions: '요추 불안정 시 무릎 굴곡 또는 작은 원 범위로 제한',
-    videoId: 'mfiKvIqWswE',
-    videoTitle: '34 Original Pilates Exercises',
-    channelName: 'Classical Pilates Archive',
+    videoId: 'MZoj2FqYdDY',
+    videoTitle: 'Corkscrew on the Mat | Online Pilates Classes',
+    channelName: 'Online Pilates Classes by Lesley Logan',
     region: 'global',
   },
   {
@@ -155,7 +188,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['복사근', '흉추 회전근', '햄스트링'],
     breath: '들숨에 흉추 회전, 날숨에 반대쪽 새끼발가락 바깥으로 스쿱 리치',
-    cues: ['회전할 때 반대쪽 좌골이 바닥에서 뜨지 않도록 무겁게 고정', '뒷손은 내회전하며 어깨 앞면이 말리지 않게 길게 뻗기'],
+    cues: [
+      '회전할 때 반대쪽 좌골이 바닥에서 뜨지 않도록 무겁게 고정',
+      '뒷손은 내회전하며 어깨 앞면이 말리지 않게 길게 뻗기',
+    ],
     precautions: '디스크 회전+굴곡 금기 대상자는 수직 축 회전(스파인 트위스트)까지만 진행',
     videoId: 'G_Y1-OyDt_U',
     videoTitle: '필라테스 강사도 놓치는 Spine Twist & Saw 디테일 | 척추 회전 업그레이드',
@@ -175,11 +211,14 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['햄스트링', '둔근', '상부 등 신전근', '대퇴직근 신장'],
     breath: '한 쪽 두 번 펄스 킥마다 들숨·날숨 교대 리듬',
-    cues: ['전완으로 매트를 밀어 흉곽과 복부를 바닥에서 가볍게 들어 올리기', '무릎을 접을 때 치골이 매트에서 들썩이지 않도록 복부 고정'],
+    cues: [
+      '전완으로 매트를 밀어 흉곽과 복부를 바닥에서 가볍게 들어 올리기',
+      '무릎을 접을 때 치골이 매트에서 들썩이지 않도록 복부 고정',
+    ],
     precautions: '무릎 관절 통증 시 발목 과도한 반동 킥 주의',
-    videoId: 'ZbtEw_pcPp4',
-    videoTitle: 'How to Do the Open Leg Rocker | Pilates Workout',
-    channelName: 'Howcast',
+    videoId: '',
+    videoTitle: '',
+    channelName: '영상 연결 미확인 · 제작자 원문 참조',
     region: 'global',
   },
   {
@@ -194,10 +233,13 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['복직근', '복횡근', '둔근·햄스트링 고정'],
     breath: '들숨에 상체 컬업 준비, 날숨에 분절 롤업 및 전굴',
-    cues: ['양손으로 목을 잡아당기지 않고 후두부를 손바닥에 가볍게 지지', '힌지 백 구간에서 척추 축성 신장 유지 후 분절 하강'],
+    cues: [
+      '양손으로 목을 잡아당기지 않고 후두부를 손바닥에 가볍게 지지',
+      '힌지 백 구간에서 척추 축성 신장 유지 후 분절 하강',
+    ],
     precautions: '골다공증·경추 디스크 대상자 제외 (하프 롤백으로 대체)',
-    videoId: 'NGiqd_7O-Tk',
-    videoTitle: 'The Original 34 Classical Pilates Mat Exercises | OPC',
+    videoId: 'B6iIe9KjVTo',
+    videoTitle: 'Neck Pull on the Mat | Online Pilates Classes',
     channelName: 'Online Pilates Classes by Lesley Logan',
     region: 'global',
   },
@@ -213,7 +255,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['복횡근', '둔근', '삼두근·견갑 안정근'],
     breath: '들숨에 오버헤드 롤오버, 날숨에 천장 수직 잭나이프 후 분절 하강',
-    cues: ['체중을 경추가 아닌 양 견갑대 위쪽과 삼두근 지지에 두기', '내려올 때 양 다리가 얼굴 쪽으로 떨어지지 않게 저항하며 분절'],
+    cues: [
+      '체중을 경추가 아닌 양 견갑대 위쪽과 삼두근 지지에 두기',
+      '내려올 때 양 다리가 얼굴 쪽으로 떨어지지 않게 저항하며 분절',
+    ],
     precautions: '경추 병변·고혈압·녹내장·골다공증 시 인버전 동작 금지',
     videoId: '1e_wDU8zUqU',
     videoTitle: 'Pilates Jack Knife Exercise- Mat Pilates- March Matness',
@@ -232,7 +277,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['복직근', '복횡근', '장요근·대퇴사두 협응'],
     breath: '들숨에 팔·상체 준비, 날숨에 다리와 상체 V자 정렬 리프트',
-    cues: ['다리 각도와 평행하게 양팔을 발끝 방향으로 뻗어 흉추 열기', '내려갈 때 다리는 유지한 채 요추부터 한 분절씩 매트에 내려놓기'],
+    cues: [
+      '다리 각도와 평행하게 양팔을 발끝 방향으로 뻗어 흉추 열기',
+      '내려갈 때 다리는 유지한 채 요추부터 한 분절씩 매트에 내려놓기',
+    ],
     precautions: '요추 통증 시 한 다리 발바닥을 매트에 둔 원레그 티저로 완화',
     videoId: 'RdloRK4oruk',
     videoTitle: 'Pilates teaser Modification + rolling like a ball',
@@ -251,7 +299,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['심부 복부', '삼각근·흉근 신장', '내전근'],
     breath: '날숨에 롤오버 후 다리 교차, 들숨에 티저 경유 팔 뒤로 깍지 신장',
-    cues: ['롤오버에서 티저로 이어지는 전환 구간을 반동 없이 코어로 연결', '다리 교차 방향을 매 세트 번갈아 수행'],
+    cues: [
+      '롤오버에서 티저로 이어지는 전환 구간을 반동 없이 코어로 연결',
+      '다리 교차 방향을 매 세트 번갈아 수행',
+    ],
     precautions: '인버전 금기 및 견관절 전방 불안정 시 팔 뒤 깍지 범위 축소',
     videoId: 'BK8OJ1tukUU',
     videoTitle: '#boomerang Pilates March MATness 2023',
@@ -270,7 +321,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['복부 스쿱', '고관절 외회전근', '척추 마사지'],
     breath: '정점에서 박수 3회 후 들숨에 롤백, 날숨에 복귀 박수 3회',
-    cues: ['발목이 아닌 고관절에서 다리 전체를 열었다 닫으며 박수 치기', '어깨 긴장을 풀고 견갑선까지만 부드럽게 구르기'],
+    cues: [
+      '발목이 아닌 고관절에서 다리 전체를 열었다 닫으며 박수 치기',
+      '어깨 긴장을 풀고 견갑선까지만 부드럽게 구르기',
+    ],
     precautions: '꼬리뼈·요추 민감 대상자는 롤링 제외하고 시티드 밸런스로 진행',
     videoId: 'iVwm4c85mSU',
     videoTitle: '#seal Pilates March MATness 2023',
@@ -290,7 +344,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['심부 코어', '둔근', '햄스트링 신장'],
     breath: '날숨에 한 다리를 천장으로 길게 뻗으며 반대 발목 터치 교대',
-    cues: ['골반이 좌우로 기울지 않도록 천장 쪽 다리를 수직으로 리치', '목에 체중이 실리지 않도록 견갑대 지지 유지'],
+    cues: [
+      '골반이 좌우로 기울지 않도록 천장 쪽 다리를 수직으로 리치',
+      '목에 체중이 실리지 않도록 견갑대 지지 유지',
+    ],
     precautions: '경추 통증·고혈압·어지럼증 대상자 실시 제외',
     videoId: 'Qv-Cq_MTu5I',
     videoTitle: 'Control Balance Pilates Variations for Flexibility & Core Control | March Matness',
@@ -310,7 +367,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['둔근', '고관절 굴곡근 신장', '복횡근'],
     breath: '다리 교차 시 날숨 2펄스 리듬으로 가위질 가동',
-    cues: ['양손으로 골반 뒤쪽을 받칠 때 손목이 꺾이지 않게 팔꿈치를 모으기', '앞뒤 다리가 동일한 각도로 대칭 분할되도록 유도'],
+    cues: [
+      '양손으로 골반 뒤쪽을 받칠 때 손목이 꺾이지 않게 팔꿈치를 모으기',
+      '앞뒤 다리가 동일한 각도로 대칭 분할되도록 유도',
+    ],
     precautions: '손목·팔꿈치·경추 부담 시 매트에 골반을 내린 싱글 스트레이트 레그 스트레치로 대체',
     videoId: '0O_Tay-g3NY',
     videoTitle: 'Joseph Pilates Classical High Scissors',
@@ -329,7 +389,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '매트 체중 제어',
     muscles: ['삼두근', '대흉근', '전거근', '복횡근'],
     breath: '날숨에 롤다운 후 4걸음 워크아웃, 들숨에 팔꿈치 굴곡·날숨에 푸시업',
-    cues: ['팔꿈치가 옆구리를 스치듯 뒤로 접히는 삼두 푸시업 정렬 유지', '엉덩이를 높이 들어 손으로 매트를 밀며 발 쪽으로 걸어 들어오기'],
+    cues: [
+      '팔꿈치가 옆구리를 스치듯 뒤로 접히는 삼두 푸시업 정렬 유지',
+      '엉덩이를 높이 들어 손으로 매트를 밀며 발 쪽으로 걸어 들어오기',
+    ],
     precautions: '손목 통증 시 무릎 지지 푸시업 또는 경사면 지지로 완화',
     videoId: 'Ny0qFffcemg',
     videoTitle: 'Joseph Pilates Classical Push Up',
@@ -351,7 +414,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'mid',
     muscles: ['복횡근', '장요근 제어', '발목 가동성'],
     breath: '들숨에 캐리지 밀어내고 뒤꿈치 내림·올림, 날숨에 복부 스쿱 복귀',
-    cues: ['정수리는 앞으로, 배꼽은 등 뒤로 당기는 깊은 C커브 유지', '무릎을 펼 때 어깨가 솟지 않도록 견갑 하강 고정'],
+    cues: [
+      '정수리는 앞으로, 배꼽은 등 뒤로 당기는 깊은 C커브 유지',
+      '무릎을 펼 때 어깨가 솟지 않도록 견갑 하강 고정',
+    ],
     precautions: '요추 디스크 급성기 대상자는 플랫백(핸즈 백) 변형부터 시작',
     videoId: '9UYUlFkLHnM',
     videoTitle: '리포머 Stomach Massage 완전 정복 | 세팅, 큐잉, 오류 수정까지',
@@ -372,10 +438,14 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'mid',
     muscles: ['척추기립근', '복사근', '대퇴사두근'],
     breath: '들숨에 양팔 사선 리치 및 흉추 회전, 날숨에 중앙 정렬 복귀',
-    cues: ['양 좌골에 체중을 균등히 실은 채 흉추 위쪽에서만 회전 만들기', '시선은 뒷손 끝을 따라가며 목이 꺾이지 않게 신장'],
+    cues: [
+      '양 좌골에 체중을 균등히 실은 채 흉추 위쪽에서만 회전 만들기',
+      '시선은 뒷손 끝을 따라가며 목이 꺾이지 않게 신장',
+    ],
     precautions: '무릎 과신전 방지 및 고관절 집힘 시 스티키 패드 활용',
     videoId: 'nuc0fxNgtg0',
-    videoTitle: 'Pilates Reformer Encyclopedia: Stomach Massage - Round, Hands Back, Reach Up, & Twist',
+    videoTitle:
+      'Pilates Reformer Encyclopedia: Stomach Massage - Round, Hands Back, Reach Up, & Twist',
     channelName: 'PILATESOLOGY',
     region: 'global',
   },
@@ -392,7 +462,10 @@ const SEEDS: readonly RawSeed[] = [
     headrest: 'flat',
     muscles: ['복횡근', '척추 분절 가동', '햄스트링 신장'],
     breath: '날숨에 스트랩 당겨 롤오버(헤드레스트 평평하게!), 들숨에 다이아몬드 폴드 후 분절 하강',
-    cues: ['반드시 시작 전 헤드레스트를 완전히 내렸는지 먼저 확인', '캐리지가 스토퍼에 닿은 상태에서 흉추부터 요추까지 길게 늘리며 내려놓기'],
+    cues: [
+      '반드시 시작 전 헤드레스트를 완전히 내렸는지 먼저 확인',
+      '캐리지가 스토퍼에 닿은 상태에서 흉추부터 요추까지 길게 늘리며 내려놓기',
+    ],
     precautions: '헤드레스트 올림 금지! 경추 질환·골다공증·녹내장 대상자 제외',
     videoId: 'JxRhly8iWa4',
     videoTitle: '숏스파인 Short Spine massage 제대로 하는 법 | 리포머 필라테스',
@@ -413,7 +486,10 @@ const SEEDS: readonly RawSeed[] = [
     headrest: 'flat',
     muscles: ['둔근', '햄스트링', '흉요추 분절 가동'],
     breath: '들숨에 골반 들어 캐리지 밀기, 날숨에 위쪽 등부터 스프링 웰로 녹여 내리기',
-    cues: ['양손으로 숄더블록을 단단히 잡고 어깨가 귀로 밀리지 않게 고정', '정방향 3~5회 후 역방향으로 척추 파동 전환'],
+    cues: [
+      '양손으로 숄더블록을 단단히 잡고 어깨가 귀로 밀리지 않게 고정',
+      '정방향 3~5회 후 역방향으로 척추 파동 전환',
+    ],
     precautions: '무릎 통증·견관절 전방 불안정 시 일반 펠빅 브릿지로 대체',
     videoId: 'AVEd2T_ForA',
     videoTitle: 'Pilates Reformer Encyclopedia: Semi-Circle',
@@ -433,7 +509,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'mid',
     muscles: ['복횡근', '대퇴사두근', '고관절 신전·굴곡 분리'],
     breath: '날숨에 하복부 힘으로 캐리지를 스토퍼 쪽으로 당겨 복귀',
-    cues: ['어깨와 손목 위치를 고정하고 오직 고관절·무릎 움직임으로만 캐리지 왕복', '뒤꿈치를 좌골 가까이에 유지하며 상체 흔들림 최소화'],
+    cues: [
+      '어깨와 손목 위치를 고정하고 오직 고관절·무릎 움직임으로만 캐리지 왕복',
+      '뒤꿈치를 좌골 가까이에 유지하며 상체 흔들림 최소화',
+    ],
     precautions: '무릎 통증 시 무릎 패드 덧대기 또는 스탠딩 스쿠터로 대체',
     videoId: 'A3vkIu44sVs',
     videoTitle: 'PA Archives | Pilates Reformer Exercise: Knee Stretches',
@@ -453,7 +532,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'mid',
     muscles: ['복횡근', '전거근', '대퇴사두근'],
     breath: '빠르고 탄력 있는 호흡으로 무릎을 캐리지 위 3cm 띄운 채 인앤아웃',
-    cues: ['무릎 높이가 위아래로 튀지 않도록 낮은 수평 궤적 유지', '손바닥으로 풋바를 밀어 날개뼈 사이를 넓게 채우기'],
+    cues: [
+      '무릎 높이가 위아래로 튀지 않도록 낮은 수평 궤적 유지',
+      '손바닥으로 풋바를 밀어 날개뼈 사이를 넓게 채우기',
+    ],
     precautions: '손목 부담 시 전완 지지 변형 또는 플랫백 니 스트레치 유지',
     videoId: 'Q326QGZfleM',
     videoTitle: 'Knee Stretch Series - Pilates Reformer',
@@ -473,7 +555,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'mid',
     muscles: ['둔근', '상부 흉추 신전근', '광배근·전거근'],
     breath: '들숨에 골반 앞면 열며 캐리지 밀기, 날숨에 가슴 들어 올리며 당겨 오기',
-    cues: ['허리로 꺾지 않고 둔근 수축으로 고관절 전면(장요근)을 먼저 펴기', '돌아올 때 흉골을 천장 사선으로 길게 끌어올리기'],
+    cues: [
+      '허리로 꺾지 않고 둔근 수축으로 고관절 전면(장요근)을 먼저 펴기',
+      '돌아올 때 흉골을 천장 사선으로 길게 끌어올리기',
+    ],
     precautions: '요추 과전만 통증 시 가동 범위 축소 및 복부 연결 우선 확인',
     videoId: 'xHFkokSNPg4',
     videoTitle: 'Pilates knee stretch and Downstretch #shorts #pilates #pilateslovers',
@@ -493,7 +578,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'mid',
     muscles: ['복횡근', '광배근', '삼두근', '후면 사슬 신장'],
     breath: '들숨에 다리를 팔 아래로 보내고 날숨에 복부 리프트로 돌아오기',
-    cues: ['풋바 위에 앉은 준비 자세에서 손가락 방향과 미끄럼 방지를 먼저 점검', '정수리는 아래로, 좌골은 천장으로 끌어올리는 역V자 리프트'],
+    cues: [
+      '풋바 위에 앉은 준비 자세에서 손가락 방향과 미끄럼 방지를 먼저 점검',
+      '정수리는 아래로, 좌골은 천장으로 끌어올리는 역V자 리프트',
+    ],
     precautions: '고난도 균형 동작으로 손목 불안정·어지럼증 대상자 제외, 스포팅 필수',
     videoId: '7TDdzbuLiUI',
     videoTitle: 'PA Archives | Pilates Reformer Exercise: Tendon Stretch',
@@ -514,7 +602,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'down',
     muscles: ['복직근', '복횡근', '고관절 내전근', '전면 삼각근'],
     breath: '들숨에 팔·다리 천장 리치 후 서클 오픈, 날숨에 복부 스쿱 홀드 복귀',
-    cues: ['롱박스 위에서 천골과 하부 흉곽을 단단히 지지한 뒤 시작', '팔·다리가 사선으로 벌어질 때 상체 컬업 높이가 떨어지지 않게 유지'],
+    cues: [
+      '롱박스 위에서 천골과 하부 흉곽을 단단히 지지한 뒤 시작',
+      '팔·다리가 사선으로 벌어질 때 상체 컬업 높이가 떨어지지 않게 유지',
+    ],
     precautions: '경추 피로 또는 박스 균형 불안 시 스트랩 없이 매트 더블레그 스트레치 선행',
     videoId: 'VzMG_pzUEmA',
     videoTitle: 'PA Archives | Pilates Reformer Exercise: Backstroke',
@@ -535,7 +626,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'down',
     muscles: ['복횡근', '복직근', '광배근·어깨 안정근'],
     breath: '들숨에 스트랩 당기며 티저 리프트, 정점에서 암 서클 3회 후 분절 하강',
-    cues: ['어깨로 스트랩을 당기지 않고 겨드랑이 아래 광배근과 복부 연결로 올라오기', '양 다리 높이를 고정한 채 상체만 부드럽게 분절해 내려놓기'],
+    cues: [
+      '어깨로 스트랩을 당기지 않고 겨드랑이 아래 광배근과 복부 연결로 올라오기',
+      '양 다리 높이를 고정한 채 상체만 부드럽게 분절해 내려놓기',
+    ],
     precautions: '롱박스 승하차 시 캐리지 흔들림 주의 (가벼운 스프링 세팅 확인)',
     videoId: 'epmHwGbbWnY',
     videoTitle: 'Backstroke into Teaser on the Reformer | Online Pilates Classes',
@@ -556,7 +650,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'down',
     muscles: ['중·하부 승모근', '흉추 신전근', '삼두근', '둔근'],
     breath: '들숨에 양팔 앞으로 뻗고 날숨에 큰 수영 원을 그리며 흉추 신전',
-    cues: ['가슴이 박스 앞모서리를 살짝 나오도록 엎드려 치골 지지 확보', '고개를 과도하게 젖히지 않고 뒷목이 길어지는 사선 아크 유지'],
+    cues: [
+      '가슴이 박스 앞모서리를 살짝 나오도록 엎드려 치골 지지 확보',
+      '고개를 과도하게 젖히지 않고 뒷목이 길어지는 사선 아크 유지',
+    ],
     precautions: '어깨 충돌 증후군 시 팔을 어깨선 아래 범위에서만 스윕',
     videoId: 'hNahzHLX2lE',
     videoTitle: 'Pilates Reformer Encyclopedia: Long Box - Breaststroke',
@@ -577,7 +674,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'down',
     muscles: ['내전근', '복횡근', '광배근'],
     breath: '들숨에 허벅지 안쪽으로 박스를 조이며 골반 살짝 리프트, 날숨에 복귀',
-    cues: ['말 안장에 앉듯 허벅지 안쪽 내전근 힘으로 펠빅 플로어와 하복부 연결', '팔을 앞으로 보낼 때 어깨 거상 없이 C커브 유지'],
+    cues: [
+      '말 안장에 앉듯 허벅지 안쪽 내전근 힘으로 펠빅 플로어와 하복부 연결',
+      '팔을 앞으로 보낼 때 어깨 거상 없이 C커브 유지',
+    ],
     precautions: '고관절 내전근 염좌 및 무릎 내측 통증 시 제외',
     videoId: 'mThgDfaUfBg',
     videoTitle: 'Horse Back on the Reformer',
@@ -599,7 +699,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'down',
     muscles: ['복직근', '햄스트링 신장', '고관절 굴곡근'],
     breath: '다리 타고 내려갈 때 날숨 분절, 다시 타고 올라올 때 날숨 복부 수축',
-    cues: ['풋스트랩에 건 반대쪽 발등을 단단히 당겨 앵커 고정', '나무를 타고 오르듯 허벅지→종아리→발목 순으로 손을 이동하며 척추 분절'],
+    cues: [
+      '풋스트랩에 건 반대쪽 발등을 단단히 당겨 앵커 고정',
+      '나무를 타고 오르듯 허벅지→종아리→발목 순으로 손을 이동하며 척추 분절',
+    ],
     precautions: '풋스트랩 체결 상태를 시작 전 반드시 손으로 당겨 확인',
     videoId: 'DSK0aUelmF4',
     videoTitle: 'Pilates Reformer, Short Box Series, Beg/ Int/ Adv.',
@@ -620,7 +723,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'mid',
     muscles: ['복사근', '전거근', '광배근', '내전근'],
     breath: '들숨에 캐리지 밀어 사이드 플랭크·아치, 날숨에 복부 스쿱 파이크 복귀',
-    cues: ['풋바를 잡은 양손 비대칭 그립과 숄더블록 앞뒤 발 위치를 먼저 정확히 세팅', '팔힘만이 아니라 옆구리 리프트로 캐리지를 조용히 닫기'],
+    cues: [
+      '풋바를 잡은 양손 비대칭 그립과 숄더블록 앞뒤 발 위치를 먼저 정확히 세팅',
+      '팔힘만이 아니라 옆구리 리프트로 캐리지를 조용히 닫기',
+    ],
     precautions: '상급자 전용 동작 · 손목·견관절 불안정 시 실시 금지 및 강사 밀착 스포팅',
     videoId: 'rL841ZgBO90',
     videoTitle: 'Pilates Reformer, Snake and Progressions, Advanced Level.',
@@ -641,7 +747,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'mid',
     muscles: ['둔근', '장요근 신장', '햄스트링', '골반 정렬'],
     breath: '들숨에 캐리지 밀어 스플릿 신장, 날숨에 앞다리 뒤꿈치·둔근 힘으로 복귀',
-    cues: ['양 골반(ASIS)이 정면 풋바를 나란히 바라보도록 스퀘어 정렬 유지', '초보자는 양손을 풋바에 얹고 시작해 안정된 후 핸즈프리 진행'],
+    cues: [
+      '양 골반(ASIS)이 정면 풋바를 나란히 바라보도록 스퀘어 정렬 유지',
+      '초보자는 양손을 풋바에 얹고 시작해 안정된 후 핸즈프리 진행',
+    ],
     precautions: '균형 상실 방지를 위해 미끄럼 방지 그립 양말 착용 필수',
     videoId: 'iNB8ZS9yj4I',
     videoTitle: 'Front Splits on the Reformer | Online Pilates Classes',
@@ -662,7 +771,10 @@ const SEEDS: readonly RawSeed[] = [
     footbar: 'mid',
     muscles: ['대퇴사두근', '햄스트링', '심부 코어 밸런스'],
     breath: '들숨에 뒷다리로 캐리지 밀기, 날숨에 앞무릎 굽히거나 펴며 중심 제어',
-    cues: ['캐리지 위에서 시작할 때 반드시 강사가 옆에서 기구를 잡아 스포팅', '시선을 정면 한 점에 고정해 흔들림 방지'],
+    cues: [
+      '캐리지 위에서 시작할 때 반드시 강사가 옆에서 기구를 잡아 스포팅',
+      '시선을 정면 한 점에 고정해 흔들림 방지',
+    ],
     precautions: '상급 스탠딩 동작 · 첫 시도 시 반드시 프론트 스플릿 숙련 후 진행',
     videoId: 'uaYgyWVdDMU',
     videoTitle: 'Russian Splits on the Reformer | Online Pilates Classes',
@@ -682,7 +794,10 @@ const SEEDS: readonly RawSeed[] = [
     headrest: 'up',
     muscles: ['복횡근', '광배근', '내전근'],
     breath: '들숨에 팔·다리 동시 뻗고 다리 오픈-클로즈, 날숨에 무릎 접고 마지막에 팔 복귀',
-    cues: ['4박자 순서(뻗기 → 다리 열기/닫기 → 무릎 접기 → 상체·팔 내리기)를 명확히 구분', '무릎을 접어 올 때까지 상체 컬업 높이를 끝까지 유지'],
+    cues: [
+      '4박자 순서(뻗기 → 다리 열기/닫기 → 무릎 접기 → 상체·팔 내리기)를 명확히 구분',
+      '무릎을 접어 올 때까지 상체 컬업 높이를 끝까지 유지',
+    ],
     precautions: '목 긴장 시 다리 오픈-클로즈만 먼저 분리 연습',
     videoId: 'zJaeongTKjE',
     videoTitle: '5-Minute Arms in Straps & Core Workout on the Studio Reformer',
@@ -702,7 +817,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '1 Blue (또는 1 Yellow)',
     muscles: ['복사근', '후면 삼각근·외회전근', '전면 삼각근'],
     breath: '날숨에 몸통 나선 회전과 함께 스트랩 프레스, 들숨에 천천히 저항 복귀',
-    cues: ['양반다리 또는 정강이 정렬로 앉아 양 좌골 무게중심을 동일하게 유지', '팔 힘만으로 당기지 않고 늑골 회전으로 스트랩을 이끌기'],
+    cues: [
+      '양반다리 또는 정강이 정렬로 앉아 양 좌골 무게중심을 동일하게 유지',
+      '팔 힘만으로 당기지 않고 늑골 회전으로 스트랩을 이끌기',
+    ],
     precautions: '회전근개 통증 시 가벼운 노란/파란 스프링으로 장력 하향',
     videoId: 'IsRhxlKrHi8',
     videoTitle: 'Side Arm Pilates Reformer Exercises: Centerline Variations Tutorial',
@@ -723,10 +841,15 @@ const SEEDS: readonly RawSeed[] = [
     springs: '하단 1 Red (또는 상단 안전 스트랩 필수)',
     muscles: ['햄스트링·종아리 신장', '요추 감압 스트레치', '복횡근'],
     breath: '날숨에 무릎을 펴며 발목 저측·배측굴곡 교대, 들숨에 무릎 접어 복귀',
-    cues: ['푸쉬스루바를 손과 발로 동시에 잡을 때 반드시 세이프티 스트랩 체결 확인', '꼬리뼈가 과하게 말려 뜨지 않는 범위에서 뒷다리 길게 신장'],
-    precautions: '하단 스프링 사용 시 반드시 안전 체인(Safety Strap) 체결 후 손으로 바를 잡아 보조!',
+    cues: [
+      '푸쉬스루바를 손과 발로 동시에 잡을 때 반드시 세이프티 스트랩 체결 확인',
+      '꼬리뼈가 과하게 말려 뜨지 않는 범위에서 뒷다리 길게 신장',
+    ],
+    precautions:
+      '하단 스프링 사용 시 반드시 안전 체인(Safety Strap) 체결 후 손으로 바를 잡아 보조!',
     videoId: 'mhulRpzBD0g',
-    videoTitle: '필라테스 | 따라하기쉬운 필라테스 캐딜락 BASIC 05️  💝 | 허리 & 엉덩이 & 다리 근육애 좋은 운동 (Monkey)',
+    videoTitle:
+      '필라테스 | 따라하기쉬운 필라테스 캐딜락 BASIC 05️  💝 | 허리 & 엉덩이 & 다리 근육애 좋은 운동 (Monkey)',
     channelName: '모션케어TV',
     region: 'kr',
   },
@@ -742,10 +865,14 @@ const SEEDS: readonly RawSeed[] = [
     springs: '상단 1 Blue (또는 1 Red)',
     muscles: ['복직근', '복횡근', '전거근·견갑 하강근'],
     breath: '들숨에 바를 천장으로 밀기 시작, 날숨에 상·하체 동시 V자 티저 리프트',
-    cues: ['스프링 보조를 활용해 매트 티저보다 척추를 더 길게 세우는 감각 익히기', '내려올 때 바가 먼저 튀어 올라가지 않도록 광배근으로 제어'],
+    cues: [
+      '스프링 보조를 활용해 매트 티저보다 척추를 더 길게 세우는 감각 익히기',
+      '내려올 때 바가 먼저 튀어 올라가지 않도록 광배근으로 제어',
+    ],
     precautions: '바 아래 머리 위치가 부딪히지 않도록 누운 거리 사전 세팅 필수',
     videoId: 'la-XSj9lmCs',
-    videoTitle: '[ 캐딜락 티저 동작 티칭 ] 10. Teaser : Easy mode 필라테스 캐딜락 시퀀스  / 큐잉  / #전주기구필라테스자격증',
+    videoTitle:
+      '[ 캐딜락 티저 동작 티칭 ] 10. Teaser : Easy mode 필라테스 캐딜락 시퀀스  / 큐잉  / #전주기구필라테스자격증',
     channelName: '유코어필라테스요가',
     region: 'kr',
   },
@@ -761,7 +888,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '하단 1~2 Red + 세이프티 스트랩 필수',
     muscles: ['척추 분절 가동', '둔근·햄스트링', '심부 코어'],
     breath: '날숨에 골반부터 분절해 들어 올리고, 무릎 굴곡·신전 후 위쪽 등부터 분절 하강',
-    cues: ['발 볼로 바 중앙을 정확히 딛고 미끄러지지 않는지 먼저 테스트', '척추 마디마디가 도장 찍히듯 내려오며 뒷다리 신장 극대화'],
+    cues: [
+      '발 볼로 바 중앙을 정확히 딛고 미끄러지지 않는지 먼저 테스트',
+      '척추 마디마디가 도장 찍히듯 내려오며 뒷다리 신장 극대화',
+    ],
     precautions: '하단 스프링 세이프티 스트랩 미체결 시 절대 실시 금지 · 경추 질환 제외',
     videoId: 'le5lDBQurtQ',
     videoTitle: '필라테스 | 따라하기쉬운 필라테스 캐딜락 BASIC 05️ | 척추 스트레칭 (Tower)',
@@ -780,10 +910,14 @@ const SEEDS: readonly RawSeed[] = [
     springs: '기둥 고정 그립 (체중 저항)',
     muscles: ['전신 척추 분절', '광배근', '둔근', '흉추 신전근'],
     breath: '들숨에 골반 뒤로 보내며 C커브 신장, 날숨에 파동처럼 골반 전진 및 가슴 오픈',
-    cues: ['양발을 기둥에 단단히 고정하고 손목·어깨에 매달리지 않도록 광배근 연결', '허리만 꺾지 말고 발끝부터 흉골까지 긴 활(Bow) 모양 만들기'],
+    cues: [
+      '양발을 기둥에 단단히 고정하고 손목·어깨에 매달리지 않도록 광배근 연결',
+      '허리만 꺾지 말고 발끝부터 흉골까지 긴 활(Bow) 모양 만들기',
+    ],
     precautions: '손악력 약화 및 어깨 탈구 이력 대상자 제외',
     videoId: '43Qf1NmZZok',
-    videoTitle: 'Spread eagle on the Cadillac uprights is a study in oppositional energy and spinal articulation',
+    videoTitle:
+      'Spread eagle on the Cadillac uprights is a study in oppositional energy and spinal articulation',
     channelName: 'Sunset Beach Pilates',
     region: 'global',
   },
@@ -799,7 +933,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '상단 캐노피 퍼지(Fuzzy) 루프 고정',
     muscles: ['광배근', '하부 승모근', '복횡근', '척추 견인 감압'],
     breath: '들숨에 견갑 하강(Active Hang) 준비, 날숨에 흉골을 천장으로 끌어올리기',
-    cues: ['퍼지 스트랩 길이가 좌우 동일한지, 벨크로가 완전히 잠겼는지 이중 점검', '귀와 어깨가 가까워지는 패시브 매달림 대신 견갑 안정 유지'],
+    cues: [
+      '퍼지 스트랩 길이가 좌우 동일한지, 벨크로가 완전히 잠겼는지 이중 점검',
+      '귀와 어깨가 가까워지는 패시브 매달림 대신 견갑 안정 유지',
+    ],
     precautions: '퍼지 스트랩 체결 안전 확인 필수 · 회전근개 손상 시 하프 행잉까지만 진행',
     videoId: 'qaQKl9dzsB4',
     videoTitle: 'Half and Full Hanging on the Cadillac | Online Pilates Classes',
@@ -818,10 +955,14 @@ const SEEDS: readonly RawSeed[] = [
     springs: '상단 2 Yellow (롤다운 바)',
     muscles: ['복직근', '복횡근', '견갑 안정근'],
     breath: '날숨에 골반 말아 롤다운 바 잡고 하강, 들숨 유지 후 날숨에 스쿱 복귀',
-    cues: ['양팔 간격을 어깨너비로 유지하고 손목이 꺾이지 않게 일직선 고정', '올라올 때 턱을 당기지 말고 복부 벽을 뒤로 밀어내며 분절'],
+    cues: [
+      '양팔 간격을 어깨너비로 유지하고 손목이 꺾이지 않게 일직선 고정',
+      '올라올 때 턱을 당기지 말고 복부 벽을 뒤로 밀어내며 분절',
+    ],
     precautions: '나무 바를 놓치지 않도록 엄지 감싸 쥐기(Wrap Grip) 유지',
     videoId: '8L9nZ2GtHig',
-    videoTitle: 'Rolling Stomach Massage with Roll Back Bar on the Cadillac or Tower | Online Pilates Classes',
+    videoTitle:
+      'Rolling Stomach Massage with Roll Back Bar on the Cadillac or Tower | Online Pilates Classes',
     channelName: 'Online Pilates Classes by Lesley Logan',
     region: 'global',
   },
@@ -837,7 +978,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '상단 1 Blue',
     muscles: ['상부 척추기립근', '하부 승모근', '삼두근', '둔근'],
     breath: '들숨에 견갑 내리고 흉골을 앞으로 밀며 신전, 날숨에 복부 지지하며 복귀',
-    cues: ['팔꿈치를 펴고 어깨뼈가 등 아래로 미끄러진 뒤 순차적으로 가슴 열기', '두 다리는 골반 너비 외회전 또는 평행으로 길게 뻗어 요추 보호'],
+    cues: [
+      '팔꿈치를 펴고 어깨뼈가 등 아래로 미끄러진 뒤 순차적으로 가슴 열기',
+      '두 다리는 골반 너비 외회전 또는 평행으로 길게 뻗어 요추 보호',
+    ],
     precautions: '요추 협착·전방전위증 대상자는 낮은 흉추 신전 범위로만 제한',
     videoId: 'CM7CEaY25FY',
     videoTitle: 'BASI Pilates Cadillac Exercises | Prone 1',
@@ -856,7 +1000,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '레그스프링 2 Purple / Yellow',
     muscles: ['고관절 내전근', '둔근', '골반 안정근'],
     breath: '날숨에 양 다리를 중심선으로 모아 내리고 들숨에 골반 고정한 채 서클 오픈',
-    cues: ['좌우 다리 스프링 장력이 비대칭으로 흔들리지 않도록 동시에 리드미컬 제어', '천골이 테이블에서 들리지 않는 높이까지만 다리 올리기'],
+    cues: [
+      '좌우 다리 스프링 장력이 비대칭으로 흔들리지 않도록 동시에 리드미컬 제어',
+      '천골이 테이블에서 들리지 않는 높이까지만 다리 올리기',
+    ],
     precautions: '고관절 전방 집힘 증상 시 외회전(필라테스 V) 각도로 조절',
     videoId: 'v8LGAtZIeGM',
     videoTitle: '[캐나다필라테스]Cadillac- Hip Opner(Below)',
@@ -875,7 +1022,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '레그스프링 2 Purple (상단 연결)',
     muscles: ['대둔근', '햄스트링', '심부 코어', '척추 분절'],
     breath: '날숨에 브릿지 사선 정점 유지하며 다리 비츠·돌핀 파동 수행',
-    cues: ['양손으로 기둥 하단을 잡고 견갑대를 넓게 펴 목 압박 차단', '골반이 스프링 쪽으로 끌려가지 않도록 둔근과 복부 동시 수축'],
+    cues: [
+      '양손으로 기둥 하단을 잡고 견갑대를 넓게 펴 목 압박 차단',
+      '골반이 스프링 쪽으로 끌려가지 않도록 둔근과 복부 동시 수축',
+    ],
     precautions: '고난도 레그스프링 동작 · 경추 부담 시 테이블 위 수평 프로그/서클로 대체',
     videoId: '8UU0y1TPFgQ',
     videoTitle: 'Pilates no Cadillac. Airplaine, Magician e Dolphin.',
@@ -894,7 +1044,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '롤다운 바 2 Yellow + 트라피즈 스트랩',
     muscles: ['복횡근', '광배근', '둔근'],
     breath: '들숨에 롤다운 바로 팔 내리며 브릿지 리프트, 날숨에 가슴부터 녹여 하강',
-    cues: ['손목부터 정수리까지 서로 반대 방향으로 길어지는 축성 신장 유지', '호흡이 멈추지 않도록 4카운트 리듬 큐잉'],
+    cues: [
+      '손목부터 정수리까지 서로 반대 방향으로 길어지는 축성 신장 유지',
+      '호흡이 멈추지 않도록 4카운트 리듬 큐잉',
+    ],
     precautions: '어깨 굴곡 제한 시 팔 높이를 가슴 선까지만 진행',
     videoId: 'pb4EyKr9YPw',
     videoTitle: '9 Best Pilates Cadillac Exercises | STOTT Pilates',
@@ -916,7 +1069,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '1 Heavy + 1 Medium (체중 보조 적정 장력)',
     muscles: ['대둔근', '대퇴사두근', '중둔근 골반 수평 유지'],
     breath: '날숨에 시트 위 앞다리 뒤꿈치로 바닥을 밀어 수직 상승, 들숨에 천천히 하강',
-    cues: ['무릎이 안쪽으로 모이지 않도록 두 번째 발가락과 무릎 정렬 일치', '내려올 때 페달이 쿵 떨어지지 않게 마지막 3cm까지 앞다리 둔근으로 버티기'],
+    cues: [
+      '무릎이 안쪽으로 모이지 않도록 두 번째 발가락과 무릎 정렬 일치',
+      '내려올 때 페달이 쿵 떨어지지 않게 마지막 3cm까지 앞다리 둔근으로 버티기',
+    ],
     precautions: '핸들이 있는 체어에서 먼저 연습 후 핸즈프리 진행 · 무릎 통증 주의',
     videoId: 'ImZxx9QdY7g',
     videoTitle: 'Going Up Front on the Wunda Chair | Online Pilates Classes',
@@ -926,7 +1082,7 @@ const SEEDS: readonly RawSeed[] = [
   {
     id: 'crawled-chair-going-up-side',
     nameKo: '운다 체어 고잉 업 사이드',
-    nameEn: 'Going Up Side (Mountain Side)',
+    nameEn: 'Going Up Side',
     apparatus: 'chair',
     blockCategory: 'lower-body',
     bodyPosition: 'standing',
@@ -936,10 +1092,13 @@ const SEEDS: readonly RawSeed[] = [
     springs: '1 Heavy + 1 Medium',
     muscles: ['중둔근', '외회전근', '내전근', '측면 코어'],
     breath: '날숨에 정수리가 천장으로 곧게 솟으며 상승, 들숨에 고관절 접어 컨트롤 하강',
-    cues: ['지지 다리 고관절을 살짝 외회전한 상태에서 골반 높이를 좌우 수평으로 유지', '페달 위 발은 깃털처럼 가볍게 두고 시트 위 다리 힘으로만 오르내리기'],
+    cues: [
+      '지지 다리 고관절을 살짝 외회전한 상태에서 골반 높이를 좌우 수평으로 유지',
+      '페달 위 발은 깃털처럼 가볍게 두고 시트 위 다리 힘으로만 오르내리기',
+    ],
     precautions: '낙상 방지를 위해 체어 주변 공간 확보 및 핸들 보조 권장',
-    videoId: '_jJ09hkBZAI',
-    videoTitle: 'Going Down the Mountain Side on the Wunda Chair | Online Pilates Classes',
+    videoId: 's483YzcUJSQ',
+    videoTitle: 'Going Up Side on the Wunda Chair | Online Pilates Classes',
     channelName: 'Online Pilates Classes by Lesley Logan',
     region: 'global',
   },
@@ -956,7 +1115,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '1 Medium + 1 Light',
     muscles: ['대퇴사두근', '둔근 지구력', '심부 코어'],
     breath: '일정한 호흡 리듬으로 시트 위 지지 다리는 고정한 채 페달 다리만 펌핑',
-    cues: ['상체와 시트 위 무릎 높이를 얼음처럼 고정하고 페달만 경쾌하게 프레스', '허리가 젖혀지지 않도록 갈비뼈와 골반 앞면 연결 유지'],
+    cues: [
+      '상체와 시트 위 무릎 높이를 얼음처럼 고정하고 페달만 경쾌하게 프레스',
+      '허리가 젖혀지지 않도록 갈비뼈와 골반 앞면 연결 유지',
+    ],
     precautions: '지지 다리 피로 누적 시 즉시 휴식 · 전방십자인대 재활 초기 제외',
     videoId: 'w_wQtCaglGU',
     videoTitle: 'climbing up the mountain on the Wunda Chair',
@@ -975,7 +1137,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '1 Heavy + 1 Light',
     muscles: ['복횡근', '전거근', '광배근', '내전근'],
     breath: '날숨에 하복부를 천장으로 끌어올려 페달 상승, 들숨에 저항하며 하강',
-    cues: ['손바닥으로 시트 중앙을 밀어 어깨 안정화 후 복부 힘으로 페달을 가볍게 들어 올리기', '시선은 복부 안쪽을 보며 양 뒤꿈치를 모은 필라테스 V 유지'],
+    cues: [
+      '손바닥으로 시트 중앙을 밀어 어깨 안정화 후 복부 힘으로 페달을 가볍게 들어 올리기',
+      '시선은 복부 안쪽을 보며 양 뒤꿈치를 모은 필라테스 V 유지',
+    ],
     precautions: '손목 통증 시 시트 양옆 모서리를 감싸 쥐어 손목 신전 각도 완화',
     videoId: 'A4AzN7w-KRc',
     videoTitle: 'Pull Up on the Wunda Chair | Online Pilates Classes',
@@ -994,7 +1159,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '1 Medium (또는 2 Light)',
     muscles: ['복직근', '복횡근', '삼두근', '장요근'],
     breath: '날숨에 골반 말아 바디 티저 하강 후 팔꿈치 굴곡·신전 프레스',
-    cues: ['시트 뒤쪽 가장자리에 안전하게 앉아 두 다리를 사선으로 고정', '팔꿈치를 구부릴 때 어깨가 귀 쪽으로 말려 올라가지 않도록 쇄골 넓게 유지'],
+    cues: [
+      '시트 뒤쪽 가장자리에 안전하게 앉아 두 다리를 사선으로 고정',
+      '팔꿈치를 구부릴 때 어깨가 귀 쪽으로 말려 올라가지 않도록 쇄골 넓게 유지',
+    ],
     precautions: '어깨 전방 충돌 증상 시 티저 밸런스만 분리해 진행',
     videoId: 'rTazPjjuZD0',
     videoTitle: '8 Best Pilates Chair Exercises for Core Strength',
@@ -1014,7 +1182,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '1 Heavy (또는 2 Medium)',
     muscles: ['중둔근(지지측)', '고관절 굴곡·신전 제어', '코어 수직축'],
     breath: '날숨에 페달을 바닥 방향으로 길게 누르고 들숨에 골반 들림 없이 복귀',
-    cues: ['바닥에 선 지지 다리 정수리까지 키가 커지며 골반이 수평에서 흔들리지 않게 유지', '페달을 누를 때 몸통이 앞으로 숙여지지 않도록 복부 벽 유지'],
+    cues: [
+      '바닥에 선 지지 다리 정수리까지 키가 커지며 골반이 수평에서 흔들리지 않게 유지',
+      '페달을 누를 때 몸통이 앞으로 숙여지지 않도록 복부 벽 유지',
+    ],
     precautions: '한 발 서기 불안정 시 핸들 또는 벽 지지 병행',
     videoId: '9tzgwKSPGDc',
     videoTitle: '20-Minute Full Body STOTT Pilates Chair Workout',
@@ -1033,7 +1204,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '1 Heavy + 1 Medium',
     muscles: ['내전근', '비복근·가자미근', '척추 축성 신장'],
     breath: '날숨에 뒤꿈치 붙여 프로그 프레스 또는 발목 배측·저측굴곡 수행',
-    cues: ['좌골 위 척추를 수직으로 세운 상태에서 발목 정렬이 안팎으로 꺾이지 않게 유도', '페달이 가장 위로 올라올 때도 스프링 텐션을 놓치지 않기'],
+    cues: [
+      '좌골 위 척추를 수직으로 세운 상태에서 발목 정렬이 안팎으로 꺾이지 않게 유도',
+      '페달이 가장 위로 올라올 때도 스프링 텐션을 놓치지 않기',
+    ],
     precautions: '아킬레스건염 급성기에는 과도한 배측굴곡 바운스 금지',
     videoId: 'Ez0BLN6M06o',
     videoTitle: 'The Chair: Jennifer Kries The Pilates Method Master Trainer Series',
@@ -1053,7 +1227,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '1 Heavy + 1 Light',
     muscles: ['복횡근', '대퇴사두근', '장요근'],
     breath: '한 다리 테이블탑 고정 상태에서 날숨에 반대 다리 페달 프레스',
-    cues: ['들고 있는 다리 쪽 좌골이 가벼워지지 않도록 양 좌골 압력 동일 유지', '양손을 머리 뒤 또는 앞으로 뻗어 흉추 직립 유지'],
+    cues: [
+      '들고 있는 다리 쪽 좌골이 가벼워지지 않도록 양 좌골 압력 동일 유지',
+      '양손을 머리 뒤 또는 앞으로 뻗어 흉추 직립 유지',
+    ],
     precautions: '고관절 앞쪽 집힘 시 들고 있는 무릎 높이를 낮춰 진행',
     videoId: '2YCHWD7rnQc',
     videoTitle: '체어 필라테스 | 중급 코어& 하체 강화 | Intermediate Chair Pilates',
@@ -1072,7 +1249,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '1 Light + 1 Medium',
     muscles: ['척추기립근 분절 신장', '복횡근', '전방 거근'],
     breath: '날숨에 정수리부터 말아 페달을 아래로 밀고, 들숨 후 날숨에 아래 허리부터 세우기',
-    cues: ['매트 바닥에 앉아 양발을 체어 폭보다 넓게 벌리고 손끝을 페달 위에 가볍게 올리기', '어깨로 누르지 않고 복부를 뒤로 당기는 반작용으로 페달 하강'],
+    cues: [
+      '매트 바닥에 앉아 양발을 체어 폭보다 넓게 벌리고 손끝을 페달 위에 가볍게 올리기',
+      '어깨로 누르지 않고 복부를 뒤로 당기는 반작용으로 페달 하강',
+    ],
     precautions: '햄스트링 뻣뻣함 심할 경우 엉덩이 아래 패드 받치기',
     videoId: 'TM_Mta1xNO4',
     videoTitle: 'Beginner Pilates Chair Workout',
@@ -1094,7 +1274,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '래더 사다리 간격 체형 맞춤 조절',
     muscles: ['복직근', '햄스트링 신장', '척추 분절 가동'],
     breath: '날숨에 허벅지 뒤를 타고 바렐 곡선을 따라 누웠다가 날숨에 분절 상승',
-    cues: ['아래쪽 발을 사다리 렁 사이에 단단히 걸어 골반 고정 확보', '바렐 아크 위에 척추를 늘려 흉추 신전 스트레치까지 연결 가능'],
+    cues: [
+      '아래쪽 발을 사다리 렁 사이에 단단히 걸어 골반 고정 확보',
+      '바렐 아크 위에 척추를 늘려 흉추 신전 스트레치까지 연결 가능',
+    ],
     precautions: '바렐과 사다리 사이 프레임 고정 노브가 단단히 잠겼는지 시작 전 확인',
     videoId: 'eMI9Z_5DBjU',
     videoTitle: 'Classic Pilates Ladder Barrel/Short Box Climb a Tree/ 숏박스 트리',
@@ -1113,7 +1296,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '래더 발 고정 (체중 저항)',
     muscles: ['복직근', '복횡근', '둔근·내전근'],
     breath: '들숨에 골반 후방경사로 바렐 곡선 감싸며 롤백, 날숨에 복부 스쿱 복귀',
-    cues: ['바렐 정점보다 살짝 사다리 쪽 우물(Well) 방향에 좌골을 두고 착석', '허리가 과신전되기 전까지만 내려가거나 가동성이 허용되면 아크 신전 연결'],
+    cues: [
+      '바렐 정점보다 살짝 사다리 쪽 우물(Well) 방향에 좌골을 두고 착석',
+      '허리가 과신전되기 전까지만 내려가거나 가동성이 허용되면 아크 신전 연결',
+    ],
     precautions: '어지럼증·역류성 식도염 시 과도한 후방 헤드 드롭 지양',
     videoId: 'VDqshKG6ncg',
     videoTitle: '[캐나다필라테스] Ladder Barrel- Round Back',
@@ -1133,7 +1319,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '사다리 위·아래 발 교차 고정',
     muscles: ['외복사근', '내복사근', '요방형근', '중둔근'],
     breath: '들숨에 바렐 곡선 위로 측면 신장, 날숨에 갈비뼈와 골반 사이를 조이며 사선 리프트',
-    cues: ['윗발은 앞쪽 위 칸, 아랫발은 뒤쪽 아래 칸에 걸어 측면 일직선 정렬', '고개만 먼저 꺾어 올리지 않고 귀·어깨·골반이 한 판처럼 올라오기'],
+    cues: [
+      '윗발은 앞쪽 위 칸, 아랫발은 뒤쪽 아래 칸에 걸어 측면 일직선 정렬',
+      '고개만 먼저 꺾어 올리지 않고 귀·어깨·골반이 한 판처럼 올라오기',
+    ],
     precautions: '요추 측면 디스크 통증 시 가동 범위를 중립 사선 정렬까지만 제한',
     videoId: 'juFmR36HcZg',
     videoTitle: 'Classic Pilates Ladder Barrel/Short Box Side Sit Up/숏박스 사이드싯업',
@@ -1152,7 +1341,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '사다리 발바닥 지지',
     muscles: ['척추기립근', '대둔근', '햄스트링', '복횡근 전면 지지'],
     breath: '들숨에 무릎을 펴 사다리를 밀며 사선 상승 후 신전, 날숨에 바렐 따라 하강',
-    cues: ['치골과 ASIS를 바렐 위에 지지한 상태에서 다리 밀어내는 힘을 정수리까지 전달', '허리 한 지점만 접히지 않도록 복부를 등 쪽으로 당긴 긴 아치 만들기'],
+    cues: [
+      '치골과 ASIS를 바렐 위에 지지한 상태에서 다리 밀어내는 힘을 정수리까지 전달',
+      '허리 한 지점만 접히지 않도록 복부를 등 쪽으로 당긴 긴 아치 만들기',
+    ],
     precautions: '척추관 협착증·요추 분리증 대상자는 다트(Dart) 범위까지만 수행',
     videoId: 'iHw7XBri28Q',
     videoTitle: 'Swan on the Ladder Barrel | Online Pilates Classes',
@@ -1171,10 +1363,14 @@ const SEEDS: readonly RawSeed[] = [
     springs: '바렐 프레임 핸들 그립 지지',
     muscles: ['대둔근', '햄스트링', '하부 등 신전근'],
     breath: '날숨에 두 다리를 사선 위로 길게 뻗어 뒤꿈치 비츠(Beats) 후 절제 하강',
-    cues: ['상체와 양손은 사다리 또는 프레임을 단단히 잡고 어깨가 앞으로 말리지 않게 고정', '무릎만 굽히지 말고 허벅지 앞면이 바렐에서 가볍게 길어지는 느낌 유지'],
+    cues: [
+      '상체와 양손은 사다리 또는 프레임을 단단히 잡고 어깨가 앞으로 말리지 않게 고정',
+      '무릎만 굽히지 말고 허벅지 앞면이 바렐에서 가볍게 길어지는 느낌 유지',
+    ],
     precautions: '요추 과부하 방지를 위해 하복부 수축을 끝까지 유지',
     videoId: 'pesWut67Ueo',
-    videoTitle: 'Swan Dive + Grasshopper Pilates Ladder Barrel 🦢♥️ #pilateslovers #pilatesworkout #shorts',
+    videoTitle:
+      'Swan Dive + Grasshopper Pilates Ladder Barrel 🦢♥️ #pilateslovers #pilatesworkout #shorts',
     channelName: 'Real Good Pilates',
     region: 'global',
   },
@@ -1191,7 +1387,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '사다리 발 고정',
     muscles: ['광배근·늑간근 신장', '외복사근', '측면 근막 이완'],
     breath: '들숨에 위쪽 갈비뼈 사이사이에 공기를 채우며 아크 드레이프, 날숨에 복귀',
-    cues: ['위쪽 팔을 귀 옆으로 길게 뻗어 발끝부터 손끝까지 무지개 곡선 형성', '어깨가 앞으로 쏟아지지 않도록 가슴은 정면 유지'],
+    cues: [
+      '위쪽 팔을 귀 옆으로 길게 뻗어 발끝부터 손끝까지 무지개 곡선 형성',
+      '어깨가 앞으로 쏟아지지 않도록 가슴은 정면 유지',
+    ],
     precautions: '어깨 집힘 시 위쪽 손을 머리 뒤 후두부에 가볍게 얹어 진행',
     videoId: 'lx2cyXqmzvc',
     videoTitle: 'Side Overs on the Ladder Barrel | OPC',
@@ -1211,11 +1410,14 @@ const SEEDS: readonly RawSeed[] = [
     springs: '바렐 탑 발 뒤꿈치 거치',
     muscles: ['햄스트링', '내전근', '장요근 신장'],
     breath: '들숨에 골반 수평 정렬, 날숨에 척추 길게 늘리며 전굴·측굴 스트레치',
-    cues: ['올려둔 다리 쪽 골반이 따라 올라가지 않도록 아래로 끌어내려 스퀘어 유지', '지지하는 아랫다리 발바닥 삼각 지지점을 무겁게 뿌리내리기'],
+    cues: [
+      '올려둔 다리 쪽 골반이 따라 올라가지 않도록 아래로 끌어내려 스퀘어 유지',
+      '지지하는 아랫다리 발바닥 삼각 지지점을 무겁게 뿌리내리기',
+    ],
     precautions: '신장이 작은 회원은 스텝박스 보조 또는 사다리 낮은 칸 활용',
-    videoId: 'mF9kt3WKtPU',
-    videoTitle: '20-Minute Full Body Pilates Ladder Barrel Workout',
-    channelName: 'STOTT Pilates',
+    videoId: '67sQoYOphpM',
+    videoTitle: 'Ballet Stretches on the Ladder Barrel | Online Pilates Classes',
+    channelName: 'Online Pilates Classes by Lesley Logan',
     region: 'global',
   },
   {
@@ -1230,7 +1432,10 @@ const SEEDS: readonly RawSeed[] = [
     springs: '아크 바렐 지지',
     muscles: ['대흉근·소흉근 이완', '흉추 가동성', '복횡근'],
     breath: '들숨에 흉곽 전면 확장 및 암 서클, 날숨에 갈비뼈 모으며 컬업 연결',
-    cues: ['견갑 하각이 아크 정점에 오도록 누워 허리가 과하게 뜨지 않게 골반 안정', '굽은 등·거북목 회원의 본운동 전 호흡 워밍업으로 최적'],
+    cues: [
+      '견갑 하각이 아크 정점에 오도록 누워 허리가 과하게 뜨지 않게 골반 안정',
+      '굽은 등·거북목 회원의 본운동 전 호흡 워밍업으로 최적',
+    ],
     precautions: '목이 과신전되어 불편한 경우 머리 아래 작은 타월 받치기',
     videoId: 'y9rOXGu86bc',
     videoTitle: 'PILATES ARC BARREL WORKOUT',
@@ -1239,45 +1444,49 @@ const SEEDS: readonly RawSeed[] = [
   },
 ];
 
-export const GLOBAL_CRAWLED_REPERTOIRE_EXERCISES: readonly PilatesExercise[] = SEEDS.map((s) => ({
-  id: s.id,
-  nameKo: s.nameKo,
-  nameEn: s.nameEn,
-  apparatus: s.apparatus,
-  requiredEquipment: [s.apparatus],
-  props: s.props ? [...s.props] : ['none'],
-  blockCategory: s.blockCategory,
-  spinalPlanes: [],
-  bodyPosition: s.bodyPosition,
-  level: s.level,
-  defaultDurationMin: s.durationMin,
-  isUnilateral: Boolean(s.unilateral),
-  springs: s.springs,
-  box: s.box ?? 'none',
-  footbar: s.footbar ?? 'none',
-  headrest: s.headrest ?? 'flat',
-  targetMuscles: [...s.muscles],
-  breathPattern: s.breath,
-  cues: [...s.cues],
-  precautions: s.precautions,
-  layers: {
-    easy: '가동 범위를 줄이거나 보조 지지(핸들·스트랩·무릎 굴곡)로 안전하게 시작하세요.',
-    standard: s.cues[0] ?? '호흡과 척추·골반 정렬을 유지하며 일정한 템포로 수행합니다.',
-    hard: '정점 홀드 카운트를 늘리거나 한 손/한 다리 협응 변형은 강사가 숙련도 확인 후 적용하세요.',
-  },
-  youtube: {
-    videoId: s.videoId,
-    url: `https://www.youtube.com/watch?v=${s.videoId}`,
-    channelName: s.channelName,
-    videoTitle: s.videoTitle,
-    region: s.region,
-    startSec: 0,
-    note: '글로벌 필라테스 레퍼토리 크롤링 참조 · 수업 전 기구 세팅과 동작 일치를 강사가 직접 확인하세요.',
-  },
-  favoriteTag: 'none',
-  isCustom: true,
-  createdAt: '2026-11-12T00:00:00.000Z',
-}));
+export const GLOBAL_CRAWLED_REPERTOIRE_EXERCISES: readonly PilatesExercise[] = SEEDS.map((s) =>
+  attachExistingVideoReference({
+    id: s.id,
+    nameKo: s.nameKo,
+    nameEn: s.nameEn,
+    apparatus: s.apparatus,
+    requiredEquipment: [s.apparatus],
+    props: s.props ? [...s.props] : ['none'],
+    blockCategory: s.blockCategory,
+    spinalPlanes: [],
+    bodyPosition: s.bodyPosition,
+    level: s.level,
+    defaultDurationMin: s.durationMin,
+    isUnilateral: Boolean(s.unilateral),
+    springs: s.springs,
+    box: s.box ?? 'none',
+    footbar: s.footbar ?? 'none',
+    headrest: s.headrest ?? 'flat',
+    targetMuscles: [...s.muscles],
+    breathPattern: s.breath,
+    cues: [...s.cues],
+    precautions: s.precautions,
+    layers: {
+      easy: '가동 범위를 줄이거나 보조 지지(핸들·스트랩·무릎 굴곡)로 안전하게 시작하세요.',
+      standard: s.cues[0] ?? '호흡과 척추·골반 정렬을 유지하며 일정한 템포로 수행합니다.',
+      hard: '정점 홀드 카운트를 늘리거나 한 손/한 다리 협응 변형은 강사가 숙련도 확인 후 적용하세요.',
+    },
+    youtube: {
+      videoId: s.videoId,
+      url: s.videoId ? `https://www.youtube.com/watch?v=${s.videoId}` : '',
+      channelName: s.channelName,
+      videoTitle: s.videoTitle,
+      region: s.region,
+      startSec: 0,
+      note: s.videoId
+        ? '수집 카탈로그의 제목·기구 분류 기반 참조 · 실제 영상 재생·정확한 동작 구간 미검수 · 0초는 검증된 동작 시작점이 아닙니다.'
+        : '기존 Open Leg Rocker 오연결 제거 · Single Leg Kick 제작자 원문 본문 참조 · 정확한 영상 ID와 재생 구간 미확인',
+    },
+    favoriteTag: 'none',
+    isCustom: true,
+    createdAt: '2026-11-12T00:00:00.000Z',
+  }),
+);
 
 export const CRAWLED_YOUTUBE_DISCOVERY_POOL: readonly CrawledYouTubeDiscoveryItem[] = (() => {
   const extraVideos: ReadonlyArray<{
@@ -1383,27 +1592,36 @@ export const CRAWLED_YOUTUBE_DISCOVERY_POOL: readonly CrawledYouTubeDiscoveryIte
 
   const byId = new Map<string, CrawledYouTubeDiscoveryItem>();
 
-  for (const s of SEEDS) {
-    if (!byId.has(s.videoId)) {
-      byId.set(s.videoId, {
-        videoId: s.videoId,
-        title: s.videoTitle,
-        channelName: s.channelName,
-        region: s.region,
-        apparatus: [s.apparatus],
-        blocks: [s.blockCategory],
-        keywords: [s.nameKo, s.nameEn, ...s.muscles],
-        watchUrl: `https://www.youtube.com/watch?v=${s.videoId}`,
-        embedUrl: `https://www.youtube-nocookie.com/embed/${s.videoId}?rel=0&autoplay=0`,
-        thumbnailUrl: `https://i.ytimg.com/vi/${s.videoId}/mqdefault.jpg`,
-      });
-    }
+  for (const exercise of GLOBAL_CRAWLED_REPERTOIRE_EXERCISES) {
+    const video = exercise.youtube;
+    if (!/^[A-Za-z0-9_-]{11}$/.test(video.videoId)) continue;
+    const evidence = getExerciseVideoEvidence(exercise);
+    const previous = byId.get(video.videoId);
+    byId.set(video.videoId, {
+      videoId: video.videoId,
+      title: video.videoTitle,
+      channelName: video.channelName,
+      region: video.region ?? 'global',
+      apparatus: [...new Set([...(previous?.apparatus ?? []), exercise.apparatus])],
+      bodyPositions: [...new Set([...(previous?.bodyPositions ?? []), exercise.bodyPosition])],
+      props: [...new Set([...(previous?.props ?? []), ...exercise.props])],
+      blocks: [...new Set([...(previous?.blocks ?? []), exercise.blockCategory])],
+      keywords: [...(previous?.keywords ?? []), exercise.nameKo, exercise.nameEn],
+      metadataStatus: evidence?.metadataStatus,
+      playbackVerified: false,
+      segmentVerified: false,
+      watchUrl: video.url,
+      embedUrl: `https://www.youtube-nocookie.com/embed/${video.videoId}?rel=0&autoplay=0`,
+      thumbnailUrl: `https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg`,
+    });
   }
 
   for (const ex of extraVideos) {
     if (!byId.has(ex.videoId)) {
       byId.set(ex.videoId, {
         ...ex,
+        playbackVerified: false,
+        segmentVerified: false,
         watchUrl: `https://www.youtube.com/watch?v=${ex.videoId}`,
         embedUrl: `https://www.youtube-nocookie.com/embed/${ex.videoId}?rel=0&autoplay=0`,
         thumbnailUrl: `https://i.ytimg.com/vi/${ex.videoId}/mqdefault.jpg`,
@@ -1415,25 +1633,23 @@ export const CRAWLED_YOUTUBE_DISCOVERY_POOL: readonly CrawledYouTubeDiscoveryIte
 })();
 
 export function getCrawledRelatedVideosForExercise(
-  exercise: Pick<PilatesExercise, 'id' | 'nameKo' | 'nameEn' | 'apparatus' | 'blockCategory' | 'targetMuscles'>,
+  exercise: Pick<
+    PilatesExercise,
+    'id' | 'nameKo' | 'nameEn' | 'apparatus' | 'blockCategory' | 'targetMuscles'
+  > &
+    Partial<Pick<PilatesExercise, 'bodyPosition' | 'props'>>,
   limit = 4,
-): CrawledYouTubeDiscoveryItem[] {
-  const tokens = `${exercise.nameKo} ${exercise.nameEn} ${exercise.targetMuscles.join(' ')}`
-    .toLowerCase()
-    .split(/[^\p{L}\p{N}]+/u)
-    .filter((t) => t.length >= 2);
-
-  return CRAWLED_YOUTUBE_DISCOVERY_POOL.filter((v) => v.apparatus.includes(exercise.apparatus))
-    .map((v) => {
-      const hay = `${v.title} ${v.channelName} ${v.keywords.join(' ')}`.toLowerCase();
-      let score = v.blocks.includes(exercise.blockCategory) ? 15 : 0;
-      for (const tk of tokens) {
-        if (hay.includes(tk)) score += 12;
-      }
-      return { v, score };
-    })
-    .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
-    .map((x) => x.v);
+): CrawledYouTubeRelatedItem[] {
+  return CRAWLED_YOUTUBE_DISCOVERY_POOL.map((video) => ({
+    video,
+    score: scoreVideoSemanticMatch(exercise, video),
+  }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || a.video.videoId.localeCompare(b.video.videoId))
+    .slice(0, safeVideoDiscoveryLimit(limit))
+    .map((entry) => ({
+      ...entry.video,
+      referenceScope: getVideoReferenceScope(exercise),
+      matchReasonKo: getVideoMatchReasonKo(exercise),
+    }));
 }

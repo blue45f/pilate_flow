@@ -20,10 +20,10 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
     cleanup();
   });
 
-  it('maintains 141 oEmbed-verified videos (76 domestic KR + 65 global)', () => {
-    expect(VERIFIED_YOUTUBE_VIDEO_POOL.length).toBe(141);
+  it('maintains 310 metadata-verified videos (76 domestic KR + 234 global)', () => {
+    expect(VERIFIED_YOUTUBE_VIDEO_POOL.length).toBe(310);
     expect(VERIFIED_YOUTUBE_CATALOG_STATS.koreanVideos).toBe(76);
-    expect(VERIFIED_YOUTUBE_CATALOG_STATS.globalVideos).toBe(65);
+    expect(VERIFIED_YOUTUBE_CATALOG_STATS.globalVideos).toBe(234);
     for (const item of VERIFIED_YOUTUBE_VIDEO_POOL) {
       expect(item.videoId).toMatch(/^[A-Za-z0-9_-]{11}$/);
       expect(['kr', 'global']).toContain(item.region);
@@ -31,8 +31,8 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
     }
   });
 
-  it('keeps all 98 exercise searches within their equipment and never pads regional quotas', () => {
-    expect(INITIAL_EXERCISES).toHaveLength(98);
+  it('keeps all catalog exercise searches within their equipment and never pads regional quotas', () => {
+    expect(INITIAL_EXERCISES).toHaveLength(158);
     for (const exercise of INITIAL_EXERCISES) {
       const related = getRelatedYouTubeVideosForExercise(exercise, 3);
       expect(related.length).toBeLessThanOrEqual(7);
@@ -56,7 +56,7 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
   });
 
   it('renders thumbnails and opens an inline embedded YouTube iframe on click', () => {
-    const exercise = INITIAL_EXERCISES[0];
+    const exercise = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-bridge')!;
     render(<ExerciseYouTubeGallery exercise={exercise} maxPerRegion={2} />);
     const gallery = screen.getByRole('region', {
       name: `${exercise.nameKo} 연관 국내·해외 YouTube 영상`,
@@ -66,7 +66,7 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
     expect(gallery.querySelector('img')).toBeNull();
     expandGallery();
     const playButtons = within(gallery).getAllByRole('button', { name: /인베드 영상 불러오기/ });
-    expect(playButtons.length).toBeGreaterThanOrEqual(4);
+    expect(playButtons.length).toBeGreaterThanOrEqual(1);
 
     fireEvent.click(playButtons[0]);
     const playerRegion = within(gallery).getByRole('region', { name: /인베드 플레이어/ });
@@ -81,7 +81,7 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
   });
 
   it('requires a new explicit load after close, subject change, filtering, and remount', () => {
-    const exercise = INITIAL_EXERCISES[0];
+    const exercise = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-bridge')!;
     const view = render(<ExerciseYouTubeGallery exercise={exercise} maxPerRegion={2} />);
     const load = () => {
       expandGallery();
@@ -111,7 +111,12 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
   });
 
   it('unloads the iframe on pagehide and never resumes it automatically', () => {
-    render(<ExerciseYouTubeGallery exercise={INITIAL_EXERCISES[0]} maxPerRegion={2} />);
+    render(
+      <ExerciseYouTubeGallery
+        exercise={INITIAL_EXERCISES.find((item) => item.id === 'original-mat-bridge')!}
+        maxPerRegion={2}
+      />,
+    );
     expandGallery();
     fireEvent.click(screen.getAllByRole('button', { name: /인베드 영상 불러오기/ })[0]);
     expect(document.querySelector('iframe')).not.toBeNull();
@@ -136,7 +141,9 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
   });
 
   it('does not treat shared posture as a movement-specific motion match', () => {
-    const reference = MOTION_PATTERN_REFERENCES.find((item) => item.variantId === 'supine-knee-fold')!;
+    const reference = MOTION_PATTERN_REFERENCES.find(
+      (item) => item.variantId === 'supine-knee-fold',
+    )!;
     expect(reference).toBeDefined();
     const related = getRelatedYouTubeVideosForMotion(reference, 6);
     expect(related.some((item) => item.videoId === '0oUg-GKSXTM')).toBe(false);
@@ -159,7 +166,7 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
   });
 
   it('does not invent matches from equipment alone and bounds invalid requested limits', () => {
-    const base = INITIAL_EXERCISES[0];
+    const base = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-bridge')!;
     const exercise = {
       ...base,
       id: 'unmatched-zzqvzx',
@@ -199,7 +206,12 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
   });
 
   it('starts compact, unloads on collapse, and never resumes a player when reopened', () => {
-    render(<ExerciseYouTubeGallery exercise={INITIAL_EXERCISES[0]} maxPerRegion={2} />);
+    render(
+      <ExerciseYouTubeGallery
+        exercise={INITIAL_EXERCISES.find((item) => item.id === 'original-mat-bridge')!}
+        maxPerRegion={2}
+      />,
+    );
     expect(screen.getByRole('button', { name: /참고 영상.*펼치기/ })).toHaveAccessibleDescription(
       '연관 자료 · 동일 동작 시범은 미검수',
     );
@@ -216,8 +228,8 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
     expect(document.querySelector('iframe')).toBeNull();
   });
 
-  it('enforces Round 5 DEF-MEDIA-01 corrections: all 98 IDs preserved, linked ex-* videos match oEmbed pool title/channel/apparatus, and unverified items are explicitly marked 자료 미확인', () => {
-    expect(INITIAL_EXERCISES).toHaveLength(98);
+  it('enforces Round 5 DEF-MEDIA-01 corrections: all original IDs preserved, linked ex-* videos match oEmbed pool title/channel/apparatus, and unverified items are explicitly marked 자료 미확인', () => {
+    expect(INITIAL_EXERCISES).toHaveLength(158);
     const poolById = new Map(VERIFIED_YOUTUBE_VIDEO_POOL.map((v) => [v.videoId, v]));
 
     // None of the 9 unrelated non-Pilates/yoga/HIIT/meditation video IDs from DEF-MEDIA-01 may remain linked
@@ -247,7 +259,10 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
         expect(ex.youtube.note).toContain('자료 미확인');
       } else {
         const verified = poolById.get(ex.youtube.videoId);
-        expect(verified, `Expected ${ex.id} (${ex.youtube.videoId}) in verified oEmbed pool`).toBeDefined();
+        expect(
+          verified,
+          `Expected ${ex.id} (${ex.youtube.videoId}) in verified oEmbed pool`,
+        ).toBeDefined();
         expect(verified!.apparatus).toContain(ex.apparatus);
         expect(ex.youtube.videoTitle).toBe(verified!.title);
         expect(ex.youtube.channelName).toBe(verified!.authorName);

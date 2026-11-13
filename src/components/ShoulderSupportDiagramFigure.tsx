@@ -399,6 +399,7 @@ export function ShoulderSupportTriptychDiagram({
       </header>
 
       <div
+        className="movement-studio-phase-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',

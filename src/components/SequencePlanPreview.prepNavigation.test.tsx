@@ -13,11 +13,7 @@ import { SequencePlanPreview } from './SequencePlanPreview';
 
 vi.mock('./MotionReferencePlayer', () => ({
   MotionReferencePlayer: ({ exerciseId, active }: { exerciseId?: string; active?: boolean }) => (
-    <div
-      data-testid="prep-nav-motion"
-      data-exercise-id={exerciseId}
-      data-active={String(active)}
-    />
+    <div data-testid="prep-nav-motion" data-exercise-id={exerciseId} data-active={String(active)} />
   ),
 }));
 
@@ -341,11 +337,12 @@ describe('SequencePlanPreview readiness jump, section shortcuts, and cursor-safe
     flushNavigationFrames();
 
     // Focus returns to item 2 heading WITHOUT resetting the 305s mid-step right-side cursor!
-    expect(
-      within(screen.getByRole('region', { name: '선택한 계획 항목' })).getByRole('heading', {
-        name: clamOriginal.nameKo,
-      }),
-    ).toHaveFocus();
+    const currentHeading = within(
+      screen.getByRole('region', { name: '선택한 계획 항목' }),
+    ).getByText(clamOriginal.nameKo, { selector: 'h3.simulation-navigation-heading' });
+    expect(currentHeading).toHaveRole('heading');
+    expect(currentHeading).toHaveAccessibleName(clamOriginal.nameKo);
+    expect(currentHeading).toHaveFocus();
     expect(parentSlider).toHaveValue('305');
     expect(screen.getByLabelText('현재 시간표 구간')).toHaveTextContent('수행 · 오른쪽');
 

@@ -71,7 +71,7 @@ it('shows specific source comparison without promoting anatomical or professiona
 });
 
 it('provides matched source comparison records and specialized track diagram disclosures across all 98 catalog exercises', async () => {
-  expect(INITIAL_EXERCISES).toHaveLength(98);
+  expect(INITIAL_EXERCISES).toHaveLength(158);
   for (const exercise of [
     INITIAL_EXERCISES.find((item) => item.id === 'original-reformer-supine-breath')!,
     INITIAL_EXERCISES.find((item) => item.id === 'original-reformer-parallel-footwork')!,

@@ -7,7 +7,14 @@ import { LiveStageView } from '../components/LiveStageView';
 import { FreeAiAssistantPanel } from '../components/FreeAiAssistantPanel';
 import { ExerciseAtlasView } from '../components/ExerciseAtlasView';
 import { MovementPhaseDiagramSvg } from '../components/MovementPhaseDiagramSvg';
-import { MOVEMENT_VISUAL_ASSETS, MOVEMENT_VISUAL_ASSET_MAP } from '../data/movementVisualRigCatalog';
+import { EXPANDED_MOVEMENTS } from '../data/expandedMovements';
+import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
+import { EXERCISE_MOTION_REFERENCES } from '../data/motionReferences';
+import {
+  MOVEMENT_VISUAL_ASSETS,
+  MOVEMENT_VISUAL_ASSET_MAP,
+} from '../data/movementVisualRigCatalog';
+import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { createFreeAiClient } from '../lib/freeAiClient';
 import { usePilatesStore } from '../store/usePilatesStore';
 import type { PilatesExercise } from '../types/pilates';
@@ -292,6 +299,7 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
 
     render(
       <ExerciseAtlasView
+        initialView="tools"
         onOpenClipper={() => undefined}
         onOpenYouTubePreview={() => undefined}
         onOpenIdeaSheet={() => undefined}
@@ -354,8 +362,37 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
     );
   });
 
-  it('verifies connected neck/shoulder/pelvis bridges, Chair seat & handle contact, userSpaceOnUse gradients, zero SVG text, and anatomicalAccuracyAssumed: false across 98 exercises', () => {
-    expect(MOVEMENT_VISUAL_ASSETS.length).toBe(98);
+  it('separates 98 native diagrams from 60 source-only additions while preserving connected anatomy, Chair contact, gradients, and unreviewed status', () => {
+    const expandedIds = new Set(EXPANDED_MOVEMENTS.map((exercise) => exercise.id));
+    const nativeAssets = MOVEMENT_VISUAL_ASSETS.filter(
+      (asset) => !expandedIds.has(asset.exerciseId),
+    );
+    const sourceOnlyAssets = MOVEMENT_VISUAL_ASSETS.filter((asset) =>
+      expandedIds.has(asset.exerciseId),
+    );
+    const motionReferences = new Map(
+      EXERCISE_MOTION_REFERENCES.map((reference) => [reference.exerciseId, reference]),
+    );
+
+    expect(INITIAL_EXERCISES).toHaveLength(158);
+    expect(MOVEMENT_VISUAL_ASSETS).toHaveLength(INITIAL_EXERCISES.length);
+    expect(new Set(MOVEMENT_VISUAL_ASSETS.map((asset) => asset.exerciseId))).toEqual(
+      new Set(INITIAL_EXERCISES.map((exercise) => exercise.id)),
+    );
+    expect(nativeAssets).toHaveLength(98);
+    expect(sourceOnlyAssets).toHaveLength(60);
+    expect(new Set(sourceOnlyAssets.map((asset) => asset.exerciseId))).toEqual(expandedIds);
+    for (const asset of MOVEMENT_VISUAL_ASSETS) {
+      expect(asset.anatomicalAccuracyAssumed).toBe(false);
+      expect(motionReferences.get(asset.exerciseId)).toMatchObject({
+        professionalReviewStatus: 'unreviewed',
+        expertApproved: false,
+      });
+    }
+    for (const asset of nativeAssets) {
+      expect(getExpandedMovementVisualBinding(asset.exerciseId)).toBeUndefined();
+    }
+
     const chairPedal = MOVEMENT_VISUAL_ASSET_MAP.get('original-chair-seated-pedal-press')!;
     const chairArmArc = MOVEMENT_VISUAL_ASSET_MAP.get('original-chair-seated-arm-arc')!;
     const chairMermaid = MOVEMENT_VISUAL_ASSET_MAP.get('original-chair-seated-mermaid')!;
@@ -366,11 +403,8 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
     expect(chairArmArc.phases.start.joints.pelvis.y).toBeLessThanOrEqual(114);
     expect(chairMermaid.phases.start.joints.pelvis.y).toBeLessThanOrEqual(114);
 
-    const { container } = render(
-      <MovementPhaseDiagramSvg
-        asset={chairPedal}
-        phase="middle"
-      />,
+    const { container, rerender } = render(
+      <MovementPhaseDiagramSvg asset={chairPedal} phase="middle" />,
     );
     const svg = container.querySelector('svg')!;
     expect(svg.querySelectorAll('text').length).toBe(0);
@@ -379,8 +413,56 @@ describe('Pilates Flow UX & Design Elevation (Mockup-to-Code 1:1)', () => {
     expect(svg.querySelector('[data-segment="pelvis-girdle-bridge"]')).not.toBeNull();
     expect(svg.querySelector('[data-chair-handle="grip"]')).not.toBeNull();
     const gradients = Array.from(svg.querySelectorAll('linearGradient'));
-    expect(gradients.length).toBeGreaterThanOrEqual(6);
-    expect(gradients.every((g) => g.getAttribute('gradientUnits') === 'userSpaceOnUse')).toBe(true);
+    const sceneGradients = gradients.filter(
+      (gradient) => gradient.getAttribute('gradientUnits') === 'userSpaceOnUse',
+    );
+    const materialGradients = gradients.filter(
+      (gradient) => gradient.getAttribute('gradientUnits') !== 'userSpaceOnUse',
+    );
+    expect(sceneGradients).toHaveLength(2);
+    expect(materialGradients).toHaveLength(6);
+    // Fixed scene lighting uses scene coordinates. Cloth, cushions and socks
+    // use normalized coordinates on closed, filled shapes, never zero-area
+    // line strokes whose object bounding box would make the paint disappear.
+    for (const gradient of materialGradients) {
+      expect(gradient.getAttribute('gradientUnits') ?? 'objectBoundingBox').toBe(
+        'objectBoundingBox',
+      );
+      const coordinates = ['x1', 'y1', 'x2', 'y2'].map((key) => Number(gradient.getAttribute(key)));
+      expect(coordinates.every((value) => Number.isFinite(value) && value >= 0 && value <= 1)).toBe(
+        true,
+      );
+      expect(coordinates.slice(0, 2)).not.toEqual(coordinates.slice(2));
+      const paint = `url(#${gradient.id})`;
+      expect(svg.querySelectorAll(`[stroke="${paint}"]`)).toHaveLength(0);
+      const shapes = Array.from(svg.querySelectorAll(`[fill="${paint}"]`));
+      expect(shapes.length).toBeGreaterThan(0);
+      for (const shape of shapes) {
+        if (shape.tagName.toLowerCase() === 'path') {
+          expect(shape.getAttribute('d')).toMatch(/[zZ]\s*$/);
+        } else {
+          expect(shape.tagName.toLowerCase()).toBe('rect');
+          expect(Number(shape.getAttribute('width'))).toBeGreaterThan(0);
+          expect(Number(shape.getAttribute('height'))).toBeGreaterThan(0);
+        }
+      }
+    }
+
+    // Source-linked catalog records must not render their generic fallback rigs as authored poses.
+    for (const asset of sourceOnlyAssets) {
+      expect(getExpandedMovementVisualBinding(asset.exerciseId)).toMatchObject({
+        nativeMotionAvailable: false,
+        presentation: 'creator-video-only',
+      });
+      rerender(<MovementPhaseDiagramSvg asset={asset} phase="middle" />);
+      const sourceSvg = container.querySelector('svg')!;
+      expect(sourceSvg).toHaveAttribute('data-native-motion-available', 'false');
+      expect(sourceSvg).toHaveAttribute('data-motion-source', 'creator-video-only');
+      expect(sourceSvg).toHaveAttribute('data-anatomical-accuracy-assumed', 'false');
+      expect(sourceSvg.querySelector('[data-segment="neck-bridge"]')).toBeNull();
+      expect(sourceSvg.querySelector('[data-segment="shoulder-yoke-bridge"]')).toBeNull();
+      expect(sourceSvg.querySelector('[data-segment="pelvis-girdle-bridge"]')).toBeNull();
+    }
   });
 
   it('preserves isolated ReusableBlock copies when template updates to v2, supports opt-in sync + Undo, and round-trips through backup/restore', () => {

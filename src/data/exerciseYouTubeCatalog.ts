@@ -1,5 +1,15 @@
 import rawCatalog from './verifiedPilatesYouTubeCatalog.json';
-import { APPARATUS_LABELS, CANONICAL_BLOCKS } from './pilatesCatalog';
+import expandedCatalog from './expandedPilatesVideoCatalog.json';
+import { INITIAL_EXERCISES } from './pilatesCatalog';
+import { getExerciseVideoEvidence } from './exerciseVideoBindings';
+import {
+  hasVideoSetupConflict,
+  movementSlug,
+  safeVideoDiscoveryLimit,
+  scoreVideoSemanticMatch,
+  hasAuditedVideoTitleMismatch,
+  getVideoMatchReasonKo,
+} from '../utils/videoSemanticMatching';
 import type { MotionPatternReference } from './motionPatternReferences';
 import type { ApparatusType, ClassBlockCategory, PilatesExercise } from '../types/pilates';
 
@@ -11,16 +21,15 @@ export interface RawVerifiedYouTubeItem {
   apparatus: ApparatusType[];
   blocks: ClassBlockCategory[];
   keywords: string[];
+  /** Creator page and public metadata checks; never a playback or coaching approval. */
+  sourceUrl?: string;
+  sourceTitle?: string;
+  verifiedAt?: string;
+  verificationMethod?: 'creator-page-and-oembed';
+  playbackVerified?: false;
 }
 
-export interface CuratedYouTubeVideoItem {
-  videoId: string;
-  title: string;
-  authorName: string;
-  region: 'kr' | 'global';
-  apparatus: ApparatusType[];
-  blocks: ClassBlockCategory[];
-  keywords: string[];
+export interface CuratedYouTubeVideoItem extends RawVerifiedYouTubeItem {
   thumbnailUrl: string;
   hqThumbnailUrl: string;
   embedUrl: string;
@@ -29,8 +38,10 @@ export interface CuratedYouTubeVideoItem {
   matchReasonKo: string;
 }
 
-export const VERIFIED_YOUTUBE_VIDEO_POOL: readonly RawVerifiedYouTubeItem[] =
-  rawCatalog as RawVerifiedYouTubeItem[];
+export const VERIFIED_YOUTUBE_VIDEO_POOL: readonly RawVerifiedYouTubeItem[] = [
+  ...rawCatalog,
+  ...expandedCatalog,
+] as RawVerifiedYouTubeItem[];
 
 export const VERIFIED_YOUTUBE_BY_ID: ReadonlyMap<string, RawVerifiedYouTubeItem> = new Map(
   VERIFIED_YOUTUBE_VIDEO_POOL.map((item) => [item.videoId, item]),
@@ -65,139 +76,41 @@ function toCuratedItem(
   };
 }
 
-function extractSlugFromExerciseId(exerciseId: string): string {
-  return exerciseId.replace(/^original-(?:mat|reformer|cadillac|chair|barrel)-/, '');
-}
-
-function tokenizeText(text: string): string[] {
-  return text
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
-    .split(/\s+/)
-    .filter((t) => t.length >= 2);
-}
-
-// Keyword tags are discovery metadata, not evidence that two movements are equivalent.
-// These audited names need title evidence because older tags connected them to a different task.
-const AUDITED_TITLE_REQUIREMENTS: Readonly<Record<string, RegExp>> = {
-  'incline-support': /fixed[\s-]*(?:seat|support)|incline[\s-]*support|고정\s*(?:좌면|지지)/i,
-  'seated-back-reach': /seated.*(?:chest|back).*reach|(?:앉|시티드).*(?:가슴|체스트).*리치/i,
-  'heel-slide': /heel[\s-]*slides?|힐\s*슬라이드/i,
-};
-
-function hasCompatibleAuditedTitle(item: RawVerifiedYouTubeItem, slug: string): boolean {
-  return AUDITED_TITLE_REQUIREMENTS[slug]?.test(item.title) ?? true;
-}
-
-function discoveryLimit(value: number): number {
-  return Number.isFinite(value) ? Math.max(0, Math.min(6, Math.floor(value))) : 0;
-}
-
-const GENERIC_MOVEMENT_WORDS = new Set([
-  'pilates',
-  'mat',
-  'reformer',
-  'cadillac',
-  'chair',
-  'barrel',
-  'standing',
-  'seated',
-  'supine',
-  'prone',
-  '필라테스',
-  '매트',
-  '리포머',
-  '캐딜락',
-  '체어',
-  '바렐',
-  '시티드',
-  '누워서',
-  '앉아서',
-]);
-
 export function getRelatedYouTubeVideosForExercise(
   exercise: PilatesExercise,
   maxPerRegion = 4,
 ): CuratedYouTubeVideoItem[] {
-  const slug = extractSlugFromExerciseId(exercise.id).toLowerCase();
-  const limit = discoveryLimit(maxPerRegion);
-  const exerciseTokens = new Set([
-    slug,
-    ...slug.split('-').filter((t) => t.length >= 3),
-    ...tokenizeText(exercise.nameKo),
-    ...tokenizeText(exercise.nameEn),
-  ]);
-
-  const scored = VERIFIED_YOUTUBE_VIDEO_POOL.filter(
-    (item) => item.apparatus.includes(exercise.apparatus) && hasCompatibleAuditedTitle(item, slug),
-  ).map((item) => {
-    let score = 0;
-    const reasons: string[] = [];
-
-    const hasExactSlug = item.keywords.some((k) => k.toLowerCase() === slug);
-    if (hasExactSlug) {
-      score += 55;
-      reasons.push(`‘${exercise.nameKo}’ 핵심 동작 키워드 일치`);
-    }
-
-    const hay = [item.title, item.authorName, ...item.keywords].join(' ').toLowerCase();
-    let tokenHits = 0;
-    for (const token of exerciseTokens) {
-      if (token.length >= 2 && !GENERIC_MOVEMENT_WORDS.has(token) && hay.includes(token)) {
-        tokenHits += 1;
-      }
-    }
-    if (tokenHits > 0) {
-      score += Math.min(36, tokenHits * 8);
-      if (!hasExactSlug) {
-        reasons.push(`동작 이름 키워드 ${tokenHits}건 · 동일 시범 미검수`);
-      }
-    }
-
-    if (item.apparatus.includes(exercise.apparatus)) {
-      score += 24;
-      reasons.push(`${APPARATUS_LABELS[exercise.apparatus].ko} 기구 일치`);
-    }
-
-    if (item.blocks.includes(exercise.blockCategory)) {
-      score += 18;
-      const blockName =
-        CANONICAL_BLOCKS.find((b) => b.category === exercise.blockCategory)?.nameKo ??
-        exercise.blockCategory;
-      reasons.push(`${blockName} 구간 일치`);
-    }
-
-    return {
-      item,
-      score,
-      relevant: hasExactSlug || tokenHits > 0,
-      reasonKo:
-        reasons.slice(0, 2).join(' · ') || `${APPARATUS_LABELS[exercise.apparatus].ko} 참고 시퀀스`,
-    };
-  });
-
-  const eligible = scored.filter((entry) => entry.relevant);
-  eligible.sort((a, b) => b.score - a.score || a.item.videoId.localeCompare(b.item.videoId));
+  const limit = safeVideoDiscoveryLimit(maxPerRegion);
+  const eligible = VERIFIED_YOUTUBE_VIDEO_POOL.map((item) => ({
+    item,
+    score: scoreVideoSemanticMatch(exercise, item),
+  }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || a.item.videoId.localeCompare(b.item.videoId));
 
   const results: CuratedYouTubeVideoItem[] = [];
   const seenIds = new Set<string>();
-
-  // If the exercise already has an explicit valid YouTube videoId, verify against public oEmbed pool first
-  if (exercise.youtube?.videoId && /^[A-Za-z0-9_-]{11}$/.test(exercise.youtube.videoId)) {
-    const linkedId = exercise.youtube.videoId;
+  const linkedId = exercise.youtube?.videoId;
+  if (linkedId && /^[A-Za-z0-9_-]{11}$/.test(linkedId)) {
     const verifiedEntry = VERIFIED_YOUTUBE_BY_ID.get(linkedId);
-    if (verifiedEntry) {
-      if (verifiedEntry.apparatus.includes(exercise.apparatus)) {
-        seenIds.add(linkedId);
-        results.push(
-          toCuratedItem(
-            verifiedEntry,
-            '직접 연결한 참조 · 공개 oEmbed 제목·채널 확인 · 동일 시범 미검수',
-            exercise.youtube.startSec || 0,
-          ),
-        );
-      }
-    } else if (exercise.isCustom || !exercise.id.startsWith('ex-')) {
+    if (
+      verifiedEntry &&
+      !hasVideoSetupConflict(exercise, verifiedEntry) &&
+      !hasAuditedVideoTitleMismatch(exercise, verifiedEntry)
+    ) {
+      const evidence = getExerciseVideoEvidence(exercise);
+      seenIds.add(linkedId);
+      results.push(
+        toCuratedItem(
+          verifiedEntry,
+          evidence
+            ? `${evidence.relation === 'related-variant' ? '관련 변형 참조' : '이름이 대응하는 참조'} · 제목·출처 메타데이터 대조 · 실제 재생·동일 시범·구간 미검수`
+            : '직접 연결한 참조 · 카탈로그 제목·채널 대조 · 실제 재생·동일 시범·구간 미검수',
+          exercise.youtube.startSec || 0,
+        ),
+      );
+    } else if (!verifiedEntry && (exercise.isCustom || !exercise.id.startsWith('ex-'))) {
+      // Explicit user input remains an unreviewed reference, never an automatic recommendation.
       seenIds.add(linkedId);
       results.push(
         toCuratedItem(
@@ -208,35 +121,27 @@ export function getRelatedYouTubeVideosForExercise(
             region: exercise.youtube.region ?? 'global',
             apparatus: [exercise.apparatus],
             blocks: [exercise.blockCategory],
-            keywords: [slug],
+            keywords: [movementSlug(exercise.id)],
           },
-          '직접 연결한 참조 · 동작 일치와 적합성 미검수',
+          '직접 연결한 참조 · 제목·재생·동작 일치 미검수',
           exercise.youtube.startSec || 0,
         ),
       );
     }
   }
-
   const krPicks = eligible
     .filter((entry) => entry.item.region === 'kr' && !seenIds.has(entry.item.videoId))
     .slice(0, limit);
   const globalPicks = eligible
     .filter((entry) => entry.item.region === 'global' && !seenIds.has(entry.item.videoId))
     .slice(0, limit);
-
-  // Interleave domestic (kr) and international (global) for balanced discovery
-  const maxLen = Math.max(krPicks.length, globalPicks.length);
-  for (let i = 0; i < maxLen; i++) {
-    if (krPicks[i]) {
-      seenIds.add(krPicks[i].item.videoId);
-      results.push(toCuratedItem(krPicks[i].item, krPicks[i].reasonKo));
-    }
-    if (globalPicks[i]) {
-      seenIds.add(globalPicks[i].item.videoId);
-      results.push(toCuratedItem(globalPicks[i].item, globalPicks[i].reasonKo));
+  for (let i = 0; i < Math.max(krPicks.length, globalPicks.length); i++) {
+    for (const pick of [krPicks[i], globalPicks[i]]) {
+      if (!pick || seenIds.has(pick.item.videoId)) continue;
+      seenIds.add(pick.item.videoId);
+      results.push(toCuratedItem(pick.item, getVideoMatchReasonKo(exercise)));
     }
   }
-
   return results;
 }
 
@@ -328,13 +233,6 @@ const MOTION_VARIANT_KEYWORD_MAP: Record<string, { apparatus: ApparatusType[]; t
     },
   };
 
-// Posture, apparatus and body-area tags may rank a match but cannot establish one.
-const GENERIC_MOTION_HINTS = new Set([
-  ...GENERIC_MOVEMENT_WORDS,
-  'quadruped', '네발기기', '골반고정', '골반', '복부', '코어', '흉추', '회전',
-  '중둔근', '발목', '사이드', '스트랩', '밴드', '세라밴드', '운다체어', '래더바렐',
-]);
-
 export function getRelatedYouTubeVideosForMotion(
   reference: MotionPatternReference,
   maxPerRegion = 3,
@@ -342,22 +240,25 @@ export function getRelatedYouTubeVideosForMotion(
   const hint = MOTION_VARIANT_KEYWORD_MAP[reference.variantId];
   // An unknown pattern must not silently become a mat exercise.
   if (!hint) return [];
-  const limit = discoveryLimit(maxPerRegion);
-  const intendedSlugs = reference.intendedExerciseIds.map(extractSlugFromExerciseId);
+  const limit = safeVideoDiscoveryLimit(maxPerRegion);
+  const intendedExercises = INITIAL_EXERCISES.filter((exercise) =>
+    reference.intendedExerciseIds.includes(exercise.id),
+  );
+  if (!intendedExercises.length) return [];
   const scored = VERIFIED_YOUTUBE_VIDEO_POOL.filter(
     (item) =>
       item.apparatus.some((app) => hint.apparatus.includes(app)) &&
-      intendedSlugs.every((slug) => hasCompatibleAuditedTitle(item, slug)),
+      intendedExercises.some((exercise) => scoreVideoSemanticMatch(exercise, item) > 0),
   )
     .map((item) => {
       let score = 0;
       let movementSpecificHit = false;
-      const hay = [item.title, item.authorName, ...item.keywords].join(' ').toLowerCase();
+      const hay = item.title.toLowerCase();
 
       for (const term of hint.terms) {
         if (hay.includes(term.toLowerCase())) {
           score += 22;
-          if (!GENERIC_MOTION_HINTS.has(term.toLowerCase())) movementSpecificHit = true;
+          movementSpecificHit = true;
         }
       }
       if (item.apparatus.some((app) => hint.apparatus.includes(app))) {

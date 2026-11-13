@@ -49,7 +49,7 @@ export interface MotionCoveragePlaybackSnapshot {
   readonly canPlay: boolean;
   /**
    * True ONLY when the exercise has an authored continuous draft (`projected-3d` or `continuous-2d`).
-   * Strictly `false` for all 77 `three-phase-2d` exercises and `missing`.
+   * Strictly `false` for `three-phase-2d` exercises and `missing`.
    */
   readonly isContinuousInterpolated: boolean;
   /**
@@ -127,7 +127,7 @@ function sanitizeFiniteProgress(value: number): number {
 /**
  * Mode-aware typed playback controller that wraps and reuses `DraftPlaybackController`
  * (`src/models/DraftPlaybackController.ts`) for continuous drafts (`projected-3d` and `continuous-2d`),
- * while keeping the 77 discrete `three-phase-2d` exercises strictly on manual 3-step selection
+ * while keeping discrete `three-phase-2d` exercises strictly on manual 3-step selection
  * (`start` / `middle` / `end`) without fake continuous auto-interpolation.
  */
 export class MotionCoveragePlaybackController {
@@ -469,7 +469,7 @@ export class MotionCoveragePlaybackController {
 
   /**
    * Starts continuous draft playback ONLY for `'projected-3d'` or `'continuous-2d'`.
-   * - For the 77 `'three-phase-2d'` exercises or `'missing'`, returns `false` and never interpolates.
+   * - For `'three-phase-2d'` exercises or `'missing'`, returns `false` and never interpolates.
    * - Requires explicitUserAction; reduced motion and unavailable hosts always stay static.
    */
   play(options: MotionCoveragePlayOptions = {}): boolean {
@@ -604,7 +604,7 @@ export class MotionCoveragePlaybackController {
 
   /**
    * Selects a discrete phase (`'start' | 'middle' | 'end'`).
-   * - For the 77 `'three-phase-2d'` exercises: updates `selectedPhase` directly with zero interpolation.
+   * - For `'three-phase-2d'` exercises: updates `selectedPhase` directly with zero interpolation.
    * - For continuous drafts: pauses and seeks to the canonical phase sample (`0`, `0.5`, or `1`).
    */
   selectPhase(phase: VisualPhaseId): void {
@@ -830,10 +830,12 @@ export class MotionCoveragePlaybackController {
         '구분: 2D 평면 연속 모션 초안(continuous-2d) · 진짜 3D 아님 · 정식 모션/해부학 검수 미완료';
     } else if (mode === 'three-phase-2d') {
       modeDistinctionLabelKo =
-        '구분: 이산 2D 3단계(시작·중간·끝) 정적 스냅샷 도해(77종) · 연속 보간 모션 아님 · 기존 98 포즈 재사용';
+        '구분: 이산 2D 3단계(시작·중간·끝) 정적 스냅샷 도해 · 연속 보간 모션 아님 · 기존 카탈로그 포즈 재사용';
     } else {
       modeDistinctionLabelKo =
-        '구분: 미지원(missing) · 카탈로그 출처 또는 기구·자세·방향 일치 근거 없음';
+        this.descriptor.mode === 'missing' && this.descriptor.resolution.isCatalogExercise
+          ? '구분: 제작자 영상 참고 · 전용 동작 도해와 연속 재생 미지원(missing)'
+          : '구분: 미지원(missing) · 카탈로그 출처 또는 기구·자세·방향 일치 근거 없음';
     }
 
     return Object.freeze({

@@ -22,7 +22,7 @@ afterEach(() => {
   usePilatesStore.setState(original, true);
 });
 const renderAtlas = () =>
-  render(<ExerciseAtlasView onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+  render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
 
 describe('atlas focus recovery without replacing current discovery UI', () => {
   it('returns focus to the exact diagram trigger on close without changing exercise data', async () => {

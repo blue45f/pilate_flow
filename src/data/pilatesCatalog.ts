@@ -1,4 +1,5 @@
 import { ORIGINAL_MOVEMENTS } from './originalMovements';
+import { EXPANDED_MOVEMENTS } from './expandedMovements';
 import type {
   ApparatusType,
   BlockMetadata,
@@ -425,6 +426,7 @@ const LEGACY_CURATED_EXERCISES: PilatesExercise[] = [
 export const INITIAL_EXERCISES: PilatesExercise[] = [
   ...ORIGINAL_MOVEMENTS,
   ...LEGACY_CURATED_EXERCISES,
+  ...EXPANDED_MOVEMENTS,
 ];
 
 export const INITIAL_CLASS_GROUPS: ClassGroupProfile[] = [

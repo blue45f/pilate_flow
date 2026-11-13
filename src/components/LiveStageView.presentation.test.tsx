@@ -95,7 +95,7 @@ describe('LiveStage presentation without session changes', () => {
     render(<LiveStageView onOpenLogModal={vi.fn()} />);
     const before = usePilatesStore.getState();
     const timer = screen.getByRole('timer');
-    const reference = disclosure('동작 참고 자료 · 3D·호흡');
+    const reference = disclosure('동작 참고 자료 · 자세·호흡');
     const timing = disclosure('이 동작 시간 구성');
     const brand = disclosure('브랜드별 스프링 기준 설정');
     expect(mode('집중 진행')).toHaveAttribute('aria-pressed', 'true');
@@ -113,7 +113,7 @@ describe('LiveStage presentation without session changes', () => {
     }
 
     fireEvent.click(
-      within(reference).getByText('동작 참고 자료 · 3D·호흡', { selector: 'summary' }),
+      within(reference).getByText('동작 참고 자료 · 자세·호흡', { selector: 'summary' }),
     );
     expect(reference).toHaveAttribute('open');
     fireEvent.click(mode('집중 진행'));
@@ -122,6 +122,11 @@ describe('LiveStage presentation without session changes', () => {
     fireEvent.click(mode('자료 함께 보기'));
     [reference, timing, brand].forEach((details) => expect(details).toHaveAttribute('open'));
     expect(screen.getByTestId('live-stage-3d-companion')).toBeVisible();
+    const companion = screen.getByTestId('live-stage-3d-companion');
+    expect([...companion.querySelectorAll('.exercise-motion-artwork')].map((frame) => frame.getAttribute('data-motion-phase'))).toEqual(['start', 'middle', 'end']);
+    expect(companion.querySelectorAll('.movement-phase-diagram-svg')).toHaveLength(3);
+    expect(companion.querySelector('img[src^="/motion-studio3d/"]')).toBeNull();
+    expect(companion).toHaveAttribute('data-motion-sync', 'reference-only');
     expect(screen.getByRole('button', { name: '라이브 스프링 기준 Balanced Body' })).toBeVisible();
     fireEvent.click(within(timing).getByText('이 동작 시간 구성', { selector: 'summary' }));
     expect(timing).not.toHaveAttribute('open');

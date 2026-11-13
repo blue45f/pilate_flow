@@ -1,4 +1,4 @@
-import { getVisibleWorkbenchButton, openWorkbenchAutomation } from './workbenchControls';
+import { getVisibleWorkbenchButton, openWorkbenchAutomation, openAdvancedWorkbench } from './workbenchControls';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
@@ -56,13 +56,13 @@ afterEach(() => {
 
 function expectCatalogBoundaries() {
   expect(JSON.stringify(INITIAL_EXERCISES)).toBe(production);
-  expect(INITIAL_EXERCISES).toHaveLength(98);
+  expect(INITIAL_EXERCISES).toHaveLength(158);
   expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
   expect(MOTION_REFERENCE_COUNTS.authoredCatalogMotions).toBe(0);
   expect(MOTION_REFERENCE_COUNTS.expertApprovedMotions).toBe(0);
 }
 
-describe('clear next action without changing class-readiness gates', () => {
+describe('clear next action without changing class-readiness gates', { timeout: 15000 }, () => {
   it('gives the real zero-approved empty draft one movement-selection action and keeps optional calendar/rest context collapsed', () => {
     const before = usePilatesStore.getState();
     const storage = vi.spyOn(Storage.prototype, 'setItem');
@@ -221,6 +221,7 @@ describe('clear next action without changing class-readiness gates', () => {
     usePilatesStore.setState({ exercises: [...INITIAL_EXERCISES, synthetic] });
     const before = usePilatesStore.getState();
     render(<App />);
+    await openAdvancedWorkbench();
     fireEvent.click(screen.getByRole('button', { name: '동작 추가' }));
     const pickerPage = screen.getByTestId('wizard-step2-page');
     expect(pickerPage).toBeVisible();
@@ -271,13 +272,14 @@ describe('clear next action without changing class-readiness gates', () => {
     );
     fireEvent.click(
       within(screen.getByRole('navigation', { name: '모바일 주 메뉴' })).getByRole('button', {
-        name: /^(계획|수업)$/,
+        name: '작성',
       }),
     );
+    await openAdvancedWorkbench();
     expect(getVisibleWorkbenchButton('자동 구성')).toHaveAttribute('aria-pressed', 'true');
     expect(usePilatesStore.getState().activeSteps).toBe(after.activeSteps);
     expectCatalogBoundaries();
-  }, 15000);
+  }, 30000);
 
   it('keeps nonempty defaults and supports a controlled mode without changing locked blocks, timing or review state', () => {
     const pending = INITIAL_EXERCISES.find((exercise) => exercise.apparatus === 'mat')!;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
+import { EXPANDED_MOVEMENTS, getExpandedMovementSource } from '../data/expandedMovements';
 import { VERIFIED_REFERENCES } from '../data/verifiedReferences';
 import type { VerifiedPublicReference } from '../data/verifiedReferences';
 import type { PilatesExercise } from '../types/pilates';
@@ -94,18 +95,21 @@ describe('read-only evidence for an exact planning note', () => {
     ).toEqual([]);
     expect(JSON.stringify(note)).toBe(before);
   });
-  it('keeps all ninety-eight catalog motions missing and personal approvals at zero without changing the catalog', () => {
+  it('keeps the current catalog unapproved while separating historical registry entries from source-only additions', () => {
     const before = JSON.stringify(INITIAL_EXERCISES);
     const evidence = INITIAL_EXERCISES.map(getExerciseEvidence);
-    expect(evidence).toHaveLength(98);
+    expect(evidence).toHaveLength(INITIAL_EXERCISES.length);
     expect(evidence.filter((item) => item.provenance.kind === 'original')).toHaveLength(60);
-    expect(evidence.filter((item) => item.provenance.kind === 'legacy')).toHaveLength(38);
+    expect(evidence.filter((item) => item.provenance.kind === 'legacy')).toHaveLength(
+      38 + EXPANDED_MOVEMENTS.length,
+    );
     for (const item of evidence) {
       expect(item.planning.status).toBe('pending');
       expect(item.planning.credentialVerified).toBe(false);
       expect(item.motion).toMatchObject({
         status: 'not-authored',
         catalogMapped: true,
+        canonicalRecordExists: true,
         professionalReviewStatus: 'unreviewed',
         professionallyApprovedCount: 0,
         unreviewedLabPrototypeCount: 2,
@@ -113,6 +117,39 @@ describe('read-only evidence for an exact planning note', () => {
     }
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
     expect(JSON.stringify(INITIAL_EXERCISES)).toBe(before);
+  });
+
+  it('removes the creator metadata confirmation when an expanded note changes its video, without altering planning reviews', () => {
+    const exercise = EXPANDED_MOVEMENTS[0];
+    const source = getExpandedMovementSource(exercise)!;
+    const before = JSON.stringify(exercise);
+    const checked = getExerciseEvidence(exercise);
+    expect(checked.source).toMatchObject({
+      kind: 'creator-metadata',
+      status: 'unknown',
+      checkedAt: '2026-11-13',
+      professionalReviewStatus: 'unreviewed',
+      exactIntervalsConfirmed: false,
+    });
+    const changed = getExerciseEvidence({
+      ...exercise,
+      youtube: {
+        ...exercise.youtube,
+        videoId: 'abcdefghijk',
+        url: 'https://www.youtube.com/watch?v=abcdefghijk',
+      },
+    });
+    expect(changed.source).toMatchObject({ kind: 'unverified-link', checkedAt: null });
+    expect(changed.source.label).toBe('입력 링크 · 내용 미확인');
+    expect(changed.links.some((link) => link.href === source.sourceUrl)).toBe(false);
+    expect(changed.motion.catalogMapped).toBe(true);
+    expect(changed.motion.canonicalRecordExists).toBe(true);
+    expect(changed.motion.status).toBe('not-authored');
+    expect(changed.motion.professionallyApprovedCount).toBe(0);
+    expect(changed.motion.relatedProposals).toEqual([]);
+    expect(changed.motion.label).not.toContain('대조 완료');
+    expect(changed.planning).toEqual(checked.planning);
+    expect(JSON.stringify(exercise)).toBe(before);
   });
 
   it('shows an instructor-authored note as pending with unknown external evidence and omits raw instructions', () => {

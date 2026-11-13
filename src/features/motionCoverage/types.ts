@@ -26,9 +26,9 @@ import type {
  * - 'projected-3d': Procedural 3D coordinates (Point3 / BatchPoint / SupineReachPoint) projected
  *   onto a 2D SVG plane via oblique orthographic projection (NOT true WebGL/scene-graph 3D).
  * - 'continuous-2d': Procedural 2D planar (Point2 / MotionPoint) continuous progress ∈ [0, 1] draft.
- * - 'three-phase-2d': Existing 98-exercise discrete 3-phase (start / middle / end) 2D kinematic rig
+ * - 'three-phase-2d': Eligible discrete 3-phase (start / middle / end) 2D kinematic rig
  *   reused directly from MOVEMENT_VISUAL_ASSETS without creating duplicate assets.
- * - 'missing': No verified motion data available (unknown ID, unverified custom item, or rejected mismatch).
+ * - 'missing': No eligible motion model (source-only entry, unknown ID, custom item, or rejected mismatch).
  */
 export type MotionSupportMode = 'three-phase-2d' | 'continuous-2d' | 'projected-3d' | 'missing';
 

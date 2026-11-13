@@ -1,6 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { Eye, Orbit, Pause, Play, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import type { PilatesExercise } from '../types/pilates';
+import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
+import { hasCatalogMotionIdentityMismatch } from '../data/movementVisualRigCatalog';
+import { MotionSourceOnlyNotice } from './MotionSourceOnlyNotice';
+import { UnmodeledMotionNotice } from './UnmodeledMotionNotice';
+import { useMotionPlaybackEnvironment } from '../hooks/useMotionPlaybackEnvironment';
+import { sampleStudioMotionCycle, STUDIO_MOTION_CYCLE_MS } from '../utils/studioMotionPlayback';
 import {
   renderRealtimeStudio3DFrame,
   STUDIO_3D_CAMERA_PRESETS,
@@ -21,11 +27,33 @@ const SHADER_MODES: readonly {
   { id: 'game-arena', labelKo: '게임엔진 그리드' },
 ];
 
-export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportProps> = ({
+export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportProps> = (props) => {
+  const binding = getExpandedMovementVisualBinding(props.exercise);
+  if (binding?.nativeMotionAvailable === false) {
+    return (
+      <MotionSourceOnlyNotice
+        exerciseId={props.exercise.id}
+        nameKo={props.exercise.nameKo}
+        apparatus={props.exercise.apparatus}
+        reasonKo={binding.reasonKo}
+        sourceUrl={binding.sourceUrl}
+      />
+    );
+  }
+  if (hasCatalogMotionIdentityMismatch(props.exercise)) {
+    return <UnmodeledMotionNotice exercise={props.exercise} />;
+  }
+  return <StudioInteractive3DViewportContent key={props.exercise.id} {...props} />;
+};
+
+const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportProps> = ({
   exercise,
   compact = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const progressRef = useRef(0);
+  const [viewportVersion, invalidateViewport] = useReducer((version: number) => version + 1, 0);
   const dragRef = useRef<{
     active: boolean;
     startX: number;
@@ -40,30 +68,28 @@ export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportPr
   const [activePresetId, setActivePresetId] = useState<string>('quarter');
   const [turntable, setTurntable] = useState<boolean>(false);
   const [shader, setShader] = useState<Studio3DShaderPreset>('studio-pbr');
-  const [playing, setPlaying] = useState<boolean>(true);
-  const [phaseT, setPhaseT] = useState<number>(0.65);
+  const [playing, setPlaying] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
   const [speed, setSpeed] = useState<0.5 | 1>(1);
+  const suspend = useCallback(() => {
+    setPlaying(false);
+    setTurntable(false);
+  }, []);
+  const { canAnimate, reducedMotion } = useMotionPlaybackEnvironment(viewportRef, suspend);
+  const phase = sampleStudioMotionCycle(progress);
 
   useEffect(() => {
-    if (!playing && !turntable) return;
+    if (!canAnimate || (!playing && !turntable)) return;
     let rafId = 0;
-    let lastTs = performance.now();
-    let dir = 1;
-    let localT = phaseT;
+    let lastTs: number | null = null;
 
     const step = (now: number) => {
-      const dt = Math.min(0.06, (now - lastTs) / 1000);
+      if (document.hidden) return;
+      const dt = lastTs === null ? 0 : Math.min(0.06, Math.max(0, now - lastTs) / 1000);
       lastTs = now;
       if (playing) {
-        localT += dt * 0.58 * speed * dir;
-        if (localT >= 1) {
-          localT = 1;
-          dir = -1;
-        } else if (localT <= 0) {
-          localT = 0;
-          dir = 1;
-        }
-        setPhaseT(localT);
+        progressRef.current = (progressRef.current + (dt * 1000 * speed) / STUDIO_MOTION_CYCLE_MS) % 1;
+        setProgress(progressRef.current);
       }
       if (turntable && !dragRef.current.active) {
         setYawDeg((prev) => {
@@ -75,8 +101,20 @@ export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportPr
     };
     rafId = window.requestAnimationFrame(step);
     return () => window.cancelAnimationFrame(rafId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, turntable, speed]);
+  }, [playing, turntable, speed, canAnimate]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const resize = () => invalidateViewport();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize);
+    observer?.observe(canvas);
+    window.addEventListener('resize', resize);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -103,14 +141,14 @@ export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportPr
       width: cssW,
       height: cssH,
       exercise,
-      phaseT,
+      phaseT: phase.pose,
       yawDeg,
       pitchDeg,
       zoom,
       shader,
     });
     ctx.restore();
-  }, [exercise, phaseT, yawDeg, pitchDeg, zoom, shader]);
+  }, [exercise, phase.pose, yawDeg, pitchDeg, zoom, shader, viewportVersion]);
 
   const applyCameraPreset = (presetId: string) => {
     const found = STUDIO_3D_CAMERA_PRESETS.find((p) => p.id === presetId);
@@ -119,14 +157,17 @@ export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportPr
     setYawDeg(found.yawDeg);
     setPitchDeg(found.pitchDeg);
     setZoom(found.zoom);
-    setTurntable(Boolean(found.autoTurntable));
+    setTurntable(Boolean(found.autoTurntable) && canAnimate);
   };
 
   return (
     <div
+      ref={viewportRef}
       className={`pf-orbit3d-viewport ${compact ? 'is-compact' : ''}`.trim()}
       data-testid="studio-interactive-3d-viewport"
       data-shader-mode={shader}
+      data-motion-playing={playing && canAnimate}
+      data-motion-phase={phase.id}
       aria-label={`${exercise.nameKo} 실시간 360도 3D 각도 조절 뷰포트`}
     >
       <div className="pf-orbit3d-canvas-wrap">
@@ -243,7 +284,8 @@ export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportPr
             type="button"
             className="pf-orbit3d-play-btn"
             aria-label={playing ? '3D 모션 일시정지' : '3D 모션 재생'}
-            onClick={() => setPlaying((p) => !p)}
+            disabled={!canAnimate}
+            onClick={() => canAnimate && setPlaying((p) => !p)}
           >
             {playing ? <Pause size={13} aria-hidden="true" /> : <Play size={13} aria-hidden="true" />}
             <span>{playing ? '일시정지' : '모션 재생'}</span>
@@ -253,15 +295,17 @@ export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportPr
             min={0}
             max={100}
             step={1}
-            value={Math.round(phaseT * 100)}
+            value={Math.round(progress * 100)}
             aria-label="3D 동작 진행 구간 스크러버"
+            aria-valuetext={`${Math.round(progress * 100)}퍼센트 · ${phase.label}`}
             className="pf-orbit3d-slider"
             onChange={(event) => {
               setPlaying(false);
-              setPhaseT(Number(event.target.value) / 100);
+              progressRef.current = Number(event.target.value) / 100;
+              setProgress(progressRef.current);
             }}
           />
-          <span className="pf-orbit3d-pct">{Math.round(phaseT * 100)}%</span>
+          <span className="pf-orbit3d-pct">{Math.round(progress * 100)}% · {phase.label}</span>
           <button
             type="button"
             className="pf-orbit3d-speed-btn"
@@ -272,6 +316,7 @@ export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportPr
           </button>
         </div>
       </div>
+      {reducedMotion && <p role="status">동작 줄이기 설정 · 위치와 각도를 직접 선택해 살펴보세요.</p>}
     </div>
   );
 };

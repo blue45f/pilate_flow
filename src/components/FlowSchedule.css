@@ -1,0 +1,498 @@
+/* The agenda stays in view; batch tools and administration are secondary. */
+#root .flow-schedule {
+  --flow-schedule-green: #264c3c;
+  --flow-schedule-border: #dde2d7;
+  width: 100%;
+  max-width: 1240px;
+  padding: 0;
+  margin: 0 auto;
+  color: #244236;
+  background: transparent;
+}
+#root .flow-schedule .schedule-page-header {
+  align-items: center;
+  margin: 0 0 26px;
+  gap: 20px;
+}
+#root .flow-schedule .schedule-page-header h1 {
+  margin: 6px 0 8px;
+  font: 700 clamp(26px, 3vw, 34px)/1.2 var(--font-ui, ui-sans-serif, system-ui, sans-serif);
+  letter-spacing: -0.04em;
+}
+#root .flow-schedule .schedule-page-header .eyebrow {
+  font-size: 12px;
+  color: #617568;
+  letter-spacing: 0.05em;
+}
+#root .flow-schedule .schedule-page-header p {
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0;
+}
+#root .flow-schedule .schedule-actions {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+#root .flow-schedule :is(button, summary) {
+  min-height: 44px;
+}
+#root .flow-schedule .flow-schedule-manage {
+  position: relative;
+  flex-shrink: 0;
+}
+#root .flow-schedule .flow-schedule-manage > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--flow-schedule-border);
+  background: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+#root .flow-schedule .flow-schedule-manage[open] > summary svg {
+  transform: rotate(180deg);
+}
+#root .flow-schedule .flow-schedule-manage-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 8;
+  display: grid;
+  gap: 6px;
+  min-width: 170px;
+  padding: 8px;
+  border: 1px solid var(--flow-schedule-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgb(27 48 35 / 12%);
+}
+#root .flow-schedule .flow-schedule-manage-menu button {
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+  border: 0;
+  background: transparent;
+}
+#root .flow-schedule .flow-schedule-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  align-items: stretch;
+  gap: 18px;
+  margin-bottom: 26px;
+}
+#root .flow-schedule .flow-schedule-next {
+  padding: 24px 26px;
+  border-radius: 16px;
+  background: #eaf0e4;
+  border: 1px solid #d7e1ce;
+  min-width: 0;
+}
+#root .flow-schedule .flow-schedule-next-label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #577247;
+}
+#root .flow-schedule .flow-schedule-next h2 {
+  margin: 14px 0 8px;
+  font: 700 clamp(20px, 2.3vw, 26px)/1.4 var(--font-ui, ui-sans-serif, system-ui, sans-serif);
+  letter-spacing: -0.035em;
+}
+#root .flow-schedule .flow-schedule-next p {
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0 0 20px;
+  color: #5c7053;
+}
+#root .flow-schedule .flow-schedule-next-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+#root .flow-schedule .flow-schedule-next-status {
+  font-size: 13px;
+  color: #4a6641;
+  padding: 7px 10px;
+  border: 1px solid #c3d1b9;
+  border-radius: 8px;
+}
+#root .flow-schedule .flow-schedule-next-status.is-needs-review {
+  color: #835a20;
+  background: #fff3de;
+  border-color: #e3cfac;
+}
+#root .flow-schedule .flow-schedule-today {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  padding: 22px;
+  border: 1px solid var(--flow-schedule-border);
+  border-radius: 16px;
+  background: #fff;
+}
+#root .flow-schedule .flow-schedule-today-label {
+  font-size: 11px;
+  letter-spacing: 0.13em;
+  color: #7c8777;
+}
+#root .flow-schedule .flow-schedule-today strong {
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+#root .flow-schedule .flow-schedule-today > span:not(.flow-schedule-today-label) {
+  font-size: 13px;
+  color: #6c7865;
+}
+#root .flow-schedule .flow-schedule-today button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0;
+  font-size: 13px;
+  color: #34543e;
+}
+#root .flow-schedule .flow-schedule-agenda {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--flow-schedule-border);
+  border-radius: 18px;
+  background: #fff;
+}
+#root .flow-schedule .schedule-toolbar {
+  padding: 0 0 18px;
+  border: 0;
+  border-bottom: 1px solid #e6e9df;
+  border-radius: 0;
+  background: transparent;
+  align-items: center;
+  gap: 14px;
+}
+#root .flow-schedule .schedule-view-toggle {
+  padding: 4px;
+  gap: 4px;
+  border-radius: 12px;
+  background: #f0f2eb;
+}
+#root .flow-schedule .schedule-view-toggle button {
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #65735e;
+  box-shadow: none;
+}
+#root .flow-schedule .schedule-view-toggle button[aria-pressed='true'] {
+  background: #fff;
+  color: #2e503a;
+  box-shadow: 0 1px 4px rgb(42 59 33 / 10%);
+}
+#root .flow-schedule .schedule-date-nav {
+  flex-wrap: nowrap;
+  align-items: end;
+  gap: 6px;
+}
+#root .flow-schedule .schedule-date-nav input {
+  height: 44px;
+  background: #fff;
+  border-color: #dbe0d4;
+  border-radius: 8px;
+  font-size: 14px;
+}
+#root .flow-schedule .schedule-date-nav .icon-button {
+  border-color: transparent;
+  border-radius: 8px;
+  background: #f5f6ef;
+}
+#root .flow-schedule .schedule-week-selector {
+  margin: 18px 0 12px;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+#root .flow-schedule .schedule-week-caption {
+  margin: 0 0 12px;
+}
+#root .flow-schedule .schedule-week-caption > span {
+  font-size: 12px;
+}
+#root .flow-schedule .schedule-week-strip {
+  gap: 6px;
+  border: 0;
+  padding: 0 0 4px;
+}
+#root .flow-schedule .schedule-week-strip > button {
+  min-width: 54px;
+  padding: 10px 6px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: #f6f7f1;
+  color: #55694c;
+}
+#root .flow-schedule .schedule-week-strip > button[aria-pressed='true'] {
+  border-color: #264c3c;
+  background: #264c3c;
+  color: #fff;
+  box-shadow: none;
+}
+#root .flow-schedule .schedule-summary {
+  margin: 16px 0;
+  font-size: 13px;
+}
+#root .flow-schedule .schedule-prep-bar {
+  padding: 12px 14px;
+  border: 0;
+  background: #f3f5ee;
+  border-radius: 12px;
+}
+#root .flow-schedule .schedule-prep-counts {
+  font-size: 12px;
+}
+#root .flow-schedule .schedule-prep-filter > button {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+#root .flow-schedule .schedule-days-day {
+  gap: 16px;
+}
+#root .flow-schedule .schedule-day {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+#root .flow-schedule .schedule-day > header {
+  margin: 0 0 12px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid #e7eae1;
+}
+#root .flow-schedule .schedule-day h2 {
+  font: 650 16px/1.4 var(--font-ui, ui-sans-serif, system-ui, sans-serif);
+}
+#root .flow-schedule .schedule-class {
+  padding: 18px;
+  margin: 0 0 14px;
+  border: 1px solid #dfe5d8;
+  border-left: 3px solid #78946a;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: none;
+}
+#root .flow-schedule .schedule-class-top {
+  gap: 12px;
+  margin-bottom: 16px;
+}
+#root .flow-schedule .schedule-class-time {
+  font-size: 15px;
+  font-weight: 700;
+  color: #284a36;
+}
+#root .flow-schedule .schedule-class h3 {
+  font: 650 18px/1.45 var(--font-ui, ui-sans-serif, system-ui, sans-serif);
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+#root .flow-schedule .pf-schedule-card-3d-row {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+#root .flow-schedule .pf-schedule-3d-thumb {
+  display: block;
+  width: 108px;
+  height: 90px;
+  border-radius: 12px;
+  background: #f1f3ec;
+  object-fit: contain;
+  padding: 6px;
+}
+#root .flow-schedule .schedule-class-meta {
+  font-size: 13px;
+  color: #65755c;
+}
+#root .flow-schedule .pf-class-badges-strip {
+  gap: 6px;
+}
+#root .flow-schedule .pf-class-spring-wrap {
+  font-size: 11px;
+}
+#root .flow-schedule .pf-v70-preclass-briefing {
+  background: #f5f6ef;
+  border-radius: 10px;
+  border: 0;
+  box-shadow: none;
+  padding: 10px;
+  gap: 8px;
+}
+#root .flow-schedule .pf-v70-briefing-chip {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font-size: 12px;
+  color: #617053;
+}
+#root .flow-schedule .schedule-prep-zone {
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid #e5e9de;
+}
+#root .flow-schedule .schedule-card-actions {
+  border-top: 1px solid #e9ece3;
+  margin-top: 12px;
+  padding-top: 8px;
+  gap: 8px 14px;
+}
+#root .flow-schedule .schedule-card-actions button {
+  font-size: 12px;
+  color: #68775e;
+}
+#root .flow-schedule .schedule-planning-entry {
+  margin: 20px 0;
+  padding: 18px 20px;
+  border: 1px solid var(--flow-schedule-border);
+  border-radius: 14px;
+  background: #f7f7ef;
+  box-shadow: none;
+}
+#root .flow-schedule .schedule-register,
+#root .flow-schedule .flow-schedule-automation {
+  margin: 12px 0;
+  padding: 0;
+  border: 1px solid var(--flow-schedule-border);
+  border-radius: 12px;
+  background: #fff;
+}
+#root .flow-schedule .schedule-register > summary,
+#root .flow-schedule .flow-schedule-automation > summary {
+  min-height: 50px;
+  padding: 14px 18px;
+  font-size: 13px;
+  cursor: pointer;
+}
+#root .flow-schedule .flow-schedule-automation > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+#root .flow-schedule .flow-schedule-automation > summary small {
+  color: #7b8673;
+  font-size: 12px;
+}
+#root .flow-schedule .flow-schedule-automation-body {
+  padding: 0 18px 18px;
+}
+#root .flow-schedule .schedule-register > div {
+  padding: 10px 18px;
+}
+#root .flow-schedule :is(button, input, summary):focus-visible {
+  outline: 3px solid #4a7d63;
+  outline-offset: 3px;
+}
+@media (max-width: 720px) {
+  #root .flow-schedule .schedule-page-header {
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  #root .flow-schedule .schedule-page-header > div:first-child {
+    flex: 1 1 220px;
+  }
+  #root .flow-schedule .schedule-page-header h1 {
+    font-size: 26px;
+  }
+  #root .flow-schedule .schedule-page-header p {
+    font-size: 13px;
+  }
+  #root .flow-schedule .flow-schedule-overview {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  #root .flow-schedule .flow-schedule-next {
+    padding: 20px;
+  }
+  #root .flow-schedule .flow-schedule-today {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    gap: 4px 10px;
+  }
+  #root .flow-schedule .flow-schedule-today-label {
+    display: none;
+  }
+  #root .flow-schedule .flow-schedule-today strong {
+    font-size: 14px;
+  }
+  #root .flow-schedule .flow-schedule-agenda {
+    padding: 14px;
+    border-radius: 14px;
+  }
+  #root .flow-schedule .schedule-toolbar {
+    align-items: flex-start;
+  }
+  #root .flow-schedule .schedule-date-nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+  #root .flow-schedule .schedule-date-nav label {
+    flex: 1;
+    min-width: 0;
+  }
+  #root .flow-schedule .schedule-date-nav input {
+    width: 100%;
+  }
+  #root .flow-schedule .schedule-class {
+    padding: 14px;
+  }
+  #root .flow-schedule .pf-schedule-card-3d-row {
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 12px;
+  }
+  #root .flow-schedule .pf-schedule-3d-thumb {
+    width: 78px;
+    height: 78px;
+  }
+  #root .flow-schedule .schedule-class h3 {
+    font-size: 16px;
+  }
+  #root .flow-schedule .schedule-days-week {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 390px) {
+  #root .flow-schedule .schedule-date-nav {
+    gap: 2px;
+  }
+  #root .flow-schedule .schedule-date-nav button {
+    padding-inline: 6px;
+  }
+  #root .flow-schedule .schedule-class-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  #root .flow-schedule .schedule-prep-filter {
+    gap: 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .flow-schedule * {
+    scroll-behavior: auto;
+  }
+}

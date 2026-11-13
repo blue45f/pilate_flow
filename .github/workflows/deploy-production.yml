@@ -96,6 +96,15 @@ jobs:
           src/components/LiveStageView.voice.test.tsx
           src/test/globalBenchmarkMotionAndRepertoire.test.tsx
           src/features/settingsPageCandidate/settingsPurposeFlowUx.test.tsx
+          src/test/sequenceStudioWorkbench.test.tsx
+          src/test/sequencePlanningActions.test.ts
+          src/components/ExerciseAtlasView.simplified.test.tsx
+          src/components/EditedCatalogMotionIdentity.test.tsx
+          src/test/motionRenderingQualityRegression.test.tsx
+          src/test/catalogMotionContinuity.test.ts
+          src/test/motionSemanticCorrections.test.ts
+          src/data/exerciseVideoBindings.test.ts
+          src/utils/videoSemanticMatching.test.ts
 
       - name: Build production PWA bundle & verify canonical config
         run: pnpm build && pnpm deploy:check

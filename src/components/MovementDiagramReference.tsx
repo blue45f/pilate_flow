@@ -35,10 +35,7 @@ import {
   FootworkLowerDiagramFigure,
   resolveFootworkLowerDiagram,
 } from './FootworkLowerDiagramFigure';
-import {
-  UpperBodyArmDiagramFigure,
-  resolveUpperBodyArmDiagram,
-} from './UpperBodyArmDiagramFigure';
+import { UpperBodyArmDiagramFigure, resolveUpperBodyArmDiagram } from './UpperBodyArmDiagramFigure';
 import {
   LateralAndApparatusDiagramFigure,
   resolveLateralAndApparatusDiagram,
@@ -47,10 +44,37 @@ import { ExtendedMotionVerificationPanel } from './ExtendedMotionVerificationPan
 import { ExtensionMovementTriptych } from './ExtensionMovementDiagram';
 import { ShoulderSupportTriptychDiagram } from './ShoulderSupportDiagramFigure';
 import { MOVEMENT_DIAGRAM_CORRECTIONS } from '../data/movementDiagramCorrections';
+import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
+import { hasCatalogMotionIdentityMismatch } from '../data/movementVisualRigCatalog';
+import { MotionSourceOnlyNotice } from './MotionSourceOnlyNotice';
+import { UnmodeledMotionNotice } from './UnmodeledMotionNotice';
 import '../styles/movement-diagram-reference.css';
 
 /** Single authored reference only; no verified motion sequence or class-side instruction. */
 export function MovementDiagramReference({ exercise }: { exercise: PilatesExercise }) {
+  const binding = getExpandedMovementVisualBinding(exercise);
+  if (binding?.nativeMotionAvailable === false) {
+    return (
+      <details className="movement-diagram-reference" data-native-motion-available="false">
+        <summary>제작자 동작 영상</summary>
+        <MotionSourceOnlyNotice
+          exerciseId={exercise.id}
+          nameKo={exercise.nameKo}
+          apparatus={exercise.apparatus}
+          reasonKo={binding.reasonKo}
+          sourceUrl={binding.sourceUrl}
+        />
+      </details>
+    );
+  }
+  if (hasCatalogMotionIdentityMismatch(exercise)) {
+    return (
+      <details className="movement-diagram-reference" data-native-motion-available="false">
+        <summary>수정한 동작의 도해 안내</summary>
+        <UnmodeledMotionNotice exercise={exercise} />
+      </details>
+    );
+  }
   return <DiagramDisclosure key={exercise.id} exercise={exercise} />;
 }
 
@@ -84,6 +108,11 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
   const [showUpperBodyArmDiagram, setShowUpperBodyArmDiagram] = useState(false);
   const [showLateralApparatusDiagram, setShowLateralApparatusDiagram] = useState(false);
   const [showExtendedVerification, setShowExtendedVerification] = useState(false);
+  const [showDisplayOptions, setShowDisplayOptions] = useState(false);
+  const [referenceOverlays, setReferenceOverlays] = useState({
+    alignment: false,
+    direction: false,
+  });
 
   const hasExpandedSubSection =
     showCorrectionRecord ||
@@ -100,7 +129,8 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
     showFootworkLowerDiagram ||
     showUpperBodyArmDiagram ||
     showLateralApparatusDiagram ||
-    showExtendedVerification;
+    showExtendedVerification ||
+    showDisplayOptions;
 
   const handleCollapseAll = () => {
     setShowCorrectionRecord(false);
@@ -118,6 +148,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
     setShowUpperBodyArmDiagram(false);
     setShowLateralApparatusDiagram(false);
     setShowExtendedVerification(false);
+    setShowDisplayOptions(false);
 
     const nestedDetails = sectionRef.current?.querySelectorAll('details');
     nestedDetails?.forEach((detailEl) => {
@@ -171,42 +202,26 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
     () => exercise.id in getPelvisHipCatalogVisualAssets(),
     [exercise.id],
   );
-  const hipLegId = useMemo(
-    () => resolveHipLegMovementId(exercise.id),
-    [exercise.id],
-  );
-  const coreSpec = useMemo(
-    () => resolveCoreAbdominalDiagram(exercise.id),
-    [exercise.id],
-  );
-  const hasExtensionDiagram = useMemo(
-    () => exercise.id in EXTENSION_MOVEMENT_SPECS,
-    [exercise.id],
-  );
-  const shoulderTargetId =
-    exercise.id === 'original-mat-forearm-plank' ? 'plank-support' : exercise.id;
+  const hipLegId = useMemo(() => resolveHipLegMovementId(exercise.id), [exercise.id]);
+  const coreSpec = useMemo(() => resolveCoreAbdominalDiagram(exercise.id), [exercise.id]);
+  const hasExtensionDiagram = useMemo(() => exercise.id in EXTENSION_MOVEMENT_SPECS, [exercise.id]);
   const shoulderSpec = useMemo(
-    () => resolveShoulderSupportDiagramForExercise(shoulderTargetId),
-    [shoulderTargetId],
+    () => resolveShoulderSupportDiagramForExercise(exercise.id),
+    [exercise.id],
   );
   const breathingPelvicSpec = useMemo(
     () => resolveBreathingPelvicDiagram(exercise.id),
     [exercise.id],
   );
-  const footworkLowerSpec = useMemo(
-    () => resolveFootworkLowerDiagram(exercise.id),
-    [exercise.id],
-  );
-  const upperBodyArmSpec = useMemo(
-    () => resolveUpperBodyArmDiagram(exercise.id),
-    [exercise.id],
-  );
+  const footworkLowerSpec = useMemo(() => resolveFootworkLowerDiagram(exercise.id), [exercise.id]);
+  const upperBodyArmSpec = useMemo(() => resolveUpperBodyArmDiagram(exercise.id), [exercise.id]);
   const lateralApparatusSpec = useMemo(
     () => resolveLateralAndApparatusDiagram(exercise.id),
     [exercise.id],
   );
   const correction = MOVEMENT_DIAGRAM_CORRECTIONS[exercise.id];
-  const matchedCorrection = correction?.archetypeId === props?.asset.archetypeId ? correction : null;
+  const matchedCorrection =
+    correction?.archetypeId === props?.asset.archetypeId ? correction : null;
   return (
     <section
       ref={sectionRef}
@@ -278,14 +293,66 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
               <p className="muted">{matchedCorrection.limitationKo}</p>
               <ul>
                 {matchedCorrection.sources.map((source) => (
-                  <li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a></li>
+                  <li key={source.url}>
+                    <a href={source.url} target="_blank" rel="noopener noreferrer">
+                      {source.title}
+                    </a>
+                  </li>
                 ))}
               </ul>
             </details>
           )}
-          <div className="movement-diagram-reference-canvas">
-            <MovementPhaseDiagramSvg {...props} />
-          </div>
+          <figure className="movement-diagram-reference-canvas">
+            <MovementPhaseDiagramSvg
+              {...props}
+              showAlignment={referenceOverlays.alignment}
+              showDirection={referenceOverlays.direction}
+            />
+            <figcaption className="movement-studio-depth-legend">
+              <span>
+                <i className="movement-studio-depth-near" aria-hidden="true" />
+                가까운 팔다리
+              </span>
+              <span>
+                <i className="movement-studio-depth-far" aria-hidden="true" />먼 팔다리
+              </span>
+            </figcaption>
+          </figure>
+          <details
+            className="movement-diagram-display-options"
+            onToggle={(event) => setShowDisplayOptions(event.currentTarget.open)}
+          >
+            <summary>그림 표시 옵션</summary>
+            <fieldset>
+              <legend>보조 표시</legend>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={referenceOverlays.alignment}
+                  onChange={(event) =>
+                    setReferenceOverlays((previous) => ({
+                      ...previous,
+                      alignment: event.target.checked,
+                    }))
+                  }
+                />
+                정렬선 표시
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={referenceOverlays.direction}
+                  onChange={(event) =>
+                    setReferenceOverlays((previous) => ({
+                      ...previous,
+                      direction: event.target.checked,
+                    }))
+                  }
+                />
+                방향 화살표 표시
+              </label>
+            </fieldset>
+          </details>
           <p className="muted">
             기준 그림: 오른쪽 · 화면 반전 없음. 수업안의 좌우 설정과 연결되지 않아요.
           </p>
@@ -312,10 +379,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
                 척추 분절(C7~S1) 6분절 상세 도해 보기
               </summary>
               {showSpineDiagram && (
-                <SpineArticulationDiagramReference
-                  movementId={exercise.id}
-                  initialPhase="middle"
-                />
+                <SpineArticulationDiagramReference movementId={exercise.id} initialPhase="middle" />
               )}
             </details>
           )}
@@ -348,10 +412,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
                 고관절·하지 가동 궤적 및 골반 고정 도해 보기
               </summary>
               {showHipLegDiagram && (
-                <HipLegDiagramFigure
-                  movementId={hipLegId}
-                  initialPhase="middle"
-                />
+                <HipLegDiagramFigure movementId={hipLegId} initialPhase="middle" />
               )}
             </details>
           )}
@@ -365,10 +426,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
                 복부 코어·요추 임프린트 3단계 상세 도해 보기
               </summary>
               {showCoreDiagram && (
-                <CoreAbdominalDiagramFigure
-                  exerciseId={exercise.id}
-                  initialPhase="middle"
-                />
+                <CoreAbdominalDiagramFigure exerciseId={exercise.id} initialPhase="middle" />
               )}
             </details>
           )}
@@ -402,7 +460,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
               </summary>
               {showShoulderDiagram && (
                 <ShoulderSupportTriptychDiagram
-                  movementId={shoulderTargetId as ShoulderSupportTargetExerciseId}
+                  movementId={exercise.id as ShoulderSupportTargetExerciseId}
                 />
               )}
             </details>
@@ -430,10 +488,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
                 호흡·센터링·골반 시계 3단계 상세 도해 보기
               </summary>
               {showBreathingPelvicDiagram && (
-                <BreathingPelvicDiagramFigure
-                  exerciseId={exercise.id}
-                  initialPhase="middle"
-                />
+                <BreathingPelvicDiagramFigure exerciseId={exercise.id} initialPhase="middle" />
               )}
             </details>
           )}
@@ -447,10 +502,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
                 풋워크·발목·페달·하지 정렬 3단계 상세 도해 보기
               </summary>
               {showFootworkLowerDiagram && (
-                <FootworkLowerDiagramFigure
-                  exerciseId={exercise.id}
-                  initialPhase="middle"
-                />
+                <FootworkLowerDiagramFigure exerciseId={exercise.id} initialPhase="middle" />
               )}
             </details>
           )}
@@ -464,10 +516,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
                 상지 스트랩·로우·암 아크 3단계 상세 도해 보기
               </summary>
               {showUpperBodyArmDiagram && (
-                <UpperBodyArmDiagramFigure
-                  exerciseId={exercise.id}
-                  initialPhase="middle"
-                />
+                <UpperBodyArmDiagramFigure exerciseId={exercise.id} initialPhase="middle" />
               )}
             </details>
           )}
@@ -481,10 +530,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
                 측굴·기구 회전·테이블탑·사지 지지 3단계 상세 도해 보기
               </summary>
               {showLateralApparatusDiagram && (
-                <LateralAndApparatusDiagramFigure
-                  exerciseId={exercise.id}
-                  initialPhase="middle"
-                />
+                <LateralAndApparatusDiagramFigure exerciseId={exercise.id} initialPhase="middle" />
               )}
             </details>
           )}
@@ -496,9 +542,7 @@ function DiagramContent({ exercise }: { exercise: PilatesExercise }) {
             <summary className="movement-diagram-correction-summary">
               후보 연속 모션·출처 원장 전수 검증 기록 보기
             </summary>
-            {showExtendedVerification && (
-              <ExtendedMotionVerificationPanel exercise={exercise} />
-            )}
+            {showExtendedVerification && <ExtendedMotionVerificationPanel exercise={exercise} />}
           </details>
         </>
       )}

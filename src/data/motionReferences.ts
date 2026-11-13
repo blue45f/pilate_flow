@@ -1,4 +1,5 @@
 import type { MotionPrototypeId } from '../utils/motionReferenceModel';
+import { EXPANDED_MOVEMENTS } from './expandedMovements';
 import sourceMetadata from './motionReferenceSource.json';
 
 /** These two drafts are available only in the explicit prototype lab, never as catalog mappings. */
@@ -1092,7 +1093,21 @@ const pendingRecords: readonly ExerciseMotionReference[] = [
 ];
 
 export const EXERCISE_MOTION_REFERENCES: readonly ExerciseMotionReference[] = Object.freeze(
-  pendingRecords.map((record) => Object.freeze(record)),
+  [
+    ...pendingRecords,
+    // Current catalog coverage only: these missing-motion records inherit no
+    // historical source audit, asset, prototype, or professional approval.
+    ...EXPANDED_MOVEMENTS.map((exercise): ExerciseMotionReference => ({
+      exerciseId: exercise.id,
+      exerciseName: exercise.nameKo,
+      apparatus: exercise.apparatus,
+      status: 'not_authored',
+      asset: null,
+      prototypeId: null,
+      professionalReviewStatus: 'unreviewed',
+      expertApproved: false,
+    })),
+  ].map((record) => Object.freeze(record)),
 );
 const byExerciseId = new Map(
   EXERCISE_MOTION_REFERENCES.map((record) => [record.exerciseId, record]),

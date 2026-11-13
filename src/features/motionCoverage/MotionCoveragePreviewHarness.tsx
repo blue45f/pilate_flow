@@ -1,7 +1,6 @@
 import React, { useId, useMemo, useState } from 'react';
 import type { Root } from 'react-dom/client';
 import { MOTION_PATTERN_REFERENCES } from '../../data/motionPatternReferences';
-import { MOVEMENT_VISUAL_ASSETS } from '../../data/movementVisualRigCatalog';
 import { INITIAL_EXERCISES } from '../../data/pilatesCatalog';
 import { PreviewHarnessStageView, PreviewHarnessTruthLedger } from './PreviewHarnessStageView';
 import { MOTION_COVERAGE_HARNESS_REPRESENTATIVE_TARGETS } from './catalogSweep';
@@ -29,9 +28,9 @@ export type { MotionCoveragePreviewHarnessProps };
 
 /**
  * Isolated local inspection preview harness (`src/features/motionCoverage/MotionCoveragePreviewHarness.tsx`).
- * - Iterates over all 98 catalog descriptors + representative missing fixture.
+ * - Iterates over the current catalog descriptors + representative missing fixture.
  * - Uses `MotionCoveragePlaybackController` (via `usePreviewHarnessController`) to drive continuous drafts
- *   (`projected-3d`, `continuous-2d`) and discrete 3-step selection (`three-phase-2d`, 77 exercises)
+ *   (`projected-3d`, `continuous-2d`) and discrete 3-step selection (`three-phase-2d`)
  *   without fake interpolation.
  * - Enforces >= 44px touch targets, non-interfering keyboard shortcuts, and responsive 320px/390px zero-overflow layout.
  * - Cleans up all RAF handles and listeners on pause, exercise switch, background tab, and unmount.
@@ -67,6 +66,10 @@ export const MotionCoveragePreviewHarness: React.FC<MotionCoveragePreviewHarness
     () => computeCatalogModeCounts(catalogDescriptors),
     [catalogDescriptors],
   );
+  const nativeDiagramCount = catalogDescriptors.filter(
+    ({ descriptor }) => descriptor.resolution.threePhase2d.supported,
+  ).length;
+  const continuousDraftCount = modeCounts['continuous-2d'] + modeCounts['projected-3d'];
 
   const activeCatalogEntry = useMemo(
     () => findActiveCatalogEntry(catalogDescriptors, snapshot.exerciseId),
@@ -124,7 +127,7 @@ export const MotionCoveragePreviewHarness: React.FC<MotionCoveragePreviewHarness
       data-reduced-motion={String(snapshot.reducedMotion)}
       data-background-hidden={String(snapshot.isBackgroundHidden)}
       data-catalog-total={String(INITIAL_EXERCISES.length)}
-      data-reused-2d-asset-count={String(MOVEMENT_VISUAL_ASSETS.length)}
+      data-reused-2d-asset-count={String(nativeDiagramCount)}
       data-pattern-reference-count={String(MOTION_PATTERN_REFERENCES.length)}
       style={{
         width: '100%',
@@ -161,7 +164,7 @@ export const MotionCoveragePreviewHarness: React.FC<MotionCoveragePreviewHarness
             id={`${uid}-harness-title`}
             style={{ margin: 0, fontSize: '1.05rem', lineHeight: 1.3 }}
           >
-            모션 도해 지원 수준 로컬 검수 프리뷰 (98종 카탈로그 순회)
+            모션 도해 지원 수준 로컬 검수 프리뷰 ({catalogDescriptors.length}종 카탈로그 순회)
           </h2>
           <span
             data-testid="harness-truth-pill"
@@ -174,7 +177,8 @@ export const MotionCoveragePreviewHarness: React.FC<MotionCoveragePreviewHarness
               maxWidth: '100%',
             }}
           >
-            기존 98 포즈 재사용 · 미검토 연속 초안 21종(22패턴) · 정식 3D/승인 0건
+            기본 도해 {nativeDiagramCount}종 · 전용 도해 미작성 {modeCounts.missing}종 · 미검토 연속
+            초안 {continuousDraftCount}종({MOTION_PATTERN_REFERENCES.length}패턴) · 정식 3D/승인 0건
           </span>
         </div>
 
@@ -236,10 +240,10 @@ export const MotionCoveragePreviewHarness: React.FC<MotionCoveragePreviewHarness
         })}
       </div>
 
-      {/* Mode Filter & 98-Exercise Catalog Traversal Controls */}
+      {/* Mode Filter & Catalog Traversal Controls */}
       <div
         role="region"
-        aria-label="98개 카탈로그 동작 순회 제어"
+        aria-label={`${catalogDescriptors.length}개 카탈로그 동작 순회 제어`}
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -342,7 +346,7 @@ export const MotionCoveragePreviewHarness: React.FC<MotionCoveragePreviewHarness
             maxWidth: '100%',
           }}
         >
-          <span>동작 직접 선택 (98개 카탈로그 + 미지원 검수 fixture)</span>
+          <span>동작 직접 선택 ({catalogDescriptors.length}개 카탈로그 + 미지원 검수 fixture)</span>
           <select
             id={`${uid}-exercise-select`}
             aria-label="검수할 동작 선택"
@@ -353,13 +357,15 @@ export const MotionCoveragePreviewHarness: React.FC<MotionCoveragePreviewHarness
           >
             {activeCatalogEntry && !activeCatalogIncludedInFilter && (
               <option value={activeCatalogEntry.exercise.id}>
-                [{activeCatalogEntry.index + 1}/98] {activeCatalogEntry.exercise.id} ·{' '}
-                {activeCatalogEntry.exercise.nameKo} ({activeCatalogEntry.descriptor.mode})
+                [{activeCatalogEntry.index + 1}/{catalogDescriptors.length}]{' '}
+                {activeCatalogEntry.exercise.id} · {activeCatalogEntry.exercise.nameKo} (
+                {activeCatalogEntry.descriptor.mode})
               </option>
             )}
             {filteredCatalogDescriptors.map(({ index, exercise, descriptor }) => (
               <option key={exercise.id} value={exercise.id}>
-                [{index + 1}/98] {exercise.id} · {exercise.nameKo} ({descriptor.mode})
+                [{index + 1}/{catalogDescriptors.length}] {exercise.id} · {exercise.nameKo} (
+                {descriptor.mode})
               </option>
             ))}
             <option value={MISSING_FIXTURE_EXERCISE_ID}>

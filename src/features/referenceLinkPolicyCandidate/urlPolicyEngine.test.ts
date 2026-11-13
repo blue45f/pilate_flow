@@ -8,6 +8,7 @@ import {
   resolveExerciseReferenceLinkPolicyReport,
 } from './index';
 import { INITIAL_EXERCISES } from '../../data/pilatesCatalog';
+import { VERIFIED_YOUTUBE_VIDEO_POOL } from '../../data/exerciseYouTubeCatalog';
 import { PUBLIC_REFERENCES } from '../../data/publicReferences';
 import { VERIFIED_REFERENCES } from '../../data/verifiedReferences';
 
@@ -245,12 +246,12 @@ describe('urlPolicyEngine — URL normalization, deduplication, malicious scheme
     expect(audit.networkRequestsMade).toBe(0);
     expect(audit.videosDownloaded).toBe(0);
     expect(audit.accessBlocksBypassed).toBe(0);
-    expect(audit.exercisesCount).toBe(98);
+    expect(audit.exercisesCount).toBe(INITIAL_EXERCISES.length);
     expect(audit.verifiedReferencesCount).toBe(30);
     expect(audit.verifiedWebsiteOnlyCount).toBe(21);
     expect(audit.verifiedYoutubeCandidateCount).toBe(9);
     expect(audit.publicPortalReferencesCount).toBe(3);
-    expect(audit.curatedYoutubePoolCount).toBe(141);
+    expect(audit.curatedYoutubePoolCount).toBe(VERIFIED_YOUTUBE_VIDEO_POOL.length);
     expect(audit.motionCandidateResearchCount).toBe(2);
     expect(audit.allSamplesPassSchemeCheck).toBe(true);
     expect(audit.allWebsitesAndPortalsSeparatedAsExternalOnly).toBe(true);

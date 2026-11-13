@@ -3,7 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ClassBinderView } from './ClassBinderView';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
-import type { ClassHistoryLog, PilatesExercise, SavedSequence, SequenceStep } from '../types/pilates';
+import type {
+  ClassHistoryLog,
+  PilatesExercise,
+  SavedSequence,
+  SequenceStep,
+} from '../types/pilates';
 import { isExerciseAutoEligible } from '../utils/exerciseReview';
 import {
   attachProgramSnapshotToHistoryLog,
@@ -144,7 +149,11 @@ describe('ClassBinderView find, inspect, and safe resume workflow (synthetic)', 
         ...originalState,
         activeTab: 'binder',
         exercises: [...INITIAL_EXERCISES, reformerWarm, reformerCore, chairLower, matCooldown],
-        savedSequences: [structuredClone(seqReformer), structuredClone(seqChair), structuredClone(seqMat)],
+        savedSequences: [
+          structuredClone(seqReformer),
+          structuredClone(seqChair),
+          structuredClone(seqMat),
+        ],
         classGroups: [
           {
             id: 'synth-group-evening',
@@ -198,14 +207,14 @@ describe('ClassBinderView find, inspect, and safe resume workflow (synthetic)', 
     const reformerCard = within(
       screen.getByRole('heading', { name: seqReformer.title }).closest('article')!,
     );
-    // Collapsed glance shows apparatus, level, total minutes, movement/rest count, and recent taught group + count without expanding '더보기'
-    expect(
-      reformerCard.getByText(/리포머 · Lv 1\.5 · 총 50분 \(동작 2 · 휴식 1\) · 최근 수업 .* · 합성 화목 저녁 A반 \(1회\)/),
-    ).toBeVisible();
+    // Essentials remain visible as scannable badges and facts before opening '더보기'.
+    expect(reformerCard.getByText('리포머')).toBeVisible();
+    expect(reformerCard.getByText('Lv 1.5 · 초중급')).toBeVisible();
+    expect(reformerCard.getByText('총 50분')).toBeVisible();
+    expect(reformerCard.getByText('동작 2 · 휴식 1')).toBeVisible();
+    expect(reformerCard.getByText(/최근 수업 .* · 합성 화목 저녁 A반 \(1회\)/)).toBeVisible();
 
-    const matCard = within(
-      screen.getByRole('heading', { name: seqMat.title }).closest('article')!,
-    );
+    const matCard = within(screen.getByRole('heading', { name: seqMat.title }).closest('article')!);
     expect(matCard.getByText('현재 계획 열림')).toBeVisible();
 
     // Whitespace-only query does NOT falsely show empty state, while exposing inline clear & Escape clear
@@ -296,7 +305,9 @@ describe('ClassBinderView find, inspect, and safe resume workflow (synthetic)', 
 
     // 2. Escape cancels confirmation and restores focus to the exact trigger button
     fireEvent.keyDown(overwriteRegion, { key: 'Escape' });
-    expect(chairCard.queryByRole('region', { name: '현재 초안 덮어쓰기 확인' })).not.toBeInTheDocument();
+    expect(
+      chairCard.queryByRole('region', { name: '현재 초안 덮어쓰기 확인' }),
+    ).not.toBeInTheDocument();
     expect(openChairBtn).toHaveFocus();
     expect(usePilatesStore.getState().activeSteps).toEqual(unsavedSteps);
 
@@ -454,9 +465,7 @@ describe('ClassBinderView find, inspect, and safe resume workflow (synthetic)', 
     fireEvent(filterDetails, new Event('toggle'));
 
     fireEvent.change(historySearch, { target: { value: '  체어  ' } });
-    expect(
-      screen.getByRole('button', { name: '검색어 필터 해제: 체어' }),
-    ).toBeVisible();
+    expect(screen.getByRole('button', { name: '검색어 필터 해제: 체어' })).toBeVisible();
     expect(
       screen.getByRole('button', { name: '그룹 필터 해제: 합성 수금 오전 B반' }),
     ).toBeVisible();

@@ -22,7 +22,7 @@ afterEach(() => {
 describe('mobile navigation becoming desktop navigation', () => {
   it('removes modal navigation and unlocks the workspace at desktop width, with useful focus', async () => {
     const { container } = render(<App />);
-    const heading = await screen.findByRole('heading', { name: '수업 준비, 가볍게.', level: 1 });
+    const heading = await screen.findByRole('heading', { name: '수업 만들기', level: 1 });
     fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
     expect(screen.getByRole('dialog', { name: '스튜디오 탐색' })).toHaveAttribute(
       'aria-modal',
@@ -46,7 +46,7 @@ describe('mobile navigation becoming desktop navigation', () => {
     'retains the open tablet menu at %ipx and exits modal mode at exactly1024px',
     async (tabletWidth) => {
       const { container } = render(<App />);
-      await screen.findByRole('heading', { name: '수업 준비, 가볍게.', level: 1 });
+      await screen.findByRole('heading', { name: '수업 만들기', level: 1 });
       fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
       resize(tabletWidth);
       expect(screen.getByRole('dialog', { name: '스튜디오 탐색' })).toHaveAttribute(

@@ -1,3 +1,4 @@
+import { ClassMotionArtwork } from './ClassMotionArtwork';
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Check, ChevronDown, Clock3, Info, Plus, ShieldCheck } from 'lucide-react';
 import { PfBadge, PfButton, PfField, PfFormError, PfInput, PfSelect, PfTextarea } from '../design-system';
@@ -687,13 +688,8 @@ const SessionLogForm: React.FC<
             data-testid="log-session-3d-banner"
             style={{ marginBottom: '10px' }}
           >
-            <img
-              src={logVisualMeta.studio3dThumbUrl}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              className="pf-spot-dialog-3d-banner__img"
-            />
+            <ClassMotionArtwork firstExerciseId={logVisualMeta.firstExerciseId} exercises={exercisesAtOpen} fallbackSrc={logVisualMeta.studio3dThumbUrl}
+              className="pf-spot-dialog-3d-banner__img" />
             <div className="pf-spot-dialog-3d-banner__info">
               <strong>{title || '완료한 수업'}</strong>
               <div className="pf-class-badges-strip">

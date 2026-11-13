@@ -1,6 +1,8 @@
 import { StrictMode } from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { INITIAL_EXERCISES } from '../../data/pilatesCatalog';
+import { EXPANDED_MOVEMENTS } from '../../data/expandedMovements';
 import {
   MISSING_FIXTURE_EXERCISE_ID,
   MotionCoveragePlaybackController,
@@ -20,6 +22,8 @@ import {
   pointsToSvgPath,
   resolvePreviewEvidenceOverlay,
 } from './index';
+
+const nativeCatalogCount = INITIAL_EXERCISES.length - EXPANDED_MOVEMENTS.length;
 
 function createTestFrameRig(initialTimeMs = 1000) {
   let currentTimeMs = initialTimeMs;
@@ -113,23 +117,23 @@ describe('MotionCoveragePreviewHarness modular boundaries (selectors, lifecycle,
   it('1. pure selector boundary (previewHarnessSelectors.ts) computes catalog counts, wrap-around navigation, evidence overlays, and target guards deterministically', () => {
     const defaultOpts = mergePreviewResolveOptions(undefined, false);
     const entries = buildCatalogDescriptorEntries(defaultOpts);
-    expect(entries).toHaveLength(98);
+    expect(entries).toHaveLength(INITIAL_EXERCISES.length);
 
     const counts = computeCatalogModeCounts(entries);
     expect(counts).toEqual({
-      'three-phase-2d': 77,
+      'three-phase-2d': nativeCatalogCount - 21,
       'continuous-2d': 1,
       'projected-3d': 20,
-      missing: 0,
+      missing: EXPANDED_MOVEMENTS.length,
     });
 
     const labOpts = mergePreviewResolveOptions({ preferMode: 'continuous-2d' }, true);
     const labCounts = computeCatalogModeCounts(buildCatalogDescriptorEntries(labOpts));
     expect(labCounts).toEqual({
-      'three-phase-2d': 77,
+      'three-phase-2d': nativeCatalogCount - 21,
       'continuous-2d': 3,
       'projected-3d': 18,
-      missing: 0,
+      missing: EXPANDED_MOVEMENTS.length,
     });
 
     const projEntries = filterCatalogDescriptorEntries(entries, 'projected-3d');

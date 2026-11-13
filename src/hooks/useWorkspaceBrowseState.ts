@@ -4,7 +4,7 @@ import { getActiveWorkspaceOwner } from '../lib/accountStorage';
 import { usePilatesStore } from '../store/usePilatesStore';
 
 export const WORKSPACE_BROWSE_STORAGE_PREFIX = 'pf_workspace_browse_v1';
-export type WorkspaceBrowsePage = 'schedule' | 'history';
+export type WorkspaceBrowsePage = 'schedule' | 'history' | 'atlas';
 
 export function workspaceBrowseStorageKey(page: WorkspaceBrowsePage, owner: string | null): string {
   const scope = owner === null ? 'guest' : `account:${encodeURIComponent(owner)}`;
@@ -30,6 +30,7 @@ export function useWorkspaceBrowseState<T>(
   page: WorkspaceBrowsePage,
   defaults: T,
   parse: (value: unknown, defaults: T) => T,
+  shouldPersist?: (value: T) => boolean,
 ): readonly [T, Dispatch<SetStateAction<T>>] {
   const owner = useSyncExternalStore(subscribeToWorkspace, getActiveWorkspaceOwner, serverOwner);
   const key = workspaceBrowseStorageKey(page, owner);
@@ -52,11 +53,15 @@ export function useWorkspaceBrowseState<T>(
   useEffect(() => {
     if (entry.key !== key || !entry.changed || typeof window === 'undefined') return;
     try {
-      window.sessionStorage.setItem(key, JSON.stringify(entry.value));
+      if (shouldPersist && !shouldPersist(entry.value)) {
+        window.sessionStorage.removeItem(key);
+      } else {
+        window.sessionStorage.setItem(key, JSON.stringify(entry.value));
+      }
     } catch {
       // Browsing still works when session storage is blocked or full.
     }
-  }, [entry, key]);
+  }, [entry, key, shouldPersist]);
 
   return [value, update];
 }
