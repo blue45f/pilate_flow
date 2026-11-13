@@ -53,12 +53,14 @@ const newMotionAssets = [
         await page.getByRole('searchbox', { name: '동작 검색', exact: true }).fill('골반시계');
         await page.getByRole('button', { name: '골반 시계', exact: true }).click();
         const inspector = page.getByRole('complementary', { name: '선택한 동작 정보' });
-        await inspector.getByTestId('detail-movement-intent-banner').waitFor();
+        await inspector.getByRole('heading', { name: '골반 시계', exact: true }).waitFor();
+        await inspector.getByTestId('studio-3d-motion-hero-card').waitFor();
         assert.ok(await inspector.getByTestId('inspector-fact-distinction').isVisible());
         await capture('movement');
         await inspector.getByRole('button', { name: '전체 정보·개인 검토 열기' }).click();
         const dialog = page.getByRole('dialog').last();
-        await dialog.getByTestId('detail-movement-intent-banner').waitFor();
+        await dialog.getByRole('heading', { name: '골반 시계', exact: true }).waitFor();
+        await dialog.getByTestId('yt-preview-step-guide').waitFor();
         await dialog.getByTestId('studio-3d-motion-hero-card').waitFor();
         await capture('detail');
         await page.keyboard.press('Escape');
@@ -68,7 +70,13 @@ const newMotionAssets = [
           .click();
         await navigate('수업');
         await page.getByRole('button', { name: /순서·시간 확인/ }).click();
-        await page.getByTestId('visual-sequence-filmstrip').waitFor();
+        if (width < 1024) {
+          await page.getByTestId('visual-sequence-filmstrip').waitFor();
+        } else {
+          const summary = page.getByTestId('board05-3sec-summary-panel');
+          await summary.getByRole('heading', { name: /골반 시계/ }).waitFor();
+          await summary.getByTestId('studio-3d-motion-hero-card').waitFor();
+        }
         await capture('sequence');
         await navigate('일정');
         await capture('schedule');
