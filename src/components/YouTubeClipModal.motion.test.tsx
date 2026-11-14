@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { VERIFIED_REFERENCES } from '../data/verifiedReferences';
@@ -39,7 +39,7 @@ const player = (mode: 'exercise' | 'prototype-lab') =>
   screen.getAllByTestId('motion-reference-hook').find((element) => element.dataset.mode === mode)!;
 
 describe('movement detail motion reference boundary', () => {
-  it('passes actual catalog and custom IDs without substituting a generic motion', () => {
+  it('passes actual catalog and custom IDs without substituting a generic motion after opening the reference drawer', async () => {
     const originalExercises = usePilatesStore.getState().exercises;
     const custom: PilatesExercise = {
       ...INITIAL_EXERCISES[0],
@@ -49,13 +49,15 @@ describe('movement detail motion reference boundary', () => {
     };
     const examples = [INITIAL_EXERCISES[0], INITIAL_EXERCISES.at(-1)!, custom];
     const { rerender } = render(<YouTubePreviewModal exercise={examples[0]} onClose={vi.fn()} />);
-    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
-    fireEvent.click(screen.getByText('출처·검토 상태 자세히 보기'));
     for (const exercise of examples) {
       rerender(<YouTubePreviewModal exercise={exercise} onClose={vi.fn()} />);
-      fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
-      fireEvent.click(screen.getByText('출처·검토 상태 자세히 보기'));
-      expect(player('exercise')).toHaveAttribute('data-exercise-id', exercise.id);
+      const voiceDrawer = screen.getByTestId('detail-voice-media-drawer');
+      expect(voiceDrawer).not.toHaveAttribute('open');
+      expect(player('exercise')).toBeUndefined();
+      fireEvent.click(voiceDrawer.querySelector('summary')!);
+      await waitFor(() =>
+        expect(player('exercise')).toHaveAttribute('data-exercise-id', exercise.id),
+      );
       expect(player('exercise')).toHaveAttribute('data-exercise-name', exercise.nameKo);
       expect(player('prototype-lab')).not.toHaveAttribute('data-exercise-id');
       expect(player('prototype-lab')).not.toHaveAttribute('data-exercise-name');
@@ -66,11 +68,24 @@ describe('movement detail motion reference boundary', () => {
     expect(usePilatesStore.getState().exercises).toBe(originalExercises);
   });
 
-  it('keeps the explicit unreviewed lab collapsed, pauses on collapse, and resets on exercise change', () => {
+  it('keeps the explicit unreviewed lab collapsed, pauses on collapse, and resets on exercise change', async () => {
     const { rerender, unmount } = render(
       <YouTubePreviewModal exercise={INITIAL_EXERCISES[0]} onClose={vi.fn()} />,
     );
-    expect(screen.getByText('직접 그린 기구 도식 · 동작 시범 아님')).toBeVisible();
+    const hero = screen.getByTestId('studio-3d-motion-hero-card');
+    expect(hero).toHaveAttribute('data-match-scope', 'catalog-authored-pattern');
+    expect(hero).toHaveAttribute('data-anatomical-accuracy-assumed', 'false');
+    expect(await within(hero).findByTestId('studio-motion-study-player')).toHaveAttribute(
+      'data-exercise-id',
+      INITIAL_EXERCISES[0].id,
+    );
+    const voiceDrawer = screen.getByTestId('detail-voice-media-drawer');
+    expect(voiceDrawer).not.toHaveAttribute('open');
+    expect(player('exercise')).toBeUndefined();
+    fireEvent.click(voiceDrawer.querySelector('summary')!);
+    await waitFor(() =>
+      expect(player('exercise')).toHaveAttribute('data-exercise-id', INITIAL_EXERCISES[0].id),
+    );
     const summary = screen.getByText('교차 검증 모션 설계 예시 · 패턴 참고용');
     const details = summary.closest('details')!;
     expect(details).not.toHaveAttribute('open');
@@ -91,14 +106,18 @@ describe('movement detail motion reference boundary', () => {
     details.open = true;
     fireEvent(details, new Event('toggle'));
     rerender(<YouTubePreviewModal exercise={INITIAL_EXERCISES[1]} onClose={vi.fn()} />);
-    fireEvent.click(screen.getByText('내 검토 기록 (선택)'));
-    fireEvent.click(screen.getByText('출처·검토 상태 자세히 보기'));
     expect(
       screen.getByText('교차 검증 모션 설계 예시 · 패턴 참고용').closest('details'),
     ).not.toHaveAttribute('open');
     expect(player('prototype-lab')).toHaveAttribute('data-active', 'false');
     expect(player('prototype-lab')).not.toHaveAttribute('data-exercise-id');
-    expect(player('exercise')).toHaveAttribute('data-exercise-id', INITIAL_EXERCISES[1].id);
+    const nextVoiceDrawer = screen.getByTestId('detail-voice-media-drawer');
+    expect(nextVoiceDrawer).not.toHaveAttribute('open');
+    expect(player('exercise')).toBeUndefined();
+    fireEvent.click(nextVoiceDrawer.querySelector('summary')!);
+    await waitFor(() =>
+      expect(player('exercise')).toHaveAttribute('data-exercise-id', INITIAL_EXERCISES[1].id),
+    );
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
 
     rerender(<YouTubePreviewModal exercise={null} onClose={vi.fn()} />);

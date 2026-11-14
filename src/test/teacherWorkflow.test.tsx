@@ -336,7 +336,7 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
         detail.getByRole('heading', { name: '자료의 출처와 검토 상태' }).closest('section')!,
       ).getByRole('link', { name: /보존된 원출처 열기/ }),
     ).toHaveAttribute('href', reference.url);
-    expect(detail.queryByRole('button', { name: 'YouTube 영상 불러오기' })).not.toBeInTheDocument();
+    expect(detail.queryByRole('button', { name: /인베드 영상 불러오기/ })).not.toBeInTheDocument();
     expect(preservedDraft()).toEqual(before);
     const key = 'pilates-flow-atelier-storage-v3';
     const persisted = JSON.parse(localStorage.getItem(key)!).state;

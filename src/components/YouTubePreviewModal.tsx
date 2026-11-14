@@ -3,8 +3,7 @@ import { MovementDiagramReference } from './MovementDiagramReference';
 import { StudioClinicalBriefCard } from './StudioClinicalBriefCard';
 import { Studio3DMotionHeroCard } from './Studio3DMotionHeroCard';
 import { SpringVisualPills } from './SpringVisualPills';
-import { getCrawledRelatedVideosForExercise } from '../data/globalCrawledRepertoirePack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   CheckCircle2,
   Clock3,
@@ -13,7 +12,6 @@ import {
   FileText,
   Info,
   ListPlus,
-  Play,
   Plus,
 } from 'lucide-react';
 import { APPARATUS_LABELS, CANONICAL_BLOCKS, POSITION_LABELS } from '../data/pilatesCatalog';
@@ -38,8 +36,7 @@ import {
 import { LightDismissDialog } from './LightDismissDialog';
 import type { DialogCloseRequest } from './LightDismissDialog';
 import { ExerciseEvidencePanel } from './ExerciseEvidencePanel';
-import { ExerciseYouTubeGallery } from './ExerciseYouTubeGallery';
-import { MovementArt } from './MovementArt';
+import { ExerciseVideoGallery } from './ExerciseVideoGallery';
 import { MotionReferencePlayer } from './MotionReferencePlayer';
 import { MovementMediaGuidancePanel } from './MovementMediaGuidancePanel';
 import '../styles/library.css';
@@ -861,29 +858,8 @@ const MovementDetails: React.FC<{
   );
   const [draftResetVersion, setDraftResetVersion] = useState(0);
   const [previewStep, setPreviewStep] = useState<1 | 2>(() => (restoredDraft ? 2 : 1));
-  const [loadVideo, setLoadVideo] = useState(false);
-  const [activeCrawledVideoId, setActiveCrawledVideoId] = useState<string | null>(null);
-  const crawledRelatedVideos = useMemo(
-    () => getCrawledRelatedVideosForExercise(exercise, 4),
-    [exercise],
-  );
-  useEffect(() => {
-    const stopVideo = () => {
-      setLoadVideo(false);
-      setActiveCrawledVideoId(null);
-    };
-    const onVisibility = () => {
-      if (document.hidden) stopVideo();
-    };
-    document.addEventListener('visibilitychange', onVisibility);
-    window.addEventListener('pagehide', stopVideo);
-    return () => {
-      document.removeEventListener('visibilitychange', onVisibility);
-      window.removeEventListener('pagehide', stopVideo);
-    };
-  }, []);
-
   const [motionLabOpen, setMotionLabOpen] = useState(false);
+  const [voiceGuideOpen, setVoiceGuideOpen] = useState(false);
   const [reviewerAlias, setReviewerAlias] = useState('');
   const [reviewEditorOpen, setReviewEditorOpen] = useState<boolean>(() => restoredDraft !== null);
   const [additionError, setAdditionError] = useState('');
@@ -929,7 +905,7 @@ const MovementDetails: React.FC<{
   const showVideoSource =
     hasOptionalVideo || (!primarySource && !exercise.id.startsWith('ex-custom-own-'));
   const rawLink = getMovementVideoLink(exercise);
-  const { videoId, startSec, endSec } = exercise.youtube;
+  const { startSec, endSec } = exercise.youtube;
   const safeStart = Math.max(0, Math.floor(startSec || 0));
   const safeEnd = endSec && endSec > safeStart ? Math.floor(endSec) : null;
   const linkPolicy = rawLink
@@ -939,10 +915,6 @@ const MovementDetails: React.FC<{
       })
     : null;
   const link = linkPolicy?.canonicalExternalUrl ?? rawLink;
-  const embedUrl = link
-    ? (linkPolicy?.embedUrl ??
-      `https://www.youtube-nocookie.com/embed/${videoId}?start=${safeStart}${safeEnd ? `&end=${safeEnd}` : ''}&rel=0&autoplay=0`)
-    : '';
   return (
     <div className="movement-detail pf-p07-clean-detail" data-preview-step={previewStep}>
       <nav
@@ -1023,43 +995,7 @@ const MovementDetails: React.FC<{
           <Studio3DMotionHeroCard exercise={exercise} />
         </div>
       )}
-      <div
-        className={`movement-detail-media movement-${exercise.apparatus} pf-p08-yt-dark-card ${loadVideo ? 'is-playing' : 'is-compact-bar'} ${previewStep === 2 ? 'is-step2-hero' : ''}`.trim()}
-      >
-        {loadVideo && link ? (
-          <iframe
-            src={embedUrl}
-            title={`${exercise.nameKo} YouTube 원본 참조`}
-            allow="encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
-        ) : (
-          <>
-            <div className="pf-p08-yt-mini-art" aria-hidden="true">
-              <MovementArt apparatus={exercise.apparatus} />
-            </div>
-            <div className="movement-detail-media-caption pf-p08-yt-caption">
-              <div className="pf-p08-yt-copy">
-                <strong>
-                  ▶ YouTube 참조 구간 플레이어 ({formatSecondsToMMSS(safeStart)}
-                  {safeEnd ? ` ~ ${formatSecondsToMMSS(safeEnd)}` : ' ~'})
-                </strong>
-                <span>직접 그린 기구 도식 · 동작 시범 아님</span>
-              </div>
-              {link && (
-                <button
-                  type="button"
-                  className="btn-primary pf-p08-yt-btn"
-                  onClick={() => setLoadVideo(true)}
-                >
-                  <Play size={15} /> YouTube 영상 불러오기
-                </button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+      <ExerciseVideoGallery exercise={exercise} />
       {previewStep === 2 && (
         <div ref={step1Ref} data-detail-step1-section className="pf-p08-compact-3d-ref">
           <Studio3DMotionHeroCard exercise={exercise} compact />
@@ -1094,101 +1030,6 @@ const MovementDetails: React.FC<{
           }}
         />
       </details>
-      {crawledRelatedVideos.length > 0 && (
-        <details
-          className="pf-detail-progressive-drawer"
-          data-testid="crawled-related-videos-drawer"
-        >
-          <summary>
-            <span>추가 관련 영상 ({crawledRelatedVideos.length}건 · 제목·출처 기준)</span>
-            <ChevronDown size={14} aria-hidden="true" />
-          </summary>
-          <div style={{ display: 'grid', gap: '8px', paddingTop: '10px' }}>
-            {crawledRelatedVideos.map((vid) => (
-              <div
-                key={vid.videoId}
-                data-reference-scope={vid.referenceScope}
-                style={{
-                  background: '#ffffff',
-                  border: '1px solid #dce3d8',
-                  borderRadius: '12px',
-                  padding: '10px 12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '8px',
-                  }}
-                >
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.84rem', color: '#173d34' }}>
-                      {vid.title}
-                    </strong>
-                    <span style={{ fontSize: '0.75rem', color: '#56685f' }}>
-                      {vid.channelName} · {vid.region === 'kr' ? '국내 채널' : '해외 채널'}
-                    </span>
-                    <p
-                      className="muted"
-                      style={{ margin: '6px 0 0', fontSize: '0.75rem', lineHeight: 1.5 }}
-                    >
-                      {vid.matchReasonKo}
-                    </p>
-                  </div>
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={() =>
-                        setActiveCrawledVideoId((prev) =>
-                          prev === vid.videoId ? null : vid.videoId,
-                        )
-                      }
-                    >
-                      <Play size={13} aria-hidden="true" />{' '}
-                      {activeCrawledVideoId === vid.videoId ? '영상 접기' : '미리보기 열기'}
-                    </button>
-                    <a
-                      href={vid.watchUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-secondary"
-                    >
-                      <ExternalLink size={13} aria-hidden="true" /> YouTube 원문
-                    </a>
-                  </div>
-                </div>
-                {activeCrawledVideoId === vid.videoId && (
-                  <div
-                    style={{
-                      aspectRatio: '16 / 9',
-                      width: '100%',
-                      borderRadius: '10px',
-                      overflow: 'hidden',
-                      background: '#111',
-                    }}
-                  >
-                    <iframe
-                      src={vid.embedUrl}
-                      title={`${vid.title} 공식 참조 영상`}
-                      allow="encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      referrerPolicy="strict-origin-when-cross-origin"
-                      style={{ width: '100%', height: '100%', border: 0 }}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </details>
-      )}
       <details
         className="pf-detail-progressive-drawer"
         data-testid="detail-clinical-diagram-drawer"
@@ -1216,7 +1057,6 @@ const MovementDetails: React.FC<{
               {primarySource ? '공개 자료를 참고한 내 계획 노트 · 원출처 보존' : source.label}
             </span>
           </div>
-          <ExerciseYouTubeGallery exercise={exercise} maxPerRegion={3} />
           <StudioClinicalBriefCard exercise={exercise} />
           <MovementDiagramReference exercise={exercise} />
           {approved ? (
@@ -1235,15 +1075,25 @@ const MovementDetails: React.FC<{
           <PostureAnatomyGuide exercise={exercise} />
         </div>
       </details>
-      <details className="pf-detail-progressive-drawer" data-testid="detail-voice-media-drawer">
+      <details
+        className="pf-detail-progressive-drawer"
+        data-testid="detail-voice-media-drawer"
+        onToggle={(event) => setVoiceGuideOpen(event.currentTarget.open)}
+      >
         <summary>
           <span>음성 티칭 가이드 · 모션 레퍼런스 펼쳐보기</span>
           <ChevronDown size={14} aria-hidden="true" />
         </summary>
-        <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
-          <MovementMediaGuidancePanel key={exercise.id} exercise={exercise} />
-          <MotionReferencePlayer exercise={exercise} exerciseId={exercise.id} exerciseName={exercise.nameKo} />
-        </div>
+        {voiceGuideOpen && (
+          <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
+            <MovementMediaGuidancePanel key={exercise.id} exercise={exercise} voiceOnly />
+            <MotionReferencePlayer
+              exercise={exercise}
+              exerciseId={exercise.id}
+              exerciseName={exercise.nameKo}
+            />
+          </div>
+        )}
       </details>
       <details
         className="pending-instruction-notes"

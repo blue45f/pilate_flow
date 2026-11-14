@@ -49,13 +49,15 @@ describe('movement addition reports the actual result without losing the current
   it('labels a composite flow source as a partial reference without loading or approving its playback', () => {
     const flow = INITIAL_EXERCISES.find((exercise) => exercise.id === 'ex-straps-01')!;
     render(<YouTubePreviewModal exercise={flow} onClose={vi.fn()} onAddToSequence={vi.fn()} />);
-    const drawer = screen.getByTestId('crawled-related-videos-drawer');
-    fireEvent.click(within(drawer).getByText(/추가 관련 영상/, { selector: 'summary span' }));
-    expect(within(drawer).getAllByText(/구성 동작을 위한 부분 참고/).length).toBeGreaterThan(0);
-    expect(within(drawer).getAllByText(/전체 흐름·실제 재생·구간 미검수/)[0]).toBeVisible();
-    expect(drawer.querySelector('[data-reference-scope="named-component"]')).toBeInTheDocument();
-    expect(drawer.querySelector('iframe')).toBeNull();
-    expect(within(drawer).queryByText(/공식 시범|해외 공식 채널/)).not.toBeInTheDocument();
+    const gallery = screen.getByTestId('exercise-video-gallery');
+    expect(gallery).toBeVisible();
+    expect(within(gallery).getAllByText(/구성 동작/).length).toBeGreaterThan(0);
+    const componentReference = gallery.querySelector('[data-video-relation="flow-component"]');
+    expect(componentReference).toBeInTheDocument();
+    fireEvent.click(componentReference!);
+    expect(within(gallery).getByText(/전체 흐름과 구간은 미확인/)).toBeVisible();
+    expect(gallery.querySelector('iframe')).toBeNull();
+    expect(within(gallery).queryByText(/공식 시범|해외 공식 채널/)).not.toBeInTheDocument();
   });
 
   it('retains the detail and typed alias when a structured add outcome is rejected', () => {

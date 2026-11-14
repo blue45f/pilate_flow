@@ -1136,7 +1136,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
             return (
               <div key={slotId} className="pf-member-my-bookings__item">
                 <div className="pf-member-my-booking-lead">
-                  <ClassMotionArtwork firstExerciseId={resolvedSlot.firstExerciseId} exercises={exercises} fallbackSrc={bookedThumb}
+                  <ClassMotionArtwork deferUntilVisible firstExerciseId={resolvedSlot.firstExerciseId} exercises={exercises} fallbackSrc={bookedThumb}
                     className="pf-member-my-booking-thumb" />
                   <div>
                     <strong>{titleText}</strong>
@@ -1482,7 +1482,7 @@ export const MemberBookingView: React.FC<MemberBookingViewProps> = ({
                 className={`pf-member-slot-card ${slot.myState === 'BOOKED' ? 'is-my-booked' : ''}`.trim()}
                 data-testid={`member-slot-${slot.id}`}
               >
-                <ClassMotionArtwork firstExerciseId={slot.firstExerciseId} exercises={exercises} fallbackSrc={studioArtSrc}
+                <ClassMotionArtwork deferUntilVisible firstExerciseId={slot.firstExerciseId} exercises={exercises} fallbackSrc={studioArtSrc}
                   className="pf-member-slot-art"
                   data-testid={`member-slot-3d-preview-${slot.id}`} />
                 <div className="pf-member-slot-main">

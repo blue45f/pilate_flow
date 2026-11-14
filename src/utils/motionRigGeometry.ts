@@ -79,6 +79,26 @@ export function resolveRigHand(joints: RigJointMap, side: 'near' | 'far'): Point
   return translated(wrist, rotate(difference(joints.hand, joints.wrist), angle));
 }
 
+/** Transport the setup face direction with the neck/head axis. Limb movement must
+ * never turn the face over when a wrist or toe crosses an arbitrary threshold. */
+export function resolveRigHeadFrame(joints: RigJointMap, referenceJoints: RigJointMap = joints): {
+  headAxis: Point2D; faceAxis: Point2D;
+} {
+  const normalize = (p: Point2D, fallback: Point2D): Point2D => {
+    const length = Math.hypot(p.x, p.y);
+    return length > 0.001 ? { x: p.x / length, y: p.y / length } : fallback;
+  };
+  const setupAxis = normalize(difference(referenceJoints.head, referenceJoints.neck), { x: 0, y: -1 });
+  const headAxis = normalize(difference(joints.head, joints.neck), setupAxis);
+  const r = referenceJoints;
+  const kneeling = Math.abs(r.knee.y - r.ankle.y) < 9 && r.pelvis.y < r.knee.y - 18;
+  const hint = Math.abs(setupAxis.y) >= Math.abs(setupAxis.x)
+    ? { x: (kneeling ? r.knee.x - r.ankle.x : 0) || r.toe.x - r.heel.x || r.hand.x - r.shoulder.x || 1, y: 0 }
+    : { x: 0, y: r.wrist.y > r.shoulder.y + 8 || r.toe.y > r.heel.y + 2 ? 1 : -1 };
+  const sign = -setupAxis.y * hint.x + setupAxis.x * hint.y >= 0 ? 1 : -1;
+  return { headAxis, faceAxis: { x: -headAxis.y * sign, y: headAxis.x * sign } };
+}
+
 /** Shared mechanical contact for the chair pedal and any foot anchored to it. */
 export function resolveChairPedalTip(pedalAngleDeg: number): Point2D {
   const angle = ((40 - pedalAngleDeg * 1.3) * Math.PI) / 180;

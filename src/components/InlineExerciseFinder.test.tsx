@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { getMotionPatternReferences } from '../data/motionPatternReferences';
@@ -203,9 +203,9 @@ describe('inline exercise finder', () => {
     const artwork = within(card).getByTestId('ief-card-3d-thumb');
     const frame = getExerciseArtworkFrame(mapped, 'middle');
     expect(frame).toBeDefined();
-    expect(frame!.src).toMatch(/^\/motion-artwork-v2\/.+\.svg$/);
+    expect(frame!.src).toMatch(/^\/motion-artwork-v2\/.+\.webp$/);
     expect(artwork).toHaveAttribute('data-match-scope', 'catalog-authored-pattern');
-    expect(artwork).toHaveAttribute('data-artwork-renderer', 'cached-native-svg');
+    expect(artwork).toHaveAttribute('data-artwork-renderer', 'cached-native-image');
     expect(artwork).toHaveAttribute('data-professional-review', 'unreviewed');
     expect(artwork).toHaveAttribute('data-anatomical-accuracy-assumed', 'false');
     expect(artwork).toHaveAttribute('aria-hidden', 'true');
@@ -241,7 +241,7 @@ describe('inline exercise finder', () => {
     expect(screen.queryByRole('region', { name: '선택한 모션 초안' })).not.toBeInTheDocument();
   });
 
-  it('distinguishes cached catalog, representative and source-only artwork while filtering to actual draft relationships', () => {
+  it('distinguishes cached catalog, representative and source-only artwork while filtering to actual draft relationships', async () => {
     const mapped = INITIAL_EXERCISES.find(
       (exercise) => getMotionPatternReferences(exercise.id).length,
     )!;
@@ -266,7 +266,7 @@ describe('inline exercise finder', () => {
     const nativeArtwork = within(emptyCard).getByTestId('ief-card-3d-thumb');
     // No pattern-reference relationship does not mean the catalog's own diagram is absent.
     expect(nativeArtwork).toHaveAttribute('data-match-scope', 'catalog-authored-pattern');
-    expect(nativeArtwork).toHaveAttribute('data-artwork-renderer', 'cached-native-svg');
+    expect(nativeArtwork).toHaveAttribute('data-artwork-renderer', 'cached-native-image');
     expect(nativeArtwork.querySelector('img')).toHaveAttribute(
       'src',
       getExerciseArtworkFrame(unmapped, 'middle')!.src,
@@ -274,8 +274,8 @@ describe('inline exercise finder', () => {
     expect(within(emptyCard).queryByRole('button', { name: /초안 보기/ })).not.toBeInTheDocument();
 
     const customCard = screen.getByRole('article', { name: `${custom.nameKo} 동작 노트` });
+    await waitFor(() => expect(within(customCard).getByTestId('ief-card-3d-thumb')).toHaveAttribute('data-match-scope', 'representative-pattern'));
     const representativeArtwork = within(customCard).getByTestId('ief-card-3d-thumb');
-    expect(representativeArtwork).toHaveAttribute('data-match-scope', 'representative-pattern');
     expect(representativeArtwork).toHaveAttribute('data-artwork-renderer', 'inline-native-svg');
     expect(within(customCard).getByText('대표 패턴')).toBeInTheDocument();
     expect(representativeArtwork.querySelector('[data-layer="kinematic-figure"]')).not.toBeNull();

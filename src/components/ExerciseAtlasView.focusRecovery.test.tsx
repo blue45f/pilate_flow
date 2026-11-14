@@ -22,12 +22,20 @@ afterEach(() => {
   usePilatesStore.setState(original, true);
 });
 const renderAtlas = () =>
-  render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+  render(
+    <ExerciseAtlasView
+      initialView="tools"
+      onOpenYouTubePreview={vi.fn()}
+      onOpenClipper={vi.fn()}
+    />,
+  );
 
 describe('atlas focus recovery without replacing current discovery UI', () => {
   it('returns focus to the exact diagram trigger on close without changing exercise data', async () => {
     const before = usePilatesStore.getState();
     renderAtlas();
+    fireEvent.click(screen.getByLabelText('패턴 도해 초안'));
+    await screen.findByRole('region', { name: '패턴 도해 초안 목록' });
     const trigger = screen.getByRole('button', {
       name: '일반 의자 · 양팔 앞·위 리치 도해 초안 보기',
     });
@@ -43,6 +51,8 @@ describe('atlas focus recovery without replacing current discovery UI', () => {
 
   it('falls back to search if filtering removes the original preview trigger', async () => {
     renderAtlas();
+    fireEvent.click(screen.getByLabelText('패턴 도해 초안'));
+    await screen.findByRole('region', { name: '패턴 도해 초안 목록' });
     fireEvent.click(
       screen.getByRole('button', { name: '일반 의자 · 양팔 앞·위 리치 도해 초안 보기' }),
     );
@@ -54,6 +64,36 @@ describe('atlas focus recovery without replacing current discovery UI', () => {
     fireEvent.click(screen.getByRole('button', { name: '패턴 도해 미리보기 닫기' }));
     await waitFor(() => expect(search).toHaveFocus());
     expect(search).toHaveValue('호흡');
+  });
+
+  it('unmounts the draft gallery and its preview when collapsed, then resets on returning to the library', async () => {
+    const { container } = renderAtlas();
+    const summary = screen.getByLabelText('패턴 도해 초안');
+    expect(container.querySelector('.ml-pattern-rail')).toBeNull();
+    fireEvent.click(summary);
+    await screen.findByRole('region', { name: '패턴 도해 초안 목록' });
+    fireEvent.click(
+      screen.getByRole('button', { name: '일반 의자 · 양팔 앞·위 리치 도해 초안 보기' }),
+    );
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('region', { name: '선택한 패턴 도해 미리보기' })).getByRole(
+          'heading',
+          { level: 2 },
+        ),
+      ).toHaveFocus(),
+    );
+    fireEvent.click(summary);
+    await waitFor(() =>
+      expect(screen.queryByRole('region', { name: '선택한 패턴 도해 미리보기' })).toBeNull(),
+    );
+    expect(container.querySelector('.ml-pattern-rail')).toBeNull();
+    await waitFor(() => expect(summary).toHaveFocus());
+    fireEvent.click(summary);
+    await screen.findByRole('region', { name: '패턴 도해 초안 목록' });
+    fireEvent.click(screen.getByRole('button', { name: '동작 라이브러리로 돌아가기' }));
+    fireEvent.click(screen.getByRole('button', { name: '자료와 고급 도구' }));
+    expect(container.querySelector('.ml-pattern-rail')).toBeNull();
   });
 
   it('restores search focus after each clear, chip removal, reset and empty-result recovery', async () => {
@@ -72,11 +112,19 @@ describe('atlas focus recovery without replacing current discovery UI', () => {
     const chips = screen.getByRole('group', { name: '적용된 검색·필터' });
     await activate(within(chips).getByRole('button', { name: '검색: 호흡 필터 해제' }));
     expect(search).toHaveValue('');
-    expect(screen.getByRole('button', { name: '즐겨찾기' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: '즐겨찾기' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await activate(screen.getByRole('button', { name: '필터 초기화' }));
-    expect(screen.getByRole('button', { name: '즐겨찾기' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: '즐겨찾기' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
     fireEvent.change(search, { target: { value: 'no-such-movement-xyz' } });
-    const empty = screen.getByText('조건에 맞는 동작이 없어요.').closest('.library-empty') as HTMLElement;
+    const empty = screen
+      .getByText('조건에 맞는 동작이 없어요.')
+      .closest('.library-empty') as HTMLElement;
     await activate(within(empty).getByRole('button', { name: '검색어 지우기' }));
     expect(search).toHaveValue('');
     fireEvent.change(search, { target: { value: 'no-such-movement-xyz' } });

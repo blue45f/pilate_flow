@@ -44,10 +44,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run secrets, motion-study & deployment orchestrator unit guards
-        run: pnpm check:secrets && pnpm check:motion-study && pnpm test:deploy
+        run: pnpm check:secrets && pnpm check:motion-study && pnpm test:deploy && pnpm test:motion-artwork
 
       - name: Run ESLint check
         run: pnpm lint
+
+      - name: Build production PWA bundle & verify canonical config
+        run: pnpm build && pnpm deploy:check
 
       - name: Run verification & deployment regression suites
         run: >-
@@ -105,9 +108,23 @@ jobs:
           src/test/motionSemanticCorrections.test.ts
           src/data/exerciseVideoBindings.test.ts
           src/utils/videoSemanticMatching.test.ts
-
-      - name: Build production PWA bundle & verify canonical config
-        run: pnpm build && pnpm deploy:check
+          src/components/ExerciseVideoGallery.test.tsx
+          src/utils/exerciseVideoReferences.test.ts
+          src/data/exerciseYouTubeCatalog.test.tsx
+          src/test/motionProvenanceAudit.test.ts
+          src/components/GeneratedPractitionerFigure.test.tsx
+          src/utils/generatedPractitionerArt.test.ts
+          src/components/MovementMediaGuidancePanel.test.tsx
+          src/components/YouTubePreviewModal.wave2Ux.test.tsx
+          src/components/ExerciseMotionArtwork.loading.test.tsx
+          src/components/ExerciseAtlasView.addFeedback.test.tsx
+          src/components/ExerciseAtlasView.conceptLayout.test.tsx
+          src/components/ExerciseAtlasView.focusRecovery.test.tsx
+          src/components/ExerciseMotionArtwork.test.tsx
+          src/components/StudioMotionPlayback.lifecycle.test.tsx
+          src/utils/exerciseArtworkCache.test.ts
+          scripts/pwa-audit-20261107/track-a/track-a-sw-cache-data-preservation.test.ts
+          scripts/free-ai-boundary-audit-20261107/track-b/privacy-bundle-ux-regression.test.tsx
 
       - name: Upload verified production dist artifact
         uses: actions/upload-artifact@v4

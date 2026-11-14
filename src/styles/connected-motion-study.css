@@ -110,7 +110,7 @@
   padding: 6px;
   min-width: 0;
 }
-.connected-motion-study .connected-study-figures svg {
+.connected-motion-study .connected-study-figures svg:not(svg svg) {
   display: block;
   width: 100%;
   max-height: 290px;

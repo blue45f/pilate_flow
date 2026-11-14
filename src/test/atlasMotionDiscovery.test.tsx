@@ -27,10 +27,16 @@ afterEach(() => {
   usePilatesStore.setState(original, true);
 });
 const renderAtlas = () =>
-  render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+  render(
+    <ExerciseAtlasView
+      initialView="tools"
+      onOpenYouTubePreview={vi.fn()}
+      onOpenClipper={vi.fn()}
+    />,
+  );
 
 describe('authored motion discovery stays separate from teaching eligibility', () => {
-  it('exposes every one of the 22 authored variants with original static geometry and opens the existing batch directly', () => {
+  it('exposes every one of the 22 authored variants on request with original static geometry', async () => {
     const before = usePilatesStore.getState();
     const { container } = renderAtlas();
     const inventory = container.querySelector('.ml-inventory')!;
@@ -38,7 +44,9 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     expect(inventory).toHaveTextContent(`${MOTION_PATTERN_REFERENCES.length}직접 제작한 도해 초안`);
     expect(inventory).toHaveTextContent('0정확히 일치하는 모션');
     expect(inventory).toHaveTextContent('0전문가 검토 완료');
-    const discovery = within(screen.getByRole('region', { name: '모션으로 살펴보기' }));
+    expect(container.querySelector('.ml-pattern-rail')).toBeNull();
+    fireEvent.click(screen.getByLabelText('패턴 도해 초안'));
+    const discovery = within(await screen.findByRole('region', { name: '패턴 도해 초안 목록' }));
     const nextPage = discovery.getByRole('button', { name: '다음 도해' });
     const previousPage = discovery.getByRole('button', { name: '이전 도해' });
     const rail = container.querySelector('.ml-pattern-rail')!;
@@ -80,7 +88,7 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
     expect(usePilatesStore.getState().historyLogs).toBe(before.historyLogs);
     expect(usePilatesStore.getState().instructorStudyState).toBe(before.instructorStudyState);
-  });
+  }, 15_000);
 
   it('opens the distinct supine-reach study from its original movement card without adding or approving the exercise', () => {
     const before = usePilatesStore.getState();
@@ -98,7 +106,7 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     const artwork = cards[0].querySelector('.exercise-motion-artwork.pf-p06-motion-art');
     expect(artwork).toHaveAttribute('data-exercise-id', exercise.id);
     expect(artwork).toHaveAttribute('data-motion-phase', 'middle');
-    expect(artwork).toHaveAttribute('data-artwork-renderer', 'cached-native-svg');
+    expect(artwork).toHaveAttribute('data-artwork-renderer', 'cached-native-image');
     expect(artwork?.querySelector('img')).toHaveAttribute(
       'src',
       getExerciseArtworkFrame(exercise, 'middle')!.src,
@@ -174,7 +182,7 @@ describe('authored motion discovery stays separate from teaching eligibility', (
     const artwork = cards[0].querySelector('.exercise-motion-artwork.pf-p06-motion-art');
     expect(artwork).toHaveAttribute('data-exercise-id', exercise.id);
     expect(artwork).toHaveAttribute('data-motion-phase', 'middle');
-    expect(artwork).toHaveAttribute('data-artwork-renderer', 'cached-native-svg');
+    expect(artwork).toHaveAttribute('data-artwork-renderer', 'cached-native-image');
     expect(artwork?.querySelector('img')).toHaveAttribute(
       'src',
       getExerciseArtworkFrame(exercise, 'middle')!.src,

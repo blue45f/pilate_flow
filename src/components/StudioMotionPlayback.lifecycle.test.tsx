@@ -282,7 +282,7 @@ describe('shared motion playback lifecycle', () => {
       1,
     );
     expect(card.querySelector('img')?.getAttribute('src')).toMatch(
-      /^\/motion-artwork-v2\/.+\.svg$/,
+      /^\/motion-artwork-v2\/.+\.webp$/,
     );
     expect(
       within(card).getByRole('group', { name: '자세 프레임 단계 보기' }).querySelectorAll('button'),
@@ -369,7 +369,7 @@ describe('shared motion playback lifecycle', () => {
     expect(region.querySelector('.mpp-figure svg')).toHaveAttribute('data-view-mirrored', 'true');
     fireEvent.click(within(region).getByRole('button', { name: '시작·정점·종료 한눈에 비교' }));
     const stills = within(region).getByLabelText('시작·중간·끝 3단계 정지 도해');
-    expect(stills.querySelectorAll('svg')).toHaveLength(3);
+    expect(stills.querySelectorAll('svg.movement-phase-diagram-svg')).toHaveLength(3);
     const endFrameButton = within(stills).getAllByRole('button')[2];
     expect(endFrameButton).toHaveTextContent(`${firstAsset.endPoseLabelKo} 보기`);
     fireEvent.click(endFrameButton);

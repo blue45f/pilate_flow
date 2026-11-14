@@ -11,6 +11,11 @@ import {
   normalizeReferenceUrlPolicy,
 } from '../features/referenceLinkPolicyCandidate';
 import type { PilatesExercise } from '../types/pilates';
+import { ExerciseVideoGallery, ExerciseVideoThumbnail } from './ExerciseVideoGallery';
+import {
+  exerciseVideoGalleryKey,
+  getExerciseVideoReferences,
+} from '../utils/exerciseVideoReferences';
 import '../styles/exercise-youtube-gallery.css';
 
 interface ExerciseYouTubeGalleryProps {
@@ -41,6 +46,7 @@ const ExerciseYouTubeGalleryContent: React.FC<ExerciseYouTubeGalleryProps> = ({
     playerTriggerRef.current?.scrollIntoView?.({ block: 'nearest' });
   };
   const toggleVideo = (videoId: string, trigger: HTMLButtonElement) => {
+    if (document.hidden) return;
     if (activeVideoId === videoId) {
       closePlayer();
       return;
@@ -187,6 +193,13 @@ const ExerciseYouTubeGalleryContent: React.FC<ExerciseYouTubeGalleryProps> = ({
               className="eyg-embed-stage"
               role="region"
               aria-label={`${activeVideo.title} 인베드 플레이어`}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  closePlayer();
+                }
+              }}
             >
               <div className="eyg-embed-topbar">
                 <div className="eyg-embed-meta">
@@ -260,7 +273,7 @@ const ExerciseYouTubeGalleryContent: React.FC<ExerciseYouTubeGalleryProps> = ({
                     onClick={(event) => toggleVideo(video.videoId, event.currentTarget)}
                     aria-label={`${video.title} (${video.authorName}) 인베드 영상 ${isPlaying ? '닫기' : '불러오기'}`}
                   >
-                    <img src={video.thumbnailUrl} alt="" loading="lazy" className="eyg-thumb-img" />
+                    <ExerciseVideoThumbnail video={video} className="eyg-thumb-img" />
                     <span className={`eyg-thumb-badge is-${video.region}`}>
                       <Globe size={11} aria-hidden="true" />
                       {video.region === 'kr' ? '국내' : '해외'}
@@ -309,9 +322,60 @@ const ExerciseYouTubeGalleryContent: React.FC<ExerciseYouTubeGalleryProps> = ({
   );
 };
 
-export const ExerciseYouTubeGallery: React.FC<ExerciseYouTubeGalleryProps> = (props) => (
-  <ExerciseYouTubeGalleryContent
-    key={`${props.exercise?.id ?? ''}:${props.motionReference?.variantId ?? ''}`}
-    {...props}
-  />
-);
+function ExerciseVideoDisclosure({
+  exercise,
+  compact,
+  onSelectForNoteDraft,
+}: ExerciseYouTubeGalleryProps & { exercise: PilatesExercise }) {
+  const [expanded, setExpanded] = useState(false);
+  const contentId = React.useId();
+  const count = useMemo(() => getExerciseVideoReferences(exercise).length, [exercise]);
+  if (!count) return <ExerciseVideoGallery exercise={exercise} compact={compact} />;
+  return (
+    <section
+      className={`eyg-section ${compact ? 'is-compact' : ''}`}
+      aria-label={`${exercise.nameKo} 연관 국내·해외 YouTube 영상`}
+    >
+      <button
+        type="button"
+        className="eyg-disclosure"
+        aria-expanded={expanded}
+        aria-controls={contentId}
+        aria-describedby={`${contentId}-review-status`}
+        aria-label={`참고 영상 ${count}개 ${expanded ? '접기' : '펼치기'}`}
+        onClick={() => setExpanded((value) => !value)}
+      >
+        <span className="eyg-disclosure-icon">
+          <Tv size={20} aria-hidden="true" />
+        </span>
+        <span className="eyg-disclosure-copy">
+          <strong>
+            참고 영상 <span>{count}</span>
+          </strong>
+          <small id={`${contentId}-review-status`}>연관 자료 · 동일 동작 시범은 미검수</small>
+        </span>
+        <ChevronDown size={18} className="eyg-disclosure-chevron" aria-hidden="true" />
+      </button>
+      {expanded && (
+        <div id={contentId} className="eyg-disclosure-content">
+          <ExerciseVideoGallery
+            exercise={exercise}
+            compact={compact}
+            onUseForNoteDraft={onSelectForNoteDraft}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+export const ExerciseYouTubeGallery: React.FC<ExerciseYouTubeGalleryProps> = (props) =>
+  props.exercise ? (
+    <ExerciseVideoDisclosure
+      key={exerciseVideoGalleryKey(props.exercise)}
+      {...props}
+      exercise={props.exercise}
+    />
+  ) : (
+    <ExerciseYouTubeGalleryContent key={props.motionReference?.variantId ?? ''} {...props} />
+  );

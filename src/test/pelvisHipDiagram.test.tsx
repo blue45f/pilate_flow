@@ -237,7 +237,9 @@ describe('Track I2: Pelvis & Hip 2D Diagrams (Pelvic Curl & Bridge Family)', () 
     const triptychRender = render(
       <PelvisHipTriptychSvg variantId="ex-bridging-02" selectedPhase="end" />,
     );
-    expect(triptychRender.container.querySelectorAll('svg')).toHaveLength(3);
+    const figures = triptychRender.container.querySelectorAll('[data-triptych-phase] > svg');
+    expect(figures).toHaveLength(3);
+    expect(Array.from(figures, (figure) => figure.getAttribute('data-phase'))).toEqual(['start', 'middle', 'end']);
     triptychRender.unmount();
   });
 });

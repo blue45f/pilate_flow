@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { INITIAL_EXERCISES } from './pilatesCatalog';
 import { MOTION_PATTERN_REFERENCES } from './motionPatternReferences';
 import {
@@ -18,12 +18,14 @@ function expandGallery() {
 describe('oEmbed-verified domestic & global YouTube catalog and inline embedded player', () => {
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
   });
 
-  it('maintains 310 metadata-verified videos (76 domestic KR + 234 global)', () => {
-    expect(VERIFIED_YOUTUBE_VIDEO_POOL.length).toBe(310);
+  it('maintains 350 metadata-verified videos (76 domestic KR + 274 global)', () => {
+    expect(VERIFIED_YOUTUBE_VIDEO_POOL.length).toBe(350);
+    expect(new Set(VERIFIED_YOUTUBE_VIDEO_POOL.map((item) => item.videoId)).size).toBe(350);
     expect(VERIFIED_YOUTUBE_CATALOG_STATS.koreanVideos).toBe(76);
-    expect(VERIFIED_YOUTUBE_CATALOG_STATS.globalVideos).toBe(234);
+    expect(VERIFIED_YOUTUBE_CATALOG_STATS.globalVideos).toBe(274);
     for (const item of VERIFIED_YOUTUBE_VIDEO_POOL) {
       expect(item.videoId).toMatch(/^[A-Za-z0-9_-]{11}$/);
       expect(['kr', 'global']).toContain(item.region);
@@ -55,6 +57,34 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
     }
   });
 
+  it('keeps motion references usable when thumbnails fail and closes their player with Escape', () => {
+    vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
+    const reference = MOTION_PATTERN_REFERENCES.find(
+      (item) => getRelatedYouTubeVideosForMotion(item, 2).length > 0,
+    )!;
+    render(<ExerciseYouTubeGallery motionReference={reference} maxPerRegion={2} />);
+    expandGallery();
+    const trigger = screen.getAllByRole('button', { name: /인베드 영상 불러오기/ })[0];
+    const image = trigger.querySelector('img')!;
+    expect(image).toHaveAttribute('decoding', 'async');
+    expect(image.getAttribute('src')).toContain('/hqdefault.jpg');
+    fireEvent.error(image);
+    expect(image.getAttribute('src')).toContain('/mqdefault.jpg');
+    fireEvent.error(image);
+    expect(trigger.querySelector('img')).toBeNull();
+    expect(within(trigger).getByText('미리보기 이미지 없음')).toBeVisible();
+    fireEvent.click(trigger);
+    expect(document.querySelector('iframe')).not.toBeNull();
+    fireEvent.keyDown(screen.getByRole('region', { name: /인베드 플레이어/ }), {
+      key: 'Escape',
+    });
+    expect(document.querySelector('iframe')).toBeNull();
+    expect(trigger).toHaveFocus();
+    vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+    fireEvent.click(trigger);
+    expect(document.querySelector('iframe')).toBeNull();
+  });
+
   it('renders thumbnails and opens an inline embedded YouTube iframe on click', () => {
     const exercise = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-bridge')!;
     render(<ExerciseYouTubeGallery exercise={exercise} maxPerRegion={2} />);
@@ -77,10 +107,10 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
     expect(iframe?.getAttribute('src')).toContain('autoplay=0');
     expect(iframe?.getAttribute('allow')).not.toContain('autoplay');
     fireEvent.click(screen.getByRole('button', { name: '인베드 플레이어 닫기' }));
-    expect(playButtons[0]).toHaveFocus();
+    expect(within(gallery).getByRole('button', { name: /인베드 영상 불러오기/ })).toHaveFocus();
   });
 
-  it('requires a new explicit load after close, subject change, filtering, and remount', () => {
+  it('requires a new explicit load after close, subject change, collapse, and remount', () => {
     const exercise = INITIAL_EXERCISES.find((item) => item.id === 'original-mat-bridge')!;
     const view = render(<ExerciseYouTubeGallery exercise={exercise} maxPerRegion={2} />);
     const load = () => {
@@ -93,7 +123,7 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
     fireEvent.click(screen.getByRole('button', { name: '인베드 플레이어 닫기' }));
     expect(document.querySelector('iframe')).toBeNull();
     load();
-    fireEvent.click(screen.getByRole('button', { name: /국내 \(KR\)/ }));
+    fireEvent.click(screen.getByRole('button', { name: /참고 영상.*접기/ }));
     expect(document.querySelector('iframe')).toBeNull();
     load();
     // The two subjects may share the same related video: subject identity still resets consent.
@@ -159,7 +189,7 @@ describe('oEmbed-verified domestic & global YouTube catalog and inline embedded 
     )!;
     render(<ExerciseYouTubeGallery exercise={exercise} />);
     expect(screen.getByRole('status')).toHaveTextContent(
-      '다른 동작이나 다른 기구의 영상으로 빈자리를 채우지 않습니다',
+      '이 동작에 연결된 참고 영상이 아직 없어요.',
     );
     expect(screen.queryByRole('button', { name: /인베드 영상/ })).not.toBeInTheDocument();
     expect(document.querySelector('iframe')).toBeNull();

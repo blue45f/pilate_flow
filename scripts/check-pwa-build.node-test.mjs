@@ -192,3 +192,33 @@ test('validates SHELL_EXTRAS when present and rejects missing Atelier V2 assets 
   rmSync(path.join(root, 'images/atelier-v2/barrel-studio-3d.png'));
   assert.throws(() => verifyAtelierV2DistAssets(root), /ENOENT/);
 });
+
+test('allows exactly the two shared motion atlases in shell extras', (t) => {
+  const { root, assets } = fixture(t);
+  mkdirSync(path.join(root, 'images', 'motion-atlas-v3'), { recursive: true });
+  const extras = [
+    '/images/motion-atlas-v3/practitioner.webp',
+    '/images/motion-atlas-v3/equipment.webp',
+  ];
+  for (const file of extras) writeFileSync(path.join(root, file), 'local-bitmap');
+  writeFileSync(
+    path.join(root, 'sw.js'),
+    'const ASSETS = ' +
+      JSON.stringify(assets) +
+      ';\nconst SHELL_EXTRAS = ' +
+      JSON.stringify(extras) +
+      ';',
+  );
+  assert.equal(verifyPwaBuild(root), 3);
+  const unknown = '/images/motion-atlas-v3/unapproved.webp';
+  writeFileSync(path.join(root, unknown), 'local-bitmap');
+  writeFileSync(
+    path.join(root, 'sw.js'),
+    'const ASSETS = ' +
+      JSON.stringify(assets) +
+      ';\nconst SHELL_EXTRAS = ' +
+      JSON.stringify([...extras, unknown]) +
+      ';',
+  );
+  assert.throws(() => verifyPwaBuild(root), /did not match/);
+});

@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildCatalogContinuousMotionAsset,
@@ -102,17 +102,17 @@ describe('edited catalogue motion identity', () => {
     expect(screen.queryByRole('link')).toBeNull();
   });
 
-  it('retains authored catalogue artwork and identifies a new custom ID as a representative pattern', () => {
+  it('retains authored catalogue artwork and identifies a new custom ID as a representative pattern', async () => {
     const renamed = { ...bridge, nameKo: '내 브리지 메모' };
     expect(getCatalogContinuousMotionAsset(renamed)).toBe(getCatalogContinuousMotionAsset(bridge));
     expect(getMovementVisualAsset(renamed)).toBe(getMovementVisualAsset(bridge));
     const view = render(<ExerciseMotionArtwork exercise={renamed} />);
-    expect(view.container.firstElementChild).toHaveAttribute('data-artwork-renderer', 'cached-native-svg');
+    expect(view.container.firstElementChild).toHaveAttribute('data-artwork-renderer', 'cached-native-image');
 
     const custom = { ...bridge, id: 'custom-bridge-reference' };
     expect(getCatalogContinuousMotionAsset(custom)?.visualAsset.apparatus).toBe(custom.apparatus);
     view.rerender(<ExerciseMotionArtwork exercise={custom} />);
-    expect(view.container.firstElementChild).toHaveAttribute('data-match-scope', 'representative-pattern');
+    await waitFor(() => expect(view.container.firstElementChild).toHaveAttribute('data-match-scope', 'representative-pattern'));
     expect(screen.getByText('대표 패턴')).toBeVisible();
   });
 

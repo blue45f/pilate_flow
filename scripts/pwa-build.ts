@@ -11,6 +11,11 @@ export const ICON_PATHS = [
   '/icons/apple-touch-icon.png',
 ] as const;
 
+export const MOTION_ATLAS_PATHS = [
+  '/images/motion-atlas-v3/practitioner.webp',
+  '/images/motion-atlas-v3/equipment.webp',
+] as const;
+
 export function getMovementGuidePaths(
   movementGuideDir = path.join('public', 'images', 'movement-guides'),
 ): string[] {
@@ -25,7 +30,12 @@ export function getMovementGuidePaths(
 export function getShellExtras(
   movementGuideDir = path.join('public', 'images', 'movement-guides'),
 ): string[] {
-  return ['/site.webmanifest', '/favicon.svg', ...getMovementGuidePaths(movementGuideDir)];
+  return [
+    '/site.webmanifest',
+    '/favicon.svg',
+    ...getMovementGuidePaths(movementGuideDir),
+    ...MOTION_ATLAS_PATHS.filter((asset) => fs.existsSync(path.join('public', asset))),
+  ];
 }
 
 /** A build-scoped cache: never mix a new HTML document with an old JS graph. */
@@ -198,7 +208,7 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/assets/') ||
     url.pathname.startsWith('/icons/') ||
     (url.pathname.startsWith('/images/movement-guides/') && url.pathname.endsWith('.svg')) ||
-    (url.pathname.startsWith('/motion-artwork-v2/') && url.pathname.endsWith('.svg')) ||
+    (url.pathname.startsWith('/motion-artwork-v2/') && (url.pathname.endsWith('.svg') || url.pathname.endsWith('.webp'))) ||
     (url.pathname.startsWith('/motion-studio3d/') && (url.pathname.endsWith('.png') || url.pathname.endsWith('.webp')));
   if (!isShellAsset) return;
   event.respondWith(

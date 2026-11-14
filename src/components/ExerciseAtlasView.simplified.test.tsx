@@ -66,8 +66,10 @@ describe('everyday Atlas catalog and preserved advanced workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: '자료와 고급 도구' }));
     expect(screen.getByRole('tab', { name: '동작 노트 6' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: `${mat.nameKo} 비교 담기` })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: '모션으로 살펴보기' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '동작 찾기로 돌아가기' }));
+    expect(screen.getByRole('heading', { name: '자료와 고급 도구', level: 1 })).toBeInTheDocument();
+    expect(screen.getByLabelText('패턴 도해 초안')).toHaveTextContent('22종 · 검토용');
+    expect(container.querySelector('.ml-pattern-rail')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: '동작 라이브러리로 돌아가기' }));
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();
     expect(container.querySelectorAll('.flow-atlas__card')).toHaveLength(6);
   });
@@ -135,7 +137,7 @@ describe('everyday Atlas catalog and preserved advanced workspace', () => {
       'data-filters-expanded',
       'true',
     );
-    fireEvent.click(screen.getByRole('button', { name: '동작 찾기로 돌아가기' }));
+    fireEvent.click(screen.getByRole('button', { name: '동작 라이브러리로 돌아가기' }));
     await waitFor(() => expect(screen.getByRole('searchbox', { name: '동작 검색' })).toHaveFocus());
     expect(screen.getByRole('button', { name: '즐겨찾기' })).toHaveAttribute(
       'aria-pressed',

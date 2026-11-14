@@ -1,4 +1,4 @@
-import React, { useId } from 'react';
+import React, { useId, useState } from 'react';
 import type { ApparatusType, BodyPosition } from '../types/pilates';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 
@@ -73,9 +73,26 @@ export function ApparatusIllustrationSvg({
   compact?: boolean;
 }): React.JSX.Element {
   const rawUid = useId().replace(/:/g, '');
+  const [atlasFailed, setAtlasFailed] = useState(false);
   const bgGradId = `pf-app-bg-grad-${rawUid}`;
   const apparatus = normalizeApparatusType(rawApparatus);
   const palette = APPARATUS_PALETTE[apparatus] ?? APPARATUS_PALETTE.mat;
+  const atlasPosition: Record<ApparatusType, readonly [number, number]> = {
+    reformer: [0, 0], cadillac: [512, 0], chair: [1024, 0], barrel: [0, 512], mat: [512, 512],
+  };
+  if (!compact && !atlasFailed) {
+    const [x, y] = atlasPosition[apparatus];
+    return <svg
+      viewBox={`${x} ${y} 512 512`}
+      aria-hidden="true"
+      focusable="false"
+      className="pf-apparatus-illustration-svg"
+      data-artwork-origin="imagegen"
+      style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '10px', aspectRatio: '1' }}
+    >
+      <image href="/images/motion-atlas-v3/equipment.webp" width="1536" height="1024" onError={() => setAtlasFailed(true)} />
+    </svg>;
+  }
   return (
     <svg
       viewBox="0 0 120 72"

@@ -2,60 +2,114 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SequenceStudioWorkbench } from '../components/SequenceStudioWorkbench';
 import { usePilatesStore } from '../store/usePilatesStore';
-import type { AutoGenerateCriteria, PilatesExercise, SavedSequence, SequenceStep } from '../types/pilates';
+import type {
+  AutoGenerateCriteria,
+  PilatesExercise,
+  SavedSequence,
+  SequenceStep,
+} from '../types/pilates';
 import { getSequenceDurations, getStepTiming } from '../utils/sequenceEngine';
 import { syntheticPlanningExercise } from './planningFixtures';
-import { closeWorkbenchConditions, openAdvancedWorkbench, openWorkbenchConditions } from './workbenchControls';
+import {
+  closeWorkbenchConditions,
+  openAdvancedWorkbench,
+  openWorkbenchConditions,
+} from './workbenchControls';
 
 // These journeys exercise the real store and editor; artwork pixels are
 // covered by the motion tests and separate browser visual review.
 vi.mock('../components/ExerciseMotionArtwork', () => ({
-  ExerciseMotionArtwork: ({ exercise }: { exercise: PilatesExercise }) =>
-    <span data-testid={`test-artwork-${exercise.id}`} />,
+  ExerciseMotionArtwork: ({ exercise }: { exercise: PilatesExercise }) => (
+    <span data-testid={`test-artwork-${exercise.id}`} />
+  ),
 }));
 
 const original = usePilatesStore.getState();
 const mat = { ...syntheticPlanningExercise('mat', 'warmup'), nameKo: '매트 준비 호흡' };
 const first = { ...syntheticPlanningExercise('reformer', 'warmup'), nameKo: '첫 번째 호흡' };
-const second = { ...syntheticPlanningExercise('reformer', 'lower-body'), nameKo: '두 번째 레그 리치' };
+const second = {
+  ...syntheticPlanningExercise('reformer', 'lower-body'),
+  nameKo: '두 번째 레그 리치',
+};
 const third = { ...syntheticPlanningExercise('reformer', 'upper-body'), nameKo: '세 번째 암 리치' };
 const cadillac = { ...syntheticPlanningExercise('cadillac', 'warmup'), nameKo: '캐딜락 준비 호흡' };
 const propExercise = {
   ...syntheticPlanningExercise('reformer', 'core'),
-  nameKo: '미니볼 코어 연습', props: ['mini-ball'] as PilatesExercise['props'],
+  nameKo: '미니볼 코어 연습',
+  props: ['mini-ball'] as PilatesExercise['props'],
 };
 const baseCriteria: AutoGenerateCriteria = {
-  apparatus: 'mat', ownedApparatus: ['mat'], availableEquipment: ['mat'], preferredProps: ['none'],
-  level: '1.0', targetMinutes: 50, focusPreset: 'full-body', defaultLayer: 'standard',
-  targetGroupId: 'qa-group', excludeDaysWindow: 0,
+  apparatus: 'mat',
+  ownedApparatus: ['mat'],
+  availableEquipment: ['mat'],
+  preferredProps: ['none'],
+  level: '1.0',
+  targetMinutes: 50,
+  focusPreset: 'full-body',
+  defaultLayer: 'standard',
+  targetGroupId: 'qa-group',
+  excludeDaysWindow: 0,
 };
 const savedStep: SequenceStep = {
-  stepId: 'saved-mat-row', order: 1, exerciseId: mat.id, blockCategory: mat.blockCategory,
-  selectedLayer: 'easy', durationMin: 5, instructorNote: '원본 수업의 메모',
+  stepId: 'saved-mat-row',
+  order: 1,
+  exerciseId: mat.id,
+  blockCategory: mat.blockCategory,
+  selectedLayer: 'easy',
+  durationMin: 5,
+  instructorNote: '원본 수업의 메모',
 };
 const savedSource: SavedSequence = {
-  id: 'original-saved-class', title: '원본 매트 수업', subtitle: '보존할 원본 수업',
-  apparatus: 'mat', level: '1.0', targetMinutes: 50, focusTags: ['보존'],
-  steps: [savedStep], criteriaSnapshot: baseCriteria, taughtCount: 3,
-  createdAt: '2026-11-13T00:00:00.000Z', updatedAt: '2026-11-13T00:00:00.000Z',
+  id: 'original-saved-class',
+  title: '원본 매트 수업',
+  subtitle: '보존할 원본 수업',
+  apparatus: 'mat',
+  level: '1.0',
+  targetMinutes: 50,
+  focusTags: ['보존'],
+  steps: [savedStep],
+  criteriaSnapshot: baseCriteria,
+  taughtCount: 3,
+  createdAt: '2026-11-13T00:00:00.000Z',
+  updatedAt: '2026-11-13T00:00:00.000Z',
 };
 
 // Keep the real advanced editor and navigation while preparing its lazy module
 // before timing assertions about the actual round trip.
-beforeAll(async () => { await import('../components/SequenceWorkbench'); }, 30000);
+beforeAll(async () => {
+  await import('../components/SequenceWorkbench');
+}, 30000);
 
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
-  usePilatesStore.setState({
-    ...original, activeTab: 'workbench', exercises: [mat, first, second, third, propExercise],
-    ownedApparatus: ['mat', 'reformer'], ownedEquipment: ['mat', 'reformer'], ownedProps: ['mini-ball'],
-    activeSequenceId: 'empty-studio-draft', activeTitle: '작성 전 수업', activeSubtitle: '',
-    activeApparatus: 'mat', activeLevel: '1.0', activeTargetMinutes: 50, activeTargetGroupId: 'qa-group',
-    activeSteps: [], lastCriteria: structuredClone(baseCriteria), draftCriteria: structuredClone(baseCriteria),
-    savedSequences: [structuredClone(savedSource)], historyLogs: [], undoStack: [],
-    generationError: null, persistenceError: null, saveFeedback: null,
-  }, true);
+  usePilatesStore.setState(
+    {
+      ...original,
+      activeTab: 'workbench',
+      exercises: [mat, first, second, third, propExercise],
+      ownedApparatus: ['mat', 'reformer'],
+      ownedEquipment: ['mat', 'reformer'],
+      ownedProps: ['mini-ball'],
+      activeSequenceId: 'empty-studio-draft',
+      activeTitle: '작성 전 수업',
+      activeSubtitle: '',
+      activeApparatus: 'mat',
+      activeLevel: '1.0',
+      activeTargetMinutes: 50,
+      activeTargetGroupId: 'qa-group',
+      activeSteps: [],
+      lastCriteria: structuredClone(baseCriteria),
+      draftCriteria: structuredClone(baseCriteria),
+      savedSequences: [structuredClone(savedSource)],
+      historyLogs: [],
+      undoStack: [],
+      generationError: null,
+      persistenceError: null,
+      saveFeedback: null,
+    },
+    true,
+  );
 });
 
 afterEach(() => {
@@ -68,8 +122,12 @@ afterEach(() => {
 
 function showStudio() {
   const handlers = {
-    onOpenYouTubePreview: vi.fn(), onOpenIdeaSheet: vi.fn(), onOpenClipper: vi.fn(),
-    onOpenLogModal: vi.fn(), onOpenInventory: vi.fn(), onStartClass: vi.fn(),
+    onOpenYouTubePreview: vi.fn(),
+    onOpenIdeaSheet: vi.fn(),
+    onOpenClipper: vi.fn(),
+    onOpenLogModal: vi.fn(),
+    onOpenInventory: vi.fn(),
+    onStartClass: vi.fn(),
   };
   return { ...render(<SequenceStudioWorkbench {...handlers} />), handlers };
 }
@@ -78,12 +136,16 @@ function seedReformer(exercises: PilatesExercise[] = [first, second]) {
   const current = usePilatesStore.getState();
   expect(current.updateSequencePlanningConditions({ apparatus: 'reformer' }).success).toBe(true);
   for (const exercise of exercises) {
-    expect(usePilatesStore.getState().insertExerciseIntoSequence(exercise.id, { kind: 'end' }).success).toBe(true);
+    expect(
+      usePilatesStore.getState().insertExerciseIntoSequence(exercise.id, { kind: 'end' }).success,
+    ).toBe(true);
   }
 }
 
 function searchAndAdd(exercise: PilatesExercise) {
-  fireEvent.change(screen.getByRole('textbox', { name: '수업 동작 검색' }), { target: { value: exercise.nameKo } });
+  fireEvent.change(screen.getByRole('textbox', { name: '수업 동작 검색' }), {
+    target: { value: exercise.nameKo },
+  });
   fireEvent.click(screen.getByRole('button', { name: `${exercise.nameKo} 추가` }));
 }
 
@@ -93,6 +155,101 @@ function openEditor(exercise: PilatesExercise) {
 }
 
 describe('single-canvas sequence studio journeys', () => {
+  it('opens an unsaved nonempty draft without treating the missing addition receipt as a recent step', () => {
+    seedReformer([first, second]);
+    usePilatesStore.setState({ activeSequenceId: undefined });
+    const steps = usePilatesStore.getState().activeSteps;
+    const { container } = showStudio();
+
+    expect(screen.getByTestId('sequence-studio')).toBeInTheDocument();
+    expect(container.querySelectorAll('.flow-sequence-row')).toHaveLength(2);
+    expect(container.querySelector('.is-recently-added')).toBeNull();
+    expect(screen.queryByRole('button', { name: '시퀀스에서 보기' })).not.toBeInTheDocument();
+    expect(usePilatesStore.getState().activeSteps).toBe(steps);
+    expect(usePilatesStore.getState().activeSequenceId).toBeUndefined();
+  });
+
+  it('adds successive movements after the selected row in chosen order and reveals the new row', async () => {
+    seedReformer([first, second]);
+    expect(
+      usePilatesStore.getState().updateSequencePlanningConditions({ preferredProps: ['mini-ball'] })
+        .success,
+    ).toBe(true);
+    const { container } = showStudio();
+    const anchor = usePilatesStore.getState().activeSteps[0].stepId;
+    fireEvent.change(screen.getByLabelText('추가 위치'), { target: { value: 'step:' + anchor } });
+    searchAndAdd(third);
+    searchAndAdd(propExercise);
+    expect(usePilatesStore.getState().activeSteps.map((step) => step.exerciseId)).toEqual([
+      first.id,
+      third.id,
+      propExercise.id,
+      second.id,
+    ]);
+    const inserted = usePilatesStore.getState().activeSteps[2];
+    expect(screen.getByLabelText('추가 위치')).toHaveValue('step:' + inserted.stepId);
+    expect(container.querySelector('.flow-added-receipt')).toHaveTextContent(
+      '3번 · ' + propExercise.nameKo + ' 추가됨',
+    );
+    fireEvent.click(screen.getByRole('button', { name: '시퀀스에서 보기' }));
+    expect(screen.getByTestId('sequence-studio')).toHaveAttribute('data-mobile-pane', 'plan');
+    await waitFor(() =>
+      expect(document.getElementById('flow-step-' + inserted.stepId)).toHaveFocus(),
+    );
+    expect(document.getElementById('flow-step-' + inserted.stepId)?.closest('article')).toHaveClass(
+      'is-recently-added',
+    );
+  });
+
+  it('uses the store lock-position contract and still allows insertion directly after the last locked row', () => {
+    seedReformer([first, second]);
+    usePilatesStore.getState().toggleStepLock(0);
+    showStudio();
+    const anchor = usePilatesStore.getState().activeSteps[0].stepId;
+    const chooser = screen.getByLabelText('추가 위치');
+    expect(within(chooser).getByRole('option', { name: '시퀀스 맨 앞' })).toBeDisabled();
+    expect(
+      within(chooser).getByRole('option', { name: '1번 ' + first.nameKo + ' 뒤' }),
+    ).toBeEnabled();
+    fireEvent.change(chooser, { target: { value: 'step:' + anchor } });
+    searchAndAdd(third);
+    expect(usePilatesStore.getState().activeSteps.map((step) => step.exerciseId)).toEqual([
+      first.id,
+      third.id,
+      second.id,
+    ]);
+    expect(usePilatesStore.getState().activeSteps[0]).toMatchObject({
+      stepId: anchor,
+      locked: true,
+    });
+  });
+
+  it('requires an explicit new position after its anchor is removed and defaults to the end for another class', () => {
+    seedReformer([first, second]);
+    showStudio();
+    const anchor = usePilatesStore.getState().activeSteps[1].stepId;
+    fireEvent.change(screen.getByLabelText('추가 위치'), { target: { value: 'step:' + anchor } });
+    act(() => usePilatesStore.getState().removeStep(1));
+    fireEvent.change(screen.getByRole('textbox', { name: '수업 동작 검색' }), {
+      target: { value: third.nameKo },
+    });
+    expect(screen.getByRole('button', { name: third.nameKo + ' 추가' })).toBeDisabled();
+    expect(screen.getByRole('alert')).toHaveTextContent('추가 위치를 다시 선택');
+    expect(screen.getByLabelText('추가 위치')).toHaveValue('step:' + anchor);
+    fireEvent.change(screen.getByLabelText('추가 위치'), { target: { value: 'end' } });
+    fireEvent.click(screen.getByRole('button', { name: third.nameKo + ' 추가' }));
+    expect(usePilatesStore.getState().activeSteps.map((step) => step.exerciseId)).toEqual([
+      first.id,
+      third.id,
+    ]);
+    fireEvent.change(screen.getByLabelText('추가 위치'), { target: { value: 'start' } });
+    act(() =>
+      usePilatesStore.setState({ activeSequenceId: 'another-class-draft', activeSteps: [] }),
+    );
+    expect(screen.getByLabelText('추가 위치')).toHaveValue('end');
+    expect(screen.queryByRole('button', { name: '시퀀스에서 보기' })).not.toBeInTheDocument();
+  });
+
   it('explains a blocked start beside the action and clears the explanation when missing exercise data is restored', () => {
     seedReformer([first, second]);
     usePilatesStore.setState((state) => ({
@@ -103,7 +260,9 @@ describe('single-canvas sequence studio journeys', () => {
     const explanation = screen.getByRole('list', { name: '수업 시작 전 확인' });
     expect(start).toBeDisabled();
     expect(explanation).toHaveTextContent('2번 항목 · 삭제되었거나 찾을 수 없는 동작이 있습니다.');
-    expect(start).toHaveAccessibleDescription('2번 항목 · 삭제되었거나 찾을 수 없는 동작이 있습니다.');
+    expect(start).toHaveAccessibleDescription(
+      '2번 항목 · 삭제되었거나 찾을 수 없는 동작이 있습니다.',
+    );
     expect(explanation).not.toHaveTextContent('목표보다');
 
     act(() => usePilatesStore.setState((state) => ({ exercises: [...state.exercises, second] })));
@@ -126,7 +285,9 @@ describe('single-canvas sequence studio journeys', () => {
     expect(target).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByRole('status')).toHaveTextContent('휴식');
     expect(usePilatesStore.getState()).toMatchObject({
-      activeTargetMinutes: 50, lastCriteria: { targetMinutes: 50 }, draftCriteria: { targetMinutes: 50 },
+      activeTargetMinutes: 50,
+      lastCriteria: { targetMinutes: 50 },
+      draftCriteria: { targetMinutes: 50 },
     });
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
     expect(usePilatesStore.getState().undoStack).toBe(before.undoStack);
@@ -144,7 +305,9 @@ describe('single-canvas sequence studio journeys', () => {
     expect(target).toHaveValue(100);
     expect(target).not.toHaveAttribute('aria-invalid', 'true');
     expect(usePilatesStore.getState()).toMatchObject({
-      activeTargetMinutes: 100, lastCriteria: { targetMinutes: 100 }, draftCriteria: { targetMinutes: 100 },
+      activeTargetMinutes: 100,
+      lastCriteria: { targetMinutes: 100 },
+      draftCriteria: { targetMinutes: 100 },
     });
     expect(screen.getByRole('status')).toBeEmptyDOMElement();
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
@@ -168,7 +331,9 @@ describe('single-canvas sequence studio journeys', () => {
     fireEvent.click(conditions.getByRole('checkbox', { name: '리포머' }));
     fireEvent.click(conditions.getByRole('button', { name: '미니볼' }));
     expect(usePilatesStore.getState().draftCriteria).toMatchObject({
-      apparatus: 'cadillac', availableEquipment: ['cadillac'], preferredProps: ['mini-ball'],
+      apparatus: 'cadillac',
+      availableEquipment: ['cadillac'],
+      preferredProps: ['mini-ball'],
     });
     expect(usePilatesStore.getState().lastCriteria).toBe(before.lastCriteria);
     expect(usePilatesStore.getState().activeSteps).toBe(before.activeSteps);
@@ -177,18 +342,30 @@ describe('single-canvas sequence studio journeys', () => {
     await waitFor(() => expect(screen.getByLabelText('수업 작성 도구 더보기')).toHaveFocus());
     expect(screen.getByLabelText('수업 기구')).toHaveValue('reformer');
     expect(screen.getByRole('checkbox', { name: '수업 조건에 맞는 동작만' })).toBeChecked();
-    expect(screen.queryByRole('button', { name: `${cadillac.nameKo} 추가` })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: `${propExercise.nameKo} 추가` })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: `${cadillac.nameKo} 추가` }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: `${propExercise.nameKo} 추가` }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: `${second.nameKo} 추가` })).toBeEnabled();
     expect(usePilatesStore.getState().draftCriteria?.apparatus).toBe('cadillac');
     searchAndAdd(second);
-    expect(usePilatesStore.getState().activeSteps.map((step) => step.exerciseId)).toEqual([first.id, second.id]);
+    expect(usePilatesStore.getState().activeSteps.map((step) => step.exerciseId)).toEqual([
+      first.id,
+      second.id,
+    ]);
 
     fireEvent.change(screen.getByLabelText('수업 목표 시간'), { target: { value: '45' } });
     expect(usePilatesStore.getState().lastCriteria).toMatchObject({
-      apparatus: 'reformer', availableEquipment: ['reformer'], preferredProps: ['none'], targetMinutes: 45,
+      apparatus: 'reformer',
+      availableEquipment: ['reformer'],
+      preferredProps: ['none'],
+      targetMinutes: 45,
     });
-    expect(usePilatesStore.getState().draftCriteria).toEqual(usePilatesStore.getState().lastCriteria);
+    expect(usePilatesStore.getState().draftCriteria).toEqual(
+      usePilatesStore.getState().lastCriteria,
+    );
     expect(usePilatesStore.getState().savedSequences).toEqual([savedSource]);
   }, 30000);
 
@@ -278,7 +455,11 @@ describe('single-canvas sequence studio journeys', () => {
     const thirdUp = screen.getByRole('button', { name: `3번 ${third.nameKo} 위로` });
     thirdUp.focus();
     fireEvent.click(thirdUp);
-    expect(usePilatesStore.getState().activeSteps.map((step) => step.exerciseId)).toEqual([second.id, third.id, first.id]);
+    expect(usePilatesStore.getState().activeSteps.map((step) => step.exerciseId)).toEqual([
+      second.id,
+      third.id,
+      first.id,
+    ]);
 
     const beforeEdit = structuredClone(usePilatesStore.getState().activeSteps);
     let editor = openEditor(second);
@@ -292,10 +473,19 @@ describe('single-canvas sequence studio journeys', () => {
     fireEvent.change(editor.getByLabelText('설명 · 초'), { target: { value: '20' } });
     fireEvent.change(editor.getByLabelText('좌우 수행'), { target: { value: 'left-then-right' } });
     fireEvent.change(editor.getByLabelText('횟수 · 선택'), { target: { value: '8' } });
-    fireEvent.change(editor.getByLabelText('수업 메모'), { target: { value: '회원에게 전달할 오늘의 메모' } });
+    fireEvent.change(editor.getByLabelText('수업 메모'), {
+      target: { value: '회원에게 전달할 오늘의 메모' },
+    });
     fireEvent.click(editor.getByRole('button', { name: '변경 적용' }));
     const edited = usePilatesStore.getState().activeSteps[0];
-    expect(getStepTiming(edited, second)).toMatchObject({ totalSec: 120, explanationSec: 20, transitionSec: 10, movementSec: 90, sides: 2, perSideSec: 45 });
+    expect(getStepTiming(edited, second)).toMatchObject({
+      totalSec: 120,
+      explanationSec: 20,
+      transitionSec: 10,
+      movementSec: 90,
+      sides: 2,
+      perSideSec: 45,
+    });
     expect(edited.repetitions).toBe(8);
     expect(edited.instructorNote).toBe('회원에게 전달할 오늘의 메모');
     fireEvent.click(screen.getByRole('button', { name: '마지막 편집 되돌리기' }));
@@ -306,10 +496,16 @@ describe('single-canvas sequence studio journeys', () => {
     fireEvent.click(editor.getByRole('button', { name: '변경 적용' }));
     const beforeRest = getSequenceDurations(usePilatesStore.getState().activeSteps).totalSec;
     fireEvent.click(screen.getByRole('button', { name: '휴식 1분 추가' }));
-    expect(getSequenceDurations(usePilatesStore.getState().activeSteps).totalSec).toBe(beforeRest + 60);
+    expect(getSequenceDurations(usePilatesStore.getState().activeSteps).totalSec).toBe(
+      beforeRest + 60,
+    );
     fireEvent.click(screen.getByRole('button', { name: '저장' }));
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('저장한 수업에 보관했습니다'));
-    expect(usePilatesStore.getState().savedSequences.find((item) => item.id === savedSource.id)).toEqual(savedSource);
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('저장한 수업에 보관했습니다'),
+    );
+    expect(
+      usePilatesStore.getState().savedSequences.find((item) => item.id === savedSource.id),
+    ).toEqual(savedSource);
     expect(usePilatesStore.getState().savedSequences).toHaveLength(2);
     // A target mismatch is allowed: the action starts the actual current budget.
     expect(usePilatesStore.getState().activeTargetMinutes).toBe(30);
@@ -327,13 +523,17 @@ describe('single-canvas sequence studio journeys', () => {
     expect(screen.queryAllByTestId('sequence-studio-row')).toHaveLength(0);
     expect(screen.getByRole('status')).toHaveTextContent('조건에 맞는 동작만 추가');
     expect(screen.getByRole('button', { name: `${propExercise.nameKo} 추가` })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: `${propExercise.nameKo} 추가됨` })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: `${propExercise.nameKo} 추가됨` }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '수업 조건' }));
     const conditions = within(screen.getByRole('dialog', { name: '수업 조건' }));
     fireEvent.click(conditions.getByRole('checkbox', { name: '미니볼' }));
     fireEvent.click(conditions.getByRole('button', { name: '완료' }));
     fireEvent.click(screen.getByRole('button', { name: `${propExercise.nameKo} 추가` }));
-    expect(usePilatesStore.getState().activeSteps.map((step) => step.exerciseId)).toEqual([propExercise.id]);
+    expect(usePilatesStore.getState().activeSteps.map((step) => step.exerciseId)).toEqual([
+      propExercise.id,
+    ]);
     expect(screen.getByRole('button', { name: `${propExercise.nameKo} 추가됨` })).toBeDisabled();
   });
 
@@ -343,7 +543,9 @@ describe('single-canvas sequence studio journeys', () => {
     fireEvent.click(screen.getByRole('button', { name: `${first.nameKo} 잠그기` }));
     const before = structuredClone(usePilatesStore.getState().activeSteps);
     for (const name of [
-      `1번 ${first.nameKo} 아래로`, `1번 ${first.nameKo} 삭제`, `${first.nameKo} 시간과 메모 편집`,
+      `1번 ${first.nameKo} 아래로`,
+      `1번 ${first.nameKo} 삭제`,
+      `${first.nameKo} 시간과 메모 편집`,
       `2번 ${second.nameKo} 위로`,
     ]) {
       const control = screen.getByRole('button', { name });
@@ -375,15 +577,21 @@ describe('single-canvas sequence studio journeys', () => {
     fireEvent.click(screen.getByRole('button', { name: '새 수업' }));
     prompt = within(screen.getByRole('dialog', { name: '새 수업을 만들까요?' }));
     fireEvent.click(prompt.getByRole('button', { name: '저장하고 새로 만들기' }));
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: '새 수업을 만들까요?' })).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: '새 수업을 만들까요?' })).not.toBeInTheDocument(),
+    );
     expect(usePilatesStore.getState().activeSteps).toEqual([]);
     expect(usePilatesStore.getState().savedSequences).toHaveLength(2);
-    expect(usePilatesStore.getState().savedSequences.find((item) => item.id === savedSource.id)).toEqual(savedSource);
+    expect(
+      usePilatesStore.getState().savedSequences.find((item) => item.id === savedSource.id),
+    ).toEqual(savedSource);
     fireEvent.click(screen.getByRole('button', { name: /원본 매트 수업/ }));
     expect(usePilatesStore.getState().activeSequenceId).not.toBe(savedSource.id);
     expect(usePilatesStore.getState().activeTitle).toBe(`${savedSource.title} (복사)`);
     expect(usePilatesStore.getState().activeSteps).toEqual(savedSource.steps);
-    expect(usePilatesStore.getState().savedSequences.find((item) => item.id === savedSource.id)).toEqual(savedSource);
+    expect(
+      usePilatesStore.getState().savedSequences.find((item) => item.id === savedSource.id),
+    ).toEqual(savedSource);
   });
 
   it('rejects a stale inspector apply instead of overwriting a newer row edit', () => {
@@ -406,9 +614,15 @@ describe('single-canvas sequence studio journeys', () => {
     const rows = usePilatesStore.getState().activeSteps;
     fireEvent.click(screen.getByRole('button', { name: '새 수업' }));
     const prompt = within(screen.getByRole('dialog', { name: '새 수업을 만들까요?' }));
-    const denied = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Storage blocked by QA test'); });
+    const denied = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('Storage blocked by QA test');
+    });
     fireEvent.click(prompt.getByRole('button', { name: '저장하고 새로 만들기' }));
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('브라우저 저장 공간에 기록하지 못했습니다'));
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(
+        '브라우저 저장 공간에 기록하지 못했습니다',
+      ),
+    );
     expect(screen.getByRole('dialog', { name: '새 수업을 만들까요?' })).toBeInTheDocument();
     expect(usePilatesStore.getState().activeSteps).toBe(rows);
     expect(screen.getByRole('status')).not.toHaveTextContent('저장한 수업에 보관했습니다');

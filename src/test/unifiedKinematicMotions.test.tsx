@@ -120,7 +120,7 @@ describe('Unified Studio Kinematic Motion System with native illustrations and s
       expect(frame, ex.id).toBeDefined();
       const badgeMarkup = renderToStaticMarkup(<ExerciseThumbnailBadge exercise={ex} size="md" />);
       expect(badgeMarkup).toContain('movement-phase-diagram-svg');
-      expect(badgeMarkup).toContain('data-artwork-renderer="cached-native-svg"');
+      expect(badgeMarkup).toContain('data-artwork-renderer="cached-native-image"');
       expect(badgeMarkup).toContain(`src="${frame!.src}"`);
       expect(badgeMarkup).toContain(`data-exercise-id="${ex.id}"`);
       expect(badgeMarkup).toContain('data-motion-phase="middle"');

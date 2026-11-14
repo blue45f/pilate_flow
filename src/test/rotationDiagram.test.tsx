@@ -257,6 +257,8 @@ describe('Track I8 Pilates Rotation 2D Diagrams (Saw, Spine Twist, Criss-Cross)'
         />
       </div>,
     );
-    expect(container.querySelectorAll('svg').length).toBeGreaterThanOrEqual(4);
+    const figures = container.querySelectorAll('svg.movement-phase-diagram-svg');
+    expect(figures).toHaveLength(4);
+    expect(Array.from(figures, (figure) => figure.getAttribute('data-phase'))).toEqual(['middle', 'start', 'middle', 'end']);
   });
 });

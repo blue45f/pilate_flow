@@ -27,6 +27,8 @@ import '../styles/movement-media-guidance.css';
 export interface MovementMediaGuidancePanelProps {
   exercise: PilatesExercise;
   active?: boolean;
+  /** Use when the surrounding view already owns the video player. */
+  voiceOnly?: boolean;
   className?: string;
 }
 
@@ -76,13 +78,15 @@ function buildInitialVoiceControllerState(exerciseId: string): KoreanVoiceContro
 export function MovementMediaGuidancePanel({
   exercise,
   active = true,
+  voiceOnly = false,
   className = '',
 }: MovementMediaGuidancePanelProps) {
   return (
     <MovementMediaGuidanceInner
-      key={`${exercise.id}:${active ? 'active' : 'inactive'}`}
+      key={`${exercise.id}:${active ? 'active' : 'inactive'}:${voiceOnly ? 'voice' : 'media'}`}
       exercise={exercise}
       active={active}
+      voiceOnly={voiceOnly}
       className={className}
     />
   );
@@ -91,6 +95,7 @@ export function MovementMediaGuidancePanel({
 function MovementMediaGuidanceInner({
   exercise,
   active = true,
+  voiceOnly = false,
   className = '',
 }: MovementMediaGuidancePanelProps) {
   const bundle = useMemo(() => resolveMovementMediaBundle(exercise), [exercise]);
@@ -328,7 +333,9 @@ function MovementMediaGuidanceInner({
   }, [voiceScript.segments, selectedSection]);
 
   const canLoadEmbed =
-    activeMatch.embedResolution.allowed && Boolean(activeMatch.embedResolution.embedUrl);
+    !voiceOnly &&
+    activeMatch.embedResolution.allowed &&
+    Boolean(activeMatch.embedResolution.embedUrl);
 
   const fallbackNoticeText = failureInfo?.noticeKo ?? activeMatch.embedResolution.reasonKo;
 
@@ -337,201 +344,200 @@ function MovementMediaGuidanceInner({
   return (
     <section
       className={rootClassName}
-      aria-label={`${exercise.nameKo} 참고 영상·자료 및 한국어 음성 안내`}
+      aria-label={`${exercise.nameKo} ${voiceOnly ? '한국어 음성 안내' : '참고 영상·자료 및 한국어 음성 안내'}`}
       data-testid="movement-media-guidance-panel"
       data-exercise-id={exercise.id}
     >
       {/* Part 1: 동작별 참고 영상·신뢰 출처 자료 */}
-      <div className="mmg-section">
-        <div className="mmg-section-header">
-          <div className="mmg-section-title-group">
-            <h3 className="mmg-section-title">참고 영상·자료</h3>
-          </div>
-        </div>
-
-        <div className="mmg-match-tabs" role="group" aria-label="매칭된 공개 참고 출처 선택">
-          {bundle.matches.map((match, index) => {
-            const isSelected = match.matchId === activeMatch.matchId;
-            return (
-              <button
-                key={match.matchId}
-                type="button"
-                className="mmg-match-tab"
-                data-testid={`media-match-tab-${index}`}
-                aria-pressed={isSelected}
-                onClick={() => handleSelectMatch(match)}
-              >
-                <div className="mmg-match-tab__top">
-                  <span
-                    className={`mmg-badge ${
-                      match.embedResolution.allowed ? 'mmg-badge--allowed' : 'mmg-badge--external'
-                    }`}
-                  >
-                    {match.embedResolution.allowed ? '여기서 보기' : '원본에서 보기'}
-                  </span>
-                </div>
-                <span className="mmg-match-tab__title">{match.source.titleKo}</span>
-                <span className="mmg-match-tab__publisher">
-                  {match.source.publisher} · {match.source.languageLabelKo}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mmg-match-card" data-testid="selected-media-match-card">
-          <div className="mmg-match-card__header">
-            <div>
-              <h4 className="mmg-match-card__title">{activeMatch.source.titleKo}</h4>
-              <p className="mmg-match-card__subtitle">
-                {activeMatch.source.publisher} ({activeMatch.source.languageLabelKo})
-              </p>
-            </div>
-            <div className="mmg-badge-row">
-              <span className="mmg-badge">
-                {activeMatch.isExactDemonstration ? '원출처 시연 자료' : '참고 시연·도해 자료'}
-              </span>
+      {!voiceOnly && (
+        <div className="mmg-section">
+          <div className="mmg-section-header">
+            <div className="mmg-section-title-group">
+              <h3 className="mmg-section-title">참고 영상·자료</h3>
             </div>
           </div>
 
-          <p className="mmg-voice-disclaimer">{activeMatch.source.safetyDisclaimerKo}</p>
-          <details className="mmg-full-script-details">
-            <summary>자료 정보</summary>
-            <ul className="mmg-match-meta-list">
-              <li className="mmg-match-meta-item">
-                <strong>연결 이유</strong>
-                <span>{activeMatch.matchReasonKo}</span>
-              </li>
-              <li className="mmg-match-meta-item">
-                <strong>확인 기록</strong>
-                <span>{activeMatch.source.verificationStatusLabelKo}</span>
-              </li>
-              <li className="mmg-match-meta-item">
-                <strong>이용 안내</strong>
-                <span>{activeMatch.source.rightsNoteKo}</span>
-              </li>
-            </ul>
-          </details>
-
-          {activeMatch.source.observationPoints.length > 0 && (
-            <ul className="mmg-observation-list" aria-label="출처 관찰 포인트">
-              {activeMatch.source.observationPoints.map((pt, idx) => (
-                <li key={`${activeMatch.matchId}-obs-${idx}`} className="mmg-observation-chip">
-                  {pt.seconds}초 · {pt.note}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <div
-            className="mmg-embed-box"
-            data-testid="media-embed-box"
-            data-embed-state={embedState}
-            data-embed-allowed={String(activeMatch.embedResolution.allowed)}
-          >
-            {canLoadEmbed && embedState === 'idle' && (
-              <div className="mmg-embed-idle">
-                <p className="mmg-embed-idle__text">버튼을 누르면 YouTube 영상을 불러옵니다.</p>
+          <div className="mmg-match-tabs" role="group" aria-label="매칭된 공개 참고 출처 선택">
+            {bundle.matches.map((match, index) => {
+              const isSelected = match.matchId === activeMatch.matchId;
+              return (
                 <button
+                  key={match.matchId}
                   type="button"
-                  className="mmg-btn mmg-btn-primary"
-                  data-testid="manual-load-video-btn"
-                  onClick={handleManualLoadVideo}
+                  className="mmg-match-tab"
+                  data-testid={`media-match-tab-${index}`}
+                  aria-pressed={isSelected}
+                  onClick={() => handleSelectMatch(match)}
                 >
-                  영상 보기
+                  <div className="mmg-match-tab__top">
+                    <span
+                      className={`mmg-badge ${
+                        match.embedResolution.allowed ? 'mmg-badge--allowed' : 'mmg-badge--external'
+                      }`}
+                    >
+                      {match.embedResolution.allowed ? '여기서 보기' : '원본에서 보기'}
+                    </span>
+                  </div>
+                  <span className="mmg-match-tab__title">{match.source.titleKo}</span>
+                  <span className="mmg-match-tab__publisher">
+                    {match.source.publisher} · {match.source.languageLabelKo}
+                  </span>
                 </button>
+              );
+            })}
+          </div>
+
+          <div className="mmg-match-card" data-testid="selected-media-match-card">
+            <div className="mmg-match-card__header">
+              <div>
+                <h4 className="mmg-match-card__title">{activeMatch.source.titleKo}</h4>
+                <p className="mmg-match-card__subtitle">
+                  {activeMatch.source.publisher} ({activeMatch.source.languageLabelKo})
+                </p>
               </div>
+              <div className="mmg-badge-row">
+                <span className="mmg-badge">
+                  {activeMatch.isExactDemonstration ? '원출처 시연 자료' : '참고 시연·도해 자료'}
+                </span>
+              </div>
+            </div>
+
+            <p className="mmg-voice-disclaimer">{activeMatch.source.safetyDisclaimerKo}</p>
+            <details className="mmg-full-script-details">
+              <summary>자료 정보</summary>
+              <ul className="mmg-match-meta-list">
+                <li className="mmg-match-meta-item">
+                  <strong>연결 이유</strong>
+                  <span>{activeMatch.matchReasonKo}</span>
+                </li>
+                <li className="mmg-match-meta-item">
+                  <strong>확인 기록</strong>
+                  <span>{activeMatch.source.verificationStatusLabelKo}</span>
+                </li>
+                <li className="mmg-match-meta-item">
+                  <strong>이용 안내</strong>
+                  <span>{activeMatch.source.rightsNoteKo}</span>
+                </li>
+              </ul>
+            </details>
+
+            {activeMatch.source.observationPoints.length > 0 && (
+              <ul className="mmg-observation-list" aria-label="출처 관찰 포인트">
+                {activeMatch.source.observationPoints.map((pt, idx) => (
+                  <li key={`${activeMatch.matchId}-obs-${idx}`} className="mmg-observation-chip">
+                    {pt.seconds}초 · {pt.note}
+                  </li>
+                ))}
+              </ul>
             )}
 
-            {canLoadEmbed && embedState === 'loaded' && (
-              <>
-                <div className="mmg-embed-player-frame">
-                  <iframe
-                    ref={iframeRef}
-                    className="mmg-embed-iframe"
-                    data-testid="permitted-youtube-iframe"
-                    src={activeMatch.embedResolution.embedUrl!}
-                    title={`${exercise.nameKo} · ${activeMatch.source.titleKo} 수동 임베드 플레이어`}
-                    allow="encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    onError={handleIframeError}
-                  />
-                </div>
-                <div className="mmg-embed-controls">
+            <div
+              className="mmg-embed-box"
+              data-testid="media-embed-box"
+              data-embed-state={embedState}
+              data-embed-allowed={String(activeMatch.embedResolution.allowed)}
+            >
+              {canLoadEmbed && embedState === 'idle' && (
+                <div className="mmg-embed-idle">
+                  <p className="mmg-embed-idle__text">버튼을 누르면 YouTube 영상을 불러옵니다.</p>
                   <button
                     type="button"
-                    className="mmg-btn mmg-btn-secondary"
-                    data-testid="stop-video-btn"
-                    onClick={handleStopVideo}
+                    className="mmg-btn mmg-btn-primary"
+                    data-testid="manual-load-video-btn"
+                    onClick={handleManualLoadVideo}
                   >
-                    영상 멈추기
-                  </button>
-                  <button
-                    type="button"
-                    className="mmg-btn mmg-btn-ghost"
-                    data-testid="report-embed-failure-btn"
-                    onClick={handleReportEmbedBlocked}
-                  >
-                    영상이 안 나오나요?
+                    영상 보기
                   </button>
                 </div>
-              </>
-            )}
+              )}
 
-            {(!canLoadEmbed ||
-              embedState === 'embed-blocked' ||
-              embedState === 'playback-failed') && (
-              <div
-                className="mmg-embed-fallback"
-                data-testid="embed-fallback-notice"
-                role="status"
-                aria-live="polite"
-              >
-                <p>{fallbackNoticeText}</p>
-                {canLoadEmbed &&
-                  (embedState === 'embed-blocked' || embedState === 'playback-failed') && (
+              {canLoadEmbed && embedState === 'loaded' && (
+                <>
+                  <div className="mmg-embed-player-frame">
+                    <iframe
+                      ref={iframeRef}
+                      className="mmg-embed-iframe"
+                      data-testid="permitted-youtube-iframe"
+                      src={activeMatch.embedResolution.embedUrl!}
+                      title={`${exercise.nameKo} · ${activeMatch.source.titleKo} 수동 임베드 플레이어`}
+                      allow="encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      onError={handleIframeError}
+                    />
+                  </div>
+                  <div className="mmg-embed-controls">
                     <button
                       type="button"
-                      className="mmg-btn mmg-btn-secondary mmg-btn-sm"
-                      data-testid="reset-embed-state-btn"
-                      onClick={handleResetEmbedState}
+                      className="mmg-btn mmg-btn-secondary"
+                      data-testid="stop-video-btn"
+                      onClick={handleStopVideo}
                     >
-                      다시 시도
+                      영상 멈추기
                     </button>
-                  )}
-              </div>
-            )}
-          </div>
+                    <button
+                      type="button"
+                      className="mmg-btn mmg-btn-ghost"
+                      data-testid="report-embed-failure-btn"
+                      onClick={handleReportEmbedBlocked}
+                    >
+                      영상이 안 나오나요?
+                    </button>
+                  </div>
+                </>
+              )}
 
-          <div className="mmg-external-link-bar">
-            <a
-              href={activeMatch.embedResolution.externalOriginalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mmg-external-link"
-              data-testid="external-original-source-link"
+              {(!canLoadEmbed ||
+                embedState === 'embed-blocked' ||
+                embedState === 'playback-failed') && (
+                <div
+                  className="mmg-embed-fallback"
+                  data-testid="embed-fallback-notice"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <p>{fallbackNoticeText}</p>
+                  {canLoadEmbed &&
+                    (embedState === 'embed-blocked' || embedState === 'playback-failed') && (
+                      <button
+                        type="button"
+                        className="mmg-btn mmg-btn-secondary mmg-btn-sm"
+                        data-testid="reset-embed-state-btn"
+                        onClick={handleResetEmbedState}
+                      >
+                        다시 시도
+                      </button>
+                    )}
+                </div>
+              )}
+            </div>
+
+            <div className="mmg-external-link-bar">
+              <a
+                href={activeMatch.embedResolution.externalOriginalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mmg-external-link"
+                data-testid="external-original-source-link"
+              >
+                원본 보기 ({activeMatch.source.publisher})
+              </a>
+            </div>
+
+            <details
+              className="mmg-link-policy-disclosure"
+              onToggle={(event) => setShowLinkPolicy(event.currentTarget.open)}
             >
-              원본 보기 ({activeMatch.source.publisher})
-            </a>
+              <summary className="mmg-link-policy-summary">
+                외부 참고 링크 보안·자동재생 차단 정책 점검
+              </summary>
+              {showLinkPolicy && (
+                <ReferenceLinkPolicyPreview exercise={exercise} iframeMode="production-nocookie" />
+              )}
+            </details>
           </div>
-
-          <details
-            className="mmg-link-policy-disclosure"
-            onToggle={(event) => setShowLinkPolicy(event.currentTarget.open)}
-          >
-            <summary className="mmg-link-policy-summary">
-              외부 참고 링크 보안·자동재생 차단 정책 점검
-            </summary>
-            {showLinkPolicy && (
-              <ReferenceLinkPolicyPreview
-                exercise={exercise}
-                iframeMode="production-nocookie"
-              />
-            )}
-          </details>
         </div>
-      </div>
+      )}
 
       {/* Part 2: 한국어 음성 설명 & 텍스트 대본 */}
       <div className="mmg-section">

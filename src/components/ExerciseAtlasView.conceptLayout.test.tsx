@@ -25,13 +25,19 @@ afterEach(() => {
 });
 
 describe('library supplied concept layout', () => {
-  it('puts search and movement results before optional motion discovery without removing it', () => {
+  it('puts search and movement results before the collapsed authoring drafts', async () => {
     const { container } = render(
-      <ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />,
+      <ExerciseAtlasView
+        initialView="tools"
+        onOpenYouTubePreview={vi.fn()}
+        onOpenClipper={vi.fn()}
+      />,
     );
     const search = screen.getByRole('region', { name: '동작 검색과 필터' });
     const results = container.querySelector('.library-notes-workspace')!;
-    const gallery = screen.getByRole('region', { name: '모션으로 살펴보기' });
+    expect(container.querySelector('.ml-pattern-rail')).toBeNull();
+    fireEvent.click(screen.getByLabelText('패턴 도해 초안'));
+    const gallery = await screen.findByRole('region', { name: '패턴 도해 초안 목록' });
     expect(search.compareDocumentPosition(results) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(
       results.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -43,7 +49,13 @@ describe('library supplied concept layout', () => {
   it('selects existing movement information, preserves review state and hands off to full details', async () => {
     const openDetails = vi.fn();
     const before = usePilatesStore.getState();
-    render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={openDetails} onOpenClipper={vi.fn()} />);
+    render(
+      <ExerciseAtlasView
+        initialView="tools"
+        onOpenYouTubePreview={openDetails}
+        onOpenClipper={vi.fn()}
+      />,
+    );
     const trigger = screen.getByRole('button', { name: movement.nameKo });
     fireEvent.click(trigger);
     const inspector = screen.getByRole('complementary', { name: '선택한 동작 정보' });
@@ -52,9 +64,7 @@ describe('library supplied concept layout', () => {
     );
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
     expect(within(inspector).getByRole('heading', { name: movement.nameKo })).toBeInTheDocument();
-    expect(inspector).toHaveTextContent(
-      '개인 검토 전 · 직접 추가 가능 (자동 추천·AI 초안 제외)',
-    );
+    expect(inspector).toHaveTextContent('개인 검토 전 · 직접 추가 가능 (자동 추천·AI 초안 제외)');
     expect(inspector).not.toHaveTextContent('교차 검증 완료 · 수업 즉시 활용');
     expect(inspector).toHaveTextContent(movement.precautions);
     fireEvent.click(within(inspector).getByRole('button', { name: '전체 정보·개인 검토 열기' }));
@@ -67,7 +77,13 @@ describe('library supplied concept layout', () => {
   });
 
   it('keeps selected information across filtering and safely restores focus if its card disappears', async () => {
-    render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+    render(
+      <ExerciseAtlasView
+        initialView="tools"
+        onOpenYouTubePreview={vi.fn()}
+        onOpenClipper={vi.fn()}
+      />,
+    );
     fireEvent.click(screen.getByRole('button', { name: movement.nameKo }));
     const search = screen.getByRole('searchbox', { name: '동작 검색' });
     fireEvent.change(search, { target: { value: 'no-matching-movement-xyz' } });
@@ -90,7 +106,13 @@ describe('library supplied concept layout', () => {
       },
       true,
     );
-    render(<ExerciseAtlasView initialView="tools" onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+    render(
+      <ExerciseAtlasView
+        initialView="tools"
+        onOpenYouTubePreview={vi.fn()}
+        onOpenClipper={vi.fn()}
+      />,
+    );
     const trigger = screen.getByRole('button', { name: movement.nameKo });
     fireEvent.click(trigger);
 
@@ -104,7 +126,9 @@ describe('library supplied concept layout', () => {
     expect(addBtn).toHaveAttribute('data-added', 'false');
     fireEvent.click(addBtn);
     expect(addBtn).toHaveAttribute('data-added', 'true');
-    expect(within(inspector).getByText(`${movement.nameKo} 동작을 수업안에 추가했습니다.`)).toBeInTheDocument();
+    expect(
+      within(inspector).getByText(`${movement.nameKo} 동작을 수업안에 추가했습니다.`),
+    ).toBeInTheDocument();
 
     fireEvent.keyDown(inspector, { key: 'Escape' });
     await waitFor(() => expect(trigger).toHaveFocus());

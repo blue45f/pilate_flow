@@ -95,7 +95,7 @@ export function verifyPwaBuild(outputDirectory = 'dist') {
       assert.ok(!assets.includes(url), `SHELL_EXTRAS overlaps ASSETS: ${url}`);
       assert.match(
         url,
-        /^\/(?:site\.webmanifest|favicon\.svg|images\/movement-guides\/[a-z0-9-]+\.svg)$/,
+        /^\/(?:site\.webmanifest|favicon\.svg|images\/movement-guides\/[a-z0-9-]+\.svg|images\/motion-atlas-v3\/(?:practitioner|equipment)\.webp)$/,
       );
       assert.ok(
         readFileSync(buildFile(root, url.slice(1))).length > 0,

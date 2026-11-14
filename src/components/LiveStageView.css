@@ -830,7 +830,7 @@
   min-width: 0;
 }
 
-.teaching-live-diagram-single svg {
+.teaching-live-diagram-single > svg {
   max-height: 220px;
   width: 100%;
   object-fit: contain;

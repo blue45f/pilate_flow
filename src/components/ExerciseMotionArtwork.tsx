@@ -1,82 +1,80 @@
-import { memo, useMemo, useState, type CSSProperties } from 'react';
-import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
+import { memo, useEffect, useState, type ComponentType } from 'react';
 import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
-import { getMovementVisualAsset, type VisualPhaseId } from '../data/movementVisualRigCatalog';
-import { APPARATUS_LABELS } from '../data/pilatesCatalog';
-import type { PilatesExercise } from '../types/pilates';
-import { getExerciseArtworkFrame } from '../utils/exerciseArtworkCache';
-import { ApparatusIllustrationSvg } from './ApparatusStudioArtwork';
-import { MovementPhaseDiagramSvg } from './MovementPhaseDiagramSvg';
+import {
+  getExerciseArtworkFrame,
+  hasExerciseArtworkIdentityMismatch,
+} from '../utils/exerciseArtworkCache';
+import {
+  getLoadedNativeExerciseArtwork,
+  loadNativeExerciseArtwork,
+} from '../utils/lazyExerciseArtwork';
+import {
+  ApparatusExerciseArtwork,
+  ExerciseMotionArtworkSurface,
+  type ExerciseMotionArtworkProps,
+} from './ExerciseMotionArtworkSurface';
 import '../styles/exercise-motion-artwork.css';
 
-export interface ExerciseMotionArtworkProps {
-  exercise: PilatesExercise;
-  phase?: VisualPhaseId;
-  className?: string;
-  decorative?: boolean;
-  label?: string;
-  style?: CSSProperties;
-  'data-testid'?: string;
+export type { ExerciseMotionArtworkProps } from './ExerciseMotionArtworkSurface';
+
+function DeferredNativeArtwork(props: ExerciseMotionArtworkProps) {
+  const [loaded, setLoaded] = useState<{
+    component: ComponentType<ExerciseMotionArtworkProps> | null;
+    failed: boolean;
+  }>(() => ({ component: getLoadedNativeExerciseArtwork()?.default ?? null, failed: false }));
+  useEffect(() => {
+    if (loaded.component) return;
+    let active = true;
+    loadNativeExerciseArtwork().then(
+      (module) => {
+        if (active) setLoaded({ component: module.default, failed: false });
+      },
+      () => {
+        if (active) setLoaded({ component: null, failed: true });
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [loaded.component]);
+  const NativeArtwork = loaded.component;
+  return NativeArtwork ? (
+    <NativeArtwork {...props} />
+  ) : (
+    <ApparatusExerciseArtwork {...props} status={loaded.failed ? 'unavailable' : 'loading'} />
+  );
 }
 
-const PHASE_LABELS: Record<VisualPhaseId, string> = {
-  start: '시작 자세',
-  middle: '정점 자세',
-  end: '종료 자세',
-};
-
-/** One static frame from the same authored rig used by the motion player. */
+/** Cache hits never initialize the motion engine or the native SVG renderer. */
 export const ExerciseMotionArtwork = memo(function ExerciseMotionArtwork({
-  exercise,
   phase = 'middle',
-  className = '',
   decorative = true,
-  label,
-  style,
-  'data-testid': testId,
+  ...props
 }: ExerciseMotionArtworkProps) {
-  const binding = getExpandedMovementVisualBinding(exercise);
-  const sourceOnly = binding?.nativeMotionAvailable === false;
+  const { exercise, label } = props;
+  const sourceOnly = getExpandedMovementVisualBinding(exercise)?.nativeMotionAvailable === false;
   const cachedFrame = sourceOnly ? undefined : getExerciseArtworkFrame(exercise, phase);
   const [failedFrameSrc, setFailedFrameSrc] = useState<string | null>(null);
-  const useCachedFrame = Boolean(cachedFrame && cachedFrame.src !== failedFrameSrc);
-  const representative =
-    /^expanded-|^crawled-/.test(exercise.id) || !getMovementVisualAsset(exercise.id);
-  const motion = useMemo(
-    () => sourceOnly || (useCachedFrame && !representative) ? null : getCatalogContinuousMotionAsset(exercise),
-    [exercise, sourceOnly, useCachedFrame, representative],
-  );
-  const unmodeled = !sourceOnly && !useCachedFrame && !motion;
-  const apparatusOnly = sourceOnly || unmodeled;
-  const frameLabel =
-    label ??
-    (sourceOnly
-      ? `${exercise.nameKo} · 영상으로 동작 확인 · 기구 안내 이미지`
-      : unmodeled
-        ? `${exercise.nameKo} · 전용 도해 없음 · ${APPARATUS_LABELS[exercise.apparatus].ko} 기구 안내 이미지`
-        : `${representative ? motion?.visualAsset.archetypeTitleKo : exercise.nameKo} · ${cachedFrame?.labelKo ?? (phase === 'end' ? motion?.endPoseLabelKo : undefined) ?? PHASE_LABELS[phase]} · ${representative ? '대표 패턴 참고' : '계획용 동작 도해'}`);
-
-  return (
-    <span
-      className={`exercise-motion-artwork ${className}`.trim()}
-      style={style}
-      aria-hidden={decorative ? 'true' : undefined}
-      role={apparatusOnly && !decorative ? 'img' : undefined}
-      aria-label={apparatusOnly && !decorative ? frameLabel : undefined}
-      title={representative || unmodeled ? frameLabel : undefined}
-      data-testid={testId}
-      data-exercise-id={exercise.id}
-      data-motion-phase={apparatusOnly ? undefined : phase}
-      data-match-scope={sourceOnly ? 'source-video-only' : unmodeled ? 'unmodeled-exercise' : representative ? 'representative-pattern' : 'catalog-authored-pattern'}
-      data-motion-source={sourceOnly ? 'creator-video-reference' : unmodeled ? 'apparatus-reference' : 'authored-kinematic-reference'}
-      data-native-motion-available={!apparatusOnly}
-      data-artwork-renderer={apparatusOnly ? 'apparatus-reference' : useCachedFrame ? 'cached-native-svg' : 'inline-native-svg'}
-      data-professional-review="unreviewed"
-      data-anatomical-accuracy-assumed="false"
-    >
-      {apparatusOnly ? (
-        <ApparatusIllustrationSvg apparatus={exercise.apparatus} />
-      ) : useCachedFrame && cachedFrame ? (
+  const artworkProps = { ...props, phase, decorative };
+  if (sourceOnly || hasExerciseArtworkIdentityMismatch(exercise))
+    return (
+      <ApparatusExerciseArtwork
+        {...artworkProps}
+        status={sourceOnly ? 'source-only' : 'unmodeled'}
+      />
+    );
+  if (cachedFrame && cachedFrame.src !== failedFrameSrc) {
+    const phaseLabel =
+      cachedFrame.labelKo ??
+      (phase === 'start' ? '시작 자세' : phase === 'middle' ? '정점 자세' : '종료 자세');
+    const frameLabel = label ?? exercise.nameKo + ' · ' + phaseLabel + ' · 계획용 동작 도해';
+    return (
+      <ExerciseMotionArtworkSurface
+        {...artworkProps}
+        frameLabel={frameLabel}
+        scope="catalog-authored-pattern"
+        renderer="cached-native-image"
+      >
         <img
           className="movement-phase-diagram-svg"
           src={cachedFrame.src}
@@ -89,24 +87,8 @@ export const ExerciseMotionArtwork = memo(function ExerciseMotionArtwork({
           data-phase={phase}
           onError={() => setFailedFrameSrc(cachedFrame.src)}
         />
-      ) : motion ? (
-        <MovementPhaseDiagramSvg
-          asset={motion.visualAsset}
-          phase={phase}
-          compact
-          showAlignment={false}
-          showDirection={false}
-          showMuscles={false}
-          showGhostStartPose={false}
-          label={frameLabel}
-        />
-      ) : null}
-      {(representative || apparatusOnly) && (
-        <span className="exercise-motion-artwork__label" data-artwork-label={sourceOnly ? 'source-video' : unmodeled ? 'apparatus-reference' : 'representative-pattern'}>
-          <strong>{sourceOnly ? '영상 참고' : unmodeled ? '기구 안내' : '대표 패턴'}</strong>
-          <span>{sourceOnly ? `${APPARATUS_LABELS[exercise.apparatus].ko} · 기구 안내` : unmodeled ? '수정한 동작 · 전용 도해 없음' : motion?.visualAsset.archetypeTitleKo}</span>
-        </span>
-      )}
-    </span>
-  );
+      </ExerciseMotionArtworkSurface>
+    );
+  }
+  return <DeferredNativeArtwork {...artworkProps} />;
 });

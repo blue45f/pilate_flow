@@ -177,6 +177,6 @@ describe('public source to personal pending note', () => {
       detail.queryByText('유효한 영상 링크가 없어 원본을 열 수 없습니다.'),
     ).not.toBeInTheDocument();
     expect(detail.queryByText('참조 구간')).not.toBeInTheDocument();
-    expect(detail.queryByRole('button', { name: 'YouTube 영상 불러오기' })).not.toBeInTheDocument();
+    expect(detail.queryByRole('button', { name: /인베드 영상 불러오기/ })).not.toBeInTheDocument();
   });
 });

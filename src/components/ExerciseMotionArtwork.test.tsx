@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
@@ -40,8 +40,10 @@ afterEach(() => {
 });
 
 describe('shared exercise artwork across planning surfaces', () => {
-  it('uses renderer-generated SVG cache frames with the same model and distinct phase sources', () => {
-    const view = render(<ExerciseMotionArtwork exercise={bridge} phase="start" decorative={false} />);
+  it('uses renderer-generated WebP cache frames with the same model and distinct phase sources', () => {
+    const view = render(
+      <ExerciseMotionArtwork exercise={bridge} phase="start" decorative={false} />,
+    );
     const sources: string[] = [];
     for (const phase of ['start', 'middle', 'end'] as const) {
       view.rerender(<ExerciseMotionArtwork exercise={bridge} phase={phase} decorative={false} />);
@@ -50,41 +52,59 @@ describe('shared exercise artwork across planning surfaces', () => {
       expect(art).toHaveAttribute('src', frame.src);
       expect(art).toHaveAttribute('data-exercise-id', bridge.id);
       expect(art).toHaveAttribute('data-phase', phase);
-      expect(art).toHaveAttribute('width', '320');
-      expect(art).toHaveAttribute('height', '200');
+      expect(art).toHaveAttribute('width', '640');
+      expect(art).toHaveAttribute('height', '400');
       expect(art).toHaveAttribute('loading', 'lazy');
       expect(art).toHaveAttribute('decoding', 'async');
-      expect(frame.src).toMatch(/^\/motion-artwork-v2\/.+\.svg$/);
+      expect(frame.src).toMatch(/^\/motion-artwork-v2\/.+\.webp$/);
       sources.push(frame.src);
     }
     expect(new Set(sources).size).toBe(3);
     expect(view.container.querySelector('svg')).toBeNull();
-    expect(view.container.firstElementChild).toHaveAttribute('data-professional-review', 'unreviewed');
-    expect(view.container.firstElementChild).toHaveAttribute('data-artwork-renderer', 'cached-native-svg');
+    expect(view.container.firstElementChild).toHaveAttribute(
+      'data-professional-review',
+      'unreviewed',
+    );
+    expect(view.container.firstElementChild).toHaveAttribute(
+      'data-artwork-renderer',
+      'cached-native-image',
+    );
   });
 
-  it('falls back to the same native model when a cached SVG cannot load', () => {
-    const view = render(<ExerciseMotionArtwork exercise={bridge} phase="middle" decorative={false} />);
+  it('falls back to the same native model when a cached image cannot load', async () => {
+    const view = render(
+      <ExerciseMotionArtwork exercise={bridge} phase="middle" decorative={false} />,
+    );
     fireEvent.error(screen.getByRole('img'));
     expect(view.container.querySelector('img')).toBeNull();
-    expect(screen.getByRole('img')).toHaveAttribute('data-phase', 'middle');
+    await waitFor(() => expect(screen.getByRole('img')).toHaveAttribute('data-phase', 'middle'));
     expect(view.container.querySelector('[data-layer="kinematic-figure"]')).not.toBeNull();
-    expect(view.container.firstElementChild).toHaveAttribute('data-artwork-renderer', 'inline-native-svg');
+    expect(view.container.firstElementChild).toHaveAttribute(
+      'data-artwork-renderer',
+      'inline-native-svg',
+    );
     expect(view.container.querySelector('[data-layer="movement-direction"]')).toBeNull();
     view.rerender(<ExerciseMotionArtwork exercise={bridge} phase="end" decorative={false} />);
-    expect(screen.getByRole('img')).toHaveAttribute('src', getExerciseArtworkFrame(bridge, 'end')!.src);
+    expect(screen.getByRole('img')).toHaveAttribute(
+      'src',
+      getExerciseArtworkFrame(bridge, 'end')!.src,
+    );
   });
 
-  it('keeps decorative artwork silent and identifies an unmodeled exercise as a representative pattern', () => {
+  it('keeps decorative artwork silent and identifies an unmodeled exercise as a representative pattern', async () => {
     const custom = { ...footwork, id: 'custom-reformer-pattern', nameKo: '새 수업 동작' };
     const view = render(<ExerciseMotionArtwork exercise={custom} />);
     expect(screen.queryByRole('img')).toBeNull();
-    expect(view.container.firstElementChild).toHaveAttribute(
-      'data-match-scope',
-      'representative-pattern',
+    await waitFor(() =>
+      expect(view.container.firstElementChild).toHaveAttribute(
+        'data-match-scope',
+        'representative-pattern',
+      ),
     );
     expect(screen.getByText('대표 패턴')).toBeVisible();
-    expect(screen.getByText(getCatalogContinuousMotionAsset(custom)!.visualAsset.archetypeTitleKo)).toBeVisible();
+    expect(
+      screen.getByText(getCatalogContinuousMotionAsset(custom)!.visualAsset.archetypeTitleKo),
+    ).toBeVisible();
     view.rerender(<ExerciseMotionArtwork exercise={custom} decorative={false} />);
     expect(screen.getByRole('img')).toHaveAccessibleName(
       `${getCatalogContinuousMotionAsset(custom)!.visualAsset.archetypeTitleKo} · 정점 자세 · 대표 패턴 참고`,
@@ -92,10 +112,17 @@ describe('shared exercise artwork across planning surfaces', () => {
   });
 
   it('shows a neutral apparatus and visible video label when an expanded movement has no authored pose', () => {
-    const expanded = INITIAL_EXERCISES.find((exercise) => exercise.id === 'expanded-mat-leg-pull-front')!;
+    const expanded = INITIAL_EXERCISES.find(
+      (exercise) => exercise.id === 'expanded-mat-leg-pull-front',
+    )!;
     const view = render(<ExerciseMotionArtwork exercise={expanded} decorative={false} />);
-    expect(screen.getByRole('img')).toHaveAccessibleName(`${expanded.nameKo} · 영상으로 동작 확인 · 기구 안내 이미지`);
-    expect(view.container.firstElementChild).toHaveAttribute('data-match-scope', 'source-video-only');
+    expect(screen.getByRole('img')).toHaveAccessibleName(
+      `${expanded.nameKo} · 영상으로 동작 확인 · 기구 안내 이미지`,
+    );
+    expect(view.container.firstElementChild).toHaveAttribute(
+      'data-match-scope',
+      'source-video-only',
+    );
     expect(view.container.firstElementChild).not.toHaveAttribute('data-motion-phase');
     expect(screen.getByText('영상 참고')).toBeVisible();
     expect(view.container.querySelector('.pf-apparatus-illustration-svg')).not.toBeNull();
@@ -117,9 +144,13 @@ describe('shared exercise artwork across planning surfaces', () => {
     const view = render(<ExerciseThumbnailBadge exercise={bridge} showPhaseStrip />);
     expect(view.container.querySelectorAll('.exercise-motion-artwork')).toHaveLength(3);
     expect(view.container.querySelectorAll('img[src^="/motion-artwork-v2/"]')).toHaveLength(3);
-    const expanded = INITIAL_EXERCISES.find((exercise) => exercise.id === 'expanded-mat-leg-pull-front')!;
+    const expanded = INITIAL_EXERCISES.find(
+      (exercise) => exercise.id === 'expanded-mat-leg-pull-front',
+    )!;
     view.rerender(<ExerciseThumbnailBadge exercise={expanded} showPhaseStrip />);
-    expect(view.container.querySelector('[data-testid="exercise-thumbnail-phase-strip"]')).toBeNull();
+    expect(
+      view.container.querySelector('[data-testid="exercise-thumbnail-phase-strip"]'),
+    ).toBeNull();
     expect(view.container.querySelectorAll('.exercise-motion-artwork')).toHaveLength(1);
     expect(screen.getByText('영상 참고')).toBeVisible();
     expect(view.container.querySelector('[data-layer="kinematic-figure"]')).toBeNull();
@@ -143,7 +174,10 @@ describe('shared exercise artwork across planning surfaces', () => {
         'data-exercise-id',
         steps[index].exerciseId,
       );
-      expect(row.querySelector('img')).toHaveAttribute('src', getExerciseArtworkFrame([bridge, footwork][index], 'middle')!.src);
+      expect(row.querySelector('img')).toHaveAttribute(
+        'src',
+        getExerciseArtworkFrame([bridge, footwork][index], 'middle')!.src,
+      );
     });
   });
 
@@ -154,7 +188,9 @@ describe('shared exercise artwork across planning surfaces', () => {
     thumbnails.forEach((thumbnail) => {
       expect(thumbnail).toHaveClass('exercise-motion-artwork');
       expect(thumbnail.querySelector('svg')).toBeNull();
-      expect(thumbnail.querySelector('img')?.getAttribute('src')).toMatch(/^\/motion-artwork-v2\/.+\.svg$/);
+      expect(thumbnail.querySelector('img')?.getAttribute('src')).toMatch(
+        /^\/motion-artwork-v2\/.+\.webp$/,
+      );
     });
   });
 

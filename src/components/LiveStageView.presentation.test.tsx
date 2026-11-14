@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePilatesStore } from '../store/usePilatesStore';
 import { syntheticPlanningExercise } from '../test/planningFixtures';
@@ -91,7 +91,7 @@ afterEach(() => {
 });
 
 describe('LiveStage presentation without session changes', () => {
-  it('keeps teaching essentials visible and reapplies either preset after manual disclosure changes', () => {
+  it('keeps teaching essentials visible and reapplies either preset after manual disclosure changes', async () => {
     render(<LiveStageView onOpenLogModal={vi.fn()} />);
     const before = usePilatesStore.getState();
     const timer = screen.getByRole('timer');
@@ -123,7 +123,14 @@ describe('LiveStage presentation without session changes', () => {
     [reference, timing, brand].forEach((details) => expect(details).toHaveAttribute('open'));
     expect(screen.getByTestId('live-stage-3d-companion')).toBeVisible();
     const companion = screen.getByTestId('live-stage-3d-companion');
-    expect([...companion.querySelectorAll('.exercise-motion-artwork')].map((frame) => frame.getAttribute('data-motion-phase'))).toEqual(['start', 'middle', 'end']);
+    // Custom exercise artwork prepares its native renderer asynchronously.
+    await waitFor(() =>
+      expect(
+        [...companion.querySelectorAll('.exercise-motion-artwork')].map((frame) =>
+          frame.getAttribute('data-motion-phase'),
+        ),
+      ).toEqual(['start', 'middle', 'end']),
+    );
     expect(companion.querySelectorAll('.movement-phase-diagram-svg')).toHaveLength(3);
     expect(companion.querySelector('img[src^="/motion-studio3d/"]')).toBeNull();
     expect(companion).toHaveAttribute('data-motion-sync', 'reference-only');

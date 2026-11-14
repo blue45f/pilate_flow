@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadNativeExerciseArtwork } from '../utils/lazyExerciseArtwork';
 import { INITIAL_EXERCISES } from '../data/pilatesCatalog';
 import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -25,6 +26,9 @@ const add = (name: string) =>
   fireEvent.click(screen.getByRole('button', { name: `${name} 수업안에 추가` }));
 const renderAtlas = (initialView: 'catalog' | 'tools' = 'catalog') =>
   render(<ExerciseAtlasView initialView={initialView} onOpenYouTubePreview={vi.fn()} onOpenClipper={vi.fn()} />);
+
+// Feedback journeys use a prepared renderer; deferred loading has its own regression suite.
+beforeAll(async () => { await loadNativeExerciseArtwork(); });
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -177,6 +181,9 @@ describe('Atlas reports actual append outcome', () => {
     const addedState = usePilatesStore.getState();
 
     // Pattern tile reflects aria-pressed and .is-selected when active
+    const draftSummary = screen.getByLabelText('패턴 도해 초안');
+    fireEvent.click(draftSummary);
+    fireEvent(draftSummary.closest('details')!, new Event('toggle'));
     const firstTile = container.querySelector('.ml-pattern-tile') as HTMLButtonElement;
     expect(firstTile).toHaveAttribute('aria-pressed', 'false');
     fireEvent.click(firstTile);

@@ -264,9 +264,9 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
     ).toEqual(['mv-01', 'mv-02', 'mv-03']);
     expect(new Set(VERIFIED_REFERENCES.map((ref) => ref.url)).size).toBe(25);
 
-    expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(310);
+    expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(350);
     expect(VERIFIED_YOUTUBE_VIDEO_POOL.filter((item) => item.region === 'kr')).toHaveLength(76);
-    expect(VERIFIED_YOUTUBE_VIDEO_POOL.filter((item) => item.region === 'global')).toHaveLength(234);
+    expect(VERIFIED_YOUTUBE_VIDEO_POOL.filter((item) => item.region === 'global')).toHaveLength(274);
     expect(COURSE_REFERENCES.length).toBeGreaterThanOrEqual(30);
     expect(PUBLIC_REFERENCES).toHaveLength(3);
     expect(MOTION_CANDIDATE_RESEARCH_V7_ASSOCIATION.canonicalAssetMappingsAdded).toBe(0);

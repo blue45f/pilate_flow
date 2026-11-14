@@ -929,6 +929,7 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [showMotionExamples, setShowMotionExamples] = useState(false);
   const [showApparatusGuide, setShowApparatusGuide] = useState(false);
+  const [showPatternDrafts, setShowPatternDrafts] = useState(false);
   const [toast, setToast] = useState<{ success: boolean; message: string } | null>(null);
   const [addedId, setAddedId] = useState<string | null>(null);
   const [brokenPhotoIds, setBrokenPhotoIds] = useState<Record<string, boolean>>({});
@@ -1317,10 +1318,14 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
           className="flow-atlas__tools-return"
           onClick={() => {
             setShowAdvancedTools(false);
+            setShowPatternDrafts(false);
+            setPatternPage(0);
+            setPreviewReference(null);
+            setPreviewCatalogMotionId(null);
             focusSearch();
           }}
         >
-          동작 찾기로 돌아가기
+          동작 라이브러리로 돌아가기
         </button>
         <span>자료와 고급 도구</span>
       </div>
@@ -1328,9 +1333,9 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
         <div>
           <span className="eyebrow">동작 사전 · {exercises.length}종</span>
           <h1 id="workspace-main-heading" tabIndex={-1}>
-            동작 라이브러리
+            자료와 고급 도구
           </h1>
-          <p className="muted">기구·부위별로 동작을 찾고 현재 수업에 바로 담아 보세요.</p>
+          <p className="muted">수집 자료와 검토 기록, 제작 중인 패턴 도해를 살펴보세요.</p>
         </div>
         <div className="library-heading-actions">
           {onOpenIdeaSheet && (
@@ -2670,68 +2675,97 @@ export const ExerciseAtlasView: React.FC<ExerciseAtlasViewProps> = ({
             </details>
           </section>
           {!filters.search && activeFilterCount === 0 && (
-            <section className="ml-pattern-discovery" aria-label="모션으로 살펴보기">
-              <div className="ml-section-heading">
-                <div>
-                  <span>ORIGINAL MOTION STUDIES</span>
-                  <h2>모션으로 살펴보기</h2>
-                </div>
-                <button type="button" onClick={() => update('motionDraft', 'proposal')}>
-                  관련 도해 있는 노트 <ArrowUpRight size={15} />
-                </button>
-              </div>
-              <p>직접 만든 도해 초안입니다. 실제 동작과의 차이는 미리보기에서 확인할 수 있어요.</p>
-              <div className="ml-pattern-rail">
-                {PATTERN_STUDIES.slice(
-                  patternPage * PATTERNS_PER_PAGE,
-                  (patternPage + 1) * PATTERNS_PER_PAGE,
-                ).map((reference) => {
-                  const isPatternSelected =
-                    previewReference?.family === reference.family &&
-                    previewReference?.variantId === reference.variantId;
-                  return (
+            <details
+              className="ml-pattern-drafts"
+              open={showPatternDrafts}
+              onToggle={(event) => {
+                const open = event.currentTarget.open;
+                setShowPatternDrafts(open);
+                if (
+                  !open &&
+                  previewTrigger.current &&
+                  event.currentTarget.contains(previewTrigger.current)
+                ) {
+                  const summary = event.currentTarget.querySelector('summary');
+                  setPreviewReference(null);
+                  setPreviewCatalogMotionId(null);
+                  requestAnimationFrame(() => {
+                    if (summary?.isConnected) summary.focus({ preventScroll: true });
+                  });
+                }
+              }}
+            >
+              <summary aria-label="패턴 도해 초안" aria-controls="atlas-pattern-draft-list">
+                <span>패턴 도해 초안</span>
+                <small>{PATTERN_STUDIES.length}종 · 검토용</small>
+                <ChevronDown size={16} aria-hidden="true" />
+              </summary>
+              {showPatternDrafts && (
+                <section
+                  id="atlas-pattern-draft-list"
+                  className="ml-pattern-discovery"
+                  aria-label="패턴 도해 초안 목록"
+                >
+                  <div className="ml-section-heading">
+                    <h2>공통 움직임별 초안</h2>
+                    <button type="button" onClick={() => update('motionDraft', 'proposal')}>
+                      관련 도해 있는 노트 <ArrowUpRight size={15} />
+                    </button>
+                  </div>
+                  <p>관련 동작의 공통 움직임을 비교·검토할 때 쓰는 제작 중 도해입니다.</p>
+                  <div className="ml-pattern-rail">
+                    {PATTERN_STUDIES.slice(
+                      patternPage * PATTERNS_PER_PAGE,
+                      (patternPage + 1) * PATTERNS_PER_PAGE,
+                    ).map((reference) => {
+                      const isPatternSelected =
+                        previewReference?.family === reference.family &&
+                        previewReference?.variantId === reference.variantId;
+                      return (
+                        <button
+                          type="button"
+                          className={`ml-pattern-tile ${isPatternSelected ? 'is-selected' : ''}`.trim()}
+                          key={`${reference.family}-${reference.variantId}`}
+                          onClick={(event) => openPatternPreview(reference, event.currentTarget)}
+                          aria-label={`${reference.title} 도해 초안 보기`}
+                          aria-pressed={isPatternSelected}
+                        >
+                          <div className="ml-pattern-tile-art">
+                            <MotionPatternThumbnail reference={reference} />
+                            <span>도해 초안</span>
+                          </div>
+                          <strong>{reference.title}</strong>
+                          <span className="ml-pattern-tile-link">
+                            패턴 참고 <Play size={12} />
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="ml-pattern-pages">
+                    <span>
+                      {patternPage * PATTERNS_PER_PAGE + 1}–
+                      {Math.min((patternPage + 1) * PATTERNS_PER_PAGE, PATTERN_STUDIES.length)} /{' '}
+                      {PATTERN_STUDIES.length}개 초안
+                    </span>
                     <button
                       type="button"
-                      className={`ml-pattern-tile ${isPatternSelected ? 'is-selected' : ''}`.trim()}
-                      key={`${reference.family}-${reference.variantId}`}
-                      onClick={(event) => openPatternPreview(reference, event.currentTarget)}
-                      aria-label={`${reference.title} 도해 초안 보기`}
-                      aria-pressed={isPatternSelected}
+                      disabled={patternPage === 0}
+                      onClick={() => setPatternPage((page) => page - 1)}
                     >
-                      <div className="ml-pattern-tile-art">
-                        <MotionPatternThumbnail reference={reference} />
-                        <span>도해 초안</span>
-                      </div>
-                      <strong>{reference.title}</strong>
-                      <span className="ml-pattern-tile-link">
-                        패턴 참고 <Play size={12} />
-                      </span>
+                      이전 도해
                     </button>
-                  );
-                })}
-              </div>
-              <div className="ml-pattern-pages">
-                <span>
-                  {patternPage * PATTERNS_PER_PAGE + 1}–
-                  {Math.min((patternPage + 1) * PATTERNS_PER_PAGE, PATTERN_STUDIES.length)} /{' '}
-                  {PATTERN_STUDIES.length}개 초안
-                </span>
-                <button
-                  type="button"
-                  disabled={patternPage === 0}
-                  onClick={() => setPatternPage((page) => page - 1)}
-                >
-                  이전 도해
-                </button>
-                <button
-                  type="button"
-                  disabled={(patternPage + 1) * PATTERNS_PER_PAGE >= PATTERN_STUDIES.length}
-                  onClick={() => setPatternPage((page) => page + 1)}
-                >
-                  다음 도해
-                </button>
-              </div>
-            </section>
+                    <button
+                      type="button"
+                      disabled={(patternPage + 1) * PATTERNS_PER_PAGE >= PATTERN_STUDIES.length}
+                      onClick={() => setPatternPage((page) => page + 1)}
+                    >
+                      다음 도해
+                    </button>
+                  </div>
+                </section>
+              )}
+            </details>
           )}
 
           {(previewReference || previewCatalogMotionId) && (

@@ -1,4 +1,6 @@
-import React, { useId } from 'react';
+import React, { useId, useState } from 'react';
+import { GeneratedPractitionerFigure } from './GeneratedPractitionerFigure';
+import { isPractitionerAtlasReady } from '../utils/generatedPractitionerArt';
 import '../styles/movement-studio.css';
 import { MOTION_STUDIO_MATERIALS as MATERIAL } from '../utils/motionStudioMaterials';
 import {
@@ -6,6 +8,7 @@ import {
   resolveChairPedalTip,
   resolveRigFoot,
   resolveRigHand,
+  resolveRigHeadFrame,
 } from '../utils/motionRigGeometry';
 import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
 import {
@@ -801,9 +804,11 @@ function renderApparatusSupportLayer(
 
   if (asset.apparatus === 'barrel') {
     const isStandingBarrel = asset.bodyPosition === 'standing';
+    const supportedSwan = asset.bodyPosition === 'prone' &&
+      (asset.exerciseId === 'original-barrel-supported-swan' || asset.exerciseId === 'ex-extension-02');
     const arcLeft = isStandingBarrel ? p(18, 174) : p(68, 174);
-    const arcPeak1 = isStandingBarrel ? p(24, 106) : p(76, 102);
-    const arcPeak2 = isStandingBarrel ? p(64, 106) : p(164, 102);
+    const arcPeak1 = isStandingBarrel ? p(24, 106) : p(76, supportedSwan ? 94 : 102);
+    const arcPeak2 = isStandingBarrel ? p(64, 106) : p(164, supportedSwan ? 94 : 102);
     const arcRight = isStandingBarrel ? p(70, 174) : p(174, 174);
     const ladderFrontX = mx(isStandingBarrel ? 76 : 222, mirrored);
     const ladderBackX = mx(isStandingBarrel ? 96 : 256, mirrored);
@@ -1270,6 +1275,7 @@ function renderKinematicFigureLayer(
   showStructure = true,
   figureScale = 1,
   referenceJoints?: RigJointMap,
+  showNativeHead = true,
 ): React.JSX.Element {
   const { joints } = phaseSpec;
   const nearSide = activeSide;
@@ -1337,32 +1343,10 @@ function renderKinematicFigureLayer(
 
   const headPt = j('head');
   const neckPt = j('neck');
-  const headDx = headPt.x - neckPt.x;
-  const headDy = headPt.y - neckPt.y;
-  const headLen = Math.hypot(headDx, headDy) || 1;
-  const ux = headDx / headLen;
-  const uy = headDy / headLen;
-  const n1 = { x: -uy, y: ux };
-  const n2 = { x: uy, y: -ux };
-  // In upright kneeling the feet point behind the body. The shin, rather than
-  // the toes, indicates the front of the face for both authored and mirrored rigs.
-  const uprightKneeling =
-    Math.abs(j('knee').y - j('ankle').y) < 9 && j('pelvis').y < j('knee').y - 18;
-  const antHint =
-    Math.abs(headDy) >= Math.abs(headDx)
-      ? {
-          x:
-            (uprightKneeling ? j('knee').x - j('ankle').x : 0) ||
-            j('toe').x - j('heel').x ||
-            j('hand').x - j('shoulder').x ||
-            (mirrored ? -1 : 1),
-          y: 0,
-        }
-      : j('wrist').y > j('shoulder').y + 8 || j('toe').y > j('heel').y + 2
-        ? { x: 0, y: 1 }
-        : { x: 0, y: -1 };
-  const chosenNormal =
-    n1.x * antHint.x + n1.y * antHint.y >= n2.x * antHint.x + n2.y * antHint.y ? n1 : n2;
+  const headFrame = resolveRigHeadFrame(joints, referenceJoints ?? joints);
+  const ux = headFrame.headAxis.x * (mirrored ? -1 : 1);
+  const uy = headFrame.headAxis.y;
+  const chosenNormal = { x: headFrame.faceAxis.x * (mirrored ? -1 : 1), y: headFrame.faceAxis.y };
 
   // Subtle anterior facial contour cue inside head silhouette (replaces external protruding stick)
   const gazeStart: Point2D = {
@@ -1561,6 +1545,7 @@ function renderKinematicFigureLayer(
         />
 
         {/* Studio low-bun & warm-skin head silhouette */}
+        <g data-segment="native-head" opacity={showNativeHead ? 1 : 0}>
         <circle
           cx={bunPt.x}
           cy={bunPt.y}
@@ -1602,6 +1587,7 @@ function renderKinematicFigureLayer(
           r={0.65}
           fill={MATERIAL.hair}
         />
+        </g>
       </g>
 
       {/* Near / Active Side Limbs (sage-emerald studio leggings + natural warm-skin arm & foot) */}
@@ -1881,6 +1867,8 @@ export function MovementPhaseDiagramSvg({
   label,
 }: MovementPhaseDiagramSvgProps): React.JSX.Element {
   const rawUid = useId().replace(/:/g, '');
+  const [atlasReady, setAtlasReady] = useState(() => typeof window === 'undefined' || isPractitionerAtlasReady());
+  const [atlasFailed, setAtlasFailed] = useState(false);
   const titleId = `mpd-title-${rawUid}`;
   const descId = `mpd-desc-${rawUid}`;
   const visualBinding = getExpandedMovementVisualBinding(asset.exerciseId);
@@ -1968,11 +1956,12 @@ export function MovementPhaseDiagramSvg({
   };
 
   const authoredPhase = asset.phases[phase];
+  const referenceJoints = getMovementVisualAsset(asset.exerciseId)?.phases.start.joints ?? asset.phases.start.joints;
   const phaseSpec: PhasePoseSpec = {
     ...authoredPhase,
     joints: normalizeRigJointMap(
       authoredPhase.joints,
-      getMovementVisualAsset(asset.exerciseId)?.phases.start.joints ?? asset.phases.start.joints,
+      referenceJoints,
     ),
   };
   const activeMuscleLabels = asset.primaryMuscles
@@ -2198,8 +2187,20 @@ export function MovementPhaseDiagramSvg({
         asset.archetypeId === 'mat-clam-isolated' || asset.archetypeId === 'mat-open-book-isolated',
         showAlignment && !compact,
         getStudioFigureScale(asset),
-        getMovementVisualAsset(asset.exerciseId)?.phases.start.joints ?? asset.phases.start.joints,
+        referenceJoints,
+        !atlasReady || atlasFailed,
       )}
+      {!atlasFailed && <GeneratedPractitionerFigure
+        joints={phaseSpec.joints}
+        referenceJoints={referenceJoints}
+        activeSide={activeSide}
+        mirrored={mirrored}
+        scale={getStudioFigureScale(asset)}
+        id={`mpd-generated-${rawUid}`}
+        ready={atlasReady}
+        onLoad={() => setAtlasReady(true)}
+        onError={() => setAtlasFailed(true)}
+      />}
 
       {/* 4. Translucent muscle overlay stays visible above the opaque clothing. */}
       {showMuscles ? renderPrimaryMusclesLayer(asset, phaseSpec, phase, mirrored, compact) : null}

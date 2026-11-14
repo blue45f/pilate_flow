@@ -20,10 +20,10 @@ it('offers only one static reference without changing the source, store or stora
   const { container } = render(<MovementDiagramReference exercise={exercise} />);
   expect(screen.queryByRole('region')).not.toBeInTheDocument();
   await open(container);
-  expect(container.querySelectorAll('svg')).toHaveLength(1);
+  expect(container.querySelectorAll('svg.movement-phase-diagram-svg')).toHaveLength(1);
   expect(screen.queryByRole('button')).not.toBeInTheDocument();
   expect(screen.getByText(/정지 그림 한 장/)).toBeInTheDocument();
-  expect(container.querySelector('svg')).toHaveAttribute('data-active-side', 'right');
+  expect(container.querySelector('svg.movement-phase-diagram-svg')).toHaveAttribute('data-active-side', 'right');
   expect(screen.getByText(/수업안의 좌우 설정과 연결되지/)).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /재생/ })).not.toBeInTheDocument();
   expect(JSON.stringify(exercise)).toBe(before);
@@ -61,7 +61,7 @@ it('shows an apparatus-only notice for a modified catalog apparatus without borr
   expect(
     within(notice).getByText(/기구나 시작 자세가 변경되어 기존 도해를 표시하지 않습니다/),
   ).toBeVisible();
-  expect(container.querySelectorAll('svg')).toHaveLength(1);
+  expect(container.querySelectorAll('svg.pf-apparatus-illustration-svg')).toHaveLength(1);
   expect(notice.querySelector('svg')).toHaveClass('pf-apparatus-illustration-svg');
   expect(
     container.querySelector(
@@ -81,7 +81,7 @@ it('resets disclosure when the displayed exercise changes', async () => {
   rerender(<MovementDiagramReference exercise={INITIAL_EXERCISES[1]} />);
   expect(screen.queryByRole('region')).not.toBeInTheDocument();
   await open(container);
-  expect(container.querySelectorAll('svg')).toHaveLength(1);
+  expect(container.querySelectorAll('svg.movement-phase-diagram-svg')).toHaveLength(1);
   expect(screen.queryByRole('button')).not.toBeInTheDocument();
 });
 
@@ -95,7 +95,7 @@ it('shows specific source comparison without promoting anatomical or professiona
   expect(screen.getByText(/오픈 북의 팔·몸통 회전을 제거/)).toBeInTheDocument();
   expect(screen.getByText(/2D 좌표·가동범위/)).toBeInTheDocument();
   expect(screen.getByText('South Tees NHS · The clam')).toHaveAttribute('href', 'https://www.southtees.nhs.uk/resources/the-clam/');
-  expect(container.querySelectorAll('svg')).toHaveLength(1);
+  expect(container.querySelectorAll('svg.movement-phase-diagram-svg')).toHaveLength(1);
   expect(screen.queryByRole('button', { name: /재생/ })).not.toBeInTheDocument();
 });
 

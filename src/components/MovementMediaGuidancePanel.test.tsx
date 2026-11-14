@@ -140,6 +140,53 @@ afterEach(() => {
 });
 
 describe('MovementMediaGuidancePanel — reference video/materials & Korean voice explanation', () => {
+  it('retains narration in voice-only mode and discards a loaded video when modes change', () => {
+    const speechEnv = installMockSpeechSynthesis();
+    try {
+      const exercise = INITIAL_EXERCISES.find((item) => item.id === 'ex-footwork-01')!;
+      const view = render(<MovementMediaGuidancePanel exercise={exercise} />);
+      fireEvent.click(screen.getByTestId('manual-load-video-btn'));
+      const previousFrame = screen.getByTestId('permitted-youtube-iframe');
+      fireEvent.click(screen.getByTestId('voice-play-btn'));
+      expect(speechEnv.speakCalls).toHaveLength(1);
+      const cancellationCount = speechEnv.cancelSpy.mock.calls.length;
+
+      view.rerender(<MovementMediaGuidancePanel exercise={exercise} voiceOnly />);
+      expect(previousFrame).not.toBeInTheDocument();
+      expect(document.querySelector('iframe')).toBeNull();
+      expect(
+        screen.queryByRole('group', { name: '매칭된 공개 참고 출처 선택' }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: '참고 영상·자료' })).not.toBeInTheDocument();
+      expect(screen.queryByTestId('media-embed-box')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('manual-load-video-btn')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('external-original-source-link')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('외부 참고 링크 보안·자동재생 차단 정책 점검'),
+      ).not.toBeInTheDocument();
+      expect(speechEnv.cancelSpy.mock.calls.length).toBeGreaterThan(cancellationCount);
+      expect(speechEnv.speakCalls).toHaveLength(1);
+
+      expect(
+        screen.getByRole('region', { name: `${exercise.nameKo} 한국어 음성 안내` }),
+      ).toBeVisible();
+      expect(screen.getByRole('group', { name: '한국어 음성 설명 제어' })).toBeVisible();
+      expect(screen.getByRole('combobox', { name: '낭독 속도 · 한국어 음성 설명' })).toBeVisible();
+      fireEvent.click(screen.getByRole('button', { name: '대본 보기' }));
+      expect(screen.getByTestId('voice-script-text')).toHaveTextContent(exercise.nameKo);
+      fireEvent.click(screen.getByTestId('voice-play-btn'));
+      expect(speechEnv.speakCalls).toHaveLength(2);
+
+      view.rerender(<MovementMediaGuidancePanel exercise={exercise} />);
+      expect(screen.getByTestId('manual-load-video-btn')).toBeEnabled();
+      expect(screen.getByTestId('media-embed-box')).toHaveAttribute('data-embed-state', 'idle');
+      expect(document.querySelector('iframe')).toBeNull();
+      expect(speechEnv.speakCalls).toHaveLength(2);
+    } finally {
+      speechEnv.restore();
+    }
+  });
+
   it('never auto-plays video or voice on initial entry and always provides external original links', () => {
     const speechEnv = installMockSpeechSynthesis();
     try {
@@ -418,7 +465,7 @@ describe('MovementMediaGuidancePanel — reference video/materials & Korean voic
     }
   });
 
-  it('integrates inside YouTubePreviewModal without side effects on mount and resets media on exercise change', () => {
+  it('integrates one video gallery with an on-demand voice-only drawer and resets media on exercise change', async () => {
     const speechEnv = installMockSpeechSynthesis();
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
@@ -451,27 +498,72 @@ describe('MovementMediaGuidancePanel — reference video/materials & Korean voic
       const { rerender } = render(<YouTubePreviewModal exercise={exercise1} onClose={vi.fn()} />);
 
       const dialog = screen.getByRole('dialog', { name: exercise1.nameKo });
-      const mediaPanel = within(dialog).getByTestId('movement-media-guidance-panel');
-      expect(mediaPanel).toHaveAttribute('data-exercise-id', exercise1.id);
-      expect(within(mediaPanel).getByTestId('external-original-source-link')).not.toBeVisible();
+      const gallery = within(dialog).getByTestId('exercise-video-gallery');
+      expect(gallery).toBeVisible();
+      expect(gallery.querySelectorAll('img').length).toBeGreaterThanOrEqual(2);
+      expect(within(gallery).getByRole('link', { name: /YouTube 원본/ })).toBeVisible();
+      expect(dialog.querySelector('iframe')).toBeNull();
       const voiceDrawer = within(dialog).getByTestId('detail-voice-media-drawer');
-      fireEvent.click(voiceDrawer.querySelector('summary')!);
-      expect(within(mediaPanel).getByTestId('external-original-source-link')).toBeVisible();
-      expect(within(mediaPanel).queryByTestId('voice-script-text')).not.toBeInTheDocument();
+      expect(voiceDrawer).not.toHaveAttribute('open');
+      expect(within(dialog).queryByTestId('movement-media-guidance-panel')).not.toBeInTheDocument();
+      expect(speechEnv.speakCalls).toHaveLength(0);
 
       expect(fetchSpy).not.toHaveBeenCalled();
       expect(setItemSpy).not.toHaveBeenCalled();
       expect(storeSetStateSpy).not.toHaveBeenCalled();
 
-      // Start voice in modal for exercise1, then switch modal to exercise2
+      // Explicit video loading stays in the primary gallery when narration opens.
+      fireEvent.click(within(gallery).getByRole('button', { name: /인베드 영상 불러오기/ }));
+      const videoFrame = gallery.querySelector('iframe')!;
+      expect(videoFrame).toHaveAttribute('src', expect.stringContaining('autoplay=0'));
+      fireEvent.click(voiceDrawer.querySelector('summary')!);
+      const mediaPanel = await within(dialog).findByTestId('movement-media-guidance-panel');
+      expect(mediaPanel).toHaveAttribute('data-exercise-id', exercise1.id);
+      expect(
+        within(mediaPanel).getByRole('group', { name: '한국어 음성 설명 제어' }),
+      ).toBeVisible();
+      expect(
+        within(mediaPanel).queryByTestId('external-original-source-link'),
+      ).not.toBeInTheDocument();
+      expect(within(mediaPanel).queryByTestId('manual-load-video-btn')).not.toBeInTheDocument();
+      expect(
+        within(mediaPanel).queryByRole('group', { name: '매칭된 공개 참고 출처 선택' }),
+      ).not.toBeInTheDocument();
+      expect(within(mediaPanel).queryByTestId('voice-script-text')).not.toBeInTheDocument();
+      expect(mediaPanel.querySelector('iframe')).toBeNull();
+      expect(gallery.querySelector('iframe')).toBe(videoFrame);
+      expect(dialog.querySelectorAll('iframe')).toHaveLength(1);
+      expect(speechEnv.speakCalls).toHaveLength(0);
+
+      // Start narration, then switch subjects: both active media sessions end.
       fireEvent.click(within(mediaPanel).getByTestId('voice-play-btn'));
       expect(speechEnv.speakCalls).toHaveLength(1);
+      const cancellationCount = speechEnv.cancelSpy.mock.calls.length;
 
       rerender(<YouTubePreviewModal exercise={exercise2} onClose={vi.fn()} />);
-      const nextPanel = screen.getByTestId('movement-media-guidance-panel');
-      expect(nextPanel).toHaveAttribute('data-exercise-id', exercise2.id);
-      expect(speechEnv.cancelSpy).toHaveBeenCalled();
+      const nextDialog = screen.getByRole('dialog', { name: exercise2.nameKo });
+      const nextDrawer = within(nextDialog).getByTestId('detail-voice-media-drawer');
+      expect(nextDrawer).not.toHaveAttribute('open');
+      expect(
+        within(nextDialog).queryByTestId('movement-media-guidance-panel'),
+      ).not.toBeInTheDocument();
+      expect(within(nextDialog).getByTestId('exercise-video-gallery')).toBeVisible();
+      expect(videoFrame).not.toBeInTheDocument();
+      expect(mediaPanel).not.toBeInTheDocument();
+      expect(nextDialog.querySelector('iframe')).toBeNull();
+      expect(speechEnv.cancelSpy.mock.calls.length).toBeGreaterThan(cancellationCount);
       expect(speechEnv.speakCalls).toHaveLength(1);
+
+      fireEvent.click(nextDrawer.querySelector('summary')!);
+      const nextPanel = await within(nextDialog).findByTestId('movement-media-guidance-panel');
+      expect(nextPanel).toHaveAttribute('data-exercise-id', exercise2.id);
+      expect(within(nextPanel).getByRole('group', { name: '한국어 음성 설명 제어' })).toBeVisible();
+      expect(within(nextPanel).queryByTestId('manual-load-video-btn')).not.toBeInTheDocument();
+      expect(nextDialog.querySelector('iframe')).toBeNull();
+      expect(speechEnv.speakCalls).toHaveLength(1);
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(setItemSpy).not.toHaveBeenCalled();
+      expect(storeSetStateSpy).not.toHaveBeenCalled();
     } finally {
       speechEnv.restore();
     }

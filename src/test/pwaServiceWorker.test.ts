@@ -70,15 +70,20 @@ function harness(options: HarnessOptions = {}) {
 }
 
 describe('static-only service worker', () => {
-  it('serves the shared-model SVG thumbnail cache without requesting external media', async () => {
-    const h = harness();
-    const event = h.request('/motion-artwork-v2/original-mat-chest-lift.middle.012345abcdef.svg');
-    expect(event).toHaveBeenCalledTimes(1);
-    expect(await event.mock.calls[0][0]).toBe(h.cached);
-    expect(h.fetch).not.toHaveBeenCalled();
-    expect(h.cache.match).toHaveBeenCalledWith('/motion-artwork-v2/original-mat-chest-lift.middle.012345abcdef.svg');
-    expect(h.request('https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg')).not.toHaveBeenCalled();
-  });
+  it.each(['svg', 'webp'])(
+    'serves the shared-model %s cache without requesting external media',
+    async (format) => {
+      const h = harness();
+      const assetPath = '/motion-artwork-v2/original-mat-chest-lift.middle.012345abcdef.' + format;
+      const event = h.request(assetPath);
+      expect(event).toHaveBeenCalledTimes(1);
+      expect(await event.mock.calls[0][0]).toBe(h.cached);
+      expect(h.fetch).not.toHaveBeenCalled();
+      expect(h.cache.match).toHaveBeenCalledWith(assetPath);
+      expect(h.request('/motion-artwork-v2/manifest.json')).not.toHaveBeenCalled();
+      expect(h.request('https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg')).not.toHaveBeenCalled();
+    },
+  );
   it('serves a prewarmed lossless intermediate frame from the dedicated motion cache without network', async () => {
     const h = harness();
     const response = new Response('frame', { headers: { 'content-type': 'image/webp' } });
@@ -195,6 +200,8 @@ describe('static-only service worker', () => {
     const expectedExtras = getShellExtras();
     expect(expectedExtras).toContain('/site.webmanifest');
     expect(expectedExtras).toContain('/favicon.svg');
+    expect(expectedExtras).toContain('/images/motion-atlas-v3/practitioner.webp');
+    expect(expectedExtras).toContain('/images/motion-atlas-v3/equipment.webp');
     expect(expectedExtras).toContain('/images/movement-guides/mat-phase-alignment-guide.svg');
     expect(expectedExtras).toContain('/images/movement-guides/reformer-phase-alignment-guide.svg');
     expect(expectedExtras).toContain('/images/movement-guides/cadillac-phase-alignment-guide.svg');
@@ -539,6 +546,8 @@ describe('static-only service worker', () => {
       ...ICON_PATHS.map((p) => `public${p}`),
       'public/site.webmanifest',
       'public/favicon.svg',
+      'public/images/motion-atlas-v3/practitioner.webp',
+      'public/images/motion-atlas-v3/equipment.webp',
       ...getMovementGuidePaths().map((p) => `public${p}`),
     ];
     for (const filePath of trackedStaticFiles) {

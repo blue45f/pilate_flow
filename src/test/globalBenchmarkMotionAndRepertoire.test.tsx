@@ -22,7 +22,6 @@ import { VERIFIED_YOUTUBE_VIDEO_POOL } from '../data/exerciseYouTubeCatalog';
 import {
   CRAWLED_YOUTUBE_DISCOVERY_POOL,
   GLOBAL_CRAWLED_REPERTOIRE_EXERCISES,
-  getCrawledRelatedVideosForExercise,
 } from '../data/globalCrawledRepertoirePack';
 import { INITIAL_EXERCISES, INITIAL_SAVED_SEQUENCES } from '../data/pilatesCatalog';
 import { usePilatesStore } from '../store/usePilatesStore';
@@ -34,6 +33,7 @@ import {
   normalizeCanonicalSpringKey,
 } from '../utils/brandSpringConverter';
 import { exerciseRevision, isExerciseAutoEligible } from '../utils/exerciseReview';
+import { getExerciseVideoReferences } from '../utils/exerciseVideoReferences';
 import {
   buildSequenceShareUrl,
   generateLocalQrCodeSvg,
@@ -77,7 +77,7 @@ afterEach(() => {
 });
 
 describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion System, Offline PWA, Brand Spring Conversion, Local QR Share & Member Focus Bridge', () => {
-  it('verifies all 48 Blender 3D studio renders across 24 movement families, 5 motion exemplar boards, and 10 mobile-first boards exist while preserving 01–09 mockups and 98/141 catalog invariants', () => {
+  it('verifies all 48 Blender 3D studio renders across 24 movement families, 5 motion exemplar boards, and 10 mobile-first boards exist while preserving 01–09 mockups and the 158-exercise/350-video catalog invariants', () => {
     expect(Object.keys(STUDIO_3D_SIGNATURES)).toHaveLength(24);
     expect(ALL_STUDIO_3D_ASSET_URLS).toHaveLength(48);
 
@@ -271,7 +271,7 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     // Baseline invariants preserved
     expect(INITIAL_EXERCISES).toHaveLength(158);
     expect(INITIAL_EXERCISES.filter(isExerciseAutoEligible)).toHaveLength(0);
-    expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(310);
+    expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(350);
   });
 
   it('routes new motion families separately from inversions and ladder-barrel poses', () => {
@@ -368,11 +368,11 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     expect(screen.getByTestId('detail-essential-3-strip')).toBeVisible();
   });
 
-  it('simplifies YouTubePreviewModal mobile detail screen via progressive-disclosure drawers and click-to-load crawled YouTube references without autoplay', () => {
+  it('shows multiple thumbnail references beside motion while advanced drawers stay collapsed and playback requires a click', () => {
     const reformerEx = INITIAL_EXERCISES.find(
       (ex) => ex.id === 'original-barrel-supported-side-bend',
     )!;
-    const related = getCrawledRelatedVideosForExercise(reformerEx, 4);
+    const related = getExerciseVideoReferences(reformerEx);
     expect(related.length).toBeGreaterThan(0);
 
     render(
@@ -387,14 +387,12 @@ describe('Global Benchmark Mobile-First Redesign, 48-Render Studio 3D Motion Sys
     expect(screen.getByTestId('detail-voice-media-drawer')).not.toHaveAttribute('open');
     expect(screen.getByTestId('detail-posture-anatomy-drawer')).not.toHaveAttribute('open');
 
-    const crawledDrawer = screen.getByTestId('crawled-related-videos-drawer');
-    expect(crawledDrawer).not.toHaveAttribute('open');
-    fireEvent.click(crawledDrawer.querySelector('summary')!);
-
-    const openVidButtons = within(crawledDrawer).getAllByRole('button', { name: /미리보기 열기/ });
-    fireEvent.click(openVidButtons[0]!);
-
-    const iframe = crawledDrawer.querySelector('iframe');
+    const gallery = screen.getByTestId('exercise-video-gallery');
+    expect(gallery).toBeVisible();
+    expect(gallery.querySelectorAll('img').length).toBeGreaterThan(0);
+    expect(gallery.querySelector('iframe')).toBeNull();
+    fireEvent.click(within(gallery).getByRole('button', { name: /인베드 영상 불러오기/ }));
+    const iframe = gallery.querySelector('iframe');
     expect(iframe).not.toBeNull();
     expect(iframe?.getAttribute('src')).toContain('youtube-nocookie.com/embed/');
     expect(iframe?.getAttribute('src')).toContain('autoplay=0');

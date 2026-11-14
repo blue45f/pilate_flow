@@ -48,7 +48,7 @@ describe('studio motion presentation controls', () => {
     const { container, rerender } = render(<MovementDiagramReference exercise={exercise} />);
     openDetails(container.querySelector('details')!);
     const reference = screen.getByRole('region', { name: '참고 자세 정지 그림' });
-    const svg = reference.querySelector('svg')!;
+    const svg = reference.querySelector('svg.movement-phase-diagram-svg')!;
     const limb = svg.querySelector('[data-limb-depth="near"] path')!.getAttribute('d');
     expect(svg.querySelector('[data-layer="joint-alignment"]')).toBeNull();
     expect(svg.querySelector('[data-layer="movement-direction"]')).toBeNull();
@@ -59,7 +59,7 @@ describe('studio motion presentation controls', () => {
     expect(svg.querySelector('[data-layer="joint-alignment"]')).not.toBeNull();
     expect(svg.querySelector('[data-layer="movement-direction"]')).not.toBeNull();
     expect(svg.querySelector('[data-limb-depth="near"] path')!.getAttribute('d')).toBe(limb);
-    expect(reference.querySelectorAll('svg')).toHaveLength(1);
+    expect(reference.querySelectorAll('svg.movement-phase-diagram-svg')).toHaveLength(1);
     expect(JSON.stringify(exercise)).toBe(sourceBefore);
     expect(usePilatesStore.getState()).toBe(before);
     expect(JSON.stringify(localStorage)).toBe(stored);

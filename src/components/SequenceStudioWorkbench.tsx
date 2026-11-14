@@ -42,6 +42,10 @@ import {
 } from '../utils/sequenceEngine';
 import { getSequenceStepClassSection } from '../utils/sequenceMotionBinding';
 import { buildSequenceSimulation } from '../utils/sequenceSimulation';
+import {
+  resolveSequenceInsertion,
+  type SequenceInsertionPlacement,
+} from '../utils/sequenceInsertion';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { LightDismissDialog } from './LightDismissDialog';
 import '../styles/sequence-studio.css';
@@ -332,6 +336,17 @@ export function SequenceStudioWorkbench(props: Props) {
   const [eligibleOnly, setEligibleOnly] = useState(true);
   const [mobilePane, setMobilePane] = useState<'library' | 'plan'>('plan');
   const [notice, setNotice] = useState('');
+  const [insertion, setInsertion] = useState<{
+    sequenceId: string;
+    placement: SequenceInsertionPlacement;
+  }>({
+    sequenceId: s.activeSequenceId,
+    placement: { kind: 'end' },
+  });
+  const [recentAddition, setRecentAddition] = useState<{
+    sequenceId: string;
+    stepId: string;
+  } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [presetsOpen, setPresetsOpen] = useState(false);
   const [conditionsOpen, setConditionsOpen] = useState(false);
@@ -358,6 +373,29 @@ export function SequenceStudioWorkbench(props: Props) {
     () => new Set(s.activeSteps.map((step) => step.exerciseId)),
     [s.activeSteps],
   );
+  const placement: SequenceInsertionPlacement =
+    insertion.sequenceId === s.activeSequenceId ? insertion.placement : { kind: 'end' };
+  const insertionResolution = resolveSequenceInsertion(s.activeSteps, placement);
+  const insertionValue = placement.kind === 'step' ? `step:${placement.stepId}` : placement.kind;
+  const insertionOptions: {
+    value: string;
+    label: string;
+    placement: SequenceInsertionPlacement;
+  }[] = [
+    { value: 'end', label: '시퀀스 맨 뒤', placement: { kind: 'end' } },
+    { value: 'start', label: '시퀀스 맨 앞', placement: { kind: 'start' } },
+    ...s.activeSteps.map((step, index) => ({
+      value: `step:${step.stepId}`,
+      label: `${index + 1}번 ${isRestStep(step) ? '휴식' : (byId.get(step.exerciseId)?.nameKo ?? '동작')} 뒤`,
+      placement: { kind: 'step' as const, stepId: step.stepId },
+    })),
+  ];
+  const recentIndex =
+    recentAddition && recentAddition.sequenceId === s.activeSequenceId
+      ? s.activeSteps.findIndex((step) => step.stepId === recentAddition.stepId)
+      : -1;
+  const recentStep = recentIndex >= 0 ? s.activeSteps[recentIndex] : undefined;
+  const recentName = recentStep ? (byId.get(recentStep.exerciseId)?.nameKo ?? '동작') : '';
   const simulation = useMemo(
     () => buildSequenceSimulation(s.activeSteps, s.exercises, s.activeTargetMinutes),
     [s.activeSteps, s.exercises, s.activeTargetMinutes],
@@ -416,18 +454,38 @@ export function SequenceStudioWorkbench(props: Props) {
     const result = usePilatesStore.getState().updateSequencePlanningConditions(patch);
     setNotice(result.message);
   };
-  const addExercise = (exercise: PilatesExercise, afterStepId?: string) => {
+  const addExercise = (exercise: PilatesExercise, override?: SequenceInsertionPlacement) => {
     const result = usePilatesStore
       .getState()
-      .insertExerciseIntoSequence(
-        exercise.id,
-        afterStepId ? { kind: 'step', stepId: afterStepId } : { kind: 'end' },
-      );
+      .insertExerciseIntoSequence(exercise.id, override ?? placement);
     setNotice(result.message);
+    if (result.success && result.stepId) {
+      setRecentAddition({ sequenceId: s.activeSequenceId, stepId: result.stepId });
+      if (!override && placement.kind !== 'end') {
+        setInsertion({
+          sequenceId: s.activeSequenceId,
+          placement: { kind: 'step', stepId: result.stepId },
+        });
+      }
+    }
+  };
+  const revealStep = (stepId: string) => {
+    setMobilePane('plan');
+    requestAnimationFrame(() => {
+      const title = document.getElementById(`flow-step-${stepId}`);
+      title?.closest('article')?.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
+      const focusTarget = title?.matches(':disabled')
+        ? title.closest('article')?.querySelector<HTMLElement>('button:not(:disabled)')
+        : title;
+      (focusTarget ?? planHeadingRef.current)?.focus({ preventScroll: true });
+    });
   };
   const showLibrary = () => {
     setMobilePane('library');
-    requestAnimationFrame(() => searchRef.current?.focus({ preventScroll: true }));
+    requestAnimationFrame(() => {
+      searchRef.current?.scrollIntoView?.({ behavior: 'instant', block: 'nearest' });
+      searchRef.current?.focus({ preventScroll: true });
+    });
   };
   const save = async () => {
     const state = usePilatesStore.getState();
@@ -466,7 +524,11 @@ export function SequenceStudioWorkbench(props: Props) {
       }
     } else {
       const exercise = byId.get(event.dataTransfer.getData('application/x-pilates-exercise'));
-      if (exercise) addExercise(exercise, targetStepId);
+      if (exercise)
+        addExercise(
+          exercise,
+          targetStepId ? { kind: 'step', stepId: targetStepId } : { kind: 'end' },
+        );
     }
     dragStep.current = null;
   };
@@ -672,6 +734,51 @@ export function SequenceStudioWorkbench(props: Props) {
             />{' '}
             수업 조건에 맞는 동작만
           </label>
+          <div className="flow-insertion-control">
+            <label htmlFor="flow-insertion-position">추가 위치</label>
+            <select
+              id="flow-insertion-position"
+              value={insertionValue}
+              aria-describedby={!insertionResolution.success ? 'flow-insertion-error' : undefined}
+              onChange={(event) => {
+                const selected = insertionOptions.find(
+                  (option) => option.value === event.target.value,
+                );
+                if (selected)
+                  setInsertion({ sequenceId: s.activeSequenceId, placement: selected.placement });
+              }}
+            >
+              {!insertionOptions.some((option) => option.value === insertionValue) && (
+                <option value={insertionValue} disabled>
+                  기준 항목 없음 · 위치를 다시 선택하세요
+                </option>
+              )}
+              {insertionOptions.map((option) => (
+                <option
+                  key={option.value}
+                  value={option.value}
+                  disabled={!resolveSequenceInsertion(s.activeSteps, option.placement).success}
+                >
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {!insertionResolution.success && (
+            <p id="flow-insertion-error" className="flow-insertion-error" role="alert">
+              {insertionResolution.message}
+            </p>
+          )}
+          {recentStep && (
+            <div className="flow-added-receipt" aria-live="polite">
+              <span>
+                <Check size={16} aria-hidden="true" /> {recentIndex + 1}번 · {recentName} 추가됨
+              </span>
+              <button type="button" onClick={() => revealStep(recentStep.stepId)}>
+                시퀀스에서 보기
+              </button>
+            </div>
+          )}
           <div className="flow-picker-list">
             {results.length ? (
               results.map((exercise) => (
@@ -707,7 +814,10 @@ export function SequenceStudioWorkbench(props: Props) {
                   <button
                     className="flow-add-button"
                     aria-label={`${exercise.nameKo} ${included.has(exercise.id) ? '추가됨' : '추가'}`}
-                    disabled={included.has(exercise.id)}
+                    disabled={included.has(exercise.id) || !insertionResolution.success}
+                    aria-describedby={
+                      !insertionResolution.success ? 'flow-insertion-error' : undefined
+                    }
                     onClick={() => addExercise(exercise)}
                   >
                     {included.has(exercise.id) ? <Check size={19} /> : <Plus size={19} />}
@@ -825,7 +935,7 @@ export function SequenceStudioWorkbench(props: Props) {
                 </span>
                 <h3>첫 동작부터 시작해 볼까요?</h3>
                 <p>
-                  왼쪽에서 동작을 추가하세요.
+                  동작 목록에서 원하는 동작을 추가하세요.
                   <br />
                   추가한 동작은 끌어서 순서를 바꿀 수 있어요.
                 </p>
@@ -884,7 +994,7 @@ export function SequenceStudioWorkbench(props: Props) {
                       </div>
                     )}
                     <article
-                      className={`flow-sequence-row ${step.locked ? 'is-locked' : ''}`}
+                      className={`flow-sequence-row ${step.locked ? 'is-locked' : ''} ${recentStep?.stepId === step.stepId ? 'is-recently-added' : ''}`}
                       data-testid="sequence-studio-row"
                       data-step-id={step.stepId}
                       draggable={!step.locked}

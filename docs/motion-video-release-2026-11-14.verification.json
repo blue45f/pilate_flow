@@ -1,0 +1,110 @@
+{
+  "date": "2026-11-14",
+  "scope": "Motion artwork, multiple reference videos and sequence authoring release",
+  "runtime": {
+    "node": "24.22.1",
+    "pnpm": "11.25.0"
+  },
+  "application_tests": {
+    "method": "full-run-plus-targeted-rechecks",
+    "initial_full_run": {
+      "test_files": 372,
+      "passed_files": 366,
+      "failed_files": 6,
+      "passed_tests": 3425,
+      "failed_tests": 6,
+      "skipped_tests": 2,
+      "total_tests": 3433,
+      "exit_code": 1
+    },
+    "rechecks": {
+      "passed_tests": 33,
+      "failed_tests": 0,
+      "new_regressions": 1,
+      "exit_code": 0,
+      "files": [
+        {
+          "path": "src/schemas/freeAiAssistantSchema.test.ts",
+          "tests": 6,
+          "status": "passed"
+        },
+        {
+          "path": "src/components/LiveStageView.presentation.test.tsx",
+          "tests": 3,
+          "status": "passed"
+        },
+        {
+          "path": "src/components/YouTubeClipModal.motion.test.tsx",
+          "tests": 5,
+          "status": "passed"
+        },
+        {
+          "path": "src/test/fastAuthoringAndDiagramContinuity.test.tsx",
+          "tests": 4,
+          "status": "passed"
+        },
+        {
+          "path": "src/test/sequenceStudioWorkbench.test.tsx",
+          "tests": 15,
+          "status": "passed"
+        }
+      ]
+    },
+    "combined_current_source": {
+      "passed_tests": 3432,
+      "blocked_browser_tests": 2,
+      "known_unresolved_assertion_failures": 0,
+      "single_full_run_passed": false
+    },
+    "browser_blocker": {
+      "path": "src/features/classCueSheet/classCueSheetChromium.test.ts",
+      "reason": "Chromium process startup denied by environment: socket() Operation not permitted",
+      "tests": 2,
+      "executed": false
+    }
+  },
+  "other_checks": {
+    "build": "passed",
+    "entry_js": "/assets/index-BKRMtVS7.js",
+    "pwa_static_files": 76,
+    "circular_js_chunks": 0,
+    "lint_errors": 0,
+    "existing_lint_warnings": 1,
+    "final_changed_file_lint_warnings": 0,
+    "booking_recurrence_tests_passed": 93,
+    "deployment_script_tests_passed": 55,
+    "motion_study_tests_passed": 6,
+    "motion_generator_tests_passed": 6,
+    "secret_guard_tests_passed": 7,
+    "staged_secret_scan": "passed"
+  },
+  "artwork": {
+    "native_movements": 98,
+    "webp_frames": 294,
+    "size": [
+      640,
+      400
+    ],
+    "bytes": 2768078,
+    "previous_svg_bytes": 3894134,
+    "raw_frame_byte_reduction_percent": 28.9,
+    "runtime_shared_atlas_bytes": 169696
+  },
+  "video_catalog": {
+    "total": 350,
+    "new": 40,
+    "kr": 76,
+    "global": 274,
+    "default_exercises": 158,
+    "default_exercises_multiple_videos": 55,
+    "default_exercises_one_video": 60,
+    "default_exercises_no_video": 43,
+    "all_videos_playback_verified": false
+  },
+  "deployment_target": {
+    "project": "deskcloud-fleet-auth",
+    "site": "pilates-flow-atelier",
+    "url": "https://pilates-flow-atelier.web.app",
+    "method": "existing manual workflow; live release confirmation recorded separately"
+  }
+}
