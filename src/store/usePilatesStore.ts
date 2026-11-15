@@ -1,3 +1,5 @@
+import { matchingTeachingScheduleContext } from '../utils/teachingScheduleContext';
+import type { TeachingScheduleContext } from '../utils/teachingScheduleContext';
 import { compareTeachingHistoryDates, getTeachingHistoryDateSource } from '../utils/teachingHistoryDate';
 import { reconstructStepsSnapshotFromHistoryLog } from '../utils/teachingHistorySnapshot';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
@@ -126,6 +128,7 @@ export type ActiveWorkspaceTab =
 export type StepTimingOptions = z.input<typeof stepTimingOptionsSchema>;
 export type StepBlockOptions = z.input<typeof stepBlockOptionsSchema>;
 interface SequenceSnapshot {
+  activeScheduleContext?: TeachingScheduleContext;
   activeSequenceId: string;
   activeTitle: string;
   activeSubtitle: string;
@@ -484,6 +487,10 @@ const cloneCriteria = (criteria: AutoGenerateCriteria): AutoGenerateCriteria => 
 });
 export function createSequenceSnapshot(state: PilatesStudioState): SequenceSnapshot {
   return {
+    activeScheduleContext: matchingTeachingScheduleContext(
+      state.activeScheduleContext,
+      state.activeSequenceId,
+    ),
     activeSequenceId: state.activeSequenceId,
     activeTitle: state.activeTitle,
     activeSubtitle: state.activeSubtitle,
@@ -504,6 +511,9 @@ function edit(
     undoStack: [...state.undoStack.slice(-19), createSequenceSnapshot(state)],
     generationError: null,
     saveFeedback: null,
+    ...(next.activeSequenceId !== undefined && next.activeSequenceId !== state.activeSequenceId
+      ? { activeScheduleContext: undefined }
+      : {}),
     ...next,
   };
 }
@@ -890,6 +900,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
       instructorSchedule: createEmptyInstructorSchedule(),
       instructorStudyState: undefined,
       datedSequencePlanning: undefined,
+      activeScheduleContext: undefined,
       activeSequenceId: defaultSequence.id,
       activeTitle: defaultSequence.title,
       activeSubtitle: defaultSequence.subtitle,
@@ -958,10 +969,24 @@ export const usePilatesStore = create<PilatesStudioState>()(
           schedule: state.instructorSchedule,
           exercises: state.exercises,
         });
+        const draftSequenceId = newId('draft-dated');
         const message = `날짜별 계획을 새 초안 사본으로 불러왔습니다. 이전 초안은 실행 취소로 복구할 수 있습니다.${warnings.length ? ` 기구·시간 등 확인 사항 ${warnings.length}개가 있습니다.` : ''}`;
         set(
           edit(state, {
-            activeSequenceId: newId('draft-dated'),
+            activeSequenceId: draftSequenceId,
+            activeScheduleContext: {
+              draftSequenceId,
+              classId: assignment.classId,
+              originalDate: assignment.originalDate,
+              date: row.date,
+              startTime: row.startTime,
+              endTime: row.endTime,
+              locationId: row.locationId,
+              locationAlias:
+                state.instructorSchedule.locations.find((item) => item.id === row.locationId)
+                  ?.alias ?? '',
+              classTitle: row.title,
+            },
             activeTitle: sequence.title,
             activeSubtitle: sequence.subtitle,
             activeApparatus: sequence.apparatus,
@@ -1327,6 +1352,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
                   found.targetMinutes,
                 ),
             ),
+            activeScheduleContext: undefined,
             activeSequenceId: found.id,
             activeTitle: found.title,
             activeSubtitle: found.subtitle,
@@ -2066,6 +2092,12 @@ export const usePilatesStore = create<PilatesStudioState>()(
               ? state.savedSequences.map((item) => (item.id === id ? sequence : item))
               : [sequence, ...state.savedSequences],
           activeSequenceId: id,
+          activeScheduleContext: matchingTeachingScheduleContext(
+            state.activeScheduleContext,
+            state.activeSequenceId,
+          )
+            ? { ...state.activeScheduleContext!, draftSequenceId: id }
+            : undefined,
           saveFeedback: '이 브라우저에 수업을 저장했습니다.',
         });
         return id;
@@ -2701,6 +2733,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
             conditionTemplates: [],
             lastCriteria: null,
             draftCriteria: null,
+            activeScheduleContext: undefined,
             activeSequenceId: defaultSequence.id,
             activeTitle: defaultSequence.title,
             activeSubtitle: defaultSequence.subtitle,
@@ -2742,6 +2775,10 @@ export const usePilatesStore = create<PilatesStudioState>()(
         const next = { ...current, ...(settings.success ? settings.data : {}) };
         // Old or malformed preferences default to the user's current inventory.
         next.exerciseBrowseScope = raw.exerciseBrowseScope === 'all' ? 'all' : 'owned';
+        next.activeScheduleContext = matchingTeachingScheduleContext(
+          raw.activeScheduleContext,
+          next.activeSequenceId,
+        );
         const equipment = z.array(equipmentSchema).safeParse(raw.ownedEquipment);
         const oldApparatus = z.array(apparatusSchema).safeParse(raw.ownedApparatus);
         if (equipment.success) next.ownedEquipment = [...new Set(equipment.data)];

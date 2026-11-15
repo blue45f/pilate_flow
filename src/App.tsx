@@ -1,3 +1,4 @@
+import { getActiveWorkspaceOwner } from './lib/accountStorage';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDownToLine,
@@ -805,6 +806,7 @@ export function App() {
                 )}
                 {state.activeTab === 'stage' && (
                   <LiveStageView
+                    key={getActiveWorkspaceOwner() ?? '__anonymous__'}
                     navigationRef={stageNavigationRef}
                     onNavigate={completeStageTransition}
                     onNavigationCancelled={() => {

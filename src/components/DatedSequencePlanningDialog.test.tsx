@@ -492,7 +492,7 @@ describe('bounded dated sequence planning dialog', () => {
     const confirmation = within(screen.getByRole('group', { name: '작업 사본 열기 확인' }));
     expect(
       confirmation.getByText(
-        '독립 초안에는 장소 연결이 유지되지 않습니다. 수업 전 실제 장소의 기구·소도구를 직접 확인하세요.',
+        '수업 진행 화면에 이 회차의 날짜·장소와 기구·시간 확인 사항을 표시합니다. 초안 변경은 원래 일정이나 저장 계획을 바꾸지 않습니다.',
       ),
     ).toBeVisible();
     expect(confirmation.getByText('장소 준비물 부족: 캐딜락')).toBeVisible();

@@ -1671,8 +1671,8 @@ export function DatedSequencePlanningDialog(props: DatedSequencePlanningDialogPr
                       유지됩니다.
                     </p>
                     <p>
-                      독립 초안에는 장소 연결이 유지되지 않습니다. 수업 전 실제 장소의 기구·소도구를
-                      직접 확인하세요.
+                      수업 진행 화면에 이 회차의 날짜·장소와 기구·시간 확인 사항을 표시합니다.
+                      초안 변경은 원래 일정이나 저장 계획을 바꾸지 않습니다.
                     </p>
                     {warnings.length > 0 && (
                       <div aria-label="현재 장소·시간 확인 사항">

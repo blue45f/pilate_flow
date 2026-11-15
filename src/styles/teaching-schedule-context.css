@@ -1,0 +1,23 @@
+.teaching-schedule-context {
+  margin-block: 10px;
+  padding: 10px 12px;
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.teaching-schedule-context p {
+  margin: 4px 0;
+}
+.teaching-schedule-context ul {
+  margin: 8px 0;
+  padding-inline-start: 18px;
+}
+.teaching-schedule-context li + li {
+  margin-top: 4px;
+}
+.teaching-schedule-context small {
+  display: block;
+  line-height: 1.5;
+}
