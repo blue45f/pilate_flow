@@ -70,6 +70,30 @@ node docs/qa/2026-11-16/motion-renderer/rebuild-contact-sheets.mjs /path/to/unto
 
 [contact-sheet-inputs.json](contact-sheet-inputs.json) records the baseline commit, source-atlas hash, frame input hashes, and composed-sheet hashes. The reproduction script reads existing cache files and verifies their manifest hashes; it does not generate new artwork or use a browser.
 
+### Reproduction input boundaries
+
+This dated tool accepts only the reference manifest from `26d5c5f0ab2f120d3d924578695c7203f2c9bb27`, with SHA-256 `a6511c38f90701ea28fedf969c6b0cbba80930222c848ba25f0bf98ea4826b72`. It checks these bytes before parsing JSON, then checks the original atlas and frame hashes against that trusted manifest. A different baseline requires a reviewed update to the reference and its evidence; the CLI still accepts one local baseline directory, including paths with spaces.
+
+Input filenames and frame identities are validated before use. Canonical file paths must stay inside the expected `src/data`, `public/images/motion-atlas-v3`, or `public/motion-artwork-v2` subtree of the selected directory. Parent paths, external file/directory symlinks, and non-regular files are rejected. An in-subtree symlink or an alias for the selected baseline directory remains usable. These checks target local, stable QA inputs; the tool is not a sandbox for a concurrently modified hostile filesystem.
+
+The tool no longer starts Git or any other child process. Newly generated provenance uses `baselineReferenceCommit`: it identifies the pinned input's source commit and does not claim to have queried the supplied checkout's current HEAD. The historical `baselineCommit` field in the committed evidence remains unchanged. The contact-sheet composition, encoder settings, frame order, and product assets are unchanged.
+
+Run the focused boundary regressions without installing packages or starting CI:
+
+```sh
+node --test docs/qa/2026-11-16/motion-renderer/rebuild-contact-sheets.node-test.mjs
+```
+
+The tests use disposable synthetic files. For a renderer comparison, use an isolated copy of the QA directory and caches: the reproduction command intentionally writes its four contact sheets and `contact-sheet-inputs.json` next to the script. The full renderer still needs the project's Sharp dependency. A local pass does not establish a new SonarQube rating; that requires a subsequent analysis with the existing rules and quality gate.
+
+Local verification on 2026-11-16 against main `33be835daee20e5a5f8cae56b1458259c6eedf58`:
+
+- Node `v24.22.1`: **14 boundary tests passed**, none failed or skipped; script syntax and diff whitespace checks passed.
+- The original and revised CLIs were run in disposable copies against the pinned baseline. All **12 before + 12 after frame inputs** and all other provenance fields matched; only `baselineCommit` became `baselineReferenceCommit`.
+- All **four WebP contact sheets were byte-for-byte identical**, and their SHA-256 values also matched the committed historical evidence. Both CLIs used the same preinstalled Sharp `0.35.5` / libvips `8.18.7`; this is a local before/after comparison, not a claim that the lockfile's Sharp `0.34.5` or remote Node 22 pipeline was rerun.
+- Direct CLI checks rejected an altered manifest, equal-but-altered baseline/working atlas copies, and an external frame symlink whose target had the correct expected hash. Each failed before changing existing outputs. Invoking the script through an alias also produced the same four images.
+- Product code, product cache/atlas files, existing QA evidence, package/lockfile, workflows, Sonar settings, and remote refs were not changed. No remote CI, paid review, or deployment was triggered.
+
 ## Limits
 
 These remain stylized, authored two-dimensional planning diagrams. Body proportions are simplified, some seat/mat silhouettes still overlap the body, and a small garment or joint seam may remain in bent poses. Passing anchor tests does not establish anatomical accuracy or validate all visible surface contacts. No expert review, medical validation, source-video frame matching, or full three-dimensional contact reconstruction was performed or claimed. This review does not authorize a deployment.
