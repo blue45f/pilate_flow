@@ -5,7 +5,7 @@
   --flow-green: #245c48;
   --flow-wash: #edf3ed;
   color: var(--flow-ink);
-  padding-bottom: 16px;
+  padding-bottom: 104px;
 }
 .flow-studio button,
 .flow-studio input,
@@ -365,7 +365,10 @@
   background: #f7f7ee;
 }
 .flow-pick-card__preview .exercise-motion-artwork {
-  aspect-ratio: 1.4;
+  aspect-ratio: 8 / 5;
+}
+.flow-pick-card__preview .exercise-motion-artwork__label {
+  display: none;
 }
 .flow-pick-card__info {
   display: grid;
@@ -543,7 +546,7 @@
   text-align: center;
 }
 .flow-row-art .exercise-motion-artwork {
-  aspect-ratio: 1.15;
+  aspect-ratio: 8 / 5;
 }
 .flow-row-content {
   min-width: 0;
@@ -1088,15 +1091,81 @@
   }
 }
 
-.flow-insertion-control { display: flex; align-items: center; gap: 10px; margin: 12px 0 8px; }
-.flow-insertion-control > label { flex-shrink: 0; font-size: 12px; font-weight: 650; color: #526152; }
-.flow-insertion-control > select {
-  min-width: 0; width: 100%; min-height: 40px; padding: 8px 30px 8px 10px;
-  border: 1px solid #d8dfd2; border-radius: 10px; background: #fffefb; color: #324936; font: inherit; font-size: 12px;
+.flow-insertion-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 8px;
 }
-.flow-insertion-error { margin: 6px 0 12px; color: #8b442e; font-size: 12px; line-height: 1.6; }
-.flow-added-receipt { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; padding: 10px; margin-bottom: 10px; border-radius: 10px; background: #edf3e8; color: #31543b; font-size: 12px; }
-.flow-added-receipt > span { display: flex; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
-.flow-added-receipt > span svg { flex: none; align-self: center; }
-.flow-added-receipt > button { min-height: 36px; border: 1px solid #b6c8aa; border-radius: 8px; padding: 6px 9px; background: #fffefb; color: inherit; cursor: pointer; font: inherit; font-weight: 650; }
-.flow-sequence-row.is-recently-added { box-shadow: inset 0 0 0 2px #85a573; }
+.flow-insertion-control > label {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 650;
+  color: #526152;
+}
+.flow-insertion-control > select {
+  min-width: 0;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 30px 8px 10px;
+  border: 1px solid #d8dfd2;
+  border-radius: 10px;
+  background: #fffefb;
+  color: #324936;
+  font: inherit;
+  font-size: 12px;
+}
+.flow-insertion-error {
+  margin: 6px 0 12px;
+  color: #8b442e;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.flow-added-receipt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: #edf3e8;
+  color: #31543b;
+  font-size: 12px;
+}
+.flow-added-receipt > span {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.flow-added-receipt > span svg {
+  flex: none;
+  align-self: center;
+}
+.flow-added-receipt > button {
+  min-height: 36px;
+  border: 1px solid #b6c8aa;
+  border-radius: 8px;
+  padding: 6px 9px;
+  background: #fffefb;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+}
+.flow-sequence-row.is-recently-added {
+  box-shadow: inset 0 0 0 2px #85a573;
+}
+.brand small.brand-tagline-deco::after {
+  content: 'PLAN. FLOW. TEACH.';
+}
+.pf-topbar-cmdk-btn kbd.pf-topbar-cmdk-kbd::after {
+  content: '⌘K';
+}
+.flow-actionbar small.is-persistence-warning {
+  display: block;
+  color: #9c523d;
+  font-weight: 600;
+}

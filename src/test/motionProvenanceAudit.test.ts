@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { BLENDER_STUDIO_GLB_MANIFEST } from '../data/blenderStudioGlbManifest';
 import coreAbdominalLedger from '../data/coreAbdominalSourceLedger.json';
 import { COURSE_REFERENCES } from '../data/courseReferences';
 import {
@@ -14,10 +15,7 @@ import {
 } from '../data/exerciseYouTubeCatalog';
 import hipLegSources from '../data/hip-leg-diagram-sources.json';
 import apparatusLedger from '../data/motionApparatusSourceLedger.json';
-import {
-  BATCH_SOURCE_FACTS,
-  BATCH_VARIANTS,
-} from '../data/motionAuthoringBatch';
+import { BATCH_SOURCE_FACTS, BATCH_VARIANTS } from '../data/motionAuthoringBatch';
 import batchIntegrity from '../data/motionAuthoringBatchIntegrity.json';
 import {
   getMotionCandidateResearch,
@@ -45,10 +43,7 @@ import studyLedger from '../data/motionStudyLedger.json';
 import tensionLedger from '../data/motionTensionSourceLedger.json';
 import { MOVEMENT_DIAGRAM_CORRECTIONS } from '../data/movementDiagramCorrections';
 import { getMovementProvenance, getMovementVideoLink } from '../data/movementProvenance';
-import {
-  MOVEMENT_VISUAL_ASSETS,
-  getMovementVisualAsset,
-} from '../data/movementVisualRigCatalog';
+import { MOVEMENT_VISUAL_ASSETS, getMovementVisualAsset } from '../data/movementVisualRigCatalog';
 import {
   CATALOG_VISUAL_SOURCE_COMPARISONS,
   getVisualSourceComparison,
@@ -68,10 +63,7 @@ import { SUPINE_REACH_DEFINITION } from '../data/supineReach';
 import supineReachSource from '../data/supineReachSource.json';
 import { VERIFIED_REFERENCES } from '../data/verifiedReferences';
 import { runMotionCoverageCatalogSweep } from '../features/motionCoverage/catalogSweep';
-import {
-  getMotionCoverageSummary,
-  resolveMotionCoverage,
-} from '../features/motionCoverage/index';
+import { getMotionCoverageSummary, resolveMotionCoverage } from '../features/motionCoverage/index';
 import { CHEST_LIFT_PROVENANCE } from '../models/chestLiftProvenance';
 import { PELVIC_CURL_PROVENANCE } from '../models/pelvicCurl';
 import type { PilatesExercise } from '../types/pilates';
@@ -194,10 +186,24 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
       '.usd',
       '.usdz',
     ]);
-    const foundBinaryAssets = scannedFiles.filter((filePath) =>
-      forbidden3dOrMocapExts.has(path.extname(filePath).toLowerCase()),
+    const registeredStudioGlbPaths = new Set(
+      Object.values(BLENDER_STUDIO_GLB_MANIFEST).map((meta) =>
+        path.join(rootDir, 'public', meta.url.replace(/^\//, '')),
+      ),
     );
-    expect(foundBinaryAssets).toEqual([]);
+    for (const meta of Object.values(BLENDER_STUDIO_GLB_MANIFEST)) {
+      const fullGlbPath = path.join(rootDir, 'public', meta.url.replace(/^\//, ''));
+      expect(existsSync(fullGlbPath)).toBe(true);
+      const buf = readFileSync(fullGlbPath);
+      expect(buf.byteLength).toBe(meta.fileBytes);
+      expect(createHash('sha256').update(buf).digest('hex')).toBe(meta.sha256);
+    }
+    const foundUnregisteredBinaryAssets = scannedFiles.filter(
+      (filePath) =>
+        forbidden3dOrMocapExts.has(path.extname(filePath).toLowerCase()) &&
+        !registeredStudioGlbPaths.has(filePath),
+    );
+    expect(foundUnregisteredBinaryAssets).toEqual([]);
   });
 
   it('2. verifies permissive software/schematic licenses and non-endorsement disclosures across all model license files', () => {
@@ -214,6 +220,7 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
       'src/models/rotation-LICENSE.txt',
       'src/models/shoulder-support-LICENSE.txt',
       'public/images/movement-guides/LICENSE.txt',
+      'public/models/pilates-studio/LICENSE.txt',
     ];
 
     for (const relPath of licensePaths) {
@@ -266,7 +273,9 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
 
     expect(VERIFIED_YOUTUBE_VIDEO_POOL).toHaveLength(350);
     expect(VERIFIED_YOUTUBE_VIDEO_POOL.filter((item) => item.region === 'kr')).toHaveLength(76);
-    expect(VERIFIED_YOUTUBE_VIDEO_POOL.filter((item) => item.region === 'global')).toHaveLength(274);
+    expect(VERIFIED_YOUTUBE_VIDEO_POOL.filter((item) => item.region === 'global')).toHaveLength(
+      274,
+    );
     expect(COURSE_REFERENCES.length).toBeGreaterThanOrEqual(30);
     expect(PUBLIC_REFERENCES).toHaveLength(3);
     expect(MOTION_CANDIDATE_RESEARCH_V7_ASSOCIATION.canonicalAssetMappingsAdded).toBe(0);
@@ -354,8 +363,12 @@ describe('[P7/추가14] Pilates Flow motion provenance audit (read-only & synthe
     for (const rotRef of ROTATION_PATTERN_REFERENCES) {
       expect(rotRef.assetSha256).toBeNull();
     }
-    expect(rotationSourceFacts.sources.every((source) => !('factualRecordSha256' in source))).toBe(true);
-    expect(rotationSourceFacts.sources.every((source) => source.verification === 'public-text-checked')).toBe(true);
+    expect(rotationSourceFacts.sources.every((source) => !('factualRecordSha256' in source))).toBe(
+      true,
+    );
+    expect(
+      rotationSourceFacts.sources.every((source) => source.verification === 'public-text-checked'),
+    ).toBe(true);
 
     // Track I6 Shoulder Support: 2 static guide SVGs exist on disk outside MANIFEST.json (which has 5 apparatus guides)
     const rootDir = process.cwd();

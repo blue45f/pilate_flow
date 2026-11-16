@@ -11,6 +11,7 @@ import './styles/mobile-first-atelier-v3.css';
 import './styles/atelier-clean-declutter-v5.css';
 import './styles/mobile-subpages-user-first-v6.css';
 import './styles/flow-studio.css';
+import './styles/atelier-calm-luxury-polish.css';
 import { bootstrapCloudSession } from './lib/cloudSync';
 
 import { startPwa } from './lib/pwa';

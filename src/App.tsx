@@ -461,7 +461,8 @@ export function App() {
         >
           <Leaf size={30} strokeWidth={1.3} />
           <span>
-            Pilates Flow<small>PLAN. FLOW. TEACH.</small>
+            Pilates Flow
+            <small className="brand-tagline-deco" aria-hidden="true" />
           </span>
         </a>
         <button
@@ -626,7 +627,10 @@ export function App() {
         <button className="workspace-button" onClick={() => setSettingsOpen(true)}>
           <span className="studio-avatar">F</span>
           <span>
-            나의 스튜디오<small>이 기기에 저장</small>
+            나의 스튜디오
+            <small>
+              {state.persistenceError ? '기기 저장 확인 · 백업 권장' : '이 기기에 저장'}
+            </small>
           </span>
           <Settings2 size={17} />
         </button>
@@ -699,8 +703,8 @@ export function App() {
                 onClick={() => setCommandPaletteOpen(true)}
               >
                 <Search size={15} aria-hidden="true" />
-                <span>빠른 검색</span>
-                <kbd aria-hidden="true">⌘K</kbd>
+                <span>동작 검색</span>
+                <kbd className="pf-topbar-cmdk-kbd" aria-hidden="true" />
               </button>
             )}
             {portalRole === 'instructor' && state.activeTab !== 'stage' && (
@@ -725,9 +729,12 @@ export function App() {
         </header>
         <main id="main-content" className="main-content" tabIndex={-1}>
           {state.persistenceError && (
-            <p className="status error" role="alert">
-              {state.persistenceError}{' '}
-              <button className="text-button" onClick={() => setSettingsOpen(true)}>
+            <p className="status error" role="alert" data-testid="global-persistence-alert">
+              <span>{state.persistenceError}</span>{' '}
+              <button type="button" className="text-button" onClick={exportData}>
+                JSON 백업 내보내기
+              </button>{' '}
+              <button type="button" className="text-button" onClick={() => setSettingsOpen(true)}>
                 전체 백업 열기
               </button>
             </p>

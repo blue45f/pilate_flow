@@ -27,7 +27,7 @@ import {
   PfStatusBanner,
   PfTextarea,
 } from '../design-system';
-import { usePilatesStore } from '../store/usePilatesStore';
+import { getLastStorageError, usePilatesStore } from '../store/usePilatesStore';
 import type {
   ApparatusType,
   DifficultyLevel,
@@ -95,7 +95,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
   const targetExercise =
     initialExercise ??
     (initialBuffer.editingExerciseId
-      ? exercises.find((item) => item.id === initialBuffer.editingExerciseId) ?? null
+      ? (exercises.find((item) => item.id === initialBuffer.editingExerciseId) ?? null)
       : null);
   const targetMeta = targetExercise ? getMovementIdeaMeta(targetExercise) : null;
   const shouldRestoreBuffer =
@@ -105,37 +105,37 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
   const [ideaLine, setIdeaLine] = useState<string>(
     shouldRestoreBuffer && initialBuffer.ideaLine
       ? initialBuffer.ideaLine
-      : targetMeta?.ideaLine ?? '',
+      : (targetMeta?.ideaLine ?? ''),
   );
   const [workingTitle, setWorkingTitle] = useState<string>(
     shouldRestoreBuffer && initialBuffer.workingTitle
       ? initialBuffer.workingTitle
-      : targetMeta?.workingTitle ?? '',
+      : (targetMeta?.workingTitle ?? ''),
   );
   const [subjectiveFeeling, setSubjectiveFeeling] = useState<string>(
     shouldRestoreBuffer && initialBuffer.subjectiveFeeling
       ? initialBuffer.subjectiveFeeling
-      : targetMeta?.subjectiveFeeling ?? '',
+      : (targetMeta?.subjectiveFeeling ?? ''),
   );
   const [adjustmentNote, setAdjustmentNote] = useState<string>(
     shouldRestoreBuffer && initialBuffer.adjustmentNote
       ? initialBuffer.adjustmentNote
-      : targetMeta?.adjustmentNote ?? '',
+      : (targetMeta?.adjustmentNote ?? ''),
   );
   const [photoDataUrl, setPhotoDataUrl] = useState<string>(
     shouldRestoreBuffer && initialBuffer.photoDataUrl
       ? initialBuffer.photoDataUrl
-      : targetMeta?.photoDataUrl ?? '',
+      : (targetMeta?.photoDataUrl ?? ''),
   );
   const [triedByInstructor, setTriedByInstructor] = useState<boolean>(
     shouldRestoreBuffer && initialBuffer.triedByInstructor
       ? initialBuffer.triedByInstructor
-      : targetMeta?.triedByInstructor ?? false,
+      : (targetMeta?.triedByInstructor ?? false),
   );
   const [apparatus, setApparatus] = useState<ApparatusType | ''>(
     shouldRestoreBuffer && initialBuffer.apparatus
       ? initialBuffer.apparatus
-      : targetExercise?.apparatus ?? '',
+      : (targetExercise?.apparatus ?? ''),
   );
   const [durationMin, setDurationMin] = useState<string>(
     shouldRestoreBuffer && initialBuffer.durationMin
@@ -145,22 +145,22 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
   const [level, setLevel] = useState<DifficultyLevel | ''>(
     shouldRestoreBuffer && initialBuffer.level
       ? initialBuffer.level
-      : targetExercise?.level ?? '',
+      : (targetExercise?.level ?? ''),
   );
   const [easyVariation, setEasyVariation] = useState<string>(
     shouldRestoreBuffer && initialBuffer.easyVariation
       ? initialBuffer.easyVariation
-      : targetMeta?.easyVariation ?? '',
+      : (targetMeta?.easyVariation ?? ''),
   );
   const [hardVariation, setHardVariation] = useState<string>(
     shouldRestoreBuffer && initialBuffer.hardVariation
       ? initialBuffer.hardVariation
-      : targetMeta?.hardVariation ?? '',
+      : (targetMeta?.hardVariation ?? ''),
   );
   const [variantLabelKo, setVariantLabelKo] = useState<string>(
     shouldRestoreBuffer && initialBuffer.variantLabelKo
       ? initialBuffer.variantLabelKo
-      : targetMeta?.variantLabelKo ?? '',
+      : (targetMeta?.variantLabelKo ?? ''),
   );
   const [repetitions, setRepetitions] = useState<string>(
     shouldRestoreBuffer && initialBuffer.repetitions
@@ -179,7 +179,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
   const [sideMode, setSideMode] = useState<StepSideMode | ''>(
     shouldRestoreBuffer && initialBuffer.sideMode
       ? initialBuffer.sideMode
-      : targetMeta?.sideMode ?? '',
+      : (targetMeta?.sideMode ?? ''),
   );
   const [explanationSec, setExplanationSec] = useState<string>(
     shouldRestoreBuffer && initialBuffer.explanationSec
@@ -200,11 +200,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
 
   const [reflectionOpen, setReflectionOpen] = useState<boolean>(
     Boolean(
-      targetExercise ||
-        subjectiveFeeling ||
-        adjustmentNote ||
-        photoDataUrl ||
-        triedByInstructor,
+      targetExercise || subjectiveFeeling || adjustmentNote || photoDataUrl || triedByInstructor,
     ),
   );
   const [variantOpen, setVariantOpen] = useState<boolean>(
@@ -227,7 +223,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
   const submitLockRef = useRef(false);
 
   const activeEditingExercise = editingId
-    ? exercises.find((item) => item.id === editingId) ?? null
+    ? (exercises.find((item) => item.id === editingId) ?? null)
     : null;
   const activeEditingMeta = activeEditingExercise
     ? getMovementIdeaMeta(activeEditingExercise)
@@ -290,7 +286,9 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
     setTransitionSec(String(meta.transitionSec ?? 15));
     setReflectionOpen(true);
     setError('');
-    setStatusMessage(`‘${exercise.nameKo}’ 초안을 다시 열었습니다. 직접 해본 느낌이나 수정점을 적어보세요.`);
+    setStatusMessage(
+      `‘${exercise.nameKo}’ 초안을 다시 열었습니다. 직접 해본 느낌이나 수정점을 적어보세요.`,
+    );
     saveMovementIdeaWorkingBuffer({
       editingExerciseId: exercise.id,
       ideaLine: meta.ideaLine,
@@ -344,8 +342,10 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
         repetitions: parsedReps && Number.isFinite(parsedReps) ? parsedReps : undefined,
         sets: parsedSets && Number.isFinite(parsedSets) ? parsedSets : undefined,
         sideMode,
-        explanationSec: parsedExpl !== undefined && Number.isFinite(parsedExpl) ? parsedExpl : undefined,
-        transitionSec: parsedTrans !== undefined && Number.isFinite(parsedTrans) ? parsedTrans : undefined,
+        explanationSec:
+          parsedExpl !== undefined && Number.isFinite(parsedExpl) ? parsedExpl : undefined,
+        transitionSec:
+          parsedTrans !== undefined && Number.isFinite(parsedTrans) ? parsedTrans : undefined,
       });
 
       if (!result.success || !result.exercise) {
@@ -368,10 +368,13 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
         return;
       }
 
+      const storageErr = getLastStorageError() ?? usePilatesStore.getState().persistenceError;
       setStatusMessage(
-        editingId
-          ? `‘${result.exercise.nameKo}’ 수정 내용을 저장했습니다 (v${result.meta?.revision ?? 1}). 바로 수업에 넣거나 창을 닫아도 보존됩니다.`
-          : `‘${result.exercise.nameKo}’ 한 줄 초안을 저장했습니다! 직접 해본 뒤 느낀 점·수정점을 언제든 덧붙여 보세요.`,
+        storageErr
+          ? `메모리에 ‘${result.exercise.nameKo}’ 초안을 임시 반영했으나 ${storageErr}`
+          : editingId
+            ? `‘${result.exercise.nameKo}’ 수정 내용을 저장했습니다 (v${result.meta?.revision ?? 1}). 바로 수업에 넣거나 창을 닫아도 보존됩니다.`
+            : `‘${result.exercise.nameKo}’ 한 줄 초안을 저장했습니다! 직접 해본 뒤 느낀 점·수정점을 언제든 덧붙여 보세요.`,
       );
       setReflectionOpen(true);
       reflectionDetailsRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
@@ -636,7 +639,11 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
           />
           <div className="pf-idea-3d-studio-banner__body">
             <span className="pf-studio-kicker-pill">3D STUDIO MEMO · 나만의 동작 노트</span>
-            <strong>{workingTitle.trim() || ideaLine.trim() || '기구를 고르고 떠오른 동작 한 줄을 남겨보세요'}</strong>
+            <strong>
+              {workingTitle.trim() ||
+                ideaLine.trim() ||
+                '기구를 고르고 떠오른 동작 한 줄을 남겨보세요'}
+            </strong>
             <div className="pf-p05-chip-row" role="group" aria-label="동작 메모 기구 빠른 선택">
               {(
                 [
@@ -703,11 +710,7 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                 <PfBadge tone="success">저장된 초안 편집 중 (v{currentRevision})</PfBadge>
               )}
             </div>
-            <div
-              className="pf-idea-starter-chips"
-              role="group"
-              aria-label="빈 초안 빠른 시작"
-            >
+            <div className="pf-idea-starter-chips" role="group" aria-label="빈 초안 빠른 시작">
               {MOVEMENT_IDEA_STARTERS.map((starter) => (
                 <button
                   key={starter.id}
@@ -922,7 +925,10 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                 </div>
                 {(hydratedPhotoUrl || photoDataUrl) && (
                   <div className="pf-idea-photo-preview">
-                    <img src={hydratedPhotoUrl || photoDataUrl} alt="내 동작 참고 스케치 미리보기" />
+                    <img
+                      src={hydratedPhotoUrl || photoDataUrl}
+                      alt="내 동작 참고 스케치 미리보기"
+                    />
                   </div>
                 )}
               </div>
@@ -1380,14 +1386,12 @@ export const MovementIdeaSheet: React.FC<MovementIdeaSheetProps> = ({
                         {item.nameKo} (v{meta.revision ?? 1})
                       </strong>
                       <div className="pf-idea-saved-badges">
-                        <PfAiStatusBadge kind={meta.triedByInstructor ? 'tried-memo' : 'creative-memo'}>
+                        <PfAiStatusBadge
+                          kind={meta.triedByInstructor ? 'tried-memo' : 'creative-memo'}
+                        >
                           {meta.triedByInstructor ? '직접 해봄 · 주관적 메모' : '아이디어 초안'}
                         </PfAiStatusBadge>
-                        {meta.parentDraftId && (
-                          <PfBadge tone="sage">
-                            변형 파생
-                          </PfBadge>
-                        )}
+                        {meta.parentDraftId && <PfBadge tone="sage">변형 파생</PfBadge>}
                         {inClass && <PfBadge tone="success">수업에 담김</PfBadge>}
                       </div>
                     </div>

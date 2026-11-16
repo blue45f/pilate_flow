@@ -1,15 +1,16 @@
 import React, { useMemo, useState } from 'react';
-import { Image, Layers, Play, ShieldAlert, Sparkles, Wind } from 'lucide-react';
+import { Box, Image, Layers, Play, ShieldAlert, Sparkles, Wind } from 'lucide-react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
 import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
 import { getMovementVisualAsset, type VisualPhaseId } from '../data/movementVisualRigCatalog';
-import type { PilatesExercise } from '../types/pilates';
+import type { BoxState, FootbarState, HeadrestState, PilatesExercise } from '../types/pilates';
 import { CatalogMotionInteractivePlayer } from './CatalogMotionInteractivePlayer';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { MotionSourceOnlyNotice } from './MotionSourceOnlyNotice';
 import { UnmodeledMotionNotice } from './UnmodeledMotionNotice';
 import { SpringVisualPills } from './SpringVisualPills';
+import { StudioInteractive3DViewport } from './StudioInteractive3DViewport';
 import '../styles/studio-motion-study.css';
 
 export type Studio3DViewMode = 'motion' | 'compare' | VisualPhaseId;
@@ -18,6 +19,48 @@ export interface Studio3DMotionHeroCardProps {
   readonly exercise: PilatesExercise;
   readonly compact?: boolean;
   readonly active?: boolean;
+}
+
+const FOOTBAR_LABELS_KO: Record<FootbarState, string> = {
+  high: '높음(High)',
+  mid: '중간(Mid)',
+  low: '낮음(Low)',
+  down: '내림(Down)',
+  none: '미사용',
+};
+
+const HEADREST_LABELS_KO: Record<HeadrestState, string> = {
+  up: '올림(Up)',
+  flat: '평평함(Flat)',
+  down: '내림(Down)',
+};
+
+const BOX_LABELS_KO: Record<BoxState, string> = {
+  none: '',
+  'long-box': '롱박스',
+  'short-box': '숏박스',
+};
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function formatExerciseSetupSummaryKo(exercise: PilatesExercise): string {
+  const posKo = POSITION_LABELS[exercise.bodyPosition]?.ko ?? exercise.bodyPosition;
+  if (exercise.apparatus === 'reformer') {
+    const boxPart = BOX_LABELS_KO[exercise.box] ? ` · ${BOX_LABELS_KO[exercise.box]}` : '';
+    return `풋바 ${FOOTBAR_LABELS_KO[exercise.footbar]} · 헤드레스트 ${HEADREST_LABELS_KO[exercise.headrest]}${boxPart}`;
+  }
+  if (exercise.apparatus === 'cadillac') {
+    return `푸시스루·타워 바 안전핀 점검 · ${posKo} 지지`;
+  }
+  if (exercise.apparatus === 'chair') {
+    return `스플릿 페달·핸들 고정 점검 · ${posKo} 지지`;
+  }
+  if (exercise.apparatus === 'barrel') {
+    return `아치 정점·래더 스텝 간격 조정 · ${posKo} 지지`;
+  }
+  const hasProps = exercise.props.some((prop) => prop !== 'none');
+  return hasProps
+    ? `매트 수평 정렬 · 소도구 위치 확인 (${posKo})`
+    : `논슬립 매트 수평 정렬 · ${posKo} 중립 확보`;
 }
 
 export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = (props) => (
@@ -44,11 +87,13 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
   const representative =
     /^expanded-|^crawled-/.test(exercise.id) || !getMovementVisualAsset(exercise.id);
   const [mode, setMode] = useState<Studio3DViewMode>('motion');
+  const [modeler3dOpen, setModeler3dOpen] = useState(false);
   const postureMode = mode !== 'motion';
   const activePhase: VisualPhaseId = mode === 'start' ? 'start' : mode === 'end' ? 'end' : 'middle';
   const patternTitle = representative ? motionAsset?.visualAsset.archetypeTitleKo : exercise.nameKo;
   const muscleLabel = exercise.targetMuscles.slice(0, 2).join(' · ') || '동작별 안내 확인';
   const topCues = exercise.cues.filter((cue) => cue.trim().length > 0).slice(0, 2);
+  const setupSummaryKo = useMemo(() => formatExerciseSetupSummaryKo(exercise), [exercise]);
   const postureFrames = POSTURE_FRAMES.map((item) =>
     item.phase === 'end' ? { ...item, label: motionAsset?.endPoseLabelKo ?? item.label } : item,
   );
@@ -77,7 +122,11 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
             {POSITION_LABELS[exercise.bodyPosition]?.ko ?? exercise.bodyPosition}
           </span>
           <span className="pf-studio3d-honest-pill">
-            {sourceOnly ? '제작자 영상으로 동작 확인' : unmodeled ? '수정한 동작 · 전용 도해 없음' : '임상 각도·개인 적합성은 강사 현장 확인'}
+            {sourceOnly
+              ? '제작자 영상으로 동작 확인'
+              : unmodeled
+                ? '수정한 동작 · 전용 도해 없음'
+                : '임상 각도·개인 적합성은 강사 현장 확인'}
           </span>
         </div>
         {hasNativeMotion && (
@@ -116,9 +165,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
         />
       )}
 
-      {unmodeled && (
-        <UnmodeledMotionNotice exercise={exercise} />
-      )}
+      {unmodeled && <UnmodeledMotionNotice exercise={exercise} />}
 
       {hasNativeMotion && mode === 'motion' && motionAsset && (
         <CatalogMotionInteractivePlayer
@@ -192,6 +239,35 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
         </div>
       )}
 
+      {hasNativeMotion && (
+        <div className="pf-hero-3d-modeler-bar" data-testid="hero-3d-modeler-bar">
+          <div className="pf-hero-3d-modeler-bar__copy">
+            <strong>3D 입체 자세 · 기구 모델러</strong>
+            <span>마우스로 360° 돌려 보고, 측면 비교와 스프링·기구 세팅을 한눈에 확인하세요</span>
+          </div>
+          <button
+            type="button"
+            className={`pf-hero-3d-modeler-toggle ${modeler3dOpen ? 'is-open' : ''}`}
+            data-testid="toggle-interactive-3d-modeler"
+            aria-expanded={modeler3dOpen}
+            onClick={() => setModeler3dOpen((prev) => !prev)}
+          >
+            <Box size={14} aria-hidden="true" />
+            <span>{modeler3dOpen ? '3D 모델러 닫기' : '3D 모델러 열기'}</span>
+          </button>
+        </div>
+      )}
+
+      {hasNativeMotion && modeler3dOpen && (
+        <div className="pf-hero-3d-modeler-panel" data-testid="interactive-3d-modeler-panel">
+          <StudioInteractive3DViewport
+            exercise={exercise}
+            compact={compact}
+            active={active && modeler3dOpen}
+          />
+        </div>
+      )}
+
       {!compact && (
         <>
           <div
@@ -210,9 +286,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
                 ) : (
                   <strong>기구별 직접 설정</strong>
                 )}
-                <small>
-                  풋바 {exercise.footbar} · 헤드레스트 {exercise.headrest}
-                </small>
+                <small>{setupSummaryKo}</small>
               </div>
             </div>
             <div className="pf-detail-essential-pill">

@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useMemo, useState } from 'react';
+import { getStudioApparatusGlbAsset } from '../data/blenderStudioGlbManifest';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 import { PfButton } from '../design-system';
 import type { ApparatusType, BodyPosition } from '../types/pilates';
@@ -8,7 +9,10 @@ import {
   type RigMotionPhase,
   buildApparatus3dRigScene,
 } from '../utils/apparatus3dRigProjection';
-import { generateBlenderApparatusSceneScript } from '../utils/blenderSceneScriptExporter';
+import {
+  downloadBlenderSceneScript,
+  generateBlenderApparatusSceneScript,
+} from '../utils/blenderSceneScriptExporter';
 import { getApparatusStudio3dImage } from '../utils/memberBookingBridge';
 
 export interface Apparatus3dRigPreviewCardProps {
@@ -108,6 +112,7 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
       }),
     [exerciseTitleKo, apparatus, bodyPosition, springsLabel, phase],
   );
+  const glbAsset = useMemo(() => getStudioApparatusGlbAsset(apparatus), [apparatus]);
 
   const framePolygon = scene.frameVertices2D.map((pt) => `${pt.u},${pt.v}`).join(' ');
   const carriagePolygon = scene.carriageRect2D.map((pt) => `${pt.u},${pt.v}`).join(' ');
@@ -147,11 +152,7 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
               : '풋바·캐리지·스프링 장력 방향을 시점·단계별로 비교해 보세요.'}
           </p>
         </div>
-        <div
-          role="group"
-          aria-label="3D 카메라 시점 전환"
-          className="pf-rig-preview__camera-group"
-        >
+        <div role="group" aria-label="3D 카메라 시점 전환" className="pf-rig-preview__camera-group">
           {CAMERA_PRESETS.map((preset) => (
             <PfButton
               key={preset.id}
@@ -166,11 +167,7 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
         </div>
       </div>
 
-      <div
-        role="group"
-        aria-label="3페이즈 키프레임 전환"
-        className="pf-rig-preview__phase-bar"
-      >
+      <div role="group" aria-label="3페이즈 키프레임 전환" className="pf-rig-preview__phase-bar">
         <div className="pf-rig-preview__phase-group">
           {MOTION_PHASES.map((item) => (
             <PfButton
@@ -223,8 +220,41 @@ export const Apparatus3dRigPreviewCard: React.FC<Apparatus3dRigPreviewCardProps>
           >
             {showBlenderScript ? 'Blender 스크립트 닫기' : 'Blender 3D 스크립트(.py)'}
           </PfButton>
+          <PfButton
+            variant="secondary"
+            className="pf-rig-preview__btn"
+            onClick={() =>
+              downloadBlenderSceneScript({
+                exerciseTitleKo: exerciseTitleKo ?? 'Pilates_Movement',
+                apparatus,
+                bodyPosition,
+                springsLabel,
+                activePhase: phase,
+              })
+            }
+          >
+            Blender .py 내려받기
+          </PfButton>
+          <a
+            href={glbAsset.url}
+            download={glbAsset.fileName}
+            className="pf-btn pf-btn--secondary pf-rig-preview__btn"
+            data-testid="rig-glb-download-link"
+          >
+            {glbAsset.labelKo} ({Math.round(glbAsset.fileBytes / 1024)}KB)
+          </a>
         </div>
       </div>
+
+      <p
+        className="pf-rig-preview__glb-badge"
+        data-testid="rig-glb-verified-meta"
+        style={{ margin: '0 0 6px', fontSize: '0.74rem', color: '#476253', fontWeight: 600 }}
+      >
+        Blender 5.2 LTS · GLBForge Meshopt 검증 완료 ({glbAsset.triangles.toLocaleString()} tris ·{' '}
+        {glbAsset.drawCalls} drawCall{glbAsset.drawCalls > 1 ? 's' : ''} · {glbAsset.glbForgeScore}
+        /100)
+      </p>
 
       {showStudio3dRender && (
         <div className="pf-rig-3d-render-frame" data-testid="blender-studio-3d-render">

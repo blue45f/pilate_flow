@@ -1,13 +1,13 @@
-import { compareTeachingHistoryDates, getTeachingHistoryDateSource } from '../utils/teachingHistoryDate';
+import {
+  compareTeachingHistoryDates,
+  getTeachingHistoryDateSource,
+} from '../utils/teachingHistoryDate';
 import { reconstructStepsSnapshotFromHistoryLog } from '../utils/teachingHistorySnapshot';
 import { isExerciseAuthoringEligible } from '../utils/exerciseAuthoring';
 import { resolveSequenceInsertion } from '../utils/sequenceInsertion';
 import type { SequenceInsertionPlacement } from '../utils/sequenceInsertion';
 import { createRecoveryStorageGuard, RECOVERY_STORAGE_KEY } from '../lib/recoveryStorageGuard';
-import {
-  canonicalRecoveryContent,
-  inspectBackupRecovery,
-} from '../utils/backupRecoveryInspection';
+import { canonicalRecoveryContent, inspectBackupRecovery } from '../utils/backupRecoveryInspection';
 import {
   applyRestoredReusableBlocksAndDrafts,
   getHumanDraftsForBackup,
@@ -237,9 +237,13 @@ export interface PilatesStudioState extends SequenceSnapshot {
   setMobilePreviewMode: (enabled: boolean) => void;
   setActiveTargetGroupId: (groupId: string) => void;
   /** New document identity and one undo entry; saved source documents stay intact. */
-  startBlankSequence: (criteriaPatch?: Partial<AutoGenerateCriteria>) => SequencePlanningActionResult;
+  startBlankSequence: (
+    criteriaPatch?: Partial<AutoGenerateCriteria>,
+  ) => SequencePlanningActionResult;
   /** Apply manual planning conditions atomically without rewriting existing rows. */
-  updateSequencePlanningConditions: (patch: Partial<AutoGenerateCriteria>) => SequencePlanningActionResult;
+  updateSequencePlanningConditions: (
+    patch: Partial<AutoGenerateCriteria>,
+  ) => SequencePlanningActionResult;
   setActiveSequenceMeta: (meta: {
     title?: string;
     subtitle?: string;
@@ -407,6 +411,78 @@ export function getRecoveryStorageStatus(expectedFingerprint?: string) {
 // Storage errors must not interrupt editing or claim a successful browser save.
 let lastStorageError: string | null = null;
 let suppressRecoveryRevertWrite = false;
+
+/** Synchronous read of the most recent browser storage write outcome (null when healthy). */
+export function getLastStorageError(): string | null {
+  return lastStorageError;
+}
+
+function canonicalSavedSequenceSignature(sequence: SavedSequence): string {
+  return JSON.stringify({
+    id: sequence.id,
+    title: sequence.title,
+    subtitle: sequence.subtitle,
+    apparatus: sequence.apparatus,
+    level: sequence.level,
+    targetMinutes: sequence.targetMinutes,
+    steps: sequence.steps,
+  });
+}
+
+/**
+ * Read-only check of whether a sequence in RAM is actually confirmed in browser storage.
+ * Never mutates recoveryStorageGuard baselines or writes to storage.
+ */
+export function isSavedSequencePersistedOnDisk(
+  sequence: SavedSequence,
+  persistenceError: string | null,
+  storageOk = getRecoveryStorageStatus().ok,
+): boolean {
+  if (!persistenceError && !lastStorageError && storageOk) {
+    return true;
+  }
+  try {
+    const raw = localStorage.getItem(RECOVERY_STORAGE_KEY);
+    if (!raw) return false;
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      !parsed ||
+      typeof parsed !== 'object' ||
+      !('state' in parsed) ||
+      !parsed.state ||
+      typeof parsed.state !== 'object'
+    ) {
+      return false;
+    }
+    const diskSequences = (parsed.state as { savedSequences?: unknown }).savedSequences;
+    if (!Array.isArray(diskSequences)) return false;
+    const diskMatch = diskSequences.find((item): item is SavedSequence =>
+      Boolean(item && typeof item === 'object' && (item as { id?: unknown }).id === sequence.id),
+    );
+    if (!diskMatch) return false;
+    return canonicalSavedSequenceSignature(diskMatch) === canonicalSavedSequenceSignature(sequence);
+  } catch {
+    return false;
+  }
+}
+
+/** Shared 1-click JSON backup download preserving both RAM edits and existing records. */
+export function downloadEmergencyBackupJson(): boolean {
+  try {
+    const json = usePilatesStore.getState().exportBackup();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `flow-atelier-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function storageResult(error: unknown | null): void {
   lastStorageError =
     error === null
@@ -646,9 +722,7 @@ function activeCriteria(state: PilatesStudioState): AutoGenerateCriteria {
  * lastCriteria/draft fallback and current-step metadata policy. Reading this
  * selector never applies an advanced-generator draft or changes the store.
  */
-export function getActiveSequencePlanningCriteria(
-  state: PilatesStudioState,
-): AutoGenerateCriteria {
+export function getActiveSequencePlanningCriteria(state: PilatesStudioState): AutoGenerateCriteria {
   return cloneCriteria(activeCriteria(state));
 }
 
@@ -733,17 +807,22 @@ function resolveManualPlanningCriteria(
   ) as Partial<AutoGenerateCriteria>;
   const source = getActiveSequencePlanningCriteria(state);
   const apparatus = definedPatch.apparatus ?? source.apparatus;
-  const needsEquipmentSelection = source.apparatus !== apparatus
-    || source.availableEquipment === undefined
-    || (apparatus !== 'mixed' && !source.availableEquipment.some((id) => getEquipmentFamily(id) === apparatus));
-  const availableEquipment = definedPatch.availableEquipment
-    ?? (definedPatch.ownedApparatus !== undefined
+  const needsEquipmentSelection =
+    source.apparatus !== apparatus ||
+    source.availableEquipment === undefined ||
+    (apparatus !== 'mixed' &&
+      !source.availableEquipment.some((id) => getEquipmentFamily(id) === apparatus));
+  const availableEquipment =
+    definedPatch.availableEquipment ??
+    (definedPatch.ownedApparatus !== undefined
       ? state.ownedEquipment.filter((id) => {
           const family = getEquipmentFamily(id);
           return family !== undefined && definedPatch.ownedApparatus!.includes(family);
         })
       : needsEquipmentSelection
-        ? state.ownedEquipment.filter((id) => apparatus === 'mixed' || getEquipmentFamily(id) === apparatus)
+        ? state.ownedEquipment.filter(
+            (id) => apparatus === 'mixed' || getEquipmentFamily(id) === apparatus,
+          )
         : source.availableEquipment!);
   const parsed = criteriaSchema.safeParse({
     ...cloneCriteria(source),
@@ -760,7 +839,9 @@ function resolveManualPlanningCriteria(
   if (!parsed.data.availableEquipment?.length)
     throw new Error('선택한 수업에 사용할 보유 기구를 하나 이상 선택해 주세요.');
   if (apparatus !== 'mixed' && !parsed.data.ownedApparatus?.includes(apparatus))
-    throw new Error('수업 기구와 선택한 세부 기구가 맞지 않습니다. 보유 기구 선택을 확인해 주세요.');
+    throw new Error(
+      '수업 기구와 선택한 세부 기구가 맞지 않습니다. 보유 기구 선택을 확인해 주세요.',
+    );
   return resolveCriteria(parsed.data, state);
 }
 
@@ -1214,22 +1295,28 @@ export const usePilatesStore = create<PilatesStudioState>()(
         try {
           const criteria = resolveManualPlanningCriteria(state, criteriaPatch);
           const sequenceId = newId('draft');
-          const apparatusLabel = criteria.apparatus === 'mixed'
-            ? '혼합 기구' : APPARATUS_LABELS[criteria.apparatus].ko;
-          set(edit(state, {
-            activeSequenceId: sequenceId,
-            activeTitle: '새 수업',
-            activeSubtitle: `${apparatusLabel} ${criteria.targetMinutes}분 · 직접 구성`,
-            activeApparatus: criteria.apparatus,
-            activeLevel: criteria.level,
-            activeTargetMinutes: criteria.targetMinutes,
-            activeTargetGroupId: criteria.targetGroupId ?? state.activeTargetGroupId,
-            activeSteps: [],
-            draftCriteria: cloneCriteria(criteria),
-            lastCriteria: cloneCriteria(criteria),
-            activeTab: 'workbench',
-          }));
-          return { success: true, sequenceId, message: '빈 수업을 열었습니다. 되돌리기로 이전 수업안을 복원할 수 있습니다.' };
+          const apparatusLabel =
+            criteria.apparatus === 'mixed' ? '혼합 기구' : APPARATUS_LABELS[criteria.apparatus].ko;
+          set(
+            edit(state, {
+              activeSequenceId: sequenceId,
+              activeTitle: '새 수업',
+              activeSubtitle: `${apparatusLabel} ${criteria.targetMinutes}분 · 직접 구성`,
+              activeApparatus: criteria.apparatus,
+              activeLevel: criteria.level,
+              activeTargetMinutes: criteria.targetMinutes,
+              activeTargetGroupId: criteria.targetGroupId ?? state.activeTargetGroupId,
+              activeSteps: [],
+              draftCriteria: cloneCriteria(criteria),
+              lastCriteria: cloneCriteria(criteria),
+              activeTab: 'workbench',
+            }),
+          );
+          return {
+            success: true,
+            sequenceId,
+            message: '빈 수업을 열었습니다. 되돌리기로 이전 수업안을 복원할 수 있습니다.',
+          };
         } catch (error) {
           const message = errorMessage(error);
           set({ generationError: message });
@@ -1242,26 +1329,29 @@ export const usePilatesStore = create<PilatesStudioState>()(
           const criteria = resolveManualPlanningCriteria(state, patch);
           const restError = restDurationError(state.activeSteps, criteria.targetMinutes);
           if (restError) throw new Error(restError);
-          const unchanged = state.activeApparatus === criteria.apparatus
-            && state.activeLevel === criteria.level
-            && state.activeTargetMinutes === criteria.targetMinutes
-            && state.activeTargetGroupId === criteria.targetGroupId
-            && canonicalRecoveryContent(state.draftCriteria) === canonicalRecoveryContent(criteria)
-            && canonicalRecoveryContent(state.lastCriteria) === canonicalRecoveryContent(criteria);
+          const unchanged =
+            state.activeApparatus === criteria.apparatus &&
+            state.activeLevel === criteria.level &&
+            state.activeTargetMinutes === criteria.targetMinutes &&
+            state.activeTargetGroupId === criteria.targetGroupId &&
+            canonicalRecoveryContent(state.draftCriteria) === canonicalRecoveryContent(criteria) &&
+            canonicalRecoveryContent(state.lastCriteria) === canonicalRecoveryContent(criteria);
           if (unchanged) return { success: true, message: '수업 조건이 이미 적용되어 있습니다.' };
           const incompatibleCount = state.activeSteps.filter((step) => {
             if (isRestStep(step)) return false;
             const exercise = state.exercises.find((item) => item.id === step.exerciseId);
             return !exercise || !exerciseMatchesCriteria(exercise, criteria);
           }).length;
-          set(edit(state, {
-            activeApparatus: criteria.apparatus,
-            activeLevel: criteria.level,
-            activeTargetMinutes: criteria.targetMinutes,
-            activeTargetGroupId: criteria.targetGroupId ?? state.activeTargetGroupId,
-            draftCriteria: cloneCriteria(criteria),
-            lastCriteria: cloneCriteria(criteria),
-          }));
+          set(
+            edit(state, {
+              activeApparatus: criteria.apparatus,
+              activeLevel: criteria.level,
+              activeTargetMinutes: criteria.targetMinutes,
+              activeTargetGroupId: criteria.targetGroupId ?? state.activeTargetGroupId,
+              draftCriteria: cloneCriteria(criteria),
+              lastCriteria: cloneCriteria(criteria),
+            }),
+          );
           return {
             success: true,
             message: incompatibleCount
@@ -1643,7 +1733,8 @@ export const usePilatesStore = create<PilatesStudioState>()(
         );
         return {
           success: true,
-          message: '횟수·세트·좌우를 저장했습니다. 전체 수행 시간은 유지됩니다.',
+          message:
+            lastStorageError ?? '횟수·세트·좌우를 저장했습니다. 전체 수행 시간은 유지됩니다.',
         };
       },
       setStepTimingOptions: (index, patch) => {
@@ -1676,7 +1767,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
         );
         return {
           success: true,
-          message: '이번 수업의 강사 입력 시간·기구 메모를 저장했습니다.',
+          message: lastStorageError ?? '이번 수업의 강사 입력 시간·기구 메모를 저장했습니다.',
         };
       },
       setStepBlockOptions: (index, patch, expectedStep) => {
@@ -1732,7 +1823,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
         );
         return {
           success: true,
-          message: '이번 수업의 강사 입력 블록 설정을 한 번에 저장했습니다.',
+          message: lastStorageError ?? '이번 수업의 강사 입력 블록 설정을 한 번에 저장했습니다.',
         };
       },
       adjustStepDuration: (index, deltaMin) =>
@@ -1922,8 +2013,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
         if (duplicatesAnotherStep(state, exercise))
           return {
             success: false,
-            message:
-              '같은 동작의 중복 구성은 추가할 수 없습니다. 다른 동작을 선택해 주세요.',
+            message: '같은 동작의 중복 구성은 추가할 수 없습니다. 다른 동작을 선택해 주세요.',
           };
         const criteria = activeCriteria(state);
         const equipment = getExerciseEquipment(exercise);
@@ -1934,8 +2024,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
         )
           return {
             success: false,
-            message:
-              '현재 선택한 기구·소도구와 최대 난이도 조건에 맞는 동작만 추가할 수 있습니다.',
+            message: '현재 선택한 기구·소도구와 최대 난이도 조건에 맞는 동작만 추가할 수 있습니다.',
           };
         const previous = state.exercises.find(
           (item) => item.id === state.activeSteps[resolved.index - 1]?.exerciseId,
@@ -1943,11 +2032,12 @@ export const usePilatesStore = create<PilatesStudioState>()(
         const previousEquipment = previous
           ? [...getExerciseEquipment(previous).requiredEquipment].sort().join('|')
           : '';
-        const transitionSec = resolved.index === 0
-          ? 0
-          : previousEquipment === [...equipment.requiredEquipment].sort().join('|')
-            ? 15
-            : 45;
+        const transitionSec =
+          resolved.index === 0
+            ? 0
+            : previousEquipment === [...equipment.requiredEquipment].sort().join('|')
+              ? 15
+              : 45;
         const insertedStep: SequenceStep = {
           stepId: newId('step-add'),
           order: resolved.index + 1,
@@ -1964,19 +2054,21 @@ export const usePilatesStore = create<PilatesStudioState>()(
         };
         const activeSteps = [...state.activeSteps];
         activeSteps.splice(resolved.index, 0, insertedStep);
-        set(edit(state, {
-          activeSteps: activeSteps.map((step, index) =>
-            step.locked ? step : { ...step, order: index + 1 },
-          ),
-          ...(!state.activeSteps.length
-            ? {
-                activeApparatus: criteria.apparatus,
-                activeLevel: criteria.level,
-                activeTargetMinutes: criteria.targetMinutes,
-                activeTargetGroupId: criteria.targetGroupId ?? state.activeTargetGroupId,
-              }
-            : {}),
-        }));
+        set(
+          edit(state, {
+            activeSteps: activeSteps.map((step, index) =>
+              step.locked ? step : { ...step, order: index + 1 },
+            ),
+            ...(!state.activeSteps.length
+              ? {
+                  activeApparatus: criteria.apparatus,
+                  activeLevel: criteria.level,
+                  activeTargetMinutes: criteria.targetMinutes,
+                  activeTargetGroupId: criteria.targetGroupId ?? state.activeTargetGroupId,
+                }
+              : {}),
+          }),
+        );
         return {
           success: true,
           stepId: insertedStep.stepId,
@@ -2079,7 +2171,10 @@ export const usePilatesStore = create<PilatesStudioState>()(
           };
         const source = state.savedSequences.find((sequence) => sequence.id === sourceId);
         if (!source)
-          return { success: false, message: '저장한 수업을 찾을 수 없습니다. 목록에서 다시 선택해 주세요.' };
+          return {
+            success: false,
+            message: '저장한 수업을 찾을 수 없습니다. 목록에서 다시 선택해 주세요.',
+          };
 
         const id = newId('seq-copy');
         const now = new Date().toISOString();
@@ -2092,23 +2187,32 @@ export const usePilatesStore = create<PilatesStudioState>()(
           taughtCount: 0,
           lastTaughtAt: undefined,
         };
-        set(edit(state, {
-          savedSequences: [copy, ...state.savedSequences],
-          draftCriteria: cloneCriteria(
-            copy.criteriaSnapshot ??
-              criteriaForSteps(state, copy.steps, copy.apparatus, copy.level, copy.targetMinutes),
-          ),
-          activeSequenceId: copy.id,
-          activeTitle: copy.title,
-          activeSubtitle: copy.subtitle,
-          activeApparatus: copy.apparatus,
-          activeLevel: copy.level,
-          activeTargetMinutes: copy.targetMinutes,
-          activeSteps: cloneSteps(copy.steps).map((step, index) => ({ ...step, order: index + 1 })),
-          activeTab: 'workbench',
-          saveFeedback: '원본을 유지하고 사본을 열었습니다.',
-        }));
-        return { success: true, sequenceId: copy.id, message: '원본을 유지하고 사본을 열었습니다.' };
+        set(
+          edit(state, {
+            savedSequences: [copy, ...state.savedSequences],
+            draftCriteria: cloneCriteria(
+              copy.criteriaSnapshot ??
+                criteriaForSteps(state, copy.steps, copy.apparatus, copy.level, copy.targetMinutes),
+            ),
+            activeSequenceId: copy.id,
+            activeTitle: copy.title,
+            activeSubtitle: copy.subtitle,
+            activeApparatus: copy.apparatus,
+            activeLevel: copy.level,
+            activeTargetMinutes: copy.targetMinutes,
+            activeSteps: cloneSteps(copy.steps).map((step, index) => ({
+              ...step,
+              order: index + 1,
+            })),
+            activeTab: 'workbench',
+            saveFeedback: '원본을 유지하고 사본을 열었습니다.',
+          }),
+        );
+        return {
+          success: true,
+          sequenceId: copy.id,
+          message: '원본을 유지하고 사본을 열었습니다.',
+        };
       },
       duplicateSavedSequence: (sequenceId) => {
         const state = get();
@@ -2410,7 +2514,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
           generationError: null,
           saveFeedback: message,
         });
-        return { success: true, message };
+        return { success: true, message: lastStorageError ?? message };
       },
       saveCurrentConditionsToGroup: (groupId) => {
         const state = get();
@@ -2437,7 +2541,7 @@ export const usePilatesStore = create<PilatesStudioState>()(
             generationError: null,
             saveFeedback: message,
           });
-          return { success: true, message };
+          return { success: true, message: lastStorageError ?? message };
         } catch (error) {
           const message = errorMessage(error);
           set({ generationError: message });
