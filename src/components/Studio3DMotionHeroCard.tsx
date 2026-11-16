@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Box, Image, Layers, Play, ShieldAlert, Sparkles, Wind } from 'lucide-react';
+import React, { useMemo, useRef, useState } from 'react';
+import { Activity, Box, Image, Layers, ShieldAlert, Sparkles, Wind } from 'lucide-react';
 import { APPARATUS_LABELS, POSITION_LABELS } from '../data/pilatesCatalog';
 import { getCatalogContinuousMotionAsset } from '../data/catalogMotionAssets';
 import { getExpandedMovementVisualBinding } from '../data/expandedMovementVisualBindings';
@@ -22,17 +22,27 @@ export interface Studio3DMotionHeroCardProps {
 }
 
 const FOOTBAR_LABELS_KO: Record<FootbarState, string> = {
-  high: '높음(High)',
-  mid: '중간(Mid)',
-  low: '낮음(Low)',
-  down: '내림(Down)',
+  high: '높음',
+  mid: '중간',
+  low: '낮음',
+  down: '내림',
   none: '미사용',
 };
 
 const HEADREST_LABELS_KO: Record<HeadrestState, string> = {
-  up: '올림(Up)',
-  flat: '평평함(Flat)',
-  down: '내림(Down)',
+  up: '올림',
+  flat: '평평함',
+  down: '내림',
+};
+
+const FRIENDLY_POSITION_KO: Record<PilatesExercise['bodyPosition'], string> = {
+  supine: '편안히 누운 자세',
+  prone: '엎드린 자세',
+  'side-lying': '옆으로 누운 자세',
+  seated: '바르게 앉은 자세',
+  kneeling: '무릎 지지 자세',
+  quadruped: '네발기기 자세',
+  standing: '선 자세',
 };
 
 const BOX_LABELS_KO: Record<BoxState, string> = {
@@ -43,24 +53,25 @@ const BOX_LABELS_KO: Record<BoxState, string> = {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function formatExerciseSetupSummaryKo(exercise: PilatesExercise): string {
-  const posKo = POSITION_LABELS[exercise.bodyPosition]?.ko ?? exercise.bodyPosition;
+  const posKo =
+    FRIENDLY_POSITION_KO[exercise.bodyPosition] ??
+    POSITION_LABELS[exercise.bodyPosition]?.ko ??
+    exercise.bodyPosition;
   if (exercise.apparatus === 'reformer') {
     const boxPart = BOX_LABELS_KO[exercise.box] ? ` · ${BOX_LABELS_KO[exercise.box]}` : '';
     return `풋바 ${FOOTBAR_LABELS_KO[exercise.footbar]} · 헤드레스트 ${HEADREST_LABELS_KO[exercise.headrest]}${boxPart}`;
   }
   if (exercise.apparatus === 'cadillac') {
-    return `푸시스루·타워 바 안전핀 점검 · ${posKo} 지지`;
+    return `타워·바 안전핀 확인 · ${posKo}`;
   }
   if (exercise.apparatus === 'chair') {
-    return `스플릿 페달·핸들 고정 점검 · ${posKo} 지지`;
+    return `페달·핸들 고정 확인 · ${posKo}`;
   }
   if (exercise.apparatus === 'barrel') {
-    return `아치 정점·래더 스텝 간격 조정 · ${posKo} 지지`;
+    return `바렐 정점·래더 간격 조절 · ${posKo}`;
   }
   const hasProps = exercise.props.some((prop) => prop !== 'none');
-  return hasProps
-    ? `매트 수평 정렬 · 소도구 위치 확인 (${posKo})`
-    : `논슬립 매트 수평 정렬 · ${posKo} 중립 확보`;
+  return hasProps ? `매트 수평 정렬 · 소도구 위치 확인 (${posKo})` : `매트 수평 정렬 · ${posKo}`;
 }
 
 export const Studio3DMotionHeroCard: React.FC<Studio3DMotionHeroCardProps> = (props) => (
@@ -88,6 +99,8 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
     /^expanded-|^crawled-/.test(exercise.id) || !getMovementVisualAsset(exercise.id);
   const [mode, setMode] = useState<Studio3DViewMode>('motion');
   const [modeler3dOpen, setModeler3dOpen] = useState(false);
+  const [previewLayer, setPreviewLayer] = useState<'easy' | 'standard' | 'hard'>('standard');
+  const modelerPanelRef = useRef<HTMLDivElement>(null);
   const postureMode = mode !== 'motion';
   const activePhase: VisualPhaseId = mode === 'start' ? 'start' : mode === 'end' ? 'end' : 'middle';
   const patternTitle = representative ? motionAsset?.visualAsset.archetypeTitleKo : exercise.nameKo;
@@ -119,7 +132,9 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
         <div className="pf-studio3d-hero-card__badges">
           <span className="pf-studio3d-scope-pill">
             {APPARATUS_LABELS[exercise.apparatus]?.ko ?? exercise.apparatus} ·{' '}
-            {POSITION_LABELS[exercise.bodyPosition]?.ko ?? exercise.bodyPosition}
+            {FRIENDLY_POSITION_KO[exercise.bodyPosition] ??
+              POSITION_LABELS[exercise.bodyPosition]?.ko ??
+              exercise.bodyPosition}
           </span>
           <span className="pf-studio3d-honest-pill">
             {sourceOnly
@@ -141,7 +156,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
               aria-pressed={mode === 'motion'}
               onClick={() => setMode('motion')}
             >
-              <Play size={14} aria-hidden="true" /> 동작 재생
+              <Activity size={14} aria-hidden="true" /> 동작 재생
             </button>
             <button
               type="button"
@@ -250,7 +265,18 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
             className={`pf-hero-3d-modeler-toggle ${modeler3dOpen ? 'is-open' : ''}`}
             data-testid="toggle-interactive-3d-modeler"
             aria-expanded={modeler3dOpen}
-            onClick={() => setModeler3dOpen((prev) => !prev)}
+            onClick={() => {
+              const next = !modeler3dOpen;
+              setModeler3dOpen(next);
+              if (next) {
+                requestAnimationFrame(() =>
+                  modelerPanelRef.current?.scrollIntoView?.({
+                    behavior: 'smooth',
+                    block: 'center',
+                  }),
+                );
+              }
+            }}
           >
             <Box size={14} aria-hidden="true" />
             <span>{modeler3dOpen ? '3D 모델러 닫기' : '3D 모델러 열기'}</span>
@@ -259,7 +285,11 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
       )}
 
       {hasNativeMotion && modeler3dOpen && (
-        <div className="pf-hero-3d-modeler-panel" data-testid="interactive-3d-modeler-panel">
+        <div
+          ref={modelerPanelRef}
+          className="pf-hero-3d-modeler-panel"
+          data-testid="interactive-3d-modeler-panel"
+        >
           <StudioInteractive3DViewport
             exercise={exercise}
             compact={compact}
@@ -316,7 +346,7 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
             <div className="pf-detail-quick-cue-box" data-testid="detail-quick-cue-box">
               {topCues.length > 0 && (
                 <div className="pf-detail-quick-cue-box__cues">
-                  <strong>즉시 티칭 큐</strong>
+                  <strong>핵심 티칭 큐</strong>
                   <ul>
                     {topCues.map((cue, idx) => (
                       <li key={idx}>{cue}</li>
@@ -324,11 +354,43 @@ const Studio3DMotionHeroContent: React.FC<Studio3DMotionHeroCardProps> = ({
                   </ul>
                 </div>
               )}
+              {(exercise.layers.easy || exercise.layers.standard || exercise.layers.hard) && (
+                <div
+                  className="pf-detail-layer-switcher"
+                  data-testid="detail-layer-switcher"
+                  role="group"
+                  aria-label="난이도별 변형 큐 보기"
+                >
+                  <div className="pf-detail-layer-switcher__tabs">
+                    <span>회원별 강도 조절</span>
+                    {(
+                      [
+                        { id: 'easy', label: '완화' },
+                        { id: 'standard', label: '기본' },
+                        { id: 'hard', label: '심화' },
+                      ] as const
+                    ).map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className={`pf-detail-layer-tab ${previewLayer === opt.id ? 'is-active' : ''}`}
+                        aria-pressed={previewLayer === opt.id}
+                        onClick={() => setPreviewLayer(opt.id)}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="pf-detail-layer-switcher__text">
+                    {exercise.layers[previewLayer] || '기본 동작 안내에 따라 진행합니다.'}
+                  </p>
+                </div>
+              )}
               {exercise.precautions?.trim() && (
                 <p className="pf-detail-quick-cue-box__caution">
                   <ShieldAlert size={14} aria-hidden="true" />
                   <span>
-                    <strong>주의:</strong> {exercise.precautions}
+                    <strong>주의 포인트:</strong> {exercise.precautions}
                   </span>
                 </p>
               )}

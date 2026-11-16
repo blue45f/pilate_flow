@@ -894,10 +894,10 @@ const MovementDetails: React.FC<{
   };
   const previewStepGuidance =
     previewStep === 1
-      ? '지금 할 일 (1/2): 원본 영상 구간과 기본 자세·티칭 큐를 먼저 확인하세요.'
+      ? '지금 할 일 (1/2): 동작 흐름과 티칭 포인트를 가볍게 살펴보세요.'
       : hasUnsavedReview || draftRestoredNotice
-        ? '지금 할 일 (2/2): 수정한 시작·종료 시각과 큐 메모를 확인한 뒤 저장하거나 초기화하세요.'
-        : '지금 할 일 (2/2): 실제 영상과 비교해 시작·종료 시각 및 큐 메모를 수정·저장하세요.';
+        ? '지금 할 일 (2/2): 수정한 구간·큐 메모를 저장하거나 초기화해 주세요.'
+        : '지금 할 일 (2/2): 필요할 때만 영상 구간과 내 티칭 메모를 다듬어 저장하세요.';
   const source = getMovementProvenance(exercise);
   const primarySourceResult = sourceReferenceSchema.safeParse(exercise.sourceReference);
   const primarySource = primarySourceResult.success ? primarySourceResult.data : null;
@@ -1030,199 +1030,207 @@ const MovementDetails: React.FC<{
           }}
         />
       </details>
-      <details
-        className="pf-detail-progressive-drawer"
-        data-testid="detail-clinical-diagram-drawer"
-      >
-        <summary>
-          <span>기구학 2D 보조 도해 · 임상 브리프 보기</span>
-          <ChevronDown size={14} aria-hidden="true" />
-        </summary>
-        <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
-          <div className="movement-detail-topline">
-            <span className="library-badge">
-              {getExerciseEquipment(exercise)
-                .requiredEquipment.map(
-                  (id) => EQUIPMENT_OPTIONS.find((item) => item.id === id)?.labelKo || id,
-                )
-                .join(' · ') || APPARATUS_LABELS[exercise.apparatus].ko}
-            </span>
-            {exercise.springs && <SpringVisualPills springs={exercise.springs} />}
-            <span className="library-badge">Lv {exercise.level}</span>
-            <span className="library-badge">
-              <Clock3 size={12} /> 계획 {exercise.defaultDurationMin}분
-              {exercise.isUnilateral ? ' · 양쪽 포함' : ''}
-            </span>
-            <span className={`library-badge provenance-${source.kind}`}>
-              {primarySource ? '공개 자료를 참고한 내 계획 노트 · 원출처 보존' : source.label}
-            </span>
-          </div>
-          <StudioClinicalBriefCard exercise={exercise} />
-          <MovementDiagramReference exercise={exercise} />
-          {approved ? (
-            <ExercisePlanningNotes exercise={exercise} pending={false} />
-          ) : (
-            <ExercisePlanningNotes exercise={exercise} pending />
-          )}
-        </div>
-      </details>
-      <details className="pf-detail-progressive-drawer" data-testid="detail-posture-anatomy-drawer">
-        <summary>
-          <span>자세 정렬 · 주동근 해부학 가이드 펼쳐보기</span>
-          <ChevronDown size={14} aria-hidden="true" />
-        </summary>
-        <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
-          <PostureAnatomyGuide exercise={exercise} />
-        </div>
-      </details>
-      <details
-        className="pf-detail-progressive-drawer"
-        data-testid="detail-voice-media-drawer"
-        onToggle={(event) => setVoiceGuideOpen(event.currentTarget.open)}
-      >
-        <summary>
-          <span>음성 티칭 가이드 · 모션 레퍼런스 펼쳐보기</span>
-          <ChevronDown size={14} aria-hidden="true" />
-        </summary>
-        {voiceGuideOpen && (
+      <div className="pf-preview-secondary-group" aria-label="보조 학습 및 출처 자료">
+        <p className="pf-preview-secondary-group__heading">
+          심화 가이드 · 출처 정보 (필요할 때 펼쳐보기)
+        </p>
+        <details
+          className="pf-detail-progressive-drawer"
+          data-testid="detail-clinical-diagram-drawer"
+        >
+          <summary>
+            <span>단계별 자세 도해 · 상세 메모 보기</span>
+            <ChevronDown size={14} aria-hidden="true" />
+          </summary>
           <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
-            <MovementMediaGuidancePanel key={exercise.id} exercise={exercise} voiceOnly />
-            <MotionReferencePlayer
-              exercise={exercise}
-              exerciseId={exercise.id}
-              exerciseName={exercise.nameKo}
-            />
+            <div className="movement-detail-topline">
+              <span className="library-badge">
+                {getExerciseEquipment(exercise)
+                  .requiredEquipment.map(
+                    (id) => EQUIPMENT_OPTIONS.find((item) => item.id === id)?.labelKo || id,
+                  )
+                  .join(' · ') || APPARATUS_LABELS[exercise.apparatus].ko}
+              </span>
+              {exercise.springs && <SpringVisualPills springs={exercise.springs} />}
+              <span className="library-badge">Lv {exercise.level}</span>
+              <span className="library-badge">
+                <Clock3 size={12} /> 계획 {exercise.defaultDurationMin}분
+                {exercise.isUnilateral ? ' · 양쪽 포함' : ''}
+              </span>
+              <span className={`library-badge provenance-${source.kind}`}>
+                {primarySource ? '공개 자료를 참고한 내 계획 노트 · 원출처 보존' : source.label}
+              </span>
+            </div>
+            <StudioClinicalBriefCard exercise={exercise} />
+            <MovementDiagramReference exercise={exercise} />
+            {approved ? (
+              <ExercisePlanningNotes exercise={exercise} pending={false} />
+            ) : (
+              <ExercisePlanningNotes exercise={exercise} pending />
+            )}
           </div>
-        )}
-      </details>
-      <details
-        className="pending-instruction-notes"
-        onToggle={(event) => setMotionLabOpen(event.currentTarget.open)}
-      >
-        <summary>
-          <span>
-            <Info size={15} />
-            교차 검증 모션 설계 예시 · 패턴 참고용
-          </span>
-          <ChevronDown size={15} />
-        </summary>
-        <MotionReferencePlayer mode="prototype-lab" active={motionLabOpen} />
-      </details>
-      <details className="optional-source-details">
-        <summary>출처·검토 상태 자세히 보기</summary>
-        <ExerciseEvidencePanel exercise={exercise} />
-        <section className="movement-source-panel">
-          <div className="movement-detail-section-title">
-            <Info size={16} />
-            <h3>자료의 출처와 검토 상태</h3>
+        </details>
+        <details
+          className="pf-detail-progressive-drawer"
+          data-testid="detail-posture-anatomy-drawer"
+        >
+          <summary>
+            <span>자세 정렬 · 타겟 근육 가이드</span>
+            <ChevronDown size={14} aria-hidden="true" />
+          </summary>
+          <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
+            <PostureAnatomyGuide exercise={exercise} />
           </div>
-          {primarySource ? (
-            <div className="movement-primary-source">
-              <p>
-                공개 자료를 참고해 직접 작성한 별도 계획 노트입니다. 원출처의 확인 상태와 내 강사
-                검토 기록은 서로 다릅니다.
-              </p>
-              <p className="muted">
-                노트에 보관한 기록이며 현재 출처 대조는 위 근거 패널에서 확인하세요.
-              </p>
+        </details>
+        <details
+          className="pf-detail-progressive-drawer"
+          data-testid="detail-voice-media-drawer"
+          onToggle={(event) => setVoiceGuideOpen(event.currentTarget.open)}
+        >
+          <summary>
+            <span>음성 안내 · 연속 모션 레퍼런스</span>
+            <ChevronDown size={14} aria-hidden="true" />
+          </summary>
+          {voiceGuideOpen && (
+            <div style={{ display: 'grid', gap: '12px', paddingTop: '10px' }}>
+              <MovementMediaGuidancePanel key={exercise.id} exercise={exercise} voiceOnly />
+              <MotionReferencePlayer
+                exercise={exercise}
+                exerciseId={exercise.id}
+                exerciseName={exercise.nameKo}
+              />
+            </div>
+          )}
+        </details>
+        <details
+          className="pending-instruction-notes pf-detail-progressive-drawer"
+          onToggle={(event) => setMotionLabOpen(event.currentTarget.open)}
+        >
+          <summary>
+            <span>
+              <Info size={15} />
+              교차 검증 모션 설계 예시 · 패턴 참고용
+            </span>
+            <ChevronDown size={15} />
+          </summary>
+          <MotionReferencePlayer mode="prototype-lab" active={motionLabOpen} />
+        </details>
+        <details className="optional-source-details pf-detail-progressive-drawer">
+          <summary>출처·검토 상태 자세히 보기</summary>
+          <ExerciseEvidencePanel exercise={exercise} />
+          <section className="movement-source-panel">
+            <div className="movement-detail-section-title">
+              <Info size={16} />
+              <h3>자료의 출처와 검토 상태</h3>
+            </div>
+            {primarySource ? (
+              <div className="movement-primary-source">
+                <p>
+                  공개 자료를 참고해 직접 작성한 별도 계획 노트입니다. 원출처의 확인 상태와 내 강사
+                  검토 기록은 서로 다릅니다.
+                </p>
+                <p className="muted">
+                  노트에 보관한 기록이며 현재 출처 대조는 위 근거 패널에서 확인하세요.
+                </p>
+                <dl className="movement-source-fields">
+                  <div>
+                    <dt>원출처 제목</dt>
+                    <dd>{primarySource.title}</dd>
+                  </div>
+                  <div>
+                    <dt>발행처</dt>
+                    <dd>{primarySource.publisher}</dd>
+                  </div>
+                  <div>
+                    <dt>자료 구분</dt>
+                    <dd>{primarySource.region === 'kr' ? '국내 후보' : '해외 출처'}</dd>
+                  </div>
+                  <div>
+                    <dt>보관된 출처 확인 상태</dt>
+                    <dd>
+                      {primarySource.verificationStatus === 'partial-playback-checked'
+                        ? '영상 부분 확인 · 동작 구간 미확인'
+                        : primarySource.verificationStatus === 'official-source-checked'
+                          ? '공식 출처 확인 · 운동 검수와 별개'
+                          : '출처 후보 · 영상 품질 미확인'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>출처 기록</dt>
+                    <dd>
+                      {primarySource.referenceId} · {primarySource.verifiedAt}
+                    </dd>
+                  </div>
+                </dl>
+                <a
+                  href={primarySource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                >
+                  <ExternalLink size={14} /> 보존된 원출처 열기
+                </a>
+                <p className="source-note-url">{primarySource.url}</p>
+                <p className="muted">
+                  원본 링크 전용 · 영상·이미지 복제권과 외부 임베드 허용 미확인. 원본 공개 자료는
+                  전문가 미검수·자동 추천 제외 상태를 유지합니다. 관찰 시점을 동작 시작·종료
+                  구간으로 옮기지 않았습니다.
+                </p>
+              </div>
+            ) : (
+              <>
+                <p>{source.description}</p>
+                <p className="muted">{source.rights}</p>
+                {exercise.sourceReference && (
+                  <p className="library-inline-warning">
+                    원출처 기록의 형식을 확인해 주세요. 유효하지 않은 주소는 열지 않습니다.
+                  </p>
+                )}
+              </>
+            )}
+            {source.kind !== 'original' && showVideoSource && (
               <dl className="movement-source-fields">
                 <div>
-                  <dt>원출처 제목</dt>
-                  <dd>{primarySource.title}</dd>
+                  <dt>입력된 채널명</dt>
+                  <dd>{exercise.youtube.channelName || '등록되지 않음'}</dd>
                 </div>
                 <div>
-                  <dt>발행처</dt>
-                  <dd>{primarySource.publisher}</dd>
+                  <dt>입력된 영상 제목</dt>
+                  <dd>{exercise.youtube.videoTitle || '등록되지 않음'}</dd>
                 </div>
                 <div>
-                  <dt>자료 구분</dt>
-                  <dd>{primarySource.region === 'kr' ? '국내 후보' : '해외 출처'}</dd>
-                </div>
-                <div>
-                  <dt>보관된 출처 확인 상태</dt>
+                  <dt>참조 구간</dt>
                   <dd>
-                    {primarySource.verificationStatus === 'partial-playback-checked'
-                      ? '영상 부분 확인 · 동작 구간 미확인'
-                      : primarySource.verificationStatus === 'official-source-checked'
-                        ? '공식 출처 확인 · 운동 검수와 별개'
-                        : '출처 후보 · 영상 품질 미확인'}
-                  </dd>
-                </div>
-                <div>
-                  <dt>출처 기록</dt>
-                  <dd>
-                    {primarySource.referenceId} · {primarySource.verifiedAt}
+                    {formatSecondsToMMSS(safeStart)}
+                    {safeEnd ? `–${formatSecondsToMMSS(safeEnd)}` : '부터 · 종료 미지정'}
                   </dd>
                 </div>
               </dl>
-              <a
-                href={primarySource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-secondary"
-              >
-                <ExternalLink size={14} /> 보존된 원출처 열기
-              </a>
-              <p className="source-note-url">{primarySource.url}</p>
-              <p className="muted">
-                원본 링크 전용 · 영상·이미지 복제권과 외부 임베드 허용 미확인. 원본 공개 자료는
-                전문가 미검수·자동 추천 제외 상태를 유지합니다. 관찰 시점을 동작 시작·종료 구간으로
-                옮기지 않았습니다.
-              </p>
-            </div>
-          ) : (
-            <>
-              <p>{source.description}</p>
-              <p className="muted">{source.rights}</p>
-              {exercise.sourceReference && (
+            )}
+            {link ? (
+              <div className="movement-source-actions">
+                <a href={link} target="_blank" rel="noopener noreferrer" className="btn-secondary">
+                  <ExternalLink size={14} /> 원본에서 이 구간 열기
+                </a>
+                <span className="muted">재생을 누르면 YouTube에 연결됩니다.</span>
+              </div>
+            ) : (
+              source.kind !== 'original' &&
+              showVideoSource && (
                 <p className="library-inline-warning">
-                  원출처 기록의 형식을 확인해 주세요. 유효하지 않은 주소는 열지 않습니다.
+                  유효한 영상 링크가 없어 원본을 열 수 없습니다.
                 </p>
-              )}
-            </>
-          )}
-          {source.kind !== 'original' && showVideoSource && (
-            <dl className="movement-source-fields">
-              <div>
-                <dt>입력된 채널명</dt>
-                <dd>{exercise.youtube.channelName || '등록되지 않음'}</dd>
-              </div>
-              <div>
-                <dt>입력된 영상 제목</dt>
-                <dd>{exercise.youtube.videoTitle || '등록되지 않음'}</dd>
-              </div>
-              <div>
-                <dt>참조 구간</dt>
-                <dd>
-                  {formatSecondsToMMSS(safeStart)}
-                  {safeEnd ? `–${formatSecondsToMMSS(safeEnd)}` : '부터 · 종료 미지정'}
-                </dd>
-              </div>
-            </dl>
-          )}
-          {link ? (
-            <div className="movement-source-actions">
-              <a href={link} target="_blank" rel="noopener noreferrer" className="btn-secondary">
-                <ExternalLink size={14} /> 원본에서 이 구간 열기
-              </a>
-              <span className="muted">재생을 누르면 YouTube에 연결됩니다.</span>
-            </div>
-          ) : (
-            source.kind !== 'original' &&
-            showVideoSource && (
-              <p className="library-inline-warning">
-                유효한 영상 링크가 없어 원본을 열 수 없습니다.
-              </p>
-            )
-          )}
-        </section>
-      </details>
+              )
+            )}
+          </section>
+        </details>
+      </div>
       <p className="pf-p07-honest-footnote">
         <Info size={14} aria-hidden="true" />
         <span>
           {approved
-            ? '내 강사 검토 기록이 있는 계획 메타데이터 · 외부 자격 인증과 별개이며 수업 전 기구·회원 상태를 직접 확인하세요.'
-            : '교차 검증 완료 참고 자료 · 수업안에 바로 추가할 수 있으며 수행 전 스프링과 몸 상태를 확인하세요.'}
+            ? '내가 검토한 수업 계획 메모입니다. 수업 전 기구 세팅과 회원 컨디션을 한 번 더 확인해 주세요.'
+            : '수업안에 바로 추가할 수 있는 참고 자료입니다. 실제 진행 전 스프링과 회원 컨디션을 확인해 주세요.'}
         </span>
       </p>
       {onAddToSequence && (

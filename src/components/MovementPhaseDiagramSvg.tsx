@@ -259,25 +259,64 @@ function renderSpringCoilPath(
   y1: number,
   x2: number,
   y2: number,
-  coils = 5,
-  amplitude = 3.2,
+  coils = 9,
+  amplitude = 1.9,
 ): string {
   const dx = x2 - x1;
   const dy = y2 - y1;
   const len = Math.hypot(dx, dy);
-  if (len < 4) return `M ${x1} ${y1} L ${x2} ${y2}`;
-  const nx = -dy / len;
-  const ny = dx / len;
-  const steps = coils * 2;
-  let d = `M ${r1(x1)} ${r1(y1)}`;
+  if (len < 6) return `M ${r1(x1)} ${r1(y1)} L ${r1(x2)} ${r1(y2)}`;
+  const ux = dx / len;
+  const uy = dy / len;
+  const nx = -uy;
+  const ny = ux;
+  const hookLead = Math.min(9, len * 0.16);
+  const coilLen = Math.max(2, len - hookLead * 2);
+  const sx = x1 + ux * hookLead;
+  const sy = y1 + uy * hookLead;
+  const ex = x2 - ux * hookLead;
+  const ey = y2 - uy * hookLead;
+  const actualCoils = Math.max(4, Math.min(12, Math.round(coils)));
+  const steps = actualCoils * 2;
+  const effAmp = Math.min(amplitude, coilLen * 0.14);
+  let d = `M ${r1(x1)} ${r1(y1)} L ${r1(sx)} ${r1(sy)}`;
   for (let i = 1; i < steps; i += 1) {
     const t = i / steps;
     const sign = i % 2 === 1 ? 1 : -1;
-    const px = x1 + dx * t + nx * amplitude * sign;
-    const py = y1 + dy * t + ny * amplitude * sign;
+    const px = sx + (ex - sx) * t + nx * effAmp * sign;
+    const py = sy + (ey - sy) * t + ny * effAmp * sign;
     d += ` L ${r1(px)} ${r1(py)}`;
   }
-  d += ` L ${r1(x2)} ${r1(y2)}`;
+  d += ` L ${r1(ex)} ${r1(ey)} L ${r1(x2)} ${r1(y2)}`;
+  return d;
+}
+
+function renderCadillacSpringWithCordPath(x1: number, y1: number, x2: number, y2: number): string {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy);
+  if (len < 12) return `M ${r1(x1)} ${r1(y1)} L ${r1(x2)} ${r1(y2)}`;
+  const ux = dx / len;
+  const uy = dy / len;
+  const nx = -uy;
+  const ny = ux;
+  const hookLead = Math.min(6, len * 0.08);
+  const coilSpan = Math.min(36, Math.max(16, len * 0.34));
+  const sx = x1 + ux * hookLead;
+  const sy = y1 + uy * hookLead;
+  const ex = sx + ux * coilSpan;
+  const ey = sy + uy * coilSpan;
+  const steps = 18;
+  const effAmp = 1.65;
+  let d = `M ${r1(x1)} ${r1(y1)} L ${r1(sx)} ${r1(sy)}`;
+  for (let i = 1; i < steps; i += 1) {
+    const t = i / steps;
+    const sign = i % 2 === 1 ? 1 : -1;
+    const px = sx + (ex - sx) * t + nx * effAmp * sign;
+    const py = sy + (ey - sy) * t + ny * effAmp * sign;
+    d += ` L ${r1(px)} ${r1(py)}`;
+  }
+  d += ` L ${r1(ex)} ${r1(ey)} L ${r1(x2)} ${r1(y2)}`;
   return d;
 }
 
@@ -411,10 +450,10 @@ function renderApparatusSupportLayer(
         <circle cx={cMinX + Math.max(18, cWidth - 14)} cy={151.5} r={2.1} fill="#4c5d56" />
 
         <path
-          d={renderSpringCoilPath(springStart.x, springStart.y, springEnd.x, springEnd.y, 7, 3.2)}
+          d={renderSpringCoilPath(springStart.x, springStart.y, springEnd.x, springEnd.y, 9, 1.8)}
           fill="none"
           stroke={springColor}
-          strokeWidth={1.85}
+          strokeWidth={1.45}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -427,15 +466,15 @@ function renderApparatusSupportLayer(
           height={9.8}
           rx={3.5}
           fill={`url(#${grads.upholsteryId})`}
-          stroke="#24443a"
-          strokeWidth={1.5}
+          stroke="#2c4d42"
+          strokeWidth={1.2}
         />
         <line
           x1={cMinX + 4}
           y1={144.2}
           x2={cMinX + Math.max(8, cWidth - 4)}
           y2={144.2}
-          stroke="rgba(245, 247, 242, 0.44)"
+          stroke="rgba(252, 252, 248, 0.52)"
           strokeWidth={1}
         />
 
@@ -448,15 +487,15 @@ function renderApparatusSupportLayer(
               height={19}
               rx={3.5}
               fill={`url(#${grads.upholsteryId})`}
-              stroke="#2c443c"
-              strokeWidth={1.3}
+              stroke="#2c4d42"
+              strokeWidth={1.15}
             />
             <line
               x1={boxMinX + 4}
               y1={125.5}
               x2={boxMinX + Math.max(8, boxWidth - 4)}
               y2={125.5}
-              stroke="rgba(255, 252, 245, 0.38)"
+              stroke="rgba(255, 252, 245, 0.48)"
               strokeWidth={1}
             />
           </g>
@@ -467,8 +506,8 @@ function renderApparatusSupportLayer(
           y1={138.8}
           x2={headrestX2}
           y2={142.8}
-          stroke="#2b4c41"
-          strokeWidth={4.4}
+          stroke="#35584c"
+          strokeWidth={4}
           strokeLinecap="round"
         />
         <rect
@@ -476,10 +515,10 @@ function renderApparatusSupportLayer(
           y={130.5}
           width={8}
           height={12}
-          rx={2.2}
-          fill="#355449"
-          stroke="#1f3b32"
-          strokeWidth={1.2}
+          rx={2.4}
+          fill="#416457"
+          stroke="#264339"
+          strokeWidth={1.05}
         />
 
         <line
@@ -487,30 +526,33 @@ function renderApparatusSupportLayer(
           y1={pulleyPostBase.y}
           x2={pulleyPostTop.x}
           y2={pulleyPostTop.y}
-          stroke="#6b5235"
-          strokeWidth={3}
+          stroke="#8a6842"
+          strokeWidth={2.8}
           strokeLinecap="round"
         />
         <circle
           cx={pulleyPostTop.x}
           cy={pulleyPostTop.y}
-          r={3.4}
+          r={3.2}
           fill="#fcfaf5"
-          stroke="#2f5247"
-          strokeWidth={1.5}
+          stroke="#3b5c50"
+          strokeWidth={1.3}
         />
         {usesPulleyStraps ? (
           <line
             data-attachment="reformer-strap"
             data-attachment-target={strapUsesFeet ? 'ankle' : 'hand'}
             x1={pulleyPostTop.x}
-            y1={pulleyPostTop.y}
+            y1={
+              !strapUsesFeet && phaseSpec.joints.hand.y > 122 && phaseSpec.joints.head.y < 116
+                ? my(124)
+                : pulleyPostTop.y
+            }
             x2={strapTarget.x}
             y2={strapTarget.y}
-            stroke="#38658e"
-            strokeWidth={1.35}
-            strokeDasharray="3 2"
-            opacity={0.76}
+            stroke="#5d574f"
+            strokeWidth={1.25}
+            opacity={0.78}
           />
         ) : null}
 
@@ -548,16 +590,51 @@ function renderApparatusSupportLayer(
   }
 
   if (asset.apparatus === 'cadillac') {
+    const isStandingCadillac = asset.bodyPosition === 'standing';
     const leftPoleX = mx(26, mirrored);
-    const rightPoleX = mx(294, mirrored);
-    const ptbPivot = p(78, 27);
-    const barEnd = p(96 + Math.round(carriageShift * 0.6), 64 + Math.round(carriageShift * 0.25));
-    const springAnchor = p(26, 44);
+    const rightPoleX = mx(isStandingCadillac ? 108 : 294, mirrored);
+    const bedMinX = Math.min(mx(22, mirrored), mx(isStandingCadillac ? 114 : 298, mirrored));
+    const bedWidth = Math.abs(mx(isStandingCadillac ? 114 : 298, mirrored) - mx(22, mirrored));
+    const rightLegX = mx(isStandingCadillac ? 102 : 282, mirrored);
+    const leftLegX = mx(31, mirrored);
+    const canopyMinX = Math.min(leftPoleX, rightPoleX);
+    const canopyMaxX = Math.max(leftPoleX, rightPoleX);
+
     const springUsesFeet =
       asset.blockCategory === 'feet-in-straps' ||
-      /feet-in-straps|leg-spring|strap-frog/.test(asset.archetypeId);
+      /feet-in-straps|leg-spring|strap-frog|side-leg|straps-02|kr-cadillac-02/.test(
+        `${asset.archetypeId} ${asset.exerciseId}`,
+      );
+    const usesActiveCadillacSpring =
+      apparatusState.springTensionLevel !== 'none' &&
+      (springUsesFeet ||
+        isStandingCadillac ||
+        /arm-spring|roll-back|side-reach|seated-rotation|quadruped-slide|prone-back|warmup-02|kr-cadillac-01/.test(
+          `${asset.archetypeId} ${asset.exerciseId}`,
+        ));
+    const showPushThroughBar =
+      !isStandingCadillac &&
+      phaseSpec.joints.hand.y < 105 &&
+      /prone-back|side-reach/.test(`${asset.archetypeId} ${asset.exerciseId}`);
+    const showPassiveRollDownCord =
+      !isStandingCadillac &&
+      !usesActiveCadillacSpring &&
+      /roll-back|kr-cadillac-01/.test(`${asset.archetypeId} ${asset.exerciseId}`);
+    const springAnchor = isStandingCadillac
+      ? p(108, 70)
+      : springUsesFeet
+        ? p(294, 52)
+        : asset.bodyPosition !== 'supine' && phaseSpec.joints.hand.x > 180
+          ? p(294, 44)
+          : p(26, 36);
     const springJoint = springUsesFeet ? phaseSpec.joints.ankle : phaseSpec.joints.hand;
     const springTarget = p(springJoint.x, springJoint.y);
+    const ptbPivotX = Math.max(
+      38,
+      Math.min(278, phaseSpec.joints.hand.x + (phaseSpec.joints.hand.x > 160 ? 18 : -18)),
+    );
+    const ptbPivot = p(ptbPivotX, 27);
+    const barEnd = springTarget;
 
     // STRICT INVARIANT: Zero <path> elements inside Cadillac apparatus-support when springTensionLevel === 'none'
     return (
@@ -567,108 +644,143 @@ function renderApparatusSupportLayer(
         data-carriage-offset={apparatusState.carriageOffsetPx}
         data-spring-tension={apparatusState.springTensionLevel}
       >
-        <ellipse cx={160} cy={183} rx={142} ry={3.4} fill="#1c342b" fillOpacity={0.08} />
-        <line x1={12} y1={182} x2={308} y2={182} stroke="#d5cec0" strokeWidth={1.5} />
+        <ellipse cx={160} cy={183} rx={142} ry={3.4} fill="#1c342b" fillOpacity={0.07} />
+        <line x1={12} y1={182} x2={308} y2={182} stroke="#d5cec0" strokeWidth={1.3} />
 
         <rect
-          x={31}
+          x={Math.min(leftLegX, leftLegX) - (mirrored ? 7 : 0)}
           y={162}
           width={7}
           height={20}
           rx={1.5}
-          fill="#8f6b43"
-          stroke="#6b4f30"
-          strokeWidth={1}
+          fill="#9d784f"
+          stroke="#755634"
+          strokeWidth={0.9}
         />
         <rect
-          x={282}
+          x={rightLegX - (mirrored ? 7 : 0)}
           y={162}
           width={7}
           height={20}
           rx={1.5}
-          fill="#8f6b43"
-          stroke="#6b4f30"
-          strokeWidth={1}
+          fill="#9d784f"
+          stroke="#755634"
+          strokeWidth={0.9}
         />
 
         <rect
-          x={22}
+          x={bedMinX}
           y={144.5}
-          width={276}
+          width={bedWidth}
           height={10.5}
           rx={3.2}
           fill={`url(#${grads.upholsteryId})`}
-          stroke="#26473d"
-          strokeWidth={1.5}
+          stroke="#2c4d42"
+          strokeWidth={1.15}
         />
         <line
-          x1={26}
-          y1={146.8}
-          x2={294}
-          y2={146.8}
-          stroke="rgba(250, 250, 245, 0.42)"
+          x1={bedMinX + 4}
+          y1={146.6}
+          x2={bedMinX + Math.max(8, bedWidth - 4)}
+          y2={146.6}
+          stroke="rgba(252, 252, 248, 0.5)"
           strokeWidth={1}
         />
         <rect
-          x={22}
+          x={bedMinX}
           y={155}
-          width={276}
+          width={bedWidth}
           height={8}
           rx={2.2}
           fill={`url(#${grads.oakId})`}
-          stroke="#87633b"
-          strokeWidth={1.3}
+          stroke="#8a6740"
+          strokeWidth={1.05}
         />
 
-        <line x1={leftPoleX} y1={27} x2={leftPoleX} y2={145} stroke="#63766f" strokeWidth={3.2} />
-        <line x1={rightPoleX} y1={27} x2={rightPoleX} y2={145} stroke="#63766f" strokeWidth={3.2} />
+        <line x1={leftPoleX} y1={27} x2={leftPoleX} y2={145} stroke="#788983" strokeWidth={2.8} />
+        <line x1={rightPoleX} y1={27} x2={rightPoleX} y2={145} stroke="#788983" strokeWidth={2.8} />
         <line
-          x1={24}
+          x1={canopyMinX - 2}
           y1={27}
-          x2={296}
+          x2={canopyMaxX + 2}
           y2={27}
-          stroke="#4b5f58"
-          strokeWidth={3.6}
+          stroke="#5c7069"
+          strokeWidth={3.2}
           strokeLinecap="round"
         />
-        <circle cx={leftPoleX} cy={27} r={2.8} fill="#dce3df" stroke="#394d46" strokeWidth={1.2} />
-        <circle cx={rightPoleX} cy={27} r={2.8} fill="#dce3df" stroke="#394d46" strokeWidth={1.2} />
+        <circle cx={leftPoleX} cy={27} r={2.6} fill="#e8edea" stroke="#475b54" strokeWidth={1.1} />
+        <circle cx={rightPoleX} cy={27} r={2.6} fill="#e8edea" stroke="#475b54" strokeWidth={1.1} />
 
-        <line
-          x1={ptbPivot.x}
-          y1={ptbPivot.y}
-          x2={barEnd.x}
-          y2={barEnd.y}
-          stroke="#35584e"
-          strokeWidth={2.6}
-          strokeLinecap="round"
-        />
-        <circle
-          cx={barEnd.x}
-          cy={barEnd.y}
-          r={3.8}
-          fill="#bf5a41"
-          stroke="#fcfaf5"
-          strokeWidth={1.1}
-        />
-        {apparatusState.springTensionLevel !== 'none' ? (
+        {showPushThroughBar && (
+          <>
+            <line
+              x1={ptbPivot.x}
+              y1={ptbPivot.y}
+              x2={barEnd.x}
+              y2={barEnd.y}
+              stroke="#46685d"
+              strokeWidth={2.2}
+              strokeLinecap="round"
+            />
+            <circle
+              cx={barEnd.x}
+              cy={barEnd.y}
+              r={3.2}
+              fill="#a8794f"
+              stroke="#fcfaf5"
+              strokeWidth={1}
+            />
+          </>
+        )}
+        {showPassiveRollDownCord && (
+          <>
+            <line
+              x1={springAnchor.x}
+              y1={springAnchor.y}
+              x2={springTarget.x}
+              y2={springTarget.y}
+              stroke="#6b645b"
+              strokeWidth={1.3}
+              opacity={0.78}
+            />
+            <circle
+              cx={springTarget.x}
+              cy={springTarget.y}
+              r={2.9}
+              fill="#9d7349"
+              stroke="#fcfaf5"
+              strokeWidth={0.95}
+            />
+          </>
+        )}
+        {usesActiveCadillacSpring ? (
           <g>
             <path
               data-attachment="cadillac-spring"
               data-attachment-target={springUsesFeet ? 'ankle' : 'hand'}
-              d={renderSpringCoilPath(
+              d={renderCadillacSpringWithCordPath(
                 springAnchor.x,
                 springAnchor.y,
                 springTarget.x,
                 springTarget.y,
-                6,
-                2.6,
               )}
               fill="none"
               stroke={springColor}
-              strokeWidth={1.5}
-              opacity={0.82}
+              strokeWidth={1.35}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity={0.86}
             />
+            {!springUsesFeet && (
+              <circle
+                cx={springTarget.x}
+                cy={springTarget.y}
+                r={2.7}
+                fill="#9d7349"
+                stroke="#fcfaf5"
+                strokeWidth={0.9}
+              />
+            )}
             {springUsesFeet && (
               <ellipse
                 data-attachment="foot-loop"
@@ -678,7 +790,7 @@ function renderApparatusSupportLayer(
                 ry={5.5}
                 fill="none"
                 stroke="#436b62"
-                strokeWidth={1.8}
+                strokeWidth={1.7}
               />
             )}
           </g>
@@ -688,13 +800,18 @@ function renderApparatusSupportLayer(
   }
 
   if (asset.apparatus === 'chair') {
-    const boxLeft = mx(112, mirrored);
-    const boxRight = mx(192, mirrored);
+    const isSitToStand = asset.exerciseId === 'original-chair-sit-to-stand';
+    const boxLeft = mx(isSitToStand ? 86 : 112, mirrored);
+    const boxRight = mx(isSitToStand ? 152 : 192, mirrored);
     const boxMinX = Math.min(boxLeft, boxRight);
     const boxW = Math.abs(boxRight - boxLeft);
-    const hinge = p(168, 164);
-    const pedalTip = mpt(resolveChairPedalTip(apparatusState.pedalAngleDeg), mirrored);
-    const springBase = p(148, 168);
+    const hinge = p(isSitToStand ? 104 : 168, 164);
+    const rawPedalTip = resolveChairPedalTip(apparatusState.pedalAngleDeg);
+    const pedalTip = isSitToStand
+      ? p(104 - (rawPedalTip.x - 168) * 0.72, rawPedalTip.y)
+      : mpt(rawPedalTip, mirrored);
+    const springBase = p(isSitToStand ? 120 : 148, 168);
+    const handleX = mx(isSitToStand ? 106 : 144, mirrored);
 
     return (
       <g
@@ -703,8 +820,8 @@ function renderApparatusSupportLayer(
         data-pedal-angle={apparatusState.pedalAngleDeg}
         data-spring-tension={apparatusState.springTensionLevel}
       >
-        <ellipse cx={160} cy={179} rx={96} ry={3.4} fill="#1c342b" fillOpacity={0.09} />
-        <line x1={12} y1={178} x2={308} y2={178} stroke="#d5cec0" strokeWidth={1.5} />
+        <ellipse cx={160} cy={179} rx={96} ry={3.4} fill="#1c342b" fillOpacity={0.08} />
+        <line x1={12} y1={178} x2={308} y2={178} stroke="#d5cec0" strokeWidth={1.3} />
 
         <rect
           x={boxMinX}
@@ -713,8 +830,8 @@ function renderApparatusSupportLayer(
           height={64}
           rx={4.5}
           fill={`url(#${grads.oakId})`}
-          stroke="#7e5b36"
-          strokeWidth={1.6}
+          stroke="#8a6740"
+          strokeWidth={1.2}
         />
         <rect
           x={boxMinX + 7}
@@ -722,9 +839,9 @@ function renderApparatusSupportLayer(
           width={Math.max(12, boxW - 14)}
           height={49}
           rx={3}
-          fill="#dfc09a"
-          stroke="#a58158"
-          strokeWidth={1}
+          fill="#e2c5a1"
+          stroke="#b39169"
+          strokeWidth={0.85}
         />
 
         <rect
@@ -734,45 +851,49 @@ function renderApparatusSupportLayer(
           height={9.5}
           rx={3.2}
           fill={`url(#${grads.upholsteryId})`}
-          stroke="#24443a"
-          strokeWidth={1.5}
+          stroke="#2c4d42"
+          strokeWidth={1.2}
           data-chair-seat="fixed"
         />
         <line
           x1={boxMinX}
-          y1={107.8}
+          y1={107.6}
           x2={boxMinX + boxW}
-          y2={107.8}
-          stroke="rgba(250, 250, 245, 0.42)"
+          y2={107.6}
+          stroke="rgba(252, 252, 248, 0.48)"
           strokeWidth={1}
         />
-        <line
-          x1={mx(144, mirrored)}
-          y1={106}
-          x2={mx(144, mirrored)}
-          y2={78}
-          stroke="#4b5f58"
-          strokeWidth={2.8}
-          strokeLinecap="round"
-          data-chair-handle="post"
-        />
-        <rect
-          x={mx(144, mirrored) - 6}
-          y={75}
-          width={12}
-          height={5.5}
-          rx={2.6}
-          fill="#26473d"
-          stroke="#fcfaf5"
-          strokeWidth={0.9}
-          data-chair-handle="grip"
-        />
+        {!isSitToStand && (
+          <>
+            <line
+              x1={handleX}
+              y1={106}
+              x2={handleX}
+              y2={78}
+              stroke="#687a73"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              data-chair-handle="post"
+            />
+            <rect
+              x={handleX - 6}
+              y={75}
+              width={12}
+              height={5.5}
+              rx={2.6}
+              fill="#2f5246"
+              stroke="#fcfaf5"
+              strokeWidth={0.9}
+              data-chair-handle="grip"
+            />
+          </>
+        )}
 
         <path
-          d={renderSpringCoilPath(springBase.x, springBase.y, pedalTip.x, pedalTip.y, 5, 2.8)}
+          d={renderSpringCoilPath(springBase.x, springBase.y, pedalTip.x, pedalTip.y, 7, 1.8)}
           fill="none"
           stroke={springColor}
-          strokeWidth={1.7}
+          strokeWidth={1.4}
         />
 
         <line
@@ -780,26 +901,26 @@ function renderApparatusSupportLayer(
           y1={hinge.y}
           x2={pedalTip.x}
           y2={pedalTip.y}
-          stroke="#2d4f44"
-          strokeWidth={4.4}
+          stroke="#35564b"
+          strokeWidth={3.8}
           strokeLinecap="round"
           data-chair-pedal="hinged"
         />
         <circle
           cx={hinge.x}
           cy={hinge.y}
-          r={3.4}
+          r={3.2}
           fill="#fcfaf5"
-          stroke="#2d4f44"
-          strokeWidth={1.5}
+          stroke="#35564b"
+          strokeWidth={1.3}
         />
         <circle
           cx={pedalTip.x}
           cy={pedalTip.y}
-          r={4.2}
-          fill="#1f3b32"
+          r={3.9}
+          fill="#264339"
           stroke="#fcfaf5"
-          strokeWidth={1.2}
+          strokeWidth={1.1}
         />
       </g>
     );
@@ -807,16 +928,25 @@ function renderApparatusSupportLayer(
 
   if (asset.apparatus === 'barrel') {
     const isStandingBarrel = asset.bodyPosition === 'standing';
+    const isSeatedBarrel = asset.bodyPosition === 'seated';
     const supportedSwan =
       asset.bodyPosition === 'prone' &&
       (asset.exerciseId === 'original-barrel-supported-swan' ||
         asset.exerciseId === 'ex-extension-02');
-    const arcLeft = isStandingBarrel ? p(18, 174) : p(68, 174);
-    const arcPeak1 = isStandingBarrel ? p(24, 106) : p(76, supportedSwan ? 94 : 102);
-    const arcPeak2 = isStandingBarrel ? p(64, 106) : p(164, supportedSwan ? 94 : 102);
-    const arcRight = isStandingBarrel ? p(70, 174) : p(174, 174);
-    const ladderFrontX = mx(isStandingBarrel ? 76 : 222, mirrored);
-    const ladderBackX = mx(isStandingBarrel ? 96 : 256, mirrored);
+    const arcLeft = isStandingBarrel ? p(18, 174) : isSeatedBarrel ? p(32, 174) : p(68, 174);
+    const arcPeak1 = isStandingBarrel
+      ? p(24, 106)
+      : isSeatedBarrel
+        ? p(40, 128)
+        : p(76, supportedSwan ? 94 : 102);
+    const arcPeak2 = isStandingBarrel
+      ? p(64, 106)
+      : isSeatedBarrel
+        ? p(104, 128)
+        : p(164, supportedSwan ? 94 : 102);
+    const arcRight = isStandingBarrel ? p(70, 174) : isSeatedBarrel ? p(114, 174) : p(174, 174);
+    const ladderFrontX = mx(isStandingBarrel ? 76 : isSeatedBarrel ? 216 : 222, mirrored);
+    const ladderBackX = mx(isStandingBarrel ? 96 : isSeatedBarrel ? 248 : 256, mirrored);
 
     return (
       <g
@@ -824,22 +954,22 @@ function renderApparatusSupportLayer(
         data-apparatus-kind="barrel"
         data-spring-tension={apparatusState.springTensionLevel}
       >
-        <ellipse cx={154} cy={179} rx={126} ry={3.5} fill="#1c342b" fillOpacity={0.08} />
-        <line x1={12} y1={178} x2={308} y2={178} stroke="#d5cec0" strokeWidth={1.5} />
+        <ellipse cx={154} cy={179} rx={126} ry={3.5} fill="#1c342b" fillOpacity={0.07} />
+        <line x1={12} y1={178} x2={308} y2={178} stroke="#d5cec0" strokeWidth={1.3} />
 
         <path
           d={`M ${arcLeft.x} ${arcLeft.y} C ${arcPeak1.x} ${arcPeak1.y} ${arcPeak2.x} ${arcPeak2.y} ${arcRight.x} ${arcRight.y} Z`}
           fill={`url(#${grads.upholsteryId})`}
-          fillOpacity={0.38}
-          stroke="#27493e"
-          strokeWidth={2.4}
+          fillOpacity={0.76}
+          stroke="#2c4d42"
+          strokeWidth={1.5}
         />
         <path
-          d={`M ${r1(arcLeft.x * 0.85 + arcRight.x * 0.15)} ${arcLeft.y} C ${arcPeak1.x} ${arcPeak1.y + 12} ${arcPeak2.x} ${arcPeak2.y + 12} ${r1(arcRight.x * 0.85 + arcLeft.x * 0.15)} ${arcRight.y} Z`}
+          d={`M ${r1(arcLeft.x * 0.88 + arcRight.x * 0.12)} ${arcLeft.y} C ${arcPeak1.x} ${arcPeak1.y + 10} ${arcPeak2.x} ${arcPeak2.y + 10} ${r1(arcRight.x * 0.88 + arcLeft.x * 0.12)} ${arcRight.y} Z`}
           fill={`url(#${grads.oakId})`}
-          fillOpacity={0.52}
-          stroke="#87633b"
-          strokeWidth={1.2}
+          fillOpacity={0.92}
+          stroke="#8a6740"
+          strokeWidth={1.05}
         />
 
         <line
@@ -847,8 +977,8 @@ function renderApparatusSupportLayer(
           y1={174}
           x2={ladderBackX}
           y2={174}
-          stroke="#87633b"
-          strokeWidth={3.4}
+          stroke="#8a6740"
+          strokeWidth={3.1}
           strokeLinecap="round"
         />
         <line
@@ -856,8 +986,8 @@ function renderApparatusSupportLayer(
           y1={54}
           x2={ladderFrontX}
           y2={176}
-          stroke="#9c754a"
-          strokeWidth={3}
+          stroke="#a57e52"
+          strokeWidth={2.8}
           strokeLinecap="round"
         />
         <line
@@ -865,8 +995,8 @@ function renderApparatusSupportLayer(
           y1={44}
           x2={ladderBackX}
           y2={176}
-          stroke="#7e5b36"
-          strokeWidth={3}
+          stroke="#846039"
+          strokeWidth={2.8}
           strokeLinecap="round"
         />
         {[66, 88, 110, 132, 154].map((ry) => (
@@ -876,8 +1006,8 @@ function renderApparatusSupportLayer(
             y1={ry}
             x2={ladderBackX}
             y2={ry - 6}
-            stroke="#59422a"
-            strokeWidth={2.6}
+            stroke="#6a4d2f"
+            strokeWidth={2.3}
             strokeLinecap="round"
           />
         ))}
@@ -1002,46 +1132,74 @@ function renderExerciseProps(
   // Optional props without an authored contact model remain a clearly separate
   // setup reference; never invent a pressure point on the moving body.
   if (props.includes('magic-circle')) {
+    const badgeCx = mx(282, mirrored);
     return (
       <g
         data-prop-model="magic-circle"
         data-prop-placement="setup-reference"
         aria-label="매직서클 도구 참고"
       >
-        <ellipse
-          cx={mx(286, mirrored)}
-          cy={32}
-          rx={13}
-          ry={17}
-          fill="none"
-          stroke="#436b62"
-          strokeWidth={2.8}
+        <rect
+          x={badgeCx - 26}
+          y={10}
+          width={52}
+          height={20}
+          rx={10}
+          fill="rgba(252, 250, 245, 0.92)"
+          stroke="#d5ddd2"
+          strokeWidth={0.9}
         />
-        <rect x={mx(286, mirrored) - 3} y={13} width={6} height={5} rx={1.7} fill="#a96e4b" />
-        <rect x={mx(286, mirrored) - 3} y={46} width={6} height={5} rx={1.7} fill="#a96e4b" />
-        <text x={mx(286, mirrored)} y={62} textAnchor="middle" fontSize={7} fill="#53675d">
+        <circle cx={badgeCx - 14} cy={20} r={5.2} fill="none" stroke="#436b62" strokeWidth={1.5} />
+        <rect x={badgeCx - 20.5} y={18.5} width={2.2} height={3} rx={0.8} fill="#a96e4b" />
+        <rect x={badgeCx - 9.7} y={18.5} width={2.2} height={3} rx={0.8} fill="#a96e4b" />
+        <text
+          x={badgeCx + 5}
+          y={22.5}
+          textAnchor="middle"
+          fontSize={6.6}
+          fontWeight={600}
+          fill="#465b51"
+        >
           도구 참고
         </text>
       </g>
     );
   }
   if (props.includes('mini-ball')) {
+    const badgeCx = mx(282, mirrored);
     return (
       <g
         data-prop-model="mini-ball"
         data-prop-placement="setup-reference"
         aria-label="미니볼 도구 참고"
       >
-        <circle
-          cx={mx(286, mirrored)}
-          cy={30}
-          r={12}
-          fill="#bf775c"
-          stroke="#8e513a"
-          strokeWidth={1.2}
+        <rect
+          x={badgeCx - 26}
+          y={10}
+          width={52}
+          height={20}
+          rx={10}
+          fill="rgba(252, 250, 245, 0.92)"
+          stroke="#d5ddd2"
+          strokeWidth={0.9}
         />
-        <ellipse cx={mx(283, mirrored)} cy={26} rx={5} ry={3} fill="#efc9ac" opacity={0.6} />
-        <text x={mx(286, mirrored)} y={53} textAnchor="middle" fontSize={7} fill="#53675d">
+        <circle
+          cx={badgeCx - 14}
+          cy={20}
+          r={5.2}
+          fill="#c48369"
+          stroke="#985d46"
+          strokeWidth={0.85}
+        />
+        <ellipse cx={badgeCx - 15.6} cy={18.2} rx={2.1} ry={1.3} fill="#f2d3bb" opacity={0.65} />
+        <text
+          x={badgeCx + 5}
+          y={22.5}
+          textAnchor="middle"
+          fontSize={6.6}
+          fontWeight={600}
+          fill="#465b51"
+        >
           도구 참고
         </text>
       </g>

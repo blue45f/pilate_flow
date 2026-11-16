@@ -9,6 +9,7 @@ import {
   Clock3,
   Copy,
   GripVertical,
+  Heart,
   LayoutTemplate,
   LockKeyhole,
   MoreHorizontal,
@@ -16,12 +17,14 @@ import {
   Plus,
   Search,
   Settings2,
+  Sparkles,
   Trash2,
   Undo2,
   UnlockKeyhole,
   X,
 } from 'lucide-react';
 import {
+  createSequenceSnapshot,
   downloadEmergencyBackupJson,
   getActiveSequencePlanningCriteria,
   getLastStorageError,
@@ -52,8 +55,10 @@ import {
   resolveSequenceInsertion,
   type SequenceInsertionPlacement,
 } from '../utils/sequenceInsertion';
+import { AiQuickSequenceBar } from './AiQuickSequenceBar';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
 import { LightDismissDialog } from './LightDismissDialog';
+import { BRAND_SPRING_OPTIONS, formatBrandSpringEquivalent } from '../utils/brandSpringConverter';
 import '../styles/sequence-studio.css';
 
 const AdvancedWorkbench = lazy(() =>
@@ -86,11 +91,17 @@ const SECTIONS: { id: ClassSectionRole; label: string }[] = [
 ];
 const CATEGORY_FILTERS = [
   { id: 'all', label: '전체' },
+  { id: 'favorites', label: '♥ 즐겨찾기' },
   { id: 'warmup', label: '준비' },
   { id: 'core', label: '코어' },
   { id: 'lower-body', label: '하체' },
   { id: 'upper-body', label: '상체' },
   { id: 'cooldown', label: '마무리' },
+];
+const LAYER_OPTIONS = [
+  { id: 'easy' as const, label: '완화' },
+  { id: 'standard' as const, label: '기본' },
+  { id: 'hard' as const, label: '심화' },
 ];
 const minutes = (seconds: number) =>
   `${Math.floor(seconds / 60)}분${seconds % 60 ? ` ${Math.round(seconds % 60)}초` : ''}`;
@@ -485,6 +496,7 @@ export function SequenceStudioWorkbench(props: Props) {
     (exercise) =>
       (criteria.apparatus === 'mixed' || exercise.apparatus === criteria.apparatus) &&
       (category === 'all' ||
+        (category === 'favorites' && exercise.favoriteTag !== 'none') ||
         exercise.blockCategory === category ||
         (category === 'lower-body' &&
           ['footwork', 'bridging', 'feet-in-straps'].includes(exercise.blockCategory))) &&
@@ -740,6 +752,51 @@ export function SequenceStudioWorkbench(props: Props) {
         </button>
       </div>
 
+      <AiQuickSequenceBar
+        onApplied={(composed) => {
+          const current = usePilatesStore.getState();
+          const preUndoSnapshot = createSequenceSnapshot(current);
+          const nextAvailableEquipment = EQUIPMENT_OPTIONS.filter(
+            (opt) =>
+              current.ownedEquipment.includes(opt.id) &&
+              (composed.intent.apparatus === 'mixed' ||
+                opt.apparatusFamily === composed.intent.apparatus),
+          ).map((opt) => opt.id);
+          const baseCriteria = getActiveSequencePlanningCriteria(current);
+          const nextCriteria: AutoGenerateCriteria = {
+            ...baseCriteria,
+            apparatus: composed.intent.apparatus,
+            availableEquipment:
+              nextAvailableEquipment.length > 0
+                ? nextAvailableEquipment
+                : EQUIPMENT_OPTIONS.filter(
+                    (opt) =>
+                      composed.intent.apparatus === 'mixed' ||
+                      opt.apparatusFamily === composed.intent.apparatus,
+                  ).map((opt) => opt.id),
+            level: composed.intent.level,
+            targetMinutes: composed.intent.targetMinutes,
+            focusPreset: composed.intent.focusPreset,
+          };
+          usePilatesStore.setState({
+            undoStack: [...current.undoStack.slice(-19), preUndoSnapshot],
+            activeTitle: composed.title,
+            activeSubtitle: composed.subtitle,
+            activeApparatus: composed.intent.apparatus,
+            activeLevel: composed.intent.level,
+            activeTargetMinutes: composed.intent.targetMinutes,
+            activeSteps: composed.steps,
+            lastCriteria: nextCriteria,
+            draftCriteria: nextCriteria,
+            generationError: null,
+            saveFeedback: null,
+          });
+          setMobilePane('plan');
+          setNotice(composed.summaryKo);
+        }}
+        onError={(msg) => setNotice(msg)}
+      />
+
       <div className="flow-mobile-panes" role="group" aria-label="작성 화면 선택">
         <button aria-pressed={mobilePane === 'plan'} onClick={() => setMobilePane('plan')}>
           내 시퀀스 <span>{exerciseCount}</span>
@@ -870,20 +927,42 @@ export function SequenceStudioWorkbench(props: Props) {
                     <span>
                       {LEVELS[exercise.level]} · {exercise.defaultDurationMin}분
                       {exercise.isUnilateral ? ' · 양쪽' : ''}
+                      {exercise.springs && !exercise.springs.includes('기구별 설정')
+                        ? ` · ${exercise.springs}`
+                        : ''}
                     </span>
                     {!eligible(exercise) && <small>기구·소도구·난이도 조건 확인</small>}
                   </div>
-                  <button
-                    className="flow-add-button"
-                    aria-label={`${exercise.nameKo} ${included.has(exercise.id) ? '추가됨' : '추가'}`}
-                    disabled={included.has(exercise.id) || !insertionResolution.success}
-                    aria-describedby={
-                      !insertionResolution.success ? 'flow-insertion-error' : undefined
-                    }
-                    onClick={() => addExercise(exercise)}
-                  >
-                    {included.has(exercise.id) ? <Check size={19} /> : <Plus size={19} />}
-                  </button>
+                  <div className="flow-pick-card__actions">
+                    <button
+                      type="button"
+                      className={`flow-fav-button ${exercise.favoriteTag !== 'none' ? 'is-favorited' : ''}`}
+                      aria-label={`${exercise.nameKo} 즐겨찾기 ${exercise.favoriteTag !== 'none' ? '해제' : '등록'}`}
+                      aria-pressed={exercise.favoriteTag !== 'none'}
+                      onClick={() =>
+                        s.setExerciseFavoriteTag(
+                          exercise.id,
+                          exercise.favoriteTag !== 'none' ? 'none' : 'signature',
+                        )
+                      }
+                    >
+                      <Heart
+                        size={15}
+                        fill={exercise.favoriteTag !== 'none' ? 'currentColor' : 'none'}
+                      />
+                    </button>
+                    <button
+                      className="flow-add-button"
+                      aria-label={`${exercise.nameKo} ${included.has(exercise.id) ? '추가됨' : '추가'}`}
+                      disabled={included.has(exercise.id) || !insertionResolution.success}
+                      aria-describedby={
+                        !insertionResolution.success ? 'flow-insertion-error' : undefined
+                      }
+                      onClick={() => addExercise(exercise)}
+                    >
+                      {included.has(exercise.id) ? <Check size={19} /> : <Plus size={19} />}
+                    </button>
+                  </div>
                 </article>
               ))
             ) : (
@@ -1099,6 +1178,20 @@ export function SequenceStudioWorkbench(props: Props) {
                         </button>
                         <div className="flow-row-meta">
                           {exercise && <span>{APPARATUS_LABELS[exercise.apparatus].short}</span>}
+                          {exercise && (step.customSpringOverride ?? exercise.springs) && (
+                            <span
+                              className="flow-row-spring-pill"
+                              title={`스튜디오 스프링 기준 (${s.reformerBrand})`}
+                            >
+                              {step.customSpringOverride
+                                ? step.customSpringOverride
+                                : formatBrandSpringEquivalent(
+                                    exercise.springs,
+                                    s.reformerBrand,
+                                    exercise.apparatus,
+                                  ).equivalentLabelKo}
+                            </span>
+                          )}
                           {getStepSideLabels(step, exercise).length > 1 && <span>양쪽 수행</span>}
                           {step.repetitions && <span>{step.repetitions}회</span>}
                           {step.locked && (
@@ -1107,6 +1200,42 @@ export function SequenceStudioWorkbench(props: Props) {
                             </span>
                           )}
                         </div>
+                        {exercise && !isRestStep(step) && (
+                          <div
+                            className="flow-row-layers"
+                            role="group"
+                            aria-label={`${title} 난이도 레이어 선택`}
+                          >
+                            {LAYER_OPTIONS.map((opt) => {
+                              const currentLayer = step.selectedLayer ?? 'standard';
+                              const isActiveLayer = currentLayer === opt.id;
+                              return (
+                                <button
+                                  key={opt.id}
+                                  type="button"
+                                  className={`flow-layer-pill ${isActiveLayer ? 'is-active' : ''}`}
+                                  aria-pressed={isActiveLayer}
+                                  disabled={step.locked}
+                                  onClick={() => {
+                                    s.setStepLayer(index, opt.id);
+                                    setNotice(`${title} 레이어를 ‘${opt.label}’으로 변경했습니다.`);
+                                  }}
+                                >
+                                  {opt.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {exercise &&
+                          step.selectedLayer &&
+                          step.selectedLayer !== 'standard' &&
+                          exercise.layers[step.selectedLayer] && (
+                            <p className="flow-row-layer-cue">
+                              <Sparkles size={12} aria-hidden="true" />{' '}
+                              {exercise.layers[step.selectedLayer]}
+                            </p>
+                          )}
                         {springChanged && (
                           <span className="flow-setup-change">
                             스프링 변경 · {step.customSpringOverride ?? exercise.springs}
@@ -1116,15 +1245,35 @@ export function SequenceStudioWorkbench(props: Props) {
                           <p className="flow-row-note">{step.instructorNote}</p>
                         )}
                       </div>
-                      <button
-                        className="flow-row-time"
-                        disabled={step.locked}
-                        onClick={() => setEditingId(step.stepId)}
-                        aria-label={`${title} 시간과 메모 편집`}
-                      >
-                        <Clock3 size={14} />
-                        {minutes(getStepTiming(step).totalSec)}
-                      </button>
+                      <div className="flow-row-time-group">
+                        <button
+                          type="button"
+                          className="flow-time-nudge"
+                          disabled={step.locked || step.durationMin <= 1}
+                          aria-label={`${title} 30초 줄이기`}
+                          onClick={() => s.adjustStepDuration(index, -0.5)}
+                        >
+                          -0.5
+                        </button>
+                        <button
+                          className="flow-row-time"
+                          disabled={step.locked}
+                          onClick={() => setEditingId(step.stepId)}
+                          aria-label={`${title} 시간과 메모 편집`}
+                        >
+                          <Clock3 size={14} />
+                          {minutes(getStepTiming(step).totalSec)}
+                        </button>
+                        <button
+                          type="button"
+                          className="flow-time-nudge"
+                          disabled={step.locked || step.durationMin >= 20}
+                          aria-label={`${title} 30초 늘리기`}
+                          onClick={() => s.adjustStepDuration(index, 0.5)}
+                        >
+                          +0.5
+                        </button>
+                      </div>
                       <div className="flow-row-actions">
                         <button
                           className="flow-icon-button"
@@ -1387,6 +1536,31 @@ export function SequenceStudioWorkbench(props: Props) {
                       {PROP_LABELS[prop].ko}
                     </label>
                   ))}
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>내 스튜디오 리포머 스프링 기준</legend>
+              <div
+                className="flow-choice-grid"
+                role="radiogroup"
+                aria-label="스튜디오 리포머 스프링 브랜드"
+              >
+                {BRAND_SPRING_OPTIONS.map((brandOpt) => (
+                  <label key={brandOpt.id} className="flow-checkbox">
+                    <input
+                      type="radio"
+                      name="studio-reformer-brand"
+                      checked={s.reformerBrand === brandOpt.id}
+                      onChange={() => {
+                        s.setReformerBrand(brandOpt.id);
+                        setNotice(
+                          `리포머 스프링 표기를 ‘${brandOpt.shortLabelKo}’ 기준으로 맞췄습니다.`,
+                        );
+                      }}
+                    />
+                    {brandOpt.shortLabelKo}
+                  </label>
+                ))}
               </div>
             </fieldset>
             <p className="flow-hint">기존에 담은 동작은 조건을 바꿔도 유지됩니다.</p>
