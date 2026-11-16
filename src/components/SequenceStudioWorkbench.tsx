@@ -21,7 +21,13 @@ import {
   UnlockKeyhole,
   X,
 } from 'lucide-react';
-import { getActiveSequencePlanningCriteria, usePilatesStore } from '../store/usePilatesStore';
+import {
+  downloadEmergencyBackupJson,
+  getActiveSequencePlanningCriteria,
+  getLastStorageError,
+  isSavedSequencePersistedOnDisk,
+  usePilatesStore,
+} from '../store/usePilatesStore';
 import { APPARATUS_LABELS, PROP_LABELS } from '../data/pilatesCatalog';
 import { EQUIPMENT_OPTIONS, getExerciseEquipment } from '../data/equipmentCatalog';
 import type {
@@ -496,8 +502,9 @@ export function SequenceStudioWorkbench(props: Props) {
     state.saveCurrentSequenceToBinder();
     await Promise.resolve();
     const next = usePilatesStore.getState();
-    setNotice(next.persistenceError ?? '저장한 수업에 보관했습니다.');
-    return !next.persistenceError;
+    const err = getLastStorageError() ?? next.persistenceError;
+    setNotice(err ?? '저장한 수업에 보관했습니다.');
+    return !err;
   };
   const start = () => {
     const state = usePilatesStore.getState();
@@ -1145,16 +1152,37 @@ export function SequenceStudioWorkbench(props: Props) {
             <span>
               <i />
               {s.persistenceError
-                ? '기기 저장을 확인해 주세요'
+                ? '이 브라우저 미저장 · 현재 화면(메모리)에만 임시 보관 중'
                 : '작성 중인 수업은 이 기기에 자동 보관'}
             </span>
-            <span>끌어서 순서 변경 · 버튼으로도 이동 가능</span>
+            {s.persistenceError ? (
+              <button
+                type="button"
+                className="flow-text-button"
+                data-testid="flow-footer-backup-btn"
+                onClick={() => {
+                  const ok = downloadEmergencyBackupJson();
+                  setNotice(
+                    ok
+                      ? '메모리 작업본을 포함한 JSON 백업 파일을 내려받았습니다. 저장 공간 확보 후 저장을 다시 눌러 주세요.'
+                      : '백업 파일을 만들지 못했습니다. 브라우저 다운로드 권한을 확인해 주세요.',
+                  );
+                }}
+              >
+                JSON 백업 내보내기
+              </button>
+            ) : (
+              <span>끌어서 순서 변경 · 버튼으로도 이동 가능</span>
+            )}
           </div>
         </div>
       </div>
 
       <div className="flow-studio-status" role="status" aria-live="polite">
-        {notice || s.persistenceError || ''}
+        {s.persistenceError &&
+        (notice.includes('저장한 수업에 보관했습니다') || notice.includes('저장했습니다'))
+          ? s.persistenceError
+          : notice || s.persistenceError || ''}
       </div>
       <div className="flow-actionbar">
         <div>
@@ -1177,10 +1205,26 @@ export function SequenceStudioWorkbench(props: Props) {
               ))}
             </ul>
           ) : (
-            <small>
-              {s.saveFeedback && !s.persistenceError
-                ? s.saveFeedback
-                : '시퀀스를 저장하고 수업을 시작하세요.'}
+            <small
+              data-testid="flow-actionbar-save-hint"
+              className={s.persistenceError ? 'is-persistence-warning' : undefined}
+            >
+              {s.persistenceError
+                ? '기기 저장 미완료 · 메모리 작업본 유지 중 (JSON 백업 후 여유 공간을 확보해 다시 저장하세요)'
+                : s.saveFeedback &&
+                    (() => {
+                      const activeSaved = s.savedSequences.find(
+                        (item) => item.id === s.activeSequenceId,
+                      );
+                      return (
+                        !activeSaved ||
+                        isSavedSequencePersistedOnDisk(activeSaved, s.persistenceError)
+                      );
+                    })()
+                  ? s.saveFeedback
+                  : exerciseCount === 0
+                    ? '왼쪽 목록에서 첫 동작을 담아 나만의 수업을 시작해 보세요.'
+                    : '시퀀스를 저장하고 수업을 시작하세요.'}
             </small>
           )}
         </div>

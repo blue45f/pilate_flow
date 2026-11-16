@@ -279,11 +279,73 @@
 
 .pf-unified-motion-hero button:focus-visible,
 .pf-unified-motion-hero select:focus-visible,
+.pf-unified-motion-hero a:focus-visible,
 .catalog-motion-interactive-player input:focus-visible,
 .catalog-motion-interactive-player button:focus-visible,
 .catalog-motion-interactive-player summary:focus-visible {
   outline: 3px solid #a5683a;
   outline-offset: 3px;
+}
+
+.pf-hero-3d-modeler-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid #d4ded3;
+  background: linear-gradient(135deg, #f3f7f2 0%, #f8f6ef 100%);
+}
+
+.pf-hero-3d-modeler-bar__copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pf-hero-3d-modeler-bar__copy strong {
+  color: #173d34;
+  font-size: 12.5px;
+  font-weight: 750;
+}
+
+.pf-hero-3d-modeler-bar__copy span {
+  color: #52675b;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.pf-hero-3d-modeler-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #173d34;
+  background: #ffffff;
+  color: #173d34;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pf-hero-3d-modeler-toggle.is-open {
+  background: #173d34;
+  color: #ffffff;
+}
+
+.pf-hero-3d-modeler-panel {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid #d4ded3;
+  background: #fcfbf7;
 }
 
 @media (max-width: 520px) {

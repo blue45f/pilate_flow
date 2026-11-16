@@ -2,8 +2,61 @@ import type { Point2D } from '../data/movementVisualRigCatalog';
 
 export const PRACTITIONER_ATLAS_URL = '/images/motion-atlas-v3/practitioner.webp';
 let atlasReady = false;
+let atlasFailed = false;
+let preloadPromise: Promise<boolean> | null = null;
 export const isPractitionerAtlasReady = () => atlasReady;
-export const markPractitionerAtlasReady = () => { atlasReady = true; };
+export const markPractitionerAtlasReady = () => {
+  atlasReady = true;
+  atlasFailed = false;
+};
+
+/**
+ * Chromium/Blink does not reliably dispatch `load` on `<svg><defs><image>` when
+ * its referencing `<use>` resides inside an `opacity="0"` group. Preload the
+ * shared WebP via HTMLImageElement in browser runtime (skipped in unit tests so
+ * explicit `fireEvent.load`/`fireEvent.error` assertions stay deterministic).
+ */
+export function preloadPractitionerAtlasInBrowser(
+  onReady: () => void,
+  onError: () => void,
+): (() => void) | undefined {
+  if (typeof window === 'undefined' || import.meta.env.MODE === 'test') {
+    return undefined;
+  }
+  if (atlasReady) {
+    onReady();
+    return undefined;
+  }
+  if (atlasFailed) {
+    onError();
+    return undefined;
+  }
+  let active = true;
+  if (!preloadPromise) {
+    preloadPromise = new Promise<boolean>((resolve) => {
+      const img = new window.Image();
+      img.decoding = 'async';
+      img.onload = () => {
+        atlasReady = true;
+        atlasFailed = false;
+        resolve(true);
+      };
+      img.onerror = () => {
+        atlasFailed = true;
+        resolve(false);
+      };
+      img.src = PRACTITIONER_ATLAS_URL;
+    });
+  }
+  void preloadPromise.then((ok) => {
+    if (!active) return;
+    if (ok) onReady();
+    else onError();
+  });
+  return () => {
+    active = false;
+  };
+}
 
 /** Painted cuff, heel and toe landmarks in the original 1254px atlas. */
 export const PRACTITIONER_FOOT_ANCHORS: readonly Point2D[] = [
@@ -24,11 +77,17 @@ export function getPractitionerFootTargets(
   referenceToe: Point2D,
   scale: number,
 ): readonly Point2D[] {
-  const dx = toe.x - heel.x, dy = toe.y - heel.y;
+  const dx = toe.x - heel.x,
+    dy = toe.y - heel.y;
   const length = Math.hypot(dx, dy) || 1;
-  const rx = referenceToe.x - referenceHeel.x, ry = referenceToe.y - referenceHeel.y;
-  const side = ry * (referenceAnkle.x - referenceHeel.x) - rx * (referenceAnkle.y - referenceHeel.y) >= 0 ? 1 : -1;
-  const nx = dy / length * side, ny = -dx / length * side;
+  const rx = referenceToe.x - referenceHeel.x,
+    ry = referenceToe.y - referenceHeel.y;
+  const side =
+    ry * (referenceAnkle.x - referenceHeel.x) - rx * (referenceAnkle.y - referenceHeel.y) >= 0
+      ? 1
+      : -1;
+  const nx = (dy / length) * side,
+    ny = (-dx / length) * side;
   const height = (ankle.x - heel.x) * nx + (ankle.y - heel.y) * ny;
   const cuffHeight = Math.max(5.5 * scale, Math.min(9 * scale, height));
   return [
@@ -53,7 +112,9 @@ function sampleSpine(points: readonly Point2D[]): Point2D[] {
     const d = points[Math.min(points.length - 1, index + 2)];
     return [0, 0.25, 0.5, 0.75].map((t) => {
       const coordinate = (axis: 'x' | 'y') =>
-        0.5 * (2 * b[axis] + (-a[axis] + c[axis]) * t +
+        0.5 *
+        (2 * b[axis] +
+          (-a[axis] + c[axis]) * t +
           (2 * a[axis] - 5 * b[axis] + 4 * c[axis] - d[axis]) * t * t +
           (-a[axis] + 3 * b[axis] - 3 * c[axis] + d[axis]) * t * t * t);
       return { x: coordinate('x'), y: coordinate('y') };
@@ -75,24 +136,23 @@ export function getPractitionerTorsoRows(
   const reference = sampleSpine(referencePoints);
   let distance = 0;
   const distances = reference.map((point, index) => {
-    if (index > 0) distance += Math.hypot(
-      point.x - reference[index - 1].x,
-      point.y - reference[index - 1].y,
-    );
+    if (index > 0)
+      distance += Math.hypot(point.x - reference[index - 1].x, point.y - reference[index - 1].y);
     return distance;
   });
   return centers.map((point, index) => {
     const previous = centers[Math.max(0, index - 1)];
     const next = centers[Math.min(centers.length - 1, index + 1)];
     const length = Math.hypot(next.x - previous.x, next.y - previous.y) || 1;
-    const nx = (next.y - previous.y) / length * flip;
-    const ny = -(next.x - previous.x) / length * flip;
-    const textureV = distance > 0.001 ? distances[index] / distance : index / Math.max(1, centers.length - 1);
+    const nx = ((next.y - previous.y) / length) * flip;
+    const ny = (-(next.x - previous.x) / length) * flip;
+    const textureV =
+      distance > 0.001 ? distances[index] / distance : index / Math.max(1, centers.length - 1);
     const tail = Math.max(0, Math.min(1, (textureV - 0.82) / 0.18));
     const rowWidth = width + (endWidth - width) * tail * tail * (3 - 2 * tail);
     return {
-      left: { x: point.x - nx * rowWidth / 2, y: point.y - ny * rowWidth / 2 },
-      right: { x: point.x + nx * rowWidth / 2, y: point.y + ny * rowWidth / 2 },
+      left: { x: point.x - (nx * rowWidth) / 2, y: point.y - (ny * rowWidth) / 2 },
+      right: { x: point.x + (nx * rowWidth) / 2, y: point.y + (ny * rowWidth) / 2 },
       textureV,
     };
   });
@@ -101,7 +161,10 @@ export function getPractitionerTorsoRows(
 export function mapSpriteTriangle(source: readonly Point2D[], target: readonly Point2D[]): string {
   const [p, q, r] = source;
   const [u, v, w] = target;
-  const sx1 = q.x - p.x, sy1 = q.y - p.y, sx2 = r.x - p.x, sy2 = r.y - p.y;
+  const sx1 = q.x - p.x,
+    sy1 = q.y - p.y,
+    sx2 = r.x - p.x,
+    sy2 = r.y - p.y;
   const det = sx1 * sy2 - sx2 * sy1;
   if (Math.abs(det) < 1e-8) return 'matrix(1 0 0 1 0 0)';
   const a = ((v.x - u.x) * sy2 - (w.x - u.x) * sy1) / det;

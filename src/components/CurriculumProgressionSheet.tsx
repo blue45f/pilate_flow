@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ArrowRight, BookmarkPlus, CalendarRange, Check, Layers } from 'lucide-react';
 import { APPARATUS_LABELS } from '../data/pilatesCatalog';
-import { usePilatesStore } from '../store/usePilatesStore';
+import { getLastStorageError, usePilatesStore } from '../store/usePilatesStore';
 import type { ApparatusType, DifficultyLevel } from '../types/pilates';
 import {
   buildSavedSequenceFromWeekDraft,
@@ -52,16 +52,16 @@ export const CurriculumProgressionSheet: React.FC<CurriculumProgressionSheetProp
     if (!curriculum) return;
     const nowMs = Date.now();
     const created = curriculum.weeks.map((wk, idx) =>
-      buildSavedSequenceFromWeekDraft(
-        wk,
-        new Date(nowMs + idx * 1000).toISOString(),
-      ),
+      buildSavedSequenceFromWeekDraft(wk, new Date(nowMs + idx * 1000).toISOString()),
     );
     usePilatesStore.setState((prev) => ({
       savedSequences: [...created.reverse(), ...prev.savedSequences],
       saveFeedback: `‘${curriculum.groupLabelKo}’ 4주 커리큘럼(1~4주차 총 4개 시퀀스)을 보관함에 일괄 저장했습니다.`,
     }));
-    const msg = `‘${curriculum.groupLabelKo}’ 1~4주차 점진 커리큘럼 4개 시퀀스를 보관함에 저장했습니다.`;
+    const storageErr = getLastStorageError() ?? usePilatesStore.getState().persistenceError;
+    const msg =
+      storageErr ??
+      `‘${curriculum.groupLabelKo}’ 1~4주차 점진 커리큘럼 4개 시퀀스를 보관함에 저장했습니다.`;
     setSavedNotice(msg);
     onSavedBatch?.(msg);
   };
@@ -99,7 +99,8 @@ export const CurriculumProgressionSheet: React.FC<CurriculumProgressionSheetProp
           <span className="pf-studio-kicker-pill">4-WEEK PROGRESSIVE CURRICULUM</span>
           <h3>4주 점진 클래스 커리큘럼 원클릭 생성</h3>
           <p className="muted">
-            1주차 정렬·인지부터 4주차 통합 플로우까지 난이도와 레이어가 자연스럽게 이어지는 4회차 시퀀스 묶음을 한 번에 보관합니다.
+            1주차 정렬·인지부터 4주차 통합 플로우까지 난이도와 레이어가 자연스럽게 이어지는 4회차
+            시퀀스 묶음을 한 번에 보관합니다.
           </p>
         </div>
         <PfButton
@@ -184,9 +185,7 @@ export const CurriculumProgressionSheet: React.FC<CurriculumProgressionSheetProp
               />
               <div>
                 <div className="pf-v70-week-badges">
-                  <PfBadge tone={wk.weekNumber >= 3 ? 'brand' : 'sage'}>
-                    {wk.weekBadgeKo}
-                  </PfBadge>
+                  <PfBadge tone={wk.weekNumber >= 3 ? 'brand' : 'sage'}>{wk.weekBadgeKo}</PfBadge>
                   <span className="pf-v70-layer-pill">
                     Lv {wk.level} ·{' '}
                     {wk.defaultLayer === 'easy'
@@ -203,7 +202,10 @@ export const CurriculumProgressionSheet: React.FC<CurriculumProgressionSheetProp
 
             <div className="pf-v70-week-moves">
               <Layers size={13} aria-hidden="true" />
-              <span>{wk.movementNamesKo.slice(0, 4).join(' → ')} 외 {Math.max(0, wk.movementNamesKo.length - 4)}동작</span>
+              <span>
+                {wk.movementNamesKo.slice(0, 4).join(' → ')} 외{' '}
+                {Math.max(0, wk.movementNamesKo.length - 4)}동작
+              </span>
             </div>
 
             <div className="pf-v70-week-actions">

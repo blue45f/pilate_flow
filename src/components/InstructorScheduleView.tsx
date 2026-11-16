@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { EQUIPMENT_OPTIONS, isEquipmentId, PROP_OPTIONS } from '../data/equipmentCatalog';
 import { INITIAL_HISTORY_LOGS } from '../data/pilatesCatalog';
-import { usePilatesStore } from '../store/usePilatesStore';
+import { getLastStorageError, usePilatesStore } from '../store/usePilatesStore';
 import { useWorkspaceBrowseState } from '../hooks/useWorkspaceBrowseState';
 import { isScheduleDate } from '../schemas/instructorScheduleSchema';
 import type {
@@ -301,6 +301,7 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     loadSequenceIntoWorkbench,
     setActiveTab,
     generationError,
+    persistenceError,
     datedSequencePlanning,
     assignSequenceToOccurrence,
     setDatedSequencePlanState,
@@ -657,7 +658,8 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
     data.locations.find((item) => item.id === id)?.alias ?? '장소 미상';
   const commit = (next: InstructorScheduleData, success: string) => {
     const result = setInstructorSchedule(next);
-    setMessage(result.success ? success : result.message);
+    const storageErr = result.success ? getLastStorageError() : null;
+    setMessage(result.success ? (storageErr ?? success) : result.message);
     setFormError(result.success ? '' : result.message);
     return result.success;
   };
@@ -2057,8 +2059,8 @@ export const InstructorScheduleView: React.FC<{ today?: string }> = ({
         <div className="flow-schedule-automation-body">
           <AiSmartScheduleGeneratorCard />
           <p className="schedule-storage-note">
-            <span>이 기기에 저장</span> 장소와 반 이름은 별칭으로 입력해도 됩니다. 외부 캘린더와
-            연결하지 않습니다.
+            <span>{persistenceError ? '기기 저장 확인 · 백업 권장' : '이 기기에 저장'}</span> 장소와
+            반 이름은 별칭으로 입력해도 됩니다. 외부 캘린더와 연결하지 않습니다.
           </p>
         </div>
       </details>

@@ -1,6 +1,9 @@
-import React, { useId, useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import { GeneratedPractitionerFigure } from './GeneratedPractitionerFigure';
-import { isPractitionerAtlasReady } from '../utils/generatedPractitionerArt';
+import {
+  isPractitionerAtlasReady,
+  preloadPractitionerAtlasInBrowser,
+} from '../utils/generatedPractitionerArt';
 import '../styles/movement-studio.css';
 import { MOTION_STUDIO_MATERIALS as MATERIAL } from '../utils/motionStudioMaterials';
 import {
@@ -804,8 +807,10 @@ function renderApparatusSupportLayer(
 
   if (asset.apparatus === 'barrel') {
     const isStandingBarrel = asset.bodyPosition === 'standing';
-    const supportedSwan = asset.bodyPosition === 'prone' &&
-      (asset.exerciseId === 'original-barrel-supported-swan' || asset.exerciseId === 'ex-extension-02');
+    const supportedSwan =
+      asset.bodyPosition === 'prone' &&
+      (asset.exerciseId === 'original-barrel-supported-swan' ||
+        asset.exerciseId === 'ex-extension-02');
     const arcLeft = isStandingBarrel ? p(18, 174) : p(68, 174);
     const arcPeak1 = isStandingBarrel ? p(24, 106) : p(76, supportedSwan ? 94 : 102);
     const arcPeak2 = isStandingBarrel ? p(64, 106) : p(164, supportedSwan ? 94 : 102);
@@ -1552,47 +1557,47 @@ function renderKinematicFigureLayer(
 
         {/* Studio low-bun & warm-skin head silhouette */}
         <g data-segment="native-head" opacity={showNativeFigure ? 1 : 0}>
-        <circle
-          cx={bunPt.x}
-          cy={bunPt.y}
-          r={4.2 * figureScale}
-          fill={`url(#${grads.hairId})`}
-          stroke={MATERIAL.hairShade}
-          strokeWidth={0.65}
-        />
-        <ellipse
-          cx={headPt.x}
-          cy={headPt.y}
-          rx={9.6 * figureScale}
-          ry={11.8 * figureScale}
-          transform={`rotate(${r1((Math.atan2(uy, ux) * 180) / Math.PI + 90)} ${headPt.x} ${headPt.y})`}
-          fill={`url(#${grads.skinId})`}
-          stroke={MATERIAL.skinShade}
-          strokeWidth={0.85}
-        />
-        <path
-          data-segment="hair-profile"
-          d={hairPath}
-          fill={`url(#${grads.hairId})`}
-          stroke={MATERIAL.hairShade}
-          strokeWidth={0.45}
-        />
-        <line
-          data-segment="head-gaze"
-          x1={gazeStart.x}
-          y1={gazeStart.y}
-          x2={gazeTip.x}
-          y2={gazeTip.y}
-          stroke={MATERIAL.skinShade}
-          strokeWidth={0.8}
-          strokeOpacity={0.7}
-        />
-        <circle
-          cx={r1(headPt.x + chosenNormal.x * 3.8)}
-          cy={r1(headPt.y + chosenNormal.y * 3.8)}
-          r={0.65}
-          fill={MATERIAL.hair}
-        />
+          <circle
+            cx={bunPt.x}
+            cy={bunPt.y}
+            r={4.2 * figureScale}
+            fill={`url(#${grads.hairId})`}
+            stroke={MATERIAL.hairShade}
+            strokeWidth={0.65}
+          />
+          <ellipse
+            cx={headPt.x}
+            cy={headPt.y}
+            rx={9.6 * figureScale}
+            ry={11.8 * figureScale}
+            transform={`rotate(${r1((Math.atan2(uy, ux) * 180) / Math.PI + 90)} ${headPt.x} ${headPt.y})`}
+            fill={`url(#${grads.skinId})`}
+            stroke={MATERIAL.skinShade}
+            strokeWidth={0.85}
+          />
+          <path
+            data-segment="hair-profile"
+            d={hairPath}
+            fill={`url(#${grads.hairId})`}
+            stroke={MATERIAL.hairShade}
+            strokeWidth={0.45}
+          />
+          <line
+            data-segment="head-gaze"
+            x1={gazeStart.x}
+            y1={gazeStart.y}
+            x2={gazeTip.x}
+            y2={gazeTip.y}
+            stroke={MATERIAL.skinShade}
+            strokeWidth={0.8}
+            strokeOpacity={0.7}
+          />
+          <circle
+            cx={r1(headPt.x + chosenNormal.x * 3.8)}
+            cy={r1(headPt.y + chosenNormal.y * 3.8)}
+            r={0.65}
+            fill={MATERIAL.hair}
+          />
         </g>
       </g>
 
@@ -1873,14 +1878,26 @@ export function MovementPhaseDiagramSvg({
   label,
 }: MovementPhaseDiagramSvgProps): React.JSX.Element {
   const rawUid = useId().replace(/:/g, '');
-  const [atlasReady, setAtlasReady] = useState(() => typeof window === 'undefined' || isPractitionerAtlasReady());
+  const [atlasReady, setAtlasReady] = useState(
+    () => typeof window === 'undefined' || isPractitionerAtlasReady(),
+  );
   const [atlasFailed, setAtlasFailed] = useState(false);
+  useEffect(
+    () =>
+      preloadPractitionerAtlasInBrowser(
+        () => setAtlasReady(true),
+        () => setAtlasFailed(true),
+      ),
+    [],
+  );
   const titleId = `mpd-title-${rawUid}`;
   const descId = `mpd-desc-${rawUid}`;
   const visualBinding = getExpandedMovementVisualBinding(asset.exerciseId);
   const sourceOnly = visualBinding?.nativeMotionAvailable === false;
   const identityMismatch = hasCatalogMotionIdentityMismatch({
-    id: asset.exerciseId, apparatus: asset.apparatus, bodyPosition: asset.bodyPosition,
+    id: asset.exerciseId,
+    apparatus: asset.apparatus,
+    bodyPosition: asset.bodyPosition,
   });
   if (sourceOnly || identityMismatch) {
     return (
@@ -1904,8 +1921,14 @@ export function MovementPhaseDiagramSvg({
           borderRadius: compact ? '10px' : '14px',
         }}
       >
-        <title id={titleId}>{`${asset.nameKo} · ${sourceOnly ? '제작자 영상 참고' : '전용 도해 없음'}`}</title>
-        <desc id={descId}>{sourceOnly ? visualBinding.reasonKo : '기구나 시작 자세가 변경되어 기존 도해를 표시하지 않습니다.'}</desc>
+        <title
+          id={titleId}
+        >{`${asset.nameKo} · ${sourceOnly ? '제작자 영상 참고' : '전용 도해 없음'}`}</title>
+        <desc id={descId}>
+          {sourceOnly
+            ? visualBinding.reasonKo
+            : '기구나 시작 자세가 변경되어 기존 도해를 표시하지 않습니다.'}
+        </desc>
         <rect
           width={VIEWBOX_WIDTH}
           height={VIEWBOX_HEIGHT}
@@ -1914,7 +1937,9 @@ export function MovementPhaseDiagramSvg({
           stroke={MATERIAL.border}
         />
         <circle cx="160" cy="78" r="26" fill={MATERIAL.floor} />
-        {sourceOnly ? <path d="M154 66 L173 78 L154 90 Z" fill={MATERIAL.ink} /> : (
+        {sourceOnly ? (
+          <path d="M154 66 L173 78 L154 90 Z" fill={MATERIAL.ink} />
+        ) : (
           <g stroke={MATERIAL.ink} strokeWidth="3" strokeLinecap="round">
             <path d="M160 77 L160 89" />
             <circle cx="160" cy="67" r="1" />
@@ -1962,13 +1987,11 @@ export function MovementPhaseDiagramSvg({
   };
 
   const authoredPhase = asset.phases[phase];
-  const referenceJoints = getMovementVisualAsset(asset.exerciseId)?.phases.start.joints ?? asset.phases.start.joints;
+  const referenceJoints =
+    getMovementVisualAsset(asset.exerciseId)?.phases.start.joints ?? asset.phases.start.joints;
   const phaseSpec: PhasePoseSpec = {
     ...authoredPhase,
-    joints: normalizeRigJointMap(
-      authoredPhase.joints,
-      referenceJoints,
-    ),
+    joints: normalizeRigJointMap(authoredPhase.joints, referenceJoints),
   };
   const activeMuscleLabels = asset.primaryMuscles
     .filter((m) => m.activePhases.includes(phase))
@@ -2196,17 +2219,19 @@ export function MovementPhaseDiagramSvg({
         referenceJoints,
         !atlasReady || atlasFailed,
       )}
-      {!atlasFailed && <GeneratedPractitionerFigure
-        joints={phaseSpec.joints}
-        referenceJoints={referenceJoints}
-        activeSide={activeSide}
-        mirrored={mirrored}
-        scale={getStudioFigureScale(asset)}
-        id={`mpd-generated-${rawUid}`}
-        ready={atlasReady}
-        onLoad={() => setAtlasReady(true)}
-        onError={() => setAtlasFailed(true)}
-      />}
+      {!atlasFailed && (
+        <GeneratedPractitionerFigure
+          joints={phaseSpec.joints}
+          referenceJoints={referenceJoints}
+          activeSide={activeSide}
+          mirrored={mirrored}
+          scale={getStudioFigureScale(asset)}
+          id={`mpd-generated-${rawUid}`}
+          ready={atlasReady}
+          onLoad={() => setAtlasReady(true)}
+          onError={() => setAtlasFailed(true)}
+        />
+      )}
 
       {/* 4. Translucent muscle overlay stays visible above the opaque clothing. */}
       {showMuscles ? renderPrimaryMusclesLayer(asset, phaseSpec, phase, mirrored, compact) : null}
@@ -2245,7 +2270,9 @@ export function MovementTriptychDiagramSvg({
   const visualBinding = getExpandedMovementVisualBinding(asset.exerciseId);
   const sourceOnly = visualBinding?.nativeMotionAvailable === false;
   const identityMismatch = hasCatalogMotionIdentityMismatch({
-    id: asset.exerciseId, apparatus: asset.apparatus, bodyPosition: asset.bodyPosition,
+    id: asset.exerciseId,
+    apparatus: asset.apparatus,
+    bodyPosition: asset.bodyPosition,
   });
   if (sourceOnly || identityMismatch) {
     return (
@@ -2255,7 +2282,11 @@ export function MovementTriptychDiagramSvg({
         aria-label={`${asset.nameKo} ${sourceOnly ? '제작자 영상 참고' : '전용 도해 없음'}`}
       >
         <MovementPhaseDiagramSvg asset={asset} phase="start" compact />
-        <p>{sourceOnly ? visualBinding.reasonKo : '기구나 시작 자세가 변경되어 기존 도해를 표시하지 않습니다.'}</p>
+        <p>
+          {sourceOnly
+            ? visualBinding.reasonKo
+            : '기구나 시작 자세가 변경되어 기존 도해를 표시하지 않습니다.'}
+        </p>
         {sourceOnly && visualBinding.sourceUrl ? (
           <a href={visualBinding.sourceUrl} target="_blank" rel="noreferrer">
             제작자 동작 설명 열기

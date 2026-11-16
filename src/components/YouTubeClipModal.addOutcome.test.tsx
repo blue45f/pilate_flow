@@ -161,7 +161,11 @@ describe('movement addition reports the actual result without losing the current
         target: { value: other.nameKo },
       },
     );
-    fireEvent.click(await screen.findByRole('button', { name: `${other.nameKo} 상세 보기` }));
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: new RegExp(`^${other.nameKo} (상세 보기|미리보기)$`),
+      }),
+    );
     const detail = await screen.findByRole('dialog', { name: other.nameKo }, { timeout: 10000 });
     fireEvent.click(within(detail).getByRole('button', { name: '수업안에 추가' }));
     await waitFor(() =>
