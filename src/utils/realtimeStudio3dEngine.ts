@@ -2148,18 +2148,22 @@ function buildStudio3DScene(options: {
     );
   }
 
-  // 2. Sculpted High-Craft Anatomical 3D Athlete Mesh
+  // 2. Sculpted High-Craft Anatomical 3D Athlete Mesh (harmonized with 2D sage-olive studio attire)
   const attireRgb: Rgb = isClay
     ? [218, 214, 206]
     : shader === 'biomech-xray'
       ? [66, 178, 148]
       : MOTION_STUDIO_RGB.cloth;
   const leggingRgb: Rgb = isClay
-    ? [198, 194, 186]
+    ? [206, 202, 194]
     : shader === 'biomech-xray'
-      ? [52, 152, 126]
-      : [46, 68, 58];
-  const waistbandRgb: Rgb = isClay ? [188, 184, 176] : [36, 56, 48];
+      ? [56, 162, 134]
+      : [
+          Math.max(0, MOTION_STUDIO_RGB.cloth[0] - 8),
+          Math.max(0, MOTION_STUDIO_RGB.cloth[1] - 8),
+          Math.max(0, MOTION_STUDIO_RGB.cloth[2] - 7),
+        ];
+  const waistbandRgb: Rgb = isClay ? [202, 198, 190] : leggingRgb;
   const skinRgb: Rgb = isClay
     ? [226, 222, 215]
     : shader === 'biomech-xray'
@@ -2168,18 +2172,20 @@ function buildStudio3DScene(options: {
   const coralRgb: Rgb = MOTION_STUDIO_RGB.primaryMuscle;
   const bodyAlpha = shader === 'biomech-xray' ? 0.44 : 1.0;
 
+  // Subtle thoracic breathing expansion (naturalistic-motion)
+  const breathScale = 1 + 0.028 * Math.sin(phaseT * Math.PI);
   const spPts = [0, 0.14, 0.28, 0.44, 0.6, 0.76, 0.9, 1.0].map((u) =>
     bezier3(rig.pelvis, rig.spineMid, rig.chest, u),
   );
   const torsoRadii: [number, number][] = [
-    [0.142, 0.102],
-    [0.132, 0.094],
-    [0.118, 0.082],
-    [0.122, 0.084],
-    [0.135, 0.092],
-    [0.147, 0.096],
-    [0.148, 0.092],
-    [0.138, 0.082],
+    [0.138, 0.098],
+    [0.128, 0.092],
+    [0.116, 0.082],
+    [0.122 * breathScale, 0.085 * breathScale],
+    [0.136 * breathScale, 0.093 * breathScale],
+    [0.145 * breathScale, 0.096 * breathScale],
+    [0.144, 0.09],
+    [0.126, 0.078],
   ];
   const coreActive =
     rig.activeZones.includes('core') ||
@@ -2188,15 +2194,36 @@ function buildStudio3DScene(options: {
   const torsoTone: Rgb =
     !isClay && coreActive && phaseT > 0.25
       ? [
-          lerp(attireRgb[0], coralRgb[0], phaseT * 0.58),
-          lerp(attireRgb[1], coralRgb[1], phaseT * 0.58),
-          lerp(attireRgb[2], coralRgb[2], phaseT * 0.58),
+          lerp(attireRgb[0], coralRgb[0], phaseT * 0.44),
+          lerp(attireRgb[1], coralRgb[1], phaseT * 0.4),
+          lerp(attireRgb[2], coralRgb[2], phaseT * 0.36),
         ]
       : attireRgb;
 
-  // Pelvis + High-Waist Legging Seam + Sculpted Ribcage/Torso
+  // Anatomical Spine & Cranial-Jawline Basis
+  const spUp = norm3(sub3(rig.chest, rig.pelvis));
+  const antN = norm3(sub3(rig.antHint, mul3(spUp, dot3(rig.antHint, spUp))));
+  const bodyRight = norm3(cross3(spUp, antN));
+
+  const lHip = sub3(rig.pelvis, mul3(bodyRight, 0.088));
+  const rHip = add3(rig.pelvis, mul3(bodyRight, 0.088));
+  const lSh = sub3(rig.chest, mul3(bodyRight, 0.148));
+  const rSh = add3(rig.chest, mul3(bodyRight, 0.148));
+
+  // Oriented Pelvic-Gluteal Girdle + High-Waist Legging Seam + Sculpted Ribcage/Torso
   quads.push(
-    ...makeSphereQuads(rig.pelvis, 0.116, 0.142, 0.098, leggingRgb, 16, 9, bodyAlpha, 0.22),
+    ...makeTaperedTubeQuads(
+      [lHip, rig.pelvis, rHip],
+      [
+        [0.086, 0.088],
+        [0.104, 0.106],
+        [0.086, 0.088],
+      ],
+      leggingRgb,
+      18,
+      bodyAlpha,
+      0.22,
+    ),
   );
   quads.push(
     ...makeTaperedTubeQuads(
@@ -2215,15 +2242,26 @@ function buildStudio3DScene(options: {
       torsoTone,
       18,
       bodyAlpha,
-      0.25,
-      coreActive && !isClay ? phaseT * 0.42 : 0,
+      0.22,
+      coreActive && !isClay ? phaseT * 0.34 : 0,
     ),
   );
 
-  // Anatomical Spine & Cranial-Jawline Basis
-  const spUp = norm3(sub3(rig.chest, rig.pelvis));
-  const antN = norm3(sub3(rig.antHint, mul3(spUp, dot3(rig.antHint, spUp))));
-  const bodyRight = norm3(cross3(spUp, antN));
+  // Sleeveless Studio Top Clavicle Yoke + Smooth Bare-Skin Deltoid Contours (zero protruding shoulder pads)
+  quads.push(
+    ...makeTaperedTubeQuads(
+      [sub3(rig.chest, mul3(bodyRight, 0.118)), rig.chest, add3(rig.chest, mul3(bodyRight, 0.118))],
+      [
+        [0.056, 0.052],
+        [0.072, 0.068],
+        [0.056, 0.052],
+      ],
+      torsoTone,
+      16,
+      bodyAlpha,
+      0.2,
+    ),
+  );
 
   const neckTop = add3(rig.chest, mul3(spUp, 0.105));
   const headPos = add3(rig.chest, add3(mul3(spUp, 0.188), mul3(antN, 0.016)));
@@ -2255,13 +2293,8 @@ function buildStudio3DScene(options: {
   );
   quads.push(...makeSphereQuads(bunPos, 0.039, 0.039, 0.039, hairCol, 18, 10, bodyAlpha, 0.28));
 
-  const lHip = sub3(rig.pelvis, mul3(bodyRight, 0.088));
-  const rHip = add3(rig.pelvis, mul3(bodyRight, 0.088));
-  const lSh = sub3(rig.chest, mul3(bodyRight, 0.152));
-  const rSh = add3(rig.chest, mul3(bodyRight, 0.152));
-
-  quads.push(...makeSphereQuads(lSh, 0.052, 0.052, 0.049, attireRgb, 14, 8, bodyAlpha, 0.24));
-  quads.push(...makeSphereQuads(rSh, 0.052, 0.052, 0.049, attireRgb, 14, 8, bodyAlpha, 0.24));
+  quads.push(...makeSphereQuads(lSh, 0.046, 0.046, 0.045, skinRgb, 14, 8, bodyAlpha, 0.18));
+  quads.push(...makeSphereQuads(rSh, 0.046, 0.046, 0.045, skinRgb, 14, 8, bodyAlpha, 0.18));
 
   const legActive =
     rig.activeZones.includes('quads') ||
@@ -2315,25 +2348,26 @@ function buildStudio3DScene(options: {
         0.2,
       ),
     );
-    // Arched Non-Slip Pilates Grip Sock + Charcoal Instep Band
+    // Arched Non-Slip Pilates Grip Sock + Soft Ribbed Ankle Cuff
+    const cuffPt = vlerp(kneePt, anklePt, 0.9);
     const heelPt = sub3(anklePt, mul3(antN, 0.035));
     const archPt = add3(anklePt, mul3(antN, 0.055));
     const fEnd = add3(anklePt, mul3(antN, 0.145));
+    const sockCol: Rgb = isClay ? [215, 212, 205] : [244, 241, 234];
     quads.push(
       ...makeTaperedTubeQuads(
-        [heelPt, archPt, fEnd],
+        [cuffPt, anklePt, heelPt, archPt, fEnd],
         [
-          [0.035, 0.032],
-          [0.036, 0.026],
-          [0.028, 0.014],
+          [0.035, 0.036],
+          [0.034, 0.034],
+          [0.034, 0.031],
+          [0.034, 0.025],
+          [0.026, 0.013],
         ],
-        isClay ? [215, 212, 205] : [242, 238, 230],
+        sockCol,
         16,
         bodyAlpha,
       ),
-    );
-    quads.push(
-      ...makeSphereQuads(archPt, 0.037, 0.028, 0.028, charcoalRgb, 12, 6, bodyAlpha, 0.18),
     );
   }
 

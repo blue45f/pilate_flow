@@ -81,20 +81,35 @@ export function resolveRigHand(joints: RigJointMap, side: 'near' | 'far'): Point
 
 /** Transport the setup face direction with the neck/head axis. Limb movement must
  * never turn the face over when a wrist or toe crosses an arbitrary threshold. */
-export function resolveRigHeadFrame(joints: RigJointMap, referenceJoints: RigJointMap = joints): {
-  headAxis: Point2D; faceAxis: Point2D;
+export function resolveRigHeadFrame(
+  joints: RigJointMap,
+  referenceJoints: RigJointMap = joints,
+): {
+  headAxis: Point2D;
+  faceAxis: Point2D;
 } {
   const normalize = (p: Point2D, fallback: Point2D): Point2D => {
     const length = Math.hypot(p.x, p.y);
     return length > 0.001 ? { x: p.x / length, y: p.y / length } : fallback;
   };
-  const setupAxis = normalize(difference(referenceJoints.head, referenceJoints.neck), { x: 0, y: -1 });
+  const setupAxis = normalize(difference(referenceJoints.head, referenceJoints.neck), {
+    x: 0,
+    y: -1,
+  });
   const headAxis = normalize(difference(joints.head, joints.neck), setupAxis);
   const r = referenceJoints;
-  const kneeling = Math.abs(r.knee.y - r.ankle.y) < 9 && r.pelvis.y < r.knee.y - 18;
-  const hint = Math.abs(setupAxis.y) >= Math.abs(setupAxis.x)
-    ? { x: (kneeling ? r.knee.x - r.ankle.x : 0) || r.toe.x - r.heel.x || r.hand.x - r.shoulder.x || 1, y: 0 }
-    : { x: 0, y: r.wrist.y > r.shoulder.y + 8 || r.toe.y > r.heel.y + 2 ? 1 : -1 };
+  const kneeling = Math.abs(r.knee.y - r.ankle.y) < 9 && r.pelvis.y <= r.knee.y - 14;
+  const hint =
+    Math.abs(setupAxis.y) >= Math.abs(setupAxis.x)
+      ? {
+          x:
+            (kneeling ? r.knee.x - r.ankle.x : 0) ||
+            r.toe.x - r.heel.x ||
+            r.hand.x - r.shoulder.x ||
+            1,
+          y: 0,
+        }
+      : { x: 0, y: r.wrist.y > r.shoulder.y + 8 || r.toe.y > r.heel.y + 2 ? 1 : -1 };
   const sign = -setupAxis.y * hint.x + setupAxis.x * hint.y >= 0 ? 1 : -1;
   return { headAxis, faceAxis: { x: -headAxis.y * sign, y: headAxis.x * sign } };
 }
@@ -114,14 +129,50 @@ export function normalizeRigJointMap(
   joints: RigJointMap,
   referenceJoints: RigJointMap = joints,
 ): RigJointMap {
+  const farShoulder = joints.farShoulder ?? offset(joints.shoulder, -3, -3);
+  const farHip = joints.farHip ?? offset(joints.hip, -3, -3);
+
+  const farWristAnchoredSeparately =
+    Boolean(joints.farWrist && !joints.farElbow) &&
+    Math.hypot(joints.farWrist!.x - joints.wrist.x, joints.farWrist!.y - joints.wrist.y) > 8;
+  const resolvedFarElbow =
+    joints.farElbow ??
+    (farWristAnchoredSeparately
+      ? {
+          x: (farShoulder.x + joints.farWrist!.x) * 0.5,
+          y: (farShoulder.y + joints.farWrist!.y) * 0.5,
+        }
+      : offset(joints.elbow, -4, -3));
+  const resolvedFarWrist = joints.farWrist ?? offset(joints.wrist, -4, -3);
+
+  const farKneeAnchoredSeparately =
+    Boolean(joints.farKnee && !joints.farAnkle) &&
+    Math.hypot(joints.farKnee!.x - joints.knee.x, joints.farKnee!.y - joints.knee.y) > 8;
+  const setupRefKnee = referenceJoints.farKnee ?? referenceJoints.knee;
+  const setupRefAnkle = referenceJoints.farAnkle ?? referenceJoints.ankle;
+  const resolvedFarAnkle =
+    joints.farAnkle ??
+    (farKneeAnchoredSeparately
+      ? translated(joints.farKnee!, difference(setupRefAnkle, setupRefKnee))
+      : offset(joints.ankle, -4, -3));
+
+  const setupRefWrist = referenceJoints.farWrist ?? referenceJoints.wrist;
+  const setupRefHand = referenceJoints.farHand ?? referenceJoints.hand;
+  const resolvedFarHand =
+    joints.farHand ??
+    (farWristAnchoredSeparately
+      ? translated(resolvedFarWrist, difference(setupRefHand, setupRefWrist))
+      : undefined);
+
   const complete: RigJointMap = {
     ...joints,
-    farShoulder: joints.farShoulder ?? offset(joints.shoulder, -3, -3),
-    farElbow: joints.farElbow ?? offset(joints.elbow, -4, -3),
-    farWrist: joints.farWrist ?? offset(joints.wrist, -4, -3),
-    farHip: joints.farHip ?? offset(joints.hip, -3, -3),
+    farShoulder,
+    farElbow: resolvedFarElbow,
+    farWrist: resolvedFarWrist,
+    ...(resolvedFarHand ? { farHand: resolvedFarHand } : {}),
+    farHip,
     farKnee: joints.farKnee ?? offset(joints.knee, -4, -4),
-    farAnkle: joints.farAnkle ?? offset(joints.ankle, -4, -3),
+    farAnkle: resolvedFarAnkle,
   };
   const foot = resolveRigFoot(complete, 'far', referenceJoints);
   return {
@@ -129,6 +180,6 @@ export function normalizeRigJointMap(
     farAnkle: foot.ankle,
     farHeel: foot.heel,
     farToe: foot.toe,
-    farHand: resolveRigHand(complete, 'far'),
+    farHand: complete.farHand ?? resolveRigHand(complete, 'far'),
   };
 }

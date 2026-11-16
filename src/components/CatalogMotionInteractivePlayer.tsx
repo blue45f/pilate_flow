@@ -25,6 +25,17 @@ const PREVIEW_FRAME_RATE = 60;
 const RENDER_INTERVAL_MS = 1000 / PREVIEW_FRAME_RATE;
 const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.5] as const;
 
+function formatFriendlyStudioText(raw: string): string {
+  return raw
+    .replace(/수파인/g, '편안히 누운')
+    .replace(/프론/g, '엎드린')
+    .replace(/사이드\s*라잉/g, '옆으로 누운')
+    .replace(/쿼드러페드/g, '네발기기')
+    .replace(/\s*다른\s*[^.]*변형은\s*별도로\s*확인합니다\.?/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 export interface CatalogMotionThumbnailProps {
   asset: CatalogContinuousMotionAsset;
   className?: string;
@@ -413,7 +424,7 @@ function CatalogMotionInteractivePlayerContent({
         <div>
           <p className="mpp-eyebrow">
             {isStudio
-              ? 'MOTION STUDY · 5단계 동작'
+              ? '동작 흐름 가이드 · 5단계 연속 재생'
               : '기구학 5단계 연속·3단계 도해 · 출처 대조 확인'}
           </p>
           <h3 id={`${id}-title`}>
@@ -428,7 +439,7 @@ function CatalogMotionInteractivePlayerContent({
           {representative
             ? '대표 패턴 참고'
             : isStudio
-              ? '동작 패턴 참고'
+              ? '자연스러운 연속 동작'
               : '출처 대조 완료 · 전문가 검수 전'}
         </span>
       </header>
@@ -453,7 +464,12 @@ function CatalogMotionInteractivePlayerContent({
           label={`${representative ? asset.visualAsset.archetypeTitleKo : asset.titleKo} · ${sampledPose.phase.labelKo}`}
         />
         <figcaption>
-          {sampledPose.phase.labelKo} <span>{sampledPose.phase.cueKo}</span>
+          {isStudio
+            ? formatFriendlyStudioText(sampledPose.phase.labelKo)
+            : sampledPose.phase.labelKo}{' '}
+          <span>
+            {isStudio ? formatFriendlyStudioText(sampledPose.phase.cueKo) : sampledPose.phase.cueKo}
+          </span>
         </figcaption>
       </figure>
 
@@ -558,40 +574,44 @@ function CatalogMotionInteractivePlayerContent({
           }}
         />
       </label>
-      <div className="mpp-frame-readout" aria-live="off">
-        <span>
-          프레임 {Math.round(progress * frameCount)} / {frameCount}
-        </span>
-        <span>
-          {((progress * asset.durationMs) / 1000).toFixed(2)} /{' '}
-          {(asset.durationMs / 1000).toFixed(0)}초
-        </span>
-      </div>
+      {!isStudio && (
+        <div className="mpp-frame-readout" aria-live="off">
+          <span>
+            프레임 {Math.round(progress * frameCount)} / {frameCount}
+          </span>
+          <span>
+            {((progress * asset.durationMs) / 1000).toFixed(2)} /{' '}
+            {(asset.durationMs / 1000).toFixed(0)}초
+          </span>
+        </div>
+      )}
       <p id={`${id}-frame-help`} className="sr-only">
         좌우 방향키로 한 프레임씩 이동합니다. 재생 시간은 참고 모션의 길이입니다.
       </p>
 
-      <div className="mpp-phase-stepper" role="group" aria-label="도해 단계 이동">
-        <button
-          type="button"
-          aria-label="이전 도해 단계"
-          disabled={!prevPhase}
-          onClick={() => prevPhase && seek(prevPhase.sample)}
-        >
-          <ChevronLeft size={15} aria-hidden="true" /> 이전 단계
-        </button>
-        <span className="mpp-phase-counter">
-          단계 {phaseIndex + 1} / {asset.phases.length} · {sampledPose.phase.labelKo}
-        </span>
-        <button
-          type="button"
-          aria-label="다음 도해 단계"
-          disabled={!nextPhase}
-          onClick={() => nextPhase && seek(nextPhase.sample)}
-        >
-          다음 단계 <ChevronRight size={15} aria-hidden="true" />
-        </button>
-      </div>
+      {!isStudio && (
+        <div className="mpp-phase-stepper" role="group" aria-label="도해 단계 이동">
+          <button
+            type="button"
+            aria-label="이전 도해 단계"
+            disabled={!prevPhase}
+            onClick={() => prevPhase && seek(prevPhase.sample)}
+          >
+            <ChevronLeft size={15} aria-hidden="true" /> 이전 단계
+          </button>
+          <span className="mpp-phase-counter">
+            단계 {phaseIndex + 1} / {asset.phases.length} · {sampledPose.phase.labelKo}
+          </span>
+          <button
+            type="button"
+            aria-label="다음 도해 단계"
+            disabled={!nextPhase}
+            onClick={() => nextPhase && seek(nextPhase.sample)}
+          >
+            다음 단계 <ChevronRight size={15} aria-hidden="true" />
+          </button>
+        </div>
+      )}
 
       <div className="mpp-phases" role="group" aria-label="관련 패턴 정지 단계">
         {asset.phases.map((item, index) => (

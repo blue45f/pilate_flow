@@ -850,15 +850,9 @@ export function SequencePlanPreview({
                   {selectedRest ? '중간 휴식' : exercise?.nameKo || '동작 정보 없음'}
                 </h3>
                 {!selectedRest && exercise && (
-                  <>
-                    <ExerciseThumbnailBadge exercise={exercise} showPhaseStrip decorative />
-                    <div
-                      className="pf-plan-preview-3d-wrap"
-                      data-testid="plan-preview-3d-hero"
-                    >
-                      <Studio3DMotionHeroCard exercise={exercise} compact />
-                    </div>
-                  </>
+                  <div className="pf-plan-preview-3d-wrap" data-testid="plan-preview-3d-hero">
+                    <Studio3DMotionHeroCard exercise={exercise} compact />
+                  </div>
                 )}
                 {viewMode === 'connected' && (
                   <p className="connected-study-section">

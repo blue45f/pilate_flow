@@ -367,12 +367,586 @@ html #root .flow-app .desktop-nav > button.active {
   box-shadow: 0 8px 24px rgba(24, 46, 35, 0.065);
 }
 
+/* 9. AI Smart Sequence Bar (Effortless 1-Tap & Natural-Language Composer) */
+.pf-ai-quick-bar {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fcfbf7 0%, #f1f5ec 100%);
+  border: 1px solid rgba(31, 68, 53, 0.14);
+  box-shadow: 0 4px 18px rgba(24, 46, 35, 0.04);
+}
+
+.pf-ai-quick-bar__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.pf-ai-quick-bar__title-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pf-ai-quick-bar__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #1f4435;
+  color: #ffffff;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.pf-ai-quick-bar__title-wrap strong {
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: #20372d;
+  word-break: keep-all;
+}
+
+.pf-ai-caution-disclosure {
+  position: relative;
+}
+
+.pf-ai-caution-disclosure > summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 34px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(31, 68, 53, 0.18);
+  color: #27483b;
+  font-size: 0.76rem;
+  font-weight: 650;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pf-ai-caution-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pf-ai-caution-popover {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid rgba(31, 68, 53, 0.14);
+}
+
+.pf-ai-caution-chip {
+  min-height: 34px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 68, 53, 0.16);
+  background: #f8f7f2;
+  color: #2e453b;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.pf-ai-caution-chip.is-active {
+  background: #bf5a41;
+  border-color: #bf5a41;
+  color: #ffffff;
+}
+
+.pf-ai-quick-bar__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.pf-ai-quick-bar__input {
+  flex: 1 1 260px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(31, 68, 53, 0.18);
+  background: #ffffff;
+  color: #1c3128;
+  font-size: 0.92rem;
+}
+
+.pf-ai-quick-bar__input:focus-visible {
+  outline: none;
+  border-color: #1f4435;
+  box-shadow: 0 0 0 3px rgba(31, 68, 53, 0.13);
+}
+
+.pf-ai-quick-bar__submit,
+.pf-ai-quick-bar__shuffle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.pf-ai-quick-bar__submit {
+  border: 1px solid #1f4435;
+  background: #1f4435;
+  color: #ffffff;
+}
+
+.pf-ai-quick-bar__submit:hover {
+  background: #173529;
+}
+
+.pf-ai-quick-bar__submit:active,
+.pf-ai-quick-bar__shuffle:active {
+  transform: scale(0.98);
+}
+
+.pf-ai-quick-bar__shuffle {
+  border: 1px solid rgba(31, 68, 53, 0.22);
+  background: #ffffff;
+  color: #1f4435;
+}
+
+.pf-ai-quick-bar__recipes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pf-ai-recipe-chip {
+  min-height: 34px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 68, 53, 0.14);
+  background: rgba(255, 255, 255, 0.88);
+  color: #284237;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  word-break: keep-all;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.pf-ai-recipe-chip:hover {
+  border-color: #1f4435;
+  background: #ffffff;
+}
+
+.pf-ai-recipe-chip.is-active {
+  background: #1f4435;
+  border-color: #1f4435;
+  color: #ffffff;
+}
+
+.pf-ai-quick-bar__summary {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 9px;
+  background: rgba(31, 68, 53, 0.07);
+  color: #1d3c2f;
+  font-size: 0.8rem;
+  font-weight: 600;
+  word-break: keep-all;
+}
+
+/* 10. In-Place Sequence Building, Layer Pills & Picker Favorites */
+.flow-pick-card__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flow-fav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 62, 48, 0.12);
+  background: #ffffff;
+  color: #6c7c73;
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.flow-fav-button.is-favorited {
+  color: #bf5a41;
+  border-color: rgba(191, 90, 65, 0.35);
+  background: #fdf4f1;
+}
+
+.flow-row-spring-pill {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #edf3ea;
+  color: #214536;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-row-layers {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.flow-layer-pill {
+  min-height: 24px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 62, 48, 0.14);
+  background: #faf9f5;
+  color: #4f6358;
+  font-size: 0.71rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.flow-layer-pill.is-active {
+  background: #1f4435;
+  border-color: #1f4435;
+  color: #ffffff;
+}
+
+.flow-row-layer-cue {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  color: #2b5444;
+  word-break: keep-all;
+}
+
+.flow-row-time-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-time-nudge {
+  min-height: 30px;
+  padding: 0 7px;
+  border-radius: 7px;
+  border: 1px solid rgba(34, 62, 48, 0.14);
+  background: #faf9f5;
+  color: #355043;
+  font-size: 0.72rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.flow-time-nudge:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+/* 11. Simplified Preview Modal & Studio Layer Switcher */
+.yt-preview-step-guide.pf-p07-top-tabs {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding: 6px 10px !important;
+  margin-bottom: 6px !important;
+  border-radius: 12px !important;
+  background: #f5f3ec !important;
+  border: 1px solid rgba(34, 62, 48, 0.1) !important;
+}
+
+.yt-preview-step-guide .pf-step-guide-list {
+  display: inline-flex !important;
+  flex-wrap: wrap;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 2px !important;
+  gap: 4px !important;
+}
+
+.yt-preview-step-guide .pf-step-guide-chip {
+  min-height: 32px !important;
+  padding: 4px 11px !important;
+  font-size: 0.78rem !important;
+}
+
+.yt-preview-step-guide .pf-step-guide-Subrow {
+  display: inline-flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+.yt-preview-step-guide .pf-step-guide-focus {
+  margin: 0;
+  font-size: 0.75rem !important;
+  color: #4c6055 !important;
+  word-break: keep-all;
+}
+
+.yt-preview-step-guide .pf-step-nav-btn {
+  min-height: 30px !important;
+  padding: 3px 10px !important;
+  font-size: 0.74rem !important;
+}
+
+.pf-unified-motion-hero .pf-studio3d-hero-card__top {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 8px !important;
+}
+
+.pf-unified-motion-hero .pf-studio3d-mode-tabs {
+  width: auto !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  grid-template-columns: none !important;
+  padding: 3px !important;
+  gap: 3px !important;
+  background: #ece8de !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(34, 62, 48, 0.12) !important;
+}
+
+.pf-unified-motion-hero .pf-studio3d-mode-btn {
+  width: auto !important;
+  flex: 0 0 auto !important;
+  min-height: 30px !important;
+  padding: 4px 13px !important;
+  font-size: 0.78rem !important;
+  white-space: nowrap !important;
+  background: transparent !important;
+  color: #465a4f !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+
+.pf-unified-motion-hero .pf-studio3d-mode-btn.is-active {
+  background: #ffffff !important;
+  color: #1b3d2f !important;
+  font-weight: 700 !important;
+  border-color: rgba(34, 62, 48, 0.14) !important;
+  box-shadow: 0 1px 3px rgba(24, 44, 35, 0.1) !important;
+}
+
+.catalog-motion-interactive-player.is-studio > .mpp-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.catalog-motion-interactive-player.is-studio .mpp-figure {
+  margin: 0 !important;
+}
+
+.catalog-motion-interactive-player.is-studio .mpp-figure svg.movement-phase-diagram-svg {
+  width: 100% !important;
+  max-width: 660px !important;
+  max-height: 318px !important;
+  height: auto !important;
+  margin: 0 auto;
+}
+
+.catalog-motion-interactive-player.is-studio .mpp-figure figcaption {
+  margin-top: 6px !important;
+  font-size: 0.8rem !important;
+}
+
+@media (min-width: 640px) {
+  .catalog-motion-interactive-player.is-studio .mpp-phases {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+}
+
+.pf-detail-layer-switcher {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(34, 62, 48, 0.09);
+}
+
+.pf-detail-layer-switcher__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-detail-layer-switcher__tabs > span {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #354e42;
+  margin-right: 4px;
+}
+
+.pf-detail-layer-tab {
+  min-height: 28px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 62, 48, 0.16);
+  background: #ffffff;
+  color: #365044;
+  font-size: 0.75rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.pf-detail-layer-tab.is-active {
+  background: #1f4435;
+  border-color: #1f4435;
+  color: #ffffff;
+}
+
+.pf-detail-layer-switcher__text {
+  margin: 0;
+  font-size: 0.81rem;
+  color: #243b31;
+  line-height: 1.48;
+  word-break: keep-all;
+}
+
+.pf-preview-secondary-group {
+  display: grid;
+  gap: 0;
+  border-radius: 14px;
+  background: #faf9f5;
+  border: 1px solid rgba(34, 62, 48, 0.11);
+  overflow: hidden;
+}
+
+.pf-preview-secondary-group__heading {
+  margin: 0;
+  padding: 10px 14px 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #5b6e63;
+  letter-spacing: 0.01em;
+}
+
+.pf-preview-secondary-group > details {
+  margin: 0 !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(34, 62, 48, 0.08) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.catalog-motion-interactive-player.is-studio .mpp-view-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding-top: 6px;
+  font-size: 0.77rem;
+}
+
+.pf-ai-quick-bar__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.pf-ai-quick-bar__refinements {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pf-ai-refine-chip {
+  min-height: 28px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 62, 48, 0.18);
+  background: #ffffff;
+  color: #214536;
+  font-size: 0.74rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.pf-ai-refine-chip:hover {
+  background: #edf3ef;
+  border-color: rgba(31, 68, 53, 0.34);
+}
+
+.pf-ai-refine-chip:active {
+  transform: scale(0.98);
+}
+
 @media (max-width: 800px) {
   .flow-picker-list {
     padding-bottom: 16px;
   }
 
-  .pf-hero-3d-modeler-toggle {
+  .pf-hero-3d-modeler-toggle,
+  .pf-ai-quick-bar__submit,
+  .pf-ai-quick-bar__shuffle {
     width: 100%;
     justify-content: center;
   }
