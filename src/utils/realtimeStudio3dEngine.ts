@@ -51,6 +51,18 @@ export interface Biomech3DTelemetry {
   readonly activeSpringLabel: string;
 }
 
+export type Studio3DHotspotId = 'spine' | 'hip' | 'knee' | 'shoulder' | 'apparatus';
+
+export interface Studio3DHotspot {
+  readonly id: Studio3DHotspotId;
+  readonly labelKo: string;
+  readonly metricKo: string;
+  readonly cueKo: string;
+  readonly x: number;
+  readonly y: number;
+  readonly pos3d: Vec3;
+}
+
 export type Vec3 = readonly [number, number, number];
 type Rgb = readonly [number, number, number];
 
@@ -634,6 +646,9 @@ function samplePoseRig(signatureId: Studio3DSignatureId, rawT: number): PoseRigK
 
 interface QuadFace {
   readonly verts: readonly [Vec3, Vec3, Vec3, Vec3];
+  readonly vNormals?: readonly [Vec3, Vec3, Vec3, Vec3];
+  readonly cullBackface?: boolean;
+  readonly depthBias?: number;
   readonly baseRgb: Rgb;
   readonly alpha: number;
   readonly spec: number;
@@ -647,6 +662,7 @@ interface StrokeLine3D {
   readonly width: number;
   readonly dash?: readonly number[];
   readonly overlay?: boolean;
+  readonly depthBias?: number;
 }
 
 interface LabelCallout3D {
@@ -690,6 +706,7 @@ function makeSubdividedBoxQuads(
           [xb, yb, z0 + wz],
           [xa, yb, z0 + wz],
         ],
+        cullBackface: true,
         baseRgb: rgb,
         alpha,
         spec,
@@ -702,6 +719,7 @@ function makeSubdividedBoxQuads(
           [xb, ya, z0],
           [xa, ya, z0],
         ],
+        cullBackface: true,
         baseRgb: rgb,
         alpha,
         spec,
@@ -722,6 +740,7 @@ function makeSubdividedBoxQuads(
           [xb, y0, zb],
           [xa, y0, zb],
         ],
+        cullBackface: true,
         baseRgb: rgb,
         alpha,
         spec,
@@ -734,6 +753,7 @@ function makeSubdividedBoxQuads(
           [xa, y0 + wy, zb],
           [xb, y0 + wy, zb],
         ],
+        cullBackface: true,
         baseRgb: rgb,
         alpha,
         spec,
@@ -754,6 +774,7 @@ function makeSubdividedBoxQuads(
           [x0 + wx, yb, zb],
           [x0 + wx, ya, zb],
         ],
+        cullBackface: true,
         baseRgb: rgb,
         alpha,
         spec,
@@ -766,6 +787,7 @@ function makeSubdividedBoxQuads(
           [x0, ya, zb],
           [x0, yb, zb],
         ],
+        cullBackface: true,
         baseRgb: rgb,
         alpha,
         spec,
@@ -788,29 +810,22 @@ function makePipedCushion(
 ): { quads: QuadFace[]; piping: StrokeLine3D } {
   const [cx, cy, cz] = center;
   const [wx, wy, wz] = dims;
-  const baseQuads = makeSubdividedBoxQuads(
-    [cx, cy, cz - wz * 0.08],
-    [wx, wy, wz * 0.84],
-    leatherRgb,
-    alpha,
-    0.26,
-    24,
-  );
-  const crownQuads = makeSubdividedBoxQuads(
-    [cx, cy, cz + wz * 0.41],
-    [wx * 0.955, wy * 0.945, wz * 0.18],
+  // Single non-overlapping solid cushion volume (prevents coplanar Z-fighting across all angles)
+  const cushionQuads = makeSubdividedBoxQuads(
+    [cx, cy, cz],
+    [wx, wy, wz],
     [
-      Math.min(255, leatherRgb[0] + 9),
-      Math.min(255, leatherRgb[1] + 10),
-      Math.min(255, leatherRgb[2] + 9),
+      Math.min(255, leatherRgb[0] + 5),
+      Math.min(255, leatherRgb[1] + 6),
+      Math.min(255, leatherRgb[2] + 5),
     ],
     alpha,
-    0.32,
-    28,
+    0.28,
+    26,
   );
-  const hwx = wx * 0.492;
-  const hwy = wy * 0.492;
-  const zp = cz + wz * 0.36;
+  const hwx = wx * 0.488;
+  const hwy = wy * 0.488;
+  const zp = cz + wz * 0.505;
   const corners: Vec3[] = [
     [cx - hwx, cy - hwy, zp],
     [cx, cy - hwy, zp],
@@ -823,8 +838,8 @@ function makePipedCushion(
     [cx - hwx, cy - hwy, zp],
   ];
   return {
-    quads: [...baseQuads, ...crownQuads],
-    piping: { pts: corners, stroke: pipingHex, width: 1.6 },
+    quads: cushionQuads,
+    piping: { pts: corners, stroke: pipingHex, width: 1.5, depthBias: -0.04 },
   };
 }
 
@@ -860,6 +875,8 @@ function makeBarrelArchVaultQuads(
     const xi1 = cx + Math.sin(a1) * (radius - thickness);
     const zi1 = cz + Math.cos(a1) * (radius - thickness);
 
+    const no0: Vec3 = [Math.sin(a0), 0, Math.cos(a0)];
+    const no1: Vec3 = [Math.sin(a1), 0, Math.cos(a1)];
     for (let jy = 0; jy < ySlices; jy++) {
       const ya = cy - widthY * 0.5 + (widthY * jy) / ySlices;
       const yb = cy - widthY * 0.5 + (widthY * (jy + 1)) / ySlices;
@@ -870,6 +887,7 @@ function makeBarrelArchVaultQuads(
           [xo1, yb, zo1],
           [xo0, yb, zo0],
         ],
+        vNormals: [no0, no1, no1, no0],
         baseRgb: leatherRgb,
         alpha,
         spec: 0.3,
@@ -926,6 +944,7 @@ function makeTaperedTubeQuads(
   nrm = norm3(sub3(nrm, mul3(tangents[0]!, dot3(nrm, tangents[0]!))));
 
   const rings: Vec3[][] = [];
+  const ringNormals: Vec3[][] = [];
   for (let i = 0; i < pts.length; i++) {
     const t = tangents[i]!;
     let proj = sub3(nrm, mul3(t, dot3(nrm, t)));
@@ -937,23 +956,31 @@ function makeTaperedTubeQuads(
     const binrm = norm3(cross3(t, nrm));
     const [rx, ry] = radii[Math.min(i, radii.length - 1)]!;
     const ring: Vec3[] = [];
+    const rNrm: Vec3[] = [];
     for (let k = 0; k < sides; k++) {
       const ang = (2 * Math.PI * k) / sides;
-      const ca = Math.cos(ang) * rx;
-      const sa = Math.sin(ang) * ry;
-      ring.push(add3(pts[i]!, add3(mul3(binrm, ca), mul3(nrm, sa))));
+      const ca = Math.cos(ang);
+      const sa = Math.sin(ang);
+      ring.push(add3(pts[i]!, add3(mul3(binrm, ca * rx), mul3(nrm, sa * ry))));
+      rNrm.push(
+        norm3(add3(mul3(binrm, ca / Math.max(0.008, rx)), mul3(nrm, sa / Math.max(0.008, ry)))),
+      );
     }
     rings.push(ring);
+    ringNormals.push(rNrm);
   }
 
   const quads: QuadFace[] = [];
   for (let i = 0; i < rings.length - 1; i++) {
     const r0 = rings[i]!;
     const r1 = rings[i + 1]!;
+    const n0 = ringNormals[i]!;
+    const n1 = ringNormals[i + 1]!;
     for (let k = 0; k < sides; k++) {
       const kn = (k + 1) % sides;
       quads.push({
         verts: [r0[k]!, r0[kn]!, r1[kn]!, r1[k]!],
+        vNormals: [n0[k]!, n0[kn]!, n1[kn]!, n1[k]!],
         baseRgb: rgb,
         alpha,
         spec,
@@ -1001,6 +1028,17 @@ function makeAnatomicalHeadWithHairQuads(
     );
   };
 
+  const evalNrm = (phi: number, th: number): Vec3 => {
+    const cp = Math.cos(phi);
+    const sp = Math.sin(phi);
+    return norm3(
+      add3(
+        mul3(rightAxis, (cp * Math.cos(th)) / rx),
+        add3(mul3(antAxis, (cp * Math.sin(th)) / ry), mul3(upAxis, sp / rz)),
+      ),
+    );
+  };
+
   const quads: QuadFace[] = [];
   for (let r = 0; r < ringsCount; r++) {
     const phi0 = -Math.PI * 0.5 + (Math.PI * r) / ringsCount;
@@ -1021,6 +1059,7 @@ function makeAnatomicalHeadWithHairQuads(
           evalPt(phi1, th1, isHair),
           evalPt(phi1, th0, isHair),
         ],
+        vNormals: [evalNrm(phi0, th0), evalNrm(phi0, th1), evalNrm(phi1, th1), evalNrm(phi1, th0)],
         baseRgb: isHair ? hairRgb : skinRgb,
         alpha,
         spec: isHair ? 0.3 : 0.2,
@@ -1065,20 +1104,24 @@ function makeSphereQuads(
   shininess = 26,
 ): QuadFace[] {
   const rings: Vec3[][] = [];
+  const ringNormals: Vec3[][] = [];
   for (let r = 0; r <= ringsCount; r++) {
     const phi = -Math.PI * 0.5 + (Math.PI * r) / ringsCount;
     const cp = Math.cos(phi);
     const sp = Math.sin(phi);
     const row: Vec3[] = [];
+    const nRow: Vec3[] = [];
     for (let s = 0; s < segs; s++) {
       const th = (2 * Math.PI * s) / segs;
-      row.push([
-        center[0] + cp * Math.cos(th) * rx,
-        center[1] + cp * Math.sin(th) * ry,
-        center[2] + sp * rz,
-      ]);
+      const ux = cp * Math.cos(th);
+      const uy = cp * Math.sin(th);
+      row.push([center[0] + ux * rx, center[1] + uy * ry, center[2] + sp * rz]);
+      nRow.push(
+        norm3([ux / Math.max(0.008, rx), uy / Math.max(0.008, ry), sp / Math.max(0.008, rz)]),
+      );
     }
     rings.push(row);
+    ringNormals.push(nRow);
   }
   const quads: QuadFace[] = [];
   for (let r = 0; r < ringsCount; r++) {
@@ -1086,6 +1129,12 @@ function makeSphereQuads(
       const sn = (s + 1) % segs;
       quads.push({
         verts: [rings[r]![s]!, rings[r]![sn]!, rings[r + 1]![sn]!, rings[r + 1]![s]!],
+        vNormals: [
+          ringNormals[r]![s]!,
+          ringNormals[r]![sn]!,
+          ringNormals[r + 1]![sn]!,
+          ringNormals[r + 1]![s]!,
+        ],
         baseRgb: rgb,
         alpha,
         spec,
@@ -1107,11 +1156,13 @@ function makeTorusQuads(
   tubeSegs = 8,
 ): QuadFace[] {
   const rings: Vec3[][] = [];
+  const ringNormals: Vec3[][] = [];
   for (let i = 0; i <= segs; i++) {
     const u = (2 * Math.PI * i) / segs;
     const cu = Math.cos(u);
     const su = Math.sin(u);
     const row: Vec3[] = [];
+    const nRow: Vec3[] = [];
     for (let j = 0; j < tubeSegs; j++) {
       const v = (2 * Math.PI * j) / tubeSegs;
       const cv = Math.cos(v);
@@ -1121,8 +1172,10 @@ function makeTorusQuads(
         center[1] + (majorR + cv * minorR) * cu,
         center[2] + (majorR + cv * minorR) * su,
       ]);
+      nRow.push(norm3([sv, cv * cu, cv * su]));
     }
     rings.push(row);
+    ringNormals.push(nRow);
   }
   const quads: QuadFace[] = [];
   for (let i = 0; i < segs; i++) {
@@ -1130,6 +1183,12 @@ function makeTorusQuads(
       const jn = (j + 1) % tubeSegs;
       quads.push({
         verts: [rings[i]![j]!, rings[i]![jn]!, rings[i + 1]![jn]!, rings[i + 1]![j]!],
+        vNormals: [
+          ringNormals[i]![j]!,
+          ringNormals[i]![jn]!,
+          ringNormals[i + 1]![jn]!,
+          ringNormals[i + 1]![j]!,
+        ],
         baseRgb: rgb,
         alpha,
         spec: 0.42,
@@ -1203,12 +1262,22 @@ export interface Render3DFrameOptions {
   readonly footbarOverride?: 'default' | FootbarState;
   readonly headrestOverride?: 'default' | HeadrestState;
   readonly propOverride?: Studio3DPropOverride;
+  readonly selectedHotspotId?: Studio3DHotspotId | null;
+}
+
+interface HotspotDef3D {
+  readonly id: Studio3DHotspotId;
+  readonly labelKo: string;
+  readonly metricKo: string;
+  readonly cueKo: string;
+  readonly pos3d: Vec3;
 }
 
 interface Built3DScene {
   readonly quads: readonly QuadFace[];
   readonly lines: readonly StrokeLine3D[];
   readonly callouts: readonly LabelCallout3D[];
+  readonly hotspotDefs: readonly HotspotDef3D[];
   readonly shadowAnchors: readonly { pos: Vec3; rx: number; ry: number }[];
   readonly pelvis: Vec3;
   readonly target: Vec3;
@@ -1395,12 +1464,18 @@ function buildStudio3DScene(options: {
       }
     }
 
-    // Standing Platform + Charcoal Non-Slip Pad + Brass Springbar
+    // Standing Platform + Charcoal Non-Slip Top + Brass Springbar
     quads.push(
-      ...makeSubdividedBoxQuads([1.04, 0, 0.372], [0.18, 0.58, 0.024], oakRgb, appAlpha, 0.24),
+      ...makeSubdividedBoxQuads(
+        [1.04, 0, 0.369],
+        [0.18, 0.58, 0.018],
+        oakRgb,
+        appAlpha,
+        0.24,
+      ).filter((q) => q.verts[0][2] < 0.377 || q.verts[2][2] < 0.377),
     );
     quads.push(
-      ...makeSubdividedBoxQuads([1.04, 0, 0.388], [0.14, 0.52, 0.009], charcoalRgb, appAlpha, 0.18),
+      ...makeSubdividedBoxQuads([1.04, 0, 0.384], [0.17, 0.56, 0.012], charcoalRgb, appAlpha, 0.18),
     );
     quads.push(
       ...makeCylinder3D(
@@ -1414,16 +1489,23 @@ function buildStudio3DScene(options: {
       ),
     );
 
-    // Walnut Carriage Chassis + Piped Sage Leather Cushion + Tilting Headrest + Sculpted Shoulder Blocks
-    quads.push(
-      ...makeSubdividedBoxQuads(
-        [cx + 0.08, 0, 0.354],
-        [0.78, 0.55, 0.022],
-        walnutRgb,
-        appAlpha,
-        0.26,
-      ),
-    );
+    // Walnut Carriage Perimeter Frame + Piped Sage Leather Cushion + Tilting Headrest + Sculpted Shoulder Blocks
+    for (const sy of [-0.275, 0.275]) {
+      quads.push(
+        ...makeSubdividedBoxQuads(
+          [cx + 0.08, sy, 0.354],
+          [0.78, 0.024, 0.024],
+          walnutRgb,
+          appAlpha,
+          0.26,
+        ),
+      );
+    }
+    for (const sx of [cx - 0.3, cx + 0.46]) {
+      quads.push(
+        ...makeSubdividedBoxQuads([sx, 0, 0.354], [0.024, 0.53, 0.024], walnutRgb, appAlpha, 0.26),
+      );
+    }
     const carriageCush = makePipedCushion(
       [cx + 0.08, 0, 0.39],
       [0.76, 0.54, 0.054],
@@ -1948,12 +2030,20 @@ function buildStudio3DScene(options: {
     }
   } else {
     shadowAnchors.push({ pos: [0, 0, 0.004], rx: 1.08, ry: 0.44 });
-    quads.push(
-      ...makeSubdividedBoxQuads([0, 0, 0.013], [2.06, 0.8, 0.022], corkRgb, appAlpha, 0.16),
-    );
+    // Non-overlapping cork perimeter border around the upholstered studio mat (zero coplanar Z-fighting)
+    for (const sy of [-0.37, 0.37]) {
+      quads.push(
+        ...makeSubdividedBoxQuads([0, sy, 0.015], [2.06, 0.06, 0.026], corkRgb, appAlpha, 0.16),
+      );
+    }
+    for (const sx of [-0.995, 0.995]) {
+      quads.push(
+        ...makeSubdividedBoxQuads([sx, 0, 0.015], [0.07, 0.68, 0.026], corkRgb, appAlpha, 0.16),
+      );
+    }
     const matCush = makePipedCushion(
-      [0, 0, 0.04],
-      [1.92, 0.68, 0.03],
+      [0, 0, 0.028],
+      [1.92, 0.68, 0.034],
       leatherRgb,
       pipingHex,
       appAlpha,
@@ -1967,6 +2057,7 @@ function buildStudio3DScene(options: {
       ],
       stroke: pipingHex,
       width: 1.2,
+      depthBias: -0.11,
     });
     for (const ey of [-0.22, 0.22]) {
       quads.push(
@@ -2258,28 +2349,35 @@ function buildStudio3DScene(options: {
     const thumbTip = add3(palmCenter, mul3(bodyRight, -0.024 * sideSgn));
     quads.push(
       ...makeTaperedTubeQuads(
+        [shPt, vlerp(shPt, elbPt, 0.34), vlerp(shPt, elbPt, 0.68), elbPt],
         [
-          shPt,
-          vlerp(shPt, elbPt, 0.45),
-          elbPt,
-          vlerp(elbPt, wrPt, 0.45),
-          wrPt,
-          palmCenter,
-          handTip,
-        ],
-        [
-          [0.045, 0.045],
-          [0.041, 0.043],
+          [0.046, 0.046],
+          [0.043, 0.044],
+          [0.039, 0.04],
           [0.035, 0.035],
-          [0.033, 0.035],
-          [0.024, 0.02],
+        ],
+        skinRgb,
+        20,
+        bodyAlpha,
+        0.18,
+      ),
+    );
+    quads.push(...makeSphereQuads(elbPt, 0.035, 0.035, 0.035, skinRgb, 14, 8, bodyAlpha, 0.18));
+    quads.push(
+      ...makeTaperedTubeQuads(
+        [elbPt, vlerp(elbPt, wrPt, 0.35), vlerp(elbPt, wrPt, 0.72), wrPt, palmCenter, handTip],
+        [
+          [0.035, 0.035],
+          [0.034, 0.036],
+          [0.029, 0.03],
+          [0.024, 0.021],
           [0.027, 0.015],
           [0.02, 0.01],
         ],
         skinRgb,
-        18,
+        20,
         bodyAlpha,
-        0.2,
+        0.18,
       ),
     );
     quads.push(...makeSphereQuads(thumbTip, 0.011, 0.011, 0.016, skinRgb, 10, 6, bodyAlpha, 0.2));
@@ -2368,10 +2466,69 @@ function buildStudio3DScene(options: {
           ? [0.02, 0, 0.34]
           : [0.04, 0, 0.54];
 
+  const apparatusAnchor: Vec3 =
+    apparatus === 'reformer'
+      ? [0.66, 0, 0.36]
+      : apparatus === 'cadillac'
+        ? [0.54, 0, 1.36]
+        : apparatus === 'chair'
+          ? [0.24, 0, 0.3]
+          : apparatus === 'barrel'
+            ? [-0.22, 0, 0.72]
+            : [0, 0, 0.05];
+
+  const hotspotDefs: HotspotDef3D[] = [
+    {
+      id: 'spine',
+      labelKo: '척추·코어 중심',
+      metricKo: `분절 ${spineArticulationDeg}° · CoM ${comHeightCm}cm`,
+      cueKo:
+        exercise.cues[0] ??
+        '갈비뼈와 골반 사이의 길이를 길게 유지하며 호흡으로 코어를 감싸 주세요.',
+      pos3d: rig.spineMid,
+    },
+    {
+      id: 'hip',
+      labelKo: '골반·고관절 정렬',
+      metricKo: `고관절 ${hipAngleDeg}°`,
+      cueKo: '좌우 골반 높이를 나란히 맞추고 요추가 과하게 꺾이지 않도록 중립을 지켜 주세요.',
+      pos3d: rig.pelvis,
+    },
+    {
+      id: 'knee',
+      labelKo: '무릎·하체 정렬',
+      metricKo: `무릎 ${kneeAngleDeg}°`,
+      cueKo: '두 번째 발가락과 무릎 중심선이 같은 방향을 가리키도록 하체 정렬을 유지하세요.',
+      pos3d: rKnee,
+    },
+    {
+      id: 'shoulder',
+      labelKo: '어깨·견갑 안정화',
+      metricKo: `견관절 ${shoulderAngleDeg}°`,
+      cueKo:
+        exercise.cues[1] ?? '귀와 어깨 사이 공간을 넓게 유지하며 상부 승모근 긴장을 내려놓으세요.',
+      pos3d: rSh,
+    },
+    {
+      id: 'apparatus',
+      labelKo: apparatus === 'mat' ? '매트·지지면 중심' : '기구·스프링 장력',
+      metricKo:
+        springStretchPct > 0
+          ? `${activeSpringLabel} · 신장 +${springStretchPct}%`
+          : activeSpringLabel,
+      cueKo:
+        apparatus === 'mat'
+          ? '매트 중심선 위에서 좌우 체중을 고르게 분산해 흔들림 없이 지지하세요.'
+          : '스프링이 돌아오는 복귀 구간에서도 저항을 끝까지 느끼며 부드럽게 제어하세요.',
+      pos3d: apparatusAnchor,
+    },
+  ];
+
   return {
     quads,
     lines,
     callouts,
+    hotspotDefs,
     shadowAnchors,
     pelvis: rig.pelvis,
     target,
@@ -2401,8 +2558,24 @@ function drawSceneRegion(params: {
   zoom: number;
   shader: Studio3DShaderPreset;
   regionLabel?: string;
+  selectedHotspotId?: Studio3DHotspotId | null;
+  collectHotspots?: Studio3DHotspot[];
 }): void {
-  const { ctx, scene, rx, ry, rw, rh, yawDeg, pitchDeg, zoom, shader, regionLabel } = params;
+  const {
+    ctx,
+    scene,
+    rx,
+    ry,
+    rw,
+    rh,
+    yawDeg,
+    pitchDeg,
+    zoom,
+    shader,
+    regionLabel,
+    selectedHotspotId,
+    collectHotspots,
+  } = params;
   ctx.save();
   ctx.beginPath();
   ctx.rect(rx, ry, rw, rh);
@@ -2533,7 +2706,7 @@ function drawSceneRegion(params: {
           { x: number; y: number },
           { x: number; y: number },
         ];
-        readonly fill: string;
+        readonly fill: string | CanvasGradient;
         readonly stroke: string;
         readonly strokeW: number;
       }
@@ -2549,6 +2722,31 @@ function drawSceneRegion(params: {
       };
 
   const renderQueue: RenderItem[] = [];
+  const evalLitRgb = (
+    normal3: Vec3,
+    pos3: Vec3,
+    q: QuadFace,
+  ): { r: number; g: number; b: number; lum: number } => {
+    let n = normal3;
+    const viewDir = norm3(sub3(camPos, pos3));
+    if (dot3(n, viewDir) < 0) n = mul3(n, -1);
+    const diffKey = Math.max(0, dot3(n, keyDir));
+    const diffFill = Math.max(0, dot3(n, fillDir));
+    const diffBounce = Math.max(0, dot3(n, bounceDir)) * 0.1;
+    const ao = Math.min(1, 0.84 + Math.max(0, pos3[2]) * 0.19);
+    const rim = Math.pow(1 - Math.max(0, dot3(n, viewDir)), 2.6) * 0.18;
+    const halfVec = norm3(add3(keyDir, viewDir));
+    const specPow = Math.pow(Math.max(0, dot3(n, halfVec)), q.shininess ?? 24) * q.spec;
+    const shade =
+      (0.45 + diffKey * 0.42 + diffFill * 0.22 + diffBounce + rim + (q.emissive ?? 0) * 0.24) * ao;
+    const r = Math.min(255, Math.round(q.baseRgb[0] * shade + specPow * 232));
+    const g = Math.min(255, Math.round(q.baseRgb[1] * shade + specPow * 229));
+    const b = Math.min(255, Math.round(q.baseRgb[2] * shade + specPow * 222));
+    return { r, g, b, lum: r * 0.3 + g * 0.59 + b * 0.11 };
+  };
+
+  const toCssColor = (c: { r: number; g: number; b: number }, alpha: number): string =>
+    alpha < 0.999 ? `rgba(${c.r},${c.g},${c.b},${alpha.toFixed(2)})` : `rgb(${c.r},${c.g},${c.b})`;
 
   for (const q of scene.quads) {
     const p0 = project(q.verts[0]);
@@ -2562,38 +2760,76 @@ function drawSceneRegion(params: {
       (q.verts[0][1] + q.verts[1][1] + q.verts[2][1] + q.verts[3][1]) * 0.25,
       (q.verts[0][2] + q.verts[1][2] + q.verts[2][2] + q.verts[3][2]) * 0.25,
     ];
-    let n = norm3(cross3(sub3(q.verts[1], q.verts[0]), sub3(q.verts[3], q.verts[0])));
     const viewDir = norm3(sub3(camPos, center3));
-    if (dot3(n, viewDir) < 0) n = mul3(n, -1);
+    const faceN = norm3(cross3(sub3(q.verts[1], q.verts[0]), sub3(q.verts[3], q.verts[0])));
 
-    const diffKey = Math.max(0, dot3(n, keyDir));
-    const diffFill = Math.max(0, dot3(n, fillDir));
-    const diffBounce = Math.max(0, dot3(n, bounceDir)) * 0.1;
-    const ao = Math.min(1, 0.84 + Math.max(0, center3[2]) * 0.19);
-    const rim = Math.pow(1 - Math.max(0, dot3(n, viewDir)), 2.6) * 0.18;
-    const halfVec = norm3(add3(keyDir, viewDir));
-    const specPow = Math.pow(Math.max(0, dot3(n, halfVec)), q.shininess ?? 24) * q.spec;
+    // Backface cull closed opaque solids so thin mats/rails/cushions & rear limb hemispheres never bleed through
+    if (q.alpha >= 0.99) {
+      if (q.vNormals) {
+        const avgOutward = norm3([
+          q.vNormals[0][0] + q.vNormals[1][0] + q.vNormals[2][0] + q.vNormals[3][0],
+          q.vNormals[0][1] + q.vNormals[1][1] + q.vNormals[2][1] + q.vNormals[3][1],
+          q.vNormals[0][2] + q.vNormals[1][2] + q.vNormals[2][2] + q.vNormals[3][2],
+        ]);
+        if (dot3(avgOutward, viewDir) < -0.06) continue;
+      } else if (q.cullBackface && dot3(faceN, viewDir) <= 0) {
+        continue;
+      }
+    }
 
-    const shade =
-      (0.45 + diffKey * 0.42 + diffFill * 0.22 + diffBounce + rim + (q.emissive ?? 0) * 0.24) * ao;
-    const r = Math.min(255, Math.round(q.baseRgb[0] * shade + specPow * 232));
-    const g = Math.min(255, Math.round(q.baseRgb[1] * shade + specPow * 229));
-    const b = Math.min(255, Math.round(q.baseRgb[2] * shade + specPow * 222));
-    const fill =
-      q.alpha < 0.999 ? `rgba(${r},${g},${b},${q.alpha.toFixed(2)})` : `rgb(${r},${g},${b})`;
+    const shadingNormal = q.vNormals
+      ? norm3([
+          q.vNormals[0][0] + q.vNormals[1][0] + q.vNormals[2][0] + q.vNormals[3][0],
+          q.vNormals[0][1] + q.vNormals[1][1] + q.vNormals[2][1] + q.vNormals[3][1],
+          q.vNormals[0][2] + q.vNormals[1][2] + q.vNormals[2][2] + q.vNormals[3][2],
+        ])
+      : faceN;
+    const centerLit = evalLitRgb(shadingNormal, center3, q);
+    const flatCss = toCssColor(centerLit, q.alpha);
+    let fillStyle: string | CanvasGradient = flatCss;
+
+    // Gouraud smooth shading across curved organic & cylindrical quads via 2-stop gradient
+    if (q.vNormals && shader !== 'clay-wire' && typeof ctx.createLinearGradient === 'function') {
+      const pts2d = [p0, p1, p2, p3] as const;
+      const vLits = [
+        evalLitRgb(q.vNormals[0], q.verts[0], q),
+        evalLitRgb(q.vNormals[1], q.verts[1], q),
+        evalLitRgb(q.vNormals[2], q.verts[2], q),
+        evalLitRgb(q.vNormals[3], q.verts[3], q),
+      ] as const;
+      let minI = 0;
+      let maxI = 0;
+      for (let i = 1; i < 4; i++) {
+        if (vLits[i]!.lum < vLits[minI]!.lum) minI = i;
+        if (vLits[i]!.lum > vLits[maxI]!.lum) maxI = i;
+      }
+      const dxG = pts2d[maxI]!.x - pts2d[minI]!.x;
+      const dyG = pts2d[maxI]!.y - pts2d[minI]!.y;
+      if (vLits[maxI]!.lum - vLits[minI]!.lum >= 5.5 && dxG * dxG + dyG * dyG > 2.2) {
+        const gGrad = ctx.createLinearGradient(
+          pts2d[minI]!.x,
+          pts2d[minI]!.y,
+          pts2d[maxI]!.x,
+          pts2d[maxI]!.y,
+        );
+        gGrad.addColorStop(0, toCssColor(vLits[minI]!, q.alpha));
+        gGrad.addColorStop(1, toCssColor(vLits[maxI]!, q.alpha));
+        fillStyle = gGrad;
+      }
+    }
 
     renderQueue.push({
       kind: 'quad',
       pts2d: [p0, p1, p2, p3],
-      depth: (p0.zCam + p1.zCam + p2.zCam + p3.zCam) * 0.25,
-      fill,
+      depth: (p0.zCam + p1.zCam + p2.zCam + p3.zCam) * 0.25 + (q.depthBias ?? 0),
+      fill: fillStyle,
       stroke:
         shader === 'clay-wire'
           ? 'rgba(42, 58, 50, 0.28)'
           : q.alpha < 0.999
             ? 'rgba(110,231,183,0.18)'
-            : fill,
-      strokeW: shader === 'clay-wire' ? 0.72 : 0.62,
+            : flatCss,
+      strokeW: shader === 'clay-wire' ? 0.72 : 0.66,
     });
   }
 
@@ -2610,7 +2846,7 @@ function drawSceneRegion(params: {
       if (!pa.valid || !pb.valid) continue;
       renderQueue.push({
         kind: 'seg',
-        depth: (pa.zCam + pb.zCam) * 0.5 - 0.004,
+        depth: (pa.zCam + pb.zCam) * 0.5 - 0.004 + (ln.depthBias ?? 0),
         x0: pa.x,
         y0: pa.y,
         x1: pb.x,
@@ -2694,6 +2930,45 @@ function drawSceneRegion(params: {
     ctx.restore();
   }
 
+  // Project interactive 3D coaching hotspots & highlight active selection
+  if (collectHotspots) {
+    for (const hDef of scene.hotspotDefs) {
+      const pr = project(hDef.pos3d);
+      if (!pr.valid) continue;
+      collectHotspots.push({
+        id: hDef.id,
+        labelKo: hDef.labelKo,
+        metricKo: hDef.metricKo,
+        cueKo: hDef.cueKo,
+        x: Math.round(pr.x * 10) / 10,
+        y: Math.round(pr.y * 10) / 10,
+        pos3d: hDef.pos3d,
+      });
+      const isSelected = selectedHotspotId === hDef.id;
+      if (isSelected) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(31, 68, 53, 0.26)';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(pr.x, pr.y, 13, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = '#1F4435';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(pr.x, pr.y, 10, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(pr.x, pr.y, 4.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#1F4435';
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  }
+
   // Region Badge (for Dual View)
   if (regionLabel) {
     const badgeX = rx === 0 ? rx + 148 : rx + 10;
@@ -2760,11 +3035,13 @@ export function renderRealtimeStudio3DFrame({
   footbarOverride,
   headrestOverride,
   propOverride,
+  selectedHotspotId = null,
 }: Render3DFrameOptions): {
   readonly signatureId: Studio3DSignatureId;
   readonly activeZonesCount: number;
   readonly springStretchPct: number;
   readonly biomechTelemetry: Biomech3DTelemetry;
+  readonly hotspots: readonly Studio3DHotspot[];
 } {
   const scene = buildStudio3DScene({
     exercise,
@@ -2777,6 +3054,7 @@ export function renderRealtimeStudio3DFrame({
     headrestOverride,
     propOverride,
   });
+  const hotspots: Studio3DHotspot[] = [];
 
   if (dualView && width >= 440) {
     const leftW = Math.round(width * 0.58);
@@ -2793,6 +3071,8 @@ export function renderRealtimeStudio3DFrame({
       zoom,
       shader,
       regionLabel: `3D 자유 회전 (${Math.round(yawDeg)}°/${Math.round(pitchDeg)}°)`,
+      selectedHotspotId,
+      collectHotspots: hotspots,
     });
     drawSceneRegion({
       ctx,
@@ -2806,6 +3086,7 @@ export function renderRealtimeStudio3DFrame({
       zoom: Math.max(0.95, zoom * 0.96),
       shader,
       regionLabel: '시상면 0° 정렬 비교',
+      selectedHotspotId,
     });
     ctx.save();
     ctx.strokeStyle =
@@ -2830,6 +3111,8 @@ export function renderRealtimeStudio3DFrame({
       pitchDeg,
       zoom,
       shader,
+      selectedHotspotId,
+      collectHotspots: hotspots,
     });
   }
 
@@ -2838,5 +3121,6 @@ export function renderRealtimeStudio3DFrame({
     activeZonesCount: scene.activeZonesCount,
     springStretchPct: scene.springStretchPct,
     biomechTelemetry: scene.biomechTelemetry,
+    hotspots,
   };
 }

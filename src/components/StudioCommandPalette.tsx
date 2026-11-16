@@ -19,10 +19,7 @@ import {
 } from 'lucide-react';
 import { LightDismissDialog } from './LightDismissDialog';
 import { APPARATUS_LABELS } from '../data/pilatesCatalog';
-import {
-  BRAND_SPRING_OPTIONS,
-  formatBrandSpringEquivalent,
-} from '../utils/brandSpringConverter';
+import { BRAND_SPRING_OPTIONS, formatBrandSpringEquivalent } from '../utils/brandSpringConverter';
 import { matchesDiscoverySearch } from '../utils/discoverySearch';
 import { isRestStep } from '../utils/sequenceEngine';
 import type { ActiveWorkspaceTab } from '../store/usePilatesStore';
@@ -58,6 +55,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
   const appendExerciseToSequence = usePilatesStore((s) => s.appendExerciseToSequence);
 
   const [query, setQuery] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -201,9 +199,7 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
 
   const trimmedQuery = query.trim();
   const filteredTabs = trimmedQuery
-    ? quickTabs.filter((item) =>
-        matchesDiscoverySearch([item.label, item.detail], trimmedQuery),
-      )
+    ? quickTabs.filter((item) => matchesDiscoverySearch([item.label, item.detail], trimmedQuery))
     : quickTabs;
 
   const handleQuickAddExercise = (exercise: PilatesExercise) => {
@@ -230,6 +226,42 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
     onClose();
   };
 
+  const navigableItems = useMemo(() => {
+    const items: Array<{
+      key: string;
+      runPrimary: () => void;
+      runSecondary?: () => void;
+    }> = [];
+    for (const ex of matchedExercises) {
+      items.push({
+        key: `ex:${ex.id}`,
+        runPrimary: () => {
+          onClose();
+          onInspectExercise3D(ex);
+        },
+        runSecondary: () => handleQuickAddExercise(ex),
+      });
+    }
+    for (const seq of matchedSequences) {
+      items.push({
+        key: `seq:${seq.id}`,
+        runPrimary: () => handleLoadSequence(seq.id),
+      });
+    }
+    for (const tab of filteredTabs) {
+      items.push({
+        key: `tab:${tab.id}`,
+        runPrimary: tab.onSelect,
+      });
+    }
+    return items;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchedExercises, matchedSequences, filteredTabs]);
+
+  const safeActiveIndex =
+    navigableItems.length > 0 ? Math.min(activeIndex, navigableItems.length - 1) : -1;
+  const activeItemKey = safeActiveIndex >= 0 ? navigableItems[safeActiveIndex]?.key : null;
+
   if (!open) return null;
 
   return (
@@ -249,21 +281,50 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
             type="search"
             data-testid="studio-command-palette-input"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setActiveIndex(0);
+            }}
+            onKeyDown={(event) => {
+              if (navigableItems.length === 0) return;
+              if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                setActiveIndex((prev) => (prev + 1) % navigableItems.length);
+              } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                setActiveIndex(
+                  (prev) => (prev - 1 + navigableItems.length) % navigableItems.length,
+                );
+              } else if (event.key === 'Enter' && safeActiveIndex >= 0) {
+                event.preventDefault();
+                const target = navigableItems[safeActiveIndex];
+                if (!target) return;
+                if (event.shiftKey && target.runSecondary) {
+                  target.runSecondary();
+                } else {
+                  target.runPrimary();
+                }
+              }
+            }}
             placeholder="동작 이름(예: 헌드레드, 풋워크, 스완), 부위, 기구, 저장한 수업 검색..."
           />
-          {query && (
+          {query ? (
             <button
               type="button"
               className="pf-cmdk-clear-btn"
               aria-label="검색어 지우기"
               onClick={() => {
                 setQuery('');
+                setActiveIndex(0);
                 inputRef.current?.focus();
               }}
             >
               <X size={15} aria-hidden="true" />
             </button>
+          ) : (
+            <span className="pf-cmdk-kbd-hint" aria-hidden="true">
+              ↑↓ · Enter
+            </span>
           )}
         </label>
 
@@ -302,7 +363,9 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
         <section className="pf-cmdk-section" aria-label="동작 검색 및 즉시 추가">
           <div className="pf-cmdk-section__head">
             <span>3D 동작 빠른 탐색 · 수업안 즉시 담기</span>
-            <small>{query.trim() ? `검색 결과 ${matchedExercises.length}건` : '대표 추천 동작'}</small>
+            <small>
+              {query.trim() ? `검색 결과 ${matchedExercises.length}건` : '대표 추천 동작'}
+            </small>
           </div>
           {matchedExercises.length > 0 ? (
             <ul className="pf-cmdk-exercise-list">
@@ -313,11 +376,15 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
                   reformerBrand,
                   ex.apparatus,
                 );
+                const isKbActive = activeItemKey === `ex:${ex.id}`;
                 return (
-                  <li key={ex.id} className="pf-cmdk-exercise-row" data-testid={`cmdk-ex-${ex.id}`}>
-                    <ExerciseMotionArtwork
-                      exercise={ex}
-                      className="pf-cmdk-exercise-thumb" />
+                  <li
+                    key={ex.id}
+                    className={`pf-cmdk-exercise-row ${isKbActive ? 'is-kb-active' : ''}`.trim()}
+                    data-testid={`cmdk-ex-${ex.id}`}
+                    data-kb-active={isKbActive || undefined}
+                  >
+                    <ExerciseMotionArtwork exercise={ex} className="pf-cmdk-exercise-thumb" />
                     <div className="pf-cmdk-exercise-meta">
                       <strong>{ex.nameKo}</strong>
                       <small>
@@ -344,7 +411,11 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
                         aria-label={`${ex.nameKo} 현재 수업안에 추가`}
                         onClick={() => handleQuickAddExercise(ex)}
                       >
-                        {inSeq ? <Check size={14} aria-hidden="true" /> : <Plus size={14} aria-hidden="true" />}
+                        {inSeq ? (
+                          <Check size={14} aria-hidden="true" />
+                        ) : (
+                          <Plus size={14} aria-hidden="true" />
+                        )}
                         <span>{inSeq ? '담김' : '수업 추가'}</span>
                       </button>
                     </div>
@@ -353,7 +424,9 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
               })}
             </ul>
           ) : (
-            <p className="pf-cmdk-empty">일치하는 동작이 없어요. 기구명이나 타겟 근육으로 검색해 보세요.</p>
+            <p className="pf-cmdk-empty">
+              일치하는 동작이 없어요. 기구명이나 타겟 근육으로 검색해 보세요.
+            </p>
           )}
         </section>
 
@@ -364,24 +437,28 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
               <small>{matchedSequences.length}개</small>
             </div>
             <div className="pf-cmdk-seq-grid">
-              {matchedSequences.map((seq) => (
-                <button
-                  key={seq.id}
-                  type="button"
-                  className="pf-cmdk-seq-card"
-                  aria-label={`${seq.title} 불러오기`}
-                  onClick={() => handleLoadSequence(seq.id)}
-                >
-                  <div>
-                    <strong>{seq.title}</strong>
-                    <small>
-                      {seq.targetMinutes}분 · Lv {seq.level} · 동작{' '}
-                      {seq.steps.filter((st) => !isRestStep(st)).length}개
-                    </small>
-                  </div>
-                  <ArrowRight size={15} aria-hidden="true" />
-                </button>
-              ))}
+              {matchedSequences.map((seq) => {
+                const isKbActive = activeItemKey === `seq:${seq.id}`;
+                return (
+                  <button
+                    key={seq.id}
+                    type="button"
+                    className={`pf-cmdk-seq-card ${isKbActive ? 'is-kb-active' : ''}`.trim()}
+                    data-kb-active={isKbActive || undefined}
+                    aria-label={`${seq.title} 불러오기`}
+                    onClick={() => handleLoadSequence(seq.id)}
+                  >
+                    <div>
+                      <strong>{seq.title}</strong>
+                      <small>
+                        {seq.targetMinutes}분 · Lv {seq.level} · 동작{' '}
+                        {seq.steps.filter((st) => !isRestStep(st)).length}개
+                      </small>
+                    </div>
+                    <ArrowRight size={15} aria-hidden="true" />
+                  </button>
+                );
+              })}
             </div>
           </section>
         )}
@@ -392,20 +469,24 @@ export const StudioCommandPalette: React.FC<StudioCommandPaletteProps> = ({
               <span>작업실 화면 바로 이동</span>
             </div>
             <div className="pf-cmdk-nav-grid">
-              {filteredTabs.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className="pf-cmdk-nav-card"
-                  onClick={item.onSelect}
-                >
-                  <span className="pf-cmdk-nav-icon">{item.icon}</span>
-                  <span className="pf-cmdk-nav-copy">
-                    <strong>{item.label}</strong>
-                    <small>{item.detail}</small>
-                  </span>
-                </button>
-              ))}
+              {filteredTabs.map((item) => {
+                const isKbActive = activeItemKey === `tab:${item.id}`;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`pf-cmdk-nav-card ${isKbActive ? 'is-kb-active' : ''}`.trim()}
+                    data-kb-active={isKbActive || undefined}
+                    onClick={item.onSelect}
+                  >
+                    <span className="pf-cmdk-nav-icon">{item.icon}</span>
+                    <span className="pf-cmdk-nav-copy">
+                      <strong>{item.label}</strong>
+                      <small>{item.detail}</small>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </section>
         )}

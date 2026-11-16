@@ -62,6 +62,11 @@ const AdvancedWorkbench = lazy(() =>
 const PresetPicker = lazy(() =>
   import('./OfflinePresetPicker').then((m) => ({ default: m.OfflinePresetPicker })),
 );
+const LazyStep3DViewport = lazy(() =>
+  import('./StudioInteractive3DViewport').then((m) => ({
+    default: m.StudioInteractive3DViewport,
+  })),
+);
 
 interface Props {
   onOpenYouTubePreview: (exercise: PilatesExercise) => void;
@@ -168,6 +173,8 @@ function StepEditor({
   const [sideMode, setSideMode] = useState<StepSideMode | 'auto'>(step.sideMode ?? 'auto');
   const [section, setSection] = useState(getSequenceStepClassSection(step));
   const [note, setNote] = useState(step.instructorNote ?? '');
+  const [customSpring, setCustomSpring] = useState(step.customSpringOverride ?? '');
+  const [preview3DOpen, setPreview3DOpen] = useState(false);
   const [error, setError] = useState('');
   const rest = isRestStep(step);
   const movementSeconds = Math.max(
@@ -193,6 +200,8 @@ function StepEditor({
             setError('이 동작이 다른 곳에서 변경되었습니다. 닫은 뒤 다시 열어 주세요.');
             return;
           }
+          const trimmedSpring = customSpring.trim();
+          const springChanged = trimmedSpring !== (step.customSpringOverride ?? '');
           const result = rest
             ? state.setRestDuration(index, Number(duration))
             : state.setStepBlockOptions(
@@ -205,6 +214,7 @@ function StepEditor({
                   sideMode: sideMode === 'auto' ? undefined : sideMode,
                   classSection: section,
                   instructorNote: note,
+                  ...(springChanged ? { customSpringOverride: trimmedSpring || undefined } : {}),
                 },
                 openedStep,
               );
@@ -292,19 +302,64 @@ function StepEditor({
                 </select>
               </label>
             </div>
-            <label className="flow-field">
-              수업 구간
-              <select
-                value={section}
-                onChange={(e) => setSection(e.target.value as ClassSectionRole)}
+            <div className="flow-form-grid">
+              <label className="flow-field">
+                수업 구간
+                <select
+                  value={section}
+                  onChange={(e) => setSection(e.target.value as ClassSectionRole)}
+                >
+                  {SECTIONS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flow-field">
+                맞춤 스프링 · 선택
+                <input
+                  type="text"
+                  maxLength={80}
+                  value={customSpring}
+                  onChange={(e) => setCustomSpring(e.target.value)}
+                  placeholder={exercise?.springs ? `기본 ${exercise.springs}` : '기본 권장 스프링'}
+                />
+              </label>
+            </div>
+            {exercise && (
+              <details
+                className="flow-step-3d-disclosure"
+                data-testid="step-editor-3d-disclosure"
+                open={preview3DOpen}
+                onToggle={(event) => setPreview3DOpen(event.currentTarget.open)}
               >
-                {SECTIONS.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+                <summary className="flow-step-3d-disclosure__summary">
+                  <span>3D 자세 · 스프링 시뮬레이션 보기</span>
+                  <small>
+                    {customSpring.trim()
+                      ? `현재 적용: ${customSpring.trim()}`
+                      : '360° 회전 · 관절 코칭 · 스프링 반영'}
+                  </small>
+                </summary>
+                {preview3DOpen && (
+                  <div className="flow-step-3d-disclosure__body">
+                    <Suspense
+                      fallback={
+                        <p className="flow-hint">실시간 3D 모델러를 불러오는 중입니다...</p>
+                      }
+                    >
+                      <LazyStep3DViewport
+                        exercise={exercise}
+                        compact
+                        initialSpringOverride={customSpring.trim() || undefined}
+                        onApplySpringToStep={(springVal) => setCustomSpring(springVal)}
+                      />
+                    </Suspense>
+                  </div>
+                )}
+              </details>
+            )}
             <label className="flow-field">
               수업 메모
               <textarea
