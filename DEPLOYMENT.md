@@ -107,27 +107,34 @@ Git 커밋 SHA와 Vite 파일명 해시는 서로 다릅니다. 테스트만 바
 
 네트워크 차단으로 운영 검증을 완료하지 못했다면 `pnpm run deploy`의 종료 코드나 빌드 성공만으로 운영 반영 완료를 보고하지 않습니다. 네트워크가 가능한 환경에서 독립 `deploy:verify` 결과까지 확인합니다. 롤백도 실제 업로드이므로 승인된 경우에만 `pnpm deploy:rollback`을 사용합니다.
 
-## 6. 로컬 `.env` 없는 클라우드 환경(GitHub Actions · 원격 에이전트) 자동 배포
+## 6. 클라우드 환경의 검증과 명시적 운영 배포
 
-로컬 `.env.deploy.local`이 없는 클라우드 환경(GitHub 웹·모바일 PR 병합, 클라우드 에이전트, Codespaces, 새 Git 워크트리)에서도 별도 로컬 인증 파일 없이 즉시 운영 배포할 수 있도록 **3중 인증 체인(Keyless OIDC WIF → 서비스 계정 시크릿 → Firebase 토큰 시크릿)** 과 **`main` 자동 배포**가 구성되어 있습니다.
+로컬 `.env.deploy.local`이 없어도 GitHub Actions가 검증과 빌드를 수행할 수 있습니다. 인증 준비와 운영 배포 승인은 별개입니다. main 푸시·PR 병합은 검증과 빌드까지만 실행하고, 운영 배포는 대상 main 커밋을 별도로 승인한 뒤 명시적으로 요청합니다.
 
-### 클라우드 인증 탐색 순서 (`.github/workflows/deploy-production.yml`)
+### 유지하는 인증 탐색 순서
 
-1. **Keyless Google Cloud OIDC (Workload Identity Federation — 최우선 · 만료 없음)**:
-   `vars.GCP_WORKLOAD_IDENTITY_PROVIDER` + `vars.GCP_SERVICE_ACCOUNT_EMAIL`이 설정된 경우 `google-github-actions/auth@v2`로 단기 OIDC 자격 증명을 발급받아 배포합니다.
-2. **서비스 계정 시크릿 폴백**:
-   `FIREBASE_SERVICE_ACCOUNT` → `FIREBASE_SERVICE_ACCOUNT_PILATES_FLOW_ATELIER` → `FIREBASE_SERVICE_ACCOUNT_DESKCLOUD_FLEET_AUTH` → `GCP_SA_KEY` (JSON 원문 또는 Base64)
-3. **토큰 시크릿 폴백**:
-   `FIREBASE_TOKEN`
+1. **Keyless Google Cloud OIDC (Workload Identity Federation)**: `vars.GCP_WORKLOAD_IDENTITY_PROVIDER`와 `vars.GCP_SERVICE_ACCOUNT_EMAIL`을 사용해 단기 자격 증명을 생성합니다. 변수의 존재만으로 현재 IAM·신뢰 조건의 유효성을 보장하지 않습니다.
+2. **서비스 계정 시크릿**: `FIREBASE_SERVICE_ACCOUNT` → `FIREBASE_SERVICE_ACCOUNT_PILATES_FLOW_ATELIER` → `FIREBASE_SERVICE_ACCOUNT_DESKCLOUD_FLEET_AUTH` → `GCP_SA_KEY`의 기존 우선순위를 유지합니다.
+3. **Firebase 토큰**: 서비스 계정 값이 없을 때 `FIREBASE_TOKEN`을 사용하는 기존 동작을 유지합니다. 앞선 서비스 계정 JSON이나 배포 명령이 실패하면 자동으로 다음 시크릿을 모두 시험하는 구조는 아닙니다.
 
-### 클라우드 환경에서의 배포 방법
+### 실행 방법
 
-- **PR 생성 (`pull_request` → `main`)**: 품질 게이트와 프로덕션 번들 빌드(`verify-and-build`)만 실행하며 운영 사이트는 변경하지 않습니다.
-- **`main` 브랜치 푸시 또는 PR 병합 (`push` → `main`)**: 전체 품질 검증 통과 직후 `deploy-hosting` 잡이 **자동으로 실행**되어 Firebase Hosting 업로드 및 `--verify-live --wait-cdn` 라이브 검증까지 완료합니다. (수동 전용으로 전환하려면 GitHub Repository Variables에서 `AUTO_DEPLOY_ON_MAIN_PUSH=false`로 설정합니다.)
-- **수동 원클릭 실행 (`workflow_dispatch`)**: GitHub Actions에서 **Production Checks & Cloud Deployment → Run workflow (`main`)** 를 누르면 기본값(`deploy_to_production=true`)으로 즉시 배포 및 라이브 검증이 실행됩니다.
-- **클라우드 터미널 명령 (`pnpm deploy:cloud`)**: 로컬 `.env.deploy.local`이 없는 환경에서도 `gh` CLI만 연결되어 있으면 아래 명령으로 원격 배포·상태 조회가 가능합니다.
-  ```bash
-  pnpm deploy:cloud:status     # 원격 WIF/시크릿 상태 및 최근 CI 실행 이력 확인
-  pnpm deploy:cloud --watch    # 원격 배포 실행 후 완료 대기 및 운영 URL 라이브 검증
-  ```
-- **로컬 → GitHub 시크릿·변수 동기화**: 로컬 인증 갱신 후 원격에도 반영할 때는 `pnpm deploy:auth` 또는 `pnpm deploy:auth --sync-github` 한 줄만 실행하면 시크릿과 배포 참고 변수가 동시에 동기화됩니다. 사용자 ADC(`authorized_user`)는 로컬 전용이므로 서비스 계정으로 동기화하지 않습니다.
+- **main 대상 PR 및 main push**: 품질 검증·빌드·artifact 생성만 수행합니다. 기존 `AUTO_DEPLOY_ON_MAIN_PUSH` 변숫값은 배포를 허용하지 않습니다.
+- **수동 실행**: **Production Checks & Approved Manual Deployment → Run workflow → main**을 선택합니다. `deploy_to_production` 기본값은 `false`입니다. 운영 배포를 별도로 승인받았을 때만 `true`로 선택합니다. 검증·빌드가 성공해야 배포합니다.
+- **CLI**: 무인수·`--watch`·기존 `--build-only`는 검증/빌드만 요청합니다. `--deploy-to-production`을 명시한 경우에만 운영 배포를 요청합니다.
+
+```bash
+pnpm deploy:cloud:status                       # 비밀값 없이 설정 존재·최근 실행 조회
+pnpm deploy:cloud --watch                      # 검증/빌드만 요청하고 완료 대기
+pnpm deploy:cloud --deploy-to-production --watch # 별도 승인한 운영 배포 요청
+```
+
+`--build-only`와 `--deploy-to-production`, 또는 `--status`와 배포 옵션을 함께 쓰면 오류로 종료합니다. 무인수 CLI 실행도 GitHub Actions 실행을 생성하므로 단순 조회에는 `deploy:cloud:status`를 사용합니다.
+
+### 변경·재실행 승인 범위
+
+코드 변경, GitHub/GCP 설정 변경, 실제 운영 배포는 각각 승인 범위를 확인합니다. `pnpm deploy:auth`와 `--sync-github`는 원격 시크릿·변수 동기화가 가능한 변경 명령이므로 조회 목적으로 실행하지 않습니다. 사용자 ADC(`authorized_user`)는 로컬 전용입니다.
+
+기존 run의 재실행은 원래 SHA/ref의 workflow를 사용할 수 있습니다. 이 파일의 변경이 과거 run에 소급 적용된다고 가정하지 말고, 승인된 현재 main에서 새 dispatch를 실행합니다. 입력을 명시적으로 선택하는 방식은 특정 검토자의 승인을 강제하는 보호 규칙과 다릅니다. Required reviewers 도입은 environment 설정과 기존 WIF 신뢰 조건을 함께 검토한 뒤 별도로 적용합니다.
+
+기존 Firebase 프로젝트 `deskcloud-fleet-auth`, 사이트 `pilates-flow-atelier`, artifact 무결성 검사와 `--verify-live --wait-cdn` 검증은 유지합니다. 같은 커밋을 로컬 배포와 클라우드 배포로 중복 실행하지 않습니다.

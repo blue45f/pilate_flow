@@ -1,4 +1,4 @@
-name: Production Checks & Cloud Deployment (Firebase Hosting · pilates-flow-atelier)
+name: Production Checks & Approved Manual Deployment (Firebase Hosting · pilates-flow-atelier)
 
 on:
   pull_request:
@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       deploy_to_production:
-        description: 'Firebase 운영 배포 실행 (기본값 true · false 선택 시 품질 검증/빌드만 실행)'
+        description: '별도 승인한 main 커밋의 Firebase 운영 배포 실행 (기본값 false)'
         required: false
-        default: true
+        default: false
         type: boolean
 
 permissions:
@@ -137,11 +137,10 @@ jobs:
   deploy-hosting:
     name: Deploy to Firebase Hosting (pilates-flow-atelier) & Verify Live Hash
     if: >-
+      github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main' &&
-      (
-        (github.event_name == 'push' && vars.AUTO_DEPLOY_ON_MAIN_PUSH != 'false') ||
-        (github.event_name == 'workflow_dispatch' && inputs.deploy_to_production != false)
-      )
+      inputs.deploy_to_production == true &&
+      needs['verify-and-build'].result == 'success'
     needs: verify-and-build
     runs-on: ubuntu-latest
     permissions:

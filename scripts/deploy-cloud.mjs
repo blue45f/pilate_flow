@@ -4,8 +4,9 @@
  *
  * Enables 1-command production deployment & status inspection from cloud workspaces,
  * fresh clones, Codespaces, or git worktrees where local `.env.deploy.local` is absent:
- *   pnpm deploy:cloud              # Trigger GitHub Actions production deploy on `main`
- *   pnpm deploy:cloud --watch      # Trigger & stream workflow progress, then verify live URL
+ *   pnpm deploy:cloud              # Run quality checks and build on `main` without upload
+ *   pnpm deploy:cloud --watch      # Run checks/build and watch that run
+ *   pnpm deploy:cloud --deploy-to-production --watch # Explicitly approved production deploy
  *   pnpm deploy:cloud --build-only # Trigger CI quality gate + build without Hosting upload
  *   pnpm deploy:cloud --status     # Show latest CI runs, remote auth/WIF readiness & live status
  */
@@ -31,6 +32,7 @@ export const ALLOWED_CLOUD_FLAGS = new Set([
   '--status',
   '--watch',
   '--build-only',
+  '--deploy-to-production',
 ]);
 
 export function parseCloudDeployArgs(rawArgs = process.argv.slice(2)) {
@@ -41,14 +43,20 @@ export function parseCloudDeployArgs(rawArgs = process.argv.slice(2)) {
     );
   }
   const flags = new Set(rawArgs);
-  if (flags.has('--status') && (flags.has('--watch') || flags.has('--build-only'))) {
+  if (
+    flags.has('--status') &&
+    (flags.has('--watch') || flags.has('--build-only') || flags.has('--deploy-to-production'))
+  ) {
     throw new Error('[deploy:cloud] --status는 단독으로 실행하세요.');
+  }
+  if (flags.has('--build-only') && flags.has('--deploy-to-production')) {
+    throw new Error('[deploy:cloud] --build-only와 --deploy-to-production은 함께 사용할 수 없습니다.');
   }
   return {
     help: flags.has('--help') || flags.has('--h') || flags.has('-h'),
     statusOnly: flags.has('--status'),
     watch: flags.has('--watch'),
-    deployToProduction: !flags.has('--build-only'),
+    deployToProduction: flags.has('--deploy-to-production'),
   };
 }
 
@@ -59,7 +67,7 @@ export function resolveReadyGhCli(
   const ghBin = resolveBin('gh', execEnv);
   if (!ghBin) {
     throw new Error(
-      '[deploy:cloud] GitHub CLI(`gh`)를 찾을 수 없습니다. 클라우드 웹에서는 main 브랜치 푸시/PR 병합 또는 GitHub Actions → Run workflow 버튼을 사용하세요.',
+      '[deploy:cloud] GitHub CLI(`gh`)를 찾을 수 없습니다. 클라우드 웹에서는 GitHub Actions → Run workflow(main)를 사용하세요. 운영 배포는 별도 승인 후 입력을 명시적으로 선택하세요.',
     );
   }
   try {
@@ -157,7 +165,8 @@ export function inspectCloudDeployReadiness(
   const wifConfigured = Boolean(
     variables.GCP_WORKLOAD_IDENTITY_PROVIDER && variables.GCP_SERVICE_ACCOUNT_EMAIL,
   );
-  const autoDeployOnMainPush = variables.AUTO_DEPLOY_ON_MAIN_PUSH !== 'false';
+  // Variables alone cannot verify which workflow policy is deployed remotely.
+  const autoDeployOnMainPush = null;
 
   return {
     repository: GITHUB_REPO_SLUG,
@@ -178,7 +187,7 @@ function sleepMs(ms) {
 }
 
 export async function triggerCloudDeployment(
-  { deployToProduction = true, watch = false } = {},
+  { deployToProduction = false, watch = false } = {},
   {
     rootDir = ROOT,
     env = process.env,
@@ -186,6 +195,9 @@ export async function triggerCloudDeployment(
     execFile = execFileSync,
   } = {},
 ) {
+  if (typeof deployToProduction !== 'boolean') {
+    throw new TypeError('[deploy:cloud] deployToProduction은 boolean이어야 합니다.');
+  }
   const execEnv = buildAugmentedEnv({}, rootDir, env);
   const readiness = inspectCloudDeployReadiness(execEnv, { rootDir, resolveBin, execFile });
   if (deployToProduction && !readiness.cloudAuthReady) {
@@ -279,8 +291,9 @@ function printHelp() {
   console.log(
     [
       '사용법: pnpm deploy:cloud [옵션]',
-      '  (인자 없음)    로컬 .env 없이 GitHub Actions(main) 운영 배포 즉시 트리거',
-      '  --watch       워크플로 완료까지 대기한 뒤 운영 URL(https://pilates-flow-atelier.web.app) 검증',
+      '  (인자 없음)    GitHub Actions(main) 품질 검증/빌드만 실행 (운영 업로드 없음)',
+      '  --watch       선택한 검증/빌드 또는 배포 실행이 끝날 때까지 대기',
+      '  --deploy-to-production  별도 승인한 운영 배포를 명시적으로 요청 (--watch 병행 가능)',
       '  --build-only  운영 업로드 없이 원격 품질 게이트 및 프로덕션 번들 빌드만 실행',
       '  --status      원격 GitHub Secrets/WIF 준비 상태 및 최근 CI 실행 이력 조회',
     ].join('\n'),
@@ -300,13 +313,13 @@ async function runCli() {
     console.log(`• 대상 저장소 / 브랜치 : ${status.repository} (main)`);
     console.log(`• 대상 Firebase 호스팅 : ${status.site} (${status.project} -> ${status.liveOrigin})`);
     console.log(
-      `• Keyless OIDC (WIF)  : ${status.wifConfigured ? '활성화됨 ✅ (만료 없는 OIDC 연동)' : '미설정'}`,
+      `• Keyless OIDC (WIF)  : ${status.wifConfigured ? '변수 등록됨 (유효성은 별도 확인)' : '미설정'}`,
     );
     console.log(
       `• GitHub 시크릿 인증  : ${status.configuredFirebaseSecrets.length > 0 ? `등록됨 ✅ (${status.configuredFirebaseSecrets.join(', ')})` : '미등록 ⚠️'}`,
     );
     console.log(
-      `• main 푸시 자동 배포 : ${status.autoDeployOnMainPush ? '활성화됨 ✅ (PR 병합/main 푸시 시 자동 배포)' : '수동 전용 (AUTO_DEPLOY_ON_MAIN_PUSH=false)'}`,
+      '• 이 코드의 배포 정책 : 수동 명시 요청 (원격 workflow 적용 여부는 별도 확인)',
     );
     if (status.recentRuns.length > 0) {
       console.log('• 최근 워크플로 실행  :');
