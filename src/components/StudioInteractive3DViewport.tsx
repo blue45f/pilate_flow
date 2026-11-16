@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import {
   Camera,
+  Check,
   Columns2,
   Compass,
   Download,
@@ -12,6 +13,8 @@ import {
   Play,
   RotateCcw,
   SlidersHorizontal,
+  Sparkles,
+  X,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
@@ -28,6 +31,8 @@ import {
   renderRealtimeStudio3DFrame,
   STUDIO_3D_CAMERA_PRESETS,
   type Biomech3DTelemetry,
+  type Studio3DHotspot,
+  type Studio3DHotspotId,
   type Studio3DPropOverride,
   type Studio3DShaderPreset,
 } from '../utils/realtimeStudio3dEngine';
@@ -36,6 +41,8 @@ export interface StudioInteractive3DViewportProps {
   readonly exercise: PilatesExercise;
   readonly compact?: boolean;
   readonly active?: boolean;
+  readonly initialSpringOverride?: string;
+  readonly onApplySpringToStep?: (springValue: string) => void;
 }
 
 const SHADER_MODES: readonly {
@@ -91,6 +98,27 @@ const PROP_EXPERIMENT_OPTIONS: readonly {
   { value: 'mini-ball', labelKo: '미니볼' },
 ];
 
+const PHASE_JUMP_PRESETS: readonly {
+  readonly id: string;
+  readonly labelKo: string;
+  readonly progress: number;
+}[] = [
+  { id: 'setup', labelKo: '시작 준비', progress: 0 },
+  { id: 'peak', labelKo: '최대 정점', progress: 0.5 },
+  { id: 'return', labelKo: '제어 복귀', progress: 0.85 },
+];
+
+const HOTSPOT_QUICK_TABS: readonly {
+  readonly id: Studio3DHotspotId;
+  readonly shortKo: string;
+}[] = [
+  { id: 'spine', shortKo: '척추·코어' },
+  { id: 'hip', shortKo: '골반·고관절' },
+  { id: 'knee', shortKo: '무릎·하체' },
+  { id: 'shoulder', shortKo: '어깨·견갑' },
+  { id: 'apparatus', shortKo: '기구·스프링' },
+];
+
 export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportProps> = (props) => {
   const binding = getExpandedMovementVisualBinding(props.exercise);
   if (binding?.nativeMotionAvailable === false) {
@@ -113,10 +141,13 @@ export const StudioInteractive3DViewport: React.FC<StudioInteractive3DViewportPr
 const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportProps> = ({
   exercise,
   compact = false,
+  initialSpringOverride,
+  onApplySpringToStep,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const progressRef = useRef(0);
+  const hotspotsRef = useRef<readonly Studio3DHotspot[]>([]);
   const telemetryRef = useRef<{
     springStretchPct: number;
     biomech?: Biomech3DTelemetry;
@@ -124,11 +155,12 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   const [viewportVersion, invalidateViewport] = useReducer((version: number) => version + 1, 0);
   const dragRef = useRef<{
     active: boolean;
+    moved: boolean;
     startX: number;
     startY: number;
     baseYaw: number;
     basePitch: number;
-  }>({ active: false, startX: 0, startY: 0, baseYaw: -34, basePitch: 21 });
+  }>({ active: false, moved: false, startX: 0, startY: 0, baseYaw: -34, basePitch: 21 });
 
   const [yawDeg, setYawDeg] = useState<number>(-34);
   const [pitchDeg, setPitchDeg] = useState<number>(21);
@@ -145,7 +177,16 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
   const [showBiomechOverlay, setShowBiomechOverlay] = useState<boolean>(false);
   const [mirrored, setMirrored] = useState<boolean>(false);
   const [setupLabOpen, setSetupLabOpen] = useState<boolean>(false);
-  const [springOverride, setSpringOverride] = useState<string>('default');
+  const [selectedHotspot, setSelectedHotspot] = useState<Studio3DHotspot | null>(null);
+  const [springOverride, setSpringOverride] = useState<string>(() => {
+    if (
+      initialSpringOverride &&
+      SPRING_EXPERIMENT_OPTIONS.some((opt) => opt.value === initialSpringOverride)
+    ) {
+      return initialSpringOverride;
+    }
+    return 'default';
+  });
   const [footbarOverride, setFootbarOverride] = useState<'default' | FootbarState>('default');
   const [headrestOverride, setHeadrestOverride] = useState<'default' | HeadrestState>('default');
   const [propOverride, setPropOverride] = useState<Studio3DPropOverride>('default');
@@ -235,7 +276,9 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       footbarOverride,
       headrestOverride,
       propOverride,
+      selectedHotspotId: selectedHotspot?.id ?? null,
     });
+    hotspotsRef.current = frameResult.hotspots;
     telemetryRef.current = {
       springStretchPct: frameResult.springStretchPct,
       biomech: frameResult.biomechTelemetry,
@@ -255,8 +298,38 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
     footbarOverride,
     headrestOverride,
     propOverride,
+    selectedHotspot,
     viewportVersion,
   ]);
+
+  const jumpToProgress = (nextProgress: number) => {
+    const clamped = Math.max(0, Math.min(1, Number(nextProgress.toFixed(2))));
+    setPlaying(false);
+    progressRef.current = clamped;
+    setProgress(clamped);
+  };
+
+  const selectHotspotById = (id: Studio3DHotspotId) => {
+    if (selectedHotspot?.id === id) {
+      setSelectedHotspot(null);
+      return;
+    }
+    const found = hotspotsRef.current.find((item) => item.id === id);
+    if (found) {
+      setSelectedHotspot(found);
+      return;
+    }
+    const fallbackLabel = HOTSPOT_QUICK_TABS.find((t) => t.id === id)?.shortKo ?? '정렬 포인트';
+    setSelectedHotspot({
+      id,
+      labelKo: fallbackLabel,
+      metricKo: springOverride !== 'default' ? springOverride : (exercise.springs ?? '맨몸 정렬'),
+      cueKo: exercise.cues[0] ?? '호흡과 함께 중심 정렬을 부드럽게 유지하세요.',
+      x: 0,
+      y: 0,
+      pos3d: [0, 0, 0],
+    });
+  };
 
   const applyCameraPreset = (presetId: string) => {
     const found = STUDIO_3D_CAMERA_PRESETS.find((p) => p.id === presetId);
@@ -319,26 +392,50 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
       data-motion-phase={phase.id}
       aria-label={`${exercise.nameKo} 실시간 360도 3D 각도 조절 뷰포트`}
     >
-      <div className="pf-orbit3d-canvas-wrap">
+      <div
+        className="pf-orbit3d-canvas-wrap"
+        tabIndex={0}
+        aria-label="3D 뷰포트 조작 영역 (스페이스바 재생, 좌우 화살표 구간 이동, 관절 클릭 코칭 확인)"
+        onKeyDown={(event) => {
+          if (event.key === ' ') {
+            event.preventDefault();
+            if (canAnimate) setPlaying((p) => !p);
+          } else if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            jumpToProgress((progressRef.current + 0.05) % 1.0001);
+          } else if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            jumpToProgress(Math.max(0, progressRef.current - 0.05));
+          } else if (event.key === 'Escape' && selectedHotspot) {
+            event.preventDefault();
+            setSelectedHotspot(null);
+          }
+        }}
+      >
         <canvas
           ref={canvasRef}
           className="pf-orbit3d-canvas"
           onPointerDown={(event) => {
             dragRef.current = {
               active: true,
+              moved: false,
               startX: event.clientX,
               startY: event.clientY,
               baseYaw: yawDeg,
               basePitch: pitchDeg,
             };
-            setTurntable(false);
-            setActivePresetId('custom');
             event.currentTarget.setPointerCapture?.(event.pointerId);
           }}
           onPointerMove={(event) => {
             if (!dragRef.current.active) return;
             const dx = event.clientX - dragRef.current.startX;
             const dy = event.clientY - dragRef.current.startY;
+            if (Math.hypot(dx, dy) >= 5) {
+              dragRef.current.moved = true;
+              setTurntable(false);
+              setActivePresetId('custom');
+            }
+            if (!dragRef.current.moved) return;
             let nextYaw = dragRef.current.baseYaw + dx * 0.55;
             if (nextYaw > 180) nextYaw -= 360;
             if (nextYaw < -180) nextYaw += 360;
@@ -346,8 +443,23 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             setYawDeg(Math.round(nextYaw));
             setPitchDeg(Math.round(nextPitch));
           }}
-          onPointerUp={() => {
+          onPointerUp={(event) => {
+            const wasTap = dragRef.current.active && !dragRef.current.moved;
             dragRef.current.active = false;
+            if (!wasTap) return;
+            const rect = event.currentTarget.getBoundingClientRect();
+            const localX = event.clientX - rect.left;
+            const localY = event.clientY - rect.top;
+            let best: Studio3DHotspot | null = null;
+            let bestDist = 42;
+            for (const h of hotspotsRef.current) {
+              const d = Math.hypot(h.x - localX, h.y - localY);
+              if (d < bestDist) {
+                bestDist = d;
+                best = h;
+              }
+            }
+            setSelectedHotspot((prev) => (best && prev?.id === best.id ? null : best));
           }}
           onPointerCancel={() => {
             dragRef.current.active = false;
@@ -359,6 +471,30 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             );
           }}
         />
+        {selectedHotspot && (
+          <div
+            className="pf-orbit3d-hotspot-card"
+            data-testid="studio-3d-hotspot-card"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="pf-orbit3d-hotspot-card__head">
+              <strong>
+                <Sparkles size={12} aria-hidden="true" /> {selectedHotspot.labelKo}
+              </strong>
+              <span className="pf-orbit3d-hotspot-card__metric">{selectedHotspot.metricKo}</span>
+              <button
+                type="button"
+                className="pf-orbit3d-hotspot-card__close"
+                aria-label="3D 포인트 코칭 닫기"
+                onClick={() => setSelectedHotspot(null)}
+              >
+                <X size={13} aria-hidden="true" />
+              </button>
+            </div>
+            <p className="pf-orbit3d-hotspot-card__cue">{selectedHotspot.cueKo}</p>
+          </div>
+        )}
         <div className="pf-orbit3d-hud-top">
           <span className="pf-orbit3d-badge is-emerald">
             <Orbit size={12} aria-hidden="true" /> 드래그 회전 · {Math.round(yawDeg)}° /{' '}
@@ -512,6 +648,37 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
             aria-label="실시간 3D 기구·스프링·소도구 시뮬레이터"
           >
             <div className="pf-orbit3d-lab-style-bar">
+              <div
+                className="pf-orbit3d-presets"
+                role="group"
+                aria-label="구간 빠른 이동 및 관절 코칭 선택"
+              >
+                {PHASE_JUMP_PRESETS.map((pj) => (
+                  <button
+                    key={pj.id}
+                    type="button"
+                    className={`pf-orbit3d-preset-chip ${
+                      Math.abs(progress - pj.progress) < 0.06 ? 'is-active' : ''
+                    }`}
+                    onClick={() => jumpToProgress(pj.progress)}
+                  >
+                    {pj.labelKo}
+                  </button>
+                ))}
+                {HOTSPOT_QUICK_TABS.map((ht) => (
+                  <button
+                    key={ht.id}
+                    type="button"
+                    className={`pf-orbit3d-preset-chip ${
+                      selectedHotspot?.id === ht.id ? 'is-active' : ''
+                    }`}
+                    aria-pressed={selectedHotspot?.id === ht.id}
+                    onClick={() => selectHotspotById(ht.id)}
+                  >
+                    {ht.shortKo} 코칭
+                  </button>
+                ))}
+              </div>
               <div className="pf-orbit3d-presets" role="group" aria-label="3D 엔진 셰이더 선택">
                 {SHADER_MODES.map((item) => (
                   <button
@@ -635,6 +802,24 @@ const StudioInteractive3DViewportContent: React.FC<StudioInteractive3DViewportPr
                 <Download size={13} aria-hidden="true" /> {glbAsset.labelKo} (
                 {Math.round(glbAsset.fileBytes / 1024)}KB)
               </a>
+              {onApplySpringToStep && (
+                <button
+                  type="button"
+                  className="pf-orbit3d-export-btn is-apply-step"
+                  data-testid="apply-3d-spring-to-step"
+                  onClick={() => {
+                    const nextVal = springOverride === 'default' ? '' : springOverride;
+                    onApplySpringToStep(nextVal);
+                    setExportNotice(
+                      nextVal
+                        ? `이 동작 블록의 스프링을 '${nextVal}' 조합으로 반영했습니다.`
+                        : '이 동작 블록의 스프링을 기본 권장값으로 되돌렸습니다.',
+                    );
+                  }}
+                >
+                  <Check size={13} aria-hidden="true" /> 현재 블록에 스프링 반영
+                </button>
+              )}
               {hasCustomSetup && (
                 <button
                   type="button"

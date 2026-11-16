@@ -1,10 +1,54 @@
 /* ==========================================================================
-   Calm Wellness Atelier · Whole-App Visual & Usability Polish
-   Applies calm-wellness-atelier-design + editor-chrome-design + impeccable standards
+   Calm Wellness Atelier & Korean Studio UX Excellence Polish
+   Applies calm-wellness-atelier-design + editor-chrome-design + ui-ux-design-excellence
    without touching SHA-256-locked legacy stylesheets.
    ========================================================================== */
 
-/* 1. Sticky Translucent Header & Grounded Sidebar Navigation */
+/* 1. Korean Typography, Balanced Titles & Tabular Numerals */
+html #root .flow-app h1,
+html #root .flow-app h2,
+html #root .flow-app h3 {
+  word-break: keep-all;
+  text-wrap: balance;
+}
+
+html #root .flow-app p,
+html #root .flow-app label,
+html #root .flow-app summary,
+html #root .flow-app li,
+html #root .flow-app .pf-orbit3d-hotspot-card__cue,
+html #root .flow-app .pf-cmdk-exercise-meta strong,
+html #root .flow-app .flow-pick-card strong {
+  word-break: keep-all;
+}
+
+html #root .flow-app .pf-orbit3d-pct,
+html #root .flow-app .pf-orbit3d-badge,
+html #root .flow-app .pf-orbit3d-hotspot-card__metric,
+html #root .flow-app .flow-time-equation,
+html #root .flow-app .flow-plan-time,
+html #root .flow-app .live-stage-timer,
+html #root .flow-app time,
+html #root .flow-app input[type='number'] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scroll containment & neutral 1px inner frame on movement thumbnails */
+html #root .flow-app .flow-picker-list,
+html #root .flow-app .flow-plan-list,
+html #root .flow-app .pf-cmdk-palette,
+html #root .flow-app dialog {
+  overscroll-behavior: contain;
+}
+
+html #root .flow-app .pf-cmdk-exercise-thumb,
+html #root .flow-app .flow-step-editor__art,
+html #root .flow-app .exercise-motion-artwork {
+  outline: 1px solid rgba(25, 58, 44, 0.08);
+  outline-offset: -1px;
+}
+
+/* 2. Sticky Translucent Header & Grounded Sidebar Navigation */
 html #root .flow-app .topbar {
   position: sticky;
   top: 0;
@@ -38,7 +82,7 @@ html #root .flow-app .desktop-nav > button.active {
   transform: none !important;
 }
 
-/* 2. Sequence Studio Workbench — Prevent Sticky Actionbar Occlusion & Refine Tactile Controls */
+/* 3. Sequence Studio Workbench — Concentric Radii & Sticky Actionbar Clearance */
 .flow-picker-list {
   padding-bottom: 92px;
   scroll-padding-bottom: 96px;
@@ -52,11 +96,13 @@ html #root .flow-app .desktop-nav > button.active {
 
 .flow-field input:focus-visible,
 .flow-field select:focus-visible,
+.flow-field textarea:focus-visible,
 .flow-search input:focus-visible,
-.flow-insertion-control > select:focus-visible {
+.flow-insertion-control > select:focus-visible,
+.pf-orbit3d-canvas-wrap:focus-visible {
   outline: none;
-  border-color: #275e43;
-  box-shadow: 0 0 0 3px rgba(39, 94, 67, 0.13);
+  border-color: #1f4435;
+  box-shadow: 0 0 0 3px rgba(31, 68, 53, 0.14);
 }
 
 .flow-picker,
@@ -66,12 +112,13 @@ html #root .flow-app .desktop-nav > button.active {
   box-shadow: 0 6px 24px rgba(33, 62, 50, 0.04);
 }
 
+/* Concentric inner card radius: 16px outer container - 4px optical inset -> 10px-12px inner card */
 .flow-pick-card {
-  border-radius: 12px;
+  border-radius: 10px;
   transition:
-    background-color 140ms ease,
-    border-color 140ms ease,
-    box-shadow 140ms ease;
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .flow-pick-card:hover {
@@ -83,35 +130,174 @@ html #root .flow-app .desktop-nav > button.active {
 .flow-add-button {
   background: #f5f9f2;
   border-color: #cce0c3;
-  color: #234c37;
+  color: #1f4435;
   transition:
-    background-color 140ms ease,
-    border-color 140ms ease,
-    color 140ms ease;
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
 }
 
 .flow-add-button:hover:not(:disabled) {
-  background: #234c37;
-  border-color: #234c37;
+  background: #1f4435;
+  border-color: #1f4435;
   color: #ffffff;
 }
 
 .flow-pick-card.is-added .flow-add-button {
   background: #e5efe0;
   border-color: #b7ceb0;
-  color: #234c37;
+  color: #1f4435;
 }
 
 .flow-actionbar {
   background: rgba(255, 254, 251, 0.92);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(39, 94, 67, 0.16);
+  border: 1px solid rgba(34, 62, 48, 0.14);
   border-radius: 16px;
   box-shadow: 0 12px 34px rgba(24, 48, 35, 0.11);
 }
 
-/* 3. Calm 3D Modeler Hero Launcher Bar */
+/* 4. StepEditor On-Demand 3D Pose & Spring Preview Disclosure */
+.flow-step-3d-disclosure {
+  margin: 4px 0 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(34, 62, 48, 0.12);
+  background: #f8f7f2;
+  overflow: hidden;
+}
+
+.flow-step-3d-disclosure__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 14px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.84rem;
+  font-weight: 720;
+  color: #1f4435;
+}
+
+.flow-step-3d-disclosure__summary::-webkit-details-marker {
+  display: none;
+}
+
+.flow-step-3d-disclosure__summary small {
+  font-size: 0.74rem;
+  font-weight: 560;
+  color: #52665a;
+}
+
+.flow-step-3d-disclosure__body {
+  padding: 0 10px 10px;
+}
+
+/* 5. Interactive 3D Joint/Part Coaching Popover & Step Spring Apply Button */
+.pf-orbit3d-hotspot-card {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 6;
+  max-width: min(320px, calc(100% - 88px));
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: rgba(255, 254, 250, 0.94);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(31, 68, 53, 0.18);
+  box-shadow: 0 8px 24px rgba(20, 42, 32, 0.12);
+}
+
+.pf-orbit3d-hotspot-card__head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.pf-orbit3d-hotspot-card__head strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 760;
+  color: #1f4435;
+}
+
+.pf-orbit3d-hotspot-card__metric {
+  font-size: 0.72rem;
+  font-weight: 680;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #e8f0e4;
+  color: #1f4435;
+}
+
+.pf-orbit3d-hotspot-card__close {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  min-height: 26px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(31, 68, 53, 0.12);
+  background: #ffffff;
+  color: #344e41;
+  cursor: pointer;
+}
+
+.pf-orbit3d-hotspot-card__cue {
+  margin: 5px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.44;
+  color: #2f4539;
+}
+
+.pf-orbit3d-export-btn.is-apply-step {
+  background: #1f4435;
+  border-color: #1f4435;
+  color: #ffffff;
+}
+
+/* 6. Command Palette (⌘K) Keyboard Navigation Highlight & Seamless Search Pill */
+.pf-cmdk-search-box input,
+.pf-cmdk-search-box input:focus,
+.pf-cmdk-search-box input:focus-visible {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.pf-cmdk-search-box:focus-within {
+  border-color: #1f4435 !important;
+  box-shadow: 0 0 0 3px rgba(31, 68, 53, 0.14) !important;
+}
+
+.pf-cmdk-kbd-hint {
+  font-size: 0.72rem;
+  font-weight: 650;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #eef2ea;
+  color: #496053;
+  white-space: nowrap;
+}
+
+.pf-cmdk-exercise-row.is-kb-active,
+.pf-cmdk-seq-card.is-kb-active,
+.pf-cmdk-nav-card.is-kb-active {
+  border-color: #1f4435 !important;
+  background: #f2f7ef !important;
+  box-shadow: inset 3px 0 0 #1f4435;
+}
+
+/* 7. Calm 3D Modeler Hero Launcher Bar */
 .pf-hero-3d-modeler-bar {
   display: flex;
   flex-wrap: wrap;
@@ -121,8 +307,8 @@ html #root .flow-app .desktop-nav > button.active {
   margin-top: 10px;
   padding: 12px 16px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #f6f8f2 0%, #edf3e8 100%);
-  border: 1px solid rgba(35, 76, 55, 0.14);
+  background: linear-gradient(135deg, #f8f7f2 0%, #edf3e8 100%);
+  border: 1px solid rgba(34, 62, 48, 0.12);
 }
 
 .pf-hero-3d-modeler-bar__copy {
@@ -134,7 +320,7 @@ html #root .flow-app .desktop-nav > button.active {
 .pf-hero-3d-modeler-bar__copy strong {
   font-size: 0.86rem;
   font-weight: 760;
-  color: #1d3f2f;
+  color: #1f4435;
 }
 
 .pf-hero-3d-modeler-bar__copy span {
@@ -147,27 +333,27 @@ html #root .flow-app .desktop-nav > button.active {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 40px;
-  padding: 7px 15px;
+  min-height: 44px;
+  padding: 8px 16px;
   border-radius: 999px;
-  border: 1px solid #234c37;
-  background: #234c37;
+  border: 1px solid #1f4435;
+  background: #1f4435;
   color: #ffffff;
   font-size: 0.78rem;
   font-weight: 720;
   cursor: pointer;
   white-space: nowrap;
   transition:
-    background-color 140ms ease,
-    color 140ms ease;
+    background-color 150ms ease,
+    color 150ms ease;
 }
 
 .pf-hero-3d-modeler-toggle.is-open {
   background: #ffffff;
-  color: #234c37;
+  color: #1f4435;
 }
 
-/* 4. Atlas, Binder & Schedule Cards — Calm Editorial Elevation */
+/* 8. Atlas, Binder & Schedule Cards — Calm Editorial Elevation */
 .flow-binder-card,
 .pf-atlas-v6-card {
   transition:
@@ -177,7 +363,7 @@ html #root .flow-app .desktop-nav > button.active {
 
 .flow-binder-card:hover,
 .pf-atlas-v6-card:hover {
-  border-color: rgba(39, 94, 67, 0.28);
+  border-color: rgba(31, 68, 53, 0.28);
   box-shadow: 0 8px 24px rgba(24, 46, 35, 0.065);
 }
 
@@ -189,6 +375,13 @@ html #root .flow-app .desktop-nav > button.active {
   .pf-hero-3d-modeler-toggle {
     width: 100%;
     justify-content: center;
+  }
+
+  .pf-orbit3d-icon-btn,
+  .pf-orbit3d-tool-chip,
+  .pf-orbit3d-play-btn,
+  .pf-orbit3d-speed-btn {
+    min-height: 40px;
   }
 }
 
