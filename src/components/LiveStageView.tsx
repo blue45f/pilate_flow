@@ -69,10 +69,7 @@ import {
   triggerLiveSensoryCue,
 } from '../utils/liveStageSensoryCueEngine';
 import { ExerciseMotionArtwork } from './ExerciseMotionArtwork';
-import {
-  BRAND_SPRING_OPTIONS,
-  formatBrandSpringEquivalent,
-} from '../utils/brandSpringConverter';
+import { BRAND_SPRING_OPTIONS, formatBrandSpringEquivalent } from '../utils/brandSpringConverter';
 
 export interface LiveStageNavigationHandle {
   /** True means Stage owns the pending exit; keep it mounted until a decision. */
@@ -301,7 +298,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const [requestedDestinationLabel, setRequestedDestinationLabel] = useState<string | null>(null);
   const navigate = onNavigate ?? setActiveTab;
   const targetLabel = (target: ActiveWorkspaceTab | null) =>
-    requestedDestinationLabel ?? {
+    requestedDestinationLabel ??
+    {
       workbench: '오늘의 수업',
       history: '수업 기록',
       schedule: '강사 일정',
@@ -338,7 +336,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const currentIsRest = !!current && isRestStep(current);
   const exercise = current ? exerciseMap.get(current.exerciseId) : undefined;
   const currentEvidence = useMemo(
-    () => exercise && !currentIsRest ? getExerciseEvidence(exercise) : null,
+    () => (exercise && !currentIsRest ? getExerciseEvidence(exercise) : null),
     [exercise, currentIsRest],
   );
   const next = steps[clock.index + 1];
@@ -430,9 +428,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     const liveDurations = durationsRef.current;
     if (index < 0 || index >= liveSteps.length) return;
 
-    applyClock((value) =>
-      sampleClock(value, Date.now(), liveDurations, autoAdvanceRef.current),
-    );
+    applyClock((value) => sampleClock(value, Date.now(), liveDurations, autoAdvanceRef.current));
     const sampled = clockRef.current;
     const sampledAtMs = sampled.sampledAt;
 
@@ -487,9 +483,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
   const startNextStepImmediately = () => {
     const liveSteps = stepsRef.current;
     const liveDurations = durationsRef.current;
-    applyClock((value) =>
-      sampleClock(value, Date.now(), liveDurations, autoAdvanceRef.current),
-    );
+    applyClock((value) => sampleClock(value, Date.now(), liveDurations, autoAdvanceRef.current));
     const sampled = clockRef.current;
     const nextIndex = sampled.index + 1;
     if (nextIndex >= liveSteps.length) return;
@@ -518,9 +512,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
 
   const extendStepBySeconds = (deltaSeconds: 15 | 30 | 60) => {
     const prevDurations = durationsRef.current;
-    applyClock((value) =>
-      sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current),
-    );
+    applyClock((value) => sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current));
     const sampled = clockRef.current;
     const targetIndex = sampled.index;
     const currentStep = stepsRef.current[targetIndex];
@@ -569,9 +561,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
 
   const trimHalfMinute = () => {
     const prevDurations = durationsRef.current;
-    applyClock((value) =>
-      sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current),
-    );
+    applyClock((value) => sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current));
     const sampled = clockRef.current;
     const targetIndex = sampled.index;
     const currentStep = stepsRef.current[targetIndex];
@@ -606,9 +596,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
 
   const adjustFifteenSeconds = (deltaSec: -15 | 15) => {
     const prevDurations = durationsRef.current;
-    applyClock((value) =>
-      sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current),
-    );
+    applyClock((value) => sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current));
     const sampled = clockRef.current;
     const targetIndex = sampled.index;
     const currentStep = stepsRef.current[targetIndex];
@@ -645,9 +633,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
 
   const moveUpcomingStep = (fromIndex: number, direction: 'up' | 'down') => {
     const prevDurations = durationsRef.current;
-    applyClock((value) =>
-      sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current),
-    );
+    applyClock((value) => sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current));
     const sampled = clockRef.current;
     const liveSteps = stepsRef.current;
     const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
@@ -689,9 +675,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     const undo = undoRef.current;
     if (!undo) return;
     const prevDurations = durationsRef.current;
-    applyClock((value) =>
-      sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current),
-    );
+    applyClock((value) => sampleClock(value, Date.now(), prevDurations, autoAdvanceRef.current));
     const sampled = clockRef.current;
 
     if (undo.kind === 'step-jump') {
@@ -978,11 +962,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       }
       return;
     }
-    if (
-      timing?.sides === 2 &&
-      secondSideLabel &&
-      phase === `수행 · ${secondSideLabel}`
-    ) {
+    if (timing?.sides === 2 && secondSideLabel && phase === `수행 · ${secondSideLabel}`) {
       const sideKey = `${stepId}:side-switch`;
       if (!firedSensoryKeysRef.current.has(sideKey)) {
         firedSensoryKeysRef.current.add(sideKey);
@@ -1117,7 +1097,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
       }
       case 'jump-main': {
         const mainIdx = stepsRef.current.findIndex(
-          (st) => !isRestStep(st) && st.blockCategory !== 'warmup' && st.blockCategory !== 'cooldown',
+          (st) =>
+            !isRestStep(st) && st.blockCategory !== 'warmup' && st.blockCategory !== 'cooldown',
         );
         if (mainIdx < 0) return false;
         selectStep(mainIdx);
@@ -1182,13 +1163,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
     };
   });
   useEffect(() => {
-    if (
-      exitOpen ||
-      reviewOpen ||
-      unavailable.length > 0 ||
-      invalidStepData ||
-      steps.length === 0
-    ) {
+    if (exitOpen || reviewOpen || unavailable.length > 0 || invalidStepData || steps.length === 0) {
       return;
     }
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -1738,7 +1713,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               } ${isStepCompleted ? 'completed' : ''}`.trim()}
               role="status"
             >
-              ● LIVE · {String(clock.index + 1).padStart(2, '0')}/{String(steps.length).padStart(2, '0')}단계 ·{' '}
+              ● LIVE · {String(clock.index + 1).padStart(2, '0')}/
+              {String(steps.length).padStart(2, '0')}단계 ·{' '}
               {clock.running
                 ? '진행 중'
                 : clock.remainingMs === 0
@@ -1788,7 +1764,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               </div>
             </details>
             {!currentIsRest && exercise?.breathPattern && (
-              <p className="teaching-breath-glance-pill sr-only" data-testid="live-stage-breath-callout">
+              <p
+                className="teaching-breath-glance-pill sr-only"
+                data-testid="live-stage-breath-callout"
+              >
                 호흡 리듬 · {exercise.breathPattern}
               </p>
             )}
@@ -1817,59 +1796,61 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 : '전체 수업 시간에 포함'}
             </span>
           </div>
-          {!currentIsRest && exercise && (() => {
-            return (
-              <details
-                className="teaching-presentation-details teaching-reference-materials"
-                data-presentation-disclosure
-                open={presentationMode === 'reference'}
-              >
-                <summary>동작 참고 자료 · 자세·호흡</summary>
-                <div
-                  className="pf-live-3d-companion is-three-frames"
-                  data-testid="live-stage-3d-companion"
-                  aria-label={`${exercise.nameKo} 시작·정점·종료 도해`}
-                  data-motion-sync="reference-only"
-                >
-                  <div
-                    className="pf-live-3d-companion__card"
-                  >
-                    <ExerciseMotionArtwork exercise={exercise} phase="start" />
-                    <span className="pf-live-3d-companion__badge">● 1. 시작 셋업</span>
-                  </div>
-                  <div
-                    className="pf-live-3d-companion__card"
-                  >
-                    <ExerciseMotionArtwork exercise={exercise} phase="middle" />
-                    <span className="pf-live-3d-companion__badge is-mid">◆ 2. 정점 자세</span>
-                  </div>
-                  <div
-                    className="pf-live-3d-companion__card"
-                  >
-                    <ExerciseMotionArtwork exercise={exercise} phase="end" />
-                    <span className="pf-live-3d-companion__badge is-peak">3. 종료 자세</span>
-                  </div>
-                </div>
+          {!currentIsRest &&
+            exercise &&
+            (() => {
+              return (
                 <details
-                  className="teaching-stage-details pf-live-3d-orbit-drawer"
-                  open={orbitDrawerOpen}
-                  onToggle={(event) => setOrbitDrawerOpen(event.currentTarget.open)}
+                  className="teaching-presentation-details teaching-reference-materials"
+                  data-presentation-disclosure
+                  open={presentationMode === 'reference'}
                 >
-                  <summary>동작 확대 · 자세와 중간 구간 살펴보기</summary>
-                  {orbitDrawerOpen && <Studio3DMotionHeroCard exercise={exercise} compact active={orbitDrawerOpen} />}
+                  <summary>동작 참고 자료 · 자세·호흡</summary>
+                  <div
+                    className="pf-live-3d-companion is-three-frames"
+                    data-testid="live-stage-3d-companion"
+                    aria-label={`${exercise.nameKo} 시작·정점·종료 도해`}
+                    data-motion-sync="reference-only"
+                  >
+                    <div className="pf-live-3d-companion__card">
+                      <ExerciseMotionArtwork exercise={exercise} phase="start" />
+                      <span className="pf-live-3d-companion__badge">● 1. 시작 셋업</span>
+                    </div>
+                    <div className="pf-live-3d-companion__card">
+                      <ExerciseMotionArtwork exercise={exercise} phase="middle" />
+                      <span className="pf-live-3d-companion__badge is-mid">◆ 2. 정점 자세</span>
+                    </div>
+                    <div className="pf-live-3d-companion__card">
+                      <ExerciseMotionArtwork exercise={exercise} phase="end" />
+                      <span className="pf-live-3d-companion__badge is-peak">3. 종료 자세</span>
+                    </div>
+                  </div>
+                  <details
+                    className="teaching-stage-details pf-live-3d-orbit-drawer"
+                    open={orbitDrawerOpen}
+                    onToggle={(event) => setOrbitDrawerOpen(event.currentTarget.open)}
+                  >
+                    <summary>동작 확대 · 자세와 중간 구간 살펴보기</summary>
+                    {orbitDrawerOpen && (
+                      <Studio3DMotionHeroCard
+                        exercise={exercise}
+                        compact
+                        active={orbitDrawerOpen}
+                      />
+                    )}
+                  </details>
+                  <div className="pf-live-breath-strip">
+                    <VisualBreathPacerRing
+                      running={clock.running}
+                      progressPct={progress}
+                      phaseLabel={phase}
+                      breathLabel={exercise.breathPattern}
+                      size={62}
+                    />
+                  </div>
                 </details>
-                <div className="pf-live-breath-strip">
-                  <VisualBreathPacerRing
-                    running={clock.running}
-                    progressPct={progress}
-                    phaseLabel={phase}
-                    breathLabel={exercise.breathPattern}
-                    size={62}
-                  />
-                </div>
-              </details>
-            );
-          })()}
+              );
+            })()}
           {timing.sides === 2 && (
             <p
               className={`teaching-side-note ${stepElapsedSec >= timing.explanationSec + timing.perSideSec ? 'switch-side' : ''}`}
@@ -1880,22 +1861,23 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 : '양쪽 수행이 전체 시간에 포함되어 있어요.'}
             </p>
           )}
-          {timing.sides === 2 &&
-            stepElapsedSec >= timing.explanationSec + timing.perSideSec && (
-              <div
-                className="pf-live-bilateral-alert"
-                data-testid="live-stage-bilateral-switch-alert"
-                role="status"
-              >
-                <span>⇄ 반대쪽 전환 시점 · 지금 {sideLabels[1]} 수행</span>
-                <small>양쪽 균형 수행 확인</small>
-              </div>
-            )}
+          {timing.sides === 2 && stepElapsedSec >= timing.explanationSec + timing.perSideSec && (
+            <div
+              className="pf-live-bilateral-alert"
+              data-testid="live-stage-bilateral-switch-alert"
+              role="status"
+            >
+              <span>⇄ 반대쪽 전환 시점 · 지금 {sideLabels[1]} 수행</span>
+              <small>양쪽 균형 수행 확인</small>
+            </div>
+          )}
           <div className="pf-p09-cue-summary-card">
             <div className="pf-p09-cue-summary-card__head">
               <strong>핵심 티칭 큐 &amp; 다음 순서 요약</strong>
               {!currentIsRest && exercise && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
+                <div
+                  style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}
+                >
                   <ApparatusIconBadge
                     apparatus={exercise.apparatus}
                     bodyPosition={exercise.bodyPosition}
@@ -1907,53 +1889,56 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 </div>
               )}
             </div>
-            {!currentIsRest && exercise && currentSpringRaw && (() => {
-              const converted = formatBrandSpringEquivalent(
-                currentSpringRaw,
-                reformerBrand,
-                exercise.apparatus,
-              );
-              if (converted.isNonSpringApparatus) return null;
-              return (
-                <div
-                  className="pf-live-brand-spring-bar"
-                  data-testid="live-stage-brand-spring-bar"
-                  role="group"
-                  aria-label="기구 브랜드별 스프링 환산"
-                >
-                  <span
-                    className="pf-brand-spring-pill"
-                    data-testid="live-stage-brand-spring-equiv"
+            {!currentIsRest &&
+              exercise &&
+              currentSpringRaw &&
+              (() => {
+                const converted = formatBrandSpringEquivalent(
+                  currentSpringRaw,
+                  reformerBrand,
+                  exercise.apparatus,
+                );
+                if (converted.isNonSpringApparatus) return null;
+                return (
+                  <div
+                    className="pf-live-brand-spring-bar"
+                    data-testid="live-stage-brand-spring-bar"
+                    role="group"
+                    aria-label="기구 브랜드별 스프링 환산"
                   >
-                    {converted.brandShortLabelKo}: {converted.equivalentLabelKo}
-                  </span>
-                  <details
-                    className="teaching-presentation-details teaching-brand-settings"
-                    data-presentation-disclosure
-                    open={presentationMode === 'reference'}
-                  >
-                    <summary>브랜드별 스프링 기준 설정</summary>
-                    <span className="pf-live-brand-spring-chips">
-                      {BRAND_SPRING_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          className={`pf-live-brand-mini-btn ${
-                            reformerBrand === opt.id ? 'is-active' : ''
-                          }`.trim()}
-                          data-testid={`live-stage-brand-btn-${opt.id}`}
-                          aria-pressed={reformerBrand === opt.id}
-                          aria-label={`라이브 스프링 기준 ${opt.shortLabelKo}`}
-                          onClick={() => setReformerBrand(opt.id)}
-                        >
-                          {opt.shortLabelKo}
-                        </button>
-                      ))}
+                    <span
+                      className="pf-brand-spring-pill"
+                      data-testid="live-stage-brand-spring-equiv"
+                    >
+                      {converted.brandShortLabelKo}: {converted.equivalentLabelKo}
                     </span>
-                  </details>
-                </div>
-              );
-            })()}
+                    <details
+                      className="teaching-presentation-details teaching-brand-settings"
+                      data-presentation-disclosure
+                      open={presentationMode === 'reference'}
+                    >
+                      <summary>브랜드별 스프링 기준 설정</summary>
+                      <span className="pf-live-brand-spring-chips">
+                        {BRAND_SPRING_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            className={`pf-live-brand-mini-btn ${
+                              reformerBrand === opt.id ? 'is-active' : ''
+                            }`.trim()}
+                            data-testid={`live-stage-brand-btn-${opt.id}`}
+                            aria-pressed={reformerBrand === opt.id}
+                            aria-label={`라이브 스프링 기준 ${opt.shortLabelKo}`}
+                            onClick={() => setReformerBrand(opt.id)}
+                          >
+                            {opt.shortLabelKo}
+                          </button>
+                        ))}
+                      </span>
+                    </details>
+                  </div>
+                );
+              })()}
             {!currentIsRest && exercise && exercise.cues.length > 0 && (
               <div
                 className="teaching-glance-cues-strip"
@@ -1985,7 +1970,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           {(phase === '다음 동작 전환' || (clock.running && clock.remainingMs <= 15000)) &&
             next &&
             nextExercise &&
-            !isRestStep(next) && (() => {
+            !isRestStep(next) &&
+            (() => {
               const delta = computeSpringTransitionDelta(
                 currentSpringRaw,
                 next.customSpringOverride || nextExercise.springs || '',
@@ -2018,7 +2004,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                       기구 · {APPARATUS_LABELS[nextExercise.apparatus].ko}
                     </span>
                     <span className="teaching-transition-chip is-spring">
-                      스프링 · {next.customSpringOverride || nextExercise.springs || '기구 세팅 확인'}
+                      스프링 ·{' '}
+                      {(next.customSpringOverride || nextExercise.springs) === 'Bodyweight'
+                        ? '맨몸'
+                        : next.customSpringOverride || nextExercise.springs || '기구 세팅 확인'}
                     </span>
                     {nextExercise.box !== 'none' && (
                       <span className="teaching-transition-chip is-box">
@@ -2033,7 +2022,10 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               );
             })()}
           {currentEvidence && currentEvidence.planning.status !== 'personal-reviewed' && (
-            <p className="muted teaching-review-advisory" style={{ margin: '4px 0 0', fontSize: '0.78rem' }}>
+            <p
+              className="muted teaching-review-advisory"
+              style={{ margin: '4px 0 0', fontSize: '0.78rem' }}
+            >
               {currentEvidence.planning.label} · {currentEvidence.source.label}
             </p>
           )}
@@ -2116,54 +2108,61 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 <span className="teaching-inline-next-value">
                   중간 휴식 ({formatSecondsToMMSS(getStepTiming(next).totalSec)})
                 </span>
-              ) : nextExercise ? (() => {
-                const inlineDelta = computeSpringTransitionDelta(
-                  currentSpringRaw,
-                  next.customSpringOverride || nextExercise.springs || '',
-                  exercise?.apparatus,
-                  nextExercise.apparatus,
-                );
-                return (
-                  <div className="teaching-inline-next-content">
-                    <strong>{nextExercise.nameKo}</strong>
-                    <span
-                      className={`pf-live-spring-delta-pill ${
-                        inlineDelta.changed ? 'is-changed' : 'is-same'
-                      }`}
-                      data-testid="live-stage-spring-delta-badge"
-                    >
-                      {inlineDelta.summaryKo}
-                    </span>
-                    {(next.customSpringOverride || nextExercise.springs) && (
-                      <SpringVisualPills
-                        springs={next.customSpringOverride || nextExercise.springs}
-                      />
-                    )}
-                    {(next.customSpringOverride || nextExercise.springs) && (() => {
-                      const nextConv = formatBrandSpringEquivalent(
-                        next.customSpringOverride || nextExercise.springs,
-                        reformerBrand,
-                        nextExercise.apparatus,
-                      );
-                      if (nextConv.isNonSpringApparatus) return null;
-                      return (
-                        <span
-                          className="pf-brand-spring-pill"
-                          data-testid="live-stage-next-brand-spring"
-                        >
-                          {nextConv.brandShortLabelKo}: {nextConv.equivalentLabelKo}
-                        </span>
-                      );
-                    })()}
-                    <span className="teaching-inline-next-meta">
-                      {APPARATUS_LABELS[nextExercise.apparatus].ko}
+              ) : nextExercise ? (
+                (() => {
+                  const inlineDelta = computeSpringTransitionDelta(
+                    currentSpringRaw,
+                    next.customSpringOverride || nextExercise.springs || '',
+                    exercise?.apparatus,
+                    nextExercise.apparatus,
+                  );
+                  return (
+                    <div className="teaching-inline-next-content">
+                      <strong>{nextExercise.nameKo}</strong>
+                      <span
+                        className={`pf-live-spring-delta-pill ${
+                          inlineDelta.changed ? 'is-changed' : 'is-same'
+                        }`}
+                        data-testid="live-stage-spring-delta-badge"
+                      >
+                        {inlineDelta.summaryKo}
+                      </span>
+                      {(next.customSpringOverride || nextExercise.springs) && (
+                        <SpringVisualPills
+                          springs={next.customSpringOverride || nextExercise.springs}
+                        />
+                      )}
                       {(next.customSpringOverride || nextExercise.springs) &&
-                        ` · ${next.customSpringOverride || nextExercise.springs}`}
-                      {nextExercise.box !== 'none' && ` · ${BOX_LABELS[nextExercise.box]}`}
-                    </span>
-                  </div>
-                );
-              })() : (
+                        (() => {
+                          const nextConv = formatBrandSpringEquivalent(
+                            next.customSpringOverride || nextExercise.springs,
+                            reformerBrand,
+                            nextExercise.apparatus,
+                          );
+                          if (nextConv.isNonSpringApparatus) return null;
+                          return (
+                            <span
+                              className="pf-brand-spring-pill"
+                              data-testid="live-stage-next-brand-spring"
+                            >
+                              {nextConv.brandShortLabelKo}: {nextConv.equivalentLabelKo}
+                            </span>
+                          );
+                        })()}
+                      <span className="teaching-inline-next-meta">
+                        {APPARATUS_LABELS[nextExercise.apparatus].ko}
+                        {(next.customSpringOverride || nextExercise.springs) &&
+                          ` · ${
+                            (next.customSpringOverride || nextExercise.springs) === 'Bodyweight'
+                              ? '맨몸'
+                              : next.customSpringOverride || nextExercise.springs
+                          }`}
+                        {nextExercise.box !== 'none' && ` · ${BOX_LABELS[nextExercise.box]}`}
+                      </span>
+                    </div>
+                  );
+                })()
+              ) : (
                 <span className="teaching-inline-next-value">다음 동작 확인</span>
               )
             ) : (
@@ -2244,9 +2243,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                     : undoState.kind === 'micro-adjust-15s'
                       ? `${String(undoState.stepNumber).padStart(2, '0')}번(${
                           undoState.stepTitle
-                        }) 시간을 15초 ${
-                          undoState.deltaSec > 0 ? '늘렸어요' : '줄였어요'
-                        }.`
+                        }) 시간을 15초 ${undoState.deltaSec > 0 ? '늘렸어요' : '줄였어요'}.`
                       : undoState.kind === 'step-reorder'
                         ? `‘${undoState.stepTitle}’ 순서를 ${undoState.toIndex + 1}번 위치로 조정했어요.`
                         : `${String(undoState.stepNumber).padStart(2, '0')}번(${
@@ -2427,9 +2424,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                   }}
                 >
                   <Bell size={15} aria-hidden="true" />{' '}
-                  {sensoryCueEnabled
-                    ? '진동·차임 전환 알림 끄기'
-                    : '진동·차임 전환 알림 켜기'}
+                  {sensoryCueEnabled ? '진동·차임 전환 알림 끄기' : '진동·차임 전환 알림 켜기'}
                 </button>
                 <button
                   type="button"
@@ -2456,9 +2451,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 </button>
               </div>
               <div className="pf-handsfree-remote-strip" data-testid="live-remote-ready-strip">
-                <span className="pf-handsfree-remote-badge">
-                  블루투스 리모컨·풋페달 상시 활성
-                </span>
+                <span className="pf-handsfree-remote-badge">블루투스 리모컨·풋페달 상시 활성</span>
                 <span className="pf-handsfree-remote-keys">
                   PageDown/→ 다음 · PageUp/← 이전 · Space 재생 · ] +15초 · + +30초 · C 큐시트
                 </span>
@@ -2469,7 +2462,11 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
                 </p>
               )}
               {lastVoiceCommandStatus && (
-                <p className="pf-handsfree-live-status" data-testid="live-voice-command-status" role="status">
+                <p
+                  className="pf-handsfree-live-status"
+                  data-testid="live-voice-command-status"
+                  role="status"
+                >
                   {lastVoiceCommandStatus}
                 </p>
               )}
@@ -2571,15 +2568,17 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
           {exercise && !currentIsRest && (
             <details className="panel teaching-stage-details">
               <summary>기구 스프링·셋업 도해 가이드 열기 (선택)</summary>
-              <ApparatusVisualGuideRibbon
-                activeApparatusId={exercise.apparatus}
-                mode="stage"
-              />
+              <ApparatusVisualGuideRibbon activeApparatusId={exercise.apparatus} mode="stage" />
             </details>
           )}
         </section>
         <aside className="teaching-stage-aside">
-          <VisualSequenceFilmstrip steps={steps} exercises={exercises} activeStepIndex={clock.index} compact />
+          <VisualSequenceFilmstrip
+            steps={steps}
+            exercises={exercises}
+            activeStepIndex={clock.index}
+            compact
+          />
           <section className="panel teaching-next-panel">
             <span className="eyebrow">다음 동작</span>
             {next && isRestStep(next) ? (
@@ -2639,8 +2638,7 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
             </div>
             <ol>
               {steps.map((step, index) => {
-                const isTaughtStep =
-                  index !== clock.index && (clock.elapsedByStep[index] ?? 0) > 0;
+                const isTaughtStep = index !== clock.index && (clock.elapsedByStep[index] ?? 0) > 0;
                 const isUpcomingStep = index > clock.index;
                 return (
                   <li key={step.stepId} className="teaching-outline-row">
@@ -2747,7 +2745,8 @@ export const LiveStageView: React.FC<LiveStageViewProps> = ({
               </>
             ) : (
               <>
-                <Play size={16} aria-hidden="true" /> {clock.elapsedMs > 0 ? '이어서 진행' : '수업 시작'}
+                <Play size={16} aria-hidden="true" />{' '}
+                {clock.elapsedMs > 0 ? '이어서 진행' : '수업 시작'}
               </>
             )}
           </button>

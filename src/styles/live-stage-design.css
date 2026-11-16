@@ -94,9 +94,22 @@
   line-height: 1.4;
   margin: 12px 0;
 }
+#root .vnext-shell .teaching-stage {
+  padding-bottom: 136px;
+}
 #root .vnext-shell .teaching-stage-aside {
   display: grid;
   gap: 16px;
+  min-width: 0;
+  max-width: 100%;
+}
+#root .vnext-shell .teaching-stage-aside > * {
+  min-width: 0;
+  max-width: 100%;
+}
+#root .vnext-shell .teaching-stage-aside .pf-visual-filmstrip {
+  max-width: 100%;
+  overflow-x: auto;
 }
 #root .vnext-shell .teaching-stage-outline {
   margin-top: 0;
@@ -385,7 +398,11 @@ html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .teaching-s
   color: var(--teaching-muted);
 }
 
-html #root .vnext-shell .teaching-stage:not(.teaching-high-contrast) .btn-secondary:hover:not(:disabled) {
+html
+  #root
+  .vnext-shell
+  .teaching-stage:not(.teaching-high-contrast)
+  .btn-secondary:hover:not(:disabled) {
   background: var(--pf-color-action-secondary-hover);
   border-color: var(--teaching-line);
 }

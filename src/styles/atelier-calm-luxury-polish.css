@@ -1,0 +1,202 @@
+/* ==========================================================================
+   Calm Wellness Atelier · Whole-App Visual & Usability Polish
+   Applies calm-wellness-atelier-design + editor-chrome-design + impeccable standards
+   without touching SHA-256-locked legacy stylesheets.
+   ========================================================================== */
+
+/* 1. Sticky Translucent Header & Grounded Sidebar Navigation */
+html #root .flow-app .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 18;
+  background: rgba(245, 247, 241, 0.88) !important;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(33, 62, 50, 0.07) !important;
+}
+
+html #root .flow-app .desktop-nav > button {
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+html #root .flow-app .desktop-nav > button:hover:not(.active) {
+  background: rgba(39, 94, 67, 0.055) !important;
+  color: #213e32 !important;
+}
+
+html #root .flow-app .desktop-nav > button.active {
+  background: #e7efe1 !important;
+  box-shadow: inset 3px 0 0 #275e43 !important;
+}
+
+/* Ban mushy button press-scale inside editor workspaces (editor-chrome-design §9) */
+.flow-studio button:active,
+.pf-orbit3d-viewport button:active,
+.flow-binder button:active {
+  transform: none !important;
+}
+
+/* 2. Sequence Studio Workbench — Prevent Sticky Actionbar Occlusion & Refine Tactile Controls */
+.flow-picker-list {
+  padding-bottom: 92px;
+  scroll-padding-bottom: 96px;
+}
+
+.flow-class-brief {
+  border-radius: 16px;
+  border-color: #dce5d7;
+  box-shadow: 0 4px 18px rgba(33, 62, 50, 0.035);
+}
+
+.flow-field input:focus-visible,
+.flow-field select:focus-visible,
+.flow-search input:focus-visible,
+.flow-insertion-control > select:focus-visible {
+  outline: none;
+  border-color: #275e43;
+  box-shadow: 0 0 0 3px rgba(39, 94, 67, 0.13);
+}
+
+.flow-picker,
+.flow-plan {
+  border-radius: 16px;
+  border-color: #dce5d7;
+  box-shadow: 0 6px 24px rgba(33, 62, 50, 0.04);
+}
+
+.flow-pick-card {
+  border-radius: 12px;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.flow-pick-card:hover {
+  background: #fbfdf9;
+  border-color: #9eb994;
+  box-shadow: 0 3px 12px rgba(33, 62, 50, 0.06);
+}
+
+.flow-add-button {
+  background: #f5f9f2;
+  border-color: #cce0c3;
+  color: #234c37;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.flow-add-button:hover:not(:disabled) {
+  background: #234c37;
+  border-color: #234c37;
+  color: #ffffff;
+}
+
+.flow-pick-card.is-added .flow-add-button {
+  background: #e5efe0;
+  border-color: #b7ceb0;
+  color: #234c37;
+}
+
+.flow-actionbar {
+  background: rgba(255, 254, 251, 0.92);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(39, 94, 67, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 12px 34px rgba(24, 48, 35, 0.11);
+}
+
+/* 3. Calm 3D Modeler Hero Launcher Bar */
+.pf-hero-3d-modeler-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f6f8f2 0%, #edf3e8 100%);
+  border: 1px solid rgba(35, 76, 55, 0.14);
+}
+
+.pf-hero-3d-modeler-bar__copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pf-hero-3d-modeler-bar__copy strong {
+  font-size: 0.86rem;
+  font-weight: 760;
+  color: #1d3f2f;
+}
+
+.pf-hero-3d-modeler-bar__copy span {
+  font-size: 0.76rem;
+  color: #536659;
+  line-height: 1.45;
+}
+
+.pf-hero-3d-modeler-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 1px solid #234c37;
+  background: #234c37;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 720;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.pf-hero-3d-modeler-toggle.is-open {
+  background: #ffffff;
+  color: #234c37;
+}
+
+/* 4. Atlas, Binder & Schedule Cards — Calm Editorial Elevation */
+.flow-binder-card,
+.pf-atlas-v6-card {
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.flow-binder-card:hover,
+.pf-atlas-v6-card:hover {
+  border-color: rgba(39, 94, 67, 0.28);
+  box-shadow: 0 8px 24px rgba(24, 46, 35, 0.065);
+}
+
+@media (max-width: 800px) {
+  .flow-picker-list {
+    padding-bottom: 16px;
+  }
+
+  .pf-hero-3d-modeler-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html #root .flow-app *,
+  html #root .flow-app *::before,
+  html #root .flow-app *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

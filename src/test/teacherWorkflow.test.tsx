@@ -1,4 +1,8 @@
-import { getVisibleWorkbenchButton, openAdvancedWorkbench, openAtlasTools } from './workbenchControls';
+import {
+  getVisibleWorkbenchButton,
+  openAdvancedWorkbench,
+  openAtlasTools,
+} from './workbenchControls';
 import {
   act,
   cleanup,
@@ -128,13 +132,17 @@ const expectProductionUnchanged = () => {
   expect(VERIFIED_REFERENCES.every((item) => !item.autoRecommendationEligible)).toBe(true);
 };
 const navigate = async (name: RegExp) => {
-  fireEvent.click(within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', { name }));
+  fireEvent.click(
+    within(screen.getByRole('navigation', { name: '주 메뉴' })).getByRole('button', { name }),
+  );
   await openAdvancedWorkbench();
 };
 const openHandoff = async () => {
   await navigate(/동작 라이브러리/);
   await openAtlasTools();
-  fireEvent.click(await screen.findByRole('tab', { name: `공개 자료 ${VERIFIED_REFERENCES.length}` }));
+  fireEvent.click(
+    await screen.findByRole('tab', { name: `공개 자료 ${VERIFIED_REFERENCES.length}` }),
+  );
   fireEvent.click(screen.getByRole('button', { name: '전체 장비 보기' }));
   fireEvent.change(screen.getByRole('searchbox', { name: '공개 참고 자료 검색' }), {
     target: { value: reference.title },
@@ -423,7 +431,9 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     expect(screen.getByRole('timer')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
     expect(
-      within(screen.getByRole('region', { name: '현재 동작 핵심 티칭 큐' })).getByText(note.cues[0]),
+      within(screen.getByRole('region', { name: '현재 동작 핵심 티칭 큐' })).getByText(
+        note.cues[0],
+      ),
     ).toBeInTheDocument();
     expect(
       usePilatesStore.getState().exercises.find((item) => item.id === note.id)?.review,
@@ -522,7 +532,9 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     fireEvent.click(screen.getByRole('button', { name: new RegExp(name) }));
     expect(screen.getByRole('timer')).toHaveTextContent('03:30');
     expect(
-      within(screen.getByRole('region', { name: '현재 동작 핵심 티칭 큐' })).getByText(reviewed.cues[0]),
+      within(screen.getByRole('region', { name: '현재 동작 핵심 티칭 큐' })).getByText(
+        reviewed.cues[0],
+      ),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '수업 시작' }));
     expect(screen.getByRole('button', { name: '일시정지' })).toBeInTheDocument();
@@ -595,7 +607,9 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     fireEvent.change(await screen.findByRole('searchbox', { name: '동작 검색' }), {
       target: { value: stale.nameKo },
     });
-    fireEvent.click(screen.getByRole('button', { name: `${stale.nameKo} 상세 보기` }));
+    fireEvent.click(
+      screen.getByRole('button', { name: new RegExp(`^${stale.nameKo} (상세 보기|미리보기)$`) }),
+    );
     const detail = within(await screen.findByRole('dialog', { name: stale.nameKo }));
     fireEvent.click(detail.getByText('내 검토 기록 (선택)'));
     fireEvent.click(detail.getByText('출처·검토 상태 자세히 보기'));
@@ -618,7 +632,9 @@ describe('teacher preparation and pending source-note handoff', { timeout: 60000
     expect(screen.getByRole('timer')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '수업 시작' })).toBeEnabled();
     expect(
-      within(screen.getByRole('region', { name: '현재 동작 핵심 티칭 큐' })).getByText(edited.cues[0]),
+      within(screen.getByRole('region', { name: '현재 동작 핵심 티칭 큐' })).getByText(
+        edited.cues[0],
+      ),
     ).toBeInTheDocument();
     expect(edited.review).toEqual(stale.review);
   });

@@ -1,4 +1,9 @@
-import { getVisibleWorkbenchButton, openAdvancedWorkbench, openAppTools, openAtlasTools } from './workbenchControls';
+import {
+  getVisibleWorkbenchButton,
+  openAdvancedWorkbench,
+  openAppTools,
+  openAtlasTools,
+} from './workbenchControls';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   cleanup,
@@ -219,7 +224,7 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     'uses distinct compatible movements for $selected at $minutes minutes without changing review records',
     async ({ selected, minutes }) => {
       render(<App />);
-    await openAdvancedWorkbench();
+      await openAdvancedWorkbench();
       openWorkbenchConditions();
       const names: Record<string, string> = { mat: '매트', reformer: '리포머', chair: '체어' };
       if (!selected.includes('mat'))
@@ -257,7 +262,9 @@ describe('planning, reference, teaching and backup user journeys', { timeout: 60
     fireEvent.change(await screen.findByRole('searchbox', { name: '동작 검색' }), {
       target: { value: pending.nameKo },
     });
-    fireEvent.click(screen.getByRole('button', { name: `${pending.nameKo} 상세 보기` }));
+    fireEvent.click(
+      screen.getByRole('button', { name: new RegExp(`^${pending.nameKo} (상세 보기|미리보기)$`) }),
+    );
     const dialog = within(await screen.findByRole('dialog', { name: pending.nameKo }));
     expect(dialog.getByRole('button', { name: '수업안에 추가' })).toBeEnabled();
     fireEvent.click(dialog.getByText('내 검토 기록 (선택)'));

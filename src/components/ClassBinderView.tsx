@@ -47,7 +47,13 @@ import {
   PfStatusBanner,
 } from '../design-system';
 import { useCloudSession } from '../lib/cloudSync';
-import { getRecoveryStorageStatus, usePilatesStore } from '../store/usePilatesStore';
+import {
+  downloadEmergencyBackupJson,
+  getLastStorageError,
+  getRecoveryStorageStatus,
+  isSavedSequencePersistedOnDisk,
+  usePilatesStore,
+} from '../store/usePilatesStore';
 import { useWorkspaceBrowseState } from '../hooks/useWorkspaceBrowseState';
 import type {
   ApparatusType,
@@ -781,6 +787,26 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     ? getHistorySnapshotApparatusAndLevel(reopenedLog, reopenedView)
     : null;
   const storageStatus = getRecoveryStorageStatus();
+  const hasStorageIssue = Boolean(persistenceError) || !storageStatus.ok;
+  const unpersistedRamCount = useMemo(
+    () =>
+      hasStorageIssue
+        ? savedSequences.filter(
+            (seq) =>
+              !sampleSequenceIds.has(seq.id) &&
+              !isSavedSequencePersistedOnDisk(seq, persistenceError, storageStatus.ok),
+          ).length
+        : 0,
+    [hasStorageIssue, savedSequences, persistenceError, storageStatus.ok],
+  );
+  const handleEmergencyBackupExport = () => {
+    const ok = downloadEmergencyBackupJson();
+    setMessage(
+      ok
+        ? '현재 메모리 작업본을 포함한 전체 JSON 백업 파일을 내려받았습니다.'
+        : '백업 파일을 만들지 못했습니다. 브라우저 다운로드 권한을 확인해 주세요.',
+    );
+  };
 
   const loadingSequenceRef = useRef(false);
   const executeLoadSavedSequence = (sequenceId: string, mode: 'workbench' | 'stage') => {
@@ -888,7 +914,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     setGroupName('');
     setGroupSchedule('');
     setShowGroupForm(false);
-    setMessage('수업 그룹을 추가했습니다.');
+    const groupErr = getLastStorageError() ?? usePilatesStore.getState().persistenceError;
+    setMessage(
+      groupErr
+        ? '메모리에 수업 그룹을 임시 반영했으나 브라우저 저장 공간 부족으로 기기에는 아직 기록되지 않았습니다. JSON 백업을 먼저 내보내 주세요.'
+        : '수업 그룹을 추가했습니다.',
+    );
   };
   const duplicatingRef = useRef(false);
   const duplicateSequence = (sequenceId: string) => {
@@ -896,7 +927,12 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
     duplicatingRef.current = true;
     try {
       if (duplicateSavedSequence(sequenceId)) {
-        setMessage('복사본을 저장했습니다. 원본의 기록은 그대로 유지됩니다.');
+        const dupErr = getLastStorageError() ?? usePilatesStore.getState().persistenceError;
+        setMessage(
+          dupErr
+            ? '메모리에만 복사본을 임시 생성했습니다. 브라우저 저장 공간 부족으로 기기에는 아직 기록되지 않았으니 JSON 백업을 먼저 내보내 주세요.'
+            : '복사본을 저장했습니다. 원본의 기록은 그대로 유지됩니다.',
+        );
       }
     } finally {
       window.setTimeout(() => {
@@ -1193,7 +1229,37 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
           </span>
         </div>
       ) : null}
-      {message && <PfStatusBanner tone="success">{message}</PfStatusBanner>}
+      {hasStorageIssue && (
+        <div
+          className="pf-binder-backup-guidance"
+          data-testid="binder-emergency-backup-strip"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '10px',
+            margin: '0 0 12px',
+            padding: '10px 14px',
+            borderRadius: '12px',
+            background: '#fff8ee',
+            border: '1px solid #e7c294',
+            color: '#6b3b10',
+            fontSize: '0.84rem',
+          }}
+        >
+          <span>
+            현재 화면(메모리) 작업본과 기존 기기 저장본은 모두 안전하게 유지됩니다. 새로고침 전 JSON
+            백업을 내보내고 저장 공간을 확보한 뒤 다시 저장해 주세요.
+          </span>
+          <PfButton variant="secondary" onClick={handleEmergencyBackupExport}>
+            <ArrowDownToLine size={15} aria-hidden="true" /> 전체 JSON 백업 내보내기
+          </PfButton>
+        </div>
+      )}
+      {message && (
+        <PfStatusBanner tone={hasStorageIssue ? 'warning' : 'success'}>{message}</PfStatusBanner>
+      )}
       {view === 'history' && historyCopyError && <PfFormError>{historyCopyError}</PfFormError>}
       {view === 'history' && (
         <details className="pf-detail-progressive-drawer" style={{ marginBottom: '12px' }}>
@@ -1254,7 +1320,17 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   </button>
                 )}
               </div>
-              <span className="muted">최근 수정 순 · 이 브라우저에 저장됨</span>
+              <span
+                className="muted"
+                data-testid="binder-browser-save-caption"
+                style={hasStorageIssue ? { color: '#8a4214', fontWeight: 650 } : undefined}
+              >
+                {hasStorageIssue
+                  ? unpersistedRamCount > 0
+                    ? `최근 수정 순 · 기기 미저장 메모리 보관 ${unpersistedRamCount}개 포함 (JSON 백업 권장)`
+                    : '최근 수정 순 · 기기 저장 확인 필요 (JSON 백업 권장)'
+                  : '최근 수정 순 · 이 브라우저에 저장됨'}
+              </span>
             </div>
             {showSavedQuickFilters && (
               <div
@@ -1371,6 +1447,9 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                   const detailsExpanded = expandedSavedIds.has(sequence.id);
                   const isLoadedInWorkbench =
                     activeSteps.length > 0 && activeSequenceId === sequence.id;
+                  const isPersistedOnDisk =
+                    sampleSequenceIds.has(sequence.id) ||
+                    isSavedSequencePersistedOnDisk(sequence, persistenceError, storageStatus.ok);
                   const isOverwriteOpen = pendingOverwrite?.sequenceId === sequence.id;
                   const apparatusLabel = getApparatusLabelKo(sequence.apparatus);
                   const recencySummary = lastTaughtDate
@@ -1414,8 +1493,14 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                           />
                         )}
                         <div className="pf-binder-card-3d-meta">
-                          <div className="teaching-saved-card-header">
-                            <div className="teaching-saved-card-title-row">
+                          <div className="teaching-saved-card-header" style={{ flexWrap: 'wrap' }}>
+                            <div
+                              className="teaching-saved-card-title-row"
+                              style={{
+                                flex: !isPersistedOnDisk ? '1 1 100%' : '1 1 180px',
+                                minWidth: 0,
+                              }}
+                            >
                               <ApparatusIconBadge
                                 apparatus={sequence.apparatus}
                                 size="xs"
@@ -1423,13 +1508,37 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
                               />
                               <h2>{sequence.title}</h2>
                             </div>
-                            {isLoadedInWorkbench && (
-                              <PfBadge
-                                tone={hasUnsavedWorkbenchDraft ? 'warning' : 'sage'}
-                                className="teaching-active-plan-badge"
+                            {(!isPersistedOnDisk || isLoadedInWorkbench) && (
+                              <div
+                                className="teaching-saved-card-badges"
+                                style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}
                               >
-                                {hasUnsavedWorkbenchDraft ? '현재 초안 수정 중' : '현재 계획 열림'}
-                              </PfBadge>
+                                {!isPersistedOnDisk && (
+                                  <PfBadge
+                                    tone="warning"
+                                    className="teaching-unsaved-ram-badge"
+                                    data-testid="binder-card-unsaved-ram-badge"
+                                  >
+                                    기기 미저장 · 메모리 임시 보관
+                                  </PfBadge>
+                                )}
+                                {isLoadedInWorkbench && (
+                                  <PfBadge
+                                    tone={
+                                      hasUnsavedWorkbenchDraft || !isPersistedOnDisk
+                                        ? 'warning'
+                                        : 'sage'
+                                    }
+                                    className="teaching-active-plan-badge"
+                                  >
+                                    {hasUnsavedWorkbenchDraft
+                                      ? '현재 초안 수정 중'
+                                      : !isPersistedOnDisk
+                                        ? '현재 계획 열림 (기기 미저장)'
+                                        : '현재 계획 열림'}
+                                  </PfBadge>
+                                )}
+                              </div>
                             )}
                           </div>
                           <div className="pf-class-badges-strip">
@@ -2764,8 +2873,10 @@ export const ClassBinderView: React.FC<ClassBinderViewProps> = ({
           </div>
         </>
       )}
-      <p className="teaching-local-note">
-        자료는 이 브라우저에 저장됩니다. 다른 기기에서 사용하려면 설정에서 JSON 백업을 내보내세요.
+      <p className="teaching-local-note" data-testid="binder-footer-local-note">
+        {hasStorageIssue
+          ? '일부 변경분이 아직 이 브라우저 저장소에 기록되지 않았습니다. 새로고침 전 JSON 백업을 내보내고 여유 공간을 확보한 뒤 다시 저장해 주세요.'
+          : '자료는 이 브라우저에 저장됩니다. 다른 기기에서 사용하려면 설정에서 JSON 백업을 내보내세요.'}
       </p>
       <LightDismissDialog
         open={Boolean(savedPreview)}
